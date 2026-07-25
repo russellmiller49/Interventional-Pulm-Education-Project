@@ -5,9 +5,20 @@ import {
 
 import type { PacGuidedSkillId } from './pacGuidedSkills'
 
-const placementEvidence = ['pac-waveforms-part-1-2021', 'monitor-workflow-supplied']
+const placementEvidence = [
+  'pac-waveforms-part-1-2021',
+  'monitor-workflow-supplied',
+  'cvp-measurement-2017',
+]
 const pressureEvidence = ['arterial-pressure-five-step-2020', 'monitor-workflow-supplied']
-const measurementEvidence = ['pac-derived-part-2-2021', 'master-hemodynamics-reference']
+const measurementEvidence = [
+  'pac-derived-part-2-2021',
+  'master-hemodynamics-reference',
+  'papi-rvmi-2012',
+  'cpo-acute-cardiac-2007',
+  'ppv-sepsis-2000',
+  'pa-compliance-outcomes-2026',
+]
 const waveformEvidence = ['pac-waveforms-part-1-2021', 'clinical-hemodynamics-waveforms']
 
 function item(input: unknown): ClinicalLearningItem {
@@ -31,16 +42,16 @@ export const pacGuidedLearningItems: Readonly<
         {
           id: 'level-zero-underdamped',
           label:
-            'The system is off level, not zeroed, and underdamped; correct and verify each problem separately.',
+            'The system is off level, not zeroed, and underdamped; repair and verify each problem separately.',
           rationale:
             'The height causes a hydrostatic offset, zero establishes the reference, and persistent oscillation identifies an underdamped response.',
           plausibility: 'best',
         },
         {
           id: 'zero-only',
-          label: 'Atmospheric zero alone will correct the height and the oscillatory response.',
+          label: 'Atmospheric zero alone will repair the height and the oscillatory response.',
           rationale:
-            'Zero does not physically move the transducer or correct dynamic-response distortion.',
+            'Zero does not physically move the transducer or repair dynamic-response distortion.',
           plausibility: 'reasonable-but-incomplete',
         },
         {
@@ -70,7 +81,7 @@ export const pacGuidedLearningItems: Readonly<
       choices: [
         {
           id: 'relevel-and-overdamping',
-          label: 'Re-level the transducer and correct the overdamped measurement response.',
+          label: 'Re-level the transducer and restore the overdamped measurement response.',
           rationale:
             'The new height creates hydrostatic error and the sluggish response attenuates rapid pressure changes.',
           plausibility: 'best',
@@ -104,35 +115,37 @@ export const pacGuidedLearningItems: Readonly<
       phase: 'predict',
       itemType: 'signal-recognition',
       contextRequirement: 'technical',
-      clinicalContextId: 'pac-advancement-rv-trace',
+      clinicalContextId: 'pac-advancement-pa-to-wedge-transition',
       visualAssetIds: ['pac-live-waveform', 'hemodynamic-heart-3d'],
-      stem: 'The live tracing has a steep ventricular systolic upstroke, pressure falls near zero in diastole, and there is no dicrotic notch. Which position does that waveform support?',
+      stem: 'After reviewing the full sequence, which change supports a true wedge tracing after brief balloon occlusion from a confirmed PA position?',
       choices: [
         {
-          id: 'rv',
-          label: 'Right ventricle',
+          id: 'pa-to-true-wedge',
+          label:
+            'PA pulsatility and the dicrotic notch disappear, and a lower-pressure atrial waveform with delayed a and v waves appears.',
           rationale:
-            'A ventricular contour with very low diastolic pressure and no pulmonic-valve closure notch supports RV position.',
+            'A true wedge replaces the PA contour with delayed atrial morphology sampled through the occluded pulmonary circulation.',
           plausibility: 'best',
         },
         {
-          id: 'pa',
-          label: 'Pulmonary artery',
+          id: 'persistent-pa-pulsatility',
+          label:
+            'The pulmonary-artery systolic pulse and dicrotic notch remain fully visible after inflation.',
           rationale:
-            'PA diastolic pressure remains above RV diastolic pressure and the contour includes a dicrotic notch.',
+            'Persistent PA pulsatility means the distal branch is not completely occluded and the tracing is not a true wedge.',
           plausibility: 'reasonable-but-incomplete',
         },
         {
-          id: 'ra',
-          label: 'Right atrium',
+          id: 'overwedged-drift',
+          label: 'The pressure drifts upward without identifiable a or v waves.',
           rationale:
-            'RA morphology has low-amplitude a, c, and v waves rather than a ventricular systolic pulse.',
+            'Loss of recognizable atrial waves with upward drift suggests an over-wedged false tracing, not a valid PAWP.',
           plausibility: 'incorrect-mechanism',
         },
       ],
-      correctChoiceIds: ['rv'],
+      correctChoiceIds: ['pa-to-true-wedge'],
       explanation:
-        'RV and PA systolic pressures can be similar. The diastolic contour and the appearance of a dicrotic notch distinguish them.',
+        'The ordered waveform sequence is introducer → RA → RV → PA → PAWP. A true wedge has delayed atrial morphology at the existing PA depth; prompt deflation must restore the PA waveform.',
       evidenceIds: placementEvidence,
       reviewStatus: 'sme-review',
     }),
@@ -157,7 +170,7 @@ export const pacGuidedLearningItems: Readonly<
         {
           id: 'ra-pa-rv',
           label: 'RA → PA → RV',
-          rationale: 'This reverses the anatomic route and misidentifies the valve-closure notch.',
+          rationale: 'This reverses the anatomic path and misidentifies the valve-closure notch.',
           plausibility: 'incorrect-mechanism',
         },
         {

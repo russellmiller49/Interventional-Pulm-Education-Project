@@ -3,6 +3,17 @@ import type {
   HemodynamicCaseDefinition,
   HemodynamicInterventionDefinition,
 } from '../engine'
+import { SHARED_CRITICAL_CARE_THRESHOLDS } from '@/features/critical-care/content/sharedClinicalThresholds'
+import { HEMODYNAMIC_CLINICAL_THRESHOLDS } from './clinicalThresholds'
+
+const mapLowThresholdMmHg = SHARED_CRITICAL_CARE_THRESHOLDS.meanArterialPressure.lowMmHg
+const pulmonaryHypertensionThresholds = HEMODYNAMIC_CLINICAL_THRESHOLDS.pulmonaryHypertension
+const mapRecoveryCriterion = {
+  metric: 'mapMmHg',
+  operator: 'at-least',
+  value: mapLowThresholdMmHg,
+  label: `MAP ≥ ${mapLowThresholdMmHg} mmHg`,
+} as const
 
 const sharedSources = [
   'pac-waveforms-part-1-2021',
@@ -229,8 +240,8 @@ const pericardialDrainage = intervention({
 
 const correctMeasurement = intervention({
   id: 'correct-measurement-system',
-  label: 'Re-level, re-zero, inspect tubing, and repeat the fast-flush test',
-  shortLabel: 'Correct signal system',
+  label: 'Re-level, re-zero, inspect tubing, and repeat the fast-flush check',
+  shortLabel: 'Restore signal system',
   category: 'assessment',
   description: 'Treat the signal before treating the patient when internal consistency fails.',
   response:
@@ -267,17 +278,42 @@ const repeatThermodilution = intervention({
 const commonMechanisms = [
   { id: 'underfilled', label: 'Underfilled, preload-responsive circulation' },
   { id: 'vasodilatory', label: 'Vasodilatory/distributive shock' },
-  { id: 'lv-failure', label: 'LV-predominant pump failure' },
-  { id: 'rv-afterload', label: 'Acute RV pressure overload' },
+  { id: 'lv-congestive-pump-failure', label: 'LV-predominant pump failure with congestion' },
+  { id: 'acute-pulmonary-obstruction', label: 'Acute pulmonary obstruction with RV shock' },
+  {
+    id: 'chronic-precapillary-rv-failure',
+    label: 'Decompensated chronic pre-capillary PH with RV failure',
+  },
+  {
+    id: 'transmitted-pressure-congestion',
+    label: 'Post-capillary congestion plus intrathoracic-pressure transmission',
+  },
   { id: 'tamponade', label: 'Pericardial constraint/tamponade physiology' },
   { id: 'artifact', label: 'Measurement-system and catheter artifact' },
 ] as const
 
 const commonPriorities = [
   { id: 'validate-preload', label: 'Validate dynamic preload responsiveness before more fluid' },
-  { id: 'restore-map', label: 'Restore vascular tone toward an initial MAP near 65 mmHg' },
-  { id: 'support-flow', label: 'Support forward flow while limiting congestion' },
-  { id: 'unload-rv', label: 'Reduce RV afterload and activate definitive treatment' },
+  {
+    id: 'restore-map',
+    label: `Restore vascular tone toward an initial MAP near ${mapLowThresholdMmHg} mmHg`,
+  },
+  {
+    id: 'restore-lv-flow-decongest',
+    label: 'Restore LV forward flow while actively limiting pulmonary congestion',
+  },
+  {
+    id: 'bridge-and-reperfuse',
+    label: 'Support the acutely failing RV while activating definitive PE treatment',
+  },
+  {
+    id: 'selective-rv-support',
+    label: 'Reduce chronic pulmonary vascular load while preserving systemic pressure',
+  },
+  {
+    id: 'separate-transmural-load',
+    label: 'Separate transmitted pressure from congestion, then reassess both',
+  },
   { id: 'relieve-constraint', label: 'Escalate urgently to relieve pericardial constraint' },
   { id: 'validate-signal', label: 'Validate the signal before treating the displayed number' },
 ] as const
@@ -299,7 +335,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     presentation:
       'An adult remains tachycardic with cool extremities after acute volume loss. The arterial trace is narrow; filling pressures are low.',
     learningObjectives: [
-      'Use a reversible dynamic test before fluid.',
+      'Use a reversible dynamic perturbation before fluid.',
       'Reassess stroke volume and congestion after each bounded volume step.',
     ],
     initialParameters: {
@@ -325,7 +361,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     unsafeInterventionIds: ['peep-up-unsafe'],
     successCriteria: [
       { metric: 'cardiacOutputLMin', operator: 'at-least', value: 4.5, label: 'CO ≥ 4.5 L/min' },
-      { metric: 'mapMmHg', operator: 'at-least', value: 65, label: 'MAP ≥ 65 mmHg' },
+      mapRecoveryCriterion,
     ],
     guidedPrompt:
       'First prove that transient preload recruitment raises flow; a low RAP or PAWP alone is not the fluid decision.',
@@ -338,7 +374,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
   },
   {
     id: 'HD-02',
-    version: '1.0.0',
+    version: '1.1.0',
     station: 'vascular-tone',
     title: 'Warm shock with a low diastolic pressure',
     shortTitle: 'Vasodilatory sepsis',
@@ -346,7 +382,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
       'An adult with suspected infection has warm extremities, a bounding pulse, low diastolic pressure, and persistent hypotension after initial resuscitation.',
     learningObjectives: [
       'Recognize low vascular tone with preserved/high flow.',
-      'Use dynamic assessment and serial perfusion reassessment rather than reflex fluid.',
+      'Use dynamic evaluation and serial perfusion review rather than reflex fluid.',
     ],
     initialParameters: {
       ...baseParameters,
@@ -366,22 +402,19 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     correctPriorityId: 'restore-map',
     interventions: [plr, fluidStep, norepinephrine, vasopressin, dobutamine],
     requiredInterventionIds: ['norepinephrine-up'],
-    unsafeInterventionIds: [],
-    successCriteria: [
-      { metric: 'mapMmHg', operator: 'at-least', value: 65, label: 'MAP ≥ 65 mmHg' },
-    ],
-    guidedPrompt:
-      'The initial modeled MAP target is around 65 mmHg; individualize after serial perfusion assessment.',
+    unsafeInterventionIds: ['fluid-250'],
+    successCriteria: [mapRecoveryCriterion],
+    guidedPrompt: `The initial modeled MAP target is around ${mapLowThresholdMmHg} mmHg; individualize after serial perfusion review.`,
     debrief: [
       'Norepinephrine is represented as the first vascular-tone tier.',
-      'Fluid is conditional on dynamic responsiveness and repeated assessment.',
+      'Fluid is conditional on dynamic responsiveness and repeated evaluation.',
     ],
     sourceIds: [...sharedSources, 'ssc-sepsis-2026'],
     safetyCriticalErrorIds: [],
   },
   {
     id: 'HD-03',
-    version: '1.0.0',
+    version: '1.1.0',
     station: 'pump-failure',
     title: 'Low flow with pulmonary congestion',
     shortTitle: 'LV cardiogenic shock',
@@ -408,8 +441,8 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     thermodilution: standardThermodilution,
     mechanismOptions: commonMechanisms,
     priorityOptions: commonPriorities,
-    correctMechanismId: 'lv-failure',
-    correctPriorityId: 'support-flow',
+    correctMechanismId: 'lv-congestive-pump-failure',
+    correctPriorityId: 'restore-lv-flow-decongest',
     interventions: [dobutamine, milrinone, diuresis, fluidStep, norepinephrine],
     requiredInterventionIds: ['dobutamine-up', 'diuresis-step'],
     unsafeInterventionIds: ['fluid-250'],
@@ -420,7 +453,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
         value: 2.2,
         label: 'CI ≥ 2.2 L/min/m²',
       },
-      { metric: 'pawpMmHg', operator: 'at-most', value: 22, label: 'PAWP ≤ 22 mmHg' },
+      { metric: 'pawpMmHg', operator: 'at-most', value: 18, label: 'PAWP ≤ 18 mmHg' },
     ],
     guidedPrompt:
       'High filling pressure does not prove adequate forward flow. Treat perfusion and congestion as linked but distinct targets.',
@@ -433,7 +466,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
   },
   {
     id: 'HD-04',
-    version: '1.0.0',
+    version: '1.1.0',
     station: 'rv-afterload',
     title: 'Abrupt RV pressure overload',
     shortTitle: 'Acute PE / RV shock',
@@ -461,12 +494,13 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     thermodilution: standardThermodilution,
     mechanismOptions: commonMechanisms,
     priorityOptions: commonPriorities,
-    correctMechanismId: 'rv-afterload',
-    correctPriorityId: 'unload-rv',
+    correctMechanismId: 'acute-pulmonary-obstruction',
+    correctPriorityId: 'bridge-and-reperfuse',
     interventions: [
       inhaledPulmonaryVasodilator,
       systemicPulmonaryVasodilator,
       reperfusion,
+      norepinephrine,
       fluidStep,
       increasePeepUnsafe,
     ],
@@ -474,7 +508,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     unsafeInterventionIds: ['peep-up-unsafe', 'fluid-250'],
     successCriteria: [
       { metric: 'cardiacIndexLMinM2', operator: 'at-least', value: 2, label: 'CI ≥ 2.0 L/min/m²' },
-      { metric: 'meanPapMmHg', operator: 'at-most', value: 30, label: 'mPAP ≤ 30 mmHg' },
+      mapRecoveryCriterion,
     ],
     guidedPrompt:
       'The RV needs afterload relief and definitive treatment, not indiscriminate volume or higher intrathoracic pressure.',
@@ -487,14 +521,13 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
   },
   {
     id: 'HD-05',
-    version: '1.0.0',
+    version: '1.1.0',
     station: 'pulmonary-hypertension',
     title: 'Decompensated pre-capillary PH with RV failure',
     shortTitle: 'Precapillary PH crisis',
-    presentation:
-      'An adult with known pulmonary vascular disease has rising RAP, low output, high PAP, and PAWP ≤15 mmHg.',
+    presentation: `An adult with known pulmonary vascular disease has rising RAP, low output, high PAP, and PAWP ≤${pulmonaryHypertensionThresholds.preCapillaryPawpMaxMmHg} mmHg.`,
     learningObjectives: [
-      'Apply the current >2 WU pre-capillary definition.',
+      `Apply the current >${pulmonaryHypertensionThresholds.elevatedPvrWoodUnits} WU pre-capillary definition.`,
       'Support RV flow while reducing afterload and avoiding systemic hypotension.',
     ],
     initialParameters: {
@@ -516,8 +549,8 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     thermodilution: standardThermodilution,
     mechanismOptions: commonMechanisms,
     priorityOptions: commonPriorities,
-    correctMechanismId: 'rv-afterload',
-    correctPriorityId: 'unload-rv',
+    correctMechanismId: 'chronic-precapillary-rv-failure',
+    correctPriorityId: 'selective-rv-support',
     interventions: [
       inhaledPulmonaryVasodilator,
       systemicPulmonaryVasodilator,
@@ -531,18 +564,17 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
       { metric: 'cardiacIndexLMinM2', operator: 'at-least', value: 2, label: 'CI ≥ 2.0 L/min/m²' },
       { metric: 'rapMmHg', operator: 'at-most', value: 14, label: 'RAP ≤ 14 mmHg' },
     ],
-    guidedPrompt:
-      'Pre-capillary physiology is mPAP >20 mmHg, PAWP ≤15 mmHg, and PVR >2 WU in current guidance.',
+    guidedPrompt: `Pre-capillary physiology is mPAP >${pulmonaryHypertensionThresholds.meanPapMmHg} mmHg, PAWP ≤${pulmonaryHypertensionThresholds.preCapillaryPawpMaxMmHg} mmHg, and PVR >${pulmonaryHypertensionThresholds.elevatedPvrWoodUnits} WU in current guidance.`,
     debrief: [
-      'The model uses >2 WU, not the historical 3-WU threshold.',
-      'Treatment evidence is less certain in the 2–3 WU range; classification is not itself a treatment instruction.',
+      `The model uses >${pulmonaryHypertensionThresholds.elevatedPvrWoodUnits} WU, not the historical 3-WU threshold.`,
+      `Treatment evidence is less certain in the ${pulmonaryHypertensionThresholds.elevatedPvrWoodUnits}–3 WU range; classification is not itself a treatment instruction.`,
     ],
     sourceIds: [...sharedSources, 'esc-ers-ph-2022'],
     safetyCriticalErrorIds: [],
   },
   {
     id: 'HD-06',
-    version: '1.0.0',
+    version: '1.1.0',
     station: 'congestion-and-peep',
     title: 'Post-capillary PH with biventricular congestion',
     shortTitle: 'Congestion + PEEP',
@@ -574,13 +606,13 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     thermodilution: standardThermodilution,
     mechanismOptions: commonMechanisms,
     priorityOptions: commonPriorities,
-    correctMechanismId: 'lv-failure',
-    correctPriorityId: 'support-flow',
+    correctMechanismId: 'transmitted-pressure-congestion',
+    correctPriorityId: 'separate-transmural-load',
     interventions: [diuresis, decreasePeep, dobutamine, fluidStep, inhaledPulmonaryVasodilator],
     requiredInterventionIds: ['diuresis-step', 'peep-down'],
     unsafeInterventionIds: ['fluid-250'],
     successCriteria: [
-      { metric: 'pawpMmHg', operator: 'at-most', value: 22, label: 'PAWP ≤ 22 mmHg' },
+      { metric: 'pawpMmHg', operator: 'at-most', value: 18, label: 'PAWP ≤ 18 mmHg' },
       { metric: 'cardiacIndexLMinM2', operator: 'at-least', value: 2, label: 'CI ≥ 2.0 L/min/m²' },
     ],
     guidedPrompt:
@@ -588,6 +620,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     debrief: [
       'A PEEP change can alter both measured pressure and true loading.',
       'Preserve oxygenation/recruitment while testing hemodynamic effects.',
+      'The 18 mmHg modeled decongestion endpoint is a scenario target, not a universal bedside treatment threshold.',
     ],
     sourceIds: sharedSources,
     safetyCriticalErrorIds: [],
@@ -633,7 +666,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
         value: 2.2,
         label: 'CI ≥ 2.2 L/min/m²',
       },
-      { metric: 'mapMmHg', operator: 'at-least', value: 65, label: 'MAP ≥ 65 mmHg' },
+      mapRecoveryCriterion,
     ],
     guidedPrompt:
       'This pattern requires urgent clinical confirmation and definitive escalation; a PAC never replaces bedside echo.',
@@ -654,7 +687,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
       'The monitor shows internally inconsistent pressures and erratic thermodilution curves while bedside perfusion appears unchanged.',
     learningObjectives: [
       'Recognize hydrostatic, damping, catheter-position, and injectate artifacts.',
-      'Correct the measurement chain before changing management.',
+      'Restore the measurement chain before changing management.',
     ],
     initialParameters: { ...baseParameters, heartRateBpm: 88, referenceCardiacOutputLMin: 5.6 },
     initialMeasurementSystem: {

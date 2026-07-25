@@ -22,7 +22,7 @@ jest.mock('@/i18n/navigation', () => ({
   ),
 }))
 
-const expectedSections = ['Overview', 'Learn', 'Practice', 'Assess']
+const expectedSections = ['Overview', 'Learn', 'Practice', 'Challenge']
 
 function expectNavigationGrammar(name: string, activeSection: string) {
   const navigation = screen.getByRole('navigation', { name })
@@ -113,6 +113,6 @@ describe('critical-care shared shell convergence', () => {
     )
     expect(screen.getByText('CRRT')).toBeInTheDocument()
     expect(screen.getByText('PrisMax console lab')).toBeInTheDocument()
-    expectNavigationGrammar('CRRT module sections', 'Assess')
+    expectNavigationGrammar('CRRT module sections', 'Challenge')
   })
 })

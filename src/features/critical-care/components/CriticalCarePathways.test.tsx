@@ -44,15 +44,15 @@ describe('critical-care clinical pathways', () => {
     expect(
       screen.getByRole('heading', { name: 'Build connected critical-care skills' }),
     ).toBeInTheDocument()
+    expect(screen.getByText(/Preparation is recommended, never required/)).toBeInTheDocument()
     expect(
-      screen.getByText(/Preparation is recommended, not required, for Practice/),
-    ).toBeInTheDocument()
-    expect(await screen.findAllByText(/0 of \d+ module milestones complete/)).toHaveLength(5)
+      await screen.findAllByText('Start with any activity that fits your current question.'),
+    ).toHaveLength(5)
     expect(screen.getAllByRole('link', { name: /^Explore / })).toHaveLength(5)
     expect(screen.getAllByText('Preview')).toHaveLength(5)
   })
 
-  it('shows module milestones, reviewed recommendation, competencies, and explainable Assess gates', async () => {
+  it('shows open milestones, reviewed guidance, and direct challenge access', async () => {
     const pathway = catalog.pathways.find((item) => item.id === 'cardiogenic-and-rv-shock')!
     render(<CriticalCarePathwayDetail catalog={catalog} pathway={pathway} />)
 
@@ -68,13 +68,10 @@ describe('critical-care clinical pathways', () => {
     expect(screen.queryByRole('link', { name: 'Open Practice course' })).not.toBeInTheDocument()
     expect(screen.queryByText('LV cardiogenic shock with pulmonary edema')).not.toBeInTheDocument()
     expect(
-      screen.getByRole('heading', { name: 'Advanced assessment remains release-gated' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('heading', { name: 'Explicit assessment prerequisites' }),
+      screen.getByRole('heading', { name: 'Advanced cross-system capstones' }),
     ).toBeInTheDocument()
     expect(screen.getByText('Preview pathway')).toBeInTheDocument()
-    expect(screen.getAllByText(/do not create a hard Assess lock/).length).toBeGreaterThan(0)
+    expect(screen.queryByText(/hard Assess lock/i)).not.toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: 'Open full lab' }).length).toBeGreaterThan(0)
   })
 })

@@ -1,3 +1,5 @@
+import { SHARED_CRITICAL_CARE_THRESHOLDS } from '@/features/critical-care/content/sharedClinicalThresholds'
+
 import {
   createInitialIcuCrrtState,
   createInitialIcuEcmoState,
@@ -261,13 +263,25 @@ function patientAlarmDescriptors(
       mappingReviewStatus: 'pending',
       active: true,
     })
-  if (state.patient.hemodynamics.mapMmHg < 55)
+  if (
+    state.patient.hemodynamics.mapMmHg <
+    SHARED_CRITICAL_CARE_THRESHOLDS.meanArterialPressure.criticalLowMmHg
+  )
     add('HYPOTENSION', 'Mean arterial pressure is critically low', 'critical')
-  else if (state.patient.hemodynamics.mapMmHg < 65)
+  else if (
+    state.patient.hemodynamics.mapMmHg <
+    SHARED_CRITICAL_CARE_THRESHOLDS.meanArterialPressure.lowMmHg
+  )
     add('LOW_MAP', 'Mean arterial pressure is low', 'warning')
-  if (state.patient.respiratory.spo2Percent < 85)
+  if (
+    state.patient.respiratory.spo2Percent <
+    SHARED_CRITICAL_CARE_THRESHOLDS.oxygenSaturation.criticalLowPercent
+  )
     add('HYPOXEMIA', 'Oxygen saturation is critically low', 'critical')
-  else if (state.patient.respiratory.spo2Percent < 90)
+  else if (
+    state.patient.respiratory.spo2Percent <
+    SHARED_CRITICAL_CARE_THRESHOLDS.oxygenSaturation.lowPercent
+  )
     add('LOW_SPO2', 'Oxygen saturation is low', 'warning')
   if (state.patient.perfusion.lactateMmolL >= 6)
     add('HIGH_LACTATE', 'Lactate remains markedly elevated', 'warning')

@@ -10,7 +10,7 @@ const isPublic = baxterCrrtIsPublic(baxterCrrtReleaseStage)
 const handoffMetadata: Metadata = {
   title: 'CRRT · PrisMax console lab',
   description:
-    'A high-yield PrisMax CRRT curriculum with seven lessons, a ten-case core path, five safety drills, two concept labs, and a masked capstone.',
+    'A high-yield PrisMax CRRT curriculum with seven lessons, an open case library, five safety drills, two concept labs, and a harder challenge.',
   robots: {
     index: isPublic,
     follow: isPublic,

@@ -3,6 +3,7 @@
 import { BookOpenCheck, Check, FlaskConical, Gauge, Layers3 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
+import { criticalCareActivityById } from '@/features/critical-care/content/activities'
 import { recordCriticalCareActivitySelection } from '@/features/critical-care/progress/selection'
 import {
   criticalCareActivityPhases,
@@ -11,6 +12,7 @@ import {
   type CriticalCareActivityPhase,
 } from '@/features/learning-module/activity'
 import { ActivityShell } from '@/features/learning-module/components/ActivityShell'
+import { ChoiceReasoningFeedback } from '@/features/learning-module/components/ChoiceReasoningFeedback'
 import { EvidenceDrawer } from '@/features/learning-module/components/EvidenceDrawer'
 import { PatientContextBar } from '@/features/learning-module/components/PatientContextBar'
 import { ReferenceDrawer } from '@/features/learning-module/components/ReferenceDrawer'
@@ -155,12 +157,12 @@ function ClinicalApplicationCheck({
   readonly onRevise: () => void
 }) {
   const submittedChoice = item.choices.find((choice) => choice.id === submittedChoiceId)
-  const correct = submittedChoiceId !== null && item.correctChoiceIds.includes(submittedChoiceId)
+  const conceptIds = criticalCareActivityById.get(item.activityId)?.assumedConceptIds ?? []
 
   return (
     <section className={styles.clinicalApplication} aria-labelledby="crrt-application-heading">
       <header>
-        <span>Clinical application · unscored</span>
+        <span>Clinical application</span>
         <h3 id="crrt-application-heading">Apply the lesson to this patient</h3>
       </header>
       <fieldset disabled={submittedChoiceId !== null}>
@@ -180,15 +182,16 @@ function ClinicalApplicationCheck({
         </div>
       </fieldset>
       {submittedChoice ? (
-        <div className={styles.applicationFeedback} data-correct={correct} role="status">
-          <strong>{correct ? 'Reasoning supported' : 'Reassess the mechanism'}</strong>
-          <p>{submittedChoice.rationale}</p>
-          <p>{item.explanation}</p>
-          {!correct ? (
-            <button type="button" onClick={onRevise}>
-              Revise answer
-            </button>
-          ) : null}
+        <div className={styles.applicationFeedback}>
+          <ChoiceReasoningFeedback
+            choice={submittedChoice}
+            explanation={item.explanation}
+            evidenceIds={item.evidenceIds}
+            conceptIds={conceptIds}
+          />
+          <button type="button" onClick={onRevise}>
+            Try another frame
+          </button>
         </div>
       ) : (
         <button
@@ -259,17 +262,15 @@ export function BaxterCrrtLearn({
       : []
   })
   const sourceTitles = [...new Set(evidenceEntries.map((entry) => entry.title))]
-  const applicationCorrect =
-    submittedChoiceId !== null &&
-    clinicalAnchor.applicationItem.correctChoiceIds.includes(submittedChoiceId)
+  const applicationSubmitted = submittedChoiceId !== null
   const completionEvidenceMet =
-    applicationCorrect && (selectedLesson.embeddedLabId === undefined || labEvidenceMet)
+    applicationSubmitted && (selectedLesson.embeddedLabId === undefined || labEvidenceMet)
   const nextLesson =
     baxterCrrtLearnLessons.find(
       (lesson) =>
         lesson.id !== selectedLesson.id && !progress.completedLessonIds.includes(lesson.id),
     ) ?? null
-  const progressLabel = `${progress.completedLessonIds.length}/${baxterCrrtLearnLessons.length} lessons complete · lesson ${selectedLesson.ordinal}`
+  const progressLabel = `Current lesson · ${selectedLesson.title} · personal history stays local`
   const lifecycleAnalytics = useCriticalCareActivityAnalytics({
     moduleId: 'baxter-crrt',
     activityId: `crrt:learn:${selectedLesson.id}`,
@@ -286,9 +287,9 @@ export function BaxterCrrtLearn({
     )
   }
 
-  function recordCompletionIfReady(nextApplicationCorrect: boolean, nextLabEvidenceMet: boolean) {
+  function recordCompletionIfReady(nextApplicationSubmitted: boolean, nextLabEvidenceMet: boolean) {
     if (
-      !nextApplicationCorrect ||
+      !nextApplicationSubmitted ||
       (selectedLesson.embeddedLabId !== undefined && !nextLabEvidenceMet) ||
       completionRecorded.current.has(selectedLesson.id)
     ) {
@@ -358,15 +359,12 @@ export function BaxterCrrtLearn({
     setSubmittedChoiceId(selectedChoiceId)
     advanceLessonPhase('observe')
     lifecycleAnalytics.recordPredictionSubmitted()
-    recordCompletionIfReady(
-      clinicalAnchor.applicationItem.correctChoiceIds.includes(selectedChoiceId),
-      labEvidenceMet,
-    )
+    recordCompletionIfReady(true, labEvidenceMet)
   }
 
   function recordLabCompletionEvidence() {
     setLabEvidenceMet(true)
-    recordCompletionIfReady(applicationCorrect, true)
+    recordCompletionIfReady(applicationSubmitted, true)
   }
 
   function resetLessonWork() {
@@ -381,6 +379,10 @@ export function BaxterCrrtLearn({
     <BaxterCrrtModuleFrame locale={locale} activeHref={`${baxterCrrtNavBase}/learn`} activityMode>
       <ActivityShell
         layout="didactic-lesson"
+        activityId={clinicalAnchor.applicationItem.activityId}
+        assumedConceptIds={
+          criticalCareActivityById.get(clinicalAnchor.applicationItem.activityId)?.assumedConceptIds
+        }
         breadcrumb={
           <>
             <Link href={baxterCrrtNavBase}>CRRT</Link>
@@ -392,6 +394,18 @@ export function BaxterCrrtLearn({
         mode="guided"
         progressLabel={progressLabel}
         stepperAriaLabel="CRRT shared activity phases"
+        onPhaseSelect={(phase) => {
+          setLessonPhase(phase)
+          document
+            .getElementById(
+              phase === 'recognize'
+                ? 'clinical-anchor-heading'
+                : phase === 'predict' || phase === 'observe'
+                  ? 'crrt-application-heading'
+                  : 'crrt-learn-viewport',
+            )
+            ?.scrollIntoView?.({ block: 'start', behavior: 'smooth' })
+        }}
         theme="dark"
         patientContext={
           <>
@@ -425,7 +439,7 @@ export function BaxterCrrtLearn({
             requiredAction={
               clinicalAnchor.labEvidenceLabel
                 ? `${clinicalAnchor.labEvidenceLabel} Then answer the patient application check. Completion records automatically when both are observed.`
-                : 'Answer the patient application check. Completion records automatically when the supported reasoning is observed.'
+                : 'Answer the patient application check. Completion records automatically after the response and feedback are observed.'
             }
             targets={selectedLesson.bullets?.slice(0, 4) ?? []}
             hint={selectedLesson.paragraphs?.[0]}
@@ -635,7 +649,7 @@ export function BaxterCrrtLearn({
                           : 'Evidence in progress'}
                       </strong>
                       <small>
-                        Application {applicationCorrect ? 'complete' : 'required this session'}
+                        Application {applicationSubmitted ? 'complete' : 'required this session'}
                         {selectedLesson.embeddedLabId
                           ? ` · embedded lab ${
                               labEvidenceMet ? 'complete' : 'required this session'

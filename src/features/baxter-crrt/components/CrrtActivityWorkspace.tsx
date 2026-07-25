@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 
+import { criticalCareActivityById } from '@/features/critical-care/content/activities'
 import {
   useCriticalCareActivityAnalytics,
   type CriticalCareActivityMode,
@@ -138,8 +139,7 @@ export function CrrtActivityWorkspace({
 }: CrrtActivityWorkspaceProps) {
   const definition = session.caseDefinition
   const deviceProfile = getBaxterCrrtDeviceProfile(session.simulation.deviceId)
-  const masked = session.experience === 'mastery' && !session.debriefRevealed
-  const title = masked ? baxterCrrtMasteryManifest.learnerTitleBeforeDebrief : definition.title
+  const title = definition.title
   const outcome = selectCrrtLearningOutcome(session)
   const task = taskByReasoningPhase[session.reasoningPhase]
   const patient = session.simulation.patient
@@ -151,6 +151,7 @@ export function CrrtActivityWorkspace({
     mode === 'challenge'
       ? `crrt:assess:${baxterCrrtMasteryManifest.id}`
       : `crrt:practice:${definition.id}`
+  const catalogActivity = criticalCareActivityById.get(activityId)
   const [helpState, setHelpState] = useState({ activityId, visible: false })
   const recordedHints = useRef({ activityId: '', ids: new Set<string>() })
   const recordedSafetyEvents = useRef({ activityId: '', ids: new Set<string>() })
@@ -168,20 +169,7 @@ export function CrrtActivityWorkspace({
     limitation: String(source.value ?? 'Use only within the authored educational source scope.'),
   }))
   const sourceTitles = [...new Set(definition.sourceBasis.map((source) => source.sourceTitle))]
-  const deviceSource = definition.sourceBasis.find(
-    (source) => source.sourceType === 'device-manual',
-  )
-  const evidenceEntries = masked
-    ? [
-        {
-          id: 'masked-assessment-boundary',
-          title: 'Assessment evidence boundary',
-          sourceLabel: deviceSource?.documentVersion ?? deviceProfile.displayName,
-          limitation:
-            'Case-specific evidence and source identifiers remain hidden until debrief. Use current manufacturer instructions and local policy.',
-        },
-      ]
-    : sourceEntries
+  const evidenceEntries = sourceEntries
 
   useEffect(() => {
     if (!session.prediction) return
@@ -231,14 +219,43 @@ export function CrrtActivityWorkspace({
     setHelpState({ activityId, visible: true })
   }
 
+  function openActivityPhase(phase: CriticalCareActivityPhase) {
+    const destination: Readonly<
+      Record<
+        CriticalCareActivityPhase,
+        { readonly surface: 'case' | 'patient' | 'debrief'; readonly targetSuffix: string }
+      >
+    > = {
+      recognize: { surface: 'case', targetSuffix: '-crrt-case-findings' },
+      predict: { surface: 'case', targetSuffix: '-crrt-prediction-heading' },
+      act: { surface: 'case', targetSuffix: '-crrt-actions-heading' },
+      observe: {
+        surface: 'patient',
+        targetSuffix: '-baxter-crrt-mobile-panel-patient',
+      },
+      explain: { surface: 'debrief', targetSuffix: '-crrt-debrief-heading' },
+      transfer: { surface: 'debrief', targetSuffix: '-crrt-transfer-question' },
+    }
+    const next = destination[phase]
+    document
+      .querySelector<HTMLButtonElement>(`[id$="-baxter-crrt-mobile-tab-${next.surface}"]`)
+      ?.click()
+    const target =
+      document.querySelector<HTMLElement>(`[id$="${next.targetSuffix}"]`) ??
+      document.querySelector<HTMLElement>('[id$="-crrt-debrief-heading"]')
+    target?.scrollIntoView?.({ block: 'start', behavior: 'smooth' })
+  }
+
   return (
     <ActivityShell
       layout="native-workbench"
+      activityId={activityId}
+      assumedConceptIds={catalogActivity?.assumedConceptIds}
       breadcrumb={
         <>
           <Link href={baxterCrrtNavBase}>CRRT</Link>
           {' / '}
-          {mode === 'challenge' ? 'assess' : 'practice'}
+          {mode === 'challenge' ? 'challenge' : 'practice'}
         </>
       }
       activityTitle={title}
@@ -246,14 +263,14 @@ export function CrrtActivityWorkspace({
       mode={mode}
       progressLabel={progressLabel}
       stepperAriaLabel="CRRT shared activity phases"
+      onPhaseSelect={openActivityPhase}
       theme="dark"
-      maskedAssessment={masked}
       patientContext={
         <>
           <PatientContextBar
             title="Live patient, prescription, and circuit"
             items={[
-              { label: 'Case', value: masked ? 'Masked capstone' : definition.title },
+              { label: 'Case', value: definition.title },
               { label: 'Device', value: deviceProfile.displayName },
               {
                 label: 'Patient',
@@ -313,11 +330,7 @@ export function CrrtActivityWorkspace({
                 value: activeAlarm ? humanizeAlarmCode(activeAlarm.code) : 'None',
               },
             ]}
-            immediateGoal={
-              masked
-                ? 'Complete the full reasoning loop using only observable case and device data.'
-                : definition.learningObjectives[0]
-            }
+            immediateGoal={definition.learningObjectives[0]}
             safetyConstraints={[
               'Educational simulation only; use current manufacturer instructions and local policy.',
               'Displayed values and responses are synthetic and are not patient-specific targets.',
@@ -327,11 +340,7 @@ export function CrrtActivityWorkspace({
             <ResumeBanner
               state="ready"
               title="Return to saved case"
-              description={
-                masked
-                  ? 'The saved assessment route and device selection are open; prior machine and answer state was not replayed.'
-                  : `${definition.title} is open with its saved selection and device profile; prior machine and answer state was not replayed.`
-              }
+              description={`${definition.title} is open with its saved selection and device profile; prior machine and answer state was not replayed.`}
               onResume={focusRestoredActivity}
               resumeActionLabel="Return to case"
             />
@@ -340,18 +349,14 @@ export function CrrtActivityWorkspace({
       }
       currentTask={
         <TaskPanel
-          objective={
-            masked ? task.objective : `${task.objective} ${definition.learningObjectives[0]}`
-          }
+          objective={`${task.objective} ${definition.learningObjectives[0]}`}
           requiredAction={task.requiredAction}
           targets={
-            masked
-              ? []
-              : session.reasoningPhase === 'read'
-                ? definition.visibleFindings.slice(0, 4)
-                : definition.learningObjectives
+            session.reasoningPhase === 'read'
+              ? definition.visibleFindings.slice(0, 4)
+              : definition.learningObjectives
           }
-          hint={masked ? undefined : definition.hintLadder[0]?.text}
+          hint={mode === 'challenge' ? undefined : definition.hintLadder[0]?.text}
           mode={mode}
           hintVisible={helpVisible}
           onHintRequested={showHelp}
@@ -376,12 +381,8 @@ export function CrrtActivityWorkspace({
               {
                 id: definition.id,
                 title,
-                summary: masked
-                  ? 'Case identity remains hidden until debrief.'
-                  : definition.patientDescription,
-                meta: masked
-                  ? 'Case-specific references available after debrief'
-                  : sourceTitles.join(' · '),
+                summary: definition.patientDescription,
+                meta: sourceTitles.join(' · '),
               },
             ]}
             trigger={<button type="button">Reference</button>}
@@ -403,16 +404,19 @@ export function CrrtActivityWorkspace({
               consequences={definition.debrief.causalChain}
               performanceDomains={[
                 {
-                  label: 'Score',
-                  result: outcome.score === null ? 'Not scored' : `${outcome.score}%`,
+                  label: 'Clinical frame',
+                  result: 'Compare the prediction with the observed patient and circuit response',
                 },
-                { label: 'Mastery', result: outcome.mastery ? 'Met' : 'Not yet met' },
                 {
-                  label: 'Safety',
+                  label: 'Safety review',
                   result:
                     outcome.criticalErrorIds.length === 0
-                      ? 'No critical error'
-                      : `${outcome.criticalErrorIds.length} critical error(s)`,
+                      ? 'No safety stop appeared in this run'
+                      : 'Revisit the safety event and the cue that preceded it',
+                },
+                {
+                  label: 'Reassessment',
+                  result: 'Reconnect prescription, delivered therapy, circuit, and patient',
                 },
               ]}
               transfer={<p>{definition.debrief.transferQuestion}</p>}

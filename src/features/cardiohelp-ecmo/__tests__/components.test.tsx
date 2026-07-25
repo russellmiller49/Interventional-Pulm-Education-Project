@@ -115,7 +115,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(window.localStorage.getItem('cardiohelp-ecmo-progress-v1')).toBeNull()
   })
 
-  it('opens each case on a brief stage and gates the workflow behind Begin case', async () => {
+  it('opens each case on a brief stage while keeping the workflow and console available', async () => {
     render(<CardiohelpWorkbench section="practice" />)
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /Begin case/i })).toBeInTheDocument()
@@ -127,7 +127,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
       screen.getByText(/Verify circuit, sensors, gas, power, and team readiness/i),
     ).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Commit before action' })).not.toBeInTheDocument()
-    expect(screen.getByText(/Console locked/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Console locked/i)).not.toBeInTheDocument()
     const currentTask = screen.getByRole('complementary', { name: 'Current task' })
     expect(
       within(currentTask).getByText(/Review the observable patient, indication/i),
@@ -140,9 +140,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
     ).not.toHaveLength(0)
     expect(screen.getByRole('button', { name: 'Commit before action' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Standard practice' })).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /Hide diagnosis cues \(harder\)/i }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Less coaching \(harder\)/i })).toBeInTheDocument()
     expect(
       screen.getByRole('heading', {
         name: /Initiate VV ECMO for refractory severe ARDS/i,
@@ -166,9 +164,8 @@ describe('CARDIOHELP ECMO learner interface', () => {
     fireEvent.change(screen.getByLabelText('Expected immediate effect'), {
       target: { value: 'gas-exchange' },
     })
-    expect(screen.getByText(/Console locked/i)).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Commit before action' }))
     expect(screen.queryByText(/Console locked/i)).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Commit before action' }))
     expect(
       (global.fetch as jest.Mock).mock.calls
         .map(([, request]) => JSON.parse(request.body as string))
@@ -341,7 +338,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
     )
     expect(screen.getByText(/Response observed for 0\/4 seconds/i)).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: /Commit reassessment · observe 4s first/i }),
+      screen.getByRole('button', { name: /Commit reassessment · select all three responses/i }),
     ).toBeDisabled()
 
     fireEvent.click(screen.getByRole('button', { name: /Advance 4 seconds now/i }))
@@ -350,7 +347,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(dispatch).toHaveBeenNthCalledWith(4, { type: 'STEP' })
   })
 
-  it('explains every requirement that keeps reassessment disabled', () => {
+  it('shows reassessment context without making the observation interval a navigation gate', () => {
     const definition = clinicalPracticeScenarios.find(
       (item) => item.id === 'clinical-vv-tension-pneumothorax',
     )!
@@ -383,7 +380,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
       'aria-current',
       'step',
     )
-    const checklist = screen.getByLabelText(/Requirements to unlock Commit reassessment/i)
+    const checklist = screen.getByLabelText(/Reassessment context/i)
     expect(checklist).toHaveTextContent(/Initial clinical plan committed/i)
     expect(checklist).toHaveTextContent(/intervention or corrective action completed/i)
     expect(checklist).toHaveTextContent(/Response observed for 0\/3 seconds/i)
@@ -392,13 +389,13 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(checklist).toHaveTextContent(/Patient response selected/i)
     expect(
       screen.getByRole('button', {
-        name: /Commit reassessment · observe 3s first/i,
+        name: /Commit reassessment · select all three responses/i,
       }),
     ).toBeDisabled()
     expect(screen.getByRole('button', { name: /Advance 3 seconds now/i })).toBeInTheDocument()
   })
 
-  it('uses objective reassessment choices and exposes scored clues', () => {
+  it('uses objective reassessment choices and offers qualitative clues', () => {
     const definition = clinicalPracticeScenarios.find(
       (item) => item.id === 'clinical-vv-tension-pneumothorax',
     )!
@@ -429,7 +426,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
 
     expect(screen.getAllByRole('radio')).toHaveLength(9)
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
-    const clueButton = screen.getByRole('button', { name: /Give me a clue.*5 points/i })
+    const clueButton = screen.getByRole('button', { name: /Give me a clue/i })
     fireEvent.click(clueButton)
     expect(dispatch).toHaveBeenCalledWith({
       type: 'REQUEST_HINT',
@@ -573,21 +570,27 @@ describe('CARDIOHELP ECMO learner interface', () => {
       />,
     )
 
-    expect(screen.getByText('Capstone assessment')).toBeInTheDocument()
+    expect(screen.getByText('Challenge')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: scenario.title })).toBeInTheDocument()
     expect(screen.queryByLabelText('Case')).not.toBeInTheDocument()
     expect(screen.getByText(/Advance 10 more simulated second/i)).toBeInTheDocument()
-    expect(
-      screen.getByText('Required assessment domains').closest('[role="note"]'),
-    ).toHaveTextContent(/right-arm oxygenation/i)
+    expect(screen.getByText('Required review domains').closest('[role="note"]')).toHaveTextContent(
+      /right-arm oxygenation/i,
+    )
     expect(screen.getByRole('button', { name: /Commit reassessment/i })).toBeDisabled()
     expect(screen.queryByRole('button', { name: 'Standard practice' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Hide diagnosis cues/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Give me a clue/i })).not.toBeInTheDocument()
-    expect(screen.getByText(/Challenge mode is locked/i)).toHaveAttribute('role', 'note')
-    expect(screen.queryByText(scenario.objectives[0].label)).not.toBeInTheDocument()
+    expect(screen.getByText(/Challenge mode collects teaching feedback/i)).toHaveAttribute(
+      'role',
+      'note',
+    )
+    for (const objective of scenario.clinicalCase?.learningObjectives ?? []) {
+      expect(screen.getByText(objective)).toBeInTheDocument()
+    }
   })
 
-  it('keeps authored initiation orders available while Assess coaching controls stay hidden', () => {
+  it('keeps authored initiation orders and objectives visible while challenge clues stay deferred', () => {
     const state = createInitialSimulationState('clinical-vv-initiation-ards')
     const scenario = clinicalPracticeScenarios.find(
       (item) => item.id === 'clinical-vv-initiation-ards',
@@ -614,10 +617,11 @@ describe('CARDIOHELP ECMO learner interface', () => {
     )
 
     expect(screen.getByText('Simulated case order')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: scenario.title })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Standard practice' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Give me a clue/i })).not.toBeInTheDocument()
     for (const objective of scenario.clinicalCase?.learningObjectives ?? []) {
-      expect(screen.queryByText(objective)).not.toBeInTheDocument()
+      expect(screen.getByText(objective)).toBeInTheDocument()
     }
   })
 
@@ -672,14 +676,14 @@ describe('CARDIOHELP ECMO learner interface', () => {
     )
 
     expect(screen.getByText(/Reassessment submitted\. Select/i)).toHaveTextContent(
-      /Reassessment submitted.*Reveal diagnosis and score/i,
+      /Reassessment submitted.*Reveal causal debrief/i,
     )
     const reassessmentPanel = screen.getByRole('region', { name: /Reassess before reveal/i })
     expect(
       within(reassessmentPanel).getByRole('button', { name: /Reassessment submitted/i }),
     ).toBeDisabled()
     const revealButton = within(reassessmentPanel).getByRole('button', {
-      name: /Reveal diagnosis and score/i,
+      name: /Reveal causal debrief/i,
     })
     expect(revealButton).toBeEnabled()
     expect(revealButton).toHaveFocus()
@@ -702,8 +706,8 @@ describe('CARDIOHELP ECMO learner interface', () => {
     )
     expect(onPhaseChange).toHaveBeenLastCalledWith('explain')
     expect(onPhaseChange).not.toHaveBeenCalledWith('transfer')
-    expect(screen.getByRole('note', { name: /Reassessment scoring/i })).toHaveTextContent(
-      /Reassessment credit not earned.*did not match the expected post-intervention evidence/i,
+    expect(screen.getByRole('note', { name: /Reassessment comparison/i })).toHaveTextContent(
+      /At least one selected response differs from the authored post-intervention evidence/i,
     )
     expect(screen.getByRole('link', { name: /Review the paired lesson/i })).toHaveAttribute(
       'href',
@@ -757,7 +761,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
     })
   })
 
-  it('masks answer-bearing scenario titles and summaries in Challenge mode', () => {
+  it('keeps scenario titles and summaries visible in Challenge mode', () => {
     const state = createInitialSimulationState('gas-source-interruption', 'challenge')
     const scenario = cardiohelpScenarios.find((item) => item.id === state.scenario.scenarioId)!
     render(
@@ -772,11 +776,86 @@ describe('CARDIOHELP ECMO learner interface', () => {
       />,
     )
 
+    expect(screen.getByRole('heading', { name: scenario.title })).toBeInTheDocument()
+    expect(screen.getByText(scenario.summary)).toBeInTheDocument()
+  })
+
+  it('defers routine clinical teaching in Challenge mode and reveals it on request', () => {
+    const scenario = clinicalPracticeScenarios.find(
+      (item) => item.id === 'clinical-vv-occult-hemorrhage',
+    )!
+    let state = createInitialSimulationState(scenario.id, 'challenge')
+    state = ecmoSimulationReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      goalId: scenario.expectation.goalId,
+      control: scenario.expectation.control,
+      direction: scenario.expectation.direction,
+    })
+    const intervention = scenario.clinicalCase!.interventions.find(
+      (item) => item.id === 'hemorrhage-search',
+    )!
+    state = ecmoSimulationReducer(state, {
+      type: 'APPLY_CLINICAL_INTERVENTION',
+      interventionId: intervention.id,
+    })
+
+    render(
+      <PracticeCasePlayer
+        state={state}
+        scenario={scenario}
+        progress={createDefaultProgress()}
+        outcome={selectScenarioOutcome(state)}
+        dispatch={jest.fn()}
+        onLoadScenario={jest.fn()}
+        onReveal={jest.fn()}
+      />,
+    )
+
+    expect(screen.queryByText(intervention.response)).not.toBeInTheDocument()
+    expect(screen.getByText(/Routine teaching note saved for the debrief/i)).toBeInTheDocument()
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: /Show teaching notes after each action/i }),
+    )
+    expect(screen.getAllByText(intervention.response).length).toBeGreaterThan(0)
+  })
+
+  it('keeps a catastrophic ECMO action visible as an immediate safety interruption', () => {
+    const scenario = clinicalPracticeScenarios.find(
+      (item) => item.id === 'clinical-vv-initiation-ards',
+    )!
+    let state = createInitialSimulationState(scenario.id, 'challenge')
+    state = ecmoSimulationReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      goalId: scenario.expectation.goalId,
+      control: scenario.expectation.control,
+      direction: scenario.expectation.direction,
+    })
+    const unsafe = scenario.clinicalCase!.interventions.find(
+      (item) => item.id === 'vv-pressure-escalation',
+    )!
+    state = ecmoSimulationReducer(state, {
+      type: 'APPLY_CLINICAL_INTERVENTION',
+      interventionId: unsafe.id,
+    })
+
+    render(
+      <PracticeCasePlayer
+        state={state}
+        scenario={scenario}
+        progress={createDefaultProgress()}
+        outcome={selectScenarioOutcome(state)}
+        dispatch={jest.fn()}
+        onLoadScenario={jest.fn()}
+        onReveal={jest.fn()}
+      />,
+    )
+
+    const interruption = screen.getByRole('alert')
+    expect(interruption).toHaveTextContent(/Safety interruption/i)
+    expect(interruption).toHaveTextContent(unsafe.response)
     expect(
-      screen.getByRole('heading', { name: /Challenge: interpret the observable pattern/i }),
+      within(interruption).getByRole('button', { name: /Restart from the clean case/i }),
     ).toBeInTheDocument()
-    expect(screen.queryByText(scenario.title)).not.toBeInTheDocument()
-    expect(screen.queryByText(scenario.summary)).not.toBeInTheDocument()
   })
 
   it('shows editable alarm limits as device settings rather than patient targets', () => {

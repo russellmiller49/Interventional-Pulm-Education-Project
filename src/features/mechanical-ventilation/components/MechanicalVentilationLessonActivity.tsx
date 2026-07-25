@@ -20,6 +20,7 @@ import {
   type CriticalCareResumePointer,
 } from '@/features/learning-module/activity'
 import { ActivityShell } from '@/features/learning-module/components/ActivityShell'
+import { ChoiceReasoningFeedback } from '@/features/learning-module/components/ChoiceReasoningFeedback'
 import { DebriefPanel } from '@/features/learning-module/components/DebriefPanel'
 import { EvidenceDrawer } from '@/features/learning-module/components/EvidenceDrawer'
 import { PatientContextBar } from '@/features/learning-module/components/PatientContextBar'
@@ -146,7 +147,7 @@ function lessonSessionReducer(
 
 function evidenceLabel(evidence: string): string {
   const labels: Readonly<Record<string, string>> = {
-    'intervention:assess-patient': 'Bedside assessment recorded',
+    'intervention:assess-patient': 'Bedside evaluation recorded',
     'intervention:review-waveforms': 'Pressure, flow, volume, and effort reviewed',
     'intervention:inspect-circuit': 'Airway and circuit inspected',
     'intervention:disconnect-bag': 'Trapped gas release and supported ventilation performed',
@@ -276,6 +277,7 @@ export function MechanicalVentilationLessonActivity({
   const runtime = runtimeForLesson(lesson.id)
   const learningItems = itemsForLesson(lesson.id)
   const activityId = lessonActivityId(lesson.id)
+  const catalogActivity = criticalCareActivityById.get(activityId)
   const query = useMemo(() => ({ activity: lesson.id }), [lesson.id])
   const [phase, setPhase] = useState<CriticalCareActivityPhase>('recognize')
   const [predictionChoice, setPredictionChoice] = useState<string | null>(null)
@@ -417,7 +419,7 @@ export function MechanicalVentilationLessonActivity({
     setStorageMessage(
       stored
         ? options.completed && authoritativeStatus === 'in-progress'
-          ? 'Draft review saved as in progress. This activity grants no completion or competency credit.'
+          ? 'Draft review saved as in progress. It does not make a claim about clinical readiness.'
           : options.completed
             ? 'Lesson completion saved on this device.'
             : 'Lesson checkpoint saved on this device.'
@@ -513,16 +515,11 @@ export function MechanicalVentilationLessonActivity({
 
   function commitPrediction() {
     if (!predictionChoice) return
-    const correct = learningItems.prediction.correctChoiceIds.includes(predictionChoice)
     setPredictionCommitted(true)
     lifecycleAnalytics.recordPredictionSubmitted()
     dispatchSession({ type: 'CLEAR_EVIDENCE' })
     advance('act')
-    setFeedback(
-      correct
-        ? learningItems.prediction.explanation
-        : `Compare your choice with the multitrace findings. ${learningItems.prediction.explanation}`,
-    )
+    setFeedback('Initial frame recorded. Compare it with the multitrace response below.')
   }
 
   function finishPrimaryAction() {
@@ -556,24 +553,18 @@ export function MechanicalVentilationLessonActivity({
 
   function completeTransfer() {
     if (!transferChoice) return
-    const interpretationCorrect = learningItems.transfer.correctChoiceIds.includes(transferChoice)
     const actionsComplete = hasVentilationLessonEvidence(
       session.evidence,
       runtime.transfer.requiredEvidence,
     )
-    const score = Number(interpretationCorrect) + Number(actionsComplete)
-    if (score < 2) {
+    if (!actionsComplete) {
       setFeedback(
-        interpretationCorrect
-          ? 'Transfer evidence is 1 of 2: the interpretation is correct, but the required actions have not all been performed in the transfer patient.'
-          : `Transfer evidence is ${Number(actionsComplete)} of 2. Reconsider the mechanism. ${learningItems.transfer.explanation}`,
+        'The reasoning feedback is available now. Complete the paired bedside actions when you are ready to compare the modeled response.',
       )
       return
     }
     runResponse(runtime.transfer.responseSeconds)
-    setFeedback(
-      `Transfer evidence is 2 of 2: interpretation and performed actions are complete. ${learningItems.transfer.explanation}`,
-    )
+    setFeedback('The interpretation and paired bedside actions are now in your local history.')
     setCompleted(true)
     persistCheckpoint('transfer', { completed: true })
     lifecycleAnalytics.recordTransferCompleted()
@@ -598,8 +589,29 @@ export function MechanicalVentilationLessonActivity({
   const transferInterpretationCorrect = Boolean(
     transferChoice && learningItems.transfer.correctChoiceIds.includes(transferChoice),
   )
-  const transferScore = Number(transferInterpretationCorrect) + Number(transferActionsComplete)
+  const feedbackItem = phase === 'transfer' ? learningItems.transfer : learningItems.prediction
+  const feedbackChoiceId = phase === 'transfer' ? transferChoice : predictionChoice
+  const feedbackChoice = feedbackItem.choices.find((choice) => choice.id === feedbackChoiceId)
 
+  function selectPhase(nextPhase: CriticalCareActivityPhase) {
+    if (nextPhase === 'transfer' && session.variant !== 'transfer') {
+      dispatchSession({
+        type: 'LOAD_VARIANT',
+        runtime,
+        variant: 'transfer',
+        attempt: attemptNumber.current + 1,
+      })
+      setTransferChoice(null)
+    } else if (nextPhase !== 'transfer' && session.variant !== 'primary') {
+      dispatchSession({
+        type: 'LOAD_VARIANT',
+        runtime,
+        variant: 'primary',
+        attempt: attemptNumber.current,
+      })
+    }
+    advance(nextPhase)
+  }
   let controls = null
   if (phase === 'recognize') {
     controls = (
@@ -712,7 +724,15 @@ export function MechanicalVentilationLessonActivity({
           onAction={performGuidedAction}
         />
         <p className="rounded-xl bg-muted p-3 text-sm" aria-live="polite">
-          Transfer evidence: {transferScore} of 2 · interpretation plus performed case actions
+          {!transferChoice
+            ? 'Choose an interpretation, then examine the transfer patient.'
+            : transferInterpretationCorrect && transferActionsComplete
+              ? 'The interpretation and bedside actions are ready to compare.'
+              : transferInterpretationCorrect
+                ? 'The interpretation fits the mechanism; complete the bedside actions before comparing the response.'
+                : transferActionsComplete
+                  ? 'The bedside actions are documented; revisit the mechanism before comparing the response.'
+                  : 'Use the interpretation and bedside actions together before comparing the response.'}
         </p>
         <button
           type="button"
@@ -837,6 +857,8 @@ export function MechanicalVentilationLessonActivity({
       ) : null}
       <ActivityShell
         layout="native-workbench"
+        activityId={activityId}
+        assumedConceptIds={catalogActivity?.assumedConceptIds}
         breadcrumb={
           <span>
             <Link href={'/mechanical-ventilation' as Route}>Mechanical Ventilation</Link> /{' '}
@@ -846,11 +868,8 @@ export function MechanicalVentilationLessonActivity({
         activityTitle={lesson.title}
         phase={phase}
         mode="guided"
-        progressLabel={
-          completed
-            ? 'Draft reviewed · non-credit'
-            : `${criticalCareActivityPhases.indexOf(phase) + 1} of 6 · ${phase}`
-        }
+        onPhaseSelect={selectPhase}
+        progressLabel={completed ? 'Draft reviewed · non-credit' : `Current phase: ${phase}`}
         patientContext={
           <PatientContextBar
             title={`${session.variant === 'primary' ? 'Primary' : 'Transfer'} clinical context`}
@@ -881,9 +900,19 @@ export function MechanicalVentilationLessonActivity({
           >
             {controls}
             {feedback ? (
-              <p className="mt-3 rounded-xl bg-muted p-3 text-sm leading-6" role="status">
-                {feedback}
-              </p>
+              <div className="mt-3 grid gap-3">
+                <p className="rounded-xl bg-muted p-3 text-sm leading-6" role="status">
+                  {feedback}
+                </p>
+                {feedbackChoice ? (
+                  <ChoiceReasoningFeedback
+                    choice={feedbackChoice}
+                    explanation={feedbackItem.explanation}
+                    evidenceIds={feedbackItem.evidenceIds}
+                    conceptIds={catalogActivity?.teachesConceptIds}
+                  />
+                ) : null}
+              </div>
             ) : null}
           </TaskPanel>
         }

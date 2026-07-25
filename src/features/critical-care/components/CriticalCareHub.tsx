@@ -37,6 +37,7 @@ import {
   type CriticalCareDashboardProgressState,
 } from '../publicDashboard'
 import type { CriticalCareProgressReadResult } from '../progress/types'
+import { CriticalCareResourceSearch } from './CriticalCareResourceSearch'
 
 const moduleIcons: Record<string, LucideIcon> = {
   hemodynamics: Activity,
@@ -48,8 +49,8 @@ const moduleIcons: Record<string, LucideIcon> = {
 const progressLabels: Readonly<Record<CriticalCareDashboardProgressState, string>> = {
   'not-started': 'Not started',
   'in-progress': 'In progress',
-  completed: 'Complete',
-  mastered: 'Mastered',
+  completed: 'Worked through',
+  mastered: 'Worked through',
 }
 
 interface HydratedDashboard {
@@ -181,27 +182,6 @@ function statusBadge(state: CriticalCareDashboardProgressState) {
   )
 }
 
-function ProgressBar({ label, value }: { readonly label: string; readonly value: number }) {
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-        <span>{label}</span>
-        <span>{value}%</span>
-      </div>
-      <div
-        role="progressbar"
-        aria-label={label}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={value}
-        className="h-2 overflow-hidden rounded-full bg-muted"
-      >
-        <span className="block h-full rounded-full bg-primary" style={{ width: `${value}%` }} />
-      </div>
-    </div>
-  )
-}
-
 function formatPhase(phase: string) {
   return `${phase.charAt(0).toUpperCase()}${phase.slice(1)}`
 }
@@ -250,15 +230,6 @@ export function CriticalCareHub({
     () => catalog.referenceItems.filter((item) => item.kind === 'reference'),
     [catalog.referenceItems],
   )
-  const completedCount = useMemo(
-    () => model?.modules.reduce((total, module) => total + module.completedActivities, 0) ?? 0,
-    [model],
-  )
-  const totalCount = useMemo(
-    () => model?.modules.reduce((total, module) => total + module.totalActivities, 0) ?? 0,
-    [model],
-  )
-
   return (
     <main className="relative overflow-hidden py-12 md:py-16">
       <div
@@ -288,11 +259,13 @@ export function CriticalCareHub({
             <ShieldCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-primary" />
             <p>
               For clinician education and simulation only. Apply institutional protocols,
-              manufacturer instructions, patient-specific assessment, and clinical judgment in real
+              manufacturer instructions, patient-specific evaluation, and clinical judgment in real
               care.
             </p>
           </div>
         </header>
+
+        <CriticalCareResourceSearch catalog={catalog} />
 
         <section aria-labelledby="return-path" className="space-y-5">
           <div>
@@ -516,10 +489,11 @@ export function CriticalCareHub({
                   <CardContent className="pt-2">
                     <p className="text-sm leading-6 text-muted-foreground">{pathway.description}</p>
                     {summary ? (
-                      <ProgressBar
-                        label={`${summary.completedActivities} of ${summary.totalActivities} pathway activities · ${summary.completedMilestones} of ${summary.totalMilestones} milestones`}
-                        value={summary.percentComplete}
-                      />
+                      <p className="text-xs text-muted-foreground">
+                        {summary.completedActivities > 0
+                          ? 'You have touched activities on this pathway.'
+                          : 'Open at any point that matches your question.'}
+                      </p>
                     ) : (
                       <p className="text-xs text-muted-foreground">Checking pathway milestones…</p>
                     )}
@@ -647,10 +621,13 @@ export function CriticalCareHub({
                   <CardContent className="flex-1 pt-2">
                     <p className="text-sm leading-6 text-muted-foreground">{module.description}</p>
                     {summary ? (
-                      <ProgressBar
-                        label={`${summary.completedActivities} of ${summary.totalActivities} activities complete`}
-                        value={summary.percentComplete}
-                      />
+                      <p className="text-xs text-muted-foreground">
+                        {summary.state === 'not-started'
+                          ? 'Start anywhere in this module.'
+                          : summary.state === 'in-progress'
+                            ? 'You have an activity in progress.'
+                            : 'You have worked through activities here.'}
+                      </p>
                     ) : null}
                     <ul className="flex flex-wrap gap-2" aria-label={`${module.title} topics`}>
                       {module.topics.map((topic) => (
@@ -744,11 +721,7 @@ export function CriticalCareHub({
             <Card>
               <CardHeader className="gap-3 border-b-0 pb-2">
                 <BookOpen aria-hidden="true" className="size-6 text-primary" />
-                <CardTitle>
-                  {model
-                    ? `${completedCount} of ${totalCount} activities complete`
-                    : 'Loading progress'}
-                </CardTitle>
+                <CardTitle>{model ? 'Your local activity history' : 'Loading history'}</CardTitle>
               </CardHeader>
               <CardContent className="pt-2">
                 {model?.integratedCaseOutcomes ? (
@@ -757,13 +730,7 @@ export function CriticalCareHub({
                     role="status"
                     aria-label="Integrated case outcomes"
                   >
-                    <p className="text-sm font-medium">
-                      {model.integratedCaseOutcomes.completedCourseCount} integrated longitudinal{' '}
-                      {model.integratedCaseOutcomes.completedCourseCount === 1
-                        ? 'course'
-                        : 'courses'}{' '}
-                      completed
-                    </p>
+                    <p className="text-sm font-medium">Integrated scenario history is available</p>
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">
                       Coarse completion only; case identity, patient state, commands, and replay
                       remain inside the simulator.

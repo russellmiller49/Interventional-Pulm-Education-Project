@@ -214,7 +214,7 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
     insertionDepth: '20–30 cm from the right internal jugular vein',
     scaleMaxMmHg: 20,
     summary:
-      'A low-amplitude venous tracing with three positive waves and two descents. Read the mean, and read it at end expiration.',
+      'A low-amplitude venous tracing with three positive waves and two descents. RA and CVP are the same pressure signal here: read at the base of the c wave during end expiration.',
     trace: {
       kind: 'atrial',
       meanMmHg: 4,
@@ -227,10 +227,12 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
       'Three positive waves (a, c, v) and two descents (x, y).',
       'The a wave follows the P wave; the c wave follows the QRS complex.',
       'Right atrial pressure sits within a few mmHg of right ventricular end-diastolic pressure.',
+      'With controlled positive-pressure ventilation, the slow CVP and arterial envelopes rise during inspiration; end expiration is the trough of that slow swing.',
+      'Freeze the tracing, locate the end-expiratory trough, then read at the base of the c wave.',
     ],
     pitfall:
-      'A catheter tip resting against the atrial wall damps the tracing, and a tip striking the tricuspid valve adds a spike that can be misread as a v wave.',
-    sourceIds: ['clinical-hemodynamics-waveforms', 'pac-review-2014'],
+      'An inspiratory peak or a one-beat average taken at an arbitrary respiratory phase can overstate CVP. Level and zero first; wall contact can damp the trace and valve contact can add a misleading spike.',
+    sourceIds: ['clinical-hemodynamics-waveforms', 'pac-review-2014', 'cvp-measurement-2017'],
   },
   {
     id: 'rv-normal',
@@ -363,7 +365,7 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
   {
     id: 'wedge-normal',
     label: 'Pulmonary capillary wedge',
-    shortLabel: 'PAWP',
+    shortLabel: 'Normal wedge',
     category: 'insertion',
     position: 'wedge',
     normalRange: 'Mean 4–12 mmHg',
@@ -386,7 +388,7 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
       'Mean wedge pressure sits 0–5 mmHg below pulmonary artery diastolic pressure.',
     ],
     pitfall:
-      'Confirm a true wedge before believing it: well-defined a and v waves, an oxygen saturation above 90% drawn from the wedged tip, and a distinct abrupt rise in mean pressure when the balloon is deflated. Oxygen saturation is the most confirmatory of these.',
+      'Confirm a true wedge before believing it: well-defined a and v waves, a wedged-tip saturation within about 5% of the simultaneous systemic arterial saturation (usually at least 95% when the patient is not hypoxemic), and an abrupt return to pulmonary-artery pressure and morphology when the balloon is deflated. In hypoxemia, use paired samples rather than an absolute saturation threshold; low arterial saturation makes oximetry less discriminating.',
     sourceIds: ['clinical-hemodynamics-waveforms', 'pac-review-2014'],
   },
   {
@@ -714,7 +716,7 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
       'The pressure is often higher than the pulmonary artery diastolic pressure, which is physiologically impossible for a true wedge.',
     ],
     pitfall:
-      'This is a potentially fatal warning sign. The catheter position that produces it can cause pulmonary artery rupture, which carries roughly 70% mortality. Deflate immediately and withdraw the catheter before re-attempting.',
+      'This is a potentially fatal warning sign. Pulmonary-artery rupture associated with a balloon-tipped catheter has a reported mortality range of roughly 30–70%. Deflate immediately, stop manipulating or flushing the catheter, and reassess/reposition only under appropriate supervision.',
     sourceIds: ['clinical-hemodynamics-waveforms', 'pac-review-2014'],
   },
   {
@@ -749,10 +751,10 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
       'Occurs particularly in pulmonary hypertension, where the catheter cannot fully occlude the artery.',
       'Hard to detect, because a and v waves may still be visible.',
       'The mean is higher than expected and does not fall by the usual amount from pulmonary artery diastolic pressure.',
-      'Oximetry settles it: a published example measured 72% saturation at a false wedge and 95% after the catheter was advanced to a true wedge.',
+      'Paired oximetry can help: a valid occlusion sample should approach the simultaneous systemic arterial saturation; persistent mixed-venous admixture supports incomplete occlusion.',
     ],
     pitfall:
-      'This artifact falsely elevates the wedge and has been responsible for false diagnoses of decompensated heart failure and mitral stenosis in patients who actually have pulmonary hypertension. Confirming the true wedge position requires blood oximetry from the wedged tip.',
+      'This artifact falsely elevates the wedge and can misclassify pulmonary hypertension. Deflate immediately, return to a confirmed PA signal, and reassess catheter position and occlusion under appropriate supervision; do not advance or withdraw solely to chase a number.',
     sourceIds: ['clinical-hemodynamics-waveforms'],
   },
 ]

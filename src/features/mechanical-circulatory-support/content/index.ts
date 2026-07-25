@@ -1,4 +1,5 @@
 export * from './curriculum'
+export * from './derivedValueGuides'
 export * from './deviceProfiles'
 export * from './impellaVariants'
 export * from './lessons'

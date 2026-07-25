@@ -468,7 +468,7 @@ describe('MCS deterministic circulation and device adapters', () => {
     expect(hasMcsMastery(state)).toBe(false)
   })
 
-  it('enforces scenario permissions and the adjust-observe step before reassessment', () => {
+  it('enforces scenario permissions without blocking reassessment', () => {
     const definition = mcsPracticeScenarios[0]
     let state = createInitialMcsState('practice', 'iabp', definition)
     state = mcsReducer(state, { type: 'INSPECT', id: 'arterial' })
@@ -483,8 +483,8 @@ describe('MCS deterministic circulation and device adapters', () => {
     expect(state.patient.preloadPercent).toBe(preload)
     expect(state.responseMessage).toMatch(/outside the permitted controls/i)
     state = mcsReducer(state, { type: 'REASSESS' })
-    expect(state.reassessed).toBe(false)
-    expect(state.responseMessage).toMatch(/management adjustment/i)
+    expect(state.reassessed).toBe(true)
+    expect(state.responseMessage).toMatch(/Reassessment: effective flow/i)
   })
 
   it('has a no-critical-error mastery path for the first IABP practice case', () => {

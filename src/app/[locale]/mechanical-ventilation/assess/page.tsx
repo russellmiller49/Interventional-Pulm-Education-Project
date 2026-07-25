@@ -15,9 +15,8 @@ import {
 } from '@/features/mechanical-ventilation/engine'
 
 export const metadata: Metadata = {
-  title: 'Assess · Mechanical Ventilation',
-  description:
-    'A seeded, masked mechanical-ventilation challenge using the preserved case engine, scoring, and mastery rules.',
+  title: 'Challenge · Mechanical Ventilation',
+  description: 'A harder, locally varied mechanical-ventilation case with a causal debrief.',
   robots: { index: false, follow: false, noarchive: true },
 }
 
@@ -76,7 +75,7 @@ export default async function MechanicalVentilationAssessPage({ params, searchPa
       <MechanicalVentilationAssessSetupV2
         compatibilityNotice={
           hadIncompleteQuery
-            ? 'The assessment seed or console was missing or incompatible. A new challenge must be launched from setup.'
+            ? 'The challenge seed or console was missing or incompatible. Open a new case from setup.'
             : undefined
         }
       />

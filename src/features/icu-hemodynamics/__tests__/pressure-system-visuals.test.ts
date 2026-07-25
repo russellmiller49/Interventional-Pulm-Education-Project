@@ -12,6 +12,7 @@ import {
   type DynamicResponseKind,
   type FastFlushLineType,
 } from '../content/pressureSystemVisuals'
+import { MMHG_PER_CM_H2O } from '../engine/waveformMorphology'
 
 const responses: readonly DynamicResponseKind[] = ['acceptable', 'overdamped', 'underdamped']
 const lineTypes: readonly FastFlushLineType[] = ['pulmonary-artery', 'systemic-arterial']
@@ -22,11 +23,11 @@ function range(values: readonly number[]): number {
 
 describe('pressure-system teaching visual model', () => {
   it('matches the engine hydrostatic convention and keeps the sign explicit', () => {
-    expect(hydrostaticPressureOffsetMmHg(10)).toBeCloseTo(-7.4, 5)
-    expect(hydrostaticPressureOffsetMmHg(-10)).toBeCloseTo(7.4, 5)
+    expect(hydrostaticPressureOffsetMmHg(10)).toBeCloseTo(-10 * MMHG_PER_CM_H2O, 5)
+    expect(hydrostaticPressureOffsetMmHg(-10)).toBeCloseTo(10 * MMHG_PER_CM_H2O, 5)
     expect(hydrostaticPressureOffsetMmHg(0)).toBe(0)
-    expect(formatSignedPressure(-7.4)).toBe('-7.4 mmHg')
-    expect(formatSignedPressure(7.4)).toBe('+7.4 mmHg')
+    expect(formatSignedPressure(-10 * MMHG_PER_CM_H2O)).toBe('-7.4 mmHg')
+    expect(formatSignedPressure(10 * MMHG_PER_CM_H2O)).toBe('+7.4 mmHg')
     expect(formatSignedPressure(0)).toBe('0.0 mmHg')
   })
 

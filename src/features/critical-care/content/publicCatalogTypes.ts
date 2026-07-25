@@ -1,5 +1,6 @@
 import type { CriticalCareActivityDefinition } from '@/features/learning-module/activity'
 
+import type { CriticalCareConcept } from './concepts'
 import type { CriticalCareCatalogModuleDefinition, CriticalCareModuleDefinition } from './modules'
 
 export interface PublicCriticalCarePathwayDefinition {
@@ -44,6 +45,7 @@ export interface CriticalCarePublicClientCatalog {
   readonly launcherModules: readonly CriticalCareModuleDefinition[]
   readonly modules: readonly CriticalCareCatalogModuleDefinition[]
   readonly activities: readonly CriticalCareActivityDefinition[]
+  readonly concepts: readonly CriticalCareConcept[]
   readonly pathways: readonly PublicCriticalCarePathwayDefinition[]
   readonly competencies: readonly PublicCriticalCareCompetencyDefinition[]
   readonly referenceItems: readonly PublicCriticalCareReferenceItem[]

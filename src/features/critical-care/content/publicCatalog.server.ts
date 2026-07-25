@@ -1,6 +1,7 @@
 import { criticalCareActivities } from './activities'
 import { criticalCareAssets } from './assets'
 import { criticalCareCompetencies } from './competencies'
+import { criticalCareConcepts } from './concepts'
 import { criticalCareModuleCatalog, criticalCareModules } from './modules'
 import { criticalCarePathways } from './pathways'
 import {
@@ -126,6 +127,7 @@ export function buildCriticalCarePublicClientCatalog(): CriticalCarePublicClient
     launcherModules: criticalCareModules.filter((module) => moduleIds.has(module.slug)),
     modules,
     activities,
+    concepts: criticalCareConcepts,
     pathways,
     competencies,
     referenceItems,

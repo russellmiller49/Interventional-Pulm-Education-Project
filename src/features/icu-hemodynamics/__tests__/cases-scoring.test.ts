@@ -131,6 +131,38 @@ describe('eight versioned management cases', () => {
     expect(artifact.catheter.position).toBe('wedge')
   })
 
+  it('keeps related cases mechanistically distinct and uses defensible scenario endpoints', () => {
+    const relatedCases = ['HD-03', 'HD-04', 'HD-05', 'HD-06'].map(
+      (caseId) => hemodynamicCaseById.get(caseId)!,
+    )
+    expect(new Set(relatedCases.map((definition) => definition.correctMechanismId)).size).toBe(4)
+    expect(new Set(relatedCases.map((definition) => definition.correctPriorityId)).size).toBe(4)
+
+    expect(hemodynamicCaseById.get('HD-02')?.unsafeInterventionIds).toContain('fluid-250')
+    expect(
+      hemodynamicCaseById
+        .get('HD-04')
+        ?.successCriteria.some((criterion) => criterion.metric === 'meanPapMmHg'),
+    ).toBe(false)
+    for (const caseId of ['HD-03', 'HD-06']) {
+      expect(
+        hemodynamicCaseById
+          .get(caseId)
+          ?.successCriteria.find((criterion) => criterion.metric === 'pawpMmHg')?.value,
+      ).toBe(18)
+    }
+  })
+
+  it('records complete provenance for the two high-use reference sources', () => {
+    const sepsis = hemodynamicsSourceById.get('ssc-sepsis-2026')
+    expect(sepsis?.citation).toMatch(/Prescott.*Crit Care Med.*7075/i)
+    expect(sepsis?.url).toMatch(/surviving-sepsis-campaign.*2026/i)
+
+    const waveformText = hemodynamicsSourceById.get('clinical-hemodynamics-waveforms')
+    expect(waveformText?.year).toBe(2025)
+    expect(waveformText?.citation).toMatch(/3rd ed.*15–49.*00002-2/i)
+  })
+
   it.each(hemodynamicCases.map((definition, index) => [definition.id, index] as const))(
     '%s has at least one no-critical-error mastery path',
     (_caseId, index) => {

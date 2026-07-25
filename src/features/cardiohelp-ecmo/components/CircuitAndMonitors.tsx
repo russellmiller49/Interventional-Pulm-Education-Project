@@ -71,7 +71,7 @@ function CircuitSchematic({
   } Q${returnPortX} 540 ${returnPortX} 512 V455`
   const circuitDescription = `${supportModeLabel} ECMO blood drains through a femoral venous cannula and the pVen pressure zone into a centrifugal pump. Pump outflow passes pInt, a pre-oxygenator access point, and the membrane oxygenator. Oxygenated blood then passes pArt and the flow and bubble sensor before returning through the ${returnVesselLabel} toward the ${returnDestinationLabel}.${
     isVa
-      ? ' Native cardiac ejection, the approximate mixing region, right-arm monitoring, and the need for separate distal-limb assessment are also shown.'
+      ? ' Native cardiac ejection, the approximate mixing region, right-arm monitoring, and the need for a separate distal-limb review are also shown.'
       : ' Both cannulas remain in the venous circulation and systemic flow still depends on the native heart.'
   } The pump uses a center-inlet to tangential-outflow schematic. In the oxygenator, blood is shown moving around simplified hollow fibers while sweep gas moves through them. Static arrows show direction. Moving dashes show simulated blood motion when circuit flow is present. Component geometry is conceptual rather than device-exact.`
   const resistancePattern = !diagnosisRevealed
@@ -641,9 +641,9 @@ function CircuitSchematic({
             </strong>
             <span>
               {startupInspectionCompleted
-                ? 'Self-test passed and the circuit inspection is recorded. Advance simulation time, then reassess device, circuit/gas, and patient response.'
+                ? 'The startup diagnostic and circuit inspection are recorded. Advance simulation time, then reassess device, circuit/gas, and patient response.'
                 : state.scenario.activeFaults.length > 0
-                  ? 'The inspection is recorded, but it does not automatically correct the separate active scenario cause. Continue targeted troubleshooting.'
+                  ? 'The inspection is recorded, but it does not automatically resolve the separate active scenario cause. Continue targeted troubleshooting.'
                   : 'The inspection is recorded. Continue with device, circuit/gas, and patient reassessment.'}
             </span>
           </div>
@@ -991,7 +991,7 @@ function PatientMonitor({
       <p className={styles.monitorReminder}>
         {state.supportMode === 'va'
           ? 'Circuit pArt is post-oxygenator circuit pressure—not patient arterial pressure. Reassess right-arm oxygenation, pulsatility, native heart and lung function, systemic and cannulated-limb perfusion, circuit, and laboratory data together.'
-          : 'Console values are not a complete clinical assessment. Reassess the patient, circuit, independent monitor, and laboratory data together.'}
+          : 'Console values are not a complete clinical picture. Reassess the patient, circuit, independent monitor, and laboratory data together.'}
       </p>
     </section>
   )

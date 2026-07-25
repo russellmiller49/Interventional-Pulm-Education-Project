@@ -3,19 +3,24 @@
 import type { ReactNode } from 'react'
 
 import type { CriticalCareActivityMode, CriticalCareActivityPhase } from '../activity'
+import { AssumedConceptStrip } from '@/features/critical-care/components/AssumedConceptStrip'
 import { ActivityChrome, type ActivityLayout } from './ActivityChrome'
 import { CaseWorkspaceFrame } from './CaseWorkspaceFrame'
 import { DidacticLessonFrame } from './DidacticLessonFrame'
 import { GuidedLabFrame } from './GuidedLabFrame'
 import { NativeWorkbenchFrame } from './NativeWorkbenchFrame'
+import styles from './learning-module-v2.module.css'
 
 export interface ActivityShellProps {
   readonly breadcrumb: ReactNode
   readonly activityTitle: string
+  readonly activityId?: string
+  readonly assumedConceptIds?: readonly string[]
   readonly phase: CriticalCareActivityPhase
   readonly mode: CriticalCareActivityMode
   readonly progressLabel: string
   readonly stepperAriaLabel?: string
+  readonly onPhaseSelect?: (phase: CriticalCareActivityPhase) => void
   readonly patientContext: ReactNode
   readonly viewport: ReactNode
   readonly currentTask: ReactNode
@@ -32,10 +37,13 @@ export interface ActivityShellProps {
 export function ActivityShell({
   breadcrumb,
   activityTitle,
+  activityId,
+  assumedConceptIds = [],
   phase,
   mode,
   progressLabel,
   stepperAriaLabel,
+  onPhaseSelect,
   patientContext,
   viewport,
   currentTask,
@@ -83,6 +91,7 @@ export function ActivityShell({
       mode={mode}
       progressLabel={progressLabel}
       stepperAriaLabel={stepperAriaLabel}
+      onPhaseSelect={onPhaseSelect}
       bottomContent={bottomContent}
       secondaryActions={secondaryActions}
       onSaveAndExit={onSaveAndExit}
@@ -92,7 +101,12 @@ export function ActivityShell({
       theme={theme}
       maskedAssessment={maskedAssessment}
     >
-      {frame}
+      <div className={styles.activityFrameStack}>
+        {activityId && assumedConceptIds.length > 0 ? (
+          <AssumedConceptStrip activityId={activityId} conceptIds={assumedConceptIds} />
+        ) : null}
+        {frame}
+      </div>
     </ActivityChrome>
   )
 }

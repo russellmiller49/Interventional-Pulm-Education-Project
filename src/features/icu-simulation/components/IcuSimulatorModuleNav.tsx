@@ -15,7 +15,7 @@ const moduleSections: readonly {
   { id: 'overview', label: 'Overview', href: '/icu-simulation' as Route },
   { id: 'learn', label: 'Learn', href: '/icu-simulation/learn' as Route },
   { id: 'practice', label: 'Practice', href: '/icu-simulation/practice' as Route },
-  { id: 'assess', label: 'Assess', href: '/icu-simulation/assess' as Route },
+  { id: 'assess', label: 'Challenge', href: '/icu-simulation/assess' as Route },
   { id: 'sandbox', label: 'Sandbox', href: '/icu-simulation/sandbox' as Route },
 ]
 

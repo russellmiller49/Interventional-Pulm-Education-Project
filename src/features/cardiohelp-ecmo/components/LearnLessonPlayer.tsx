@@ -332,9 +332,6 @@ export function LearnLessonPlayer({
   const activeUnitNumber = activeUnit
     ? trackUnits.findIndex((unit) => unit.id === activeUnit.id) + 1
     : null
-  const unitCompletedCount = activeUnit
-    ? activeUnit.lessonScenarioIds.filter((scenarioId) => completedLessonIds.has(scenarioId)).length
-    : 0
   const nextLessonUnitId = nextLesson
     ? unitIdByLessonScenarioId.get(nextLesson.scenarioId)
     : undefined
@@ -347,8 +344,6 @@ export function LearnLessonPlayer({
     : null
   const pairedCaseId = pairedCaseIdsForLesson(lesson.scenarioId)[0]
   const pairedCase = pairedCaseId ? clinicalPracticeScenarioById.get(pairedCaseId) : undefined
-  const percentComplete = Math.round((completedStepIds.size / lesson.steps.length) * 100)
-
   const simulatorSnapshot = useMemo(
     () => ({
       time: state.simulationTime,
@@ -472,10 +467,7 @@ export function LearnLessonPlayer({
             <span className={styles.kicker}>{state.supportMode.toUpperCase()} Learn pathway</span>
             <h2 id="learn-lessons-heading">Guided lessons</h2>
           </div>
-          <span>
-            {modeLessons.filter((item) => completedLessonIds.has(item.scenarioId)).length}/
-            {modeLessons.length} completed
-          </span>
+          <span>Choose any lesson</span>
         </div>
         <label>
           Lesson
@@ -496,7 +488,7 @@ export function LearnLessonPlayer({
                     return (
                       <option key={item.id} value={item.scenarioId}>
                         {globalIndex + 1}. {item.title}
-                        {completedLessonIds.has(item.scenarioId) ? ' · completed' : ''}
+                        {completedLessonIds.has(item.scenarioId) ? ' · worked through' : ''}
                       </option>
                     )
                   })}
@@ -529,7 +521,7 @@ export function LearnLessonPlayer({
           {activeUnit && activeUnitNumber
             ? `Unit ${activeUnitNumber} · ${activeUnit.title} — `
             : ''}
-          Lesson {lessonIndex + 1} of {modeLessons.length} · unscored
+          Guided lesson
         </div>
         <h2>{lesson.title}</h2>
         <ul>
@@ -539,18 +531,7 @@ export function LearnLessonPlayer({
             </li>
           ))}
         </ul>
-        <div className={styles.learnProgress}>
-          <span>Lesson progress</span>
-          <strong>{percentComplete}%</strong>
-          <div
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={percentComplete}
-          >
-            <i style={{ width: `${percentComplete}%` }} />
-          </div>
-        </div>
+        <p className={styles.learnProgress}>Work through the sequence at your own pace.</p>
       </section>
 
       <nav className={styles.guidedStepper} aria-label="Lesson steps">
@@ -591,9 +572,7 @@ export function LearnLessonPlayer({
           aria-atomic="true"
         >
           <div className={styles.guidedStepMeta}>
-            <span>
-              Step {activeStepIndex + 1} of {lesson.steps.length}
-            </span>
+            <span>{phaseLabels[activeStep.phase]} focus</span>
             <span>
               <CircleDot aria-hidden="true" /> Focus: {targetLabels[activeStep.target]}
             </span>
@@ -729,18 +708,13 @@ export function LearnLessonPlayer({
         <section className={styles.guidedCompletion} role="status" aria-live="polite">
           <ListChecks aria-hidden="true" />
           <div>
-            <h3>Lesson complete</h3>
+            <h3>Lesson worked through</h3>
             <p>
               {pairedCase
-                ? 'The reasoning sequence has been demonstrated. Apply it to the paired clinical case in Practice—scored, from a clean state, with no step-by-step cues.'
+                ? 'The reasoning sequence has been demonstrated. Apply it to the paired clinical case in Practice from a clean state with fewer step-by-step cues.'
                 : 'The reasoning sequence has been demonstrated. Continue to the next lesson to keep building the track.'}
             </p>
-            {activeUnit ? (
-              <small>
-                Unit {activeUnitNumber} · {activeUnit.title}: {unitCompletedCount}/
-                {activeUnit.lessonScenarioIds.length} lessons complete
-              </small>
-            ) : null}
+            {activeUnit ? <small>Continue within {activeUnit.title} whenever useful.</small> : null}
             <div>
               {pairedCase ? (
                 <button type="button" onClick={() => onTryPractice(pairedCase.id)}>

@@ -425,10 +425,6 @@ function refreshMeasurements(state: VentilationSimulationState): VentilationSimu
   }
 }
 
-function canChangeTherapy(state: VentilationSimulationState): boolean {
-  return state.experience === 'learn' || state.prediction.committed
-}
-
 function performConsoleHold(
   state: VentilationSimulationState,
   hold: 'inspiratory' | 'expiratory',
@@ -491,7 +487,7 @@ export function ventilationSimulationReducer(
     return { ...state, ventilator: { ...state.ventilator, screen: action.screen } }
   }
   if (action.type === 'SELECT_MODE') {
-    if (!canChangeTherapy(state) || state.ventilator.locked) return state
+    if (state.ventilator.locked) return state
     const descriptor = getVentilatorDeviceProfile(state.deviceId).modes.find(
       (candidate) => candidate.id === action.mode,
     )
@@ -509,7 +505,7 @@ export function ventilationSimulationReducer(
     }
   }
   if (action.type === 'CONFIRM_MODE') {
-    if (!canChangeTherapy(state) || state.ventilator.locked || !state.ventilator.pendingMode) {
+    if (state.ventilator.locked || !state.ventilator.pendingMode) {
       return state
     }
     const currentRate = deriveEffectiveVentilationRate(
@@ -534,7 +530,7 @@ export function ventilationSimulationReducer(
     })
   }
   if (action.type === 'SET_CONTROL') {
-    if (!canChangeTherapy(state) || state.ventilator.locked) return state
+    if (state.ventilator.locked) return state
     const settings = updateVentilatorControl(
       state.ventilator.settings,
       action.control,
@@ -583,7 +579,6 @@ export function ventilationSimulationReducer(
     }
   }
   if (action.type === 'OXYGEN_ENRICHMENT') {
-    if (!canChangeTherapy(state)) return state
     return {
       ...state,
       ventilator: { ...state.ventilator, oxygenEnrichmentUntil: state.simulationTime + 120 },
@@ -591,7 +586,6 @@ export function ventilationSimulationReducer(
     }
   }
   if (action.type === 'MANUAL_BREATH') {
-    if (!canChangeTherapy(state)) return state
     return {
       ...state,
       ventilator: { ...state.ventilator, manualBreathUntil: state.simulationTime + 1 },
@@ -599,7 +593,6 @@ export function ventilationSimulationReducer(
     }
   }
   if (action.type === 'PERFORM_HOLD') {
-    if (!canChangeTherapy(state)) return state
     return performConsoleHold(state, action.hold)
   }
   if (action.type === 'COMMIT_PREDICTION') {
@@ -613,13 +606,10 @@ export function ventilationSimulationReducer(
         responseId: action.responseId,
       },
       phase: 'act',
-      lastResponse: 'Prediction committed. Ventilator and bedside actions are now available.',
+      lastResponse: 'Initial frame recorded for comparison with the observed response.',
     }
   }
   if (action.type === 'PERFORM_INTERVENTION') {
-    if (!canChangeTherapy(state)) {
-      return { ...state, lastResponse: 'Commit your prediction before intervening.' }
-    }
     return applyIntervention(state, caseDefinition(state), action.interventionId)
   }
   if (action.type === 'USE_HINT') {
@@ -650,7 +640,6 @@ export function ventilationSimulationReducer(
     }
   }
   if (action.type === 'REVEAL_DEBRIEF') {
-    if (!state.reassessment.committed && state.experience === 'practice') return state
     return { ...state, phase: 'debrief', paused: true }
   }
   if (action.type === 'TOGGLE_EDUCATOR_OVERLAY') {

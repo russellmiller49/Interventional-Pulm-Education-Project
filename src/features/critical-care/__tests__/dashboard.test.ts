@@ -55,8 +55,8 @@ describe('critical-care dashboard derivation', () => {
     expect(dashboard.audienceState).toBe('new')
     expect(dashboard.resume).toBeNull()
     expect(dashboard.recommendation).toMatchObject({
-      activity: { id: 'hemodynamics:learn:pac-signal-validation' },
-      href: '/icu-hemodynamics/learn?activity=pac-signal-validation',
+      activity: { id: 'hemodynamics:learn:catheter-advancement' },
+      href: '/icu-hemodynamics/learn?activity=catheter-advancement',
     })
     expect(dashboard.modules).toHaveLength(4)
     expect(dashboard.pathways).toHaveLength(5)
@@ -155,7 +155,7 @@ describe('critical-care dashboard derivation', () => {
 
     expect(dashboard.audienceState).toBe('incompatible')
     expect(dashboard.issueCount).toBe(1)
-    expect(dashboard.recommendation?.activity.id).toBe('hemodynamics:learn:pac-signal-validation')
+    expect(dashboard.recommendation?.activity.id).toBe('hemodynamics:learn:catheter-advancement')
   })
 
   it('calculates module states and pathway milestones only from explicit completion', () => {

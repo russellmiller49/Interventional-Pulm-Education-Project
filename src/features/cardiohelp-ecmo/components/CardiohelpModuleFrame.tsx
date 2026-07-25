@@ -64,13 +64,13 @@ export function CardiohelpModuleFrame({
           safetyNotice={
             <>
               <strong>
-                Professional education only—not a clinical device, digital twin, certification, or
+                Professional education only—not a clinical device, digital twin, credential, or
                 patient-specific guide.
               </strong>{' '}
               <span>
                 This independent educational module is not manufactured, sponsored, or endorsed by
                 Getinge. Follow current manufacturer instructions, ELSO guidance, local protocols,
-                hands-on competency requirements, and supervised multidisciplinary judgment. All
+                hands-on supervised-performance requirements, and multidisciplinary judgment. All
                 physiologic values are simulated.
               </span>
             </>

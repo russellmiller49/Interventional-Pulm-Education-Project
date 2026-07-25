@@ -45,7 +45,7 @@ describe('mechanical ventilation sequential setup', () => {
     fireEvent.click(screen.getByRole('button', { name: /Continue to cases/i }))
     expect(screen.getByRole('heading', { name: 'Choose one clean case.' })).toBeInTheDocument()
 
-    const caseLinks = screen.getAllByRole('link', { name: 'Start practice attempt' })
+    const caseLinks = screen.getAllByRole('link', { name: 'Start practice run' })
     expect(caseLinks).toHaveLength(15)
     expect(caseLinks[0]).toHaveAttribute(
       'href',
@@ -53,15 +53,15 @@ describe('mechanical ventilation sequential setup', () => {
     )
   })
 
-  it('draws the masked assessment only after the console is locked', async () => {
+  it('opens the locally varied challenge after the console is fixed', async () => {
     jest.spyOn(Date, 'now').mockReturnValue(1_721_670_000_000)
     render(<MechanicalVentilationAssessSetupV2 />)
 
     await waitFor(() => expect(screen.getByRole('button', { name: /Dräger Evita/i })).toBeVisible())
     fireEvent.click(screen.getByRole('button', { name: /Dräger Evita/i }))
-    expect(screen.queryByRole('button', { name: /Draw seeded case/i })).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /Lock console/i }))
-    fireEvent.click(screen.getByRole('button', { name: /Draw seeded case and begin/i }))
+    expect(screen.queryByRole('button', { name: /Open challenge/i })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Keep this console/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Open challenge/i }))
 
     expect(readProgress().lastDeviceId).toBe('drager-evita-v800-v600')
     expect(push).toHaveBeenCalledWith(

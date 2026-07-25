@@ -40,7 +40,7 @@ export function CrrtCalibrationPanel({
       </summary>
       <p>
         This panel exists only in development. It exposes synthetic calibration and deterministic
-        engine state for reviewers; it is not learner guidance or a clinical reference.
+        model state for reviewers; it is not learner guidance or a clinical reference.
       </p>
 
       <div className={styles.calibrationGrid}>
@@ -54,7 +54,7 @@ export function CrrtCalibrationPanel({
               <dd>{state.scenario.fixtureId ?? 'unloaded'}</dd>
             </div>
             <div>
-              <dt>Seed / attempt</dt>
+              <dt>Variation / run</dt>
               <dd>
                 {state.seed} / {attempt}
               </dd>
@@ -64,7 +64,7 @@ export function CrrtCalibrationPanel({
               <dd>{state.simulationTimeSeconds} s</dd>
             </div>
             <div>
-              <dt>Engine / content</dt>
+              <dt>Model / content</dt>
               <dd>
                 {state.engineVersion} / {state.contentVersion}
               </dd>

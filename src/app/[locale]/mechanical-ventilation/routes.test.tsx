@@ -217,19 +217,28 @@ describe('mechanical ventilation route family', () => {
     }
   })
 
-  it('lands the masked assessment catalog entry on setup without a malformed case query', async () => {
+  it('opens the stable ventilation challenge catalog entry directly', async () => {
     const assessment = criticalCareActivities.find(
       (activity) => activity.id === 'ventilation:assess:masked-seeded',
     )
     if (!assessment) throw new Error('Expected the ventilation assessment catalog entry.')
-    expect(criticalCareCatalogActivityHref(assessment)).toBe('/mechanical-ventilation/assess')
+    const href = new URL(criticalCareCatalogActivityHref(assessment), 'https://example.test')
+    expect(href.pathname).toBe('/mechanical-ventilation/assess')
+    expect(href.searchParams.get('case')).toBe('masked-seeded')
+    expect(href.searchParams.get('seed')).toBe('catalog-challenge-v1')
+    expect(href.searchParams.get('device')).toBe('hamilton-c6')
 
     render(
       await MechanicalVentilationAssessPage({
         params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve(Object.fromEntries(href.searchParams)),
       }),
     )
-    expect(screen.getByTestId('ventilation-assess-setup')).toBeInTheDocument()
-    expect(screen.getByTestId('ventilation-assess-setup')).toBeEmptyDOMElement()
+    expect(screen.getByTestId('ventilation-case')).toHaveAttribute('data-mode', 'challenge')
+    expect(screen.getByTestId('ventilation-case')).toHaveAttribute('data-section', 'assess')
+    expect(screen.getByTestId('ventilation-case')).toHaveAttribute(
+      'data-seed',
+      'catalog-challenge-v1',
+    )
   })
 })

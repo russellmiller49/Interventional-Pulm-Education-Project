@@ -147,10 +147,10 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
 
     render(<CardiohelpWorkbench section="learn" />)
     await waitFor(() => {
-      expect(screen.getByText('1/10 completed')).toBeInTheDocument()
+      expect(screen.getByText('Choose any lesson')).toBeInTheDocument()
     })
     expect(
-      screen.getByRole('option', { name: /Acute hypercapnic acidemia · completed/i }),
+      screen.getByRole('option', { name: /Acute hypercapnic acidemia · worked through/i }),
     ).toBeInTheDocument()
   })
 

@@ -41,13 +41,13 @@ export function McsModuleFrame({
           safetyNotice={
             <>
               <strong>
-                Educational model—not a clinical device, digital twin, certification, or
+                Educational model—not a clinical device, digital twin, credential, or
                 patient-specific guide.
               </strong>{' '}
               <span>
                 Use current manufacturer instructions, local policy, direct examination and imaging,
                 and the responsible shock/LVAD team. Insertion, anticoagulation dosing, device
-                selection, and operational competency are outside this lab.
+                selection, and supervised operational performance are outside this lab.
               </span>
             </>
           }
@@ -57,7 +57,7 @@ export function McsModuleFrame({
               <Languages aria-hidden="true" />
               <span>
                 <strong>Reviewed-English fallback.</strong> Localized clinical content remains
-                hidden until specialty review is complete.
+                pending until specialty review is complete.
               </span>
             </div>
           ) : null}

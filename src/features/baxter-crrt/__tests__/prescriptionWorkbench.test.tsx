@@ -155,7 +155,7 @@ describe('learner prescription workbench UI', () => {
     expect(workbench).toHaveAttribute('data-progress-write', 'learner-mode-only')
     expect(workbench).toHaveAttribute('data-persistence', 'learner-mode-only')
     expect(workbench).toHaveAttribute('data-scoring', 'tool-specific')
-    expect(workbench).toHaveAttribute('data-competency', 'none')
+    expect(workbench).not.toHaveAttribute('data-competency')
     expect(
       within(workbench).getByRole('note', { name: 'Educational calculation boundary' }),
     ).toHaveTextContent(/calculation practice.*not for patient care/i)
@@ -268,21 +268,21 @@ describe('learner prescription workbench UI', () => {
     expect(weight).toHaveValue(null)
     expect(weight).toHaveAttribute('aria-invalid', 'true')
     expect(weight).toHaveAccessibleDescription(/example weight is required/i)
-    expect(screen.getAllByText('Unavailable — correct entries')).toHaveLength(6)
+    expect(screen.getAllByText('Unavailable — revise entries')).toHaveLength(6)
     expect(screen.queryByText('2,100 mL/h')).not.toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent(
       /all calculated outputs are unavailable.*example weight/i,
     )
     expect(
-      screen.getByText(/correct every invalid entry before viewing the qualitative comparison/i),
+      screen.getByText(/revise every invalid entry before viewing the qualitative comparison/i),
     ).toBeInTheDocument()
-    expect(screen.getByText('Unavailable — correct every invalid entry.')).toBeInTheDocument()
+    expect(screen.getByText('Unavailable — revise every invalid entry.')).toBeInTheDocument()
 
     fireEvent.change(weight, { target: { value: '70' } })
     expect(weight).toHaveValue(70)
     expect(weight).not.toHaveAttribute('aria-invalid')
     expect(screen.getByText('2,100 mL/h')).toBeInTheDocument()
-    expect(screen.queryByText('Unavailable — correct entries')).not.toBeInTheDocument()
+    expect(screen.queryByText('Unavailable — revise entries')).not.toBeInTheDocument()
   })
 
   it('fails all calculated outputs closed for an invalid optional capacity', () => {
@@ -294,7 +294,7 @@ describe('learner prescription workbench UI', () => {
     expect(capacity).toHaveValue(-1)
     expect(capacity).toHaveAttribute('aria-invalid', 'true')
     expect(capacity).toHaveAccessibleDescription(/must be greater than zero/i)
-    expect(screen.getAllByText('Unavailable — correct entries')).toHaveLength(6)
+    expect(screen.getAllByText('Unavailable — revise entries')).toHaveLength(6)
     expect(screen.getByRole('status')).toHaveTextContent(/practice bag capacity/i)
   })
 
@@ -306,7 +306,7 @@ describe('learner prescription workbench UI', () => {
 
     expect(bloodFlow).toHaveValue(1e308)
     expect(bloodFlow).not.toHaveAttribute('aria-invalid')
-    expect(screen.getAllByText('Unavailable — correct entries')).toHaveLength(6)
+    expect(screen.getAllByText('Unavailable — revise entries')).toHaveLength(6)
     expect(screen.getByRole('status')).toHaveTextContent(/exceeds a finite calculation boundary/i)
   })
 

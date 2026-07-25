@@ -226,7 +226,7 @@ export function IcuPatientMonitor({
       <footer className={styles.monitorFooter}>
         <span>
           Synthetic patient{' '}
-          {concealSyntheticId ? 'assessment variant' : state.patient.syntheticPatientId} · Adult{' '}
+          {concealSyntheticId ? 'challenge variant' : state.patient.syntheticPatientId} · Adult{' '}
           {finite(state.patient.adultAgeYears, 0)} y · {finite(state.patient.weightKg, 0)} kg
         </span>
         <span>

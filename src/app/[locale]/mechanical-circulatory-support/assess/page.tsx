@@ -5,9 +5,8 @@ import { McsWorkbench } from '@/features/mechanical-circulatory-support/componen
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
 const pageMetadata: Metadata = {
-  title: 'Assess · Mechanical Circulatory Support ICU Lab',
-  description:
-    'Locked IABP, Impella, and durable-LVAD capstones with no coaching and safety-gated mastery.',
+  title: 'Challenge · Mechanical Circulatory Support ICU Lab',
+  description: 'Harder IABP, Impella, and durable-LVAD cases with causal debriefs.',
   robots: { index: false, follow: false, noarchive: true },
 }
 

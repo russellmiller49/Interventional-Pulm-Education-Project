@@ -113,13 +113,13 @@ describe('critical-care catalogs', () => {
 
   it('covers every requested source registry without importing those registries in production', () => {
     expect(sourceIds('icu-hemodynamics', 'learn')).toEqual([
-      'pac-signal-validation',
-      'pressure-system',
       'catheter-advancement',
+      'pressure-system',
       'waveform-interpretation',
       'pawp-capture',
       'thermodilution-series',
       'derived-hemodynamics',
+      'pac-signal-validation',
     ])
     expect(sourceIds('icu-hemodynamics', 'practice')).toEqual(
       hemodynamicCases.map((definition) => definition.id),
@@ -153,7 +153,9 @@ describe('critical-care catalogs', () => {
     )
     expect(sourceIds('cardiohelp-ecmo', 'assess')).toEqual(
       cardiohelpScenarios
-        .filter((definition) => definition.hiddenUntilAssessment)
+        .filter((definition) =>
+          ['vv-off-sweep-capstone', 'va-mixed-circulation-capstone'].includes(definition.id),
+        )
         .map((definition) => definition.id),
     )
     expect(sourceIds('baxter-crrt', 'learn')).toEqual(
@@ -169,11 +171,11 @@ describe('critical-care catalogs', () => {
     )
   })
 
-  it('does not expose the seeded hemodynamics case through the public assessment identity', () => {
+  it('preserves the seeded hemodynamics ID while exposing its named Challenge', () => {
     const serializedCatalog = JSON.stringify(criticalCareActivities)
 
     expect(serializedCatalog).toContain('hemodynamics:assess:masked-seeded')
-    expect(serializedCatalog).not.toContain('hemodynamics:assess:HD-07')
+    expect(serializedCatalog).toContain('HD-07 pressure-equalization challenge')
   })
 
   it('uses the query keys consumed by each rebuilt module route', () => {
@@ -197,7 +199,11 @@ describe('critical-care catalogs', () => {
     const ventilationAssessment = criticalCareActivities.find(
       (activity) => activity.id === 'ventilation:assess:masked-seeded',
     )
-    expect(ventilationAssessment?.query).toBeUndefined()
+    expect(ventilationAssessment?.query).toEqual({
+      case: 'masked-seeded',
+      seed: 'catalog-challenge-v1',
+      device: 'hamilton-c6',
+    })
   })
 
   it('parses the documented asset inventory and enforces lightweight heavy-asset alternatives', () => {

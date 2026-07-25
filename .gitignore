@@ -214,6 +214,8 @@ Thumbs.db
 /storybook-static/
 /artifacts/
 /tmp-*.bin
+/test-results/
+/playwright-report/
 
 # Podcast source media. Production playback uses the private Supabase bucket;
 # transcripts and application metadata remain tracked.
@@ -233,7 +235,16 @@ Thumbs.db
 /Pleural_effusion_simulation/**/*.h5
 /Pleural_effusion_simulation/**/*.nii
 /Pleural_effusion_simulation/**/*.nrrd
-/Critical_Care_Reference/
+
+# Private authoring corpus — copyrighted source material, never commit.
+# Keep the implementation plan and its review in version control as project documentation.
+/Critical_Care_Reference/*
+!/Critical_Care_Reference/critical-care-curriculum-plan-v5-IMPLEMENTATION.md
+!/Critical_Care_Reference/PLAN-REVIEW-2026-07-24.md
+/critical_care_references/
+**/Full_textbooks/
+**/Summary files/
+
 /updated_fistual_5_25_26/**/*.glb
 /Imports/**/*.glb
 /Imports/**/*.vtk

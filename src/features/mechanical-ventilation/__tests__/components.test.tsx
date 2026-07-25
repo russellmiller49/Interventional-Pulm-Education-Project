@@ -128,18 +128,14 @@ describe('multi-device mechanical ventilation learner interface', () => {
     expect(screen.getByText(/neonatal test-lung pathway is required/i)).toBeInTheDocument()
   })
 
-  it('requires commit-before-action in Practice and hides guided answer labels', () => {
+  it('keeps Practice actions open while hiding guided answer labels', () => {
     const definition = mechanicalVentilationCaseById.get('MV-01')!
     render(<MechanicalVentilationLab />)
     fireEvent.click(screen.getByRole('tab', { name: /Practice/i }))
 
     expect(screen.queryByText(/^Mechanism:$/i)).not.toBeInTheDocument()
-    expect(
-      screen.getByText(/Ventilator controls and bedside intervention cards unlock/i),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /Assess the patient at the bedside/i }),
-    ).toBeDisabled()
+    expect(screen.queryByText(/unlock after commitment/i)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Assess the patient at the bedside/i })).toBeEnabled()
 
     fireEvent.change(screen.getByLabelText('Suspected mechanism'), {
       target: { value: definition.correctMechanismId },
@@ -152,7 +148,7 @@ describe('multi-device mechanical ventilation learner interface', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: 'Commit prediction' }))
 
-    expect(screen.getByText(/Prediction locked/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Initial frame recorded/i).length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: /Assess the patient at the bedside/i })).toBeEnabled()
   })
 
@@ -218,7 +214,7 @@ describe('multi-device mechanical ventilation learner interface', () => {
     expect(
       screen.getByText(/8c4c65aadd7267d181c694947b9602278f511746af25001ceb220f3be09e8151/),
     ).toBeInTheDocument()
-    expect(screen.getByText('cases completed').parentElement).toHaveTextContent('0cases completed')
+    expect(screen.getByText('Personal history stays local')).toBeInTheDocument()
 
     const body = JSON.parse((global.fetch as jest.Mock).mock.calls.at(-1)![1].body as string)
     expect(body.eventPayload).toEqual({

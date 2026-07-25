@@ -1595,8 +1595,9 @@ export function validateGuidedLessonRegistry(): string[] {
   const errors: string[] = []
   const lessonIds = new Set<string>()
   const scenarioIds = new Set<string>()
+  const capstoneIds = new Set(['vv-off-sweep-capstone', 'va-mixed-circulation-capstone'])
   const eligibleScenarioIds = cardiohelpScenarios
-    .filter((scenario) => !scenario.hiddenUntilAssessment)
+    .filter((scenario) => !capstoneIds.has(scenario.id))
     .map((scenario) => scenario.id)
 
   for (const lesson of cardiohelpLearnLessons) {
@@ -1612,8 +1613,9 @@ export function validateGuidedLessonRegistry(): string[] {
     if (scenario && scenario.supportMode !== lesson.supportMode) {
       errors.push(`${lesson.id}: support mode does not match ${scenario.id}`)
     }
-    if (scenario?.hiddenUntilAssessment)
-      errors.push(`${lesson.id}: capstone must remain Practice-only`)
+    if (scenario && capstoneIds.has(scenario.id)) {
+      errors.push(`${lesson.id}: capstone must remain a standalone challenge`)
+    }
     if (!lesson.title.trim()) errors.push(`${lesson.id}: missing title`)
     if (!lesson.learningObjectives.length) errors.push(`${lesson.id}: missing objectives`)
 

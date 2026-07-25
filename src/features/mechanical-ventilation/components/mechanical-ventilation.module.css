@@ -1748,6 +1748,35 @@
   font-size: 0.63rem;
 }
 
+.challengeFeedbackControl {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid #c8d4e4;
+  color: #40506c;
+  background: #eef2f8;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.challengeFeedbackControl p {
+  margin: 0;
+}
+
+.challengeFeedbackControl label {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.challengeFeedbackControl input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--teal);
+}
+
 .workflowSection {
   padding: 1.1rem;
   border-bottom: 1px solid var(--line);
@@ -1848,6 +1877,15 @@
 .responseCallout {
   font-size: 0.75rem;
   line-height: 1.45;
+}
+
+.deferredResponseNotice {
+  padding: 0.75rem;
+  margin-top: 0.8rem;
+  border: 1px dashed #a7b5c8;
+  border-radius: 0.65rem;
+  color: #4d5c72;
+  background: #f2f5fa;
 }
 
 .guidedPrediction {

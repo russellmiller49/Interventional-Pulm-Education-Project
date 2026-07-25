@@ -16,6 +16,17 @@ function AdvancementHarness() {
   return <PacActionDock state={state} dispatch={dispatch} focus="advancement" />
 }
 
+function WedgeHarness() {
+  const definition = hemodynamicCaseById.get('HD-01')!
+  const [state, dispatch] = useReducer(icuHemodynamicsReducer, undefined, () =>
+    icuHemodynamicsReducer(createInitialHemodynamicState(definition, 'learn', 72), {
+      type: 'SET_CATHETER_POSITION',
+      position: 'pa',
+    }),
+  )
+  return <PacActionDock state={state} dispatch={dispatch} focus="wedge" />
+}
+
 describe('PAC action dock advancement semantics', () => {
   beforeEach(() => {
     Object.defineProperty(window, 'matchMedia', {
@@ -54,5 +65,21 @@ describe('PAC action dock advancement semantics', () => {
       'aria-pressed',
       'true',
     )
+  })
+
+  it('keeps the normal wedge tracing available beside both false-wedge patterns', () => {
+    render(<WedgeHarness />)
+
+    expect(
+      screen.getByRole('heading', { name: 'True wedge versus false wedge' }),
+    ).toBeInTheDocument()
+    const normalWedge = screen.getByRole('tab', { name: 'Normal wedge' })
+    expect(normalWedge).toHaveAttribute('aria-selected', 'true')
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Hybrid' }))
+    expect(screen.getByText(/mixture of pulmonary artery and wedge waveforms/i)).toBeInTheDocument()
+
+    fireEvent.click(normalWedge)
+    expect(normalWedge).toHaveAttribute('aria-selected', 'true')
   })
 })

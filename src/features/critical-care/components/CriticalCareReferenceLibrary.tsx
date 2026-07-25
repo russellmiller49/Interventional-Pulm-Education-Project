@@ -44,10 +44,6 @@ export function CriticalCareReferenceLibrary({
   readonly selectedItemId?: string
 }) {
   const referenceLibraryItems = catalog.referenceItems
-  const publicReferenceCompetencyIds = useMemo(
-    () => new Set(referenceLibraryItems.flatMap((item) => item.competencyIds)),
-    [referenceLibraryItems],
-  )
   const publicReferenceAssetTypes = useMemo(
     () =>
       [
@@ -63,7 +59,6 @@ export function CriticalCareReferenceLibrary({
   )
   const [query, setQuery] = useState('')
   const [moduleId, setModuleId] = useState('all')
-  const [competencyId, setCompetencyId] = useState('all')
   const [category, setCategory] = useState('all')
   const [assetType, setAssetType] = useState('all')
   const [deviceVersion, setDeviceVersion] = useState('all')
@@ -111,21 +106,11 @@ export function CriticalCareReferenceLibrary({
     return searched.filter(
       (item) =>
         (moduleId === 'all' || item.moduleIds.includes(moduleId)) &&
-        (competencyId === 'all' || item.competencyIds.includes(competencyId)) &&
         (category === 'all' || item.category === category) &&
         (assetType === 'all' || item.assetType === assetType) &&
         (deviceVersion === 'all' || item.deviceVersion === deviceVersion),
     )
-  }, [
-    assetType,
-    category,
-    competencyId,
-    deviceVersion,
-    fuse,
-    moduleId,
-    query,
-    referenceLibraryItems,
-  ])
+  }, [assetType, category, deviceVersion, fuse, moduleId, query, referenceLibraryItems])
 
   useEffect(() => {
     if (results.length > 0 || (!query.trim() && moduleId === 'all' && category === 'all')) {
@@ -135,7 +120,6 @@ export function CriticalCareReferenceLibrary({
     const signature = [
       queryLengthBucket(query.trim().length),
       moduleId,
-      competencyId,
       category,
       assetType,
       deviceVersion,
@@ -147,7 +131,7 @@ export function CriticalCareReferenceLibrary({
       searchCategory: criticalCareAnalyticsCategory(category),
       resultCount: 0,
     })
-  }, [assetType, category, competencyId, deviceVersion, moduleId, query, results.length])
+  }, [assetType, category, deviceVersion, moduleId, query, results.length])
 
   function toggleSaved(item: PublicCriticalCareReferenceItem) {
     const updated = toggleCriticalCareNotebookItem(
@@ -214,7 +198,7 @@ export function CriticalCareReferenceLibrary({
             className="min-h-11 w-full rounded-xl border bg-background py-2 pl-10 pr-3 text-sm"
           />
         </label>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <label className="grid gap-1 text-xs font-semibold">
             Module
             <select
@@ -228,23 +212,6 @@ export function CriticalCareReferenceLibrary({
                   {module.title}
                 </option>
               ))}
-            </select>
-          </label>
-          <label className="grid gap-1 text-xs font-semibold">
-            Competency
-            <select
-              value={competencyId}
-              onChange={(event) => setCompetencyId(event.target.value)}
-              className="min-h-11 rounded-xl border bg-background px-2 text-sm font-normal"
-            >
-              <option value="all">All competencies</option>
-              {catalog.competencies
-                .filter((competency) => publicReferenceCompetencyIds.has(competency.id))
-                .map((competency) => (
-                  <option key={competency.id} value={competency.id}>
-                    {competency.title}
-                  </option>
-                ))}
             </select>
           </label>
           <label className="grid gap-1 text-xs font-semibold">
@@ -346,12 +313,6 @@ export function CriticalCareReferenceLibrary({
                       <dt className="font-semibold">Modules</dt>
                       <dd className="mt-1 text-muted-foreground">{item.moduleIds.join(', ')}</dd>
                     </div>
-                    <div>
-                      <dt className="font-semibold">Competencies</dt>
-                      <dd className="mt-1 text-muted-foreground">
-                        {item.competencyIds.join(', ')}
-                      </dd>
-                    </div>
                     {item.deviceVersion ? (
                       <div>
                         <dt className="font-semibold">Device/version</dt>
@@ -377,7 +338,7 @@ export function CriticalCareReferenceLibrary({
                               href={related.href as Route}
                               className="inline-flex min-h-11 items-center rounded-xl border px-3 py-2 text-sm font-semibold text-primary"
                             >
-                              {related.kind === 'assessment' ? 'Open assessment' : related.title}
+                              {related.kind === 'assessment' ? 'Open challenge' : related.title}
                             </Link>
                           </li>
                         ))}

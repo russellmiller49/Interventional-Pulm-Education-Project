@@ -325,7 +325,7 @@ export const baxterCrrtLessonClinicalAnchors: Readonly<
         {
           id: 'assess-inspect-verify',
           label:
-            'Assess the patient, inspect the return catheter and line pathway, verify the detected condition is corrected, then reassess delivery',
+            'Assess the patient, inspect the return catheter and line pathway, verify the detected condition has resolved, then reassess delivery',
           rationale:
             'Acknowledgment changes message state; it does not prove that the patient or circuit cause has resolved.',
           plausibility: 'best',
@@ -346,7 +346,7 @@ export const baxterCrrtLessonClinicalAnchors: Readonly<
       ],
       correctChoiceIds: ['assess-inspect-verify'],
       explanation:
-        'Cause-first troubleshooting separates device notification from physical resolution: assess, inspect, correct under current instructions and policy, then verify delivery and recurrence.',
+        'Cause-first troubleshooting separates device notification from physical resolution: assess, inspect, address the cause under current instructions and policy, then verify delivery and recurrence.',
       evidenceIds: ['DEV-PM-008', 'DEV-PM-012', 'DEV-PM-013', 'DEV-PM-014', 'GUID-RRT-ICU-2026'],
       reviewStatus: 'sme-review',
     }),
@@ -371,7 +371,7 @@ export const baxterCrrtLessonClinicalAnchors: Readonly<
       itemType: 'reassessment',
       contextRequirement: 'patient',
       clinicalContextId: 'crrt-anchor-fluid-liberation',
-      stem: 'The machine removed 100 mL/h, but medication carriers, nutrition, boluses, urine, drains, and downtime varied. Which assessment best supports a liberation decision?',
+      stem: 'The machine removed 100 mL/h, but medication carriers, nutrition, boluses, urine, drains, and downtime varied. Which review best supports a liberation decision?',
       choices: [
         {
           id: 'whole-patient-and-indication',

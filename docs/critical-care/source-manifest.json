@@ -1,0 +1,151 @@
+{
+  "version": 1,
+  "generatedOn": "2026-07-24",
+  "scopeNote": "Metadata only. Private source documents are not distributed in this repository.",
+  "sources": [
+    {
+      "doc_id": "arterial-pressure-five-step-2020",
+      "title": "How to measure blood pressure using an arterial catheter: a systematic 5-step approach",
+      "edition_year": "2020",
+      "publisher": "Critical Care",
+      "isbn_doi": "10.1186/s13054-020-02859-w",
+      "sha256": null,
+      "source_type": "journal",
+      "rights_status": "linked-publication-metadata-only",
+      "review_status": "sme-review",
+      "verified_on": "2026-07-24"
+    },
+    {
+      "doc_id": "esicm-shock-2025",
+      "title": "ESICM guidance on circulatory shock and hemodynamic monitoring",
+      "edition_year": "2025",
+      "publisher": "European Society of Intensive Care Medicine",
+      "isbn_doi": null,
+      "sha256": null,
+      "source_type": "guideline",
+      "rights_status": "linked-publication-metadata-only",
+      "review_status": "sme-review",
+      "verified_on": "2026-07-24"
+    },
+    {
+      "doc_id": "edwards-swan-ganz-ifu-2023",
+      "title": "Swan-Ganz IQ pulmonary artery catheter instructions for use",
+      "edition_year": "DOC-0222632A (2023)",
+      "publisher": "Edwards Lifesciences",
+      "isbn_doi": null,
+      "sha256": null,
+      "source_type": "IFU",
+      "rights_status": "linked-manufacturer-document-metadata-only",
+      "review_status": "sme-review",
+      "verified_on": "2026-07-24"
+    },
+    {
+      "doc_id": "tobin-3e-monitoring",
+      "title": "Principles and Practice of Mechanical Ventilation: Monitoring",
+      "edition_year": "3rd edition (2013)",
+      "publisher": "McGraw-Hill",
+      "isbn_doi": null,
+      "sha256": null,
+      "source_type": "chapter",
+      "rights_status": "owner-licensed-private-authoring-source",
+      "review_status": "sme-review",
+      "verified_on": "2026-07-24"
+    },
+    {
+      "doc_id": "ishlt-hfsa-acute-mcs-2023",
+      "title": "ISHLT/HFSA Guideline on Acute Mechanical Circulatory Support",
+      "edition_year": "2023",
+      "publisher": "Journal of Heart and Lung Transplantation",
+      "isbn_doi": null,
+      "sha256": null,
+      "source_type": "guideline",
+      "rights_status": "linked-publication-metadata-only",
+      "review_status": "sme-review",
+      "verified_on": "2026-07-24"
+    },
+    {
+      "doc_id": "ifu-us-2025-scope",
+      "title": "CARDIOHELP-i Instructions for Use, United States",
+      "edition_year": "Revision 2.3 (2025)",
+      "publisher": "Getinge",
+      "isbn_doi": null,
+      "sha256": null,
+      "source_type": "IFU",
+      "rights_status": "linked-manufacturer-document-metadata-only",
+      "review_status": "draft",
+      "verified_on": "2026-07-24"
+    },
+    {
+      "doc_id": "elso-circuit-2022",
+      "title": "ELSO Guidelines for Adult and Pediatric Extracorporeal Membrane Oxygenation Circuits",
+      "edition_year": "2022",
+      "publisher": "ASAIO Journal",
+      "isbn_doi": null,
+      "sha256": null,
+      "source_type": "guideline",
+      "rights_status": "linked-publication-metadata-only",
+      "review_status": "draft",
+      "verified_on": "2026-07-24"
+    },
+    {
+      "doc_id": "PRISMAX-AW8035-RB",
+      "title": "PrisMax Operator's Manual",
+      "edition_year": "AW8035 Rev B JUN2019",
+      "publisher": "Baxter",
+      "isbn_doi": null,
+      "sha256": "204543b8c205e535cb9d45c970b8231362839177f3795b6164edcef3b834f1ff",
+      "source_type": "IFU",
+      "rights_status": "owner-licensed-private-authoring-source",
+      "review_status": "sme-review",
+      "verified_on": "2026-07-24"
+    },
+    {
+      "doc_id": "REVIEW-CKRT-CORE-2025",
+      "title": "Continuous Kidney Replacement Therapies: Core Curriculum 2025",
+      "edition_year": "2025",
+      "publisher": "American Journal of Kidney Diseases",
+      "isbn_doi": "10.1053/j.ajkd.2024.09.015",
+      "sha256": null,
+      "source_type": "journal",
+      "rights_status": "linked-publication-metadata-only",
+      "review_status": "sme-review",
+      "verified_on": "2026-07-24"
+    },
+    {
+      "doc_id": "ICU-ESICM-SHOCK",
+      "title": "Circulatory shock and hemodynamic monitoring guidance",
+      "edition_year": "2025",
+      "publisher": "European Society of Intensive Care Medicine",
+      "isbn_doi": null,
+      "sha256": null,
+      "source_type": "guideline",
+      "rights_status": "linked-publication-metadata-only",
+      "review_status": "draft",
+      "verified_on": "2026-07-24"
+    },
+    {
+      "doc_id": "icu-hemodynamics-model-v1",
+      "title": "ICU Hemodynamics Lab educational circulation model",
+      "edition_year": "1.0.0-preview.1 (2026)",
+      "publisher": "Interventional Pulm Education Project",
+      "isbn_doi": null,
+      "sha256": null,
+      "source_type": "local-protocol",
+      "rights_status": "original-project-specification",
+      "review_status": "sme-review",
+      "verified_on": "2026-07-24"
+    },
+    {
+      "doc_id": "ICU-SCENARIO-MODEL",
+      "title": "Integrated ICU deterministic scenario model",
+      "edition_year": "2026",
+      "publisher": "Interventional Pulm Education Project",
+      "isbn_doi": null,
+      "sha256": null,
+      "source_type": "local-protocol",
+      "rights_status": "original-project-specification",
+      "review_status": "draft",
+      "verified_on": "2026-07-24"
+    }
+  ]
+}

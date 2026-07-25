@@ -27,6 +27,7 @@ import { FormulaDrawer } from './FormulaDrawer'
 import { PacActionDock } from './PacActionDock'
 import { PacSkillsLab } from './PacSkillsLab'
 import { PhysiologyPanel } from './PhysiologyPanel'
+import { ResizablePacWorkspace } from './ResizablePacWorkspace'
 import { SourcesPanel } from './SourcesPanel'
 import styles from './icu-hemodynamics.module.css'
 
@@ -176,12 +177,12 @@ export default function IcuHemodynamicsLab({ locale = 'en' }: IcuHemodynamicsLab
           <div className={styles.heroBadges}>
             <span>Adult · English-first</span>
             <span data-preview>{ICU_HEMODYNAMICS_RELEASE_STAGE.replace('-', ' ')}</span>
-            <span>50 Hz deterministic engine</span>
+            <span>50 Hz synchronized model</span>
           </div>
           <p className={styles.eyebrow}>ICU PHYSIOLOGY · PAC SKILLS · MANAGEMENT CASES</p>
           <h1>ICU Hemodynamics Lab</h1>
           <p>
-            Read the signal, build the mechanism, test a management choice, and watch pressure,
+            Read the signal, build the mechanism, explore a management choice, and watch pressure,
             flow, and catheter waveforms respond together.
           </p>
           <div className={styles.heroStats}>
@@ -194,8 +195,8 @@ export default function IcuHemodynamicsLab({ locale = 'en' }: IcuHemodynamicsLab
               <span>synchronized traces</span>
             </div>
             <div>
-              <strong>80%</strong>
-              <span>mastery + no critical error</span>
+              <strong>5</strong>
+              <span>feedback parts per action</span>
             </div>
           </div>
         </div>
@@ -282,10 +283,8 @@ export default function IcuHemodynamicsLab({ locale = 'en' }: IcuHemodynamicsLab
           </button>
         </div>
         <div className={styles.masterySummary}>
-          <strong>
-            {progress.masteredCaseIds.length}/{hemodynamicCases.length}
-          </strong>
-          <span>mastered</span>
+          <strong>Local</strong>
+          <span>personal history</span>
         </div>
       </nav>
 
@@ -293,7 +292,9 @@ export default function IcuHemodynamicsLab({ locale = 'en' }: IcuHemodynamicsLab
         <section className={styles.caseRail} aria-label="Hemodynamic cases">
           {hemodynamicCases.map((definition, index) => {
             const selected = definition.id === state.caseId
-            const mastered = progress.masteredCaseIds.includes(definition.id)
+            const workedThrough =
+              progress.masteredCaseIds.includes(definition.id) ||
+              progress.completedCaseIds.includes(definition.id)
             return (
               <button
                 key={definition.id}
@@ -304,11 +305,7 @@ export default function IcuHemodynamicsLab({ locale = 'en' }: IcuHemodynamicsLab
                 <span>{String(index + 1).padStart(2, '0')}</span>
                 <strong>{definition.shortTitle}</strong>
                 <small>
-                  {mastered
-                    ? `Mastered · ${progress.bestScores[definition.id]}%`
-                    : progress.completedCaseIds.includes(definition.id)
-                      ? `Best ${progress.bestScores[definition.id]}%`
-                      : definition.station.replaceAll('-', ' ')}
+                  {workedThrough ? 'Worked through' : definition.station.replaceAll('-', ' ')}
                 </small>
               </button>
             )
@@ -337,17 +334,18 @@ export default function IcuHemodynamicsLab({ locale = 'en' }: IcuHemodynamicsLab
         className={styles.liveWorkspace}
         aria-label="Synchronized monitor, anatomy, and PAC controls"
       >
-        <div className={styles.monitorPane} data-mobile-visible={mobileSurface === 'monitor'}>
-          <BedsideMonitor
-            state={state}
-            dispatch={dispatch}
-            onOpenCardiacOutput={openCardiacOutput}
-          />
-        </div>
-        <div className={styles.physiologyPane} data-mobile-visible={mobileSurface === 'physiology'}>
-          <PhysiologyPanel state={state} dispatch={dispatch} />
-        </div>
-        <PacActionDock state={state} dispatch={dispatch} />
+        <ResizablePacWorkspace
+          activePane={mobileSurface === 'tasks' ? 'controls' : mobileSurface}
+          monitor={
+            <BedsideMonitor
+              state={state}
+              dispatch={dispatch}
+              onOpenCardiacOutput={openCardiacOutput}
+            />
+          }
+          physiology={<PhysiologyPanel state={state} dispatch={dispatch} />}
+          controls={<PacActionDock state={state} dispatch={dispatch} />}
+        />
 
         <div className={styles.taskPane} data-mobile-visible={mobileSurface === 'tasks'}>
           {state.workspace === 'pac-skills' ? (
@@ -366,7 +364,7 @@ export default function IcuHemodynamicsLab({ locale = 'en' }: IcuHemodynamicsLab
       </section>
 
       <section className={styles.reviewGate}>
-        <span>Preview review gate</span>
+        <span>Clinical review status</span>
         <p>
           The preview badge remains until an ICU/PAC subject-matter reviewer signs off on waveform
           morphology, ranges, intervention directions, thermodilution behavior, derived equations,

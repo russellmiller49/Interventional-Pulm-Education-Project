@@ -2,11 +2,7 @@
 
 import { useState } from 'react'
 
-import {
-  waveformAtlasEntries,
-  waveformAtlasById,
-  type WaveformAtlasCategory,
-} from '../content/waveformAtlas'
+import { waveformAtlasEntries, type WaveformAtlasCategory } from '../content/waveformAtlas'
 import { WaveformAtlasFigure } from './WaveformAtlasFigure'
 import styles from './icu-hemodynamics.module.css'
 
@@ -23,18 +19,44 @@ interface WaveformAtlasPanelProps {
   readonly initialEntryId?: string
   /** Restrict the atlas to a subset, for a station that only needs part of it. */
   readonly onlyCategories?: readonly WaveformAtlasCategory[]
+  /** Restrict the atlas to specific entries while preserving the supplied order. */
+  readonly onlyEntryIds?: readonly string[]
+  /** Combine the selected entries into one explicitly labeled tab list. */
+  readonly tablistLabel?: string
   readonly heading?: string
 }
 
 export function WaveformAtlasPanel({
   initialEntryId = 'ra-normal',
   onlyCategories,
+  onlyEntryIds,
+  tablistLabel,
   heading = 'Waveform atlas',
 }: WaveformAtlasPanelProps) {
   const [selectedId, setSelectedId] = useState(initialEntryId)
   const categories = onlyCategories ?? categoryOrder
-  const visibleEntries = waveformAtlasEntries.filter((entry) => categories.includes(entry.category))
-  const selected = waveformAtlasById.get(selectedId) ?? visibleEntries[0]
+  const visibleEntries = waveformAtlasEntries
+    .filter(
+      (entry) =>
+        categories.includes(entry.category) &&
+        (onlyEntryIds === undefined || onlyEntryIds.includes(entry.id)),
+    )
+    .sort((left, right) =>
+      onlyEntryIds === undefined
+        ? 0
+        : onlyEntryIds.indexOf(left.id) - onlyEntryIds.indexOf(right.id),
+    )
+  const selected = visibleEntries.find((entry) => entry.id === selectedId) ?? visibleEntries[0]
+  if (!selected) {
+    throw new Error('WaveformAtlasPanel requires at least one visible atlas entry.')
+  }
+  const entryGroups = tablistLabel
+    ? [{ id: 'selected-entries', label: tablistLabel, entries: visibleEntries }]
+    : categories.map((category) => ({
+        id: category,
+        label: categoryLabels[category],
+        entries: visibleEntries.filter((entry) => entry.category === category),
+      }))
 
   return (
     <section className={styles.atlasPanel} aria-labelledby="waveform-atlas-heading">
@@ -45,14 +67,13 @@ export function WaveformAtlasPanel({
         </div>
       </header>
 
-      {categories.map((category) => {
-        const entries = visibleEntries.filter((entry) => entry.category === category)
-        if (entries.length === 0) return null
+      {entryGroups.map((group) => {
+        if (group.entries.length === 0) return null
         return (
-          <div key={category} className={styles.atlasCategory}>
-            <h4>{categoryLabels[category]}</h4>
-            <div className={styles.atlasTabs} role="tablist" aria-label={categoryLabels[category]}>
-              {entries.map((entry) => (
+          <div key={group.id} className={styles.atlasCategory}>
+            <h4>{group.label}</h4>
+            <div className={styles.atlasTabs} role="tablist" aria-label={group.label}>
+              {group.entries.map((entry) => (
                 <button
                   key={entry.id}
                   type="button"
@@ -83,7 +104,7 @@ export function WaveformAtlasPanel({
           </div>
           {selected.pitfall ? (
             <div className={styles.atlasPitfall}>
-              <h4>Where this goes wrong</h4>
+              <h4>How this becomes misleading</h4>
               <p>{selected.pitfall}</p>
             </div>
           ) : null}

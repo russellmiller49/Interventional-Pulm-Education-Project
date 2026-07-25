@@ -271,7 +271,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
     id: 'lvad-parameters-assessment',
     version: '1.0.0',
     device: 'lvad',
-    title: 'Durable LVAD parameters and ICU assessment',
+    title: 'Durable LVAD parameters and ICU review',
     summary: 'Interpret flow, speed, power, PI, MAP, pulsatility, and RV filling as one system.',
     objectives: [
       'Explain why displayed flow is an estimate.',
@@ -294,7 +294,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
       },
       {
         id: 'lvad-authority',
-        title: 'Use the authorized setting gate',
+        title: 'Confirm simulated authorization',
         instruction:
           'Enable the simulated authorized-personnel order before exploring a speed change.',
         rationale: 'Real settings changes require the prescribing team and current instructions.',

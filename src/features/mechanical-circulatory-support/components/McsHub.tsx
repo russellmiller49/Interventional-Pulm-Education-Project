@@ -1,18 +1,12 @@
 'use client'
 
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense } from 'react'
 import { Activity, ArrowRight, HeartPulse, ShieldCheck } from 'lucide-react'
 
 import { Link } from '@/i18n/navigation'
 import { mechanicalCirculatorySupportNavBase } from '@/features/learning-module/moduleRoutes'
 
 import { mcsDeviceProfiles, mcsLessons, mcsPracticeScenarios, mcsReleaseGates } from '../content'
-import {
-  createDefaultMcsProgress,
-  mcsProgressPercent,
-  readMcsProgress,
-  type McsProgressV1,
-} from '../engine'
 import { ImpellaVariantPreview } from './ImpellaVariantPreview'
 import { McsModuleFrame } from './McsModuleFrame'
 import { McsSourcesPanel } from './McsSourcesPanel'
@@ -26,18 +20,11 @@ const EcmoCannulationPreview = lazy(() =>
 )
 
 export function McsHub({ locale = 'en' }: { locale?: string }) {
-  const [progress, setProgress] = useState<McsProgressV1>(createDefaultMcsProgress)
-  useEffect(() => {
-    const timer = window.setTimeout(() => setProgress(readMcsProgress()), 0)
-    return () => window.clearTimeout(timer)
-  }, [])
-  const completion = mcsProgressPercent(progress)
-
   return (
     <McsModuleFrame locale={locale} activeHref={mechanicalCirculatorySupportNavBase}>
       <section className={styles.hubHero}>
         <div>
-          <span className={styles.kicker}>LEARN → PRACTICE → ASSESS</span>
+          <span className={styles.kicker}>LEARN → PRACTICE → CHALLENGE</span>
           <h1>Mechanical Circulatory Support ICU Lab</h1>
           <p>
             Make a physiologic prediction, change one bounded control, and watch anatomy, pressure,
@@ -53,19 +40,12 @@ export function McsHub({ locale = 'en' }: { locale?: string }) {
           </div>
         </div>
         <aside className={styles.progressCard} aria-label="Saved module progress">
-          <span>LOCAL PROGRESS</span>
-          <strong>{completion}%</strong>
-          <div>
-            <i style={{ width: `${completion}%` }} />
-          </div>
+          <span>PERSONAL HISTORY</span>
+          <strong>Stored locally</strong>
           <p>
-            {progress.completedLessonIds.length}/8 lessons · {progress.masteredCaseIds.length}/9
-            practice cases mastered
+            Activities you work through remain available as private revisit cues in this browser.
           </p>
-          <small>
-            Stored in this browser. Only coarse completion and score bands are eligible for
-            analytics.
-          </small>
+          <small>No ranking, comparison, or claim about what you know.</small>
         </aside>
       </section>
 
@@ -82,8 +62,8 @@ export function McsHub({ locale = 'en' }: { locale?: string }) {
         </div>
         <div>
           <ShieldCheck aria-hidden="true" />
-          <strong>80%</strong>
-          <span>mastery + no critical error</span>
+          <strong>Open</strong>
+          <span>all cases from the start</span>
         </div>
       </section>
 
@@ -113,8 +93,8 @@ export function McsHub({ locale = 'en' }: { locale?: string }) {
                   <dd>3 cases</dd>
                 </div>
                 <div>
-                  <dt>Assess</dt>
-                  <dd>1 masked capstone</dd>
+                  <dt>Challenge</dt>
+                  <dd>1 harder case</dd>
                 </div>
               </dl>
               <Link href={`${mechanicalCirculatorySupportNavBase}/learn?device=${profile.kind}`}>
@@ -211,12 +191,12 @@ export function McsHub({ locale = 'en' }: { locale?: string }) {
         </div>
       </section>
 
-      <section className={styles.reviewGate}>
-        <strong>Preview release gate</strong>
+      <section className={styles.releaseReview}>
+        <strong>Preview release review</strong>
         <p>
-          Publication remains blocked until an advanced-heart-failure/MCS physician and an ICU
-          nurse, APP, perfusionist, or clinical engineer review the clinical content, device
-          revision, model behavior, accessibility, 3D provenance, and safety boundaries.
+          Publication awaits review by an advanced-heart-failure/MCS physician and an ICU nurse,
+          APP, perfusionist, or clinical engineer covering the clinical content, device revision,
+          model behavior, accessibility, 3D provenance, and safety boundaries.
         </p>
         <details>
           <summary>Show {mcsReleaseGates.length}-item release checklist</summary>

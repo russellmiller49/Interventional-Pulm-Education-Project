@@ -15,6 +15,7 @@ import {
   rightAtrialDeviationMmHg,
   SYSTEMIC_ARTERIAL_MEAN_FRACTION,
   SYSTEMIC_ARTERIAL_SHAPE,
+  MMHG_PER_CM_H2O,
   ventricularPressureShape,
   wedgeAmplitudesFor,
   wedgeDeviationMmHg,
@@ -24,7 +25,9 @@ import {
   createInitialCirculationCompartments,
   HEMODYNAMIC_FIXED_STEP_SECONDS,
 } from '@/features/hemodynamics-core'
+import { SHARED_CRITICAL_CARE_THRESHOLDS } from '@/features/critical-care/content/sharedClinicalThresholds'
 import { PAC_ROUTE_PROGRESS } from '@/features/cardiac-anatomy/content/paths'
+import { HEMODYNAMIC_CLINICAL_THRESHOLDS } from '../content/clinicalThresholds'
 export {
   advanceWindkesselCompartments,
   createInitialCirculationCompartments,
@@ -221,20 +224,26 @@ export function deriveHemodynamicMeasurements(
   )
   const strokeVolume = (flow * 1000) / parameters.heartRateBpm
   const volumePressure = (parameters.circulatingVolumeFraction - 1) * 14
-  const rapTrue = clamp(
+  const pericardialConstraintFraction = clamp(parameters.pericardialPressureMmHg / 14, 0, 1)
+  const sharedConstrainedFillingPressure = parameters.pericardialPressureMmHg + 4
+  const unconstrainedRap =
     parameters.rightAtrialPressureSetPointMmHg +
-      volumePressure / parameters.rightVentricularCompliance +
-      parameters.pericardialPressureMmHg * 0.72 +
-      Math.max(0, parameters.pulmonaryVascularResistanceWU - 2) * 0.48 +
-      parameters.peepCmH2O * 0.16,
+    volumePressure / parameters.rightVentricularCompliance +
+    Math.max(0, parameters.pulmonaryVascularResistanceWU - 2) * 0.48 +
+    parameters.peepCmH2O * 0.16
+  const unconstrainedPawp =
+    parameters.leftAtrialPressureSetPointMmHg +
+    volumePressure / parameters.leftVentricularCompliance +
+    Math.max(0, parameters.peepCmH2O - 5) * 0.28
+  const rapTrue = clamp(
+    unconstrainedRap * (1 - pericardialConstraintFraction) +
+      sharedConstrainedFillingPressure * pericardialConstraintFraction,
     0,
     35,
   )
   const pawpTrue = clamp(
-    parameters.leftAtrialPressureSetPointMmHg +
-      volumePressure / parameters.leftVentricularCompliance +
-      parameters.pericardialPressureMmHg * 0.62 +
-      Math.max(0, parameters.peepCmH2O - 5) * 0.28,
+    unconstrainedPawp * (1 - pericardialConstraintFraction) +
+      sharedConstrainedFillingPressure * pericardialConstraintFraction,
     1,
     40,
   )
@@ -263,15 +272,21 @@ export function deriveHemodynamicMeasurements(
   papSystolic = meanPapTrue + (papSystolic - meanPapTrue) * pulsatileGain
   papDiastolic = meanPapTrue + (papDiastolic - meanPapTrue) * pulsatileGain
 
-  const hydrostaticOffset = -measurementSystem.transducerLevelCm * 0.74
+  const hydrostaticOffset = -measurementSystem.transducerLevelCm * MMHG_PER_CM_H2O
   const zeroOffset = measurementSystem.zeroed ? 0 : 5
   const offset = hydrostaticOffset + zeroOffset
   const displayedPawp =
     measurementSystem.artifact === 'false-wedge' ? meanPapTrue + 2 + offset : pawpTrue + offset
+  const rvMediatedVariation =
+    Math.max(0, 0.75 - parameters.rightVentricularContractility) * 18 +
+    Math.max(0, parameters.pulmonaryVascularResistanceWU - 4) * 1.2
   const pulseVariation = clamp(
-    4 + parameters.fluidResponsiveness * 13 + Math.abs(parameters.pleuralPressureSwingMmHg) * 0.7,
+    3 +
+      parameters.fluidResponsiveness * 11 +
+      Math.abs(parameters.pleuralPressureSwingMmHg) * 0.65 +
+      rvMediatedVariation,
     2,
-    28,
+    32,
   )
 
   return {
@@ -320,7 +335,7 @@ function pressureTransfer(
     readonly fastFlushLineType?: FastFlushLineType
   },
 ): number {
-  const hydrostaticOffset = -measurementSystem.transducerLevelCm * 0.74
+  const hydrostaticOffset = -measurementSystem.transducerLevelCm * MMHG_PER_CM_H2O
   const zeroOffset = measurementSystem.zeroed ? 0 : 5
   const catheterOnlyArtifact =
     measurementSystem.artifact === 'catheter-whip' ||
@@ -379,7 +394,7 @@ function generateWaveformSample(
   const pulseShape = arterialShape(cardiacPhase)
   const respiratorySwing = respiratoryExcursion(respiratoryPhase) * respiratoryDirection(parameters)
   const displayedOffset =
-    -measurementSystem.transducerLevelCm * 0.74 + (measurementSystem.zeroed ? 0 : 5)
+    -measurementSystem.transducerLevelCm * MMHG_PER_CM_H2O + (measurementSystem.zeroed ? 0 : 5)
   const artMean = measurements.mapMmHg - displayedOffset
   const artDiastolic = measurements.artDiastolicMmHg - displayedOffset
   const artPulsePressure = measurements.artSystolicMmHg - measurements.artDiastolicMmHg
@@ -520,26 +535,31 @@ function alarmsFor(
   balloonInflated: boolean,
   forcedSafetyRecovery: boolean,
 ): HemodynamicAlarm[] {
+  const sharedMap = SHARED_CRITICAL_CARE_THRESHOLDS.meanArterialPressure
+  const cardiacIndex = HEMODYNAMIC_CLINICAL_THRESHOLDS.cardiacIndexAlarm
   return [
     {
       id: 'low-map',
       label: 'ART MAP LOW',
-      priority: measurements.mapMmHg < 55 ? 'critical' : 'warning',
-      active: measurements.mapMmHg < 65,
+      priority: measurements.mapMmHg < sharedMap.criticalLowMmHg ? 'critical' : 'warning',
+      active: measurements.mapMmHg < sharedMap.lowMmHg,
       acknowledged: false,
     },
     {
       id: 'low-ci',
       label: 'CARDIAC INDEX LOW',
-      priority: measurements.cardiacIndexLMinM2 < 1.8 ? 'critical' : 'warning',
-      active: measurements.cardiacIndexLMinM2 < 2.2,
+      priority:
+        measurements.cardiacIndexLMinM2 < cardiacIndex.criticalLowLMinM2 ? 'critical' : 'warning',
+      active: measurements.cardiacIndexLMinM2 < cardiacIndex.lowLMinM2,
       acknowledged: false,
     },
     {
       id: 'high-pap',
       label: 'PAP HIGH',
       priority: 'warning',
-      active: measurements.meanPapMmHg > 25,
+      active:
+        measurements.meanPapMmHg >
+        HEMODYNAMIC_CLINICAL_THRESHOLDS.pulmonaryHypertension.meanPapMmHg,
       acknowledged: false,
     },
     {

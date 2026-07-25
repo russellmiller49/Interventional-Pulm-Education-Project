@@ -211,6 +211,7 @@ const nextConfig = {
   reactStrictMode: true,
   typedRoutes: true,
   output: 'standalone',
+  allowedDevOrigins: ['127.0.0.1'],
   // @react-three/xr ships modern ESM/JSX that Next's server compile must transpile.
   transpilePackages: ['@react-three/xr'],
   experimental: {

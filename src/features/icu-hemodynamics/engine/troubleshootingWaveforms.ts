@@ -1,5 +1,6 @@
 import type { ArtifactId } from '../content/troubleshootingAtlas'
 import {
+  MMHG_PER_CM_H2O,
   PULMONARY_ARTERY_SHAPE,
   pulsatilePressureShape,
   wedgeDeviationMmHg,
@@ -33,8 +34,8 @@ export const zeroLevelOptions = {
   'transducer-too-low': {
     id: 'transducer-too-low',
     label: 'Transducer 10 cm too low',
-    offsetMmHg: 7.5,
-    explanation: 'The entire tracing shifts upward by approximately 7.5 mmHg.',
+    offsetMmHg: 10 * MMHG_PER_CM_H2O,
+    explanation: 'The entire tracing shifts upward by approximately 7.4 mmHg.',
   },
   'correctly-leveled': {
     id: 'correctly-leveled',
@@ -45,8 +46,8 @@ export const zeroLevelOptions = {
   'transducer-too-high': {
     id: 'transducer-too-high',
     label: 'Transducer 10 cm too high',
-    offsetMmHg: -7.5,
-    explanation: 'The entire tracing shifts downward by approximately 7.5 mmHg.',
+    offsetMmHg: -10 * MMHG_PER_CM_H2O,
+    explanation: 'The entire tracing shifts downward by approximately 7.4 mmHg.',
   },
   'incorrect-zero': {
     id: 'incorrect-zero',
@@ -278,6 +279,20 @@ function spontaneousWedgeTransform(
   })
 }
 
+function falseWedgeTransform(
+  source: readonly TroubleshootingWaveformSample[],
+): readonly TroubleshootingWaveformSample[] {
+  return source.map((sample) => {
+    const wedge = wedgePressureMmHg(sample.cardiacPhase)
+    const residualPaFraction = 0.42
+    return {
+      ...sample,
+      pressureMmHg:
+        wedge * (1 - residualPaFraction) + sample.pressureMmHg * residualPaFraction + 2.2,
+    }
+  })
+}
+
 function overwedgingTransform(
   source: readonly TroubleshootingWaveformSample[],
 ): readonly TroubleshootingWaveformSample[] {
@@ -325,6 +340,7 @@ export const artifactTransforms = {
   'catheter-whip': catheterWhipTransform,
   'wall-contact': wallContactTransform,
   'spontaneous-wedge': spontaneousWedgeTransform,
+  'false-wedge': falseWedgeTransform,
   overwedging: overwedgingTransform,
   'zero-level': zeroLevelTransform,
 } satisfies Record<ArtifactId, ArtifactWaveformTransform>
@@ -406,7 +422,7 @@ function pressureEffectsFor(
       metricDisplay: 'unreliable',
     }
   }
-  if (id === 'spontaneous-wedge') {
+  if (id === 'spontaneous-wedge' || id === 'false-wedge') {
     return {
       effects: {
         systolic: 'measuring a different compartment',

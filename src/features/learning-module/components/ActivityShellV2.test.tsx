@@ -157,6 +157,16 @@ describe('ActivityShell V2', () => {
     expect(screen.getByRole('group', { name: 'Activity phases' })).toBeInTheDocument()
   })
 
+  it('allows authored activities to expose direct phase navigation', () => {
+    const onPhaseSelect = jest.fn()
+    render(<ActivityStepper currentPhase="recognize" onPhaseSelect={onPhaseSelect} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open Explain phase' }))
+
+    expect(onPhaseSelect).toHaveBeenCalledWith('explain')
+    expect(screen.queryByRole('button', { name: 'Open Recognize phase' })).not.toBeInTheDocument()
+  })
+
   it('withholds challenge hints while keeping guided hints keyboard operable', () => {
     const onHintRequested = jest.fn()
     const { rerender } = render(

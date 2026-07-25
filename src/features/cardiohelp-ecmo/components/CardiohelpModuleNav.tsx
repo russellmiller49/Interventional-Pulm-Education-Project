@@ -13,17 +13,17 @@ export const cardiohelpModuleNavItems: readonly ModuleNavItem[] = [
   {
     href: `${cardiohelpEcmoNavBase}/learn`,
     title: 'Learn',
-    description: 'Guided lessons · unscored',
+    description: 'Guided lessons',
   },
   {
     href: `${cardiohelpEcmoNavBase}/practice`,
     title: 'Practice',
-    description: 'Clinical cases · scored',
+    description: 'Clinical cases',
   },
   {
     href: `${cardiohelpEcmoNavBase}/assess`,
-    title: 'Assess',
-    description: 'Capstone · unlocked by lessons',
+    title: 'Challenge',
+    description: 'Harder cases · open now',
   },
 ]
 

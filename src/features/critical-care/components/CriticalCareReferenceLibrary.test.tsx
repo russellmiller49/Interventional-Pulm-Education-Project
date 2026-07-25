@@ -75,11 +75,7 @@ describe('critical-care reference and notebook', () => {
         name: 'Integrated ICU Simulator',
       }),
     ).not.toBeInTheDocument()
-    expect(
-      within(screen.getByLabelText('Competency')).queryByRole('option', {
-        name: 'ECMO circuit assessment',
-      }),
-    ).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Competency')).not.toBeInTheDocument()
     expect(
       within(screen.getByLabelText('Device/version')).queryByRole('option', {
         name: /CARDIOHELP-i/i,
@@ -105,10 +101,9 @@ describe('critical-care reference and notebook', () => {
     const save = await screen.findByRole('button', {
       name: 'Save to notebook: PAC signal-validation sequence',
     })
-    expect(screen.getAllByRole('link', { name: 'PAC signal validation' })[0]).toHaveAttribute(
-      'href',
-      '/icu-hemodynamics/learn?activity=pac-signal-validation',
-    )
+    expect(
+      screen.getAllByRole('link', { name: 'PAC signal-validation capstone' })[0],
+    ).toHaveAttribute('href', '/icu-hemodynamics/learn?activity=pac-signal-validation')
     fireEvent.click(save)
     expect(window.localStorage.getItem(CRITICAL_CARE_NOTEBOOK_STORAGE_KEY)).toContain(
       'reference:hemodynamics:signal-validation',

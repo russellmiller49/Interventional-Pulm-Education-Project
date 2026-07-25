@@ -23,10 +23,6 @@ function refresh(state: McsSimulationState): McsSimulationState {
   return advanceMcsSimulation({ ...state, score: null, completed: false }, 0)
 }
 
-function controlsLocked(state: McsSimulationState): boolean {
-  return state.scenario !== null && state.section !== 'learn' && !state.predictionCommitted
-}
-
 export function isMcsActionIdPermitted(state: McsSimulationState, actionId: string): boolean {
   if (!state.scenario) return true
   return (
@@ -40,13 +36,6 @@ function actionNotPermitted(state: McsSimulationState): McsSimulationState {
   return {
     ...state,
     responseMessage: 'That action is outside the permitted controls for this station.',
-  }
-}
-
-function lockedResponse(state: McsSimulationState): McsSimulationState {
-  return {
-    ...state,
-    responseMessage: 'Commit to a mechanism before changing patient or device controls.',
   }
 }
 
@@ -177,12 +166,6 @@ export function mcsReducer(state: McsSimulationState, action: McsAction): McsSim
     case 'SELECT_PREDICTION':
       return state.predictionCommitted ? state : { ...state, selectedPredictionId: action.id }
     case 'COMMIT_PREDICTION':
-      if (state.scenario && state.inspectedIds.length === 0) {
-        return {
-          ...state,
-          responseMessage: 'Inspect at least one signal set before committing to a mechanism.',
-        }
-      }
       if (!state.selectedPredictionId) {
         return { ...state, responseMessage: 'Choose a mechanism before committing.' }
       }
@@ -191,10 +174,9 @@ export function mcsReducer(state: McsSimulationState, action: McsAction): McsSim
         predictionCommitted: true,
         scenarioPhase: 'adjust',
         responseMessage:
-          'Prediction locked. Adjust the model, observe the coupled response, then reassess.',
+          'Initial frame recorded. Adjust the model, observe the coupled response, then reassess.',
       }
     case 'SET_RHYTHM':
-      if (controlsLocked(state)) return lockedResponse(state)
       if (!isMcsActionIdPermitted(state, 'patient:set-rhythm')) return actionNotPermitted(state)
       return refresh({
         ...addActionIds(state, 'patient:adjust', 'patient:set-rhythm'),
@@ -202,7 +184,6 @@ export function mcsReducer(state: McsSimulationState, action: McsAction): McsSim
         scenarioPhase: state.scenario ? 'observe' : state.scenarioPhase,
       })
     case 'SET_PATIENT_CONTROL': {
-      if (controlsLocked(state)) return lockedResponse(state)
       const bounds: Record<typeof action.control, readonly [number, number]> = {
         heartRateBpm: [40, 180],
         preloadPercent: [50, 145],
@@ -232,7 +213,6 @@ export function mcsReducer(state: McsSimulationState, action: McsAction): McsSim
       })
     }
     case 'SET_TAMPONADE':
-      if (controlsLocked(state)) return lockedResponse(state)
       if (!isMcsActionIdPermitted(state, 'patient:set-tamponade')) return actionNotPermitted(state)
       return refresh({
         ...addActionIds(state, 'patient:adjust', 'patient:set-tamponade'),
@@ -241,7 +221,6 @@ export function mcsReducer(state: McsSimulationState, action: McsAction): McsSim
       })
     case 'SET_IABP_CONTROL': {
       if (state.device.kind !== 'iabp') return state
-      if (controlsLocked(state)) return lockedResponse(state)
       if (!isMcsActionIdPermitted(state, iabpActionId(action.control)))
         return actionNotPermitted(state)
       const device = { ...state.device, [action.control]: action.value } as IabpDeviceState
@@ -263,7 +242,6 @@ export function mcsReducer(state: McsSimulationState, action: McsAction): McsSim
     }
     case 'SET_IMPELLA_CONTROL': {
       if (state.device.kind !== 'impella') return state
-      if (controlsLocked(state)) return lockedResponse(state)
       const side = action.side ?? 'left'
       const actionId = impellaActionId(side, action.control)
       if (!isMcsActionIdPermitted(state, actionId)) return actionNotPermitted(state)
@@ -291,7 +269,6 @@ export function mcsReducer(state: McsSimulationState, action: McsAction): McsSim
     }
     case 'SET_IMPELLA_CONFIGURATION': {
       if (state.device.kind !== 'impella') return state
-      if (controlsLocked(state)) return lockedResponse(state)
       const actionId = impellaConfigurationActionId(action.control)
       if (!isMcsActionIdPermitted(state, actionId)) return actionNotPermitted(state)
       const device: ImpellaDeviceState =
@@ -321,7 +298,6 @@ export function mcsReducer(state: McsSimulationState, action: McsAction): McsSim
     }
     case 'SET_LVAD_CONTROL': {
       if (state.device.kind !== 'lvad') return state
-      if (controlsLocked(state)) return lockedResponse(state)
       if (!isMcsActionIdPermitted(state, lvadActionId(action.control)))
         return actionNotPermitted(state)
       let criticalErrors = state.criticalErrors
@@ -354,14 +330,6 @@ export function mcsReducer(state: McsSimulationState, action: McsAction): McsSim
         responseMessage: 'Shock/MCS team escalation documented in the simulation.',
       }
     case 'REASSESS':
-      if (state.scenario && !state.predictionCommitted) return lockedResponse(state)
-      if (state.scenario && state.scenarioPhase === 'adjust') {
-        return {
-          ...state,
-          responseMessage:
-            'Make a permitted management adjustment, then observe the coupled response before reassessing.',
-        }
-      }
       return {
         ...state,
         reassessed: true,
@@ -369,12 +337,6 @@ export function mcsReducer(state: McsSimulationState, action: McsAction): McsSim
         responseMessage: `Reassessment: effective flow ${state.metrics.effectiveSystemicFlowLMin.toFixed(1)} L/min, MAP ${state.metrics.mapMmHg}, RAP ${state.metrics.rapMmHg}, PCWP ${state.metrics.pcwpMmHg} mm Hg.`,
       }
     case 'COMPLETE': {
-      if (state.scenario && !state.reassessed) {
-        return {
-          ...state,
-          responseMessage: 'Reassess the physiologic response before opening the debrief.',
-        }
-      }
       const score = calculateMcsScore(state)
       return {
         ...state,
@@ -383,8 +345,8 @@ export function mcsReducer(state: McsSimulationState, action: McsAction): McsSim
         scenarioPhase: 'debrief',
         responseMessage:
           state.criticalErrors.length > 0
-            ? `Debrief ready. Critical safety errors prevent mastery despite a ${score.total}% score.`
-            : `Debrief ready. Score: ${score.total}%.`,
+            ? 'Debrief ready. Review the safety interruption and the cues that preceded it.'
+            : 'Debrief ready. Compare your frame, actions, and observed response.',
       }
     }
   }

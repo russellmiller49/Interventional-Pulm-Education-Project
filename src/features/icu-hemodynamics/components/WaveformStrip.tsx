@@ -15,6 +15,13 @@ export interface WaveformLandmark {
   readonly placement: 'above' | 'below'
 }
 
+export interface WaveformPhaseCursor {
+  readonly time: number
+  readonly label: string
+  /** Optional pressure at the selected phase; when present, a point is placed on the trace. */
+  readonly value?: number
+}
+
 interface WaveformStripProps {
   samples: readonly HemodynamicWaveformSample[]
   field: WaveformField
@@ -33,6 +40,16 @@ interface WaveformStripProps {
   /** Numerical reference drawn across the trace, such as MAP or end-expiratory mean pressure. */
   referenceValue?: number
   referenceLabel?: string
+  /** Uses the prior field to the left of a transition marker, then the primary field. */
+  transitionFrom?: {
+    readonly field: WaveformField
+    readonly untilTime: number
+    readonly label: string
+  }
+  /** Renders an explicitly unavailable channel instead of implying a chamber waveform. */
+  unavailableMessage?: string
+  /** Phase-specific cursor, such as the shared end-expiratory cursor across ART and CVP. */
+  phaseCursor?: WaveformPhaseCursor
 }
 
 const VIEW_WIDTH = 1000
@@ -65,6 +82,9 @@ export function WaveformStrip({
   showScale = false,
   referenceValue,
   referenceLabel,
+  transitionFrom,
+  unavailableMessage,
+  phaseCursor,
 }: WaveformStripProps) {
   const gridId = useId()
 
@@ -80,20 +100,30 @@ export function WaveformStrip({
   }, [visibleSamples])
 
   const points = useMemo(() => {
-    if (visibleSamples.length < 2) return ''
+    if (unavailableMessage || visibleSamples.length < 2) return ''
     return visibleSamples
       .map((sample) => {
         const x = ((sample.time - window.first) / window.duration) * VIEW_WIDTH
-        const y = valueToY(sample[field], minimum, maximum)
+        const value =
+          transitionFrom && sample.time < transitionFrom.untilTime
+            ? sample[transitionFrom.field]
+            : sample[field]
+        const y = valueToY(value, minimum, maximum)
         return `${x.toFixed(1)},${y.toFixed(1)}`
       })
       .join(' ')
-  }, [field, maximum, minimum, visibleSamples, window])
+  }, [field, maximum, minimum, transitionFrom, unavailableMessage, visibleSamples, window])
 
   // Landmarks repeat on every beat inside the visible window. The engine derives cardiac phase
   // from time modulo the cycle length, so beat boundaries fall on multiples of the cycle.
   const placedLandmarks = useMemo(() => {
-    if (!landmarks || landmarks.length === 0 || !heartRateBpm || visibleSamples.length < 2) {
+    if (
+      unavailableMessage ||
+      !landmarks ||
+      landmarks.length === 0 ||
+      !heartRateBpm ||
+      visibleSamples.length < 2
+    ) {
       return []
     }
     const cycleSeconds = 60 / heartRateBpm
@@ -112,15 +142,37 @@ export function WaveformStrip({
           id: `${landmark.id}-${beat}`,
           label: landmark.label,
           x: ((time - window.first) / window.duration) * VIEW_WIDTH,
-          y: valueToY(nearest[field], minimum, maximum),
+          y: valueToY(
+            transitionFrom && nearest.time < transitionFrom.untilTime
+              ? nearest[transitionFrom.field]
+              : nearest[field],
+            minimum,
+            maximum,
+          ),
           placement: landmark.placement,
         })
       }
     }
     return placed
-  }, [field, heartRateBpm, landmarks, maximum, minimum, visibleSamples, window])
+  }, [
+    field,
+    heartRateBpm,
+    landmarks,
+    maximum,
+    minimum,
+    transitionFrom,
+    unavailableMessage,
+    visibleSamples,
+    window,
+  ])
 
-  const values = visibleSamples.map((sample) => sample[field])
+  const values = unavailableMessage
+    ? []
+    : visibleSamples.map((sample) =>
+        transitionFrom && sample.time < transitionFrom.untilTime
+          ? sample[transitionFrom.field]
+          : sample[field],
+      )
   const low = values.length > 0 ? Math.min(...values) : 0
   const high = values.length > 0 ? Math.max(...values) : 0
   const landmarkSummary =
@@ -131,11 +183,38 @@ export function WaveformStrip({
     referenceValue !== undefined && Number.isFinite(referenceValue)
       ? ` ${referenceLabel ?? 'Reference'} ${referenceValue.toFixed(0)} ${unit}.`
       : ''
-  const summary = `${label} waveform over ${sweepSeconds} seconds, range ${low.toFixed(1)} to ${high.toFixed(1)} ${unit}.${referenceSummary}${landmarkSummary}`
+  const transitionSummary = transitionFrom
+    ? ` The marker identifies ${transitionFrom.label}, where the displayed channel changes morphology.`
+    : ''
+  const phaseCursorSummary =
+    phaseCursor && phaseCursor.time >= window.first && phaseCursor.time <= window.last
+      ? ` ${phaseCursor.label} cursor at ${phaseCursor.time.toFixed(1)} seconds${
+          phaseCursor.value === undefined
+            ? '.'
+            : `, ${phaseCursor.value.toFixed(0)} ${unit} on the trace.`
+        }`
+      : ''
+  const summary = unavailableMessage
+    ? `${label} channel unavailable. ${unavailableMessage}`
+    : `${label} waveform over ${sweepSeconds} seconds, range ${low.toFixed(1)} to ${high.toFixed(1)} ${unit}.${referenceSummary}${landmarkSummary}${transitionSummary}${phaseCursorSummary}`
   const ticks = showScale ? scaleTicks(minimum, maximum) : []
   const referenceY =
-    referenceValue !== undefined && Number.isFinite(referenceValue)
+    !unavailableMessage && referenceValue !== undefined && Number.isFinite(referenceValue)
       ? valueToY(referenceValue, minimum, maximum)
+      : null
+  const transitionX =
+    transitionFrom &&
+    transitionFrom.untilTime >= window.first &&
+    transitionFrom.untilTime <= window.last
+      ? ((transitionFrom.untilTime - window.first) / window.duration) * VIEW_WIDTH
+      : null
+  const phaseCursorX =
+    phaseCursor && phaseCursor.time >= window.first && phaseCursor.time <= window.last
+      ? ((phaseCursor.time - window.first) / window.duration) * VIEW_WIDTH
+      : null
+  const phaseCursorY =
+    phaseCursor?.value !== undefined && Number.isFinite(phaseCursor.value)
+      ? valueToY(phaseCursor.value, minimum, maximum)
       : null
 
   return (
@@ -162,6 +241,17 @@ export function WaveformStrip({
         </defs>
         <rect width={VIEW_WIDTH} height={VIEW_HEIGHT} fill={`url(#grid-${gridId})`} />
 
+        {unavailableMessage ? (
+          <text
+            className={styles.stripUnavailable}
+            x={VIEW_WIDTH / 2}
+            y={VIEW_HEIGHT / 2}
+            textAnchor="middle"
+          >
+            {unavailableMessage}
+          </text>
+        ) : null}
+
         {referenceY !== null ? (
           <g className={styles.stripReference}>
             <line x1="0" x2={VIEW_WIDTH} y1={referenceY} y2={referenceY} />
@@ -183,6 +273,19 @@ export function WaveformStrip({
           )
         })}
 
+        {phaseCursorX !== null && phaseCursor ? (
+          <g className={styles.stripPhaseCursor}>
+            <line x1={phaseCursorX} x2={phaseCursorX} y1={TRACE_TOP} y2={TRACE_BOTTOM} />
+            <text
+              x={phaseCursorX > VIEW_WIDTH * 0.76 ? phaseCursorX - 8 : phaseCursorX + 8}
+              y={14}
+              textAnchor={phaseCursorX > VIEW_WIDTH * 0.76 ? 'end' : 'start'}
+            >
+              {phaseCursor.label}
+            </text>
+          </g>
+        ) : null}
+
         <polyline
           points={points}
           fill="none"
@@ -190,6 +293,31 @@ export function WaveformStrip({
           strokeWidth="2.2"
           vectorEffect="non-scaling-stroke"
         />
+
+        {phaseCursorX !== null && phaseCursorY !== null ? (
+          <g className={styles.stripPhaseCursorPoint}>
+            <line
+              x1={Math.max(0, phaseCursorX - 15)}
+              x2={Math.min(VIEW_WIDTH, phaseCursorX + 15)}
+              y1={phaseCursorY}
+              y2={phaseCursorY}
+            />
+            <circle cx={phaseCursorX} cy={phaseCursorY} r="4" />
+          </g>
+        ) : null}
+
+        {transitionX !== null && transitionFrom ? (
+          <g className={styles.stripTransition}>
+            <line x1={transitionX} x2={transitionX} y1={TRACE_TOP} y2={TRACE_BOTTOM} />
+            <text
+              x={transitionX > VIEW_WIDTH * 0.72 ? transitionX - 8 : transitionX + 8}
+              y={18}
+              textAnchor={transitionX > VIEW_WIDTH * 0.72 ? 'end' : 'start'}
+            >
+              {transitionFrom.label}
+            </text>
+          </g>
+        ) : null}
 
         {placedLandmarks.map((landmark) => (
           <g key={landmark.id} className={styles.stripLandmark}>

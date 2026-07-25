@@ -1,3 +1,5 @@
+import { SHARED_CRITICAL_CARE_THRESHOLDS } from '@/features/critical-care/content/sharedClinicalThresholds'
+
 import { mechanicalVentilationCaseById, mechanicalVentilationCases } from '../content/runtimeCases'
 import {
   adaptInitialSettingsForDevice,
@@ -598,10 +600,16 @@ function updateRisk(
       (measurements.intrinsicPeepCmH2O > 10 ? deltaSeconds : -deltaSeconds * 0.25),
     hypoxemia:
       risk.hypoxemia +
-      (state.patient.gasExchange.spo2Percent < 85 ? deltaSeconds : -deltaSeconds * 0.25),
+      (state.patient.gasExchange.spo2Percent <
+      SHARED_CRITICAL_CARE_THRESHOLDS.oxygenSaturation.criticalLowPercent
+        ? deltaSeconds
+        : -deltaSeconds * 0.25),
     hypotension:
       risk.hypotension +
-      (state.patient.hemodynamics.mapMmHg < 55 ? deltaSeconds : -deltaSeconds * 0.25),
+      (state.patient.hemodynamics.mapMmHg <
+      SHARED_CRITICAL_CARE_THRESHOLDS.meanArterialPressure.criticalLowMmHg
+        ? deltaSeconds
+        : -deltaSeconds * 0.25),
     excessiveSedation:
       risk.excessiveSedation +
       (state.patient.human.sedationScore <= -4 ? deltaSeconds : -deltaSeconds * 0.25),
@@ -635,10 +643,16 @@ function alarmDescriptors(
       priority: 'medium',
     })
   }
-  if (state.patient.gasExchange.spo2Percent < 85) {
+  if (
+    state.patient.gasExchange.spo2Percent <
+    SHARED_CRITICAL_CARE_THRESHOLDS.oxygenSaturation.criticalLowPercent
+  ) {
     descriptors.push({ code: 'SPO2_LOW', message: 'SpO₂ low', priority: 'high' })
   }
-  if (state.patient.hemodynamics.mapMmHg < 55) {
+  if (
+    state.patient.hemodynamics.mapMmHg <
+    SHARED_CRITICAL_CARE_THRESHOLDS.meanArterialPressure.criticalLowMmHg
+  ) {
     descriptors.push({ code: 'MAP_LOW', message: 'Patient blood pressure low', priority: 'high' })
   }
   if (m.exhaledVtMl < 250 && m.totalRatePerMin > 0) {

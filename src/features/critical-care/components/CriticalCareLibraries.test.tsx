@@ -53,7 +53,7 @@ describe('critical-care global libraries', () => {
     ).toBeInTheDocument()
   })
 
-  it('masks public assessment identities and removes their case query', () => {
+  it('keeps challenge identities visible and preserves direct case links', () => {
     render(<CriticalCareCasesLibrary catalog={catalog} />)
     fireEvent.change(screen.getByLabelText('Module'), {
       target: { value: 'icu-hemodynamics' },
@@ -62,21 +62,24 @@ describe('critical-care global libraries', () => {
       target: { value: 'assessment' },
     })
 
-    expect(screen.getByRole('heading', { name: 'Masked assessment' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', {
+        name: 'HD-07 pressure-equalization challenge',
+      }),
+    ).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Open activity' })).toHaveAttribute(
       'href',
-      '/icu-hemodynamics/assess',
+      '/icu-hemodynamics/assess?start=1',
     )
-    expect(
-      screen.queryByText(/Pressure equalization with a falling pulse pressure/),
-    ).not.toBeInTheDocument()
   })
 
-  it('labels every incomplete public pathway as Preview in progress', async () => {
+  it('presents personal history without grading-style progress', async () => {
     render(<CriticalCareProgressView catalog={catalog} />)
 
-    const previewPathways = catalog.pathways.filter((pathway) => pathway.stage === 'preview')
-    expect(previewPathways.length).toBeGreaterThan(0)
-    expect(await screen.findAllByText('Preview')).toHaveLength(previewPathways.length)
+    expect(await screen.findByRole('heading', { name: 'Where you have been' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Export JSON' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Delete local history' })).toBeInTheDocument()
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
+    expect(screen.queryByText(/% complete/i)).not.toBeInTheDocument()
   })
 })

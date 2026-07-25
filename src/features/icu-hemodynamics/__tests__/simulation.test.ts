@@ -130,6 +130,59 @@ describe('50 Hz circulation, waveforms, and measurement system', () => {
     expect(Math.abs(overdamped.mapMmHg - normal.mapMmHg)).toBeLessThanOrEqual(1)
   })
 
+  it('activates the pulmonary-hypertension alarm above a mean PAP of 20 mmHg', () => {
+    const borderlineDefinition = {
+      ...definition,
+      initialParameters: {
+        ...definition.initialParameters,
+        pulmonaryVascularResistanceWU: 6,
+      },
+      initialMeasurementSystem: {
+        ...definition.initialMeasurementSystem,
+        zeroed: true,
+        transducerLevelCm: 0,
+      },
+    }
+    const state = createInitialHemodynamicState(borderlineDefinition, 'learn', 41)
+
+    expect(state.measurements.meanPapMmHg).toBeGreaterThan(20)
+    expect(state.measurements.meanPapMmHg).toBeLessThanOrEqual(25)
+    expect(state.alarms.find((alarm) => alarm.id === 'high-pap')?.active).toBe(true)
+  })
+
+  it('converges right- and left-sided filling pressures under modeled tamponade constraint', () => {
+    const tamponadeCase = hemodynamicCases.find((candidate) => candidate.id === 'HD-07')!
+    const state = createInitialHemodynamicState(tamponadeCase, 'learn', 707)
+
+    expect(state.measurements.rapMmHg).toBe(state.measurements.pawpMmHg)
+  })
+
+  it('can generate elevated raw PPV from RV failure without fluid responsiveness', () => {
+    const rvFailureDefinition = {
+      ...definition,
+      initialParameters: {
+        ...definition.initialParameters,
+        fluidResponsiveness: 0.05,
+        rightVentricularContractility: 0.2,
+        pulmonaryVascularResistanceWU: 8,
+      },
+      initialMeasurementSystem: {
+        ...definition.initialMeasurementSystem,
+        zeroed: true,
+        transducerLevelCm: 0,
+      },
+    }
+    const state = createInitialHemodynamicState(rvFailureDefinition, 'learn', 42)
+    const meanPulsePressure =
+      (state.measurements.pulsePressureMaxMmHg + state.measurements.pulsePressureMinMmHg) / 2
+    const ppvPercent =
+      (100 * (state.measurements.pulsePressureMaxMmHg - state.measurements.pulsePressureMinMmHg)) /
+      meanPulsePressure
+
+    expect(ppvPercent).toBeGreaterThanOrEqual(13)
+    expect(state.parameters.fluidResponsiveness).toBeLessThan(0.1)
+  })
+
   it('keeps a false-wedge numerical value centered on its displayed contaminated trace', () => {
     const signalCase = hemodynamicCases.find((candidate) => candidate.id === 'HD-08')!
     const cleanFalseWedge = {

@@ -101,12 +101,13 @@ describe('MCS curriculum and evidence registry', () => {
     )
   })
 
-  it('uses distinct capstone presentations and hidden faults rather than recycling practice cases', () => {
+  it('uses distinct, openly named capstone presentations rather than recycling practice cases', () => {
     for (const capstone of mcsCapstoneScenarios) {
       expect(
         mcsPracticeScenarios.some((practice) => practice.presentation === capstone.presentation),
       ).toBe(false)
-      expect(capstone.title).toMatch(/Masked/i)
+      expect(capstone.title).toMatch(/challenge/i)
+      expect(capstone.title).not.toMatch(/masked/i)
     }
   })
 

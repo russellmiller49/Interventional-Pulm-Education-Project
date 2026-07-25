@@ -1,6 +1,6 @@
 import {
   clinicalLearningItemSchema,
-  learnerCopyReviewTerms,
+  flaggedLearnerCopyTerms,
 } from '@/features/learning-module/activity'
 
 import {
@@ -91,7 +91,7 @@ describe('mechanical-ventilation lesson recovery contracts', () => {
       const learnerCopy = [learningItem.stem, ...learningItem.choices.map((choice) => choice.label)]
         .join(' ')
         .toLowerCase()
-      expect(learnerCopyReviewTerms.filter((term) => learnerCopy.includes(term))).toEqual([])
+      expect(flaggedLearnerCopyTerms(learnerCopy)).toEqual([])
       expect(learnerCopy).not.toMatch(
         /\b(i have reviewed|i would|mark (the )?(lesson )?complete|self[- ]attest)\b/i,
       )

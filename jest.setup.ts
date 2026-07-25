@@ -1,5 +1,8 @@
 import '@testing-library/jest-dom'
+import { toHaveNoViolations } from 'jest-axe'
 import messages from './messages/en.json'
+
+expect.extend(toHaveNoViolations)
 
 function formatMessage(message: string, values?: Record<string, unknown>) {
   if (!values) {

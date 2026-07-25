@@ -36,7 +36,9 @@ describe('PressureSystemTeachingVisual', () => {
       /Confirm a pulmonary-artery waveform and a fully deflated balloon.*Never fast-flush a wedged or spontaneously wedged catheter/i,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: /Run PA-catheter fast-flush test/i }))
+    fireEvent.click(
+      screen.getByRole('button', { name: /Run PA-catheter fast-flush response check/i }),
+    )
     expect(dispatch).toHaveBeenCalledWith({
       type: 'FAST_FLUSH',
       lineType: 'pulmonary-artery',
@@ -49,7 +51,9 @@ describe('PressureSystemTeachingVisual', () => {
 
     fireEvent.click(screen.getByRole('radio', { name: /Systemic arterial line/i }))
     expect(screen.queryByRole('img', { name: /observed fast-flush release response/i })).toBeNull()
-    fireEvent.click(screen.getByRole('button', { name: /Run arterial-line fast-flush test/i }))
+    fireEvent.click(
+      screen.getByRole('button', { name: /Run arterial-line fast-flush response check/i }),
+    )
     expect(dispatch).toHaveBeenLastCalledWith({
       type: 'FAST_FLUSH',
       lineType: 'systemic-arterial',
@@ -77,18 +81,23 @@ describe('PressureSystemTeachingVisual', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(
       /current simulated catheter state does not meet this prerequisite/i,
     )
-    expect(screen.getByRole('button', { name: /Run PA-catheter fast-flush test/i })).toBeDisabled()
+    expect(
+      screen.getByRole('button', { name: /Run PA-catheter fast-flush response check/i }),
+    ).toBeDisabled()
   })
 
-  it('keeps the monitor separate from a keyboard-scrollable learning pane', () => {
+  it('exposes three keyboard-scrollable panes with accessible resize separators', () => {
     const state = createInitialHemodynamicState(hemodynamicCaseById.get('HD-01')!, 'learn', 99)
     render(<HemodynamicNativeWorkspace state={state} dispatch={jest.fn()} />)
 
     expect(screen.getByRole('region', { name: 'Mock bedside monitor' })).toBeInTheDocument()
-    expect(
-      screen.getByRole('region', {
-        name: 'Scrollable anatomy, catheter controls, and measurement labs',
-      }),
-    ).toHaveAttribute('tabindex', '0')
+    for (const name of [
+      'Monitor panel',
+      'Anatomy and pressure-reference panel',
+      'PAC controls and waveform-teaching panel',
+    ]) {
+      expect(screen.getByRole('region', { name })).toHaveAttribute('tabindex', '0')
+    }
+    expect(screen.getAllByRole('separator')).toHaveLength(2)
   })
 })

@@ -1126,7 +1126,7 @@ export function MechanicalVentilatorConsole({
               </div>
               <p className={styles.deviceNote}>
                 High-risk bedside actions are recognition-and-priority exercises only. Perform
-                procedures according to local policy and supervised competency.
+                procedures according to local policy and under appropriate supervision.
               </p>
             </div>
           ) : null}

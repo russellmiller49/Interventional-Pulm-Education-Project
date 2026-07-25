@@ -1,5 +1,5 @@
 import type { Route } from 'next'
-import { Activity, ArrowRight, Gauge, ShieldCheck, Wind, type LucideIcon } from 'lucide-react'
+import { Activity, ArrowRight, BookOpen, Gauge, Wind, type LucideIcon } from 'lucide-react'
 
 import { Link } from '@/i18n/navigation'
 
@@ -8,11 +8,11 @@ import { mechanicalVentilationLessons, ventilatorDeviceProfiles } from '../conte
 const outcomes = [
   'Read the patient, pressure, flow, volume, effort, gas exchange, and alarms as one physiologic system.',
   'Predict a mechanism and response before changing ventilator or whole-patient therapy.',
-  'Use the preserved deterministic engine to act, observe, reassess, and explain consequences.',
+  'Use the authored response model to act, observe, reassess, and explain consequences.',
 ] as const
 
 const overviewStats: readonly { icon: LucideIcon; value: string; label: string }[] = [
-  { icon: Activity, value: '15', label: 'preserved scored cases' },
+  { icon: Activity, value: '15', label: 'interactive cases' },
   {
     icon: Wind,
     value: String(ventilatorDeviceProfiles.length),
@@ -23,7 +23,7 @@ const overviewStats: readonly { icon: LucideIcon; value: string; label: string }
     value: String(mechanicalVentilationLessons.length),
     label: 'focused guided lessons',
   },
-  { icon: ShieldCheck, value: '80%', label: 'existing mastery threshold, with no critical error' },
+  { icon: BookOpen, value: 'Open', label: 'practice and challenge cases from the start' },
 ]
 
 export function MechanicalVentilationOverviewV2() {
@@ -74,7 +74,7 @@ export function MechanicalVentilationOverviewV2() {
           Learning outcomes
         </p>
         <h2 id="ventilation-outcomes-heading" className="mt-2 text-2xl font-bold">
-          Interpret, test, and reassess
+          Interpret, perturb, and reassess
         </h2>
         <ol className="mt-5 grid gap-4 md:grid-cols-3">
           {outcomes.map((outcome, index) => (
@@ -97,13 +97,13 @@ export function MechanicalVentilationOverviewV2() {
         <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
           Your preferred training console is saved in the existing ventilation progress record. Once
           a case starts, that console stays fixed. To change consoles, exit to setup; the case
-          restarts at time zero while completed-case progress and best scores remain intact.
+          restarts at time zero while your local case history remains intact.
         </p>
         <Link
           href={'/mechanical-ventilation/assess' as Route}
           className="mt-5 inline-flex min-h-11 items-center rounded-xl border px-5 py-3 text-sm font-semibold"
         >
-          Open the masked assessment
+          Open the challenge
         </Link>
       </section>
     </main>

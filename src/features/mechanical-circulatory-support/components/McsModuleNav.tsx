@@ -22,8 +22,8 @@ export const mcsModuleNavItems: readonly ModuleNavItem[] = [
   },
   {
     href: `${mechanicalCirculatorySupportNavBase}/assess`,
-    title: 'Assess',
-    description: 'Three locked capstones',
+    title: 'Challenge',
+    description: 'Three harder cases',
   },
 ] as const
 

@@ -37,21 +37,6 @@ function progressByActivityId(
   )
 }
 
-function hasCompleted(
-  activityId: string,
-  progress: ReadonlyMap<string, CriticalCareActivityProgress>,
-): boolean {
-  const status = progress.get(activityId)?.status
-  return status === 'completed' || status === 'mastered'
-}
-
-function isUnblocked(
-  activity: CriticalCareActivityDefinition,
-  progress: ReadonlyMap<string, CriticalCareActivityProgress>,
-): boolean {
-  return activity.prerequisiteActivityIds.every((id) => hasCompleted(id, progress))
-}
-
 function recommendationReason(
   activity: CriticalCareActivityDefinition,
   progress: CriticalCareActivityProgress | undefined,
@@ -80,7 +65,6 @@ export function getCriticalCareRecommendations(
     const activityProgress = progress.get(activity.id)
     const reason = recommendationReason(activity, activityProgress)
     if (!reason) return []
-    if (reason !== 'continue' && !isUnblocked(activity, progress)) return []
 
     const phaseRank = reason === 'continue' ? 0 : reason === 'next-unblocked' ? 1 : 2
     const missedMatchCount = activity.competencyIds.filter((id) =>

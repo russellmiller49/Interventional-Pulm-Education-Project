@@ -3,9 +3,8 @@ import { setRequestLocale } from 'next-intl/server'
 
 import { IcuHemodynamicsLearnLandingV2 } from '@/features/icu-hemodynamics/components/IcuHemodynamicsLearnLandingV2'
 import { IcuHemodynamicsModuleFrameV2 } from '@/features/icu-hemodynamics/components/IcuHemodynamicsModuleFrameV2'
-import { PacGuidedSkillActivity } from '@/features/icu-hemodynamics/components/PacGuidedSkillActivity'
-import { PacSignalValidationActivity } from '@/features/icu-hemodynamics/components/PacSignalValidationActivity'
-import { pacGuidedSkillIds, type PacGuidedSkillId } from '@/features/icu-hemodynamics/content'
+import { PacLearningPathwayActivity } from '@/features/icu-hemodynamics/components/PacLearningPathwayActivity'
+import { isPacLearningPathwaySectionId } from '@/features/icu-hemodynamics/content'
 import { icuHemodynamicsNavBase } from '@/features/learning-module/moduleRoutes'
 
 export const metadata: Metadata = {
@@ -25,11 +24,8 @@ export default async function IcuHemodynamicsLearnPage({ params, searchParams }:
   const activity = (await searchParams)?.activity
   setRequestLocale(locale)
 
-  if (activity === 'pac-signal-validation') {
-    return <PacSignalValidationActivity locale={locale} />
-  }
-  if (typeof activity === 'string' && (pacGuidedSkillIds as readonly string[]).includes(activity)) {
-    return <PacGuidedSkillActivity skillId={activity as PacGuidedSkillId} locale={locale} />
+  if (isPacLearningPathwaySectionId(activity)) {
+    return <PacLearningPathwayActivity initialSectionId={activity} locale={locale} />
   }
 
   return (

@@ -7,7 +7,7 @@ import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 const handoffMetadata: Metadata = {
   title: 'Practice · ECMO Management · CARDIOHELP console lab',
   description:
-    'Scored CARDIOHELP-i clinical cases: commit a plan, treat the patient and circuit, reassess, and debrief across adult VV and peripheral VA ECMO.',
+    'CARDIOHELP-i clinical cases: commit a plan, treat the patient and circuit, reassess, and debrief across adult VV and peripheral VA ECMO.',
   robots: {
     index: false,
     follow: false,

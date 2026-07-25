@@ -18,11 +18,48 @@ export const learnerCopyReviewTerms = [
   'deterministic attempt',
   'checkpoint payload',
   'simulator behavior',
+  'score',
+  'scored',
+  'points',
+  'grade',
+  'graded',
+  'percent',
+  '%',
+  'pass',
+  'passed',
+  'fail',
+  'failed',
+  'correct',
+  'incorrect',
+  'wrong',
+  'mastery',
+  'mastered',
+  'exam',
+  'test',
+  'quiz',
+  'assessment',
+  'attempt N of',
+  'X out of Y',
+  'certification',
+  'certified',
+  'competent',
+  'competency',
 ] as const
 
-function flaggedLearnerTerms(value: string): readonly string[] {
-  const normalized = value.toLowerCase()
-  return learnerCopyReviewTerms.filter((term) => normalized.includes(term))
+function escapeRegularExpression(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function learnerCopyPattern(term: (typeof learnerCopyReviewTerms)[number]): RegExp {
+  if (term === '%') return /%/
+  if (term === 'attempt N of') return /\battempt\s+\d+\s+of\b/i
+  if (term === 'X out of Y') return /\b\d+\s+out\s+of\s+\d+\b/i
+  const escaped = escapeRegularExpression(term)
+  return new RegExp(`(^|[^A-Za-z0-9])${escaped}(?=$|[^A-Za-z0-9])`, 'i')
+}
+
+export function flaggedLearnerCopyTerms(value: string): readonly string[] {
+  return learnerCopyReviewTerms.filter((term) => learnerCopyPattern(term).test(value))
 }
 
 const clinicalLearningChoiceSchema = z
@@ -111,8 +148,12 @@ export const clinicalLearningItemSchema = z
         message: 'Every correct choice must be classified as best.',
       })
     }
-    const flagged = flaggedLearnerTerms(
-      [item.stem, ...item.choices.map((choice) => choice.label)].join(' '),
+    const flagged = flaggedLearnerCopyTerms(
+      [
+        item.stem,
+        item.explanation,
+        ...item.choices.flatMap((choice) => [choice.label, choice.rationale]),
+      ].join(' '),
     )
     if (flagged.length > 0 && !item.learnerCopyOverrideReason) {
       context.addIssue({

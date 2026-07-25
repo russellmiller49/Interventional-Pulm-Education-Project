@@ -39,7 +39,7 @@ jest.mock('@/i18n/navigation', () => ({
   },
 }))
 
-describe('Baxter CRRT Practice curation and Assess gating', () => {
+describe('Baxter CRRT Practice curation and open Challenge access', () => {
   beforeEach(() => {
     window.localStorage.clear()
     mockRecordLifecycleEvent.mockClear()
@@ -101,7 +101,7 @@ describe('Baxter CRRT Practice curation and Assess gating', () => {
     ).toEqual(expect.arrayContaining(['recognize', 'predict', 'act', 'observe']))
   })
 
-  it('records Learn completion only from supported patient-application evidence', async () => {
+  it('advances after any patient-application response while preserving mechanism feedback', async () => {
     render(<BaxterCrrtLearn initialLessonId="crrt-core-concepts" />)
     const phases = screen.getByRole('group', { name: 'CRRT shared activity phases' })
 
@@ -112,17 +112,10 @@ describe('Baxter CRRT Practice curation and Assess gating', () => {
       }),
     )
     fireEvent.click(screen.getByRole('button', { name: 'Check clinical reasoning' }))
-    expect(screen.getByText('Reassess the mechanism')).toBeInTheDocument()
-    expect(screen.getByText('Evidence in progress')).toBeInTheDocument()
-    expect(readProgress().completedLessonIds).not.toContain('crrt-indications-modality')
-
-    fireEvent.click(screen.getByRole('button', { name: 'Revise answer' }))
-    fireEvent.click(
-      screen.getByRole('radio', {
-        name: /define the patient-specific solute, acid–base, and volume goals/i,
-      }),
-    )
-    fireEvent.click(screen.getByRole('button', { name: 'Check clinical reasoning' }))
+    expect(
+      screen.getByText('That mechanism would produce a different pattern from the one shown here.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Try another frame' })).toBeInTheDocument()
 
     await waitFor(() => expect(screen.getByText('Lesson evidence recorded')).toBeInTheDocument())
     expect(readProgress().completedLessonIds).toContain('crrt-indications-modality')
@@ -290,18 +283,19 @@ describe('Baxter CRRT Practice curation and Assess gating', () => {
     )
   })
 
-  it('keeps the capstone locked and links every remaining core case', async () => {
+  it('keeps the Challenge open without requiring prior case history', async () => {
     render(<BaxterCrrtAssess />)
 
-    const heading = await screen.findByRole('heading', {
-      name: 'Complete 10 remaining core cases',
-    })
-    const gate = heading.closest('section')
-    expect(gate).not.toBeNull()
-    expect(within(gate as HTMLElement).getAllByRole('link')).toHaveLength(10)
+    expect(
+      await screen.findAllByRole('heading', {
+        name: 'Recurrent filter loss across access, filtration, downtime, and policy domains',
+      }),
+    ).not.toHaveLength(0)
+    expect(screen.getByRole('note', { name: 'Challenge flow.' })).toBeInTheDocument()
+    expect(screen.queryByText(/remaining core cases|capstone locked/i)).not.toBeInTheDocument()
   })
 
-  it('unlocks only after all ten core cases are complete', async () => {
+  it('keeps the same named Challenge open when prior cases exist', async () => {
     const progress = {
       ...createDefaultProgress(),
       completedPracticeCaseIds: baxterCrrtCoreCaseIds.map((id) => id.toLowerCase()),
@@ -312,18 +306,18 @@ describe('Baxter CRRT Practice curation and Assess gating', () => {
 
     await waitFor(() =>
       expect(
-        screen.getByRole('heading', { name: 'Masked PrisMax capstone', level: 2 }),
-      ).toBeInTheDocument(),
+        screen.getAllByRole('heading', {
+          name: 'Recurrent filter loss across access, filtration, downtime, and policy domains',
+        }).length,
+      ).toBeGreaterThan(0),
     )
-    expect(screen.queryByText('Capstone locked')).not.toBeInTheDocument()
-    expect(screen.getByRole('note', { name: 'Capstone safeguards.' })).toBeInTheDocument()
+    expect(screen.getByRole('note', { name: 'Challenge flow.' })).toBeInTheDocument()
     expect(screen.getByText('Live patient, prescription, and circuit')).toBeInTheDocument()
     expect(screen.getByText('Relevant labs')).toBeInTheDocument()
     expect(screen.getByText('Pressure pattern')).toBeInTheDocument()
     const capstone = getBaxterCrrtCase('CRRT-16')
-    expect(screen.queryByText('CRRT-16')).not.toBeInTheDocument()
     for (const objective of capstone.learningObjectives) {
-      expect(screen.queryByText(objective)).not.toBeInTheDocument()
+      expect(screen.getAllByText(objective)).not.toHaveLength(0)
     }
   })
 })

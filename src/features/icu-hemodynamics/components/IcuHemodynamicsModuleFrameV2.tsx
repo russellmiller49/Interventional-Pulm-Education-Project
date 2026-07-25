@@ -7,7 +7,7 @@ import type { ModuleNavItem } from '@/features/learning-module/types'
 export const ICU_HEMODYNAMICS_SAFETY_NOTICE = (
   <>
     <strong>Educational model—not a clinical device.</strong> Values and responses are synthetic and
-    must not be used for patient-specific decisions. Use bedside assessment, validated monitoring,
+    must not be used for patient-specific decisions. Use bedside evaluation, validated monitoring,
     current institutional protocols, manufacturer instructions, and qualified clinical supervision.
   </>
 )
@@ -29,9 +29,9 @@ export const icuHemodynamicsModuleNavItems: readonly ModuleNavItem[] = [
     description: 'Eight preserved cases',
   },
   {
-    title: 'Assess',
+    title: 'Challenge',
     href: `${icuHemodynamicsNavBase}/assess`,
-    description: 'Masked capstone',
+    description: 'Harder case, less help',
   },
 ]
 
@@ -44,7 +44,7 @@ export function IcuHemodynamicsModuleFrameV2({
 }) {
   return (
     <ModuleFrameV2
-      eyebrow="Critical care · Hemodynamic assessment"
+      eyebrow="Critical care · Hemodynamic reasoning"
       title="ICU Hemodynamics Lab"
       subtitle="Signal validation, PAC technique, shock physiology, and reassessment"
       releaseLabel="Unlisted preview"

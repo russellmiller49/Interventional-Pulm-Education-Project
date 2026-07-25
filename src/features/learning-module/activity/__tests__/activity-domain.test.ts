@@ -33,6 +33,8 @@ const activity: CriticalCareActivityDefinition = {
   pathwayIds: ['shock-and-perfusion'],
   competencyIds: ['signal-validation'],
   prerequisiteActivityIds: [],
+  teachesConceptIds: ['signal-fidelity'],
+  assumedConceptIds: [],
   estimatedMinutes: 10,
   difficulty: 'foundation',
   completionRuleId: 'complete-pac-signal-validation',

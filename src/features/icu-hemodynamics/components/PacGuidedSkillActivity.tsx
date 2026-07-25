@@ -15,11 +15,13 @@ import { TaskPanel } from '@/features/learning-module/components/TaskPanel'
 import {
   authoritativeCriticalCareCompetencyEvidence,
   authoritativeCriticalCareStatus,
+  criticalCareActivityPhases,
   readCriticalCareProgress,
   upsertCriticalCareActivityProgress,
   useCriticalCareActivityAnalytics,
   withoutCriticalCareResumePointer,
   writeCriticalCareProgress,
+  type ClinicalLearningItem,
   type CriticalCareActivityPhase,
 } from '@/features/learning-module/activity'
 import { Link, useRouter } from '@/i18n/navigation'
@@ -27,7 +29,10 @@ import { Link, useRouter } from '@/i18n/navigation'
 import {
   hemodynamicCaseById,
   hemodynamicsSourceById,
+  pacAdvancementOrientationSteps,
   pacGuidedLearningItems,
+  pacLearningPathwaySections,
+  type PacLearningPathwaySectionId,
   type PacGuidedSkillId,
 } from '../content'
 import {
@@ -40,8 +45,16 @@ import {
 import { BedsideMonitor } from './BedsideMonitor'
 import { FormulaDrawer } from './FormulaDrawer'
 import { PacActionDock } from './PacActionDock'
+import { PacAdvancementOrientation } from './PacAdvancementOrientation'
+import { PacLearningPathwayViewport } from './PacLearningPathwayNav'
+import { PacSectionCompletionActions } from './PacSectionCompletionActions'
+import {
+  CardiacOutputTeachingPanel,
+  DerivedHemodynamicsTeachingPanel,
+} from './PacMeasurementTeaching'
 import { PacSkillsLab } from './PacSkillsLab'
 import { PhysiologyPanel } from './PhysiologyPanel'
+import { ResizablePacWorkspace } from './ResizablePacWorkspace'
 import { WaveformAtlasPanel } from './WaveformAtlasPanel'
 import { WaveformRecognitionDrill } from './WaveformRecognitionDrill'
 
@@ -51,6 +64,58 @@ interface PacGuidedSkillSpec {
   readonly requiredAction: string
   readonly explanation: readonly string[]
   readonly transfer: string
+}
+
+type ClinicalLearningChoice = ClinicalLearningItem['choices'][number]
+
+const plausibilityLabels: Readonly<Record<ClinicalLearningChoice['plausibility'], string>> = {
+  best: 'Best-supported interpretation',
+  'reasonable-but-incomplete': 'Reasonable but incomplete',
+  'incorrect-mechanism': 'Mechanism mismatch',
+  unsafe: 'Unsafe interpretation',
+}
+
+const likelyFrameByPlausibility: Readonly<Record<ClinicalLearningChoice['plausibility'], string>> =
+  {
+    best: 'Your frame uses the most discriminating cue in the displayed signal.',
+    'reasonable-but-incomplete':
+      'Your choice notices a real part of the pattern, but it leaves another required signal unexplained.',
+    'incorrect-mechanism':
+      'The selected cue can occur clinically, but it does not produce the morphology or measurement-system behavior shown here.',
+    unsafe:
+      'The selected interpretation could lead to action before the signal or catheter state is safe to use.',
+  }
+
+function ChoiceReasoningFeedback({
+  choice,
+  explanation,
+}: {
+  readonly choice: ClinicalLearningChoice
+  readonly explanation: string
+}) {
+  return (
+    <aside className="grid gap-2 rounded-xl border border-sky-500/30 bg-sky-500/10 p-3 text-xs leading-5">
+      <p className="font-bold text-foreground">{plausibilityLabels[choice.plausibility]}</p>
+      <dl className="grid gap-2">
+        <div>
+          <dt className="font-semibold">Why this reasoning lands here</dt>
+          <dd>{choice.rationale}</dd>
+        </div>
+        <div>
+          <dt className="font-semibold">A reasonable frame</dt>
+          <dd>{likelyFrameByPlausibility[choice.plausibility]}</dd>
+        </div>
+        <div>
+          <dt className="font-semibold">The distinguishing cue</dt>
+          <dd>{explanation}</dd>
+        </div>
+        <div>
+          <dt className="font-semibold">Next move</dt>
+          <dd>Use the visual workspace to test that interpretation against the live signal.</dd>
+        </div>
+      </dl>
+    </aside>
+  )
 }
 
 const skillSpecs: Readonly<Record<PacGuidedSkillId, PacGuidedSkillSpec>> = {
@@ -73,6 +138,7 @@ const skillSpecs: Readonly<Record<PacGuidedSkillId, PacGuidedSkillSpec>> = {
     explanation: [
       'The authored route progresses from introducer to RA, RV, and PA.',
       'Anatomic route cues support orientation, but the pressure waveform confirms each transition.',
+      'In the RA, CVP and PAC · RA are the same pressure signal. With controlled positive-pressure ventilation, read the base of the c wave at the trough of the slow respiratory swing.',
     ],
     transfer:
       'When a position is uncertain, stop advancement and re-establish a confirmed waveform.',
@@ -84,7 +150,7 @@ const skillSpecs: Readonly<Record<PacGuidedSkillId, PacGuidedSkillSpec>> = {
       'Work through the recognition drill until five tracings are correctly identified.',
     explanation: [
       'Right ventricular and pulmonary artery systolic pressures are normally identical, so the systolic number cannot distinguish them. The diastolic contour can: right ventricular diastole slopes up as the ventricle fills, and pulmonary artery diastole slopes down through runoff.',
-      'Wave components carry diagnoses. A blunted y descent points to pericardial constraint, a tall systolic c-v wave that erases the x descent points to tricuspid regurgitation, and a giant wedge v wave points to mitral regurgitation.',
+      'Wave components carry diagnoses. A blunted y descent suggests pericardial constraint, a tall systolic c-v wave that erases the x descent suggests tricuspid regurgitation, and a giant wedge v wave suggests mitral regurgitation.',
     ],
     transfer:
       'Before acting on any invasive number, confirm which chamber the waveform says the tip is in.',
@@ -102,37 +168,34 @@ const skillSpecs: Readonly<Record<PacGuidedSkillId, PacGuidedSkillSpec>> = {
       'If the PA waveform does not return, treat the signal and catheter position as unsafe.',
   },
   'thermodilution-series': {
-    title: 'Thermodilution technique and curve review',
-    objective: 'Create and accept at least three technically valid thermodilution trials.',
-    requiredAction: 'Standardize technique, review each curve, and reject poor trials.',
+    title: 'Cardiac output: thermodilution and Fick',
+    objective:
+      'Compare thermodilution with direct and indirect Fick, then create a valid thermodilution series.',
+    requiredAction:
+      'Review the method comparison, standardize technique, inspect each curve, and reject poor trials.',
     explanation: [
-      'A technically poor curve should be rejected rather than averaged into false precision.',
-      'The preserved engine calculates the accepted valid average only after adequate trials.',
+      'Thermodilution derives flow from a downstream temperature–time curve; direct Fick derives flow from measured oxygen consumption and the arterial–mixed-venous oxygen-content difference.',
+      'Indirect Fick estimates rather than measures oxygen consumption and should not be mislabeled as direct Fick.',
+      'A technically poor curve should be rejected rather than averaged into false precision. At least three acceptable thermodilution measurements form the modeled average.',
     ],
     transfer:
-      'Repeat a questionable trial with standardized technique instead of forcing agreement.',
+      'When methods disagree, audit each method’s inputs and assumptions instead of averaging unlike estimates together.',
   },
   'derived-hemodynamics': {
-    title: 'Derived values and interpretation limits',
-    objective: 'Review formulas and the validity screen for every derived value.',
-    requiredAction: 'Open the formula panel and inspect the explicit not-interpretable states.',
+    title: 'Derived hemodynamics and validity',
+    objective:
+      'Trace calculated values back to their source measurements and validity requirements.',
+    requiredAction:
+      'Review the dependency teaching, then open the formula panel and inspect the explicit not-interpretable states.',
     explanation: [
-      'Derived values inherit the validity and limitations of every input.',
+      'Derived values are equations, not independent measurements; they inherit the timing, calibration, artifact, and sampling limitations of every input.',
+      'Resistance is a pressure gradient divided by flow, so error in either pressure or cardiac output can move the result substantially.',
       'PPV remains unavailable outside the modeled rhythm, ventilation, effort, chest, waveform, and RV conditions.',
     ],
     transfer:
       'Withhold precise derived interpretation whenever a source measurement is stale or invalid.',
   },
 }
-
-const phaseOrder: readonly CriticalCareActivityPhase[] = [
-  'recognize',
-  'predict',
-  'act',
-  'observe',
-  'explain',
-  'transfer',
-]
 
 function requireCase(): NonNullable<ReturnType<typeof hemodynamicCaseById.get>> {
   const definition = hemodynamicCaseById.get('HD-01')
@@ -180,9 +243,6 @@ function addThermodilutionTrial(
 
 function predictionSkillState(skillId: PacGuidedSkillId): HemodynamicSimulationState {
   let state = actionSkillState(skillId)
-  if (skillId === 'catheter-advancement') {
-    state = icuHemodynamicsReducer(state, { type: 'SET_CATHETER_POSITION', position: 'rv' })
-  }
   if (skillId === 'thermodilution-series') {
     const validTechnique = {
       injectateVolumeMl: baseCase.thermodilution.injectateVolumeMl,
@@ -318,20 +378,10 @@ function SkillSurface({
     )
   }
   if (skillId === 'catheter-advancement') {
-    return (
-      <div className="grid gap-3">
-        <PhysiologyPanel state={state} dispatch={dispatch} />
-        <PacActionDock state={state} dispatch={dispatch} focus="advancement" />
-      </div>
-    )
+    return <PacActionDock state={state} dispatch={dispatch} focus="advancement" />
   }
   if (skillId === 'waveform-interpretation') {
-    return (
-      <>
-        <WaveformRecognitionDrill dispatch={dispatch} />
-        <WaveformAtlasPanel initialEntryId="ra-tamponade" heading="Full waveform atlas" />
-      </>
-    )
+    return <WaveformAtlasPanel initialEntryId="ra-tamponade" heading="Full waveform atlas" />
   }
   if (skillId === 'pawp-capture') {
     return <PacActionDock state={state} dispatch={dispatch} focus="wedge" />
@@ -345,17 +395,21 @@ function SkillSurface({
 export function PacGuidedSkillActivity({
   skillId,
   locale = 'en',
+  onPathwaySectionChange,
 }: {
   readonly skillId: PacGuidedSkillId
   readonly locale?: string
+  readonly onPathwaySectionChange?: (sectionId: PacLearningPathwaySectionId) => void
 }) {
   const spec = skillSpecs[skillId]
   const learningItems = pacGuidedLearningItems[skillId]
   const activityId = `hemodynamics:learn:${skillId}`
   const activity = requireActivity(activityId)
+  const sectionIndex = pacLearningPathwaySections.findIndex((section) => section.id === skillId)
+  const nextSection = pacLearningPathwaySections[sectionIndex + 1]
 
   const router = useRouter()
-  const [state, setState] = useState(() => predictionSkillState(skillId))
+  const [state, setState] = useState(() => actionSkillState(skillId))
   const [phase, setPhase] = useState<CriticalCareActivityPhase>('recognize')
   const [predictionChoiceId, setPredictionChoiceId] = useState<string | null>(null)
   const [transferChoiceId, setTransferChoiceId] = useState<string | null>(null)
@@ -488,7 +542,7 @@ export function PacGuidedSkillActivity({
         ? done
           ? 'Activity completion saved on this device.'
           : requestedDone
-            ? 'Draft review saved as in progress; no completion or competency credit was awarded.'
+            ? 'Draft review saved as in progress; it does not make a claim about clinical readiness.'
             : 'Progress saved; this activity safely resumes from its authored setup.'
         : 'Progress could not be stored on this device.',
     )
@@ -500,13 +554,45 @@ export function PacGuidedSkillActivity({
     persist(false, false, next)
   }
 
+  function selectPhase(next: CriticalCareActivityPhase) {
+    const movingForward =
+      criticalCareActivityPhases.indexOf(next) > criticalCareActivityPhases.indexOf(phase)
+    if (movingForward && next === 'predict') {
+      setState(predictionSkillState(skillId))
+      setPredictionChoiceId(null)
+    } else if (movingForward && next === 'act') {
+      setState(actionSkillState(skillId))
+    } else if (movingForward && next === 'transfer') {
+      setState(transferSkillState(skillId))
+      setTransferChoiceId(null)
+    }
+    setPhase(next)
+    setHintVisible(false)
+    persist(false, false, next)
+    setMessage(
+      `Opened the ${next} section directly. Earlier checkpoints remain available from the phase navigation.`,
+    )
+  }
+
   function reset() {
-    setState(predictionSkillState(skillId))
+    setState(actionSkillState(skillId))
     setPhase('recognize')
     setPredictionChoiceId(null)
     setTransferChoiceId(null)
     setCompleted(false)
     setMessage('Activity reset to its authored setup.')
+  }
+
+  function continueToNextSection() {
+    if (!nextSection) {
+      router.push('/icu-hemodynamics/practice' as Route)
+      return
+    }
+    if (onPathwaySectionChange) {
+      onPathwaySectionChange(nextSection.id)
+      return
+    }
+    router.push(`/icu-hemodynamics/learn?activity=${nextSection.id}` as Route)
   }
 
   function showHint() {
@@ -518,14 +604,17 @@ export function PacGuidedSkillActivity({
   }
 
   function commitPrediction() {
+    if (skillId === 'catheter-advancement' && state.catheter.position !== 'wedge') {
+      setMessage(
+        'Continue the orientation through RA, RV, PA, and the brief normal wedge example before committing the pattern comparison.',
+      )
+      return
+    }
     const choice = learningItems.prediction.choices.find(
       (candidate) => candidate.id === predictionChoiceId,
     )
     if (!choice) return
-    const correct = learningItems.prediction.correctChoiceIds.includes(choice.id)
-    setMessage(
-      `${correct ? 'Best interpretation.' : 'Review this interpretation.'} ${choice.rationale}`,
-    )
+    setMessage(`${plausibilityLabels[choice.plausibility]}. ${choice.rationale}`)
     setState(actionSkillState(skillId))
     lifecycleAnalytics.recordPredictionSubmitted()
     advance('act')
@@ -544,62 +633,104 @@ export function PacGuidedSkillActivity({
   }
 
   function completeTransfer() {
-    const correctChoice =
-      transferChoiceId !== null &&
-      learningItems.transfer.correctChoiceIds.includes(transferChoiceId)
-    if (!correctChoice || !objectiveComplete(skillId, state)) {
+    if (transferChoiceId === null || !objectiveComplete(skillId, state)) {
       setMessage(
-        'Complete the authored transfer interaction and select the best interpretation before finishing.',
+        'Complete the authored transfer interaction and choose an interpretation before finishing.',
       )
       return
     }
     setCompleted(true)
     persist(true, false, 'transfer')
     lifecycleAnalytics.recordTransferCompleted()
+    setMessage(
+      nextSection
+        ? `Section worked through. Repeat it or continue to ${nextSection.title}.`
+        : 'Section worked through. Repeat it or continue to hemodynamics practice.',
+    )
   }
 
   const isObjectiveComplete = objectiveComplete(skillId, state)
   const predictionCorrect =
     predictionChoiceId !== null &&
     learningItems.prediction.correctChoiceIds.includes(predictionChoiceId)
-  const transferCorrect =
-    transferChoiceId !== null && learningItems.transfer.correctChoiceIds.includes(transferChoiceId)
-  const taskControls =
-    phase === 'recognize' ? (
+  const predictionFeedbackChoice = learningItems.prediction.choices.find(
+    (choice) => choice.id === predictionChoiceId,
+  )
+  const transferFeedbackChoice = learningItems.transfer.choices.find(
+    (choice) => choice.id === transferChoiceId,
+  )
+  const advancementOrientationPosition =
+    pacAdvancementOrientationSteps.find((step) => step.position === state.catheter.position)
+      ?.position ?? 'introducer'
+  const taskControls = completed ? (
+    <PacSectionCompletionActions
+      sectionTitle={spec.title}
+      nextTitle={nextSection?.title}
+      continueLabel={nextSection ? undefined : 'Continue to hemodynamics practice'}
+      onRepeat={reset}
+      onContinue={continueToNextSection}
+    />
+  ) : phase === 'recognize' ? (
+    <button
+      type="button"
+      className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+      onClick={() => {
+        setState(predictionSkillState(skillId))
+        advance('predict')
+      }}
+    >
+      Orient to this skill station
+    </button>
+  ) : phase === 'predict' && skillId === 'catheter-advancement' ? (
+    <PacAdvancementOrientation
+      currentPosition={advancementOrientationPosition}
+      moving={state.catheter.targetPosition !== null}
+      prediction={learningItems.prediction}
+      selectedChoiceId={predictionChoiceId}
+      onAdvance={(position) =>
+        dispatch(
+          position === 'wedge'
+            ? { type: 'SET_CATHETER_POSITION', position }
+            : { type: 'ADVANCE_CATHETER', instant: true },
+        )
+      }
+      onChoiceChange={setPredictionChoiceId}
+      onCommit={commitPrediction}
+    />
+  ) : phase === 'predict' ? (
+    <fieldset className="grid gap-2">
+      <legend className="text-sm font-semibold">{learningItems.prediction.stem}</legend>
+      {learningItems.prediction.choices.map((choice) => (
+        <label
+          key={choice.id}
+          className="flex min-h-11 items-start gap-3 rounded-xl border p-3 text-sm"
+        >
+          <input
+            type="radio"
+            name="skill-prediction"
+            checked={predictionChoiceId === choice.id}
+            onChange={() => setPredictionChoiceId(choice.id)}
+          />
+          {choice.label}
+        </label>
+      ))}
       <button
         type="button"
-        className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
-        onClick={() => advance('predict')}
+        disabled={predictionChoiceId === null}
+        className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+        onClick={commitPrediction}
       >
-        Orient to this skill station
+        Commit prediction
       </button>
-    ) : phase === 'predict' ? (
-      <fieldset className="grid gap-2">
-        <legend className="text-sm font-semibold">{learningItems.prediction.stem}</legend>
-        {learningItems.prediction.choices.map((choice) => (
-          <label
-            key={choice.id}
-            className="flex min-h-11 items-start gap-3 rounded-xl border p-3 text-sm"
-          >
-            <input
-              type="radio"
-              name="skill-prediction"
-              checked={predictionChoiceId === choice.id}
-              onChange={() => setPredictionChoiceId(choice.id)}
-            />
-            {choice.label}
-          </label>
-        ))}
-        <button
-          type="button"
-          disabled={predictionChoiceId === null}
-          className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-          onClick={commitPrediction}
-        >
-          Commit prediction
-        </button>
-      </fieldset>
-    ) : phase === 'act' ? (
+    </fieldset>
+  ) : phase === 'act' ? (
+    <div className="grid gap-3">
+      {predictionFeedbackChoice ? (
+        <ChoiceReasoningFeedback
+          choice={predictionFeedbackChoice}
+          explanation={learningItems.prediction.explanation}
+        />
+      ) : null}
       <button
         type="button"
         disabled={!isObjectiveComplete}
@@ -608,64 +739,82 @@ export function PacGuidedSkillActivity({
       >
         Continue after completing the objective
       </button>
-    ) : phase === 'observe' ? (
+    </div>
+  ) : phase === 'observe' ? (
+    <button
+      type="button"
+      className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+      onClick={() => {
+        dispatch({ type: 'TICK', seconds: 5 })
+        lifecycleAnalytics.recordDebriefViewed()
+        advance('explain')
+      }}
+    >
+      Observe and explain the result
+    </button>
+  ) : phase === 'explain' ? (
+    <button
+      type="button"
+      className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+      onClick={enterTransfer}
+    >
+      Open transfer check
+    </button>
+  ) : (
+    <div className="grid gap-2">
+      <fieldset className="grid gap-2">
+        <legend className="text-sm font-semibold">{learningItems.transfer.stem}</legend>
+        {learningItems.transfer.choices.map((choice) => (
+          <label
+            key={choice.id}
+            className="flex min-h-11 items-start gap-3 rounded-xl border p-3 text-sm"
+          >
+            <input
+              type="radio"
+              name="skill-transfer"
+              checked={transferChoiceId === choice.id}
+              onChange={() => {
+                setTransferChoiceId(choice.id)
+                setMessage(`${plausibilityLabels[choice.plausibility]}. ${choice.rationale}`)
+              }}
+            />
+            {choice.label}
+          </label>
+        ))}
+      </fieldset>
+      {transferFeedbackChoice ? (
+        <ChoiceReasoningFeedback
+          choice={transferFeedbackChoice}
+          explanation={learningItems.transfer.explanation}
+        />
+      ) : null}
+      <p className="rounded-xl bg-muted p-3 text-xs leading-5">
+        Complete the new interaction in the visual workspace; selecting an answer alone does not
+        complete the activity.
+      </p>
       <button
         type="button"
-        className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
-        onClick={() => {
-          dispatch({ type: 'TICK', seconds: 5 })
-          lifecycleAnalytics.recordDebriefViewed()
-          advance('explain')
-        }}
+        disabled={completed || transferChoiceId === null || !isObjectiveComplete}
+        className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+        onClick={completeTransfer}
       >
-        Observe and explain the result
+        Complete transfer and keep the reasoning feedback
       </button>
-    ) : phase === 'explain' ? (
-      <button
-        type="button"
-        className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
-        onClick={enterTransfer}
-      >
-        Open transfer check
-      </button>
+    </div>
+  )
+
+  const learningPane =
+    skillId === 'waveform-interpretation' ? (
+      <WaveformRecognitionDrill dispatch={dispatch} />
+    ) : skillId === 'thermodilution-series' ? (
+      <CardiacOutputTeachingPanel />
+    ) : skillId === 'derived-hemodynamics' ? (
+      <DerivedHemodynamicsTeachingPanel />
     ) : (
-      <div className="grid gap-2">
-        <fieldset className="grid gap-2">
-          <legend className="text-sm font-semibold">{learningItems.transfer.stem}</legend>
-          {learningItems.transfer.choices.map((choice) => (
-            <label
-              key={choice.id}
-              className="flex min-h-11 items-start gap-3 rounded-xl border p-3 text-sm"
-            >
-              <input
-                type="radio"
-                name="skill-transfer"
-                checked={transferChoiceId === choice.id}
-                onChange={() => {
-                  setTransferChoiceId(choice.id)
-                  setMessage(choice.rationale)
-                }}
-              />
-              {choice.label}
-            </label>
-          ))}
-        </fieldset>
-        <p className="rounded-xl bg-muted p-3 text-xs leading-5">
-          Complete the new interaction in the visual workspace; selecting an answer alone does not
-          complete the activity.
-        </p>
-        <button
-          type="button"
-          disabled={completed || !transferCorrect || !isObjectiveComplete}
-          className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-          onClick={completeTransfer}
-        >
-          Complete validated transfer
-        </button>
-      </div>
+      <PhysiologyPanel state={state} dispatch={dispatch} />
     )
 
-  const viewport =
+  const stationViewport =
     phase === 'explain' ? (
       <div className="h-full overflow-auto p-4">
         <DebriefPanel
@@ -683,28 +832,42 @@ export function PacGuidedSkillActivity({
           transfer={<p>{spec.transfer}</p>}
         />
       </div>
-    ) : phase === 'recognize' ? (
-      <div className="h-full overflow-auto p-2">
-        <BedsideMonitor state={state} dispatch={dispatch} onOpenCardiacOutput={showHint} />
-      </div>
     ) : (
-      <div className="grid h-full gap-3 overflow-auto p-3 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
-        <BedsideMonitor state={state} dispatch={dispatch} onOpenCardiacOutput={showHint} />
-        <div className="min-w-0">
+      <ResizablePacWorkspace
+        key={`${skillId}-${phase}`}
+        monitor={
+          <BedsideMonitor state={state} dispatch={dispatch} onOpenCardiacOutput={showHint} />
+        }
+        physiology={learningPane}
+        controls={
           <SkillSurface
             key={`${skillId}-${phase}`}
             skillId={skillId}
             state={state}
             dispatch={dispatch}
           />
-        </div>
-      </div>
+        }
+      />
     )
+
+  const viewport = onPathwaySectionChange ? (
+    <PacLearningPathwayViewport
+      activeSectionId={skillId}
+      onSelect={(sectionId) => {
+        persist(completed, false, phase)
+        onPathwaySectionChange(sectionId)
+      }}
+    >
+      {stationViewport}
+    </PacLearningPathwayViewport>
+  ) : (
+    stationViewport
+  )
 
   return (
     <SimulationLaunchGate
       activityTitle={spec.title}
-      minimumViewport="desktop"
+      minimumViewport="tablet"
       bandwidthClass="standard"
       estimatedSizeLabel="Under 2 MB after shared application assets"
       lightweightAlternativeHref="/icu-hemodynamics/learn"
@@ -719,6 +882,8 @@ export function PacGuidedSkillActivity({
       ) : null}
       <ActivityShell
         layout="guided-lab"
+        activityId={activityId}
+        assumedConceptIds={activity.assumedConceptIds}
         breadcrumb={
           <span>
             <Link href={'/icu-hemodynamics' as Route}>ICU Hemodynamics</Link> /{' '}
@@ -727,13 +892,14 @@ export function PacGuidedSkillActivity({
         }
         activityTitle={spec.title}
         phase={phase}
+        onPhaseSelect={selectPhase}
         mode="guided"
         progressLabel={
           completed
             ? activity.completionEvidenceAuthority === 'none'
               ? 'Draft reviewed · non-credit'
-              : 'Completed'
-            : `${phaseOrder.indexOf(phase) + 1} of 6 · ${phase}`
+              : 'Worked through'
+            : `Current phase: ${phase}`
         }
         patientContext={
           <PatientContextBar
@@ -772,6 +938,7 @@ export function PacGuidedSkillActivity({
             safetyConstraints={[
               'Educational simulation only.',
               'Validate signals and technique before interpretation.',
+              'At the bedside, prepare, level, and zero the pressure system before catheter advancement.',
             ]}
           />
         }
@@ -779,8 +946,14 @@ export function PacGuidedSkillActivity({
         currentTask={
           <TaskPanel
             objective={spec.objective}
-            requiredAction={phase === 'transfer' ? spec.transfer : spec.requiredAction}
-            targets={[spec.title]}
+            requiredAction={
+              completed
+                ? 'Choose whether to repeat this section or continue to the next section.'
+                : phase === 'transfer'
+                  ? spec.transfer
+                  : spec.requiredAction
+            }
+            targets={completed && nextSection ? [nextSection.title] : [spec.title]}
             hint={spec.explanation[0]}
             hintVisible={hintVisible}
             onHintRequested={showHint}

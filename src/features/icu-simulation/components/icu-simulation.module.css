@@ -125,8 +125,12 @@
   display: grid;
   min-width: 0;
   min-height: 0;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
   overflow: hidden;
+}
+
+.assumedConceptSlot:empty {
+  display: block;
 }
 
 .compactPatientStrip {
@@ -234,6 +238,39 @@
   margin: 0.2rem 0 0;
   font-size: 0.76rem;
   line-height: 1.5;
+}
+
+.challengeFeedbackToggle {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  padding: 0.75rem 0.85rem;
+  margin: 0 0 0.75rem;
+  border: 1px solid #41627e;
+  border-radius: 0.8rem;
+  color: #e5f2f6;
+  background: #10263a;
+}
+
+.challengeFeedbackToggle input {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: 0 0 auto;
+  margin-top: 0.1rem;
+  accent-color: #69ded2;
+}
+
+.challengeFeedbackToggle span,
+.challengeFeedbackToggle strong,
+.challengeFeedbackToggle small {
+  display: block;
+}
+
+.challengeFeedbackToggle small {
+  margin-top: 0.2rem;
+  color: #aac2cd;
+  font-size: 0.68rem;
+  line-height: 1.4;
 }
 
 .activityStatusBanner {
@@ -2049,46 +2086,6 @@
   color: #73541c;
   background: #fff6df;
   font-size: 0.64rem;
-}
-
-.controlLockNote {
-  padding: 0.65rem 0.7rem;
-  margin: 0;
-  border: 1px solid #dfbd72;
-  border-radius: 0.62rem;
-  color: #6d501b;
-  background: var(--icu-amber-soft);
-  font-size: 0.62rem;
-  line-height: 1.45;
-}
-
-.neutralControlLock {
-  display: flex;
-  gap: 0.7rem;
-  align-items: flex-start;
-  padding: 0.9rem;
-  border: 1px solid #d9bd79;
-  border-radius: 0.75rem;
-  color: #674c1d;
-  background: linear-gradient(135deg, #fff8e9, #fffdf8);
-}
-
-.neutralControlLock > svg {
-  flex: 0 0 auto;
-  width: 1.15rem;
-  height: 1.15rem;
-  margin-top: 0.05rem;
-}
-
-.neutralControlLock strong {
-  display: block;
-  font-size: 0.72rem;
-}
-
-.neutralControlLock p {
-  margin: 0.25rem 0 0;
-  font-size: 0.62rem;
-  line-height: 1.5;
 }
 
 .sandboxControlGrid {

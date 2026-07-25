@@ -1,9 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
-import type { CriticalCareProgressReadResult } from '@/features/critical-care/progress/types'
-
-const mockReadMergedCriticalCareProgress = jest.fn<CriticalCareProgressReadResult, []>()
 const mockRouterPush = jest.fn()
 const mockIcuSimulatorLab = jest.fn(
   (props: {
@@ -22,10 +19,6 @@ const mockIcuSimulatorLab = jest.fn(
     />
   ),
 )
-
-jest.mock('@/features/critical-care/progress', () => ({
-  readMergedCriticalCareProgress: () => mockReadMergedCriticalCareProgress(),
-}))
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -46,40 +39,14 @@ jest.mock('../components/IcuSimulatorLab', () => ({
 
 import { IcuCapstoneEntry } from '../components/IcuCapstoneEntry'
 
-const NOW = '2026-07-22T12:00:00.000Z'
-
-function progressResult(activityIds: readonly string[] = []): CriticalCareProgressReadResult {
-  return {
-    envelope: {
-      version: 1,
-      activities: activityIds.map((activityId) => ({
-        activityId,
-        status: 'completed' as const,
-        attempts: 1,
-        competencyEvidenceIds: [],
-        updatedAt: NOW,
-      })),
-      updatedAt: NOW,
-    },
-    normalizedSource: {
-      moduleId: 'critical-care',
-      storageKey: 'critical-care-activity-progress-v1',
-      status: activityIds.length > 0 ? 'valid' : 'empty',
-    },
-    legacySources: [],
-    notices: [],
-  }
-}
-
 describe('integrated ICU capstone entry', () => {
   beforeEach(() => mockRouterPush.mockReset())
 
   beforeEach(() => {
-    mockReadMergedCriticalCareProgress.mockReturnValue(progressResult())
     mockIcuSimulatorLab.mockClear()
   })
 
-  it('keeps Practice open with a soft warning and direct refresher links', async () => {
+  it('keeps Practice open and names the selected scenario', async () => {
     render(<IcuCapstoneEntry mode="practice" locale="en" />)
 
     expect(await screen.findByTestId('icu-simulator-lab')).toHaveAttribute(
@@ -90,10 +57,12 @@ describe('integrated ICU capstone entry', () => {
     expect(
       screen.getByTestId('icu-simulator-lab').closest('[data-icu-capstone-active]'),
     ).toHaveAttribute('data-icu-capstone-active', 'practice')
-    expect(screen.getByText(/Practice remains open to experienced learners/)).toBeInTheDocument()
     expect(
-      screen.getByRole('link', { name: /Warm shock with a low diastolic pressure/ }),
-    ).toHaveAttribute('href', '/icu-hemodynamics/practice?case=HD-02')
+      screen.getByRole('heading', { name: 'Septic shock with ARDS and evolving AKI' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/scenario remains available regardless of saved history/i),
+    ).toBeInTheDocument()
   })
 
   it('keeps the capstone mobile gate pointed at the ICU Overview text alternative', async () => {
@@ -127,12 +96,8 @@ describe('integrated ICU capstone entry', () => {
     }
   })
 
-  it('visibly changes the Practice recommendation after focused completion', async () => {
-    mockReadMergedCriticalCareProgress.mockReturnValue(
-      progressResult(['hemodynamics:practice:HD-03', 'mcs:practice:IMP-03']),
-    )
-
-    render(<IcuCapstoneEntry mode="practice" locale="en" />)
+  it('opens a requested Practice scenario directly without consulting history', async () => {
+    render(<IcuCapstoneEntry mode="practice" locale="en" requestedScenarioId="lv-cardiogenic" />)
 
     expect(await screen.findByTestId('icu-simulator-lab')).toHaveAttribute(
       'data-scenario',
@@ -141,37 +106,32 @@ describe('integrated ICU capstone entry', () => {
     expect(
       screen.getByRole('heading', { name: 'LV cardiogenic shock with pulmonary edema' }),
     ).toBeInTheDocument()
-    expect(screen.getByText('Focused preparation complete.', { exact: false })).toBeInTheDocument()
+    expect(screen.getByText(/optional refreshers and never prevent entry/i)).toBeInTheDocument()
   })
 
-  it('does not hard-lock Assess when every authored prerequisite is still under review', async () => {
+  it('opens a requested Challenge directly without an entry lock', async () => {
     render(<IcuCapstoneEntry mode="assess" locale="en" requestedScenarioId="lv-cardiogenic" />)
 
     expect(await screen.findByTestId('icu-simulator-lab')).toHaveAttribute(
       'data-scenario',
       'lv-cardiogenic',
     )
-    expect(screen.getByText(/Assessment case 02 opened in Preview/)).toBeInTheDocument()
-    expect(screen.getByText(/advisory, not a hard lock/)).toBeInTheDocument()
-    expect(screen.queryByText('LV cardiogenic shock with pulmonary edema')).not.toBeInTheDocument()
+    expect(screen.queryByText(/locked|prerequisite/i)).not.toBeInTheDocument()
   })
 
-  it('labels pending-review preparation as Preview on the Assess course chooser', async () => {
+  it('names every open Challenge in the chooser', async () => {
     render(<IcuCapstoneEntry mode="assess" locale="en" />)
 
     expect(
-      await screen.findByRole('heading', { name: 'Masked assessment courses' }),
+      await screen.findByRole('heading', { name: 'Harder cases, open from the start' }),
     ).toBeInTheDocument()
-    expect(screen.getAllByText(/advisory preparation groups complete · Preview/)).toHaveLength(6)
-    expect(screen.getAllByRole('link', { name: /Start Assessment case/ })).toHaveLength(6)
-    expect(screen.queryByLabelText('Assessment locked')).not.toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: 'Open challenge' })).toHaveLength(6)
+    expect(screen.getByText('Sepsis + ARDS + AKI')).toBeInTheDocument()
+    expect(screen.getByText('LV cardiogenic shock')).toBeInTheDocument()
+    expect(screen.queryByText(/masked|locked/i)).not.toBeInTheDocument()
   })
 
-  it('mounts only the selected Assess case and passes no focused raw state', async () => {
-    mockReadMergedCriticalCareProgress.mockReturnValue(
-      progressResult(['hemodynamics:practice:HD-03', 'mcs:practice:IMP-03']),
-    )
-
+  it('mounts only the selected Challenge and passes no focused raw state', async () => {
     render(<IcuCapstoneEntry mode="assess" locale="en" requestedScenarioId="lv-cardiogenic" />)
 
     expect(await screen.findByTestId('icu-simulator-lab')).toHaveAttribute(

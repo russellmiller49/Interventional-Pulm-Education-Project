@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import type { Route } from 'next'
-import { ArrowRight, EyeOff, ShieldCheck } from 'lucide-react'
+import { ArrowRight, GitCompareArrows, ShieldCheck } from 'lucide-react'
 
 import { useRouter } from '@/i18n/navigation'
 
@@ -40,15 +40,15 @@ export function MechanicalVentilationAssessSetupV2({
     <main className="mx-auto grid w-full max-w-5xl gap-7 px-4 py-10 text-foreground sm:px-6 lg:px-8">
       <header className="max-w-3xl">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
-          Challenge setup · seeded and masked
+          Challenge setup · locally varied
         </p>
         <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-          Choose the console before the case is drawn.
+          Choose the console before the case opens.
         </h1>
         <p className="mt-4 text-base leading-7 text-muted-foreground">
-          The assessment selects one of the preserved fifteen cases from a local seed. The case ID,
-          title, mechanism, teaching targets, and hints remain masked until debrief. Existing case
-          scoring and the no-critical-error mastery rule are unchanged.
+          A local variation selects one of the fifteen cases. You will see the patient context, case
+          identity, references, and evidence from the start; teaching feedback is collected for the
+          debrief so you can reason without interruption.
         </p>
       </header>
 
@@ -68,7 +68,7 @@ export function MechanicalVentilationAssessSetupV2({
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
             This console stays fixed for the challenge. Exiting and changing it creates a clean new
-            attempt.
+            run.
           </p>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             {ventilatorDeviceProfiles.map((profile) => (
@@ -94,7 +94,7 @@ export function MechanicalVentilationAssessSetupV2({
             className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground"
             onClick={() => setReady(true)}
           >
-            Lock console for this attempt <ArrowRight className="size-4" aria-hidden="true" />
+            Keep this console <ArrowRight className="size-4" aria-hidden="true" />
           </button>
         </section>
       ) : (
@@ -103,19 +103,21 @@ export function MechanicalVentilationAssessSetupV2({
           aria-labelledby="challenge-boundary-heading"
         >
           <div className="flex items-start gap-4">
-            <EyeOff className="mt-1 size-7 shrink-0 text-primary" aria-hidden="true" />
+            <GitCompareArrows className="mt-1 size-7 shrink-0 text-primary" aria-hidden="true" />
             <div>
               <h2 id="challenge-boundary-heading" className="text-2xl font-bold">
-                Masked challenge ready
+                Challenge ready
               </h2>
               <ul className="mt-4 grid gap-3 text-sm leading-6 text-muted-foreground">
-                <li>Prediction is required before therapy controls unlock.</li>
-                <li>Hints are unavailable and the challenge timer behavior is enabled.</li>
                 <li>
-                  The preserved safety, mechanism, action, reassessment, and communication rubric
-                  applies.
+                  You can record an initial frame before acting, but all therapy controls remain
+                  available.
                 </li>
-                <li>Completion requires debrief review and an explicit transfer check.</li>
+                <li>The challenge timer behavior is enabled and coaching is deferred.</li>
+                <li>
+                  Patient context, case identity, references, and source boundaries stay visible.
+                </li>
+                <li>The end state is a causal debrief and an explicit transfer check.</li>
               </ul>
               <div className="mt-5 flex items-center gap-2 rounded-xl bg-muted/40 p-3 text-sm">
                 <ShieldCheck className="size-4 text-primary" aria-hidden="true" />
@@ -126,7 +128,7 @@ export function MechanicalVentilationAssessSetupV2({
                 className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground"
                 onClick={launchAssessment}
               >
-                Draw seeded case and begin <ArrowRight className="size-4" aria-hidden="true" />
+                Open challenge <ArrowRight className="size-4" aria-hidden="true" />
               </button>
             </div>
           </div>

@@ -372,7 +372,7 @@ export function QualitativePrePostDilutionExperiment({
 
       {result === null ? (
         <p className={styles.inactiveNotice}>
-          Unavailable — correct every invalid entry before viewing the qualitative comparison.
+          Unavailable — revise every invalid entry before viewing the qualitative comparison.
         </p>
       ) : result.direction === 'not-active' ? (
         <p className={styles.inactiveNotice}>{result.comparisonText}</p>
@@ -468,7 +468,7 @@ export function CrrtPrescriptionWorkbench({
           : `${formatNumber(result.syntheticBagDuration.durationHours, 2)} hours`
       }.`
     : (calculationAttempt?.errorMessage ??
-      `All calculated outputs are unavailable. Correct: ${validation.invalidLabels.join(', ')}.`)
+      `All calculated outputs are unavailable. Revise: ${validation.invalidLabels.join(', ')}.`)
 
   function updateNumericInput(key: NumericInputKey, value: string) {
     setNumericInputs((current) => ({ ...current, [key]: value }))
@@ -496,7 +496,6 @@ export function CrrtPrescriptionWorkbench({
       data-progress-write="learner-mode-only"
       data-persistence="learner-mode-only"
       data-scoring="tool-specific"
-      data-competency="none"
       onFocusCapture={() => onPhaseChange?.('predict')}
       onChangeCapture={recordChangedInput}
     >
@@ -743,7 +742,7 @@ export function CrrtPrescriptionWorkbench({
                 value={
                   result
                     ? `${formatNumber(result.effluentPumpTargetMlPerHour)} mL/h`
-                    : 'Unavailable — correct entries'
+                    : 'Unavailable — revise entries'
                 }
                 source="PrisMax operator's manual calculation"
                 note="Sum of entered PFR, PBP, replacement, and dialysate terms; syringe/makeup held at zero."
@@ -753,7 +752,7 @@ export function CrrtPrescriptionWorkbench({
                 value={
                   result
                     ? `${formatNumber(result.effluentDoseMlPerKgHour, 2)} mL/kg/h`
-                    : 'Unavailable — correct entries'
+                    : 'Unavailable — revise entries'
                 }
                 source="PrisMax operator's manual calculation"
                 note="No target range and no delivered-dose or downtime claim."
@@ -763,7 +762,7 @@ export function CrrtPrescriptionWorkbench({
                 value={
                   result
                     ? `${formatNumber(result.plasmaFlowMlPerHour)} mL/h`
-                    : 'Unavailable — correct entries'
+                    : 'Unavailable — revise entries'
                 }
                 source="PrisMax operator's manual calculation"
                 note="Blood-flow entry converted from mL/min before applying entered hematocrit."
@@ -773,7 +772,7 @@ export function CrrtPrescriptionWorkbench({
                 value={
                   result
                     ? `${formatNumber(result.machinePatientFluidRemovalTermMlPerHour)} mL/h`
-                    : 'Unavailable — correct entries'
+                    : 'Unavailable — revise entries'
                 }
                 source="PrisMax operator's manual · separate term"
                 note="Not a whole-patient balance or tolerance recommendation."
@@ -783,7 +782,7 @@ export function CrrtPrescriptionWorkbench({
                 value={
                   result
                     ? `${formatNumber(result.aggregateSourcePumpThroughputMlPerDay / 1_000, 2)} L/day`
-                    : 'Unavailable — correct entries'
+                    : 'Unavailable — revise entries'
                 }
                 source="Calculated from the entered values"
                 note="PBP + dialysate + replacement pump entries over 24 hours if unchanged. This is source-bag use: dialysate remains separate from blood-side/patient input, and PFR is excluded."
@@ -793,7 +792,7 @@ export function CrrtPrescriptionWorkbench({
                 value={
                   result
                     ? formatPercentageFraction(result.totalPredilutionFraction)
-                    : 'Unavailable — correct entries'
+                    : 'Unavailable — revise entries'
                 }
                 source="PrisMax operator's manual calculation"
                 note="Dimensionless relationship only; not quantitative filtration fraction."
@@ -825,7 +824,7 @@ export function CrrtPrescriptionWorkbench({
           <section className={styles.bagResult} aria-labelledby={`${idPrefix}-bag-result`}>
             <h3 id={`${idPrefix}-bag-result`}>Practice bag-duration result</h3>
             {result === null ? (
-              <p>Unavailable — correct every invalid entry.</p>
+              <p>Unavailable — revise every invalid entry.</p>
             ) : result.syntheticBagDuration === null ? (
               <p>No result — enter an optional practice bag capacity.</p>
             ) : result.syntheticBagDuration.status === 'unavailable-zero-stream' ? (

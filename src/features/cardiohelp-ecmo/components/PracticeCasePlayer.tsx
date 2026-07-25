@@ -63,6 +63,10 @@ interface PracticeCasePlayerProps {
   onReveal: () => void
   /** 'assess' renders a capstone: no case picker, capstone context line. */
   section?: 'practice' | 'assess'
+  phaseRequest?: {
+    readonly stage: EcmoPracticeStage
+    readonly requestId: number
+  } | null
   onPhaseChange?: (phase: CriticalCareActivityPhase) => void
   onActiveStageChange?: (stage: EcmoPracticeStage) => void
 }
@@ -75,19 +79,19 @@ const predictionControls: readonly {
   { value: 'inspect-circuit', label: 'Inspect circuit / sensors', supportModes: ['vv', 'va'] },
   {
     value: 'assess-upper-body',
-    label: 'Assess right-arm oxygenation and mixed circulation',
+    label: 'Review right-arm oxygenation and mixed circulation',
     supportModes: ['va'],
   },
   {
     value: 'assess-lv-loading',
-    label: 'Assess pulsatility, aortic valve, LV, and lungs',
+    label: 'Review pulsatility, aortic valve, LV, and lungs',
     supportModes: ['va'],
   },
   { value: 'rpm', label: 'Pump RPM', supportModes: ['vv', 'va'] },
   { value: 'sweep', label: 'External sweep flow', supportModes: ['vv', 'va'] },
   { value: 'gas-fio2', label: 'External sweep-gas FiO₂', supportModes: ['vv', 'va'] },
   { value: 'restore-gas', label: 'Restore gas source', supportModes: ['vv', 'va'] },
-  { value: 'correct-cause', label: 'Correct cause before reset', supportModes: ['vv', 'va'] },
+  { value: 'correct-cause', label: 'Resolve cause before reset', supportModes: ['vv', 'va'] },
   { value: 'restore-power', label: 'Restore verified AC power', supportModes: ['vv', 'va'] },
   { value: 'off-sweep-trial', label: 'VV off-sweep trial', supportModes: ['vv'] },
   {
@@ -112,7 +116,7 @@ const predictionControls: readonly {
   },
   {
     value: 'reposition-cannula',
-    label: 'Assess and correct cannula position',
+    label: 'Review and restore cannula position',
     supportModes: ['vv'],
   },
   {
@@ -148,19 +152,19 @@ const predictionDirections: readonly { value: PredictionDirection; label: string
   { value: 'perfusion', label: 'Improve systemic perfusion' },
   { value: 'drainage', label: 'Restore effective venous drainage' },
   { value: 'temporary', label: 'Temporize while the cause remains' },
-  { value: 'definitive', label: 'Definitively correct the cause' },
+  { value: 'definitive', label: 'Definitively resolve the cause' },
 ]
 
 const faultLabels: Record<FaultId, string> = {
-  'startup-inspection': 'Complete self-test, circuit, sensor, and backup check',
-  'preload-limited': 'Correct the identified drainage limitation',
+  'startup-inspection': 'Complete startup diagnostic, circuit, sensor, and backup check',
+  'preload-limited': 'Resolve the identified drainage limitation',
   'return-obstruction': 'Remove the identified return-side obstruction',
   'oxygenator-resistance': 'Escalate the identified oxygenator/circuit resistance',
-  recirculation: 'Correct the cannula/recirculation cause',
+  recirculation: 'Resolve the cannula/recirculation cause',
   'acute-hypercapnia': 'Apply the predicted phase-aware sweep change',
   'compensated-hypercapnia': 'Confirm the compensated state and avoid blind normalization',
   'gas-source-interruption': 'Restore the verified gas source',
-  'arterial-bubble': 'Correct and clear the source of air',
+  'arterial-bubble': 'Resolve and clear the source of air',
   'ac-power-loss': 'Restore verified AC power and backup readiness',
   'flow-sensor-failure': 'Restore or replace the flow measurement',
   'differential-hypoxemia': 'Verify upper-body oxygenation, assess both circulations, and escalate',
@@ -219,7 +223,7 @@ function navigateToWorkflowSection(sectionId: WorkflowSectionId) {
   if (!section) return
   const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
   section.focus({ preventScroll: true })
-  section.scrollIntoView({
+  section.scrollIntoView?.({
     behavior: reduceMotion ? 'auto' : 'smooth',
     block: 'start',
   })
@@ -301,14 +305,14 @@ function StageRail({
   let nextTitle = 'Choose and apply an intervention'
   let nextDescription = treatmentAttempted
     ? 'Continue treating if another action is needed. When this is your final decision, observe the response and reassess.'
-    : 'Use the intervention cards, ECMO console, circuit, or gas controls. Practice does not mark the correct choice in advance.'
+    : 'Use the intervention cards, ECMO console, circuit, or gas controls. Practice leaves the causal comparison for the response and debrief.'
   let primaryLabel = 'Go to management choices'
   let primaryAction = () => onShowStage('manage')
 
   if (currentStage === 'brief') {
     nextTitle = 'Review the case and its objectives'
     nextDescription =
-      'Read the presentation, data, and learning objectives. Beginning the case moves you to the plan; the console stays locked until the plan is committed.'
+      'Read the presentation, data, and learning objectives. You can begin with the plan or open any later step to inspect what it contains.'
     primaryLabel = 'Begin case'
     primaryAction = onBeginCase
   } else if (!planComplete) {
@@ -320,13 +324,13 @@ function StageRail({
   } else if (reassessmentSubmitted && !debriefRevealed) {
     nextTitle = 'Your reassessment is submitted'
     nextDescription =
-      'Select reveal to see the diagnosis, teaching explanation, and how your observations were scored.'
-    primaryLabel = 'Reveal diagnosis and score'
+      'Select reveal to see the diagnosis, teaching explanation, and an expert response comparison.'
+    primaryLabel = 'Reveal causal debrief'
     primaryAction = onReveal
   } else if (debriefRevealed) {
-    nextTitle = `Case complete · ${outcome.score}%`
+    nextTitle = 'Case worked through'
     nextDescription =
-      'Review the debrief below: the causal chain, the correct workflow, and the next recommended step.'
+      'Review the debrief below: the causal chain, an authored workflow, and the next recommended step.'
     primaryLabel = 'Choose another case'
     primaryAction = () => navigateToWorkflowSection('practice-round-selector')
   } else if (causeCorrected && !observation.responseObserved) {
@@ -363,12 +367,11 @@ function StageRail({
         data-stages={stages.length}
       >
         {stages.map((stage, index) => {
-          const reachable = stage.complete || index <= currentIndex
           const stateLabel = stage.complete
             ? 'complete'
             : stage.id === currentStage
               ? 'current'
-              : reachable
+              : index <= currentIndex
                 ? 'started'
                 : 'pending'
           return (
@@ -377,7 +380,6 @@ function StageRail({
               key={stage.id}
               data-state={stateLabel}
               data-expanded={stage.id === activeStage}
-              disabled={!reachable}
               aria-current={stage.id === currentStage ? 'step' : undefined}
               onClick={() => onShowStage(stage.id)}
             >
@@ -450,9 +452,7 @@ function PredictionPanel({
         <span>{stageNumber}</span>
         <div>
           <h3 id="prediction-heading">Commit your initial clinical plan</h3>
-          <p>
-            Name the goal, first move, and expected physiologic effect before interventions unlock.
-          </p>
+          <p>Name the goal, first move, and expected physiologic effect for later comparison.</p>
         </div>
       </div>
       <div className={styles.predictionGrid}>
@@ -586,25 +586,21 @@ function HintPanel({
   if (!hints.length) return null
   const usedHints = hints.filter((hint) => state.scenario.usedHintIds.includes(hint.id))
   const nextHint = hints.find((hint) => !state.scenario.usedHintIds.includes(hint.id))
-  const maximumScore = Math.max(0, 100 - state.scenario.penalties)
-
   return (
     <section className={styles.hintPanel} aria-labelledby="practice-hint-heading">
       <div>
         <Lightbulb aria-hidden="true" />
         <span>
           <strong id="practice-hint-heading">Stuck?</strong>
-          <small>Clues are optional and reduce the maximum case score.</small>
+          <small>Clues are optional and stay visible in the final reasoning trace.</small>
         </span>
-        <em>Current score ceiling · {maximumScore}%</em>
+        <em>Use only as much help as you need</em>
       </div>
       {usedHints.length ? (
         <ol aria-live="polite">
           {usedHints.map((hint) => (
             <li key={hint.id}>
-              <strong>
-                {hint.title} · −{hint.penalty} points
-              </strong>
+              <strong>{hint.title}</strong>
               <span>{hint.text}</span>
             </li>
           ))}
@@ -622,11 +618,10 @@ function HintPanel({
           }}
         >
           <Lightbulb aria-hidden="true" />
-          {usedHints.length ? 'Show a stronger clue' : 'Give me a clue'} (−{nextHint.penalty}{' '}
-          points)
+          {usedHints.length ? 'Show a stronger clue' : 'Give me a clue'}
         </button>
       ) : (
-        <p>All available clues have been shown. Maximum score: {maximumScore}%.</p>
+        <p>All available clues have been shown.</p>
       )}
     </section>
   )
@@ -664,11 +659,11 @@ function SimulationControls({
             data-active={state.simulationMode === 'challenge'}
             onClick={() => onLoadScenario(scenario.id, 'challenge')}
           >
-            Hide diagnosis cues (harder)
+            Less coaching (harder)
           </button>
         </div>
       ) : (
-        <p role="note">Challenge mode is locked for this masked assessment.</p>
+        <p role="note">Challenge mode collects teaching feedback for the debrief.</p>
       )}
       <button type="button" onClick={() => dispatch({ type: 'SET_PAUSED', paused: !state.paused })}>
         {state.paused ? <CirclePlay aria-hidden="true" /> : <CirclePause aria-hidden="true" />}
@@ -687,8 +682,8 @@ function SimulationControls({
       </button>
       <small className={styles.simulationResetNote}>
         {section === 'practice'
-          ? 'Hiding cues masks the case title, summary, and diagnosis hints until debrief; scoring is unchanged. Changing mode or resetting starts this case over.'
-          : 'Resetting starts a new masked challenge attempt; assessment mode cannot be changed.'}
+          ? 'Changing the coaching mode or resetting starts this case over.'
+          : 'Resetting starts a new challenge run; patient context and references remain visible.'}
       </small>
     </section>
   )
@@ -720,11 +715,15 @@ function ClinicalActionPanel({
   scenario,
   dispatch,
   stageNumber,
-}: Pick<PracticeCasePlayerProps, 'state' | 'scenario' | 'dispatch'> & { stageNumber: number }) {
+  showTeachingFeedback,
+}: Pick<PracticeCasePlayerProps, 'state' | 'scenario' | 'dispatch'> & {
+  stageNumber: number
+  showTeachingFeedback: boolean
+}) {
   const clinicalCase = scenario.clinicalCase
   const clinical = state.scenario.clinical
   if (!clinicalCase || !clinical) return null
-  const enabled = state.scenario.prediction.committed
+  const enabled = true
   const appliedIds = new Set(clinical.appliedInterventions.map((record) => record.interventionId))
   const simulatorTasks = clinicalCase.interventions.filter(
     (item) => item.simulatorAction?.visibility === 'prompted',
@@ -765,6 +764,13 @@ function ClinicalActionPanel({
     : []
   const initiationSettingsMatched =
     initiationControlItems.length > 0 && initiationControlItems.every((item) => item.matched)
+  const latestIntervention = clinical.appliedInterventions.at(-1)
+  const latestDefinition = latestIntervention
+    ? clinicalCase.interventions.find(
+        (intervention) => intervention.id === latestIntervention.interventionId,
+      )
+    : undefined
+  const hardInterruptActive = Boolean(latestDefinition?.penalty?.critical)
 
   return (
     <section
@@ -791,7 +797,7 @@ function ClinicalActionPanel({
           <span>
             Apply bedside interventions from the cards. Machine-setting tasks send you to the actual
             console or gas control and complete automatically there. Unsafe console choices and
-            ineffective interventions still affect the score.
+            ineffective interventions still shape the modeled response and debrief.
           </span>
         </div>
       </div>
@@ -929,10 +935,9 @@ function ClinicalActionPanel({
         <div>
           <strong>Patient trajectory · {clinical.trajectory.replaceAll('-', ' ')}</strong>
           <span>
-            {clinical.lastResponse ??
-              (enabled
-                ? clinicalCase.deteriorationResponse
-                : 'Commit your initial plan to unlock interventions.')}
+            {showTeachingFeedback || hardInterruptActive
+              ? (clinical.lastResponse ?? clinicalCase.deteriorationResponse)
+              : 'Routine teaching note saved for the debrief. Read the trajectory and live patient, circuit, gas, and console signals.'}
           </span>
         </div>
       </div>
@@ -949,7 +954,15 @@ function ClinicalActionPanel({
                 <time>{record.time}s</time>
                 <span>
                   <strong>{record.label}</strong>
-                  <small>{record.response}</small>
+                  {showTeachingFeedback ||
+                  clinicalCase.interventions.some(
+                    (intervention) =>
+                      intervention.id === record.interventionId && intervention.penalty?.critical,
+                  ) ? (
+                    <small>{record.response}</small>
+                  ) : (
+                    <small>Response explanation deferred to the debrief.</small>
+                  )}
                 </span>
               </li>
             ))}
@@ -965,7 +978,11 @@ function ActionPanel({
   scenario,
   dispatch,
   stageNumber,
-}: Pick<PracticeCasePlayerProps, 'state' | 'scenario' | 'dispatch'> & { stageNumber: number }) {
+  showTeachingFeedback,
+}: Pick<PracticeCasePlayerProps, 'state' | 'scenario' | 'dispatch'> & {
+  stageNumber: number
+  showTeachingFeedback: boolean
+}) {
   if (scenario.clinicalCase) {
     return (
       <ClinicalActionPanel
@@ -973,10 +990,11 @@ function ActionPanel({
         scenario={scenario}
         dispatch={dispatch}
         stageNumber={stageNumber}
+        showTeachingFeedback={showTeachingFeedback}
       />
     )
   }
-  const enabled = state.scenario.prediction.committed
+  const enabled = true
   const correctiveFault = scenario.expectation.correctiveFault
   const corrected = state.scenario.correctedFaults.includes(correctiveFault)
 
@@ -992,8 +1010,8 @@ function ActionPanel({
         <div>
           <h3 id="action-heading">Act, advance time, and inspect the response</h3>
           <p>
-            Controls remain available for deliberate wrong turns; safety-critical shortcuts are
-            scored.
+            Controls remain available for deliberate alternate paths; safety-critical shortcuts
+            trigger a safety record for the debrief.
           </p>
         </div>
       </div>
@@ -1103,7 +1121,7 @@ function ActionPanel({
         <span>
           {enabled
             ? 'Use the console, circuit check, gas panel, and independent patient data. Then advance time before reassessment.'
-            : 'Commit your prediction to unlock actions.'}
+            : 'Use the available controls to explore the response.'}
         </span>
       </div>
     </section>
@@ -1211,22 +1229,12 @@ function ReassessmentPanel({
   const patientObservationComplete = Boolean(answers.patientOptionId)
   const domainsComplete =
     deviceObservationComplete && circuitObservationComplete && patientObservationComplete
-  const commitReady =
-    state.scenario.prediction.committed &&
-    observation.responseObserved &&
-    domainsComplete &&
-    !submitted
+  const commitReady = domainsComplete && !submitted
   const commitLabel = submitted
     ? 'Reassessment submitted'
-    : !state.scenario.prediction.committed
-      ? 'Commit reassessment · commit the clinical plan first'
-      : observation.anchor === null
-        ? 'Commit reassessment · take an action first'
-        : !observation.responseObserved
-          ? `Commit reassessment · observe ${observation.remainingSeconds}s first`
-          : !domainsComplete
-            ? 'Commit reassessment · select all three responses'
-            : 'Commit reassessment'
+    : !domainsComplete
+      ? 'Commit reassessment · select all three responses'
+      : 'Commit reassessment'
 
   useEffect(() => {
     if (submitted && !revealed) revealButtonRef.current?.focus()
@@ -1244,17 +1252,17 @@ function ReassessmentPanel({
         <div>
           <h3 id="reassessment-heading">Reassess before reveal</h3>
           <p>
-            Choose the observed device, circuit/gas, and patient responses. All three selections are
-            graded against scenario-specific evidence.
+            Choose the observed device, circuit/gas, and patient responses. The debrief compares all
+            three with scenario-specific evidence.
           </p>
         </div>
       </div>
       <div
-        id="reassessment-unlock-checklist"
+        id="reassessment-context-checklist"
         className={styles.reassessmentChecklist}
-        aria-label="Requirements to unlock Commit reassessment"
+        aria-label="Reassessment context"
       >
-        <strong>Commit reassessment unlocks when every item is checked</strong>
+        <strong>Context captured so far</strong>
         <ul>
           <li data-complete={state.scenario.prediction.committed}>
             <span aria-hidden="true">{state.scenario.prediction.committed ? '✓' : '○'}</span>
@@ -1285,7 +1293,7 @@ function ReassessmentPanel({
       </div>
       {reassessmentGuidance ? (
         <div className={styles.assessmentGuidance} role="note">
-          <strong>Required assessment domains</strong>
+          <strong>Required review domains</strong>
           <span>
             <b>Device:</b> {reassessmentGuidance.device}
           </span>
@@ -1303,7 +1311,7 @@ function ReassessmentPanel({
           domain="device"
           question={reassessment.device}
           value={answers.deviceOptionId}
-          disabled={!state.scenario.prediction.committed || submitted}
+          disabled={submitted}
           revealed={revealed}
           onChange={(deviceOptionId) => setAnswers((current) => ({ ...current, deviceOptionId }))}
         />
@@ -1311,7 +1319,7 @@ function ReassessmentPanel({
           domain="circuit"
           question={reassessment.circuit}
           value={answers.circuitOptionId}
-          disabled={!state.scenario.prediction.committed || submitted}
+          disabled={submitted}
           revealed={revealed}
           onChange={(circuitOptionId) => setAnswers((current) => ({ ...current, circuitOptionId }))}
         />
@@ -1319,7 +1327,7 @@ function ReassessmentPanel({
           domain="patient"
           question={reassessment.patient}
           value={answers.patientOptionId}
-          disabled={!state.scenario.prediction.committed || submitted}
+          disabled={submitted}
           revealed={revealed}
           onChange={(patientOptionId) => setAnswers((current) => ({ ...current, patientOptionId }))}
         />
@@ -1348,7 +1356,7 @@ function ReassessmentPanel({
       ) : null}
       {acknowledgementOnly ? (
         <p className={styles.observationGate} role="alert">
-          Acknowledgement paused the alarm sound but did not correct the cause. Completing the case
+          Acknowledgement paused the alarm sound but did not resolve the cause. Completing the case
           now records a critical acknowledgement-without-correction error.
         </p>
       ) : null}
@@ -1357,7 +1365,7 @@ function ReassessmentPanel({
           type="button"
           className={styles.primaryAction}
           disabled={!commitReady}
-          aria-describedby="reassessment-unlock-checklist"
+          aria-describedby="reassessment-context-checklist"
           onClick={() =>
             dispatch({
               type: 'COMMIT_REASSESSMENT',
@@ -1367,48 +1375,34 @@ function ReassessmentPanel({
         >
           <CheckCircle2 aria-hidden="true" /> {commitLabel}
         </button>
-        <button
-          ref={revealButtonRef}
-          type="button"
-          disabled={!submitted || revealed}
-          onClick={onReveal}
-        >
-          <ArrowRight aria-hidden="true" /> Reveal diagnosis and score
+        <button ref={revealButtonRef} type="button" disabled={revealed} onClick={onReveal}>
+          <ArrowRight aria-hidden="true" /> Reveal causal debrief
         </button>
       </div>
 
       {submitted && !revealed ? (
         <p className={styles.acceptedCue} role="status">
-          Reassessment submitted. Select “Reveal diagnosis and score” to continue.
+          Reassessment submitted. Select “Reveal causal debrief” to continue.
         </p>
       ) : null}
 
       {revealed ? (
         <div className={styles.debriefPanel}>
-          <div className={styles.debriefScore} data-mastery={outcome.mastery}>
-            <span>Case score</span>
-            <strong>{outcome.score}%</strong>
-            <em>{outcome.mastery ? 'Mastery standard met' : 'Review and retry'}</em>
-            {outcome.hintPenalty ? (
-              <small>
-                Clues used: −{outcome.hintPenalty} points · maximum after clues{' '}
-                {outcome.maximumScoreAfterHints}%
-              </small>
-            ) : null}
+          <div className={styles.debriefScore}>
+            <span>Causal debrief</span>
+            <strong>Case worked through</strong>
+            <em>Compare the response, cues, and authored workflow</em>
           </div>
           <div
             className={styles.reassessmentScoreCue}
-            data-earned={state.scenario.credit.reassessment}
             role="note"
-            aria-label="Reassessment scoring"
+            aria-label="Reassessment comparison"
           >
-            <strong>
-              Reassessment credit {state.scenario.credit.reassessment ? 'earned' : 'not earned'}
-            </strong>
+            <strong>Response comparison</strong>
             <span>
               {state.scenario.credit.reassessment
-                ? 'All three selected responses matched the scenario-specific device, circuit or gas, and patient evidence.'
-                : 'One or more selected responses did not match the expected post-intervention evidence, or the underlying cause was not corrected. Review the marked choices and the workflow below, then retry the case.'}
+                ? 'All three selected responses align with the scenario-specific device, circuit or gas, and patient evidence.'
+                : 'At least one selected response differs from the authored post-intervention evidence, or the underlying cause remains. Review the marked choices and workflow below, then try another path.'}
             </span>
           </div>
           <div>
@@ -1466,7 +1460,7 @@ function ReassessmentPanel({
             <div className={styles.criticalErrors} role="alert">
               <AlertOctagon aria-hidden="true" />
               <div>
-                <strong>Critical safety error</strong>
+                <strong>Safety event to revisit</strong>
                 <span>{outcome.criticalErrors.join(', ')}</span>
               </div>
             </div>
@@ -1487,13 +1481,12 @@ export function PracticeCasePlayer(props: PracticeCasePlayerProps) {
     dispatch,
     onLoadScenario,
     onReveal,
+    phaseRequest,
     onPhaseChange,
     onActiveStageChange,
     section = 'practice',
   } = props
-  const challengePromptHidden =
-    (section === 'assess' || state.simulationMode === 'challenge') &&
-    state.scenario.phase !== 'complete'
+  const challengePromptHidden = false
   const supportMode = scenario.supportMode
   const trackUnits = cardiohelpCurriculum[supportMode]
   const caseUnits = useMemo(
@@ -1506,7 +1499,7 @@ export function PracticeCasePlayer(props: PracticeCasePlayerProps) {
   const unitNumber = unit ? trackUnits.findIndex((item) => item.id === unit.id) + 1 : null
   const unitContextLabel =
     section === 'assess'
-      ? 'Capstone assessment'
+      ? 'Challenge'
       : unit && unitNumber
         ? challengePromptHidden
           ? `Unit ${unitNumber}`
@@ -1517,8 +1510,9 @@ export function PracticeCasePlayer(props: PracticeCasePlayerProps) {
   // Keyed derived state instead of reset effects: a new attempt (scenario or
   // mode change) invalidates the acknowledgement and any manual expansion, and
   // a stage advance invalidates the expansion, without setState-in-effect.
-  const attemptKey = `${scenario.id}:${state.simulationMode}`
+  const attemptKey = `${scenario.id}:${state.simulationMode}:${state.scenario.attempts}`
   const [briefAcknowledgedFor, setBriefAcknowledgedFor] = useState<string | null>(null)
+  const [challengeFeedbackFor, setChallengeFeedbackFor] = useState<string | null>(null)
   const [expanded, setExpanded] = useState<{
     attemptKey: string
     whenCurrent: CaseStage
@@ -1532,6 +1526,9 @@ export function PracticeCasePlayer(props: PracticeCasePlayerProps) {
   )
   const reassessmentSubmitted = state.scenario.reassessment !== null
   const debriefRevealed = state.scenario.phase === 'complete'
+  const challengeActive = section === 'assess' || state.simulationMode === 'challenge'
+  const showTeachingFeedback =
+    !challengeActive || challengeFeedbackFor === attemptKey || debriefRevealed
   const workflowStage: CaseStage = !planComplete
     ? 'plan'
     : reassessmentSubmitted
@@ -1551,7 +1548,7 @@ export function PracticeCasePlayer(props: PracticeCasePlayerProps) {
     expanded && expanded.attemptKey === attemptKey && expanded.whenCurrent === currentStage
       ? expanded.stage
       : currentStage
-  const workflowReady = !hasBrief || briefAcknowledged || planComplete
+  const workflowReady = true
 
   const appliedCount = state.scenario.clinical?.appliedInterventions.length ?? 0
   const trajectory = state.scenario.clinical?.trajectory
@@ -1597,7 +1594,7 @@ export function PracticeCasePlayer(props: PracticeCasePlayerProps) {
     number: stages.length + 1,
     label: 'Debrief',
     complete: debriefRevealed,
-    summary: debriefRevealed ? `${outcome.score}%` : undefined,
+    summary: debriefRevealed ? 'Reviewed' : undefined,
   })
   const stageNumberById = new Map(stages.map((stage) => [stage.id, stage.number]))
 
@@ -1613,6 +1610,18 @@ export function PracticeCasePlayer(props: PracticeCasePlayerProps) {
     setExpanded(null)
     window.requestAnimationFrame(() => navigateToWorkflowSection('practice-plan'))
   }
+
+  useEffect(() => {
+    if (!phaseRequest) return
+    setExpanded({
+      attemptKey,
+      whenCurrent: currentStage,
+      stage: phaseRequest.stage,
+    })
+    window.requestAnimationFrame(() =>
+      navigateToWorkflowSection(stagePanelIds[phaseRequest.stage] as WorkflowSectionId),
+    )
+  }, [attemptKey, currentStage, phaseRequest])
 
   const pairedLessonId = pairedLessonIdsForCase(scenario.id)[0]
   const pairedLesson = pairedLessonId
@@ -1643,7 +1652,7 @@ export function PracticeCasePlayer(props: PracticeCasePlayerProps) {
         : {
             pathname: `${cardiohelpEcmoNavBase}/assess`,
             query: { track: supportMode },
-            label: `${supportMode.toUpperCase()} capstone assessment`,
+            label: `${supportMode.toUpperCase()} challenge`,
           }
     : null
 
@@ -1652,16 +1661,11 @@ export function PracticeCasePlayer(props: PracticeCasePlayerProps) {
       {scenario.clinicalCase ? (
         <div>
           <span className={styles.kicker}>Learning objectives</span>
-          <ul className={styles.caseObjectives} data-mastery={outcome.mastery}>
+          <ul className={styles.caseObjectives}>
             {scenario.clinicalCase.learningObjectives.map((objective) => (
               <li key={objective}>
-                {outcome.mastery ? (
-                  <CheckCircle2 aria-hidden="true" />
-                ) : (
-                  <Target aria-hidden="true" />
-                )}
+                <Target aria-hidden="true" />
                 {objective}
-                {outcome.mastery ? '' : ' · review'}
               </li>
             ))}
           </ul>
@@ -1734,7 +1738,7 @@ export function PracticeCasePlayer(props: PracticeCasePlayerProps) {
                           {challengePromptHidden
                             ? `Clinical challenge ${trackCaseIds.indexOf(caseId) + 1}`
                             : caseDefinition.title}
-                          {progress.completedLabs.includes(caseId) ? ' · completed' : ''}
+                          {progress.completedLabs.includes(caseId) ? ' · worked through' : ''}
                         </option>
                       )
                     })}
@@ -1759,6 +1763,44 @@ export function PracticeCasePlayer(props: PracticeCasePlayerProps) {
         onBeginCase={beginCase}
       />
 
+      {challengeActive && !debriefRevealed ? (
+        <aside className={styles.challengeFeedbackControl}>
+          <p>
+            Routine teaching is collected for the debrief. Patient, circuit, gas, console, and alarm
+            responses remain live.
+          </p>
+          <label>
+            <input
+              type="checkbox"
+              checked={showTeachingFeedback}
+              onChange={(event) =>
+                setChallengeFeedbackFor(event.currentTarget.checked ? attemptKey : null)
+              }
+            />
+            <span>Show teaching notes after each action</span>
+          </label>
+        </aside>
+      ) : null}
+
+      {state.scenario.criticalErrors.length > 0 && !debriefRevealed ? (
+        <div className={styles.criticalErrors} role="alert">
+          <AlertOctagon aria-hidden="true" />
+          <div>
+            <strong>Safety interruption</strong>
+            <span>
+              Stopping here—in a real patient this path could cause catastrophic harm.{' '}
+              {state.scenario.clinical?.lastResponse}
+            </span>
+            <span>
+              {state.scenario.criticalErrors.map((error) => error.replaceAll('-', ' ')).join(', ')}
+            </span>
+            <button type="button" onClick={() => onLoadScenario(scenario.id, state.simulationMode)}>
+              Restart from the clean case
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       <ClinicalCaseBrief state={state} scenario={scenario} />
 
       {activeStage === 'brief' && scenario.clinicalCase ? (
@@ -1773,8 +1815,8 @@ export function PracticeCasePlayer(props: PracticeCasePlayerProps) {
             <div>
               <h3 id="case-objectives-heading">Learning objectives</h3>
               <p>
-                What this case is designed to teach. Begin when ready—the console unlocks after you
-                commit a plan.
+                What this case is designed to teach. Begin when ready, or open any workflow step
+                directly.
               </p>
             </div>
           </div>
@@ -1816,6 +1858,7 @@ export function PracticeCasePlayer(props: PracticeCasePlayerProps) {
               scenario={scenario}
               dispatch={dispatch}
               stageNumber={stageNumberById.get('manage') ?? 2}
+              showTeachingFeedback={showTeachingFeedback}
             />
           </div>
           <div hidden={activeStage !== 'reassess' && activeStage !== 'debrief'}>

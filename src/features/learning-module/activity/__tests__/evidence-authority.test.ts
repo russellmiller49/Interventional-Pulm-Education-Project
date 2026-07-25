@@ -20,6 +20,8 @@ function activity(
     pathwayIds: ['respiratory-failure'],
     competencyIds: ['ventilation-mechanics'],
     prerequisiteActivityIds: [],
+    teachesConceptIds: ['respiratory-system-compliance'],
+    assumedConceptIds: [],
     estimatedMinutes: 12,
     difficulty: 'foundation',
     completionRuleId: 'validated-transfer',

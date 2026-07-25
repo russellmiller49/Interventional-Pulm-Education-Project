@@ -65,7 +65,7 @@ describe('Baxter CRRT accessibility contract', () => {
         expect.stringMatching(/Overview/),
         expect.stringMatching(/Learn/),
         expect.stringMatching(/Practice/),
-        expect.stringMatching(/Assess/),
+        expect.stringMatching(/Challenge/),
       ]),
     )
     expect(within(nav).getByRole('link', { name: /Learn/ })).toHaveAttribute('aria-current', 'page')

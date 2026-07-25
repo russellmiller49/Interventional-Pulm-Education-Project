@@ -31,11 +31,11 @@ export function SourcesPanel({
     <section className={styles.sourcesSection} aria-labelledby="sources-heading">
       <div className={styles.sectionTitleRow}>
         <div>
-          <span className={styles.kicker}>Assessment & source notes</span>
+          <span className={styles.kicker}>Clinical review & source notes</span>
           <h2 id="sources-heading">Evidence boundary and review status</h2>
         </div>
         <span className={styles.draftBadge}>
-          {published ? 'PUBLISHED · REVIEW APPROVED' : 'UNLISTED TEST · REVIEW REQUIRED'}
+          {published ? 'PUBLISHED · REVIEW APPROVED' : 'UNLISTED REVIEW · REVIEW REQUIRED'}
         </span>
       </div>
 
@@ -79,9 +79,7 @@ export function SourcesPanel({
         <div>
           <dt>Publication</dt>
           <dd>
-            {published
-              ? 'Reviewed release'
-              : 'Unlisted tester draft; clinical + device review pending'}
+            {published ? 'Reviewed release' : 'Unlisted draft; clinical + device review pending'}
           </dd>
         </div>
       </dl>
@@ -141,7 +139,7 @@ export function SourcesPanel({
           </li>
           <li>
             <span aria-hidden="true">□</span> Local faculty maps emergency recognition exercises to
-            hands-on competency and local escalation policy.
+            hands-on supervised performance and local escalation policy.
           </li>
           <li>
             <span aria-hidden="true">□</span> Spanish and Simplified Chinese clinical translations

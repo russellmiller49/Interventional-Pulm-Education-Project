@@ -19,7 +19,7 @@ export const criticalCareModules = [
   {
     slug: 'icu-hemodynamics',
     title: 'ICU Hemodynamics Lab',
-    eyebrow: 'Hemodynamic assessment',
+    eyebrow: 'Hemodynamic reasoning',
     description:
       'Build fluency with pulmonary artery catheter waveforms, thermodilution, derived values, shock physiology, and bedside management cases.',
     href: '/icu-hemodynamics',
@@ -41,7 +41,7 @@ export const criticalCareModules = [
     title: 'Mechanical Circulatory Support',
     eyebrow: 'Circulatory support',
     description:
-      'Compare IABP counterpulsation, Impella CP-family support, and durable continuous-flow LVAD assessment through guided learning and ICU cases.',
+      'Compare IABP counterpulsation, Impella CP-family support, and durable continuous-flow LVAD behavior through guided learning and ICU cases.',
     href: '/mechanical-circulatory-support',
     icon: 'circulatory-support',
     topics: ['IABP', 'Impella', 'LVAD'],
@@ -51,7 +51,7 @@ export const criticalCareModules = [
     title: 'CARDIOHELP ECMO',
     eyebrow: 'Extracorporeal support',
     description:
-      'Learn and practice adult VV and peripheral VA ECMO console operation, circuit assessment, alarms, transport, and troubleshooting.',
+      'Learn and practice adult VV and peripheral VA ECMO console operation, circuit review, alarms, transport, and troubleshooting.',
     href: '/cardiohelp-ecmo',
     icon: 'ecmo',
     topics: ['VV ECMO', 'VA ECMO', 'Circuit safety'],
@@ -61,7 +61,7 @@ export const criticalCareModules = [
     title: 'Baxter CRRT',
     eyebrow: 'Renal support',
     description:
-      'Work through CRRT concepts, PrisMax and Prismaflex workflows, safety drills, case-based practice, and mastery assessment.',
+      'Work through CRRT concepts, PrisMax and Prismaflex workflows, safety drills, case-based practice, and an advanced challenge.',
     href: '/baxter-crrt',
     icon: 'crrt',
     topics: ['CRRT concepts', 'Device workflow', 'Safety drills'],

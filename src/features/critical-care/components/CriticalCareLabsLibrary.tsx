@@ -18,7 +18,7 @@ export function CriticalCareLabsLibrary({
       <h1 className="mt-2 text-3xl font-bold tracking-tight">Focused critical-care labs</h1>
       <p className="mt-3 max-w-3xl leading-7 text-muted-foreground">
         Experienced learners can enter any reviewed focused laboratory directly while preserving
-        each module&apos;s established progress and scoring behavior.
+        each module&apos;s established progress and feedback behavior.
       </p>
       <ol className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {catalog.modules.map((module) => (

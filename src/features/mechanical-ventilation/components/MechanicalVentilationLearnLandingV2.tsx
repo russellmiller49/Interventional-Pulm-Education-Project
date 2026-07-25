@@ -18,8 +18,8 @@ export function MechanicalVentilationLearnLandingV2() {
         </h1>
         <p className="mt-4 text-base leading-7 text-muted-foreground">
           Each guided activity uses the same six phases as the case workspace and ends with an
-          explicit transfer check. These lesson drafts are available for preview and do not award
-          completion or competency credit.
+          explicit transfer check. These lesson drafts are available for preview and do not make a
+          claim about clinical readiness.
         </p>
       </header>
 
@@ -35,7 +35,7 @@ export function MechanicalVentilationLearnLandingV2() {
           <p className="font-semibold">Preview · needs clinical review</p>
           <p className="text-muted-foreground">
             Draft lesson interactions are being rebuilt and validated. Use the reviewed practice
-            cases for scored learning evidence.
+            cases for deeper clinical application.
           </p>
         </div>
       </aside>

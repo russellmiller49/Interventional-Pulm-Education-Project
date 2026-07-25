@@ -74,7 +74,7 @@ describe('CriticalCareHub', () => {
 
     expect(await screen.findByRole('link', { name: 'Start here' })).toHaveAttribute(
       'href',
-      '/icu-hemodynamics/learn?activity=pac-signal-validation',
+      '/icu-hemodynamics/learn?activity=catheter-advancement',
     )
     expect(screen.getByRole('heading', { name: 'Quick launch a lab' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Browse all cases' })).toHaveAttribute(
@@ -120,7 +120,7 @@ describe('CriticalCareHub', () => {
 
     render(<CriticalCareHub catalog={catalog} />)
     const outcomes = await screen.findByRole('status', { name: 'Integrated case outcomes' })
-    expect(outcomes).toHaveTextContent('2 integrated longitudinal courses completed')
+    expect(outcomes).toHaveTextContent('Integrated scenario history is available')
     expect(outcomes).toHaveTextContent(/case identity, patient state, commands, and replay remain/)
   })
 

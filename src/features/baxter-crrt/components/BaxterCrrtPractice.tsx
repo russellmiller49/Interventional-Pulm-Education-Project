@@ -186,7 +186,7 @@ export function BaxterCrrtPractice({
       <CrrtActivityWorkspace
         session={session}
         mode="practice"
-        progressLabel={`${progress.completedPracticeCaseIds.length}/${baxterCrrtCoreCaseIds.length} core cases complete · ${selectedCatalogEntry.title}`}
+        progressLabel={`Practice case · ${selectedCatalogEntry.title} · personal history stays local`}
         resumed={validPracticeCaseId(initialCaseId)}
         onReset={() => dispatch({ type: 'RESET', attempt: session.attempt + 1 })}
         onSaveAndExit={() => {
@@ -214,7 +214,7 @@ export function BaxterCrrtPractice({
                       )
                       return (
                         <option key={caseId} value={caseId}>
-                          {complete ? '✓ ' : ''}
+                          {complete ? 'Worked through · ' : ''}
                           {entry.title}
                         </option>
                       )

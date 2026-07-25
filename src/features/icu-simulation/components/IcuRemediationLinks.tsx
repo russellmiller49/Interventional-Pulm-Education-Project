@@ -29,8 +29,8 @@ export function IcuRemediationLinks({
       <div className={styles.remediationComplete} role="status">
         <CheckCircle2 aria-hidden="true" />
         <p>
-          <strong>Focused preparation complete.</strong> Continue into the integrated course when
-          ready.
+          <strong>Related topics visited.</strong> Continue into the integrated course whenever you
+          are ready.
         </p>
       </div>
     )
@@ -53,8 +53,8 @@ export function IcuRemediationLinks({
               <strong>{requirement.label}</strong>
               <span className={styles.remediationGateStatus}>
                 {requirement.countsForAssessGate
-                  ? 'Released Assess prerequisite'
-                  : 'Preview preparation · advisory while clinical review is pending'}
+                  ? 'Suggested foundation'
+                  : 'Related preview · clinical review pending'}
               </span>
               <p>{requirement.rationale}</p>
               <div className={styles.remediationActions}>

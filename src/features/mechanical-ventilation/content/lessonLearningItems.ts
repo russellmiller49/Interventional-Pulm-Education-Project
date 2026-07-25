@@ -247,7 +247,7 @@ export const mechanicalVentilationLessonItems: Readonly<
       choices: [
         {
           id: 'validate-circuit',
-          label: 'Inspect and correct the circuit signal source, then repeat the multitrace review',
+          label: 'Inspect and repair the circuit signal source, then repeat the multitrace review',
           rationale:
             'The missing effort and visible condensate support a circuit-driven trigger that should be validated directly.',
           plausibility: 'best',
@@ -256,7 +256,7 @@ export const mechanicalVentilationLessonItems: Readonly<
           id: 'suppress-effort',
           label: 'Suppress patient effort before inspecting the circuit',
           rationale:
-            'The extra breaths are not matched to effort, and sedation would not correct a circuit signal.',
+            'The extra breaths are not matched to effort, and sedation would not repair a circuit signal.',
           plausibility: 'unsafe',
         },
         {
@@ -319,12 +319,12 @@ export const mechanicalVentilationLessonItems: Readonly<
       clinicalContextId: 'mv10-delayed-cycling',
       visualAssetIds: ['vent-pressure-flow-volume', 'vent-pmus-overlay'],
       transferVariantId: 'mv10-delayed-cycle',
-      stem: 'In obstructive physiology, inspiratory flow continues after patient effort has ended, expiration starts late, and intrinsic PEEP rises. Which test best targets the mismatch?',
+      stem: 'In obstructive physiology, inspiratory flow continues after patient effort has ended, expiration starts late, and intrinsic PEEP rises. Which maneuver best targets the mismatch?',
       choices: [
         {
           id: 'earlier-cycle',
           label:
-            'Test an earlier cycling threshold and reassess inspiratory time plus expiratory emptying',
+            'Try an earlier cycling threshold and reassess inspiratory time plus expiratory emptying',
           rationale:
             'The mechanical breath is ending too late for the patient and is shortening expiration.',
           plausibility: 'best',
@@ -417,7 +417,8 @@ export const mechanicalVentilationLessonItems: Readonly<
           id: 'repeat-prior',
           label:
             'Repeat the rate change used for the prior patient without relocalizing the mismatch',
-          rationale: 'A successful action in reverse triggering does not test slow pressurization.',
+          rationale:
+            'A successful action in reverse triggering does not evaluate slow pressurization.',
           plausibility: 'incorrect-mechanism',
         },
       ],
@@ -481,7 +482,7 @@ export const mechanicalVentilationLessonItems: Readonly<
         {
           id: 'urgent-new-mechanism',
           label:
-            'Perform an urgent bedside assessment and treat the new obstructive mechanism according to local emergency protocol',
+            'Perform an urgent bedside evaluation and treat the new obstructive mechanism according to local emergency protocol',
           rationale:
             'The abrupt coupled deterioration is not the same phenotype as diffuse recruitable hypoxemia.',
           plausibility: 'best',
@@ -610,14 +611,14 @@ export const mechanicalVentilationLessonItems: Readonly<
           id: 'sedate-first',
           label: 'Deepen sedation before asking about pain or breathing discomfort',
           rationale:
-            'This can obscure assessment and does not address the identified reversible causes.',
+            'This can obscure bedside evaluation and does not address the identified reversible causes.',
           plausibility: 'unsafe',
         },
         {
           id: 'screen-only',
           label: 'Use the ventilator display alone because patient report is unreliable',
           rationale:
-            'Patient experience and bedside examination are essential parts of dyspnea assessment.',
+            'Patient experience and bedside examination are essential parts of dyspnea evaluation.',
           plausibility: 'incorrect-mechanism',
         },
       ],
@@ -641,13 +642,13 @@ export const mechanicalVentilationLessonItems: Readonly<
         {
           id: 'signal-acknowledged',
           label:
-            'It records and temporarily quiets the alert; the patient, airway, circuit, and pressure components still require assessment',
+            'It records and temporarily quiets the alert; the patient, airway, circuit, and pressure components still require review',
           rationale: 'Acknowledgment changes alert handling, not the cause of the high pressure.',
           plausibility: 'best',
         },
         {
           id: 'cause-treated',
-          label: 'It treats the cause and makes further bedside assessment unnecessary',
+          label: 'It treats the cause and makes further bedside review unnecessary',
           rationale:
             'No physiologic, airway, or circuit problem is corrected by acknowledging an alert.',
           plausibility: 'unsafe',
@@ -661,7 +662,7 @@ export const mechanicalVentilationLessonItems: Readonly<
       ],
       correctChoiceIds: ['signal-acknowledged'],
       explanation:
-        'A safe transfer requires bedside assessment, airway/circuit inspection, a peak-to-plateau comparison, action on the localized cause, and closed-loop reassessment.',
+        'A safe transfer requires bedside evaluation, airway/circuit inspection, a peak-to-plateau comparison, action on the localized cause, and closed-loop reassessment.',
       evidenceIds: mechanicsEvidence,
       reviewStatus: 'sme-review',
     }),

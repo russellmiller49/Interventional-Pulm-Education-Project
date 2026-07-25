@@ -355,10 +355,6 @@
 
 .liveWorkspace {
   display: grid;
-  grid-template-areas:
-    'monitor physiology controls'
-    'tasks tasks tasks';
-  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.74fr) minmax(260px, 0.48fr);
   gap: 1rem;
   align-items: stretch;
   margin-bottom: 1rem;
@@ -368,7 +364,11 @@
   min-width: 0;
 }
 
-.hemodynamicNativeWorkspace {
+.liveWorkspace > .resizablePacWorkspace {
+  height: clamp(38rem, calc(100dvh - 8rem), 52rem);
+}
+
+.resizablePacWorkspace {
   --ink: #15323a;
   --muted: #62767b;
   --line: #d9e4e3;
@@ -381,22 +381,75 @@
   --amber-soft: #fff4db;
   --red: #b64152;
   display: grid;
-  grid-template-columns: minmax(0, 1.22fr) minmax(31rem, 1fr);
-  gap: 1rem;
-  align-items: stretch;
-  height: 100%;
+  grid-template-columns:
+    minmax(0, var(--pac-monitor-width, 43%))
+    0.75rem
+    minmax(0, var(--pac-physiology-width, 29%))
+    0.75rem
+    minmax(0, 1fr);
   width: 100%;
+  height: 100%;
   min-width: 0;
   min-height: 0;
   padding: 0.75rem;
   overflow: hidden;
   color: var(--ink);
   color-scheme: light;
-  background: #eef4f2;
-  font-family: var(--font-sans, Arial, sans-serif);
+  background: #eaf1ef;
 }
 
-.hemodynamicNativeMonitor {
+.resizablePacWorkspace[data-compact='true'] {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.55rem;
+}
+
+.pacCompactPaneTabs {
+  display: grid;
+  grid-column: 1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.pacCompactPaneTabs > span {
+  grid-column: 1 / -1;
+  color: #567075;
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.035em;
+}
+
+.pacCompactPaneTabs button {
+  min-height: 2.5rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #8facaa;
+  border-radius: 0.65rem;
+  color: #31565b;
+  background: #f8fbfa;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.pacCompactPaneTabs button[aria-selected='true'] {
+  border-color: #147d7b;
+  color: #f3fffd;
+  background: #147d7b;
+  box-shadow: 0 0 0 2px rgba(20, 125, 123, 0.14);
+}
+
+.resizablePacWorkspace[data-compact='true'] .resizablePacPane {
+  grid-row: 2;
+  grid-column: 1;
+}
+
+.pacResizeHandle[hidden],
+.resizablePacPane[hidden] {
+  display: none;
+}
+
+.resizablePacPane {
   min-width: 0;
   min-height: 0;
   overflow: auto;
@@ -404,41 +457,224 @@
   scrollbar-gutter: stable;
 }
 
-.hemodynamicNativeLearningPane {
-  min-width: 0;
-  min-height: 0;
-  padding-right: 0.2rem;
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
-}
-
-.hemodynamicNativeLearningPane:focus-visible {
+.resizablePacPane:focus-visible {
   outline: 3px solid var(--teal);
   outline-offset: -3px;
 }
 
-.hemodynamicNativeTop {
+.resizablePacPane > * {
+  width: 100%;
+}
+
+.resizablePacPane > .pacActionDock {
+  position: static;
+  top: auto;
+  order: initial;
+}
+
+.pacResizeHandle {
+  position: relative;
+  z-index: 5;
   display: grid;
-  grid-template-columns: minmax(19rem, 1.2fr) minmax(16rem, 0.8fr);
+  width: 0.75rem;
+  min-width: 0.75rem;
+  height: 100%;
+  min-height: 3rem;
+  place-items: center;
+  touch-action: none;
+  cursor: col-resize;
+}
+
+.pacResizeHandle::before {
+  width: 2px;
+  height: 100%;
+  content: '';
+  background: #9eb6b2;
+  transition:
+    width 120ms ease,
+    background 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.pacResizeHandle > span {
+  position: absolute;
+  display: block;
+  width: 0.42rem;
+  height: 3.5rem;
+  border: 1px solid #7f9c97;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, #537b75 1px, transparent 1.5px) center / 4px 6px,
+    #eef5f3;
+  box-shadow: 0 0.2rem 0.75rem rgba(17, 61, 58, 0.2);
+}
+
+.pacResizeHandle:hover::before,
+.pacResizeHandle:focus-visible::before,
+.pacResizeHandle[data-active='true']::before {
+  width: 4px;
+  background: var(--teal);
+  box-shadow: 0 0 0 3px rgba(20, 125, 123, 0.16);
+}
+
+.pacResizeHandle:focus-visible {
+  outline: 3px solid #63c9c0;
+  outline-offset: -3px;
+}
+
+.pacPathwayViewport {
+  display: grid;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.pacPathwaySurface {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.pacPathwaySurface > * {
+  height: 100%;
+}
+
+.pacPathwayNav {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 10.5rem minmax(0, 1fr);
+  gap: 0.8rem;
+  padding: 0.6rem 0.8rem 0.45rem;
+  overflow: hidden;
+  border-bottom: 1px solid #31505f;
+  color: #dcebf0;
+  background: #0a1b27;
+  box-shadow: 0 0.45rem 1.2rem rgba(0, 0, 0, 0.18);
+}
+
+.pacPathwayNavIntro {
+  display: grid;
+  min-width: 0;
+  align-content: center;
+  gap: 0.08rem;
+}
+
+.pacPathwayNavIntro > span {
+  color: #6ed7cd;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.pacPathwayNavIntro > strong {
+  font-size: 0.78rem;
+}
+
+.pacPathwayNavIntro > small {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #9eb3bd;
+  font-size: 0.62rem;
+}
+
+.pacPathwayNav ol {
+  display: flex;
+  min-width: 0;
+  gap: 0.38rem;
+  padding: 0;
+  margin: 0;
+  overflow-x: auto;
+  list-style: none;
+  scrollbar-color: #52727f transparent;
+  scrollbar-width: thin;
+}
+
+.pacPathwayNav li {
+  display: flex;
+  min-width: 5.75rem;
+}
+
+.pacPathwayNav button {
+  display: grid;
+  width: 100%;
+  min-height: 2.75rem;
+  grid-template-columns: 1.35rem minmax(0, 1fr);
+  gap: 0.38rem;
+  align-items: center;
+  padding: 0.45rem 0.55rem;
+  cursor: pointer;
+  border: 1px solid #345363;
+  border-radius: 0.65rem;
+  color: #d5e4e9;
+  background: #102735;
+  text-align: left;
+}
+
+.pacPathwayNav button:hover {
+  border-color: #65bfb8;
+  background: #153442;
+}
+
+.pacPathwayNav button:focus-visible {
+  outline: 3px solid #72d7ce;
+  outline-offset: 2px;
+}
+
+.pacPathwayNav button[aria-current='step'] {
+  border-color: #69cfc5;
+  color: #061b22;
+  background: #80d9d0;
+  box-shadow: 0 0 0 2px rgba(105, 207, 197, 0.18);
+}
+
+.pacPathwayNav button > span:first-child {
+  display: grid;
+  place-items: center;
+  color: #75d4cb;
+  font-size: 0.67rem;
+  font-weight: 850;
+}
+
+.pacPathwayNav button[aria-current='step'] > span:first-child {
+  color: #0c5755;
+}
+
+.pacPathwayNav button > span:last-child {
+  display: grid;
+  min-width: 0;
+  gap: 0.1rem;
+}
+
+.pacPathwayNav button strong {
+  font-size: 0.7rem;
+}
+
+.pacPathwayNav button small {
+  display: none;
+}
+
+.hemodynamicNativeWorkspace {
+  background: #eef4f2;
+  font-family: var(--font-sans, Arial, sans-serif);
+}
+
+.hemodynamicNativeControls {
+  display: grid;
   gap: 0.75rem;
   min-width: 0;
-}
-
-.hemodynamicNativePhysiology {
-  min-width: 0;
-}
-
-.hemodynamicNativeTop > .pacActionDock {
-  grid-area: auto;
+  padding-right: 0.2rem;
 }
 
 .hemodynamicNativeLabs {
   display: grid;
   gap: 0.75rem;
   min-width: 0;
-  margin-top: 0.75rem;
 }
 
 .hemodynamicNativeLabs > details {
@@ -736,8 +972,21 @@
 .skillsLab,
 .caseWorkflow,
 .sourcesPanel {
+  --ink: #15323a;
+  --muted: #62767b;
+  --line: #d9e4e3;
+  --paper: #f6f8f5;
+  --navy: #092934;
+  --navy-2: #0e3b46;
+  --teal: #147d7b;
+  --teal-soft: #e4f3f0;
+  --amber: #b9781d;
+  --amber-soft: #fff4db;
+  --red: #b64152;
   border: 1px solid var(--line);
   border-radius: 1.2rem;
+  color: var(--ink);
+  color-scheme: light;
   background: #fff;
   box-shadow: 0 18px 45px rgba(27, 58, 62, 0.07);
 }
@@ -750,7 +999,6 @@
 }
 
 .pacActionDock {
-  grid-area: controls;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -789,6 +1037,93 @@
   font-size: 0.66rem;
   font-weight: 850;
   letter-spacing: 0.03em;
+}
+
+.pacAdvancementTeaching {
+  display: grid;
+  gap: 0.42rem;
+  padding: 0.72rem 0.78rem;
+  margin-top: 0.75rem;
+  border: 1px solid #d6aa55;
+  border-left: 5px solid #d49a2f;
+  border-radius: 0.72rem;
+  color: #4f3b16;
+  background: linear-gradient(135deg, #fff8e7, #f5fbf8);
+  box-shadow: 0 0.45rem 1.1rem rgba(128, 87, 16, 0.1);
+}
+
+.pacAdvancementTeaching strong {
+  color: #6c4708;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pacAdvancementTeaching p {
+  margin: 0;
+  font-size: 0.66rem;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.pacAdvancementTeaching output {
+  padding: 0.42rem 0.5rem;
+  border-radius: 0.45rem;
+  color: #135d59;
+  background: #e2f2ee;
+  font-size: 0.64rem;
+  font-weight: 850;
+  line-height: 1.4;
+}
+
+.pacCvpTeaching {
+  display: grid;
+  gap: 0.48rem;
+  padding: 0.76rem 0.8rem;
+  margin-top: 0.8rem;
+  border: 1px solid #87cfd5;
+  border-left: 5px solid #2ba9b5;
+  border-radius: 0.72rem;
+  color: #123f47;
+  background: linear-gradient(135deg, #eafafb, #f8fcf8);
+  box-shadow: 0 0.45rem 1.1rem rgba(25, 112, 121, 0.09);
+}
+
+.pacCvpTeaching strong {
+  color: #0d6570;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pacCvpTeaching p,
+.pacCvpTeaching li {
+  font-size: 0.66rem;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.pacCvpTeaching p {
+  margin: 0;
+}
+
+.pacCvpTeaching ol {
+  display: grid;
+  gap: 0.2rem;
+  padding-left: 1.1rem;
+  margin: 0;
+}
+
+.pacCvpTeaching output {
+  padding: 0.44rem 0.52rem;
+  border-radius: 0.45rem;
+  color: #5e460d;
+  background: #fff4d6;
+  font-size: 0.64rem;
+  font-weight: 850;
+  line-height: 1.4;
 }
 
 .pacDockBody {
@@ -1077,6 +1412,22 @@
   height: 0.68rem;
 }
 
+.physiologyKeyboardControls {
+  display: inline-flex;
+  gap: 0.2rem;
+  pointer-events: auto;
+}
+
+.physiologyKeyboardControls button {
+  min-width: 1.65rem;
+  justify-content: center;
+}
+
+.physiologyOrientation button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .physiologyAnatomyHud {
   position: absolute;
   right: 0.65rem;
@@ -1102,6 +1453,12 @@
 .physiologyAnatomyHud span {
   font-size: 0.58rem;
   line-height: 1.35;
+}
+
+.physiologyBalloonStatus[data-inflated='true'] {
+  color: #ffd166;
+  font-weight: 800;
+  letter-spacing: 0.025em;
 }
 
 .physiologyWebglFallback {
@@ -1918,6 +2275,14 @@
   font-size: 0.59rem;
   font-weight: 500;
   line-height: 1.4;
+}
+
+.optionStateText {
+  color: #17655d;
+  font-size: 0.62rem;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.02em;
 }
 
 .dynamicResponseFeedback {
@@ -2804,6 +3169,192 @@
   line-height: 1.45;
 }
 
+.measurementTeachingPanel {
+  --teaching-ink: #16343b;
+  --teaching-muted: #5d7277;
+  --teaching-line: #c7d9d6;
+  display: grid;
+  min-width: 0;
+  gap: 0.75rem;
+  padding: 0.8rem;
+  color: var(--teaching-ink);
+  background: #edf4f2;
+}
+
+.measurementTeachingPanel > header {
+  padding: 0.9rem;
+  border: 1px solid #b9d4cf;
+  border-radius: 0.85rem;
+  background: linear-gradient(145deg, #f9fcfb, #e5f2ef);
+}
+
+.measurementTeachingPanel > header > span,
+.measurementTeachingCardHeading span,
+.measurementMethodComparison article > span,
+.derivedTeachingGrid article > span,
+.measurementTeachingSource > span {
+  color: #197671;
+  font-size: 0.6rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.measurementTeachingPanel h2 {
+  margin: 0.3rem 0 0;
+  color: #0b3942;
+  font-size: 1.08rem;
+  line-height: 1.18;
+}
+
+.measurementTeachingPanel > header p {
+  margin: 0.55rem 0 0;
+  color: var(--teaching-muted);
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.measurementTeachingCard,
+.measurementMethodComparison article,
+.derivedTeachingGrid article {
+  min-width: 0;
+  padding: 0.8rem;
+  border: 1px solid var(--teaching-line);
+  border-radius: 0.8rem;
+  background: #fbfdfc;
+}
+
+.measurementTeachingCardHeading {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+}
+
+.measurementTeachingCardHeading > svg {
+  flex: 0 0 auto;
+  margin-top: 0.1rem;
+  color: #177e78;
+}
+
+.measurementTeachingPanel h3 {
+  margin: 0.18rem 0 0;
+  color: #123b43;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.measurementTeachingSteps,
+.measurementTeachingAudit {
+  display: grid;
+  gap: 0.45rem;
+  padding-left: 1.25rem;
+  margin: 0.75rem 0 0;
+  color: #526a6f;
+  font-size: 0.68rem;
+  line-height: 1.48;
+}
+
+.measurementTeachingSteps strong {
+  color: #164d4b;
+}
+
+.measurementTeachingCallout {
+  padding: 0.65rem 0.7rem;
+  margin: 0.7rem 0 0;
+  border-left: 3px solid #c58b2c;
+  border-radius: 0 0.55rem 0.55rem 0;
+  color: #735923;
+  background: #fff6df;
+  font-size: 0.67rem;
+  line-height: 1.45;
+}
+
+.measurementMethodComparison,
+.derivedTeachingGrid {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.measurementMethodComparison article {
+  border-top: 3px solid #2a8b84;
+}
+
+.measurementMethodComparison ul {
+  display: grid;
+  gap: 0.38rem;
+  padding-left: 1rem;
+  margin: 0.65rem 0 0;
+  color: #526a6f;
+  font-size: 0.66rem;
+  line-height: 1.43;
+}
+
+.measurementEquation {
+  padding: 0.55rem;
+  margin: 0.65rem 0 0;
+  overflow-wrap: anywhere;
+  border-radius: 0.55rem;
+  color: #dff8f4;
+  background: #0b3640;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.65rem;
+  line-height: 1.4;
+}
+
+.derivedDependencyFlow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.3rem;
+  align-items: center;
+  color: #4d686c;
+}
+
+.derivedDependencyFlow > span {
+  display: flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.45rem;
+  border: 1px solid #bdd3cf;
+  border-radius: 0.6rem;
+  background: #f9fcfb;
+  font-size: 0.62rem;
+  font-weight: 780;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.derivedDependencyFlow > svg {
+  justify-self: center;
+  color: #278b84;
+  transform: rotate(90deg);
+}
+
+.derivedTeachingGrid article {
+  border-left: 3px solid #58afa7;
+}
+
+.derivedTeachingGrid article p {
+  margin: 0.45rem 0 0;
+  color: #5b7074;
+  font-size: 0.67rem;
+  line-height: 1.47;
+}
+
+.measurementTeachingSource {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.65rem 0.75rem;
+  margin: 0;
+  border: 1px dashed #9ebbb6;
+  border-radius: 0.65rem;
+  color: #607579;
+  background: #f7faf9;
+  font-size: 0.62rem;
+  line-height: 1.4;
+}
+
 .reviewGate {
   display: grid;
   grid-template-columns: 150px 1fr;
@@ -2923,6 +3474,17 @@
     display: flex;
     flex-direction: column;
   }
+  .labShell .resizablePacWorkspace {
+    grid-template-columns: minmax(0, 1fr);
+    height: min(48rem, calc(100dvh - 7rem));
+  }
+  .labShell .pacResizeHandle {
+    display: none;
+  }
+  .labShell .resizablePacPane {
+    grid-column: 1;
+    min-height: 0;
+  }
   .hemodynamicNativeTop > .pacActionDock {
     position: static;
     order: initial;
@@ -2988,28 +3550,6 @@
   }
   .sourceGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 1080px) {
-  .hemodynamicNativeWorkspace {
-    display: block;
-    height: 100%;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-gutter: stable;
-  }
-  .hemodynamicNativeMonitor,
-  .hemodynamicNativeLearningPane {
-    height: auto;
-    overflow: visible;
-  }
-  .hemodynamicNativeLearningPane {
-    margin-top: 0.75rem;
-    padding-right: 0;
-  }
-  .hemodynamicNativeTop {
-    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -3109,6 +3649,26 @@
   }
   .pvLoopPanel {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 840px) {
+  .pacPathwayNav {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .resizablePacWorkspace {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+  .pacResizeHandle {
+    display: none;
+  }
+  .resizablePacPane {
+    grid-column: 1;
+    max-height: 38rem;
+    border-bottom: 1px solid #a9bfbb;
   }
 }
 
@@ -4148,6 +4708,44 @@
   font-weight: 850;
   font-style: italic;
 }
+.stripUnavailable {
+  fill: #8ea4a8;
+  font-size: 18px;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+}
+.stripTransition line {
+  stroke: #ffcf65;
+  stroke-width: 2;
+  stroke-dasharray: 7 5;
+}
+.stripTransition text {
+  fill: #ffe3a3;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.stripPhaseCursor line {
+  stroke: rgba(110, 231, 224, 0.8);
+  stroke-width: 1.4;
+  stroke-dasharray: 3 4;
+}
+.stripPhaseCursor text {
+  fill: #b6f4ef;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.03em;
+}
+.stripPhaseCursorPoint line {
+  stroke: #f7e4a8;
+  stroke-width: 1.5;
+}
+.stripPhaseCursorPoint circle {
+  fill: #07171d;
+  stroke: #f7e4a8;
+  stroke-width: 2;
+}
 
 .recognitionDrill {
   display: grid;
@@ -4217,6 +4815,9 @@
 .drillOptions label[data-state='incorrect'] {
   border-color: #c98f95;
   background: #fdecec;
+}
+.drillOptions .optionStateText {
+  margin-left: auto;
 }
 .drillControls button {
   min-height: 2.6rem;

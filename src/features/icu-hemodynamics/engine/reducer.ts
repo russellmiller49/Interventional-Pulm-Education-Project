@@ -7,7 +7,8 @@ import {
   deriveHemodynamicMeasurements,
 } from './simulation'
 import { generateThermodilutionCurve, thermodilutionAcceptedAverage } from './thermodilution'
-import { FAST_FLUSH_LIVE_DURATION_SECONDS } from './waveformArtifacts'
+import { DYNAMIC_RESPONSE_REFERENCE, FAST_FLUSH_LIVE_DURATION_SECONDS } from './waveformArtifacts'
+import { HEMODYNAMIC_CLINICAL_THRESHOLDS } from '../content/clinicalThresholds'
 import type {
   CatheterPosition,
   HemodynamicAction,
@@ -41,7 +42,8 @@ function withValidatedProcedureMilestones(
   const completed = new Set(state.completedInterventionIds)
   const pressureSystemValidated =
     state.measurementSystem.zeroed &&
-    Math.abs(state.measurementSystem.transducerLevelCm) <= 1 &&
+    Math.abs(state.measurementSystem.transducerLevelCm) <=
+      HEMODYNAMIC_CLINICAL_THRESHOLDS.signalValidation.transducerLevelToleranceCm &&
     state.measurementSystem.artifact === 'none' &&
     state.measurementSystem.dampingRatio >= 0.4 &&
     state.measurementSystem.dampingRatio <= 0.95 &&
@@ -163,7 +165,7 @@ export function icuHemodynamicsReducer(
         ...state,
         predictionCommitted: true,
         phase: 'measure',
-        responseMessage: 'Prediction locked. Validate the signals before treating the model.',
+        responseMessage: 'Working frame recorded. Validate the signals before treating the model.',
       }
     case 'SET_CATHETER_POSITION':
       return {
@@ -299,7 +301,8 @@ export function icuHemodynamicsReducer(
             transducerLevelCm: clamp(action.levelCm, -20, 20),
           },
           responseMessage:
-            Math.abs(action.levelCm) <= 1
+            Math.abs(action.levelCm) <=
+            HEMODYNAMIC_CLINICAL_THRESHOLDS.signalValidation.transducerLevelToleranceCm
               ? 'Transducer leveled at the phlebostatic axis. Zero remains a separate reference step.'
               : 'Transducer height changed. Align it with the phlebostatic axis before interpretation.',
         }),
@@ -314,7 +317,8 @@ export function icuHemodynamicsReducer(
           },
           signalValidationChecks: [...new Set([...state.signalValidationChecks, 'zero-reference'])],
           responseMessage:
-            Math.abs(state.measurementSystem.transducerLevelCm) <= 1
+            Math.abs(state.measurementSystem.transducerLevelCm) <=
+            HEMODYNAMIC_CLINICAL_THRESHOLDS.signalValidation.transducerLevelToleranceCm
               ? 'Atmospheric zero accepted. Transducer level is already aligned.'
               : 'Atmospheric zero accepted, but the transducer remains off level and must be positioned separately.',
         }),
@@ -327,9 +331,9 @@ export function icuHemodynamicsReducer(
             ...state.measurementSystem,
             dampingRatio: clamp(action.dampingRatio, 0.15, 1.5),
             artifact:
-              action.dampingRatio > 0.95
+              action.dampingRatio > DYNAMIC_RESPONSE_REFERENCE.overdampedAbove
                 ? 'overdamped'
-                : action.dampingRatio < 0.4
+                : action.dampingRatio < DYNAMIC_RESPONSE_REFERENCE.underdampedBelow
                   ? 'underdamped'
                   : 'none',
           },
@@ -346,9 +350,9 @@ export function icuHemodynamicsReducer(
       const artifact = state.measurementSystem.artifact
       const dampingRatio = state.measurementSystem.dampingRatio
       const finding =
-        artifact === 'overdamped' || dampingRatio > 0.95
+        artifact === 'overdamped' || dampingRatio > DYNAMIC_RESPONSE_REFERENCE.overdampedAbove
           ? 'Sluggish return without oscillation: overdamping suspected.'
-          : artifact === 'underdamped' || dampingRatio < 0.4
+          : artifact === 'underdamped' || dampingRatio < DYNAMIC_RESPONSE_REFERENCE.underdampedBelow
             ? 'Multiple high-frequency oscillations: underdamping suspected.'
             : 'One to two oscillations with prompt return: dynamic response is acceptable.'
       return withValidatedProcedureMilestones({

@@ -130,7 +130,7 @@ export function selectCrrtConsoleControls(
   )
   const performedIds = new Set(session.performedInterventionIds)
   const unsafeIds = new Set(session.caseDefinition.unsafeActions.map(({ actionId }) => actionId))
-  const canAct = session.prediction !== null && !session.debriefRevealed
+  const canAct = !session.debriefRevealed
 
   const settingActions = interventions.flatMap<CrrtConsoleActionModel>((intervention) => {
     const changes = intervention.effects.flatMap((effect) => {

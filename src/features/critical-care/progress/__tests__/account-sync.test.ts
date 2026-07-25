@@ -38,6 +38,8 @@ function definition(
     pathwayIds: [],
     competencyIds: ['signal-validation'],
     prerequisiteActivityIds: [],
+    teachesConceptIds: ['signal-fidelity'],
+    assumedConceptIds: [],
     estimatedMinutes: 10,
     difficulty: 'foundation',
     completionRuleId: 'explicit-completion',

@@ -170,24 +170,16 @@ describe('mechanical ventilation V2 case activity', () => {
     const incorrectMechanism = transferDefinition!.mechanismOptions.find(
       (option) => option.id !== transferDefinition!.correctMechanismId,
     )
-    const correctMechanism = transferDefinition!.mechanismOptions.find(
-      (option) => option.id === transferDefinition!.correctMechanismId,
-    )
     expect(incorrectMechanism).toBeDefined()
-    expect(correctMechanism).toBeDefined()
 
     fireEvent.click(screen.getByLabelText(incorrectMechanism!.label))
-    fireEvent.click(screen.getByRole('button', { name: 'Record bedside assessment' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Record bedside review' }))
     fireEvent.click(screen.getByRole('button', { name: 'Document multitrace review' }))
     const transferButton = screen.getByRole('button', {
-      name: /Submit scored transfer/i,
+      name: /Submit transfer review/i,
     })
     fireEvent.click(transferButton)
-    expect(screen.getByText(/Follow-up score: 2\/3/)).toBeInTheDocument()
-    expect(screen.queryByText(/^Completed$/)).not.toBeInTheDocument()
-
-    fireEvent.click(screen.getByLabelText(correctMechanism!.label))
-    fireEvent.click(transferButton)
+    expect(screen.getByText(/different multitrace pattern/i)).toBeInTheDocument()
 
     const completed = JSON.parse(
       window.localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY) ?? '{}',
@@ -246,7 +238,7 @@ describe('mechanical ventilation V2 case activity', () => {
     expect(interactions).not.toContain('critical_care_goal_met')
   })
 
-  it('keeps assessment identity masked while preserving observable patient context', async () => {
+  it('keeps challenge identity, patient context, and sources visible', async () => {
     render(
       <MechanicalVentilationCaseActivityV2
         caseId="MV-01"
@@ -257,13 +249,11 @@ describe('mechanical ventilation V2 case activity', () => {
       />,
     )
 
-    expect(
-      await screen.findByRole('heading', { name: 'Masked ventilation challenge' }),
-    ).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /MV-01/i })).toBeInTheDocument()
     expect(
       screen.getByText(/A 62-year-old woman with pneumonia-associated moderate-to-severe ARDS/),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Reference' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reference' })).toBeInTheDocument()
     expect(screen.queryByText(/seed \d+/i)).not.toBeInTheDocument()
     expect(screen.getByTestId('mock-bedside')).toBeInTheDocument()
     expect(screen.getByTestId('mock-console')).toBeInTheDocument()
@@ -271,10 +261,9 @@ describe('mechanical ventilation V2 case activity', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Finish mock case' }))
     fireEvent.click(screen.getByRole('button', { name: /Load contrasting transfer patient/i }))
 
-    expect(screen.getByRole('heading', { name: 'Masked transfer challenge' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Transfer · MV-14/i })).toBeInTheDocument()
     expect(screen.getByText(/A 50-year-old man with ARDS on moderate PEEP/)).toBeInTheDocument()
-    expect(screen.queryByText(/Transfer · MV-14/)).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Reference' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reference' })).toBeInTheDocument()
   })
 
   it('restores the scored primary case exactly and restarts partial transfer work clean', async () => {
@@ -304,7 +293,7 @@ describe('mechanical ventilation V2 case activity', () => {
     render(<MechanicalVentilationCaseActivityV2 {...props} />)
 
     expect(await screen.findByRole('heading', { name: /Transfer · MV-14/i })).toBeInTheDocument()
-    expect(screen.getByText(/scored primary case was reconstructed exactly/i)).toBeInTheDocument()
-    expect(screen.getByText(/Follow-up evidence: 0 of 3 recorded/)).toBeInTheDocument()
+    expect(screen.getByText(/primary case was reconstructed exactly/i)).toBeInTheDocument()
+    expect(screen.getByText(/Transfer inputs: choose an interpretation/i)).toBeInTheDocument()
   })
 })

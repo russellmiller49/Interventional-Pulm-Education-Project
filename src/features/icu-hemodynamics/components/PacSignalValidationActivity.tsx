@@ -33,7 +33,11 @@ import {
 } from '@/features/learning-module/activity'
 import { Link, useRouter } from '@/i18n/navigation'
 
-import { hemodynamicCaseById, hemodynamicsSourceById } from '../content'
+import {
+  hemodynamicCaseById,
+  hemodynamicsSourceById,
+  type PacLearningPathwaySectionId,
+} from '../content'
 import {
   createInitialHemodynamicState,
   icuHemodynamicsReducer,
@@ -42,6 +46,8 @@ import {
   type HemodynamicSimulationState,
 } from '../engine'
 import { HemodynamicNativeWorkspace } from './HemodynamicNativeWorkspace'
+import { PacLearningPathwayViewport } from './PacLearningPathwayNav'
+import { PacSectionCompletionActions } from './PacSectionCompletionActions'
 
 const ACTIVITY_ID = 'hemodynamics:learn:pac-signal-validation'
 const PAYLOAD_VERSION = 'pac-signal-validation-v1'
@@ -98,7 +104,7 @@ const phaseCopy: Readonly<
     hint: 'A plausible number is not necessarily a valid measurement.',
   },
   act: {
-    objective: 'Validate and correct the complete PAC measurement chain.',
+    objective: 'Validate and repair the complete PAC measurement chain.',
     requiredAction: 'Complete all four checks before advancing.',
     targets: ['Level and zero', 'Dynamic response', 'Catheter position', 'Repeat technique'],
     hint: caseDefinition.guidedPrompt,
@@ -213,6 +219,7 @@ function ActionStatus({
 }) {
   return (
     <span className="inline-flex items-center gap-2">
+      <span className="sr-only">{complete ? 'Completed: ' : 'Not completed: '}</span>
       {complete ? (
         <CheckCircle2 className="size-4 text-emerald-600" aria-hidden="true" />
       ) : (
@@ -223,7 +230,13 @@ function ActionStatus({
   )
 }
 
-export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale?: string }) {
+export function PacSignalValidationActivity({
+  locale = 'en',
+  onPathwaySectionChange,
+}: {
+  readonly locale?: string
+  readonly onPathwaySectionChange?: (sectionId: PacLearningPathwaySectionId) => void
+}) {
   const router = useRouter()
   const [simulation, setSimulation] = useState(freshSimulation)
   const [phase, setPhase] = useState<CriticalCareActivityPhase>('recognize')
@@ -395,7 +408,7 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
     setStorageMessage(
       saved
         ? options.completed && !done
-          ? 'Draft review saved as in progress; no completion or competency credit was awarded.'
+          ? 'Draft review saved as in progress; it does not make a claim about clinical readiness.'
           : options.completed
             ? 'Activity completion saved on this device.'
             : 'Safe checkpoint saved on this device.'
@@ -407,6 +420,22 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
     setPhase(nextPhase)
     setHintVisible(false)
     persistCheckpoint(nextPhase, checkpoints[nextPhase])
+  }
+
+  function selectPhase(nextPhase: CriticalCareActivityPhase) {
+    setSimulation(rebuildAtCheckpoint(checkpoints[nextPhase]))
+    setPhase(nextPhase)
+    setHintVisible(false)
+    setCompleted(false)
+    if (nextPhase === 'predict') setPrediction(null)
+    if (nextPhase === 'transfer') {
+      setTransferInterpretation(null)
+      setTransferFeedback(null)
+    }
+    persistCheckpoint(nextPhase, checkpoints[nextPhase])
+    setStorageMessage(
+      `Opened the ${nextPhase} section from the authored safe setup for that phase.`,
+    )
   }
 
   function submitPrediction() {
@@ -466,19 +495,19 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
       return
     }
     setTransferFeedback(
-      'Best interpretation. The sluggish release with little oscillation indicates an overdamped measurement system. Correct and revalidate that system in the workspace.',
+      'Best interpretation. The sluggish release with little oscillation indicates an overdamped measurement system. Repair and revalidate that system in the workspace.',
     )
   }
 
   function completeTransfer() {
     const transferInteractionComplete =
-      transferInterpretation === 'overdamped-system' &&
+      transferInterpretation !== null &&
       simulation.signalValidationChecks.includes('dynamic-response-classified') &&
       simulation.signalValidationChecks.includes('dynamic-response-corrected') &&
       simulation.measurementSystem.artifact === 'none'
     if (!transferInteractionComplete) {
       setTransferFeedback(
-        'Interpret the observed release response, then use the pressure-system lab to classify and correct it.',
+        'Choose an interpretation, then use the pressure-system lab to classify and repair the observed release response.',
       )
       return
     }
@@ -574,7 +603,16 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
         : 'No prediction has been submitted yet.'
 
   let taskControls = null
-  if (phase === 'recognize') {
+  if (completed) {
+    taskControls = (
+      <PacSectionCompletionActions
+        sectionTitle="PAC signal-validation capstone"
+        continueLabel="Continue to hemodynamics practice"
+        onRepeat={resetActivity}
+        onContinue={() => router.push('/icu-hemodynamics/practice' as Route)}
+      />
+    )
+  } else if (phase === 'recognize') {
     taskControls = (
       <button
         type="button"
@@ -635,7 +673,7 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
               pressureSystemCorrected && dynamicResponseChecked && dynamicResponseClassified
             }
           >
-            Run, classify, and correct the actual fast-flush release trace
+            Run, classify, and resolve the actual fast-flush release trace
           </ActionStatus>
         </div>
         <div className="rounded-xl border p-3 text-sm">
@@ -680,7 +718,7 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
     )
   } else {
     const transferReady =
-      transferInterpretation === 'overdamped-system' &&
+      transferInterpretation !== null &&
       simulation.signalValidationChecks.includes('dynamic-response-classified') &&
       simulation.signalValidationChecks.includes('dynamic-response-corrected') &&
       simulation.measurementSystem.artifact === 'none'
@@ -723,13 +761,13 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
           className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
           onClick={completeTransfer}
         >
-          Complete after interpreting and correcting the new trace
+          Complete after choosing, reviewing, and correcting the new trace
         </button>
       </div>
     )
   }
 
-  const viewport =
+  const stationViewport =
     phase === 'explain' ? (
       <div className="h-full overflow-auto p-4">
         <DebriefPanel
@@ -770,7 +808,23 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
       />
     )
 
+  const viewport = onPathwaySectionChange ? (
+    <PacLearningPathwayViewport
+      activeSectionId="pac-signal-validation"
+      onSelect={(sectionId) => {
+        persistCheckpoint(phase, checkpoints[phase], { completed })
+        onPathwaySectionChange(sectionId)
+      }}
+    >
+      {stationViewport}
+    </PacLearningPathwayViewport>
+  ) : (
+    stationViewport
+  )
+
   const shellProps: ActivityShellProps = {
+    activityId: ACTIVITY_ID,
+    assumedConceptIds: activityDefinition.assumedConceptIds,
     breadcrumb: (
       <span>
         <Link href={'/icu-hemodynamics' as Route}>ICU Hemodynamics</Link> /{' '}
@@ -780,9 +834,7 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
     activityTitle: 'PAC signal validation',
     phase,
     mode: 'guided',
-    progressLabel: completed
-      ? 'Completed'
-      : `${Object.keys(checkpoints).indexOf(phase) + 1} of 6 · ${phase}`,
+    progressLabel: completed ? 'Worked through' : `Current phase: ${phase}`,
     patientContext: (
       <PatientContextBar
         items={[
@@ -820,8 +872,12 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
     currentTask: (
       <TaskPanel
         objective={task.objective}
-        requiredAction={task.requiredAction}
-        targets={task.targets}
+        requiredAction={
+          completed
+            ? 'Choose whether to repeat the capstone or continue to hemodynamics practice.'
+            : task.requiredAction
+        }
+        targets={completed ? ['Hemodynamics practice cases'] : task.targets}
         hint={task.hint}
         mode="guided"
         hintVisible={hintVisible}
@@ -855,6 +911,7 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
     onSaveAndExit: saveAndExit,
     onHelp: showHint,
     onReset: resetActivity,
+    onPhaseSelect: selectPhase,
     theme: 'dark',
     layout: 'native-workbench',
   }
@@ -878,7 +935,7 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
   return (
     <SimulationLaunchGate
       activityTitle="PAC signal validation"
-      minimumViewport="desktop"
+      minimumViewport="tablet"
       bandwidthClass="standard"
       estimatedSizeLabel="Under 2 MB after shared application assets"
       lightweightAlternativeHref="/icu-hemodynamics/learn"

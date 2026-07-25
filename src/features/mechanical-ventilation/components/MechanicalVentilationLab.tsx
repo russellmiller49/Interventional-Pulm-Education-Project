@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import {
   Activity,
   BadgeCheck,
@@ -81,15 +81,15 @@ function CalibrationPanel({
           <dd>{definition.phenotype}</dd>
         </div>
         <div>
-          <dt>Seed</dt>
+          <dt>Case variation</dt>
           <dd>{state.seed}</dd>
         </div>
         <div>
-          <dt>Branch</dt>
+          <dt>Response path</dt>
           <dd>{state.branch}</dd>
         </div>
         <div>
-          <dt>Engine time</dt>
+          <dt>Modeled elapsed time</dt>
           <dd>{state.simulationTime.toFixed(2)} s</dd>
         </div>
         <div>
@@ -151,11 +151,6 @@ export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: s
   const deviceProfile = getVentilatorDeviceProfile(state.deviceId)
 
   const completedCount = progress.completedCases.length
-  const masteryCount = useMemo(
-    () => mechanicalVentilationCases.filter((item) => hasCaseMastery(progress, item.id)).length,
-    [progress],
-  )
-
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       const stored = readProgress()
@@ -329,16 +324,16 @@ export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: s
           </p>
           <div className={styles.heroStats}>
             <div>
-              <strong>{completedCount}</strong>
-              <span>cases completed</span>
+              <strong>15</strong>
+              <span>interactive cases</span>
             </div>
             <div>
-              <strong>{masteryCount}</strong>
-              <span>cases mastered</span>
+              <strong>5</strong>
+              <span>mechanism stations</span>
             </div>
             <div>
-              <strong>80%</strong>
-              <span>mastery threshold, no critical error</span>
+              <strong>Open</strong>
+              <span>choose any case</span>
             </div>
           </div>
         </div>
@@ -380,8 +375,8 @@ export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: s
           <span>Ventilator library</span>
           <h2 id="ventilator-selector-heading">Choose a training console</h2>
           <p>
-            The patient model and clinical scoring stay shared. Changing consoles reloads this case
-            from a clean baseline.
+            The patient model and clinical response logic stay shared. Changing consoles reloads
+            this case from a clean baseline.
           </p>
         </div>
         <div className={styles.deviceChoices} role="radiogroup" aria-label="Ventilator profile">
@@ -432,7 +427,7 @@ export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: s
             <ClipboardCheck aria-hidden="true" />
             <span>
               <strong>Practice</strong>
-              <small>Clean case, commit first, scored debrief</small>
+              <small>Clean case, commit first, causal debrief</small>
             </span>
           </button>
         </div>
@@ -476,7 +471,7 @@ export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: s
               <span>Curriculum</span>
               <h2>Five stations</h2>
             </div>
-            <span>{completedCount}/15</span>
+            <span>Personal history stays local</span>
           </div>
           {ventilationStations.map((stationItem, stationIndex) => {
             const stationCases = mechanicalVentilationCasesByStation[stationItem.id]
@@ -498,7 +493,9 @@ export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: s
                 {active ? (
                   <div className={styles.caseButtons}>
                     {stationCases.map((caseDefinition) => {
-                      const mastered = hasCaseMastery(progress, caseDefinition.id)
+                      const workedThrough =
+                        hasCaseMastery(progress, caseDefinition.id) ||
+                        progress.completedCases.includes(caseDefinition.id)
                       return (
                         <button
                           type="button"
@@ -507,11 +504,7 @@ export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: s
                           onClick={() => loadCase(caseDefinition.id)}
                         >
                           <span>
-                            {mastered ? (
-                              <BadgeCheck aria-label="Mastered" />
-                            ) : progress.completedCases.includes(caseDefinition.id) ? (
-                              <CheckCircle2 aria-label="Completed" />
-                            ) : null}
+                            {workedThrough ? <CheckCircle2 aria-label="Worked through" /> : null}
                             <strong>{caseDefinition.id}</strong>
                           </span>
                           <span>{caseDefinition.title}</span>
@@ -519,9 +512,9 @@ export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: s
                             {pilotCaseIds.includes(
                               caseDefinition.id as (typeof pilotCaseIds)[number],
                             )
-                              ? 'Engine-validation case · '
+                              ? 'Calibration case · '
                               : ''}
-                            best {progress.bestScores[caseDefinition.id] ?? '—'}
+                            {workedThrough ? 'worked through' : 'not yet opened'}
                           </small>
                         </button>
                       )
@@ -576,7 +569,7 @@ export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: s
             <section>
               <Stethoscope aria-hidden="true" />
               <div>
-                <strong>Physiologic endpoints score better than exact settings</strong>
+                <strong>Physiologic endpoints matter more than exact settings</strong>
                 <p>
                   Accepted paths can differ if the safety priority, mechanism, response direction,
                   and reassessment are sound.
@@ -646,8 +639,7 @@ export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: s
               Switch to {getVentilatorDeviceProfile(requestedDeviceId).displayName}?
             </h2>
             <p id="device-change-description">
-              The current case will restart at time zero. Shared mastery and completed-case progress
-              will be preserved.
+              The current case will restart at time zero. Your local case history will be preserved.
             </p>
             <div>
               <button type="button" onClick={() => setRequestedDeviceId(null)}>

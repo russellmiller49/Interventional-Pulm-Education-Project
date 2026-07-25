@@ -1,5 +1,5 @@
 import type { Route } from 'next'
-import { Activity, ArrowRight, Gauge, ShieldCheck, type LucideIcon } from 'lucide-react'
+import { Activity, ArrowRight, BookOpen, Gauge, type LucideIcon } from 'lucide-react'
 
 import { Link } from '@/i18n/navigation'
 
@@ -11,11 +11,11 @@ const outcomes = [
 
 const overviewStats: readonly { icon: LucideIcon; value: string; label: string }[] = [
   { icon: Activity, value: '8', label: 'preserved management cases' },
-  { icon: Gauge, value: '50 Hz', label: 'deterministic simulation engine' },
+  { icon: Gauge, value: '50 Hz', label: 'synchronized response model' },
   {
-    icon: ShieldCheck,
-    value: '80%',
-    label: 'existing mastery threshold, with no critical error',
+    icon: BookOpen,
+    value: '5-part',
+    label: 'action feedback with authored expert traces',
   },
 ]
 
@@ -31,15 +31,16 @@ export function IcuHemodynamicsOverviewV2() {
             Make the measurement chain part of the clinical reasoning.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground">
-            Begin with a focused guided PAC signal-validation activity, then use the preserved
-            deterministic engine across eight hemodynamic management cases.
+            Begin at the introducer in one continuous, sectioned PAC pathway. Move in order or jump
+            among advancement, setup validation, waveform interpretation, wedge, cardiac output,
+            derived hemodynamics, and the final integration capstone.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link
-              href={'/icu-hemodynamics/learn?activity=pac-signal-validation' as Route}
+              href={'/icu-hemodynamics/learn?activity=catheter-advancement' as Route}
               className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground"
             >
-              Start guided activity <ArrowRight className="size-4" aria-hidden="true" />
+              Start at the introducer <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
             <Link
               href={'/icu-hemodynamics/practice' as Route}

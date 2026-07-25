@@ -10,7 +10,7 @@ const mockRouterPush = jest.fn()
 const activityTitles = {
   learn: 'See how the systems connect',
   practice: 'Run the full ICU course',
-  assess: 'Demonstrate safe clinical reasoning',
+  assess: 'Try an integrated ICU challenge',
   sandbox: 'Explore support interactions',
 } as const
 
@@ -86,7 +86,7 @@ describe('ICU Simulator learner interface', () => {
       within(hubNavigation)
         .getAllByRole('link')
         .map((link) => link.textContent),
-    ).toEqual(['Overview', 'Learn', 'Practice', 'Assess', 'Sandbox'])
+    ).toEqual(['Overview', 'Learn', 'Practice', 'Challenge', 'Sandbox'])
     expect(within(hubNavigation).getByRole('link', { name: 'Overview' })).toHaveAttribute(
       'aria-current',
       'page',
@@ -106,7 +106,7 @@ describe('ICU Simulator learner interface', () => {
   })
 
   it.each(['learn', 'practice', 'assess', 'sandbox'] as const)(
-    'keeps thin shared chrome around the native %s workspace without duplicated guidance',
+    'keeps thin shared chrome and navigable phases around the native %s workspace',
     async (mode) => {
       const { container } = render(<IcuSimulatorLab mode={mode} embedded />)
       await screen.findByRole('region', { name: 'Clinical context' })
@@ -116,9 +116,14 @@ describe('ICU Simulator learner interface', () => {
       expect(
         within(shell as HTMLElement).getByRole('heading', { name: activityTitles[mode] }),
       ).toBeInTheDocument()
-      expect(
-        screen.queryByRole('group', { name: 'Integrated ICU shared activity phases' }),
-      ).not.toBeInTheDocument()
+      const phaseStepper = screen.getByRole('group', {
+        name: 'Integrated ICU shared activity phases',
+      })
+      fireEvent.click(within(phaseStepper).getByRole('button', { name: 'Open Act phase' }))
+      expect(screen.getByRole('region', { name: 'Diagnostic and care actions' })).toHaveAttribute(
+        'data-mobile-visible',
+        'true',
+      )
       expect(screen.getByRole('region', { name: 'Clinical context' })).toBeInTheDocument()
       expect(screen.queryByRole('heading', { name: 'Current task' })).not.toBeInTheDocument()
       expect(
@@ -194,78 +199,51 @@ describe('ICU Simulator learner interface', () => {
     }
   })
 
-  it('conceals the assessment identity and capability answer key until debrief', async () => {
+  it('keeps challenge identity, relevant actions, and sources visible from the start', async () => {
     render(<IcuSimulatorLab mode="assess" initialScenarioId="tamponade" />)
 
     await screen.findByRole('heading', { name: 'Choose a shock course' })
-    expect(screen.getByRole('heading', { name: 'Unclassified shock course' })).toBeInTheDocument()
-    expect(
-      screen.getByText('Synthetic patient assessment variant', { exact: false }),
-    ).toBeInTheDocument()
-    expect(screen.queryByText(/Cardiac tamponade/i)).not.toBeInTheDocument()
-    expect(screen.queryByText(/icu-tamponade-01/i)).not.toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Source notes' })).not.toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Support catalog locked' })).toBeInTheDocument()
-    expect(screen.getByText('Treatment formulary locked')).toBeInTheDocument()
-
-    for (const capabilityLabel of [
-      'Mechanical ventilation',
-      'ECMO',
-      'Mechanical circulatory support',
-      'Continuous renal replacement',
-      'Drain tamponade',
-      'Complete reperfusion',
-      'Blood products',
-    ]) {
-      expect(screen.queryByText(capabilityLabel, { exact: false })).not.toBeInTheDocument()
-    }
-
-    fireEvent.change(screen.getByLabelText('Classification'), {
-      target: { value: 'distributive' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Commit working diagnosis' }))
-
-    expect(
-      await screen.findByRole('heading', { name: 'Mechanical ventilation' }),
-    ).toBeInTheDocument()
+    expect(screen.getAllByRole('heading', { name: 'Cardiac tamponade' }).length).toBeGreaterThan(0)
+    expect(screen.getByText(/icu-tamponade-01/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Source notes' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Mechanical ventilation' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Drain tamponade/i })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Source notes' })).not.toBeInTheDocument()
+    expect(screen.getByText('Optional coaching is deferred.')).toBeInTheDocument()
   })
 
-  it('keeps anonymous assessment case numbers stable after selection', async () => {
+  it('keeps named challenge cases directly selectable', async () => {
     render(<IcuSimulatorLab mode="assess" />)
     await screen.findByRole('heading', { name: 'Choose a shock course' })
 
-    fireEvent.click(screen.getByRole('button', { name: /Assessment case 02/i }))
+    fireEvent.click(screen.getByRole('button', { name: /LV cardiogenic shock/i }))
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: /Assessment case 02/i })).toHaveAttribute(
+      expect(screen.getByRole('button', { name: /LV cardiogenic shock/i })).toHaveAttribute(
         'aria-current',
         'true',
       ),
     )
   })
 
-  it('keeps masked context safe and makes Help, Reset, and Save & exit functional', async () => {
+  it('keeps visible challenge context and makes Help, Reset, and Save & exit functional', async () => {
     const { container } = render(
       <IcuSimulatorLab mode="assess" initialScenarioId="tamponade" embedded />,
     )
-    await screen.findByRole('heading', { name: 'Unclassified shock course' })
+    await screen.findByRole('heading', { name: 'Cardiac tamponade' })
 
     const shell = container.querySelector('[data-critical-care-activity-shell]') as HTMLElement
-    expect(shell).toHaveAttribute('data-masked-assessment', 'true')
+    expect(shell).not.toHaveAttribute('data-masked-assessment')
     const context = screen.getByRole('region', { name: 'Clinical context' })
-    expect(within(context).getByText('Unclassified shock course')).toBeInTheDocument()
-    expect(within(context).queryByText(/tamponade/i)).not.toBeInTheDocument()
+    expect(within(context).getByText('Cardiac tamponade')).toBeInTheDocument()
 
     fireEvent.click(within(shell).getByRole('button', { name: 'Help' }))
     const help = await screen.findByRole('status', { name: 'Simulation help' })
-    expect(help).toHaveTextContent(
-      /Assessment help does not reveal the diagnosis, scenario-specific targets, or answer key/i,
-    )
+    expect(help).toHaveTextContent(/Challenge coaching stays deferred until the debrief/i)
+    fireEvent.click(screen.getByRole('checkbox', { name: /Show coaching while I work/i }))
+    expect(screen.getByRole('heading', { name: 'Learning objectives' })).toBeInTheDocument()
 
     fireEvent.click(within(shell).getByRole('button', { name: 'Reference' }))
-    expect(await screen.findByText('Assessment reference boundary')).toBeInTheDocument()
-    expect(screen.queryByText(/Cardiac tamponade/i)).not.toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Reference' })).toBeInTheDocument()
+    expect(screen.getAllByText(/Evolving cardiac tamponade/i).length).toBeGreaterThan(0)
     fireEvent.keyDown(document, { key: 'Escape' })
 
     fireEvent.click(screen.getByRole('button', { name: 'Commit working diagnosis' }))
@@ -280,7 +258,7 @@ describe('ICU Simulator learner interface', () => {
     expect(mockRouterPush).toHaveBeenCalledWith('/icu-simulation')
   })
 
-  it('scores the first Assess diagnosis after a recommit and reveals evidence only in debrief', async () => {
+  it('keeps an evolving challenge decision trace and opens a qualitative debrief', async () => {
     render(<IcuSimulatorLab mode="assess" initialScenarioId="tamponade" />)
     await screen.findByRole('heading', { name: 'Choose a shock course' })
 
@@ -297,20 +275,19 @@ describe('ICU Simulator learner interface', () => {
     ).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Complete course and open debrief' }))
 
-    const prioritization = await screen.findByText('Prioritization')
-    expect(prioritization.closest('div')).toHaveTextContent('0/15')
-    expect(
-      screen.getByText(/Consider: Commit the correct working shock classification/i),
-    ).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Reasoning review' })).toBeInTheDocument()
+    expect(screen.queryByText('Prioritization')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Source notes' })).toBeInTheDocument()
     expect(screen.getByText(/Scenario evidence record/i)).toBeInTheDocument()
     expect(screen.getByText(/Serial commitments/i).closest('div')).toHaveTextContent('2')
-    expect(screen.getByRole('heading', { name: 'Physiologic response gate' })).toBeInTheDocument()
-    expect(screen.getByText('Response not demonstrated')).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Modeled physiologic response' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/Authored response pattern/)).toBeInTheDocument()
     expect(
       screen.getByText(/pending-review educational simulator calibration/i),
     ).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Focused remediation' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Related refreshers' })).toBeInTheDocument()
     expect(
       screen.getByRole('link', { name: /Pressure equalization with a falling pulse pressure/ }),
     ).toHaveAttribute('href', '/icu-hemodynamics/practice?case=HD-07')
@@ -350,7 +327,7 @@ describe('ICU Simulator learner interface', () => {
     expect(window.localStorage.getItem(ICU_SIMULATION_SESSION_STORAGE_KEY)).toBeNull()
   })
 
-  it('discards an Assess replay that is outside the current preparation allowlist', async () => {
+  it('discards a saved challenge that is outside the current route allowlist', async () => {
     const scenario = getIcuScenario('lv-cardiogenic')
     const saved = applyIcuCommand(
       createIcuSimulation(scenario, { mode: 'assess', seed: 93 }),
@@ -369,9 +346,7 @@ describe('ICU Simulator learner interface', () => {
 
     await screen.findByRole('heading', { name: 'Choose a shock course' })
     expect(screen.queryByRole('button', { name: /Resume saved session/i })).not.toBeInTheDocument()
-    expect(
-      screen.getByText(/no longer met the current preparation requirements/i),
-    ).toBeInTheDocument()
+    expect(screen.getByText(/saved challenge was no longer available/i)).toBeInTheDocument()
     expect(window.localStorage.getItem(ICU_SIMULATION_SESSION_STORAGE_KEY)).toBeNull()
   })
 
@@ -406,7 +381,7 @@ describe('ICU Simulator learner interface', () => {
     expect(screen.queryByRole('button', { name: /Resume saved session/i })).not.toBeInTheDocument()
   })
 
-  it('does not re-emit module completion when already-mastered progress is loaded', async () => {
+  it('does not re-emit module completion when completed progress is loaded', async () => {
     const progress = {
       ...createDefaultIcuProgress(),
       lastMode: 'assess' as const,
@@ -509,7 +484,6 @@ describe('ICU Simulator learner interface', () => {
   it('marks a completed care action using the semantic care action ID', async () => {
     render(<IcuSimulatorLab mode="practice" initialScenarioId="septic-ards-aki" />)
     await screen.findByRole('heading', { name: 'Choose a shock course' })
-    fireEvent.click(screen.getByRole('button', { name: 'Commit working diagnosis' }))
     const carePanel = screen
       .getByRole('heading', { name: 'Immediate and definitive care' })
       .closest('section')
@@ -565,11 +539,11 @@ describe('ICU Simulator learner interface', () => {
     expect(await screen.findByText('0.50 severity')).toBeInTheDocument()
   })
 
-  it('does not award unified lifecycle credit for the unscored Sandbox', async () => {
+  it('does not award unified lifecycle completion for Sandbox exploration', async () => {
     render(<IcuSimulatorLab mode="sandbox" initialScenarioId="septic-ards-aki" embedded />)
     await screen.findByRole('region', { name: 'Clinical context' })
     fireEvent.click(await screen.findByRole('button', { name: 'Complete course and open debrief' }))
-    await screen.findByText('Unscored')
+    await screen.findByText('Course reviewed')
 
     const unifiedPayloads = jest
       .mocked(globalThis.fetch)

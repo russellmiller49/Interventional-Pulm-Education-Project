@@ -46,18 +46,18 @@ const learningModes = [
   },
   {
     id: 'assess',
-    title: 'Demonstrate clinical reasoning',
+    title: 'Try an integrated challenge',
     description:
-      'Run seeded scenario variants without answer cues, then review a causal debrief and safety-critical decisions.',
-    eyebrow: 'Scored assessment',
+      'Run a seeded scenario variant with the patient identity and source record visible, then compare your path with a causal debrief.',
+    eyebrow: 'Open challenge',
     Icon: ClipboardCheck,
   },
   {
     id: 'sandbox',
     title: 'Explore the physiology sandbox',
     description:
-      'Start from a reviewed synthetic patient preset and explore bounded support changes without a mastery score.',
-    eyebrow: 'Unscored exploration',
+      'Start from a reviewed synthetic patient preset and explore bounded support changes without a prescribed sequence.',
+    eyebrow: 'Open exploration',
     Icon: FlaskConical,
   },
 ] as const
@@ -116,7 +116,7 @@ export function IcuSimulatorHub({ locale = 'en' }: { locale?: string }) {
           <p className={styles.eyebrow}>One patient · one clock · every support system</p>
           <h1>ICU Simulator</h1>
           <p className={styles.heroLead}>
-            Run an evolving ICU course from first assessment through rescue support and
+            Run an evolving ICU course from initial bedside review through rescue support and
             reassessment. Every monitor, intervention, and device acts on the same synthetic
             patient.
           </p>
@@ -176,7 +176,10 @@ export function IcuSimulatorHub({ locale = 'en' }: { locale?: string }) {
             <p className={styles.eyebrow}>Choose your level of support</p>
             <h2 id="paths-title">Four ways into the same bedside</h2>
           </div>
-          <p>Learn and Practice reveal coaching. Assess withholds it. Sandbox is never scored.</p>
+          <p>
+            Learn and Practice include coaching. Challenge defers optional coaching until the
+            debrief. Sandbox supports free exploration.
+          </p>
         </div>
 
         <div className={styles.modeGrid}>
@@ -194,7 +197,7 @@ export function IcuSimulatorHub({ locale = 'en' }: { locale?: string }) {
                 aria-label={`Open ${title}`}
                 className={styles.cardLink}
               >
-                Open {id}
+                Open {id === 'assess' ? 'challenge' : id}
                 <ArrowRight aria-hidden="true" />
               </Link>
             </article>
@@ -213,7 +216,7 @@ export function IcuSimulatorHub({ locale = 'en' }: { locale?: string }) {
         </div>
         <ol aria-label="Simulation workflow">
           {[
-            ['01', 'Assess', 'Read the examination, monitor, labs, imaging, and device state.'],
+            ['01', 'Review', 'Read the examination, monitor, labs, imaging, and device state.'],
             ['02', 'Classify', 'Commit to a working mechanism and immediate priorities.'],
             ['03', 'Intervene', 'Start or adjust bounded therapies through supervised workflows.'],
             ['04', 'Advance', 'Move the shared clock and observe delayed, coupled effects.'],

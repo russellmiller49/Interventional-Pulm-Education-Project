@@ -254,7 +254,6 @@ export function CrrtPressureLocalizationLab({
       data-scoring="tool-specific"
       data-progress-write="learner-mode-only"
       data-persistence="learner-mode-only"
-      data-competency="none"
       onFocusCapture={() => onPhaseChange?.('predict')}
     >
       <header className={styles.header}>
@@ -273,13 +272,13 @@ export function CrrtPressureLocalizationLab({
         </p>
       </div>
 
-      <aside className={styles.sourceNote} aria-label="Lab scope">
+      <div className={styles.sourceNote} aria-label="Lab scope" role="note">
         <strong>Scope of this lab</strong>
         <small>
           The exercise uses manufacturer-referenced pressure relationships to teach direction and
           localization. It does not establish a clinical normal or validate a disconnection pattern.
         </small>
-      </aside>
+      </div>
 
       <p className={styles.intro}>
         Choose an obstruction site, predict how each pressure will change, then reveal the pressure
@@ -407,7 +406,7 @@ export function CrrtPressureLocalizationLab({
       {committedPrediction !== null && revealed ? (
         <section className={styles.resultPanel} aria-labelledby={`${idPrefix}-result-heading`}>
           <header>
-            <span>Practice result · no score</span>
+            <span>Modeled pressure result</span>
             <h4 id={`${idPrefix}-result-heading`}>
               {result.faultLabel} at {result.siteLabel}
             </h4>

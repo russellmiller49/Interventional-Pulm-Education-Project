@@ -4,9 +4,11 @@ import {
   pulsatilePressureShape,
   SYSTEMIC_ARTERIAL_MEAN_FRACTION,
   SYSTEMIC_ARTERIAL_SHAPE,
+  MMHG_PER_CM_H2O,
 } from '../engine/waveformMorphology'
 import {
   applyFastFlushEvent,
+  DYNAMIC_RESPONSE_REFERENCE,
   FAST_FLUSH_HOLD_DURATION_SECONDS,
   FAST_FLUSH_PRESSURE_MMHG as SHARED_FAST_FLUSH_PRESSURE_MMHG,
   FAST_FLUSH_RISE_DURATION_SECONDS,
@@ -15,7 +17,8 @@ import type { DynamicResponseKind, FastFlushLineType } from '../engine/types'
 
 export type { DynamicResponseKind, FastFlushLineType } from '../engine/types'
 
-export const HYDROSTATIC_PRESSURE_MMHG_PER_CM = 0.74
+/** @deprecated Import MMHG_PER_CM_H2O from waveformMorphology for new pressure calculations. */
+export const HYDROSTATIC_PRESSURE_MMHG_PER_CM = MMHG_PER_CM_H2O
 
 export interface DynamicResponseDefinition {
   readonly id: DynamicResponseKind
@@ -88,10 +91,16 @@ export function classifyDynamicResponse(measurementSystem: {
   readonly artifact: string
   readonly dampingRatio: number
 }): DynamicResponseKind {
-  if (measurementSystem.artifact === 'overdamped' || measurementSystem.dampingRatio > 0.95) {
+  if (
+    measurementSystem.artifact === 'overdamped' ||
+    measurementSystem.dampingRatio > DYNAMIC_RESPONSE_REFERENCE.overdampedAbove
+  ) {
     return 'overdamped'
   }
-  if (measurementSystem.artifact === 'underdamped' || measurementSystem.dampingRatio < 0.4) {
+  if (
+    measurementSystem.artifact === 'underdamped' ||
+    measurementSystem.dampingRatio < DYNAMIC_RESPONSE_REFERENCE.underdampedBelow
+  ) {
     return 'underdamped'
   }
   return 'acceptable'

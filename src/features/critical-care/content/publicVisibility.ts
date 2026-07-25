@@ -78,19 +78,19 @@ export interface PublicCriticalCareActivityPresentation {
 }
 
 /**
- * Public assessment cards intentionally link to the module's Assess landing page without a case
- * identifier. This keeps seeded/masked scenario identity out of labels and deep links.
+ * Public challenge cards keep the stable activity identity and direct route. Publication review
+ * remains separate from learner preparation; no progress state is consulted here.
  */
 export function presentCriticalCareActivityPublicly(
   activity: CriticalCareActivityDefinition,
 ): PublicCriticalCareActivityPresentation {
   if (activity.kind === 'assessment') {
     return {
-      title: 'Masked assessment',
+      title: activity.title,
       description:
-        'Open the module assessment landing page to review eligibility and begin a masked challenge.',
-      href: activity.pathname,
-      maskedAssessment: true,
+        'A harder case with less help. Feedback comes at the end so you can work through it uninterrupted.',
+      href: criticalCareCatalogActivityHref(activity),
+      maskedAssessment: false,
     }
   }
 
@@ -106,11 +106,9 @@ export function sanitizeCriticalCareActivityForPublicCatalog(
   activity: CriticalCareActivityDefinition,
 ): CriticalCareActivityDefinition {
   const presentation = presentCriticalCareActivityPublicly(activity)
-  if (!presentation.maskedAssessment) return activity
   return {
     ...activity,
     title: presentation.title,
     description: presentation.description,
-    query: undefined,
   }
 }

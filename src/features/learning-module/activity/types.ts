@@ -73,6 +73,10 @@ export interface CriticalCareActivityDefinition {
   readonly pathwayIds: readonly string[]
   readonly competencyIds: readonly string[]
   readonly prerequisiteActivityIds: readonly string[]
+  /** Authoring metadata only; never written to the progress envelope. */
+  readonly teachesConceptIds: readonly string[]
+  /** Authoring metadata only; drives optional just-in-time refreshers. */
+  readonly assumedConceptIds: readonly string[]
   readonly estimatedMinutes: number
   readonly difficulty: CriticalCareDifficulty
   readonly completionRuleId: string
@@ -93,6 +97,7 @@ export interface CriticalCareActivityProgress {
   readonly bestScore?: number
   readonly attempts: number
   readonly hintCount?: number
+  readonly tricky?: boolean
   readonly competencyEvidenceIds: readonly string[]
   readonly updatedAt: string
 }

@@ -120,7 +120,11 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
       />,
     )
 
-    expect(screen.getByText('Step 1 of 13')).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', {
+        name: cardiohelpLearnLessonsBySupportMode.vv[0].steps[0].title,
+      }),
+    ).toBeInTheDocument()
     expect(screen.getByText('Focus: Circuit and sensors')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Next step/i })).toBeDisabled()
     expect(screen.queryByRole('option', { name: /capstone/i })).not.toBeInTheDocument()
@@ -403,7 +407,12 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     fireEvent.change(screen.getByLabelText('Lesson'), {
       target: { value: 'acute-hypercapnia' },
     })
-    expect(screen.getByText('Step 1 of 5')).toBeInTheDocument()
+    const selectedLesson = cardiohelpLearnLessonsBySupportMode.vv.find(
+      (lesson) => lesson.scenarioId === 'acute-hypercapnia',
+    )
+    expect(
+      screen.getByRole('heading', { name: selectedLesson?.steps[0].title }),
+    ).toBeInTheDocument()
     expect(screen.getByTestId('screen')).toHaveTextContent('startup')
     expect(screen.getByRole('button', { name: /Next step/i })).toBeDisabled()
   })

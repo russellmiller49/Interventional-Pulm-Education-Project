@@ -107,6 +107,7 @@ export function upsertCriticalCareActivityProgress(
     ...(existing?.hintCount !== undefined || incoming.hintCount !== undefined
       ? { hintCount: Math.max(existing?.hintCount ?? 0, incoming.hintCount ?? 0) }
       : {}),
+    ...(existing?.tricky || incoming.tricky ? { tricky: true } : {}),
     competencyEvidenceIds: [
       ...new Set([...(existing?.competencyEvidenceIds ?? []), ...incoming.competencyEvidenceIds]),
     ],

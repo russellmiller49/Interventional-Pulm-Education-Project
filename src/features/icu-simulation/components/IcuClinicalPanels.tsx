@@ -25,7 +25,6 @@ import { Link } from '@/i18n/navigation'
 import { getCriticalCareIcuScenarioReadiness } from '@/features/critical-care/progress/integrated'
 
 import { ICU_EVIDENCE_BY_ID } from '../content'
-import { ICU_SCORE_WEIGHTS, icuScoreDomains } from '../engine'
 import type {
   IcuAssessmentId,
   IcuCareInterventionId,
@@ -77,7 +76,7 @@ const assessmentCopy: Readonly<
     detail: 'Lung, line, and device overview',
     Icon: ImageIcon,
   },
-  pac: { label: 'PAC assessment', detail: 'Pressure and flow observations', Icon: Radio },
+  pac: { label: 'PAC observations', detail: 'Pressure and flow observations', Icon: Radio },
 }
 
 const careCopy: Readonly<
@@ -204,21 +203,6 @@ const expectedClassificationByFamily: Readonly<Record<IcuScenarioFamily, IcuShoc
     tamponade: 'tamponade-obstructive',
     'mixed-cardiogenic-vasodilatory': 'mixed-cardiogenic-vasodilatory',
   }
-
-const maskedAssessmentNarratives: Readonly<Record<string, string>> = {
-  'septic-ards-aki':
-    'A synthetic adult transferred from the emergency department has worsening hypotension, bilateral lung injury, oliguria, and rising lactate despite initial stabilization.',
-  'lv-cardiogenic':
-    'A synthetic adult arrives after acute chest discomfort with pulmonary edema, cool extremities, hypotension, and falling urine output.',
-  'massive-pe-rv':
-    'A synthetic adult develops abrupt dyspnea, syncope, hypoxemia, elevated right-sided pressures, and hypotension.',
-  hemorrhagic:
-    'A synthetic adult after an abdominal procedure develops falling arterial pressure, tachycardia, cool skin, and a declining hemoglobin.',
-  tamponade:
-    'A synthetic adult after an invasive cardiac procedure develops progressive hypotension, tachycardia, elevated venous pressure, and a narrowing pulse pressure.',
-  'mixed-cardiogenic-vasodilatory':
-    'A synthetic adult with infection develops hypotension, cool extremities, pulmonary congestion, and rising lactate despite initial treatment.',
-}
 
 const sandboxDriverCopy: readonly {
   driver: keyof IcuDiseaseDrivers
@@ -413,14 +397,17 @@ export function IcuCaseGuide({
   scenario,
   mode,
   dispatch,
+  showChallengeCoaching = false,
 }: {
   state: IcuSimulationState
   scenario: IcuScenarioDefinition
   mode: IcuSimulationMode
   dispatch: Dispatch<IcuCommand>
+  showChallengeCoaching?: boolean
 }) {
   const completedCheckpoints = state.outcome.checkpointIdsCompleted
-  const coachingVisible = mode === 'learn' || mode === 'practice' || state.phase === 'debrief'
+  const coachingVisible =
+    mode === 'learn' || mode === 'practice' || state.phase === 'debrief' || showChallengeCoaching
   const sessionKey = `${state.scenarioId}:${state.seed}`
   const [classificationDraft, setClassificationDraft] = useState<{
     sessionKey: string
@@ -450,7 +437,7 @@ export function IcuCaseGuide({
     (intervention) => !state.performedActionIds.includes(intervention.actionId),
   )
   const response = state.outcome.response
-  const passedResponsePaths = (scenario.masteryResponse.oneOf ?? []).filter((path) =>
+  const observedResponsePaths = (scenario.masteryResponse.oneOf ?? []).filter((path) =>
     response.passedPathIds.includes(path.id),
   )
   const visibleResponseCriteria = response.criteria.filter(
@@ -473,20 +460,11 @@ export function IcuCaseGuide({
       <header>
         <div>
           <span className={styles.panelKicker}>{mode} pathway</span>
-          <h2 id="case-guide-title">
-            {mode === 'assess' && state.phase !== 'debrief'
-              ? 'Unclassified ICU patient'
-              : scenario.title}
-          </h2>
+          <h2 id="case-guide-title">{scenario.title}</h2>
         </div>
         <span className={styles.phaseBadge}>{state.phase}</span>
       </header>
-      <p className={styles.caseNarrative}>
-        {mode === 'assess' && state.phase !== 'debrief'
-          ? (maskedAssessmentNarratives[scenario.id] ??
-            'An evolving synthetic adult ICU patient requires assessment, shock classification, and serial reassessment.')
-          : scenario.openingNarrative}
-      </p>
+      <p className={styles.caseNarrative}>{scenario.openingNarrative}</p>
 
       <div className={styles.classificationCommit}>
         <div>
@@ -495,8 +473,8 @@ export function IcuCaseGuide({
           <p>
             Commit to the dominant mechanism using the evidence available now.{' '}
             {mode === 'assess'
-              ? 'The first commitment counts for assessment scoring; later reclassification is documented but does not replace it.'
-              : 'You may reassess the patient later; correctness remains hidden until debrief.'}
+              ? 'Your first commitment stays in the decision trace; later reclassification shows how your frame changed.'
+              : 'You may revise the working frame as the patient response evolves.'}
           </p>
         </div>
         <label>
@@ -531,12 +509,12 @@ export function IcuCaseGuide({
         </button>
       </div>
 
-      {mode === 'assess' && state.phase !== 'debrief' ? (
+      {mode === 'assess' && state.phase !== 'debrief' && !showChallengeCoaching ? (
         <div className={styles.coachingWithheld}>
           <ShieldAlert aria-hidden="true" />
           <p>
-            <strong>Assessment cues are withheld.</strong> Use the chart, patient response, device
-            state, and timeline. Causal coaching returns in the debrief.
+            <strong>Optional coaching is deferred.</strong> Use the chart, patient response, device
+            state, and timeline. The causal comparison appears in the debrief.
           </p>
         </div>
       ) : coachingVisible ? (
@@ -556,12 +534,11 @@ export function IcuCaseGuide({
           <ol>
             {scenario.checkpoints.map((checkpoint, index) => {
               const complete = completedCheckpoints.includes(checkpoint.id)
-              const revealLabel = mode !== 'assess' || state.phase === 'debrief'
               return (
                 <li key={checkpoint.id} data-complete={complete || undefined}>
                   <span>{complete ? <Check aria-label="Complete" /> : index + 1}</span>
                   <div>
-                    <strong>{revealLabel ? checkpoint.label : `Checkpoint ${index + 1}`}</strong>
+                    <strong>{checkpoint.label}</strong>
                     <small>{complete ? 'Completed' : 'In progress'}</small>
                   </div>
                 </li>
@@ -571,49 +548,30 @@ export function IcuCaseGuide({
         </div>
       ) : (
         <p className={styles.sandboxNote}>
-          Sandbox is unscored. It begins from a reviewed synthetic preset and still enforces bounded
-          device combinations and safety alarms.
+          Sandbox begins from a reviewed synthetic preset and still enforces bounded device
+          combinations and safety alarms.
         </p>
       )}
 
       {state.phase === 'debrief' ? (
         <div className={styles.debriefPanel}>
           <div className={styles.debriefOutcome}>
-            <span>Outcome</span>
-            <strong>
-              {mode === 'sandbox' || mode === 'learn'
-                ? 'Unscored'
-                : `${state.outcome.score.total}%`}
-            </strong>
-            <small>
-              {mode === 'sandbox' || mode === 'learn'
-                ? 'No mastery record in this mode'
-                : state.outcome.mastery
-                  ? 'Mastery achieved'
-                  : 'Review the causal debrief'}
-            </small>
+            <span>Debrief</span>
+            <strong>Course reviewed</strong>
+            <small>Compare the modeled response and your decision trace below.</small>
           </div>
           <div className={styles.debriefContent}>
-            <section aria-labelledby="domain-score-title">
-              <h3 id="domain-score-title">Six-domain score</h3>
-              {mode === 'sandbox' || mode === 'learn' ? (
-                <p>Domain scoring is shown only in Practice and Assess.</p>
-              ) : (
-                <dl className={styles.scoreBreakdown}>
-                  {icuScoreDomains.map((domain) => (
-                    <div key={domain}>
-                      <dt>{humanizeKey(domain)}</dt>
-                      <dd>
-                        {state.outcome.score[domain]}/{ICU_SCORE_WEIGHTS[domain]}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              )}
+            <section aria-labelledby="reasoning-review-title">
+              <h3 id="reasoning-review-title">Reasoning review</h3>
+              <p>
+                Follow the sequence from working mechanism through interventions, modeled patient
+                response, and reassessment. This review highlights the explanations and refreshers
+                most closely related to that sequence; it does not issue a learner verdict.
+              </p>
             </section>
 
             <section aria-labelledby="response-gate-title" className={styles.responseGate}>
-              <h3 id="response-gate-title">Physiologic response gate</h3>
+              <h3 id="response-gate-title">Modeled physiologic response</h3>
               <p className={styles.responseGateStatus} data-complete={response.passed || undefined}>
                 {response.passed ? (
                   <CheckCircle2 aria-hidden="true" />
@@ -621,21 +579,23 @@ export function IcuCaseGuide({
                   <AlertTriangle aria-hidden="true" />
                 )}
                 <strong>
-                  {response.passed ? 'Response demonstrated' : 'Response not demonstrated'}
+                  {response.passed
+                    ? 'Authored response pattern observed'
+                    : 'Authored response pattern not yet observed'}
                 </strong>
               </p>
-              {passedResponsePaths.length > 0 ? (
-                <p>Authored pathway: {passedResponsePaths.map((path) => path.label).join(' · ')}</p>
+              {observedResponsePaths.length > 0 ? (
+                <p>Response path: {observedResponsePaths.map((path) => path.label).join(' · ')}</p>
               ) : scenario.masteryResponse.oneOf ? (
-                <p>No complete response pathway was demonstrated.</p>
+                <p>Compare the available response paths with the action sequence below.</p>
               ) : null}
               <ul className={styles.responseCriteria}>
                 {visibleResponseCriteria.map((criterion) => (
                   <li key={criterion.id} data-complete={criterion.passed || undefined}>
                     {criterion.passed ? (
-                      <CheckCircle2 aria-label="Met" />
+                      <CheckCircle2 aria-label="Observed" />
                     ) : (
-                      <AlertTriangle aria-label="Not met" />
+                      <AlertTriangle aria-label="Not observed" />
                     )}
                     <span>
                       <strong>{criterion.label}</strong>
@@ -650,9 +610,8 @@ export function IcuCaseGuide({
               </ul>
               {substitutedActions.length > 0 ? (
                 <p>
-                  The demonstrated alternative pathway supplied score credit for:{' '}
-                  {substitutedActions.join('; ')}. These credits did not alter the learner action
-                  history.
+                  The model recognized this alternative action sequence:{' '}
+                  {substitutedActions.join('; ')}. The learner action history remains unchanged.
                 </p>
               ) : null}
               <p className={styles.responseThresholdNote} role="note">
@@ -687,26 +646,26 @@ export function IcuCaseGuide({
               <h3 id="checkpoint-review-title">Checkpoint review</h3>
               <div className={styles.debriefColumns}>
                 <div>
-                  <strong>Achieved ({achievedCheckpoints.length})</strong>
+                  <strong>Visited</strong>
                   <ul>
                     {achievedCheckpoints.length > 0 ? (
                       achievedCheckpoints.map((checkpoint) => (
                         <li key={checkpoint.id}>{checkpoint.label}</li>
                       ))
                     ) : (
-                      <li>No authored checkpoints completed.</li>
+                      <li>No authored checkpoints were visited.</li>
                     )}
                   </ul>
                 </div>
                 <div>
-                  <strong>Missed ({missedCheckpoints.length})</strong>
+                  <strong>Revisit</strong>
                   <ul>
                     {missedCheckpoints.length > 0 ? (
                       missedCheckpoints.map((checkpoint) => (
                         <li key={checkpoint.id}>{checkpoint.label}</li>
                       ))
                     ) : (
-                      <li>No checkpoints missed.</li>
+                      <li>No checkpoint suggestions remain.</li>
                     )}
                   </ul>
                 </div>
@@ -715,10 +674,14 @@ export function IcuCaseGuide({
 
             <section aria-labelledby="action-review-title">
               <h3 id="action-review-title">Key action review</h3>
-              <p>
-                {achievedActions.length} authored action{achievedActions.length === 1 ? '' : 's'}{' '}
-                achieved · {missedActions.length} not demonstrated.
-              </p>
+              <p>Compare actions taken with options that may have changed the modeled course.</p>
+              {achievedActions.length > 0 ? (
+                <ul>
+                  {achievedActions.slice(0, 6).map((intervention) => (
+                    <li key={intervention.actionId}>Action taken: {intervention.label}</li>
+                  ))}
+                </ul>
+              ) : null}
               {missedActions.length > 0 ? (
                 <ul>
                   {missedActions.slice(0, 6).map((intervention) => (
@@ -737,7 +700,7 @@ export function IcuCaseGuide({
                   ))}
                 </ul>
               ) : (
-                <p>No authored critical safety error was triggered.</p>
+                <p>No authored hard safety stop was triggered.</p>
               )}
             </section>
 
@@ -753,7 +716,7 @@ export function IcuCaseGuide({
             <section aria-label="Focused remediation links">
               <IcuRemediationLinks
                 readiness={remediationReadiness}
-                heading="Focused remediation"
+                heading="Related refreshers"
                 showCompletion={false}
               />
             </section>
@@ -825,13 +788,13 @@ export function IcuDiagnosticsPanel({
     <section className={styles.clinicalPanel} aria-labelledby="diagnostics-title">
       <header className={styles.panelIntro}>
         <div>
-          <span className={styles.panelKicker}>Assessment</span>
+          <span className={styles.panelKicker}>Diagnostic workup</span>
           <h2 id="diagnostics-title">Order, interpret, and reassess</h2>
         </div>
         <p>Results appear on the shared timeline and may include modeled delay or uncertainty.</p>
       </header>
 
-      <div className={styles.orderGrid} aria-label="Available assessments">
+      <div className={styles.orderGrid} aria-label="Available diagnostic studies">
         {scenario.capabilities.assessments.map((assessmentId) => {
           const copy = assessmentCopy[assessmentId]
           const Icon = copy.Icon
@@ -867,7 +830,7 @@ export function IcuDiagnosticsPanel({
           <div className={styles.emptyState}>
             <ClipboardList aria-hidden="true" />
             <strong>No diagnostic observations yet</strong>
-            <span>Order a focused assessment above.</span>
+            <span>Order a focused bedside evaluation above.</span>
           </div>
         )}
       </div>
@@ -926,8 +889,9 @@ export function IcuSandboxControls({
         })}
       </div>
       <p className={styles.sandboxBoundary} role="note">
-        Synthetic preset only. The engine enforces reviewed bounds and records semantic driver
-        changes in the replay; it never accepts a direct patient-state patch.
+        Synthetic preset only. The training model keeps changes within reviewed bounds and records
+        each driver change for replay; it does not accept direct changes to the modeled patient
+        state.
       </p>
     </section>
   )
@@ -937,14 +901,10 @@ export function IcuCarePanel({
   state,
   scenario,
   dispatch,
-  controlsLocked = false,
-  neutralLocked = false,
 }: {
   state: IcuSimulationState
   scenario: IcuScenarioDefinition
   dispatch: Dispatch<IcuCommand>
-  controlsLocked?: boolean
-  neutralLocked?: boolean
 }) {
   const domains = Object.keys(reassessmentCopy) as IcuReassessmentDomain[]
   return (
@@ -957,74 +917,48 @@ export function IcuCarePanel({
         <p>Medication choices use relative tiers. No drug doses or local protocol are modeled.</p>
       </header>
 
-      {neutralLocked ? (
-        <div className={styles.neutralControlLock} role="status">
-          <ShieldAlert aria-hidden="true" />
-          <div>
-            <strong>Treatment formulary locked</strong>
-            <p>
-              Commit the first working shock classification in the Course panel. Case-specific
-              intervention names remain concealed until that scored commitment is recorded.
-            </p>
-          </div>
-        </div>
-      ) : controlsLocked ? (
-        <p className={styles.controlLockNote} role="status">
-          Commit a working shock classification in the Course panel before initiating treatment.
-          Diagnostic orders remain available.
-        </p>
-      ) : null}
+      <div className={styles.careGrid}>
+        {scenario.capabilities.interventions.map((interventionId) => {
+          const copy = careCopy[interventionId]
+          const Icon = copy.Icon
+          const completed = state.performedActionIds.includes(`care:${interventionId}`)
+          return (
+            <button
+              type="button"
+              key={interventionId}
+              data-complete={completed || undefined}
+              onClick={() => dispatch({ type: 'care.perform', interventionId })}
+            >
+              <Icon aria-hidden="true" />
+              <span>
+                <small>{copy.group}</small>
+                <strong>{copy.label}</strong>
+                <em>{copy.detail}</em>
+              </span>
+              {completed ? <Check aria-label="Performed" /> : null}
+            </button>
+          )
+        })}
+      </div>
 
-      {!neutralLocked ? (
-        <div className={styles.careGrid}>
-          {scenario.capabilities.interventions.map((interventionId) => {
-            const copy = careCopy[interventionId]
-            const Icon = copy.Icon
-            const completed = state.performedActionIds.includes(`care:${interventionId}`)
-            return (
-              <button
-                type="button"
-                key={interventionId}
-                disabled={controlsLocked}
-                data-complete={completed || undefined}
-                onClick={() => dispatch({ type: 'care.perform', interventionId })}
-              >
-                <Icon aria-hidden="true" />
-                <span>
-                  <small>{copy.group}</small>
-                  <strong>{copy.label}</strong>
-                  <em>{copy.detail}</em>
-                </span>
-                {completed ? <Check aria-label="Performed" /> : null}
-              </button>
-            )
-          })}
+      <div className={styles.reassessmentBox}>
+        <div>
+          <span className={styles.panelKicker}>Close the loop</span>
+          <h3>Document a full reassessment</h3>
+          <p>Confirm the patient—not just the device—responded to your intervention.</p>
         </div>
-      ) : null}
-
-      {!neutralLocked ? (
-        <div className={styles.reassessmentBox}>
-          <div>
-            <span className={styles.panelKicker}>Close the loop</span>
-            <h3>Document a full reassessment</h3>
-            <p>Confirm the patient—not just the device—responded to your intervention.</p>
-          </div>
-          <ul>
-            {domains.map((domain) => (
-              <li
-                key={domain}
-                data-complete={state.reassessedDomains.includes(domain) || undefined}
-              >
-                {state.reassessedDomains.includes(domain) ? <Check aria-hidden="true" /> : <span />}
-                {reassessmentCopy[domain]}
-              </li>
-            ))}
-          </ul>
-          <button type="button" onClick={() => dispatch({ type: 'patient.reassess', domains })}>
-            Reassess all domains
-          </button>
-        </div>
-      ) : null}
+        <ul>
+          {domains.map((domain) => (
+            <li key={domain} data-complete={state.reassessedDomains.includes(domain) || undefined}>
+              {state.reassessedDomains.includes(domain) ? <Check aria-hidden="true" /> : <span />}
+              {reassessmentCopy[domain]}
+            </li>
+          ))}
+        </ul>
+        <button type="button" onClick={() => dispatch({ type: 'patient.reassess', domains })}>
+          Reassess all domains
+        </button>
+      </div>
     </section>
   )
 }
@@ -1140,7 +1074,7 @@ export function IcuTimelinePanel({
                   <span>{event.kind}</span>
                   <strong>
                     {maskScenarioEvents && event.kind === 'scenario'
-                      ? 'Patient condition changed—repeat focused assessment.'
+                      ? 'Patient condition changed—repeat the focused evaluation.'
                       : event.label}
                   </strong>
                 </li>
@@ -1164,7 +1098,6 @@ const sourceModules = [
 
 export function IcuSourceNotes({
   scenario,
-  masked = false,
 }: {
   scenario: IcuScenarioDefinition
   masked?: boolean
@@ -1196,51 +1129,39 @@ export function IcuSourceNotes({
           </ul>
         </div>
         <div>
-          <h3>{masked ? 'Assessment evidence boundary' : 'Scenario evidence record'}</h3>
-          {masked ? (
-            <p>
-              Scenario-specific titles and links are withheld during a masked assessment because
-              they could reveal the intended diagnosis. The complete evidence record appears in the
-              debrief.
-            </p>
-          ) : (
-            <>
-              <p>
-                Scenario version {scenario.version} · review status {scenario.reviewStatus}.
-                Evidence identifiers remain attached to authored events, interventions, and
-                checkpoints.
-              </p>
-              <ul className={styles.evidenceCards}>
-                {evidenceSources.map(({ evidenceId, source }) => (
-                  <li key={evidenceId}>
-                    {source ? (
-                      <>
-                        {source.url.startsWith('/') ? (
-                          <Link href={source.url as Route}>{source.title}</Link>
-                        ) : (
-                          <a href={source.url} target="_blank" rel="noreferrer">
-                            {source.title}
-                          </a>
-                        )}
-                        <span>
-                          {source.organization} · {source.year} ·{' '}
-                          {source.sourceType.replace('-', ' ')}
-                        </span>
-                        <small>
-                          Review: {source.reviewStatus}. {source.limitation}
-                        </small>
-                      </>
+          <h3>Scenario evidence record</h3>
+          <p>
+            Scenario version {scenario.version} · review status {scenario.reviewStatus}. Evidence
+            identifiers remain attached to authored events, interventions, and checkpoints.
+          </p>
+          <ul className={styles.evidenceCards}>
+            {evidenceSources.map(({ evidenceId, source }) => (
+              <li key={evidenceId}>
+                {source ? (
+                  <>
+                    {source.url.startsWith('/') ? (
+                      <Link href={source.url as Route}>{source.title}</Link>
                     ) : (
-                      <>
-                        <strong>{evidenceId}</strong>
-                        <small>Evidence registry entry pending.</small>
-                      </>
+                      <a href={source.url} target="_blank" rel="noreferrer">
+                        {source.title}
+                      </a>
                     )}
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
+                    <span>
+                      {source.organization} · {source.year} · {source.sourceType.replace('-', ' ')}
+                    </span>
+                    <small>
+                      Review: {source.reviewStatus}. {source.limitation}
+                    </small>
+                  </>
+                ) : (
+                  <>
+                    <strong>{evidenceId}</strong>
+                    <small>Evidence registry entry pending.</small>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
         </div>
         <div>
           <h3>Interpretation boundary</h3>

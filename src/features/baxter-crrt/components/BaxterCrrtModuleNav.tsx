@@ -22,8 +22,8 @@ export const baxterCrrtModuleNavItems: readonly ModuleNavItem[] = [
   },
   {
     href: `${baxterCrrtNavBase}/assess`,
-    title: 'Assess',
-    description: 'Gated PrisMax capstone',
+    title: 'Challenge',
+    description: 'Harder PrisMax case',
   },
 ]
 

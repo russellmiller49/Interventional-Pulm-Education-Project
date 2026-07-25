@@ -49,6 +49,8 @@ export const criticalCareActivityDefinitionSchema = z
     pathwayIds: z.array(stableIdSchema).max(20),
     competencyIds: z.array(stableIdSchema).min(1).max(30),
     prerequisiteActivityIds: z.array(stableIdSchema).max(30),
+    teachesConceptIds: z.array(stableIdSchema).min(1).max(12),
+    assumedConceptIds: z.array(stableIdSchema).max(12),
     estimatedMinutes: z.number().int().min(1).max(480),
     difficulty: z.enum(criticalCareDifficulties),
     completionRuleId: stableIdSchema,
@@ -104,6 +106,7 @@ export const criticalCareActivityProgressSchema = z
     bestScore: z.number().int().min(0).max(100).optional(),
     attempts: z.number().int().min(0).max(10_000),
     hintCount: z.number().int().min(0).max(10_000).optional(),
+    tricky: z.boolean().optional(),
     competencyEvidenceIds: z.array(stableIdSchema).max(100),
     updatedAt: isoDateSchema,
   })

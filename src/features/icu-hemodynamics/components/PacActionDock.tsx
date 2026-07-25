@@ -65,13 +65,27 @@ export function PacActionDock({ state, dispatch, focus }: PacActionDockProps) {
           : catheter.balloonInflated
             ? 'Balloon inflated. Sampling the respiratory cycle.'
             : 'Balloon deflated.'
+  const advancementBalloonStatus =
+    catheter.position === 'wedge'
+      ? 'PAWP capture uses a separate brief occlusion inflation; deflate promptly after the end-expiratory sample.'
+      : catheter.floatBalloonInflated
+        ? 'Flow-directed balloon INFLATED while the catheter advances through the right heart.'
+        : catheter.targetPosition === 'ra'
+          ? 'Balloon DEFLATED while the tip clears the introducer and enters the right atrium.'
+          : catheter.position === 'introducer'
+            ? 'Balloon DEFLATED inside the introducer; the simulator inflates it before RA-to-RV advancement.'
+            : catheter.position === 'ra'
+              ? 'RA reached with the balloon deflated; the next Advance action inflates it before movement toward RV.'
+              : catheter.position === 'pa'
+                ? 'PA waveform reached; flow-directed balloon DEFLATED.'
+                : 'Confirm the RV waveform; keep the flow-directed balloon inflated for movement toward PA.'
 
   return (
     <section className={styles.pacActionDock} aria-labelledby="pac-action-dock-heading">
       <header className={styles.pacDockHeader}>
         <div>
           <span>Live PAC controls</span>
-          <h2 id="pac-action-dock-heading">Advance by waveform and route gate</h2>
+          <h2 id="pac-action-dock-heading">Advance by waveform and catheter route</h2>
         </div>
         <output className={styles.pacDockTip} aria-live="polite" aria-atomic="true">
           Tip: {catheter.position.toUpperCase()}
@@ -80,6 +94,23 @@ export function PacActionDock({ state, dispatch, focus }: PacActionDockProps) {
           {catheter.targetPosition ? `→${catheterPositionDepth(catheter.targetPosition)}` : ''} cm
         </output>
       </header>
+
+      {focus !== 'wedge' ? (
+        <aside
+          className={styles.pacAdvancementTeaching}
+          role="note"
+          aria-label="Flow-directed balloon advancement technique"
+        >
+          <strong>Balloon technique during advancement</strong>
+          <p>
+            Keep the balloon deflated while the tip is inside the introducer. Once the tip has
+            entered the RA, inflate before advancing and keep it inflated while floating through RA
+            → RV → PA. Stop advancing and deflate promptly when the PA waveform appears; confirm
+            every chamber transition by waveform rather than depth alone.
+          </p>
+          <output aria-live="polite">{advancementBalloonStatus}</output>
+        </aside>
+      ) : null}
 
       <div className={styles.pacDockBody}>
         {focus !== 'wedge' ? (
@@ -196,6 +227,32 @@ export function PacActionDock({ state, dispatch, focus }: PacActionDockProps) {
         ) : null}
       </div>
 
+      {focus !== 'wedge' && catheter.position === 'ra' ? (
+        <aside
+          className={styles.pacCvpTeaching}
+          role="note"
+          aria-label="RA and CVP end-expiratory measurement"
+        >
+          <strong>RA = CVP here: read the respiratory trough</strong>
+          <p>
+            The blue CVP channel and yellow PAC · RA channel sample the same right-atrial pressure,
+            so their end-expiratory values must match. In this controlled positive-pressure model,
+            the slow CVP and ART envelopes rise together during inspiration; the lowest slow
+            envelope is end expiration.
+          </p>
+          <ol>
+            <li>Freeze the trace and identify the end-expiratory trough.</li>
+            <li>Read CVP at the base of the c wave inside that trough.</li>
+            <li>Do not substitute an inspiratory peak or an arbitrary one-beat average.</li>
+          </ol>
+          <output aria-live="polite">
+            {state.measurementSystem.zeroed
+              ? 'Pressure system zeroed: the cyan cursor marks the modeled end-expiratory c-wave base.'
+              : 'ZERO REQUIRED: the cursor teaches respiratory timing, but the pressure remains technically invalid until the transducer is leveled and zeroed.'}
+          </output>
+        </aside>
+      ) : null}
+
       {focus !== 'wedge' ? (
         <WaveformAtlasPanel
           key={`advance-${catheter.position}`}
@@ -209,7 +266,8 @@ export function PacActionDock({ state, dispatch, focus }: PacActionDockProps) {
         <>
           <WaveformAtlasPanel
             initialEntryId="wedge-normal"
-            onlyCategories={['artifact']}
+            onlyEntryIds={['wedge-normal', 'wedge-overwedged', 'wedge-hybrid']}
+            tablistLabel="True and false wedge patterns"
             heading="True wedge versus false wedge"
           />
           <WedgeValidityPanel />

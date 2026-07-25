@@ -87,9 +87,9 @@ describe('critical care parent module release boundary', () => {
     )) {
       expect(presentCriticalCareActivityPublicly(assessment)).toEqual(
         expect.objectContaining({
-          title: 'Masked assessment',
-          href: assessment.pathname,
-          maskedAssessment: true,
+          title: assessment.title,
+          href: expect.stringContaining(assessment.pathname),
+          maskedAssessment: false,
         }),
       )
     }

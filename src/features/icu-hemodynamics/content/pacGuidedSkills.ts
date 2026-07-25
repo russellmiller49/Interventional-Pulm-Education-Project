@@ -1,6 +1,6 @@
 export const pacGuidedSkillIds = [
-  'pressure-system',
   'catheter-advancement',
+  'pressure-system',
   'waveform-interpretation',
   'pawp-capture',
   'thermodilution-series',

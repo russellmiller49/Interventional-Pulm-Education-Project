@@ -13,7 +13,7 @@ const MechanicalVentilationCaseActivityV2 = dynamic(
         <div className="rounded-2xl border bg-card p-6 text-center shadow-sm">
           <strong>Loading the ventilator workspace</strong>
           <p className="mt-2 text-sm text-muted-foreground">
-            The case engine and console assets load only after setup is complete.
+            The case workspace and console assets load only after setup is complete.
           </p>
         </div>
       </main>

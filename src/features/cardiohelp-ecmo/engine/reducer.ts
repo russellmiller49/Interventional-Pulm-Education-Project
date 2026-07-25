@@ -22,31 +22,6 @@ import type {
   SimulationAction,
 } from './types'
 
-const gatedActionTypes = new Set<SimulationAction['type']>([
-  'SET_RPM',
-  'SET_PUMP_MODE',
-  'SET_FLOW_TARGET',
-  'SET_SWEEP',
-  'SET_GAS_FIO2',
-  'RESTORE_GAS_SOURCE',
-  'RESTORE_AC_POWER',
-  'TOGGLE_ZERO_FLOW',
-  'TOGGLE_GLOBAL_OVERRIDE',
-  'PRESS_SAFETY',
-  'RELEASE_SAFETY',
-  'ADJUST_LIMIT',
-  'TOGGLE_TIMER',
-  'RESET_TIMER',
-  'ACK_ALARM',
-  'RESET_BUBBLE',
-  'TOGGLE_CIRCUIT_CLAMP',
-  'CORRECT_FAULT',
-  'PERFORM_CHECK',
-  'ROTARY_DELTA',
-  'APPLY_CLINICAL_INTERVENTION',
-  'START_ECMO',
-])
-
 const actionLabels: Partial<Record<SimulationAction['type'], string>> = {
   SET_RPM: 'Changed RPM setpoint',
   SET_FLOW_TARGET: 'Changed LPM setpoint',
@@ -481,10 +456,6 @@ function advance(state: EcmoSimulationState, seconds: number): EcmoSimulationSta
   return next
 }
 
-function blockedBeforePrediction(state: EcmoSimulationState, action: SimulationAction) {
-  return !state.scenario.prediction.committed && gatedActionTypes.has(action.type)
-}
-
 export function ecmoSimulationReducer(
   state: EcmoSimulationState,
   action: SimulationAction,
@@ -513,10 +484,6 @@ export function ecmoSimulationReducer(
       'action',
       'Committed prediction before action',
     )
-  }
-
-  if (blockedBeforePrediction(state, action)) {
-    return appendHistory(state, 'system', 'Action held: commit a prediction first')
   }
 
   switch (action.type) {
@@ -990,7 +957,7 @@ export function ecmoSimulationReducer(
           },
         },
         'action',
-        `${actionLabels.REQUEST_HINT}: ${hint.title} (−${hint.penalty} points)`,
+        `${actionLabels.REQUEST_HINT}: ${hint.title}`,
       )
     }
     case 'COMMIT_REASSESSMENT': {
@@ -1017,17 +984,15 @@ export function ecmoSimulationReducer(
       )
       const acknowledgementOnlyAttempt = correctedAt === null && acknowledgedAt !== null
       const observationAnchor = correctedAt ?? clinicalActionAt ?? acknowledgedAt
-      const assessmentPolicy = definition.assessmentPolicy
-      const minimumObservationSeconds = assessmentPolicy?.minimumObservationSeconds ?? 1
+      const minimumObservationSeconds = definition.assessmentPolicy?.minimumObservationSeconds ?? 1
       const observedAfterAction =
         observationAnchor !== null &&
         state.simulationTime - observationAnchor >= minimumObservationSeconds
-      const submissionReady =
-        state.scenario.prediction.committed && hasAllDomains && observedAfterAction
+      const submissionReady = hasAllDomains
       const causeCorrected = state.scenario.correctedFaults.includes(
         definition.expectation.correctiveFault,
       )
-      const valid = submissionReady && causeCorrected && answersCorrect
+      const valid = submissionReady && causeCorrected && answersCorrect && observedAfterAction
       const assessmentState =
         submissionReady && acknowledgementOnlyAttempt
           ? addCriticalError(state, 'ack-without-correction', 30)
@@ -1048,14 +1013,12 @@ export function ecmoSimulationReducer(
         valid
           ? 'Committed reassessment'
           : submissionReady
-            ? 'Committed reassessment; response-selection credit will be shown in the debrief'
-            : 'Reassessment requires one device, circuit/gas, and patient response after the corrective action',
+            ? 'Committed reassessment; the response comparison will be shown in the debrief'
+            : 'Choose one device, circuit/gas, and patient response before recording the reassessment',
       )
     }
     case 'REVEAL_DEBRIEF':
-      return state.scenario.reassessment !== null
-        ? { ...state, scenario: { ...state.scenario, phase: 'complete' } }
-        : state
+      return { ...state, scenario: { ...state.scenario, phase: 'complete' } }
     case 'TOGGLE_ALARM_AUDIO':
       return {
         ...state,

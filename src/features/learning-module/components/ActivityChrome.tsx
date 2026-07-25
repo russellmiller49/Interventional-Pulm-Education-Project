@@ -20,6 +20,7 @@ export interface ActivityChromeProps {
   readonly mode: CriticalCareActivityMode
   readonly progressLabel: string
   readonly stepperAriaLabel?: string
+  readonly onPhaseSelect?: (phase: CriticalCareActivityPhase) => void
   /** Native workbenches with their own authored progress surface can suppress the shared stepper. */
   readonly showProgressStepper?: boolean
   readonly children: ReactNode
@@ -40,6 +41,7 @@ export function ActivityChrome({
   mode,
   progressLabel,
   stepperAriaLabel,
+  onPhaseSelect,
   showProgressStepper = true,
   children,
   bottomContent,
@@ -81,14 +83,16 @@ export function ActivityChrome({
           <SaveExitControl onSaveAndExit={onSaveAndExit} />
         </div>
         {showProgressStepper ? (
-          <ActivityProgressStepper currentPhase={phase} ariaLabel={stepperAriaLabel} />
+          <ActivityProgressStepper
+            currentPhase={phase}
+            ariaLabel={stepperAriaLabel}
+            onPhaseSelect={onPhaseSelect}
+          />
         ) : null}
       </header>
       {children}
       <footer className={styles.bottomBar}>
-        <div className={styles.bottomContent} aria-live="polite">
-          {bottomContent ?? progressLabel}
-        </div>
+        <div className={styles.bottomContent}>{bottomContent ?? progressLabel}</div>
         {secondaryActions ? <div className={styles.bottomActions}>{secondaryActions}</div> : null}
       </footer>
     </section>

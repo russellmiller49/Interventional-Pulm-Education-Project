@@ -2,8 +2,10 @@
 
 import type { Route } from 'next'
 import { useEffect, useReducer, useRef, useState } from 'react'
-import { ArrowRight, Check, LockKeyhole } from 'lucide-react'
+import { ArrowRight, Check } from 'lucide-react'
 
+import { criticalCareActivityById } from '@/features/critical-care/content/activities'
+import { resolveCriticalCareEvidence } from '@/features/critical-care/content/evidenceRegistry'
 import { recordSiteModuleEvent } from '@/lib/analytics'
 import { recordCriticalCareActivitySelection } from '@/features/critical-care/progress/selection'
 import {
@@ -11,6 +13,7 @@ import {
   type CriticalCareActivityPhase,
 } from '@/features/learning-module/activity'
 import { ActivityShell } from '@/features/learning-module/components/ActivityShell'
+import { ChoiceReasoningFeedback } from '@/features/learning-module/components/ChoiceReasoningFeedback'
 import { DebriefPanel } from '@/features/learning-module/components/DebriefPanel'
 import { EvidenceDrawer } from '@/features/learning-module/components/EvidenceDrawer'
 import { PatientContextBar } from '@/features/learning-module/components/PatientContextBar'
@@ -23,13 +26,13 @@ import { Link, useRouter } from '@/i18n/navigation'
 
 import {
   MCS_ANALYTICS_MODULE_ID,
-  isMcsCapstoneUnlocked,
+  MCS_MODEL_BOUNDARIES,
   mcsCapstoneScenarios,
+  mcsDerivedValueGuides,
   mcsLessonTransferByLessonId,
   mcsLessons,
   mcsPracticeScenarios,
   mcsSources,
-  remainingMcsCapstoneRequirements,
 } from '../content'
 import {
   createDefaultMcsProgress,
@@ -81,27 +84,19 @@ const semanticPhaseByMcsPhase: Readonly<
   debrief: 'explain',
 }
 
-function scoreBand(score: number | null) {
-  if (score === null) return 'not-scored'
-  if (score >= 80) return '80-100'
-  if (score >= 60) return '60-79'
-  return 'below-60'
-}
-
 function rhythmLabel(state: McsSimulationState): string {
   if (state.patient.rhythm === 'atrial-fibrillation') return 'Atrial fibrillation'
   if (state.patient.rhythm === 'paced') return 'Paced'
   return 'Sinus rhythm'
 }
 
-function shockPhenotype(state: McsSimulationState, masked: boolean): string {
-  if (masked) return 'Undifferentiated hemodynamic instability'
+function shockPhenotype(state: McsSimulationState): string {
   if (state.patient.tamponade) return 'Obstructive / tamponade pattern'
   const lvLimited =
     state.patient.leftVentricularContractility < 0.55 || state.metrics.pcwpMmHg >= 20
   const rvLimited =
     state.patient.rightVentricularContractility < 0.55 ||
-    state.metrics.papi < 1.5 ||
+    state.metrics.papi < MCS_MODEL_BOUNDARIES.rvLimitedPapiMax ||
     state.metrics.rapMmHg >= 14
   if (lvLimited && rvLimited) return 'Biventricular / mixed shock'
   if (rvLimited) return 'RV-dominant shock'
@@ -198,8 +193,9 @@ export function McsWorkbench({
   )
   const [state, dispatch] = useReducer(mcsReducer, undefined, () => {
     const initial = createInitialMcsState(section, activeInitialDevice)
-    return requestedPractice
-      ? mcsReducer(initial, { type: 'LOAD_SCENARIO', scenario: requestedPractice })
+    const requestedScenario = requestedPractice ?? requestedCapstone
+    return requestedScenario
+      ? mcsReducer(initial, { type: 'LOAD_SCENARIO', scenario: requestedScenario })
       : initial
   })
   const [progress, setProgress] = useState<McsProgressV1>(createDefaultMcsProgress)
@@ -218,11 +214,15 @@ export function McsWorkbench({
   const [lessonTransferActive, setLessonTransferActive] = useState(false)
   const [transferChoiceId, setTransferChoiceId] = useState<string | null>(null)
   const [transferFeedback, setTransferFeedback] = useState<string | null>(null)
+  const [showChallengeFeedback, setShowChallengeFeedback] = useState(false)
   const recordedCompletion = useRef<string | null>(null)
   const recordedSafetyEvents = useRef(new Set<string>())
   const activeHref = `${mechanicalCirculatorySupportNavBase}/${section}`
   const lesson = mcsLessons.find((candidate) => candidate.id === selectedLessonId) ?? mcsLessons[0]
   const lessonTransfer = mcsLessonTransferByLessonId.get(lesson.id)
+  const transferChoice = lessonTransfer?.item.choices.find(
+    (choice) => choice.id === transferChoiceId,
+  )
   const activeLessonStep =
     lesson.steps[activeLessonStepIndex] ?? lesson.steps[lesson.steps.length - 1]
   const activeLessonStepPerformed = activeLessonStep.targetActionId
@@ -239,8 +239,11 @@ export function McsWorkbench({
             : activeLessonStep.targetActionId,
         )
       : 'workflow'
-  const assessmentMasked = section === 'assess' && !state.completed
-  const revealCausality = !assessmentMasked
+  const revealCausality =
+    section !== 'assess' ||
+    showChallengeFeedback ||
+    state.completed ||
+    state.alarms.some((alarm) => alarm.active && alarm.priority === 'critical')
   const activityMode =
     section === 'learn'
       ? ('guided' as const)
@@ -270,6 +273,7 @@ export function McsWorkbench({
     phase: lifecyclePhase,
     enabled: section !== 'assess' || state.scenario !== null,
   })
+  const catalogActivity = criticalCareActivityById.get(lifecycleActivityId)
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -316,10 +320,9 @@ export function McsWorkbench({
         deviceTrack: state.deviceKind,
         station: selectedActivityId,
         completion: state.completed ? 'complete' : 'in-progress',
-        scoreBand: scoreBand(state.score?.total ?? null),
       },
     })
-  }, [progress, section, selectedActivityId, state.completed, state.deviceKind, state.score?.total])
+  }, [progress, section, selectedActivityId, state.completed, state.deviceKind])
 
   useEffect(() => {
     if (!progressLoaded || !state.completed || !state.scenario || !state.score) {
@@ -392,9 +395,8 @@ export function McsWorkbench({
       if (!capstone) return
       setSelectedActivityId(capstone.id)
       setHelpVisible(false)
-      if (isMcsCapstoneUnlocked(progress, device))
-        dispatch({ type: 'LOAD_SCENARIO', scenario: capstone })
-      else dispatch({ type: 'OPEN_STUDIO', device })
+      setShowChallengeFeedback(false)
+      dispatch({ type: 'LOAD_SCENARIO', scenario: capstone })
       return
     }
     const deviceLesson = mcsLessons.find((candidate) => candidate.device === device)
@@ -434,7 +436,6 @@ export function McsWorkbench({
 
   function completeLessonFromEvidence() {
     if (!lessonTransfer || !transferChoiceId || !transferActionsMet) return
-    if (!lessonTransfer.item.correctChoiceIds.includes(transferChoiceId)) return
     const device = lesson.device === 'shared' ? state.deviceKind : lesson.device
     setProgress((current) => {
       if (current.completedLessonIds.includes(lesson.id)) return current
@@ -458,7 +459,7 @@ export function McsWorkbench({
   }
 
   function beginLessonTransfer() {
-    if (!lessonTransfer || !activeLessonStepPerformed) return
+    if (!lessonTransfer) return
     setLessonTransferActive(true)
     setTransferChoiceId(null)
     setTransferFeedback(null)
@@ -467,7 +468,6 @@ export function McsWorkbench({
   }
 
   function advanceLessonStep() {
-    if (!activeLessonStepPerformed) return
     if (activeLessonStepIndex >= lesson.steps.length - 1) {
       beginLessonTransfer()
       return
@@ -481,23 +481,15 @@ export function McsWorkbench({
       setTransferFeedback('Choose the best response before checking the transfer case.')
       return
     }
-    const correct = lessonTransfer.item.correctChoiceIds.includes(transferChoiceId)
-    const choice = lessonTransfer.item.choices.find(
-      (candidate) => candidate.id === transferChoiceId,
-    )
-    if (!correct) {
-      setTransferFeedback(
-        `${choice?.rationale ?? 'That response does not fit the modeled mechanism.'} Reassess the patient, loading condition, and support pathway.`,
-      )
-      return
-    }
     if (!transferActionsMet) {
       setTransferFeedback(
-        `${choice?.rationale ?? lessonTransfer.item.explanation} Now complete the required simulator action and check again.`,
+        'The reasoning feedback is available below. Try the paired live interaction when you are ready.',
       )
       return
     }
-    setTransferFeedback(lessonTransfer.item.explanation)
+    setTransferFeedback(
+      'The transfer decision and paired live interaction are now in your history.',
+    )
     completeLessonFromEvidence()
   }
 
@@ -522,36 +514,17 @@ export function McsWorkbench({
     (scenario) => scenario.device === state.deviceKind,
   )
   const capstone = mcsCapstoneScenarios.find((scenario) => scenario.device === state.deviceKind)
-  const capstoneUnlocked = isMcsCapstoneUnlocked(progress, state.deviceKind)
-  const remaining = remainingMcsCapstoneRequirements(progress, state.deviceKind)
-  const activeTitle = assessmentMasked
-    ? 'Masked MCS capstone'
-    : section === 'learn'
-      ? lesson.title
-      : (state.scenario?.title ?? 'Mechanism Studio')
-  const maskedRequiredAction =
-    state.scenarioPhase === 'inspect'
-      ? 'Inspect the observable patient, device, and waveform data.'
-      : state.scenarioPhase === 'predict'
-        ? 'Commit a prediction from the observable data before changing support.'
-        : state.scenarioPhase === 'adjust'
-          ? 'Apply a bounded action using the available controls.'
-          : state.scenarioPhase === 'observe'
-            ? 'Observe the simulated response before reassessment.'
-            : state.scenarioPhase === 'reassess'
-              ? 'Reassess the patient and support response.'
-              : 'Review the completed attempt.'
-  const currentObjective = assessmentMasked
-    ? 'Complete the full reasoning loop using only observable case and device data.'
-    : section === 'learn'
+  const activeTitle =
+    section === 'learn' ? lesson.title : (state.scenario?.title ?? 'Mechanism Studio')
+  const currentObjective =
+    section === 'learn'
       ? lessonTransferActive
         ? (lessonTransfer?.title ?? 'Apply the mechanism to a new loading condition.')
         : activeLessonStep.title
       : (state.scenario?.learningObjectives[0] ??
         'Compare device support with the synchronized patient and circuit response.')
-  const requiredAction = assessmentMasked
-    ? maskedRequiredAction
-    : section === 'learn'
+  const requiredAction =
+    section === 'learn'
       ? lessonTransferActive
         ? (lessonTransfer?.requiredActionLabel ?? 'Complete the transfer interaction.')
         : activeLessonStep.instruction
@@ -560,33 +533,38 @@ export function McsWorkbench({
           ? state.scenario.predictionPrompt
           : state.scenario.guidedPrompt
         : 'Change one bounded variable and reconcile the patient, monitor, and device response.'
-  const activeSourceIds = assessmentMasked
-    ? []
-    : section === 'learn' && lessonTransferActive && lessonTransfer
+  const activeSourceIds =
+    section === 'learn' && lessonTransferActive && lessonTransfer
       ? [...lesson.sourceIds, ...lessonTransfer.item.evidenceIds]
       : state.scenario
         ? [...state.scenario.sourceIds, ...state.scenario.evidenceSourceIds]
         : lesson.sourceIds
-  const evidenceEntries = assessmentMasked
-    ? [
-        {
-          id: 'mcs-assessment-evidence-boundary',
-          title: 'Assessment evidence boundary',
-          sourceLabel: 'Scenario-specific sources available after debrief',
-          limitation:
-            'Use current manufacturer instructions, local policy, and supervised clinical judgment.',
-        },
-      ]
-    : mcsSources
-        .filter((source) => activeSourceIds.includes(source.id))
-        .map((source) => ({
+  const derivedValueEvidence = resolveCriticalCareEvidence([
+    ...mcsDerivedValueGuides.pulmonaryArteryPulsatilityIndex.evidenceIds,
+    ...mcsDerivedValueGuides.cardiacPowerOutputW.evidenceIds,
+  ])
+  const evidenceEntries = Array.from(
+    new Map(
+      [
+        ...mcsSources
+          .filter((source) => activeSourceIds.includes(source.id))
+          .map((source) => ({
+            id: source.id,
+            title: source.title,
+            sourceLabel: source.citation,
+            limitation:
+              source.limitation ??
+              'Use the current source, manufacturer instructions, local policy, and supervised clinical judgment.',
+          })),
+        ...derivedValueEvidence.map((source) => ({
           id: source.id,
           title: source.title,
           sourceLabel: source.citation,
-          limitation:
-            source.limitation ??
-            'Use the current source, manufacturer instructions, local policy, and supervised clinical judgment.',
-        }))
+          limitation: source.limitation,
+        })),
+      ].map((entry) => [entry.id, entry] as const),
+    ).values(),
+  )
   const nextLesson =
     section === 'learn'
       ? (mcsLessons.find(
@@ -606,7 +584,9 @@ export function McsWorkbench({
             candidate.id !== state.scenario?.id && !progress.masteredCaseIds.includes(candidate.id),
         ) ?? null)
       : null
-  const progressLabel = `${mcsProgressPercent(progress)}% saved · ${progress.completedLessonIds.length}/8 lessons · ${progress.masteredCaseIds.length}/9 cases mastered`
+  const progressLabel = state.completed
+    ? 'Worked through · personal history saved locally'
+    : 'Personal history stays in this browser'
 
   function saveAndExit() {
     writeMcsProgress(progress)
@@ -615,12 +595,53 @@ export function McsWorkbench({
 
   function resetActivity() {
     setHelpVisible(false)
+    setShowChallengeFeedback(false)
     if (section === 'learn') resetLessonRuntime()
     dispatch({ type: 'RESET' })
   }
 
   function focusRestoredActivity() {
     document.getElementById('mcs-activity-viewport')?.focus({ preventScroll: true })
+  }
+
+  function selectActivityPhase(phase: CriticalCareActivityPhase) {
+    setHelpVisible(false)
+    if (section === 'learn') {
+      if (phase === 'transfer') {
+        beginLessonTransfer()
+      } else {
+        setLessonTransferActive(false)
+        const stepIndex =
+          phase === 'recognize' || phase === 'predict'
+            ? 0
+            : phase === 'act'
+              ? Math.min(1, lesson.steps.length - 1)
+              : lesson.steps.length - 1
+        setActiveLessonStepIndex(Math.max(0, stepIndex))
+      }
+      setMobileSurface(phase === 'observe' ? 'monitor' : phase === 'act' ? 'controls' : 'workflow')
+      window.requestAnimationFrame(focusRestoredActivity)
+      return
+    }
+
+    const surface: MobileSurface =
+      phase === 'act'
+        ? 'controls'
+        : phase === 'recognize' || phase === 'observe'
+          ? 'monitor'
+          : 'workflow'
+    setMobileSurface(surface)
+    const targetId =
+      phase === 'recognize'
+        ? 'mcs-case-inspect'
+        : phase === 'predict'
+          ? 'mcs-case-predict'
+          : phase === 'observe'
+            ? 'mcs-case-response'
+            : 'mcs-case-actions'
+    window.requestAnimationFrame(() => {
+      document.getElementById(targetId)?.focus({ preventScroll: false })
+    })
   }
 
   function showHelp() {
@@ -632,6 +653,8 @@ export function McsWorkbench({
     <McsModuleFrame locale={locale} activeHref={activeHref} activityMode>
       <ActivityShell
         layout="native-workbench"
+        activityId={lifecycleActivityId}
+        assumedConceptIds={catalogActivity?.assumedConceptIds}
         breadcrumb={
           <>
             <Link href={mechanicalCirculatorySupportNavBase}>Mechanical Circulatory Support</Link>
@@ -644,8 +667,8 @@ export function McsWorkbench({
         mode={activityMode}
         progressLabel={progressLabel}
         stepperAriaLabel="MCS shared activity phases"
+        onPhaseSelect={selectActivityPhase}
         theme="light"
-        maskedAssessment={section === 'assess'}
         patientContext={
           <>
             <PatientContextBar
@@ -654,7 +677,7 @@ export function McsWorkbench({
                   label: 'Support',
                   value: `${deviceLabels[state.deviceKind].short} · ${deviceSetting(state)}`,
                 },
-                { label: 'Shock phenotype', value: shockPhenotype(state, assessmentMasked) },
+                { label: 'Shock phenotype', value: shockPhenotype(state) },
                 {
                   label: 'Rhythm',
                   value: `${rhythmLabel(state)} · ${state.patient.heartRateBpm} bpm`,
@@ -691,11 +714,7 @@ export function McsWorkbench({
               <ResumeBanner
                 state="ready"
                 title={section === 'learn' ? 'Return to saved lesson' : 'Return to saved case'}
-                description={
-                  assessmentMasked
-                    ? 'The saved assessment route and device selection are open. Prior simulation state was not replayed.'
-                    : `${activeTitle} is open with its saved route and device selection. Prior controls and answers were not replayed.`
-                }
+                description={`${activeTitle} is open with its saved route and device selection. Prior controls and answers were not replayed.`}
                 onResume={focusRestoredActivity}
                 resumeActionLabel={section === 'learn' ? 'Return to lesson' : 'Return to case'}
               />
@@ -707,22 +726,18 @@ export function McsWorkbench({
             objective={currentObjective}
             requiredAction={requiredAction}
             targets={
-              assessmentMasked
-                ? []
-                : section === 'learn'
-                  ? lessonTransferActive
-                    ? [lessonTransfer?.item.stem ?? requiredAction]
-                    : [activeLessonStep.title]
-                  : (state.scenario?.learningObjectives ?? [])
+              section === 'learn'
+                ? lessonTransferActive
+                  ? [lessonTransfer?.item.stem ?? requiredAction]
+                  : [activeLessonStep.title]
+                : (state.scenario?.learningObjectives ?? [])
             }
             hint={
-              assessmentMasked
-                ? undefined
-                : section === 'learn'
-                  ? lessonTransferActive
-                    ? lessonTransfer?.item.explanation
-                    : activeLessonStep.rationale
-                  : state.scenario?.guidedPrompt
+              section === 'learn'
+                ? lessonTransferActive
+                  ? lessonTransfer?.item.explanation
+                  : activeLessonStep.rationale
+                : state.scenario?.guidedPrompt
             }
             mode={activityMode}
             hintVisible={helpVisible}
@@ -785,30 +800,19 @@ export function McsWorkbench({
                   ))}
                 </section>
               ) : (
-                <section className={styles.taskCapstoneGate} data-unlocked={capstoneUnlocked}>
+                <section className={styles.taskCapstoneCard} data-available>
                   <div>
-                    {capstoneUnlocked ? (
-                      <Check aria-hidden="true" />
-                    ) : (
-                      <LockKeyhole aria-hidden="true" />
-                    )}
-                    <strong>
-                      {assessmentMasked
-                        ? `${deviceLabels[state.deviceKind].short} capstone assessment`
-                        : (capstone?.title ?? 'MCS capstone')}
-                    </strong>
+                    <Check aria-hidden="true" />
+                    <strong>{capstone?.title ?? 'MCS challenge'}</strong>
                   </div>
-                  <p>
-                    {capstoneUnlocked
-                      ? 'Capstone unlocked. Coaching remains hidden until debrief.'
-                      : `${remaining.length} requirement${remaining.length === 1 ? '' : 's'} remain.`}
-                  </p>
+                  <p>Open from the start. Feedback is collected for the end-of-case debrief.</p>
                   <button
                     type="button"
-                    disabled={!capstoneUnlocked || !capstone}
+                    disabled={!capstone}
                     onClick={() => {
                       if (!capstone) return
                       setHelpVisible(false)
+                      setShowChallengeFeedback(false)
                       setSelectedActivityId(capstone.id)
                       dispatch({ type: 'LOAD_SCENARIO', scenario: capstone })
                       recordCriticalCareActivitySelection(window.localStorage, {
@@ -821,7 +825,7 @@ export function McsWorkbench({
                       })
                     }}
                   >
-                    Start capstone
+                    Open challenge
                   </button>
                 </section>
               )}
@@ -837,19 +841,13 @@ export function McsWorkbench({
             <ReferenceDrawer
               entries={[
                 {
-                  id: assessmentMasked
-                    ? 'mcs-masked-assessment'
-                    : (state.scenario?.id ?? lesson.id),
+                  id: state.scenario?.id ?? lesson.id,
                   title: activeTitle,
-                  summary: assessmentMasked
-                    ? 'Scenario-specific coaching and references remain hidden until debrief.'
-                    : (state.scenario?.presentation ?? lesson.summary),
-                  meta: assessmentMasked
-                    ? 'Masked assessment'
-                    : mcsSources
-                        .filter((source) => activeSourceIds.includes(source.id))
-                        .map((source) => source.title)
-                        .join(' · '),
+                  summary: state.scenario?.presentation ?? lesson.summary,
+                  meta: mcsSources
+                    .filter((source) => activeSourceIds.includes(source.id))
+                    .map((source) => source.title)
+                    .join(' · '),
                 },
               ]}
               trigger={<button type="button">Reference</button>}
@@ -920,10 +918,12 @@ export function McsWorkbench({
                             key={step.id}
                             aria-current={index === activeLessonStepIndex ? 'step' : undefined}
                             data-complete={completed}
-                            disabled={index > activeLessonStepIndex && !completed}
                             onClick={() => setActiveLessonStepIndex(index)}
                           >
-                            <span>{completed ? <Check aria-hidden="true" /> : index + 1}</span>
+                            <span aria-hidden="true">{completed ? <Check /> : index + 1}</span>
+                            <span className="sr-only">
+                              {completed ? 'Worked through. ' : `Step ${index + 1}. `}
+                            </span>
                             <small>{step.title}</small>
                           </button>
                         )
@@ -957,15 +957,11 @@ export function McsWorkbench({
                           </button>
                         ) : (
                           <p className={styles.guidedControlPrompt}>
-                            Use the highlighted {guidedSurface} surface. This step advances only
-                            after the authored control action appears in the simulation record.
+                            Use the highlighted {guidedSurface} surface to try the authored
+                            interaction, or move to another step and return later.
                           </p>
                         )}
-                        <button
-                          type="button"
-                          disabled={!activeLessonStepPerformed}
-                          onClick={advanceLessonStep}
-                        >
+                        <button type="button" onClick={advanceLessonStep}>
                           {activeLessonStepIndex === lesson.steps.length - 1
                             ? 'Load transfer patient'
                             : 'Continue to next step'}
@@ -1048,12 +1044,23 @@ export function McsWorkbench({
                         <span>{transferFeedback}</span>
                       </div>
                     ) : null}
+                    {transferChoice ? (
+                      <ChoiceReasoningFeedback
+                        choice={transferChoice}
+                        explanation={lessonTransfer.item.explanation}
+                        evidenceIds={lessonTransfer.item.evidenceIds}
+                        conceptIds={catalogActivity?.teachesConceptIds}
+                      />
+                    ) : null}
                     {lessonComplete ? (
-                      <section className={styles.lessonCompletion} aria-label="Lesson complete">
+                      <section
+                        className={styles.lessonCompletion}
+                        aria-label="Lesson worked through"
+                      >
                         <div aria-live="polite">
                           <Check aria-hidden="true" />
                           <span>
-                            <strong>Lesson complete</strong>
+                            <strong>Lesson worked through</strong>
                             <small>
                               Your transfer evidence is saved. Continue when you are ready.
                             </small>
@@ -1134,7 +1141,12 @@ export function McsWorkbench({
               data-mobile-visible={mobileSurface === 'workflow'}
               data-guided-focus={section === 'learn' && guidedSurface === 'workflow'}
             >
-              <McsCaseWorkflow state={state} dispatch={dispatch} />
+              <McsCaseWorkflow
+                state={state}
+                dispatch={dispatch}
+                showChallengeFeedback={showChallengeFeedback}
+                onShowChallengeFeedbackChange={setShowChallengeFeedback}
+              />
             </section>
 
             {state.completed && state.scenario && state.score ? (
@@ -1143,12 +1155,11 @@ export function McsWorkbench({
                 actions={state.actionIds}
                 consequences={state.scenario.debrief}
                 performanceDomains={[
-                  { label: 'Inspection', result: `${state.score.inspection}` },
-                  { label: 'Prediction', result: `${state.score.prediction}` },
-                  { label: 'Management', result: `${state.score.management}` },
-                  { label: 'Response', result: `${state.score.response}` },
-                  { label: 'Reassessment', result: `${state.score.reassessment}` },
-                  { label: 'Total', result: `${state.score.total}%` },
+                  { label: 'Inspection', result: 'Review the cues opened before action' },
+                  { label: 'Prediction', result: 'Compare the committed frame with the response' },
+                  { label: 'Management', result: 'Trace each bounded device or loading change' },
+                  { label: 'Response', result: 'Reconcile native, device, and effective flow' },
+                  { label: 'Reassessment', result: 'Return to the whole patient' },
                 ]}
                 transfer={<p>{state.scenario.learningObjectives.join(' ')}</p>}
                 replay={
@@ -1162,9 +1173,9 @@ export function McsWorkbench({
             <section className={styles.privacyNote}>
               <strong>Privacy boundary</strong>
               <span>
-                This module sends only device track, station, completion state, and score band.
+                This module sends only the device track, station, and coarse activity state.
                 Physiologic traces, pressures, detailed action histories, and free text remain in
-                the browser.
+                this browser.
               </span>
             </section>
             <McsSourcesPanel />

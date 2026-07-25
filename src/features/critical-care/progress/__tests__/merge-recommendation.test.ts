@@ -250,7 +250,7 @@ describe('deterministic critical-care recommendations', () => {
 
   it('gives a new learner one stable first activity', () => {
     expect(getCriticalCareRecommendation(criticalCareActivities, empty)).toMatchObject({
-      activity: { id: 'hemodynamics:learn:pac-signal-validation' },
+      activity: { id: 'hemodynamics:learn:catheter-advancement' },
       reason: 'next-unblocked',
     })
   })
@@ -265,7 +265,7 @@ describe('deterministic critical-care recommendations', () => {
     })
   })
 
-  it('downgrades unsupported completion before ranking or prerequisite checks', () => {
+  it('downgrades unsupported completion without turning prerequisites into a gate', () => {
     const nonCreditLesson = catalogActivity('hemodynamics:learn:pressure-system')
     const invalidCompletion = normalizedEnvelope([
       normalizedActivity(nonCreditLesson.id, {
@@ -290,13 +290,17 @@ describe('deterministic critical-care recommendations', () => {
       getCriticalCareRecommendations(criticalCareActivities, unsupportedPrerequisites, {
         limit: 100,
       }).some((recommendation) => recommendation.activity.id === capstone.id),
-    ).toBe(false)
+    ).toBe(true)
   })
 
-  it('respects prerequisites and deterministically applies learner preferences', () => {
-    const blockedCapstone = catalogActivity('mcs:assess:CAP-IMP-01')
+  it('keeps advanced activities eligible and deterministically applies learner preferences', () => {
+    const openCapstone = catalogActivity('mcs:assess:CAP-IMP-01')
     const pac = catalogActivity('hemodynamics:learn:pac-signal-validation')
-    expect(getCriticalCareRecommendation([blockedCapstone, pac], empty)?.activity.id).toBe(pac.id)
+    expect(
+      getCriticalCareRecommendations([openCapstone, pac], empty, { limit: 2 }).map(
+        (item) => item.activity.id,
+      ),
+    ).toEqual([openCapstone.id, pac.id])
 
     const ventilation = catalogActivity('ventilation:practice:MV-01')
     expect(

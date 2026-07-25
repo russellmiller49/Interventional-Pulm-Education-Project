@@ -199,7 +199,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
           id: 'increase-ratio',
           label: 'Increase assist frequency without checking the trigger or waveform timing',
           rationale:
-            'More assisted beats do not correct mistiming and can reproduce the error more often.',
+            'More assisted beats do not resolve mistiming and can reproduce the error more often.',
           plausibility: 'unsafe',
         },
       ],
@@ -258,7 +258,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
           id: 'retime-normal',
           label:
             'Continue changing inflation timing even though the waveform timing is already acceptable',
-          rationale: 'Technical timing changes do not correct a support-mechanism mismatch.',
+          rationale: 'Technical timing changes do not resolve a support-mechanism mismatch.',
           plausibility: 'reasonable-but-incomplete',
         },
         {
@@ -379,7 +379,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
         {
           id: 'reduce-and-diagnose',
           label:
-            'Reduce support temporarily, reassess preload, RV delivery, and position, and correct the cause before re-escalating',
+            'Reduce support temporarily, reassess preload, RV delivery, and position, and address the cause before re-escalating',
           rationale:
             'This limits ongoing suction while preserving a structured patient–position–device evaluation.',
           plausibility: 'best',

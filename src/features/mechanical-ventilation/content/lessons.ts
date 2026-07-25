@@ -248,7 +248,7 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
         objective: 'Explain the pattern without overclaiming its cause.',
         requiredAction: 'Separate observed waveform features from the inferred mechanism.',
         teachingPoint:
-          'The case score distinguishes recognition, mechanism, action, and reassessment.',
+          'The causal debrief distinguishes recognition, mechanism, action, and reassessment.',
       },
       transfer: {
         objective: 'Transfer the sequence to an artifact-prone trace.',
@@ -313,7 +313,8 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
       predict: {
         objective: 'Predict which transition is abnormal.',
         requiredAction: 'Commit to trigger, cycle, or non-ventilator mechanism.',
-        teachingPoint: 'The prediction is locked before practice controls become active.',
+        teachingPoint:
+          'Recording a prediction preserves an independent baseline while practice controls remain available.',
       },
       act: {
         objective: 'Change one timing variable or correct one identified source.',
@@ -407,7 +408,7 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
         objective: 'Explain why the intervention did or did not work.',
         requiredAction: 'Connect drive, load, timing, action, and response.',
         teachingPoint:
-          'Several accepted paths can score when the mechanism and reassessment remain sound.',
+          'Several accepted paths can remain clinically coherent when the mechanism and reassessment remain sound.',
       },
       transfer: {
         objective: 'Transfer to a mismatch with the opposite timing direction.',
@@ -504,7 +505,7 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
       ],
       correctChoiceId: 'tradeoff',
       explanation:
-        'The preserved cases score physiologic response and safety, not a single display value.',
+        'The preserved cases compare physiologic response and safety, not a single display value.',
     },
     transfer: {
       prompt: 'Hypoxemia becomes abrupt and hypotension appears. What changes?',
@@ -623,7 +624,7 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
       },
       predict: {
         objective: 'Predict the immediate safety priority and response.',
-        requiredAction: 'Commit before controls unlock in independent practice.',
+        requiredAction: 'Record an initial frame, then compare it with the response to an action.',
         teachingPoint: 'The commitment separates pre-action reasoning from hindsight.',
       },
       act: {
@@ -641,7 +642,7 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
       explain: {
         objective: 'Explain safety priority, action, and consequence.',
         requiredAction: 'Close the loop with the team or patient in the case record.',
-        teachingPoint: 'Communication and comfort remain a scored domain in the preserved rubric.',
+        teachingPoint: 'Communication and comfort remain part of the causal review.',
       },
       transfer: {
         objective: 'Transfer to a new high-pressure deterioration.',
@@ -680,9 +681,9 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
     },
     references: [
       {
-        title: 'Preserved scoring',
+        title: 'Reasoning domains',
         summary:
-          'Safety, mechanism, corrective action, reassessment, and communication retain their original weights.',
+          'The debrief compares safety, mechanism, corrective action, reassessment, and communication.',
       },
       {
         title: 'Clinical boundary',

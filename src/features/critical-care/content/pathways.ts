@@ -157,21 +157,21 @@ export const criticalCareIcuScenarioPreparation = [
         id: 'septic-hemodynamics',
         label: 'Distributive-shock hemodynamics',
         rationale:
-          'Establish a focused shock-mechanism and perfusion reassessment foundation before the masked multiorgan assessment.',
+          'Review focused shock mechanism and perfusion reassessment as optional preparation for the multiorgan challenge.',
         anyOfActivityIds: ['hemodynamics:practice:HD-02'],
       },
       {
         id: 'septic-ventilation',
         label: 'ARDS mechanics and sudden compliance change',
         rationale:
-          'Demonstrate a focused respiratory assessment before ventilator decisions are combined with shock and renal support.',
+          'Use this focused respiratory review as optional context for ventilator decisions combined with shock and renal support.',
         anyOfActivityIds: ['ventilation:practice:MV-01', 'ventilation:practice:MV-14'],
       },
       {
         id: 'septic-renal',
         label: 'CRRT priorities or fluid balance',
         rationale:
-          'Complete one focused renal-support case before the integrated course adds evolving AKI and fluid management.',
+          'Use one focused renal-support case as optional context for evolving AKI and fluid management.',
         anyOfActivityIds: ['crrt:practice:CRRT-01', 'crrt:practice:CRRT-10'],
       },
     ],
@@ -184,14 +184,14 @@ export const criticalCareIcuScenarioPreparation = [
         id: 'lv-hemodynamics',
         label: 'LV congestion and low-flow hemodynamics',
         rationale:
-          'Recognize a low-output congested phenotype before selecting and reassessing advanced support.',
+          'Review a low-output congested phenotype as optional context for selecting and reassessing advanced support.',
         anyOfActivityIds: ['hemodynamics:practice:HD-03', 'hemodynamics:practice:HD-06'],
       },
       {
         id: 'lv-mcs',
         label: 'Effective MCS flow',
         rationale:
-          'Complete one focused MCS case that separates a displayed device setting from effective systemic support.',
+          'Review one focused MCS case that separates a displayed device setting from effective systemic support.',
         anyOfActivityIds: ['mcs:practice:IMP-01', 'mcs:practice:IMP-03', 'mcs:practice:IABP-03'],
       },
     ],
@@ -209,14 +209,14 @@ export const criticalCareIcuScenarioPreparation = [
         id: 'pe-rv-hemodynamics',
         label: 'Acute RV pressure overload',
         rationale:
-          'Recognize the RV-obstructive hemodynamic pattern before entering a masked cross-system assessment.',
+          'Review the RV-obstructive hemodynamic pattern as optional preparation for the cross-system challenge.',
         anyOfActivityIds: ['hemodynamics:practice:HD-04', 'hemodynamics:practice:HD-05'],
       },
       {
         id: 'pe-rv-support',
         label: 'RV-sensitive advanced support',
         rationale:
-          'Complete a focused support case involving preload-sensitive flow or VA support before the integrated capstone.',
+          'Review a focused support case involving preload-sensitive flow or VA support as optional challenge preparation.',
         anyOfActivityIds: ['mcs:practice:IMP-01', 'ecmo:practice:va-clinical-initiation-shock'],
       },
     ],
@@ -229,7 +229,7 @@ export const criticalCareIcuScenarioPreparation = [
         id: 'hemorrhagic-hemodynamics',
         label: 'Volume-loss hemodynamics',
         rationale:
-          'Recognize the volume-loss phenotype and its reassessment priorities before the longitudinal assessment.',
+          'Review the volume-loss phenotype and its reassessment priorities before or after the longitudinal challenge.',
         anyOfActivityIds: ['hemodynamics:practice:HD-01'],
       },
     ],
@@ -242,7 +242,7 @@ export const criticalCareIcuScenarioPreparation = [
         id: 'tamponade-hemodynamics',
         label: 'Pressure equalization and falling pulse pressure',
         rationale:
-          'Complete the focused tamponade-pattern case before the masked course tests recognition and definitive escalation.',
+          'Review the focused tamponade-pattern case before or after the integrated recognition and escalation challenge.',
         anyOfActivityIds: ['hemodynamics:practice:HD-07'],
       },
     ],
@@ -255,21 +255,21 @@ export const criticalCareIcuScenarioPreparation = [
         id: 'mixed-hemodynamics',
         label: 'Mixed low-flow and vasodilatory hemodynamics',
         rationale:
-          'Complete a focused distributive or cardiogenic phenotype before combining both mechanisms longitudinally.',
+          'Review a focused distributive or cardiogenic phenotype as optional context for the combined longitudinal case.',
         anyOfActivityIds: ['hemodynamics:practice:HD-02', 'hemodynamics:practice:HD-03'],
       },
       {
         id: 'mixed-mcs',
         label: 'MCS under changing loading conditions',
         rationale:
-          'Demonstrate that effective support depends on preload and afterload before the integrated device course.',
+          'Review how effective support depends on preload and afterload as optional context for the integrated device course.',
         anyOfActivityIds: ['mcs:practice:IMP-03', 'mcs:practice:IABP-03'],
       },
       {
         id: 'mixed-ecmo',
         label: 'VA ECMO shock or vasoplegia management',
         rationale:
-          'Complete a focused VA course before the assessment combines circuit support with persistent vasodilation.',
+          'Review a focused VA case before or after the challenge combines circuit support with persistent vasodilation.',
         anyOfActivityIds: [
           'ecmo:practice:va-clinical-initiation-shock',
           'ecmo:practice:va-clinical-vasoplegia',

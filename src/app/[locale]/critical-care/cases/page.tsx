@@ -8,7 +8,7 @@ import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
 const pageMetadata: Metadata = {
   title: 'Cases · Critical Care Learning Center',
-  description: 'Direct library of critical care practice cases and simulation assessments.',
+  description: 'Direct library of critical care practice cases and simulation challenges.',
   robots: { index: false, follow: false, noarchive: true },
 }
 

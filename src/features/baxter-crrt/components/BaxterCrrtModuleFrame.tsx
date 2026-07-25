@@ -52,9 +52,9 @@ export function BaxterCrrtModuleFrame({
                 Education only—never patient-specific advice or a local operating policy.
               </strong>{' '}
               <span>
-                Patient values, device responses, and scores are simulated. Use current manufacturer
+                Patient values and device responses are simulated. Use current manufacturer
                 instructions, authorized local protocols, supervision, and clinical judgment for
-                patient care. This module does not establish competency or certification.
+                patient care. This module does not establish readiness or grant a credential.
               </span>
             </>
           }

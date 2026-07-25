@@ -50,7 +50,7 @@ export function DebriefPanel({
           </ol>
         </div>
         <div className={styles.debriefSection}>
-          <h3>Performance domains</h3>
+          <h3>Reasoning review</h3>
           <dl className={styles.contextList}>
             {performanceDomains.map((domain) => (
               <div key={domain.label} className={styles.contextItem}>

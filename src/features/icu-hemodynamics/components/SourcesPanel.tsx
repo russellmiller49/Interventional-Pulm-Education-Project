@@ -1,4 +1,4 @@
-import { hemodynamicsSources } from '../content'
+import { HEMODYNAMIC_CLINICAL_THRESHOLDS, hemodynamicsSources } from '../content'
 import styles from './icu-hemodynamics.module.css'
 
 export function SourcesPanel() {
@@ -8,16 +8,20 @@ export function SourcesPanel() {
         <span>Evidence registry · versioned</span>
         <h2 id="sources-heading">Sources, definitions, and model limits</h2>
         <p>
-          Every case points to registry IDs below. Current guidance supersedes older thresholds in
-          the supplied master document.
+          Every case maps to registry IDs below. Current guidance supersedes older thresholds in the
+          supplied master document.
         </p>
       </div>
       <div className={styles.definitionCallout}>
         <strong>Current pulmonary hypertension definition used here</strong>
         <p>
-          mPAP &gt;20 mmHg. Pre-capillary/PAH physiology requires PAWP ≤15 mmHg and PVR &gt;2 WU.
-          The treatment evidence between 2 and 3 WU remains less certain; classification is not a
-          treatment recommendation.
+          mPAP &gt;{HEMODYNAMIC_CLINICAL_THRESHOLDS.pulmonaryHypertension.meanPapMmHg} mmHg.
+          Pre-capillary/PAH physiology requires PAWP ≤
+          {HEMODYNAMIC_CLINICAL_THRESHOLDS.pulmonaryHypertension.preCapillaryPawpMaxMmHg} mmHg and
+          PVR &gt;{HEMODYNAMIC_CLINICAL_THRESHOLDS.pulmonaryHypertension.elevatedPvrWoodUnits} WU.
+          The treatment evidence between{' '}
+          {HEMODYNAMIC_CLINICAL_THRESHOLDS.pulmonaryHypertension.elevatedPvrWoodUnits} and 3 WU
+          remains less certain; classification is not a treatment recommendation.
         </p>
       </div>
       <div className={styles.sourceGrid}>

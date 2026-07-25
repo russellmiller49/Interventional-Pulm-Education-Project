@@ -35,6 +35,8 @@ const activities: readonly CriticalCareActivityDefinition[] = [
     pathwayIds: ['shock-and-perfusion'],
     competencyIds: ['signal-validation'],
     prerequisiteActivityIds: [],
+    teachesConceptIds: ['signal-fidelity'],
+    assumedConceptIds: [],
     estimatedMinutes: 10,
     difficulty: 'foundation',
     completionRuleId: 'hemodynamics:completion:learn-existing',

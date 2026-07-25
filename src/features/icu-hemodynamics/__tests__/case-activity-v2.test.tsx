@@ -56,7 +56,7 @@ describe('focused hemodynamic case activity', () => {
     })
   })
 
-  it('runs the preserved reducer and score through six phases and writes both progress contracts', async () => {
+  it('runs the preserved reducer through the learning phases and writes both progress contracts', async () => {
     const definition = hemodynamicCaseById.get('HD-01')
     if (!definition) throw new Error('Missing HD-01 test fixture.')
     const requiredInterventions = definition.requiredInterventionIds.map((requiredId) => {
@@ -78,7 +78,7 @@ describe('focused hemodynamic case activity', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Commit mechanism and priority' }))
 
     fireEvent.click(screen.getByRole('button', { name: 'Open to air + zero' }))
-    fireEvent.click(screen.getByRole('button', { name: /fast-flush test/i }))
+    fireEvent.click(screen.getByRole('button', { name: /fast-flush response check/i }))
     for (const intervention of requiredInterventions) {
       fireEvent.click(
         screen.getByRole('button', {
@@ -89,9 +89,18 @@ describe('focused hemodynamic case activity', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Observe the modeled response' }))
     fireEvent.click(screen.getByRole('button', { name: 'Commit final reassessment' }))
 
-    expect(await screen.findByRole('heading', { name: 'Causal debrief' })).toBeInTheDocument()
-    expect(screen.getByText(/Total/)).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Open a new signal-transfer variant' }))
+    expect(
+      await screen.findByRole('heading', {
+        name: /Before we look at what happened/,
+      }),
+    ).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('My working frame'), {
+      target: { value: 'The pressure pattern suggested low effective filling.' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Capture this frame and reveal the trace' }))
+    expect(screen.getByRole('heading', { name: 'Reconstruct the reasoning' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('radio', { name: 'Which cue I trusted' }))
+    fireEvent.click(screen.getByRole('button', { name: /Continue to the signal-transfer variant/ }))
     fireEvent.click(
       screen.getByLabelText(
         'An off-level, overdamped measurement chain that requires revalidation',
@@ -100,11 +109,15 @@ describe('focused hemodynamic case activity', () => {
     fireEvent.change(screen.getByLabelText(/Transducer relative to phlebostatic axis/i), {
       target: { value: '0' },
     })
-    fireEvent.click(screen.getByRole('button', { name: /fast-flush test/i }))
+    fireEvent.click(screen.getByRole('button', { name: /fast-flush response check/i }))
     fireEvent.click(screen.getByRole('radio', { name: /Overdamped.*Sluggish return/i }))
     fireEvent.click(screen.getByRole('button', { name: 'Check classification' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Correct the pressure-system response' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Complete validated transfer' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Resolve the pressure-system response' }))
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Complete transfer and keep the reasoning feedback',
+      }),
+    )
 
     const normalized = JSON.parse(
       window.localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY) ?? '{}',
@@ -152,20 +165,24 @@ describe('focused hemodynamic case activity', () => {
     ).toHaveLength(1)
   })
 
-  it('keeps hints unavailable and patient details masked in challenge mode', async () => {
+  it('keeps challenge identity visible while deferring optional teaching feedback', async () => {
     render(<HemodynamicCaseActivity caseId="HD-07" mode="challenge" />)
     expect(
-      await screen.findByRole('heading', { name: 'Masked hemodynamics capstone' }),
+      await screen.findByRole('heading', {
+        name: 'Pressure equalization with a falling pulse pressure',
+      }),
     ).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Show hint' })).not.toBeInTheDocument()
-    expect(screen.getByText('Masked patient context')).toBeInTheDocument()
-    expect(screen.queryByText('HD-07')).not.toBeInTheDocument()
+    expect(screen.getAllByText('HD-07').length).toBeGreaterThan(0)
     expect(screen.queryByText('CI ≥ 2.2 L/min/m²')).not.toBeInTheDocument()
     expect(screen.queryByText('MAP ≥ 65 mmHg')).not.toBeInTheDocument()
-    expect(screen.queryByText('Cardiac tamponade')).not.toBeInTheDocument()
+    expect(screen.getByText(/tamponade/i)).toBeInTheDocument()
+    expect(
+      screen.getByRole('checkbox', { name: /Show teaching feedback as I work/ }),
+    ).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Help' }))
-    expect(screen.getByText(/diagnosis cues remain hidden/i)).toBeInTheDocument()
+    expect(screen.getByText(/deferring teaching feedback until the debrief/i)).toBeInTheDocument()
   })
 
   it('labels the authored restart checkpoint as Recognize rather than exact Predict resume', async () => {

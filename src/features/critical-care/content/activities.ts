@@ -10,6 +10,7 @@ import {
 
 import { criticalCareAssets } from './assets'
 import { criticalCareCompetencies } from './competencies'
+import { criticalCareConceptById, criticalCareConceptMetadataForActivity } from './concepts'
 import {
   criticalCareModuleById,
   criticalCareModuleCatalog,
@@ -17,6 +18,7 @@ import {
 } from './modules'
 import { criticalCarePathways } from './pathways'
 import { criticalCareReferences } from './references'
+import { criticalCareEvidenceById } from './evidenceRegistry'
 
 type ActivitySection = 'learn' | 'practice' | 'assess'
 type EcmoTrack = 'vv' | 'va'
@@ -29,6 +31,8 @@ interface ActivitySeed {
   readonly pathwayIds: readonly string[]
   readonly evidenceIds: readonly string[]
   readonly prerequisiteActivityIds?: readonly string[]
+  readonly teachesConceptIds?: readonly string[]
+  readonly assumedConceptIds?: readonly string[]
   readonly estimatedMinutes?: number
   readonly difficulty?: CriticalCareDifficulty
   readonly track?: EcmoTrack
@@ -119,21 +123,25 @@ function activityQuery(
   if (moduleId === 'mechanical-circulatory-support') {
     return section === 'learn' ? { lesson: seed.sourceId } : { case: seed.sourceId }
   }
-  // Assessment cases are selected from a locally seeded, masked setup flow.
-  // A catalog link must never expose or pretend to select that hidden case.
-  if (moduleId === 'mechanical-ventilation' && section === 'assess') return undefined
+  if (moduleId === 'mechanical-ventilation' && section === 'assess') {
+    return {
+      case: seed.sourceId,
+      seed: 'catalog-challenge-v1',
+      device: 'hamilton-c6',
+    }
+  }
   if (section === 'learn') return { activity: seed.sourceId }
   return { case: seed.sourceId }
 }
 
 function defaultDescription(section: ActivitySection, title: string): string {
   if (section === 'learn') {
-    return `Complete the existing guided ${title} learning activity.`
+    return `Explore ${title} with guided cues and a focused transfer step.`
   }
   if (section === 'assess') {
-    return `Complete the existing masked ${title} assessment with its preserved mastery rules.`
+    return `A harder ${title} case with less help. Teaching feedback comes at the end so you can work through it uninterrupted.`
   }
-  return `Work through the existing ${title} case with its preserved engine and scoring rules.`
+  return `Work through the ${title} case, observe the modeled consequences, and review the mechanism-level feedback.`
 }
 
 function defineActivities(
@@ -147,11 +155,18 @@ function defineActivities(
   return seeds.map((seed) => {
     const id = `${moduleDefinition.activityIdPrefix}:${section}:${seed.sourceId}`
     const governance = activityGovernance(moduleId, section, seed)
+    const description = seed.description ?? defaultDescription(section, seed.title)
+    const conceptMetadata = criticalCareConceptMetadataForActivity({
+      moduleId,
+      section,
+      title: seed.title,
+      description,
+    })
     return criticalCareActivityDefinitionSchema.parse({
       id,
       moduleId,
       title: seed.title,
-      description: seed.description ?? defaultDescription(section, seed.title),
+      description,
       kind:
         section === 'learn'
           ? seed.sourceId === 'pac-signal-validation'
@@ -166,6 +181,8 @@ function defineActivities(
       pathwayIds: seed.pathwayIds,
       competencyIds: seed.competencyIds,
       prerequisiteActivityIds: seed.prerequisiteActivityIds ?? [],
+      teachesConceptIds: seed.teachesConceptIds ?? conceptMetadata.teachesConceptIds,
+      assumedConceptIds: seed.assumedConceptIds ?? conceptMetadata.assumedConceptIds,
       estimatedMinutes:
         seed.estimatedMinutes ?? (section === 'learn' ? 12 : section === 'assess' ? 25 : 15),
       difficulty:
@@ -199,27 +216,20 @@ const hemodynamicsEvidence = [
 
 const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
   {
-    sourceId: 'pac-signal-validation',
-    title: 'PAC signal validation',
-    description:
-      'Recognize the monitoring setup, predict signal usability, validate the measurement chain, and transfer the sequence to an artifact variant.',
-    competencyIds: ['signal-validation', 'hemodynamic-reassessment', 'critical-care-safety'],
+    sourceId: 'catheter-advancement',
+    title: 'Advance the PAC by waveform',
+    competencyIds: ['signal-validation', 'critical-care-safety'],
     pathwayIds: ['shock-and-perfusion'],
-    evidenceIds: [
-      ...hemodynamicsEvidence,
-      'monitor-workflow-supplied',
-      'arterial-pressure-five-step-2020',
-    ],
+    prerequisiteActivityIds: [],
+    evidenceIds: [...hemodynamicsEvidence, 'monitor-workflow-supplied'],
     estimatedMinutes: 15,
-    creditPolicy: 'competency-eligible',
-    completionEvidenceAuthority: 'validated-interaction',
   },
   {
     sourceId: 'pressure-system',
     title: 'Level, zero, and dynamic response',
     competencyIds: ['signal-validation', 'critical-care-safety'],
     pathwayIds: ['shock-and-perfusion'],
-    prerequisiteActivityIds: ['hemodynamics:learn:pac-signal-validation'],
+    prerequisiteActivityIds: ['hemodynamics:learn:catheter-advancement'],
     evidenceIds: [
       ...hemodynamicsEvidence,
       'monitor-workflow-supplied',
@@ -227,20 +237,11 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
     ],
   },
   {
-    sourceId: 'catheter-advancement',
-    title: 'Advance the PAC by waveform',
-    competencyIds: ['signal-validation', 'critical-care-safety'],
-    pathwayIds: ['shock-and-perfusion'],
-    prerequisiteActivityIds: ['hemodynamics:learn:pressure-system'],
-    evidenceIds: [...hemodynamicsEvidence, 'monitor-workflow-supplied'],
-    estimatedMinutes: 15,
-  },
-  {
     sourceId: 'waveform-interpretation',
     title: 'Interpret normal and abnormal waveforms',
     competencyIds: ['signal-validation', 'hemodynamic-reassessment'],
     pathwayIds: ['shock-and-perfusion', 'cardiogenic-and-rv-shock'],
-    prerequisiteActivityIds: ['hemodynamics:learn:catheter-advancement'],
+    prerequisiteActivityIds: ['hemodynamics:learn:pressure-system'],
     evidenceIds: [...hemodynamicsEvidence, 'clinical-hemodynamics-waveforms'],
     estimatedMinutes: 18,
   },
@@ -249,27 +250,51 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
     title: 'Brief end-expiratory PAWP capture',
     competencyIds: ['signal-validation', 'critical-care-safety'],
     pathwayIds: ['shock-and-perfusion'],
-    prerequisiteActivityIds: ['hemodynamics:learn:catheter-advancement'],
+    prerequisiteActivityIds: ['hemodynamics:learn:waveform-interpretation'],
     evidenceIds: [...hemodynamicsEvidence, 'monitor-workflow-supplied'],
     estimatedMinutes: 15,
   },
   {
     sourceId: 'thermodilution-series',
-    title: 'Thermodilution technique and curve review',
+    title: 'Cardiac output: thermodilution and Fick',
     competencyIds: ['signal-validation', 'hemodynamic-reassessment'],
     pathwayIds: ['shock-and-perfusion'],
-    prerequisiteActivityIds: ['hemodynamics:learn:pressure-system'],
+    prerequisiteActivityIds: ['hemodynamics:learn:pawp-capture'],
     evidenceIds: hemodynamicsEvidence,
     estimatedMinutes: 18,
   },
   {
     sourceId: 'derived-hemodynamics',
-    title: 'Derived values and interpretation limits',
+    title: 'Derived hemodynamics and validity',
     competencyIds: ['hemodynamic-reassessment', 'critical-care-safety'],
     pathwayIds: ['shock-and-perfusion', 'cardiogenic-and-rv-shock'],
     prerequisiteActivityIds: ['hemodynamics:learn:thermodilution-series'],
     evidenceIds: hemodynamicsEvidence,
     estimatedMinutes: 15,
+  },
+  {
+    sourceId: 'pac-signal-validation',
+    title: 'PAC signal-validation capstone',
+    description:
+      'Integrate setup, catheter position, curve quality, derived values, and reassessment in one discordant-signal case.',
+    competencyIds: ['signal-validation', 'hemodynamic-reassessment', 'critical-care-safety'],
+    pathwayIds: ['shock-and-perfusion'],
+    prerequisiteActivityIds: [
+      'hemodynamics:learn:catheter-advancement',
+      'hemodynamics:learn:pressure-system',
+      'hemodynamics:learn:waveform-interpretation',
+      'hemodynamics:learn:pawp-capture',
+      'hemodynamics:learn:thermodilution-series',
+      'hemodynamics:learn:derived-hemodynamics',
+    ],
+    evidenceIds: [
+      ...hemodynamicsEvidence,
+      'monitor-workflow-supplied',
+      'arterial-pressure-five-step-2020',
+    ],
+    estimatedMinutes: 20,
+    creditPolicy: 'competency-eligible',
+    completionEvidenceAuthority: 'validated-interaction',
   },
 ]
 
@@ -320,9 +345,9 @@ const hemodynamicsCaseSeeds: readonly ActivitySeed[] = [
 const hemodynamicsAssessSeeds: readonly ActivitySeed[] = [
   {
     sourceId: 'masked-seeded',
-    title: 'Masked HD-07 hemodynamics capstone',
+    title: 'HD-07 pressure-equalization challenge',
     description:
-      'Complete the fixed, masked HD-07 hemodynamic case while retaining the existing 80% and no-critical-error mastery rule.',
+      'A harder HD-07 hemodynamics case with less help. Teaching feedback comes at the end so you can work through it uninterrupted.',
     competencyIds: [
       'signal-validation',
       'shock-mechanism',
@@ -489,9 +514,9 @@ const ventilationLearnSeeds: readonly ActivitySeed[] = [
 const ventilationAssessSeeds: readonly ActivitySeed[] = [
   {
     sourceId: 'masked-seeded',
-    title: 'Seeded masked ventilation challenge',
+    title: 'Seeded ventilation challenge',
     description:
-      'Complete one locally seeded, masked case using the preserved ventilation engine, scoring rubric, and critical-error mastery rule.',
+      'A harder locally varied ventilation case with less help. Teaching feedback comes at the end so you can work through it uninterrupted.',
     competencyIds: [
       'ventilator-setup',
       'ventilator-mechanics',
@@ -513,7 +538,7 @@ const mcsLessonSeeds: readonly ActivitySeed[] = [
   ['iabp-efficacy-limits', 'IABP efficacy, limits, and escalation'],
   ['impella-unloading-placement', 'Impella unloading and placement signals'],
   ['impella-suction-purge-rv', 'Impella suction, purge, hemolysis, and RV delivery'],
-  ['lvad-parameters-assessment', 'Durable LVAD parameters and ICU assessment'],
+  ['lvad-parameters-assessment', 'Durable LVAD parameters and ICU review'],
   ['lvad-alarms-emergencies', 'Durable LVAD low flow, high power, and power emergencies'],
 ].map(([sourceId, title]) => ({
   sourceId,
@@ -526,7 +551,7 @@ const mcsLessonSeeds: readonly ActivitySeed[] = [
 const mcsPracticeSeeds: readonly ActivitySeed[] = [
   ['IABP-01', 'The balloon that stays inflated too long'],
   ['IABP-02', 'Irregular rhythm, unreliable trigger'],
-  ['IABP-03', 'Correct timing, inadequate circulation'],
+  ['IABP-03', 'Timing aligned, circulation still inadequate'],
   ['IMP-01', 'High support, underfilled LV'],
   ['IMP-02', 'Malposition with blood-trauma risk'],
   ['IMP-03', 'Low flow across high afterload'],
@@ -729,7 +754,7 @@ const crrtCaseSeeds: readonly ActivitySeed[] = [
   ['CRRT-11', 'Respond to hemodynamic intolerance during fluid removal', 4],
   ['CRRT-10', 'Reconcile machine PFR with whole-patient fluid balance', 4],
   ['CRRT-12', 'Electrolyte, temperature, medication, and nutrition consequences', 4],
-  ['CRRT-13', 'Localize and correct a worsening access-pressure pattern', 5],
+  ['CRRT-13', 'Localize and resolve a worsening access-pressure pattern', 5],
   ['CRRT-15', 'Localize rising filter and effluent pressure trends', 5],
   ['CRRT-14', 'High return pressure versus return disconnection', 5],
   ['CRRT-17', 'Recognize and escalate a citrate-calcium safety concern', 6],
@@ -768,7 +793,7 @@ const crrtCoreCaseIds = [
 const crrtAssessSeeds: readonly ActivitySeed[] = [
   {
     sourceId: 'MASTERY-PRISMAX-01',
-    title: 'Masked PrisMax capstone',
+    title: 'PrisMax troubleshooting challenge',
     competencyIds: [
       'crrt-device-management',
       'crrt-pressure-localization',
@@ -882,6 +907,8 @@ export function validateCriticalCareActivityCatalog(
   const competencyIds = new Set<string>(criticalCareCompetencies.map((competency) => competency.id))
   const assetIds = new Set<string>(criticalCareAssets.map((asset) => asset.id))
   const activityIds = new Set(activities.map((activity) => activity.id))
+  const conceptIds = new Set(criticalCareConceptById.keys())
+  const evidenceIds = new Set(criticalCareEvidenceById.keys())
 
   if (activityIds.size !== activities.length) errors.push('Activity IDs must be unique.')
 
@@ -918,14 +945,86 @@ export function validateCriticalCareActivityCatalog(
         errors.push(`${activity.id}: unknown prerequisite ${prerequisiteId}`)
       }
     }
+    for (const conceptId of activity.teachesConceptIds) {
+      if (!conceptIds.has(conceptId)) {
+        errors.push(`${activity.id}: unknown taught concept ${conceptId}`)
+      }
+    }
+    for (const conceptId of activity.assumedConceptIds) {
+      if (!conceptIds.has(conceptId)) {
+        errors.push(`${activity.id}: unknown assumed concept ${conceptId}`)
+      }
+      if (activity.teachesConceptIds.includes(conceptId)) {
+        errors.push(`${activity.id}: cannot both teach and assume ${conceptId}`)
+      }
+    }
     if (activity.reviewStatus === 'released' && activity.evidenceIds.length === 0) {
       errors.push(`${activity.id}: released activity requires evidence`)
+    }
+    for (const evidenceId of activity.evidenceIds) {
+      if (!evidenceIds.has(evidenceId)) {
+        errors.push(`${activity.id}: unknown evidence ${evidenceId}`)
+      }
     }
     if (activity.kind === 'assessment' && !activity.masteryRuleId) {
       errors.push(`${activity.id}: assessment requires a mastery rule`)
     }
   }
+
+  const prerequisiteEdges = new Map(
+    activities.map((activity) => [activity.id, activity.prerequisiteActivityIds]),
+  )
+  errors.push(...detectDirectedCycles(prerequisiteEdges, 'prerequisite activity'))
+
+  const conceptDependencyEdges = new Map<string, readonly string[]>()
+  for (const activity of activities) {
+    for (const taughtConceptId of activity.teachesConceptIds) {
+      conceptDependencyEdges.set(
+        taughtConceptId,
+        Array.from(
+          new Set([
+            ...(conceptDependencyEdges.get(taughtConceptId) ?? []),
+            ...activity.assumedConceptIds,
+          ]),
+        ),
+      )
+    }
+  }
+  errors.push(...detectDirectedCycles(conceptDependencyEdges, 'assumed concept'))
+
   return errors
+}
+
+function detectDirectedCycles(
+  edges: ReadonlyMap<string, readonly string[]>,
+  label: string,
+): readonly string[] {
+  const errors: string[] = []
+  const visited = new Set<string>()
+  const visiting = new Set<string>()
+  const path: string[] = []
+
+  const visit = (id: string) => {
+    if (visiting.has(id)) {
+      const cycleStart = path.indexOf(id)
+      const cycle = [...path.slice(Math.max(0, cycleStart)), id]
+      errors.push(`${label} cycle: ${cycle.join(' -> ')}`)
+      return
+    }
+    if (visited.has(id)) return
+
+    visiting.add(id)
+    path.push(id)
+    for (const dependency of edges.get(id) ?? []) {
+      if (edges.has(dependency)) visit(dependency)
+    }
+    path.pop()
+    visiting.delete(id)
+    visited.add(id)
+  }
+
+  for (const id of edges.keys()) visit(id)
+  return [...new Set(errors)]
 }
 
 export function validateCriticalCareCatalogs(): readonly string[] {
@@ -933,6 +1032,7 @@ export function validateCriticalCareCatalogs(): readonly string[] {
   const moduleIds = new Set<string>(criticalCareModuleCatalog.map((module) => module.id))
   const competencyIds = new Set<string>(criticalCareCompetencies.map((competency) => competency.id))
   const activityIds = new Set(criticalCareActivities.map((activity) => activity.id))
+  const evidenceIds = new Set(criticalCareEvidenceById.keys())
 
   for (const pathway of criticalCarePathways) {
     for (const moduleId of pathway.moduleIds) {
@@ -968,6 +1068,24 @@ export function validateCriticalCareCatalogs(): readonly string[] {
     for (const activityId of reference.relatedActivityIds) {
       if (!activityIds.has(activityId)) {
         errors.push(`${reference.id}: unknown related activity ${activityId}`)
+      }
+    }
+    for (const evidenceId of reference.evidenceIds) {
+      if (!evidenceIds.has(evidenceId)) {
+        errors.push(`${reference.id}: unknown evidence ${evidenceId}`)
+      }
+    }
+  }
+
+  for (const conceptDefinition of criticalCareConceptById.values()) {
+    for (const relatedConceptId of conceptDefinition.relatedConceptIds) {
+      if (!criticalCareConceptById.has(relatedConceptId)) {
+        errors.push(`${conceptDefinition.id}: unknown related concept ${relatedConceptId}`)
+      }
+    }
+    for (const evidenceId of conceptDefinition.evidenceIds) {
+      if (!evidenceIds.has(evidenceId)) {
+        errors.push(`${conceptDefinition.id}: unknown evidence ${evidenceId}`)
       }
     }
   }

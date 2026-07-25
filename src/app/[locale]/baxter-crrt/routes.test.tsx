@@ -51,7 +51,7 @@ describe('Baxter CRRT routes', () => {
     expect((await hubMetadata({ params })).title).toMatch(/CRRT · PrisMax console lab/i)
     expect((await learnMetadata({ params })).title).toMatch(/^Learn ·/)
     expect((await practiceMetadata({ params })).title).toMatch(/^Practice ·/)
-    expect((await assessMetadata({ params })).title).toMatch(/^Assess ·/)
+    expect((await assessMetadata({ params })).title).toMatch(/^Challenge ·/)
   })
 
   it.each(['en', 'es', 'zh-CN'])('renders the hub with the %s locale', async (locale) => {

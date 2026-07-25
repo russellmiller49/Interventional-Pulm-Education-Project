@@ -20,6 +20,7 @@ import {
   type FastFlushLineType,
 } from '../content/pressureSystemVisuals'
 import {
+  DYNAMIC_RESPONSE_REFERENCE,
   deriveHemodynamicMeasurements,
   type HemodynamicAction,
   type HemodynamicSimulationState,
@@ -314,8 +315,8 @@ export function PressureSystemTeachingVisual({
   const correctionComplete =
     state.signalValidationChecks.includes('dynamic-response-corrected') ||
     (state.measurementSystem.artifact === 'none' &&
-      state.measurementSystem.dampingRatio >= 0.4 &&
-      state.measurementSystem.dampingRatio <= 0.95)
+      state.measurementSystem.dampingRatio >= DYNAMIC_RESPONSE_REFERENCE.underdampedBelow &&
+      state.measurementSystem.dampingRatio <= DYNAMIC_RESPONSE_REFERENCE.overdampedAbove)
   const paFlushUnsafe =
     lineType === 'pulmonary-artery' &&
     (state.catheter.position === 'wedge' || state.catheter.balloonInflated)
@@ -385,7 +386,7 @@ export function PressureSystemTeachingVisual({
           </div>
           {challengeMode === 'selectable' ? (
             <label>
-              Concealed test
+              Concealed line
               <select
                 value={challengeId}
                 onChange={(event) =>
@@ -433,8 +434,8 @@ export function PressureSystemTeachingVisual({
         {lineType === 'pulmonary-artery' ? (
           <p className={styles.paFlushSafetyBanner} role={paFlushUnsafe ? 'alert' : 'note'}>
             <strong>PA safety.</strong> Confirm a pulmonary-artery waveform and a fully deflated
-            balloon before performing a fast-flush test. Never fast-flush a wedged or spontaneously
-            wedged catheter.
+            balloon before performing a fast-flush response check. Never fast-flush a wedged or
+            spontaneously wedged catheter.
             {paFlushUnsafe
               ? ' The current simulated catheter state does not meet this prerequisite.'
               : ''}
@@ -447,7 +448,8 @@ export function PressureSystemTeachingVisual({
           disabled={paFlushUnsafe}
           onClick={runFastFlush}
         >
-          Run {lineType === 'pulmonary-artery' ? 'PA-catheter' : 'arterial-line'} fast-flush test
+          Run {lineType === 'pulmonary-artery' ? 'PA-catheter' : 'arterial-line'} fast-flush
+          response check
         </button>
 
         {hasRunFlush ? (
@@ -470,6 +472,11 @@ export function PressureSystemTeachingVisual({
                   <span>
                     <strong>{definition.shortLabel}</strong>
                     <small>{definition.observation}</small>
+                    {revealed && definition.id === response ? (
+                      <em className={styles.optionStateText}>Reference pattern</em>
+                    ) : revealed && classification === definition.id ? (
+                      <em className={styles.optionStateText}>Selected response</em>
+                    ) : null}
                   </span>
                 </label>
               ))}
@@ -485,8 +492,8 @@ export function PressureSystemTeachingVisual({
           </>
         ) : (
           <div className={styles.fastFlushPlaceholder} role="status">
-            The selected line&apos;s release trace will appear after the fast-flush test. Other
-            pressure channels will continue normally.
+            The selected line&apos;s release trace will appear after the fast-flush response check.
+            Other pressure channels will continue normally.
           </div>
         )}
 
@@ -497,8 +504,8 @@ export function PressureSystemTeachingVisual({
             role="status"
             aria-label="Dynamic response feedback"
           >
-            <strong>{classificationCorrect ? 'Correct.' : 'Compare the response.'}</strong> This is
-            an {responseDefinition.label.toLowerCase()}. {responseDefinition.interpretation}{' '}
+            <strong>{classificationCorrect ? 'Pattern aligned.' : 'Compare the response.'}</strong>{' '}
+            This is an {responseDefinition.label.toLowerCase()}. {responseDefinition.interpretation}{' '}
             {responseDefinition.pressureEffect}
           </div>
         ) : null}
@@ -512,7 +519,7 @@ export function PressureSystemTeachingVisual({
           >
             {correctionComplete
               ? 'Dynamic response corrected'
-              : 'Correct the pressure-system response'}
+              : 'Resolve the pressure-system response'}
           </button>
         ) : null}
 

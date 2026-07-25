@@ -13,6 +13,7 @@ import {
   getArtifactWaveformTransform,
   TROUBLESHOOTING_BEAT_SECONDS,
 } from '../engine/troubleshootingWaveforms'
+import { MMHG_PER_CM_H2O } from '../engine/waveformMorphology'
 
 function signature(id: (typeof ARTIFACT_IDS)[number]): string {
   return generateArtifactWaveform(id)
@@ -172,10 +173,10 @@ describe('artifact waveform physiology and derived numbers', () => {
       zeroLevelMode: 'correctly-leveled',
     })
 
-    expect(low.metrics.systolicMmHg - normal.systolicMmHg).toBeCloseTo(7.5, 5)
-    expect(low.metrics.diastolicMmHg - normal.diastolicMmHg).toBeCloseTo(7.5, 5)
-    expect(low.metrics.meanMmHg - normal.meanMmHg).toBeCloseTo(7.5, 5)
-    expect(high.metrics.meanMmHg - normal.meanMmHg).toBeCloseTo(-7.5, 5)
+    expect(low.metrics.systolicMmHg - normal.systolicMmHg).toBeCloseTo(10 * MMHG_PER_CM_H2O, 5)
+    expect(low.metrics.diastolicMmHg - normal.diastolicMmHg).toBeCloseTo(10 * MMHG_PER_CM_H2O, 5)
+    expect(low.metrics.meanMmHg - normal.meanMmHg).toBeCloseTo(10 * MMHG_PER_CM_H2O, 5)
+    expect(high.metrics.meanMmHg - normal.meanMmHg).toBeCloseTo(-10 * MMHG_PER_CM_H2O, 5)
     expect(low.metrics.pulsePressureMmHg).toBeCloseTo(normal.pulsePressureMmHg, 8)
     expect(high.metrics.pulsePressureMmHg).toBeCloseTo(normal.pulsePressureMmHg, 8)
     expect(correct.metrics).toEqual(normal)
@@ -184,6 +185,18 @@ describe('artifact waveform physiology and derived numbers', () => {
       (sample, index) => sample.pressureMmHg - normalSamples[index].pressureMmHg,
     )
     expect(Math.max(...offsets) - Math.min(...offsets)).toBeLessThan(1e-9)
+  })
+
+  it('renders false wedge as a contaminated mixture rather than a normal wedge trace', () => {
+    const falseWedge = generateArtifactWaveform('false-wedge')
+    const wedge = generateArtifactWaveform('spontaneous-wedge')
+    const finalWedgeBeat = derivePressureMetrics(
+      wedge.samples.filter((sample) => sample.beatIndex === 3),
+    )
+
+    expect(falseWedge.metricDisplay).toBe('different-compartment')
+    expect(falseWedge.metrics.pulsePressureMmHg).toBeGreaterThan(finalWedgeBeat.pulsePressureMmHg)
+    expect(signature('false-wedge')).not.toBe(signature('spontaneous-wedge'))
   })
 
   it('contains at least three complete beats on a shared time base', () => {

@@ -20,6 +20,8 @@ import {
 
 import { Link, useRouter } from '@/i18n/navigation'
 import { recordSiteModuleEvent } from '@/lib/analytics'
+import { AssumedConceptStrip } from '@/features/critical-care/components/AssumedConceptStrip'
+import { criticalCareActivityById } from '@/features/critical-care/content/activities'
 import { recordCriticalCareIcuOutcome } from '@/features/critical-care/progress/integrated'
 import {
   useCriticalCareActivityAnalytics,
@@ -98,9 +100,9 @@ export interface IcuSimulatorLabProps {
   mode: IcuSimulationMode
   locale?: string
   initialScenarioId?: string
-  /** Optional catalog-only allowlist used by the Assess preparation gate. */
+  /** Optional catalog-only allowlist used by the Challenge chooser. */
   availableScenarioIds?: readonly string[]
-  /** Keeps the shell inside a parent route-level gate instead of fixing it to the viewport. */
+  /** Keeps the shell inside a parent route-level stage instead of fixing it to the viewport. */
   embedded?: boolean
 }
 
@@ -124,7 +126,7 @@ const modeCopy: Readonly<
     title: 'See how the systems connect',
     description:
       'Causal coaching stays visible while you assess the patient, start support, advance time, and close the reassessment loop.',
-    status: 'Guidance visible · unscored orientation',
+    status: 'Guidance visible · open orientation',
     Icon: BookOpenCheck,
   },
   practice: {
@@ -132,23 +134,23 @@ const modeCopy: Readonly<
     title: 'Run the full ICU course',
     description:
       'Work through evolving shock, organ support, and device problems. Checkpoints reward mechanism, prioritization, and reassessment.',
-    status: 'Hints available · scored practice',
+    status: 'Hints available · coaching on request',
     Icon: Stethoscope,
   },
   assess: {
-    eyebrow: 'Seeded assessment variants',
-    title: 'Demonstrate safe clinical reasoning',
+    eyebrow: 'Seeded challenge variants',
+    title: 'Try an integrated ICU challenge',
     description:
-      'Coaching is withheld until the causal debrief. Mastery requires at least 80% and no critical safety error.',
-    status: 'Coaching withheld · scored assessment',
+      'Work from the visible patient context and source record. Optional coaching returns in the causal debrief.',
+    status: 'Challenge · coaching deferred',
     Icon: ClipboardCheck,
   },
   sandbox: {
     eyebrow: 'Bounded physiology exploration',
     title: 'Explore support interactions',
     description:
-      'Begin from a reviewed synthetic preset and explore available interventions without a mastery score or exact action sequence.',
-    status: 'No score · reviewed device combinations',
+      'Begin from a reviewed synthetic preset and explore available interventions without an exact action sequence.',
+    status: 'Exploration · reviewed device combinations',
     Icon: FlaskConical,
   },
 }
@@ -168,12 +170,6 @@ function formatClock(seconds: number): string {
   const minutes = Math.floor((safe % 3_600) / 60)
   const remainingSeconds = safe % 60
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`
-}
-
-function maskedOrderValue(id: string, seed: number): number {
-  let value = seed >>> 0
-  for (const character of id) value = Math.imul(value ^ character.charCodeAt(0), 16_777_619)
-  return value >>> 0
 }
 
 function chooseInitialScenario(
@@ -241,7 +237,6 @@ export function IcuSimulatorLab({
     return availableScenarios[0] ?? requested
   }, [availableScenarios, eligibleScenarioIds, initialScenarioId, mode])
   const [state, setState] = useState<IcuSimulationState>(() => createSession(initialScenario, mode))
-  const [assessmentCatalogSeed] = useState(() => state.seed)
   const [mobileSurface, setMobileSurface] = useState<MobileSurface>('monitor')
   const [running, setRunning] = useState(false)
   const [speed, setSpeed] = useState<SimulationSpeed>(1)
@@ -252,14 +247,14 @@ export function IcuSimulatorLab({
   const [restoringSession, setRestoringSession] = useState(false)
   const [engineNotice, setEngineNotice] = useState<string | null>(null)
   const [helpVisible, setHelpVisible] = useState(false)
+  const [challengeCoachingImmediate, setChallengeCoachingImmediate] = useState(false)
   const openedSection = useRef<IcuSimulationMode | null>(null)
   const openedScenario = useRef<string | null>(null)
   const predictionRecorded = useRef<string | null>(null)
   const reassessmentRecorded = useRef<string | null>(null)
   const completionRecorded = useRef<string | null>(null)
   const progressRecorded = useRef<string | null>(null)
-  const moduleCompletionRecorded = useRef(false)
-  const previousModuleMastery = useRef<boolean | null>(null)
+  const previousModuleCompletion = useRef<boolean | null>(null)
   const lifecycleSafetyEvents = useRef<{ key: string; ids: Set<string> }>({
     key: '',
     ids: new Set(),
@@ -275,25 +270,11 @@ export function IcuSimulatorLab({
   const latestWorkerState = useRef<IcuSimulationState>(state)
   const initialWorkerSession = useRef(state)
   const scenario = getIcuScenario(state.scenarioId)
-  const displayedScenarios = useMemo(
-    () =>
-      mode === 'assess'
-        ? [...availableScenarios].sort(
-            (left, right) =>
-              maskedOrderValue(left.id, assessmentCatalogSeed) -
-              maskedOrderValue(right.id, assessmentCatalogSeed),
-          )
-        : availableScenarios,
-    [assessmentCatalogSeed, availableScenarios, mode],
-  )
+  const displayedScenarios = availableScenarios
   const copy = modeCopy[mode]
   const ModeIcon = copy.Icon
-  const assessmentDiagnosisHidden = mode === 'assess' && state.phase !== 'debrief'
-  const assessmentAwaitingDiagnosis = mode === 'assess' && !state.diagnosis.committed
   const courseWindowReached = state.clock.elapsedSeconds >= scenario.durationHours * 3_600
   const simulationRunning = running && !courseWindowReached && state.phase !== 'debrief'
-  const interventionControlsLocked =
-    (mode === 'practice' || mode === 'assess') && !state.diagnosis.committed
   const lifecycleMode: CriticalCareActivityMode =
     mode === 'learn' ? 'guided' : mode === 'assess' ? 'challenge' : 'practice'
   const lifecyclePhase: CriticalCareActivityPhase = state.outcome.completed
@@ -309,6 +290,7 @@ export function IcuSimulatorLab({
           ? 'predict'
           : 'recognize'
   const lifecycleActivityId = `icu:${mode}:${state.scenarioFamily}`
+  const catalogActivity = criticalCareActivityById.get(lifecycleActivityId)
   const {
     recordPredictionSubmitted: recordLifecyclePrediction,
     recordHintUsed: recordLifecycleHint,
@@ -445,13 +427,11 @@ export function IcuSimulatorLab({
         if (alreadyCompleted) {
           clearIcuSyntheticSession(window.localStorage)
           setEngineNotice(
-            'The prior synthetic course was already complete, so its replay was cleared instead of being offered as a new attempt.',
+            'The prior synthetic course was already complete, so its replay was cleared instead of being offered as a new session.',
           )
         } else if (!assessScenarioIsEligible) {
           clearIcuSyntheticSession(window.localStorage)
-          setEngineNotice(
-            'A saved assessment no longer met the current preparation requirements and was safely discarded.',
-          )
+          setEngineNotice('A saved challenge was no longer available and was safely discarded.')
         } else if (candidate.replay.scenarioVersion === candidateScenario.version) {
           setSavedSession(candidate)
         } else {
@@ -510,6 +490,10 @@ export function IcuSimulatorLab({
       section: mode,
       scenarioId: state.scenarioId as IcuSimulationAnalyticsEventPayload['scenarioId'],
     })
+  }, [mode, state.scenarioId, state.seed])
+
+  useEffect(() => {
+    setChallengeCoachingImmediate(false)
   }, [mode, state.scenarioId, state.seed])
 
   useEffect(() => {
@@ -632,23 +616,18 @@ export function IcuSimulatorLab({
 
   useEffect(() => {
     if (!storageReady || mode !== 'assess') return
-    const moduleMastered = availableScenarios.every((candidate) =>
-      progress.masteredScenarioIds.some((scenarioId) => scenarioId === candidate.id),
+    const allChallengesVisited = availableScenarios.every((candidate) =>
+      progress.completedScenarioIds.some((scenarioId) => scenarioId === candidate.id),
     )
-    if (
-      previousModuleMastery.current === false &&
-      moduleMastered &&
-      !moduleCompletionRecorded.current
-    ) {
-      moduleCompletionRecorded.current = true
+    if (previousModuleCompletion.current === false && allChallengesVisited) {
       recordBoundedAnalytics({
         interaction: 'module_completed',
         section: 'assess',
         completed: true,
       })
     }
-    previousModuleMastery.current = moduleMastered
-  }, [availableScenarios, mode, progress.masteredScenarioIds, storageReady])
+    previousModuleCompletion.current = allChallengesVisited
+  }, [availableScenarios, mode, progress.completedScenarioIds, storageReady])
 
   const discardSavedSession = useCallback(() => {
     clearIcuSyntheticSession(window.localStorage)
@@ -665,9 +644,7 @@ export function IcuSimulatorLab({
       !eligibleScenarioIds.has(savedSession.replay.scenarioId)
     ) {
       discardSavedSession()
-      setEngineNotice(
-        'A saved assessment no longer met the current preparation requirements and was safely discarded.',
-      )
+      setEngineNotice('A saved challenge was no longer available and was safely discarded.')
       return
     }
     const client = workerClient.current
@@ -715,61 +692,36 @@ export function IcuSimulatorLab({
 
   const lastEvent = state.history.at(-1)
   const activeAlarmCount = state.alarms.filter((alarm) => alarm.active).length
-  const completedCheckpointCount = state.outcome.checkpointIdsCompleted.length
   const activityTitle = copy.title
-  const progressLabel = assessmentDiagnosisHidden
-    ? `${formatClock(state.clock.elapsedSeconds)} · ${activeAlarmCount} active alarms · assessment progress masked`
-    : `${formatClock(state.clock.elapsedSeconds)} · ${completedCheckpointCount}/${scenario.checkpoints.length} checkpoints · ${activeAlarmCount} active alarms`
-  const currentObjective = assessmentDiagnosisHidden
-    ? 'Complete the current reasoning phase using only observable patient, device, and timeline data.'
-    : (scenario.learningObjectives[0] ?? copy.description)
-  const referenceEntries = assessmentDiagnosisHidden
-    ? [
-        {
-          id: 'icu-assessment-reference-boundary',
-          title: 'Assessment reference boundary',
-          summary:
-            'Scenario-specific coaching and references remain withheld until the causal debrief.',
-          meta: 'Masked assessment',
-        },
-      ]
-    : [
-        {
-          id: scenario.id,
-          title: scenario.title,
-          summary: scenario.summary,
-          meta: `${scenario.durationHours}-hour synthetic course · ${scenario.reviewStatus} review`,
-        },
-        {
-          id: 'icu-educational-boundary',
-          title: ICU_EDUCATIONAL_BOUNDARIES.title,
-          summary: ICU_EDUCATIONAL_BOUNDARIES.disclaimer,
-          meta: 'Applies to every integrated ICU activity',
-        },
-      ]
-  const evidenceEntries = assessmentDiagnosisHidden
-    ? [
-        {
-          id: 'icu-assessment-evidence-boundary',
-          title: 'Assessment evidence boundary',
-          sourceLabel: 'Scenario-specific evidence is available after debrief.',
-          limitation:
-            'Use current source documents, manufacturer instructions, local policy, and supervised clinical judgment.',
-        },
-      ]
-    : scenario.evidenceIds.flatMap((evidenceId) => {
-        const evidence = ICU_EVIDENCE_BY_ID.get(evidenceId)
-        return evidence
-          ? [
-              {
-                id: evidence.id,
-                title: evidence.title,
-                sourceLabel: `${evidence.organization} · ${evidence.year} · ${evidence.sourceType} · ${evidence.reviewStatus}`,
-                limitation: evidence.limitation,
-              },
-            ]
-          : []
-      })
+  const progressLabel = `${formatClock(state.clock.elapsedSeconds)} · ${activeAlarmCount} active alarms`
+  const currentObjective = scenario.learningObjectives[0] ?? copy.description
+  const referenceEntries = [
+    {
+      id: scenario.id,
+      title: scenario.title,
+      summary: scenario.summary,
+      meta: `${scenario.durationHours}-hour synthetic course · ${scenario.reviewStatus} review`,
+    },
+    {
+      id: 'icu-educational-boundary',
+      title: ICU_EDUCATIONAL_BOUNDARIES.title,
+      summary: ICU_EDUCATIONAL_BOUNDARIES.disclaimer,
+      meta: 'Applies to every integrated ICU activity',
+    },
+  ]
+  const evidenceEntries = scenario.evidenceIds.flatMap((evidenceId) => {
+    const evidence = ICU_EVIDENCE_BY_ID.get(evidenceId)
+    return evidence
+      ? [
+          {
+            id: evidence.id,
+            title: evidence.title,
+            sourceLabel: `${evidence.organization} · ${evidence.year} · ${evidence.sourceType} · ${evidence.reviewStatus}`,
+            limitation: evidence.limitation,
+          },
+        ]
+      : []
+  })
 
   const showHelp = useCallback(() => {
     if (!helpVisible && mode !== 'assess') recordLifecycleHint()
@@ -791,6 +743,30 @@ export function IcuSimulatorLab({
     })
   }, [])
 
+  const openActivityPhase = useCallback((phase: CriticalCareActivityPhase) => {
+    const destination: Readonly<
+      Record<
+        CriticalCareActivityPhase,
+        { readonly surface: MobileSurface; readonly targetId: string }
+      >
+    > = {
+      recognize: { surface: 'monitor', targetId: 'icu-monitor-surface' },
+      predict: { surface: 'course', targetId: 'icu-course-surface' },
+      act: { surface: 'clinical', targetId: 'icu-clinical-surface' },
+      observe: { surface: 'monitor', targetId: 'icu-monitor-surface' },
+      explain: { surface: 'course', targetId: 'icu-course-surface' },
+      transfer: { surface: 'course', targetId: 'causal-debrief-title' },
+    }
+    const next = destination[phase]
+    setMobileSurface(next.surface)
+    window.requestAnimationFrame(() => {
+      const target =
+        document.getElementById(next.targetId) ?? document.getElementById('icu-course-surface')
+      target?.focus({ preventScroll: false })
+      target?.scrollIntoView?.({ block: 'start', behavior: 'smooth' })
+    })
+  }, [])
+
   const activityChrome = (
     <ActivityChrome
       layout="native-workbench"
@@ -799,9 +775,9 @@ export function IcuSimulatorLab({
       phase={lifecyclePhase}
       mode={lifecycleMode}
       progressLabel={progressLabel}
-      showProgressStepper={false}
+      stepperAriaLabel="Integrated ICU shared activity phases"
+      onPhaseSelect={openActivityPhase}
       theme="dark"
-      maskedAssessment={assessmentDiagnosisHidden}
       onHelp={showHelp}
       onReset={resetSession}
       onSaveAndExit={saveAndExit}
@@ -823,6 +799,14 @@ export function IcuSimulatorLab({
       }
     >
       <div className={styles.icuNativeActivityFrame}>
+        <div className={styles.assumedConceptSlot}>
+          {catalogActivity && catalogActivity.assumedConceptIds.length > 0 ? (
+            <AssumedConceptStrip
+              activityId={lifecycleActivityId}
+              conceptIds={catalogActivity.assumedConceptIds}
+            />
+          ) : null}
+        </div>
         <ClinicalContextStrip>
           <section
             className={styles.compactPatientStrip}
@@ -833,9 +817,7 @@ export function IcuSimulatorLab({
               <span>
                 {copy.eyebrow} · {ICU_SIMULATION_RELEASE.stage.replaceAll('-', ' ')}
               </span>
-              <h2 id="icu-persistent-context-title">
-                {assessmentDiagnosisHidden ? 'Unclassified shock course' : scenario.shortTitle}
-              </h2>
+              <h2 id="icu-persistent-context-title">{scenario.shortTitle}</h2>
             </div>
             <dl className={styles.compactPatientMetrics}>
               <div>
@@ -897,7 +879,9 @@ export function IcuSimulatorLab({
                   Reference and Evidence describe the educational boundary, source scope, and model
                   limits.
                   {mode === 'assess'
-                    ? ' Assessment help does not reveal the diagnosis, scenario-specific targets, or answer key.'
+                    ? challengeCoachingImmediate
+                      ? ' Challenge coaching is visible for this run.'
+                      : ' Challenge coaching stays deferred until the debrief unless you opt in below.'
                     : ` ${copy.description}`}
                 </p>
               </section>
@@ -907,6 +891,22 @@ export function IcuSimulatorLab({
               <p className={styles.engineNotice} role="status">
                 {engineNotice}
               </p>
+            ) : null}
+
+            {mode === 'assess' ? (
+              <label className={styles.challengeFeedbackToggle}>
+                <input
+                  type="checkbox"
+                  checked={challengeCoachingImmediate}
+                  onChange={(event) => setChallengeCoachingImmediate(event.currentTarget.checked)}
+                />
+                <span>
+                  <strong>Show coaching while I work</strong>
+                  <small>
+                    Off by default; the full causal comparison still appears at debrief.
+                  </small>
+                </span>
+              </label>
             ) : null}
 
             {!storageReady ? (
@@ -925,9 +925,7 @@ export function IcuSimulatorLab({
                 <div>
                   <span className={styles.panelKicker}>Saved synthetic session</span>
                   <h2 id="resume-session-title">
-                    {savedSession.replay.mode === 'assess'
-                      ? 'Unclassified assessment course'
-                      : getIcuScenario(savedSession.replay.scenarioId).shortTitle}
+                    {getIcuScenario(savedSession.replay.scenarioId).shortTitle}
                   </h2>
                   <p>
                     A validated {savedSession.replay.mode} session is available on this device.
@@ -969,16 +967,11 @@ export function IcuSimulatorLab({
                         <span className={styles.panelKicker}>Patient census</span>
                         <h2 id="case-selector-title">Choose a shock course</h2>
                       </div>
-                      <span>
-                        {availableScenarios.length} scenario families ·{' '}
-                        {progress.completedScenarioIds.length} completed ·{' '}
-                        {progress.masteredScenarioIds.length} mastered
-                      </span>
+                      <span>Every scenario is open · personal history stays on this device</span>
                     </header>
                     <div className={styles.caseRail}>
                       {displayedScenarios.map((candidate, index) => {
                         const selected = candidate.id === state.scenarioId
-                        const concealed = mode === 'assess'
                         return (
                           <button
                             type="button"
@@ -987,15 +980,9 @@ export function IcuSimulatorLab({
                             onClick={() => selectScenario(candidate)}
                           >
                             <span>{String(index + 1).padStart(2, '0')}</span>
-                            <strong>
-                              {concealed
-                                ? `Assessment case ${String(index + 1).padStart(2, '0')}`
-                                : candidate.shortTitle}
-                            </strong>
+                            <strong>{candidate.shortTitle}</strong>
                             <small>
-                              {concealed
-                                ? 'Timed course · classification withheld'
-                                : `${candidate.durationHours} h · ${candidate.family.replaceAll('-', ' ')}`}
+                              {candidate.durationHours} h · {candidate.family.replaceAll('-', ' ')}
                             </small>
                             <ChevronRight aria-hidden="true" />
                           </button>
@@ -1096,19 +1083,18 @@ export function IcuSimulatorLab({
 
                 <div className={styles.workspace}>
                   <section
+                    id="icu-monitor-surface"
                     className={styles.workspaceSurface}
                     data-surface="monitor"
                     data-mobile-visible={mobileSurface === 'monitor'}
                     aria-label="Patient monitor and bedside overview"
                   >
-                    <IcuPatientMonitor
-                      state={state}
-                      concealSyntheticId={assessmentDiagnosisHidden}
-                    />
+                    <IcuPatientMonitor state={state} concealSyntheticId={false} />
                     <IcuBedsideScene state={state} />
                   </section>
 
                   <section
+                    id="icu-clinical-surface"
                     className={styles.workspaceSurface}
                     data-surface="clinical"
                     data-mobile-visible={mobileSurface === 'clinical'}
@@ -1118,28 +1104,17 @@ export function IcuSimulatorLab({
                     {mode === 'sandbox' ? (
                       <IcuSandboxControls state={state} dispatch={dispatch} />
                     ) : null}
-                    <IcuCarePanel
-                      state={state}
-                      scenario={scenario}
-                      dispatch={dispatch}
-                      controlsLocked={interventionControlsLocked}
-                      neutralLocked={assessmentAwaitingDiagnosis}
-                    />
+                    <IcuCarePanel state={state} scenario={scenario} dispatch={dispatch} />
                   </section>
 
                   <section
+                    id="icu-devices-surface"
                     className={styles.workspaceSurface}
                     data-surface="devices"
                     data-mobile-visible={mobileSurface === 'devices'}
                     aria-label="Device controls"
                   >
-                    <IcuDevicePanels
-                      state={state}
-                      scenario={scenario}
-                      dispatch={dispatch}
-                      controlsLocked={interventionControlsLocked}
-                      neutralLocked={assessmentAwaitingDiagnosis}
-                    />
+                    <IcuDevicePanels state={state} scenario={scenario} dispatch={dispatch} />
                   </section>
 
                   <section
@@ -1155,15 +1130,13 @@ export function IcuSimulatorLab({
                       scenario={scenario}
                       mode={mode}
                       dispatch={dispatch}
+                      showChallengeCoaching={challengeCoachingImmediate}
                     />
-                    <IcuTimelinePanel
-                      state={state}
-                      maskScenarioEvents={assessmentDiagnosisHidden}
-                    />
+                    <IcuTimelinePanel state={state} maskScenarioEvents={false} />
                   </section>
                 </div>
 
-                {assessmentDiagnosisHidden ? null : <IcuSourceNotes scenario={scenario} />}
+                <IcuSourceNotes scenario={scenario} />
               </>
             )}
           </div>

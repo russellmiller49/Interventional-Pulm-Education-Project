@@ -103,10 +103,12 @@ export function WaveformRecognitionDrill({ dispatch }: WaveformRecognitionDrillP
           <h3 id="recognition-drill-heading">Name the tracing</h3>
         </div>
         <p className={styles.drillScore} role="status" aria-live="polite">
-          <strong>
-            {correctCount}/{REQUIRED_CORRECT}
-          </strong>
-          <span>{complete ? 'objective met' : `correct · ${answered} attempted`}</span>
+          <strong>{complete ? 'Pattern set worked through' : 'Compare the morphology'}</strong>
+          <span>
+            {answered > 0
+              ? 'Use the revealed landmarks to refine the next identification.'
+              : 'Commit to a tracing before revealing its landmarks.'}
+          </span>
         </p>
       </header>
 
@@ -133,6 +135,11 @@ export function WaveformRecognitionDrill({ dispatch }: WaveformRecognitionDrillP
               onChange={() => setSelectedId(option.id)}
             />
             <span>{option.label}</span>
+            {revealed && option.id === answer.id ? (
+              <span className={styles.optionStateText}>Reference tracing</span>
+            ) : revealed && option.id === selectedId ? (
+              <span className={styles.optionStateText}>Selected response</span>
+            ) : null}
           </label>
         ))}
       </fieldset>
@@ -151,7 +158,9 @@ export function WaveformRecognitionDrill({ dispatch }: WaveformRecognitionDrillP
 
       {revealed ? (
         <div className={styles.drillFeedback} data-correct={isCorrect || undefined} role="status">
-          <strong>{isCorrect ? 'Correct.' : `This is ${answer.label.toLowerCase()}.`}</strong>
+          <strong>
+            {isCorrect ? 'Pattern identified.' : `This is ${answer.label.toLowerCase()}.`}
+          </strong>
           <p>{answer.summary}</p>
           <ul>
             {answer.recognitionCues.map((cue) => (

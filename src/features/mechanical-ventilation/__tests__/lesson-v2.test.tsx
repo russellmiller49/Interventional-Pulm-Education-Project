@@ -87,13 +87,15 @@ describe('focused mechanical ventilation lesson', () => {
     fireEvent.click(screen.getByLabelText(items.transfer.choices[0].label))
     fireEvent.click(screen.getByRole('button', { name: 'Review draft transfer' }))
     expect(
-      screen.getByText(/Transfer evidence is 1 of 2: the interpretation is correct/),
+      screen.getByText(/The interpretation fits the mechanism; complete the bedside actions/i),
     ).toBeInTheDocument()
     expect(screen.queryByText('Draft reviewed · non-credit')).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /^Record bedside assessment/ }))
     fireEvent.click(screen.getByRole('button', { name: /^Document multitrace review/ }))
-    expect(screen.getByText(/Transfer evidence: 2 of 2/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/The interpretation and bedside actions are ready to compare/i),
+    ).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Review draft transfer' }))
     expect(screen.getByText('Draft reviewed · non-credit')).toBeInTheDocument()
 

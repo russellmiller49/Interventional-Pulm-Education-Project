@@ -12,7 +12,7 @@ export const MECHANICAL_VENTILATION_SAFETY_NOTICE = (
   <>
     <strong>Educational simulation—not a clinical device or treatment recommendation.</strong>{' '}
     Synthetic values, waveforms, alarms, and responses must not guide care for a real patient. Use
-    bedside assessment, the applicable operator manual, current institutional protocols, and
+    bedside evaluation, the applicable operator manual, current institutional protocols, and
     qualified clinical supervision.
   </>
 )
@@ -34,9 +34,9 @@ export const mechanicalVentilationModuleNavItems: readonly ModuleNavItem[] = [
     description: 'Fifteen preserved cases',
   },
   {
-    title: 'Assess',
+    title: 'Challenge',
     href: `${MECHANICAL_VENTILATION_NAV_BASE}/assess`,
-    description: 'Seeded masked challenge',
+    description: 'Harder seeded case',
   },
 ]
 
@@ -44,7 +44,7 @@ const releaseLabel =
   mechanicalVentilationPublicationStatus === 'published'
     ? 'Reviewed release'
     : mechanicalVentilationPublicationStatus === 'tester-preview'
-      ? 'Unlisted tester preview'
+      ? 'Unlisted reviewer preview'
       : 'Authenticated draft'
 
 export function MechanicalVentilationModuleFrameV2({

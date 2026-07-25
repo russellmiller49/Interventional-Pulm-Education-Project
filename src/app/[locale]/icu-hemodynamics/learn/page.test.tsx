@@ -11,16 +11,16 @@ jest.mock('@/features/icu-hemodynamics/components/IcuHemodynamicsModuleFrameV2',
   ),
 }))
 
-jest.mock('@/features/icu-hemodynamics/components/PacSignalValidationActivity', () => ({
-  PacSignalValidationActivity: ({ locale }: { locale: string }) => (
-    <div data-testid="pac-signal-activity">{locale}</div>
-  ),
-}))
-
-jest.mock('@/features/icu-hemodynamics/components/PacGuidedSkillActivity', () => ({
-  PacGuidedSkillActivity: ({ skillId, locale }: { skillId: string; locale: string }) => (
-    <div data-testid="pac-guided-skill">
-      {skillId}:{locale}
+jest.mock('@/features/icu-hemodynamics/components/PacLearningPathwayActivity', () => ({
+  PacLearningPathwayActivity: ({
+    initialSectionId,
+    locale,
+  }: {
+    initialSectionId: string
+    locale: string
+  }) => (
+    <div data-testid="pac-learning-pathway">
+      {initialSectionId}:{locale}
     </div>
   ),
 }))
@@ -40,14 +40,14 @@ describe('ICU hemodynamics learn route', () => {
     expect(screen.getByTestId('module-frame')).toContainElement(screen.getByTestId('learn-landing'))
   })
 
-  it('selects only the known signal-validation activity query', async () => {
+  it('opens signal validation as the final section of the shared PAC pathway', async () => {
     render(
       await IcuHemodynamicsLearnPage({
         params: Promise.resolve({ locale: 'es' }),
         searchParams: Promise.resolve({ activity: 'pac-signal-validation' }),
       }),
     )
-    expect(screen.getByTestId('pac-signal-activity')).toHaveTextContent('es')
+    expect(screen.getByTestId('pac-learning-pathway')).toHaveTextContent('pac-signal-validation:es')
     expect(screen.queryByTestId('learn-landing')).not.toBeInTheDocument()
   })
 
@@ -58,7 +58,9 @@ describe('ICU hemodynamics learn route', () => {
         searchParams: Promise.resolve({ activity: 'derived-hemodynamics' }),
       }),
     )
-    expect(screen.getByTestId('pac-guided-skill')).toHaveTextContent('derived-hemodynamics:zh-CN')
+    expect(screen.getByTestId('pac-learning-pathway')).toHaveTextContent(
+      'derived-hemodynamics:zh-CN',
+    )
   })
 
   it('falls back to the Learn catalog for an unknown activity query', async () => {
@@ -69,6 +71,6 @@ describe('ICU hemodynamics learn route', () => {
       }),
     )
     expect(screen.getByTestId('module-frame')).toContainElement(screen.getByTestId('learn-landing'))
-    expect(screen.queryByTestId('pac-guided-skill')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('pac-learning-pathway')).not.toBeInTheDocument()
   })
 })

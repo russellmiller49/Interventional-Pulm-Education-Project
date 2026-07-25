@@ -26,10 +26,8 @@ type PracticeSetupStep = 'device' | 'support' | 'case'
 type PracticeSupportMode = Extract<CriticalCareActivityMode, 'guided' | 'practice'>
 
 function progressLabel(progress: MechanicalVentilationProgressV2, caseId: string): string {
-  if (hasCaseMastery(progress, caseId)) return `Mastered · best ${progress.bestScores[caseId]}`
-  if (progress.completedCases.includes(caseId)) {
-    return `Completed · best ${progress.bestScores[caseId] ?? '—'}`
-  }
+  if (hasCaseMastery(progress, caseId) || progress.completedCases.includes(caseId))
+    return 'Worked through'
   return 'Not started'
 }
 
@@ -63,7 +61,8 @@ export function MechanicalVentilationPracticeSetupV2({
     <main className="mx-auto grid w-full max-w-6xl gap-7 px-4 py-10 text-foreground sm:px-6 lg:px-8">
       <header className="max-w-3xl">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
-          Practice setup · {step === 'device' ? '1 of 3' : step === 'support' ? '2 of 3' : '3 of 3'}
+          Practice setup ·{' '}
+          {step === 'device' ? 'console' : step === 'support' ? 'guidance' : 'case'}
         </p>
         <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
           {step === 'device'
@@ -76,7 +75,7 @@ export function MechanicalVentilationPracticeSetupV2({
           {step === 'device'
             ? 'Your choice becomes the preferred console and stays fixed until you exit the case.'
             : step === 'support'
-              ? 'Guided reveals the teaching targets. Practice locks your prediction before controls unlock.'
+              ? 'Guided reveals the teaching targets. Practice lets you record an initial frame while keeping all controls available.'
               : 'All fifteen source cases remain available. The live workspace opens only after this final setup choice.'}
         </p>
       </header>
@@ -142,7 +141,7 @@ export function MechanicalVentilationPracticeSetupV2({
               <strong className="mt-3 block text-xl">Guided</strong>
               <span className="mt-2 block text-sm leading-6 text-muted-foreground">
                 Teaching targets, mechanism framing, and freely available hints. The underlying case
-                engine is unchanged; this pathway does not write a scored legacy result.
+                model is unchanged, while support remains visible as you work.
               </span>
             </button>
             <button
@@ -154,8 +153,8 @@ export function MechanicalVentilationPracticeSetupV2({
               <ClipboardCheck className="size-6 text-primary" aria-hidden="true" />
               <strong className="mt-3 block text-xl">Practice</strong>
               <span className="mt-2 block text-sm leading-6 text-muted-foreground">
-                Commit mechanism, safety priority, and expected response before acting. The
-                preserved 100-point rubric and critical-error mastery rule apply.
+                Commit a mechanism, safety priority, and expected response before acting, then
+                examine the modeled consequence and causal debrief.
               </span>
             </button>
           </div>
@@ -203,8 +202,12 @@ export function MechanicalVentilationPracticeSetupV2({
                   <li key={caseDefinition.id} className="flex flex-col rounded-xl border p-4">
                     <div className="flex items-start justify-between gap-2">
                       <strong className="text-sm text-primary">{caseDefinition.id}</strong>
-                      {hasCaseMastery(progress, caseDefinition.id) ? (
-                        <BadgeCheck className="size-4 text-emerald-600" aria-label="Mastered" />
+                      {hasCaseMastery(progress, caseDefinition.id) ||
+                      progress.completedCases.includes(caseDefinition.id) ? (
+                        <BadgeCheck
+                          className="size-4 text-emerald-600"
+                          aria-label="Worked through"
+                        />
                       ) : null}
                     </div>
                     <span className="mt-2 flex-1 text-sm font-semibold leading-5">
@@ -219,7 +222,7 @@ export function MechanicalVentilationPracticeSetupV2({
                       }
                       className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
                     >
-                      Start {supportMode === 'guided' ? 'guided case' : 'practice attempt'}
+                      Start {supportMode === 'guided' ? 'guided case' : 'practice run'}
                     </Link>
                   </li>
                 ))}

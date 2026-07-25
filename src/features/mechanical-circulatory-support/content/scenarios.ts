@@ -167,7 +167,7 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
     predictionPrompt: 'What should be checked first?',
     predictionOptions: [
       { id: 'trigger', label: 'Trigger source and beat recognition' },
-      { id: 'more-volume', label: 'Give volume without further assessment' },
+      { id: 'more-volume', label: 'Give volume without further bedside review' },
       { id: 'inflate-early', label: 'Move inflation before valve closure' },
     ],
     correctPredictionId: 'trigger',
@@ -570,7 +570,7 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
     guidedPrompt: 'Treat loss of continuous-flow support as time critical.',
     debrief: [
       'Preserve power and use current device emergency procedures.',
-      'This simulator does not teach controller exchange or certify emergency competency.',
+      'This simulator does not teach controller exchange or establish readiness for emergency operation.',
     ],
     sourceIds: lvadSources,
     evidenceSourceIds: lvadSources,
@@ -583,7 +583,7 @@ export const mcsCapstoneScenarios: readonly McsScenarioDefinition[] = [
     version: '1.0.0',
     kind: 'capstone',
     device: 'iabp',
-    title: 'Masked IABP counterpulsation capstone',
+    title: 'Advanced IABP counterpulsation challenge',
     shortTitle: 'IABP capstone',
     presentation:
       'During rapid atrial fibrillation, assisted beats are intermittent, diastolic augmentation is delayed and truncated, and the next systolic pressure is not reduced.',
@@ -655,7 +655,7 @@ export const mcsCapstoneScenarios: readonly McsScenarioDefinition[] = [
     version: '1.0.0',
     kind: 'capstone',
     device: 'impella',
-    title: 'Masked Impella effective-flow capstone',
+    title: 'Advanced Impella effective-flow challenge',
     shortTitle: 'Impella capstone',
     presentation:
       'Displayed pump activity persists, but effective flow is disproportionately low with a position warning, hypertension, and a widened gap between gross and effective flow.',
@@ -730,7 +730,7 @@ export const mcsCapstoneScenarios: readonly McsScenarioDefinition[] = [
     version: '1.0.0',
     kind: 'capstone',
     device: 'lvad',
-    title: 'Masked durable-LVAD constrained-filling capstone',
+    title: 'Advanced durable-LVAD constrained-filling challenge',
     shortTitle: 'LVAD capstone',
     presentation:
       'A continuous-flow LVAD patient develops low flow with rising and converging filling pressures after a bedside procedure; speed and power are unchanged.',

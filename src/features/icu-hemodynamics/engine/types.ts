@@ -165,9 +165,11 @@ export interface InterpretationValue {
   unit: string
   status: 'interpretable' | 'not-interpretable'
   reason?: string
+  interpretation?: string
 }
 
 export interface DerivedHemodynamics {
+  cardiacIndexLMinM2: InterpretationValue
   strokeVolumeMl: InterpretationValue
   strokeVolumeIndexMlM2: InterpretationValue
   systemicVascularResistance: InterpretationValue

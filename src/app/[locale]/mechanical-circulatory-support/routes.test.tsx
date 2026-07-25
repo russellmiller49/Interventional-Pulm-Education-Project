@@ -53,7 +53,7 @@ describe('mechanical circulatory support route family', () => {
     expect((await hubMetadata({ params })).title).toMatch(/Mechanical Circulatory Support/i)
     expect((await learnMetadata({ params })).title).toMatch(/^Learn ·/)
     expect((await practiceMetadata({ params })).title).toMatch(/^Practice ·/)
-    expect((await assessMetadata({ params })).title).toMatch(/^Assess ·/)
+    expect((await assessMetadata({ params })).title).toMatch(/^Challenge ·/)
   })
 
   it.each(['en', 'es', 'zh-CN'])('mounts the localized hub for %s', async (locale) => {

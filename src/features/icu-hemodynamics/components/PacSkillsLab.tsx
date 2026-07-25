@@ -1,6 +1,13 @@
 'use client'
 
-import { useRef, useState, type Dispatch, type KeyboardEvent, type PointerEvent } from 'react'
+import {
+  useId,
+  useRef,
+  useState,
+  type Dispatch,
+  type KeyboardEvent,
+  type PointerEvent,
+} from 'react'
 
 import {
   thermodilutionAcceptedAverage,
@@ -40,6 +47,7 @@ export function PacSkillsLab({
   pressureChallengeMode = 'selectable',
 }: PacSkillsLabProps) {
   const configuration = state.caseDefinition.thermodilution
+  const skillsHeadingId = useId()
   const [volumeMl, setVolumeMl] = useState(configuration.injectateVolumeMl)
   const [temperatureC, setTemperatureC] = useState(configuration.injectateTemperatureC)
   const [durationSeconds, setDurationSeconds] = useState(2.5)
@@ -99,11 +107,17 @@ export function PacSkillsLab({
   }
 
   return (
-    <section className={styles.skillsLab} aria-labelledby="skills-heading">
+    <section className={styles.skillsLab} aria-labelledby={skillsHeadingId}>
       <header className={styles.sectionHeader}>
         <div>
           <span>Reusable skills station</span>
-          <h2 id="skills-heading">PAC setup, advancement, wedge, and cardiac output</h2>
+          <h2 id={skillsHeadingId}>
+            {focus === 'pressure-system'
+              ? 'Pressure-system validation lab'
+              : focus === 'thermodilution'
+                ? 'Thermodilution measurement lab'
+                : 'PAC setup, advancement, wedge, and cardiac output'}
+          </h2>
         </div>
       </header>
 
@@ -136,10 +150,10 @@ export function PacSkillsLab({
         {focus !== 'thermodilution' ? (
           <article className={`${styles.skillCard} ${styles.pressureSystemCard}`}>
             <div className={styles.cardHeading}>
-              <span>01</span>
+              <span>{focus === 'pressure-system' ? '02' : '01'}</span>
               <div>
                 <h3>Pressure system</h3>
-                <p>Level, zero, select scale, and test dynamic response before interpretation.</p>
+                <p>Level, zero, select scale, and check dynamic response before interpretation.</p>
               </div>
             </div>
             <label className={styles.rangeControl}>
@@ -172,7 +186,7 @@ export function PacSkillsLab({
                   type="button"
                   onClick={() => dispatch({ type: 'FAST_FLUSH', lineType: 'pulmonary-artery' })}
                 >
-                  PA-catheter fast-flush test
+                  PA-catheter fast-flush response check
                 </button>
               ) : null}
             </div>
@@ -220,7 +234,7 @@ export function PacSkillsLab({
             id="cardiac-output-lab"
           >
             <div className={styles.cardHeading}>
-              <span>04</span>
+              <span>{focus === 'thermodilution' ? '05' : '04'}</span>
               <div>
                 <h3>Thermodilution series</h3>
                 <p>

@@ -58,6 +58,16 @@ describe('waveform atlas content', () => {
     expect(insertion.map((entry) => entry.position)).toEqual(['ra', 'rv', 'pa', 'wedge'])
   })
 
+  it('teaches RA and CVP as one end-expiratory signal during controlled positive pressure', () => {
+    const rightAtrium = waveformAtlasById.get('ra-normal')!
+    expect(rightAtrium.summary).toMatch(/RA and CVP are the same pressure signal/i)
+    expect(rightAtrium.recognitionCues.join(' ')).toMatch(
+      /positive-pressure ventilation.*rise during inspiration.*end expiration is the trough.*base of the c wave/i,
+    )
+    expect(rightAtrium.pitfall).toMatch(/inspiratory peak.*one-beat average/i)
+    expect(rightAtrium.sourceIds).toContain('cvp-measurement-2017')
+  })
+
   it('teaches the right ventricle and pulmonary artery apart by diastolic contour', () => {
     const rightVentricle = waveformAtlasById.get('rv-normal')
     const pulmonaryArtery = waveformAtlasById.get('pa-normal')
@@ -138,6 +148,26 @@ describe('WaveformAtlasPanel', () => {
     expect(screen.getByRole('tab', { name: 'RA' })).toBeInTheDocument()
     expect(screen.queryByRole('tab', { name: 'Tamponade' })).not.toBeInTheDocument()
   })
+
+  it('lets a focused wedge station return from a false pattern to the normal tracing', () => {
+    render(
+      <WaveformAtlasPanel
+        initialEntryId="wedge-normal"
+        onlyEntryIds={['wedge-normal', 'wedge-overwedged', 'wedge-hybrid']}
+        tablistLabel="True and false wedge patterns"
+      />,
+    )
+
+    const normalWedge = screen.getByRole('tab', { name: 'Normal wedge' })
+    expect(normalWedge).toHaveAttribute('aria-selected', 'true')
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Over-wedge' }))
+    expect(screen.getByText(/false wedge produced by a catheter tip/i)).toBeInTheDocument()
+
+    fireEvent.click(normalWedge)
+    expect(normalWedge).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByText(/tracing collapses back to an atrial morphology/i)).toBeInTheDocument()
+  })
 })
 
 describe('TroubleshootingPanel', () => {
@@ -217,7 +247,7 @@ describe('TroubleshootingPanel', () => {
       target: { value: 'transducer-too-high' },
     })
     expect(screen.getAllByText('Shifted low')).toHaveLength(3)
-    expect(screen.getByText(/shifts downward by approximately 7.5 mmHg/i)).toBeInTheDocument()
+    expect(screen.getByText(/shifts downward by approximately 7.4 mmHg/i)).toBeInTheDocument()
   })
 
   it('makes no-flush warnings prominent for spontaneous wedge and overwedging', () => {
@@ -257,12 +287,21 @@ describe('WedgeValidityPanel', () => {
     expect(definitive).toHaveLength(1)
     expect(definitive[0].id).toBe('oximetry')
     expect(screen.getAllByText(/most confirmatory/i).length).toBeGreaterThan(0)
-    expect(screen.getByText(/Oxygen saturation above 90%/i)).toBeInTheDocument()
+    expect(
+      screen.getAllByText(/within about 5% of.*systemic arterial saturation/i).length,
+    ).toBeGreaterThan(0)
+    expect(
+      screen.getByText(/usually at least 95% when the patient is not hypoxemic/i),
+    ).toBeInTheDocument()
   })
 
-  it('states the PEEP correction and where the wedge stops tracking LVEDP', () => {
+  it('states the modeled PEEP transmission without presenting it as a bedside correction', () => {
     render(<WedgeValidityPanel />)
-    expect(screen.getByText(/2 to 3 cm for every 5 cmH2O/i)).toBeInTheDocument()
+    expect(screen.getByText(/about 1.4 mmHg per 5 cmH₂O/i)).toBeInTheDocument()
+    expect(screen.getByText(/not a bedside correction formula/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Arithmetic PEEP correction is not universally validated/i),
+    ).toBeInTheDocument()
     expect(screen.getByText(/mitral stenosis/i)).toBeInTheDocument()
   })
 })
@@ -279,7 +318,8 @@ describe('WaveformRecognitionDrill', () => {
     fireEvent.click(screen.getByRole('radio', { name: 'Right ventricle' }))
     fireEvent.click(screen.getByRole('button', { name: 'Check answer' }))
 
-    expect(screen.getByText('Correct.')).toBeInTheDocument()
+    expect(screen.getByText('Pattern identified.')).toBeInTheDocument()
+    expect(screen.getByText('Reference tracing')).toBeInTheDocument()
     expect(screen.getByText(/Diastole slopes UP/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Next tracing' })).toBeInTheDocument()
   })
@@ -289,6 +329,8 @@ describe('WaveformRecognitionDrill', () => {
     fireEvent.click(screen.getByRole('radio', { name: 'Pulmonary artery' }))
     fireEvent.click(screen.getByRole('button', { name: 'Check answer' }))
     expect(screen.getByText(/This is right ventricle/i)).toBeInTheDocument()
+    expect(screen.getByText('Reference tracing')).toBeInTheDocument()
+    expect(screen.getByText('Selected response')).toBeInTheDocument()
   })
 
   it('signals the objective only after five correct identifications', () => {

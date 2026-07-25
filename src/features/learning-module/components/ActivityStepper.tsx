@@ -14,12 +14,14 @@ export interface ActivityStepperProps {
   readonly currentPhase: CriticalCareActivityPhase
   readonly completedPhases?: readonly CriticalCareActivityPhase[]
   readonly ariaLabel?: string
+  readonly onPhaseSelect?: (phase: CriticalCareActivityPhase) => void
 }
 
 export function ActivityStepper({
   currentPhase,
   completedPhases,
   ariaLabel = 'Activity phases',
+  onPhaseSelect,
 }: ActivityStepperProps) {
   const currentIndex = criticalCareActivityPhases.indexOf(currentPhase)
   const completed = new Set(
@@ -41,6 +43,14 @@ export function ActivityStepper({
             >
               <span className={styles.stepLabel}>{phaseLabels[phase]}</span>
               {isComplete ? <span className="sr-only">, completed</span> : null}
+              {onPhaseSelect && phase !== currentPhase ? (
+                <button
+                  type="button"
+                  className={styles.stepJumpButton}
+                  aria-label={`Open ${phaseLabels[phase]} phase`}
+                  onClick={() => onPhaseSelect(phase)}
+                />
+              ) : null}
             </li>
           )
         })}

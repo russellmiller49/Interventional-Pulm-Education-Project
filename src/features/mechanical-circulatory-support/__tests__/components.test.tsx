@@ -84,7 +84,7 @@ describe('Mechanical Circulatory Support learner interface', () => {
 
   it.each([
     ['impella', /Impella CP \/ 5\.5 \/ RP/i, /Impella unloading and placement signals/i],
-    ['lvad', /Durable continuous-flow LVAD/i, /Durable LVAD parameters and ICU assessment/i],
+    ['lvad', /Durable continuous-flow LVAD/i, /Durable LVAD parameters and ICU review/i],
   ] as const)(
     'initializes the %s track and its first device lesson',
     (device, tabName, lessonName) => {
@@ -121,20 +121,40 @@ describe('Mechanical Circulatory Support learner interface', () => {
     )
   })
 
-  it('selects an exact assessment track without bypassing its prerequisite gate', async () => {
+  it('selects an exact Challenge track and keeps it open from the start', async () => {
     render(<McsWorkbench section="assess" initialActivityId="CAP-IMP-01" />)
 
     expect(screen.getByRole('button', { name: /Impella CP \/ 5\.5 \/ RP/i })).toHaveAttribute(
       'aria-pressed',
       'true',
     )
-    expect(screen.getByText('Impella capstone assessment')).toBeInTheDocument()
-    expect(screen.queryByText('CAP-IMP-01')).not.toBeInTheDocument()
-    expect(screen.queryByText(/effective-flow capstone/i)).not.toBeInTheDocument()
+    expect(screen.getAllByText('Advanced Impella effective-flow challenge').length).toBeGreaterThan(
+      1,
+    )
+    const feedbackToggle = screen.getByRole('checkbox', {
+      name: /Show teaching notes after each action/i,
+    })
+    expect(feedbackToggle).not.toBeChecked()
+    expect(screen.getByText('Routine teaching deferred')).toBeInTheDocument()
+    expect(screen.getByText(/Why the display changed/i)).toBeInTheDocument()
+    fireEvent.click(feedbackToggle)
+    expect(screen.getByText('Simulation response')).toBeInTheDocument()
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: /Start capstone/i })).toBeDisabled(),
+      expect(screen.getByRole('button', { name: /Open challenge/i })).toBeEnabled(),
     )
     expect(getCriticalCareResumeTarget(window.localStorage)).toBeNull()
+  })
+
+  it('defers causal coaching in a Challenge until opt-in when no critical alarm is active', () => {
+    render(<McsWorkbench section="assess" initialActivityId="CAP-IABP-01" />)
+
+    expect(screen.getByText(/Causal coaching is withheld/i)).toBeInTheDocument()
+    fireEvent.click(
+      screen.getByRole('checkbox', {
+        name: /Show teaching notes after each action/i,
+      }),
+    )
+    expect(screen.getByText(/Why the display changed/i)).toBeInTheDocument()
   })
 
   it('renders the safety boundary, synchronized accessible traces, and required hemodynamics', () => {
@@ -146,7 +166,7 @@ describe('Mechanical Circulatory Support learner interface', () => {
     expect(screen.getByRole('img', { name: /ECG II waveform/i })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: /ART waveform/i })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: /pressure-volume loop/i })).toBeInTheDocument()
-    const metrics = screen.getByRole('complementary', { name: /Current hemodynamic values/i })
+    const metrics = screen.getByRole('group', { name: /Current hemodynamic values/i })
     for (const label of [
       'NATIVE FLOW',
       'DEVICE FLOW',
@@ -159,6 +179,13 @@ describe('Mechanical Circulatory Support learner interface', () => {
     ]) {
       expect(within(metrics).getByText(label)).toBeInTheDocument()
     }
+    const derivedGuide = screen.getByRole('region', {
+      name: /PAPi and cardiac power interpretation/i,
+    })
+    expect(within(derivedGuide).getByText(/No universal normal interval exists/i)).toBeVisible()
+    expect(
+      within(derivedGuide).getByText(/No universal normal interval or treatment target/i),
+    ).toBeVisible()
   })
 
   it('configures and displays independent 5.5 and RP pumps in the biventricular workspace', () => {
@@ -181,14 +208,13 @@ describe('Mechanical Circulatory Support learner interface', () => {
     expect(screen.getByText(/never added directly to systemic flow/i)).toBeInTheDocument()
   })
 
-  it('enforces inspect then predict then commit before adjustment', async () => {
+  it('keeps permitted controls open while preserving an optional initial frame', async () => {
     render(<McsWorkbench section="practice" />)
     fireEvent.click(screen.getByRole('button', { name: /Late deflation/i }))
     const deflation = screen.getByRole('slider', { name: /Deflation vs systole/i })
-    expect(deflation).toBeDisabled()
-    const commit = screen.getByRole('button', { name: /Commit prediction/i })
+    expect(deflation).toBeEnabled()
+    const commit = screen.getByRole('button', { name: /Record initial frame/i })
     expect(commit).toBeDisabled()
-    fireEvent.click(screen.getByRole('button', { name: /Arterial waveform/i }))
     fireEvent.click(
       screen.getByRole('radio', { name: /Late deflation raises effective LV afterload/i }),
     )
@@ -197,7 +223,7 @@ describe('Mechanical Circulatory Support learner interface', () => {
     expect(await screen.findByRole('button', { name: /Prediction committed/i })).toBeDisabled()
     expect(screen.getByRole('slider', { name: /Deflation vs systole/i })).toBeEnabled()
     expect(screen.getByRole('slider', { name: /Preload/i })).toBeDisabled()
-    expect(screen.getByText(/Prediction locked. Adjust the model/i)).toBeInTheDocument()
+    expect(screen.getByText(/Initial frame recorded. Adjust the model/i)).toBeInTheDocument()
     const lifecyclePayloads = (global.fetch as jest.Mock).mock.calls.map(([, request]) =>
       JSON.parse(request.body as string),
     )
@@ -221,12 +247,12 @@ describe('Mechanical Circulatory Support learner interface', () => {
     fireEvent.click(
       screen.getByRole('radio', { name: /Late deflation raises effective LV afterload/i }),
     )
-    fireEvent.click(screen.getByRole('button', { name: /Commit prediction/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Record initial frame/i }))
     fireEvent.change(screen.getByRole('slider', { name: /Deflation vs systole/i }), {
       target: { value: '0' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Reassess response' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Open debrief & score' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Open causal debrief' }))
 
     expect(await screen.findByRole('heading', { name: /Causal debrief/i })).toBeInTheDocument()
     const phases = screen.getByRole('group', { name: 'MCS shared activity phases' })
@@ -324,7 +350,7 @@ describe('Mechanical Circulatory Support learner interface', () => {
     const continueButton = await screen.findByRole('button', {
       name: /Continue to next lesson Impella suction, purge, hemolysis, and RV delivery/i,
     })
-    expect(screen.getByRole('region', { name: 'Lesson complete' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Lesson worked through' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Recheck transfer evidence/i })).toBeNull()
 
     fireEvent.click(continueButton)
@@ -338,7 +364,7 @@ describe('Mechanical Circulatory Support learner interface', () => {
     ).toBeInTheDocument()
   })
 
-  it('keeps capstones locked until foundations, device lessons, and three mastered cases are present', async () => {
+  it('keeps capstones open, named, and source-visible regardless of local history', async () => {
     const baseProgress = {
       version: 1,
       completedLessonIds: [],
@@ -352,51 +378,26 @@ describe('Mechanical Circulatory Support learner interface', () => {
       lastActivityId: null,
     }
     window.localStorage.setItem(progressKey, JSON.stringify(baseProgress))
-    const { unmount } = render(<McsWorkbench section="assess" />)
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: /Start capstone/i })).toBeDisabled(),
-    )
-    expect(screen.getByText(/7 requirements remain/i)).toBeInTheDocument()
-    unmount()
-
-    window.localStorage.setItem(
-      progressKey,
-      JSON.stringify({
-        ...baseProgress,
-        completedLessonIds: [
-          'mcs-foundations-signals',
-          'mcs-foundations-mechanisms',
-          'iabp-timing-triggering',
-          'iabp-efficacy-limits',
-        ],
-        masteredCaseIds: ['IABP-01', 'IABP-02', 'IABP-03'],
-      }),
-    )
     render(<McsWorkbench section="assess" />)
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: /Start capstone/i })).toBeEnabled(),
+      expect(screen.getByRole('button', { name: /Open challenge/i })).toBeEnabled(),
     )
     const capstone = mcsCapstoneScenarios.find((item) => item.device === 'iabp')!
-    expect(screen.queryByText(capstone.id)).not.toBeInTheDocument()
-    expect(screen.queryByText(capstone.title)).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /Start capstone/i }))
-    expect(screen.getByText(/coaching withheld/i)).toBeInTheDocument()
-    expect(screen.getByText(/Causal coaching is withheld/i)).toBeInTheDocument()
-    expect(screen.getAllByRole('heading', { name: 'Masked MCS capstone' })).not.toHaveLength(0)
-    expect(screen.queryByText(capstone.id)).not.toBeInTheDocument()
-    expect(screen.queryByText(capstone.title)).not.toBeInTheDocument()
+    expect(screen.getByText(capstone.title)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Open challenge/i }))
+    expect(screen.getAllByRole('heading', { name: capstone.title })).not.toHaveLength(0)
     for (const objective of capstone.learningObjectives) {
-      expect(screen.queryByText(objective)).not.toBeInTheDocument()
+      expect(screen.getAllByText(objective)).not.toHaveLength(0)
     }
 
     fireEvent.click(screen.getByRole('button', { name: 'Evidence' }))
     const evidenceDrawer = await screen.findByRole('dialog')
-    expect(within(evidenceDrawer).getByText('Assessment evidence boundary')).toBeInTheDocument()
+    expect(within(evidenceDrawer).getByText('Evidence and model limits')).toBeInTheDocument()
     const caseOnlySource = mcsSources.find((source) =>
       capstone.evidenceSourceIds.includes(source.id),
     )
     if (caseOnlySource) {
-      expect(within(evidenceDrawer).queryByText(caseOnlySource.title)).not.toBeInTheDocument()
+      expect(within(evidenceDrawer).getByText(caseOnlySource.title)).toBeInTheDocument()
     }
   })
 
@@ -411,7 +412,6 @@ describe('Mechanical Circulatory Support learner interface', () => {
       deviceTrack: 'iabp',
       station: 'studio',
       completion: 'in-progress',
-      scoreBand: 'not-scored',
     })
     expect(JSON.stringify(payload)).not.toMatch(
       /waveform|pressure|trace|actionIds|presentation|freeText|mapMmHg|pcwp/i,

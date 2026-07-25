@@ -15,6 +15,7 @@ export const ARTIFACT_IDS = [
   'catheter-whip',
   'wall-contact',
   'spontaneous-wedge',
+  'false-wedge',
   'overwedging',
   'zero-level',
 ] as const
@@ -54,13 +55,13 @@ export const artifactDefinitions = {
     appearance: [
       'The PA upstroke is rounded, the peak is blunted, and pulse pressure is narrow.',
       'The pulmonic-closure notch and other high-frequency detail are markedly reduced or lost.',
-      'This tracing is generated with low-pass smoothing plus amplitude attenuation, not simple vertical rescaling.',
+      'This tracing is generated with low-frequency smoothing plus amplitude attenuation, not simple vertical rescaling.',
     ],
     causes: [
       'Air or blood in the catheter-tubing-transducer circuit.',
       'A clot, kink, partial lumen obstruction, or catheter tip against the vessel wall.',
       'Low pressure-bag pressure, a loose or partially open connection, or overly compliant nonstandard tubing.',
-      'An incorrect monitor scale can visually mimic damping even though it does not alter the signal itself.',
+      'A mismatched monitor scale can visually mimic damping even though it does not alter the signal itself.',
     ],
     numbersTeaching:
       'The generated trace has a lower systolic peak, higher diastolic nadir, narrower pulse pressure, and a mean that is less affected than either endpoint.',
@@ -69,8 +70,8 @@ export const artifactDefinitions = {
     actions: [
       'Confirm the pressure display scale, transducer level, and atmospheric zero.',
       'Confirm approximately 300 mmHg in the pressure bag and inspect every stopcock, connection, and segment of tubing.',
-      'Remove air or blood from the monitoring circuit and correct any kink or visible obstruction.',
-      'After confirming a PA waveform and a fully deflated balloon, use a fast-flush test to verify dynamic response.',
+      'Remove air or blood from the monitoring circuit and resolve any kink or visible obstruction.',
+      'After confirming a PA waveform and a fully deflated balloon, use a fast-flush response check to verify dynamic response.',
       'When persistent wall contact or malposition is suspected, reposition according to clinician authority and local policy.',
     ],
     doNot: [
@@ -102,14 +103,14 @@ export const artifactDefinitions = {
     whyItMatters:
       'The exaggerated peak can be mistaken for severe pulmonary hypertension or a pressure gradient that is not actually present.',
     actions: [
-      'Confirm the response with a correctly performed fast-flush test.',
+      'Confirm the response with a properly performed fast-flush response check.',
       'Remove unnecessary extensions and stopcocks and use tubing intended for invasive pressure monitoring.',
       'Secure the catheter and external tubing and replace a suspected defective transducer or monitoring set.',
       'Compare the mean pressure, waveform family, and clinical situation before acting on the peak alone.',
     ],
     doNot: [
       'Do not list an air bubble as the primary cause of underdamping; added compliance generally promotes damping.',
-      'Do not diagnose severe pulmonary hypertension from the overshoot without correcting the signal.',
+      'Do not diagnose severe pulmonary hypertension from the overshoot without restoring the signal.',
     ],
     callouts: [
       { id: 'overshoot', label: 'systolic overshoot', timeSeconds: 0.87 },
@@ -134,7 +135,7 @@ export const artifactDefinitions = {
     numbersTeaching:
       'The spike can make systolic pressure spuriously high. Diastolic and mean pressure may be less affected, but all values become unreliable when contamination is severe.',
     whyItMatters:
-      'A mechanical spike can masquerade as a true pressure peak and lead to an incorrect diagnosis or unnecessary treatment.',
+      'A mechanical spike can masquerade as a true pressure peak and lead to a misleading diagnosis or unnecessary treatment.',
     actions: [
       'Confirm complete balloon deflation and stop external catheter or tubing movement.',
       'Compare the spike timing with the ECG and with the underlying PA contour.',
@@ -211,6 +212,44 @@ export const artifactDefinitions = {
       'emcrit-rhc-supplied-2026',
     ],
   },
+  'false-wedge': {
+    id: 'false-wedge',
+    label: 'False wedge from incomplete occlusion',
+    shortLabel: 'False wedge',
+    liveArtifact: 'false-wedge',
+    pressureInterpretation: 'different-compartment',
+    appearance: [
+      'Residual PA pulsatility remains superimposed on a lower-amplitude atrial-type contour.',
+      'The mean does not fall plausibly below PA diastolic pressure, and the pulmonic-closure contour may remain partly visible.',
+      'The live capstone uses this same PA-contaminated waveform and labels its PAWP value invalid until position and occlusion are re-established.',
+    ],
+    causes: [
+      'Incomplete balloon occlusion leaves communication with the proximal pulmonary artery.',
+      'A non-zone-3 tip position, marked pulmonary hypertension, or unfavorable catheter orientation can prevent a valid transmitted left-atrial pressure.',
+    ],
+    numbersTeaching:
+      'The displayed value is a mixture of PA and wedge compartments. It is not a valid PAWP and must not be entered into PVR or other derived calculations.',
+    whyItMatters:
+      'A falsely elevated PAWP can misclassify pre-capillary physiology as post-capillary disease and redirect treatment toward an unsupported mechanism.',
+    actions: [
+      'Deflate immediately and confirm return of a stable PA waveform.',
+      'Reassess catheter depth, course, balloon volume, and zone-3 plausibility under appropriate supervision.',
+      'If morphology remains ambiguous, compare a wedged-tip sample with a simultaneous systemic arterial saturation; low systemic saturation limits discrimination.',
+      'Repeat PAWP only after a valid occlusion signal is established, and reject the contaminated value.',
+    ],
+    doNot: [
+      'Do not accept residual PA pulsatility as a true wedge.',
+      'Do not keep inflating, flush the distal lumen, or move the catheter solely to force a target number.',
+      'Do not calculate PVR from the contaminated PAWP.',
+    ],
+    callouts: [
+      { id: 'residual-pa', label: 'residual PA pulsatility', timeSeconds: 1.0 },
+      { id: 'hybrid-mean', label: 'mixed-compartment mean', timeSeconds: 2.28 },
+    ],
+    warning:
+      'Invalid mixed-compartment signal: deflate, restore a confirmed PA waveform, and reassess before repeating PAWP.',
+    sourceIds: ['clinical-hemodynamics-waveforms', 'pac-waveforms-part-1-2021', 'pac-review-2014'],
+  },
   overwedging: {
     id: 'overwedging',
     label: 'Overwedging',
@@ -259,11 +298,11 @@ export const artifactDefinitions = {
     ],
     causes: [
       'The transducer is above or below the phlebostatic reference level.',
-      'Atmospheric zero is incorrect or has drifted.',
+      'Atmospheric zero is mis-set or has drifted.',
       'The transducer moved with the bed or patient and was not re-leveled.',
     ],
     numbersTeaching:
-      'A transducer 10 cm too low reads approximately 7.5 mmHg high; 10 cm too high reads approximately 7.5 mmHg low. Pulse pressure is unchanged.',
+      'A transducer 10 cm too low reads approximately 7.4 mmHg high; 10 cm too high reads approximately 7.4 mmHg low. Pulse pressure is unchanged.',
     whyItMatters:
       'A constant offset is easy to miss because the tracing still looks physiologic, and the relative error is especially large for PAWP and right-sided filling pressures.',
     actions: [
@@ -321,11 +360,11 @@ export const troubleshootingReferenceRows: readonly TroubleshootingReferenceRow[
     waveform:
       'Small, smooth, or flattened PA contour; diagnose the cause before calling it overdamping.',
     causes:
-      'Wrong scale; air or blood; low pressure-bag pressure; loose connection; kink or obstruction; wall contact; spontaneous wedge.',
+      'Mismatched scale; air or blood; low pressure-bag pressure; loose connection; kink or obstruction; wall contact; spontaneous wedge.',
     checks:
       'Scale, level, zero, pressure bag, connections, stopcocks, tubing, catheter depth, and whether atrial-type wedge waves replaced PA morphology.',
     action:
-      'Correct the identified mechanical or display problem, then reassess the waveform family.',
+      'Resolve the identified mechanical or display problem, then reassess the waveform family.',
     warning:
       'Leveling changes offset, not morphology. Do not fast-flush a possible spontaneous wedge.',
   },
@@ -337,7 +376,8 @@ export const troubleshootingReferenceRows: readonly TroubleshootingReferenceRow[
       'Air or blood, clot, kink, partial obstruction, low pressure bag, loose connection, compliant tubing.',
     checks:
       'Confirm PA position, balloon deflation, scale, level, zero, circuit integrity, and fast-flush response.',
-    action: 'Remove circuit problems, restore pressure-bag pressure, correct tubing, and retest.',
+    action:
+      'Remove circuit problems, restore pressure-bag pressure, repair tubing, and repeat the response check.',
     warning: 'Do not trust the systolic or diastolic endpoint while the response remains damped.',
   },
   {
@@ -365,12 +405,13 @@ export const troubleshootingReferenceRows: readonly TroubleshootingReferenceRow[
   },
   {
     id: 'incorrect-monitor-scale',
-    problem: 'Incorrect monitor scale',
-    waveform: 'A normal signal appears tiny, flat, or clipped because the display range is wrong.',
+    problem: 'Mismatched monitor scale',
+    waveform:
+      'A normal signal appears tiny, flat, or clipped because the display range is mismatched.',
     causes: 'A high pressure scale on a low-pressure PA signal or an inappropriately narrow scale.',
     checks: 'Read the y-axis and compare it with the expected chamber pressure range.',
     action: 'Select a clinically appropriate fixed scale, then reassess morphology.',
-    warning: 'Do not diagnose damping from appearance alone when the display scale is wrong.',
+    warning: 'Do not diagnose damping from appearance alone when the display scale is mismatched.',
   },
   {
     id: 'spontaneous-wedge',
@@ -383,6 +424,19 @@ export const troubleshootingReferenceRows: readonly TroubleshootingReferenceRow[
     action:
       'Withdraw slowly until PA morphology returns when authorized; notify the responsible clinician.',
     warning: 'Do not flush.',
+  },
+  {
+    id: 'false-wedge',
+    problem: 'False wedge / incomplete occlusion',
+    waveform:
+      'A lower-amplitude atrial-type contour retains PA pulsatility or a closure feature, and the mean fails to fall plausibly below PA diastolic pressure.',
+    causes:
+      'Incomplete balloon occlusion, non-zone-3 position, pulmonary hypertension, or unfavorable catheter orientation.',
+    checks:
+      'Balloon deflation and PA return, depth and course, PA-diastolic plausibility, West-zone context, and paired wedged-tip/systemic oximetry when useful.',
+    action:
+      'Reject the value, restore a confirmed PA signal, and repeat the occlusion check only under appropriate supervision.',
+    warning: 'Do not keep inflating or flush a potentially occluded distal PA branch.',
   },
   {
     id: 'rv-migration',
@@ -421,7 +475,7 @@ export const troubleshootingReferenceRows: readonly TroubleshootingReferenceRow[
     problem: 'Absent waveform',
     waveform: 'No pressure contour or an entirely flat channel.',
     causes:
-      'Disconnection, closed stopcock, wrong channel or scale, failed transducer, low pressure bag, kink, obstruction, or malposition.',
+      'Disconnection, closed stopcock, mismatched channel or scale, malfunctioning transducer, low pressure bag, kink, obstruction, or malposition.',
     checks:
       'Patient first, then monitor channel, scale, connections, stopcocks, transducer, pressure bag, tubing, and catheter position.',
     action:
@@ -457,14 +511,14 @@ export const troubleshootingReferenceRows: readonly TroubleshootingReferenceRow[
       'Clot, kink, blood in the lumen, closed stopcock, distal wall contact, or catheter damage.',
     checks:
       'Catheter position, course, stopcocks, tubing, blood return, and institutional patency protocol.',
-    action: 'Correct external causes and escalate suspected intraluminal or distal obstruction.',
+    action: 'Resolve external causes and escalate suspected intraluminal or distal obstruction.',
     warning:
       'Do not forcefully flush when distal occlusion, wedging, or pulmonary-artery injury is possible.',
   },
 ]
 
 export const commonErrorSources: readonly string[] = [
-  'Incorrect display scale, level, or atmospheric zero',
+  'Mismatched display scale, level, or atmospheric zero',
   'Air, blood, clot, kink, obstruction, or a low pressure bag',
   'Loose connections, open stopcocks, or a defective transducer',
   'Catheter whip, wall contact, spontaneous wedge, RV migration, or overwedging',
@@ -495,9 +549,9 @@ export const wedgeValidityChecks: readonly WedgeValidityCheck[] = [
   },
   {
     id: 'oximetry',
-    label: 'Oxygen saturation above 90% from the wedged tip',
+    label: 'Wedged-tip saturation within about 5% of systemic arterial saturation',
     detail:
-      'Blood drawn from a true wedge is arterialized pulmonary capillary blood. This is the most confirmatory sign of a true wedge, and the one that settles an ambiguous tracing.',
+      'Blood drawn from a true wedge is arterialized pulmonary capillary blood: usually at least 95% when the patient is not hypoxemic, or within about 5% of the simultaneous systemic arterial saturation. This is the most confirmatory sign when the arterial saturation is normal. In hypoxemia, compare the paired samples rather than requiring an impossible absolute threshold; low systemic saturation reduces the check’s discriminating power.',
     definitive: true,
   },
   {
@@ -549,7 +603,8 @@ export const westZones: readonly WestZoneDefinition[] = [
 ]
 
 export const wedgeValidityModifiers: readonly string[] = [
-  'PEEP below 10 cmH2O does not significantly affect the wedge. Above that, a suggested correction is that the wedge rises 2 to 3 cm for every 5 cmH2O increment in PEEP.',
+  'This educational model transmits 0.28 mmHg to PAWP for each 1 cmH₂O of PEEP above 5 cmH₂O (about 1.4 mmHg per 5 cmH₂O). That is a model assumption, not a bedside correction formula.',
+  'At the bedside, obtain PAWP at end expiration and interpret it with the ventilator and lung mechanics. Arithmetic PEEP correction is not universally validated; when pleural-pressure transmission materially changes the question, use additional physiology such as esophageal pressure rather than treating a fixed subtraction as truth.',
   'Positive end-expiratory pressure also raises alveolar pressure, which can convert a zone 3 position into a non-zone 3 position.',
   'A catheter tip below the level of the left atrium is the position most likely to be in zone 3.',
   'The wedge does not track left ventricular end-diastolic pressure in mitral stenosis, severe mitral or aortic regurgitation, pulmonary vascular obstruction, marked increases in PEEP, left atrial myxoma, marked left ventricular non-compliance, or a non-zone 3 tip position.',

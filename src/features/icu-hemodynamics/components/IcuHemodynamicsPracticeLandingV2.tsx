@@ -22,15 +22,15 @@ export function IcuHemodynamicsPracticeLandingV2() {
       <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Practice</p>
       <h1 className="mt-2 text-3xl font-bold tracking-tight">Eight preserved management cases</h1>
       <p className="mt-3 max-w-3xl leading-7 text-muted-foreground">
-        Each case now opens one focused simulation workspace. The original deterministic engine,
-        intervention effects, 100-point score, 80% mastery threshold, and critical-error rule are
-        unchanged.
+        Each case opens one focused simulation workspace. Watch the modeled consequence of each
+        action, read mechanism-level feedback, then compare your reasoning with an authored expert
+        trace.
       </p>
       <ol className="mt-8 grid gap-4 md:grid-cols-2">
         {hemodynamicCases.map((definition, index) => {
-          const mastered = progress.masteredCaseIds.includes(definition.id)
-          const completed = progress.completedCaseIds.includes(definition.id)
-          const best = progress.bestScores[definition.id]
+          const workedThrough =
+            progress.completedCaseIds.includes(definition.id) ||
+            progress.masteredCaseIds.includes(definition.id)
           return (
             <li key={definition.id} className="rounded-2xl border bg-card p-5 shadow-sm">
               <div className="flex items-start justify-between gap-4">
@@ -43,20 +43,16 @@ export function IcuHemodynamicsPracticeLandingV2() {
                     {definition.presentation}
                   </p>
                 </div>
-                {mastered ? (
+                {workedThrough ? (
                   <CheckCircle2
                     className="size-5 shrink-0 text-emerald-600"
-                    aria-label="Mastered"
+                    aria-label="Worked through"
                   />
                 ) : null}
               </div>
               <div className="mt-4 flex items-center justify-between gap-3">
                 <span className="text-xs font-semibold text-muted-foreground">
-                  {mastered
-                    ? `Mastered · ${best ?? 0}%`
-                    : completed
-                      ? `Completed · best ${best ?? 0}%`
-                      : definition.station.replaceAll('-', ' ')}
+                  {workedThrough ? 'Worked through' : definition.station.replaceAll('-', ' ')}
                 </span>
                 <Link
                   href={`/icu-hemodynamics/practice?case=${definition.id}` as Route}
