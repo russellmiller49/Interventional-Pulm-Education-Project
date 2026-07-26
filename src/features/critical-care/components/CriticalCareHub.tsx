@@ -16,6 +16,7 @@ import {
   Route as RouteIcon,
   ShieldCheck,
   Sparkles,
+  Waves,
   Wind,
   type LucideIcon,
 } from 'lucide-react'
@@ -43,6 +44,7 @@ const moduleIcons: Record<string, LucideIcon> = {
   hemodynamics: Activity,
   ventilation: Wind,
   'circulatory-support': HeartPulse,
+  ecmo: Waves,
   crrt: Droplets,
 }
 
@@ -585,7 +587,7 @@ export function CriticalCareHub({
             </div>
             <div className="flex flex-col items-start gap-2 sm:items-end">
               <p className="text-sm text-muted-foreground">
-                Reviewed focused modules available from this catalog
+                Focused modules available inside this unlisted learning center
               </p>
               <Link
                 href={'/critical-care/labs' as Route}

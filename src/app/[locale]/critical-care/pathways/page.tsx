@@ -8,7 +8,7 @@ import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
 const metadata: Metadata = {
   title: 'Clinical Pathways · Critical Care Learning Center',
-  description: 'Clinical learning pathways connecting reviewed focused critical-care labs.',
+  description: 'Clinical learning pathways connecting focused critical-care labs.',
   robots: { index: false, follow: false, noarchive: true },
 }
 

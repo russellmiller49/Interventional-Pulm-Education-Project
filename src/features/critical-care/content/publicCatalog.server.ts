@@ -8,7 +8,7 @@ import {
   criticalCarePublicModuleIdsForReference,
   isCriticalCareActivityPubliclyCataloged,
   isCriticalCareAssetPubliclyCataloged,
-  isCriticalCareModulePubliclyCataloged,
+  isCriticalCareModuleVisibleInUnlistedCenter,
   presentCriticalCareActivityPublicly,
   sanitizeCriticalCareActivityForPublicCatalog,
 } from './publicVisibility'
@@ -36,13 +36,14 @@ function titleFromAssetId(id: string): string {
 }
 
 /**
- * The only bridge from the complete authoring catalog to public Critical Care client components.
- * Keep this module server-owned: its return value intentionally omits draft/private module data,
- * private scenario fields, and authoring-only metadata before React serializes client props.
+ * The only bridge from the complete authoring catalog to unlisted Critical Care client components.
+ * Keep this module server-owned: it exposes stable launcher identity for focused non-private labs
+ * while omitting draft activity/reference/asset records, private module data, private scenario
+ * fields, and authoring-only metadata before React serializes client props.
  */
 export function buildCriticalCarePublicClientCatalog(): CriticalCarePublicClientCatalog {
   const modules = criticalCareModuleCatalog.filter((module) =>
-    isCriticalCareModulePubliclyCataloged(module.id),
+    isCriticalCareModuleVisibleInUnlistedCenter(module.id),
   )
   const moduleIds = new Set<string>(modules.map((module) => module.id))
   const activities = criticalCareActivities

@@ -8,7 +8,7 @@ import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
 const pageMetadata: Metadata = {
   title: 'Labs · Critical Care Learning Center',
-  description: 'Direct access to reviewed focused critical care laboratories.',
+  description: 'Direct access to focused draft and preview critical care laboratories.',
   robots: { index: false, follow: false, noarchive: true },
 }
 

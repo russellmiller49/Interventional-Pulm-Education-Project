@@ -53,12 +53,14 @@ describe('critical care parent route', () => {
     expect(screen.getByTestId('critical-care-hub')).toBeInTheDocument()
   })
 
-  it('keeps direct access to every preserved public lab when the dashboard flag is off', async () => {
+  it('keeps direct access to every focused lab when the dashboard flag is off', async () => {
     featureFlags.criticalCareDashboardV2 = false
 
     render(await CriticalCarePage({ params: Promise.resolve({ locale: 'en' }) }))
 
     expect(screen.queryByTestId('critical-care-hub')).not.toBeInTheDocument()
-    expect(screen.getAllByRole('link', { name: 'Open full lab' })).toHaveLength(4)
+    const labLinks = screen.getAllByRole('link', { name: 'Open full lab' })
+    expect(labLinks).toHaveLength(5)
+    expect(labLinks.map((link) => link.getAttribute('href'))).toContain('/cardiohelp-ecmo')
   })
 })

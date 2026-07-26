@@ -56,7 +56,7 @@ describe('CriticalCareHub', () => {
     })
   })
 
-  it('promotes only reviewed modules and gives a new learner one start', async () => {
+  it('shows every focused lab in the unlisted center and gives a new learner one reviewed start', async () => {
     render(<CriticalCareHub catalog={catalog} />)
 
     expect(
@@ -68,9 +68,10 @@ describe('CriticalCareHub', () => {
         screen.getByRole('link', { name: `Open full lab: ${moduleDefinition.title}` }),
       ).toHaveAttribute('href', moduleDefinition.href)
     }
-    expect(
-      screen.queryByRole('link', { name: 'Open full lab: CARDIOHELP ECMO' }),
-    ).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Open full lab: CARDIOHELP ECMO' })).toHaveAttribute(
+      'href',
+      '/cardiohelp-ecmo',
+    )
 
     expect(await screen.findByRole('link', { name: 'Start here' })).toHaveAttribute(
       'href',

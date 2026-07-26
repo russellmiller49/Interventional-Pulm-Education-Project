@@ -41,15 +41,17 @@ describe('critical-care global libraries', () => {
     )
   })
 
-  it('lists only reviewed labs and withholds draft/private identities and links', () => {
+  it('lists focused draft/preview labs while withholding private-development modules', () => {
     render(<CriticalCareLabsLibrary catalog={catalog} />)
-    expect(screen.getAllByRole('link', { name: 'Open full lab' })).toHaveLength(4)
+    const labLinks = screen.getAllByRole('link', { name: 'Open full lab' })
+    expect(labLinks).toHaveLength(5)
+    expect(labLinks.map((link) => link.getAttribute('href'))).toContain('/cardiohelp-ecmo')
     expect(
       screen.queryByRole('heading', { name: 'Integrated ICU Simulator' }),
     ).not.toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'ECMO Management' })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'ECMO Management' })).toBeInTheDocument()
     expect(
-      screen.getByText(/Additional labs follow their existing release gates/i),
+      screen.getByText(/retain their existing draft or preview release gates/i),
     ).toBeInTheDocument()
   })
 

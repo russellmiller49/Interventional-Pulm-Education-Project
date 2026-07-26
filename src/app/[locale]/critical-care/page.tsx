@@ -11,7 +11,7 @@ import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 const handoffMetadata: Metadata = {
   title: 'Critical Care Learning Center',
   description:
-    'An unlisted critical-care learning dashboard with exact resume, clinical pathways, and reviewed focused practice labs.',
+    'An unlisted critical-care learning dashboard with exact resume, clinical pathways, and focused draft or preview labs.',
   robots: {
     index: false,
     follow: false,

@@ -11,10 +11,10 @@ import { criticalCareCatalogActivityHref } from './activityRoutes'
 export type CriticalCarePublicCatalogStage = 'public-unlisted' | 'draft' | 'private'
 
 /**
- * Public-parent catalog policy. This is deliberately separate from route authorization: a module
- * can remain reachable by an audited direct URL without the public Critical Care parent promoting
- * its draft activity catalog. Release-boundary tests lock this map to each module's source-owned
- * release constant.
+ * Content-publication policy for the unlisted parent. This is deliberately separate from route
+ * authorization and from showing a stable module launcher: a module can remain reachable by an
+ * audited direct URL without publishing its draft activity catalog. Release-boundary tests lock
+ * this map to each module's source-owned release constant.
  */
 export const criticalCarePublicCatalogStageByModule: Readonly<
   Record<CriticalCareCatalogModuleId, CriticalCarePublicCatalogStage>
@@ -44,6 +44,20 @@ export const criticalCarePublicCatalogModuleIds: readonly CriticalCareCatalogMod
   Object.freeze(criticalCareCatalogModuleIds.filter(isCriticalCareModulePubliclyCataloged))
 
 const publicCatalogModuleIds = new Set<string>(criticalCarePublicCatalogModuleIds)
+
+/**
+ * The Critical Care center is itself an unlisted, noindex route. Focused draft modules may retain
+ * a launcher there without publishing their draft activities, references, or assets into the
+ * reviewed catalog. Private-development modules remain excluded.
+ */
+export function isCriticalCareModuleVisibleInUnlistedCenter(
+  moduleId: CriticalCareCatalogModuleId,
+): boolean {
+  return criticalCarePublicCatalogStageByModule[moduleId] !== 'private'
+}
+
+export const criticalCareUnlistedCenterModuleIds: readonly CriticalCareCatalogModuleId[] =
+  Object.freeze(criticalCareCatalogModuleIds.filter(isCriticalCareModuleVisibleInUnlistedCenter))
 
 export function isCriticalCareReferencePubliclyCataloged(
   reference: CriticalCareReferenceDefinition,

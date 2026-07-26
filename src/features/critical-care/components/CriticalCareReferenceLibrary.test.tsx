@@ -64,12 +64,12 @@ describe('critical-care reference and notebook', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('keeps draft ECMO and private ICU catalog metadata out of public reference surfaces', () => {
+  it('offers the draft ECMO module filter without leaking its draft records or private ICU metadata', () => {
     render(<CriticalCareReferenceLibrary catalog={catalog} />)
 
     expect(
-      within(screen.getByLabelText('Module')).queryByRole('option', { name: 'ECMO Management' }),
-    ).not.toBeInTheDocument()
+      within(screen.getByLabelText('Module')).getByRole('option', { name: 'ECMO Management' }),
+    ).toBeInTheDocument()
     expect(
       within(screen.getByLabelText('Module')).queryByRole('option', {
         name: 'Integrated ICU Simulator',

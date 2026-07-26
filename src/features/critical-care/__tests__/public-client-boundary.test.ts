@@ -40,12 +40,8 @@ const forbiddenRuntimeSuffixes = [
 ]
 
 const forbiddenSerializedValues = [
-  'cardiohelp-ecmo',
   'icu-simulation',
-  'ECMO Management',
-  'CARDIOHELP',
   'Integrated ICU Simulator',
-  'ecmo:',
   'icu:practice:',
   'icu:assess:',
   'septic-ards-aki',
@@ -137,13 +133,18 @@ function collectRuntimeGraph(entries: readonly string[]): ReadonlySet<string> {
 }
 
 describe('critical-care public client data boundary', () => {
-  it('serializes only reviewed, public-safe catalog records into client props', () => {
+  it('serializes unlisted-safe module identity and only reviewed content records into client props', () => {
     const catalog = buildCriticalCarePublicClientCatalog()
     const serialized = JSON.stringify(catalog)
 
     for (const forbidden of forbiddenSerializedValues) expect(serialized).not.toContain(forbidden)
     expect(serialized).not.toContain('recommendedIcuScenarioIds')
-    expect(catalog.modules).toHaveLength(4)
+    expect(catalog.modules).toHaveLength(5)
+    expect(catalog.modules.map((module) => module.id)).toContain('cardiohelp-ecmo')
+    expect(catalog.launcherModules.map((module) => module.slug)).toContain('cardiohelp-ecmo')
+    expect(catalog.activities.some((activity) => activity.moduleId === 'cardiohelp-ecmo')).toBe(
+      false,
+    )
     expect(catalog.activities.every((activity) => activity.reviewStatus !== 'draft')).toBe(true)
     expect(catalog.pathways.every((pathway) => pathway.moduleIds.length > 0)).toBe(true)
     expect(catalog.modules.every((module) => !module.integrated)).toBe(true)

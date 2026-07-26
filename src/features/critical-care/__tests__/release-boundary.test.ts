@@ -8,6 +8,7 @@ import { criticalCareModules } from '@/features/critical-care/content/modules'
 import { criticalCareActivities } from '@/features/critical-care/content/activities'
 import {
   criticalCarePublicCatalogStageByModule,
+  criticalCareUnlistedCenterModuleIds,
   isCriticalCareActivityPubliclyCataloged,
   presentCriticalCareActivityPublicly,
 } from '@/features/critical-care/content/publicVisibility'
@@ -81,6 +82,13 @@ describe('critical care parent module release boundary', () => {
           activity.moduleId === 'cardiohelp-ecmo' || activity.moduleId === 'icu-simulation',
       ),
     ).toBe(false)
+    expect(criticalCareUnlistedCenterModuleIds).toEqual([
+      'icu-hemodynamics',
+      'mechanical-ventilation',
+      'mechanical-circulatory-support',
+      'cardiohelp-ecmo',
+      'baxter-crrt',
+    ])
 
     for (const assessment of publicActivities.filter(
       (activity) => activity.kind === 'assessment',

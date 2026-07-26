@@ -17,8 +17,8 @@ export function CriticalCareLabsLibrary({
       <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Lab library</p>
       <h1 className="mt-2 text-3xl font-bold tracking-tight">Focused critical-care labs</h1>
       <p className="mt-3 max-w-3xl leading-7 text-muted-foreground">
-        Experienced learners can enter any reviewed focused laboratory directly while preserving
-        each module&apos;s established progress and feedback behavior.
+        Experienced learners can enter any focused laboratory available in this unlisted learning
+        center while preserving each module&apos;s established progress and feedback behavior.
       </p>
       <ol className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {catalog.modules.map((module) => (
@@ -47,8 +47,8 @@ export function CriticalCareLabsLibrary({
         ))}
       </ol>
       <p className="mt-6 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm leading-6 text-muted-foreground">
-        Additional labs follow their existing release gates and are not promoted from this public
-        catalog.
+        These laboratories retain their existing draft or preview release gates and are not promoted
+        into general site navigation, search, or the sitemap.
       </p>
     </main>
   )
