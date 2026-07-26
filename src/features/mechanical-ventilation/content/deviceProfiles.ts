@@ -16,6 +16,7 @@ import {
   createDefaultAdvancedVentilationSettings,
 } from '../engine/modes'
 import { deriveVolumeFlowTimeSeconds } from '../engine/physics'
+import { resolveControlUnit } from './deviceDisplay'
 
 export type MechanicalVentilationPublicationStatus = 'draft' | 'tester-preview' | 'published'
 
@@ -306,6 +307,10 @@ const profiles: readonly VentilatorDeviceProfile[] = [
     },
     display: {
       pressureUnit: 'cmH₂O',
+      // Operator's manual Table 16-5 prints the unit beside each control parameter: Vt (ml),
+      // Rate (b/min), Peak flow and Trigger flow (l/min), TI / TI max / T high / T low (s),
+      // P-ramp (ms), Pause and ETS and Oxygen (%), TRC tube size (mm). Lowercase l throughout.
+      controlUnits: { mL: 'ml', '/min': 'b/min', 'L/min': 'l/min' },
       pressureLabels: { peak: 'Ppeak', plateau: 'Pplateau', mean: 'Pmean', peep: 'PEEP/CPAP' },
       // Operator's manual §2.2.2 and §8.2.1: the MMPs run down the left of the display, with the
       // SpO2 value and its low alarm limit in a strip beneath them. Ppeak is always displayed;
@@ -406,7 +411,7 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       ],
       controlOrder: [],
       displayNote:
-        'MMP column, SpO2 strip, waveform colors, and the grouping of the ventilator controls follow the HAMILTON-C6 operator’s manual §2.2.2, §8.2.1-8.3.3 and Figures 7-2 to 7-12, verified against the registered SHA-256. Bezel key legends come from quick guide §1.1. MMPs are configurable on the device, so this is the set the manual figures show.',
+        'MMP column, SpO2 strip, waveform colors, and the grouping of the ventilator controls follow the HAMILTON-C6 operator’s manual §2.2.2, §8.2.1-8.3.3 and Figures 7-2 to 7-12, verified against the registered SHA-256. Setting units are the ones Table 16-5 prints beside each control parameter — ml, b/min, l/min. Bezel key legends come from quick guide §1.1. MMPs are configurable on the device, so this is the set the manual figures show.',
     },
     educationalUseOnly: true,
   },
@@ -497,6 +502,10 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       // Pocket guide p. 5 and p. 9: the monitoring area carries a column of large values to the
       // right of the waveform fields, top to bottom FiO2, an airway pressure, PEEP, MVe, RR, VT.
       pressureUnit: 'mbar',
+      // The Evita's own abbreviations (§3.9, and the monitoring column on pocket guide p. 5)
+      // match the simulator's neutral spelling for every non-pressure unit, so nothing is renamed.
+      // Authored explicitly rather than omitted so the agreement is recorded, not assumed.
+      controlUnits: {},
       pressureLabels: { peak: 'PIP', plateau: 'Pplat', mean: 'Pmean', peep: 'PEEP' },
       monitorLayout: 'right-column',
       monitorLabel: 'Monitoring area',
@@ -547,7 +556,7 @@ const profiles: readonly VentilatorDeviceProfile[] = [
         'highPressureLimitCmH2O',
       ],
       displayNote:
-        'Parameter names and units follow the Evita V800 / V600 instructions for use §3.9 abbreviations; the monitoring-area and therapy-bar arrangement follows §4.1 and the pocket guide pp. 5, 8-9. Pressures print in mbar, which this simulator treats as numerically interchangeable with cmH₂O.',
+        'Parameter names and units follow the Evita V800 / V600 instructions for use §3.9 abbreviations; the monitoring-area and therapy-bar arrangement follows §4.1 and the pocket guide pp. 5, 8-9. Pressures print in mbar, which this simulator treats as numerically interchangeable with cmH₂O. The remaining setting units carry the same abbreviations as this device’s monitored column.',
     },
     educationalUseOnly: true,
   },
@@ -622,6 +631,9 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       // screen, opened by the breath-phase letter. Symbol names come from service manual
       // Table 2-10 (patient data).
       pressureUnit: 'cmH₂O',
+      // Rate prints as 1/min on this device — the symbol used for fTOT in service manual
+      // Table 2-10. Volume and flow keep mL and L/min, as the same table prints them.
+      controlUnits: { '/min': '1/min' },
       pressureLabels: { peak: 'PPEAK', plateau: 'PPL', mean: 'PMEAN', peep: 'PEEP' },
       monitorLayout: 'top-banner',
       monitorLabel: 'Patient data banner',
@@ -657,7 +669,7 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       // screen lays them out in, so the engine's mode-driven order stands.
       controlOrder: [],
       displayNote:
-        'Banner parameters use the symbol names in service manual Table 2-10; the bezel key set and its order follow §1.11.1. Breath phase shows the documented Control / Assist / Spontaneous indicator. The service manual does not publish a Vent Setup screen layout, so the settings keep the simulator’s own order.',
+        'Banner parameters use the symbol names in service manual Table 2-10; the bezel key set and its order follow §1.11.1. Breath phase shows the documented Control / Assist / Spontaneous indicator. Setting units carry the same abbreviations as that table — rate in 1/min. The service manual does not publish a Vent Setup screen layout, so the settings keep the simulator’s own order.',
     },
     educationalUseOnly: true,
   },
@@ -748,6 +760,10 @@ const profiles: readonly VentilatorDeviceProfile[] = [
     },
     display: {
       pressureUnit: 'cmH₂O',
+      // Rate prints as BPM in the modes guide's alarm-limits window (p. 6). Volume and flow keep
+      // mL and L/min from the same window; the waveform axes on pp. 11-26 print ml and l/min, but
+      // that is the graphics region, not the settings tiles.
+      controlUnits: { '/min': 'BPM' },
       pressureLabels: { peak: 'Ppeak', plateau: 'Pplat', mean: 'Pmean', peep: 'PEEP' },
       monitorLayout: 'right-tiles',
       monitorLabel: 'Patient data',
@@ -803,7 +819,7 @@ const profiles: readonly VentilatorDeviceProfile[] = [
         'highPressureLimitCmH2O',
       ],
       displayNote:
-        'Control names, membrane-key legends, primary-control order, and waveform axis scales follow the AVEA ventilation modes user guide. The guide is explicit that it does not replace the operator manual, so the monitored-parameter set is the documented subset, not the full configurable monitor screen.',
+        'Control names, membrane-key legends, primary-control order, and waveform axis scales follow the AVEA ventilation modes user guide. Setting units carry the abbreviations printed in that guide’s alarm-limits window — rate in BPM. The guide is explicit that it does not replace the operator manual, so the monitored-parameter set is the documented subset, not the full configurable monitor screen.',
     },
     educationalUseOnly: true,
   },
@@ -1059,11 +1075,10 @@ export function adaptControlDescriptor(
 ): VentilatorControlDescriptor {
   const profile = getVentilatorDeviceProfile(deviceId)
   const label = profile.controlLabels[rawDescriptor.key] ?? rawDescriptor.label
-  // Pressure settings print in the unit the device uses on screen — mbar on the Evita.
-  const descriptor =
-    rawDescriptor.unit === 'cmH₂O'
-      ? { ...rawDescriptor, unit: profile.display.pressureUnit }
-      : rawDescriptor
+  // Settings print in the unit spelling the device uses on screen: mbar on the Evita, `ml` and
+  // `b/min` on the C6. `unit` below is the vendor's spelling from here down.
+  const unit = (neutral: string) => resolveControlUnit(profile.display, neutral)
+  const descriptor = { ...rawDescriptor, unit: unit(rawDescriptor.unit) }
   if (descriptor.key === 'deltaPControlCmH2O' && deviceId === 'drager-evita-v800-v600') {
     return {
       ...descriptor,
@@ -1081,7 +1096,7 @@ export function adaptControlDescriptor(
     return {
       ...descriptor,
       label,
-      unit: 's',
+      unit: unit('s'),
       minimum: 0,
       maximum,
       step: 0.05,
@@ -1096,7 +1111,7 @@ export function adaptControlDescriptor(
       return {
         ...descriptor,
         label,
-        unit: 's',
+        unit: unit('s'),
         minimum: 0,
         maximum: Number((riseTimeBounds(deviceId, settings, descriptor.key)[1] / 1000).toFixed(2)),
         step: 0.01,
@@ -1106,7 +1121,7 @@ export function adaptControlDescriptor(
       return {
         ...descriptor,
         label,
-        unit: '%',
+        unit: unit('%'),
         minimum: 1,
         maximum: 100,
         step: 1,

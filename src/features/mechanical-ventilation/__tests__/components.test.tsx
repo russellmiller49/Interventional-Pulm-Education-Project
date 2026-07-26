@@ -321,4 +321,79 @@ describe('multi-device mechanical ventilation learner interface', () => {
     expect(within(consoleRegion).getByRole('button', { name: /Alarm audio off/i })).toBeEnabled()
     expect(within(consoleRegion).getByRole('button', { name: 'Screen lock' })).toBeEnabled()
   })
+
+  /**
+   * A hold used to be performed on a screen that had replaced the waveform, so the occlusion and
+   * the plateau drew while the learner was looking at a menu.
+   */
+  it('keeps the pressure and flow traces on the Tools screen so a hold can be watched', () => {
+    render(<MechanicalVentilationLab />)
+    fireEvent.click(screen.getByRole('button', { name: 'Tools' }))
+
+    expect(screen.getByRole('img', { name: /Paw waveform/i })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /Flow waveform/i })).toBeInTheDocument()
+    // Volume adds nothing to a hold and stays on the monitoring screen.
+    expect(screen.queryByRole('img', { name: /Volume waveform/i })).not.toBeInTheDocument()
+  })
+
+  it('names the occlusion and what the held pressure means while a hold runs', () => {
+    render(<MechanicalVentilationLab />)
+    fireEvent.click(screen.getByRole('button', { name: 'Tools' }))
+    const consoleRegion = screen.getByRole('region', { name: /C6 functional training facsimile/i })
+    expect(within(consoleRegion).getByText(/No maneuver running/i)).toBeInTheDocument()
+
+    fireEvent.click(within(consoleRegion).getByRole('button', { name: /Inspiratory hold/i }))
+
+    expect(within(consoleRegion).getByText(/Occluding at end-inspiration/i)).toBeInTheDocument()
+    expect(within(consoleRegion).getByText(/flow is zero/i)).toBeInTheDocument()
+    // Still on Tools, still showing the trace the plateau is drawn on.
+    expect(within(consoleRegion).getByRole('img', { name: /Paw waveform/i })).toBeInTheDocument()
+    expect(
+      within(consoleRegion).getByRole('button', { name: /Expiratory hold/i }),
+    ).toBeInTheDocument()
+  })
+
+  /**
+   * The device prints the plateau either way; the learner is the one who has to know it is not
+   * usable while the patient is still pulling.
+   */
+  it('marks the plateau readout unreliable and says why in the text alternative', () => {
+    const state = createInitialSimulationState('MV-01', 'learn')
+    const active = {
+      ...state,
+      measurements: {
+        ...state.measurements,
+        plateauIsInterpretable: false,
+        endInspiratoryEffortCmH2O: 8,
+      },
+    }
+    render(<MechanicalVentilatorConsole state={active} dispatch={jest.fn()} controlsEnabled />)
+    expect(screen.getByText(/Pplateau .* not interpretable: patient effort 8/)).toBeInTheDocument()
+  })
+
+  it('leaves the plateau unmarked once the patient is passive', () => {
+    const state = createInitialSimulationState('MV-01', 'learn')
+    const passive = {
+      ...state,
+      measurements: {
+        ...state.measurements,
+        plateauIsInterpretable: true,
+        endInspiratoryEffortCmH2O: 0,
+      },
+    }
+    render(<MechanicalVentilatorConsole state={passive} dispatch={jest.fn()} controlsEnabled />)
+    expect(screen.queryByText(/not interpretable/)).not.toBeInTheDocument()
+  })
+
+  it('labels the pressure components while the trace is held still by an occlusion', () => {
+    render(<MechanicalVentilationLab />)
+    fireEvent.click(screen.getByRole('button', { name: 'Tools' }))
+    const consoleRegion = screen.getByRole('region', { name: /C6 functional training facsimile/i })
+    fireEvent.click(within(consoleRegion).getByRole('button', { name: /Inspiratory hold/i }))
+
+    // Rendered on the trace and again in the strip's text alternative.
+    expect(
+      within(consoleRegion).getAllByText(/Pplateau .* elastic load only/i).length,
+    ).toBeGreaterThan(0)
+  })
 })

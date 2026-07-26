@@ -14,7 +14,9 @@ import {
   deriveEffectivePatient,
   deriveMeasurements,
   equationOfMotionPressure,
+  expiratoryAirwayPressure,
   hasPerformedEffect,
+  holdRelaxationFraction,
   isCaseResolved,
   MAX_TREND_SAMPLES,
   MAX_WAVEFORM_SAMPLES,
@@ -43,9 +45,20 @@ import type {
 export const SIMULATION_VERSION = 1 as const
 export const DEFAULT_CASE_ID = 'MV-01'
 
+/**
+ * How long the valves stay shut once a hold is armed. Long enough for the plateau to be read off
+ * the trace and for the relaxation drift to be visible, which is what the maneuver is being taught
+ * for; real devices offer a range and this is not a recommendation for one.
+ */
+export const HOLD_SECONDS = 4
+
 const emptyMeasurements: VentilatorMeasurements = {
   peakPressureCmH2O: 0,
   plateauPressureCmH2O: 0,
+  relaxedPeakPressureCmH2O: 0,
+  relaxedPlateauPressureCmH2O: 0,
+  endInspiratoryEffortCmH2O: 0,
+  plateauIsInterpretable: true,
   meanAirwayPressureCmH2O: 0,
   exhaledVtMl: 0,
   minuteVentilationLMin: 0,
@@ -150,6 +163,7 @@ function baseState(
       alarmAudioEnabled: false,
       audioPausedUntil: null,
       oxygenEnrichmentUntil: null,
+      pendingHold: null,
       holdType: null,
       holdUntil: null,
       manualBreathUntil: null,
@@ -384,17 +398,52 @@ function nextWaveformSample(
   let nextVolume = clamp(volumeL + flowLps * WAVEFORM_STEP_SECONDS, 0, 2)
   if (holdActive && state.ventilator.holdType === 'expiratory')
     nextVolume = Math.min(nextVolume, 0.03)
-  let paw = equationOfMotionPressure({
-    peepCmH2O: baselinePressure,
-    intrinsicPeepCmH2O: measurements.intrinsicPeepCmH2O,
-    resistanceCmH2OPerLps:
-      patient.mechanics.resistanceCmH2OPerLps + patient.mechanics.tubeResistanceCmH2OPerLps,
-    flowLps,
-    volumeL: nextVolume,
-    complianceLPerCmH2O: patient.mechanics.complianceLPerCmH2O,
-    inspiratoryEffortCmH2O: effort,
-  })
-  if (pressureTargetedBreath && timing.inspiration) {
+
+  const totalResistance =
+    patient.mechanics.resistanceCmH2OPerLps + patient.mechanics.tubeResistanceCmH2OPerLps
+
+  /*
+   * Which pressure the airway is showing depends on what the valves are doing.
+   *
+   * - Occluded (a hold): the airway equilibrates with the alveolus, so the equation of motion at
+   *   zero flow is what the manometer reads. This is the only time the elastic term — plateau on
+   *   an inspiratory hold, total PEEP on an expiratory one — is visible at all.
+   * - Inspiring: the ventilator is driving flow in, so the full equation of motion applies.
+   * - Passively expiring: the expiratory valve regulates the circuit to the baseline. Alveolar
+   *   pressure is still falling behind it, but the airway sits at baseline plus the drop across
+   *   the expiratory limb. Applying the alveolar equation here drove the trace below zero.
+   */
+  let paw: number
+  if (holdActive) {
+    const secondsHeld = Math.max(0, HOLD_SECONDS - ((state.ventilator.holdUntil ?? time) - time))
+    paw = equationOfMotionPressure({
+      peepCmH2O: baselinePressure,
+      intrinsicPeepCmH2O: measurements.intrinsicPeepCmH2O,
+      resistanceCmH2OPerLps: totalResistance,
+      flowLps: 0,
+      volumeL: nextVolume * (1 - holdRelaxationFraction(secondsHeld)),
+      complianceLPerCmH2O: patient.mechanics.complianceLPerCmH2O,
+      inspiratoryEffortCmH2O: effort,
+    })
+  } else if (timing.inspiration) {
+    paw = equationOfMotionPressure({
+      peepCmH2O: baselinePressure,
+      intrinsicPeepCmH2O: measurements.intrinsicPeepCmH2O,
+      resistanceCmH2OPerLps: totalResistance,
+      flowLps,
+      volumeL: nextVolume,
+      complianceLPerCmH2O: patient.mechanics.complianceLPerCmH2O,
+      inspiratoryEffortCmH2O: effort,
+    })
+  } else {
+    paw = expiratoryAirwayPressure({
+      baselineCmH2O: baselinePressure,
+      circuitResistanceCmH2OPerLps: patient.mechanics.tubeResistanceCmH2OPerLps,
+      flowLps,
+      inspiratoryEffortCmH2O: effort,
+    })
+  }
+  if (pressureTargetedBreath && timing.inspiration && !holdActive) {
     paw = Math.min(
       paw,
       baselinePressure + breathPressureAboveBaseline + measurements.pressureOvershootCmH2O,
@@ -414,9 +463,21 @@ function nextWaveformSample(
       flowLMin: round(flowLps * 60, 2),
       volumeMl: round(nextVolume * 1000, 1),
       pmusCmH2O: round(-effort, 2),
-      phase: timing.inspiration ? 'inspiration' : 'expiration',
-      triggered: timing.triggered,
-      spontaneous: timing.spontaneous || settings.mode === 'pressure-support',
+      /*
+       * While the valves are shut the ventilator is not cycling, so the phase is the limb the
+       * occlusion is holding — not whatever the free-running breath clock would have said. Letting
+       * the clock keep flipping the phase through a four-second hold invented breath onsets on a
+       * trace where no gas was moving.
+       */
+      phase: holdActive
+        ? state.ventilator.holdType === 'expiratory'
+          ? 'expiration'
+          : 'inspiration'
+        : timing.inspiration
+          ? 'inspiration'
+          : 'expiration',
+      triggered: holdActive ? false : timing.triggered,
+      spontaneous: holdActive ? false : timing.spontaneous || settings.mode === 'pressure-support',
     },
     volumeL: nextVolume,
   }
@@ -588,9 +649,11 @@ function updateRisk(
   deltaSeconds: number,
 ): RiskState {
   return {
+    // Lung stress is the relaxed plateau. A patient working hard lowers the displayed number
+    // without lowering what the alveoli are being distended to.
     highPlateau:
       risk.highPlateau +
-      (measurements.plateauPressureCmH2O > 30 ? deltaSeconds : -deltaSeconds * 0.25),
+      (measurements.relaxedPlateauPressureCmH2O > 30 ? deltaSeconds : -deltaSeconds * 0.25),
     stackedVolume:
       risk.stackedVolume +
       (measurements.stackedVolumeMl > measurements.exhaledVtMl * 1.4
@@ -743,12 +806,45 @@ export function advanceSimulation(
   let risk = { ...state.risk }
   let working = state
   let lastTrendSecond = Math.floor(state.simulationTime)
+  let ventilator = state.ventilator
+  let previousPhase = state.waveforms.at(-1)?.phase ?? 'expiration'
 
   for (let index = 0; index < steps; index += 1) {
     time += actualStep
-    working = { ...working, simulationTime: time, patient, measurements }
+    // `waveforms` too: the reported peak pressure and the end-inspiratory effort are read off the
+    // trace, so a long advance must not derive them from the buffer as it was before the call.
+    working = { ...working, ventilator, simulationTime: time, patient, measurements, waveforms }
     patient = deriveEffectivePatient(working, definition)
-    const frame = nextWaveformSample(working, definition, patient, measurements, time, volumeL)
+    let frame = nextWaveformSample(working, definition, patient, measurements, time, volumeL)
+
+    /*
+     * Arm a requested hold at the boundary the simulation actually reached.
+     *
+     * This used to be done in the reducer by jumping `simulationTime` forward by a boundary
+     * computed from `simulationTime % cycle`. That arithmetic used a different rate from the one
+     * `machineTiming` runs on, so it landed in the wrong limb: an inspiratory hold froze the model
+     * at zero volume and baseline pressure — a flat line at PEEP, no plateau, which is the exact
+     * opposite of what the maneuver is meant to show.
+     */
+    if (ventilator.pendingHold) {
+      const reachedBoundary =
+        ventilator.pendingHold === 'inspiratory'
+          ? previousPhase === 'inspiration' && frame.sample.phase === 'expiration'
+          : previousPhase === 'expiration' && frame.sample.phase === 'inspiration'
+      if (reachedBoundary) {
+        ventilator = {
+          ...ventilator,
+          holdType: ventilator.pendingHold,
+          holdUntil: time + HOLD_SECONDS,
+          pendingHold: null,
+        }
+        working = { ...working, ventilator }
+        // Recompute this step with the valves shut, from the volume *before* it: an inspiratory
+        // hold has to occlude on the full delivered breath, not after a step of expiratory flow.
+        frame = nextWaveformSample(working, definition, patient, measurements, time, volumeL)
+      }
+    }
+    previousPhase = frame.sample.phase
     volumeL = frame.volumeL
     if (!state.ventilator.frozen) {
       waveforms.push(frame.sample)
@@ -790,20 +886,17 @@ export function advanceSimulation(
     waveforms,
     trends,
     risk,
+    // `ventilator`, not `state.ventilator`: a hold armed inside the loop lives on the local copy.
     ventilator: {
-      ...state.ventilator,
+      ...ventilator,
       holdType:
-        state.ventilator.holdUntil !== null && state.ventilator.holdUntil <= time
-          ? null
-          : state.ventilator.holdType,
+        ventilator.holdUntil !== null && ventilator.holdUntil <= time ? null : ventilator.holdType,
       holdUntil:
-        state.ventilator.holdUntil !== null && state.ventilator.holdUntil <= time
-          ? null
-          : state.ventilator.holdUntil,
+        ventilator.holdUntil !== null && ventilator.holdUntil <= time ? null : ventilator.holdUntil,
       manualBreathUntil:
-        state.ventilator.manualBreathUntil !== null && state.ventilator.manualBreathUntil <= time
+        ventilator.manualBreathUntil !== null && ventilator.manualBreathUntil <= time
           ? null
-          : state.ventilator.manualBreathUntil,
+          : ventilator.manualBreathUntil,
     },
   }
   next = { ...next, ...reconcileAlarms(next, definition) }
@@ -847,10 +940,11 @@ export function applyIntervention(
   let lastAbgAt = state.lastAbgAt
   const errors = new Set(state.criticalErrors)
   if (intervention.effectId === 'inspiratory-hold' || intervention.effectId === 'expiratory-hold') {
+    // Requested, not started: the occlusion is armed at the next real breath boundary, same as a
+    // hold performed from the console.
     ventilator = {
       ...ventilator,
-      holdType: intervention.effectId === 'inspiratory-hold' ? 'inspiratory' : 'expiratory',
-      holdUntil: state.simulationTime + 10,
+      pendingHold: intervention.effectId === 'inspiratory-hold' ? 'inspiratory' : 'expiratory',
     }
   }
   if (intervention.effectId === 'order-abg') lastAbgAt = state.simulationTime + 60

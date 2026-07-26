@@ -4,6 +4,7 @@ import type {
   VentilatorDisplayProfile,
   VentilatorMonitorField,
   VentilatorMonitorMetric,
+  VentilatorNeutralControlUnit,
 } from '../engine/types'
 
 /**
@@ -68,6 +69,19 @@ export function formatMonitorField(
   const value = resolveMonitorMetric(state, field.metric)
   if (field.metric === 'ieRatio') return `1:${value.toFixed(field.precision ?? 1)}`
   return value.toFixed(field.precision ?? 0)
+}
+
+/**
+ * Print a setting's unit the way this device prints it.
+ *
+ * Pressure is a genuine unit difference and comes from `pressureUnit`; everything else is the same
+ * quantity spelled differently — `ml` vs `mL`, `b/min` vs `1/min` vs `BPM` — and comes from the
+ * device's `controlUnits`. Units the device does not rename keep the simulator's neutral spelling,
+ * so an unmapped unit is passed through rather than blanked.
+ */
+export function resolveControlUnit(display: VentilatorDisplayProfile, unit: string): string {
+  if (unit === 'cmH₂O') return display.pressureUnit
+  return display.controlUnits[unit as VentilatorNeutralControlUnit] ?? unit
 }
 
 /** The flat precedence list for a device, whether it groups its controls or prints one bar. */

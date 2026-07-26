@@ -370,7 +370,7 @@ const caseProfiles: Record<string, CaseProfile> = {
     requiredReassessmentIds: ['inspiratory-hold', 'review-waveforms'],
     successConditions: [
       { metric: 'patient.gasExchange.spo2Percent', comparator: 'gte', value: 88 },
-      { metric: 'measurements.plateauPressureCmH2O', comparator: 'lte', value: 30 },
+      { metric: 'measurements.relaxedPlateauPressureCmH2O', comparator: 'lte', value: 30 },
     ],
     branchOptions: ['standard'],
     baselineSeconds: 30,
@@ -416,7 +416,7 @@ const caseProfiles: Record<string, CaseProfile> = {
     requiredInterventionIds: [],
     requiredReassessmentIds: ['review-waveforms', 'assess-patient'],
     successConditions: [
-      { metric: 'measurements.plateauPressureCmH2O', comparator: 'lte', value: 30 },
+      { metric: 'measurements.relaxedPlateauPressureCmH2O', comparator: 'lte', value: 30 },
     ],
     branchOptions: ['short-machine-ti'],
     baselineSeconds: 30,
@@ -646,7 +646,7 @@ const caseProfiles: Record<string, CaseProfile> = {
     requiredInterventionIds: ['inspiratory-hold', 'inspect-circuit'],
     requiredReassessmentIds: ['inspiratory-hold', 'review-waveforms'],
     successConditions: [
-      { metric: 'measurements.plateauPressureCmH2O', comparator: 'lte', value: 30 },
+      { metric: 'measurements.relaxedPlateauPressureCmH2O', comparator: 'lte', value: 30 },
     ],
     branchOptions: ['secretions', 'hme-or-ett', 'bronchospasm'],
     baselineSeconds: 15,
@@ -671,7 +671,7 @@ const caseProfiles: Record<string, CaseProfile> = {
     requiredReassessmentIds: ['assess-patient', 'review-waveforms'],
     successConditions: [
       { metric: 'patient.hemodynamics.mapMmHg', comparator: 'gte', value: 60 },
-      { metric: 'measurements.plateauPressureCmH2O', comparator: 'lte', value: 32 },
+      { metric: 'measurements.relaxedPlateauPressureCmH2O', comparator: 'lte', value: 32 },
     ],
     branchOptions: ['unstable', 'stable'],
     baselineSeconds: 10,

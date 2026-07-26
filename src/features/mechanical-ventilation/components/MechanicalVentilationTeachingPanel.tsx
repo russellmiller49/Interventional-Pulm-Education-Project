@@ -2,8 +2,22 @@
 
 import { useMemo, useState } from 'react'
 
-import type { VentilationSimulationState, WaveformSample } from '../engine'
-import styles from './mechanical-ventilation-teaching.module.css'
+import type { VentilationSimulationState } from '../engine'
+import { VentilationDyssynchronyDomains } from './teaching/dyssynchrony'
+import { VentilationModeVariables } from './teaching/modes'
+import { VentilationOxygenationTradeoff } from './teaching/oxygenation'
+import { VentilationSafetyReassessment } from './teaching/safety'
+import {
+  EMPTY_STATE_NOTE,
+  ModelBoundary,
+  TextEquivalent,
+  latestBreath,
+  round,
+  styles,
+  tracePath,
+} from './teaching/shared'
+import { VentilationTriggerAndCycle } from './teaching/timing'
+import { VentilationCo2Response } from './teaching/ventilation'
 
 /**
  * Per-section teaching panels for the Mechanical Ventilation Learn pathway.
@@ -14,73 +28,10 @@ import styles from './mechanical-ventilation-teaching.module.css'
  *
  * Deliberately no numeric targets or threshold tables: this module's source reconciliation is
  * still pending, so the teaching claims here are about relationships between signals.
- */
-
-const EMPTY_STATE_NOTE =
-  'Waveform data appears once the simulation has produced a breath. Advance the case to populate this figure.'
-
-function round(value: number, places = 0): number {
-  const factor = 10 ** places
-  return Math.round(value * factor) / factor
-}
-
-/**
- * The most recent *complete* breath cycle: from one inspiration onset to the next.
  *
- * Slicing by phase from the tail instead truncates whichever phase is in progress, which drew a
- * pressure trace that stepped down and flattened rather than showing a breath. Cutting between
- * successive inspiration onsets also keeps a double-triggered pair together in one window, which
- * is what the dyssynchrony cases need to be legible.
+ * The three panels defined below were the first authored and stayed here; the six that followed
+ * live one-per-file under `teaching/`, over the primitives in `teaching/shared`.
  */
-function latestBreath(samples: readonly WaveformSample[]): readonly WaveformSample[] {
-  if (samples.length < 4) return []
-  const onsets: number[] = []
-  for (let index = 1; index < samples.length; index += 1) {
-    if (samples[index].phase === 'inspiration' && samples[index - 1].phase === 'expiration') {
-      onsets.push(index)
-    }
-  }
-  if (onsets.length >= 2) {
-    const start = onsets[onsets.length - 2]
-    const end = onsets[onsets.length - 1]
-    if (end - start >= 4) return samples.slice(start, end)
-  }
-  // No two onsets in the window yet: fall back to the most recent second or so of samples.
-  return samples.slice(-Math.min(samples.length, 80))
-}
-
-function tracePath(
-  samples: readonly WaveformSample[],
-  field: 'pawCmH2O' | 'flowLMin' | 'volumeMl' | 'pmusCmH2O',
-  minimum: number,
-  maximum: number,
-  width = 300,
-  height = 78,
-): string {
-  if (samples.length === 0) return ''
-  const firstTime = samples[0].time
-  const duration = Math.max(0.02, samples[samples.length - 1].time - firstTime)
-  return samples
-    .map((sample, index) => {
-      const x = ((sample.time - firstTime) / duration) * width
-      const normalized = Math.max(0, Math.min(1, (sample[field] - minimum) / (maximum - minimum)))
-      const y = height - normalized * (height - 6) - 3
-      return `${index === 0 ? 'M' : 'L'}${x.toFixed(1)} ${y.toFixed(1)}`
-    })
-    .join(' ')
-}
-
-function TextEquivalent({ children }: { readonly children: string }) {
-  return (
-    <p className={styles.textEquivalent}>
-      <strong>Visual text equivalent:</strong> {children}
-    </p>
-  )
-}
-
-function ModelBoundary({ children }: { readonly children: string }) {
-  return <p className={styles.boundary}>{children}</p>
-}
 
 /* ------------------------------------------------------------------------------------------------
  * Section 1 — Mechanics: what peak pressure is made of
@@ -133,7 +84,11 @@ export function VentilationPressureDecomposition({
   const dim = (component: PressureComponent) =>
     focused && focused !== component ? styles.segmentMuted : undefined
 
-  const summary = `Peak airway pressure ${round(peak, 1)} centimeters of water decomposes into a baseline of ${round(totalBaseline, 1)} — set PEEP ${round(setPeep, 1)} plus ${round(intrinsic, 1)} of trapped pressure — an elastic component of ${round(elastic, 1)} measured as plateau minus baseline, and a resistive component of ${round(resistive, 1)} measured as peak minus plateau.`
+  const summary = `Peak airway pressure ${round(peak, 1)} centimeters of water decomposes into a baseline of ${round(totalBaseline, 1)} — set PEEP ${round(setPeep, 1)} plus ${round(intrinsic, 1)} of trapped pressure — an elastic component of ${round(elastic, 1)} measured as plateau minus baseline, and a resistive component of ${round(resistive, 1)} measured as peak minus plateau. ${
+    measurements.plateauIsInterpretable
+      ? 'There is no appreciable patient effort, so this split reports respiratory-system mechanics.'
+      : `The patient is making ${round(measurements.endInspiratoryEffortCmH2O, 1)} centimeters of water of inspiratory effort at end-inspiration, so the plateau is lower than the same lung would show relaxed and this split does not report mechanics alone.`
+  }`
 
   return (
     <section className={styles.panel} aria-labelledby="mv-mechanics-teaching">
@@ -301,6 +256,8 @@ export function VentilationPressureDecomposition({
         </div>
       </dl>
 
+      <PlateauValidity state={state} />
+
       <TextEquivalent>{summary}</TextEquivalent>
       <ModelBoundary>
         Compliance and resistance here are derived from the bounded educational model and assume a
@@ -308,6 +265,56 @@ export function VentilationPressureDecomposition({
         module’s source reconciliation and to local policy.
       </ModelBoundary>
     </section>
+  )
+}
+
+/**
+ * The condition every one of these numbers depends on, stated where the numbers are.
+ *
+ * The split above is only a decomposition of respiratory-system mechanics if the respiratory
+ * muscles are quiet. This is the most reliably misread measurement on a ventilator, so the panel
+ * says out loud which case it is in right now rather than leaving the learner to notice.
+ */
+function PlateauValidity({ state }: { readonly state: VentilationSimulationState }) {
+  const { measurements } = state
+  const relaxed = measurements.plateauIsInterpretable
+  const effort = measurements.endInspiratoryEffortCmH2O
+  const displayed = measurements.plateauPressureCmH2O
+  const underlying = measurements.relaxedPlateauPressureCmH2O
+
+  return (
+    <div className={styles.validity} data-valid={relaxed} role="note">
+      <span>{relaxed ? 'Measurement conditions met' : 'Plateau not interpretable'}</span>
+      {relaxed ? (
+        <p>
+          No appreciable inspiratory effort at end-inspiration, so an occlusion here reports the
+          elastic pressure of the respiratory system and the split above means what it says.
+        </p>
+      ) : (
+        <>
+          <p>
+            The patient is pulling {round(effort, 1)} cmH₂O at end-inspiration. An occlusion now
+            reports alveolar pressure <em>minus</em> that effort — {round(displayed, 1)} rather than
+            the {round(underlying, 1)} the same lung would show relaxed. The number is not the
+            elastic pressure of the respiratory system, and the peak-to-plateau difference is not
+            purely resistive.
+          </p>
+          <p>
+            <strong>Why it matters:</strong> effort makes a plateau read <em>low</em>, so a stiff
+            lung can look safe. It is the one direction of error you cannot afford here, and it is
+            not visible in the number itself — only in the effort trace beside it.
+          </p>
+          <p>
+            <strong>What to do:</strong> establish whether the patient is passive before you read a
+            plateau at all. Repeat the occlusion over several breaths and watch whether the value
+            settles: a plateau that moves breath to breath is reporting the patient, not the lung.
+            If the measurement has to be relied on, the patient has to be relaxed — which is a
+            clinical decision about sedation or neuromuscular blockade with its own risks, made for
+            the patient rather than for the measurement.
+          </p>
+        </>
+      )}
+    </div>
   )
 }
 
@@ -722,15 +729,28 @@ export function VentilationHighPressureDiscriminator({
  * Dispatcher
  * ---------------------------------------------------------------------------------------------- */
 
-/** Sections that currently have an authored teaching panel (WP10 follow-up, flagship three). */
-export const ventilationTeachingPanelSectionIds = [
-  'mechanics-load-and-pressure',
-  'waveform-reading-sequence',
-  'high-peak-pressure-integration',
-] as const
+/**
+ * Every section of the Learn pathway now has an authored panel, so `VentilationSectionOverview`
+ * below is a fallback for a section added without one rather than the state six sections are in.
+ */
+const panels: Readonly<
+  Record<string, (props: { readonly state: VentilationSimulationState }) => React.JSX.Element>
+> = {
+  'mechanics-load-and-pressure': VentilationPressureDecomposition,
+  'waveform-reading-sequence': VentilationWaveformReadingSequence,
+  'modes-and-breath-delivery': VentilationModeVariables,
+  'triggering-and-cycling': VentilationTriggerAndCycle,
+  'dyssynchrony-mechanisms': VentilationDyssynchronyDomains,
+  'oxygenation-response': VentilationOxygenationTradeoff,
+  'ventilation-and-co2': VentilationCo2Response,
+  'safety-reassessment-and-human-factors': VentilationSafetyReassessment,
+  'high-peak-pressure-integration': VentilationHighPressureDiscriminator,
+}
+
+export const ventilationTeachingPanelSectionIds = Object.keys(panels) as readonly string[]
 
 export function hasVentilationTeachingPanel(lessonId: string): boolean {
-  return (ventilationTeachingPanelSectionIds as readonly string[]).includes(lessonId)
+  return lessonId in panels
 }
 
 export function MechanicalVentilationTeachingPanel({
@@ -740,23 +760,22 @@ export function MechanicalVentilationTeachingPanel({
   readonly lessonId: string
   readonly state: VentilationSimulationState
 }) {
-  if (lessonId === 'mechanics-load-and-pressure') {
-    return <VentilationPressureDecomposition state={state} />
-  }
-  if (lessonId === 'waveform-reading-sequence') {
-    return <VentilationWaveformReadingSequence state={state} />
-  }
-  if (lessonId === 'high-peak-pressure-integration') {
-    return <VentilationHighPressureDiscriminator state={state} />
-  }
-  return null
+  const Panel = panels[lessonId]
+  return Panel ? <Panel state={state} /> : null
 }
 
 /* ------------------------------------------------------------------------------------------------
  * Run control and the generic section panel
  * ---------------------------------------------------------------------------------------------- */
 
-/** Explicit start/pause for the lesson clock. Learn had no way to make the console move. */
+/**
+ * Explicit start/pause for the lesson clock. Learn had no way to make the console move.
+ *
+ * Stepping advances one full breath and leaves the run paused, because a breath you cannot hold
+ * still is not one you can read. That pause used to be an unlabelled side effect, so the console
+ * looked like it had stopped on its own — the label and the hint below now say so before the
+ * learner presses anything.
+ */
 export function VentilationRunControl({
   paused,
   simulationTime,
@@ -770,7 +789,7 @@ export function VentilationRunControl({
 }) {
   return (
     <section className={styles.runControl} aria-label="Lesson simulation clock">
-      <div>
+      <div role="status" aria-live="polite">
         <span>Simulation</span>
         <strong>
           {paused ? 'Paused' : 'Running'} · {round(simulationTime)} s
@@ -781,17 +800,22 @@ export function VentilationRunControl({
           {paused ? 'Start ventilation' : 'Pause'}
         </button>
         <button type="button" onClick={onStepBreath}>
-          Step one breath
+          {paused ? 'Step one breath' : 'Pause + step one breath'}
         </button>
       </div>
+      <p className={styles.runHint}>
+        {paused
+          ? 'Stepping advances one full breath and stays paused, so the trace holds still while you read it.'
+          : 'Stepping pauses the run and advances one full breath. Start ventilation resumes it.'}
+      </p>
     </section>
   )
 }
 
 /**
- * Fallback teaching panel for sections without a bespoke figure. It surfaces the lesson's own
- * authored phase copy and references so every section explains what it is for, instead of
- * leaving the middle pane empty and the section looking unbuilt.
+ * Fallback teaching panel for a section without a bespoke figure. Every section of the current
+ * pathway has one, so this now only catches a section added ahead of its panel — it surfaces the
+ * lesson's own authored phase copy and references rather than leaving the middle pane empty.
  */
 export function VentilationSectionOverview({
   title,
@@ -838,8 +862,8 @@ export function VentilationSectionOverview({
       ) : null}
 
       <ModelBoundary>
-        An illustrated mechanism panel is authored for the mechanics, waveform, and integration
-        sections. This section shows its authored objectives while its figure is still pending.
+        This section is showing its authored objectives because no illustrated mechanism panel is
+        registered for it yet.
       </ModelBoundary>
     </section>
   )

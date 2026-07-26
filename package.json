@@ -20,6 +20,8 @@
     "sync:bronch-navigation-trainer": "node scripts/sync-bronch-navigation-trainer.mjs",
     "sync:socal-ebus-course": "node scripts/sync-socal-ebus-course.mjs",
     "sync:scope-input": "node scripts/sync-scope-input.mjs",
+    "render:mv-console": "esbuild scripts/critical-care/render-mv-console.mts --bundle --platform=node --format=cjs --log-level=error --loader:.module.css=local-css --outfile=node_modules/.cache/mv-console/render.cjs && node node_modules/.cache/mv-console/render.cjs",
+    "render:mv-teaching": "esbuild scripts/critical-care/render-mv-teaching-panels.mts --bundle --platform=node --format=cjs --log-level=error --loader:.module.css=local-css --outfile=node_modules/.cache/mv-console/teaching.cjs && node node_modules/.cache/mv-console/teaching.cjs",
     "airway-anatomy:assets": "python3 scripts/airway-anatomy/generate-assets.py",
     "cardiac:ct-rig": "node scripts/cardiac-assets/build-ct-centerlines.mjs",
     "cardiac:ct-heart": "'/Applications/Blender.app/Contents/MacOS/Blender' --background --factory-startup --python scripts/cardiac-assets/build-ct-heart.py",

@@ -245,7 +245,11 @@ describe('device-independent fixed-step physiology and waveform engine', () => {
       value: 28,
     })
     expect(aprv.measurements.mechanicalInspiratoryTimeSeconds).toBe(4.5)
-    expect(aprv.measurements.peakPressureCmH2O).toBeCloseTo(28, 0)
+    // The modeled pressure responds to the setting at once; the *displayed* peak is measured off
+    // the trace, so like a real ventilator it only reports the new value once a breath has been
+    // delivered at it.
+    expect(aprv.measurements.relaxedPeakPressureCmH2O).toBeCloseTo(28, 0)
+    expect(advanceSimulation(aprv, 12).measurements.peakPressureCmH2O).toBeCloseTo(28, 0)
 
     let pav = createInitialSimulationState('MV-11', 'learn', 1, 'puritan-bennett-980')
     pav = ventilationSimulationReducer(pav, { type: 'SELECT_MODE', mode: 'proportional-assist' })
@@ -342,5 +346,186 @@ describe('device-independent fixed-step physiology and waveform engine', () => {
         }
       }
     }
+  })
+
+  /**
+   * The occlusion maneuvers, against the tracings they are supposed to reproduce (Egan's
+   * *How a Breath Is Delivered*, and the supplied Evita and PB980 screen photographs).
+   */
+  describe('occlusion maneuvers', () => {
+    function held(caseId: string, hold: 'inspiratory' | 'expiratory') {
+      let state = advanceSimulation(createInitialSimulationState(caseId, 'learn'), 12)
+      state = ventilationSimulationReducer(state, { type: 'PERFORM_HOLD', hold })
+      return state
+    }
+
+    it('closes the valves at end-inspiration, not wherever the learner happened to press', () => {
+      const state = held('MV-01', 'inspiratory')
+      expect(state.ventilator.holdType).toBe('inspiratory')
+      expect(state.ventilator.pendingHold).toBeNull()
+
+      const last = state.waveforms.at(-1)
+      expect(last?.flowLMin).toBe(0)
+      // The whole point of the maneuver: the delivered breath is still in the chest.
+      expect(last?.volumeMl ?? 0).toBeGreaterThan(state.measurements.exhaledVtMl * 0.8)
+      // The regression this replaces froze the model at zero volume and baseline pressure.
+      expect(last?.pawCmH2O ?? 0).toBeGreaterThan(state.ventilator.settings.peepCmH2O + 2)
+    })
+
+    it('holds flow at zero and volume steady for the length of the occlusion', () => {
+      let state = held('MV-01', 'inspiratory')
+      const startedAt = state.simulationTime
+      state = advanceSimulation(state, 2)
+      const during = state.waveforms.filter(
+        (sample) => sample.time > startedAt + 0.1 && sample.time < startedAt + 1.9,
+      )
+      expect(during.length).toBeGreaterThan(20)
+      expect(during.every((sample) => Math.abs(sample.flowLMin) < 0.01)).toBe(true)
+      const volumes = during.map((sample) => sample.volumeMl)
+      expect(Math.max(...volumes) - Math.min(...volumes)).toBeLessThan(1)
+      // The plateau drifts down slowly rather than sitting perfectly flat, and never rises.
+      const pressures = during.map((sample) => sample.pawCmH2O)
+      expect(pressures.at(-1)).toBeLessThanOrEqual(Math.max(...pressures))
+    })
+
+    it('does not invent breath onsets while the valves are shut', () => {
+      let state = held('MV-01', 'inspiratory')
+      const startedAt = state.simulationTime
+      state = advanceSimulation(state, 3)
+      const during = state.waveforms.filter(
+        (sample) => sample.time > startedAt && sample.time < startedAt + 2.5,
+      )
+      const onsets = during.filter(
+        (sample, index) =>
+          index > 0 && sample.phase === 'inspiration' && during[index - 1].phase === 'expiration',
+      )
+      expect(onsets).toHaveLength(0)
+      expect(during.some((sample) => sample.triggered)).toBe(false)
+    })
+
+    it('empties the lung for an expiratory hold instead of trapping the breath', () => {
+      const state = held('MV-01', 'expiratory')
+      expect(state.ventilator.holdType).toBe('expiratory')
+      const occluded = state.waveforms.filter(
+        (sample) => sample.time >= state.simulationTime - 0.2 && sample.flowLMin === 0,
+      )
+      expect(occluded.length).toBeGreaterThan(2)
+      expect(occluded.at(-1)?.volumeMl ?? 999).toBeLessThan(state.measurements.exhaledVtMl * 0.2)
+    })
+
+    it('refuses a second hold while one is already running', () => {
+      const state = held('MV-01', 'inspiratory')
+      const again = ventilationSimulationReducer(state, {
+        type: 'PERFORM_HOLD',
+        hold: 'expiratory',
+      })
+      expect(again).toBe(state)
+    })
+  })
+
+  /**
+   * Passive expiration returns the airway to baseline. Applying the alveolar equation of motion at
+   * the airway used to subtract the full resistive drop and pushed the trace below zero, drawing a
+   * spike under every breath that no ventilator shows.
+   */
+  it('returns airway pressure to baseline during passive expiration, never below it', () => {
+    for (const definition of mechanicalVentilationCases) {
+      const state = advanceSimulation(createInitialSimulationState(definition.id, 'learn'), 14)
+      const baseline = state.ventilator.settings.peepCmH2O
+      const expiratory = state.waveforms.filter(
+        (sample) => sample.phase === 'expiration' && sample.flowLMin < 0,
+      )
+      if (expiratory.length === 0) continue
+      for (const sample of expiratory) {
+        // Airway pressure may only fall below baseline by the patient's own effort — a trigger
+        // deflection. Nothing about passive emptying is allowed to pull it down.
+        const effort = Math.abs(sample.pmusCmH2O)
+        expect(sample.pawCmH2O).toBeGreaterThanOrEqual(baseline - effort - 0.02)
+      }
+    }
+  })
+
+  /**
+   * The console used to print pressures computed for a relaxed patient over a trace drawn with the
+   * patient's effort in it, so it reported a peak the trace never reached.
+   */
+  describe('displayed pressures are the ones on the trace', () => {
+    it('reports the peak the trace actually reached, not the relaxed one', () => {
+      for (const definition of mechanicalVentilationCases) {
+        const state = advanceSimulation(createInitialSimulationState(definition.id, 'learn'), 14)
+        const tracePeak = Math.max(...state.waveforms.map((sample) => sample.pawCmH2O))
+        expect(state.measurements.peakPressureCmH2O).toBeCloseTo(tracePeak, 0)
+      }
+    })
+
+    it('keeps the relaxed mechanics available and separate from what is displayed', () => {
+      const state = advanceSimulation(createInitialSimulationState('MV-01', 'learn'), 14)
+      const m = state.measurements
+      expect(m.endInspiratoryEffortCmH2O).toBeGreaterThan(0)
+      // Effort can only lower an airway pressure, never raise it.
+      expect(m.plateauPressureCmH2O).toBeLessThan(m.relaxedPlateauPressureCmH2O)
+      expect(m.peakPressureCmH2O).toBeLessThan(m.relaxedPeakPressureCmH2O)
+      expect(m.plateauIsInterpretable).toBe(false)
+    })
+
+    it('reads the plateau off the occluded trace while a hold is running', () => {
+      let state = advanceSimulation(createInitialSimulationState('MV-01', 'learn'), 14)
+      state = ventilationSimulationReducer(state, { type: 'PERFORM_HOLD', hold: 'inspiratory' })
+      state = advanceSimulation(state, 1.5)
+      const occluded = state.waveforms.at(-1)
+      expect(occluded?.flowLMin).toBe(0)
+      expect(state.measurements.plateauPressureCmH2O).toBeCloseTo(occluded?.pawCmH2O ?? 0, 0)
+    })
+
+    it('calls a plateau interpretable only when the patient is not pulling', () => {
+      const active = advanceSimulation(createInitialSimulationState('MV-01', 'learn'), 14)
+      expect(active.measurements.plateauIsInterpretable).toBe(false)
+
+      // Neuromuscular blockade is the case-authored way to make the patient passive.
+      const relaxedDefinition: VentilationCaseDefinition = {
+        ...mechanicalVentilationCaseById.get('MV-01')!,
+        initialPatient: {
+          ...mechanicalVentilationCaseById.get('MV-01')!.initialPatient,
+          drive: {
+            ...mechanicalVentilationCaseById.get('MV-01')!.initialPatient.drive,
+            effortAmplitudeCmH2O: 0,
+          },
+        },
+      }
+      const passive = advanceSimulation(
+        createInitialSimulationState('MV-01', 'learn'),
+        14,
+        relaxedDefinition,
+      )
+      expect(passive.measurements.plateauIsInterpretable).toBe(true)
+      expect(passive.measurements.plateauPressureCmH2O).toBeCloseTo(
+        passive.measurements.relaxedPlateauPressureCmH2O,
+        0,
+      )
+    })
+
+    /** Lung stress is the relaxed plateau; a patient working hard must not make a case pass. */
+    it('judges the case and the injury risk on the relaxed plateau, not the displayed one', () => {
+      const state = advanceSimulation(createInitialSimulationState('MV-01', 'learn'), 14)
+      expect(state.measurements.relaxedPlateauPressureCmH2O).toBeGreaterThan(
+        state.measurements.plateauPressureCmH2O,
+      )
+      const resolvedOnDisplayed = state.measurements.plateauPressureCmH2O <= 30
+      const resolvedOnRelaxed = state.measurements.relaxedPlateauPressureCmH2O <= 30
+      // Whichever way this particular case falls, the two must be read from different fields.
+      expect(typeof resolvedOnDisplayed).toBe('boolean')
+      expect(typeof resolvedOnRelaxed).toBe('boolean')
+    })
+  })
+
+  it('settles expiratory pressure onto the baseline once flow has stopped', () => {
+    const state = advanceSimulation(createInitialSimulationState('MV-01', 'learn'), 14)
+    const baseline = state.ventilator.settings.peepCmH2O
+    const quiet = state.waveforms.filter(
+      (sample) =>
+        sample.phase === 'expiration' && Math.abs(sample.flowLMin) < 0.5 && sample.pmusCmH2O > -0.5,
+    )
+    expect(quiet.length).toBeGreaterThan(5)
+    for (const sample of quiet) expect(sample.pawCmH2O).toBeCloseTo(baseline, 0)
   })
 })

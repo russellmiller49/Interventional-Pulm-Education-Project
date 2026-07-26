@@ -11,6 +11,13 @@ export interface WaveformReadout {
   readonly label: string
   readonly value: number
   readonly precision?: number
+  /**
+   * Marks a value the device is printing but that cannot be read as what its name implies — a
+   * plateau measured while the patient is pulling is the standing example.
+   */
+  readonly unreliable?: boolean
+  /** Why, in a few words. Shown beside the value and included in the text alternative. */
+  readonly caveat?: string
 }
 
 /** A labelled pressure level drawn on the trace while the simulation is paused. */
@@ -93,9 +100,12 @@ export function WaveformStrip({
         {readouts && readouts.length > 0 ? (
           <dl className={styles.waveformReadouts}>
             {readouts.map((readout) => (
-              <div key={readout.label}>
+              <div key={readout.label} data-unreliable={readout.unreliable ? 'true' : undefined}>
                 <dt>{readout.label}</dt>
-                <dd>{readout.value.toFixed(readout.precision ?? 0)}</dd>
+                <dd>
+                  {readout.value.toFixed(readout.precision ?? 0)}
+                  {readout.unreliable ? <em aria-hidden="true">?</em> : null}
+                </dd>
               </div>
             ))}
           </dl>
@@ -159,7 +169,9 @@ export function WaveformStrip({
           ? `Derived values: ${readouts
               .map(
                 (readout) =>
-                  `${readout.label} ${readout.value.toFixed(readout.precision ?? 0)} ${unit}`,
+                  `${readout.label} ${readout.value.toFixed(readout.precision ?? 0)} ${unit}${
+                    readout.caveat ? ` — ${readout.caveat}` : ''
+                  }`,
               )
               .join('; ')}. `
           : ''}

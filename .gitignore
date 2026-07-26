@@ -262,3 +262,6 @@ Thumbs.db
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Offline console renders from `npm run render:mv-console` — look-at-it artifacts, not build output.
+/public/mv-console-preview/

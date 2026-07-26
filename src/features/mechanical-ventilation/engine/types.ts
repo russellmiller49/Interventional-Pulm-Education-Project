@@ -144,9 +144,25 @@ export interface VentilatorPressureLabels {
   peep: string
 }
 
+/**
+ * The unit spellings the simulator authors its controls in, before a device profile renames them.
+ * Pressure is deliberately absent — it is a real unit difference (mbar vs cmH₂O) carried by
+ * `pressureUnit`, not a spelling one.
+ */
+export type VentilatorNeutralControlUnit = 'mL' | 'L/min' | '/min' | 's' | 'ms' | '%' | 'mm'
+
+/**
+ * How a vendor spells each unit on its own settings tiles. The quantities are identical across
+ * devices; only the printed abbreviation differs — the C6 prints `ml` and `b/min` where the PB980
+ * prints `mL` and `1/min`. An unlisted unit keeps the simulator's neutral spelling.
+ */
+export type VentilatorControlUnits = Readonly<Partial<Record<VentilatorNeutralControlUnit, string>>>
+
 export interface VentilatorDisplayProfile {
   /** How this vendor prints airway pressures. Evita uses mbar; the others use cmH₂O. */
   pressureUnit: string
+  /** How this vendor spells the remaining setting units. See `VentilatorControlUnits`. */
+  controlUnits: VentilatorControlUnits
   pressureLabels: VentilatorPressureLabels
   monitorLayout: VentilatorMonitorLayout
   /** The vendor's name for the monitored-value region, used as its accessible name. */
@@ -263,6 +279,13 @@ export interface MechanicalVentilatorState {
   alarmAudioEnabled: boolean
   audioPausedUntil: number | null
   oxygenEnrichmentUntil: number | null
+  /**
+   * A hold that has been asked for but not yet started. The occlusion has to happen at the real
+   * breath boundary the simulation is computing — end-inspiration for an inspiratory hold,
+   * end-expiration for an expiratory one — so the request is parked here and armed by
+   * `advanceSimulation` at the next matching phase transition.
+   */
+  pendingHold: 'inspiratory' | 'expiratory' | null
   holdType: 'inspiratory' | 'expiratory' | null
   holdUntil: number | null
   manualBreathUntil: number | null
@@ -322,9 +345,26 @@ export interface PatientModelState {
 }
 
 export interface VentilatorMeasurements {
+  /**
+   * The pressures the ventilator displays — measured at the airway, so whatever the patient is
+   * doing is in them. A patient pulling against a volume-controlled breath lowers every one of
+   * these without changing the lung at all. The `relaxed*` pair below is the respiratory-system
+   * mechanics themselves, which is what the model reasons about and what a hold in a relaxed
+   * patient would reveal.
+   */
   peakPressureCmH2O: number
   plateauPressureCmH2O: number
   meanAirwayPressureCmH2O: number
+  /** The same two pressures with the patient's own effort taken out. Not displayed. */
+  relaxedPeakPressureCmH2O: number
+  relaxedPlateauPressureCmH2O: number
+  /** Magnitude of inspiratory effort at end-inspiration, read off the trace. Zero when passive. */
+  endInspiratoryEffortCmH2O: number
+  /**
+   * False when the patient was pulling at the moment a plateau would be read. A plateau measured
+   * then is not the respiratory system's elastic pressure and cannot be used as one.
+   */
+  plateauIsInterpretable: boolean
   exhaledVtMl: number
   minuteVentilationLMin: number
   totalRatePerMin: number
@@ -464,6 +504,9 @@ export interface PredictionOption {
 
 export type MetricKey =
   | 'measurements.plateauPressureCmH2O'
+  // Case criteria are about the lung, so they read the relaxed value rather than the number on
+  // the screen — an actively breathing patient can make a dangerous plateau look reassuring.
+  | 'measurements.relaxedPlateauPressureCmH2O'
   | 'measurements.intrinsicPeepCmH2O'
   | 'measurements.expiratoryFlowAtNextBreathLMin'
   | 'measurements.ineffectiveEffortFraction'

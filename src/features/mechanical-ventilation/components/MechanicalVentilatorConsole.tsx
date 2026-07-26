@@ -42,6 +42,7 @@ import type {
   VentilationAction,
   VentilationSimulationState,
   VentilatorControlKey,
+  VentilatorWaveformChannel,
 } from '../engine'
 import { WaveformLoops, WaveformStrip } from './WaveformStrip'
 import styles from './mechanical-ventilation.module.css'
@@ -743,9 +744,23 @@ export function MechanicalVentilatorConsole({
   const latest = state.waveforms.at(-1)
   const display = profile.display
   const pressureNames = display.pressureLabels
+  /*
+   * A plateau read while the patient is pulling is not the elastic pressure of the respiratory
+   * system, so the console prints it with a question mark rather than pretending otherwise. The
+   * device would show the number either way; the learner is the one who has to know it is not
+   * usable.
+   */
+  const plateauUnreliable = !state.measurements.plateauIsInterpretable
   const pressureReadouts = [
     { label: pressureNames.peak, value: state.measurements.peakPressureCmH2O },
-    { label: pressureNames.plateau, value: state.measurements.plateauPressureCmH2O },
+    {
+      label: pressureNames.plateau,
+      value: state.measurements.plateauPressureCmH2O,
+      unreliable: plateauUnreliable,
+      caveat: plateauUnreliable
+        ? `not interpretable: patient effort ${state.measurements.endInspiratoryEffortCmH2O.toFixed(0)} cmH₂O at end-inspiration`
+        : undefined,
+    },
     { label: pressureNames.mean, value: state.measurements.meanAirwayPressureCmH2O },
     { label: pressureNames.peep, value: settings.peepCmH2O },
   ]
@@ -766,6 +781,57 @@ export function MechanicalVentilatorConsole({
       value: settings.peepCmH2O,
     },
   ]
+
+  const holdActive =
+    state.ventilator.holdUntil !== null && state.ventilator.holdUntil > state.simulationTime
+  const holdSecondsRemaining = holdActive
+    ? Math.max(0, (state.ventilator.holdUntil as number) - state.simulationTime)
+    : 0
+
+  /*
+   * One channel of the vendor's trace stack. The pressure trace carries the derived readouts and,
+   * while the trace is not moving, the component labels; the others draw plain. Extracted so the
+   * Tools screen can show the trace a maneuver draws on without duplicating the profile plumbing.
+   */
+  const renderWaveformChannel = (channel: VentilatorWaveformChannel) =>
+    channel.field === 'pawCmH2O' ? (
+      <WaveformStrip
+        key={channel.field}
+        samples={state.waveforms}
+        field={channel.field}
+        label={channel.label}
+        unit={channel.unit}
+        minimum={channel.minimum}
+        maximum={channel.maximum}
+        color={channel.color}
+        showPmus={state.showEducatorOverlay}
+        readouts={pressureReadouts}
+        // An occlusion holds the trace still, so the reference levels can be named without
+        // chasing a moving line — and naming the plateau during the hold is the point of it.
+        annotationsVisible={state.paused || holdActive}
+        annotations={pressureAnnotations}
+      />
+    ) : (
+      <WaveformStrip
+        key={channel.field}
+        samples={state.waveforms}
+        field={channel.field}
+        label={channel.label}
+        unit={channel.unit}
+        minimum={channel.minimum}
+        maximum={channel.maximum}
+        color={channel.color}
+      />
+    )
+
+  /*
+   * Pressure and flow are what a hold is read from: pressure settles onto the plateau, flow sits
+   * at zero for as long as the valves stay closed. Volume adds nothing to the maneuver, so the
+   * Tools screen carries two traces and leaves the third on the monitoring screen.
+   */
+  const maneuverChannels = display.waveforms.filter(
+    (channel) => channel.field === 'pawCmH2O' || channel.field === 'flowLMin',
+  )
 
   const renderBezelKey = (key: VentilatorBezelKey) => {
     switch (key.action) {
@@ -906,35 +972,7 @@ export function MechanicalVentilatorConsole({
                  * broken number beside the peak. The pressure trace keeps the derived pressures a
                  * real console shows, under that vendor's abbreviations.
                  */}
-                {display.waveforms.map((channel) =>
-                  channel.field === 'pawCmH2O' ? (
-                    <WaveformStrip
-                      key={channel.field}
-                      samples={state.waveforms}
-                      field={channel.field}
-                      label={channel.label}
-                      unit={channel.unit}
-                      minimum={channel.minimum}
-                      maximum={channel.maximum}
-                      color={channel.color}
-                      showPmus={state.showEducatorOverlay}
-                      readouts={pressureReadouts}
-                      annotationsVisible={state.paused}
-                      annotations={pressureAnnotations}
-                    />
-                  ) : (
-                    <WaveformStrip
-                      key={channel.field}
-                      samples={state.waveforms}
-                      field={channel.field}
-                      label={channel.label}
-                      unit={channel.unit}
-                      minimum={channel.minimum}
-                      maximum={channel.maximum}
-                      color={channel.color}
-                    />
-                  ),
-                )}
+                {display.waveforms.map(renderWaveformChannel)}
               </div>
               {display.monitorLayout === 'right-column' ||
               display.monitorLayout === 'right-tiles' ? (
@@ -1256,71 +1294,117 @@ export function MechanicalVentilatorConsole({
           ) : null}
 
           {screen === 'tools' ? (
-            <div className={styles.menuScreen}>
-              <div className={styles.screenHeading}>
-                <div>
-                  <span>Tools</span>
-                  <h3>Maneuvers and utilities</h3>
+            /*
+             * The maneuver and the trace it draws on sit side by side. Performing a hold used to
+             * mean leaving the monitoring screen, so the occlusion and the plateau happened while
+             * the learner was looking at a menu and had to navigate back to find them. Every one
+             * of these devices keeps its waveforms on screen while a maneuver runs — the C6's
+             * Tools > Maneuvers, the Evita's Procedures drawer, the PB980's bezel pause keys.
+             */
+            <div className={styles.toolsScreen}>
+              <div className={styles.waveformStack}>
+                {maneuverChannels.map(renderWaveformChannel)}
+              </div>
+              <div className={styles.toolsPanel}>
+                <div className={styles.screenHeading}>
+                  <div>
+                    <span>Tools</span>
+                    <h3>Maneuvers and utilities</h3>
+                  </div>
+                  <small>All values and maneuvers are simulated.</small>
                 </div>
-                <small>All values and maneuvers are simulated.</small>
-              </div>
-              <div className={styles.toolGrid}>
-                <button
-                  type="button"
-                  disabled={therapyDisabled}
-                  onClick={() => dispatch({ type: 'PERFORM_HOLD', hold: 'inspiratory' })}
+                <p
+                  className={styles.maneuverStatus}
+                  data-active={holdActive}
+                  role="status"
+                  aria-live="polite"
                 >
-                  <Hand aria-hidden="true" /> Inspiratory hold
-                </button>
-                <button
-                  type="button"
-                  disabled={therapyDisabled}
-                  onClick={() => dispatch({ type: 'PERFORM_HOLD', hold: 'expiratory' })}
-                >
-                  <Hand aria-hidden="true" /> Expiratory hold
-                </button>
-                <button
-                  type="button"
-                  disabled={!controlsEnabled}
-                  onClick={() => dispatch({ type: 'TOGGLE_FREEZE' })}
-                >
-                  <Snowflake aria-hidden="true" />{' '}
-                  {state.ventilator.frozen ? 'Unfreeze waveforms' : 'Freeze waveforms'}
-                </button>
-                <button
-                  type="button"
-                  disabled={therapyDisabled}
-                  onClick={() => dispatch({ type: 'MANUAL_BREATH' })}
-                >
-                  <Wind aria-hidden="true" /> Manual breath
-                </button>
-                <button
-                  type="button"
-                  disabled={therapyDisabled}
-                  onClick={() => dispatch({ type: 'OXYGEN_ENRICHMENT' })}
-                >
-                  <span aria-hidden="true">O₂</span> O₂ enrichment / suction
-                </button>
-                <button type="button" onClick={() => dispatch({ type: 'TOGGLE_ALARM_AUDIO' })}>
-                  {state.ventilator.alarmAudioEnabled ? (
-                    <Volume2 aria-hidden="true" />
+                  {holdActive ? (
+                    <>
+                      <strong>
+                        Occluding at end-
+                        {state.ventilator.holdType === 'inspiratory' ? 'inspiration' : 'expiration'}
+                      </strong>
+                      <span>
+                        {holdSecondsRemaining.toFixed(0)} s remaining · flow is zero, so the
+                        pressure on the trace is{' '}
+                        {state.ventilator.holdType === 'inspiratory'
+                          ? `${pressureNames.plateau}, the elastic load alone`
+                          : 'the total PEEP the lung equilibrates to'}
+                        {state.ventilator.holdType === 'inspiratory' && plateauUnreliable
+                          ? ' — but only in a relaxed patient. This one is still pulling, so what the trace settles on is the alveolar pressure minus their effort, and it will move as that effort does.'
+                          : ''}
+                      </span>
+                    </>
                   ) : (
-                    <VolumeX aria-hidden="true" />
+                    <>
+                      <strong>No maneuver running</strong>
+                      <span>
+                        A hold waits for its own point in the breath — end-inspiration or
+                        end-expiration — before it closes the valves. Watch the trace above for
+                        where it lands.
+                      </span>
+                    </>
                   )}
-                  Alarm audio {state.ventilator.alarmAudioEnabled ? 'on' : 'off'}
-                </button>
-                {/* Devices whose real bezel has no lock key still need the screen lock reachable. */}
-                {lockOnBezel ? null : (
-                  <button type="button" onClick={() => dispatch({ type: 'TOGGLE_LOCK' })}>
-                    <LockKeyhole aria-hidden="true" />{' '}
-                    {state.ventilator.locked ? 'Unlock screen' : 'Lock screen'}
+                </p>
+                <div className={styles.toolGrid}>
+                  <button
+                    type="button"
+                    disabled={therapyDisabled}
+                    onClick={() => dispatch({ type: 'PERFORM_HOLD', hold: 'inspiratory' })}
+                  >
+                    <Hand aria-hidden="true" /> Inspiratory hold
                   </button>
-                )}
+                  <button
+                    type="button"
+                    disabled={therapyDisabled}
+                    onClick={() => dispatch({ type: 'PERFORM_HOLD', hold: 'expiratory' })}
+                  >
+                    <Hand aria-hidden="true" /> Expiratory hold
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!controlsEnabled}
+                    onClick={() => dispatch({ type: 'TOGGLE_FREEZE' })}
+                  >
+                    <Snowflake aria-hidden="true" />{' '}
+                    {state.ventilator.frozen ? 'Unfreeze waveforms' : 'Freeze waveforms'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={therapyDisabled}
+                    onClick={() => dispatch({ type: 'MANUAL_BREATH' })}
+                  >
+                    <Wind aria-hidden="true" /> Manual breath
+                  </button>
+                  <button
+                    type="button"
+                    disabled={therapyDisabled}
+                    onClick={() => dispatch({ type: 'OXYGEN_ENRICHMENT' })}
+                  >
+                    <span aria-hidden="true">O₂</span> O₂ enrichment / suction
+                  </button>
+                  <button type="button" onClick={() => dispatch({ type: 'TOGGLE_ALARM_AUDIO' })}>
+                    {state.ventilator.alarmAudioEnabled ? (
+                      <Volume2 aria-hidden="true" />
+                    ) : (
+                      <VolumeX aria-hidden="true" />
+                    )}
+                    Alarm audio {state.ventilator.alarmAudioEnabled ? 'on' : 'off'}
+                  </button>
+                  {/* Devices whose real bezel has no lock key still need the screen lock reachable. */}
+                  {lockOnBezel ? null : (
+                    <button type="button" onClick={() => dispatch({ type: 'TOGGLE_LOCK' })}>
+                      <LockKeyhole aria-hidden="true" />{' '}
+                      {state.ventilator.locked ? 'Unlock screen' : 'Lock screen'}
+                    </button>
+                  )}
+                </div>
+                <p className={styles.deviceNote}>
+                  High-risk bedside actions are recognition-and-priority exercises only. Perform
+                  procedures according to local policy and under appropriate supervision.
+                </p>
               </div>
-              <p className={styles.deviceNote}>
-                High-risk bedside actions are recognition-and-priority exercises only. Perform
-                procedures according to local policy and under appropriate supervision.
-              </p>
             </div>
           ) : null}
         </div>

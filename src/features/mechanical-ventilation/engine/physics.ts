@@ -7,6 +7,7 @@ import type {
   VentilationCaseDefinition,
   VentilationSimulationState,
   VentilatorMeasurements,
+  WaveformSample,
 } from './types'
 import { isAdaptivePressureMode, isAdaptiveSupportMode, isSimvMode, isTwoLevelMode } from './modes'
 
@@ -51,6 +52,83 @@ export function equationOfMotionPressure(args: {
     args.volumeL / Math.max(0.005, args.complianceLPerCmH2O) -
     args.inspiratoryEffortCmH2O
   )
+}
+
+/**
+ * Airway-opening pressure during **passive expiration**.
+ *
+ * The equation of motion above describes alveolar pressure. Applying it at the airway during
+ * expiration subtracts the full resistive drop from the elastic term and drove the trace far below
+ * baseline — down to −4 cmH₂O on a PEEP of 5, drawn as a spike under every breath. That is not what
+ * a ventilator shows: the expiratory valve regulates the circuit to the set baseline, so proximal
+ * pressure falls to PEEP and stays there, sitting only slightly above it while gas is still moving
+ * through the expiratory limb (Egan's Fig. 3.3; visible on the supplied Evita and PB980 tracings).
+ *
+ * The alveolus is still emptying against its own elastic recoil — that pressure simply is not
+ * visible at the airway until the valve closes, which is exactly what an expiratory hold is for.
+ *
+ * Patient effort is still subtracted, so a trigger deflection below baseline is preserved.
+ */
+export function expiratoryAirwayPressure(args: {
+  baselineCmH2O: number
+  circuitResistanceCmH2OPerLps: number
+  flowLps: number
+  inspiratoryEffortCmH2O: number
+}): number {
+  // Flow is negative during expiration; the drop across the expiratory limb raises airway pressure
+  // slightly above baseline while it lasts.
+  return (
+    args.baselineCmH2O +
+    args.circuitResistanceCmH2OPerLps * Math.abs(args.flowLps) -
+    args.inspiratoryEffortCmH2O
+  )
+}
+
+/**
+ * Fractional fall of the held pressure during an occlusion — the slow stress relaxation and
+ * pendelluft redistribution between lung units with different time constants that makes a real
+ * plateau drift gently downward rather than sitting perfectly flat. Modeled, not measured: it is
+ * here so the plateau reads like a tracing, not so a number can be taken off it.
+ */
+/**
+ * Effort large enough that the model stops treating a plateau as interpretable.
+ *
+ * A detection floor for the simulated effort signal, not a clinical threshold — there is no
+ * published pressure below which a patient counts as relaxed. Any appreciable effort makes a
+ * plateau something other than the elastic pressure of the respiratory system.
+ */
+export const EFFORT_DETECTION_FLOOR_CMH2O = 1.5
+
+/**
+ * Inspiratory effort at the moment a plateau would be read, taken off the trace so the reported
+ * pressures and the drawn ones cannot disagree.
+ *
+ * Looks for the last end-inspiration in the buffer — the final inspiratory sample before the
+ * ventilator cycled — and returns the magnitude of muscle pressure there.
+ */
+export function endInspiratoryEffortCmH2O(waveforms: readonly WaveformSample[]): number {
+  for (let index = waveforms.length - 1; index > 0; index -= 1) {
+    if (waveforms[index].phase === 'expiration' && waveforms[index - 1].phase === 'inspiration') {
+      return Math.max(0, -waveforms[index - 1].pmusCmH2O)
+    }
+  }
+  return 0
+}
+
+/** Highest airway pressure in the buffer — what the ventilator would be reporting as peak. */
+export function observedPeakAirwayPressureCmH2O(
+  waveforms: readonly WaveformSample[],
+): number | undefined {
+  if (waveforms.length === 0) return undefined
+  let peak = Number.NEGATIVE_INFINITY
+  for (const sample of waveforms) peak = Math.max(peak, sample.pawCmH2O)
+  return Number.isFinite(peak) ? peak : undefined
+}
+
+export function holdRelaxationFraction(secondsHeld: number): number {
+  const amplitude = 0.06
+  const timeConstantSeconds = 1.4
+  return amplitude * (1 - Math.exp(-Math.max(0, secondsHeld) / timeConstantSeconds))
 }
 
 export function passiveExpiratoryFlowLps(
@@ -475,7 +553,7 @@ export function deriveMeasurements(
   }
   if (hasPerformedEffect(state, definition, 'disconnect-bag')) intrinsicPeep *= 0.35
 
-  const plateau = baselinePressure + intrinsicPeep + vtMl / 1000 / compliance
+  const relaxedPlateau = baselinePressure + intrinsicPeep + vtMl / 1000 / compliance
   const riseTimeMs =
     settings.mode === 'pressure-ac'
       ? settings.pRampMs
@@ -484,9 +562,41 @@ export function deriveMeasurements(
         : 70
   const pressureOvershoot =
     pressureTargeted && riseTimeMs < 30 ? clamp((30 - riseTimeMs) / 5, 0, 6) : 0
-  const peak = !pressureTargeted
-    ? plateau + resistance * (peakFlowLMin / 60)
+  const relaxedPeak = !pressureTargeted
+    ? relaxedPlateau + resistance * (peakFlowLMin / 60)
     : baselinePressure + pressureAboveBaseline + pressureOvershoot
+
+  /*
+   * What the ventilator would actually be reporting.
+   *
+   * The two above are the mechanics of the respiratory system: what these pressures would be if
+   * the patient were relaxed. The manometer is not measuring the respiratory system, it is
+   * measuring the airway — so a patient pulling against the breath lowers every displayed
+   * pressure without the lung having changed. The console used to print the relaxed values over a
+   * trace drawn with effort in it, so it reported a peak the trace never reached.
+   *
+   * Peak comes straight off the trace, so the number and the drawing cannot disagree. Plateau is
+   * the relaxed value less the effort present when it would be read — and is flagged
+   * uninterpretable whenever that effort exists, because then it is not an elastic pressure.
+   */
+  const observedPeak = observedPeakAirwayPressureCmH2O(state.waveforms)
+  const peak = observedPeak ?? relaxedPeak
+
+  /*
+   * While an inspiratory hold is running the plateau is not estimated at all — it is read off the
+   * occluded trace, exactly as the device reads its manometer. Outside a hold it is the relaxed
+   * value less the effort present at end-inspiration, which is what an instantaneous occlusion
+   * would have shown.
+   */
+  const holdRunning =
+    state.ventilator.holdUntil !== null && state.ventilator.holdUntil > state.simulationTime
+  const occluded =
+    holdRunning && state.ventilator.holdType === 'inspiratory' ? state.waveforms.at(-1) : undefined
+  const endInspiratoryEffort = occluded
+    ? Math.max(0, -occluded.pmusCmH2O)
+    : endInspiratoryEffortCmH2O(state.waveforms)
+  const plateau =
+    occluded?.pawCmH2O ?? Math.max(baselinePressure, relaxedPlateau - endInspiratoryEffort)
 
   let ineffectiveFraction = 0
   let autotriggerFraction = 0
@@ -538,6 +648,10 @@ export function deriveMeasurements(
     meanAirwayPressureCmH2O: round(
       baselinePressure + ((peak - baselinePressure) * mechanicalTi) / Math.max(0.1, cycleTime),
     ),
+    relaxedPeakPressureCmH2O: round(relaxedPeak),
+    relaxedPlateauPressureCmH2O: round(relaxedPlateau),
+    endInspiratoryEffortCmH2O: round(endInspiratoryEffort),
+    plateauIsInterpretable: endInspiratoryEffort < EFFORT_DETECTION_FLOOR_CMH2O,
     exhaledVtMl: round(vtMl, 0),
     minuteVentilationLMin: round((vtMl / 1000) * observedRate),
     totalRatePerMin: round(observedRate, 0),
@@ -561,9 +675,13 @@ export function isCaseResolved(
   const settings = state.ventilator.settings
   const m = state.measurements
   const effects = performedEffectIds(state, definition)
+  // Case criteria read the relaxed pressures throughout: they are claims about the lung, and the
+  // displayed plateau can be pulled down by a patient who is simply working hard.
   switch (definition.phenotype) {
     case 'ards-recruitment':
-      return settings.peepCmH2O >= 8 && settings.peepCmH2O <= 12 && m.plateauPressureCmH2O <= 30
+      return (
+        settings.peepCmH2O >= 8 && settings.peepCmH2O <= 12 && m.relaxedPlateauPressureCmH2O <= 30
+      )
     case 'flow-starvation':
       return (
         settings.mode !== 'volume-ac' ||
@@ -616,7 +734,8 @@ export function isCaseResolved(
       )
     case 'high-resistance':
       return (
-        branchCorrected(state, definition) && m.peakPressureCmH2O - m.plateauPressureCmH2O <= 15
+        branchCorrected(state, definition) &&
+        m.relaxedPeakPressureCmH2O - m.relaxedPlateauPressureCmH2O <= 15
       )
     case 'tension-pneumothorax':
       return effects.has('decompress-pneumothorax') && !state.patient.airway.pneumothorax

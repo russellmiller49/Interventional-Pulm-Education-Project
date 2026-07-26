@@ -1,12 +1,14 @@
 import { render, screen, within } from '@testing-library/react'
 
 import {
+  adaptControlDescriptor,
   canonicalToNativeControlValue,
   createDefaultMechanicalVentilationSettings,
   formatMonitorField,
   getVentilatorDeviceProfile,
   nativeToCanonicalControlValue,
   resolveBreathPhase,
+  resolveControlUnit,
   ventilatorDeviceProfiles,
 } from '../content'
 import { createInitialSimulationState, ventilatorDeviceIds } from '../engine'
@@ -321,6 +323,79 @@ describe('device-specific console displays', () => {
       expect(Math.abs(roundTripped - 20)).toBeLessThanOrEqual(2)
       expect(getVentilatorDeviceProfile(deviceId).controlLabels.pausePercent).toBeTruthy()
     }
+  })
+
+  /**
+   * Setting units used to be shared across all four devices, so a C6 printed `mL` and `/min` where
+   * its own Table 16-5 prints `ml` and `b/min`.
+   */
+  describe('per-device setting units', () => {
+    const volume = createDefaultMechanicalVentilationSettings('volume-ac')
+
+    function unitFor(deviceId: VentilatorDeviceId, neutral: string): string {
+      return resolveControlUnit(getVentilatorDeviceProfile(deviceId).display, neutral)
+    }
+
+    it('prints the C6 setting units its control-parameter table prints', () => {
+      expect(unitFor('hamilton-c6', 'mL')).toBe('ml')
+      expect(unitFor('hamilton-c6', '/min')).toBe('b/min')
+      expect(unitFor('hamilton-c6', 'L/min')).toBe('l/min')
+      // Durations, ramps, and percentages are spelled the same as the simulator's neutral unit.
+      expect(unitFor('hamilton-c6', 's')).toBe('s')
+      expect(unitFor('hamilton-c6', 'ms')).toBe('ms')
+      expect(unitFor('hamilton-c6', '%')).toBe('%')
+    })
+
+    it('gives each device its own rate unit', () => {
+      expect(unitFor('hamilton-c6', '/min')).toBe('b/min')
+      expect(unitFor('puritan-bennett-980', '/min')).toBe('1/min')
+      expect(unitFor('carefusion-avea', '/min')).toBe('BPM')
+      expect(unitFor('drager-evita-v800-v600', '/min')).toBe('/min')
+    })
+
+    it('routes pressure through the pressure unit, not the spelling map', () => {
+      expect(unitFor('drager-evita-v800-v600', 'cmH₂O')).toBe('mbar')
+      expect(unitFor('hamilton-c6', 'cmH₂O')).toBe('cmH₂O')
+      for (const deviceId of ventilatorDeviceIds) {
+        expect(getVentilatorDeviceProfile(deviceId).display.controlUnits).not.toHaveProperty(
+          'cmH₂O',
+        )
+      }
+    })
+
+    it('passes an unmapped unit through rather than blanking it', () => {
+      for (const deviceId of ventilatorDeviceIds) {
+        expect(unitFor(deviceId, 'relative')).toBe('relative')
+      }
+    })
+
+    it('carries the device unit onto the adapted control descriptor', () => {
+      const descriptor = {
+        key: 'vtMl',
+        label: 'Tidal volume',
+        unit: 'mL',
+        value: 420,
+        minimum: 20,
+        maximum: 2000,
+        step: 10,
+      } as const
+      expect(adaptControlDescriptor('hamilton-c6', volume, descriptor).unit).toBe('ml')
+      expect(adaptControlDescriptor('puritan-bennett-980', volume, descriptor).unit).toBe('mL')
+    })
+
+    it('renders the C6 volume and rate tiles in the manual’s own units', () => {
+      const initial = createInitialSimulationState('MV-01', 'learn', 1, 'hamilton-c6')
+      render(
+        <MechanicalVentilatorConsole
+          state={{ ...initial, ventilator: { ...initial.ventilator, screen: 'controls' } }}
+          dispatch={jest.fn()}
+          controlsEnabled
+        />,
+      )
+      expect(screen.getByRole('button', { name: /^Vt, 420 ml/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /^Rate, .* b\/min/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /^Peak flow, .* l\/min/i })).toBeInTheDocument()
+    })
   })
 
   it('keeps the screen lock reachable on devices whose bezel has no lock key', () => {

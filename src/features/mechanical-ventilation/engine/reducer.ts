@@ -426,56 +426,56 @@ function refreshMeasurements(state: VentilationSimulationState): VentilationSimu
 }
 
 /**
- * Occlude at the correct point in the breath.
+ * Request an occlusion. The valves close at the next real breath boundary, not here.
  *
- * The hold used to begin the instant it was requested. With a typical I:E ratio the learner is in
- * expiration most of the time, so the model froze at roughly zero volume and baseline pressure —
- * a flat trace with no plateau, which is the opposite of what the maneuver is meant to show. A
- * real inspiratory hold occludes at end-inspiration and an expiratory hold at end-expiration, so
- * advance to that boundary first, then close the valves.
+ * Two earlier attempts got this wrong in the same way. The first closed the valves the instant the
+ * button was pressed, which with a typical I:E ratio was almost always mid-expiration. The second
+ * tried to jump forward to the boundary using `simulationTime % cycle` — but that arithmetic ran on
+ * a different rate from the one `machineTiming` uses, so it still landed in the wrong limb and the
+ * model froze at zero volume and baseline pressure: a flat line at PEEP with no plateau at all.
+ *
+ * So the boundary is no longer computed twice. The request is parked on `pendingHold` and
+ * `advanceSimulation` arms it when the phase it is watching for actually arrives.
  */
 function performConsoleHold(
   state: VentilationSimulationState,
   hold: 'inspiratory' | 'expiratory',
 ): VentilationSimulationState {
+  if (state.ventilator.holdUntil !== null) return state
   const definition = caseDefinition(state)
-  const rate = deriveEffectiveVentilationRate(
-    state.ventilator.settings,
-    state.patient,
-    definition.predictedBodyWeightKg,
-  )
-  const cycle = 60 / Math.max(1, rate)
-  const inspiratoryTime = clamp(
-    state.measurements.mechanicalInspiratoryTimeSeconds,
-    0.1,
-    Math.max(0.2, cycle - 0.05),
-  )
-  const remainder = state.simulationTime % cycle
-  const secondsToBoundary =
-    hold === 'inspiratory'
-      ? remainder < inspiratoryTime
-        ? inspiratoryTime - remainder
-        : cycle - remainder + inspiratoryTime
-      : cycle - remainder
-
-  const atBoundary = advanceSimulation(state, Math.max(0.02, secondsToBoundary))
   const interventionId = hold === 'inspiratory' ? 'inspiratory-hold' : 'expiratory-hold'
-  // Cases that author their own hold intervention still get it, but the maneuver is now also
-  // rendered on the trace rather than only recorded.
-  const withIntervention = definition.interventions.some((item) => item.id === interventionId)
-    ? applyIntervention(atBoundary, definition, interventionId)
-    : atBoundary
+  // Cases that author their own hold intervention still record it; `applyIntervention` now also
+  // parks the request rather than closing the valves where the learner happens to be.
+  const requested = definition.interventions.some((item) => item.id === interventionId)
+    ? applyIntervention(state, definition, interventionId)
+    : state
+
+  let advanced: VentilationSimulationState = {
+    ...requested,
+    ventilator: { ...requested.ventilator, pendingHold: hold },
+  }
+
+  /*
+   * Run the model forward until it reaches the boundary itself. Pressing the key still does
+   * something immediately — the lesson requirements and the console readout both depend on that —
+   * but the instant the valves close is decided by `advanceSimulation`, not recomputed here.
+   * The cap is a little over one breath so a case that never reaches the awaited phase cannot spin.
+   */
+  const cycleSeconds = 60 / Math.max(1, advanced.measurements.totalRatePerMin)
+  const limitSeconds = cycleSeconds * 1.6 + 0.4
+  for (let elapsed = 0; advanced.ventilator.pendingHold !== null && elapsed < limitSeconds; ) {
+    advanced = advanceSimulation(advanced, 0.1, definition)
+    elapsed += 0.1
+  }
 
   return {
-    ...withIntervention,
-    ventilator: {
-      ...withIntervention.ventilator,
-      holdType: hold,
-      holdUntil: withIntervention.simulationTime + 4,
-    },
-    lastResponse: `${hold === 'inspiratory' ? 'Inspiratory' : 'Expiratory'} hold active at end-${
-      hold === 'inspiratory' ? 'inspiration' : 'expiration'
-    }.`,
+    ...advanced,
+    lastResponse:
+      advanced.ventilator.holdType === hold
+        ? `${hold === 'inspiratory' ? 'Inspiratory' : 'Expiratory'} hold active at end-${
+            hold === 'inspiratory' ? 'inspiration' : 'expiration'
+          }.`
+        : `${hold === 'inspiratory' ? 'Inspiratory' : 'Expiratory'} hold requested; no breath boundary was reached.`,
   }
 }
 
