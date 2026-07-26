@@ -63,6 +63,8 @@ import {
 import { BedsidePanel } from './BedsidePanel'
 import {
   MechanicalVentilationTeachingPanel,
+  VentilationRunControl,
+  VentilationSectionOverview,
   hasVentilationTeachingPanel,
 } from './MechanicalVentilationTeachingPanel'
 import { MechanicalVentilatorConsole } from './MechanicalVentilatorConsole'
@@ -520,6 +522,10 @@ export function MechanicalVentilationLessonActivity({
     dispatchSimulation(action.resolve(simulation))
   }
 
+  function toggleRunning() {
+    dispatchSimulation({ type: 'SET_PAUSED', paused: !simulation.paused })
+  }
+
   function runResponse(seconds: number) {
     dispatchSimulation({ type: 'SET_PAUSED', paused: false })
     dispatchSimulation({ type: 'TICK', seconds })
@@ -625,6 +631,19 @@ export function MechanicalVentilationLessonActivity({
     }
     advance(nextPhase)
   }
+  // Learn previously advanced the clock only in bursts when an action completed, so the console
+  // sat frozen at zero and read as a broken screen. Run it continuously while unpaused, matching
+  // the Practice case activity.
+  useEffect(() => {
+    if (simulation.paused) return undefined
+    const intervalMs = 100
+    const timer = window.setInterval(
+      () => dispatchSimulation({ type: 'TICK', seconds: intervalMs / 1000 }),
+      intervalMs,
+    )
+    return () => window.clearInterval(timer)
+  }, [simulation.paused, dispatchSimulation])
+
   let controls = null
   if (phase === 'recognize') {
     controls = (
@@ -775,9 +794,21 @@ export function MechanicalVentilationLessonActivity({
 
   const phaseCopy = lesson.phases[phase]
   const nextSection = nextPathwaySection(ventilationLearningPathway, lesson.id)
+  // Every section gets a middle pane. Sections without a bespoke figure show their own authored
+  // objectives rather than an empty pane, which read as an unbuilt module.
   const teachingPanel = hasVentilationTeachingPanel(lesson.id) ? (
     <MechanicalVentilationTeachingPanel lessonId={lesson.id} state={simulation} />
-  ) : null
+  ) : (
+    <VentilationSectionOverview
+      title={lesson.title}
+      summary={lesson.summary}
+      phaseCopy={criticalCareActivityPhases.map((lessonPhase) => ({
+        phase: lessonPhase,
+        objective: lesson.phases[lessonPhase].objective,
+      }))}
+      references={lesson.references}
+    />
+  )
 
   const viewport = (
     <div className="grid h-full min-h-0 content-start gap-3 overflow-auto bg-background p-3">
@@ -813,44 +844,50 @@ export function MechanicalVentilationLessonActivity({
        * teaching panel that explains what is being taught, and the console the learner acts
        * through. Sections without one keep the two-pane layout rather than showing an empty pane.
        */}
-      {teachingPanel ? (
-        <div className="min-h-[38rem] overflow-hidden rounded-xl border">
-          <ResizableTeachingWorkspace
-            workspaceLabel="Resizable bedside, teaching, and ventilator workspace"
-            paneLabels={{ primary: 'Bedside', secondary: 'Teaching', tertiary: 'Ventilator' }}
-            primary={
-              <div className="min-w-0 p-2 [&>*]:m-0">
-                <BedsidePanel state={simulation} definition={definition} compact />
-              </div>
-            }
-            secondary={teachingPanel}
-            tertiary={
-              <div className="min-w-0 p-2 [&>*]:m-0">
-                <MechanicalVentilatorConsole
-                  key={`${simulation.caseId}:${simulation.ventilator.settings.deviceMode}`}
-                  state={simulation}
-                  dispatch={dispatchSimulation}
-                  controlsEnabled
-                />
-              </div>
-            }
-          />
-        </div>
-      ) : (
-        <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(18rem,0.42fr)_minmax(44rem,1fr)]">
-          <div className="min-w-0 [&>*]:m-0">
-            <BedsidePanel state={simulation} definition={definition} compact />
-          </div>
-          <div className="min-w-0 [&>*]:m-0">
-            <MechanicalVentilatorConsole
-              key={`${simulation.caseId}:${simulation.ventilator.settings.deviceMode}`}
-              state={simulation}
-              dispatch={dispatchSimulation}
-              controlsEnabled
-            />
-          </div>
-        </div>
-      )}
+      {/*
+       * Pane order mirrors the hemodynamics workspace: the live device, then the teaching panel,
+       * then the surface the learner acts through. The activity surface previously lived only in
+       * the collapsible task panel, so at common viewports a learner saw a frozen console and
+       * nothing to do.
+       */}
+      <div className="min-h-[40rem] overflow-hidden rounded-xl border">
+        <ResizableTeachingWorkspace
+          workspaceLabel="Resizable ventilator, teaching, and activity workspace"
+          paneLabels={{ primary: 'Ventilator', secondary: 'Teaching', tertiary: 'Your turn' }}
+          primary={
+            <div className="min-w-0 p-2 [&>*]:m-0">
+              <MechanicalVentilatorConsole
+                key={`${simulation.caseId}:${simulation.ventilator.settings.deviceMode}`}
+                state={simulation}
+                dispatch={dispatchSimulation}
+                controlsEnabled
+              />
+            </div>
+          }
+          secondary={teachingPanel}
+          tertiary={
+            <div className="grid min-w-0 gap-3 p-2 [&>*]:m-0">
+              <VentilationRunControl
+                paused={simulation.paused}
+                simulationTime={simulation.simulationTime}
+                onToggle={toggleRunning}
+                onStepBreath={() => dispatchSimulation({ type: 'STEP_BREATH' })}
+              />
+              <section className="grid gap-2 rounded-xl border bg-card p-3" aria-label="Your turn">
+                <p className="text-[0.68rem] font-bold uppercase tracking-[0.14em] text-primary">
+                  Your turn · {phase}
+                </p>
+                <p className="text-sm font-semibold leading-5">{phaseCopy.objective}</p>
+                <p className="text-xs leading-5 text-muted-foreground">
+                  {phaseCopy.requiredAction}
+                </p>
+                {controls}
+              </section>
+              <BedsidePanel state={simulation} definition={definition} compact />
+            </div>
+          }
+        />
+      </div>
 
       <dl
         className="grid grid-cols-2 gap-2 rounded-xl border bg-card p-3 text-sm sm:grid-cols-4 xl:grid-cols-7"
@@ -954,7 +991,7 @@ export function MechanicalVentilationLessonActivity({
             hintVisible={hintVisible}
             onHintRequested={showHint}
           >
-            {controls}
+            {/* Actions live in the workspace "Your turn" pane; the task panel keeps the framing. */}
             {feedback ? (
               <div className="mt-3 grid gap-3">
                 <p className="rounded-xl bg-muted p-3 text-sm leading-6" role="status">

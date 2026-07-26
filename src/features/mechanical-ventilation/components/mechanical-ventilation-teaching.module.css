@@ -393,3 +393,84 @@
   font-size: 0.67rem;
   line-height: 1.5;
 }
+
+.runControl {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.6rem;
+  border: 1px solid #cfdedb;
+  border-radius: 0.65rem;
+  background: #fff;
+}
+
+.runControl > div:first-child > span {
+  display: block;
+  color: #147d7b;
+  font-size: 0.6rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.runControl > div:first-child > strong {
+  font-size: 0.82rem;
+}
+
+.runButtons {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.35rem;
+}
+
+.runButtons button {
+  min-height: 2.6rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #a8c2be;
+  border-radius: 0.6rem;
+  color: #2c5257;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.runButtons button[aria-pressed='true'] {
+  border-color: #147d7b;
+  color: #f2fffd;
+  background: #147d7b;
+}
+
+.overviewStep {
+  display: grid;
+  grid-template-columns: 1.4rem minmax(0, 1fr);
+  gap: 0.45rem;
+  align-items: start;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid #cfdedb;
+  border-radius: 0.6rem;
+  background: #fff;
+}
+
+.overviewStep > span:first-child {
+  display: grid;
+  place-items: center;
+  height: 1.4rem;
+  border-radius: 999px;
+  background: #dbeae7;
+  font-size: 0.64rem;
+  font-weight: 850;
+}
+
+.overviewStep strong {
+  display: block;
+  font-size: 0.74rem;
+  text-transform: capitalize;
+}
+
+.overviewStep small {
+  display: block;
+  margin-top: 0.1rem;
+  color: #5b7176;
+  font-size: 0.66rem;
+  line-height: 1.4;
+}
