@@ -102,7 +102,7 @@ describe('Baxter CRRT Practice curation and open Challenge access', () => {
   })
 
   it('advances after any patient-application response while preserving mechanism feedback', async () => {
-    render(<BaxterCrrtLearn initialLessonId="crrt-core-concepts" />)
+    render(<BaxterCrrtLearn initialLessonId="crrt-indications-modality" />)
     const phases = screen.getByRole('group', { name: 'CRRT shared activity phases' })
 
     expect(screen.queryByRole('button', { name: 'Mark lesson complete' })).not.toBeInTheDocument()

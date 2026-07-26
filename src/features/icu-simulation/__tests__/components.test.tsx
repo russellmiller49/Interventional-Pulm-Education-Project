@@ -215,9 +215,13 @@ describe('ICU Simulator learner interface', () => {
     render(<IcuSimulatorLab mode="assess" />)
     await screen.findByRole('heading', { name: 'Choose a shock course' })
 
-    fireEvent.click(screen.getByRole('button', { name: /LV cardiogenic shock/i }))
+    // Scope to the course picker: the persistent pathway rail also names every scenario.
+    const picker = screen
+      .getByRole('heading', { name: 'Choose a shock course' })
+      .closest('section') as HTMLElement
+    fireEvent.click(within(picker).getByRole('button', { name: /LV cardiogenic shock/i }))
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: /LV cardiogenic shock/i })).toHaveAttribute(
+      expect(within(picker).getByRole('button', { name: /LV cardiogenic shock/i })).toHaveAttribute(
         'aria-current',
         'true',
       ),

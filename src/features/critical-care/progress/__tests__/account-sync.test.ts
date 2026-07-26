@@ -42,6 +42,8 @@ function definition(
     assumedConceptIds: [],
     estimatedMinutes: 10,
     difficulty: 'foundation',
+    curriculumStage: 'foundation',
+    stageOrder: 1,
     completionRuleId: 'explicit-completion',
     assetIds: [],
     reviewStatus: 'sme-review',

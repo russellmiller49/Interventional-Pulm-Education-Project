@@ -22,6 +22,7 @@ import { Link, useRouter } from '@/i18n/navigation'
 import { recordSiteModuleEvent } from '@/lib/analytics'
 import { AssumedConceptStrip } from '@/features/critical-care/components/AssumedConceptStrip'
 import { criticalCareActivityById } from '@/features/critical-care/content/activities'
+import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 import { recordCriticalCareIcuOutcome } from '@/features/critical-care/progress/integrated'
 import {
   useCriticalCareActivityAnalytics,
@@ -29,6 +30,7 @@ import {
   type CriticalCareActivityPhase,
 } from '@/features/learning-module/activity'
 import { ActivityChrome } from '@/features/learning-module/components/ActivityChrome'
+import { PathwayNav } from '@/features/learning-module/curriculum'
 import { ClinicalContextStrip } from '@/features/learning-module/components/ClinicalContextStrip'
 import { EvidenceDrawer } from '@/features/learning-module/components/EvidenceDrawer'
 import { ReferenceDrawer } from '@/features/learning-module/components/ReferenceDrawer'
@@ -46,6 +48,7 @@ import {
   ICU_EDUCATIONAL_BOUNDARIES,
   ICU_EVIDENCE_BY_ID,
   ICU_SIMULATION_RELEASE,
+  ICU_WORKSPACE_ORIENTATION_ID,
   getIcuScenario,
   icuScenarios,
 } from '../content'
@@ -205,6 +208,8 @@ function recordBoundedAnalytics(payload: IcuSimulationAnalyticsEventPayload) {
     eventPayload: parsed.data,
   })
 }
+
+const icuLearningPathway = criticalCareLearningPathway('icu-simulation')
 
 export function IcuSimulatorLab({
   mode,
@@ -767,10 +772,31 @@ export function IcuSimulatorLab({
     })
   }, [])
 
+  // Sections span two routes: the orientation section lives under Learn and each scenario section
+  // opens its coached Practice run.
+  const openPathwaySection = useCallback((sectionId: string) => {
+    window.location.assign(
+      sectionId === ICU_WORKSPACE_ORIENTATION_ID
+        ? `/icu-simulation/learn?activity=${sectionId}`
+        : `/icu-simulation/practice?case=${sectionId}`,
+    )
+  }, [])
+
   const activityChrome = (
     <ActivityChrome
       layout="native-workbench"
-      breadcrumb={<IcuSimulatorModuleNav activeSection={mode} compact />}
+      breadcrumb={
+        <>
+          <IcuSimulatorModuleNav activeSection={mode} compact />
+          {/* The pathway rail stays visible while working, in every mode (WP10 §6). */}
+          <PathwayNav
+            pathway={icuLearningPathway}
+            label="ICU learning pathway"
+            activeSectionId={state.scenarioFamily}
+            onSelect={openPathwaySection}
+          />
+        </>
+      }
       activityTitle={activityTitle}
       phase={lifecyclePhase}
       mode={lifecycleMode}

@@ -1,3 +1,4 @@
+import type React from 'react'
 import { render, screen } from '@testing-library/react'
 import { setRequestLocale } from 'next-intl/server'
 
@@ -14,6 +15,37 @@ jest.mock('@/features/cardiohelp-ecmo/components/CardiohelpWorkbench', () => ({
     <div data-testid="cardiohelp-workbench" data-section={section}>
       {locale}
     </div>
+  ),
+}))
+
+jest.mock('@/features/cardiohelp-ecmo/components/CardiohelpLearnLanding', () => ({
+  __esModule: true,
+  CardiohelpLearnLanding: ({ supportMode }: { supportMode: string }) => (
+    <div data-testid="cardiohelp-learn-landing" data-track={supportMode} />
+  ),
+}))
+
+jest.mock('@/features/cardiohelp-ecmo/components/EcmoFoundationSectionView', () => ({
+  __esModule: true,
+  EcmoFoundationSectionView: ({
+    sectionId,
+    supportMode,
+  }: {
+    sectionId: string
+    supportMode: string
+  }) => (
+    <div
+      data-testid="ecmo-foundation-section"
+      data-section-id={sectionId}
+      data-track={supportMode}
+    />
+  ),
+}))
+
+jest.mock('@/features/cardiohelp-ecmo/components/CardiohelpModuleFrame', () => ({
+  __esModule: true,
+  CardiohelpModuleFrame: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="cardiohelp-module-frame">{children}</div>
   ),
 }))
 
@@ -52,7 +84,6 @@ describe('CARDIOHELP ECMO routes', () => {
   })
 
   it.each([
-    ['learn', CardiohelpEcmoLearnPage],
     ['practice', CardiohelpEcmoPracticePage],
     ['assess', CardiohelpEcmoAssessPage],
   ] as const)('mounts the %s workbench section', async (section, Page) => {
@@ -61,5 +92,38 @@ describe('CARDIOHELP ECMO routes', () => {
     const workbench = screen.getByTestId('cardiohelp-workbench')
     expect(workbench).toHaveAttribute('data-section', section)
     expect(workbench).toHaveTextContent('en')
+  })
+
+  it.each(['vv', 'va'] as const)('opens the %s Learn pathway landing by default', async (track) => {
+    render(
+      await CardiohelpEcmoLearnPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({ track }),
+      }),
+    )
+    expect(screen.getByTestId('cardiohelp-learn-landing')).toHaveAttribute('data-track', track)
+  })
+
+  it('renders an authored physiology section as prose rather than the console', async () => {
+    render(
+      await CardiohelpEcmoLearnPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({ lesson: 'circuit-flow-path', track: 'va' }),
+      }),
+    )
+    const section = screen.getByTestId('ecmo-foundation-section')
+    expect(section).toHaveAttribute('data-section-id', 'circuit-flow-path')
+    expect(section).toHaveAttribute('data-track', 'va')
+    expect(screen.queryByTestId('cardiohelp-workbench')).not.toBeInTheDocument()
+  })
+
+  it('opens the guided workbench for a drill section', async () => {
+    render(
+      await CardiohelpEcmoLearnPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({ lesson: 'vv-recirculation', track: 'vv' }),
+      }),
+    )
+    expect(screen.getByTestId('cardiohelp-workbench')).toHaveAttribute('data-section', 'learn')
   })
 })

@@ -22,6 +22,8 @@ import { ResumeBanner } from '@/features/learning-module/components/ResumeBanner
 import { mechanicalCirculatorySupportNavBase } from '@/features/learning-module/moduleRoutes'
 import { SimulationLaunchGate } from '@/features/learning-module/components/SimulationLaunchGate'
 import { TaskPanel } from '@/features/learning-module/components/TaskPanel'
+import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
+import { PathwayNav } from '@/features/learning-module/curriculum'
 import { Link, useRouter } from '@/i18n/navigation'
 
 import {
@@ -56,6 +58,8 @@ import { McsModuleFrame } from './McsModuleFrame'
 import { McsMonitor } from './McsMonitor'
 import { McsSourcesPanel } from './McsSourcesPanel'
 import styles from './mechanical-circulatory-support.module.css'
+
+const mcsLearningPathway = criticalCareLearningPathway('mechanical-circulatory-support')
 
 const deviceLabels: Record<McsDeviceKind, { short: string; title: string; mechanism: string }> = {
   iabp: { short: 'IABP', title: 'Intra-aortic balloon pump', mechanism: 'Counterpulsation' },
@@ -744,35 +748,38 @@ export function McsWorkbench({
             onHintRequested={showHelp}
           >
             <div className={styles.taskSelectors}>
-              <strong>Device track</strong>
-              <nav className={styles.taskDeviceTabs} aria-label="Choose device track">
-                {(Object.keys(deviceLabels) as McsDeviceKind[]).map((device) => (
-                  <button
-                    key={device}
-                    type="button"
-                    aria-pressed={state.deviceKind === device}
-                    onClick={() => selectDevice(device)}
-                  >
-                    <span>{deviceLabels[device].short}</span>
-                    <small>{deviceLabels[device].title}</small>
-                  </button>
-                ))}
-              </nav>
+              {/*
+               * The device tabs are an axis orthogonal to the teaching sequence, so inside Learn
+               * they are replaced by the ordered pathway rail: the two shared foundation sections
+               * read as foundations rather than as items 01–02 of a flat device list, and the
+               * cross-device integration section closes the arc. Selecting a section switches the
+               * device track for you. Practice and Challenge keep the tabs.
+               */}
+              {section === 'learn' ? null : (
+                <>
+                  <strong>Device track</strong>
+                  <nav className={styles.taskDeviceTabs} aria-label="Choose device track">
+                    {(Object.keys(deviceLabels) as McsDeviceKind[]).map((device) => (
+                      <button
+                        key={device}
+                        type="button"
+                        aria-pressed={state.deviceKind === device}
+                        onClick={() => selectDevice(device)}
+                      >
+                        <span>{deviceLabels[device].short}</span>
+                        <small>{deviceLabels[device].title}</small>
+                      </button>
+                    ))}
+                  </nav>
+                </>
+              )}
               {section === 'learn' ? (
-                <section className={styles.taskActivityRail} aria-label="Eight guided lessons">
-                  {mcsLessons.map((candidate, index) => (
-                    <button
-                      type="button"
-                      key={candidate.id}
-                      aria-current={selectedLessonId === candidate.id ? 'true' : undefined}
-                      data-complete={progress.completedLessonIds.includes(candidate.id)}
-                      onClick={() => chooseLesson(candidate.id)}
-                    >
-                      <span>{String(index + 1).padStart(2, '0')}</span>
-                      <strong>{candidate.title}</strong>
-                    </button>
-                  ))}
-                </section>
+                <PathwayNav
+                  pathway={mcsLearningPathway}
+                  label="MCS learning pathway"
+                  activeSectionId={selectedLessonId}
+                  onSelect={(sectionId) => chooseLesson(sectionId)}
+                />
               ) : section === 'practice' ? (
                 <section
                   className={styles.taskActivityRail}
@@ -1068,10 +1075,7 @@ export function McsWorkbench({
                         </div>
                         {followingLesson ? (
                           <button type="button" onClick={() => chooseLesson(followingLesson.id)}>
-                            <span>
-                              Continue to next lesson
-                              <small>{followingLesson.title}</small>
-                            </span>
+                            <span>Continue to next section: {followingLesson.title}</span>
                             <ArrowRight aria-hidden="true" />
                           </button>
                         ) : (

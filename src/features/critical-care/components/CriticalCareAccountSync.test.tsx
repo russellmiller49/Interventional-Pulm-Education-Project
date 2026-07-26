@@ -39,6 +39,8 @@ const activities: readonly CriticalCareActivityDefinition[] = [
     assumedConceptIds: [],
     estimatedMinutes: 10,
     difficulty: 'foundation',
+    curriculumStage: 'foundation',
+    stageOrder: 1,
     completionRuleId: 'hemodynamics:completion:learn-existing',
     assetIds: ['hemodynamics-bedside-waveforms'],
     reviewStatus: 'sme-review',

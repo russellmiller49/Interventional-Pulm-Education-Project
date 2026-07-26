@@ -37,6 +37,8 @@ const activity: CriticalCareActivityDefinition = {
   assumedConceptIds: [],
   estimatedMinutes: 10,
   difficulty: 'foundation',
+  curriculumStage: 'foundation',
+  stageOrder: 1,
   completionRuleId: 'complete-pac-signal-validation',
   assetIds: ['hemodynamics-bedside-waveforms'],
   reviewStatus: 'sme-review',

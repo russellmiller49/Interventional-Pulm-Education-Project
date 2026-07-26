@@ -336,8 +336,10 @@ export function validateCurriculumRegistry(): string[] {
         if (lesson && lesson.supportMode !== supportMode) {
           errors.push(`${unit.id}: lesson ${scenarioId} belongs to ${lesson.supportMode}`)
         }
-        if (capstoneIds.has(scenarioId)) {
-          errors.push(`${unit.id}: standalone capstone ${scenarioId} cannot be a lesson`)
+        if (capstoneIds.has(scenarioId) && lesson?.curriculumStage !== 'integration') {
+          errors.push(
+            `${unit.id}: capstone ${scenarioId} may only be listed as an integration-stage lesson`,
+          )
         }
       }
       for (const scenarioId of unit.caseScenarioIds) {

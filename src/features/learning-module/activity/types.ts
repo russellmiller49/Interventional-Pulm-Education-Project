@@ -38,6 +38,30 @@ export const criticalCareDifficulties = ['foundation', 'intermediate', 'advanced
 
 export type CriticalCareDifficulty = (typeof criticalCareDifficulties)[number]
 
+/**
+ * Where an activity sits in its module's teaching arc. Distinct from `difficulty`, which
+ * describes how hard the activity is; a stage describes what kind of work it asks for.
+ * Authoring metadata only — never written to the progress envelope.
+ */
+export const criticalCareCurriculumStages = [
+  'orientation', // why this exists, what it can and cannot do
+  'foundation', // the causal model and the normal state
+  'mechanism', // one manipulated variable, observed response
+  'application', // full workspace, a dominant mechanism, coaching visible
+  'integration', // several mechanisms interacting; the capstone
+] as const
+
+export type CriticalCareCurriculumStage = (typeof criticalCareCurriculumStages)[number]
+
+export const criticalCareCurriculumStageRank: Readonly<
+  Record<CriticalCareCurriculumStage, number>
+> = Object.freeze(
+  Object.fromEntries(criticalCareCurriculumStages.map((stage, index) => [stage, index])) as Record<
+    CriticalCareCurriculumStage,
+    number
+  >,
+)
+
 export const criticalCareReviewStatuses = ['draft', 'sme-review', 'released'] as const
 
 export type CriticalCareReviewStatus = (typeof criticalCareReviewStatuses)[number]
@@ -79,6 +103,10 @@ export interface CriticalCareActivityDefinition {
   readonly assumedConceptIds: readonly string[]
   readonly estimatedMinutes: number
   readonly difficulty: CriticalCareDifficulty
+  /** Authoring metadata only; the teaching arc position. Never persisted. */
+  readonly curriculumStage: CriticalCareCurriculumStage
+  /** Authored ordinal within (moduleId, curriculumStage). Never persisted. */
+  readonly stageOrder: number
   readonly completionRuleId: string
   readonly masteryRuleId?: string
   readonly assetIds: readonly string[]

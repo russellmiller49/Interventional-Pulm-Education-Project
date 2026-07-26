@@ -16,7 +16,9 @@ import {
 
 describe('MCS curriculum and evidence registry', () => {
   it('contains the planned lessons, practice cases, capstones, and three device profiles', () => {
-    expect(mcsLessons).toHaveLength(8)
+    // Eight device lessons plus the cross-device integration capstone (WP10 §5.3).
+    expect(mcsLessons).toHaveLength(9)
+    expect(mcsLessons.at(-1)?.id).toBe('mcs-device-selection-integration')
     expect(mcsPracticeScenarios).toHaveLength(9)
     expect(mcsCapstoneScenarios).toHaveLength(3)
     expect(allMcsScenarios).toHaveLength(12)

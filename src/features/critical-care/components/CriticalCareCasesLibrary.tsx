@@ -7,6 +7,7 @@ import { ArrowRight, Search } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 
 import { criticalCareCatalogActivityHref } from '../content/activityRoutes'
+import { sortByCurriculumOrder } from '../content/curriculumOrder'
 import type { CriticalCarePublicClientCatalog } from '../content/publicCatalogTypes'
 
 export function CriticalCareCasesLibrary({
@@ -27,9 +28,8 @@ export function CriticalCareCasesLibrary({
   )
   const results = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase()
-    const difficultyOrder = { foundation: 0, intermediate: 1, advanced: 2 } as const
-    return caseActivities
-      .filter((activity) => {
+    return sortByCurriculumOrder(
+      caseActivities.filter((activity) => {
         const activityConcepts = catalog.concepts.filter(
           (concept) =>
             activity.teachesConceptIds.includes(concept.id) ||
@@ -53,12 +53,8 @@ export function CriticalCareCasesLibrary({
           (difficulty === 'all' || activity.difficulty === difficulty) &&
           (!normalized || searchable.includes(normalized))
         )
-      })
-      .sort(
-        (left, right) =>
-          difficultyOrder[left.difficulty] - difficultyOrder[right.difficulty] ||
-          left.title.localeCompare(right.title),
-      )
+      }),
+    )
   }, [caseActivities, catalog.concepts, difficulty, kind, moduleId, query])
 
   return (
@@ -67,7 +63,8 @@ export function CriticalCareCasesLibrary({
       <h1 className="mt-2 text-3xl font-bold tracking-tight">Critical care cases and capstones</h1>
       <p className="mt-3 max-w-3xl leading-7 text-muted-foreground">
         Open a stable Practice or Challenge deep link without following a prescribed curriculum.
-        Activities are ordered from foundation to advanced, and every route remains open.
+        Activities are listed in each module&rsquo;s authored teaching order, and every route
+        remains open.
       </p>
       <section
         className="mt-7 grid gap-3 rounded-2xl border bg-card p-4 md:grid-cols-2 xl:grid-cols-[1fr_13rem_13rem_13rem]"

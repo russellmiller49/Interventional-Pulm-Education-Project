@@ -15,12 +15,13 @@ export const ICU_MAX_DIAGNOSIS_COMMITMENTS = 24 as const
 export const icuSimulationModes = ['learn', 'practice', 'assess', 'sandbox'] as const
 export type IcuSimulationMode = (typeof icuSimulationModes)[number]
 
+/** Authored learner order (WP10 §5.5), fewest interacting systems first. */
 export const icuScenarioFamilies = [
-  'septic-ards-aki',
-  'lv-cardiogenic',
-  'massive-pe-rv',
   'hemorrhagic',
   'tamponade',
+  'lv-cardiogenic',
+  'massive-pe-rv',
+  'septic-ards-aki',
   'mixed-cardiogenic-vasodilatory',
 ] as const
 export type IcuScenarioFamily = (typeof icuScenarioFamilies)[number]

@@ -1591,6 +1591,22 @@ export const cardiohelpLearnLessonsBySupportMode: Readonly<
   va: cardiohelpLearnLessons.filter((lesson) => lesson.supportMode === 'va'),
 }
 
+const CAPSTONE_SCENARIO_IDS = new Set(['vv-off-sweep-capstone', 'va-mixed-circulation-capstone'])
+
+/**
+ * A capstone scenario may be wrapped by exactly one guided lesson: the track's integration lesson
+ * (WP10 §5.1). The unseen assessment capstone on the same scenario is unaffected. Before WP10 any
+ * lesson wrapping a capstone scenario was rejected outright, which made a capstone lesson
+ * impossible to author.
+ */
+export function capstoneLessonErrors(lesson: GuidedLessonDefinition): string[] {
+  if (!CAPSTONE_SCENARIO_IDS.has(lesson.scenarioId)) return []
+  if (lesson.curriculumStage === 'integration') return []
+  return [
+    `${lesson.id}: only an integration-stage lesson may wrap the capstone scenario ${lesson.scenarioId}`,
+  ]
+}
+
 export function validateGuidedLessonRegistry(): string[] {
   const errors: string[] = []
   const lessonIds = new Set<string>()
@@ -1613,9 +1629,7 @@ export function validateGuidedLessonRegistry(): string[] {
     if (scenario && scenario.supportMode !== lesson.supportMode) {
       errors.push(`${lesson.id}: support mode does not match ${scenario.id}`)
     }
-    if (scenario && capstoneIds.has(scenario.id)) {
-      errors.push(`${lesson.id}: capstone must remain a standalone challenge`)
-    }
+    errors.push(...capstoneLessonErrors(lesson))
     if (!lesson.title.trim()) errors.push(`${lesson.id}: missing title`)
     if (!lesson.learningObjectives.length) errors.push(`${lesson.id}: missing objectives`)
 

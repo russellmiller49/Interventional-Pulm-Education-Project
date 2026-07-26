@@ -11,7 +11,8 @@ import {
 describe('Baxter CRRT Learn lessons', () => {
   it('registers seven substantive, ordered, draft-reviewed lessons', () => {
     expect(baxterCrrtLearnLessons.map(({ id }) => id)).toEqual(BAXTER_CRRT_LEARN_LESSON_IDS)
-    expect(baxterCrrtLearnLessons.map(({ ordinal }) => ordinal)).toEqual([1, 2, 3, 4, 5, 6, 7])
+    // Circuit anatomy sits second: transport and prescription both assume the blood path.
+    expect(BAXTER_CRRT_LEARN_LESSON_IDS[1]).toBe('crrt-circuit-pressures')
 
     for (const lesson of baxterCrrtLearnLessons) {
       expect(lesson.reviewStatus).toBe('pending')
@@ -30,8 +31,8 @@ describe('Baxter CRRT Learn lessons', () => {
         .filter(({ embeddedLabId }) => embeddedLabId)
         .map(({ id, embeddedLabId }) => ({ id, embeddedLabId })),
     ).toEqual([
-      { id: 'crrt-prescription-dosing', embeddedLabId: 'LAB-PRESCRIPTION' },
       { id: 'crrt-circuit-pressures', embeddedLabId: 'LAB-PRESSURE-LOCALIZATION' },
+      { id: 'crrt-prescription-dosing', embeddedLabId: 'LAB-PRESCRIPTION' },
     ])
   })
 
@@ -45,7 +46,9 @@ describe('Baxter CRRT Learn lessons', () => {
       expect(anchor.contextItems.length).toBeGreaterThanOrEqual(4)
       expect(item.contextRequirement).toBe('patient')
       expect(item.clinicalContextId).toBeDefined()
-      expect(item.choices).toHaveLength(3)
+      // Three competing frames is the module's floor; the integration capstone carries four,
+      // one per circuit location the pressure profile has to discriminate between.
+      expect(item.choices.length).toBeGreaterThanOrEqual(3)
       expect(item.choices.every((choice) => choice.rationale.length > 20)).toBe(true)
       expect(item.evidenceIds.length).toBeGreaterThan(0)
       expect(item.reviewStatus).toBe('sme-review')

@@ -4,6 +4,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
   {
     id: 'mcs-foundations-signals',
     version: '1.0.0',
+    curriculumStage: 'foundation',
     device: 'shared',
     title: 'Validate the signal before the device',
     summary:
@@ -43,6 +44,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
   {
     id: 'mcs-foundations-mechanisms',
     version: '1.0.0',
+    curriculumStage: 'foundation',
     device: 'shared',
     title: 'Unloading, augmentation, and total flow',
     summary:
@@ -86,6 +88,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
   {
     id: 'iabp-timing-triggering',
     version: '1.0.0',
+    curriculumStage: 'mechanism',
     device: 'iabp',
     title: 'IABP timing and triggering',
     summary:
@@ -123,6 +126,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
   {
     id: 'iabp-efficacy-limits',
     version: '1.0.0',
+    curriculumStage: 'application',
     device: 'iabp',
     title: 'IABP efficacy, limits, and escalation',
     summary:
@@ -161,6 +165,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
   {
     id: 'impella-unloading-placement',
     version: '1.0.0',
+    curriculumStage: 'mechanism',
     device: 'impella',
     title: 'Impella unloading and placement signals',
     summary: 'Relate performance level and transvalvular position to flow and unloading.',
@@ -214,6 +219,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
   {
     id: 'impella-suction-purge-rv',
     version: '1.0.0',
+    curriculumStage: 'application',
     device: 'impella',
     title: 'Impella suction, purge, hemolysis, and RV delivery',
     summary:
@@ -270,6 +276,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
   {
     id: 'lvad-parameters-assessment',
     version: '1.0.0',
+    curriculumStage: 'mechanism',
     device: 'lvad',
     title: 'Durable LVAD parameters and ICU review',
     summary: 'Interpret flow, speed, power, PI, MAP, pulsatility, and RV filling as one system.',
@@ -306,6 +313,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
   {
     id: 'lvad-alarms-emergencies',
     version: '1.0.0',
+    curriculumStage: 'application',
     device: 'lvad',
     title: 'Durable LVAD low flow, high power, and power emergencies',
     summary:
@@ -341,6 +349,75 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
       },
     ],
     sourceIds: ['ishlt-durable-mcs-2023', 'fda-heartmate3-ifu'],
+  },
+  {
+    id: 'mcs-device-selection-integration',
+    version: '1.0.0',
+    curriculumStage: 'integration',
+    device: 'shared',
+    title: 'Choosing among IABP, Impella, and durable LVAD for a shock phenotype',
+    summary:
+      'Compare the three mechanisms against one phenotype, and let the limiting problem select the device.',
+    objectives: [
+      'State the limiting problem — contractility, LV filling pressure, RV delivery, afterload, or duration — before naming a device.',
+      'Predict what each mechanism changes and what it leaves unchanged in the same patient.',
+      'Recognize the phenotypes in which a device that raises displayed flow does not raise effective systemic flow.',
+    ],
+    steps: [
+      {
+        id: 'integration-phenotype',
+        title: 'Name the limiting problem first',
+        instruction:
+          'Rebuild the baseline — rhythm, arterial fidelity, RAP, PCWP, PAPi, native flow, effective systemic flow, perfusion — and state which one is limiting.',
+        rationale:
+          'Device selection is a statement about which part of the circulation is failing. Naming the device first hides that judgement instead of making it.',
+        targetActionId: 'inspect:preload',
+      },
+      {
+        id: 'integration-counterpulsation',
+        title: 'Test counterpulsation against the phenotype',
+        instruction:
+          'Select the IABP mechanism and compare augmented pressure, native ejection, PCWP, and effective systemic flow.',
+        rationale:
+          'Counterpulsation modifies loading around a native beat. Where contractility is the limiting problem, an improved pressure trace can accompany an unchanged forward flow.',
+        targetActionId: 'device:select:iabp',
+      },
+      {
+        id: 'integration-direct-unloading',
+        title: 'Test direct LV unloading against the same phenotype',
+        instruction:
+          'Select the Impella mechanism at the same patient state and compare LV filling, native ejection, pump flow, and effective systemic flow.',
+        rationale:
+          'Direct unloading moves volume from LV to aorta independently of the native beat, so it addresses LV filling pressure in a way counterpulsation does not — but it still depends on adequate RV delivery.',
+        targetActionId: 'device:select:impella',
+      },
+      {
+        id: 'integration-durable',
+        title: 'Test durable continuous flow and the RV constraint',
+        instruction:
+          'Select the durable LVAD mechanism, then vary RV delivery and afterload and watch effective systemic flow rather than the displayed number.',
+        rationale:
+          'Every left-sided device inherits the right ventricle. A phenotype limited by RV delivery is not converted into an LV problem by adding left-sided support.',
+        targetActionId: 'device:select:lvad',
+      },
+      {
+        id: 'integration-commit',
+        title: 'Commit to a mechanism and name what would change it',
+        instruction:
+          'State which mechanism the phenotype selects, what you expect it to change, and the reassessment finding that would reverse the choice.',
+        rationale:
+          'Selection is provisional. The value of an explicit prediction is that a later reassessment can contradict it.',
+        targetActionId: 'inspect:device',
+      },
+    ],
+    sourceIds: [
+      'mcs-bedside-reference-supplied',
+      'ishlt-hfsa-acute-mcs-2023',
+      'ishlt-durable-mcs-2023',
+      'getinge-iabp-current',
+      'fda-impella-cp-labeling',
+      'fda-heartmate3-ifu',
+    ],
   },
 ] as const
 

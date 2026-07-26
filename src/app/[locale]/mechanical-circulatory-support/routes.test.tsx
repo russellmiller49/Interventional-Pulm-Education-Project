@@ -1,3 +1,4 @@
+import type React from 'react'
 import { render, screen } from '@testing-library/react'
 import { setRequestLocale } from 'next-intl/server'
 
@@ -26,6 +27,14 @@ jest.mock('@/features/mechanical-circulatory-support/components/McsWorkbench', (
     >
       {locale}
     </div>
+  ),
+}))
+jest.mock('@/features/mechanical-circulatory-support/components/McsLearnLanding', () => ({
+  McsLearnLanding: () => <div data-testid="mcs-learn-landing" />,
+}))
+jest.mock('@/features/mechanical-circulatory-support/components/McsModuleFrame', () => ({
+  McsModuleFrame: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="mcs-module-frame">{children}</div>
   ),
 }))
 jest.mock('@/i18n/handoff-server', () => ({
@@ -63,12 +72,27 @@ describe('mechanical circulatory support route family', () => {
   })
 
   it.each([
-    ['learn', LearnPage],
     ['practice', PracticePage],
     ['assess', AssessPage],
   ] as const)('mounts the %s workbench', async (section, Page) => {
     render(await Page({ params: Promise.resolve({ locale: 'en' }) }))
     expect(screen.getByTestId('mcs-workbench')).toHaveAttribute('data-section', section)
+  })
+
+  it('opens the Learn pathway landing when no section or track is requested', async () => {
+    render(await LearnPage({ params: Promise.resolve({ locale: 'en' }) }))
+    expect(screen.getByTestId('mcs-learn-landing')).toBeInTheDocument()
+    expect(screen.queryByTestId('mcs-workbench')).not.toBeInTheDocument()
+  })
+
+  it('opens the Learn workbench for a requested section', async () => {
+    render(
+      await LearnPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({ lesson: 'mcs-foundations-signals' }),
+      }),
+    )
+    expect(screen.getByTestId('mcs-workbench')).toHaveAttribute('data-section', 'learn')
   })
 
   it.each(['iabp', 'impella', 'lvad'] as const)(
@@ -84,14 +108,14 @@ describe('mechanical circulatory support route family', () => {
     },
   )
 
-  it('falls back to the shared learning overview for an invalid track query', async () => {
+  it('falls back to the pathway landing for an invalid track query', async () => {
     render(
       await LearnPage({
         params: Promise.resolve({ locale: 'en' }),
         searchParams: Promise.resolve({ device: 'unknown' }),
       }),
     )
-    expect(screen.getByTestId('mcs-workbench')).not.toHaveAttribute('data-device')
+    expect(screen.getByTestId('mcs-learn-landing')).toBeInTheDocument()
   })
 
   it('maps every MCS catalog query to its exact Learn, Practice, or Assess selection', async () => {

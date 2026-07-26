@@ -18,14 +18,19 @@ if (registryIssues.length > 0) {
 
 const learnerCaseIds = new Set(baxterCrrtLearnerCases.map(({ id }) => id))
 const learnerProgressCaseIds = new Set(baxterCrrtLearnerCases.map(({ id }) => id.toLowerCase()))
+/**
+ * Learner-facing lesson order (WP10 §5.2). Circuit anatomy precedes transport and prescription
+ * because both of those reason about a blood path the learner has not otherwise been shown.
+ */
 export const BAXTER_CRRT_LEARN_LESSON_IDS = Object.freeze([
   'crrt-indications-modality',
+  'crrt-circuit-pressures',
   'crrt-solute-transport',
   'crrt-prescription-dosing',
-  'crrt-circuit-pressures',
   'crrt-anticoagulation',
   'crrt-alarms-troubleshooting',
   'crrt-fluid-liberation',
+  'crrt-pressure-profile-integration',
 ] as const)
 
 export type BaxterCrrtLearnLessonId = (typeof BAXTER_CRRT_LEARN_LESSON_IDS)[number]

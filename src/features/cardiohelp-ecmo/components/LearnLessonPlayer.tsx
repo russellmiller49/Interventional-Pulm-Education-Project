@@ -17,7 +17,9 @@ import {
   Target,
 } from 'lucide-react'
 
+import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 import type { CriticalCareActivityPhase } from '@/features/learning-module/activity'
+import { PathwayNav, nextPathwaySection } from '@/features/learning-module/curriculum'
 
 import { cardiohelpLearnLessons, cardiohelpLearnLessonByScenarioId } from '../content/learnLessons'
 import {
@@ -27,6 +29,7 @@ import {
   pairedCaseIdsForLesson,
   unitIdByLessonScenarioId,
 } from '../content/curriculum'
+import { isEcmoFoundationSectionId } from '../content/foundationLessons'
 import { clinicalPracticeScenarioById } from '../content/clinicalCases'
 import type {
   ConsoleScreen,
@@ -42,7 +45,6 @@ import styles from './cardiohelp-ecmo.module.css'
 interface LearnLessonPlayerProps {
   state: EcmoSimulationState
   lesson: GuidedLessonDefinition
-  completedLessonIds: ReadonlySet<string>
   dispatch: (action: SimulationAction) => void
   onSelectLesson: (scenarioId: string) => void
   onCompleteLesson: (scenarioId: string) => void
@@ -291,7 +293,6 @@ export function resolveGuidedLesson(scenarioId: string): GuidedLessonDefinition 
 export function LearnLessonPlayer({
   state,
   lesson,
-  completedLessonIds,
   dispatch,
   onSelectLesson,
   onCompleteLesson,
@@ -312,11 +313,24 @@ export function LearnLessonPlayer({
   const simulatorTaskSatisfied = simulatorTask?.satisfied ?? false
   const helpControlId = simulatorTask?.controlId ?? panelControlIds[activeStep.target]
   const helpRequested = helpRequestCount > 0
+  const trackPathway = criticalCareLearningPathway('cardiohelp-ecmo', state.supportMode)
+
+  // Physiology sections are prose on their own route; drill sections stay inside this player.
+  const onSelectSection = (sectionId: string) => {
+    if (isEcmoFoundationSectionId(sectionId)) {
+      window.location.assign(
+        `/cardiohelp-ecmo/learn?lesson=${sectionId}&track=${state.supportMode}`,
+      )
+      return
+    }
+    onSelectLesson(sectionId)
+  }
+
+  // The pathway, not the unit list, defines what comes next: it also contains the physiology
+  // sections, which the unit list does not know about.
+  const nextPathwaySectionForLesson = nextPathwaySection(trackPathway, lesson.scenarioId)
+
   const trackUnits = cardiohelpCurriculum[state.supportMode]
-  const lessonUnits = useMemo(
-    () => trackUnits.filter((unit) => unit.lessonScenarioIds.length > 0),
-    [trackUnits],
-  )
   const modeLessons = useMemo(
     () =>
       orderedLessonScenarioIds(state.supportMode)
@@ -331,16 +345,6 @@ export function LearnLessonPlayer({
   const activeUnit = activeUnitId ? curriculumUnitById.get(activeUnitId) : undefined
   const activeUnitNumber = activeUnit
     ? trackUnits.findIndex((unit) => unit.id === activeUnit.id) + 1
-    : null
-  const nextLessonUnitId = nextLesson
-    ? unitIdByLessonScenarioId.get(nextLesson.scenarioId)
-    : undefined
-  const nextLessonUnit =
-    nextLessonUnitId && nextLessonUnitId !== activeUnitId
-      ? curriculumUnitById.get(nextLessonUnitId)
-      : undefined
-  const nextLessonUnitNumber = nextLessonUnit
-    ? trackUnits.findIndex((unit) => unit.id === nextLessonUnit.id) + 1
     : null
   const pairedCaseId = pairedCaseIdsForLesson(lesson.scenarioId)[0]
   const pairedCase = pairedCaseId ? clinicalPracticeScenarioById.get(pairedCaseId) : undefined
@@ -469,34 +473,17 @@ export function LearnLessonPlayer({
           </div>
           <span>Choose any lesson</span>
         </div>
-        <label>
-          Lesson
-          <select
-            value={lesson.scenarioId}
-            onChange={(event) => onSelectLesson(event.target.value)}
-          >
-            {lessonUnits.map((unit) => {
-              const unitNumber = trackUnits.findIndex((item) => item.id === unit.id) + 1
-              return (
-                <optgroup key={unit.id} label={`Unit ${unitNumber} · ${unit.title}`}>
-                  {unit.lessonScenarioIds.map((scenarioId) => {
-                    const item = cardiohelpLearnLessonByScenarioId.get(scenarioId)
-                    if (!item) return null
-                    const globalIndex = modeLessons.findIndex(
-                      (candidate) => candidate.scenarioId === scenarioId,
-                    )
-                    return (
-                      <option key={item.id} value={item.scenarioId}>
-                        {globalIndex + 1}. {item.title}
-                        {completedLessonIds.has(item.scenarioId) ? ' · worked through' : ''}
-                      </option>
-                    )
-                  })}
-                </optgroup>
-              )
-            })}
-          </select>
-        </label>
+        {/*
+         * The ordered rail replaces the previous grouped dropdown. A dropdown hides the shape of
+         * the course: it cannot show that the physiology sections precede the console tour, or
+         * where in the arc the learner currently is.
+         */}
+        <PathwayNav
+          pathway={trackPathway}
+          label={`${state.supportMode.toUpperCase()} learning pathway`}
+          activeSectionId={lesson.scenarioId}
+          onSelect={onSelectSection}
+        />
         <div className={styles.lessonNavActions}>
           <button
             type="button"
@@ -721,11 +708,12 @@ export function LearnLessonPlayer({
                   Apply this in Practice: {pairedCase.title} <ArrowRight aria-hidden="true" />
                 </button>
               ) : null}
-              {nextLesson ? (
-                <button type="button" onClick={() => onSelectLesson(nextLesson.scenarioId)}>
-                  {nextLessonUnit && nextLessonUnitNumber
-                    ? `Next: Unit ${nextLessonUnitNumber} · ${nextLessonUnit.title}`
-                    : 'Continue to next lesson'}
+              {nextPathwaySectionForLesson ? (
+                <button
+                  type="button"
+                  onClick={() => onSelectSection(nextPathwaySectionForLesson.id)}
+                >
+                  Continue to next section: {nextPathwaySectionForLesson.title}
                 </button>
               ) : null}
             </div>

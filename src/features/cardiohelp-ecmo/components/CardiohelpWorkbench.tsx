@@ -579,10 +579,6 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
     })
   }
 
-  const completedLearnLessonIds = useMemo(
-    () => new Set(progress.completedLearnLessonIds),
-    [progress.completedLearnLessonIds],
-  )
   const handleTrackKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
     const nextMode =
       event.key === 'Home'
@@ -885,7 +881,6 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
                     key={learnLesson.id}
                     state={state}
                     lesson={learnLesson}
-                    completedLessonIds={completedLearnLessonIds}
                     dispatch={dispatch}
                     onSelectLesson={loadLearnScenario}
                     onCompleteLesson={completeLearnLesson}

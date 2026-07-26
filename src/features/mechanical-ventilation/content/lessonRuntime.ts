@@ -483,6 +483,63 @@ const lessonRuntimes: readonly VentilationLessonRuntimeDefinition[] = [
       responseSeconds: 20,
     },
   },
+  {
+    lessonId: 'high-peak-pressure-integration',
+    primary: {
+      caseId: 'MV-13',
+      goal: 'Separate a resistive rise from an elastic one, and from patient effort, before selecting any corrective branch.',
+      actions: [
+        assessPatient,
+        reviewWaveforms,
+        hold(
+          'inspiratory',
+          'Measure plateau pressure',
+          'Split peak pressure into the part spent moving gas and the part spent distending the respiratory system.',
+        ),
+        intervention(
+          'inspect-circuit',
+          'Inspect airway and circuit',
+          'Check the tube, HME, circuit, secretions, and bronchospasm branch against the widened gap.',
+        ),
+        intervention(
+          'communicate-plan',
+          'State the mechanism and the reassessment',
+          'Name the dominant mechanism, the one you excluded, and the finding that excluded it.',
+        ),
+      ],
+      requiredEvidence: [
+        'intervention:assess-patient',
+        'intervention:review-waveforms',
+        'hold:inspiratory',
+        'intervention:inspect-circuit',
+        'intervention:communicate-plan',
+      ],
+      responseSeconds: 45,
+    },
+    transfer: {
+      caseId: 'MV-06',
+      goal: 'Recognize the same alarm produced by trapped gas rather than by airway resistance, and act on the expiratory limb.',
+      actions: [
+        assessPatient,
+        hold(
+          'expiratory',
+          'Measure intrinsic PEEP',
+          'Test the fourth mechanism directly: expiratory flow that never reaches zero implicates trapped volume, not a resistive rise alone.',
+        ),
+        intervention(
+          'disconnect-bag',
+          'Permit exhalation while manually supporting ventilation',
+          'Use the authored emergency branch to release trapped gas and separate patient from ventilator causes.',
+        ),
+      ],
+      requiredEvidence: [
+        'intervention:assess-patient',
+        'hold:expiratory',
+        'intervention:disconnect-bag',
+      ],
+      responseSeconds: 20,
+    },
+  },
 ] as const
 
 export const ventilationLessonRuntimeById = new Map(

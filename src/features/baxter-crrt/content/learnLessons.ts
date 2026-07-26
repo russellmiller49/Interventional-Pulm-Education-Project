@@ -6,7 +6,6 @@ export type BaxterCrrtEmbeddedLabId = 'LAB-PRESCRIPTION' | 'LAB-PRESSURE-LOCALIZ
 
 export interface BaxterCrrtLearnLesson extends LearnBlock {
   readonly id: BaxterCrrtLearnLessonId
-  readonly ordinal: number
   readonly summary: string
   readonly sourceRecordIds: readonly string[]
   readonly reviewStatus: 'pending'
@@ -31,7 +30,6 @@ const lesson = (
 export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.freeze([
   lesson({
     id: 'crrt-indications-modality',
-    ordinal: 1,
     title: 'CRRT indications and modality selection',
     summary:
       'Start with a patient-centered goal, then choose the transport and fluid strategy that serves it.',
@@ -55,8 +53,32 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
     ],
   }),
   lesson({
+    id: 'crrt-circuit-pressures',
+    title: 'Circuit anatomy and pressure localization',
+    summary:
+      'Use the circuit path to localize a pattern before reacting to an isolated pressure value.',
+    paragraphs: [
+      'Trace the blood path from patient access through the access segment, blood pump, filter, return segment, and back to the patient. The effluent path leaves the filter and is measured separately.',
+      'Pressure values are location-dependent signals. Interpret access, filter, return, effluent, transmembrane pressure, and filter pressure drop together and across time. A number by itself does not establish a diagnosis or a universal alarm response.',
+    ],
+    bullets: [
+      'Start with patient safety and visible circuit inspection.',
+      'Name the likely location and competing explanations before changing a control.',
+      'Correct the cause, then verify the pressure pattern, delivery, circuit, and patient response.',
+      'Use current PrisMax instructions and local policy for exact alarm and restart actions.',
+    ],
+    embeddedLabId: 'LAB-PRESSURE-LOCALIZATION',
+    sourceRecordIds: [
+      'DEV-PM-009',
+      'DEV-PM-010',
+      'MATH-PM-002',
+      'TEXT-RRT-HOSTE-2024',
+      'REVIEW-CRRT-PRINCIPLES-2021',
+      'SYNTH-LAB-PRESSURE-001',
+    ],
+  }),
+  lesson({
     id: 'crrt-solute-transport',
-    ordinal: 2,
     title: 'Solute and water transport',
     summary:
       'Separate diffusion, convection, ultrafiltration, and adsorption before interpreting a modality.',
@@ -79,7 +101,6 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
   }),
   lesson({
     id: 'crrt-prescription-dosing',
-    ordinal: 3,
     title: 'Prescription and delivered dose',
     summary:
       'Translate the clinical goal into explicit flows, then reconcile prescribed and delivered therapy.',
@@ -108,34 +129,7 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
     ],
   }),
   lesson({
-    id: 'crrt-circuit-pressures',
-    ordinal: 4,
-    title: 'Circuit anatomy and pressure localization',
-    summary:
-      'Use the circuit path to localize a pattern before reacting to an isolated pressure value.',
-    paragraphs: [
-      'Trace the blood path from patient access through the access segment, blood pump, filter, return segment, and back to the patient. The effluent path leaves the filter and is measured separately.',
-      'Pressure values are location-dependent signals. Interpret access, filter, return, effluent, transmembrane pressure, and filter pressure drop together and across time. A number by itself does not establish a diagnosis or a universal alarm response.',
-    ],
-    bullets: [
-      'Start with patient safety and visible circuit inspection.',
-      'Name the likely location and competing explanations before changing a control.',
-      'Correct the cause, then verify the pressure pattern, delivery, circuit, and patient response.',
-      'Use current PrisMax instructions and local policy for exact alarm and restart actions.',
-    ],
-    embeddedLabId: 'LAB-PRESSURE-LOCALIZATION',
-    sourceRecordIds: [
-      'DEV-PM-009',
-      'DEV-PM-010',
-      'MATH-PM-002',
-      'TEXT-RRT-HOSTE-2024',
-      'REVIEW-CRRT-PRINCIPLES-2021',
-      'SYNTH-LAB-PRESSURE-001',
-    ],
-  }),
-  lesson({
     id: 'crrt-anticoagulation',
-    ordinal: 5,
     title: 'Anticoagulation and citrate safety',
     summary:
       'Frame anticoagulation as a linked patient–circuit monitoring problem, not a single setting.',
@@ -153,7 +147,6 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
   }),
   lesson({
     id: 'crrt-alarms-troubleshooting',
-    ordinal: 6,
     title: 'Alarms and cause-first troubleshooting',
     summary:
       'Preserve the safe state, identify what the device detected, and verify the cause before resuming.',
@@ -179,7 +172,6 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
   }),
   lesson({
     id: 'crrt-fluid-liberation',
-    ordinal: 7,
     title: 'Fluid management and liberation',
     summary: 'Maintain two fluid ledgers and make liberation a reassessed clinical transition.',
     paragraphs: [
@@ -202,12 +194,43 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
       'GUID-RRT-ICU-2026',
     ],
   }),
+  lesson({
+    id: 'crrt-pressure-profile-integration',
+    title: 'Read the pressure profile: where in the circuit is the problem?',
+    summary:
+      'Localize a deteriorating run from the whole pressure profile, then reconcile prescription, anticoagulation, and fluid before deciding what to change.',
+    paragraphs: [
+      'Every earlier section supplies one reading of the same run. Circuit anatomy says where each transducer sits. Transport and prescription say what the run was supposed to deliver. Anticoagulation says how the filter was being protected. The fluid ledger says what was being removed and at what rate. A single pressure value does not distinguish among those; the profile read together with its trend often does.',
+      'Read the profile as a set of relationships rather than a list of numbers. Access pressure describes the inflow side, return pressure the outflow side, and transmembrane pressure with filter pressure drop describe the membrane and the filter itself. Ask which combination of those would have to be true for each competing explanation, then look for the one the whole profile supports. Name the location before naming the fix.',
+      'The competing explanations usually available are a patient-side or access-side inflow limitation, a return-side obstruction, progressive filter clotting, and a delivery target that is simply too aggressive for the current hemodynamics. Each of these can present with a falling delivered dose and a rising alarm burden, so the discriminating information is which pressures moved, in which direction, and over what interval — together with what the patient was doing at the time.',
+      'This section does not supply a threshold table or a universal corrective sequence. Exact alarm limits, restart behavior, and the actions permitted at each state come from current PrisMax instructions and local policy, and the anticoagulation response comes from the authorized local protocol and the responsible clinical team.',
+    ],
+    bullets: [
+      'Start with the patient and a visible circuit inspection before interpreting any number.',
+      'State the profile as a pattern: which pressures moved, in which direction, over what interval.',
+      'List the competing locations explicitly, then say what each one predicts for the other pressures.',
+      'Check the prescription and the fluid-removal rate as candidate causes, not only the circuit.',
+      'Separate a recurring pattern from a single fluctuation before treating it as filter failure.',
+      'Correct the cause, then verify the pressure profile, the delivered dose, the circuit, and the patient.',
+    ],
+    sourceRecordIds: [
+      'DEV-PM-009',
+      'DEV-PM-010',
+      'MATH-PM-002',
+      'FLUID-PM-002',
+      'TEXT-RRT-HOSTE-2024',
+      'REVIEW-CRRT-PRINCIPLES-2021',
+      'REVIEW-CKRT-CORE-2025',
+      'SYNTH-LAB-PRESSURE-001',
+      'GUID-RRT-ICU-2026',
+    ],
+  }),
 ])
 
 if (
   baxterCrrtLearnLessons.map(({ id }) => id).join('|') !== BAXTER_CRRT_LEARN_LESSON_IDS.join('|')
 ) {
-  throw new Error('CRRT Learn lessons must match the stable seven-lesson registry exactly.')
+  throw new Error('CRRT Learn lessons must match the stable lesson registry exactly.')
 }
 
 export const baxterCrrtLearnLessonById = new Map(
