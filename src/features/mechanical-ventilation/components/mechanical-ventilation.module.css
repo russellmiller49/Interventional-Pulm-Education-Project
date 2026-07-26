@@ -3341,3 +3341,46 @@
     color: #273b3e;
   }
 }
+
+.waveformReadouts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.15rem 0.35rem;
+  margin: 0.2rem 0 0;
+}
+
+.waveformReadouts > div {
+  display: flex;
+  gap: 0.25rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.waveformReadouts dt {
+  font-size: 0.58rem;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.waveformReadouts dd {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.waveformAnnotation line {
+  stroke: #f0c274;
+  stroke-dasharray: 6 5;
+  stroke-width: 1;
+  opacity: 0.85;
+}
+
+.waveformAnnotation text {
+  fill: #f6dfae;
+  font-size: 9px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: rgba(3, 20, 26, 0.85);
+  stroke-width: 3px;
+}
