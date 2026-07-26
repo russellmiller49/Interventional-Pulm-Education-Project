@@ -61,6 +61,7 @@ import {
   type VentilationSimulationState,
 } from '../engine'
 import { BedsidePanel } from './BedsidePanel'
+import teachingStyles from './mechanical-ventilation-teaching.module.css'
 import {
   MechanicalVentilationTeachingPanel,
   VentilationRunControl,
@@ -132,8 +133,12 @@ function createLessonSession(
   attempt: number,
 ): LessonSimulationSession {
   const definition = runtime[variant]
+  const initial = createInitialSimulationState(definition.caseId, 'learn', attempt, 'hamilton-c6')
   return {
-    simulation: createInitialSimulationState(definition.caseId, 'learn', attempt, 'hamilton-c6'),
+    // Open on a running ventilator. The shared initializer pauses after priming four seconds of
+    // waveform, which froze every lesson at 0 s — and a maneuver such as an inspiratory hold only
+    // teaches its point when it interrupts a vent that is actually cycling.
+    simulation: { ...initial, paused: false },
     evidence: [],
     variant,
   }
@@ -527,9 +532,12 @@ export function MechanicalVentilationLessonActivity({
   }
 
   function runResponse(seconds: number) {
+    // Fast-forward the modeled response, then restore whatever run state the learner had chosen
+    // rather than always leaving the ventilator stopped.
+    const wasPaused = simulation.paused
     dispatchSimulation({ type: 'SET_PAUSED', paused: false })
     dispatchSimulation({ type: 'TICK', seconds })
-    dispatchSimulation({ type: 'SET_PAUSED', paused: true })
+    if (wasPaused) dispatchSimulation({ type: 'SET_PAUSED', paused: true })
   }
 
   function commitPrediction() {
@@ -866,7 +874,10 @@ export function MechanicalVentilationLessonActivity({
           }
           secondary={teachingPanel}
           tertiary={
-            <div className="grid min-w-0 gap-3 p-2 [&>*]:m-0">
+            // The workspace is a light surface; without re-rooting the theme here the Tailwind
+            // tokens resolve from the shell's dark root and the enabled action buttons read as
+            // greyed out.
+            <div className={`${teachingStyles.activityPane} grid min-w-0 gap-3 p-2 [&>*]:m-0`}>
               <VentilationRunControl
                 paused={simulation.paused}
                 simulationTime={simulation.simulationTime}

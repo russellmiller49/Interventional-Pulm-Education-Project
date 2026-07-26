@@ -474,3 +474,27 @@
   font-size: 0.66rem;
   line-height: 1.4;
 }
+
+/*
+ * The workbench theme sets its tokens on <body> via :has(), so a nested theme root cannot override
+ * them. The activity pane sits on the light workspace surface, so it re-declares the light values
+ * locally — otherwise every enabled control inside it renders dark and reads as disabled.
+ */
+.activityPane {
+  --background: 0 0% 100%;
+  --foreground: 196 42% 15%;
+  --muted: 168 24% 94%;
+  --muted-foreground: 195 12% 40%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 196 42% 15%;
+  --card: 0 0% 100%;
+  --card-foreground: 196 42% 15%;
+  --border: 168 18% 85%;
+  --input: 168 18% 85%;
+  --primary: 178 72% 28%;
+  --primary-foreground: 170 100% 98%;
+  --secondary: 178 72% 28%;
+  --secondary-foreground: 170 100% 98%;
+  --ring: 178 72% 28%;
+  color-scheme: light;
+}
