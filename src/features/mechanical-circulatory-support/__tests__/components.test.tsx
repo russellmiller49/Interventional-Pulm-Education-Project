@@ -82,21 +82,22 @@ describe('Mechanical Circulatory Support learner interface', () => {
     }
   })
 
+  // Learn shows the ordered pathway rail instead of the device tabs, so a device deep link is
+  // expressed as the pathway section it opens.
   it.each([
-    ['impella', /Impella CP \/ 5\.5 \/ RP/i, /Impella unloading and placement signals/i],
-    ['lvad', /Durable continuous-flow LVAD/i, /Durable LVAD parameters and ICU review/i],
-  ] as const)(
-    'initializes the %s track and its first device lesson',
-    (device, tabName, lessonName) => {
-      render(<McsWorkbench section="learn" initialDevice={device} />)
+    ['impella', /^5\. Impella unloading and placement signals/i],
+    ['lvad', /^7\. Durable LVAD parameters and ICU review/i],
+  ] as const)('initializes the %s track at its first device section', (device, sectionName) => {
+    render(<McsWorkbench section="learn" initialDevice={device} />)
 
-      expect(screen.getByRole('button', { name: tabName })).toHaveAttribute('aria-pressed', 'true')
-      expect(screen.getByRole('button', { name: lessonName })).toHaveAttribute(
-        'aria-current',
-        'true',
-      )
-    },
-  )
+    expect(
+      screen.queryByRole('navigation', { name: /Choose device track/i }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: sectionName })).toHaveAttribute(
+      'aria-current',
+      'step',
+    )
+  })
 
   it('opens an exact practice deep link and exposes it through global Continue', async () => {
     const { container } = render(<McsWorkbench section="practice" initialActivityId="IMP-02" />)
@@ -270,8 +271,9 @@ describe('Mechanical Circulatory Support learner interface', () => {
 
   it('requires authored interactions and a transfer decision before lesson completion', async () => {
     render(<McsWorkbench section="learn" />)
-    const rail = screen.getByRole('region', { name: /Eight guided lessons/i })
-    expect(within(rail).getAllByRole('button')).toHaveLength(8)
+    const rail = screen.getByRole('navigation', { name: /MCS learning pathway sections/i })
+    // Eight device sections plus the cross-device integration capstone (WP10 §5.3).
+    expect(within(rail).getAllByRole('button')).toHaveLength(9)
     expect(screen.queryByRole('button', { name: /Mark lesson complete/i })).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Inspect arterial waveform' }))
@@ -312,7 +314,7 @@ describe('Mechanical Circulatory Support learner interface', () => {
     expect(screen.getByText('Evidence complete')).toBeInTheDocument()
     expect(
       screen.getByRole('button', {
-        name: /Continue to next lesson Unloading, augmentation, and total flow/i,
+        name: /Continue to next section: Unloading, augmentation, and total flow/i,
       }),
     ).toBeInTheDocument()
     expect(
@@ -348,7 +350,7 @@ describe('Mechanical Circulatory Support learner interface', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Check transfer decision' }))
 
     const continueButton = await screen.findByRole('button', {
-      name: /Continue to next lesson Impella suction, purge, hemolysis, and RV delivery/i,
+      name: /Continue to next section: Impella suction, purge, hemolysis, and RV delivery/i,
     })
     expect(screen.getByRole('region', { name: 'Lesson worked through' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Recheck transfer evidence/i })).toBeNull()

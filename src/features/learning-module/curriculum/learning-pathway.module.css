@@ -1,0 +1,136 @@
+.pathwayViewport {
+  display: grid;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.pathwaySurface {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.pathwaySurface > * {
+  height: 100%;
+}
+
+.pathwayNav {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 10.5rem minmax(0, 1fr);
+  gap: 0.8rem;
+  padding: 0.6rem 0.8rem 0.45rem;
+  overflow: hidden;
+  border-bottom: 1px solid #31505f;
+  color: #dcebf0;
+  background: #0a1b27;
+  box-shadow: 0 0.45rem 1.2rem rgba(0, 0, 0, 0.18);
+}
+
+.pathwayNavIntro {
+  display: grid;
+  min-width: 0;
+  align-content: center;
+  gap: 0.08rem;
+}
+
+.pathwayNavIntro > span {
+  color: #6ed7cd;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.pathwayNavIntro > strong {
+  font-size: 0.78rem;
+}
+
+.pathwayNavIntro > small {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #9eb3bd;
+  font-size: 0.62rem;
+}
+
+.pathwayNav ol {
+  display: flex;
+  min-width: 0;
+  gap: 0.38rem;
+  padding: 0;
+  margin: 0;
+  overflow-x: auto;
+  list-style: none;
+  scrollbar-color: #52727f transparent;
+  scrollbar-width: thin;
+}
+
+.pathwayNav li {
+  display: flex;
+  min-width: 5.75rem;
+}
+
+.pathwayNav button {
+  display: grid;
+  width: 100%;
+  min-height: 2.75rem;
+  grid-template-columns: 1.35rem minmax(0, 1fr);
+  gap: 0.38rem;
+  align-items: center;
+  padding: 0.45rem 0.55rem;
+  cursor: pointer;
+  border: 1px solid #345363;
+  border-radius: 0.65rem;
+  color: #d5e4e9;
+  background: #102735;
+  text-align: left;
+}
+
+.pathwayNav button:hover {
+  border-color: #65bfb8;
+  background: #153442;
+}
+
+.pathwayNav button:focus-visible {
+  outline: 3px solid #72d7ce;
+  outline-offset: 2px;
+}
+
+.pathwayNav button[aria-current='step'] {
+  border-color: #69cfc5;
+  color: #061b22;
+  background: #80d9d0;
+  box-shadow: 0 0 0 2px rgba(105, 207, 197, 0.18);
+}
+
+.pathwayNav button > span:first-child {
+  display: grid;
+  place-items: center;
+  color: #75d4cb;
+  font-size: 0.67rem;
+  font-weight: 850;
+}
+
+.pathwayNav button[aria-current='step'] > span:first-child {
+  color: #0c5755;
+}
+
+.pathwayNav button > span:last-child {
+  display: grid;
+  min-width: 0;
+  gap: 0.1rem;
+}
+
+.pathwayNav button strong {
+  font-size: 0.7rem;
+}
+
+.pathwayNav button small {
+  display: none;
+}

@@ -521,6 +521,71 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       reviewStatus: 'sme-review',
     }),
   },
+  {
+    lessonId: 'mcs-device-selection-integration',
+    title: 'Transfer selection: the same low output, a different limiting problem',
+    contextItems: [
+      { label: 'Phenotype', value: 'Low output with a rising RAP and a falling PAPi' },
+      { label: 'Filling', value: 'PCWP is only modestly elevated' },
+      { label: 'Current support', value: 'Left-sided support is being considered' },
+      { label: 'Variant', value: 'RV delivery is the limiting problem, not LV filling pressure' },
+    ],
+    setupDevice: 'impella',
+    setupActions: [
+      { type: 'SET_PATIENT_CONTROL', control: 'rightVentricularContractility', value: 0.32 },
+      { type: 'SET_PATIENT_CONTROL', control: 'preloadPercent', value: 85 },
+    ],
+    requiredActionIds: ['inspect:preload', 'inspect:device'],
+    requiredActionLabel:
+      'Inspect right-sided filling and the device/effective flow relationship before committing to a device.',
+    item: item({
+      id: 'mcs-device-selection-integration-transfer-1',
+      activityId: 'mcs:learn:mcs-device-selection-integration',
+      phase: 'transfer',
+      itemType: 'transfer-case',
+      contextRequirement: 'patient',
+      clinicalContextId: 'mcs-transfer-rv-limited-selection',
+      visualAssetIds: ['mcs-monitor', 'mcs-anatomy'],
+      transferVariantId: 'mcs-rv-limited-device-selection',
+      stem: 'Output is low, RAP is rising and PAPi falling, and PCWP is only modestly elevated. Which reasoning best selects the next mechanism?',
+      choices: [
+        {
+          id: 'name-rv-limitation-first',
+          label:
+            'Name RV delivery as the limiting problem and evaluate right-sided support or RV optimization, because every left-sided device depends on the volume the RV delivers',
+          rationale:
+            'A rising RAP with a falling PAPi and only modest LV filling pressure indicates a delivery problem upstream of the left heart rather than at LV unloading. Adding left-sided support to an RV-limited circulation raises the displayed number without raising effective systemic flow.',
+          plausibility: 'best',
+        },
+        {
+          id: 'escalate-left-support',
+          label: 'Escalate left-sided support further, since output is still low',
+          rationale:
+            'Escalating LV unloading against an underfilled left heart increases suction risk and does not address the delivery problem upstream of it.',
+          plausibility: 'unsafe',
+        },
+        {
+          id: 'add-counterpulsation',
+          label: 'Add counterpulsation to improve coronary and systemic loading',
+          rationale:
+            'Counterpulsation modifies loading around a native beat; it does not address delivery of volume to the left heart, which is what this profile identifies.',
+          plausibility: 'incorrect-mechanism',
+        },
+        {
+          id: 'wait-for-lactate',
+          label: 'Continue current support and re-evaluate after the next lactate',
+          rationale:
+            'Trending perfusion markers is reasonable and belongs in the plan, but on its own it defers a selection the hemodynamic profile is already discriminating.',
+          plausibility: 'reasonable-but-incomplete',
+        },
+      ],
+      correctChoiceIds: ['name-rv-limitation-first'],
+      explanation:
+        'The transfer keeps the presenting number — low output — and moves the limiting problem upstream. Device selection follows the limiting problem; it is not a fixed ranking of devices by support magnitude. Actual device choice, timing, and escalation remain team decisions under current instructions and local protocol.',
+      evidenceIds: [...bedsideEvidence, 'ishlt-durable-mcs-2023'],
+      reviewStatus: 'sme-review',
+    }),
+  },
 ] as const
 
 export const mcsLessonTransferByLessonId = new Map(

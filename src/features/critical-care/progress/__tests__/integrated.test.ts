@@ -57,9 +57,10 @@ describe('integrated ICU capstone progress boundary', () => {
     expect(CRITICAL_CARE_INTEGRATED_OUTCOMES_MAX_COURSES).toBe(icuScenarioFamilies.length)
   })
 
-  it('starts with a broad foundation course and changes recommendation with focused completion', () => {
+  it('starts at the authored foundation scenario and changes recommendation with focused completion', () => {
+    // The entry point is the single-dominant-mechanism scenario, not the longest multisystem one.
     expect(getCriticalCareIcuScenarioRecommendation(envelope())).toMatchObject({
-      scenarioId: 'septic-ards-aki',
+      scenarioId: 'hemorrhagic',
       reason: 'foundation',
     })
 

@@ -138,82 +138,6 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
     ],
   }),
   lesson({
-    id: 'modes-and-breath-delivery',
-    title: 'Modes: trigger, target, cycle, and expiration',
-    domain: 'Modes',
-    summary:
-      'Translate device-native labels into trigger, controlled variable, cycling, and expiration.',
-    relatedCaseIds: ['MV-01', 'MV-02', 'MV-09', 'MV-12'],
-    phases: {
-      recognize: {
-        objective: 'Recognize the four breath variables behind a device label.',
-        requiredAction: 'Identify trigger, target or flow, cycle, and expiration.',
-        teachingPoint:
-          'Device vocabulary differs, while the underlying breath variables remain comparable.',
-      },
-      predict: {
-        objective: 'Predict what will remain controlled after a mode change.',
-        requiredAction: 'Commit to the variable-based description rather than the brand label.',
-        teachingPoint:
-          'A mode name alone does not describe the patient interaction or the resulting measurements.',
-      },
-      act: {
-        objective: 'Map a device-native mode to its breath-delivery variables.',
-        requiredAction: 'Review the selected console profile before confirming the mode.',
-        teachingPoint:
-          'Available modes and confirmation steps depend on the selected training console.',
-      },
-      observe: {
-        objective: 'Observe the next breath boundary.',
-        requiredAction: 'Compare the controlled variable and measured response.',
-        teachingPoint: 'A confirmed mode change takes effect at the next breath boundary.',
-      },
-      explain: {
-        objective: 'Explain why labels and behavior must both be checked.',
-        requiredAction: 'Name the breath-delivery behavior and the device-native label.',
-        teachingPoint:
-          'The training facsimile teaches navigation without claiming full proprietary-device fidelity.',
-      },
-      transfer: {
-        objective: 'Transfer the variable framework to pressure-support cycling.',
-        requiredAction: 'Localize which breath variable is mismatched before choosing a new mode.',
-        teachingPoint: 'A different mode label does not replace assessment of the measured breath.',
-      },
-    },
-    prediction: {
-      prompt: 'Two consoles use different labels. What is the most reliable comparison?',
-      choices: [
-        { id: 'variables', label: 'Compare trigger, target or flow, cycle, and expiration' },
-        { id: 'label-shape', label: 'Assume similarly placed labels have identical behavior' },
-      ],
-      correctChoiceId: 'variables',
-      explanation:
-        'The variable framework is shared; labels and control workflows remain profile-specific.',
-    },
-    transfer: {
-      prompt:
-        'A pressure-support breath ends while patient inspiratory effort continues. Which variable should be localized?',
-      choices: [
-        { id: 'reset', label: 'The criterion that cycles inspiration to expiration' },
-        { id: 'trigger-only', label: 'Only the criterion that triggers inspiration' },
-      ],
-      correctChoiceId: 'reset',
-      explanation:
-        'The mismatch occurs at breath termination, so the cycling rule is the discriminating variable.',
-    },
-    references: [
-      {
-        title: 'Breath-delivery foundations',
-        summary: 'Compare volume A/C, pressure A/C, and pressure support by breath variables.',
-      },
-      {
-        title: 'Profile-specific modes',
-        summary:
-          'Advanced mode names and availability come from the selected source-bound device profile.',
-      },
-    ],
-  }),
-  lesson({
     id: 'waveform-reading-sequence',
     title: 'Waveforms: a repeatable reading sequence',
     domain: 'Waveforms',
@@ -294,6 +218,82 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
         title: 'Text equivalent',
         summary:
           'Measured values and case findings remain available without relying on trace color alone.',
+      },
+    ],
+  }),
+  lesson({
+    id: 'modes-and-breath-delivery',
+    title: 'Modes: trigger, target, cycle, and expiration',
+    domain: 'Modes',
+    summary:
+      'Translate device-native labels into trigger, controlled variable, cycling, and expiration.',
+    relatedCaseIds: ['MV-01', 'MV-02', 'MV-09', 'MV-12'],
+    phases: {
+      recognize: {
+        objective: 'Recognize the four breath variables behind a device label.',
+        requiredAction: 'Identify trigger, target or flow, cycle, and expiration.',
+        teachingPoint:
+          'Device vocabulary differs, while the underlying breath variables remain comparable.',
+      },
+      predict: {
+        objective: 'Predict what will remain controlled after a mode change.',
+        requiredAction: 'Commit to the variable-based description rather than the brand label.',
+        teachingPoint:
+          'A mode name alone does not describe the patient interaction or the resulting measurements.',
+      },
+      act: {
+        objective: 'Map a device-native mode to its breath-delivery variables.',
+        requiredAction: 'Review the selected console profile before confirming the mode.',
+        teachingPoint:
+          'Available modes and confirmation steps depend on the selected training console.',
+      },
+      observe: {
+        objective: 'Observe the next breath boundary.',
+        requiredAction: 'Compare the controlled variable and measured response.',
+        teachingPoint: 'A confirmed mode change takes effect at the next breath boundary.',
+      },
+      explain: {
+        objective: 'Explain why labels and behavior must both be checked.',
+        requiredAction: 'Name the breath-delivery behavior and the device-native label.',
+        teachingPoint:
+          'The training facsimile teaches navigation without claiming full proprietary-device fidelity.',
+      },
+      transfer: {
+        objective: 'Transfer the variable framework to pressure-support cycling.',
+        requiredAction: 'Localize which breath variable is mismatched before choosing a new mode.',
+        teachingPoint: 'A different mode label does not replace assessment of the measured breath.',
+      },
+    },
+    prediction: {
+      prompt: 'Two consoles use different labels. What is the most reliable comparison?',
+      choices: [
+        { id: 'variables', label: 'Compare trigger, target or flow, cycle, and expiration' },
+        { id: 'label-shape', label: 'Assume similarly placed labels have identical behavior' },
+      ],
+      correctChoiceId: 'variables',
+      explanation:
+        'The variable framework is shared; labels and control workflows remain profile-specific.',
+    },
+    transfer: {
+      prompt:
+        'A pressure-support breath ends while patient inspiratory effort continues. Which variable should be localized?',
+      choices: [
+        { id: 'reset', label: 'The criterion that cycles inspiration to expiration' },
+        { id: 'trigger-only', label: 'Only the criterion that triggers inspiration' },
+      ],
+      correctChoiceId: 'reset',
+      explanation:
+        'The mismatch occurs at breath termination, so the cycling rule is the discriminating variable.',
+    },
+    references: [
+      {
+        title: 'Breath-delivery foundations',
+        summary: 'Compare volume A/C, pressure A/C, and pressure support by breath variables.',
+      },
+      {
+        title: 'Profile-specific modes',
+        summary:
+          'Advanced mode names and availability come from the selected source-bound device profile.',
       },
     ],
   }),
@@ -689,6 +689,126 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
         title: 'Clinical boundary',
         summary:
           'This module is not a device, treatment recommendation, or substitute for supervised practice.',
+      },
+    ],
+  }),
+  lesson({
+    id: 'high-peak-pressure-integration',
+    title: 'High peak pressure: resistance, compliance, auto-PEEP, or patient effort?',
+    domain: 'Integration',
+    estimatedMinutes: 14,
+    summary:
+      'One alarm, four mechanisms. Use the peak-to-plateau split, the expiratory limb, and the patient to separate them before acting.',
+    relatedCaseIds: ['MV-01', 'MV-05', 'MV-06', 'MV-13', 'MV-14'],
+    phases: {
+      recognize: {
+        objective: 'Recognize that a high peak pressure names an alarm, not a mechanism.',
+        requiredAction:
+          'Read the patient, the pressure and flow waveforms, and the alarm together before touching a setting.',
+        teachingPoint:
+          'Peak pressure is the sum of what it took to move gas through the circuit and airway plus what it took to distend the respiratory system. The alarm cannot say which term rose.',
+      },
+      predict: {
+        objective:
+          'Predict which of resistance, compliance, auto-PEEP, or patient effort the discriminating measurements will implicate.',
+        requiredAction:
+          'Commit to one dominant mechanism and state what the peak-to-plateau difference and the expiratory flow tracing should show if you are right.',
+        teachingPoint:
+          'Naming the expected finding before measuring is what makes the measurement informative rather than confirmatory.',
+      },
+      act: {
+        objective: 'Obtain the measurements that separate the four mechanisms.',
+        requiredAction:
+          'Perform an inspiratory hold for plateau pressure, inspect whether expiratory flow returns to zero, and assess patient effort and the airway/circuit.',
+        teachingPoint:
+          'A widened peak-to-plateau gap points at resistance; a raised plateau with a narrow gap points at the respiratory system itself; expiratory flow that never reaches zero points at trapped volume. Effort can raise or lower measured pressures depending on its timing.',
+      },
+      observe: {
+        objective: 'Observe what the measurements actually showed, including where they disagree.',
+        requiredAction:
+          'Compare the observed plateau, the peak-to-plateau difference, the expiratory limb, and the patient against the committed prediction.',
+        teachingPoint:
+          'Holds are only interpretable in a relaxed patient; an active effort during the maneuver makes the plateau uninterpretable rather than reassuring.',
+      },
+      explain: {
+        objective: 'Explain the mechanism in terms of the measurement that identified it.',
+        requiredAction:
+          'State the dominant mechanism, the competing one you excluded, and the finding that excluded it.',
+        teachingPoint:
+          'More than one mechanism can be present at once. The useful claim is which one is dominant now, not which one is uniquely present.',
+      },
+      transfer: {
+        objective: 'Transfer the sequence to a high-pressure alarm with a different cause.',
+        requiredAction:
+          'Repeat patient assessment, the peak-to-plateau split, and the expiratory-limb inspection on the new patient.',
+        teachingPoint:
+          'The reading sequence transfers; the answer does not. A new patient requires fresh localization.',
+      },
+    },
+    prediction: {
+      prompt:
+        'Peak pressure has risen sharply. Plateau pressure is unchanged, and expiratory flow still returns to zero before the next breath. Which mechanism does this pattern implicate?',
+      choices: [
+        {
+          id: 'resistance',
+          label:
+            'A resistive problem in the airway or circuit — the peak-to-plateau gap widened while the distending pressure did not change',
+        },
+        {
+          id: 'compliance',
+          label: 'A fall in respiratory-system compliance',
+        },
+        {
+          id: 'auto-peep',
+          label: 'Dynamic hyperinflation with trapped end-expiratory volume',
+        },
+      ],
+      correctChoiceId: 'resistance',
+      explanation:
+        'An unchanged plateau means the pressure required to distend the respiratory system at end-inspiration has not changed, so the extra peak pressure was spent moving gas — secretions, a kinked or obstructed tube, bronchospasm, or a circuit problem. Expiratory flow reaching zero argues against trapped volume as the dominant contributor.',
+    },
+    transfer: {
+      prompt:
+        'A different patient triggers the same high-pressure alarm. Plateau pressure has risen with an unchanged peak-to-plateau difference, and the patient is making visible inspiratory effort. What should be established first?',
+      choices: [
+        {
+          id: 'relaxed-measurement',
+          label:
+            'Whether the hold measurements are interpretable at all, since active effort during the maneuver invalidates the plateau before any mechanism can be assigned',
+        },
+        {
+          id: 'raise-alarm-limit',
+          label: 'Raise the pressure alarm limit so the alarm stops and reassess later',
+        },
+        {
+          id: 'assume-compliance',
+          label: 'Assume a compliance fall and act on it, since the plateau rose',
+        },
+      ],
+      correctChoiceId: 'relaxed-measurement',
+      explanation:
+        'The pattern is consistent with a compliance problem, but patient effort during an inspiratory hold makes the plateau uninterpretable — the same tracing can be produced by effort alone. Establish measurement validity before assigning a mechanism, exactly as the waveform-reading sequence requires.',
+    },
+    references: [
+      {
+        title: 'Pressure components',
+        summary:
+          'The peak-to-plateau difference separates the resistive component from the pressure needed to distend the respiratory system.',
+      },
+      {
+        title: 'Expiratory limb',
+        summary:
+          'Expiratory flow that does not return to zero before the next breath indicates incomplete emptying and trapped volume.',
+      },
+      {
+        title: 'Measurement validity',
+        summary:
+          'Hold maneuvers assume a relaxed patient. Reported values from an actively breathing patient are not interpretable as mechanics.',
+      },
+      {
+        title: 'Clinical boundary',
+        summary:
+          'Numeric thresholds and corrective protocols are deliberately not supplied here; they belong to the module content pass and to local policy.',
       },
     ],
   }),

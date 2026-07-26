@@ -12,7 +12,11 @@ export interface PublicIcuScenarioManifestEntry {
 
 export const publicIcuScenarioManifest = Object.freeze([
   {
-    id: 'septic-ards-aki',
+    id: 'hemorrhagic',
+    version: '1.0.0',
+  },
+  {
+    id: 'tamponade',
     version: '1.0.0',
   },
   {
@@ -24,11 +28,7 @@ export const publicIcuScenarioManifest = Object.freeze([
     version: '1.0.0',
   },
   {
-    id: 'hemorrhagic',
-    version: '1.0.0',
-  },
-  {
-    id: 'tamponade',
+    id: 'septic-ards-aki',
     version: '1.0.0',
   },
   {

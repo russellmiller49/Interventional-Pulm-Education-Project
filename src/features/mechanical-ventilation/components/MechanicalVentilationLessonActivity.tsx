@@ -6,6 +6,7 @@ import { CheckCircle2, Circle, Languages } from 'lucide-react'
 
 import { Link, useRouter } from '@/i18n/navigation'
 import { criticalCareActivityById } from '@/features/critical-care/content/activities'
+import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 import {
   authoritativeCriticalCareCompetencyEvidence,
   authoritativeCriticalCareStatus,
@@ -28,6 +29,11 @@ import { ReferenceDrawer } from '@/features/learning-module/components/Reference
 import { ResumeBanner } from '@/features/learning-module/components/ResumeBanner'
 import { SimulationLaunchGate } from '@/features/learning-module/components/SimulationLaunchGate'
 import { TaskPanel } from '@/features/learning-module/components/TaskPanel'
+import {
+  PathwayNav,
+  PathwaySectionCompletion,
+  nextPathwaySection,
+} from '@/features/learning-module/curriculum'
 
 import {
   getVentilatorDeviceProfile,
@@ -265,6 +271,8 @@ function GuidedActions({
     </div>
   )
 }
+
+const ventilationLearningPathway = criticalCareLearningPathway('mechanical-ventilation')
 
 export function MechanicalVentilationLessonActivity({
   lesson,
@@ -761,8 +769,17 @@ export function MechanicalVentilationLessonActivity({
   }
 
   const phaseCopy = lesson.phases[phase]
+  const nextSection = nextPathwaySection(ventilationLearningPathway, lesson.id)
   const viewport = (
     <div className="grid h-full min-h-0 content-start gap-3 overflow-auto bg-background p-3">
+      <PathwayNav
+        pathway={ventilationLearningPathway}
+        label="Ventilation learning pathway"
+        activeSectionId={lesson.id}
+        onSelect={(sectionId) =>
+          router.push(`/mechanical-ventilation/learn?activity=${sectionId}` as Route)
+        }
+      />
       <section
         className="flex flex-wrap items-start justify-between gap-3 rounded-xl border bg-card p-3"
         aria-label="Active lesson patient"
@@ -912,6 +929,23 @@ export function MechanicalVentilationLessonActivity({
                     conceptIds={catalogActivity?.teachesConceptIds}
                   />
                 ) : null}
+              </div>
+            ) : null}
+            {completed ? (
+              <div className="mt-3">
+                <PathwaySectionCompletion
+                  sectionTitle={lesson.title}
+                  {...(nextSection ? { nextTitle: nextSection.title } : {})}
+                  endOfPathwayLabel="Continue to ventilation practice cases"
+                  onRepeat={resetLesson}
+                  onContinue={() =>
+                    router.push(
+                      (nextSection
+                        ? `/mechanical-ventilation/learn?activity=${nextSection.id}`
+                        : '/mechanical-ventilation/practice') as Route,
+                    )
+                  }
+                />
               </div>
             ) : null}
           </TaskPanel>

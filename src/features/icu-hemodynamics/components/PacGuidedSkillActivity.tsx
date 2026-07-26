@@ -589,7 +589,7 @@ export function PacGuidedSkillActivity({
       return
     }
     if (onPathwaySectionChange) {
-      onPathwaySectionChange(nextSection.id)
+      onPathwaySectionChange(nextSection.id as PacLearningPathwaySectionId)
       return
     }
     router.push(`/icu-hemodynamics/learn?activity=${nextSection.id}` as Route)

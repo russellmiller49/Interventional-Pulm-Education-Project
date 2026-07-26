@@ -1,4 +1,5 @@
 import {
+  BAXTER_CRRT_LEARN_LESSON_IDS,
   baxterCrrtAdditionalCaseIds,
   baxterCrrtCoreCaseIds,
   baxterCrrtCurriculum,
@@ -77,5 +78,23 @@ describe('Baxter CRRT curriculum curation', () => {
       kind: 'capstone',
       id: 'MASTERY-PRISMAX-01',
     })
+  })
+
+  it('walks lessons in Learn-pathway order, so hub and workbench cannot disagree', () => {
+    const progress = createDefaultProgress()
+    const walked: string[] = []
+    let completedLessonIds: string[] = []
+
+    for (let step = 0; step < BAXTER_CRRT_LEARN_LESSON_IDS.length; step += 1) {
+      const next = nextRecommendedCrrtActivity({ ...progress, completedLessonIds })
+      expect(next?.kind).toBe('lesson')
+      walked.push(next!.id)
+      completedLessonIds = [...completedLessonIds, next!.id]
+    }
+
+    expect(walked).toEqual([...BAXTER_CRRT_LEARN_LESSON_IDS])
+    // The recommendation is station-independent for lessons: previously the hub walked station
+    // order (which maps 1,2,3,6,7,4,5) while Learn walked its own, giving two different answers.
+    expect(walked).not.toEqual(baxterCrrtCurriculum.flatMap(({ lessonIds }) => lessonIds))
   })
 })

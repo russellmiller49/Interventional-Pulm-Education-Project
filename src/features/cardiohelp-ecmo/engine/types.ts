@@ -1,3 +1,5 @@
+import type { CriticalCareCurriculumStage } from '@/features/learning-module/activity/types'
+
 export type SupportMode = 'vv' | 'va'
 
 export type ConsoleScreen =
@@ -659,4 +661,10 @@ export interface GuidedLessonDefinition {
   title: string
   learningObjectives: readonly string[]
   steps: readonly GuidedWalkthroughStep[]
+  /**
+   * Teaching-arc position. An `integration` lesson is the track's capstone lesson and is the one
+   * case where a Learn lesson may wrap a registered capstone scenario; the unseen assessment
+   * capstone that uses the same scenario is unaffected.
+   */
+  curriculumStage?: CriticalCareCurriculumStage
 }

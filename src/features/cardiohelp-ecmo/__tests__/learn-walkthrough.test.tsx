@@ -1,5 +1,7 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { useReducer, useState, type AnchorHTMLAttributes, type ReactNode } from 'react'
+
+import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 
 import { cardiohelpLearnLessonsBySupportMode } from '../content/learnLessons'
 import {
@@ -41,7 +43,7 @@ function LearnHarness({
   const [state, dispatch] = useReducer(ecmoSimulationReducer, initialScenarioId, (id) =>
     createInitialSimulationState(id, 'guided'),
   )
-  const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(() => new Set())
+  const [, setCompletedLessonIds] = useState<Set<string>>(() => new Set())
   const [guidedTarget, setGuidedTarget] = useState<GuidedTarget>('circuit')
   const [guidedControlId, setGuidedControlId] = useState<GuidedControlId | null>(null)
   const lesson = resolveGuidedLesson(scenarioId)
@@ -62,7 +64,6 @@ function LearnHarness({
         key={lesson.id}
         state={state}
         lesson={lesson}
-        completedLessonIds={completedLessonIds}
         dispatch={dispatch}
         onSelectLesson={selectLesson}
         onCompleteLesson={(completedScenarioId) => {
@@ -127,9 +128,9 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     ).toBeInTheDocument()
     expect(screen.getByText('Focus: Circuit and sensors')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Next step/i })).toBeDisabled()
-    expect(screen.queryByRole('option', { name: /capstone/i })).not.toBeInTheDocument()
-    expect(screen.getAllByRole('option')).toHaveLength(
-      cardiohelpLearnLessonsBySupportMode.vv.length,
+    const rail = screen.getByRole('navigation', { name: /VV learning pathway sections/i })
+    expect(within(rail).getAllByRole('button')).toHaveLength(
+      criticalCareLearningPathway('cardiohelp-ecmo', 'vv').sections.length,
     )
 
     fireEvent.click(screen.getByRole('button', { name: /identify all four domains/i }))
@@ -404,9 +405,7 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     })
     expect(screen.getByTestId('screen')).toHaveTextContent('parameters')
 
-    fireEvent.change(screen.getByLabelText('Lesson'), {
-      target: { value: 'acute-hypercapnia' },
-    })
+    fireEvent.click(screen.getByRole('button', { name: /Acute hypercapnic acidemia/i }))
     const selectedLesson = cardiohelpLearnLessonsBySupportMode.vv.find(
       (lesson) => lesson.scenarioId === 'acute-hypercapnia',
     )

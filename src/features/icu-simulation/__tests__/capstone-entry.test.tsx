@@ -51,14 +51,14 @@ describe('integrated ICU capstone entry', () => {
 
     expect(await screen.findByTestId('icu-simulator-lab')).toHaveAttribute(
       'data-scenario',
-      'septic-ards-aki',
+      'hemorrhagic',
     )
     expect(screen.getByTestId('icu-simulator-lab')).toHaveAttribute('data-embedded', 'true')
     expect(
       screen.getByTestId('icu-simulator-lab').closest('[data-icu-capstone-active]'),
     ).toHaveAttribute('data-icu-capstone-active', 'practice')
     expect(
-      screen.getByRole('heading', { name: 'Septic shock with ARDS and evolving AKI' }),
+      screen.getByRole('heading', { name: 'Active hemorrhagic hypovolemic shock' }),
     ).toBeInTheDocument()
     expect(
       screen.getByText(/scenario remains available regardless of saved history/i),

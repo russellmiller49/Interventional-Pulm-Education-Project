@@ -24,6 +24,8 @@ function activity(
     assumedConceptIds: [],
     estimatedMinutes: 12,
     difficulty: 'foundation',
+    curriculumStage: 'foundation',
+    stageOrder: 1,
     completionRuleId: 'validated-transfer',
     assetIds: [],
     reviewStatus: 'draft',

@@ -1,3 +1,4 @@
+import { capstoneLessonErrors, cardiohelpLearnLessonsBySupportMode } from '../content/learnLessons'
 import {
   cardiohelpCurriculum,
   capstoneScenarioIdForMode,
@@ -125,5 +126,31 @@ describe('CARDIOHELP curriculum registry', () => {
         'vv',
       ),
     ).toBeNull()
+  })
+})
+
+describe('capstone lesson permission (WP10 §4)', () => {
+  const capstoneScenarioId = capstoneScenarioIdForMode('vv')
+  const base = cardiohelpLearnLessonsBySupportMode.vv[0]
+
+  it('permits exactly one integration-stage lesson to wrap a capstone scenario', () => {
+    const asIntegration = {
+      ...base,
+      id: 'learn-vv-capstone-integration',
+      scenarioId: capstoneScenarioId,
+      curriculumStage: 'integration' as const,
+    }
+    expect(capstoneLessonErrors(asIntegration)).toEqual([])
+  })
+
+  it('still rejects a non-integration lesson wrapping a capstone scenario', () => {
+    const asDrill = {
+      ...base,
+      id: 'learn-vv-capstone-drill',
+      scenarioId: capstoneScenarioId,
+    }
+    expect(capstoneLessonErrors(asDrill)).toEqual([
+      expect.stringContaining('only an integration-stage lesson may wrap the capstone scenario'),
+    ])
   })
 })

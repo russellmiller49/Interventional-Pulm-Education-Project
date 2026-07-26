@@ -7,9 +7,8 @@ import type { CriticalCareConcept } from '../content/concepts'
 import { resolveCriticalCareEvidence } from '../content/evidenceRegistry'
 import { sourceConflictsForConcept } from '../content/sourceConflicts'
 import { criticalCareCatalogActivityHref } from '../content/activityRoutes'
+import { sortByCurriculumOrder } from '../content/curriculumOrder'
 import type { CriticalCarePublicClientCatalog } from '../content/publicCatalogTypes'
-
-const difficultyOrder = { foundation: 0, intermediate: 1, advanced: 2 } as const
 
 export function CriticalCareConceptDetail({
   concept,
@@ -18,17 +17,13 @@ export function CriticalCareConceptDetail({
   readonly concept: CriticalCareConcept
   readonly catalog: CriticalCarePublicClientCatalog
 }) {
-  const activities = catalog.activities
-    .filter(
+  const activities = sortByCurriculumOrder(
+    catalog.activities.filter(
       (activity) =>
         activity.teachesConceptIds.includes(concept.id) ||
         activity.assumedConceptIds.includes(concept.id),
-    )
-    .sort(
-      (left, right) =>
-        difficultyOrder[left.difficulty] - difficultyOrder[right.difficulty] ||
-        left.title.localeCompare(right.title),
-    )
+    ),
+  )
   const byModule = catalog.modules.flatMap((module) => {
     const moduleActivities = activities.filter((activity) => activity.moduleId === module.id)
     return moduleActivities.length > 0 ? [{ module, activities: moduleActivities }] : []

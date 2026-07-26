@@ -1,4 +1,6 @@
 export { IcuCapstoneEntry } from './IcuCapstoneEntry'
+export { IcuLearnLanding } from './IcuLearnLanding'
+export { IcuWorkspaceOrientation } from './IcuWorkspaceOrientation'
 export type { IcuCapstoneEntryProps } from './IcuCapstoneEntry'
 export { IcuRemediationLinks } from './IcuRemediationLinks'
 export type { IcuRemediationLinksProps } from './IcuRemediationLinks'

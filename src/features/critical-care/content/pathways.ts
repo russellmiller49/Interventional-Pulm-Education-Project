@@ -30,11 +30,11 @@ export const criticalCarePathways = [
       'hemodynamic-reassessment',
     ],
     recommendedIcuScenarioIds: [
-      'septic-ards-aki',
-      'lv-cardiogenic',
-      'massive-pe-rv',
       'hemorrhagic',
       'tamponade',
+      'lv-cardiogenic',
+      'massive-pe-rv',
+      'septic-ards-aki',
       'mixed-cardiogenic-vasodilatory',
     ],
   },
@@ -51,7 +51,7 @@ export const criticalCarePathways = [
       'ecmo-patient-management',
       'cross-system-reassessment',
     ],
-    recommendedIcuScenarioIds: ['septic-ards-aki', 'massive-pe-rv'],
+    recommendedIcuScenarioIds: ['massive-pe-rv', 'septic-ards-aki'],
   },
   {
     id: 'cardiogenic-and-rv-shock',
@@ -72,9 +72,9 @@ export const criticalCarePathways = [
       'hemodynamic-reassessment',
     ],
     recommendedIcuScenarioIds: [
+      'tamponade',
       'lv-cardiogenic',
       'massive-pe-rv',
-      'tamponade',
       'mixed-cardiogenic-vasodilatory',
     ],
   },
@@ -106,11 +106,11 @@ export const criticalCarePathways = [
       'critical-care-safety',
     ],
     recommendedIcuScenarioIds: [
-      'septic-ards-aki',
-      'lv-cardiogenic',
-      'massive-pe-rv',
       'hemorrhagic',
       'tamponade',
+      'lv-cardiogenic',
+      'massive-pe-rv',
+      'septic-ards-aki',
       'mixed-cardiogenic-vasodilatory',
     ],
   },
@@ -145,34 +145,28 @@ export interface CriticalCareIcuScenarioPreparation {
  */
 export const criticalCareIcuScenarioPreparation = [
   {
-    scenarioId: 'septic-ards-aki',
-    pathwayIds: [
-      'shock-and-perfusion',
-      'acute-respiratory-failure',
-      'renal-support-and-fluid-management',
-      'multiorgan-critical-illness',
-    ],
+    scenarioId: 'hemorrhagic',
+    pathwayIds: ['shock-and-perfusion', 'multiorgan-critical-illness'],
     assessRequirements: [
       {
-        id: 'septic-hemodynamics',
-        label: 'Distributive-shock hemodynamics',
+        id: 'hemorrhagic-hemodynamics',
+        label: 'Volume-loss hemodynamics',
         rationale:
-          'Review focused shock mechanism and perfusion reassessment as optional preparation for the multiorgan challenge.',
-        anyOfActivityIds: ['hemodynamics:practice:HD-02'],
+          'Review the volume-loss phenotype and its reassessment priorities before or after the longitudinal challenge.',
+        anyOfActivityIds: ['hemodynamics:practice:HD-01'],
       },
+    ],
+  },
+  {
+    scenarioId: 'tamponade',
+    pathwayIds: ['shock-and-perfusion', 'cardiogenic-and-rv-shock', 'multiorgan-critical-illness'],
+    assessRequirements: [
       {
-        id: 'septic-ventilation',
-        label: 'ARDS mechanics and sudden compliance change',
+        id: 'tamponade-hemodynamics',
+        label: 'Pressure equalization and falling pulse pressure',
         rationale:
-          'Use this focused respiratory review as optional context for ventilator decisions combined with shock and renal support.',
-        anyOfActivityIds: ['ventilation:practice:MV-01', 'ventilation:practice:MV-14'],
-      },
-      {
-        id: 'septic-renal',
-        label: 'CRRT priorities or fluid balance',
-        rationale:
-          'Use one focused renal-support case as optional context for evolving AKI and fluid management.',
-        anyOfActivityIds: ['crrt:practice:CRRT-01', 'crrt:practice:CRRT-10'],
+          'Review the focused tamponade-pattern case before or after the integrated recognition and escalation challenge.',
+        anyOfActivityIds: ['hemodynamics:practice:HD-07'],
       },
     ],
   },
@@ -222,28 +216,34 @@ export const criticalCareIcuScenarioPreparation = [
     ],
   },
   {
-    scenarioId: 'hemorrhagic',
-    pathwayIds: ['shock-and-perfusion', 'multiorgan-critical-illness'],
-    assessRequirements: [
-      {
-        id: 'hemorrhagic-hemodynamics',
-        label: 'Volume-loss hemodynamics',
-        rationale:
-          'Review the volume-loss phenotype and its reassessment priorities before or after the longitudinal challenge.',
-        anyOfActivityIds: ['hemodynamics:practice:HD-01'],
-      },
+    scenarioId: 'septic-ards-aki',
+    pathwayIds: [
+      'shock-and-perfusion',
+      'acute-respiratory-failure',
+      'renal-support-and-fluid-management',
+      'multiorgan-critical-illness',
     ],
-  },
-  {
-    scenarioId: 'tamponade',
-    pathwayIds: ['shock-and-perfusion', 'cardiogenic-and-rv-shock', 'multiorgan-critical-illness'],
     assessRequirements: [
       {
-        id: 'tamponade-hemodynamics',
-        label: 'Pressure equalization and falling pulse pressure',
+        id: 'septic-hemodynamics',
+        label: 'Distributive-shock hemodynamics',
         rationale:
-          'Review the focused tamponade-pattern case before or after the integrated recognition and escalation challenge.',
-        anyOfActivityIds: ['hemodynamics:practice:HD-07'],
+          'Review focused shock mechanism and perfusion reassessment as optional preparation for the multiorgan challenge.',
+        anyOfActivityIds: ['hemodynamics:practice:HD-02'],
+      },
+      {
+        id: 'septic-ventilation',
+        label: 'ARDS mechanics and sudden compliance change',
+        rationale:
+          'Use this focused respiratory review as optional context for ventilator decisions combined with shock and renal support.',
+        anyOfActivityIds: ['ventilation:practice:MV-01', 'ventilation:practice:MV-14'],
+      },
+      {
+        id: 'septic-renal',
+        label: 'CRRT priorities or fluid balance',
+        rationale:
+          'Use one focused renal-support case as optional context for evolving AKI and fluid management.',
+        anyOfActivityIds: ['crrt:practice:CRRT-01', 'crrt:practice:CRRT-10'],
       },
     ],
   },

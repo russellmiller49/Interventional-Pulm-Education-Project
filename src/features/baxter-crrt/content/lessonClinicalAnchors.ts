@@ -79,6 +79,67 @@ export const baxterCrrtLessonClinicalAnchors: Readonly<
       reviewStatus: 'sme-review',
     }),
   },
+  'crrt-circuit-pressures': {
+    title: 'Abrupt access-pressure change',
+    contextItems: [
+      { label: 'Patient', value: 'CRRT running after a position change' },
+      {
+        label: 'Signal',
+        value: 'Access pressure becomes more negative with intermittent blood flow',
+      },
+      { label: 'Other findings', value: 'No isolated value establishes the cause' },
+      { label: 'Priority', value: 'Patient and circuit inspection before control changes' },
+    ],
+    immediateGoal:
+      'Use pressure direction, circuit location, and direct inspection together to localize the problem.',
+    labEvidenceLabel:
+      'Commit a complete pressure prediction, reveal the pattern, and compare prediction with observation.',
+    applicationItem: item({
+      id: 'crrt-pressure-application-1',
+      activityId: 'crrt:learn:crrt-circuit-pressures',
+      phase: 'predict',
+      itemType: 'management-decision',
+      contextRequirement: 'patient',
+      clinicalContextId: 'crrt-anchor-access-pressure',
+      visualAssetIds: ['crrt-circuit-path', 'crrt-pressure-pattern'],
+      stem: 'Access pressure becomes progressively more negative and blood flow is intermittent after the patient is repositioned. What is the best next reasoning step?',
+      choices: [
+        {
+          id: 'inspect-access-path',
+          label:
+            'Assess the patient and inspect the catheter and access-line path, then compare the full pressure pattern and delivery',
+          rationale:
+            'The access-side signal and timing localize the first inspection without treating one number as a diagnosis.',
+          plausibility: 'best',
+        },
+        {
+          id: 'raise-flow',
+          label: 'Increase blood flow immediately to overcome the negative access pressure',
+          rationale:
+            'Increasing flow before identifying an access restriction can intensify the pressure change and interruption.',
+          plausibility: 'unsafe',
+        },
+        {
+          id: 'filter-only',
+          label: 'Assume filter clotting from the access pressure alone',
+          rationale:
+            'Filter burden is assessed with the filter, return, TMP, pressure-drop, and delivery trends—not an isolated access signal.',
+          plausibility: 'incorrect-mechanism',
+        },
+      ],
+      correctChoiceIds: ['inspect-access-path'],
+      explanation:
+        'Pressure signals are location dependent. Localize by circuit path, pattern, trend, timing, and direct patient/circuit inspection before changing therapy.',
+      evidenceIds: [
+        'DEV-PM-009',
+        'DEV-PM-010',
+        'MATH-PM-002',
+        'REVIEW-CRRT-PRINCIPLES-2021',
+        'SYNTH-LAB-PRESSURE-001',
+      ],
+      reviewStatus: 'sme-review',
+    }),
+  },
   'crrt-solute-transport': {
     title: 'Small-solute control during continuous therapy',
     contextItems: [
@@ -186,67 +247,6 @@ export const baxterCrrtLessonClinicalAnchors: Readonly<
         'DOSE-PM-001',
         'FLUID-PM-002',
         'SYNTH-LAB-PRESCRIPTION-001',
-      ],
-      reviewStatus: 'sme-review',
-    }),
-  },
-  'crrt-circuit-pressures': {
-    title: 'Abrupt access-pressure change',
-    contextItems: [
-      { label: 'Patient', value: 'CRRT running after a position change' },
-      {
-        label: 'Signal',
-        value: 'Access pressure becomes more negative with intermittent blood flow',
-      },
-      { label: 'Other findings', value: 'No isolated value establishes the cause' },
-      { label: 'Priority', value: 'Patient and circuit inspection before control changes' },
-    ],
-    immediateGoal:
-      'Use pressure direction, circuit location, and direct inspection together to localize the problem.',
-    labEvidenceLabel:
-      'Commit a complete pressure prediction, reveal the pattern, and compare prediction with observation.',
-    applicationItem: item({
-      id: 'crrt-pressure-application-1',
-      activityId: 'crrt:learn:crrt-circuit-pressures',
-      phase: 'predict',
-      itemType: 'management-decision',
-      contextRequirement: 'patient',
-      clinicalContextId: 'crrt-anchor-access-pressure',
-      visualAssetIds: ['crrt-circuit-path', 'crrt-pressure-pattern'],
-      stem: 'Access pressure becomes progressively more negative and blood flow is intermittent after the patient is repositioned. What is the best next reasoning step?',
-      choices: [
-        {
-          id: 'inspect-access-path',
-          label:
-            'Assess the patient and inspect the catheter and access-line path, then compare the full pressure pattern and delivery',
-          rationale:
-            'The access-side signal and timing localize the first inspection without treating one number as a diagnosis.',
-          plausibility: 'best',
-        },
-        {
-          id: 'raise-flow',
-          label: 'Increase blood flow immediately to overcome the negative access pressure',
-          rationale:
-            'Increasing flow before identifying an access restriction can intensify the pressure change and interruption.',
-          plausibility: 'unsafe',
-        },
-        {
-          id: 'filter-only',
-          label: 'Assume filter clotting from the access pressure alone',
-          rationale:
-            'Filter burden is assessed with the filter, return, TMP, pressure-drop, and delivery trends—not an isolated access signal.',
-          plausibility: 'incorrect-mechanism',
-        },
-      ],
-      correctChoiceIds: ['inspect-access-path'],
-      explanation:
-        'Pressure signals are location dependent. Localize by circuit path, pattern, trend, timing, and direct patient/circuit inspection before changing therapy.',
-      evidenceIds: [
-        'DEV-PM-009',
-        'DEV-PM-010',
-        'MATH-PM-002',
-        'REVIEW-CRRT-PRINCIPLES-2021',
-        'SYNTH-LAB-PRESSURE-001',
       ],
       reviewStatus: 'sme-review',
     }),
@@ -405,6 +405,71 @@ export const baxterCrrtLessonClinicalAnchors: Readonly<
         'FLUID-PM-002',
         'GUID-RRT-ICU-2026',
         'SYNTH-LAB-FLUID-001',
+      ],
+      reviewStatus: 'sme-review',
+    }),
+  },
+  'crrt-pressure-profile-integration': {
+    title: 'A run that is losing dose and gaining alarms',
+    contextItems: [
+      { label: 'Run', value: 'CVVHDF, hour 14, third pressure alarm this shift' },
+      { label: 'Access pressure', value: 'Unchanged from the start of the run' },
+      { label: 'Filter and TMP', value: 'Both rising over the last several hours' },
+      { label: 'Filter pressure drop', value: 'Rising in parallel with TMP' },
+      { label: 'Delivered dose', value: 'Falling as downtime accumulates' },
+    ],
+    immediateGoal:
+      'Localize the problem from the whole pressure profile and its trend before changing any control.',
+    applicationItem: item({
+      id: 'crrt-pressure-profile-application-1',
+      activityId: 'crrt:learn:crrt-pressure-profile-integration',
+      phase: 'predict',
+      itemType: 'mechanism-interpretation',
+      contextRequirement: 'patient',
+      clinicalContextId: 'crrt-anchor-pressure-profile',
+      stem: 'Access pressure is unchanged while filter pressure, transmembrane pressure, and filter pressure drop have all risen over hours, and delivered dose is falling. Which reading does this profile best support?',
+      choices: [
+        {
+          id: 'progressive-filter-burden',
+          label:
+            'Progressive filter burden: the rise is on the membrane and filter side while the inflow side is unchanged, so review the anticoagulation plan and the run history before adjusting flows',
+          rationale:
+            'A rising filter pressure drop and TMP with a stable access pressure localize the change to the filter and membrane rather than to inflow. That reframes the next step as a circuit-patency and monitoring question rather than a flow-setting one.',
+          plausibility: 'best',
+        },
+        {
+          id: 'access-limitation',
+          label: 'Access-side inflow limitation from catheter position or patient volume state',
+          rationale:
+            'An inflow limitation would be expected to move access pressure more negative; a stable access pressure argues against it as the dominant explanation here.',
+          plausibility: 'incorrect-mechanism',
+        },
+        {
+          id: 'excessive-removal-rate',
+          label: 'Too aggressive a fluid-removal rate for the current hemodynamics',
+          rationale:
+            'Removal rate is a genuine competing explanation and does belong on the list, but on its own it does not account for a filter pressure drop that rises independently of the inflow side. It is worth checking, not concluding.',
+          plausibility: 'reasonable-but-incomplete',
+        },
+        {
+          id: 'reset-and-continue',
+          label:
+            'Clear the alarm and continue, treating the values as within the range the device tolerates',
+          rationale:
+            'Acknowledging an alarm is not evidence that the detected condition has resolved, and a trend that has developed over hours is not an isolated fluctuation.',
+          plausibility: 'unsafe',
+        },
+      ],
+      correctChoiceIds: ['progressive-filter-burden'],
+      explanation:
+        'Read the profile as a set of relationships. Access pressure describes inflow, return pressure describes outflow, and TMP with filter pressure drop describe the membrane and filter. Here the inflow side is unchanged while the filter side is not, which localizes the problem without yet naming a correction. Prescription, removal rate, and anticoagulation all remain on the list to be checked; the exact alarm limits, restart behavior, and anticoagulation response come from current PrisMax instructions, local policy, and the responsible clinical team.',
+      evidenceIds: [
+        'DEV-PM-009',
+        'DEV-PM-010',
+        'MATH-PM-002',
+        'TEXT-RRT-HOSTE-2024',
+        'REVIEW-CRRT-PRINCIPLES-2021',
+        'SYNTH-LAB-PRESSURE-001',
       ],
       reviewStatus: 'sme-review',
     }),

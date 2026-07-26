@@ -3,6 +3,7 @@ import { baxterCrrtLearnLessons } from '@/features/baxter-crrt/content/learnLess
 import { baxterCrrtPracticeCaseIds } from '@/features/baxter-crrt/content/curriculum'
 import { baxterCrrtMasteryManifest } from '@/features/baxter-crrt/content/mastery'
 import { clinicalPracticeScenarios } from '@/features/cardiohelp-ecmo/content/clinicalCases'
+import { ecmoFoundationSections } from '@/features/cardiohelp-ecmo/content/foundationLessons'
 import { cardiohelpLearnLessons } from '@/features/cardiohelp-ecmo/content/learnLessons'
 import { cardiohelpScenarios } from '@/features/cardiohelp-ecmo/content/scenarios'
 import {
@@ -145,9 +146,16 @@ describe('critical-care catalogs', () => {
         .filter((definition) => definition.kind === 'capstone')
         .map((definition) => definition.id),
     )
-    expect(sourceIds('cardiohelp-ecmo', 'learn')).toEqual(
-      cardiohelpLearnLessons.map((definition) => definition.scenarioId),
-    )
+    // ECMO Learn is the authored physiology sections followed by the guided drill lessons.
+    expect(sourceIds('cardiohelp-ecmo', 'learn')).toEqual([
+      ...ecmoFoundationSections
+        .map((section) => section.id)
+        .filter((id) => !id.endsWith('-capstone')),
+      ...cardiohelpLearnLessons.map((definition) => definition.scenarioId),
+      ...ecmoFoundationSections
+        .map((section) => section.id)
+        .filter((id) => id.endsWith('-capstone')),
+    ])
     expect(sourceIds('cardiohelp-ecmo', 'practice')).toEqual(
       clinicalPracticeScenarios.map((definition) => definition.id),
     )
