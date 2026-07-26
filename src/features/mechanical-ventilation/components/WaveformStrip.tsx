@@ -7,6 +7,19 @@ import styles from './mechanical-ventilation.module.css'
 
 type WaveformField = 'pawCmH2O' | 'flowLMin' | 'volumeMl'
 
+export interface WaveformReadout {
+  readonly label: string
+  readonly value: number
+  readonly precision?: number
+}
+
+/** A labelled pressure level drawn on the trace while the simulation is paused. */
+export interface WaveformAnnotation {
+  readonly id: string
+  readonly label: string
+  readonly value: number
+}
+
 interface WaveformStripProps {
   samples: readonly WaveformSample[]
   field: WaveformField
@@ -15,6 +28,11 @@ interface WaveformStripProps {
   minimum: number
   maximum: number
   showPmus?: boolean
+  /** Persistent derived values. Replaces the single instantaneous reading when supplied. */
+  readouts?: readonly WaveformReadout[]
+  /** Component labels, shown only when paused so they do not chase a moving trace. */
+  annotations?: readonly WaveformAnnotation[]
+  annotationsVisible?: boolean
 }
 
 function linePoints(
@@ -45,6 +63,9 @@ export function WaveformStrip({
   minimum,
   maximum,
   showPmus = false,
+  readouts,
+  annotations,
+  annotationsVisible = false,
 }: WaveformStripProps) {
   const values = useMemo(() => samples.map((sample) => sample[field]), [field, samples])
   const points = useMemo(
@@ -63,9 +84,20 @@ export function WaveformStrip({
     <figure className={styles.waveformFigure}>
       <div className={styles.waveformLabel} aria-hidden="true">
         <strong>{label}</strong>
-        <span>
-          {current.toFixed(field === 'volumeMl' ? 0 : 1)} {unit}
-        </span>
+        {readouts && readouts.length > 0 ? (
+          <dl className={styles.waveformReadouts}>
+            {readouts.map((readout) => (
+              <div key={readout.label}>
+                <dt>{readout.label}</dt>
+                <dd>{readout.value.toFixed(readout.precision ?? 0)}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : (
+          <span>
+            {current.toFixed(field === 'volumeMl' ? 0 : 1)} {unit}
+          </span>
+        )}
       </div>
       <svg
         className={styles.waveformSvg}
@@ -96,10 +128,38 @@ export function WaveformStrip({
             vectorEffect="non-scaling-stroke"
           />
         ) : null}
+        {annotationsVisible && annotations
+          ? annotations.map((annotation) => {
+              const normalized = Math.max(
+                0,
+                Math.min(1, (annotation.value - minimum) / (maximum - minimum)),
+              )
+              const y = 112 - normalized * 104
+              return (
+                <g key={annotation.id} className={styles.waveformAnnotation}>
+                  <line x1="0" y1={y} x2="1000" y2={y} vectorEffect="non-scaling-stroke" />
+                  <text x="12" y={y - 5}>
+                    {annotation.label}
+                  </text>
+                </g>
+              )
+            })
+          : null}
       </svg>
       <figcaption className={styles.srOnly}>
         {label}: current {current.toFixed(1)} {unit}; minimum {observedMin.toFixed(1)}; maximum{' '}
         {observedMax.toFixed(1)}.{' '}
+        {readouts && readouts.length > 0
+          ? `Derived values: ${readouts
+              .map(
+                (readout) =>
+                  `${readout.label} ${readout.value.toFixed(readout.precision ?? 0)} ${unit}`,
+              )
+              .join('; ')}. `
+          : ''}
+        {annotationsVisible && annotations && annotations.length > 0
+          ? `Labelled components: ${annotations.map((a) => a.label).join('; ')}. `
+          : ''}
         {showPmus ? 'Educator Pmus overlay is shown as a dashed trace.' : ''}
       </figcaption>
     </figure>

@@ -425,23 +425,57 @@ function refreshMeasurements(state: VentilationSimulationState): VentilationSimu
   }
 }
 
+/**
+ * Occlude at the correct point in the breath.
+ *
+ * The hold used to begin the instant it was requested. With a typical I:E ratio the learner is in
+ * expiration most of the time, so the model froze at roughly zero volume and baseline pressure —
+ * a flat trace with no plateau, which is the opposite of what the maneuver is meant to show. A
+ * real inspiratory hold occludes at end-inspiration and an expiratory hold at end-expiration, so
+ * advance to that boundary first, then close the valves.
+ */
 function performConsoleHold(
   state: VentilationSimulationState,
   hold: 'inspiratory' | 'expiratory',
 ): VentilationSimulationState {
   const definition = caseDefinition(state)
+  const rate = deriveEffectiveVentilationRate(
+    state.ventilator.settings,
+    state.patient,
+    definition.predictedBodyWeightKg,
+  )
+  const cycle = 60 / Math.max(1, rate)
+  const inspiratoryTime = clamp(
+    state.measurements.mechanicalInspiratoryTimeSeconds,
+    0.1,
+    Math.max(0.2, cycle - 0.05),
+  )
+  const remainder = state.simulationTime % cycle
+  const secondsToBoundary =
+    hold === 'inspiratory'
+      ? remainder < inspiratoryTime
+        ? inspiratoryTime - remainder
+        : cycle - remainder + inspiratoryTime
+      : cycle - remainder
+
+  const atBoundary = advanceSimulation(state, Math.max(0.02, secondsToBoundary))
   const interventionId = hold === 'inspiratory' ? 'inspiratory-hold' : 'expiratory-hold'
-  if (definition.interventions.some((item) => item.id === interventionId)) {
-    return applyIntervention(state, definition, interventionId)
-  }
+  // Cases that author their own hold intervention still get it, but the maneuver is now also
+  // rendered on the trace rather than only recorded.
+  const withIntervention = definition.interventions.some((item) => item.id === interventionId)
+    ? applyIntervention(atBoundary, definition, interventionId)
+    : atBoundary
+
   return {
-    ...state,
+    ...withIntervention,
     ventilator: {
-      ...state.ventilator,
+      ...withIntervention.ventilator,
       holdType: hold,
-      holdUntil: state.simulationTime + 10,
+      holdUntil: withIntervention.simulationTime + 4,
     },
-    lastResponse: `${hold === 'inspiratory' ? 'Inspiratory' : 'Expiratory'} hold active.`,
+    lastResponse: `${hold === 'inspiratory' ? 'Inspiratory' : 'Expiratory'} hold active at end-${
+      hold === 'inspiratory' ? 'inspiration' : 'expiration'
+    }.`,
   }
 }
 

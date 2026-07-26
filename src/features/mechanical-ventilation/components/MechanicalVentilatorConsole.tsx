@@ -698,6 +698,11 @@ export function MechanicalVentilatorConsole({
           {screen === 'main' ? (
             <div className={styles.monitoringScreen}>
               <div className={styles.waveformStack}>
+                {/*
+                 * A single instantaneous Paw sat at PEEP for most of the cycle, so it read as a
+                 * broken number beside Ppeak. Show the derived pressures a real console keeps on
+                 * screen, and label the pressure components on the trace while paused.
+                 */}
                 <WaveformStrip
                   samples={state.waveforms}
                   field="pawCmH2O"
@@ -706,6 +711,30 @@ export function MechanicalVentilatorConsole({
                   minimum={0}
                   maximum={50}
                   showPmus={state.showEducatorOverlay}
+                  readouts={[
+                    { label: 'Ppeak', value: state.measurements.peakPressureCmH2O },
+                    { label: 'Pplat', value: state.measurements.plateauPressureCmH2O },
+                    { label: 'Pmean', value: state.measurements.meanAirwayPressureCmH2O },
+                    { label: 'PEEP', value: state.ventilator.settings.peepCmH2O },
+                  ]}
+                  annotationsVisible={state.paused}
+                  annotations={[
+                    {
+                      id: 'ppeak',
+                      label: `Peak inspiratory pressure ${state.measurements.peakPressureCmH2O.toFixed(0)} — resistive + elastic`,
+                      value: state.measurements.peakPressureCmH2O,
+                    },
+                    {
+                      id: 'pplat',
+                      label: `Plateau ${state.measurements.plateauPressureCmH2O.toFixed(0)} — elastic load only; gap to peak is resistive`,
+                      value: state.measurements.plateauPressureCmH2O,
+                    },
+                    {
+                      id: 'peep',
+                      label: `PEEP ${state.ventilator.settings.peepCmH2O.toFixed(0)} — baseline the breath starts from`,
+                      value: state.ventilator.settings.peepCmH2O,
+                    },
+                  ]}
                 />
                 <WaveformStrip
                   samples={state.waveforms}
