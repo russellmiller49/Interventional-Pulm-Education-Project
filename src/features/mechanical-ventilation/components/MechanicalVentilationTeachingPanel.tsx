@@ -751,3 +751,96 @@ export function MechanicalVentilationTeachingPanel({
   }
   return null
 }
+
+/* ------------------------------------------------------------------------------------------------
+ * Run control and the generic section panel
+ * ---------------------------------------------------------------------------------------------- */
+
+/** Explicit start/pause for the lesson clock. Learn had no way to make the console move. */
+export function VentilationRunControl({
+  paused,
+  simulationTime,
+  onToggle,
+  onStepBreath,
+}: {
+  readonly paused: boolean
+  readonly simulationTime: number
+  readonly onToggle: () => void
+  readonly onStepBreath: () => void
+}) {
+  return (
+    <section className={styles.runControl} aria-label="Lesson simulation clock">
+      <div>
+        <span>Simulation</span>
+        <strong>
+          {paused ? 'Paused' : 'Running'} · {round(simulationTime)} s
+        </strong>
+      </div>
+      <div className={styles.runButtons}>
+        <button type="button" onClick={onToggle} aria-pressed={!paused}>
+          {paused ? 'Start ventilation' : 'Pause'}
+        </button>
+        <button type="button" onClick={onStepBreath}>
+          Step one breath
+        </button>
+      </div>
+    </section>
+  )
+}
+
+/**
+ * Fallback teaching panel for sections without a bespoke figure. It surfaces the lesson's own
+ * authored phase copy and references so every section explains what it is for, instead of
+ * leaving the middle pane empty and the section looking unbuilt.
+ */
+export function VentilationSectionOverview({
+  title,
+  summary,
+  phaseCopy,
+  references,
+}: {
+  readonly title: string
+  readonly summary: string
+  readonly phaseCopy: readonly { readonly phase: string; readonly objective: string }[]
+  readonly references: readonly { readonly title: string; readonly summary: string }[]
+}) {
+  return (
+    <section className={styles.panel} aria-labelledby="mv-section-overview">
+      <header className={styles.panelHeader}>
+        <span>What this section is for</span>
+        <h2 id="mv-section-overview">{title}</h2>
+        <p>{summary}</p>
+      </header>
+
+      <ol className={styles.steps} aria-label="What you will do in this section">
+        {phaseCopy.map((entry, index) => (
+          <li key={entry.phase}>
+            <div className={styles.overviewStep}>
+              <span aria-hidden="true">{index + 1}</span>
+              <span>
+                <strong>{entry.phase}</strong>
+                <small>{entry.objective}</small>
+              </span>
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      {references.length > 0 ? (
+        <div className={styles.stepDetail}>
+          <span>Reference</span>
+          {references.map((reference) => (
+            <p key={reference.title}>
+              <strong>{reference.title}.</strong> {reference.summary}
+            </p>
+          ))}
+        </div>
+      ) : null}
+
+      <ModelBoundary>
+        An illustrated mechanism panel is authored for the mechanics, waveform, and integration
+        sections. This section shows its authored objectives while its figure is still pending.
+      </ModelBoundary>
+    </section>
+  )
+}
