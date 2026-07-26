@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, type CSSProperties } from 'react'
 
 import type { WaveformSample } from '../engine'
 import styles from './mechanical-ventilation.module.css'
@@ -33,6 +33,8 @@ interface WaveformStripProps {
   /** Component labels, shown only when paused so they do not chase a moving trace. */
   annotations?: readonly WaveformAnnotation[]
   annotationsVisible?: boolean
+  /** Per-trace color where the vendor documents one; otherwise the device palette's default. */
+  color?: string
 }
 
 function linePoints(
@@ -66,6 +68,7 @@ export function WaveformStrip({
   readouts,
   annotations,
   annotationsVisible = false,
+  color,
 }: WaveformStripProps) {
   const values = useMemo(() => samples.map((sample) => sample[field]), [field, samples])
   const points = useMemo(
@@ -81,7 +84,10 @@ export function WaveformStrip({
   const observedMax = values.length ? Math.max(...values) : 0
 
   return (
-    <figure className={styles.waveformFigure}>
+    <figure
+      className={styles.waveformFigure}
+      style={color ? ({ '--wave': color } as CSSProperties) : undefined}
+    >
       <div className={styles.waveformLabel} aria-hidden="true">
         <strong>{label}</strong>
         {readouts && readouts.length > 0 ? (

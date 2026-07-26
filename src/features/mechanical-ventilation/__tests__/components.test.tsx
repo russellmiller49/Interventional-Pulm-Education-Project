@@ -207,7 +207,7 @@ describe('multi-device mechanical ventilation learner interface', () => {
     ).toBeInTheDocument()
     expect(screen.getAllByText(/VC-AC/).length).toBeGreaterThan(0)
     fireEvent.click(screen.getByRole('button', { name: 'Therapy bar' }))
-    expect(screen.getByRole('button', { name: /PEEP, 5 cmH₂O/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /PEEP, 5 mbar/i })).toBeInTheDocument()
     expect(
       screen.getByRole('heading', { name: 'Evita V800 / V600 Instructions for Use' }),
     ).toBeInTheDocument()
@@ -235,7 +235,7 @@ describe('multi-device mechanical ventilation learner interface', () => {
     const dispatch = jest.fn()
     render(<MechanicalVentilatorConsole state={state} dispatch={dispatch} controlsEnabled />)
 
-    fireEvent.keyDown(screen.getByRole('button', { name: /PEEP, 5 cmH₂O/i }), { key: 'ArrowUp' })
+    fireEvent.keyDown(screen.getByRole('button', { name: /PEEP, 5 mbar/i }), { key: 'ArrowUp' })
     expect(dispatch).not.toHaveBeenCalled()
     expect(screen.getByText('Pending PEEP')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Press knob to confirm' }))
@@ -319,6 +319,6 @@ describe('multi-device mechanical ventilation learner interface', () => {
     ).toBeGreaterThan(0)
     expect(within(consoleRegion).getByRole('button', { name: /Freeze waveforms/i })).toBeEnabled()
     expect(within(consoleRegion).getByRole('button', { name: /Alarm audio off/i })).toBeEnabled()
-    expect(within(consoleRegion).getByRole('button', { name: 'Lock' })).toBeEnabled()
+    expect(within(consoleRegion).getByRole('button', { name: 'Screen lock' })).toBeEnabled()
   })
 })

@@ -416,6 +416,7 @@ function nextWaveformSample(
       pmusCmH2O: round(-effort, 2),
       phase: timing.inspiration ? 'inspiration' : 'expiration',
       triggered: timing.triggered,
+      spontaneous: timing.spontaneous || settings.mode === 'pressure-support',
     },
     volumeL: nextVolume,
   }

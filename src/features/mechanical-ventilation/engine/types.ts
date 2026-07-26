@@ -64,6 +64,113 @@ export interface VentilatorControlDescriptor {
   rangeNote?: string
 }
 
+/**
+ * A measurement the monitoring screen can put in a parameter field. Vendors publish these under
+ * different abbreviations and in different orders, so the metric is the stable identity and the
+ * label lives on the device's display profile.
+ */
+export type VentilatorMonitorMetric =
+  | 'peakPressure'
+  | 'plateauPressure'
+  | 'meanAirwayPressure'
+  | 'peep'
+  | 'intrinsicPeep'
+  | 'exhaledTidalVolume'
+  | 'minuteVolume'
+  | 'totalRate'
+  | 'spontaneousRate'
+  | 'ieRatio'
+  | 'oxygenPercent'
+  | 'staticCompliance'
+  | 'spo2'
+
+export interface VentilatorMonitorField {
+  metric: VentilatorMonitorMetric
+  /** The vendor's own abbreviation, e.g. `PIP` on Evita, `PPEAK` on the PB980. */
+  label: string
+  unit: string
+  precision?: number
+}
+
+export type VentilatorWaveformField = 'pawCmH2O' | 'flowLMin' | 'volumeMl'
+
+export interface VentilatorWaveformChannel {
+  field: VentilatorWaveformField
+  label: string
+  unit: string
+  minimum: number
+  maximum: number
+  /** Trace color, where the vendor documents one. Omitted devices draw every trace alike. */
+  color?: string
+}
+
+/**
+ * How a device organizes its settings. The C6 groups them by clinical purpose; the Evita prints a
+ * single therapy bar. `keys` is a precedence list — keys the active mode does not expose are
+ * skipped, and anything unlisted keeps its engine order at the end.
+ */
+export interface VentilatorControlGroup {
+  label: string
+  keys: readonly VentilatorControlKey[]
+}
+
+/**
+ * Where the device puts its monitored numbers relative to the waveforms.
+ * `right-column` — Evita: large values in a column beside the waveform fields.
+ * `right-tiles`  — Hamilton/AVEA: a stack of compact labelled tiles.
+ * `top-banner`   — PB980: a horizontal patient-data banner across the top of the screen.
+ */
+export type VentilatorMonitorLayout = 'left-column' | 'right-column' | 'right-tiles' | 'top-banner'
+
+export type VentilatorBezelAction =
+  | 'manual-breath'
+  | 'inspiratory-hold'
+  | 'expiratory-hold'
+  | 'alarm-reset'
+  | 'alarm-silence'
+  | 'oxygen-enrichment'
+  | 'screen-lock'
+
+export interface VentilatorBezelKey {
+  action: VentilatorBezelAction
+  label: string
+}
+
+/** The vendor's abbreviations for the four pressures the console keeps on the Paw trace. */
+export interface VentilatorPressureLabels {
+  peak: string
+  plateau: string
+  mean: string
+  peep: string
+}
+
+export interface VentilatorDisplayProfile {
+  /** How this vendor prints airway pressures. Evita uses mbar; the others use cmH₂O. */
+  pressureUnit: string
+  pressureLabels: VentilatorPressureLabels
+  monitorLayout: VentilatorMonitorLayout
+  /** The vendor's name for the monitored-value region, used as its accessible name. */
+  monitorLabel: string
+  monitorFields: readonly VentilatorMonitorField[]
+  /** A separate strip below the monitored values. The C6 puts SpO2 and its low limit there. */
+  monitorFooter?: readonly VentilatorMonitorField[]
+  waveforms: readonly VentilatorWaveformChannel[]
+  /**
+   * The order this vendor presents its settings in. Empty means no documented order, so the
+   * engine's mode-driven order stands. `controlGroups` additionally labels the groups on screen.
+   */
+  controlOrder: readonly VentilatorControlKey[]
+  controlGroups?: readonly VentilatorControlGroup[]
+  /** PB980 only: the C / A / S breath-phase indicator that opens its patient-data banner. */
+  showBreathPhase: boolean
+  /** Documented off-screen keys rendered on the bezel, in the order the vendor prints them. */
+  bezelKeys: readonly VentilatorBezelKey[]
+  /** How many bezel keys sit to the left of the rotary control. The PB980 straddles its knob. */
+  knobPosition: number
+  /** Sourcing note for everything above; surfaced on the console. */
+  displayNote: string
+}
+
 export interface VentilatorDeviceProfile {
   id: VentilatorDeviceId
   displayName: string
@@ -80,6 +187,7 @@ export interface VentilatorDeviceProfile {
   deferredModes: readonly string[]
   sourceIds: readonly string[]
   controlLabels: Partial<Record<VentilatorControlKey, string>>
+  display: VentilatorDisplayProfile
   educationalUseOnly: true
 }
 
@@ -240,6 +348,8 @@ export interface WaveformSample {
   pmusCmH2O: number
   phase: 'inspiration' | 'expiration'
   triggered: boolean
+  /** True when this breath is a spontaneous one rather than a mandatory delivery. */
+  spontaneous: boolean
 }
 
 export interface TrendSample {

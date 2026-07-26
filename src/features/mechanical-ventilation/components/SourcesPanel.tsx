@@ -108,6 +108,10 @@ export function SourcesPanel({ deviceId }: { deviceId: VentilatorDeviceId }) {
           <dd>{profile.patientGroup}</dd>
         </div>
         <div>
+          <dt>Display basis</dt>
+          <dd>{profile.display.displayNote}</dd>
+        </div>
+        <div>
           <dt>Publication</dt>
           <dd>
             {mechanicalVentilationPublicationStatus === 'published'

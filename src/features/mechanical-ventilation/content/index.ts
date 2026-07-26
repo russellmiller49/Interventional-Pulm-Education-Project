@@ -1,4 +1,5 @@
 export * from './caseTransfer'
+export * from './deviceDisplay'
 export * from './deviceProfiles'
 export * from './evidence'
 export * from './lessonLearningItems'

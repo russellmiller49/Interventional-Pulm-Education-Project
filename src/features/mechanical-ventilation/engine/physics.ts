@@ -62,6 +62,24 @@ export function passiveExpiratoryFlowLps(
   return -volumeL / timeConstant
 }
 
+/**
+ * Flow-delivery time for a volume-targeted breath, from settings alone. Split out of
+ * `deriveMechanicalInspiratoryTime` so device profiles can express a pause in seconds — the unit
+ * the Evita, PB980, and AVEA all print — without needing a patient model.
+ */
+export function deriveVolumeFlowTimeSeconds(settings: MechanicalVentilationSettings): number {
+  if (settings.mode !== 'volume-ac') return 0
+  const patternFactor =
+    settings.flowPattern === 'square'
+      ? 1
+      : settings.flowPattern === 'sine'
+        ? 0.64
+        : settings.flowPattern === 'decelerating-100'
+          ? 0.55
+          : 0.72
+  return clamp(settings.vtMl / Math.max(1, settings.peakFlowLMin * patternFactor * 16.67), 0.2, 3)
+}
+
 export function deriveMechanicalInspiratoryTime(
   settings: MechanicalVentilationSettings,
   patient: PatientModelState,
@@ -70,17 +88,7 @@ export function deriveMechanicalInspiratoryTime(
   if (settings.advanced.intelliSyncEnabled) {
     return clamp(patient.drive.neuralInspiratoryTimeSeconds, 0.2, 3)
   }
-  if (settings.mode === 'volume-ac') {
-    const patternFactor =
-      settings.flowPattern === 'square'
-        ? 1
-        : settings.flowPattern === 'sine'
-          ? 0.64
-          : settings.flowPattern === 'decelerating-100'
-            ? 0.55
-            : 0.72
-    return clamp(settings.vtMl / Math.max(1, settings.peakFlowLMin * patternFactor * 16.67), 0.2, 3)
-  }
+  if (settings.mode === 'volume-ac') return deriveVolumeFlowTimeSeconds(settings)
   if (settings.mode === 'pressure-ac') return settings.inspiratoryTimeSeconds
   const tau = Math.max(
     0.08,

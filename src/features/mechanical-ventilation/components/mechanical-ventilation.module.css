@@ -711,6 +711,72 @@
   min-height: 470px;
 }
 
+/* C6: the MMP column runs down the left of the display, ahead of the waveforms. */
+.monitoringScreen[data-layout='left-column'] {
+  grid-template-columns: minmax(112px, 0.2fr) minmax(0, 1fr);
+}
+
+/* Evita: a wider column so the large values it prints beside the waveform fields fit. */
+.monitoringScreen[data-layout='right-column'] {
+  grid-template-columns: minmax(0, 1fr) minmax(132px, 0.24fr);
+}
+
+/* PB980: the patient-data banner runs across the top; waveforms take the full width beneath it. */
+.monitoringScreen[data-layout='top-banner'] {
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.patientDataBanner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 1.1rem;
+  padding: 0.45rem 0.7rem;
+  border-bottom: 1px solid var(--screen-line);
+  background: rgba(13, 36, 40, 0.88);
+}
+
+.patientDataBanner > div {
+  display: grid;
+  justify-items: center;
+  gap: 0.05rem;
+}
+
+.patientDataBanner span {
+  color: #8eafb1;
+  font-size: 0.55rem;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.patientDataBanner strong {
+  color: var(--wave);
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.breathPhase {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.2rem;
+  color: #ffffff;
+  background: #b3372c;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.breathPhase[data-phase='C'] {
+  background: #3c5f8c;
+}
+
+.breathPhase[data-phase='A'] {
+  background: #8a6a1d;
+}
+
 .waveformStack {
   display: grid;
   grid-template-rows: repeat(3, minmax(0, 1fr));
@@ -720,7 +786,7 @@
 .waveformFigure {
   position: relative;
   display: grid;
-  grid-template-columns: 70px minmax(0, 1fr);
+  grid-template-columns: 92px minmax(0, 1fr);
   min-width: 0;
   min-height: 145px;
   margin: 0;
@@ -783,12 +849,51 @@
 
 .mmpPanel {
   display: grid;
-  grid-template-rows: repeat(5, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
   border-left: 1px solid var(--screen-line);
   background: rgba(13, 36, 40, 0.88);
 }
 
-.mmpPanel > div {
+.mmpPanel[data-layout='left-column'] {
+  border-right: 1px solid var(--screen-line);
+  border-left: 0;
+}
+
+.mmpValues {
+  display: grid;
+  grid-auto-rows: minmax(0, 1fr);
+  min-height: 0;
+}
+
+.mmpFooter {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 0.35rem;
+  align-items: baseline;
+  justify-content: start;
+  padding: 0.3rem 0.55rem;
+  border-top: 1px solid var(--screen-line);
+}
+
+.mmpFooter > div {
+  display: flex;
+  gap: 0.3rem;
+  align-items: baseline;
+}
+
+.mmpFooter span,
+.mmpFooter small {
+  color: #8eafb1;
+  font-size: 0.58rem;
+}
+
+.mmpFooter strong {
+  color: var(--wave);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.mmpValues > div {
   display: grid;
   grid-template-columns: 1fr auto;
   grid-template-rows: auto auto;
@@ -798,7 +903,7 @@
   border-bottom: 1px solid var(--screen-line);
 }
 
-.mmpPanel > div:last-child {
+.mmpValues > div:last-child {
   border-bottom: 0;
 }
 
@@ -815,6 +920,68 @@
   color: var(--wave);
   font-size: clamp(1rem, 2vw, 1.45rem);
   font-variant-numeric: tabular-nums;
+}
+
+/*
+ * C6 MMP (operator's manual Figure 8-2): a large value with the parameter name and unit small
+ * beneath it, left aligned.
+ */
+.mmpPanel[data-layout='left-column'] > .mmpValues > div {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: 0;
+}
+
+.mmpPanel[data-layout='left-column'] strong {
+  grid-row: 1;
+  grid-column: 1;
+  justify-self: end;
+  color: #f2f6f6;
+  font-size: clamp(1.1rem, 2.3vw, 1.75rem);
+  font-weight: 400;
+}
+
+.mmpPanel[data-layout='left-column'] span {
+  grid-row: 2;
+  grid-column: 1;
+  justify-self: end;
+}
+
+.mmpPanel[data-layout='left-column'] small {
+  grid-row: 3;
+  grid-column: 1;
+  justify-self: end;
+}
+
+/*
+ * Evita monitoring area (pocket guide pp. 5, 8-9): the parameter name and unit sit small above a
+ * large left-aligned value, rather than beside it.
+ */
+.mmpPanel[data-layout='right-column'] > .mmpValues > div {
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: center;
+  gap: 0.1rem 0.3rem;
+}
+
+.mmpPanel[data-layout='right-column'] span {
+  grid-row: 1;
+  grid-column: 1;
+  justify-self: start;
+}
+
+.mmpPanel[data-layout='right-column'] small {
+  grid-row: 1;
+  grid-column: 2;
+  justify-self: start;
+}
+
+.mmpPanel[data-layout='right-column'] strong {
+  grid-row: 2;
+  grid-column: 1 / -1;
+  justify-self: end;
+  font-size: clamp(1.15rem, 2.4vw, 1.9rem);
+  font-weight: 400;
 }
 
 .consoleNav {
@@ -1003,17 +1170,22 @@
 .inlineDeviceFields label {
   display: grid;
   gap: 0.25rem;
-  color: #9fb5b7;
+  color: var(--screen-text);
   font-size: 0.65rem;
+  opacity: 0.78;
 }
 
+/*
+ * These fields sit on the device screen, so they take the device palette. Hard-coded dark values
+ * rendered navy-on-navy once the Evita's light screen arrived.
+ */
 .inlineDeviceFields select {
   min-height: 2rem;
   padding: 0.35rem;
-  border: 1px solid #456168;
+  border: 1px solid var(--screen-line);
   border-radius: 0.35rem;
   color: var(--screen-text);
-  background: #10282d;
+  background: var(--screen-panel);
 }
 
 .inlineDeviceFields .checkField {
@@ -1022,8 +1194,9 @@
   align-items: center;
   min-height: 2rem;
   padding: 0.35rem 0.55rem;
-  border: 1px solid #456168;
+  border: 1px solid var(--screen-line);
   border-radius: 0.35rem;
+  opacity: 1;
 }
 
 .modeFeatures {
@@ -1034,20 +1207,22 @@
 
 .modeFeatures h4 {
   margin: 0;
-  color: #9fb5b7;
+  color: var(--screen-text);
   font-size: 0.68rem;
   text-transform: uppercase;
+  opacity: 0.78;
 }
 
+/* On the device screen, so it follows the device palette rather than a fixed dark surface. */
 .featureField {
   display: flex;
   gap: 0.55rem;
   align-items: start;
   padding: 0.55rem 0.65rem;
-  border: 1px solid #456168;
+  border: 1px solid var(--screen-line);
   border-radius: 0.4rem;
-  color: #b7c9cb;
-  background: #10282d;
+  color: var(--screen-text);
+  background: var(--screen-panel);
 }
 
 .featureField > span {
@@ -1063,12 +1238,18 @@
 }
 
 .featureField small {
-  color: #91aaac;
+  color: var(--screen-text);
+  opacity: 0.76;
 }
 
+/* Amber warning text was authored for a dark screen; darken it on light device palettes. */
 .featureField em {
   color: #f2c879;
   font-style: normal;
+}
+
+.consoleShell[data-device='drager-evita-v800-v600'] .featureField em {
+  color: #8a5300;
 }
 
 .featureField[data-availability='requires-neonatal'] {
@@ -1272,8 +1453,8 @@
 }
 
 .physicalControls {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(95px, 1fr)) minmax(210px, 1.3fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.55rem;
   align-items: center;
   padding-top: 0.75rem;
@@ -1281,6 +1462,7 @@
 
 .physicalControls > button {
   display: grid;
+  flex: 1 1 95px;
   justify-items: center;
   gap: 0.3rem;
   min-height: 66px;
@@ -1306,6 +1488,7 @@
 
 .rotaryControl {
   display: grid;
+  flex: 1 1 210px;
   grid-template-columns: 2rem 1fr 2rem;
   gap: 0.35rem;
   align-items: center;
@@ -2694,23 +2877,8 @@
   box-shadow: 0 3px 0 #07121e;
 }
 
-.consoleShell[data-device='puritan-bennett-980'] .physicalControls {
-  grid-template-columns:
-    minmax(82px, 1fr) minmax(82px, 1fr) minmax(210px, 1.35fr) minmax(82px, 1fr)
-    minmax(82px, 1fr);
-}
-
-.consoleShell[data-device='puritan-bennett-980'] .physicalControls > button:nth-child(3) {
-  grid-column: 4;
-}
-
-.consoleShell[data-device='puritan-bennett-980'] .physicalControls > button:nth-child(4) {
-  grid-column: 5;
-}
-
-.consoleShell[data-device='puritan-bennett-980'] .rotaryControl {
-  grid-row: 1;
-  grid-column: 3;
+.consoleShell[data-device='puritan-bennett-980'] .physicalControls > button {
+  flex: 1 1 82px;
 }
 
 .consoleShell[data-device='carefusion-avea'] {
@@ -2888,12 +3056,8 @@
     grid-template-columns: 1fr;
   }
 
-  .physicalControls {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
   .rotaryControl {
-    grid-column: 1 / -1;
+    flex-basis: 100%;
     width: min(100%, 280px);
     justify-self: center;
   }
@@ -2981,28 +3145,10 @@
     grid-template-columns: repeat(3, 1fr);
   }
 
-  .physicalControls {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
   .rotaryControl {
-    grid-column: 1 / -1;
+    flex-basis: 100%;
     max-width: 280px;
     justify-self: center;
-  }
-
-  .consoleShell[data-device='puritan-bennett-980'] .physicalControls {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .consoleShell[data-device='puritan-bennett-980'] .physicalControls > button:nth-child(3),
-  .consoleShell[data-device='puritan-bennett-980'] .physicalControls > button:nth-child(4) {
-    grid-column: auto;
-  }
-
-  .consoleShell[data-device='puritan-bennett-980'] .rotaryControl {
-    grid-row: auto;
-    grid-column: 1 / -1;
   }
 
   .predictionFields {
@@ -3145,7 +3291,7 @@
   }
 
   .waveformFigure {
-    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-columns: 68px minmax(0, 1fr);
   }
 
   .waveformLabel {
@@ -3216,8 +3362,8 @@
     width: 110px;
   }
 
-  .physicalControls {
-    grid-template-columns: repeat(2, 1fr);
+  .physicalControls > button {
+    flex-basis: 45%;
   }
 
   .workflowStepper {
@@ -3342,10 +3488,25 @@
   }
 }
 
+.controlGroup {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 0.85rem;
+}
+
+.controlGroup h4 {
+  margin: 0;
+  color: #9dc0c2;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
 .waveformReadouts {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.15rem 0.35rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.08rem;
   margin: 0.2rem 0 0;
 }
 

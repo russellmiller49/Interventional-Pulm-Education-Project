@@ -15,6 +15,7 @@ import {
   cloneMechanicalVentilationSettings,
   createDefaultAdvancedVentilationSettings,
 } from '../engine/modes'
+import { deriveVolumeFlowTimeSeconds } from '../engine/physics'
 
 export type MechanicalVentilationPublicationStatus = 'draft' | 'tester-preview' | 'published'
 
@@ -44,13 +45,28 @@ export const ventilatorDeviceSources: readonly VentilatorDeviceSource[] = [
       'Hamilton Medical. HAMILTON-C6 Operator’s Manual. Software version 1.2.x; document 10197564/00.',
     revision: '10197564/00 · software 1.2.x',
     date: '2022-03-31',
-    pages: '44, 91-112, 123-183, 195-225, 229-235, 311-317',
+    pages: '44, 47-52, 91-112, 123-183, 184-192, 195-225, 229-235, 311-317',
     sourceFilename: 'HAMILTON-C6_ops-manual_v1.2.x_en_10197564.00.pdf',
     sourceSha256: '5de5eeffee986633ffeaf40fc80dd63fd975b23ad1645ea3b975273f3d511f78',
     intendedUse:
-      'Mode vocabulary, control ranges, navigation, graphics, alarms, maneuvers, and physical-control workflow.',
+      'Mode vocabulary, control ranges and grouping, main-display layout, monitored-parameter names and units, waveform colors, navigation, graphics, alarms, maneuvers, and physical-control workflow.',
     limitations:
-      'Optional features and market-specific configurations are excluded unless explicitly listed.',
+      'Optional features and market-specific configurations are excluded unless explicitly listed. Main monitoring parameters are configurable on the device; the profile uses the set shown in the manual figures.',
+  },
+  {
+    id: 'hamilton-c6-quick-guide',
+    deviceId: 'hamilton-c6',
+    title: 'HAMILTON-C6 Quick Guide',
+    citation: 'Hamilton Medical. HAMILTON-C6 Quick Guide. Document 624972/00.',
+    revision: '624972/00',
+    date: '2018-04-24',
+    pages: '4-12, 29-32',
+    sourceFilename: 'HAMILTON-C6_quick-guide_en_624972.00.pdf',
+    sourceSha256: '7d3576c9de465d275b3b42c5e948c091c59ea051d3f54ed0714931ec91940a26',
+    intendedUse:
+      'Bezel key legends, main-display element names, and the navigation shortcuts reachable from each screen element.',
+    limitations:
+      'A quick reference that explicitly does not replace the operator’s manual; control ranges and clinical claims come from the operator’s manual.',
   },
   {
     id: 'hamilton-c6-intellivent-asv-1.2.x',
@@ -76,7 +92,7 @@ export const ventilatorDeviceSources: readonly VentilatorDeviceSource[] = [
       'Dräger. Evita V800 / V600 Intensive Care Ventilator Instructions for Use. Software 3.1n; document 9513888; Edition 1.',
     revision: '9513888 · Edition 1 · software 3.1n',
     date: '2026-03',
-    pages: '23-35, 56-68, 121-170, 181-191, 315-350',
+    pages: '23-35, 45-51, 56-68, 121-170, 181-191, 315-350',
     sourceFilename: '9513888_1_enUS.pdf',
     sourceSha256: '8c4c65aadd7267d181c694947b9602278f511746af25001ceb220f3be09e8151',
     intendedUse:
@@ -120,7 +136,7 @@ export const ventilatorDeviceSources: readonly VentilatorDeviceSource[] = [
       'Covidien. Puritan Bennett 980 Series Ventilator Service Manual. Part 10078090 Rev C.',
     revision: '10078090 Rev C',
     date: '2014-02',
-    pages: '1-5, 1-12 to 1-15, 2-7 to 2-15',
+    pages: '1-5, 1-12 to 1-15, 2-7 to 2-21',
     sourceFilename: '662436517-PB980-Service-Manual.pdf',
     sourceSha256: '7fdf53d323d0f80acc42efde0428db4fc010a86dbe6bce97e1ac2274a88c94d6',
     intendedUse:
@@ -135,7 +151,7 @@ export const ventilatorDeviceSources: readonly VentilatorDeviceSource[] = [
     citation: 'Medtronic. Puritan Bennett 980 Ventilator in the ICU. 04/2023-US-RE-2300017.',
     revision: '04/2023-US-RE-2300017',
     date: '2023-04',
-    pages: '1, 4-7, 12',
+    pages: '1, 4-9, 12',
     sourceFilename: 'puritan-bennett-980-ventilator-intensive-care-unit-interactive-brochure.pdf',
     sourceSha256: 'dd61c1bedeeb07ae17f387ee0e209aaaae5317d346ecd0fc3c1f7f6e5ba19258',
     intendedUse: 'High-level display configuration and product-generation context.',
@@ -149,7 +165,7 @@ export const ventilatorDeviceSources: readonly VentilatorDeviceSource[] = [
     citation: 'CareFusion. AVEA Ventilator Ventilation Modes User Guide. RC3859.',
     revision: 'RC3859 · 0814/2000',
     date: '2014-08',
-    pages: '1-6, 10-16, 27-29, 33-46',
+    pages: '1-6, 10-31, 33-46',
     sourceFilename: 'RC_AVEA-Modes-Guide_UG_EN.pdf',
     sourceSha256: '607c34e1dfbbb756375fdfb0668d284248ebed71c84156f24559b7661ac62a96',
     intendedUse:
@@ -253,21 +269,30 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       'Use bedside data to decide whether the ventilator is the cause, the response, or neither.',
     ],
     deferredModes: ['NIV', 'NIV-ST', 'nCPAP-PS'],
-    sourceIds: ['hamilton-c6-manual-1.2.x', 'hamilton-c6-intellivent-asv-1.2.x'],
+    sourceIds: [
+      'hamilton-c6-manual-1.2.x',
+      'hamilton-c6-intellivent-asv-1.2.x',
+      'hamilton-c6-quick-guide',
+    ],
+    // Control names as defined in operator's manual Table 5-9.
     controlLabels: {
       oxygenPercent: 'Oxygen',
       peepCmH2O: 'PEEP/CPAP',
-      deltaPControlCmH2O: 'Pcontrol',
-      pressureSupportCmH2O: 'Psupport',
+      deltaPControlCmH2O: 'ΔPcontrol',
+      pressureSupportCmH2O: 'ΔPsupport',
       pRampMs: 'P-ramp',
       etsPercent: 'ETS',
       tiMaxSeconds: 'TI max',
+      ratePerMin: 'Rate',
+      vtMl: 'Vt',
+      inspiratoryTimeSeconds: 'TI',
       peakFlowLMin: 'Peak flow',
+      pausePercent: 'Pause',
       highPressureLimitCmH2O: 'High pressure',
       triggerThreshold: 'Flow trigger',
       trcEnabled: 'TRC compensation',
-      targetVtMl: 'Target Vt',
-      spontaneousPressureSupportCmH2O: 'Psupport',
+      targetVtMl: 'Vt',
+      spontaneousPressureSupportCmH2O: 'ΔPsupport',
       spontaneousRampMs: 'P-ramp',
       spontaneousCyclePercent: 'ETS',
       pHighCmH2O: 'P high',
@@ -278,6 +303,110 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       targetSpO2LowPercent: 'Target SpO₂ low',
       targetPetCO2MmHg: 'Target PetCO₂',
       intelliSyncEnabled: 'IntelliSync+',
+    },
+    display: {
+      pressureUnit: 'cmH₂O',
+      pressureLabels: { peak: 'Ppeak', plateau: 'Pplateau', mean: 'Pmean', peep: 'PEEP/CPAP' },
+      // Operator's manual §2.2.2 and §8.2.1: the MMPs run down the left of the display, with the
+      // SpO2 value and its low alarm limit in a strip beneath them. Ppeak is always displayed;
+      // the rest are configurable, so this is the set shown in Figures 2-6, 8-1, and 8-2.
+      monitorLayout: 'left-column',
+      monitorLabel: 'Main monitoring parameters',
+      monitorFields: [
+        { metric: 'peakPressure', label: 'Ppeak', unit: 'cmH2O' },
+        { metric: 'minuteVolume', label: 'ExpMinVol', unit: 'l/min', precision: 1 },
+        { metric: 'exhaledTidalVolume', label: 'VTE', unit: 'ml' },
+        { metric: 'totalRate', label: 'fTotal', unit: 'b/min' },
+        { metric: 'ieRatio', label: 'I:E', unit: '' },
+      ],
+      monitorFooter: [{ metric: 'spo2', label: 'SpO2', unit: '%' }],
+      // §8.3.3.3: the Paw waveform is yellow. Flow and volume traces are magenta and green in
+      // Figures 7-2 through 7-12 and 8-11.
+      waveforms: [
+        {
+          field: 'pawCmH2O',
+          label: 'Paw',
+          unit: 'cmH2O',
+          minimum: 0,
+          maximum: 50,
+          color: '#e8c33c',
+        },
+        {
+          field: 'flowLMin',
+          label: 'Flow',
+          unit: 'l/min',
+          minimum: -100,
+          maximum: 100,
+          color: '#d6489a',
+        },
+        {
+          field: 'volumeMl',
+          label: 'Volume',
+          unit: 'ml',
+          minimum: 0,
+          maximum: 1000,
+          color: '#2f9e5f',
+        },
+      ],
+      showBreathPhase: false,
+      // Quick guide §1.1: the keys either side of the press-and-turn knob.
+      bezelKeys: [
+        { action: 'alarm-silence', label: 'Audio Pause' },
+        { action: 'oxygen-enrichment', label: 'O2 enrichment' },
+        { action: 'manual-breath', label: 'Manual breath' },
+        { action: 'screen-lock', label: 'Screen lock' },
+      ],
+      knobPosition: 4,
+      // Figures 7-2 to 7-12 list the ventilator controls of every mode under three headings, in
+      // this order. ΔPsupport sits under CO2 elimination in SPONT, where it is the primary
+      // control, and under Oxygenation wherever it supports spontaneous breaths in a SIMV mode.
+      controlGroups: [
+        {
+          label: 'CO2 elimination',
+          keys: [
+            'minuteVolumePercent',
+            'vtMl',
+            'targetVtMl',
+            'deltaPControlCmH2O',
+            'pressureSupportCmH2O',
+            'pHighCmH2O',
+            'pLowCmH2O',
+            'tHighSeconds',
+            'tLowSeconds',
+            'ratePerMin',
+            'inspiratoryTimeSeconds',
+            'pausePercent',
+          ],
+        },
+        {
+          label: 'Oxygenation',
+          keys: [
+            'peepCmH2O',
+            'spontaneousPressureSupportCmH2O',
+            'oxygenPercent',
+            'peakFlowLMin',
+            'targetSpO2LowPercent',
+          ],
+        },
+        {
+          label: 'Patient synchronization',
+          keys: [
+            'pRampMs',
+            'spontaneousRampMs',
+            'triggerThreshold',
+            'etsPercent',
+            'spontaneousCyclePercent',
+            'tiMaxSeconds',
+          ],
+        },
+        {
+          label: 'Patient, TRC, and apnea',
+          keys: ['apneaRatePerMin', 'trcEnabled', 'targetPetCO2MmHg', 'highPressureLimitCmH2O'],
+        },
+      ],
+      controlOrder: [],
+      displayNote:
+        'MMP column, SpO2 strip, waveform colors, and the grouping of the ventilator controls follow the HAMILTON-C6 operator’s manual §2.2.2, §8.2.1-8.3.3 and Figures 7-2 to 7-12, verified against the registered SHA-256. Bezel key legends come from quick guide §1.1. MMPs are configurable on the device, so this is the set the manual figures show.',
     },
     educationalUseOnly: true,
   },
@@ -347,6 +476,8 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       etsPercent: 'Insp term',
       tiMaxSeconds: 'Timax',
       ratePerMin: 'RR',
+      vtMl: 'VT',
+      inspiratoryTimeSeconds: 'Ti',
       peakFlowLMin: 'Flow',
       highPressureLimitCmH2O: 'Paw high',
       triggerThreshold: 'Trigger',
@@ -359,7 +490,64 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       pLowCmH2O: 'Plow',
       tHighSeconds: 'Thigh',
       tLowSeconds: 'Tlow',
+      pausePercent: 'Tplat',
       autoFlowEnabled: 'AutoFlow',
+    },
+    display: {
+      // Pocket guide p. 5 and p. 9: the monitoring area carries a column of large values to the
+      // right of the waveform fields, top to bottom FiO2, an airway pressure, PEEP, MVe, RR, VT.
+      pressureUnit: 'mbar',
+      pressureLabels: { peak: 'PIP', plateau: 'Pplat', mean: 'Pmean', peep: 'PEEP' },
+      monitorLayout: 'right-column',
+      monitorLabel: 'Monitoring area',
+      monitorFields: [
+        { metric: 'oxygenPercent', label: 'FiO2', unit: 'Vol%' },
+        { metric: 'peakPressure', label: 'PIP', unit: 'mbar' },
+        { metric: 'peep', label: 'PEEP', unit: 'mbar', precision: 1 },
+        { metric: 'minuteVolume', label: 'MVe', unit: 'L/min', precision: 2 },
+        { metric: 'totalRate', label: 'RR', unit: '/min' },
+        { metric: 'exhaledTidalVolume', label: 'VTe', unit: 'mL' },
+      ],
+      waveforms: [
+        { field: 'pawCmH2O', label: 'Paw', unit: 'mbar', minimum: 0, maximum: 50 },
+        { field: 'flowLMin', label: 'Flow', unit: 'L/min', minimum: -100, maximum: 100 },
+        { field: 'volumeMl', label: 'Volume', unit: 'mL', minimum: 0, maximum: 1000 },
+      ],
+      showBreathPhase: false,
+      // Pocket guide p. 5: the display unit carries an ON/OFF key, power indicators, the rotary
+      // knob, and a 2-minute alarm silence. Maneuvers are on-screen, under Procedures.
+      bezelKeys: [{ action: 'alarm-silence', label: 'Alarm silence 2 min' }],
+      knobPosition: 1,
+      // Therapy bar order as printed on the pocket guide main screen (pp. 5, 8-9):
+      // FiO2 · VT · Ti · RR · PEEP · ΔPsupp · Slope · Flow, with Pinsp taking VT's place in the
+      // pressure-controlled modes.
+      controlOrder: [
+        'oxygenPercent',
+        'vtMl',
+        'targetVtMl',
+        'deltaPControlCmH2O',
+        'pHighCmH2O',
+        'pLowCmH2O',
+        'inspiratoryTimeSeconds',
+        'tHighSeconds',
+        'tLowSeconds',
+        'ratePerMin',
+        'peepCmH2O',
+        'pressureSupportCmH2O',
+        'spontaneousPressureSupportCmH2O',
+        'pRampMs',
+        'spontaneousRampMs',
+        'peakFlowLMin',
+        'pausePercent',
+        'etsPercent',
+        'spontaneousCyclePercent',
+        'tiMaxSeconds',
+        'triggerThreshold',
+        'apneaRatePerMin',
+        'highPressureLimitCmH2O',
+      ],
+      displayNote:
+        'Parameter names and units follow the Evita V800 / V600 instructions for use §3.9 abbreviations; the monitoring-area and therapy-bar arrangement follows §4.1 and the pocket guide pp. 5, 8-9. Pressures print in mbar, which this simulator treats as numerically interchangeable with cmH₂O.',
     },
     educationalUseOnly: true,
   },
@@ -402,17 +590,21 @@ const profiles: readonly VentilatorDeviceProfile[] = [
     deferredModes: ['NIV+', 'Leak Sync advanced setup'],
     sourceIds: ['pb980-service-manual-rev-c', 'pb980-icu-brochure-2023'],
     controlLabels: {
+      // Service manual Table 2-8 (settings) and Table 2-9 (alarms). The up arrow marks a high
+      // alarm limit; the dot marks a flow. Both had been transcribed as a literal "2".
       oxygenPercent: 'O₂%',
       peepCmH2O: 'PEEP',
       deltaPControlCmH2O: 'PI',
       pressureSupportCmH2O: 'PSUPP',
       pRampMs: 'Rise Time',
       etsPercent: 'ESENS',
-      tiMaxSeconds: '2TI SPONT',
+      tiMaxSeconds: '↑TI SPONT',
       ratePerMin: 'f',
-      peakFlowLMin: 'VMAX',
-      highPressureLimitCmH2O: '2PPEAK',
-      triggerThreshold: 'VSENS',
+      peakFlowLMin: 'V̇MAX',
+      pausePercent: 'TPL',
+      inspiratoryTimeSeconds: 'TI',
+      highPressureLimitCmH2O: '↑PPEAK',
+      triggerThreshold: 'V̇SENS',
       trcEnabled: 'Tube compensation',
       targetVtMl: 'VT / VT SUPP',
       spontaneousPressureSupportCmH2O: 'PSUPP',
@@ -422,7 +614,50 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       pLowCmH2O: 'PL',
       tHighSeconds: 'TH',
       tLowSeconds: 'TL',
+      apneaRatePerMin: 'fA',
       proportionalSupportPercent: '% Supp',
+    },
+    display: {
+      // ICU brochure pp. 1 and 9 show the patient-data banner running across the top of the
+      // screen, opened by the breath-phase letter. Symbol names come from service manual
+      // Table 2-10 (patient data).
+      pressureUnit: 'cmH₂O',
+      pressureLabels: { peak: 'PPEAK', plateau: 'PPL', mean: 'PMEAN', peep: 'PEEP' },
+      monitorLayout: 'top-banner',
+      monitorLabel: 'Patient data banner',
+      monitorFields: [
+        { metric: 'totalRate', label: 'fTOT', unit: '1/min' },
+        { metric: 'minuteVolume', label: 'V̇E TOT', unit: 'L/min', precision: 1 },
+        { metric: 'exhaledTidalVolume', label: 'VTE', unit: 'mL' },
+        { metric: 'peep', label: 'PEEP', unit: 'cmH₂O', precision: 1 },
+        { metric: 'ieRatio', label: 'I:E', unit: '' },
+        // Table 2-12: pressure resolution is 1 cmH₂O at or above 10 cmH₂O.
+        { metric: 'peakPressure', label: 'PPEAK', unit: 'cmH₂O' },
+        { metric: 'meanAirwayPressure', label: 'PMEAN', unit: 'cmH₂O' },
+      ],
+      waveforms: [
+        { field: 'pawCmH2O', label: 'Pressure', unit: 'cmH₂O', minimum: 0, maximum: 50 },
+        { field: 'flowLMin', label: 'Flow', unit: 'L/min', minimum: -100, maximum: 100 },
+        { field: 'volumeMl', label: 'Volume', unit: 'mL', minimum: 0, maximum: 1000 },
+      ],
+      showBreathPhase: true,
+      // Service manual §1.11.1: eight off-screen bezel keys straddle the rotary encoder.
+      // Brightness and alarm volume are omitted because this simulator models neither.
+      bezelKeys: [
+        { action: 'screen-lock', label: 'Display lock' },
+        { action: 'manual-breath', label: 'Manual inspiration' },
+        { action: 'inspiratory-hold', label: 'Inspiratory pause' },
+        { action: 'expiratory-hold', label: 'Expiratory pause' },
+        { action: 'alarm-reset', label: 'Alarm reset' },
+        { action: 'alarm-silence', label: 'Alarm silence' },
+        { action: 'oxygen-enrichment', label: 'Elevate O₂' },
+      ],
+      knobPosition: 2,
+      // The service manual documents the setting names and ranges but not the order the Vent Setup
+      // screen lays them out in, so the engine's mode-driven order stands.
+      controlOrder: [],
+      displayNote:
+        'Banner parameters use the symbol names in service manual Table 2-10; the bezel key set and its order follow §1.11.1. Breath phase shows the documented Control / Assist / Spontaneous indicator. The service manual does not publish a Vent Setup screen layout, so the settings keep the simulator’s own order.',
     },
     educationalUseOnly: true,
   },
@@ -468,13 +703,15 @@ const profiles: readonly VentilatorDeviceProfile[] = [
           'Source-listed only: the current casebook is adult-only. A neonatal test-lung pathway is required before activation.',
       },
     ],
+    // Membrane-key legends: SCREEN SELECT keys (MAIN, LOOP, MANEUVER) from the modes guide p. 31,
+    // and the MODE / ADV SETTINGS / ALARM LIMITS keys from pp. 2, 4 and 6.
     navigationLabels: {
-      main: 'Main',
-      modes: 'Mode Select',
-      controls: 'Primary controls',
-      alarms: 'Alarm Limits',
-      graphics: 'Waveforms',
-      tools: 'Adv Settings',
+      main: 'MAIN',
+      modes: 'MODE',
+      controls: 'ADV SETTINGS',
+      alarms: 'ALARM LIMITS',
+      graphics: 'LOOP',
+      tools: 'MANEUVER',
     },
     orientationSteps: [
       'Use the MODE membrane key or on-screen mode indicator to open Mode Select.',
@@ -484,27 +721,89 @@ const profiles: readonly VentilatorDeviceProfile[] = [
     ],
     deferredModes: ['nCPAP/IMV', 'Independent lung ventilation'],
     sourceIds: ['avea-modes-guide-2014'],
+    // Row names as printed in the modes guide primary-control tables, pp. 43-46.
     controlLabels: {
       oxygenPercent: '%O₂',
       peepCmH2O: 'PEEP',
       deltaPControlCmH2O: 'Insp Pres',
       pressureSupportCmH2O: 'PSV',
-      pRampMs: 'Insp / PSV Rise',
+      pRampMs: 'Insp Rise',
       etsPercent: 'PSV Cycle',
       tiMaxSeconds: 'PSV Tmax',
       ratePerMin: 'Rate',
+      vtMl: 'Volume',
       peakFlowLMin: 'Peak Flow',
+      inspiratoryTimeSeconds: 'Insp Time',
       pausePercent: 'Insp Pause',
-      highPressureLimitCmH2O: 'High Peak',
+      highPressureLimitCmH2O: 'High Ppeak',
       triggerThreshold: 'Flow Trig',
-      targetVtMl: 'Tidal Volume',
+      targetVtMl: 'Volume',
       spontaneousPressureSupportCmH2O: 'PSV',
       spontaneousRampMs: 'PSV Rise',
       spontaneousCyclePercent: 'PSV Cycle',
-      pHighCmH2O: 'Pressure High',
-      pLowCmH2O: 'Pressure Low',
+      pHighCmH2O: 'Pres High',
+      pLowCmH2O: 'Pres Low',
       tHighSeconds: 'Time High',
       tLowSeconds: 'Time Low',
+    },
+    display: {
+      pressureUnit: 'cmH₂O',
+      pressureLabels: { peak: 'Ppeak', plateau: 'Pplat', mean: 'Pmean', peep: 'PEEP' },
+      monitorLayout: 'right-tiles',
+      monitorLabel: 'Patient data',
+      // Parameter vocabulary taken from the alarm-limits window (p. 6) and the derived values
+      // printed under the primary controls (pp. 4-5). The modes guide does not publish the full
+      // configurable monitor screen, so this is the documented subset rather than a full facsimile.
+      monitorFields: [
+        { metric: 'peakPressure', label: 'Ppeak', unit: 'cmH₂O' },
+        { metric: 'peep', label: 'PEEP', unit: 'cmH₂O', precision: 1 },
+        { metric: 'exhaledTidalVolume', label: 'Vte', unit: 'mL' },
+        { metric: 'minuteVolume', label: 'Ve', unit: 'L/min', precision: 1 },
+        { metric: 'totalRate', label: 'Rate', unit: 'BPM' },
+        { metric: 'ieRatio', label: 'I:E', unit: '' },
+      ],
+      // Axis legends and scales as printed on the mode waveform figures, pp. 11-26.
+      waveforms: [
+        { field: 'pawCmH2O', label: 'Paw', unit: 'cmH₂O', minimum: -40, maximum: 80 },
+        { field: 'flowLMin', label: 'Flow', unit: 'l/min', minimum: -80, maximum: 80 },
+        { field: 'volumeMl', label: 'Vt', unit: 'ml', minimum: -500, maximum: 1500 },
+      ],
+      showBreathPhase: false,
+      bezelKeys: [
+        { action: 'manual-breath', label: 'MANUAL BREATH' },
+        { action: 'alarm-reset', label: 'ALARM RESET' },
+      ],
+      knobPosition: 2,
+      // Primary-control row order as printed in the mode tables, pp. 43-46: Rate, Volume,
+      // Insp Pres, Peak flow, Insp time, Insp pause, PSV, PEEP, Flow trig, % oxygen, then the
+      // APRV/BiPhasic pressures. Advanced settings follow, matching the ADV SETTINGS row.
+      controlOrder: [
+        'ratePerMin',
+        'vtMl',
+        'targetVtMl',
+        'deltaPControlCmH2O',
+        'peakFlowLMin',
+        'inspiratoryTimeSeconds',
+        'pausePercent',
+        'pressureSupportCmH2O',
+        'spontaneousPressureSupportCmH2O',
+        'peepCmH2O',
+        'triggerThreshold',
+        'oxygenPercent',
+        'pHighCmH2O',
+        'tHighSeconds',
+        'tLowSeconds',
+        'pLowCmH2O',
+        'pRampMs',
+        'spontaneousRampMs',
+        'etsPercent',
+        'spontaneousCyclePercent',
+        'tiMaxSeconds',
+        'apneaRatePerMin',
+        'highPressureLimitCmH2O',
+      ],
+      displayNote:
+        'Control names, membrane-key legends, primary-control order, and waveform axis scales follow the AVEA ventilation modes user guide. The guide is explicit that it does not replace the operator manual, so the monitored-parameter set is the documented subset, not the full configurable monitor screen.',
     },
     educationalUseOnly: true,
   },
@@ -680,6 +979,23 @@ function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value))
 }
 
+/**
+ * The engine holds the inspiratory pause as a percentage of the flow-delivery time. Every device
+ * except the C6 prints it as a duration: PB980 `TPL` (service manual Table 2-8, 0 to 2 s), AVEA
+ * `Insp pause sec` (modes guide pp. 43-46), and Evita `Tplat`.
+ */
+const pauseInSecondsDevices: readonly VentilatorDeviceId[] = [
+  'drager-evita-v800-v600',
+  'puritan-bennett-980',
+  'carefusion-avea',
+]
+
+const pauseSecondsMaximum = 2
+
+function pauseSecondsPerPercent(settings: MechanicalVentilationSettings): number {
+  return deriveVolumeFlowTimeSeconds(settings) / 100
+}
+
 export function canonicalToNativeControlValue(
   deviceId: VentilatorDeviceId,
   settings: MechanicalVentilationSettings,
@@ -688,6 +1004,10 @@ export function canonicalToNativeControlValue(
 ): number {
   if (deviceId === 'drager-evita-v800-v600' && key === 'deltaPControlCmH2O') {
     return value + settings.peepCmH2O
+  }
+  if (key === 'pausePercent' && pauseInSecondsDevices.includes(deviceId)) {
+    const seconds = value * pauseSecondsPerPercent(settings)
+    return Number(clamp(seconds, 0, pauseSecondsMaximum).toFixed(2))
   }
   if (key !== 'pRampMs' && key !== 'spontaneousRampMs') return value
   const [minimum, maximum] = riseTimeBounds(deviceId, settings, key)
@@ -713,6 +1033,11 @@ export function nativeToCanonicalControlValue(
   if (deviceId === 'drager-evita-v800-v600' && key === 'deltaPControlCmH2O') {
     return value - settings.peepCmH2O
   }
+  if (key === 'pausePercent' && pauseInSecondsDevices.includes(deviceId)) {
+    const secondsPerPercent = pauseSecondsPerPercent(settings)
+    if (secondsPerPercent <= 0) return 0
+    return Number(clamp(value / secondsPerPercent, 0, 70).toFixed(2))
+  }
   if (key !== 'pRampMs' && key !== 'spontaneousRampMs') return value
   const [minimum, maximum] = riseTimeBounds(deviceId, settings, key)
   if (deviceId === 'drager-evita-v800-v600') return clamp(value * 1000, minimum, maximum)
@@ -730,10 +1055,15 @@ export function nativeToCanonicalControlValue(
 export function adaptControlDescriptor(
   deviceId: VentilatorDeviceId,
   settings: MechanicalVentilationSettings,
-  descriptor: VentilatorControlDescriptor,
+  rawDescriptor: VentilatorControlDescriptor,
 ): VentilatorControlDescriptor {
   const profile = getVentilatorDeviceProfile(deviceId)
-  const label = profile.controlLabels[descriptor.key] ?? descriptor.label
+  const label = profile.controlLabels[rawDescriptor.key] ?? rawDescriptor.label
+  // Pressure settings print in the unit the device uses on screen — mbar on the Evita.
+  const descriptor =
+    rawDescriptor.unit === 'cmH₂O'
+      ? { ...rawDescriptor, unit: profile.display.pressureUnit }
+      : rawDescriptor
   if (descriptor.key === 'deltaPControlCmH2O' && deviceId === 'drager-evita-v800-v600') {
     return {
       ...descriptor,
@@ -742,6 +1072,23 @@ export function adaptControlDescriptor(
       maximum: Math.min(80, settings.peepCmH2O + 45),
       rangeNote:
         'Pinsp is displayed as an absolute upper pressure; the model retains Pinsp − PEEP.',
+    }
+  }
+  if (descriptor.key === 'pausePercent' && pauseInSecondsDevices.includes(deviceId)) {
+    const maximum = Number(
+      clamp(70 * pauseSecondsPerPercent(settings), 0.1, pauseSecondsMaximum).toFixed(2),
+    )
+    return {
+      ...descriptor,
+      label,
+      unit: 's',
+      minimum: 0,
+      maximum,
+      step: 0.05,
+      rangeNote:
+        deviceId === 'drager-evita-v800-v600'
+          ? 'Evita derives the plateau from Ti and Flow; the simulator exposes Tplat directly so the pause remains adjustable.'
+          : 'Set as a duration on this device. The model holds the pause as a fraction of flow-delivery time, so the seconds shown move with Vt and peak flow.',
     }
   }
   if (descriptor.key === 'pRampMs' || descriptor.key === 'spontaneousRampMs') {
