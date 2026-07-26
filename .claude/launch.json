@@ -24,6 +24,13 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "8099", "--directory", "public"],
       "port": 8099
+    },
+    {
+      "name": "mv-teaching",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "--port", "3010", "--webpack"],
+      "port": 3010,
+      "autoPort": false
     }
   ]
 }

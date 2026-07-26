@@ -32,6 +32,7 @@ import { TaskPanel } from '@/features/learning-module/components/TaskPanel'
 import {
   PathwayNav,
   PathwaySectionCompletion,
+  ResizableTeachingWorkspace,
   nextPathwaySection,
 } from '@/features/learning-module/curriculum'
 
@@ -60,6 +61,10 @@ import {
   type VentilationSimulationState,
 } from '../engine'
 import { BedsidePanel } from './BedsidePanel'
+import {
+  MechanicalVentilationTeachingPanel,
+  hasVentilationTeachingPanel,
+} from './MechanicalVentilationTeachingPanel'
 import { MechanicalVentilatorConsole } from './MechanicalVentilatorConsole'
 
 const PATHNAME = '/mechanical-ventilation/learn'
@@ -770,6 +775,10 @@ export function MechanicalVentilationLessonActivity({
 
   const phaseCopy = lesson.phases[phase]
   const nextSection = nextPathwaySection(ventilationLearningPathway, lesson.id)
+  const teachingPanel = hasVentilationTeachingPanel(lesson.id) ? (
+    <MechanicalVentilationTeachingPanel lessonId={lesson.id} state={simulation} />
+  ) : null
+
   const viewport = (
     <div className="grid h-full min-h-0 content-start gap-3 overflow-auto bg-background p-3">
       <PathwayNav
@@ -799,19 +808,49 @@ export function MechanicalVentilationLessonActivity({
         </p>
       </section>
 
-      <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(18rem,0.42fr)_minmax(44rem,1fr)]">
-        <div className="min-w-0 [&>*]:m-0">
-          <BedsidePanel state={simulation} definition={definition} compact />
-        </div>
-        <div className="min-w-0 [&>*]:m-0">
-          <MechanicalVentilatorConsole
-            key={`${simulation.caseId}:${simulation.ventilator.settings.deviceMode}`}
-            state={simulation}
-            dispatch={dispatchSimulation}
-            controlsEnabled
+      {/*
+       * Sections with an authored teaching panel get the three-pane workspace: live bedside, the
+       * teaching panel that explains what is being taught, and the console the learner acts
+       * through. Sections without one keep the two-pane layout rather than showing an empty pane.
+       */}
+      {teachingPanel ? (
+        <div className="min-h-[38rem] overflow-hidden rounded-xl border">
+          <ResizableTeachingWorkspace
+            workspaceLabel="Resizable bedside, teaching, and ventilator workspace"
+            paneLabels={{ primary: 'Bedside', secondary: 'Teaching', tertiary: 'Ventilator' }}
+            primary={
+              <div className="min-w-0 p-2 [&>*]:m-0">
+                <BedsidePanel state={simulation} definition={definition} compact />
+              </div>
+            }
+            secondary={teachingPanel}
+            tertiary={
+              <div className="min-w-0 p-2 [&>*]:m-0">
+                <MechanicalVentilatorConsole
+                  key={`${simulation.caseId}:${simulation.ventilator.settings.deviceMode}`}
+                  state={simulation}
+                  dispatch={dispatchSimulation}
+                  controlsEnabled
+                />
+              </div>
+            }
           />
         </div>
-      </div>
+      ) : (
+        <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(18rem,0.42fr)_minmax(44rem,1fr)]">
+          <div className="min-w-0 [&>*]:m-0">
+            <BedsidePanel state={simulation} definition={definition} compact />
+          </div>
+          <div className="min-w-0 [&>*]:m-0">
+            <MechanicalVentilatorConsole
+              key={`${simulation.caseId}:${simulation.ventilator.settings.deviceMode}`}
+              state={simulation}
+              dispatch={dispatchSimulation}
+              controlsEnabled
+            />
+          </div>
+        </div>
+      )}
 
       <dl
         className="grid grid-cols-2 gap-2 rounded-xl border bg-card p-3 text-sm sm:grid-cols-4 xl:grid-cols-7"

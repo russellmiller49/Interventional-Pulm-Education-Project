@@ -1,0 +1,176 @@
+/*
+ * Three-pane teaching workspace, generalized from the hemodynamics PAC workspace.
+ *
+ * Pane widths are driven by CSS custom properties the component sets from measured pixel widths,
+ * so the separators can be dragged or moved with the arrow keys. Below a threshold the grid
+ * collapses to one full-width pane with a tab row, because three panes at laptop width leave the
+ * separators no room to move.
+ */
+.workspace {
+  --tw-ink: #15323a;
+  --tw-line: #d9e4e3;
+  --tw-teal: #147d7b;
+  display: grid;
+  grid-template-columns:
+    minmax(0, var(--tw-primary-width, 43%))
+    0.75rem
+    minmax(0, var(--tw-secondary-width, 29%))
+    0.75rem
+    minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 0.75rem;
+  overflow: hidden;
+  color: var(--tw-ink);
+  color-scheme: light;
+  background: #eaf1ef;
+}
+
+.workspace[data-compact='true'] {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.55rem;
+}
+
+.workspace[data-compact='true'] .pane {
+  grid-row: 2;
+  grid-column: 1;
+}
+
+.compactPaneTabs {
+  display: grid;
+  grid-column: 1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.compactPaneTabs > span {
+  grid-column: 1 / -1;
+  color: #567075;
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.035em;
+}
+
+.compactPaneTabs button {
+  min-height: 2.5rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #8facaa;
+  border-radius: 0.65rem;
+  color: #31565b;
+  background: #f8fbfa;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.compactPaneTabs button[aria-selected='true'] {
+  border-color: var(--tw-teal);
+  color: #f3fffd;
+  background: var(--tw-teal);
+  box-shadow: 0 0 0 2px rgba(20, 125, 123, 0.14);
+}
+
+.pane {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.pane[hidden],
+.resizeHandle[hidden] {
+  display: none;
+}
+
+.pane:focus-visible {
+  outline: 3px solid var(--tw-teal);
+  outline-offset: -3px;
+}
+
+.pane > * {
+  width: 100%;
+}
+
+.resizeHandle {
+  position: relative;
+  z-index: 5;
+  display: grid;
+  width: 0.75rem;
+  min-width: 0.75rem;
+  height: 100%;
+  min-height: 3rem;
+  place-items: center;
+  touch-action: none;
+  cursor: col-resize;
+}
+
+.resizeHandle::before {
+  width: 2px;
+  height: 100%;
+  content: '';
+  background: #9eb6b2;
+  transition:
+    width 120ms ease,
+    background 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.resizeHandle > span {
+  position: absolute;
+  display: block;
+  width: 0.42rem;
+  height: 3.5rem;
+  border: 1px solid #7f9c97;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, #537b75 1px, transparent 1.5px) center / 4px 6px,
+    #eef5f3;
+  box-shadow: 0 0.2rem 0.75rem rgba(17, 61, 58, 0.2);
+}
+
+.resizeHandle:hover::before,
+.resizeHandle:focus-visible::before,
+.resizeHandle[data-active='true']::before {
+  width: 4px;
+  background: var(--tw-teal);
+  box-shadow: 0 0 0 3px rgba(20, 125, 123, 0.16);
+}
+
+.resizeHandle:focus-visible {
+  outline: 3px solid #63c9c0;
+  outline-offset: -3px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 840px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+  .resizeHandle {
+    display: none;
+  }
+  .pane {
+    grid-column: 1;
+    max-height: 38rem;
+    border-bottom: 1px solid #a9bfbb;
+  }
+}
