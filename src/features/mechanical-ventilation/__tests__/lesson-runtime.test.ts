@@ -26,6 +26,18 @@ describe('mechanical-ventilation lesson recovery contracts', () => {
     }
   })
 
+  // The suite previously iterated the learning-item map instead of indexing it per lesson, so a
+  // lesson added without items stayed green here and crashed the Learn route at render.
+  it('provides prediction and transfer items for every authored lesson', () => {
+    for (const lesson of mechanicalVentilationLessons) {
+      const items =
+        mechanicalVentilationLessonItems[lesson.id as keyof typeof mechanicalVentilationLessonItems]
+      expect(items).toBeDefined()
+      expect(items.prediction.activityId).toBe(`ventilation:learn:${lesson.id}`)
+      expect(items.transfer.activityId).toBe(`ventilation:learn:${lesson.id}`)
+    }
+  })
+
   it('provides one engine-backed primary and transfer patient for every lesson', () => {
     expect(ventilationLessonRuntimes).toHaveLength(mechanicalVentilationLessons.length)
     expect(new Set(ventilationLessonRuntimes.map((runtime) => runtime.lessonId)).size).toBe(
@@ -71,13 +83,13 @@ describe('mechanical-ventilation lesson recovery contracts', () => {
       items.prediction,
       items.transfer,
     ])
-    expect(allItems).toHaveLength(16)
+    expect(allItems).toHaveLength(mechanicalVentilationLessons.length * 2)
     expect(new Set(allItems.map((item) => item.id)).size).toBe(allItems.length)
 
     const transferVariantIds = allItems.flatMap((item) =>
       item.transferVariantId ? [item.transferVariantId] : [],
     )
-    expect(transferVariantIds).toHaveLength(8)
+    expect(transferVariantIds).toHaveLength(mechanicalVentilationLessons.length)
     expect(new Set(transferVariantIds).size).toBe(transferVariantIds.length)
 
     for (const learningItem of allItems) {

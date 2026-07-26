@@ -1,4 +1,6 @@
 export * from './types'
 export { PathwayNav, PathwayViewport } from './PathwayNav'
+export { ResizableTeachingWorkspace } from './ResizableTeachingWorkspace'
+export type { TeachingWorkspacePaneLabels } from './ResizableTeachingWorkspace'
 export { PathwayLanding } from './PathwayLanding'
 export { PathwaySectionCompletion } from './PathwaySectionCompletion'

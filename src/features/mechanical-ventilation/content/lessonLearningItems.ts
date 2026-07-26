@@ -12,6 +12,7 @@ export type MechanicalVentilationLessonId =
   | 'oxygenation-response'
   | 'ventilation-and-co2'
   | 'safety-reassessment-and-human-factors'
+  | 'high-peak-pressure-integration'
 
 function item(input: unknown): ClinicalLearningItem {
   return clinicalLearningItemSchema.parse(input)
@@ -663,6 +664,87 @@ export const mechanicalVentilationLessonItems: Readonly<
       correctChoiceIds: ['signal-acknowledged'],
       explanation:
         'A safe transfer requires bedside evaluation, airway/circuit inspection, a peak-to-plateau comparison, action on the localized cause, and closed-loop reassessment.',
+      evidenceIds: mechanicsEvidence,
+      reviewStatus: 'sme-review',
+    }),
+  },
+  'high-peak-pressure-integration': {
+    prediction: item({
+      id: 'vent-high-pressure-integration-predict-1',
+      activityId: 'ventilation:learn:high-peak-pressure-integration',
+      phase: 'predict',
+      itemType: 'mechanism-interpretation',
+      contextRequirement: 'patient',
+      clinicalContextId: 'mv13-high-pressure',
+      visualAssetIds: ['vent-pressure-flow-volume', 'vent-bedside-findings'],
+      stem: 'Peak pressure has risen sharply. Plateau pressure is unchanged and expiratory flow still returns to zero before the next breath. Which mechanism does this combination implicate?',
+      choices: [
+        {
+          id: 'resistive-dominant',
+          label:
+            'A resistive problem between the ventilator and the alveoli — the peak-to-plateau difference widened while distending pressure did not change',
+          rationale:
+            'An unchanged plateau means the pressure needed to distend the respiratory system at end-inspiration is the same, so the additional peak pressure was spent moving gas. Expiratory flow reaching zero argues against trapped volume as the dominant contributor.',
+          plausibility: 'best',
+        },
+        {
+          id: 'compliance-dominant',
+          label: 'A fall in respiratory-system compliance',
+          rationale:
+            'A compliance fall raises the plateau, because more pressure is then required to distend the system by the same volume. The plateau here did not move.',
+          plausibility: 'incorrect-mechanism',
+        },
+        {
+          id: 'auto-peep-dominant',
+          label: 'Dynamic hyperinflation with trapped end-expiratory volume',
+          rationale:
+            'Trapping is a genuine member of the differential and belongs on the list, but expiratory flow that reaches zero before the next breath argues against it being dominant now.',
+          plausibility: 'reasonable-but-incomplete',
+        },
+      ],
+      correctChoiceIds: ['resistive-dominant'],
+      explanation:
+        'Peak pressure is a sum. Separating it into the pressure spent moving gas and the pressure spent distending the respiratory system is what makes the alarm interpretable; the expiratory limb then excludes or implicates trapped volume. More than one mechanism can coexist, so the claim is about which is dominant now.',
+      evidenceIds: mechanicsEvidence,
+      reviewStatus: 'sme-review',
+    }),
+    transfer: item({
+      id: 'vent-high-pressure-integration-transfer-1',
+      activityId: 'ventilation:learn:high-peak-pressure-integration',
+      phase: 'transfer',
+      itemType: 'transfer-case',
+      contextRequirement: 'patient',
+      clinicalContextId: 'mv06-auto-peep',
+      transferVariantId: 'vent-high-pressure-integration-transfer',
+      visualAssetIds: ['vent-pressure-flow-volume', 'vent-bedside-findings'],
+      stem: 'A different patient triggers the same alarm. Plateau pressure has risen with an unchanged peak-to-plateau difference, and the patient is making visible inspiratory effort. What should be established first?',
+      choices: [
+        {
+          id: 'measurement-validity',
+          label:
+            'Whether the hold measurements are interpretable at all, because effort during the maneuver invalidates the plateau before any mechanism can be assigned',
+          rationale:
+            'A hold assumes a relaxed patient. An active effort can produce the same tracing, so measurement validity has to precede mechanism assignment.',
+          plausibility: 'best',
+        },
+        {
+          id: 'assume-compliance',
+          label: 'Assume a compliance fall and act on it, since the plateau rose',
+          rationale:
+            'The pattern is consistent with a compliance problem but is not yet distinguishable from effort alone.',
+          plausibility: 'reasonable-but-incomplete',
+        },
+        {
+          id: 'raise-alarm-limit',
+          label: 'Raise the pressure alarm limit so the alarm stops, and reassess later',
+          rationale:
+            'Silencing the signal removes the information without addressing the condition it detected.',
+          plausibility: 'unsafe',
+        },
+      ],
+      correctChoiceIds: ['measurement-validity'],
+      explanation:
+        'The reading sequence transfers; the answer does not. Establish that the measurement means what it appears to mean, then localize, then act.',
       evidenceIds: mechanicsEvidence,
       reviewStatus: 'sme-review',
     }),
