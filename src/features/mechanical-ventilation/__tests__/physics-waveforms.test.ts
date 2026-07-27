@@ -5,11 +5,19 @@ import {
 } from '../content'
 import {
   advanceSimulation,
+  applyIntervention,
+  CARDIOGENIC_OSCILLATION_AMPLITUDE_LMIN,
+  cardiogenicFlowOscillationLps,
+  CLOSED_VALVE_BIAS_FLOW_LPS,
   createInitialSimulationState,
   deriveMechanicalInspiratoryTime,
   equationOfMotionPressure,
+  expiratoryAirwayPressure,
   MAX_WAVEFORM_SAMPLES,
+  observedTidalVolumeMl,
   passiveExpiratoryFlowLps,
+  secretionFlowDisturbanceLps,
+  unmodeledIntrinsicPeepCmH2O,
   ventilationSimulationReducer,
   ventilatorDeviceIds,
   type VentilationCaseDefinition,
@@ -218,18 +226,43 @@ describe('device-independent fixed-step physiology and waveform engine', () => {
       mode: 'adaptive-pressure-ac',
     })
     vcPlus = ventilationSimulationReducer(vcPlus, { type: 'CONFIRM_MODE' })
-    const lowTarget = ventilationSimulationReducer(vcPlus, {
-      type: 'SET_CONTROL',
-      control: 'targetVtMl',
-      value: 300,
-    })
-    const highTarget = ventilationSimulationReducer(vcPlus, {
-      type: 'SET_CONTROL',
-      control: 'targetVtMl',
-      value: 700,
-    })
-    expect(lowTarget.measurements.exhaledVtMl).toBeCloseTo(300, 0)
-    expect(highTarget.measurements.exhaledVtMl).toBeCloseTo(700, 0)
+    /*
+     * Advanced before reading: the tidal volume the console reports is now measured off the trace,
+     * so like the peak pressure since §1.6 it lags a setting change until a breath has been
+     * delivered at the new setting. Asserting immediately read the previous breath.
+     */
+    const lowTarget = advanceSimulation(
+      ventilationSimulationReducer(vcPlus, {
+        type: 'SET_CONTROL',
+        control: 'targetVtMl',
+        value: 300,
+      }),
+      10,
+    )
+    const highTarget = advanceSimulation(
+      ventilationSimulationReducer(vcPlus, {
+        type: 'SET_CONTROL',
+        control: 'targetVtMl',
+        value: 700,
+      }),
+      10,
+    )
+    /*
+     * A measurement, so it tracks the target rather than equalling it. It sits *above* the target
+     * because this patient is pulling: the model sets the pressure open-loop from target ÷
+     * compliance and the effort adds volume on top of it, where a real adaptive controller would
+     * back the pressure off over the next few breaths. Worth knowing, not asserted here.
+     */
+    for (const [state, target] of [
+      [lowTarget, 300],
+      [highTarget, 700],
+    ] as const) {
+      expect(state.measurements.exhaledVtMl).toBeGreaterThan(target * 0.8)
+      expect(state.measurements.exhaledVtMl).toBeLessThan(target * 1.5)
+    }
+    expect(highTarget.measurements.exhaledVtMl).toBeGreaterThan(
+      lowTarget.measurements.exhaledVtMl + 200,
+    )
 
     let aprv = createInitialSimulationState('MV-01', 'learn', 1, 'carefusion-avea')
     aprv = ventilationSimulationReducer(aprv, { type: 'SELECT_MODE', mode: 'aprv' })
@@ -254,31 +287,43 @@ describe('device-independent fixed-step physiology and waveform engine', () => {
     let pav = createInitialSimulationState('MV-11', 'learn', 1, 'puritan-bennett-980')
     pav = ventilationSimulationReducer(pav, { type: 'SELECT_MODE', mode: 'proportional-assist' })
     pav = ventilationSimulationReducer(pav, { type: 'CONFIRM_MODE' })
-    const lowPav = ventilationSimulationReducer(pav, {
-      type: 'SET_CONTROL',
-      control: 'proportionalSupportPercent',
-      value: 20,
-    })
-    const highPav = ventilationSimulationReducer(pav, {
-      type: 'SET_CONTROL',
-      control: 'proportionalSupportPercent',
-      value: 80,
-    })
+    const lowPav = advanceSimulation(
+      ventilationSimulationReducer(pav, {
+        type: 'SET_CONTROL',
+        control: 'proportionalSupportPercent',
+        value: 20,
+      }),
+      10,
+    )
+    const highPav = advanceSimulation(
+      ventilationSimulationReducer(pav, {
+        type: 'SET_CONTROL',
+        control: 'proportionalSupportPercent',
+        value: 80,
+      }),
+      10,
+    )
     expect(highPav.measurements.exhaledVtMl).toBeGreaterThan(lowPav.measurements.exhaledVtMl)
 
     let asv = createInitialSimulationState('MV-01', 'learn', 1, 'hamilton-c6')
     asv = ventilationSimulationReducer(asv, { type: 'SELECT_MODE', mode: 'asv' })
     asv = ventilationSimulationReducer(asv, { type: 'CONFIRM_MODE' })
-    const lowMinVol = ventilationSimulationReducer(asv, {
-      type: 'SET_CONTROL',
-      control: 'minuteVolumePercent',
-      value: 50,
-    })
-    const highMinVol = ventilationSimulationReducer(asv, {
-      type: 'SET_CONTROL',
-      control: 'minuteVolumePercent',
-      value: 150,
-    })
+    const lowMinVol = advanceSimulation(
+      ventilationSimulationReducer(asv, {
+        type: 'SET_CONTROL',
+        control: 'minuteVolumePercent',
+        value: 50,
+      }),
+      10,
+    )
+    const highMinVol = advanceSimulation(
+      ventilationSimulationReducer(asv, {
+        type: 'SET_CONTROL',
+        control: 'minuteVolumePercent',
+        value: 150,
+      }),
+      10,
+    )
     expect(highMinVol.measurements.minuteVentilationLMin).toBeGreaterThan(
       lowMinVol.measurements.minuteVentilationLMin,
     )
@@ -515,6 +560,444 @@ describe('device-independent fixed-step physiology and waveform engine', () => {
       // Whichever way this particular case falls, the two must be read from different fields.
       expect(typeof resolvedOnDisplayed).toBe('boolean')
       expect(typeof resolvedOnRelaxed).toBe('boolean')
+    })
+  })
+
+  /**
+   * Retained secretions saw-tooth the *flow* trace; pressure inherits it through the resistive
+   * term. This used to be modeled backwards — a fixed sine added to pressure with flow left
+   * perfectly smooth — so the one waveform that shows the sign was flat and the trace wandered on
+   * at zero flow, including through an occlusion.
+   */
+  describe('retained-secretions sign', () => {
+    function secretionsState(seconds: number) {
+      const initial = createInitialSimulationState('MV-13', 'learn')
+      return advanceSimulation(
+        {
+          ...initial,
+          branch: 'secretions',
+          patient: {
+            ...initial.patient,
+            airway: { ...initial.patient.airway, secretions: true },
+          },
+        },
+        seconds,
+      )
+    }
+
+    it('puts the disturbance on the flow trace, not only on pressure', () => {
+      const state = secretionsState(14)
+      const inspiratory = state.waveforms.filter(
+        (sample) => sample.phase === 'inspiration' && sample.flowLMin > 5,
+      )
+      expect(inspiratory.length).toBeGreaterThan(20)
+      const flows = inspiratory.map((sample) => sample.flowLMin)
+      // A square inspiratory flow with secretions is no longer a flat line.
+      expect(Math.max(...flows) - Math.min(...flows)).toBeGreaterThan(2)
+    })
+
+    /*
+     * Asserted on the disturbance itself rather than on a stretch of the trace. This used to look
+     * for zero-flow samples in the buffer, which found the end-inspiratory coast that appeared when
+     * the volume target was measured against absolute lung volume — a breath into a lung with gas
+     * still in it hit the target early and idled for the rest of its inspiratory time, under-
+     * delivering the set tidal volume. That coast was an artifact and is gone; the property it was
+     * standing in for is this one, and the occlusion case below covers the trace.
+     */
+    it('goes quiet wherever gas is not moving', () => {
+      const still = Array.from({ length: 40 }, (_, index) =>
+        secretionFlowDisturbanceLps(index * 0.02, 0),
+      )
+      expect(still.every((value) => value === 0)).toBe(true)
+      const trickle = Array.from({ length: 40 }, (_, index) =>
+        secretionFlowDisturbanceLps(index * 0.02, 0.02),
+      )
+      const moving = Array.from({ length: 40 }, (_, index) =>
+        secretionFlowDisturbanceLps(index * 0.02, 1),
+      )
+      // Amplitude tracks how much gas is actually moving, rather than being present at any flow.
+      expect(Math.max(...trickle.map(Math.abs))).toBeLessThan(Math.max(...moving.map(Math.abs)))
+    })
+
+    it('delivers the full set tidal volume into a lung that has not emptied', () => {
+      const state = secretionsState(20)
+      const onsets: number[] = []
+      state.waveforms.forEach((sample, index) => {
+        if (
+          index > 0 &&
+          sample.phase === 'inspiration' &&
+          state.waveforms[index - 1].phase === 'expiration'
+        ) {
+          onsets.push(index)
+        }
+      })
+      expect(onsets.length).toBeGreaterThan(1)
+      const start = onsets[onsets.length - 2]
+      const startVolume = state.waveforms[start - 1].volumeMl
+      let peak = startVolume
+      for (let index = start; index < onsets[onsets.length - 1]; index += 1) {
+        peak = Math.max(peak, state.waveforms[index].volumeMl)
+      }
+      // Gas left over from the previous breath must not be counted toward this breath's target.
+      expect(peak - startVolume).toBeGreaterThan(state.measurements.exhaledVtMl * 0.9)
+      expect(startVolume).toBeGreaterThan(20)
+    })
+
+    it('leaves an occlusion plateau clean', () => {
+      let state = secretionsState(14)
+      state = ventilationSimulationReducer(state, { type: 'PERFORM_HOLD', hold: 'inspiratory' })
+      const startedAt = state.simulationTime
+      state = advanceSimulation(state, 2)
+      const during = state.waveforms.filter(
+        (sample) => sample.time > startedAt + 0.1 && sample.time < startedAt + 1.8,
+      )
+      expect(during.length).toBeGreaterThan(20)
+      expect(during.every((sample) => sample.flowLMin === 0)).toBe(true)
+
+      /*
+       * The held pressure may still drift — this patient is not relaxed, and an effort during an
+       * occlusion moves the plateau, which is the point of §1.6's teaching content. What must be
+       * gone is the ripple. The old 1.8 cmH₂O sine at 6.4 Hz moved the trace ~1.4 cmH₂O between
+       * consecutive 20 ms samples; this patient's effort, at its steepest, moves it under 0.6.
+       */
+      for (let index = 1; index < during.length; index += 1) {
+        expect(Math.abs(during[index].pawCmH2O - during[index - 1].pawCmH2O)).toBeLessThan(1)
+      }
+    })
+  })
+
+  /**
+   * The sweep of the remaining casebook signatures, in the same spirit as the secretions sign
+   * above: each of these is a phenotype a fellow is meant to recognize by sight, so the trace has
+   * to carry the finding on the waveform the finding is actually taught on.
+   */
+  describe('casebook waveform signatures', () => {
+    describe('patient effort during expiration', () => {
+      it('slows expiratory flow rather than only deflecting pressure', () => {
+        const relaxed = passiveExpiratoryFlowLps(0.3, 20, 0.05)
+        const straining = passiveExpiratoryFlowLps(0.3, 20, 0.05, 6)
+        expect(straining).toBeGreaterThan(relaxed)
+        expect(relaxed).toBeLessThan(0)
+      })
+
+      it('cannot draw more than a shut demand valve supplies', () => {
+        const enormous = passiveExpiratoryFlowLps(0.01, 20, 0.05, 60)
+        expect(enormous).toBeLessThanOrEqual(CLOSED_VALVE_BIAS_FLOW_LPS)
+        // Still ordered: a bigger effort draws a bigger notch right up to the bound.
+        expect(enormous).toBeGreaterThan(passiveExpiratoryFlowLps(0.01, 20, 0.05, 6))
+      })
+
+      it('reaches the airway only once it exceeds the recoil left in the lung', () => {
+        const shared = {
+          baselineCmH2O: 5,
+          circuitResistanceCmH2OPerLps: 2,
+          flowLps: 0,
+          inspiratoryEffortCmH2O: 8,
+        }
+        // Plenty of recoil still stored: the valve holds the circuit at baseline.
+        expect(expiratoryAirwayPressure({ ...shared, elasticRecoilCmH2O: 12 })).toBeCloseTo(5, 5)
+        // Recoil spent: the surplus pulls the circuit down, so a trigger deflection survives.
+        expect(expiratoryAirwayPressure({ ...shared, elasticRecoilCmH2O: 1 })).toBeCloseTo(-2, 5)
+      })
+
+      it('draws the COPD ineffective effort on the flow trace, not on the pressure trace', () => {
+        const state = advanceSimulation(createInitialSimulationState('MV-05', 'learn'), 30)
+        const expiring = state.waveforms.filter((sample) => sample.phase === 'expiration')
+        const effortful = expiring.filter((sample) => sample.pmusCmH2O < -4)
+        expect(effortful.length).toBeGreaterThan(10)
+
+        // Flow notches back toward — and through — zero while the patient pulls.
+        const quiet = expiring.filter((sample) => sample.pmusCmH2O === 0)
+        expect(Math.max(...effortful.map((sample) => sample.flowLMin))).toBeGreaterThan(
+          Math.max(...quiet.map((sample) => sample.flowLMin)) + 2,
+        )
+
+        /*
+         * And the pressure trace stays near baseline through it: with this much gas trapped the
+         * effort never reaches the airway, which is exactly why the finding is read off flow.
+         * Previously the whole 8 cmH₂O of muscle pressure was drawn here and flow was a smooth
+         * exponential — the sign on the one trace that does not carry it.
+         */
+        const baseline = state.ventilator.settings.peepCmH2O
+        for (const sample of effortful) {
+          expect(sample.pawCmH2O).toBeGreaterThan(baseline - 1)
+        }
+      })
+    })
+
+    describe('cardiogenic oscillations', () => {
+      function autotriggerState(seconds: number) {
+        const initial = createInitialSimulationState('MV-08', 'learn')
+        return advanceSimulation({ ...initial, branch: 'cardiogenic-oscillation' }, seconds)
+      }
+
+      it('runs at the heart rate', () => {
+        const fast = Array.from({ length: 200 }, (_, index) =>
+          cardiogenicFlowOscillationLps(index * 0.02, 120),
+        )
+        const slow = Array.from({ length: 200 }, (_, index) =>
+          cardiogenicFlowOscillationLps(index * 0.02, 60),
+        )
+        const crossings = (series: number[]) =>
+          series.filter((value, index) => index > 0 && value >= 0 && series[index - 1] < 0).length
+        expect(crossings(fast)).toBeGreaterThan(crossings(slow))
+      })
+
+      it('is large enough to explain the triggering it causes, and averages to nothing', () => {
+        const cycle = Array.from({ length: 200 }, (_, index) =>
+          cardiogenicFlowOscillationLps(index * 0.005, 60),
+        )
+        const peakLMin = Math.max(...cycle) * 60
+        // The rule autotriggers a flow trigger set below this amplitude, so the trace has to reach
+        // it — otherwise the learner sees breaths with no visible cause.
+        expect(peakLMin).toBeCloseTo(CARDIOGENIC_OSCILLATION_AMPLITUDE_LMIN, 5)
+        const mean = cycle.reduce((total, value) => total + value, 0) / cycle.length
+        expect(Math.abs(mean)).toBeLessThan(0.001)
+      })
+
+      it('shows on the expiratory limb of the running case', () => {
+        const state = autotriggerState(30)
+        const tail = state.waveforms.filter(
+          (sample) => sample.phase === 'expiration' && Math.abs(sample.flowLMin) < 6,
+        )
+        expect(tail.length).toBeGreaterThan(20)
+        // Not a monotone decay any more: the limb reverses direction as the heart beats.
+        const reversals = tail.filter(
+          (sample, index) =>
+            index > 0 && index < tail.length - 1 && sample.flowLMin < tail[index - 1].flowLMin,
+        )
+        expect(reversals.length).toBeGreaterThan(3)
+      })
+
+      it('stops at an occlusion, where no gas is moving', () => {
+        let state = autotriggerState(30)
+        state = ventilationSimulationReducer(state, { type: 'PERFORM_HOLD', hold: 'expiratory' })
+        const startedAt = state.simulationTime
+        state = advanceSimulation(state, 2)
+        const during = state.waveforms.filter(
+          (sample) => sample.time > startedAt + 0.1 && sample.time < startedAt + 1.8,
+        )
+        expect(during.length).toBeGreaterThan(20)
+        expect(during.every((sample) => sample.flowLMin === 0)).toBe(true)
+      })
+    })
+
+    describe('double triggering', () => {
+      it('stacks the second inflation on top of the first', () => {
+        const state = advanceSimulation(createInitialSimulationState('MV-03', 'learn'), 30)
+        const peakVolume = Math.max(...state.waveforms.map((sample) => sample.volumeMl))
+        /*
+         * The danger of the phenotype is the lung seeing close to two tidal volumes. Measuring the
+         * volume target against absolute lung volume meant the second inflation only topped the
+         * lung back up to one, so the trace showed two inflations and no consequence while the
+         * console reported 1.85 × VT.
+         */
+        expect(peakVolume).toBeGreaterThan(state.measurements.exhaledVtMl * 1.5)
+        expect(state.measurements.stackedVolumeMl).toBeGreaterThan(
+          state.measurements.exhaledVtMl * 1.5,
+        )
+      })
+
+      it('costs pressure, which is what makes it worth stopping', () => {
+        const state = advanceSimulation(createInitialSimulationState('MV-03', 'learn'), 30)
+        const onsets: number[] = []
+        state.waveforms.forEach((sample, index) => {
+          if (
+            index > 0 &&
+            sample.phase === 'inspiration' &&
+            state.waveforms[index - 1].phase === 'expiration'
+          ) {
+            onsets.push(index)
+          }
+        })
+        expect(onsets.length).toBeGreaterThan(3)
+        const peakOf = (from: number, to: number) =>
+          Math.max(...state.waveforms.slice(from, to).map((sample) => sample.pawCmH2O))
+        const peaks = onsets
+          .slice(0, -1)
+          .map((onset, index) => peakOf(onset, onsets[index + 1]))
+          .sort((a, b) => a - b)
+        // The stacked inflations peak well above the unstacked ones.
+        expect(peaks[peaks.length - 1]).toBeGreaterThan(peaks[0] + 8)
+      })
+    })
+
+    /**
+     * A derived number that the trace does not support is the same defect as a sign drawn on the
+     * wrong waveform: the console asserts something the picture contradicts. These are the
+     * invariants that used to fail — seven cases reported a tidal volume never delivered, and four
+     * printed a plateau above their own peak.
+     */
+    describe('reported numbers against the trace', () => {
+      const warmed = (caseId: string) =>
+        advanceSimulation(createInitialSimulationState(caseId, 'learn'), 30)
+
+      it.each(mechanicalVentilationCases.map((definition) => definition.id))(
+        '%s never reports a plateau above its own peak',
+        (caseId) => {
+          const state = warmed(caseId)
+          expect(state.measurements.plateauPressureCmH2O).toBeLessThanOrEqual(
+            state.measurements.peakPressureCmH2O,
+          )
+        },
+      )
+
+      it.each(mechanicalVentilationCases.map((definition) => definition.id))(
+        '%s reports the tidal volume its own trace delivered',
+        (caseId) => {
+          const state = warmed(caseId)
+          const delivered = observedTidalVolumeMl(state.waveforms)
+          expect(delivered).toBeDefined()
+          const leak = state.patient.mechanics.airwayLeakFraction
+          expect(state.measurements.exhaledVtMl).toBe(Math.round((delivered ?? 0) * (1 - leak)))
+        },
+      )
+
+      it('lags a setting change until a breath has been delivered at it, like the peak', () => {
+        const state = advanceSimulation(createInitialSimulationState('MV-01', 'learn'), 20)
+        const settings = state.ventilator.settings
+        expect(settings.mode).toBe('volume-ac')
+        const halved = ventilationSimulationReducer(state, {
+          type: 'SET_CONTROL',
+          control: 'vtMl',
+          value: Math.round((settings.mode === 'volume-ac' ? settings.vtMl : 400) / 2),
+        })
+        // Measured, so unchanged until the machine has actually delivered one.
+        expect(halved.measurements.exhaledVtMl).toBeCloseTo(state.measurements.exhaledVtMl, 0)
+        expect(advanceSimulation(halved, 12).measurements.exhaledVtMl).toBeLessThan(
+          state.measurements.exhaledVtMl * 0.75,
+        )
+      })
+    })
+
+    describe('occlusion against trapped gas', () => {
+      it('holds the volume trace still instead of dumping it to the floor', () => {
+        let state = advanceSimulation(createInitialSimulationState('MV-10', 'learn'), 30)
+        state = ventilationSimulationReducer(state, { type: 'PERFORM_HOLD', hold: 'expiratory' })
+        const startedAt = state.simulationTime
+        state = advanceSimulation(state, 2)
+        const during = state.waveforms.filter(
+          (sample) => sample.time > startedAt + 0.1 && sample.time < startedAt + 1.8,
+        )
+        expect(during.length).toBeGreaterThan(20)
+        expect(during.every((sample) => sample.flowLMin === 0)).toBe(true)
+        // No gas is moving, so the volume cannot be changing either.
+        const volumes = new Set(during.map((sample) => sample.volumeMl))
+        expect(volumes.size).toBe(1)
+        // And what it holds is the gas that did not get out, not zero.
+        expect(during[0].volumeMl).toBeGreaterThan(300)
+      })
+
+      it('reads total PEEP off that trapped gas rather than from the case model alone', () => {
+        let state = advanceSimulation(createInitialSimulationState('MV-10', 'learn'), 30)
+        const compliance = state.patient.mechanics.complianceLPerCmH2O * 1000
+        state = ventilationSimulationReducer(state, { type: 'PERFORM_HOLD', hold: 'expiratory' })
+        state = advanceSimulation(state, 2)
+        const settled = state.waveforms.at(-1)!
+        const peep = state.ventilator.settings.peepCmH2O
+        const trappedRecoil = settled.volumeMl / compliance
+        expect(trappedRecoil).toBeGreaterThan(3)
+        /*
+         * The occlusion must show at least the recoil of the gas the trace is holding — that is the
+         * gas being measured — and never more than the total auto-PEEP the console reports. It used
+         * to sit at the bottom of that range with the trapped volume discarded entirely.
+         */
+        expect(settled.pawCmH2O).toBeGreaterThan(peep + trappedRecoil * 0.9)
+        expect(settled.pawCmH2O).toBeLessThanOrEqual(
+          peep + state.measurements.intrinsicPeepCmH2O + 0.5,
+        )
+      })
+
+      it('keeps the running lung volume across an intervention', () => {
+        const state = advanceSimulation(createInitialSimulationState('MV-10', 'learn'), 30)
+        const before = state.patient.mechanics.endExpiratoryVolumeL
+        expect(before).toBeGreaterThan(0.2)
+        /*
+         * `deriveEffectivePatient` rebuilds mechanics from the case, and used to rebuild this with
+         * them — so performing any intervention emptied the lung. An expiratory hold armed through
+         * an authored `expiratory-hold` intervention then occluded nothing.
+         */
+        const after = applyIntervention(
+          state,
+          mechanicalVentilationCaseById.get('MV-10')!,
+          'review-waveforms',
+        )
+        expect(after.patient.mechanics.endExpiratoryVolumeL).toBeCloseTo(before, 5)
+      })
+
+      it('does not count trapped gas twice in the equation of motion', () => {
+        // Nothing trapped: the whole analytic value still has to be applied.
+        expect(unmodeledIntrinsicPeepCmH2O(9, 0, 0.08)).toBeCloseTo(9, 5)
+        // Half of it already showing as retained volume: only the shortfall is left to add.
+        expect(unmodeledIntrinsicPeepCmH2O(9, 0.36, 0.08)).toBeCloseTo(4.5, 5)
+        // Trace traps more than the case predicted — nothing to add, and never negative.
+        expect(unmodeledIntrinsicPeepCmH2O(9, 1.2, 0.08)).toBe(0)
+      })
+
+      it('gives the lung the expiratory time the machine actually leaves it', () => {
+        /*
+         * MV-05's patient breathes at 28 while the machine cycles at 8. Deriving expiratory time
+         * from the neural rate credited it with 0.64 s and invented 7.8 cmH₂O of auto-PEEP on top
+         * of an authored 10, over a trace whose lung empties completely.
+         */
+        const state = advanceSimulation(createInitialSimulationState('MV-05', 'learn'), 30)
+        expect(state.measurements.totalRatePerMin).toBeLessThan(
+          state.patient.drive.neuralRatePerMin,
+        )
+        const authored =
+          mechanicalVentilationCaseById.get('MV-05')!.initialPatient.mechanics.intrinsicPeepCmH2O
+        // Its settings terms still add a few cmH₂O; the phantom dynamic term is what must be gone.
+        expect(state.measurements.intrinsicPeepCmH2O).toBeLessThan(authored + 5)
+      })
+    })
+
+    describe('reverse triggering', () => {
+      /** Time from each machine inspiration onset to that breath's peak muscle pressure. */
+      function effortDelaysSeconds(state: ReturnType<typeof advanceSimulation>): number[] {
+        const delays: number[] = []
+        let onset: number | null = null
+        let deepest: { time: number; pmus: number } | null = null
+        state.waveforms.forEach((sample, index) => {
+          const starting =
+            index > 0 &&
+            sample.phase === 'inspiration' &&
+            state.waveforms[index - 1].phase === 'expiration'
+          if (starting) {
+            if (onset !== null && deepest && deepest.pmus < -1) delays.push(deepest.time - onset)
+            onset = sample.time
+            deepest = null
+          }
+          if (onset !== null && (!deepest || sample.pmusCmH2O < deepest.pmus)) {
+            deepest = { time: sample.time, pmus: sample.pmusCmH2O }
+          }
+        })
+        return delays
+      }
+
+      it('keeps the effort locked to the machine breath after the rate is changed', () => {
+        const initial = { ...createInitialSimulationState('MV-04', 'learn'), paused: false }
+        const changed = ventilationSimulationReducer(initial, {
+          type: 'SET_CONTROL',
+          control: 'ratePerMin',
+          value: 14,
+        })
+        // The buffer only holds 12 s, so accumulate across successive windows.
+        let state = advanceSimulation(changed, 12)
+        const delays: number[] = []
+        for (let window = 0; window < 4; window += 1) {
+          state = advanceSimulation(state, 10)
+          delays.push(...effortDelaysSeconds(state))
+        }
+        expect(delays.length).toBeGreaterThan(5)
+        /*
+         * Entrainment means a fixed delay after each machine breath. `effortAt` used to build its
+         * machine period from `settings.ratePerMin` while `machineTiming` built the breath from
+         * `measurements.totalRatePerMin`; lowering the set rate below the patient's own rate — the
+         * one action this case asks for — left the two running on different clocks and the effort
+         * walked through the breath instead of staying locked to it.
+         */
+        expect(Math.max(...delays) - Math.min(...delays)).toBeLessThan(0.25)
+      })
     })
   })
 

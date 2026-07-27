@@ -50,6 +50,87 @@ function lesson(
 
 export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[] = [
   lesson({
+    id: 'waveform-anatomy',
+    title: 'Waveform anatomy: three traces, one breath',
+    domain: 'Waveforms',
+    summary:
+      'Name what each trace plots and what sets its shape, then separate a volume-targeted breath from a pressure-targeted one on sight.',
+    relatedCaseIds: ['MV-01', 'MV-02'],
+    phases: {
+      recognize: {
+        objective: 'Name what each of the three traces is plotting.',
+        requiredAction:
+          'Identify the pressure, flow, and volume traces and the zero line each is read against.',
+        teachingPoint:
+          'Pressure is measured at the airway, flow is signed — in above the line, out below it — and volume is the running total of flow.',
+      },
+      predict: {
+        objective: 'Predict which trace keeps its shape when the lung changes.',
+        requiredAction:
+          'Commit to whether pressure or volume is the variable the ventilator is holding.',
+        teachingPoint:
+          'The ventilator sets exactly one of pressure or volume. The other one is free to move, which is what makes it worth monitoring.',
+      },
+      act: {
+        objective: 'Look at a delivered breath on the live console.',
+        requiredAction: 'Review the waveforms and identify which variable is being controlled.',
+        teachingPoint:
+          'A square flow with a rising pressure ramp is volume delivery; a square pressure with decelerating flow is pressure delivery.',
+      },
+      observe: {
+        objective: 'Observe the expiratory limb of all three traces.',
+        requiredAction: 'Compare how each trace returns toward its baseline.',
+        teachingPoint:
+          'Expiration is passive in every mode here, so its shape is set by the lung and the circuit rather than by any setting.',
+      },
+      explain: {
+        objective: 'Explain the difference in terms of what is set and what follows.',
+        requiredAction: 'State the controlled variable and what it costs you to control it.',
+        teachingPoint:
+          'Controlling volume guarantees the breath size and lets pressure vary; controlling pressure caps the pressure and lets the breath size vary.',
+      },
+      transfer: {
+        objective: 'Transfer the reading to a breath with a different controlled variable.',
+        requiredAction: 'Name the controlled variable from the trace shapes alone.',
+        teachingPoint: 'The shapes carry across devices and mode names; the labels do not.',
+      },
+    },
+    prediction: {
+      prompt:
+        'Respiratory-system compliance falls during volume-controlled ventilation. What happens on the traces?',
+      choices: [
+        { id: 'pressure-rises', label: 'Pressure rises; the volume trace is unchanged' },
+        { id: 'volume-falls', label: 'Volume falls; the pressure trace is unchanged' },
+      ],
+      correctChoiceId: 'pressure-rises',
+      explanation:
+        'Volume is the controlled variable, so it is delivered regardless and the pressure required to deliver it rises. In a pressure-controlled breath the same stiffening does the opposite.',
+    },
+    transfer: {
+      prompt:
+        'A breath shows a square-topped pressure trace and an inspiratory flow that decays toward zero. Which variable is the ventilator controlling?',
+      choices: [
+        { id: 'pressure', label: 'Pressure — flow and volume follow the mechanics' },
+        { id: 'volume', label: 'Volume — pressure follows the mechanics' },
+      ],
+      correctChoiceId: 'pressure',
+      explanation:
+        'A held, rectangular pressure with decelerating flow is pressure-targeted delivery. The decay is the lung filling until the pressure gradient closes.',
+    },
+    references: [
+      {
+        title: 'Characteristic waveforms',
+        summary:
+          'Pressure-controlled and volume-controlled ventilation produce the rectangular and ramp shapes compared in this section.',
+      },
+      {
+        title: 'Equation of motion',
+        summary:
+          'Pressure at any instant is the sum of a resistive term that exists only while flow is moving and an elastic term that scales with delivered volume.',
+      },
+    ],
+  }),
+  lesson({
     id: 'mechanics-load-and-pressure',
     title: 'Mechanics: load, pressure, and volume',
     domain: 'Mechanics',

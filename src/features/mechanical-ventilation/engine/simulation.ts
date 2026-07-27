@@ -8,6 +8,7 @@ import {
 } from '../content/deviceProfiles'
 import { cloneMechanicalVentilationSettings, isSimvMode, isTwoLevelMode } from './modes'
 import {
+  cardiogenicFlowOscillationLps,
   clamp,
   effectiveBaselinePressureCmH2O,
   effectivePressureAboveBaselineCmH2O,
@@ -21,9 +22,12 @@ import {
   MAX_TREND_SAMPLES,
   MAX_WAVEFORM_SAMPLES,
   moveTowardExp,
+  observedEndExpiratoryVolumeMl,
   passiveExpiratoryFlowLps,
   round,
+  secretionFlowDisturbanceLps,
   targetTidalVolumeMl,
+  unmodeledIntrinsicPeepCmH2O,
   usesPressureTargetedDelivery,
   WAVEFORM_STEP_SECONDS,
 } from './physics'
@@ -229,16 +233,29 @@ function effortAt(
   state: VentilationSimulationState,
   definition: VentilationCaseDefinition,
   patient: PatientModelState,
+  measurements: VentilatorMeasurements,
   time: number,
 ): number {
   const neuralPeriod = 60 / Math.max(1, patient.drive.neuralRatePerMin)
   let phase = time % neuralPeriod
-  if (definition.phenotype === 'reverse-triggering') {
-    const machineRate =
-      state.ventilator.settings.mode === 'pressure-support'
-        ? patient.drive.neuralRatePerMin
-        : state.ventilator.settings.ratePerMin
-    const machinePeriod = 60 / Math.max(1, machineRate)
+  /*
+   * Entrainment is the whole phenotype, and breaking it is the whole treatment — so it has to be
+   * conditional on the case still being unresolved. It used to break by accident: `effortAt` and
+   * `machineTiming` ran on different rates, so changing the set rate made the effort drift out of
+   * step, which read as entrainment breaking. Locking the two together (§1.9) fixed the defect and
+   * removed the therapy with it, leaving the effort entrained forever, still stacking volume onto
+   * every breath after the learner had done the right thing.
+   */
+  if (definition.phenotype === 'reverse-triggering' && !isCaseResolved(state, definition)) {
+    /*
+     * Entrainment means the effort is locked to the breath the ventilator is actually delivering,
+     * so this has to be the rate `machineTiming` runs on. Deriving it from `settings.ratePerMin`
+     * instead silently unlocked the effort whenever the two disagreed — which is precisely what
+     * happens when the learner lowers the set rate, the one action this case asks for, because the
+     * patient's own rate then keeps the machine running faster than the setting. Third instance of
+     * the same two-clocks defect (§1.3 item 9, §1.6).
+     */
+    const machinePeriod = 60 / Math.max(1, measurements.totalRatePerMin)
     phase =
       ((time % machinePeriod) -
         (patient.drive.reverseTriggerDelaySeconds ?? 0.35) +
@@ -325,6 +342,36 @@ function machineTiming(
   }
 }
 
+/**
+ * When the inspiration in progress began, and how much gas was in the lung at that moment.
+ *
+ * A ventilator delivers its set tidal volume by integrating flow from the start of *this* breath,
+ * so what it delivers does not depend on what is still left over from the last one. Measuring the
+ * target against absolute lung volume instead made breath stacking impossible to draw: the second
+ * inflation of a double trigger only topped the lung back up to one tidal volume, so the trace
+ * showed two inflations with no volume or pressure consequence while the console reported 1.85×VT.
+ * Stacking is the entire danger of the phenotype.
+ *
+ * Read back off the waveform buffer rather than held as extra state, so it survives the tick
+ * boundary and cannot drift out of step with the trace it describes.
+ */
+function inspirationAnchor(
+  waveforms: readonly WaveformSample[],
+  time: number,
+  volumeL: number,
+): { time: number; volumeL: number } {
+  const last = waveforms.at(-1)
+  // Nothing inspiring in the buffer: this sample is the onset.
+  if (!last || last.phase === 'expiration') return { time, volumeL }
+  for (let index = waveforms.length - 1; index > 0; index -= 1) {
+    if (waveforms[index].phase !== 'inspiration') break
+    if (waveforms[index - 1].phase === 'expiration') {
+      return { time: waveforms[index].time, volumeL: waveforms[index - 1].volumeMl / 1000 }
+    }
+  }
+  return { time, volumeL }
+}
+
 function nextWaveformSample(
   state: VentilationSimulationState,
   definition: VentilationCaseDefinition,
@@ -335,7 +382,7 @@ function nextWaveformSample(
 ): { sample: WaveformSample; volumeL: number } {
   const settings = state.ventilator.settings
   const timing = machineTiming(state, definition, patient, measurements, time)
-  const effort = effortAt(state, definition, patient, time)
+  const effort = effortAt(state, definition, patient, measurements, time)
   const holdActive = state.ventilator.holdUntil !== null && state.ventilator.holdUntil > time
   const pressureTargeted = usesPressureTargetedDelivery(settings)
   const baselinePressure = effectiveBaselinePressureCmH2O(settings)
@@ -348,14 +395,32 @@ function nextWaveformSample(
     ? settings.advanced.spontaneousPressureSupportCmH2O
     : pressureAboveBaseline
   const pressureTargetedBreath = pressureTargeted || timing.spontaneous
+  /*
+   * Only the auto-PEEP the trace is not already producing. `volumeL` is absolute lung volume, so a
+   * lung that did not finish emptying is generating that recoil through the elastic term already;
+   * adding the case's full analytic value on top counted the same trapped gas twice. Both the flow
+   * a breath delivers and the pressure the manometer reads have to use this same number.
+   */
+  const residualIntrinsicPeep = unmodeledIntrinsicPeepCmH2O(
+    measurements.intrinsicPeepCmH2O,
+    (observedEndExpiratoryVolumeMl(state.waveforms) ?? 0) / 1000,
+    patient.mechanics.complianceLPerCmH2O,
+  )
   let flowLps = 0
   if (!holdActive && timing.inspiration) {
     if (settings.mode === 'volume-ac' && !pressureTargetedBreath) {
-      flowLps = flowProfile(settings, timing.phase, measurements.mechanicalInspiratoryTimeSeconds)
+      // Both the flow profile and the volume target run off this breath's own onset. Using the
+      // breath-cycle phase instead ran a stacked inflation past the end of its own profile, where a
+      // decelerating pattern evaluates to zero flow.
+      const anchor = inspirationAnchor(state.waveforms, time, volumeL)
+      flowLps = flowProfile(
+        settings,
+        time - anchor.time,
+        measurements.mechanicalInspiratoryTimeSeconds,
+      )
       const targetVolume =
-        targetTidalVolumeMl(settings, patient, definition.predictedBodyWeightKg) / 1000 +
-        patient.mechanics.endExpiratoryVolumeL
-      if (volumeL >= targetVolume) flowLps = 0
+        targetTidalVolumeMl(settings, patient, definition.predictedBodyWeightKg) / 1000
+      if (volumeL - anchor.volumeL >= targetVolume) flowLps = 0
     } else {
       const pRampMs = Math.max(
         10,
@@ -372,10 +437,18 @@ function nextWaveformSample(
         breathPressureAboveBaseline * (1 - Math.exp(-timing.phase / (pRampMs / 1000)))
       const resistance =
         patient.mechanics.resistanceCmH2OPerLps + patient.mechanics.tubeResistanceCmH2OPerLps
+      /*
+       * Auto-PEEP is part of the back-pressure this breath has to push against, and it was missing
+       * here while `equationOfMotionPressure` below included it — so the flow the breath delivered
+       * and the pressure the manometer showed came from two different equations, and the mismatch
+       * was hidden by the ceiling clamp. Including it makes the trapped gas a threshold load, which
+       * is what it is at the bedside: the same support pressure delivers a smaller breath.
+       */
       flowLps =
         (targetPressure +
           effort -
           baselinePressure -
+          residualIntrinsicPeep -
           volumeL / Math.max(0.005, patient.mechanics.complianceLPerCmH2O)) /
         Math.max(2, resistance)
       flowLps = clamp(flowLps, 0, 3)
@@ -385,19 +458,34 @@ function nextWaveformSample(
       volumeL,
       patient.mechanics.resistanceCmH2OPerLps + patient.mechanics.tubeResistanceCmH2OPerLps,
       patient.mechanics.complianceLPerCmH2O,
+      effort,
     )
   }
 
   if (
     definition.phenotype === 'autotriggering' &&
     state.branch === 'cardiogenic-oscillation' &&
-    !timing.inspiration
+    !timing.inspiration &&
+    !holdActive
   ) {
-    flowLps += Math.sin(time * Math.PI * 3) * 0.012
+    flowLps += cardiogenicFlowOscillationLps(time, patient.hemodynamics.heartRatePerMin)
   }
-  let nextVolume = clamp(volumeL + flowLps * WAVEFORM_STEP_SECONDS, 0, 2)
-  if (holdActive && state.ventilator.holdType === 'expiratory')
-    nextVolume = Math.min(nextVolume, 0.03)
+  if (
+    definition.phenotype === 'high-resistance' &&
+    state.branch === 'secretions' &&
+    patient.airway.secretions &&
+    !holdActive
+  ) {
+    flowLps += secretionFlowDisturbanceLps(time, flowLps)
+  }
+  /*
+   * An occlusion stops gas moving, in both directions. The volume trace therefore holds wherever it
+   * was — it used to be clamped to ~0 for an expiratory hold, which threw away the trapped gas the
+   * maneuver exists to measure, dropped the volume waveform to the floor mid-limb, and left the
+   * held pressure to come entirely from the analytic `intrinsicPeepCmH2O` rather than from the gas
+   * the trace says is still in the lung.
+   */
+  const nextVolume = holdActive ? volumeL : clamp(volumeL + flowLps * WAVEFORM_STEP_SECONDS, 0, 2)
 
   const totalResistance =
     patient.mechanics.resistanceCmH2OPerLps + patient.mechanics.tubeResistanceCmH2OPerLps
@@ -418,7 +506,7 @@ function nextWaveformSample(
     const secondsHeld = Math.max(0, HOLD_SECONDS - ((state.ventilator.holdUntil ?? time) - time))
     paw = equationOfMotionPressure({
       peepCmH2O: baselinePressure,
-      intrinsicPeepCmH2O: measurements.intrinsicPeepCmH2O,
+      intrinsicPeepCmH2O: residualIntrinsicPeep,
       resistanceCmH2OPerLps: totalResistance,
       flowLps: 0,
       volumeL: nextVolume * (1 - holdRelaxationFraction(secondsHeld)),
@@ -428,7 +516,7 @@ function nextWaveformSample(
   } else if (timing.inspiration) {
     paw = equationOfMotionPressure({
       peepCmH2O: baselinePressure,
-      intrinsicPeepCmH2O: measurements.intrinsicPeepCmH2O,
+      intrinsicPeepCmH2O: residualIntrinsicPeep,
       resistanceCmH2OPerLps: totalResistance,
       flowLps,
       volumeL: nextVolume,
@@ -441,6 +529,9 @@ function nextWaveformSample(
       circuitResistanceCmH2OPerLps: patient.mechanics.tubeResistanceCmH2OPerLps,
       flowLps,
       inspiratoryEffortCmH2O: effort,
+      elasticRecoilCmH2O:
+        measurements.intrinsicPeepCmH2O +
+        nextVolume / Math.max(0.005, patient.mechanics.complianceLPerCmH2O),
     })
   }
   if (pressureTargetedBreath && timing.inspiration && !holdActive) {
@@ -448,13 +539,6 @@ function nextWaveformSample(
       paw,
       baselinePressure + breathPressureAboveBaseline + measurements.pressureOvershootCmH2O,
     )
-  }
-  if (
-    definition.phenotype === 'high-resistance' &&
-    state.branch === 'secretions' &&
-    patient.airway.secretions
-  ) {
-    paw += Math.sin(time * 40) * 1.8
   }
   return {
     sample: {

@@ -1,19 +1,32 @@
 # Critical Care — session handoff
 
-**Date:** 2026-07-26 (revised same day after the §1.5 follow-up session)
+**Date:** 2026-07-26 (revised same day, four times — see §1.5, §1.6–§1.8, §1.9, and §1.10)
 **Branch of record:** `codex/ip-preference-card-builder-v0-1` (what the dev server runs)
 **Work branch:** `claude/curricular-sequencing-updates-b351b1`
-**Head at handoff:** `ea7699d9`, plus an **uncommitted** working tree carrying §1.5
+**Head at handoff:** `3a1c05a2`, plus an **uncommitted** working tree carrying §1.7 and §1.8
 
 ---
 
 ## 1. What was done
 
-Five work packages, in the order they landed: WP10 curricular sequencing (§1.1), the mechanical
-ventilation teaching workspace and the defects that surfaced with it (§1.2, §1.3), per-device
-ventilator console fidelity (§1.4), a follow-up session that cleared §3 items 1–4 (§1.5), and the
-waveform-physiology corrections the owner's review of the hold tracing prompted (§1.6). Everything
-through §1.4 is committed; §1.5 and §1.6 are uncommitted.
+In the order it landed:
+
+| §          | Work                                                                              | State       |
+| ---------- | --------------------------------------------------------------------------------- | ----------- |
+| §1.1       | WP10 curricular sequencing across all modules                                     | committed   |
+| §1.2, §1.3 | MV three-pane teaching workspace, and the defects that surfaced with it           | committed   |
+| §1.4       | Per-device ventilator console fidelity, all four devices                          | committed   |
+| §1.5       | Follow-up session clearing §3 items 1–4 and the housekeeping half of 8            | committed   |
+| §1.6       | Waveform physiology — the hold, the expiratory limb, and what the console reports | committed   |
+| §1.7       | The Learn pathway now opens by teaching how to read a breath                      | uncommitted |
+| §1.8       | The wandering baseline between breaths                                            | uncommitted |
+| §1.9       | The rest of the casebook's waveform signatures, swept the same way                | uncommitted |
+| §1.10      | The numbers the console reports, measured off the trace rather than predicted     | uncommitted |
+
+§1.6–§1.8 all came out of the owner reviewing the running module rather than from the backlog, and
+each began as "this does not look right" over a screenshot. Read §1.6 first of the three: the other
+two are consequences of looking closely at the same trace. §1.9 then took the method those three
+established and ran it over every remaining signature in the casebook.
 
 ### 1.1 WP10 — curricular sequencing across all modules (complete)
 
@@ -60,7 +73,7 @@ consumes them; its pathway file is now a thin binding over the shared registry.
 | ------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | CRRT    | circuit anatomy moved to 2nd — transport and prescription both assume the blood path    | 1 — pressure-profile integration capstone                                 |
 | MCS     | device tabs replaced by the ordered rail inside Learn                                   | 1 — cross-device selection capstone                                       |
-| MV      | waveforms moved ahead of modes (modes are device-facing)                                | 1 — high-peak-pressure capstone                                           |
+| MV      | waveforms moved ahead of modes (modes are device-facing) — §1.7 later put anatomy first | 1 — high-peak-pressure capstone                                           |
 | ICU-sim | reordered by interacting-system count; entry point is now the 6 h single-mechanism case | 1 — workspace + `Review → Classify → Intervene → Advance → Reassess` loop |
 | ECMO    | **console orientation moved from 1st to 7th**                                           | 10 — 4 shared foundation, 2 track physiology, 2 normal-state, 2 capstones |
 
@@ -97,7 +110,7 @@ so the pattern could be judged before the rest adopt it.
     graded against live measurements.
 - The other six sections show `VentilationSectionOverview`: their own authored six-phase objectives
   and references, with an explicit note that the illustrated figure is pending. No empty panes.
-  _(Superseded by §1.5 — all nine sections now have a bespoke panel.)_
+  _(Superseded by §1.5 and §1.7 — all ten sections now have a bespoke panel.)_
 
 **No numeric thresholds anywhere in these panels** — this module's source reconciliation is still
 pending, so every claim is about relationships between signals.
@@ -144,7 +157,7 @@ Several were only findable by running the thing; two the test suite actively mis
 ### 1.4 Ventilator device fidelity — all four consoles
 
 Making each ventilator console display information the way that device actually does. **Complete
-for all four devices**; uncommitted on `codex/ip-preference-card-builder-v0-1`.
+for all four devices**; committed as `ea7699d9`.
 
 Nine manuals were supplied across two passes — note that the first of the original six is **not** a
 Hamilton document:
@@ -284,7 +297,8 @@ panel; `VentilationSectionOverview` is a safety net for a section added ahead of
 than the state six sections were in. The three original panels stayed in
 `MechanicalVentilationTeachingPanel.tsx`; the six new ones are one-file-each under
 `components/teaching/`, over shared primitives in `teaching/shared.tsx`. The dispatcher is now a
-`Record` keyed by section id, so `ventilationTeachingPanelSectionIds` derives from it.
+`Record` keyed by section id, so `ventilationTeachingPanelSectionIds` derives from it. (§1.7 later
+added a seventh file there, for the new opening section.)
 
 | Section                                 | Panel                                                                                                             |
 | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
@@ -407,18 +421,236 @@ is the measurement most reliably misread and the error runs in the dangerous dir
 This sits alongside the `invalidates` verdicts the high-pressure discriminator already had (§1.3
 item 4), so the module now says the same thing in all three places a plateau is read.
 
+### 1.7 The pathway now opens by teaching how to read a breath
+
+Owner's reading of the module: the waveform components and the difference between volume- and
+pressure-targeted breaths were under-explained, and the pathway should start there. It previously
+opened on **Mechanics**, which decomposes peak pressure without ever having said what the three
+traces are.
+
+**New first section — `waveform-anatomy`, "Waveform anatomy: three traces, one breath".** Authored
+end to end: catalog seed (`orientation`, `stageOrder` 1, with `modes-and-breath-delivery` moved to
+2), pathway section, lesson with its six phases and prediction/transfer, learning items, guided
+runtime, and a teaching panel. It is also now the first prerequisite on the capstone.
+
+The panel has two halves:
+
+- **The three traces**, off the live breath. Selecting one gives what it plots, what it is read
+  against, and what sets its shape — including that pressure is airway pressure and equals alveolar
+  pressure only when nothing is moving, that flow is the one signed trace and the only one read
+  against zero, and that volume is the integral of flow and carries no information flow does not.
+- **Volume-targeted against pressure-targeted**, side by side on the same lung. The stated rule is
+  that a ventilator sets _one_ of pressure or volume and the lung decides the rest, so whichever is
+  set keeps its shape and the other one is the one worth watching. The figure makes the rectangle
+  move from flow to pressure between the columns, with the consequence spelled out both ways: a
+  stiffer lung raises the pressure trace and leaves the breath size alone under volume targeting,
+  and shrinks the breath while leaving the pressure trace alone under pressure targeting. Expiration
+  is passive in both, so that limb is identical — which is why it reports the lung, not the machine.
+
+The comparison breaths are drawn closed-form from **this patient's** compliance, resistance, PEEP,
+tidal volume and inspiratory time rather than simulated — two live engine runs inside a render is
+not affordable, and the claim being made is about shape. They move with the case; they are not stock
+art. Both limbs share one time axis, which matters: drawing them on separate axes squashed the
+inspiratory flow rectangle next to the expiratory spike and made the two columns look alike.
+
+**A latent test coupling fell out.** `lesson-v2.test.tsx` took `mechanicalVentilationLessons[0]` and
+paired it with `mechanicalVentilationLessonItems['mechanics-load-and-pressure']`, so it broke the
+moment anything else became first. Now pinned by id.
+
+### 1.8 The wandering baseline between breaths
+
+Also owner-raised, from a high-resistance screenshot. The retained-secretions sign was modeled as
+`paw += Math.sin(time * 40) * 1.8` — applied to **pressure only**, on **every** sample.
+
+Two things wrong with it. Clinically the sign is a saw-tooth on the **flow** trace; pressure inherits
+it through the resistive term, which is why it is more obvious the higher the resistance. This drew
+it on the one waveform that does not carry it and left flow perfectly flat at 60.0 L/min. And it ran
+at zero flow: the end-inspiratory pause wobbled between 10.10 and 10.28 with no gas moving, and it
+would have wobbled straight through the occlusion plateau §1.6 had just fixed.
+
+`secretionFlowDisturbanceLps` now perturbs flow, scaled by how much gas is actually moving, so it
+vanishes wherever flow does. Pressure picks it up through the equation of motion at the right
+amplitude for the resistance. The pause is now flat at 8.49.
+
+> A test asserts the occluded plateau carries no ripple **between consecutive samples** rather than
+> no movement at all — the held pressure may still drift, because this patient is not relaxed and an
+> effort during an occlusion moves the plateau. That is §1.6's teaching point, not a defect.
+
+### 1.9 The rest of the casebook's waveform signatures
+
+§3 item 9, worked through in full: every remaining clinical sign the casebook draws, checked by
+dumping the buffer rather than by looking at a rendering. Four were wrong in the same way §1.8's
+secretions sign was wrong — the finding was drawn on a waveform that does not carry it, or the
+console asserted something the trace never showed.
+
+The dump script is now committed as well, since this had been rebuilt from scratch three times:
+
+```bash
+npm run dump:mv-waveforms                      # one-line summary for all 15 cases
+npm run dump:mv-waveforms -- --case=MV-03      # sample table for one case
+npm run dump:mv-waveforms -- --case=MV-13 --branch=secretions --hold=inspiratory
+npm run dump:mv-waveforms -- --case=MV-04 --set=ratePerMin:14
+```
+
+The summary line flags the two ways a derived number can outrun its own trace (`Pplat > Ppeak`,
+`VTe over trace`), so this class of defect is screened rather than spotted by eye. The console
+harness now also takes `MV_CASE=MV-08 npm run render:mv-console`.
+
+**Patient effort was invisible on the expiratory flow limb.** `passiveExpiratoryFlowLps` took only
+volume, resistance and compliance, so an effort during expiration moved the _pressure_ trace by up
+to 8 cmH₂O and left flow a perfectly smooth exponential. That is backwards for the sign it matters
+most for: **an ineffective effort is a flow finding** — a notch back toward zero on the expiratory
+limb — and MV-05, the case built to teach it, drew nothing at all on flow.
+
+Expiration is driven by the recoil still stored in the lung, so an inspiratory effort works against
+it: driving pressure falls, flow slows, and if the effort exceeds the recoil the limb crosses zero,
+bounded by `CLOSED_VALVE_BIAS_FLOW_LPS` — what a shut demand valve can supply. The same term now
+explains _why_ trapping makes efforts ineffective: the more recoil is still stored, the larger the
+effort has to be before anything moves.
+
+`expiratoryAirwayPressure` changed with it, and this is the part worth a second look. It used to
+subtract the whole effort, so the pressure trace carried the entire sign at full muscle amplitude.
+It now subtracts only the surplus over the recoil still in the lung: while gas is leaving, the
+expiratory valve holds the circuit at baseline and the effort is spent inside the chest. A trigger
+deflection is preserved — §1.6's reason for having the term at all — because that is exactly the
+case where the effort exceeds the recoil.
+
+> **Consequence across the casebook.** Six cases used to drive airway pressure below zero on every
+> breath; now only MV-02 and MV-09 dip under their own PEEP, both with a large effort still near
+> peak when the ventilator cycles. That is the genuine premature-cycling picture §3 item 10 asks
+> about, and it is now the only thing producing it.
+
+**Cardiogenic oscillations were invisible and off-clock.** `Math.sin(time * Math.PI * 3) * 0.012`
+— ±0.7 L/min at a hard-coded 1.5 Hz, on a trace scaled ±100. MV-08 asks the learner why the
+ventilator is cycling at 28/min against a neural rate of 8, and the trace gave no reason.
+`cardiogenicFlowOscillationLps` now runs at the patient's own heart rate and draws at
+`CARDIOGENIC_OSCILLATION_AMPLITUDE_LMIN`, which is **the same constant the autotrigger rule keys
+on** — so the flow limb, the trigger setting, and the machine's behavior come from one number. It
+is also zero-mean and skipped under an occlusion; it was previously integrating into lung volume
+through a hold, the §1.8 defect exactly.
+
+> Sized honestly rather than for visibility: 1.5 L/min on a ±100 L/min band is about 3 px of
+> peak-to-peak on the rendered console. Real cardiogenic oscillations are that subtle, which is why
+> autotriggering gets missed. If it should be more prominent for teaching, the amplitude and the
+> rule move together — one constant — or the autotriggering panel draws a zoomed end-expiratory
+> window.
+
+**A "double trigger" never stacked.** The volume target was measured against **absolute** lung
+volume, so the second inflation only topped the lung back up to one tidal volume: MV-03 peaked at
+354 mL against a set VT of 350 while the console reported `stacked 648 mL`. Two inflations, no
+consequence — with breath stacking being the entire danger of the phenotype. The flow profile had
+the same origin problem: it ran on the breath-cycle phase, so a stacked inflation evaluated past
+the end of its own profile, where a decelerating pattern is zero flow.
+
+Both now run from the breath's own onset, read back off the waveform buffer by `inspirationAnchor`
+rather than held as extra state. MV-03 now peaks at **726 mL and 39.4 cmH₂O** against 350 mL and
+21.9 for a single breath.
+
+> This also fixed a quieter bug: any breath into a lung that had not finished emptying was
+> **under-delivered** by whatever was still in it, and idled at zero flow for the rest of its
+> inspiratory time. That fake pause is what §1.8's "goes quiet wherever gas is not moving" test was
+> asserting on; the test now asserts the property on the disturbance function, and a new test
+> asserts the full tidal volume reaches a lung that has not emptied. **The engine models no
+> inspiratory pause at all** — `pausePercent` is display-only (§1.4 split `deriveVolumeFlowTimeSeconds`
+> out for exactly that). Whether to implement one is open.
+
+**Reverse triggering re-derived the breath clock — trap 5, third instance.** `effortAt` built its
+machine period from `settings.ratePerMin` while `machineTiming` built the breath from
+`measurements.totalRatePerMin`. They agree at baseline, so entrainment looked right; they diverge
+the moment the learner **lowers the set rate**, which is the one action the case asks for, because
+the patient's own rate then keeps the machine running faster than the setting. The effort would
+have walked through the breath instead of staying locked to it. Now both read the same rate, and a
+test asserts the effort-to-onset delay stays within 0.25 s across a rate change.
+
+**Checked and left alone.** MV-02's flow-starvation scoop is emergent from the equation of motion
+and is textbook (pressure falls 16.5 → 8.2 → 12.9 across a square-flow breath). MV-11's rise-time
+ramp is a smooth ramp, not a step. MV-14's −170 L/min expiratory spike is arithmetically right for
+a compliance of 10 mL/cmH₂O and will simply clip off the vendor scale, as it would on the device.
+
 **Offline render harness — now committed.** §4 trap 2 described the recipe but no script existed.
 Two are now checked in and wired to npm:
 
 ```bash
 npm run render:mv-console   # public/mv-console-preview/<device>.html  — 4 devices × 4 screens
-npm run render:mv-teaching  # public/mv-console-preview/teaching-panels.html — all 9 panels
+npm run render:mv-teaching  # public/mv-console-preview/teaching-panels.html — all 10 panels
 ```
 
 Serve through the `trainer-prod-static` launch config on :8099. Output is gitignored. Two gotchas
 beyond the ones already in §4: the harness must use `createElement` rather than calling the component
 (`.mts` is parsed without JSX, and a direct call bypasses React's hook dispatcher), and it reads the
 CSS esbuild emits as a **sibling of the JS bundle**.
+
+### 1.10 The numbers the console reports
+
+§3 items 11 and 12, both cleared. §1.9's sweep found seven cases reporting a tidal volume the trace
+never delivered and four printing a plateau above their own peak; the expiratory hold was throwing
+away the trapped gas it exists to measure. All of it turned out to be one disease with four
+symptoms: **a quantity modeled twice, once analytically and once by the trace.** §1.6 fixed the
+first instance of it — peak pressure — by deleting the analytic copy. This does the same for the
+rest.
+
+| Quantity        | Was                                               | Now                                                                         |
+| --------------- | ------------------------------------------------- | --------------------------------------------------------------------------- |
+| Tidal volume    | driving pressure × compliance, at **equilibrium** | `observedTidalVolumeMl` — peak volume of the last inflation, less its onset |
+| Plateau         | analytic tidal volume ÷ compliance, less effort   | `observedPlateauPressureCmH2O` — end-inspiratory `paw − R·V̇`                |
+| Auto-PEEP       | analytic only, added on top of retained volume    | the larger of the case's value and the trace's own retained recoil          |
+| Expiratory time | `60/rate − Ti` on the **neural** rate             | `observedExpiratoryTimeSeconds`, then the machine's own rate                |
+| Occluded volume | clamped to ~0 on an expiratory hold               | frozen — no gas moves in either direction                                   |
+
+Each keeps its analytic value as the cold-start fallback, the `observedPeak ?? relaxedPeak` pattern
+§1.6 established. **A consequence to know:** tidal volume is now a measurement, so like the peak
+pressure it lags a setting change until a breath has been delivered at the new setting. Four
+existing tests asserted on it immediately after `SET_CONTROL` and have been advanced a breath.
+
+**No pressure-targeted breath was ever allowed to reach equilibrium.** They are cycled at Ti — a
+flow-cycled breath loses the ETS fraction by definition, and one clamped by `tiMaxSeconds` loses far
+more. MV-05 has a 1.92 s time constant and 1.5 s to fill in, so it reached 54% of the predicted
+volume and the console reported 1400 mL over a trace delivering 877.
+
+**Auto-PEEP was counted twice.** `volumeL` in the equation of motion is absolute lung volume, so
+wherever the trace fails to empty it is already producing the trapped gas's recoil — and the case's
+full analytic `intrinsicPeepCmH2O` was added on top of that. Worst on the two air-trapping cases,
+which are the ones the term exists for: MV-06's peak was 6.9 cmH₂O too high. `unmodeledIntrinsicPeepCmH2O`
+now adds only the shortfall, so the authored total is preserved and the trace supplies as much of it
+as it actually can. It also runs the other way — MV-03's double trigger stacks onto a lung that has
+not emptied, which is auto-PEEP by any definition and the analytic model never predicted it. It now
+reports 13.1 cmH₂O, entirely from the trace.
+
+**A fourth two-clocks defect, in the trapping model itself.** Expiratory time came from
+`60/rate − Ti` where `rate` is `deriveEffectiveVentilationRate` — the **neural** rate in pressure
+support. MV-05's patient breathes at 28 against a machine cycling at 8, so it was credited with
+0.64 s to empty where the trace gives it six full seconds, inventing 7.8 cmH₂O of auto-PEEP on top
+of an authored 10. Read off the trace now, which also sidesteps the circularity: auto-PEEP drives
+the ineffective-effort fraction, which drives the machine rate, which would otherwise drive
+auto-PEEP.
+
+**Two defects the freeze uncovered.**
+
+1. **`deriveEffectivePatient` rebuilt the running lung volume from the case definition.** It rebuilds
+   mechanics each call, and `endExpiratoryVolumeL` was going with them — but that field is not a
+   property of the case, it is how much gas is in the lung right now. So performing _any_
+   intervention emptied the lung, and an expiratory hold armed through an authored `expiratory-hold`
+   intervention — MV-05 and MV-10 both require one — occluded nothing. The clamp to ~0 had hidden
+   this completely.
+2. **Entrainment could no longer be broken.** §1.9 locked the reverse-trigger effort to the rate
+   `machineTiming` runs on, which was the right fix for the two-clocks defect and accidentally
+   removed the therapy: the old divergence between the two clocks was what made the effort drift
+   apart when the learner changed the rate. Entrainment is now explicitly conditional on the case
+   being unresolved, so changing the rate breaks it the way it does at the bedside. Without this
+   MV-04 kept stacking volume after the correct fix and tripped a sustained-high-plateau critical
+   error on all four devices.
+
+**Where this lands.** MV-06's peak 77.4 → 70.5, MV-10's VTe 1400 → 426, MV-05's auto-PEEP 22.4 →
+13.5. Every case now reports a tidal volume its trace delivered and a plateau at or below its own
+peak, asserted per case by two `it.each` sweeps. An expiratory hold on MV-10 freezes the volume
+trace at the 553 mL still in the lung and reads total PEEP 13.6 off it.
+
+> **Worth the owner's eye.** These are large moves on the two air-trapping cases, and they change
+> what the console shows a fellow. Nothing in the casebook's authored criteria was touched, and all
+> fifteen cases still solve on all four devices — but the numbers a learner reads are different now,
+> and MV-05's tidal volume in particular is small (237 mL) because its auto-PEEP is a genuine
+> threshold load against PS 18. That is the case's own teaching point rather than a defect, but it
+> is a judgement call whether the parameters land where you want them.
 
 ---
 
@@ -438,10 +670,14 @@ All merged into `codex/ip-preference-card-builder-v0-1` via `--no-ff` merges (`e
 `b3bfab7`, `4aa8921`, `8aaffc1`). Clean merges throughout — WP10 and the preference-card builder share
 zero files.
 
-### §1.4 is committed
+Two later commits sit directly on the branch of record, both named "updates":
 
-§1.4 landed on `codex/ip-preference-card-builder-v0-1` as `ea7699d9` ("updates"), together with the
-first version of this handoff. The table below is what it contained.
+| Commit     | Contents                                                    |
+| ---------- | ----------------------------------------------------------- |
+| `ea7699d9` | §1.4 device fidelity, and the first version of this handoff |
+| `3a1c05a2` | §1.5 follow-up and §1.6 waveform physiology, 29 files       |
+
+### What `ea7699d9` contained (§1.4)
 
 | Path                                           | Change                                                                               |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------ |
@@ -457,34 +693,61 @@ first version of this handoff. The table below is what it contained.
 | `__tests__/device-display.test.tsx`            | **new** — 15 tests over the display profiles and the rendered consoles               |
 | `__tests__/components.test.tsx`                | three label expectations updated to the sourced names                                |
 
-### Uncommitted — §1.5
+### Uncommitted — §1.7 and §1.8
 
-Nothing in §1.5 is committed. `git status` on the branch of record:
+`git status` on the branch of record. Paths are relative to
+`src/features/mechanical-ventilation/` unless shown otherwise. §1.5 and §1.6 are in `3a1c05a2`.
 
-| Path                                                    | Change                                                                            |
-| ------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `jest.config.cjs`                                       | ignore `.claude/worktrees/` in both path-ignore lists                             |
-| `package.json`                                          | `render:mv-console` and `render:mv-teaching`                                      |
-| `.gitignore`                                            | `/public/mv-console-preview/`                                                     |
-| `engine/types.ts`                                       | control-unit types; `pendingHold`; relaxed-vs-displayed pressures on measurements |
-| `engine/physics.ts`                                     | `expiratoryAirwayPressure`, `holdRelaxationFraction`, trace-derived pressures     |
-| `engine/simulation.ts`                                  | hold armed at the real boundary; phase pinned under occlusion; `HOLD_SECONDS`     |
-| `engine/reducer.ts`                                     | `performConsoleHold` parks the request and runs the model to the boundary         |
-| `content/runtimeCases.ts`                               | four case criteria repointed at `relaxedPlateauPressureCmH2O`                     |
-| `components/WaveformStrip.tsx`                          | `unreliable` / `caveat` on a readout                                              |
-| `__tests__/physics-waveforms.test.ts`                   | +12 tests over the occlusion maneuvers, the expiratory limb, and the readouts     |
-| `content/deviceDisplay.ts`                              | `resolveControlUnit`                                                              |
-| `content/deviceProfiles.ts`                             | four `controlUnits` blocks, unit-aware `adaptControlDescriptor`, display notes    |
-| `components/MechanicalVentilatorConsole.tsx`            | Tools two-column screen, maneuver status, extracted channel renderer              |
-| `components/mechanical-ventilation.module.css`          | `.toolsScreen` / `.toolsPanel` / `.maneuverStatus`, annotation + toolGrid tokens  |
-| `components/MechanicalVentilationTeachingPanel.tsx`     | `Record`-based dispatcher, run-control labelling, shared-primitive imports        |
-| `components/teaching/`                                  | **new** — `shared` plus six panels, one file each                                 |
-| `components/mechanical-ventilation-teaching.module.css` | markers, lanes, trade-off columns, tiers, locus grid, `.runHint`                  |
-| `scripts/critical-care/render-mv-console.mts`           | **new** — offline console render harness                                          |
-| `scripts/critical-care/render-mv-teaching-panels.mts`   | **new** — offline teaching-panel render harness                                   |
-| `__tests__/teaching-panel.test.tsx`                     | +9 tests: every-panel-every-case, no-thresholds, per-panel interaction            |
-| `__tests__/device-display.test.tsx`                     | +6 tests over per-device control units                                            |
-| `__tests__/components.test.tsx`                         | +3 tests over the Tools trace and maneuver status                                 |
+**§1.7 — the `waveform-anatomy` section.** A new pathway section touches every layer, so this is
+the list to copy when adding the next one.
+
+| Path                                                    | Change                                                                                   |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `critical-care/content/activities.ts`                   | the seed; `modes-and-breath-delivery` renumbered to orientation 2; capstone prerequisite |
+| `critical-care/content/learningPathways.ts`             | the new first section, and a rewritten arc sentence                                      |
+| `content/lessons.ts`                                    | the lesson — six phases, prediction, transfer, references                                |
+| `content/lessonLearningItems.ts`                        | its prediction and transfer items                                                        |
+| `content/lessonRuntime.ts`                              | its guided actions and required evidence                                                 |
+| `components/teaching/waveform-anatomy.tsx`              | **new** — the three traces, and the volume/pressure comparison                           |
+| `components/MechanicalVentilationTeachingPanel.tsx`     | registers it as the first entry in the panel `Record`                                    |
+| `components/mechanical-ventilation-teaching.module.css` | `.comparisonColumns`, `.comparisonColumn`, `.comparisonRule`, `.comparisonAxis`          |
+| `__tests__/teaching-panel.test.tsx`                     | +5 over the new panel                                                                    |
+| `__tests__/lesson-v2.test.tsx`                          | pinned to the mechanics lesson by id instead of by list position                         |
+
+**§1.8 — the secretions sign.**
+
+| Path                                  | Change                                                                  |
+| ------------------------------------- | ----------------------------------------------------------------------- |
+| `engine/physics.ts`                   | `secretionFlowDisturbanceLps`                                           |
+| `engine/simulation.ts`                | the disturbance moved from pressure onto flow, and skipped under a hold |
+| `__tests__/physics-waveforms.test.ts` | +3 over where the sign appears and where it must not                    |
+
+**§1.9 — the casebook signature sweep.**
+
+| Path                                          | Change                                                                                              |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `engine/physics.ts`                           | effort term + `CLOSED_VALVE_BIAS_FLOW_LPS` on `passiveExpiratoryFlowLps`; surplus-over-recoil on    |
+|                                               | `expiratoryAirwayPressure`; `cardiogenicFlowOscillationLps` + its amplitude constant, which the     |
+|                                               | autotrigger rule now keys on                                                                        |
+| `engine/simulation.ts`                        | `inspirationAnchor`; per-breath flow profile and volume target; effort into expiratory flow and     |
+|                                               | pressure; cardiogenic term rebuilt and gated on the hold; `effortAt` takes `measurements`           |
+| `__tests__/physics-waveforms.test.ts`         | +12 — a `casebook waveform signatures` block over all four, plus the reworked secretions assertions |
+| `scripts/critical-care/dump-mv-waveforms.mts` | **new** — the buffer dump, wired to `npm run dump:mv-waveforms`                                     |
+| `scripts/critical-care/render-mv-console.mts` | `MV_CASE` override so the console harness can render any case                                       |
+| `package.json`                                | the `dump:mv-waveforms` script                                                                      |
+
+**§1.10 — reported numbers measured off the trace.**
+
+| Path                                          | Change                                                                                           |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `engine/physics.ts`                           | `observedTidalVolumeMl`, `observedPlateauPressureCmH2O`, `observedEndExpiratoryVolumeMl`,        |
+|                                               | `observedExpiratoryTimeSeconds`, `unmodeledIntrinsicPeepCmH2O`; all five wired into              |
+|                                               | `deriveMeasurements`; `deriveEffectivePatient` keeps the running lung volume                     |
+| `engine/simulation.ts`                        | occlusion freezes the volume; residual auto-PEEP into both the flow equation and the equation of |
+|                                               | motion; entrainment conditional on the case being unresolved                                     |
+| `__tests__/physics-waveforms.test.ts`         | +36 — two per-case `it.each` invariant sweeps, the occlusion block, and four tests advanced a    |
+|                                               | breath before reading a now-measured value                                                       |
+| `scripts/critical-care/dump-mv-waveforms.mts` | `EEV` and analytic-vs-trace auto-PEEP columns; `--hold` runs on into the occlusion               |
 
 [PR #26](https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/26) targets
 `main` from the work branch and contains the WP10 commit only. It has **not** been updated with the MV
@@ -492,18 +755,23 @@ work — decide whether to retarget, extend, or close it.
 
 ### Verification status
 
-Re-run at the end of §1.5, on the working tree.
+Re-run at the end of §1.8, on the working tree.
 
 | Check                                   | Result                                                        |
 | --------------------------------------- | ------------------------------------------------------------- |
 | `npm run type-check`                    | clean                                                         |
-| `npm test`                              | **2411 passed / 318 suites**, direct from the main checkout   |
+| `npm test`                              | **2469 passed / 318 suites**, direct from the main checkout   |
 | `npm run lint`                          | 0 errors (18 pre-existing warnings, none in mechanical-vent.) |
 | `npm run test:a11y`                     | 4 passed                                                      |
 | `npm run validate:critical-care-assets` | passed (19 assets)                                            |
-| Offline render harness                  | 4 consoles × 4 screens and all 9 panels inspected visually    |
+| Offline render harness                  | 4 consoles × 4 screens and all 10 panels inspected visually   |
+| `npm run dump:mv-waveforms`             | all 15 cases read as sample tables (§1.9)                     |
 | `npm run build`                         | **STILL NOT VERIFIED**                                        |
 | `npm run test:e2e`                      | **STILL NOT RUN**                                             |
+
+The engine changes in §1.6 and §1.8 were verified by dumping the waveform buffer as a table of
+`paw / flow / volume / phase` and reading the numbers, not by looking at the rendered trace. Both
+defects were invisible in a screenshot and obvious in the dump — see trap 7.
 
 **`npm run build` was never completed.** Its first step, `contentlayer2 build`, ran 42 minutes on the
 MDX corpus in a fresh worktree without finishing; `next build --webpack` against reused contentlayer
@@ -530,7 +798,8 @@ the wrong tree. Needs that server stopped or a port override.
 
 ## 3. Future sessions
 
-Roughly in priority order. Items 1–4 and half of 8 are done — see §1.5.
+Roughly in priority order. Items 1–4 and half of 8 are done — see §1.5. Items 9 and 10 are new,
+and came out of the owner's review rather than the original list.
 
 1. ~~**Ventilator device fidelity.**~~ Control units done (§1.5). What remains is:
    - a **sourced PB980 settings layout** — still blocked, and now more so: the service manual PDF is
@@ -540,9 +809,12 @@ Roughly in priority order. Items 1–4 and half of 8 are done — see §1.5.
      against each device's already-registered vocabulary. Only the C6 row is manual-verified.
 2. ~~**Hold interaction wrinkle.**~~ Decided and built (§1.5) — the trace stays on Tools.
 3. ~~**`Step one breath` pauses the run.**~~ Labelled (§1.5).
-4. ~~**Remaining six MV teaching panels.**~~ All authored (§1.5). Each is a first pass: the copy is
-   written against the section's own authored objectives and holds the no-thresholds rule, but none
-   has had a clinical read-through by the owner. Worth one before this ships to fellows.
+4. ~~**Remaining six MV teaching panels.**~~ All authored (§1.5), and a tenth added in §1.7. Each is
+   a first pass: the copy is written against the section's own authored objectives and holds the
+   no-thresholds rule, but only the plateau-validity and waveform-anatomy content has been through
+   the owner. **A clinical read-through of the other eight is the highest-value thing left**, and
+   should happen before this reaches fellows. `npm run render:mv-teaching` puts all ten on one page
+   for exactly that.
 5. **Extend the three-pane workspace to CRRT, MCS and ECMO.** `ResizableTeachingWorkspace` is already
    shared and unused by them.
 6. **MV clinical reconciliation** — still blocked on the ventilation synthesis and the owner's
@@ -553,6 +825,41 @@ Roughly in priority order. Items 1–4 and half of 8 are done — see §1.5.
    module except hemodynamics.
 8. **Housekeeping** — ~~`testPathIgnorePatterns` fix~~ (done, §1.5); confirm the production build in
    CI; run `test:e2e` against the right tree; resolve PR #26.
+9. ~~**Sweep the rest of the casebook's waveform signatures.**~~ Done in §1.9 — all four named
+   signatures plus the flow-starvation and rise-time shapes, which were already right. The buffer
+   dump is committed as `npm run dump:mv-waveforms` so the next sweep does not start from scratch.
+10. **Patient effort ends where the neural breath ends, not where the machine breath does.** Several
+    cases run a neural rate well above the set rate, so effort is often still near peak when the
+    ventilator cycles — which is genuine premature cycling and correctly drives airway pressure
+    below baseline. It is worth a deliberate look at whether every case that does this means to.
+    **Narrowed by §1.9:** the effort now reaches the airway only once it exceeds the recoil left in
+    the lung, so the six cases that used to dip below zero on every breath no longer do. Only MV-02
+    and MV-09 still pull under their own PEEP, and both mean to. This is now a two-case review.
+11. ~~**Derived measurements outrun the trace on every pressure-targeted case.**~~ Done in §1.10.
+    Every case now reports a tidal volume its own trace delivered and a plateau at or below its own
+    peak, both asserted per case. The root was one formula: `targetTidalVolumeMl` returned the
+    equilibrium volume of a pressure-targeted breath, and no such breath is allowed to reach
+    equilibrium.
+12. ~~**The expiratory hold discards the trace's own trapped volume.**~~ Done in §1.10. The occlusion
+    freezes the volume trace and reads total PEEP off the gas actually in the lung. Two further
+    defects fell out of it — `deriveEffectivePatient` was rebuilding the running lung volume from the
+    case definition on every intervention, and §1.9's entrainment fix had made reverse triggering
+    unbreakable. Both fixed.
+13. **MV-05 and MV-06 are worth a clinical read now.** §1.10 moved them more than any other case:
+    MV-06's peak 77.4 → 70.5 and MV-05's auto-PEEP 22.4 → 13.5 with a tidal volume of 237 mL,
+    because its auto-PEEP is now a real threshold load against PS 18. Every authored criterion still
+    solves on all four devices, so this is a question of whether the numbers teach what you want,
+    not whether anything is broken.
+14. **`pausePercent` is display-only.** All four consoles present an inspiratory pause (`Tplat` /
+    `TPL` / `Insp pause` / `Pause`) and the engine has never implemented one — §1.4 split
+    `deriveVolumeFlowTimeSeconds` out on the assumption it would stay a display value. §1.9 removed
+    the accidental pause that used to appear when gas was trapped, so there is now none anywhere.
+    Implementing it would put a real plateau on the trace without a manual hold, which is how a
+    plateau is usually read.
+15. **Adaptive modes do not close their loop.** PRVC/VC+/ASV set the pressure open-loop from
+    target ÷ compliance; an active patient's effort then adds volume on top and the controller never
+    backs the pressure off. Visible now that tidal volume is measured — a 300 mL target delivers
+    ~405 mL on MV-01. Real controllers converge over a few breaths.
 
 ---
 
@@ -568,10 +875,13 @@ Roughly in priority order. Items 1–4 and half of 8 are done — see §1.5.
   that lists activities. Never sort by title.
 - `src/features/learning-module/curriculum/` — the shared pathway abstraction and the three-pane
   workspace.
+- `src/features/mechanical-ventilation/content/lessons.ts` — the ten Learn sections in pathway
+  order. A section exists in five places at once (catalog seed, pathway, lesson, learning items,
+  runtime); §1.7's file table is the checklist for adding an eleventh.
 - `src/features/mechanical-ventilation/components/MechanicalVentilationTeachingPanel.tsx` — the
-  section-id → panel `Record`, the first three panels, the run control, and the overview fallback.
-  Registering a new section's panel means adding one entry to that `Record`.
-- `src/features/mechanical-ventilation/components/teaching/` — the six later panels, one per file,
+  section-id → panel `Record`, the three original panels, the run control, `PlateauValidity`, and
+  the overview fallback. Registering a new section's panel means adding one entry to that `Record`.
+- `src/features/mechanical-ventilation/components/teaching/` — the seven later panels, one per file,
   over the primitives in `teaching/shared.tsx` (`latestBreath`, `tracePath`, `TextEquivalent`,
   `ModelBoundary`, direction helpers). New panels go here.
 - `src/features/mechanical-ventilation/content/deviceProfiles.ts` — the four device profiles and the
@@ -618,8 +928,48 @@ Roughly in priority order. Items 1–4 and half of 8 are done — see §1.5.
    the trace below zero (§1.6).
 7. **A rendered console is not a verified one — dump the samples.** The hold defect was invisible in
    a screenshot (the flat segment looked like an ordinary baseline) and obvious the moment
-   `waveforms` was printed as a table of `paw / flow / volume / phase`.
+   `waveforms` was printed as a table of `paw / flow / volume / phase`. §1.6, §1.8 and all four of
+   §1.9's defects were diagnosed that way. **The script is committed now** — `npm run
+dump:mv-waveforms` — so stop rebuilding it. Its summary line also screens for a derived number
+   the trace does not support, which is how §3 item 11 surfaced.
+8. **Put a clinical sign on the trace that actually carries it, and gate it on flow.** The
+   retained-secretions saw-tooth was added to pressure with flow left smooth, which is backwards,
+   and it ran at zero flow so it wobbled through pauses and would have wobbled through an occlusion
+   (§1.8). Perturb the physical quantity the sign belongs to and let the equation of motion carry
+   it into the others — the amplitude relationship then comes out right for free. **Three more of
+   these in §1.9**: the ineffective effort was on pressure with flow smooth, the cardiogenic
+   oscillation was too small to see and integrated into volume through an occlusion, and the double
+   trigger delivered no stacked volume at all. When a sign has an amplitude the model already
+   reasons about elsewhere — a trigger threshold, a tidal volume — draw it from that same number so
+   the trace and the rule cannot part company.
+9. **Anything measured from the start of a breath needs the breath's own onset.** Both the volume
+   target and the flow profile ran off absolute lung volume and the breath-cycle phase, which is
+   the same thing only when the lung empties completely between breaths. `inspirationAnchor` reads
+   the onset back off the waveform buffer; use it rather than adding state that can drift out of
+   step with the trace.
+10. **If the trace can produce a quantity, do not also model it.** Peak pressure (§1.6), tidal
+    volume, plateau, auto-PEEP and expiratory time (§1.10) were each modeled twice — once from the
+    settings and once by the trace — and every one of them eventually disagreed with itself on
+    screen. The pattern that works is `observed… ?? predicted`: measure it, and keep the analytic
+    value only as the cold-start fallback. Watch for the additive form of the same mistake, where
+    both copies are summed: absolute lung volume already carries trapped gas, so adding
+    `intrinsicPeepCmH2O` on top of `volumeL / C` counted it twice.
+11. **Anything a learner can fix has to be able to stop happening.** §1.9 locked the reverse-trigger
+    effort to the machine breath, correcting a genuine two-clocks defect and silently removing the
+    treatment with it — entrainment had been breaking _because_ the two clocks disagreed. If a case
+    is resolved by an action, check that the trace actually changes when the action is taken.
+12. **Displayed pressures are measured, so they lag.** Since §1.6, `peakPressureCmH2O` comes off the
+    waveform buffer. Anything asserting on it immediately after `SET_CONTROL` needs a tick first, or
+    should read `relaxedPeakPressureCmH2O` instead. One existing test was written against the old
+    instantaneous behavior.
+13. **A pathway section lives in five files.** Catalog seed, pathway, lesson, learning items, and
+    runtime — miss one and the catalog validators throw at import, which at least fails loudly.
+    §1.7's file table is the checklist. Watch the `stageOrder` renumbering: it must stay unique per
+    `(module, stage)` and ascend in the order the pathway lists its sections.
 
-**A measurement artifact worth knowing:** `setInterval` is throttled in a backgrounded tab, so the
-simulation clock looks frozen under browser automation even when it is running correctly. Check
-`document.hidden` before concluding the clock is broken.
+**Two measurement artifacts worth knowing.** `setInterval` is throttled in a backgrounded tab, so
+the simulation clock looks frozen under browser automation even when it is running correctly —
+check `document.hidden` before concluding the clock is broken. And `latestBreath()` slices between
+inspiration onsets, so the first sample of the window is the start of inspiration: a volume-control
+pressure trace legitimately begins part-way up the axis, because the resistive step is instant.
+That is not a truncated breath.

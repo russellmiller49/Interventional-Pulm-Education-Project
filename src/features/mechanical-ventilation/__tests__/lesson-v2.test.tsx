@@ -38,7 +38,13 @@ describe('focused mechanical ventilation lesson', () => {
   })
 
   it('requires real primary and transfer interactions while keeping the lesson non-credit', async () => {
-    const lesson = mechanicalVentilationLessons[0]
+    // Pinned by id, not by position: this exercises the mechanics lesson's own guided actions and
+    // items, and the pathway's first section is not always going to be this one.
+    const lesson = mechanicalVentilationLessons.find(
+      (candidate) => candidate.id === 'mechanics-load-and-pressure',
+    )
+    expect(lesson).toBeDefined()
+    if (!lesson) return
     const items = mechanicalVentilationLessonItems['mechanics-load-and-pressure']
     render(<MechanicalVentilationLessonActivity lesson={lesson} />)
 

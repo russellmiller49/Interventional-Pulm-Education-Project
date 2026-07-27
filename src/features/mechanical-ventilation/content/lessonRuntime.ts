@@ -181,6 +181,29 @@ export function ventilationLessonActionEvidence(
 
 const lessonRuntimes: readonly VentilationLessonRuntimeDefinition[] = [
   {
+    lessonId: 'waveform-anatomy',
+    primary: {
+      caseId: 'MV-01',
+      goal: 'Name what each of the three traces plots, and read the controlled variable off their shapes.',
+      actions: [
+        screen('graphics', 'Open the graphics screen', 'Put all three traces in front of you.'),
+        reviewWaveforms,
+      ],
+      requiredEvidence: ['intervention:review-waveforms'],
+      responseSeconds: 12,
+    },
+    transfer: {
+      caseId: 'MV-02',
+      goal: 'Read the controlled variable from the trace shapes on a second breath, without using the mode name.',
+      actions: [
+        screen('main', 'Return to the monitoring screen', 'Read the live breath as delivered.'),
+        reviewWaveforms,
+      ],
+      requiredEvidence: ['intervention:review-waveforms'],
+      responseSeconds: 12,
+    },
+  },
+  {
     lessonId: 'mechanics-load-and-pressure',
     primary: {
       caseId: 'MV-13',

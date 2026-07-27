@@ -166,6 +166,74 @@ describe('mechanical-ventilation teaching panels', () => {
   })
 
   /**
+   * The section that opens the pathway. It exists because the module went straight to decomposing
+   * peak pressure without ever saying what the traces were, or how a volume-targeted breath
+   * differs from a pressure-targeted one.
+   */
+  describe('waveform anatomy', () => {
+    it('opens the Learn pathway', () => {
+      expect(mechanicalVentilationLessons[0].id).toBe('waveform-anatomy')
+    })
+
+    it('names all three traces and what each is read against', () => {
+      render(
+        <MechanicalVentilationTeachingPanel
+          lessonId="waveform-anatomy"
+          state={stateFor('MV-01', 14)}
+        />,
+      )
+      for (const trace of ['Pressure', 'Flow', 'Volume']) {
+        expect(screen.getByRole('button', { name: trace })).toBeInTheDocument()
+      }
+      fireEvent.click(screen.getByRole('button', { name: 'Flow' }))
+      expect(screen.getByText(/above the line is gas going into the patient/i)).toBeInTheDocument()
+      expect(screen.getAllByText(/Read against zero/i).length).toBeGreaterThan(0)
+    })
+
+    it('states the rule that a ventilator sets one of pressure or volume, never both', () => {
+      render(
+        <MechanicalVentilationTeachingPanel
+          lessonId="waveform-anatomy"
+          state={stateFor('MV-01', 14)}
+        />,
+      )
+      expect(screen.getByText(/It cannot set both/i)).toBeInTheDocument()
+    })
+
+    it('contrasts the two delivery strategies and what varies under each', () => {
+      render(
+        <MechanicalVentilationTeachingPanel
+          lessonId="waveform-anatomy"
+          state={stateFor('MV-01', 14)}
+        />,
+      )
+      // Once as the column heading over the traces, once as the row explaining it.
+      expect(screen.getAllByText('Volume targeted')).toHaveLength(2)
+      expect(screen.getAllByText('Pressure targeted')).toHaveLength(2)
+      expect(screen.getByText('Pressure varies')).toBeInTheDocument()
+      expect(screen.getByText('Volume varies')).toBeInTheDocument()
+      // The consequence, in both directions.
+      expect(
+        screen.getByText(
+          /stiffer lung raises the pressure trace and leaves the breath size alone/i,
+        ),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByText(/stiffer lung shrinks the breath and leaves the pressure trace alone/i),
+      ).toBeInTheDocument()
+      // And what does not change: expiration is passive either way.
+      expect(screen.getByText(/Expiration is passive either way/i)).toBeInTheDocument()
+    })
+
+    it('draws the comparison from this patient’s own mechanics', () => {
+      const state = stateFor('MV-01', 14)
+      render(<MechanicalVentilationTeachingPanel lessonId="waveform-anatomy" state={state} />)
+      const compliance = Math.round(state.patient.mechanics.complianceLPerCmH2O * 1000)
+      expect(screen.getByText(new RegExp(`${compliance} mL/cmH₂O`))).toBeInTheDocument()
+    })
+  })
+
+  /**
    * The measurement every number in the mechanics panel depends on, and the one most reliably
    * misread: a plateau taken in a patient who is not relaxed.
    */

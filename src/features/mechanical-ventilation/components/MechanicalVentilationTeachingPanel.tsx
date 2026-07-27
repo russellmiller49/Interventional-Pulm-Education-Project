@@ -18,6 +18,7 @@ import {
 } from './teaching/shared'
 import { VentilationTriggerAndCycle } from './teaching/timing'
 import { VentilationCo2Response } from './teaching/ventilation'
+import { VentilationWaveformAnatomy } from './teaching/waveform-anatomy'
 
 /**
  * Per-section teaching panels for the Mechanical Ventilation Learn pathway.
@@ -736,6 +737,7 @@ export function VentilationHighPressureDiscriminator({
 const panels: Readonly<
   Record<string, (props: { readonly state: VentilationSimulationState }) => React.JSX.Element>
 > = {
+  'waveform-anatomy': VentilationWaveformAnatomy,
   'mechanics-load-and-pressure': VentilationPressureDecomposition,
   'waveform-reading-sequence': VentilationWaveformReadingSequence,
   'modes-and-breath-delivery': VentilationModeVariables,

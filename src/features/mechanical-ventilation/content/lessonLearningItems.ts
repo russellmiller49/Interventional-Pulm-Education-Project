@@ -4,6 +4,7 @@ import {
 } from '@/features/learning-module/activity'
 
 export type MechanicalVentilationLessonId =
+  | 'waveform-anatomy'
   | 'mechanics-load-and-pressure'
   | 'modes-and-breath-delivery'
   | 'waveform-reading-sequence'
@@ -38,6 +39,87 @@ export const mechanicalVentilationLessonItems: Readonly<
     { prediction: ClinicalLearningItem; transfer: ClinicalLearningItem }
   >
 > = {
+  'waveform-anatomy': {
+    prediction: item({
+      id: 'vent-anatomy-predict-1',
+      activityId: 'ventilation:learn:waveform-anatomy',
+      phase: 'predict',
+      itemType: 'mechanism-interpretation',
+      contextRequirement: 'patient',
+      clinicalContextId: 'mv13-high-pressure',
+      visualAssetIds: ['vent-pressure-flow-volume'],
+      stem: 'A patient is on volume-controlled ventilation with a square inspiratory flow. Respiratory-system compliance falls. What happens on the traces?',
+      choices: [
+        {
+          id: 'pressure-rises',
+          label:
+            'The pressure trace rises; the flow and volume traces keep the same shape and size',
+          rationale:
+            'Volume is the controlled variable, so it is delivered regardless and the pressure needed to deliver it rises.',
+          plausibility: 'best',
+        },
+        {
+          id: 'volume-falls',
+          label: 'The volume trace falls; the pressure trace is unchanged',
+          rationale:
+            'That is what a stiffening lung does to a pressure-targeted breath, where pressure is the variable being held.',
+          plausibility: 'reasonable-but-incomplete',
+        },
+        {
+          id: 'flow-decelerates',
+          label: 'The inspiratory flow trace becomes decelerating',
+          rationale:
+            'The flow pattern in a volume-controlled breath is a setting, not a response to mechanics.',
+          plausibility: 'incorrect-mechanism',
+        },
+      ],
+      correctChoiceIds: ['pressure-rises'],
+      explanation:
+        'The ventilator controls exactly one of pressure or volume. Whichever it controls keeps its shape when the lung changes; the other one moves, which is why it is the one worth watching.',
+      evidenceIds: mechanicsEvidence,
+      reviewStatus: 'sme-review',
+    }),
+    transfer: item({
+      id: 'vent-anatomy-transfer-1',
+      activityId: 'ventilation:learn:waveform-anatomy',
+      phase: 'transfer',
+      itemType: 'transfer-case',
+      contextRequirement: 'patient',
+      clinicalContextId: 'mv13-high-pressure',
+      visualAssetIds: ['vent-pressure-flow-volume'],
+      transferVariantId: 'mv02-controlled-variable',
+      stem: 'A different breath shows a square-topped pressure trace and an inspiratory flow that decays smoothly toward zero before inspiration ends. Which variable is the ventilator controlling, and what follows from it?',
+      choices: [
+        {
+          id: 'pressure-controlled',
+          label:
+            'Pressure — so the delivered volume is free to change with the mechanics and must be monitored',
+          rationale:
+            'A held rectangular pressure with decelerating flow is pressure-targeted delivery; flow decays as the lung fills and the gradient closes.',
+          plausibility: 'best',
+        },
+        {
+          id: 'volume-controlled',
+          label: 'Volume — the square top means a set tidal volume was reached',
+          rationale:
+            'A volume-targeted breath makes the *flow* trace rectangular, not the pressure trace.',
+          plausibility: 'incorrect-mechanism',
+        },
+        {
+          id: 'name-the-mode',
+          label: 'Read the mode name off the device to find out',
+          rationale:
+            'Mode names differ between devices; the trace shapes carry across all of them.',
+          plausibility: 'reasonable-but-incomplete',
+        },
+      ],
+      correctChoiceIds: ['pressure-controlled'],
+      explanation:
+        'Reading the controlled variable off the shapes tells you what will change when the patient does, before you have looked at a single number.',
+      evidenceIds: mechanicsEvidence,
+      reviewStatus: 'sme-review',
+    }),
+  },
   'mechanics-load-and-pressure': {
     prediction: item({
       id: 'vent-mechanics-predict-1',

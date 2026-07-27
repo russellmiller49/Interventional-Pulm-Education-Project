@@ -514,6 +514,16 @@ const ventilationCaseSeeds: readonly ActivitySeed[] = [
  */
 const ventilationLearnSeeds: readonly ActivitySeed[] = [
   {
+    // Opens the pathway: what the three traces are, and how a volume-targeted breath differs from
+    // a pressure-targeted one. Everything after this assumes the learner can read a breath.
+    sourceId: 'waveform-anatomy',
+    title: 'Waveform anatomy: three traces, one breath',
+    competencyIds: ['ventilator-waveform-interpretation'],
+    difficulty: 'foundation' as const,
+    curriculumStage: 'orientation' as const,
+    stageOrder: 1,
+  },
+  {
     sourceId: 'mechanics-load-and-pressure',
     title: 'Mechanics: load, pressure, and volume',
     competencyIds: ['ventilator-mechanics'],
@@ -535,7 +545,7 @@ const ventilationLearnSeeds: readonly ActivitySeed[] = [
     competencyIds: ['ventilator-setup'],
     difficulty: 'foundation' as const,
     curriculumStage: 'orientation' as const,
-    stageOrder: 1,
+    stageOrder: 2,
   },
   {
     sourceId: 'triggering-and-cycling',
@@ -593,6 +603,7 @@ const ventilationLearnSeeds: readonly ActivitySeed[] = [
     stageOrder: 1,
     estimatedMinutes: 14,
     prerequisiteActivityIds: [
+      'ventilation:learn:waveform-anatomy',
       'ventilation:learn:mechanics-load-and-pressure',
       'ventilation:learn:waveform-reading-sequence',
       'ventilation:learn:modes-and-breath-delivery',

@@ -67,20 +67,33 @@ export function equationOfMotionPressure(args: {
  * The alveolus is still emptying against its own elastic recoil — that pressure simply is not
  * visible at the airway until the valve closes, which is exactly what an expiratory hold is for.
  *
- * Patient effort is still subtracted, so a trigger deflection below baseline is preserved.
+ * Patient effort reaches the airway only once it has overcome the recoil still stored in the lung,
+ * so a trigger deflection below baseline is preserved — see `elasticRecoilCmH2O` below.
  */
 export function expiratoryAirwayPressure(args: {
   baselineCmH2O: number
   circuitResistanceCmH2OPerLps: number
   flowLps: number
   inspiratoryEffortCmH2O: number
+  /** Elastic recoil still stored in the lung, `volume / compliance`. */
+  elasticRecoilCmH2O: number
 }): number {
+  /*
+   * How much of an effort the airway manometer actually sees depends on what the effort is working
+   * against. While recoil still exceeds it, gas is leaving and the expiratory valve holds the
+   * circuit at baseline — the effort is spent inside the chest and the airway barely moves. That is
+   * why an ineffective effort is a *flow* finding: it notches the expiratory limb (see
+   * `passiveExpiratoryFlowLps`) while leaving the pressure trace nearly flat. Only the surplus over
+   * recoil is left to pull the circuit down, which is what draws a trigger deflection.
+   *
+   * Subtracting the whole effort here instead put the entire sign on the pressure trace, at the
+   * muscle's full amplitude, on the one waveform where it is least visible at the bedside.
+   */
+  const surplusEffort = Math.max(0, args.inspiratoryEffortCmH2O - args.elasticRecoilCmH2O)
   // Flow is negative during expiration; the drop across the expiratory limb raises airway pressure
   // slightly above baseline while it lasts.
   return (
-    args.baselineCmH2O +
-    args.circuitResistanceCmH2OPerLps * Math.abs(args.flowLps) -
-    args.inspiratoryEffortCmH2O
+    args.baselineCmH2O + args.circuitResistanceCmH2OPerLps * Math.abs(args.flowLps) - surplusEffort
   )
 }
 
@@ -115,6 +128,161 @@ export function endInspiratoryEffortCmH2O(waveforms: readonly WaveformSample[]):
   return 0
 }
 
+/**
+ * Tidal volume over the last complete inflation on the trace — what the ventilator's flow sensor
+ * would have integrated, rather than what the settings predict.
+ *
+ * The predicted value is the volume a pressure-targeted breath reaches at **equilibrium**, and no
+ * such breath is allowed to reach equilibrium: it is cycled at Ti, often well short of it. On a
+ * flow-cycled breath that alone costs the ETS fraction, and a breath clamped by `tiMaxSeconds`
+ * loses much more — MV-05 has a time constant of 1.92 s and 1.5 s to fill in, so it reaches about
+ * 54% of the predicted volume. Seven of fifteen cases were reporting a tidal volume the trace never
+ * delivered, and because the relaxed plateau is derived from that volume, four of them printed a
+ * plateau above their own peak.
+ *
+ * Measured from the volume waveform, which is the running integral of flow and therefore carries
+ * trapped gas, patient effort and stacked inflations for free: peak volume during the breath less
+ * the volume it started from. Same argument as `observedPeakAirwayPressureCmH2O` — the number and
+ * the drawing cannot disagree if there is only one of them.
+ *
+ * Bounded by the last completed **inflation** rather than the last complete breath cycle: the
+ * slowest cases deliver fewer than two breaths in the 12 s buffer, so requiring two inspiration
+ * onsets left exactly the cases with the worst prediction error — MV-05 at 8/min, MV-12 at 5/min —
+ * falling back to the predicted value forever.
+ *
+ * Undefined until the buffer holds one whole inflation, so callers keep the predicted value as
+ * their cold-start fallback.
+ */
+export function observedTidalVolumeMl(waveforms: readonly WaveformSample[]): number | undefined {
+  /*
+   * Walks back until an inflation that actually moved gas. Switching mode re-times the breath and
+   * can leave a one-sample inspiration behind in the buffer; reporting a tidal volume of zero off
+   * that transient would be worse than falling back to the predicted value.
+   */
+  let searchTo = waveforms.length
+  while (searchTo > 1) {
+    let cycledOff = -1
+    for (let index = searchTo - 1; index > 0; index -= 1) {
+      if (waveforms[index].phase === 'expiration' && waveforms[index - 1].phase === 'inspiration') {
+        cycledOff = index
+        break
+      }
+    }
+    if (cycledOff < 1) return undefined
+    let start = -1
+    for (let index = cycledOff - 1; index > 0; index -= 1) {
+      if (waveforms[index].phase === 'inspiration' && waveforms[index - 1].phase === 'expiration') {
+        start = index
+        break
+      }
+    }
+    if (start < 1) return undefined
+    const startedFrom = waveforms[start - 1].volumeMl
+    let peak = startedFrom
+    for (let index = start; index < cycledOff; index += 1) {
+      peak = Math.max(peak, waveforms[index].volumeMl)
+    }
+    if (peak > startedFrom) return peak - startedFrom
+    searchTo = start
+  }
+  return undefined
+}
+
+/**
+ * Lung volume immediately before the last inspiration began — the gas that did not get out.
+ *
+ * Auto-PEEP has two representations in this engine: `intrinsicPeepCmH2O`, derived per case from the
+ * time constant against the expiratory time, and this — the recoil of whatever the trace itself
+ * failed to exhale. They are the same physical thing, so the equation of motion must not add both;
+ * see `unmodeledIntrinsicPeepCmH2O`.
+ */
+export function observedEndExpiratoryVolumeMl(
+  waveforms: readonly WaveformSample[],
+): number | undefined {
+  for (let index = waveforms.length - 1; index > 0; index -= 1) {
+    if (waveforms[index].phase === 'inspiration' && waveforms[index - 1].phase === 'expiration') {
+      return waveforms[index - 1].volumeMl
+    }
+  }
+  return undefined
+}
+
+/**
+ * The part of a case's auto-PEEP that the volume trace is *not* already carrying.
+ *
+ * `volumeL` in the equation of motion is absolute lung volume, so wherever the trace fails to empty
+ * it is already producing the elastic recoil of the trapped gas. Adding the full analytic
+ * `intrinsicPeepCmH2O` on top of that counted the same gas twice — worst on the two air-trapping
+ * cases, which are precisely the ones the term exists for. Only the shortfall is added, so the
+ * authored total is preserved while the trace supplies as much of it as it actually can.
+ */
+export function unmodeledIntrinsicPeepCmH2O(
+  intrinsicPeepCmH2O: number,
+  endExpiratoryVolumeL: number,
+  complianceLPerCmH2O: number,
+): number {
+  const carriedByTheTrace = endExpiratoryVolumeL / Math.max(0.005, complianceLPerCmH2O)
+  return Math.max(0, intrinsicPeepCmH2O - carriedByTheTrace)
+}
+
+/**
+ * Plateau estimated from the trace at end-inspiration, without occluding anything.
+ *
+ * What an instantaneous occlusion would have shown: the airway pressure at the last end-inspiratory
+ * sample, less the pressure still being spent driving gas through the resistance at that moment. It
+ * is an estimate, not a measurement — only a real hold measures a plateau — but it is an estimate
+ * off the trace, which the predicted one was not.
+ *
+ * Deriving the displayed plateau from the analytic tidal volume and auto-PEEP instead let it come
+ * out **above the peak the trace ever reached** on four cases: pressure-targeted breaths are capped
+ * at their set pressure, so no arithmetic on the settings can be trusted to land under it.
+ */
+export function observedPlateauPressureCmH2O(
+  waveforms: readonly WaveformSample[],
+  resistanceCmH2OPerLps: number,
+): number | undefined {
+  for (let index = waveforms.length - 1; index > 0; index -= 1) {
+    if (waveforms[index].phase === 'expiration' && waveforms[index - 1].phase === 'inspiration') {
+      const endInspiratory = waveforms[index - 1]
+      return endInspiratory.pawCmH2O - resistanceCmH2OPerLps * (endInspiratory.flowLMin / 60)
+    }
+  }
+  return undefined
+}
+
+/**
+ * How long the last complete expiration actually lasted, in seconds.
+ *
+ * Gas trapping is a race between the time constant and the time the lung is given to empty, and the
+ * time it is given is set by the rate the ventilator is **cycling** at. Deriving it from the
+ * patient's neural rate instead — `deriveEffectiveVentilationRate` returns the neural rate in
+ * pressure support — invented trapping on cases where the machine cycles far more slowly than the
+ * patient is trying to breathe. On MV-05 that put auto-PEEP at 22.4 cmH₂O against an authored 10,
+ * over a trace whose lung empties completely: it assumed 0.64 s of expiratory time where the trace
+ * had 6 s. Fourth instance of the same two-clocks defect.
+ *
+ * Read off the trace, which also sidesteps the circularity — auto-PEEP drives the ineffective-effort
+ * fraction, which drives the machine rate, which would otherwise drive auto-PEEP.
+ */
+export function observedExpiratoryTimeSeconds(
+  waveforms: readonly WaveformSample[],
+): number | undefined {
+  let onset = -1
+  for (let index = waveforms.length - 1; index > 0; index -= 1) {
+    if (waveforms[index].phase === 'inspiration' && waveforms[index - 1].phase === 'expiration') {
+      onset = index
+      break
+    }
+  }
+  if (onset < 1) return undefined
+  for (let index = onset - 1; index > 0; index -= 1) {
+    if (waveforms[index].phase === 'expiration' && waveforms[index - 1].phase === 'inspiration') {
+      return waveforms[onset].time - waveforms[index].time
+    }
+  }
+  return undefined
+}
+
 /** Highest airway pressure in the buffer — what the ventilator would be reporting as peak. */
 export function observedPeakAirwayPressureCmH2O(
   waveforms: readonly WaveformSample[],
@@ -125,19 +293,102 @@ export function observedPeakAirwayPressureCmH2O(
   return Number.isFinite(peak) ? peak : undefined
 }
 
+/**
+ * The retained-secretions sign, as a **flow** disturbance.
+ *
+ * Secretions sitting in the airway make gas passing them stutter, and the classic bedside finding
+ * is a saw-tooth on the *flow* trace; the pressure trace inherits it through the resistive term,
+ * which is why the ripple is larger the higher the resistance. Modeling it the other way round —
+ * adding a fixed sine to pressure and leaving flow perfectly smooth — drew the one waveform that
+ * cannot show the sign and left the one that does show it flat.
+ *
+ * Amplitude scales with how much gas is actually moving, so the disturbance disappears wherever
+ * flow does: the end-inspiratory pause, the expiratory tail, and any occlusion.
+ */
+export function secretionFlowDisturbanceLps(timeSeconds: number, flowLps: number): number {
+  const frequencyHz = 6.4
+  const amplitudeLps = 0.06
+  const phase = (timeSeconds * frequencyHz) % 1
+  const sawtooth = phase * 2 - 1
+  const moving = Math.min(1, Math.abs(flowLps) / 0.25)
+  return sawtooth * amplitudeLps * moving
+}
+
+/**
+ * Cardiogenic oscillations, as a **flow** disturbance at the heart rate.
+ *
+ * Each systole displaces gas in the lung adjacent to the heart, so the flow trace carries a small
+ * ripple at the heart rate — most visible late in expiration, once the passive limb has decayed and
+ * there is nothing else moving. The pressure trace inherits it through the resistive drop. This is
+ * the finding that makes a flow-triggered ventilator autotrigger: the ripple crosses the trigger
+ * threshold and the machine reads it as an effort.
+ *
+ * The amplitude is the one the autotrigger rule already assumes: `derivedMeasurements` autotriggers
+ * a flow trigger set below `CARDIOGENIC_OSCILLATION_AMPLITUDE_LMIN`, so drawing the ripple at that
+ * same amplitude means the trace and the rule cannot disagree — the learner can look at the flow
+ * limb, look at the trigger setting, and see for themselves why the machine is cycling. The
+ * previous ±0.7 L/min on an ±80 L/min axis gave no visible reason for the breaths being delivered.
+ *
+ * Zero-mean by construction: a heartbeat displaces gas back and forth, it does not inflate anyone.
+ */
+export const CARDIOGENIC_OSCILLATION_AMPLITUDE_LMIN = 1.5
+
+export function cardiogenicFlowOscillationLps(
+  timeSeconds: number,
+  heartRatePerMin: number,
+): number {
+  const frequencyHz = Math.max(0.5, heartRatePerMin) / 60
+  const amplitudeLps = CARDIOGENIC_OSCILLATION_AMPLITUDE_LMIN / 60
+  return Math.sin(timeSeconds * 2 * Math.PI * frequencyHz) * amplitudeLps
+}
+
 export function holdRelaxationFraction(secondsHeld: number): number {
   const amplitude = 0.06
   const timeConstantSeconds = 1.4
   return amplitude * (1 - Math.exp(-Math.max(0, secondsHeld) / timeConstantSeconds))
 }
 
+/**
+ * Most inward flow a patient can draw while the demand valve is shut, in L/s.
+ *
+ * An effort that fails to open the valve is not drawing from the ventilator; it can only pull on
+ * the bias flow crossing the circuit. This is what stops an ineffective effort from being drawn as
+ * a full inspiration on the flow trace.
+ */
+export const CLOSED_VALVE_BIAS_FLOW_LPS = 5 / 60
+
+/**
+ * Expiratory flow at the airway, with the patient's effort in it.
+ *
+ * Expiration is driven by the elastic recoil still stored in the lung, so flow is that recoil
+ * pressure divided by the resistance it has to cross. An inspiratory effort during expiration works
+ * *against* that recoil: it lowers alveolar pressure, the driving pressure falls, and expiratory
+ * flow slows — the notch back toward zero that is the bedside sign of an ineffective effort. If the
+ * effort exceeds the recoil left in the lung, flow crosses zero, bounded by what a shut demand
+ * valve can supply.
+ *
+ * Leaving the effort out drew this sign on the pressure trace alone: an 8 cmH₂O deflection on the
+ * airway pressure and a perfectly smooth exponential on the flow limb, which is the one trace the
+ * finding is actually taught on. Same defect as the retained-secretions saw-tooth in §1.8 — a sign
+ * put on a waveform that does not carry it.
+ *
+ * This is also why gas trapping makes efforts ineffective: the more recoil is still stored at
+ * end-expiration, the larger the effort has to be before any flow reverses at all.
+ */
 export function passiveExpiratoryFlowLps(
   volumeL: number,
   resistanceCmH2OPerLps: number,
   complianceLPerCmH2O: number,
+  inspiratoryEffortCmH2O = 0,
 ): number {
   const timeConstant = Math.max(0.08, resistanceCmH2OPerLps * complianceLPerCmH2O)
-  return -volumeL / timeConstant
+  const recoilFlow = -volumeL / timeConstant
+  if (inspiratoryEffortCmH2O <= 0) return recoilFlow
+  const effortFlow = inspiratoryEffortCmH2O / Math.max(2, resistanceCmH2OPerLps)
+  const net = recoilFlow + effortFlow
+  if (net <= 0) return net
+  // Saturates smoothly rather than clipping flat, so a larger effort still draws a larger notch.
+  return CLOSED_VALVE_BIAS_FLOW_LPS * Math.tanh(net / CLOSED_VALVE_BIAS_FLOW_LPS)
 }
 
 /**
@@ -364,7 +615,17 @@ export function deriveEffectivePatient(
   const effects = performedEffectIds(state, definition)
   const settings = state.ventilator.settings
   const patient: PatientModelState = {
-    mechanics: { ...base.mechanics },
+    /*
+     * Mechanics are re-derived from the case each time, but `endExpiratoryVolumeL` is not a property
+     * of the case — it is how much gas is in the lung right now, advanced sample by sample by
+     * `advanceSimulation`. Rebuilding it from the definition threw the running volume away every
+     * time an intervention was performed, which is why an expiratory hold armed through an authored
+     * `expiratory-hold` intervention occluded an empty lung and reported no trapped gas at all.
+     */
+    mechanics: {
+      ...base.mechanics,
+      endExpiratoryVolumeL: state.patient.mechanics.endExpiratoryVolumeL,
+    },
     drive: { ...base.drive },
     gasExchange: { ...state.patient.gasExchange },
     hemodynamics: { ...state.patient.hemodynamics },
@@ -517,6 +778,16 @@ export function deriveMeasurements(
     peakFlowLMin = Math.max(peakFlowLMin, clamp((spontaneousPressure / resistance) * 60, 10, 180))
   }
 
+  /*
+   * Everything above predicts what the settings should produce. Once the buffer holds a complete
+   * breath, the trace has actually produced it, so that is what the ventilator reports — leak
+   * subtracted, because a flow sensor never sees the gas that escaped.
+   */
+  const observedVt = observedTidalVolumeMl(state.waveforms)
+  if (observedVt !== undefined) {
+    vtMl = observedVt * (1 - patient.mechanics.airwayLeakFraction)
+  }
+
   // Dynamic PEEPi is recomputed from the case baseline and the current expiratory
   // time on every fixed step. Feeding the prior derived value back into this
   // calculation would falsely compound trapped pressure at 50 Hz.
@@ -533,9 +804,22 @@ export function deriveMeasurements(
   const cycleTime = isTwoLevelMode(settings.deviceMode)
     ? settings.advanced.tHighSeconds + settings.advanced.tLowSeconds
     : 60 / Math.max(1, rate)
+  /*
+   * The cycle the lung is actually living in, not the one the patient is asking for. `rate` above
+   * is `deriveEffectiveVentilationRate`, which in pressure support is the *neural* rate — so a
+   * patient breathing at 28 against a machine cycling at 8 was credited with 0.64 s of expiratory
+   * time when the trace gives it six full seconds. Preferred order: the trace, then the rate the
+   * machine last reported, then the effective rate at cold start.
+   */
+  const cycledRate =
+    state.measurements.totalRatePerMin > 0 ? state.measurements.totalRatePerMin : rate
   const expiratoryTime = isTwoLevelMode(settings.deviceMode)
     ? settings.advanced.tLowSeconds
-    : Math.max(0.08, cycleTime - mechanicalTi)
+    : Math.max(
+        0.08,
+        observedExpiratoryTimeSeconds(state.waveforms) ??
+          60 / Math.max(1, cycledRate) - mechanicalTi,
+      )
   const timeConstant = resistance * compliance
   if (timeConstant > expiratoryTime) {
     intrinsicPeep += clamp((timeConstant - expiratoryTime) * 7, 0, 24)
@@ -552,6 +836,18 @@ export function deriveMeasurements(
     intrinsicPeep += Math.max(0, (40 - settings.etsPercent) * 0.12)
   }
   if (hasPerformedEffect(state, definition, 'disconnect-bag')) intrinsicPeep *= 0.35
+
+  /*
+   * Everything above is the case's own model of how much gas gets trapped. The trace has its own
+   * answer — whatever it failed to exhale — and on some cases the trace traps where the model does
+   * not: a double trigger stacks its second inflation onto an incompletely emptied lung, which is
+   * auto-PEEP by any definition and the model above never predicted it. Report whichever is larger,
+   * so the number covers both mechanisms, and it is the number an expiratory hold then reads.
+   */
+  const observedEndExpiratoryMl = observedEndExpiratoryVolumeMl(state.waveforms)
+  if (observedEndExpiratoryMl !== undefined) {
+    intrinsicPeep = Math.max(intrinsicPeep, observedEndExpiratoryMl / 1000 / compliance)
+  }
 
   const relaxedPlateau = baselinePressure + intrinsicPeep + vtMl / 1000 / compliance
   const riseTimeMs =
@@ -584,9 +880,10 @@ export function deriveMeasurements(
 
   /*
    * While an inspiratory hold is running the plateau is not estimated at all — it is read off the
-   * occluded trace, exactly as the device reads its manometer. Outside a hold it is the relaxed
-   * value less the effort present at end-inspiration, which is what an instantaneous occlusion
-   * would have shown.
+   * occluded trace, exactly as the device reads its manometer. Outside a hold it is estimated from
+   * the trace at end-inspiration, which is what an instantaneous occlusion would have shown; the
+   * relaxed value less the effort is only the cold-start fallback now, because computing it from
+   * the settings put the plateau above the peak on every case whose pressure trace is capped.
    */
   const holdRunning =
     state.ventilator.holdUntil !== null && state.ventilator.holdUntil > state.simulationTime
@@ -596,7 +893,9 @@ export function deriveMeasurements(
     ? Math.max(0, -occluded.pmusCmH2O)
     : endInspiratoryEffortCmH2O(state.waveforms)
   const plateau =
-    occluded?.pawCmH2O ?? Math.max(baselinePressure, relaxedPlateau - endInspiratoryEffort)
+    occluded?.pawCmH2O ??
+    observedPlateauPressureCmH2O(state.waveforms, resistance) ??
+    Math.max(baselinePressure, relaxedPlateau - endInspiratoryEffort)
 
   let ineffectiveFraction = 0
   let autotriggerFraction = 0
@@ -616,8 +915,11 @@ export function deriveMeasurements(
     triggerDelayMs = 100 + ineffectiveFraction * 450
   }
   if (definition.phenotype === 'autotriggering') {
+    // The same amplitude the oscillation is drawn at, so what the trace shows and what the machine
+    // does off it come from one number.
     const triggerSensitive =
-      settings.trigger.type === 'flow' && settings.trigger.thresholdLMin < 1.5
+      settings.trigger.type === 'flow' &&
+      settings.trigger.thresholdLMin < CARDIOGENIC_OSCILLATION_AMPLITUDE_LMIN
     autotriggerFraction = branchCorrected(state, definition) || !triggerSensitive ? 0.04 : 0.68
   }
   if (settings.advanced.intelliSyncEnabled) {

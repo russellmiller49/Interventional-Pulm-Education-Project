@@ -818,3 +818,61 @@
 .validity p {
   margin: 0;
 }
+
+/* ------------------------------------------------------------------------------------------------
+ * Waveform anatomy — the volume-targeted / pressure-targeted comparison
+ * ---------------------------------------------------------------------------------------------- */
+
+.comparisonColumns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.comparisonColumn {
+  display: grid;
+  align-content: start;
+  gap: 0.25rem;
+  padding: 0.45rem 0.5rem;
+  border: 1px solid #dbe6e4;
+  border-top: 3px solid #147d7b;
+  border-radius: 0.5rem;
+}
+
+.comparisonColumn h3 {
+  margin: 0;
+  color: #1d3d42;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.comparisonRule {
+  margin: 0;
+  color: #5b7176;
+  font-size: 0.63rem;
+  line-height: 1.4;
+}
+
+.comparisonRule strong {
+  color: #147d7b;
+}
+
+.comparisonColumn svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.comparisonAxis {
+  fill: #7d9296;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 620px) {
+  .comparisonColumns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

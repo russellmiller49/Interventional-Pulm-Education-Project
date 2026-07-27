@@ -41,7 +41,8 @@ const SCREENS: readonly { screen: VentilatorScreen; caption: string; hold?: bool
   { screen: 'tools', caption: 'Tools, mid-occlusion — inspiratory hold at end-inspiration', hold: true },
 ]
 
-const CASE_ID = 'MV-01'
+/** `MV_CASE=MV-08 npm run render:mv-console` to look at another case's traces on all four devices. */
+const CASE_ID = process.env.MV_CASE ?? 'MV-01'
 const WARMUP_SECONDS = 14
 
 function warmed(deviceId: VentilatorDeviceId): VentilationSimulationState {

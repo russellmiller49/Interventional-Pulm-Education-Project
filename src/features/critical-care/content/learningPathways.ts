@@ -275,8 +275,18 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
   {
     moduleId: 'mechanical-ventilation',
     arcSentence:
-      'Read the mechanics, read the waveforms, then work what the machine and the patient do to each other',
+      'Learn to read a breath, then the mechanics behind it, then what the machine and the patient do to each other',
     sections: [
+      {
+        id: 'waveform-anatomy',
+        shortTitle: 'Anatomy',
+        title: 'Waveform anatomy: three traces, one breath',
+        minutes: 8,
+        description:
+          'What pressure, flow, and volume each plot, what sets the shape of each — and why a volume-targeted breath and a pressure-targeted one look nothing alike.',
+        stage: 'orientation',
+        activityId: 'ventilation:learn:waveform-anatomy',
+      },
       {
         id: 'mechanics-load-and-pressure',
         shortTitle: 'Mechanics',
