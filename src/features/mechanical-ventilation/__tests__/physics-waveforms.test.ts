@@ -11,6 +11,7 @@ import {
   CLOSED_VALVE_BIAS_FLOW_LPS,
   createInitialSimulationState,
   deriveMechanicalInspiratoryTime,
+  deriveVolumeFlowTimeSeconds,
   equationOfMotionPressure,
   expiratoryAirwayPressure,
   MAX_WAVEFORM_SAMPLES,
@@ -948,6 +949,85 @@ describe('device-independent fixed-step physiology and waveform engine', () => {
           mechanicalVentilationCaseById.get('MV-05')!.initialPatient.mechanics.intrinsicPeepCmH2O
         // Its settings terms still add a few cmH₂O; the phantom dynamic term is what must be gone.
         expect(state.measurements.intrinsicPeepCmH2O).toBeLessThan(authored + 5)
+      })
+    })
+
+    /**
+     * All four consoles present an end-inspiratory pause and none of them used to do anything: the
+     * inspiratory time was the flow-delivery time alone, so inspiration ended the moment the tidal
+     * volume was delivered and there was nothing left of it to hold.
+     */
+    describe('the end-inspiratory pause', () => {
+      const paused = (pausePercent: number) => {
+        const initial = { ...createInitialSimulationState('MV-01', 'learn'), paused: false }
+        const set = ventilationSimulationReducer(initial, {
+          type: 'SET_CONTROL',
+          control: 'pausePercent',
+          value: pausePercent,
+        })
+        return advanceSimulation(set, 30)
+      }
+
+      it('changes nothing at its default, which is where every case sits', () => {
+        const zero = paused(0)
+        const settings = zero.ventilator.settings
+        expect(settings.mode).toBe('volume-ac')
+        if (settings.mode !== 'volume-ac') return
+        expect(settings.pausePercent).toBe(0)
+        expect(zero.measurements.mechanicalInspiratoryTimeSeconds).toBeCloseTo(
+          deriveVolumeFlowTimeSeconds(settings),
+          2,
+        )
+      })
+
+      it('extends inspiration and holds the delivered breath still', () => {
+        const state = paused(70)
+        const settings = state.ventilator.settings
+        if (settings.mode !== 'volume-ac') throw new Error('expected a volume-controlled breath')
+        const flowTime = deriveVolumeFlowTimeSeconds(settings)
+        expect(state.measurements.mechanicalInspiratoryTimeSeconds).toBeGreaterThan(flowTime)
+
+        // The pause is the tail of inspiration: no flow, and the volume it holds is the breath.
+        const held = state.waveforms.filter(
+          (sample) => sample.phase === 'inspiration' && sample.flowLMin === 0,
+        )
+        expect(held.length).toBeGreaterThan(5)
+        const volumes = held.map((sample) => sample.volumeMl)
+        expect(Math.max(...volumes) - Math.min(...volumes)).toBeLessThan(1)
+        expect(Math.max(...volumes)).toBeGreaterThan(state.measurements.exhaledVtMl * 0.9)
+      })
+
+      it('gives the console a plateau it can actually measure', () => {
+        /*
+         * Without a pause the last end-inspiratory sample still carries full flow, so the plateau
+         * has to be estimated by subtracting the resistive drop. With one it is read off a
+         * zero-flow segment, which is how a plateau is read at the bedside.
+         */
+        const withoutPause = paused(0).measurements.plateauPressureCmH2O
+        const withPause = paused(70).measurements.plateauPressureCmH2O
+        expect(withPause).toBeGreaterThan(withoutPause)
+        expect(withPause).toBeLessThanOrEqual(paused(70).measurements.peakPressureCmH2O)
+      })
+
+      it('does not stretch the flow profile across the pause', () => {
+        // A decelerating ramp should still finish delivering inside the flow time, then hold.
+        const initial = { ...createInitialSimulationState('MV-01', 'learn'), paused: false }
+        const shaped = ventilationSimulationReducer(
+          ventilationSimulationReducer(initial, {
+            type: 'SET_CONTROL',
+            control: 'flowPattern',
+            value: 'decelerating-100',
+          }),
+          { type: 'SET_CONTROL', control: 'pausePercent', value: 70 },
+        )
+        const state = advanceSimulation(shaped, 30)
+        const settings = state.ventilator.settings
+        if (settings.mode !== 'volume-ac') throw new Error('expected a volume-controlled breath')
+        expect(settings.flowPattern).toBe('decelerating-100')
+        expect(state.measurements.exhaledVtMl).toBeGreaterThan(settings.vtMl * 0.85)
+        expect(
+          state.waveforms.some((sample) => sample.phase === 'inspiration' && sample.flowLMin === 0),
+        ).toBe(true)
       })
     })
 

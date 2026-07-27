@@ -102,6 +102,22 @@ export const ventilatorDeviceSources: readonly VentilatorDeviceSource[] = [
       'Availability depends on patient category, configuration, country, and licensed options.',
   },
   {
+    id: 'evita-v800-v600-ifu-3n',
+    deviceId: 'drager-evita-v800-v600',
+    title: 'Evita V800 / V600 Instructions for Use (software 3.n)',
+    citation:
+      'Dräger. Evita V800 / V600 Intensive Care Ventilator Instructions for Use. Software 3.n.',
+    revision: 'software 3.n',
+    date: '2024',
+    pages: '46, 130-133, 284-292',
+    sourceFilename: '1016340985-Download-Document.pdf',
+    sourceSha256: 'c5604282b48ff01b92c2dd623f18250363929dd92b5a41fa84c874f353f5d295',
+    intendedUse:
+      'The verified copy of the software-3.n instructions for use: §3.9 abbreviations, §7.2 the settings each mode exposes, and §16.2 "Set values" — every setting with its own symbol, range, and printed unit.',
+    limitations:
+      'A different PDF of the same software generation as `evita-v800-v600-ifu-3.1n`, which is no longer on disk; where the two are cited together this is the one that was read.',
+  },
+  {
     id: 'evita-v800-v600-pocket-guide-1n',
     deviceId: 'drager-evita-v800-v600',
     title: 'Evita V800 / V600 Pocket Guide',
@@ -146,6 +162,22 @@ export const ventilatorDeviceSources: readonly VentilatorDeviceSource[] = [
       'A service manual, not the operator manual; this profile does not claim exhaustive operator-workflow fidelity.',
   },
   {
+    id: 'pb980-operators-manual',
+    deviceId: 'puritan-bennett-980',
+    title: 'Puritan Bennett 980 Series Ventilator Operator’s Manual',
+    citation:
+      'Covidien/Medtronic. Puritan Bennett™ 980 Series Ventilator Operator’s Manual. PT00128079A00. ©2012–2019.',
+    revision: 'PT00128079A00',
+    date: '2019',
+    pages: '2-15 to 2-22, 4-3, 4-7 to 4-16, 4-25 to 4-28, 6-36 to 6-42, 11-7 to 11-13',
+    sourceFilename: 'PB980_OperatorsManual_US_EN_PT00128079A00.pdf',
+    sourceSha256: 'a8fd1043af297f65625780cd761140cdf237e012bb2c2291575201d79c1fd948',
+    intendedUse:
+      'The operator-facing GUI: current-settings layout, patient-data banner, bezel keys, on-screen symbols, and the setting ranges, units, and resolutions in Table 11-9.',
+    limitations:
+      'Adult invasive ventilation only; the NIV, capnography, nebulizer, high-flow, and IE Sync addenda cover options this simulator does not model.',
+  },
+  {
     id: 'pb980-icu-brochure-2023',
     deviceId: 'puritan-bennett-980',
     title: 'Puritan Bennett 980 Ventilator in the ICU Brochure',
@@ -158,6 +190,22 @@ export const ventilatorDeviceSources: readonly VentilatorDeviceSource[] = [
     intendedUse: 'High-level display configuration and product-generation context.',
     limitations:
       'Marketing brochure; not used for ranges, treatment claims, or procedural instructions.',
+  },
+  {
+    id: 'avea-operators-manual-rev-m',
+    deviceId: 'carefusion-avea',
+    title: 'AVEA Ventilator Systems Operator’s Manual',
+    citation:
+      'CareFusion. AVEA® Ventilator Systems Operator’s Manual. L2786 Revision M. ©2010–2011.',
+    revision: 'L2786 Rev. M',
+    date: '2011',
+    pages: '90-92, 201-210',
+    sourceFilename: 'viasys-avea-operator-manual.pdf',
+    sourceSha256: 'b696af6019c51bc81e5c88d8fca04de8803e8c44bf203f366113ad773480171d',
+    intendedUse:
+      'Table 3-3 "Primary Breath Controls" — the settings tiles along the bottom of the touch screen, each with the unit the device prints above its name — plus their ranges and accuracies.',
+    limitations:
+      'Adult invasive ventilation only; the infant NIV, volumetric capnography, and Volume Guarantee chapters cover options this simulator does not model.',
   },
   {
     id: 'avea-modes-guide-2014',
@@ -468,6 +516,7 @@ const profiles: readonly VentilatorDeviceProfile[] = [
     ],
     deferredModes: ['VC-MMV', 'PC-BIPAP / SIMV+', 'SPN-PPS', 'SmartCare/PS'],
     sourceIds: [
+      'evita-v800-v600-ifu-3n',
       'evita-v800-v600-ifu-3.1n',
       'evita-v800-v600-pocket-guide-1n',
       'evita-v800-product-information-2023',
@@ -502,10 +551,20 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       // Pocket guide p. 5 and p. 9: the monitoring area carries a column of large values to the
       // right of the waveform fields, top to bottom FiO2, an airway pressure, PEEP, MVe, RR, VT.
       pressureUnit: 'mbar',
-      // The Evita's own abbreviations (§3.9, and the monitoring column on pocket guide p. 5)
-      // match the simulator's neutral spelling for every non-pressure unit, so nothing is renamed.
-      // Authored explicitly rather than omitted so the agreement is recorded, not assumed.
+      /*
+       * Re-sourced against IFU §16.2 "Set values", which prints each setting with its own unit:
+       * RR in /min, Ti and Timax in s, VT in mL, Flow and the flow-trigger threshold in L/min. All
+       * of those are the simulator's neutral spelling, so nothing is renamed — authored explicitly
+       * rather than omitted so the agreement is recorded, not assumed. This row previously reused
+       * the device's already-registered vocabulary rather than a fresh reading.
+       */
       controlUnits: {},
+      /*
+       * The one exception §16.2 turns up: "O2 concentration — FiO2 — 21 to 100 Vol%", while the
+       * inspiration-termination criterion on the same page is "5 to 70 % Flowipeak". One unit
+       * string, two spellings, so it has to be keyed by the setting.
+       */
+      controlUnitOverrides: { oxygenPercent: 'Vol%' },
       pressureLabels: { peak: 'PIP', plateau: 'Pplat', mean: 'Pmean', peep: 'PEEP' },
       monitorLayout: 'right-column',
       monitorLabel: 'Monitoring area',
@@ -556,7 +615,7 @@ const profiles: readonly VentilatorDeviceProfile[] = [
         'highPressureLimitCmH2O',
       ],
       displayNote:
-        'Parameter names and units follow the Evita V800 / V600 instructions for use §3.9 abbreviations; the monitoring-area and therapy-bar arrangement follows §4.1 and the pocket guide pp. 5, 8-9. Pressures print in mbar, which this simulator treats as numerically interchangeable with cmH₂O. The remaining setting units carry the same abbreviations as this device’s monitored column.',
+        'Parameter names follow the Evita V800 / V600 instructions for use §3.9 abbreviations; the monitoring-area and therapy-bar arrangement follows §4.1 and the pocket guide pp. 5, 8-9. Pressures print in mbar, which this simulator treats as numerically interchangeable with cmH₂O. Setting units are now read from IFU §16.2 “Set values”, which prints each setting with its own unit: RR in /min, Ti in s, VT in mL, Flow and the flow trigger in L/min — all the simulator’s own spelling, so nothing is renamed — and FiO₂ in Vol%, which is, so it carries a per-setting override. §7.2 lists which settings each mode exposes; the therapy-bar order remains the pocket guide’s screen layout rather than that capability table.',
     },
     educationalUseOnly: true,
   },
@@ -597,10 +656,11 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       'Use the bezel keys for manual inspiration, holds, alarm reset, silence, and screen lock.',
     ],
     deferredModes: ['NIV+', 'Leak Sync advanced setup'],
-    sourceIds: ['pb980-service-manual-rev-c', 'pb980-icu-brochure-2023'],
+    sourceIds: ['pb980-operators-manual', 'pb980-service-manual-rev-c', 'pb980-icu-brochure-2023'],
     controlLabels: {
-      // Service manual Table 2-8 (settings) and Table 2-9 (alarms). The up arrow marks a high
-      // alarm limit; the dot marks a flow. Both had been transcribed as a literal "2".
+      // Operator's manual Table 2-7 (symbols and abbreviations) and Table 11-9 (settings). The up
+      // arrow marks a high alarm limit; the dot marks a flow. Both had been transcribed as a
+      // literal "2" from the service manual.
       oxygenPercent: 'O₂%',
       peepCmH2O: 'PEEP',
       deltaPControlCmH2O: 'PI',
@@ -609,6 +669,7 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       etsPercent: 'ESENS',
       tiMaxSeconds: '↑TI SPONT',
       ratePerMin: 'f',
+      vtMl: 'VT',
       peakFlowLMin: 'V̇MAX',
       pausePercent: 'TPL',
       inspiratoryTimeSeconds: 'TI',
@@ -627,49 +688,108 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       proportionalSupportPercent: '% Supp',
     },
     display: {
-      // ICU brochure pp. 1 and 9 show the patient-data banner running across the top of the
-      // screen, opened by the breath-phase letter. Symbol names come from service manual
-      // Table 2-10 (patient data).
+      // Operator's manual Figure 4-1 item 5: the vital patient data banner runs across the top of
+      // the GUI, opened by the breath-phase indicator (item 4). Symbol names are Table 2-7.
       pressureUnit: 'cmH₂O',
-      // Rate prints as 1/min on this device — the symbol used for fTOT in service manual
-      // Table 2-10. Volume and flow keep mL and L/min, as the same table prints them.
+      /*
+       * Table 11-9 prints respiratory rate in 1/min, tidal volume in mL, and flows in L/min, and
+       * Table 2-7 gives the symbols. This row used to reuse the service manual's already-registered
+       * vocabulary rather than a fresh reading; the operator's manual now confirms it, and the
+       * plateau-time unit (s, Table 11-9 "Plateau time (TPL) … Range: 0 s to 2 s") with it.
+       */
       controlUnits: { '/min': '1/min' },
       pressureLabels: { peak: 'PPEAK', plateau: 'PPL', mean: 'PMEAN', peep: 'PEEP' },
       monitorLayout: 'top-banner',
-      monitorLabel: 'Patient data banner',
+      monitorLabel: 'Vital patient data banner',
+      /*
+       * The default banner order, read off Figures 4-1, 4-4 and 4-8, which agree: peak pressure
+       * leads, then the exhaled volume, rate, I:E, PEEP, mean pressure and minute volume. The
+       * banner is operator-configurable (§3.7 Vital Patient Data), so this is the documented
+       * default rather than the only arrangement. It previously led with fTOT, which no figure
+       * shows.
+       */
       monitorFields: [
-        { metric: 'totalRate', label: 'fTOT', unit: '1/min' },
-        { metric: 'minuteVolume', label: 'V̇E TOT', unit: 'L/min', precision: 1 },
-        { metric: 'exhaledTidalVolume', label: 'VTE', unit: 'mL' },
-        { metric: 'peep', label: 'PEEP', unit: 'cmH₂O', precision: 1 },
-        { metric: 'ieRatio', label: 'I:E', unit: '' },
         // Table 2-12: pressure resolution is 1 cmH₂O at or above 10 cmH₂O.
         { metric: 'peakPressure', label: 'PPEAK', unit: 'cmH₂O' },
+        { metric: 'exhaledTidalVolume', label: 'VTE', unit: 'mL' },
+        { metric: 'totalRate', label: 'fTOT', unit: '1/min' },
+        { metric: 'ieRatio', label: 'I:E', unit: '' },
+        { metric: 'peep', label: 'PEEP', unit: 'cmH₂O', precision: 1 },
         { metric: 'meanAirwayPressure', label: 'PMEAN', unit: 'cmH₂O' },
+        { metric: 'minuteVolume', label: 'V̇E TOT', unit: 'L/min', precision: 1 },
       ],
       waveforms: [
         { field: 'pawCmH2O', label: 'Pressure', unit: 'cmH₂O', minimum: 0, maximum: 50 },
         { field: 'flowLMin', label: 'Flow', unit: 'L/min', minimum: -100, maximum: 100 },
         { field: 'volumeMl', label: 'Volume', unit: 'mL', minimum: 0, maximum: 1000 },
       ],
+      /*
+       * Table 11-9, Flow pattern: "Range: square, descending ramp" — two, not four. §10.15.9 pins
+       * which one the descending ramp is: holding VT and V̇MAX constant, TI "approximately halves"
+       * changing from descending ramp to square, so the ramp's mean flow is half its peak. That is
+       * the pattern this simulator calls 100% decelerating.
+       */
+      flowPatterns: ['square', 'decelerating-100'],
       showBreathPhase: true,
-      // Service manual §1.11.1: eight off-screen bezel keys straddle the rotary encoder.
-      // Brightness and alarm volume are omitted because this simulator models neither.
+      /*
+       * Operator's manual Table 2-5, in its printed order: brightness, display lock, alarm volume,
+       * manual inspiration, inspiratory pause, expiratory pause, alarm reset, audio paused.
+       * Brightness and alarm volume are omitted because this simulator models neither.
+       *
+       * "Elevate O₂" is not a bezel key — Figure 4-1 item 7 puts it in the constant-access icons at
+       * the lower right of the *screen*, with home, configure, logs, and help. It stays reachable
+       * from Tools, where the other maneuvers live.
+       */
       bezelKeys: [
         { action: 'screen-lock', label: 'Display lock' },
         { action: 'manual-breath', label: 'Manual inspiration' },
         { action: 'inspiratory-hold', label: 'Inspiratory pause' },
         { action: 'expiratory-hold', label: 'Expiratory pause' },
         { action: 'alarm-reset', label: 'Alarm reset' },
-        { action: 'alarm-silence', label: 'Alarm silence' },
-        { action: 'oxygen-enrichment', label: 'Elevate O₂' },
+        { action: 'alarm-silence', label: 'Audio paused' },
       ],
       knobPosition: 2,
-      // The service manual documents the setting names and ranges but not the order the Vent Setup
-      // screen lays them out in, so the engine's mode-driven order stands.
-      controlOrder: [],
+      /*
+       * The current settings area, Figure 4-1 item 9 — "the ventilator's current active settings
+       * display here". Figures 4-1, 4-4 and 4-5 all show it for A/C + VC as
+       *
+       *     f · VT · V̇MAX · [P̶SENS | V̇SENS] · O₂%
+       *     TPL · flow pattern · PEEP
+       *
+       * and Figure 4-8 shows the same shape for SIMV + PC + PS, with PI and TI where VT and V̇MAX
+       * sit and the spontaneous settings where TPL and the flow pattern do. So: rate, then what
+       * sizes the mandatory breath, then what times it, then the trigger, then O₂, then the
+       * breath-shaping settings, and PEEP last. Unlisted keys keep the engine's order after these.
+       *
+       * This is the layout §3 item 1 was blocked on — the service manual does not publish one.
+       */
+      controlOrder: [
+        'ratePerMin',
+        'vtMl',
+        'deltaPControlCmH2O',
+        'targetVtMl',
+        'peakFlowLMin',
+        'inspiratoryTimeSeconds',
+        'pHighCmH2O',
+        'pLowCmH2O',
+        'tHighSeconds',
+        'tLowSeconds',
+        'triggerType',
+        'triggerThreshold',
+        'oxygenPercent',
+        'pausePercent',
+        'flowPattern',
+        'pRampMs',
+        'pressureSupportCmH2O',
+        'spontaneousPressureSupportCmH2O',
+        'spontaneousRampMs',
+        'etsPercent',
+        'spontaneousCyclePercent',
+        'proportionalSupportPercent',
+        'peepCmH2O',
+      ],
       displayNote:
-        'Banner parameters use the symbol names in service manual Table 2-10; the bezel key set and its order follow §1.11.1. Breath phase shows the documented Control / Assist / Spontaneous indicator. Setting units carry the same abbreviations as that table — rate in 1/min. The service manual does not publish a Vent Setup screen layout, so the settings keep the simulator’s own order.',
+        'Rebuilt from the operator’s manual (PT00128079A00). The settings order is the current settings area in Figure 4-1 item 9, as drawn in Figures 4-1, 4-4, 4-5 and 4-8 — rate, the mandatory breath’s size and timing, trigger, O₂, breath shaping, PEEP last. Banner parameters and their order are the documented default in those same figures, using the Table 2-7 symbols; the real banner is operator-configurable. Bezel keys and their order are Table 2-5, less brightness and alarm volume, which this simulator does not model — Elevate O₂ is a constant-access screen icon, not a bezel key. Setting units and ranges are Table 11-9: rate in 1/min, volume in mL, flows in L/min, plateau time in seconds. Breath phase shows the documented Control / Assist / Spontaneous indicator.',
     },
     educationalUseOnly: true,
   },
@@ -732,7 +852,7 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       'Use ALARM LIMITS and the physical maneuver keys while retaining the active mode view.',
     ],
     deferredModes: ['nCPAP/IMV', 'Independent lung ventilation'],
-    sourceIds: ['avea-modes-guide-2014'],
+    sourceIds: ['avea-operators-manual-rev-m', 'avea-modes-guide-2014'],
     // Row names as printed in the modes guide primary-control tables, pp. 43-46.
     controlLabels: {
       oxygenPercent: '%O₂',
@@ -760,10 +880,16 @@ const profiles: readonly VentilatorDeviceProfile[] = [
     },
     display: {
       pressureUnit: 'cmH₂O',
-      // Rate prints as BPM in the modes guide's alarm-limits window (p. 6). Volume and flow keep
-      // mL and L/min from the same window; the waveform axes on pp. 11-26 print ml and l/min, but
-      // that is the graphics region, not the settings tiles.
-      controlUnits: { '/min': 'BPM' },
+      /*
+       * Re-sourced against operator's manual Table 3-3 "Primary Breath Controls", which prints the
+       * displayed unit directly above each control name — these are the settings tiles themselves,
+       * not an alarm window. Rate is `bpm`, volume `ml`, times `sec`, and flow stays `L/min`.
+       *
+       * This row previously read `BPM` from the modes guide's alarm-limits window (p. 6) and left
+       * volume and time at the simulator's own spelling. Table 3-3 is the stronger source for what
+       * the control tiles print, and it disagrees on all three.
+       */
+      controlUnits: { '/min': 'bpm', mL: 'ml', s: 'sec' },
       pressureLabels: { peak: 'Ppeak', plateau: 'Pplat', mean: 'Pmean', peep: 'PEEP' },
       monitorLayout: 'right-tiles',
       monitorLabel: 'Patient data',
@@ -819,7 +945,7 @@ const profiles: readonly VentilatorDeviceProfile[] = [
         'highPressureLimitCmH2O',
       ],
       displayNote:
-        'Control names, membrane-key legends, primary-control order, and waveform axis scales follow the AVEA ventilation modes user guide. Setting units carry the abbreviations printed in that guide’s alarm-limits window — rate in BPM. The guide is explicit that it does not replace the operator manual, so the monitored-parameter set is the documented subset, not the full configurable monitor screen.',
+        'Membrane-key legends and waveform axis scales follow the AVEA ventilation modes user guide. Control names, their order, and their units are now the operator’s manual Table 3-3 “Primary Breath Controls”, which prints the unit above each control name on the settings tiles themselves: rate in bpm, volume in ml, times in sec, flows in L/min. That corrects three units previously read from the modes guide’s alarm-limits window. The monitored-parameter set remains the documented subset rather than the full configurable monitor screen.',
     },
     educationalUseOnly: true,
   },
@@ -1077,7 +1203,7 @@ export function adaptControlDescriptor(
   const label = profile.controlLabels[rawDescriptor.key] ?? rawDescriptor.label
   // Settings print in the unit spelling the device uses on screen: mbar on the Evita, `ml` and
   // `b/min` on the C6. `unit` below is the vendor's spelling from here down.
-  const unit = (neutral: string) => resolveControlUnit(profile.display, neutral)
+  const unit = (neutral: string) => resolveControlUnit(profile.display, neutral, rawDescriptor.key)
   const descriptor = { ...rawDescriptor, unit: unit(rawDescriptor.unit) }
   if (descriptor.key === 'deltaPControlCmH2O' && deviceId === 'drager-evita-v800-v600') {
     return {

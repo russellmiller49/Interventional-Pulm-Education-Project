@@ -229,7 +229,46 @@ describe('mechanical-ventilation teaching panels', () => {
       const state = stateFor('MV-01', 14)
       render(<MechanicalVentilationTeachingPanel lessonId="waveform-anatomy" state={state} />)
       const compliance = Math.round(state.patient.mechanics.complianceLPerCmH2O * 1000)
-      expect(screen.getByText(new RegExp(`${compliance} mL/cmH₂O`))).toBeInTheDocument()
+      // Named twice on purpose: in the figure caption and on the slider that drives it.
+      expect(screen.getAllByText(new RegExp(`${compliance} mL/cmH₂O`)).length).toBeGreaterThan(0)
+      expect(screen.getByText(/this patient$/)).toBeInTheDocument()
+    })
+
+    /**
+     * The section's own prediction question asks what happens to each trace when compliance falls.
+     * The slider is how that gets answered by looking rather than by being told, so the two columns
+     * have to move in opposite ways — and each has to hold its own set variable while it does.
+     */
+    it('lets the learner stiffen the lung and shows the two columns diverging', () => {
+      const state = stateFor('MV-01', 14)
+      render(<MechanicalVentilationTeachingPanel lessonId="waveform-anatomy" state={state} />)
+      const slider = screen.getByRole('slider', { name: /compliance/i })
+      const setVt = Math.round(state.measurements.exhaledVtMl)
+
+      /** `[held, moved]` for a column: what it holds, and the quantity the lung then decides. */
+      const columnFor = (label: RegExp): [string, string] => {
+        const values = screen.getByText(label).closest('div')?.querySelectorAll('dd') ?? []
+        return [values[0]?.textContent ?? '', values[1]?.textContent ?? '']
+      }
+      const numeric = (text: string) => Number(text.replace(/[^0-9.]/g, ''))
+
+      const [baseVcHeld, baseVcMoved] = columnFor(/Volume targeted holds/)
+      const [basePcHeld, basePcMoved] = columnFor(/Pressure targeted holds/)
+      expect(numeric(baseVcHeld)).toBe(setVt)
+
+      fireEvent.change(slider, { target: { value: '0.5' } })
+
+      const [stiffVcHeld, stiffVcMoved] = columnFor(/Volume targeted holds/)
+      const [stiffPcHeld, stiffPcMoved] = columnFor(/Pressure targeted holds/)
+
+      // Each column holds its own set variable across the change...
+      expect(stiffVcHeld).toBe(baseVcHeld)
+      expect(stiffPcHeld).toBe(basePcHeld)
+      // ...and the quantity the lung decides moves, in opposite directions.
+      expect(numeric(stiffVcMoved)).toBeGreaterThan(numeric(baseVcMoved))
+      expect(numeric(stiffPcMoved)).toBeLessThan(numeric(basePcMoved))
+
+      expect(screen.getByText(/A stiffer lung\./)).toBeInTheDocument()
     })
   })
 

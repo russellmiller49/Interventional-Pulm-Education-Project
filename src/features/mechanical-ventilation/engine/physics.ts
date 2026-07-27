@@ -409,6 +409,24 @@ export function deriveVolumeFlowTimeSeconds(settings: MechanicalVentilationSetti
   return clamp(settings.vtMl / Math.max(1, settings.peakFlowLMin * patternFactor * 16.67), 0.2, 3)
 }
 
+/**
+ * The end-inspiratory pause, in seconds.
+ *
+ * All four consoles present this control — `TPL`, `Tplat`, `Insp Pause`, `Pause` — and until now
+ * none of them did anything: `deriveMechanicalInspiratoryTime` returned the flow-delivery time
+ * alone, so inspiration ended the moment the tidal volume was delivered and there was nothing left
+ * of it to hold. A set pause is how a plateau is normally read at the bedside, without occluding
+ * anything by hand.
+ *
+ * Expressed as a percentage of the flow-delivery time, which is the conversion the device profiles
+ * already use to print it in seconds on the three devices that set it that way.
+ */
+export function derivePauseSeconds(settings: MechanicalVentilationSettings): number {
+  if (settings.mode !== 'volume-ac') return 0
+  if (settings.advanced.autoFlowEnabled) return 0
+  return clamp((settings.pausePercent / 100) * deriveVolumeFlowTimeSeconds(settings), 0, 2)
+}
+
 export function deriveMechanicalInspiratoryTime(
   settings: MechanicalVentilationSettings,
   patient: PatientModelState,
@@ -417,7 +435,13 @@ export function deriveMechanicalInspiratoryTime(
   if (settings.advanced.intelliSyncEnabled) {
     return clamp(patient.drive.neuralInspiratoryTimeSeconds, 0.2, 3)
   }
-  if (settings.mode === 'volume-ac') return deriveVolumeFlowTimeSeconds(settings)
+  /*
+   * Inspiratory time is flow time *plus* the pause — the valves stay shut for it, so it is part of
+   * inspiration and counts toward I:E and mean airway pressure, as it does on the device.
+   */
+  if (settings.mode === 'volume-ac') {
+    return deriveVolumeFlowTimeSeconds(settings) + derivePauseSeconds(settings)
+  }
   if (settings.mode === 'pressure-ac') return settings.inspiratoryTimeSeconds
   const tau = Math.max(
     0.08,

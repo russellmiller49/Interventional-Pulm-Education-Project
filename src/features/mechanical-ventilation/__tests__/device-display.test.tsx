@@ -81,9 +81,14 @@ describe('device-specific console displays', () => {
 
   it('opens the PB980 patient-data banner with its breath-phase indicator', () => {
     renderConsole('puritan-bennett-980')
-    const banner = screen.getByLabelText('Patient data banner')
+    const banner = screen.getByLabelText('Vital patient data banner')
     expect(within(banner).getByLabelText(/Breath phase/)).toBeInTheDocument()
-    for (const label of ['fTOT', 'V̇E TOT', 'VTE', 'PEEP', 'I:E', 'PPEAK', 'PMEAN']) {
+    // Operator's manual Figures 4-1, 4-4 and 4-8: peak pressure leads the default banner.
+    const labels = getVentilatorDeviceProfile('puritan-bennett-980').display.monitorFields.map(
+      (field) => field.label,
+    )
+    expect(labels).toEqual(['PPEAK', 'VTE', 'fTOT', 'I:E', 'PEEP', 'PMEAN', 'V̇E TOT'])
+    for (const label of labels) {
       expect(within(banner).getByText(label)).toBeInTheDocument()
     }
     // The banner replaces the side column rather than sitting next to it.
@@ -96,6 +101,11 @@ describe('device-specific console displays', () => {
     const labels = Array.from(bezel.children).map(
       (child) => child.getAttribute('aria-label') ?? child.textContent?.trim(),
     )
+    /*
+     * Operator's manual Table 2-5, in its printed order, less brightness and alarm volume. Elevate
+     * O₂ is gone from here: Figure 4-1 item 7 puts it in the constant-access screen icons, not on
+     * the bezel.
+     */
     expect(labels).toEqual([
       'Display lock',
       'Manual inspiration',
@@ -103,9 +113,34 @@ describe('device-specific console displays', () => {
       'Inspiratory pause',
       'Expiratory pause',
       'Alarm reset',
-      'Alarm silence',
-      'Elevate O₂',
+      'Audio paused',
     ])
+  })
+
+  it('lays the PB980 settings out in the order its current settings area shows them', () => {
+    const display = getVentilatorDeviceProfile('puritan-bennett-980').display
+    const rank = (key: string) => display.controlOrder.indexOf(key as never)
+    /*
+     * Figure 4-1 item 9, drawn for A/C + VC in Figures 4-1, 4-4 and 4-5:
+     *   f · VT · V̇MAX · trigger · O₂% / TPL · flow pattern · PEEP
+     */
+    for (const [before, after] of [
+      ['ratePerMin', 'vtMl'],
+      ['vtMl', 'peakFlowLMin'],
+      ['peakFlowLMin', 'triggerThreshold'],
+      ['triggerThreshold', 'oxygenPercent'],
+      ['oxygenPercent', 'pausePercent'],
+      ['pausePercent', 'flowPattern'],
+      ['flowPattern', 'peepCmH2O'],
+    ] as const) {
+      expect(rank(before)).toBeGreaterThanOrEqual(0)
+      expect(rank(before)).toBeLessThan(rank(after))
+    }
+    // Figure 4-8 puts PI and TI where VT and V̇MAX sit for a pressure-controlled breath.
+    expect(rank('deltaPControlCmH2O')).toBeLessThan(rank('triggerThreshold'))
+    expect(rank('inspiratoryTimeSeconds')).toBeLessThan(rank('triggerThreshold'))
+    // PEEP is last in every figure.
+    expect(rank('peepCmH2O')).toBe(display.controlOrder.length - 1)
   })
 
   it('uses the AVEA axis legends and documented waveform scales', () => {
@@ -347,10 +382,35 @@ describe('device-specific console displays', () => {
     })
 
     it('gives each device its own rate unit', () => {
-      expect(unitFor('hamilton-c6', '/min')).toBe('b/min')
-      expect(unitFor('puritan-bennett-980', '/min')).toBe('1/min')
-      expect(unitFor('carefusion-avea', '/min')).toBe('BPM')
-      expect(unitFor('drager-evita-v800-v600', '/min')).toBe('/min')
+      // Four devices, four spellings, each from that device's own manual.
+      expect(unitFor('hamilton-c6', '/min')).toBe('b/min') // C6 Table 16-5
+      expect(unitFor('puritan-bennett-980', '/min')).toBe('1/min') // PB980 Table 11-9
+      expect(unitFor('carefusion-avea', '/min')).toBe('bpm') // AVEA Table 3-3
+      expect(unitFor('drager-evita-v800-v600', '/min')).toBe('/min') // Evita IFU §16.2
+    })
+
+    it('prints the AVEA setting units its primary-controls table prints', () => {
+      // Operator's manual Table 3-3 prints the unit above each control name.
+      expect(unitFor('carefusion-avea', 'mL')).toBe('ml')
+      expect(unitFor('carefusion-avea', 's')).toBe('sec')
+      expect(unitFor('carefusion-avea', 'L/min')).toBe('L/min')
+      expect(unitFor('carefusion-avea', '%')).toBe('%')
+    })
+
+    it('spells the Evita’s oxygen setting Vol% without touching its other percentages', () => {
+      /*
+       * IFU §16.2 prints "O2 concentration — FiO2 — 21 to 100 Vol%" and, on the same page, an
+       * inspiration-termination criterion of "5 to 70 % Flowipeak". The unit map alone cannot tell
+       * those apart, so this rides on the per-setting override.
+       */
+      const evita = getVentilatorDeviceProfile('drager-evita-v800-v600').display
+      expect(resolveControlUnit(evita, '%', 'oxygenPercent')).toBe('Vol%')
+      expect(resolveControlUnit(evita, '%', 'etsPercent')).toBe('%')
+      expect(resolveControlUnit(evita, '%')).toBe('%')
+      // Everything else on this device keeps the simulator's neutral spelling, per §16.2.
+      for (const neutral of ['mL', 'L/min', '/min', 's', 'ms'] as const) {
+        expect(unitFor('drager-evita-v800-v600', neutral)).toBe(neutral)
+      }
     })
 
     it('routes pressure through the pressure unit, not the spelling map', () => {

@@ -1,5 +1,5 @@
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 
 import { CRITICAL_CARE_PROGRESS_STORAGE_KEY } from '@/features/learning-module/activity'
 
@@ -62,8 +62,20 @@ describe('focused mechanical ventilation lesson', () => {
     expect(continueButton).toBeEnabled()
     fireEvent.click(continueButton)
 
-    fireEvent.click(screen.getByLabelText(items.prediction.choices[0].label))
+    const chosen = items.prediction.choices[0]
+    fireEvent.click(screen.getByLabelText(chosen.label))
     fireEvent.click(screen.getByRole('button', { name: 'Commit prediction' }))
+
+    /*
+     * Committing now marks the answer and stays put. Advancing straight to the next phase replaced
+     * the question before the learner was told whether they were right.
+     */
+    const verdict = document.querySelector<HTMLElement>('[data-plausibility]')
+    expect(verdict).not.toBeNull()
+    expect(verdict).toHaveAttribute('data-plausibility', chosen.plausibility)
+    expect(within(verdict!).getByText(chosen.rationale)).toBeInTheDocument()
+    expect(within(verdict!).getByText(/Why the other answers do not fit/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
 
     const responseButton = screen.getByRole('button', {
       name: 'Run the response and reassess',

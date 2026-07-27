@@ -163,6 +163,13 @@ export interface VentilatorDisplayProfile {
   pressureUnit: string
   /** How this vendor spells the remaining setting units. See `VentilatorControlUnits`. */
   controlUnits: VentilatorControlUnits
+  /**
+   * Per-setting exceptions, for a vendor that spells one quantity two ways depending on what is
+   * being measured. The Evita prints its O2 concentration in `Vol%` but its inspiration-termination
+   * criterion in plain `%` — one unit string, two spellings, which `controlUnits` cannot express
+   * because it is keyed by the unit rather than by the setting. Takes precedence over it.
+   */
+  controlUnitOverrides?: Readonly<Partial<Record<VentilatorControlKey, string>>>
   pressureLabels: VentilatorPressureLabels
   monitorLayout: VentilatorMonitorLayout
   /** The vendor's name for the monitored-value region, used as its accessible name. */
@@ -171,6 +178,12 @@ export interface VentilatorDisplayProfile {
   /** A separate strip below the monitored values. The C6 puts SpO2 and its low limit there. */
   monitorFooter?: readonly VentilatorMonitorField[]
   waveforms: readonly VentilatorWaveformChannel[]
+  /**
+   * The flow patterns this vendor offers for a volume-controlled breath, in the order it lists
+   * them. Omitted means the simulator's full set, which is the right default for a device whose
+   * manual does not publish one — not a claim that the device offers all four.
+   */
+  flowPatterns?: readonly FlowPattern[]
   /**
    * The order this vendor presents its settings in. Empty means no documented order, so the
    * engine's mode-driven order stands. `controlGroups` additionally labels the groups on screen.

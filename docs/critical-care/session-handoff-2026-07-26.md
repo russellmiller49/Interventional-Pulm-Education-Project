@@ -1,9 +1,15 @@
 # Critical Care — session handoff
 
-**Date:** 2026-07-26 (revised same day, four times — see §1.5, §1.6–§1.8, §1.9, and §1.10)
+**Date:** 2026-07-26 (revised same day, eight times — the last is §1.14)
 **Branch of record:** `codex/ip-preference-card-builder-v0-1` (what the dev server runs)
 **Work branch:** `claude/curricular-sequencing-updates-b351b1`
-**Head at handoff:** `3a1c05a2`, plus an **uncommitted** working tree carrying §1.7 and §1.8
+**Head at handoff:** `0d72608f`. §1.1–§1.10 are committed; §1.11 and §1.12 are not.
+
+> **A concurrent session shares this checkout.** While §1.11 was being written, another session
+> committed an unrelated "IP literature explorer phase 1" merge into this same working tree and ran
+> `lint-staged`, whose stash/restore cycle briefly reverted files mid-edit. Everything survived, but
+> check `git status` before trusting a diff here, and prefer synchronous test runs over background
+> ones.
 
 ---
 
@@ -18,15 +24,30 @@ In the order it landed:
 | §1.4       | Per-device ventilator console fidelity, all four devices                          | committed   |
 | §1.5       | Follow-up session clearing §3 items 1–4 and the housekeeping half of 8            | committed   |
 | §1.6       | Waveform physiology — the hold, the expiratory limb, and what the console reports | committed   |
-| §1.7       | The Learn pathway now opens by teaching how to read a breath                      | uncommitted |
-| §1.8       | The wandering baseline between breaths                                            | uncommitted |
-| §1.9       | The rest of the casebook's waveform signatures, swept the same way                | uncommitted |
-| §1.10      | The numbers the console reports, measured off the trace rather than predicted     | uncommitted |
+| §1.7       | The Learn pathway now opens by teaching how to read a breath                      | committed   |
+| §1.8       | The wandering baseline between breaths                                            | committed   |
+| §1.9       | The rest of the casebook's waveform signatures, swept the same way                | committed   |
+| §1.10      | The numbers the console reports, measured off the trace rather than predicted     | committed   |
+| §1.11      | The PB980 rebuilt against its operator's manual                                   | uncommitted |
+| §1.12      | Evita and AVEA setting units re-sourced — every device now manual-verified        | uncommitted |
+| §1.13      | Answering a question now tells the learner whether they were right, and why       | uncommitted |
+| §1.14      | The inspiratory pause the four consoles advertise now does something              | uncommitted |
 
-§1.6–§1.8 all came out of the owner reviewing the running module rather than from the backlog, and
-each began as "this does not look right" over a screenshot. Read §1.6 first of the three: the other
-two are consequences of looking closely at the same trace. §1.9 then took the method those three
-established and ran it over every remaining signature in the casebook.
+Three threads run through this, and it is worth knowing which one a section belongs to.
+
+**The trace.** §1.6–§1.8 came out of the owner reviewing the running module rather than from the
+backlog, each beginning as "this does not look right" over a screenshot. Read §1.6 first: the other
+two are consequences of looking closely at the same trace. §1.9 then took that method — dump the
+buffer, do not judge from a rendering — and ran it over every remaining clinical sign in the
+casebook. §1.10 finished the job by making every _reported number_ come off the trace too, which is
+the same principle applied to the console instead of the waveform.
+
+**The devices.** §1.4, §1.11 and §1.12 are display fidelity: what each vendor's console actually
+shows and what it calls it. That thread is now **complete** — all four devices are verified against
+their own operator's manual, which had been blocked on missing PDFs since §1.5.
+
+**The curriculum.** §1.1–§1.3 and §1.7 are structure and teaching content. This is the thread with
+the most left in it; see §3 item 4.
 
 ### 1.1 WP10 — curricular sequencing across all modules (complete)
 
@@ -652,6 +673,189 @@ trace at the 553 mL still in the lung and reads total PEEP 13.6 off it.
 > threshold load against PS 18. That is the case's own teaching point rather than a defect, but it
 > is a judgement call whether the parameters land where you want them.
 
+### 1.11 The PB980, rebuilt against its operator's manual
+
+The owner supplied `PB980_OperatorsManual_US_EN_PT00128079A00.pdf` (442 pp, SHA-256
+`a8fd1043…d79c1fd948`) plus five option addenda — NIV PLUS, capnography, nebulizer, high-flow O2,
+and IE Sync. The operator's manual is the document §3 item 1 had been blocked on twice; it is now
+registered as `pb980-operators-manual` and is the PB980's primary source. **The five addenda cover
+options this simulator does not model and are deliberately not registered**, but they are on disk
+if NIV or capnography is ever built.
+
+**The settings layout, which no previous source published.** Figure 4-1 item 9 names the _current
+settings area_, and Figures 4-1, 4-4, 4-5 and 4-8 draw it. For A/C + VC it reads
+
+```
+f · VT · V̇MAX · [V̇SENS | PSENS] · O₂%
+TPL · flow pattern · PEEP
+```
+
+and Figure 4-8 shows the same shape for SIMV + PC + PS, with `PI` and `TI` where `VT` and `V̇MAX`
+sit. So: rate, then what sizes the mandatory breath, then what times it, then the trigger, then O₂,
+then the breath-shaping settings, and **PEEP last** in every figure. That is now `controlOrder`.
+No `controlGroups` — unlike the C6, the PB980 prints no group labels, only a visual divider.
+
+**Setting units, re-sourced.** Table 11-9 (Ventilator Settings Range and Resolution) and Table 2-7
+(Symbols and Abbreviations) confirm rate in `1/min`, volume in `mL`, flows in `L/min`, and plateau
+time `TPL` in seconds. That row had been reusing the service manual's already-registered
+vocabulary; it is now read from the operator's manual, so the PB980 joins the C6 as
+manual-verified.
+
+**Three corrections the manual forced.**
+
+1. **The banner led with the wrong parameter.** It opened on `fTOT`, which no figure shows. The
+   documented default across Figures 4-1, 4-4 and 4-8 leads with peak pressure:
+   `PPEAK · VTE · fTOT · I:E · PEEP · PMEAN · V̇E TOT`. The real banner is operator-configurable
+   (§3.7 Vital Patient Data), so this is the default rather than the only arrangement.
+2. **Elevate O₂ was not a bezel key.** Figure 4-1 item 7 puts it in the _constant-access icons_ at
+   the lower right of the screen, with home, configure, logs and help. Removed from the bezel; it
+   stays reachable from Tools where the other maneuvers live. `Alarm silence` is also renamed to
+   the manual's own `Audio paused`, and the remaining six keys match Table 2-5's printed order once
+   brightness and alarm volume — neither of which this simulator models — are dropped.
+3. **The PB980 offers two flow patterns, not four.** Table 11-9: "Range: square, descending ramp".
+   §10.15.9 pins which one the ramp is — holding `VT` and `V̇MAX` constant, `TI` "approximately
+   halves" going from descending ramp to square, so the ramp's mean flow is half its peak, which is
+   what this simulator calls 100% decelerating. `VentilatorDisplayProfile.flowPatterns` is new and
+   optional: **omitted means the simulator's full four**, which is the honest default for a device
+   whose manual does not publish a list, rather than a claim that it offers all of them. The
+   console reads it instead of hard-coding the options, so §4's "do not branch on `deviceId` here"
+   still holds.
+
+---
+
+### 1.12 The last two devices' setting units
+
+The owner supplied the Evita V800/V600 software-3.n IFU (386 pp), a software-1.n IFU excerpt, the
+**AVEA operator's manual** (L2786 Rev. M, 262 pp), and the AVEA user guide. That closes §3 item 1:
+all four devices' setting units are now read from that device's own manual rather than from its
+already-registered vocabulary.
+
+**AVEA — operator's manual Table 3-3, "Primary Breath Controls".** This is a better source than the
+modes guide for units, because it prints the unit _directly above each control name_ — these are
+the settings tiles themselves, not an alarm window. It disagreed with the registered row on three
+of them:
+
+| Unit   | Was   | Table 3-3 |
+| ------ | ----- | --------- |
+| rate   | `BPM` | `bpm`     |
+| volume | `mL`  | `ml`      |
+| time   | `s`   | `sec`     |
+
+Flow stays `L/min` and O₂ stays `%`. The control _names_ already matched Table 3-3 exactly, so only
+the units moved.
+
+**Evita — IFU §16.2 "Set values".** Prints every setting with its own symbol, range and unit: `RR`
+in /min, `Ti` and `Timax` in s, `VT` in mL, `Flow` and the flow-trigger threshold in L/min. All of
+those are the simulator's neutral spelling, so §1.5's claim that "its own spelling is neutral" was
+right — but it was an assumption from the monitored column, and it is now a reading.
+
+**One exception, and a small new mechanism for it.** §16.2 prints "O2 concentration — FiO2 — 21 to
+100 **Vol%**" while the inspiration-termination criterion on the same page is "5 to 70 **%**
+Flowipeak". One unit string, two spellings on one device, which `controlUnits` cannot express
+because it is keyed by the unit rather than by the setting. `VentilatorDisplayProfile.controlUnitOverrides`
+is a per-setting map that takes precedence; the Evita uses it for `oxygenPercent` alone. The Evita's
+therapy bar now reads `FiO₂ 60 Vol%` beside `VT 420 mL` and `RR 24 /min`.
+
+> §7.2 of the same IFU lists which settings each mode exposes, in an order that differs from the
+> therapy bar. It is a **capability matrix, not a screen layout**, so the therapy-bar order still
+> comes from the pocket guide. Worth knowing before someone reads §7.2 and "fixes" the order.
+
+---
+
+### 1.13 Answering a question, and changing the lung to see why
+
+Both from the owner looking at the `waveform-anatomy` prediction checkpoint in the running module.
+
+**A committed answer said nothing back.** `commitPrediction` marked the answer and immediately
+called `advance('act')`, so the question was replaced by the next phase's controls before any
+verdict appeared — the reasoning feedback existed, but it rendered in the task panel _after_ the
+phase had already moved, which is not where the learner was looking. Committing now stays on the
+predict phase and shows an `AnswerVerdict` in the same pane the question was answered in:
+
+- a plain verdict — **Correct**, **Partly right**, **Not quite**, or **Unsafe** — keyed on the
+  choice's own `plausibility`, rather than the shared component's softer "The cues support this
+  read";
+- the chosen answer's `rationale`;
+- **why each of the others does not fit**, in a disclosure, since that is where most of the teaching
+  is and all of it was already authored;
+- the item's `explanation` as "how to tell them apart";
+- then a **Continue** button, which is what advances.
+
+The transfer question gets the same verdict as soon as an interpretation is chosen. Styled for the
+light "Your turn" pane rather than reusing the shared `ChoiceReasoningFeedback`, which is written
+for the dark workbench (§1.3 item 8).
+
+> **Practice cases deliberately still withhold this.** `CaseWorkflow`'s prediction commits to
+> "Initial frame recorded" and the learner finds out by acting and reassessing, with the reveal at
+> the debrief. That is an assessment-flavoured surface rather than a teaching one, so it was left
+> alone — but it is the same complaint waiting to be made, and whether Practice should also give an
+> immediate verdict is a call worth making deliberately.
+
+**A compliance slider on the comparison figure.** The section's own prediction asks what happens to
+each trace when compliance falls; the figure beneath it draws both delivery strategies on this
+patient's lung. It now has a slider — 0.4× to 2× this patient's own compliance — so the learner can
+answer the question by moving it.
+
+The subtlety that makes it work: **each column holds its own set variable.** Volume targeting keeps
+the tidal volume, so the peak pressure moves. Pressure targeting keeps the driving pressure it was
+set to at the patient's own compliance, so the breath size moves. The driving pressure had been
+derived from the _current_ compliance, which would have made the pressure-targeted column quietly
+hold volume too and both columns would have moved together, showing nothing.
+
+The readout names what each column holds and what consequently moves, with the moving quantity
+coloured. It first printed both as "N mL at N cmH₂O", which put a peak pressure beside a set
+pressure — different quantities, and side by side they read as a cost difference between the two
+strategies that is neither the point nor true.
+
+---
+
+### 1.14 The inspiratory pause, and what §3 item 5 actually is
+
+**The pause (§3 item 14).** All four consoles present an end-inspiratory pause — `TPL`, `Tplat`,
+`Insp Pause`, `Pause` — and none of them did anything. `deriveMechanicalInspiratoryTime` returned
+the flow-delivery time alone for a volume-controlled breath, so inspiration ended the moment the
+tidal volume was delivered and there was nothing left of it to hold. §1.4 had split
+`deriveVolumeFlowTimeSeconds` out on the assumption the pause would stay a display value; §1.9
+removed the accidental pause that used to appear when gas was trapped, which left none anywhere.
+
+`derivePauseSeconds` is now part of the inspiratory time, so the valves stay shut for it and it
+counts toward I:E and mean airway pressure as it does on the device. The plateau then falls out of
+machinery that already existed: the volume target stops flow once the breath is delivered, and
+`observedPlateauPressureCmH2O` reads the resulting zero-flow segment.
+
+One thing had to move with it. `flowProfile` normalizes over the **flow** time, not the
+pause-extended inspiratory time — spreading the profile across the pause would deliver the breath
+more slowly instead of holding it, so a decelerating ramp would simply take longer rather than
+plateau.
+
+> **Every case defaults to a pause of 0**, so this is a pure addition: the all-case dump is
+> byte-identical to before it, and no authored criterion can have moved. It only bites when a
+> learner sets it, which is the point.
+
+On MV-01 at 70% (the control's own maximum), inspiratory time goes 0.46 s → 0.78 s, flow holds at
+zero for the tail with the volume steady at 422.8 mL, and the reported plateau goes **14.0 → 19.9**
+— estimated by subtracting a resistive drop before, measured off a real zero-flow segment now. A
+four-second manual hold on the same patient reads 21.5, and the gap is the patient still relaxing:
+a short pause catches them mid-relaxation, a long occlusion does not. That is §1.6's teaching point
+appearing on its own.
+
+**§3 item 5 is not a port (§3 item 5, re-scoped).** The item says `ResizableTeachingWorkspace` is
+"already shared and unused by" CRRT, MCS and ECMO, which is true and badly understates the work.
+The three-pane arrangement earns its keep in MV because of the ten bespoke teaching panels authored
+across §1.2, §1.5 and §1.7 — the middle pane. None of the three has that, and two do not have a
+live device for the first pane either:
+
+| Module | Today                                                                     | What a port would actually mean                            |
+| ------ | ------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| CRRT   | Document-flow lesson; the console is a static `ReadOnlyConsoleFigure`     | Build a live CRRT console **and** author teaching panels   |
+| MCS    | Task workbench with device _tabs_, no live console                        | Same, plus deciding what the primary pane even is          |
+| ECMO   | Already two-column: `LearnLessonPlayer` beside a live console and circuit | Genuine — separate teaching from actions inside the player |
+
+ECMO is the one real candidate, and it is a restructure of a 725-line component rather than a
+layout swap. The other two are module rebuilds. Item 5 is rewritten below to say so.
+
+---
+
 ---
 
 ## 2. Current state
@@ -670,12 +874,16 @@ All merged into `codex/ip-preference-card-builder-v0-1` via `--no-ff` merges (`e
 `b3bfab7`, `4aa8921`, `8aaffc1`). Clean merges throughout — WP10 and the preference-card builder share
 zero files.
 
-Two later commits sit directly on the branch of record, both named "updates":
+Later commits sit directly on the branch of record, the first three all named "updates":
 
-| Commit     | Contents                                                    |
-| ---------- | ----------------------------------------------------------- |
-| `ea7699d9` | §1.4 device fidelity, and the first version of this handoff |
-| `3a1c05a2` | §1.5 follow-up and §1.6 waveform physiology, 29 files       |
+| Commit     | Contents                                                           |
+| ---------- | ------------------------------------------------------------------ |
+| `ea7699d9` | §1.4 device fidelity, and the first version of this handoff        |
+| `3a1c05a2` | §1.5 follow-up and §1.6 waveform physiology, 29 files              |
+| `3a35ce86` | §1.7 through §1.10 — everything from the opening lesson to the     |
+|            | measured-off-the-trace work                                        |
+| `0d72608f` | _(merge)_ "IP literature explorer phase 1" — \*\*another session's |
+|            | work\*\*, unrelated to critical care. See the warning at the top.  |
 
 ### What `ea7699d9` contained (§1.4)
 
@@ -693,10 +901,10 @@ Two later commits sit directly on the branch of record, both named "updates":
 | `__tests__/device-display.test.tsx`            | **new** — 15 tests over the display profiles and the rendered consoles               |
 | `__tests__/components.test.tsx`                | three label expectations updated to the sourced names                                |
 
-### Uncommitted — §1.7 and §1.8
+### What landed in `3a35ce86` (§1.7–§1.10)
 
-`git status` on the branch of record. Paths are relative to
-`src/features/mechanical-ventilation/` unless shown otherwise. §1.5 and §1.6 are in `3a1c05a2`.
+Paths are relative to `src/features/mechanical-ventilation/` unless shown otherwise. §1.5 and §1.6
+are in `3a1c05a2`; §1.11 and §1.12 are still uncommitted and listed after these.
 
 **§1.7 — the `waveform-anatomy` section.** A new pathway section touches every layer, so this is
 the list to copy when adding the next one.
@@ -749,29 +957,73 @@ the list to copy when adding the next one.
 |                                               | breath before reading a now-measured value                                                       |
 | `scripts/critical-care/dump-mv-waveforms.mts` | `EEV` and analytic-vs-trace auto-PEEP columns; `--hold` runs on into the occlusion               |
 
+### Uncommitted — §1.11 through §1.14
+
+The files below plus this handoff. Everything else in §1 is committed.
+
+**§1.11 — the PB980 against its operator's manual.**
+
+| Path                                         | Change                                                                                     |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `content/deviceProfiles.ts`                  | `pb980-operators-manual` source; PB980 `controlOrder`, banner order, `flowPatterns`, bezel |
+|                                              | keys, `VT` label, and a rewritten `displayNote`                                            |
+| `engine/types.ts`                            | optional `flowPatterns` on `VentilatorDisplayProfile`                                      |
+| `components/MechanicalVentilatorConsole.tsx` | flow-pattern options read from the profile instead of being hard-coded                     |
+| `__tests__/device-display.test.tsx`          | banner and bezel expectations re-pinned to the manual, +1 over the settings order          |
+
+**§1.14 — the inspiratory pause.**
+
+| Path                                  | Change                                                                      |
+| ------------------------------------- | --------------------------------------------------------------------------- |
+| `engine/physics.ts`                   | `derivePauseSeconds`; the pause added to `deriveMechanicalInspiratoryTime`  |
+| `engine/simulation.ts`                | `flowProfile` normalized over the flow time rather than inspiratory time    |
+| `__tests__/physics-waveforms.test.ts` | +4 over the default being inert, the held breath, the plateau, and the ramp |
+
+**§1.13 — answer feedback and the compliance slider.**
+
+| Path                                                    | Change                                                                           |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `components/MechanicalVentilationLessonActivity.tsx`    | `AnswerVerdict`; `commitPrediction` no longer advances; `continueFromPrediction` |
+| `components/teaching/waveform-anatomy.tsx`              | compliance slider, per-column held/moved readout, live prose                     |
+| `components/mechanical-ventilation-teaching.module.css` | `.complianceSlider`, `.sliderScale`, `.comparisonReadout`                        |
+| `__tests__/teaching-panel.test.tsx`                     | +1 — the two columns diverge and each holds its own set variable                 |
+| `__tests__/lesson-v2.test.tsx`                          | the walkthrough now reads the verdict and clicks Continue                        |
+
+**§1.12 — Evita and AVEA setting units.**
+
+| Path                                | Change                                                                                   |
+| ----------------------------------- | ---------------------------------------------------------------------------------------- |
+| `content/deviceProfiles.ts`         | `evita-v800-v600-ifu-3n` and `avea-operators-manual-rev-m` sources; AVEA `controlUnits`  |
+|                                     | (`bpm`/`ml`/`sec`); Evita `controlUnitOverrides` for FiO₂; both `displayNote`s rewritten |
+| `engine/types.ts`                   | optional `controlUnitOverrides` on `VentilatorDisplayProfile`                            |
+| `content/deviceDisplay.ts`          | `resolveControlUnit` takes an optional control key and checks the override first         |
+| `__tests__/device-display.test.tsx` | +2 over the AVEA units and the Evita's two spellings of `%`                              |
+
 [PR #26](https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/26) targets
 `main` from the work branch and contains the WP10 commit only. It has **not** been updated with the MV
 work — decide whether to retarget, extend, or close it.
 
 ### Verification status
 
-Re-run at the end of §1.8, on the working tree.
+Re-run at the end of §1.12, on the working tree.
 
-| Check                                   | Result                                                        |
-| --------------------------------------- | ------------------------------------------------------------- |
-| `npm run type-check`                    | clean                                                         |
-| `npm test`                              | **2469 passed / 318 suites**, direct from the main checkout   |
-| `npm run lint`                          | 0 errors (18 pre-existing warnings, none in mechanical-vent.) |
-| `npm run test:a11y`                     | 4 passed                                                      |
-| `npm run validate:critical-care-assets` | passed (19 assets)                                            |
-| Offline render harness                  | 4 consoles × 4 screens and all 10 panels inspected visually   |
-| `npm run dump:mv-waveforms`             | all 15 cases read as sample tables (§1.9)                     |
-| `npm run build`                         | **STILL NOT VERIFIED**                                        |
-| `npm run test:e2e`                      | **STILL NOT RUN**                                             |
+| Check                                   | Result                                                         |
+| --------------------------------------- | -------------------------------------------------------------- |
+| `npm run type-check`                    | clean                                                          |
+| `npm test`                              | **2507 passed / 326 suites**, direct from the main checkout    |
+| `npm run lint`                          | 0 errors (18 pre-existing warnings, none in mechanical-vent.)  |
+| `npm run test:a11y`                     | 4 passed                                                       |
+| `npm run validate:critical-care-assets` | passed (19 assets)                                             |
+| Offline render harness                  | 4 consoles × 4 screens and all 10 panels inspected visually    |
+| `npm run dump:mv-waveforms`             | all 15 cases read as sample tables; **zero flags** (§1.9–1.10) |
+| `npm run build`                         | **STILL NOT VERIFIED**                                         |
+| `npm run test:e2e`                      | **STILL NOT RUN**                                              |
 
-The engine changes in §1.6 and §1.8 were verified by dumping the waveform buffer as a table of
-`paw / flow / volume / phase` and reading the numbers, not by looking at the rendered trace. Both
-defects were invisible in a screenshot and obvious in the dump — see trap 7.
+Every engine change from §1.6 onward was verified by dumping the waveform buffer as a table of
+`paw / flow / volume / phase` and reading the numbers, not by looking at the rendered trace. Those
+defects were invisible in a screenshot and obvious in the dump — see trap 7. The display work in
+§1.4, §1.11 and §1.12 was checked the other way round, in the offline render harness against the
+figure in the manual.
 
 **`npm run build` was never completed.** Its first step, `contentlayer2 build`, ran 42 minutes on the
 MDX corpus in a fresh worktree without finishing; `next build --webpack` against reused contentlayer
@@ -793,20 +1045,40 @@ the wrong tree. Needs that server stopped or a port override.
   harness in §4 serves through — keep that one.
 - **One flaky suite** — `cardiohelp-ecmo/learn-walkthrough` timed out once at 28 s during a full run,
   then passed three times in isolation. Watch it; may need a timeout bump.
+- **Another session shares this checkout.** It committed `0d72608f` mid-way through §1.11 and ran
+  `lint-staged`, whose stash/restore cycle briefly reverted files being edited. Nothing was lost,
+  but: re-read a file before trusting a `grep` that came back empty, prefer synchronous test runs
+  to backgrounded ones, and check `git status` before concluding anything about the working tree.
+- **Suite counts moved for a reason unrelated to this work.** `npm test` collects 326 suites now
+  rather than 318, because that other session added the literature-explorer tests.
 
 ---
 
 ## 3. Future sessions
 
-Roughly in priority order. Items 1–4 and half of 8 are done — see §1.5. Items 9 and 10 are new,
-and came out of the owner's review rather than the original list.
+Numbers are stable and referenced from §1, so completed items stay in place struck through rather
+than being renumbered. **Items 1, 2, 3, 9, 11, 12 and 14 are done.** What is actually open:
 
-1. ~~**Ventilator device fidelity.**~~ Control units done (§1.5). What remains is:
-   - a **sourced PB980 settings layout** — still blocked, and now more so: the service manual PDF is
-     no longer on disk, and it does not publish a Vent Setup layout in any case. Needs the PB980
-     _operator_ manual, which the project does not have.
-   - **re-sourcing the Evita, PB980 and AVEA setting units** against their manuals rather than
-     against each device's already-registered vocabulary. Only the C6 row is manual-verified.
+| Open | Item                                                         | Needs                         |
+| ---- | ------------------------------------------------------------ | ----------------------------- |
+| 4    | Clinical read-through of eight teaching panels               | **the owner** — highest value |
+| 13   | MV-05 and MV-06's numbers after §1.10                        | **the owner**                 |
+| 10   | Two cases that pull the expiratory limb under PEEP           | **the owner** — narrowed to 2 |
+| 6    | MV clinical reconciliation                                   | blocked on the synthesis      |
+| 5    | Three-pane workspace — ECMO only; the other two are rebuilds | buildable (ECMO)              |
+| 16   | Closed loop for the adaptive modes                           | buildable now                 |
+| 15   | Whether Practice cases give an immediate verdict             | **the owner**                 |
+| 7    | Per-module content passes                                    | large                         |
+| 8    | CI build, `test:e2e`, PR #26                                 | housekeeping                  |
+
+The three owner items are all reading and judgement rather than building, and item 4 is the one that
+gates this reaching fellows.
+
+1. ~~**Ventilator device fidelity.**~~ **Done.** Control units (§1.5), the PB980 rebuilt against
+   its operator's manual including the settings layout that had blocked this twice (§1.11), and the
+   Evita and AVEA units re-sourced against their own manuals (§1.12). All four devices' setting
+   names, units, and layouts are now manual-verified against a registered source with a recorded
+   SHA-256.
 2. ~~**Hold interaction wrinkle.**~~ Decided and built (§1.5) — the trace stays on Tools.
 3. ~~**`Step one breath` pauses the run.**~~ Labelled (§1.5).
 4. ~~**Remaining six MV teaching panels.**~~ All authored (§1.5), and a tenth added in §1.7. Each is
@@ -815,8 +1087,15 @@ and came out of the owner's review rather than the original list.
    the owner. **A clinical read-through of the other eight is the highest-value thing left**, and
    should happen before this reaches fellows. `npm run render:mv-teaching` puts all ten on one page
    for exactly that.
-5. **Extend the three-pane workspace to CRRT, MCS and ECMO.** `ResizableTeachingWorkspace` is already
-   shared and unused by them.
+5. **Extend the three-pane workspace — but it is not a port.** Re-scoped in §1.14 after looking
+   at all three. `ResizableTeachingWorkspace` is shared and unused by them, but the arrangement is
+   only worth having because of MV's ten bespoke teaching panels, and none of the three has
+   equivalents. **ECMO** is the one genuine candidate: it is already two-column with a live console,
+   so the work is separating teaching content from guided actions inside its 725-line
+   `LearnLessonPlayer`. **CRRT** is a document-flow lesson whose console is a static figure, and
+   **MCS** has device tabs rather than a live console — for those two this is a module rebuild
+   (build a device surface, author teaching panels), not a layout change. Split them into separate
+   items before starting.
 6. **MV clinical reconciliation** — still blocked on the ventilation synthesis and the owner's
    reconciliation rule (implementation report, decision 2). WP10 deliberately did structure only; the
    MV landing says so. Numeric thresholds stay out until this lands. (Airway pressures now report
@@ -850,13 +1129,15 @@ and came out of the owner's review rather than the original list.
     because its auto-PEEP is now a real threshold load against PS 18. Every authored criterion still
     solves on all four devices, so this is a question of whether the numbers teach what you want,
     not whether anything is broken.
-14. **`pausePercent` is display-only.** All four consoles present an inspiratory pause (`Tplat` /
-    `TPL` / `Insp pause` / `Pause`) and the engine has never implemented one — §1.4 split
-    `deriveVolumeFlowTimeSeconds` out on the assumption it would stay a display value. §1.9 removed
-    the accidental pause that used to appear when gas was trapped, so there is now none anywhere.
-    Implementing it would put a real plateau on the trace without a manual hold, which is how a
-    plateau is usually read.
-15. **Adaptive modes do not close their loop.** PRVC/VC+/ASV set the pressure open-loop from
+14. ~~**`pausePercent` is display-only.**~~ Implemented in §1.14. The pause is part of the
+    inspiratory time now, so the four consoles' pause control holds the delivered breath and draws
+    a plateau the console can measure. Every case defaults to 0, so nothing else moved.
+15. **Should Practice cases also give an immediate verdict?** §1.13 gave the Learn questions a
+    right/wrong-and-why panel at the point of answering. `CaseWorkflow`'s practice prediction still
+    commits to "Initial frame recorded" and defers the reveal to the debrief, which is defensible
+    for an assessment-flavoured surface — but it is now the only place in the module where
+    answering a question says nothing back. Worth a deliberate decision either way.
+16. **Adaptive modes do not close their loop.** PRVC/VC+/ASV set the pressure open-loop from
     target ÷ compliance; an active patient's effort then adds volume on top and the controller never
     backs the pressure off. Visible now that tidal volume is measured — a 300 mL target delivers
     ~405 mL on MV-01. Real controllers converge over a few breaths.
@@ -884,17 +1165,44 @@ and came out of the owner's review rather than the original list.
 - `src/features/mechanical-ventilation/components/teaching/` — the seven later panels, one per file,
   over the primitives in `teaching/shared.tsx` (`latestBreath`, `tracePath`, `TextEquivalent`,
   `ModelBoundary`, direction helpers). New panels go here.
+- `src/features/mechanical-ventilation/engine/physics.ts` — the pure physics, and since §1.6 also
+  the **observers**: `observedPeakAirwayPressureCmH2O`, `observedTidalVolumeMl`,
+  `observedPlateauPressureCmH2O`, `observedEndExpiratoryVolumeMl`, `observedExpiratoryTimeSeconds`.
+  Each reads a quantity off the waveform buffer, with the analytic value kept only as the cold-start
+  fallback. If you are adding a reported number, add it here in that shape — see trap 10.
+- `src/features/mechanical-ventilation/engine/simulation.ts` — the per-sample waveform generator and
+  `advanceSimulation`. `nextWaveformSample` is where every clinical sign is drawn; `inspirationAnchor`
+  is how anything measured from the start of a breath finds that start.
 - `src/features/mechanical-ventilation/content/deviceProfiles.ts` — the four device profiles and the
   source registry. Everything a console shows about a device is authored here; each `display` block
-  carries a `displayNote` naming the pages it came from.
+  carries a `displayNote` naming the pages it came from, and every source carries a SHA-256. As of
+  §1.12 **all four devices are verified against their own operator's manual**, so a new claim about
+  any of them should cite one.
 - `src/features/mechanical-ventilation/content/deviceDisplay.ts` — the pure resolvers behind those
-  profiles: metric lookup, unit spelling, control ordering and grouping, the PB980 breath-phase
-  letter.
+  profiles: metric lookup, unit spelling (`controlUnits`, then the per-setting `controlUnitOverrides`),
+  control ordering and grouping, the PB980 breath-phase letter.
 - `src/features/mechanical-ventilation/components/MechanicalVentilatorConsole.tsx` — reads both.
   **Do not branch on `deviceId` here.** Adding a device means authoring a profile, not editing the
   component. The only three `deviceId` checks left are AVEA's Touch-Turn-Touch idiom — the
   15-second pending timeout and the `MODE ACCEPT` / `ACCEPT` legends — which is behavior, not
-  display.
+  display. Anything that varies by vendor gets a profile field: `controlOrder`, `controlGroups`,
+  `flowPatterns`, `bezelKeys`, `controlUnitOverrides` were all added that way.
+
+**The two harnesses**
+
+Both routes are behind login, so neither the app nor `curl` can check this work. Use these instead —
+they are committed, and rebuilding them from scratch has already cost three sessions.
+
+```bash
+npm run dump:mv-waveforms                  # the numbers: all 15 cases, or one in full
+npm run render:mv-console                  # the pixels: 4 devices × 4 screens
+npm run render:mv-teaching                 # all 10 teaching panels on one page
+MV_CASE=MV-08 npm run render:mv-console    # any case on all four consoles
+```
+
+Serve the render output through the `trainer-prod-static` launch config on :8099. The dump's summary
+line screens for the defect class §1.10 was about — a derived number the trace does not support —
+and should stay at zero flags.
 
 **Traps that cost time**
 

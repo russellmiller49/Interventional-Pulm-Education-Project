@@ -222,6 +222,80 @@ function LearningItemChoices({
   )
 }
 
+/**
+ * What the learner gets back the moment they answer, in the pane they answered in.
+ *
+ * The reasoning feedback already existed, but it rendered in the task panel *after*
+ * `commitPrediction` had advanced the phase — so the question was replaced before any verdict
+ * appeared and the answer read as unacknowledged. This says plainly whether the answer was right,
+ * why, and why each of the others is not, before anything moves.
+ *
+ * Styled for the light "Your turn" pane rather than reusing the dark shared panel; that pane
+ * re-declares light theme tokens locally (§1.3 item 8) and the shared component is written for the
+ * dark workbench.
+ */
+const verdictCopy: Readonly<
+  Record<ClinicalLearningItem['choices'][number]['plausibility'], { title: string; tone: string }>
+> = {
+  best: { title: 'Correct', tone: 'border-emerald-500/60 bg-emerald-50' },
+  'reasonable-but-incomplete': {
+    title: 'Partly right — defensible, but not the whole picture',
+    tone: 'border-amber-500/60 bg-amber-50',
+  },
+  'incorrect-mechanism': {
+    title: 'Not quite — that mechanism predicts a different pattern',
+    tone: 'border-rose-500/60 bg-rose-50',
+  },
+  unsafe: {
+    title: 'Unsafe — this would harm a real patient',
+    tone: 'border-rose-600/70 bg-rose-100',
+  },
+}
+
+function AnswerVerdict({
+  item,
+  choiceId,
+}: {
+  readonly item: ClinicalLearningItem
+  readonly choiceId: string
+}) {
+  const chosen = item.choices.find((choice) => choice.id === choiceId)
+  if (!chosen) return null
+  const others = item.choices.filter((choice) => choice.id !== choiceId)
+  const copy = verdictCopy[chosen.plausibility]
+  return (
+    <article
+      className={`rounded-xl border p-3 text-sm leading-6 ${copy.tone}`}
+      role={chosen.plausibility === 'unsafe' ? 'alert' : 'status'}
+      aria-live="polite"
+      data-plausibility={chosen.plausibility}
+    >
+      <p className="font-semibold">{copy.title}</p>
+      <p className="mt-1">
+        <span className="font-medium">You chose:</span> {chosen.label}
+      </p>
+      <p className="mt-2">{chosen.rationale}</p>
+      {others.length > 0 ? (
+        <details className="mt-3 rounded-lg border border-black/10 bg-white/60 p-2">
+          <summary className="min-h-9 cursor-pointer font-medium">
+            Why the other answers do not fit
+          </summary>
+          <ul className="mt-2 grid gap-2">
+            {others.map((choice) => (
+              <li key={choice.id}>
+                <span className="font-medium">{choice.label}</span> — {choice.rationale}
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+      <p className="mt-3 border-t border-black/10 pt-2">
+        <span className="font-medium">How to tell them apart:</span> {item.explanation}
+      </p>
+    </article>
+  )
+}
+
 function GuidedActions({
   actions,
   state,
@@ -540,10 +614,19 @@ export function MechanicalVentilationLessonActivity({
     if (wasPaused) dispatchSimulation({ type: 'SET_PAUSED', paused: true })
   }
 
+  /*
+   * Commit marks the answer and shows the verdict; it deliberately does **not** advance. Advancing
+   * here replaced the question with the next phase's controls before the learner had been told
+   * whether they were right, so a committed prediction read as if nothing had happened.
+   */
   function commitPrediction() {
     if (!predictionChoice) return
     setPredictionCommitted(true)
     lifecycleAnalytics.recordPredictionSubmitted()
+    setFeedback('Prediction recorded. Read the verdict, then continue.')
+  }
+
+  function continueFromPrediction() {
     dispatchSession({ type: 'CLEAR_EVIDENCE' })
     advance('act')
     setFeedback('Initial frame recorded. Compare it with the multitrace response below.')
@@ -682,17 +765,31 @@ export function MechanicalVentilationLessonActivity({
         <LearningItemChoices
           item={learningItems.prediction}
           selected={predictionChoice}
+          disabled={predictionCommitted}
           name={`${lesson.id}-prediction`}
           onSelect={setPredictionChoice}
         />
-        <button
-          type="button"
-          disabled={!predictionChoice}
-          className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-          onClick={commitPrediction}
-        >
-          Commit prediction
-        </button>
+        {predictionCommitted && predictionChoice ? (
+          <>
+            <AnswerVerdict item={learningItems.prediction} choiceId={predictionChoice} />
+            <button
+              type="button"
+              className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+              onClick={continueFromPrediction}
+            >
+              Continue
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            disabled={!predictionChoice}
+            className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+            onClick={commitPrediction}
+          >
+            Commit prediction
+          </button>
+        )}
       </div>
     )
   } else if (phase === 'act') {
@@ -755,6 +852,10 @@ export function MechanicalVentilationLessonActivity({
           name={`${lesson.id}-transfer`}
           onSelect={setTransferChoice}
         />
+        {/* Same verdict the prediction gets, as soon as an interpretation is chosen. */}
+        {transferChoice ? (
+          <AnswerVerdict item={learningItems.transfer} choiceId={transferChoice} />
+        ) : null}
         <GuidedActions
           actions={runtime.transfer.actions}
           state={simulation}

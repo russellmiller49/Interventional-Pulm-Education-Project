@@ -79,7 +79,14 @@ export function formatMonitorField(
  * device's `controlUnits`. Units the device does not rename keep the simulator's neutral spelling,
  * so an unmapped unit is passed through rather than blanked.
  */
-export function resolveControlUnit(display: VentilatorDisplayProfile, unit: string): string {
+export function resolveControlUnit(
+  display: VentilatorDisplayProfile,
+  unit: string,
+  control?: VentilatorControlKey,
+): string {
+  // A per-setting exception wins: one unit string can be spelled two ways on the same device.
+  const override = control ? display.controlUnitOverrides?.[control] : undefined
+  if (override) return override
   if (unit === 'cmH₂O') return display.pressureUnit
   return display.controlUnits[unit as VentilatorNeutralControlUnit] ?? unit
 }

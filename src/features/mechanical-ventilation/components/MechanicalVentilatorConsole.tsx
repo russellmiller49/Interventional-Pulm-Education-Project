@@ -36,6 +36,7 @@ import {
   isTwoLevelMode,
 } from '../engine'
 import type {
+  FlowPattern,
   VentilatorBezelKey,
   VentilatorDisplayProfile,
   VentilatorScreen,
@@ -46,6 +47,15 @@ import type {
 } from '../engine'
 import { WaveformLoops, WaveformStrip } from './WaveformStrip'
 import styles from './mechanical-ventilation.module.css'
+
+/** How this simulator names each flow pattern, and the fallback set for an unsourced device. */
+const flowPatternLabels: Record<FlowPattern, string> = {
+  square: 'Square',
+  'decelerating-50': '50% decelerating',
+  sine: 'Sine',
+  'decelerating-100': '100% decelerating',
+}
+const allFlowPatterns = Object.keys(flowPatternLabels) as FlowPattern[]
 
 interface MechanicalVentilatorConsoleProps {
   state: VentilationSimulationState
@@ -908,6 +918,8 @@ export function MechanicalVentilatorConsole({
   const bezelBeforeKnob = display.bezelKeys.slice(0, display.knobPosition)
   const bezelAfterKnob = display.bezelKeys.slice(display.knobPosition)
   const lockOnBezel = display.bezelKeys.some((key) => key.action === 'screen-lock')
+  // A device that publishes its own set offers only those; the rest keep the simulator's four.
+  const flowPatternOptions = display.flowPatterns ?? allFlowPatterns
 
   return (
     <section
@@ -1099,10 +1111,11 @@ export function MechanicalVentilatorConsole({
                         )
                       }
                     >
-                      <option value="square">Square</option>
-                      <option value="decelerating-50">50% decelerating</option>
-                      <option value="sine">Sine</option>
-                      <option value="decelerating-100">100% decelerating</option>
+                      {flowPatternOptions.map((pattern) => (
+                        <option key={pattern} value={pattern}>
+                          {flowPatternLabels[pattern]}
+                        </option>
+                      ))}
                     </select>
                   </label>
                 ) : null}

@@ -254,14 +254,29 @@ export function VentilationWaveformAnatomy({
   const breath = useMemo(() => latestBreath(state.waveforms), [state.waveforms])
   const { patient, ventilator, measurements } = state
 
-  const compliance = Math.max(0.005, patient.mechanics.complianceLPerCmH2O)
+  const patientCompliance = Math.max(0.005, patient.mechanics.complianceLPerCmH2O)
   const resistance = Math.max(
     1,
     patient.mechanics.resistanceCmH2OPerLps + patient.mechanics.tubeResistanceCmH2OPerLps,
   )
   const peep = ventilator.settings.peepCmH2O
   const tidalVolumeL = Math.max(0.1, measurements.exhaledVtMl / 1000)
-  const drivingPressure = Math.max(5, tidalVolumeL / compliance)
+
+  /*
+   * The learner can stiffen or soften the lung and watch which trace moves. `stiffness` is a
+   * multiplier on this patient's own compliance, so 1.0 is always wherever the case actually is.
+   */
+  const [stiffness, setStiffness] = useState(1)
+  const compliance = Math.max(0.005, patientCompliance * stiffness)
+
+  /*
+   * Each column holds *its own* set variable fixed while compliance moves, which is the whole point
+   * of the comparison. Volume targeting keeps the tidal volume; pressure targeting keeps the
+   * driving pressure it was set to at this patient's own compliance. Deriving the driving pressure
+   * from the *current* compliance instead would have made the pressure-targeted column silently
+   * hold volume too, and the two columns would have moved together — showing nothing.
+   */
+  const drivingPressure = Math.max(5, tidalVolumeL / patientCompliance)
 
   const inspiratorySeconds = Math.max(0.2, measurements.mechanicalInspiratoryTimeSeconds)
   const comparison = useMemo(
@@ -269,6 +284,11 @@ export function VentilationWaveformAnatomy({
       idealBreaths(compliance, resistance, peep, tidalVolumeL, drivingPressure, inspiratorySeconds),
     [compliance, resistance, peep, tidalVolumeL, drivingPressure, inspiratorySeconds],
   )
+
+  // What the two columns cost: the pressure volume targeting needs, the volume pressure delivers.
+  const volumeTargetedPeak =
+    peep + resistance * (tidalVolumeL / inspiratorySeconds) + tidalVolumeL / compliance
+  const pressureTargetedVtMl = drivingPressure * compliance * 1000
 
   const pressurePath = tracePath(breath, 'pawCmH2O', -5, 45, 300, 62)
   const flowPath = tracePath(breath, 'flowLMin', -80, 80, 300, 62)
@@ -373,10 +393,70 @@ export function VentilationWaveformAnatomy({
         </div>
         <figcaption>
           The same lung both times — compliance {round(compliance * 1000)} mL/cmH₂O, resistance{' '}
-          {round(resistance)} cmH₂O/L/s, taken from this patient. Notice which trace is the
-          rectangle: it moves from flow to pressure, and everything else follows from that.
+          {round(resistance)} cmH₂O/L/s. Notice which trace is the rectangle: it moves from flow to
+          pressure, and everything else follows from that.
         </figcaption>
       </figure>
+
+      <div className={styles.stepDetail}>
+        <span>Change the lung and watch which trace moves</span>
+        <label className={styles.complianceSlider}>
+          <span>
+            Compliance <strong>{round(compliance * 1000)} mL/cmH₂O</strong>
+            {stiffness === 1
+              ? ' — this patient'
+              : stiffness < 1
+                ? ' — stiffer'
+                : ' — more compliant'}
+          </span>
+          <input
+            type="range"
+            min={0.4}
+            max={2}
+            step={0.05}
+            value={stiffness}
+            onChange={(event) => setStiffness(Number(event.target.value))}
+            aria-label="Respiratory-system compliance, as a multiple of this patient's own"
+            aria-valuetext={`${round(compliance * 1000)} millilitres per centimetre of water`}
+          />
+          <span className={styles.sliderScale} aria-hidden="true">
+            <span>Stiffer</span>
+            <span>This patient</span>
+            <span>More compliant</span>
+          </span>
+        </label>
+        {/*
+         * Each column names what it *holds* and what consequently *moves*. Printing both as
+         * "N mL at N cmH₂O" put a peak pressure beside a set pressure — different quantities, and
+         * side by side they read as a cost difference between the two strategies, which is not the
+         * point and is not true.
+         */}
+        <dl className={styles.comparisonReadout}>
+          <div>
+            <dt>Volume targeted holds</dt>
+            <dd>{round(tidalVolumeL * 1000)} mL</dd>
+            <dt>so peak pressure moves to</dt>
+            <dd data-moves="true">{round(volumeTargetedPeak)} cmH₂O</dd>
+          </div>
+          <div>
+            <dt>Pressure targeted holds</dt>
+            <dd>{round(peep + drivingPressure)} cmH₂O</dd>
+            <dt>so the breath moves to</dt>
+            <dd data-moves="true">{round(pressureTargetedVtMl)} mL</dd>
+          </div>
+        </dl>
+        <p aria-live="polite">
+          {stiffness === 1
+            ? 'Both columns are set to deliver the same breath at this patient’s own compliance. Move the slider to make the lung stiffer or more compliant.'
+            : stiffness < 1
+              ? `A stiffer lung. Volume targeting still delivers ${round(tidalVolumeL * 1000)} mL — it just costs ${round(volumeTargetedPeak)} cmH₂O to do it, so the pressure trace rises and the flow and volume traces are unchanged. Pressure targeting holds ${round(peep + drivingPressure)} cmH₂O, so the pressure trace is unchanged and the breath shrinks to ${round(pressureTargetedVtMl)} mL.`
+              : `A more compliant lung. Volume targeting still delivers ${round(tidalVolumeL * 1000)} mL and needs only ${round(volumeTargetedPeak)} cmH₂O for it. Pressure targeting holds the same ${round(peep + drivingPressure)} cmH₂O and now delivers ${round(pressureTargetedVtMl)} mL.`}
+        </p>
+        <p>
+          Expiration is passive in both columns, so that limb is identical — which is why the
+          expiratory limb reports the lung rather than the machine.
+        </p>
+      </div>
 
       <div className={styles.evidenceTable} aria-label="What changes between the two">
         <div className={styles.evidenceRow}>

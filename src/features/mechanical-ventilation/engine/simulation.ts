@@ -14,6 +14,7 @@ import {
   effectivePressureAboveBaselineCmH2O,
   deriveEffectivePatient,
   deriveMeasurements,
+  deriveVolumeFlowTimeSeconds,
   equationOfMotionPressure,
   expiratoryAirwayPressure,
   hasPerformedEffect,
@@ -413,11 +414,13 @@ function nextWaveformSample(
       // breath-cycle phase instead ran a stacked inflation past the end of its own profile, where a
       // decelerating pattern evaluates to zero flow.
       const anchor = inspirationAnchor(state.waveforms, time, volumeL)
-      flowLps = flowProfile(
-        settings,
-        time - anchor.time,
-        measurements.mechanicalInspiratoryTimeSeconds,
-      )
+      /*
+       * Normalized over the *flow* time, not `mechanicalInspiratoryTimeSeconds`, which now includes
+       * the end-inspiratory pause. Spreading the profile across the pause as well would deliver the
+       * breath more slowly instead of holding it, which is the opposite of what the setting does —
+       * a decelerating ramp would simply take longer rather than plateau.
+       */
+      flowLps = flowProfile(settings, time - anchor.time, deriveVolumeFlowTimeSeconds(settings))
       const targetVolume =
         targetTidalVolumeMl(settings, patient, definition.predictedBodyWeightKg) / 1000
       if (volumeL - anchor.volumeL >= targetVolume) flowLps = 0
