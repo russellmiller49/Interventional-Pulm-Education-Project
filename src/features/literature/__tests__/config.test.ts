@@ -1,6 +1,7 @@
 import manifestExample from '../../../../config/literature/import-manifest.example.json'
 import {
   flattenLiteratureTaxonomy,
+  literatureGoldSetLabels,
   literatureQueryRegistry,
   literatureTaxonomy,
   literatureTopicRules,
@@ -8,6 +9,7 @@ import {
 } from '@/features/literature/config'
 import {
   literatureImportManifestSchema,
+  literatureGoldSetLabelsSchema,
   literatureQueryRegistrySchema,
   literatureTaxonomySchema,
   literatureTopicRulesSchema,
@@ -19,6 +21,7 @@ describe('literature configuration', () => {
     expect(() => literatureQueryRegistrySchema.parse(literatureQueryRegistry)).not.toThrow()
     expect(() => literatureTaxonomySchema.parse(literatureTaxonomy)).not.toThrow()
     expect(() => literatureTopicRulesSchema.parse(literatureTopicRules)).not.toThrow()
+    expect(() => literatureGoldSetLabelsSchema.parse(literatureGoldSetLabels)).not.toThrow()
     expect(() => literatureImportManifestSchema.parse(manifestExample)).not.toThrow()
   })
 

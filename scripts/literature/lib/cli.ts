@@ -63,6 +63,23 @@ export function numberArgument(arguments_: ParsedCliArguments, key: string, fall
   return value
 }
 
+export function nonNegativeIntegerArgument(
+  arguments_: ParsedCliArguments,
+  key: string,
+  fallback?: number,
+) {
+  const raw = stringArgument(arguments_, key)
+  if (raw === undefined) return fallback
+  if (!/^\d+$/u.test(raw)) {
+    throw new Error(`--${key} must be a non-negative integer.`)
+  }
+  const value = Number(raw)
+  if (!Number.isSafeInteger(value) || value < 0) {
+    throw new Error(`--${key} must be a non-negative integer.`)
+  }
+  return value
+}
+
 export function hasFlag(arguments_: ParsedCliArguments, key: string) {
   return arguments_.flags.has(key)
 }

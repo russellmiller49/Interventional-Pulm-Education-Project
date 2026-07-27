@@ -164,9 +164,14 @@ export default async function LiteratureAdminPage({
           <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">{t('heading')}</h1>
           <p className="text-base leading-7 text-muted-foreground">{t('description')}</p>
         </div>
-        <Button asChild variant="outline">
-          <Link href="/literature?adminPreview=1">{t('openPreview')}</Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild>
+            <Link href="/admin/literature/gold-set">Open gold-set review</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/literature?adminPreview=1">{t('openPreview')}</Link>
+          </Button>
+        </div>
       </section>
 
       <section

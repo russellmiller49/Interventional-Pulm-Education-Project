@@ -65,14 +65,36 @@ and taxonomy version `1.0.0`.
 
 ## 3. Generate and review a provenance manifest
 
+For the supplied IP corpus, use the explicit top-level folder provenance:
+
+```bash
+npm run literature:manifest -- \
+  --corpus-root "IP_PubMed/nbib files" \
+  --output local-data/literature/ip-corpus-manifest.v1.json
+```
+
+The exact folder names map as follows:
+
+| Folder                 | Source kind            |
+| ---------------------- | ---------------------- |
+| `Full Journals`        | `core_journal`         |
+| `Expanded-journal`     | `expanded_journal`     |
+| `All-PubMed discovery` | `all_pubmed_discovery` |
+
+This is user-supplied source-tier provenance, not an inference from article content. An exact
+registry ID in a filename is retained when available. The original filename is always retained
+for every PMID occurrence.
+
+For another corpus without these three agreed folder names, use conservative filename mapping:
+
 ```bash
 npm run literature:manifest -- \
   --directory "/absolute/path/to/nbib files" \
   --output local-data/literature/import-manifest.json
 ```
 
-The generator maps a file only when its filename contains exactly one unambiguous registry source
-or query ID. Every other entry is emitted as:
+Outside an agreed corpus-root folder, the generator maps a file only when its filename contains
+exactly one unambiguous registry source or query ID. Every other entry is emitted as:
 
 ```json
 {

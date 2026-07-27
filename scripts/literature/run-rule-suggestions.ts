@@ -78,21 +78,24 @@ async function main() {
 
   const writeMode = resolveLiteratureWriteMode(arguments_, limit)
   const client = writeMode.client ?? createLiteratureReadClient(arguments_)
-  let offset = 0
+  let afterPmid: string | null = null
   let processed = 0
   let suggestionCount = 0
 
   while (processed < limit) {
     const take = Math.min(batchSize, limit - processed)
+    let articleQuery = client
+      .from('literature_articles')
+      .select('pmid,title,abstract,mesh_terms,author_keywords')
+      .eq('relevance_state', state)
+      .order('pmid', { ascending: true })
+      .limit(take)
+    if (afterPmid) {
+      articleQuery = articleQuery.gt('pmid', afterPmid)
+    }
     const articles =
-      (await executeDatabaseCall<ArticleRow[]>('Article suggestion query', () =>
-        client
-          .from('literature_articles')
-          .select('pmid,title,abstract,mesh_terms,author_keywords')
-          .eq('relevance_state', state)
-          .order('pmid', { ascending: true })
-          .range(offset, offset + take - 1),
-      )) ?? []
+      (await executeDatabaseCall<ArticleRow[]>('Article suggestion query', () => articleQuery)) ??
+      []
 
     if (articles.length === 0) {
       break
@@ -148,7 +151,7 @@ async function main() {
     }
 
     processed += articles.length
-    offset += articles.length
+    afterPmid = articles.at(-1)?.pmid ?? afterPmid
     if (articles.length < take) {
       break
     }

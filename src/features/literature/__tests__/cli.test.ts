@@ -1,5 +1,6 @@
 import {
   assertKnownArguments,
+  nonNegativeIntegerArgument,
   numberArgument,
   parseCliArguments,
   stringArgument,
@@ -31,6 +32,13 @@ describe('literature command-line parsing', () => {
   it('rejects value options supplied as bare flags', () => {
     const parsed = parseCliArguments(['--manifest'])
     expect(() => stringArgument(parsed, 'manifest')).toThrow('--manifest requires a value.')
+  })
+
+  it('allows zero only for explicitly non-negative integer options', () => {
+    const parsed = parseCliArguments(['--test-percent=0'])
+
+    expect(nonNegativeIntegerArgument(parsed, 'test-percent')).toBe(0)
+    expect(() => numberArgument(parsed, 'test-percent')).toThrow('positive integer')
   })
 
   it('rejects unknown options', () => {
