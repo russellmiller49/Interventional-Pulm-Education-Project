@@ -204,6 +204,19 @@ describe('main site auth access helpers', () => {
     expect(getRequiredEntitlement('/tnm-9-staging', params())).toBeNull()
   })
 
+  it('keeps every localized literature route site-admin-only with one analytics id', () => {
+    for (const path of [
+      '/literature',
+      '/es/literature',
+      '/zh-CN/literature/methods',
+      '/literature/article/12345678',
+    ]) {
+      expect(isPublicPath(path)).toBe(false)
+      expect(getRequiredEntitlement(path, params())).toBe('site_admin')
+      expect(resolveSiteModuleId(path)).toBe('literature')
+    }
+  })
+
   it('tracks the protected SOCRATES builder separately from the public demo', () => {
     expect(isPublicPath('/socrates-builder')).toBe(false)
     expect(isPublicUnlistedPath('/socrates-builder')).toBe(false)

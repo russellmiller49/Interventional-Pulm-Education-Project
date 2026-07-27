@@ -250,6 +250,10 @@ export function getRequiredEntitlement(
     return 'site_admin'
   }
 
+  if (normalizedPathname === '/literature' || normalizedPathname.startsWith('/literature/')) {
+    return 'site_admin'
+  }
+
   if (normalizedPathname.startsWith('/ip-registry')) {
     return 'ip_registry'
   }
@@ -363,6 +367,10 @@ export function resolveSiteModuleId(pathname: string) {
 
   if (first === 'preference-cards') {
     return 'preference-cards'
+  }
+
+  if (first === 'literature') {
+    return 'literature'
   }
 
   // Collapse subroutes (hub/learn/practice/assess) into one module id so
