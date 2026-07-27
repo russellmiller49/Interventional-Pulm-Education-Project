@@ -1,0 +1,53 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
+const migrationPath = join(
+  process.cwd(),
+  'supabase/migrations/20260727164510_add_literature_gold_set.sql',
+)
+
+describe('gold-set database contract', () => {
+  const sql = readFileSync(migrationPath, 'utf8')
+  const tables = [
+    'literature_gold_set_batches',
+    'literature_gold_set_items',
+    'literature_gold_set_review_drafts',
+    'literature_gold_set_reviews',
+    'literature_gold_set_events',
+  ]
+
+  it('creates service-only, RLS-protected tables', () => {
+    for (const table of tables) {
+      expect(sql).toContain(`create table public.${table}`)
+      expect(sql).toContain(`alter table public.${table} enable row level security`)
+      expect(sql).toContain(`revoke all on table public.${table} from public, anon, authenticated`)
+      expect(sql).toContain(`on table public.${table} to service_role`)
+    }
+  })
+
+  it('implements the single-reviewer workflow without adjudication entities', () => {
+    expect(sql).not.toContain('second_reviewer')
+    expect(sql).not.toContain('adjudication')
+    expect(sql).toContain('unique (item_id, revision)')
+    expect(sql).toContain('supersedes_review_id')
+    expect(sql).toContain('is_blinded')
+  })
+
+  it('protects first-pass blinding, immutable history, and frozen batches', () => {
+    expect(sql).toContain('automated signals may only be revealed after the first completed review')
+    expect(sql).toContain('the first completed review must remain blinded')
+    expect(sql).toContain('is append-only')
+    expect(sql).toContain('frozen gold-set batches are immutable')
+    expect(sql).toContain(
+      'a batch can only be frozen after every item is completed and drafts are cleared',
+    )
+  })
+
+  it('uses keyset candidate pagination and database-side response blinding', () => {
+    expect(sql).toContain('p_after_pmid')
+    expect(sql).toContain('article.pmid::numeric > p_after_pmid::numeric')
+    expect(sql).toContain('get_literature_gold_review_item_v1')
+    expect(sql).toContain('when selected_item.supplemental_metadata_revealed_at is null then null')
+    expect(sql).toContain('and selected_item.automated_signals_revealed_at is not null')
+  })
+})

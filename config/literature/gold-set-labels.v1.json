@@ -1,0 +1,152 @@
+{
+  "label_schema_version": "1.0.0",
+  "relevance_definition_version": "1.0.0",
+  "relevance_labels": [
+    {
+      "id": "include_core",
+      "label": "Include: core IP",
+      "description": "The article's central question concerns an interventional pulmonology procedure, device, technique, outcome, complication, training method, or directly associated diagnostic or therapeutic workflow."
+    },
+    {
+      "id": "include_adjacent",
+      "label": "Include: adjacent",
+      "description": "The article is not primarily an IP study but is directly useful to IP practice, such as anesthesia, pathology, molecular adequacy, procedural planning imaging, or bronchoscopic localization."
+    },
+    {
+      "id": "exclude",
+      "label": "Exclude",
+      "description": "The procedural connection is incidental, absent, or outside interventional pulmonology."
+    },
+    {
+      "id": "uncertain",
+      "label": "Uncertain",
+      "description": "Available metadata is insufficient for a defensible decision or the article sits at an unresolved scope boundary."
+    }
+  ],
+  "metadata_sufficiency_labels": [
+    {
+      "id": "adequate_abstract",
+      "label": "Adequate abstract"
+    },
+    {
+      "id": "limited_abstract",
+      "label": "Limited abstract"
+    },
+    {
+      "id": "no_abstract",
+      "label": "No abstract"
+    },
+    {
+      "id": "conflicting_metadata",
+      "label": "Conflicting metadata"
+    }
+  ],
+  "reviewer_confidence_labels": [
+    {
+      "id": "high",
+      "label": "High"
+    },
+    {
+      "id": "moderate",
+      "label": "Moderate"
+    },
+    {
+      "id": "low",
+      "label": "Low"
+    }
+  ],
+  "technology_tags": [
+    {
+      "id": "convex-ebus",
+      "label": "Convex-probe EBUS"
+    },
+    {
+      "id": "eus-b",
+      "label": "EUS-B"
+    },
+    {
+      "id": "radial-ebus",
+      "label": "Radial EBUS"
+    },
+    {
+      "id": "robotic-bronchoscopy",
+      "label": "Robotic bronchoscopy"
+    },
+    {
+      "id": "electromagnetic-navigation",
+      "label": "Electromagnetic navigation"
+    },
+    {
+      "id": "cone-beam-ct",
+      "label": "Cone-beam CT"
+    },
+    {
+      "id": "augmented-fluoroscopy",
+      "label": "Augmented fluoroscopy"
+    },
+    {
+      "id": "virtual-bronchoscopy",
+      "label": "Virtual bronchoscopy"
+    },
+    {
+      "id": "transbronchial-cryobiopsy",
+      "label": "Transbronchial cryobiopsy"
+    },
+    {
+      "id": "endobronchial-valve",
+      "label": "Endobronchial valve"
+    },
+    {
+      "id": "airway-stent",
+      "label": "Airway stent"
+    },
+    {
+      "id": "rigid-bronchoscopy",
+      "label": "Rigid bronchoscopy"
+    },
+    {
+      "id": "electrocautery",
+      "label": "Electrocautery"
+    },
+    {
+      "id": "argon-plasma-coagulation",
+      "label": "Argon plasma coagulation"
+    },
+    {
+      "id": "laser",
+      "label": "Bronchoscopic laser"
+    },
+    {
+      "id": "cryotherapy",
+      "label": "Cryotherapy"
+    },
+    {
+      "id": "photodynamic-therapy",
+      "label": "Photodynamic therapy"
+    },
+    {
+      "id": "brachytherapy",
+      "label": "Endobronchial brachytherapy"
+    },
+    {
+      "id": "indwelling-pleural-catheter",
+      "label": "Indwelling pleural catheter"
+    },
+    {
+      "id": "medical-thoracoscopy",
+      "label": "Medical thoracoscopy / pleuroscopy"
+    },
+    {
+      "id": "bronchial-thermoplasty",
+      "label": "Bronchial thermoplasty"
+    },
+    {
+      "id": "whole-lung-lavage",
+      "label": "Whole-lung lavage"
+    },
+    {
+      "id": "percutaneous-tracheostomy",
+      "label": "Percutaneous tracheostomy"
+    }
+  ]
+}

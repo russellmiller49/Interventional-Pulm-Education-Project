@@ -216,8 +216,62 @@ export const literatureTopicRulesSchema = z.object({
   ),
 })
 
+const goldSetLabelOptionSchema = z.object({
+  id: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9][a-z0-9_-]*$/u),
+  label: z.string().trim().min(1).max(160),
+  description: z.string().trim().min(1).max(2_000).optional(),
+})
+
+export const literatureGoldSetLabelsSchema = z
+  .object({
+    label_schema_version: z.string().trim().min(1).max(40),
+    relevance_definition_version: z.string().trim().min(1).max(40),
+    relevance_labels: z.array(goldSetLabelOptionSchema).length(4),
+    metadata_sufficiency_labels: z.array(goldSetLabelOptionSchema).length(4),
+    reviewer_confidence_labels: z.array(goldSetLabelOptionSchema).length(3),
+    technology_tags: z.array(goldSetLabelOptionSchema).min(1),
+  })
+  .superRefine((config, context) => {
+    const expected = {
+      relevance_labels: ['include_core', 'include_adjacent', 'exclude', 'uncertain'],
+      metadata_sufficiency_labels: [
+        'adequate_abstract',
+        'limited_abstract',
+        'no_abstract',
+        'conflicting_metadata',
+      ],
+      reviewer_confidence_labels: ['high', 'moderate', 'low'],
+    } as const
+
+    for (const [field, expectedIds] of Object.entries(expected)) {
+      const actualIds = new Set(config[field as keyof typeof expected].map((option) => option.id))
+      expectedIds.forEach((id) => {
+        if (!actualIds.has(id)) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Missing required gold-set label: ${id}`,
+            path: [field],
+          })
+        }
+      })
+    }
+
+    const technologyIds = config.technology_tags.map((option) => option.id)
+    if (new Set(technologyIds).size !== technologyIds.length) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Gold-set technology tag IDs must be unique.',
+        path: ['technology_tags'],
+      })
+    }
+  })
+
 export type LiteratureImportManifest = z.infer<typeof literatureImportManifestSchema>
 export type LiteratureManifestFile = z.infer<typeof literatureManifestFileSchema>
 export type LiteratureQueryRegistry = z.infer<typeof literatureQueryRegistrySchema>
 export type LiteratureTaxonomy = z.infer<typeof literatureTaxonomySchema>
 export type LiteratureTopicRules = z.infer<typeof literatureTopicRulesSchema>
+export type LiteratureGoldSetLabels = z.infer<typeof literatureGoldSetLabelsSchema>

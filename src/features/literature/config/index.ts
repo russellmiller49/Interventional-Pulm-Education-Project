@@ -1,9 +1,11 @@
+import goldSetLabelsJson from '../../../../config/literature/gold-set-labels.v1.json'
 import queryRegistryJson from '../../../../config/literature/pubmed-query-registry.v1.json'
 import taxonomyJson from '../../../../config/literature/taxonomy.v1.json'
 import topicRulesJson from '../../../../config/literature/topic-rules.v1.json'
 
 import {
   literatureQueryRegistrySchema,
+  literatureGoldSetLabelsSchema,
   literatureTaxonomySchema,
   literatureTopicRulesSchema,
   type LiteratureTaxonomy,
@@ -12,6 +14,7 @@ import {
 export const literatureQueryRegistry = literatureQueryRegistrySchema.parse(queryRegistryJson)
 export const literatureTaxonomy = literatureTaxonomySchema.parse(taxonomyJson)
 export const literatureTopicRules = literatureTopicRulesSchema.parse(topicRulesJson)
+export const literatureGoldSetLabels = literatureGoldSetLabelsSchema.parse(goldSetLabelsJson)
 
 export interface FlattenedLiteratureTopic {
   id: string

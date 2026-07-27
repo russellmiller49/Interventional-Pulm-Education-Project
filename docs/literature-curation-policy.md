@@ -96,7 +96,9 @@ inference from article content.
 
 ## Decisions still requiring physician/editorial review
 
-- Map the 67 supplied NBIB files to actual journal/query/date provenance.
+- Confirm that the supplied `Full Journals`, `Expanded-journal`, and `All-PubMed discovery`
+  folder names are the intended source-tier provenance. Individual discovery-query/date mappings
+  remain unknown unless they are documented separately.
 - Review the large set of expected non-registry journals from broad PubMed discovery.
 - Establish inclusion/exclusion guidance and adjudicate the initial corpus.
 - Decide abstract redistribution policy.
