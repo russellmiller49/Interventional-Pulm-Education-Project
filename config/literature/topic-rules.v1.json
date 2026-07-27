@@ -1,0 +1,254 @@
+{
+  "rule_version": "1.0.0",
+  "normalization": "unicode_nfkd_lowercase_whitespace_v1",
+  "query_topic_aliases": {
+    "ip_broad_catchall": "other-advanced-bronchoscopy",
+    "ebus_mediastinal_staging": "ebus-mediastinal-staging",
+    "peripheral_navigation": "peripheral-navigation",
+    "peripheral_biopsy_localization": "peripheral-biopsy-localization",
+    "central_airway_obstruction": "central-airway-obstruction",
+    "airway_stents": "airway-stents-stenosis",
+    "pleural_interventions": "pleural-interventions",
+    "bronchoscopic_lung_volume_reduction": "bronchoscopic-lung-volume-reduction",
+    "persistent_air_leak_fistula": "persistent-air-leak-fistula",
+    "transbronchial_cryobiopsy": "transbronchial-cryobiopsy",
+    "hemoptysis_airway_bleeding": "hemoptysis-airway-bleeding",
+    "percutaneous_tracheostomy": "tracheostomy-airway-access",
+    "other_advanced_bronchoscopy": "other-advanced-bronchoscopy",
+    "bronchoscopic_tumor_ablation": "bronchoscopic-tumor-ablation",
+    "education_simulation_quality": "education-simulation-quality",
+    "procedural_safety_anesthesia": "safety-anesthesia-complications",
+    "ai_imaging_technology": "ai-imaging-technology"
+  },
+  "rules": [
+    {
+      "id": "ebus-mediastinal-staging.v1",
+      "topic_id": "ebus-mediastinal-staging",
+      "confidence": 0.94,
+      "any_terms": [
+        "ebus-tbna",
+        "ebus tbna",
+        "cp-ebus",
+        "convex probe ebus",
+        "endobronchial ultrasound",
+        "eus-b",
+        "eus b fna",
+        "endoscopic ultrasound with bronchoscope"
+      ],
+      "all_term_groups": [],
+      "none_terms": []
+    },
+    {
+      "id": "peripheral-navigation.robotic.v1",
+      "topic_id": "peripheral-navigation.robotic-bronchoscopy",
+      "confidence": 0.98,
+      "any_terms": ["robotic bronchoscopy", "robot-assisted bronchoscopy"],
+      "all_term_groups": [],
+      "none_terms": []
+    },
+    {
+      "id": "peripheral-navigation.emn.v1",
+      "topic_id": "peripheral-navigation.electromagnetic-navigation",
+      "confidence": 0.97,
+      "any_terms": [
+        "electromagnetic navigation bronchoscopy",
+        "electromagnetic navigational bronchoscopy",
+        "electromagnetic bronchoscopy"
+      ],
+      "all_term_groups": [],
+      "none_terms": []
+    },
+    {
+      "id": "peripheral-navigation.cbct.v1",
+      "topic_id": "peripheral-navigation.cone-beam-ct",
+      "confidence": 0.96,
+      "any_terms": ["cone-beam ct", "cone beam ct", "cone-beam computed tomography", "cbct"],
+      "all_term_groups": [],
+      "none_terms": []
+    },
+    {
+      "id": "peripheral-navigation.radial-ebus.v1",
+      "topic_id": "peripheral-navigation.radial-ebus",
+      "confidence": 0.96,
+      "any_terms": [
+        "radial ebus",
+        "radial probe endobronchial ultrasound",
+        "radial endobronchial ultrasound"
+      ],
+      "all_term_groups": [],
+      "none_terms": []
+    },
+    {
+      "id": "central-airway-obstruction.v1",
+      "topic_id": "central-airway-obstruction",
+      "confidence": 0.96,
+      "any_terms": [
+        "central airway obstruction",
+        "malignant airway obstruction",
+        "bronchoscopic recanalization",
+        "airway debulking"
+      ],
+      "all_term_groups": [],
+      "none_terms": []
+    },
+    {
+      "id": "central-airway-obstruction.rigid.v1",
+      "topic_id": "central-airway-obstruction.rigid-bronchoscopy",
+      "confidence": 0.9,
+      "any_terms": ["rigid bronchoscopy", "rigid bronchoscopic"],
+      "all_term_groups": [["airway obstruction", "airway stenosis", "debulking", "recanalization"]],
+      "none_terms": []
+    },
+    {
+      "id": "airway-stents.v1",
+      "topic_id": "airway-stents-stenosis",
+      "confidence": 0.97,
+      "any_terms": [
+        "airway stent",
+        "tracheobronchial stent",
+        "bronchial stent",
+        "tracheal stent",
+        "silicone stent"
+      ],
+      "all_term_groups": [],
+      "none_terms": ["coronary stent", "vascular stent"]
+    },
+    {
+      "id": "pleural-interventions.pleuroscopy.v1",
+      "topic_id": "pleural-interventions.pleuroscopy",
+      "confidence": 0.98,
+      "any_terms": [
+        "pleuroscopy",
+        "medical thoracoscopy",
+        "local anesthetic thoracoscopy",
+        "local anaesthetic thoracoscopy"
+      ],
+      "all_term_groups": [],
+      "none_terms": []
+    },
+    {
+      "id": "pleural-interventions.ipc.v1",
+      "topic_id": "pleural-interventions.ipc",
+      "confidence": 0.98,
+      "any_terms": [
+        "indwelling pleural catheter",
+        "tunneled pleural catheter",
+        "tunnelled pleural catheter"
+      ],
+      "all_term_groups": [],
+      "none_terms": []
+    },
+    {
+      "id": "pleural-interventions.thoracentesis.v1",
+      "topic_id": "pleural-interventions.thoracentesis",
+      "confidence": 0.98,
+      "any_terms": ["thoracentesis", "thoracocentesis", "pleural aspiration"],
+      "all_term_groups": [],
+      "none_terms": []
+    },
+    {
+      "id": "blvr-valve-context.v1",
+      "topic_id": "bronchoscopic-lung-volume-reduction.valves",
+      "confidence": 0.96,
+      "any_terms": [
+        "endobronchial valve",
+        "endobronchial valves",
+        "bronchial valve",
+        "bronchial valves"
+      ],
+      "all_term_groups": [
+        ["emphysema", "lung volume reduction", "blvr", "collateral ventilation", "hyperinflation"]
+      ],
+      "none_terms": ["persistent air leak", "bronchopleural fistula", "alveolopleural fistula"]
+    },
+    {
+      "id": "persistent-air-leak-valve-context.v1",
+      "topic_id": "persistent-air-leak-fistula.valves",
+      "confidence": 0.96,
+      "any_terms": [
+        "endobronchial valve",
+        "endobronchial valves",
+        "bronchial valve",
+        "bronchial valves"
+      ],
+      "all_term_groups": [
+        [
+          "persistent air leak",
+          "bronchopleural fistula",
+          "alveolopleural fistula",
+          "postoperative air leak"
+        ]
+      ],
+      "none_terms": []
+    },
+    {
+      "id": "cryobiopsy-ild-context.v1",
+      "topic_id": "transbronchial-cryobiopsy.ild",
+      "confidence": 0.95,
+      "any_terms": ["cryobiopsy", "cryo-biopsy"],
+      "all_term_groups": [
+        [
+          "interstitial lung disease",
+          "diffuse parenchymal lung disease",
+          "fibrotic lung disease",
+          "ild"
+        ]
+      ],
+      "none_terms": []
+    },
+    {
+      "id": "cryobiopsy-peripheral-context.v1",
+      "topic_id": "transbronchial-cryobiopsy.peripheral-lesions",
+      "confidence": 0.94,
+      "any_terms": ["cryobiopsy", "cryo-biopsy"],
+      "all_term_groups": [
+        ["peripheral pulmonary lesion", "peripheral lung lesion", "pulmonary nodule", "lung nodule"]
+      ],
+      "none_terms": []
+    },
+    {
+      "id": "cryobiopsy-mediastinal-context.v1",
+      "topic_id": "transbronchial-cryobiopsy.mediastinal",
+      "confidence": 0.95,
+      "any_terms": ["cryobiopsy", "cryo-biopsy"],
+      "all_term_groups": [["mediastinal", "intranodal", "ebus"]],
+      "none_terms": []
+    },
+    {
+      "id": "cryobiopsy-endobronchial-context.v1",
+      "topic_id": "transbronchial-cryobiopsy.endobronchial",
+      "confidence": 0.94,
+      "any_terms": ["cryobiopsy", "cryo-biopsy"],
+      "all_term_groups": [["endobronchial lesion", "endobronchial tumor", "endobronchial tumour"]],
+      "none_terms": []
+    },
+    {
+      "id": "tracheostomy-airway-access.v1",
+      "topic_id": "tracheostomy-airway-access",
+      "confidence": 0.97,
+      "any_terms": [
+        "percutaneous tracheostomy",
+        "percutaneous dilatational tracheostomy",
+        "percutaneous dilational tracheostomy"
+      ],
+      "all_term_groups": [],
+      "none_terms": []
+    },
+    {
+      "id": "other-advanced-bronchoscopy.thermoplasty.v1",
+      "topic_id": "other-advanced-bronchoscopy.bronchial-thermoplasty",
+      "confidence": 0.99,
+      "any_terms": ["bronchial thermoplasty"],
+      "all_term_groups": [],
+      "none_terms": []
+    },
+    {
+      "id": "other-advanced-bronchoscopy.whole-lung-lavage.v1",
+      "topic_id": "other-advanced-bronchoscopy.whole-lung-lavage",
+      "confidence": 0.99,
+      "any_terms": ["whole lung lavage", "whole-lung lavage"],
+      "all_term_groups": [],
+      "none_terms": []
+    }
+  ]
+}

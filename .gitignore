@@ -27,6 +27,10 @@ pids
 *.seed
 *.pid.lock
 
+# Literature Explorer local corpus, manifests, and generated reports
+/local-data/literature/
+/IP_PubMed/nbib files/
+
 # FluoroView raw source data and VM transfer bundles
 /fluoro_2/
 *.dcm

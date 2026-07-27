@@ -51,6 +51,7 @@ const draftModulePathPrefixes = [
   '/education/chest-drainage',
   '/intro-bronchoscopy',
   '/learn/anatomy/airway',
+  '/literature',
   '/pleural-procedures',
   '/rapid-onsite-cytology',
 ] as const

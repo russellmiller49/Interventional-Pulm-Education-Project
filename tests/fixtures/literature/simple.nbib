@@ -1,0 +1,20 @@
+PMID- 12345678
+PMC - PMC1234567
+OWN - NLM
+STAT- MEDLINE
+DP  - 2024 Jan 15
+TI  - Endobronchial ultrasound for mediastinal staging.
+AB  - BACKGROUND: This is a fixture abstract.
+      METHODS: It has an indented continuation line.
+FAU - Rivera, Alex M
+AU  - Rivera AM
+LA  - eng
+PT  - Journal Article
+TA  - Chest
+JT  - CHEST
+JID - 0231335
+IS  - 0012-3692 (Print)
+MH  - Bronchoscopy
+OT  - EBUS-TBNA
+LID - 10.1000/Example.DOI [doi]
+SO  - Chest. 2024 Jan;165(1):1-8.

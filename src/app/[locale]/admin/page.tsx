@@ -1542,6 +1542,12 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
             </div>
             <div className="flex flex-wrap gap-2">
               <Button asChild variant="outline">
+                <Link href={'/admin/literature' as Route}>
+                  <BookOpen className="h-4 w-4" aria-hidden />
+                  Literature review
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
                 <Link href={'/socrates-builder' as Route}>SOCRATES builder</Link>
               </Button>
               <Button asChild variant="outline">
