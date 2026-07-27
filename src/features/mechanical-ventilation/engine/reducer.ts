@@ -44,6 +44,17 @@ function bounded(
   return clamp(numeric(value, fallback), range[0], range[1])
 }
 
+/**
+ * Bounds a teaching multiplier. Wide enough for a bitten tube or a stiff ARDS lung, narrow enough
+ * that the console stays a console rather than becoming a graph of arithmetic.
+ */
+export const TEACHING_MECHANICS_SCALE_RANGE = [0.25, 6] as const
+
+function clampScale(value: number): number {
+  if (!Number.isFinite(value)) return 1
+  return clamp(value, TEACHING_MECHANICS_SCALE_RANGE[0], TEACHING_MECHANICS_SCALE_RANGE[1])
+}
+
 function maxControlledPRampMs(inspiratoryTimeSeconds: number): number {
   return Math.min(
     simulationControlRanges.pRampControlledMs[1],
@@ -624,6 +635,29 @@ export function ventilationSimulationReducer(
       ...state,
       ventilator: { ...state.ventilator, manualBreathUntil: state.simulationTime + 1 },
       lastResponse: 'A manual breath is delivered using the active settings.',
+    }
+  }
+  /*
+   * A teaching control, not a device setting: it changes the *patient*, so it is Learn-only. In
+   * Practice the case's mechanics are the thing being assessed, and letting a learner soften the
+   * lung would resolve the case by editing it.
+   */
+  if (action.type === 'SET_TEACHING_MECHANICS') {
+    if (state.experience !== 'learn') return state
+    const teachingMechanics = {
+      complianceScale: clampScale(
+        action.overrides.complianceScale ?? state.teachingMechanics.complianceScale,
+      ),
+      resistanceScale: clampScale(
+        action.overrides.resistanceScale ?? state.teachingMechanics.resistanceScale,
+      ),
+    }
+    const next = { ...state, teachingMechanics }
+    const patient = deriveEffectivePatient(next, caseDefinition(next))
+    return {
+      ...next,
+      patient,
+      measurements: deriveMeasurements(next, caseDefinition(next), patient),
     }
   }
   if (action.type === 'PERFORM_HOLD') {

@@ -1,8 +1,8 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type Dispatch } from 'react'
 
-import type { VentilationSimulationState } from '../engine'
+import type { VentilationAction, VentilationSimulationState } from '../engine'
 import { VentilationDyssynchronyDomains } from './teaching/dyssynchrony'
 import { VentilationModeVariables } from './teaching/modes'
 import { VentilationOxygenationTradeoff } from './teaching/oxygenation'
@@ -734,9 +734,17 @@ export function VentilationHighPressureDiscriminator({
  * Every section of the Learn pathway now has an authored panel, so `VentilationSectionOverview`
  * below is a fallback for a section added without one rather than the state six sections are in.
  */
-const panels: Readonly<
-  Record<string, (props: { readonly state: VentilationSimulationState }) => React.JSX.Element>
-> = {
+/**
+ * Panels are read-only over the simulation by default. `waveform-anatomy` is the exception: its
+ * mechanics sliders change the patient, so it needs `dispatch` to reach the engine and put the
+ * consequence on the real console rather than only on its own drawing.
+ */
+export interface TeachingPanelProps {
+  readonly state: VentilationSimulationState
+  readonly dispatch?: Dispatch<VentilationAction>
+}
+
+const panels: Readonly<Record<string, (props: TeachingPanelProps) => React.JSX.Element>> = {
   'waveform-anatomy': VentilationWaveformAnatomy,
   'mechanics-load-and-pressure': VentilationPressureDecomposition,
   'waveform-reading-sequence': VentilationWaveformReadingSequence,
@@ -758,12 +766,14 @@ export function hasVentilationTeachingPanel(lessonId: string): boolean {
 export function MechanicalVentilationTeachingPanel({
   lessonId,
   state,
+  dispatch,
 }: {
   readonly lessonId: string
   readonly state: VentilationSimulationState
+  readonly dispatch?: Dispatch<VentilationAction>
 }) {
   const Panel = panels[lessonId]
-  return Panel ? <Panel state={state} /> : null
+  return Panel ? <Panel state={state} dispatch={dispatch} /> : null
 }
 
 /* ------------------------------------------------------------------------------------------------

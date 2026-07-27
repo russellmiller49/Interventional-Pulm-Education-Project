@@ -744,6 +744,28 @@ export function deriveEffectivePatient(
     if (settings.pressureSupportCmH2O >= 18) patient.drive.neuralRatePerMin = 8
     if (settings.pressureSupportCmH2O >= 18) patient.drive.effortAmplitudeCmH2O *= 0.25
   }
+
+  /*
+   * Last, so the learner's teaching sliders scale whatever the case and its interventions produced
+   * rather than being overwritten by them. Only the airway resistance is scaled, not the tube's —
+   * the tube is a property of the circuit, and the ATC compensation above is already reasoning
+   * about it.
+   */
+  const { complianceScale, resistanceScale } = state.teachingMechanics
+  if (complianceScale !== 1) {
+    patient.mechanics.complianceLPerCmH2O = clamp(
+      patient.mechanics.complianceLPerCmH2O * complianceScale,
+      0.005,
+      0.2,
+    )
+  }
+  if (resistanceScale !== 1) {
+    patient.mechanics.resistanceCmH2OPerLps = clamp(
+      patient.mechanics.resistanceCmH2OPerLps * resistanceScale,
+      1,
+      200,
+    )
+  }
   return patient
 }
 

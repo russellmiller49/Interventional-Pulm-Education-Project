@@ -635,6 +635,22 @@ export interface VentilationSimulationState {
   criticalErrors: readonly string[]
   lastResponse: string | null
   lastAbgAt: number | null
+  /**
+   * Teaching-only multipliers on this patient's mechanics, so a Learn section can change the lung
+   * and let the learner watch the consequence on the real console rather than on a drawing.
+   *
+   * Multipliers rather than absolute values because the point is always "compared with *this*
+   * patient", and because a case's own mechanics keep meaning something. `deriveEffectivePatient`
+   * applies them last, after every intervention effect — it rebuilds mechanics from the case
+   * definition on every sample, so anything set directly on `patient` is gone by the next one.
+   */
+  teachingMechanics: TeachingMechanicsOverride
+}
+
+/** Both default to 1, which is the case exactly as authored. */
+export interface TeachingMechanicsOverride {
+  complianceScale: number
+  resistanceScale: number
 }
 
 export interface CaseOutcome {
@@ -715,6 +731,8 @@ export type VentilationAction =
   | { type: 'OXYGEN_ENRICHMENT' }
   | { type: 'MANUAL_BREATH' }
   | { type: 'PERFORM_HOLD'; hold: 'inspiratory' | 'expiratory' }
+  /** Learn-only: scale this patient's mechanics so the console shows the consequence. */
+  | { type: 'SET_TEACHING_MECHANICS'; overrides: Partial<TeachingMechanicsOverride> }
   | {
       type: 'COMMIT_PREDICTION'
       mechanismId: string

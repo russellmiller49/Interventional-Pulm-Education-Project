@@ -1,9 +1,9 @@
 # Critical Care — session handoff
 
-**Date:** 2026-07-26 (revised same day, eight times — the last is §1.14)
+**Date:** 2026-07-26 (revised same day, nine times — the last is §1.15)
 **Branch of record:** `codex/ip-preference-card-builder-v0-1` (what the dev server runs)
 **Work branch:** `claude/curricular-sequencing-updates-b351b1`
-**Head at handoff:** `0d72608f`. §1.1–§1.10 are committed; §1.11 and §1.12 are not.
+**Head at handoff:** `05bece6d`. Everything through §1.14 is committed; §1.15 is not.
 
 > **A concurrent session shares this checkout.** While §1.11 was being written, another session
 > committed an unrelated "IP literature explorer phase 1" merge into this same working tree and ran
@@ -28,10 +28,11 @@ In the order it landed:
 | §1.8       | The wandering baseline between breaths                                            | committed   |
 | §1.9       | The rest of the casebook's waveform signatures, swept the same way                | committed   |
 | §1.10      | The numbers the console reports, measured off the trace rather than predicted     | committed   |
-| §1.11      | The PB980 rebuilt against its operator's manual                                   | uncommitted |
-| §1.12      | Evita and AVEA setting units re-sourced — every device now manual-verified        | uncommitted |
-| §1.13      | Answering a question now tells the learner whether they were right, and why       | uncommitted |
-| §1.14      | The inspiratory pause the four consoles advertise now does something              | uncommitted |
+| §1.11      | The PB980 rebuilt against its operator's manual                                   | committed   |
+| §1.12      | Evita and AVEA setting units re-sourced — every device now manual-verified        | committed   |
+| §1.13      | Answering a question now tells the learner whether they were right, and why       | committed   |
+| §1.14      | The inspiratory pause the four consoles advertise now does something              | committed   |
+| §1.15      | The teaching sliders drive the real ventilator, and resistance joins compliance   | uncommitted |
 
 Three threads run through this, and it is worth knowing which one a section belongs to.
 
@@ -856,6 +857,49 @@ layout swap. The other two are module rebuilds. Item 5 is rewritten below to say
 
 ---
 
+### 1.15 The sliders drive the real ventilator
+
+Owner-raised against §1.13's compliance slider: add airway resistance, and make the sliders move
+the **live console** rather than only the panel's own drawing.
+
+**They now change the patient, not a local copy.** `SET_TEACHING_MECHANICS` puts two multipliers on
+`VentilationSimulationState`, and `deriveEffectivePatient` applies them **last**, after every
+intervention effect. That placement is the whole trick: `deriveEffectivePatient` rebuilds mechanics
+from the case definition on every sample, so anything written straight onto `patient` is gone by the
+next one — the same trap that ate the running lung volume in §1.10. The teaching panel takes a
+`dispatch`, and because it re-renders off the engine's own scaled patient, the comparison figure
+follows for free.
+
+**Learn only.** The reducer refuses the action outside `experience === 'learn'`: in Practice the
+case's mechanics are the thing being assessed, and softening the lung would resolve a case by
+editing it rather than by treating it. Where there is no dispatch at all — the offline render
+harness — the sliders render disabled rather than pretending to be interactive.
+
+**Resistance, with the bedside names on it.** The anchors read _wide open · this patient ·
+secretions · bronchospasm · biting or kinking the tube_, because "4× this patient" means nothing on
+a ward round. Descriptive labels for a slider, not thresholds; the no-numeric-thresholds rule still
+holds.
+
+**The two sliders produce the two signatures the module later asks fellows to tell apart**, which
+was the unlooked-for payoff. On MV-01:
+
+| Lung            | Ppeak    | Pplat    | VTe    |
+| --------------- | -------- | -------- | ------ |
+| This patient    | 25       | 14       | 422 mL |
+| Compliance ×0.5 | **41.8** | **30.8** | 422 mL |
+| Resistance ×4   | **55.5** | 17       | 422 mL |
+
+Compliance moves peak _and_ plateau together; resistance moves peak alone and widens the gap between
+them. That is exactly the discrimination the high-peak-pressure section teaches, arrived at by
+dragging a slider.
+
+> **Both sliders run on a log exponent from −1 to +1**, converted with a per-slider base — 2× for
+> compliance, 4× for resistance. A linear multiplier range does not put 1.0 under the middle label:
+> on the 0.5–5 range the resistance slider's first draft used, "this patient" sat about a tenth of
+> the way along while the label claimed the centre.
+
+---
+
 ---
 
 ## 2. Current state
@@ -901,7 +945,7 @@ Later commits sit directly on the branch of record, the first three all named "u
 | `__tests__/device-display.test.tsx`            | **new** — 15 tests over the display profiles and the rendered consoles               |
 | `__tests__/components.test.tsx`                | three label expectations updated to the sourced names                                |
 
-### What landed in `3a35ce86` (§1.7–§1.10)
+### What landed in `3a35ce86` (§1.7–§1.10) and `05bece6d` (§1.11–§1.14)
 
 Paths are relative to `src/features/mechanical-ventilation/` unless shown otherwise. §1.5 and §1.6
 are in `3a1c05a2`; §1.11 and §1.12 are still uncommitted and listed after these.
@@ -957,7 +1001,7 @@ the list to copy when adding the next one.
 |                                               | breath before reading a now-measured value                                                       |
 | `scripts/critical-care/dump-mv-waveforms.mts` | `EEV` and analytic-vs-trace auto-PEEP columns; `--hold` runs on into the occlusion               |
 
-### Uncommitted — §1.11 through §1.14
+### Uncommitted — §1.15
 
 The files below plus this handoff. Everything else in §1 is committed.
 
@@ -970,6 +1014,18 @@ The files below plus this handoff. Everything else in §1 is committed.
 | `engine/types.ts`                            | optional `flowPatterns` on `VentilatorDisplayProfile`                                      |
 | `components/MechanicalVentilatorConsole.tsx` | flow-pattern options read from the profile instead of being hard-coded                     |
 | `__tests__/device-display.test.tsx`          | banner and bezel expectations re-pinned to the manual, +1 over the settings order          |
+
+**§1.15 — sliders that drive the engine.**
+
+| Path                                                | Change                                                                            |
+| --------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `engine/types.ts`                                   | `teachingMechanics` on the state, `TeachingMechanicsOverride`, the action         |
+| `engine/physics.ts`                                 | `deriveEffectivePatient` applies the scales last                                  |
+| `engine/reducer.ts`                                 | `SET_TEACHING_MECHANICS`, Learn-only, with `TEACHING_MECHANICS_SCALE_RANGE`       |
+| `engine/simulation.ts`                              | the default of 1/1 on a new state                                                 |
+| `components/MechanicalVentilationTeachingPanel.tsx` | panels take an optional `dispatch`                                                |
+| `components/teaching/waveform-anatomy.tsx`          | both sliders on a log exponent, resistance anchors, reset, live prose             |
+| `__tests__/teaching-panel.test.tsx`                 | +3 and a `LivePanel` reducer harness — the sliders need a real engine to exercise |
 
 **§1.14 — the inspiratory pause.**
 

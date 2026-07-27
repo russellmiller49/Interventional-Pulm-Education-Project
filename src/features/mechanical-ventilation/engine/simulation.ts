@@ -192,6 +192,7 @@ function baseState(
     criticalErrors: [],
     lastResponse: null,
     lastAbgAt: null,
+    teachingMechanics: { complianceScale: 1, resistanceScale: 1 },
   }
   return { ...state, measurements: deriveMeasurements(state, definition, patient) }
 }

@@ -906,7 +906,11 @@ export function MechanicalVentilationLessonActivity({
   // Every section gets a middle pane. Sections without a bespoke figure show their own authored
   // objectives rather than an empty pane, which read as an unbuilt module.
   const teachingPanel = hasVentilationTeachingPanel(lesson.id) ? (
-    <MechanicalVentilationTeachingPanel lessonId={lesson.id} state={simulation} />
+    <MechanicalVentilationTeachingPanel
+      lessonId={lesson.id}
+      state={simulation}
+      dispatch={dispatchSimulation}
+    />
   ) : (
     <VentilationSectionOverview
       title={lesson.title}

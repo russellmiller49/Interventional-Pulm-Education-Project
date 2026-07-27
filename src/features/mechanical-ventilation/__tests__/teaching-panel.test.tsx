@@ -1,3 +1,4 @@
+import { useReducer } from 'react'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 
 import {
@@ -9,6 +10,22 @@ import {
 import { mechanicalVentilationLessons } from '../content'
 import { createInitialSimulationState, ventilationSimulationReducer } from '../engine'
 import type { VentilationSimulationState } from '../engine'
+
+/**
+ * The waveform-anatomy sliders drive the *engine*, not local state, so exercising them needs a real
+ * reducer behind the panel. Without a dispatch they render disabled, which is the contract for the
+ * offline render harness.
+ */
+function LivePanel({ initial }: { readonly initial: VentilationSimulationState }) {
+  const [state, dispatch] = useReducer(ventilationSimulationReducer, initial)
+  return (
+    <MechanicalVentilationTeachingPanel
+      lessonId="waveform-anatomy"
+      state={state}
+      dispatch={dispatch}
+    />
+  )
+}
 
 function stateFor(caseId: string, seconds = 12): VentilationSimulationState {
   let state = createInitialSimulationState(caseId, 'learn', 1, 'hamilton-c6')
@@ -231,7 +248,8 @@ describe('mechanical-ventilation teaching panels', () => {
       const compliance = Math.round(state.patient.mechanics.complianceLPerCmH2O * 1000)
       // Named twice on purpose: in the figure caption and on the slider that drives it.
       expect(screen.getAllByText(new RegExp(`${compliance} mL/cmH₂O`)).length).toBeGreaterThan(0)
-      expect(screen.getByText(/this patient$/)).toBeInTheDocument()
+      // Both sliders sit at this patient by default.
+      expect(screen.getAllByText(/this patient$/).length).toBe(2)
     })
 
     /**
@@ -240,8 +258,8 @@ describe('mechanical-ventilation teaching panels', () => {
      * have to move in opposite ways — and each has to hold its own set variable while it does.
      */
     it('lets the learner stiffen the lung and shows the two columns diverging', () => {
+      render(<LivePanel initial={stateFor('MV-01', 14)} />)
       const state = stateFor('MV-01', 14)
-      render(<MechanicalVentilationTeachingPanel lessonId="waveform-anatomy" state={state} />)
       const slider = screen.getByRole('slider', { name: /compliance/i })
       const setVt = Math.round(state.measurements.exhaledVtMl)
 
@@ -256,7 +274,8 @@ describe('mechanical-ventilation teaching panels', () => {
       const [basePcHeld, basePcMoved] = columnFor(/Pressure targeted holds/)
       expect(numeric(baseVcHeld)).toBe(setVt)
 
-      fireEvent.change(slider, { target: { value: '0.5' } })
+      // The sliders take a log exponent: -1 is half this patient's compliance.
+      fireEvent.change(slider, { target: { value: '-1' } })
 
       const [stiffVcHeld, stiffVcMoved] = columnFor(/Volume targeted holds/)
       const [stiffPcHeld, stiffPcMoved] = columnFor(/Pressure targeted holds/)
@@ -269,6 +288,53 @@ describe('mechanical-ventilation teaching panels', () => {
       expect(numeric(stiffPcMoved)).toBeLessThan(numeric(basePcMoved))
 
       expect(screen.getByText(/A stiffer lung\./)).toBeInTheDocument()
+    })
+
+    /**
+     * The sliders change the *patient*, so the console beside the panel has to change with them —
+     * that is the whole reason they dispatch instead of holding local state.
+     */
+    it('drives the engine, so the live console shows the consequence', () => {
+      const initial = stateFor('MV-01', 14)
+      render(<LivePanel initial={initial} />)
+      const baselinePeak = initial.measurements.peakPressureCmH2O
+
+      // Exponent +1 on a base of four: four times this patient's airway resistance.
+      fireEvent.change(screen.getByRole('slider', { name: /resistance/i }), {
+        target: { value: '1' },
+      })
+
+      // The panel re-renders off the engine's own scaled patient, not off a local copy.
+      expect(screen.getAllByText(/biting or kinking the tube/).length).toBeGreaterThan(0)
+      const shown = Number(
+        screen.getByText(/Airway resistance/).textContent?.match(/([\d.]+) cmH₂O\/L\/s/)?.[1] ??
+          '0',
+      )
+      expect(shown).toBeGreaterThan(initial.patient.mechanics.resistanceCmH2OPerLps)
+      expect(baselinePeak).toBeGreaterThan(0)
+    })
+
+    it('offers a way back to the patient the case authored', () => {
+      render(<LivePanel initial={stateFor('MV-01', 14)} />)
+      expect(screen.queryByRole('button', { name: /Put the patient back/ })).toBeNull()
+      fireEvent.change(screen.getByRole('slider', { name: /resistance/i }), {
+        target: { value: '0.5' },
+      })
+      fireEvent.click(screen.getByRole('button', { name: /Put the patient back/ }))
+      expect(screen.getAllByText(/this patient$/).length).toBe(2)
+    })
+
+    it('disables the sliders where there is no dispatch to drive', () => {
+      // The offline render harness renders panels read-only; they must not look interactive.
+      render(
+        <MechanicalVentilationTeachingPanel
+          lessonId="waveform-anatomy"
+          state={stateFor('MV-01', 14)}
+        />,
+      )
+      for (const slider of screen.getAllByRole('slider')) {
+        expect(slider).toBeDisabled()
+      }
     })
   })
 

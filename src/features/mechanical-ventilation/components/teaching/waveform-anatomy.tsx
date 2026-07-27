@@ -15,9 +15,9 @@
  * rather than simulated, because two live engine runs inside a render is not affordable and
  * because the point being made is about shape. They move with the case; they are not stock art.
  */
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type Dispatch } from 'react'
 
-import type { VentilationSimulationState } from '../../engine'
+import type { VentilationAction, VentilationSimulationState } from '../../engine'
 import {
   AwaitingBreath,
   ModelBoundary,
@@ -159,6 +159,41 @@ function idealBreaths(
   }
 }
 
+/**
+ * What a resistance multiple looks like at the bedside.
+ *
+ * Named rather than numeric because "4× this patient" means nothing on a ward round, and because
+ * the causes sit at recognisable magnitudes: secretions and bronchospasm raise resistance
+ * substantially, a kinked or bitten tube raises it enormously and is the one that reaches the
+ * ventilator's pressure alarm within a breath or two. Descriptive labels for a slider, not
+ * thresholds — the module's no-numeric-thresholds rule still holds.
+ */
+/**
+ * Both sliders run on an exponent from −1 to +1 and convert with a per-slider base, so 0 is always
+ * this patient and it always sits under the middle label. A linear multiplier range does not: 1.0
+ * on a 0.5–5 scale lands about a tenth of the way along, so the thumb and the "this patient" label
+ * disagreed about where the patient was.
+ */
+const complianceBase = 2 // 0.5x to 2x
+const resistanceBase = 4 // 0.25x to 4x — a bitten tube is a bigger multiple than a stiff lung
+
+function scaleToExponent(scale: number, base: number): number {
+  return Math.log(scale) / Math.log(base)
+}
+
+function exponentToScale(exponent: number, base: number): number {
+  return Number(base ** exponent === 1 ? 1 : (base ** exponent).toFixed(3))
+}
+
+function resistanceAnchor(scale: number): string {
+  if (scale <= 0.6) return 'wide open'
+  if (scale < 1) return 'less obstructed'
+  if (scale === 1) return 'this patient'
+  if (scale <= 1.8) return 'secretions'
+  if (scale <= 3) return 'bronchospasm'
+  return 'biting or kinking the tube'
+}
+
 /** Row geometry for the comparison figure: a label band above a plotted band. */
 const ROW_HEIGHT = 52
 const PLOT_HEIGHT = 38
@@ -247,14 +282,30 @@ function ComparisonColumn({
 
 export function VentilationWaveformAnatomy({
   state,
+  dispatch,
 }: {
   readonly state: VentilationSimulationState
+  readonly dispatch?: Dispatch<VentilationAction>
 }) {
   const [selected, setSelected] = useState<TraceId | null>(null)
   const breath = useMemo(() => latestBreath(state.waveforms), [state.waveforms])
   const { patient, ventilator, measurements } = state
 
-  const patientCompliance = Math.max(0.005, patient.mechanics.complianceLPerCmH2O)
+  /*
+   * The sliders drive the *engine*, not a local copy — `SET_TEACHING_MECHANICS` scales this
+   * patient's mechanics, so the live console beside this panel shows the consequence on its own
+   * traces and monitored numbers. `patient` here is already the scaled patient, so the comparison
+   * figure below follows for free.
+   *
+   * Where there is no dispatch — the offline render harness, or a read-only embedding — the sliders
+   * are shown disabled rather than lying about being interactive.
+   */
+  const { complianceScale, resistanceScale } = state.teachingMechanics
+  const setScale = (overrides: Partial<typeof state.teachingMechanics>) =>
+    dispatch?.({ type: 'SET_TEACHING_MECHANICS', overrides })
+
+  const compliance = Math.max(0.005, patient.mechanics.complianceLPerCmH2O)
+  const airwayResistance = Math.max(1, patient.mechanics.resistanceCmH2OPerLps)
   const resistance = Math.max(
     1,
     patient.mechanics.resistanceCmH2OPerLps + patient.mechanics.tubeResistanceCmH2OPerLps,
@@ -263,19 +314,13 @@ export function VentilationWaveformAnatomy({
   const tidalVolumeL = Math.max(0.1, measurements.exhaledVtMl / 1000)
 
   /*
-   * The learner can stiffen or soften the lung and watch which trace moves. `stiffness` is a
-   * multiplier on this patient's own compliance, so 1.0 is always wherever the case actually is.
+   * Each column holds *its own* set variable while the lung moves, which is the whole point of the
+   * comparison. Volume targeting keeps the tidal volume; pressure targeting keeps the driving
+   * pressure it was set to at this patient's *unscaled* compliance. Deriving the driving pressure
+   * from the current compliance instead would have made the pressure-targeted column silently hold
+   * volume too, and the two columns would have moved together — showing nothing.
    */
-  const [stiffness, setStiffness] = useState(1)
-  const compliance = Math.max(0.005, patientCompliance * stiffness)
-
-  /*
-   * Each column holds *its own* set variable fixed while compliance moves, which is the whole point
-   * of the comparison. Volume targeting keeps the tidal volume; pressure targeting keeps the
-   * driving pressure it was set to at this patient's own compliance. Deriving the driving pressure
-   * from the *current* compliance instead would have made the pressure-targeted column silently
-   * hold volume too, and the two columns would have moved together — showing nothing.
-   */
+  const patientCompliance = Math.max(0.005, compliance / Math.max(0.01, complianceScale))
   const drivingPressure = Math.max(5, tidalVolumeL / patientCompliance)
 
   const inspiratorySeconds = Math.max(0.2, measurements.mechanicalInspiratoryTimeSeconds)
@@ -400,22 +445,32 @@ export function VentilationWaveformAnatomy({
 
       <div className={styles.stepDetail}>
         <span>Change the lung and watch which trace moves</span>
+        <p className={styles.sliderIntro}>
+          These change the patient, not the ventilator — the console beside this panel is running on
+          them, so its traces and its monitored numbers move with the sliders.
+        </p>
+
         <label className={styles.complianceSlider}>
           <span>
             Compliance <strong>{round(compliance * 1000)} mL/cmH₂O</strong>
-            {stiffness === 1
+            {complianceScale === 1
               ? ' — this patient'
-              : stiffness < 1
+              : complianceScale < 1
                 ? ' — stiffer'
                 : ' — more compliant'}
           </span>
           <input
             type="range"
-            min={0.4}
-            max={2}
+            min={-1}
+            max={1}
             step={0.05}
-            value={stiffness}
-            onChange={(event) => setStiffness(Number(event.target.value))}
+            value={scaleToExponent(complianceScale, complianceBase)}
+            disabled={!dispatch}
+            onChange={(event) =>
+              setScale({
+                complianceScale: exponentToScale(Number(event.target.value), complianceBase),
+              })
+            }
             aria-label="Respiratory-system compliance, as a multiple of this patient's own"
             aria-valuetext={`${round(compliance * 1000)} millilitres per centimetre of water`}
           />
@@ -425,6 +480,49 @@ export function VentilationWaveformAnatomy({
             <span>More compliant</span>
           </span>
         </label>
+
+        {/*
+         * Resistance is the other half of the equation of motion, and it moves a different trace:
+         * compliance changes the elastic term, resistance changes the resistive one. The anchors
+         * are named rather than numeric because "4× this patient" means nothing at the bedside and
+         * "biting the tube" is instantly recognisable.
+         */}
+        <label className={styles.complianceSlider}>
+          <span>
+            Airway resistance <strong>{round(airwayResistance)} cmH₂O/L/s</strong>
+            {` — ${resistanceAnchor(resistanceScale)}`}
+          </span>
+          <input
+            type="range"
+            min={-1}
+            max={1}
+            step={0.05}
+            value={scaleToExponent(resistanceScale, resistanceBase)}
+            disabled={!dispatch}
+            onChange={(event) =>
+              setScale({
+                resistanceScale: exponentToScale(Number(event.target.value), resistanceBase),
+              })
+            }
+            aria-label="Airway resistance, as a multiple of this patient's own"
+            aria-valuetext={`${round(airwayResistance)} centimetres of water per litre per second, ${resistanceAnchor(resistanceScale)}`}
+          />
+          <span className={styles.sliderScale} aria-hidden="true">
+            <span>Wide open</span>
+            <span>This patient</span>
+            <span>Biting the tube</span>
+          </span>
+        </label>
+
+        {dispatch && (complianceScale !== 1 || resistanceScale !== 1) ? (
+          <button
+            type="button"
+            className={styles.resetMechanics}
+            onClick={() => setScale({ complianceScale: 1, resistanceScale: 1 })}
+          >
+            Put the patient back
+          </button>
+        ) : null}
         {/*
          * Each column names what it *holds* and what consequently *moves*. Printing both as
          * "N mL at N cmH₂O" put a peak pressure beside a set pressure — different quantities, and
@@ -446,11 +544,22 @@ export function VentilationWaveformAnatomy({
           </div>
         </dl>
         <p aria-live="polite">
-          {stiffness === 1
+          {complianceScale === 1
             ? 'Both columns are set to deliver the same breath at this patient’s own compliance. Move the slider to make the lung stiffer or more compliant.'
-            : stiffness < 1
+            : complianceScale < 1
               ? `A stiffer lung. Volume targeting still delivers ${round(tidalVolumeL * 1000)} mL — it just costs ${round(volumeTargetedPeak)} cmH₂O to do it, so the pressure trace rises and the flow and volume traces are unchanged. Pressure targeting holds ${round(peep + drivingPressure)} cmH₂O, so the pressure trace is unchanged and the breath shrinks to ${round(pressureTargetedVtMl)} mL.`
               : `A more compliant lung. Volume targeting still delivers ${round(tidalVolumeL * 1000)} mL and needs only ${round(volumeTargetedPeak)} cmH₂O for it. Pressure targeting holds the same ${round(peep + drivingPressure)} cmH₂O and now delivers ${round(pressureTargetedVtMl)} mL.`}
+        </p>
+        {/*
+         * Resistance is deliberately described separately: it moves a *different* part of the
+         * pressure trace, and conflating the two is the misconception this section exists to
+         * prevent. Compliance changes what the trace ends at; resistance changes the step it starts
+         * with, and leaves the plateau alone.
+         */}
+        <p aria-live="polite">
+          {resistanceScale === 1
+            ? 'Resistance is at this patient’s own. Raising it — secretions, bronchospasm, a bitten tube — adds to the pressure trace in a different place.'
+            : `Resistance is now ${resistanceAnchor(resistanceScale)}. That adds to the *resistive* part of the breath: on volume targeting the trace steps higher the instant flow starts and the expiratory limb takes longer to come back to zero, while the plateau it settles to is unchanged, because resistance costs nothing once gas stops moving. On pressure targeting the set pressure is still reached, so the breath is delivered more slowly instead — flow decays more gently and the volume may not finish.`}
         </p>
         <p>
           Expiration is passive in both columns, so that limb is identical — which is why the

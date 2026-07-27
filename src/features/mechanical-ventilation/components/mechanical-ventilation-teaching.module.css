@@ -900,6 +900,27 @@
   accent-color: #147d7b;
 }
 
+.sliderIntro {
+  margin: 0 0 0.15rem;
+  color: #5b7176;
+  font-size: 0.66rem;
+  line-height: 1.45;
+}
+
+.resetMechanics {
+  justify-self: start;
+  min-height: 1.9rem;
+  margin-bottom: 0.45rem;
+  padding: 0 0.6rem;
+  border: 1px solid #147d7b;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #147d7b;
+  font-size: 0.66rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
 .sliderScale {
   display: flex;
   justify-content: space-between;
