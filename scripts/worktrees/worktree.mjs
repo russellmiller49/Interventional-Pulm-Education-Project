@@ -1029,7 +1029,7 @@ async function commandGuard(args, { ci = false } = {}) {
   const parsed = ensureGuardContext(context, registry, { ci, branchOverride })
   const base = options.base || 'origin/main'
   const files = ci
-    ? diffNameStatus(context.topLevel, [base, 'HEAD'])
+    ? diffNameStatus(context.topLevel, [`${base}...HEAD`])
     : diffNameStatus(context.topLevel, ['--cached'])
   if (!files.length) {
     console.log(ci ? 'CI scope guard: no changed files.' : 'Scope guard: no staged files.')

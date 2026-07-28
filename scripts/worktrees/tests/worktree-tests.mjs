@@ -7,8 +7,10 @@ import {
   WtError,
   acquireLease,
   canonicalLeaseResource,
+  diffNameStatus,
   ensureGuardContext,
   globToRegExp,
+  git,
   leaseOwnedForResource,
   loadRegistry,
   matchesPattern,
@@ -113,6 +115,36 @@ describe('registry and branch contracts', () => {
 })
 
 describe('scope enforcement', () => {
+  test('uses a merge-base diff when the feature branch is behind the base branch', () => {
+    const repository = temporaryDirectory()
+    git(repository, ['init', '-b', 'main'])
+    git(repository, ['config', 'user.email', 'worktree-tests@example.invalid'])
+    git(repository, ['config', 'user.name', 'Worktree Tests'])
+    writeFileSync(join(repository, 'shared.txt'), 'base\n')
+    git(repository, ['add', 'shared.txt'])
+    git(repository, ['commit', '-m', 'base'])
+    git(repository, ['switch', '-c', 'codex/literature/test'])
+    writeFileSync(join(repository, 'feature.txt'), 'feature\n')
+    git(repository, ['add', 'feature.txt'])
+    git(repository, ['commit', '-m', 'feature'])
+    git(repository, ['switch', 'main'])
+    writeFileSync(join(repository, 'main-only.txt'), 'main\n')
+    git(repository, ['add', 'main-only.txt'])
+    git(repository, ['commit', '-m', 'main advancement'])
+    git(repository, ['switch', 'codex/literature/test'])
+
+    assert.deepEqual(
+      diffNameStatus(repository, ['main...HEAD']).map((entry) => entry.path),
+      ['feature.txt'],
+    )
+    assert.deepEqual(
+      diffNameStatus(repository, ['main', 'HEAD'])
+        .map((entry) => entry.path)
+        .sort(),
+      ['feature.txt', 'main-only.txt'],
+    )
+  })
+
   test('accepts owned work and rejects another module’s exclusive path', () => {
     const commonDir = temporaryDirectory()
     const literatureContext = context(commonDir, 'scope', 'literature')
