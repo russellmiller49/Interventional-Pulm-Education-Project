@@ -12,7 +12,10 @@ import {
 import { ecmoFoundationLearningItems } from '../content/foundationLearningItems'
 import {
   ecmoFoundationLessonRuntimes,
+  ecmoInteractiveFoundationSectionIds,
   ecmoSharedFoundationSectionIds,
+  ecmoVvOnlyFoundationSectionIds,
+  isEcmoInteractiveFoundationSectionId,
   isEcmoSharedFoundationSectionId,
 } from '../content/foundationLessonRuntime'
 import { ecmoFoundationSectionById } from '../content/foundationLessons'
@@ -29,33 +32,44 @@ function settled(supportMode: SupportMode, seconds = 10): EcmoSimulationState {
   return state
 }
 
-describe('shared foundation panel registry', () => {
-  it('registers exactly the four track-shared sections', () => {
+describe('interactive foundation panel registry', () => {
+  it('registers exactly the seven interactive sections', () => {
     expect(validateEcmoFoundationPanelRegistry()).toEqual([])
-    expect(ecmoFoundationTeachingPanelSectionIds).toHaveLength(4)
+    expect(ecmoFoundationTeachingPanelSectionIds).toHaveLength(7)
     expect([...ecmoFoundationTeachingPanelSectionIds].sort()).toEqual(
-      [...ecmoSharedFoundationSectionIds].sort(),
+      [...ecmoInteractiveFoundationSectionIds].sort(),
     )
+    expect(ecmoSharedFoundationSectionIds).toHaveLength(4)
+    expect(ecmoVvOnlyFoundationSectionIds).toHaveLength(3)
+    expect(new Set(ecmoInteractiveFoundationSectionIds).size).toBe(7)
   })
 
-  it('registers no track-specific or drill section', () => {
+  it('registers no VA-only or drill section', () => {
     for (const excluded of [
-      'vv-normal-state',
-      'va-normal-state',
-      'vv-series-physiology',
       'va-parallel-physiology',
-      'vv-integration-capstone',
+      'va-normal-state',
       'va-integration-capstone',
       'startup-sensor-orientation',
       'vv-recirculation',
+      'gas-source-interruption',
+      'afterload-oxygenator-resistance',
+      'vv-off-sweep-capstone',
     ]) {
       expect(hasEcmoFoundationTeachingPanel(excluded)).toBe(false)
-      expect(isEcmoSharedFoundationSectionId(excluded)).toBe(false)
+      expect(isEcmoInteractiveFoundationSectionId(excluded)).toBe(false)
     }
   })
 
-  it('gives every shared section a runtime, prediction, and transfer item', () => {
-    for (const sectionId of ecmoSharedFoundationSectionIds) {
+  it('keeps the VV-only sections out of the track-shared set', () => {
+    for (const sectionId of ecmoVvOnlyFoundationSectionIds) {
+      expect(isEcmoSharedFoundationSectionId(sectionId)).toBe(false)
+      expect(isEcmoInteractiveFoundationSectionId(sectionId)).toBe(true)
+      expect(hasEcmoFoundationTeachingPanel(sectionId)).toBe(true)
+    }
+  })
+
+  it('gives every interactive section a runtime, prediction, and transfer item', () => {
+    for (const sectionId of ecmoInteractiveFoundationSectionIds) {
       const runtime = ecmoFoundationLessonRuntimes[sectionId]
       expect(runtime.sectionId).toBe(sectionId)
       expect(runtime.evidenceIds.length).toBeGreaterThan(0)
@@ -68,8 +82,8 @@ describe('shared foundation panel registry', () => {
     }
   })
 
-  it('declares all six phases for every shared section', () => {
-    for (const sectionId of ecmoSharedFoundationSectionIds) {
+  it('declares all six phases for every interactive section', () => {
+    for (const sectionId of ecmoInteractiveFoundationSectionIds) {
       expect(Object.keys(ecmoFoundationLessonRuntimes[sectionId].phases).sort()).toEqual(
         ['act', 'explain', 'observe', 'predict', 'recognize', 'transfer'].sort(),
       )

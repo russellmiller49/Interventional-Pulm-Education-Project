@@ -160,12 +160,143 @@ const recirculationAdjustedFlow: CriticalCareDerivedValueGuide = {
   reviewStatus: 'draft',
 }
 
+/**
+ * Deliberately carries no band. The supplied sources do not give a universal "normal recirculation"
+ * range, and this simulation does not derive the fraction from anything the learner can change — so
+ * the guide's whole job is to say what kind of number it is and what it cannot be read as.
+ */
+const recirculationFraction: CriticalCareDerivedValueGuide = {
+  id: 'ecmo.recirculationFraction',
+  label: 'Recirculation fraction',
+  formula: 'fraction of drained blood that is freshly returned circuit blood',
+  liveValueType: 'configured',
+  interpretation:
+    'The share of what the circuit drains that is blood it returned a moment ago rather than systemic venous return. At the bedside it is a consequence of where the cannulae sit relative to one another, the volume state, and how hard the circuit is being asked to pull. In this simulation it is authored by the case rather than computed, and the observable it produces — the drainage-limb saturation — is derived from it.',
+  references: [
+    {
+      id: 'ecmo.recirculation-fraction.authored-by-case',
+      kind: 'educational-model-boundary',
+      statement:
+        'This simulation sets the recirculation fraction from the authored case. It does not vary it with pump speed, cannula position, or volume state.',
+      appliesWhen:
+        'Inside this simulation only. It exists so that the difference between displayed flow and the flow left after re-drainage can be shown at all.',
+      evidenceIds: ['bounded-educational-model'],
+      caveat:
+        'Raising the pump speed here therefore does not move the modeled fraction, even though speed is one of the things that changes recirculation at the bedside.',
+    },
+    {
+      id: 'ecmo.recirculation-fraction.mixture-relationship',
+      kind: 'formula-definition',
+      statement:
+        'Drainage-limb saturation is modeled as the systemic venous value mixed with the returned post-membrane value in proportion to the recirculating share: pre-oxygenator = systemic + fraction × (post-oxygenator − systemic).',
+      appliesWhen:
+        'This simulation’s own mixing model. It is the definition the modeled numbers obey, not a validated bedside calculation for estimating recirculation from two saturations.',
+      evidenceIds: ['bounded-educational-model'],
+    },
+  ],
+  caveats:
+    'The two saturations this relationship uses are themselves modeled, and one of them — the systemic venous value — has no sensor anywhere on the circuit.',
+  doNotInfer:
+    'Do not read this as a measured quantity, do not treat the rearranged relationship as a bedside formula for estimating recirculation, and do not conclude that changing pump speed changes the fraction this simulation uses.',
+  conceptIds: ['cc.circuit.recirculation', 'cc.device.native-device-effective-flow'],
+  reviewStatus: 'draft',
+}
+
+/**
+ * Per-signal display deadbands for the baseline review.
+ *
+ * They exist so a value moving in its last decimal does not read as movement. **A display aid for
+ * this simulation and nothing else** — not a clinical tolerance, not a boundary of anything. The
+ * guide below carries the same numbers as its own provenance so the two cannot drift apart, and
+ * the panel prints the raw change beside every word they produce.
+ *
+ * Inclusive: a change exactly equal to a deadband reads as unchanged.
+ */
+export const ECMO_BASELINE_DISPLAY_DEADBANDS = Object.freeze({
+  bloodFlow: 0.05,
+  rpmSetpoint: 0,
+  pVen: 2,
+  pInt: 3,
+  pArt: 3,
+  deltaP: 2,
+  sweepLpm: 0.05,
+  spo2: 0.5,
+  paCO2: 0.5,
+  pH: 0.02,
+  venousLineSaturation: 0.5,
+  nativeCardiacOutputLpm: 0.1,
+  recirculationAdjustedCircuitFlowLpm: 0.05,
+})
+
+const deadbandLabels: Readonly<Record<keyof typeof ECMO_BASELINE_DISPLAY_DEADBANDS, string>> = {
+  bloodFlow: 'circuit blood flow, L/min',
+  rpmSetpoint: 'pump speed, rpm',
+  pVen: 'pVen, mmHg',
+  pInt: 'pInt, mmHg',
+  pArt: 'pArt, mmHg',
+  deltaP: 'the membrane gradient, mmHg',
+  sweepLpm: 'sweep, L/min',
+  spo2: 'patient SpO₂',
+  paCO2: 'the arterial carbon dioxide value, mmHg',
+  pH: 'pH',
+  venousLineSaturation: 'venous-line SvO₂',
+  nativeCardiacOutputLpm: 'native cardiac output, L/min',
+  recirculationAdjustedCircuitFlowLpm: 'recirculation-adjusted circuit flow, L/min',
+}
+
+/** Built from the constants above so the guide's own statement cannot drift from the behaviour. */
+const deadbandStatement = Object.entries(ECMO_BASELINE_DISPLAY_DEADBANDS)
+  .map(
+    ([key, value]) =>
+      `${deadbandLabels[key as keyof typeof ECMO_BASELINE_DISPLAY_DEADBANDS]} ${value}`,
+  )
+  .join('; ')
+
+const baselineChange: CriticalCareDerivedValueGuide = {
+  id: 'ecmo.baselineChangeFromEarlierValue',
+  label: 'Change from this circuit’s earlier value',
+  formula: 'value now − value earlier in this session',
+  liveValueType: 'derived',
+  interpretation:
+    'The quantity a baseline review actually reads. It is defined for one circuit against itself over a window in which nothing was deliberately changed, and it does not transfer to another circuit, another cannula configuration, or another patient.',
+  references: [
+    {
+      id: 'ecmo.baseline-change.own-earlier-value',
+      kind: 'patient-baseline',
+      statement:
+        'A change from this circuit’s own earlier value, over a window in which the settings were not altered, is the interpretable quantity. The absolute values themselves depend on cannula size and position, patient size, temperature, hemoglobin, volume state, the device configuration and local protocol.',
+      appliesWhen:
+        'A single patient–circuit followed over time. Comparing two circuits, two cannula configurations, or two patients compares different things.',
+      evidenceIds: ['elso-adult-vv-2021', 'ecmo-book-ch18', 'bounded-educational-model'],
+      caveat:
+        'A change read without knowing what else was altered in the same window is not interpretable.',
+    },
+    {
+      id: 'ecmo.baseline-change.display-deadbands',
+      kind: 'educational-model-boundary',
+      statement: `This simulation calls a change higher, lower, or unchanged using a per-signal display deadband: ${deadbandStatement}. A change exactly equal to a deadband reads as unchanged.`,
+      appliesWhen:
+        'Inside this simulation only, as a display aid so that a value moving in its last decimal does not read as movement. It is not a clinical tolerance and marks no boundary of safety.',
+      evidenceIds: ['bounded-educational-model'],
+      caveat: 'The raw change is printed beside every word these deadbands produce.',
+    },
+  ],
+  caveats:
+    'A window of modeled seconds is not a bedside window. A real baseline is established and re-read over hours, and the slow drift a real circuit shows over that time has no counterpart here.',
+  doNotInfer:
+    'Do not read a display deadband as a tolerance for acceptable drift, do not treat a change inside one as established stability, and do not carry any of these numbers to another circuit or to a bedside.',
+  conceptIds: ['cc.circuit.pressure-zones', 'cc.measurement.measured-estimated-inferred'],
+  reviewStatus: 'draft',
+}
+
 export const ecmoDerivedValueGuideList = registerCriticalCareDerivedValueGuides([
   deltaPTrend,
   venousLineSaturation,
   systemicVenousEstimate,
   oxygenConsumption,
   recirculationAdjustedFlow,
+  recirculationFraction,
+  baselineChange,
 ])
 
 export const ecmoDerivedValueGuides = {
@@ -174,4 +305,6 @@ export const ecmoDerivedValueGuides = {
   systemicVenousSaturationEstimate: systemicVenousEstimate,
   oxygenConsumption,
   recirculationAdjustedCircuitFlow: recirculationAdjustedFlow,
+  recirculationFraction,
+  baselineChangeFromEarlierValue: baselineChange,
 } as const

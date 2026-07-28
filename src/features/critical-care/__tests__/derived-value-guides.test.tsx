@@ -347,6 +347,130 @@ describe('shared evidence renderers', () => {
   })
 })
 
+/**
+ * A guide with no matching rule still has provenance.
+ *
+ * Several guides in this resource deliberately refuse to draw a band — the honest ones — and an
+ * earlier renderer showed references only inside a matched interpretation rule, which hid the
+ * sourcing of exactly those. The behaviour was corrected but never pinned, so it is pinned here.
+ */
+describe('rule-free and unmatched guide provenance', () => {
+  const richReference = {
+    id: 'provenance.reference.first',
+    kind: 'educational-model-boundary' as const,
+    statement: 'This simulation authors the quantity rather than measuring it.',
+    appliesWhen: 'Inside this simulation only.',
+    evidenceIds: ['pac-derived-part-2-2021'],
+    caveat: 'Everything feeding it is itself modeled.',
+  }
+  const secondReference = {
+    id: 'provenance.reference.second',
+    kind: 'source-reported-range' as const,
+    statement: 'One source reports trending rather than a single cut point.',
+    appliesWhen: 'Adult circuits in the supplied set.',
+    evidenceIds: ['pac-derived-part-2-2021'],
+  }
+
+  function expectFullProvenance(container: HTMLElement) {
+    const references = container.querySelectorAll('[data-reference-id]')
+    expect(references).toHaveLength(2)
+    expect(container.querySelector('[data-reference-id="provenance.reference.first"]')).toBeTruthy()
+    expect(
+      container.querySelector('[data-reference-id="provenance.reference.second"]'),
+    ).toBeTruthy()
+
+    const kinds = [...container.querySelectorAll('[data-reference-kind]')].map((node) =>
+      node.getAttribute('data-reference-kind'),
+    )
+    expect(kinds).toEqual(['educational-model-boundary', 'source-reported-range'])
+    for (const node of container.querySelectorAll('[data-reference-kind]')) {
+      expect(node.textContent?.trim()).toBeTruthy()
+    }
+
+    expect(container.textContent).toContain('Applies when:')
+    expect(container.textContent).toContain('Inside this simulation only.')
+    expect(container.textContent).toContain('Everything feeding it is itself modeled.')
+    expect(container.querySelector('[data-do-not-infer]')?.textContent).toContain(
+      'Do not infer anything from a test.',
+    )
+    for (const node of container.querySelectorAll('[data-evidence-ids]')) {
+      expect(node.textContent?.trim()).toBeTruthy()
+    }
+  }
+
+  it('renders every reference for a guide that authors no rules at all', () => {
+    const ruleFree = guide({
+      id: 'provenance.rule-free',
+      references: [richReference, secondReference],
+    })
+    const { container } = render(<DerivedValueReadout guide={ruleFree} value={42} />)
+
+    expect(container.querySelector('[data-live-value]')?.textContent).toContain('42')
+    expect(container.querySelector('[data-live-value-type]')?.textContent).toContain('Derived')
+    expect(container.querySelector('[data-guide-references]')).toBeTruthy()
+    // Nothing may stand in for an interpretation that was never authored.
+    expect(container.querySelector('[data-interpretation-rule]')).toBeNull()
+    expectFullProvenance(container)
+  })
+
+  it('renders every reference when rules exist but the value matches none of them', () => {
+    const unmatched = guide({
+      id: 'provenance.unmatched',
+      references: [richReference, secondReference],
+      rules: [
+        {
+          id: 'only-the-low-band',
+          interval: { lte: 1 },
+          statement: 'An interpretation that must not appear for a value of 42.',
+          referenceIds: ['provenance.reference.first'],
+        },
+      ],
+    })
+    const { container } = render(<DerivedValueReadout guide={unmatched} value={42} />)
+
+    expect(resolveInterpretation(unmatched, 42)).toBeNull()
+    expect(container.querySelector('[data-interpretation-rule]')).toBeNull()
+    expect(container.textContent).not.toContain('must not appear for a value of 42')
+    expect(container.querySelector('[data-guide-references]')).toBeTruthy()
+    expectFullProvenance(container)
+  })
+
+  it('renders the applicable interpretation and keeps its references when a rule matches', () => {
+    const matching = guide({
+      id: 'provenance.matched',
+      references: [richReference, secondReference],
+      rules: [
+        {
+          id: 'the-matching-band',
+          interval: { gte: 40 },
+          statement: 'The applicable interpretation for this value.',
+          referenceIds: ['provenance.reference.first', 'provenance.reference.second'],
+        },
+      ],
+    })
+    const { container } = render(<DerivedValueReadout guide={matching} value={42} />)
+
+    const rule = container.querySelector('[data-interpretation-rule="the-matching-band"]')
+    expect(rule).toBeTruthy()
+    expect(rule?.textContent).toContain('The applicable interpretation for this value.')
+    // References move inside the matched rule, but every one of them still renders in full.
+    expect(rule?.querySelectorAll('[data-reference-id]')).toHaveLength(2)
+    expectFullProvenance(container)
+  })
+
+  it('holds for every authored guide that draws no band', () => {
+    for (const authored of allCriticalCareDerivedValueGuides()) {
+      if (authored.rules && authored.rules.length > 0) continue
+      const { container, unmount } = render(<DerivedValueReadout guide={authored} value={1} />)
+      expect(container.querySelectorAll('[data-reference-id]')).toHaveLength(
+        authored.references.length,
+      )
+      expect(container.querySelector('[data-interpretation-rule]')).toBeNull()
+      unmount()
+    }
+  })
+})
+
 describe('ECMO normal-state lessons', () => {
   it('no longer attach the anti-Xa disagreement, which is not what they teach', async () => {
     const { ecmoFoundationSectionById } =

@@ -143,7 +143,10 @@ describe('CARDIOHELP ECMO routes', () => {
     'circuit-flow-path',
     'pump-and-pressure-zones',
     'blood-flow-versus-sweep',
-  ])('routes the shared foundation section %s to the new activity', async (lesson) => {
+    'vv-series-physiology',
+    'vv-normal-state',
+    'vv-integration-capstone',
+  ])('routes the interactive foundation section %s to the workspace activity', async (lesson) => {
     render(
       await CardiohelpEcmoLearnPage({
         params: Promise.resolve({ locale: 'en' }),
@@ -154,19 +157,75 @@ describe('CARDIOHELP ECMO routes', () => {
       'data-section-id',
       lesson,
     )
+    expect(screen.queryByTestId('ecmo-foundation-section')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('cardiohelp-workbench')).not.toBeInTheDocument()
   })
 
-  it('leaves the track-specific foundation sections on the prose view for now', async () => {
+  it.each(['vv-series-physiology', 'vv-normal-state', 'vv-integration-capstone'])(
+    'canonicalizes a VA track on the VV-only section %s instead of loading a VA circuit',
+    async (lesson) => {
+      await expect(
+        CardiohelpEcmoLearnPage({
+          params: Promise.resolve({ locale: 'en' }),
+          searchParams: Promise.resolve({ lesson, track: 'va' }),
+        }),
+      ).rejects.toMatchObject({
+        digest: expect.stringContaining(`/en/cardiohelp-ecmo/learn?lesson=${lesson}&track=vv`),
+      })
+      expect(screen.queryByTestId('ecmo-foundation-activity')).not.toBeInTheDocument()
+    },
+  )
+
+  it.each(['vv-series-physiology', 'vv-normal-state', 'vv-integration-capstone'])(
+    'renders %s directly once the track is already VV, so the redirect cannot loop',
+    async (lesson) => {
+      render(
+        await CardiohelpEcmoLearnPage({
+          params: Promise.resolve({ locale: 'en' }),
+          searchParams: Promise.resolve({ lesson, track: 'vv' }),
+        }),
+      )
+      expect(screen.getByTestId('ecmo-foundation-activity')).toHaveAttribute('data-track', 'vv')
+    },
+  )
+
+  it.each(['banana', '', 'VA', 'vv,va'])(
+    'restores VV for a VV-only section when the track value is stale or malformed (%s)',
+    async (track) => {
+      render(
+        await CardiohelpEcmoLearnPage({
+          params: Promise.resolve({ locale: 'en' }),
+          searchParams: Promise.resolve({ lesson: 'vv-normal-state', track }),
+        }),
+      )
+      expect(screen.getByTestId('ecmo-foundation-activity')).toHaveAttribute('data-track', 'vv')
+    },
+  )
+
+  it('keeps the working track toggle for a shared section on the VA reference', async () => {
     render(
       await CardiohelpEcmoLearnPage({
         params: Promise.resolve({ locale: 'en' }),
-        searchParams: Promise.resolve({ lesson: 'vv-normal-state', track: 'vv' }),
+        searchParams: Promise.resolve({ lesson: 'circuit-flow-path', track: 'va' }),
       }),
     )
-    const section = screen.getByTestId('ecmo-foundation-section')
-    expect(section).toHaveAttribute('data-section-id', 'vv-normal-state')
-    expect(screen.queryByTestId('ecmo-foundation-activity')).not.toBeInTheDocument()
+    expect(screen.getByTestId('ecmo-foundation-activity')).toHaveAttribute('data-track', 'va')
   })
+
+  it.each(['va-parallel-physiology', 'va-normal-state', 'va-integration-capstone'])(
+    'leaves the VA section %s on the prose view for now',
+    async (lesson) => {
+      render(
+        await CardiohelpEcmoLearnPage({
+          params: Promise.resolve({ locale: 'en' }),
+          searchParams: Promise.resolve({ lesson, track: 'va' }),
+        }),
+      )
+      const section = screen.getByTestId('ecmo-foundation-section')
+      expect(section).toHaveAttribute('data-section-id', lesson)
+      expect(screen.queryByTestId('ecmo-foundation-activity')).not.toBeInTheDocument()
+    },
+  )
 
   it('opens the guided workbench for a drill section', async () => {
     render(

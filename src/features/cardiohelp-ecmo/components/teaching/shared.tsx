@@ -15,7 +15,12 @@ import type { EcmoChannelReadout, EcmoSimulationState } from '../../engine/types
 
 export const styles = {
   panel: 'grid gap-4',
-  section: 'rounded-2xl border p-4',
+  /**
+   * `min-w-0` is load-bearing: these sections are grid items, and a grid item defaults to
+   * `min-width: auto`, so a wide child — the capstone's hypothesis matrix — would stretch the whole
+   * pane instead of scrolling inside its own `overflow-x-auto` wrapper.
+   */
+  section: 'min-w-0 rounded-2xl border p-4',
   heading: 'text-sm font-semibold uppercase tracking-wide text-muted-foreground',
   figureCaption: 'mt-2 text-xs leading-5 text-muted-foreground',
 } as const

@@ -1,4 +1,5 @@
-import type { Metadata } from 'next'
+import type { Metadata, Route } from 'next'
+import { redirect } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
 
 import { CardiohelpLearnLanding } from '@/features/cardiohelp-ecmo/components/CardiohelpLearnLanding'
@@ -7,10 +8,14 @@ import { CardiohelpWorkbench } from '@/features/cardiohelp-ecmo/components/Cardi
 import { EcmoFoundationLessonActivity } from '@/features/cardiohelp-ecmo/components/EcmoFoundationLessonActivity'
 import { EcmoFoundationSectionView } from '@/features/cardiohelp-ecmo/components/EcmoFoundationSectionView'
 import { isEcmoFoundationSectionId } from '@/features/cardiohelp-ecmo/content/foundationLessons'
-import { isEcmoSharedFoundationSectionId } from '@/features/cardiohelp-ecmo/content/foundationLessonRuntime'
+import {
+  ecmoFoundationSupportMode,
+  isEcmoInteractiveFoundationSectionId,
+} from '@/features/cardiohelp-ecmo/content/foundationLessonRuntime'
 import type { SupportMode } from '@/features/cardiohelp-ecmo/engine/types'
 import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
+import { defaultLocale, isActiveLocale } from '@/i18n/locale'
 
 const handoffMetadata: Metadata = {
   title: 'Learn · ECMO Management · CARDIOHELP console lab',
@@ -45,13 +50,26 @@ export default async function CardiohelpEcmoLearnPage({ params, searchParams }: 
   const track = requestedTrack(query?.track)
   setRequestLocale(locale)
 
-  // The four track-shared foundation sections now open a live three-pane workspace over a
-  // reference circuit. The six track-specific foundation sections still render as prose until
-  // their own packages land, and drill sections open the guided workbench.
-  if (isEcmoSharedFoundationSectionId(lesson)) {
+  // Seven foundation sections open the live three-pane workspace: the four shared by both tracks
+  // over whichever reference circuit is selected, and the three VV-only ones, which always run on
+  // the VV reference. The three VA sections still render as prose until their own package lands,
+  // and drill sections open the guided workbench.
+  if (isEcmoInteractiveFoundationSectionId(lesson)) {
+    const resolved = ecmoFoundationSupportMode(lesson, track)
+    if (resolved !== track) {
+      // A VV-only section asked for on the VA track. Canonicalize the URL rather than quietly
+      // rendering VV teaching under a VA query, and never load the VA reference behind it. The
+      // target is the same lesson with the resolved track, and the resolver is idempotent, so the
+      // redirect lands on a request that renders rather than redirecting again. The locale prefix
+      // is written explicitly because this app routes with `localePrefix: 'always'`.
+      const resolvedLocale = isActiveLocale(locale) ? locale : defaultLocale
+      redirect(
+        `/${resolvedLocale}/cardiohelp-ecmo/learn?lesson=${lesson}&track=${resolved}` as Route,
+      )
+    }
     return (
       <CardiohelpModuleFrame locale={locale} activeHref={`${cardiohelpEcmoNavBase}/learn`}>
-        <EcmoFoundationLessonActivity sectionId={lesson} supportMode={track} />
+        <EcmoFoundationLessonActivity sectionId={lesson} supportMode={resolved} />
       </CardiohelpModuleFrame>
     )
   }
