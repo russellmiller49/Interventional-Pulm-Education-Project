@@ -1,0 +1,4 @@
+product_id,manufacturer,product_name,canonical_catalog_number,classification,reason_codes,candidate_count,candidate_primary_di,candidate_catalog_number,candidate_company_name,candidate_model_number,commercial_distribution_status,public_version_date,backlog_comparison,decision
+PRD-019030A1C7,Karl Storz,Aspirator for Collecting Secretions with Cut-Off Hole,10432N,unmatched,no_candidate_found,0,,,,,,,not_previously_evaluated,pending_review
+PRD-1A152615A0,VisionAir Solutions,Patient-Specific Airway Stent Design and Manufacturing Service,CUSTOM-SERVICE,insufficient_identifiers,no_usable_identifier,0,,,,,,,existing_backlog_has_more_specific_match,pending_review
+PRD-C684D9ADCF,ERBE,"ERBECRYO 2 Exhaust Gas Hose, 10 m",20402-008,unmatched,no_candidate_found,0,,,,,,,not_previously_evaluated,pending_review

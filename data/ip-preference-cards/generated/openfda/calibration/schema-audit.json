@@ -1,0 +1,495 @@
+{
+  "format_version": 1,
+  "validated_cache_entries": 79,
+  "deduplicated_record_count": 113,
+  "schema_parse_failures": 0,
+  "malformed_records": 0,
+  "consistently_present_fields": [
+    "brand_name",
+    "commercial_distribution_status",
+    "company_name",
+    "device_count_in_base_package",
+    "gmdn_terms",
+    "has_donation_id_number",
+    "has_expiration_date",
+    "has_lot_or_batch_number",
+    "has_manufacturing_date",
+    "has_serial_number",
+    "identifiers",
+    "is_combination_product",
+    "is_direct_marking_exempt",
+    "is_hct_p",
+    "is_kit",
+    "is_labeled_as_no_nrl",
+    "is_labeled_as_nrl",
+    "is_otc",
+    "is_pm_exempt",
+    "is_rx",
+    "is_single_use",
+    "labeler_duns_number",
+    "mri_safety",
+    "product_codes",
+    "public_device_record_key",
+    "public_version_date",
+    "public_version_number",
+    "public_version_status",
+    "publish_date",
+    "record_status",
+    "sterilization",
+    "version_or_model_number"
+  ],
+  "commonly_missing_fields": [
+    {
+      "field": "storage",
+      "missing": 104,
+      "present": 9
+    },
+    {
+      "field": "commercial_distribution_end_date",
+      "missing": 97,
+      "present": 16
+    },
+    {
+      "field": "device_sizes",
+      "missing": 87,
+      "present": 26
+    },
+    {
+      "field": "customer_contacts",
+      "missing": 60,
+      "present": 53
+    },
+    {
+      "field": "premarket_submissions",
+      "missing": 53,
+      "present": 60
+    },
+    {
+      "field": "catalog_number",
+      "missing": 31,
+      "present": 82
+    },
+    {
+      "field": "device_description",
+      "missing": 26,
+      "present": 87
+    }
+  ],
+  "field_shapes": {
+    "brand_name": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "string": 113
+      }
+    },
+    "catalog_number": {
+      "present": 82,
+      "missing": 31,
+      "shapes": {
+        "string": 82
+      }
+    },
+    "commercial_distribution_end_date": {
+      "present": 16,
+      "missing": 97,
+      "shapes": {
+        "string": 16
+      }
+    },
+    "commercial_distribution_status": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "string": 113
+      }
+    },
+    "company_name": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "string": 113
+      }
+    },
+    "customer_contacts": {
+      "present": 53,
+      "missing": 60,
+      "shapes": {
+        "array": 53
+      }
+    },
+    "device_count_in_base_package": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "number": 113
+      }
+    },
+    "device_description": {
+      "present": 87,
+      "missing": 26,
+      "shapes": {
+        "string": 87
+      }
+    },
+    "device_sizes": {
+      "present": 26,
+      "missing": 87,
+      "shapes": {
+        "array": 26
+      }
+    },
+    "gmdn_terms": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "array": 113
+      }
+    },
+    "has_donation_id_number": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "string": 113
+      }
+    },
+    "has_expiration_date": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "boolean": 113
+      }
+    },
+    "has_lot_or_batch_number": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "boolean": 113
+      }
+    },
+    "has_manufacturing_date": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "boolean": 113
+      }
+    },
+    "has_serial_number": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "boolean": 113
+      }
+    },
+    "identifiers": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "array": 113
+      }
+    },
+    "is_combination_product": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "string": 113
+      }
+    },
+    "is_direct_marking_exempt": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "string": 113
+      }
+    },
+    "is_hct_p": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "string": 113
+      }
+    },
+    "is_kit": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "boolean": 113
+      }
+    },
+    "is_labeled_as_no_nrl": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "string": 113
+      }
+    },
+    "is_labeled_as_nrl": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "string": 113
+      }
+    },
+    "is_otc": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "string": 113
+      }
+    },
+    "is_pm_exempt": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "string": 113
+      }
+    },
+    "is_rx": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "string": 113
+      }
+    },
+    "is_single_use": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "boolean": 113
+      }
+    },
+    "labeler_duns_number": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "string": 113
+      }
+    },
+    "mri_safety": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "string": 113
+      }
+    },
+    "premarket_submissions": {
+      "present": 60,
+      "missing": 53,
+      "shapes": {
+        "array": 60
+      }
+    },
+    "product_codes": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "array": 113
+      }
+    },
+    "public_device_record_key": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "string": 113
+      }
+    },
+    "public_version_date": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "string": 113
+      }
+    },
+    "public_version_number": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "string": 113
+      }
+    },
+    "public_version_status": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "string": 113
+      }
+    },
+    "publish_date": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "string": 113
+      }
+    },
+    "record_status": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "string": 113
+      }
+    },
+    "sterilization": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "object": 113
+      }
+    },
+    "storage": {
+      "present": 9,
+      "missing": 104,
+      "shapes": {
+        "array": 9
+      }
+    },
+    "version_or_model_number": {
+      "present": 113,
+      "missing": 0,
+      "shapes": {
+        "string": 113
+      }
+    }
+  },
+  "additional_passthrough_fields": [
+    "customer_contacts",
+    "has_donation_id_number",
+    "is_combination_product",
+    "is_direct_marking_exempt",
+    "is_hct_p",
+    "is_labeled_as_no_nrl",
+    "is_labeled_as_nrl",
+    "is_otc",
+    "is_pm_exempt",
+    "is_rx",
+    "labeler_duns_number"
+  ],
+  "retained_field_shape_anomalies": [],
+  "identifiers": {
+    "identifier_count": 140,
+    "fields": {
+      "id": {
+        "present": 140,
+        "missing": 0,
+        "shapes": {
+          "string": 140
+        }
+      },
+      "issuing_agency": {
+        "present": 140,
+        "missing": 0,
+        "shapes": {
+          "string": 140
+        }
+      },
+      "package_discontinue_date": {
+        "present": 7,
+        "missing": 133,
+        "shapes": {
+          "string": 7
+        }
+      },
+      "package_status": {
+        "present": 18,
+        "missing": 122,
+        "shapes": {
+          "string": 18
+        }
+      },
+      "package_type": {
+        "present": 12,
+        "missing": 128,
+        "shapes": {
+          "string": 12
+        }
+      },
+      "quantity_per_package": {
+        "present": 18,
+        "missing": 122,
+        "shapes": {
+          "string": 18
+        }
+      },
+      "type": {
+        "present": 140,
+        "missing": 0,
+        "shapes": {
+          "string": 140
+        }
+      },
+      "unit_of_use_id": {
+        "present": 18,
+        "missing": 122,
+        "shapes": {
+          "string": 18
+        }
+      }
+    },
+    "identifier_types": {
+      "Primary": 113,
+      "Package": 18,
+      "Unit of Use": 7,
+      "Previous": 2
+    },
+    "package_types": {
+      "(missing)": 6,
+      "Case": 6,
+      "Crate": 2,
+      "CASE": 1,
+      "Level 1": 1,
+      "Level1": 1,
+      "Peel Pack": 1
+    },
+    "package_statuses": {
+      "In Commercial Distribution": 11,
+      "Not in Commercial Distribution": 7
+    }
+  },
+  "company_name_variations": {
+    "L&K BIOMED CO. ,LTD.": 26,
+    "OLYMPUS MEDICAL SYSTEMS CORP.": 24,
+    "Howmedica Osteonics Corp.": 14,
+    "TELEFLEX INCORPORATED": 6,
+    "BOSTON SCIENTIFIC CORPORATION": 4,
+    "Merit Medical Systems, Inc.": 4,
+    "Erbe Elektromedizin GmbH": 3,
+    "ORTHOPEDIATRICS CORP.": 3,
+    "Auris Health, Inc.": 2,
+    "BIOMET MICROFIXATION, INC": 2,
+    "Medartis AG": 2,
+    "NOVATECH": 2,
+    "Seaspine Orthopedics Corporation": 2,
+    "ASPEN SURGICAL PRODUCTS, INC.": 1,
+    "Atrium Medical Corporation": 1,
+    "BIO SB, INC.": 1,
+    "Cardinal Health, Inc.": 1,
+    "COOK INCORPORATED": 1,
+    "COOK IRELAND LTD": 1,
+    "DEROYAL INDUSTRIES, INC.": 1,
+    "FUSION ORTHOPEDICS, LLC": 1,
+    "Gc Orthodontics America Inc.": 1,
+    "Gyrus ACMI, LLC": 1,
+    "HNM STAINLESS, LLC.": 1,
+    "HOBBS MEDICAL, INC.": 1,
+    "KATENA PRODUCTS, INC.": 1,
+    "Power Dental U.S.A. Inc.": 1,
+    "Richard Wolf GmbH": 1,
+    "Scivita Medical Technology Co., Ltd.": 1,
+    "SCOTT'S DENTAL SUPPLY L.L.C.": 1,
+    "SHOFU DENTAL CORPORATION": 1,
+    "SPEX LIMITED": 1
+  },
+  "model_number_behavior": {
+    "present": 113,
+    "missing": 0,
+    "blank": 0,
+    "distinct_non_blank": 92
+  },
+  "distribution_status_values": {
+    "In Commercial Distribution": 97,
+    "Not in Commercial Distribution": 16
+  },
+  "package_level_observations": {
+    "records_with_package_identifier": 18,
+    "records_with_multiple_identifiers": 25
+  }
+}

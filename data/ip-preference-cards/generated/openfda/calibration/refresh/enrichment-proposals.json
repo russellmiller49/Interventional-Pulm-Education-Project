@@ -1,0 +1,355 @@
+[
+  {
+    "format_version": 1,
+    "product_id": "PRD-05780FEDD7",
+    "manufacturer": "Boston Scientific",
+    "product_name": "Ultraflex Partially Covered Tracheobronchial Stent System",
+    "catalog_number": "M00576560",
+    "classification": "review_required",
+    "reason_codes": [
+      "exact_existing_di_match",
+      "high_confidence_invariant_catalog_mismatch",
+      "high_confidence_invariant_failed",
+      "high_confidence_invariant_non_unique_eligible_candidate"
+    ],
+    "query_attempts": [
+      {
+        "kind": "primary_di",
+        "search": "identifiers.id:\"08714729842361\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": false,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"M00576560\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": false,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"M00576560\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": false,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 1,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "6c63113c-9e82-4791-a03a-8376626ba9bb",
+      "primary_di": "08714729842361",
+      "brand_name": "Ultraflex™ Tracheobronchial",
+      "company_name": "BOSTON SCIENTIFIC CORPORATION",
+      "catalog_number": null,
+      "version_or_model_number": "M00576560",
+      "commercial_distribution_status": "In Commercial Distribution",
+      "public_version_date": "2021-02-19",
+      "record_status": "Published",
+      "query_kinds": ["primary_di", "model_number"]
+    },
+    "proposed_fields": {
+      "primary_di": "08714729842361",
+      "additional_identifiers": [],
+      "brand_name": "Ultraflex™ Tracheobronchial",
+      "company_name": "BOSTON SCIENTIFIC CORPORATION",
+      "version_or_model_number": "M00576560",
+      "device_description": "Distal Release Stent System",
+      "device_count_in_base_package": 1,
+      "device_sizes": [
+        {
+          "type": "Device Size Text, specify",
+          "text": "40 mm Stent Length"
+        },
+        {
+          "type": "Device Size Text, specify",
+          "text": "12 mm Stent Diameter"
+        }
+      ],
+      "commercial_distribution_status": "In Commercial Distribution",
+      "commercial_distribution_end_date": null,
+      "is_kit": false,
+      "is_single_use": true,
+      "sterilization": {
+        "is_sterile": "true",
+        "is_sterilization_prior_use": "false"
+      },
+      "storage": [],
+      "product_codes": [
+        {
+          "code": "JCT",
+          "name": "Prosthesis, tracheal, expandable",
+          "openfda": {
+            "device_name": "Prosthesis, Tracheal, Expandable",
+            "medical_specialty_description": "General, Plastic Surgery",
+            "regulation_number": "878.3720",
+            "device_class": "2"
+          }
+        }
+      ],
+      "premarket_submissions": [],
+      "public_version_date": "2021-02-19",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "agrees_with_existing_backlog",
+    "retrieved_at": "2026-07-28T14:34:37.320Z",
+    "raw_cache_reference": "openfda-cache:1215085ce07f60a03d5b3c357c17fdbf0d7c9a9f862f3de78e5967d667099811.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-189E7EF27A",
+    "manufacturer": "Boston Scientific",
+    "product_name": "CRE Single-Use Pulmonary Balloon Dilatation Catheter",
+    "catalog_number": "M00550350",
+    "classification": "review_required",
+    "reason_codes": [
+      "exact_existing_di_match",
+      "high_confidence_invariant_catalog_mismatch",
+      "high_confidence_invariant_failed",
+      "high_confidence_invariant_non_unique_eligible_candidate"
+    ],
+    "query_attempts": [
+      {
+        "kind": "primary_di",
+        "search": "identifiers.id:\"08714729456230\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": false,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"M00550350\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": false,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"M00550350\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": false,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 1,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "15e8d051-99df-4d9b-b7d7-ca38ad452a03",
+      "primary_di": "08714729456230",
+      "brand_name": "CRE Pulmonary",
+      "company_name": "BOSTON SCIENTIFIC CORPORATION",
+      "catalog_number": null,
+      "version_or_model_number": "M00550350",
+      "commercial_distribution_status": "In Commercial Distribution",
+      "public_version_date": "2018-03-29",
+      "record_status": "Published",
+      "query_kinds": ["primary_di", "model_number"]
+    },
+    "proposed_fields": {
+      "primary_di": "08714729456230",
+      "additional_identifiers": [],
+      "brand_name": "CRE Pulmonary",
+      "company_name": "BOSTON SCIENTIFIC CORPORATION",
+      "version_or_model_number": "M00550350",
+      "device_description": "Pulmonary Balloon Dilatation Catheter",
+      "device_count_in_base_package": 1,
+      "device_sizes": [
+        {
+          "type": "Device Size Text, specify",
+          "text": "15 mm Diameter"
+        },
+        {
+          "type": "Device Size Text, specify",
+          "text": "13.5 mm Diameter"
+        },
+        {
+          "type": "Device Size Text, specify",
+          "text": "12 mm Diameter"
+        }
+      ],
+      "commercial_distribution_status": "In Commercial Distribution",
+      "commercial_distribution_end_date": null,
+      "is_kit": false,
+      "is_single_use": true,
+      "sterilization": {
+        "is_sterile": "true",
+        "is_sterilization_prior_use": "false"
+      },
+      "storage": [],
+      "product_codes": [
+        {
+          "code": "KTI",
+          "name": "BRONCHOSCOPE ACCESSORY",
+          "openfda": {
+            "device_name": "Bronchoscope Accessory",
+            "medical_specialty_description": "Ear, Nose, Throat",
+            "regulation_number": "874.4680",
+            "device_class": "2"
+          }
+        }
+      ],
+      "premarket_submissions": [],
+      "public_version_date": "2018-03-29",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "agrees_with_existing_backlog",
+    "retrieved_at": "2026-07-28T14:34:38.344Z",
+    "raw_cache_reference": "openfda-cache:24ede019b792389f6acd3971d61280731174c4f37ce520ca1968f106634e6b99.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-2302DA77DA",
+    "manufacturer": "Boston Scientific",
+    "product_name": "Expect Pulmonary EBUS-TBNA Needle",
+    "catalog_number": "M00558220",
+    "classification": "review_required",
+    "reason_codes": [
+      "exact_existing_di_match",
+      "high_confidence_invariant_catalog_mismatch",
+      "high_confidence_invariant_failed",
+      "high_confidence_invariant_non_unique_eligible_candidate"
+    ],
+    "query_attempts": [
+      {
+        "kind": "primary_di",
+        "search": "identifiers.id:\"08714729861409\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": false,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"M00558220\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": false,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"M00558220\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": false,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 1,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "e09dac7b-573b-49fc-b197-cec7744f7303",
+      "primary_di": "08714729861409",
+      "brand_name": "Expect Pulmonary",
+      "company_name": "BOSTON SCIENTIFIC CORPORATION",
+      "catalog_number": null,
+      "version_or_model_number": "M00558220",
+      "commercial_distribution_status": "In Commercial Distribution",
+      "public_version_date": "2019-07-12",
+      "record_status": "Published",
+      "query_kinds": ["primary_di", "model_number"]
+    },
+    "proposed_fields": {
+      "primary_di": "08714729861409",
+      "additional_identifiers": [
+        {
+          "id": "08714729861430",
+          "type": "Package",
+          "issuing_agency": "GS1",
+          "unit_of_use_id": "08714729861409",
+          "package_status": "In Commercial Distribution",
+          "package_type": null
+        }
+      ],
+      "brand_name": "Expect Pulmonary",
+      "company_name": "BOSTON SCIENTIFIC CORPORATION",
+      "version_or_model_number": "M00558220",
+      "device_description": "Endobronchial Ultrasound Transbronchial Aspiration Needle",
+      "device_count_in_base_package": 1,
+      "device_sizes": [
+        {
+          "type": "Device Size Text, specify",
+          "text": "0.72 mm Diameter"
+        },
+        {
+          "type": "Device Size Text, specify",
+          "text": "22 ga Diameter"
+        }
+      ],
+      "commercial_distribution_status": "In Commercial Distribution",
+      "commercial_distribution_end_date": null,
+      "is_kit": false,
+      "is_single_use": true,
+      "sterilization": {
+        "is_sterile": "true",
+        "is_sterilization_prior_use": "false"
+      },
+      "storage": [],
+      "product_codes": [
+        {
+          "code": "EOQ",
+          "name": "BRONCHOSCOPE (FLEXIBLE OR RIGID)",
+          "openfda": {
+            "device_name": "Bronchoscope (Flexible Or Rigid)",
+            "medical_specialty_description": "Ear, Nose, Throat",
+            "regulation_number": "874.4680",
+            "device_class": "2"
+          }
+        },
+        {
+          "code": "FCG",
+          "name": "Biopsy needle",
+          "openfda": {
+            "device_name": "Biopsy Needle",
+            "medical_specialty_description": "Gastroenterology, Urology",
+            "regulation_number": "876.1075",
+            "device_class": "2"
+          }
+        }
+      ],
+      "premarket_submissions": [],
+      "public_version_date": "2019-07-12",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "agrees_with_existing_backlog",
+    "retrieved_at": "2026-07-28T14:34:36.974Z",
+    "raw_cache_reference": "openfda-cache:7ee3b2896ccc3b8f876b68d98ed872cd3a3428c5baf239d39f66510400f295c9.json",
+    "decision": "pending_review"
+  }
+]

@@ -31,6 +31,10 @@ pids
 /local-data/literature/
 /IP_PubMed/nbib files/
 
+# Local openFDA UDI request cache and opt-in bulk partitions
+/local-data/ip-preference-cards/openfda/
+/data/ip-preference-cards/openfda-bulk/
+
 # FluoroView raw source data and VM transfer bundles
 /fluoro_2/
 *.dcm
@@ -281,6 +285,9 @@ Preference_card_module/AccessGUDID_Delimited_Full_Release_*/
 Preference_card_module/UCSD/
 # Manufacturer catalogs and IFUs cited by source id in generated/sources.json. The citation
 # records the document; the document itself stays out of the repo.
+Preference_card_module/Catalogs and IFU for confirmation/**/*.pdf
+# Belt and braces: a single * does not cross directory boundaries, so the pattern above
+# is what catches vendor subfolders such as .../Steris/.
 Preference_card_module/Catalogs and IFU for confirmation/*.pdf
 
 # Excel lock/temp files.

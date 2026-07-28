@@ -1,5 +1,6 @@
 import { cardiohelpScenarioById, cardiohelpScenarios } from '../content/scenarios'
 import { clinicalPracticeScenarioById } from '../content/clinicalCases'
+import { ecmoReferenceProfiles, type EcmoReferenceProfileId } from '../content/referenceProfiles'
 import type {
   AlarmEvent,
   AlarmPriority,
@@ -83,10 +84,10 @@ export const RECIRCULATION_FRACTION = Object.freeze({
 export const defaultCircuitState: CircuitState = {
   bloodFlow: 4,
   pVen: -34,
-  pInt: 250,
-  pArt: 190,
+  pInt: 242,
+  pArt: 210,
   pAux: null,
-  deltaP: 60,
+  deltaP: 32,
   tVen: 36.5,
   tArt: 36.8,
   svo2: 68,
@@ -96,6 +97,7 @@ export const defaultCircuitState: CircuitState = {
   postOxygenatorSaturation: 99,
   recirculationFraction: RECIRCULATION_FRACTION.baseline,
   effectiveFlow: 3.68,
+  pressureSignalsValid: true,
   drainageChatter: false,
   flowSensorConnected: true,
   arterialBubbleDetected: false,
@@ -135,6 +137,34 @@ export const defaultPatientState: PatientState = {
   temperature: 37,
   distalLimbPerfusion: 'normal',
   distalLimbNirs: 68,
+}
+
+/**
+ * The scenario runtime a reference circuit carries: everything scored is empty and stays empty.
+ * The prediction is marked committed so no surface offers a prediction step for a circuit that
+ * poses no question.
+ */
+function createReferenceRuntime(profileId: string): ScenarioRuntime {
+  return {
+    scenarioId: profileId,
+    family: 'orientation',
+    // The circuit is there to be read, not acted on toward a scored goal.
+    phase: 'act',
+    activeFaults: [],
+    correctedFaults: [],
+    injectedTimedFaultIds: [],
+    prediction: { committed: true, goalId: null, control: null, direction: null },
+    reassessment: null,
+    credit: { goal: false, control: false, direction: false, cause: false, reassessment: false },
+    penalties: 0,
+    hintPenalty: 0,
+    usedHintIds: [],
+    criticalErrors: [],
+    completedObjectiveIds: [],
+    attempts: 1,
+    causeCorrectedAt: null,
+    clinical: null,
+  }
 }
 
 function createScenarioRuntime(definition: ScenarioDefinition): ScenarioRuntime {
@@ -214,6 +244,51 @@ export function createInitialSimulationState(
         time: 0,
         kind: 'system' as const,
         label: `Loaded ${definition.title}`,
+      },
+    ],
+  }
+
+  return deriveSimulation({ ...base, trends: [initialTrend(base)] })
+}
+
+/**
+ * A running, fault-free circuit for the didactic Learn sections.
+ *
+ * Built from an authored reference profile rather than a scenario: no faults, no timed faults, no
+ * objectives, no prediction, no scoring, and the pump running from the first frame. The profile
+ * authors only inputs — RPM, sweep, support mode and patient state — so flow and the three
+ * pressures are derived here exactly as they are anywhere else, and are then checked against the
+ * profile's `expected` bounds by the dump harness and by tests.
+ */
+export function createReferenceSimulationState(
+  profileId: EcmoReferenceProfileId,
+): EcmoSimulationState {
+  const profile = ecmoReferenceProfiles[profileId]
+  const base = {
+    version: SIMULATION_VERSION,
+    supportMode: profile.supportMode,
+    simulationMode: 'guided' as EcmoSimulationState['simulationMode'],
+    simulationTime: 0,
+    paused: false,
+    device: {
+      ...defaultDeviceState,
+      rpmSetpoint: profile.inputs.rpmSetpoint,
+      pumpRunning: true,
+      pumpMode: 'rpm' as const,
+      displayedSetpoint: profile.inputs.rpmSetpoint,
+    },
+    circuit: { ...defaultCircuitState },
+    gas: { ...defaultGasState, ...profile.inputs.gas },
+    patient: { ...defaultPatientState, ...profile.inputs.patient },
+    scenario: createReferenceRuntime(profile.id),
+    alarms: [] as readonly AlarmEvent[],
+    alarmHistory: [] as readonly AlarmEvent[],
+    history: [
+      {
+        id: `system-0-${profile.id}`,
+        time: 0,
+        kind: 'system' as const,
+        label: `Loaded ${profile.title}`,
       },
     ],
   }
@@ -357,94 +432,99 @@ function alarmDescriptors(state: EcmoSimulationState): AlarmDescriptor[] {
     })
   }
 
-  if (circuit.pVen < device.limits.pVenAlarmLow - 10) {
-    descriptors.push({
-      code: 'PVEN_STOP',
-      message: pressureProtectionActive
-        ? 'pVen below intervention range - pump stopped'
-        : 'pVen critically below limit - intervention bypassed',
-      priority: pressureProtectionActive ? 'high' : 'low',
-      source: 'device',
-      parameter: 'pVen',
-    })
-  } else if (circuit.pVen < device.limits.pVenAlarmLow) {
-    descriptors.push({
-      code: 'PVEN_INTERVENTION',
-      message: pressureProtectionActive
-        ? 'pVen below alarm limit - RPM intervention'
-        : 'pVen below alarm limit - intervention bypassed',
-      priority: pressureProtectionActive ? 'medium' : 'low',
-      source: 'device',
-      parameter: 'pVen',
-    })
-  } else if (circuit.pVen < device.limits.pVenWarningLow) {
-    descriptors.push({
-      code: 'PVEN_WARNING',
-      message: 'pVen below warning limit',
-      priority: 'low',
-      source: 'device',
-      parameter: 'pVen',
-    })
-  }
+  // A channel that is not reporting a supported value cannot breach a limit. Alarming on the
+  // zero-flow intercept of a stopped circuit would be alarming on an artefact. Power, gas and
+  // patient alarms below are unaffected — a stopped pump on battery must still alarm.
+  if (circuit.pressureSignalsValid) {
+    if (circuit.pVen < device.limits.pVenAlarmLow - 10) {
+      descriptors.push({
+        code: 'PVEN_STOP',
+        message: pressureProtectionActive
+          ? 'pVen below intervention range - pump stopped'
+          : 'pVen critically below limit - intervention bypassed',
+        priority: pressureProtectionActive ? 'high' : 'low',
+        source: 'device',
+        parameter: 'pVen',
+      })
+    } else if (circuit.pVen < device.limits.pVenAlarmLow) {
+      descriptors.push({
+        code: 'PVEN_INTERVENTION',
+        message: pressureProtectionActive
+          ? 'pVen below alarm limit - RPM intervention'
+          : 'pVen below alarm limit - intervention bypassed',
+        priority: pressureProtectionActive ? 'medium' : 'low',
+        source: 'device',
+        parameter: 'pVen',
+      })
+    } else if (circuit.pVen < device.limits.pVenWarningLow) {
+      descriptors.push({
+        code: 'PVEN_WARNING',
+        message: 'pVen below warning limit',
+        priority: 'low',
+        source: 'device',
+        parameter: 'pVen',
+      })
+    }
 
-  if (circuit.pInt > device.limits.pIntAlarmHigh + 10) {
-    descriptors.push({
-      code: 'PINT_STOP',
-      message: pressureProtectionActive
-        ? 'pInt above intervention range - pump stopped'
-        : 'pInt critically above limit - intervention bypassed',
-      priority: pressureProtectionActive ? 'high' : 'low',
-      source: 'device',
-      parameter: 'pInt',
-    })
-  } else if (circuit.pInt > device.limits.pIntAlarmHigh) {
-    descriptors.push({
-      code: 'PINT_INTERVENTION',
-      message: pressureProtectionActive
-        ? 'pInt above alarm limit - RPM intervention'
-        : 'pInt above alarm limit - intervention bypassed',
-      priority: pressureProtectionActive ? 'medium' : 'low',
-      source: 'device',
-      parameter: 'pInt',
-    })
-  } else if (circuit.pInt > device.limits.pIntWarningHigh) {
-    descriptors.push({
-      code: 'PINT_WARNING',
-      message: 'pInt above warning limit',
-      priority: 'low',
-      source: 'device',
-      parameter: 'pInt',
-    })
-  }
+    if (circuit.pInt > device.limits.pIntAlarmHigh + 10) {
+      descriptors.push({
+        code: 'PINT_STOP',
+        message: pressureProtectionActive
+          ? 'pInt above intervention range - pump stopped'
+          : 'pInt critically above limit - intervention bypassed',
+        priority: pressureProtectionActive ? 'high' : 'low',
+        source: 'device',
+        parameter: 'pInt',
+      })
+    } else if (circuit.pInt > device.limits.pIntAlarmHigh) {
+      descriptors.push({
+        code: 'PINT_INTERVENTION',
+        message: pressureProtectionActive
+          ? 'pInt above alarm limit - RPM intervention'
+          : 'pInt above alarm limit - intervention bypassed',
+        priority: pressureProtectionActive ? 'medium' : 'low',
+        source: 'device',
+        parameter: 'pInt',
+      })
+    } else if (circuit.pInt > device.limits.pIntWarningHigh) {
+      descriptors.push({
+        code: 'PINT_WARNING',
+        message: 'pInt above warning limit',
+        priority: 'low',
+        source: 'device',
+        parameter: 'pInt',
+      })
+    }
 
-  if (circuit.pArt > device.limits.pArtAlarmHigh + 10) {
-    descriptors.push({
-      code: 'PART_STOP',
-      message: pressureProtectionActive
-        ? 'pArt above intervention range - pump stopped'
-        : 'pArt critically above limit - intervention bypassed',
-      priority: pressureProtectionActive ? 'high' : 'low',
-      source: 'device',
-      parameter: 'pArt',
-    })
-  } else if (circuit.pArt > device.limits.pArtAlarmHigh) {
-    descriptors.push({
-      code: 'PART_INTERVENTION',
-      message: pressureProtectionActive
-        ? 'pArt above alarm limit - RPM intervention'
-        : 'pArt above alarm limit - intervention bypassed',
-      priority: pressureProtectionActive ? 'medium' : 'low',
-      source: 'device',
-      parameter: 'pArt',
-    })
-  } else if (circuit.pArt > device.limits.pArtWarningHigh) {
-    descriptors.push({
-      code: 'PART_WARNING',
-      message: 'pArt above warning limit',
-      priority: 'low',
-      source: 'device',
-      parameter: 'pArt',
-    })
+    if (circuit.pArt > device.limits.pArtAlarmHigh + 10) {
+      descriptors.push({
+        code: 'PART_STOP',
+        message: pressureProtectionActive
+          ? 'pArt above intervention range - pump stopped'
+          : 'pArt critically above limit - intervention bypassed',
+        priority: pressureProtectionActive ? 'high' : 'low',
+        source: 'device',
+        parameter: 'pArt',
+      })
+    } else if (circuit.pArt > device.limits.pArtAlarmHigh) {
+      descriptors.push({
+        code: 'PART_INTERVENTION',
+        message: pressureProtectionActive
+          ? 'pArt above alarm limit - RPM intervention'
+          : 'pArt above alarm limit - intervention bypassed',
+        priority: pressureProtectionActive ? 'medium' : 'low',
+        source: 'device',
+        parameter: 'pArt',
+      })
+    } else if (circuit.pArt > device.limits.pArtWarningHigh) {
+      descriptors.push({
+        code: 'PART_WARNING',
+        message: 'pArt above warning limit',
+        priority: 'low',
+        source: 'device',
+        parameter: 'pArt',
+      })
+    }
   }
 
   if (device.powerSource === 'battery') {
@@ -562,10 +642,52 @@ function calculateBloodFlow(state: EcmoSimulationState, rpm: number): number {
   return round(clamp(flow, -9.99, 9.99), 2)
 }
 
+/**
+ * Pressure drop across the membrane lung, per litre per minute of blood flow.
+ *
+ * Deliberately proportional to flow with no constant term: the gradient across an oxygenator is a
+ * resistance times a flow, so at zero flow it must be zero. The previous form carried a fixed
+ * +50 mmHg offset, which both survived a stopped pump and put the normal circuit at a delta-p near
+ * 60 mmHg — high enough that the module's own authored return-obstruction text ("delta-p need not
+ * rise substantially") contradicted what the engine produced.
+ *
+ * Evidence boundary: bounded-educational-model. A resistance coefficient, not a device claim.
+ */
+const MEMBRANE_RESISTANCE_MMHG_PER_LPM = Object.freeze({
+  /** Reference circuit: about 31 mmHg at 4.05 L/min. */
+  reference: 7.8,
+  /** Fouled or thrombosed membrane: the same relationship with a much larger coefficient. */
+  elevated: 46,
+})
+
+/**
+ * The pressure display range the CARDIOHELP-i supports. Values outside it are among the cases the
+ * IFU says display as dashes rather than as a number (Rev 2.3 §14.8, page 201).
+ */
+const PRESSURE_DISPLAY_RANGE_MMHG = Object.freeze({ low: -500, high: 900 })
+
+/**
+ * Whether the pressure channels currently mean anything.
+ *
+ * Deliberately narrow: it says the model is not describing this state, not that the real device
+ * would read nothing. A stopped pump on a primed circuit has genuine static pressures; this
+ * simulation simply does not model them, and saying so is more honest than reporting the zero-flow
+ * intercepts of equations written for a flowing circuit.
+ */
+function derivePressureSignalsValid(
+  state: EcmoSimulationState,
+  device: DeviceState,
+  flow: number,
+): boolean {
+  // A clamped line is a modelled state with a real, teachable pressure, so it stays valid.
+  if (state.circuit.drainageClampClosed || state.circuit.returnClampClosed) return true
+  return device.pumpRunning && !device.zeroFlowActive && flow > 0
+}
+
 function calculatePressures(state: EcmoSimulationState, flow: number, rpm: number) {
   let pVen = -25 - flow * 2.4
-  let pArt = 125 + flow * 16
-  let pInt = pArt + 50 + flow * 2.5
+  let pArt = 146 + flow * 16
+  let pInt = pArt + flow * MEMBRANE_RESISTANCE_MMHG_PER_LPM.reference
 
   if (hasFault(state, 'preload-limited')) {
     pVen = -35 - Math.max(0, rpm - 2700) * 0.052
@@ -577,12 +699,16 @@ function calculatePressures(state: EcmoSimulationState, flow: number, rpm: numbe
     pVen = -65 - Math.max(0, rpm - 2700) * 0.15
   }
   if (hasFault(state, 'return-obstruction')) {
+    // Obstruction sits downstream of the membrane, so both pressures rise together and the
+    // gradient across the membrane keeps tracking flow. That is the sign that separates this from
+    // an oxygenator problem, and the authored scenario text says so.
     pArt = 285 + flow * 10
-    pInt = pArt + 58
+    pInt = pArt + flow * MEMBRANE_RESISTANCE_MMHG_PER_LPM.reference
   }
   if (hasFault(state, 'oxygenator-resistance')) {
+    // The membrane itself is the resistance, so the gradient rises out of proportion to flow.
     pArt = 165 + flow * 8
-    pInt = pArt + 110 + flow * 8
+    pInt = pArt + flow * MEMBRANE_RESISTANCE_MMHG_PER_LPM.elevated
   }
   if (state.circuit.drainageClampClosed && state.device.pumpRunning && rpm > 0) {
     pVen = -350
@@ -592,10 +718,13 @@ function calculatePressures(state: EcmoSimulationState, flow: number, rpm: numbe
     pInt = 690
   }
 
+  // Clamped to the range the CARDIOHELP-i can display, so the engine cannot produce a pressure the
+  // console has no way to show (Rev 2.3 §14.8, page 201).
+  const { low, high } = PRESSURE_DISPLAY_RANGE_MMHG
   return {
-    pVen: round(clamp(pVen, -500, 900), 0),
-    pInt: round(clamp(pInt, -500, 900), 0),
-    pArt: round(clamp(pArt, -500, 900), 0),
+    pVen: round(clamp(pVen, low, high), 0),
+    pInt: round(clamp(pInt, low, high), 0),
+    pArt: round(clamp(pArt, low, high), 0),
   }
 }
 
@@ -687,7 +816,9 @@ export function deriveMixedVenousSaturation(
     HUFNER_CONSTANT_ML_PER_G * state.circuit.hemoglobin * Math.max(systemicFlowLpm, 0.2) * 10
   const extractedSaturationPoints =
     (ASSUMED_OXYGEN_CONSUMPTION_ML_MIN / oxygenCarryingCapacity) * 100
-  return clamp(arterialSaturation - extractedSaturationPoints, 20, 95)
+  // Clamped to the SvO2 range the CARDIOHELP-i can display (Rev 2.3 §14.8, page 201: 40.0-99.9%).
+  // A modelled value below that floor is not something this console could show as a number.
+  return clamp(arterialSaturation - extractedSaturationPoints, 40, 99.9)
 }
 
 /**
@@ -894,6 +1025,7 @@ export function deriveSimulation(state: EcmoSimulationState): EcmoSimulationStat
     flow = 0
   }
   const pressures = calculatePressures(state, flow, device.zeroFlowActive ? 0 : device.rpmSetpoint)
+  const pressureSignalsValid = derivePressureSignalsValid(state, device, flow)
   const recirculationFraction = deriveRecirculationFraction(state)
   const effectiveFlow = deriveEffectiveFlow(flow, recirculationFraction)
   const mixedVenousSaturation = deriveMixedVenousSaturation(state, effectiveFlow)
@@ -910,6 +1042,7 @@ export function deriveSimulation(state: EcmoSimulationState): EcmoSimulationStat
     deltaP: round(pressures.pInt - pressures.pArt, 0),
     recirculationFraction: round(recirculationFraction, 3),
     effectiveFlow: round(effectiveFlow, 2),
+    pressureSignalsValid,
     svo2: round(mixedVenousSaturation, 1),
     drainageChatter:
       (hasFault(state, 'preload-limited') ||

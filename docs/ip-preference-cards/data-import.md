@@ -19,7 +19,7 @@ npm run ip-cards:seed
 
 The importer reads headers from Excel row 4, begins records on row 5, and writes normalized server-side JSON to `data/ip-preference-cards/generated/`. It never parses the workbook in the browser, mutates `verification_status` or `live_dropdown_status`, or copies a suggested GUDID identifier into a canonical product.
 
-## Current result
+## Current workbook result
 
 Workbook SHA-256:
 
@@ -29,7 +29,7 @@ fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf
 
 | Dataset                    |  Rows |
 | -------------------------- | ----: |
-| Products                   | 1,221 |
+| Workbook products          | 1,221 |
 | Product roles              | 1,268 |
 | Procedures                 |    13 |
 | Procedure slots            |   174 |
@@ -42,6 +42,12 @@ fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf
 | Formulary staging          | 1,221 |
 | Modifier catalog           |    30 |
 | Verification backlog       | 1,221 |
+
+The importer then merges 253 reviewed rows from `seed/catalog-additions.json`, producing
+1,474 products in `generated/catalog-products.json`. The workbook-backed verification
+backlog and formulary staging remain 1,221 rows; additions do not fabricate local decisions.
+The full count reconciliation and duplicate audit are in
+[`openfda-live-calibration-report.md`](./openfda-live-calibration-report.md).
 
 The current supplied workbook has 80 non-null GTIN values, and all 80 are already represented as 14-character strings. This differs from the older measured pattern quoted in the build brief. The importer validates the file actually supplied: it preserves leading zeros, reports non-14-digit values, and never truncates or rounds. The regression fixture confirms `08714729986225` and leading-zero catalog number `02841S` survive exactly.
 
@@ -89,13 +95,15 @@ Cardinal Health would otherwise contribute hundreds of thousands of unrelated re
 
 ### Curated catalog additions
 
-`seed/catalog-additions.json` carries products the workbook does not, currently the
-Getinge/Atrium thoracic drainage line. Identity, DI/GTIN, distribution status, sterility, and
-single-use come from GUDID; product family naming, part numbers, and configuration come from
-the Getinge US product pages (SRC047). Only devices GUDID reports as in commercial
-distribution are emitted. `apply-catalog-additions.ts` merges them at import time and
-validates them against the workbook's own vocabularies — unknown role codes or source ids,
-or a colliding product id, fail the import.
+`seed/catalog-additions.json` carries products the workbook does not: Getinge/Atrium and
+Teleflex thoracic drainage, FUJIFILM bronchoscopy/ultrasound equipment, Auris and Noah
+robotic-bronchoscopy equipment, Olympus scope additions, and ICU Medical tracheostomy
+products. Identity, DI/GTIN, distribution status, sterility, and single-use come from GUDID;
+manufacturer sources support product family naming, part numbers, dimensions, and
+configuration. Only devices the seed-generation review found in commercial distribution
+are emitted. `apply-catalog-additions.ts` merges them at import time and validates them
+against the workbook's own vocabularies — unknown role codes or source ids, or a colliding
+product id, fail the import.
 
 ### Brand-level discovery
 
@@ -123,3 +131,15 @@ The explorer surfaces one derived signal from this queue: a **Not currently dist
 badge. A product is flagged only when _every_ strong match says the device is out of
 commercial distribution, so a product that is discontinued in one package configuration but
 still active in another is not mislabeled.
+
+## openFDA enrichment is a separate proposal layer
+
+The optional openFDA pipeline documented in
+[`openfda-enrichment.md`](./openfda-enrichment.md) reads the normalized catalog and existing
+verification backlog but does not participate in workbook import. It writes candidate
+proposals and review reports under `generated/openfda/`; it never patches imported products,
+verification decisions, hospital formulary staging, or the source workbook.
+
+Re-running `ip-cards:import` is therefore independent of openFDA cache state. Conversely, a
+high-confidence openFDA match remains pending human review and does not make a product
+selectable, clinically ready, compatible, locally available, or orderable.

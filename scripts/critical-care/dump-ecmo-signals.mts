@@ -13,9 +13,11 @@
  *
  * The summary line screens for numbers the run cannot support. It should stay at zero flags.
  */
+import { ecmoReferenceProfileList } from '../../src/features/cardiohelp-ecmo/content/referenceProfiles.ts'
 import { cardiohelpScenarios } from '../../src/features/cardiohelp-ecmo/content/scenarios.ts'
 import {
   createInitialSimulationState,
+  createReferenceSimulationState,
   ecmoSimulationReducer,
 } from '../../src/features/cardiohelp-ecmo/engine/index.ts'
 import type {
@@ -42,6 +44,11 @@ function advanced(scenarioId: string, steps: number): EcmoSimulationState[] {
 
 function n(value: number, places = 1): string {
   return value.toFixed(places).padStart(7)
+}
+
+/** Renders a pressure the way the console must: dashes when the channel means nothing. */
+function p(value: number, valid: boolean): string {
+  return valid ? value.toFixed(0).padStart(7) : '--'.padStart(7)
 }
 
 interface Flag {
@@ -72,6 +79,20 @@ function inspect(scenarioId: string, frames: readonly EcmoSimulationState[]): vo
 
   for (const frame of frames) {
     const { circuit } = frame
+    // A pressure channel the model does not support must not read as live data, and must not
+    // alarm. The IFU's convention is dashes for an unavailable value (Rev 2.3 p47).
+    if (!circuit.pressureSignalsValid) {
+      const pressureAlarm = frame.alarms.find((alarm) =>
+        ['pVen', 'pInt', 'pArt'].includes(alarm.parameter ?? ''),
+      )
+      if (pressureAlarm) {
+        flags.push({
+          scenarioId,
+          reason: `pressure alarm ${pressureAlarm.code} raised while the channels are invalid`,
+        })
+        break
+      }
+    }
     if (circuit.effectiveFlow > circuit.bloodFlow + 0.01) {
       flags.push({ scenarioId, reason: 'effective flow exceeds displayed flow' })
       break
@@ -108,6 +129,74 @@ function inspect(scenarioId: string, frames: readonly EcmoSimulationState[]): vo
   }
 }
 
+/**
+ * The reference profiles author only inputs; flow and the pressures are derived. This is where
+ * that promise is kept — if the physics stops producing what a profile says to expect, it fails
+ * here rather than silently teaching a number the model does not make.
+ */
+function checkReferenceProfiles(): void {
+  console.log('\nReference circuits — derived state against authored bounds\n')
+  console.log(
+    'profile          mode     flow      Rf     pVen    pArt    pInt      dP     eff    SvO2',
+  )
+  for (const profile of ecmoReferenceProfileList) {
+    let state = createReferenceSimulationState(profile.id)
+    for (let step = 0; step < 12; step += 1) state = run(state, [{ type: 'STEP' }])
+    const c = state.circuit
+    console.log(
+      [
+        profile.id.padEnd(16),
+        profile.supportMode.toUpperCase().padEnd(4),
+        n(c.bloodFlow, 2),
+        n(c.recirculationFraction, 3),
+        n(c.pVen, 0),
+        n(c.pArt, 0),
+        n(c.pInt, 0),
+        n(c.deltaP, 0),
+        n(c.effectiveFlow, 2),
+        n(c.svo2),
+      ].join(' '),
+    )
+
+    const e = profile.expected
+    const within = (label: string, value: number, range?: EcmoRange) => {
+      if (!range) return
+      if (value < range.low || value > range.high) {
+        flags.push({
+          scenarioId: profile.id,
+          reason: `${label} ${value} outside authored ${range.low}..${range.high}`,
+        })
+      }
+    }
+    within('bloodFlow', c.bloodFlow, e.bloodFlow)
+    within('pVen', c.pVen, e.pVen)
+    within('pArt', c.pArt, e.pArt)
+    within('pInt', c.pInt, e.pInt)
+    within('deltaP', c.deltaP, e.deltaP)
+    within('effectiveFlow', c.effectiveFlow, e.effectiveFlow)
+    within('pulsePressure', state.patient.pulsePressure, e.pulsePressure)
+    within('rightRadialSpo2', state.patient.rightRadialSpo2, e.rightRadialSpo2)
+    within('femoralArterialSpo2', state.patient.femoralArterialSpo2, e.femoralArterialSpo2)
+    if (Math.abs(c.recirculationFraction - e.recirculationFraction) > 0.001) {
+      flags.push({
+        scenarioId: profile.id,
+        reason: `recirculationFraction ${c.recirculationFraction} != authored ${e.recirculationFraction}`,
+      })
+    }
+    if (state.scenario.activeFaults.length > 0) {
+      flags.push({ scenarioId: profile.id, reason: 'reference circuit carries an active fault' })
+    }
+    if (state.paused) {
+      flags.push({ scenarioId: profile.id, reason: 'reference circuit is paused' })
+    }
+  }
+}
+
+interface EcmoRange {
+  readonly low: number
+  readonly high: number
+}
+
 const scenarios = ONLY
   ? cardiohelpScenarios.filter((scenario) => scenario.id === ONLY)
   : cardiohelpScenarios
@@ -130,10 +219,10 @@ if (ONLY) {
         n(c.bloodFlow, 2),
         n(c.effectiveFlow, 2),
         n(c.recirculationFraction, 3),
-        n(c.pVen, 0),
-        n(c.pInt, 0),
-        n(c.pArt, 0),
-        n(c.deltaP, 0),
+        p(c.pVen, c.pressureSignalsValid),
+        p(c.pInt, c.pressureSignalsValid),
+        p(c.pArt, c.pressureSignalsValid),
+        p(c.deltaP, c.pressureSignalsValid),
         n(c.preOxygenatorSaturation),
         n(c.postOxygenatorSaturation),
         n(c.svo2),
@@ -166,6 +255,7 @@ if (ONLY) {
     )
     inspect(scenario.id, frames)
   }
+  checkReferenceProfiles()
 }
 
 console.log(`\n${flags.length} flag(s)`)

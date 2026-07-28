@@ -13,6 +13,7 @@ It demonstrates:
 - immutable hash-addressed previews and optional append-only database snapshots;
 - spatial, chronological, exceptions, trace, and print views;
 - protected mapping actions and read-only catalog verification QA;
+- read-only openFDA/GUDID identity-enrichment proposals kept separate from canonical data;
 - organization-aware RLS and feature-flagged production exposure.
 
 Every output displays:
@@ -41,6 +42,7 @@ DRAFT PROTOTYPE — NOT APPROVED FOR CLINICAL USE
 - Only literal quantities are evaluated.
 - The admin recipe view is status-only; full authoring is deferred.
 - Catalog QA is read-only.
+- openFDA high-confidence classifications remain unapproved candidates; they do not alter clinical readiness, procurement status, compatibility, or local formulary state.
 - The database catalog load is deliberately controlled and separate from the non-destructive JSON import.
 - Print output uses browser Print/Save as PDF; there is no PDF service.
 - Locale bundles contain English fallback copy for this feature.

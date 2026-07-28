@@ -1,0 +1,206 @@
+{
+  "format_version": 1,
+  "selection_method": "Deterministic, manually reviewed calibration cohort stratified by identifier evidence and expected matching challenge. Products favor P0/P1 verification work and current golden-scenario roles; ordering is stable and is not catalog-alphabetical order.",
+  "products": [
+    {
+      "product_id": "PRD-2302DA77DA",
+      "reason_selected": "P0 EBUS needle used in the EBUS-TBNA workflow with a canonical GTIN already confirmed as the Primary DI.",
+      "expected_challenge_category": "existing_exact_di_or_gtin",
+      "current_catalog_number": "M00558220",
+      "current_manufacturer": "Boston Scientific",
+      "existing_di_candidate": true
+    },
+    {
+      "product_id": "PRD-189E7EF27A",
+      "reason_selected": "P1 pulmonary balloon dilator used in central-airway workflows with a canonical GTIN already confirmed as the Primary DI.",
+      "expected_challenge_category": "existing_exact_di_or_gtin",
+      "current_catalog_number": "M00550350",
+      "current_manufacturer": "Boston Scientific",
+      "existing_di_candidate": true
+    },
+    {
+      "product_id": "PRD-05780FEDD7",
+      "reason_selected": "P1 airway-stent system with a canonical GTIN and a configuration-specific catalog number.",
+      "expected_challenge_category": "existing_exact_di_or_gtin",
+      "current_catalog_number": "M00576560",
+      "current_manufacturer": "Boston Scientific",
+      "existing_di_candidate": true
+    },
+    {
+      "product_id": "PRD-5F801B5A8E",
+      "reason_selected": "P1 guidewire with a canonical GTIN, exercising a non-implant accessory class used in airway-stenting workflows.",
+      "expected_challenge_category": "existing_exact_di_or_gtin",
+      "current_catalog_number": "M00550090",
+      "current_manufacturer": "Boston Scientific",
+      "existing_di_candidate": true
+    },
+    {
+      "product_id": "PRD-9BB524F077",
+      "reason_selected": "P0 reusable capital processor with a canonical GTIN and a model-like catalog number.",
+      "expected_challenge_category": "existing_exact_di_or_gtin",
+      "current_catalog_number": "HDVS-S300D",
+      "current_manufacturer": "Scivita Medical Technology",
+      "existing_di_candidate": true
+    },
+    {
+      "product_id": "PRD-00FC2A29AC",
+      "reason_selected": "P1 silicone airway stent with a catalog number and a backlog-suggested Primary DI, but no canonical catalog GTIN.",
+      "expected_challenge_category": "catalog_with_suggested_gudid",
+      "current_catalog_number": "03531S",
+      "current_manufacturer": "Novatech",
+      "existing_di_candidate": true
+    },
+    {
+      "product_id": "PRD-05670F1B5F",
+      "reason_selected": "P1 cryotherapy accessory with a catalog number and a backlog-suggested Primary DI.",
+      "expected_challenge_category": "catalog_with_suggested_gudid",
+      "current_catalog_number": "20402-411",
+      "current_manufacturer": "ERBE",
+      "existing_di_candidate": true
+    },
+    {
+      "product_id": "PRD-19AC7F0794",
+      "reason_selected": "P0 EBUS sampling needle with catalog evidence and a backlog-suggested Primary DI.",
+      "expected_challenge_category": "catalog_with_suggested_gudid",
+      "current_catalog_number": "G53408",
+      "current_manufacturer": "Cook Medical",
+      "existing_di_candidate": true
+    },
+    {
+      "product_id": "PRD-0410844D48",
+      "reason_selected": "P0 small-bore pleural drainage set used in the chest-tube scenario with a backlog-suggested Primary DI.",
+      "expected_challenge_category": "catalog_with_suggested_gudid",
+      "current_catalog_number": "G55713",
+      "current_manufacturer": "Cook Medical",
+      "existing_di_candidate": true
+    },
+    {
+      "product_id": "PRD-E37704D087",
+      "reason_selected": "P0 reusable stent-fenestration forceps with catalog evidence and a backlog-suggested Primary DI.",
+      "expected_challenge_category": "catalog_with_suggested_gudid",
+      "current_catalog_number": "6522",
+      "current_manufacturer": "Novatech",
+      "existing_di_candidate": true
+    },
+    {
+      "product_id": "PRD-2B8AACAB67",
+      "reason_selected": "P0 capital ultrasound processor with a catalog number but no existing DI candidate in the backlog.",
+      "expected_challenge_category": "catalog_without_existing_di",
+      "current_catalog_number": "EU-ME3",
+      "current_manufacturer": "Olympus",
+      "existing_di_candidate": false
+    },
+    {
+      "product_id": "PRD-02BE5F7D32",
+      "reason_selected": "P1 airway-stenting guidewire with a catalog number but no existing DI candidate.",
+      "expected_challenge_category": "catalog_without_existing_di",
+      "current_catalog_number": "80129-404",
+      "current_manufacturer": "Merit Medical",
+      "existing_di_candidate": false
+    },
+    {
+      "product_id": "PRD-1BCD8D38BC",
+      "reason_selected": "P0 EBUS-TBNA needle variant whose exact catalog identifier had no candidate in the current verification backlog.",
+      "expected_challenge_category": "catalog_without_existing_di",
+      "current_catalog_number": "NA-U401SX-4022-A",
+      "current_manufacturer": "Olympus",
+      "existing_di_candidate": false
+    },
+    {
+      "product_id": "PRD-C684D9ADCF",
+      "reason_selected": "P1 reusable cryotherapy hose with a catalog number but no existing DI candidate.",
+      "expected_challenge_category": "catalog_without_existing_di",
+      "current_catalog_number": "20402-008",
+      "current_manufacturer": "ERBE",
+      "existing_di_candidate": false
+    },
+    {
+      "product_id": "PRD-019030A1C7",
+      "reason_selected": "P0 reusable secretion/specimen-collection accessory with catalog evidence but no existing DI candidate.",
+      "expected_challenge_category": "catalog_without_existing_di",
+      "current_catalog_number": "10432N",
+      "current_manufacturer": "Karl Storz",
+      "existing_di_candidate": false
+    },
+    {
+      "product_id": "PRD-1517AA42DA",
+      "reason_selected": "P0 thoracentesis kit supplied by the box; the backlog records multiple current GUDID records for the same catalog/model.",
+      "expected_challenge_category": "package_level_ambiguity",
+      "current_catalog_number": "AK-01000-J",
+      "current_manufacturer": "Teleflex",
+      "existing_di_candidate": true
+    },
+    {
+      "product_id": "PRD-6D9A7A7E79",
+      "reason_selected": "P0 EBUS needle supplied as a box of five; the backlog records multiple records with one preferred current candidate.",
+      "expected_challenge_category": "package_level_ambiguity",
+      "current_catalog_number": "NA-U401SX-4025N",
+      "current_manufacturer": "Olympus",
+      "existing_di_candidate": true
+    },
+    {
+      "product_id": "PRD-1708F37D2C",
+      "reason_selected": "P1 APC energy accessory supplied as a box of five with multiple GUDID records in the backlog.",
+      "expected_challenge_category": "package_level_ambiguity",
+      "current_catalog_number": "20132-252",
+      "current_manufacturer": "ERBE",
+      "existing_di_candidate": true
+    },
+    {
+      "product_id": "PRD-C094F5AF07",
+      "reason_selected": "P1 EBUS balloon with multiple current GUDID records for the same catalog/model in the backlog.",
+      "expected_challenge_category": "package_level_ambiguity",
+      "current_catalog_number": "MAJ-1351",
+      "current_manufacturer": "Olympus",
+      "existing_di_candidate": true
+    },
+    {
+      "product_id": "PRD-00C13A59AA",
+      "reason_selected": "P0 reusable rigid tracheoscope whose suggested GUDID record is not in commercial distribution.",
+      "expected_challenge_category": "legacy_or_distribution_question",
+      "current_catalog_number": "82520.1441",
+      "current_manufacturer": "Richard Wolf",
+      "existing_di_candidate": true
+    },
+    {
+      "product_id": "PRD-5543746F59",
+      "reason_selected": "P1 reusable capital reprocessor whose suggested GUDID record is not in commercial distribution.",
+      "expected_challenge_category": "legacy_or_distribution_question",
+      "current_catalog_number": "OER-Pro",
+      "current_manufacturer": "Olympus",
+      "existing_di_candidate": true
+    },
+    {
+      "product_id": "PRD-E04326B8E4",
+      "reason_selected": "P0 prior-generation ultrasound center with no current exact GUDID candidate, selected to probe legacy-generation handling.",
+      "expected_challenge_category": "legacy_or_distribution_question",
+      "current_catalog_number": "EU-ME2",
+      "current_manufacturer": "Olympus",
+      "existing_di_candidate": false
+    },
+    {
+      "product_id": "PRD-94C61697D9",
+      "reason_selected": "Curated chest-drain addition whose canonical manufacturer combines Atrium Medical with its Getinge parent while GUDID uses the labeler legal name.",
+      "expected_challenge_category": "manufacturer_alias_complexity",
+      "current_catalog_number": "3600-100",
+      "current_manufacturer": "Atrium Medical (Getinge)",
+      "existing_di_candidate": true
+    },
+    {
+      "product_id": "PRD-09AB6CA202",
+      "reason_selected": "Curated robotic-bronchoscopy capital platform whose canonical manufacturer includes the Johnson & Johnson parent while GUDID uses the Auris legal name.",
+      "expected_challenge_category": "manufacturer_alias_complexity",
+      "current_catalog_number": "MON-000008",
+      "current_manufacturer": "Auris Health (Johnson & Johnson)",
+      "existing_di_candidate": true
+    },
+    {
+      "product_id": "PRD-1A152615A0",
+      "reason_selected": "P1 patient-specific stent service whose CUSTOM-SERVICE value is a workflow placeholder rather than a device identifier.",
+      "expected_challenge_category": "insufficient_identifiers",
+      "current_catalog_number": "CUSTOM-SERVICE",
+      "current_manufacturer": "VisionAir Solutions",
+      "existing_di_candidate": false
+    }
+  ]
+}

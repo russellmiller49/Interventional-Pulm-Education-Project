@@ -10,6 +10,7 @@ export async function AdminPreferenceCardNav({ locale }: { locale: string }) {
     ['recipes', t('recipesLink')],
     ['formulary', t('formularyLink')],
     ['catalog-qa', t('catalogQaLink')],
+    ['catalog-qa/openfda', t('openfdaLink')],
   ] as const
 
   return (

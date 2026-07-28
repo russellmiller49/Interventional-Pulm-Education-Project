@@ -182,6 +182,23 @@ export interface CircuitState {
   recirculationFraction: number
   /** Circuit flow that reaches the systemic circulation: `bloodFlow × (1 − recirculationFraction)`. */
   effectiveFlow: number
+  /**
+   * Whether the pressure channels are reporting a value the model actually supports.
+   *
+   * The pressure equations describe a primed circuit with the pump turning. With the pump stopped
+   * they have no basis, and returning their zero-flow intercepts would put plausible-looking
+   * numbers on screen for a state this simulation does not model. The IFU's own convention covers
+   * this: measured values that are unavailable or outside the valid range display as **dashes**
+   * rather than as numbers (Rev 2.3 §3, page 47, "Status of measured values").
+   *
+   * A connected, primed circuit with a deliberately stopped pump does have real static pressures,
+   * but modelling them would need a support-mode-specific static-pressure model that no supplied
+   * source provides — so this stays `false` rather than inventing one.
+   *
+   * When `false`, consumers must render dashes, must not raise a pressure alarm, and must not read
+   * the channel as a trend point.
+   */
+  pressureSignalsValid: boolean
   drainageChatter: boolean
   flowSensorConnected: boolean
   arterialBubbleDetected: boolean

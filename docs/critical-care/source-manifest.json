@@ -195,7 +195,7 @@
     {
       "doc_id": "PRISMAX-AW8035-RB",
       "title": "PrisMax Operator's Manual",
-      "edition_year": "AW8035 Rev B JUN2019",
+      "edition_year": "AW8035 Rev B JUN2019, program version 2.XX",
       "publisher": "Baxter",
       "isbn_doi": null,
       "sha256": "204543b8c205e535cb9d45c970b8231362839177f3795b6164edcef3b834f1ff",
@@ -203,7 +203,7 @@
       "rights_status": "owner-licensed-private-authoring-source",
       "review_status": "sme-review",
       "verified_on": "2026-07-27",
-      "verification_note": "Document supplied 2026-07-27 and hashed: it matches the SHA-256 this manifest already recorded, so the registered source is now verified rather than merely cited. 353 pages, full operator's manual."
+      "verification_note": "Document supplied 2026-07-27 and hashed: it matches the SHA-256 this manifest already recorded, so the registered source is now verified rather than merely cited. 353 pages, full operator's manual. REVISION CHECKED 2026-07-27 because the owner believed this was a 2025 'D0.3' release: it is not. The document self-identifies as AW8035 Rev B JUN2019, program version 2.XX in the page footer of 350 of its 353 pages, no 'D0.3' string appears anywhere in the full text, and the only years it mentions are two instances of 2015. CURRENCY LIMIT: PrisMax software has advanced since program version 2.XX, so any console layout, alarm text, or setup flow authored from this manual describes 2.XX and must say so in its displayNote. A newer operator's manual would supersede it for display claims."
     },
     {
       "doc_id": "REVIEW-CKRT-CORE-2025",

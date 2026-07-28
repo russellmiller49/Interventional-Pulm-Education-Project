@@ -1,0 +1,367 @@
+{
+  "format_version": 1,
+  "retrieved_at": "2026-07-28T03:41:56.718Z",
+  "export_date": "2026-07-27",
+  "total_records": 5083948,
+  "partition_count": 51,
+  "total_size_mb": 1793.76,
+  "partitions": [
+    {
+      "index": 1,
+      "display_name": "/device/udi (part 1 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0001-of-0051.json.zip",
+      "size_mb": 35.43,
+      "records": 100000
+    },
+    {
+      "index": 2,
+      "display_name": "/device/udi (part 2 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0002-of-0051.json.zip",
+      "size_mb": 35.51,
+      "records": 100000
+    },
+    {
+      "index": 3,
+      "display_name": "/device/udi (part 3 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0003-of-0051.json.zip",
+      "size_mb": 35.21,
+      "records": 100000
+    },
+    {
+      "index": 4,
+      "display_name": "/device/udi (part 4 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0004-of-0051.json.zip",
+      "size_mb": 35.61,
+      "records": 100000
+    },
+    {
+      "index": 5,
+      "display_name": "/device/udi (part 5 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0005-of-0051.json.zip",
+      "size_mb": 34.81,
+      "records": 100000
+    },
+    {
+      "index": 6,
+      "display_name": "/device/udi (part 6 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0006-of-0051.json.zip",
+      "size_mb": 35.28,
+      "records": 100000
+    },
+    {
+      "index": 7,
+      "display_name": "/device/udi (part 7 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0007-of-0051.json.zip",
+      "size_mb": 35.69,
+      "records": 100000
+    },
+    {
+      "index": 8,
+      "display_name": "/device/udi (part 8 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0008-of-0051.json.zip",
+      "size_mb": 35.35,
+      "records": 100000
+    },
+    {
+      "index": 9,
+      "display_name": "/device/udi (part 9 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0009-of-0051.json.zip",
+      "size_mb": 34.86,
+      "records": 100000
+    },
+    {
+      "index": 10,
+      "display_name": "/device/udi (part 10 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0010-of-0051.json.zip",
+      "size_mb": 35.26,
+      "records": 100000
+    },
+    {
+      "index": 11,
+      "display_name": "/device/udi (part 11 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0011-of-0051.json.zip",
+      "size_mb": 35.48,
+      "records": 100000
+    },
+    {
+      "index": 12,
+      "display_name": "/device/udi (part 12 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0012-of-0051.json.zip",
+      "size_mb": 35.67,
+      "records": 100000
+    },
+    {
+      "index": 13,
+      "display_name": "/device/udi (part 13 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0013-of-0051.json.zip",
+      "size_mb": 35.29,
+      "records": 100000
+    },
+    {
+      "index": 14,
+      "display_name": "/device/udi (part 14 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0014-of-0051.json.zip",
+      "size_mb": 35.18,
+      "records": 100000
+    },
+    {
+      "index": 15,
+      "display_name": "/device/udi (part 15 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0015-of-0051.json.zip",
+      "size_mb": 35.24,
+      "records": 100000
+    },
+    {
+      "index": 16,
+      "display_name": "/device/udi (part 16 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0016-of-0051.json.zip",
+      "size_mb": 35.13,
+      "records": 100000
+    },
+    {
+      "index": 17,
+      "display_name": "/device/udi (part 17 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0017-of-0051.json.zip",
+      "size_mb": 35.46,
+      "records": 100000
+    },
+    {
+      "index": 18,
+      "display_name": "/device/udi (part 18 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0018-of-0051.json.zip",
+      "size_mb": 35.43,
+      "records": 100000
+    },
+    {
+      "index": 19,
+      "display_name": "/device/udi (part 19 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0019-of-0051.json.zip",
+      "size_mb": 35.01,
+      "records": 100000
+    },
+    {
+      "index": 20,
+      "display_name": "/device/udi (part 20 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0020-of-0051.json.zip",
+      "size_mb": 35.19,
+      "records": 100000
+    },
+    {
+      "index": 21,
+      "display_name": "/device/udi (part 21 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0021-of-0051.json.zip",
+      "size_mb": 35.4,
+      "records": 100000
+    },
+    {
+      "index": 22,
+      "display_name": "/device/udi (part 22 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0022-of-0051.json.zip",
+      "size_mb": 35.44,
+      "records": 100000
+    },
+    {
+      "index": 23,
+      "display_name": "/device/udi (part 23 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0023-of-0051.json.zip",
+      "size_mb": 35.51,
+      "records": 100000
+    },
+    {
+      "index": 24,
+      "display_name": "/device/udi (part 24 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0024-of-0051.json.zip",
+      "size_mb": 35.38,
+      "records": 100000
+    },
+    {
+      "index": 25,
+      "display_name": "/device/udi (part 25 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0025-of-0051.json.zip",
+      "size_mb": 34.98,
+      "records": 100000
+    },
+    {
+      "index": 26,
+      "display_name": "/device/udi (part 26 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0026-of-0051.json.zip",
+      "size_mb": 35.11,
+      "records": 100000
+    },
+    {
+      "index": 27,
+      "display_name": "/device/udi (part 27 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0027-of-0051.json.zip",
+      "size_mb": 35.52,
+      "records": 100000
+    },
+    {
+      "index": 28,
+      "display_name": "/device/udi (part 28 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0028-of-0051.json.zip",
+      "size_mb": 35.22,
+      "records": 100000
+    },
+    {
+      "index": 29,
+      "display_name": "/device/udi (part 29 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0029-of-0051.json.zip",
+      "size_mb": 35.35,
+      "records": 100000
+    },
+    {
+      "index": 30,
+      "display_name": "/device/udi (part 30 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0030-of-0051.json.zip",
+      "size_mb": 35.09,
+      "records": 100000
+    },
+    {
+      "index": 31,
+      "display_name": "/device/udi (part 31 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0031-of-0051.json.zip",
+      "size_mb": 35.07,
+      "records": 100000
+    },
+    {
+      "index": 32,
+      "display_name": "/device/udi (part 32 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0032-of-0051.json.zip",
+      "size_mb": 35.47,
+      "records": 100000
+    },
+    {
+      "index": 33,
+      "display_name": "/device/udi (part 33 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0033-of-0051.json.zip",
+      "size_mb": 35.41,
+      "records": 100000
+    },
+    {
+      "index": 34,
+      "display_name": "/device/udi (part 34 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0034-of-0051.json.zip",
+      "size_mb": 35.4,
+      "records": 100000
+    },
+    {
+      "index": 35,
+      "display_name": "/device/udi (part 35 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0035-of-0051.json.zip",
+      "size_mb": 34.95,
+      "records": 100000
+    },
+    {
+      "index": 36,
+      "display_name": "/device/udi (part 36 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0036-of-0051.json.zip",
+      "size_mb": 35,
+      "records": 100000
+    },
+    {
+      "index": 37,
+      "display_name": "/device/udi (part 37 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0037-of-0051.json.zip",
+      "size_mb": 35.53,
+      "records": 100000
+    },
+    {
+      "index": 38,
+      "display_name": "/device/udi (part 38 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0038-of-0051.json.zip",
+      "size_mb": 35.31,
+      "records": 100000
+    },
+    {
+      "index": 39,
+      "display_name": "/device/udi (part 39 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0039-of-0051.json.zip",
+      "size_mb": 35.32,
+      "records": 100000
+    },
+    {
+      "index": 40,
+      "display_name": "/device/udi (part 40 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0040-of-0051.json.zip",
+      "size_mb": 35.39,
+      "records": 100000
+    },
+    {
+      "index": 41,
+      "display_name": "/device/udi (part 41 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0041-of-0051.json.zip",
+      "size_mb": 34.69,
+      "records": 100000
+    },
+    {
+      "index": 42,
+      "display_name": "/device/udi (part 42 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0042-of-0051.json.zip",
+      "size_mb": 35.38,
+      "records": 100000
+    },
+    {
+      "index": 43,
+      "display_name": "/device/udi (part 43 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0043-of-0051.json.zip",
+      "size_mb": 35.65,
+      "records": 100000
+    },
+    {
+      "index": 44,
+      "display_name": "/device/udi (part 44 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0044-of-0051.json.zip",
+      "size_mb": 35.31,
+      "records": 100000
+    },
+    {
+      "index": 45,
+      "display_name": "/device/udi (part 45 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0045-of-0051.json.zip",
+      "size_mb": 35.27,
+      "records": 100000
+    },
+    {
+      "index": 46,
+      "display_name": "/device/udi (part 46 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0046-of-0051.json.zip",
+      "size_mb": 34.86,
+      "records": 100000
+    },
+    {
+      "index": 47,
+      "display_name": "/device/udi (part 47 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0047-of-0051.json.zip",
+      "size_mb": 35.33,
+      "records": 100000
+    },
+    {
+      "index": 48,
+      "display_name": "/device/udi (part 48 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0048-of-0051.json.zip",
+      "size_mb": 35.71,
+      "records": 100000
+    },
+    {
+      "index": 49,
+      "display_name": "/device/udi (part 49 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0049-of-0051.json.zip",
+      "size_mb": 35.22,
+      "records": 100000
+    },
+    {
+      "index": 50,
+      "display_name": "/device/udi (part 50 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0050-of-0051.json.zip",
+      "size_mb": 35.29,
+      "records": 100000
+    },
+    {
+      "index": 51,
+      "display_name": "/device/udi (part 51 of 51)",
+      "file": "https://download.open.fda.gov/device/udi/device-udi-0051-of-0051.json.zip",
+      "size_mb": 29.11,
+      "records": 83948
+    }
+  ]
+}
