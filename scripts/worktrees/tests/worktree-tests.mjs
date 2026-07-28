@@ -1,5 +1,13 @@
 import assert from 'node:assert/strict'
-import { chmodSync, lstatSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  chmodSync,
+  lstatSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, test } from 'node:test'
@@ -8,6 +16,7 @@ import {
   acquireLease,
   canonicalLeaseResource,
   diffNameStatus,
+  ensureCommonExclude,
   ensureGuardContext,
   globToRegExp,
   git,
@@ -291,6 +300,31 @@ describe('atomic leases', () => {
 })
 
 describe('mount and process validation', () => {
+  test('updates the managed common exclude block without removing local rules', () => {
+    const commonDir = temporaryDirectory()
+    const exclude = join(commonDir, 'info', 'exclude')
+    mkdirSync(join(commonDir, 'info'))
+    writeFileSync(
+      exclude,
+      [
+        '# local rule',
+        '*.machine-only',
+        '# BEGIN managed by wt (universal local-only paths)',
+        '/old-managed-path/',
+        '# END managed by wt',
+        '',
+      ].join('\n'),
+    )
+
+    ensureCommonExclude(commonDir)
+
+    const content = readFileSync(exclude, 'utf8')
+    assert.match(content, /\*\.machine-only/)
+    assert.match(content, /\/\.claude\/settings\.local\.json/)
+    assert.doesNotMatch(content, /old-managed-path/)
+    assert.equal(content.match(/# BEGIN managed by wt \(universal local-only paths\)/g)?.length, 1)
+  })
+
   test('provisions only symlinks to read-only approved inputs', () => {
     const root = temporaryDirectory()
     const source = join(root, 'external.env')

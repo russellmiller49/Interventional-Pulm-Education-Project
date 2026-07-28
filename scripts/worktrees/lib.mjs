@@ -1015,6 +1015,17 @@ export function ensureCommonExclude(commonDir) {
   const block = [
     start,
     '/.wt-runtime/',
+    '/.claude/settings.local.json',
+    '/.claude/scheduled_tasks.lock',
+    '/.claude/scheduled_tasks.json',
+    '/.claude/routines/.state/',
+    '/.claude/worktrees/',
+    '/.claude/checkpoints/',
+    '/.claude/mailbox/',
+    '/.claude/agent-registry.json',
+    '/.claude/agent-memory-local',
+    '/.claude/first-run',
+    '/.claude/assistant-daemon-state.json',
     '/local-data/',
     '/public/ecmo-teaching-preview/',
     '/playwright-report/',
@@ -1022,10 +1033,17 @@ export function ensureCommonExclude(commonDir) {
     end,
   ].join('\n')
   const existing = existsSync(pathname) ? readFileSync(pathname, 'utf8') : ''
-  if (!existing.includes(start)) {
-    const prefix = existing && !existing.endsWith('\n') ? `${existing}\n` : existing
-    writeFileSync(pathname, `${prefix}${block}\n`, { encoding: 'utf8', mode: 0o600 })
-  }
+  const startIndex = existing.indexOf(start)
+  const endIndex = startIndex >= 0 ? existing.indexOf(end, startIndex + start.length) : -1
+  const unmanaged =
+    startIndex >= 0 && endIndex >= 0
+      ? `${existing.slice(0, startIndex)}${existing.slice(endIndex + end.length)}`.replace(
+          /^\n+|\n+$/g,
+          '',
+        )
+      : existing.replace(/\n+$/g, '')
+  const content = unmanaged ? `${unmanaged}\n${block}\n` : `${block}\n`
+  writeFileSync(pathname, content, { encoding: 'utf8', mode: 0o600 })
   return pathname
 }
 
