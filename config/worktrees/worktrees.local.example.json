@@ -11,7 +11,7 @@
     "criticalCareManuals": "/absolute/path/Interventional-Pulm-Local-Data/device-manuals/critical-care",
     "criticalCareTextbooks": "/absolute/path/Interventional-Pulm-Local-Data/private-references/critical-care-full-textbooks",
     "criticalCareSummaries": "/absolute/path/Interventional-Pulm-Local-Data/private-references/critical-care-summaries",
-    "preferenceCardManuals": "/absolute/path/Interventional-Pulm-Local-Data/device-manuals/preference-cards-ucsd",
+    "preferenceCardUcsd": "/absolute/path/Interventional-Pulm-Local-Data/private-references/preference-cards-ucsd",
     "preferenceCardConfirmation": "/absolute/path/Interventional-Pulm-Local-Data/device-manuals/preference-card-confirmation",
     "gudid": "/absolute/path/Interventional-Pulm-Local-Data/gudid/accessgudid-20260723",
     "raw3dAssets": "/absolute/path/Interventional-Pulm-Local-Data/raw-assets/3d-assets"
