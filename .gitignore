@@ -27,8 +27,11 @@ pids
 *.seed
 *.pid.lock
 
-# Literature Explorer local corpus, manifests, and generated reports
-/local-data/literature/
+# All worktree-local mounts, caches, and writable task data
+/local-data/
+
+# Literature Explorer external corpus. Active literature worktrees receive a
+# read-only symlink at this legacy path so existing import commands keep working.
 /IP_PubMed/nbib files/
 
 # Local openFDA UDI request cache and opt-in bulk partitions
