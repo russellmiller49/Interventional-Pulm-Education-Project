@@ -1,0 +1,26 @@
+name: Worktree scope
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  registry-scope:
+    name: Registry scope
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the pull request head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Validate branch and changed-path scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          WT_BRANCH: ${{ github.head_ref }}
+        run: node scripts/worktrees/worktree.mjs ci-scope --base "${BASE_SHA}"

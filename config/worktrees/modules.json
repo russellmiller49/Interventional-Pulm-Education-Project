@@ -1,0 +1,740 @@
+{
+  "version": 1,
+  "defaultBranch": "origin/main",
+  "branchAgents": ["codex", "claude"],
+  "maxProvisionedWorktrees": 5,
+  "defaultSharedPaths": [
+    "package.json",
+    "package-lock.json",
+    "jest.config.cjs",
+    "src/data/training-modules.ts",
+    "src/i18n/navigation.ts",
+    "src/lib/module-assets.ts",
+    "src/lib/non-public-modules*"
+  ],
+  "platformScope": {
+    "id": "platform",
+    "description": "Cross-cutting repository infrastructure. This is a scope, not a learner module.",
+    "ownedPaths": [
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".github/workflows/worktree-scope.yml",
+      ".husky/pre-commit",
+      "config/worktrees/**",
+      "docs/development/worktree-isolation.md",
+      "scripts/worktrees/**"
+    ],
+    "sharedPaths": [
+      ".gitignore",
+      "package.json",
+      "package-lock.json",
+      "jest.config.cjs",
+      "messages/*.json",
+      "src/components/layout/**",
+      "src/data/training-modules.ts",
+      "src/i18n/navigation.ts",
+      "src/lib/draft-modules*",
+      "src/lib/module-assets.ts",
+      "src/lib/non-public-modules*",
+      "supabase/migrations/**",
+      "supabase/seed/**"
+    ],
+    "externalInputProfile": "environment"
+  },
+  "protectedSharedPaths": [
+    { "pattern": ".gitignore", "lease": ".gitignore" },
+    { "pattern": "package.json", "lease": "package.json" },
+    { "pattern": "package-lock.json", "lease": "package-lock.json" },
+    { "pattern": "jest.config.cjs", "lease": "jest.config.cjs" },
+    { "pattern": "messages/*.json", "lease": "translations" },
+    { "pattern": "src/components/layout/**", "lease": "shared-navigation" },
+    { "pattern": "src/i18n/navigation.ts", "lease": "shared-navigation" },
+    { "pattern": "src/data/training-modules.ts", "lease": "shared-module-catalog" },
+    { "pattern": "src/lib/draft-modules*", "lease": "shared-module-catalog" },
+    { "pattern": "src/lib/module-assets.ts", "lease": "shared-module-catalog" },
+    { "pattern": "src/lib/non-public-modules*", "lease": "shared-module-catalog" },
+    { "pattern": "supabase/migrations/**", "lease": "supabase-mutate" },
+    { "pattern": "supabase/seed/**", "lease": "supabase-mutate" }
+  ],
+  "blockedPaths": [
+    ".env",
+    ".env.*",
+    "local-data",
+    "local-data/**",
+    ".next",
+    ".next/**",
+    "playwright-report",
+    "playwright-report/**",
+    "test-results",
+    "test-results/**",
+    "public/ecmo-teaching-preview",
+    "public/ecmo-teaching-preview/**",
+    "IP_PubMed/nbib files",
+    "IP_PubMed/nbib files/**",
+    "Critical_Care_Reference/Device Manuals",
+    "Critical_Care_Reference/Device Manuals/**",
+    "Critical_Care_Reference/Full_textbooks",
+    "Critical_Care_Reference/Full_textbooks/**",
+    "Critical_Care_Reference/Summary files",
+    "Critical_Care_Reference/Summary files/**",
+    "Preference_card_module/AccessGUDID_Delimited_Full_Release_*",
+    "Preference_card_module/AccessGUDID_Delimited_Full_Release_*/**",
+    "Preference_card_module/UCSD",
+    "Preference_card_module/UCSD/**",
+    "Preference_card_module/Catalogs and IFU for confirmation/**/*.pdf"
+  ],
+  "inputProfiles": {
+    "none": [],
+    "environment": ["environment"],
+    "critical-care": [
+      "environment",
+      "criticalCareManuals",
+      "criticalCareTextbooks",
+      "criticalCareSummaries"
+    ],
+    "literature": ["environment", "literatureNbib"],
+    "preference-cards": [
+      "environment",
+      "gudid",
+      "preferenceCardManuals",
+      "preferenceCardConfirmation"
+    ],
+    "raw-3d": ["environment", "raw3dAssets"],
+    "critical-care-3d": [
+      "environment",
+      "criticalCareManuals",
+      "criticalCareTextbooks",
+      "criticalCareSummaries",
+      "raw3dAssets"
+    ]
+  },
+  "inputMountTargets": {
+    "environment": ".env.local",
+    "literatureNbib": "IP_PubMed/nbib files",
+    "criticalCareManuals": "Critical_Care_Reference/Device Manuals",
+    "criticalCareTextbooks": "Critical_Care_Reference/Full_textbooks",
+    "criticalCareSummaries": "Critical_Care_Reference/Summary files",
+    "preferenceCardManuals": "Preference_card_module/UCSD/IFU Documents",
+    "preferenceCardConfirmation": "local-data/inputs/preferenceCardConfirmation",
+    "gudid": "Preference_card_module/AccessGUDID_Delimited_Full_Release_20260723",
+    "raw3dAssets": "local-data/inputs/raw3dAssets"
+  },
+  "modules": [
+    {
+      "id": "critical-care",
+      "group": "critical-care",
+      "owned": {
+        "source": ["src/features/critical-care/**", "src/lib/critical-care-*"],
+        "routes": ["src/app/[locale]/critical-care/**", "src/app/api/critical-care/**"],
+        "tests": ["src/features/critical-care/**/__tests__/**", "src/lib/critical-care-*.test.ts"],
+        "documentation": ["docs/critical-care/**", "Critical_Care_Reference/*.md"],
+        "assets": ["public/module-assets/v1/critical-care/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/components/layout/**", "src/lib/draft-modules*"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "critical-care"
+    },
+    {
+      "id": "icu-hemodynamics",
+      "group": "critical-care",
+      "owned": {
+        "source": ["src/features/icu-hemodynamics/**", "src/features/hemodynamics-core/**"],
+        "routes": ["src/app/[locale]/icu-hemodynamics/**"],
+        "tests": [
+          "src/features/icu-hemodynamics/**/__tests__/**",
+          "src/features/hemodynamics-core/**/__tests__/**"
+        ],
+        "documentation": ["docs/icu-hemodynamics/**"],
+        "assets": ["public/module-assets/v1/icu-hemodynamics/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/lib/draft-modules*"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "critical-care"
+    },
+    {
+      "id": "mechanical-ventilation",
+      "group": "critical-care",
+      "owned": {
+        "source": ["src/features/mechanical-ventilation/**"],
+        "routes": [
+          "src/app/[locale]/mechanical-ventilation/**",
+          "src/app/[locale]/hamilton-c6-ventilation/**"
+        ],
+        "tests": ["src/features/mechanical-ventilation/**/__tests__/**"],
+        "documentation": ["docs/mechanical-ventilation/**"],
+        "assets": ["public/module-assets/v1/mechanical-ventilation/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/lib/draft-modules*"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "critical-care"
+    },
+    {
+      "id": "mechanical-circulatory-support",
+      "group": "critical-care",
+      "owned": {
+        "source": ["src/features/mechanical-circulatory-support/**"],
+        "routes": ["src/app/[locale]/mechanical-circulatory-support/**"],
+        "tests": ["src/features/mechanical-circulatory-support/**/__tests__/**"],
+        "documentation": ["docs/mechanical-circulatory-support/**"],
+        "assets": ["public/models/mechanical-circulatory-support/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/lib/draft-modules*"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "critical-care-3d"
+    },
+    {
+      "id": "cardiohelp-ecmo",
+      "group": "critical-care",
+      "owned": {
+        "source": ["src/features/cardiohelp-ecmo/**", "scripts/cardiohelp-ecmo/**"],
+        "routes": ["src/app/[locale]/cardiohelp-ecmo/**"],
+        "tests": ["src/features/cardiohelp-ecmo/**/__tests__/**"],
+        "documentation": ["docs/cardiohelp-ecmo/**"],
+        "assets": ["public/models/cardiohelp-ecmo/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/lib/draft-modules*"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "critical-care-3d"
+    },
+    {
+      "id": "baxter-crrt",
+      "group": "critical-care",
+      "owned": {
+        "source": ["src/features/baxter-crrt/**"],
+        "routes": ["src/app/[locale]/baxter-crrt/**"],
+        "tests": ["src/features/baxter-crrt/**/__tests__/**"],
+        "documentation": ["docs/baxter-crrt/**"],
+        "assets": ["public/images/baxter-crrt/**", "public/module-assets/v1/baxter-crrt/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/lib/draft-modules*"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "critical-care"
+    },
+    {
+      "id": "icu-simulation",
+      "group": "critical-care",
+      "owned": {
+        "source": ["src/features/icu-simulation/**", "src/lib/icu-simulation-*"],
+        "routes": ["src/app/[locale]/icu-simulation/**"],
+        "tests": [
+          "src/features/icu-simulation/**/__tests__/**",
+          "src/lib/icu-simulation-*.test.ts"
+        ],
+        "documentation": ["docs/icu-simulation/**"],
+        "assets": ["public/module-assets/v1/icu-simulation/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/lib/draft-modules*"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "critical-care"
+    },
+    {
+      "id": "pleural-curriculum",
+      "group": "pleural",
+      "owned": {
+        "source": ["src/features/pleural-procedures/**", "src/features/intro-pleural-course/**"],
+        "routes": [
+          "src/app/[locale]/pleural-procedures/page.*",
+          "src/app/[locale]/pleural-procedures/intro-course/**",
+          "src/app/[locale]/pleural-procedures/clinical-review/**"
+        ],
+        "tests": [
+          "src/features/pleural-procedures/**/__tests__/**",
+          "src/features/intro-pleural-course/**/__tests__/**"
+        ],
+        "documentation": ["docs/pleural-curriculum/**"],
+        "assets": ["public/pleural-procedures/curriculum/**"]
+      },
+      "sharedPaths": [
+        "messages/*.json",
+        "src/features/learning-module/**",
+        "src/lib/draft-modules*"
+      ],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "environment"
+    },
+    {
+      "id": "thoracentesis-planner",
+      "group": "pleural",
+      "owned": {
+        "source": ["src/features/thoracentesis-planner/**"],
+        "routes": ["src/app/[locale]/pleural-procedures/thoracentesis-planner/**"],
+        "tests": ["src/features/thoracentesis-planner/**/__tests__/**"],
+        "documentation": ["docs/thoracentesis-planner/**"],
+        "assets": ["public/pleural-procedures/thoracentesis-planner/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/features/learning-module/**"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "environment"
+    },
+    {
+      "id": "pleural-ultrasound",
+      "group": "pleural",
+      "owned": {
+        "source": [
+          "src/features/pleural-ultrasound/**",
+          "scripts/pleural-ultrasound/**",
+          "scripts/thoracic-ultrasound/**"
+        ],
+        "routes": ["src/app/[locale]/pleural-procedures/pleural-ultrasound/**"],
+        "tests": ["src/features/pleural-ultrasound/**/__tests__/**"],
+        "documentation": ["docs/pleural-ultrasound/**"],
+        "assets": ["public/module-assets/v1/pleural-ultrasound/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/features/learning-module/**"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "raw-3d"
+    },
+    {
+      "id": "pleural-dataset-lab",
+      "group": "pleural",
+      "owned": {
+        "source": ["src/features/pleural-dataset-lab/**"],
+        "routes": ["src/app/[locale]/pleural-procedures/dataset-lab/**"],
+        "tests": ["src/features/pleural-dataset-lab/**/__tests__/**"],
+        "documentation": ["docs/pleural-dataset-lab/**"],
+        "assets": ["public/pleural-procedures/dataset-lab/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/features/learning-module/**"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "environment"
+    },
+    {
+      "id": "pleural-fluid-analysis",
+      "group": "pleural",
+      "owned": {
+        "source": ["src/features/pleural-fluid-analysis/**"],
+        "routes": ["src/app/[locale]/pleural-procedures/pleural-fluid-analysis/**"],
+        "tests": ["src/features/pleural-fluid-analysis/**/__tests__/**"],
+        "documentation": ["docs/pleural-fluid-analysis/**"],
+        "assets": ["public/pleural-procedures/pleural-fluid-analysis/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/features/learning-module/**"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "environment"
+    },
+    {
+      "id": "chest-drainage",
+      "group": "pleural",
+      "owned": {
+        "source": ["src/features/chest-drainage/**"],
+        "routes": [
+          "src/app/[locale]/pleural-procedures/chest-drainage/**",
+          "src/app/[locale]/education/chest-drainage/**"
+        ],
+        "tests": ["src/features/chest-drainage/**/__tests__/**"],
+        "documentation": ["docs/chest-drainage/**"],
+        "assets": ["public/pleural-procedures/chest-drainage/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/features/learning-module/**"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "environment"
+    },
+    {
+      "id": "pleural-infection",
+      "group": "pleural",
+      "owned": {
+        "source": ["src/features/pleural-infection/**"],
+        "routes": ["src/app/[locale]/pleural-procedures/pleural-infection/**"],
+        "tests": ["src/features/pleural-infection/**/__tests__/**"],
+        "documentation": ["docs/pleural-infection/**"],
+        "assets": ["public/pleural-procedures/pleural-infection/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/features/learning-module/**"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "environment"
+    },
+    {
+      "id": "pneumothorax-pathway",
+      "group": "pleural",
+      "owned": {
+        "source": ["src/features/pneumothorax-pathway/**"],
+        "routes": ["src/app/[locale]/pleural-procedures/pneumothorax-pathway/**"],
+        "tests": ["src/features/pneumothorax-pathway/**/__tests__/**"],
+        "documentation": ["docs/pneumothorax-pathway/**"],
+        "assets": ["public/pleural-procedures/pneumothorax-pathway/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/features/learning-module/**"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "environment"
+    },
+    {
+      "id": "malignant-effusion",
+      "group": "pleural",
+      "owned": {
+        "source": ["src/features/malignant-effusion/**"],
+        "routes": ["src/app/[locale]/pleural-procedures/malignant-effusion/**"],
+        "tests": ["src/features/malignant-effusion/**/__tests__/**"],
+        "documentation": ["docs/malignant-effusion/**"],
+        "assets": ["public/pleural-procedures/malignant-effusion/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/features/learning-module/**"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "environment"
+    },
+    {
+      "id": "pleuroscopy",
+      "group": "pleural",
+      "owned": {
+        "source": ["src/features/pleuroscopy/**", "src/features/skill-lab/**/pleuroscopy*"],
+        "routes": ["src/app/[locale]/pleural-procedures/pleuroscopy/**"],
+        "tests": ["src/features/pleuroscopy/**/__tests__/**"],
+        "documentation": ["docs/pleuroscopy/**"],
+        "assets": ["public/skill-lab/pleuroscopy/**", "public/pleural-procedures/pleuroscopy/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/features/learning-module/**"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "raw-3d"
+    },
+    {
+      "id": "pleural-ultrasound-simulator",
+      "group": "pleural",
+      "owned": {
+        "source": [
+          "src/features/pleural-ultrasound-simulator/**",
+          "src/features/thoracic-ultrasound-simulator/**",
+          "scripts/generate-pleural-simulator-frame-atlas.mjs"
+        ],
+        "routes": ["src/app/[locale]/pleural-procedures/pleural-ultrasound-simulator/**"],
+        "tests": [
+          "src/features/pleural-ultrasound-simulator/**/__tests__/**",
+          "src/features/thoracic-ultrasound-simulator/**/__tests__/**"
+        ],
+        "documentation": ["docs/pleural-ultrasound-simulator/**"],
+        "assets": ["public/module-assets/v1/pleural-ultrasound-simulator/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/features/learning-module/**"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "raw-3d"
+    },
+    {
+      "id": "intro-bronchoscopy",
+      "group": "bronchoscopy-procedures",
+      "owned": {
+        "source": ["src/features/intro-bronchoscopy/**", "scripts/intro-bronchoscopy/**"],
+        "routes": ["src/app/[locale]/intro-bronchoscopy/**"],
+        "tests": ["src/features/intro-bronchoscopy/**/__tests__/**"],
+        "documentation": ["docs/intro-bronchoscopy/**"],
+        "assets": ["public/intro-bronchoscopy/**", "public/airway-lesson/**"]
+      },
+      "sharedPaths": [
+        "messages/*.json",
+        "src/features/learning-module/**",
+        "src/lib/draft-modules*"
+      ],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "raw-3d"
+    },
+    {
+      "id": "rigid-bronchoscopy",
+      "group": "bronchoscopy-procedures",
+      "owned": {
+        "source": [
+          "src/features/rigid-bronchoscopy/**",
+          "src/features/rigid-bronchoscopy-techniques/**",
+          "scripts/rigid-bronchoscopy/**",
+          "scripts/rigid-bronchoscopy-video/**"
+        ],
+        "routes": ["src/app/[locale]/rigid-bronchoscopy/**"],
+        "tests": [
+          "src/features/rigid-bronchoscopy/**/__tests__/**",
+          "src/features/rigid-bronchoscopy-techniques/**/__tests__/**"
+        ],
+        "documentation": ["docs/rigid-bronchoscopy-video/**"],
+        "assets": ["public/models/rigid-bronchoscopy/**", "public/skill-lab/rigid-bronchoscopy/**"]
+      },
+      "sharedPaths": [
+        "messages/*.json",
+        "src/features/learning-module/**",
+        "src/lib/draft-modules*"
+      ],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "raw-3d"
+    },
+    {
+      "id": "airway-stent-mechanics",
+      "group": "bronchoscopy-procedures",
+      "owned": {
+        "source": ["src/features/airway-stent-mechanics/**", "scripts/airway-stent-mechanics/**"],
+        "routes": ["src/app/[locale]/airway-stent-mechanics/**"],
+        "tests": ["src/features/airway-stent-mechanics/**/__tests__/**"],
+        "documentation": ["docs/airway-stent-mechanics/**"],
+        "assets": ["public/airway-stent-mechanics/**", "3D assets/Stents/**"]
+      },
+      "sharedPaths": [
+        "messages/*.json",
+        "src/features/learning-module/**",
+        "src/lib/draft-modules*"
+      ],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "raw-3d"
+    },
+    {
+      "id": "thermal-ablation",
+      "group": "bronchoscopy-procedures",
+      "owned": {
+        "source": ["src/features/thermal-ablation/**"],
+        "routes": ["src/app/[locale]/thermal-ablation/**"],
+        "tests": ["src/features/thermal-ablation/**/__tests__/**"],
+        "documentation": ["docs/thermal-ablation/**"],
+        "assets": ["public/thermal-ablation/**"]
+      },
+      "sharedPaths": [
+        "messages/*.json",
+        "src/features/learning-module/**",
+        "src/lib/draft-modules*"
+      ],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "raw-3d"
+    },
+    {
+      "id": "peripheral-ablation",
+      "group": "bronchoscopy-procedures",
+      "owned": {
+        "source": ["src/features/peripheral-ablation/**"],
+        "routes": ["src/app/[locale]/peripheral-ablation/**"],
+        "tests": ["src/features/peripheral-ablation/**/__tests__/**"],
+        "documentation": ["docs/peripheral-ablation/**"],
+        "assets": ["public/peripheral-ablation/**"]
+      },
+      "sharedPaths": [
+        "messages/*.json",
+        "src/features/learning-module/**",
+        "src/lib/draft-modules*"
+      ],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "raw-3d"
+    },
+    {
+      "id": "tracheostomy",
+      "group": "bronchoscopy-procedures",
+      "owned": {
+        "source": ["src/features/tracheostomy/**", "scripts/tracheostomy/**"],
+        "routes": ["src/app/[locale]/tracheostomy/**"],
+        "tests": ["src/features/tracheostomy/**/__tests__/**"],
+        "documentation": ["docs/tracheostomy/**", "3D assets/Tracheostomy/README.md"],
+        "assets": ["public/tracheostomy/**", "public/skill-lab/tracheostomy/**"]
+      },
+      "sharedPaths": [
+        "messages/*.json",
+        "src/features/learning-module/**",
+        "src/lib/draft-modules*"
+      ],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "raw-3d"
+    },
+    {
+      "id": "ebus-suite",
+      "group": "bronchoscopy-procedures",
+      "owned": {
+        "source": ["src/features/ebus-training/**", "scripts/sync-socal-ebus-course.mjs"],
+        "routes": [
+          "src/app/[locale]/ebus-training/**",
+          "src/app/[locale]/socal-ebus-course/**",
+          "src/app/api/admin/ebus-preview/**"
+        ],
+        "tests": ["src/features/ebus-training/**/__tests__/**"],
+        "documentation": ["docs/ebus-suite/**"],
+        "assets": ["public/socal-ebus-course/**"]
+      },
+      "sharedPaths": [
+        "messages/*.json",
+        "src/features/learning-module/**",
+        "src/lib/draft-modules*"
+      ],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "raw-3d"
+    },
+    {
+      "id": "bronch-navigation-trainer",
+      "group": "bronchoscopy-procedures",
+      "owned": {
+        "source": ["navigation_module/**", "scripts/sync-bronch-navigation-trainer.mjs"],
+        "routes": [
+          "src/app/[locale]/bronch-navigation-trainer/**",
+          "src/app/api/airway-anatomy/scope-orientation/**"
+        ],
+        "tests": ["navigation_module/**/__tests__/**", "src/**/bronch-navigation*.test.*"],
+        "documentation": ["docs/bronch-navigation-trainer/**"],
+        "assets": ["public/bronch-navigation-trainer/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/lib/draft-modules*"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "raw-3d"
+    },
+    {
+      "id": "rapid-onsite-cytology",
+      "group": "bronchoscopy-procedures",
+      "owned": {
+        "source": ["src/features/rapid-onsite-cytology/**", "scripts/rapid-onsite-cytology/**"],
+        "routes": ["src/app/[locale]/rapid-onsite-cytology/**"],
+        "tests": ["src/features/rapid-onsite-cytology/**/__tests__/**"],
+        "documentation": ["docs/rapid-onsite-cytology/**"],
+        "assets": ["public/module-assets/v1/rapid-onsite-cytology/**"]
+      },
+      "sharedPaths": [
+        "messages/*.json",
+        "src/features/learning-module/**",
+        "src/lib/draft-modules*"
+      ],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "environment"
+    },
+    {
+      "id": "anatomy-xr",
+      "group": "other",
+      "owned": {
+        "source": [
+          "src/features/cardiac-anatomy/**",
+          "scripts/airway-anatomy/**",
+          "scripts/airway-lesson/**"
+        ],
+        "routes": ["src/app/[locale]/xr/**", "src/app/[locale]/learn/anatomy/**"],
+        "tests": ["src/features/cardiac-anatomy/**/__tests__/**", "src/**/anatomy*.test.*"],
+        "documentation": ["docs/anatomy-xr/**"],
+        "assets": [
+          "public/airway-anatomy/**",
+          "public/models/cardiac/**",
+          "public/models/cardiac-devices/**"
+        ]
+      },
+      "sharedPaths": ["messages/*.json", "src/lib/draft-modules*"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "raw-3d"
+    },
+    {
+      "id": "fluoroview",
+      "group": "other",
+      "owned": {
+        "source": ["fluoro-viewer/**", "src/features/fluoroview/**"],
+        "routes": ["src/app/[locale]/fluoroview/**"],
+        "tests": ["fluoro-viewer/**/__tests__/**", "src/features/fluoroview/**/__tests__/**"],
+        "documentation": ["docs/fluoroview/**"],
+        "assets": ["public/fluoroview/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/lib/draft-modules*"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "environment"
+    },
+    {
+      "id": "board-prep",
+      "group": "other",
+      "owned": {
+        "source": ["src/components/board-review/**", "src/features/board-prep/**"],
+        "routes": ["src/app/[locale]/board-prep/**"],
+        "tests": [
+          "src/components/board-review/**/__tests__/**",
+          "src/features/board-prep/**/__tests__/**"
+        ],
+        "documentation": ["docs/board-prep/**", "content/board-prep/**"],
+        "assets": ["public/module-assets/v1/board-prep/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/components/layout/**", "src/lib/draft-modules*"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "environment"
+    },
+    {
+      "id": "journal-club-podcasts",
+      "group": "other",
+      "owned": {
+        "source": [
+          "src/features/journal-club-podcasts/**",
+          "scripts/upload-journal-club-podcasts.mjs"
+        ],
+        "routes": [
+          "src/app/[locale]/journal-club-podcasts/**",
+          "src/app/api/journal-club-podcasts/**"
+        ],
+        "tests": ["src/features/journal-club-podcasts/**/__tests__/**"],
+        "documentation": ["Imports/Journal_Club_Podcasts/**/*.md", "docs/journal-club-podcasts/**"],
+        "assets": ["public/module-assets/v1/journal-club-podcasts/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/lib/draft-modules*"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "environment"
+    },
+    {
+      "id": "literature",
+      "group": "other",
+      "owned": {
+        "source": ["src/features/literature/**", "scripts/literature/**", "config/literature/**"],
+        "routes": [
+          "src/app/[locale]/literature/**",
+          "src/app/[locale]/admin/literature/**",
+          "src/app/api/literature/**",
+          "src/app/api/admin/literature/**"
+        ],
+        "tests": ["src/features/literature/**/__tests__/**", "tests/fixtures/literature/**"],
+        "documentation": ["IP_PubMed/**/*.md", "IP_PubMed/**/*.json", "docs/literature/**"],
+        "assets": ["public/module-assets/v1/literature/**"]
+      },
+      "sharedPaths": ["messages/*.json", "supabase/migrations/**"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "literature"
+    },
+    {
+      "id": "preference-cards",
+      "group": "other",
+      "owned": {
+        "source": [
+          "src/features/preference-cards/**",
+          "scripts/ip-preference-cards/**",
+          "data/ip-preference-cards/**"
+        ],
+        "routes": [
+          "src/app/[locale]/preference-cards/**",
+          "src/app/[locale]/admin/preference-cards/**",
+          "src/app/api/preference-cards/**"
+        ],
+        "tests": [
+          "src/features/preference-cards/**/__tests__/**",
+          "scripts/ip-preference-cards/**/*.test.ts"
+        ],
+        "documentation": [
+          "docs/ip-preference-cards/**",
+          "Preference_card_module/*.md",
+          "Preference_card_module/*.txt",
+          "Preference_card_module/*.xlsx"
+        ],
+        "assets": ["public/module-assets/v1/preference-cards/**"]
+      },
+      "sharedPaths": ["messages/*.json", "supabase/migrations/**", "supabase/seed/**"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "preference-cards"
+    },
+    {
+      "id": "pccm-intro-course",
+      "group": "other",
+      "owned": {
+        "source": ["src/features/pccm-intro-course/**", "scripts/pccm-intro-course/**"],
+        "routes": [
+          "src/app/[locale]/pccm-intro-course/**",
+          "src/app/[locale]/admin/pccm-intro-course/**",
+          "src/app/api/pccm-intro-course/**"
+        ],
+        "tests": ["src/features/pccm-intro-course/**/__tests__/**"],
+        "documentation": ["docs/pccm-intro-course/**"],
+        "assets": ["public/pccm-intro-course/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/lib/draft-modules*"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "environment"
+    },
+    {
+      "id": "socrates",
+      "group": "other",
+      "owned": {
+        "source": ["src/features/socrates-builder/**", "src/features/socrates-demo/**"],
+        "routes": ["src/app/[locale]/socrates-builder/**", "src/app/[locale]/socrates-demo/**"],
+        "tests": [
+          "src/features/socrates-builder/**/__tests__/**",
+          "src/features/socrates-demo/**/__tests__/**"
+        ],
+        "documentation": ["docs/socrates/**"],
+        "assets": ["public/module-assets/v1/socrates/**"]
+      },
+      "sharedPaths": ["messages/*.json", "src/lib/draft-modules*"],
+      "exclusivePaths": ["config/worktrees/**", "scripts/worktrees/**"],
+      "externalInputProfile": "environment"
+    }
+  ]
+}
