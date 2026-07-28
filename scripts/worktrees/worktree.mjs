@@ -788,7 +788,9 @@ export function doctorSnapshot(cwd) {
       findings.push(
         finding(
           'error',
-          validation.reason === 'pid-reused' ? 'WT-DOCTOR-PID-REUSED' : 'WT-DOCTOR-PROCESS',
+          ['pid-reused', 'listener-pid-reused'].includes(validation.reason)
+            ? 'WT-DOCTOR-PID-REUSED'
+            : 'WT-DOCTOR-PROCESS',
           `Process record for port ${record.port} is invalid: ${validation.reason}.`,
           record,
         ),
@@ -826,13 +828,27 @@ export function doctorSnapshot(cwd) {
         )
       }
     }
+    if (record.status === 'starting') {
+      if (validation.valid) {
+        findings.push(
+          finding(
+            'info',
+            'WT-DOCTOR-PROCESS-STARTING',
+            `Dev process for port ${record.port} is starting and has not recorded a listener yet.`,
+            record,
+          ),
+        )
+      }
+      continue
+    }
     const listeners = portListener(record.port)
-    if (validation.valid && !listeners.includes(record.pid)) {
+    const expectedListenerPid = Number(record.listenerPid || record.pid)
+    if (validation.valid && !listeners.includes(expectedListenerPid)) {
       findings.push(
         finding(
           'error',
           'WT-DOCTOR-WRONG-PORT',
-          `PID ${record.pid} is valid but is not listening on port ${record.port}.`,
+          `Listener PID ${expectedListenerPid} is valid but is not listening on port ${record.port}.`,
         ),
       )
     }
@@ -887,13 +903,62 @@ async function commandDoctor(args) {
   if (!snapshot.ok) process.exitCode = 1
 }
 
-async function waitForSnapshot(pid, attempts = 20) {
+export async function waitForSnapshot(pid, attempts = 20, shouldCancel = () => false) {
   for (let index = 0; index < attempts; index += 1) {
+    if (shouldCancel()) return null
     const snapshot = processSnapshot(pid)
     if (snapshot) return snapshot
     await new Promise((resolvePromise) => setTimeout(resolvePromise, 50))
   }
   return null
+}
+
+function parentProcessId(pid) {
+  const result = run('ps', ['-p', String(pid), '-o', 'ppid='], { allowFailure: true })
+  if (result.status !== 0) return null
+  const parent = Number(result.stdout.trim())
+  return Number.isInteger(parent) && parent > 0 ? parent : null
+}
+
+function isDescendantProcess(pid, ancestorPid) {
+  let current = Number(pid)
+  const ancestor = Number(ancestorPid)
+  for (let depth = 0; depth < 32 && current > 0; depth += 1) {
+    if (current === ancestor) return true
+    current = parentProcessId(current)
+    if (!current) return false
+  }
+  return false
+}
+
+export async function waitForPortListener(
+  port,
+  ownerPid,
+  attempts = 200,
+  shouldCancel = () => false,
+) {
+  for (let index = 0; index < attempts; index += 1) {
+    if (shouldCancel()) return null
+    for (const pid of portListener(port)) {
+      if (!isDescendantProcess(pid, ownerPid)) continue
+      const snapshot = processSnapshot(pid)
+      if (snapshot) return snapshot
+    }
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, 50))
+  }
+  return null
+}
+
+export async function waitForPortRelease(port, attempts = 200) {
+  for (let index = 0; index < attempts; index += 1) {
+    if (!portListener(port).length) return true
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, 50))
+  }
+  return !portListener(port).length
+}
+
+function signalExitCode(signal) {
+  return { SIGHUP: 129, SIGINT: 130, SIGTERM: 143 }[signal] || 1
 }
 
 async function commandDev(args) {
@@ -931,60 +996,136 @@ async function commandDev(args) {
       'WT-DEPENDENCIES',
     )
   }
+  const coordinatorSnapshot = processSnapshot(process.pid)
   exclusiveCreateJson(target, {
     schemaVersion: 1,
     status: 'starting',
     pid: process.pid,
-    processStartTime: processSnapshot(process.pid)?.startTime,
-    command: `${process.execPath} ${nextBin} dev --port ${context.port} --webpack`,
-    expectedCommand: 'next dev',
+    processStartTime: coordinatorSnapshot?.startTime,
+    command: coordinatorSnapshot?.command,
+    expectedCommand: 'worktree.mjs dev',
     worktree: context.topLevel,
     branch: context.branch,
     port: context.port,
     leaseCreationTime: new Date().toISOString(),
   })
-  const child = spawn(
-    process.execPath,
-    [nextBin, 'dev', '--port', String(context.port), '--webpack'],
-    {
+  let child = null
+  let childCompletion = null
+  let interruptedSignal = null
+  const cleanupRecord = () => {
+    const current = readJson(target, null)
+    if (
+      current?.worktree === context.topLevel &&
+      current?.branch === context.branch &&
+      Number(current?.port) === Number(context.port)
+    ) {
+      rmSync(target, { force: true })
+    }
+  }
+  const markStopping = (signal) => {
+    const current = readJson(target, null)
+    if (
+      current?.worktree === context.topLevel &&
+      current?.branch === context.branch &&
+      Number(current?.port) === Number(context.port)
+    ) {
+      writeJsonAtomic(target, {
+        ...current,
+        status: 'stopping',
+        shutdownSignal: signal,
+        shutdownRequestedAt: new Date().toISOString(),
+      })
+    }
+  }
+  const forward = (signal) => {
+    interruptedSignal ||= signal
+    markStopping(interruptedSignal)
+    if (child?.pid && child.exitCode === null && child.signalCode === null) child.kill(signal)
+  }
+  const signalHandlers = new Map(
+    ['SIGHUP', 'SIGINT', 'SIGTERM'].map((signal) => [signal, () => forward(signal)]),
+  )
+  for (const [signal, handler] of signalHandlers) process.once(signal, handler)
+
+  try {
+    child = spawn(process.execPath, [nextBin, 'dev', '--port', String(context.port), '--webpack'], {
       cwd: context.topLevel,
       env: { ...process.env, PORT: String(context.port) },
       stdio: 'inherit',
-    },
-  )
-  const snapshot = await waitForSnapshot(child.pid)
-  if (!snapshot) {
-    rmSync(target, { force: true })
-    child.kill('SIGTERM')
-    throw new WtError('Dev process failed to start.', 'WT-DEV-START')
-  }
-  const record = {
-    schemaVersion: 1,
-    status: 'running',
-    pid: child.pid,
-    processStartTime: snapshot.startTime,
-    command: snapshot.command,
-    expectedCommand: 'next dev',
-    worktree: context.topLevel,
-    branch: context.branch,
-    port: context.port,
-    leaseCreationTime: new Date().toISOString(),
-  }
-  writeJsonAtomic(target, record)
-  console.log(`wt dev: ${context.branch || context.role} owns http://localhost:${context.port}`)
+    })
+    childCompletion = new Promise((resolvePromise, rejectPromise) => {
+      child.once('error', rejectPromise)
+      child.once('exit', (code, signal) => resolvePromise({ code, signal }))
+    })
+    const snapshot = await waitForSnapshot(child.pid, 20, () => Boolean(interruptedSignal))
+    if (!snapshot) {
+      if (!interruptedSignal && child.pid) child.kill('SIGTERM')
+      await childCompletion.catch(() => {})
+      if (interruptedSignal) {
+        process.exitCode = signalExitCode(interruptedSignal)
+        return
+      }
+      throw new WtError('Dev process failed to start.', 'WT-DEV-START')
+    }
+    const listenerSnapshot = await waitForPortListener(context.port, child.pid, 200, () =>
+      Boolean(interruptedSignal),
+    )
+    if (!listenerSnapshot) {
+      if (!interruptedSignal && child.pid) child.kill('SIGTERM')
+      await childCompletion.catch(() => {})
+      if (interruptedSignal) {
+        process.exitCode = signalExitCode(interruptedSignal)
+        return
+      }
+      throw new WtError(`Dev process did not acquire port ${context.port}.`, 'WT-DEV-LISTENER')
+    }
+    if (interruptedSignal) {
+      await childCompletion.catch(() => {})
+      process.exitCode = signalExitCode(interruptedSignal)
+      return
+    }
+    const record = {
+      schemaVersion: 1,
+      status: 'running',
+      pid: child.pid,
+      processStartTime: snapshot.startTime,
+      command: snapshot.command,
+      expectedCommand: 'next dev',
+      listenerPid: listenerSnapshot.pid,
+      listenerProcessStartTime: listenerSnapshot.startTime,
+      listenerCommand: listenerSnapshot.command,
+      expectedListenerCommand: 'next-server',
+      worktree: context.topLevel,
+      branch: context.branch,
+      port: context.port,
+      leaseCreationTime: new Date().toISOString(),
+    }
+    writeJsonAtomic(target, record)
+    console.log(`wt dev: ${context.branch || context.role} owns http://localhost:${context.port}`)
 
-  const forward = (signal) => {
-    if (!child.killed) child.kill(signal)
+    const completion = await childCompletion
+    process.exitCode = interruptedSignal
+      ? signalExitCode(interruptedSignal)
+      : (completion.code ?? (completion.signal ? 1 : 0))
+  } finally {
+    for (const [signal, handler] of signalHandlers) process.removeListener(signal, handler)
+    if (child?.pid && child.exitCode === null && child.signalCode === null) {
+      markStopping(interruptedSignal || 'SIGTERM')
+      child.kill('SIGTERM')
+      await childCompletion?.catch(() => {})
+    }
+    if (portListener(context.port).length) markStopping(interruptedSignal || 'PROCESS_EXIT')
+    const released = await waitForPortRelease(context.port)
+    if (released) {
+      cleanupRecord()
+    } else {
+      markStopping(interruptedSignal || 'UNKNOWN')
+      throw new WtError(
+        `Port ${context.port} is still listening after the dev process exited; the process lease was retained.`,
+        'WT-DEV-SHUTDOWN',
+      )
+    }
   }
-  process.once('SIGINT', () => forward('SIGINT'))
-  process.once('SIGTERM', () => forward('SIGTERM'))
-  const exitCode = await new Promise((resolvePromise, rejectPromise) => {
-    child.once('error', rejectPromise)
-    child.once('exit', (code, signal) => resolvePromise(code ?? (signal ? 1 : 0)))
-  })
-  const current = readJson(target, null)
-  if (current?.pid === child.pid) rmSync(target, { force: true })
-  process.exitCode = exitCode
 }
 
 function assertClaimAllowed(registry, context, descriptor) {

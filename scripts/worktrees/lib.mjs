@@ -1032,7 +1032,39 @@ export function validateProcessRecord(record) {
   ) {
     return { valid: false, reason: 'wrong-command', snapshot }
   }
-  return { valid: true, reason: null, snapshot }
+  let listenerSnapshot = null
+  if (record.listenerPid) {
+    listenerSnapshot = processSnapshot(record.listenerPid)
+    if (!listenerSnapshot) {
+      return {
+        valid: false,
+        reason: 'listener-pid-not-running',
+        snapshot,
+        listenerSnapshot: null,
+      }
+    }
+    if (listenerSnapshot.startTime !== record.listenerProcessStartTime) {
+      return {
+        valid: false,
+        reason: 'listener-pid-reused',
+        snapshot,
+        listenerSnapshot,
+      }
+    }
+    if (
+      record.expectedListenerCommand &&
+      !listenerSnapshot.command.includes(record.expectedListenerCommand) &&
+      listenerSnapshot.command !== record.listenerCommand
+    ) {
+      return {
+        valid: false,
+        reason: 'wrong-listener-command',
+        snapshot,
+        listenerSnapshot,
+      }
+    }
+  }
+  return { valid: true, reason: null, snapshot, listenerSnapshot }
 }
 
 export function processRecordPath(commonDir, port) {
