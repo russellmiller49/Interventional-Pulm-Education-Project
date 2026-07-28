@@ -37,6 +37,7 @@ import {
   validateProcessRecord,
   worktreeExcludeRules,
 } from '../lib.mjs'
+import { doctorSnapshot } from '../worktree.mjs'
 
 const repositoryRoot = new URL('../../../', import.meta.url).pathname
 const registry = loadRegistry(repositoryRoot)
@@ -68,6 +69,55 @@ afterEach(() => {
 })
 
 describe('registry and branch contracts', () => {
+  test('doctor reports an unregistered control checkout without a module instead of throwing', () => {
+    const root = temporaryDirectory()
+    const repository = join(root, 'repository')
+    const registryDirectory = join(repository, 'config', 'worktrees')
+    const inputsDirectory = join(root, 'inputs')
+    const worktreesRoot = join(root, 'worktrees')
+    const localConfigPath = join(root, 'worktrees.local.json')
+    const excludePath = join(root, 'control.exclude')
+    mkdirSync(registryDirectory, { recursive: true })
+    mkdirSync(inputsDirectory)
+    mkdirSync(worktreesRoot)
+    writeFileSync(
+      join(registryDirectory, 'modules.json'),
+      readFileSync(join(repositoryRoot, 'config', 'worktrees', 'modules.json')),
+    )
+    writeFileSync(join(repository, 'README.md'), 'test repository\n')
+    writeFileSync(excludePath, '# local excludes\n')
+    const inputs = {}
+    for (const inputName of Object.keys(registry.inputMountTargets)) {
+      const source = join(inputsDirectory, inputName)
+      writeFileSync(source, `${inputName}\n`, { mode: 0o400 })
+      chmodSync(source, 0o400)
+      inputs[inputName] = source
+    }
+    writeFileSync(
+      localConfigPath,
+      `${JSON.stringify({
+        version: 1,
+        worktreesRoot,
+        controlCheckout: repository,
+        maxProvisionedWorktrees: 5,
+        inputs,
+      })}\n`,
+    )
+    git(repository, ['init', '-b', 'main'])
+    git(repository, ['config', 'user.email', 'worktree-tests@example.invalid'])
+    git(repository, ['config', 'user.name', 'Worktree Tests'])
+    git(repository, ['add', 'README.md', 'config/worktrees/modules.json'])
+    git(repository, ['commit', '-m', 'base'])
+    git(repository, ['config', 'extensions.worktreeConfig', 'true'])
+    git(repository, ['config', '--worktree', 'core.excludesFile', excludePath])
+    git(repository, ['config', 'worktree.localConfigPath', localConfigPath])
+
+    const snapshot = doctorSnapshot(repository)
+
+    assert.equal(snapshot.ok, false)
+    assert.ok(snapshot.findings.some((finding) => finding.code === 'WT-DOCTOR-UNREGISTERED'))
+  })
+
   test('contains exactly the 35 learner modules and a separate platform scope', () => {
     assert.equal(registry.modules.length, 35)
     assert.equal(

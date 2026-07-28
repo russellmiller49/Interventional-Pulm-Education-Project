@@ -578,7 +578,7 @@ function finding(severity, code, message, data = null) {
   return { severity, code, message, data }
 }
 
-function doctorSnapshot(cwd) {
+export function doctorSnapshot(cwd) {
   const registry = loadRegistry(cwd)
   const localConfig = loadLocalConfig(cwd)
   const gitInfo = discoverGit(cwd)
@@ -628,6 +628,7 @@ function doctorSnapshot(cwd) {
     }
     const state = stateForWorktree(worktree)
     const context = inferContext(worktree.path, registry, localConfig)
+    const contextModule = context.module ? moduleById(registry, context.module) : null
     if (!state) {
       findings.push(
         finding('error', 'WT-DOCTOR-UNREGISTERED', `Unregistered worktree: ${worktree.path}`),
@@ -638,6 +639,15 @@ function doctorSnapshot(cwd) {
           'error',
           'WT-DOCTOR-BRANCH-MISMATCH',
           `${worktree.path} state says ${state.branch}; Git says ${worktree.branch || 'detached'}.`,
+        ),
+      )
+    }
+    if (context.module && !contextModule) {
+      findings.push(
+        finding(
+          'error',
+          'WT-DOCTOR-MODULE',
+          `Unknown module ${context.module} at ${worktree.path}.`,
         ),
       )
     }
@@ -658,7 +668,7 @@ function doctorSnapshot(cwd) {
         ),
       )
     }
-    if (context.module) {
+    if (contextModule) {
       for (const mount of validateMounts(worktree.path, registry, context.module, localConfig)) {
         if (mount.status !== 'ok') {
           findings.push(
@@ -689,9 +699,10 @@ function doctorSnapshot(cwd) {
         ),
       )
     } else if (
-      !existsSync(expectedExclude) ||
-      readFileSync(expectedExclude, 'utf8') !==
-        `${worktreeExcludeRules(registry, context.module).join('\n')}\n`
+      contextModule &&
+      (!existsSync(expectedExclude) ||
+        readFileSync(expectedExclude, 'utf8') !==
+          `${worktreeExcludeRules(registry, context.module).join('\n')}\n`)
     ) {
       findings.push(
         finding(
