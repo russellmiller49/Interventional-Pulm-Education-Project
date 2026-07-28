@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict'
+import { spawn } from 'node:child_process'
+import { once } from 'node:events'
 import {
   chmodSync,
   existsSync,
@@ -10,6 +12,7 @@ import {
   symlinkSync,
   writeFileSync,
 } from 'node:fs'
+import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, test } from 'node:test'
@@ -36,6 +39,7 @@ import {
   validateMounts,
   validateProcessRecord,
   worktreeExcludeRules,
+  writeWorktreeState,
 } from '../lib.mjs'
 import { doctorSnapshot } from '../worktree.mjs'
 
@@ -59,6 +63,123 @@ function context(commonDir, suffix, module = 'platform') {
     topLevel: join(commonDir, suffix),
     commonDir,
     gitDir: join(commonDir, '.git', suffix),
+  }
+}
+
+async function availablePort() {
+  const server = createServer()
+  server.listen(0, '127.0.0.1')
+  await once(server, 'listening')
+  const address = server.address()
+  const port = typeof address === 'object' && address ? address.port : null
+  server.close()
+  await once(server, 'close')
+  assert.ok(port)
+  return port
+}
+
+async function waitFor(predicate, message, timeoutMs = 5000) {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    const value = predicate()
+    if (value) return value
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, 25))
+  }
+  assert.fail(message)
+}
+
+function createDevFixture(port) {
+  const root = temporaryDirectory()
+  const repository = join(root, 'repository')
+  const registryDirectory = join(repository, 'config', 'worktrees')
+  const nextDirectory = join(repository, 'node_modules', 'next', 'dist', 'bin')
+  const externalEnvironment = join(root, 'external.env')
+  const localConfigPath = join(root, 'worktrees.local.json')
+  const worktreesRoot = join(root, 'worktrees')
+  mkdirSync(registryDirectory, { recursive: true })
+  mkdirSync(nextDirectory, { recursive: true })
+  mkdirSync(worktreesRoot)
+  writeFileSync(
+    join(registryDirectory, 'modules.json'),
+    readFileSync(join(repositoryRoot, 'config', 'worktrees', 'modules.json')),
+  )
+  writeFileSync(join(repository, 'README.md'), 'dev lifecycle fixture\n')
+  writeFileSync(externalEnvironment, 'EXAMPLE=value\n', { mode: 0o400 })
+  chmodSync(externalEnvironment, 0o400)
+  writeFileSync(
+    localConfigPath,
+    `${JSON.stringify({
+      version: 1,
+      worktreesRoot,
+      controlCheckout: repository,
+      maxProvisionedWorktrees: 5,
+      inputs: { environment: externalEnvironment },
+    })}\n`,
+  )
+  writeFileSync(
+    join(nextDirectory, 'next'),
+    `const { spawn } = require('node:child_process')
+const { join } = require('node:path')
+const child = spawn(process.execPath, [join(__dirname, 'next-server'), ...process.argv.slice(2)], {
+  env: process.env,
+  stdio: 'inherit',
+})
+for (const signal of ['SIGHUP', 'SIGINT', 'SIGTERM']) {
+  process.once(signal, () => child.kill(signal))
+}
+child.once('exit', (code, signal) => {
+  process.exitCode = code ?? (signal ? 1 : 0)
+})
+`,
+  )
+  writeFileSync(
+    join(nextDirectory, 'next-server'),
+    `const { createServer } = require('node:net')
+const portIndex = process.argv.indexOf('--port')
+const port = Number(process.argv[portIndex + 1])
+const startupDelay = Number(process.env.WT_TEST_START_DELAY || 0)
+const shutdownDelay = Number(process.env.WT_TEST_SHUTDOWN_DELAY || 0)
+let server = null
+let startupTimer = setTimeout(() => {
+  server = createServer((socket) => socket.end('ok'))
+  server.listen(port, '127.0.0.1')
+}, startupDelay)
+const shutdown = () => {
+  clearTimeout(startupTimer)
+  if (!server) {
+    process.exit(0)
+    return
+  }
+  setTimeout(() => server.close(() => process.exit(0)), shutdownDelay)
+}
+for (const signal of ['SIGHUP', 'SIGINT', 'SIGTERM']) process.once(signal, shutdown)
+`,
+  )
+  git(repository, ['init', '-b', 'main'])
+  git(repository, ['config', 'user.email', 'worktree-tests@example.invalid'])
+  git(repository, ['config', 'user.name', 'Worktree Tests'])
+  git(repository, ['add', 'README.md', 'config/worktrees/modules.json'])
+  git(repository, ['commit', '-m', 'base'])
+  git(repository, ['switch', '-c', 'codex/platform/dev-lifecycle'])
+  git(repository, ['config', 'worktree.localConfigPath', localConfigPath])
+  writeWorktreeState(join(repository, '.git'), {
+    schemaVersion: 1,
+    role: 'temporary',
+    agent: 'codex',
+    module: 'platform',
+    task: 'dev-lifecycle',
+    branch: 'codex/platform/dev-lifecycle',
+    port,
+    worktree: repository,
+    base: 'origin/main',
+    inputProfile: 'environment',
+    acknowledgements: [],
+    createdAt: new Date().toISOString(),
+  })
+  return {
+    repository,
+    localConfigPath,
+    processRecord: join(repository, '.git', 'wt', 'processes', `port-${port}.json`),
   }
 }
 
@@ -541,5 +662,109 @@ describe('mount and process validation', () => {
     })
     assert.equal(validation.valid, false)
     assert.equal(validation.reason, 'listener-pid-reused')
+  })
+
+  test('retains the dev lease until a delayed listener shutdown completes', async () => {
+    const port = await availablePort()
+    const fixture = createDevFixture(port)
+    const runner = spawn(
+      process.execPath,
+      [join(repositoryRoot, 'scripts', 'worktrees', 'worktree.mjs'), 'dev'],
+      {
+        cwd: fixture.repository,
+        env: {
+          ...process.env,
+          WT_LOCAL_CONFIG: fixture.localConfigPath,
+          WT_TEST_SHUTDOWN_DELAY: '600',
+        },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      },
+    )
+    let output = ''
+    runner.stdout.on('data', (chunk) => {
+      output += chunk
+    })
+    runner.stderr.on('data', (chunk) => {
+      output += chunk
+    })
+    const completion = new Promise((resolvePromise, rejectPromise) => {
+      runner.once('error', rejectPromise)
+      runner.once('exit', (code, signal) => resolvePromise({ code, signal }))
+    })
+
+    try {
+      await waitFor(() => {
+        if (!existsSync(fixture.processRecord)) return false
+        return JSON.parse(readFileSync(fixture.processRecord, 'utf8')).status === 'running'
+      }, `wt dev did not reach running state:\n${output}`)
+      runner.kill('SIGTERM')
+      await waitFor(() => {
+        if (!existsSync(fixture.processRecord)) return false
+        return JSON.parse(readFileSync(fixture.processRecord, 'utf8')).status === 'stopping'
+      }, `wt dev removed its lease before entering stopping state:\n${output}`)
+      await new Promise((resolvePromise) => setTimeout(resolvePromise, 150))
+      assert.equal(
+        existsSync(fixture.processRecord),
+        true,
+        'the lease must remain while the listener delays shutdown',
+      )
+      const result = await completion
+      assert.equal(result.code, 143, output)
+      assert.equal(existsSync(fixture.processRecord), false, output)
+    } finally {
+      if (runner.exitCode === null && runner.signalCode === null) runner.kill('SIGKILL')
+    }
+  })
+
+  test('cancels listener discovery without writing a running lease after a signal', async () => {
+    const port = await availablePort()
+    const fixture = createDevFixture(port)
+    const runner = spawn(
+      process.execPath,
+      [join(repositoryRoot, 'scripts', 'worktrees', 'worktree.mjs'), 'dev'],
+      {
+        cwd: fixture.repository,
+        env: {
+          ...process.env,
+          WT_LOCAL_CONFIG: fixture.localConfigPath,
+          WT_TEST_START_DELAY: '3000',
+        },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      },
+    )
+    let output = ''
+    runner.stdout.on('data', (chunk) => {
+      output += chunk
+    })
+    runner.stderr.on('data', (chunk) => {
+      output += chunk
+    })
+    const completion = new Promise((resolvePromise, rejectPromise) => {
+      runner.once('error', rejectPromise)
+      runner.once('exit', (code, signal) => resolvePromise({ code, signal }))
+    })
+
+    try {
+      await waitFor(() => {
+        if (!existsSync(fixture.processRecord)) return false
+        return JSON.parse(readFileSync(fixture.processRecord, 'utf8')).status === 'starting'
+      }, `wt dev did not create its startup lease:\n${output}`)
+      const signalTime = Date.now()
+      runner.kill('SIGTERM')
+      const result = await Promise.race([
+        completion,
+        new Promise((_, rejectPromise) =>
+          setTimeout(
+            () => rejectPromise(new Error(`wt dev did not cancel startup promptly:\n${output}`)),
+            1500,
+          ),
+        ),
+      ])
+      assert.equal(result.code, 143, output)
+      assert.ok(Date.now() - signalTime < 1500, output)
+      assert.equal(existsSync(fixture.processRecord), false, output)
+    } finally {
+      if (runner.exitCode === null && runner.signalCode === null) runner.kill('SIGKILL')
+    }
   })
 })

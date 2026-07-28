@@ -903,8 +903,9 @@ async function commandDoctor(args) {
   if (!snapshot.ok) process.exitCode = 1
 }
 
-async function waitForSnapshot(pid, attempts = 20) {
+export async function waitForSnapshot(pid, attempts = 20, shouldCancel = () => false) {
   for (let index = 0; index < attempts; index += 1) {
+    if (shouldCancel()) return null
     const snapshot = processSnapshot(pid)
     if (snapshot) return snapshot
     await new Promise((resolvePromise) => setTimeout(resolvePromise, 50))
@@ -930,8 +931,14 @@ function isDescendantProcess(pid, ancestorPid) {
   return false
 }
 
-async function waitForPortListener(port, ownerPid, attempts = 200) {
+export async function waitForPortListener(
+  port,
+  ownerPid,
+  attempts = 200,
+  shouldCancel = () => false,
+) {
   for (let index = 0; index < attempts; index += 1) {
+    if (shouldCancel()) return null
     for (const pid of portListener(port)) {
       if (!isDescendantProcess(pid, ownerPid)) continue
       const snapshot = processSnapshot(pid)
@@ -940,6 +947,18 @@ async function waitForPortListener(port, ownerPid, attempts = 200) {
     await new Promise((resolvePromise) => setTimeout(resolvePromise, 50))
   }
   return null
+}
+
+export async function waitForPortRelease(port, attempts = 200) {
+  for (let index = 0; index < attempts; index += 1) {
+    if (!portListener(port).length) return true
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, 50))
+  }
+  return !portListener(port).length
+}
+
+function signalExitCode(signal) {
+  return { SIGHUP: 129, SIGINT: 130, SIGTERM: 143 }[signal] || 1
 }
 
 async function commandDev(args) {
@@ -991,6 +1010,8 @@ async function commandDev(args) {
     leaseCreationTime: new Date().toISOString(),
   })
   let child = null
+  let childCompletion = null
+  let interruptedSignal = null
   const cleanupRecord = () => {
     const current = readJson(target, null)
     if (
@@ -1001,15 +1022,30 @@ async function commandDev(args) {
       rmSync(target, { force: true })
     }
   }
+  const markStopping = (signal) => {
+    const current = readJson(target, null)
+    if (
+      current?.worktree === context.topLevel &&
+      current?.branch === context.branch &&
+      Number(current?.port) === Number(context.port)
+    ) {
+      writeJsonAtomic(target, {
+        ...current,
+        status: 'stopping',
+        shutdownSignal: signal,
+        shutdownRequestedAt: new Date().toISOString(),
+      })
+    }
+  }
   const forward = (signal) => {
-    cleanupRecord()
-    if (child && !child.killed) child.kill(signal)
+    interruptedSignal ||= signal
+    markStopping(interruptedSignal)
+    if (child?.pid && child.exitCode === null && child.signalCode === null) child.kill(signal)
   }
   const signalHandlers = new Map(
     ['SIGHUP', 'SIGINT', 'SIGTERM'].map((signal) => [signal, () => forward(signal)]),
   )
   for (const [signal, handler] of signalHandlers) process.once(signal, handler)
-  process.once('exit', cleanupRecord)
 
   try {
     child = spawn(process.execPath, [nextBin, 'dev', '--port', String(context.port), '--webpack'], {
@@ -1017,15 +1053,36 @@ async function commandDev(args) {
       env: { ...process.env, PORT: String(context.port) },
       stdio: 'inherit',
     })
-    const snapshot = await waitForSnapshot(child.pid)
+    childCompletion = new Promise((resolvePromise, rejectPromise) => {
+      child.once('error', rejectPromise)
+      child.once('exit', (code, signal) => resolvePromise({ code, signal }))
+    })
+    const snapshot = await waitForSnapshot(child.pid, 20, () => Boolean(interruptedSignal))
     if (!snapshot) {
-      child.kill('SIGTERM')
+      if (!interruptedSignal && child.pid) child.kill('SIGTERM')
+      await childCompletion.catch(() => {})
+      if (interruptedSignal) {
+        process.exitCode = signalExitCode(interruptedSignal)
+        return
+      }
       throw new WtError('Dev process failed to start.', 'WT-DEV-START')
     }
-    const listenerSnapshot = await waitForPortListener(context.port, child.pid)
+    const listenerSnapshot = await waitForPortListener(context.port, child.pid, 200, () =>
+      Boolean(interruptedSignal),
+    )
     if (!listenerSnapshot) {
-      child.kill('SIGTERM')
+      if (!interruptedSignal && child.pid) child.kill('SIGTERM')
+      await childCompletion.catch(() => {})
+      if (interruptedSignal) {
+        process.exitCode = signalExitCode(interruptedSignal)
+        return
+      }
       throw new WtError(`Dev process did not acquire port ${context.port}.`, 'WT-DEV-LISTENER')
+    }
+    if (interruptedSignal) {
+      await childCompletion.catch(() => {})
+      process.exitCode = signalExitCode(interruptedSignal)
+      return
     }
     const record = {
       schemaVersion: 1,
@@ -1046,15 +1103,28 @@ async function commandDev(args) {
     writeJsonAtomic(target, record)
     console.log(`wt dev: ${context.branch || context.role} owns http://localhost:${context.port}`)
 
-    const exitCode = await new Promise((resolvePromise, rejectPromise) => {
-      child.once('error', rejectPromise)
-      child.once('exit', (code, signal) => resolvePromise(code ?? (signal ? 1 : 0)))
-    })
-    process.exitCode = exitCode
+    const completion = await childCompletion
+    process.exitCode = interruptedSignal
+      ? signalExitCode(interruptedSignal)
+      : (completion.code ?? (completion.signal ? 1 : 0))
   } finally {
-    cleanupRecord()
-    process.removeListener('exit', cleanupRecord)
     for (const [signal, handler] of signalHandlers) process.removeListener(signal, handler)
+    if (child?.pid && child.exitCode === null && child.signalCode === null) {
+      markStopping(interruptedSignal || 'SIGTERM')
+      child.kill('SIGTERM')
+      await childCompletion?.catch(() => {})
+    }
+    if (portListener(context.port).length) markStopping(interruptedSignal || 'PROCESS_EXIT')
+    const released = await waitForPortRelease(context.port)
+    if (released) {
+      cleanupRecord()
+    } else {
+      markStopping(interruptedSignal || 'UNKNOWN')
+      throw new WtError(
+        `Port ${context.port} is still listening after the dev process exited; the process lease was retained.`,
+        'WT-DEV-SHUTDOWN',
+      )
+    }
   }
 }
 
