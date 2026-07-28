@@ -230,6 +230,62 @@ export function listWorktrees(cwd) {
   return records
 }
 
+export function assertDisposableWorktreePath(worktreePath, worktreesRoot) {
+  const root = realpathIfPossible(worktreesRoot)
+  const target = realpathIfPossible(worktreePath)
+  const pathname = relative(root, target)
+  const area = pathname.split(sep)[0]
+  if (
+    !pathname ||
+    pathname === '..' ||
+    pathname.startsWith(`..${sep}`) ||
+    isAbsolute(pathname) ||
+    !['active', 'temporary'].includes(area)
+  ) {
+    throw new WtError(
+      `Refusing to dispose a worktree outside ${root}/active or ${root}/temporary: ${target}`,
+      'WT-DISPOSAL-PATH',
+    )
+  }
+  return target
+}
+
+export function removeDisposableWorktree(control, worktreePath, worktreesRoot) {
+  const target = assertDisposableWorktreePath(worktreePath, worktreesRoot)
+  const registered = listWorktrees(control).some(
+    (worktree) => realpathIfPossible(worktree.path) === target,
+  )
+  if (!registered) {
+    throw new WtError(`Worktree is no longer registered: ${target}`, 'WT-DISPOSAL-UNREGISTERED')
+  }
+  git(control, ['worktree', 'remove', '--force', target])
+  if (existsSync(target)) {
+    throw new WtError(
+      `Git unregistered the worktree but did not remove its directory: ${target}`,
+      'WT-DISPOSAL-INCOMPLETE',
+    )
+  }
+}
+
+export function orphanWorktreeDirectories(cwd, worktreesRoot) {
+  const registered = new Set(
+    listWorktrees(cwd)
+      .filter((worktree) => existsSync(worktree.path))
+      .map((worktree) => realpathIfPossible(worktree.path)),
+  )
+  const orphans = []
+  for (const area of ['active', 'temporary', 'review']) {
+    const parent = join(resolve(worktreesRoot), area)
+    if (!existsSync(parent)) continue
+    for (const entry of readdirSync(parent, { withFileTypes: true })) {
+      if (!entry.isDirectory() && !entry.isSymbolicLink()) continue
+      const candidate = join(parent, entry.name)
+      if (!registered.has(realpathIfPossible(candidate))) orphans.push(candidate)
+    }
+  }
+  return orphans.sort()
+}
+
 export function findControlCheckout(cwd, localConfig = null) {
   if (localConfig?.controlCheckout) return realpathIfPossible(localConfig.controlCheckout)
   const main = listWorktrees(cwd).find((item) => item.branch === 'main')
@@ -444,7 +500,7 @@ export function diffNameStatus(cwd, args) {
   }).stdout
   const tokens = parseNullList(output)
   const entries = []
-  for (let index = 0; index < tokens.length; ) {
+  for (let index = 0; index < tokens.length;) {
     const status = tokens[index]
     index += 1
     if (!/^[A-Z][0-9]*$/.test(status) || index >= tokens.length) {

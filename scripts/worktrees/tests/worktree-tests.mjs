@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict'
 import {
   chmodSync,
+  existsSync,
   lstatSync,
   mkdtempSync,
   mkdirSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -23,11 +25,13 @@ import {
   leaseOwnedForResource,
   loadRegistry,
   matchesPattern,
+  normalizeRepoPath,
+  orphanWorktreeDirectories,
   parseTaskBranch,
   processSnapshot,
   provisionMounts,
   releaseLease,
-  normalizeRepoPath,
+  removeDisposableWorktree,
   scopeReport,
   validateMounts,
   validateProcessRecord,
@@ -296,6 +300,45 @@ describe('atomic leases', () => {
       () => acquireLease(commonDir, second, read, 'read during reset'),
       (error) => error instanceof WtError && error.code === 'WT-LEASE-CONFLICT',
     )
+  })
+})
+
+describe('disposable worktrees', () => {
+  test('removes ignored artifacts and mount symlinks without touching external inputs', () => {
+    const root = temporaryDirectory()
+    const repository = join(root, 'repository')
+    const worktreesRoot = join(root, 'worktrees')
+    const target = join(worktreesRoot, 'active', 'codex-platform-disposal-test')
+    const externalInput = join(root, 'external.env')
+    mkdirSync(repository)
+    mkdirSync(join(worktreesRoot, 'active'), { recursive: true })
+    git(repository, ['init', '-b', 'main'])
+    git(repository, ['config', 'user.email', 'worktree-tests@example.invalid'])
+    git(repository, ['config', 'user.name', 'Worktree Tests'])
+    writeFileSync(join(repository, '.gitignore'), 'node_modules/\n.env.local\n')
+    writeFileSync(join(repository, 'README.md'), 'test repository\n')
+    git(repository, ['add', '.gitignore', 'README.md'])
+    git(repository, ['commit', '-m', 'base'])
+    git(repository, ['worktree', 'add', '-b', 'codex/platform/disposal-test', target, 'main'])
+    mkdirSync(join(target, 'node_modules'))
+    writeFileSync(join(target, 'node_modules', 'cache.txt'), 'disposable\n')
+    writeFileSync(externalInput, 'preserve me\n')
+    symlinkSync(externalInput, join(target, '.env.local'))
+
+    assert.deepEqual(orphanWorktreeDirectories(repository, worktreesRoot), [])
+    const orphan = join(worktreesRoot, 'temporary', 'orphaned-task')
+    mkdirSync(orphan, { recursive: true })
+    assert.deepEqual(orphanWorktreeDirectories(repository, worktreesRoot), [orphan])
+    rmSync(orphan, { recursive: true })
+
+    assert.throws(
+      () => removeDisposableWorktree(repository, repository, worktreesRoot),
+      (error) => error instanceof WtError && error.code === 'WT-DISPOSAL-PATH',
+    )
+    removeDisposableWorktree(repository, target, worktreesRoot)
+
+    assert.equal(existsSync(target), false)
+    assert.equal(readFileSync(externalInput, 'utf8'), 'preserve me\n')
   })
 })
 
