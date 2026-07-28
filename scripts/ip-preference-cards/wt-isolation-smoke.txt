@@ -1,1 +1,0 @@
-Claude worktree isolation probe: 2026-07-28
