@@ -38,7 +38,7 @@ function commitCorrect(state: VentilationSimulationState): VentilationSimulation
 describe('mechanical ventilation reducer and progress boundary', () => {
   beforeEach(() => window.localStorage.clear())
 
-  it('blocks ventilator and bedside therapy until a Practice prediction is committed', () => {
+  it('keeps ventilator and bedside therapy open before a Practice prediction is committed', () => {
     const initial = createInitialSimulationState('MV-01', 'practice')
     const blockedControl = ventilationSimulationReducer(initial, {
       type: 'SET_CONTROL',
@@ -49,9 +49,9 @@ describe('mechanical ventilation reducer and progress boundary', () => {
       type: 'PERFORM_INTERVENTION',
       interventionId: 'inspiratory-hold',
     })
-    expect(blockedControl.ventilator.settings.peepCmH2O).toBe(initial.ventilator.settings.peepCmH2O)
-    expect(blockedIntervention.interventions).toHaveLength(0)
-    expect(blockedIntervention.lastResponse).toMatch(/commit/i)
+    expect(blockedControl.ventilator.settings.peepCmH2O).toBe(10)
+    expect(blockedIntervention.interventions).toHaveLength(1)
+    expect(blockedIntervention.lastResponse).not.toMatch(/commit/i)
 
     const committed = commitCorrect(initial)
     const changed = ventilationSimulationReducer(committed, {

@@ -34,6 +34,7 @@ describe('derived hemodynamic calculations', () => {
       ppvContext: validPpvContext,
     })
 
+    expect(result.cardiacIndexLMinM2.value).toBe(2.5)
     expect(result.strokeVolumeMl.value).toBe(50)
     expect(result.strokeVolumeIndexMlM2.value).toBe(25)
     expect(result.systemicVascularResistance.value).toBe(1120)

@@ -1,0 +1,786 @@
+[
+  {
+    "role_code": "AIRWAY_BALLOON_DILATOR",
+    "category": "Airway dilation",
+    "role_name": "Pulmonary balloon dilator",
+    "description": "Balloon catheter for airway stricture dilation.",
+    "selection_guidance": "Filter by diameter range, balloon length, guidewire, and inflation device.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "AIRWAY_STENT_PATIENT_SPECIFIC",
+    "category": "Airway stent",
+    "role_name": "Patient-specific airway stent service",
+    "description": "Custom stent design/manufacturing service.",
+    "selection_guidance": "Treat as a service workflow, not an off-the-shelf SKU.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "AIRWAY_STENT_SEMS_COVERED",
+    "category": "Airway stent",
+    "role_name": "Covered or partially covered SEMS",
+    "description": "Self-expanding metallic tracheobronchial stent with covering.",
+    "selection_guidance": "Filter by diameter, length, delivery profile, coverage, and release direction.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "AIRWAY_STENT_SEMS_UNCOVERED",
+    "category": "Airway stent",
+    "role_name": "Uncovered SEMS",
+    "description": "Uncovered self-expanding metallic tracheobronchial stent.",
+    "selection_guidance": "Filter by diameter, length, delivery profile, and release direction.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "AIRWAY_STENT_SILICONE_HOURGLASS",
+    "category": "Airway stent",
+    "role_name": "Hourglass silicone stent",
+    "description": "Hourglass-shaped silicone stent for selected stenoses.",
+    "selection_guidance": "Filter by proximal, waist, distal diameters, and segment lengths.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
+    "category": "Airway stent",
+    "role_name": "Straight silicone airway stent",
+    "description": "Straight tracheal or bronchial silicone stent.",
+    "selection_guidance": "Filter by model, outer diameter, length, wall thickness, and radiopaque option.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "AIRWAY_STENT_SILICONE_Y",
+    "category": "Airway stent",
+    "role_name": "Silicone Y stent",
+    "description": "Bifurcation silicone stent.",
+    "selection_guidance": "Filter by tracheal/bronchial diameters and limb lengths.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "AIRWAY_STENT_SIZING_DEVICE",
+    "category": "Airway stenting",
+    "role_name": "Airway stent sizing device",
+    "description": "Device used to estimate airway stricture diameter or length for stent selection.",
+    "selection_guidance": "Verify measurement method, channel, guidewire, and intended stent family.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "APC_APPLICATOR_RIGID",
+    "category": "Therapeutic bronchoscopy",
+    "role_name": "Rigid or malleable APC applicator",
+    "description": "Rigid/malleable APC applicator for use through rigid bronchoscopy or open airway access.",
+    "selection_guidance": "Match shaft geometry, electrode type, platform, and local credentialing.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "APC_GAS_ACCESSORY",
+    "category": "Therapeutic bronchoscopy",
+    "role_name": "APC gas-system accessory",
+    "description": "Argon pressure reducer, gas cylinder, connecting tube, or related APC gas accessory.",
+    "selection_guidance": "Match local gas standard, generator, cylinder connector, and institutional gas-safety policy.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "APC_PROBE_FLEX",
+    "category": "Therapeutic bronchoscopy",
+    "role_name": "Flexible APC probe",
+    "description": "Flexible argon plasma coagulation probe for endoscopic airway therapy.",
+    "selection_guidance": "Match probe diameter, beam form, working length, compatible APC generator, and airway-fire precautions.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "AUTOMATED_ENDOSCOPE_REPROCESSOR",
+    "category": "Reprocessing",
+    "role_name": "Automated endoscope reprocessor",
+    "description": "Capital reprocessing system used for automated cleaning and/or high-level disinfection of compatible flexible endoscopes.",
+    "selection_guidance": "Match validated endoscope models, connectors, detergents/disinfectants, facility utilities, and institutional SPD policy.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "BAL_KIT",
+    "category": "Bronchoscopy sampling",
+    "role_name": "BAL kit",
+    "description": "Packaged tubing or accessory kit for bronchoalveolar lavage.",
+    "selection_guidance": "Verify connectors, anti-reflux features, specimen collection, and scope compatibility.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "BIOPSY_FORCEPS_FLEX",
+    "category": "Sampling",
+    "role_name": "Flexible bronchoscopy biopsy forceps",
+    "description": "Single-use or reusable forceps for endobronchial/transbronchial biopsy.",
+    "selection_guidance": "Filter by jaw type, OD, working length, and minimum channel.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "BITE_BLOCK",
+    "category": "Bronchoscopy accessory",
+    "role_name": "Bite block",
+    "description": "Single-use or reusable bite block used to protect the scope and patient.",
+    "selection_guidance": "Match maximum endoscope outer diameter and local reprocessing policy.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "BRONCH_REPROCESSING_KIT",
+    "category": "Reprocessing",
+    "role_name": "Bronchoscope reprocessing kit",
+    "description": "Single-use kit supporting bedside pre-cleaning/transport.",
+    "selection_guidance": "Match local reprocessing policy.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "category": "Pleural procedures",
+    "role_name": "Large-bore chest tube set",
+    "description": "Large-bore percutaneous or surgical chest tube set.",
+    "selection_guidance": "Filter by French size, insertion technique, and included tray components.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "CHEST_TUBE_SMALL_BORE",
+    "category": "Pleural procedures",
+    "role_name": "Small-bore chest drain",
+    "description": "Seldinger or pigtail pleural drainage catheter.",
+    "selection_guidance": "Filter by French size, length, locking/pigtail design, and indication.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "category": "Pleural procedures",
+    "role_name": "Surgical thoracic catheter",
+    "description": "Straight/right-angle surgical chest tube or trocar catheter.",
+    "selection_guidance": "Filter by French size, length, tip geometry, and trocar option.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "CO2_INSUFFLATOR",
+    "category": "Thoracoscopy platform",
+    "role_name": "CO2 insufflator",
+    "description": "CO2 regulation or insufflation unit used for applicable endoscopic procedures.",
+    "selection_guidance": "Verify institutional technique, tubing, pressure limits, and scope of indication.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "CRYO_SYSTEM_ACCESSORY",
+    "category": "Therapeutic bronchoscopy",
+    "role_name": "Cryosurgery platform accessory",
+    "description": "Cryosurgery footswitch, gas hose, gas adapter, exhaust hose, cart, or related accessory.",
+    "selection_guidance": "Match the cryosurgery platform, gas source, country-specific connector, and local engineering requirements.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "CRYOPROBE_FLEX",
+    "category": "Therapeutic bronchoscopy",
+    "role_name": "Flexible cryoprobe",
+    "description": "Flexible cryoprobe for cryobiopsy, clot extraction, or therapeutic airway work.",
+    "selection_guidance": "Match probe OD, oversheath, cryosurgical platform, and bronchoscope channel.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "CYTOLOGY_BRUSH",
+    "category": "Sampling",
+    "role_name": "Pulmonary cytology brush",
+    "description": "Covered or uncovered brush for airway cytology or microbiology.",
+    "selection_guidance": "Filter by sheath, brush dimensions, working length, and channel.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "DLT_LEFT",
+    "category": "Airway isolation",
+    "role_name": "Left double-lumen tube",
+    "description": "Left-sided double-lumen endobronchial tube.",
+    "selection_guidance": "Filter by French size and bronchoscope compatibility.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "DLT_RIGHT",
+    "category": "Airway isolation",
+    "role_name": "Right double-lumen tube",
+    "description": "Right-sided double-lumen endobronchial tube.",
+    "selection_guidance": "Usually a backup/selected-anatomy option; filter by French size.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "EBUS_BALLOON",
+    "category": "EBUS accessory",
+    "role_name": "EBUS balloon",
+    "description": "Distal balloon used for acoustic coupling during EBUS.",
+    "selection_guidance": "Match the EBUS scope model and IFU.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "EBUS_MINIFORCEPS",
+    "category": "Sampling",
+    "role_name": "EBUS intranodal mini-forceps",
+    "description": "Mini-forceps for intranodal histology after EBUS access.",
+    "selection_guidance": "Filter by channel, access-hole workflow, and scope compatibility.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "EBUS_NEEDLE_ADAPTER",
+    "category": "EBUS accessory",
+    "role_name": "EBUS needle adapter or biopsy valve",
+    "description": "Adapter/biopsy valve required by a specific EBUS needle family.",
+    "selection_guidance": "Match the exact needle family and scope model; do not infer cross-family compatibility.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "EBUS_NEEDLE_FNA",
+    "category": "Sampling",
+    "role_name": "EBUS-TBNA FNA needle",
+    "description": "Needle for EBUS-guided aspiration.",
+    "selection_guidance": "Filter by gauge, scope compatibility, minimum channel, and packaging.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "EBUS_NEEDLE_FNB",
+    "category": "Sampling",
+    "role_name": "EBUS FNB needle",
+    "description": "Core-biopsy needle for EBUS-guided sampling.",
+    "selection_guidance": "Filter by gauge, scope compatibility, and intended pathology workflow.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "EBUS_SCOPE",
+    "category": "EBUS platform",
+    "role_name": "Linear EBUS bronchoscope",
+    "description": "Linear ultrasound bronchoscope for EBUS-TBNA/FNB.",
+    "selection_guidance": "Match ultrasound processor, cable, balloon, needle system, and channel requirements.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "EBV_DELIVERY_CATHETER",
+    "category": "Endobronchial valve",
+    "role_name": "Valve deployment catheter",
+    "description": "Deployment catheter for endobronchial valves.",
+    "selection_guidance": "Match valve family, size, scope channel, and anatomy.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "EBV_SIZING_BALLOON",
+    "category": "Endobronchial valve",
+    "role_name": "Endobronchial valve sizing balloon catheter",
+    "description": "Balloon catheter used for airway sizing in an endobronchial valve workflow.",
+    "selection_guidance": "Match the valve system, scope channel, balloon diameter, and working length.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "EBV_SIZING_KIT",
+    "category": "Endobronchial valve",
+    "role_name": "Endobronchial valve sizing kit",
+    "description": "Kit used to size target airways before endobronchial valve deployment.",
+    "selection_guidance": "Match valve family, sizing catheter/balloon, channel, and current IFU.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "EBV_VALVE",
+    "category": "Endobronchial valve",
+    "role_name": "Endobronchial valve",
+    "description": "One-way endobronchial valve implant.",
+    "selection_guidance": "Match airway sizing workflow and manufacturer deployment system.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "ENDOBRONCHIAL_BLOCKER",
+    "category": "Airway isolation",
+    "role_name": "Endobronchial blocker",
+    "description": "Bronchoscopically guided bronchial blocker for lung isolation.",
+    "selection_guidance": "Match blocker Fr size to ETT internal diameter and bronchoscope outer diameter; verify balloon and adapter compatibility.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "ENDOBRONCHIAL_SPIGOT",
+    "category": "Endobronchial occlusion",
+    "role_name": "Endobronchial occlusion spigot/plug",
+    "description": "Implantable bronchial occlusion plug or spigot used to block a selected airway.",
+    "selection_guidance": "Match indication, airway size, deployment/removal technique, and current local regulatory status.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "ENDOSCOPE_CLEANING_BRUSH",
+    "category": "Reprocessing",
+    "role_name": "Endoscope cleaning brush",
+    "description": "Single-use or reusable cleaning brush for endoscope channels or wire sheaths.",
+    "selection_guidance": "Match channel diameter/length and local reprocessing instructions.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "ENDOSCOPIC_IRRIGATION_PUMP",
+    "category": "Endoscopy platform",
+    "role_name": "Endoscopic irrigation pump",
+    "description": "Pump for irrigation or flushing during endoscopy.",
+    "selection_guidance": "Match tubing set, connector, pressure/flow range, and endoscope platform.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "ENDOSCOPIC_SUCTION_PUMP",
+    "category": "Endoscopy platform",
+    "role_name": "Endoscopic suction pump",
+    "description": "Dedicated suction pump or simple suction unit used with endoscopy.",
+    "selection_guidance": "Match canister, tubing, vacuum range, and infection-control workflow.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "ENDOSCOPY_CART",
+    "category": "Bronchoscopy platform",
+    "role_name": "Endoscopy system cart",
+    "description": "Cart or mobile stand for an endoscopy video/ultrasound platform.",
+    "selection_guidance": "Match the processor/display platform and facility equipment policy.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "ENDOSCOPY_LIGHT_CABLE",
+    "category": "Imaging platform",
+    "role_name": "Endoscopy light cable",
+    "description": "Fiber-optic light cable or platform-specific light connection.",
+    "selection_guidance": "Match endoscope-side and light-source-side connectors and cable diameter.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "ENDOSCOPY_MONITOR",
+    "category": "Imaging platform",
+    "role_name": "Endoscopy monitor",
+    "description": "Medical-grade display used with the endoscopy video platform.",
+    "selection_guidance": "Match video inputs, resolution, mounting, and current platform compatibility.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "ENERGY_CABLE_ADAPTER",
+    "category": "Therapeutic bronchoscopy",
+    "role_name": "Energy-platform cable or adapter",
+    "description": "Connecting cable or adapter between an electrosurgical instrument and generator.",
+    "selection_guidance": "Match both connector standards, generator model, instrument, maximum electrical capacity, and reprocessing requirements.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "category": "Bronchoscopy platform",
+    "role_name": "Diagnostic flexible bronchoscope",
+    "description": "Reusable or single-use flexible bronchoscope suitable for diagnostic bronchoscopy.",
+    "selection_guidance": "Filter by outer diameter, working channel, image platform, and single-use/reusable preference.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "FLEX_SCOPE_SINGLE_USE",
+    "category": "Bronchoscopy platform",
+    "role_name": "Single-use flexible bronchoscope",
+    "description": "Disposable flexible bronchoscope for ICU, OR, or isolation workflows.",
+    "selection_guidance": "Filter by outer diameter, channel, ETT/DLT compatibility, and display platform.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "FLEX_SCOPE_THERAPEUTIC",
+    "category": "Bronchoscopy platform",
+    "role_name": "Therapeutic flexible bronchoscope",
+    "description": "Flexible bronchoscope with a larger working channel for therapeutic accessories and suction.",
+    "selection_guidance": "Filter by channel requirement of planned accessories and airway size.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "FOREIGN_BODY_BASKET",
+    "category": "Retrieval",
+    "role_name": "Airway retrieval basket/net",
+    "description": "Flexible basket or net for foreign body retrieval.",
+    "selection_guidance": "Filter by sheath OD, opening size, channel, and working length.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "FOREIGN_BODY_FORCEPS_FLEX",
+    "category": "Retrieval",
+    "role_name": "Flexible grasping forceps",
+    "description": "Flexible forceps for foreign body or tissue retrieval.",
+    "selection_guidance": "Filter by jaw design, opening, OD, and channel.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "GENERIC_AIRWAY_ADAPTER",
+    "category": "Generic supply",
+    "role_name": "Airway bronchoscopy adapter",
+    "description": "Swivel, bronchoscopy, or ventilation adapter.",
+    "selection_guidance": "Match ETT/DLT/tracheostomy tube and ventilation circuit.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "GENERIC_COLLATERAL_VENT",
+    "category": "Endobronchial valve",
+    "role_name": "Collateral ventilation assessment system",
+    "description": "Platform/catheter for collateral ventilation assessment.",
+    "selection_guidance": "Match selected valve workflow and local protocol.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "category": "Generic supply",
+    "role_name": "Pleural drainage unit",
+    "description": "Wet or dry suction chest drainage unit.",
+    "selection_guidance": "Hospital formulary item.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "GENERIC_ENERGY_PLATFORM",
+    "category": "Generic equipment",
+    "role_name": "Energy/hemostasis platform",
+    "description": "APC, electrocautery, laser, or other energy platform.",
+    "selection_guidance": "Match intended modality, probe, grounding/airway-fire protocol, and local credentialing.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "GENERIC_PPE",
+    "category": "Generic supply",
+    "role_name": "PPE / isolation supplies",
+    "description": "Procedure and isolation PPE.",
+    "selection_guidance": "Hospital infection-control policy.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "GENERIC_SPECIMEN",
+    "category": "Generic supply",
+    "role_name": "Specimen containers/labels",
+    "description": "Laboratory containers, labels, and transport materials.",
+    "selection_guidance": "Hospital and laboratory-specific item.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "GENERIC_SUCTION",
+    "category": "Generic supply",
+    "role_name": "Suction source/tubing/canister",
+    "description": "Generic suction setup.",
+    "selection_guidance": "Hospital-specific item.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "GENERIC_ULTRASOUND",
+    "category": "Generic equipment",
+    "role_name": "Ultrasound machine/probe cover",
+    "description": "Ultrasound platform and sterile probe cover.",
+    "selection_guidance": "Hospital-specific platform.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "GENERIC_WLL_LAVAGE",
+    "category": "Whole lung lavage",
+    "role_name": "WLL saline/tubing/drainage circuit",
+    "description": "Warmed saline delivery and drainage circuit for whole-lung lavage.",
+    "selection_guidance": "Institution-designed and clinically validated setup.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "GUIDE_SHEATH_KIT",
+    "category": "Sampling",
+    "role_name": "Peripheral biopsy guide-sheath kit",
+    "description": "Guide sheath kit used to maintain access to a peripheral lesion for repeated sampling.",
+    "selection_guidance": "Match minimum channel, working length, compatible radial probe, included forceps/brush, and local navigation workflow.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "GUIDING_DEVICE",
+    "category": "Sampling",
+    "role_name": "Peripheral guiding device",
+    "description": "Rotatable or articulating guiding device used to direct sampling tools.",
+    "selection_guidance": "Match bronchoscope channel, working length, compatible tools, and current IFU.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "INFLATION_DEVICE",
+    "category": "Airway dilation",
+    "role_name": "Balloon inflation device",
+    "description": "Reusable or single-use inflation device for balloon dilation.",
+    "selection_guidance": "Match balloon system and pressure requirements.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "IPC_DRAINAGE_KIT",
+    "category": "Pleural procedures",
+    "role_name": "Indwelling pleural catheter drainage kit",
+    "description": "Vacuum bottle, bag, or drainage set for an indwelling pleural catheter.",
+    "selection_guidance": "Must match the implanted catheter family.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "IPC_DRESSING_KIT",
+    "category": "Pleural procedures",
+    "role_name": "IPC dressing kit",
+    "description": "Dressing supplies packaged for an indwelling pleural catheter.",
+    "selection_guidance": "Match catheter valve/system and local home-care workflow.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "IPC_INSERTION_KIT",
+    "category": "Pleural procedures",
+    "role_name": "Indwelling pleural catheter insertion kit",
+    "description": "Tunneled indwelling pleural catheter and insertion kit.",
+    "selection_guidance": "Match catheter family and drainage accessories.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "IPC_MANAGEMENT_ACCESSORY",
+    "category": "Pleural procedures",
+    "role_name": "IPC management accessory",
+    "description": "Valve, cap, drainage line, adapter, dilator, or removal accessory for an IPC system.",
+    "selection_guidance": "Match exact catheter system and current IFU.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "PDT_KIT",
+    "category": "Percutaneous tracheostomy",
+    "role_name": "Percutaneous tracheostomy kit",
+    "description": "Dilational percutaneous tracheostomy kit or tray.",
+    "selection_guidance": "Filter by technique, dilator/tube sizes, and included components.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "category": "Medical thoracoscopy",
+    "role_name": "Pleural biopsy forceps",
+    "description": "Biopsy forceps for pleuroscopy.",
+    "selection_guidance": "Match pleuroscope channel and working length.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
+    "category": "Pleural procedures",
+    "role_name": "Pleural drainage accessory",
+    "description": "Tubing adapter, connecting tube, one-way valve, chest-tube adapter, or aspiration accessory set.",
+    "selection_guidance": "Match catheter hub, drainage system, intended air/fluid use, and current IFU.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "PLEUROSCOPE",
+    "category": "Medical thoracoscopy",
+    "role_name": "Pleuroscope",
+    "description": "Semi-rigid/flexible pleuroscope.",
+    "selection_guidance": "Match processor, trocar, biopsy forceps, and channel requirements.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "PLEUROSCOPY_TROCAR",
+    "category": "Medical thoracoscopy",
+    "role_name": "Pleuroscopy trocar",
+    "description": "Trocar/cannula for medical thoracoscopy.",
+    "selection_guidance": "Match pleuroscope and access strategy.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "PNEUMOTHORAX_KIT",
+    "category": "Pleural procedures",
+    "role_name": "Pneumothorax catheter or aspiration kit",
+    "description": "Small-caliber catheter set for pneumothorax aspiration or drainage.",
+    "selection_guidance": "Filter by insertion method, French size, catheter length, included one-way valve, and intended duration.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "PULMONARY_GUIDEWIRE",
+    "category": "Guidewire",
+    "role_name": "Pulmonary guidewire",
+    "description": "Guidewire used for airway stent or balloon delivery.",
+    "selection_guidance": "Match diameter and device IFU.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "RADIAL_EBUS_DRIVE_UNIT",
+    "category": "Peripheral bronchoscopy",
+    "role_name": "Radial EBUS probe drive unit",
+    "description": "Mechanical probe drive unit for radial EBUS miniature probes.",
+    "selection_guidance": "Match ultrasound processor and probe family.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "RADIAL_EBUS_PROBE",
+    "category": "Peripheral bronchoscopy",
+    "role_name": "Radial EBUS probe",
+    "description": "Radial ultrasound miniature probe for peripheral lesion localization.",
+    "selection_guidance": "Match probe frequency, working length, minimum channel, drive unit, and guide sheath.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "RIGID_BIPOLAR_FORCEPS",
+    "category": "Rigid bronchoscopy",
+    "role_name": "Rigid bipolar forceps",
+    "description": "Rigid bipolar forceps system for excisional biopsy or coagulation.",
+    "selection_guidance": "Match insert, sheath, handle, cable, generator, and barrel dimensions.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "RIGID_BRONCH_SHAVER",
+    "category": "Rigid bronchoscopy",
+    "role_name": "Rigid bronchoscopic shaver",
+    "description": "Motorized rigid shaver blade or secretion-removal tool.",
+    "selection_guidance": "Match handpiece, motor controller, blade diameter, barrel lumen, and electrosurgical requirements.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "category": "Rigid bronchoscopy",
+    "role_name": "Rigid bronchoscopy accessory",
+    "description": "Ports, caps, cannulae, O-rings, and other rigid bronchoscopy components.",
+    "selection_guidance": "Match the rigid system model and opening required for accessory passage.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "category": "Rigid bronchoscopy",
+    "role_name": "Rigid bronchoscope barrel/tube",
+    "description": "Rigid tracheoscope or bronchoscope barrel.",
+    "selection_guidance": "Filter by internal/external diameter, working length, and ventilation interface.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "RIGID_BRONCHOSCOPE_HEAD",
+    "category": "Rigid bronchoscopy",
+    "role_name": "Rigid bronchoscope head",
+    "description": "Proximal bronchoscope head/ventilation element.",
+    "selection_guidance": "Match barrel family, ports, ventilation strategy, and optics.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "RIGID_FORCEPS",
+    "category": "Rigid bronchoscopy",
+    "role_name": "Rigid bronchoscopy forceps/instrument",
+    "description": "Rigid grasping, retraction, scissors, or Y-stent forceps.",
+    "selection_guidance": "Match handle, shaft diameter, head, barrel ID, and intended task.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "RIGID_SUCTION_CATHETER",
+    "category": "Rigid bronchoscopy",
+    "role_name": "Rigid bronchoscopy suction catheter",
+    "description": "Large-lumen suction catheter for rigid bronchoscopy.",
+    "selection_guidance": "Filter by ID/OD, length, flexibility, and connector.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "RIGID_TELESCOPE",
+    "category": "Rigid bronchoscopy",
+    "role_name": "Rigid telescope",
+    "description": "Rigid optical telescope used through a bronchoscope or tracheoscope.",
+    "selection_guidance": "Match telescope diameter, length, direction of view, and compatible barrel/forceps.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "SPECIMEN_TRAP",
+    "category": "Specimen management",
+    "role_name": "Bronchoscopy specimen trap",
+    "description": "Sterile trap for BAL, wash, or secretion collection.",
+    "selection_guidance": "Match suction tubing and local laboratory workflow.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "STENT_APPLICATOR",
+    "category": "Airway stent accessory",
+    "role_name": "Silicone stent applicator",
+    "description": "Applicator/loading system for silicone airway stents.",
+    "selection_guidance": "Match stent model, dimensions, and rigid bronchoscope.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "TALC_POUDRAGE_KIT",
+    "category": "Pleurodesis",
+    "role_name": "Talc poudrage kit",
+    "description": "Sterile talc poudrage delivery kit.",
+    "selection_guidance": "Match local formulary and delivery method.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "TALC_VIAL",
+    "category": "Pleurodesis",
+    "role_name": "Sterile talc vial",
+    "description": "Sterile talc vial for slurry or atomizer use.",
+    "selection_guidance": "Match local formulary, dose, and delivery method.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "TBNA_NEEDLE",
+    "category": "Sampling",
+    "role_name": "Conventional TBNA needle",
+    "description": "Non-EBUS transbronchial aspiration needle.",
+    "selection_guidance": "Filter by gauge, sheath diameter, and minimum channel.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "THORACENTESIS_KIT",
+    "category": "Pleural procedures",
+    "role_name": "Thoracentesis kit/catheter",
+    "description": "Integrated thoracentesis catheter, tray, or drainage kit.",
+    "selection_guidance": "Filter by French size, length, valved design, and drainage connection.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "THORACOSCOPY_PROBE",
+    "category": "Medical thoracoscopy",
+    "role_name": "Thoracoscopy surgical probe",
+    "description": "Rigid surgical probe used during thoracoscopy.",
+    "selection_guidance": "Match shaft diameter, working length, and trocar.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "THORACOSCOPY_SCISSORS",
+    "category": "Medical thoracoscopy",
+    "role_name": "Thoracoscopy scissors",
+    "description": "Rigid thoracoscopic scissors.",
+    "selection_guidance": "Match diameter, working length, trocar capacity, and handle system.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "THORACOSCOPY_TELESCOPE",
+    "category": "Medical thoracoscopy",
+    "role_name": "Thoracoscopy telescope",
+    "description": "Rigid thoracoscopy telescope or optical endoscope.",
+    "selection_guidance": "Match diameter, working length, direction of view, trocar, camera, and light cable.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "TRACH_TUBE_CUFFED",
+    "category": "Tracheostomy",
+    "role_name": "Adult cuffed tracheostomy tube",
+    "description": "Cuffed adult tracheostomy tube.",
+    "selection_guidance": "Filter by size, length, cuff, inner cannula, and flange geometry.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "category": "Tracheostomy",
+    "role_name": "Adult cuffless tracheostomy tube",
+    "description": "Cuffless adult tracheostomy tube.",
+    "selection_guidance": "Filter by size, length, inner cannula, and flange geometry.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "TRACH_TUBE_EVAC",
+    "category": "Tracheostomy",
+    "role_name": "Subglottic suction tracheostomy tube",
+    "description": "Cuffed tracheostomy tube with subglottic suction lumen.",
+    "selection_guidance": "Filter by tube size/length and suction-lumen requirement.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "ULTRASOUND_CABLE",
+    "category": "EBUS accessory",
+    "role_name": "Ultrasound cable",
+    "description": "Cable linking EBUS scope and ultrasound processor.",
+    "selection_guidance": "Match scope and processor.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "ULTRASOUND_PROCESSOR",
+    "category": "EBUS platform",
+    "role_name": "Endoscopic ultrasound processor",
+    "description": "Ultrasound console used with the EBUS scope.",
+    "selection_guidance": "Must match scope and cable.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "VACUUM_LOCKING_SYRINGE",
+    "category": "Sampling accessory",
+    "role_name": "Vacuum locking syringe",
+    "description": "Vacuum-locking syringe used for aspiration sampling.",
+    "selection_guidance": "Match volume, locking positions, stopcock, and needle system.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "VIDEO_PROCESSOR",
+    "category": "Endoscopy platform",
+    "role_name": "Video processor / light source",
+    "description": "Video processor, light source, or integrated display platform.",
+    "selection_guidance": "Must match the selected reusable or single-use bronchoscope.",
+    "requires_current_ifu": true
+  }
+]

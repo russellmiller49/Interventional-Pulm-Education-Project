@@ -1,0 +1,119 @@
+[
+  {
+    "procedure_code": "CHEST_TUBE",
+    "procedure_name": "Chest tube insertion",
+    "template_version": "0.3",
+    "scope": "Adult draft",
+    "status": "Draft - clinician review required",
+    "clinical_owner": null,
+    "notes": "Updated with manufacturer-specific accessory slots in v0.2. Updated in v0.3 with additional manufacturer-specific platform and accessory roles."
+  },
+  {
+    "procedure_code": "EBUS_TBNA",
+    "procedure_name": "EBUS-TBNA / EBUS-FNB",
+    "template_version": "0.3",
+    "scope": "Adult draft",
+    "status": "Draft - clinician/pathology review required",
+    "clinical_owner": null,
+    "notes": "Updated with manufacturer-specific accessory slots in v0.2. Updated in v0.3 with additional manufacturer-specific platform and accessory roles."
+  },
+  {
+    "procedure_code": "EBV",
+    "procedure_name": "Endobronchial valve placement",
+    "template_version": "0.2",
+    "scope": "Adult draft",
+    "status": "Draft - valve-program review required",
+    "clinical_owner": null,
+    "notes": "Updated with manufacturer-specific accessory slots in v0.2."
+  },
+  {
+    "procedure_code": "FLEX_DIAGNOSTIC",
+    "procedure_name": "Diagnostic flexible bronchoscopy",
+    "template_version": "0.3",
+    "scope": "Adult draft",
+    "status": "Draft - clinician review required",
+    "clinical_owner": null,
+    "notes": "Updated with manufacturer-specific accessory slots in v0.2. Updated in v0.3 with additional manufacturer-specific platform and accessory roles."
+  },
+  {
+    "procedure_code": "ICU_BRONCH",
+    "procedure_name": "ICU / bedside bronchoscopy",
+    "template_version": "0.3",
+    "scope": "Adult draft",
+    "status": "Draft - clinician review required",
+    "clinical_owner": null,
+    "notes": "Inventory and setup-card template; not a clinical checklist. Updated in v0.3 with additional manufacturer-specific platform and accessory roles."
+  },
+  {
+    "procedure_code": "IPC_PLACEMENT",
+    "procedure_name": "Tunneled indwelling pleural catheter placement",
+    "template_version": "0.3",
+    "scope": "Adult draft",
+    "status": "Draft - clinician/homecare/supply-chain review required",
+    "clinical_owner": null,
+    "notes": "Inventory and setup-card template; exact catheter system and home-drainage workflow must be institutionally approved."
+  },
+  {
+    "procedure_code": "MED_THORACOSCOPY",
+    "procedure_name": "Medical thoracoscopy / pleuroscopy",
+    "template_version": "0.3",
+    "scope": "Adult draft",
+    "status": "Draft - clinician review required",
+    "clinical_owner": null,
+    "notes": "Updated in v0.3 with additional manufacturer-specific platform and accessory roles."
+  },
+  {
+    "procedure_code": "PERC_TRACH",
+    "procedure_name": "Percutaneous dilational tracheostomy",
+    "template_version": "0.1",
+    "scope": "Adult draft",
+    "status": "Draft - ICU/surgery review required",
+    "clinical_owner": null,
+    "notes": null
+  },
+  {
+    "procedure_code": "RIGID_BRONCH",
+    "procedure_name": "Rigid bronchoscopy",
+    "template_version": "0.3",
+    "scope": "Adult draft",
+    "status": "Draft - clinician/anesthesia review required",
+    "clinical_owner": null,
+    "notes": "Updated with manufacturer-specific accessory slots in v0.2. Updated in v0.3 with additional manufacturer-specific platform and accessory roles."
+  },
+  {
+    "procedure_code": "TB_RULEOUT",
+    "procedure_name": "TB rule-out bronchoscopy",
+    "template_version": "0.3",
+    "scope": "Adult draft",
+    "status": "Draft - infection control and lab review required",
+    "clinical_owner": null,
+    "notes": "Local airborne isolation and microbiology workflows must control. Updated in v0.3 with additional manufacturer-specific platform and accessory roles."
+  },
+  {
+    "procedure_code": "THERAPEUTIC_BRONCH",
+    "procedure_name": "Therapeutic flexible bronchoscopy",
+    "template_version": "0.3",
+    "scope": "Adult draft",
+    "status": "Draft - clinician review required",
+    "clinical_owner": null,
+    "notes": "Updated with manufacturer-specific accessory slots in v0.2. Updated in v0.3 with additional manufacturer-specific platform and accessory roles."
+  },
+  {
+    "procedure_code": "THORACENTESIS",
+    "procedure_name": "Thoracentesis",
+    "template_version": "0.2",
+    "scope": "Adult draft",
+    "status": "Draft - clinician review required",
+    "clinical_owner": null,
+    "notes": "Updated with manufacturer-specific accessory slots in v0.2."
+  },
+  {
+    "procedure_code": "WLL",
+    "procedure_name": "Whole lung lavage",
+    "template_version": "0.3",
+    "scope": "Adult draft",
+    "status": "Draft - anesthesia/OR review required",
+    "clinical_owner": null,
+    "notes": "Institution-specific circuit and safety checks are essential. Updated in v0.3 with additional manufacturer-specific platform and accessory roles."
+  }
+]

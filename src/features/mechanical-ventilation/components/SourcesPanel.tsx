@@ -42,14 +42,14 @@ export function SourcesPanel({ deviceId }: { deviceId: VentilatorDeviceId }) {
         <div>
           <span>Evidence boundary & release safety</span>
           <h2 id="ventilation-sources-heading">
-            Source-bound profile locked to the supplied {profile.shortName} sources
+            Source-bound profile tied to the supplied {profile.shortName} sources
           </h2>
         </div>
         <span className={styles.draftBadge}>
           {mechanicalVentilationPublicationStatus === 'published'
             ? 'PUBLISHED · REVIEW APPROVED'
             : mechanicalVentilationPublicationStatus === 'tester-preview'
-              ? 'UNLISTED · TESTER PREVIEW'
+              ? 'UNLISTED · REVIEWER PREVIEW'
               : 'DRAFT · REVIEW REQUIRED'}
         </span>
       </div>
@@ -61,7 +61,7 @@ export function SourcesPanel({ deviceId }: { deviceId: VentilatorDeviceId }) {
           <p>
             This original functional facsimile teaches recognition, ventilator reasoning, and
             reassessment. It does not reproduce every device behavior, replace an operator manual,
-            prescribe care, or verify procedural competency. It is not manufactured, sponsored, or
+            prescribe care, or establish procedural readiness. It is not manufactured, sponsored, or
             endorsed by {profile.manufacturer}.
           </p>
         </div>
@@ -106,6 +106,10 @@ export function SourcesPanel({ deviceId }: { deviceId: VentilatorDeviceId }) {
         <div>
           <dt>Patient group</dt>
           <dd>{profile.patientGroup}</dd>
+        </div>
+        <div>
+          <dt>Display basis</dt>
+          <dd>{profile.display.displayNote}</dd>
         </div>
         <div>
           <dt>Publication</dt>
@@ -224,8 +228,8 @@ export function SourcesPanel({ deviceId }: { deviceId: VentilatorDeviceId }) {
             proprietary device algorithms.
           </li>
           <li>
-            <span aria-hidden="true">□</span> Adult-only cases keep TCPL and Volume Guarantee locked
-            until a separately reviewed neonatal test-lung pathway exists.
+            <span aria-hidden="true">□</span> Adult-only cases exclude TCPL and Volume Guarantee
+            until a separately reviewed neonatal lung-model pathway exists.
           </li>
           <li>
             <span aria-hidden="true">□</span> Accessibility review covers keyboard operation, text

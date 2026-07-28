@@ -1017,7 +1017,7 @@ function explainState(
   }
   const authorization = device.speedChangeAuthorized
     ? 'authorized simulation enabled'
-    : 'speed changes locked to the authorized-personnel gate'
+    : 'speed changes require the authorized-personnel simulation control'
   return `Continuous LV-to-aorta support is ${metrics.deviceFlowLMin.toFixed(1)} L/min with ${authorization}. Flow remains preload-, RV-, and afterload-dependent.`
 }
 

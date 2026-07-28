@@ -66,6 +66,20 @@ export const defaultDeviceState: DeviceState = {
   timerRunning: [false, false, false, false],
 }
 
+/**
+ * Recirculation is a property of where the cannulae sit and how hard the circuit is pulling, not a
+ * consequence of the saturations it produces. The scenario therefore sets the fraction, and the
+ * observable a bedside clinician actually reads — drainage saturation — is derived from it by
+ * `deriveDrainageSaturation`. Doing it the other way round, as this module did until now, made the
+ * sign appear without the quantity it is a sign of.
+ *
+ * Evidence boundary: bounded-educational-model. These are model constants, not measured values.
+ */
+export const RECIRCULATION_FRACTION = Object.freeze({
+  baseline: 0.08,
+  established: 0.48,
+})
+
 export const defaultCircuitState: CircuitState = {
   bloodFlow: 4,
   pVen: -34,
@@ -78,8 +92,10 @@ export const defaultCircuitState: CircuitState = {
   svo2: 68,
   hemoglobin: 10.2,
   hematocrit: 31,
-  preOxygenatorSaturation: 68,
+  preOxygenatorSaturation: 70.5,
   postOxygenatorSaturation: 99,
+  recirculationFraction: RECIRCULATION_FRACTION.baseline,
+  effectiveFlow: 3.68,
   drainageChatter: false,
   flowSensorConnected: true,
   arterialBubbleDetected: false,
@@ -625,10 +641,75 @@ function applyPressureIntervention(
   return device
 }
 
+export function deriveRecirculationFraction(state: EcmoSimulationState): number {
+  // VA return is arterial, so drained blood is not in series with it and the VV recirculation
+  // mechanism does not apply.
+  if (state.supportMode === 'va') return 0
+  return hasFault(state, 'recirculation')
+    ? RECIRCULATION_FRACTION.established
+    : RECIRCULATION_FRACTION.baseline
+}
+
+export function deriveEffectiveFlow(bloodFlow: number, recirculationFraction: number): number {
+  return Math.max(0, bloodFlow * (1 - recirculationFraction))
+}
+
+/**
+ * Assumed whole-body oxygen consumption for the sedated, often cooled and paralysed patient this
+ * module models. Chosen so the module's own baseline circuit state (Hb 10.2 g/dL, native output
+ * 4.5 L/min, SaO₂ ≈ 92%) is self-consistent at the SvO₂ of 68% it has always displayed.
+ *
+ * Evidence boundary: bounded-educational-model.
+ */
+const ASSUMED_OXYGEN_CONSUMPTION_ML_MIN = 150
+const HUFNER_CONSTANT_ML_PER_G = 1.34
+
+/**
+ * Mixed venous saturation from the oxygen balance rather than from a constant.
+ *
+ * This was a frozen 68 that never moved, while being displayed as a live parameter on two console
+ * screens and tinting the drainage limb of the bedside scene. A number that cannot move cannot
+ * teach extraction, and it cannot support the recirculation arithmetic that reads it.
+ */
+export function deriveMixedVenousSaturation(
+  state: EcmoSimulationState,
+  effectiveFlow: number,
+): number {
+  const arterialSaturation =
+    state.supportMode === 'va' ? state.patient.femoralArterialSpo2 : state.patient.spo2
+  // In VV the circuit returns to the venous side, so systemic flow is the native output alone. In
+  // VA the return is arterial and adds to it.
+  const systemicFlowLpm =
+    state.supportMode === 'va'
+      ? state.patient.nativeCardiacOutputLpm + effectiveFlow
+      : state.patient.nativeCardiacOutputLpm
+  const oxygenCarryingCapacity =
+    HUFNER_CONSTANT_ML_PER_G * state.circuit.hemoglobin * Math.max(systemicFlowLpm, 0.2) * 10
+  const extractedSaturationPoints =
+    (ASSUMED_OXYGEN_CONSUMPTION_ML_MIN / oxygenCarryingCapacity) * 100
+  return clamp(arterialSaturation - extractedSaturationPoints, 20, 95)
+}
+
+/**
+ * Drainage (pre-oxygenator) saturation as the mixture it physically is: systemic venous return
+ * diluted by whatever fraction of freshly oxygenated blood is being pulled straight back in.
+ */
+export function deriveDrainageSaturation(
+  mixedVenousSaturation: number,
+  postOxygenatorSaturation: number,
+  recirculationFraction: number,
+): number {
+  return clamp(
+    mixedVenousSaturation +
+      recirculationFraction * (postOxygenatorSaturation - mixedVenousSaturation),
+    20,
+    99.9,
+  )
+}
+
 function patientTargets(state: EcmoSimulationState, flow: number) {
   const gasAvailable = state.gas.sourceConnected && state.gas.sweepLpm > 0
-  const recirculationFraction = hasFault(state, 'recirculation') ? 0.48 : 0.08
-  const effectiveFlow = flow * (1 - recirculationFraction)
+  const effectiveFlow = deriveEffectiveFlow(flow, deriveRecirculationFraction(state))
   const oxygenatorContribution = gasAvailable ? effectiveFlow * state.gas.fio2 : 0
   let targetSpo2 = 82 + oxygenatorContribution * 4
   let targetPaCO2 = gasAvailable ? 76 - state.gas.sweepLpm * 7.5 : 90
@@ -638,7 +719,8 @@ function patientTargets(state: EcmoSimulationState, flow: number) {
   if (hasFault(state, 'compensated-hypercapnia')) {
     targetPaCO2 = state.gas.sweepLpm === 0 ? 64 : 72 - state.gas.sweepLpm * 4
   }
-  if (hasFault(state, 'recirculation')) targetSpo2 -= 6
+  // Recirculation reaches arterial saturation through effective flow above, and only there. It
+  // used to be charged a second time here as a flat penalty, so the same fault was counted twice.
   if (hasFault(state, 'gas-source-interruption')) targetSpo2 = 82
   if (hasFault(state, 'oxygenator-resistance')) targetSpo2 -= 8
   if (hasFault(state, 'ecmo-not-initiated')) {
@@ -812,26 +894,38 @@ export function deriveSimulation(state: EcmoSimulationState): EcmoSimulationStat
     flow = 0
   }
   const pressures = calculatePressures(state, flow, device.zeroFlowActive ? 0 : device.rpmSetpoint)
+  const recirculationFraction = deriveRecirculationFraction(state)
+  const effectiveFlow = deriveEffectiveFlow(flow, recirculationFraction)
+  const mixedVenousSaturation = deriveMixedVenousSaturation(state, effectiveFlow)
+  const postOxygenatorSaturation = hasFault(state, 'oxygenator-resistance')
+    ? 88
+    : state.gas.sourceConnected
+      ? round(96 + state.gas.fio2 * 3, 1)
+      : 72
   let circuit: CircuitState = {
     ...state.circuit,
     ...pressures,
     bloodFlow: flow,
     backflowSeconds,
     deltaP: round(pressures.pInt - pressures.pArt, 0),
+    recirculationFraction: round(recirculationFraction, 3),
+    effectiveFlow: round(effectiveFlow, 2),
+    svo2: round(mixedVenousSaturation, 1),
     drainageChatter:
       (hasFault(state, 'preload-limited') ||
         hasFault(state, 'hemorrhagic-hypovolemia') ||
         hasFault(state, 'tension-pneumothorax') ||
         hasFault(state, 'tamponade')) &&
       pressures.pVen < -75,
-    preOxygenatorSaturation: hasFault(state, 'recirculation')
-      ? round(clamp(state.patient.spo2 - 2, 40, 99.9), 1)
-      : round(clamp(state.patient.spo2 - 25, 40, 99.9), 1),
-    postOxygenatorSaturation: hasFault(state, 'oxygenator-resistance')
-      ? 88
-      : state.gas.sourceConnected
-        ? round(96 + state.gas.fio2 * 3, 1)
-        : 72,
+    preOxygenatorSaturation: round(
+      deriveDrainageSaturation(
+        mixedVenousSaturation,
+        postOxygenatorSaturation,
+        recirculationFraction,
+      ),
+      1,
+    ),
+    postOxygenatorSaturation,
     hemoglobin: round(
       moveToward(
         state.circuit.hemoglobin,

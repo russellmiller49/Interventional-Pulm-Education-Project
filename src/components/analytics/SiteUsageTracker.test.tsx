@@ -47,6 +47,17 @@ describe('SiteUsageTracker review-boundary exclusions', () => {
     expect(postSiteAnalytics).not.toHaveBeenCalled()
   })
 
+  it('does not bypass the bounded schema with generic critical-care lifecycle telemetry', () => {
+    mockPathname = '/en/critical-care'
+    jest.mocked(resolveSiteModuleId).mockReturnValue('critical-care')
+
+    const { unmount } = render(<SiteUsageTracker />)
+
+    expect(postSiteAnalytics).not.toHaveBeenCalled()
+    unmount()
+    expect(postSiteAnalytics).not.toHaveBeenCalled()
+  })
+
   it('preserves generic lifecycle tracking for other modules', () => {
     mockPathname = '/en/cardiohelp-ecmo'
     jest.mocked(resolveSiteModuleId).mockReturnValue('cardiohelp-ecmo')

@@ -1,3 +1,5 @@
+import type { CriticalCareCurriculumStage } from '@/features/learning-module/activity/types'
+
 export type SupportMode = 'vv' | 'va'
 
 export type ConsoleScreen =
@@ -171,6 +173,15 @@ export interface CircuitState {
   hematocrit: number
   preOxygenatorSaturation: number
   postOxygenatorSaturation: number
+  /**
+   * Fraction of drained blood that is freshly returned circuit blood rather than systemic venous
+   * return. A physical property of cannula geometry and the flow the circuit is asked for, so the
+   * scenario sets the tendency — but the observable it produces (`preOxygenatorSaturation`) is
+   * derived from it rather than authored beside it.
+   */
+  recirculationFraction: number
+  /** Circuit flow that reaches the systemic circulation: `bloodFlow × (1 − recirculationFraction)`. */
+  effectiveFlow: number
   drainageChatter: boolean
   flowSensorConnected: boolean
   arterialBubbleDetected: boolean
@@ -644,6 +655,12 @@ export interface GuidedWalkthroughStep {
   actionLabel: string
   actions: readonly SimulationAction[]
   expectedResponse: readonly string[]
+  /** A distinct authored scenario loaded when this transfer step becomes active. */
+  transferScenarioId?: string
+  /** Stable identifier used to audit that this is a real transfer variant. */
+  transferVariantId?: string
+  /** Scenario setup applied before the learner performs the transfer action. */
+  transferSetupActions?: readonly SimulationAction[]
 }
 
 export interface GuidedLessonDefinition {
@@ -653,4 +670,10 @@ export interface GuidedLessonDefinition {
   title: string
   learningObjectives: readonly string[]
   steps: readonly GuidedWalkthroughStep[]
+  /**
+   * Teaching-arc position. An `integration` lesson is the track's capstone lesson and is the one
+   * case where a Learn lesson may wrap a registered capstone scenario; the unseen assessment
+   * capstone that uses the same scenario is unaffected.
+   */
+  curriculumStage?: CriticalCareCurriculumStage
 }

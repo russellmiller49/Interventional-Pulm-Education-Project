@@ -47,7 +47,7 @@ describe('CRRT learning-session reducer', () => {
     },
   )
 
-  it('enforces prediction, intervention, time, reassessment, and debrief order', () => {
+  it('keeps prediction, intervention, time, reassessment, and debrief independently available', () => {
     let state = createCrrtLearningSession({
       caseDefinition: getBaxterCrrtCase('CRRT-04'),
       experience: 'practice',
@@ -55,35 +55,50 @@ describe('CRRT learning-session reducer', () => {
       attempt: 1,
     })
     const firstAction = state.caseDefinition.interventions[0]
-    expect(
-      crrtLearningSessionReducer(state, {
-        type: 'PERFORM_INTERVENTION',
-        interventionId: firstAction.id,
-      }),
-    ).toBe(state)
-
-    state = commitCorrectPrediction(state)
-    const accepted = state.caseDefinition.acceptedAlternativePaths[0]
-    for (const actionId of accepted.actionIds) {
-      state = crrtLearningSessionReducer(state, {
-        type: 'PERFORM_INTERVENTION',
-        interventionId: actionId,
-      })
-    }
-    expect(
-      crrtLearningSessionReducer(state, {
-        type: 'COMMIT_REASSESSMENT',
-        optionIds: accepted.reassessmentIds,
-      }),
-    ).toBe(state)
+    state = crrtLearningSessionReducer(state, {
+      type: 'PERFORM_INTERVENTION',
+      interventionId: firstAction.id,
+    })
+    expect(state.performedInterventionIds).toContain(firstAction.id)
     state = crrtLearningSessionReducer(state, { type: 'ADVANCE_TIME', seconds: 60 })
+    expect(state.simulation.simulationTimeSeconds).toBe(60)
     state = crrtLearningSessionReducer(state, {
       type: 'COMMIT_REASSESSMENT',
-      optionIds: accepted.reassessmentIds,
+      optionIds: [state.caseDefinition.reassessmentOptions[0].id],
     })
     state = crrtLearningSessionReducer(state, { type: 'REVEAL_DEBRIEF' })
     expect(state.reassessment.committed).toBe(true)
     expect(state.debriefRevealed).toBe(true)
+
+    const freshForPrediction = createCrrtLearningSession({
+      caseDefinition: getBaxterCrrtCase('CRRT-04'),
+      experience: 'practice',
+      roleLens: 'integrated',
+      attempt: 2,
+    })
+    const hidden = freshForPrediction.caseDefinition.hiddenMechanism
+    const directPrediction = crrtLearningSessionReducer(freshForPrediction, {
+      type: 'COMMIT_PREDICTION',
+      prediction: {
+        goalOptionId: hidden.correctGoalOptionId,
+        mechanismOptionId: hidden.correctMechanismOptionId,
+        controlOptionIds: hidden.correctControlOptionIds,
+        responseOptionId: hidden.correctResponseOptionId,
+        reassessmentOptionIds: hidden.correctReassessmentOptionIds,
+      },
+    })
+    expect(directPrediction.prediction).not.toBeNull()
+
+    const directDebrief = crrtLearningSessionReducer(
+      createCrrtLearningSession({
+        caseDefinition: getBaxterCrrtCase('CRRT-04'),
+        experience: 'practice',
+        roleLens: 'integrated',
+        attempt: 3,
+      }),
+      { type: 'REVEAL_DEBRIEF' },
+    )
+    expect(directDebrief.debriefRevealed).toBe(true)
   })
 
   it('runs only the masked CRRT-16 capstone mapping and ignores hint actions', () => {
@@ -102,7 +117,7 @@ describe('CRRT learning-session reducer', () => {
         roleLens: 'integrated',
         attempt: 1,
       }),
-    ).toThrow(/Mastery is locked/i)
+    ).toThrow(/challenge uses its content-owned capstone/i)
   })
 
   it('loads a clean case and role state without carrying prior attempt data', () => {

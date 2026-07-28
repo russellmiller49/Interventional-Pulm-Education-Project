@@ -79,6 +79,7 @@ export type CrrtRapidDrillReviewAction =
   | { readonly type: 'COMMIT_PREDICTION'; readonly optionId: string }
   | { readonly type: 'ACKNOWLEDGE_SIGNAL' }
   | { readonly type: 'COMPLETE_NEXT_STEP' }
+  | { readonly type: 'REVIEW_STEP'; readonly stepId: CrrtCauseFirstStepId }
   | { readonly type: 'RESET' }
 
 function freezeState(state: CrrtRapidDrillReviewState): CrrtRapidDrillReviewState {
@@ -137,10 +138,13 @@ export function reduceCrrtRapidDrillReview(
   if (action.type === 'ACKNOWLEDGE_SIGNAL') {
     return state.acknowledged ? state : freezeState({ ...state, acknowledged: true })
   }
-  if (action.type === 'COMPLETE_NEXT_STEP') {
-    const nextStep = CRRT_CAUSE_FIRST_STEP_IDS[state.completedStepIds.length]
-    if (!nextStep) return state
-    const completedStepIds = [...state.completedStepIds, nextStep]
+  if (action.type === 'COMPLETE_NEXT_STEP' || action.type === 'REVIEW_STEP') {
+    const reviewedStep =
+      action.type === 'REVIEW_STEP'
+        ? action.stepId
+        : CRRT_CAUSE_FIRST_STEP_IDS[state.completedStepIds.length]
+    if (!reviewedStep || state.completedStepIds.includes(reviewedStep)) return state
+    const completedStepIds = [...state.completedStepIds, reviewedStep]
     const completed = completedStepIds.length === CRRT_CAUSE_FIRST_STEP_IDS.length
     const prediction = drill.predictionOptions.find(
       (option) => option.id === state.predictionOptionId,
@@ -156,9 +160,9 @@ export function reduceCrrtRapidDrillReview(
     return freezeState({
       ...state,
       completedStepIds,
-      correctionVerified: state.correctionVerified || nextStep === 'verify-cause-corrected',
+      correctionVerified: state.correctionVerified || reviewedStep === 'verify-cause-corrected',
       reassessmentCompleted:
-        state.reassessmentCompleted || nextStep === 'reassess-delivery-and-patient',
+        state.reassessmentCompleted || reviewedStep === 'reassess-delivery-and-patient',
       outcome,
     })
   }

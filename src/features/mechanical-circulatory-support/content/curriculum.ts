@@ -2,9 +2,17 @@ import type { McsDeviceKind } from '../engine/types'
 import { mcsLessons } from './lessons'
 import { mcsCapstoneScenarios, mcsPracticeScenarios } from './scenarios'
 
+/**
+ * The two shared lessons that precede every device track. Selected by stage, not by
+ * `device === 'shared'`: the cross-device integration lesson is also shared but sits *after* the
+ * device pairs, so it must not become a prerequisite for a device capstone.
+ */
 export const mcsFoundationLessonIds = mcsLessons
-  .filter((lesson) => lesson.device === 'shared')
+  .filter((lesson) => lesson.curriculumStage === 'foundation')
   .map((lesson) => lesson.id)
+
+/** The single cross-device integration lesson that closes the MCS pathway (WP10 §5.3). */
+export const mcsIntegrationLessonId = 'mcs-device-selection-integration'
 
 export function mcsDeviceLessonIds(device: McsDeviceKind): readonly string[] {
   return mcsLessons.filter((lesson) => lesson.device === device).map((lesson) => lesson.id)

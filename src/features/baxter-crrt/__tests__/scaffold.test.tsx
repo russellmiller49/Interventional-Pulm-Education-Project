@@ -37,7 +37,7 @@ describe('Baxter CRRT module scaffold', () => {
     expect(screen.getByRole('note', { name: 'Educational safety notice' })).toHaveTextContent(
       /never patient-specific advice or a local operating policy/i,
     )
-    const moduleNav = screen.getByRole('navigation', { name: 'Baxter CRRT module sections' })
+    const moduleNav = screen.getByRole('navigation', { name: 'CRRT module sections' })
     expect(within(moduleNav).getAllByRole('link')).toHaveLength(4)
     expect(screen.getByRole('heading', { name: 'Curriculum map' })).toBeInTheDocument()
     expect(screen.getAllByText(/ten core cases/i).length).toBeGreaterThan(0)

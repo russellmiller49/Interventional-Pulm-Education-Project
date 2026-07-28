@@ -135,12 +135,12 @@ describe('CARDIOHELP ECMO simulation reducer', () => {
     expect(state.patient.workOfBreathing).toBe('low')
   })
 
-  it('holds corrective controls until a prediction is committed', () => {
+  it('keeps corrective controls available before a prediction is committed', () => {
     const initial = createInitialSimulationState('preload-drainage-collapse')
     const blocked = ecmoSimulationReducer(initial, { type: 'SET_RPM', rpm: 2800 })
 
-    expect(blocked.device.rpmSetpoint).toBe(initial.device.rpmSetpoint)
-    expect(blocked.history.at(-1)?.label).toContain('commit a prediction')
+    expect(blocked.device.rpmSetpoint).toBe(2800)
+    expect(blocked.history.at(-1)?.label).toContain('Changed RPM setpoint')
   })
 
   it('keeps simulated values within documented display bounds', () => {

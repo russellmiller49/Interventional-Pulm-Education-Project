@@ -1,0 +1,37 @@
+{
+  "manifest_version": "1.0.0",
+  "query_registry_version": "1.0.0",
+  "notes": "Copy this file to local-data/literature/import-manifest.json and replace each example with the actual NBIB files. Do not guess uncertain mappings.",
+  "files": [
+    {
+      "path": "local-data/literature/nbib/core_chest_2000_2004.nbib",
+      "source_kind": "core_journal",
+      "source_id": "chest",
+      "query_id": "core_chest",
+      "date_from": "2000-01-01",
+      "date_to": "2004-12-31",
+      "status": "mapped",
+      "notes": null
+    },
+    {
+      "path": "local-data/literature/nbib/discovery_peripheral_navigation_2020_2026.nbib",
+      "source_kind": "all_pubmed_discovery",
+      "source_id": "all_pubmed",
+      "query_id": "peripheral_navigation",
+      "date_from": "2020-01-01",
+      "date_to": "2026-12-31",
+      "status": "mapped",
+      "notes": null
+    },
+    {
+      "path": "local-data/literature/nbib/unknown_export_01.nbib",
+      "source_kind": "unmapped",
+      "source_id": null,
+      "query_id": null,
+      "date_from": null,
+      "date_to": null,
+      "status": "needs_mapping",
+      "notes": "Do not import as a known source until this file is mapped."
+    }
+  ]
+}

@@ -6,7 +6,6 @@ import {
   BookOpenCheck,
   Check,
   ChevronRight,
-  CircleAlert,
   ClipboardCheck,
   Clock3,
   Eye,
@@ -32,7 +31,7 @@ import {
 import styles from './mechanical-ventilation.module.css'
 
 const categoryLabels: Record<InterventionCategory, string> = {
-  assessment: 'Assessment & reassessment',
+  assessment: 'Bedside review and response check',
   ventilator: 'Ventilator maneuvers',
   'airway-circuit': 'Airway & circuit',
   medication: 'Medication / whole-patient treatment',
@@ -57,41 +56,22 @@ function workflowStepState(
   return 'upcoming'
 }
 
-function DomainScore({ outcome }: { outcome: CaseOutcome }) {
-  const rows = [
-    ['Safety', outcome.domains.safety, 20],
-    ['Mechanism', outcome.domains.mechanism, 20],
-    ['Corrective actions', outcome.domains.correctiveActions, 30],
-    ['Reassessment', outcome.domains.reassessment, 20],
-    ['Communication / comfort', outcome.domains.communicationComfort, 10],
-  ] as const
-  return (
-    <div className={styles.scoreBreakdown}>
-      {rows.map(([label, score, maximum]) => (
-        <div key={label}>
-          <span>{label}</span>
-          <span className={styles.scoreTrack} aria-hidden="true">
-            <span style={{ width: `${(score / maximum) * 100}%` }} />
-          </span>
-          <strong>
-            {score}/{maximum}
-          </strong>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 export function CaseWorkflow({
   state,
   definition,
   dispatch,
   onResult,
+  showActionFeedback = true,
+  onShowActionFeedbackChange,
 }: {
   state: VentilationSimulationState
   definition: VentilationCaseDefinition
   dispatch: Dispatch<VentilationAction>
   onResult: (outcome: CaseOutcome) => void
+  /** Retained for legacy callers; challenge identity is always visible. */
+  maskedAssessment?: boolean
+  showActionFeedback?: boolean
+  onShowActionFeedbackChange?: (show: boolean) => void
 }) {
   const [mechanismId, setMechanismId] = useState('')
   const [priorityId, setPriorityId] = useState('')
@@ -127,6 +107,11 @@ export function CaseWorkflow({
   const hintAvailable =
     state.experience === 'learn' ||
     (state.challengeMode === 'untimed' && state.simulationTime >= 60)
+  const latestInterventionId = state.interventions.at(-1)?.interventionId
+  const hardInterruptActive = definition.interventions.some(
+    (intervention) =>
+      intervention.id === latestInterventionId && intervention.unsafe && intervention.critical,
+  )
 
   return (
     <section className={styles.workflowPanel} aria-labelledby="workflow-heading">
@@ -158,7 +143,24 @@ export function CaseWorkflow({
         )}
       </ol>
 
-      <section className={styles.workflowSection}>
+      {onShowActionFeedbackChange ? (
+        <aside className={styles.challengeFeedbackControl}>
+          <p>
+            Routine teaching is collected for the debrief. Patient signals, waveforms, and alarms
+            continue to respond in real time.
+          </p>
+          <label>
+            <input
+              type="checkbox"
+              checked={showActionFeedback}
+              onChange={(event) => onShowActionFeedbackChange(event.currentTarget.checked)}
+            />
+            <span>Show teaching notes after each action</span>
+          </label>
+        </aside>
+      ) : null}
+
+      <section id="mv-case-recognize" className={styles.workflowSection} tabIndex={-1}>
         <div className={styles.workflowSectionHeading}>
           <Eye aria-hidden="true" />
           <div>
@@ -211,10 +213,7 @@ export function CaseWorkflow({
         ) : null}
       </section>
 
-      <section
-        className={styles.workflowSection}
-        data-locked={state.experience === 'practice' && state.prediction.committed}
-      >
+      <section id="mv-case-predict" className={styles.workflowSection} tabIndex={-1}>
         <div className={styles.workflowSectionHeading}>
           <ClipboardCheck aria-hidden="true" />
           <div>
@@ -249,7 +248,7 @@ export function CaseWorkflow({
           </div>
         ) : state.prediction.committed ? (
           <p className={styles.committedNotice}>
-            <BadgeCheck aria-hidden="true" /> Prediction locked. Act on it, then reassess its
+            <BadgeCheck aria-hidden="true" /> Initial frame recorded. Act on it, then reassess its
             physiologic effect.
           </p>
         ) : (
@@ -301,7 +300,7 @@ export function CaseWorkflow({
         )}
       </section>
 
-      <section className={styles.workflowSection} data-locked={!state.prediction.committed}>
+      <section id="mv-case-act" className={styles.workflowSection} tabIndex={-1}>
         <div className={styles.workflowSectionHeading}>
           <Gauge aria-hidden="true" />
           <div>
@@ -309,11 +308,6 @@ export function CaseWorkflow({
             <h3>Intervene, then watch the response</h3>
           </div>
         </div>
-        {!state.prediction.committed ? (
-          <p className={styles.lockedNotice}>
-            Ventilator controls and bedside intervention cards unlock after commitment.
-          </p>
-        ) : null}
         <div className={styles.interventionGroups}>
           {[...groupedInterventions.entries()].map(([category, interventions]) => (
             <div key={category}>
@@ -327,11 +321,7 @@ export function CaseWorkflow({
                       type="button"
                       key={intervention.id}
                       data-performed={isPerformed}
-                      disabled={
-                        !state.prediction.committed ||
-                        Boolean(unmet) ||
-                        (isPerformed && !intervention.repeatable)
-                      }
+                      disabled={Boolean(unmet) || (isPerformed && !intervention.repeatable)}
                       onClick={() =>
                         dispatch({ type: 'PERFORM_INTERVENTION', interventionId: intervention.id })
                       }
@@ -355,20 +345,44 @@ export function CaseWorkflow({
             </div>
           ))}
         </div>
-        {state.lastResponse ? (
+        {state.lastResponse &&
+        (showActionFeedback || state.phase === 'debrief' || hardInterruptActive) ? (
           <div className={styles.responseCallout} role="status">
             <RotateCcw aria-hidden="true" />
             <span>{state.lastResponse}</span>
           </div>
         ) : null}
+        {!showActionFeedback && state.lastResponse && !hardInterruptActive ? (
+          <p className={styles.deferredResponseNotice}>
+            Routine teaching note saved for the debrief. Read the physiologic response on the
+            patient and ventilator surfaces.
+          </p>
+        ) : null}
+        {state.criticalErrors.length > 0 && state.phase !== 'debrief' ? (
+          <div className={styles.criticalErrorBox} role="alert">
+            <ShieldAlert aria-hidden="true" />
+            <div>
+              <strong>Safety interruption</strong>
+              <p>
+                Stopping here—these findings represent a potentially catastrophic trajectory in a
+                real patient. Stabilize the patient and revisit the action before continuing.
+              </p>
+              <ul>
+                {state.criticalErrors.map((error) => (
+                  <li key={error}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ) : null}
       </section>
 
-      <section className={styles.workflowSection}>
+      <section id="mv-case-observe" className={styles.workflowSection} tabIndex={-1}>
         <div className={styles.workflowSectionHeading}>
           <Stethoscope aria-hidden="true" />
           <div>
             <span>Step 5</span>
-            <h3>Repeat the discriminating assessment</h3>
+            <h3>Repeat the discriminating bedside check</h3>
           </div>
         </div>
         <p>
@@ -387,7 +401,6 @@ export function CaseWorkflow({
         <button
           type="button"
           className={styles.primaryAction}
-          disabled={!state.prediction.committed || state.interventions.length === 0}
           onClick={() => dispatch({ type: 'COMMIT_REASSESSMENT' })}
         >
           <ClipboardCheck aria-hidden="true" /> Commit reassessment
@@ -399,19 +412,19 @@ export function CaseWorkflow({
             onClick={() => dispatch({ type: 'USE_HINT' })}
           >
             <Lightbulb aria-hidden="true" />
-            {state.experience === 'learn' ? 'Show guided hint' : 'Use hint (−5 points)'}
+            {state.experience === 'learn' ? 'Show guided hint' : 'Show a focused hint'}
           </button>
           {state.experience === 'practice' && !hintAvailable ? (
             <small>
               {state.challengeMode === 'timed'
                 ? 'Hints are hidden in timed challenge.'
-                : `Hints unlock after ${Math.max(0, 60 - state.simulationTime).toFixed(0)} simulated seconds.`}
+                : `Focused hints become available after ${Math.max(0, 60 - state.simulationTime).toFixed(0)} simulated seconds.`}
             </small>
           ) : null}
         </div>
       </section>
 
-      <section className={styles.workflowSection}>
+      <section id="mv-case-explain" className={styles.workflowSection} tabIndex={-1}>
         <div className={styles.workflowSectionHeading}>
           <MessageSquareText aria-hidden="true" />
           <div>
@@ -423,34 +436,30 @@ export function CaseWorkflow({
           <button
             type="button"
             className={styles.revealAction}
-            disabled={state.experience === 'practice' && !state.reassessment.committed}
             onClick={() => dispatch({ type: 'REVEAL_DEBRIEF' })}
           >
             Reveal case reasoning
           </button>
         ) : (
           <div className={styles.debriefPanel}>
-            <div className={styles.outcomeHeader} data-mastery={outcome.mastery}>
-              {outcome.mastery ? (
-                <BadgeCheck aria-hidden="true" />
-              ) : (
-                <CircleAlert aria-hidden="true" />
-              )}
+            <div className={styles.outcomeHeader}>
+              <MessageSquareText aria-hidden="true" />
               <div>
                 <span>
                   {state.experience === 'learn'
                     ? 'Guided walkthrough complete'
-                    : outcome.mastery
-                      ? 'Mastery achieved'
-                      : 'Reassessment needed'}
+                    : 'Case worked through'}
                 </span>
-                <strong>
-                  {state.experience === 'learn' ? 'Teaching case' : `${outcome.score} / 100`}
-                </strong>
+                <strong>Causal debrief</strong>
               </div>
             </div>
-            {state.experience === 'practice' ? <DomainScore outcome={outcome} /> : null}
             <p>{definition.debrief}</p>
+            {state.lastResponse ? (
+              <div className={styles.responseCallout}>
+                <RotateCcw aria-hidden="true" />
+                <span>{state.lastResponse}</span>
+              </div>
+            ) : null}
             <div className={styles.debriefColumns}>
               <div>
                 <h4>Expected actions</h4>
@@ -473,7 +482,7 @@ export function CaseWorkflow({
               <div className={styles.criticalErrorBox}>
                 <ShieldAlert aria-hidden="true" />
                 <div>
-                  <strong>Critical-error rule triggered</strong>
+                  <strong>Safety stop to revisit</strong>
                   <ul>
                     {outcome.criticalErrors.map((error) => (
                       <li key={error}>{error}</li>
@@ -486,7 +495,7 @@ export function CaseWorkflow({
               <summary>Educator mechanics and hidden risk record</summary>
               <dl>
                 <div>
-                  <dt>Seed / branch</dt>
+                  <dt>Case variation / response path</dt>
                   <dd>
                     {state.seed} · {state.branch}
                   </dd>

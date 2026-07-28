@@ -51,6 +51,7 @@ const draftModulePathPrefixes = [
   '/education/chest-drainage',
   '/intro-bronchoscopy',
   '/learn/anatomy/airway',
+  '/literature',
   '/pleural-procedures',
   '/rapid-onsite-cytology',
 ] as const
@@ -64,6 +65,12 @@ const unlistedModulePathPrefixes = [
   '/cardiohelp-ecmo',
   '/mechanical-ventilation',
   '/hamilton-c6-ventilation',
+  // Reachable by direct link for beta testers, so these stay out of navigation entirely
+  // rather than only being hidden from non-admins. Every other public-unlisted module is
+  // treated this way; `/socrates-demo` and the pleural simulator were the exceptions.
+  '/preference-cards',
+  '/pleural-procedures/pleural-ultrasound-simulator',
+  '/socrates-demo',
 ] as const
 
 interface DraftModuleVisibilityOptions {

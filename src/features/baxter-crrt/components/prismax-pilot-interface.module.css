@@ -251,7 +251,7 @@
   white-space: nowrap;
 }
 
-.predictionLock {
+.unavailableNotice {
   display: flex;
   gap: 0.65rem;
   align-items: center;
@@ -262,14 +262,14 @@
   background: rgba(86, 56, 20, 0.72);
 }
 
-.predictionLock > svg {
+.unavailableNotice > svg {
   width: 1.2rem;
   height: 1.2rem;
   flex: 0 0 auto;
   color: #f5bb65;
 }
 
-.predictionLock > div {
+.unavailableNotice > div {
   display: flex;
   flex: 1;
   gap: 0.75rem;
@@ -278,17 +278,17 @@
   min-width: 0;
 }
 
-.predictionLock span,
-.predictionLock strong {
+.unavailableNotice span,
+.unavailableNotice strong {
   display: block;
 }
 
-.predictionLock span {
+.unavailableNotice span {
   font-size: 0.72rem;
   line-height: 1.45;
 }
 
-.predictionLock button {
+.unavailableNotice button {
   display: inline-flex;
   flex: 0 0 auto;
   gap: 0.4rem;
@@ -305,7 +305,7 @@
   cursor: pointer;
 }
 
-.predictionLock button svg {
+.unavailableNotice button svg {
   width: 0.9rem;
   height: 0.9rem;
 }
@@ -1456,13 +1456,13 @@
 }
 
 @media (max-width: 520px) {
-  .predictionLock,
-  .predictionLock > div {
+  .unavailableNotice,
+  .unavailableNotice > div {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .predictionLock button {
+  .unavailableNotice button {
     width: 100%;
   }
 

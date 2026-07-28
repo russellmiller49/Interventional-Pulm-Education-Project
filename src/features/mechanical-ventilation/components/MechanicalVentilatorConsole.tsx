@@ -5,7 +5,6 @@ import {
   Activity,
   AlarmClock,
   BellRing,
-  CirclePause,
   Gauge,
   Hand,
   LockKeyhole,
@@ -22,9 +21,13 @@ import {
 import {
   adaptControlDescriptor,
   canonicalToNativeControlValue,
+  formatMonitorField,
   getVentilatorDeviceProfile,
   getVentilatorModeDescriptor,
+  groupControlsForDevice,
   nativeToCanonicalControlValue,
+  orderControlsForDevice,
+  resolveBreathPhase,
 } from '../content'
 import {
   isAdaptivePressureMode,
@@ -33,13 +36,26 @@ import {
   isTwoLevelMode,
 } from '../engine'
 import type {
+  FlowPattern,
+  VentilatorBezelKey,
+  VentilatorDisplayProfile,
   VentilatorScreen,
   VentilationAction,
   VentilationSimulationState,
   VentilatorControlKey,
+  VentilatorWaveformChannel,
 } from '../engine'
 import { WaveformLoops, WaveformStrip } from './WaveformStrip'
 import styles from './mechanical-ventilation.module.css'
+
+/** How this simulator names each flow pattern, and the fallback set for an unsourced device. */
+const flowPatternLabels: Record<FlowPattern, string> = {
+  square: 'Square',
+  'decelerating-50': '50% decelerating',
+  sine: 'Sine',
+  'decelerating-100': '100% decelerating',
+}
+const allFlowPatterns = Object.keys(flowPatternLabels) as FlowPattern[]
 
 interface MechanicalVentilatorConsoleProps {
   state: VentilationSimulationState
@@ -104,7 +120,87 @@ function NumericControlTile({
   )
 }
 
-function DynamicLungPanel({ state }: { state: VentilationSimulationState }) {
+/**
+ * The monitored numbers, in the arrangement the device puts them in: a column of large values
+ * beside the waveforms on the Evita, compact labelled tiles on the C6 and AVEA.
+ */
+function MonitorPanel({
+  state,
+  display,
+}: {
+  state: VentilationSimulationState
+  display: VentilatorDisplayProfile
+}) {
+  return (
+    <aside
+      className={styles.mmpPanel}
+      data-layout={display.monitorLayout}
+      aria-label={display.monitorLabel}
+    >
+      <div className={styles.mmpValues}>
+        {display.monitorFields.map((field) => (
+          <div key={field.metric}>
+            <span>{field.label}</span>
+            <strong>{formatMonitorField(state, field)}</strong>
+            <small>{field.unit}</small>
+          </div>
+        ))}
+      </div>
+      {display.monitorFooter?.length ? (
+        <div className={styles.mmpFooter}>
+          {display.monitorFooter.map((field) => (
+            <div key={field.metric}>
+              <span>{field.label}</span>
+              <strong>{formatMonitorField(state, field)}</strong>
+              <small>{field.unit}</small>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </aside>
+  )
+}
+
+/**
+ * The PB980 patient-data banner: a horizontal strip across the top of the screen, opened by the
+ * Control / Assist / Spontaneous breath-phase letter.
+ */
+function MonitorBanner({
+  state,
+  display,
+}: {
+  state: VentilationSimulationState
+  display: VentilatorDisplayProfile
+}) {
+  const phase = resolveBreathPhase(state)
+  return (
+    <div className={styles.patientDataBanner} aria-label={display.monitorLabel}>
+      {display.showBreathPhase ? (
+        <span
+          className={styles.breathPhase}
+          data-phase={phase.code}
+          aria-label={`Breath phase ${phase.label}`}
+        >
+          {phase.code}
+        </span>
+      ) : null}
+      {display.monitorFields.map((field) => (
+        <div key={field.metric}>
+          <span>{field.label}</span>
+          <strong>{formatMonitorField(state, field)}</strong>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function DynamicLungPanel({
+  state,
+  pressureUnit,
+}: {
+  state: VentilationSimulationState
+  pressureUnit: string
+}) {
   const compliance = state.measurements.staticComplianceMlCmH2O
   const resistanceGap = Math.max(
     0,
@@ -122,15 +218,21 @@ function DynamicLungPanel({ state }: { state: VentilationSimulationState }) {
       <dl>
         <div>
           <dt>Compliance</dt>
-          <dd>{compliance.toFixed(0)} mL/cmH₂O</dd>
+          <dd>
+            {compliance.toFixed(0)} mL/{pressureUnit}
+          </dd>
         </div>
         <div>
           <dt>Resistive gap</dt>
-          <dd>{resistanceGap.toFixed(0)} cmH₂O</dd>
+          <dd>
+            {resistanceGap.toFixed(0)} {pressureUnit}
+          </dd>
         </div>
         <div>
           <dt>Patient effort</dt>
-          <dd>{effort.toFixed(0)} cmH₂O</dd>
+          <dd>
+            {effort.toFixed(0)} {pressureUnit}
+          </dd>
         </div>
       </dl>
     </section>
@@ -527,7 +629,7 @@ export function MechanicalVentilatorConsole({
         },
       )
     }
-    return controls.map((control) => {
+    const adapted = controls.map((control) => {
       const descriptor = adaptControlDescriptor(state.deviceId, settings, control)
       const triggerLabel =
         control.key === 'triggerThreshold' && settings.trigger.type === 'pressure'
@@ -540,6 +642,9 @@ export function MechanicalVentilatorConsole({
         value: canonicalToNativeControlValue(state.deviceId, settings, control.key, control.value),
       }
     })
+    // Each vendor presents the same settings in its own order — the Evita's therapy bar, the
+    // AVEA's primary-control row, the C6's three purpose groups.
+    return orderControlsForDevice(getVentilatorDeviceProfile(state.deviceId).display, adapted)
   }, [
     adaptivePressureActive,
     adaptiveSupportActive,
@@ -647,6 +752,174 @@ export function MechanicalVentilatorConsole({
   const activeAlarm = state.alarms[0]
   const screen = state.ventilator.screen
   const latest = state.waveforms.at(-1)
+  const display = profile.display
+  const pressureNames = display.pressureLabels
+  /*
+   * A plateau read while the patient is pulling is not the elastic pressure of the respiratory
+   * system, so the console prints it with a question mark rather than pretending otherwise. The
+   * device would show the number either way; the learner is the one who has to know it is not
+   * usable.
+   */
+  const plateauUnreliable = !state.measurements.plateauIsInterpretable
+  const pressureReadouts = [
+    { label: pressureNames.peak, value: state.measurements.peakPressureCmH2O },
+    {
+      label: pressureNames.plateau,
+      value: state.measurements.plateauPressureCmH2O,
+      unreliable: plateauUnreliable,
+      caveat: plateauUnreliable
+        ? `not interpretable: patient effort ${state.measurements.endInspiratoryEffortCmH2O.toFixed(0)} cmH₂O at end-inspiration`
+        : undefined,
+    },
+    { label: pressureNames.mean, value: state.measurements.meanAirwayPressureCmH2O },
+    { label: pressureNames.peep, value: settings.peepCmH2O },
+  ]
+  const pressureAnnotations = [
+    {
+      id: 'peak',
+      label: `${pressureNames.peak} ${state.measurements.peakPressureCmH2O.toFixed(0)} — resistive + elastic`,
+      value: state.measurements.peakPressureCmH2O,
+    },
+    {
+      id: 'plateau',
+      label: `${pressureNames.plateau} ${state.measurements.plateauPressureCmH2O.toFixed(0)} — elastic load only; gap to peak is resistive`,
+      value: state.measurements.plateauPressureCmH2O,
+    },
+    {
+      id: 'peep',
+      label: `${pressureNames.peep} ${settings.peepCmH2O.toFixed(0)} — baseline the breath starts from`,
+      value: settings.peepCmH2O,
+    },
+  ]
+
+  const holdActive =
+    state.ventilator.holdUntil !== null && state.ventilator.holdUntil > state.simulationTime
+  const holdSecondsRemaining = holdActive
+    ? Math.max(0, (state.ventilator.holdUntil as number) - state.simulationTime)
+    : 0
+
+  /*
+   * One channel of the vendor's trace stack. The pressure trace carries the derived readouts and,
+   * while the trace is not moving, the component labels; the others draw plain. Extracted so the
+   * Tools screen can show the trace a maneuver draws on without duplicating the profile plumbing.
+   */
+  const renderWaveformChannel = (channel: VentilatorWaveformChannel) =>
+    channel.field === 'pawCmH2O' ? (
+      <WaveformStrip
+        key={channel.field}
+        samples={state.waveforms}
+        field={channel.field}
+        label={channel.label}
+        unit={channel.unit}
+        minimum={channel.minimum}
+        maximum={channel.maximum}
+        color={channel.color}
+        showPmus={state.showEducatorOverlay}
+        readouts={pressureReadouts}
+        // An occlusion holds the trace still, so the reference levels can be named without
+        // chasing a moving line — and naming the plateau during the hold is the point of it.
+        annotationsVisible={state.paused || holdActive}
+        annotations={pressureAnnotations}
+      />
+    ) : (
+      <WaveformStrip
+        key={channel.field}
+        samples={state.waveforms}
+        field={channel.field}
+        label={channel.label}
+        unit={channel.unit}
+        minimum={channel.minimum}
+        maximum={channel.maximum}
+        color={channel.color}
+      />
+    )
+
+  /*
+   * Pressure and flow are what a hold is read from: pressure settles onto the plateau, flow sits
+   * at zero for as long as the valves stay closed. Volume adds nothing to the maneuver, so the
+   * Tools screen carries two traces and leaves the third on the monitoring screen.
+   */
+  const maneuverChannels = display.waveforms.filter(
+    (channel) => channel.field === 'pawCmH2O' || channel.field === 'flowLMin',
+  )
+
+  const renderBezelKey = (key: VentilatorBezelKey) => {
+    switch (key.action) {
+      case 'manual-breath':
+        return (
+          <button
+            key={key.action}
+            type="button"
+            disabled={therapyDisabled}
+            onClick={() => dispatch({ type: 'MANUAL_BREATH' })}
+          >
+            <Wind aria-hidden="true" /> {key.label}
+          </button>
+        )
+      case 'inspiratory-hold':
+      case 'expiratory-hold':
+        return (
+          <button
+            key={key.action}
+            type="button"
+            disabled={therapyDisabled}
+            onClick={() =>
+              dispatch({
+                type: 'PERFORM_HOLD',
+                hold: key.action === 'inspiratory-hold' ? 'inspiratory' : 'expiratory',
+              })
+            }
+          >
+            <Hand aria-hidden="true" /> {key.label}
+          </button>
+        )
+      case 'alarm-reset':
+        return (
+          <button key={key.action} type="button" onClick={() => dispatch({ type: 'ACK_ALARM' })}>
+            <BellRing aria-hidden="true" /> {key.label}
+          </button>
+        )
+      case 'alarm-silence':
+        return (
+          <button
+            key={key.action}
+            type="button"
+            onClick={() => dispatch({ type: 'TOGGLE_ALARM_AUDIO' })}
+          >
+            {state.ventilator.alarmAudioEnabled ? (
+              <Volume2 aria-hidden="true" />
+            ) : (
+              <VolumeX aria-hidden="true" />
+            )}{' '}
+            {key.label}
+          </button>
+        )
+      case 'oxygen-enrichment':
+        return (
+          <button
+            key={key.action}
+            type="button"
+            aria-label={key.label}
+            disabled={therapyDisabled}
+            onClick={() => dispatch({ type: 'OXYGEN_ENRICHMENT' })}
+          >
+            <span aria-hidden="true">O₂</span> {key.label}
+          </button>
+        )
+      case 'screen-lock':
+        return (
+          <button key={key.action} type="button" onClick={() => dispatch({ type: 'TOGGLE_LOCK' })}>
+            <LockKeyhole aria-hidden="true" /> {state.ventilator.locked ? 'Unlock' : key.label}
+          </button>
+        )
+    }
+  }
+
+  const bezelBeforeKnob = display.bezelKeys.slice(0, display.knobPosition)
+  const bezelAfterKnob = display.bezelKeys.slice(display.knobPosition)
+  const lockOnBezel = display.bezelKeys.some((key) => key.action === 'screen-lock')
+  // A device that publishes its own set offers only those; the rest keep the simulator's four.
+  const flowPatternOptions = display.flowPatterns ?? allFlowPatterns
 
   return (
     <section
@@ -696,69 +969,27 @@ export function MechanicalVentilatorConsole({
 
         <div className={styles.consoleScreen}>
           {screen === 'main' ? (
-            <div className={styles.monitoringScreen}>
+            <div className={styles.monitoringScreen} data-layout={display.monitorLayout}>
+              {display.monitorLayout === 'top-banner' ? (
+                <MonitorBanner state={state} display={display} />
+              ) : null}
+              {display.monitorLayout === 'left-column' ? (
+                <MonitorPanel state={state} display={display} />
+              ) : null}
               <div className={styles.waveformStack}>
-                <WaveformStrip
-                  samples={state.waveforms}
-                  field="pawCmH2O"
-                  label="Paw"
-                  unit="cmH₂O"
-                  minimum={0}
-                  maximum={50}
-                  showPmus={state.showEducatorOverlay}
-                />
-                <WaveformStrip
-                  samples={state.waveforms}
-                  field="flowLMin"
-                  label="Flow"
-                  unit="L/min"
-                  minimum={-100}
-                  maximum={100}
-                />
-                <WaveformStrip
-                  samples={state.waveforms}
-                  field="volumeMl"
-                  label="Volume"
-                  unit="mL"
-                  minimum={0}
-                  maximum={1000}
-                />
+                {/*
+                 * Trace order, axis legends, and default scales come from the device profile: the
+                 * AVEA labels its volume trace Vt and runs Paw from -40, the Evita prints mbar.
+                 * A single instantaneous Paw sat at PEEP for most of the cycle, so it read as a
+                 * broken number beside the peak. The pressure trace keeps the derived pressures a
+                 * real console shows, under that vendor's abbreviations.
+                 */}
+                {display.waveforms.map(renderWaveformChannel)}
               </div>
-              <aside className={styles.mmpPanel} aria-label="Main monitoring parameters">
-                <div>
-                  <span>Ppeak</span>
-                  <strong>{state.measurements.peakPressureCmH2O.toFixed(0)}</strong>
-                  <small>cmH₂O</small>
-                </div>
-                <div>
-                  <span>VTE</span>
-                  <strong>{state.measurements.exhaledVtMl.toFixed(0)}</strong>
-                  <small>mL</small>
-                </div>
-                <div>
-                  <span>fTotal</span>
-                  <strong>{state.measurements.totalRatePerMin.toFixed(0)}</strong>
-                  <small>/min</small>
-                </div>
-                <div>
-                  <span>MinVol</span>
-                  <strong>{state.measurements.minuteVentilationLMin.toFixed(1)}</strong>
-                  <small>L/min</small>
-                </div>
-                <div>
-                  <span>I:E</span>
-                  <strong>
-                    1:
-                    {Math.max(
-                      0.3,
-                      (60 / Math.max(1, state.measurements.totalRatePerMin) -
-                        state.measurements.mechanicalInspiratoryTimeSeconds) /
-                        Math.max(0.1, state.measurements.mechanicalInspiratoryTimeSeconds),
-                    ).toFixed(1)}
-                  </strong>
-                  <small>ratio</small>
-                </div>
-              </aside>
+              {display.monitorLayout === 'right-column' ||
+              display.monitorLayout === 'right-tiles' ? (
+                <MonitorPanel state={state} display={display} />
+              ) : null}
             </div>
           ) : null}
 
@@ -821,21 +1052,26 @@ export function MechanicalVentilatorConsole({
                 </div>
                 <small>Select a tile, then use the physical knob or arrow keys.</small>
               </div>
-              <div className={styles.controlGrid}>
-                {displayedControls.map((control) => (
-                  <NumericControlTile
-                    key={control.key}
-                    control={control}
-                    selected={activeControl?.key === control.key}
-                    disabled={therapyDisabled}
-                    onSelect={() => selectControl(control.key)}
-                    onChange={(value) => {
-                      setActiveControlKey(control.key)
-                      changeControl(control, value)
-                    }}
-                  />
-                ))}
-              </div>
+              {groupControlsForDevice(display, displayedControls).map((group) => (
+                <section key={group.label || 'controls'} className={styles.controlGroup}>
+                  {group.label ? <h4>{group.label}</h4> : null}
+                  <div className={styles.controlGrid}>
+                    {group.controls.map((control) => (
+                      <NumericControlTile
+                        key={control.key}
+                        control={control}
+                        selected={activeControl?.key === control.key}
+                        disabled={therapyDisabled}
+                        onSelect={() => selectControl(control.key)}
+                        onChange={(value) => {
+                          setActiveControlKey(control.key)
+                          changeControl(control, value)
+                        }}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ))}
               {activeControl?.rangeNote ? (
                 <p className={styles.deviceNote}>{activeControl.rangeNote}</p>
               ) : null}
@@ -875,10 +1111,11 @@ export function MechanicalVentilatorConsole({
                         )
                       }
                     >
-                      <option value="square">Square</option>
-                      <option value="decelerating-50">50% decelerating</option>
-                      <option value="sine">Sine</option>
-                      <option value="decelerating-100">100% decelerating</option>
+                      {flowPatternOptions.map((pattern) => (
+                        <option key={pattern} value={pattern}>
+                          {flowPatternLabels[pattern]}
+                        </option>
+                      ))}
                     </select>
                   </label>
                 ) : null}
@@ -1065,69 +1302,122 @@ export function MechanicalVentilatorConsole({
           {screen === 'graphics' ? (
             <div className={styles.graphicsScreen}>
               <WaveformLoops samples={state.waveforms} />
-              <DynamicLungPanel state={state} />
+              <DynamicLungPanel state={state} pressureUnit={display.pressureUnit} />
             </div>
           ) : null}
 
           {screen === 'tools' ? (
-            <div className={styles.menuScreen}>
-              <div className={styles.screenHeading}>
-                <div>
-                  <span>Tools</span>
-                  <h3>Maneuvers and utilities</h3>
+            /*
+             * The maneuver and the trace it draws on sit side by side. Performing a hold used to
+             * mean leaving the monitoring screen, so the occlusion and the plateau happened while
+             * the learner was looking at a menu and had to navigate back to find them. Every one
+             * of these devices keeps its waveforms on screen while a maneuver runs — the C6's
+             * Tools > Maneuvers, the Evita's Procedures drawer, the PB980's bezel pause keys.
+             */
+            <div className={styles.toolsScreen}>
+              <div className={styles.waveformStack}>
+                {maneuverChannels.map(renderWaveformChannel)}
+              </div>
+              <div className={styles.toolsPanel}>
+                <div className={styles.screenHeading}>
+                  <div>
+                    <span>Tools</span>
+                    <h3>Maneuvers and utilities</h3>
+                  </div>
+                  <small>All values and maneuvers are simulated.</small>
                 </div>
-                <small>All values and maneuvers are simulated.</small>
-              </div>
-              <div className={styles.toolGrid}>
-                <button
-                  type="button"
-                  disabled={therapyDisabled}
-                  onClick={() => dispatch({ type: 'PERFORM_HOLD', hold: 'inspiratory' })}
+                <p
+                  className={styles.maneuverStatus}
+                  data-active={holdActive}
+                  role="status"
+                  aria-live="polite"
                 >
-                  <Hand aria-hidden="true" /> Inspiratory hold
-                </button>
-                <button
-                  type="button"
-                  disabled={therapyDisabled}
-                  onClick={() => dispatch({ type: 'PERFORM_HOLD', hold: 'expiratory' })}
-                >
-                  <Hand aria-hidden="true" /> Expiratory hold
-                </button>
-                <button
-                  type="button"
-                  disabled={!controlsEnabled}
-                  onClick={() => dispatch({ type: 'TOGGLE_FREEZE' })}
-                >
-                  <Snowflake aria-hidden="true" />{' '}
-                  {state.ventilator.frozen ? 'Unfreeze waveforms' : 'Freeze waveforms'}
-                </button>
-                <button
-                  type="button"
-                  disabled={therapyDisabled}
-                  onClick={() => dispatch({ type: 'MANUAL_BREATH' })}
-                >
-                  <Wind aria-hidden="true" /> Manual breath
-                </button>
-                <button
-                  type="button"
-                  disabled={therapyDisabled}
-                  onClick={() => dispatch({ type: 'OXYGEN_ENRICHMENT' })}
-                >
-                  <span aria-hidden="true">O₂</span> O₂ enrichment / suction
-                </button>
-                <button type="button" onClick={() => dispatch({ type: 'TOGGLE_ALARM_AUDIO' })}>
-                  {state.ventilator.alarmAudioEnabled ? (
-                    <Volume2 aria-hidden="true" />
+                  {holdActive ? (
+                    <>
+                      <strong>
+                        Occluding at end-
+                        {state.ventilator.holdType === 'inspiratory' ? 'inspiration' : 'expiration'}
+                      </strong>
+                      <span>
+                        {holdSecondsRemaining.toFixed(0)} s remaining · flow is zero, so the
+                        pressure on the trace is{' '}
+                        {state.ventilator.holdType === 'inspiratory'
+                          ? `${pressureNames.plateau}, the elastic load alone`
+                          : 'the total PEEP the lung equilibrates to'}
+                        {state.ventilator.holdType === 'inspiratory' && plateauUnreliable
+                          ? ' — but only in a relaxed patient. This one is still pulling, so what the trace settles on is the alveolar pressure minus their effort, and it will move as that effort does.'
+                          : ''}
+                      </span>
+                    </>
                   ) : (
-                    <VolumeX aria-hidden="true" />
+                    <>
+                      <strong>No maneuver running</strong>
+                      <span>
+                        A hold waits for its own point in the breath — end-inspiration or
+                        end-expiration — before it closes the valves. Watch the trace above for
+                        where it lands.
+                      </span>
+                    </>
                   )}
-                  Alarm audio {state.ventilator.alarmAudioEnabled ? 'on' : 'off'}
-                </button>
+                </p>
+                <div className={styles.toolGrid}>
+                  <button
+                    type="button"
+                    disabled={therapyDisabled}
+                    onClick={() => dispatch({ type: 'PERFORM_HOLD', hold: 'inspiratory' })}
+                  >
+                    <Hand aria-hidden="true" /> Inspiratory hold
+                  </button>
+                  <button
+                    type="button"
+                    disabled={therapyDisabled}
+                    onClick={() => dispatch({ type: 'PERFORM_HOLD', hold: 'expiratory' })}
+                  >
+                    <Hand aria-hidden="true" /> Expiratory hold
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!controlsEnabled}
+                    onClick={() => dispatch({ type: 'TOGGLE_FREEZE' })}
+                  >
+                    <Snowflake aria-hidden="true" />{' '}
+                    {state.ventilator.frozen ? 'Unfreeze waveforms' : 'Freeze waveforms'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={therapyDisabled}
+                    onClick={() => dispatch({ type: 'MANUAL_BREATH' })}
+                  >
+                    <Wind aria-hidden="true" /> Manual breath
+                  </button>
+                  <button
+                    type="button"
+                    disabled={therapyDisabled}
+                    onClick={() => dispatch({ type: 'OXYGEN_ENRICHMENT' })}
+                  >
+                    <span aria-hidden="true">O₂</span> O₂ enrichment / suction
+                  </button>
+                  <button type="button" onClick={() => dispatch({ type: 'TOGGLE_ALARM_AUDIO' })}>
+                    {state.ventilator.alarmAudioEnabled ? (
+                      <Volume2 aria-hidden="true" />
+                    ) : (
+                      <VolumeX aria-hidden="true" />
+                    )}
+                    Alarm audio {state.ventilator.alarmAudioEnabled ? 'on' : 'off'}
+                  </button>
+                  {/* Devices whose real bezel has no lock key still need the screen lock reachable. */}
+                  {lockOnBezel ? null : (
+                    <button type="button" onClick={() => dispatch({ type: 'TOGGLE_LOCK' })}>
+                      <LockKeyhole aria-hidden="true" />{' '}
+                      {state.ventilator.locked ? 'Unlock screen' : 'Lock screen'}
+                    </button>
+                  )}
+                </div>
+                <p className={styles.deviceNote}>
+                  High-risk bedside actions are recognition-and-priority exercises only. Perform
+                  procedures according to local policy and under appropriate supervision.
+                </p>
               </div>
-              <p className={styles.deviceNote}>
-                High-risk bedside actions are recognition-and-priority exercises only. Perform
-                procedures according to local policy and supervised competency.
-              </p>
             </div>
           ) : null}
         </div>
@@ -1169,27 +1459,13 @@ export function MechanicalVentilatorConsole({
         </div>
       ) : null}
 
-      <div className={styles.physicalControls}>
-        <button type="button" onClick={() => dispatch({ type: 'ACK_ALARM' })}>
-          <CirclePause aria-hidden="true" /> Audio pause
-        </button>
-        <button
-          type="button"
-          disabled={therapyDisabled}
-          onClick={() => dispatch({ type: 'OXYGEN_ENRICHMENT' })}
-        >
-          <span aria-hidden="true">O₂</span> Enrichment
-        </button>
-        <button
-          type="button"
-          disabled={therapyDisabled}
-          onClick={() => dispatch({ type: 'MANUAL_BREATH' })}
-        >
-          <Wind aria-hidden="true" /> Manual breath
-        </button>
-        <button type="button" onClick={() => dispatch({ type: 'TOGGLE_LOCK' })}>
-          <LockKeyhole aria-hidden="true" /> {state.ventilator.locked ? 'Unlock' : 'Lock'}
-        </button>
+      {/*
+       * Off-screen keys come from the device profile, in the vendor's own order and legend. The
+       * PB980 straddles its rotary encoder with four keys either side; the Evita display unit
+       * carries only alarm silence, and puts its maneuvers on screen under Procedures.
+       */}
+      <div className={styles.physicalControls} aria-label={`${profile.shortName} bezel keys`}>
+        {bezelBeforeKnob.map(renderBezelKey)}
         <div className={styles.rotaryControl} aria-label="Press-and-turn control">
           <button
             type="button"
@@ -1224,13 +1500,22 @@ export function MechanicalVentilatorConsole({
             +
           </button>
         </div>
+        {bezelAfterKnob.map(renderBezelKey)}
       </div>
 
       <p className={styles.waveformTextEquivalent} aria-live="off">
-        Waveform text: Paw {latest?.pawCmH2O.toFixed(1) ?? '—'} cmH₂O; flow{' '}
-        {latest?.flowLMin.toFixed(1) ?? '—'} L/min; volume {latest?.volumeMl.toFixed(0) ?? '—'} mL;
-        measured plateau {state.measurements.plateauPressureCmH2O.toFixed(0)} cmH₂O; intrinsic PEEP{' '}
-        {state.measurements.intrinsicPeepCmH2O.toFixed(1)} cmH₂O.
+        Waveform text:{' '}
+        {display.waveforms
+          .map((channel) => {
+            const sample = latest?.[channel.field]
+            const shown =
+              sample === undefined ? '—' : sample.toFixed(channel.field === 'volumeMl' ? 0 : 1)
+            return `${channel.label} ${shown} ${channel.unit}`
+          })
+          .join('; ')}
+        ; measured {pressureNames.plateau} {state.measurements.plateauPressureCmH2O.toFixed(0)}{' '}
+        {display.pressureUnit}; intrinsic PEEP {state.measurements.intrinsicPeepCmH2O.toFixed(1)}{' '}
+        {display.pressureUnit}.
       </p>
     </section>
   )

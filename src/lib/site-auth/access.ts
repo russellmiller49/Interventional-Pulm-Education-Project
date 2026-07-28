@@ -5,6 +5,7 @@ export type SiteEntitlement =
   | 'pccm_intro_course'
   | 'pccm_intro_course_admin_loma_linda'
   | 'pccm_intro_course_admin_ucsd'
+  | 'preference_cards_builder'
   | 'site_admin'
   | 'socrates_editor'
   | 'socal_ebus_course'
@@ -15,7 +16,6 @@ const PUBLIC_EXACT_PATHS = new Set([
   '/api/scope-calibration',
   '/login',
   '/pocus',
-  '/pleural-procedures/pleural-ultrasound-simulator',
   '/signup',
   '/verify-email',
   '/auth/update-password',
@@ -29,6 +29,11 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
   '/mechanical-circulatory-support',
   '/mechanical-ventilation',
   '/hamilton-c6-ventilation',
+  // Reachable without an account, like the fully-public paths above, but it is a module in
+  // development rather than a sign-in page — so it belongs here, where it also gets
+  // noindex/noarchive instead of being search-indexable.
+  '/pleural-procedures/pleural-ultrasound-simulator',
+  '/preference-cards',
   '/socrates-demo',
 ])
 
@@ -37,7 +42,13 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
 const PUBLIC_UNLISTED_PATH_PREFIXES = [
   '/baxter-crrt',
   '/cardiohelp-ecmo',
+  '/critical-care',
+  '/icu-hemodynamics',
   '/mechanical-circulatory-support',
+  '/mechanical-ventilation',
+  // Beta testers reach the card builder and catalog by direct link without an account.
+  // Saving a card still needs one — cards are per-user rows under row-level security.
+  '/preference-cards',
 ] as const
 
 function isPublicUnlistedMatch(normalizedPathname: string) {
@@ -246,6 +257,10 @@ export function getRequiredEntitlement(
     return 'site_admin'
   }
 
+  if (normalizedPathname === '/literature' || normalizedPathname.startsWith('/literature/')) {
+    return 'site_admin'
+  }
+
   if (normalizedPathname.startsWith('/ip-registry')) {
     return 'ip_registry'
   }
@@ -355,6 +370,14 @@ export function resolveSiteModuleId(pathname: string) {
 
   if (first === 'socrates-builder') {
     return 'socrates-builder'
+  }
+
+  if (first === 'preference-cards') {
+    return 'preference-cards'
+  }
+
+  if (first === 'literature') {
+    return 'literature'
   }
 
   // Collapse subroutes (hub/learn/practice/assess) into one module id so

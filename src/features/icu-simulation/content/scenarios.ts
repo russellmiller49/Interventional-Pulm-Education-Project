@@ -1948,12 +1948,17 @@ const mixedShock = parseIcuScenarioDefinition({
   educationalUseOnly: true,
 })
 
+/**
+ * Ordered by interacting-system count and duration (WP10 §5.5): one dominant mechanism first,
+ * the twelve-hour multisystem scenarios last, capstone at the end. The previous order opened on
+ * the longest and most multi-system scenario in the set.
+ */
 export const icuScenarios: readonly IcuScenarioDefinition[] = Object.freeze([
-  septicArdsAki,
-  lvCardiogenic,
-  massivePeRv,
   hemorrhagic,
   tamponade,
+  lvCardiogenic,
+  massivePeRv,
+  septicArdsAki,
   mixedShock,
 ])
 

@@ -12,6 +12,7 @@ const adminEntitlements = [
   'pccm_intro_course',
   'pccm_intro_course_admin_ucsd',
   'pccm_intro_course_admin_loma_linda',
+  'preference_cards_builder',
   'socal_ebus_course',
   'site_admin',
 ] as const
@@ -29,6 +30,8 @@ type PermissionFilter =
   | 'pccm_intro_course_admin_ucsd_inactive'
   | 'pccm_intro_course_admin_loma_linda_active'
   | 'pccm_intro_course_admin_loma_linda_inactive'
+  | 'preference_cards_builder_active'
+  | 'preference_cards_builder_inactive'
   | 'socal_ebus_course_active'
   | 'socal_ebus_course_inactive'
   | 'site_admin_active'
@@ -104,6 +107,7 @@ const entitlementLabels: Record<AdminEntitlement, string> = {
   pccm_intro_course: 'PCCM Intro Course',
   pccm_intro_course_admin_loma_linda: 'PCCM Loma Linda Admin',
   pccm_intro_course_admin_ucsd: 'PCCM UCSD Admin',
+  preference_cards_builder: 'Preference Card Builder',
   socal_ebus_course: 'SoCal EBUS Course',
   site_admin: 'Site Admin',
 }
@@ -135,6 +139,14 @@ const permissionFilterConfig: Record<
     active: false,
     entitlement: 'pccm_intro_course_admin_loma_linda',
   },
+  preference_cards_builder_active: {
+    active: true,
+    entitlement: 'preference_cards_builder',
+  },
+  preference_cards_builder_inactive: {
+    active: false,
+    entitlement: 'preference_cards_builder',
+  },
   socal_ebus_course_active: { active: true, entitlement: 'socal_ebus_course' },
   socal_ebus_course_inactive: {
     active: false,
@@ -163,6 +175,8 @@ function normalizePermissionFilter(value: string | null): PermissionFilter {
     'pccm_intro_course_admin_ucsd_inactive',
     'pccm_intro_course_admin_loma_linda_active',
     'pccm_intro_course_admin_loma_linda_inactive',
+    'preference_cards_builder_active',
+    'preference_cards_builder_inactive',
     'socal_ebus_course_active',
     'socal_ebus_course_inactive',
     'site_admin_active',
@@ -584,6 +598,9 @@ function buildCsvRows(users: ExportUserRow[]) {
     'pccm_intro_course_admin_loma_linda_status',
     'pccm_intro_course_admin_loma_linda_granted_at',
     'pccm_intro_course_admin_loma_linda_expires_at',
+    'preference_cards_builder_status',
+    'preference_cards_builder_granted_at',
+    'preference_cards_builder_expires_at',
     'socal_ebus_course_status',
     'socal_ebus_course_granted_at',
     'socal_ebus_course_expires_at',
@@ -604,6 +621,7 @@ function buildCsvRows(users: ExportUserRow[]) {
       user,
       'pccm_intro_course_admin_loma_linda',
     )
+    const preferenceCardsBuilder = getEntitlementRecord(user, 'preference_cards_builder')
     const socalEbusCourse = getEntitlementRecord(user, 'socal_ebus_course')
     const siteAdmin = getEntitlementRecord(user, 'site_admin')
 
@@ -636,6 +654,9 @@ function buildCsvRows(users: ExportUserRow[]) {
       getEntitlementExportStatus(user, 'pccm_intro_course_admin_loma_linda'),
       pccmIntroCourseAdminLomaLinda?.granted_at ?? '',
       pccmIntroCourseAdminLomaLinda?.expires_at ?? '',
+      getEntitlementExportStatus(user, 'preference_cards_builder'),
+      preferenceCardsBuilder?.granted_at ?? '',
+      preferenceCardsBuilder?.expires_at ?? '',
       getEntitlementExportStatus(user, 'socal_ebus_course'),
       socalEbusCourse?.granted_at ?? '',
       socalEbusCourse?.expires_at ?? '',

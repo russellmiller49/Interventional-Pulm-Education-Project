@@ -31,16 +31,20 @@ describe('main site auth access helpers', () => {
     expect(isPublicPath('/api/scope-calibration')).toBe(true)
   })
 
-  it('keeps the critical care parent public, unlisted, and on one localized analytics id', () => {
-    for (const path of ['/critical-care', '/es/critical-care', '/zh-CN/critical-care']) {
+  it('keeps the critical care dashboard and pathways public, unlisted, and on one localized analytics id', () => {
+    for (const path of [
+      '/critical-care',
+      '/es/critical-care',
+      '/zh-CN/critical-care',
+      '/critical-care/pathways',
+      '/es/critical-care/pathways/shock-and-perfusion',
+      '/zh-CN/critical-care/pathways/acute-respiratory-failure',
+    ]) {
       expect(isPublicPath(path)).toBe(true)
       expect(isPublicUnlistedPath(path)).toBe(true)
       expect(getRequiredEntitlement(path, params())).toBeNull()
       expect(resolveSiteModuleId(path)).toBe('critical-care')
     }
-
-    expect(isPublicPath('/critical-care/extra')).toBe(false)
-    expect(isPublicUnlistedPath('/critical-care/extra')).toBe(false)
   })
 
   it('keeps every localized ICU Simulator route private with one stable analytics id', () => {
@@ -91,8 +95,6 @@ describe('main site auth access helpers', () => {
     expect(isPublicUnlistedPath('/cardiohelp-ecmo/learn')).toBe(true)
     expect(isPublicUnlistedPath('/cardiohelp-ecmo/assess')).toBe(true)
     expect(isPublicUnlistedPath('/zh-CN/cardiohelp-ecmo/practice')).toBe(true)
-    // Other unlisted modules stay exact-match only.
-    expect(isPublicUnlistedPath('/mechanical-ventilation/extra')).toBe(false)
     expect(getRequiredEntitlement('/cardiohelp-ecmo', params())).toBeNull()
     expect(getRequiredEntitlement('/cardiohelp-ecmo/learn', params())).toBeNull()
     expect(resolveSiteModuleId('/cardiohelp-ecmo')).toBe('cardiohelp-ecmo')
@@ -102,32 +104,40 @@ describe('main site auth access helpers', () => {
   })
 
   it('keeps the mechanical ventilation tester route public but unlisted and resolves both URLs to one module', () => {
-    expect(isPublicPath('/mechanical-ventilation')).toBe(true)
-    expect(isPublicPath('/es/mechanical-ventilation')).toBe(true)
+    for (const path of [
+      '/mechanical-ventilation',
+      '/es/mechanical-ventilation',
+      '/mechanical-ventilation/learn',
+      '/zh-CN/mechanical-ventilation/practice',
+      '/mechanical-ventilation/assess',
+    ]) {
+      expect(isPublicPath(path)).toBe(true)
+      expect(isPublicUnlistedPath(path)).toBe(true)
+      expect(getRequiredEntitlement(path, params())).toBeNull()
+      expect(resolveSiteModuleId(path)).toBe('mechanical-ventilation')
+    }
     expect(isPublicPath('/hamilton-c6-ventilation')).toBe(true)
     expect(isPublicPath('/es/hamilton-c6-ventilation')).toBe(true)
-    expect(isPublicUnlistedPath('/mechanical-ventilation')).toBe(true)
-    expect(isPublicUnlistedPath('/es/mechanical-ventilation')).toBe(true)
     expect(isPublicUnlistedPath('/hamilton-c6-ventilation')).toBe(true)
     expect(isPublicUnlistedPath('/es/hamilton-c6-ventilation')).toBe(true)
-    expect(isPublicUnlistedPath('/mechanical-ventilation/extra')).toBe(false)
-    expect(getRequiredEntitlement('/mechanical-ventilation', params())).toBeNull()
     expect(getRequiredEntitlement('/hamilton-c6-ventilation', params())).toBeNull()
-    expect(resolveSiteModuleId('/mechanical-ventilation')).toBe('mechanical-ventilation')
-    expect(resolveSiteModuleId('/zh-CN/mechanical-ventilation')).toBe('mechanical-ventilation')
     expect(resolveSiteModuleId('/hamilton-c6-ventilation')).toBe('mechanical-ventilation')
     expect(resolveSiteModuleId('/zh-CN/hamilton-c6-ventilation')).toBe('mechanical-ventilation')
   })
 
   it('keeps the ICU hemodynamics preview public-unlisted with one localized analytics id', () => {
-    expect(isPublicPath('/icu-hemodynamics')).toBe(true)
-    expect(isPublicPath('/es/icu-hemodynamics')).toBe(true)
-    expect(isPublicUnlistedPath('/icu-hemodynamics')).toBe(true)
-    expect(isPublicUnlistedPath('/zh-CN/icu-hemodynamics')).toBe(true)
-    expect(isPublicUnlistedPath('/icu-hemodynamics/extra')).toBe(false)
-    expect(getRequiredEntitlement('/icu-hemodynamics', params())).toBeNull()
-    expect(resolveSiteModuleId('/icu-hemodynamics')).toBe('icu-hemodynamics')
-    expect(resolveSiteModuleId('/es/icu-hemodynamics')).toBe('icu-hemodynamics')
+    for (const path of [
+      '/icu-hemodynamics',
+      '/es/icu-hemodynamics',
+      '/icu-hemodynamics/learn',
+      '/zh-CN/icu-hemodynamics/practice',
+      '/icu-hemodynamics/assess',
+    ]) {
+      expect(isPublicPath(path)).toBe(true)
+      expect(isPublicUnlistedPath(path)).toBe(true)
+      expect(getRequiredEntitlement(path, params())).toBeNull()
+      expect(resolveSiteModuleId(path)).toBe('icu-hemodynamics')
+    }
   })
 
   it('keeps the MCS lab and its subroutes public-unlisted with one analytics id', () => {
@@ -192,6 +202,19 @@ describe('main site auth access helpers', () => {
     expect(getRequiredEntitlement('/ebus-training', params())).toBeNull()
     expect(getRequiredEntitlement('/es/ebus-training', params())).toBeNull()
     expect(getRequiredEntitlement('/tnm-9-staging', params())).toBeNull()
+  })
+
+  it('keeps every localized literature route site-admin-only with one analytics id', () => {
+    for (const path of [
+      '/literature',
+      '/es/literature',
+      '/zh-CN/literature/methods',
+      '/literature/article/12345678',
+    ]) {
+      expect(isPublicPath(path)).toBe(false)
+      expect(getRequiredEntitlement(path, params())).toBe('site_admin')
+      expect(resolveSiteModuleId(path)).toBe('literature')
+    }
   })
 
   it('tracks the protected SOCRATES builder separately from the public demo', () => {

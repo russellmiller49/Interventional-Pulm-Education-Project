@@ -1,0 +1,188 @@
+[
+  {
+    "id": "demo-video-stack",
+    "role_code": "VIDEO_PROCESSOR",
+    "local_description": "Demo video processor and light-source stack for the active scope platform",
+    "reason": "No reviewed hospital-local processor/platform mapping was supplied."
+  },
+  {
+    "id": "demo-specimen-bundle",
+    "role_code": "GENERIC_SPECIMEN",
+    "local_description": "Demo specimen-labeling and transport bundle",
+    "reason": "Hospital-local specimen workflow placeholder."
+  },
+  {
+    "id": "demo-suction",
+    "role_code": "GENERIC_SUCTION",
+    "local_description": "Demo wall suction setup",
+    "reason": "Hospital-local room resource placeholder."
+  },
+  {
+    "id": "demo-rose-station",
+    "role_code": "LOCAL_ROSE_STATION",
+    "local_description": "Demo cytology/ROSE station and personnel readiness",
+    "reason": "Local cytology service workflow was not supplied."
+  },
+  {
+    "id": "demo-cytology-supplies",
+    "role_code": "LOCAL_CYTOLOGY_SUPPLIES",
+    "local_description": "Demo slides, fixatives, labels, and cell-block supplies",
+    "reason": "Local cytology supply workflow was not supplied."
+  },
+  {
+    "id": "demo-molecular-specimen",
+    "role_code": "LOCAL_MOLECULAR_SPECIMEN_BUNDLE",
+    "local_description": "Demo molecular-testing specimen preservation and transport bundle",
+    "reason": "Local molecular-testing workflow was not supplied."
+  },
+  {
+    "id": "demo-molecular-readiness",
+    "role_code": "LOCAL_MOLECULAR_READINESS",
+    "local_description": "Demo pathology adequacy and molecular-testing readiness check",
+    "reason": "Local pathology readiness requirements were not supplied."
+  },
+  {
+    "id": "demo-rigid-telescope",
+    "role_code": "RIGID_TELESCOPE",
+    "local_description": "Demo stand-in — rigid telescope",
+    "reason": "All catalog options are hidden."
+  },
+  {
+    "id": "demo-light-cable",
+    "role_code": "ENDOSCOPY_LIGHT_CABLE",
+    "local_description": "Demo stand-in — endoscopy light cable",
+    "reason": "All catalog options are hidden."
+  },
+  {
+    "id": "demo-apc-platform",
+    "role_code": "GENERIC_ENERGY_PLATFORM",
+    "local_description": "Demo stand-in — APC energy platform",
+    "reason": "No approved local APC platform mapping was supplied."
+  },
+  {
+    "id": "demo-apc-probe-incompatible",
+    "role_code": "APC_PROBE_FLEX",
+    "local_description": "Demo stand-in — intentionally incompatible flexible APC probe fixture",
+    "reason": "Deliberately incompatible test fixture; all catalog options are hidden."
+  },
+  {
+    "id": "demo-apc-applicator-rigid",
+    "role_code": "APC_APPLICATOR_RIGID",
+    "local_description": "Demo stand-in — rigid APC applicator",
+    "reason": "All catalog options are hidden."
+  },
+  {
+    "id": "demo-apc-gas",
+    "role_code": "APC_GAS_ACCESSORY",
+    "local_description": "Demo stand-in — APC gas supply and accessory set",
+    "reason": "All catalog options are hidden."
+  },
+  {
+    "id": "demo-energy-cable",
+    "role_code": "ENERGY_CABLE_ADAPTER",
+    "local_description": "Demo stand-in — energy cable and adapter",
+    "reason": "All catalog options are hidden."
+  },
+  {
+    "id": "demo-fire-readiness",
+    "role_code": "LOCAL_AIRWAY_FIRE_READINESS",
+    "local_description": "Demo airway-fire readiness line",
+    "reason": "Local fire-risk readiness policy was not supplied."
+  },
+  {
+    "id": "demo-airway-measurement",
+    "role_code": "LOCAL_AIRWAY_MEASUREMENT",
+    "local_description": "Demo airway measurement readiness line — no sizing recommendation",
+    "reason": "The prototype does not supply clinical sizing guidance."
+  },
+  {
+    "id": "demo-airway-stent",
+    "role_code": "AIRWAY_STENT_CONFIGURATION",
+    "local_description": "Demo stand-in — airway stent configuration (no clinical size selected)",
+    "reason": "No locally reviewed configuration or clinical size was supplied."
+  },
+  {
+    "id": "demo-stent-deployment",
+    "role_code": "STENT_DEPLOYMENT_TOOLS",
+    "local_description": "Demo stent deployment/loading and measurement tool set",
+    "reason": "No reviewed local stent-system mapping was supplied."
+  },
+  {
+    "id": "demo-jet-ventilator",
+    "role_code": "JET_VENTILATOR",
+    "local_description": "Demo jet ventilator resource",
+    "reason": "No reviewed local jet-ventilator mapping was supplied."
+  },
+  {
+    "id": "demo-jet-accessories",
+    "role_code": "JET_VENT_ACCESSORY",
+    "local_description": "Demo jet-ventilation tubing, connector, and pressure-source set",
+    "reason": "No reviewed local jet-ventilation accessory mapping was supplied."
+  },
+  {
+    "id": "demo-manual-ventilation",
+    "role_code": "MANUAL_VENTILATION_BACKUP",
+    "local_description": "Demo manual-ventilation backup setup",
+    "reason": "Local anesthesia/ventilation equipment mapping was not supplied."
+  },
+  {
+    "id": "demo-c-arm",
+    "role_code": "C_ARM_RESOURCE",
+    "local_description": "Demo C-arm resource",
+    "reason": "Local imaging resource mapping was not supplied."
+  },
+  {
+    "id": "demo-c-arm-drape",
+    "role_code": "C_ARM_STERILE_DRAPE",
+    "local_description": "Demo C-arm sterile drape",
+    "reason": "Local sterile-drape mapping was not supplied."
+  },
+  {
+    "id": "demo-radiation-safety",
+    "role_code": "RADIATION_SAFETY_BUNDLE",
+    "local_description": "Demo radiation-safety bundle and readiness line",
+    "reason": "Local radiation-safety workflow was not supplied."
+  },
+  {
+    "id": "demo-large-bore-tube",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "local_description": "Demo stand-in — large-bore chest tube set",
+    "reason": "All catalog options are hidden."
+  },
+  {
+    "id": "demo-drainage-unit",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "local_description": "Demo conventional chest drainage unit",
+    "reason": "Hospital-local drainage resource placeholder."
+  },
+  {
+    "id": "demo-digital-drainage",
+    "role_code": "DIGITAL_DRAINAGE_SYSTEM",
+    "local_description": "Demo digital pleural drainage system and disposable set",
+    "reason": "No reviewed local digital-drainage mapping was supplied."
+  },
+  {
+    "id": "demo-chest-securement",
+    "role_code": "LOCAL_CHEST_TUBE_SECUREMENT",
+    "local_description": "Demo chest-tube securement and dressing pack",
+    "reason": "Used to prove kit/BOM duplicate suppression."
+  },
+  {
+    "id": "demo-second-suction",
+    "role_code": "HIGH_CAPACITY_SUCTION_BACKUP",
+    "local_description": "Demo second high-capacity suction setup",
+    "reason": "Local rescue-resource mapping was not supplied."
+  },
+  {
+    "id": "demo-tamponade-balloon",
+    "role_code": "AIRWAY_TAMPONADE_BALLOON_CAPABILITY",
+    "local_description": "Demo blocker/tamponade balloon capability",
+    "reason": "Local rescue-resource mapping was not supplied."
+  },
+  {
+    "id": "demo-rigid-backup",
+    "role_code": "RIGID_BRONCHOSCOPY_BACKUP",
+    "local_description": "Demo rigid bronchoscopy backup tray readiness",
+    "reason": "Local rescue-resource mapping was not supplied."
+  }
+]

@@ -127,12 +127,12 @@ function ImpellaPumpControls({
   const positionOptions =
     side === 'left'
       ? [
-          ['correct', 'Correct'],
+          ['correct', 'Aligned'],
           ['too-deep', 'Too deep'],
           ['too-shallow', 'Too shallow'],
         ]
       : [
-          ['correct', 'Correct IVC-to-PA relationship'],
+          ['correct', 'Aligned IVC-to-PA relationship'],
           ['inlet-too-high', 'Inlet too high'],
           ['outlet-too-proximal', 'Outlet too proximal'],
           ['too-distal', 'Outlet too distal'],
@@ -225,8 +225,7 @@ export function McsControls({
   state: McsSimulationState
   dispatch: Dispatch<McsAction>
 }) {
-  const locked = Boolean(state.scenario && state.section !== 'learn' && !state.predictionCommitted)
-  const unavailable = (actionId: string) => locked || !isMcsActionIdPermitted(state, actionId)
+  const unavailable = (actionId: string) => !isMcsActionIdPermitted(state, actionId)
   const patientActionId = (control: McsPatientControl) =>
     control === 'preloadPercent'
       ? 'patient:set-preload'
@@ -244,11 +243,7 @@ export function McsControls({
           <span className={styles.kicker}>BOUNDED CONTROLS</span>
           <h2>Change one variable, then read the system</h2>
         </div>
-        {locked ? (
-          <span className={styles.lockedBadge}>Prediction required</span>
-        ) : (
-          <span className={styles.liveBadge}>Controls live</span>
-        )}
+        <span className={styles.liveBadge}>Controls available</span>
       </header>
       <details open className={styles.controlGroup}>
         <summary>Patient conditions</summary>
@@ -499,7 +494,7 @@ export function McsControls({
               />
               <span>
                 <strong>Authorized-personnel order</strong>
-                <small>Simulation gate only</small>
+                <small>Simulation authorization only</small>
               </span>
             </label>
             <RangeControl

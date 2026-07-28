@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://interventionalpulm.com/schemas/critical-care-asset-inventory-v1.json",
+  "title": "Critical-care asset inventory",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "moduleId",
+      "kind",
+      "competencyIds",
+      "intendedPhases",
+      "supportedModes",
+      "bandwidthClass",
+      "localeStatus",
+      "contentOwner",
+      "evidenceIds",
+      "accessibilityAlternative"
+    ],
+    "properties": {
+      "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9.-]+$" },
+      "moduleId": { "type": "string" },
+      "kind": {
+        "enum": ["image", "video", "waveform", "3d", "console", "circuit", "chart"]
+      },
+      "competencyIds": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+      "intendedPhases": {
+        "type": "array",
+        "items": {
+          "enum": ["recognize", "predict", "act", "observe", "explain", "transfer"]
+        },
+        "minItems": 1
+      },
+      "supportedModes": {
+        "type": "array",
+        "items": { "enum": ["guided", "practice", "challenge"] },
+        "minItems": 1
+      },
+      "bandwidthClass": { "enum": ["light", "standard", "heavy"] },
+      "minimumViewport": { "enum": ["mobile", "tablet", "desktop"] },
+      "lightweightAlternativeAssetId": { "type": "string" },
+      "localeStatus": {
+        "type": "object",
+        "additionalProperties": { "enum": ["reviewed", "fallback", "unavailable"] }
+      },
+      "deviceVersion": { "type": "string" },
+      "contentOwner": { "type": "string" },
+      "clinicalReviewer": { "type": "string" },
+      "lastReviewDate": { "type": "string", "format": "date" },
+      "evidenceIds": { "type": "array", "items": { "type": "string" } },
+      "accessibilityAlternative": { "type": "string", "minLength": 1 }
+    }
+  }
+}

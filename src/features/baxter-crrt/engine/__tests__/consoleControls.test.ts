@@ -35,8 +35,8 @@ describe('CRRT console controls', () => {
       attempt: 1,
     })
 
-    const locked = selectCrrtConsoleControls(state)
-    expect(locked.settingActions).toEqual(
+    const initialControls = selectCrrtConsoleControls(state)
+    expect(initialControls.settingActions).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           label: 'Adjust machine fluid removal after assessment',
@@ -51,7 +51,6 @@ describe('CRRT console controls', () => {
       ]),
     )
 
-    state = commitCorrectPrediction(state)
     let controls = selectCrrtConsoleControls(state)
     const safeSetting = controls.settingActions.find((action) => !action.unsafe)
     const assessment = controls.prerequisiteActions.find(

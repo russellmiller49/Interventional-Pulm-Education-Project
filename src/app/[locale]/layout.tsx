@@ -8,6 +8,8 @@ import { notFound } from 'next/navigation'
 import { Layout as AppLayout } from '@/components/layout/Layout'
 import { ThemeProvider } from '@/components/layout/theme-provider'
 import { SiteUsageTracker } from '@/components/analytics/SiteUsageTracker'
+import { CriticalCareAccountSync } from '@/features/critical-care/components/CriticalCareAccountSync'
+import { buildCriticalCarePublicClientCatalog } from '@/features/critical-care/content/publicCatalog.server'
 import { Toaster } from '@/components/ui/toaster'
 import { getLocaleDirection } from '@/i18n/locale'
 import { localeStaticParams } from '@/i18n/path'
@@ -77,6 +79,9 @@ export default async function RootLayout({ children, params }: LocaleLayoutProps
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <AppLayout>{children}</AppLayout>
             <SiteUsageTracker />
+            <CriticalCareAccountSync
+              activities={buildCriticalCarePublicClientCatalog().activities}
+            />
             <Toaster />
           </ThemeProvider>
         </NextIntlClientProvider>

@@ -155,11 +155,31 @@ describe('learner prescription workbench UI', () => {
     expect(workbench).toHaveAttribute('data-progress-write', 'learner-mode-only')
     expect(workbench).toHaveAttribute('data-persistence', 'learner-mode-only')
     expect(workbench).toHaveAttribute('data-scoring', 'tool-specific')
-    expect(workbench).toHaveAttribute('data-competency', 'none')
+    expect(workbench).not.toHaveAttribute('data-competency')
     expect(
       within(workbench).getByRole('note', { name: 'Educational calculation boundary' }),
     ).toHaveTextContent(/calculation practice.*not for patient care/i)
     expect(window.localStorage).toHaveLength(0)
+  })
+
+  it('emits completion evidence only after an input change is followed by output inspection', () => {
+    const onCompletionEvidence = jest.fn()
+    render(<CrrtPrescriptionWorkbench onCompletionEvidence={onCompletionEvidence} />)
+
+    const outputs = screen.getByRole('region', { name: 'Educational calculation outputs' })
+    fireEvent.focus(outputs)
+    expect(onCompletionEvidence).not.toHaveBeenCalled()
+
+    fireEvent.blur(outputs)
+    fireEvent.change(screen.getByRole('spinbutton', { name: /^Dialysate flow/ }), {
+      target: { value: '1200' },
+    })
+    expect(onCompletionEvidence).not.toHaveBeenCalled()
+
+    fireEvent.focus(outputs)
+    expect(onCompletionEvidence).toHaveBeenCalledTimes(1)
+    fireEvent.focus(outputs)
+    expect(onCompletionEvidence).toHaveBeenCalledTimes(1)
   })
 
   it('permits only no anticoagulation and leaves the solution registry unavailable', () => {
@@ -228,10 +248,12 @@ describe('learner prescription workbench UI', () => {
       screen.getByText(/Neither connection position is declared universally best/i),
     ).toBeInTheDocument()
     expect(screen.getByText(/quantitative FF is unavailable/i)).toBeInTheDocument()
-    expect(screen.getAllByText('REVIEW-CKRT-CORE-2025')).not.toHaveLength(0)
-    expect(screen.getAllByText('GUID-RRT-ICU-2026')).not.toHaveLength(0)
-    expect(screen.getAllByText('SYNTH-LAB-PREPOST-001')).not.toHaveLength(0)
-    expect(screen.getByText('SYNTH-LAB-PRESCRIPTION-001')).toBeInTheDocument()
+    expect(screen.getByText('Clinical context')).toBeInTheDocument()
+    expect(screen.getByText('Critical-care guidance')).toBeInTheDocument()
+    expect(screen.getByText('Comparison boundary')).toBeInTheDocument()
+    expect(screen.getByText('Practice-value boundary')).toBeInTheDocument()
+    expect(screen.queryByText('REVIEW-CKRT-CORE-2025')).not.toBeInTheDocument()
+    expect(screen.queryByText('SYNTH-LAB-PRESCRIPTION-001')).not.toBeInTheDocument()
     expect(
       screen.getByText(/does not model blood flow.*PBP dilution.*anticoagulation/i),
     ).toBeInTheDocument()
@@ -246,21 +268,21 @@ describe('learner prescription workbench UI', () => {
     expect(weight).toHaveValue(null)
     expect(weight).toHaveAttribute('aria-invalid', 'true')
     expect(weight).toHaveAccessibleDescription(/example weight is required/i)
-    expect(screen.getAllByText('Unavailable — correct entries')).toHaveLength(6)
+    expect(screen.getAllByText('Unavailable — revise entries')).toHaveLength(6)
     expect(screen.queryByText('2,100 mL/h')).not.toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent(
       /all calculated outputs are unavailable.*example weight/i,
     )
     expect(
-      screen.getByText(/correct every invalid entry before viewing the qualitative comparison/i),
+      screen.getByText(/revise every invalid entry before viewing the qualitative comparison/i),
     ).toBeInTheDocument()
-    expect(screen.getByText('Unavailable — correct every invalid entry.')).toBeInTheDocument()
+    expect(screen.getByText('Unavailable — revise every invalid entry.')).toBeInTheDocument()
 
     fireEvent.change(weight, { target: { value: '70' } })
     expect(weight).toHaveValue(70)
     expect(weight).not.toHaveAttribute('aria-invalid')
     expect(screen.getByText('2,100 mL/h')).toBeInTheDocument()
-    expect(screen.queryByText('Unavailable — correct entries')).not.toBeInTheDocument()
+    expect(screen.queryByText('Unavailable — revise entries')).not.toBeInTheDocument()
   })
 
   it('fails all calculated outputs closed for an invalid optional capacity', () => {
@@ -272,7 +294,7 @@ describe('learner prescription workbench UI', () => {
     expect(capacity).toHaveValue(-1)
     expect(capacity).toHaveAttribute('aria-invalid', 'true')
     expect(capacity).toHaveAccessibleDescription(/must be greater than zero/i)
-    expect(screen.getAllByText('Unavailable — correct entries')).toHaveLength(6)
+    expect(screen.getAllByText('Unavailable — revise entries')).toHaveLength(6)
     expect(screen.getByRole('status')).toHaveTextContent(/practice bag capacity/i)
   })
 
@@ -284,7 +306,7 @@ describe('learner prescription workbench UI', () => {
 
     expect(bloodFlow).toHaveValue(1e308)
     expect(bloodFlow).not.toHaveAttribute('aria-invalid')
-    expect(screen.getAllByText('Unavailable — correct entries')).toHaveLength(6)
+    expect(screen.getAllByText('Unavailable — revise entries')).toHaveLength(6)
     expect(screen.getByRole('status')).toHaveTextContent(/exceeds a finite calculation boundary/i)
   })
 

@@ -113,6 +113,12 @@ function Transducer({
 const BALLOON_DEFLATED_COLOR = new THREE.Color('#d6d4c5')
 const BALLOON_INFLATED_COLOR = new THREE.Color('#e9d7a1')
 
+export function isPacBalloonVisuallyInflated(
+  catheter: HemodynamicSimulationState['catheter'],
+): boolean {
+  return catheter.position === 'wedge' || catheter.balloonInflated || catheter.floatBalloonInflated
+}
+
 function PacBalloonVisual({
   balloonInflated,
   reducedMotion,
@@ -135,6 +141,7 @@ function PacBalloonVisual({
       balloon.current.scale.set(...nextScale)
       material.current.color.copy(balloonInflated ? BALLOON_INFLATED_COLOR : BALLOON_DEFLATED_COLOR)
       material.current.opacity = balloonInflated ? 0.58 : 0.9
+      material.current.emissiveIntensity = balloonInflated ? 0.36 : 0.08
       return
     }
     const damping = 18
@@ -154,29 +161,52 @@ function PacBalloonVisual({
       damping,
       delta,
     )
+    material.current.emissiveIntensity = THREE.MathUtils.damp(
+      material.current.emissiveIntensity,
+      balloonInflated ? 0.36 : 0.08,
+      damping,
+      delta,
+    )
   })
 
   const deflatedRadius = CARDIAC_RIG.pac.balloonRadius.deflated
+  const inflatedRadius = CARDIAC_RIG.pac.balloonRadius.inflated
 
   return (
-    <mesh
-      ref={balloon}
-      scale={[deflatedRadius * 0.78, deflatedRadius * 1.5, deflatedRadius * 0.78]}
-    >
-      <sphereGeometry args={[1, 22, 16]} />
-      <meshPhysicalMaterial
-        ref={material}
-        color="#d6d4c5"
-        depthTest={false}
-        depthWrite={false}
-        emissive="#d8b75a"
-        emissiveIntensity={0.08}
-        opacity={0.9}
-        roughness={0.22}
-        thickness={0.12}
-        transparent
-      />
-    </mesh>
+    <group>
+      {balloonInflated ? (
+        <mesh renderOrder={33} scale={[inflatedRadius, inflatedRadius * 1.26, inflatedRadius]}>
+          <sphereGeometry args={[1, 22, 16]} />
+          <meshBasicMaterial
+            color="#ffd166"
+            depthTest={false}
+            depthWrite={false}
+            opacity={0.2}
+            side={THREE.BackSide}
+            transparent
+          />
+        </mesh>
+      ) : null}
+      <mesh
+        ref={balloon}
+        renderOrder={34}
+        scale={[deflatedRadius * 0.78, deflatedRadius * 1.5, deflatedRadius * 0.78]}
+      >
+        <sphereGeometry args={[1, 22, 16]} />
+        <meshPhysicalMaterial
+          ref={material}
+          color="#d6d4c5"
+          depthTest={false}
+          depthWrite={false}
+          emissive="#d8b75a"
+          emissiveIntensity={0.08}
+          opacity={0.9}
+          roughness={0.22}
+          thickness={0.12}
+          transparent
+        />
+      </mesh>
+    </group>
   )
 }
 
@@ -225,7 +255,7 @@ function PacCatheterOverlay({
         renderOrder={32}
       >
         <PacBalloonVisual
-          balloonInflated={state.catheter.balloonInflated || state.catheter.floatBalloonInflated}
+          balloonInflated={isPacBalloonVisuallyInflated(state.catheter)}
           reducedMotion={reducedMotion}
         />
         <mesh position={[0, -0.075, 0]} renderOrder={32}>
@@ -265,6 +295,40 @@ export function HemodynamicHeart3D({ state }: { state: HemodynamicSimulationStat
     level === 0
       ? 'at axis'
       : `${Math.abs(level).toFixed(0)} cm ${level > 0 ? 'above' : 'below'} axis`
+  const balloonVisuallyInflated = isPacBalloonVisuallyInflated(state.catheter)
+  const balloonLabel =
+    state.catheter.position === 'wedge'
+      ? 'INFLATED for brief PA occlusion'
+      : state.catheter.floatBalloonInflated
+        ? 'INFLATED for flow-directed advancement'
+        : state.catheter.balloonInflated
+          ? 'INFLATED'
+          : 'deflated'
+
+  function adjustView({
+    azimuth = 0,
+    polar = 0,
+    distanceScale = 1,
+  }: {
+    azimuth?: number
+    polar?: number
+    distanceScale?: number
+  }) {
+    const controls = controlsRef.current
+    if (!controls) return
+    const offset = controls.object.position.clone().sub(controls.target)
+    const spherical = new THREE.Spherical().setFromVector3(offset)
+    spherical.theta += azimuth
+    spherical.phi = THREE.MathUtils.clamp(spherical.phi + polar, 0.25, Math.PI - 0.25)
+    spherical.radius = THREE.MathUtils.clamp(
+      spherical.radius * distanceScale,
+      camera.minDistance,
+      camera.maxDistance,
+    )
+    controls.object.position.copy(controls.target).add(offset.setFromSpherical(spherical))
+    controls.object.lookAt(controls.target)
+    controls.update()
+  }
 
   return (
     <div className={styles.physiologyViewport}>
@@ -330,9 +394,64 @@ export function HemodynamicHeart3D({ state }: { state: HemodynamicSimulationStat
       <div className={styles.physiologyOrientation}>
         <span>Anterior heart + distal PA</span>
         <span>Patient right is viewer left</span>
+        <div
+          className={styles.physiologyKeyboardControls}
+          role="group"
+          aria-label="Keyboard-accessible 3D view controls"
+        >
+          <button
+            type="button"
+            aria-label="Rotate 3D anatomy view left"
+            disabled={!webglReady || contextLost}
+            onClick={() => adjustView({ azimuth: -Math.PI / 10 })}
+          >
+            ←
+          </button>
+          <button
+            type="button"
+            aria-label="Rotate 3D anatomy view right"
+            disabled={!webglReady || contextLost}
+            onClick={() => adjustView({ azimuth: Math.PI / 10 })}
+          >
+            →
+          </button>
+          <button
+            type="button"
+            aria-label="Tilt 3D anatomy view up"
+            disabled={!webglReady || contextLost}
+            onClick={() => adjustView({ polar: -Math.PI / 12 })}
+          >
+            ↑
+          </button>
+          <button
+            type="button"
+            aria-label="Tilt 3D anatomy view down"
+            disabled={!webglReady || contextLost}
+            onClick={() => adjustView({ polar: Math.PI / 12 })}
+          >
+            ↓
+          </button>
+          <button
+            type="button"
+            aria-label="Zoom 3D anatomy view in"
+            disabled={!webglReady || contextLost}
+            onClick={() => adjustView({ distanceScale: 0.85 })}
+          >
+            +
+          </button>
+          <button
+            type="button"
+            aria-label="Zoom 3D anatomy view out"
+            disabled={!webglReady || contextLost}
+            onClick={() => adjustView({ distanceScale: 1.18 })}
+          >
+            −
+          </button>
+        </div>
         <button
           type="button"
           aria-label="Reset 3D hemodynamic anatomy view"
+          disabled={!webglReady || contextLost}
           onClick={() => controlsRef.current?.reset()}
         >
           <RotateCcw aria-hidden="true" /> Reset view
@@ -346,6 +465,12 @@ export function HemodynamicHeart3D({ state }: { state: HemodynamicSimulationStat
         {targetAnatomy ? (
           <span>Advancing · waveform remains {confirmedAnatomy.shortLabel}</span>
         ) : null}
+        <span
+          className={styles.physiologyBalloonStatus}
+          data-inflated={balloonVisuallyInflated || undefined}
+        >
+          Balloon · {balloonLabel}
+        </span>
         <span>Pressure transducer · {levelLabel}</span>
         <span>Yellow = PAC course · dashed teal = phlebostatic reference</span>
       </div>

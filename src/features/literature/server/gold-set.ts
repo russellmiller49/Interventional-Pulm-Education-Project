@@ -1,0 +1,554 @@
+import type { SupabaseClient, User } from '@supabase/supabase-js'
+
+import type {
+  LiteratureGoldReviewItem,
+  LiteratureGoldReviewPayload,
+  LiteratureGoldReviewRecord,
+  LiteratureGoldSetBatchSummary,
+  LiteratureGoldSetItemAction,
+} from '@/features/literature/gold-set/types'
+import type {
+  LiteratureGoldExport,
+  LiteratureGoldExportReview,
+} from '@/features/literature/gold-set/export'
+import { literatureGoldExportSamplingContext } from '@/features/literature/gold-set/export'
+
+import { createLiteratureAdmin } from './database-client'
+import type { LiteratureServerResult } from './types'
+
+interface GoldBatchRow {
+  id: string
+  name: string
+  kind: LiteratureGoldSetBatchSummary['kind']
+  status: LiteratureGoldSetBatchSummary['status']
+  requested_size: number
+  total_count: number | string
+  completed_count: number | string
+  remaining_count: number | string
+  return_later_count: number | string
+  development_count: number | string
+  test_count: number | string
+  sampling_seed: number | string
+  sampling_report: LiteratureGoldSetBatchSummary['samplingReport']
+  created_at: string
+  frozen_at: string | null
+}
+
+function text(value: unknown) {
+  return typeof value === 'string' ? value : null
+}
+
+function textArray(value: unknown) {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string')
+    : []
+}
+
+function reviewPayload(value: unknown): LiteratureGoldReviewPayload | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  const row = value as Record<string, unknown>
+  return {
+    relevanceLabel:
+      row.relevanceLabel === 'include_core' ||
+      row.relevanceLabel === 'include_adjacent' ||
+      row.relevanceLabel === 'exclude' ||
+      row.relevanceLabel === 'uncertain'
+        ? row.relevanceLabel
+        : null,
+    metadataSufficiency:
+      row.metadataSufficiency === 'adequate_abstract' ||
+      row.metadataSufficiency === 'limited_abstract' ||
+      row.metadataSufficiency === 'no_abstract' ||
+      row.metadataSufficiency === 'conflicting_metadata'
+        ? row.metadataSufficiency
+        : null,
+    reviewerConfidence:
+      row.reviewerConfidence === 'high' ||
+      row.reviewerConfidence === 'moderate' ||
+      row.reviewerConfidence === 'low'
+        ? row.reviewerConfidence
+        : null,
+    topicIds: textArray(row.topicIds),
+    technologyTags: textArray(row.technologyTags),
+    clinicalPurposes: textArray(row.clinicalPurposes),
+    diseaseTags: textArray(row.diseaseTags),
+    studyDesign: text(row.studyDesign),
+    publicationStatus: text(row.publicationStatus),
+    categorizationFromFullText: row.categorizationFromFullText === true,
+    notes: text(row.notes) ?? '',
+    usedSupplementalMetadata: row.usedSupplementalMetadata === true,
+    reviewSeconds:
+      typeof row.reviewSeconds === 'number' && Number.isFinite(row.reviewSeconds)
+        ? row.reviewSeconds
+        : 0,
+  }
+}
+
+function reviewRecord(value: unknown): LiteratureGoldReviewRecord | null {
+  const payload = reviewPayload(value)
+  if (!payload || !value || typeof value !== 'object' || Array.isArray(value)) return null
+  const row = value as Record<string, unknown>
+  const id = text(row.id)
+  const completedAt = text(row.completedAt)
+  const revision = Number(row.revision)
+  if (!id || !completedAt || !Number.isInteger(revision) || revision < 1) return null
+  return {
+    ...payload,
+    id,
+    revision,
+    reviewerEmail: text(row.reviewerEmail),
+    isBlinded: row.isBlinded === true,
+    completedAt,
+  }
+}
+
+function normalizeGoldReviewItem(value: unknown): LiteratureGoldReviewItem | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  const row = value as Record<string, unknown>
+  const article =
+    row.article && typeof row.article === 'object' && !Array.isArray(row.article)
+      ? (row.article as Record<string, unknown>)
+      : null
+  const automated =
+    row.automatedSignals &&
+    typeof row.automatedSignals === 'object' &&
+    !Array.isArray(row.automatedSignals)
+      ? (row.automatedSignals as Record<string, unknown>)
+      : null
+  const authors = Array.isArray(article?.authors)
+    ? article.authors.flatMap((author) => {
+        if (!author || typeof author !== 'object' || Array.isArray(author)) return []
+        const candidate = author as Record<string, unknown>
+        const fullName = text(candidate.fullName)
+        return fullName ? [{ fullName, abbreviatedName: text(candidate.abbreviatedName) }] : []
+      })
+    : []
+  const history = Array.isArray(row.reviewHistory)
+    ? row.reviewHistory
+        .map(reviewRecord)
+        .filter((review): review is LiteratureGoldReviewRecord => Boolean(review))
+    : []
+  const currentReview = reviewRecord(row.currentReview)
+  const id = text(row.id)
+  const batchId = text(row.batchId)
+  const batchName = text(row.batchName)
+  const pmid = text(article?.pmid)
+  const title = text(article?.title)
+  if (!id || !batchId || !batchName || !pmid || !title) return null
+
+  return {
+    id,
+    batchId,
+    batchName,
+    batchStatus:
+      row.batchStatus === 'frozen' || row.batchStatus === 'archived' ? row.batchStatus : 'active',
+    displayOrder: Number(row.displayOrder) || 0,
+    totalCount: Number(row.totalCount) || 0,
+    completedCount: Number(row.completedCount) || 0,
+    remainingCount: Number(row.remainingCount) || 0,
+    reviewStatus:
+      row.reviewStatus === 'in_progress' ||
+      row.reviewStatus === 'return_later' ||
+      row.reviewStatus === 'completed'
+        ? row.reviewStatus
+        : 'pending',
+    article: {
+      pmid,
+      title,
+      abstract: text(article?.abstract),
+      authors,
+      journalTitle: text(article?.journalTitle),
+      journalAbbreviation: text(article?.journalAbbreviation),
+      publicationYear:
+        typeof article?.publicationYear === 'number' ? article.publicationYear : null,
+      publicationTypes: textArray(article?.publicationTypes),
+      ...(Array.isArray(article?.meshTerms) ? { meshTerms: textArray(article.meshTerms) } : {}),
+      ...(Array.isArray(article?.authorKeywords)
+        ? { authorKeywords: textArray(article.authorKeywords) }
+        : {}),
+    },
+    draft: reviewPayload(row.draft),
+    currentReview,
+    reviewHistory: history,
+    supplementalMetadataRevealed: row.supplementalMetadataRevealed === true,
+    automatedSignalsRevealed: row.automatedSignalsRevealed === true,
+    automatedSignals: automated
+      ? {
+          sampleStratum:
+            automated.sampleStratum === 'strong_likely_ip' ||
+            automated.sampleStratum === 'likely_non_ip' ||
+            automated.sampleStratum === 'ambiguous_boundary' ||
+            automated.sampleStratum === 'discovery_only' ||
+            automated.sampleStratum === 'landmark_regression' ||
+            automated.sampleStratum === 'hard_negative_regression'
+              ? automated.sampleStratum
+              : 'challenging_metadata',
+          samplingReason: text(automated.samplingReason) ?? '',
+          samplingMetadata:
+            automated.samplingMetadata &&
+            typeof automated.samplingMetadata === 'object' &&
+            !Array.isArray(automated.samplingMetadata)
+              ? (automated.samplingMetadata as Record<string, unknown>)
+              : {},
+          sources: Array.isArray(automated.sources)
+            ? automated.sources.flatMap((source) => {
+                if (!source || typeof source !== 'object' || Array.isArray(source)) return []
+                const candidate = source as Record<string, unknown>
+                const sourceKind = text(candidate.sourceKind)
+                const sourceFilename = text(candidate.sourceFilename)
+                return sourceKind && sourceFilename
+                  ? [
+                      {
+                        sourceKind,
+                        sourceId: text(candidate.sourceId),
+                        queryId: text(candidate.queryId),
+                        sourceFilename,
+                      },
+                    ]
+                  : []
+              })
+            : [],
+          suggestions: Array.isArray(automated.suggestions)
+            ? automated.suggestions.flatMap((suggestion) => {
+                if (!suggestion || typeof suggestion !== 'object' || Array.isArray(suggestion)) {
+                  return []
+                }
+                const candidate = suggestion as Record<string, unknown>
+                const topicId = text(candidate.topicId)
+                const assignmentSource = text(candidate.assignmentSource)
+                return topicId && assignmentSource
+                  ? [
+                      {
+                        topicId,
+                        confidence:
+                          typeof candidate.confidence === 'number'
+                            ? candidate.confidence
+                            : candidate.confidence === null
+                              ? null
+                              : Number(candidate.confidence) || null,
+                        assignmentSource,
+                        evidence:
+                          candidate.evidence &&
+                          typeof candidate.evidence === 'object' &&
+                          !Array.isArray(candidate.evidence)
+                            ? (candidate.evidence as Record<string, unknown>)
+                            : null,
+                      },
+                    ]
+                  : []
+              })
+            : [],
+        }
+      : null,
+    previousItemId: text(row.previousItemId),
+    nextItemId: text(row.nextItemId),
+    nextUnresolvedItemId: text(row.nextUnresolvedItemId),
+  }
+}
+
+export async function listLiteratureGoldSetBatches(): Promise<
+  LiteratureServerResult<LiteratureGoldSetBatchSummary[]>
+> {
+  const client = createLiteratureAdmin()
+  if (!client) return { data: null, error: 'The literature database is not configured.' }
+
+  const { data, error } = await client.rpc('list_literature_gold_batches_v1')
+  if (error) return { data: null, error: error.message }
+
+  return {
+    data: ((data ?? []) as GoldBatchRow[]).map((row) => ({
+      id: row.id,
+      name: row.name,
+      kind: row.kind,
+      status: row.status,
+      requestedSize: row.requested_size,
+      totalCount: Number(row.total_count) || 0,
+      completedCount: Number(row.completed_count) || 0,
+      remainingCount: Number(row.remaining_count) || 0,
+      returnLaterCount: Number(row.return_later_count) || 0,
+      developmentCount: Number(row.development_count) || 0,
+      testCount: Number(row.test_count) || 0,
+      samplingSeed: Number(row.sampling_seed),
+      samplingReport: row.sampling_report,
+      createdAt: row.created_at,
+      frozenAt: row.frozen_at,
+    })),
+    error: null,
+  }
+}
+
+export async function loadLiteratureGoldReviewItem(
+  batchId?: string,
+  itemId?: string,
+  status: 'all' | 'unresolved' | 'return_later' | 'completed' = 'unresolved',
+  split: 'development' | 'test' | 'all' = 'development',
+): Promise<LiteratureServerResult<LiteratureGoldReviewItem | null>> {
+  const client = createLiteratureAdmin()
+  if (!client) return { data: null, error: 'The literature database is not configured.' }
+
+  const { data, error } = await client.rpc('get_literature_gold_review_item_v1', {
+    p_batch_id: batchId ?? null,
+    p_item_id: itemId ?? null,
+    p_status: status,
+    p_split: split,
+  })
+  if (error) return { data: null, error: error.message }
+  if (
+    data &&
+    typeof data === 'object' &&
+    !Array.isArray(data) &&
+    (data as Record<string, unknown>).item === null
+  ) {
+    return { data: null, error: null }
+  }
+  const normalized = normalizeGoldReviewItem(data)
+  if (!normalized && data !== null) {
+    return { data: null, error: 'The gold-set item response was malformed.' }
+  }
+  return { data: normalized, error: null }
+}
+
+export async function saveLiteratureGoldReview(
+  itemId: string,
+  review: LiteratureGoldReviewPayload,
+  complete: boolean,
+  user: User,
+): Promise<LiteratureServerResult<Record<string, unknown>>> {
+  const client = createLiteratureAdmin()
+  if (!client) return { data: null, error: 'The literature database is not configured.' }
+  const { data, error } = await client.rpc('save_literature_gold_review_v1', {
+    p_item_id: itemId,
+    p_actor_user_id: user.id,
+    p_actor_email: user.email ?? null,
+    p_review: review,
+    p_complete: complete,
+  })
+  return error
+    ? { data: null, error: error.message }
+    : { data: (data ?? {}) as Record<string, unknown>, error: null }
+}
+
+export async function updateLiteratureGoldReviewItem(
+  itemId: string,
+  action: LiteratureGoldSetItemAction,
+  user: User,
+): Promise<LiteratureServerResult<Record<string, unknown>>> {
+  const client = createLiteratureAdmin()
+  if (!client) return { data: null, error: 'The literature database is not configured.' }
+  const { data, error } = await client.rpc('update_literature_gold_item_v1', {
+    p_item_id: itemId,
+    p_actor_user_id: user.id,
+    p_actor_email: user.email ?? null,
+    p_action: action,
+  })
+  return error
+    ? { data: null, error: error.message }
+    : { data: (data ?? {}) as Record<string, unknown>, error: null }
+}
+
+export async function freezeLiteratureGoldSetBatch(
+  batchId: string,
+  user: User,
+): Promise<LiteratureServerResult<Record<string, unknown>>> {
+  const client = createLiteratureAdmin()
+  if (!client) return { data: null, error: 'The literature database is not configured.' }
+  const { data, error } = await client.rpc('freeze_literature_gold_batch_v1', {
+    p_batch_id: batchId,
+    p_actor_user_id: user.id,
+    p_actor_email: user.email ?? null,
+  })
+  return error
+    ? { data: null, error: error.message }
+    : { data: (data ?? {}) as Record<string, unknown>, error: null }
+}
+
+function chunks<T>(values: T[], size: number) {
+  return Array.from({ length: Math.ceil(values.length / size) }, (_, index) =>
+    values.slice(index * size, (index + 1) * size),
+  )
+}
+
+function exportReview(
+  row: Record<string, unknown> | undefined,
+  draft: boolean,
+): LiteratureGoldExportReview | null {
+  if (!row) return null
+  return {
+    id: draft ? null : text(row.id),
+    revision: draft ? null : Number(row.revision) || null,
+    relevanceLabel: text(row.relevance_label),
+    metadataSufficiency: text(row.metadata_sufficiency),
+    reviewerConfidence: text(row.reviewer_confidence),
+    topicIds: textArray(row.topic_ids),
+    technologyTags: textArray(row.technology_tags),
+    clinicalPurposes: textArray(row.clinical_purposes),
+    diseaseTags: textArray(row.disease_tags),
+    studyDesign: text(row.study_design),
+    publicationStatus: text(row.publication_status),
+    categorizationFromFullText: row.categorization_from_full_text === true,
+    notes: text(row.notes) ?? '',
+    usedSupplementalMetadata: row.used_supplemental_metadata === true,
+    reviewSeconds: Number(row.review_seconds) || 0,
+    isBlinded: draft ? null : row.is_blinded === true,
+    reviewerEmail: text(row.reviewer_email),
+    completedAt: draft ? null : text(row.completed_at),
+  }
+}
+
+export async function exportLiteratureGoldSet(
+  batchId: string,
+  split: 'development' | 'test' | 'all',
+  includeHistory: boolean,
+  clientOverride?: SupabaseClient,
+): Promise<LiteratureServerResult<LiteratureGoldExport>> {
+  const client = clientOverride ?? createLiteratureAdmin()
+  if (!client) return { data: null, error: 'The literature database is not configured.' }
+
+  const { data: batchData, error: batchError } = await client
+    .from('literature_gold_set_batches')
+    .select(
+      'id,name,kind,status,taxonomy_version,label_schema_version,relevance_definition_version,sampling_algorithm_version,sampling_seed,requested_size,frozen_at',
+    )
+    .eq('id', batchId)
+    .maybeSingle()
+  if (batchError) return { data: null, error: batchError.message }
+  if (!batchData) return { data: null, error: 'Gold-set batch not found.' }
+
+  const itemRows: Array<Record<string, unknown>> = []
+  for (let start = 0; ; start += 1000) {
+    let query = client
+      .from('literature_gold_set_items')
+      .select(
+        'id,pmid,sample_stratum,sampling_reason,dataset_split,display_order,review_status,current_review_id',
+      )
+      .eq('batch_id', batchId)
+    if (split !== 'all') query = query.eq('dataset_split', split)
+    const { data, error } = await query
+      .order('display_order', { ascending: true })
+      .range(start, start + 999)
+    if (error) return { data: null, error: error.message }
+    itemRows.push(...((data ?? []) as Array<Record<string, unknown>>))
+    if ((data?.length ?? 0) < 1000) break
+  }
+
+  const pmids = itemRows.map((row) => String(row.pmid))
+  const itemIds = itemRows.map((row) => String(row.id))
+  const currentReviewIds = itemRows
+    .map((row) => text(row.current_review_id))
+    .filter((id): id is string => Boolean(id))
+  const articleRows: Array<Record<string, unknown>> = []
+  const draftRows: Array<Record<string, unknown>> = []
+  const reviewRows: Array<Record<string, unknown>> = []
+  const historyRows: Array<Record<string, unknown>> = []
+
+  for (const pmidChunk of chunks(pmids, 200)) {
+    const { data, error } = await client
+      .from('literature_articles')
+      .select(
+        'pmid,title,abstract,authors,journal_title,journal_abbreviation,publication_year,publication_types',
+      )
+      .in('pmid', pmidChunk)
+    if (error) return { data: null, error: error.message }
+    articleRows.push(...((data ?? []) as Array<Record<string, unknown>>))
+  }
+  for (const itemChunk of chunks(itemIds, 200)) {
+    const { data, error } = await client
+      .from('literature_gold_set_review_drafts')
+      .select('*')
+      .in('item_id', itemChunk)
+    if (error) return { data: null, error: error.message }
+    draftRows.push(...((data ?? []) as Array<Record<string, unknown>>))
+    if (includeHistory) {
+      for (let start = 0; ; start += 1000) {
+        const { data: history, error: historyError } = await client
+          .from('literature_gold_set_reviews')
+          .select('*')
+          .in('item_id', itemChunk)
+          .order('item_id', { ascending: true })
+          .order('revision', { ascending: true })
+          .range(start, start + 999)
+        if (historyError) return { data: null, error: historyError.message }
+        historyRows.push(...((history ?? []) as Array<Record<string, unknown>>))
+        if ((history?.length ?? 0) < 1000) break
+      }
+    }
+  }
+  for (const reviewChunk of chunks(currentReviewIds, 200)) {
+    const { data, error } = await client
+      .from('literature_gold_set_reviews')
+      .select('*')
+      .in('id', reviewChunk)
+    if (error) return { data: null, error: error.message }
+    reviewRows.push(...((data ?? []) as Array<Record<string, unknown>>))
+  }
+
+  const articleByPmid = new Map(articleRows.map((row) => [String(row.pmid), row]))
+  const draftByItem = new Map(draftRows.map((row) => [String(row.item_id), row]))
+  const reviewById = new Map(reviewRows.map((row) => [String(row.id), row]))
+  const historyByItem = new Map<string, LiteratureGoldExportReview[]>()
+  for (const row of historyRows) {
+    const review = exportReview(row, false)
+    if (!review) continue
+    const key = String(row.item_id)
+    historyByItem.set(key, [...(historyByItem.get(key) ?? []), review])
+  }
+
+  const batch = batchData as Record<string, unknown>
+  return {
+    data: {
+      exportVersion: '1.0.0',
+      exportedAt: new Date().toISOString(),
+      batch: {
+        id: String(batch.id),
+        name: String(batch.name),
+        kind: String(batch.kind),
+        status: String(batch.status),
+        taxonomyVersion: String(batch.taxonomy_version),
+        labelSchemaVersion: String(batch.label_schema_version),
+        relevanceDefinitionVersion: String(batch.relevance_definition_version),
+        samplingAlgorithmVersion: String(batch.sampling_algorithm_version),
+        samplingSeed: Number(batch.sampling_seed),
+        requestedSize: Number(batch.requested_size),
+        frozenAt: text(batch.frozen_at),
+      },
+      split,
+      includesHistory: includeHistory,
+      records: itemRows.map((item) => {
+        const itemId = String(item.id)
+        const pmid = String(item.pmid)
+        const article = articleByPmid.get(pmid) ?? {}
+        const current = reviewById.get(String(item.current_review_id))
+        const draft = draftByItem.get(itemId)
+        const samplingContext = literatureGoldExportSamplingContext(
+          Boolean(current),
+          String(item.sample_stratum),
+          String(item.sampling_reason),
+        )
+        return {
+          itemId,
+          pmid,
+          title: String(article.title ?? ''),
+          abstract: text(article.abstract),
+          authors: article.authors ?? [],
+          journalTitle: text(article.journal_title),
+          journalAbbreviation: text(article.journal_abbreviation),
+          publicationYear:
+            typeof article.publication_year === 'number' ? article.publication_year : null,
+          publicationTypes: textArray(article.publication_types),
+          ...samplingContext,
+          datasetSplit: String(item.dataset_split),
+          displayOrder: Number(item.display_order),
+          reviewStatus: String(item.review_status),
+          reviewSource: current
+            ? ('completed' as const)
+            : draft
+              ? ('draft' as const)
+              : ('empty' as const),
+          review: current ? exportReview(current, false) : exportReview(draft, true),
+          ...(includeHistory ? { reviewHistory: historyByItem.get(itemId) ?? [] } : {}),
+        }
+      }),
+    },
+    error: null,
+  }
+}

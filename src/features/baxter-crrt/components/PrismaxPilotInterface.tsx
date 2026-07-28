@@ -67,12 +67,11 @@ interface PrismaxPilotInterfaceProps {
   state: PrismaxPilotInterfaceState
   dispatch: Dispatch<PrismaxPilotInterfaceAction>
   controlsEnabled?: boolean
-  controlLockReason?: 'plan' | 'debrief'
+  controlsUnavailableReason?: 'debrief'
   consoleControls?: CrrtConsoleControlsModel
   operationsDisplay?: PrismaxPilotOperationsDisplay
   caseContext?: PrismaxPilotCaseContext
   onPerformCaseAction?: (interventionId: string) => void
-  onRequestClinicalPlan?: () => void
   onReset?: () => void
 }
 
@@ -117,7 +116,7 @@ function formatStepLabel(stepId: PrismaxSetupStepId) {
 }
 
 function caseIdentifier(caseContext: PrismaxPilotCaseContext): string {
-  return caseContext.identityMasked ? 'Masked case' : caseContext.caseId
+  return caseContext.identityMasked ? 'Masked case' : 'Selected clinical case'
 }
 
 function caseTitle(caseContext: PrismaxPilotCaseContext): string {
@@ -736,7 +735,7 @@ function OperationsScreen({
         </div>
         <p>
           {operations.activeAlarmCodes.length > 0
-            ? 'A generic training alert is shown. Assess the patient and circuit, identify the cause, and verify correction; acknowledgement alone does not resolve the problem.'
+            ? 'A generic training alert is shown. Review the patient and circuit, identify the cause, and verify resolution; acknowledgement alone does not resolve the problem.'
             : 'This exercise does not reproduce exact alarm names, priorities, thresholds, pump or clamp reactions, or correction steps. Follow current device instructions and local policy.'}
         </p>
         <p className={styles.alarmPriority}>
@@ -828,7 +827,7 @@ function PrismaxHardwareOrientation({ state }: { state: PrismaxPilotInterfaceSta
         : state.screen === 'operations'
           ? 'Operations paused'
           : state.screen === 'setup'
-            ? `Setup · ${state.completedStepIds.length} of 8 checks`
+            ? 'Setup checks underway'
             : 'Ready for new attempt'
 
   return (
@@ -874,7 +873,7 @@ function PrismaxHardwareOrientation({ state }: { state: PrismaxPilotInterfaceSta
         <div>
           <h4>{selectedHotspot.label}</h4>
           <p>{selectedHotspot.description}</p>
-          <small>Manual-reference orientation · {selectedHotspot.sourceRecordIds.join(', ')}</small>
+          <small>PrisMax Operator&apos;s Manual · cited hardware-orientation section</small>
         </div>
       </div>
 
@@ -903,12 +902,11 @@ export function PrismaxPilotInterface({
   state,
   dispatch,
   controlsEnabled = true,
-  controlLockReason = controlsEnabled ? undefined : 'plan',
+  controlsUnavailableReason,
   consoleControls,
   operationsDisplay,
   caseContext,
   onPerformCaseAction,
-  onRequestClinicalPlan,
   onReset,
 }: PrismaxPilotInterfaceProps) {
   const view = selectPrismaxPilotInterface(state)
@@ -917,24 +915,15 @@ export function PrismaxPilotInterface({
   return (
     <div className={styles.interfaceFrame}>
       {!controlsEnabled ? (
-        <div className={styles.predictionLock} role="status">
+        <div className={styles.unavailableNotice} role="status">
           <LockKeyhole aria-hidden="true" />
           <div>
             <span>
-              <strong>
-                {controlLockReason === 'debrief'
-                  ? 'This case attempt is complete'
-                  : 'Complete the clinical plan to unlock controls'}
-              </strong>
-              {controlLockReason === 'debrief'
+              <strong>This run is read-only</strong>
+              {controlsUnavailableReason === 'debrief'
                 ? 'Start a clean attempt to make additional treatment or machine changes.'
-                : 'Return to the Case tab and submit the goal, mechanism, planned control, expected response, and reassessment plan.'}
+                : 'Start a clean attempt to use the educational device controls.'}
             </span>
-            {controlLockReason === 'plan' && onRequestClinicalPlan ? (
-              <button type="button" onClick={onRequestClinicalPlan}>
-                Complete clinical plan <ArrowRight aria-hidden="true" />
-              </button>
-            ) : null}
           </div>
         </div>
       ) : null}
@@ -944,7 +933,9 @@ export function PrismaxPilotInterface({
 
         <fieldset className={styles.controlFieldset} disabled={!controlsEnabled}>
           <legend className={styles.visuallyHidden}>
-            {controlsEnabled ? 'Educational device controls' : 'Locked educational device controls'}
+            {controlsEnabled
+              ? 'Educational device controls'
+              : 'Educational device controls unavailable'}
           </legend>
           <section
             className={styles.consoleShell}

@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import { setRequestLocale } from 'next-intl/server'
 
+import { criticalCareActivities } from '@/features/critical-care/content/activities'
+
 jest.mock('@/features/baxter-crrt/components/BaxterCrrtHub', () => ({
   BaxterCrrtHub: ({ locale }: { locale: string }) => <div data-testid="crrt-hub">{locale}</div>,
 }))
@@ -46,10 +48,10 @@ describe('Baxter CRRT routes', () => {
         noarchive: true,
       })
     }
-    expect((await hubMetadata({ params })).title).toMatch(/Baxter CRRT/i)
+    expect((await hubMetadata({ params })).title).toMatch(/CRRT · PrisMax console lab/i)
     expect((await learnMetadata({ params })).title).toMatch(/^Learn ·/)
     expect((await practiceMetadata({ params })).title).toMatch(/^Practice ·/)
-    expect((await assessMetadata({ params })).title).toMatch(/^Assess ·/)
+    expect((await assessMetadata({ params })).title).toMatch(/^Challenge ·/)
   })
 
   it.each(['en', 'es', 'zh-CN'])('renders the hub with the %s locale', async (locale) => {
@@ -82,5 +84,34 @@ describe('Baxter CRRT routes', () => {
   it('mounts the Assess client component', async () => {
     render(await BaxterCrrtAssessPage({ params: Promise.resolve({ locale: 'en' }) }))
     expect(screen.getByTestId('crrt-assess')).toHaveTextContent('en')
+  })
+
+  it('maps every CRRT catalog query to the exact runtime selector', async () => {
+    const activities = criticalCareActivities.filter(
+      (activity) => activity.moduleId === 'baxter-crrt',
+    )
+    for (const activity of activities) {
+      const section = activity.id.split(':')[1]
+      const sourceId = activity.id.split(':').slice(2).join(':')
+      if (section === 'assess') {
+        expect(activity.query).toBeUndefined()
+        continue
+      }
+      const result = render(
+        section === 'learn'
+          ? await BaxterCrrtLearnPage({
+              params: Promise.resolve({ locale: 'en' }),
+              searchParams: Promise.resolve(activity.query ?? {}),
+            })
+          : await BaxterCrrtPracticePage({
+              params: Promise.resolve({ locale: 'en' }),
+              searchParams: Promise.resolve(activity.query ?? {}),
+            }),
+      )
+      expect(
+        screen.getByTestId(section === 'learn' ? 'crrt-learn' : 'crrt-practice'),
+      ).toHaveAttribute('data-initial', sourceId)
+      result.unmount()
+    }
   })
 })

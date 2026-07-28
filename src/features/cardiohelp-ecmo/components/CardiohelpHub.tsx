@@ -3,12 +3,9 @@
 import { useEffect, useState } from 'react'
 import {
   ArrowRight,
-  BadgeCheck,
   BookOpenCheck,
   GraduationCap,
   HeartPulse,
-  Lock,
-  LockOpen,
   SlidersHorizontal,
   Wind,
 } from 'lucide-react'
@@ -19,10 +16,7 @@ import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 import { cardiohelpDeviceProfile, cardiohelpEcmoPublicationStatus } from '../content/deviceProfile'
 import {
   cardiohelpCurriculum,
-  hasTrackMastery,
-  isTrackCapstoneUnlocked,
   nextRecommendedActivity,
-  remainingCapstonePrerequisites,
   type RecommendedActivity,
 } from '../content/curriculum'
 import { cardiohelpLearnLessonByScenarioId } from '../content/learnLessons'
@@ -62,7 +56,7 @@ function activityLink(activity: RecommendedActivity, supportMode: SupportMode): 
   return {
     pathname: `${cardiohelpEcmoNavBase}/assess`,
     query: { track: supportMode },
-    label: `${supportMode.toUpperCase()} capstone assessment`,
+    label: `${supportMode.toUpperCase()} challenge`,
   }
 }
 
@@ -73,7 +67,7 @@ function continueLink(progress: ProgressV2, track: SupportMode): ActivityLink | 
       return {
         pathname: `${cardiohelpEcmoNavBase}/assess`,
         query: { track: lastVisited.supportMode },
-        label: `${lastVisited.supportMode.toUpperCase()} capstone assessment`,
+        label: `${lastVisited.supportMode.toUpperCase()} challenge`,
       }
     }
     const kind = lastVisited.section === 'learn' ? 'lesson' : 'case'
@@ -101,9 +95,6 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
   const completedLessons = new Set(progress.completedLearnLessonIds)
   const completedCases = new Set(progress.completedLabs)
   const units = cardiohelpCurriculum[track]
-  const capstoneUnlocked = isTrackCapstoneUnlocked(progress, track)
-  const trackMastered = hasTrackMastery(progress, track)
-  const remainingPrerequisites = remainingCapstonePrerequisites(progress, track)
   const resume = continueLink(progress, track)
   const recommended = nextRecommendedActivity(progress, track)
   const started =
@@ -115,11 +106,11 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
     <CardiohelpModuleFrame locale={locale} activeHref={cardiohelpEcmoNavBase}>
       <div data-hydrated={hydrated}>
         <header className={styles.hubHero}>
-          <h1>CARDIOHELP-i Console & Troubleshooting Lab</h1>
+          <h1>ECMO Management</h1>
           <p>
-            A curriculum of paired lessons and clinical cases for adult VV and peripheral VA ECMO on
-            the CARDIOHELP-i: learn each reasoning sequence step by step, apply it to an evolving
-            scored case, then prove it in an unseen capstone.
+            The CARDIOHELP console lab pairs lessons and clinical cases for adult VV and peripheral
+            VA ECMO: learn each reasoning sequence step by step, apply it to an evolving case, then
+            try a harder challenge with less help.
           </p>
           {resume && started ? (
             <Link
@@ -155,8 +146,8 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
                 <GraduationCap aria-hidden="true" />
                 <strong>Learn</strong>
                 <p>
-                  Guided, unscored walkthroughs on the simulated console: where to look, what to do,
-                  and why. Ten lessons per track.
+                  Guided walkthroughs on the simulated console: where to look, what to do, and why.
+                  Ten lessons per track.
                 </p>
               </Link>
             </li>
@@ -166,7 +157,7 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
                 <SlidersHorizontal aria-hidden="true" />
                 <strong>Practice</strong>
                 <p>
-                  Scored clinical cases that apply each lesson: commit a plan, treat the patient and
+                  Clinical cases that apply each lesson: commit a plan, treat the patient and
                   circuit, reassess, and debrief. Seven cases per track.
                 </p>
               </Link>
@@ -174,11 +165,11 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
             <li>
               <Link href={`${cardiohelpEcmoNavBase}/assess`}>
                 <span aria-hidden="true">3</span>
-                <BadgeCheck aria-hidden="true" />
-                <strong>Assess</strong>
+                <BookOpenCheck aria-hidden="true" />
+                <strong>Challenge</strong>
                 <p>
-                  An unseen capstone scenario per track, unlocked by completing every lesson.
-                  Mastery: ≥80% with no critical safety error.
+                  A harder case per track, open from the start. Work uninterrupted, then use the
+                  causal debrief.
                 </p>
               </Link>
             </li>
@@ -233,32 +224,8 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
 
         <section className={styles.hubCurriculum} aria-labelledby="hub-curriculum-heading">
           <div className={styles.hubCurriculumHeading}>
-            <h2 id="hub-curriculum-heading">
-              {track.toUpperCase()} curriculum
-              {trackMastered ? (
-                <em className={styles.hubMasteryBadge}>
-                  <BadgeCheck aria-hidden="true" /> Mastery recorded
-                </em>
-              ) : null}
-            </h2>
-            <span>
-              {units
-                .filter((unit) => !unit.capstoneScenarioId)
-                .reduce(
-                  (count, unit) =>
-                    count + unit.lessonScenarioIds.filter((id) => completedLessons.has(id)).length,
-                  0,
-                )}
-              /10 lessons ·{' '}
-              {units
-                .filter((unit) => !unit.capstoneScenarioId)
-                .reduce(
-                  (count, unit) =>
-                    count + unit.caseScenarioIds.filter((id) => completedCases.has(id)).length,
-                  0,
-                )}
-              /7 cases
-            </span>
+            <h2 id="hub-curriculum-heading">{track.toUpperCase()} curriculum</h2>
+            <span>Open in any order · personal history stays local</span>
           </div>
           <ol className={styles.hubUnitList}>
             {units.map((unit, index) => {
@@ -271,39 +238,22 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
                         <h3>{unit.title}</h3>
                         <p>{unit.summary}</p>
                       </div>
-                      {capstoneUnlocked ? (
-                        <LockOpen aria-hidden="true" />
-                      ) : (
-                        <Lock aria-hidden="true" />
-                      )}
+                      <BookOpenCheck aria-hidden="true" />
                     </div>
-                    {capstoneUnlocked ? (
-                      <Link
-                        className={styles.hubChip}
-                        data-kind="capstone"
-                        href={{
-                          pathname: `${cardiohelpEcmoNavBase}/assess`,
-                          query: { track },
-                        }}
-                      >
-                        <BadgeCheck aria-hidden="true" /> Start the {track.toUpperCase()} capstone
-                        {completedCases.has(unit.capstoneScenarioId) ? ' · completed' : ''}
-                      </Link>
-                    ) : (
-                      <p className={styles.hubCapstoneLocked}>
-                        Locked · complete {remainingPrerequisites.length} more{' '}
-                        {remainingPrerequisites.length === 1 ? 'lesson' : 'lessons'} to unlock.
-                      </p>
-                    )}
+                    <Link
+                      className={styles.hubChip}
+                      data-kind="capstone"
+                      href={{
+                        pathname: `${cardiohelpEcmoNavBase}/assess`,
+                        query: { track },
+                      }}
+                    >
+                      <ArrowRight aria-hidden="true" /> Open the {track.toUpperCase()} challenge
+                      {completedCases.has(unit.capstoneScenarioId) ? ' · worked through' : ''}
+                    </Link>
                   </li>
                 )
               }
-              const unitLessonComplete = unit.lessonScenarioIds.filter((id) =>
-                completedLessons.has(id),
-              ).length
-              const unitCaseComplete = unit.caseScenarioIds.filter((id) =>
-                completedCases.has(id),
-              ).length
               return (
                 <li key={unit.id} className={styles.hubUnitCard}>
                   <div className={styles.hubUnitHeading}>
@@ -312,13 +262,7 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
                       <h3>{unit.title}</h3>
                       <p>{unit.summary}</p>
                     </div>
-                    <small className={styles.hubUnitCount}>
-                      {unitLessonComplete}/{unit.lessonScenarioIds.length}{' '}
-                      {unit.lessonScenarioIds.length === 1 ? 'lesson' : 'lessons'}
-                      {unit.caseScenarioIds.length
-                        ? ` · ${unitCaseComplete}/${unit.caseScenarioIds.length} ${unit.caseScenarioIds.length === 1 ? 'case' : 'cases'}`
-                        : ''}
-                    </small>
+                    <small className={styles.hubUnitCount}>Choose what is useful now</small>
                   </div>
                   <div className={styles.hubChipRow}>
                     {unit.lessonScenarioIds.map((lessonId) => {
@@ -348,7 +292,6 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
                     {unit.caseScenarioIds.map((caseId) => {
                       const clinicalCase = clinicalPracticeScenarioById.get(caseId)
                       const complete = completedCases.has(caseId)
-                      const bestScore = progress.bestScores[caseId]
                       const isRecommended =
                         recommended?.kind === 'case' && recommended.scenarioId === caseId
                       return (
@@ -366,7 +309,6 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
                           <BookOpenCheck aria-hidden="true" />
                           {clinicalCase?.title ?? caseId}
                           {complete ? ' ✓' : ''}
-                          {bestScore !== undefined ? <em>best {bestScore}</em> : null}
                           {isRecommended ? <em>Up next</em> : null}
                         </Link>
                       )
@@ -378,7 +320,7 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
           </ol>
         </section>
 
-        <section className={styles.profileStrip} aria-label="Locked device profile">
+        <section className={styles.profileStrip} aria-label="Fixed device profile">
           <span>
             <strong>Profile</strong> {cardiohelpDeviceProfile.displayName}
           </span>

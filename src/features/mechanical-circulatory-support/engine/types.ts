@@ -1,3 +1,5 @@
+import type { CriticalCareCurriculumStage } from '@/features/learning-module/activity/types'
+
 import type {
   CirculationCompartmentState,
   CirculationParameters,
@@ -204,6 +206,8 @@ export interface McsLessonDefinition {
   id: string
   version: string
   device: McsDeviceKind | 'shared'
+  /** Teaching-arc position, mirroring the activity catalog's `curriculumStage`. */
+  curriculumStage: CriticalCareCurriculumStage
   title: string
   summary: string
   objectives: readonly string[]

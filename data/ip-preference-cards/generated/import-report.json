@@ -1,0 +1,82 @@
+{
+  "format_version": 1,
+  "source_file": "Preference_card_module/IP_Procedure_Equipment_Catalog_v0_5_with_GUDID_Verification_Backlog.xlsx",
+  "workbook_sha256": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+  "header_row": 4,
+  "data_start_row": 5,
+  "counts": {
+    "Products": 1221,
+    "Product_Roles": 1268,
+    "Procedures": 13,
+    "Procedure_Slots": 174,
+    "Slot_Product_Options": 2080,
+    "Roles": 98,
+    "Compatibility": 179,
+    "Manufacturers": 28,
+    "Sources": 46,
+    "Product_Sources": 1366,
+    "Hospital_Formulary": 1221,
+    "Modifier_Catalog": 30,
+    "Product_Verification_Backlog": 1221
+  },
+  "count_warnings": [],
+  "duplicate_ids": {},
+  "foreign_key_errors": [],
+  "vocabulary_warnings": [],
+  "gtin": {
+    "non_null": 80,
+    "padded_from_13_digits": 0,
+    "valid_14_digits": 80,
+    "invalid": []
+  },
+  "compatibility_resolution": {
+    "source": {
+      "product": 35,
+      "role": 11,
+      "unresolved": 133
+    },
+    "target": {
+      "product": 0,
+      "role": 28,
+      "unresolved": 151
+    }
+  },
+  "visibility_conflicts": [
+    {
+      "slot_id": "SLOT-1AF4BEFE3B",
+      "product_id": "PRD-0D6E4DB711",
+      "slot_visible_by_default": true,
+      "product_visibility": "hidden"
+    },
+    {
+      "slot_id": "SLOT-B83EBD2FBB",
+      "product_id": "PRD-0D6E4DB711",
+      "slot_visible_by_default": true,
+      "product_visibility": "hidden"
+    }
+  ],
+  "malformed_spec_json": [],
+  "warnings": [],
+  "product_overrides": {
+    "applied": true,
+    "products_changed": 5,
+    "fields_changed": 32,
+    "reasons": [
+      "manufacturer=Olympus, catalog_number=EU-ME2: EU-ME2 and EU-ME3 are both EVIS EUS Endoscopic Ultrasound Centers — the legacy and current generations of one Olympus platform. The workbook filed EU-ME2 under its own model number as the brand family and EU-ME3 under 'EVIS EUS', so the explorer showed them as two unrelated single-product lines instead of one platform with two generations.",
+      "manufacturer=Olympus, catalog_number=EU-ME3: Named only 'Universal Endoscopic Ultrasound Center', which is indistinguishable from the EU-ME2 row once both sit in the EVIS EUS product line. The model number belongs in the product name so the two generations read apart on a card.",
+      "manufacturer=Olympus, catalog_number=BF-H190: Filed under a bare 'Bronchoscopy platform' category with its own model number as the brand family and no dimensions at all, so it sat apart from the other EVIS EXERA III scopes and carried nothing a card could use. Specifications are from the Olympus America product page for the BF-H190; channel size cross-checks against the Olympus Bronchoscope Compatibility Chart.",
+      "manufacturer=Olympus, catalog_number=BF-1TH190: Filed under a bare 'Bronchoscopy platform' category with its own model number as the brand family and no dimensions at all, so it sat apart from the other EVIS EXERA III scopes and carried nothing a card could use. Specifications are from the Olympus America product page for the BF-1TH190; channel size cross-checks against the Olympus Bronchoscope Compatibility Chart.",
+      "manufacturer=Olympus, catalog_number=BF-UC190F: Filed with its own model number as the brand family, so the current-generation convex EBUS scope sat apart from its own series while the BF-UC180F it replaced grouped under EVIS EXERA II. Both are EBUS scopes in the same role; naming them by series lets the two generations read against each other."
+    ],
+    "errors": []
+  },
+  "catalog_additions": {
+    "applied": true,
+    "products_added": 253,
+    "product_roles_added": 298,
+    "product_sources_added": 420,
+    "manufacturers_added": 5,
+    "sources_added": 6,
+    "errors": []
+  }
+}

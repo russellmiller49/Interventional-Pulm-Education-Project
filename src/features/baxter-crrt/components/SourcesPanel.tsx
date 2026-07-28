@@ -55,8 +55,8 @@ export function SourcesPanel() {
           </strong>
           <p>
             Device details come from the referenced PrisMax manual, and clinical concepts come from
-            cited literature and guidance. Simulated values, responses, and scores are not treatment
-            recommendations, verified device limits, local policy, or proof of competency.
+            cited literature and guidance. Simulated values and responses are not treatment
+            recommendations, verified device limits, local policy, or proof of clinical readiness.
           </p>
         </div>
       </div>

@@ -27,6 +27,10 @@ pids
 *.seed
 *.pid.lock
 
+# Literature Explorer local corpus, manifests, and generated reports
+/local-data/literature/
+/IP_PubMed/nbib files/
+
 # FluoroView raw source data and VM transfer bundles
 /fluoro_2/
 *.dcm
@@ -214,6 +218,8 @@ Thumbs.db
 /storybook-static/
 /artifacts/
 /tmp-*.bin
+/test-results/
+/playwright-report/
 
 # Podcast source media. Production playback uses the private Supabase bucket;
 # transcripts and application metadata remain tracked.
@@ -223,6 +229,7 @@ Thumbs.db
 
 # Raw 3D and medical-imaging authoring inputs. Derived learner-facing assets
 # under public/ remain tracked and/or are delivered through MODULE_ASSET_ORIGIN.
+/3D assets/
 /3D assets/Slicer Cardiac_model/
 /3D assets/**/*.glb
 /anatomy_assets/**/*.glb
@@ -232,6 +239,16 @@ Thumbs.db
 /Pleural_effusion_simulation/**/*.h5
 /Pleural_effusion_simulation/**/*.nii
 /Pleural_effusion_simulation/**/*.nrrd
+
+# Private authoring corpus — copyrighted source material, never commit.
+# Keep the implementation plan and its review in version control as project documentation.
+/Critical_Care_Reference/*
+!/Critical_Care_Reference/critical-care-curriculum-plan-v5-IMPLEMENTATION.md
+!/Critical_Care_Reference/PLAN-REVIEW-2026-07-24.md
+/critical_care_references/
+**/Full_textbooks/
+**/Summary files/
+
 /updated_fistual_5_25_26/**/*.glb
 /Imports/**/*.glb
 /Imports/**/*.vtk
@@ -249,3 +266,22 @@ Thumbs.db
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Offline console renders from `npm run render:mv-console` — look-at-it artifacts, not build output.
+/public/mv-console-preview/
+
+# IP preference-card authoring sources. The import pipeline reads these locally; only the
+# distilled JSON under data/ip-preference-cards/generated/ is committed. Kept out of Git
+# because they are third-party copyrighted documents, private institutional material, or
+# far too large for the repo.
+#
+# The AccessGUDID full delimited release is ~5.6 GB.
+Preference_card_module/AccessGUDID_Delimited_Full_Release_*/
+# UCSD institutional protocols and device IFUs — private reference only, never redistributed.
+Preference_card_module/UCSD/
+# Manufacturer catalogs and IFUs cited by source id in generated/sources.json. The citation
+# records the document; the document itself stays out of the repo.
+Preference_card_module/Catalogs and IFU for confirmation/*.pdf
+
+# Excel lock/temp files.
+~$*

@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState, type ChangeEvent } from 'react'
+import { useEffect, useId, useRef, useState, type ChangeEvent } from 'react'
 
 import {
   createSyntheticPressureLocalizationResult,
@@ -162,8 +162,19 @@ function CircuitPlacementDiagram({ idPrefix, fault, site }: CircuitPlacementDiag
   )
 }
 
-export function CrrtPressureLocalizationLab() {
+export interface CrrtPressureLocalizationLabProps {
+  readonly onPhaseChange?: (phase: 'predict' | 'act' | 'observe' | 'explain') => void
+  readonly onPredictionCommitted?: () => void
+  readonly onCompletionEvidence?: () => void
+}
+
+export function CrrtPressureLocalizationLab({
+  onPhaseChange,
+  onPredictionCommitted,
+  onCompletionEvidence,
+}: CrrtPressureLocalizationLabProps = {}) {
   const idPrefix = `crrt-pressure-lab-${useId().replaceAll(':', '')}`
+  const completionReported = useRef(false)
   const [fault, setFault] = useState<PressureLocalizationFault>('obstruction')
   const [site, setSite] = useState<PressureLocalizationSite>('access-catheter')
   const [prediction, setPrediction] = useState<DraftPrediction>(emptyPrediction)
@@ -175,6 +186,7 @@ export function CrrtPressureLocalizationLab() {
   const predictionComplete = hasCompletePrediction(prediction)
 
   function clearCommit(nextPrediction: DraftPrediction = emptyPrediction()) {
+    completionReported.current = false
     setPrediction(nextPrediction)
     setCommittedPrediction(null)
     setRevealed(false)
@@ -209,12 +221,28 @@ export function CrrtPressureLocalizationLab() {
     if (!hasCompletePrediction(prediction)) return
     setCommittedPrediction({ ...prediction })
     setRevealed(false)
+    onPredictionCommitted?.()
+    onPhaseChange?.('act')
+  }
+
+  function revealResult() {
+    setRevealed(true)
+    onPhaseChange?.('observe')
   }
 
   function revisePrediction() {
+    completionReported.current = false
     setCommittedPrediction(null)
     setRevealed(false)
   }
+
+  useEffect(() => {
+    if (!revealed || committedPrediction === null) return
+    onPhaseChange?.('explain')
+    if (completionReported.current) return
+    completionReported.current = true
+    onCompletionEvidence?.()
+  }, [committedPrediction, onCompletionEvidence, onPhaseChange, revealed])
 
   return (
     <section
@@ -226,7 +254,7 @@ export function CrrtPressureLocalizationLab() {
       data-scoring="tool-specific"
       data-progress-write="learner-mode-only"
       data-persistence="learner-mode-only"
-      data-competency="none"
+      onFocusCapture={() => onPhaseChange?.('predict')}
     >
       <header className={styles.header}>
         <div>
@@ -244,13 +272,13 @@ export function CrrtPressureLocalizationLab() {
         </p>
       </div>
 
-      <aside className={styles.sourceNote} aria-label="Lab scope">
+      <div className={styles.sourceNote} aria-label="Lab scope" role="note">
         <strong>Scope of this lab</strong>
         <small>
           The exercise uses manufacturer-referenced pressure relationships to teach direction and
           localization. It does not establish a clinical normal or validate a disconnection pattern.
         </small>
-      </aside>
+      </div>
 
       <p className={styles.intro}>
         Choose an obstruction site, predict how each pressure will change, then reveal the pressure
@@ -358,7 +386,7 @@ export function CrrtPressureLocalizationLab() {
         ) : (
           <>
             {!revealed ? (
-              <button type="button" onClick={() => setRevealed(true)}>
+              <button type="button" onClick={revealResult}>
                 Reveal pressure pattern
               </button>
             ) : null}
@@ -378,7 +406,7 @@ export function CrrtPressureLocalizationLab() {
       {committedPrediction !== null && revealed ? (
         <section className={styles.resultPanel} aria-labelledby={`${idPrefix}-result-heading`}>
           <header>
-            <span>Practice result · no score</span>
+            <span>Modeled pressure result</span>
             <h4 id={`${idPrefix}-result-heading`}>
               {result.faultLabel} at {result.siteLabel}
             </h4>

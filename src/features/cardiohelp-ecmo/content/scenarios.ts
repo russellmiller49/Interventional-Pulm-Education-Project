@@ -531,10 +531,9 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
     id: 'vv-off-sweep-capstone',
     family: 'capstone',
     stationId: 'assessment',
-    title: 'Unseen capstone: VV off-sweep trial',
+    title: 'VV off-sweep integration challenge',
     summary: 'Demonstrate the correct separation sequence without reducing circuit blood flow.',
     clinicalPhase: 'weaning',
-    hiddenUntilAssessment: true,
     initialState: {
       device: { pumpMode: 'rpm', rpmSetpoint: 3200 },
       gas: { sweepLpm: 3 },
@@ -1015,11 +1014,10 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
     supportMode: 'va',
     family: 'capstone',
     stationId: 'assessment',
-    title: 'Unseen capstone: VA mixed-circulation mismatch',
+    title: 'VA mixed-circulation integration challenge',
     summary:
       'Integrate circuit, right-arm, lower-body, pulsatility, lung, and perfusion observations without applying a VV off-sweep sequence.',
     clinicalPhase: 'maintenance',
-    hiddenUntilAssessment: true,
     initialState: {
       circuit: { postOxygenatorSaturation: 99 },
       patient: {
@@ -1104,10 +1102,10 @@ export const cardiohelpCapstonePrerequisiteIdsBySupportMode: Readonly<
   Record<SupportMode, readonly string[]>
 > = {
   vv: cardiohelpScenariosBySupportMode.vv
-    .filter((definition) => !definition.hiddenUntilAssessment)
+    .filter((definition) => definition.id !== 'vv-off-sweep-capstone')
     .map((definition) => definition.id),
   va: cardiohelpScenariosBySupportMode.va
-    .filter((definition) => !definition.hiddenUntilAssessment)
+    .filter((definition) => definition.id !== 'va-mixed-circulation-capstone')
     .map((definition) => definition.id),
 }
 
@@ -1146,8 +1144,8 @@ export const cardiohelpStations = [
   },
   {
     id: 'assessment',
-    label: 'Assessment & sources',
-    description: 'Mode-specific unseen capstone, score, and evidence',
+    label: 'Challenge & sources',
+    description: 'Mode-specific integration challenge, causal review, and evidence',
   },
 ] as const
 

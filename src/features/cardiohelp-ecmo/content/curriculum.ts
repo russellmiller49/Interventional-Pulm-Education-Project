@@ -87,9 +87,9 @@ export const cardiohelpCurriculum: Readonly<Record<SupportMode, readonly Curricu
     {
       id: 'vv-7-capstone',
       supportMode: 'vv',
-      title: 'VV capstone assessment',
+      title: 'VV integration challenge',
       summary:
-        'An unseen scored scenario that combines drainage, sweep, and safety reasoning. Unlocks after every VV lesson is complete.',
+        'An open challenge that combines drainage, sweep, and safety reasoning. Prior VV lessons are recommended context.',
       lessonScenarioIds: [],
       caseScenarioIds: [],
       capstoneScenarioId: 'vv-off-sweep-capstone',
@@ -160,9 +160,9 @@ export const cardiohelpCurriculum: Readonly<Record<SupportMode, readonly Curricu
     {
       id: 'va-7-capstone',
       supportMode: 'va',
-      title: 'VA capstone assessment',
+      title: 'VA integration challenge',
       summary:
-        'An unseen scored scenario that combines mixed-circulation and safety reasoning. Unlocks after every VA lesson is complete.',
+        'An open challenge that combines mixed-circulation and safety reasoning. Prior VA lessons are recommended context.',
       lessonScenarioIds: [],
       caseScenarioIds: [],
       capstoneScenarioId: 'va-mixed-circulation-capstone',
@@ -311,6 +311,7 @@ export function nextRecommendedActivity(
 
 export function validateCurriculumRegistry(): string[] {
   const errors: string[] = []
+  const capstoneIds = new Set(['vv-off-sweep-capstone', 'va-mixed-circulation-capstone'])
 
   for (const supportMode of ['vv', 'va'] as const) {
     const units = cardiohelpCurriculum[supportMode]
@@ -335,8 +336,10 @@ export function validateCurriculumRegistry(): string[] {
         if (lesson && lesson.supportMode !== supportMode) {
           errors.push(`${unit.id}: lesson ${scenarioId} belongs to ${lesson.supportMode}`)
         }
-        if (cardiohelpScenarioById.get(scenarioId)?.hiddenUntilAssessment) {
-          errors.push(`${unit.id}: hidden capstone ${scenarioId} cannot be a lesson`)
+        if (capstoneIds.has(scenarioId) && lesson?.curriculumStage !== 'integration') {
+          errors.push(
+            `${unit.id}: capstone ${scenarioId} may only be listed as an integration-stage lesson`,
+          )
         }
       }
       for (const scenarioId of unit.caseScenarioIds) {
@@ -355,8 +358,8 @@ export function validateCurriculumRegistry(): string[] {
         const capstone = cardiohelpScenarioById.get(unit.capstoneScenarioId)
         if (!capstone) {
           errors.push(`${unit.id}: unknown capstone ${unit.capstoneScenarioId}`)
-        } else if (!capstone.hiddenUntilAssessment) {
-          errors.push(`${unit.id}: capstone ${unit.capstoneScenarioId} must be hidden`)
+        } else if (!capstoneIds.has(capstone.id)) {
+          errors.push(`${unit.id}: ${unit.capstoneScenarioId} is not a registered capstone`)
         }
         if (unit.lessonScenarioIds.length || unit.caseScenarioIds.length) {
           errors.push(`${unit.id}: capstone units cannot also list lessons or cases`)

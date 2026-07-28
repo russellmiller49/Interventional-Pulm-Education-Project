@@ -6,6 +6,7 @@ import type {
   InterpretationValue,
   ValidityResult,
 } from './types'
+import { HEMODYNAMIC_CLINICAL_THRESHOLDS } from '../content/clinicalThresholds'
 
 export function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value))
@@ -42,7 +43,10 @@ export function checkPpvValidity(context?: FluidResponsivenessContext): Validity
     reasons.push('Patient is not fully mechanically ventilated.')
   if (!context.regularRhythm) reasons.push('Irregular rhythm changes beat-to-beat pulse pressure.')
   if (!context.noSpontaneousEffort) reasons.push('Spontaneous respiratory effort is present.')
-  if (context.tidalVolumeMlKg < 8)
+  if (
+    context.tidalVolumeMlKg <
+    HEMODYNAMIC_CLINICAL_THRESHOLDS.pulsePressureVariation.traditionalTidalVolumeMlKg
+  )
     reasons.push('Tidal volume is below the traditional validation range.')
   if (!context.closedChest) reasons.push('Open-chest physiology invalidates the usual threshold.')
   if (!context.validArterialWaveform)
@@ -97,6 +101,14 @@ export function calculateDerivedHemodynamics(input: DerivedHemodynamicsInput): D
   const padp = measurements.papDiastolicMmHg
   const bsa = input.bodySurfaceAreaM2
 
+  const cardiacIndexLMinM2 =
+    finitePositive(co) && finitePositive(bsa)
+      ? available(co / bsa, 'L/min/m²', 1)
+      : unavailable(
+          'L/min/m²',
+          staleReason ??
+            'A current positive cardiac output and valid body-surface area are required.',
+        )
   const flowReason = staleReason ?? 'A current positive cardiac output and heart rate are required.'
   const sv = finitePositive(co) && finitePositive(hr) ? (co * 1000) / hr : null
   const strokeVolumeMl = sv === null ? unavailable('mL', flowReason) : available(sv, 'mL', 0)
@@ -182,6 +194,7 @@ export function calculateDerivedHemodynamics(input: DerivedHemodynamicsInput): D
       : available((100 * (ppMax - ppMin)) / meanPulse, '%', 0)
 
   return {
+    cardiacIndexLMinM2,
     strokeVolumeMl,
     strokeVolumeIndexMlM2,
     systemicVascularResistance,

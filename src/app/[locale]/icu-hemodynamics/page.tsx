@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
-import IcuHemodynamicsLab from '@/features/icu-hemodynamics/components/IcuHemodynamicsLab'
+import { IcuHemodynamicsModuleFrameV2 } from '@/features/icu-hemodynamics/components/IcuHemodynamicsModuleFrameV2'
+import { IcuHemodynamicsOverviewV2 } from '@/features/icu-hemodynamics/components/IcuHemodynamicsOverviewV2'
 import { ICU_HEMODYNAMICS_RELEASE_STAGE } from '@/features/icu-hemodynamics/content'
+import { icuHemodynamicsNavBase } from '@/features/learning-module/moduleRoutes'
 
 export const metadata: Metadata = {
   title: 'ICU Hemodynamics Lab — PAC Skills and Shock Cases',
@@ -24,5 +26,9 @@ interface PageProps {
 export default async function IcuHemodynamicsPage({ params }: PageProps) {
   const { locale } = await params
   setRequestLocale(locale)
-  return <IcuHemodynamicsLab locale={locale} />
+  return (
+    <IcuHemodynamicsModuleFrameV2 activeHref={icuHemodynamicsNavBase}>
+      <IcuHemodynamicsOverviewV2 />
+    </IcuHemodynamicsModuleFrameV2>
+  )
 }

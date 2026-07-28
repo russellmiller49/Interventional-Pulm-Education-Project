@@ -1,0 +1,11 @@
+TI  - Missing PMID record
+AB  - It must be quarantined.
+
+PMID- not-a-number
+TI  - Invalid PMID record
+
+orphan non-indented text
+PMID- 45678901
+TI  - Valid record after malformed input.
+     Wrapped title continuation.
+ZZZ - Preserved unknown field.

@@ -1,0 +1,51 @@
+PMID- 23456789
+OWN - NLM
+STAT- Publisher
+LR  - 20250307
+DP  - 2025 Winter
+TI  - A deliberately wrapped title about robotic
+      bronchoscopy and cone-beam CT.
+AB  - OBJECTIVE: Preserve section labels.
+      METHODS: Preserve continuation text without dropping content.
+AB  - RESULTS: Repeated abstract fields become readable paragraphs.
+FAU - Chen, Jordan
+FAU - O'Neil, Sam
+AU  - Chen J
+AU  - O'Neil S
+CN  - The Fixture Research Group
+AD  - Division of Pulmonary Medicine, Example University.
+AD  - Department of Radiology, Example University.
+LA  - eng
+LA  - eng
+PT  - Journal Article
+PT  - Congress
+TA  - J Bronchology Interv Pulmonol
+JT  - Journal of Bronchology & Interventional Pulmonology
+JID - 101496866
+IS  - 1944-6586 (Print)
+IS  - 1948-8270 (Electronic)
+MH  - Bronchoscopy
+MH  - Bronchoscopy
+MH  - Solitary Pulmonary Nodule
+OT  - Robotic bronchoscopy
+OT  - cone-beam CT
+LID - doi:10.2000/First [doi]
+AID - https://doi.org/10.2000/SECOND. [doi]
+AID - S1234-5678(25)00001-2 [pii]
+CRDT- 2025/01/03 00:01
+XYZ - Unknown tags must survive.
+SO  - J Bronchology Interv Pulmonol. 2025 Winter;32(1):10-20.
+
+PMID- 34567890
+DP  - 2020
+TI  - A record without an abstract.
+AU  - Singh T
+CN  - Fixture Consortium
+PT  - Retracted Publication
+PT  - Published Erratum
+RIN - Retraction in: Example Journal. 2021.
+CRI - Corrected in: Example Journal. 2021.
+TA  - Unknown Journal
+JT  - Unknown Journal of Fixtures
+JID - 000000000
+LID - 10.3000/year-only [doi]

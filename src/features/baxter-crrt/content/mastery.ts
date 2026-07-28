@@ -3,7 +3,7 @@ import { BAXTER_CRRT_CONTENT_VERSION } from './versions'
 export interface BaxterCrrtMasteryManifest {
   readonly id: 'MASTERY-PRISMAX-01'
   readonly contentVersion: typeof BAXTER_CRRT_CONTENT_VERSION
-  readonly learnerTitleBeforeDebrief: 'Unseen PrisMax capstone'
+  readonly learnerTitleBeforeDebrief: 'Masked PrisMax capstone'
   readonly revealingTitle: null
   readonly deviceId: 'prismax-aw8035-2xx'
   readonly minimumProblemDomains: 2
@@ -31,7 +31,7 @@ export interface BaxterCrrtMasteryManifest {
 export const baxterCrrtMasteryManifest: BaxterCrrtMasteryManifest = Object.freeze({
   id: 'MASTERY-PRISMAX-01',
   contentVersion: BAXTER_CRRT_CONTENT_VERSION,
-  learnerTitleBeforeDebrief: 'Unseen PrisMax capstone',
+  learnerTitleBeforeDebrief: 'Masked PrisMax capstone',
   revealingTitle: null,
   deviceId: 'prismax-aw8035-2xx',
   minimumProblemDomains: 2,

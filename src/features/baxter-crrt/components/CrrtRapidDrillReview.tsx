@@ -34,8 +34,6 @@ export function CrrtRapidDrillReview() {
   const candidatePrediction = drill.predictionOptions.find(
     (option) => option.id === drill.candidateCauseOptionId,
   )
-  const nextStepIndex = state.completedStepIds.length
-
   function selectDrill(value: string) {
     if (!isReviewerRapidDrillId(value)) return
     setDraftPredictionOptionId('')
@@ -64,7 +62,6 @@ export function CrrtRapidDrillReview() {
       data-analytics="allowlisted"
       data-progress-write="learner-mode-only"
       data-persistence="learner-mode-only"
-      data-competency="none"
       data-correction-verification={state.correctionVerified ? 'reviewed' : 'not-reviewed'}
     >
       <header className={styles.header}>
@@ -78,8 +75,8 @@ export function CrrtRapidDrillReview() {
       <div className={styles.boundary} role="note" aria-labelledby={REVIEW_BOUNDARY_ID}>
         <p>
           <strong id={REVIEW_BOUNDARY_ID}>Educational cause-first practice.</strong> These simulated
-          drills teach assessment, inspection, verification, reassessment, and escalation. They do
-          not supply local alarm thresholds, correction procedures, restart rules, or
+          drills teach patient review, inspection, verification, reassessment, and escalation. They
+          do not supply local alarm thresholds, correction procedures, restart rules, or
           blood-disposition instructions. Device instructions, local policy, and clinical judgment
           remain authoritative.
         </p>
@@ -160,7 +157,7 @@ export function CrrtRapidDrillReview() {
             </button>
             {state.acknowledged ? (
               <p className={styles.acknowledgement} role="status">
-                Signal acknowledged. Acknowledgement does not correct the cause or authorize
+                Signal acknowledged. Acknowledgement does not resolve the cause or authorize
                 continuation.
               </p>
             ) : null}
@@ -178,19 +175,19 @@ export function CrrtRapidDrillReview() {
                 </h3>
               </div>
               <strong>
-                {state.completedStepIds.length}/{CRRT_CAUSE_FIRST_STEPS.length} complete
+                {state.completedStepIds.length === 0
+                  ? 'Ready to review'
+                  : state.completedStepIds.length === CRRT_CAUSE_FIRST_STEPS.length
+                    ? 'Sequence worked through'
+                    : 'Continue with the next safety step'}
               </strong>
             </div>
 
             <ol>
-              {CRRT_CAUSE_FIRST_STEPS.map((step, index) => {
-                const completed = index < nextStepIndex
-                const current = index === nextStepIndex
+              {CRRT_CAUSE_FIRST_STEPS.map((step) => {
+                const completed = state.completedStepIds.includes(step.id)
                 return (
-                  <li
-                    key={step.id}
-                    data-step-status={completed ? 'complete' : current ? 'current' : 'locked'}
-                  >
+                  <li key={step.id} data-step-status={completed ? 'complete' : 'available'}>
                     <div>
                       <strong>{step.label}</strong>
                       <p>{step.reviewerBoundary}</p>
@@ -209,10 +206,9 @@ export function CrrtRapidDrillReview() {
                     ) : (
                       <button
                         type="button"
-                        disabled={!current}
-                        onClick={() => dispatch({ type: 'COMPLETE_NEXT_STEP' })}
+                        onClick={() => dispatch({ type: 'REVIEW_STEP', stepId: step.id })}
                       >
-                        {current ? `Complete: ${step.label}` : `Locked: ${step.label}`}
+                        Review: {step.label}
                       </button>
                     )}
                   </li>
@@ -226,7 +222,7 @@ export function CrrtRapidDrillReview() {
       <div className={styles.footer}>
         <p aria-live="polite">
           {state.faultRevealed
-            ? `${state.completedStepIds.length} of ${CRRT_CAUSE_FIRST_STEPS.length} steps complete. Outcome: ${state.outcome}. Correction ${state.correctionVerified ? 'verified' : 'not yet verified'}.`
+            ? `Cause-first sequence worked through. Outcome: ${state.outcome}. Cause resolution ${state.correctionVerified ? 'verified' : 'not yet verified'}.`
             : 'No rapid-drill action has been recorded.'}
         </p>
         <button type="button" onClick={resetPreview}>

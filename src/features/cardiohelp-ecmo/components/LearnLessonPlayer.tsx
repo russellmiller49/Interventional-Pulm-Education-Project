@@ -17,6 +17,10 @@ import {
   Target,
 } from 'lucide-react'
 
+import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
+import type { CriticalCareActivityPhase } from '@/features/learning-module/activity'
+import { PathwayNav, nextPathwaySection } from '@/features/learning-module/curriculum'
+
 import { cardiohelpLearnLessons, cardiohelpLearnLessonByScenarioId } from '../content/learnLessons'
 import {
   cardiohelpCurriculum,
@@ -25,6 +29,7 @@ import {
   pairedCaseIdsForLesson,
   unitIdByLessonScenarioId,
 } from '../content/curriculum'
+import { isEcmoFoundationSectionId } from '../content/foundationLessons'
 import { clinicalPracticeScenarioById } from '../content/clinicalCases'
 import type {
   ConsoleScreen,
@@ -40,13 +45,14 @@ import styles from './cardiohelp-ecmo.module.css'
 interface LearnLessonPlayerProps {
   state: EcmoSimulationState
   lesson: GuidedLessonDefinition
-  completedLessonIds: ReadonlySet<string>
   dispatch: (action: SimulationAction) => void
   onSelectLesson: (scenarioId: string) => void
   onCompleteLesson: (scenarioId: string) => void
   onTryPractice: (scenarioId: string) => void
   onTargetChange: (target: GuidedTarget) => void
   onControlHelpChange: (controlId: GuidedControlId | null) => void
+  onPhaseChange?: (phase: CriticalCareActivityPhase) => void
+  onActiveStepChange?: (step: GuidedWalkthroughStep) => void
 }
 
 const targetLabels: Record<GuidedTarget, string> = {
@@ -58,13 +64,26 @@ const targetLabels: Record<GuidedTarget, string> = {
 }
 
 const phaseLabels = {
-  orient: 'Orient',
-  observe: 'Observe',
-  interpret: 'Interpret',
-  respond: 'Respond',
-  reassess: 'Reassess',
+  orient: 'Recognize',
+  observe: 'Recognize',
+  interpret: 'Predict',
+  respond: 'Act',
+  reassess: 'Observe',
   transfer: 'Transfer',
 } as const
+
+function semanticPhaseForGuidedStep(
+  phase: GuidedWalkthroughStep['phase'],
+  lessonFinished: boolean,
+): CriticalCareActivityPhase {
+  if (lessonFinished) return 'transfer'
+  if (phase === 'orient' || phase === 'observe') return 'recognize'
+  if (phase === 'interpret') return 'predict'
+  if (phase === 'respond') return 'act'
+  if (phase === 'reassess') return 'observe'
+  if (phase === 'transfer') return 'transfer'
+  return 'explain'
+}
 
 const panelControlIds: Record<GuidedTarget, GuidedControlId> = {
   console: 'cardiohelp-console',
@@ -274,13 +293,14 @@ export function resolveGuidedLesson(scenarioId: string): GuidedLessonDefinition 
 export function LearnLessonPlayer({
   state,
   lesson,
-  completedLessonIds,
   dispatch,
   onSelectLesson,
   onCompleteLesson,
   onTryPractice,
   onTargetChange,
   onControlHelpChange,
+  onPhaseChange,
+  onActiveStepChange,
 }: LearnLessonPlayerProps) {
   const [activeStepIndex, setActiveStepIndex] = useState(0)
   const [completedStepIds, setCompletedStepIds] = useState<Set<string>>(() => new Set())
@@ -293,11 +313,24 @@ export function LearnLessonPlayer({
   const simulatorTaskSatisfied = simulatorTask?.satisfied ?? false
   const helpControlId = simulatorTask?.controlId ?? panelControlIds[activeStep.target]
   const helpRequested = helpRequestCount > 0
+  const trackPathway = criticalCareLearningPathway('cardiohelp-ecmo', state.supportMode)
+
+  // Physiology sections are prose on their own route; drill sections stay inside this player.
+  const onSelectSection = (sectionId: string) => {
+    if (isEcmoFoundationSectionId(sectionId)) {
+      window.location.assign(
+        `/cardiohelp-ecmo/learn?lesson=${sectionId}&track=${state.supportMode}`,
+      )
+      return
+    }
+    onSelectLesson(sectionId)
+  }
+
+  // The pathway, not the unit list, defines what comes next: it also contains the physiology
+  // sections, which the unit list does not know about.
+  const nextPathwaySectionForLesson = nextPathwaySection(trackPathway, lesson.scenarioId)
+
   const trackUnits = cardiohelpCurriculum[state.supportMode]
-  const lessonUnits = useMemo(
-    () => trackUnits.filter((unit) => unit.lessonScenarioIds.length > 0),
-    [trackUnits],
-  )
   const modeLessons = useMemo(
     () =>
       orderedLessonScenarioIds(state.supportMode)
@@ -313,23 +346,8 @@ export function LearnLessonPlayer({
   const activeUnitNumber = activeUnit
     ? trackUnits.findIndex((unit) => unit.id === activeUnit.id) + 1
     : null
-  const unitCompletedCount = activeUnit
-    ? activeUnit.lessonScenarioIds.filter((scenarioId) => completedLessonIds.has(scenarioId)).length
-    : 0
-  const nextLessonUnitId = nextLesson
-    ? unitIdByLessonScenarioId.get(nextLesson.scenarioId)
-    : undefined
-  const nextLessonUnit =
-    nextLessonUnitId && nextLessonUnitId !== activeUnitId
-      ? curriculumUnitById.get(nextLessonUnitId)
-      : undefined
-  const nextLessonUnitNumber = nextLessonUnit
-    ? trackUnits.findIndex((unit) => unit.id === nextLessonUnit.id) + 1
-    : null
   const pairedCaseId = pairedCaseIdsForLesson(lesson.scenarioId)[0]
   const pairedCase = pairedCaseId ? clinicalPracticeScenarioById.get(pairedCaseId) : undefined
-  const percentComplete = Math.round((completedStepIds.size / lesson.steps.length) * 100)
-
   const simulatorSnapshot = useMemo(
     () => ({
       time: state.simulationTime,
@@ -351,6 +369,14 @@ export function LearnLessonPlayer({
     onControlHelpChange(null)
     window.requestAnimationFrame(() => activePanelRef.current?.focus({ preventScroll: true }))
   }, [activeStep.id, activeStep.target, onControlHelpChange, onTargetChange])
+
+  useEffect(() => {
+    onPhaseChange?.(semanticPhaseForGuidedStep(activeStep.phase, lessonFinished))
+  }, [activeStep.phase, lessonFinished, onPhaseChange])
+
+  useEffect(() => {
+    onActiveStepChange?.(activeStep)
+  }, [activeStep, onActiveStepChange])
 
   useEffect(
     () => () => {
@@ -410,6 +436,17 @@ export function LearnLessonPlayer({
     if (index > activeStepIndex && !stepPerformed) return
     setHelpRequestCount(0)
     onControlHelpChange(null)
+    const nextStep = lesson.steps[index]
+    if (nextStep.transferScenarioId) {
+      dispatch({
+        type: 'LOAD_SCENARIO',
+        scenarioId: nextStep.transferScenarioId,
+        mode: 'guided',
+      })
+      for (const action of nextStep.transferSetupActions ?? []) dispatch(action)
+    } else if (activeStep.transferScenarioId) {
+      dispatch({ type: 'LOAD_SCENARIO', scenarioId: lesson.scenarioId, mode: 'guided' })
+    }
     setActiveStepIndex(index)
     setLessonFinished(false)
   }
@@ -434,39 +471,19 @@ export function LearnLessonPlayer({
             <span className={styles.kicker}>{state.supportMode.toUpperCase()} Learn pathway</span>
             <h2 id="learn-lessons-heading">Guided lessons</h2>
           </div>
-          <span>
-            {modeLessons.filter((item) => completedLessonIds.has(item.scenarioId)).length}/
-            {modeLessons.length} completed
-          </span>
+          <span>Choose any lesson</span>
         </div>
-        <label>
-          Lesson
-          <select
-            value={lesson.scenarioId}
-            onChange={(event) => onSelectLesson(event.target.value)}
-          >
-            {lessonUnits.map((unit) => {
-              const unitNumber = trackUnits.findIndex((item) => item.id === unit.id) + 1
-              return (
-                <optgroup key={unit.id} label={`Unit ${unitNumber} · ${unit.title}`}>
-                  {unit.lessonScenarioIds.map((scenarioId) => {
-                    const item = cardiohelpLearnLessonByScenarioId.get(scenarioId)
-                    if (!item) return null
-                    const globalIndex = modeLessons.findIndex(
-                      (candidate) => candidate.scenarioId === scenarioId,
-                    )
-                    return (
-                      <option key={item.id} value={item.scenarioId}>
-                        {globalIndex + 1}. {item.title}
-                        {completedLessonIds.has(item.scenarioId) ? ' · completed' : ''}
-                      </option>
-                    )
-                  })}
-                </optgroup>
-              )
-            })}
-          </select>
-        </label>
+        {/*
+         * The ordered rail replaces the previous grouped dropdown. A dropdown hides the shape of
+         * the course: it cannot show that the physiology sections precede the console tour, or
+         * where in the arc the learner currently is.
+         */}
+        <PathwayNav
+          pathway={trackPathway}
+          label={`${state.supportMode.toUpperCase()} learning pathway`}
+          activeSectionId={lesson.scenarioId}
+          onSelect={onSelectSection}
+        />
         <div className={styles.lessonNavActions}>
           <button
             type="button"
@@ -491,7 +508,7 @@ export function LearnLessonPlayer({
           {activeUnit && activeUnitNumber
             ? `Unit ${activeUnitNumber} · ${activeUnit.title} — `
             : ''}
-          Lesson {lessonIndex + 1} of {modeLessons.length} · unscored
+          Guided lesson
         </div>
         <h2>{lesson.title}</h2>
         <ul>
@@ -501,18 +518,7 @@ export function LearnLessonPlayer({
             </li>
           ))}
         </ul>
-        <div className={styles.learnProgress}>
-          <span>Lesson progress</span>
-          <strong>{percentComplete}%</strong>
-          <div
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={percentComplete}
-          >
-            <i style={{ width: `${percentComplete}%` }} />
-          </div>
-        </div>
+        <p className={styles.learnProgress}>Work through the sequence at your own pace.</p>
       </section>
 
       <nav className={styles.guidedStepper} aria-label="Lesson steps">
@@ -553,9 +559,7 @@ export function LearnLessonPlayer({
           aria-atomic="true"
         >
           <div className={styles.guidedStepMeta}>
-            <span>
-              Step {activeStepIndex + 1} of {lesson.steps.length}
-            </span>
+            <span>{phaseLabels[activeStep.phase]} focus</span>
             <span>
               <CircleDot aria-hidden="true" /> Focus: {targetLabels[activeStep.target]}
             </span>
@@ -691,29 +695,25 @@ export function LearnLessonPlayer({
         <section className={styles.guidedCompletion} role="status" aria-live="polite">
           <ListChecks aria-hidden="true" />
           <div>
-            <h3>Lesson complete</h3>
+            <h3>Lesson worked through</h3>
             <p>
               {pairedCase
-                ? 'The reasoning sequence has been demonstrated. Apply it to the paired clinical case in Practice—scored, from a clean state, with no step-by-step cues.'
+                ? 'The reasoning sequence has been demonstrated. Apply it to the paired clinical case in Practice from a clean state with fewer step-by-step cues.'
                 : 'The reasoning sequence has been demonstrated. Continue to the next lesson to keep building the track.'}
             </p>
-            {activeUnit ? (
-              <small>
-                Unit {activeUnitNumber} · {activeUnit.title}: {unitCompletedCount}/
-                {activeUnit.lessonScenarioIds.length} lessons complete
-              </small>
-            ) : null}
+            {activeUnit ? <small>Continue within {activeUnit.title} whenever useful.</small> : null}
             <div>
               {pairedCase ? (
                 <button type="button" onClick={() => onTryPractice(pairedCase.id)}>
                   Apply this in Practice: {pairedCase.title} <ArrowRight aria-hidden="true" />
                 </button>
               ) : null}
-              {nextLesson ? (
-                <button type="button" onClick={() => onSelectLesson(nextLesson.scenarioId)}>
-                  {nextLessonUnit && nextLessonUnitNumber
-                    ? `Next: Unit ${nextLessonUnitNumber} · ${nextLessonUnit.title}`
-                    : 'Continue to next lesson'}
+              {nextPathwaySectionForLesson ? (
+                <button
+                  type="button"
+                  onClick={() => onSelectSection(nextPathwaySectionForLesson.id)}
+                >
+                  Continue to next section: {nextPathwaySectionForLesson.title}
                 </button>
               ) : null}
             </div>

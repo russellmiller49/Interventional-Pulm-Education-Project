@@ -1,4 +1,8 @@
-import { baxterCrrtLearnerCases, type BaxterCrrtLearnLessonId } from './learnerRegistry'
+import {
+  BAXTER_CRRT_LEARN_LESSON_IDS,
+  baxterCrrtLearnerCases,
+  type BaxterCrrtLearnLessonId,
+} from './learnerRegistry'
 import { baxterCrrtReleaseStage, type BaxterCrrtReleaseStage } from './release'
 import { CRRT_ALL_CASE_IDS, type CrrtCaseId, type RuntimeCrrtCase } from './schema'
 import { BAXTER_CRRT_CONTENT_VERSION } from './versions'
@@ -139,7 +143,9 @@ export const baxterCrrtCurriculum: readonly CrrtCurriculumUnit[] = Object.freeze
     title: baxterCrrtStationLabels[6],
     summary:
       'Recognize anticoagulation hazards, manage complications, and reassess readiness to liberate.',
-    lessonIds: Object.freeze(['crrt-anticoagulation']),
+    // The integration lesson is filed with the last station because it closes the course, but it
+    // integrates every station rather than belonging to this one.
+    lessonIds: Object.freeze(['crrt-anticoagulation', 'crrt-pressure-profile-integration']),
     coreCaseIds: Object.freeze(['CRRT-17', 'CRRT-18']),
     additionalCaseIds: Object.freeze([]),
     capstoneId: 'MASTERY-PRISMAX-01',
@@ -203,35 +209,51 @@ export function remainingCrrtCoreCaseIds(
   return baxterCrrtCoreCaseIds.filter((id) => !completed.has(id))
 }
 
-function nextInUnit(
+const unitIdByLessonId = new Map(
+  baxterCrrtCurriculum.flatMap((unit) => unit.lessonIds.map((id) => [id, unit.id] as const)),
+)
+
+function nextCaseInUnit(
   progress: CrrtCurriculumProgressInput,
   unit: CrrtCurriculumUnit,
 ): BaxterCrrtRecommendedActivity | null {
-  const completedLessons = new Set(progress.completedLessonIds)
   const completedCases = completedCaseSet(progress)
-  const lessonId = unit.lessonIds.find((id) => !completedLessons.has(id))
-  if (lessonId) return { kind: 'lesson', id: lessonId, unitId: unit.id }
   const caseId = unit.coreCaseIds.find((id) => !completedCases.has(id))
   return caseId ? { kind: 'case', id: caseId, unitId: unit.id } : null
 }
 
 /**
- * Recommends unfinished work in the last station first, then walks the six-station core path.
- * Optional cases never block the capstone.
+ * The single answer to "what next" for CRRT, used by both the hub and the Learn workbench.
+ *
+ * Lessons come first, in Learn-pathway order (`BAXTER_CRRT_LEARN_LESSON_IDS`); cases then follow
+ * the six-station core path, with unfinished work in the last visited station first. Previously
+ * the hub walked station order while the Learn workbench walked lesson order, so the same learner
+ * at the same moment could be given two different next steps. Optional cases never block the
+ * mastery capstone.
  */
 export function nextRecommendedCrrtActivity(
   progress: CrrtCurriculumProgressInput,
 ): BaxterCrrtRecommendedActivity | null {
+  const completedLessons = new Set(progress.completedLessonIds)
+  const lessonId = BAXTER_CRRT_LEARN_LESSON_IDS.find((id) => !completedLessons.has(id))
+  if (lessonId) {
+    return {
+      kind: 'lesson',
+      id: lessonId,
+      unitId: unitIdByLessonId.get(lessonId) ?? baxterCrrtCurriculum.at(-1)?.id ?? '',
+    }
+  }
+
   const lastStationNumber =
     progress.lastStation && progress.lastStation !== 'orientation'
       ? stationNumberById[progress.lastStation]
       : undefined
   const lastUnit = baxterCrrtCurriculum.find((unit) => unit.station === lastStationNumber)
-  const lastUnitActivity = lastUnit ? nextInUnit(progress, lastUnit) : null
+  const lastUnitActivity = lastUnit ? nextCaseInUnit(progress, lastUnit) : null
   if (lastUnitActivity) return lastUnitActivity
 
   for (const unit of baxterCrrtCurriculum) {
-    const activity = nextInUnit(progress, unit)
+    const activity = nextCaseInUnit(progress, unit)
     if (activity) return activity
   }
 

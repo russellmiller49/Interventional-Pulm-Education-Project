@@ -7,8 +7,6 @@ import {
   Check,
   ClipboardCheck,
   GraduationCap,
-  Lock,
-  LockOpen,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
@@ -18,10 +16,8 @@ import { Link } from '@/i18n/navigation'
 import {
   baxterCrrtCurriculum,
   getBaxterCrrtCaseCatalogEntry,
-  isCrrtCapstoneUnlocked,
   isCrrtCurriculumUnitComplete,
   nextRecommendedCrrtActivity,
-  remainingCrrtCoreCaseIds,
   type BaxterCrrtRecommendedActivity,
 } from '../content/curriculum'
 import { baxterCrrtLearnLessonById } from '../content/learnLessons'
@@ -45,7 +41,7 @@ function activityLink(activity: BaxterCrrtRecommendedActivity) {
   }
   return {
     href: `${baxterCrrtNavBase}/assess`,
-    label: 'Unseen PrisMax capstone',
+    label: 'PrisMax challenge',
   }
 }
 
@@ -65,8 +61,6 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
   const completedCases = new Set(progress.completedPracticeCaseIds.map((id) => id.toUpperCase()))
   const recommendation = nextRecommendedCrrtActivity(progress)
   const resume = recommendation ? activityLink(recommendation) : null
-  const capstoneUnlocked = isCrrtCapstoneUnlocked(progress)
-  const remainingCases = remainingCrrtCoreCaseIds(progress)
   const started =
     progress.completedLessonIds.length > 0 || progress.completedPracticeCaseIds.length > 0
 
@@ -74,11 +68,11 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
     <BaxterCrrtModuleFrame locale={locale} activeHref={baxterCrrtNavBase}>
       <div data-hydrated={hydrated}>
         <header className={styles.hubHero}>
-          <p className={styles.eyebrow}>Learn → Practice → Assess</p>
+          <p className={styles.eyebrow}>Learn → Practice → Challenge</p>
           <h1>High-yield CRRT reasoning on PrisMax</h1>
           <p>
             Build the concepts in seven focused lessons, apply them in a ten-case core path,
-            rehearse five cause-first safety drills, then complete an unseen capstone.
+            rehearse five cause-first safety drills, then try a harder challenge.
           </p>
           {resume ? (
             <Link className={styles.hubContinue} href={resume.href}>
@@ -115,8 +109,8 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
             </Link>
             <Link href={`${baxterCrrtNavBase}/assess`}>
               <GraduationCap aria-hidden="true" />
-              <strong>3 · Assess</strong>
-              <p>Complete the ten core cases to unlock a masked, unassisted capstone.</p>
+              <strong>3 · Challenge</strong>
+              <p>Open a harder PrisMax case from the start and use its causal debrief.</p>
             </Link>
           </div>
         </section>
@@ -128,12 +122,7 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
               <h2 id="crrt-map-heading">Curriculum map</h2>
             </div>
             <span className={styles.completionSummary}>
-              {
-                progress.completedPracticeCaseIds.filter((id) =>
-                  completedCases.has(id.toUpperCase()),
-                ).length
-              }{' '}
-              practice completions saved
+              Open in any order · history stays local
             </span>
           </div>
 
@@ -201,22 +190,14 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
             })}
           </ol>
 
-          <article className={styles.capstoneCard} data-unlocked={capstoneUnlocked}>
-            {capstoneUnlocked ? <LockOpen aria-hidden="true" /> : <Lock aria-hidden="true" />}
+          <article className={styles.capstoneCard} data-available>
+            <GraduationCap aria-hidden="true" />
             <div>
-              <span>Final assessment</span>
-              <h3>Unseen PrisMax capstone</h3>
-              <p>
-                {capstoneUnlocked
-                  ? 'Unlocked. The case identity stays masked until the causal debrief.'
-                  : `Complete ${remainingCases.length} remaining core ${remainingCases.length === 1 ? 'case' : 'cases'} to unlock. Optional cases and drills do not block access.`}
-              </p>
+              <span>Challenge</span>
+              <h3>PrisMax troubleshooting challenge</h3>
+              <p>Open from the start. Teaching feedback is collected for the causal debrief.</p>
             </div>
-            {capstoneUnlocked ? (
-              <Link href={`${baxterCrrtNavBase}/assess`}>Begin assessment</Link>
-            ) : (
-              <span>{remainingCases.join(' · ')}</span>
-            )}
+            <Link href={`${baxterCrrtNavBase}/assess`}>Open challenge</Link>
           </article>
         </section>
 

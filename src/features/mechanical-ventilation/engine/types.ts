@@ -64,6 +64,142 @@ export interface VentilatorControlDescriptor {
   rangeNote?: string
 }
 
+/**
+ * A measurement the monitoring screen can put in a parameter field. Vendors publish these under
+ * different abbreviations and in different orders, so the metric is the stable identity and the
+ * label lives on the device's display profile.
+ */
+export type VentilatorMonitorMetric =
+  | 'peakPressure'
+  | 'plateauPressure'
+  | 'meanAirwayPressure'
+  | 'peep'
+  | 'intrinsicPeep'
+  | 'exhaledTidalVolume'
+  | 'minuteVolume'
+  | 'totalRate'
+  | 'spontaneousRate'
+  | 'ieRatio'
+  | 'oxygenPercent'
+  | 'staticCompliance'
+  | 'spo2'
+
+export interface VentilatorMonitorField {
+  metric: VentilatorMonitorMetric
+  /** The vendor's own abbreviation, e.g. `PIP` on Evita, `PPEAK` on the PB980. */
+  label: string
+  unit: string
+  precision?: number
+}
+
+export type VentilatorWaveformField = 'pawCmH2O' | 'flowLMin' | 'volumeMl'
+
+export interface VentilatorWaveformChannel {
+  field: VentilatorWaveformField
+  label: string
+  unit: string
+  minimum: number
+  maximum: number
+  /** Trace color, where the vendor documents one. Omitted devices draw every trace alike. */
+  color?: string
+}
+
+/**
+ * How a device organizes its settings. The C6 groups them by clinical purpose; the Evita prints a
+ * single therapy bar. `keys` is a precedence list — keys the active mode does not expose are
+ * skipped, and anything unlisted keeps its engine order at the end.
+ */
+export interface VentilatorControlGroup {
+  label: string
+  keys: readonly VentilatorControlKey[]
+}
+
+/**
+ * Where the device puts its monitored numbers relative to the waveforms.
+ * `right-column` — Evita: large values in a column beside the waveform fields.
+ * `right-tiles`  — Hamilton/AVEA: a stack of compact labelled tiles.
+ * `top-banner`   — PB980: a horizontal patient-data banner across the top of the screen.
+ */
+export type VentilatorMonitorLayout = 'left-column' | 'right-column' | 'right-tiles' | 'top-banner'
+
+export type VentilatorBezelAction =
+  | 'manual-breath'
+  | 'inspiratory-hold'
+  | 'expiratory-hold'
+  | 'alarm-reset'
+  | 'alarm-silence'
+  | 'oxygen-enrichment'
+  | 'screen-lock'
+
+export interface VentilatorBezelKey {
+  action: VentilatorBezelAction
+  label: string
+}
+
+/** The vendor's abbreviations for the four pressures the console keeps on the Paw trace. */
+export interface VentilatorPressureLabels {
+  peak: string
+  plateau: string
+  mean: string
+  peep: string
+}
+
+/**
+ * The unit spellings the simulator authors its controls in, before a device profile renames them.
+ * Pressure is deliberately absent — it is a real unit difference (mbar vs cmH₂O) carried by
+ * `pressureUnit`, not a spelling one.
+ */
+export type VentilatorNeutralControlUnit = 'mL' | 'L/min' | '/min' | 's' | 'ms' | '%' | 'mm'
+
+/**
+ * How a vendor spells each unit on its own settings tiles. The quantities are identical across
+ * devices; only the printed abbreviation differs — the C6 prints `ml` and `b/min` where the PB980
+ * prints `mL` and `1/min`. An unlisted unit keeps the simulator's neutral spelling.
+ */
+export type VentilatorControlUnits = Readonly<Partial<Record<VentilatorNeutralControlUnit, string>>>
+
+export interface VentilatorDisplayProfile {
+  /** How this vendor prints airway pressures. Evita uses mbar; the others use cmH₂O. */
+  pressureUnit: string
+  /** How this vendor spells the remaining setting units. See `VentilatorControlUnits`. */
+  controlUnits: VentilatorControlUnits
+  /**
+   * Per-setting exceptions, for a vendor that spells one quantity two ways depending on what is
+   * being measured. The Evita prints its O2 concentration in `Vol%` but its inspiration-termination
+   * criterion in plain `%` — one unit string, two spellings, which `controlUnits` cannot express
+   * because it is keyed by the unit rather than by the setting. Takes precedence over it.
+   */
+  controlUnitOverrides?: Readonly<Partial<Record<VentilatorControlKey, string>>>
+  pressureLabels: VentilatorPressureLabels
+  monitorLayout: VentilatorMonitorLayout
+  /** The vendor's name for the monitored-value region, used as its accessible name. */
+  monitorLabel: string
+  monitorFields: readonly VentilatorMonitorField[]
+  /** A separate strip below the monitored values. The C6 puts SpO2 and its low limit there. */
+  monitorFooter?: readonly VentilatorMonitorField[]
+  waveforms: readonly VentilatorWaveformChannel[]
+  /**
+   * The flow patterns this vendor offers for a volume-controlled breath, in the order it lists
+   * them. Omitted means the simulator's full set, which is the right default for a device whose
+   * manual does not publish one — not a claim that the device offers all four.
+   */
+  flowPatterns?: readonly FlowPattern[]
+  /**
+   * The order this vendor presents its settings in. Empty means no documented order, so the
+   * engine's mode-driven order stands. `controlGroups` additionally labels the groups on screen.
+   */
+  controlOrder: readonly VentilatorControlKey[]
+  controlGroups?: readonly VentilatorControlGroup[]
+  /** PB980 only: the C / A / S breath-phase indicator that opens its patient-data banner. */
+  showBreathPhase: boolean
+  /** Documented off-screen keys rendered on the bezel, in the order the vendor prints them. */
+  bezelKeys: readonly VentilatorBezelKey[]
+  /** How many bezel keys sit to the left of the rotary control. The PB980 straddles its knob. */
+  knobPosition: number
+  /** Sourcing note for everything above; surfaced on the console. */
+  displayNote: string
+}
+
 export interface VentilatorDeviceProfile {
   id: VentilatorDeviceId
   displayName: string
@@ -80,6 +216,7 @@ export interface VentilatorDeviceProfile {
   deferredModes: readonly string[]
   sourceIds: readonly string[]
   controlLabels: Partial<Record<VentilatorControlKey, string>>
+  display: VentilatorDisplayProfile
   educationalUseOnly: true
 }
 
@@ -155,6 +292,13 @@ export interface MechanicalVentilatorState {
   alarmAudioEnabled: boolean
   audioPausedUntil: number | null
   oxygenEnrichmentUntil: number | null
+  /**
+   * A hold that has been asked for but not yet started. The occlusion has to happen at the real
+   * breath boundary the simulation is computing — end-inspiration for an inspiratory hold,
+   * end-expiration for an expiratory one — so the request is parked here and armed by
+   * `advanceSimulation` at the next matching phase transition.
+   */
+  pendingHold: 'inspiratory' | 'expiratory' | null
   holdType: 'inspiratory' | 'expiratory' | null
   holdUntil: number | null
   manualBreathUntil: number | null
@@ -214,9 +358,26 @@ export interface PatientModelState {
 }
 
 export interface VentilatorMeasurements {
+  /**
+   * The pressures the ventilator displays — measured at the airway, so whatever the patient is
+   * doing is in them. A patient pulling against a volume-controlled breath lowers every one of
+   * these without changing the lung at all. The `relaxed*` pair below is the respiratory-system
+   * mechanics themselves, which is what the model reasons about and what a hold in a relaxed
+   * patient would reveal.
+   */
   peakPressureCmH2O: number
   plateauPressureCmH2O: number
   meanAirwayPressureCmH2O: number
+  /** The same two pressures with the patient's own effort taken out. Not displayed. */
+  relaxedPeakPressureCmH2O: number
+  relaxedPlateauPressureCmH2O: number
+  /** Magnitude of inspiratory effort at end-inspiration, read off the trace. Zero when passive. */
+  endInspiratoryEffortCmH2O: number
+  /**
+   * False when the patient was pulling at the moment a plateau would be read. A plateau measured
+   * then is not the respiratory system's elastic pressure and cannot be used as one.
+   */
+  plateauIsInterpretable: boolean
   exhaledVtMl: number
   minuteVentilationLMin: number
   totalRatePerMin: number
@@ -240,6 +401,8 @@ export interface WaveformSample {
   pmusCmH2O: number
   phase: 'inspiration' | 'expiration'
   triggered: boolean
+  /** True when this breath is a spontaneous one rather than a mandatory delivery. */
+  spontaneous: boolean
 }
 
 export interface TrendSample {
@@ -354,6 +517,9 @@ export interface PredictionOption {
 
 export type MetricKey =
   | 'measurements.plateauPressureCmH2O'
+  // Case criteria are about the lung, so they read the relaxed value rather than the number on
+  // the screen — an actively breathing patient can make a dangerous plateau look reassuring.
+  | 'measurements.relaxedPlateauPressureCmH2O'
   | 'measurements.intrinsicPeepCmH2O'
   | 'measurements.expiratoryFlowAtNextBreathLMin'
   | 'measurements.ineffectiveEffortFraction'
@@ -469,6 +635,22 @@ export interface VentilationSimulationState {
   criticalErrors: readonly string[]
   lastResponse: string | null
   lastAbgAt: number | null
+  /**
+   * Teaching-only multipliers on this patient's mechanics, so a Learn section can change the lung
+   * and let the learner watch the consequence on the real console rather than on a drawing.
+   *
+   * Multipliers rather than absolute values because the point is always "compared with *this*
+   * patient", and because a case's own mechanics keep meaning something. `deriveEffectivePatient`
+   * applies them last, after every intervention effect — it rebuilds mechanics from the case
+   * definition on every sample, so anything set directly on `patient` is gone by the next one.
+   */
+  teachingMechanics: TeachingMechanicsOverride
+}
+
+/** Both default to 1, which is the case exactly as authored. */
+export interface TeachingMechanicsOverride {
+  complianceScale: number
+  resistanceScale: number
 }
 
 export interface CaseOutcome {
@@ -549,6 +731,8 @@ export type VentilationAction =
   | { type: 'OXYGEN_ENRICHMENT' }
   | { type: 'MANUAL_BREATH' }
   | { type: 'PERFORM_HOLD'; hold: 'inspiratory' | 'expiratory' }
+  /** Learn-only: scale this patient's mechanics so the console shows the consequence. */
+  | { type: 'SET_TEACHING_MECHANICS'; overrides: Partial<TeachingMechanicsOverride> }
   | {
       type: 'COMMIT_PREDICTION'
       mechanismId: string

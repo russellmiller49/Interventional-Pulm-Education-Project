@@ -7,7 +7,6 @@ import {
   ChevronRight,
   Clock3,
   Lightbulb,
-  LockKeyhole,
   MessageSquareText,
   RefreshCcw,
   ShieldAlert,
@@ -22,7 +21,9 @@ import {
   type KeyboardEvent,
 } from 'react'
 
-import { baxterCrrtMasteryManifest } from '../content/mastery'
+import type { CriticalCareActivityPhase } from '@/features/learning-module/activity'
+import { ActivityStepper } from '@/features/learning-module/components/ActivityStepper'
+
 import type { RuntimeCrrtCase } from '../content/schema'
 import { selectCrrtConsoleControls } from '../engine/consoleControls'
 import {
@@ -60,6 +61,16 @@ const reasoningStages = [
   readonly phases: readonly CrrtReasoningPhase[]
 }[]
 
+const semanticPhaseByCrrtPhase: Readonly<Record<CrrtReasoningPhase, CriticalCareActivityPhase>> = {
+  read: 'recognize',
+  define: 'recognize',
+  select: 'predict',
+  predict: 'predict',
+  run: 'act',
+  reassess: 'observe',
+  reflect: 'explain',
+}
+
 const roleLabels: Readonly<Record<CrrtRoleLens, string>> = {
   integrated: 'Integrated',
   operator: 'Operator',
@@ -74,17 +85,6 @@ const simulationTimeAdvanceOptions = [
   { seconds: 3_600, label: '+1 hr' },
   { seconds: 21_600, label: '+6 hr' },
 ] as const
-
-const outcomeDomainLabels: Readonly<
-  Record<keyof NonNullable<CrrtLearningOutcome['domains']>, string>
-> = {
-  indicationAndTreatmentGoal: 'Goal',
-  modalityAndPrescription: 'Modality / prescription',
-  machineAndCircuitOperation: 'Machine / circuit',
-  safetyAndTroubleshooting: 'Safety / troubleshooting',
-  monitoringAndReassessment: 'Monitoring / reassessment',
-  communicationAndCoordination: 'Communication / team',
-}
 
 const timelineEventLabels: Readonly<
   Record<CrrtLearningSessionState['timeline'][number]['type'], string>
@@ -112,6 +112,8 @@ interface CrrtCasePlayerProps {
   readonly onDebriefRevealed?: (outcome: CrrtLearningOutcome) => void
   /** Prefixes every authored DOM ID so multiple workflow instances can coexist. */
   readonly idNamespace?: string
+  /** Standalone players retain the shared phase display; shell wrappers render it in ActivityShell. */
+  readonly showSharedStepper?: boolean
 }
 
 export function CrrtReasoningRibbon({ session }: { session: CrrtLearningSessionState }) {
@@ -217,30 +219,20 @@ function CrrtCasePlayerContent({
   onReassessmentCommitted,
   onDebriefRevealed,
   idNamespace,
+  showSharedStepper = true,
 }: CrrtCasePlayerProps) {
   const definition = session.caseDefinition
   const isMastery = session.experience === 'mastery'
   const scopedId = (id: string) => (idNamespace ? `${idNamespace}-${id}` : id)
-  const experienceLabel =
-    session.experience === 'practice' ? 'Scored Practice' : 'Capstone assessment'
-  const visibleCaseTitle =
-    isMastery && !session.debriefRevealed
-      ? baxterCrrtMasteryManifest.learnerTitleBeforeDebrief
-      : definition.title
-  const machineControlsEnabled = session.prediction !== null && !session.debriefRevealed
+  const experienceLabel = session.experience === 'practice' ? 'Practice' : 'Challenge'
+  const visibleCaseTitle = definition.title
+  const machineControlsEnabled = !session.debriefRevealed
   const consoleControls = selectCrrtConsoleControls(session)
-  const prismaxCaseContext: PrismaxPilotCaseContext =
-    isMastery && !session.debriefRevealed
-      ? {
-          identityMasked: true,
-          learnerLabel: baxterCrrtMasteryManifest.learnerTitleBeforeDebrief,
-          pathway: 'mastery',
-        }
-      : {
-          caseId: definition.id,
-          title: visibleCaseTitle,
-          pathway: session.experience,
-        }
+  const prismaxCaseContext: PrismaxPilotCaseContext = {
+    caseId: definition.id,
+    title: visibleCaseTitle,
+    pathway: session.experience,
+  }
   const [goalOptionId, setGoalOptionId] = useState('')
   const [mechanismOptionId, setMechanismOptionId] = useState('')
   const [controlOptionIds, setControlOptionIds] = useState<readonly string[]>([])
@@ -249,6 +241,7 @@ function CrrtCasePlayerContent({
   const [actualReassessmentIds, setActualReassessmentIds] = useState<readonly string[]>([])
   const [predictionSubmitAttempt, setPredictionSubmitAttempt] = useState(0)
   const [mobileSurface, setMobileSurface] = useState<CrrtMobileSurface>('case')
+  const [challengeFeedbackImmediate, setChallengeFeedbackImmediate] = useState(false)
   const mobileTabRefs = useRef<Partial<Record<CrrtMobileSurface, HTMLButtonElement>>>({})
   const predictionValidationSummaryRef = useRef<HTMLDivElement>(null)
   const goalSelectRef = useRef<HTMLSelectElement>(null)
@@ -336,9 +329,8 @@ function CrrtCasePlayerContent({
     definedGoal && mechanismOptionId !== '' && controlOptionIds.length > 0
   const completePrediction =
     selectedMechanismAndControl && responseOptionId !== '' && plannedReassessmentIds.length > 0
-  const hasPerformedIntervention = session.performedInterventionIds.length > 0
-  const canReassess = hasPerformedIntervention && session.reasoningPhase === 'reassess'
-  const timeControlsLocked = !session.prediction || session.debriefRevealed
+  const canReassess = !session.reassessment.committed && !session.debriefRevealed
+  const timeControlsUnavailable = session.debriefRevealed
   const secondsUntilNextScheduledEvent = selectSecondsUntilNextScheduledEvent(session.simulation)
   const predictionValidationAttempted = predictionSubmitAttempt > 0
   const missingPredictionFields: readonly {
@@ -389,7 +381,6 @@ function CrrtCasePlayerContent({
       setPredictionSubmitAttempt((attempt) => attempt + 1)
       return
     }
-    if (session.reasoningPhase !== 'predict') return
     const prediction: CrrtPredictionCommitment = {
       goalOptionId,
       mechanismOptionId,
@@ -409,17 +400,38 @@ function CrrtCasePlayerContent({
   }
 
   function commitReassessment() {
-    if (actualReassessmentIds.length === 0 || session.reassessment.committed || !canReassess) {
-      return
-    }
+    if (actualReassessmentIds.length === 0 || !canReassess) return
     dispatch({ type: 'COMMIT_REASSESSMENT', optionIds: actualReassessmentIds })
     onReassessmentCommitted?.()
   }
 
   function revealDebrief() {
-    if (!session.reassessment.committed || session.debriefRevealed) return
+    if (session.debriefRevealed) return
     dispatch({ type: 'REVEAL_DEBRIEF' })
     onDebriefRevealed?.(outcome)
+  }
+
+  function openPhase(phase: CriticalCareActivityPhase) {
+    const destination: Readonly<
+      Record<
+        CriticalCareActivityPhase,
+        { readonly surface: CrrtMobileSurface; readonly targetId: string }
+      >
+    > = {
+      recognize: { surface: 'case', targetId: scopedId('crrt-case-findings') },
+      predict: { surface: 'case', targetId: scopedId('crrt-prediction-heading') },
+      act: { surface: 'case', targetId: scopedId('crrt-actions-heading') },
+      observe: {
+        surface: 'patient',
+        targetId: scopedId('baxter-crrt-mobile-panel-patient'),
+      },
+      explain: { surface: 'debrief', targetId: scopedId('crrt-debrief-heading') },
+      transfer: { surface: 'debrief', targetId: scopedId('crrt-transfer-question') },
+    }
+    const next = destination[phase]
+    setMobileSurface(next.surface)
+    const target = document.getElementById(next.targetId)
+    target?.scrollIntoView?.({ block: 'start', behavior: 'smooth' })
   }
 
   function moveSurfaceFocus(
@@ -447,6 +459,17 @@ function CrrtCasePlayerContent({
   return (
     <div className={styles.learningWorkflow}>
       <CrrtReasoningRibbon session={session} />
+      {showSharedStepper ? (
+        <ActivityStepper
+          currentPhase={
+            session.reasoningPhase === 'reflect' && session.debriefRevealed
+              ? 'transfer'
+              : semanticPhaseByCrrtPhase[session.reasoningPhase]
+          }
+          ariaLabel="CRRT shared activity phases"
+          onPhaseSelect={openPhase}
+        />
+      ) : null}
       <div className={styles.mobileSurfaceTabs} role="tablist" aria-label="CRRT case surfaces">
         {mobileSurfaces.map((surface) => (
           <button
@@ -490,7 +513,7 @@ function CrrtCasePlayerContent({
             ))}
           </div>
           <button type="button" className={styles.resetButton} onClick={onReset}>
-            <RefreshCcw aria-hidden="true" /> Clean attempt
+            <RefreshCcw aria-hidden="true" /> Reset case
           </button>
         </div>
 
@@ -501,32 +524,42 @@ function CrrtCasePlayerContent({
             role="note"
             aria-labelledby={scopedId('crrt-mastery-boundary-heading')}
           >
-            <LockKeyhole aria-hidden="true" />
+            <Sparkles aria-hidden="true" />
             <p>
-              <strong id={scopedId('crrt-mastery-boundary-heading')}>Capstone safeguards.</strong>{' '}
-              Case identity remains masked until causal debrief. Guided assistance is unavailable,
-              and Clean attempt starts a new, unassisted attempt. Passing requires a score of at
-              least {baxterCrrtMasteryManifest.minimumScore}, no critical error, and completed
-              reassessment.
+              <strong id={scopedId('crrt-mastery-boundary-heading')}>Challenge flow.</strong> Work
+              from the visible patient, prescription, circuit, pressure, and alert cues. Teaching
+              feedback is collected for the causal debrief, and Reset case starts a new run from the
+              beginning.
             </p>
+            <ul>
+              {definition.learningObjectives.map((objective) => (
+                <li key={objective}>{objective}</li>
+              ))}
+            </ul>
+            <label>
+              <input
+                type="checkbox"
+                checked={challengeFeedbackImmediate}
+                onChange={(event) => setChallengeFeedbackImmediate(event.currentTarget.checked)}
+              />
+              <span>Show teaching notes after each action</span>
+            </label>
           </div>
         ) : null}
 
         <header className={styles.caseHeader}>
           <div>
-            <span>
-              {isMastery ? 'Masked case' : definition.id} · {experienceLabel}
-            </span>
+            <span>Clinical case · {experienceLabel}</span>
             <h3>{visibleCaseTitle}</h3>
           </div>
-          <strong>Attempt {session.attempt}</strong>
+          <strong>Current run</strong>
         </header>
 
         <div className={styles.syntheticNotice} role="note">
           <ShieldAlert aria-hidden="true" />
           <p>
             <strong>Simulated clinical case.</strong> Patient values, treatment responses, and
-            scoring are for education only—not bedside targets or local protocols.
+            comparisons are for education only—not bedside targets or local protocols.
           </p>
         </div>
 
@@ -556,9 +589,13 @@ function CrrtCasePlayerContent({
           aria-labelledby={scopedId('crrt-prediction-heading')}
         >
           <div className={styles.workflowHeading}>
-            {session.prediction ? <Check aria-hidden="true" /> : <LockKeyhole aria-hidden="true" />}
+            {session.prediction ? (
+              <Check aria-hidden="true" />
+            ) : (
+              <BrainCircuit aria-hidden="true" />
+            )}
             <div>
-              <span>Assess · Plan · Predict</span>
+              <span>Review · Plan · Predict</span>
               <h4 id={scopedId('crrt-prediction-heading')}>Plan your approach before acting</h4>
             </div>
           </div>
@@ -653,10 +690,6 @@ function CrrtCasePlayerContent({
                   onFocus={() => enterPrecommitReasoningPhase('define')}
                   onChange={(event) => {
                     setGoalOptionId(event.target.value)
-                    setMechanismOptionId('')
-                    setControlOptionIds([])
-                    setResponseOptionId('')
-                    setPlannedReassessmentIds([])
                     enterPrecommitReasoningPhase('define')
                   }}
                 >
@@ -674,7 +707,7 @@ function CrrtCasePlayerContent({
                   id={scopedId('crrt-prediction-mechanism-instructions')}
                   className={styles.predictionInstruction}
                 >
-                  Required. After defining a goal, choose one mechanism.
+                  Required. Choose one mechanism.
                 </small>
                 {mechanismInvalid ? (
                   <small
@@ -687,7 +720,6 @@ function CrrtCasePlayerContent({
                 <select
                   ref={mechanismSelectRef}
                   required
-                  disabled={!definedGoal}
                   value={mechanismOptionId}
                   aria-labelledby={scopedId('crrt-prediction-mechanism-label')}
                   aria-describedby={`${scopedId('crrt-prediction-mechanism-instructions')}${
@@ -697,8 +729,6 @@ function CrrtCasePlayerContent({
                   onFocus={() => enterPrecommitReasoningPhase('select')}
                   onChange={(event) => {
                     setMechanismOptionId(event.target.value)
-                    setResponseOptionId('')
-                    setPlannedReassessmentIds([])
                     enterPrecommitReasoningPhase('select')
                   }}
                 >
@@ -711,7 +741,6 @@ function CrrtCasePlayerContent({
                 </select>
               </label>
               <fieldset
-                disabled={!definedGoal}
                 data-invalid={controlInvalid || undefined}
                 aria-describedby={`${scopedId('crrt-prediction-control-instructions')}${
                   controlInvalid ? ` ${scopedId('crrt-prediction-control-error')}` : ''
@@ -722,7 +751,7 @@ function CrrtCasePlayerContent({
                   id={scopedId('crrt-prediction-control-instructions')}
                   className={styles.predictionInstruction}
                 >
-                  Required. After defining a goal, select at least one planned control.
+                  Required. Select at least one planned control.
                 </p>
                 {controlInvalid ? (
                   <p
@@ -745,8 +774,6 @@ function CrrtCasePlayerContent({
                       onFocus={() => enterPrecommitReasoningPhase('select')}
                       onChange={() => {
                         setControlOptionIds(toggleId(controlOptionIds, option.id))
-                        setResponseOptionId('')
-                        setPlannedReassessmentIds([])
                         enterPrecommitReasoningPhase('select')
                       }}
                     />
@@ -760,8 +787,7 @@ function CrrtCasePlayerContent({
                   id={scopedId('crrt-prediction-response-instructions')}
                   className={styles.predictionInstruction}
                 >
-                  Required. After choosing a mechanism and planned control, choose one expected
-                  response.
+                  Required. Choose one expected response.
                 </small>
                 {responseInvalid ? (
                   <small
@@ -774,7 +800,6 @@ function CrrtCasePlayerContent({
                 <select
                   ref={responseSelectRef}
                   required
-                  disabled={!selectedMechanismAndControl}
                   value={responseOptionId}
                   aria-labelledby={scopedId('crrt-prediction-response-label')}
                   aria-describedby={`${scopedId('crrt-prediction-response-instructions')}${
@@ -796,7 +821,6 @@ function CrrtCasePlayerContent({
                 </select>
               </label>
               <fieldset
-                disabled={!selectedMechanismAndControl}
                 data-invalid={reassessmentInvalid || undefined}
                 aria-describedby={`${scopedId('crrt-prediction-reassessment-instructions')}${
                   reassessmentInvalid ? ` ${scopedId('crrt-prediction-reassessment-error')}` : ''
@@ -807,8 +831,7 @@ function CrrtCasePlayerContent({
                   id={scopedId('crrt-prediction-reassessment-instructions')}
                   className={styles.predictionInstruction}
                 >
-                  Required. After choosing a mechanism and planned control, select at least one
-                  reassessment.
+                  Required. Select at least one reassessment.
                 </p>
                 {reassessmentInvalid ? (
                   <p
@@ -859,53 +882,48 @@ function CrrtCasePlayerContent({
             </div>
           </div>
 
-          {!session.prediction ? (
-            <p className={styles.lockedCopy}>
-              <LockKeyhole aria-hidden="true" /> Submit your plan and prediction before taking
-              action.
-            </p>
-          ) : (
-            <div className={styles.actionList}>
-              {definition.interventions.map((intervention) => {
-                const performed = performedSet.has(intervention.id)
-                const missingPrerequisite = intervention.prerequisites.find(
-                  (id) => !performedSet.has(id),
-                )
-                const disabled =
-                  session.debriefRevealed ||
-                  Boolean(missingPrerequisite) ||
-                  (performed && !intervention.repeatable)
-                return (
-                  <article key={intervention.id} data-performed={performed}>
-                    <div>
-                      <span>{intervention.category}</span>
-                      <strong>{intervention.label}</strong>
-                      <p>{intervention.description}</p>
-                      {missingPrerequisite ? (
-                        <small>
-                          Requires{' '}
-                          {definition.interventions.find((item) => item.id === missingPrerequisite)
-                            ?.label ?? missingPrerequisite}
-                          .
-                        </small>
-                      ) : null}
-                    </div>
-                    <button
-                      type="button"
-                      disabled={disabled}
-                      onClick={() => performIntervention(intervention.id)}
-                    >
-                      {performed ? <Check aria-hidden="true" /> : <ArrowRight aria-hidden="true" />}
-                      {performed ? 'Completed' : 'Perform'}
-                    </button>
-                    {performed ? (
-                      <p className={styles.actionResponse}>{intervention.response}</p>
+          <div className={styles.actionList}>
+            {definition.interventions.map((intervention) => {
+              const performed = performedSet.has(intervention.id)
+              const missingPrerequisite = intervention.prerequisites.find(
+                (id) => !performedSet.has(id),
+              )
+              const disabled =
+                session.debriefRevealed ||
+                Boolean(missingPrerequisite) ||
+                (performed && !intervention.repeatable)
+              const showActionResponse =
+                performed && (!isMastery || challengeFeedbackImmediate || session.debriefRevealed)
+              return (
+                <article key={intervention.id} data-performed={performed}>
+                  <div>
+                    <span>{intervention.category}</span>
+                    <strong>{intervention.label}</strong>
+                    <p>{intervention.description}</p>
+                    {missingPrerequisite ? (
+                      <small>
+                        Requires{' '}
+                        {definition.interventions.find((item) => item.id === missingPrerequisite)
+                          ?.label ?? missingPrerequisite}
+                        .
+                      </small>
                     ) : null}
-                  </article>
-                )
-              })}
-            </div>
-          )}
+                  </div>
+                  <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => performIntervention(intervention.id)}
+                  >
+                    {performed ? <Check aria-hidden="true" /> : <ArrowRight aria-hidden="true" />}
+                    {performed ? 'Completed' : 'Perform'}
+                  </button>
+                  {showActionResponse ? (
+                    <p className={styles.actionResponse}>{intervention.response}</p>
+                  ) : null}
+                </article>
+              )
+            })}
+          </div>
 
           <div className={styles.timeControls} role="group" aria-label="Advance simulated time">
             <div>
@@ -919,7 +937,7 @@ function CrrtCasePlayerContent({
               <button
                 key={option.seconds}
                 type="button"
-                disabled={timeControlsLocked}
+                disabled={timeControlsUnavailable}
                 onClick={() => dispatch({ type: 'ADVANCE_TIME', seconds: option.seconds })}
               >
                 {option.label}
@@ -929,7 +947,7 @@ function CrrtCasePlayerContent({
               <button
                 type="button"
                 className={styles.nextEventButton}
-                disabled={timeControlsLocked}
+                disabled={timeControlsUnavailable}
                 onClick={() =>
                   dispatch({ type: 'ADVANCE_TIME', seconds: secondsUntilNextScheduledEvent })
                 }
@@ -946,7 +964,7 @@ function CrrtCasePlayerContent({
               <Lightbulb aria-hidden="true" />
               <div>
                 <span>Hint ladder</span>
-                <h4 id={scopedId('crrt-hint-heading')}>Optional, scored support</h4>
+                <h4 id={scopedId('crrt-hint-heading')}>Optional teaching support</h4>
               </div>
             </div>
             {session.usedHintIds.length > 0 ? (
@@ -972,7 +990,7 @@ function CrrtCasePlayerContent({
               <Lightbulb aria-hidden="true" />
               {nextHint ? `Reveal hint ${nextHint.sequence}` : 'All hints used'}
             </button>
-            <small>Each revealed hint subtracts 5 points, up to the maximum hint penalty.</small>
+            <small>Revealed hints remain visible in the final reasoning trace.</small>
           </section>
         ) : null}
 
@@ -994,10 +1012,7 @@ function CrrtCasePlayerContent({
               <Check aria-hidden="true" /> Reassessment committed. Continue to causal debrief.
             </p>
           ) : (
-            <fieldset
-              disabled={!canReassess}
-              aria-describedby={canReassess ? undefined : scopedId('crrt-reassess-prerequisite')}
-            >
+            <fieldset disabled={!canReassess}>
               <legend>Select every reassessment you actually completed</legend>
               {definition.reassessmentOptions.map((option) => (
                 <label key={option.id}>
@@ -1020,13 +1035,6 @@ function CrrtCasePlayerContent({
               </button>
             </fieldset>
           )}
-          {!canReassess ? (
-            <small id={scopedId('crrt-reassess-prerequisite')}>
-              {hasPerformedIntervention
-                ? 'Advance simulated time by a positive interval before reassessment.'
-                : 'Perform at least one intervention, then advance simulated time by a positive interval before reassessment.'}
-            </small>
-          ) : null}
         </section>
 
         {outcome.criticalErrorIds.length > 0 ? (
@@ -1034,7 +1042,7 @@ function CrrtCasePlayerContent({
             <ShieldAlert aria-hidden="true" />
             <p>
               <strong>A required safety step was missed.</strong> Review the action sequence in the
-              debrief. This exercise feedback is not a clinical threshold or competency decision.
+              debrief. This exercise feedback is not a clinical threshold or readiness decision.
             </p>
           </div>
         ) : null}
@@ -1052,23 +1060,19 @@ function CrrtCasePlayerContent({
             <span>Interactive equipment station</span>
             <h4>PrisMax machine and circuit</h4>
           </div>
-          <strong data-unlocked={machineControlsEnabled}>
-            {machineControlsEnabled
-              ? 'Machine actions available'
-              : session.debriefRevealed
-                ? 'Attempt complete'
-                : 'Complete clinical plan'}
+          <strong data-available={machineControlsEnabled}>
+            {machineControlsEnabled ? 'Machine actions available' : 'Run worked through'}
           </strong>
         </div>
         <p className={styles.machineSurfaceIntro}>
-          Explore the layout and circuit at any time. Submit the five-part plan on the Case tab to
-          use setup and Operations controls. Machine, circuit, and patient views update together.
+          Explore the layout, circuit, setup, and Operations controls at any time. Machine, circuit,
+          and patient views update together; the five-part plan remains available on the Case tab.
         </p>
         <PrismaxPilotInterface
           state={session.interfaceState}
           dispatch={(action) => dispatch({ type: 'DEVICE_ACTION', action })}
           controlsEnabled={machineControlsEnabled}
-          controlLockReason={session.debriefRevealed ? 'debrief' : 'plan'}
+          controlsUnavailableReason={session.debriefRevealed ? 'debrief' : undefined}
           consoleControls={consoleControls}
           operationsDisplay={selectPrismaxPilotCaseOperationsDisplay(
             session.interfaceState,
@@ -1076,7 +1080,6 @@ function CrrtCasePlayerContent({
           )}
           caseContext={prismaxCaseContext}
           onPerformCaseAction={performIntervention}
-          onRequestClinicalPlan={() => setMobileSurface('case')}
           onReset={onReset}
         />
         <div className={styles.circuitSummary} aria-label="Circuit and fluid state">
@@ -1147,49 +1150,28 @@ function CrrtCasePlayerContent({
           </div>
         </div>
 
-        {!session.reassessment.committed ? (
-          <p className={styles.lockedCopy}>
-            <LockKeyhole aria-hidden="true" /> Commit prediction, act, and reassess to unlock the
-            causal debrief.
-          </p>
-        ) : !session.debriefRevealed ? (
-          <button type="button" className={styles.commitButton} onClick={revealDebrief}>
-            Reveal causal debrief <ArrowRight aria-hidden="true" />
-          </button>
+        {!session.debriefRevealed ? (
+          <>
+            {!session.reassessment.committed ? (
+              <p>
+                You can open the debrief now. Any unrecorded prediction, action, or reassessment
+                will remain visible as missing attempt evidence.
+              </p>
+            ) : null}
+            <button type="button" className={styles.commitButton} onClick={revealDebrief}>
+              Reveal causal debrief <ArrowRight aria-hidden="true" />
+            </button>
+          </>
         ) : debrief ? (
           <div className={styles.debriefBody}>
             <p className={styles.debriefSummary}>{debrief.summary}</p>
-            {debrief.outcome.scored && debrief.outcome.score !== null ? (
-              <section
-                className={styles.scoreCard}
-                aria-label={isMastery ? 'Capstone score' : 'Practice score'}
-              >
-                <div>
-                  <span>{isMastery ? 'Capstone score' : 'Practice score'}</span>
-                  <strong>{debrief.outcome.score}/100</strong>
-                  <small>
-                    {isMastery
-                      ? 'Educational capstone result · no competency or certification claim'
-                      : `Educational score · ${debrief.outcome.hintPenalty} hint-penalty points`}
-                  </small>
-                </div>
-                {debrief.outcome.domains ? (
-                  <dl>
-                    {Object.entries(debrief.outcome.domains).map(([domain, score]) => (
-                      <div key={domain}>
-                        <dt>{outcomeDomainLabels[domain as keyof typeof outcomeDomainLabels]}</dt>
-                        <dd>{score}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                ) : null}
-              </section>
-            ) : (
-              <p className={styles.learnOutcome}>
-                This attempt cannot be scored because its required assessment configuration is
-                unavailable.
-              </p>
-            )}
+            <section className={styles.scoreCard} aria-label="Teaching debrief status">
+              <div>
+                <span>Causal debrief</span>
+                <strong>Case worked through</strong>
+                <small>Compare your frame, actions, modeled consequences, and reassessment.</small>
+              </div>
+            </section>
 
             <section
               className={styles.attemptEvidence}
@@ -1317,6 +1299,26 @@ function CrrtCasePlayerContent({
               )}
             </section>
 
+            {isMastery && session.performedInterventionIds.length > 0 ? (
+              <section aria-labelledby={scopedId('crrt-deferred-action-feedback')}>
+                <h5 id={scopedId('crrt-deferred-action-feedback')}>
+                  Action teaching notes from this run
+                </h5>
+                <ul>
+                  {session.performedInterventionIds.map((interventionId, index) => {
+                    const intervention = definition.interventions.find(
+                      ({ id }) => id === interventionId,
+                    )
+                    return intervention ? (
+                      <li key={`${interventionId}-${index}`}>
+                        <strong>{intervention.label}:</strong> {intervention.response}
+                      </li>
+                    ) : null
+                  })}
+                </ul>
+              </section>
+            ) : null}
+
             <dl className={styles.debriefGrid}>
               <div>
                 <dt>Stated goal</dt>
@@ -1358,7 +1360,9 @@ function CrrtCasePlayerContent({
               ))}
             </ol>
 
-            <blockquote>{debrief.transferQuestion}</blockquote>
+            <blockquote id={scopedId('crrt-transfer-question')}>
+              {debrief.transferQuestion}
+            </blockquote>
           </div>
         ) : null}
       </section>

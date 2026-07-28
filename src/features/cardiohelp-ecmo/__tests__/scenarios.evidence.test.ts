@@ -31,12 +31,15 @@ describe('CARDIOHELP ECMO scenario and evidence registries', () => {
     expect(
       cardiohelpScenarios.find((scenario) => scenario.id === 'vv-off-sweep-capstone'),
     ).toMatchObject({
-      hiddenUntilAssessment: true,
+      family: 'capstone',
       supportMode: 'vv',
     })
+    expect(
+      cardiohelpScenarios.find((scenario) => scenario.id === 'vv-off-sweep-capstone'),
+    ).not.toHaveProperty('hiddenUntilAssessment')
   })
 
-  it('unlocks the unseen capstone only after every prerequisite scenario', () => {
+  it('preserves the legacy recommendation helper without using it as a route gate', () => {
     expect(isCardiohelpCapstoneUnlocked([])).toBe(false)
     expect(isCardiohelpCapstoneUnlocked(cardiohelpCapstonePrerequisiteIds)).toBe(true)
     expect(
@@ -93,7 +96,7 @@ describe('CARDIOHELP ECMO scenario and evidence registries', () => {
   it('provides a valid guided walkthrough for every non-capstone scenario', () => {
     expect(validateGuidedLessonRegistry()).toEqual([])
     const eligibleScenarioIds = cardiohelpScenarios
-      .filter((scenario) => !scenario.hiddenUntilAssessment)
+      .filter((scenario) => scenario.family !== 'capstone')
       .map((scenario) => scenario.id)
     expect(cardiohelpLearnLessons.map((lesson) => lesson.scenarioId)).toEqual(eligibleScenarioIds)
     expect(
@@ -107,6 +110,26 @@ describe('CARDIOHELP ECMO scenario and evidence registries', () => {
     for (const lesson of cardiohelpLearnLessons) {
       const scenario = cardiohelpScenarios.find((item) => item.id === lesson.scenarioId)
       expect(lesson.supportMode).toBe(scenario?.supportMode)
+    }
+  })
+
+  it('uses a distinct authored scenario and observable action for every transfer phase', () => {
+    const transfers = cardiohelpLearnLessons.map((lesson) => ({
+      lesson,
+      transfer: lesson.steps.find((step) => step.phase === 'transfer'),
+    }))
+    expect(transfers).toHaveLength(20)
+    expect(new Set(transfers.map(({ transfer }) => transfer?.transferVariantId)).size).toBe(20)
+
+    for (const { lesson, transfer } of transfers) {
+      expect(transfer?.transferScenarioId).toBeTruthy()
+      expect(transfer?.transferScenarioId).not.toBe(lesson.scenarioId)
+      expect(transfer?.actions).toHaveLength(1)
+      expect(transfer?.actionLabel).not.toMatch(/finish|mark complete|acknowledge completion/i)
+      const variantScenario = cardiohelpScenarios.find(
+        (scenario) => scenario.id === transfer?.transferScenarioId,
+      )
+      expect(variantScenario?.supportMode).toBe(lesson.supportMode)
     }
   })
 

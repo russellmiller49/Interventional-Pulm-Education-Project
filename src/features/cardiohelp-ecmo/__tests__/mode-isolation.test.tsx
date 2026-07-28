@@ -1,9 +1,10 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
+import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
+
 import { CardiohelpWorkbench } from '../components/CardiohelpWorkbench'
 import { CircuitAndMonitors } from '../components/CircuitAndMonitors'
-import { cardiohelpLearnLessonsBySupportMode } from '../content/learnLessons'
 import { createInitialSimulationState } from '../engine'
 
 const mockRouterPush = jest.fn()
@@ -54,9 +55,10 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
     expect(vvTrack).toHaveAttribute('aria-checked', 'true')
     expect(vvTrack).toHaveAttribute('tabindex', '0')
     expect(vaTrack).toHaveAttribute('tabindex', '-1')
-    expect(screen.queryByRole('option', { name: /capstone/i })).not.toBeInTheDocument()
-    expect(screen.getAllByRole('option')).toHaveLength(
-      cardiohelpLearnLessonsBySupportMode.vv.length,
+    // The rail lists the whole authored VV pathway, physiology sections included.
+    const vvRail = screen.getByRole('navigation', { name: /VV learning pathway sections/i })
+    expect(within(vvRail).getAllByRole('button')).toHaveLength(
+      criticalCareLearningPathway('cardiohelp-ecmo', 'vv').sections.length,
     )
     fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
     expect(
@@ -66,8 +68,9 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
     fireEvent.keyDown(vvTrack, { key: 'ArrowRight' })
     expect(vaTrack).toHaveAttribute('aria-checked', 'true')
     expect(vaTrack).toHaveAttribute('tabindex', '0')
-    expect(screen.getAllByRole('option')).toHaveLength(
-      cardiohelpLearnLessonsBySupportMode.va.length,
+    const vaRail = screen.getByRole('navigation', { name: /VA learning pathway sections/i })
+    expect(within(vaRail).getAllByRole('button')).toHaveLength(
+      criticalCareLearningPathway('cardiohelp-ecmo', 'va').sections.length,
     )
     expect(
       screen.getByRole('img', { name: /VA ECMO femoral-femoral circuit schematic/i }),
@@ -147,11 +150,9 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
 
     render(<CardiohelpWorkbench section="learn" />)
     await waitFor(() => {
-      expect(screen.getByText('1/10 completed')).toBeInTheDocument()
+      expect(screen.getByText('Choose any lesson')).toBeInTheDocument()
     })
-    expect(
-      screen.getByRole('option', { name: /Acute hypercapnic acidemia · completed/i }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Acute hypercapnic acidemia/i })).toBeInTheDocument()
   })
 
   it('renders mode-specific cannulation and supports keyboard panning of the schematic', () => {

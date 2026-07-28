@@ -9,6 +9,67 @@ const PENDING = 'pending' as const
  */
 const candidateClinicalSources = [
   {
+    id: 'TEXT-CRRT-NEYRA-2026',
+    claim:
+      'The chapter frames kidney-replacement decisions around patient-specific solute and volume-control goals, modality logistics, delivered therapy, access, and iterative tolerance of fluid removal.',
+    value:
+      'Clinical framing source only; chapter examples and average prescription ranges are not imported as patient-specific targets or local protocol.',
+    sourceTitle: 'Critical Care Nephrology',
+    sourceType: 'textbook' as const,
+    documentVersion:
+      "Neyra JA, Teixeira JP, Tolwani AJ. Brenner & Rector's The Kidney. 12th ed. 2026",
+    pageOrSection: 'Chapter 64 · pp1881–1898 · Kidney replacement therapy section',
+    implementationLocation:
+      'content/learnLessons.ts and content/lessonClinicalAnchors.ts · goal, dose, anticoagulation, and fluid-liberation lessons',
+    reviewer: null,
+    reviewStatus: PENDING,
+  },
+  {
+    id: 'TEXT-RRT-HOSTE-2024',
+    claim:
+      'The chapter explains core kidney-replacement mechanisms, prescription components, modality distinctions, and circuit monitoring in critical illness.',
+    value:
+      'General critical-care teaching source only; no device-specific workflow, alarm threshold, or patient prescription is imported.',
+    sourceTitle: 'Basic principles of renal replacement therapy',
+    sourceType: 'textbook' as const,
+    documentVersion: 'Hoste EAJ. Textbook of Critical Care. 8th ed. 2024',
+    pageOrSection: 'Chapter 38 · pp233–239',
+    implementationLocation:
+      'content/learnLessons.ts and content/lessonClinicalAnchors.ts · transport and circuit reasoning',
+    reviewer: null,
+    reviewStatus: PENDING,
+  },
+  {
+    id: 'REVIEW-CRRT-PRINCIPLES-2021',
+    claim:
+      'The review describes CRRT fluid and solute transport, modality construction, transmembrane-pressure relationships, and effluent-based dose concepts.',
+    value:
+      'Mechanism source only; equations and examples do not establish a universal clinical target, alarm limit, or device response.',
+    sourceTitle: 'Continuous renal replacement therapy principles',
+    sourceType: 'peer-reviewed' as const,
+    documentVersion: 'Claure-Del Granado R, Clark WR. Seminars in Dialysis. 2021;34:398–405',
+    pageOrSection: 'DOI 10.1111/sdi.12967 · pp398–405',
+    implementationLocation:
+      'content/learnLessons.ts and content/lessonClinicalAnchors.ts · modality, transport, dose, and pressure lessons',
+    reviewer: null,
+    reviewStatus: PENDING,
+  },
+  {
+    id: 'STD-NEPHROLOGY-COMPETENCIES-2025',
+    claim:
+      'The competency standard includes mechanisms of fluid delivery, machine mechanics, membrane physiology, and prescription, monitoring, and adjustment of extracorporeal therapies.',
+    value:
+      'Curriculum-scope source only; it does not award learner competency or replace supervised clinical assessment.',
+    sourceTitle: 'Nephrology Competencies',
+    sourceType: 'professional-standard' as const,
+    documentVersion: 'Royal College of Physicians and Surgeons of Canada · Version 2.0 · 2025',
+    pageOrSection: 'Medical Expert competencies · pp3–8',
+    implementationLocation:
+      'content/lessonClinicalAnchors.ts · application-check and monitoring scope',
+    reviewer: null,
+    reviewStatus: PENDING,
+  },
+  {
     id: 'GUID-NICE-NG148-2024',
     claim:
       'RRT indications should be discussed promptly when listed complications do not respond to medical management, and the start decision should use the whole clinical condition rather than an isolated value.',

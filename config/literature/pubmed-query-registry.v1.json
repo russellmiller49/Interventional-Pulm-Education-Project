@@ -1,0 +1,416 @@
+{
+  "registry_version": "1.0.0",
+  "prepared_date": "2026-07-26",
+  "date_filter": "2000:3000[dp]",
+  "field_tags": {
+    "journal": "[ta]",
+    "title_abstract_author_keywords": "[tiab]",
+    "mesh": "[mh]",
+    "publication_date": "[dp]",
+    "create_date": "[crdt]",
+    "modification_date": "[lr]",
+    "pmid": "[pmid]"
+  },
+  "core_journals": [
+    {
+      "id": "jbip",
+      "display_name": "Journal of Bronchology & Interventional Pulmonology",
+      "pubmed_abbreviation": "J Bronchology Interv Pulmonol",
+      "query_term": "J Bronchology Interv Pulmonol[ta]",
+      "nlm_id": "101496866",
+      "issn_print": "1944-6586",
+      "issn_online": "1948-8270",
+      "tier": "core",
+      "notes": "The current title began in 2009, but the NLM Catalog lists systematic PubMed coverage beginning with volume 19, issue 1 (January 2012). Use publisher/Crossref ingestion to audit and fill 2009-2011. The predecessor Journal of Bronchology (1994-2008) is a separate NLM record and does not have complete PubMed coverage."
+    },
+    {
+      "id": "chest",
+      "display_name": "CHEST",
+      "pubmed_abbreviation": "Chest",
+      "query_term": "Chest[ta]",
+      "nlm_id": "0231335",
+      "issn_print": "0012-3692",
+      "issn_online": "1931-3543",
+      "tier": "core"
+    },
+    {
+      "id": "ajrccm",
+      "display_name": "American Journal of Respiratory and Critical Care Medicine",
+      "pubmed_abbreviation": "Am J Respir Crit Care Med",
+      "query_term": "Am J Respir Crit Care Med[ta]",
+      "nlm_id": "9421642",
+      "issn_print": "1073-449X",
+      "issn_online": "1535-4970",
+      "tier": "core"
+    },
+    {
+      "id": "erj",
+      "display_name": "European Respiratory Journal",
+      "pubmed_abbreviation": "Eur Respir J",
+      "query_term": "Eur Respir J[ta]",
+      "nlm_id": "8803460",
+      "issn_print": "0903-1936",
+      "issn_online": "1399-3003",
+      "tier": "core",
+      "notes": "Does not include Eur Respir J Suppl unless that title is added explicitly."
+    },
+    {
+      "id": "thorax",
+      "display_name": "Thorax",
+      "pubmed_abbreviation": "Thorax",
+      "query_term": "Thorax[ta]",
+      "nlm_id": "0417353",
+      "issn_print": "0040-6376",
+      "issn_online": "1468-3296",
+      "tier": "core"
+    },
+    {
+      "id": "annals_ats",
+      "display_name": "Annals of the American Thoracic Society",
+      "pubmed_abbreviation": "Ann Am Thorac Soc",
+      "query_term": "Ann Am Thorac Soc[ta]",
+      "nlm_id": "101600811",
+      "issn_print": "2329-6933",
+      "issn_online": "2325-6621",
+      "tier": "core"
+    },
+    {
+      "id": "respiration",
+      "display_name": "Respiration",
+      "pubmed_abbreviation": "Respiration",
+      "query_term": "Respiration[ta]",
+      "nlm_id": "0137356",
+      "issn_print": "0025-7931",
+      "issn_online": "1423-0356",
+      "tier": "core"
+    },
+    {
+      "id": "respirology",
+      "display_name": "Respirology",
+      "pubmed_abbreviation": "Respirology",
+      "query_term": "Respirology[ta]",
+      "nlm_id": "9616368",
+      "issn_print": "1323-7799",
+      "issn_online": "1440-1843",
+      "tier": "core"
+    },
+    {
+      "id": "respiratory_medicine",
+      "display_name": "Respiratory Medicine",
+      "pubmed_abbreviation": "Respir Med",
+      "query_term": "Respir Med[ta]",
+      "nlm_id": "8908438",
+      "issn_print": "0954-6111",
+      "issn_online": "1532-3064",
+      "tier": "core"
+    },
+    {
+      "id": "respiratory_research",
+      "display_name": "Respiratory Research",
+      "pubmed_abbreviation": "Respir Res",
+      "query_term": "Respir Res[ta]",
+      "nlm_id": "101090633",
+      "issn_print": "1465-9921",
+      "issn_online": "1465-993X",
+      "tier": "core"
+    },
+    {
+      "id": "journal_thoracic_disease",
+      "display_name": "Journal of Thoracic Disease",
+      "pubmed_abbreviation": "J Thorac Dis",
+      "query_term": "J Thorac Dis[ta]",
+      "nlm_id": "101533916",
+      "issn_print": "2072-1439",
+      "issn_online": "2077-6624",
+      "tier": "core"
+    }
+  ],
+  "optional_continuity_journals": [
+    {
+      "id": "proceedings_ats",
+      "display_name": "Proceedings of the American Thoracic Society",
+      "pubmed_abbreviation": "Proc Am Thorac Soc",
+      "query_term": "Proc Am Thorac Soc[ta]",
+      "nlm_id": "101203596",
+      "issn_print": "1546-3222",
+      "issn_online": "1943-5665",
+      "tier": "optional_core_continuity",
+      "notes": "Optional historical continuity before Annals of the American Thoracic Society."
+    }
+  ],
+  "expanded_journals": [
+    {
+      "id": "jto",
+      "display_name": "Journal of Thoracic Oncology",
+      "pubmed_abbreviation": "J Thorac Oncol",
+      "query_term": "J Thorac Oncol[ta]",
+      "nlm_id": "101274235",
+      "issn_print": "1556-0864",
+      "issn_online": "1556-1380",
+      "tier": "expanded"
+    },
+    {
+      "id": "lung_cancer",
+      "display_name": "Lung Cancer",
+      "pubmed_abbreviation": "Lung Cancer",
+      "query_term": "Lung Cancer[ta]",
+      "nlm_id": "8800805",
+      "issn_print": "0169-5002",
+      "issn_online": "1872-8332",
+      "tier": "expanded"
+    },
+    {
+      "id": "lancet_respiratory_medicine",
+      "display_name": "The Lancet Respiratory Medicine",
+      "pubmed_abbreviation": "Lancet Respir Med",
+      "query_term": "Lancet Respir Med[ta]",
+      "nlm_id": "101605555",
+      "issn_print": "2213-2600",
+      "issn_online": "2213-2619",
+      "tier": "expanded"
+    },
+    {
+      "id": "annals_thoracic_surgery",
+      "display_name": "The Annals of Thoracic Surgery",
+      "pubmed_abbreviation": "Ann Thorac Surg",
+      "query_term": "Ann Thorac Surg[ta]",
+      "nlm_id": "15030100R",
+      "issn_print": "0003-4975",
+      "issn_online": "1552-6259",
+      "tier": "expanded"
+    },
+    {
+      "id": "jtcvs",
+      "display_name": "The Journal of Thoracic and Cardiovascular Surgery",
+      "pubmed_abbreviation": "J Thorac Cardiovasc Surg",
+      "query_term": "J Thorac Cardiovasc Surg[ta]",
+      "nlm_id": "0376343",
+      "issn_print": "0022-5223",
+      "issn_online": "1097-685X",
+      "tier": "expanded"
+    },
+    {
+      "id": "bmj_open_respiratory_research",
+      "display_name": "BMJ Open Respiratory Research",
+      "pubmed_abbreviation": "BMJ Open Respir Res",
+      "query_term": "BMJ Open Respir Res[ta]",
+      "nlm_id": "101638061",
+      "issn_print": null,
+      "issn_online": "2052-4439",
+      "tier": "expanded"
+    },
+    {
+      "id": "ats_scholar",
+      "display_name": "ATS Scholar",
+      "pubmed_abbreviation": "ATS Sch",
+      "query_term": "ATS Sch[ta]",
+      "nlm_id": "101774447",
+      "issn_print": null,
+      "issn_online": "2690-7097",
+      "tier": "expanded"
+    }
+  ],
+  "non_pubmed_sources": [
+    {
+      "id": "journal_of_bronchology_predecessor",
+      "display_name": "Journal of Bronchology",
+      "source_type": "publisher_crossref",
+      "pubmed_query_term": "Journal of Bronchology[ta]",
+      "nlm_id": "9422791",
+      "issn_print": "1070-8030",
+      "issn_online": "1536-7959",
+      "tier": "core_historical_gap",
+      "start_year": 1994,
+      "end_year": 2008,
+      "project_start_year": 2000,
+      "notes": "Separate predecessor title. The NLM Catalog does not list complete PubMed coverage; use the title query only as an audit and obtain the 2000-2008 archive from the publisher/Crossref."
+    },
+    {
+      "id": "respiratory_endoscopy",
+      "display_name": "Respiratory Endoscopy",
+      "source_type": "jstage",
+      "pubmed_query_term": null,
+      "issn_online": "2758-3813",
+      "tier": "core",
+      "start_year": 2023,
+      "notes": "Not found in the current NLM daily PubMed journal list when this registry was prepared. Ingest from J-STAGE and deduplicate later by DOI/PMID if PubMed indexing is added."
+    }
+  ],
+  "blocks": {
+    "core_journals": "(\n  J Bronchology Interv Pulmonol[ta]\n  OR Chest[ta]\n  OR Am J Respir Crit Care Med[ta]\n  OR Eur Respir J[ta]\n  OR Thorax[ta]\n  OR Ann Am Thorac Soc[ta]\n  OR Respiration[ta]\n  OR Respirology[ta]\n  OR Respir Med[ta]\n  OR Respir Res[ta]\n  OR J Thorac Dis[ta]\n)",
+    "core_plus_optional_continuity": "(\n  J Bronchology Interv Pulmonol[ta]\n  OR Chest[ta]\n  OR Am J Respir Crit Care Med[ta]\n  OR Eur Respir J[ta]\n  OR Thorax[ta]\n  OR Ann Am Thorac Soc[ta]\n  OR Respiration[ta]\n  OR Respirology[ta]\n  OR Respir Med[ta]\n  OR Respir Res[ta]\n  OR J Thorac Dis[ta]\n  OR Proc Am Thorac Soc[ta]\n)",
+    "expanded_journals": "(\n  J Thorac Oncol[ta]\n  OR Lung Cancer[ta]\n  OR Lancet Respir Med[ta]\n  OR Ann Thorac Surg[ta]\n  OR J Thorac Cardiovasc Surg[ta]\n  OR BMJ Open Respir Res[ta]\n  OR ATS Sch[ta]\n)",
+    "master_ip_terms": "(\n  \"Bronchoscopy\"[mh]\n  OR bronchoscop*[tiab]\n  OR tracheobronchoscop*[tiab]\n  OR endobronchial[tiab]\n  OR transbronchial[tiab]\n  OR \"interventional pulmonology\"[tiab]\n  OR \"interventional pulmonary\"[tiab]\n  OR \"interventional bronchoscopy\"[tiab]\n  OR \"advanced bronchoscopy\"[tiab]\n  OR EBUS[tiab]\n  OR \"EUS-B\"[tiab]\n  OR pleuroscop*[tiab]\n  OR \"medical thoracoscopy\"[tiab]\n  OR \"local anesthetic thoracoscopy\"[tiab]\n  OR \"local anaesthetic thoracoscopy\"[tiab]\n  OR \"indwelling pleural catheter\"[tiab]\n  OR \"indwelling pleural catheters\"[tiab]\n  OR \"tunneled pleural catheter\"[tiab]\n  OR \"tunneled pleural catheters\"[tiab]\n  OR thoracentes*[tiab]\n  OR \"central airway obstruction\"[tiab]\n  OR \"airway stent\"[tiab]\n  OR \"airway stents\"[tiab]\n  OR \"tracheobronchial stent\"[tiab]\n  OR \"tracheobronchial stents\"[tiab]\n  OR \"bronchoscopic lung volume reduction\"[tiab]\n  OR \"endobronchial valve\"[tiab]\n  OR \"endobronchial valves\"[tiab]\n  OR \"transbronchial lung cryobiopsy\"[tiab]\n  OR \"transbronchial cryobiopsy\"[tiab]\n  OR \"percutaneous tracheostomy\"[tiab]\n  OR \"percutaneous dilatational tracheostomy\"[tiab]\n  OR \"percutaneous dilational tracheostomy\"[tiab]\n  OR \"bronchial thermoplasty\"[tiab]\n  OR \"whole lung lavage\"[tiab]\n  OR \"whole-lung lavage\"[tiab]\n)"
+  },
+  "queries": {
+    "core_backfill": "(\n  J Bronchology Interv Pulmonol[ta]\n  OR Chest[ta]\n  OR Am J Respir Crit Care Med[ta]\n  OR Eur Respir J[ta]\n  OR Thorax[ta]\n  OR Ann Am Thorac Soc[ta]\n  OR Respiration[ta]\n  OR Respirology[ta]\n  OR Respir Med[ta]\n  OR Respir Res[ta]\n  OR J Thorac Dis[ta]\n)\nAND 2000:3000[dp]",
+    "core_plus_optional_continuity_backfill": "(\n  J Bronchology Interv Pulmonol[ta]\n  OR Chest[ta]\n  OR Am J Respir Crit Care Med[ta]\n  OR Eur Respir J[ta]\n  OR Thorax[ta]\n  OR Ann Am Thorac Soc[ta]\n  OR Respiration[ta]\n  OR Respirology[ta]\n  OR Respir Med[ta]\n  OR Respir Res[ta]\n  OR J Thorac Dis[ta]\n  OR Proc Am Thorac Soc[ta]\n)\nAND 2000:3000[dp]",
+    "expanded_all_records_audit": "(\n  J Thorac Oncol[ta]\n  OR Lung Cancer[ta]\n  OR Lancet Respir Med[ta]\n  OR Ann Thorac Surg[ta]\n  OR J Thorac Cardiovasc Surg[ta]\n  OR BMJ Open Respir Res[ta]\n  OR ATS Sch[ta]\n)\nAND 2000:3000[dp]",
+    "expanded_topic_filtered_backfill": "(\n  J Thorac Oncol[ta]\n  OR Lung Cancer[ta]\n  OR Lancet Respir Med[ta]\n  OR Ann Thorac Surg[ta]\n  OR J Thorac Cardiovasc Surg[ta]\n  OR BMJ Open Respir Res[ta]\n  OR ATS Sch[ta]\n)\nAND\n(\n  \"Bronchoscopy\"[mh]\n  OR bronchoscop*[tiab]\n  OR tracheobronchoscop*[tiab]\n  OR endobronchial[tiab]\n  OR transbronchial[tiab]\n  OR \"interventional pulmonology\"[tiab]\n  OR \"interventional pulmonary\"[tiab]\n  OR \"interventional bronchoscopy\"[tiab]\n  OR \"advanced bronchoscopy\"[tiab]\n  OR EBUS[tiab]\n  OR \"EUS-B\"[tiab]\n  OR pleuroscop*[tiab]\n  OR \"medical thoracoscopy\"[tiab]\n  OR \"local anesthetic thoracoscopy\"[tiab]\n  OR \"local anaesthetic thoracoscopy\"[tiab]\n  OR \"indwelling pleural catheter\"[tiab]\n  OR \"indwelling pleural catheters\"[tiab]\n  OR \"tunneled pleural catheter\"[tiab]\n  OR \"tunneled pleural catheters\"[tiab]\n  OR thoracentes*[tiab]\n  OR \"central airway obstruction\"[tiab]\n  OR \"airway stent\"[tiab]\n  OR \"airway stents\"[tiab]\n  OR \"tracheobronchial stent\"[tiab]\n  OR \"tracheobronchial stents\"[tiab]\n  OR \"bronchoscopic lung volume reduction\"[tiab]\n  OR \"endobronchial valve\"[tiab]\n  OR \"endobronchial valves\"[tiab]\n  OR \"transbronchial lung cryobiopsy\"[tiab]\n  OR \"transbronchial cryobiopsy\"[tiab]\n  OR \"percutaneous tracheostomy\"[tiab]\n  OR \"percutaneous dilatational tracheostomy\"[tiab]\n  OR \"percutaneous dilational tracheostomy\"[tiab]\n  OR \"bronchial thermoplasty\"[tiab]\n  OR \"whole lung lavage\"[tiab]\n  OR \"whole-lung lavage\"[tiab]\n)\nAND 2000:3000[dp]",
+    "all_pubmed_master_backfill": "(\n  \"Bronchoscopy\"[mh]\n  OR bronchoscop*[tiab]\n  OR tracheobronchoscop*[tiab]\n  OR endobronchial[tiab]\n  OR transbronchial[tiab]\n  OR \"interventional pulmonology\"[tiab]\n  OR \"interventional pulmonary\"[tiab]\n  OR \"interventional bronchoscopy\"[tiab]\n  OR \"advanced bronchoscopy\"[tiab]\n  OR EBUS[tiab]\n  OR \"EUS-B\"[tiab]\n  OR pleuroscop*[tiab]\n  OR \"medical thoracoscopy\"[tiab]\n  OR \"local anesthetic thoracoscopy\"[tiab]\n  OR \"local anaesthetic thoracoscopy\"[tiab]\n  OR \"indwelling pleural catheter\"[tiab]\n  OR \"indwelling pleural catheters\"[tiab]\n  OR \"tunneled pleural catheter\"[tiab]\n  OR \"tunneled pleural catheters\"[tiab]\n  OR thoracentes*[tiab]\n  OR \"central airway obstruction\"[tiab]\n  OR \"airway stent\"[tiab]\n  OR \"airway stents\"[tiab]\n  OR \"tracheobronchial stent\"[tiab]\n  OR \"tracheobronchial stents\"[tiab]\n  OR \"bronchoscopic lung volume reduction\"[tiab]\n  OR \"endobronchial valve\"[tiab]\n  OR \"endobronchial valves\"[tiab]\n  OR \"transbronchial lung cryobiopsy\"[tiab]\n  OR \"transbronchial cryobiopsy\"[tiab]\n  OR \"percutaneous tracheostomy\"[tiab]\n  OR \"percutaneous dilatational tracheostomy\"[tiab]\n  OR \"percutaneous dilational tracheostomy\"[tiab]\n  OR \"bronchial thermoplasty\"[tiab]\n  OR \"whole lung lavage\"[tiab]\n  OR \"whole-lung lavage\"[tiab]\n)\nAND 2000:3000[dp]"
+  },
+  "discovery_queries": [
+    {
+      "id": "ip_broad_catchall",
+      "label": "Broad IP catch-all",
+      "seed_topics": ["other_advanced_bronchoscopy"],
+      "cadence": "monthly_backfill_or_low_cost_prescreen",
+      "precision_profile": "high_recall_low_precision",
+      "query_body": "(\n  \"Bronchoscopy\"[mh]\n  OR bronchoscop*[tiab]\n  OR tracheobronchoscop*[tiab]\n  OR \"interventional pulmonology\"[tiab]\n  OR \"interventional pulmonary\"[tiab]\n  OR \"interventional bronchoscopy\"[tiab]\n  OR \"advanced bronchoscopy\"[tiab]\n  OR EBUS[tiab]\n  OR \"EUS-B\"[tiab]\n  OR pleuroscop*[tiab]\n  OR \"medical thoracoscopy\"[tiab]\n  OR \"indwelling pleural catheter\"[tiab]\n  OR \"indwelling pleural catheters\"[tiab]\n  OR \"tunneled pleural catheter\"[tiab]\n  OR \"tunneled pleural catheters\"[tiab]\n  OR \"bronchoscopic lung volume reduction\"[tiab]\n  OR \"transbronchial lung cryobiopsy\"[tiab]\n  OR \"percutaneous dilatational tracheostomy\"[tiab]\n  OR \"percutaneous dilational tracheostomy\"[tiab]\n)",
+      "backfill_query": "(\n  \"Bronchoscopy\"[mh]\n  OR bronchoscop*[tiab]\n  OR tracheobronchoscop*[tiab]\n  OR \"interventional pulmonology\"[tiab]\n  OR \"interventional pulmonary\"[tiab]\n  OR \"interventional bronchoscopy\"[tiab]\n  OR \"advanced bronchoscopy\"[tiab]\n  OR EBUS[tiab]\n  OR \"EUS-B\"[tiab]\n  OR pleuroscop*[tiab]\n  OR \"medical thoracoscopy\"[tiab]\n  OR \"indwelling pleural catheter\"[tiab]\n  OR \"indwelling pleural catheters\"[tiab]\n  OR \"tunneled pleural catheter\"[tiab]\n  OR \"tunneled pleural catheters\"[tiab]\n  OR \"bronchoscopic lung volume reduction\"[tiab]\n  OR \"transbronchial lung cryobiopsy\"[tiab]\n  OR \"percutaneous dilatational tracheostomy\"[tiab]\n  OR \"percutaneous dilational tracheostomy\"[tiab]\n)\nAND 2000:3000[dp]"
+    },
+    {
+      "id": "ebus_mediastinal_staging",
+      "label": "EBUS, EUS-B, and mediastinal staging",
+      "seed_topics": ["ebus_mediastinal_staging"],
+      "cadence": "weekly",
+      "precision_profile": "high_recall",
+      "query_body": "(\n  EBUS[tiab]\n  OR \"EBUS-TBNA\"[tiab]\n  OR \"EBUS-TBNB\"[tiab]\n  OR \"endobronchial ultrasound\"[tiab]\n  OR \"endobronchial ultrasonography\"[tiab]\n  OR \"endobronchial ultrasound-guided\"[tiab]\n  OR \"EUS-B\"[tiab]\n  OR \"EUS-B-FNA\"[tiab]\n  OR \"endoscopic ultrasound with bronchoscope\"[tiab]\n  OR \"intranodal forceps biopsy\"[tiab]\n  OR \"EBUS-IFB\"[tiab]\n  OR \"mediastinal cryobiopsy\"[tiab]\n  OR \"transbronchial mediastinal cryobiopsy\"[tiab]\n  OR (\n    (TBNA[tiab] OR \"transbronchial needle aspiration\"[tiab] OR \"mediastinal staging\"[tiab])\n    AND (bronchoscop*[tiab] OR mediastin*[tiab] OR lung[tiab] OR pulmon*[tiab])\n  )\n)",
+      "backfill_query": "(\n  EBUS[tiab]\n  OR \"EBUS-TBNA\"[tiab]\n  OR \"EBUS-TBNB\"[tiab]\n  OR \"endobronchial ultrasound\"[tiab]\n  OR \"endobronchial ultrasonography\"[tiab]\n  OR \"endobronchial ultrasound-guided\"[tiab]\n  OR \"EUS-B\"[tiab]\n  OR \"EUS-B-FNA\"[tiab]\n  OR \"endoscopic ultrasound with bronchoscope\"[tiab]\n  OR \"intranodal forceps biopsy\"[tiab]\n  OR \"EBUS-IFB\"[tiab]\n  OR \"mediastinal cryobiopsy\"[tiab]\n  OR \"transbronchial mediastinal cryobiopsy\"[tiab]\n  OR (\n    (TBNA[tiab] OR \"transbronchial needle aspiration\"[tiab] OR \"mediastinal staging\"[tiab])\n    AND (bronchoscop*[tiab] OR mediastin*[tiab] OR lung[tiab] OR pulmon*[tiab])\n  )\n)\nAND 2000:3000[dp]"
+    },
+    {
+      "id": "peripheral_navigation",
+      "label": "Peripheral pulmonary lesions, navigation, and image confirmation",
+      "seed_topics": ["peripheral_navigation"],
+      "cadence": "weekly",
+      "precision_profile": "high_recall",
+      "query_body": "(\n  \"peripheral pulmonary lesion\"[tiab]\n  OR \"peripheral pulmonary lesions\"[tiab]\n  OR \"peripheral lung lesion\"[tiab]\n  OR \"peripheral lung lesions\"[tiab]\n  OR \"pulmonary nodule\"[tiab]\n  OR \"pulmonary nodules\"[tiab]\n  OR \"lung nodule\"[tiab]\n  OR \"lung nodules\"[tiab]\n)\nAND\n(\n  bronchoscop*[tiab]\n  OR \"radial EBUS\"[tiab]\n  OR \"R-EBUS\"[tiab]\n  OR \"radial endobronchial ultrasound\"[tiab]\n  OR \"guide sheath\"[tiab]\n  OR \"ultrathin bronchoscopy\"[tiab]\n  OR \"ultrathin bronchoscope\"[tiab]\n  OR \"electromagnetic navigation\"[tiab]\n  OR \"electromagnetic navigational bronchoscopy\"[tiab]\n  OR \"navigation bronchoscopy\"[tiab]\n  OR \"navigational bronchoscopy\"[tiab]\n  OR \"virtual bronchoscopic navigation\"[tiab]\n  OR \"virtual bronchoscopy\"[tiab]\n  OR \"robotic bronchoscopy\"[tiab]\n  OR \"robotic-assisted bronchoscopy\"[tiab]\n  OR \"robot-assisted bronchoscopy\"[tiab]\n  OR \"robotically assisted bronchoscopy\"[tiab]\n  OR \"shape-sensing\"[tiab]\n  OR \"shape sensing\"[tiab]\n  OR \"cone-beam CT\"[tiab]\n  OR \"cone beam CT\"[tiab]\n  OR \"cone-beam computed tomography\"[tiab]\n  OR \"cone beam computed tomography\"[tiab]\n  OR \"mobile cone-beam CT\"[tiab]\n  OR \"augmented fluoroscopy\"[tiab]\n  OR \"3D fluoroscopy\"[tiab]\n  OR tomosynthesis[tiab]\n  OR \"tool-in-lesion\"[tiab]\n  OR \"tool in lesion\"[tiab]\n)",
+      "backfill_query": "(\n  \"peripheral pulmonary lesion\"[tiab]\n  OR \"peripheral pulmonary lesions\"[tiab]\n  OR \"peripheral lung lesion\"[tiab]\n  OR \"peripheral lung lesions\"[tiab]\n  OR \"pulmonary nodule\"[tiab]\n  OR \"pulmonary nodules\"[tiab]\n  OR \"lung nodule\"[tiab]\n  OR \"lung nodules\"[tiab]\n)\nAND\n(\n  bronchoscop*[tiab]\n  OR \"radial EBUS\"[tiab]\n  OR \"R-EBUS\"[tiab]\n  OR \"radial endobronchial ultrasound\"[tiab]\n  OR \"guide sheath\"[tiab]\n  OR \"ultrathin bronchoscopy\"[tiab]\n  OR \"ultrathin bronchoscope\"[tiab]\n  OR \"electromagnetic navigation\"[tiab]\n  OR \"electromagnetic navigational bronchoscopy\"[tiab]\n  OR \"navigation bronchoscopy\"[tiab]\n  OR \"navigational bronchoscopy\"[tiab]\n  OR \"virtual bronchoscopic navigation\"[tiab]\n  OR \"virtual bronchoscopy\"[tiab]\n  OR \"robotic bronchoscopy\"[tiab]\n  OR \"robotic-assisted bronchoscopy\"[tiab]\n  OR \"robot-assisted bronchoscopy\"[tiab]\n  OR \"robotically assisted bronchoscopy\"[tiab]\n  OR \"shape-sensing\"[tiab]\n  OR \"shape sensing\"[tiab]\n  OR \"cone-beam CT\"[tiab]\n  OR \"cone beam CT\"[tiab]\n  OR \"cone-beam computed tomography\"[tiab]\n  OR \"cone beam computed tomography\"[tiab]\n  OR \"mobile cone-beam CT\"[tiab]\n  OR \"augmented fluoroscopy\"[tiab]\n  OR \"3D fluoroscopy\"[tiab]\n  OR tomosynthesis[tiab]\n  OR \"tool-in-lesion\"[tiab]\n  OR \"tool in lesion\"[tiab]\n)\nAND 2000:3000[dp]"
+    },
+    {
+      "id": "peripheral_biopsy_localization",
+      "label": "Peripheral biopsy, specimen adequacy, fiducials, and localization",
+      "seed_topics": ["peripheral_biopsy_localization"],
+      "cadence": "weekly",
+      "precision_profile": "moderate_recall",
+      "query_body": "(\n  bronchoscop*[tiab]\n  OR transbronchial[tiab]\n  OR endobronchial[tiab]\n)\nAND\n(\n  \"peripheral pulmonary lesion\"[tiab]\n  OR \"peripheral pulmonary lesions\"[tiab]\n  OR \"peripheral lung lesion\"[tiab]\n  OR \"peripheral lung lesions\"[tiab]\n  OR \"pulmonary nodule\"[tiab]\n  OR \"pulmonary nodules\"[tiab]\n  OR \"lung nodule\"[tiab]\n  OR \"lung nodules\"[tiab]\n)\nAND\n(\n  \"needle biopsy\"[tiab]\n  OR \"forceps biopsy\"[tiab]\n  OR cryobiops*[tiab]\n  OR \"transbronchial biopsy\"[tiab]\n  OR \"molecular adequacy\"[tiab]\n  OR \"molecular testing\"[tiab]\n  OR \"genomic testing\"[tiab]\n  OR \"next-generation sequencing\"[tiab]\n  OR \"next generation sequencing\"[tiab]\n  OR \"fiducial marker\"[tiab]\n  OR \"fiducial markers\"[tiab]\n  OR \"dye marking\"[tiab]\n  OR \"dye localization\"[tiab]\n  OR \"bronchoscopic localization\"[tiab]\n  OR \"pleural dye marking\"[tiab]\n)",
+      "backfill_query": "(\n  bronchoscop*[tiab]\n  OR transbronchial[tiab]\n  OR endobronchial[tiab]\n)\nAND\n(\n  \"peripheral pulmonary lesion\"[tiab]\n  OR \"peripheral pulmonary lesions\"[tiab]\n  OR \"peripheral lung lesion\"[tiab]\n  OR \"peripheral lung lesions\"[tiab]\n  OR \"pulmonary nodule\"[tiab]\n  OR \"pulmonary nodules\"[tiab]\n  OR \"lung nodule\"[tiab]\n  OR \"lung nodules\"[tiab]\n)\nAND\n(\n  \"needle biopsy\"[tiab]\n  OR \"forceps biopsy\"[tiab]\n  OR cryobiops*[tiab]\n  OR \"transbronchial biopsy\"[tiab]\n  OR \"molecular adequacy\"[tiab]\n  OR \"molecular testing\"[tiab]\n  OR \"genomic testing\"[tiab]\n  OR \"next-generation sequencing\"[tiab]\n  OR \"next generation sequencing\"[tiab]\n  OR \"fiducial marker\"[tiab]\n  OR \"fiducial markers\"[tiab]\n  OR \"dye marking\"[tiab]\n  OR \"dye localization\"[tiab]\n  OR \"bronchoscopic localization\"[tiab]\n  OR \"pleural dye marking\"[tiab]\n)\nAND 2000:3000[dp]"
+    },
+    {
+      "id": "central_airway_obstruction",
+      "label": "Central airway obstruction and therapeutic bronchoscopy",
+      "seed_topics": ["central_airway_obstruction"],
+      "cadence": "weekly",
+      "precision_profile": "high_recall",
+      "query_body": "(\n  \"central airway obstruction\"[tiab]\n  OR \"malignant airway obstruction\"[tiab]\n  OR \"benign airway obstruction\"[tiab]\n  OR \"endobronchial obstruction\"[tiab]\n  OR \"tracheal obstruction\"[tiab]\n  OR \"bronchial obstruction\"[tiab]\n  OR \"airway stenosis\"[tiab]\n  OR \"tracheal stenosis\"[tiab]\n  OR \"bronchial stenosis\"[tiab]\n  OR \"subglottic stenosis\"[tiab]\n  OR \"postintubation tracheal stenosis\"[tiab]\n  OR \"post-intubation tracheal stenosis\"[tiab]\n  OR tracheobronchomalacia[tiab]\n  OR \"excessive dynamic airway collapse\"[tiab]\n)\nAND\n(\n  bronchoscop*[tiab]\n  OR endobronchial[tiab]\n  OR \"rigid bronchoscopy\"[tiab]\n  OR debulk*[tiab]\n  OR recanali*[tiab]\n  OR dilat*[tiab]\n  OR stent*[tiab]\n  OR electrocauter*[tiab]\n  OR \"argon plasma coagulation\"[tiab]\n  OR laser[tiab]\n  OR cryotherap*[tiab]\n  OR cryoextract*[tiab]\n  OR \"spray cryotherapy\"[tiab]\n  OR \"photodynamic therapy\"[tiab]\n  OR brachytherap*[tiab]\n  OR microdebrid*[tiab]\n)",
+      "backfill_query": "(\n  \"central airway obstruction\"[tiab]\n  OR \"malignant airway obstruction\"[tiab]\n  OR \"benign airway obstruction\"[tiab]\n  OR \"endobronchial obstruction\"[tiab]\n  OR \"tracheal obstruction\"[tiab]\n  OR \"bronchial obstruction\"[tiab]\n  OR \"airway stenosis\"[tiab]\n  OR \"tracheal stenosis\"[tiab]\n  OR \"bronchial stenosis\"[tiab]\n  OR \"subglottic stenosis\"[tiab]\n  OR \"postintubation tracheal stenosis\"[tiab]\n  OR \"post-intubation tracheal stenosis\"[tiab]\n  OR tracheobronchomalacia[tiab]\n  OR \"excessive dynamic airway collapse\"[tiab]\n)\nAND\n(\n  bronchoscop*[tiab]\n  OR endobronchial[tiab]\n  OR \"rigid bronchoscopy\"[tiab]\n  OR debulk*[tiab]\n  OR recanali*[tiab]\n  OR dilat*[tiab]\n  OR stent*[tiab]\n  OR electrocauter*[tiab]\n  OR \"argon plasma coagulation\"[tiab]\n  OR laser[tiab]\n  OR cryotherap*[tiab]\n  OR cryoextract*[tiab]\n  OR \"spray cryotherapy\"[tiab]\n  OR \"photodynamic therapy\"[tiab]\n  OR brachytherap*[tiab]\n  OR microdebrid*[tiab]\n)\nAND 2000:3000[dp]"
+    },
+    {
+      "id": "airway_stents",
+      "label": "Airway stents and stent complications",
+      "seed_topics": ["airway_stents"],
+      "cadence": "weekly",
+      "precision_profile": "high_precision",
+      "query_body": "(\n  \"airway stent\"[tiab]\n  OR \"airway stents\"[tiab]\n  OR \"tracheal stent\"[tiab]\n  OR \"tracheal stents\"[tiab]\n  OR \"bronchial stent\"[tiab]\n  OR \"bronchial stents\"[tiab]\n  OR \"tracheobronchial stent\"[tiab]\n  OR \"tracheobronchial stents\"[tiab]\n  OR \"silicone airway stent\"[tiab]\n  OR \"silicone airway stents\"[tiab]\n  OR \"metallic airway stent\"[tiab]\n  OR \"metallic airway stents\"[tiab]\n  OR \"hybrid airway stent\"[tiab]\n  OR \"hybrid airway stents\"[tiab]\n  OR \"Montgomery T-tube\"[tiab]\n  OR \"Montgomery T tube\"[tiab]\n)",
+      "backfill_query": "(\n  \"airway stent\"[tiab]\n  OR \"airway stents\"[tiab]\n  OR \"tracheal stent\"[tiab]\n  OR \"tracheal stents\"[tiab]\n  OR \"bronchial stent\"[tiab]\n  OR \"bronchial stents\"[tiab]\n  OR \"tracheobronchial stent\"[tiab]\n  OR \"tracheobronchial stents\"[tiab]\n  OR \"silicone airway stent\"[tiab]\n  OR \"silicone airway stents\"[tiab]\n  OR \"metallic airway stent\"[tiab]\n  OR \"metallic airway stents\"[tiab]\n  OR \"hybrid airway stent\"[tiab]\n  OR \"hybrid airway stents\"[tiab]\n  OR \"Montgomery T-tube\"[tiab]\n  OR \"Montgomery T tube\"[tiab]\n)\nAND 2000:3000[dp]"
+    },
+    {
+      "id": "pleural_interventions",
+      "label": "Pleural procedures, pleuroscopy, IPCs, drainage, and pleurodesis",
+      "seed_topics": ["pleural_interventions"],
+      "cadence": "weekly",
+      "precision_profile": "high_recall",
+      "query_body": "(\n  pleuroscop*[tiab]\n  OR \"medical thoracoscopy\"[tiab]\n  OR \"local anesthetic thoracoscopy\"[tiab]\n  OR \"local anaesthetic thoracoscopy\"[tiab]\n  OR \"semirigid thoracoscopy\"[tiab]\n  OR \"semi-rigid thoracoscopy\"[tiab]\n  OR \"flexi-rigid thoracoscopy\"[tiab]\n  OR \"indwelling pleural catheter\"[tiab]\n  OR \"indwelling pleural catheters\"[tiab]\n  OR \"tunneled pleural catheter\"[tiab]\n  OR \"tunneled pleural catheters\"[tiab]\n  OR \"tunnelled pleural catheter\"[tiab]\n  OR \"tunnelled pleural catheters\"[tiab]\n  OR thoracentes*[tiab]\n  OR \"pleural biopsy\"[tiab]\n  OR \"pleural biopsies\"[tiab]\n  OR pleurodesis[tiab]\n  OR \"thoracic ultrasound\"[tiab]\n  OR \"pleural ultrasound\"[tiab]\n  OR \"pleural drain\"[tiab]\n  OR \"pleural drains\"[tiab]\n  OR \"intercostal drain\"[tiab]\n  OR \"intercostal drains\"[tiab]\n  OR (\n    (\"chest tube\"[tiab] OR \"chest tubes\"[tiab] OR \"pigtail catheter\"[tiab] OR \"pigtail catheters\"[tiab])\n    AND (pleur*[tiab] OR pneumothorax[tiab] OR empyema[tiab])\n  )\n  OR (\n    (\"intrapleural fibrinolytic\"[tiab] OR \"intrapleural fibrinolytics\"[tiab] OR \"intrapleural enzyme therapy\"[tiab] OR \"tPA DNase\"[tiab])\n    AND (empyema[tiab] OR \"pleural infection\"[tiab])\n  )\n)",
+      "backfill_query": "(\n  pleuroscop*[tiab]\n  OR \"medical thoracoscopy\"[tiab]\n  OR \"local anesthetic thoracoscopy\"[tiab]\n  OR \"local anaesthetic thoracoscopy\"[tiab]\n  OR \"semirigid thoracoscopy\"[tiab]\n  OR \"semi-rigid thoracoscopy\"[tiab]\n  OR \"flexi-rigid thoracoscopy\"[tiab]\n  OR \"indwelling pleural catheter\"[tiab]\n  OR \"indwelling pleural catheters\"[tiab]\n  OR \"tunneled pleural catheter\"[tiab]\n  OR \"tunneled pleural catheters\"[tiab]\n  OR \"tunnelled pleural catheter\"[tiab]\n  OR \"tunnelled pleural catheters\"[tiab]\n  OR thoracentes*[tiab]\n  OR \"pleural biopsy\"[tiab]\n  OR \"pleural biopsies\"[tiab]\n  OR pleurodesis[tiab]\n  OR \"thoracic ultrasound\"[tiab]\n  OR \"pleural ultrasound\"[tiab]\n  OR \"pleural drain\"[tiab]\n  OR \"pleural drains\"[tiab]\n  OR \"intercostal drain\"[tiab]\n  OR \"intercostal drains\"[tiab]\n  OR (\n    (\"chest tube\"[tiab] OR \"chest tubes\"[tiab] OR \"pigtail catheter\"[tiab] OR \"pigtail catheters\"[tiab])\n    AND (pleur*[tiab] OR pneumothorax[tiab] OR empyema[tiab])\n  )\n  OR (\n    (\"intrapleural fibrinolytic\"[tiab] OR \"intrapleural fibrinolytics\"[tiab] OR \"intrapleural enzyme therapy\"[tiab] OR \"tPA DNase\"[tiab])\n    AND (empyema[tiab] OR \"pleural infection\"[tiab])\n  )\n)\nAND 2000:3000[dp]"
+    },
+    {
+      "id": "bronchoscopic_lung_volume_reduction",
+      "label": "Bronchoscopic lung-volume reduction and bronchoscopic COPD therapies",
+      "seed_topics": ["bronchoscopic_lung_volume_reduction"],
+      "cadence": "weekly",
+      "precision_profile": "high_precision",
+      "query_body": "(\n  \"bronchoscopic lung volume reduction\"[tiab]\n  OR \"bronchoscopic volume reduction\"[tiab]\n  OR \"endobronchial valve\"[tiab]\n  OR \"endobronchial valves\"[tiab]\n  OR \"bronchial valve\"[tiab]\n  OR \"bronchial valves\"[tiab]\n  OR Zephyr[tiab]\n  OR Spiration[tiab]\n  OR Chartis[tiab]\n  OR \"collateral ventilation\"[tiab]\n  OR \"lung volume reduction coil\"[tiab]\n  OR \"lung volume reduction coils\"[tiab]\n  OR RePneu[tiab]\n  OR \"bronchoscopic thermal vapor ablation\"[tiab]\n  OR \"bronchoscopic thermal vapour ablation\"[tiab]\n  OR \"bronchoscopic lung sealant\"[tiab]\n  OR \"airway bypass\"[tiab]\n  OR \"targeted lung denervation\"[tiab]\n)\nAND\n(\n  emphysema[tiab]\n  OR COPD[tiab]\n  OR hyperinflation[tiab]\n  OR \"Pulmonary Emphysema\"[mh]\n)",
+      "backfill_query": "(\n  \"bronchoscopic lung volume reduction\"[tiab]\n  OR \"bronchoscopic volume reduction\"[tiab]\n  OR \"endobronchial valve\"[tiab]\n  OR \"endobronchial valves\"[tiab]\n  OR \"bronchial valve\"[tiab]\n  OR \"bronchial valves\"[tiab]\n  OR Zephyr[tiab]\n  OR Spiration[tiab]\n  OR Chartis[tiab]\n  OR \"collateral ventilation\"[tiab]\n  OR \"lung volume reduction coil\"[tiab]\n  OR \"lung volume reduction coils\"[tiab]\n  OR RePneu[tiab]\n  OR \"bronchoscopic thermal vapor ablation\"[tiab]\n  OR \"bronchoscopic thermal vapour ablation\"[tiab]\n  OR \"bronchoscopic lung sealant\"[tiab]\n  OR \"airway bypass\"[tiab]\n  OR \"targeted lung denervation\"[tiab]\n)\nAND\n(\n  emphysema[tiab]\n  OR COPD[tiab]\n  OR hyperinflation[tiab]\n  OR \"Pulmonary Emphysema\"[mh]\n)\nAND 2000:3000[dp]"
+    },
+    {
+      "id": "persistent_air_leak_fistula",
+      "label": "Persistent air leak and bronchoscopic fistula closure",
+      "seed_topics": ["persistent_air_leak_fistula"],
+      "cadence": "weekly",
+      "precision_profile": "high_recall",
+      "query_body": "(\n  \"persistent air leak\"[tiab]\n  OR \"prolonged air leak\"[tiab]\n  OR \"alveolopleural fistula\"[tiab]\n  OR \"alveolar-pleural fistula\"[tiab]\n  OR \"bronchopleural fistula\"[tiab]\n  OR \"broncho-pleural fistula\"[tiab]\n  OR \"bronchocutaneous fistula\"[tiab]\n  OR \"bronchobiliary fistula\"[tiab]\n)\nAND\n(\n  bronchoscop*[tiab]\n  OR endobronchial[tiab]\n  OR intrabronchial[tiab]\n  OR \"endobronchial valve\"[tiab]\n  OR \"endobronchial valves\"[tiab]\n  OR \"bronchial valve\"[tiab]\n  OR \"bronchial valves\"[tiab]\n  OR spigot*[tiab]\n  OR \"Watanabe spigot\"[tiab]\n  OR sealant*[tiab]\n  OR glue[tiab]\n  OR occluder*[tiab]\n  OR Amplatzer[tiab]\n  OR coil*[tiab]\n)",
+      "backfill_query": "(\n  \"persistent air leak\"[tiab]\n  OR \"prolonged air leak\"[tiab]\n  OR \"alveolopleural fistula\"[tiab]\n  OR \"alveolar-pleural fistula\"[tiab]\n  OR \"bronchopleural fistula\"[tiab]\n  OR \"broncho-pleural fistula\"[tiab]\n  OR \"bronchocutaneous fistula\"[tiab]\n  OR \"bronchobiliary fistula\"[tiab]\n)\nAND\n(\n  bronchoscop*[tiab]\n  OR endobronchial[tiab]\n  OR intrabronchial[tiab]\n  OR \"endobronchial valve\"[tiab]\n  OR \"endobronchial valves\"[tiab]\n  OR \"bronchial valve\"[tiab]\n  OR \"bronchial valves\"[tiab]\n  OR spigot*[tiab]\n  OR \"Watanabe spigot\"[tiab]\n  OR sealant*[tiab]\n  OR glue[tiab]\n  OR occluder*[tiab]\n  OR Amplatzer[tiab]\n  OR coil*[tiab]\n)\nAND 2000:3000[dp]"
+    },
+    {
+      "id": "transbronchial_cryobiopsy",
+      "label": "Transbronchial and endobronchial cryobiopsy",
+      "seed_topics": ["transbronchial_cryobiopsy"],
+      "cadence": "weekly",
+      "precision_profile": "high_precision",
+      "query_body": "(\n  \"transbronchial lung cryobiopsy\"[tiab]\n  OR \"transbronchial cryobiopsy\"[tiab]\n  OR \"transbronchial cryo-biopsy\"[tiab]\n  OR TBLC[tiab]\n  OR TBCB[tiab]\n  OR (\n    (cryobiops*[tiab] OR \"cryo-biopsy\"[tiab] OR cryoprobe*[tiab])\n    AND (transbronchial[tiab] OR endobronchial[tiab] OR bronchoscop*[tiab])\n  )\n)",
+      "backfill_query": "(\n  \"transbronchial lung cryobiopsy\"[tiab]\n  OR \"transbronchial cryobiopsy\"[tiab]\n  OR \"transbronchial cryo-biopsy\"[tiab]\n  OR TBLC[tiab]\n  OR TBCB[tiab]\n  OR (\n    (cryobiops*[tiab] OR \"cryo-biopsy\"[tiab] OR cryoprobe*[tiab])\n    AND (transbronchial[tiab] OR endobronchial[tiab] OR bronchoscop*[tiab])\n  )\n)\nAND 2000:3000[dp]"
+    },
+    {
+      "id": "hemoptysis_airway_bleeding",
+      "label": "Hemoptysis and bronchoscopic airway-bleeding management",
+      "seed_topics": ["hemoptysis_airway_bleeding"],
+      "cadence": "weekly",
+      "precision_profile": "moderate_recall",
+      "query_body": "(\n  hemoptysis[tiab]\n  OR haemoptysis[tiab]\n  OR \"airway bleeding\"[tiab]\n  OR \"endobronchial bleeding\"[tiab]\n  OR \"bronchoscopic bleeding\"[tiab]\n)\nAND\n(\n  bronchoscop*[tiab]\n  OR endobronchial[tiab]\n  OR \"bronchial blocker\"[tiab]\n  OR \"bronchial blockers\"[tiab]\n  OR \"endobronchial blocker\"[tiab]\n  OR \"endobronchial blockers\"[tiab]\n  OR tamponade[tiab]\n  OR \"topical hemostatic\"[tiab]\n  OR \"topical haemostatic\"[tiab]\n  OR cryotherap*[tiab]\n  OR electrocauter*[tiab]\n  OR \"argon plasma coagulation\"[tiab]\n  OR laser[tiab]\n)",
+      "backfill_query": "(\n  hemoptysis[tiab]\n  OR haemoptysis[tiab]\n  OR \"airway bleeding\"[tiab]\n  OR \"endobronchial bleeding\"[tiab]\n  OR \"bronchoscopic bleeding\"[tiab]\n)\nAND\n(\n  bronchoscop*[tiab]\n  OR endobronchial[tiab]\n  OR \"bronchial blocker\"[tiab]\n  OR \"bronchial blockers\"[tiab]\n  OR \"endobronchial blocker\"[tiab]\n  OR \"endobronchial blockers\"[tiab]\n  OR tamponade[tiab]\n  OR \"topical hemostatic\"[tiab]\n  OR \"topical haemostatic\"[tiab]\n  OR cryotherap*[tiab]\n  OR electrocauter*[tiab]\n  OR \"argon plasma coagulation\"[tiab]\n  OR laser[tiab]\n)\nAND 2000:3000[dp]"
+    },
+    {
+      "id": "percutaneous_tracheostomy",
+      "label": "Percutaneous tracheostomy and procedural guidance",
+      "seed_topics": ["percutaneous_tracheostomy"],
+      "cadence": "weekly",
+      "precision_profile": "high_precision",
+      "query_body": "(\n  \"percutaneous dilatational tracheostomy\"[tiab]\n  OR \"percutaneous dilational tracheostomy\"[tiab]\n  OR \"percutaneous tracheostomy\"[tiab]\n  OR \"bronchoscopic tracheostomy\"[tiab]\n  OR \"bronchoscopy-guided tracheostomy\"[tiab]\n  OR \"bronchoscopic-guided tracheostomy\"[tiab]\n  OR \"ultrasound-guided tracheostomy\"[tiab]\n  OR \"ultrasound guided tracheostomy\"[tiab]\n)",
+      "backfill_query": "(\n  \"percutaneous dilatational tracheostomy\"[tiab]\n  OR \"percutaneous dilational tracheostomy\"[tiab]\n  OR \"percutaneous tracheostomy\"[tiab]\n  OR \"bronchoscopic tracheostomy\"[tiab]\n  OR \"bronchoscopy-guided tracheostomy\"[tiab]\n  OR \"bronchoscopic-guided tracheostomy\"[tiab]\n  OR \"ultrasound-guided tracheostomy\"[tiab]\n  OR \"ultrasound guided tracheostomy\"[tiab]\n)\nAND 2000:3000[dp]"
+    },
+    {
+      "id": "other_advanced_bronchoscopy",
+      "label": "Other advanced bronchoscopy: foreign bodies, thermoplasty, lavage, and transplant airways",
+      "seed_topics": ["other_advanced_bronchoscopy"],
+      "cadence": "weekly",
+      "precision_profile": "high_recall",
+      "query_body": "(\n  \"bronchial thermoplasty\"[tiab]\n  OR \"whole lung lavage\"[tiab]\n  OR \"whole-lung lavage\"[tiab]\n  OR (\n    (\"foreign body\"[tiab] OR \"foreign bodies\"[tiab])\n    AND (bronchoscop*[tiab] OR tracheobronch*[tiab] OR airway[tiab])\n  )\n  OR (\n    (transplant*[tiab] OR \"Lung Transplantation\"[mh])\n    AND (\n      \"airway complication\"[tiab]\n      OR \"airway complications\"[tiab]\n      OR \"bronchial stenosis\"[tiab]\n      OR \"anastomotic stenosis\"[tiab]\n      OR \"airway dehiscence\"[tiab]\n      OR \"bronchial dehiscence\"[tiab]\n    )\n    AND (bronchoscop*[tiab] OR endobronchial[tiab] OR stent*[tiab] OR dilat*[tiab])\n  )\n)",
+      "backfill_query": "(\n  \"bronchial thermoplasty\"[tiab]\n  OR \"whole lung lavage\"[tiab]\n  OR \"whole-lung lavage\"[tiab]\n  OR (\n    (\"foreign body\"[tiab] OR \"foreign bodies\"[tiab])\n    AND (bronchoscop*[tiab] OR tracheobronch*[tiab] OR airway[tiab])\n  )\n  OR (\n    (transplant*[tiab] OR \"Lung Transplantation\"[mh])\n    AND (\n      \"airway complication\"[tiab]\n      OR \"airway complications\"[tiab]\n      OR \"bronchial stenosis\"[tiab]\n      OR \"anastomotic stenosis\"[tiab]\n      OR \"airway dehiscence\"[tiab]\n      OR \"bronchial dehiscence\"[tiab]\n    )\n    AND (bronchoscop*[tiab] OR endobronchial[tiab] OR stent*[tiab] OR dilat*[tiab])\n  )\n)\nAND 2000:3000[dp]"
+    },
+    {
+      "id": "bronchoscopic_tumor_ablation",
+      "label": "Bronchoscopic tumor ablation and emerging therapeutic technologies",
+      "seed_topics": ["bronchoscopic_tumor_ablation"],
+      "cadence": "weekly",
+      "precision_profile": "moderate_recall",
+      "query_body": "(\n  bronchoscop*[tiab]\n  OR endobronchial[tiab]\n  OR transbronchial[tiab]\n)\nAND\n(\n  \"microwave ablation\"[tiab]\n  OR \"radiofrequency ablation\"[tiab]\n  OR \"thermal ablation\"[tiab]\n  OR \"vapor ablation\"[tiab]\n  OR \"vapour ablation\"[tiab]\n  OR \"pulsed electric field\"[tiab]\n  OR \"pulsed-field ablation\"[tiab]\n  OR \"pulsed field ablation\"[tiab]\n  OR \"photodynamic therapy\"[tiab]\n  OR brachytherap*[tiab]\n  OR \"spray cryotherapy\"[tiab]\n)\nAND\n(\n  lung[tiab]\n  OR pulmon*[tiab]\n  OR airway*[tiab]\n  OR bronch*[tiab]\n  OR neoplasm*[tiab]\n  OR cancer*[tiab]\n  OR tumor*[tiab]\n  OR tumour*[tiab]\n)",
+      "backfill_query": "(\n  bronchoscop*[tiab]\n  OR endobronchial[tiab]\n  OR transbronchial[tiab]\n)\nAND\n(\n  \"microwave ablation\"[tiab]\n  OR \"radiofrequency ablation\"[tiab]\n  OR \"thermal ablation\"[tiab]\n  OR \"vapor ablation\"[tiab]\n  OR \"vapour ablation\"[tiab]\n  OR \"pulsed electric field\"[tiab]\n  OR \"pulsed-field ablation\"[tiab]\n  OR \"pulsed field ablation\"[tiab]\n  OR \"photodynamic therapy\"[tiab]\n  OR brachytherap*[tiab]\n  OR \"spray cryotherapy\"[tiab]\n)\nAND\n(\n  lung[tiab]\n  OR pulmon*[tiab]\n  OR airway*[tiab]\n  OR bronch*[tiab]\n  OR neoplasm*[tiab]\n  OR cancer*[tiab]\n  OR tumor*[tiab]\n  OR tumour*[tiab]\n)\nAND 2000:3000[dp]"
+    },
+    {
+      "id": "education_simulation_quality",
+      "label": "IP education, simulation, competency, workflow, and quality",
+      "seed_topics": ["education_simulation_quality"],
+      "cadence": "monthly",
+      "precision_profile": "moderate_recall",
+      "query_body": "(\n  bronchoscop*[tiab]\n  OR pleuroscop*[tiab]\n  OR \"medical thoracoscopy\"[tiab]\n  OR \"interventional pulmonology\"[tiab]\n  OR \"interventional pulmonary\"[tiab]\n)\nAND\n(\n  simulation[tiab]\n  OR simulator*[tiab]\n  OR competency[tiab]\n  OR competence[tiab]\n  OR training[tiab]\n  OR curriculum[tiab]\n  OR \"learning curve\"[tiab]\n  OR assessment[tiab]\n  OR credential*[tiab]\n  OR quality[tiab]\n  OR workflow[tiab]\n  OR ergonomics[tiab]\n)",
+      "backfill_query": "(\n  bronchoscop*[tiab]\n  OR pleuroscop*[tiab]\n  OR \"medical thoracoscopy\"[tiab]\n  OR \"interventional pulmonology\"[tiab]\n  OR \"interventional pulmonary\"[tiab]\n)\nAND\n(\n  simulation[tiab]\n  OR simulator*[tiab]\n  OR competency[tiab]\n  OR competence[tiab]\n  OR training[tiab]\n  OR curriculum[tiab]\n  OR \"learning curve\"[tiab]\n  OR assessment[tiab]\n  OR credential*[tiab]\n  OR quality[tiab]\n  OR workflow[tiab]\n  OR ergonomics[tiab]\n)\nAND 2000:3000[dp]"
+    },
+    {
+      "id": "procedural_safety_anesthesia",
+      "label": "Procedural safety, anesthesia, ventilation, and complications",
+      "seed_topics": ["procedural_safety_anesthesia"],
+      "cadence": "monthly",
+      "precision_profile": "low_precision",
+      "query_body": "(\n  bronchoscop*[tiab]\n  OR pleuroscop*[tiab]\n  OR \"medical thoracoscopy\"[tiab]\n  OR \"interventional pulmonology\"[tiab]\n)\nAND\n(\n  anesthesia[tiab]\n  OR anaesthesia[tiab]\n  OR sedation[tiab]\n  OR ventilation[tiab]\n  OR hypoxemia[tiab]\n  OR hypoxaemia[tiab]\n  OR bleeding[tiab]\n  OR pneumothorax[tiab]\n  OR complication*[tiab]\n  OR safety[tiab]\n)",
+      "backfill_query": "(\n  bronchoscop*[tiab]\n  OR pleuroscop*[tiab]\n  OR \"medical thoracoscopy\"[tiab]\n  OR \"interventional pulmonology\"[tiab]\n)\nAND\n(\n  anesthesia[tiab]\n  OR anaesthesia[tiab]\n  OR sedation[tiab]\n  OR ventilation[tiab]\n  OR hypoxemia[tiab]\n  OR hypoxaemia[tiab]\n  OR bleeding[tiab]\n  OR pneumothorax[tiab]\n  OR complication*[tiab]\n  OR safety[tiab]\n)\nAND 2000:3000[dp]"
+    },
+    {
+      "id": "ai_imaging_technology",
+      "label": "AI, computer vision, imaging, and procedural technology",
+      "seed_topics": ["ai_imaging_technology"],
+      "cadence": "weekly",
+      "precision_profile": "high_recall",
+      "query_body": "(\n  bronchoscop*[tiab]\n  OR endobronchial[tiab]\n  OR transbronchial[tiab]\n  OR EBUS[tiab]\n  OR pleuroscop*[tiab]\n)\nAND\n(\n  \"artificial intelligence\"[tiab]\n  OR \"machine learning\"[tiab]\n  OR \"deep learning\"[tiab]\n  OR \"computer vision\"[tiab]\n  OR \"image segmentation\"[tiab]\n  OR \"image guidance\"[tiab]\n  OR \"image registration\"[tiab]\n  OR \"augmented reality\"[tiab]\n  OR \"virtual reality\"[tiab]\n  OR radiomics[tiab]\n  OR \"neural network\"[tiab]\n  OR \"neural networks\"[tiab]\n)",
+      "backfill_query": "(\n  bronchoscop*[tiab]\n  OR endobronchial[tiab]\n  OR transbronchial[tiab]\n  OR EBUS[tiab]\n  OR pleuroscop*[tiab]\n)\nAND\n(\n  \"artificial intelligence\"[tiab]\n  OR \"machine learning\"[tiab]\n  OR \"deep learning\"[tiab]\n  OR \"computer vision\"[tiab]\n  OR \"image segmentation\"[tiab]\n  OR \"image guidance\"[tiab]\n  OR \"image registration\"[tiab]\n  OR \"augmented reality\"[tiab]\n  OR \"virtual reality\"[tiab]\n  OR radiomics[tiab]\n  OR \"neural network\"[tiab]\n  OR \"neural networks\"[tiab]\n)\nAND 2000:3000[dp]"
+    }
+  ],
+  "implementation_rules": [
+    "Run backfills in one-year buckets and store the exact query, source ID, run timestamp, count, and errors.",
+    "Union and deduplicate by PMID; retain all journal and discovery query IDs that matched each PMID.",
+    "Do not use hasabstract, English-language, humans, or publication-type exclusions during ingestion.",
+    "Use deterministic rules and AI only after retrieval; never permanently delete an AI-excluded citation.",
+    "For incremental synchronization, query new records by Create Date [crdt] and revised records by Modification Date [lr] using an explicit overlapping date window.",
+    "Use PMID as the canonical PubMed identifier and DOI as a secondary cross-source identifier.",
+    "Seed labels from discovery queries are provenance hints, not final topic classifications."
+  ]
+}

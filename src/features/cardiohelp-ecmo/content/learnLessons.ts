@@ -395,7 +395,211 @@ const vaOrientationLesson: GuidedLessonDefinition = {
   })),
 }
 
-export const cardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
+interface GuidedTransferVariant {
+  readonly scenarioId: string
+  readonly target: GuidedTarget
+  readonly instruction: string
+  readonly actionLabel: string
+  readonly action: SimulationAction
+  readonly setupActions?: readonly SimulationAction[]
+}
+
+const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTransferVariant>> = {
+  'startup-sensor-orientation': {
+    scenarioId: 'preload-drainage-collapse',
+    target: 'console',
+    instruction:
+      'A newly unstable VV patient has falling flow, increasingly negative pVen, and drainage chatter. Reduce pump demand on the real rotary control before reassessing the drainage cause.',
+    actionLabel: 'Reduce the transfer patient to 3300 RPM',
+    action: { type: 'SET_RPM', rpm: 3300 },
+  },
+  'preload-drainage-collapse': {
+    scenarioId: 'afterload-return-obstruction',
+    target: 'console',
+    instruction:
+      'The transfer patient has falling flow with pInt and pArt rising together. Open the parameter screen and localize whether resistance is before, across, or after the oxygenator.',
+    actionLabel: 'Open Parameter list for the new pressure pattern',
+    action: { type: 'SET_SCREEN', screen: 'parameters' },
+  },
+  'afterload-return-obstruction': {
+    scenarioId: 'afterload-oxygenator-resistance',
+    target: 'console',
+    instruction:
+      'In this contrasting pressure pattern, pInt separates from pArt and oxygenator pressure drop rises. Open the parameter screen and compare the three pressure locations.',
+    actionLabel: 'Open Parameter list for the oxygenator-resistance variant',
+    action: { type: 'SET_SCREEN', screen: 'parameters' },
+  },
+  'afterload-oxygenator-resistance': {
+    scenarioId: 'vv-recirculation',
+    target: 'console',
+    instruction:
+      'Displayed flow is high but patient oxygenation remains limited. Open Blood parameters and compare pre-oxygenator saturation with independent patient oxygenation before attributing the problem to membrane resistance.',
+    actionLabel: 'Open Blood parameters for the recirculation variant',
+    action: { type: 'SET_SCREEN', screen: 'blood' },
+  },
+  'vv-recirculation': {
+    scenarioId: 'acute-hypercapnia',
+    target: 'gas-panel',
+    instruction:
+      'The transfer patient now has acute hypercapnic acidemia without a recirculation pattern. Increase the separate sweep control to 4.0 L/min and observe PaCO₂ and pH.',
+    actionLabel: 'Set transfer sweep to 4.0 L/min',
+    action: { type: 'SET_SWEEP', sweep: 4 },
+  },
+  'acute-hypercapnia': {
+    scenarioId: 'compensated-hypercapnia',
+    target: 'console',
+    instruction:
+      'The new patient has elevated PaCO₂ with a compensated pH and low work of breathing. Open Blood parameters and reconcile the full acid–base context before changing sweep.',
+    actionLabel: 'Open Blood parameters for the compensated variant',
+    action: { type: 'SET_SCREEN', screen: 'blood' },
+  },
+  'compensated-hypercapnia': {
+    scenarioId: 'gas-source-interruption',
+    target: 'gas-panel',
+    instruction:
+      'Blood flow persists but the external gas source has just been interrupted. Restore the verified source on the separate gas panel and reassess membrane gas transfer.',
+    actionLabel: 'Restore the verified gas source',
+    action: { type: 'RESTORE_GAS_SOURCE' },
+    setupActions: [{ type: 'TICK', seconds: 5 }],
+  },
+  'gas-source-interruption': {
+    scenarioId: 'arterial-bubble-stop',
+    target: 'circuit',
+    instruction:
+      'A distinct arterial-bubble event stops the pump. Begin the authored isolation sequence by closing the return-limb clamp near the patient; do not treat acknowledgement as correction.',
+    actionLabel: 'Close the transfer patient return-limb clamp',
+    action: { type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return', closed: true },
+    setupActions: [{ type: 'TICK', seconds: 4 }],
+  },
+  'arterial-bubble-stop': {
+    scenarioId: 'transport-power-loss',
+    target: 'console',
+    instruction:
+      'During transport, AC power is lost and the console is running on a low battery. Restore a verified AC source from the Transport screen and confirm ongoing flow and backup readiness.',
+    actionLabel: 'Restore verified AC power',
+    action: { type: 'RESTORE_AC_POWER' },
+    setupActions: [{ type: 'TICK', seconds: 3 }],
+  },
+  'transport-power-loss': {
+    scenarioId: 'startup-sensor-orientation',
+    target: 'circuit',
+    instruction:
+      'A fresh circuit is now at startup rather than in transport. Perform the tip-to-tip circuit and sensor check before any support adjustment.',
+    actionLabel: 'Perform the transfer circuit check',
+    action: { type: 'PERFORM_CHECK', checkId: TIP_TO_TIP_CHECK_ID },
+  },
+  'va-startup-sensor-orientation': {
+    scenarioId: 'va-preload-drainage-collapse',
+    target: 'console',
+    instruction:
+      'A newly unstable VA patient has falling systemic-support flow, increasingly negative pVen, and venous-line chatter. Reduce pump demand before reassessing preload and the drainage limb.',
+    actionLabel: 'Reduce the transfer patient to 3300 RPM',
+    action: { type: 'SET_RPM', rpm: 3300 },
+  },
+  'va-preload-drainage-collapse': {
+    scenarioId: 'va-afterload-arterial-return-obstruction',
+    target: 'console',
+    instruction:
+      'The transfer case now shows pInt and pArt rising together with falling flow. Open Parameter list and distinguish circuit return pressure from the patient arterial line and MAP.',
+    actionLabel: 'Open Parameter list for the arterial-return variant',
+    action: { type: 'SET_SCREEN', screen: 'parameters' },
+  },
+  'va-afterload-arterial-return-obstruction': {
+    scenarioId: 'va-afterload-oxygenator-resistance',
+    target: 'console',
+    instruction:
+      'The new pattern has pInt separating from pArt with a rising oxygenator pressure drop. Open Parameter list and compare matched flow, RPM, and pressure locations.',
+    actionLabel: 'Open Parameter list for the oxygenator variant',
+    action: { type: 'SET_SCREEN', screen: 'parameters' },
+  },
+  'va-afterload-oxygenator-resistance': {
+    scenarioId: 'va-differential-hypoxemia',
+    target: 'console',
+    instruction:
+      'The circuit now has reassuring post-oxygenator blood while right-arm oxygenation is low. Open Blood parameters and compare circuit data with upper- and lower-body patient observations.',
+    actionLabel: 'Open Blood parameters for the mixed-circulation variant',
+    action: { type: 'SET_SCREEN', screen: 'blood' },
+  },
+  'va-differential-hypoxemia': {
+    scenarioId: 'va-lv-loading',
+    target: 'console',
+    instruction:
+      'The transfer patient has acceptable flow and MAP but narrow pulse pressure, absent aortic-valve opening, and pulmonary congestion. Open Parameter list and reconcile console flow with native-heart data.',
+    actionLabel: 'Open Parameter list for the LV-loading variant',
+    action: { type: 'SET_SCREEN', screen: 'parameters' },
+  },
+  'va-lv-loading': {
+    scenarioId: 'va-acute-hypercapnia',
+    target: 'gas-panel',
+    instruction:
+      'The new VA patient has acute hypercapnic acidemia. Increase the external sweep control to 4.0 L/min while continuing to assess circulation and right-arm oxygenation.',
+    actionLabel: 'Set transfer sweep to 4.0 L/min',
+    action: { type: 'SET_SWEEP', sweep: 4 },
+  },
+  'va-acute-hypercapnia': {
+    scenarioId: 'va-gas-source-interruption',
+    target: 'gas-panel',
+    instruction:
+      'VA blood flow persists after an external gas-source interruption. Restore the verified source and reassess post-oxygenator transfer, right-arm oxygenation, PaCO₂, and perfusion.',
+    actionLabel: 'Restore the verified gas source',
+    action: { type: 'RESTORE_GAS_SOURCE' },
+    setupActions: [{ type: 'TICK', seconds: 5 }],
+  },
+  'va-gas-source-interruption': {
+    scenarioId: 'va-arterial-bubble-stop',
+    target: 'circuit',
+    instruction:
+      'A distinct VA arterial-return bubble event stops forward support. Begin isolation by closing the arterial return-limb clamp near the patient before source correction and deliberate reset.',
+    actionLabel: 'Close the VA return-limb clamp',
+    action: { type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return', closed: true },
+    setupActions: [{ type: 'TICK', seconds: 4 }],
+  },
+  'va-arterial-bubble-stop': {
+    scenarioId: 'va-transport-power-loss',
+    target: 'console',
+    instruction:
+      'AC power is lost during VA transport and battery reserve is limited. Restore a verified AC source and confirm continuous circulatory support and backup readiness.',
+    actionLabel: 'Restore verified AC power',
+    action: { type: 'RESTORE_AC_POWER' },
+    setupActions: [{ type: 'TICK', seconds: 3 }],
+  },
+  'va-transport-power-loss': {
+    scenarioId: 'va-startup-sensor-orientation',
+    target: 'circuit',
+    instruction:
+      'A new VA circuit is at startup. Trace femoral venous drainage to femoral arterial return and perform the tip-to-tip circuit and sensor check before support changes.',
+    actionLabel: 'Perform the VA transfer circuit check',
+    action: { type: 'PERFORM_CHECK', checkId: TIP_TO_TIP_CHECK_ID },
+  },
+}
+
+function withRealTransferVariant(lesson: GuidedLessonDefinition): GuidedLessonDefinition {
+  const variant = guidedTransferVariantByLessonScenarioId[lesson.scenarioId]
+  if (!variant) return lesson
+  const transferScenario = requireScenario(variant.scenarioId)
+  return {
+    ...lesson,
+    steps: lesson.steps.map((lessonStep) =>
+      lessonStep.phase === 'transfer'
+        ? {
+            ...lessonStep,
+            title: `Transfer: ${transferScenario.title}`,
+            instruction: variant.instruction,
+            rationale: transferScenario.debrief.causalChain.join(' '),
+            target: variant.target,
+            actionLabel: variant.actionLabel,
+            actions: [variant.action],
+            expectedResponse: transferScenario.debrief.safetyNotes,
+            transferScenarioId: variant.scenarioId,
+            transferVariantId: `${lesson.scenarioId}-to-${variant.scenarioId}`,
+            transferSetupActions: variant.setupActions ?? [],
+          }
+        : lessonStep,
+    ),
+  }
+}
+
+const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
   orientationLesson,
   standardLesson({
     scenarioId: 'preload-drainage-collapse',
@@ -1373,6 +1577,9 @@ export const cardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
   }),
 ] as const
 
+export const cardiohelpLearnLessons: readonly GuidedLessonDefinition[] =
+  baseCardiohelpLearnLessons.map(withRealTransferVariant)
+
 export const cardiohelpLearnLessonByScenarioId = new Map(
   cardiohelpLearnLessons.map((lesson) => [lesson.scenarioId, lesson]),
 )
@@ -1384,12 +1591,29 @@ export const cardiohelpLearnLessonsBySupportMode: Readonly<
   va: cardiohelpLearnLessons.filter((lesson) => lesson.supportMode === 'va'),
 }
 
+const CAPSTONE_SCENARIO_IDS = new Set(['vv-off-sweep-capstone', 'va-mixed-circulation-capstone'])
+
+/**
+ * A capstone scenario may be wrapped by exactly one guided lesson: the track's integration lesson
+ * (WP10 §5.1). The unseen assessment capstone on the same scenario is unaffected. Before WP10 any
+ * lesson wrapping a capstone scenario was rejected outright, which made a capstone lesson
+ * impossible to author.
+ */
+export function capstoneLessonErrors(lesson: GuidedLessonDefinition): string[] {
+  if (!CAPSTONE_SCENARIO_IDS.has(lesson.scenarioId)) return []
+  if (lesson.curriculumStage === 'integration') return []
+  return [
+    `${lesson.id}: only an integration-stage lesson may wrap the capstone scenario ${lesson.scenarioId}`,
+  ]
+}
+
 export function validateGuidedLessonRegistry(): string[] {
   const errors: string[] = []
   const lessonIds = new Set<string>()
   const scenarioIds = new Set<string>()
+  const capstoneIds = new Set(['vv-off-sweep-capstone', 'va-mixed-circulation-capstone'])
   const eligibleScenarioIds = cardiohelpScenarios
-    .filter((scenario) => !scenario.hiddenUntilAssessment)
+    .filter((scenario) => !capstoneIds.has(scenario.id))
     .map((scenario) => scenario.id)
 
   for (const lesson of cardiohelpLearnLessons) {
@@ -1405,8 +1629,7 @@ export function validateGuidedLessonRegistry(): string[] {
     if (scenario && scenario.supportMode !== lesson.supportMode) {
       errors.push(`${lesson.id}: support mode does not match ${scenario.id}`)
     }
-    if (scenario?.hiddenUntilAssessment)
-      errors.push(`${lesson.id}: capstone must remain Practice-only`)
+    errors.push(...capstoneLessonErrors(lesson))
     if (!lesson.title.trim()) errors.push(`${lesson.id}: missing title`)
     if (!lesson.learningObjectives.length) errors.push(`${lesson.id}: missing objectives`)
 
@@ -1420,6 +1643,23 @@ export function validateGuidedLessonRegistry(): string[] {
       if (!item.actionLabel.trim()) errors.push(`${lesson.id}/${item.id}: missing action label`)
       if (item.actions.some((action) => action.type === 'TOGGLE_GLOBAL_OVERRIDE')) {
         errors.push(`${lesson.id}/${item.id}: Global Override cannot be a Learn action`)
+      }
+      if (item.phase === 'transfer') {
+        if (!item.transferVariantId || !item.transferScenarioId) {
+          errors.push(`${lesson.id}/${item.id}: transfer requires an authored scenario variant`)
+        }
+        if (item.transferScenarioId === lesson.scenarioId) {
+          errors.push(`${lesson.id}/${item.id}: transfer must use a different scenario`)
+        }
+        if (item.actions.length !== 1) {
+          errors.push(`${lesson.id}/${item.id}: transfer requires one observable learner action`)
+        }
+        const transferScenario = item.transferScenarioId
+          ? cardiohelpScenarioById.get(item.transferScenarioId)
+          : undefined
+        if (!transferScenario || transferScenario.supportMode !== lesson.supportMode) {
+          errors.push(`${lesson.id}/${item.id}: transfer scenario must exist in the same track`)
+        }
       }
     }
 

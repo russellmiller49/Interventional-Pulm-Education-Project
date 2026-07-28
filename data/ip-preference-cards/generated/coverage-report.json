@@ -1,0 +1,672 @@
+{
+  "format_version": 1,
+  "procedures": [
+    {
+      "procedure_code": "EBUS_TBNA",
+      "slots": 13,
+      "required": 7,
+      "slots_with_zero_selectable_products": 2,
+      "required_slots_with_zero_selectable_products": 2,
+      "required_mapping_percentage": 71.4,
+      "slot_coverage": [
+        {
+          "slot_id": "SLOT-4648848CC3",
+          "role_code": "EBUS_SCOPE",
+          "requiredness": "required",
+          "total_product_options": 1,
+          "selectable_product_options": 1,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-7DFA66EA2D",
+          "role_code": "VIDEO_PROCESSOR",
+          "requiredness": "required",
+          "total_product_options": 10,
+          "selectable_product_options": 4,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-92874E31E1",
+          "role_code": "ULTRASOUND_PROCESSOR",
+          "requiredness": "required",
+          "total_product_options": 2,
+          "selectable_product_options": 1,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-B19121A5B9",
+          "role_code": "ULTRASOUND_CABLE",
+          "requiredness": "required",
+          "total_product_options": 1,
+          "selectable_product_options": 1,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-93655BF7C4",
+          "role_code": "EBUS_BALLOON",
+          "requiredness": "conditional",
+          "total_product_options": 1,
+          "selectable_product_options": 1,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-1AF4BEFE3B",
+          "role_code": "EBUS_NEEDLE_FNA",
+          "requiredness": "required",
+          "total_product_options": 25,
+          "selectable_product_options": 21,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-B83EBD2FBB",
+          "role_code": "EBUS_NEEDLE_FNB",
+          "requiredness": "optional",
+          "total_product_options": 8,
+          "selectable_product_options": 4,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-D08C74941A",
+          "role_code": "EBUS_MINIFORCEPS",
+          "requiredness": "optional",
+          "total_product_options": 1,
+          "selectable_product_options": 1,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-12ACA27E54",
+          "role_code": "GENERIC_SPECIMEN",
+          "requiredness": "required",
+          "total_product_options": 0,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": true
+        },
+        {
+          "slot_id": "SLOT-76F4405D68",
+          "role_code": "SPECIMEN_TRAP",
+          "requiredness": "optional",
+          "total_product_options": 6,
+          "selectable_product_options": 2,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-2E3065C976",
+          "role_code": "GENERIC_SUCTION",
+          "requiredness": "required",
+          "total_product_options": 0,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": true
+        },
+        {
+          "slot_id": "SLOT-CD12842559",
+          "role_code": "EBUS_NEEDLE_ADAPTER",
+          "requiredness": "conditional",
+          "total_product_options": 1,
+          "selectable_product_options": 1,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-E8F0B48B49",
+          "role_code": "VACUUM_LOCKING_SYRINGE",
+          "requiredness": "optional",
+          "total_product_options": 5,
+          "selectable_product_options": 5,
+          "required_with_zero_selectable": false
+        }
+      ]
+    },
+    {
+      "procedure_code": "CHEST_TUBE",
+      "slots": 13,
+      "required": 3,
+      "slots_with_zero_selectable_products": 6,
+      "required_slots_with_zero_selectable_products": 3,
+      "required_mapping_percentage": 0,
+      "slot_coverage": [
+        {
+          "slot_id": "SLOT-C7DBD5BC4C",
+          "role_code": "GENERIC_ULTRASOUND",
+          "requiredness": "optional",
+          "total_product_options": 25,
+          "selectable_product_options": 14,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-708736B8C2",
+          "role_code": "CHEST_TUBE_SMALL_BORE",
+          "requiredness": "conditional",
+          "total_product_options": 11,
+          "selectable_product_options": 1,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-D5C3DB0027",
+          "role_code": "CHEST_TUBE_LARGE_BORE",
+          "requiredness": "conditional",
+          "total_product_options": 5,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-4D849E266F",
+          "role_code": "CHEST_TUBE_SURGICAL",
+          "requiredness": "conditional",
+          "total_product_options": 16,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-20D17E94D4",
+          "role_code": "PNEUMOTHORAX_KIT",
+          "requiredness": "optional",
+          "total_product_options": 9,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-3631C94D7A",
+          "role_code": "GENERIC_DRAINAGE_UNIT",
+          "requiredness": "required",
+          "total_product_options": 0,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": true
+        },
+        {
+          "slot_id": "SLOT-CE48C1B108",
+          "role_code": "GENERIC_SUCTION",
+          "requiredness": "required",
+          "total_product_options": 0,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": true
+        },
+        {
+          "slot_id": "SLOT-D02F71E583",
+          "role_code": "IPC_INSERTION_KIT",
+          "requiredness": "optional",
+          "total_product_options": 13,
+          "selectable_product_options": 10,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-B4E5C6A7A9",
+          "role_code": "IPC_DRAINAGE_KIT",
+          "requiredness": "conditional",
+          "total_product_options": 12,
+          "selectable_product_options": 10,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-4BE1D79D6C",
+          "role_code": "GENERIC_SPECIMEN",
+          "requiredness": "required",
+          "total_product_options": 0,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": true
+        },
+        {
+          "slot_id": "SLOT-AECDA16326",
+          "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
+          "requiredness": "conditional",
+          "total_product_options": 18,
+          "selectable_product_options": 11,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-702914B1CF",
+          "role_code": "IPC_DRESSING_KIT",
+          "requiredness": "conditional",
+          "total_product_options": 2,
+          "selectable_product_options": 2,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-67171A33D4",
+          "role_code": "IPC_MANAGEMENT_ACCESSORY",
+          "requiredness": "conditional",
+          "total_product_options": 11,
+          "selectable_product_options": 11,
+          "required_with_zero_selectable": false
+        }
+      ]
+    },
+    {
+      "procedure_code": "THERAPEUTIC_BRONCH",
+      "slots": 22,
+      "required": 3,
+      "slots_with_zero_selectable_products": 8,
+      "required_slots_with_zero_selectable_products": 1,
+      "required_mapping_percentage": 66.7,
+      "slot_coverage": [
+        {
+          "slot_id": "SLOT-B79D3CF198",
+          "role_code": "FLEX_SCOPE_THERAPEUTIC",
+          "requiredness": "required",
+          "total_product_options": 6,
+          "selectable_product_options": 3,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-6BCA0B7A49",
+          "role_code": "VIDEO_PROCESSOR",
+          "requiredness": "required",
+          "total_product_options": 10,
+          "selectable_product_options": 4,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-13609A744F",
+          "role_code": "GENERIC_SUCTION",
+          "requiredness": "required",
+          "total_product_options": 0,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": true
+        },
+        {
+          "slot_id": "SLOT-FCE9E3810E",
+          "role_code": "GENERIC_ENERGY_PLATFORM",
+          "requiredness": "conditional",
+          "total_product_options": 0,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-14453819D5",
+          "role_code": "CRYOPROBE_FLEX",
+          "requiredness": "conditional",
+          "total_product_options": 4,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-1647A73048",
+          "role_code": "FOREIGN_BODY_FORCEPS_FLEX",
+          "requiredness": "optional",
+          "total_product_options": 8,
+          "selectable_product_options": 7,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-115310F554",
+          "role_code": "FOREIGN_BODY_BASKET",
+          "requiredness": "optional",
+          "total_product_options": 7,
+          "selectable_product_options": 3,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-3FE6796B6D",
+          "role_code": "AIRWAY_BALLOON_DILATOR",
+          "requiredness": "conditional",
+          "total_product_options": 18,
+          "selectable_product_options": 18,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-D43C866FB5",
+          "role_code": "PULMONARY_GUIDEWIRE",
+          "requiredness": "conditional",
+          "total_product_options": 4,
+          "selectable_product_options": 4,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-7412B3318B",
+          "role_code": "INFLATION_DEVICE",
+          "requiredness": "conditional",
+          "total_product_options": 7,
+          "selectable_product_options": 7,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-45D721710F",
+          "role_code": "AIRWAY_STENT_SEMS_COVERED",
+          "requiredness": "conditional",
+          "total_product_options": 142,
+          "selectable_product_options": 81,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-09A64B2C62",
+          "role_code": "AIRWAY_STENT_SEMS_UNCOVERED",
+          "requiredness": "conditional",
+          "total_product_options": 26,
+          "selectable_product_options": 18,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-D2974FC11B",
+          "role_code": "BIOPSY_FORCEPS_FLEX",
+          "requiredness": "optional",
+          "total_product_options": 20,
+          "selectable_product_options": 15,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-0F8FA96C28",
+          "role_code": "GENERIC_SPECIMEN",
+          "requiredness": "conditional",
+          "total_product_options": 0,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-97CFA5C9A2",
+          "role_code": "APC_PROBE_FLEX",
+          "requiredness": "conditional",
+          "total_product_options": 11,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-90A43CBAEF",
+          "role_code": "ENERGY_CABLE_ADAPTER",
+          "requiredness": "conditional",
+          "total_product_options": 69,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-971BBE6BF8",
+          "role_code": "CRYO_SYSTEM_ACCESSORY",
+          "requiredness": "conditional",
+          "total_product_options": 14,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-D6B291DC80",
+          "role_code": "BITE_BLOCK",
+          "requiredness": "conditional",
+          "total_product_options": 2,
+          "selectable_product_options": 2,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-D7F2D36301",
+          "role_code": "ENDOSCOPE_CLEANING_BRUSH",
+          "requiredness": "conditional",
+          "total_product_options": 9,
+          "selectable_product_options": 6,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-1538BC9076",
+          "role_code": "APC_GAS_ACCESSORY",
+          "requiredness": "conditional",
+          "total_product_options": 12,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-081FB0C695",
+          "role_code": "AIRWAY_STENT_SIZING_DEVICE",
+          "requiredness": "optional",
+          "total_product_options": 1,
+          "selectable_product_options": 1,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-FDF73730B0",
+          "role_code": "BAL_KIT",
+          "requiredness": "optional",
+          "total_product_options": 7,
+          "selectable_product_options": 6,
+          "required_with_zero_selectable": false
+        }
+      ]
+    },
+    {
+      "procedure_code": "RIGID_BRONCH",
+      "slots": 25,
+      "required": 8,
+      "slots_with_zero_selectable_products": 10,
+      "required_slots_with_zero_selectable_products": 2,
+      "required_mapping_percentage": 75,
+      "slot_coverage": [
+        {
+          "slot_id": "SLOT-04C940D8B9",
+          "role_code": "RIGID_BRONCHOSCOPE_HEAD",
+          "requiredness": "required",
+          "total_product_options": 6,
+          "selectable_product_options": 2,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-113FCB30ED",
+          "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+          "requiredness": "required",
+          "total_product_options": 43,
+          "selectable_product_options": 5,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-175CA9F5B4",
+          "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+          "requiredness": "required",
+          "total_product_options": 80,
+          "selectable_product_options": 22,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-6BDDC6260B",
+          "role_code": "VIDEO_PROCESSOR",
+          "requiredness": "required",
+          "total_product_options": 10,
+          "selectable_product_options": 4,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-94783C387D",
+          "role_code": "FLEX_SCOPE_THERAPEUTIC",
+          "requiredness": "optional",
+          "total_product_options": 6,
+          "selectable_product_options": 3,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-BC936B7BD8",
+          "role_code": "RIGID_FORCEPS",
+          "requiredness": "required",
+          "total_product_options": 93,
+          "selectable_product_options": 14,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-2D59E32F4B",
+          "role_code": "RIGID_SUCTION_CATHETER",
+          "requiredness": "required",
+          "total_product_options": 37,
+          "selectable_product_options": 4,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-C2EF0C350D",
+          "role_code": "GENERIC_ENERGY_PLATFORM",
+          "requiredness": "conditional",
+          "total_product_options": 0,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-00E8CCAE2A",
+          "role_code": "CRYOPROBE_FLEX",
+          "requiredness": "conditional",
+          "total_product_options": 4,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-3D6358F157",
+          "role_code": "AIRWAY_BALLOON_DILATOR",
+          "requiredness": "optional",
+          "total_product_options": 18,
+          "selectable_product_options": 18,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-5F3642C851",
+          "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
+          "requiredness": "conditional",
+          "total_product_options": 105,
+          "selectable_product_options": 100,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-D6B6FF156F",
+          "role_code": "AIRWAY_STENT_SILICONE_Y",
+          "requiredness": "conditional",
+          "total_product_options": 6,
+          "selectable_product_options": 4,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-6A75E6D661",
+          "role_code": "AIRWAY_STENT_SILICONE_HOURGLASS",
+          "requiredness": "conditional",
+          "total_product_options": 4,
+          "selectable_product_options": 4,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-3FFB2D272E",
+          "role_code": "STENT_APPLICATOR",
+          "requiredness": "conditional",
+          "total_product_options": 8,
+          "selectable_product_options": 4,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-99199F9B11",
+          "role_code": "AIRWAY_STENT_SEMS_COVERED",
+          "requiredness": "optional",
+          "total_product_options": 142,
+          "selectable_product_options": 81,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-140B672D52",
+          "role_code": "FOREIGN_BODY_FORCEPS_FLEX",
+          "requiredness": "optional",
+          "total_product_options": 8,
+          "selectable_product_options": 7,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-18617846CD",
+          "role_code": "APC_APPLICATOR_RIGID",
+          "requiredness": "conditional",
+          "total_product_options": 8,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-8AA6269352",
+          "role_code": "ENERGY_CABLE_ADAPTER",
+          "requiredness": "conditional",
+          "total_product_options": 69,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-D6219069A9",
+          "role_code": "CRYO_SYSTEM_ACCESSORY",
+          "requiredness": "conditional",
+          "total_product_options": 14,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-E8281AFEA1",
+          "role_code": "APC_GAS_ACCESSORY",
+          "requiredness": "conditional",
+          "total_product_options": 12,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-19FC83049A",
+          "role_code": "RIGID_TELESCOPE",
+          "requiredness": "required",
+          "total_product_options": 11,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": true
+        },
+        {
+          "slot_id": "SLOT-72BAE3EC7C",
+          "role_code": "ENDOSCOPY_LIGHT_CABLE",
+          "requiredness": "required",
+          "total_product_options": 1,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": true
+        },
+        {
+          "slot_id": "SLOT-66C8ADA940",
+          "role_code": "RIGID_BRONCH_SHAVER",
+          "requiredness": "conditional",
+          "total_product_options": 8,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-3C8165659D",
+          "role_code": "RIGID_BIPOLAR_FORCEPS",
+          "requiredness": "conditional",
+          "total_product_options": 4,
+          "selectable_product_options": 0,
+          "required_with_zero_selectable": false
+        },
+        {
+          "slot_id": "SLOT-702FD644B7",
+          "role_code": "AIRWAY_STENT_SIZING_DEVICE",
+          "requiredness": "optional",
+          "total_product_options": 1,
+          "selectable_product_options": 1,
+          "required_with_zero_selectable": false
+        }
+      ]
+    }
+  ],
+  "roles_with_zero_selectable_products": [
+    "AIRWAY_STENT_PATIENT_SPECIFIC",
+    "APC_APPLICATOR_RIGID",
+    "APC_GAS_ACCESSORY",
+    "APC_PROBE_FLEX",
+    "AUTOMATED_ENDOSCOPE_REPROCESSOR",
+    "CO2_INSUFFLATOR",
+    "CRYOPROBE_FLEX",
+    "CRYO_SYSTEM_ACCESSORY",
+    "DLT_LEFT",
+    "DLT_RIGHT",
+    "ENDOBRONCHIAL_BLOCKER",
+    "ENDOBRONCHIAL_SPIGOT",
+    "ENDOSCOPIC_IRRIGATION_PUMP",
+    "ENDOSCOPIC_SUCTION_PUMP",
+    "ENDOSCOPY_LIGHT_CABLE",
+    "ENDOSCOPY_MONITOR",
+    "ENERGY_CABLE_ADAPTER",
+    "GENERIC_COLLATERAL_VENT",
+    "GENERIC_ENERGY_PLATFORM",
+    "GENERIC_PPE",
+    "GENERIC_SPECIMEN",
+    "GENERIC_SUCTION",
+    "GENERIC_WLL_LAVAGE",
+    "PDT_KIT",
+    "PLEURAL_BIOPSY_FORCEPS",
+    "PLEUROSCOPE",
+    "PLEUROSCOPY_TROCAR",
+    "PNEUMOTHORAX_KIT",
+    "RIGID_BIPOLAR_FORCEPS",
+    "RIGID_BRONCH_SHAVER",
+    "RIGID_TELESCOPE",
+    "TALC_POUDRAGE_KIT",
+    "TALC_VIAL",
+    "THORACENTESIS_KIT",
+    "THORACOSCOPY_PROBE",
+    "THORACOSCOPY_SCISSORS",
+    "THORACOSCOPY_TELESCOPE"
+  ],
+  "role_counts": {
+    "total": 98,
+    "zero_selectable": 37
+  }
+}

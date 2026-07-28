@@ -44,13 +44,6 @@ export type CrrtPrecommitReasoningPhase = Extract<
   'define' | 'select' | 'predict'
 >
 
-const crrtPrecommitReasoningPhases = [
-  'read',
-  'define',
-  'select',
-  'predict',
-] as const satisfies readonly CrrtReasoningPhase[]
-
 export interface CrrtPredictionCommitment {
   readonly goalOptionId: string
   readonly mechanismOptionId: string
@@ -88,7 +81,7 @@ export interface CrrtLearningSessionState {
   readonly experience: CrrtLearningExperience
   readonly persistenceEnabled: typeof CRRT_PROGRESS_PERSISTENCE_ENABLED
   readonly telemetryEnabled: typeof CRRT_TELEMETRY_ENABLED
-  /** Approved capstone identity; null for every non-Mastery or locked session. */
+  /** Content-owned capstone identity; null for every non-challenge session. */
   readonly masteryCapstoneId: string | null
   readonly roleLens: CrrtRoleLens
   readonly attempt: number
@@ -384,7 +377,7 @@ export function createCrrtLearningSession(
     options.experience === 'mastery' ? selectCrrtMasteryCapstoneId(options.caseDefinition) : null
   if (options.experience === 'mastery' && masteryCapstoneId === null) {
     throw new Error(
-      'CRRT Mastery is locked to its content-owned capstone case with at least two problem domains.',
+      'The CRRT challenge uses its content-owned capstone case with at least two problem domains.',
     )
   }
   const fixture = options.fixture ?? normalizeRuntimeCrrtCaseToEngineFixture(options.caseDefinition)
@@ -425,8 +418,8 @@ export function createCrrtLearningSession(
   }
 }
 
-function canAct(state: CrrtLearningSessionState): boolean {
-  return state.prediction !== null && !state.debriefRevealed
+function canModifyRun(state: CrrtLearningSessionState): boolean {
+  return !state.debriefRevealed
 }
 
 function applyNumberOperation(current: number, effect: NumericCaseEffect): number {
@@ -737,23 +730,11 @@ export function crrtLearningSessionReducer(
       })
     case 'ENTER_PRECOMMIT_REASONING_PHASE': {
       if (state.prediction || state.debriefRevealed) return state
-      const currentIndex = crrtPrecommitReasoningPhases.findIndex(
-        (phase) => phase === state.reasoningPhase,
-      )
-      const requestedIndex = crrtPrecommitReasoningPhases.indexOf(action.phase)
-      if (
-        currentIndex < 0 ||
-        requestedIndex === currentIndex ||
-        requestedIndex > currentIndex + 1
-      ) {
-        return state
-      }
+      if (action.phase === state.reasoningPhase) return state
       return { ...state, reasoningPhase: action.phase }
     }
     case 'COMMIT_PREDICTION': {
-      if (state.prediction || state.debriefRevealed || state.reasoningPhase !== 'predict') {
-        return state
-      }
+      if (state.prediction || state.debriefRevealed) return state
       const prediction = validatePrediction(state.caseDefinition, action.prediction)
       if (!prediction) return state
       return {
@@ -764,7 +745,7 @@ export function crrtLearningSessionReducer(
       }
     }
     case 'PERFORM_INTERVENTION': {
-      if (!canAct(state)) return state
+      if (!canModifyRun(state)) return state
       const intervention = state.caseDefinition.interventions.find(
         (candidate) => candidate.id === action.interventionId,
       )
@@ -788,7 +769,7 @@ export function crrtLearningSessionReducer(
       })
     }
     case 'DEVICE_ACTION': {
-      if (!canAct(state)) return state
+      if (!canModifyRun(state)) return state
       if (action.action.type === 'RESET_INTERFACE') {
         throw new Error('Reset the complete CRRT learning session instead of only the interface.')
       }
@@ -815,7 +796,7 @@ export function crrtLearningSessionReducer(
       })
     }
     case 'ADVANCE_TIME': {
-      if (!canAct(state)) return state
+      if (!canModifyRun(state)) return state
       if (!Number.isFinite(action.seconds) || action.seconds < 0) {
         throw new RangeError('CRRT learning-session time advance must be finite and nonnegative.')
       }
@@ -851,12 +832,7 @@ export function crrtLearningSessionReducer(
       }
     }
     case 'COMMIT_REASSESSMENT': {
-      if (
-        !canAct(state) ||
-        state.performedInterventionIds.length === 0 ||
-        state.reasoningPhase !== 'reassess' ||
-        state.reassessment.committed
-      ) {
+      if (state.debriefRevealed || state.reassessment.committed) {
         return state
       }
       const validIds = optionIds(state.caseDefinition.reassessmentOptions)
@@ -870,7 +846,7 @@ export function crrtLearningSessionReducer(
       }
     }
     case 'REVEAL_DEBRIEF':
-      if (!state.reassessment.committed || state.debriefRevealed) return state
+      if (state.debriefRevealed) return state
       return {
         ...state,
         debriefRevealed: true,

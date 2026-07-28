@@ -16,8 +16,6 @@ interface DevicePanelProps {
   state: IcuSimulationState
   scenario: IcuScenarioDefinition
   dispatch: Dispatch<IcuCommand>
-  controlsLocked?: boolean
-  neutralLocked?: boolean
 }
 
 interface NumericControlProps {
@@ -81,7 +79,6 @@ function DeviceShell({
   available,
   icon,
   configuration,
-  controlsLocked,
   children,
   dispatch,
 }: {
@@ -92,7 +89,6 @@ function DeviceShell({
   available: boolean
   icon: ReactNode
   configuration?: string
-  controlsLocked: boolean
   children: ReactNode
   dispatch: Dispatch<IcuCommand>
 }) {
@@ -120,7 +116,6 @@ function DeviceShell({
             {status === 'off' ? (
               <button
                 type="button"
-                disabled={controlsLocked}
                 onClick={() => dispatch({ type: 'therapy.prepare', therapy: id, configuration })}
               >
                 <ShieldCheck aria-hidden="true" /> Prepare with team
@@ -128,7 +123,6 @@ function DeviceShell({
             ) : status === 'ready' ? (
               <button
                 type="button"
-                disabled={controlsLocked}
                 onClick={() => dispatch({ type: 'therapy.start', therapy: id })}
               >
                 <Power aria-hidden="true" /> Start support
@@ -137,23 +131,20 @@ function DeviceShell({
               <button
                 type="button"
                 className={styles.stopButton}
-                disabled={controlsLocked}
                 onClick={() => dispatch({ type: 'therapy.stop', therapy: id })}
               >
                 <Power aria-hidden="true" /> Stop support
               </button>
             )}
             <span>
-              {controlsLocked
-                ? 'Commit a working shock classification in the Course panel to unlock support controls.'
-                : status === 'off'
-                  ? 'Supervised readiness workflow required before controls unlock.'
-                  : status === 'ready'
-                    ? 'Readiness confirmed. Review the goal before starting.'
-                    : 'Adjust one setting, advance time, then reassess.'}
+              {status === 'off'
+                ? 'Complete the supervised readiness workflow before changing support.'
+                : status === 'ready'
+                  ? 'Readiness confirmed. Review the goal before starting.'
+                  : 'Adjust one setting, advance time, then reassess.'}
             </span>
           </div>
-          <fieldset disabled={status === 'off' || controlsLocked} className={styles.deviceControls}>
+          <fieldset disabled={status === 'off'} className={styles.deviceControls}>
             <legend className={styles.srOnly}>{title} controls</legend>
             {children}
           </fieldset>
@@ -177,7 +168,7 @@ function adjust(
   dispatch({ type: 'therapy.adjust', therapy, control, value })
 }
 
-function VentilatorPanel({ state, scenario, dispatch, controlsLocked = false }: DevicePanelProps) {
+function VentilatorPanel({ state, scenario, dispatch }: DevicePanelProps) {
   const device = state.devices.ventilator
   const available = scenario.capabilities.therapies.includes('ventilator')
   return (
@@ -190,7 +181,6 @@ function VentilatorPanel({ state, scenario, dispatch, controlsLocked = false }: 
       configuration={device.mode}
       icon={<Wind aria-hidden="true" />}
       dispatch={dispatch}
-      controlsLocked={controlsLocked}
     >
       <label className={styles.selectControl}>
         <span>Ventilator mode</span>
@@ -281,7 +271,7 @@ function VentilatorPanel({ state, scenario, dispatch, controlsLocked = false }: 
   )
 }
 
-function EcmoPanel({ state, scenario, dispatch, controlsLocked = false }: DevicePanelProps) {
+function EcmoPanel({ state, scenario, dispatch }: DevicePanelProps) {
   const device = state.devices.ecmo
   const available = scenario.capabilities.therapies.includes('ecmo')
   const configuration = scenario.capabilities.ecmoModes.includes(device.mode)
@@ -301,7 +291,6 @@ function EcmoPanel({ state, scenario, dispatch, controlsLocked = false }: Device
       configuration={configuration}
       icon={<CircleGauge aria-hidden="true" />}
       dispatch={dispatch}
-      controlsLocked={controlsLocked}
     >
       <label className={styles.selectControl}>
         <span>Support configuration</span>
@@ -379,7 +368,7 @@ function EcmoPanel({ state, scenario, dispatch, controlsLocked = false }: Device
   )
 }
 
-function McsPanel({ state, scenario, dispatch, controlsLocked = false }: DevicePanelProps) {
+function McsPanel({ state, scenario, dispatch }: DevicePanelProps) {
   const device = state.devices.mcs
   const available = scenario.capabilities.therapies.includes('mcs')
   const configuration =
@@ -396,7 +385,6 @@ function McsPanel({ state, scenario, dispatch, controlsLocked = false }: DeviceP
       configuration={configuration}
       icon={<HeartPulse aria-hidden="true" />}
       dispatch={dispatch}
-      controlsLocked={controlsLocked}
     >
       <label className={styles.selectControl}>
         <span>Support device</span>
@@ -465,7 +453,7 @@ function McsPanel({ state, scenario, dispatch, controlsLocked = false }: DeviceP
   )
 }
 
-function CrrtPanel({ state, scenario, dispatch, controlsLocked = false }: DevicePanelProps) {
+function CrrtPanel({ state, scenario, dispatch }: DevicePanelProps) {
   const device = state.devices.crrt
   const available = scenario.capabilities.therapies.includes('crrt')
   return (
@@ -478,7 +466,6 @@ function CrrtPanel({ state, scenario, dispatch, controlsLocked = false }: Device
       configuration={device.modality}
       icon={<Droplets aria-hidden="true" />}
       dispatch={dispatch}
-      controlsLocked={controlsLocked}
     >
       <label className={styles.selectControl}>
         <span>Modality</span>
@@ -554,30 +541,6 @@ function CrrtPanel({ state, scenario, dispatch, controlsLocked = false }: Device
 }
 
 export function IcuDevicePanels(props: DevicePanelProps) {
-  if (props.neutralLocked) {
-    return (
-      <div className={styles.deviceStack}>
-        <div className={styles.panelIntro}>
-          <div>
-            <span className={styles.panelKicker}>Bedside support</span>
-            <h2>Support catalog locked</h2>
-          </div>
-          <p>Case-specific support names and configurations remain concealed for this step.</p>
-        </div>
-        <div className={styles.neutralControlLock} role="status">
-          <ShieldCheck aria-hidden="true" />
-          <div>
-            <strong>Commit the first working shock classification</strong>
-            <p>
-              Return to the Course panel to record the assessment commitment that counts for
-              scoring. The relevant bedside support workspace will then open.
-            </p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className={styles.deviceStack}>
       <div className={styles.panelIntro}>

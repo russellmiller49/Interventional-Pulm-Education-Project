@@ -140,9 +140,10 @@ export function PhysiologyPanel({ state, dispatch }: PhysiologyPanelProps) {
 
       <p className={styles.visualTextEquivalent}>
         <strong>Visual text equivalent:</strong> {summary} The transparent CT-derived anatomy is a
-        teaching surface. The flow-directed balloon is shown inflated only for modeled RA/RV-to-PA
-        advancement and deflated on PA arrival. The catheter route and transducer are educational
-        overlays, not procedural placement guidance.
+        teaching surface. The balloon is shown inflated during modeled RA/RV-to-PA advancement and
+        during the brief pulmonary-artery occlusion that produces the wedge preview; it is shown
+        deflated after PA arrival and after wedge release. The catheter route and transducer are
+        educational overlays, not procedural placement guidance.
       </p>
     </section>
   )

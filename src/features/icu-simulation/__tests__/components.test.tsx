@@ -1,5 +1,18 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
+
+import { CRITICAL_CARE_PROGRESS_STORAGE_KEY } from '@/features/learning-module/activity'
+
+const mockRouterPush = jest.fn()
+const activityTitles = {
+  learn: 'See how the systems connect',
+  practice: 'Run the full ICU course',
+  assess: 'Try an integrated ICU challenge',
+  sandbox: 'Explore support interactions',
+} as const
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -11,6 +24,7 @@ jest.mock('@/i18n/navigation', () => ({
       {children}
     </a>
   ),
+  useRouter: () => ({ push: mockRouterPush }),
 }))
 
 jest.mock('next/dynamic', () => ({
@@ -41,6 +55,7 @@ import {
 
 describe('ICU Simulator learner interface', () => {
   beforeEach(() => {
+    mockRouterPush.mockReset()
     window.localStorage.clear()
     Object.defineProperty(globalThis, 'Worker', {
       configurable: true,
@@ -62,58 +77,192 @@ describe('ICU Simulator learner interface', () => {
     })
   })
 
-  it('conceals the assessment identity and capability answer key until the first commitment', async () => {
+  it('uses the canonical module navigation on Overview and active activities', async () => {
+    const hub = render(<IcuSimulatorHub />)
+    const hubNavigation = screen.getByRole('navigation', {
+      name: 'ICU Simulator module sections',
+    })
+    expect(
+      within(hubNavigation)
+        .getAllByRole('link')
+        .map((link) => link.textContent),
+    ).toEqual(['Overview', 'Learn', 'Practice', 'Challenge', 'Sandbox'])
+    expect(within(hubNavigation).getByRole('link', { name: 'Overview' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+    hub.unmount()
+
+    const { container } = render(<IcuSimulatorLab mode="practice" embedded />)
+    await screen.findByRole('region', { name: 'Clinical context' })
+    expect(container.querySelector('[data-critical-care-activity-shell]')).toBeInTheDocument()
+    const activityNavigation = screen.getByRole('navigation', {
+      name: 'ICU Simulator module sections',
+    })
+    expect(within(activityNavigation).getByRole('link', { name: 'Practice' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+  })
+
+  it.each(['learn', 'practice', 'assess', 'sandbox'] as const)(
+    'keeps thin shared chrome and navigable phases around the native %s workspace',
+    async (mode) => {
+      const { container } = render(<IcuSimulatorLab mode={mode} embedded />)
+      await screen.findByRole('region', { name: 'Clinical context' })
+
+      const shell = container.querySelector('[data-critical-care-activity-shell]')
+      expect(shell).toBeInTheDocument()
+      expect(
+        within(shell as HTMLElement).getByRole('heading', { name: activityTitles[mode] }),
+      ).toBeInTheDocument()
+      const phaseStepper = screen.getByRole('group', {
+        name: 'Integrated ICU shared activity phases',
+      })
+      fireEvent.click(within(phaseStepper).getByRole('button', { name: 'Open Act phase' }))
+      expect(screen.getByRole('region', { name: 'Diagnostic and care actions' })).toHaveAttribute(
+        'data-mobile-visible',
+        'true',
+      )
+      expect(screen.getByRole('region', { name: 'Clinical context' })).toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: 'Current task' })).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('heading', { name: 'Choose a shock course' }),
+      ).not.toBeInTheDocument()
+      for (const surface of [
+        'Patient monitor and bedside overview',
+        'Diagnostic and care actions',
+        'Device controls',
+        'Course guide and trends',
+      ]) {
+        expect(await screen.findByRole('region', { name: surface })).toBeInTheDocument()
+      }
+    },
+  )
+
+  it('does not reintroduce the universal ActivityShell wrapper around the ICU workbench', () => {
+    const source = readFileSync(
+      join(process.cwd(), 'src/features/icu-simulation/components/IcuSimulatorLab.tsx'),
+      'utf8',
+    )
+    expect(source).not.toMatch(/from ['"].*ActivityShell['"]/)
+    expect(source).toContain('<ActivityChrome')
+    expect(source).toContain('<ClinicalContextStrip>')
+  })
+
+  it('bounds the active route and capstone preparation without desktop document scrolling', () => {
+    const css = readFileSync(
+      join(process.cwd(), 'src/features/icu-simulation/components/icu-simulation.module.css'),
+      'utf8',
+    )
+
+    expect(css).toMatch(/\.activityViewport\s*{[\s\S]*?overflow: auto/)
+    expect(css).toMatch(
+      /\.icuActivityRoute,\s*\.capstoneActivityRoute\s*{[\s\S]*?position: fixed[\s\S]*?inset: 5rem 0 0[\s\S]*?overflow: hidden/,
+    )
+    expect(css).toMatch(
+      /\.capstoneActivityRoute\s*{[\s\S]*?grid-template-rows: minmax\(5\.5rem, 18dvh\) minmax\(0, 1fr\)/,
+    )
+    expect(css).toMatch(
+      /\.capstonePreparation,[\s\S]*?height: 100%[\s\S]*?overflow: auto[\s\S]*?scrollbar-gutter: stable/,
+    )
+  })
+
+  it('keeps the mobile launch gate and routes its text alternative to the ICU Overview', async () => {
+    const originalWidth = window.innerWidth
+    const originalHeight = window.innerHeight
+    Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: 390 })
+    Object.defineProperty(window, 'innerHeight', { configurable: true, writable: true, value: 844 })
+
+    const rendered = render(<IcuSimulatorLab mode="learn" />)
+    try {
+      expect(
+        await screen.findByRole('heading', { name: 'A larger screen is recommended' }),
+      ).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: 'Open lightweight alternative' })).toHaveAttribute(
+        'href',
+        '/icu-simulation',
+      )
+      expect(screen.queryByText('Choose a shock course')).not.toBeInTheDocument()
+    } finally {
+      rendered.unmount()
+      Object.defineProperty(window, 'innerWidth', {
+        configurable: true,
+        writable: true,
+        value: originalWidth,
+      })
+      Object.defineProperty(window, 'innerHeight', {
+        configurable: true,
+        writable: true,
+        value: originalHeight,
+      })
+    }
+  })
+
+  it('keeps challenge identity, relevant actions, and sources visible from the start', async () => {
     render(<IcuSimulatorLab mode="assess" initialScenarioId="tamponade" />)
 
     await screen.findByRole('heading', { name: 'Choose a shock course' })
-    expect(screen.getByRole('heading', { name: 'Unclassified shock course' })).toBeInTheDocument()
-    expect(
-      screen.getByText('Synthetic patient assessment variant', { exact: false }),
-    ).toBeInTheDocument()
-    expect(screen.queryByText(/Cardiac tamponade/i)).not.toBeInTheDocument()
-    expect(screen.queryByText(/icu-tamponade-01/i)).not.toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Source notes' })).not.toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Support catalog locked' })).toBeInTheDocument()
-    expect(screen.getByText('Treatment formulary locked')).toBeInTheDocument()
-
-    for (const capabilityLabel of [
-      'Mechanical ventilation',
-      'ECMO',
-      'Mechanical circulatory support',
-      'Continuous renal replacement',
-      'Drain tamponade',
-      'Complete reperfusion',
-      'Blood products',
-    ]) {
-      expect(screen.queryByText(capabilityLabel, { exact: false })).not.toBeInTheDocument()
-    }
-
-    fireEvent.change(screen.getByLabelText('Classification'), {
-      target: { value: 'distributive' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Commit working diagnosis' }))
-
-    expect(
-      await screen.findByRole('heading', { name: 'Mechanical ventilation' }),
-    ).toBeInTheDocument()
+    expect(screen.getAllByRole('heading', { name: 'Cardiac tamponade' }).length).toBeGreaterThan(0)
+    expect(screen.getByText(/icu-tamponade-01/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Source notes' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Mechanical ventilation' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Drain tamponade/i })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Source notes' })).not.toBeInTheDocument()
+    expect(screen.getByText('Optional coaching is deferred.')).toBeInTheDocument()
   })
 
-  it('keeps anonymous assessment case numbers stable after selection', async () => {
+  it('keeps named challenge cases directly selectable', async () => {
     render(<IcuSimulatorLab mode="assess" />)
     await screen.findByRole('heading', { name: 'Choose a shock course' })
 
-    fireEvent.click(screen.getByRole('button', { name: /Assessment case 02/i }))
+    // Scope to the course picker: the persistent pathway rail also names every scenario.
+    const picker = screen
+      .getByRole('heading', { name: 'Choose a shock course' })
+      .closest('section') as HTMLElement
+    fireEvent.click(within(picker).getByRole('button', { name: /LV cardiogenic shock/i }))
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: /Assessment case 02/i })).toHaveAttribute(
+      expect(within(picker).getByRole('button', { name: /LV cardiogenic shock/i })).toHaveAttribute(
         'aria-current',
         'true',
       ),
     )
   })
 
-  it('scores the first Assess diagnosis after a recommit and reveals evidence only in debrief', async () => {
+  it('keeps visible challenge context and makes Help, Reset, and Save & exit functional', async () => {
+    const { container } = render(
+      <IcuSimulatorLab mode="assess" initialScenarioId="tamponade" embedded />,
+    )
+    await screen.findByRole('heading', { name: 'Cardiac tamponade' })
+
+    const shell = container.querySelector('[data-critical-care-activity-shell]') as HTMLElement
+    expect(shell).not.toHaveAttribute('data-masked-assessment')
+    const context = screen.getByRole('region', { name: 'Clinical context' })
+    expect(within(context).getByText('Cardiac tamponade')).toBeInTheDocument()
+
+    fireEvent.click(within(shell).getByRole('button', { name: 'Help' }))
+    const help = await screen.findByRole('status', { name: 'Simulation help' })
+    expect(help).toHaveTextContent(/Challenge coaching stays deferred until the debrief/i)
+    fireEvent.click(screen.getByRole('checkbox', { name: /Show coaching while I work/i }))
+    expect(screen.getByRole('heading', { name: 'Learning objectives' })).toBeInTheDocument()
+
+    fireEvent.click(within(shell).getByRole('button', { name: 'Reference' }))
+    expect(await screen.findByRole('heading', { name: 'Reference' })).toBeInTheDocument()
+    expect(screen.getAllByText(/Evolving cardiac tamponade/i).length).toBeGreaterThan(0)
+    fireEvent.keyDown(document, { key: 'Escape' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Commit working diagnosis' }))
+    expect(screen.getByRole('button', { name: 'Commit reclassification' })).toBeInTheDocument()
+    fireEvent.click(within(shell).getAllByRole('button', { name: 'Reset' })[0])
+    expect(
+      await screen.findByRole('button', { name: 'Commit working diagnosis' }),
+    ).toBeInTheDocument()
+
+    fireEvent.click(within(shell).getByRole('button', { name: 'Save & exit' }))
+    expect(window.localStorage.getItem(ICU_SIMULATION_SESSION_STORAGE_KEY)).not.toBeNull()
+    expect(mockRouterPush).toHaveBeenCalledWith('/icu-simulation')
+  })
+
+  it('keeps an evolving challenge decision trace and opens a qualitative debrief', async () => {
     render(<IcuSimulatorLab mode="assess" initialScenarioId="tamponade" />)
     await screen.findByRole('heading', { name: 'Choose a shock course' })
 
@@ -130,19 +279,23 @@ describe('ICU Simulator learner interface', () => {
     ).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Complete course and open debrief' }))
 
-    const prioritization = await screen.findByText('Prioritization')
-    expect(prioritization.closest('div')).toHaveTextContent('0/15')
-    expect(
-      screen.getByText(/Consider: Commit the correct working shock classification/i),
-    ).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Reasoning review' })).toBeInTheDocument()
+    expect(screen.queryByText('Prioritization')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Source notes' })).toBeInTheDocument()
     expect(screen.getByText(/Scenario evidence record/i)).toBeInTheDocument()
     expect(screen.getByText(/Serial commitments/i).closest('div')).toHaveTextContent('2')
-    expect(screen.getByRole('heading', { name: 'Physiologic response gate' })).toBeInTheDocument()
-    expect(screen.getByText('Response not demonstrated')).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Modeled physiologic response' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/Authored response pattern/)).toBeInTheDocument()
     expect(
       screen.getByText(/pending-review educational simulator calibration/i),
     ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Related refreshers' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('link', { name: /Pressure equalization with a falling pulse pressure/ }),
+    ).toHaveAttribute('href', '/icu-hemodynamics/practice?case=HD-07')
+    expect(screen.getByLabelText('Preview activity')).toBeInTheDocument()
   })
 
   it('offers explicit resume and start-new choices and labels the safe fallback', async () => {
@@ -178,6 +331,29 @@ describe('ICU Simulator learner interface', () => {
     expect(window.localStorage.getItem(ICU_SIMULATION_SESSION_STORAGE_KEY)).toBeNull()
   })
 
+  it('discards a saved challenge that is outside the current route allowlist', async () => {
+    const scenario = getIcuScenario('lv-cardiogenic')
+    const saved = applyIcuCommand(
+      createIcuSimulation(scenario, { mode: 'assess', seed: 93 }),
+      scenario,
+      { type: 'diagnosis.commit', classification: 'lv-cardiogenic' },
+    )
+    expect(writeIcuSyntheticSession(window.localStorage, saved)).toBe(true)
+
+    render(
+      <IcuSimulatorLab
+        mode="assess"
+        initialScenarioId="tamponade"
+        availableScenarioIds={['tamponade']}
+      />,
+    )
+
+    await screen.findByRole('heading', { name: 'Choose a shock course' })
+    expect(screen.queryByRole('button', { name: /Resume saved session/i })).not.toBeInTheDocument()
+    expect(screen.getByText(/saved challenge was no longer available/i)).toBeInTheDocument()
+    expect(window.localStorage.getItem(ICU_SIMULATION_SESSION_STORAGE_KEY)).toBeNull()
+  })
+
   it('clears a completed session instead of persisting or offering it as a new attempt', async () => {
     const scenario = getIcuScenario('septic-ards-aki')
     const completed = applyIcuCommand(
@@ -196,6 +372,12 @@ describe('ICU Simulator learner interface', () => {
     await waitFor(() =>
       expect(window.localStorage.getItem(ICU_SIMULATION_SESSION_STORAGE_KEY)).toBeNull(),
     )
+    await waitFor(() =>
+      expect(window.localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY)).not.toBeNull(),
+    )
+    const normalized = window.localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY)
+    expect(normalized).toContain('icu:practice:septic-ards-aki')
+    expect(normalized).not.toMatch(/commands|waveform|patient|replay|deviceState/i)
     first.unmount()
 
     render(<IcuSimulatorLab mode="practice" initialScenarioId="septic-ards-aki" />)
@@ -203,7 +385,7 @@ describe('ICU Simulator learner interface', () => {
     expect(screen.queryByRole('button', { name: /Resume saved session/i })).not.toBeInTheDocument()
   })
 
-  it('does not re-emit module completion when already-mastered progress is loaded', async () => {
+  it('does not re-emit module completion when completed progress is loaded', async () => {
     const progress = {
       ...createDefaultIcuProgress(),
       lastMode: 'assess' as const,
@@ -306,7 +488,6 @@ describe('ICU Simulator learner interface', () => {
   it('marks a completed care action using the semantic care action ID', async () => {
     render(<IcuSimulatorLab mode="practice" initialScenarioId="septic-ards-aki" />)
     await screen.findByRole('heading', { name: 'Choose a shock course' })
-    fireEvent.click(screen.getByRole('button', { name: 'Commit working diagnosis' }))
     const carePanel = screen
       .getByRole('heading', { name: 'Immediate and definitive care' })
       .closest('section')
@@ -314,6 +495,42 @@ describe('ICU Simulator learner interface', () => {
     const fluid = within(carePanel as HTMLElement).getByRole('button', { name: /Fluid challenge/i })
     fireEvent.click(fluid)
     expect(fluid).toHaveAttribute('data-complete', 'true')
+  })
+
+  it('emits the bounded unified lifecycle contract when a diagnosis is committed', async () => {
+    render(<IcuSimulatorLab mode="practice" initialScenarioId="septic-ards-aki" />)
+    await screen.findByRole('heading', { name: 'Choose a shock course' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Commit working diagnosis' }))
+
+    const fetchMock = jest.mocked(globalThis.fetch)
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some(([, request]) => {
+          const payload = JSON.parse(String((request as RequestInit).body)) as {
+            moduleId?: string
+            eventPayload?: { interaction?: string }
+          }
+          return (
+            payload.moduleId === 'critical-care' &&
+            payload.eventPayload?.interaction === 'critical_care_prediction_submitted'
+          )
+        }),
+      ).toBe(true),
+    )
+
+    const lifecyclePayloads = fetchMock.mock.calls
+      .map(
+        ([, request]) =>
+          JSON.parse(String((request as RequestInit).body)) as Record<string, unknown>,
+      )
+      .filter((payload) => payload.moduleId === 'critical-care')
+    expect(lifecyclePayloads).not.toHaveLength(0)
+    for (const payload of lifecyclePayloads) {
+      expect(JSON.stringify(payload)).not.toMatch(
+        /mapMmHg|fio2|waveform|patientTruth|freeText|actionHistory|command/i,
+      )
+    }
   })
 
   it('dispatches bounded Sandbox driver changes through the visible control', async () => {
@@ -324,5 +541,28 @@ describe('ICU Simulator learner interface', () => {
     fireEvent.change(vasoplegia, { target: { value: '0.5' } })
 
     expect(await screen.findByText('0.50 severity')).toBeInTheDocument()
+  })
+
+  it('does not award unified lifecycle completion for Sandbox exploration', async () => {
+    render(<IcuSimulatorLab mode="sandbox" initialScenarioId="septic-ards-aki" embedded />)
+    await screen.findByRole('region', { name: 'Clinical context' })
+    fireEvent.click(await screen.findByRole('button', { name: 'Complete course and open debrief' }))
+    await screen.findByText('Course reviewed')
+
+    const unifiedPayloads = jest
+      .mocked(globalThis.fetch)
+      .mock.calls.map(
+        ([, request]) =>
+          JSON.parse(String((request as RequestInit).body)) as {
+            moduleId?: string
+            eventPayload?: { activityId?: string }
+          },
+      )
+      .filter(
+        (payload) =>
+          payload.moduleId === 'critical-care' &&
+          payload.eventPayload?.activityId?.startsWith('icu:sandbox:'),
+      )
+    expect(unifiedPayloads).toHaveLength(0)
   })
 })

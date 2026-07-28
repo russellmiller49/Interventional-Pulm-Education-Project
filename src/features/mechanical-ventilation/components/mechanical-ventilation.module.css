@@ -1,4 +1,7 @@
-.moduleRoot {
+.moduleRoot,
+.bedsidePanel,
+.workflowPanel,
+.consoleShell {
   --ink: #13252a;
   --muted: #5d6e72;
   --surface: #ffffff;
@@ -24,6 +27,17 @@
   --wave: #65efb1;
   --wave-two: #62c8ff;
   --pmus: #f2c969;
+  /*
+   * Component labels on the pressure trace. They are drawn with a halo so they stay legible over
+   * the trace, which means both the fill and the halo have to flip with the device palette — pale
+   * text with a dark halo reads as a smudge on the Evita's white screen.
+   */
+  --wave-annotation: #f6dfae;
+  --wave-annotation-line: #f0c274;
+  --wave-annotation-halo: rgb(3 20 26 / 85%);
+}
+
+.moduleRoot {
   box-sizing: border-box;
   width: min(100%, 1720px);
   margin: 0 auto;
@@ -705,16 +719,86 @@
   min-height: 470px;
 }
 
+/* C6: the MMP column runs down the left of the display, ahead of the waveforms. */
+.monitoringScreen[data-layout='left-column'] {
+  grid-template-columns: minmax(112px, 0.2fr) minmax(0, 1fr);
+}
+
+/* Evita: a wider column so the large values it prints beside the waveform fields fit. */
+.monitoringScreen[data-layout='right-column'] {
+  grid-template-columns: minmax(0, 1fr) minmax(132px, 0.24fr);
+}
+
+/* PB980: the patient-data banner runs across the top; waveforms take the full width beneath it. */
+.monitoringScreen[data-layout='top-banner'] {
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.patientDataBanner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 1.1rem;
+  padding: 0.45rem 0.7rem;
+  border-bottom: 1px solid var(--screen-line);
+  background: rgba(13, 36, 40, 0.88);
+}
+
+.patientDataBanner > div {
+  display: grid;
+  justify-items: center;
+  gap: 0.05rem;
+}
+
+.patientDataBanner span {
+  color: #8eafb1;
+  font-size: 0.55rem;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.patientDataBanner strong {
+  color: var(--wave);
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.breathPhase {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.2rem;
+  color: #ffffff;
+  background: #b3372c;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.breathPhase[data-phase='C'] {
+  background: #3c5f8c;
+}
+
+.breathPhase[data-phase='A'] {
+  background: #8a6a1d;
+}
+
+/*
+ * Auto rows rather than a fixed three, so the two-trace stack the Tools screen shows beside the
+ * maneuver buttons fills its column instead of leaving an empty third row.
+ */
 .waveformStack {
   display: grid;
-  grid-template-rows: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
   min-width: 0;
 }
 
 .waveformFigure {
   position: relative;
   display: grid;
-  grid-template-columns: 70px minmax(0, 1fr);
+  grid-template-columns: 92px minmax(0, 1fr);
   min-width: 0;
   min-height: 145px;
   margin: 0;
@@ -777,12 +861,51 @@
 
 .mmpPanel {
   display: grid;
-  grid-template-rows: repeat(5, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
   border-left: 1px solid var(--screen-line);
   background: rgba(13, 36, 40, 0.88);
 }
 
-.mmpPanel > div {
+.mmpPanel[data-layout='left-column'] {
+  border-right: 1px solid var(--screen-line);
+  border-left: 0;
+}
+
+.mmpValues {
+  display: grid;
+  grid-auto-rows: minmax(0, 1fr);
+  min-height: 0;
+}
+
+.mmpFooter {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 0.35rem;
+  align-items: baseline;
+  justify-content: start;
+  padding: 0.3rem 0.55rem;
+  border-top: 1px solid var(--screen-line);
+}
+
+.mmpFooter > div {
+  display: flex;
+  gap: 0.3rem;
+  align-items: baseline;
+}
+
+.mmpFooter span,
+.mmpFooter small {
+  color: #8eafb1;
+  font-size: 0.58rem;
+}
+
+.mmpFooter strong {
+  color: var(--wave);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.mmpValues > div {
   display: grid;
   grid-template-columns: 1fr auto;
   grid-template-rows: auto auto;
@@ -792,7 +915,7 @@
   border-bottom: 1px solid var(--screen-line);
 }
 
-.mmpPanel > div:last-child {
+.mmpValues > div:last-child {
   border-bottom: 0;
 }
 
@@ -809,6 +932,68 @@
   color: var(--wave);
   font-size: clamp(1rem, 2vw, 1.45rem);
   font-variant-numeric: tabular-nums;
+}
+
+/*
+ * C6 MMP (operator's manual Figure 8-2): a large value with the parameter name and unit small
+ * beneath it, left aligned.
+ */
+.mmpPanel[data-layout='left-column'] > .mmpValues > div {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: 0;
+}
+
+.mmpPanel[data-layout='left-column'] strong {
+  grid-row: 1;
+  grid-column: 1;
+  justify-self: end;
+  color: #f2f6f6;
+  font-size: clamp(1.1rem, 2.3vw, 1.75rem);
+  font-weight: 400;
+}
+
+.mmpPanel[data-layout='left-column'] span {
+  grid-row: 2;
+  grid-column: 1;
+  justify-self: end;
+}
+
+.mmpPanel[data-layout='left-column'] small {
+  grid-row: 3;
+  grid-column: 1;
+  justify-self: end;
+}
+
+/*
+ * Evita monitoring area (pocket guide pp. 5, 8-9): the parameter name and unit sit small above a
+ * large left-aligned value, rather than beside it.
+ */
+.mmpPanel[data-layout='right-column'] > .mmpValues > div {
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: center;
+  gap: 0.1rem 0.3rem;
+}
+
+.mmpPanel[data-layout='right-column'] span {
+  grid-row: 1;
+  grid-column: 1;
+  justify-self: start;
+}
+
+.mmpPanel[data-layout='right-column'] small {
+  grid-row: 1;
+  grid-column: 2;
+  justify-self: start;
+}
+
+.mmpPanel[data-layout='right-column'] strong {
+  grid-row: 2;
+  grid-column: 1 / -1;
+  justify-self: end;
+  font-size: clamp(1.15rem, 2.4vw, 1.9rem);
+  font-weight: 400;
 }
 
 .consoleNav {
@@ -997,17 +1182,22 @@
 .inlineDeviceFields label {
   display: grid;
   gap: 0.25rem;
-  color: #9fb5b7;
+  color: var(--screen-text);
   font-size: 0.65rem;
+  opacity: 0.78;
 }
 
+/*
+ * These fields sit on the device screen, so they take the device palette. Hard-coded dark values
+ * rendered navy-on-navy once the Evita's light screen arrived.
+ */
 .inlineDeviceFields select {
   min-height: 2rem;
   padding: 0.35rem;
-  border: 1px solid #456168;
+  border: 1px solid var(--screen-line);
   border-radius: 0.35rem;
   color: var(--screen-text);
-  background: #10282d;
+  background: var(--screen-panel);
 }
 
 .inlineDeviceFields .checkField {
@@ -1016,8 +1206,9 @@
   align-items: center;
   min-height: 2rem;
   padding: 0.35rem 0.55rem;
-  border: 1px solid #456168;
+  border: 1px solid var(--screen-line);
   border-radius: 0.35rem;
+  opacity: 1;
 }
 
 .modeFeatures {
@@ -1028,20 +1219,22 @@
 
 .modeFeatures h4 {
   margin: 0;
-  color: #9fb5b7;
+  color: var(--screen-text);
   font-size: 0.68rem;
   text-transform: uppercase;
+  opacity: 0.78;
 }
 
+/* On the device screen, so it follows the device palette rather than a fixed dark surface. */
 .featureField {
   display: flex;
   gap: 0.55rem;
   align-items: start;
   padding: 0.55rem 0.65rem;
-  border: 1px solid #456168;
+  border: 1px solid var(--screen-line);
   border-radius: 0.4rem;
-  color: #b7c9cb;
-  background: #10282d;
+  color: var(--screen-text);
+  background: var(--screen-panel);
 }
 
 .featureField > span {
@@ -1057,12 +1250,18 @@
 }
 
 .featureField small {
-  color: #91aaac;
+  color: var(--screen-text);
+  opacity: 0.76;
 }
 
+/* Amber warning text was authored for a dark screen; darken it on light device palettes. */
 .featureField em {
   color: #f2c879;
   font-style: normal;
+}
+
+.consoleShell[data-device='drager-evita-v800-v600'] .featureField em {
+  color: #8a5300;
 }
 
 .featureField[data-availability='requires-neonatal'] {
@@ -1237,37 +1436,89 @@
   color: var(--wave);
 }
 
-.toolGrid {
+/*
+ * Tools keeps the trace a maneuver draws on beside the buttons that start it. The learner should
+ * not have to leave the waveform to occlude the airway and then navigate back to read the result.
+ */
+.toolsScreen {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.65rem;
-  margin-top: 1rem;
+  grid-template-columns: minmax(0, 1fr) minmax(258px, 0.62fr);
+  min-height: 470px;
 }
 
+.toolsPanel {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  border-left: 1px solid var(--screen-line);
+}
+
+.maneuverStatus {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0.85rem 0 0;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--screen-line);
+  border-left: 3px solid var(--screen-line);
+  border-radius: 0.4rem;
+  background: var(--screen-panel);
+}
+
+.maneuverStatus[data-active='true'] {
+  border-left-color: #d79a2b;
+}
+
+.maneuverStatus strong {
+  color: var(--screen-text);
+  font-size: 0.76rem;
+}
+
+.maneuverStatus span {
+  color: #91aaac;
+  font-size: 0.67rem;
+  line-height: 1.45;
+}
+
+.consoleShell[data-device='drager-evita-v800-v600'] .maneuverStatus span {
+  color: #4a6577;
+}
+
+.toolGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+}
+
+/* Device palette, not fixed dark values — the Evita's screen is white. */
 .toolGrid button {
   display: flex;
   gap: 0.5rem;
   align-items: center;
-  min-height: 64px;
-  padding: 0.7rem;
-  border: 1px solid #3c5960;
+  min-height: 60px;
+  padding: 0.6rem;
+  border: 1px solid var(--screen-line);
   border-radius: 0.5rem;
   color: var(--screen-text);
   text-align: left;
-  background: #112d32;
-  font-size: 0.7rem;
+  background: var(--screen-panel);
+  font-size: 0.68rem;
 }
 
 .toolGrid svg {
   flex: 0 0 auto;
-  width: 1.15rem;
-  height: 1.15rem;
+  width: 1.1rem;
+  height: 1.1rem;
   color: #79daca;
 }
 
+.consoleShell[data-device='drager-evita-v800-v600'] .toolGrid svg {
+  color: #0f6fa4;
+}
+
 .physicalControls {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(95px, 1fr)) minmax(210px, 1.3fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.55rem;
   align-items: center;
   padding-top: 0.75rem;
@@ -1275,6 +1526,7 @@
 
 .physicalControls > button {
   display: grid;
+  flex: 1 1 95px;
   justify-items: center;
   gap: 0.3rem;
   min-height: 66px;
@@ -1300,6 +1552,7 @@
 
 .rotaryControl {
   display: grid;
+  flex: 1 1 210px;
   grid-template-columns: 2rem 1fr 2rem;
   gap: 0.35rem;
   align-items: center;
@@ -1742,6 +1995,35 @@
   font-size: 0.63rem;
 }
 
+.challengeFeedbackControl {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid #c8d4e4;
+  color: #40506c;
+  background: #eef2f8;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.challengeFeedbackControl p {
+  margin: 0;
+}
+
+.challengeFeedbackControl label {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.challengeFeedbackControl input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--teal);
+}
+
 .workflowSection {
   padding: 1.1rem;
   border-bottom: 1px solid var(--line);
@@ -1842,6 +2124,15 @@
 .responseCallout {
   font-size: 0.75rem;
   line-height: 1.45;
+}
+
+.deferredResponseNotice {
+  padding: 0.75rem;
+  margin-top: 0.8rem;
+  border: 1px dashed #a7b5c8;
+  border-radius: 0.65rem;
+  color: #4d5c72;
+  background: #f2f5fa;
 }
 
 .guidedPrediction {
@@ -2539,6 +2830,10 @@
   --wave: #176ba2;
   --wave-two: #1c82b9;
   --pmus: #c36c00;
+  /* White screen: dark label text over a pale halo, the inverse of the dark-screen devices. */
+  --wave-annotation: #6a3f00;
+  --wave-annotation-line: #c07d10;
+  --wave-annotation-halo: rgb(255 255 255 / 88%);
   border: 1px solid #d7dfe4;
   background: linear-gradient(150deg, #ffffff, #e9eef1);
 }
@@ -2650,23 +2945,8 @@
   box-shadow: 0 3px 0 #07121e;
 }
 
-.consoleShell[data-device='puritan-bennett-980'] .physicalControls {
-  grid-template-columns:
-    minmax(82px, 1fr) minmax(82px, 1fr) minmax(210px, 1.35fr) minmax(82px, 1fr)
-    minmax(82px, 1fr);
-}
-
-.consoleShell[data-device='puritan-bennett-980'] .physicalControls > button:nth-child(3) {
-  grid-column: 4;
-}
-
-.consoleShell[data-device='puritan-bennett-980'] .physicalControls > button:nth-child(4) {
-  grid-column: 5;
-}
-
-.consoleShell[data-device='puritan-bennett-980'] .rotaryControl {
-  grid-row: 1;
-  grid-column: 3;
+.consoleShell[data-device='puritan-bennett-980'] .physicalControls > button {
+  flex: 1 1 82px;
 }
 
 .consoleShell[data-device='carefusion-avea'] {
@@ -2844,12 +3124,8 @@
     grid-template-columns: 1fr;
   }
 
-  .physicalControls {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
   .rotaryControl {
-    grid-column: 1 / -1;
+    flex-basis: 100%;
     width: min(100%, 280px);
     justify-self: center;
   }
@@ -2929,36 +3205,30 @@
   .consoleScreen,
   .monitoringScreen,
   .menuScreen,
-  .graphicsScreen {
+  .graphicsScreen,
+  .toolsScreen {
     min-height: 420px;
+  }
+
+  /* Too narrow to sit the trace beside the maneuvers; stack it above them so it stays visible. */
+  .toolsScreen {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(200px, 0.9fr) auto;
+  }
+
+  .toolsPanel {
+    border-top: 1px solid var(--screen-line);
+    border-left: 0;
   }
 
   .controlGrid {
     grid-template-columns: repeat(3, 1fr);
   }
 
-  .physicalControls {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
   .rotaryControl {
-    grid-column: 1 / -1;
+    flex-basis: 100%;
     max-width: 280px;
     justify-self: center;
-  }
-
-  .consoleShell[data-device='puritan-bennett-980'] .physicalControls {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .consoleShell[data-device='puritan-bennett-980'] .physicalControls > button:nth-child(3),
-  .consoleShell[data-device='puritan-bennett-980'] .physicalControls > button:nth-child(4) {
-    grid-column: auto;
-  }
-
-  .consoleShell[data-device='puritan-bennett-980'] .rotaryControl {
-    grid-row: auto;
-    grid-column: 1 / -1;
   }
 
   .predictionFields {
@@ -3101,7 +3371,7 @@
   }
 
   .waveformFigure {
-    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-columns: 68px minmax(0, 1fr);
   }
 
   .waveformLabel {
@@ -3172,8 +3442,8 @@
     width: 110px;
   }
 
-  .physicalControls {
-    grid-template-columns: repeat(2, 1fr);
+  .physicalControls > button {
+    flex-basis: 45%;
   }
 
   .workflowStepper {
@@ -3296,4 +3566,88 @@
   .rotaryControl > button:not(.rotaryKnob) {
     color: #273b3e;
   }
+}
+
+.controlGroup {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 0.85rem;
+}
+
+.controlGroup h4 {
+  margin: 0;
+  color: #9dc0c2;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.waveformReadouts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.08rem;
+  margin: 0.2rem 0 0;
+}
+
+.waveformReadouts > div {
+  display: flex;
+  gap: 0.25rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.waveformReadouts dt {
+  font-size: 0.58rem;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.waveformReadouts dd {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.waveformAnnotation line {
+  stroke: var(--wave-annotation-line);
+  stroke-dasharray: 6 5;
+  stroke-width: 1;
+  opacity: 0.85;
+}
+
+.waveformAnnotation text {
+  fill: var(--wave-annotation);
+  font-size: 9px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: var(--wave-annotation-halo);
+  stroke-width: 3px;
+}
+
+/*
+ * A displayed value the device is printing but that cannot be read as what its name implies —
+ * a plateau measured while the patient is still pulling.
+ */
+.waveformReadouts > div[data-unreliable='true'] dt,
+.waveformReadouts > div[data-unreliable='true'] dd {
+  color: #e2a93f;
+}
+
+.waveformReadouts > div[data-unreliable='true'] dd em {
+  margin-left: 0.1rem;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.consoleShell[data-device='drager-evita-v800-v600']
+  .waveformReadouts
+  > div[data-unreliable='true']
+  dt,
+.consoleShell[data-device='drager-evita-v800-v600']
+  .waveformReadouts
+  > div[data-unreliable='true']
+  dd {
+  color: #a8620a;
 }

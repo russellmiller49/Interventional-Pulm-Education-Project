@@ -386,7 +386,7 @@ export function McsAnatomy3D({
         <span>
           {revealCausality
             ? state.causalExplanation
-            : 'Causal coaching is withheld during Assess; use the visible loading, flow, valve, waveform, and alarm signals.'}
+            : 'Use the visible loading, flow, valve, waveform, and alarm signals to build the causal chain.'}
         </span>
         <span>
           LVEDV {state.metrics.lvedvMl} mL · aortic valve{' '}

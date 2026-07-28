@@ -132,7 +132,7 @@ export function BedsidePanel({
                 ))}
               </ul>
             ) : (
-              <p>Repeat a bedside assessment to reveal dynamic examination findings.</p>
+              <p>Repeat a bedside evaluation to reveal dynamic examination findings.</p>
             )}
             {!compact ? (
               <dl className={styles.comfortGrid}>
@@ -183,7 +183,7 @@ export function BedsidePanel({
             <p className={styles.orderStatus}>
               <ClipboardPlus aria-hidden="true" />{' '}
               {!repeatAbgOrdered
-                ? 'Baseline gas shown. Order a repeat ABG through an assessment action.'
+                ? 'Baseline gas shown. Order a repeat ABG through a bedside review action.'
                 : repeatAbgReady
                   ? 'Repeat gas is available from the current simulated physiology.'
                   : `Repeat gas processing: ${Math.max(0, state.lastAbgAt! - state.simulationTime).toFixed(0)} simulated seconds remaining.`}

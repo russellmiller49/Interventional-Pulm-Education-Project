@@ -29,6 +29,33 @@ describe('50 Hz circulation, waveforms, and measurement system', () => {
     expect(once.waveforms.at(-1)).toEqual(split.waveforms.at(-1))
   })
 
+  it('applies a fast flush only to the selected pressure line', () => {
+    const initial = createInitialHemodynamicState(definition, 'learn', 313)
+    const arterialFlush = advanceHemodynamicSimulation(
+      icuHemodynamicsReducer(initial, {
+        type: 'FAST_FLUSH',
+        lineType: 'systemic-arterial',
+      }),
+      0.2,
+    )
+    const arterialSample = arterialFlush.waveforms.at(-1)!
+    expect(arterialSample.artMmHg).toBe(300)
+    expect(arterialSample.papMmHg).toBeLessThan(80)
+    expect(arterialSample.cvpMmHg).toBeLessThan(50)
+
+    const paFlush = advanceHemodynamicSimulation(
+      icuHemodynamicsReducer(initial, {
+        type: 'FAST_FLUSH',
+        lineType: 'pulmonary-artery',
+      }),
+      0.2,
+    )
+    const paSample = paFlush.waveforms.at(-1)!
+    expect(paSample.papMmHg).toBe(300)
+    expect(paSample.artMmHg).toBeLessThan(220)
+    expect(paSample.cvpMmHg).toBeLessThan(50)
+  })
+
   it('uses time-varying ventricular elastance and volume-conserving Windkessel compartments', () => {
     const initial = createInitialHemodynamicState(definition, 'learn', 22)
     const cycle = 60 / initial.parameters.heartRateBpm
@@ -65,7 +92,9 @@ describe('50 Hz circulation, waveforms, and measurement system', () => {
       naturalFrequencyHz: 18,
       noiseAmplitudeMmHg: 0,
       artifact: 'none',
+      fastFlushStartedAt: null,
       fastFlushActiveUntil: null,
+      fastFlushLineType: null,
       lastFastFlushFinding: null,
     })
     const elevated = deriveHemodynamicMeasurements(zeroed, {
@@ -75,7 +104,9 @@ describe('50 Hz circulation, waveforms, and measurement system', () => {
       naturalFrequencyHz: 18,
       noiseAmplitudeMmHg: 0,
       artifact: 'none',
+      fastFlushStartedAt: null,
       fastFlushActiveUntil: null,
+      fastFlushLineType: null,
       lastFastFlushFinding: null,
     })
     expect(normal.mapMmHg - elevated.mapMmHg).toBeGreaterThanOrEqual(7)
@@ -88,13 +119,157 @@ describe('50 Hz circulation, waveforms, and measurement system', () => {
       naturalFrequencyHz: 18,
       noiseAmplitudeMmHg: 0,
       artifact: 'overdamped',
+      fastFlushStartedAt: null,
       fastFlushActiveUntil: null,
+      fastFlushLineType: null,
       lastFastFlushFinding: null,
     })
     expect(overdamped.artSystolicMmHg - overdamped.artDiastolicMmHg).toBeLessThan(
       normal.artSystolicMmHg - normal.artDiastolicMmHg,
     )
     expect(Math.abs(overdamped.mapMmHg - normal.mapMmHg)).toBeLessThanOrEqual(1)
+  })
+
+  it('activates the pulmonary-hypertension alarm above a mean PAP of 20 mmHg', () => {
+    const borderlineDefinition = {
+      ...definition,
+      initialParameters: {
+        ...definition.initialParameters,
+        pulmonaryVascularResistanceWU: 6,
+      },
+      initialMeasurementSystem: {
+        ...definition.initialMeasurementSystem,
+        zeroed: true,
+        transducerLevelCm: 0,
+      },
+    }
+    const state = createInitialHemodynamicState(borderlineDefinition, 'learn', 41)
+
+    expect(state.measurements.meanPapMmHg).toBeGreaterThan(20)
+    expect(state.measurements.meanPapMmHg).toBeLessThanOrEqual(25)
+    expect(state.alarms.find((alarm) => alarm.id === 'high-pap')?.active).toBe(true)
+  })
+
+  it('converges right- and left-sided filling pressures under modeled tamponade constraint', () => {
+    const tamponadeCase = hemodynamicCases.find((candidate) => candidate.id === 'HD-07')!
+    const state = createInitialHemodynamicState(tamponadeCase, 'learn', 707)
+
+    expect(state.measurements.rapMmHg).toBe(state.measurements.pawpMmHg)
+  })
+
+  it('can generate elevated raw PPV from RV failure without fluid responsiveness', () => {
+    const rvFailureDefinition = {
+      ...definition,
+      initialParameters: {
+        ...definition.initialParameters,
+        fluidResponsiveness: 0.05,
+        rightVentricularContractility: 0.2,
+        pulmonaryVascularResistanceWU: 8,
+      },
+      initialMeasurementSystem: {
+        ...definition.initialMeasurementSystem,
+        zeroed: true,
+        transducerLevelCm: 0,
+      },
+    }
+    const state = createInitialHemodynamicState(rvFailureDefinition, 'learn', 42)
+    const meanPulsePressure =
+      (state.measurements.pulsePressureMaxMmHg + state.measurements.pulsePressureMinMmHg) / 2
+    const ppvPercent =
+      (100 * (state.measurements.pulsePressureMaxMmHg - state.measurements.pulsePressureMinMmHg)) /
+      meanPulsePressure
+
+    expect(ppvPercent).toBeGreaterThanOrEqual(13)
+    expect(state.parameters.fluidResponsiveness).toBeLessThan(0.1)
+  })
+
+  it('keeps a false-wedge numerical value centered on its displayed contaminated trace', () => {
+    const signalCase = hemodynamicCases.find((candidate) => candidate.id === 'HD-08')!
+    const cleanFalseWedge = {
+      ...signalCase,
+      initialParameters: {
+        ...signalCase.initialParameters,
+        pleuralPressureSwingMmHg: 0,
+      },
+      initialMeasurementSystem: {
+        ...signalCase.initialMeasurementSystem,
+        zeroed: true,
+        transducerLevelCm: 0,
+        dampingRatio: 0.65,
+        noiseAmplitudeMmHg: 0,
+        artifact: 'false-wedge' as const,
+      },
+    }
+    const state = createInitialHemodynamicState(cleanFalseWedge, 'learn', 808)
+    const cycleSeconds = 60 / state.measurements.heartRateBpm
+    const lastBeat = state.waveforms.filter(
+      (sample) => sample.time >= state.timeSeconds - cycleSeconds,
+    )
+    const displayedMean =
+      lastBeat.reduce((total, sample) => total + sample.pcwpMmHg, 0) / lastBeat.length
+
+    expect(displayedMean).toBeCloseTo(state.measurements.pawpMmHg ?? 0, 0)
+    expect(state.measurements.pawpMmHg).toBeGreaterThan(state.measurements.meanPapMmHg)
+  })
+
+  it('keeps leveling and atmospheric zero as separate observable actions', () => {
+    const signalCase = hemodynamicCases.find((candidate) => candidate.id === 'HD-08')!
+    let state = createInitialHemodynamicState(signalCase, 'learn', 808)
+    expect(state.measurementSystem.transducerLevelCm).toBe(10)
+    expect(state.measurementSystem.zeroed).toBe(false)
+
+    state = icuHemodynamicsReducer(state, { type: 'ZERO_TRANSDUCER' })
+
+    expect(state.measurementSystem.zeroed).toBe(true)
+    expect(state.measurementSystem.transducerLevelCm).toBe(10)
+    expect(state.responseMessage).toMatch(/remains off level/i)
+
+    state = icuHemodynamicsReducer(state, { type: 'SET_TRANSDUCER_LEVEL', levelCm: 0 })
+    expect(state.measurementSystem.transducerLevelCm).toBe(0)
+    expect(state.measurementSystem.zeroed).toBe(true)
+  })
+
+  it('returns a false-wedge catheter to PA rather than skipping to RV', () => {
+    const signalCase = hemodynamicCases.find((candidate) => candidate.id === 'HD-08')!
+    let state = createInitialHemodynamicState(signalCase, 'learn', 808)
+    expect(state.catheter.position).toBe('wedge')
+
+    state = icuHemodynamicsReducer(state, { type: 'RETRACT_CATHETER', instant: true })
+
+    expect(state.catheter.position).toBe('pa')
+    expect(state.catheter.balloonInflated).toBe(false)
+    expect(state.signalValidationChecks).toContain('catheter-position-confirmed')
+    expect(state.completedInterventionIds).toContain('reposition-catheter')
+  })
+
+  it('derives HD-08 procedure credit from real interactions and blocks bundled shortcuts', () => {
+    const signalCase = hemodynamicCases.find((candidate) => candidate.id === 'HD-08')!
+    const bundledPressureCorrection = signalCase.interventions.find(
+      (candidate) => candidate.id === 'correct-measurement-system',
+    )!
+    let state = createInitialHemodynamicState(signalCase, 'learn', 808)
+
+    state = icuHemodynamicsReducer(state, {
+      type: 'APPLY_INTERVENTION',
+      intervention: bundledPressureCorrection,
+    })
+    expect(state.completedInterventionIds).not.toContain('correct-measurement-system')
+    expect(state.measurementSystem.transducerLevelCm).toBe(10)
+
+    state = icuHemodynamicsReducer(state, { type: 'SET_TRANSDUCER_LEVEL', levelCm: 0 })
+    state = icuHemodynamicsReducer(state, { type: 'ZERO_TRANSDUCER' })
+    state = icuHemodynamicsReducer(state, {
+      type: 'FAST_FLUSH',
+      lineType: 'pulmonary-artery',
+    })
+    state = icuHemodynamicsReducer(state, {
+      type: 'VALIDATE_SIGNAL',
+      check: 'dynamic-response-classified',
+    })
+    expect(state.completedInterventionIds).not.toContain('correct-measurement-system')
+
+    state = icuHemodynamicsReducer(state, { type: 'SET_DAMPING', dampingRatio: 0.65 })
+    expect(state.completedInterventionIds).toContain('correct-measurement-system')
   })
 
   it('enables end-expiratory capture after one respiratory cycle and auto-deflates at 10 seconds', () => {
@@ -185,7 +360,7 @@ describe('50 Hz circulation, waveforms, and measurement system', () => {
     expect(afterIgnoredStore.catheter.storedWedgeMmHg).toBeNull()
   })
 
-  it('cancels pending movement when a case intervention restores PA position', () => {
+  it('does not let the retired bundled reposition intervention bypass catheter movement', () => {
     const catheterCase = hemodynamicCases.find((candidate) =>
       candidate.interventions.some((intervention) => intervention.id === 'reposition-catheter'),
     )
@@ -203,12 +378,13 @@ describe('50 Hz circulation, waveforms, and measurement system', () => {
       intervention: reposition,
     })
     expect(state.catheter.position).toBe('pa')
-    expect(state.catheter.targetPosition).toBeNull()
-    expect(state.catheter.movementCompletesAt).toBeNull()
+    expect(state.catheter.targetPosition).toBe('rv')
+    expect(state.catheter.movementCompletesAt).not.toBeNull()
     expect(state.catheter.floatBalloonInflated).toBe(false)
+    expect(state.completedInterventionIds).not.toContain('reposition-catheter')
 
     state = advanceHemodynamicSimulation(state, 3)
-    expect(state.catheter.position).toBe('pa')
+    expect(state.catheter.position).toBe('rv')
     expect(state.catheter.targetPosition).toBeNull()
   })
 

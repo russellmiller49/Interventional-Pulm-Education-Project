@@ -3,7 +3,6 @@
 import type { Dispatch } from 'react'
 
 import {
-  hasHemodynamicMastery,
   measurementMeetsCriterion,
   thermodilutionAcceptedAverage,
   type HemodynamicAction,
@@ -34,7 +33,6 @@ function currentMetric(state: HemodynamicSimulationState, metric: keyof typeof s
 export function CaseWorkflow({ state, dispatch }: CaseWorkflowProps) {
   const definition = state.caseDefinition
   const average = thermodilutionAcceptedAverage(state.thermodilutionTrials)
-  const controlsUnlocked = state.mode === 'learn' || state.predictionCommitted
   const activePhaseIndex = workflow.findIndex(([id]) => id === state.phase)
 
   return (
@@ -47,7 +45,7 @@ export function CaseWorkflow({ state, dispatch }: CaseWorkflowProps) {
           <h2 id="case-workflow-heading">{definition.title}</h2>
         </div>
         <span className={styles.modeChip}>
-          {state.mode === 'learn' ? 'Guided Learn' : 'Scored Practice'}
+          {state.mode === 'learn' ? 'Guided Learn' : 'Practice'}
         </span>
       </header>
       <p className={styles.presentation}>{definition.presentation}</p>
@@ -79,7 +77,7 @@ export function CaseWorkflow({ state, dispatch }: CaseWorkflowProps) {
         </div>
       ) : (
         <fieldset className={styles.predictionPanel} disabled={state.predictionCommitted}>
-          <legend>Commit before intervention</legend>
+          <legend>Record a working frame before or during intervention</legend>
           <label>
             Suspected hemodynamic mechanism
             <select
@@ -117,7 +115,7 @@ export function CaseWorkflow({ state, dispatch }: CaseWorkflowProps) {
             }
             onClick={() => dispatch({ type: 'COMMIT_PREDICTION' })}
           >
-            {state.predictionCommitted ? 'Prediction locked' : 'Commit phenotype + priority'}
+            {state.predictionCommitted ? 'Working frame recorded' : 'Record phenotype + priority'}
           </button>
         </fieldset>
       )}
@@ -137,10 +135,10 @@ export function CaseWorkflow({ state, dispatch }: CaseWorkflowProps) {
             <button
               type="button"
               data-complete={state.signalValidationChecks.includes('fast-flush')}
-              onClick={() => dispatch({ type: 'FAST_FLUSH' })}
+              onClick={() => dispatch({ type: 'FAST_FLUSH', lineType: 'pulmonary-artery' })}
             >
               <span>{state.signalValidationChecks.includes('fast-flush') ? '✓' : '2'}</span>
-              Fast-flush test
+              PA fast-flush response check
             </button>
             <button
               type="button"
@@ -167,11 +165,12 @@ export function CaseWorkflow({ state, dispatch }: CaseWorkflowProps) {
 
         <article>
           <h3>Intervene in bounded tiers</h3>
-          {!controlsUnlocked && (
+          {!state.predictionCommitted ? (
             <p className={styles.lockMessage}>
-              Commit a mechanism and priority to unlock interventions.
+              You may act now or record a working frame first; the initial frame can make later
+              reflection more useful.
             </p>
-          )}
+          ) : null}
           <div className={styles.interventionGrid}>
             {definition.interventions.map((item) => {
               const complete = state.completedInterventionIds.includes(item.id)
@@ -179,7 +178,7 @@ export function CaseWorkflow({ state, dispatch }: CaseWorkflowProps) {
                 <button
                   type="button"
                   key={item.id}
-                  disabled={!controlsUnlocked || (complete && !item.repeatable)}
+                  disabled={complete && !item.repeatable}
                   data-complete={complete}
                   onClick={() => dispatch({ type: 'APPLY_INTERVENTION', intervention: item })}
                 >
@@ -237,32 +236,21 @@ export function CaseWorkflow({ state, dispatch }: CaseWorkflowProps) {
       </div>
 
       {state.completed && state.score && (
-        <div className={styles.debriefPanel} role="region" aria-label="Case score and debrief">
-          <div className={styles.scoreRing} data-mastered={hasHemodynamicMastery(state)}>
-            <strong>{state.score.total}</strong>
-            <span>/100</span>
-          </div>
+        <div className={styles.debriefPanel} role="region" aria-label="Case teaching debrief">
           <div>
-            <span>
-              {hasHemodynamicMastery(state)
-                ? 'Mastery demonstrated'
-                : state.criticalErrors.length > 0
-                  ? 'Critical safety error: mastery withheld'
-                  : 'Continue practice'}
-            </span>
-            <h3>Case debrief</h3>
+            <span>Reasoning review</span>
+            <h3>What the modeled response can teach</h3>
             <ul>
               {definition.debrief.map((point) => (
                 <li key={point}>{point}</li>
               ))}
             </ul>
-            <div className={styles.scoreBreakdown}>
-              <span>Signal {state.score.signalValidity}/20</span>
-              <span>Mechanism {state.score.mechanism}/20</span>
-              <span>Management {state.score.management}/25</span>
-              <span>TD + derived {state.score.thermodilutionAndDerived}/15</span>
-              <span>Reassess + safety {state.score.reassessmentAndSafety}/20</span>
-            </div>
+            {state.criticalErrors.length > 0 ? (
+              <p>
+                A safety interrupt occurred. Revisit the cue that made the action hazardous, then
+                rewind and choose again.
+              </p>
+            ) : null}
           </div>
         </div>
       )}

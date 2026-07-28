@@ -42,6 +42,8 @@ export const sourceReferenceSchema = z
       'ifu',
       'guideline',
       'peer-reviewed',
+      'textbook',
+      'professional-standard',
       'local-protocol',
       'synthetic-calibration',
     ]),

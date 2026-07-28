@@ -44,6 +44,17 @@ function bounded(
   return clamp(numeric(value, fallback), range[0], range[1])
 }
 
+/**
+ * Bounds a teaching multiplier. Wide enough for a bitten tube or a stiff ARDS lung, narrow enough
+ * that the console stays a console rather than becoming a graph of arithmetic.
+ */
+export const TEACHING_MECHANICS_SCALE_RANGE = [0.25, 6] as const
+
+function clampScale(value: number): number {
+  if (!Number.isFinite(value)) return 1
+  return clamp(value, TEACHING_MECHANICS_SCALE_RANGE[0], TEACHING_MECHANICS_SCALE_RANGE[1])
+}
+
 function maxControlledPRampMs(inspiratoryTimeSeconds: number): number {
   return Math.min(
     simulationControlRanges.pRampControlledMs[1],
@@ -425,27 +436,57 @@ function refreshMeasurements(state: VentilationSimulationState): VentilationSimu
   }
 }
 
-function canChangeTherapy(state: VentilationSimulationState): boolean {
-  return state.experience === 'learn' || state.prediction.committed
-}
-
+/**
+ * Request an occlusion. The valves close at the next real breath boundary, not here.
+ *
+ * Two earlier attempts got this wrong in the same way. The first closed the valves the instant the
+ * button was pressed, which with a typical I:E ratio was almost always mid-expiration. The second
+ * tried to jump forward to the boundary using `simulationTime % cycle` — but that arithmetic ran on
+ * a different rate from the one `machineTiming` uses, so it still landed in the wrong limb and the
+ * model froze at zero volume and baseline pressure: a flat line at PEEP with no plateau at all.
+ *
+ * So the boundary is no longer computed twice. The request is parked on `pendingHold` and
+ * `advanceSimulation` arms it when the phase it is watching for actually arrives.
+ */
 function performConsoleHold(
   state: VentilationSimulationState,
   hold: 'inspiratory' | 'expiratory',
 ): VentilationSimulationState {
+  if (state.ventilator.holdUntil !== null) return state
   const definition = caseDefinition(state)
   const interventionId = hold === 'inspiratory' ? 'inspiratory-hold' : 'expiratory-hold'
-  if (definition.interventions.some((item) => item.id === interventionId)) {
-    return applyIntervention(state, definition, interventionId)
+  // Cases that author their own hold intervention still record it; `applyIntervention` now also
+  // parks the request rather than closing the valves where the learner happens to be.
+  const requested = definition.interventions.some((item) => item.id === interventionId)
+    ? applyIntervention(state, definition, interventionId)
+    : state
+
+  let advanced: VentilationSimulationState = {
+    ...requested,
+    ventilator: { ...requested.ventilator, pendingHold: hold },
   }
+
+  /*
+   * Run the model forward until it reaches the boundary itself. Pressing the key still does
+   * something immediately — the lesson requirements and the console readout both depend on that —
+   * but the instant the valves close is decided by `advanceSimulation`, not recomputed here.
+   * The cap is a little over one breath so a case that never reaches the awaited phase cannot spin.
+   */
+  const cycleSeconds = 60 / Math.max(1, advanced.measurements.totalRatePerMin)
+  const limitSeconds = cycleSeconds * 1.6 + 0.4
+  for (let elapsed = 0; advanced.ventilator.pendingHold !== null && elapsed < limitSeconds; ) {
+    advanced = advanceSimulation(advanced, 0.1, definition)
+    elapsed += 0.1
+  }
+
   return {
-    ...state,
-    ventilator: {
-      ...state.ventilator,
-      holdType: hold,
-      holdUntil: state.simulationTime + 10,
-    },
-    lastResponse: `${hold === 'inspiratory' ? 'Inspiratory' : 'Expiratory'} hold active.`,
+    ...advanced,
+    lastResponse:
+      advanced.ventilator.holdType === hold
+        ? `${hold === 'inspiratory' ? 'Inspiratory' : 'Expiratory'} hold active at end-${
+            hold === 'inspiratory' ? 'inspiration' : 'expiration'
+          }.`
+        : `${hold === 'inspiratory' ? 'Inspiratory' : 'Expiratory'} hold requested; no breath boundary was reached.`,
   }
 }
 
@@ -491,7 +532,7 @@ export function ventilationSimulationReducer(
     return { ...state, ventilator: { ...state.ventilator, screen: action.screen } }
   }
   if (action.type === 'SELECT_MODE') {
-    if (!canChangeTherapy(state) || state.ventilator.locked) return state
+    if (state.ventilator.locked) return state
     const descriptor = getVentilatorDeviceProfile(state.deviceId).modes.find(
       (candidate) => candidate.id === action.mode,
     )
@@ -509,7 +550,7 @@ export function ventilationSimulationReducer(
     }
   }
   if (action.type === 'CONFIRM_MODE') {
-    if (!canChangeTherapy(state) || state.ventilator.locked || !state.ventilator.pendingMode) {
+    if (state.ventilator.locked || !state.ventilator.pendingMode) {
       return state
     }
     const currentRate = deriveEffectiveVentilationRate(
@@ -534,7 +575,7 @@ export function ventilationSimulationReducer(
     })
   }
   if (action.type === 'SET_CONTROL') {
-    if (!canChangeTherapy(state) || state.ventilator.locked) return state
+    if (state.ventilator.locked) return state
     const settings = updateVentilatorControl(
       state.ventilator.settings,
       action.control,
@@ -583,7 +624,6 @@ export function ventilationSimulationReducer(
     }
   }
   if (action.type === 'OXYGEN_ENRICHMENT') {
-    if (!canChangeTherapy(state)) return state
     return {
       ...state,
       ventilator: { ...state.ventilator, oxygenEnrichmentUntil: state.simulationTime + 120 },
@@ -591,15 +631,36 @@ export function ventilationSimulationReducer(
     }
   }
   if (action.type === 'MANUAL_BREATH') {
-    if (!canChangeTherapy(state)) return state
     return {
       ...state,
       ventilator: { ...state.ventilator, manualBreathUntil: state.simulationTime + 1 },
       lastResponse: 'A manual breath is delivered using the active settings.',
     }
   }
+  /*
+   * A teaching control, not a device setting: it changes the *patient*, so it is Learn-only. In
+   * Practice the case's mechanics are the thing being assessed, and letting a learner soften the
+   * lung would resolve the case by editing it.
+   */
+  if (action.type === 'SET_TEACHING_MECHANICS') {
+    if (state.experience !== 'learn') return state
+    const teachingMechanics = {
+      complianceScale: clampScale(
+        action.overrides.complianceScale ?? state.teachingMechanics.complianceScale,
+      ),
+      resistanceScale: clampScale(
+        action.overrides.resistanceScale ?? state.teachingMechanics.resistanceScale,
+      ),
+    }
+    const next = { ...state, teachingMechanics }
+    const patient = deriveEffectivePatient(next, caseDefinition(next))
+    return {
+      ...next,
+      patient,
+      measurements: deriveMeasurements(next, caseDefinition(next), patient),
+    }
+  }
   if (action.type === 'PERFORM_HOLD') {
-    if (!canChangeTherapy(state)) return state
     return performConsoleHold(state, action.hold)
   }
   if (action.type === 'COMMIT_PREDICTION') {
@@ -613,13 +674,10 @@ export function ventilationSimulationReducer(
         responseId: action.responseId,
       },
       phase: 'act',
-      lastResponse: 'Prediction committed. Ventilator and bedside actions are now available.',
+      lastResponse: 'Initial frame recorded for comparison with the observed response.',
     }
   }
   if (action.type === 'PERFORM_INTERVENTION') {
-    if (!canChangeTherapy(state)) {
-      return { ...state, lastResponse: 'Commit your prediction before intervening.' }
-    }
     return applyIntervention(state, caseDefinition(state), action.interventionId)
   }
   if (action.type === 'USE_HINT') {
@@ -650,7 +708,6 @@ export function ventilationSimulationReducer(
     }
   }
   if (action.type === 'REVEAL_DEBRIEF') {
-    if (!state.reassessment.committed && state.experience === 'practice') return state
     return { ...state, phase: 'debrief', paused: true }
   }
   if (action.type === 'TOGGLE_EDUCATOR_OVERLAY') {

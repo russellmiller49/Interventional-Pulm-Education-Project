@@ -269,8 +269,7 @@
 .masteryBoundary,
 .criticalBanner,
 .guidedCallout,
-.completedNotice,
-.lockedCopy {
+.completedNotice {
   display: flex;
   gap: 0.55rem;
   align-items: flex-start;
@@ -285,8 +284,7 @@
 .masteryBoundary svg,
 .criticalBanner svg,
 .guidedCallout svg,
-.completedNotice svg,
-.lockedCopy svg {
+.completedNotice svg {
   width: 1rem;
   height: 1rem;
   flex: 0 0 auto;
@@ -812,14 +810,6 @@
   margin-top: 0.3rem;
 }
 
-.lockedCopy {
-  align-items: center;
-  margin-top: 0.7rem;
-  color: #d5c09e;
-  font-size: 0.68rem;
-  line-height: 1.45;
-}
-
 .criticalBanner {
   border-color: rgba(241, 141, 121, 0.62);
   background: rgba(106, 38, 34, 0.55);
@@ -950,13 +940,13 @@
   content: '';
 }
 
-.machineSurfaceHeading > strong[data-unlocked='true'] {
+.machineSurfaceHeading > strong[data-available='true'] {
   color: #bdf5e7;
   border-color: rgba(87, 208, 193, 0.5);
   background: rgba(11, 65, 59, 0.5);
 }
 
-.machineSurfaceHeading > strong[data-unlocked='true']::before {
+.machineSurfaceHeading > strong[data-available='true']::before {
   background: #57d0c1;
 }
 

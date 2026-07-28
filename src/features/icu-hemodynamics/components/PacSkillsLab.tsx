@@ -1,6 +1,13 @@
 'use client'
 
-import { useRef, useState, type Dispatch, type KeyboardEvent, type PointerEvent } from 'react'
+import {
+  useId,
+  useRef,
+  useState,
+  type Dispatch,
+  type KeyboardEvent,
+  type PointerEvent,
+} from 'react'
 
 import {
   thermodilutionAcceptedAverage,
@@ -9,11 +16,15 @@ import {
   type ThermodilutionTechnique,
   type ThermodilutionTrial,
 } from '../engine'
+import { PressureSystemTeachingVisual } from './PressureSystemTeachingVisual'
+import { TroubleshootingPanel } from './TroubleshootingPanel'
 import styles from './icu-hemodynamics.module.css'
 
 interface PacSkillsLabProps {
   state: HemodynamicSimulationState
   dispatch: Dispatch<HemodynamicAction>
+  focus?: 'pressure-system' | 'thermodilution'
+  pressureChallengeMode?: 'selectable' | 'current-state'
 }
 
 function curvePoints(trial: ThermodilutionTrial): string {
@@ -29,8 +40,14 @@ function curvePoints(trial: ThermodilutionTrial): string {
     .join(' ')
 }
 
-export function PacSkillsLab({ state, dispatch }: PacSkillsLabProps) {
+export function PacSkillsLab({
+  state,
+  dispatch,
+  focus,
+  pressureChallengeMode = 'selectable',
+}: PacSkillsLabProps) {
   const configuration = state.caseDefinition.thermodilution
+  const skillsHeadingId = useId()
   const [volumeMl, setVolumeMl] = useState(configuration.injectateVolumeMl)
   const [temperatureC, setTemperatureC] = useState(configuration.injectateTemperatureC)
   const [durationSeconds, setDurationSeconds] = useState(2.5)
@@ -90,271 +107,306 @@ export function PacSkillsLab({ state, dispatch }: PacSkillsLabProps) {
   }
 
   return (
-    <section className={styles.skillsLab} aria-labelledby="skills-heading">
+    <section className={styles.skillsLab} aria-labelledby={skillsHeadingId}>
       <header className={styles.sectionHeader}>
         <div>
           <span>Reusable skills station</span>
-          <h2 id="skills-heading">PAC setup, advancement, wedge, and cardiac output</h2>
+          <h2 id={skillsHeadingId}>
+            {focus === 'pressure-system'
+              ? 'Pressure-system validation lab'
+              : focus === 'thermodilution'
+                ? 'Thermodilution measurement lab'
+                : 'PAC setup, advancement, wedge, and cardiac output'}
+          </h2>
         </div>
       </header>
 
-      <ol className={styles.skillSequence} aria-label="PAC skills sequence">
-        <li data-complete={state.measurementSystem.zeroed}>
-          1 <span>Level + zero</span>
-        </li>
-        <li data-complete={state.signalValidationChecks.includes('fast-flush')}>
-          2 <span>Dynamic response</span>
-        </li>
-        <li data-complete={state.catheter.position === 'pa' || state.catheter.position === 'wedge'}>
-          3 <span>Advance by waveform</span>
-        </li>
-        <li data-complete={state.catheter.storedWedgeMmHg !== null}>
-          4 <span>Capture PAWP</span>
-        </li>
-        <li data-complete={average !== null}>
-          5 <span>Thermodilution series</span>
-        </li>
-      </ol>
+      {!focus ? (
+        <ol className={styles.skillSequence} aria-label="PAC skills sequence">
+          <li data-complete={Math.abs(state.measurementSystem.transducerLevelCm) <= 1}>
+            1 <span>Level transducer</span>
+          </li>
+          <li data-complete={state.measurementSystem.zeroed}>
+            2 <span>Atmospheric zero</span>
+          </li>
+          <li data-complete={state.signalValidationChecks.includes('dynamic-response-classified')}>
+            3 <span>Dynamic response</span>
+          </li>
+          <li
+            data-complete={state.catheter.position === 'pa' || state.catheter.position === 'wedge'}
+          >
+            4 <span>Advance by waveform</span>
+          </li>
+          <li data-complete={state.catheter.storedWedgeMmHg !== null}>
+            5 <span>Capture PAWP</span>
+          </li>
+          <li data-complete={average !== null}>
+            6 <span>Thermodilution series</span>
+          </li>
+        </ol>
+      ) : null}
 
       <div className={styles.skillsGrid}>
-        <article className={`${styles.skillCard} ${styles.pressureSystemCard}`}>
-          <div className={styles.cardHeading}>
-            <span>01</span>
-            <div>
-              <h3>Pressure system</h3>
-              <p>Level, zero, select scale, and test dynamic response before interpretation.</p>
+        {focus !== 'thermodilution' ? (
+          <article className={`${styles.skillCard} ${styles.pressureSystemCard}`}>
+            <div className={styles.cardHeading}>
+              <span>{focus === 'pressure-system' ? '02' : '01'}</span>
+              <div>
+                <h3>Pressure system</h3>
+                <p>Level, zero, select scale, and check dynamic response before interpretation.</p>
+              </div>
             </div>
-          </div>
-          <label className={styles.rangeControl}>
-            Transducer relative to phlebostatic axis:{' '}
-            <strong>
-              {state.measurementSystem.transducerLevelCm > 0 ? '+' : ''}
-              {state.measurementSystem.transducerLevelCm.toFixed(0)} cm
-            </strong>
-            <input
-              type="range"
-              min="-15"
-              max="15"
-              step="1"
-              value={state.measurementSystem.transducerLevelCm}
-              onChange={(event) =>
-                dispatch({ type: 'SET_TRANSDUCER_LEVEL', levelCm: Number(event.target.value) })
-              }
-            />
-            <span>
-              <small>Below → pressure reads high</small>
-              <small>Above → pressure reads low</small>
-            </span>
-          </label>
-          <div className={styles.buttonRow}>
-            <button type="button" onClick={() => dispatch({ type: 'ZERO_TRANSDUCER' })}>
-              Open to air + zero
-            </button>
-            <button type="button" onClick={() => dispatch({ type: 'FAST_FLUSH' })}>
-              Fast flush test
-            </button>
-          </div>
-          {state.measurementSystem.lastFastFlushFinding && (
-            <p className={styles.feedback}>{state.measurementSystem.lastFastFlushFinding}</p>
-          )}
-          <label>
-            Measurement artifact
-            <select
-              value={state.measurementSystem.artifact}
-              onChange={(event) =>
-                dispatch({
-                  type: 'SET_ARTIFACT',
-                  artifact: event.target.value as typeof state.measurementSystem.artifact,
-                })
-              }
-            >
-              <option value="none">None / corrected</option>
-              <option value="overdamped">Overdamped</option>
-              <option value="underdamped">Underdamped</option>
-              <option value="catheter-whip">Catheter whip</option>
-              <option value="wall-contact">Wall contact</option>
-              <option value="false-wedge">False wedge</option>
-            </select>
-          </label>
-        </article>
-
-        <article
-          className={`${styles.skillCard} ${styles.thermodilutionCard}`}
-          id="cardiac-output-lab"
-        >
-          <div className={styles.cardHeading}>
-            <span>04</span>
-            <div>
-              <h3>Thermodilution series</h3>
-              <p>
-                Standardize injectate and timing. Reject technically poor curves; average at least
-                three valid accepted trials.
-              </p>
-            </div>
-          </div>
-          <div className={styles.injectionSetup}>
-            <label>
-              Volume
-              <select
-                value={volumeMl}
-                onChange={(event) => setVolumeMl(Number(event.target.value))}
-              >
-                <option value="5">5 mL</option>
-                <option value="10">10 mL</option>
-                <option value="15">15 mL</option>
-              </select>
-            </label>
-            <label>
-              Temperature
-              <select
-                value={temperatureC}
-                onChange={(event) => setTemperatureC(Number(event.target.value))}
-              >
-                <option value="4">4 °C</option>
-                <option value="5">5 °C</option>
-                <option value="20">20 °C</option>
-              </select>
-            </label>
-            <label>
-              Respiratory phase
-              <select
-                value={respiratoryPhase}
+            <label className={styles.rangeControl}>
+              Transducer relative to phlebostatic axis:{' '}
+              <strong>
+                {state.measurementSystem.transducerLevelCm > 0 ? '+' : ''}
+                {state.measurementSystem.transducerLevelCm.toFixed(0)} cm
+              </strong>
+              <input
+                type="range"
+                min="-15"
+                max="15"
+                step="1"
+                value={state.measurementSystem.transducerLevelCm}
                 onChange={(event) =>
-                  setRespiratoryPhase(
-                    event.target.value as ThermodilutionTechnique['respiratoryPhase'],
-                  )
+                  dispatch({ type: 'SET_TRANSDUCER_LEVEL', levelCm: Number(event.target.value) })
+                }
+              />
+              <span>
+                <small>Below → pressure reads high</small>
+                <small>Above → pressure reads low</small>
+              </span>
+            </label>
+            <div className={styles.buttonRow}>
+              <button type="button" onClick={() => dispatch({ type: 'ZERO_TRANSDUCER' })}>
+                Open to air + zero
+              </button>
+              {focus !== 'pressure-system' ? (
+                <button
+                  type="button"
+                  onClick={() => dispatch({ type: 'FAST_FLUSH', lineType: 'pulmonary-artery' })}
+                >
+                  PA-catheter fast-flush response check
+                </button>
+              ) : null}
+            </div>
+            {focus === 'pressure-system' ? (
+              <>
+                <PressureSystemTeachingVisual
+                  state={state}
+                  dispatch={dispatch}
+                  challengeMode={pressureChallengeMode}
+                />
+                <TroubleshootingPanel state={state} dispatch={dispatch} />
+              </>
+            ) : (
+              <>
+                {state.measurementSystem.lastFastFlushFinding ? (
+                  <p className={styles.feedback}>{state.measurementSystem.lastFastFlushFinding}</p>
+                ) : null}
+                <label>
+                  Measurement artifact
+                  <select
+                    value={state.measurementSystem.artifact}
+                    onChange={(event) =>
+                      dispatch({
+                        type: 'SET_ARTIFACT',
+                        artifact: event.target.value as typeof state.measurementSystem.artifact,
+                      })
+                    }
+                  >
+                    <option value="none">None / corrected</option>
+                    <option value="overdamped">Overdamped</option>
+                    <option value="underdamped">Underdamped</option>
+                    <option value="catheter-whip">Catheter whip</option>
+                    <option value="wall-contact">Wall contact</option>
+                    <option value="false-wedge">False wedge</option>
+                  </select>
+                </label>
+              </>
+            )}
+          </article>
+        ) : null}
+
+        {focus !== 'pressure-system' ? (
+          <article
+            className={`${styles.skillCard} ${styles.thermodilutionCard}`}
+            id="cardiac-output-lab"
+          >
+            <div className={styles.cardHeading}>
+              <span>{focus === 'thermodilution' ? '05' : '04'}</span>
+              <div>
+                <h3>Thermodilution series</h3>
+                <p>
+                  Standardize injectate and timing. Reject technically poor curves; average at least
+                  three valid accepted trials.
+                </p>
+              </div>
+            </div>
+            <div className={styles.injectionSetup}>
+              <label>
+                Volume
+                <select
+                  value={volumeMl}
+                  onChange={(event) => setVolumeMl(Number(event.target.value))}
+                >
+                  <option value="5">5 mL</option>
+                  <option value="10">10 mL</option>
+                  <option value="15">15 mL</option>
+                </select>
+              </label>
+              <label>
+                Temperature
+                <select
+                  value={temperatureC}
+                  onChange={(event) => setTemperatureC(Number(event.target.value))}
+                >
+                  <option value="4">4 °C</option>
+                  <option value="5">5 °C</option>
+                  <option value="20">20 °C</option>
+                </select>
+              </label>
+              <label>
+                Respiratory phase
+                <select
+                  value={respiratoryPhase}
+                  onChange={(event) =>
+                    setRespiratoryPhase(
+                      event.target.value as ThermodilutionTechnique['respiratoryPhase'],
+                    )
+                  }
+                >
+                  <option value="end-expiration">End expiration</option>
+                  <option value="inspiration">Inspiration</option>
+                  <option value="variable">Variable</option>
+                </select>
+              </label>
+              <label>
+                Modeled duration <strong>{durationSeconds.toFixed(1)} s</strong>
+                <input
+                  type="range"
+                  min="0.4"
+                  max="7"
+                  step="0.1"
+                  value={durationSeconds}
+                  onChange={(event) => setDurationSeconds(Number(event.target.value))}
+                />
+              </label>
+              <label>
+                Smoothness <strong>{Math.round(smoothness * 100)}%</strong>
+                <input
+                  type="range"
+                  min="0.3"
+                  max="1"
+                  step="0.05"
+                  value={smoothness}
+                  onChange={(event) => setSmoothness(Number(event.target.value))}
+                />
+              </label>
+            </div>
+            <button
+              type="button"
+              className={styles.injectButton}
+              disabled={state.thermodilutionTrials.length >= configuration.maximumTrials}
+              onPointerDown={onPointerDown}
+              onPointerUp={onPointerUp}
+              onKeyDown={onInjectionKeyDown}
+              onKeyUp={onInjectionKeyUp}
+              onClick={() => {
+                if (ignoreClick.current) {
+                  ignoreClick.current = false
+                  return
+                }
+                generate()
+              }}
+            >
+              Hold to inject · Space is timed · Enter uses {durationSeconds.toFixed(1)} s
+            </button>
+            <p className={styles.configurationNote}>
+              Configured computation constant: {configuration.injectateVolumeMl} mL at{' '}
+              {configuration.injectateTemperatureC} °C.
+            </p>
+
+            <div className={styles.thermoCurve}>
+              <svg
+                viewBox="0 0 500 110"
+                role="img"
+                aria-label={
+                  latestTrial
+                    ? `Thermodilution trial ${latestTrial.sequence}, ${latestTrial.quality}, estimated cardiac output ${latestTrial.estimatedCardiacOutputLMin} liters per minute.`
+                    : 'No thermodilution curve generated yet.'
                 }
               >
-                <option value="end-expiration">End expiration</option>
-                <option value="inspiration">Inspiration</option>
-                <option value="variable">Variable</option>
-              </select>
-            </label>
-            <label>
-              Modeled duration <strong>{durationSeconds.toFixed(1)} s</strong>
-              <input
-                type="range"
-                min="0.4"
-                max="7"
-                step="0.1"
-                value={durationSeconds}
-                onChange={(event) => setDurationSeconds(Number(event.target.value))}
-              />
-            </label>
-            <label>
-              Smoothness <strong>{Math.round(smoothness * 100)}%</strong>
-              <input
-                type="range"
-                min="0.3"
-                max="1"
-                step="0.05"
-                value={smoothness}
-                onChange={(event) => setSmoothness(Number(event.target.value))}
-              />
-            </label>
-          </div>
-          <button
-            type="button"
-            className={styles.injectButton}
-            disabled={state.thermodilutionTrials.length >= configuration.maximumTrials}
-            onPointerDown={onPointerDown}
-            onPointerUp={onPointerUp}
-            onKeyDown={onInjectionKeyDown}
-            onKeyUp={onInjectionKeyUp}
-            onClick={() => {
-              if (ignoreClick.current) {
-                ignoreClick.current = false
-                return
-              }
-              generate()
-            }}
-          >
-            Hold to inject · Space is timed · Enter uses {durationSeconds.toFixed(1)} s
-          </button>
-          <p className={styles.configurationNote}>
-            Configured computation constant: {configuration.injectateVolumeMl} mL at{' '}
-            {configuration.injectateTemperatureC} °C.
-          </p>
-
-          <div className={styles.thermoCurve}>
-            <svg
-              viewBox="0 0 500 110"
-              role="img"
-              aria-label={
-                latestTrial
-                  ? `Thermodilution trial ${latestTrial.sequence}, ${latestTrial.quality}, estimated cardiac output ${latestTrial.estimatedCardiacOutputLMin} liters per minute.`
-                  : 'No thermodilution curve generated yet.'
-              }
-            >
-              <path d="M0 18 H500 M0 54 H500 M0 90 H500" stroke="rgba(255,255,255,.1)" />
-              {latestTrial && (
-                <polyline
-                  points={curvePoints(latestTrial)}
-                  fill="none"
-                  stroke="#72d7c8"
-                  strokeWidth="2.5"
-                />
+                <path d="M0 18 H500 M0 54 H500 M0 90 H500" stroke="rgba(255,255,255,.1)" />
+                {latestTrial && (
+                  <polyline
+                    points={curvePoints(latestTrial)}
+                    fill="none"
+                    stroke="#72d7c8"
+                    strokeWidth="2.5"
+                  />
+                )}
+              </svg>
+              {latestTrial ? (
+                <div>
+                  <strong>{latestTrial.estimatedCardiacOutputLMin.toFixed(1)} L/min</strong>
+                  <span data-quality={latestTrial.quality}>{latestTrial.quality}</span>
+                </div>
+              ) : (
+                <p>Generate a trial to display the temperature-time curve.</p>
               )}
-            </svg>
-            {latestTrial ? (
-              <div>
-                <strong>{latestTrial.estimatedCardiacOutputLMin.toFixed(1)} L/min</strong>
-                <span data-quality={latestTrial.quality}>{latestTrial.quality}</span>
-              </div>
-            ) : (
-              <p>Generate a trial to display the temperature-time curve.</p>
-            )}
-          </div>
+            </div>
 
-          <div className={styles.trialList} aria-label="Thermodilution trials">
-            {state.thermodilutionTrials.map((trial) => (
-              <div key={trial.id}>
-                <span>#{trial.sequence}</span>
-                <strong>{trial.estimatedCardiacOutputLMin.toFixed(1)}</strong>
-                <small>{trial.quality}</small>
-                <button
-                  type="button"
-                  aria-pressed={trial.accepted === true}
-                  onClick={() =>
-                    dispatch({
-                      type: 'SET_THERMODILUTION_ACCEPTED',
-                      trialId: trial.id,
-                      accepted: true,
-                    })
-                  }
-                >
-                  Accept
-                </button>
-                <button
-                  type="button"
-                  aria-pressed={trial.accepted === false}
-                  onClick={() =>
-                    dispatch({
-                      type: 'SET_THERMODILUTION_ACCEPTED',
-                      trialId: trial.id,
-                      accepted: false,
-                    })
-                  }
-                >
-                  Reject
-                </button>
-              </div>
-            ))}
-          </div>
-          <div className={styles.averageReadout}>
-            <span>Accepted valid average</span>
-            <strong>
-              {average === null ? 'Need ≥3 valid trials' : `${average.toFixed(1)} L/min`}
-            </strong>
-          </div>
-          {latestTrial && latestTrial.alerts.length > 0 && (
-            <ul className={styles.curveAlerts}>
-              {latestTrial.alerts.map((alert) => (
-                <li key={alert}>{alert}</li>
+            <div className={styles.trialList} aria-label="Thermodilution trials">
+              {state.thermodilutionTrials.map((trial) => (
+                <div key={trial.id}>
+                  <span>#{trial.sequence}</span>
+                  <strong>{trial.estimatedCardiacOutputLMin.toFixed(1)}</strong>
+                  <small>{trial.quality}</small>
+                  <button
+                    type="button"
+                    aria-pressed={trial.accepted === true}
+                    onClick={() =>
+                      dispatch({
+                        type: 'SET_THERMODILUTION_ACCEPTED',
+                        trialId: trial.id,
+                        accepted: true,
+                      })
+                    }
+                  >
+                    Accept
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={trial.accepted === false}
+                    onClick={() =>
+                      dispatch({
+                        type: 'SET_THERMODILUTION_ACCEPTED',
+                        trialId: trial.id,
+                        accepted: false,
+                      })
+                    }
+                  >
+                    Reject
+                  </button>
+                </div>
               ))}
-            </ul>
-          )}
-        </article>
+            </div>
+            <div className={styles.averageReadout}>
+              <span>Accepted valid average</span>
+              <strong>
+                {average === null ? 'Need ≥3 valid trials' : `${average.toFixed(1)} L/min`}
+              </strong>
+            </div>
+            {latestTrial && latestTrial.alerts.length > 0 && (
+              <ul className={styles.curveAlerts}>
+                {latestTrial.alerts.map((alert) => (
+                  <li key={alert}>{alert}</li>
+                ))}
+              </ul>
+            )}
+          </article>
+        ) : null}
       </div>
     </section>
   )

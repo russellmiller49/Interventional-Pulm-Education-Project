@@ -11,6 +11,7 @@ import {
   Clock,
   Download,
   Filter,
+  FlaskConical,
   Headphones,
   KeyRound,
   RotateCcw,
@@ -48,6 +49,7 @@ const adminEntitlements = [
   'pccm_intro_course',
   'pccm_intro_course_admin_ucsd',
   'pccm_intro_course_admin_loma_linda',
+  'preference_cards_builder',
   'socrates_editor',
   'socal_ebus_course',
   'site_admin',
@@ -67,6 +69,8 @@ const permissionFilterOptions = [
   { value: 'pccm_intro_course_admin_ucsd_inactive', label: 'PCCM UCSD Admin off' },
   { value: 'pccm_intro_course_admin_loma_linda_active', label: 'PCCM Loma Linda Admin active' },
   { value: 'pccm_intro_course_admin_loma_linda_inactive', label: 'PCCM Loma Linda Admin off' },
+  { value: 'preference_cards_builder_active', label: 'Preference Card Builder active' },
+  { value: 'preference_cards_builder_inactive', label: 'Preference Card Builder off' },
   { value: 'socrates_editor_active', label: 'SOCRATES Editor active' },
   { value: 'socrates_editor_inactive', label: 'SOCRATES Editor off' },
   { value: 'socal_ebus_course_active', label: 'SoCal EBUS Course active' },
@@ -332,6 +336,7 @@ const entitlementLabels: Record<AdminEntitlement, string> = {
   pccm_intro_course: 'PCCM Intro Course',
   pccm_intro_course_admin_loma_linda: 'PCCM Loma Linda Admin',
   pccm_intro_course_admin_ucsd: 'PCCM UCSD Admin',
+  preference_cards_builder: 'Preference Card Builder',
   socrates_editor: 'SOCRATES Editor',
   socal_ebus_course: 'SoCal EBUS Course',
   site_admin: 'Site Admin',
@@ -363,6 +368,14 @@ const permissionFilterConfig: Record<
   pccm_intro_course_admin_loma_linda_inactive: {
     active: false,
     entitlement: 'pccm_intro_course_admin_loma_linda',
+  },
+  preference_cards_builder_active: {
+    active: true,
+    entitlement: 'preference_cards_builder',
+  },
+  preference_cards_builder_inactive: {
+    active: false,
+    entitlement: 'preference_cards_builder',
   },
   socrates_editor_active: { active: true, entitlement: 'socrates_editor' },
   socrates_editor_inactive: { active: false, entitlement: 'socrates_editor' },
@@ -1541,6 +1554,18 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
+              <Button asChild variant="outline">
+                <Link href={'/admin/modules' as Route}>
+                  <FlaskConical className="h-4 w-4" aria-hidden />
+                  Modules in development
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href={'/admin/literature' as Route}>
+                  <BookOpen className="h-4 w-4" aria-hidden />
+                  Literature review
+                </Link>
+              </Button>
               <Button asChild variant="outline">
                 <Link href={'/socrates-builder' as Route}>SOCRATES builder</Link>
               </Button>

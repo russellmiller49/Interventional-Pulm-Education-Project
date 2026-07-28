@@ -1,0 +1,192 @@
+{
+  "Access": {
+    "setup_zone": "sterile_field",
+    "procedural_phase": "airway_access",
+    "needs_review": false
+  },
+  "Access/drainage": {
+    "setup_zone": "sterile_field",
+    "procedural_phase": "therapeutic",
+    "needs_review": false
+  },
+  "Accessories": {
+    "setup_zone": "unassigned",
+    "procedural_phase": "unassigned",
+    "needs_review": true
+  },
+  "Airway isolation": {
+    "setup_zone": "equipment_tower",
+    "procedural_phase": "airway_access",
+    "needs_review": false
+  },
+  "Airway protection": {
+    "setup_zone": "mayo_stand",
+    "procedural_phase": "airway_access",
+    "needs_review": false
+  },
+  "Assessment": {
+    "setup_zone": "unassigned",
+    "procedural_phase": "unassigned",
+    "needs_review": true
+  },
+  "Bronchoscopy": {
+    "setup_zone": "equipment_tower",
+    "procedural_phase": "diagnostic",
+    "needs_review": false
+  },
+  "Catheter system": {
+    "setup_zone": "sterile_field",
+    "procedural_phase": "therapeutic",
+    "needs_review": false
+  },
+  "Cryotherapy": {
+    "setup_zone": "equipment_tower",
+    "procedural_phase": "therapeutic",
+    "needs_review": false
+  },
+  "Dilation": {
+    "setup_zone": "back_table",
+    "procedural_phase": "therapeutic",
+    "needs_review": false
+  },
+  "Drainage": {
+    "setup_zone": "equipment_tower",
+    "procedural_phase": "post_procedure",
+    "needs_review": false
+  },
+  "Dressing": {
+    "setup_zone": "back_table",
+    "procedural_phase": "post_procedure",
+    "needs_review": false
+  },
+  "Energy": {
+    "setup_zone": "equipment_tower",
+    "procedural_phase": "therapeutic",
+    "needs_review": false
+  },
+  "Imaging": {
+    "setup_zone": "room_capital_equipment",
+    "procedural_phase": "pre_room",
+    "needs_review": false
+  },
+  "Implant": {
+    "setup_zone": "back_table",
+    "procedural_phase": "therapeutic",
+    "needs_review": false
+  },
+  "Infection control": {
+    "setup_zone": "other",
+    "procedural_phase": "pre_room",
+    "needs_review": false
+  },
+  "Instrumentation": {
+    "setup_zone": "back_table",
+    "procedural_phase": "therapeutic",
+    "needs_review": false
+  },
+  "Isolation": {
+    "setup_zone": "other",
+    "procedural_phase": "pre_room",
+    "needs_review": false
+  },
+  "Lavage circuit": {
+    "setup_zone": "back_table",
+    "procedural_phase": "diagnostic",
+    "needs_review": false
+  },
+  "Long-term drainage": {
+    "setup_zone": "back_table",
+    "procedural_phase": "therapeutic",
+    "needs_review": false
+  },
+  "Peripheral biopsy": {
+    "setup_zone": "back_table",
+    "procedural_phase": "diagnostic",
+    "needs_review": false
+  },
+  "Platform": {
+    "setup_zone": "equipment_tower",
+    "procedural_phase": "pre_room",
+    "needs_review": false
+  },
+  "Pleurodesis": {
+    "setup_zone": "back_table",
+    "procedural_phase": "therapeutic",
+    "needs_review": false
+  },
+  "Pneumothorax": {
+    "setup_zone": "back_table",
+    "procedural_phase": "therapeutic",
+    "needs_review": false
+  },
+  "Post-procedure": {
+    "setup_zone": "back_table",
+    "procedural_phase": "post_procedure",
+    "needs_review": false
+  },
+  "Procedure kit": {
+    "setup_zone": "sterile_field",
+    "procedural_phase": "pre_induction_or_sedation",
+    "needs_review": false
+  },
+  "Rescue": {
+    "setup_zone": "emergency_cart",
+    "procedural_phase": "rescue_or_contingency",
+    "needs_review": false
+  },
+  "Retrieval": {
+    "setup_zone": "mayo_stand",
+    "procedural_phase": "therapeutic",
+    "needs_review": false
+  },
+  "Rigid system": {
+    "setup_zone": "equipment_tower",
+    "procedural_phase": "airway_access",
+    "needs_review": false
+  },
+  "Sampling": {
+    "setup_zone": "specimen_station",
+    "procedural_phase": "specimen_handling",
+    "needs_review": false
+  },
+  "Scope accessory": {
+    "setup_zone": "back_table",
+    "procedural_phase": "diagnostic",
+    "needs_review": false
+  },
+  "Sizing": {
+    "setup_zone": "back_table",
+    "procedural_phase": "therapeutic",
+    "needs_review": false
+  },
+  "Stent": {
+    "setup_zone": "back_table",
+    "procedural_phase": "therapeutic",
+    "needs_review": false
+  },
+  "Suction": {
+    "setup_zone": "equipment_tower",
+    "procedural_phase": "pre_induction_or_sedation",
+    "needs_review": false
+  },
+  "Suction/irrigation": {
+    "setup_zone": "equipment_tower",
+    "procedural_phase": "therapeutic",
+    "needs_review": false
+  },
+  "Tube": {
+    "setup_zone": "sterile_field",
+    "procedural_phase": "therapeutic",
+    "needs_review": false
+  },
+  "Ventilation": {
+    "setup_zone": "room_capital_equipment",
+    "procedural_phase": "airway_access",
+    "needs_review": false
+  },
+  "Visualization": {
+    "setup_zone": "equipment_tower",
+    "procedural_phase": "pre_room",
+    "needs_review": false
+  }
+}

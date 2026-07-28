@@ -46,14 +46,16 @@ describe('CRRT runnable rapid-drill interface', () => {
     fireEvent.click(within(drillUi).getByRole('button', { name: 'Submit prediction' }))
     fireEvent.click(within(drillUi).getByRole('button', { name: 'Acknowledge signal' }))
     expect(within(drillUi).getByRole('status')).toHaveTextContent(
-      /Acknowledgement does not correct the cause/i,
+      /Acknowledgement does not resolve the cause/i,
     )
 
-    for (const step of CRRT_CAUSE_FIRST_STEPS) {
-      fireEvent.click(within(drillUi).getByRole('button', { name: `Complete: ${step.label}` }))
+    for (const step of [...CRRT_CAUSE_FIRST_STEPS].reverse()) {
+      fireEvent.click(within(drillUi).getByRole('button', { name: `Review: ${step.label}` }))
     }
     expect(drillUi).toHaveAttribute('data-correction-verification', 'reviewed')
-    expect(within(drillUi).getByText(/6 of 6 steps complete.*Outcome: safe/i)).toBeInTheDocument()
+    expect(
+      within(drillUi).getByText(/Cause-first sequence worked through.*Outcome: safe/i),
+    ).toBeInTheDocument()
     expect(window.localStorage).toHaveLength(0)
   })
 

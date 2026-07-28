@@ -1,5 +1,8 @@
+import type React from 'react'
 import { render, screen } from '@testing-library/react'
 import { setRequestLocale } from 'next-intl/server'
+
+import { criticalCareActivities } from '@/features/critical-care/content/activities'
 
 jest.mock('@/features/mechanical-circulatory-support/components/McsHub', () => ({
   McsHub: ({ locale }: { locale: string }) => <div data-testid="mcs-hub">{locale}</div>,
@@ -9,14 +12,29 @@ jest.mock('@/features/mechanical-circulatory-support/components/McsWorkbench', (
     section,
     locale,
     initialDevice,
+    initialActivityId,
   }: {
     section: string
     locale: string
     initialDevice?: string
+    initialActivityId?: string
   }) => (
-    <div data-testid="mcs-workbench" data-section={section} data-device={initialDevice}>
+    <div
+      data-testid="mcs-workbench"
+      data-section={section}
+      data-device={initialDevice}
+      data-activity={initialActivityId}
+    >
       {locale}
     </div>
+  ),
+}))
+jest.mock('@/features/mechanical-circulatory-support/components/McsLearnLanding', () => ({
+  McsLearnLanding: () => <div data-testid="mcs-learn-landing" />,
+}))
+jest.mock('@/features/mechanical-circulatory-support/components/McsModuleFrame', () => ({
+  McsModuleFrame: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="mcs-module-frame">{children}</div>
   ),
 }))
 jest.mock('@/i18n/handoff-server', () => ({
@@ -44,7 +62,7 @@ describe('mechanical circulatory support route family', () => {
     expect((await hubMetadata({ params })).title).toMatch(/Mechanical Circulatory Support/i)
     expect((await learnMetadata({ params })).title).toMatch(/^Learn ·/)
     expect((await practiceMetadata({ params })).title).toMatch(/^Practice ·/)
-    expect((await assessMetadata({ params })).title).toMatch(/^Assess ·/)
+    expect((await assessMetadata({ params })).title).toMatch(/^Challenge ·/)
   })
 
   it.each(['en', 'es', 'zh-CN'])('mounts the localized hub for %s', async (locale) => {
@@ -54,12 +72,27 @@ describe('mechanical circulatory support route family', () => {
   })
 
   it.each([
-    ['learn', LearnPage],
     ['practice', PracticePage],
     ['assess', AssessPage],
   ] as const)('mounts the %s workbench', async (section, Page) => {
     render(await Page({ params: Promise.resolve({ locale: 'en' }) }))
     expect(screen.getByTestId('mcs-workbench')).toHaveAttribute('data-section', section)
+  })
+
+  it('opens the Learn pathway landing when no section or track is requested', async () => {
+    render(await LearnPage({ params: Promise.resolve({ locale: 'en' }) }))
+    expect(screen.getByTestId('mcs-learn-landing')).toBeInTheDocument()
+    expect(screen.queryByTestId('mcs-workbench')).not.toBeInTheDocument()
+  })
+
+  it('opens the Learn workbench for a requested section', async () => {
+    render(
+      await LearnPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({ lesson: 'mcs-foundations-signals' }),
+      }),
+    )
+    expect(screen.getByTestId('mcs-workbench')).toHaveAttribute('data-section', 'learn')
   })
 
   it.each(['iabp', 'impella', 'lvad'] as const)(
@@ -75,13 +108,46 @@ describe('mechanical circulatory support route family', () => {
     },
   )
 
-  it('falls back to the shared learning overview for an invalid track query', async () => {
+  it('falls back to the pathway landing for an invalid track query', async () => {
     render(
       await LearnPage({
         params: Promise.resolve({ locale: 'en' }),
         searchParams: Promise.resolve({ device: 'unknown' }),
       }),
     )
-    expect(screen.getByTestId('mcs-workbench')).not.toHaveAttribute('data-device')
+    expect(screen.getByTestId('mcs-learn-landing')).toBeInTheDocument()
+  })
+
+  it('maps every MCS catalog query to its exact Learn, Practice, or Assess selection', async () => {
+    const activities = criticalCareActivities.filter(
+      (activity) => activity.moduleId === 'mechanical-circulatory-support',
+    )
+
+    for (const activity of activities) {
+      const section = activity.id.split(':')[1]
+      const Page =
+        section === 'learn' ? LearnPage : section === 'practice' ? PracticePage : AssessPage
+      const result = render(
+        await Page({
+          params: Promise.resolve({ locale: 'en' }),
+          searchParams: Promise.resolve(activity.query ?? {}),
+        }),
+      )
+      expect(screen.getByTestId('mcs-workbench')).toHaveAttribute(
+        'data-activity',
+        activity.id.split(':').slice(2).join(':'),
+      )
+      result.unmount()
+    }
+  })
+
+  it('ignores array-valued activity queries instead of guessing a target', async () => {
+    render(
+      await PracticePage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({ case: ['IABP-01', 'IMP-01'] }),
+      }),
+    )
+    expect(screen.getByTestId('mcs-workbench')).not.toHaveAttribute('data-activity')
   })
 })

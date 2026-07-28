@@ -1,8 +1,10 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 
 import { hemodynamicCases } from '../content'
+import { FormulaDrawer } from '../components/FormulaDrawer'
 import IcuHemodynamicsLab from '../components/IcuHemodynamicsLab'
 import { PacActionDock } from '../components/PacActionDock'
+import { ResizablePacWorkspace } from '../components/ResizablePacWorkspace'
 import { createInitialHemodynamicState, icuHemodynamicsReducer } from '../engine'
 
 describe('ICU Hemodynamics Lab learner interface', () => {
@@ -35,6 +37,19 @@ describe('ICU Hemodynamics Lab learner interface', () => {
     expect(
       screen.getByRole('region', { name: /Vendor-neutral simulated ICU bedside monitor/i }),
     ).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Monitor panel' })).toHaveAttribute('tabindex', '0')
+    expect(
+      screen.getByRole('region', { name: 'Anatomy and pressure-reference panel' }),
+    ).toHaveAttribute('tabindex', '0')
+    expect(
+      screen.getByRole('region', { name: 'PAC controls and waveform-teaching panel' }),
+    ).toHaveAttribute('tabindex', '0')
+    expect(
+      screen.getByRole('separator', { name: 'Resize monitor and anatomy panels' }),
+    ).toHaveAttribute('aria-orientation', 'vertical')
+    expect(
+      screen.getByRole('separator', { name: 'Resize anatomy and PAC teaching panels' }),
+    ).toHaveAttribute('aria-orientation', 'vertical')
     expect(screen.getByRole('img', { name: /ECG II waveform over/i })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: /ART waveform over/i })).toBeInTheDocument()
     expect(screen.getByText(/Waveform text: ART waveform/i)).toBeInTheDocument()
@@ -44,13 +59,67 @@ describe('ICU Hemodynamics Lab learner interface', () => {
     expect(screen.getByText(/Aortic cusps are segmented/i)).toBeInTheDocument()
     expect(screen.getByText(/route\/orifice proxies only/i)).toBeInTheDocument()
     expect(
-      screen.getByRole('region', { name: 'Advance by waveform and route gate' }),
+      screen.getByRole('region', { name: 'Advance by waveform and catheter route' }),
     ).toBeInTheDocument()
+    expect(
+      screen.getByRole('note', { name: 'Flow-directed balloon advancement technique' }),
+    ).toHaveTextContent(/balloon deflated while the tip is inside the introducer/i)
     expect(
       screen.getByText(/Tricuspid and pulmonic gates orient the CT-derived route/i),
     ).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: 'Advance' })).toHaveLength(1)
     expect(screen.getAllByRole('button', { name: 'Inflate briefly' })).toHaveLength(1)
+  })
+
+  it('switches narrow workspaces to full-width accessible panel tabs', async () => {
+    const boundsSpy = jest
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockImplementation(function mockWorkspaceBounds(this: HTMLElement) {
+        const width = this.hasAttribute('data-pac-resize-handle') ? 12 : 900
+        return {
+          bottom: 600,
+          height: 600,
+          left: 0,
+          right: width,
+          top: 0,
+          width,
+          x: 0,
+          y: 0,
+          toJSON: () => ({}),
+        }
+      })
+
+    try {
+      render(
+        <ResizablePacWorkspace
+          monitor={<div>Monitor content</div>}
+          physiology={<div>Anatomy content</div>}
+          controls={<div>Activity content</div>}
+        />,
+      )
+
+      fireEvent(window, new Event('resize'))
+
+      expect(
+        await screen.findByRole('tablist', { name: 'Workspace panel views' }),
+      ).toBeInTheDocument()
+      expect(screen.getByRole('tab', { name: 'Monitor' })).toHaveAttribute('aria-selected', 'true')
+      expect(screen.getByText('Anatomy content').closest('[role="region"]')).toHaveAttribute(
+        'hidden',
+      )
+
+      fireEvent.click(screen.getByRole('tab', { name: 'Activity' }))
+
+      expect(screen.getByRole('tab', { name: 'Activity' })).toHaveAttribute('aria-selected', 'true')
+      expect(
+        screen.getByRole('region', { name: 'PAC controls and waveform-teaching panel' }),
+      ).not.toHaveAttribute('hidden')
+      expect(screen.getByText('Monitor content').closest('[role="region"]')).toHaveAttribute(
+        'hidden',
+      )
+    } finally {
+      boundsSpy.mockRestore()
+    }
   })
 
   it('advances the PAC by waveform and exposes wedge and keyboard-capable thermodilution controls', async () => {
@@ -67,10 +136,21 @@ describe('ICU Hemodynamics Lab learner interface', () => {
       'step',
     )
     expect(screen.getByText(/tip is in the right atrium/i)).toBeInTheDocument()
+    expect(
+      screen.getByRole('note', { name: 'RA and CVP end-expiratory measurement' }),
+    ).toHaveTextContent(
+      /same right-atrial pressure.*slow CVP and ART envelopes rise together.*lowest slow envelope is end expiration.*base of the c wave.*ZERO REQUIRED/is,
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm RA waveform' }))
     fireEvent.click(screen.getByRole('button', { name: 'Advance' }))
     expect(screen.getByText(/Tip: RV · 35 cm/i)).toBeInTheDocument()
+    expect(
+      screen.getByRole('note', { name: 'Flow-directed balloon advancement technique' }),
+    ).toHaveTextContent(/balloon INFLATED/i)
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm RV waveform' }))
     fireEvent.click(screen.getByRole('button', { name: 'Advance' }))
     expect(screen.getByText(/Tip: PA · 45 cm/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm PA waveform' }))
     expect(
       screen.getByRole('group', { name: 'Brief end-expiratory PAWP capture' }),
     ).toBeInTheDocument()
@@ -137,7 +217,30 @@ describe('ICU Hemodynamics Lab learner interface', () => {
     expect(wedgeStatus()).toHaveTextContent(/Balloon deflated and PA waveform restored/i)
   })
 
-  it('requires commit-before-intervention in Practice and reveals scored workflow only after selection', async () => {
+  it('requires an explicit derived-value review action rather than awarding credit for disclosure', () => {
+    const state = createInitialHemodynamicState(hemodynamicCases[0], 'learn', 18)
+    const dispatch = jest.fn()
+    render(<FormulaDrawer state={state} dispatch={dispatch} />)
+
+    fireEvent.click(
+      screen.getByText('Derived hemodynamics and interpretation limits', {
+        selector: 'summary',
+      }),
+    )
+    expect(dispatch).not.toHaveBeenCalled()
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Confirm input validity and interpretation limits reviewed',
+      }),
+    )
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'VALIDATE_SIGNAL',
+      check: 'derived-reviewed',
+    })
+  })
+
+  it('keeps practice interventions available while preserving an optional working-frame capture', async () => {
     render(<IcuHemodynamicsLab />)
     fireEvent.click(screen.getByRole('tab', { name: 'Eight cases' }))
     fireEvent.click(screen.getByRole('tab', { name: 'Practice' }))
@@ -146,15 +249,15 @@ describe('ICU Hemodynamics Lab learner interface', () => {
     ).not.toBeInTheDocument()
 
     const plr = screen.getByRole('button', { name: /PLR/i })
-    expect(plr).toBeDisabled()
+    expect(plr).toBeEnabled()
     fireEvent.change(screen.getByLabelText('Suspected hemodynamic mechanism'), {
       target: { value: 'underfilled' },
     })
     fireEvent.change(screen.getByLabelText('Immediate management priority'), {
       target: { value: 'validate-preload' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Commit phenotype + priority' }))
-    expect(screen.getByRole('button', { name: 'Prediction locked' })).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Record phenotype + priority' }))
+    expect(screen.getByRole('button', { name: 'Working frame recorded' })).toBeDisabled()
     expect(screen.getByRole('button', { name: /PLR/i })).toBeEnabled()
   })
 

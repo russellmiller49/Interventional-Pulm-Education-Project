@@ -34,32 +34,6 @@ function CasePlayerHarness({ experience = 'practice' }: { experience?: CrrtLearn
   )
 }
 
-function submitCrrt01ClinicalPlan() {
-  const definition = getBaxterCrrtCase('CRRT-01')
-  const hidden = definition.hiddenMechanism
-  const plan = within(screen.getByRole('region', { name: 'Plan your approach before acting' }))
-  fireEvent.change(plan.getByRole('combobox', { name: '1 · Goal' }), {
-    target: { value: hidden.correctGoalOptionId },
-  })
-  fireEvent.change(plan.getByRole('combobox', { name: '2 · Mechanism' }), {
-    target: { value: hidden.correctMechanismOptionId },
-  })
-  for (const id of hidden.correctControlOptionIds) {
-    const option = definition.controlOptions.find((candidate) => candidate.id === id)
-    if (!option) throw new Error(`Missing CRRT-01 control option ${id}.`)
-    fireEvent.click(plan.getByRole('checkbox', { name: option.label }))
-  }
-  fireEvent.change(plan.getByRole('combobox', { name: '4 · Expected response' }), {
-    target: { value: hidden.correctResponseOptionId },
-  })
-  for (const id of hidden.correctReassessmentOptionIds) {
-    const option = definition.reassessmentOptions.find((candidate) => candidate.id === id)
-    if (!option) throw new Error(`Missing CRRT-01 reassessment option ${id}.`)
-    fireEvent.click(plan.getByRole('checkbox', { name: option.label }))
-  }
-  fireEvent.click(plan.getByRole('button', { name: 'Submit plan and prediction' }))
-}
-
 describe('Baxter CRRT case player', () => {
   it('shows the four-stage reasoning ribbon, compact role lens, and four workspace tabs', () => {
     render(<CasePlayerHarness />)
@@ -72,6 +46,10 @@ describe('Baxter CRRT case player', () => {
     expect(within(ribbon).getByText('Select + Predict')).toBeInTheDocument()
     expect(within(ribbon).getByText('Act + Observe')).toBeInTheDocument()
     expect(within(ribbon).getByText('Reassess + Reflect')).toBeInTheDocument()
+    const sharedPhases = screen.getByRole('group', { name: 'CRRT shared activity phases' })
+    for (const label of ['Recognize', 'Predict', 'Act', 'Observe', 'Explain', 'Transfer']) {
+      expect(within(sharedPhases).getByText(label)).toBeInTheDocument()
+    }
 
     const roles = screen.getByRole('group', { name: 'View case through role lens' })
     expect(within(roles).getByRole('button', { name: 'Integrated' })).toHaveAttribute(
@@ -109,9 +87,8 @@ describe('Baxter CRRT case player', () => {
     expect(screen.queryByRole('combobox', { name: 'Device profile' })).not.toBeInTheDocument()
   })
 
-  it('unlocks authored machine controls only after the clinical plan is committed', () => {
+  it('exposes authored machine controls before the clinical plan is committed', () => {
     render(<CasePlayerHarness />)
-    submitCrrt01ClinicalPlan()
 
     const tabs = screen.getByRole('tablist', { name: 'CRRT case surfaces' })
     const machineTab = within(tabs).getByRole('tab', { name: 'Machine + circuit' })
@@ -133,12 +110,14 @@ describe('Baxter CRRT case player', () => {
     expect(machine.getByLabelText('Pilot flow displays')).toHaveTextContent('70 mL/h')
   })
 
-  it('runs the masked capstone without hints or a case/device picker', () => {
+  it('runs the named Challenge without hints or a case/device picker', () => {
     render(<CasePlayerHarness experience="mastery" />)
 
-    expect(screen.getByRole('note', { name: 'Capstone safeguards.' })).toBeInTheDocument()
+    expect(screen.getByRole('note', { name: 'Challenge flow.' })).toBeInTheDocument()
     expect(
-      screen.getByText(/Case identity remains masked until causal debrief/i),
+      screen.getByRole('heading', {
+        name: 'Recurrent filter loss across access, filtration, downtime, and policy domains',
+      }),
     ).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: /Reveal guidance/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('combobox', { name: /case/i })).not.toBeInTheDocument()

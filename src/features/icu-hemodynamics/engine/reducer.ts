@@ -7,6 +7,8 @@ import {
   deriveHemodynamicMeasurements,
 } from './simulation'
 import { generateThermodilutionCurve, thermodilutionAcceptedAverage } from './thermodilution'
+import { DYNAMIC_RESPONSE_REFERENCE, FAST_FLUSH_LIVE_DURATION_SECONDS } from './waveformArtifacts'
+import { HEMODYNAMIC_CLINICAL_THRESHOLDS } from '../content/clinicalThresholds'
 import type {
   CatheterPosition,
   HemodynamicAction,
@@ -15,10 +17,54 @@ import type {
 } from './types'
 
 const catheterSequence: readonly CatheterPosition[] = ['introducer', 'ra', 'rv', 'pa']
+const HD08_PROCEDURE_MILESTONES = new Set([
+  'correct-measurement-system',
+  'reposition-catheter',
+  'repeat-valid-thermodilution',
+])
 
 function refreshMeasurements(state: HemodynamicSimulationState): HemodynamicSimulationState {
   const measurements = deriveHemodynamicMeasurements(state.parameters, state.measurementSystem)
   return { ...state, measurements }
+}
+
+/**
+ * HD-08 intentionally keeps the original intervention IDs because they are part of the
+ * established scoring contract. Credit for those IDs is now derived from the actual skill
+ * interactions instead of being granted by a bundled intervention button.
+ */
+function withValidatedProcedureMilestones(
+  state: HemodynamicSimulationState,
+): HemodynamicSimulationState {
+  if (state.caseId !== 'HD-08') return state
+
+  const checks = new Set(state.signalValidationChecks)
+  const completed = new Set(state.completedInterventionIds)
+  const pressureSystemValidated =
+    state.measurementSystem.zeroed &&
+    Math.abs(state.measurementSystem.transducerLevelCm) <=
+      HEMODYNAMIC_CLINICAL_THRESHOLDS.signalValidation.transducerLevelToleranceCm &&
+    state.measurementSystem.artifact === 'none' &&
+    state.measurementSystem.dampingRatio >= 0.4 &&
+    state.measurementSystem.dampingRatio <= 0.95 &&
+    checks.has('fast-flush') &&
+    checks.has('dynamic-response-classified')
+
+  if (pressureSystemValidated) completed.add('correct-measurement-system')
+  if (
+    state.catheter.position === 'pa' &&
+    state.catheter.targetPosition === null &&
+    !state.catheter.balloonInflated &&
+    checks.has('catheter-position-confirmed')
+  ) {
+    completed.add('reposition-catheter')
+  }
+  if (thermodilutionAcceptedAverage(state.thermodilutionTrials) !== null) {
+    completed.add('repeat-valid-thermodilution')
+  }
+
+  if (completed.size === state.completedInterventionIds.length) return state
+  return { ...state, completedInterventionIds: [...completed] }
 }
 
 export function calculateHemodynamicScore(
@@ -92,7 +138,7 @@ export function icuHemodynamicsReducer(
 ): HemodynamicSimulationState {
   switch (action.type) {
     case 'TICK':
-      return advanceHemodynamicSimulation(state, action.seconds)
+      return withValidatedProcedureMilestones(advanceHemodynamicSimulation(state, action.seconds))
     case 'RESET_CASE': {
       const next = createInitialHemodynamicState(
         action.definition,
@@ -119,7 +165,7 @@ export function icuHemodynamicsReducer(
         ...state,
         predictionCommitted: true,
         phase: 'measure',
-        responseMessage: 'Prediction locked. Validate the signals before treating the model.',
+        responseMessage: 'Working frame recorded. Validate the signals before treating the model.',
       }
     case 'SET_CATHETER_POSITION':
       return {
@@ -193,13 +239,15 @@ export function icuHemodynamicsReducer(
             'Catheter movement is already in progress; wait for the current transition.',
         }
       }
-      const normalizedPosition =
-        state.catheter.position === 'wedge' ? 'pa' : state.catheter.position
+      const retractingFromWedge = state.catheter.position === 'wedge'
+      const normalizedPosition = retractingFromWedge ? 'pa' : state.catheter.position
       const currentIndex = catheterSequence.indexOf(normalizedPosition)
-      const nextPosition = catheterSequence[Math.max(0, currentIndex - 1)]
-      if (nextPosition === normalizedPosition) return state
+      const nextPosition = retractingFromWedge
+        ? 'pa'
+        : catheterSequence[Math.max(0, currentIndex - 1)]
+      if (nextPosition === normalizedPosition && !retractingFromWedge) return state
       if (action.instant) {
-        return {
+        return withValidatedProcedureMilestones({
           ...state,
           catheter: {
             ...state.catheter,
@@ -213,9 +261,15 @@ export function icuHemodynamicsReducer(
             wedgeStartedAt: null,
             wedgeCaptureReady: false,
           },
-        }
+          signalValidationChecks: retractingFromWedge
+            ? [...new Set([...state.signalValidationChecks, 'catheter-position-confirmed'])]
+            : state.signalValidationChecks,
+          responseMessage: retractingFromWedge
+            ? 'Catheter withdrawn from the false-wedge position; the PA waveform is restored and confirmed.'
+            : `Catheter retracted to ${nextPosition.toUpperCase()}. Confirm the waveform before moving again.`,
+        })
       }
-      return {
+      return withValidatedProcedureMilestones({
         ...state,
         catheter: {
           ...state.catheter,
@@ -230,72 +284,95 @@ export function icuHemodynamicsReducer(
           wedgeCursorTime: null,
           storedAtEndExpiration: state.catheter.storedWedgeMmHg !== null,
         },
-        responseMessage: `Catheter retracting toward ${nextPosition.toUpperCase()}; the monitor retains the confirmed ${normalizedPosition.toUpperCase()} waveform until arrival.`,
-      }
+        signalValidationChecks: retractingFromWedge
+          ? [...new Set([...state.signalValidationChecks, 'catheter-position-confirmed'])]
+          : state.signalValidationChecks,
+        responseMessage: retractingFromWedge
+          ? 'Catheter withdrawing from the false-wedge position toward PA; confirm return of the PA waveform on arrival.'
+          : `Catheter retracting toward ${nextPosition.toUpperCase()}; the monitor retains the confirmed ${normalizedPosition.toUpperCase()} waveform until arrival.`,
+      })
     }
     case 'SET_TRANSDUCER_LEVEL':
-      return refreshMeasurements({
-        ...state,
-        measurementSystem: {
-          ...state.measurementSystem,
-          transducerLevelCm: clamp(action.levelCm, -20, 20),
-        },
-      })
+      return withValidatedProcedureMilestones(
+        refreshMeasurements({
+          ...state,
+          measurementSystem: {
+            ...state.measurementSystem,
+            transducerLevelCm: clamp(action.levelCm, -20, 20),
+          },
+          responseMessage:
+            Math.abs(action.levelCm) <=
+            HEMODYNAMIC_CLINICAL_THRESHOLDS.signalValidation.transducerLevelToleranceCm
+              ? 'Transducer leveled at the phlebostatic axis. Zero remains a separate reference step.'
+              : 'Transducer height changed. Align it with the phlebostatic axis before interpretation.',
+        }),
+      )
     case 'ZERO_TRANSDUCER':
-      return refreshMeasurements({
-        ...state,
-        measurementSystem: {
-          ...state.measurementSystem,
-          zeroed: true,
-          transducerLevelCm: 0,
-        },
-        signalValidationChecks: [...new Set([...state.signalValidationChecks, 'zero-level'])],
-        responseMessage: 'Transducer zero accepted at the phlebostatic axis.',
-      })
+      return withValidatedProcedureMilestones(
+        refreshMeasurements({
+          ...state,
+          measurementSystem: {
+            ...state.measurementSystem,
+            zeroed: true,
+          },
+          signalValidationChecks: [...new Set([...state.signalValidationChecks, 'zero-reference'])],
+          responseMessage:
+            Math.abs(state.measurementSystem.transducerLevelCm) <=
+            HEMODYNAMIC_CLINICAL_THRESHOLDS.signalValidation.transducerLevelToleranceCm
+              ? 'Atmospheric zero accepted. Transducer level is already aligned.'
+              : 'Atmospheric zero accepted, but the transducer remains off level and must be positioned separately.',
+        }),
+      )
     case 'SET_DAMPING':
-      return refreshMeasurements({
-        ...state,
-        measurementSystem: {
-          ...state.measurementSystem,
-          dampingRatio: clamp(action.dampingRatio, 0.15, 1.5),
-          artifact:
-            action.dampingRatio > 0.95
-              ? 'overdamped'
-              : action.dampingRatio < 0.4
-                ? 'underdamped'
-                : 'none',
-        },
-      })
+      return withValidatedProcedureMilestones(
+        refreshMeasurements({
+          ...state,
+          measurementSystem: {
+            ...state.measurementSystem,
+            dampingRatio: clamp(action.dampingRatio, 0.15, 1.5),
+            artifact:
+              action.dampingRatio > DYNAMIC_RESPONSE_REFERENCE.overdampedAbove
+                ? 'overdamped'
+                : action.dampingRatio < DYNAMIC_RESPONSE_REFERENCE.underdampedBelow
+                  ? 'underdamped'
+                  : 'none',
+          },
+        }),
+      )
     case 'SET_ARTIFACT':
-      return refreshMeasurements({
-        ...state,
-        measurementSystem: { ...state.measurementSystem, artifact: action.artifact },
-      })
+      return withValidatedProcedureMilestones(
+        refreshMeasurements({
+          ...state,
+          measurementSystem: { ...state.measurementSystem, artifact: action.artifact },
+        }),
+      )
     case 'FAST_FLUSH': {
       const artifact = state.measurementSystem.artifact
       const dampingRatio = state.measurementSystem.dampingRatio
       const finding =
-        artifact === 'overdamped' || dampingRatio > 0.95
+        artifact === 'overdamped' || dampingRatio > DYNAMIC_RESPONSE_REFERENCE.overdampedAbove
           ? 'Sluggish return without oscillation: overdamping suspected.'
-          : artifact === 'underdamped' || dampingRatio < 0.4
+          : artifact === 'underdamped' || dampingRatio < DYNAMIC_RESPONSE_REFERENCE.underdampedBelow
             ? 'Multiple high-frequency oscillations: underdamping suspected.'
             : 'One to two oscillations with prompt return: dynamic response is acceptable.'
-      return {
+      return withValidatedProcedureMilestones({
         ...state,
         measurementSystem: {
           ...state.measurementSystem,
-          fastFlushActiveUntil: state.timeSeconds + 1.2,
+          fastFlushStartedAt: state.timeSeconds,
+          fastFlushActiveUntil: state.timeSeconds + FAST_FLUSH_LIVE_DURATION_SECONDS,
+          fastFlushLineType: action.lineType,
           lastFastFlushFinding: finding,
         },
         signalValidationChecks: [...new Set([...state.signalValidationChecks, 'fast-flush'])],
         responseMessage: finding,
-      }
+      })
     }
     case 'VALIDATE_SIGNAL':
-      return {
+      return withValidatedProcedureMilestones({
         ...state,
         signalValidationChecks: [...new Set([...state.signalValidationChecks, action.check])],
-      }
+      })
     case 'START_WEDGE': {
       if (
         state.catheter.targetPosition !== null ||
@@ -409,17 +486,24 @@ export function icuHemodynamicsReducer(
         trial.id === action.trialId ? { ...trial, accepted: action.accepted } : trial,
       )
       const average = thermodilutionAcceptedAverage(thermodilutionTrials)
-      return {
+      return withValidatedProcedureMilestones({
         ...state,
         thermodilutionTrials,
         responseMessage:
           average === null
             ? 'Continue until at least three technically valid accepted trials are available.'
             : `Accepted thermodilution average: ${average.toFixed(1)} L/min.`,
-      }
+      })
     }
     case 'APPLY_INTERVENTION': {
       if (state.mode === 'practice' && !state.predictionCommitted) return state
+      if (state.caseId === 'HD-08' && HD08_PROCEDURE_MILESTONES.has(action.intervention.id)) {
+        return {
+          ...state,
+          responseMessage:
+            'Complete this procedure with the dedicated pressure-system, catheter, and thermodilution controls; bundled action credit is disabled.',
+        }
+      }
       if (
         !action.intervention.repeatable &&
         state.completedInterventionIds.includes(action.intervention.id)

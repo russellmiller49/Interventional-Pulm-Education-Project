@@ -1,17 +1,12 @@
 'use client'
 
-import { CheckCircle2, GraduationCap, Lock, ShieldCheck } from 'lucide-react'
+import { GraduationCap } from 'lucide-react'
 import { useEffect, useReducer, useState } from 'react'
 
 import { baxterCrrtNavBase } from '@/features/learning-module/moduleRoutes'
-import { Link } from '@/i18n/navigation'
+import { Link, useRouter } from '@/i18n/navigation'
 
 import { getBaxterCrrtCase } from '../content/completeCases'
-import {
-  getBaxterCrrtCaseCatalogEntry,
-  isCrrtCapstoneUnlocked,
-  remainingCrrtCoreCaseIds,
-} from '../content/curriculum'
 import { baxterCrrtMasteryManifest } from '../content/mastery'
 import {
   createCrrtLearningSession,
@@ -28,12 +23,14 @@ import {
 } from '../engine/progress'
 import type { CrrtRoleLens } from '../engine/types'
 import { BaxterCrrtModuleFrame } from './BaxterCrrtModuleFrame'
+import { CrrtActivityWorkspace } from './CrrtActivityWorkspace'
 import { CrrtCasePlayer } from './CrrtCasePlayer'
 import styles from './baxter-crrt.module.css'
 
 const capstoneCase = getBaxterCrrtCase('CRRT-16')
 
 export function BaxterCrrtAssess({ locale = 'en' }: { readonly locale?: string }) {
+  const router = useRouter()
   const [progress, setProgress] = useState<BaxterCrrtProgressV3>(createDefaultProgress)
   const [hydrated, setHydrated] = useState(false)
   const [roleLens, setRoleLens] = useState<CrrtRoleLens>('integrated')
@@ -70,10 +67,6 @@ export function BaxterCrrtAssess({ locale = 'en' }: { readonly locale?: string }
     })
   }, [roleLens])
 
-  const unlocked = hydrated && isCrrtCapstoneUnlocked(progress)
-  const remainingCases = remainingCrrtCoreCaseIds(progress)
-  const completed = progress.completedMasteryCapstoneIds.includes(baxterCrrtMasteryManifest.id)
-
   function persist(next: BaxterCrrtProgressV3) {
     setProgress(next)
     if (hydrated) writeProgress(next)
@@ -92,7 +85,7 @@ export function BaxterCrrtAssess({ locale = 'en' }: { readonly locale?: string }
   }
 
   function recordDebrief(outcome: CrrtLearningOutcome) {
-    if (!unlocked || !outcome.scored || outcome.score === null) return
+    if (!outcome.scored || outcome.score === null) return
     persist(
       recordCaseResult(progress, {
         caseId: baxterCrrtMasteryManifest.id,
@@ -108,78 +101,42 @@ export function BaxterCrrtAssess({ locale = 'en' }: { readonly locale?: string }
     )
   }
 
+  const assessmentTaskRules = (
+    <div className={styles.assessmentTaskRules}>
+      <strong>Challenge flow</strong>
+      <ul>
+        <li>Use the five-part plan when it helps organize your working frame.</li>
+        <li>Use patient, prescription, circuit, pressure, and alert cues together.</li>
+        <li>Open any phase directly; unrecorded work remains visible in the causal debrief.</li>
+      </ul>
+      <small>Educational simulation only; not patient-specific device or treatment guidance.</small>
+    </div>
+  )
+
   return (
-    <BaxterCrrtModuleFrame locale={locale} activeHref={`${baxterCrrtNavBase}/assess`}>
-      <header className={styles.sectionHero}>
-        <span className={styles.kicker}>Assess · masked capstone</span>
-        <h1>Prove the full reasoning loop in an unseen case</h1>
-        <p>
-          The assessment unlocks after all ten core Practice cases. It uses PrisMax, provides no
-          hints, and keeps the case identity masked until debrief.
-        </p>
-      </header>
-
-      <section className={styles.assessmentRules} aria-labelledby="assessment-rules-heading">
-        <ShieldCheck aria-hidden="true" />
-        <div>
-          <h2 id="assessment-rules-heading">Passing rules</h2>
-          <ul>
-            <li>Score at least {baxterCrrtMasteryManifest.minimumScore}/100</li>
-            <li>No hints</li>
-            <li>No critical error</li>
-            <li>Complete the required reassessment</li>
-          </ul>
-          <p>
-            Educational completion only—this is not certification or proof of clinical competency.
-          </p>
-        </div>
-        {completed ? (
-          <span className={styles.completedBadge}>
-            <CheckCircle2 aria-hidden="true" /> Capstone completed
-          </span>
-        ) : null}
-      </section>
-
-      {!hydrated ? (
-        <div className={styles.assessmentGate} role="status">
-          Checking core-path progress…
-        </div>
-      ) : !unlocked ? (
-        <section className={styles.assessmentGate} aria-labelledby="assessment-locked-heading">
-          <Lock aria-hidden="true" />
-          <div>
-            <span>Capstone locked</span>
-            <h2 id="assessment-locked-heading">
-              Complete {remainingCases.length} remaining core{' '}
-              {remainingCases.length === 1 ? 'case' : 'cases'}
-            </h2>
-            <p>Optional cases and safety drills do not block the assessment.</p>
-            <ul>
-              {remainingCases.map((caseId) => {
-                const entry = getBaxterCrrtCaseCatalogEntry(caseId)
-                return (
-                  <li key={caseId}>
-                    <Link
-                      href={{
-                        pathname: `${baxterCrrtNavBase}/practice`,
-                        query: { case: caseId },
-                      }}
-                    >
-                      {caseId} · {entry.title}
-                    </Link>
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-        </section>
-      ) : (
+    <BaxterCrrtModuleFrame locale={locale} activeHref={`${baxterCrrtNavBase}/assess`} activityMode>
+      <CrrtActivityWorkspace
+        session={session}
+        mode="challenge"
+        progressLabel="Challenge · personal history stays local"
+        onReset={() => dispatch({ type: 'RESET', attempt: session.attempt + 1 })}
+        onSaveAndExit={() => {
+          writeProgress(progress)
+          router.push(baxterCrrtNavBase)
+        }}
+        currentTaskExtras={assessmentTaskRules}
+        nextRecommendation={
+          session.debriefRevealed ? (
+            <Link href={baxterCrrtNavBase}>Next recommended · Review CRRT history</Link>
+          ) : null
+        }
+      >
         <section className={styles.casePlayerSection} aria-labelledby="capstone-heading">
           <div className={styles.casePlayerHeading}>
             <GraduationCap aria-hidden="true" />
             <div>
-              <span>Unlocked assessment</span>
-              <h2 id="capstone-heading">{baxterCrrtMasteryManifest.learnerTitleBeforeDebrief}</h2>
+              <span>Open challenge</span>
+              <h2 id="capstone-heading">{capstoneCase.title}</h2>
             </div>
           </div>
           <CrrtCasePlayer
@@ -189,9 +146,10 @@ export function BaxterCrrtAssess({ locale = 'en' }: { readonly locale?: string }
             onReset={() => dispatch({ type: 'RESET', attempt: session.attempt + 1 })}
             onDebriefRevealed={recordDebrief}
             idNamespace="assess-prismax"
+            showSharedStepper={false}
           />
         </section>
-      )}
+      </CrrtActivityWorkspace>
     </BaxterCrrtModuleFrame>
   )
 }

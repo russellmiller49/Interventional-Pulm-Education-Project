@@ -1,0 +1,977 @@
+.panel {
+  display: grid;
+  gap: 0.7rem;
+  align-content: start;
+  padding: 0.8rem;
+  color: #15323a;
+  background: #f6f8f5;
+}
+
+.panelHeader > span {
+  color: #147d7b;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.panelHeader h2 {
+  margin-top: 0.15rem;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.panelHeader p {
+  margin-top: 0.3rem;
+  color: #4d6469;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.figure {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.6rem;
+  margin: 0;
+  border: 1px solid #d3e0dd;
+  border-radius: 0.7rem;
+  background: #fff;
+}
+
+.figure svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.figure figcaption {
+  color: #5b7176;
+  font-size: 0.66rem;
+  line-height: 1.45;
+}
+
+/* Pressure decomposition */
+.axis {
+  fill: none;
+  stroke: #9db3b0;
+  stroke-width: 1.2;
+}
+
+.gridLine {
+  fill: none;
+  stroke: #e3ebe9;
+  stroke-width: 1;
+}
+
+.segmentBaseline {
+  fill: #cfe0e4;
+}
+
+.segmentElastic {
+  fill: #7fc4b6;
+}
+
+.segmentResistive {
+  fill: #e8b869;
+}
+
+.segmentMuted {
+  opacity: 0.32;
+}
+
+.segmentLabel {
+  fill: #24454b;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.segmentValue {
+  fill: #15323a;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.segmentBandValue {
+  fill: #3b585e;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.boundaryTick {
+  fill: none;
+  stroke: #7f9c97;
+  stroke-width: 1;
+}
+
+.traceGrid {
+  fill: none;
+  stroke: #e6edeb;
+  stroke-width: 1;
+}
+
+.trace {
+  fill: none;
+  stroke: #147d7b;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+}
+
+.traceMuted {
+  fill: none;
+  stroke: #b7c8c6;
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}
+
+.traceEffort {
+  fill: none;
+  stroke: #b64152;
+  stroke-dasharray: 3 3;
+  stroke-width: 1.4;
+}
+
+.zeroFlowLine {
+  fill: none;
+  stroke: #b64152;
+  stroke-dasharray: 4 3;
+  stroke-width: 1;
+}
+
+.componentToggles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+  gap: 0.35rem;
+}
+
+.componentToggles button {
+  min-height: 2.5rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #a8c2be;
+  border-radius: 0.6rem;
+  color: #2c5257;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-align: left;
+}
+
+.componentToggles button[aria-pressed='true'] {
+  border-color: #147d7b;
+  color: #f2fffd;
+  background: #147d7b;
+}
+
+.equation {
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #d3e0dd;
+  border-left: 3px solid #147d7b;
+  border-radius: 0.5rem;
+  background: #fff;
+  font-size: 0.72rem;
+  line-height: 1.6;
+}
+
+.equation strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.readouts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.readouts > div {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #dde7e5;
+  border-radius: 0.55rem;
+  background: #fff;
+}
+
+.readouts dt {
+  color: #5b7176;
+  font-size: 0.6rem;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.readouts dd {
+  margin: 0.1rem 0 0;
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.readouts dd small {
+  font-size: 0.6rem;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.readouts > div[data-state='unavailable'] dd {
+  color: #86999d;
+}
+
+/* Reading sequence */
+.steps {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  counter-reset: readingStep;
+}
+
+.steps li button {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 1.4rem minmax(0, 1fr);
+  gap: 0.45rem;
+  align-items: start;
+  min-height: 2.6rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid #cfdedb;
+  border-radius: 0.6rem;
+  color: #2c5257;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+
+.steps li button[aria-current='step'] {
+  border-color: #147d7b;
+  background: #e6f4f1;
+  box-shadow: inset 0 0 0 1px #147d7b;
+}
+
+.steps li button > span:first-child {
+  display: grid;
+  place-items: center;
+  height: 1.4rem;
+  border-radius: 999px;
+  background: #dbeae7;
+  font-size: 0.64rem;
+  font-weight: 850;
+}
+
+.steps li button strong {
+  display: block;
+  font-size: 0.74rem;
+}
+
+.steps li button small {
+  display: block;
+  margin-top: 0.1rem;
+  color: #5b7176;
+  font-size: 0.66rem;
+  line-height: 1.4;
+}
+
+.stepDetail {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.6rem;
+  border: 1px solid #d3e0dd;
+  border-radius: 0.65rem;
+  background: #fff;
+  font-size: 0.73rem;
+  line-height: 1.55;
+}
+
+.stepDetail p + p {
+  margin-top: 0.1rem;
+}
+
+.stepDetail span {
+  color: #147d7b;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Discriminator */
+.candidates {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.candidates button {
+  min-height: 2.6rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #cfdedb;
+  border-radius: 0.6rem;
+  color: #2c5257;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.73rem;
+  font-weight: 750;
+  text-align: left;
+}
+
+.candidates button[aria-pressed='true'] {
+  border-color: #147d7b;
+  background: #e6f4f1;
+  box-shadow: inset 0 0 0 1px #147d7b;
+}
+
+.evidenceTable {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.evidenceRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid #dde7e5;
+  border-radius: 0.55rem;
+  background: #fff;
+  font-size: 0.71rem;
+  line-height: 1.4;
+}
+
+.evidenceRow small {
+  display: block;
+  color: #5b7176;
+  font-size: 0.64rem;
+}
+
+.verdict {
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.verdict[data-verdict='consistent'] {
+  color: #14564a;
+  background: #cdeade;
+}
+
+.verdict[data-verdict='against'] {
+  color: #7d2233;
+  background: #f7d7dc;
+}
+
+.verdict[data-verdict='unmeasured'],
+.verdict[data-verdict='invalidates'] {
+  color: #6b5220;
+  background: #fdeec9;
+}
+
+.verdict[data-verdict='neutral'] {
+  color: #47606a;
+  background: #e2eaef;
+}
+
+.textEquivalent {
+  padding: 0.5rem 0.6rem;
+  border: 1px dashed #b8cbc8;
+  border-radius: 0.55rem;
+  color: #40585d;
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+.boundary {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid rgba(185, 120, 29, 0.35);
+  border-radius: 0.55rem;
+  background: #fff6e6;
+  color: #6b5220;
+  font-size: 0.67rem;
+  line-height: 1.5;
+}
+
+.runControl {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.6rem;
+  border: 1px solid #cfdedb;
+  border-radius: 0.65rem;
+  background: #fff;
+}
+
+.runControl > div:first-child > span {
+  display: block;
+  color: #147d7b;
+  font-size: 0.6rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.runControl > div:first-child > strong {
+  font-size: 0.82rem;
+}
+
+.runButtons {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.35rem;
+}
+
+.runButtons button {
+  min-height: 2.6rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #a8c2be;
+  border-radius: 0.6rem;
+  color: #2c5257;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.runButtons button[aria-pressed='true'] {
+  border-color: #147d7b;
+  color: #f2fffd;
+  background: #147d7b;
+}
+
+/* Names the pause that stepping causes, so the console does not read as stopping on its own. */
+.runHint {
+  margin: 0;
+  color: #4f6d70;
+  font-size: 0.64rem;
+  line-height: 1.4;
+}
+
+.overviewStep {
+  display: grid;
+  grid-template-columns: 1.4rem minmax(0, 1fr);
+  gap: 0.45rem;
+  align-items: start;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid #cfdedb;
+  border-radius: 0.6rem;
+  background: #fff;
+}
+
+.overviewStep > span:first-child {
+  display: grid;
+  place-items: center;
+  height: 1.4rem;
+  border-radius: 999px;
+  background: #dbeae7;
+  font-size: 0.64rem;
+  font-weight: 850;
+}
+
+.overviewStep strong {
+  display: block;
+  font-size: 0.74rem;
+  text-transform: capitalize;
+}
+
+.overviewStep small {
+  display: block;
+  margin-top: 0.1rem;
+  color: #5b7176;
+  font-size: 0.66rem;
+  line-height: 1.4;
+}
+
+/*
+ * The workbench theme sets its tokens on <body> via :has(), so a nested theme root cannot override
+ * them. The activity pane sits on the light workspace surface, so it re-declares the light values
+ * locally — otherwise every enabled control inside it renders dark and reads as disabled.
+ */
+.activityPane {
+  --background: 0 0% 100%;
+  --foreground: 196 42% 15%;
+  --muted: 168 24% 94%;
+  --muted-foreground: 195 12% 40%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 196 42% 15%;
+  --card: 0 0% 100%;
+  --card-foreground: 196 42% 15%;
+  --border: 168 18% 85%;
+  --input: 168 18% 85%;
+  --primary: 178 72% 28%;
+  --primary-foreground: 170 100% 98%;
+  --secondary: 178 72% 28%;
+  --secondary-foreground: 170 100% 98%;
+  --ring: 178 72% 28%;
+  color-scheme: light;
+}
+
+/* ------------------------------------------------------------------------------------------------
+ * Modes and timing — variable markers over a live breath
+ * ---------------------------------------------------------------------------------------------- */
+
+.variableMarker path,
+.variableMarkerMuted path {
+  fill: none;
+  stroke-dasharray: 3 3;
+  stroke-width: 1.2;
+}
+
+.variableMarker path {
+  stroke: #147d7b;
+}
+
+.variableMarkerMuted path {
+  stroke: #cddad8;
+}
+
+.variableMarker text,
+.variableMarkerMuted text {
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.variableMarker text {
+  fill: #14564a;
+}
+
+.variableMarkerMuted text {
+  fill: #a9bcb9;
+}
+
+.laneLabel {
+  fill: #5b7176;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.laneTrack {
+  fill: #eef3f2;
+}
+
+.laneMachine {
+  fill: #a8d8d2;
+}
+
+.lanePatient {
+  fill: #f0c3ca;
+}
+
+/* ------------------------------------------------------------------------------------------------
+ * Oxygenation — the benefit column and the cost column, side by side
+ * ---------------------------------------------------------------------------------------------- */
+
+.tradeoffColumns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.tradeoffColumn {
+  display: grid;
+  align-content: start;
+  gap: 0.3rem;
+  padding: 0.5rem;
+  border: 1px solid #dbe6e4;
+  border-top: 3px solid #cfdedb;
+  border-radius: 0.55rem;
+}
+
+.tradeoffColumn[data-side='benefit'] {
+  border-top-color: #2f9e5f;
+}
+
+.tradeoffColumn[data-side='cost'] {
+  border-top-color: #b86708;
+}
+
+.tradeoffColumn h3 {
+  margin: 0 0 0.15rem;
+  color: #2c5257;
+  font-size: 0.63rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tradeoffRow {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+.tradeoffRow > span {
+  color: #5b7176;
+}
+
+.tradeoffRow > strong {
+  color: #1d3d42;
+  white-space: nowrap;
+}
+
+.tradeoffRow em[data-trend] {
+  font-size: 0.6rem;
+  font-style: normal;
+}
+
+.tradeoffRow em[data-trend='up'] {
+  color: #b86708;
+}
+
+.tradeoffRow em[data-trend='down'] {
+  color: #2f6f9e;
+}
+
+.tradeoffRow em[data-trend='flat'] {
+  color: #9db3b0;
+}
+
+/* ------------------------------------------------------------------------------------------------
+ * Ventilation — delivery over gas exchange, on one time axis
+ * ---------------------------------------------------------------------------------------------- */
+
+.tierStack {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.tier {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.55rem;
+  border: 1px solid #dbe6e4;
+  border-left: 3px solid #cfdedb;
+  border-radius: 0.55rem;
+}
+
+.tier[data-active='true'] {
+  border-left-color: #147d7b;
+  background: #f6fbfa;
+}
+
+.tier h3 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: baseline;
+  margin: 0;
+  color: #2c5257;
+  font-size: 0.63rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tier h3 small {
+  color: #7d9296;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.tierRows {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.tierArrow {
+  display: grid;
+  justify-items: center;
+}
+
+.tierArrow span {
+  color: #7d9296;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tierArrow span::before {
+  content: '↓ ';
+}
+
+.tierSpark {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.tierNote {
+  margin: 0;
+  color: #5b7176;
+  font-size: 0.66rem;
+  line-height: 1.45;
+}
+
+/* ------------------------------------------------------------------------------------------------
+ * Safety — active alarms grouped by where the answer lives
+ * ---------------------------------------------------------------------------------------------- */
+
+.locusGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.locusCard {
+  display: grid;
+  align-content: start;
+  gap: 0.25rem;
+  padding: 0.5rem 0.55rem;
+  border: 1px solid #dbe6e4;
+  border-radius: 0.55rem;
+}
+
+.locusCard[data-populated='true'] {
+  border-color: #e7c68d;
+  background: #fffaf0;
+}
+
+.locusCard[data-active='true'] {
+  outline: 2px solid #147d7b;
+  outline-offset: -2px;
+}
+
+.locusRank {
+  color: #7d9296;
+  font-size: 0.6rem;
+  font-weight: 850;
+}
+
+.locusCard h3 {
+  margin: 0;
+  color: #1d3d42;
+  font-size: 0.7rem;
+  font-weight: 850;
+}
+
+.locusEmpty {
+  margin: 0;
+  color: #8ea3a6;
+  font-size: 0.66rem;
+}
+
+.plainList {
+  display: grid;
+  gap: 0.25rem;
+  padding-left: 1rem;
+  margin: 0;
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.plainList li[data-priority='high'] {
+  color: #7d2233;
+  font-weight: 700;
+}
+
+@media (max-width: 620px) {
+  .tradeoffColumns,
+  .locusGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ------------------------------------------------------------------------------------------------
+ * Measurement validity — whether the numbers above mean what their names say
+ * ---------------------------------------------------------------------------------------------- */
+
+.validity {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid #e0c58c;
+  border-left: 3px solid #b86708;
+  border-radius: 0.6rem;
+  background: #fff8ec;
+  color: #5c4715;
+  font-size: 0.71rem;
+  line-height: 1.55;
+}
+
+.validity[data-valid='true'] {
+  border-color: #b4d8c4;
+  border-left-color: #2f9e5f;
+  background: #f2fbf6;
+  color: #204a35;
+}
+
+.validity > span {
+  color: #8a5b12;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.validity[data-valid='true'] > span {
+  color: #1f6b45;
+}
+
+.validity p {
+  margin: 0;
+}
+
+/* ------------------------------------------------------------------------------------------------
+ * Waveform anatomy — the volume-targeted / pressure-targeted comparison
+ * ---------------------------------------------------------------------------------------------- */
+
+.comparisonColumns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.comparisonColumn {
+  display: grid;
+  align-content: start;
+  gap: 0.25rem;
+  padding: 0.45rem 0.5rem;
+  border: 1px solid #dbe6e4;
+  border-top: 3px solid #147d7b;
+  border-radius: 0.5rem;
+}
+
+.comparisonColumn h3 {
+  margin: 0;
+  color: #1d3d42;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.comparisonRule {
+  margin: 0;
+  color: #5b7176;
+  font-size: 0.63rem;
+  line-height: 1.4;
+}
+
+.comparisonRule strong {
+  color: #147d7b;
+}
+
+.comparisonColumn svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.comparisonAxis {
+  fill: #7d9296;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 620px) {
+  .comparisonColumns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The compliance slider that drives the two comparison columns. */
+.complianceSlider {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0.35rem 0 0.5rem;
+}
+
+.complianceSlider > span:first-child {
+  color: #5b7176;
+  font-size: 0.68rem;
+}
+
+.complianceSlider strong {
+  color: #147d7b;
+  font-variant-numeric: tabular-nums;
+}
+
+.complianceSlider input[type='range'] {
+  width: 100%;
+  min-height: 1.75rem;
+  accent-color: #147d7b;
+}
+
+.sliderIntro {
+  margin: 0 0 0.15rem;
+  color: #5b7176;
+  font-size: 0.66rem;
+  line-height: 1.45;
+}
+
+.resetMechanics {
+  justify-self: start;
+  min-height: 1.9rem;
+  margin-bottom: 0.45rem;
+  padding: 0 0.6rem;
+  border: 1px solid #147d7b;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #147d7b;
+  font-size: 0.66rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.sliderScale {
+  display: flex;
+  justify-content: space-between;
+  color: #7d9296;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.comparisonReadout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin: 0 0 0.45rem;
+}
+
+.comparisonReadout > div {
+  padding: 0.35rem 0.45rem;
+  border: 1px solid #dbe6e4;
+  border-radius: 0.5rem;
+  background: #f4faf9;
+}
+
+.comparisonReadout dt {
+  color: #5b7176;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.comparisonReadout dt + dd {
+  margin: 0.15rem 0 0;
+  color: #1d3d42;
+  font-size: 0.74rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.comparisonReadout dd + dt {
+  margin-top: 0.3rem;
+}
+
+/* The quantity the lung decides, rather than the one the ventilator is holding. */
+.comparisonReadout dd[data-moves='true'] {
+  color: #147d7b;
+}
+
+@media (max-width: 620px) {
+  .comparisonReadout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

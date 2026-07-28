@@ -1,5 +1,6 @@
 'use client'
 
+import { interpretMcsCardiacPowerOutput, interpretMcsPapi, mcsDerivedValueGuides } from '../content'
 import type { McsSimulationState, McsWaveformSample } from '../engine'
 import styles from './mechanical-circulatory-support.module.css'
 
@@ -171,9 +172,17 @@ function TrendPlot({ state }: { state: McsSimulationState }) {
         aria-label="Trend of MAP, effective systemic flow, left pump flow, and right pump flow"
       >
         <path d="M0 30 H640 M0 75 H640 M0 120 H640" className={styles.monitorGridLine} />
-        <path d={mapPath} fill="none" stroke="#ff7185" strokeWidth="2.5" />
-        <path d={flowPath} fill="none" stroke="#6ee7f2" strokeWidth="2.5" />
+        <path data-series="map" d={mapPath} fill="none" stroke="#ff7185" strokeWidth="2.5" />
         <path
+          data-series="effective-flow"
+          d={flowPath}
+          fill="none"
+          stroke="#6ee7f2"
+          strokeWidth="2.5"
+          strokeDasharray="12 3"
+        />
+        <path
+          data-series="left-pump"
           d={leftDevicePath}
           fill="none"
           stroke="#f4c66e"
@@ -181,6 +190,7 @@ function TrendPlot({ state }: { state: McsSimulationState }) {
           strokeDasharray="6 5"
         />
         <path
+          data-series="right-pump"
           d={rightDevicePath}
           fill="none"
           stroke="#b788ff"
@@ -277,7 +287,7 @@ export function McsMonitor({
             color="#69c9ff"
           />
         </div>
-        <aside className={styles.metricGrid} aria-label="Current hemodynamic values">
+        <div className={styles.metricGrid} aria-label="Current hemodynamic values" role="group">
           <div data-color="native">
             <span>NATIVE FLOW</span>
             <strong>{metric(metrics.nativeFlowLMin, 1)}</strong>
@@ -369,14 +379,40 @@ export function McsMonitor({
               <small>W / estimate</small>
             </div>
           ) : null}
-        </aside>
+        </div>
       </div>
+      <section
+        className={styles.derivedValueGuide}
+        aria-label="PAPi and cardiac power interpretation"
+      >
+        <p>
+          <strong>
+            PAPi {metric(metrics.papi, 1)} · {interpretMcsPapi(metrics.papi)}
+          </strong>
+          <span>
+            {mcsDerivedValueGuides.pulmonaryArteryPulsatilityIndex.formula}.{' '}
+            {mcsDerivedValueGuides.pulmonaryArteryPulsatilityIndex.normalRange}
+          </span>
+          <small>{mcsDerivedValueGuides.pulmonaryArteryPulsatilityIndex.caveats}</small>
+        </p>
+        <p>
+          <strong>
+            CPO {metric(metrics.cardiacPowerOutputW, 2)} W ·{' '}
+            {interpretMcsCardiacPowerOutput(metrics.cardiacPowerOutputW)}
+          </strong>
+          <span>
+            {mcsDerivedValueGuides.cardiacPowerOutputW.formula}.{' '}
+            {mcsDerivedValueGuides.cardiacPowerOutputW.normalRange}
+          </span>
+          <small>{mcsDerivedValueGuides.cardiacPowerOutputW.caveats}</small>
+        </p>
+      </section>
       <div className={styles.chartGrid}>
         <PressureVolumeLoop samples={state.waveforms} />
         <TrendPlot state={state} />
       </div>
       <p className={styles.causalCallout}>
-        <strong>{revealCausality ? 'Why the display changed:' : 'Assess mode:'}</strong>{' '}
+        <strong>{revealCausality ? 'Why the display changed:' : 'Challenge mode:'}</strong>{' '}
         {revealCausality
           ? state.causalExplanation
           : 'Causal coaching is withheld until you complete the reassessment.'}

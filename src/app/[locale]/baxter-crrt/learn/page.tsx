@@ -5,9 +5,9 @@ import { BaxterCrrtLearn } from '@/features/baxter-crrt/components/BaxterCrrtLea
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
 const handoffMetadata: Metadata = {
-  title: 'Learn · Baxter CRRT',
+  title: 'Learn · CRRT · PrisMax console lab',
   description:
-    'Seven focused CRRT lessons covering modality selection, transport, prescription, circuit pressures, anticoagulation, alarms, fluid management, and liberation.',
+    'An ordered eight-section CRRT pathway: treatment goal, circuit anatomy, transport, prescription, anticoagulation, alarms, fluid management, and a pressure-profile integration capstone.',
   robots: { index: false, follow: false, noarchive: true },
 }
 
@@ -25,6 +25,9 @@ export default async function BaxterCrrtLearnPage({ params, searchParams }: Page
   const { locale } = await params
   const lesson = (await searchParams)?.lesson
   setRequestLocale(locale)
+
+  // With no section selected, BaxterCrrtLearn renders the pathway landing instead of dropping
+  // the learner straight into the workbench at section one.
   return (
     <BaxterCrrtLearn
       locale={locale}

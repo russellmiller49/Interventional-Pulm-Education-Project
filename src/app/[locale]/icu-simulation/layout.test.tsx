@@ -9,6 +9,9 @@ jest.mock('@/lib/draft-module-guard', () => ({
 jest.mock('@/i18n/handoff-server', () => ({
   localizeHandoffServerValue: async (_locale: string, value: unknown) => value,
 }))
+jest.mock('@/features/critical-care/components/CriticalCareRestrictedAccountSync', () => ({
+  CriticalCareRestrictedAccountSync: () => null,
+}))
 
 import IcuSimulationLayout, { generateMetadata } from './layout'
 
@@ -23,7 +26,7 @@ describe('ICU Simulator private-development layout', () => {
     })
 
     expect(assertDraftModulesEnabledMock).toHaveBeenCalledTimes(1)
-    expect(result).toBe(child)
+    expect(result.props.children[0]).toBe(child)
   })
 
   it.each(['en', 'es', 'zh-CN'])(

@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState, type ChangeEvent, type CSSProperties } from 'react'
+import { useId, useRef, useState, type ChangeEvent, type CSSProperties } from 'react'
 
 import {
   PRESCRIPTION_WORKBENCH_UNAVAILABLE_OUTPUTS,
@@ -92,38 +92,47 @@ const BAG_STREAM_OPTIONS: readonly {
 const SOURCE_NOTES = Object.freeze([
   Object.freeze({
     id: 'MATH-PM-001',
+    label: 'Effluent-pump arithmetic',
     text: 'PrisMax effluent-pump target expression · AW8035 manual p217 / PDF p218',
   }),
   Object.freeze({
     id: 'DOSE-PM-001',
+    label: 'Weight-normalized display',
     text: 'Weight-normalized effluent display · AW8035 manual pp219–220 / PDF pp220–221',
   }),
   Object.freeze({
     id: 'MATH-PM-003',
+    label: 'Predilution relationship',
     text: 'Printed total-predilution relationship · AW8035 manual p218 / PDF p219',
   }),
   Object.freeze({
     id: 'MATH-PM-005',
+    label: 'Plasma-flow relationship',
     text: 'Plasma-flow relationship · AW8035 manual pp218–219 / PDF pp219–220',
   }),
   Object.freeze({
     id: 'MATH-PM-004 / MATH-PM-006',
+    label: 'Unavailable calculations',
     text: 'Some circuit-flow calculations remain unavailable because the references do not support one verified expression',
   }),
   Object.freeze({
     id: 'REVIEW-CKRT-CORE-2025',
+    label: 'Clinical context',
     text: '2025 CKRT Core Curriculum · clinical context source',
   }),
   Object.freeze({
     id: 'GUID-RRT-ICU-2026',
+    label: 'Critical-care guidance',
     text: '2026 multidisciplinary ICU RRT guideline · clinical context source',
   }),
   Object.freeze({
     id: 'SYNTH-LAB-PRESCRIPTION-001',
+    label: 'Practice-value boundary',
     text: 'Practice values and arithmetic boundaries for the prescription workbench',
   }),
   Object.freeze({
     id: 'SYNTH-LAB-PREPOST-001',
+    label: 'Comparison boundary',
     text: 'Qualitative comparison rules for the pre/post replacement-flow exercise',
   }),
 ])
@@ -321,6 +330,11 @@ export interface QualitativePrePostDilutionExperimentProps {
   readonly result: QualitativePrePostDilutionResult | null
 }
 
+export interface CrrtPrescriptionWorkbenchProps {
+  readonly onPhaseChange?: (phase: 'predict' | 'act' | 'observe') => void
+  readonly onCompletionEvidence?: () => void
+}
+
 export function QualitativePrePostDilutionExperiment({
   result,
 }: QualitativePrePostDilutionExperimentProps) {
@@ -358,7 +372,7 @@ export function QualitativePrePostDilutionExperiment({
 
       {result === null ? (
         <p className={styles.inactiveNotice}>
-          Unavailable — correct every invalid entry before viewing the qualitative comparison.
+          Unavailable — revise every invalid entry before viewing the qualitative comparison.
         </p>
       ) : result.direction === 'not-active' ? (
         <p className={styles.inactiveNotice}>{result.comparisonText}</p>
@@ -425,8 +439,13 @@ export function QualitativePrePostDilutionExperiment({
   )
 }
 
-export function CrrtPrescriptionWorkbench() {
+export function CrrtPrescriptionWorkbench({
+  onPhaseChange,
+  onCompletionEvidence,
+}: CrrtPrescriptionWorkbenchProps = {}) {
   const idPrefix = useId()
+  const inputChanged = useRef(false)
+  const completionReported = useRef(false)
   const [numericInputs, setNumericInputs] = useState(INITIAL_NUMERIC_INPUTS)
   const [syntheticBagStream, setSyntheticBagStream] = useState<SyntheticBagStream>('dialysate')
   const [syntheticBagCapacity, setSyntheticBagCapacity] = useState('')
@@ -449,10 +468,22 @@ export function CrrtPrescriptionWorkbench() {
           : `${formatNumber(result.syntheticBagDuration.durationHours, 2)} hours`
       }.`
     : (calculationAttempt?.errorMessage ??
-      `All calculated outputs are unavailable. Correct: ${validation.invalidLabels.join(', ')}.`)
+      `All calculated outputs are unavailable. Revise: ${validation.invalidLabels.join(', ')}.`)
 
   function updateNumericInput(key: NumericInputKey, value: string) {
     setNumericInputs((current) => ({ ...current, [key]: value }))
+  }
+
+  function recordChangedInput() {
+    inputChanged.current = true
+    onPhaseChange?.('act')
+  }
+
+  function inspectUpdatedOutputs() {
+    onPhaseChange?.('observe')
+    if (!inputChanged.current || completionReported.current) return
+    completionReported.current = true
+    onCompletionEvidence?.()
   }
 
   return (
@@ -465,7 +496,8 @@ export function CrrtPrescriptionWorkbench() {
       data-progress-write="learner-mode-only"
       data-persistence="learner-mode-only"
       data-scoring="tool-specific"
-      data-competency="none"
+      onFocusCapture={() => onPhaseChange?.('predict')}
+      onChangeCapture={recordChangedInput}
     >
       <header className={styles.header}>
         <div>
@@ -694,7 +726,12 @@ export function CrrtPrescriptionWorkbench() {
         </div>
 
         <div className={styles.outputColumn}>
-          <section className={styles.outputPanel} aria-labelledby={`${idPrefix}-outputs`}>
+          <section
+            className={styles.outputPanel}
+            aria-labelledby={`${idPrefix}-outputs`}
+            tabIndex={0}
+            onFocus={inspectUpdatedOutputs}
+          >
             <header>
               <span>Manufacturer-manual calculations</span>
               <h3 id={`${idPrefix}-outputs`}>Educational calculation outputs</h3>
@@ -705,7 +742,7 @@ export function CrrtPrescriptionWorkbench() {
                 value={
                   result
                     ? `${formatNumber(result.effluentPumpTargetMlPerHour)} mL/h`
-                    : 'Unavailable — correct entries'
+                    : 'Unavailable — revise entries'
                 }
                 source="PrisMax operator's manual calculation"
                 note="Sum of entered PFR, PBP, replacement, and dialysate terms; syringe/makeup held at zero."
@@ -715,7 +752,7 @@ export function CrrtPrescriptionWorkbench() {
                 value={
                   result
                     ? `${formatNumber(result.effluentDoseMlPerKgHour, 2)} mL/kg/h`
-                    : 'Unavailable — correct entries'
+                    : 'Unavailable — revise entries'
                 }
                 source="PrisMax operator's manual calculation"
                 note="No target range and no delivered-dose or downtime claim."
@@ -725,7 +762,7 @@ export function CrrtPrescriptionWorkbench() {
                 value={
                   result
                     ? `${formatNumber(result.plasmaFlowMlPerHour)} mL/h`
-                    : 'Unavailable — correct entries'
+                    : 'Unavailable — revise entries'
                 }
                 source="PrisMax operator's manual calculation"
                 note="Blood-flow entry converted from mL/min before applying entered hematocrit."
@@ -735,7 +772,7 @@ export function CrrtPrescriptionWorkbench() {
                 value={
                   result
                     ? `${formatNumber(result.machinePatientFluidRemovalTermMlPerHour)} mL/h`
-                    : 'Unavailable — correct entries'
+                    : 'Unavailable — revise entries'
                 }
                 source="PrisMax operator's manual · separate term"
                 note="Not a whole-patient balance or tolerance recommendation."
@@ -745,7 +782,7 @@ export function CrrtPrescriptionWorkbench() {
                 value={
                   result
                     ? `${formatNumber(result.aggregateSourcePumpThroughputMlPerDay / 1_000, 2)} L/day`
-                    : 'Unavailable — correct entries'
+                    : 'Unavailable — revise entries'
                 }
                 source="Calculated from the entered values"
                 note="PBP + dialysate + replacement pump entries over 24 hours if unchanged. This is source-bag use: dialysate remains separate from blood-side/patient input, and PFR is excluded."
@@ -755,7 +792,7 @@ export function CrrtPrescriptionWorkbench() {
                 value={
                   result
                     ? formatPercentageFraction(result.totalPredilutionFraction)
-                    : 'Unavailable — correct entries'
+                    : 'Unavailable — revise entries'
                 }
                 source="PrisMax operator's manual calculation"
                 note="Dimensionless relationship only; not quantitative filtration fraction."
@@ -787,7 +824,7 @@ export function CrrtPrescriptionWorkbench() {
           <section className={styles.bagResult} aria-labelledby={`${idPrefix}-bag-result`}>
             <h3 id={`${idPrefix}-bag-result`}>Practice bag-duration result</h3>
             {result === null ? (
-              <p>Unavailable — correct every invalid entry.</p>
+              <p>Unavailable — revise every invalid entry.</p>
             ) : result.syntheticBagDuration === null ? (
               <p>No result — enter an optional practice bag capacity.</p>
             ) : result.syntheticBagDuration.status === 'unavailable-zero-stream' ? (
@@ -816,7 +853,7 @@ export function CrrtPrescriptionWorkbench() {
           <ul>
             {SOURCE_NOTES.map((source) => (
               <li key={source.id}>
-                <strong>{source.id}</strong>
+                <strong>{source.label}</strong>
                 <span>{source.text}</span>
               </li>
             ))}
