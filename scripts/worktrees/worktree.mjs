@@ -36,6 +36,7 @@ import {
   matchesAny,
   moduleById,
   moduleOwnedPatterns,
+  orphanWorktreeDirectories,
   overlapWarnings,
   parseTaskBranch,
   processRecordPath,
@@ -48,6 +49,7 @@ import {
   readWorktreeState,
   registryPath,
   releaseLease,
+  removeDisposableWorktree,
   requiredInputs,
   run,
   scopeReport,
@@ -547,7 +549,17 @@ async function commandFinish(args) {
   }
   const branch = context.branch
   const path = context.topLevel
-  git(control, ['worktree', 'remove', path])
+  const invalidMounts = validateMounts(path, registry, context.module, localConfig).filter(
+    (mount) => mount.status !== 'ok',
+  )
+  if (invalidMounts.length) {
+    throw new WtError(
+      'Worktree mounts must be valid before disposal.',
+      'WT-DISPOSAL-MOUNT',
+      invalidMounts,
+    )
+  }
+  removeDisposableWorktree(control, path, localConfig.worktreesRoot)
   if (options['delete-branch']) git(control, ['branch', '-d', branch])
   console.log(`Finished ${branch}`)
   console.log(`removed worktree: ${path}`)
@@ -575,6 +587,15 @@ function doctorSnapshot(cwd) {
   if (worktrees.length > max) {
     findings.push(
       finding('error', 'WT-DOCTOR-CAP', `${worktrees.length} worktrees exceed cap ${max}.`),
+    )
+  }
+  for (const pathname of orphanWorktreeDirectories(cwd, localConfig.worktreesRoot)) {
+    findings.push(
+      finding(
+        'error',
+        'WT-DOCTOR-ORPHAN-DIRECTORY',
+        `Directory is not a registered worktree: ${pathname}`,
+      ),
     )
   }
   for (const inputName of Object.keys(registry.inputMountTargets || {})) {
