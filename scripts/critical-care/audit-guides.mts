@@ -25,6 +25,7 @@ import {
   validateCriticalCareSourceConflicts,
 } from '../../src/features/critical-care/content/sourceConflicts.ts'
 // Importing the module bindings is what populates the shared registry.
+import '../../src/features/cardiohelp-ecmo/content/ecmoValueGuides.ts'
 import '../../src/features/mechanical-circulatory-support/content/derivedValueGuides.ts'
 
 const failures: string[] = []

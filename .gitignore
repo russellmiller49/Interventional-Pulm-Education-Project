@@ -292,3 +292,4 @@ Preference_card_module/Catalogs and IFU for confirmation/*.pdf
 
 # Excel lock/temp files.
 ~$*
+/public/ecmo-teaching-preview/
