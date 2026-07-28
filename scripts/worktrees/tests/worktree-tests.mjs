@@ -501,4 +501,21 @@ describe('mount and process validation', () => {
     assert.equal(validation.valid, false)
     assert.equal(validation.reason, 'pid-reused')
   })
+
+  test('detects listener PID reuse independently of the dev command owner', () => {
+    const snapshot = processSnapshot(process.pid)
+    assert.ok(snapshot)
+    const validation = validateProcessRecord({
+      pid: process.pid,
+      processStartTime: snapshot.startTime,
+      command: snapshot.command,
+      expectedCommand: snapshot.command,
+      listenerPid: process.pid,
+      listenerProcessStartTime: 'Mon Jan  1 00:00:00 1990',
+      listenerCommand: snapshot.command,
+      expectedListenerCommand: snapshot.command,
+    })
+    assert.equal(validation.valid, false)
+    assert.equal(validation.reason, 'listener-pid-reused')
+  })
 })
