@@ -1,4 +1,13 @@
 #!/bin/sh
 
+set -eu
+
+node scripts/worktrees/worktree.mjs guard
 node scripts/check-staged-pdfs.mjs
-npx lint-staged
+
+if [ ! -x node_modules/.bin/lint-staged ]; then
+  echo "error: node_modules is missing; run npm ci before committing." >&2
+  exit 1
+fi
+
+node_modules/.bin/lint-staged --no-stash --no-hide-partially-staged
