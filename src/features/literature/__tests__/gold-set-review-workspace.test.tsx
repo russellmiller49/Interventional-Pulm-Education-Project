@@ -70,8 +70,11 @@ describe('gold-set review workspace', () => {
     expect(screen.getByText('Basic bronchoscopy')).toBeInTheDocument()
     expect(screen.getByText('Pleural procedures')).toBeInTheDocument()
     expect(screen.getByText('Multiple/general overview')).toBeInTheDocument()
+    expect(screen.getByText('Safety/complication prevention')).toBeInTheDocument()
+    expect(screen.getByText('Immune/inflammatory disease')).toBeInTheDocument()
     expect(screen.getAllByText('Not assessable from available metadata')).toHaveLength(3)
     expect(screen.getByRole('option', { name: 'Review article' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Interactive clinical case' })).toBeInTheDocument()
     expect(
       screen.getByRole('checkbox', { name: /Categorization required full-text review/u }),
     ).toBeInTheDocument()

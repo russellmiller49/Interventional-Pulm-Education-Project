@@ -13,11 +13,26 @@ const fullTextMigrationPath = join(
   process.cwd(),
   'supabase/migrations/20260727193432_add_literature_full_text_categorization_flag.sql',
 )
+const interactiveCaseMigrationPath = join(
+  process.cwd(),
+  'supabase/migrations/20260728170939_add_interactive_clinical_case_publication_status.sql',
+)
+const immuneInflammatoryMigrationPath = join(
+  process.cwd(),
+  'supabase/migrations/20260728171212_add_immune_inflammatory_disease_tag.sql',
+)
+const safetyPreventionMigrationPath = join(
+  process.cwd(),
+  'supabase/migrations/20260728174726_add_safety_complication_prevention_clinical_purpose.sql',
+)
 
 describe('gold-set database contract', () => {
   const sql = readFileSync(migrationPath, 'utf8')
   const categorySql = readFileSync(categoryMigrationPath, 'utf8')
   const fullTextSql = readFileSync(fullTextMigrationPath, 'utf8')
+  const interactiveCaseSql = readFileSync(interactiveCaseMigrationPath, 'utf8')
+  const immuneInflammatorySql = readFileSync(immuneInflammatoryMigrationPath, 'utf8')
+  const safetyPreventionSql = readFileSync(safetyPreventionMigrationPath, 'utf8')
   const tables = [
     'literature_gold_set_batches',
     'literature_gold_set_items',
@@ -73,5 +88,20 @@ describe('gold-set database contract', () => {
     expect(fullTextSql).toContain("'categorizationFromFullText'")
     expect(fullTextSql).toContain('literature_gold_set_reviews_full_text_categorization_check')
     expect(fullTextSql).toContain('get_literature_gold_review_item_v1')
+  })
+
+  it('allows interactive clinical cases as a publication status', () => {
+    expect(interactiveCaseSql).toContain("'interactive-clinical-case'")
+    expect(interactiveCaseSql).toContain('publication-status allowlist')
+  })
+
+  it('allows immune/inflammatory disease as a disease tag', () => {
+    expect(immuneInflammatorySql).toContain("'immune-inflammatory-disease'")
+    expect(immuneInflammatorySql).toContain('disease-tag allowlist')
+  })
+
+  it('allows safety/complication prevention as a clinical purpose', () => {
+    expect(safetyPreventionSql).toContain("'safety-complication-prevention'")
+    expect(safetyPreventionSql).toContain('clinical-purpose allowlist')
   })
 })

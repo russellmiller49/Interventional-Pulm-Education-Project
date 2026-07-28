@@ -70,7 +70,9 @@ const confidenceShortcut = {
 } as const
 
 const facetLabelOverrides: Record<string, string> = {
+  'immune-inflammatory-disease': 'Immune/inflammatory disease',
   'multiple-general-overview': 'Multiple/general overview',
+  'safety-complication-prevention': 'Safety/complication prevention',
 }
 
 function facetLabel(value: string) {
@@ -633,7 +635,7 @@ export function GoldSetReviewWorkspace({
                 values={review.diseaseTags}
                 options={literatureTaxonomy.facets.disease.map((id) => ({
                   id,
-                  label: id.replaceAll('-', ' '),
+                  label: facetLabel(id),
                 }))}
                 onChange={(values) =>
                   setReviewValue((current) => ({ ...current, diseaseTags: values }))
