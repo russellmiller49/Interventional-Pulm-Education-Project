@@ -1033,16 +1033,26 @@ export function ensureCommonExclude(commonDir) {
     end,
   ].join('\n')
   const existing = existsSync(pathname) ? readFileSync(pathname, 'utf8') : ''
+  const startCount = existing.split(start).length - 1
+  const endCount = existing.split(end).length - 1
+  if (startCount !== endCount || startCount > 1) {
+    throw new WtError(
+      `Managed exclude markers are malformed in ${pathname}; repair them before continuing.`,
+      'WT-COMMON-EXCLUDE-MALFORMED',
+    )
+  }
   const startIndex = existing.indexOf(start)
   const endIndex = startIndex >= 0 ? existing.indexOf(end, startIndex + start.length) : -1
-  const unmanaged =
-    startIndex >= 0 && endIndex >= 0
-      ? `${existing.slice(0, startIndex)}${existing.slice(endIndex + end.length)}`.replace(
-          /^\n+|\n+$/g,
-          '',
-        )
-      : existing.replace(/\n+$/g, '')
-  const content = unmanaged ? `${unmanaged}\n${block}\n` : `${block}\n`
+  if (startIndex >= 0 && endIndex < startIndex) {
+    throw new WtError(
+      `Managed exclude markers are out of order in ${pathname}; repair them before continuing.`,
+      'WT-COMMON-EXCLUDE-MALFORMED',
+    )
+  }
+  const content =
+    startIndex >= 0
+      ? `${existing.slice(0, startIndex)}${block}${existing.slice(endIndex + end.length)}`
+      : `${existing}${existing && !existing.endsWith('\n') ? '\n' : ''}${block}\n`
   writeFileSync(pathname, content, { encoding: 'utf8', mode: 0o600 })
   return pathname
 }

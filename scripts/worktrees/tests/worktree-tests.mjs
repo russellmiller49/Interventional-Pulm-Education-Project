@@ -307,11 +307,13 @@ describe('mount and process validation', () => {
     writeFileSync(
       exclude,
       [
-        '# local rule',
+        '# local rule before',
         '*.machine-only',
         '# BEGIN managed by wt (universal local-only paths)',
         '/old-managed-path/',
         '# END managed by wt',
+        '# local rule after',
+        '!/local-data/keep-this-file',
         '',
       ].join('\n'),
     )
@@ -322,7 +324,31 @@ describe('mount and process validation', () => {
     assert.match(content, /\*\.machine-only/)
     assert.match(content, /\/\.claude\/settings\.local\.json/)
     assert.doesNotMatch(content, /old-managed-path/)
+    assert.ok(
+      content.indexOf('# local rule before') <
+        content.indexOf('# BEGIN managed by wt (universal local-only paths)'),
+    )
+    assert.ok(content.indexOf('# local rule after') > content.indexOf('# END managed by wt'))
     assert.equal(content.match(/# BEGIN managed by wt \(universal local-only paths\)/g)?.length, 1)
+  })
+
+  test('rejects malformed common exclude markers without rewriting the file', () => {
+    const commonDir = temporaryDirectory()
+    const exclude = join(commonDir, 'info', 'exclude')
+    mkdirSync(join(commonDir, 'info'))
+    const malformed = [
+      '# local rule',
+      '# BEGIN managed by wt (universal local-only paths)',
+      '/stale-managed-path/',
+      '',
+    ].join('\n')
+    writeFileSync(exclude, malformed)
+
+    assert.throws(
+      () => ensureCommonExclude(commonDir),
+      (error) => error instanceof WtError && error.code === 'WT-COMMON-EXCLUDE-MALFORMED',
+    )
+    assert.equal(readFileSync(exclude, 'utf8'), malformed)
   })
 
   test('provisions only symlinks to read-only approved inputs', () => {
