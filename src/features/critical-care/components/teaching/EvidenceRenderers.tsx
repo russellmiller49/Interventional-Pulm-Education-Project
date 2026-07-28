@@ -107,7 +107,18 @@ export function DerivedValueReadout({
             ))}
           </ul>
         </div>
-      ) : null}
+      ) : (
+        /*
+         * A guide with no matching rule still has provenance, and that is exactly the case for the
+         * guides which deliberately refuse to draw a band. Showing references only inside a matched
+         * rule would hide the sourcing of every honest one.
+         */
+        <ul className="mt-3 grid gap-2" data-guide-references>
+          {guide.references.map((reference) => (
+            <ReferenceBlock key={reference.id} reference={reference} />
+          ))}
+        </ul>
+      )}
 
       <p className="mt-3 text-xs leading-5 text-muted-foreground">{guide.caveats}</p>
       <p className="mt-2 text-xs leading-5" data-do-not-infer>

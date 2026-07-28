@@ -25,6 +25,23 @@ jest.mock('@/features/cardiohelp-ecmo/components/CardiohelpLearnLanding', () => 
   ),
 }))
 
+jest.mock('@/features/cardiohelp-ecmo/components/EcmoFoundationLessonActivity', () => ({
+  __esModule: true,
+  EcmoFoundationLessonActivity: ({
+    sectionId,
+    supportMode,
+  }: {
+    sectionId: string
+    supportMode: string
+  }) => (
+    <div
+      data-testid="ecmo-foundation-activity"
+      data-section-id={sectionId}
+      data-track={supportMode}
+    />
+  ),
+}))
+
 jest.mock('@/features/cardiohelp-ecmo/components/EcmoFoundationSectionView', () => ({
   __esModule: true,
   EcmoFoundationSectionView: ({
@@ -104,17 +121,51 @@ describe('CARDIOHELP ECMO routes', () => {
     expect(screen.getByTestId('cardiohelp-learn-landing')).toHaveAttribute('data-track', track)
   })
 
-  it('renders an authored physiology section as prose rather than the console', async () => {
+  it.each(['vv', 'va'] as const)(
+    'opens the foundation workspace for a shared section on the %s reference',
+    async (track) => {
+      render(
+        await CardiohelpEcmoLearnPage({
+          params: Promise.resolve({ locale: 'en' }),
+          searchParams: Promise.resolve({ lesson: 'circuit-flow-path', track }),
+        }),
+      )
+      const activity = screen.getByTestId('ecmo-foundation-activity')
+      expect(activity).toHaveAttribute('data-section-id', 'circuit-flow-path')
+      expect(activity).toHaveAttribute('data-track', track)
+      expect(screen.queryByTestId('ecmo-foundation-section')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('cardiohelp-workbench')).not.toBeInTheDocument()
+    },
+  )
+
+  it.each([
+    'why-extracorporeal-support',
+    'circuit-flow-path',
+    'pump-and-pressure-zones',
+    'blood-flow-versus-sweep',
+  ])('routes the shared foundation section %s to the new activity', async (lesson) => {
     render(
       await CardiohelpEcmoLearnPage({
         params: Promise.resolve({ locale: 'en' }),
-        searchParams: Promise.resolve({ lesson: 'circuit-flow-path', track: 'va' }),
+        searchParams: Promise.resolve({ lesson, track: 'vv' }),
+      }),
+    )
+    expect(screen.getByTestId('ecmo-foundation-activity')).toHaveAttribute(
+      'data-section-id',
+      lesson,
+    )
+  })
+
+  it('leaves the track-specific foundation sections on the prose view for now', async () => {
+    render(
+      await CardiohelpEcmoLearnPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({ lesson: 'vv-normal-state', track: 'vv' }),
       }),
     )
     const section = screen.getByTestId('ecmo-foundation-section')
-    expect(section).toHaveAttribute('data-section-id', 'circuit-flow-path')
-    expect(section).toHaveAttribute('data-track', 'va')
-    expect(screen.queryByTestId('cardiohelp-workbench')).not.toBeInTheDocument()
+    expect(section).toHaveAttribute('data-section-id', 'vv-normal-state')
+    expect(screen.queryByTestId('ecmo-foundation-activity')).not.toBeInTheDocument()
   })
 
   it('opens the guided workbench for a drill section', async () => {
