@@ -96,7 +96,7 @@
     "preference-cards": [
       "environment",
       "gudid",
-      "preferenceCardManuals",
+      "preferenceCardUcsd",
       "preferenceCardConfirmation"
     ],
     "raw-3d": ["environment", "raw3dAssets"],
@@ -114,7 +114,7 @@
     "criticalCareManuals": "Critical_Care_Reference/Device Manuals",
     "criticalCareTextbooks": "Critical_Care_Reference/Full_textbooks",
     "criticalCareSummaries": "Critical_Care_Reference/Summary files",
-    "preferenceCardManuals": "Preference_card_module/UCSD/IFU Documents",
+    "preferenceCardUcsd": "Preference_card_module/UCSD",
     "preferenceCardConfirmation": "local-data/inputs/preferenceCardConfirmation",
     "gudid": "Preference_card_module/AccessGUDID_Delimited_Full_Release_20260723",
     "raw3dAssets": "local-data/inputs/raw3dAssets"

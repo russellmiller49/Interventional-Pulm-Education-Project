@@ -554,6 +554,11 @@ describe('mount and process validation', () => {
         '/Preference_card_module/AccessGUDID_Delimited_Full_Release_20260723',
       ),
     )
+    assert.ok(preferenceRules.includes('/Preference_card_module/UCSD'))
+    assert.equal(
+      preferenceRules.includes('/Preference_card_module/UCSD/IFU Documents'),
+      false,
+    )
     assert.equal(preferenceRules.includes('/IP_PubMed/nbib files'), false)
   })
 
