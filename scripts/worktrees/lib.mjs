@@ -1117,16 +1117,34 @@ export function ensureCommonExclude(commonDir) {
   return pathname
 }
 
-export function configureWorktreeExclude(cwd, gitDir) {
+export function gitignoreLiteralPath(value) {
+  const pathname = normalizeRepoPath(value)
+  let escaped = ''
+  for (const character of pathname) {
+    escaped += ['\\', '*', '?', '[', ']'].includes(character) ? `\\${character}` : character
+  }
+  return `/${escaped}`
+}
+
+export function worktreeExcludeRules(registry, moduleId) {
+  return [
+    '# Per-worktree local-only paths',
+    '/.agent-scratch/',
+    '/.wt-local/',
+    '# Approved read-only external mounts',
+    ...requiredInputs(registry, moduleId).map((inputName) =>
+      gitignoreLiteralPath(registry.inputMountTargets[inputName]),
+    ),
+  ]
+}
+
+export function configureWorktreeExclude(cwd, gitDir, registry, moduleId) {
   const pathname = join(gitDir, 'wt', 'exclude')
   mkdirSync(dirname(pathname), { recursive: true, mode: 0o700 })
-  if (!existsSync(pathname)) {
-    writeFileSync(
-      pathname,
-      ['# Per-worktree local-only paths', '/.agent-scratch/', '/.wt-local/'].join('\n') + '\n',
-      { encoding: 'utf8', mode: 0o600 },
-    )
-  }
+  writeFileSync(pathname, `${worktreeExcludeRules(registry, moduleId).join('\n')}\n`, {
+    encoding: 'utf8',
+    mode: 0o600,
+  })
   git(cwd, ['config', '--worktree', 'core.excludesFile', pathname])
   return pathname
 }

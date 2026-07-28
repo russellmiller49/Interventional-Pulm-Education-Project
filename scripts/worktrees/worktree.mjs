@@ -57,6 +57,7 @@ import {
   stateForWorktree,
   validateMounts,
   validateProcessRecord,
+  worktreeExcludeRules,
   writeJsonAtomic,
   writeWorktreeState,
 } from './lib.mjs'
@@ -440,7 +441,7 @@ async function commandStart(args) {
     created = true
     const targetGit = discoverGit(target)
     ensureCommonExclude(targetGit.commonDir)
-    configureWorktreeExclude(target, targetGit.gitDir)
+    configureWorktreeExclude(target, targetGit.gitDir, registry, moduleId)
     configureWorktreeHooks(target)
     const mounts = provisionMounts(target, registry, moduleId, localConfig)
     const state = {
@@ -577,7 +578,7 @@ function finding(severity, code, message, data = null) {
   return { severity, code, message, data }
 }
 
-function doctorSnapshot(cwd) {
+export function doctorSnapshot(cwd) {
   const registry = loadRegistry(cwd)
   const localConfig = loadLocalConfig(cwd)
   const gitInfo = discoverGit(cwd)
@@ -627,6 +628,7 @@ function doctorSnapshot(cwd) {
     }
     const state = stateForWorktree(worktree)
     const context = inferContext(worktree.path, registry, localConfig)
+    const contextModule = context.module ? moduleById(registry, context.module) : null
     if (!state) {
       findings.push(
         finding('error', 'WT-DOCTOR-UNREGISTERED', `Unregistered worktree: ${worktree.path}`),
@@ -637,6 +639,15 @@ function doctorSnapshot(cwd) {
           'error',
           'WT-DOCTOR-BRANCH-MISMATCH',
           `${worktree.path} state says ${state.branch}; Git says ${worktree.branch || 'detached'}.`,
+        ),
+      )
+    }
+    if (context.module && !contextModule) {
+      findings.push(
+        finding(
+          'error',
+          'WT-DOCTOR-MODULE',
+          `Unknown module ${context.module} at ${worktree.path}.`,
         ),
       )
     }
@@ -657,7 +668,7 @@ function doctorSnapshot(cwd) {
         ),
       )
     }
-    if (context.module) {
+    if (contextModule) {
       for (const mount of validateMounts(worktree.path, registry, context.module, localConfig)) {
         if (mount.status !== 'ok') {
           findings.push(
@@ -685,6 +696,19 @@ function doctorSnapshot(cwd) {
           'error',
           'WT-DOCTOR-EXCLUDE',
           `Worktree-specific exclude is not configured at ${worktree.path}.`,
+        ),
+      )
+    } else if (
+      contextModule &&
+      (!existsSync(expectedExclude) ||
+        readFileSync(expectedExclude, 'utf8') !==
+          `${worktreeExcludeRules(registry, context.module).join('\n')}\n`)
+    ) {
+      findings.push(
+        finding(
+          'error',
+          'WT-DOCTOR-EXCLUDE-RULES',
+          `Worktree-specific exclude rules are stale at ${worktree.path}.`,
         ),
       )
     }
@@ -1134,7 +1158,7 @@ async function commandRegisterCurrent(args) {
     ensureGuardContext({ ...context, module: moduleId }, registry)
   git(context.topLevel, ['config', 'extensions.worktreeConfig', 'true'])
   ensureCommonExclude(context.commonDir)
-  configureWorktreeExclude(context.topLevel, context.gitDir)
+  configureWorktreeExclude(context.topLevel, context.gitDir, registry, moduleId)
   configureWorktreeHooks(context.topLevel)
   const mounts = provisionMounts(context.topLevel, registry, moduleId, localConfig)
   writeWorktreeState(context.gitDir, {
