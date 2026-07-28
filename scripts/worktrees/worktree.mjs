@@ -1045,7 +1045,7 @@ async function commandDev(args) {
   const signalHandlers = new Map(
     ['SIGHUP', 'SIGINT', 'SIGTERM'].map((signal) => [signal, () => forward(signal)]),
   )
-  for (const [signal, handler] of signalHandlers) process.once(signal, handler)
+  for (const [signal, handler] of signalHandlers) process.on(signal, handler)
 
   try {
     child = spawn(process.execPath, [nextBin, 'dev', '--port', String(context.port), '--webpack'], {
@@ -1108,22 +1108,25 @@ async function commandDev(args) {
       ? signalExitCode(interruptedSignal)
       : (completion.code ?? (completion.signal ? 1 : 0))
   } finally {
-    for (const [signal, handler] of signalHandlers) process.removeListener(signal, handler)
-    if (child?.pid && child.exitCode === null && child.signalCode === null) {
-      markStopping(interruptedSignal || 'SIGTERM')
-      child.kill('SIGTERM')
-      await childCompletion?.catch(() => {})
-    }
-    if (portListener(context.port).length) markStopping(interruptedSignal || 'PROCESS_EXIT')
-    const released = await waitForPortRelease(context.port)
-    if (released) {
-      cleanupRecord()
-    } else {
-      markStopping(interruptedSignal || 'UNKNOWN')
-      throw new WtError(
-        `Port ${context.port} is still listening after the dev process exited; the process lease was retained.`,
-        'WT-DEV-SHUTDOWN',
-      )
+    try {
+      if (child?.pid && child.exitCode === null && child.signalCode === null) {
+        markStopping(interruptedSignal || 'SIGTERM')
+        child.kill('SIGTERM')
+        await childCompletion?.catch(() => {})
+      }
+      if (portListener(context.port).length) markStopping(interruptedSignal || 'PROCESS_EXIT')
+      const released = await waitForPortRelease(context.port)
+      if (released) {
+        cleanupRecord()
+      } else {
+        markStopping(interruptedSignal || 'UNKNOWN')
+        throw new WtError(
+          `Port ${context.port} is still listening after the dev process exited; the process lease was retained.`,
+          'WT-DEV-SHUTDOWN',
+        )
+      }
+    } finally {
+      for (const [signal, handler] of signalHandlers) process.removeListener(signal, handler)
     }
   }
 }

@@ -555,10 +555,7 @@ describe('mount and process validation', () => {
       ),
     )
     assert.ok(preferenceRules.includes('/Preference_card_module/UCSD'))
-    assert.equal(
-      preferenceRules.includes('/Preference_card_module/UCSD/IFU Documents'),
-      false,
-    )
+    assert.equal(preferenceRules.includes('/Preference_card_module/UCSD/IFU Documents'), false)
     assert.equal(preferenceRules.includes('/IP_PubMed/nbib files'), false)
   })
 
@@ -703,6 +700,8 @@ describe('mount and process validation', () => {
         return JSON.parse(readFileSync(fixture.processRecord, 'utf8')).status === 'running'
       }, `wt dev did not reach running state:\n${output}`)
       runner.kill('SIGTERM')
+      await new Promise((resolvePromise) => setTimeout(resolvePromise, 25))
+      runner.kill('SIGTERM')
       await waitFor(() => {
         if (!existsSync(fixture.processRecord)) return false
         return JSON.parse(readFileSync(fixture.processRecord, 'utf8')).status === 'stopping'
@@ -717,6 +716,64 @@ describe('mount and process validation', () => {
       assert.equal(result.code, 143, output)
       assert.equal(existsSync(fixture.processRecord), false, output)
     } finally {
+      if (runner.exitCode === null && runner.signalCode === null) runner.kill('SIGKILL')
+    }
+  })
+
+  test('keeps signal handlers active while an orphaned listener finishes shutting down', async () => {
+    const port = await availablePort()
+    const fixture = createDevFixture(port)
+    const runner = spawn(
+      process.execPath,
+      [join(repositoryRoot, 'scripts', 'worktrees', 'worktree.mjs'), 'dev'],
+      {
+        cwd: fixture.repository,
+        env: {
+          ...process.env,
+          WT_LOCAL_CONFIG: fixture.localConfigPath,
+        },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      },
+    )
+    let output = ''
+    let listenerPid = null
+    runner.stdout.on('data', (chunk) => {
+      output += chunk
+    })
+    runner.stderr.on('data', (chunk) => {
+      output += chunk
+    })
+    const completion = new Promise((resolvePromise, rejectPromise) => {
+      runner.once('error', rejectPromise)
+      runner.once('exit', (code, signal) => resolvePromise({ code, signal }))
+    })
+
+    try {
+      const runningRecord = await waitFor(() => {
+        if (!existsSync(fixture.processRecord)) return false
+        const record = JSON.parse(readFileSync(fixture.processRecord, 'utf8'))
+        return record.status === 'running' ? record : false
+      }, `wt dev did not reach running state:\n${output}`)
+      listenerPid = runningRecord.listenerPid
+      process.kill(runningRecord.pid, 'SIGKILL')
+      await waitFor(
+        () => !processSnapshot(runningRecord.pid),
+        `the fake dev owner did not exit:\n${output}`,
+      )
+      await waitFor(() => {
+        if (!existsSync(fixture.processRecord)) return false
+        return JSON.parse(readFileSync(fixture.processRecord, 'utf8')).status === 'stopping'
+      }, `wt dev did not retain a stopping lease:\n${output}`)
+
+      runner.kill('SIGTERM')
+      await new Promise((resolvePromise) => setTimeout(resolvePromise, 50))
+      process.kill(listenerPid, 'SIGTERM')
+      const result = await completion
+
+      assert.equal(result.signal, null, output)
+      assert.equal(existsSync(fixture.processRecord), false, output)
+    } finally {
+      if (listenerPid && processSnapshot(listenerPid)) process.kill(listenerPid, 'SIGKILL')
       if (runner.exitCode === null && runner.signalCode === null) runner.kill('SIGKILL')
     }
   })
