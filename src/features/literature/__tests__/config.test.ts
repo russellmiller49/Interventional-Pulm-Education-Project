@@ -44,6 +44,9 @@ describe('literature configuration', () => {
         }),
       ]),
     )
+    expect(literatureTaxonomy.facets.clinical_purpose).toContain('safety-complication-prevention')
+    expect(literatureTaxonomy.facets.disease).toContain('immune-inflammatory-disease')
+    expect(literatureTaxonomy.facets.publication_class).toContain('interactive-clinical-case')
   })
 
   it('rejects a needs-mapping entry that claims known provenance', () => {

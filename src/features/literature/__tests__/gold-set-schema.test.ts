@@ -102,6 +102,39 @@ describe('gold-set review labels', () => {
     })
   })
 
+  it('accepts an interactive clinical case publication status', () => {
+    expect(
+      literatureGoldCompleteReviewSchema.parse({
+        ...base,
+        publicationStatus: 'interactive-clinical-case',
+      }),
+    ).toMatchObject({
+      publicationStatus: 'interactive-clinical-case',
+    })
+  })
+
+  it('accepts immune/inflammatory disease as a disease tag', () => {
+    expect(
+      literatureGoldCompleteReviewSchema.parse({
+        ...base,
+        diseaseTags: ['immune-inflammatory-disease'],
+      }),
+    ).toMatchObject({
+      diseaseTags: ['immune-inflammatory-disease'],
+    })
+  })
+
+  it('accepts safety/complication prevention as a clinical purpose', () => {
+    expect(
+      literatureGoldCompleteReviewSchema.parse({
+        ...base,
+        clinicalPurposes: ['safety-complication-prevention'],
+      }),
+    ).toMatchObject({
+      clinicalPurposes: ['safety-complication-prevention'],
+    })
+  })
+
   it('accepts a full-text categorization flag for included articles', () => {
     expect(
       literatureGoldCompleteReviewSchema.parse({
