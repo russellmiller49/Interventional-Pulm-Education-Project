@@ -35,6 +35,7 @@ import {
   scopeReport,
   validateMounts,
   validateProcessRecord,
+  worktreeExcludeRules,
 } from '../lib.mjs'
 
 const repositoryRoot = new URL('../../../', import.meta.url).pathname
@@ -343,6 +344,24 @@ describe('disposable worktrees', () => {
 })
 
 describe('mount and process validation', () => {
+  test('limits per-worktree excludes to the module input profile', () => {
+    const literatureRules = worktreeExcludeRules(registry, 'literature')
+    assert.ok(literatureRules.includes('/.env.local'))
+    assert.ok(literatureRules.includes('/IP_PubMed/nbib files'))
+    assert.equal(
+      literatureRules.some((rule) => rule.includes('AccessGUDID')),
+      false,
+    )
+
+    const preferenceRules = worktreeExcludeRules(registry, 'preference-cards')
+    assert.ok(
+      preferenceRules.includes(
+        '/Preference_card_module/AccessGUDID_Delimited_Full_Release_20260723',
+      ),
+    )
+    assert.equal(preferenceRules.includes('/IP_PubMed/nbib files'), false)
+  })
+
   test('updates the managed common exclude block without removing local rules', () => {
     const commonDir = temporaryDirectory()
     const exclude = join(commonDir, 'info', 'exclude')

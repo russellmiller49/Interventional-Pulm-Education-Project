@@ -57,6 +57,7 @@ import {
   stateForWorktree,
   validateMounts,
   validateProcessRecord,
+  worktreeExcludeRules,
   writeJsonAtomic,
   writeWorktreeState,
 } from './lib.mjs'
@@ -440,7 +441,7 @@ async function commandStart(args) {
     created = true
     const targetGit = discoverGit(target)
     ensureCommonExclude(targetGit.commonDir)
-    configureWorktreeExclude(target, targetGit.gitDir)
+    configureWorktreeExclude(target, targetGit.gitDir, registry, moduleId)
     configureWorktreeHooks(target)
     const mounts = provisionMounts(target, registry, moduleId, localConfig)
     const state = {
@@ -685,6 +686,18 @@ function doctorSnapshot(cwd) {
           'error',
           'WT-DOCTOR-EXCLUDE',
           `Worktree-specific exclude is not configured at ${worktree.path}.`,
+        ),
+      )
+    } else if (
+      !existsSync(expectedExclude) ||
+      readFileSync(expectedExclude, 'utf8') !==
+        `${worktreeExcludeRules(registry, context.module).join('\n')}\n`
+    ) {
+      findings.push(
+        finding(
+          'error',
+          'WT-DOCTOR-EXCLUDE-RULES',
+          `Worktree-specific exclude rules are stale at ${worktree.path}.`,
         ),
       )
     }
@@ -1134,7 +1147,7 @@ async function commandRegisterCurrent(args) {
     ensureGuardContext({ ...context, module: moduleId }, registry)
   git(context.topLevel, ['config', 'extensions.worktreeConfig', 'true'])
   ensureCommonExclude(context.commonDir)
-  configureWorktreeExclude(context.topLevel, context.gitDir)
+  configureWorktreeExclude(context.topLevel, context.gitDir, registry, moduleId)
   configureWorktreeHooks(context.topLevel)
   const mounts = provisionMounts(context.topLevel, registry, moduleId, localConfig)
   writeWorktreeState(context.gitDir, {
