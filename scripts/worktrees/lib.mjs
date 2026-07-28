@@ -1012,20 +1012,52 @@ export function ensureCommonExclude(commonDir) {
   mkdirSync(dirname(pathname), { recursive: true })
   const start = '# BEGIN managed by wt (universal local-only paths)'
   const end = '# END managed by wt'
-  const block = [
+  const blockLines = [
     start,
     '/.wt-runtime/',
+    '/.claude/settings.local.json',
+    '/.claude/scheduled_tasks.lock',
+    '/.claude/scheduled_tasks.json',
+    '/.claude/routines/.state/',
+    '/.claude/worktrees/',
+    '/.claude/checkpoints/',
+    '/.claude/mailbox/',
+    '/.claude/agent-registry.json',
+    '/.claude/agent-memory-local',
+    '/.claude/first-run',
+    '/.claude/assistant-daemon-state.json',
     '/local-data/',
     '/public/ecmo-teaching-preview/',
     '/playwright-report/',
     '/test-results/',
     end,
-  ].join('\n')
+  ]
   const existing = existsSync(pathname) ? readFileSync(pathname, 'utf8') : ''
-  if (!existing.includes(start)) {
-    const prefix = existing && !existing.endsWith('\n') ? `${existing}\n` : existing
-    writeFileSync(pathname, `${prefix}${block}\n`, { encoding: 'utf8', mode: 0o600 })
+  const newline = existing.includes('\r\n') ? '\r\n' : '\n'
+  const block = blockLines.join(newline)
+  const startMatches = [
+    ...existing.matchAll(/^# BEGIN managed by wt \(universal local-only paths\)\r?$/gm),
+  ]
+  const endMatches = [...existing.matchAll(/^# END managed by wt\r?$/gm)]
+  if (startMatches.length !== endMatches.length || startMatches.length > 1) {
+    throw new WtError(
+      `Managed exclude markers are malformed in ${pathname}; repair them before continuing.`,
+      'WT-COMMON-EXCLUDE-MALFORMED',
+    )
   }
+  const startMatch = startMatches[0]
+  const endMatch = endMatches[0]
+  if (startMatch && endMatch.index < startMatch.index) {
+    throw new WtError(
+      `Managed exclude markers are out of order in ${pathname}; repair them before continuing.`,
+      'WT-COMMON-EXCLUDE-MALFORMED',
+    )
+  }
+  const content =
+    startMatch && endMatch
+      ? `${existing.slice(0, startMatch.index)}${block}${existing.slice(endMatch.index + endMatch[0].length)}`
+      : `${existing}${existing && !existing.endsWith(newline) ? newline : ''}${block}${newline}`
+  writeFileSync(pathname, content, { encoding: 'utf8', mode: 0o600 })
   return pathname
 }
 

@@ -1,5 +1,13 @@
 import assert from 'node:assert/strict'
-import { chmodSync, lstatSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  chmodSync,
+  lstatSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, test } from 'node:test'
@@ -8,6 +16,7 @@ import {
   acquireLease,
   canonicalLeaseResource,
   diffNameStatus,
+  ensureCommonExclude,
   ensureGuardContext,
   globToRegExp,
   git,
@@ -291,6 +300,69 @@ describe('atomic leases', () => {
 })
 
 describe('mount and process validation', () => {
+  test('updates the managed common exclude block without removing local rules', () => {
+    const commonDir = temporaryDirectory()
+    const exclude = join(commonDir, 'info', 'exclude')
+    mkdirSync(join(commonDir, 'info'))
+    writeFileSync(
+      exclude,
+      [
+        '# local rule before',
+        '*.machine-only',
+        '# note: # BEGIN managed by wt (universal local-only paths) is reserved',
+        '# BEGIN managed by wt (universal local-only paths)',
+        '/old-managed-path/',
+        '# END managed by wt',
+        '# local rule after',
+        '# note: # END managed by wt is reserved',
+        '!/local-data/keep-this-file',
+        '',
+      ].join('\n'),
+    )
+
+    ensureCommonExclude(commonDir)
+
+    const content = readFileSync(exclude, 'utf8')
+    assert.match(content, /\*\.machine-only/)
+    assert.match(content, /\/\.claude\/settings\.local\.json/)
+    assert.match(
+      content,
+      /# note: # BEGIN managed by wt \(universal local-only paths\) is reserved/,
+    )
+    assert.match(content, /# note: # END managed by wt is reserved/)
+    assert.doesNotMatch(content, /old-managed-path/)
+    assert.ok(
+      content.indexOf('# local rule before') <
+        content.indexOf('# BEGIN managed by wt (universal local-only paths)'),
+    )
+    assert.ok(content.indexOf('# local rule after') > content.indexOf('# END managed by wt'))
+    assert.equal(
+      content
+        .split(/\r?\n/)
+        .filter((line) => line === '# BEGIN managed by wt (universal local-only paths)').length,
+      1,
+    )
+  })
+
+  test('rejects malformed common exclude markers without rewriting the file', () => {
+    const commonDir = temporaryDirectory()
+    const exclude = join(commonDir, 'info', 'exclude')
+    mkdirSync(join(commonDir, 'info'))
+    const malformed = [
+      '# local rule',
+      '# BEGIN managed by wt (universal local-only paths)',
+      '/stale-managed-path/',
+      '',
+    ].join('\n')
+    writeFileSync(exclude, malformed)
+
+    assert.throws(
+      () => ensureCommonExclude(commonDir),
+      (error) => error instanceof WtError && error.code === 'WT-COMMON-EXCLUDE-MALFORMED',
+    )
+    assert.equal(readFileSync(exclude, 'utf8'), malformed)
+  })
+
   test('provisions only symlinks to read-only approved inputs', () => {
     const root = temporaryDirectory()
     const source = join(root, 'external.env')
