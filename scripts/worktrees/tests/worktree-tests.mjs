@@ -309,10 +309,12 @@ describe('mount and process validation', () => {
       [
         '# local rule before',
         '*.machine-only',
+        '# note: # BEGIN managed by wt (universal local-only paths) is reserved',
         '# BEGIN managed by wt (universal local-only paths)',
         '/old-managed-path/',
         '# END managed by wt',
         '# local rule after',
+        '# note: # END managed by wt is reserved',
         '!/local-data/keep-this-file',
         '',
       ].join('\n'),
@@ -323,13 +325,23 @@ describe('mount and process validation', () => {
     const content = readFileSync(exclude, 'utf8')
     assert.match(content, /\*\.machine-only/)
     assert.match(content, /\/\.claude\/settings\.local\.json/)
+    assert.match(
+      content,
+      /# note: # BEGIN managed by wt \(universal local-only paths\) is reserved/,
+    )
+    assert.match(content, /# note: # END managed by wt is reserved/)
     assert.doesNotMatch(content, /old-managed-path/)
     assert.ok(
       content.indexOf('# local rule before') <
         content.indexOf('# BEGIN managed by wt (universal local-only paths)'),
     )
     assert.ok(content.indexOf('# local rule after') > content.indexOf('# END managed by wt'))
-    assert.equal(content.match(/# BEGIN managed by wt \(universal local-only paths\)/g)?.length, 1)
+    assert.equal(
+      content
+        .split(/\r?\n/)
+        .filter((line) => line === '# BEGIN managed by wt (universal local-only paths)').length,
+      1,
+    )
   })
 
   test('rejects malformed common exclude markers without rewriting the file', () => {
