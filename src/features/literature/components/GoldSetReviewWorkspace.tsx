@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { Route } from 'next'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
@@ -49,6 +50,7 @@ const EMPTY_REVIEW: LiteratureGoldReviewPayload = {
   diseaseTags: [],
   studyDesign: null,
   publicationStatus: null,
+  categorizationFromFullText: false,
   notes: '',
   usedSupplementalMetadata: false,
   reviewSeconds: 0,
@@ -66,6 +68,15 @@ const confidenceShortcut = {
   m: 'moderate',
   l: 'low',
 } as const
+
+const facetLabelOverrides: Record<string, string> = {
+  'multiple-general-overview': 'Multiple/general overview',
+}
+
+function facetLabel(value: string) {
+  const label = facetLabelOverrides[value] ?? value.replaceAll('-', ' ')
+  return `${label.charAt(0).toLocaleUpperCase('en-US')}${label.slice(1)}`
+}
 
 function CheckboxOptions({
   legend,
@@ -252,7 +263,7 @@ export function GoldSetReviewWorkspace({
     (itemId: string | null, status = 'unresolved') => {
       const params = new URLSearchParams({ batch: item.batchId, split: queueSplit, status })
       if (itemId) params.set('item', itemId)
-      router.push(`/${locale}/admin/literature/gold-set?${params.toString()}`)
+      router.push(`/${locale}/admin/literature/gold-set?${params.toString()}` as Route)
     },
     [item.batchId, locale, queueSplit, router],
   )
@@ -271,6 +282,7 @@ export function GoldSetReviewWorkspace({
               diseaseTags: [],
               studyDesign: null,
               publicationStatus: null,
+              categorizationFromFullText: false,
             }),
       }))
     },
@@ -610,7 +622,7 @@ export function GoldSetReviewWorkspace({
                 values={review.clinicalPurposes}
                 options={literatureTaxonomy.facets.clinical_purpose.map((id) => ({
                   id,
-                  label: id.replaceAll('-', ' '),
+                  label: facetLabel(id),
                 }))}
                 onChange={(values) =>
                   setReviewValue((current) => ({ ...current, clinicalPurposes: values }))
@@ -645,7 +657,7 @@ export function GoldSetReviewWorkspace({
                     <option value="">Choose one</option>
                     {literatureTaxonomy.facets.study_design.map((value) => (
                       <option key={value} value={value}>
-                        {value.replaceAll('-', ' ')}
+                        {facetLabel(value)}
                       </option>
                     ))}
                   </select>
@@ -666,12 +678,35 @@ export function GoldSetReviewWorkspace({
                     <option value="">Choose one</option>
                     {literatureTaxonomy.facets.publication_class.map((value) => (
                       <option key={value} value={value}>
-                        {value.replaceAll('-', ' ')}
+                        {facetLabel(value)}
                       </option>
                     ))}
                   </select>
                 </label>
               </div>
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border/70 bg-muted/20 p-4 text-sm">
+                <input
+                  type="checkbox"
+                  checked={review.categorizationFromFullText}
+                  disabled={frozen}
+                  onChange={(event) =>
+                    setReviewValue((current) => ({
+                      ...current,
+                      categorizationFromFullText: event.target.checked,
+                    }))
+                  }
+                  className="mt-0.5 h-4 w-4 accent-primary"
+                />
+                <span>
+                  <span className="block font-semibold">
+                    Categorization required full-text review
+                  </span>
+                  <span className="mt-1 block text-muted-foreground">
+                    Category 3 information was unavailable in the abstract and was determined from
+                    the full text.
+                  </span>
+                </span>
+              </label>
             </CardContent>
           </Card>
         ) : null}

@@ -25,6 +25,16 @@ import {
   withoutSourceRow,
 } from './catalog-utils'
 import { formatJson } from './format-json'
+import {
+  mergeCatalogAdditions,
+  readCatalogAdditions,
+  type AdditionsMergeReport,
+} from './apply-catalog-additions'
+import {
+  applyProductOverrides,
+  readProductOverrides,
+  type OverridesReport,
+} from './apply-product-overrides'
 
 const DEFAULT_WORKBOOK =
   'Preference_card_module/IP_Procedure_Equipment_Catalog_v0_5_with_GUDID_Verification_Backlog.xlsx'
@@ -80,6 +90,8 @@ const UNIQUE_KEYS: Partial<Record<ImportedSheetName, string[]>> = {
 
 interface ImportReport {
   format_version: 1
+  catalog_additions?: AdditionsMergeReport
+  product_overrides?: OverridesReport
   source_file: string
   workbook_sha256: string
   header_row: 4
@@ -526,6 +538,20 @@ export async function importCatalog(options?: { workbookPath?: string; outputDir
     Product_Verification_Backlog: normalizeGeneric(raw.Product_Verification_Backlog),
   } as Record<ImportedSheetName, CatalogRecord[]>
 
+  // Corrections to workbook rows (see apply-product-overrides.ts). Applied before the
+  // additions merge so an override can never silently target an added product.
+  const overrides = await readProductOverrides()
+  const overridesReport = applyProductOverrides(normalized.Products, overrides)
+  report.product_overrides = overridesReport
+
+  // Curated additions the workbook does not carry (see apply-catalog-additions.ts).
+  const additions = await readCatalogAdditions()
+  const additionsReport = mergeCatalogAdditions(
+    normalized as unknown as Record<string, CatalogRecord[]>,
+    additions,
+  )
+  report.catalog_additions = additionsReport
+
   await mkdir(outputDirectory, { recursive: true })
   for (const sheetName of IMPORTED_SHEETS) {
     const idColumn = ID_COLUMNS[sheetName]
@@ -546,6 +572,8 @@ export async function importCatalog(options?: { workbookPath?: string; outputDir
     ...(modifierRoleCollisions.length > 0
       ? [`Modifier/role code collisions: ${modifierRoleCollisions.join(', ')}`]
       : []),
+    ...additionsReport.errors.map((error) => `catalog additions: ${error}`),
+    ...overridesReport.errors.map((error) => `product overrides: ${error}`),
   ]
 
   if (hardFailures.length > 0) {

@@ -72,6 +72,8 @@ interface CandidateRow {
   max_suggestion_confidence: number | string
 }
 
+const GOLD_CANDIDATE_PAGE_SIZE = 1_000
+
 async function exists(path: string) {
   try {
     await access(path)
@@ -119,7 +121,7 @@ async function fetchCandidates(
       () =>
         client.rpc('list_literature_gold_sampling_candidates_v1', {
           p_after_pmid: afterPmid,
-          p_limit: 5000,
+          p_limit: GOLD_CANDIDATE_PAGE_SIZE,
         }),
       3,
     )
@@ -142,7 +144,7 @@ async function fetchCandidates(
         maxSuggestionConfidence: Number(row.max_suggestion_confidence) || 0,
       })),
     )
-    if (rows.length < 5000) break
+    if (rows.length < GOLD_CANDIDATE_PAGE_SIZE) break
     afterPmid = rows.at(-1)?.pmid ?? null
     if (!afterPmid) break
   }

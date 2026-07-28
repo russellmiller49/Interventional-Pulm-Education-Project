@@ -1,0 +1,106 @@
+{
+  "format_version": "1.0",
+  "notes": "Corrections applied to workbook product rows at import time by apply-product-overrides.ts. Each entry records why the workbook value is wrong. An override that stops matching exactly one row, or whose `expect` values no longer hold, fails the import rather than silently doing nothing.",
+  "overrides": [
+    {
+      "match": {
+        "manufacturer": "Olympus",
+        "catalog_number": "EU-ME2"
+      },
+      "reason": "EU-ME2 and EU-ME3 are both EVIS EUS Endoscopic Ultrasound Centers \u2014 the legacy and current generations of one Olympus platform. The workbook filed EU-ME2 under its own model number as the brand family and EU-ME3 under 'EVIS EUS', so the explorer showed them as two unrelated single-product lines instead of one platform with two generations.",
+      "expect": {
+        "brand_family": "EU-ME2",
+        "product_name": "Universal Endoscopic Ultrasound Center EU-ME2",
+        "primary_category": "EBUS platform",
+        "product_kind": "Reusable equipment"
+      },
+      "set": {
+        "brand_family": "EVIS EUS",
+        "product_name": "EVIS EUS Endoscopic Ultrasound Center EU-ME2",
+        "primary_category": "Ultrasound platform",
+        "product_kind": "Reusable capital equipment",
+        "notes": "Legacy generation of the EVIS EUS platform; superseded by the EU-ME3."
+      }
+    },
+    {
+      "match": {
+        "manufacturer": "Olympus",
+        "catalog_number": "EU-ME3"
+      },
+      "reason": "Named only 'Universal Endoscopic Ultrasound Center', which is indistinguishable from the EU-ME2 row once both sit in the EVIS EUS product line. The model number belongs in the product name so the two generations read apart on a card.",
+      "expect": {
+        "brand_family": "EVIS EUS",
+        "product_name": "Universal Endoscopic Ultrasound Center"
+      },
+      "set": {
+        "product_name": "EVIS EUS Endoscopic Ultrasound Center EU-ME3",
+        "notes": "Current generation of the EVIS EUS platform; successor to the EU-ME2."
+      }
+    },
+    {
+      "match": {
+        "manufacturer": "Olympus",
+        "catalog_number": "BF-H190"
+      },
+      "reason": "Filed under a bare 'Bronchoscopy platform' category with its own model number as the brand family and no dimensions at all, so it sat apart from the other EVIS EXERA III scopes and carried nothing a card could use. Specifications are from the Olympus America product page for the BF-H190; channel size cross-checks against the Olympus Bronchoscope Compatibility Chart.",
+      "expect": {
+        "brand_family": "BF-H190",
+        "primary_category": "Bronchoscopy platform",
+        "subcategory": null
+      },
+      "set": {
+        "brand_family": "EVIS EXERA III",
+        "product_name": "BF-H190 Video Bronchoscope",
+        "primary_category": "Flexible bronchoscopy",
+        "subcategory": "Reusable video bronchoscope",
+        "product_kind": "Reusable endoscope",
+        "diameter_mm": 5.5,
+        "min_working_channel_mm": 2.0,
+        "working_length_cm": 60,
+        "size_display": "Insertion tube 5.1 mm; distal 5.5 mm; channel 2.0 mm; WL 600 mm",
+        "verification_status": "Verified - Olympus America product page specifications; current U.S. status pending",
+        "verification_grade": "verified_source",
+        "spec_json_raw": "{\"distal_outer_diameter_mm\": 5.5, \"insertion_tube_diameter_mm\": 5.1, \"instrument_channel_mm\": 2.0, \"working_length_mm\": 600, \"field_of_view_deg\": 120}"
+      }
+    },
+    {
+      "match": {
+        "manufacturer": "Olympus",
+        "catalog_number": "BF-1TH190"
+      },
+      "reason": "Filed under a bare 'Bronchoscopy platform' category with its own model number as the brand family and no dimensions at all, so it sat apart from the other EVIS EXERA III scopes and carried nothing a card could use. Specifications are from the Olympus America product page for the BF-1TH190; channel size cross-checks against the Olympus Bronchoscope Compatibility Chart.",
+      "expect": {
+        "brand_family": "BF-1TH190",
+        "primary_category": "Bronchoscopy platform",
+        "subcategory": null
+      },
+      "set": {
+        "brand_family": "EVIS EXERA III",
+        "product_name": "BF-1TH190 Video Bronchoscope",
+        "primary_category": "Flexible bronchoscopy",
+        "subcategory": "Reusable video bronchoscope",
+        "product_kind": "Reusable endoscope",
+        "diameter_mm": 6.2,
+        "min_working_channel_mm": 2.8,
+        "working_length_cm": 60,
+        "size_display": "Insertion tube 6.0 mm; distal 6.2 mm; channel 2.8 mm; WL 600 mm",
+        "verification_status": "Verified - Olympus America product page specifications; current U.S. status pending",
+        "verification_grade": "verified_source",
+        "spec_json_raw": "{\"distal_outer_diameter_mm\": 6.2, \"insertion_tube_diameter_mm\": 6.0, \"instrument_channel_mm\": 2.8, \"working_length_mm\": 600, \"field_of_view_deg\": 120}"
+      }
+    },
+    {
+      "match": {
+        "manufacturer": "Olympus",
+        "catalog_number": "BF-UC190F"
+      },
+      "reason": "Filed with its own model number as the brand family, so the current-generation convex EBUS scope sat apart from its own series while the BF-UC180F it replaced grouped under EVIS EXERA II. Both are EBUS scopes in the same role; naming them by series lets the two generations read against each other.",
+      "expect": {
+        "brand_family": "BF-UC190F"
+      },
+      "set": {
+        "brand_family": "EVIS EXERA III"
+      }
+    }
+  ]
+}

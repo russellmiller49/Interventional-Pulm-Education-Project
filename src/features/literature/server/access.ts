@@ -1,10 +1,15 @@
 import type { Route } from 'next'
 import { NextResponse } from 'next/server'
 import { redirect } from 'next/navigation'
+import { cookies, headers } from 'next/headers'
 import type { User } from '@supabase/supabase-js'
 
 import { defaultLocale, isActiveLocale } from '@/i18n/locale'
 import { localizePath } from '@/i18n/path'
+import {
+  hasValidLocalDevAuthCookie,
+  LOCAL_DEV_AUTH_COOKIE_NAME,
+} from '@/lib/site-auth/local-dev-auth'
 import { supabaseServer } from '@/lib/supabase/server'
 
 interface SiteAdminResult {
@@ -17,7 +22,41 @@ interface SiteAdminResult {
     | 'unavailable'
 }
 
+const LOCAL_DEV_LITERATURE_ADMIN: User = {
+  id: '00000000-0000-4000-8000-000000000001',
+  app_metadata: {
+    provider: 'local-dev',
+    providers: ['local-dev'],
+  },
+  aud: 'authenticated',
+  created_at: '1970-01-01T00:00:00.000Z',
+  email: 'local-literature-admin@localhost.invalid',
+  email_confirmed_at: '1970-01-01T00:00:00.000Z',
+  role: 'authenticated',
+  updated_at: '1970-01-01T00:00:00.000Z',
+  user_metadata: {},
+}
+
+async function resolveLocalDevLiteratureAdmin() {
+  try {
+    const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()])
+    const host = requestHeaders.get('host')
+    if (!host) return null
+
+    const requestUrl = new URL(`http://${host}`)
+    const cookieValue = cookieStore.get(LOCAL_DEV_AUTH_COOKIE_NAME)?.value
+    return hasValidLocalDevAuthCookie(requestUrl, cookieValue) ? LOCAL_DEV_LITERATURE_ADMIN : null
+  } catch {
+    return null
+  }
+}
+
 async function resolveLiteratureSiteAdmin(): Promise<SiteAdminResult> {
+  const localDevAdmin = await resolveLocalDevLiteratureAdmin()
+  if (localDevAdmin) {
+    return { user: localDevAdmin, reason: 'authenticated' }
+  }
+
   try {
     const supabase = await supabaseServer()
     const {

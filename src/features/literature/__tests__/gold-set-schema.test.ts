@@ -13,6 +13,7 @@ const base = {
   diseaseTags: ['lung-cancer'],
   studyDesign: 'diagnostic-accuracy',
   publicationStatus: 'full-article',
+  categorizationFromFullText: false,
   notes: '',
   usedSupplementalMetadata: false,
   reviewSeconds: 30,
@@ -73,6 +74,70 @@ describe('gold-set review labels', () => {
         publicationStatus: null,
       }),
     ).toMatchObject({ relevanceLabel: 'exclude' })
+  })
+
+  it('accepts the metadata fallback and review-article categories', () => {
+    expect(
+      literatureGoldCompleteReviewSchema.parse({
+        ...base,
+        clinicalPurposes: ['multiple-general-overview', 'not-assessable-from-available-metadata'],
+        studyDesign: 'review-article',
+        publicationStatus: 'not-assessable-from-available-metadata',
+      }),
+    ).toMatchObject({
+      clinicalPurposes: ['multiple-general-overview', 'not-assessable-from-available-metadata'],
+      studyDesign: 'review-article',
+      publicationStatus: 'not-assessable-from-available-metadata',
+    })
+  })
+
+  it('accepts not assessable as a study design', () => {
+    expect(
+      literatureGoldCompleteReviewSchema.parse({
+        ...base,
+        studyDesign: 'not-assessable-from-available-metadata',
+      }),
+    ).toMatchObject({
+      studyDesign: 'not-assessable-from-available-metadata',
+    })
+  })
+
+  it('accepts a full-text categorization flag for included articles', () => {
+    expect(
+      literatureGoldCompleteReviewSchema.parse({
+        ...base,
+        categorizationFromFullText: true,
+      }),
+    ).toMatchObject({
+      categorizationFromFullText: true,
+    })
+  })
+
+  it('accepts the basic bronchoscopy and pleural procedure topics', () => {
+    expect(
+      literatureGoldCompleteReviewSchema.parse({
+        ...base,
+        topicIds: ['basic-bronchoscopy', 'pleural-interventions'],
+      }),
+    ).toMatchObject({
+      topicIds: ['basic-bronchoscopy', 'pleural-interventions'],
+    })
+  })
+
+  it('rejects a full-text categorization flag on excluded articles', () => {
+    expect(() =>
+      literatureGoldCompleteReviewSchema.parse({
+        ...base,
+        relevanceLabel: 'exclude',
+        topicIds: [],
+        technologyTags: [],
+        clinicalPurposes: [],
+        diseaseTags: [],
+        studyDesign: null,
+        publicationStatus: null,
+        categorizationFromFullText: true,
+      }),
+    ).toThrow('only for included articles')
   })
 
   it('rejects uncontrolled or child topic labels', () => {

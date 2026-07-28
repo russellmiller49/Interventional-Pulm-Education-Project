@@ -48,6 +48,12 @@
     "notes": "Thoracoscopy instrument"
   },
   {
+    "product_id": "PRD-023CDB45EE",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 8 mm I.D."
+  },
+  {
     "product_id": "PRD-02641F9166",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -102,10 +108,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-03ABC75AEE",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 5 mm I.D."
+  },
+  {
     "product_id": "PRD-03B374F7B8",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-040CC03419",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Neonatal silicone tracheostomy tube, 3 mm I.D."
   },
   {
     "product_id": "PRD-0410844D48",
@@ -148,6 +166,18 @@
     "role_code": "BAL_KIT",
     "role_fit": "Compatible",
     "notes": "Integrated sampler-set configuration for BAL/specimen collection."
+  },
+  {
+    "product_id": "PRD-04A299EF7E",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "24 Fr straight firm PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-04A299EF7E",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "24 Fr thoracic catheter."
   },
   {
     "product_id": "PRD-04E1CAF545",
@@ -276,6 +306,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-08F2047797",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "10 Fr straight soft PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-08F2047797",
+    "role_code": "CHEST_TUBE_SMALL_BORE",
+    "role_fit": "Compatible",
+    "notes": "10 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-09192221FE",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Primary",
@@ -288,10 +330,22 @@
     "notes": "Rigid bronchoscope/tracheoscope tube"
   },
   {
+    "product_id": "PRD-09AB6CA202",
+    "role_code": "GUIDING_DEVICE",
+    "role_fit": "Primary",
+    "notes": "Robotic bronchoscopy platform; current bronchoscopy configuration."
+  },
+  {
     "product_id": "PRD-09AF1B1AE5",
     "role_code": "APC_GAS_ACCESSORY",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-0A062BF907",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 8 mm I.D."
   },
   {
     "product_id": "PRD-0A2A8CB33F",
@@ -312,6 +366,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-0A889B7C1B",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 3 mm I.D."
+  },
+  {
     "product_id": "PRD-0A9806F6F2",
     "role_code": "ENERGY_CABLE_ADAPTER",
     "role_fit": "Primary",
@@ -330,6 +390,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-0B677E0328",
+    "role_code": "GUIDING_DEVICE",
+    "role_fit": "Primary",
+    "notes": "Robotic bronchoscopy platform; earliest P1 generation."
+  },
+  {
+    "product_id": "PRD-0B94236A0C",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 5 mm I.D."
+  },
+  {
     "product_id": "PRD-0BA1BB5296",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -346,6 +418,12 @@
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscopy suction/accessory"
+  },
+  {
+    "product_id": "PRD-0BD5A16970",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 7 mm I.D."
   },
   {
     "product_id": "PRD-0C13E4001B",
@@ -390,6 +468,24 @@
     "notes": null
   },
   {
+    "product_id": "PRD-0D41BB92EA",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "12 Fr straight soft PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-0D41BB92EA",
+    "role_code": "CHEST_TUBE_SMALL_BORE",
+    "role_fit": "Compatible",
+    "notes": "12 Fr thoracic catheter."
+  },
+  {
+    "product_id": "PRD-0D52EE5808",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 8 mm I.D."
+  },
+  {
     "product_id": "PRD-0D6E4DB711",
     "role_code": "EBUS_NEEDLE_FNA",
     "role_fit": "Primary",
@@ -400,6 +496,12 @@
     "role_code": "EBUS_NEEDLE_FNB",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-0DE5F7D9EF",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 5 mm I.D."
   },
   {
     "product_id": "PRD-0E088FC681",
@@ -418,6 +520,18 @@
     "role_code": "THORACOSCOPY_PROBE",
     "role_fit": "Exact",
     "notes": "Thoracoscopy surgical probe"
+  },
+  {
+    "product_id": "PRD-0E9FB83457",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "24 Fr right angle soft PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-0E9FB83457",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "24 Fr thoracic catheter."
   },
   {
     "product_id": "PRD-0EA2B293A4",
@@ -472,6 +586,12 @@
     "role_code": "RIGID_TELESCOPE",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscopy telescope"
+  },
+  {
+    "product_id": "PRD-0FDB2829E5",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Non-digital chest drainage unit — wet suction control with water seal."
   },
   {
     "product_id": "PRD-0FECB0AD06",
@@ -534,6 +654,12 @@
     "notes": "Pleural drainage accessory"
   },
   {
+    "product_id": "PRD-1095EC33EA",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 6 mm I.D."
+  },
+  {
     "product_id": "PRD-10B24D66DD",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -586,6 +712,12 @@
     "role_code": "ENDOSCOPY_CART",
     "role_fit": "Compatible",
     "notes": "Platform accessory"
+  },
+  {
+    "product_id": "PRD-1274FDC47F",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Non-digital chest drainage unit — dry suction control with dry seal."
   },
   {
     "product_id": "PRD-128B8E1F80",
@@ -666,6 +798,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-14C4B0C4B4",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 4.5 mm I.D."
+  },
+  {
     "product_id": "PRD-14D0927E5A",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -696,16 +834,40 @@
     "notes": null
   },
   {
+    "product_id": "PRD-1542B5E7CF",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 3 mm I.D."
+  },
+  {
     "product_id": "PRD-15747FB1A6",
     "role_code": "GUIDING_DEVICE",
     "role_fit": "Primary",
     "notes": null
   },
   {
+    "product_id": "PRD-15D0FCE237",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "32 Fr right angle thoracic catheter."
+  },
+  {
+    "product_id": "PRD-15D0FCE237",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "32 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-15E6B259A7",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-15E6FABAF4",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 5 mm I.D."
   },
   {
     "product_id": "PRD-16096E045B",
@@ -730,6 +892,12 @@
     "role_code": "BRONCH_REPROCESSING_KIT",
     "role_fit": "Compatible",
     "notes": null
+  },
+  {
+    "product_id": "PRD-1673C58CEF",
+    "role_code": "ULTRASOUND_PROCESSOR",
+    "role_fit": "Primary",
+    "notes": "Cart-based ultrasound system; its curved linear array endoscope list includes the EB-530US."
   },
   {
     "product_id": "PRD-167A020826",
@@ -804,6 +972,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-18B68E4FF0",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Neonatal silicone tracheostomy tube, 4 mm I.D."
+  },
+  {
     "product_id": "PRD-18D62EB4E8",
     "role_code": "ENDOSCOPY_LIGHT_CABLE",
     "role_fit": "Exact",
@@ -828,6 +1002,18 @@
     "notes": "Rigid bronchoscopy forceps/scissors"
   },
   {
+    "product_id": "PRD-1971F84681",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "24 Fr straight soft PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-1971F84681",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "24 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-19AC7F0794",
     "role_code": "EBUS_NEEDLE_FNA",
     "role_fit": "Exact",
@@ -838,6 +1024,12 @@
     "role_code": "APC_PROBE_FLEX",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-19CBF1BDA8",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 9 mm I.D."
   },
   {
     "product_id": "PRD-19D03D9B14",
@@ -858,6 +1050,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-19EB39DDA8",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "24 Fr trocar thoracic catheter."
+  },
+  {
+    "product_id": "PRD-19EB39DDA8",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "24 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-1A0C09927F",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -868,6 +1072,12 @@
     "role_code": "AIRWAY_STENT_PATIENT_SPECIFIC",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-1B17AB9452",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 5.5 mm I.D."
   },
   {
     "product_id": "PRD-1B9BB00FC8",
@@ -966,6 +1176,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-1E02D8D533",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 7 mm I.D."
+  },
+  {
+    "product_id": "PRD-1E256C03FD",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 5 mm I.D."
+  },
+  {
     "product_id": "PRD-1E339ED4FF",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -1002,6 +1224,12 @@
     "notes": "Rigid bronchoscope accessory"
   },
   {
+    "product_id": "PRD-1F0A588D48",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 6 mm I.D."
+  },
+  {
     "product_id": "PRD-1F48992C6C",
     "role_code": "CHEST_TUBE_SURGICAL",
     "role_fit": "Primary",
@@ -1030,6 +1258,12 @@
     "role_code": "THORACOSCOPY_TELESCOPE",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
+  },
+  {
+    "product_id": "PRD-1FF7F18F7C",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 6 mm I.D., cuffed."
   },
   {
     "product_id": "PRD-2058BA100A",
@@ -1134,6 +1368,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-22D9D12C16",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 2.5 mm I.D."
+  },
+  {
+    "product_id": "PRD-22E565D381",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 6 mm I.D."
+  },
+  {
     "product_id": "PRD-2302DA77DA",
     "role_code": "EBUS_NEEDLE_FNA",
     "role_fit": "Primary",
@@ -1146,6 +1392,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-234CBAADF6",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 10 mm I.D., cuffed, fenestrated."
+  },
+  {
     "product_id": "PRD-235F9C6FBD",
     "role_code": "AIRWAY_STENT_SEMS_UNCOVERED",
     "role_fit": "Primary",
@@ -1156,6 +1408,18 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-23D02BB26C",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "20 Fr right angle soft PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-23D02BB26C",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "20 Fr thoracic catheter."
   },
   {
     "product_id": "PRD-23D7DAB53A",
@@ -1248,6 +1512,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-254809271D",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 4 mm I.D."
+  },
+  {
     "product_id": "PRD-25D4F080A3",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Exact",
@@ -1308,6 +1578,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-26ABB902BA",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 8.5 mm I.D."
+  },
+  {
     "product_id": "PRD-27460DB568",
     "role_code": "ENERGY_CABLE_ADAPTER",
     "role_fit": "Primary",
@@ -1356,6 +1632,24 @@
     "notes": null
   },
   {
+    "product_id": "PRD-284C287F6C",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 7 mm I.D."
+  },
+  {
+    "product_id": "PRD-28A6EE6D23",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "32 Fr straight thoracic catheter."
+  },
+  {
+    "product_id": "PRD-28A6EE6D23",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "32 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-28A9600774",
     "role_code": "GENERIC_AIRWAY_ADAPTER",
     "role_fit": "Primary",
@@ -1374,10 +1668,22 @@
     "notes": "Rigid suction catheter"
   },
   {
+    "product_id": "PRD-28DF28AD09",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 9 mm I.D., cuffed, fenestrated."
+  },
+  {
     "product_id": "PRD-293EEBCDF0",
     "role_code": "APC_GAS_ACCESSORY",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-2941300796",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Non-digital chest drainage unit — wet suction control with water seal."
   },
   {
     "product_id": "PRD-2952D06A3F",
@@ -1404,16 +1710,34 @@
     "notes": null
   },
   {
+    "product_id": "PRD-29E98A6ED6",
+    "role_code": "GUIDING_DEVICE",
+    "role_fit": "Primary",
+    "notes": "Scope guide for the Galaxy bronchoscope."
+  },
+  {
     "product_id": "PRD-2A67871443",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
   },
   {
+    "product_id": "PRD-2A7E3A4C88",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 4.5 mm I.D."
+  },
+  {
     "product_id": "PRD-2A8E02EC0E",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-2A9186F3F5",
+    "role_code": "GUIDING_DEVICE",
+    "role_fit": "Primary",
+    "notes": "Electromagnetic field generator for navigation."
   },
   {
     "product_id": "PRD-2A9D06CF51",
@@ -1440,6 +1764,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2B5C66F3AB",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 9 mm I.D., cuffless."
+  },
+  {
     "product_id": "PRD-2B8AACAB67",
     "role_code": "ULTRASOUND_PROCESSOR",
     "role_fit": "Exact",
@@ -1456,6 +1786,18 @@
     "role_code": "PLEURAL_BIOPSY_FORCEPS",
     "role_fit": "Exact",
     "notes": "Thoracoscopy instrument"
+  },
+  {
+    "product_id": "PRD-2C0C6A3F3C",
+    "role_code": "FLEX_SCOPE_THERAPEUTIC",
+    "role_fit": "Primary",
+    "notes": "3.2 mm instrument channel."
+  },
+  {
+    "product_id": "PRD-2C1F40E815",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 9 mm I.D."
   },
   {
     "product_id": "PRD-2C2F29762E",
@@ -1506,6 +1848,12 @@
     "notes": "Current manufacturer EBUS needle configuration"
   },
   {
+    "product_id": "PRD-2D2AC3B109",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 5.5 mm I.D."
+  },
+  {
     "product_id": "PRD-2D588804C5",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -1528,6 +1876,12 @@
     "role_code": "FLEX_SCOPE_THERAPEUTIC",
     "role_fit": "Compatible",
     "notes": null
+  },
+  {
+    "product_id": "PRD-2D7DC0B764",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 4 mm I.D."
   },
   {
     "product_id": "PRD-2DA93F54B9",
@@ -1614,6 +1968,12 @@
     "notes": "Bronchoscopy aspiration/irrigation accessory"
   },
   {
+    "product_id": "PRD-2F1DF55F3C",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Non-digital chest drainage unit — dry seal one-way valve, mobile/ambulatory."
+  },
+  {
     "product_id": "PRD-2F3F39DBA3",
     "role_code": "CYTOLOGY_BRUSH",
     "role_fit": "Primary",
@@ -1644,6 +2004,12 @@
     "notes": "Thoracoscopy telescope"
   },
   {
+    "product_id": "PRD-2FD558D7CD",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 5.5 mm I.D."
+  },
+  {
     "product_id": "PRD-2FFEEB98B2",
     "role_code": "EBUS_SCOPE",
     "role_fit": "Primary",
@@ -1662,10 +2028,40 @@
     "notes": null
   },
   {
+    "product_id": "PRD-30BD29FE91",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "40 Fr right angle soft PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-30BD29FE91",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "40 Fr thoracic catheter."
+  },
+  {
+    "product_id": "PRD-3119D76B4D",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Non-digital chest drainage unit — dry suction regulation with calibrated water seal."
+  },
+  {
+    "product_id": "PRD-312C14D983",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Non-digital chest drainage unit — wet suction control with water seal."
+  },
+  {
     "product_id": "PRD-31373D9CE6",
     "role_code": "BIOPSY_FORCEPS_FLEX",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-315023EFEF",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Neonatal silicone tracheostomy tube, 2.5 mm I.D."
   },
   {
     "product_id": "PRD-31DA7C7FF7",
@@ -1710,6 +2106,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-337D7942C1",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 7.5 mm I.D., cuffless."
+  },
+  {
     "product_id": "PRD-33C62E2093",
     "role_code": "RIGID_SUCTION_CATHETER",
     "role_fit": "Exact",
@@ -1752,10 +2154,28 @@
     "notes": null
   },
   {
+    "product_id": "PRD-3496BE691A",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 5 mm I.D."
+  },
+  {
     "product_id": "PRD-34BAA70074",
     "role_code": "RADIAL_EBUS_DRIVE_UNIT",
     "role_fit": "Exact",
     "notes": "Radial EBUS probe drive unit"
+  },
+  {
+    "product_id": "PRD-34C95CA615",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Non-digital chest drainage unit — dry suction control with water seal."
+  },
+  {
+    "product_id": "PRD-34DC6AE7FD",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "2 mm instrument channel."
   },
   {
     "product_id": "PRD-354ECD3DC4",
@@ -1836,6 +2256,12 @@
     "notes": "Articulated rigid bronchoscopic instrument"
   },
   {
+    "product_id": "PRD-38DED67ECF",
+    "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Chest drainage accessory."
+  },
+  {
     "product_id": "PRD-38F9E96675",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -1852,6 +2278,12 @@
     "role_code": "TBNA_NEEDLE",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-399E04C9C8",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Neonatal silicone tracheostomy tube, 4 mm I.D."
   },
   {
     "product_id": "PRD-39EB1A695C",
@@ -1906,6 +2338,12 @@
     "role_code": "ENDOBRONCHIAL_SPIGOT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-3BC81CC453",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Non-digital chest drainage unit — dry suction control with water seal."
   },
   {
     "product_id": "PRD-3BEF064A41",
@@ -1980,10 +2418,28 @@
     "notes": null
   },
   {
+    "product_id": "PRD-3F25D56A85",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 6 mm I.D."
+  },
+  {
     "product_id": "PRD-3F51C7D66F",
     "role_code": "EBUS_NEEDLE_FNA",
     "role_fit": "Exact",
     "notes": "Current manufacturer EBUS needle configuration"
+  },
+  {
+    "product_id": "PRD-3FB3ACD1F6",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "28 Fr straight thoracic catheter."
+  },
+  {
+    "product_id": "PRD-3FB3ACD1F6",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "28 Fr thoracic catheter."
   },
   {
     "product_id": "PRD-3FE0E7E391",
@@ -2004,16 +2460,40 @@
     "notes": "Rigid suction catheter"
   },
   {
+    "product_id": "PRD-4073AAF637",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 3.5 mm I.D."
+  },
+  {
     "product_id": "PRD-408A683593",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
   },
   {
+    "product_id": "PRD-4098113030",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "32 Fr straight firm PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-4098113030",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "32 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-40B834E981",
     "role_code": "PLEUROSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
+  },
+  {
+    "product_id": "PRD-40BFF2736A",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 9 mm I.D."
   },
   {
     "product_id": "PRD-40F16EE5D5",
@@ -2032,6 +2512,12 @@
     "role_code": "IPC_INSERTION_KIT",
     "role_fit": "Exact",
     "notes": "Rocket IPC placement kit"
+  },
+  {
+    "product_id": "PRD-412C78FBE5",
+    "role_code": "ULTRASOUND_PROCESSOR",
+    "role_fit": "Primary",
+    "notes": "Drives the EB-530US convex EBUS bronchoscope for EBUS-TBNA."
   },
   {
     "product_id": "PRD-4130F930C5",
@@ -2100,6 +2586,12 @@
     "notes": "Rigid bronchoscopy forceps"
   },
   {
+    "product_id": "PRD-429E40F1F3",
+    "role_code": "GUIDING_DEVICE",
+    "role_fit": "Primary",
+    "notes": "Accessory kit for the Galaxy platform."
+  },
+  {
     "product_id": "PRD-4361785147",
     "role_code": "AIRWAY_BALLOON_DILATOR",
     "role_fit": "Exact",
@@ -2110,6 +2602,30 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-43A0159EDB",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "40 Fr right angle thoracic catheter."
+  },
+  {
+    "product_id": "PRD-43A0159EDB",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "40 Fr thoracic catheter."
+  },
+  {
+    "product_id": "PRD-43DF4C56B7",
+    "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Chest drainage accessory."
+  },
+  {
+    "product_id": "PRD-43F3036551",
+    "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Chest drainage accessory."
   },
   {
     "product_id": "PRD-4423366610",
@@ -2140,6 +2656,12 @@
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-450492ECBB",
+    "role_code": "VIDEO_PROCESSOR",
+    "role_fit": "Primary",
+    "notes": "Single-box video processor and light source for the 700 and 500 series."
   },
   {
     "product_id": "PRD-456C006CCE",
@@ -2178,10 +2700,22 @@
     "notes": "Rigid bronchoscope accessory"
   },
   {
+    "product_id": "PRD-476DD42C80",
+    "role_code": "GUIDING_DEVICE",
+    "role_fit": "Primary",
+    "notes": "Single-use robotic bronchoscope and sheath system."
+  },
+  {
     "product_id": "PRD-481074A513",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscopy accessory"
+  },
+  {
+    "product_id": "PRD-4821683CAA",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 8 mm I.D., cuffed, fenestrated."
   },
   {
     "product_id": "PRD-486F6703A9",
@@ -2208,6 +2742,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-48C4E1CC20",
+    "role_code": "FLEX_SCOPE_THERAPEUTIC",
+    "role_fit": "Primary",
+    "notes": "2.8 mm instrument channel."
+  },
+  {
     "product_id": "PRD-48CBAB53FF",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
@@ -2232,6 +2772,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-49C658BF52",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 6 mm I.D."
+  },
+  {
     "product_id": "PRD-4A023D6489",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -2242,6 +2788,12 @@
     "role_code": "FLEX_SCOPE_THERAPEUTIC",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-4A13E00131",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 3 mm I.D."
   },
   {
     "product_id": "PRD-4A329E27C5",
@@ -2274,6 +2826,12 @@
     "notes": "Optical rigid bronchoscopy forceps"
   },
   {
+    "product_id": "PRD-4AE462CF09",
+    "role_code": "GUIDING_DEVICE",
+    "role_fit": "Primary",
+    "notes": "Physician controller for the Monarch platform."
+  },
+  {
     "product_id": "PRD-4AECEED0C8",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -2284,6 +2842,18 @@
     "role_code": "AIRWAY_STENT_SEMS_UNCOVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-4B6813254B",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "28 Fr straight firm PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-4B6813254B",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "28 Fr thoracic catheter."
   },
   {
     "product_id": "PRD-4BB84F196B",
@@ -2298,10 +2868,28 @@
     "notes": "Endoscope cleaning accessory"
   },
   {
+    "product_id": "PRD-4BE4CD0EBA",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "36 Fr right angle soft PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-4BE4CD0EBA",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "36 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-4C3147DF15",
     "role_code": "ENDOSCOPY_CART",
     "role_fit": "Compatible",
     "notes": "Platform accessory"
+  },
+  {
+    "product_id": "PRD-4C43134B78",
+    "role_code": "GUIDING_DEVICE",
+    "role_fit": "Primary",
+    "notes": "Reusable navigation sensors."
   },
   {
     "product_id": "PRD-4C745881F9",
@@ -2332,6 +2920,12 @@
     "role_code": "ENERGY_CABLE_ADAPTER",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-4D4109FA08",
+    "role_code": "TRACH_TUBE_EVAC",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 8 mm I.D., cuffed, with subglottic suction."
   },
   {
     "product_id": "PRD-4D5E28D425",
@@ -2382,6 +2976,18 @@
     "notes": "Optical rigid bronchoscopy forceps"
   },
   {
+    "product_id": "PRD-4F06752688",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 7 mm I.D."
+  },
+  {
+    "product_id": "PRD-4F08144D47",
+    "role_code": "GUIDING_DEVICE",
+    "role_fit": "Primary",
+    "notes": "Connector between the Galaxy bronchoscope and the platform."
+  },
+  {
     "product_id": "PRD-4F4AA966A9",
     "role_code": "THORACENTESIS_KIT",
     "role_fit": "Primary",
@@ -2398,6 +3004,18 @@
     "role_code": "AIRWAY_STENT_SEMS_UNCOVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-4FC1A1B17E",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Neonatal silicone tracheostomy tube, 4 mm I.D."
+  },
+  {
+    "product_id": "PRD-5066E92CF8",
+    "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Chest drainage accessory."
   },
   {
     "product_id": "PRD-5070336E33",
@@ -2446,6 +3064,24 @@
     "role_code": "BRONCH_REPROCESSING_KIT",
     "role_fit": "Compatible",
     "notes": null
+  },
+  {
+    "product_id": "PRD-516C2D8F03",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 7 mm I.D., cuffed, fenestrated."
+  },
+  {
+    "product_id": "PRD-51D601323E",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "32 Fr trocar thoracic catheter."
+  },
+  {
+    "product_id": "PRD-51D601323E",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "32 Fr thoracic catheter."
   },
   {
     "product_id": "PRD-523148A737",
@@ -2532,6 +3168,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-544D0285F6",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "24 Fr right angle thoracic catheter."
+  },
+  {
+    "product_id": "PRD-544D0285F6",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "24 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-54CEDAAE5B",
     "role_code": "RIGID_BRONCHOSCOPE_HEAD",
     "role_fit": "Exact",
@@ -2580,6 +3228,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-563D121CAF",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 9 mm I.D., cuffed."
+  },
+  {
     "product_id": "PRD-56932BDE51",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -2596,6 +3250,12 @@
     "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
     "role_fit": "Compatible",
     "notes": "Pleural drainage accessory"
+  },
+  {
+    "product_id": "PRD-571FBBA6A3",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 3 mm I.D."
   },
   {
     "product_id": "PRD-574BC79D2B",
@@ -2638,6 +3298,12 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Exact",
     "notes": "Fully covered small-airway SEMS"
+  },
+  {
+    "product_id": "PRD-57DAB5ECAE",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "2 mm instrument channel."
   },
   {
     "product_id": "PRD-57EB842692",
@@ -2718,6 +3384,18 @@
     "notes": "Rigid bronchoscope/tracheoscope tube"
   },
   {
+    "product_id": "PRD-5A0C3D8844",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "2 mm instrument channel."
+  },
+  {
+    "product_id": "PRD-5A1DE3192C",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 8 mm I.D."
+  },
+  {
     "product_id": "PRD-5A28AF1C52",
     "role_code": "RIGID_SUCTION_CATHETER",
     "role_fit": "Primary",
@@ -2734,6 +3412,12 @@
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-5A7CE40A85",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 5.5 mm I.D."
   },
   {
     "product_id": "PRD-5A822E57C6",
@@ -2770,6 +3454,12 @@
     "role_code": "CRYO_SYSTEM_ACCESSORY",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-5AFF0D7C54",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 8 mm I.D."
   },
   {
     "product_id": "PRD-5B0D81C458",
@@ -2886,6 +3576,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-5D5FC30CC3",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 9 mm I.D."
+  },
+  {
     "product_id": "PRD-5DFC2E8E8B",
     "role_code": "CRYO_SYSTEM_ACCESSORY",
     "role_fit": "Primary",
@@ -2914,6 +3610,12 @@
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscope/tracheoscope tube"
+  },
+  {
+    "product_id": "PRD-5EC4CBC7BF",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 7 mm I.D."
   },
   {
     "product_id": "PRD-5EF986AAB1",
@@ -2958,6 +3660,12 @@
     "notes": "Rocket IPC drainage supply"
   },
   {
+    "product_id": "PRD-60D298A1B6",
+    "role_code": "GUIDING_DEVICE",
+    "role_fit": "Primary",
+    "notes": "Reprocessed robotic bronchoscope."
+  },
+  {
     "product_id": "PRD-60ED7DF50E",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -2968,6 +3676,12 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-61318B0A7E",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 8.5 mm I.D., cuffed."
   },
   {
     "product_id": "PRD-615CDFB8AB",
@@ -3042,6 +3756,24 @@
     "notes": "Thoracoscopy instrument"
   },
   {
+    "product_id": "PRD-638E83CED6",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "36 Fr straight firm PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-638E83CED6",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "36 Fr thoracic catheter."
+  },
+  {
+    "product_id": "PRD-63D23F7DB0",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Non-digital chest drainage unit — wet suction control with water seal."
+  },
+  {
     "product_id": "PRD-63E9945A0A",
     "role_code": "ENERGY_CABLE_ADAPTER",
     "role_fit": "Primary",
@@ -3076,6 +3808,12 @@
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-64F3BFC979",
+    "role_code": "VIDEO_PROCESSOR",
+    "role_fit": "Primary",
+    "notes": "Video processor for the 700 and 500 series bronchoscopes."
   },
   {
     "product_id": "PRD-6556097624",
@@ -3114,6 +3852,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-6683FE6ADD",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 4.5 mm I.D."
+  },
+  {
     "product_id": "PRD-66935DEE7B",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
@@ -3130,6 +3874,12 @@
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscope barrel"
+  },
+  {
+    "product_id": "PRD-6727C4A9D9",
+    "role_code": "FLEX_SCOPE_THERAPEUTIC",
+    "role_fit": "Primary",
+    "notes": "3.2 mm instrument channel."
   },
   {
     "product_id": "PRD-67D1D03D3F",
@@ -3178,6 +3928,12 @@
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscopy forceps/scissors"
+  },
+  {
+    "product_id": "PRD-69ABE013A8",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Neonatal silicone tracheostomy tube, 3 mm I.D."
   },
   {
     "product_id": "PRD-69C70153C3",
@@ -3444,6 +4200,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-6EDE2453EE",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "2.2 mm instrument channel."
+  },
+  {
     "product_id": "PRD-6EE929E70C",
     "role_code": "EBV_DELIVERY_CATHETER",
     "role_fit": "Primary",
@@ -3468,6 +4230,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-6F64134373",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "1.2 mm instrument channel."
+  },
+  {
     "product_id": "PRD-6F74CF87DF",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -3484,6 +4252,18 @@
     "role_code": "THORACENTESIS_KIT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-6FAA3BD6FA",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 7 mm I.D., cuffless."
+  },
+  {
+    "product_id": "PRD-6FE573D714",
+    "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Chest drainage accessory."
   },
   {
     "product_id": "PRD-6FF6668D03",
@@ -3552,6 +4332,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-714F030362",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 5 mm I.D."
+  },
+  {
     "product_id": "PRD-716AA24BEF",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -3562,6 +4348,12 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Exact",
     "notes": "Direct-visualization covered airway SEMS"
+  },
+  {
+    "product_id": "PRD-71BFC33B57",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Neonatal silicone tracheostomy tube, 2.5 mm I.D."
   },
   {
     "product_id": "PRD-71D13E3955",
@@ -3580,6 +4372,24 @@
     "role_code": "ENERGY_CABLE_ADAPTER",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-723273697C",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 5 mm I.D."
+  },
+  {
+    "product_id": "PRD-7240BD99DA",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "2 mm instrument channel."
+  },
+  {
+    "product_id": "PRD-7273BDA984",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 9 mm I.D."
   },
   {
     "product_id": "PRD-72889F9CE3",
@@ -3612,6 +4422,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-7385F4136A",
+    "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Chest drainage accessory."
+  },
+  {
     "product_id": "PRD-7389E0BD35",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -3628,6 +4444,24 @@
     "role_code": "EBUS_NEEDLE_FNA",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-73EB209662",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "12 Fr trocar thoracic catheter."
+  },
+  {
+    "product_id": "PRD-73EB209662",
+    "role_code": "CHEST_TUBE_SMALL_BORE",
+    "role_fit": "Compatible",
+    "notes": "12 Fr thoracic catheter."
+  },
+  {
+    "product_id": "PRD-7435E842E8",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 7 mm I.D."
   },
   {
     "product_id": "PRD-744A95F952",
@@ -3658,6 +4492,18 @@
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
     "notes": "Optical rigid bronchoscopy forceps"
+  },
+  {
+    "product_id": "PRD-75732DDDB6",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "16 Fr straight soft PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-75732DDDB6",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "16 Fr thoracic catheter."
   },
   {
     "product_id": "PRD-7578C8D45A",
@@ -3694,6 +4540,18 @@
     "role_code": "THORACOSCOPY_SCISSORS",
     "role_fit": "Exact",
     "notes": "Thoracoscopy instrument"
+  },
+  {
+    "product_id": "PRD-75C7EDFC91",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "40 Fr straight soft PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-75C7EDFC91",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "40 Fr thoracic catheter."
   },
   {
     "product_id": "PRD-75E555BC77",
@@ -3756,6 +4614,12 @@
     "notes": "Aspira drainage supply"
   },
   {
+    "product_id": "PRD-77D7F7892F",
+    "role_code": "GUIDING_DEVICE",
+    "role_fit": "Primary",
+    "notes": "Platform tower, cart, and fluidics pump."
+  },
+  {
     "product_id": "PRD-77DCFC650E",
     "role_code": "ENERGY_CABLE_ADAPTER",
     "role_fit": "Primary",
@@ -3766,6 +4630,12 @@
     "role_code": "APC_GAS_ACCESSORY",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-781389ABFE",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Neonatal silicone tracheostomy tube, 2.5 mm I.D."
   },
   {
     "product_id": "PRD-78354BF30F",
@@ -3792,6 +4662,24 @@
     "notes": null
   },
   {
+    "product_id": "PRD-790B27C6F7",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 2.5 mm I.D."
+  },
+  {
+    "product_id": "PRD-795FD16DE8",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "16 Fr straight thoracic catheter."
+  },
+  {
+    "product_id": "PRD-795FD16DE8",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "16 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-79B8CF6846",
     "role_code": "ENERGY_CABLE_ADAPTER",
     "role_fit": "Primary",
@@ -3810,6 +4698,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-7A1F781FE3",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 5 mm I.D."
+  },
+  {
     "product_id": "PRD-7A4AE2E955",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -3826,6 +4720,12 @@
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscopy forceps/scissors"
+  },
+  {
+    "product_id": "PRD-7A64131F24",
+    "role_code": "TRACH_TUBE_EVAC",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 10 mm I.D., cuffed, with subglottic suction."
   },
   {
     "product_id": "PRD-7AA19EC9FD",
@@ -3876,6 +4776,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-7C62BB4F88",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Neonatal silicone tracheostomy tube, 3.5 mm I.D."
+  },
+  {
     "product_id": "PRD-7C8F860816",
     "role_code": "FLEX_SCOPE_DIAGNOSTIC",
     "role_fit": "Primary",
@@ -3904,6 +4810,12 @@
     "role_code": "RIGID_BRONCH_SHAVER",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscopic shaver instrument"
+  },
+  {
+    "product_id": "PRD-7D8D97D18F",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Non-digital chest drainage unit — dry suction regulation with calibrated water seal."
   },
   {
     "product_id": "PRD-7DC3645CFA",
@@ -3972,6 +4884,24 @@
     "notes": "BAL convenience accessory"
   },
   {
+    "product_id": "PRD-7FBD6FB1A3",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 2.5 mm I.D."
+  },
+  {
+    "product_id": "PRD-7FFA3EACA4",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "28 Fr right angle thoracic catheter."
+  },
+  {
+    "product_id": "PRD-7FFA3EACA4",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "28 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-804529441A",
     "role_code": "TRACH_TUBE_CUFFED",
     "role_fit": "Primary",
@@ -4000,6 +4930,18 @@
     "role_code": "CYTOLOGY_BRUSH",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-815B93A920",
+    "role_code": "FLEX_SCOPE_THERAPEUTIC",
+    "role_fit": "Primary",
+    "notes": "2.8 mm instrument channel."
+  },
+  {
+    "product_id": "PRD-815DC29EF1",
+    "role_code": "CYTOLOGY_BRUSH",
+    "role_fit": "Primary",
+    "notes": "Cytology brush for the Monarch bronchoscope."
   },
   {
     "product_id": "PRD-81D89E1E76",
@@ -4054,6 +4996,12 @@
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
     "notes": "Optical rigid bronchoscopy forceps"
+  },
+  {
+    "product_id": "PRD-83A71310E6",
+    "role_code": "GUIDING_DEVICE",
+    "role_fit": "Primary",
+    "notes": "Single-use robotic bronchoscope."
   },
   {
     "product_id": "PRD-83ADF2581C",
@@ -4146,6 +5094,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-86FC0B1E5C",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "12 Fr straight thoracic catheter."
+  },
+  {
+    "product_id": "PRD-86FC0B1E5C",
+    "role_code": "CHEST_TUBE_SMALL_BORE",
+    "role_fit": "Compatible",
+    "notes": "12 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-87011FE827",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
@@ -4200,6 +5160,12 @@
     "notes": "Reusable diagnostic/peripheral bronchoscope"
   },
   {
+    "product_id": "PRD-88E003F12B",
+    "role_code": "FLEX_SCOPE_THERAPEUTIC",
+    "role_fit": "Primary",
+    "notes": "3 mm instrument channel."
+  },
+  {
     "product_id": "PRD-8905E9BA40",
     "role_code": "ENERGY_CABLE_ADAPTER",
     "role_fit": "Primary",
@@ -4216,6 +5182,12 @@
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-89702103AF",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Neonatal silicone tracheostomy tube, 3 mm I.D."
   },
   {
     "product_id": "PRD-89BCEE2895",
@@ -4242,6 +5214,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8A5FA2EE1B",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "16 Fr right angle thoracic catheter."
+  },
+  {
+    "product_id": "PRD-8A5FA2EE1B",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "16 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-8A6658D379",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -4260,10 +5244,34 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8B0DE554FB",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 10 mm I.D., cuffless, fenestrated."
+  },
+  {
+    "product_id": "PRD-8B542204C5",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 8 mm I.D., cuffed."
+  },
+  {
     "product_id": "PRD-8B87F7D42B",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Exact",
     "notes": "Direct-visualization covered airway SEMS"
+  },
+  {
+    "product_id": "PRD-8BAF2F51A6",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 4.5 mm I.D."
+  },
+  {
+    "product_id": "PRD-8C032DCD3A",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 9 mm I.D."
   },
   {
     "product_id": "PRD-8C4F3E180E",
@@ -4296,6 +5304,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8CBA34433F",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Non-digital chest drainage unit — wet suction control with water seal."
+  },
+  {
     "product_id": "PRD-8CDDDC5158",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Primary",
@@ -4306,6 +5320,12 @@
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Exact",
     "notes": "Full-lumen rigid bronchoscope/tracheoscope"
+  },
+  {
+    "product_id": "PRD-8D676A6B58",
+    "role_code": "GUIDING_DEVICE",
+    "role_fit": "Primary",
+    "notes": "Electromagnetic navigation patient patches, 60 per pack."
   },
   {
     "product_id": "PRD-8D82B325C6",
@@ -4336,6 +5356,12 @@
     "role_code": "THORACENTESIS_KIT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-8EC41A9FB6",
+    "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Chest drainage accessory."
   },
   {
     "product_id": "PRD-8EE9A09E05",
@@ -4380,6 +5406,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-90DB5DFF8D",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "36 Fr straight thoracic catheter."
+  },
+  {
+    "product_id": "PRD-90DB5DFF8D",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "36 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-90F9A0A0BC",
     "role_code": "TRACH_TUBE_CUFFLESS",
     "role_fit": "Primary",
@@ -4402,6 +5440,12 @@
     "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
     "role_fit": "Compatible",
     "notes": "May be used as a cavity/pleural drainage option only when consistent with the current IFU and institutional policy."
+  },
+  {
+    "product_id": "PRD-9188987BF8",
+    "role_code": "RADIAL_EBUS_PROBE",
+    "role_fit": "Primary",
+    "notes": "20 MHz radial mini probe, 1.4-1.9 mm outer diameter."
   },
   {
     "product_id": "PRD-9188CC0F47",
@@ -4428,6 +5472,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-9218072541",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 6 mm I.D."
+  },
+  {
     "product_id": "PRD-921CB1B912",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Exact",
@@ -4440,10 +5490,28 @@
     "notes": "Rigid bronchoscope/tracheoscope tube"
   },
   {
+    "product_id": "PRD-925F0C99C6",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Non-digital chest drainage unit — wet suction control with water seal."
+  },
+  {
     "product_id": "PRD-92C95201F3",
     "role_code": "GENERIC_ULTRASOUND",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-93331CA104",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 7 mm I.D."
+  },
+  {
+    "product_id": "PRD-9336231788",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Non-digital chest drainage unit — dry suction control with dry seal."
   },
   {
     "product_id": "PRD-9349B7D1F6",
@@ -4482,6 +5550,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-93C8085CA3",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Non-digital chest drainage unit — wet suction control with water seal."
+  },
+  {
     "product_id": "PRD-941D1C2633",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Exact",
@@ -4504,6 +5578,12 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-94C61697D9",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Non-digital chest drainage unit — dry suction regulation with calibrated water seal."
   },
   {
     "product_id": "PRD-94C76DB87E",
@@ -4558,6 +5638,12 @@
     "role_code": "FLEX_SCOPE_SINGLE_USE",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-978B2478DC",
+    "role_code": "FLEX_SCOPE_THERAPEUTIC",
+    "role_fit": "Primary",
+    "notes": "FUJIFILM bronchoscope."
   },
   {
     "product_id": "PRD-97B68B1ECE",
@@ -4674,6 +5760,12 @@
     "notes": "Rigid suction catheter"
   },
   {
+    "product_id": "PRD-9C17CA11C4",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 9 mm I.D., cuffless, fenestrated."
+  },
+  {
     "product_id": "PRD-9C1CF84490",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Exact",
@@ -4764,6 +5856,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-9DB23B9ABC",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "40 Fr straight thoracic catheter."
+  },
+  {
+    "product_id": "PRD-9DB23B9ABC",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "40 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-9DCC51E06A",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -4806,10 +5910,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-9F6F724DC2",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Non-digital chest drainage unit — dry suction control with water seal."
+  },
+  {
     "product_id": "PRD-9FDA372767",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-9FE903D754",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 7 mm I.D., cuffed."
   },
   {
     "product_id": "PRD-9FFD95C095",
@@ -4830,6 +5946,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-A04C2075B1",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 8 mm I.D."
+  },
+  {
     "product_id": "PRD-A0DF0074DB",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -4840,6 +5962,18 @@
     "role_code": "PLEUROSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
+  },
+  {
+    "product_id": "PRD-A153D77FD4",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "20 Fr straight soft PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-A153D77FD4",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "20 Fr thoracic catheter."
   },
   {
     "product_id": "PRD-A19F031A49",
@@ -4866,6 +6000,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-A283B9F302",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "8 Fr straight soft PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-A283B9F302",
+    "role_code": "CHEST_TUBE_SMALL_BORE",
+    "role_fit": "Compatible",
+    "notes": "8 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-A2C49C9352",
     "role_code": "CRYOPROBE_FLEX",
     "role_fit": "Primary",
@@ -4890,6 +6036,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-A31173136E",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Non-digital chest drainage unit — wet suction control with water seal."
+  },
+  {
     "product_id": "PRD-A344758F57",
     "role_code": "PNEUMOTHORAX_KIT",
     "role_fit": "Primary",
@@ -4906,6 +6058,18 @@
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-A4144F4F64",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "32 Fr right angle soft PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-A4144F4F64",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "32 Fr thoracic catheter."
   },
   {
     "product_id": "PRD-A457429809",
@@ -5004,10 +6168,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-A7761877B0",
+    "role_code": "RADIAL_EBUS_DRIVE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Drives the PB2020-M2 radial mini probe for peripheral lesion localisation."
+  },
+  {
     "product_id": "PRD-A7A7DF79BA",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-A7D620FEA8",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "2 mm instrument channel."
   },
   {
     "product_id": "PRD-A83C7ADE90",
@@ -5046,6 +6222,18 @@
     "notes": "Thoracoscopy trocar"
   },
   {
+    "product_id": "PRD-A8BADCC88E",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "20 Fr straight firm PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-A8BADCC88E",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "20 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-A8D6EE3E6F",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Exact",
@@ -5076,6 +6264,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-AA3A12BCF8",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 4.5 mm I.D."
+  },
+  {
     "product_id": "PRD-AACBA3F0AD",
     "role_code": "CO2_INSUFFLATOR",
     "role_fit": "Exact",
@@ -5092,6 +6286,12 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-AB3747D636",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 6 mm I.D., cuffless, fenestrated."
   },
   {
     "product_id": "PRD-AB6D9F097B",
@@ -5118,6 +6318,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-AC75A8DD2A",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 6 mm I.D."
+  },
+  {
     "product_id": "PRD-AC9799F503",
     "role_code": "AIRWAY_STENT_SEMS_UNCOVERED",
     "role_fit": "Primary",
@@ -5140,6 +6346,18 @@
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-ACE0C385EE",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 9 mm I.D."
+  },
+  {
+    "product_id": "PRD-ACE79E14D3",
+    "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Chest drainage accessory."
   },
   {
     "product_id": "PRD-ACF77D4FD4",
@@ -5184,6 +6402,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-ADD6503B0B",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 6 mm I.D., cuffed, fenestrated."
+  },
+  {
     "product_id": "PRD-AE3B2BA40B",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -5212,6 +6436,12 @@
     "role_code": "EBUS_NEEDLE_FNB",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-AF18E6BE1C",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 9.5 mm I.D."
   },
   {
     "product_id": "PRD-AF1D02BED5",
@@ -5334,6 +6564,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B43064119C",
+    "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Chest drainage accessory."
+  },
+  {
+    "product_id": "PRD-B4667E9AC0",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 10 mm I.D., cuffed."
+  },
+  {
     "product_id": "PRD-B4AC755EAE",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
@@ -5358,6 +6600,12 @@
     "notes": "Rigid bronchoscope/tracheoscope tube"
   },
   {
+    "product_id": "PRD-B5156B0347",
+    "role_code": "FLEX_SCOPE_THERAPEUTIC",
+    "role_fit": "Primary",
+    "notes": "3 mm instrument channel."
+  },
+  {
     "product_id": "PRD-B53F0F16C8",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -5368,6 +6616,12 @@
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
     "notes": "Optical rigid bronchoscopy forceps"
+  },
+  {
+    "product_id": "PRD-B5456D95B7",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 4 mm I.D."
   },
   {
     "product_id": "PRD-B54B621217",
@@ -5400,16 +6654,52 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B5B467FEF2",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "16 Fr trocar thoracic catheter."
+  },
+  {
+    "product_id": "PRD-B5B467FEF2",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "16 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-B5E107E3AE",
     "role_code": "STENT_APPLICATOR",
     "role_fit": "Primary",
     "notes": null
   },
   {
+    "product_id": "PRD-B5FC79AB78",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "28 Fr right angle soft PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-B5FC79AB78",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "28 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-B5FC89830C",
     "role_code": "ENDOSCOPY_MONITOR",
     "role_fit": "Exact",
     "notes": "Endoscopy monitor"
+  },
+  {
+    "product_id": "PRD-B61DBDED5A",
+    "role_code": "TBNA_NEEDLE",
+    "role_fit": "Primary",
+    "notes": "Aspirating biopsy needle for the Monarch bronchoscope."
+  },
+  {
+    "product_id": "PRD-B625A0B418",
+    "role_code": "GUIDING_DEVICE",
+    "role_fit": "Primary",
+    "notes": "Patient introducer kit for the Monarch bronchoscope."
   },
   {
     "product_id": "PRD-B68845E997",
@@ -5434,6 +6724,12 @@
     "role_code": "RIGID_SUCTION_CATHETER",
     "role_fit": "Exact",
     "notes": "Rigid suction catheter"
+  },
+  {
+    "product_id": "PRD-B6E3342E92",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 8 mm I.D., cuffless, fenestrated."
   },
   {
     "product_id": "PRD-B71889B81F",
@@ -5514,6 +6810,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B99BD2D544",
+    "role_code": "TRACH_TUBE_EVAC",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 7.5 mm I.D., cuffed, with subglottic suction."
+  },
+  {
     "product_id": "PRD-B99F53FBC5",
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Exact",
@@ -5556,10 +6858,22 @@
     "notes": "Thoracoscopy trocar"
   },
   {
+    "product_id": "PRD-BA861EFE13",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 10 mm I.D., cuffless."
+  },
+  {
     "product_id": "PRD-BA86F45760",
     "role_code": "THORACOSCOPY_TELESCOPE",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
+  },
+  {
+    "product_id": "PRD-BAC26D08B6",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 8 mm I.D."
   },
   {
     "product_id": "PRD-BAC7605565",
@@ -5602,6 +6916,18 @@
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscopy forceps/scissors"
+  },
+  {
+    "product_id": "PRD-BB6FAC1D3E",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "20 Fr trocar thoracic catheter."
+  },
+  {
+    "product_id": "PRD-BB6FAC1D3E",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "20 Fr thoracic catheter."
   },
   {
     "product_id": "PRD-BB9A5CC0AE",
@@ -5670,6 +6996,12 @@
     "notes": "Pulmonary balloon dilator"
   },
   {
+    "product_id": "PRD-BD43B26C4B",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 8 mm I.D."
+  },
+  {
     "product_id": "PRD-BD9FC1E209",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -5692,6 +7024,18 @@
     "role_code": "AIRWAY_BALLOON_DILATOR",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-BDC310E38B",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "16 Fr right angle soft PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-BDC310E38B",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "16 Fr thoracic catheter."
   },
   {
     "product_id": "PRD-BDE6A1058E",
@@ -5760,6 +7104,12 @@
     "notes": "Direct-visualization covered airway SEMS"
   },
   {
+    "product_id": "PRD-BFEE788ACB",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 6 mm I.D."
+  },
+  {
     "product_id": "PRD-C00C2E4E80",
     "role_code": "RIGID_SUCTION_CATHETER",
     "role_fit": "Exact",
@@ -5772,6 +7122,12 @@
     "notes": "Rigid bronchoscopy forceps"
   },
   {
+    "product_id": "PRD-C094578A7A",
+    "role_code": "TRACH_TUBE_EVAC",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 9 mm I.D., cuffed, with subglottic suction."
+  },
+  {
     "product_id": "PRD-C094F5AF07",
     "role_code": "EBUS_BALLOON",
     "role_fit": "Primary",
@@ -5782,6 +7138,12 @@
     "role_code": "RIGID_SUCTION_CATHETER",
     "role_fit": "Exact",
     "notes": "Rigid suction catheter"
+  },
+  {
+    "product_id": "PRD-C0EF9A3C2A",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 4 mm I.D."
   },
   {
     "product_id": "PRD-C0FA666A98",
@@ -5800,6 +7162,18 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-C1CB3E7B73",
+    "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Chest drainage accessory."
+  },
+  {
+    "product_id": "PRD-C1CBD0EB4C",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 3 mm I.D."
   },
   {
     "product_id": "PRD-C1F90B7445",
@@ -5842,6 +7216,12 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-C3CCEF8357",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 8.5 mm I.D., cuffless."
   },
   {
     "product_id": "PRD-C3FA589A20",
@@ -5910,6 +7290,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-C4F96A16A4",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 3.5 mm I.D."
+  },
+  {
+    "product_id": "PRD-C580C3FAB4",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Non-digital chest drainage unit — wet suction control with water seal."
+  },
+  {
     "product_id": "PRD-C649B4B9C5",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -5932,6 +7324,12 @@
     "role_code": "CRYO_SYSTEM_ACCESSORY",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-C68942362F",
+    "role_code": "GUIDING_DEVICE",
+    "role_fit": "Primary",
+    "notes": "Robotic bronchoscopy platform; P2 generation."
   },
   {
     "product_id": "PRD-C6BE641E4E",
@@ -6012,6 +7410,30 @@
     "notes": null
   },
   {
+    "product_id": "PRD-C8DE8E876B",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "20 Fr straight thoracic catheter."
+  },
+  {
+    "product_id": "PRD-C8DE8E876B",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "20 Fr thoracic catheter."
+  },
+  {
+    "product_id": "PRD-C8F3239E22",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 7.5 mm I.D., cuffed."
+  },
+  {
+    "product_id": "PRD-C919655C5F",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 9 mm I.D."
+  },
+  {
     "product_id": "PRD-C96F155F93",
     "role_code": "GENERIC_ULTRASOUND",
     "role_fit": "Primary",
@@ -6022,6 +7444,12 @@
     "role_code": "AIRWAY_STENT_SEMS_UNCOVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-CA18ADF836",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Neonatal silicone tracheostomy tube, 3 mm I.D."
   },
   {
     "product_id": "PRD-CA32599DA2",
@@ -6084,6 +7512,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-CC28627AEB",
+    "role_code": "VIDEO_PROCESSOR",
+    "role_fit": "Primary",
+    "notes": "Light source paired with the VP-7000 video processor."
+  },
+  {
     "product_id": "PRD-CC378D0981",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
@@ -6112,6 +7546,12 @@
     "role_code": "GUIDING_DEVICE",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-CCBB682CF9",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Non-digital chest drainage unit — dry suction regulation with dry seal one-way valve."
   },
   {
     "product_id": "PRD-CCDCC41B7E",
@@ -6196,6 +7636,12 @@
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscopy forceps/scissors"
+  },
+  {
+    "product_id": "PRD-D082801F57",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 5 mm I.D."
   },
   {
     "product_id": "PRD-D09AAAFB72",
@@ -6300,6 +7746,12 @@
     "notes": "IPC accessory"
   },
   {
+    "product_id": "PRD-D3E87A1251",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 6 mm I.D., cuffless."
+  },
+  {
     "product_id": "PRD-D41DE241C1",
     "role_code": "ENERGY_CABLE_ADAPTER",
     "role_fit": "Primary",
@@ -6366,6 +7818,30 @@
     "notes": null
   },
   {
+    "product_id": "PRD-D5DAB48B5B",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "28 Fr trocar thoracic catheter."
+  },
+  {
+    "product_id": "PRD-D5DAB48B5B",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "28 Fr thoracic catheter."
+  },
+  {
+    "product_id": "PRD-D6183226BF",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "10 Fr trocar thoracic catheter."
+  },
+  {
+    "product_id": "PRD-D6183226BF",
+    "role_code": "CHEST_TUBE_SMALL_BORE",
+    "role_fit": "Compatible",
+    "notes": "10 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-D630438171",
     "role_code": "FOREIGN_BODY_FORCEPS_FLEX",
     "role_fit": "Primary",
@@ -6376,6 +7852,12 @@
     "role_code": "AIRWAY_STENT_SILICONE_HOURGLASS",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-D64A651B55",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 7 mm I.D., cuffless, fenestrated."
   },
   {
     "product_id": "PRD-D6F54A6D11",
@@ -6394,6 +7876,12 @@
     "role_code": "RIGID_TELESCOPE",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscopy telescope"
+  },
+  {
+    "product_id": "PRD-D7472146DC",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "FUJIFILM bronchoscope."
   },
   {
     "product_id": "PRD-D76BFAD4AA",
@@ -6418,6 +7906,12 @@
     "role_code": "THORACENTESIS_KIT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-D794E57FFE",
+    "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Chest drainage accessory."
   },
   {
     "product_id": "PRD-D7A7620198",
@@ -6472,6 +7966,12 @@
     "role_code": "APC_APPLICATOR_RIGID",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-D9E0F4748B",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Non-digital chest drainage unit — dry suction control with water seal."
   },
   {
     "product_id": "PRD-DA286027ED",
@@ -6534,10 +8034,28 @@
     "notes": "Rigid bronchoscopy forceps/scissors"
   },
   {
+    "product_id": "PRD-DB99B2DA8B",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 6 mm I.D."
+  },
+  {
+    "product_id": "PRD-DBC74C33F6",
+    "role_code": "TRACH_TUBE_EVAC",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 7 mm I.D., cuffed, with subglottic suction."
+  },
+  {
     "product_id": "PRD-DBCBF4AF27",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-DC2568EC2B",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 7 mm I.D."
   },
   {
     "product_id": "PRD-DC7D6310BB",
@@ -6570,6 +8088,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-DCEE87A7A4",
+    "role_code": "TRACH_TUBE_EVAC",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 6 mm I.D., cuffed, with subglottic suction."
+  },
+  {
     "product_id": "PRD-DCF0AFE654",
     "role_code": "TBNA_NEEDLE",
     "role_fit": "Primary",
@@ -6586,6 +8110,18 @@
     "role_code": "ENDOSCOPE_CLEANING_BRUSH",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-DDB4750F44",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "12 Fr right angle soft PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-DDB4750F44",
+    "role_code": "CHEST_TUBE_SMALL_BORE",
+    "role_fit": "Compatible",
+    "notes": "12 Fr thoracic catheter."
   },
   {
     "product_id": "PRD-DE28F9BAFD",
@@ -6762,6 +8298,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-E1787EC88A",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "32 Fr straight soft PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-E1787EC88A",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "32 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-E1B889E869",
     "role_code": "AIRWAY_BALLOON_DILATOR",
     "role_fit": "Exact",
@@ -6780,6 +8328,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-E28782A64A",
+    "role_code": "GUIDING_DEVICE",
+    "role_fit": "Primary",
+    "notes": "Robotic bronchoscopy platform with tomosynthesis-based target correction."
+  },
+  {
     "product_id": "PRD-E2A3EFD37E",
     "role_code": "IPC_INSERTION_KIT",
     "role_fit": "Primary",
@@ -6792,10 +8346,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-E31D13A5D1",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 4 mm I.D."
+  },
+  {
     "product_id": "PRD-E353F2E250",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Exact",
     "notes": "Flexible bronchoscope accessory"
+  },
+  {
+    "product_id": "PRD-E354CF7061",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "2.2 mm instrument channel."
   },
   {
     "product_id": "PRD-E3605F6BFF",
@@ -6822,6 +8388,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-E3EE9B4863",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 2.5 mm I.D."
+  },
+  {
     "product_id": "PRD-E4277B23A8",
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Exact",
@@ -6846,6 +8418,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-E5458B10BA",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 7 mm I.D."
+  },
+  {
     "product_id": "PRD-E56FC05269",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -6858,6 +8436,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-E60B906F69",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "28 Fr straight soft PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-E60B906F69",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "28 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-E6A1370266",
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Exact",
@@ -6868,6 +8458,12 @@
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscope accessory"
+  },
+  {
+    "product_id": "PRD-E6DB284BB8",
+    "role_code": "ULTRASOUND_PROCESSOR",
+    "role_fit": "Primary",
+    "notes": "Higher-tier SONART ultrasonic processor."
   },
   {
     "product_id": "PRD-E6ED309802",
@@ -6892,6 +8488,18 @@
     "role_code": "TBNA_NEEDLE",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-E81D93D123",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "24 Fr straight thoracic catheter."
+  },
+  {
+    "product_id": "PRD-E81D93D123",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "24 Fr thoracic catheter."
   },
   {
     "product_id": "PRD-E8C63D6C64",
@@ -6942,6 +8550,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-E9EF90BF33",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "FUJIFILM bronchoscope."
+  },
+  {
+    "product_id": "PRD-E9F1FCA53D",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 9 mm I.D."
+  },
+  {
     "product_id": "PRD-EA133128FD",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Primary",
@@ -6984,6 +8604,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-EB21C8D83F",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 8 mm I.D."
+  },
+  {
+    "product_id": "PRD-EB229631AE",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 8 mm I.D."
+  },
+  {
     "product_id": "PRD-EB27F8D657",
     "role_code": "TALC_VIAL",
     "role_fit": "Primary",
@@ -7002,10 +8634,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-EBAEE8A314",
+    "role_code": "EBUS_SCOPE",
+    "role_fit": "Primary",
+    "notes": "2 mm instrument channel."
+  },
+  {
     "product_id": "PRD-EC1BF76FBC",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-EC36176EAA",
+    "role_code": "BIOPSY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Smooth-cup biopsy forceps for the Monarch bronchoscope."
   },
   {
     "product_id": "PRD-EC45CB0F5D",
@@ -7018,6 +8662,12 @@
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-EC722A229F",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 2.5 mm I.D."
   },
   {
     "product_id": "PRD-EC8645595D",
@@ -7074,10 +8724,34 @@
     "notes": null
   },
   {
+    "product_id": "PRD-EE32112850",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "36 Fr right angle thoracic catheter."
+  },
+  {
+    "product_id": "PRD-EE32112850",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "36 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-EEA17CA0DB",
     "role_code": "THORACOSCOPY_PROBE",
     "role_fit": "Exact",
     "notes": "Thoracoscopy surgical probe"
+  },
+  {
+    "product_id": "PRD-EEABE84165",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 8 mm I.D., cuffless."
+  },
+  {
+    "product_id": "PRD-EF46DA3FE4",
+    "role_code": "GUIDING_DEVICE",
+    "role_fit": "Primary",
+    "notes": "Single-use bronchoscope for the Galaxy platform."
   },
   {
     "product_id": "PRD-EF6C5DE6CC",
@@ -7132,6 +8806,12 @@
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-F14A305B8A",
+    "role_code": "GUIDING_DEVICE",
+    "role_fit": "Primary",
+    "notes": "Extended patient introducer mount."
   },
   {
     "product_id": "PRD-F14EF79E1A",
@@ -7260,10 +8940,22 @@
     "notes": "Rigid suction catheter"
   },
   {
+    "product_id": "PRD-F4D1B1F6F2",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 7 mm I.D."
+  },
+  {
     "product_id": "PRD-F510911B2C",
     "role_code": "ENDOSCOPIC_IRRIGATION_PUMP",
     "role_fit": "Exact",
     "notes": "Endoscopic irrigation pump"
+  },
+  {
+    "product_id": "PRD-F51977AD07",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Pediatric silicone tracheostomy tube, 5.5 mm I.D."
   },
   {
     "product_id": "PRD-F527A8F44E",
@@ -7284,10 +8976,22 @@
     "notes": "Aspira IPC insertion system"
   },
   {
+    "product_id": "PRD-F586C51621",
+    "role_code": "EBUS_SCOPE",
+    "role_fit": "Primary",
+    "notes": "2.2 mm instrument channel."
+  },
+  {
     "product_id": "PRD-F5AE18C06E",
     "role_code": "THORACENTESIS_KIT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-F5B2165AE3",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "role_fit": "Primary",
+    "notes": "Non-digital chest drainage unit — dry suction control with water seal."
   },
   {
     "product_id": "PRD-F5CEB7234A",
@@ -7374,16 +9078,58 @@
     "notes": "Current manufacturer EBUS needle configuration"
   },
   {
+    "product_id": "PRD-F833DFCC44",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "36 Fr straight soft PVC thoracic catheter."
+  },
+  {
+    "product_id": "PRD-F833DFCC44",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "36 Fr thoracic catheter."
+  },
+  {
+    "product_id": "PRD-F8573BB46D",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Neonatal silicone tracheostomy tube, 4 mm I.D."
+  },
+  {
     "product_id": "PRD-F858AF48F6",
     "role_code": "BAL_KIT",
     "role_fit": "Primary",
     "notes": null
   },
   {
+    "product_id": "PRD-F85C161CB5",
+    "role_code": "EBUS_SCOPE",
+    "role_fit": "Primary",
+    "notes": "FUJIFILM bronchoscope."
+  },
+  {
+    "product_id": "PRD-F867027C4E",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "Olympus bronchoscope."
+  },
+  {
     "product_id": "PRD-F8B8727229",
     "role_code": "CHEST_TUBE_SURGICAL",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-F8ECE4182D",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 9 mm I.D."
+  },
+  {
+    "product_id": "PRD-F935858A9E",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 6 mm I.D."
   },
   {
     "product_id": "PRD-F96AA87958",
@@ -7408,6 +9154,12 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-F9A5EB644C",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 7.5 mm I.D."
   },
   {
     "product_id": "PRD-F9A98419EA",
@@ -7452,6 +9204,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-FB075DFB2D",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "2 mm instrument channel."
+  },
+  {
     "product_id": "PRD-FB1867A930",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -7486,6 +9244,12 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-FBFA19440C",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Adult silicone tracheostomy tube, 9.5 mm I.D."
   },
   {
     "product_id": "PRD-FC1DF08B67",
@@ -7536,6 +9300,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-FD962E14DA",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "20 Fr right angle thoracic catheter."
+  },
+  {
+    "product_id": "PRD-FD962E14DA",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Compatible",
+    "notes": "20 Fr thoracic catheter."
+  },
+  {
     "product_id": "PRD-FDAC925AF1",
     "role_code": "GENERIC_AIRWAY_ADAPTER",
     "role_fit": "Primary",
@@ -7548,6 +9324,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-FDFDD69931",
+    "role_code": "TRACH_TUBE_EVAC",
+    "role_fit": "Primary",
+    "notes": "Adult PVC tracheostomy tube, 8.5 mm I.D., cuffed, with subglottic suction."
+  },
+  {
     "product_id": "PRD-FE028163EB",
     "role_code": "CHEST_TUBE_LARGE_BORE",
     "role_fit": "Primary",
@@ -7558,6 +9340,12 @@
     "role_code": "ENDOSCOPY_CART",
     "role_fit": "Compatible",
     "notes": "Platform accessory"
+  },
+  {
+    "product_id": "PRD-FE27794D4C",
+    "role_code": "FLEX_SCOPE_THERAPEUTIC",
+    "role_fit": "Primary",
+    "notes": "2.8 mm instrument channel."
   },
   {
     "product_id": "PRD-FE67FEA4F0",

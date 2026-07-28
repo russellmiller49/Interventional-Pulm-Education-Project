@@ -12,8 +12,8 @@ import type {
   LiteratureGoldExportReview,
 } from '@/features/literature/gold-set/export'
 import { literatureGoldExportSamplingContext } from '@/features/literature/gold-set/export'
-import { createSupabaseAdmin } from '@/lib/supabase/admin'
 
+import { createLiteratureAdmin } from './database-client'
 import type { LiteratureServerResult } from './types'
 
 interface GoldBatchRow {
@@ -74,6 +74,7 @@ function reviewPayload(value: unknown): LiteratureGoldReviewPayload | null {
     diseaseTags: textArray(row.diseaseTags),
     studyDesign: text(row.studyDesign),
     publicationStatus: text(row.publicationStatus),
+    categorizationFromFullText: row.categorizationFromFullText === true,
     notes: text(row.notes) ?? '',
     usedSupplementalMetadata: row.usedSupplementalMetadata === true,
     reviewSeconds:
@@ -248,7 +249,7 @@ function normalizeGoldReviewItem(value: unknown): LiteratureGoldReviewItem | nul
 export async function listLiteratureGoldSetBatches(): Promise<
   LiteratureServerResult<LiteratureGoldSetBatchSummary[]>
 > {
-  const client = createSupabaseAdmin()
+  const client = createLiteratureAdmin()
   if (!client) return { data: null, error: 'The literature database is not configured.' }
 
   const { data, error } = await client.rpc('list_literature_gold_batches_v1')
@@ -282,7 +283,7 @@ export async function loadLiteratureGoldReviewItem(
   status: 'all' | 'unresolved' | 'return_later' | 'completed' = 'unresolved',
   split: 'development' | 'test' | 'all' = 'development',
 ): Promise<LiteratureServerResult<LiteratureGoldReviewItem | null>> {
-  const client = createSupabaseAdmin()
+  const client = createLiteratureAdmin()
   if (!client) return { data: null, error: 'The literature database is not configured.' }
 
   const { data, error } = await client.rpc('get_literature_gold_review_item_v1', {
@@ -313,7 +314,7 @@ export async function saveLiteratureGoldReview(
   complete: boolean,
   user: User,
 ): Promise<LiteratureServerResult<Record<string, unknown>>> {
-  const client = createSupabaseAdmin()
+  const client = createLiteratureAdmin()
   if (!client) return { data: null, error: 'The literature database is not configured.' }
   const { data, error } = await client.rpc('save_literature_gold_review_v1', {
     p_item_id: itemId,
@@ -332,7 +333,7 @@ export async function updateLiteratureGoldReviewItem(
   action: LiteratureGoldSetItemAction,
   user: User,
 ): Promise<LiteratureServerResult<Record<string, unknown>>> {
-  const client = createSupabaseAdmin()
+  const client = createLiteratureAdmin()
   if (!client) return { data: null, error: 'The literature database is not configured.' }
   const { data, error } = await client.rpc('update_literature_gold_item_v1', {
     p_item_id: itemId,
@@ -349,7 +350,7 @@ export async function freezeLiteratureGoldSetBatch(
   batchId: string,
   user: User,
 ): Promise<LiteratureServerResult<Record<string, unknown>>> {
-  const client = createSupabaseAdmin()
+  const client = createLiteratureAdmin()
   if (!client) return { data: null, error: 'The literature database is not configured.' }
   const { data, error } = await client.rpc('freeze_literature_gold_batch_v1', {
     p_batch_id: batchId,
@@ -384,6 +385,7 @@ function exportReview(
     diseaseTags: textArray(row.disease_tags),
     studyDesign: text(row.study_design),
     publicationStatus: text(row.publication_status),
+    categorizationFromFullText: row.categorization_from_full_text === true,
     notes: text(row.notes) ?? '',
     usedSupplementalMetadata: row.used_supplemental_metadata === true,
     reviewSeconds: Number(row.review_seconds) || 0,
@@ -399,7 +401,7 @@ export async function exportLiteratureGoldSet(
   includeHistory: boolean,
   clientOverride?: SupabaseClient,
 ): Promise<LiteratureServerResult<LiteratureGoldExport>> {
-  const client = clientOverride ?? createSupabaseAdmin()
+  const client = clientOverride ?? createLiteratureAdmin()
   if (!client) return { data: null, error: 'The literature database is not configured.' }
 
   const { data: batchData, error: batchError } = await client

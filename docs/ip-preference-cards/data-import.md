@@ -61,3 +61,65 @@ The current supplied workbook has 80 non-null GTIN values, and all 80 are alread
 The coverage command runs before seed validation and writes `coverage-report.json`. In the current catalog, 45 of 98 roles have no selectable product. Required zero-selectable slots in the golden source procedures are explicitly resolved by reviewed demo-only stand-ins; every stand-in and reason is listed in `data/ip-preference-cards/seed/demo-stand-ins.json`.
 
 The JSON output is the runtime source for the prototype. The additive database migration provides normalized import tables for a later controlled database load; v0.1 does not perform an automatic destructive catalog replacement.
+
+## Catalog additions and GUDID confirmation (v0.2)
+
+The workbook remains the source of truth for everything it covers. Two extra inputs sit
+alongside it, each with its own generator, and the full pipeline is idempotent — running it
+twice with unchanged inputs leaves `git status` clean.
+
+```bash
+npm run ip-cards:gudid          # AccessGUDID release  -> generated/gudid-index.json
+npm run ip-cards:additions      # gudid-index          -> seed/catalog-additions.json
+npm run ip-cards:import         # workbook + additions -> generated/*.json
+npm run ip-cards:coverage
+npm run ip-cards:scenarios      # -> generated/scenarios.json, modifier-definitions.json
+npm run ip-cards:gudid-confirm  # -> generated/gudid-confirmations.json
+npm run ip-cards:validate-data
+```
+
+### AccessGUDID index
+
+`scripts/ip-preference-cards/build-gudid-index.ts` streams the ~5.6 GB AccessGUDID
+delimited full release (not committed; expected at
+`Preference_card_module/AccessGUDID_Delimited_Full_Release_<date>`) and keeps only what this
+catalog needs: the complete listing for thoracic/airway-specific labelers, plus any device
+whose catalog number already appears in our product list. Broad-line suppliers such as
+Cardinal Health would otherwise contribute hundreds of thousands of unrelated records.
+
+### Curated catalog additions
+
+`seed/catalog-additions.json` carries products the workbook does not, currently the
+Getinge/Atrium thoracic drainage line. Identity, DI/GTIN, distribution status, sterility, and
+single-use come from GUDID; product family naming, part numbers, and configuration come from
+the Getinge US product pages (SRC047). Only devices GUDID reports as in commercial
+distribution are emitted. `apply-catalog-additions.ts` merges them at import time and
+validates them against the workbook's own vocabularies — unknown role codes or source ids,
+or a colliding product id, fail the import.
+
+### Brand-level discovery
+
+Some relevant lines sit inside labelers far too large to index wholesale. `build-gudid-index.ts`
+therefore also matches on GUDID `brandName`: the Pleur-evac line inside Teleflex (~29,000
+devices) and the Portex range inside ICU Medical. A brand match is evaluated before the
+company match, so a brand reaches the index even when its labeler is not otherwise a catalog
+manufacturer. Bivona is deliberately not matched — it alone lists ~53,000 devices.
+
+**Known limitation.** Portex GUDID records carry no `deviceDescription` and no
+`catalogNumber`, only a bare `versionModelNumber`. They are indexed so the confirmation
+machinery covers them, but no Portex products have been added: identifying them needs an
+ordering list that maps product code to model number, and tracheostomy tube dimensions are
+too consequential to infer from a mangled PDF table.
+
+### Confirmation queue
+
+`gudid-confirm.ts` matches catalog products against the index and writes a review queue. It
+never mutates product records: AccessGUDID's use policy (SRC046) states a GUDID record is not
+by itself evidence of current orderability, and verification changes stay a human decision.
+Matches are graded — `manufacturer_and_catalog_number` is strong, `catalog_number_only` is
+reported at lower strength because a shared catalog number across vendors is weak evidence.
+
+The explorer surfaces one derived signal from this queue: a **Not currently distributed**
+badge. A product is flagged only when _every_ strong match says the device is out of
+commercial distribution, so a product that is discontinued in one package configuration but
+still active in another is not mislabeled.

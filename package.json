@@ -35,6 +35,11 @@
     "ip-cards:seed": "tsx scripts/ip-preference-cards/validate-seed.ts",
     "literature:manifest": "tsx scripts/literature/generate-manifest.ts",
     "literature:validate": "tsx scripts/literature/validate-nbib.ts",
+    "literature:local:prepare": "tsx scripts/literature/local-supabase.ts prepare",
+    "literature:local:start": "tsx scripts/literature/local-supabase.ts start",
+    "literature:local:status": "tsx scripts/literature/local-supabase.ts status",
+    "literature:local:reset": "tsx scripts/literature/local-supabase.ts reset",
+    "literature:local:stop": "tsx scripts/literature/local-supabase.ts stop",
     "literature:import": "tsx scripts/literature/import-nbib.ts",
     "literature:seed-taxonomy": "tsx scripts/literature/seed-taxonomy.ts",
     "literature:suggest-topics": "tsx scripts/literature/run-rule-suggestions.ts",
@@ -56,7 +61,12 @@
     "storybook:build": "storybook build",
     "deploy:cloud": "npm run build && npm run start:prod",
     "deploy:static": "npm run build:static",
-    "dump:mv-waveforms": "esbuild scripts/critical-care/dump-mv-waveforms.mts --bundle --platform=node --format=cjs --log-level=error --outfile=node_modules/.cache/mv-console/dump.cjs && node node_modules/.cache/mv-console/dump.cjs"
+    "dump:ecmo-signals": "esbuild scripts/critical-care/dump-ecmo-signals.mts --bundle --platform=node --format=cjs --log-level=error --outfile=node_modules/.cache/ecmo/dump.cjs && node node_modules/.cache/ecmo/dump.cjs",
+    "dump:mv-waveforms": "esbuild scripts/critical-care/dump-mv-waveforms.mts --bundle --platform=node --format=cjs --log-level=error --outfile=node_modules/.cache/mv-console/dump.cjs && node node_modules/.cache/mv-console/dump.cjs",
+    "ip-cards:scenarios": "tsx scripts/ip-preference-cards/generate-scenarios.ts",
+    "ip-cards:gudid": "tsx scripts/ip-preference-cards/build-gudid-index.ts",
+    "ip-cards:additions": "tsx scripts/ip-preference-cards/build-catalog-additions.ts",
+    "ip-cards:gudid-confirm": "tsx scripts/ip-preference-cards/gudid-confirm.ts"
   },
   "engines": {
     "node": ">=20.19.0"

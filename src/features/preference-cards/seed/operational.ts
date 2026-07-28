@@ -7,7 +7,6 @@ import type {
   RecipeSlot,
   Requiredness,
   RescueModule,
-  ScenarioDefinition,
   SetupZone,
   TypedCompatibilityRule,
   VerificationState,
@@ -1230,25 +1229,9 @@ export const operationalModifiers: ModifierDefinition[] = [
 
 export const rescueModules: RescueModule[] = [bleedingRescueModule]
 
+// The deliberately-failing APC fixture rule now lives in __fixtures__/test-compatibility-rules.ts
+// so a real card is never blocked just to exercise a test path.
 export const typedCompatibilityRules: TypedCompatibilityRule[] = [
-  {
-    id: 'RULE-APC-PLATFORM-FAMILY',
-    sourceRoleCode: 'APC_PROBE_FLEX',
-    targetRoleCode: 'GENERIC_ENERGY_PLATFORM',
-    sourceAttribute: 'system_family',
-    targetAttribute: 'system_family',
-    operator: 'eq',
-    expectedValue: null,
-    unit: null,
-    severity: 'blocking',
-    message:
-      'The intentionally incompatible APC probe fixture does not match the demo APC platform family.',
-    missingValueMessage:
-      'APC platform/probe compatibility cannot be established from the available structured data.',
-    active: true,
-    modifierCodes: ['APC'],
-    evidenceSourceId: null,
-  },
   {
     id: 'RULE-BALLOON-WORKING-CHANNEL',
     sourceRoleCode: 'AIRWAY_BALLOON_DILATOR',
@@ -1266,50 +1249,5 @@ export const typedCompatibilityRules: TypedCompatibilityRule[] = [
     active: true,
     modifierCodes: ['BALLOON_DILATION'],
     evidenceSourceId: null,
-  },
-]
-
-export const scenarioDefinitions: ScenarioDefinition[] = [
-  {
-    id: 'ebus-rose-molecular',
-    title: 'EBUS-TBNA + ROSE + molecular testing',
-    shortDescription: 'EBUS setup with local cytology readiness and molecular-specimen workflow.',
-    recipeVersionId: 'recipe-ebus-tbna-v0-1',
-    sourceProcedureCode: 'EBUS_TBNA',
-    defaultModifierCodes: ['ROSE', 'SPEC_MOLECULAR'],
-    requiredRoleMappingPercentage: 71.4,
-    governanceState: 'draft',
-    owner: null,
-  },
-  {
-    id: 'central-airway-obstruction',
-    title: 'Central airway obstruction / tumor debulking',
-    shortDescription:
-      'Rigid airway, APC, dilation, stent, jet ventilation, fluoroscopy, and rescue readiness.',
-    recipeVersionId: 'recipe-central-airway-obstruction-v0-1',
-    sourceProcedureCode: 'THERAPEUTIC_BRONCH',
-    defaultModifierCodes: [
-      'RIGID_AIRWAY',
-      'APC',
-      'BALLOON_DILATION',
-      'STENT_PLACE',
-      'JET_VENT',
-      'FLUOROSCOPY',
-      'HIGH_BLEED_RISK',
-    ],
-    requiredRoleMappingPercentage: 66.7,
-    governanceState: 'draft',
-    owner: null,
-  },
-  {
-    id: 'chest-tube',
-    title: 'Chest tube insertion',
-    shortDescription: 'Small- or large-bore technique with conventional or digital drainage.',
-    recipeVersionId: 'recipe-chest-tube-v0-1',
-    sourceProcedureCode: 'CHEST_TUBE',
-    defaultModifierCodes: ['TECH_CHEST_TUBE_SMALL_BORE', 'DIGITAL_DRAINAGE'],
-    requiredRoleMappingPercentage: 0,
-    governanceState: 'draft',
-    owner: null,
   },
 ]

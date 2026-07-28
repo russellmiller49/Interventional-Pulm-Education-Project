@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/cn'
 
+import { isCustomItemId } from '../domain/custom-item'
 import {
   proceduralPhases,
   setupZones,
@@ -43,6 +44,9 @@ function stateTone(item: ResolvedCardItem) {
 function RequirementLine({ item }: { item: ResolvedCardItem }) {
   const t = useTranslations('preferenceCards')
   const product = item.selectedItemSnapshot?.catalogProduct
+  const unverified = item.selectedItemSnapshot !== null && item.verificationState === 'unverified'
+  // A line the author typed rather than chose: no manufacturer document behind it at all.
+  const isCustom = isCustomItemId(item.selectedItemSnapshot?.id)
   return (
     <article
       className={cn('break-inside-avoid rounded-xl border px-4 py-3 shadow-sm', stateTone(item))}
@@ -80,10 +84,28 @@ function RequirementLine({ item }: { item: ResolvedCardItem }) {
           <div className="mt-3 rounded-lg bg-muted/45 px-3 py-2">
             <p className="text-sm font-medium text-foreground">
               {item.selectedItemSnapshot?.localDescription ?? t('unresolvedLocalItem')}
+              {/*
+                A dagger on every line that has not been confirmed against a manufacturer
+                document, explained once in the footnote. The card is carried into a room; a
+                reader has to be able to tell at a glance which lines still need checking.
+              */}
+              {unverified ? (
+                <span
+                  aria-label={t('printNotes.unverifiedMarkLabel')}
+                  className="ml-1 font-bold text-foreground"
+                >
+                  †
+                </span>
+              ) : null}
             </p>
             {product ? (
               <p className="mt-0.5 text-xs text-muted-foreground">
                 {[product.manufacturer, product.catalogNumber].filter(Boolean).join(' · ')}
+              </p>
+            ) : null}
+            {isCustom ? (
+              <p className="mt-0.5 text-xs font-medium italic text-muted-foreground">
+                {t('printNotes.customItemNote')}
               </p>
             ) : null}
             {item.selectedItemSnapshot?.localItemNumber ? (
@@ -317,6 +339,13 @@ export function PrintCardView({
   mode: 'spatial' | 'chronological'
 }) {
   const t = useTranslations('preferenceCards')
+  const unverifiedCount = card.items.filter(
+    (item) => item.selectedItemSnapshot !== null && item.verificationState === 'unverified',
+  ).length
+  const customCount = card.items.filter((item) =>
+    isCustomItemId(item.selectedItemSnapshot?.id),
+  ).length
+
   return (
     <div>
       <div className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
@@ -328,6 +357,20 @@ export function PrintCardView({
         {mode === 'spatial' ? t('tabs.spatial') : t('tabs.chronological')}
       </div>
       {mode === 'spatial' ? <SpatialCardView card={card} /> : <ChronologicalCardView card={card} />}
+
+      {/* Prints on every page break, so the dagger is never orphaned from its meaning. */}
+      <footer className="mt-6 break-inside-avoid border-t border-border pt-3 text-xs leading-5 text-muted-foreground">
+        {unverifiedCount > 0 ? (
+          <p>
+            <span className="font-bold text-foreground">†</span>{' '}
+            {t('printNotes.unverifiedFootnote', { count: unverifiedCount })}
+          </p>
+        ) : null}
+        {customCount > 0 ? (
+          <p className="mt-1">{t('printNotes.customFootnote', { count: customCount })}</p>
+        ) : null}
+        <p className="mt-1">{t('disclaimer')}</p>
+      </footer>
     </div>
   )
 }

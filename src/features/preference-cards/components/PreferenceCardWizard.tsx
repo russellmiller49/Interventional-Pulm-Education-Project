@@ -27,7 +27,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { cn } from '@/lib/cn'
-import { generatePreferenceCardAction } from '@/app/[locale]/preference-cards/new/actions'
+import { saveUserCardAction } from '@/app/[locale]/preference-cards/new/actions'
 
 import { resolveCard } from '../domain/resolve-card'
 import type {
@@ -41,6 +41,14 @@ import type {
 import { PreferenceCardTabs } from './PreferenceCardViews'
 import { PrototypeBanner } from './PrototypeBanner'
 import { ReadinessBadge } from './ReadinessBadge'
+import { CatalogOptionPicker } from './CatalogOptionPicker'
+import { catalogPickItemId, withCatalogPicks, type CatalogPick } from '../domain/catalog-pick'
+import { withFamilyPicks, type FamilyPick } from '../domain/family-pick'
+import { customItemId, withCustomItems, type CustomItem } from '../domain/custom-item'
+import { CustomItemForm } from './CustomItemForm'
+import { familyPickId } from '../domain/size-at-procedure'
+import { equipmentSetIdFromItemId, withEquipmentSets } from '../domain/equipment-set'
+import { useEquipmentSets } from '../hooks/useEquipmentSets'
 
 export interface PreferenceCardScenarioBundle {
   definition: ScenarioDefinition
@@ -49,7 +57,13 @@ export interface PreferenceCardScenarioBundle {
 }
 
 interface PreferenceCardWizardProps {
-  bundles: PreferenceCardScenarioBundle[]
+  /** Lightweight summaries for the procedure picker; no build context attached. */
+  scenarios: ScenarioDefinition[]
+  /**
+   * The one scenario the page resolved server-side. Only this context is serialized to the
+   * client — building all of them would ship megabytes per page load.
+   */
+  bundle?: PreferenceCardScenarioBundle
   initialScenarioId?: string
 }
 
@@ -80,12 +94,11 @@ interface BuilderLocalOption {
 }
 
 function isNormalBuilderOption(item: HospitalItem): boolean {
-  if (!item.active || item.verificationState === 'hidden') return false
-  if (!item.catalogProduct) return true
-  return (
-    item.catalogProduct.visibilityState === 'prototype_visible' &&
-    ['locally_approved', 'prototype_visible'].includes(item.verificationState)
-  )
+  // Unverified products are selectable and badged rather than withheld, matching the
+  // explorer and the resolver. Only an explicitly hidden item is kept out of the list —
+  // otherwise a product added from the catalog would resolve the requirement while still
+  // showing as "Unresolved" in the dropdown.
+  return item.active && item.verificationState !== 'hidden'
 }
 
 function builderOptionText({ item, option }: BuilderLocalOption): string {
@@ -100,16 +113,21 @@ function builderOptionText({ item, option }: BuilderLocalOption): string {
     .join(' · ')
 }
 
-export function PreferenceCardWizard({ bundles, initialScenarioId }: PreferenceCardWizardProps) {
+const emptyProductIds: Set<string> = new Set()
+const emptyFamilyKeys: Set<string> = new Set()
+
+export function PreferenceCardWizard({
+  scenarios,
+  bundle,
+  initialScenarioId,
+}: PreferenceCardWizardProps) {
   const t = useTranslations('preferenceCards')
   const locale = useLocale()
   const router = useRouter()
-  const initialBundle =
-    bundles.find((bundle) => bundle.definition.id === initialScenarioId) ?? bundles[0]
-  const [step, setStep] = useState(initialScenarioId ? 1 : 0)
-  const [scenarioId, setScenarioId] = useState(initialBundle?.definition.id ?? '')
+  const [step, setStep] = useState(bundle ? 1 : 0)
+  const scenarioId = bundle?.definition.id ?? initialScenarioId ?? ''
   const [modifierCodes, setModifierCodes] = useState<string[]>(
-    initialBundle?.definition.defaultModifierCodes ?? [],
+    bundle?.definition.defaultModifierCodes ?? [],
   )
   const [conditionalStates, setConditionalStates] = useState<Record<string, ConditionalState>>({})
   const [selectedHospitalItemIds, setSelectedHospitalItemIds] = useState<
@@ -117,10 +135,23 @@ export function PreferenceCardWizard({ bundles, initialScenarioId }: PreferenceC
   >({})
   const [localOptionSearches, setLocalOptionSearches] = useState<Record<string, string>>({})
   const [waiverDrafts, setWaiverDrafts] = useState<Record<string, string>>({})
+  // Products promoted out of the catalog into this card's eligible local options.
+  const [catalogPicks, setCatalogPicks] = useState<CatalogPick[]>([])
+  // Whole product lines, for requirements whose size is decided during the procedure.
+  const [familyPicks, setFamilyPicks] = useState<FamilyPick[]>([])
+  // Free-text lines, for the requirements with nothing catalogued.
+  const [customItems, setCustomItems] = useState<CustomItem[]>([])
+  // Saved equipment sets are offered on every requirement they cover.
+  const { sets: equipmentSets } = useEquipmentSets()
+  const [setRoleBySetId, setSetRoleBySetId] = useState<Record<string, string>>({})
   const [isGenerating, startGenerating] = useTransition()
+  const [title, setTitle] = useState(bundle?.definition.title ?? '')
+  const [physicianName, setPhysicianName] = useState('')
+  const [status, setStatus] = useState<'draft' | 'final'>('draft')
+  const [saveError, setSaveError] = useState<string | null>(null)
+  // Preview only. The server stamps the real value at save time, and the snapshot hash
+  // excludes it, so a frozen constant here keeps the preview hash stable while typing.
   const generatedAt = '2026-07-25T12:00:00.000Z'
-  const bundle =
-    bundles.find((candidate) => candidate.definition.id === scenarioId) ?? initialBundle
   const waivers = useMemo(
     () =>
       Object.fromEntries(
@@ -130,11 +161,23 @@ export function PreferenceCardWizard({ bundles, initialScenarioId }: PreferenceC
       ),
     [waiverDrafts],
   )
+  const resolveContext = useMemo(() => {
+    if (!bundle) return null
+    return withEquipmentSets(
+      withCustomItems(
+        withFamilyPicks(withCatalogPicks(bundle.context, catalogPicks), familyPicks),
+        customItems,
+      ),
+      equipmentSets,
+      setRoleBySetId,
+    )
+  }, [bundle, catalogPicks, familyPicks, customItems, equipmentSets, setRoleBySetId])
+
   const localOptionsByRole = useMemo(() => {
     const result = new Map<string, BuilderLocalOption[]>()
-    if (!bundle) return result
-    const hospitalItemById = new Map(bundle.context.hospitalItems.map((item) => [item.id, item]))
-    for (const option of bundle.context.hospitalRoleOptions) {
+    if (!resolveContext) return result
+    const hospitalItemById = new Map(resolveContext.hospitalItems.map((item) => [item.id, item]))
+    for (const option of resolveContext.hospitalRoleOptions) {
       const item = hospitalItemById.get(option.hospitalItemId)
       if (!option.active || !item || !isNormalBuilderOption(item)) continue
       const existing = result.get(option.roleCode) ?? []
@@ -149,10 +192,10 @@ export function PreferenceCardWizard({ bundles, initialScenarioId }: PreferenceC
       )
     }
     return result
-  }, [bundle])
+  }, [resolveContext])
 
   const card = useMemo(() => {
-    if (!bundle) return null
+    if (!bundle || !resolveContext) return null
     return resolveCard(
       {
         organizationId: bundle.context.hospitalItems[0]?.organizationId ?? 'demo',
@@ -165,25 +208,19 @@ export function PreferenceCardWizard({ bundles, initialScenarioId }: PreferenceC
         selectedHospitalItemIds,
         waivers,
       },
-      bundle.context,
+      resolveContext,
     )
-  }, [bundle, conditionalStates, modifierCodes, selectedHospitalItemIds, waivers])
+  }, [bundle, resolveContext, conditionalStates, modifierCodes, selectedHospitalItemIds, waivers])
 
-  if (!bundle || !card) return null
+  const availableModifiers = bundle
+    ? bundle.context.modifiers.filter((modifier) =>
+        bundle.availableModifierCodes.includes(modifier.code),
+      )
+    : []
 
-  const availableModifiers = bundle.context.modifiers.filter((modifier) =>
-    bundle.availableModifierCodes.includes(modifier.code),
-  )
-
+  // Choosing a procedure reloads the page for that scenario so only its context is sent.
   const selectScenario = (nextId: string) => {
-    const next = bundles.find((candidate) => candidate.definition.id === nextId)
-    if (!next) return
-    setScenarioId(nextId)
-    setModifierCodes([...next.definition.defaultModifierCodes])
-    setConditionalStates({})
-    setSelectedHospitalItemIds({})
-    setLocalOptionSearches({})
-    setWaiverDrafts({})
+    router.push(`/${locale}/preference-cards/new?scenario=${encodeURIComponent(nextId)}` as Route)
   }
 
   const toggleModifier = (code: string) => {
@@ -194,30 +231,96 @@ export function PreferenceCardWizard({ bundles, initialScenarioId }: PreferenceC
     )
   }
 
-  const generateSnapshot = () => {
-    const query = new URLSearchParams()
-    query.set('modifiers', modifierCodes.join(','))
-    query.set('generatedAt', generatedAt)
-    if (Object.keys(conditionalStates).length > 0) {
-      query.set('conditions', JSON.stringify(conditionalStates))
+  const pickedProductIdsByRole = useMemo(() => {
+    const result = new Map<string, Set<string>>()
+    for (const pick of catalogPicks) {
+      const existing = result.get(pick.roleCode) ?? new Set<string>()
+      existing.add(pick.productId)
+      result.set(pick.roleCode, existing)
     }
-    if (Object.keys(selectedHospitalItemIds).length > 0) {
-      query.set('items', JSON.stringify(selectedHospitalItemIds))
+    return result
+  }, [catalogPicks])
+
+  const pickedFamilyKeysByRole = useMemo(() => {
+    const result = new Map<string, Set<string>>()
+    for (const pick of familyPicks) {
+      const existing = result.get(pick.roleCode) ?? new Set<string>()
+      existing.add(pick.familyKey)
+      result.set(pick.roleCode, existing)
     }
-    if (Object.keys(waivers).length > 0) {
-      query.set('waivers', JSON.stringify(waivers))
-    }
-    const demoTarget = `/${locale}/preference-cards/demo-${bundle.definition.id}-${card.snapshotHash.slice(
-      0,
-      12,
-    )}?${query.toString()}`
+    return result
+  }, [familyPicks])
+
+  /** Promote a catalog product into this requirement's options and select it. */
+  const addCatalogPick = (slotId: string, pick: CatalogPick) => {
+    setCatalogPicks((current) =>
+      current.some((candidate) => candidate.productId === pick.productId)
+        ? current
+        : [...current, pick],
+    )
+    setSelectedHospitalItemIds((current) => ({
+      ...current,
+      [slotId]: catalogPickItemId(pick.productId),
+    }))
+  }
+
+  /** Add a line the catalog does not have, and select it. */
+  const addCustomItem = (slotId: string, item: CustomItem) => {
+    setCustomItems((current) => [...current, item])
+    setSelectedHospitalItemIds((current) => ({
+      ...current,
+      [slotId]: customItemId(item.id),
+    }))
+  }
+
+  /** Promote a whole product line, leaving the size to the procedure. */
+  const addFamilyPick = (slotId: string, pick: FamilyPick) => {
+    setFamilyPicks((current) =>
+      current.some((candidate) => candidate.familyKey === pick.familyKey)
+        ? current
+        : [...current, pick],
+    )
+    setSelectedHospitalItemIds((current) => ({
+      ...current,
+      [slotId]: familyPickId(pick.familyKey),
+    }))
+  }
+
+  const saveCard = () => {
+    if (!bundle || !card) return
+    setSaveError(null)
     startGenerating(async () => {
-      const result = await generatePreferenceCardAction({
+      const result = await saveUserCardAction({
+        title: title.trim() || bundle.definition.title,
+        physicianName: physicianName.trim() || null,
+        status,
         scenarioId: bundle.definition.id,
+        catalogPicks: catalogPicks.map((pick) => ({
+          productId: pick.productId,
+          roleCode: pick.roleCode,
+        })),
+        familyPicks: familyPicks.map((pick) => ({
+          familyKey: pick.familyKey,
+          roleCode: pick.roleCode,
+        })),
+        customItems,
+        equipmentSets: equipmentSets
+          .filter((set) => setRoleBySetId[set.id])
+          .map((set) => ({
+            id: set.id,
+            name: set.name,
+            description: set.description,
+            selectedRoleCode: setRoleBySetId[set.id],
+            additionalCoveredRoles: set.additionalCoveredRoles,
+            members: set.members.map((member) => ({
+              productId: member.productId,
+              roleCode: member.roleCode,
+            })),
+          })),
         input: {
-          organizationId: bundle.context.hospitalItems[0]?.organizationId ?? 'demo',
-          siteId: bundle.context.hospitalItems[0]?.siteId ?? 'demo',
-          locationId: bundle.context.hospitalItems[0]?.locationId ?? 'demo',
+          organizationId: bundle.context.hospitalItems[0]?.organizationId ?? 'personal',
+          siteId: bundle.context.hospitalItems[0]?.siteId ?? 'personal',
+          locationId: bundle.context.hospitalItems[0]?.locationId ?? 'personal',
           recipeVersionId: bundle.context.recipe.id,
           modifierCodes,
           variables: { generated_at: generatedAt },
@@ -226,11 +329,13 @@ export function PreferenceCardWizard({ bundles, initialScenarioId }: PreferenceC
           waivers,
         },
       })
-      router.push(
-        result.ok && result.cardId
-          ? (`/${locale}/preference-cards/${result.cardId}` as Route)
-          : (demoTarget as Route),
-      )
+      // A failed save says so. It used to fall through to a URL that encoded the whole card,
+      // which looked like success and lost the card as soon as the link was gone.
+      if (!result.ok || !result.cardId) {
+        setSaveError(result.error ?? t('saveFailed'))
+        return
+      }
+      router.push(`/${locale}/preference-cards/${result.cardId}` as Route)
     })
   }
 
@@ -306,19 +411,21 @@ export function PreferenceCardWizard({ bundles, initialScenarioId }: PreferenceC
               )}
             </p>
           </div>
-          <ReadinessBadge
-            state={card.readinessState}
-            label={t(`readiness.${card.readinessState}`)}
-          />
+          {card ? (
+            <ReadinessBadge
+              state={card.readinessState}
+              label={t(`readiness.${card.readinessState}`)}
+            />
+          ) : null}
         </div>
 
         {step === 0 ? (
           <div className="grid gap-4 lg:grid-cols-3">
-            {bundles.map((candidate) => {
-              const selected = candidate.definition.id === scenarioId
+            {scenarios.map((definition) => {
+              const selected = definition.id === scenarioId
               return (
                 <Card
-                  key={candidate.definition.id}
+                  key={definition.id}
                   className={cn(
                     'h-full',
                     selected && 'border-2 border-primary shadow-lg shadow-primary/10',
@@ -327,32 +434,32 @@ export function PreferenceCardWizard({ bundles, initialScenarioId }: PreferenceC
                   <CardHeader>
                     <div className="flex items-start justify-between gap-3">
                       <Badge variant={selected ? 'default' : 'outline'}>
-                        {selected ? t('selected') : candidate.definition.governanceState}
+                        {selected ? t('selected') : definition.governanceState}
                       </Badge>
                       <span className="text-xs font-semibold text-muted-foreground">
                         {t('mapped', {
-                          percent: candidate.definition.requiredRoleMappingPercentage,
+                          percent: definition.requiredRoleMappingPercentage,
                         })}
                       </span>
                     </div>
-                    <CardTitle className="mt-2">{candidate.definition.title}</CardTitle>
-                    <CardDescription>{candidate.definition.shortDescription}</CardDescription>
+                    <CardTitle className="mt-2">{definition.title}</CardTitle>
+                    <CardDescription>{definition.shortDescription}</CardDescription>
                   </CardHeader>
                   <CardContent className="text-sm text-muted-foreground">
                     <p>
                       <span className="font-semibold text-foreground">{t('sourceRecipe')}:</span>{' '}
-                      {candidate.definition.sourceProcedureCode}
+                      {definition.sourceProcedureCode}
                     </p>
                     <p>
                       <span className="font-semibold text-foreground">{t('owner')}:</span>{' '}
-                      {candidate.definition.owner ?? t('ownerNotAssigned')}
+                      {definition.owner ?? t('ownerNotAssigned')}
                     </p>
                   </CardContent>
                   <CardFooter>
                     <Button
                       type="button"
                       variant={selected ? 'default' : 'outline'}
-                      onClick={() => selectScenario(candidate.definition.id)}
+                      onClick={() => selectScenario(definition.id)}
                     >
                       {selected ? t('selected') : t('select')}
                     </Button>
@@ -363,7 +470,7 @@ export function PreferenceCardWizard({ bundles, initialScenarioId }: PreferenceC
           </div>
         ) : null}
 
-        {step === 1 ? (
+        {step === 1 && bundle && card ? (
           <div className="space-y-8">
             {modifierGroupOrder.map((group) => {
               const modifiers = availableModifiers.filter(
@@ -438,164 +545,66 @@ export function PreferenceCardWizard({ bundles, initialScenarioId }: PreferenceC
           </div>
         ) : null}
 
-        {step === 2 ? (
+        {step === 2 && bundle && card ? (
           <div className="space-y-5">
-            <div className="overflow-x-auto rounded-2xl border border-border">
-              <table className="w-full min-w-[1450px] border-collapse text-left text-sm">
-                <thead className="sticky top-0 bg-muted/95 text-xs uppercase tracking-wider text-muted-foreground">
-                  <tr>
-                    {[
-                      'requirement',
-                      'requiredness',
-                      'why',
-                      'localItem',
-                      'manufacturerCatalog',
-                      'localNumber',
-                      'quantity',
-                      'zone',
-                      'phase',
-                      'openHold',
-                      'verification',
-                      'compatibility',
-                      'resolution',
-                    ].map((column) => (
-                      <th key={column} scope="col" className="px-3 py-3 font-bold">
-                        {t(`columns.${column}`)}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {card.items.map((item) => {
-                    const allOptions = localOptionsByRole.get(item.roleCode) ?? []
-                    const search = localOptionSearches[item.id]?.trim().toLocaleLowerCase() ?? ''
-                    const matchingOptions = search
-                      ? allOptions.filter((candidate) =>
-                          builderOptionText(candidate).toLocaleLowerCase().includes(search),
-                        )
-                      : allOptions
-                    const selectedOption = allOptions.find(
-                      (candidate) => candidate.item.id === item.selectedHospitalItemId,
+            {/*
+              One card per requirement rather than a 13-column table. The table needed
+              1,450px before it could be read at all, so on anything narrower than a desktop
+              the selection controls sat off-screen behind a horizontal scrollbar.
+            */}
+            <ul className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+              {card.items.map((item) => {
+                const allOptions = localOptionsByRole.get(item.roleCode) ?? []
+                const search = localOptionSearches[item.id]?.trim().toLocaleLowerCase() ?? ''
+                const matchingOptions = search
+                  ? allOptions.filter((candidate) =>
+                      builderOptionText(candidate).toLocaleLowerCase().includes(search),
                     )
-                    const visibleOptions =
-                      selectedOption &&
-                      !matchingOptions.some(
-                        (candidate) => candidate.item.id === selectedOption.item.id,
-                      )
-                        ? [selectedOption, ...matchingOptions]
-                        : matchingOptions
-                    return (
-                      <tr
-                        key={item.id}
-                        className={cn(
-                          'align-top',
-                          item.resolutionState === 'blocking' && 'bg-red-50/60 dark:bg-red-950/10',
-                        )}
-                      >
-                        <td className="max-w-64 px-3 py-3">
-                          <p className="font-semibold text-foreground">{item.label}</p>
-                          <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                  : allOptions
+                const selectedOption = allOptions.find(
+                  (candidate) => candidate.item.id === item.selectedHospitalItemId,
+                )
+                const visibleOptions =
+                  selectedOption &&
+                  !matchingOptions.some((candidate) => candidate.item.id === selectedOption.item.id)
+                    ? [selectedOption, ...matchingOptions]
+                    : matchingOptions
+                const facts: [string, string][] = [
+                  [t('columns.quantity'), item.quantityDisplay],
+                  [t('columns.zone'), t(`spatialZones.${item.setupZone}`)],
+                  [t('columns.phase'), t(`phases.${item.proceduralPhase}`)],
+                  [t('columns.openHold'), humanize(item.openHoldStatus)],
+                  [t('columns.verification'), humanize(item.verificationState)],
+                  [t('columns.compatibility'), humanize(item.compatibilityState)],
+                ]
+                const sourceLine =
+                  [
+                    item.selectedItemSnapshot?.catalogProduct?.manufacturer,
+                    item.selectedItemSnapshot?.catalogProduct?.catalogNumber,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ') || null
+
+                return (
+                  <li key={item.id}>
+                    <article
+                      className={cn(
+                        'flex h-full flex-col rounded-2xl border border-border bg-background p-4 shadow-sm',
+                        item.resolutionState === 'blocking' &&
+                          'border-red-300 bg-red-50/60 dark:border-red-900 dark:bg-red-950/10',
+                      )}
+                    >
+                      <header className="flex flex-wrap items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h3 className="font-semibold text-foreground">{item.label}</h3>
+                          <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
                             {item.roleCode}
                           </p>
-                          {item.dependencyRule ? (
-                            <div className="mt-2">
-                              <label htmlFor={`conditional-${item.id}`} className="sr-only">
-                                {t('conditional.label')} — {item.label}
-                              </label>
-                              <select
-                                id={`conditional-${item.id}`}
-                                value={item.conditionalState ?? 'undecided'}
-                                onChange={(event) =>
-                                  setConditionalStates((current) => ({
-                                    ...current,
-                                    [item.id]: event.target.value as ConditionalState,
-                                  }))
-                                }
-                                className="h-9 w-full rounded-lg border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                              >
-                                {(['undecided', 'include', 'exclude'] as const).map((state) => (
-                                  <option key={state} value={state}>
-                                    {t(`conditional.${state}`)}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          ) : null}
-                        </td>
-                        <td className="px-3 py-3">
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5">
                           <Badge variant="outline" size="sm">
                             {humanize(item.effectiveRequiredness)}
                           </Badge>
-                        </td>
-                        <td className="max-w-72 px-3 py-3 text-xs leading-5 text-muted-foreground">
-                          {item.whyIncluded.join(' ')}
-                        </td>
-                        <td className="w-80 px-3 py-3">
-                          <label htmlFor={`local-option-search-${item.id}`} className="sr-only">
-                            {t('searchLocalOptionsFor', {
-                              requirement: item.label,
-                            })}
-                          </label>
-                          <input
-                            id={`local-option-search-${item.id}`}
-                            type="search"
-                            value={localOptionSearches[item.id] ?? ''}
-                            onChange={(event) =>
-                              setLocalOptionSearches((current) => ({
-                                ...current,
-                                [item.id]: event.target.value,
-                              }))
-                            }
-                            placeholder={t('searchLocalOptions')}
-                            className="h-9 w-full rounded-lg border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          />
-                          <label htmlFor={`local-option-${item.id}`} className="sr-only">
-                            {t('selectLocalOptionFor', {
-                              requirement: item.label,
-                            })}
-                          </label>
-                          <select
-                            id={`local-option-${item.id}`}
-                            value={item.selectedHospitalItemId ?? ''}
-                            onChange={(event) =>
-                              setSelectedHospitalItemIds((current) => ({
-                                ...current,
-                                [item.id]: event.target.value || null,
-                              }))
-                            }
-                            className="mt-2 h-10 w-full rounded-lg border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          >
-                            <option value="">{t('unresolved')}</option>
-                            {visibleOptions.map((candidate) => (
-                              <option key={candidate.option.id} value={candidate.item.id}>
-                                {builderOptionText(candidate)}
-                              </option>
-                            ))}
-                          </select>
-                          {search && matchingOptions.length === 0 ? (
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              {t('noEligibleLocalOptions')}
-                            </p>
-                          ) : null}
-                        </td>
-                        <td className="max-w-48 px-3 py-3 text-xs text-muted-foreground">
-                          {[
-                            item.selectedItemSnapshot?.catalogProduct?.manufacturer,
-                            item.selectedItemSnapshot?.catalogProduct?.catalogNumber,
-                          ]
-                            .filter(Boolean)
-                            .join(' · ') || '—'}
-                        </td>
-                        <td className="px-3 py-3 font-mono text-xs">
-                          {item.selectedItemSnapshot?.localItemNumber ?? '—'}
-                        </td>
-                        <td className="px-3 py-3">{item.quantityDisplay}</td>
-                        <td className="px-3 py-3 text-xs">{t(`spatialZones.${item.setupZone}`)}</td>
-                        <td className="px-3 py-3 text-xs">{t(`phases.${item.proceduralPhase}`)}</td>
-                        <td className="px-3 py-3 text-xs">{humanize(item.openHoldStatus)}</td>
-                        <td className="px-3 py-3 text-xs">{humanize(item.verificationState)}</td>
-                        <td className="px-3 py-3 text-xs">{humanize(item.compatibilityState)}</td>
-                        <td className="px-3 py-3">
                           <Badge
                             variant={
                               item.resolutionState === 'blocking'
@@ -608,13 +617,146 @@ export function PreferenceCardWizard({ bundles, initialScenarioId }: PreferenceC
                           >
                             {humanize(item.resolutionState)}
                           </Badge>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        </div>
+                      </header>
+
+                      {item.dependencyRule ? (
+                        <div className="mt-3">
+                          <label
+                            htmlFor={`conditional-${item.id}`}
+                            className="text-[11px] font-semibold text-foreground"
+                          >
+                            {t('conditional.label')}
+                          </label>
+                          <select
+                            id={`conditional-${item.id}`}
+                            value={item.conditionalState ?? 'undecided'}
+                            onChange={(event) =>
+                              setConditionalStates((current) => ({
+                                ...current,
+                                [item.id]: event.target.value as ConditionalState,
+                              }))
+                            }
+                            className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            {(['undecided', 'include', 'exclude'] as const).map((state) => (
+                              <option key={state} value={state}>
+                                {t(`conditional.${state}`)}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : null}
+
+                      <div className="mt-3">
+                        <label htmlFor={`local-option-search-${item.id}`} className="sr-only">
+                          {t('searchLocalOptionsFor', { requirement: item.label })}
+                        </label>
+                        <input
+                          id={`local-option-search-${item.id}`}
+                          type="search"
+                          value={localOptionSearches[item.id] ?? ''}
+                          onChange={(event) =>
+                            setLocalOptionSearches((current) => ({
+                              ...current,
+                              [item.id]: event.target.value,
+                            }))
+                          }
+                          placeholder={t('searchLocalOptions')}
+                          className="h-9 w-full rounded-lg border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        />
+                        <label htmlFor={`local-option-${item.id}`} className="sr-only">
+                          {t('selectLocalOptionFor', { requirement: item.label })}
+                        </label>
+                        <select
+                          id={`local-option-${item.id}`}
+                          value={item.selectedHospitalItemId ?? ''}
+                          onChange={(event) => {
+                            const value = event.target.value || null
+                            setSelectedHospitalItemIds((current) => ({
+                              ...current,
+                              [item.id]: value,
+                            }))
+                            // A set becomes the kit for the requirement it was chosen on,
+                            // and suppresses the other requirements it covers.
+                            const setId = value ? equipmentSetIdFromItemId(value) : null
+                            if (setId) {
+                              setSetRoleBySetId((current) => ({
+                                ...current,
+                                [setId]: item.roleCode,
+                              }))
+                            }
+                          }}
+                          className="mt-2 h-10 w-full rounded-lg border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          <option value="">{t('unresolved')}</option>
+                          {visibleOptions.map((candidate) => (
+                            <option key={candidate.option.id} value={candidate.item.id}>
+                              {builderOptionText(candidate)}
+                            </option>
+                          ))}
+                        </select>
+                        {search && matchingOptions.length === 0 ? (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {t('noEligibleLocalOptions')}
+                          </p>
+                        ) : null}
+                        <CatalogOptionPicker
+                          roleCode={item.roleCode}
+                          roleLabel={item.label}
+                          existingProductIds={
+                            pickedProductIdsByRole.get(item.roleCode) ?? emptyProductIds
+                          }
+                          onAdd={(pick) => addCatalogPick(item.id, pick)}
+                          existingFamilyKeys={
+                            pickedFamilyKeysByRole.get(item.roleCode) ?? emptyFamilyKeys
+                          }
+                          onAddFamily={(pick) => addFamilyPick(item.id, pick)}
+                        />
+                        <CustomItemForm
+                          roleCode={item.roleCode}
+                          roleLabel={item.label}
+                          onAdd={(custom) => addCustomItem(item.id, custom)}
+                        />
+                      </div>
+
+                      {sourceLine || item.selectedItemSnapshot?.localItemNumber ? (
+                        <p className="mt-3 text-xs text-muted-foreground">
+                          {sourceLine}
+                          {item.selectedItemSnapshot?.localItemNumber ? (
+                            <span className="ml-2 font-mono">
+                              {t('localNumberValue', {
+                                number: item.selectedItemSnapshot.localItemNumber,
+                              })}
+                            </span>
+                          ) : null}
+                        </p>
+                      ) : null}
+
+                      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-border pt-3 text-xs sm:grid-cols-3">
+                        {facts.map(([label, value]) => (
+                          <div key={label} className="min-w-0">
+                            <dt className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                              {label}
+                            </dt>
+                            <dd className="mt-0.5 break-words text-foreground">{value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+
+                      <details className="mt-3 text-xs">
+                        <summary className="cursor-pointer text-muted-foreground">
+                          {t('whyIncluded')}
+                        </summary>
+                        <p className="mt-1 leading-5 text-muted-foreground">
+                          {item.whyIncluded.join(' ')}
+                        </p>
+                      </details>
+                    </article>
+                  </li>
+                )
+              })}
+            </ul>
 
             {card.warnings.some((warning) => warning.severity === 'blocking') ? (
               <section className="rounded-2xl border border-red-300 bg-red-50/60 p-5 dark:border-red-900 dark:bg-red-950/10">
@@ -678,7 +820,7 @@ export function PreferenceCardWizard({ bundles, initialScenarioId }: PreferenceC
           </div>
         ) : null}
 
-        {step === 3 ? (
+        {step === 3 && bundle && card ? (
           <div className="space-y-5">
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-background px-4 py-3">
               <div>
@@ -694,6 +836,52 @@ export function PreferenceCardWizard({ bundles, initialScenarioId }: PreferenceC
                 })}
               </Badge>
             </div>
+
+            <div className="grid gap-4 rounded-2xl border border-border bg-background p-4 md:grid-cols-3">
+              <label className="text-xs font-semibold text-foreground">
+                {t('cardTitleLabel')}
+                <input
+                  type="text"
+                  value={title}
+                  maxLength={160}
+                  onChange={(event) => setTitle(event.target.value)}
+                  placeholder={bundle.definition.title}
+                  className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+              </label>
+              <label className="text-xs font-semibold text-foreground">
+                {t('physicianLabel')}
+                <input
+                  type="text"
+                  value={physicianName}
+                  maxLength={160}
+                  onChange={(event) => setPhysicianName(event.target.value)}
+                  placeholder={t('physicianPlaceholder')}
+                  className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+              </label>
+              <label className="text-xs font-semibold text-foreground">
+                {t('statusLabel')}
+                <select
+                  value={status}
+                  onChange={(event) => setStatus(event.target.value as 'draft' | 'final')}
+                  className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="draft">{t('status.draft')}</option>
+                  <option value="final">{t('status.final')}</option>
+                </select>
+              </label>
+            </div>
+
+            {saveError ? (
+              <p
+                role="alert"
+                className="rounded-2xl border border-destructive bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive"
+              >
+                {saveError}
+              </p>
+            ) : null}
+
             <PreferenceCardTabs card={card} />
           </div>
         ) : null}
@@ -717,7 +905,7 @@ export function PreferenceCardWizard({ bundles, initialScenarioId }: PreferenceC
               <ArrowRight aria-hidden="true" className="h-4 w-4" />
             </Button>
           ) : (
-            <Button type="button" onClick={generateSnapshot} disabled={isGenerating} elevated>
+            <Button type="button" onClick={saveCard} disabled={isGenerating} elevated>
               <FlaskConical aria-hidden="true" className="h-4 w-4" />
               {isGenerating ? t('generating') : t('generate')}
               <ChevronRight aria-hidden="true" className="h-4 w-4" />

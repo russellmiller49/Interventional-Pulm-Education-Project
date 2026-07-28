@@ -34,6 +34,7 @@ export const literatureGoldReviewPayloadSchema = z
     diseaseTags: uniqueStringArray(30).default([]),
     studyDesign: z.string().trim().min(1).max(160).nullable().default(null),
     publicationStatus: z.string().trim().min(1).max(160).nullable().default(null),
+    categorizationFromFullText: z.boolean().default(false),
     notes: z.string().trim().max(MAX_LITERATURE_GOLD_NOTES_LENGTH).default(''),
     usedSupplementalMetadata: z.boolean().default(false),
     reviewSeconds: z.number().int().min(0).max(MAX_LITERATURE_GOLD_REVIEW_SECONDS).default(0),
@@ -143,7 +144,8 @@ export const literatureGoldCompleteReviewSchema = literatureGoldReviewPayloadSch
       payload.clinicalPurposes.length > 0 ||
       payload.diseaseTags.length > 0 ||
       payload.studyDesign ||
-      payload.publicationStatus
+      payload.publicationStatus ||
+      payload.categorizationFromFullText
     ) {
       context.addIssue({
         code: z.ZodIssueCode.custom,

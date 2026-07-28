@@ -7,6 +7,19 @@ import { evaluateCompatibilityRule } from '../domain/evaluate-compatibility'
 import { resolveCard } from '../domain/resolve-card'
 import type { ResolvedCardItem, TypedCompatibilityRule } from '../domain/types'
 import { goldenScenarioExpectations } from '../__fixtures__/golden-scenario-expectations'
+import { intentionallyFailingApcRule } from '../__fixtures__/test-compatibility-rules'
+
+/**
+ * The deliberately-failing APC rule is a test fixture, not production seed data, so it is
+ * injected here instead of permanently blocking the central-airway scenario for users.
+ */
+function contextWithFailingApcRule() {
+  const context = buildDemoContext('central-airway-obstruction')
+  return {
+    ...context,
+    compatibilityRules: [...context.compatibilityRules, intentionallyFailingApcRule],
+  }
+}
 
 describe('preference-card deterministic resolver', () => {
   it('produces identical output and snapshot hash for the same inputs', () => {
@@ -67,14 +80,17 @@ describe('preference-card deterministic resolver', () => {
     ).toBe(true)
   })
 
-  it('blocks a required role with no local resolution', () => {
+  it('warns without blocking when a required role has no local resolution', () => {
+    // An unfinished card is not a conflict: many required roles have no catalogued product
+    // and are covered by a custom line item instead.
     const context = buildDemoContext('ebus-rose-molecular')
     context.hospitalRoleOptions = context.hospitalRoleOptions.filter(
       (option) => option.roleCode !== 'GENERIC_SUCTION',
     )
     const card = resolveCard(defaultBuildInput('ebus-rose-molecular'), context)
-    expect(card.readinessState).toBe('blocked')
-    expect(card.warnings.some((warning) => warning.code === 'required_role_unresolved')).toBe(true)
+    expect(card.readinessState).toBe('complete_with_warnings')
+    const unresolved = card.warnings.find((warning) => warning.code === 'required_role_unresolved')
+    expect(unresolved?.severity).toBe('warning')
   })
 
   it('honors an explicit builder selection without changing other roles', () => {
@@ -88,7 +104,7 @@ describe('preference-card deterministic resolver', () => {
 
     expect(changed.items.find((item) => item.id === target.id)).toMatchObject({
       selectedHospitalItemId: null,
-      resolutionState: 'blocking',
+      resolutionState: 'warning',
     })
     expect(
       changed.items
@@ -108,7 +124,10 @@ describe('preference-card deterministic resolver', () => {
   })
 
   it('blocks on the intentionally incompatible APC fixture', () => {
-    const card = resolveDemoScenario('central-airway-obstruction')
+    const card = resolveCard(
+      defaultBuildInput('central-airway-obstruction'),
+      contextWithFailingApcRule(),
+    )
     expect(card.readinessState).toBe('blocked')
     expect(
       card.warnings.some(
@@ -120,7 +139,7 @@ describe('preference-card deterministic resolver', () => {
   })
 
   it('records an authorized waiver reason without clearing a blocker', () => {
-    const context = buildDemoContext('central-airway-obstruction')
+    const context = contextWithFailingApcRule()
     const baselineInput = defaultBuildInput('central-airway-obstruction')
     const baseline = resolveCard(baselineInput, context)
     const blocker = baseline.warnings.find((warning) => warning.code === 'compatibility_failed')
@@ -214,7 +233,6 @@ describe('preference-card deterministic resolver', () => {
     const card = resolveDemoScenario('ebus-rose-molecular')
     expect(card.governanceState).toBe('draft')
     expect(card.prototype).toBe(true)
-    expect(card.warnings.some((warning) => warning.code === 'draft_recipe')).toBe(true)
   })
 
   it('does not block an undecided conditional slot', () => {
@@ -233,7 +251,7 @@ describe('preference-card deterministic resolver', () => {
     ).toBe(false)
   })
 
-  it('blocks the same unresolved conditional slot when included', () => {
+  it('warns on the same unresolved conditional slot once it is included', () => {
     const context = buildDemoContext('ebus-rose-molecular')
     const conditional = context.recipe.slots.find((slot) => slot.requiredness === 'conditional')
     if (!conditional) throw new Error('Expected a conditional EBUS slot')
@@ -243,7 +261,7 @@ describe('preference-card deterministic resolver', () => {
     const input = defaultBuildInput('ebus-rose-molecular')
     input.conditionalStates = { [conditional.id]: 'include' }
     const card = resolveCard(input, context)
-    expect(card.readinessState).toBe('blocked')
+    expect(card.readinessState).toBe('complete_with_warnings')
     expect(
       card.warnings.some(
         (warning) =>

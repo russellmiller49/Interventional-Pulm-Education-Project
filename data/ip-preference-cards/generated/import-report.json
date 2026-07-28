@@ -56,5 +56,27 @@
     }
   ],
   "malformed_spec_json": [],
-  "warnings": []
+  "warnings": [],
+  "product_overrides": {
+    "applied": true,
+    "products_changed": 5,
+    "fields_changed": 32,
+    "reasons": [
+      "manufacturer=Olympus, catalog_number=EU-ME2: EU-ME2 and EU-ME3 are both EVIS EUS Endoscopic Ultrasound Centers — the legacy and current generations of one Olympus platform. The workbook filed EU-ME2 under its own model number as the brand family and EU-ME3 under 'EVIS EUS', so the explorer showed them as two unrelated single-product lines instead of one platform with two generations.",
+      "manufacturer=Olympus, catalog_number=EU-ME3: Named only 'Universal Endoscopic Ultrasound Center', which is indistinguishable from the EU-ME2 row once both sit in the EVIS EUS product line. The model number belongs in the product name so the two generations read apart on a card.",
+      "manufacturer=Olympus, catalog_number=BF-H190: Filed under a bare 'Bronchoscopy platform' category with its own model number as the brand family and no dimensions at all, so it sat apart from the other EVIS EXERA III scopes and carried nothing a card could use. Specifications are from the Olympus America product page for the BF-H190; channel size cross-checks against the Olympus Bronchoscope Compatibility Chart.",
+      "manufacturer=Olympus, catalog_number=BF-1TH190: Filed under a bare 'Bronchoscopy platform' category with its own model number as the brand family and no dimensions at all, so it sat apart from the other EVIS EXERA III scopes and carried nothing a card could use. Specifications are from the Olympus America product page for the BF-1TH190; channel size cross-checks against the Olympus Bronchoscope Compatibility Chart.",
+      "manufacturer=Olympus, catalog_number=BF-UC190F: Filed with its own model number as the brand family, so the current-generation convex EBUS scope sat apart from its own series while the BF-UC180F it replaced grouped under EVIS EXERA II. Both are EBUS scopes in the same role; naming them by series lets the two generations read against each other."
+    ],
+    "errors": []
+  },
+  "catalog_additions": {
+    "applied": true,
+    "products_added": 253,
+    "product_roles_added": 298,
+    "product_sources_added": 420,
+    "manufacturers_added": 5,
+    "sources_added": 6,
+    "errors": []
+  }
 }

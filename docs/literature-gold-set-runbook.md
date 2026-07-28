@@ -53,29 +53,38 @@ written under `local-data/literature/reports/`.
 The many non-registry journal titles in broad discovery are expected. Their source filename and
 journal text remain stored even when no curated journal-registry ID exists.
 
-## 1. Prepare a database
+## 1. Start the isolated local literature database
 
-Install dependencies and apply the literature migrations to the intended existing Supabase
-environment:
+The Literature Explorer has its own local-only Supabase stack. It uses ports `55320`–`55329`, so
+it can run beside another project using the standard `5432x` ports. Only the two canonical
+literature migrations are copied into its ignored generated work directory; the repository's
+unrelated legacy migrations are not applied.
 
 ```bash
 npm install
-npx supabase migration up --local
+npm run literature:local:start
 ```
 
-For a new empty local database, the repository currently has an unrelated legacy migration
-blocker: `20260430180000_add_socal_ebus_email_notifications.sql` assumes
-`public.learner_profiles` already exists. The literature base and gold-set migrations have been
-verified from empty in an isolated PostgreSQL database. Reconcile that legacy baseline before
-expecting `npx supabase db reset --local` to work for the entire repository.
+This command:
 
-Load local CLI credentials without copying a service key into source or browser configuration:
+- prepares `local-data/literature/supabase-local`;
+- starts a stack named `ip-literature-local`;
+- applies the literature schema and gold-set schema; and
+- writes dedicated `LITERATURE_SUPABASE_*` values to the ignored `.env.local`.
 
-```bash
-eval "$(npx supabase status -o env 2>/dev/null)"
-export LITERATURE_SUPABASE_URL="$API_URL"
-export LITERATURE_SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
-```
+The main site's Supabase URL, authentication, and other modules are unchanged. Server-side
+literature queries use the dedicated local values when present and retain the existing main
+database only as a backwards-compatible fallback.
+
+Useful lifecycle commands:
+
+| Command                           | Effect                                                      |
+| --------------------------------- | ----------------------------------------------------------- |
+| `npm run literature:local:status` | Show the safe local API and Studio URLs                     |
+| `npm run literature:local:reset`  | Recreate only the local literature database from migrations |
+| `npm run literature:local:stop`   | Stop this stack while preserving its local database volume  |
+
+Restart `npm run dev` after the first start so Next.js reloads `.env.local`.
 
 All database-writing literature commands default to no-write mode. Local writes require
 `--commit --target local`. Remote writes additionally require `--confirm-remote`.
@@ -162,6 +171,16 @@ Sign in with a verified account that has an active `site_admin` entitlement, the
 ```text
 http://localhost:3001/en/admin/literature/gold-set
 ```
+
+For local-only review without a remote sign-in, use the existing localhost developer unlock. Read
+`LOCAL_DEV_AUTH_TOKEN` from the ignored `.env.local` and visit:
+
+```text
+http://localhost:3001/api/local-dev-auth?token=<LOCAL_DEV_AUTH_TOKEN>&next=/en/admin/literature/gold-set
+```
+
+The unlock is rejected outside development mode and outside localhost. Literature page and API
+authorization both honor it; completed-review audit rows use a dedicated local-development actor.
 
 The old experimental URL `/en/feat/ip-literature-explorer` is not a route and returns 404.
 

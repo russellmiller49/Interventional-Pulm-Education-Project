@@ -5,9 +5,19 @@ const migrationPath = join(
   process.cwd(),
   'supabase/migrations/20260727164510_add_literature_gold_set.sql',
 )
+const categoryMigrationPath = join(
+  process.cwd(),
+  'supabase/migrations/20260727190000_add_literature_gold_review_categories.sql',
+)
+const fullTextMigrationPath = join(
+  process.cwd(),
+  'supabase/migrations/20260727193432_add_literature_full_text_categorization_flag.sql',
+)
 
 describe('gold-set database contract', () => {
   const sql = readFileSync(migrationPath, 'utf8')
+  const categorySql = readFileSync(categoryMigrationPath, 'utf8')
+  const fullTextSql = readFileSync(fullTextMigrationPath, 'utf8')
   const tables = [
     'literature_gold_set_batches',
     'literature_gold_set_items',
@@ -49,5 +59,19 @@ describe('gold-set database contract', () => {
     expect(sql).toContain('get_literature_gold_review_item_v1')
     expect(sql).toContain('when selected_item.supplemental_metadata_revealed_at is null then null')
     expect(sql).toContain('and selected_item.automated_signals_revealed_at is not null')
+  })
+
+  it('allows the expanded review categories in the server-side validator', () => {
+    expect(categorySql).toContain("'multiple-general-overview'")
+    expect(categorySql.match(/'not-assessable-from-available-metadata'/gu)).toHaveLength(3)
+    expect(categorySql).toContain("'review-article'")
+    expect(categorySql).toContain('pg_get_functiondef')
+  })
+
+  it('persists and returns the full-text categorization audit flag', () => {
+    expect(fullTextSql.match(/add column categorization_from_full_text/gu)).toHaveLength(2)
+    expect(fullTextSql).toContain("'categorizationFromFullText'")
+    expect(fullTextSql).toContain('literature_gold_set_reviews_full_text_categorization_check')
+    expect(fullTextSql).toContain('get_literature_gold_review_item_v1')
   })
 })

@@ -1,6 +1,6 @@
 {
   "taxonomy_version": "1.0.0",
-  "prepared_date": "2026-07-26",
+  "prepared_date": "2026-07-27",
   "principles": {
     "multi_label": true,
     "stable_ids": true,
@@ -8,6 +8,23 @@
     "human_decisions_override_automation": true
   },
   "topics": [
+    {
+      "id": "basic-bronchoscopy",
+      "label_en": "Basic bronchoscopy",
+      "description_en": "Routine flexible bronchoscopy, airway inspection, bronchoalveolar lavage, brushing, washing, and conventional endobronchial or transbronchial sampling.",
+      "synonyms": [
+        "basic bronchoscopy",
+        "flexible bronchoscopy",
+        "diagnostic bronchoscopy",
+        "routine bronchoscopy",
+        "bronchoalveolar lavage",
+        "BAL",
+        "bronchial washing",
+        "endobronchial biopsy",
+        "transbronchial biopsy"
+      ],
+      "children": []
+    },
     {
       "id": "ebus-mediastinal-staging",
       "label_en": "EBUS and mediastinal staging",
@@ -187,10 +204,12 @@
     },
     {
       "id": "pleural-interventions",
-      "label_en": "Pleural interventions",
+      "label_en": "Pleural procedures",
       "description_en": "Diagnostic and therapeutic pleural procedures.",
       "synonyms": [
         "pleural procedure",
+        "pleural procedures",
+        "pleural intervention",
         "pleuroscopy",
         "medical thoracoscopy",
         "IPC",
@@ -406,7 +425,9 @@
       "palliation",
       "surveillance",
       "localization",
-      "training"
+      "training",
+      "multiple-general-overview",
+      "not-assessable-from-available-metadata"
     ],
     "disease": [
       "lung-cancer",
@@ -430,7 +451,9 @@
       "case-series",
       "case-report",
       "technical-note",
-      "editorial"
+      "editorial",
+      "review-article",
+      "not-assessable-from-available-metadata"
     ],
     "publication_class": [
       "full-article",
@@ -439,7 +462,8 @@
       "editorial",
       "correction",
       "retraction",
-      "protocol"
+      "protocol",
+      "not-assessable-from-available-metadata"
     ],
     "population": ["adult", "pediatric", "transplant", "critically-ill", "mixed"]
   }

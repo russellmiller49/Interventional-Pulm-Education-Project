@@ -1,3 +1,5 @@
+import generatedModifiersJson from '../../../../data/ip-preference-cards/generated/modifier-definitions.json'
+import generatedScenariosJson from '../../../../data/ip-preference-cards/generated/scenarios.json'
 import productsJson from '../../../../data/ip-preference-cards/generated/catalog-products.json'
 import coverageJson from '../../../../data/ip-preference-cards/generated/coverage-report.json'
 import importReportJson from '../../../../data/ip-preference-cards/generated/import-report.json'
@@ -12,6 +14,8 @@ import type {
   BuildCardInput,
   BuildContext,
   CatalogProductSummary,
+  ModifierAction,
+  ModifierDefinition,
   HospitalItem,
   HospitalRoleOption,
   RecipeSlot,
@@ -28,7 +32,6 @@ import {
   demoHospitalItemSeeds,
   operationalModifiers,
   rescueModules,
-  scenarioDefinitions,
   typedCompatibilityRules,
 } from '../seed/operational'
 
@@ -126,7 +129,21 @@ const coverageProcedures = (coverageJson as { procedures: CoverageProcedure[] })
 const verificationBacklog = verificationBacklogJson as VerificationBacklogRow[]
 
 const productById = new Map(products.map((product) => [product.product_id, product]))
+/**
+ * Scenarios and the informational modifier tags are generated from the workbook by
+ * `npm run ip-cards:scenarios`, so every imported procedure is buildable without a code
+ * change. The twelve hand-tuned modifiers in seed/operational.ts carry real actions and
+ * win on code collision.
+ */
+const scenarioDefinitions = generatedScenariosJson as unknown as ScenarioDefinition[]
 const scenarioById = new Map(scenarioDefinitions.map((scenario) => [scenario.id, scenario]))
+
+const generatedModifierDefinitions = generatedModifiersJson as unknown as ModifierDefinition[]
+const handTunedModifierCodes = new Set(operationalModifiers.map((modifier) => modifier.code))
+const allModifierDefinitions: ModifierDefinition[] = [
+  ...operationalModifiers,
+  ...generatedModifierDefinitions.filter((modifier) => !handTunedModifierCodes.has(modifier.code)),
+].sort((left, right) => left.code.localeCompare(right.code))
 
 function catalogProductSummary(productId: string | undefined): CatalogProductSummary | null {
   if (!productId) return null
@@ -164,8 +181,10 @@ function hospitalItems(): HospitalItem[] {
       localDescription: seed.localDescription,
       localUom: seed.localUom ?? null,
       storageLocation: seed.storageLocation ?? null,
+      // A product the workbook holds out of dropdowns is shown as unverified rather than
+      // withheld; the card flags it instead of blocking on it.
       verificationState:
-        catalogProduct?.visibilityState === 'hidden' ? 'hidden' : seed.verificationState,
+        catalogProduct?.visibilityState === 'hidden' ? 'unverified' : seed.verificationState,
       active: true,
       notes: seed.rationale,
       attributes: {
@@ -189,12 +208,6 @@ function roleOptions(): HospitalRoleOption[] {
     active: true,
     rationale: seed.rationale,
   }))
-}
-
-function recipeName(scenario: ScenarioDefinition, source: ProcedureRow): string {
-  return scenario.id === 'central-airway-obstruction'
-    ? 'Central airway obstruction / tumor debulking'
-    : source.procedure_name
 }
 
 function toRecipeSlot(row: ProcedureSlotRow, recipeLabel: string): RecipeSlot {
@@ -237,7 +250,7 @@ function recipeForScenario(scenario: ScenarioDefinition): RecipeVersion {
       `Source procedure ${scenario.sourceProcedureCode} is missing from generated data.`,
     )
   }
-  const name = recipeName(scenario, source)
+  const name = scenario.recipeName
   return {
     id: scenario.recipeVersionId,
     sourceProcedureCode: source.procedure_code,
@@ -263,16 +276,14 @@ export function getScenarioDefinition(id: string): ScenarioDefinition | null {
 }
 
 export function getScenarioDefinitions(): ScenarioDefinition[] {
-  return scenarioDefinitions.map((scenario) => {
-    const coverage = coverageProcedures.find(
-      (candidate) => candidate.procedure_code === scenario.sourceProcedureCode,
-    )
-    return {
-      ...scenario,
-      requiredRoleMappingPercentage:
-        coverage?.required_mapping_percentage ?? scenario.requiredRoleMappingPercentage,
-    }
-  })
+  // requiredRoleMappingPercentage is computed by the scenario generator against catalogued
+  // roles (verified or not), which is the rule the picker and explorer follow.
+  return scenarioDefinitions.map((scenario) => ({
+    ...scenario,
+    defaultModifierCodes: [...scenario.defaultModifierCodes],
+    availableModifierCodes: [...scenario.availableModifierCodes],
+    emptyRoleCodes: [...scenario.emptyRoleCodes],
+  }))
 }
 
 export function buildDemoContext(scenarioId: string): BuildContext {
@@ -284,11 +295,11 @@ export function buildDemoContext(scenarioId: string): BuildContext {
     locationName: 'Bronchoscopy Suite 1',
     locationCapabilities: ['rigid_bronchoscopy', 'jet_ventilation', 'fluoroscopy'],
     recipe: recipeForScenario(scenario),
-    modifiers: operationalModifiers.map((modifier) => ({
+    modifiers: allModifierDefinitions.map((modifier) => ({
       ...modifier,
       preview: [...modifier.preview],
       conflictsWith: [...modifier.conflictsWith],
-      actions: modifier.actions.map((action) => ({
+      actions: modifier.actions.map((action: ModifierAction) => ({
         ...action,
         payload: { ...action.payload },
       })),
@@ -370,7 +381,6 @@ export function getDashboardMetrics() {
         (warning) => warning.severity === 'blocking' && warning.code.includes('compatibility'),
       ).length,
       readinessState: card.readinessState,
-      previewCardId: `demo-${scenario.id}-${card.snapshotHash.slice(0, 12)}`,
     })),
     totals: {
       unresolvedRequiredRoles: resolved.reduce(
@@ -398,55 +408,6 @@ export function getDashboardMetrics() {
   }
 }
 
-export function parseDemoCardId(cardId: string): {
-  scenarioId: string
-  expectedHashPrefix: string
-} | null {
-  if (!cardId.startsWith('demo-')) return null
-  for (const scenario of scenarioDefinitions) {
-    const prefix = `demo-${scenario.id}-`
-    if (cardId.startsWith(prefix)) {
-      return {
-        scenarioId: scenario.id,
-        expectedHashPrefix: cardId.slice(prefix.length),
-      }
-    }
-  }
-  return null
-}
-
-export function resolveDemoCardId(cardId: string): ResolvedCard | null {
-  const parsed = parseDemoCardId(cardId)
-  if (!parsed) return null
-  const card = resolveDemoScenario(parsed.scenarioId)
-  return card.snapshotHash.startsWith(parsed.expectedHashPrefix) ? card : null
-}
-
-export function resolveDemoCardRequest(
-  cardId: string,
-  options: {
-    modifierCodes?: string[]
-    generatedAt?: string
-    conditionalStates?: BuildCardInput['conditionalStates']
-    selectedHospitalItemIds?: BuildCardInput['selectedHospitalItemIds']
-    waivers?: BuildCardInput['waivers']
-  },
-): ResolvedCard | null {
-  const parsed = parseDemoCardId(cardId)
-  if (!parsed) return null
-  const context = buildDemoContext(parsed.scenarioId)
-  const allowedModifierCodes = new Set(context.modifiers.map((modifier) => modifier.code))
-  const scenario = getScenarioDefinition(parsed.scenarioId)
-  const modifierCodes = (options.modifierCodes ?? scenario?.defaultModifierCodes ?? []).filter(
-    (code) => allowedModifierCodes.has(code),
-  )
-  const card = resolveDemoScenario(parsed.scenarioId, {
-    ...options,
-    modifierCodes,
-  })
-  return card.snapshotHash.startsWith(parsed.expectedHashPrefix) ? card : null
-}
-
 export function getVerificationBacklog(): VerificationBacklogRow[] {
   return verificationBacklog.map((row) => ({ ...row }))
 }
@@ -455,28 +416,12 @@ export function getCoverageSummary() {
   return coverageProcedures.map((procedure) => ({ ...procedure }))
 }
 
-export function getCatalogProductsForRoles(roleCodes: string[]) {
-  const roles = new Set(roleCodes)
-  const options = roleOptions()
-  const items = hospitalItems()
-  return options
-    .filter((option) => roles.has(option.roleCode))
-    .flatMap((option) => {
-      const item = items.find((candidate) => candidate.id === option.hospitalItemId)
-      return item ? [{ option, item }] : []
-    })
-}
-
 export function getEligibleCatalogProductsForRole(roleCode: string) {
   const matchingProductIds = new Set(
     productRoles.filter((row) => row.role_code === roleCode).map((row) => row.product_id),
   )
   return products
-    .filter(
-      (product) =>
-        matchingProductIds.has(product.product_id) &&
-        product.visibility_state === 'prototype_visible',
-    )
+    .filter((product) => matchingProductIds.has(product.product_id))
     .sort(
       (left, right) =>
         (left.manufacturer ?? '').localeCompare(right.manufacturer ?? '') ||
@@ -489,6 +434,8 @@ export function getEligibleCatalogProductsForRole(roleCode: string) {
       productName: product.product_name,
       catalogNumber: product.catalog_number,
       verificationStatus: product.verification_status,
+      // Unverified products are listed and badged rather than filtered out.
+      verified: product.visibility_state === 'prototype_visible',
     }))
 }
 

@@ -1,55 +1,25 @@
 import { parsePreferenceCardSearch } from '../data/request-options'
 
-describe('preference-card route request parsing', () => {
-  it('accepts bounded modifiers and tri-state conditional decisions', () => {
-    const parsed = parsePreferenceCardSearch({
-      modifiers: 'ROSE,SPEC_MOLECULAR,not allowed',
-      generatedAt: '2026-07-25T12:00:00.000Z',
-      conditions: JSON.stringify({
-        'slot-1': 'include',
-        'slot-2': 'undecided',
-      }),
-      items: JSON.stringify({
-        'slot-1': 'hospital-item-1',
-        'slot-2': null,
-      }),
-      waivers: JSON.stringify({
-        'message-1': 'Reviewed by the prototype administrator.',
-      }),
-      mode: 'chronological',
-    })
-
-    expect(parsed.modifierCodes).toEqual(['ROSE', 'SPEC_MOLECULAR'])
-    expect(parsed.conditionalStates).toEqual({
-      'slot-1': 'include',
-      'slot-2': 'undecided',
-    })
-    expect(parsed.selectedHospitalItemIds).toEqual({
-      'slot-1': 'hospital-item-1',
-      'slot-2': null,
-    })
-    expect(parsed.waivers).toEqual({
-      'message-1': 'Reviewed by the prototype administrator.',
-    })
-    expect(parsed.mode).toBe('chronological')
+describe('preference-card print options', () => {
+  it('reads the print layout from the query string', () => {
+    expect(parsePreferenceCardSearch({ mode: 'chronological' }).mode).toBe('chronological')
+    expect(parsePreferenceCardSearch({ mode: 'spatial' }).mode).toBe('spatial')
   })
 
-  it('fails safely for malformed conditional JSON and print modes', () => {
-    const parsed = parsePreferenceCardSearch({
-      conditions: '{bad',
-      items: '{bad',
-      waivers: JSON.stringify({ 'message-1': 'short' }),
-      mode: 'unexpected',
-    })
-    expect(parsed.conditionalStates).toBeUndefined()
-    expect(parsed.selectedHospitalItemIds).toBeUndefined()
-    expect(parsed.waivers).toBeUndefined()
-    expect(parsed.mode).toBe('spatial')
+  it('falls back to the spatial layout for anything unexpected', () => {
+    expect(parsePreferenceCardSearch({}).mode).toBe('spatial')
+    expect(parsePreferenceCardSearch({ mode: 'unexpected' }).mode).toBe('spatial')
+    expect(parsePreferenceCardSearch({ mode: ['chronological', 'spatial'] }).mode).toBe(
+      'chronological',
+    )
   })
 
-  it('preserves an explicit empty modifier selection', () => {
-    const parsed = parsePreferenceCardSearch({ modifiers: '' })
-    expect(parsed.modifierCodes).toEqual([])
-    expect(parsed.serialized).toContain('modifiers=')
+  it('no longer reconstructs a card from the URL', () => {
+    // Cards are stored per user now. The old parser rebuilt an entire card from query
+    // blobs up to 60 KB — modifiers, conditional states, item selections, waivers — because
+    // saving did not work; carrying that forward would be a second, unauthenticated way to
+    // materialize a card.
+    const parsed = parsePreferenceCardSearch({ mode: 'spatial' } as Record<string, string>)
+    expect(Object.keys(parsed)).toEqual(['mode'])
   })
 })

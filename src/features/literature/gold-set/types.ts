@@ -96,6 +96,7 @@ export interface LiteratureGoldReviewPayload {
   diseaseTags: string[]
   studyDesign: string | null
   publicationStatus: string | null
+  categorizationFromFullText: boolean
   notes: string
   usedSupplementalMetadata: boolean
   reviewSeconds: number

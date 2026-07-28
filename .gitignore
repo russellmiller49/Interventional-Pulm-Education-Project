@@ -269,3 +269,19 @@ next-env.d.ts
 
 # Offline console renders from `npm run render:mv-console` — look-at-it artifacts, not build output.
 /public/mv-console-preview/
+
+# IP preference-card authoring sources. The import pipeline reads these locally; only the
+# distilled JSON under data/ip-preference-cards/generated/ is committed. Kept out of Git
+# because they are third-party copyrighted documents, private institutional material, or
+# far too large for the repo.
+#
+# The AccessGUDID full delimited release is ~5.6 GB.
+Preference_card_module/AccessGUDID_Delimited_Full_Release_*/
+# UCSD institutional protocols and device IFUs — private reference only, never redistributed.
+Preference_card_module/UCSD/
+# Manufacturer catalogs and IFUs cited by source id in generated/sources.json. The citation
+# records the document; the document itself stays out of the repo.
+Preference_card_module/Catalogs and IFU for confirmation/*.pdf
+
+# Excel lock/temp files.
+~$*

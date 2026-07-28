@@ -10,6 +10,7 @@ export interface LiteratureGoldExportReview {
   diseaseTags: string[]
   studyDesign: string | null
   publicationStatus: string | null
+  categorizationFromFullText: boolean
   notes: string
   usedSupplementalMetadata: boolean
   reviewSeconds: number
@@ -98,6 +99,7 @@ const CSV_COLUMNS = [
   'disease_tags_json',
   'study_design',
   'publication_status',
+  'categorization_from_full_text',
   'notes',
   'used_supplemental_metadata',
   'review_seconds',
@@ -145,6 +147,7 @@ export function serializeLiteratureGoldSetCsv(exported: LiteratureGoldExport) {
       disease_tags_json: JSON.stringify(review?.diseaseTags ?? []),
       study_design: review?.studyDesign,
       publication_status: review?.publicationStatus,
+      categorization_from_full_text: review?.categorizationFromFullText ?? false,
       notes: review?.notes,
       used_supplemental_metadata: review?.usedSupplementalMetadata ?? false,
       review_seconds: review?.reviewSeconds ?? 0,
@@ -240,6 +243,7 @@ export function parseLiteratureGoldSetCsv(input: string) {
         diseaseTags: jsonArray(row, 'disease_tags_json'),
         studyDesign: decodedField(row, 'study_design') || null,
         publicationStatus: decodedField(row, 'publication_status') || null,
+        categorizationFromFullText: decodedField(row, 'categorization_from_full_text') === 'true',
         notes: decodedField(row, 'notes'),
         usedSupplementalMetadata: decodedField(row, 'used_supplemental_metadata') === 'true',
         reviewSeconds: Number(decodedField(row, 'review_seconds')) || 0,

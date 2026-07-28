@@ -1,11 +1,26 @@
 import { render, screen } from '@testing-library/react'
 
-import { resolveDemoScenario } from '../data/demo-context.server'
+import {
+  buildDemoContext,
+  defaultBuildInput,
+  resolveDemoScenario,
+} from '../data/demo-context.server'
+import { resolveCard } from '../domain/resolve-card'
 import { PreferenceCardTabs, PrintCardView } from '../components/PreferenceCardViews'
+import { intentionallyFailingApcRule } from '../__fixtures__/test-compatibility-rules'
+
+/** The failing APC rule is a test fixture, so it is injected rather than seeded. */
+function cardWithBlockingApcException() {
+  const context = buildDemoContext('central-airway-obstruction')
+  return resolveCard(defaultBuildInput('central-airway-obstruction'), {
+    ...context,
+    compatibilityRules: [...context.compatibilityRules, intentionallyFailingApcRule],
+  })
+}
 
 describe('preference-card output views', () => {
   it('renders emergency-pull content and the blocking APC exception', () => {
-    const card = resolveDemoScenario('central-airway-obstruction')
+    const card = cardWithBlockingApcException()
     const { unmount } = render(<PreferenceCardTabs card={card} />)
 
     expect(

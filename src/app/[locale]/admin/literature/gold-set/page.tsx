@@ -109,8 +109,8 @@ export default async function LiteratureGoldSetPage({ params, searchParams }: Go
       {batchesResult.error || itemResult.error ? (
         <Card className="border-destructive/40">
           <CardContent className="p-5 text-sm">
-            {batchesResult.error ?? itemResult.error}. Apply the gold-set migration and confirm the
-            server-side Supabase environment before reviewing.
+            {batchesResult.error ?? itemResult.error}. Start the isolated database with{' '}
+            <code>npm run literature:local:start</code>, then restart the development server.
           </CardContent>
         </Card>
       ) : null}
@@ -226,29 +226,29 @@ export default async function LiteratureGoldSetPage({ params, searchParams }: Go
           <Card>
             <CardHeader>
               <Database className="h-6 w-6 text-primary" aria-hidden="true" />
-              <CardTitle>1. Import the corpus</CardTitle>
+              <CardTitle>1. Start the local database</CardTitle>
               <CardDescription>
-                Generate the manifest from the three supplied folders.
+                The literature schema and data stay on this computer.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <code className="whitespace-pre-wrap break-all rounded-xl bg-muted p-3 text-xs">
-                npm run literature:manifest -- --corpus-root &quot;IP_PubMed/nbib files&quot;
+                npm run literature:local:start
               </code>
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
               <FlaskConical className="h-6 w-6 text-primary" aria-hidden="true" />
-              <CardTitle>2. Create the 100-article pilot</CardTitle>
+              <CardTitle>2. Load the corpus and pilot</CardTitle>
               <CardDescription>
-                Review the sampling report before committing locally.
+                Use the validated manifest, then inspect the sampling report before committing.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <code className="whitespace-pre-wrap break-all rounded-xl bg-muted p-3 text-xs">
-                npm run literature:create-gold-set -- --kind pilot --size 100 --seed 20260727 --name
-                pilot-v1
+                npm run literature:import -- --manifest
+                local-data/literature/ip-corpus-manifest.v1.json --commit --target local
               </code>
             </CardContent>
           </Card>

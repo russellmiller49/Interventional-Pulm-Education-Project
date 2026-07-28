@@ -130,6 +130,7 @@ function databaseReview(row: Record<string, unknown>): LiteratureGoldReviewPaylo
     diseaseTags: row.disease_tags,
     studyDesign: row.study_design,
     publicationStatus: row.publication_status,
+    categorizationFromFullText: row.categorization_from_full_text,
     notes: row.notes,
     usedSupplementalMetadata: row.used_supplemental_metadata,
     reviewSeconds: row.review_seconds,

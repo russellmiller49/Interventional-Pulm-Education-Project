@@ -24,4 +24,23 @@ const config = createJestConfig({
   testEnvironment: 'jest-environment-jsdom',
 })
 
-module.exports = config
+/**
+ * `next/jest` sets its own `transformIgnorePatterns` and overwrites whatever is passed in,
+ * so the override has to happen after it resolves.
+ *
+ * `use-intl` ships ESM only. jest.setup.ts mocks next-intl with naive placeholder
+ * substitution, so tests that need the real ICU formatter — the one that actually throws on
+ * a malformed plural instead of quietly echoing the source string — import use-intl directly
+ * and need it transformed.
+ */
+module.exports = async () => {
+  const resolved = await config()
+  return {
+    ...resolved,
+    transformIgnorePatterns: [
+      // use-intl and the @formatjs packages it pulls in are all ESM-only.
+      '/node_modules/(?!use-intl|@formatjs|intl-messageformat)',
+      '^.+\\.module\\.(css|sass|scss)$',
+    ],
+  }
+}

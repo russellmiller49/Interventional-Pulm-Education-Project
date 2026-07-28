@@ -1,7 +1,7 @@
 import type { Metadata, Route } from 'next'
 import Link from 'next/link'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { AlertOctagon, Boxes, CirclePlus, FileClock, MapPinOff } from 'lucide-react'
+import { AlertOctagon, Boxes, CirclePlus, FileClock, Layers, MapPinOff, Search } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -13,9 +13,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { CardRowActions } from '@/features/preference-cards/components/CardRowActions'
 import { PrototypeBanner } from '@/features/preference-cards/components/PrototypeBanner'
 import { ReadinessBadge } from '@/features/preference-cards/components/ReadinessBadge'
 import { getDashboardMetrics } from '@/features/preference-cards/data/demo-context.server'
+import { getCatalogOverview } from '@/features/preference-cards/server/catalog'
+import { listUserCards } from '@/features/preference-cards/server/user-cards'
+
+export const dynamic = 'force-dynamic'
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -35,7 +40,11 @@ export default async function PreferenceCardsDashboard({ params }: PageProps) {
   const { locale } = await params
   setRequestLocale(locale)
   const t = await getTranslations('preferenceCards')
+  const tCatalog = await getTranslations('preferenceCards.catalog')
+  const tSets = await getTranslations('preferenceCards.sets')
   const metrics = getDashboardMetrics()
+  const catalogOverview = getCatalogOverview()
+  const savedCards = await listUserCards()
   const metricCards = [
     {
       label: t('unresolvedRequired'),
@@ -68,13 +77,67 @@ export default async function PreferenceCardsDashboard({ params }: PageProps) {
           </h1>
           <p className="mt-3 text-base leading-7 text-muted-foreground">{t('subtitle')}</p>
         </div>
-        <Button asChild size="lg" elevated>
-          <Link href={`/${locale}/preference-cards/new` as Route}>
-            <CirclePlus aria-hidden="true" className="h-5 w-5" />
-            {t('createNewCard')}
-          </Link>
-        </Button>
+        <div className="flex flex-wrap gap-3">
+          <Button asChild size="lg" elevated>
+            <Link href={`/${locale}/preference-cards/new` as Route}>
+              <CirclePlus aria-hidden="true" className="h-5 w-5" />
+              {t('createNewCard')}
+            </Link>
+          </Button>
+          <Button asChild size="lg" variant="outline">
+            <Link href={`/${locale}/preference-cards/catalog` as Route}>
+              <Search aria-hidden="true" className="h-5 w-5" />
+              {tCatalog('browseCatalogCta')}
+            </Link>
+          </Button>
+          <Button asChild size="lg" variant="outline">
+            <Link href={`/${locale}/preference-cards/sets` as Route}>
+              <Layers aria-hidden="true" className="h-5 w-5" />
+              {tSets('title')}
+            </Link>
+          </Button>
+        </div>
       </header>
+
+      <section aria-label={tCatalog('heading')} className="grid gap-4 md:grid-cols-2">
+        <Link
+          href={`/${locale}/preference-cards/catalog` as Route}
+          className="rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <Card className="h-full transition hover:border-primary hover:shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Search aria-hidden="true" className="h-5 w-5 text-primary" />
+                {tCatalog('heading')}
+              </CardTitle>
+              <CardDescription>{tCatalog('description')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Badge variant="secondary" className="normal-case tracking-normal">
+                {tCatalog('overviewCounts', {
+                  products: catalogOverview.productCount,
+                  manufacturers: catalogOverview.manufacturerCount,
+                  uses: catalogOverview.roleCount,
+                })}
+              </Badge>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link
+          href={`/${locale}/preference-cards/catalog/uses` as Route}
+          className="rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <Card className="h-full transition hover:border-primary hover:shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Layers aria-hidden="true" className="h-5 w-5 text-primary" />
+                {tCatalog('uses.heading')}
+              </CardTitle>
+              <CardDescription>{tCatalog('uses.description')}</CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+      </section>
 
       <section aria-label={t('dashboard')} className="grid gap-4 sm:grid-cols-3">
         {metricCards.map(({ label, value, icon: Icon }) => (
@@ -146,11 +209,6 @@ export default async function PreferenceCardsDashboard({ params }: PageProps) {
                     {t('launchScenario')}
                   </Link>
                 </Button>
-                <Button asChild size="sm" variant="outline">
-                  <Link href={`/${locale}/preference-cards/${scenario.previewCardId}` as Route}>
-                    {t('previewCard')}
-                  </Link>
-                </Button>
               </CardFooter>
             </Card>
           ))}
@@ -161,29 +219,52 @@ export default async function PreferenceCardsDashboard({ params }: PageProps) {
         <div className="mb-4 flex items-center gap-2">
           <FileClock aria-hidden="true" className="h-5 w-5 text-primary" />
           <h2 className="text-xl font-bold text-foreground">{t('recentCards')}</h2>
+          <Badge variant="outline">{savedCards.length}</Badge>
         </div>
-        <div className="overflow-hidden rounded-2xl border border-border bg-card">
-          <ul className="divide-y divide-border">
-            {metrics.scenarios.map((scenario) => (
-              <li
-                key={scenario.previewCardId}
-                className="flex flex-wrap items-center justify-between gap-3 px-5 py-4"
+        {savedCards.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-border bg-card px-5 py-8 text-center text-sm text-muted-foreground">
+            {t('noRecentCards')}
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {savedCards.map((savedCard) => (
+              <div
+                key={savedCard.id}
+                className="overflow-hidden rounded-2xl border border-border bg-card"
               >
-                <div>
-                  <p className="font-semibold text-foreground">{scenario.title}</p>
-                  <p className="mt-1 font-mono text-[11px] text-muted-foreground">
-                    {scenario.previewCardId}
-                  </p>
+                <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-foreground">{savedCard.title}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {[
+                        savedCard.physicianName,
+                        savedCard.procedureCode,
+                        new Date(savedCard.updatedAt).toLocaleString(),
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="outline">{t(`status.${savedCard.status}`)}</Badge>
+                    <ReadinessBadge
+                      state={savedCard.readinessState}
+                      label={t(`readiness.${savedCard.readinessState}`)}
+                    />
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/${locale}/preference-cards/${savedCard.id}` as Route}>
+                        {t('openCard')}
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
-                <Button asChild variant="outline" size="sm">
-                  <Link href={`/${locale}/preference-cards/${scenario.previewCardId}` as Route}>
-                    {t('previewCard')}
-                  </Link>
-                </Button>
-              </li>
+                <div className="border-t border-border px-3 pb-3">
+                  <CardRowActions locale={locale} card={savedCard} layout="row" />
+                </div>
+              </div>
             ))}
-          </ul>
-        </div>
+          </div>
+        )}
       </section>
     </div>
   )

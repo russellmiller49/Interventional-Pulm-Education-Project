@@ -45,15 +45,16 @@ describe('gold-set CSV backup', () => {
           review: {
             id: 'review-id',
             revision: 1,
-            relevanceLabel: 'exclude',
+            relevanceLabel: 'include_core',
             metadataSufficiency: 'adequate_abstract',
             reviewerConfidence: 'high',
-            topicIds: [],
+            topicIds: ['ebus-mediastinal-staging'],
             technologyTags: [],
-            clinicalPurposes: [],
+            clinicalPurposes: ['diagnosis'],
             diseaseTags: [],
-            studyDesign: null,
-            publicationStatus: null,
+            studyDesign: 'diagnostic-accuracy',
+            publicationStatus: 'full-article',
+            categorizationFromFullText: true,
             notes: '=HYPERLINK("https://example.invalid"), comma, and\nnew line',
             usedSupplementalMetadata: false,
             reviewSeconds: 30,
@@ -72,7 +73,8 @@ describe('gold-set CSV backup', () => {
     expect(rows).toHaveLength(1)
     expect(rows[0].itemId).toBe('item-id')
     expect(rows[0].review.notes).toBe('=HYPERLINK("https://example.invalid"), comma, and\nnew line')
-    expect(rows[0].review.relevanceLabel).toBe('exclude')
+    expect(rows[0].review.relevanceLabel).toBe('include_core')
+    expect(rows[0].review.categorizationFromFullText).toBe(true)
   })
 
   it('redacts sampling signals until the first completed decision', () => {

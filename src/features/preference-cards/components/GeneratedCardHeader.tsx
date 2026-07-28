@@ -15,58 +15,67 @@ import { ReadinessBadge } from './ReadinessBadge'
 interface GeneratedCardHeaderProps {
   card: ResolvedCard
   cardId: string
-  generatedBy?: string
+  /** The owner's own name for this card, which is what the heading shows. */
+  title: string
+  physicianName?: string | null
+  status?: 'draft' | 'final'
+  updatedAt?: string
   printMode?: boolean
-  printQuery?: string
+  /** Read-only share view: no dashboard link and no print action. */
+  shared?: boolean
 }
 
 export function GeneratedCardHeader({
   card,
   cardId,
-  generatedBy,
+  title,
+  physicianName,
+  status,
+  updatedAt,
   printMode = false,
-  printQuery,
+  shared = false,
 }: GeneratedCardHeaderProps) {
   const t = useTranslations('preferenceCards')
   const locale = useLocale()
   const dashboardHref = `/${locale}/preference-cards` as Route
-  const printHref = `/${locale}/preference-cards/${cardId}/print` as Route
-  const printSearch = new URLSearchParams(printQuery)
-  printSearch.set('mode', 'spatial')
+  const printHref = `/${locale}/preference-cards/${cardId}/print?mode=spatial` as Route
 
+  // A personal card names a physician and a procedure. Organization, site, and room came
+  // from the abandoned hospital-governance model and said "demo" on every card.
   const metadata = [
-    [t('cardMetadata.organization'), card.organizationName],
-    [t('cardMetadata.site'), card.siteName],
-    [t('cardMetadata.location'), card.locationName],
+    [t('cardMetadata.physician'), physicianName || t('cardMetadata.physicianNotSet')],
     [t('cardMetadata.recipe'), card.recipeName],
     [t('cardMetadata.modifiers'), card.selectedModifiers.join(' · ') || '—'],
     [t('cardMetadata.recipeVersion'), card.recipeVersion],
     [t('cardMetadata.catalogVersion'), card.catalogImportId.slice(0, 12)],
     [t('cardMetadata.generatedAt'), new Date(card.generatedAt).toLocaleString()],
-    [t('generatedBy'), generatedBy ?? t('demoGeneratedBy')],
-    [t('cardMetadata.governance'), card.governanceState],
+    ...(updatedAt
+      ? ([[t('cardMetadata.updatedAt'), new Date(updatedAt).toLocaleString()]] as const)
+      : []),
     [t('cardMetadata.snapshot'), card.snapshotHash.slice(0, 20)],
     [t('cardMetadata.engine'), card.engineVersion],
   ] as const
 
   return (
     <header className="space-y-5">
-      <div className="no-print flex flex-wrap items-center justify-between gap-3">
-        <Button asChild variant="outline" size="sm">
-          <Link href={dashboardHref}>
-            <ArrowLeft aria-hidden="true" className="h-4 w-4" />
-            {t('backToDashboard')}
-          </Link>
-        </Button>
-        {!printMode ? (
-          <Button asChild size="sm">
-            <Link href={`${printHref}?${printSearch.toString()}` as Route}>
-              <FileDown aria-hidden="true" className="h-4 w-4" />
-              {t('print')}
+      {shared ? null : (
+        <div className="no-print flex flex-wrap items-center justify-between gap-3">
+          <Button asChild variant="outline" size="sm">
+            <Link href={dashboardHref}>
+              <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+              {t('backToDashboard')}
             </Link>
           </Button>
-        ) : null}
-      </div>
+          {!printMode ? (
+            <Button asChild size="sm">
+              <Link href={printHref}>
+                <FileDown aria-hidden="true" className="h-4 w-4" />
+                {t('print')}
+              </Link>
+            </Button>
+          ) : null}
+        </div>
+      )}
 
       <PrototypeBanner title={t('prototypeBanner')} disclaimer={t('disclaimer')} />
 
@@ -76,13 +85,11 @@ export function GeneratedCardHeader({
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
               {t('immutableSnapshot')}
             </p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight text-foreground">
-              {card.recipeName}
-            </h1>
+            <h1 className="mt-2 text-3xl font-black tracking-tight text-foreground">{title}</h1>
             <p className="mt-2 font-mono text-xs text-muted-foreground">{card.snapshotHash}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Badge variant="outline">{card.governanceState}</Badge>
+            {status ? <Badge variant="outline">{t(`status.${status}`)}</Badge> : null}
             <ReadinessBadge
               state={card.readinessState}
               label={t(`readiness.${card.readinessState}`)}

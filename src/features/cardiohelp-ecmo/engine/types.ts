@@ -173,6 +173,15 @@ export interface CircuitState {
   hematocrit: number
   preOxygenatorSaturation: number
   postOxygenatorSaturation: number
+  /**
+   * Fraction of drained blood that is freshly returned circuit blood rather than systemic venous
+   * return. A physical property of cannula geometry and the flow the circuit is asked for, so the
+   * scenario sets the tendency — but the observable it produces (`preOxygenatorSaturation`) is
+   * derived from it rather than authored beside it.
+   */
+  recirculationFraction: number
+  /** Circuit flow that reaches the systemic circulation: `bloodFlow × (1 − recirculationFraction)`. */
+  effectiveFlow: number
   drainageChatter: boolean
   flowSensorConnected: boolean
   arterialBubbleDetected: boolean

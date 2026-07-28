@@ -306,17 +306,20 @@ function itemResolution(
 
   if (!selectedItem) {
     if (effectiveRequiredness === 'required') {
-      resolutionState = 'blocking'
-      const message = `Required role ${slot.roleCode} (${slot.label}) has no approved hospital-local resolution.`
+      // A required role with nothing chosen yet is an unfinished card, not a conflict.
+      // Blocking here would make most procedures unbuildable, since many roles have no
+      // catalogued product and are covered by a custom line item instead.
+      resolutionState = 'warning'
+      const message = `No product is selected yet for required role ${slot.roleCode} (${slot.label}).`
       addMessage(state, {
         id: `unresolved-required-${slot.id}`,
-        severity: 'blocking',
+        severity: 'warning',
         code: 'required_role_unresolved',
         message,
         sourceType: 'slot',
         sourceId: slot.id,
       })
-      whyIncluded.push('No active hospital-local mapping is available.')
+      whyIncluded.push('No product selected yet; add one or enter a custom item.')
     } else {
       whyIncluded.push('No active hospital-local mapping is selected.')
     }
@@ -333,6 +336,25 @@ function itemResolution(
       sourceId: selectedItem.id,
     })
     whyIncluded.push(message)
+  } else if (selectedItem.verificationState === 'unverified') {
+    // Unverified products are usable and badged, not withheld. Info severity keeps the
+    // card "complete" while still printing a confirm-before-use flag on every such line.
+    //
+    // The row is resolved: something is chosen and the snapshot carries it. Leaving this at
+    // the initial 'unresolved' made every unverified selection — 158 candidate-tier catalog
+    // products and every custom line — read as an empty requirement in the builder.
+    resolutionState = 'resolved'
+    const message = `${selectedItem.localDescription} is not verified against a current catalog — confirm availability and IFU.`
+    addMessage(state, {
+      id: `unverified-product-${slot.id}`,
+      severity: 'info',
+      code: 'unverified_product',
+      message,
+      sourceType: 'hospital_item',
+      sourceId: selectedItem.id,
+    })
+    verificationState = 'unverified'
+    whyIncluded.push(`Resolved to ${selectedItem.localDescription}.`)
   } else if (selectedItem.verificationState === 'demo_only') {
     resolutionState = 'warning'
     const message = `${selectedItem.localDescription} is demo-only and cannot support production readiness.`
@@ -424,8 +446,14 @@ function snapshotPayload(card: Omit<ResolvedCard, 'snapshotHash'>) {
       id: warning.id,
       waiverReason: warning.waiverReason,
     }))
+  // The hash addresses card *content*, so re-saving an unchanged card keeps its identity.
+  // When it was generated is carried by the row's timestamps, not the hash.
+  const hashableCard: Omit<ResolvedCard, 'snapshotHash' | 'generatedAt'> & {
+    generatedAt?: string
+  } = { ...card }
+  delete hashableCard.generatedAt
   return {
-    ...card,
+    ...hashableCard,
     warnings: card.warnings.map((warning) => {
       const stableWarning: Partial<RuleMessage> = { ...warning }
       delete stableWarning.acknowledged
@@ -598,16 +626,9 @@ export function resolveCard(inputValue: BuildCardInput, context: BuildContext): 
       : 'not_evaluated',
   }))
 
-  if (context.recipe.governanceState !== 'approved') {
-    addMessage(state, {
-      id: 'draft-governance',
-      severity: 'warning',
-      code: 'draft_recipe',
-      message: 'This recipe is a draft prototype and cannot produce a production-approved card.',
-      sourceType: 'governance',
-      sourceId: context.recipe.id,
-    })
-  }
+  // No standing draft-governance warning: every recipe is a draft, so the message was on
+  // every card forever and only duplicated the page-level reference-only banner. The
+  // `prototype` flag below still records it.
 
   for (const message of state.messages) {
     const reason = input.waivers?.[message.id]?.trim()

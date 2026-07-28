@@ -550,5 +550,77 @@
     "reliability_tier": "Tier 1 - regulatory device identity",
     "use_policy": "Use for device identity, DI/package hierarchy, GUDID distribution status, product code, GMDN, and record metadata. Do not treat as sole evidence of current orderability, exact clinical configuration, or platform compatibility.",
     "notes": "Automated exact-identifier matching added in Product_Verification_Backlog and GUDID_Candidate_Matches; all matches require manual approval."
+  },
+  {
+    "source_id": "SRC047",
+    "title": "Getinge US Thoracic Drainage Solutions product pages",
+    "filename": null,
+    "source_type": "Manufacturer product page",
+    "publisher": "Getinge / Atrium Medical Corporation",
+    "revision_date": null,
+    "as_of_date": "2026-07-23",
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for product family naming, configuration, ordering part numbers, and stated operating ranges. Confirm current orderability and full IFU with the manufacturer or supply chain.",
+    "notes": "Covers Oasis dry suction water seal, Express dry seal, Express Mini 500 mobile dry seal, and soft/firm PVC thoracic catheters."
+  },
+  {
+    "source_id": "SRC048",
+    "title": "FUJIFILM Bronchoscope Catalog",
+    "filename": "bronchoscope_catalog_0.pdf",
+    "source_type": "Manufacturer catalog",
+    "publisher": "FUJIFILM Corporation",
+    "revision_date": null,
+    "as_of_date": null,
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for model dimensions, instrument channel size, and optical specifications. The catalog is international; confirm US availability separately, which is why entries here are limited to models the FDA UDI database lists in commercial distribution.",
+    "notes": "Covers the EB-530 and EB-580 series. EB-530XT appears in the catalog but has no FDA UDI record and is therefore not listed."
+  },
+  {
+    "source_id": "SRC049",
+    "title": "Bivona Tracheostomy Tube Catalog",
+    "filename": "p24-5643-bivona-trach-tube-catalog_v7_web.pdf",
+    "source_type": "Manufacturer catalog",
+    "publisher": "ICU Medical",
+    "revision_date": null,
+    "as_of_date": null,
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for tube dimensions, cuff type, and product line naming. Ordering codes were transcribed from the catalog tables and matched one-to-one against FDA UDI records; confirm the exact configuration and full IFU with the manufacturer before use.",
+    "notes": "Cuff status is taken from the product line, not from the presence of the word \"cuffed\": Fome-Cuf, Aire-Cuf, and TTS lines are all cuffed."
+  },
+  {
+    "source_id": "SRC050",
+    "title": "FUJIFILM Endoscopic Ultrasound — ultrasonic endoscopes & ultrasound system",
+    "filename": "Fujifilm_EUS Brochure_03_2025_EN.pdf",
+    "source_type": "Manufacturer brochure",
+    "publisher": "FUJIFILM Healthcare Europe GmbH",
+    "revision_date": "2025-03",
+    "as_of_date": null,
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for system specifications and applicable-endoscope lists. This is a European brochure; US availability is confirmed separately against the FDA UDI database, which is why only devices GUDID reports in commercial distribution are listed.",
+    "notes": "Covers the ARIETTA 850 / 750 FF ENDO systems, SU-1 processor, and the EG-series ultrasonic endoscopes. Only the ARIETTA 750 lists the EB-530US bronchoscope among its applicable endoscopes."
+  },
+  {
+    "source_id": "SRC051",
+    "title": "FUJIFILM EndoSolutions for Pulmonology",
+    "filename": "Fujifilm_EndoSolutionsPulmonology_2023_EN_144dpi.pdf",
+    "source_type": "Manufacturer catalog",
+    "publisher": "FUJIFILM Healthcare Europe GmbH",
+    "revision_date": "2023",
+    "as_of_date": null,
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for bronchoscope and platform specifications and compatibility. European catalog; US availability is confirmed separately against the FDA UDI database.",
+    "notes": "Covers the EB-series bronchoscopes, EB-530US with the SU-1 processor, the SP-900 mini probe system, and the ELUXEO light sources and video processors. The EB-530XT and the FB-120 fiberoptic bronchoscopes appear in this catalog but have no FDA UDI record and are therefore not listed."
+  },
+  {
+    "source_id": "SRC052",
+    "title": "Portex BLUselect Tracheostomy Tubes — ICU Medical product page",
+    "filename": "Portex™ BLUselect™ Tracheostomy Tubes _ ICU Medical.pdf",
+    "source_type": "Manufacturer product page",
+    "publisher": "ICU Medical",
+    "revision_date": null,
+    "as_of_date": "2026-07-27",
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for ordering codes, tube dimensions, cuff type, and fenestration. US product page, so ordering codes are the US ones; every listed code was matched to an FDA UDI record in commercial distribution.",
+    "notes": "Cuff status and fenestration are taken from the ordering table titles read off the page images — this is a web print whose text layer drops those headings. Inner cannulas (101/851, 101/856, 101/858) are excluded: no role exists for them."
   }
 ]

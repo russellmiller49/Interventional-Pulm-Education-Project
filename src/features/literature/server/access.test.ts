@@ -1,7 +1,14 @@
+import { cookies, headers } from 'next/headers'
 import { supabaseServer } from '@/lib/supabase/server'
+
+import { LOCAL_DEV_AUTH_COOKIE_NAME } from '@/lib/site-auth/local-dev-auth'
 
 import { requireLiteratureSiteAdminApi } from './access'
 
+jest.mock('next/headers', () => ({
+  cookies: jest.fn(),
+  headers: jest.fn(),
+}))
 jest.mock('@/lib/supabase/server', () => ({
   supabaseServer: jest.fn(),
 }))
@@ -15,6 +22,8 @@ jest.mock('next/server', () => ({
 }))
 
 const mockedSupabaseServer = jest.mocked(supabaseServer)
+const mockedCookies = jest.mocked(cookies)
+const mockedHeaders = jest.mocked(headers)
 
 function entitlementQuery(result: {
   data: { entitlement: string } | null
@@ -59,6 +68,47 @@ function mockClient(options: {
 describe('literature API authorization', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockedCookies.mockResolvedValue({
+      get: jest.fn().mockReturnValue(undefined),
+    } as never)
+    mockedHeaders.mockResolvedValue({
+      get: jest.fn((name: string) => (name === 'host' ? 'localhost:3001' : null)),
+    } as never)
+  })
+
+  it('accepts the existing localhost-only developer unlock without remote authentication', async () => {
+    const previousEnabled = process.env.LOCAL_DEV_AUTH_ENABLED
+    const previousToken = process.env.LOCAL_DEV_AUTH_TOKEN
+    process.env.LOCAL_DEV_AUTH_ENABLED = '1'
+    process.env.LOCAL_DEV_AUTH_TOKEN = 'local-literature-test-token'
+    mockedCookies.mockResolvedValue({
+      get: jest.fn((name: string) =>
+        name === LOCAL_DEV_AUTH_COOKIE_NAME
+          ? { name, value: 'local-literature-test-token' }
+          : undefined,
+      ),
+    } as never)
+
+    try {
+      const result = await requireLiteratureSiteAdminApi()
+
+      expect(result.ok).toBe(true)
+      if (result.ok) {
+        expect(result.user.email).toBe('local-literature-admin@localhost.invalid')
+      }
+      expect(mockedSupabaseServer).not.toHaveBeenCalled()
+    } finally {
+      if (previousEnabled === undefined) {
+        delete process.env.LOCAL_DEV_AUTH_ENABLED
+      } else {
+        process.env.LOCAL_DEV_AUTH_ENABLED = previousEnabled
+      }
+      if (previousToken === undefined) {
+        delete process.env.LOCAL_DEV_AUTH_TOKEN
+      } else {
+        process.env.LOCAL_DEV_AUTH_TOKEN = previousToken
+      }
+    }
   })
 
   it('rejects an unauthenticated request', async () => {

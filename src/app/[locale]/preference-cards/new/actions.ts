@@ -1,37 +1,39 @@
 'use server'
 
-import { z } from 'zod'
+import { revalidatePath } from 'next/cache'
 
-import {
-  buildDemoContext,
-  getScenarioDefinition,
-} from '@/features/preference-cards/data/demo-context.server'
-import { resolveCard } from '@/features/preference-cards/domain/resolve-card'
-import { buildCardInputSchema } from '@/features/preference-cards/domain/schemas'
-import { persistResolvedCard } from '@/features/preference-cards/server/persist-card'
+import { saveCardRequestSchema } from '@/features/preference-cards/schemas/saved-card'
+import { saveUserCard } from '@/features/preference-cards/server/user-cards'
 
-const requestSchema = z.object({
-  scenarioId: z.string().min(1).max(100),
-  input: buildCardInputSchema,
-})
-
-export async function generatePreferenceCardAction(request: unknown): Promise<{
+export interface SaveCardActionResult {
   ok: boolean
   cardId?: string
   error?: string
-}> {
-  const parsed = requestSchema.safeParse(request)
+}
+
+/**
+ * Save a preference card for the signed-in user.
+ *
+ * The client sends its selections, never its resolution: the card is re-resolved here from
+ * the catalog and the recipe, and that server-built snapshot is what gets stored. Failures
+ * are returned verbatim so the wizard can show what actually went wrong.
+ */
+export async function saveUserCardAction(request: unknown): Promise<SaveCardActionResult> {
+  const parsed = saveCardRequestSchema.safeParse(request)
   if (!parsed.success) {
     return {
       ok: false,
       error: parsed.error.issues[0]?.message ?? 'The preference-card request is invalid.',
     }
   }
-  const scenario = getScenarioDefinition(parsed.data.scenarioId)
-  if (!scenario || scenario.recipeVersionId !== parsed.data.input.recipeVersionId) {
-    return { ok: false, error: 'The scenario and recipe do not match.' }
+
+  const result = await saveUserCard(parsed.data)
+  if (!result.ok || !result.data) {
+    return { ok: false, error: result.error ?? 'The preference card could not be saved.' }
   }
-  const context = buildDemoContext(scenario.id)
-  const card = resolveCard(parsed.data.input, context)
-  return persistResolvedCard(parsed.data.input, card)
+  return { ok: true, cardId: result.data }
+}
+
+export async function revalidatePreferenceCards(locale: string): Promise<void> {
+  revalidatePath(`/${locale}/preference-cards`)
 }

@@ -91,6 +91,13 @@
     "notes": "BFlex 2 records are transcribed from the uploaded 2023 manufacturer brochure; commercial item numbers were not printed."
   },
   {
+    "manufacturer_id": "MFR-66B998A25F",
+    "manufacturer": "Atrium Medical (Getinge)",
+    "default_distributor": null,
+    "website": "https://www.getinge.com/us/products-and-solutions/intensive-care/thoracic-drainage-solutions/",
+    "notes": "Atrium Medical Corporation is the GUDID labeler for the Getinge thoracic drainage line (Oasis, Express, Ocean, and PVC thoracic catheters)."
+  },
+  {
     "manufacturer_id": "MFR-68565E2FD2",
     "manufacturer": "Medtronic",
     "default_distributor": null,
@@ -98,11 +105,25 @@
     "notes": null
   },
   {
+    "manufacturer_id": "MFR-6A25149997",
+    "manufacturer": "ICU Medical",
+    "default_distributor": null,
+    "website": null,
+    "notes": "ICU Medical is the GUDID labeler for the Bivona silicone tracheostomy tubes, and for Portex."
+  },
+  {
     "manufacturer_id": "MFR-6C37CDDB39",
     "manufacturer": "TRACOE",
     "default_distributor": null,
     "website": null,
     "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-711B8B255D",
+    "manufacturer": "Auris Health (Johnson & Johnson)",
+    "default_distributor": null,
+    "website": null,
+    "notes": "Auris Health is the GUDID labeler for the Monarch robotic bronchoscopy platform and its single-use consumables. Now part of Johnson & Johnson MedTech."
   },
   {
     "manufacturer_id": "MFR-760E4EA0D7",
@@ -154,6 +175,13 @@
     "notes": "SonoSite LX/PX systems and transducer models are represented as source-backed model records; exact orderable configurations require verification."
   },
   {
+    "manufacturer_id": "MFR-B91AF4A147",
+    "manufacturer": "Noah Medical",
+    "default_distributor": null,
+    "website": null,
+    "notes": "Noah Medical Corporation is the GUDID labeler for the Galaxy robotic bronchoscopy platform and its single-use bronchoscope."
+  },
+  {
     "manufacturer_id": "MFR-BC7F6D9790",
     "manufacturer": "Ethicon",
     "default_distributor": null,
@@ -180,6 +208,13 @@
     "default_distributor": null,
     "website": null,
     "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-DF7E28B2EB",
+    "manufacturer": "FUJIFILM",
+    "default_distributor": null,
+    "website": null,
+    "notes": "FUJIFILM Corporation is the GUDID labeler for the EB-series bronchoscopes. Separate from FUJIFILM SonoSite, the ultrasound business already listed in the workbook."
   },
   {
     "manufacturer_id": "MFR-E3F284CAE2",

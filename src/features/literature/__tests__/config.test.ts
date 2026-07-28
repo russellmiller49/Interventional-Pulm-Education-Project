@@ -29,9 +29,21 @@ describe('literature configuration', () => {
     expect(validateLiteratureConfigRelations()).toEqual({
       queryCount: 17,
       ruleCount: 20,
-      topicCount: 77,
+      topicCount: 78,
     })
-    expect(flattenLiteratureTaxonomy()).toHaveLength(77)
+    expect(flattenLiteratureTaxonomy()).toHaveLength(78)
+    expect(literatureTaxonomy.topics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'basic-bronchoscopy',
+          label_en: 'Basic bronchoscopy',
+        }),
+        expect.objectContaining({
+          id: 'pleural-interventions',
+          label_en: 'Pleural procedures',
+        }),
+      ]),
+    )
   })
 
   it('rejects a needs-mapping entry that claims known provenance', () => {

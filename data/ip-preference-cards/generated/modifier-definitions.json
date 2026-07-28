@@ -1,0 +1,284 @@
+[
+  {
+    "code": "AIRBORNE_ISOLATION",
+    "name": "Airborne isolation",
+    "groupCode": "location",
+    "description": "PPE bundle, single-use scope option, specimen transport, infection-control prompts — Local infection-control profile",
+    "releaseState": "mvp",
+    "active": true,
+    "appliesTo": "Bronchoscopy",
+    "preview": [
+      "PPE bundle, single-use scope option, specimen transport, infection-control prompts"
+    ],
+    "conflictsWith": [],
+    "actions": [],
+    "informational": true
+  },
+  {
+    "code": "AIRWAY_ETT",
+    "name": "Endotracheal tube",
+    "groupCode": "anesthesia_airway",
+    "description": "Swivel adapter; scope outside-diameter and working-channel validation against ETT inside diameter — Typed compatibility rule",
+    "releaseState": "mvp",
+    "active": true,
+    "appliesTo": "Bronchoscopy",
+    "preview": [
+      "Swivel adapter; scope outside-diameter and working-channel validation against ETT inside diameter"
+    ],
+    "conflictsWith": ["AIRWAY_LMA"],
+    "actions": [],
+    "informational": true
+  },
+  {
+    "code": "AIRWAY_LMA",
+    "name": "Laryngeal mask airway",
+    "groupCode": "anesthesia_airway",
+    "description": "LMA-compatible bronchoscopy adapter and scope-size validation — Typed compatibility rule",
+    "releaseState": "mvp",
+    "active": true,
+    "appliesTo": "Bronchoscopy",
+    "preview": ["LMA-compatible bronchoscopy adapter and scope-size validation"],
+    "conflictsWith": ["AIRWAY_ETT"],
+    "actions": [],
+    "informational": true
+  },
+  {
+    "code": "ANES_GENERAL",
+    "name": "General anesthesia",
+    "groupCode": "anesthesia_airway",
+    "description": "Airway device, anesthesia circuit/adapters, ventilation equipment, room readiness checks — Anesthesia profile",
+    "releaseState": "mvp",
+    "active": true,
+    "appliesTo": "Bronchoscopy / thoracoscopy",
+    "preview": [
+      "Airway device, anesthesia circuit/adapters, ventilation equipment, room readiness checks"
+    ],
+    "conflictsWith": ["ANES_MOD_SED"],
+    "actions": [],
+    "informational": true
+  },
+  {
+    "code": "ANES_MOD_SED",
+    "name": "Moderate sedation",
+    "groupCode": "anesthesia_airway",
+    "description": "Oxygen delivery, bite block, monitoring, reversal/emergency readiness prompts — Medication details remain local",
+    "releaseState": "mvp",
+    "active": true,
+    "appliesTo": "Flexible bronchoscopy / pleural",
+    "preview": ["Oxygen delivery, bite block, monitoring, reversal/emergency readiness prompts"],
+    "conflictsWith": ["ANES_GENERAL"],
+    "actions": [],
+    "informational": true
+  },
+  {
+    "code": "CBCT",
+    "name": "Cone-beam CT / 3D imaging",
+    "groupCode": "imaging_navigation",
+    "description": "CBCT platform, table/room requirements, sterile draping, registration and confirmation workflow — Platform-specific profile",
+    "releaseState": "mvp",
+    "active": true,
+    "appliesTo": "Peripheral bronchoscopy / ablation",
+    "preview": [
+      "CBCT platform, table/room requirements, sterile draping, registration and confirmation workflow"
+    ],
+    "conflictsWith": [],
+    "actions": [],
+    "informational": true
+  },
+  {
+    "code": "CRYOTHERAPY",
+    "name": "Cryotherapy / cryoextraction",
+    "groupCode": "therapeutic",
+    "description": "Cryosurgery unit, gas, footswitch, probe, adapters, thaw/specimen workflow — Typed platform compatibility",
+    "releaseState": "mvp",
+    "active": true,
+    "appliesTo": "Therapeutic / rigid / TBLC",
+    "preview": ["Cryosurgery unit, gas, footswitch, probe, adapters, thaw/specimen workflow"],
+    "conflictsWith": [],
+    "actions": [],
+    "informational": true
+  },
+  {
+    "code": "ELECTROCAUTERY",
+    "name": "Electrocautery",
+    "groupCode": "therapeutic",
+    "description": "Generator, probe/knife/snare/forceps, cable/adapters, return electrode if required, fire prompts — Typed platform compatibility",
+    "releaseState": "mvp",
+    "active": true,
+    "appliesTo": "Therapeutic / rigid",
+    "preview": [
+      "Generator, probe/knife/snare/forceps, cable/adapters, return electrode if required, fire prompts"
+    ],
+    "conflictsWith": [],
+    "actions": [],
+    "informational": true
+  },
+  {
+    "code": "ENV_BRONCH_SUITE",
+    "name": "Bronchoscopy suite",
+    "groupCode": "location",
+    "description": "Suite-specific tower, suction, monitor, storage locations — Room profile",
+    "releaseState": "mvp",
+    "active": true,
+    "appliesTo": "All",
+    "preview": ["Suite-specific tower, suction, monitor, storage locations"],
+    "conflictsWith": ["ENV_ICU_BEDSIDE", "ENV_OR"],
+    "actions": [],
+    "informational": true
+  },
+  {
+    "code": "ENV_ICU_BEDSIDE",
+    "name": "ICU / bedside",
+    "groupCode": "location",
+    "description": "Portable tower or single-use scope, bedside ultrasound, portable suction, airway adapter, transport cart — Room profile",
+    "releaseState": "mvp",
+    "active": true,
+    "appliesTo": "Flexible bronchoscopy, PDT, pleural drainage",
+    "preview": [
+      "Portable tower or single-use scope, bedside ultrasound, portable suction, airway adapter, transport cart"
+    ],
+    "conflictsWith": ["ENV_BRONCH_SUITE", "ENV_OR"],
+    "actions": [],
+    "informational": true
+  },
+  {
+    "code": "ENV_OR",
+    "name": "Operating room",
+    "groupCode": "location",
+    "description": "OR table/positioning, anesthesia circuit, electrosurgical safety, room-specific devices — Room profile",
+    "releaseState": "mvp",
+    "active": true,
+    "appliesTo": "All bronchoscopy / pleural procedures",
+    "preview": [
+      "OR table/positioning, anesthesia circuit, electrosurgical safety, room-specific devices"
+    ],
+    "conflictsWith": ["ENV_BRONCH_SUITE", "ENV_ICU_BEDSIDE"],
+    "actions": [],
+    "informational": true
+  },
+  {
+    "code": "LASER",
+    "name": "Laser",
+    "groupCode": "therapeutic",
+    "description": "Laser console/fiber, eyewear/signage, smoke evacuation, fire safety, credential/readiness prompt — Room credential and readiness rule",
+    "releaseState": "phase_1_1",
+    "active": true,
+    "appliesTo": "Therapeutic / rigid",
+    "preview": [
+      "Laser console/fiber, eyewear/signage, smoke evacuation, fire safety, credential/readiness prompt"
+    ],
+    "conflictsWith": [],
+    "actions": [],
+    "informational": true
+  },
+  {
+    "code": "NAVIGATION",
+    "name": "Electromagnetic or other navigation",
+    "groupCode": "imaging_navigation",
+    "description": "Navigation workstation, field generator or patches, locatable guide/catheter, registration accessories — Platform-specific bundle",
+    "releaseState": "mvp",
+    "active": true,
+    "appliesTo": "Peripheral bronchoscopy",
+    "preview": [
+      "Navigation workstation, field generator or patches, locatable guide/catheter, registration accessories"
+    ],
+    "conflictsWith": [],
+    "actions": [],
+    "informational": true
+  },
+  {
+    "code": "PLEURAL_MANOMETRY",
+    "name": "Pleural manometry",
+    "groupCode": "pleural",
+    "description": "Manometer or pressure-transducer system, stopcocks/tubing, measurement workflow — Local equipment profile",
+    "releaseState": "phase_2",
+    "active": true,
+    "appliesTo": "Thoracentesis / pleural drainage",
+    "preview": ["Manometer or pressure-transducer system, stopcocks/tubing, measurement workflow"],
+    "conflictsWith": [],
+    "actions": [],
+    "informational": true
+  },
+  {
+    "code": "RADIAL_EBUS",
+    "name": "Radial EBUS",
+    "groupCode": "imaging_navigation",
+    "description": "Probe, drive unit, guide sheath if used, probe-protection and localization supplies — Scope/channel compatibility",
+    "releaseState": "mvp",
+    "active": true,
+    "appliesTo": "Peripheral bronchoscopy",
+    "preview": [
+      "Probe, drive unit, guide sheath if used, probe-protection and localization supplies"
+    ],
+    "conflictsWith": [],
+    "actions": [],
+    "informational": true
+  },
+  {
+    "code": "ROBOTIC",
+    "name": "Robotic bronchoscopy",
+    "groupCode": "imaging_navigation",
+    "description": "Robotic console, catheter, vision probe, platform-specific tools and drapes — Platform-specific bundle",
+    "releaseState": "mvp",
+    "active": true,
+    "appliesTo": "Peripheral bronchoscopy",
+    "preview": ["Robotic console, catheter, vision probe, platform-specific tools and drapes"],
+    "conflictsWith": [],
+    "actions": [],
+    "informational": true
+  },
+  {
+    "code": "SPEC_FLOW",
+    "name": "Flow cytometry",
+    "groupCode": "sampling",
+    "description": "Flow medium/container, labels, transport-time prompt — Local laboratory profile",
+    "releaseState": "mvp",
+    "active": true,
+    "appliesTo": "EBUS / pleural / biopsy",
+    "preview": ["Flow medium/container, labels, transport-time prompt"],
+    "conflictsWith": [],
+    "actions": [],
+    "informational": true
+  },
+  {
+    "code": "SPEC_MICRO",
+    "name": "Microbiology specimens",
+    "groupCode": "sampling",
+    "description": "Sterile traps/containers, transport media, labels, biosafety transport — Local laboratory profile",
+    "releaseState": "mvp",
+    "active": true,
+    "appliesTo": "Bronchoscopy / pleural",
+    "preview": ["Sterile traps/containers, transport media, labels, biosafety transport"],
+    "conflictsWith": [],
+    "actions": [],
+    "informational": true
+  },
+  {
+    "code": "STENT_REMOVE",
+    "name": "Stent removal",
+    "groupCode": "therapeutic",
+    "description": "Rigid extraction forceps, flexible graspers, retrieval tools, granulation treatment, replacement backup — Dedicated recipe",
+    "releaseState": "phase_1_1",
+    "active": true,
+    "appliesTo": "Airway stent procedure",
+    "preview": [
+      "Rigid extraction forceps, flexible graspers, retrieval tools, granulation treatment, replacement backup"
+    ],
+    "conflictsWith": [],
+    "actions": [],
+    "informational": true
+  },
+  {
+    "code": "TALC_POUDRAGE",
+    "name": "Talc poudrage",
+    "groupCode": "pleural",
+    "description": "Sterile graded talc, poudrage applicator/kit, documentation prompts — Medication/product verification",
+    "releaseState": "phase_1_1",
+    "active": true,
+    "appliesTo": "Medical thoracoscopy",
+    "preview": ["Sterile graded talc, poudrage applicator/kit, documentation prompts"],
+    "conflictsWith": [],
+    "actions": [],
+    "informational": true
+  }
+]

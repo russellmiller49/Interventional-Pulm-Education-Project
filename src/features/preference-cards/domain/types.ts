@@ -386,11 +386,19 @@ export interface ResolvedCard {
 export interface ScenarioDefinition {
   id: string
   title: string
+  /** Recipe label from the source procedure; may differ from the scenario title. */
+  recipeName: string
   shortDescription: string
   recipeVersionId: string
   sourceProcedureCode: string
+  templateVersion: string
   defaultModifierCodes: string[]
+  availableModifierCodes: string[]
   requiredRoleMappingPercentage: number
+  /** Roles this procedure requests that have no catalogued product; surfaced honestly in the UI. */
+  emptyRoleCodes: string[]
+  slotCount: number
+  requiredSlotCount: number
   governanceState: GovernanceState
   owner: string | null
 }

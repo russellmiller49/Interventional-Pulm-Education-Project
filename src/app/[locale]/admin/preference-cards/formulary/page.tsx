@@ -7,10 +7,8 @@ import { Button } from '@/components/ui/button'
 import { AdminPreferenceCardNav } from '@/features/preference-cards/components/AdminPreferenceCardNav'
 import { getFormularyRoleRows } from '@/features/preference-cards/data/demo-context.server'
 
-import { saveHospitalMappingAction } from './actions'
-
 export const metadata: Metadata = {
-  title: 'Preference-card formulary mapping',
+  title: 'Preference-card formulary coverage',
   robots: { index: false, follow: false, noarchive: true },
 }
 
@@ -19,6 +17,15 @@ interface PageProps {
   searchParams: Promise<{ unresolved?: string | string[] }>
 }
 
+/**
+ * Read-only coverage view: which procedure requirements resolve to a seeded item and which
+ * do not.
+ *
+ * This page used to write hospital-local mappings into an organization/site/room schema that
+ * was never applied and has since been dropped in favour of per-user cards. Cards now carry
+ * their own product choices, made from the catalog in the wizard, so there is no shared
+ * formulary to edit — what remains useful is seeing where the seed data is thin.
+ */
 export default async function PreferenceCardFormularyPage({ params, searchParams }: PageProps) {
   const { locale } = await params
   setRequestLocale(locale)
@@ -36,7 +43,7 @@ export default async function PreferenceCardFormularyPage({ params, searchParams
       <header className="space-y-4">
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t('eyebrow')}</p>
         <h1 className="text-4xl font-black tracking-tight">{t('admin.formularyTitle')}</h1>
-        <p className="max-w-3xl text-muted-foreground">{t('admin.mappingSeedNote')}</p>
+        <p className="max-w-3xl text-muted-foreground">{t('admin.formularyReadOnlyNote')}</p>
         <AdminPreferenceCardNav locale={locale} />
       </header>
 
@@ -59,13 +66,10 @@ export default async function PreferenceCardFormularyPage({ params, searchParams
 
       <div className="grid gap-5">
         {rows.map((row) => (
-          <form
-            action={saveHospitalMappingAction}
+          <section
             key={row.roleCode}
             className="rounded-2xl border border-border bg-card p-5 shadow-sm"
           >
-            <input type="hidden" name="locale" value={locale} />
-            <input type="hidden" name="roleCode" value={row.roleCode} />
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -79,92 +83,63 @@ export default async function PreferenceCardFormularyPage({ params, searchParams
                   {row.roleCode} · {row.scenarioTitle}
                 </p>
               </div>
-              <Button type="submit" size="sm">
-                {t('admin.saveMapping')}
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/${locale}/preference-cards/catalog/uses/${row.roleCode}` as Route}>
+                  {t('admin.viewCatalogUse')}
+                </Link>
               </Button>
             </div>
 
-            <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <label className="text-sm font-medium text-foreground md:col-span-2">
-                {t('admin.product')}
-                <select
-                  name="catalogProductId"
-                  defaultValue={row.selectedItem?.catalogProduct?.productId ?? ''}
-                  className="mt-1 h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
-                >
-                  <option value="">{t('admin.genericLocalResource')}</option>
-                  {row.eligibleProducts.map((product) => (
-                    <option key={product.productId} value={product.productId}>
-                      {[product.manufacturer, product.productName, product.catalogNumber]
-                        .filter(Boolean)
-                        .join(' · ')}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="text-sm font-medium text-foreground md:col-span-2">
-                {t('admin.localItem')}
-                <input
-                  name="localDescription"
-                  required
-                  maxLength={240}
-                  defaultValue={row.selectedItem?.localDescription ?? ''}
-                  className="mt-1 h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
-                />
-              </label>
-              <label className="text-sm font-medium text-foreground">
-                {t('admin.localItemNumber')}
-                <input
-                  name="localItemNumber"
-                  maxLength={120}
-                  defaultValue={row.selectedItem?.localItemNumber ?? ''}
-                  className="mt-1 h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
-                />
-              </label>
-              <label className="text-sm font-medium text-foreground">
-                {t('admin.uom')}
-                <input
-                  name="localUom"
-                  maxLength={80}
-                  defaultValue={row.selectedItem?.localUom ?? ''}
-                  className="mt-1 h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
-                />
-              </label>
-              <label className="text-sm font-medium text-foreground">
-                {t('admin.storage')}
-                <input
-                  name="storageLocation"
-                  maxLength={160}
-                  defaultValue={row.selectedItem?.storageLocation ?? ''}
-                  className="mt-1 h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
-                />
-              </label>
-              <label className="text-sm font-medium text-foreground">
-                {t('admin.semantics')}
-                <select
-                  name="substitutionClass"
-                  defaultValue="preferred"
-                  className="mt-1 h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
-                >
+            <dl className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <div className="md:col-span-2">
+                <dt className="text-sm font-medium text-foreground">{t('admin.localItem')}</dt>
+                <dd className="mt-1 text-sm text-muted-foreground">
+                  {row.selectedItem?.localDescription ?? t('unresolvedLocalItem')}
+                </dd>
+              </div>
+              <div className="md:col-span-2">
+                <dt className="text-sm font-medium text-foreground">{t('admin.product')}</dt>
+                <dd className="mt-1 text-sm text-muted-foreground">
                   {[
-                    'preferred',
-                    'acceptable',
-                    'shortage_substitute',
-                    'backup',
-                    'emergency_only',
-                    'no_substitute',
-                  ].map((value) => (
-                    <option key={value} value={value}>
-                      {value.replaceAll('_', ' ')}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
+                    row.selectedItem?.catalogProduct?.manufacturer,
+                    row.selectedItem?.catalogProduct?.productName,
+                    row.selectedItem?.catalogProduct?.catalogNumber,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ') || t('admin.genericLocalResource')}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-foreground">
+                  {t('admin.localItemNumber')}
+                </dt>
+                <dd className="mt-1 font-mono text-sm text-muted-foreground">
+                  {row.selectedItem?.localItemNumber ?? '—'}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-foreground">{t('admin.uom')}</dt>
+                <dd className="mt-1 text-sm text-muted-foreground">
+                  {row.selectedItem?.localUom ?? '—'}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-foreground">{t('admin.storage')}</dt>
+                <dd className="mt-1 text-sm text-muted-foreground">
+                  {row.selectedItem?.storageLocation ?? '—'}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-foreground">{t('columns.verification')}</dt>
+                <dd className="mt-1 text-sm text-muted-foreground">
+                  {row.selectedItem?.verificationState ?? 'unverified'}
+                </dd>
+              </div>
+            </dl>
             <p className="mt-4 text-xs text-muted-foreground">
-              {row.selectedItem?.verificationState ?? 'unverified'} · {t('admin.mappingPrototype')}
+              {t('admin.eligibleProductCount', { count: row.eligibleProducts.length })}
             </p>
-          </form>
+          </section>
         ))}
       </div>
     </div>

@@ -61,4 +61,36 @@ describe('gold-set review workspace', () => {
     expect(screen.queryByText('3. Categorization for included articles')).not.toBeInTheDocument()
     expect(screen.getByText('Exclude').closest('button')).toHaveAttribute('aria-pressed', 'true')
   })
+
+  it('shows the expanded clinical, study-design, and publication categories', () => {
+    render(<GoldSetReviewWorkspace item={item} locale="en" queueSplit="development" />)
+
+    fireEvent.keyDown(window, { key: '1' })
+
+    expect(screen.getByText('Basic bronchoscopy')).toBeInTheDocument()
+    expect(screen.getByText('Pleural procedures')).toBeInTheDocument()
+    expect(screen.getByText('Multiple/general overview')).toBeInTheDocument()
+    expect(screen.getAllByText('Not assessable from available metadata')).toHaveLength(3)
+    expect(screen.getByRole('option', { name: 'Review article' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('checkbox', { name: /Categorization required full-text review/u }),
+    ).toBeInTheDocument()
+  })
+
+  it('clears the full-text categorization flag when an article is excluded', () => {
+    render(<GoldSetReviewWorkspace item={item} locale="en" queueSplit="development" />)
+
+    fireEvent.keyDown(window, { key: '1' })
+    const fullTextCheckbox = screen.getByRole('checkbox', {
+      name: /Categorization required full-text review/u,
+    })
+    fireEvent.click(fullTextCheckbox)
+    expect(fullTextCheckbox).toBeChecked()
+
+    fireEvent.keyDown(window, { key: '3' })
+    fireEvent.keyDown(window, { key: '1' })
+    expect(
+      screen.getByRole('checkbox', { name: /Categorization required full-text review/u }),
+    ).not.toBeChecked()
+  })
 })

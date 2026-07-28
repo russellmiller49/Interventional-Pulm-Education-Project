@@ -11,6 +11,7 @@ import {
   Clock,
   Download,
   Filter,
+  FlaskConical,
   Headphones,
   KeyRound,
   RotateCcw,
@@ -1553,6 +1554,12 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
+              <Button asChild variant="outline">
+                <Link href={'/admin/modules' as Route}>
+                  <FlaskConical className="h-4 w-4" aria-hidden />
+                  Modules in development
+                </Link>
+              </Button>
               <Button asChild variant="outline">
                 <Link href={'/admin/literature' as Route}>
                   <BookOpen className="h-4 w-4" aria-hidden />

@@ -1,4 +1,16 @@
 // Reviewed stable domain expectations; intentionally separate from UI snapshots.
+//
+// Hashes and the central-airway readiness state were regenerated in v0.2, when:
+//   - the snapshot payload stopped including `generatedAt` (the hash addresses card
+//     content, so re-saving unchanged content keeps its identity), and
+//   - an unresolved required role became a warning instead of a blocker, and the
+//     deliberately-failing APC rule moved out of the production seed into a test fixture.
+// Item and suppression counts are unchanged from v0.1.
+//
+// `ebusRoseMolecular` was rehashed again when the Olympus EU-ME2 row was corrected to sit in
+// the EVIS EUS product line and both ultrasound centres were renamed to carry their model
+// numbers (see seed/product-overrides.json). The card's ultrasound-processor line reads
+// differently, so its content hash moves; the item and suppression counts do not.
 export const goldenScenarioExpectations = {
   ebusRoseMolecular: {
     scenarioId: 'ebus-rose-molecular',
@@ -6,7 +18,7 @@ export const goldenScenarioExpectations = {
     readinessState: 'complete_with_warnings',
     itemCount: 17,
     suppressedItemCount: 0,
-    snapshotHash: 'f739cacc033943445b3e7a2ec0f6841b01762772a33e573a1b750dd76a2ccf25',
+    snapshotHash: 'c618e19cb98c195fab83255495b9f2abed88e4ec2bb6592e31311e35f13b8c6c',
   },
   centralAirwayObstruction: {
     scenarioId: 'central-airway-obstruction',
@@ -19,10 +31,10 @@ export const goldenScenarioExpectations = {
       'FLUOROSCOPY',
       'HIGH_BLEED_RISK',
     ],
-    readinessState: 'blocked',
+    readinessState: 'complete_with_warnings',
     itemCount: 50,
     suppressedItemCount: 0,
-    snapshotHash: '0eb8a8f52a794e3211129a82a4a63ad4774785d856180257efe7e78ca7ed9299',
+    snapshotHash: 'ef39991f0cbadc6102f2cda039ffc54b67432b757324916ce435b899df7b29cd',
   },
   chestTubeSmallBoreDigital: {
     scenarioId: 'chest-tube',
@@ -30,7 +42,7 @@ export const goldenScenarioExpectations = {
     readinessState: 'complete_with_warnings',
     itemCount: 11,
     suppressedItemCount: 1,
-    snapshotHash: 'a5d7fc30e3da8504b4d264d181b9c9d47d20cd6250f206a78a3df48334e81181',
+    snapshotHash: '0724bc554558f421912d63ab80205f236fc8eeea81d8dc4cbfb3839be0e98783',
   },
   chestTubeLargeBoreConventional: {
     scenarioId: 'chest-tube',
@@ -38,6 +50,6 @@ export const goldenScenarioExpectations = {
     readinessState: 'complete_with_warnings',
     itemCount: 12,
     suppressedItemCount: 0,
-    snapshotHash: '017d342b9bd28c759fa45851c80707dea213e50ce9f8f02cb7bfd86244534b9c',
+    snapshotHash: '31f3d27d2a21f1fe50e81d8eb1b94a5e8e3ee1962300b9b249c77532851eb529',
   },
 } as const

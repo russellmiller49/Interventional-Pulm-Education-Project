@@ -64,6 +64,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-023CDB45EE",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 05021312013774",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-023CDB45EE",
+    "source_id": "SRC049",
+    "source_location": "Product code 67FHXL80",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-02641F9166",
     "source_id": "SRC030",
     "source_location": "p. 88",
@@ -128,11 +144,43 @@
     "notes": null
   },
   {
+    "product_id": "PRD-03ABC75AEE",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312013733",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-03ABC75AEE",
+    "source_id": "SRC049",
+    "source_location": "Product code 60HA50",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-03B374F7B8",
     "source_id": "SRC006",
     "source_location": "Product list 2025!bonastent",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-040CC03419",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006957",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-040CC03419",
+    "source_id": "SRC049",
+    "source_location": "Product code 85N030",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -189,6 +237,22 @@
     "source_location": "pp. 55-57",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - U.S. manufacturer brochure",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-04A299EF7E",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862150241",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-04A299EF7E",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
     "notes": null
   },
   {
@@ -408,6 +472,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-08F2047797",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862130106",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-08F2047797",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-09192221FE",
     "source_id": "SRC001",
     "source_location": "p. 25",
@@ -424,12 +504,36 @@
     "notes": null
   },
   {
+    "product_id": "PRD-09AB6CA202",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 10810068810988",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-09AF1B1AE5",
     "source_id": "SRC019",
     "source_location": "APC pressure reducers and gas accessories, catalog pp. 10-11",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-0A062BF907",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006421",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0A062BF907",
+    "source_id": "SRC049",
+    "source_location": "Product code 750180",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
   },
   {
     "product_id": "PRD-0A2A8CB33F",
@@ -464,6 +568,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-0A889B7C1B",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006254",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0A889B7C1B",
+    "source_id": "SRC049",
+    "source_location": "Product code 67P030",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-0A9806F6F2",
     "source_id": "SRC017",
     "source_location": "Bipolar cables, catalog p. 11",
@@ -488,6 +608,30 @@
     "notes": null
   },
   {
+    "product_id": "PRD-0B677E0328",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI B634MON0000050",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0B94236A0C",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312007039",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0B94236A0C",
+    "source_id": "SRC049",
+    "source_location": "Product code 85P050",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-0BA1BB5296",
     "source_id": "SRC021",
     "source_location": "p. 13",
@@ -509,6 +653,22 @@
     "source_location": "p. 26",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0BD5A16970",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312013801",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0BD5A16970",
+    "source_id": "SRC049",
+    "source_location": "Product code 67HA70",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -568,6 +728,38 @@
     "notes": null
   },
   {
+    "product_id": "PRD-0D41BB92EA",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862130120",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0D41BB92EA",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0D52EE5808",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005578",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0D52EE5808",
+    "source_id": "SRC049",
+    "source_location": "Product code 60A180",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-0D6E4DB711",
     "source_id": "SRC012",
     "source_location": "Respiratory 14.09 (PDF p. 122)",
@@ -584,6 +776,22 @@
     "notes": "Historical brochure added for provenance only; record remains suppressed."
   },
   {
+    "product_id": "PRD-0DE5F7D9EF",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005547",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0DE5F7D9EF",
+    "source_id": "SRC049",
+    "source_location": "Product code 60A150",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-0E088FC681",
     "source_id": "SRC027",
     "source_location": "p. 15",
@@ -597,6 +805,22 @@
     "source_location": "p. 52",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0E9FB83457",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862132247",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0E9FB83457",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
     "notes": null
   },
   {
@@ -680,6 +904,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-0FDB2829E5",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 14026704911902",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-0FECB0AD06",
     "source_id": "SRC030",
     "source_location": "p. 91",
@@ -741,6 +973,22 @@
     "source_location": "p. 15",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog and IFU",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1095EC33EA",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312013832",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1095EC33EA",
+    "source_id": "SRC049",
+    "source_location": "Product code 75HA60",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -821,6 +1069,14 @@
     "source_location": "p. 2.13",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current market status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1274FDC47F",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704417469",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -944,6 +1200,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-14C4B0C4B4",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005981",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-14C4B0C4B4",
+    "source_id": "SRC049",
+    "source_location": "Product code 65P045",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-14D0927E5A",
     "source_id": "SRC021",
     "source_location": "p. 22",
@@ -984,6 +1256,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-1542B5E7CF",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312013696",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1542B5E7CF",
+    "source_id": "SRC049",
+    "source_location": "Product code 60HA30",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-15747FB1A6",
     "source_id": "SRC043",
     "source_location": "p. 2",
@@ -992,11 +1280,35 @@
     "notes": null
   },
   {
+    "product_id": "PRD-15D0FCE237",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558292",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-15E6B259A7",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-15E6FABAF4",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006292",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-15E6FABAF4",
+    "source_id": "SRC049",
+    "source_location": "Product code 67P050",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -1013,6 +1325,22 @@
     "source_location": "p. 52",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer brochure; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1673C58CEF",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04573596214008",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1673C58CEF",
+    "source_id": "SRC050",
+    "source_location": "p. 18, ARIETTA 750 FF ENDO Diagnostic Ultrasound System",
+    "claim_type": "Specifications, compatibility, and product naming",
+    "verification_status": "Transcribed from the manufacturer brochure",
     "notes": null
   },
   {
@@ -1112,6 +1440,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-18B68E4FF0",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006971",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-18B68E4FF0",
+    "source_id": "SRC049",
+    "source_location": "Product code 85N040",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-18D62EB4E8",
     "source_id": "SRC021",
     "source_location": "p. 6",
@@ -1144,6 +1488,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-1971F84681",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862130243",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1971F84681",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-19AC7F0794",
     "source_id": "SRC024",
     "source_location": "p. 2",
@@ -1158,6 +1518,22 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-19CBF1BDA8",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006094",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-19CBF1BDA8",
+    "source_id": "SRC049",
+    "source_location": "Product code 670190",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
   },
   {
     "product_id": "PRD-19D03D9B14",
@@ -1192,6 +1568,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-19EB39DDA8",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558544",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-1A0C09927F",
     "source_id": "SRC016",
     "source_location": "Specifications table, brochure p. 2",
@@ -1205,6 +1589,22 @@
     "source_location": "Product list 2025!Sheet8",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1B17AB9452",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005783",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1B17AB9452",
+    "source_id": "SRC049",
+    "source_location": "Product code 60P055",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -1344,6 +1744,38 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-1E02D8D533",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 05021312013767",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1E02D8D533",
+    "source_id": "SRC049",
+    "source_location": "Product code 67FHXL70",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1E256C03FD",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005998",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1E256C03FD",
+    "source_id": "SRC049",
+    "source_location": "Product code 65P050",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-1E339ED4FF",
     "source_id": "SRC030",
     "source_location": "p. 88",
@@ -1392,6 +1824,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-1F0A588D48",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312013795",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1F0A588D48",
+    "source_id": "SRC049",
+    "source_location": "Product code 67HA60",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-1F48992C6C",
     "source_id": "SRC008",
     "source_location": "CSV row 3",
@@ -1429,6 +1877,22 @@
     "source_location": "pp. 44-48",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1FF7F18F7C",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077339",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1FF7F18F7C",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/815/060",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
     "notes": null
   },
   {
@@ -1568,6 +2032,38 @@
     "notes": null
   },
   {
+    "product_id": "PRD-22D9D12C16",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006988",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-22D9D12C16",
+    "source_id": "SRC049",
+    "source_location": "Product code 85P025",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-22E565D381",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312015638",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-22E565D381",
+    "source_id": "SRC049",
+    "source_location": "Product code 60AFHXL60",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2302DA77DA",
     "source_id": "SRC003",
     "source_location": "p. 3",
@@ -1581,6 +2077,22 @@
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-234CBAADF6",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077513",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-234CBAADF6",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/817/100",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
     "notes": null
   },
   {
@@ -1630,6 +2142,22 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - current manufacturer page capture",
     "notes": "Exact ordering table and product specifications shown on manufacturer page capture."
+  },
+  {
+    "product_id": "PRD-23D02BB26C",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862132209",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-23D02BB26C",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
+    "notes": null
   },
   {
     "product_id": "PRD-23D7DAB53A",
@@ -1760,6 +2288,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-254809271D",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005974",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-254809271D",
+    "source_id": "SRC049",
+    "source_location": "Product code 65P040",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-25D4F080A3",
     "source_id": "SRC021",
     "source_location": "p. 18",
@@ -1829,6 +2373,22 @@
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-26ABB902BA",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006087",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-26ABB902BA",
+    "source_id": "SRC049",
+    "source_location": "Product code 670185",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -1912,6 +2472,30 @@
     "notes": null
   },
   {
+    "product_id": "PRD-284C287F6C",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312013849",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-284C287F6C",
+    "source_id": "SRC049",
+    "source_location": "Product code 75HA70",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-28A6EE6D23",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558452",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-28A9600774",
     "source_id": "SRC043",
     "source_location": "p. 1",
@@ -1928,12 +2512,36 @@
     "notes": null
   },
   {
+    "product_id": "PRD-28DF28AD09",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077506",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-28DF28AD09",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/817/090",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-293EEBCDF0",
     "source_id": "SRC019",
     "source_location": "APC pressure reducers and gas accessories, catalog pp. 10-11",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-2941300796",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 34026704410089",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
   },
   {
     "product_id": "PRD-2952D06A3F",
@@ -1976,6 +2584,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-29E98A6ED6",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 00850048825031",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2A67871443",
     "source_id": "SRC006",
     "source_location": "Product list 2025!Sheet5",
@@ -1992,11 +2608,35 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2A7E3A4C88",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312013726",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2A7E3A4C88",
+    "source_id": "SRC049",
+    "source_location": "Product code 60HA45",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2A8E02EC0E",
     "source_id": "SRC001",
     "source_location": "p. 29",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2A9186F3F5",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI B634MON0007090",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -2032,6 +2672,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2B5C66F3AB",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077452",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2B5C66F3AB",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/816/090",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2B8AACAB67",
     "source_id": "SRC029",
     "source_location": "p. 2",
@@ -2053,6 +2709,30 @@
     "source_location": "pp. 53-55",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2C0C6A3F3C",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04953170402470",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2C1F40E815",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312015669",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2C1F40E815",
+    "source_id": "SRC049",
+    "source_location": "Product code 60AFHXL90",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -2144,6 +2824,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2D2AC3B109",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312013740",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2D2AC3B109",
+    "source_id": "SRC049",
+    "source_location": "Product code 60HA55",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2D588804C5",
     "source_id": "SRC006",
     "source_location": "Product list 2025!Sheet6",
@@ -2157,6 +2853,22 @@
     "source_location": "p. 95",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified exact model/specification - commercial item code required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2D7DC0B764",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312007015",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2D7DC0B764",
+    "source_id": "SRC049",
+    "source_location": "Product code 85P040",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -2272,6 +2984,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2F1DF55F3C",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 00650862164008",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2F1DF55F3C",
+    "source_id": "SRC047",
+    "source_location": "Express Mini 500 mobile dry seal drain",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2F3F39DBA3",
     "source_id": "SRC003",
     "source_location": "p. 7",
@@ -2312,6 +3040,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2FD558D7CD",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312007046",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2FD558D7CD",
+    "source_id": "SRC049",
+    "source_location": "Product code 85P055",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2FFEEB98B2",
     "source_id": "SRC002",
     "source_location": "pp. 2-5",
@@ -2336,11 +3080,67 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-30BD29FE91",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862132407",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-30BD29FE91",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-3119D76B4D",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 00650862111019",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-3119D76B4D",
+    "source_id": "SRC047",
+    "source_location": "Oasis dry suction water seal chest drain — Ordering Information",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-312C14D983",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 14026704911919",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-31373D9CE6",
     "source_id": "SRC043",
     "source_location": "p. 1",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer ordering-page capture",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-315023EFEF",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005684",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-315023EFEF",
+    "source_id": "SRC049",
+    "source_location": "Product code 60N025",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -2416,6 +3216,22 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-337D7942C1",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077421",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-337D7942C1",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/816/075",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-33C62E2093",
     "source_id": "SRC030",
     "source_location": "p. 91",
@@ -2488,11 +3304,43 @@
     "notes": null
   },
   {
+    "product_id": "PRD-3496BE691A",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006025",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-3496BE691A",
+    "source_id": "SRC049",
+    "source_location": "Product code 670150",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-34BAA70074",
     "source_id": "SRC029",
     "source_location": "p. 2",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer flyer; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-34C95CA615",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 14026704911896",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-34DC6AE7FD",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04953170335198",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -2592,6 +3440,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-38DED67ECF",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704428779",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-38F9E96675",
     "source_id": "SRC030",
     "source_location": "p. 88",
@@ -2613,6 +3469,22 @@
     "source_location": "p. 1",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer ordering-page capture",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-399E04C9C8",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006230",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-399E04C9C8",
+    "source_id": "SRC049",
+    "source_location": "Product code 67N040",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -2693,6 +3565,14 @@
     "source_location": "pp. 70-77",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-3BC81CC453",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 14026704911889",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -2808,11 +3688,35 @@
     "notes": null
   },
   {
+    "product_id": "PRD-3F25D56A85",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006032",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-3F25D56A85",
+    "source_id": "SRC049",
+    "source_location": "Product code 670160",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-3F51C7D66F",
     "source_id": "SRC024",
     "source_location": "p. 2",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - current manufacturer brochure",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-3FB3ACD1F6",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558438",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -2840,6 +3744,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-4073AAF637",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312013702",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4073AAF637",
+    "source_id": "SRC049",
+    "source_location": "Product code 60HA35",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-408A683593",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
@@ -2848,11 +3768,43 @@
     "notes": null
   },
   {
+    "product_id": "PRD-4098113030",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862150326",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4098113030",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-40B834E981",
     "source_id": "SRC021",
     "source_location": "pp. 49-51",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-40BFF2736A",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006803",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-40BFF2736A",
+    "source_id": "SRC049",
+    "source_location": "Product code 850190",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -2877,6 +3829,22 @@
     "source_location": "p. 6",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - U.S. manufacturer brochure",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-412C78FBE5",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04547410332353",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-412C78FBE5",
+    "source_id": "SRC051",
+    "source_location": "p. 27, SU-1 Endoscopic Ultrasonic Processor specifications",
+    "claim_type": "Specifications, compatibility, and product naming",
+    "verification_status": "Transcribed from the manufacturer brochure",
     "notes": null
   },
   {
@@ -2984,6 +3952,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-429E40F1F3",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 00850048825055",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4361785147",
     "source_id": "SRC027",
     "source_location": "pp. 9-10",
@@ -3005,6 +3981,30 @@
     "source_location": "p. 5",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-43A0159EDB",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558339",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-43DF4C56B7",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 14026704631695",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-43F3036551",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704607334",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -3064,6 +4064,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-450492ECBB",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04547410384543",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-450492ECBB",
+    "source_id": "SRC051",
+    "source_location": "p. 32, EP-6000 ELUXEO Lite video processor",
+    "claim_type": "Specifications, compatibility, and product naming",
+    "verification_status": "Transcribed from the manufacturer brochure",
+    "notes": null
+  },
+  {
     "product_id": "PRD-456C006CCE",
     "source_id": "SRC017",
     "source_location": "Irrigation adapters, catalog p. 19",
@@ -3120,11 +4136,35 @@
     "notes": null
   },
   {
+    "product_id": "PRD-476DD42C80",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI B634MBR0000110",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-481074A513",
     "source_id": "SRC030",
     "source_location": "p. 91",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4821683CAA",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077490",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4821683CAA",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/817/080",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
     "notes": null
   },
   {
@@ -3160,6 +4200,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-48C4E1CC20",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04547410330151",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-48C4E1CC20",
+    "source_id": "SRC048",
+    "source_location": "EB-530T specifications",
+    "claim_type": "Dimensions and optical specifications",
+    "verification_status": "Manufacturer catalog",
+    "notes": null
+  },
+  {
     "product_id": "PRD-48CBAB53FF",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
@@ -3192,6 +4248,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-49C658BF52",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006896",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-49C658BF52",
+    "source_id": "SRC049",
+    "source_location": "Product code 855160",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4A023D6489",
     "source_id": "SRC030",
     "source_location": "p. 86",
@@ -3205,6 +4277,22 @@
     "source_location": "Flexible bronchoscopy platforms!2",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4A13E00131",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005738",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4A13E00131",
+    "source_id": "SRC049",
+    "source_location": "Product code 60P030",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -3240,6 +4328,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-4AE462CF09",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 10810068810971",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4AECEED0C8",
     "source_id": "SRC006",
     "source_location": "Product list 2025!bonastent",
@@ -3272,6 +4368,22 @@
     "notes": "Exact ordering table and product specifications shown on manufacturer page capture."
   },
   {
+    "product_id": "PRD-4B6813254B",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862150289",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4B6813254B",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4BB84F196B",
     "source_id": "SRC021",
     "source_location": "pp. 44-48",
@@ -3288,11 +4400,35 @@
     "notes": null
   },
   {
+    "product_id": "PRD-4BE4CD0EBA",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862132360",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4BE4CD0EBA",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4C3147DF15",
     "source_id": "SRC022",
     "source_location": "p. 2.13",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current market status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4C43134B78",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 10810068810841",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -3318,6 +4454,22 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-4D4109FA08",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517078077",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4D4109FA08",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/875/080",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
   },
   {
     "product_id": "PRD-4D5E28D425",
@@ -3400,6 +4552,30 @@
     "notes": null
   },
   {
+    "product_id": "PRD-4F06752688",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006414",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4F06752688",
+    "source_id": "SRC049",
+    "source_location": "Product code 750170",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4F08144D47",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 00850048825017",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4F4AA966A9",
     "source_id": "SRC031",
     "source_location": "pp. 70-71",
@@ -3438,6 +4614,30 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - current manufacturer page capture",
     "notes": "Exact ordering table and product specifications shown on manufacturer page capture."
+  },
+  {
+    "product_id": "PRD-4FC1A1B17E",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005936",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4FC1A1B17E",
+    "source_id": "SRC049",
+    "source_location": "Product code 65N040",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5066E92CF8",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558667",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
   },
   {
     "product_id": "PRD-5070336E33",
@@ -3493,6 +4693,30 @@
     "source_location": "p. 52",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer brochure; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-516C2D8F03",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077483",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-516C2D8F03",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/817/070",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-51D601323E",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558568",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -3600,6 +4824,14 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-544D0285F6",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558254",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-54CEDAAE5B",
     "source_id": "SRC021",
     "source_location": "pp. 6-7",
@@ -3664,6 +4896,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-563D121CAF",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077384",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-563D121CAF",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/815/090",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-56932BDE51",
     "source_id": "SRC006",
     "source_location": "Product list 2025!bonastent",
@@ -3677,6 +4925,22 @@
     "source_location": "p. 15",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog and IFU",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-571FBBA6A3",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006995",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-571FBBA6A3",
+    "source_id": "SRC049",
+    "source_location": "Product code 85P030",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -3749,6 +5013,14 @@
     "source_location": "p. 5",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-57DAB5ECAE",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04953170339288",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"Not in Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -3864,6 +5136,38 @@
     "notes": null
   },
   {
+    "product_id": "PRD-5A0C3D8844",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04547410333312",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5A0C3D8844",
+    "source_id": "SRC048",
+    "source_location": "EB-530S specifications",
+    "claim_type": "Dimensions and optical specifications",
+    "verification_status": "Manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5A1DE3192C",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006919",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5A1DE3192C",
+    "source_id": "SRC049",
+    "source_location": "Product code 855180",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-5A28AF1C52",
     "source_id": "SRC001",
     "source_location": "p. 30",
@@ -3885,6 +5189,22 @@
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5A7CE40A85",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006308",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5A7CE40A85",
+    "source_id": "SRC049",
+    "source_location": "Product code 67P055",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -3950,6 +5270,22 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-5AFF0D7C54",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312015690",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5AFF0D7C54",
+    "source_id": "SRC049",
+    "source_location": "Product code 75FHXL80",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
   },
   {
     "product_id": "PRD-5B0D81C458",
@@ -4096,6 +5432,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-5D5FC30CC3",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006438",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5D5FC30CC3",
+    "source_id": "SRC049",
+    "source_location": "Product code 750190",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-5DFC2E8E8B",
     "source_id": "SRC018",
     "source_location": "Accessories for ERBECRYO 2, catalog p. 6",
@@ -4133,6 +5485,22 @@
     "source_location": "p. 10",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5EC4CBC7BF",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006056",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5EC4CBC7BF",
+    "source_id": "SRC049",
+    "source_location": "Product code 670170",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -4192,6 +5560,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-60D298A1B6",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI B634MBR000211B0",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-60ED7DF50E",
     "source_id": "SRC030",
     "source_location": "p. 86",
@@ -4205,6 +5581,22 @@
     "source_location": "Specifications table, brochure p. 2",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer/distributor brochure",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-61318B0A7E",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077377",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-61318B0A7E",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/815/085",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
     "notes": null
   },
   {
@@ -4336,6 +5728,30 @@
     "notes": null
   },
   {
+    "product_id": "PRD-638E83CED6",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862150364",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-638E83CED6",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-63D23F7DB0",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 14026704631299",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-63E9945A0A",
     "source_id": "SRC019",
     "source_location": "FiAPC probes, catalog p. 6",
@@ -4408,6 +5824,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-64F3BFC979",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04547410337419",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-64F3BFC979",
+    "source_id": "SRC051",
+    "source_location": "p. 31, VP-7000 ELUXEO video processor",
+    "claim_type": "Specifications, compatibility, and product naming",
+    "verification_status": "Transcribed from the manufacturer brochure",
+    "notes": null
+  },
+  {
     "product_id": "PRD-6556097624",
     "source_id": "SRC027",
     "source_location": "p. 5",
@@ -4456,6 +5888,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-6683FE6ADD",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312007022",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6683FE6ADD",
+    "source_id": "SRC049",
+    "source_location": "Product code 85P045",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-66935DEE7B",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
@@ -4477,6 +5925,14 @@
     "source_location": "p. 66",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6727C4A9D9",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04953170340147",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"Not in Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -4541,6 +5997,22 @@
     "source_location": "p. 87",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-69ABE013A8",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005691",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-69ABE013A8",
+    "source_id": "SRC049",
+    "source_location": "Product code 60N030",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -4936,6 +6408,22 @@
     "notes": "Exact ordering table and product specifications shown on manufacturer page capture."
   },
   {
+    "product_id": "PRD-6EDE2453EE",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04547410400380",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6EDE2453EE",
+    "source_id": "SRC048",
+    "source_location": "EB-580S specifications",
+    "claim_type": "Dimensions and optical specifications",
+    "verification_status": "Manufacturer catalog",
+    "notes": null
+  },
+  {
     "product_id": "PRD-6EE929E70C",
     "source_id": "SRC007",
     "source_location": "Therapeutic bronchoscopy",
@@ -4968,6 +6456,22 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-6F64134373",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04547410343205",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6F64134373",
+    "source_id": "SRC048",
+    "source_location": "EB-530P specifications",
+    "claim_type": "Dimensions and optical specifications",
+    "verification_status": "Manufacturer catalog",
+    "notes": null
+  },
+  {
     "product_id": "PRD-6F74CF87DF",
     "source_id": "SRC006",
     "source_location": "Product list 2025!bonastent",
@@ -4989,6 +6493,30 @@
     "source_location": "p. 72",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - U.S. manufacturer brochure; current orderability pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6FAA3BD6FA",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077414",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6FAA3BD6FA",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/816/070",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6FE573D714",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704607327",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -5088,6 +6616,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-714F030362",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005776",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-714F030362",
+    "source_id": "SRC049",
+    "source_location": "Product code 60P050",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-716AA24BEF",
     "source_id": "SRC021",
     "source_location": "p. 25",
@@ -5101,6 +6645,22 @@
     "source_location": "p. 7",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-71BFC33B57",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005905",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-71BFC33B57",
+    "source_id": "SRC049",
+    "source_location": "Product code 65N025",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -5134,6 +6694,46 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-723273697C",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006889",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-723273697C",
+    "source_id": "SRC049",
+    "source_location": "Product code 855150",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7240BD99DA",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04953170339301",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7273BDA984",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312013863",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7273BDA984",
+    "source_id": "SRC049",
+    "source_location": "Product code 75HA90",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
   },
   {
     "product_id": "PRD-72889F9CE3",
@@ -5176,6 +6776,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-7385F4136A",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558650",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-7389E0BD35",
     "source_id": "SRC006",
     "source_location": "Product list 2025!Sheet5",
@@ -5205,6 +6813,30 @@
     "source_location": "p. 3",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-73EB209662",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558513",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7435E842E8",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006902",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7435E842E8",
+    "source_id": "SRC049",
+    "source_location": "Product code 855170",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -5248,6 +6880,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-75732DDDB6",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862130168",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-75732DDDB6",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-7578C8D45A",
     "source_id": "SRC026",
     "source_location": "p. 6",
@@ -5277,6 +6925,22 @@
     "source_location": "pp. 53-55",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-75C7EDFC91",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862130403",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-75C7EDFC91",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
     "notes": null
   },
   {
@@ -5352,6 +7016,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-77D7F7892F",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 10810068811046",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-77DCFC650E",
     "source_id": "SRC017",
     "source_location": "Bipolar cables, catalog p. 9",
@@ -5366,6 +7038,22 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-781389ABFE",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006209",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-781389ABFE",
+    "source_id": "SRC049",
+    "source_location": "Product code 67N025",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
   },
   {
     "product_id": "PRD-78354BF30F",
@@ -5408,6 +7096,30 @@
     "notes": null
   },
   {
+    "product_id": "PRD-790B27C6F7",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312013689",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-790B27C6F7",
+    "source_id": "SRC049",
+    "source_location": "Product code 60HA25",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-795FD16DE8",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558377",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-79B8CF6846",
     "source_id": "SRC017",
     "source_location": "Bipolar cables, catalog p. 10",
@@ -5432,6 +7144,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-7A1F781FE3",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006766",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7A1F781FE3",
+    "source_id": "SRC049",
+    "source_location": "Product code 850150",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-7A4AE2E955",
     "source_id": "SRC013",
     "source_location": "Tracheal stent specifications (PDF p. 12)",
@@ -5453,6 +7181,22 @@
     "source_location": "p. 88",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7A64131F24",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517078107",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7A64131F24",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/875/100",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
     "notes": null
   },
   {
@@ -5520,6 +7264,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-7C62BB4F88",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006964",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7C62BB4F88",
+    "source_id": "SRC049",
+    "source_location": "Product code 85N035",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-7C8F860816",
     "source_id": "SRC012",
     "source_location": "Respiratory 14.12 (PDF p. 125)",
@@ -5549,6 +7309,22 @@
     "source_location": "p. 12",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7D8D97D18F",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 00650862110098",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7D8D97D18F",
+    "source_id": "SRC047",
+    "source_location": "Oasis dry suction water seal chest drain",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
     "notes": null
   },
   {
@@ -5656,6 +7432,30 @@
     "notes": null
   },
   {
+    "product_id": "PRD-7FBD6FB1A3",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006247",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7FBD6FB1A3",
+    "source_id": "SRC049",
+    "source_location": "Product code 67P025",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7FFA3EACA4",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558278",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-804529441A",
     "source_id": "SRC007",
     "source_location": "Perc trach and WLL",
@@ -5693,6 +7493,22 @@
     "source_location": "p. 7",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-815B93A920",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04953170339349",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-815DC29EF1",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI B634MBR0000150",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -5765,6 +7581,14 @@
     "source_location": "p. 22",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-83A71310E6",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI B634MBR000211A0",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -5888,6 +7712,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-86FC0B1E5C",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558353",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-87011FE827",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
@@ -5976,6 +7808,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-88E003F12B",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04953170339325",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"Not in Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-8905E9BA40",
     "source_id": "SRC017",
     "source_location": "Return-electrode cables, catalog p. 14",
@@ -5997,6 +7837,22 @@
     "source_location": "p. 25",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-89702103AF",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005912",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-89702103AF",
+    "source_id": "SRC049",
+    "source_location": "Product code 65N030",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -6032,6 +7888,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8A5FA2EE1B",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558216",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-8A6658D379",
     "source_id": "SRC013",
     "source_location": "Tracheal stent specifications (PDF p. 12)",
@@ -6056,11 +7920,75 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8B0DE554FB",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077568",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-8B0DE554FB",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/818/100",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-8B542204C5",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077360",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-8B542204C5",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/815/080",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-8B87F7D42B",
     "source_id": "SRC027",
     "source_location": "p. 7",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-8BAF2F51A6",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005769",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-8BAF2F51A6",
+    "source_id": "SRC049",
+    "source_location": "Product code 60P045",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-8C032DCD3A",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 05021312013781",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-8C032DCD3A",
+    "source_id": "SRC049",
+    "source_location": "Product code 67FHXL90",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -6128,6 +8056,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8CBA34433F",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 14026704911940",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-8CDDDC5158",
     "source_id": "SRC001",
     "source_location": "p. 28",
@@ -6141,6 +8077,14 @@
     "source_location": "pp. 68-69",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-8D676A6B58",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI B634MBR0000160",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -6181,6 +8125,14 @@
     "source_location": "pleural seed",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-8EC41A9FB6",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704607372",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -6256,6 +8208,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-90DB5DFF8D",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558476",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-90F9A0A0BC",
     "source_id": "SRC007",
     "source_location": "Perc trach and WLL",
@@ -6277,6 +8237,22 @@
     "source_location": "p. 74",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - U.S. manufacturer brochure; current orderability pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9188987BF8",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04547410445886",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9188987BF8",
+    "source_id": "SRC051",
+    "source_location": "p. 28, PB2020-M2 Probe for Bronchoscopy",
+    "claim_type": "Specifications, compatibility, and product naming",
+    "verification_status": "Transcribed from the manufacturer brochure",
     "notes": null
   },
   {
@@ -6328,6 +8304,22 @@
     "notes": "Exact ordering table and product specifications shown on manufacturer page capture."
   },
   {
+    "product_id": "PRD-9218072541",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 05021312013750",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9218072541",
+    "source_id": "SRC049",
+    "source_location": "Product code 67FHXL60",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-921CB1B912",
     "source_id": "SRC030",
     "source_location": "p. 91",
@@ -6344,11 +8336,43 @@
     "notes": null
   },
   {
+    "product_id": "PRD-925F0C99C6",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 14026704911926",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-92C95201F3",
     "source_id": "SRC033",
     "source_location": "p. 77",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - current manufacturer user manual",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-93331CA104",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006780",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-93331CA104",
+    "source_id": "SRC049",
+    "source_location": "Product code 850170",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9336231788",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 14026704911780",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -6400,6 +8424,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-93C8085CA3",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 34026704410096",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-941D1C2633",
     "source_id": "SRC027",
     "source_location": "p. 7",
@@ -6446,6 +8478,22 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - current manufacturer page capture",
     "notes": "Exact ordering table and product specifications shown on manufacturer page capture."
+  },
+  {
+    "product_id": "PRD-94C61697D9",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 00650862110012",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-94C61697D9",
+    "source_id": "SRC047",
+    "source_location": "Oasis dry suction water seal chest drain — Ordering Information",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
+    "notes": null
   },
   {
     "product_id": "PRD-94C76DB87E",
@@ -6517,6 +8565,14 @@
     "source_location": "Flexible bronchoscopy platforms!10",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-978B2478DC",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04547410520545",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -6680,6 +8736,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-9C17CA11C4",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077551",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9C17CA11C4",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/818/090",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-9C1CF84490",
     "source_id": "SRC021",
     "source_location": "p. 18",
@@ -6800,6 +8872,14 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-9DB23B9ABC",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558490",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-9DCC51E06A",
     "source_id": "SRC006",
     "source_location": "Product list 2025!bonastent",
@@ -6864,11 +8944,35 @@
     "notes": null
   },
   {
+    "product_id": "PRD-9F6F724DC2",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704604173",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-9FDA372767",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9FE903D754",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077346",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9FE903D754",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/815/070",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
     "notes": null
   },
   {
@@ -6896,6 +9000,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-A04C2075B1",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312013856",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A04C2075B1",
+    "source_id": "SRC049",
+    "source_location": "Product code 75HA80",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-A0DF0074DB",
     "source_id": "SRC006",
     "source_location": "Product list 2025!bonastent",
@@ -6909,6 +9029,22 @@
     "source_location": "pp. 49-51",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A153D77FD4",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862130205",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A153D77FD4",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
     "notes": null
   },
   {
@@ -6942,6 +9078,22 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-A283B9F302",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862130083",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A283B9F302",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
+    "notes": null
   },
   {
     "product_id": "PRD-A2C49C9352",
@@ -6984,6 +9136,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-A31173136E",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 00650862100327",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A31173136E",
+    "source_id": "SRC047",
+    "source_location": "AccessGUDID device record",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-A344758F57",
     "source_id": "SRC031",
     "source_location": "p. 73",
@@ -7005,6 +9173,22 @@
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A4144F4F64",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862132322",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A4144F4F64",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
     "notes": null
   },
   {
@@ -7160,11 +9344,43 @@
     "notes": "Upgraded a prior discovery-only seed without changing its stable product_id."
   },
   {
+    "product_id": "PRD-A7761877B0",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04547410342741",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A7761877B0",
+    "source_id": "SRC051",
+    "source_location": "p. 28, SP-900 Ultrasonic Processor",
+    "claim_type": "Specifications, compatibility, and product naming",
+    "verification_status": "Transcribed from the manufacturer brochure",
+    "notes": null
+  },
+  {
     "product_id": "PRD-A7A7DF79BA",
     "source_id": "SRC001",
     "source_location": "p. 29",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A7D620FEA8",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04547410330168",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A7D620FEA8",
+    "source_id": "SRC048",
+    "source_location": "EB-530H specifications",
+    "claim_type": "Dimensions and optical specifications",
+    "verification_status": "Manufacturer catalog",
     "notes": null
   },
   {
@@ -7224,6 +9440,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-A8BADCC88E",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862150203",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A8BADCC88E",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-A8D6EE3E6F",
     "source_id": "SRC027",
     "source_location": "p. 5",
@@ -7264,6 +9496,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-AA3A12BCF8",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006285",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AA3A12BCF8",
+    "source_id": "SRC049",
+    "source_location": "Product code 67P045",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-AACBA3F0AD",
     "source_id": "SRC022",
     "source_location": "p. 6.02",
@@ -7285,6 +9533,22 @@
     "source_location": "Specifications table, brochure p. 2",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer/distributor brochure",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AB3747D636",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077520",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AB3747D636",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/818/060",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
     "notes": null
   },
   {
@@ -7317,6 +9581,22 @@
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AC75A8DD2A",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312015676",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AC75A8DD2A",
+    "source_id": "SRC049",
+    "source_location": "Product code 75FHXL60",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -7365,6 +9645,30 @@
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-ACE0C385EE",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005585",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-ACE0C385EE",
+    "source_id": "SRC049",
+    "source_location": "Product code 60A190",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-ACE79E14D3",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704410842",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -7440,6 +9744,22 @@
     "notes": "Safety/intended-use cross-reference."
   },
   {
+    "product_id": "PRD-ADD6503B0B",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077476",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-ADD6503B0B",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/817/060",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-AE3B2BA40B",
     "source_id": "SRC021",
     "source_location": "p. 25",
@@ -7477,6 +9797,22 @@
     "source_location": "Product list 2025!thoracent",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AF18E6BE1C",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006445",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AF18E6BE1C",
+    "source_id": "SRC049",
+    "source_location": "Product code 750195",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -7656,6 +9992,30 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B43064119C",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558643",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B4667E9AC0",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077391",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B4667E9AC0",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/815/100",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-B4AC755EAE",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
@@ -7685,6 +10045,14 @@
     "source_location": "p. 16",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B5156B0347",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04953170424199",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -7720,6 +10088,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B5456D95B7",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005752",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B5456D95B7",
+    "source_id": "SRC049",
+    "source_location": "Product code 60P040",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-B54B621217",
     "source_id": "SRC006",
     "source_location": "Product list 2025!thoracent",
@@ -7752,6 +10136,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B5B467FEF2",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558520",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-B5E107E3AE",
     "source_id": "SRC001",
     "source_location": "p. 19",
@@ -7760,11 +10152,43 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B5FC79AB78",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862132285",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B5FC79AB78",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-B5FC89830C",
     "source_id": "SRC022",
     "source_location": "p. 4.02",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current market status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B61DBDED5A",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI B634MBR0000120",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B625A0B418",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI B634MBR0000170",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -7797,6 +10221,22 @@
     "source_location": "p. 91",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B6E3342E92",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077544",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B6E3342E92",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/818/080",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
     "notes": null
   },
   {
@@ -7912,6 +10352,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B99BD2D544",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517078060",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B99BD2D544",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/875/075",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-B99F53FBC5",
     "source_id": "SRC030",
     "source_location": "pp. 68-69",
@@ -7984,11 +10440,43 @@
     "notes": null
   },
   {
+    "product_id": "PRD-BA861EFE13",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077469",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-BA861EFE13",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/816/100",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-BA86F45760",
     "source_id": "SRC021",
     "source_location": "pp. 44-48",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-BAC26D08B6",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006797",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-BAC26D08B6",
+    "source_id": "SRC049",
+    "source_location": "Product code 850180",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -8072,6 +10560,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-BB6FAC1D3E",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558537",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-BB9A5CC0AE",
     "source_id": "SRC030",
     "source_location": "pp. 70-73",
@@ -8152,6 +10648,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-BD43B26C4B",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312015652",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-BD43B26C4B",
+    "source_id": "SRC049",
+    "source_location": "Product code 60AFHXL80",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-BD9FC1E209",
     "source_id": "SRC006",
     "source_location": "Product list 2025!Sheet5",
@@ -8189,6 +10701,22 @@
     "source_location": "p. 12",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-BDC310E38B",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862132162",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-BDC310E38B",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
     "notes": null
   },
   {
@@ -8296,6 +10824,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-BFEE788ACB",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006773",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-BFEE788ACB",
+    "source_id": "SRC049",
+    "source_location": "Product code 850160",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-C00C2E4E80",
     "source_id": "SRC030",
     "source_location": "p. 91",
@@ -8312,6 +10856,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-C094578A7A",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517078091",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C094578A7A",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/875/090",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-C094F5AF07",
     "source_id": "SRC002",
     "source_location": "p. 5",
@@ -8325,6 +10885,22 @@
     "source_location": "p. 75",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C0EF9A3C2A",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312013719",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C0EF9A3C2A",
+    "source_id": "SRC049",
+    "source_location": "Product code 60HA40",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -8366,6 +10942,30 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - current manufacturer page capture",
     "notes": "Exact ordering table and product specifications shown on manufacturer page capture."
+  },
+  {
+    "product_id": "PRD-C1CB3E7B73",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 14026704631688",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C1CBD0EB4C",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005950",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C1CBD0EB4C",
+    "source_id": "SRC049",
+    "source_location": "Product code 65P030",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
   },
   {
     "product_id": "PRD-C1F90B7445",
@@ -8445,6 +11045,22 @@
     "source_location": "p. 5",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C3CCEF8357",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077445",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C3CCEF8357",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/816/085",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
     "notes": null
   },
   {
@@ -8544,6 +11160,30 @@
     "notes": null
   },
   {
+    "product_id": "PRD-C4F96A16A4",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005745",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C4F96A16A4",
+    "source_id": "SRC049",
+    "source_location": "Product code 60P035",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C580C3FAB4",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 14026704911933",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-C649B4B9C5",
     "source_id": "SRC030",
     "source_location": "p. 87",
@@ -8582,6 +11222,14 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-C68942362F",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI B634MON0000060",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
   },
   {
     "product_id": "PRD-C6BE641E4E",
@@ -8688,6 +11336,46 @@
     "notes": null
   },
   {
+    "product_id": "PRD-C8DE8E876B",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558391",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C8F3239E22",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077353",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C8F3239E22",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/815/075",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C919655C5F",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006926",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C919655C5F",
+    "source_id": "SRC049",
+    "source_location": "Product code 855190",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-C96F155F93",
     "source_id": "SRC033",
     "source_location": "p. 18",
@@ -8702,6 +11390,22 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - global/older source",
     "notes": "Exact catalog/SKU evidence from an older global manufacturer catalog; U.S. status unverified."
+  },
+  {
+    "product_id": "PRD-CA18ADF836",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006216",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-CA18ADF836",
+    "source_id": "SRC049",
+    "source_location": "Product code 67N030",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
   },
   {
     "product_id": "PRD-CA32599DA2",
@@ -8800,6 +11504,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-CC28627AEB",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04547410337730",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-CC28627AEB",
+    "source_id": "SRC051",
+    "source_location": "p. 31, BL-7000 ELUXEO 4-LED light source",
+    "claim_type": "Specifications, compatibility, and product naming",
+    "verification_status": "Transcribed from the manufacturer brochure",
+    "notes": null
+  },
+  {
     "product_id": "PRD-CC378D0981",
     "source_id": "SRC006",
     "source_location": "Product list 2025!Sheet7",
@@ -8837,6 +11557,22 @@
     "source_location": "pp. 255-257",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - historical U.S. manufacturer brochure; current configuration pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-CCBB682CF9",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 00650862115130",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-CCBB682CF9",
+    "source_id": "SRC047",
+    "source_location": "Express dry seal chest drain — Ordering Information",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
     "notes": null
   },
   {
@@ -8949,6 +11685,22 @@
     "source_location": "p. 88",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D082801F57",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006391",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D082801F57",
+    "source_id": "SRC049",
+    "source_location": "Product code 750150",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -9104,6 +11856,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-D3E87A1251",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077407",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D3E87A1251",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/816/060",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-D41DE241C1",
     "source_id": "SRC017",
     "source_location": "Monopolar cables, catalog p. 5",
@@ -9192,6 +11960,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-D5DAB48B5B",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 14026704631565",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D6183226BF",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558506",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-D630438171",
     "source_id": "SRC012",
     "source_location": "Respiratory 14.13 (PDF p. 127)",
@@ -9205,6 +11989,22 @@
     "source_location": "p. 14",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D64A651B55",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077537",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D64A651B55",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/818/070",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
     "notes": null
   },
   {
@@ -9229,6 +12029,14 @@
     "source_location": "p. 19",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D7472146DC",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04547410482478",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -9261,6 +12069,14 @@
     "source_location": "pleural seed",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D794E57FFE",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704607310",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -9334,6 +12150,14 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-D9E0F4748B",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 14026704911872",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
   },
   {
     "product_id": "PRD-DA286027ED",
@@ -9416,11 +12240,59 @@
     "notes": null
   },
   {
+    "product_id": "PRD-DB99B2DA8B",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006407",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DB99B2DA8B",
+    "source_id": "SRC049",
+    "source_location": "Product code 750160",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DBC74C33F6",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517078053",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DBC74C33F6",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/875/070",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-DBCBF4AF27",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DC2568EC2B",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005561",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DC2568EC2B",
+    "source_id": "SRC049",
+    "source_location": "Product code 60A170",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -9488,6 +12360,22 @@
     "notes": "Exact ordering table and product specifications shown on manufacturer page capture."
   },
   {
+    "product_id": "PRD-DCEE87A7A4",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517078046",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DCEE87A7A4",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/875/060",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-DCF0AFE654",
     "source_id": "SRC043",
     "source_location": "p. 1",
@@ -9509,6 +12397,22 @@
     "source_location": "Respiratory 14.17 (PDF p. 132)",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DDB4750F44",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862132124",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DDB4750F44",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
     "notes": null
   },
   {
@@ -9744,6 +12648,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-E1787EC88A",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862130328",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-E1787EC88A",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-E1B889E869",
     "source_id": "SRC027",
     "source_location": "pp. 9-10",
@@ -9766,6 +12686,14 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-E28782A64A",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 00850048825048",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
   },
   {
     "product_id": "PRD-E2A3EFD37E",
@@ -9792,11 +12720,35 @@
     "notes": null
   },
   {
+    "product_id": "PRD-E31D13A5D1",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006278",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-E31D13A5D1",
+    "source_id": "SRC049",
+    "source_location": "Product code 67P040",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-E353F2E250",
     "source_id": "SRC021",
     "source_location": "p. 5",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-E354CF7061",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04953170424229",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -9840,6 +12792,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-E3EE9B4863",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005721",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-E3EE9B4863",
+    "source_id": "SRC049",
+    "source_location": "Product code 60P025",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-E4277B23A8",
     "source_id": "SRC021",
     "source_location": "p. 16",
@@ -9872,6 +12840,22 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-E5458B10BA",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312015683",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-E5458B10BA",
+    "source_id": "SRC049",
+    "source_location": "Product code 75FHXL70",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-E56FC05269",
     "source_id": "SRC030",
     "source_location": "p. 72",
@@ -9888,6 +12872,22 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-E60B906F69",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862130281",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-E60B906F69",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-E6A1370266",
     "source_id": "SRC030",
     "source_location": "p. 67",
@@ -9901,6 +12901,14 @@
     "source_location": "p. 18",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-E6DB284BB8",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04547410332346",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -9941,6 +12949,14 @@
     "source_location": "p. 8",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-E81D93D123",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558414",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -10005,6 +13021,30 @@
     "source_location": "p. 72",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - U.S. manufacturer brochure; current orderability pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-E9EF90BF33",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04547410330922",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-E9F1FCA53D",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312015706",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-E9F1FCA53D",
+    "source_id": "SRC049",
+    "source_location": "Product code 75FHXL90",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -10080,6 +13120,38 @@
     "notes": null
   },
   {
+    "product_id": "PRD-EB21C8D83F",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006070",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-EB21C8D83F",
+    "source_id": "SRC049",
+    "source_location": "Product code 670180",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-EB229631AE",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312013818",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-EB229631AE",
+    "source_id": "SRC049",
+    "source_location": "Product code 67HA80",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-EB27F8D657",
     "source_id": "SRC007",
     "source_location": "pleural seed",
@@ -10112,6 +13184,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-EBAEE8A314",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04547410330182",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-EBAEE8A314",
+    "source_id": "SRC048",
+    "source_location": "EB-530US specifications",
+    "claim_type": "Dimensions and optical specifications",
+    "verification_status": "Manufacturer catalog",
+    "notes": null
+  },
+  {
     "product_id": "PRD-EC1BF76FBC",
     "source_id": "SRC006",
     "source_location": "Product list 2025!Sheet5",
@@ -10128,6 +13216,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-EC36176EAA",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI B634MBR0000140",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-EC45CB0F5D",
     "source_id": "SRC030",
     "source_location": "pp. 70-73",
@@ -10141,6 +13237,22 @@
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-EC722A229F",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005943",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-EC722A229F",
+    "source_id": "SRC049",
+    "source_location": "Product code 65P025",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -10232,11 +13344,43 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-EE32112850",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558315",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-EEA17CA0DB",
     "source_id": "SRC021",
     "source_location": "p. 52",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-EEABE84165",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517077438",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-EEABE84165",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/816/080",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-EF46DA3FE4",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 00850048825000",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -10325,6 +13469,14 @@
     "source_location": "p. 67",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F14A305B8A",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 10810068811275",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -10488,11 +13640,43 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F4D1B1F6F2",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312015645",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F4D1B1F6F2",
+    "source_id": "SRC049",
+    "source_location": "Product code 60AFHXL70",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-F510911B2C",
     "source_id": "SRC022",
     "source_location": "p. 7.02",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current market status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F51977AD07",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006001",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F51977AD07",
+    "source_id": "SRC049",
+    "source_location": "Product code 65P055",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -10528,11 +13712,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F586C51621",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04953170356360",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-F5AE18C06E",
     "source_id": "SRC007",
     "source_location": "pleural seed",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F5B2165AE3",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 14026704631268",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
     "notes": null
   },
   {
@@ -10624,6 +13824,38 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F833DFCC44",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 20650862130366",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F833DFCC44",
+    "source_id": "SRC047",
+    "source_location": "Soft and firm PVC thoracic catheters",
+    "claim_type": "Product family, configuration, and part number",
+    "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F8573BB46D",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005714",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F8573BB46D",
+    "source_id": "SRC049",
+    "source_location": "Product code 60N040",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
     "product_id": "PRD-F858AF48F6",
     "source_id": "SRC036",
     "source_location": "p. 216 (catalog p. 88)",
@@ -10632,11 +13864,59 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F85C161CB5",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04547410520583",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F867027C4E",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04953170339974",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"Not in Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-F8B8727229",
     "source_id": "SRC008",
     "source_location": "CSV row 9",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F8ECE4182D",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312013825",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F8ECE4182D",
+    "source_id": "SRC049",
+    "source_location": "Product code 67HA90",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F935858A9E",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312005554",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F935858A9E",
+    "source_id": "SRC049",
+    "source_location": "Product code 60A160",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -10661,6 +13941,22 @@
     "source_location": "Product list 2025!bonastent",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F9A5EB644C",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006063",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F9A5EB644C",
+    "source_id": "SRC049",
+    "source_location": "Product code 670175",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -10720,6 +14016,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-FB075DFB2D",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04953170340086",
+    "claim_type": "Device identity, model number, and distribution status",
+    "verification_status": "GUDID \"Not in Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-FB1867A930",
     "source_id": "SRC021",
     "source_location": "p. 25",
@@ -10757,6 +14061,22 @@
     "source_location": "Product list 2025!bonastent",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-FBFA19440C",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15021312006810",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-FBFA19440C",
+    "source_id": "SRC049",
+    "source_location": "Product code 850195",
+    "claim_type": "Tube dimensions, cuff type, and product line",
+    "verification_status": "Transcribed from the manufacturer catalog ordering tables",
     "notes": null
   },
   {
@@ -10816,6 +14136,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-FD962E14DA",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04026704558230",
+    "claim_type": "Device identity, configuration, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-FDAC925AF1",
     "source_id": "SRC036",
     "source_location": "p. 216 (catalog p. 88)",
@@ -10832,6 +14160,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-FDFDD69931",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 15019517078084",
+    "claim_type": "Device identity, GTIN, and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-FDFDD69931",
+    "source_id": "SRC052",
+    "source_location": "Ordering information, product code 101/875/085",
+    "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
+    "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
+  },
+  {
     "product_id": "PRD-FE028163EB",
     "source_id": "SRC007",
     "source_location": "pleural seed",
@@ -10845,6 +14189,22 @@
     "source_location": "p. 2.04",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current market status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-FE27794D4C",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04547410400397",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-FE27794D4C",
+    "source_id": "SRC048",
+    "source_location": "EB-580T specifications",
+    "claim_type": "Dimensions and optical specifications",
+    "verification_status": "Manufacturer catalog",
     "notes": null
   },
   {

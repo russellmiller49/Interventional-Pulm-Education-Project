@@ -6,8 +6,8 @@ import type {
   LiteratureReviewQueueQuery,
   LiteratureSearchQuery,
 } from '@/features/literature/schemas/search'
-import { createSupabaseAdmin } from '@/lib/supabase/admin'
 
+import { createLiteratureAdmin } from './database-client'
 import type {
   LiteratureAdminStats,
   LiteratureArticleDetail,
@@ -250,7 +250,7 @@ export async function searchLiterature(
     return { data: null, error: 'One or more search filters are invalid.' }
   }
 
-  const client = createSupabaseAdmin()
+  const client = createLiteratureAdmin()
   if (!client) {
     return { data: null, error: 'The literature database is not configured.' }
   }
@@ -318,7 +318,7 @@ export async function searchLiterature(
 }
 
 async function loadAssociations(pmids: string[]) {
-  const client = createSupabaseAdmin()
+  const client = createLiteratureAdmin()
   if (!client || pmids.length === 0) {
     return { sources: [] as SourceRow[], topics: [] as TopicAssignmentRow[] }
   }
@@ -351,7 +351,7 @@ async function loadAssociations(pmids: string[]) {
 export async function getLiteratureArticle(
   pmid: string,
 ): Promise<LiteratureServerResult<LiteratureArticleDetail | null>> {
-  const client = createSupabaseAdmin()
+  const client = createLiteratureAdmin()
   if (!client) {
     return { data: null, error: 'The literature database is not configured.' }
   }
@@ -427,7 +427,7 @@ export async function getLiteratureArticle(
 export async function loadLiteratureAdminStats(): Promise<
   LiteratureServerResult<LiteratureAdminStats>
 > {
-  const client = createSupabaseAdmin()
+  const client = createLiteratureAdmin()
   if (!client) {
     return { data: null, error: 'The literature database is not configured.' }
   }
@@ -480,7 +480,7 @@ export async function loadLiteratureReviewQueue(filters: LiteratureReviewQueueQu
     return { data: null, error: 'One or more review filters are invalid.' }
   }
 
-  const client = createSupabaseAdmin()
+  const client = createLiteratureAdmin()
   if (!client) {
     return { data: null, error: 'The literature database is not configured.' }
   }
@@ -606,7 +606,7 @@ export async function curateLiteratureArticle(
     return { data: null, error: 'One or more topic decisions are invalid.' }
   }
 
-  const client = createSupabaseAdmin()
+  const client = createLiteratureAdmin()
   if (!client) {
     return { data: null, error: 'The literature database is not configured.' }
   }
