@@ -1,4 +1,9 @@
-import type { GasState, PatientState, SupportMode } from '../engine/types'
+import type {
+  EcmoPhysiologyModelInputs,
+  GasState,
+  PatientState,
+  SupportMode,
+} from '../engine/types'
 
 /**
  * Stable reference circuits for the didactic Learn sections.
@@ -42,6 +47,8 @@ export interface EcmoReferenceProfile {
     readonly rpmSetpoint: number
     readonly gas: Pick<GasState, 'sweepLpm' | 'fio2'>
     readonly patient: Partial<PatientState>
+    /** Authored explicitly rather than inherited, so the oxygen balance is visible at the profile. */
+    readonly modelInputs: EcmoPhysiologyModelInputs
   }
   /** Bounds the derived state must satisfy. Enforced by the dump harness and by tests. */
   readonly expected: {
@@ -51,7 +58,7 @@ export interface EcmoReferenceProfile {
     readonly pInt: EcmoExpectedRange
     readonly deltaP: EcmoExpectedRange
     readonly recirculationFraction: number
-    readonly effectiveFlow?: EcmoExpectedRange
+    readonly recirculationAdjustedCircuitFlowLpm?: EcmoExpectedRange
     readonly pulsePressure?: EcmoExpectedRange
     readonly rightRadialSpo2?: EcmoExpectedRange
     readonly femoralArterialSpo2?: EcmoExpectedRange
@@ -78,11 +85,12 @@ export const ecmoReferenceProfiles: Readonly<Record<EcmoReferenceProfileId, Ecmo
         rpmSetpoint: 3200,
         gas: { sweepLpm: 4, fio2: 1 },
         patient: { nativeCardiacOutputLpm: 4.5 },
+        modelInputs: { oxygenConsumptionMlMin: 150 },
       },
       expected: {
         ...sharedCircuitExpectation,
         recirculationFraction: 0.08,
-        effectiveFlow: { low: 3.6, high: 3.8 },
+        recirculationAdjustedCircuitFlowLpm: { low: 3.6, high: 3.8 },
       },
     },
     'va-reference': {
@@ -95,6 +103,7 @@ export const ecmoReferenceProfiles: Readonly<Record<EcmoReferenceProfileId, Ecmo
         rpmSetpoint: 3200,
         gas: { sweepLpm: 4, fio2: 1 },
         patient: { nativeCardiacOutputLpm: 2.4 },
+        modelInputs: { oxygenConsumptionMlMin: 150 },
       },
       expected: {
         ...sharedCircuitExpectation,

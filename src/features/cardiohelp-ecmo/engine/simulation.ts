@@ -5,6 +5,8 @@ import type {
   AlarmEvent,
   AlarmPriority,
   CircuitState,
+  EcmoChannelReadout,
+  EcmoPhysiologyModelInputs,
   DeviceState,
   EcmoSimulationState,
   FaultId,
@@ -90,14 +92,20 @@ export const defaultCircuitState: CircuitState = {
   deltaP: 32,
   tVen: 36.5,
   tArt: 36.8,
-  svo2: 68,
   hemoglobin: 10.2,
   hematocrit: 31,
   preOxygenatorSaturation: 70.5,
   postOxygenatorSaturation: 99,
   recirculationFraction: RECIRCULATION_FRACTION.baseline,
-  effectiveFlow: 3.68,
-  pressureSignalsValid: true,
+  recirculationAdjustedCircuitFlowLpm: 3.68,
+  // Replaced on the first derivation; a plain seed so the shape is complete before deriveSimulation.
+  readouts: {
+    pVen: { status: 'valid', raw: -34, displayed: -34, reason: '' },
+    pInt: { status: 'valid', raw: 242, displayed: 242, reason: '' },
+    pArt: { status: 'valid', raw: 210, displayed: 210, reason: '' },
+    deltaP: { status: 'valid', raw: 32, displayed: 32, reason: '' },
+    venousLineSaturation: { status: 'valid', raw: 70.5, displayed: 70.5, reason: '' },
+  },
   drainageChatter: false,
   flowSensorConnected: true,
   arterialBubbleDetected: false,
@@ -137,6 +145,7 @@ export const defaultPatientState: PatientState = {
   temperature: 37,
   distalLimbPerfusion: 'normal',
   distalLimbNirs: 68,
+  systemicVenousSaturationEstimate: 68,
 }
 
 /**
@@ -235,6 +244,7 @@ export function createInitialSimulationState(
     circuit: { ...defaultCircuitState, ...definition.initialState.circuit },
     gas: { ...defaultGasState, ...definition.initialState.gas },
     patient: { ...defaultPatientState, ...definition.initialState.patient },
+    modelInputs: { ...DEFAULT_ECMO_MODEL_INPUTS, ...definition.initialState.modelInputs },
     scenario: createScenarioRuntime(definition),
     alarms: [] as readonly AlarmEvent[],
     alarmHistory: [] as readonly AlarmEvent[],
@@ -280,6 +290,7 @@ export function createReferenceSimulationState(
     circuit: { ...defaultCircuitState },
     gas: { ...defaultGasState, ...profile.inputs.gas },
     patient: { ...defaultPatientState, ...profile.inputs.patient },
+    modelInputs: { ...DEFAULT_ECMO_MODEL_INPUTS, ...profile.inputs.modelInputs },
     scenario: createReferenceRuntime(profile.id),
     alarms: [] as readonly AlarmEvent[],
     alarmHistory: [] as readonly AlarmEvent[],
@@ -435,7 +446,7 @@ function alarmDescriptors(state: EcmoSimulationState): AlarmDescriptor[] {
   // A channel that is not reporting a supported value cannot breach a limit. Alarming on the
   // zero-flow intercept of a stopped circuit would be alarming on an artefact. Power, gas and
   // patient alarms below are unaffected — a stopped pump on battery must still alarm.
-  if (circuit.pressureSignalsValid) {
+  if (circuit.readouts.pVen.status === 'valid') {
     if (circuit.pVen < device.limits.pVenAlarmLow - 10) {
       descriptors.push({
         code: 'PVEN_STOP',
@@ -666,22 +677,49 @@ const MEMBRANE_RESISTANCE_MMHG_PER_LPM = Object.freeze({
  */
 const PRESSURE_DISPLAY_RANGE_MMHG = Object.freeze({ low: -500, high: 900 })
 
+/** SvO₂ display range the CARDIOHELP-i supports (Rev 2.3 §14.8, page 201: 40.0-99.9%). */
+const VENOUS_SATURATION_DISPLAY_RANGE = Object.freeze({ low: 40, high: 99.9 })
+
 /**
- * Whether the pressure channels currently mean anything.
+ * Whether the pressure equations describe the current state at all.
  *
- * Deliberately narrow: it says the model is not describing this state, not that the real device
+ * Deliberately narrow: it says *this model* has nothing to offer, not that the physical device
  * would read nothing. A stopped pump on a primed circuit has genuine static pressures; this
- * simulation simply does not model them, and saying so is more honest than reporting the zero-flow
+ * simulation does not model them, and saying so is more honest than reporting the zero-flow
  * intercepts of equations written for a flowing circuit.
  */
-function derivePressureSignalsValid(
+function pressuresAreModeled(
   state: EcmoSimulationState,
   device: DeviceState,
   flow: number,
 ): boolean {
-  // A clamped line is a modelled state with a real, teachable pressure, so it stays valid.
+  // A clamped line is a modelled state with a real, teachable pressure response.
   if (state.circuit.drainageClampClosed || state.circuit.returnClampClosed) return true
   return device.pumpRunning && !device.zeroFlowActive && flow > 0
+}
+
+const UNMODELED_PRESSURE_REASON =
+  'Pressure response is not modeled while the pump is stopped. This is a limitation of this educational simulation, not a statement about what the device would display.'
+
+/**
+ * Builds a channel readout, keeping the raw model value intact and deciding separately whether the
+ * console may render it as a number.
+ */
+function channelReadout(
+  raw: number,
+  modeled: boolean,
+  range: { low: number; high: number },
+  unmodeledReason: string,
+  outOfRangeReason: string,
+): EcmoChannelReadout {
+  if (!modeled) {
+    return { status: 'simulation-unmodeled', raw, displayed: null, reason: unmodeledReason }
+  }
+  if (raw < range.low || raw > range.high) {
+    // Not clamped to the boundary and shown as measured — that would be a fabricated reading.
+    return { status: 'device-unavailable', raw, displayed: null, reason: outOfRangeReason }
+  }
+  return { status: 'valid', raw, displayed: raw, reason: '' }
 }
 
 function calculatePressures(state: EcmoSimulationState, flow: number, rpm: number) {
@@ -718,13 +756,13 @@ function calculatePressures(state: EcmoSimulationState, flow: number, rpm: numbe
     pInt = 690
   }
 
-  // Clamped to the range the CARDIOHELP-i can display, so the engine cannot produce a pressure the
-  // console has no way to show (Rev 2.3 §14.8, page 201).
-  const { low, high } = PRESSURE_DISPLAY_RANGE_MMHG
+  // Deliberately NOT clamped to the console's display range. A value the device could not show is
+  // a display-eligibility question, decided per channel in `readouts`; clamping it here and then
+  // rendering it would turn a boundary artefact into an apparent measurement.
   return {
-    pVen: round(clamp(pVen, low, high), 0),
-    pInt: round(clamp(pInt, low, high), 0),
-    pArt: round(clamp(pArt, low, high), 0),
+    pVen: round(pVen, 0),
+    pInt: round(pInt, 0),
+    pArt: round(pArt, 0),
   }
 }
 
@@ -779,30 +817,37 @@ export function deriveRecirculationFraction(state: EcmoSimulationState): number 
     : RECIRCULATION_FRACTION.baseline
 }
 
-export function deriveEffectiveFlow(bloodFlow: number, recirculationFraction: number): number {
+/**
+ * Circuit flow left after the immediately re-drained fraction is removed.
+ *
+ * Not "effective systemic flow": in VA the recirculation term is zero, so this equals displayed
+ * circuit flow and says nothing about total systemic perfusion, which native cardiac output also
+ * contributes to.
+ */
+export function deriveRecirculationAdjustedCircuitFlow(
+  bloodFlow: number,
+  recirculationFraction: number,
+): number {
   return Math.max(0, bloodFlow * (1 - recirculationFraction))
 }
 
-/**
- * Assumed whole-body oxygen consumption for the sedated, often cooled and paralysed patient this
- * module models. Chosen so the module's own baseline circuit state (Hb 10.2 g/dL, native output
- * 4.5 L/min, SaO₂ ≈ 92%) is self-consistent at the SvO₂ of 68% it has always displayed.
- *
- * Evidence boundary: bounded-educational-model.
- */
-const ASSUMED_OXYGEN_CONSUMPTION_ML_MIN = 150
+/** Default educational-model inputs. Reference profiles and scenarios may author over these. */
+export const DEFAULT_ECMO_MODEL_INPUTS: EcmoPhysiologyModelInputs = Object.freeze({
+  oxygenConsumptionMlMin: 150,
+})
+
 const HUFNER_CONSTANT_ML_PER_G = 1.34
 
 /**
- * Mixed venous saturation from the oxygen balance rather than from a constant.
+ * Systemic mixed venous saturation, estimated from the oxygen balance rather than held constant.
  *
- * This was a frozen 68 that never moved, while being displayed as a live parameter on two console
- * screens and tinting the drainage limb of the bedside scene. A number that cannot move cannot
- * teach extraction, and it cannot support the recirculation arithmetic that reads it.
+ * This was a frozen 68 that never moved while being displayed as a live parameter on two console
+ * screens. It is **latent and estimated**: the CARDIOHELP has no sensor for it, so it is never
+ * clamped to any console display range, and it is deliberately not what the SvO₂ tile shows.
  */
-export function deriveMixedVenousSaturation(
+export function deriveSystemicVenousSaturationEstimate(
   state: EcmoSimulationState,
-  effectiveFlow: number,
+  recirculationAdjustedCircuitFlowLpm: number,
 ): number {
   const arterialSaturation =
     state.supportMode === 'va' ? state.patient.femoralArterialSpo2 : state.patient.spo2
@@ -810,38 +855,44 @@ export function deriveMixedVenousSaturation(
   // VA the return is arterial and adds to it.
   const systemicFlowLpm =
     state.supportMode === 'va'
-      ? state.patient.nativeCardiacOutputLpm + effectiveFlow
+      ? state.patient.nativeCardiacOutputLpm + recirculationAdjustedCircuitFlowLpm
       : state.patient.nativeCardiacOutputLpm
   const oxygenCarryingCapacity =
     HUFNER_CONSTANT_ML_PER_G * state.circuit.hemoglobin * Math.max(systemicFlowLpm, 0.2) * 10
-  const extractedSaturationPoints =
-    (ASSUMED_OXYGEN_CONSUMPTION_ML_MIN / oxygenCarryingCapacity) * 100
-  // Clamped to the SvO2 range the CARDIOHELP-i can display (Rev 2.3 §14.8, page 201: 40.0-99.9%).
-  // A modelled value below that floor is not something this console could show as a number.
-  return clamp(arterialSaturation - extractedSaturationPoints, 40, 99.9)
+  const consumption =
+    state.modelInputs?.oxygenConsumptionMlMin ?? DEFAULT_ECMO_MODEL_INPUTS.oxygenConsumptionMlMin
+  const extractedSaturationPoints = (consumption / oxygenCarryingCapacity) * 100
+  // Bounded only by what a saturation can physically be. No console range is applied here: this
+  // quantity is not a console reading.
+  return clamp(arterialSaturation - extractedSaturationPoints, 0, 100)
 }
 
 /**
  * Drainage (pre-oxygenator) saturation as the mixture it physically is: systemic venous return
  * diluted by whatever fraction of freshly oxygenated blood is being pulled straight back in.
+ *
+ * Bounded as a saturation, not as a console reading — display eligibility is decided separately.
  */
 export function deriveDrainageSaturation(
-  mixedVenousSaturation: number,
+  systemicVenousSaturationEstimate: number,
   postOxygenatorSaturation: number,
   recirculationFraction: number,
 ): number {
   return clamp(
-    mixedVenousSaturation +
-      recirculationFraction * (postOxygenatorSaturation - mixedVenousSaturation),
-    20,
-    99.9,
+    systemicVenousSaturationEstimate +
+      recirculationFraction * (postOxygenatorSaturation - systemicVenousSaturationEstimate),
+    0,
+    100,
   )
 }
 
 function patientTargets(state: EcmoSimulationState, flow: number) {
   const gasAvailable = state.gas.sourceConnected && state.gas.sweepLpm > 0
-  const effectiveFlow = deriveEffectiveFlow(flow, deriveRecirculationFraction(state))
-  const oxygenatorContribution = gasAvailable ? effectiveFlow * state.gas.fio2 : 0
+  const recirculationAdjustedFlow = deriveRecirculationAdjustedCircuitFlow(
+    flow,
+    deriveRecirculationFraction(state),
+  )
+  const oxygenatorContribution = gasAvailable ? recirculationAdjustedFlow * state.gas.fio2 : 0
   let targetSpo2 = 82 + oxygenatorContribution * 4
   let targetPaCO2 = gasAvailable ? 76 - state.gas.sweepLpm * 7.5 : 90
 
@@ -1025,39 +1076,84 @@ export function deriveSimulation(state: EcmoSimulationState): EcmoSimulationStat
     flow = 0
   }
   const pressures = calculatePressures(state, flow, device.zeroFlowActive ? 0 : device.rpmSetpoint)
-  const pressureSignalsValid = derivePressureSignalsValid(state, device, flow)
+  const pressuresModeled = pressuresAreModeled(state, device, flow)
   const recirculationFraction = deriveRecirculationFraction(state)
-  const effectiveFlow = deriveEffectiveFlow(flow, recirculationFraction)
-  const mixedVenousSaturation = deriveMixedVenousSaturation(state, effectiveFlow)
+  const recirculationAdjustedCircuitFlowLpm = deriveRecirculationAdjustedCircuitFlow(
+    flow,
+    recirculationFraction,
+  )
+  const systemicVenousSaturationEstimate = deriveSystemicVenousSaturationEstimate(
+    state,
+    recirculationAdjustedCircuitFlowLpm,
+  )
   const postOxygenatorSaturation = hasFault(state, 'oxygenator-resistance')
     ? 88
     : state.gas.sourceConnected
       ? round(96 + state.gas.fio2 * 3, 1)
       : 72
+  const deltaP = round(pressures.pInt - pressures.pArt, 0)
+  const venousLineSaturation = round(
+    deriveDrainageSaturation(
+      systemicVenousSaturationEstimate,
+      postOxygenatorSaturation,
+      recirculationFraction,
+    ),
+    1,
+  )
+  const pressureRangeReason =
+    'Value is outside the pressure range this console displays, so it shows the unavailable indication instead.'
   let circuit: CircuitState = {
     ...state.circuit,
     ...pressures,
     bloodFlow: flow,
     backflowSeconds,
-    deltaP: round(pressures.pInt - pressures.pArt, 0),
+    deltaP,
     recirculationFraction: round(recirculationFraction, 3),
-    effectiveFlow: round(effectiveFlow, 2),
-    pressureSignalsValid,
-    svo2: round(mixedVenousSaturation, 1),
+    recirculationAdjustedCircuitFlowLpm: round(recirculationAdjustedCircuitFlowLpm, 2),
+    readouts: {
+      pVen: channelReadout(
+        pressures.pVen,
+        pressuresModeled,
+        PRESSURE_DISPLAY_RANGE_MMHG,
+        UNMODELED_PRESSURE_REASON,
+        pressureRangeReason,
+      ),
+      pInt: channelReadout(
+        pressures.pInt,
+        pressuresModeled,
+        PRESSURE_DISPLAY_RANGE_MMHG,
+        UNMODELED_PRESSURE_REASON,
+        pressureRangeReason,
+      ),
+      pArt: channelReadout(
+        pressures.pArt,
+        pressuresModeled,
+        PRESSURE_DISPLAY_RANGE_MMHG,
+        UNMODELED_PRESSURE_REASON,
+        pressureRangeReason,
+      ),
+      deltaP: channelReadout(
+        deltaP,
+        pressuresModeled,
+        PRESSURE_DISPLAY_RANGE_MMHG,
+        UNMODELED_PRESSURE_REASON,
+        pressureRangeReason,
+      ),
+      venousLineSaturation: channelReadout(
+        venousLineSaturation,
+        true,
+        VENOUS_SATURATION_DISPLAY_RANGE,
+        '',
+        'Venous saturation is outside the range this console displays, so it shows the unavailable indication instead.',
+      ),
+    },
     drainageChatter:
       (hasFault(state, 'preload-limited') ||
         hasFault(state, 'hemorrhagic-hypovolemia') ||
         hasFault(state, 'tension-pneumothorax') ||
         hasFault(state, 'tamponade')) &&
       pressures.pVen < -75,
-    preOxygenatorSaturation: round(
-      deriveDrainageSaturation(
-        mixedVenousSaturation,
-        postOxygenatorSaturation,
-        recirculationFraction,
-      ),
-      1,
-    ),
+    preOxygenatorSaturation: venousLineSaturation,
     postOxygenatorSaturation,
     hemoglobin: round(
       moveToward(
@@ -1076,7 +1172,13 @@ export function deriveSimulation(state: EcmoSimulationState): EcmoSimulationStat
     circuit = { ...circuit, bloodFlow: 0 }
   }
 
-  const patient = derivePatient({ ...state, device, circuit }, flow)
+  const derived = derivePatient({ ...state, device, circuit }, flow)
+  // Latent, estimated, and kept on the patient rather than the circuit so it can never be mistaken
+  // for the console's venous-probe reading.
+  const patient: PatientState = {
+    ...derived,
+    systemicVenousSaturationEstimate: round(systemicVenousSaturationEstimate, 1),
+  }
   const intermediate: EcmoSimulationState = { ...state, device, circuit, patient }
   const reconciled = reconcileAlarms(intermediate)
   const trend: TrendSample = {

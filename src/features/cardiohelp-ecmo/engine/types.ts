@@ -159,6 +159,49 @@ export interface DeviceState {
   timerRunning: readonly boolean[]
 }
 
+/**
+ * Why a channel can or cannot be shown as a number.
+ *
+ * These are different provenance claims and must not collapse into one boolean:
+ *
+ * - `valid` — the model produced a value and the console can display it.
+ * - `device-unavailable` — the CARDIOHELP itself would not show a number here: the sensor is not
+ *   connected, the parameter is unsupported, or the value falls outside the documented display
+ *   range. Sourced from the IFU (Rev 2.3 §3 p47 "Status of measured values"; ranges §14.8 p201).
+ * - `simulation-unmodeled` — this educational model has no value to offer. Saying the device shows
+ *   dashes here would be an unsourced claim about the physical device.
+ */
+export type EcmoReadoutStatus = 'valid' | 'device-unavailable' | 'simulation-unmodeled'
+
+/**
+ * A model quantity together with whether the console may render it as a number.
+ *
+ * `raw` is always the model-derived value and is never altered to fit a display range — clamping a
+ * value to a display boundary and then showing it as though measured is the defect this type
+ * exists to prevent. `displayed` is `null` whenever the console must fall back to the unavailable
+ * convention instead.
+ */
+export interface EcmoChannelReadout {
+  readonly status: EcmoReadoutStatus
+  readonly raw: number
+  readonly displayed: number | null
+  /** Learner- and screen-reader-facing explanation of why a number is absent. */
+  readonly reason: string
+}
+
+export interface CircuitReadouts {
+  readonly pVen: EcmoChannelReadout
+  readonly pInt: EcmoChannelReadout
+  readonly pArt: EcmoChannelReadout
+  readonly deltaP: EcmoChannelReadout
+  /**
+   * The console's SvO₂ tile. The CARDIOHELP venous probe measures blood in the disposable's
+   * measuring cell, which sits on the venous inlet of the oxygenator pump unit — so this reads the
+   * drainage limb, not a systemic mixed-venous estimate.
+   */
+  readonly venousLineSaturation: EcmoChannelReadout
+}
+
 export interface CircuitState {
   bloodFlow: number
   pVen: number
@@ -168,9 +211,15 @@ export interface CircuitState {
   deltaP: number
   tVen: number
   tArt: number
-  svo2: number
   hemoglobin: number
   hematocrit: number
+  /**
+   * Saturation of blood in the drainage limb entering the oxygenator — the quantity the
+   * CARDIOHELP venous probe measures. In VV this is systemic venous blood diluted by whatever
+   * fraction of freshly oxygenated return is pulled straight back in, so it rises with
+   * recirculation even as the patient does worse. Never clamped to the console's display range;
+   * display eligibility is decided separately in `readouts`.
+   */
   preOxygenatorSaturation: number
   postOxygenatorSaturation: number
   /**
@@ -180,25 +229,17 @@ export interface CircuitState {
    * derived from it rather than authored beside it.
    */
   recirculationFraction: number
-  /** Circuit flow that reaches the systemic circulation: `bloodFlow × (1 − recirculationFraction)`. */
-  effectiveFlow: number
   /**
-   * Whether the pressure channels are reporting a value the model actually supports.
+   * Circuit flow left after subtracting the fraction that is immediately re-drained:
+   * `bloodFlow × (1 − recirculationFraction)`.
    *
-   * The pressure equations describe a primed circuit with the pump turning. With the pump stopped
-   * they have no basis, and returning their zero-flow intercepts would put plausible-looking
-   * numbers on screen for a state this simulation does not model. The IFU's own convention covers
-   * this: measured values that are unavailable or outside the valid range display as **dashes**
-   * rather than as numbers (Rev 2.3 §3, page 47, "Status of measured values").
-   *
-   * A connected, primed circuit with a deliberately stopped pump does have real static pressures,
-   * but modelling them would need a support-mode-specific static-pressure model that no supplied
-   * source provides — so this stays `false` rather than inventing one.
-   *
-   * When `false`, consumers must render dashes, must not raise a pressure alarm, and must not read
-   * the channel as a trend point.
+   * Deliberately **not** called effective systemic flow. In VV it is the circuit flow that does
+   * useful work. In VA the recirculation term is zero, so this equals displayed circuit flow and
+   * says nothing about total systemic flow, which would also involve native cardiac output.
    */
-  pressureSignalsValid: boolean
+  recirculationAdjustedCircuitFlowLpm: number
+  /** Per-channel display eligibility. Channels can differ, so this is not one shared flag. */
+  readouts: CircuitReadouts
   drainageChatter: boolean
   flowSensorConnected: boolean
   arterialBubbleDetected: boolean
@@ -238,6 +279,37 @@ export interface PatientState {
   temperature: number
   distalLimbPerfusion: 'normal' | 'threatened' | 'critical'
   distalLimbNirs: number
+  /**
+   * Whole-body mixed venous saturation estimated from the oxygen balance.
+   *
+   * **Latent and estimated, not measured.** The CARDIOHELP has no sensor for this — its venous
+   * probe reads the drainage limb (see `CircuitState.preOxygenatorSaturation`), which in VV
+   * recirculation diverges from this value in the opposite direction. Kept in patient physiology
+   * rather than on the circuit precisely so the two cannot be confused again, and never clamped to
+   * any console display range.
+   */
+  systemicVenousSaturationEstimate: number
+}
+
+/**
+ * Authored inputs to the educational physiology model.
+ *
+ * These are not measurements and not universal clinical assumptions — they are the knobs the
+ * simulation needs in order to close its own oxygen balance. Reference profiles and scenarios may
+ * author them; anything that does not inherits the defaults.
+ *
+ * Evidence boundary: bounded-educational-model.
+ */
+export interface EcmoPhysiologyModelInputs {
+  /**
+   * Assumed whole-body oxygen consumption, mL/min.
+   *
+   * The default is chosen so the module's own baseline circuit (Hb 10.2 g/dL, native output
+   * 4.5 L/min, SaO₂ ≈ 92%) is self-consistent at the venous saturation it has always displayed.
+   * It is a model input, not a patient measurement, and carries no claim about any real patient's
+   * metabolic rate.
+   */
+  readonly oxygenConsumptionMlMin: number
 }
 
 export type ClinicalCaseKind = 'initiation' | 'deterioration' | 'complication'
@@ -452,6 +524,8 @@ export interface EcmoSimulationState {
   circuit: CircuitState
   gas: GasState
   patient: PatientState
+  /** Authored educational-model inputs. Not a learner-visible bedside measurement. */
+  modelInputs: EcmoPhysiologyModelInputs
   scenario: ScenarioRuntime
   alarms: readonly AlarmEvent[]
   alarmHistory: readonly AlarmEvent[]
@@ -478,6 +552,8 @@ export interface ScenarioInitialState {
   circuit?: Partial<CircuitState>
   gas?: Partial<GasState>
   patient?: Partial<PatientState>
+  /** Scenarios inherit the model defaults unless they deliberately author an override. */
+  modelInputs?: Partial<EcmoPhysiologyModelInputs>
   activeFaults?: readonly FaultId[]
   paused?: boolean
 }
