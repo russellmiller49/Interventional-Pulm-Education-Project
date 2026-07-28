@@ -1,3 +1,4 @@
+import type { CriticalCareDerivedValueGuide } from '@/features/critical-care/content/derivedValueGuides'
 import { mcsDerivedValueGuides } from '@/features/mechanical-circulatory-support/content/derivedValueGuides'
 
 import type { DerivedHemodynamics } from '../engine/types'
@@ -5,6 +6,17 @@ import { HEMODYNAMIC_CLINICAL_THRESHOLDS as thresholds } from './clinicalThresho
 
 export type HemodynamicDerivedValueId = keyof DerivedHemodynamics
 
+/**
+ * NOT YET MIGRATED to the shared context-aware model in
+ * `critical-care/content/derivedValueGuides`.
+ *
+ * `normalRange` and `actionableThresholds` are the field names that migration exists to remove:
+ * they cannot say whether a number is a cohort observation, a device specification, or a boundary
+ * this simulator invented. MCS has moved; these thirteen hemodynamic guides have not, because
+ * re-expressing each one is clinical authoring that must not be done mechanically.
+ *
+ * The audit harness allowlists this one file by path and reports it as outstanding.
+ */
 export interface DerivedValueGuide {
   readonly id: HemodynamicDerivedValueId
   readonly label: string
@@ -14,6 +26,37 @@ export interface DerivedValueGuide {
   readonly caveats: string
   readonly evidenceIds: readonly string[]
   readonly conceptIds: readonly string[]
+}
+
+/**
+ * Projects a migrated shared guide back into this module's legacy shape.
+ *
+ * MCS owns CPO and PAPi and has moved to the shared context-aware model; hemodynamics cross-links
+ * to them and has not. Rather than duplicate the clinical content, the shared guide is projected:
+ * `interpretation` becomes the legacy `normalRange` prose, the authored interpretation rules are
+ * flattened into `actionableThresholds`, and the reference evidence is de-duplicated.
+ *
+ * Lossy by construction — the reference *kinds* cannot survive the projection, which is exactly
+ * why the rest of these guides still need migrating.
+ */
+function fromSharedGuide(
+  id: HemodynamicDerivedValueId,
+  guide: CriticalCareDerivedValueGuide,
+): DerivedValueGuide {
+  const thresholdStatements = (guide.rules ?? [])
+    .filter((rule) => rule.interval)
+    .map((rule) => rule.statement)
+  return {
+    id,
+    label: guide.label,
+    formula: guide.formula ?? '',
+    normalRange: guide.interpretation,
+    actionableThresholds:
+      thresholdStatements.length > 0 ? thresholdStatements.join(' ') : undefined,
+    caveats: guide.caveats,
+    evidenceIds: [...new Set(guide.references.flatMap((reference) => reference.evidenceIds))],
+    conceptIds: guide.conceptIds,
+  }
 }
 
 export const hemodynamicDerivedValueIds = [
@@ -104,8 +147,14 @@ export const hemodynamicDerivedValueGuides = {
     evidenceIds: ['esc-ers-ph-2022', 'pac-derived-part-2-2021'],
     conceptIds: ['cc.flow.resistance-and-impedance'],
   },
-  cardiacPowerOutputW: mcsDerivedValueGuides.cardiacPowerOutputW,
-  pulmonaryArteryPulsatilityIndex: mcsDerivedValueGuides.pulmonaryArteryPulsatilityIndex,
+  cardiacPowerOutputW: fromSharedGuide(
+    'cardiacPowerOutputW',
+    mcsDerivedValueGuides.cardiacPowerOutputW,
+  ),
+  pulmonaryArteryPulsatilityIndex: fromSharedGuide(
+    'pulmonaryArteryPulsatilityIndex',
+    mcsDerivedValueGuides.pulmonaryArteryPulsatilityIndex,
+  ),
   pulmonaryArteryCompliance: {
     id: 'pulmonaryArteryCompliance',
     label: 'PA compliance',

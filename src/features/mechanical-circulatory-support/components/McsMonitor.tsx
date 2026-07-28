@@ -391,7 +391,7 @@ export function McsMonitor({
           </strong>
           <span>
             {mcsDerivedValueGuides.pulmonaryArteryPulsatilityIndex.formula}.{' '}
-            {mcsDerivedValueGuides.pulmonaryArteryPulsatilityIndex.normalRange}
+            {mcsDerivedValueGuides.pulmonaryArteryPulsatilityIndex.interpretation}
           </span>
           <small>{mcsDerivedValueGuides.pulmonaryArteryPulsatilityIndex.caveats}</small>
         </p>
@@ -402,7 +402,7 @@ export function McsMonitor({
           </strong>
           <span>
             {mcsDerivedValueGuides.cardiacPowerOutputW.formula}.{' '}
-            {mcsDerivedValueGuides.cardiacPowerOutputW.normalRange}
+            {mcsDerivedValueGuides.cardiacPowerOutputW.interpretation}
           </span>
           <small>{mcsDerivedValueGuides.cardiacPowerOutputW.caveats}</small>
         </p>

@@ -2,6 +2,17 @@ import type { McsSource } from '../engine/types'
 
 export const mcsSources: readonly McsSource[] = [
   {
+    id: 'case-based-device-therapy-hf',
+    title: 'Case-Based Device Therapy for Heart Failure',
+    citation: 'Owner-licensed private authoring source, reviewed July 2026.',
+    sourceType: 'reference-package',
+    year: 2026,
+    intendedUse:
+      'Authoring context for device-therapy cases. Registered so its two internally inconsistent Impella CP flow statements can be cited as a documented source conflict rather than referenced by an unresolvable identifier.',
+    limitation:
+      'This source contradicts itself on Impella CP maximum flow (table page 26 versus narrative page 27) and neither figure matches current device labeling. Never use it as the source of a device specification.',
+  },
+  {
     id: 'mcs-bedside-reference-supplied',
     title: 'Bedside Mechanical Circulatory Support Reference',
     citation: 'User-supplied critical-care bedside reference, reviewed July 2026.',
