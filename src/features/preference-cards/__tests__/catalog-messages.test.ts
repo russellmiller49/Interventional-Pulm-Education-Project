@@ -23,7 +23,9 @@ import zhCnMessages from '../../../../messages/zh-CN.json'
  * placeholder to a message without adding it here fails the declaration test below.
  */
 const parameterizedMessages: Record<string, string[]> = {
-  mapped: ['percent'],
+  catalogAlternatives: ['count', 'total'],
+  curatedDefaults: ['count', 'total'],
+  coverageFraction: ['count', 'total'],
   step: ['step', 'total'],
   searchLocalOptionsFor: ['requirement'],
   selectLocalOptionFor: ['requirement'],

@@ -1,8 +1,10 @@
 import modifierCatalogJson from '../../../../data/ip-preference-cards/generated/modifier-catalog.json'
+import productsJson from '../../../../data/ip-preference-cards/generated/catalog-products.json'
 import proceduresJson from '../../../../data/ip-preference-cards/generated/procedures.json'
 import productRolesJson from '../../../../data/ip-preference-cards/generated/product-roles.json'
 import scenariosJson from '../../../../data/ip-preference-cards/generated/scenarios.json'
 import generatedModifiersJson from '../../../../data/ip-preference-cards/generated/modifier-definitions.json'
+import slotProductOptionsJson from '../../../../data/ip-preference-cards/generated/slot-product-options.json'
 import slotsJson from '../../../../data/ip-preference-cards/generated/procedure-slots.json'
 import overridesJson from '../../../../data/ip-preference-cards/seed/scenario-overrides.json'
 
@@ -14,7 +16,9 @@ describe('scenario generator', () => {
   const result = buildScenarios({
     procedures: proceduresJson as never,
     slots: slotsJson as never,
+    products: productsJson as never,
     productRoles: productRolesJson as never,
+    slotProductOptions: slotProductOptionsJson as never,
     modifierCatalog: modifierCatalogJson as never,
     overrides: overridesJson as never,
   })
@@ -61,14 +65,18 @@ describe('scenario generator', () => {
     }
   })
 
-  it('reports roles with no catalogued product for each procedure', () => {
+  it('reports required roles with no catalogued product for each procedure', () => {
     const rolesWithProducts = new Set(
       (productRolesJson as { role_code: string }[]).map((row) => row.role_code),
     )
     for (const scenario of result.scenarios) {
-      for (const roleCode of scenario.emptyRoleCodes) {
+      for (const roleCode of scenario.roleCodesWithoutCatalogProducts) {
         expect(rolesWithProducts.has(roleCode)).toBe(false)
       }
+      expect(scenario.requiredCatalogCoverageCount).toBeLessThanOrEqual(scenario.requiredSlotCount)
+      expect(scenario.requiredDefaultOptionCoverageCount).toBeLessThanOrEqual(
+        scenario.requiredSlotCount,
+      )
     }
   })
 

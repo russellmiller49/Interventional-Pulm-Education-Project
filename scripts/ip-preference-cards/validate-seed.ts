@@ -16,10 +16,11 @@ import { formatJson } from './format-json'
 
 interface CoverageReport {
   procedures: {
-    procedure_code: string
-    slot_coverage: {
-      role_code: string
-      required_with_zero_selectable: boolean
+    procedureCode: string
+    slotCoverage: {
+      roleCode: string
+      requiredness: string
+      hasCuratedDefault: boolean
     }[]
   }[]
 }
@@ -33,6 +34,13 @@ interface DemoStandIn {
 interface RoleRow {
   role_code: string
 }
+
+const DEMO_SEED_COVERAGE_PROCEDURES = new Set([
+  'EBUS_TBNA',
+  'CHEST_TUBE',
+  'THERAPEUTIC_BRONCH',
+  'RIGID_BRONCH',
+])
 
 function duplicates(values: string[]): string[] {
   return [...new Set(values.filter((value, index) => values.indexOf(value) !== index))]
@@ -89,16 +97,19 @@ export async function validateDemoSeed() {
   }
 
   const mappedRoles = new Set(demoHospitalItemSeeds.map((item) => item.roleCode))
-  const uncoveredRequiredRoles = coverage.procedures.flatMap((procedure) =>
-    procedure.slot_coverage.flatMap((slot) =>
-      slot.required_with_zero_selectable && !mappedRoles.has(slot.role_code)
-        ? [`${procedure.procedure_code}:${slot.role_code}`]
+  const demoCoverageProcedures = coverage.procedures.filter((procedure) =>
+    DEMO_SEED_COVERAGE_PROCEDURES.has(procedure.procedureCode),
+  )
+  const uncoveredRequiredRoles = demoCoverageProcedures.flatMap((procedure) =>
+    procedure.slotCoverage.flatMap((slot) =>
+      slot.requiredness === 'required' && !slot.hasCuratedDefault && !mappedRoles.has(slot.roleCode)
+        ? [`${procedure.procedureCode}:${slot.roleCode}`]
         : [],
     ),
   )
   if (uncoveredRequiredRoles.length > 0) {
     errors.push(
-      `Required zero-selectable catalog roles lack an explicit demo resolution: ${uncoveredRequiredRoles.join(', ')}`,
+      `Required roles without curated defaults lack an explicit demo resolution: ${uncoveredRequiredRoles.join(', ')}`,
     )
   }
 
@@ -133,10 +144,8 @@ export async function validateDemoSeed() {
   if (chestTube?.readiness_state === 'blocked') {
     errors.push('The default chest-tube golden scenario should not be blocked.')
   }
-  if (!central?.blocking_codes.includes('compatibility_failed')) {
-    errors.push(
-      'The central-airway-obstruction fixture must contain the intentional APC compatibility failure.',
-    )
+  if (central?.readiness_state === 'blocked') {
+    errors.push('The default central-airway-obstruction scenario should not be blocked.')
   }
   if ((chestTube?.suppressed_item_count ?? 0) < 1) {
     errors.push('The chest-tube small-bore fixture must prove kit/BOM suppression.')
@@ -150,11 +159,14 @@ export async function validateDemoSeed() {
       location: 'Bronchoscopy Suite 1',
     },
     demo_only_stand_ins: demoOnlySeeds.length,
-    explicitly_resolved_zero_selectable_required_roles: coverage.procedures.reduce(
+    explicitly_resolved_required_roles_without_curated_defaults: demoCoverageProcedures.reduce(
       (total, procedure) =>
         total +
-        procedure.slot_coverage.filter(
-          (slot) => slot.required_with_zero_selectable && mappedRoles.has(slot.role_code),
+        procedure.slotCoverage.filter(
+          (slot) =>
+            slot.requiredness === 'required' &&
+            !slot.hasCuratedDefault &&
+            mappedRoles.has(slot.roleCode),
         ).length,
       0,
     ),

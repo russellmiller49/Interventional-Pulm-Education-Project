@@ -89,7 +89,9 @@ export function catalogPickToHospitalItem(
 
 export function catalogPickToRoleOption(pick: CatalogPick): HospitalRoleOption {
   return {
-    id: `catalog-option-${pick.productId}`,
+    // One product may legitimately carry several Product_Roles. The hospital item remains
+    // one physical catalog product, while each exact product-role pair needs its own option.
+    id: `catalog-option-${pick.productId}-${pick.roleCode}`,
     roleCode: pick.roleCode,
     hospitalItemId: catalogPickItemId(pick.productId),
     preferenceRank: 99,
@@ -113,8 +115,8 @@ export function withCatalogPicks<
     siteId: context.hospitalItems[0]?.siteId ?? 'personal',
     locationId: context.hospitalItems[0]?.locationId ?? 'personal',
   }
-  // Dedupe within the picks themselves as well as against the context: the same product can
-  // legitimately be picked for two requirements, but it is one hospital item.
+  // Dedupe physical items by product. The same product can legitimately be picked for two
+  // roles, so the role-option loop below dedupes exact product-role pairs independently.
   const seenProductIds = new Set(
     context.hospitalItems.map((item) => item.id).filter(isCatalogPickItemId),
   )

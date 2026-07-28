@@ -1061,30 +1061,74 @@ export function validateKnownCatalogFilters(
   return null
 }
 
+export type CatalogPickLookupErrorCode =
+  | 'unknown_product'
+  | 'unknown_role'
+  | 'product_role_mismatch'
+
+export type CatalogPickLookupResult =
+  | { ok: true; pick: CatalogPick }
+  | {
+      ok: false
+      code: CatalogPickLookupErrorCode
+      productId: string
+      roleCode: string
+    }
+
 /**
- * Rebuild a catalog pick from the product id alone. The wizard sends only ids on save, so
- * product identity on a stored card always comes from the catalog, never from the client.
+ * Authoritative server-side reconstruction for a catalog pick.
+ *
+ * Product identity and its requested role both come from generated catalog relationships.
+ * A browser picker is role-scoped too, but save-time callers are untrusted and must prove the
+ * exact Product_Roles pair again.
+ */
+export function resolveCatalogPick(
+  productId: string,
+  roleCode: string,
+  store: CatalogStore = getCatalogStore(),
+): CatalogPickLookupResult {
+  const product = store.productById.get(productId)
+  if (!product) return { ok: false, code: 'unknown_product', productId, roleCode }
+  if (!store.roleByCode.has(roleCode)) {
+    return { ok: false, code: 'unknown_role', productId, roleCode }
+  }
+  const carriesRole = (store.rolesByProduct.get(productId) ?? []).some(
+    (relationship) => relationship.role_code === roleCode,
+  )
+  if (!carriesRole) {
+    return { ok: false, code: 'product_role_mismatch', productId, roleCode }
+  }
+  return {
+    ok: true,
+    pick: {
+      productId: product.product_id,
+      roleCode,
+      manufacturerDisplay: product.manufacturerDisplay,
+      productName: product.product_name,
+      catalogNumber: product.catalog_number,
+      gtin: product.gtin,
+      sizeDisplay: product.size_display,
+      verificationTier: product.verificationTier,
+      usStatusPending: product.usStatusPending,
+      minWorkingChannelMm: product.min_working_channel_mm,
+      deliverySystemOdMm: product.delivery_system_od_mm,
+      sourceId: product.primary_source_id,
+      sourceLocation: product.primary_source_location,
+    },
+  }
+}
+
+/**
+ * Nullable compatibility wrapper for server views and tests.
+ *
+ * Unlike the former implementation, this returns null for an unknown role or a product that
+ * does not carry the requested role; it never copies an arbitrary caller-provided role.
  */
 export function getCatalogPick(
   productId: string,
   roleCode: string,
   store: CatalogStore = getCatalogStore(),
 ): CatalogPick | null {
-  const product = store.productById.get(productId)
-  if (!product) return null
-  return {
-    productId: product.product_id,
-    roleCode,
-    manufacturerDisplay: product.manufacturerDisplay,
-    productName: product.product_name,
-    catalogNumber: product.catalog_number,
-    gtin: product.gtin,
-    sizeDisplay: product.size_display,
-    verificationTier: product.verificationTier,
-    usStatusPending: product.usStatusPending,
-    minWorkingChannelMm: product.min_working_channel_mm,
-    deliverySystemOdMm: product.delivery_system_od_mm,
-    sourceId: product.primary_source_id,
-    sourceLocation: product.primary_source_location,
-  }
+  const result = resolveCatalogPick(productId, roleCode, store)
+  return result.ok ? result.pick : null
 }

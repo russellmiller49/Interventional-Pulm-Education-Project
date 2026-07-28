@@ -37,10 +37,15 @@ describe('size chosen at time of procedure', () => {
 
   it('keeps family pick ids distinct from product and set ids', () => {
     expect(familyPickId('MFR-A|dumon td|implant')).toBe('family:MFR-A|dumon td|implant')
+    expect(familyPickId('MFR-A|dumon td|implant', 'AIRWAY_STENT_SILICONE_STRAIGHT')).toBe(
+      'family-role:AIRWAY_STENT_SILICONE_STRAIGHT:MFR-A|dumon td|implant',
+    )
     expect(isFamilyPickId('family:x')).toBe(true)
+    expect(isFamilyPickId('family-role:ROLE_A:x')).toBe(true)
     expect(isFamilyPickId('catalog:PRD-X')).toBe(false)
     expect(isFamilyPickId('set:s1')).toBe(false)
     expect(familyKeyFromPickId('family:x')).toBe('x')
+    expect(familyKeyFromPickId('family-role:ROLE_A:x')).toBe('x')
     expect(familyKeyFromPickId('catalog:PRD-X')).toBeNull()
   })
 })

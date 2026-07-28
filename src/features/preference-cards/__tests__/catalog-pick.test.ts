@@ -9,7 +9,12 @@ import {
 } from '../domain/catalog-pick'
 import { buildDemoContext, defaultBuildInput } from '../data/demo-context.server'
 import { resolveCard } from '../domain/resolve-card'
-import { getCatalogPick, searchProductsForRole } from '../server/catalog'
+import {
+  getCatalogPick,
+  getCatalogStore,
+  resolveCatalogPick,
+  searchProductsForRole,
+} from '../server/catalog'
 
 function pick(overrides: Partial<CatalogPick> = {}): CatalogPick {
   return {
@@ -98,6 +103,25 @@ describe('withCatalogPicks', () => {
       .filter((id) => id.startsWith('catalog:'))
     expect(new Set(ids).size).toBe(ids.length)
   })
+
+  it('keeps one physical item but adds an option for every valid role pair', () => {
+    const context = buildDemoContext('chest-tube')
+    const productId = 'PRD-TESTMULTI'
+    const merged = withCatalogPicks(context, [
+      pick({ productId, roleCode: 'ROLE_A' }),
+      pick({ productId, roleCode: 'ROLE_B' }),
+    ])
+
+    expect(
+      merged.hospitalItems.filter((item) => item.id === catalogPickItemId(productId)),
+    ).toHaveLength(1)
+    expect(
+      merged.hospitalRoleOptions
+        .filter((option) => option.hospitalItemId === catalogPickItemId(productId))
+        .map((option) => option.roleCode)
+        .sort(),
+    ).toEqual(['ROLE_A', 'ROLE_B'])
+  })
 })
 
 describe('resolving a card with a catalog pick', () => {
@@ -184,9 +208,11 @@ describe('resolving a card with a catalog pick', () => {
 })
 
 describe('server-side pick rebuild', () => {
-  it('rebuilds a real catalogued product from its id alone', () => {
+  it('accepts a real product only for a role it carries', () => {
     const options = searchProductsForRole({ roleCode: 'GENERIC_DRAINAGE_UNIT', limit: 1 })
     expect(options.length).toBeGreaterThan(0)
+    const result = resolveCatalogPick(options[0].productId, 'GENERIC_DRAINAGE_UNIT')
+    expect(result.ok).toBe(true)
     const rebuilt = getCatalogPick(options[0].productId, 'GENERIC_DRAINAGE_UNIT')
     expect(rebuilt).not.toBeNull()
     expect(rebuilt!.productName).toBe(options[0].productName)
@@ -194,7 +220,37 @@ describe('server-side pick rebuild', () => {
     expect(rebuilt!.roleCode).toBe('GENERIC_DRAINAGE_UNIT')
   })
 
-  it('refuses an unknown product id', () => {
+  it('distinguishes an unknown product id', () => {
+    expect(resolveCatalogPick('PRD-DOESNOTEXIST', 'GENERIC_DRAINAGE_UNIT')).toMatchObject({
+      ok: false,
+      code: 'unknown_product',
+    })
     expect(getCatalogPick('PRD-DOESNOTEXIST', 'GENERIC_DRAINAGE_UNIT')).toBeNull()
+  })
+
+  it('distinguishes an unknown role code', () => {
+    const options = searchProductsForRole({ roleCode: 'GENERIC_DRAINAGE_UNIT', limit: 1 })
+    expect(resolveCatalogPick(options[0].productId, 'NOT_A_REAL_ROLE')).toMatchObject({
+      ok: false,
+      code: 'unknown_role',
+    })
+    expect(getCatalogPick(options[0].productId, 'NOT_A_REAL_ROLE')).toBeNull()
+  })
+
+  it('rejects a known product submitted with an unrelated known role', () => {
+    const store = getCatalogStore()
+    const options = searchProductsForRole({ roleCode: 'GENERIC_DRAINAGE_UNIT', limit: 1 }, store)
+    const productId = options[0].productId
+    const mappedRoles = new Set(
+      (store.rolesByProduct.get(productId) ?? []).map((relationship) => relationship.role_code),
+    )
+    const unrelatedRole = store.roles.find((role) => !mappedRoles.has(role.role_code))
+    expect(unrelatedRole).toBeDefined()
+
+    expect(resolveCatalogPick(productId, unrelatedRole!.role_code, store)).toMatchObject({
+      ok: false,
+      code: 'product_role_mismatch',
+    })
+    expect(getCatalogPick(productId, unrelatedRole!.role_code, store)).toBeNull()
   })
 })

@@ -1,6 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
+import { calculateProcedureCoverage } from './coverage-metrics'
 import { formatJson } from './format-json'
 
 /**
@@ -44,11 +45,21 @@ interface ProcedureSlotRow {
   role_code: string
   requiredness: string
   display_order: number
+  allow_custom: boolean
+}
+
+interface ProductRow {
+  product_id: string
 }
 
 interface ProductRoleRow {
   product_id: string
   role_code: string
+}
+
+interface SlotProductOptionRow {
+  slot_id: string
+  selectable: boolean | null
 }
 
 interface ModifierCatalogRow {
@@ -80,6 +91,17 @@ interface OverridesFile {
 
 async function readJson<T>(directory: string, filename: string): Promise<T> {
   return JSON.parse(await readFile(path.join(directory, filename), 'utf8')) as T
+}
+
+async function writeJsonWhenChanged(directory: string, filename: string, value: unknown) {
+  const outputPath = path.join(directory, filename)
+  try {
+    const current = JSON.parse(await readFile(outputPath, 'utf8')) as unknown
+    if (JSON.stringify(current) === JSON.stringify(value)) return
+  } catch {
+    // Missing or malformed output is replaced below.
+  }
+  await writeFile(outputPath, await formatJson(value), 'utf8')
 }
 
 function kebab(procedureCode: string): string {
@@ -115,9 +137,14 @@ export interface GeneratedScenario {
   templateVersion: string
   defaultModifierCodes: string[]
   availableModifierCodes: string[]
-  requiredRoleMappingPercentage: number
-  /** Roles this procedure asks for that have no catalogued product at all. */
-  emptyRoleCodes: string[]
+  requiredCatalogCoverageCount: number
+  requiredCatalogCoveragePercentage: number
+  requiredSlotsWithoutCatalogProducts: string[]
+  roleCodesWithoutCatalogProducts: string[]
+  requiredDefaultOptionCoverageCount: number
+  requiredDefaultOptionCoveragePercentage: number
+  requiredSlotsWithoutDefaultOptions: string[]
+  requiredCustomAllowedCount: number
   slotCount: number
   requiredSlotCount: number
   governanceState: 'draft'
@@ -153,17 +180,32 @@ export interface GenerateScenariosResult {
 export function buildScenarios(input: {
   procedures: ProcedureRow[]
   slots: ProcedureSlotRow[]
+  products: ProductRow[]
   productRoles: ProductRoleRow[]
+  slotProductOptions: SlotProductOptionRow[]
   modifierCatalog: ModifierCatalogRow[]
   overrides: OverridesFile
 }): GenerateScenariosResult {
-  const { procedures, slots, productRoles, modifierCatalog, overrides } = input
+  const {
+    procedures,
+    slots,
+    products,
+    productRoles,
+    slotProductOptions,
+    modifierCatalog,
+    overrides,
+  } = input
 
   const allProcedureCodes = procedures.map((procedure) => procedure.procedure_code).sort()
-
-  // A role is "catalogued" when at least one product claims it — verified or not, since
-  // the explorer and the picker both show unverified products.
-  const rolesWithProducts = new Set(productRoles.map((row) => row.role_code))
+  const coverageByProcedure = new Map(
+    calculateProcedureCoverage({
+      products,
+      productRoles,
+      procedures,
+      slots,
+      slotProductOptions,
+    }).map((coverage) => [coverage.procedureCode, coverage]),
+  )
 
   const slotsByProcedure = new Map<string, ProcedureSlotRow[]>()
   for (const slot of slots) {
@@ -197,17 +239,10 @@ export function buildScenarios(input: {
     .map((procedure) => {
       const override = overrides.scenarios[procedure.procedure_code] ?? {}
       const procedureSlots = slotsByProcedure.get(procedure.procedure_code) ?? []
-      const requiredSlots = procedureSlots.filter((slot) => slot.requiredness === 'required')
-      const requiredWithProducts = requiredSlots.filter((slot) =>
-        rolesWithProducts.has(slot.role_code),
-      )
-      const emptyRoleCodes = [
-        ...new Set(
-          procedureSlots
-            .filter((slot) => !rolesWithProducts.has(slot.role_code))
-            .map((slot) => slot.role_code),
-        ),
-      ].sort()
+      const coverage = coverageByProcedure.get(procedure.procedure_code)
+      if (!coverage) {
+        throw new Error(`Coverage metrics are missing for ${procedure.procedure_code}.`)
+      }
 
       const available = new Set(modifiersByProcedure.get(procedure.procedure_code) ?? [])
       for (const code of override.addModifiers ?? []) available.add(code)
@@ -226,13 +261,16 @@ export function buildScenarios(input: {
         templateVersion: procedure.template_version ?? '0.1',
         defaultModifierCodes: [...(override.defaultModifierCodes ?? [])].sort(),
         availableModifierCodes: [...available].sort(),
-        requiredRoleMappingPercentage:
-          requiredSlots.length === 0
-            ? 100
-            : Math.round((requiredWithProducts.length / requiredSlots.length) * 1000) / 10,
-        emptyRoleCodes,
+        requiredCatalogCoverageCount: coverage.requiredCatalogCoverageCount,
+        requiredCatalogCoveragePercentage: coverage.requiredCatalogCoveragePercentage,
+        requiredSlotsWithoutCatalogProducts: coverage.requiredSlotsWithoutCatalogProducts,
+        roleCodesWithoutCatalogProducts: coverage.roleCodesWithoutCatalogProducts,
+        requiredDefaultOptionCoverageCount: coverage.requiredDefaultOptionCoverageCount,
+        requiredDefaultOptionCoveragePercentage: coverage.requiredDefaultOptionCoveragePercentage,
+        requiredSlotsWithoutDefaultOptions: coverage.requiredSlotsWithoutDefaultOptions,
+        requiredCustomAllowedCount: coverage.requiredCustomAllowedCount,
         slotCount: procedureSlots.length,
-        requiredSlotCount: requiredSlots.length,
+        requiredSlotCount: coverage.requiredSlotCount,
         governanceState: 'draft' as const,
         owner: null,
       }
@@ -274,36 +312,50 @@ async function main() {
   const generatedDirectory = process.argv[2] ?? GENERATED_DIRECTORY
   const seedDirectory = process.argv[3] ?? SEED_DIRECTORY
 
-  const [procedures, slots, productRoles, modifierCatalog, overrides] = await Promise.all([
+  const [
+    procedures,
+    slots,
+    products,
+    productRoles,
+    slotProductOptions,
+    modifierCatalog,
+    overrides,
+  ] = await Promise.all([
     readJson<ProcedureRow[]>(generatedDirectory, 'procedures.json'),
     readJson<ProcedureSlotRow[]>(generatedDirectory, 'procedure-slots.json'),
+    readJson<ProductRow[]>(generatedDirectory, 'catalog-products.json'),
     readJson<ProductRoleRow[]>(generatedDirectory, 'product-roles.json'),
+    readJson<SlotProductOptionRow[]>(generatedDirectory, 'slot-product-options.json'),
     readJson<ModifierCatalogRow[]>(generatedDirectory, 'modifier-catalog.json'),
     readJson<OverridesFile>(seedDirectory, 'scenario-overrides.json'),
   ])
 
-  const result = buildScenarios({ procedures, slots, productRoles, modifierCatalog, overrides })
+  const result = buildScenarios({
+    procedures,
+    slots,
+    products,
+    productRoles,
+    slotProductOptions,
+    modifierCatalog,
+    overrides,
+  })
 
-  await writeFile(
-    path.join(generatedDirectory, 'scenarios.json'),
-    await formatJson(result.scenarios),
-    'utf8',
-  )
-  await writeFile(
-    path.join(generatedDirectory, 'modifier-definitions.json'),
-    await formatJson(result.modifierDefinitions),
-    'utf8',
+  await writeJsonWhenChanged(generatedDirectory, 'scenarios.json', result.scenarios)
+  await writeJsonWhenChanged(
+    generatedDirectory,
+    'modifier-definitions.json',
+    result.modifierDefinitions,
   )
 
   const buildable = result.scenarios.filter(
-    (scenario) => scenario.requiredRoleMappingPercentage > 0,
+    (scenario) => scenario.requiredCatalogCoverageCount > 0,
   ).length
   console.log(
     `Wrote ${result.scenarios.length} scenarios (${buildable} with at least one catalogued required role) and ${result.modifierDefinitions.length} generated modifier definitions.`,
   )
   for (const scenario of result.scenarios) {
     console.log(
-      `  ${scenario.sourceProcedureCode.padEnd(20)} ${String(scenario.requiredRoleMappingPercentage).padStart(5)}% required mapped · ${scenario.slotCount} slots · ${scenario.availableModifierCodes.length} modifiers · ${scenario.emptyRoleCodes.length} empty roles`,
+      `  ${scenario.sourceProcedureCode.padEnd(20)} catalog ${scenario.requiredCatalogCoverageCount}/${scenario.requiredSlotCount} · defaults ${scenario.requiredDefaultOptionCoverageCount}/${scenario.requiredSlotCount} · ${scenario.slotCount} slots · ${scenario.availableModifierCodes.length} modifiers`,
     )
   }
 }

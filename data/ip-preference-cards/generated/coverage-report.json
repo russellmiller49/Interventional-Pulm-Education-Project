@@ -1,672 +1,1999 @@
 {
-  "format_version": 1,
+  "formatVersion": 2,
+  "semantics": {
+    "catalogCoverage": "required_slots_with_existing_product_role",
+    "curatedDefaultCoverage": "required_slots_with_selectable_canonical_option"
+  },
   "procedures": [
     {
-      "procedure_code": "EBUS_TBNA",
-      "slots": 13,
-      "required": 7,
-      "slots_with_zero_selectable_products": 2,
-      "required_slots_with_zero_selectable_products": 2,
-      "required_mapping_percentage": 71.4,
-      "slot_coverage": [
+      "procedureCode": "CHEST_TUBE",
+      "requiredSlotCount": 3,
+      "requiredCatalogCoverageCount": 1,
+      "requiredCatalogCoveragePercentage": 33.3,
+      "requiredSlotsWithoutCatalogProducts": ["SLOT-CE48C1B108", "SLOT-4BE1D79D6C"],
+      "roleCodesWithoutCatalogProducts": ["GENERIC_SPECIMEN", "GENERIC_SUCTION"],
+      "requiredDefaultOptionCoverageCount": 0,
+      "requiredDefaultOptionCoveragePercentage": 0,
+      "requiredSlotsWithoutDefaultOptions": [
+        "SLOT-3631C94D7A",
+        "SLOT-CE48C1B108",
+        "SLOT-4BE1D79D6C"
+      ],
+      "requiredCustomAllowedCount": 3,
+      "slotCount": 13,
+      "slotCoverage": [
         {
-          "slot_id": "SLOT-4648848CC3",
-          "role_code": "EBUS_SCOPE",
-          "requiredness": "required",
-          "total_product_options": 1,
-          "selectable_product_options": 1,
-          "required_with_zero_selectable": false
+          "slotId": "SLOT-C7DBD5BC4C",
+          "roleCode": "GENERIC_ULTRASOUND",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 25,
+          "curatedDefaultOptionCount": 14,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         },
         {
-          "slot_id": "SLOT-7DFA66EA2D",
-          "role_code": "VIDEO_PROCESSOR",
-          "requiredness": "required",
-          "total_product_options": 10,
-          "selectable_product_options": 4,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-92874E31E1",
-          "role_code": "ULTRASOUND_PROCESSOR",
-          "requiredness": "required",
-          "total_product_options": 2,
-          "selectable_product_options": 1,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-B19121A5B9",
-          "role_code": "ULTRASOUND_CABLE",
-          "requiredness": "required",
-          "total_product_options": 1,
-          "selectable_product_options": 1,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-93655BF7C4",
-          "role_code": "EBUS_BALLOON",
+          "slotId": "SLOT-708736B8C2",
+          "roleCode": "CHEST_TUBE_SMALL_BORE",
           "requiredness": "conditional",
-          "total_product_options": 1,
-          "selectable_product_options": 1,
-          "required_with_zero_selectable": false
+          "allowCustom": true,
+          "catalogProductCount": 18,
+          "curatedDefaultOptionCount": 1,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         },
         {
-          "slot_id": "SLOT-1AF4BEFE3B",
-          "role_code": "EBUS_NEEDLE_FNA",
-          "requiredness": "required",
-          "total_product_options": 25,
-          "selectable_product_options": 21,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-B83EBD2FBB",
-          "role_code": "EBUS_NEEDLE_FNB",
-          "requiredness": "optional",
-          "total_product_options": 8,
-          "selectable_product_options": 4,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-D08C74941A",
-          "role_code": "EBUS_MINIFORCEPS",
-          "requiredness": "optional",
-          "total_product_options": 1,
-          "selectable_product_options": 1,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-12ACA27E54",
-          "role_code": "GENERIC_SPECIMEN",
-          "requiredness": "required",
-          "total_product_options": 0,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": true
-        },
-        {
-          "slot_id": "SLOT-76F4405D68",
-          "role_code": "SPECIMEN_TRAP",
-          "requiredness": "optional",
-          "total_product_options": 6,
-          "selectable_product_options": 2,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-2E3065C976",
-          "role_code": "GENERIC_SUCTION",
-          "requiredness": "required",
-          "total_product_options": 0,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": true
-        },
-        {
-          "slot_id": "SLOT-CD12842559",
-          "role_code": "EBUS_NEEDLE_ADAPTER",
+          "slotId": "SLOT-D5C3DB0027",
+          "roleCode": "CHEST_TUBE_LARGE_BORE",
           "requiredness": "conditional",
-          "total_product_options": 1,
-          "selectable_product_options": 1,
-          "required_with_zero_selectable": false
+          "allowCustom": true,
+          "catalogProductCount": 43,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
         },
         {
-          "slot_id": "SLOT-E8F0B48B49",
-          "role_code": "VACUUM_LOCKING_SYRINGE",
+          "slotId": "SLOT-4D849E266F",
+          "roleCode": "CHEST_TUBE_SURGICAL",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 61,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-20D17E94D4",
+          "roleCode": "PNEUMOTHORAX_KIT",
           "requiredness": "optional",
-          "total_product_options": 5,
-          "selectable_product_options": 5,
-          "required_with_zero_selectable": false
+          "allowCustom": true,
+          "catalogProductCount": 9,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-3631C94D7A",
+          "roleCode": "GENERIC_DRAINAGE_UNIT",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 21,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-CE48C1B108",
+          "roleCode": "GENERIC_SUCTION",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-D02F71E583",
+          "roleCode": "IPC_INSERTION_KIT",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 13,
+          "curatedDefaultOptionCount": 10,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-B4E5C6A7A9",
+          "roleCode": "IPC_DRAINAGE_KIT",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 12,
+          "curatedDefaultOptionCount": 10,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-4BE1D79D6C",
+          "roleCode": "GENERIC_SPECIMEN",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-AECDA16326",
+          "roleCode": "PLEURAL_DRAINAGE_ACCESSORY",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 29,
+          "curatedDefaultOptionCount": 11,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-702914B1CF",
+          "roleCode": "IPC_DRESSING_KIT",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 2,
+          "curatedDefaultOptionCount": 2,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-67171A33D4",
+          "roleCode": "IPC_MANAGEMENT_ACCESSORY",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 11,
+          "curatedDefaultOptionCount": 11,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         }
       ]
     },
     {
-      "procedure_code": "CHEST_TUBE",
-      "slots": 13,
-      "required": 3,
-      "slots_with_zero_selectable_products": 6,
-      "required_slots_with_zero_selectable_products": 3,
-      "required_mapping_percentage": 0,
-      "slot_coverage": [
+      "procedureCode": "EBUS_TBNA",
+      "requiredSlotCount": 7,
+      "requiredCatalogCoverageCount": 5,
+      "requiredCatalogCoveragePercentage": 71.4,
+      "requiredSlotsWithoutCatalogProducts": ["SLOT-12ACA27E54", "SLOT-2E3065C976"],
+      "roleCodesWithoutCatalogProducts": ["GENERIC_SPECIMEN", "GENERIC_SUCTION"],
+      "requiredDefaultOptionCoverageCount": 5,
+      "requiredDefaultOptionCoveragePercentage": 71.4,
+      "requiredSlotsWithoutDefaultOptions": ["SLOT-12ACA27E54", "SLOT-2E3065C976"],
+      "requiredCustomAllowedCount": 7,
+      "slotCount": 13,
+      "slotCoverage": [
         {
-          "slot_id": "SLOT-C7DBD5BC4C",
-          "role_code": "GENERIC_ULTRASOUND",
-          "requiredness": "optional",
-          "total_product_options": 25,
-          "selectable_product_options": 14,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-708736B8C2",
-          "role_code": "CHEST_TUBE_SMALL_BORE",
-          "requiredness": "conditional",
-          "total_product_options": 11,
-          "selectable_product_options": 1,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-D5C3DB0027",
-          "role_code": "CHEST_TUBE_LARGE_BORE",
-          "requiredness": "conditional",
-          "total_product_options": 5,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-4D849E266F",
-          "role_code": "CHEST_TUBE_SURGICAL",
-          "requiredness": "conditional",
-          "total_product_options": 16,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-20D17E94D4",
-          "role_code": "PNEUMOTHORAX_KIT",
-          "requiredness": "optional",
-          "total_product_options": 9,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-3631C94D7A",
-          "role_code": "GENERIC_DRAINAGE_UNIT",
+          "slotId": "SLOT-4648848CC3",
+          "roleCode": "EBUS_SCOPE",
           "requiredness": "required",
-          "total_product_options": 0,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": true
+          "allowCustom": true,
+          "catalogProductCount": 4,
+          "curatedDefaultOptionCount": 1,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         },
         {
-          "slot_id": "SLOT-CE48C1B108",
-          "role_code": "GENERIC_SUCTION",
+          "slotId": "SLOT-7DFA66EA2D",
+          "roleCode": "VIDEO_PROCESSOR",
           "requiredness": "required",
-          "total_product_options": 0,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": true
+          "allowCustom": true,
+          "catalogProductCount": 13,
+          "curatedDefaultOptionCount": 4,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         },
         {
-          "slot_id": "SLOT-D02F71E583",
-          "role_code": "IPC_INSERTION_KIT",
+          "slotId": "SLOT-92874E31E1",
+          "roleCode": "ULTRASOUND_PROCESSOR",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 5,
+          "curatedDefaultOptionCount": 1,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-B19121A5B9",
+          "roleCode": "ULTRASOUND_CABLE",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 1,
+          "curatedDefaultOptionCount": 1,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-93655BF7C4",
+          "roleCode": "EBUS_BALLOON",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 1,
+          "curatedDefaultOptionCount": 1,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-1AF4BEFE3B",
+          "roleCode": "EBUS_NEEDLE_FNA",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 25,
+          "curatedDefaultOptionCount": 21,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-B83EBD2FBB",
+          "roleCode": "EBUS_NEEDLE_FNB",
           "requiredness": "optional",
-          "total_product_options": 13,
-          "selectable_product_options": 10,
-          "required_with_zero_selectable": false
+          "allowCustom": true,
+          "catalogProductCount": 8,
+          "curatedDefaultOptionCount": 4,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         },
         {
-          "slot_id": "SLOT-B4E5C6A7A9",
-          "role_code": "IPC_DRAINAGE_KIT",
-          "requiredness": "conditional",
-          "total_product_options": 12,
-          "selectable_product_options": 10,
-          "required_with_zero_selectable": false
+          "slotId": "SLOT-D08C74941A",
+          "roleCode": "EBUS_MINIFORCEPS",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 1,
+          "curatedDefaultOptionCount": 1,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         },
         {
-          "slot_id": "SLOT-4BE1D79D6C",
-          "role_code": "GENERIC_SPECIMEN",
+          "slotId": "SLOT-12ACA27E54",
+          "roleCode": "GENERIC_SPECIMEN",
           "requiredness": "required",
-          "total_product_options": 0,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": true
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
         },
         {
-          "slot_id": "SLOT-AECDA16326",
-          "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
-          "requiredness": "conditional",
-          "total_product_options": 18,
-          "selectable_product_options": 11,
-          "required_with_zero_selectable": false
+          "slotId": "SLOT-76F4405D68",
+          "roleCode": "SPECIMEN_TRAP",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 6,
+          "curatedDefaultOptionCount": 2,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         },
         {
-          "slot_id": "SLOT-702914B1CF",
-          "role_code": "IPC_DRESSING_KIT",
-          "requiredness": "conditional",
-          "total_product_options": 2,
-          "selectable_product_options": 2,
-          "required_with_zero_selectable": false
+          "slotId": "SLOT-2E3065C976",
+          "roleCode": "GENERIC_SUCTION",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
         },
         {
-          "slot_id": "SLOT-67171A33D4",
-          "role_code": "IPC_MANAGEMENT_ACCESSORY",
+          "slotId": "SLOT-CD12842559",
+          "roleCode": "EBUS_NEEDLE_ADAPTER",
           "requiredness": "conditional",
-          "total_product_options": 11,
-          "selectable_product_options": 11,
-          "required_with_zero_selectable": false
+          "allowCustom": true,
+          "catalogProductCount": 1,
+          "curatedDefaultOptionCount": 1,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-E8F0B48B49",
+          "roleCode": "VACUUM_LOCKING_SYRINGE",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 5,
+          "curatedDefaultOptionCount": 5,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         }
       ]
     },
     {
-      "procedure_code": "THERAPEUTIC_BRONCH",
-      "slots": 22,
-      "required": 3,
-      "slots_with_zero_selectable_products": 8,
-      "required_slots_with_zero_selectable_products": 1,
-      "required_mapping_percentage": 66.7,
-      "slot_coverage": [
+      "procedureCode": "EBV",
+      "requiredSlotCount": 7,
+      "requiredCatalogCoverageCount": 6,
+      "requiredCatalogCoveragePercentage": 85.7,
+      "requiredSlotsWithoutCatalogProducts": ["SLOT-D336807B69"],
+      "roleCodesWithoutCatalogProducts": ["GENERIC_SUCTION"],
+      "requiredDefaultOptionCoverageCount": 5,
+      "requiredDefaultOptionCoveragePercentage": 71.4,
+      "requiredSlotsWithoutDefaultOptions": ["SLOT-D336807B69", "SLOT-022D0D3DC6"],
+      "requiredCustomAllowedCount": 7,
+      "slotCount": 11,
+      "slotCoverage": [
         {
-          "slot_id": "SLOT-B79D3CF198",
-          "role_code": "FLEX_SCOPE_THERAPEUTIC",
+          "slotId": "SLOT-D49EAA8281",
+          "roleCode": "FLEX_SCOPE_THERAPEUTIC",
           "requiredness": "required",
-          "total_product_options": 6,
-          "selectable_product_options": 3,
-          "required_with_zero_selectable": false
+          "allowCustom": true,
+          "catalogProductCount": 14,
+          "curatedDefaultOptionCount": 3,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         },
         {
-          "slot_id": "SLOT-6BCA0B7A49",
-          "role_code": "VIDEO_PROCESSOR",
+          "slotId": "SLOT-A24CA7DB72",
+          "roleCode": "VIDEO_PROCESSOR",
           "requiredness": "required",
-          "total_product_options": 10,
-          "selectable_product_options": 4,
-          "required_with_zero_selectable": false
+          "allowCustom": true,
+          "catalogProductCount": 13,
+          "curatedDefaultOptionCount": 4,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         },
         {
-          "slot_id": "SLOT-13609A744F",
-          "role_code": "GENERIC_SUCTION",
+          "slotId": "SLOT-C4034E9595",
+          "roleCode": "GENERIC_COLLATERAL_VENT",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-B14DF27813",
+          "roleCode": "EBV_VALVE",
           "requiredness": "required",
-          "total_product_options": 0,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": true
+          "allowCustom": true,
+          "catalogProductCount": 13,
+          "curatedDefaultOptionCount": 4,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         },
         {
-          "slot_id": "SLOT-FCE9E3810E",
-          "role_code": "GENERIC_ENERGY_PLATFORM",
+          "slotId": "SLOT-D48FE87D5A",
+          "roleCode": "EBV_DELIVERY_CATHETER",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 6,
+          "curatedDefaultOptionCount": 1,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-6AC64B5E3D",
+          "roleCode": "FOREIGN_BODY_FORCEPS_FLEX",
           "requiredness": "conditional",
-          "total_product_options": 0,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": false
+          "allowCustom": true,
+          "catalogProductCount": 8,
+          "curatedDefaultOptionCount": 7,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         },
         {
-          "slot_id": "SLOT-14453819D5",
-          "role_code": "CRYOPROBE_FLEX",
+          "slotId": "SLOT-D336807B69",
+          "roleCode": "GENERIC_SUCTION",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-030A408C27",
+          "roleCode": "CHEST_TUBE_SMALL_BORE",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 18,
+          "curatedDefaultOptionCount": 1,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-022D0D3DC6",
+          "roleCode": "GENERIC_DRAINAGE_UNIT",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 21,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-639A3A4E14",
+          "roleCode": "EBV_SIZING_KIT",
           "requiredness": "conditional",
-          "total_product_options": 4,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": false
+          "allowCustom": true,
+          "catalogProductCount": 3,
+          "curatedDefaultOptionCount": 1,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         },
         {
-          "slot_id": "SLOT-1647A73048",
-          "role_code": "FOREIGN_BODY_FORCEPS_FLEX",
-          "requiredness": "optional",
-          "total_product_options": 8,
-          "selectable_product_options": 7,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-115310F554",
-          "role_code": "FOREIGN_BODY_BASKET",
-          "requiredness": "optional",
-          "total_product_options": 7,
-          "selectable_product_options": 3,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-3FE6796B6D",
-          "role_code": "AIRWAY_BALLOON_DILATOR",
+          "slotId": "SLOT-C657258C05",
+          "roleCode": "EBV_SIZING_BALLOON",
           "requiredness": "conditional",
-          "total_product_options": 18,
-          "selectable_product_options": 18,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-D43C866FB5",
-          "role_code": "PULMONARY_GUIDEWIRE",
-          "requiredness": "conditional",
-          "total_product_options": 4,
-          "selectable_product_options": 4,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-7412B3318B",
-          "role_code": "INFLATION_DEVICE",
-          "requiredness": "conditional",
-          "total_product_options": 7,
-          "selectable_product_options": 7,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-45D721710F",
-          "role_code": "AIRWAY_STENT_SEMS_COVERED",
-          "requiredness": "conditional",
-          "total_product_options": 142,
-          "selectable_product_options": 81,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-09A64B2C62",
-          "role_code": "AIRWAY_STENT_SEMS_UNCOVERED",
-          "requiredness": "conditional",
-          "total_product_options": 26,
-          "selectable_product_options": 18,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-D2974FC11B",
-          "role_code": "BIOPSY_FORCEPS_FLEX",
-          "requiredness": "optional",
-          "total_product_options": 20,
-          "selectable_product_options": 15,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-0F8FA96C28",
-          "role_code": "GENERIC_SPECIMEN",
-          "requiredness": "conditional",
-          "total_product_options": 0,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-97CFA5C9A2",
-          "role_code": "APC_PROBE_FLEX",
-          "requiredness": "conditional",
-          "total_product_options": 11,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-90A43CBAEF",
-          "role_code": "ENERGY_CABLE_ADAPTER",
-          "requiredness": "conditional",
-          "total_product_options": 69,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-971BBE6BF8",
-          "role_code": "CRYO_SYSTEM_ACCESSORY",
-          "requiredness": "conditional",
-          "total_product_options": 14,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-D6B291DC80",
-          "role_code": "BITE_BLOCK",
-          "requiredness": "conditional",
-          "total_product_options": 2,
-          "selectable_product_options": 2,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-D7F2D36301",
-          "role_code": "ENDOSCOPE_CLEANING_BRUSH",
-          "requiredness": "conditional",
-          "total_product_options": 9,
-          "selectable_product_options": 6,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-1538BC9076",
-          "role_code": "APC_GAS_ACCESSORY",
-          "requiredness": "conditional",
-          "total_product_options": 12,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-081FB0C695",
-          "role_code": "AIRWAY_STENT_SIZING_DEVICE",
-          "requiredness": "optional",
-          "total_product_options": 1,
-          "selectable_product_options": 1,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-FDF73730B0",
-          "role_code": "BAL_KIT",
-          "requiredness": "optional",
-          "total_product_options": 7,
-          "selectable_product_options": 6,
-          "required_with_zero_selectable": false
+          "allowCustom": true,
+          "catalogProductCount": 2,
+          "curatedDefaultOptionCount": 2,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         }
       ]
     },
     {
-      "procedure_code": "RIGID_BRONCH",
-      "slots": 25,
-      "required": 8,
-      "slots_with_zero_selectable_products": 10,
-      "required_slots_with_zero_selectable_products": 2,
-      "required_mapping_percentage": 75,
-      "slot_coverage": [
+      "procedureCode": "FLEX_DIAGNOSTIC",
+      "requiredSlotCount": 4,
+      "requiredCatalogCoverageCount": 2,
+      "requiredCatalogCoveragePercentage": 50,
+      "requiredSlotsWithoutCatalogProducts": ["SLOT-49853F1B39", "SLOT-6C8ED671CE"],
+      "roleCodesWithoutCatalogProducts": ["GENERIC_SPECIMEN", "GENERIC_SUCTION"],
+      "requiredDefaultOptionCoverageCount": 2,
+      "requiredDefaultOptionCoveragePercentage": 50,
+      "requiredSlotsWithoutDefaultOptions": ["SLOT-49853F1B39", "SLOT-6C8ED671CE"],
+      "requiredCustomAllowedCount": 4,
+      "slotCount": 16,
+      "slotCoverage": [
         {
-          "slot_id": "SLOT-04C940D8B9",
-          "role_code": "RIGID_BRONCHOSCOPE_HEAD",
+          "slotId": "SLOT-34A46FFBA2",
+          "roleCode": "FLEX_SCOPE_DIAGNOSTIC",
           "requiredness": "required",
-          "total_product_options": 6,
-          "selectable_product_options": 2,
-          "required_with_zero_selectable": false
+          "allowCustom": true,
+          "catalogProductCount": 24,
+          "curatedDefaultOptionCount": 6,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         },
         {
-          "slot_id": "SLOT-113FCB30ED",
-          "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+          "slotId": "SLOT-6BFE5046B8",
+          "roleCode": "VIDEO_PROCESSOR",
           "requiredness": "required",
-          "total_product_options": 43,
-          "selectable_product_options": 5,
-          "required_with_zero_selectable": false
+          "allowCustom": true,
+          "catalogProductCount": 13,
+          "curatedDefaultOptionCount": 4,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         },
         {
-          "slot_id": "SLOT-175CA9F5B4",
-          "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+          "slotId": "SLOT-49853F1B39",
+          "roleCode": "GENERIC_SUCTION",
           "requiredness": "required",
-          "total_product_options": 80,
-          "selectable_product_options": 22,
-          "required_with_zero_selectable": false
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
         },
         {
-          "slot_id": "SLOT-6BDDC6260B",
-          "role_code": "VIDEO_PROCESSOR",
-          "requiredness": "required",
-          "total_product_options": 10,
-          "selectable_product_options": 4,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-94783C387D",
-          "role_code": "FLEX_SCOPE_THERAPEUTIC",
+          "slotId": "SLOT-F969CF31B0",
+          "roleCode": "SPECIMEN_TRAP",
           "requiredness": "optional",
-          "total_product_options": 6,
-          "selectable_product_options": 3,
-          "required_with_zero_selectable": false
+          "allowCustom": true,
+          "catalogProductCount": 6,
+          "curatedDefaultOptionCount": 2,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         },
         {
-          "slot_id": "SLOT-BC936B7BD8",
-          "role_code": "RIGID_FORCEPS",
-          "requiredness": "required",
-          "total_product_options": 93,
-          "selectable_product_options": 14,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-2D59E32F4B",
-          "role_code": "RIGID_SUCTION_CATHETER",
-          "requiredness": "required",
-          "total_product_options": 37,
-          "selectable_product_options": 4,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-C2EF0C350D",
-          "role_code": "GENERIC_ENERGY_PLATFORM",
-          "requiredness": "conditional",
-          "total_product_options": 0,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-00E8CCAE2A",
-          "role_code": "CRYOPROBE_FLEX",
-          "requiredness": "conditional",
-          "total_product_options": 4,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-3D6358F157",
-          "role_code": "AIRWAY_BALLOON_DILATOR",
+          "slotId": "SLOT-EFF8BA9B93",
+          "roleCode": "BIOPSY_FORCEPS_FLEX",
           "requiredness": "optional",
-          "total_product_options": 18,
-          "selectable_product_options": 18,
-          "required_with_zero_selectable": false
+          "allowCustom": true,
+          "catalogProductCount": 21,
+          "curatedDefaultOptionCount": 15,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         },
         {
-          "slot_id": "SLOT-5F3642C851",
-          "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
-          "requiredness": "conditional",
-          "total_product_options": 105,
-          "selectable_product_options": 100,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-D6B6FF156F",
-          "role_code": "AIRWAY_STENT_SILICONE_Y",
-          "requiredness": "conditional",
-          "total_product_options": 6,
-          "selectable_product_options": 4,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-6A75E6D661",
-          "role_code": "AIRWAY_STENT_SILICONE_HOURGLASS",
-          "requiredness": "conditional",
-          "total_product_options": 4,
-          "selectable_product_options": 4,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-3FFB2D272E",
-          "role_code": "STENT_APPLICATOR",
-          "requiredness": "conditional",
-          "total_product_options": 8,
-          "selectable_product_options": 4,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-99199F9B11",
-          "role_code": "AIRWAY_STENT_SEMS_COVERED",
+          "slotId": "SLOT-CD96ECF1DB",
+          "roleCode": "CYTOLOGY_BRUSH",
           "requiredness": "optional",
-          "total_product_options": 142,
-          "selectable_product_options": 81,
-          "required_with_zero_selectable": false
+          "allowCustom": true,
+          "catalogProductCount": 16,
+          "curatedDefaultOptionCount": 14,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         },
         {
-          "slot_id": "SLOT-140B672D52",
-          "role_code": "FOREIGN_BODY_FORCEPS_FLEX",
+          "slotId": "SLOT-9363E589C4",
+          "roleCode": "TBNA_NEEDLE",
           "requiredness": "optional",
-          "total_product_options": 8,
-          "selectable_product_options": 7,
-          "required_with_zero_selectable": false
+          "allowCustom": true,
+          "catalogProductCount": 21,
+          "curatedDefaultOptionCount": 13,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         },
         {
-          "slot_id": "SLOT-18617846CD",
-          "role_code": "APC_APPLICATOR_RIGID",
-          "requiredness": "conditional",
-          "total_product_options": 8,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-8AA6269352",
-          "role_code": "ENERGY_CABLE_ADAPTER",
-          "requiredness": "conditional",
-          "total_product_options": 69,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-D6219069A9",
-          "role_code": "CRYO_SYSTEM_ACCESSORY",
-          "requiredness": "conditional",
-          "total_product_options": 14,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-E8281AFEA1",
-          "role_code": "APC_GAS_ACCESSORY",
-          "requiredness": "conditional",
-          "total_product_options": 12,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-19FC83049A",
-          "role_code": "RIGID_TELESCOPE",
+          "slotId": "SLOT-6C8ED671CE",
+          "roleCode": "GENERIC_SPECIMEN",
           "requiredness": "required",
-          "total_product_options": 11,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": true
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
         },
         {
-          "slot_id": "SLOT-72BAE3EC7C",
-          "role_code": "ENDOSCOPY_LIGHT_CABLE",
-          "requiredness": "required",
-          "total_product_options": 1,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": true
-        },
-        {
-          "slot_id": "SLOT-66C8ADA940",
-          "role_code": "RIGID_BRONCH_SHAVER",
+          "slotId": "SLOT-EA38AE186D",
+          "roleCode": "BRONCH_REPROCESSING_KIT",
           "requiredness": "conditional",
-          "total_product_options": 8,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": false
+          "allowCustom": true,
+          "catalogProductCount": 9,
+          "curatedDefaultOptionCount": 2,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
         },
         {
-          "slot_id": "SLOT-3C8165659D",
-          "role_code": "RIGID_BIPOLAR_FORCEPS",
-          "requiredness": "conditional",
-          "total_product_options": 4,
-          "selectable_product_options": 0,
-          "required_with_zero_selectable": false
-        },
-        {
-          "slot_id": "SLOT-702FD644B7",
-          "role_code": "AIRWAY_STENT_SIZING_DEVICE",
+          "slotId": "SLOT-7BFC6EB54E",
+          "roleCode": "GUIDE_SHEATH_KIT",
           "requiredness": "optional",
-          "total_product_options": 1,
-          "selectable_product_options": 1,
-          "required_with_zero_selectable": false
+          "allowCustom": true,
+          "catalogProductCount": 4,
+          "curatedDefaultOptionCount": 4,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-09EF760638",
+          "roleCode": "GUIDING_DEVICE",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 34,
+          "curatedDefaultOptionCount": 12,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-54D7E08779",
+          "roleCode": "BITE_BLOCK",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 2,
+          "curatedDefaultOptionCount": 2,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-EB37262191",
+          "roleCode": "ENDOSCOPE_CLEANING_BRUSH",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 9,
+          "curatedDefaultOptionCount": 6,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-239938A6A9",
+          "roleCode": "RADIAL_EBUS_PROBE",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 3,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-C9A4F576D5",
+          "roleCode": "RADIAL_EBUS_DRIVE_UNIT",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 2,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-4C2FE905D3",
+          "roleCode": "BAL_KIT",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 7,
+          "curatedDefaultOptionCount": 6,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        }
+      ]
+    },
+    {
+      "procedureCode": "ICU_BRONCH",
+      "requiredSlotCount": 7,
+      "requiredCatalogCoverageCount": 4,
+      "requiredCatalogCoveragePercentage": 57.1,
+      "requiredSlotsWithoutCatalogProducts": [
+        "SLOT-49FB14CBF6",
+        "SLOT-5D918DA83D",
+        "SLOT-1A3A9B71B1"
+      ],
+      "roleCodesWithoutCatalogProducts": ["GENERIC_PPE", "GENERIC_SPECIMEN", "GENERIC_SUCTION"],
+      "requiredDefaultOptionCoverageCount": 4,
+      "requiredDefaultOptionCoveragePercentage": 57.1,
+      "requiredSlotsWithoutDefaultOptions": [
+        "SLOT-49FB14CBF6",
+        "SLOT-5D918DA83D",
+        "SLOT-1A3A9B71B1"
+      ],
+      "requiredCustomAllowedCount": 7,
+      "slotCount": 12,
+      "slotCoverage": [
+        {
+          "slotId": "SLOT-42AC1F18B2",
+          "roleCode": "FLEX_SCOPE_SINGLE_USE",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 24,
+          "curatedDefaultOptionCount": 14,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-7BAF2FC882",
+          "roleCode": "VIDEO_PROCESSOR",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 13,
+          "curatedDefaultOptionCount": 4,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-B6ED05FBC7",
+          "roleCode": "GENERIC_AIRWAY_ADAPTER",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 9,
+          "curatedDefaultOptionCount": 9,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-49FB14CBF6",
+          "roleCode": "GENERIC_SUCTION",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-8790F5F0AE",
+          "roleCode": "SPECIMEN_TRAP",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 6,
+          "curatedDefaultOptionCount": 2,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-5D918DA83D",
+          "roleCode": "GENERIC_SPECIMEN",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-B138BA994E",
+          "roleCode": "BIOPSY_FORCEPS_FLEX",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 21,
+          "curatedDefaultOptionCount": 15,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-4CC66ADF82",
+          "roleCode": "CYTOLOGY_BRUSH",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 16,
+          "curatedDefaultOptionCount": 14,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-53400A7A7C",
+          "roleCode": "FOREIGN_BODY_FORCEPS_FLEX",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 8,
+          "curatedDefaultOptionCount": 7,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-1A3A9B71B1",
+          "roleCode": "GENERIC_PPE",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-3BE665D0CA",
+          "roleCode": "BRONCH_REPROCESSING_KIT",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 9,
+          "curatedDefaultOptionCount": 2,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-63E328321A",
+          "roleCode": "BAL_KIT",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 7,
+          "curatedDefaultOptionCount": 6,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        }
+      ]
+    },
+    {
+      "procedureCode": "IPC_PLACEMENT",
+      "requiredSlotCount": 6,
+      "requiredCatalogCoverageCount": 4,
+      "requiredCatalogCoveragePercentage": 66.7,
+      "requiredSlotsWithoutCatalogProducts": ["SLOT-27D1A61598", "SLOT-01010CB364"],
+      "roleCodesWithoutCatalogProducts": ["GENERIC_SPECIMEN", "GENERIC_SUCTION"],
+      "requiredDefaultOptionCoverageCount": 4,
+      "requiredDefaultOptionCoveragePercentage": 66.7,
+      "requiredSlotsWithoutDefaultOptions": ["SLOT-27D1A61598", "SLOT-01010CB364"],
+      "requiredCustomAllowedCount": 6,
+      "slotCount": 8,
+      "slotCoverage": [
+        {
+          "slotId": "SLOT-6E9F37C656",
+          "roleCode": "GENERIC_ULTRASOUND",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 25,
+          "curatedDefaultOptionCount": 14,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-1BCF3D0702",
+          "roleCode": "IPC_INSERTION_KIT",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 13,
+          "curatedDefaultOptionCount": 10,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-3FBC244FAF",
+          "roleCode": "IPC_DRAINAGE_KIT",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 12,
+          "curatedDefaultOptionCount": 10,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-6693BCAEE1",
+          "roleCode": "IPC_DRESSING_KIT",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 2,
+          "curatedDefaultOptionCount": 2,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-1E91C231E5",
+          "roleCode": "IPC_MANAGEMENT_ACCESSORY",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 11,
+          "curatedDefaultOptionCount": 11,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-27D1A61598",
+          "roleCode": "GENERIC_SUCTION",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-CA2DF6D3A0",
+          "roleCode": "GENERIC_SPECIMEN",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-01010CB364",
+          "roleCode": "GENERIC_SPECIMEN",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        }
+      ]
+    },
+    {
+      "procedureCode": "MED_THORACOSCOPY",
+      "requiredSlotCount": 11,
+      "requiredCatalogCoverageCount": 9,
+      "requiredCatalogCoveragePercentage": 81.8,
+      "requiredSlotsWithoutCatalogProducts": ["SLOT-BC9CCE1853", "SLOT-D8D781E494"],
+      "roleCodesWithoutCatalogProducts": ["GENERIC_SPECIMEN", "GENERIC_SUCTION"],
+      "requiredDefaultOptionCoverageCount": 3,
+      "requiredDefaultOptionCoveragePercentage": 27.3,
+      "requiredSlotsWithoutDefaultOptions": [
+        "SLOT-5A9EDD575F",
+        "SLOT-9448C2A991",
+        "SLOT-545818F1DC",
+        "SLOT-BC9CCE1853",
+        "SLOT-D8D781E494",
+        "SLOT-AA3C2EAA6D",
+        "SLOT-E63DC64C2F",
+        "SLOT-6D737D1334"
+      ],
+      "requiredCustomAllowedCount": 11,
+      "slotCount": 18,
+      "slotCoverage": [
+        {
+          "slotId": "SLOT-8E4B5F2EC9",
+          "roleCode": "GENERIC_ULTRASOUND",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 25,
+          "curatedDefaultOptionCount": 14,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-5A9EDD575F",
+          "roleCode": "PLEUROSCOPE",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 2,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-3CA143BB11",
+          "roleCode": "VIDEO_PROCESSOR",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 13,
+          "curatedDefaultOptionCount": 4,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-9448C2A991",
+          "roleCode": "PLEUROSCOPY_TROCAR",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 26,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-545818F1DC",
+          "roleCode": "PLEURAL_BIOPSY_FORCEPS",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 15,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-BC9CCE1853",
+          "roleCode": "GENERIC_SPECIMEN",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-D8D781E494",
+          "roleCode": "GENERIC_SUCTION",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-1D10D8A2BF",
+          "roleCode": "TALC_POUDRAGE_KIT",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 2,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-0B24E5F37A",
+          "roleCode": "TALC_VIAL",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 3,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-57CA4B1298",
+          "roleCode": "CHEST_TUBE_SMALL_BORE",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 18,
+          "curatedDefaultOptionCount": 1,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-AA3C2EAA6D",
+          "roleCode": "GENERIC_DRAINAGE_UNIT",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 21,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-9A1C0491F9",
+          "roleCode": "IPC_INSERTION_KIT",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 13,
+          "curatedDefaultOptionCount": 10,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-E63DC64C2F",
+          "roleCode": "THORACOSCOPY_TELESCOPE",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 17,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-6D737D1334",
+          "roleCode": "ENDOSCOPY_LIGHT_CABLE",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 1,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-65FFA3703B",
+          "roleCode": "THORACOSCOPY_SCISSORS",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 3,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-0037091804",
+          "roleCode": "THORACOSCOPY_PROBE",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 3,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-694FCE203D",
+          "roleCode": "CO2_INSUFFLATOR",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 4,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-99F995A756",
+          "roleCode": "ENDOBRONCHIAL_BLOCKER",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 4,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        }
+      ]
+    },
+    {
+      "procedureCode": "PERC_TRACH",
+      "requiredSlotCount": 8,
+      "requiredCatalogCoverageCount": 6,
+      "requiredCatalogCoveragePercentage": 75,
+      "requiredSlotsWithoutCatalogProducts": ["SLOT-657F12A89F", "SLOT-126F71E1BD"],
+      "roleCodesWithoutCatalogProducts": ["GENERIC_SPECIMEN", "GENERIC_SUCTION"],
+      "requiredDefaultOptionCoverageCount": 3,
+      "requiredDefaultOptionCoveragePercentage": 37.5,
+      "requiredSlotsWithoutDefaultOptions": [
+        "SLOT-09D5542BAA",
+        "SLOT-6EAB7FD727",
+        "SLOT-32739F7002",
+        "SLOT-657F12A89F",
+        "SLOT-126F71E1BD"
+      ],
+      "requiredCustomAllowedCount": 8,
+      "slotCount": 10,
+      "slotCoverage": [
+        {
+          "slotId": "SLOT-C629C55E61",
+          "roleCode": "GENERIC_ULTRASOUND",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 25,
+          "curatedDefaultOptionCount": 14,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-658CF18CF0",
+          "roleCode": "FLEX_SCOPE_SINGLE_USE",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 24,
+          "curatedDefaultOptionCount": 14,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-2C4CF749E6",
+          "roleCode": "VIDEO_PROCESSOR",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 13,
+          "curatedDefaultOptionCount": 4,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-BC6864D752",
+          "roleCode": "GENERIC_AIRWAY_ADAPTER",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 9,
+          "curatedDefaultOptionCount": 9,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-09D5542BAA",
+          "roleCode": "PDT_KIT",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 8,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-6EAB7FD727",
+          "roleCode": "TRACH_TUBE_CUFFED",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 91,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-738A987A4C",
+          "roleCode": "TRACH_TUBE_EVAC",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 12,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-32739F7002",
+          "roleCode": "TRACH_TUBE_CUFFED",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 91,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-657F12A89F",
+          "roleCode": "GENERIC_SUCTION",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-126F71E1BD",
+          "roleCode": "GENERIC_SPECIMEN",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        }
+      ]
+    },
+    {
+      "procedureCode": "RIGID_BRONCH",
+      "requiredSlotCount": 8,
+      "requiredCatalogCoverageCount": 8,
+      "requiredCatalogCoveragePercentage": 100,
+      "requiredSlotsWithoutCatalogProducts": [],
+      "roleCodesWithoutCatalogProducts": [],
+      "requiredDefaultOptionCoverageCount": 6,
+      "requiredDefaultOptionCoveragePercentage": 75,
+      "requiredSlotsWithoutDefaultOptions": ["SLOT-19FC83049A", "SLOT-72BAE3EC7C"],
+      "requiredCustomAllowedCount": 8,
+      "slotCount": 25,
+      "slotCoverage": [
+        {
+          "slotId": "SLOT-04C940D8B9",
+          "roleCode": "RIGID_BRONCHOSCOPE_HEAD",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 6,
+          "curatedDefaultOptionCount": 2,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-113FCB30ED",
+          "roleCode": "RIGID_BRONCHOSCOPE_BARREL",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 43,
+          "curatedDefaultOptionCount": 5,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-175CA9F5B4",
+          "roleCode": "RIGID_BRONCHOSCOPE_ACCESSORY",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 80,
+          "curatedDefaultOptionCount": 22,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-6BDDC6260B",
+          "roleCode": "VIDEO_PROCESSOR",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 13,
+          "curatedDefaultOptionCount": 4,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-94783C387D",
+          "roleCode": "FLEX_SCOPE_THERAPEUTIC",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 14,
+          "curatedDefaultOptionCount": 3,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-BC936B7BD8",
+          "roleCode": "RIGID_FORCEPS",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 93,
+          "curatedDefaultOptionCount": 14,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-2D59E32F4B",
+          "roleCode": "RIGID_SUCTION_CATHETER",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 37,
+          "curatedDefaultOptionCount": 4,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-C2EF0C350D",
+          "roleCode": "GENERIC_ENERGY_PLATFORM",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-00E8CCAE2A",
+          "roleCode": "CRYOPROBE_FLEX",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 4,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-3D6358F157",
+          "roleCode": "AIRWAY_BALLOON_DILATOR",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 18,
+          "curatedDefaultOptionCount": 18,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-5F3642C851",
+          "roleCode": "AIRWAY_STENT_SILICONE_STRAIGHT",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 105,
+          "curatedDefaultOptionCount": 100,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-D6B6FF156F",
+          "roleCode": "AIRWAY_STENT_SILICONE_Y",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 6,
+          "curatedDefaultOptionCount": 4,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-6A75E6D661",
+          "roleCode": "AIRWAY_STENT_SILICONE_HOURGLASS",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 4,
+          "curatedDefaultOptionCount": 4,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-3FFB2D272E",
+          "roleCode": "STENT_APPLICATOR",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 8,
+          "curatedDefaultOptionCount": 4,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-99199F9B11",
+          "roleCode": "AIRWAY_STENT_SEMS_COVERED",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 142,
+          "curatedDefaultOptionCount": 81,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-140B672D52",
+          "roleCode": "FOREIGN_BODY_FORCEPS_FLEX",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 8,
+          "curatedDefaultOptionCount": 7,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-18617846CD",
+          "roleCode": "APC_APPLICATOR_RIGID",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 8,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-8AA6269352",
+          "roleCode": "ENERGY_CABLE_ADAPTER",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 69,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-D6219069A9",
+          "roleCode": "CRYO_SYSTEM_ACCESSORY",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 14,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-E8281AFEA1",
+          "roleCode": "APC_GAS_ACCESSORY",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 12,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-19FC83049A",
+          "roleCode": "RIGID_TELESCOPE",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 11,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-72BAE3EC7C",
+          "roleCode": "ENDOSCOPY_LIGHT_CABLE",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 1,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-66C8ADA940",
+          "roleCode": "RIGID_BRONCH_SHAVER",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 8,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-3C8165659D",
+          "roleCode": "RIGID_BIPOLAR_FORCEPS",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 4,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-702FD644B7",
+          "roleCode": "AIRWAY_STENT_SIZING_DEVICE",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 1,
+          "curatedDefaultOptionCount": 1,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        }
+      ]
+    },
+    {
+      "procedureCode": "TB_RULEOUT",
+      "requiredSlotCount": 6,
+      "requiredCatalogCoverageCount": 3,
+      "requiredCatalogCoveragePercentage": 50,
+      "requiredSlotsWithoutCatalogProducts": [
+        "SLOT-C46D25AF46",
+        "SLOT-2943D859CB",
+        "SLOT-D73F3C8E6D"
+      ],
+      "roleCodesWithoutCatalogProducts": ["GENERIC_PPE", "GENERIC_SPECIMEN", "GENERIC_SUCTION"],
+      "requiredDefaultOptionCoverageCount": 3,
+      "requiredDefaultOptionCoveragePercentage": 50,
+      "requiredSlotsWithoutDefaultOptions": [
+        "SLOT-C46D25AF46",
+        "SLOT-2943D859CB",
+        "SLOT-D73F3C8E6D"
+      ],
+      "requiredCustomAllowedCount": 6,
+      "slotCount": 11,
+      "slotCoverage": [
+        {
+          "slotId": "SLOT-C46D25AF46",
+          "roleCode": "GENERIC_PPE",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-0F96B1FA45",
+          "roleCode": "FLEX_SCOPE_SINGLE_USE",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 24,
+          "curatedDefaultOptionCount": 14,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-A19D105581",
+          "roleCode": "VIDEO_PROCESSOR",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 13,
+          "curatedDefaultOptionCount": 4,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-763A2D63F1",
+          "roleCode": "GENERIC_AIRWAY_ADAPTER",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 9,
+          "curatedDefaultOptionCount": 9,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-2943D859CB",
+          "roleCode": "GENERIC_SUCTION",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-46FDDCCF7C",
+          "roleCode": "SPECIMEN_TRAP",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 6,
+          "curatedDefaultOptionCount": 2,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-D73F3C8E6D",
+          "roleCode": "GENERIC_SPECIMEN",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-2E7FF49D2D",
+          "roleCode": "CYTOLOGY_BRUSH",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 16,
+          "curatedDefaultOptionCount": 14,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-05F71417F2",
+          "roleCode": "BIOPSY_FORCEPS_FLEX",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 21,
+          "curatedDefaultOptionCount": 15,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-313877F69F",
+          "roleCode": "BRONCH_REPROCESSING_KIT",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 9,
+          "curatedDefaultOptionCount": 2,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-9029673D34",
+          "roleCode": "BAL_KIT",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 7,
+          "curatedDefaultOptionCount": 6,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        }
+      ]
+    },
+    {
+      "procedureCode": "THERAPEUTIC_BRONCH",
+      "requiredSlotCount": 3,
+      "requiredCatalogCoverageCount": 2,
+      "requiredCatalogCoveragePercentage": 66.7,
+      "requiredSlotsWithoutCatalogProducts": ["SLOT-13609A744F"],
+      "roleCodesWithoutCatalogProducts": ["GENERIC_SUCTION"],
+      "requiredDefaultOptionCoverageCount": 2,
+      "requiredDefaultOptionCoveragePercentage": 66.7,
+      "requiredSlotsWithoutDefaultOptions": ["SLOT-13609A744F"],
+      "requiredCustomAllowedCount": 3,
+      "slotCount": 22,
+      "slotCoverage": [
+        {
+          "slotId": "SLOT-B79D3CF198",
+          "roleCode": "FLEX_SCOPE_THERAPEUTIC",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 14,
+          "curatedDefaultOptionCount": 3,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-6BCA0B7A49",
+          "roleCode": "VIDEO_PROCESSOR",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 13,
+          "curatedDefaultOptionCount": 4,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-13609A744F",
+          "roleCode": "GENERIC_SUCTION",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-FCE9E3810E",
+          "roleCode": "GENERIC_ENERGY_PLATFORM",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-14453819D5",
+          "roleCode": "CRYOPROBE_FLEX",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 4,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-1647A73048",
+          "roleCode": "FOREIGN_BODY_FORCEPS_FLEX",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 8,
+          "curatedDefaultOptionCount": 7,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-115310F554",
+          "roleCode": "FOREIGN_BODY_BASKET",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 7,
+          "curatedDefaultOptionCount": 3,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-3FE6796B6D",
+          "roleCode": "AIRWAY_BALLOON_DILATOR",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 18,
+          "curatedDefaultOptionCount": 18,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-D43C866FB5",
+          "roleCode": "PULMONARY_GUIDEWIRE",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 4,
+          "curatedDefaultOptionCount": 4,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-7412B3318B",
+          "roleCode": "INFLATION_DEVICE",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 7,
+          "curatedDefaultOptionCount": 7,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-45D721710F",
+          "roleCode": "AIRWAY_STENT_SEMS_COVERED",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 142,
+          "curatedDefaultOptionCount": 81,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-09A64B2C62",
+          "roleCode": "AIRWAY_STENT_SEMS_UNCOVERED",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 26,
+          "curatedDefaultOptionCount": 18,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-D2974FC11B",
+          "roleCode": "BIOPSY_FORCEPS_FLEX",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 21,
+          "curatedDefaultOptionCount": 15,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-0F8FA96C28",
+          "roleCode": "GENERIC_SPECIMEN",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-97CFA5C9A2",
+          "roleCode": "APC_PROBE_FLEX",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 11,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-90A43CBAEF",
+          "roleCode": "ENERGY_CABLE_ADAPTER",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 69,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-971BBE6BF8",
+          "roleCode": "CRYO_SYSTEM_ACCESSORY",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 14,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-D6B291DC80",
+          "roleCode": "BITE_BLOCK",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 2,
+          "curatedDefaultOptionCount": 2,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-D7F2D36301",
+          "roleCode": "ENDOSCOPE_CLEANING_BRUSH",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 9,
+          "curatedDefaultOptionCount": 6,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-1538BC9076",
+          "roleCode": "APC_GAS_ACCESSORY",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 12,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-081FB0C695",
+          "roleCode": "AIRWAY_STENT_SIZING_DEVICE",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 1,
+          "curatedDefaultOptionCount": 1,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-FDF73730B0",
+          "roleCode": "BAL_KIT",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 7,
+          "curatedDefaultOptionCount": 6,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        }
+      ]
+    },
+    {
+      "procedureCode": "THORACENTESIS",
+      "requiredSlotCount": 4,
+      "requiredCatalogCoverageCount": 2,
+      "requiredCatalogCoveragePercentage": 50,
+      "requiredSlotsWithoutCatalogProducts": ["SLOT-CA34F60BE9", "SLOT-23A6DA3B89"],
+      "roleCodesWithoutCatalogProducts": ["GENERIC_SPECIMEN", "GENERIC_SUCTION"],
+      "requiredDefaultOptionCoverageCount": 1,
+      "requiredDefaultOptionCoveragePercentage": 25,
+      "requiredSlotsWithoutDefaultOptions": [
+        "SLOT-A13A73CA93",
+        "SLOT-CA34F60BE9",
+        "SLOT-23A6DA3B89"
+      ],
+      "requiredCustomAllowedCount": 4,
+      "slotCount": 6,
+      "slotCoverage": [
+        {
+          "slotId": "SLOT-E91A13EE9E",
+          "roleCode": "GENERIC_ULTRASOUND",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 25,
+          "curatedDefaultOptionCount": 14,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-A13A73CA93",
+          "roleCode": "THORACENTESIS_KIT",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 20,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-CA34F60BE9",
+          "roleCode": "GENERIC_SUCTION",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-103FF61AAC",
+          "roleCode": "GENERIC_SPECIMEN",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-23A6DA3B89",
+          "roleCode": "GENERIC_SPECIMEN",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-C174DA0A4E",
+          "roleCode": "PLEURAL_DRAINAGE_ACCESSORY",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 29,
+          "curatedDefaultOptionCount": 11,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        }
+      ]
+    },
+    {
+      "procedureCode": "WLL",
+      "requiredSlotCount": 6,
+      "requiredCatalogCoverageCount": 4,
+      "requiredCatalogCoveragePercentage": 66.7,
+      "requiredSlotsWithoutCatalogProducts": ["SLOT-41977168DA", "SLOT-2015EC8357"],
+      "roleCodesWithoutCatalogProducts": ["GENERIC_SUCTION", "GENERIC_WLL_LAVAGE"],
+      "requiredDefaultOptionCoverageCount": 3,
+      "requiredDefaultOptionCoveragePercentage": 50,
+      "requiredSlotsWithoutDefaultOptions": [
+        "SLOT-2947B0846D",
+        "SLOT-41977168DA",
+        "SLOT-2015EC8357"
+      ],
+      "requiredCustomAllowedCount": 6,
+      "slotCount": 9,
+      "slotCoverage": [
+        {
+          "slotId": "SLOT-2947B0846D",
+          "roleCode": "DLT_LEFT",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 4,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-C3D82E151B",
+          "roleCode": "DLT_RIGHT",
+          "requiredness": "optional",
+          "allowCustom": true,
+          "catalogProductCount": 4,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-1039D6C9E8",
+          "roleCode": "FLEX_SCOPE_SINGLE_USE",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 24,
+          "curatedDefaultOptionCount": 14,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-5B9AA7A469",
+          "roleCode": "VIDEO_PROCESSOR",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 13,
+          "curatedDefaultOptionCount": 4,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-DD40010751",
+          "roleCode": "GENERIC_AIRWAY_ADAPTER",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 9,
+          "curatedDefaultOptionCount": 9,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-41977168DA",
+          "roleCode": "GENERIC_WLL_LAVAGE",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-2015EC8357",
+          "roleCode": "GENERIC_SUCTION",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-ECF1B0860E",
+          "roleCode": "CHEST_TUBE_SMALL_BORE",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 18,
+          "curatedDefaultOptionCount": 1,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-506C864DCC",
+          "roleCode": "ENDOBRONCHIAL_BLOCKER",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 4,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
         }
       ]
     }
   ],
-  "roles_with_zero_selectable_products": [
-    "AIRWAY_STENT_PATIENT_SPECIFIC",
-    "APC_APPLICATOR_RIGID",
-    "APC_GAS_ACCESSORY",
-    "APC_PROBE_FLEX",
-    "AUTOMATED_ENDOSCOPE_REPROCESSOR",
-    "CO2_INSUFFLATOR",
-    "CRYOPROBE_FLEX",
-    "CRYO_SYSTEM_ACCESSORY",
-    "DLT_LEFT",
-    "DLT_RIGHT",
-    "ENDOBRONCHIAL_BLOCKER",
-    "ENDOBRONCHIAL_SPIGOT",
-    "ENDOSCOPIC_IRRIGATION_PUMP",
-    "ENDOSCOPIC_SUCTION_PUMP",
-    "ENDOSCOPY_LIGHT_CABLE",
-    "ENDOSCOPY_MONITOR",
-    "ENERGY_CABLE_ADAPTER",
+  "rolesWithoutCatalogProducts": [
     "GENERIC_COLLATERAL_VENT",
     "GENERIC_ENERGY_PLATFORM",
     "GENERIC_PPE",
     "GENERIC_SPECIMEN",
     "GENERIC_SUCTION",
-    "GENERIC_WLL_LAVAGE",
-    "PDT_KIT",
-    "PLEURAL_BIOPSY_FORCEPS",
-    "PLEUROSCOPE",
-    "PLEUROSCOPY_TROCAR",
-    "PNEUMOTHORAX_KIT",
-    "RIGID_BIPOLAR_FORCEPS",
-    "RIGID_BRONCH_SHAVER",
-    "RIGID_TELESCOPE",
-    "TALC_POUDRAGE_KIT",
-    "TALC_VIAL",
-    "THORACENTESIS_KIT",
-    "THORACOSCOPY_PROBE",
-    "THORACOSCOPY_SCISSORS",
-    "THORACOSCOPY_TELESCOPE"
+    "GENERIC_WLL_LAVAGE"
   ],
-  "role_counts": {
+  "roleCounts": {
     "total": 98,
-    "zero_selectable": 37
+    "withoutCatalogProducts": 6
   }
 }

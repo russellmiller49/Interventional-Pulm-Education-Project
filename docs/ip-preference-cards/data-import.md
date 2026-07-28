@@ -13,6 +13,7 @@ Run the deterministic pipeline from the repository root:
 ```bash
 npm run ip-cards:import
 npm run ip-cards:coverage
+npm run ip-cards:scenarios
 npm run ip-cards:validate-data
 npm run ip-cards:seed
 ```
@@ -27,21 +28,21 @@ Workbook SHA-256:
 fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf
 ```
 
-| Dataset                    |  Rows |
-| -------------------------- | ----: |
-| Workbook products          | 1,221 |
-| Product roles              | 1,268 |
-| Procedures                 |    13 |
-| Procedure slots            |   174 |
-| Slot product options       | 2,080 |
-| Roles                      |    98 |
-| Raw compatibility evidence |   179 |
-| Manufacturers              |    28 |
-| Sources                    |    46 |
-| Product sources            | 1,366 |
-| Formulary staging          | 1,221 |
-| Modifier catalog           |    30 |
-| Verification backlog       | 1,221 |
+| Dataset                       |  Rows |
+| ----------------------------- | ----: |
+| Workbook products             | 1,221 |
+| Product roles                 | 1,268 |
+| Procedures                    |    13 |
+| Procedure slots               |   174 |
+| Authored slot product options | 2,080 |
+| Roles                         |    98 |
+| Raw compatibility evidence    |   179 |
+| Manufacturers                 |    28 |
+| Sources                       |    46 |
+| Product sources               | 1,366 |
+| Formulary staging             | 1,221 |
+| Modifier catalog              |    30 |
+| Verification backlog          | 1,221 |
 
 The importer then merges 253 reviewed rows from `seed/catalog-additions.json`, producing
 1,474 products in `generated/catalog-products.json`. The workbook-backed verification
@@ -60,11 +61,41 @@ The current supplied workbook has 80 non-null GTIN values, and all 80 are alread
 - Raw verification text is preserved, with a coarse derived state of `verified_source`, `candidate`, or `unknown`.
 - Raw compatibility endpoints remain free text. Exact canonical matches are enriched, while unresolved model/catalog strings remain untouched.
 - Strict workbook foreign keys fail the import when broken.
+- Every authored slot option must use its slot's role and have the same exact
+  `Product_Roles` relationship.
 - Import output and reporting are stable and idempotent for the same workbook bytes.
+
+## Authored options and unreviewed proposals
+
+The workbook's 2,080 `Slot_Product_Options` rows remain the canonical, curated exact-slot
+options. Import does not promote every product sharing the slot's broad role into that file.
+Instead, `derive-slot-option-proposals.ts` writes a separate deterministic review artifact:
+
+```text
+data/ip-preference-cards/generated/slot-product-option-proposals.json
+```
+
+The current artifact has 475 unreviewed pairs and zero exclusions. Every proposal is
+nonselectable and hidden by default. Exceptions in
+`seed/slot-option-exceptions.json` are Zod-validated, exact, proposal-only suppressions; stale
+or contradictory exceptions fail generation. See
+[`catalog-role-and-slot-semantics.md`](./catalog-role-and-slot-semantics.md).
 
 ## Coverage before seed
 
-The coverage command runs before seed validation and writes `coverage-report.json`. In the current catalog, 45 of 98 roles have no selectable product. Required zero-selectable slots in the golden source procedures are explicitly resolved by reviewed demo-only stand-ins; every stand-in and reason is listed in `data/ip-preference-cards/seed/demo-stand-ins.json`.
+The coverage command writes `coverage-report.json` for all 13 procedures using the same pure
+helper as the scenario generator. It reports two separate metrics:
+
+- required catalog coverage: required slots whose broad role has at least one existing
+  `Product_Roles` product, including candidate/unverified products; and
+- required curated-default coverage: required slots with at least one selectable canonical
+  `Slot_Product_Options` row.
+
+Unreviewed proposals do not count toward curated-default coverage. In the current catalog, 6
+of 98 roles have no catalog product. Required slots without curated defaults in the golden
+source procedures are explicitly resolved by reviewed demo-only stand-ins; every stand-in and
+reason is listed in `data/ip-preference-cards/seed/demo-stand-ins.json`. Neither coverage
+metric is card readiness or clinical approval.
 
 The JSON output is the runtime source for the prototype. The additive database migration provides normalized import tables for a later controlled database load; v0.1 does not perform an automatic destructive catalog replacement.
 
@@ -143,3 +174,7 @@ verification decisions, hospital formulary staging, or the source workbook.
 Re-running `ip-cards:import` is therefore independent of openFDA cache state. Conversely, a
 high-confidence openFDA match remains pending human review and does not make a product
 selectable, clinically ready, compatible, locally available, or orderable.
+
+OpenFDA/GUDID identity enrichment also does not create `Product_Roles`, canonical
+`Slot_Product_Options`, or accepted slot-option proposals, and it does not affect either
+coverage metric.

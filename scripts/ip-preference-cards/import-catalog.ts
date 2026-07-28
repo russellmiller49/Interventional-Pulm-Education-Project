@@ -35,6 +35,10 @@ import {
   readProductOverrides,
   type OverridesReport,
 } from './apply-product-overrides'
+import {
+  generateSlotOptionProposals,
+  type SlotOptionProposalSummary,
+} from './derive-slot-option-proposals'
 
 const DEFAULT_WORKBOOK =
   'Preference_card_module/IP_Procedure_Equipment_Catalog_v0_5_with_GUDID_Verification_Backlog.xlsx'
@@ -92,6 +96,7 @@ interface ImportReport {
   format_version: 1
   catalog_additions?: AdditionsMergeReport
   product_overrides?: OverridesReport
+  slot_option_proposals?: SlotOptionProposalSummary
   source_file: string
   workbook_sha256: string
   header_row: 4
@@ -560,6 +565,10 @@ export async function importCatalog(options?: { workbookPath?: string; outputDir
       : normalized[sheetName]
     await writeJson(outputDirectory, OUTPUT_FILES[sheetName], records)
   }
+  const proposalArtifact = await generateSlotOptionProposals({
+    generatedDirectory: outputDirectory,
+  })
+  report.slot_option_proposals = proposalArtifact.summary
   await writeJson(outputDirectory, 'import-report.json', report)
 
   const hardFailures = [

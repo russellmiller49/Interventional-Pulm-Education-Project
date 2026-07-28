@@ -78,5 +78,15 @@
     "manufacturers_added": 5,
     "sources_added": 6,
     "errors": []
+  },
+  "slot_option_proposals": {
+    "authored_canonical_options": 2080,
+    "generated_unreviewed_proposals": 475,
+    "excluded_proposal_pairs": 0,
+    "required_slots_with_catalog_coverage": 56,
+    "required_slots_with_curated_defaults": 41,
+    "authored_row_errors": 0,
+    "stale_exceptions": 0,
+    "proposal_generation_errors": 0
   }
 }

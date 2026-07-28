@@ -6,6 +6,7 @@ import {
 } from '../server/catalog-store'
 import {
   activeSpecColumns,
+  getCatalogPick,
   getProductDetail,
   getUseDetail,
   getUseIndex,
@@ -289,6 +290,19 @@ describe('catalog search', () => {
     expect(verified.total).toBe(3)
     expect(unverified.total).toBe(1)
     expect(unverified.items[0]?.productId).toBe('PRD-BBB')
+  })
+
+  it('keeps a role-mapped product discoverable when it has no canonical slot option', () => {
+    const options = searchProductsForRole({ roleCode: 'AIRWAY_STENT' }, store)
+    const beta = options.find((option) => option.productId === 'PRD-BBB')
+
+    expect(beta).toMatchObject({
+      productId: 'PRD-BBB',
+      verificationTier: 'candidate',
+    })
+    expect(getProductDetail('PRD-BBB', store)?.slots).toEqual([])
+    expect(getCatalogPick('PRD-BBB', 'AIRWAY_STENT', store)).not.toBeNull()
+    expect(getCatalogPick('PRD-BBB', 'CRYOPROBE', store)).toBeNull()
   })
 
   it('counts products excluded only because the filtered spec is missing', () => {

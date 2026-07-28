@@ -36,15 +36,24 @@ export default async function PreferenceCardRecipesPage({
         <AdminPreferenceCardNav locale={locale} />
       </header>
 
+      <p id="recipe-coverage-help" className="max-w-4xl text-sm text-muted-foreground">
+        {t('coverageMetricHelp')}
+      </p>
+
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
-        <table className="w-full min-w-[900px] text-left text-sm">
+        <table className="w-full min-w-[1050px] text-left text-sm">
           <thead className="bg-muted/70 text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="px-4 py-3">{t('admin.recipe')}</th>
               <th className="px-4 py-3">{t('admin.version')}</th>
               <th className="px-4 py-3">{t('admin.governance')}</th>
               <th className="px-4 py-3">{t('admin.owner')}</th>
-              <th className="px-4 py-3">{t('admin.mapping')}</th>
+              <th className="px-4 py-3" aria-describedby="recipe-coverage-help">
+                {t('admin.catalogAlternatives')}
+              </th>
+              <th className="px-4 py-3" aria-describedby="recipe-coverage-help">
+                {t('admin.curatedDefaults')}
+              </th>
               <th className="px-4 py-3">{t('admin.unresolved')}</th>
               <th className="px-4 py-3">{t('cardMetadata.readiness')}</th>
             </tr>
@@ -63,9 +72,28 @@ export default async function PreferenceCardRecipesPage({
                   <Badge variant="outline">{scenario.governanceState}</Badge>
                 </td>
                 <td className="px-4 py-4">{scenario.owner ?? t('ownerNotAssigned')}</td>
-                <td className="px-4 py-4">
-                  {t('mapped', {
-                    percent: scenario.requiredRoleMappingPercentage,
+                <td
+                  className="px-4 py-4"
+                  aria-label={t('catalogAlternatives', {
+                    count: scenario.requiredCatalogCoverageCount,
+                    total: scenario.requiredSlotCount,
+                  })}
+                >
+                  {t('coverageFraction', {
+                    count: scenario.requiredCatalogCoverageCount,
+                    total: scenario.requiredSlotCount,
+                  })}
+                </td>
+                <td
+                  className="px-4 py-4"
+                  aria-label={t('curatedDefaults', {
+                    count: scenario.requiredDefaultOptionCoverageCount,
+                    total: scenario.requiredSlotCount,
+                  })}
+                >
+                  {t('coverageFraction', {
+                    count: scenario.requiredDefaultOptionCoverageCount,
+                    total: scenario.requiredSlotCount,
                   })}
                 </td>
                 <td className="px-4 py-4">

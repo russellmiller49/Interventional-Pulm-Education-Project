@@ -1,9 +1,71 @@
-# IP preference cards — session handoff, 2026-07-27 (second session)
+# IP preference cards — session handoff, updated 2026-07-28
 
-Continuation notes for the v0.2 rebuild. Branch: `codex/ip-preference-card-builder-v0-1`.
-**Nothing is committed** — all work is in the working tree.
+Intended preference-card work branch: `codex/ip-openfda-enrichment-v0-1` at `25a35a05`.
+During the final shared-worktree audit, another task switched the checkout to
+`critical-care/module-rebuild` and advanced it to `61a7d171`; the uncommitted preference-card
+changes were preserved in place rather than risking a branch switch in a dirty checkout.
+The proposal-generator command entry in `package.json` had already been captured in the
+unrelated `25a35a05` commit; the generator and all other Phase 0.5 files remain uncommitted.
+The original v0.2 notes remain below for historical context.
 
 Approved plan: `~/.claude/plans/please-review-the-in-reflective-feather.md`.
+
+## 2026-07-28 Phase 0.5 catalog-role integrity addendum
+
+The safety/semantics work package is implemented in the working tree:
+
+- `getCatalogPick` no longer copies an arbitrary client role. The authoritative server lookup
+  distinguishes unknown product, unknown role, and a known product without the requested
+  `Product_Roles` mapping. `resolveForSave` uses it for ordinary picks and equipment-set
+  members. Family reconstruction remains role-scoped. Valid products and families serving
+  multiple roles retain distinct role options, and equipment-set editing uses exact
+  product-role member identities.
+- The workbook's 2,080 authored `Slot_Product_Options` rows remain canonical and byte-stable.
+  The automatic-promotion behavior and artifact were absent and were not adopted; only a
+  dormant package command had already landed.
+- `derive-slot-option-proposals.ts` produces 475 separate unreviewed proposals, all
+  `selectable: false` and `visible_by_default: false`. The checked-in exception file is empty;
+  strict Zod validation reports zero exclusions and zero stale exceptions.
+- `coverage-metrics.ts` is the single source for scenario and report metrics. All 13
+  procedures now expose required catalog-alternative counts separately from required
+  curated-default counts.
+- Procedure selection, the dashboard, and the admin recipe table use truthful metric names.
+  They do not call source-data coverage mapped, ready, complete, or approved.
+- Custom items, the role-scoped browser, verification/distribution badges, compatibility
+  rules, canonical product identity, and `ResolvedCard.readinessState` are unchanged.
+- A checked-in hash guard now enforces the protected workbook, canonical catalog data,
+  calibration inputs/report, aliases, classifier/query plan, and the complete 48-file OpenFDA
+  artifact set.
+
+The semantic contract is in
+[`catalog-role-and-slot-semantics.md`](./catalog-role-and-slot-semantics.md), and the
+implementation plan is in
+[`phase0-5-catalog-role-integrity-plan.md`](./phase0-5-catalog-role-integrity-plan.md).
+The completed command results, file inventory, coverage table, and stop point are in
+[`phase0-5-catalog-role-integrity-report.md`](./phase0-5-catalog-role-integrity-report.md).
+All protected before/after hashes match; the path-level OpenFDA record is in
+[`phase0-5-protected-hash-manifest.md`](./phase0-5-protected-hash-manifest.md).
+
+Current generated counts:
+
+| Measure                          | Count |
+| -------------------------------- | ----: |
+| Catalog products                 | 1,474 |
+| Product-role relationships       | 1,566 |
+| Procedures                       |    13 |
+| Procedure slots                  |   174 |
+| Authored canonical slot options  | 2,080 |
+| Unreviewed slot-option proposals |   475 |
+| Explicit exclusions              |     0 |
+| Stale exceptions                 |     0 |
+
+No OpenFDA/GUDID calibration, proposal acceptance, product verification, visibility,
+compatibility, or formulary decision belongs in this phase.
+
+Final validation on 2026-07-28 passed the prescribed import, coverage, scenario, data,
+seed, focused Jest, type-check, lint, and production-build sequence. The focused scope had
+361 passing tests and one intentionally skipped live-OpenFDA integration test. Lint completed
+with zero errors and 18 warnings outside this work package.
 
 ## Read this first
 

@@ -14,6 +14,10 @@ It demonstrates:
 - spatial, chronological, exceptions, trace, and print views;
 - protected mapping actions and read-only catalog verification QA;
 - read-only openFDA/GUDID identity-enrichment proposals kept separate from canonical data;
+- server-side enforcement of exact product-to-role catalog relationships;
+- deterministic, nonselectable review proposals for missing exact-slot options;
+- separate catalog-alternative and curated-default coverage metrics that are not labeled
+  readiness or approval;
 - organization-aware RLS and feature-flagged production exposure.
 
 Every output displays:
@@ -37,12 +41,19 @@ DRAFT PROTOTYPE — NOT APPROVED FOR CLINICAL USE
 
 ## Known v0.1 limitations
 
-- Only the three golden scenarios are operationalized.
+- All 13 procedures have deterministic generated scenarios. Clinical and operational review
+  remains required before any one is treated as pilot-ready.
 - The workbook’s 179 compatibility statements remain raw evidence except for the few manually typed fixtures.
 - Only literal quantities are evaluated.
 - The admin recipe view is status-only; full authoring is deferred.
 - Catalog QA is read-only.
 - openFDA high-confidence classifications remain unapproved candidates; they do not alter clinical readiness, procurement status, compatibility, or local formulary state.
+- The 475 current slot-option proposals are unreviewed and nonselectable; broad role equality
+  is not exact-slot eligibility.
+- Catalog alternatives and curated defaults are source-data coverage measures. Neither
+  establishes compatibility, local approval, or a resolved card's readiness.
+- Custom items remain per-user, unverified local requirements rather than an organization
+  formulary.
 - The database catalog load is deliberately controlled and separate from the non-destructive JSON import.
 - Print output uses browser Print/Save as PDF; there is no PDF service.
 - Locale bundles contain English fallback copy for this feature.
@@ -53,6 +64,7 @@ DRAFT PROTOTYPE — NOT APPROVED FOR CLINICAL USE
 npm install
 npm run ip-cards:import
 npm run ip-cards:coverage
+npm run ip-cards:scenarios
 npm run ip-cards:validate-data
 npm run ip-cards:seed
 npm run dev
@@ -64,4 +76,9 @@ Open `/en/preference-cards` as an authenticated user. Development enables the fe
 NEXT_PUBLIC_ENABLE_PREFERENCE_CARDS=true
 ```
 
-To exercise database persistence, apply `20260725210000_add_ip_preference_cards.sql`, then apply `supabase/seed/ip_preference_cards_demo.sql`, load the normalized catalog through the controlled database workflow, add the user to the demo organization, and grant either `preference_cards_builder` or `site_admin`. Without those database steps, the builder intentionally falls back to a deterministic hash-addressed demo snapshot rather than claiming that a database save occurred.
+To exercise database persistence, use the already-applied
+`20260727224807_add_ip_user_preference_cards.sql` schema, then grant the authenticated user
+either `preference_cards_builder` or `site_admin`. Do not run `supabase db push` for this
+repository; the local and remote migration histories diverge, as documented in the current
+session handoff. Without a valid authenticated persistence context, saving intentionally
+fails rather than claiming that a database save occurred.
