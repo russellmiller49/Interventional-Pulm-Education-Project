@@ -13,9 +13,9 @@ Date completed: 2026-07-28
 - Existing commits, including the earlier mixed snapshot and intervening critical-care commits,
   were not rewritten, reverted, amended, or otherwise cleaned up. The proposal-generator command
   in `package.json` remains in `25a35a05` and is excluded from this package's explicit staging.
-- All other files in this bounded package remain uncommitted while they are isolated through the
-  dedicated implementation commit step. No database migration, network request, live OpenFDA run,
-  or bulk UDI download was created.
+- All other files in this bounded package were isolated through the dedicated implementation
+  commit `a8697aa4dca7c18c4dc62649f6bef342ec8ce410`. No database migration, network
+  request, live OpenFDA run, or bulk UDI download was created.
 
 The source workbook, catalog identity, product roles, verification backlog, formulary staging,
 OpenFDA artifacts, aliases, classifier, query plan, visibility states, verification grades,
@@ -227,10 +227,38 @@ Current generated work-package artifact hashes:
 | Artifact                             | SHA-256                                                            |
 | ------------------------------------ | ------------------------------------------------------------------ |
 | `slot-product-option-proposals.json` | `e489ede20808f5a87cfb93341fb9b47fffce6a02877b85c2cae7be29f337011f` |
-| `coverage-report.json`               | `735b32701decd82d6b4ed77ee8172102f0fd7b0230851795716e4cf58c8cbbe8` |
+| `coverage-report.json`               | `7e7f251a318a46933dd15a8dec384569d6544e572273a2d1f9deca4dac317143` |
 | `scenarios.json`                     | `4eca70ccf9f8abcf936d9b3f4abf328f7077fe1dd57109f3f7de5fb5d16bc839` |
 | `import-report.json`                 | `c5d6fc00b5fa8b3b6df875d26b6d0731fc0fe8ff6889e7faee4756426cce2288` |
 | `demo-seed-summary.json`             | `7e7d11f68e0c0f56ea44b487541a2bad30db901c178468e5f9c66c12138bba12` |
+
+## Final isolation checkpoint
+
+- Date: 2026-07-28.
+- Branch: `codex/ip-openfda-enrichment-v0-1`.
+- Implementation commit:
+  `a8697aa4dca7c18c4dc62649f6bef342ec8ce410`.
+- Parent commit:
+  `25a35a051aab120efa8632de6b78a2ab4df10aae`.
+- The implementation commit contains exactly the 51 documented Phase 0.5 paths. It does not
+  recommit `package.json`, and it includes no Claude Code-owned, literature, Supabase migration,
+  shared-checkout protocol, Calibration 2, or raw OpenFDA-cache path.
+- The working tree still contains 7 unrelated modified literature paths and 3 unrelated untracked
+  Supabase migrations. They were neither staged nor committed, and their before/after content
+  hashes remained unchanged.
+- The generated critical-care preview
+  `public/ecmo-teaching-preview/panels.html` was classified as
+  `branch_specific_ignore_visibility_only`. A reversible
+  `codex → critical-care → codex` checkout verified the same SHA-256
+  (`eef1d6542098f7bfbd4386d05b8acac359b2b34bdb9a2d1ad5c79e80601df15f`),
+  size, and mtime at all three observations. It is locally excluded through `.git/info/exclude`;
+  no repository ignore file was changed.
+- All protected hashes remained unchanged, including the 48-artifact OpenFDA composite
+  `4cc03adac07ad4f7e2d455559377017af9f2c9048240e3637ced4d46e9add61c`.
+- The repository pre-commit hook formatted the 51 allowed staged paths before committing. The
+  work-package hash table above records the committed bytes; focused tests and type-check were
+  repeated successfully against the committed tree.
+- No live OpenFDA request, bulk download, or Calibration Cohort 2 work occurred.
 
 ## Known limitations and stop point
 
@@ -252,7 +280,7 @@ Current generated work-package artifact hashes:
   transactional filesystem operation if a future run fails partway through.
 - The shared working tree still contains unrelated uncommitted literature and Supabase changes.
   They are outside the explicit Phase 0.5 allowlist and remain excluded from this dedicated
-  isolation step.
+  implementation commit.
 
 The smallest logical next work package is a read-only clinical review of a small, explicitly
 bounded subset of the 475 proposals, producing reviewed decisions and exact exceptions without
