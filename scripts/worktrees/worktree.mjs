@@ -828,6 +828,19 @@ export function doctorSnapshot(cwd) {
         )
       }
     }
+    if (record.status === 'starting') {
+      if (validation.valid) {
+        findings.push(
+          finding(
+            'info',
+            'WT-DOCTOR-PROCESS-STARTING',
+            `Dev process for port ${record.port} is starting and has not recorded a listener yet.`,
+            record,
+          ),
+        )
+      }
+      continue
+    }
     const listeners = portListener(record.port)
     const expectedListenerPid = Number(record.listenerPid || record.pid)
     if (validation.valid && !listeners.includes(expectedListenerPid)) {

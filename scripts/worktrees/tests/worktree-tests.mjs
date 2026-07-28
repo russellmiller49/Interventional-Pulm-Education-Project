@@ -111,11 +111,35 @@ describe('registry and branch contracts', () => {
     git(repository, ['config', 'extensions.worktreeConfig', 'true'])
     git(repository, ['config', '--worktree', 'core.excludesFile', excludePath])
     git(repository, ['config', 'worktree.localConfigPath', localConfigPath])
+    const liveProcess = processSnapshot(process.pid)
+    assert.ok(liveProcess)
+    const processDirectory = join(repository, '.git', 'wt', 'processes')
+    mkdirSync(processDirectory, { recursive: true })
+    writeFileSync(
+      join(processDirectory, 'port-3130.json'),
+      `${JSON.stringify({
+        schemaVersion: 1,
+        status: 'starting',
+        pid: liveProcess.pid,
+        processStartTime: liveProcess.startTime,
+        command: liveProcess.command,
+        expectedCommand: liveProcess.command,
+        worktree: repository,
+        branch: 'main',
+        port: 3130,
+        leaseCreationTime: new Date().toISOString(),
+      })}\n`,
+    )
 
     const snapshot = doctorSnapshot(repository)
 
     assert.equal(snapshot.ok, false)
     assert.ok(snapshot.findings.some((finding) => finding.code === 'WT-DOCTOR-UNREGISTERED'))
+    assert.ok(snapshot.findings.some((finding) => finding.code === 'WT-DOCTOR-PROCESS-STARTING'))
+    assert.equal(
+      snapshot.findings.some((finding) => finding.code === 'WT-DOCTOR-WRONG-PORT'),
+      false,
+    )
   })
 
   test('contains exactly the 35 learner modules and a separate platform scope', () => {
