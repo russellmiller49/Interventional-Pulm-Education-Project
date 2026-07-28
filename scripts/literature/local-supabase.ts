@@ -16,6 +16,9 @@ const MIGRATIONS = [
   '20260727164510_add_literature_gold_set.sql',
   '20260727190000_add_literature_gold_review_categories.sql',
   '20260727193432_add_literature_full_text_categorization_flag.sql',
+  '20260728170939_add_interactive_clinical_case_publication_status.sql',
+  '20260728171212_add_immune_inflammatory_disease_tag.sql',
+  '20260728174726_add_safety_complication_prevention_clinical_purpose.sql',
 ] as const
 const EXCLUDED_SERVICES = [
   'realtime',

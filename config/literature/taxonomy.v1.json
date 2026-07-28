@@ -1,6 +1,6 @@
 {
   "taxonomy_version": "1.0.0",
-  "prepared_date": "2026-07-27",
+  "prepared_date": "2026-07-28",
   "principles": {
     "multi_label": true,
     "stable_ids": true,
@@ -426,6 +426,7 @@
       "surveillance",
       "localization",
       "training",
+      "safety-complication-prevention",
       "multiple-general-overview",
       "not-assessable-from-available-metadata"
     ],
@@ -434,6 +435,7 @@
       "mesothelioma",
       "emphysema",
       "interstitial-lung-disease",
+      "immune-inflammatory-disease",
       "infection",
       "transplant",
       "benign-airway-stenosis",
@@ -463,6 +465,7 @@
       "correction",
       "retraction",
       "protocol",
+      "interactive-clinical-case",
       "not-assessable-from-available-metadata"
     ],
     "population": ["adult", "pediatric", "transplant", "critically-ill", "mixed"]
