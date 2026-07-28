@@ -1,8 +1,9 @@
 import type { Route } from 'next'
-import { AlertTriangle, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
-import { criticalCareSourceConflicts } from '@/features/critical-care/content/sourceConflicts'
+import { HeldDisagreement } from '@/features/critical-care/components/teaching/EvidenceRenderers'
+import { criticalCareSourceConflictById } from '@/features/critical-care/content/sourceConflicts'
 import {
   nextPathwaySection,
   pathwaySectionIndex,
@@ -31,9 +32,9 @@ export function EcmoFoundationSectionView({
   const next = nextPathwaySection(pathway, sectionId)
   // Held open on purpose: the supplied ECMO synthesis reports no universally endorsed adult
   // target set, so both source-stated ranges stay visible and neither becomes a threshold here.
-  const conflict = criticalCareSourceConflicts.find(
-    (candidate) => candidate.id === section.heldDisagreementId,
-  )
+  const conflict = section.heldDisagreementId
+    ? criticalCareSourceConflictById.get(section.heldDisagreementId)
+    : undefined
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
@@ -61,34 +62,7 @@ export function EcmoFoundationSectionView({
         </ul>
       ) : null}
 
-      {conflict ? (
-        <section
-          className="mt-8 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5"
-          aria-labelledby="ecmo-held-disagreement"
-        >
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="size-5 text-amber-700" aria-hidden="true" />
-            <h2 id="ecmo-held-disagreement" className="text-lg font-semibold">
-              {conflict.title}
-            </h2>
-          </div>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-            {conflict.context}
-          </p>
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
-            {conflict.positions.map((position) => (
-              <div key={position.claim} className="rounded-xl border bg-background p-4">
-                <h3 className="font-semibold">{position.claim}</h3>
-                <p className="mt-2 text-sm">{position.source}</p>
-                <p className="mt-1 text-xs leading-5 text-muted-foreground">{position.locator}</p>
-              </div>
-            ))}
-          </div>
-          <p className="mt-4 text-sm leading-6">
-            <strong>How this curriculum handles it:</strong> {conflict.handling}
-          </p>
-        </section>
-      ) : null}
+      {conflict ? <HeldDisagreement conflict={conflict} headingLevel={2} /> : null}
 
       <aside className="mt-8 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5 text-sm leading-6">
         <strong>Educational resource.</strong> Device behavior, measurements, and modeled responses

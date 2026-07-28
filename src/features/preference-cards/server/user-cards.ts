@@ -14,7 +14,7 @@ import {
   type BuilderInputs,
   type SaveCardRequest,
 } from '../schemas/saved-card'
-import { getCatalogPick, getFamilyPick } from './catalog'
+import { getFamilyPick, resolveCatalogPick, type CatalogPickLookupResult } from './catalog'
 
 /**
  * Per-user preference cards.
@@ -124,6 +124,21 @@ function parseSnapshot(snapshot: unknown, expectedHash: string): ResolvedCard | 
   return parsed.data as unknown as ResolvedCard
 }
 
+function catalogPickLookupError(
+  result: Exclude<CatalogPickLookupResult, { ok: true }>,
+  location?: string,
+): string {
+  const suffix = location ? ` ${location}` : ''
+  switch (result.code) {
+    case 'unknown_product':
+      return `Unknown catalog product ${result.productId}${suffix}.`
+    case 'unknown_role':
+      return `Unknown catalog role ${result.roleCode}${suffix}.`
+    case 'product_role_mismatch':
+      return `Catalog product ${result.productId} is not mapped to role ${result.roleCode}${suffix}.`
+  }
+}
+
 /**
  * Re-resolve a card from its builder inputs, rebuilding every product from the catalog.
  *
@@ -142,9 +157,9 @@ export function resolveForSave(
 
   const picks: CatalogPick[] = []
   for (const requested of inputs.catalogPicks) {
-    const pick = getCatalogPick(requested.productId, requested.roleCode)
-    if (!pick) return { ok: false, error: `Unknown catalog product ${requested.productId}.` }
-    picks.push(pick)
+    const result = resolveCatalogPick(requested.productId, requested.roleCode)
+    if (!result.ok) return { ok: false, error: catalogPickLookupError(result) }
+    picks.push(result.pick)
   }
 
   const familyPicks: FamilyPick[] = []
@@ -159,14 +174,14 @@ export function resolveForSave(
   for (const requested of inputs.equipmentSets) {
     const members: CatalogPick[] = []
     for (const member of requested.members) {
-      const rebuilt = getCatalogPick(member.productId, member.roleCode)
-      if (!rebuilt) {
+      const result = resolveCatalogPick(member.productId, member.roleCode)
+      if (!result.ok) {
         return {
           ok: false,
-          error: `Unknown catalog product ${member.productId} in set "${requested.name}".`,
+          error: catalogPickLookupError(result, `in set "${requested.name}"`),
         }
       }
-      members.push(rebuilt)
+      members.push(result.pick)
     }
     sets.push({
       id: requested.id,

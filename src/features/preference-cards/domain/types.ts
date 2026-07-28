@@ -394,9 +394,17 @@ export interface ScenarioDefinition {
   templateVersion: string
   defaultModifierCodes: string[]
   availableModifierCodes: string[]
-  requiredRoleMappingPercentage: number
-  /** Roles this procedure requests that have no catalogued product; surfaced honestly in the UI. */
-  emptyRoleCodes: string[]
+  /** Required lines whose broad role has at least one existing Product_Roles product. */
+  requiredCatalogCoverageCount: number
+  requiredCatalogCoveragePercentage: number
+  requiredSlotsWithoutCatalogProducts: string[]
+  roleCodesWithoutCatalogProducts: string[]
+  /** Required lines with at least one selectable canonical Slot_Product_Options row. */
+  requiredDefaultOptionCoverageCount: number
+  requiredDefaultOptionCoveragePercentage: number
+  requiredSlotsWithoutDefaultOptions: string[]
+  /** Descriptive only; custom entry is not a readiness or approval state. */
+  requiredCustomAllowedCount: number
   slotCount: number
   requiredSlotCount: number
   governanceState: GovernanceState

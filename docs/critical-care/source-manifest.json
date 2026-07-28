@@ -74,7 +74,34 @@
       "rights_status": "owner-licensed-private-authoring-source",
       "review_status": "draft",
       "verified_on": "2026-07-27",
-      "verification_note": "Document supplied 2026-07-27. Revision, issue date, minimum software release 03.04.10.00, and US jurisdiction all match the values already asserted in cardiohelp-ecmo/content/deviceProfile.ts, so that profile is now source-verified rather than cited. 212 pages."
+      "verification_note": "Document supplied 2026-07-27. Revision, issue date, minimum software release 03.04.10.00, and US jurisdiction all match the values already asserted in cardiohelp-ecmo/content/deviceProfile.ts, so that profile is now source-verified rather than cited. 212 pages.",
+      "claims_traced": [
+        {
+          "claim": "A valid measured value displays as a number; an unavailable, unsupported, or out-of-valid-range value displays as dashes.",
+          "locator": "Section 3 System Description, page 47, table 'Status of measured values'",
+          "used_for": "The engine's per-channel readout status, and the console's '--' rendering."
+        },
+        {
+          "claim": "Integrated and external sensor pressures pVen/pInt/pArt/pAux and the calculated delta-p have a display range of -500 to +900 mmHg, resolution 1.",
+          "locator": "Section 14.8 Measured Data and Displayed Data, page 201",
+          "used_for": "Pressure display eligibility. Raw model values are NOT clamped to this range; out-of-range renders as unavailable."
+        },
+        {
+          "claim": "SVO2 has a display range of 40.0 to 99.9%, resolution 0.1.",
+          "locator": "Section 14.8, page 201",
+          "used_for": "Venous-line saturation display eligibility. The latent systemic estimate is not clamped to it."
+        },
+        {
+          "claim": "The venous probe measures the venous blood parameters SVO2, Hb, Hct and temperature; for measurement the probe connects to the disposable's measuring cell, and that measuring cell is integrated in the oxygenator pump unit (HLS Set Advanced). The console parameter is defined as oxygen saturation IN THE MEASURING CELL. Arterial temperature is by contrast defined as temperature at the blood outlet, confirming the venous cell sits on the inlet side.",
+          "locator": "Page 39 (probe description), page 46 (blood-parameter definitions and the venous/arterial contrast), page 104 (measuring-cell location), page 12 (abbreviation: SVO2 = venous oxygen saturation)",
+          "used_for": "Mapping the console SvO2 tile to the drainage/pre-oxygenator limb rather than to a systemic mixed-venous estimate. Considered CONFIRMED, not ambiguous."
+        }
+      ],
+      "model_boundaries": [
+        "Pump-stopped pressure unavailability is a limitation of this educational simulation, which does not model connected static circuit pressures. It is NOT a sourced assertion that the physical CARDIOHELP shows dashes whenever the pump stops; the IFU's dash conditions are sensor-not-connected, unsupported parameter, and out-of-range value. The engine reports this case as 'simulation-unmodeled' and says so in its accessible text.",
+        "Assumed whole-body oxygen consumption of 150 mL/min is a bounded educational-model input authored per reference profile, not a measured patient value and not a universal clinical assumption.",
+        "Systemic mixed-venous saturation is an ESTIMATE derived from the modeled oxygen balance. The CARDIOHELP has no sensor for it and never displays it; it is kept in patient physiology, not on the circuit."
+      ]
     },
     {
       "doc_id": "impella-rp-ifu-0046-9062-rn",
@@ -195,7 +222,7 @@
     {
       "doc_id": "PRISMAX-AW8035-RB",
       "title": "PrisMax Operator's Manual",
-      "edition_year": "AW8035 Rev B JUN2019",
+      "edition_year": "AW8035 Rev B JUN2019, program version 2.XX",
       "publisher": "Baxter",
       "isbn_doi": null,
       "sha256": "204543b8c205e535cb9d45c970b8231362839177f3795b6164edcef3b834f1ff",
@@ -203,7 +230,7 @@
       "rights_status": "owner-licensed-private-authoring-source",
       "review_status": "sme-review",
       "verified_on": "2026-07-27",
-      "verification_note": "Document supplied 2026-07-27 and hashed: it matches the SHA-256 this manifest already recorded, so the registered source is now verified rather than merely cited. 353 pages, full operator's manual."
+      "verification_note": "Document supplied 2026-07-27 and hashed: it matches the SHA-256 this manifest already recorded, so the registered source is now verified rather than merely cited. 353 pages, full operator's manual. REVISION CHECKED 2026-07-27 because the owner believed this was a 2025 'D0.3' release: it is not. The document self-identifies as AW8035 Rev B JUN2019, program version 2.XX in the page footer of 350 of its 353 pages, no 'D0.3' string appears anywhere in the full text, and the only years it mentions are two instances of 2015. CURRENCY LIMIT: PrisMax software has advanced since program version 2.XX, so any console layout, alarm text, or setup flow authored from this manual describes 2.XX and must say so in its displayNote. A newer operator's manual would supersede it for display claims."
     },
     {
       "doc_id": "REVIEW-CKRT-CORE-2025",

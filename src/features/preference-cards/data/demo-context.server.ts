@@ -83,9 +83,10 @@ interface ImportReport {
 }
 
 interface CoverageProcedure {
-  procedure_code: string
-  required_mapping_percentage: number
-  required_slots_with_zero_selectable_products: number
+  procedureCode: string
+  requiredCatalogCoverageCount: number
+  requiredDefaultOptionCoverageCount: number
+  requiredSlotCount: number
 }
 
 export interface VerificationBacklogRow {
@@ -276,13 +277,15 @@ export function getScenarioDefinition(id: string): ScenarioDefinition | null {
 }
 
 export function getScenarioDefinitions(): ScenarioDefinition[] {
-  // requiredRoleMappingPercentage is computed by the scenario generator against catalogued
-  // roles (verified or not), which is the rule the picker and explorer follow.
+  // Catalog coverage and curated-default coverage are generated from one shared pure helper.
+  // Neither metric is a resolved-card readiness state.
   return scenarioDefinitions.map((scenario) => ({
     ...scenario,
     defaultModifierCodes: [...scenario.defaultModifierCodes],
     availableModifierCodes: [...scenario.availableModifierCodes],
-    emptyRoleCodes: [...scenario.emptyRoleCodes],
+    requiredSlotsWithoutCatalogProducts: [...scenario.requiredSlotsWithoutCatalogProducts],
+    roleCodesWithoutCatalogProducts: [...scenario.roleCodesWithoutCatalogProducts],
+    requiredSlotsWithoutDefaultOptions: [...scenario.requiredSlotsWithoutDefaultOptions],
   }))
 }
 

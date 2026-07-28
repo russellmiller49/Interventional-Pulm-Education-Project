@@ -120,7 +120,12 @@ export function BedsideScene({
   const flowTarget = bloodMoving ? 1 : 0
   const flowDirection: 1 | -1 = state.circuit.bloodFlow < 0 ? -1 : 1
   const flowSpeed = 0.1 + Math.min(Math.abs(state.circuit.bloodFlow) / 8, 1) * 0.25
-  const drainageTint = useMemo(() => bloodColor(state.circuit.svo2 / 100), [state.circuit.svo2])
+  // The drainage limb carries venous-line blood, which under VV recirculation is brighter than the
+  // systemic mixed-venous estimate. Tinting from the estimate would hide exactly that sign.
+  const drainageTint = useMemo(
+    () => bloodColor(state.circuit.preOxygenatorSaturation / 100),
+    [state.circuit.preOxygenatorSaturation],
+  )
   const returnTint = useMemo(
     () => bloodColor(state.circuit.postOxygenatorSaturation / 100),
     [state.circuit.postOxygenatorSaturation],

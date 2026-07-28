@@ -2,6 +2,7 @@ import coverageReport from '../../data/ip-preference-cards/generated/coverage-re
 import importReport from '../../data/ip-preference-cards/generated/import-report.json'
 import products from '../../data/ip-preference-cards/generated/catalog-products.json'
 import procedureSlots from '../../data/ip-preference-cards/generated/procedure-slots.json'
+import slotOptionProposals from '../../data/ip-preference-cards/generated/slot-product-option-proposals.json'
 
 describe('generated IP preference-card import contract', () => {
   it('records workbook provenance, row offsets, counts, and a stable hash', () => {
@@ -23,6 +24,28 @@ describe('generated IP preference-card import contract', () => {
   it('reports no duplicate identifiers or strict foreign-key failures', () => {
     expect(importReport.duplicate_ids).toEqual({})
     expect(importReport.foreign_key_errors).toEqual([])
+  })
+
+  it('reports authored options and unreviewed proposals with accurate names', () => {
+    expect(importReport.slot_option_proposals).toEqual({
+      authored_canonical_options: 2080,
+      generated_unreviewed_proposals: slotOptionProposals.proposals.length,
+      excluded_proposal_pairs: 0,
+      required_slots_with_catalog_coverage: 56,
+      required_slots_with_curated_defaults: 41,
+      authored_row_errors: 0,
+      stale_exceptions: 0,
+      proposal_generation_errors: 0,
+    })
+    expect(slotOptionProposals.proposals).toHaveLength(475)
+    expect(
+      slotOptionProposals.proposals.every(
+        (proposal) =>
+          proposal.proposal_status === 'unreviewed' &&
+          proposal.selectable === false &&
+          proposal.visible_by_default === false,
+      ),
+    ).toBe(true)
   })
 
   it('normalizes booleans, numeric dimensions, blanks, and spec JSON', () => {
@@ -53,17 +76,27 @@ describe('generated IP preference-card import contract', () => {
     }
   })
 
-  it('names every required zero-selectable slot in the coverage report', () => {
+  it('names every required slot without a curated default in the coverage report', () => {
     const procedures = coverageReport.procedures
     const namedRequiredGaps = procedures.flatMap((procedure) =>
-      procedure.slot_coverage.filter((slot) => slot.required_with_zero_selectable),
+      procedure.slotCoverage.filter(
+        (slot) => slot.requiredness === 'required' && !slot.hasCuratedDefault,
+      ),
     )
     expect(namedRequiredGaps).toHaveLength(
       procedures.reduce(
-        (sum, procedure) => sum + procedure.required_slots_with_zero_selectable_products,
+        (sum, procedure) => sum + procedure.requiredSlotsWithoutDefaultOptions.length,
         0,
       ),
     )
-    expect(namedRequiredGaps.every((slot) => Boolean(slot.slot_id && slot.role_code))).toBe(true)
+    expect(namedRequiredGaps.every((slot) => Boolean(slot.slotId && slot.roleCode))).toBe(true)
+  })
+
+  it('never reports full curated-default coverage while required default gaps remain', () => {
+    for (const procedure of coverageReport.procedures) {
+      if (procedure.requiredSlotsWithoutDefaultOptions.length > 0) {
+        expect(procedure.requiredDefaultOptionCoveragePercentage).toBeLessThan(100)
+      }
+    }
   })
 })

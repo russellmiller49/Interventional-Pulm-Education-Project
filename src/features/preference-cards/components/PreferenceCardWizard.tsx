@@ -254,7 +254,10 @@ export function PreferenceCardWizard({
   /** Promote a catalog product into this requirement's options and select it. */
   const addCatalogPick = (slotId: string, pick: CatalogPick) => {
     setCatalogPicks((current) =>
-      current.some((candidate) => candidate.productId === pick.productId)
+      current.some(
+        (candidate) =>
+          candidate.productId === pick.productId && candidate.roleCode === pick.roleCode,
+      )
         ? current
         : [...current, pick],
     )
@@ -275,15 +278,35 @@ export function PreferenceCardWizard({
 
   /** Promote a whole product line, leaving the size to the procedure. */
   const addFamilyPick = (slotId: string, pick: FamilyPick) => {
+    const requiresRoleScopedIdentity = familyPicks.some(
+      (candidate) => candidate.familyKey === pick.familyKey && candidate.roleCode !== pick.roleCode,
+    )
     setFamilyPicks((current) =>
-      current.some((candidate) => candidate.familyKey === pick.familyKey)
+      current.some(
+        (candidate) =>
+          candidate.familyKey === pick.familyKey && candidate.roleCode === pick.roleCode,
+      )
         ? current
         : [...current, pick],
     )
-    setSelectedHospitalItemIds((current) => ({
-      ...current,
-      [slotId]: familyPickId(pick.familyKey),
-    }))
+    setSelectedHospitalItemIds((current) => {
+      const next = { ...current }
+      if (requiresRoleScopedIdentity) {
+        const legacyId = familyPickId(pick.familyKey)
+        for (const [selectedSlotId, selectedItemId] of Object.entries(next)) {
+          if (selectedItemId !== legacyId) continue
+          const selectedRole = card?.items.find((item) => item.id === selectedSlotId)?.roleCode
+          if (selectedRole) {
+            next[selectedSlotId] = familyPickId(pick.familyKey, selectedRole)
+          }
+        }
+      }
+      next[slotId] = familyPickId(
+        pick.familyKey,
+        requiresRoleScopedIdentity ? pick.roleCode : undefined,
+      )
+      return next
+    })
   }
 
   const saveCard = () => {
@@ -436,14 +459,32 @@ export function PreferenceCardWizard({
                       <Badge variant={selected ? 'default' : 'outline'}>
                         {selected ? t('selected') : definition.governanceState}
                       </Badge>
-                      <span className="text-xs font-semibold text-muted-foreground">
-                        {t('mapped', {
-                          percent: definition.requiredRoleMappingPercentage,
-                        })}
-                      </span>
                     </div>
                     <CardTitle className="mt-2">{definition.title}</CardTitle>
                     <CardDescription>{definition.shortDescription}</CardDescription>
+                    <div
+                      className="mt-3 rounded-xl bg-muted/60 p-3 text-xs"
+                      aria-describedby={`coverage-help-${definition.id}`}
+                    >
+                      <p className="font-semibold text-foreground">
+                        {t('catalogAlternatives', {
+                          count: definition.requiredCatalogCoverageCount,
+                          total: definition.requiredSlotCount,
+                        })}
+                      </p>
+                      <p className="mt-1 font-semibold text-foreground">
+                        {t('curatedDefaults', {
+                          count: definition.requiredDefaultOptionCoverageCount,
+                          total: definition.requiredSlotCount,
+                        })}
+                      </p>
+                      <p
+                        id={`coverage-help-${definition.id}`}
+                        className="mt-2 leading-5 text-muted-foreground"
+                      >
+                        {t('coverageMetricHelp')}
+                      </p>
+                    </div>
                   </CardHeader>
                   <CardContent className="text-sm text-muted-foreground">
                     <p>

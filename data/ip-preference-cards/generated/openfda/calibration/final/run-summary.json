@@ -1,0 +1,20 @@
+{
+  "format_version": 1,
+  "catalog_input_sha256": "1948f00c20f673dfbe2092bde6315c78ca02b8cb5f3f1e308e33c223175861fe",
+  "catalog_product_count": 1474,
+  "products_requested": 25,
+  "products_processed": 25,
+  "products_served_from_cache": 24,
+  "api_requests_made": 0,
+  "retry_count": 0,
+  "high_confidence_count": 2,
+  "review_required_count": 17,
+  "unmatched_count": 5,
+  "insufficient_identifier_count": 1,
+  "query_error_count": 0,
+  "existing_backlog_conflicts": 0,
+  "started_at": "2026-07-28T14:34:24.858Z",
+  "completed_at": "2026-07-28T14:34:24.918Z",
+  "openfda_endpoint": "https://api.fda.gov/device/udi.json",
+  "api_key_used": true
+}

@@ -23,6 +23,7 @@ import {
 import type {
   AlarmEvent,
   ClinicalInitiationTargets,
+  EcmoChannelReadout,
   ConsoleScreen,
   EcmoSimulationState,
   GuidedControlId,
@@ -49,6 +50,15 @@ const screenTabs: readonly { id: ConsoleScreen; label: string; short: string }[]
   { id: 'interventions', label: 'Interventions', short: 'INTERV' },
   { id: 'timers', label: 'Timers', short: 'TIME' },
 ]
+
+/**
+ * The CARDIOHELP venous probe measures blood in the disposable's measuring cell, which is
+ * integrated in the oxygenator pump unit on the venous inlet side — so this tile reads the
+ * drainage limb, not a systemic mixed-venous estimate (IFU Rev 2.3: p39 probe description, p46
+ * "Oxygen saturation in the measuring cell", p104 measuring-cell location).
+ */
+const VENOUS_LINE_SATURATION_DESCRIPTION =
+  'Device-displayed venous-line saturation. During VV recirculation this may differ from the estimated systemic mixed-venous saturation.'
 
 function formatTime(totalSeconds: number) {
   const hours = Math.floor(totalSeconds / 3600)
@@ -78,6 +88,54 @@ function ParameterTile({
       <span className={styles.parameterLabel}>{label}</span>
       <span className={styles.parameterValue}>{value}</span>
       <span className={styles.parameterUnit}>{unit}</span>
+      {alarm ? <span className={styles.parameterAlarmText}>{alarm.priority} alarm</span> : null}
+    </div>
+  )
+}
+
+/**
+ * A tile fed from an engine readout rather than a bare number.
+ *
+ * The IFU's convention is that a measured value which is unavailable, unsupported, or outside the
+ * documented display range shows as dashes rather than as a number (Rev 2.3 §3, page 47). The two
+ * reasons a value can be missing here are not the same claim, so the visible dashes are identical
+ * but the accessible text distinguishes a device-side unavailability from a limitation of this
+ * simulation.
+ */
+function ReadoutTile({
+  label,
+  readout,
+  unit,
+  precision = 1,
+  alarm,
+  large = false,
+  description,
+}: {
+  label: string
+  readout: EcmoChannelReadout
+  unit: string
+  precision?: number
+  alarm?: AlarmEvent
+  large?: boolean
+  description?: string
+}) {
+  const available = readout.displayed !== null
+  return (
+    <div
+      className={`${styles.parameterTile} ${large ? styles.parameterTileLarge : ''}`}
+      data-alarm-priority={alarm?.priority ?? 'none'}
+      data-readout-status={readout.status}
+    >
+      <span className={styles.parameterLabel}>{label}</span>
+      <span className={styles.parameterValue}>
+        {available ? readout.displayed?.toFixed(precision) : '--'}
+      </span>
+      <span className={styles.parameterUnit}>{available ? unit : ''}</span>
+      <span className="sr-only">
+        {available
+          ? `${label} ${readout.displayed?.toFixed(precision)} ${unit}.${description ? ` ${description}` : ''}`
+          : `${label} not available. ${readout.reason}`}
+      </span>
       {alarm ? <span className={styles.parameterAlarmText}>{alarm.priority} alarm</span> : null}
     </div>
   )
@@ -211,7 +269,12 @@ function ScreenBody({ state, dispatch, controlsEnabled, guidedControlId }: Cardi
       <div className={styles.parameterGrid}>
         <ParameterTile label="TVen" value={state.circuit.tVen.toFixed(1)} unit="°C" />
         <ParameterTile label="TArt" value={state.circuit.tArt.toFixed(1)} unit="°C" />
-        <ParameterTile label="SvO₂" value={state.circuit.svo2.toFixed(1)} unit="%" />
+        <ReadoutTile
+          label="SvO₂"
+          readout={state.circuit.readouts.venousLineSaturation}
+          unit="%"
+          description={VENOUS_LINE_SATURATION_DESCRIPTION}
+        />
         <ParameterTile label="Hb" value={state.circuit.hemoglobin.toFixed(1)} unit="g/dL" />
         <ParameterTile label="Hct" value={state.circuit.hematocrit.toFixed(1)} unit="%" />
       </div>
@@ -365,7 +428,12 @@ function ScreenBody({ state, dispatch, controlsEnabled, guidedControlId }: Cardi
           alarm={alarmFor('pArt')}
         />
         <ParameterTile label="Δp" value={state.circuit.deltaP} unit="mmHg · trend" />
-        <ParameterTile label="SvO₂" value={state.circuit.svo2.toFixed(1)} unit="%" />
+        <ReadoutTile
+          label="SvO₂"
+          readout={state.circuit.readouts.venousLineSaturation}
+          unit="%"
+          description={VENOUS_LINE_SATURATION_DESCRIPTION}
+        />
       </div>
     </div>
   )

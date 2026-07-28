@@ -13,13 +13,14 @@ Run the deterministic pipeline from the repository root:
 ```bash
 npm run ip-cards:import
 npm run ip-cards:coverage
+npm run ip-cards:scenarios
 npm run ip-cards:validate-data
 npm run ip-cards:seed
 ```
 
 The importer reads headers from Excel row 4, begins records on row 5, and writes normalized server-side JSON to `data/ip-preference-cards/generated/`. It never parses the workbook in the browser, mutates `verification_status` or `live_dropdown_status`, or copies a suggested GUDID identifier into a canonical product.
 
-## Current result
+## Current workbook result
 
 Workbook SHA-256:
 
@@ -27,21 +28,27 @@ Workbook SHA-256:
 fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf
 ```
 
-| Dataset                    |  Rows |
-| -------------------------- | ----: |
-| Products                   | 1,221 |
-| Product roles              | 1,268 |
-| Procedures                 |    13 |
-| Procedure slots            |   174 |
-| Slot product options       | 2,080 |
-| Roles                      |    98 |
-| Raw compatibility evidence |   179 |
-| Manufacturers              |    28 |
-| Sources                    |    46 |
-| Product sources            | 1,366 |
-| Formulary staging          | 1,221 |
-| Modifier catalog           |    30 |
-| Verification backlog       | 1,221 |
+| Dataset                       |  Rows |
+| ----------------------------- | ----: |
+| Workbook products             | 1,221 |
+| Product roles                 | 1,268 |
+| Procedures                    |    13 |
+| Procedure slots               |   174 |
+| Authored slot product options | 2,080 |
+| Roles                         |    98 |
+| Raw compatibility evidence    |   179 |
+| Manufacturers                 |    28 |
+| Sources                       |    46 |
+| Product sources               | 1,366 |
+| Formulary staging             | 1,221 |
+| Modifier catalog              |    30 |
+| Verification backlog          | 1,221 |
+
+The importer then merges 253 reviewed rows from `seed/catalog-additions.json`, producing
+1,474 products in `generated/catalog-products.json`. The workbook-backed verification
+backlog and formulary staging remain 1,221 rows; additions do not fabricate local decisions.
+The full count reconciliation and duplicate audit are in
+[`openfda-live-calibration-report.md`](./openfda-live-calibration-report.md).
 
 The current supplied workbook has 80 non-null GTIN values, and all 80 are already represented as 14-character strings. This differs from the older measured pattern quoted in the build brief. The importer validates the file actually supplied: it preserves leading zeros, reports non-14-digit values, and never truncates or rounds. The regression fixture confirms `08714729986225` and leading-zero catalog number `02841S` survive exactly.
 
@@ -54,11 +61,41 @@ The current supplied workbook has 80 non-null GTIN values, and all 80 are alread
 - Raw verification text is preserved, with a coarse derived state of `verified_source`, `candidate`, or `unknown`.
 - Raw compatibility endpoints remain free text. Exact canonical matches are enriched, while unresolved model/catalog strings remain untouched.
 - Strict workbook foreign keys fail the import when broken.
+- Every authored slot option must use its slot's role and have the same exact
+  `Product_Roles` relationship.
 - Import output and reporting are stable and idempotent for the same workbook bytes.
+
+## Authored options and unreviewed proposals
+
+The workbook's 2,080 `Slot_Product_Options` rows remain the canonical, curated exact-slot
+options. Import does not promote every product sharing the slot's broad role into that file.
+Instead, `derive-slot-option-proposals.ts` writes a separate deterministic review artifact:
+
+```text
+data/ip-preference-cards/generated/slot-product-option-proposals.json
+```
+
+The current artifact has 475 unreviewed pairs and zero exclusions. Every proposal is
+nonselectable and hidden by default. Exceptions in
+`seed/slot-option-exceptions.json` are Zod-validated, exact, proposal-only suppressions; stale
+or contradictory exceptions fail generation. See
+[`catalog-role-and-slot-semantics.md`](./catalog-role-and-slot-semantics.md).
 
 ## Coverage before seed
 
-The coverage command runs before seed validation and writes `coverage-report.json`. In the current catalog, 45 of 98 roles have no selectable product. Required zero-selectable slots in the golden source procedures are explicitly resolved by reviewed demo-only stand-ins; every stand-in and reason is listed in `data/ip-preference-cards/seed/demo-stand-ins.json`.
+The coverage command writes `coverage-report.json` for all 13 procedures using the same pure
+helper as the scenario generator. It reports two separate metrics:
+
+- required catalog coverage: required slots whose broad role has at least one existing
+  `Product_Roles` product, including candidate/unverified products; and
+- required curated-default coverage: required slots with at least one selectable canonical
+  `Slot_Product_Options` row.
+
+Unreviewed proposals do not count toward curated-default coverage. In the current catalog, 6
+of 98 roles have no catalog product. Required slots without curated defaults in the golden
+source procedures are explicitly resolved by reviewed demo-only stand-ins; every stand-in and
+reason is listed in `data/ip-preference-cards/seed/demo-stand-ins.json`. Neither coverage
+metric is card readiness or clinical approval.
 
 The JSON output is the runtime source for the prototype. The additive database migration provides normalized import tables for a later controlled database load; v0.1 does not perform an automatic destructive catalog replacement.
 
@@ -89,13 +126,15 @@ Cardinal Health would otherwise contribute hundreds of thousands of unrelated re
 
 ### Curated catalog additions
 
-`seed/catalog-additions.json` carries products the workbook does not, currently the
-Getinge/Atrium thoracic drainage line. Identity, DI/GTIN, distribution status, sterility, and
-single-use come from GUDID; product family naming, part numbers, and configuration come from
-the Getinge US product pages (SRC047). Only devices GUDID reports as in commercial
-distribution are emitted. `apply-catalog-additions.ts` merges them at import time and
-validates them against the workbook's own vocabularies — unknown role codes or source ids,
-or a colliding product id, fail the import.
+`seed/catalog-additions.json` carries products the workbook does not: Getinge/Atrium and
+Teleflex thoracic drainage, FUJIFILM bronchoscopy/ultrasound equipment, Auris and Noah
+robotic-bronchoscopy equipment, Olympus scope additions, and ICU Medical tracheostomy
+products. Identity, DI/GTIN, distribution status, sterility, and single-use come from GUDID;
+manufacturer sources support product family naming, part numbers, dimensions, and
+configuration. Only devices the seed-generation review found in commercial distribution
+are emitted. `apply-catalog-additions.ts` merges them at import time and validates them
+against the workbook's own vocabularies — unknown role codes or source ids, or a colliding
+product id, fail the import.
 
 ### Brand-level discovery
 
@@ -123,3 +162,19 @@ The explorer surfaces one derived signal from this queue: a **Not currently dist
 badge. A product is flagged only when _every_ strong match says the device is out of
 commercial distribution, so a product that is discontinued in one package configuration but
 still active in another is not mislabeled.
+
+## openFDA enrichment is a separate proposal layer
+
+The optional openFDA pipeline documented in
+[`openfda-enrichment.md`](./openfda-enrichment.md) reads the normalized catalog and existing
+verification backlog but does not participate in workbook import. It writes candidate
+proposals and review reports under `generated/openfda/`; it never patches imported products,
+verification decisions, hospital formulary staging, or the source workbook.
+
+Re-running `ip-cards:import` is therefore independent of openFDA cache state. Conversely, a
+high-confidence openFDA match remains pending human review and does not make a product
+selectable, clinically ready, compatible, locally available, or orderable.
+
+OpenFDA/GUDID identity enrichment also does not create `Product_Roles`, canonical
+`Slot_Product_Options`, or accepted slot-option proposals, and it does not affect either
+coverage metric.

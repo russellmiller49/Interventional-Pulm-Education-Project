@@ -1,0 +1,2 @@
+product_id,manufacturer,product_name,canonical_catalog_number,classification,reason_codes,candidate_count,candidate_primary_di,candidate_catalog_number,candidate_company_name,candidate_model_number,commercial_distribution_status,public_version_date,backlog_comparison,decision
+PRD-00C13A59AA,Richard Wolf,TEXAS Tracheoscope Tube ID 17.1 mm,82520.1441,high_confidence_candidate,exact_catalog_and_approved_manufacturer_alias,1,04055207033791,82520.1441,Richard Wolf GmbH,825201441,Not in Commercial Distribution,2024-11-21,agrees_with_existing_backlog,pending_review

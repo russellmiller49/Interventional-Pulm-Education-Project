@@ -16,15 +16,30 @@ export function allowsSizeAtProcedure(roleCode: string): boolean {
   return SIZE_AT_PROCEDURE_ROLE_PATTERN.test(roleCode)
 }
 
-/** Family-level pick id, distinct from a product id so the two can never be confused. */
-export function familyPickId(familyKey: string): string {
-  return `family:${familyKey}`
+/**
+ * Family-level pick id, distinct from a product id so the two can never be confused.
+ *
+ * The one-argument form is the persisted v1 identity and remains stable for the common case
+ * where a line is selected for one role. A role-qualified identity is used only when the same
+ * family key is selected for multiple role-scoped slices with different variant metadata.
+ */
+export function familyPickId(familyKey: string, roleCode?: string): string {
+  return roleCode ? `family-role:${roleCode}:${familyKey}` : `family:${familyKey}`
 }
 
 export function isFamilyPickId(value: string | null | undefined): boolean {
+  return (
+    typeof value === 'string' && (value.startsWith('family:') || value.startsWith('family-role:'))
+  )
+}
+
+export function isLegacyFamilyPickId(value: string | null | undefined): boolean {
   return typeof value === 'string' && value.startsWith('family:')
 }
 
 export function familyKeyFromPickId(value: string): string | null {
-  return isFamilyPickId(value) ? value.slice('family:'.length) : null
+  if (isLegacyFamilyPickId(value)) return value.slice('family:'.length)
+  if (!value.startsWith('family-role:')) return null
+  const roleSeparator = value.indexOf(':', 'family-role:'.length)
+  return roleSeparator === -1 ? null : value.slice(roleSeparator + 1)
 }

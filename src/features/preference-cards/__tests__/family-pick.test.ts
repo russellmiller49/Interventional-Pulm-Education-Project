@@ -5,7 +5,7 @@ import {
   withFamilyPicks,
   type FamilyPick,
 } from '../domain/family-pick'
-import { familyPickId, isFamilyPickId } from '../domain/size-at-procedure'
+import { familyKeyFromPickId, familyPickId, isFamilyPickId } from '../domain/size-at-procedure'
 import { isCatalogPickItemId } from '../domain/catalog-pick'
 import { buildDemoContext, defaultBuildInput } from '../data/demo-context.server'
 import { resolveCard } from '../domain/resolve-card'
@@ -112,6 +112,40 @@ describe('withFamilyPicks', () => {
     const ids = merged.hospitalItems.map((item) => item.id).filter(isFamilyPickId)
     expect(new Set(ids).size).toBe(ids.length)
   })
+
+  it('retains a distinct role option when the same line serves two roles', () => {
+    const context = buildDemoContext('rigid-bronch')
+    const straight = pick()
+    const yStent = pick({
+      roleCode: 'AIRWAY_STENT_SILICONE_Y',
+      specRanges: [
+        { key: 'diameter_mm', min: 15, max: 18 },
+        { key: 'length_mm', min: 40, max: 70 },
+      ],
+    })
+    const merged = withFamilyPicks(context, [straight, yStent])
+    const familyItems = merged.hospitalItems.filter((item) =>
+      [straight, yStent].some(
+        (candidate) => item.id === familyPickId(candidate.familyKey, candidate.roleCode),
+      ),
+    )
+    const familyOptions = merged.hospitalRoleOptions.filter(
+      (option) => familyKeyFromPickId(option.hospitalItemId) === straight.familyKey,
+    )
+
+    expect(familyItems).toHaveLength(2)
+    expect(familyOptions.map((option) => option.roleCode).sort()).toEqual([
+      'AIRWAY_STENT_SILICONE_STRAIGHT',
+      'AIRWAY_STENT_SILICONE_Y',
+    ])
+    expect(new Set(familyOptions.map((option) => option.id)).size).toBe(2)
+    expect(familyItems.find((item) => item.roleCode === STENT_ROLE)?.notes).toContain(
+      'length 20–110 mm',
+    )
+    expect(
+      familyItems.find((item) => item.roleCode === 'AIRWAY_STENT_SILICONE_Y')?.notes,
+    ).toContain('length 40–70 mm')
+  })
 })
 
 describe('resolving a card with a family pick', () => {
@@ -146,6 +180,31 @@ describe('resolving a card with a family pick', () => {
       return resolveCard(input, withFamilyPicks(context, [picked])).snapshotHash
     }
     expect(build('MFR-TEST|dumon td|implant')).not.toBe(build('MFR-TEST|dumon tf|implant'))
+  })
+
+  it('upgrades a legacy family id to the exact role slice when a family serves two roles', () => {
+    const context = buildDemoContext('rigid-bronch')
+    const straight = pick()
+    const yStent = pick({ roleCode: 'AIRWAY_STENT_SILICONE_Y' })
+    const card = resolveCard(defaultBuildInput('rigid-bronch'), context)
+    const straightSlot = card.items.find((item) => item.roleCode === straight.roleCode)
+    const ySlot = card.items.find((item) => item.roleCode === yStent.roleCode)
+    expect(straightSlot).toBeDefined()
+    expect(ySlot).toBeDefined()
+    const input = defaultBuildInput('rigid-bronch')
+    input.selectedHospitalItemIds = {
+      [straightSlot!.id]: familyPickId(straight.familyKey),
+      [ySlot!.id]: familyPickId(yStent.familyKey),
+    }
+
+    const resolved = resolveCard(input, withFamilyPicks(context, [straight, yStent]))
+
+    expect(
+      resolved.items.find((item) => item.id === straightSlot!.id)?.selectedHospitalItemId,
+    ).toBe(familyPickId(straight.familyKey, straight.roleCode))
+    expect(resolved.items.find((item) => item.id === ySlot!.id)?.selectedHospitalItemId).toBe(
+      familyPickId(yStent.familyKey, yStent.roleCode),
+    )
   })
 })
 

@@ -1,9 +1,14 @@
 import {
   equipmentSetCoveredRoles,
+  equipmentSetHasMember,
   equipmentSetIdFromItemId,
   equipmentSetItemId,
+  equipmentSetMemberKey,
+  equipmentSetProductIdsForRole,
+  equipmentSetSummary,
   equipmentSetToHospitalItem,
   equipmentSetToRoleOptions,
+  equipmentSetWithoutMember,
   isEquipmentSetItemId,
   parseStoredEquipmentSets,
   serializeEquipmentSets,
@@ -66,6 +71,20 @@ describe('equipment set identity and coverage', () => {
       'RIGID_BRONCHOSCOPE_BARREL',
       'RIGID_BRONCHOSCOPE_HEAD',
     ])
+  })
+
+  it('retains the same valid product separately for each role it serves', () => {
+    const sharedProduct = 'PRD-MULTIROLE'
+    const barrel = member('RIGID_BRONCHOSCOPE_BARREL', { productId: sharedProduct })
+    const head = member('RIGID_BRONCHOSCOPE_HEAD', { productId: sharedProduct })
+    const set = makeSet({ members: [barrel, head] })
+
+    expect(equipmentSetMemberKey(barrel)).not.toBe(equipmentSetMemberKey(head))
+    expect(equipmentSetHasMember(set, barrel)).toBe(true)
+    expect(equipmentSetHasMember(set, head)).toBe(true)
+    expect(equipmentSetProductIdsForRole(set, barrel.roleCode)).toEqual(new Set([sharedProduct]))
+    expect(equipmentSetWithoutMember(set, barrel).members).toEqual([head])
+    expect(equipmentSetSummary(set)).toBe('Karl Storz Full Lumen Operating Tracheoscope')
   })
 
   it('builds a procedure kit listing every covered role as an included component', () => {

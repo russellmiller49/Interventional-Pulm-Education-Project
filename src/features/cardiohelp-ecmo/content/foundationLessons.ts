@@ -157,7 +157,6 @@ export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.f
       'The native lungs and native cardiac output remain part of the state.',
       'Trends over hours carry more information than any single reading.',
     ],
-    heldDisagreementId: 'conflict.ecmo.anti-xa-target',
     sourceIds: [...coreSources, 'elso-adult-vv-2021', 'ecmo-book-ch18'],
   },
   {
@@ -227,7 +226,6 @@ export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.f
       'Distal limb perfusion belongs to the routine assessment, not to complications.',
       'A stable circuit display does not by itself establish a stable VA state.',
     ],
-    heldDisagreementId: 'conflict.ecmo.anti-xa-target',
     sourceIds: [...coreSources, 'elso-adult-va-2021', 'elso-neuro-monitoring-2024'],
   },
   {

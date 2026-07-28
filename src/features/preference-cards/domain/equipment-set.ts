@@ -37,6 +37,36 @@ export const EQUIPMENT_SETS_STORAGE_KEY = 'ip-preference-cards:equipment-sets:v1
 export const MAX_EQUIPMENT_SETS = 50
 export const MAX_EQUIPMENT_SET_MEMBERS = 60
 
+/** A physical product may legitimately serve more than one role in the same set. */
+export function equipmentSetMemberKey(member: Pick<CatalogPick, 'productId' | 'roleCode'>): string {
+  return `${member.productId}:${member.roleCode}`
+}
+
+export function equipmentSetHasMember(
+  set: EquipmentSet,
+  member: Pick<CatalogPick, 'productId' | 'roleCode'>,
+): boolean {
+  const key = equipmentSetMemberKey(member)
+  return set.members.some((candidate) => equipmentSetMemberKey(candidate) === key)
+}
+
+export function equipmentSetProductIdsForRole(set: EquipmentSet, roleCode: string): Set<string> {
+  return new Set(
+    set.members.filter((member) => member.roleCode === roleCode).map((member) => member.productId),
+  )
+}
+
+export function equipmentSetWithoutMember(
+  set: EquipmentSet,
+  member: Pick<CatalogPick, 'productId' | 'roleCode'>,
+): EquipmentSet {
+  const key = equipmentSetMemberKey(member)
+  return {
+    ...set,
+    members: set.members.filter((candidate) => equipmentSetMemberKey(candidate) !== key),
+  }
+}
+
 export function equipmentSetItemId(setId: string): string {
   return `set:${setId}`
 }
@@ -58,9 +88,12 @@ export function equipmentSetCoveredRoles(set: EquipmentSet): string[] {
 }
 
 export function equipmentSetSummary(set: EquipmentSet): string {
-  const memberNames = set.members.map(
-    (member) => `${member.manufacturerDisplay} ${member.productName}`,
-  )
+  const seenProductIds = new Set<string>()
+  const memberNames = set.members.flatMap((member) => {
+    if (seenProductIds.has(member.productId)) return []
+    seenProductIds.add(member.productId)
+    return [`${member.manufacturerDisplay} ${member.productName}`]
+  })
   return memberNames.join('; ')
 }
 

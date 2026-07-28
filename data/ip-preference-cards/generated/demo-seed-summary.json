@@ -6,30 +6,110 @@
     "location": "Bronchoscopy Suite 1"
   },
   "demo_only_stand_ins": 31,
-  "explicitly_resolved_zero_selectable_required_roles": 8,
+  "explicitly_resolved_required_roles_without_curated_defaults": 8,
   "scenarios": [
+    {
+      "id": "chest-tube",
+      "readiness_state": "complete_with_warnings",
+      "snapshot_hash": "1dc2b25bcb571c130eab6b6bbf227efcef93475322f2b6f256a8facd3657a51b",
+      "item_count": 11,
+      "suppressed_item_count": 1,
+      "blocking_codes": []
+    },
     {
       "id": "ebus-rose-molecular",
       "readiness_state": "complete_with_warnings",
-      "snapshot_hash": "f739cacc033943445b3e7a2ec0f6841b01762772a33e573a1b750dd76a2ccf25",
+      "snapshot_hash": "c618e19cb98c195fab83255495b9f2abed88e4ec2bb6592e31311e35f13b8c6c",
       "item_count": 17,
       "suppressed_item_count": 0,
       "blocking_codes": []
     },
     {
-      "id": "central-airway-obstruction",
-      "readiness_state": "blocked",
-      "snapshot_hash": "0eb8a8f52a794e3211129a82a4a63ad4774785d856180257efe7e78ca7ed9299",
-      "item_count": 50,
+      "id": "ebv",
+      "readiness_state": "complete_with_warnings",
+      "snapshot_hash": "a655c6d60f2c4da925672d2854f456ed15f698d8864141a638c9de5ffa3ff28f",
+      "item_count": 11,
       "suppressed_item_count": 0,
-      "blocking_codes": ["compatibility_failed"]
+      "blocking_codes": []
     },
     {
-      "id": "chest-tube",
+      "id": "flex-diagnostic",
       "readiness_state": "complete_with_warnings",
-      "snapshot_hash": "a5d7fc30e3da8504b4d264d181b9c9d47d20cd6250f206a78a3df48334e81181",
+      "snapshot_hash": "ae74299068e58395e9147dece384b1279c7203004ee57b3a4892e8060135ef07",
+      "item_count": 16,
+      "suppressed_item_count": 0,
+      "blocking_codes": []
+    },
+    {
+      "id": "icu-bronch",
+      "readiness_state": "complete_with_warnings",
+      "snapshot_hash": "fd6490bd04484ae205380b0ee175221f1f5a0afef7b18594bda09e31cb7eedc3",
+      "item_count": 12,
+      "suppressed_item_count": 0,
+      "blocking_codes": []
+    },
+    {
+      "id": "ipc-placement",
+      "readiness_state": "complete_with_warnings",
+      "snapshot_hash": "60eebae0978655f448dd1d044cfeca912baf252fdb935eb774df776468663c2b",
+      "item_count": 8,
+      "suppressed_item_count": 0,
+      "blocking_codes": []
+    },
+    {
+      "id": "med-thoracoscopy",
+      "readiness_state": "complete_with_warnings",
+      "snapshot_hash": "5cf443d8f351b583e980659b3eacb4b285f4b0c90c8e8a74833cd8e4d08686fc",
+      "item_count": 18,
+      "suppressed_item_count": 0,
+      "blocking_codes": []
+    },
+    {
+      "id": "perc-trach",
+      "readiness_state": "complete_with_warnings",
+      "snapshot_hash": "dcc3082d7688b25e564c7c6fe9aeb17ebf8e7fde4def7617a2ef05f07f175bd8",
+      "item_count": 10,
+      "suppressed_item_count": 0,
+      "blocking_codes": []
+    },
+    {
+      "id": "rigid-bronch",
+      "readiness_state": "complete_with_warnings",
+      "snapshot_hash": "c4e04a967dd7a87323bcfc2e8f197803b059ef4cd76a3b9a3c61c20825af40e3",
+      "item_count": 25,
+      "suppressed_item_count": 0,
+      "blocking_codes": []
+    },
+    {
+      "id": "tb-ruleout",
+      "readiness_state": "complete_with_warnings",
+      "snapshot_hash": "19f9a15912752057f3d028b0c6af6ba40b9bb0110ef06f8ee64a76706f61abe5",
       "item_count": 11,
-      "suppressed_item_count": 1,
+      "suppressed_item_count": 0,
+      "blocking_codes": []
+    },
+    {
+      "id": "central-airway-obstruction",
+      "readiness_state": "complete_with_warnings",
+      "snapshot_hash": "59f14ff2784acabff4e67e544b181252a5932b9c8961dd64d86b9e9eaef26849",
+      "item_count": 50,
+      "suppressed_item_count": 0,
+      "blocking_codes": []
+    },
+    {
+      "id": "thoracentesis",
+      "readiness_state": "complete_with_warnings",
+      "snapshot_hash": "acfc533b48cfc46ae0cb540e7b03b6e360c197daa5ae0f6154a68a478fc17658",
+      "item_count": 6,
+      "suppressed_item_count": 0,
+      "blocking_codes": []
+    },
+    {
+      "id": "wll",
+      "readiness_state": "complete_with_warnings",
+      "snapshot_hash": "3bea39b3bbdc0d84fbe53671c5b53cb4cd93898068f6d8638c82c74cf24c2f73",
+      "item_count": 9,
+      "suppressed_item_count": 0,
       "blocking_codes": []
     }
   ]

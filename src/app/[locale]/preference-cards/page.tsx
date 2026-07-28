@@ -191,11 +191,27 @@ export default async function PreferenceCardsDashboard({ params }: PageProps) {
                     </dd>
                   </div>
                 </dl>
-                <div className="rounded-xl bg-muted/60 p-3">
+                <div
+                  className="rounded-xl bg-muted/60 p-3"
+                  aria-describedby={`dashboard-coverage-help-${scenario.id}`}
+                >
                   <p className="font-semibold text-foreground">
-                    {t('mapped', {
-                      percent: scenario.requiredRoleMappingPercentage,
+                    {t('catalogAlternatives', {
+                      count: scenario.requiredCatalogCoverageCount,
+                      total: scenario.requiredSlotCount,
                     })}
+                  </p>
+                  <p className="mt-1 font-semibold text-foreground">
+                    {t('curatedDefaults', {
+                      count: scenario.requiredDefaultOptionCoverageCount,
+                      total: scenario.requiredSlotCount,
+                    })}
+                  </p>
+                  <p
+                    id={`dashboard-coverage-help-${scenario.id}`}
+                    className="mt-1 text-xs text-muted-foreground"
+                  >
+                    {t('coverageMetricHelp')}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {scenario.unresolvedRequiredRoles} {t('unresolvedRequired')} ·{' '}

@@ -5,6 +5,7 @@ const MIGRATIONS_DIR = path.resolve(process.cwd(), 'supabase/migrations')
 // Named for the version Supabase assigned when it was applied, so `supabase db push` does
 // not see it as pending and try to run it a second time.
 const MIGRATION_FILE = '20260727224807_add_ip_user_preference_cards.sql'
+const DEPENDENCY_MIGRATIONS = ['20260605041809_add_main_site_auth_usage.sql']
 
 const migration = fs.readFileSync(path.join(MIGRATIONS_DIR, MIGRATION_FILE), 'utf8')
 
@@ -94,6 +95,11 @@ describe('preference-card migration contract', () => {
       .readdirSync(MIGRATIONS_DIR)
       .filter((file) => file.endsWith('.sql'))
       .sort()
-    expect(files.at(-1)).toBe(MIGRATION_FILE)
+    const migrationIndex = files.indexOf(MIGRATION_FILE)
+    expect(migrationIndex).toBeGreaterThanOrEqual(0)
+    for (const dependency of DEPENDENCY_MIGRATIONS) {
+      expect(files.indexOf(dependency)).toBeGreaterThanOrEqual(0)
+      expect(files.indexOf(dependency)).toBeLessThan(migrationIndex)
+    }
   })
 })

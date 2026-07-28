@@ -1,0 +1,37 @@
+{
+  "format_version": 1,
+  "protected_files": [
+    {
+      "file": "data/ip-preference-cards/generated/catalog-products.json",
+      "before": "1948f00c20f673dfbe2092bde6315c78ca02b8cb5f3f1e308e33c223175861fe",
+      "after": "1948f00c20f673dfbe2092bde6315c78ca02b8cb5f3f1e308e33c223175861fe",
+      "unchanged": true
+    },
+    {
+      "file": "data/ip-preference-cards/generated/verification-backlog.json",
+      "before": "25ab658850a5df620986d4596d5043f40e46d17132493dd62d7adaffc36c1b38",
+      "after": "25ab658850a5df620986d4596d5043f40e46d17132493dd62d7adaffc36c1b38",
+      "unchanged": true
+    },
+    {
+      "file": "data/ip-preference-cards/generated/hospital-formulary-staging.json",
+      "before": "f8ceb2433694f7ef1d5f65a6e4533fa6c2b1f83659d6ba017abda5fda4908e73",
+      "after": "f8ceb2433694f7ef1d5f65a6e4533fa6c2b1f83659d6ba017abda5fda4908e73",
+      "unchanged": true
+    },
+    {
+      "file": "Preference_card_module/IP_Procedure_Equipment_Catalog_v0_5_with_GUDID_Verification_Backlog.xlsx",
+      "before": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+      "after": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+      "unchanged": true
+    }
+  ],
+  "api_key_secret_scan": {
+    "text_files_scanned": 3489,
+    "matches": 0
+  },
+  "tracked_raw_cache_files": [],
+  "bulk_zip_files": [],
+  "canonical_fields_applied": false,
+  "source_workbook_modified": false
+}

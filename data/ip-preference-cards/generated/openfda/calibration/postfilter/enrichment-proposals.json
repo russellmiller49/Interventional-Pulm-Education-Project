@@ -1,0 +1,2760 @@
+[
+  {
+    "format_version": 1,
+    "product_id": "PRD-00C13A59AA",
+    "manufacturer": "Richard Wolf",
+    "product_name": "TEXAS Tracheoscope Tube ID 17.1 mm",
+    "catalog_number": "82520.1441",
+    "classification": "high_confidence_candidate",
+    "reason_codes": ["exact_catalog_and_approved_manufacturer_alias"],
+    "query_attempts": [
+      {
+        "kind": "primary_di",
+        "search": "identifiers.id:\"04055207033791\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"82520.1441\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 1,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "1d8915be-2b89-4522-9656-baefed63e585",
+      "primary_di": "04055207033791",
+      "brand_name": "TEXAS",
+      "company_name": "Richard Wolf GmbH",
+      "catalog_number": "82520.1441",
+      "version_or_model_number": "825201441",
+      "commercial_distribution_status": "Not in Commercial Distribution",
+      "public_version_date": "2024-11-21",
+      "record_status": "Published",
+      "query_kinds": ["primary_di", "catalog_number"]
+    },
+    "proposed_fields": {
+      "primary_di": "04055207033791",
+      "additional_identifiers": [],
+      "brand_name": "TEXAS",
+      "company_name": "Richard Wolf GmbH",
+      "version_or_model_number": "825201441",
+      "device_description": "TRACHEAL SCOPE-TUBE ID 17.1MM  OD 19.3mm, TL 360mm, for use with the optical element 82510.1400 and head systems 825101100 and 825101200, with distal viewing window, graduated, reusable",
+      "device_count_in_base_package": 1,
+      "device_sizes": [
+        {
+          "type": "Lumen/Inner Diameter",
+          "value": "17.1",
+          "unit": "Millimeter"
+        }
+      ],
+      "commercial_distribution_status": "Not in Commercial Distribution",
+      "commercial_distribution_end_date": "2020-03-02",
+      "is_kit": false,
+      "is_single_use": false,
+      "sterilization": {
+        "is_sterile": "false",
+        "is_sterilization_prior_use": "true",
+        "sterilization_methods": "Moist Heat or Steam Sterilization"
+      },
+      "storage": [],
+      "product_codes": [
+        {
+          "code": "KTI",
+          "name": "BRONCHOSCOPE ACCESSORY",
+          "openfda": {
+            "device_name": "Bronchoscope Accessory",
+            "medical_specialty_description": "Ear, Nose, Throat",
+            "regulation_number": "874.4680",
+            "device_class": "2"
+          }
+        }
+      ],
+      "premarket_submissions": [],
+      "public_version_date": "2024-11-21",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "agrees_with_existing_backlog",
+    "retrieved_at": "2026-07-28T14:26:39.138Z",
+    "raw_cache_reference": "openfda-cache:54f29de47287a274378d02b2472f57430145d9ee725054a4de9326e2a6299f63.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-00FC2A29AC",
+    "manufacturer": "Novatech",
+    "product_name": "DUMON TD Silicone Airway Stent",
+    "catalog_number": "03531S",
+    "classification": "review_required",
+    "reason_codes": ["matches_existing_backlog_suggestion_only", "model_only_match"],
+    "query_attempts": [
+      {
+        "kind": "primary_di",
+        "search": "identifiers.id:\"14063108100266\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"03531S\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"03531S\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 1,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "7a3c5d2d-3613-477d-8ed2-c94c726d4ed1",
+      "primary_di": "14063108100266",
+      "brand_name": "TRACHEOBRONXANE™ DUMON®",
+      "company_name": "NOVATECH",
+      "catalog_number": null,
+      "version_or_model_number": "03531S",
+      "commercial_distribution_status": "In Commercial Distribution",
+      "public_version_date": "2024-11-22",
+      "record_status": "Published",
+      "query_kinds": ["primary_di", "model_number"]
+    },
+    "proposed_fields": {
+      "primary_di": "14063108100266",
+      "additional_identifiers": [],
+      "brand_name": "TRACHEOBRONXANE™ DUMON®",
+      "company_name": "NOVATECH",
+      "version_or_model_number": "03531S",
+      "device_description": "Tracheo-bronchial silicone stent, TD 15 L 30",
+      "device_count_in_base_package": 1,
+      "device_sizes": [],
+      "commercial_distribution_status": "In Commercial Distribution",
+      "commercial_distribution_end_date": null,
+      "is_kit": false,
+      "is_single_use": true,
+      "sterilization": {
+        "is_sterile": "true",
+        "is_sterilization_prior_use": "false"
+      },
+      "storage": [],
+      "product_codes": [
+        {
+          "code": "NWA",
+          "name": "Prosthesis, Tracheal, Preformed/Molded",
+          "openfda": {
+            "device_name": "Prosthesis, Tracheal, Preformed/Molded",
+            "medical_specialty_description": "General, Plastic Surgery",
+            "regulation_number": "878.3720",
+            "device_class": "2"
+          }
+        }
+      ],
+      "premarket_submissions": [
+        {
+          "submission_number": "K243126",
+          "supplement_number": "000"
+        }
+      ],
+      "public_version_date": "2024-11-22",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "agrees_with_existing_backlog",
+    "retrieved_at": "2026-07-28T14:28:19.390Z",
+    "raw_cache_reference": "openfda-cache:2d6876a37eb1ae35487dabe8ae4acc038c6e0a282536319e6998c94c1b0a9166.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-019030A1C7",
+    "manufacturer": "Karl Storz",
+    "product_name": "Aspirator for Collecting Secretions with Cut-Off Hole",
+    "catalog_number": "10432N",
+    "classification": "unmatched",
+    "reason_codes": ["no_candidate_found"],
+    "query_attempts": [
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"10432N\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number_company",
+        "search": "catalog_number:\"10432N\" AND company_name:\"Karl Storz\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"10432N\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "alternate_identifier",
+        "search": "version_or_model_number:\"10432 N\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "brand_fallback",
+        "search": "brand_name:\"KARL STORZ THORAX\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 0,
+    "selected_candidate": null,
+    "proposed_fields": {
+      "primary_di": null,
+      "additional_identifiers": [],
+      "brand_name": null,
+      "company_name": null,
+      "version_or_model_number": null,
+      "device_description": null,
+      "device_count_in_base_package": null,
+      "device_sizes": [],
+      "commercial_distribution_status": null,
+      "commercial_distribution_end_date": null,
+      "is_kit": null,
+      "is_single_use": null,
+      "sterilization": null,
+      "storage": [],
+      "product_codes": [],
+      "premarket_submissions": [],
+      "public_version_date": null,
+      "record_status": null
+    },
+    "backlog_comparison": "not_previously_evaluated",
+    "retrieved_at": "2026-07-28T14:26:36.798Z",
+    "raw_cache_reference": "openfda-cache:8c218fc65400e38d2c46f10058cde2e48a2e0e94df51c4f71ba7f8224362e6bf.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-02BE5F7D32",
+    "manufacturer": "Merit Medical",
+    "product_name": "MAXXwire Guide Wire",
+    "catalog_number": "80129-404",
+    "classification": "review_required",
+    "reason_codes": [
+      "model_or_configuration_conflict",
+      "multiple_candidate_records",
+      "product_family_fallback_only"
+    ],
+    "query_attempts": [
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"80129-404\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number_company",
+        "search": "catalog_number:\"80129-404\" AND company_name:\"Merit Medical\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 1,
+        "cache_hit": false,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number_company",
+        "search": "catalog_number:\"80129-404\" AND company_name:\"Merit Medical Systems, Inc.\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 1,
+        "cache_hit": false,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"80129-404\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": false,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "brand_fallback",
+        "search": "brand_name:\"MAXXwire\"",
+        "limit": 100,
+        "result_count": 4,
+        "raw_result_count": 4,
+        "cache_hit": false,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 4,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "8eff550f-de3a-47ca-a68a-5e02a3662df9",
+      "primary_di": "10884450458089",
+      "brand_name": "MAXXWIRE®",
+      "company_name": "Merit Medical Systems, Inc.",
+      "catalog_number": "80129-406/A",
+      "version_or_model_number": "10884450458089",
+      "commercial_distribution_status": "In Commercial Distribution",
+      "public_version_date": "2024-12-23",
+      "record_status": "Published",
+      "query_kinds": ["brand_fallback"]
+    },
+    "proposed_fields": {
+      "primary_di": "10884450458089",
+      "additional_identifiers": [
+        {
+          "id": "00884450458082",
+          "type": "Unit of Use",
+          "issuing_agency": "GS1",
+          "unit_of_use_id": null,
+          "package_status": null,
+          "package_type": null
+        }
+      ],
+      "brand_name": "MAXXWIRE®",
+      "company_name": "Merit Medical Systems, Inc.",
+      "version_or_model_number": "10884450458089",
+      "device_description": null,
+      "device_count_in_base_package": 2,
+      "device_sizes": [],
+      "commercial_distribution_status": "In Commercial Distribution",
+      "commercial_distribution_end_date": null,
+      "is_kit": false,
+      "is_single_use": true,
+      "sterilization": {
+        "is_sterile": "true",
+        "is_sterilization_prior_use": "false"
+      },
+      "storage": [],
+      "product_codes": [
+        {
+          "code": "MDM",
+          "name": "INSTRUMENT, MANUAL, SURGICAL, GENERAL USE",
+          "openfda": {
+            "device_name": "Instrument, Manual, Surgical, General Use",
+            "medical_specialty_description": "General, Plastic Surgery",
+            "regulation_number": "878.4800",
+            "device_class": "1"
+          }
+        }
+      ],
+      "premarket_submissions": [],
+      "public_version_date": "2024-12-23",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "adds_missing_candidate",
+    "retrieved_at": "2026-07-28T14:34:06.466Z",
+    "raw_cache_reference": "openfda-cache:476ea5ef6801b11b30f96a7982970e26e72220d8cb89cf4545d028588f79b4fa.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-0410844D48",
+    "manufacturer": "Cook Medical",
+    "product_name": "Fuhrman Pleural/Pneumopericardial Drainage Set and Tray",
+    "catalog_number": "G55713",
+    "classification": "review_required",
+    "reason_codes": ["matches_existing_backlog_suggestion_only", "model_only_match"],
+    "query_attempts": [
+      {
+        "kind": "primary_di",
+        "search": "identifiers.id:\"00827002557130\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"G55713\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"G55713\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 1,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "a15d9d74-6cd0-4798-ad12-34561bdb254f",
+      "primary_di": "00827002557130",
+      "brand_name": "Fuhrman",
+      "company_name": "COOK INCORPORATED",
+      "catalog_number": "C-PPD-500-WCE-IMH",
+      "version_or_model_number": "G55713",
+      "commercial_distribution_status": "In Commercial Distribution",
+      "public_version_date": "2020-10-12",
+      "record_status": "Published",
+      "query_kinds": ["primary_di", "model_number"]
+    },
+    "proposed_fields": {
+      "primary_di": "00827002557130",
+      "additional_identifiers": [],
+      "brand_name": "Fuhrman",
+      "company_name": "COOK INCORPORATED",
+      "version_or_model_number": "G55713",
+      "device_description": "Fuhrman Pleural/Pneumopericardial Drainage Set",
+      "device_count_in_base_package": 1,
+      "device_sizes": [],
+      "commercial_distribution_status": "In Commercial Distribution",
+      "commercial_distribution_end_date": null,
+      "is_kit": false,
+      "is_single_use": true,
+      "sterilization": {
+        "is_sterile": "true",
+        "is_sterilization_prior_use": "false"
+      },
+      "storage": [
+        {
+          "type": "Special Storage Condition, Specify",
+          "special_conditions": "Store in dark, dry, cool place."
+        }
+      ],
+      "product_codes": [
+        {
+          "code": "GBX",
+          "name": "CATHETER, IRRIGATION",
+          "openfda": {
+            "device_name": "Catheter, Irrigation",
+            "medical_specialty_description": "General, Plastic Surgery",
+            "regulation_number": "878.4200",
+            "device_class": "1"
+          }
+        }
+      ],
+      "premarket_submissions": [],
+      "public_version_date": "2020-10-12",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "agrees_with_existing_backlog",
+    "retrieved_at": "2026-07-28T14:28:19.906Z",
+    "raw_cache_reference": "openfda-cache:5b7d2bd8ce4347ad751bd7de27323221cd0095147d75ef8a07effcae4acacdd6.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-05670F1B5F",
+    "manufacturer": "ERBE",
+    "product_name": "Flexible Cryoprobe 2.4 mm",
+    "catalog_number": "20402-411",
+    "classification": "high_confidence_candidate",
+    "reason_codes": ["exact_catalog_and_approved_manufacturer_alias"],
+    "query_attempts": [
+      {
+        "kind": "primary_di",
+        "search": "identifiers.id:\"04050147021839\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"20402-411\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 1,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "75fbe42c-49fb-4380-adb3-173ac6824728",
+      "primary_di": "04050147021839",
+      "brand_name": "ERBE",
+      "company_name": "Erbe Elektromedizin GmbH",
+      "catalog_number": "20402-411",
+      "version_or_model_number": "20402-411",
+      "commercial_distribution_status": "In Commercial Distribution",
+      "public_version_date": "2021-11-01",
+      "record_status": "Published",
+      "query_kinds": ["primary_di", "catalog_number"]
+    },
+    "proposed_fields": {
+      "primary_di": "04050147021839",
+      "additional_identifiers": [
+        {
+          "id": "04050147021846",
+          "type": "Package",
+          "issuing_agency": "GS1",
+          "unit_of_use_id": "04050147021839",
+          "package_status": "In Commercial Distribution",
+          "package_type": "Level 1"
+        }
+      ],
+      "brand_name": "ERBE",
+      "company_name": "Erbe Elektromedizin GmbH",
+      "version_or_model_number": "20402-411",
+      "device_description": null,
+      "device_count_in_base_package": 1,
+      "device_sizes": [
+        {
+          "type": "Length",
+          "value": "1150",
+          "unit": "Millimeter"
+        }
+      ],
+      "commercial_distribution_status": "In Commercial Distribution",
+      "commercial_distribution_end_date": null,
+      "is_kit": false,
+      "is_single_use": true,
+      "sterilization": {
+        "is_sterile": "true",
+        "is_sterilization_prior_use": "false"
+      },
+      "storage": [
+        {
+          "type": "Special Storage Condition, Specify",
+          "special_conditions": "Keep dry"
+        },
+        {
+          "type": "Special Storage Condition, Specify",
+          "special_conditions": "Keep away from heat and direct sunlight"
+        },
+        {
+          "type": "Handling Environment Temperature",
+          "high": {
+            "unit": "Degrees Celsius",
+            "value": "60"
+          },
+          "low": {
+            "unit": "Degrees Celsius",
+            "value": "-29"
+          }
+        },
+        {
+          "type": "Handling Environment Humidity",
+          "high": {
+            "unit": "Percent (%) Relative Humidity",
+            "value": "85"
+          },
+          "low": {
+            "unit": "Percent (%) Relative Humidity",
+            "value": "15"
+          }
+        }
+      ],
+      "product_codes": [
+        {
+          "code": "GEH",
+          "name": "Unit, Cryosurgical, Accessories",
+          "openfda": {
+            "device_name": "Unit, Cryosurgical, Accessories",
+            "medical_specialty_description": "General, Plastic Surgery",
+            "regulation_number": "878.4350",
+            "device_class": "2"
+          }
+        }
+      ],
+      "premarket_submissions": [
+        {
+          "submission_number": "K190651",
+          "supplement_number": "000"
+        }
+      ],
+      "public_version_date": "2021-11-01",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "agrees_with_existing_backlog",
+    "retrieved_at": "2026-07-28T14:26:27.812Z",
+    "raw_cache_reference": "openfda-cache:4d53bd521d1e0b40e44e0a87141f069663e4a090fa8ad4da4272b264b44ac00d.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-05780FEDD7",
+    "manufacturer": "Boston Scientific",
+    "product_name": "Ultraflex Partially Covered Tracheobronchial Stent System",
+    "catalog_number": "M00576560",
+    "classification": "review_required",
+    "reason_codes": [
+      "exact_existing_di_match",
+      "high_confidence_invariant_catalog_mismatch",
+      "high_confidence_invariant_failed",
+      "high_confidence_invariant_non_unique_eligible_candidate"
+    ],
+    "query_attempts": [
+      {
+        "kind": "primary_di",
+        "search": "identifiers.id:\"08714729842361\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"M00576560\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"M00576560\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 1,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "6c63113c-9e82-4791-a03a-8376626ba9bb",
+      "primary_di": "08714729842361",
+      "brand_name": "Ultraflex™ Tracheobronchial",
+      "company_name": "BOSTON SCIENTIFIC CORPORATION",
+      "catalog_number": null,
+      "version_or_model_number": "M00576560",
+      "commercial_distribution_status": "In Commercial Distribution",
+      "public_version_date": "2021-02-19",
+      "record_status": "Published",
+      "query_kinds": ["primary_di", "model_number"]
+    },
+    "proposed_fields": {
+      "primary_di": "08714729842361",
+      "additional_identifiers": [],
+      "brand_name": "Ultraflex™ Tracheobronchial",
+      "company_name": "BOSTON SCIENTIFIC CORPORATION",
+      "version_or_model_number": "M00576560",
+      "device_description": "Distal Release Stent System",
+      "device_count_in_base_package": 1,
+      "device_sizes": [
+        {
+          "type": "Device Size Text, specify",
+          "text": "40 mm Stent Length"
+        },
+        {
+          "type": "Device Size Text, specify",
+          "text": "12 mm Stent Diameter"
+        }
+      ],
+      "commercial_distribution_status": "In Commercial Distribution",
+      "commercial_distribution_end_date": null,
+      "is_kit": false,
+      "is_single_use": true,
+      "sterilization": {
+        "is_sterile": "true",
+        "is_sterilization_prior_use": "false"
+      },
+      "storage": [],
+      "product_codes": [
+        {
+          "code": "JCT",
+          "name": "Prosthesis, tracheal, expandable",
+          "openfda": {
+            "device_name": "Prosthesis, Tracheal, Expandable",
+            "medical_specialty_description": "General, Plastic Surgery",
+            "regulation_number": "878.3720",
+            "device_class": "2"
+          }
+        }
+      ],
+      "premarket_submissions": [],
+      "public_version_date": "2021-02-19",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "agrees_with_existing_backlog",
+    "retrieved_at": "2026-07-28T14:30:03.526Z",
+    "raw_cache_reference": "openfda-cache:1215085ce07f60a03d5b3c357c17fdbf0d7c9a9f862f3de78e5967d667099811.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-09AB6CA202",
+    "manufacturer": "Auris Health (Johnson & Johnson)",
+    "product_name": "Monarch Platform, Bronchoscopy 4.1",
+    "catalog_number": "MON-000008",
+    "classification": "review_required",
+    "reason_codes": [
+      "exact_existing_di_match",
+      "high_confidence_invariant_catalog_mismatch",
+      "high_confidence_invariant_failed",
+      "high_confidence_invariant_non_unique_eligible_candidate"
+    ],
+    "query_attempts": [
+      {
+        "kind": "primary_di",
+        "search": "identifiers.id:\"10810068810988\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"MON-000008\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"MON-000008\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 2,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 1,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "6600cbf2-2309-4920-8fb6-eb1238628605",
+      "primary_di": "10810068810988",
+      "brand_name": "Monarch Platform, Bronchoscopy 4.1",
+      "company_name": "Auris Health, Inc.",
+      "catalog_number": null,
+      "version_or_model_number": "MON-000008",
+      "commercial_distribution_status": "In Commercial Distribution",
+      "public_version_date": "2026-03-19",
+      "record_status": "Published",
+      "query_kinds": ["primary_di", "model_number"]
+    },
+    "proposed_fields": {
+      "primary_di": "10810068810988",
+      "additional_identifiers": [
+        {
+          "id": "20810068810985",
+          "type": "Package",
+          "issuing_agency": "GS1",
+          "unit_of_use_id": "10810068810988",
+          "package_status": "In Commercial Distribution",
+          "package_type": "Crate"
+        }
+      ],
+      "brand_name": "Monarch Platform, Bronchoscopy 4.1",
+      "company_name": "Auris Health, Inc.",
+      "version_or_model_number": "MON-000008",
+      "device_description": "The Monarch Bronchoscope enables electro-mechanical articulation and precise control of a flexible endoscope (bronchoscope) under continuous and direct control by a physician operator.",
+      "device_count_in_base_package": 1,
+      "device_sizes": [],
+      "commercial_distribution_status": "In Commercial Distribution",
+      "commercial_distribution_end_date": null,
+      "is_kit": false,
+      "is_single_use": false,
+      "sterilization": {
+        "is_sterile": "false",
+        "is_sterilization_prior_use": "false"
+      },
+      "storage": [],
+      "product_codes": [
+        {
+          "code": "EOQ",
+          "name": "Bronchoscope (Flexible Or Rigid)",
+          "openfda": {
+            "device_name": "Bronchoscope (Flexible Or Rigid)",
+            "medical_specialty_description": "Ear, Nose, Throat",
+            "regulation_number": "874.4680",
+            "device_class": "2"
+          }
+        },
+        {
+          "code": "JAK",
+          "name": "System, X-Ray, Tomography, Computed",
+          "openfda": {
+            "device_name": "System, X-Ray, Tomography, Computed",
+            "medical_specialty_description": "Radiology",
+            "regulation_number": "892.1750",
+            "device_class": "2"
+          }
+        }
+      ],
+      "premarket_submissions": [
+        {
+          "submission_number": "K243219",
+          "supplement_number": "000"
+        }
+      ],
+      "public_version_date": "2026-03-19",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "not_previously_evaluated",
+    "retrieved_at": "2026-07-28T14:28:23.421Z",
+    "raw_cache_reference": "openfda-cache:8691a406b43e7d0e21e53be388525abfbf347c4e0ad17d1074894016f83ac882.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-1517AA42DA",
+    "manufacturer": "Teleflex",
+    "product_name": "Arrow-Clarke Thoracentesis Kit",
+    "catalog_number": "AK-01000-J",
+    "classification": "review_required",
+    "reason_codes": [
+      "matches_existing_backlog_suggestion_only",
+      "model_or_configuration_conflict",
+      "multiple_candidate_records"
+    ],
+    "query_attempts": [
+      {
+        "kind": "primary_di",
+        "search": "identifiers.id:\"20801902097969\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"AK-01000-J\"",
+        "limit": 100,
+        "result_count": 6,
+        "raw_result_count": 6,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 6,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "216f5a88-763e-4e43-a917-2560722bd15e",
+      "primary_di": "20801902097969",
+      "brand_name": "ARROW",
+      "company_name": "TELEFLEX INCORPORATED",
+      "catalog_number": "AK-01000-J",
+      "version_or_model_number": "IPN032616",
+      "commercial_distribution_status": "In Commercial Distribution",
+      "public_version_date": "2023-07-07",
+      "record_status": "Published",
+      "query_kinds": ["primary_di", "catalog_number"]
+    },
+    "proposed_fields": {
+      "primary_di": "20801902097969",
+      "additional_identifiers": [
+        {
+          "id": "10801902097962",
+          "type": "Package",
+          "issuing_agency": "GS1",
+          "unit_of_use_id": "20801902097969",
+          "package_status": "Not in Commercial Distribution",
+          "package_type": "Case"
+        }
+      ],
+      "brand_name": "ARROW",
+      "company_name": "TELEFLEX INCORPORATED",
+      "version_or_model_number": "IPN032616",
+      "device_description": "Arrow-Clarke(TM) Pleura-Seal(R) Thoracentesis Kit",
+      "device_count_in_base_package": 1,
+      "device_sizes": [],
+      "commercial_distribution_status": "In Commercial Distribution",
+      "commercial_distribution_end_date": null,
+      "is_kit": true,
+      "is_single_use": true,
+      "sterilization": {
+        "is_sterile": "true",
+        "is_sterilization_prior_use": "false"
+      },
+      "storage": [],
+      "product_codes": [
+        {
+          "code": "JOL",
+          "name": "CATHETER AND TIP, SUCTION",
+          "openfda": {
+            "device_name": "Catheter And Tip, Suction",
+            "medical_specialty_description": "General Hospital",
+            "regulation_number": "880.6740",
+            "device_class": "2"
+          }
+        }
+      ],
+      "premarket_submissions": [
+        {
+          "submission_number": "K870572",
+          "supplement_number": "000"
+        }
+      ],
+      "public_version_date": "2023-07-07",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "agrees_with_existing_backlog",
+    "retrieved_at": "2026-07-28T14:26:35.488Z",
+    "raw_cache_reference": "openfda-cache:b3ae5920a71b650000981b30fff01858950a0c362b687e9d8cbc6a3e803502fb.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-1708F37D2C",
+    "manufacturer": "ERBE",
+    "product_name": "APCapplicator, Rigid, 100 mm, Spatula Electrode",
+    "catalog_number": "20132-252",
+    "classification": "review_required",
+    "reason_codes": ["matches_existing_backlog_suggestion_only", "multiple_candidate_records"],
+    "query_attempts": [
+      {
+        "kind": "primary_di",
+        "search": "identifiers.id:\"04050147024458\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"20132-252\"",
+        "limit": 100,
+        "result_count": 2,
+        "raw_result_count": 2,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 2,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "d0285266-0ed6-4804-8ed4-034df49231bd",
+      "primary_di": "04050147024458",
+      "brand_name": "Erbe",
+      "company_name": "Erbe Elektromedizin GmbH",
+      "catalog_number": "20132-252",
+      "version_or_model_number": "20132-252",
+      "commercial_distribution_status": "In Commercial Distribution",
+      "public_version_date": "2025-05-07",
+      "record_status": "Published",
+      "query_kinds": ["primary_di", "catalog_number"]
+    },
+    "proposed_fields": {
+      "primary_di": "04050147024458",
+      "additional_identifiers": [
+        {
+          "id": "04050147018150",
+          "type": "Previous",
+          "issuing_agency": "GS1",
+          "unit_of_use_id": null,
+          "package_status": null,
+          "package_type": null
+        },
+        {
+          "id": "04050147024465",
+          "type": "Package",
+          "issuing_agency": "GS1",
+          "unit_of_use_id": "04050147024458",
+          "package_status": "In Commercial Distribution",
+          "package_type": null
+        }
+      ],
+      "brand_name": "Erbe",
+      "company_name": "Erbe Elektromedizin GmbH",
+      "version_or_model_number": "20132-252",
+      "device_description": null,
+      "device_count_in_base_package": 1,
+      "device_sizes": [
+        {
+          "type": "Length",
+          "value": "100",
+          "unit": "Millimeter"
+        }
+      ],
+      "commercial_distribution_status": "In Commercial Distribution",
+      "commercial_distribution_end_date": null,
+      "is_kit": false,
+      "is_single_use": true,
+      "sterilization": {
+        "is_sterile": "true",
+        "is_sterilization_prior_use": "false"
+      },
+      "storage": [
+        {
+          "type": "Special Storage Condition, Specify",
+          "special_conditions": "Keep dry"
+        },
+        {
+          "type": "Special Storage Condition, Specify",
+          "special_conditions": "Keep away from heat and direct sunlight"
+        }
+      ],
+      "product_codes": [
+        {
+          "code": "GEI",
+          "name": "Electrosurgical, Cutting & Coagulation & Accessories",
+          "openfda": {
+            "device_name": "Electrosurgical, Cutting & Coagulation & Accessories",
+            "medical_specialty_description": "General, Plastic Surgery",
+            "regulation_number": "878.4400",
+            "device_class": "2"
+          }
+        }
+      ],
+      "premarket_submissions": [
+        {
+          "submission_number": "K183445",
+          "supplement_number": "000"
+        }
+      ],
+      "public_version_date": "2025-05-07",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "agrees_with_existing_backlog",
+    "retrieved_at": "2026-07-28T14:26:37.172Z",
+    "raw_cache_reference": "openfda-cache:77b088d184ee65bdcb679ce161dc871394441d058453f36f02a8bed2352bd163.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-189E7EF27A",
+    "manufacturer": "Boston Scientific",
+    "product_name": "CRE Single-Use Pulmonary Balloon Dilatation Catheter",
+    "catalog_number": "M00550350",
+    "classification": "review_required",
+    "reason_codes": [
+      "exact_existing_di_match",
+      "high_confidence_invariant_catalog_mismatch",
+      "high_confidence_invariant_failed",
+      "high_confidence_invariant_non_unique_eligible_candidate"
+    ],
+    "query_attempts": [
+      {
+        "kind": "primary_di",
+        "search": "identifiers.id:\"08714729456230\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"M00550350\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"M00550350\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 1,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "15e8d051-99df-4d9b-b7d7-ca38ad452a03",
+      "primary_di": "08714729456230",
+      "brand_name": "CRE Pulmonary",
+      "company_name": "BOSTON SCIENTIFIC CORPORATION",
+      "catalog_number": null,
+      "version_or_model_number": "M00550350",
+      "commercial_distribution_status": "In Commercial Distribution",
+      "public_version_date": "2018-03-29",
+      "record_status": "Published",
+      "query_kinds": ["primary_di", "model_number"]
+    },
+    "proposed_fields": {
+      "primary_di": "08714729456230",
+      "additional_identifiers": [],
+      "brand_name": "CRE Pulmonary",
+      "company_name": "BOSTON SCIENTIFIC CORPORATION",
+      "version_or_model_number": "M00550350",
+      "device_description": "Pulmonary Balloon Dilatation Catheter",
+      "device_count_in_base_package": 1,
+      "device_sizes": [
+        {
+          "type": "Device Size Text, specify",
+          "text": "15 mm Diameter"
+        },
+        {
+          "type": "Device Size Text, specify",
+          "text": "13.5 mm Diameter"
+        },
+        {
+          "type": "Device Size Text, specify",
+          "text": "12 mm Diameter"
+        }
+      ],
+      "commercial_distribution_status": "In Commercial Distribution",
+      "commercial_distribution_end_date": null,
+      "is_kit": false,
+      "is_single_use": true,
+      "sterilization": {
+        "is_sterile": "true",
+        "is_sterilization_prior_use": "false"
+      },
+      "storage": [],
+      "product_codes": [
+        {
+          "code": "KTI",
+          "name": "BRONCHOSCOPE ACCESSORY",
+          "openfda": {
+            "device_name": "Bronchoscope Accessory",
+            "medical_specialty_description": "Ear, Nose, Throat",
+            "regulation_number": "874.4680",
+            "device_class": "2"
+          }
+        }
+      ],
+      "premarket_submissions": [],
+      "public_version_date": "2018-03-29",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "agrees_with_existing_backlog",
+    "retrieved_at": "2026-07-28T14:30:02.075Z",
+    "raw_cache_reference": "openfda-cache:24ede019b792389f6acd3971d61280731174c4f37ce520ca1968f106634e6b99.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-19AC7F0794",
+    "manufacturer": "Cook Medical",
+    "product_name": "EchoTip Endobronchial HD Ultrasound Needle",
+    "catalog_number": "G53408",
+    "classification": "review_required",
+    "reason_codes": ["matches_existing_backlog_suggestion_only", "model_only_match"],
+    "query_attempts": [
+      {
+        "kind": "primary_di",
+        "search": "identifiers.id:\"00827002534087\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"G53408\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"G53408\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"ECHO-HD-22-EBUS-P\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 1,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "132408c4-9ca5-4576-ad34-d49ee2e581bb",
+      "primary_di": "00827002534087",
+      "brand_name": "EchoTip",
+      "company_name": "COOK IRELAND LTD",
+      "catalog_number": "ECHO-HD-22-EBUS-P",
+      "version_or_model_number": "G53408",
+      "commercial_distribution_status": "In Commercial Distribution",
+      "public_version_date": "2025-12-05",
+      "record_status": "Published",
+      "query_kinds": ["primary_di", "model_number"]
+    },
+    "proposed_fields": {
+      "primary_di": "00827002534087",
+      "additional_identifiers": [],
+      "brand_name": "EchoTip",
+      "company_name": "COOK IRELAND LTD",
+      "version_or_model_number": "G53408",
+      "device_description": "EchoTip Ultra, Endobronchial High Definition Ultrasound Needle",
+      "device_count_in_base_package": 1,
+      "device_sizes": [],
+      "commercial_distribution_status": "In Commercial Distribution",
+      "commercial_distribution_end_date": null,
+      "is_kit": false,
+      "is_single_use": true,
+      "sterilization": {
+        "is_sterile": "true",
+        "is_sterilization_prior_use": "false"
+      },
+      "storage": [
+        {
+          "type": "Special Storage Condition, Specify",
+          "special_conditions": "Store the device in a dry location"
+        }
+      ],
+      "product_codes": [
+        {
+          "code": "FCG",
+          "name": "Biopsy needle",
+          "openfda": {
+            "device_name": "Biopsy Needle",
+            "medical_specialty_description": "Gastroenterology, Urology",
+            "regulation_number": "876.1075",
+            "device_class": "2"
+          }
+        }
+      ],
+      "premarket_submissions": [],
+      "public_version_date": "2025-12-05",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "agrees_with_existing_backlog",
+    "retrieved_at": "2026-07-28T14:28:19.614Z",
+    "raw_cache_reference": "openfda-cache:7d1604353b45f3d7279aa1546b09e69733cd3ef25116cd6c3905fc38c6b76030.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-1A152615A0",
+    "manufacturer": "VisionAir Solutions",
+    "product_name": "Patient-Specific Airway Stent Design and Manufacturing Service",
+    "catalog_number": "CUSTOM-SERVICE",
+    "classification": "insufficient_identifiers",
+    "reason_codes": ["no_usable_identifier"],
+    "query_attempts": [],
+    "candidate_count": 0,
+    "selected_candidate": null,
+    "proposed_fields": {
+      "primary_di": null,
+      "additional_identifiers": [],
+      "brand_name": null,
+      "company_name": null,
+      "version_or_model_number": null,
+      "device_description": null,
+      "device_count_in_base_package": null,
+      "device_sizes": [],
+      "commercial_distribution_status": null,
+      "commercial_distribution_end_date": null,
+      "is_kit": null,
+      "is_single_use": null,
+      "sterilization": null,
+      "storage": [],
+      "product_codes": [],
+      "premarket_submissions": [],
+      "public_version_date": null,
+      "record_status": null
+    },
+    "backlog_comparison": "existing_backlog_has_more_specific_match",
+    "retrieved_at": null,
+    "raw_cache_reference": null,
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-1BCD8D38BC",
+    "manufacturer": "Olympus",
+    "product_name": "ViziShot 2 EBUS-TBNA Needle",
+    "catalog_number": "NA-U401SX-4022-A",
+    "classification": "unmatched",
+    "reason_codes": ["no_candidate_found"],
+    "query_attempts": [
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"NA-U401SX-4022-A\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number_company",
+        "search": "catalog_number:\"NA-U401SX-4022-A\" AND company_name:\"Olympus\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number_company",
+        "search": "catalog_number:\"NA-U401SX-4022-A\" AND company_name:\"Olympus Medical Systems Corp.\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"NA-U401SX-4022-A\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "brand_fallback",
+        "search": "brand_name:\"ViziShot 2\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 0,
+    "selected_candidate": null,
+    "proposed_fields": {
+      "primary_di": null,
+      "additional_identifiers": [],
+      "brand_name": null,
+      "company_name": null,
+      "version_or_model_number": null,
+      "device_description": null,
+      "device_count_in_base_package": null,
+      "device_sizes": [],
+      "commercial_distribution_status": null,
+      "commercial_distribution_end_date": null,
+      "is_kit": null,
+      "is_single_use": null,
+      "sterilization": null,
+      "storage": [],
+      "product_codes": [],
+      "premarket_submissions": [],
+      "public_version_date": null,
+      "record_status": null
+    },
+    "backlog_comparison": "not_previously_evaluated",
+    "retrieved_at": "2026-07-28T14:28:20.906Z",
+    "raw_cache_reference": "openfda-cache:0043710a7a3c95c901aef77616779fdff7ee75a5ba20b00a0d78b195e54426b9.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-2302DA77DA",
+    "manufacturer": "Boston Scientific",
+    "product_name": "Expect Pulmonary EBUS-TBNA Needle",
+    "catalog_number": "M00558220",
+    "classification": "review_required",
+    "reason_codes": [
+      "exact_existing_di_match",
+      "high_confidence_invariant_catalog_mismatch",
+      "high_confidence_invariant_failed",
+      "high_confidence_invariant_non_unique_eligible_candidate"
+    ],
+    "query_attempts": [
+      {
+        "kind": "primary_di",
+        "search": "identifiers.id:\"08714729861409\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"M00558220\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"M00558220\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 1,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "e09dac7b-573b-49fc-b197-cec7744f7303",
+      "primary_di": "08714729861409",
+      "brand_name": "Expect Pulmonary",
+      "company_name": "BOSTON SCIENTIFIC CORPORATION",
+      "catalog_number": null,
+      "version_or_model_number": "M00558220",
+      "commercial_distribution_status": "In Commercial Distribution",
+      "public_version_date": "2019-07-12",
+      "record_status": "Published",
+      "query_kinds": ["primary_di", "model_number"]
+    },
+    "proposed_fields": {
+      "primary_di": "08714729861409",
+      "additional_identifiers": [
+        {
+          "id": "08714729861430",
+          "type": "Package",
+          "issuing_agency": "GS1",
+          "unit_of_use_id": "08714729861409",
+          "package_status": "In Commercial Distribution",
+          "package_type": null
+        }
+      ],
+      "brand_name": "Expect Pulmonary",
+      "company_name": "BOSTON SCIENTIFIC CORPORATION",
+      "version_or_model_number": "M00558220",
+      "device_description": "Endobronchial Ultrasound Transbronchial Aspiration Needle",
+      "device_count_in_base_package": 1,
+      "device_sizes": [
+        {
+          "type": "Device Size Text, specify",
+          "text": "0.72 mm Diameter"
+        },
+        {
+          "type": "Device Size Text, specify",
+          "text": "22 ga Diameter"
+        }
+      ],
+      "commercial_distribution_status": "In Commercial Distribution",
+      "commercial_distribution_end_date": null,
+      "is_kit": false,
+      "is_single_use": true,
+      "sterilization": {
+        "is_sterile": "true",
+        "is_sterilization_prior_use": "false"
+      },
+      "storage": [],
+      "product_codes": [
+        {
+          "code": "EOQ",
+          "name": "BRONCHOSCOPE (FLEXIBLE OR RIGID)",
+          "openfda": {
+            "device_name": "Bronchoscope (Flexible Or Rigid)",
+            "medical_specialty_description": "Ear, Nose, Throat",
+            "regulation_number": "874.4680",
+            "device_class": "2"
+          }
+        },
+        {
+          "code": "FCG",
+          "name": "Biopsy needle",
+          "openfda": {
+            "device_name": "Biopsy Needle",
+            "medical_specialty_description": "Gastroenterology, Urology",
+            "regulation_number": "876.1075",
+            "device_class": "2"
+          }
+        }
+      ],
+      "premarket_submissions": [],
+      "public_version_date": "2019-07-12",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "agrees_with_existing_backlog",
+    "retrieved_at": "2026-07-28T14:30:01.547Z",
+    "raw_cache_reference": "openfda-cache:7ee3b2896ccc3b8f876b68d98ed872cd3a3428c5baf239d39f66510400f295c9.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-2B8AACAB67",
+    "manufacturer": "Olympus",
+    "product_name": "EVIS EUS Endoscopic Ultrasound Center EU-ME3",
+    "catalog_number": "EU-ME3",
+    "classification": "unmatched",
+    "reason_codes": ["no_candidate_found"],
+    "query_attempts": [
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"EU-ME3\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number_company",
+        "search": "catalog_number:\"EU-ME3\" AND company_name:\"Olympus\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number_company",
+        "search": "catalog_number:\"EU-ME3\" AND company_name:\"Olympus Medical Systems Corp.\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"EU-ME3\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "brand_fallback",
+        "search": "brand_name:\"EVIS EUS\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 18,
+        "cache_hit": false,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 0,
+    "selected_candidate": null,
+    "proposed_fields": {
+      "primary_di": null,
+      "additional_identifiers": [],
+      "brand_name": null,
+      "company_name": null,
+      "version_or_model_number": null,
+      "device_description": null,
+      "device_count_in_base_package": null,
+      "device_sizes": [],
+      "commercial_distribution_status": null,
+      "commercial_distribution_end_date": null,
+      "is_kit": null,
+      "is_single_use": null,
+      "sterilization": null,
+      "storage": [],
+      "product_codes": [],
+      "premarket_submissions": [],
+      "public_version_date": null,
+      "record_status": null
+    },
+    "backlog_comparison": "not_previously_evaluated",
+    "retrieved_at": "2026-07-28T14:34:05.559Z",
+    "raw_cache_reference": "openfda-cache:02e27fcc81ccf14597ce751c7024ec304a1d764c573e594aee7f7781843eaf9e.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-5543746F59",
+    "manufacturer": "Olympus",
+    "product_name": "Olympus OER-Pro Automated Endoscope Reprocessor",
+    "catalog_number": "OER-Pro",
+    "classification": "review_required",
+    "reason_codes": ["matches_existing_backlog_suggestion_only", "model_only_match"],
+    "query_attempts": [
+      {
+        "kind": "primary_di",
+        "search": "identifiers.id:\"04953170258589\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"OER-Pro\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"OER-Pro\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 1,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "385e5dd9-370e-4c08-9e5f-8c583a12426d",
+      "primary_di": "04953170258589",
+      "brand_name": "ENDOSCOPE REPROCESSOR",
+      "company_name": "OLYMPUS MEDICAL SYSTEMS CORP.",
+      "catalog_number": null,
+      "version_or_model_number": "OER-Pro",
+      "commercial_distribution_status": "Not in Commercial Distribution",
+      "public_version_date": "2025-11-24",
+      "record_status": "Published",
+      "query_kinds": ["primary_di", "model_number"]
+    },
+    "proposed_fields": {
+      "primary_di": "04953170258589",
+      "additional_identifiers": [],
+      "brand_name": "ENDOSCOPE REPROCESSOR",
+      "company_name": "OLYMPUS MEDICAL SYSTEMS CORP.",
+      "version_or_model_number": "OER-Pro",
+      "device_description": null,
+      "device_count_in_base_package": 1,
+      "device_sizes": [],
+      "commercial_distribution_status": "Not in Commercial Distribution",
+      "commercial_distribution_end_date": "2024-07-09",
+      "is_kit": false,
+      "is_single_use": false,
+      "sterilization": {
+        "is_sterile": "false",
+        "is_sterilization_prior_use": "false"
+      },
+      "storage": [],
+      "product_codes": [
+        {
+          "code": "FEB",
+          "name": "ACCESSORIES, CLEANING, FOR ENDOSCOPE",
+          "openfda": {
+            "device_name": "Accessories, Cleaning, For Endoscope",
+            "medical_specialty_description": "Gastroenterology, Urology",
+            "regulation_number": "876.1500",
+            "device_class": "2"
+          }
+        }
+      ],
+      "premarket_submissions": [],
+      "public_version_date": "2025-11-24",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "agrees_with_existing_backlog",
+    "retrieved_at": "2026-07-28T14:28:22.265Z",
+    "raw_cache_reference": "openfda-cache:66c6f08dbd8613daf9a125e1693e4f9e3756bb57158f26c4d196cf1064c12293.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-5F801B5A8E",
+    "manufacturer": "Boston Scientific",
+    "product_name": "Amplatz Super Stiff Guidewire",
+    "catalog_number": "M00550090",
+    "classification": "review_required",
+    "reason_codes": [
+      "exact_existing_di_match",
+      "high_confidence_invariant_catalog_mismatch",
+      "high_confidence_invariant_failed",
+      "high_confidence_invariant_non_unique_eligible_candidate"
+    ],
+    "query_attempts": [
+      {
+        "kind": "primary_di",
+        "search": "identifiers.id:\"08714729301929\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"M00550090\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"M00550090\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 1,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "bc7446de-af1f-46d0-96d5-e2fac77050e3",
+      "primary_di": "08714729301929",
+      "brand_name": "Amplatz Super Stiff",
+      "company_name": "BOSTON SCIENTIFIC CORPORATION",
+      "catalog_number": null,
+      "version_or_model_number": "M00550090",
+      "commercial_distribution_status": "In Commercial Distribution",
+      "public_version_date": "2024-12-23",
+      "record_status": "Published",
+      "query_kinds": ["primary_di", "model_number"]
+    },
+    "proposed_fields": {
+      "primary_di": "08714729301929",
+      "additional_identifiers": [],
+      "brand_name": "Amplatz Super Stiff",
+      "company_name": "BOSTON SCIENTIFIC CORPORATION",
+      "version_or_model_number": "M00550090",
+      "device_description": "Guidewire",
+      "device_count_in_base_package": 1,
+      "device_sizes": [
+        {
+          "type": "Device Size Text, specify",
+          "text": "0.038 in Diameter"
+        },
+        {
+          "type": "Device Size Text, specify",
+          "text": "260 cm Length"
+        },
+        {
+          "type": "Device Size Text, specify",
+          "text": "0.97 mm Diameter"
+        }
+      ],
+      "commercial_distribution_status": "In Commercial Distribution",
+      "commercial_distribution_end_date": null,
+      "is_kit": false,
+      "is_single_use": true,
+      "sterilization": {
+        "is_sterile": "true",
+        "is_sterilization_prior_use": "false"
+      },
+      "storage": [],
+      "product_codes": [
+        {
+          "code": "OCY",
+          "name": "Endoscopic guidewire, gastroenterology-urology",
+          "openfda": {
+            "device_name": "Endoscopic Guidewire, Gastroenterology-Urology",
+            "medical_specialty_description": "Gastroenterology, Urology",
+            "regulation_number": "876.1500",
+            "device_class": "2"
+          }
+        }
+      ],
+      "premarket_submissions": [],
+      "public_version_date": "2024-12-23",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "agrees_with_existing_backlog",
+    "retrieved_at": "2026-07-28T14:28:18.578Z",
+    "raw_cache_reference": "openfda-cache:380f15f0f57ae4801a599b03b87b4f7459e3602a7f03aabc61a507a24117d9b4.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-6D9A7A7E79",
+    "manufacturer": "Olympus",
+    "product_name": "ViziShot 2 EBUS-TBNA Needle",
+    "catalog_number": "NA-U401SX-4025N",
+    "classification": "review_required",
+    "reason_codes": [
+      "matches_existing_backlog_suggestion_only",
+      "model_only_match",
+      "multiple_candidate_records"
+    ],
+    "query_attempts": [
+      {
+        "kind": "primary_di",
+        "search": "identifiers.id:\"04953170402005\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"NA-U401SX-4025N\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"NA-U401SX-4025N\"",
+        "limit": 100,
+        "result_count": 2,
+        "raw_result_count": 2,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 2,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "8d2e6556-72df-48d1-a846-0aadf679194a",
+      "primary_di": "04953170402005",
+      "brand_name": "Single Use Aspiration Needle",
+      "company_name": "OLYMPUS MEDICAL SYSTEMS CORP.",
+      "catalog_number": null,
+      "version_or_model_number": "NA-U401SX-4025N",
+      "commercial_distribution_status": "In Commercial Distribution",
+      "public_version_date": "2024-04-22",
+      "record_status": "Published",
+      "query_kinds": ["primary_di", "model_number"]
+    },
+    "proposed_fields": {
+      "primary_di": "04953170402005",
+      "additional_identifiers": [
+        {
+          "id": "14953170402002",
+          "type": "Package",
+          "issuing_agency": "GS1",
+          "unit_of_use_id": "04953170402005",
+          "package_status": "In Commercial Distribution",
+          "package_type": null
+        }
+      ],
+      "brand_name": "Single Use Aspiration Needle",
+      "company_name": "OLYMPUS MEDICAL SYSTEMS CORP.",
+      "version_or_model_number": "NA-U401SX-4025N",
+      "device_description": "Single Use Aspiration Needle NA-U401SX-4025N",
+      "device_count_in_base_package": 1,
+      "device_sizes": [],
+      "commercial_distribution_status": "In Commercial Distribution",
+      "commercial_distribution_end_date": null,
+      "is_kit": false,
+      "is_single_use": true,
+      "sterilization": {
+        "is_sterile": "true",
+        "is_sterilization_prior_use": "false"
+      },
+      "storage": [],
+      "product_codes": [
+        {
+          "code": "KTI",
+          "name": "Bronchoscope accessory",
+          "openfda": {
+            "device_name": "Bronchoscope Accessory",
+            "medical_specialty_description": "Ear, Nose, Throat",
+            "regulation_number": "874.4680",
+            "device_class": "2"
+          }
+        },
+        {
+          "code": "FCG",
+          "name": "Biopsy Needle",
+          "openfda": {
+            "device_name": "Biopsy Needle",
+            "medical_specialty_description": "Gastroenterology, Urology",
+            "regulation_number": "876.1075",
+            "device_class": "2"
+          }
+        }
+      ],
+      "premarket_submissions": [
+        {
+          "submission_number": "K180668",
+          "supplement_number": "000"
+        },
+        {
+          "submission_number": "K190239",
+          "supplement_number": "000"
+        }
+      ],
+      "public_version_date": "2024-04-22",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "agrees_with_existing_backlog",
+    "retrieved_at": "2026-07-28T14:28:21.592Z",
+    "raw_cache_reference": "openfda-cache:c2aaa9f6aaeef7465017763e88373ffd98626a71fd8c8353c59c834e90e41e81.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-94C61697D9",
+    "manufacturer": "Atrium Medical (Getinge)",
+    "product_name": "Atrium Oasis Dry Suction Water Seal Chest Drain",
+    "catalog_number": "3600-100",
+    "classification": "review_required",
+    "reason_codes": [
+      "exact_existing_di_match",
+      "high_confidence_invariant_catalog_mismatch",
+      "high_confidence_invariant_failed",
+      "high_confidence_invariant_non_unique_eligible_candidate"
+    ],
+    "query_attempts": [
+      {
+        "kind": "primary_di",
+        "search": "identifiers.id:\"00650862110012\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"3600-100\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"3600-100\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 1,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "7c3c23b2-e26d-4759-af09-958cdaa2f017",
+      "primary_di": "00650862110012",
+      "brand_name": "OASIS",
+      "company_name": "Atrium Medical Corporation",
+      "catalog_number": null,
+      "version_or_model_number": "3600-100",
+      "commercial_distribution_status": "In Commercial Distribution",
+      "public_version_date": "2026-02-12",
+      "record_status": "Published",
+      "query_kinds": ["primary_di", "model_number"]
+    },
+    "proposed_fields": {
+      "primary_di": "00650862110012",
+      "additional_identifiers": [
+        {
+          "id": "20650862110016",
+          "type": "Package",
+          "issuing_agency": "GS1",
+          "unit_of_use_id": "00650862110012",
+          "package_status": "In Commercial Distribution",
+          "package_type": null
+        }
+      ],
+      "brand_name": "OASIS",
+      "company_name": "Atrium Medical Corporation",
+      "version_or_model_number": "3600-100",
+      "device_description": "Atrium Oasis Dry Suction Water Seal Chest Drain",
+      "device_count_in_base_package": 1,
+      "device_sizes": [],
+      "commercial_distribution_status": "In Commercial Distribution",
+      "commercial_distribution_end_date": null,
+      "is_kit": false,
+      "is_single_use": true,
+      "sterilization": {
+        "is_sterile": "true",
+        "is_sterilization_prior_use": "false"
+      },
+      "storage": [
+        {
+          "type": "Storage Environment Temperature",
+          "high": {
+            "unit": "Degrees Fahrenheit",
+            "value": "77"
+          },
+          "low": {
+            "unit": "Degrees Fahrenheit",
+            "value": "59"
+          }
+        },
+        {
+          "type": "Storage Environment Humidity",
+          "high": {
+            "unit": "Percent (%) Relative Humidity",
+            "value": "80"
+          },
+          "low": {
+            "unit": "Percent (%) Relative Humidity",
+            "value": "0"
+          }
+        },
+        {
+          "type": "Handling Environment Humidity",
+          "high": {
+            "unit": "Percent (%) Relative Humidity",
+            "value": "90"
+          },
+          "low": {
+            "unit": "Percent (%) Relative Humidity",
+            "value": "20"
+          }
+        },
+        {
+          "type": "Handling Environment Temperature",
+          "high": {
+            "unit": "Degrees Fahrenheit",
+            "value": "113"
+          },
+          "low": {
+            "unit": "Degrees Fahrenheit",
+            "value": "44.6"
+          }
+        }
+      ],
+      "product_codes": [
+        {
+          "code": "KDQ",
+          "name": "Bottle, Collection, Vacuum",
+          "openfda": {
+            "device_name": "Bottle, Collection, Vacuum",
+            "medical_specialty_description": "General Hospital",
+            "regulation_number": "880.6740",
+            "device_class": "2"
+          }
+        }
+      ],
+      "premarket_submissions": [],
+      "public_version_date": "2026-02-12",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "not_previously_evaluated",
+    "retrieved_at": "2026-07-28T14:28:22.938Z",
+    "raw_cache_reference": "openfda-cache:887b6ba06db48cec293252f518c83898aaa4219a02369be54d3f4d5bfeea9685.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-9BB524F077",
+    "manufacturer": "Scivita Medical Technology",
+    "product_name": "Scivita Full HD Visualization Endoscopic Image Processor HDVS-S300D",
+    "catalog_number": "HDVS-S300D",
+    "classification": "review_required",
+    "reason_codes": [
+      "exact_existing_di_match",
+      "high_confidence_invariant_catalog_mismatch",
+      "high_confidence_invariant_failed",
+      "high_confidence_invariant_non_unique_eligible_candidate"
+    ],
+    "query_attempts": [
+      {
+        "kind": "primary_di",
+        "search": "identifiers.id:\"06971381252422\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"HDVS-S300D\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"HDVS-S300D\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 1,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "9bad82b2-92fb-4f00-9222-8e539c047e1b",
+      "primary_di": "06971381252422",
+      "brand_name": "Full HD Visualization Endoscopic Image Processor",
+      "company_name": "Scivita Medical Technology Co., Ltd.",
+      "catalog_number": null,
+      "version_or_model_number": "HDVS-S300D",
+      "commercial_distribution_status": "In Commercial Distribution",
+      "public_version_date": "2025-06-26",
+      "record_status": "Published",
+      "query_kinds": ["primary_di", "model_number"]
+    },
+    "proposed_fields": {
+      "primary_di": "06971381252422",
+      "additional_identifiers": [],
+      "brand_name": "Full HD Visualization Endoscopic Image Processor",
+      "company_name": "Scivita Medical Technology Co., Ltd.",
+      "version_or_model_number": "HDVS-S300D",
+      "device_description": "The product is composed of full HD visualization endoscopic image processor, power supply adapter and power cables. This Full HD Visualization Endoscopic Image Processor is used for endoscopic diagnosis and therapies. It connects to the electronic endoscopes, displaying the images on its LCD display and/or external monitor within the field of view from the body cavity.",
+      "device_count_in_base_package": 1,
+      "device_sizes": [],
+      "commercial_distribution_status": "In Commercial Distribution",
+      "commercial_distribution_end_date": null,
+      "is_kit": false,
+      "is_single_use": false,
+      "sterilization": {
+        "is_sterile": "false",
+        "is_sterilization_prior_use": "false"
+      },
+      "storage": [
+        {
+          "type": "Handling Environment Temperature",
+          "high": {
+            "unit": "Degrees Celsius",
+            "value": "35"
+          },
+          "low": {
+            "unit": "Degrees Celsius",
+            "value": "5"
+          }
+        },
+        {
+          "type": "Handling Environment Humidity",
+          "high": {
+            "unit": "Percent (%) Relative Humidity",
+            "value": "80"
+          },
+          "low": {
+            "unit": "Percent (%) Relative Humidity",
+            "value": "20"
+          }
+        },
+        {
+          "type": "Handling Environment Atmospheric Pressure",
+          "high": {
+            "unit": "KiloPascal",
+            "value": "106"
+          },
+          "low": {
+            "unit": "KiloPascal",
+            "value": "70"
+          }
+        },
+        {
+          "type": "Storage Environment Temperature",
+          "high": {
+            "unit": "Degrees Celsius",
+            "value": "55"
+          },
+          "low": {
+            "unit": "Degrees Celsius",
+            "value": "-20"
+          }
+        },
+        {
+          "type": "Storage Environment Humidity",
+          "high": {
+            "unit": "Percent (%) Relative Humidity",
+            "value": "85"
+          },
+          "low": {
+            "unit": "Percent (%) Relative Humidity",
+            "value": "20"
+          }
+        },
+        {
+          "type": "Storage Environment Atmospheric Pressure",
+          "high": {
+            "unit": "KiloPascal",
+            "value": "106"
+          },
+          "low": {
+            "unit": "KiloPascal",
+            "value": "70"
+          }
+        }
+      ],
+      "product_codes": [
+        {
+          "code": "EOQ",
+          "name": "Bronchoscope (Flexible Or Rigid)",
+          "openfda": {
+            "device_name": "Bronchoscope (Flexible Or Rigid)",
+            "medical_specialty_description": "Ear, Nose, Throat",
+            "regulation_number": "874.4680",
+            "device_class": "2"
+          }
+        }
+      ],
+      "premarket_submissions": [],
+      "public_version_date": "2025-06-26",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "agrees_with_existing_backlog",
+    "retrieved_at": "2026-07-28T14:28:18.912Z",
+    "raw_cache_reference": "openfda-cache:88b5a9771006491f42832d2f6350071d8cfeb01a812b9247b6d3f6601321895e.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-C094F5AF07",
+    "manufacturer": "Olympus",
+    "product_name": "EBUS Balloon",
+    "catalog_number": "MAJ-1351",
+    "classification": "review_required",
+    "reason_codes": [
+      "matches_existing_backlog_suggestion_only",
+      "model_only_match",
+      "multiple_candidate_records"
+    ],
+    "query_attempts": [
+      {
+        "kind": "primary_di",
+        "search": "identifiers.id:\"04953170463938\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"MAJ-1351\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"MAJ-1351\"",
+        "limit": 100,
+        "result_count": 3,
+        "raw_result_count": 3,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 3,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "bbf6cf89-fa1b-42ce-9b85-49d3472f49ed",
+      "primary_di": "04953170463938",
+      "brand_name": "BALLOON",
+      "company_name": "OLYMPUS MEDICAL SYSTEMS CORP.",
+      "catalog_number": "N5369631",
+      "version_or_model_number": "MAJ-1351",
+      "commercial_distribution_status": "In Commercial Distribution",
+      "public_version_date": "2026-04-06",
+      "record_status": "Published",
+      "query_kinds": ["primary_di", "model_number"]
+    },
+    "proposed_fields": {
+      "primary_di": "04953170463938",
+      "additional_identifiers": [
+        {
+          "id": "84953170463934",
+          "type": "Unit of Use",
+          "issuing_agency": "GS1",
+          "unit_of_use_id": null,
+          "package_status": null,
+          "package_type": null
+        }
+      ],
+      "brand_name": "BALLOON",
+      "company_name": "OLYMPUS MEDICAL SYSTEMS CORP.",
+      "version_or_model_number": "MAJ-1351",
+      "device_description": null,
+      "device_count_in_base_package": 20,
+      "device_sizes": [],
+      "commercial_distribution_status": "In Commercial Distribution",
+      "commercial_distribution_end_date": null,
+      "is_kit": false,
+      "is_single_use": true,
+      "sterilization": {
+        "is_sterile": "true",
+        "is_sterilization_prior_use": "false"
+      },
+      "storage": [],
+      "product_codes": [
+        {
+          "code": "EOQ",
+          "name": "Bronchoscope (Flexible Or Rigid)",
+          "openfda": {
+            "device_name": "Bronchoscope (Flexible Or Rigid)",
+            "medical_specialty_description": "Ear, Nose, Throat",
+            "regulation_number": "874.4680",
+            "device_class": "2"
+          }
+        },
+        {
+          "code": "FDS",
+          "name": "Gastroscope And Accessories, Flexible/Rigid",
+          "openfda": {
+            "device_name": "Gastroscope And Accessories, Flexible/Rigid",
+            "medical_specialty_description": "Gastroenterology, Urology",
+            "regulation_number": "876.1500",
+            "device_class": "2"
+          }
+        },
+        {
+          "code": "ITX",
+          "name": "Transducer, Ultrasonic, Diagnostic",
+          "openfda": {
+            "device_name": "Transducer, Ultrasonic, Diagnostic",
+            "medical_specialty_description": "Radiology",
+            "regulation_number": "892.1570",
+            "device_class": "2"
+          }
+        },
+        {
+          "code": "ODG",
+          "name": "Endoscopic Ultrasound System, Gastroenterology-Urology",
+          "openfda": {
+            "device_name": "Endoscopic Ultrasound System, Gastroenterology-Urology",
+            "medical_specialty_description": "Gastroenterology, Urology",
+            "regulation_number": "876.1500",
+            "device_class": "2"
+          }
+        }
+      ],
+      "premarket_submissions": [],
+      "public_version_date": "2026-04-06",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "agrees_with_existing_backlog",
+    "retrieved_at": "2026-07-28T14:28:21.928Z",
+    "raw_cache_reference": "openfda-cache:5a58533ebb34c993e5d719159b728d4dc34267c2d297f4e15e08be80500f5ad0.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-C684D9ADCF",
+    "manufacturer": "ERBE",
+    "product_name": "ERBECRYO 2 Exhaust Gas Hose, 10 m",
+    "catalog_number": "20402-008",
+    "classification": "unmatched",
+    "reason_codes": ["no_candidate_found"],
+    "query_attempts": [
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"20402-008\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number_company",
+        "search": "catalog_number:\"20402-008\" AND company_name:\"ERBE\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number_company",
+        "search": "catalog_number:\"20402-008\" AND company_name:\"Erbe Elektromedizin GmbH\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"20402-008\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "brand_fallback",
+        "search": "brand_name:\"ERBECRYO 2\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 0,
+    "selected_candidate": null,
+    "proposed_fields": {
+      "primary_di": null,
+      "additional_identifiers": [],
+      "brand_name": null,
+      "company_name": null,
+      "version_or_model_number": null,
+      "device_description": null,
+      "device_count_in_base_package": null,
+      "device_sizes": [],
+      "commercial_distribution_status": null,
+      "commercial_distribution_end_date": null,
+      "is_kit": null,
+      "is_single_use": null,
+      "sterilization": null,
+      "storage": [],
+      "product_codes": [],
+      "premarket_submissions": [],
+      "public_version_date": null,
+      "record_status": null
+    },
+    "backlog_comparison": "not_previously_evaluated",
+    "retrieved_at": "2026-07-28T14:28:21.431Z",
+    "raw_cache_reference": "openfda-cache:11fc6e343349f6d75db77f72f8501e8958f3ecb1f95ebfacc98a6c82c49a8fa2.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-E04326B8E4",
+    "manufacturer": "Olympus",
+    "product_name": "EVIS EUS Endoscopic Ultrasound Center EU-ME2",
+    "catalog_number": "EU-ME2",
+    "classification": "unmatched",
+    "reason_codes": ["no_candidate_found"],
+    "query_attempts": [
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"EU-ME2\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number_company",
+        "search": "catalog_number:\"EU-ME2\" AND company_name:\"Olympus\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number_company",
+        "search": "catalog_number:\"EU-ME2\" AND company_name:\"Olympus Medical Systems Corp.\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 0,
+        "cache_hit": true,
+        "http_status": 404,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "model_number",
+        "search": "version_or_model_number:\"EU-ME2\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 4,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "brand_fallback",
+        "search": "brand_name:\"EVIS EUS\"",
+        "limit": 100,
+        "result_count": 0,
+        "raw_result_count": 18,
+        "cache_hit": false,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 0,
+    "selected_candidate": null,
+    "proposed_fields": {
+      "primary_di": null,
+      "additional_identifiers": [],
+      "brand_name": null,
+      "company_name": null,
+      "version_or_model_number": null,
+      "device_description": null,
+      "device_count_in_base_package": null,
+      "device_sizes": [],
+      "commercial_distribution_status": null,
+      "commercial_distribution_end_date": null,
+      "is_kit": null,
+      "is_single_use": null,
+      "sterilization": null,
+      "storage": [],
+      "product_codes": [],
+      "premarket_submissions": [],
+      "public_version_date": null,
+      "record_status": null
+    },
+    "backlog_comparison": "not_previously_evaluated",
+    "retrieved_at": "2026-07-28T14:34:05.554Z",
+    "raw_cache_reference": "openfda-cache:1f7deb5c35bb9f02ddeb61b06d17fb9fa8b8da8e0ae8f9c7372e0d65c4477089.json",
+    "decision": "pending_review"
+  },
+  {
+    "format_version": 1,
+    "product_id": "PRD-E37704D087",
+    "manufacturer": "Novatech",
+    "product_name": "DUTAU Stent Fenestration Forceps",
+    "catalog_number": "6522",
+    "classification": "review_required",
+    "reason_codes": ["matches_existing_backlog_suggestion_only", "multiple_candidate_records"],
+    "query_attempts": [
+      {
+        "kind": "primary_di",
+        "search": "identifiers.id:\"14063108108637\"",
+        "limit": 100,
+        "result_count": 1,
+        "raw_result_count": 1,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      },
+      {
+        "kind": "catalog_number",
+        "search": "catalog_number:\"6522\"",
+        "limit": 100,
+        "result_count": 5,
+        "raw_result_count": 63,
+        "cache_hit": true,
+        "http_status": 200,
+        "attempt_count": 1,
+        "error": null
+      }
+    ],
+    "candidate_count": 5,
+    "selected_candidate": {
+      "record_key": null,
+      "public_device_record_key": "b868eade-b83a-4644-8dbf-1271d6d75272",
+      "primary_di": "14063108108637",
+      "brand_name": "DUTAU FORCEPS®",
+      "company_name": "NOVATECH",
+      "catalog_number": "6522",
+      "version_or_model_number": "6522",
+      "commercial_distribution_status": "In Commercial Distribution",
+      "public_version_date": "2023-06-19",
+      "record_status": "Published",
+      "query_kinds": ["primary_di", "catalog_number"]
+    },
+    "proposed_fields": {
+      "primary_di": "14063108108637",
+      "additional_identifiers": [],
+      "brand_name": "DUTAU FORCEPS®",
+      "company_name": "NOVATECH",
+      "version_or_model_number": "6522",
+      "device_description": "Forceps",
+      "device_count_in_base_package": 1,
+      "device_sizes": [],
+      "commercial_distribution_status": "In Commercial Distribution",
+      "commercial_distribution_end_date": null,
+      "is_kit": false,
+      "is_single_use": false,
+      "sterilization": {
+        "is_sterile": "false",
+        "is_sterilization_prior_use": "true",
+        "sterilization_methods": "Moist Heat or Steam Sterilization"
+      },
+      "storage": [],
+      "product_codes": [
+        {
+          "code": "KAE",
+          "name": "Forceps, Ent",
+          "openfda": {
+            "device_name": "Forceps, Ent",
+            "medical_specialty_description": "Ear, Nose, Throat",
+            "regulation_number": "874.4420",
+            "device_class": "1"
+          }
+        }
+      ],
+      "premarket_submissions": [],
+      "public_version_date": "2023-06-19",
+      "record_status": "Published"
+    },
+    "backlog_comparison": "agrees_with_existing_backlog",
+    "retrieved_at": "2026-07-28T14:26:29.812Z",
+    "raw_cache_reference": "openfda-cache:7b3dcd9b286a0eba68e64069b7f66de95d9513164de14beeb6f72f08882ac633.json",
+    "decision": "pending_review"
+  }
+]

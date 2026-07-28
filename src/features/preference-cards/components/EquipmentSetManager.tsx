@@ -11,7 +11,14 @@ import { cn } from '@/lib/cn'
 
 import { CatalogOptionPicker } from './CatalogOptionPicker'
 import { useEquipmentSets } from '../hooks/useEquipmentSets'
-import { equipmentSetCoveredRoles, type EquipmentSet } from '../domain/equipment-set'
+import {
+  equipmentSetCoveredRoles,
+  equipmentSetHasMember,
+  equipmentSetMemberKey,
+  equipmentSetProductIdsForRole,
+  equipmentSetWithoutMember,
+  type EquipmentSet,
+} from '../domain/equipment-set'
 import type { CatalogPick } from '../domain/catalog-pick'
 
 export interface EquipmentSetRole {
@@ -85,24 +92,20 @@ export function EquipmentSetManager({ roles, labels }: EquipmentSetManagerProps)
 
   const draftCoveredRoles = draft ? equipmentSetCoveredRoles(draft) : []
   const memberProductIds = useMemo(
-    () => new Set(draft?.members.map((member) => member.productId) ?? []),
-    [draft],
+    () => (draft ? equipmentSetProductIdsForRole(draft, memberRole) : new Set<string>()),
+    [draft, memberRole],
   )
 
   const addMember = (pick: CatalogPick) => {
     setDraft((current) =>
-      current && !current.members.some((member) => member.productId === pick.productId)
+      current && !equipmentSetHasMember(current, pick)
         ? { ...current, members: [...current.members, pick] }
         : current,
     )
   }
 
-  const removeMember = (productId: string) => {
-    setDraft((current) =>
-      current
-        ? { ...current, members: current.members.filter((m) => m.productId !== productId) }
-        : current,
-    )
+  const removeMember = (member: Pick<CatalogPick, 'productId' | 'roleCode'>) => {
+    setDraft((current) => (current ? equipmentSetWithoutMember(current, member) : current))
   }
 
   const toggleAdditionalRole = (code: string) => {
@@ -178,7 +181,7 @@ export function EquipmentSetManager({ roles, labels }: EquipmentSetManagerProps)
                 <ul className="space-y-2">
                   {draft.members.map((member) => (
                     <li
-                      key={member.productId}
+                      key={equipmentSetMemberKey(member)}
                       className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-background p-2.5"
                     >
                       <div className="min-w-0">
@@ -194,7 +197,7 @@ export function EquipmentSetManager({ roles, labels }: EquipmentSetManagerProps)
                         type="button"
                         variant="ghost"
                         size="sm"
-                        onClick={() => removeMember(member.productId)}
+                        onClick={() => removeMember(member)}
                       >
                         <Trash2 aria-hidden="true" className="h-4 w-4" />
                         <span className="sr-only">{labels.remove}</span>

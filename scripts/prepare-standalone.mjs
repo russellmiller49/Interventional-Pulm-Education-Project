@@ -7,6 +7,7 @@ const standaloneDir = path.join(nextDir, 'standalone')
 const publicDir = path.join(root, 'public')
 const boardReviewHtmlDir = path.join(root, 'Imports', 'Board_Review_Book', 'Updated_chapters')
 const boardReviewTranslationsDir = path.join(root, 'board_review_translations')
+const openFdaReviewDir = path.join(root, 'data', 'ip-preference-cards', 'generated', 'openfda')
 
 const copiedPublicDir = path.join(standaloneDir, 'public')
 const copiedStaticDir = path.join(standaloneDir, '.next', 'static')
@@ -17,14 +18,17 @@ const copiedBoardReviewHtmlDir = path.join(
   'Updated_chapters',
 )
 const copiedBoardReviewTranslationsDir = path.join(standaloneDir, 'board_review_translations')
+const copiedOpenFdaReviewDir = path.join(
+  standaloneDir,
+  'data',
+  'ip-preference-cards',
+  'generated',
+  'openfda',
+)
 
 // Most model assets are hosted by MODULE_ASSET_ORIGIN and intentionally omitted.
 // Compact ECMO and cardiac teaching assets ship with the standalone application.
-const bundledAssetPrefixes = [
-  'models/cardiohelp-ecmo',
-  'models/cardiac',
-  'models/cardiac-devices',
-]
+const bundledAssetPrefixes = ['models/cardiohelp-ecmo', 'models/cardiac', 'models/cardiac-devices']
 
 const remoteAssetPrefixes = [
   'airway-anatomy',
@@ -45,6 +49,15 @@ const remoteAssetFiles = new Set([
 ])
 
 const embeddedShellAssetExtensions = new Set(['.css', '.html', '.js'])
+const openFdaReviewFiles = new Set([
+  'enrichment-proposals.json',
+  'high-confidence-candidates.csv',
+  'manifest-snapshot.json',
+  'query-errors.csv',
+  'review-required.csv',
+  'run-summary.json',
+  'unmatched-products.csv',
+])
 
 async function exists(pathname) {
   try {
@@ -107,6 +120,11 @@ function shouldCopyBoardReviewAsset(source) {
   return path.basename(source) !== '.DS_Store'
 }
 
+function shouldCopyOpenFdaReviewAsset(source) {
+  const relativePath = path.relative(openFdaReviewDir, source)
+  return relativePath === '' || openFdaReviewFiles.has(relativePath)
+}
+
 async function copyDirectoryIfExists(source, destination, filter) {
   if (!(await exists(source))) {
     return
@@ -144,6 +162,11 @@ async function main() {
     boardReviewTranslationsDir,
     copiedBoardReviewTranslationsDir,
     shouldCopyBoardReviewAsset,
+  )
+  await copyDirectoryIfExists(
+    openFdaReviewDir,
+    copiedOpenFdaReviewDir,
+    shouldCopyOpenFdaReviewAsset,
   )
 
   console.log('Prepared standalone output with static files and trimmed public assets.')

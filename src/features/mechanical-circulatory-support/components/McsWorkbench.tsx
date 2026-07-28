@@ -544,8 +544,12 @@ export function McsWorkbench({
         ? [...state.scenario.sourceIds, ...state.scenario.evidenceSourceIds]
         : lesson.sourceIds
   const derivedValueEvidence = resolveCriticalCareEvidence([
-    ...mcsDerivedValueGuides.pulmonaryArteryPulsatilityIndex.evidenceIds,
-    ...mcsDerivedValueGuides.cardiacPowerOutputW.evidenceIds,
+    ...mcsDerivedValueGuides.pulmonaryArteryPulsatilityIndex.references.flatMap(
+      (reference) => reference.evidenceIds,
+    ),
+    ...mcsDerivedValueGuides.cardiacPowerOutputW.references.flatMap(
+      (reference) => reference.evidenceIds,
+    ),
   ])
   const evidenceEntries = Array.from(
     new Map(

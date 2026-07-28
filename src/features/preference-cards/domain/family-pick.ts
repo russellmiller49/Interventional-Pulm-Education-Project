@@ -91,9 +91,11 @@ function verificationStateFor(pick: FamilyPick): VerificationState {
 export function familyPickToHospitalItem(
   pick: FamilyPick,
   scope: { organizationId: string; siteId: string; locationId: string },
+  roleScopedIdentity = false,
 ): HospitalItem {
+  const itemId = familyPickId(pick.familyKey, roleScopedIdentity ? pick.roleCode : undefined)
   return {
-    id: familyPickId(pick.familyKey),
+    id: itemId,
     organizationId: scope.organizationId,
     siteId: scope.siteId,
     locationId: scope.locationId,
@@ -102,7 +104,7 @@ export function familyPickToHospitalItem(
     catalogProduct: {
       // Namespaced, so the snapshot can never present a product line as a single ordered
       // product. There is no catalog number to pull until a size is chosen.
-      productId: familyPickId(pick.familyKey),
+      productId: itemId,
       manufacturer: pick.manufacturerDisplay,
       productName: pick.familyName,
       catalogNumber: null,
@@ -129,11 +131,17 @@ export function familyPickToHospitalItem(
   }
 }
 
-export function familyPickToRoleOption(pick: FamilyPick): HospitalRoleOption {
+export function familyPickToRoleOption(
+  pick: FamilyPick,
+  roleScopedIdentity = false,
+): HospitalRoleOption {
+  const itemId = familyPickId(pick.familyKey, roleScopedIdentity ? pick.roleCode : undefined)
   return {
-    id: `family-option-${pick.familyKey}`,
+    id: roleScopedIdentity
+      ? `family-option-${pick.roleCode}-${pick.familyKey}`
+      : `family-option-${pick.familyKey}`,
     roleCode: pick.roleCode,
-    hospitalItemId: familyPickId(pick.familyKey),
+    hospitalItemId: itemId,
     preferenceRank: 99,
     substitutionClass: 'acceptable',
     noSubstitute: false,
@@ -159,17 +167,25 @@ export function withFamilyPicks<
 
   const seenItemIds = new Set(context.hospitalItems.map((item) => item.id))
   const extraItems: HospitalItem[] = []
+  const rolesByFamily = new Map<string, Set<string>>()
   for (const pick of picks) {
-    const itemId = familyPickId(pick.familyKey)
+    const roles = rolesByFamily.get(pick.familyKey) ?? new Set<string>()
+    roles.add(pick.roleCode)
+    rolesByFamily.set(pick.familyKey, roles)
+  }
+  for (const pick of picks) {
+    const roleScopedIdentity = (rolesByFamily.get(pick.familyKey)?.size ?? 0) > 1
+    const itemId = familyPickId(pick.familyKey, roleScopedIdentity ? pick.roleCode : undefined)
     if (seenItemIds.has(itemId)) continue
     seenItemIds.add(itemId)
-    extraItems.push(familyPickToHospitalItem(pick, scope))
+    extraItems.push(familyPickToHospitalItem(pick, scope, roleScopedIdentity))
   }
 
   const seenOptionIds = new Set(context.hospitalRoleOptions.map((option) => option.id))
   const extraOptions: HospitalRoleOption[] = []
   for (const pick of picks) {
-    const option = familyPickToRoleOption(pick)
+    const roleScopedIdentity = (rolesByFamily.get(pick.familyKey)?.size ?? 0) > 1
+    const option = familyPickToRoleOption(pick, roleScopedIdentity)
     if (seenOptionIds.has(option.id)) continue
     seenOptionIds.add(option.id)
     extraOptions.push(option)

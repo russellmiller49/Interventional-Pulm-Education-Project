@@ -1,0 +1,300 @@
+{
+  "format_version": 1,
+  "cohort_product_count": 25,
+  "final_classifications": {
+    "high_confidence": 2,
+    "review_required": 17,
+    "unmatched": 5,
+    "insufficient_identifiers": 1,
+    "query_error": 0
+  },
+  "backlog_agreement_count": 16,
+  "di_conflict_count": 0,
+  "distribution_status_conflict_count": 0,
+  "exact_catalog_number_match": {
+    "matches": 5,
+    "selected_candidate_denominator": 19,
+    "rate_percent": 26.3
+  },
+  "manufacturer_alias_match": {
+    "matches": 17,
+    "selected_candidate_denominator": 19,
+    "rate_percent": 89.5
+  },
+  "products_with_multiple_candidate_records": 6,
+  "products_requiring_package_level_resolution": 4,
+  "high_confidence_invariant_demotions": [
+    "PRD-05780FEDD7",
+    "PRD-09AB6CA202",
+    "PRD-189E7EF27A",
+    "PRD-2302DA77DA",
+    "PRD-5F801B5A8E",
+    "PRD-94C61697D9",
+    "PRD-9BB524F077"
+  ],
+  "runs": {
+    "initial_live": {
+      "summary": {
+        "format_version": 1,
+        "catalog_input_sha256": "1948f00c20f673dfbe2092bde6315c78ca02b8cb5f3f1e308e33c223175861fe",
+        "catalog_product_count": 1474,
+        "products_requested": 25,
+        "products_processed": 25,
+        "products_served_from_cache": 0,
+        "api_requests_made": 56,
+        "retry_count": 0,
+        "high_confidence_count": 1,
+        "review_required_count": 21,
+        "unmatched_count": 2,
+        "insufficient_identifier_count": 1,
+        "query_error_count": 0,
+        "existing_backlog_conflicts": 0,
+        "started_at": "2026-07-28T14:26:22.551Z",
+        "completed_at": "2026-07-28T14:26:41.124Z",
+        "openfda_endpoint": "https://api.fda.gov/device/udi.json",
+        "api_key_used": true
+      },
+      "request_metrics": {
+        "query_attempts": 56,
+        "api_requests": 56,
+        "cache_hits": 0,
+        "retries": 0,
+        "timeouts": 0,
+        "query_errors": 0,
+        "median_api_requests_per_product": 2,
+        "maximum_api_requests_per_product": 5
+      }
+    },
+    "remediation_live": {
+      "summary": {
+        "format_version": 1,
+        "catalog_input_sha256": "1948f00c20f673dfbe2092bde6315c78ca02b8cb5f3f1e308e33c223175861fe",
+        "catalog_product_count": 1474,
+        "products_requested": 25,
+        "products_processed": 25,
+        "products_served_from_cache": 7,
+        "api_requests_made": 18,
+        "retry_count": 0,
+        "high_confidence_count": 2,
+        "review_required_count": 20,
+        "unmatched_count": 2,
+        "insufficient_identifier_count": 1,
+        "query_error_count": 0,
+        "existing_backlog_conflicts": 1,
+        "started_at": "2026-07-28T14:28:17.360Z",
+        "completed_at": "2026-07-28T14:28:23.423Z",
+        "openfda_endpoint": "https://api.fda.gov/device/udi.json",
+        "api_key_used": true
+      },
+      "request_metrics": {
+        "query_attempts": 74,
+        "api_requests": 18,
+        "cache_hits": 56,
+        "retries": 0,
+        "timeouts": 0,
+        "query_errors": 0,
+        "median_api_requests_per_product": 1,
+        "maximum_api_requests_per_product": 2
+      }
+    },
+    "exact_filter_remediation_live": {
+      "summary": {
+        "format_version": 1,
+        "catalog_input_sha256": "1948f00c20f673dfbe2092bde6315c78ca02b8cb5f3f1e308e33c223175861fe",
+        "catalog_product_count": 1474,
+        "products_requested": 25,
+        "products_processed": 25,
+        "products_served_from_cache": 21,
+        "api_requests_made": 6,
+        "retry_count": 0,
+        "high_confidence_count": 2,
+        "review_required_count": 17,
+        "unmatched_count": 5,
+        "insufficient_identifier_count": 1,
+        "query_error_count": 0,
+        "existing_backlog_conflicts": 0,
+        "started_at": "2026-07-28T14:34:04.543Z",
+        "completed_at": "2026-07-28T14:34:06.467Z",
+        "openfda_endpoint": "https://api.fda.gov/device/udi.json",
+        "api_key_used": true
+      },
+      "request_metrics": {
+        "query_attempts": 80,
+        "api_requests": 6,
+        "cache_hits": 74,
+        "retries": 0,
+        "timeouts": 0,
+        "query_errors": 0,
+        "median_api_requests_per_product": 0,
+        "maximum_api_requests_per_product": 4
+      }
+    },
+    "final_from_populated_cache": {
+      "summary": {
+        "format_version": 1,
+        "catalog_input_sha256": "1948f00c20f673dfbe2092bde6315c78ca02b8cb5f3f1e308e33c223175861fe",
+        "catalog_product_count": 1474,
+        "products_requested": 25,
+        "products_processed": 25,
+        "products_served_from_cache": 24,
+        "api_requests_made": 0,
+        "retry_count": 0,
+        "high_confidence_count": 2,
+        "review_required_count": 17,
+        "unmatched_count": 5,
+        "insufficient_identifier_count": 1,
+        "query_error_count": 0,
+        "existing_backlog_conflicts": 0,
+        "started_at": "2026-07-28T14:34:24.858Z",
+        "completed_at": "2026-07-28T14:34:24.918Z",
+        "openfda_endpoint": "https://api.fda.gov/device/udi.json",
+        "api_key_used": true
+      },
+      "request_metrics": {
+        "query_attempts": 80,
+        "api_requests": 0,
+        "cache_hits": 80,
+        "retries": 0,
+        "timeouts": 0,
+        "query_errors": 0,
+        "median_api_requests_per_product": 0,
+        "maximum_api_requests_per_product": 0
+      }
+    },
+    "immediate_cached_rerun": {
+      "summary": {
+        "format_version": 1,
+        "catalog_input_sha256": "1948f00c20f673dfbe2092bde6315c78ca02b8cb5f3f1e308e33c223175861fe",
+        "catalog_product_count": 1474,
+        "products_requested": 25,
+        "products_processed": 25,
+        "products_served_from_cache": 24,
+        "api_requests_made": 0,
+        "retry_count": 0,
+        "high_confidence_count": 2,
+        "review_required_count": 17,
+        "unmatched_count": 5,
+        "insufficient_identifier_count": 1,
+        "query_error_count": 0,
+        "existing_backlog_conflicts": 0,
+        "started_at": "2026-07-28T14:34:28.725Z",
+        "completed_at": "2026-07-28T14:34:28.786Z",
+        "openfda_endpoint": "https://api.fda.gov/device/udi.json",
+        "api_key_used": true
+      },
+      "request_metrics": {
+        "query_attempts": 80,
+        "api_requests": 0,
+        "cache_hits": 80,
+        "retries": 0,
+        "timeouts": 0,
+        "query_errors": 0,
+        "median_api_requests_per_product": 0,
+        "maximum_api_requests_per_product": 0
+      },
+      "queryable_products": 24,
+      "cache_reuse_rate_percent": 100
+    },
+    "targeted_refresh": {
+      "summary": {
+        "format_version": 1,
+        "catalog_input_sha256": "1948f00c20f673dfbe2092bde6315c78ca02b8cb5f3f1e308e33c223175861fe",
+        "catalog_product_count": 1474,
+        "products_requested": 3,
+        "products_processed": 3,
+        "products_served_from_cache": 0,
+        "api_requests_made": 9,
+        "retry_count": 0,
+        "high_confidence_count": 0,
+        "review_required_count": 3,
+        "unmatched_count": 0,
+        "insufficient_identifier_count": 0,
+        "query_error_count": 0,
+        "existing_backlog_conflicts": 0,
+        "started_at": "2026-07-28T14:34:34.755Z",
+        "completed_at": "2026-07-28T14:34:38.350Z",
+        "openfda_endpoint": "https://api.fda.gov/device/udi.json",
+        "api_key_used": true
+      },
+      "refresh_product_limit": 3
+    },
+    "total_live_api_requests_before_cached_proof": 80
+  },
+  "deterministic_proposal_output": {
+    "byte_for_byte_equal": true,
+    "sha256": "33916a6e906d5b2cf75d35cb12362955f3ff01ff4fbec8348285e756eaec3122",
+    "excluded_runtime_metadata": []
+  },
+  "by_expected_challenge_category": {
+    "existing_exact_di_or_gtin": {
+      "products": 5,
+      "high_confidence": 0,
+      "review_required": 5,
+      "unmatched": 0,
+      "insufficient_identifiers": 0,
+      "query_error": 0,
+      "multiple_candidate_records": 0,
+      "backlog_agreements": 5
+    },
+    "catalog_with_suggested_gudid": {
+      "products": 5,
+      "high_confidence": 1,
+      "review_required": 4,
+      "unmatched": 0,
+      "insufficient_identifiers": 0,
+      "query_error": 0,
+      "multiple_candidate_records": 1,
+      "backlog_agreements": 5
+    },
+    "catalog_without_existing_di": {
+      "products": 5,
+      "high_confidence": 0,
+      "review_required": 1,
+      "unmatched": 4,
+      "insufficient_identifiers": 0,
+      "query_error": 0,
+      "multiple_candidate_records": 1,
+      "backlog_agreements": 0
+    },
+    "package_level_ambiguity": {
+      "products": 4,
+      "high_confidence": 0,
+      "review_required": 4,
+      "unmatched": 0,
+      "insufficient_identifiers": 0,
+      "query_error": 0,
+      "multiple_candidate_records": 4,
+      "backlog_agreements": 4
+    },
+    "legacy_or_distribution_question": {
+      "products": 3,
+      "high_confidence": 1,
+      "review_required": 1,
+      "unmatched": 1,
+      "insufficient_identifiers": 0,
+      "query_error": 0,
+      "multiple_candidate_records": 0,
+      "backlog_agreements": 2
+    },
+    "manufacturer_alias_complexity": {
+      "products": 2,
+      "high_confidence": 0,
+      "review_required": 2,
+      "unmatched": 0,
+      "insufficient_identifiers": 0,
+      "query_error": 0,
+      "multiple_candidate_records": 0,
+      "backlog_agreements": 0
+    },
+    "insufficient_identifiers": {
+      "products": 1,
+      "high_confidence": 0,
+      "review_required": 0,
+      "unmatched": 0,
+      "insufficient_identifiers": 1,
+      "query_error": 0,
+      "multiple_candidate_records": 0,
+      "backlog_agreements": 0
+    }
+  }
+}

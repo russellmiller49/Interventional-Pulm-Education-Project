@@ -2,6 +2,7 @@ import { evaluateCompatibilityRules } from './evaluate-compatibility'
 import { suppressKitDuplicates } from './kit-suppression'
 import { evaluateQuantityExpression } from './quantity-expression'
 import { buildCardInputSchema, quantityExpressionSchema, recipeSlotSchema } from './schemas'
+import { familyKeyFromPickId, isLegacyFamilyPickId } from './size-at-procedure'
 import { stableSnapshotHash } from './stable-hash'
 import type {
   BuildCardInput,
@@ -294,7 +295,13 @@ function itemResolution(
       ? options[0]
       : selectedItemOverride === null
         ? undefined
-        : options.find((option) => option.hospitalItemId === selectedItemOverride)
+        : options.find(
+            (option) =>
+              option.hospitalItemId === selectedItemOverride ||
+              (isLegacyFamilyPickId(selectedItemOverride) &&
+                familyKeyFromPickId(option.hospitalItemId) ===
+                  familyKeyFromPickId(selectedItemOverride)),
+          )
   const selectedItem = selectedOption
     ? (context.hospitalItems.find((item) => item.id === selectedOption.hospitalItemId) ?? null)
     : null
@@ -404,6 +411,13 @@ function itemResolution(
     slotId: slot.id,
   })
 
+  // A physical item or family can be mapped to more than one role. The role option proves
+  // which relationship was selected for this exact slot; snapshot that effective role
+  // rather than retaining whichever role happened to create the shared item first.
+  const selectedItemSnapshot = selectedItem
+    ? { ...cloneHospitalItem(selectedItem), roleCode: slot.roleCode }
+    : null
+
   return {
     id: slot.id,
     sourceSlotId: slot.sourceSlotId,
@@ -421,7 +435,7 @@ function itemResolution(
     openHoldStatus: slot.openHoldStatus,
     selectedHospitalItemId: selectedItem?.id ?? null,
     selectedCatalogProductId: selectedItem?.catalogProduct?.productId ?? null,
-    selectedItemSnapshot: selectedItem ? cloneHospitalItem(selectedItem) : null,
+    selectedItemSnapshot,
     resolutionState,
     verificationState,
     compatibilityState: 'not_evaluated',
