@@ -1,17 +1,23 @@
 import type { Metadata, Route } from 'next'
 import Link from 'next/link'
+import { FileSpreadsheet } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { ExternalLink } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { AdminPreferenceCardNav } from '@/features/preference-cards/components/AdminPreferenceCardNav'
+import { CatalogVerificationQueue } from '@/features/preference-cards/components/CatalogVerificationQueue'
 import {
-  getVerificationBacklog,
-  type VerificationBacklogRow,
-} from '@/features/preference-cards/data/demo-context.server'
+  catalogVerificationFacets,
+  catalogVerificationSignals,
+  filterCatalogVerificationRows,
+  getCatalogVerificationRows,
+  summarizeCatalogVerificationRows,
+  type CatalogVerificationFilters,
+  type CatalogVerificationSignal,
+} from '@/features/preference-cards/data/catalog-verification.server'
 
 export const metadata: Metadata = {
-  title: 'Preference-card catalog QA',
+  title: 'Preference-card catalog verification',
   robots: { index: false, follow: false, noarchive: true },
 }
 
@@ -22,19 +28,25 @@ interface PageProps {
   searchParams: Promise<Record<string, SearchValue>>
 }
 
-const filterFields = [
-  ['priority', 'priority'],
-  ['manufacturer', 'manufacturer'],
-  ['workstream', 'workstream'],
-  ['reviewStatus', 'review_status'],
-  ['procedure', 'procedures'],
-  ['role', 'roles'],
-  ['gudid', 'gudid_result'],
-  ['distribution', 'distribution_status'],
-] as const satisfies ReadonlyArray<readonly [string, keyof VerificationBacklogRow]>
+const textFilterKeys = ['q', 'manufacturer', 'procedure', 'role', 'gudid', 'distribution'] as const
+
+const allFilterKeys = [
+  ...textFilterKeys,
+  'priority',
+  'workstream',
+  'reviewStatus',
+  'signal',
+] as const
 
 function first(value: SearchValue): string {
   return (Array.isArray(value) ? value[0] : value)?.trim().slice(0, 160) ?? ''
+}
+
+function signal(value: SearchValue): CatalogVerificationSignal | '' {
+  const candidate = first(value)
+  return catalogVerificationSignals.includes(candidate as CatalogVerificationSignal)
+    ? (candidate as CatalogVerificationSignal)
+    : ''
 }
 
 export default async function PreferenceCardCatalogQaPage({ params, searchParams }: PageProps) {
@@ -42,21 +54,22 @@ export default async function PreferenceCardCatalogQaPage({ params, searchParams
   setRequestLocale(locale)
   const t = await getTranslations('preferenceCards')
   const query = await searchParams
-  const filters = new Map(
-    filterFields.map(([queryKey, dataKey]) => [
-      dataKey,
-      first(query[queryKey]).toLocaleLowerCase(),
-    ]),
-  )
-  const filtered = getVerificationBacklog().filter((row) =>
-    [...filters.entries()].every(([key, value]) => {
-      if (!value) return true
-      return String(row[key] ?? '')
-        .toLocaleLowerCase()
-        .includes(value)
-    }),
-  )
-  const pageSize = 25
+  const allRows = getCatalogVerificationRows()
+  const facets = catalogVerificationFacets(allRows)
+  const filters: CatalogVerificationFilters = {
+    q: first(query.q),
+    priority: first(query.priority),
+    manufacturer: first(query.manufacturer),
+    workstream: first(query.workstream),
+    reviewStatus: first(query.reviewStatus),
+    procedure: first(query.procedure),
+    role: first(query.role),
+    gudid: first(query.gudid),
+    distribution: first(query.distribution),
+    signal: signal(query.signal),
+  }
+  const filtered = filterCatalogVerificationRows(allRows, filters)
+  const pageSize = 20
   const requestedPage = Number.parseInt(first(query.page), 10)
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize))
   const currentPage = Math.min(
@@ -65,13 +78,13 @@ export default async function PreferenceCardCatalogQaPage({ params, searchParams
   )
   const rows = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
   const pageHref = (page: number) => {
-    const params = new URLSearchParams()
-    for (const [key] of filterFields) {
+    const hrefParams = new URLSearchParams()
+    for (const key of allFilterKeys) {
       const value = first(query[key])
-      if (value) params.set(key, value)
+      if (value) hrefParams.set(key, value)
     }
-    params.set('page', String(page))
-    return `/${locale}/admin/preference-cards/catalog-qa?${params.toString()}` as Route
+    hrefParams.set('page', String(page))
+    return `/${locale}/admin/preference-cards/catalog-qa?${hrefParams.toString()}` as Route
   }
 
   return (
@@ -79,21 +92,127 @@ export default async function PreferenceCardCatalogQaPage({ params, searchParams
       <header className="space-y-4">
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t('eyebrow')}</p>
         <h1 className="text-4xl font-black tracking-tight">{t('admin.catalogQaTitle')}</h1>
-        <p className="max-w-3xl text-muted-foreground">{t('admin.catalogReadOnly')}</p>
+        <p className="max-w-4xl text-muted-foreground">
+          {t('admin.verificationWorkflowDescription')}
+        </p>
         <AdminPreferenceCardNav locale={locale} />
       </header>
+
+      <aside className="rounded-2xl border border-amber-400/60 bg-amber-50 p-5 text-sm leading-6 text-amber-950 dark:bg-amber-950/30 dark:text-amber-100">
+        <p className="font-bold">{t('admin.verificationSafetyTitle')}</p>
+        <p className="mt-1">{t('admin.verificationSafety')}</p>
+      </aside>
+
+      <section
+        aria-labelledby="full-catalog-clinical-use-heading"
+        className="rounded-2xl border border-primary/30 bg-card p-5 shadow-sm"
+      >
+        <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+          <div className="max-w-4xl">
+            <div className="flex items-center gap-2">
+              <FileSpreadsheet aria-hidden="true" className="h-5 w-5 text-primary" />
+              <h2
+                id="full-catalog-clinical-use-heading"
+                className="text-xl font-bold tracking-tight"
+              >
+                {t('admin.clinicalUseReviewEntryTitle')}
+              </h2>
+            </div>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              {t('admin.clinicalUseReviewEntryDescription')}
+            </p>
+          </div>
+          <Button
+            asChild
+            className="h-auto min-h-10 w-full shrink-0 justify-center whitespace-normal text-center lg:w-auto"
+          >
+            <Link href={`/${locale}/admin/preference-cards/catalog-qa/clinical-use` as Route}>
+              {t('admin.clinicalUseReviewEntryAction')}
+            </Link>
+          </Button>
+        </div>
+      </section>
 
       <form className="rounded-2xl border border-border bg-card p-5">
         <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
           {t('admin.filters')}
         </h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {filterFields.map(([queryKey]) => (
-            <label key={queryKey} className="text-xs font-semibold text-foreground">
-              {t(`admin.${queryKey}`)}
+          <label className="text-xs font-semibold text-foreground sm:col-span-2">
+            {t('admin.verificationSearch')}
+            <input
+              name="q"
+              defaultValue={first(query.q)}
+              placeholder={t('admin.verificationSearchPlaceholder')}
+              className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm font-normal"
+            />
+          </label>
+          <label className="text-xs font-semibold text-foreground">
+            {t('admin.priority')}
+            <select
+              name="priority"
+              defaultValue={first(query.priority)}
+              className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm font-normal"
+            >
+              <option value="">{t('admin.verificationAllPriorities')}</option>
+              {facets.priorities.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-xs font-semibold text-foreground">
+            {t('admin.verificationSignal')}
+            <select
+              name="signal"
+              defaultValue={signal(query.signal)}
+              className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm font-normal"
+            >
+              <option value="">{t('admin.verificationAllSignals')}</option>
+              {catalogVerificationSignals.map((value) => (
+                <option key={value} value={value}>
+                  {t(`admin.verificationSignal_${value}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-xs font-semibold text-foreground">
+            {t('admin.workstream')}
+            <select
+              name="workstream"
+              defaultValue={first(query.workstream)}
+              className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm font-normal"
+            >
+              <option value="">{t('admin.verificationAllWorkstreams')}</option>
+              {facets.workstreams.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-xs font-semibold text-foreground">
+            {t('admin.reviewStatus')}
+            <select
+              name="reviewStatus"
+              defaultValue={first(query.reviewStatus)}
+              className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm font-normal"
+            >
+              <option value="">{t('admin.verificationAllReviewStatuses')}</option>
+              {facets.reviewStatuses.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+          </label>
+          {(['manufacturer', 'procedure', 'role', 'gudid', 'distribution'] as const).map((key) => (
+            <label key={key} className="text-xs font-semibold text-foreground">
+              {t(`admin.${key}`)}
               <input
-                name={queryKey}
-                defaultValue={first(query[queryKey])}
+                name={key}
+                defaultValue={first(query[key])}
                 className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm font-normal"
               />
             </label>
@@ -111,71 +230,11 @@ export default async function PreferenceCardCatalogQaPage({ params, searchParams
         </div>
       </form>
 
-      <div className="overflow-x-auto rounded-2xl border border-border bg-card">
-        <table className="w-full min-w-[1450px] text-left text-xs">
-          <thead className="bg-muted/70 uppercase tracking-wider text-muted-foreground">
-            <tr>
-              {[
-                'priority',
-                'manufacturer',
-                'product',
-                'catalogNumber',
-                'workstream',
-                'reviewStatus',
-                'procedure',
-                'role',
-                'gudid',
-                'distribution',
-                'action',
-                'evidence',
-              ].map((column) => (
-                <th key={column} className="px-3 py-3">
-                  {t(`admin.${column}`)}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {rows.map((row) => (
-              <tr key={row.product_id} className="align-top">
-                <td className="px-3 py-3">{row.priority ?? '—'}</td>
-                <td className="px-3 py-3">{row.manufacturer ?? '—'}</td>
-                <td className="max-w-56 px-3 py-3 font-medium">
-                  {row.product_name ?? row.product_id}
-                </td>
-                <td className="px-3 py-3 font-mono">{row.catalog_number ?? '—'}</td>
-                <td className="px-3 py-3">{row.workstream ?? '—'}</td>
-                <td className="px-3 py-3">{row.review_status ?? '—'}</td>
-                <td className="max-w-56 px-3 py-3">{row.procedures ?? '—'}</td>
-                <td className="max-w-56 px-3 py-3">{row.roles ?? '—'}</td>
-                <td className="px-3 py-3">{row.gudid_result ?? '—'}</td>
-                <td className="px-3 py-3">{row.distribution_status ?? '—'}</td>
-                <td className="max-w-72 px-3 py-3">{row.recommended_action ?? '—'}</td>
-                <td className="px-3 py-3">
-                  {row.evidence_url?.startsWith('https://') ? (
-                    <a
-                      href={row.evidence_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 font-semibold text-primary hover:underline"
-                    >
-                      {t('admin.evidence')}
-                      <ExternalLink aria-hidden="true" className="h-3 w-3" />
-                    </a>
-                  ) : (
-                    '—'
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {rows.length === 0 ? (
-          <p className="px-5 py-10 text-center text-sm text-muted-foreground">
-            {t('admin.noResults')}
-          </p>
-        ) : null}
-      </div>
+      <CatalogVerificationQueue
+        rows={rows}
+        summary={summarizeCatalogVerificationRows(allRows)}
+        locale={locale}
+      />
 
       <div className="flex items-center justify-between gap-3">
         {currentPage <= 1 ? (

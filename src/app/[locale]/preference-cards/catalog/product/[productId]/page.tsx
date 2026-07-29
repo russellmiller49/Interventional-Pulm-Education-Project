@@ -115,6 +115,7 @@ export default async function CatalogProductPage({ params }: PageProps) {
           <VerificationBadge
             tier={product.verificationTier}
             usStatusPending={product.usStatusPending}
+            distributionStatus={detail.distributionStatus}
             labels={verificationLabels}
           />
           {[
@@ -267,14 +268,33 @@ export default async function CatalogProductPage({ params }: PageProps) {
                     <p className="text-xs text-muted-foreground">
                       {[
                         source.publisher,
+                        source.filename,
                         source.sourceLocation,
                         source.revisionDate,
+                        source.asOfDate,
                         source.reliabilityTier,
                         source.claimType,
+                        source.verificationStatus,
                       ]
                         .filter(Boolean)
                         .join(' · ')}
                     </p>
+                    {source.usePolicy ? (
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                        <span className="font-semibold text-foreground">
+                          {t('product.sourceUsePolicy')}:
+                        </span>{' '}
+                        {source.usePolicy}
+                      </p>
+                    ) : null}
+                    {source.linkNotes || source.sourceNotes ? (
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                        <span className="font-semibold text-foreground">
+                          {t('product.sourceNotes')}:
+                        </span>{' '}
+                        {[source.linkNotes, source.sourceNotes].filter(Boolean).join(' ')}
+                      </p>
+                    ) : null}
                   </li>
                 ))}
               </ul>

@@ -668,13 +668,18 @@ export function getUseDetail(
 export interface ProductSourceDetail {
   sourceId: string
   title: string
+  filename: string | null
   publisher: string | null
   sourceType: string | null
   reliabilityTier: string | null
   claimType: string | null
   sourceLocation: string | null
   revisionDate: string | null
+  asOfDate: string | null
   verificationStatus: string | null
+  usePolicy: string | null
+  sourceNotes: string | null
+  linkNotes: string | null
 }
 
 export interface ProductRoleDetail {
@@ -685,14 +690,18 @@ export interface ProductRoleDetail {
 }
 
 export interface ProductSlotDetail {
+  slotId: string
   procedureCode: string
   procedureName: string
   slotLabel: string
   requiredness: string
+  eligibilityStatus: string | null
+  selectable: boolean | null
 }
 
 export interface ProductDetail {
   product: CatalogProduct
+  distributionStatus: 'in_distribution' | 'not_in_distribution' | null
   roles: ProductRoleDetail[]
   slots: ProductSlotDetail[]
   sources: ProductSourceDetail[]
@@ -722,11 +731,14 @@ export function getProductDetail(
     const slot = store.procedureSlots.find((candidate) => candidate.slot_id === option.slot_id)
     if (!slot) continue
     slots.push({
+      slotId: slot.slot_id,
       procedureCode: slot.procedure_code,
       procedureName:
         store.procedureByCode.get(slot.procedure_code)?.procedure_name ?? slot.procedure_code,
       slotLabel: slot.slot_label,
       requiredness: slot.requiredness,
+      eligibilityStatus: option.eligibility_status,
+      selectable: option.selectable,
     })
   }
 
@@ -736,13 +748,18 @@ export function getProductDetail(
       return {
         sourceId: link.source_id,
         title: source?.title ?? link.source_id,
+        filename: source?.filename ?? null,
         publisher: source?.publisher ?? null,
         sourceType: source?.source_type ?? null,
         reliabilityTier: source?.reliability_tier ?? null,
         claimType: link.claim_type,
         sourceLocation: link.source_location,
         revisionDate: source?.revision_date ?? null,
+        asOfDate: source?.as_of_date ?? null,
         verificationStatus: link.verification_status,
+        usePolicy: source?.use_policy ?? null,
+        sourceNotes: source?.notes ?? null,
+        linkNotes: link.notes,
       }
     },
   )
@@ -761,7 +778,14 @@ export function getProductDetail(
     }
   }
 
-  return { product, roles, slots, sources, otherManufacturers }
+  return {
+    product,
+    distributionStatus: getDistributionMap().get(productId) ?? null,
+    roles,
+    slots,
+    sources,
+    otherManufacturers,
+  }
 }
 
 export interface RolePickerOption {

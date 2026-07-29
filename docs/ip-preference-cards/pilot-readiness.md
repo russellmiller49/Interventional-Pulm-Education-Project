@@ -13,6 +13,8 @@ It demonstrates:
 - immutable hash-addressed previews and optional append-only database snapshots;
 - spatial, chronological, exceptions, trace, and print views;
 - protected mapping actions and read-only catalog verification QA;
+- a product-centric verification workbench joining current catalog, backlog, source, GUDID,
+  and procedure-impact evidence without mutation;
 - read-only openFDA/GUDID identity-enrichment proposals kept separate from canonical data;
 - server-side enforcement of exact product-to-role catalog relationships;
 - deterministic, nonselectable review proposals for missing exact-slot options;
@@ -47,6 +49,10 @@ DRAFT PROTOTYPE — NOT APPROVED FOR CLINICAL USE
 - Only literal quantities are evaluated.
 - The admin recipe view is status-only; full authoring is deferred.
 - Catalog QA is read-only.
+- The verification workbench describes evidence availability and conflicts; it does not record
+  reviewer decisions, approve products, release visibility, or establish local formulary state.
+- Exact-slot proposal review is read-only. All 475 proposals remain unreviewed, nonselectable,
+  and separate from the 2,080 authored canonical options.
 - openFDA high-confidence classifications remain unapproved candidates; they do not alter clinical readiness, procurement status, compatibility, or local formulary state.
 - The 475 current slot-option proposals are unreviewed and nonselectable; broad role equality
   is not exact-slot eligibility.
