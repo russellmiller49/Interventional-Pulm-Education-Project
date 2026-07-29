@@ -107,6 +107,9 @@ export interface SlotProductOptionRecord {
   role_code: string
   eligibility_status: string | null
   selectable: boolean | null
+  reason?: string | null
+  visible_by_default?: boolean | null
+  product_visibility?: string | null
 }
 
 export interface SourceRecord {
