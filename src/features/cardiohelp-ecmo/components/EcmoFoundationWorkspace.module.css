@@ -1,0 +1,352 @@
+/*
+ * Layout and theme for the foundation Learn activity's three-pane workspace.
+ *
+ * Four separate defects lived in the gap between this activity and the shared workspace it mounts,
+ * and each one is fixed here rather than in `src/features/learning-module`, which this module does
+ * not own:
+ *
+ * 1. `ResizableTeachingWorkspace` asks for `height: 100%`. The activity gave it an auto-height
+ *    parent, so 100% had nothing to resolve against, every pane grew to its content, and the
+ *    document became the scroll surface. `.workspaceFrame` is the definite-height box that was
+ *    missing.
+ *
+ * 2. The shared workspace paints a light `#eaf1ef` surface but inherits the Tailwind/shadcn
+ *    semantic tokens from the document root, which carries `.dark` whenever the visitor prefers a
+ *    dark theme. `text-muted-foreground` then resolved to `hsl(217 15% 65%)` — roughly 2.2:1 on
+ *    that light background. `.readableWorkspace` re-declares the tokens for the subtree so the
+ *    light surface gets light-theme foregrounds.
+ *
+ * 3. The CARDIOHELP console cannot lay out below about 820px, which is wider than the primary pane
+ *    at any common laptop width, so dragging the separators could never reveal all of it.
+ *    `.fitSurface` scales it instead of squeezing it.
+ *
+ * 4. `activePane` alone does not maximize a desktop pane: the shared component only sets `hidden`
+ *    when it is in compact mode. `.focusedWorkspace` implements the desktop single-pane view on
+ *    top of the `data-mobile-visible` markers the shared component does publish.
+ */
+
+/* ------------------------------------------------------------------ *
+ * A. Bounded frame
+ * ------------------------------------------------------------------ */
+
+.workspaceFrame {
+  /*
+   * `--ecmo-workspace-offset` is the distance from the top of the document to the top of this
+   * frame, plus a bottom gutter, measured at runtime by the activity and written here as an inline
+   * custom property. It is measured rather than hard-coded because the chrome above the workspace
+   * is not a fixed height: the module identity row, the section nav, the safety notice, the lesson
+   * title block and the track control all reflow with the viewport and with the locale.
+   *
+   * The value below is only the pre-measurement fallback used for the first paint and for any
+   * environment without layout (SSR, jsdom). It is deliberately close to the measured desktop
+   * offset so the first paint is not visibly wrong.
+   */
+  --ecmo-workspace-offset: 37.5rem;
+  /* The height at which all three panes are usable and the fitted console needs no pane scroll. */
+  --ecmo-workspace-fit-target: 44rem;
+  /* Room left on screen when the frame has been scrolled into view, so it is never taller than the
+     window and a pane bottom is always reachable without scrolling the page. */
+  --ecmo-workspace-screen-margin: 4rem;
+  --ecmo-workspace-max-height: 62rem;
+
+  margin-top: 1rem;
+  height: min(
+    var(--ecmo-workspace-max-height),
+    max(
+      calc(100vh - var(--ecmo-workspace-offset)),
+      min(var(--ecmo-workspace-fit-target), calc(100vh - var(--ecmo-workspace-screen-margin)))
+    )
+  );
+  height: min(
+    var(--ecmo-workspace-max-height),
+    max(
+      calc(100dvh - var(--ecmo-workspace-offset)),
+      min(var(--ecmo-workspace-fit-target), calc(100dvh - var(--ecmo-workspace-screen-margin)))
+    )
+  );
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid rgba(163, 206, 209, 0.28);
+  border-radius: 1rem;
+}
+
+/*
+ * The two terms, and why there are two.
+ *
+ * The measured offset above the workspace is 576px at desktop width: 40px of module-shell padding,
+ * 288px of shared module chrome (identity row, section nav, safety notice), then the lesson title
+ * block and the panel toolbar. On a 768px-tall window there is no arrangement in which that chrome
+ * and a usable workspace are on screen at the same time, so `100dvh - offset` on its own would give
+ * a 168px letterbox.
+ *
+ * So: use the room below the chrome when there is enough of it — on a tall monitor the workspace
+ * fills it and the page never scrolls — and otherwise fall back to a screen-sized workspace that the
+ * page scrolls to reveal. Either way the frame has a definite height, it is never taller than the
+ * window, and the panes scroll inside it rather than the document scrolling for them. The fallback
+ * term governs below roughly 1150px of window height; the offset term governs above it.
+ */
+
+/*
+ * At 840px and below the shared workspace stops being a grid of panes and stacks them, dropping its
+ * own `height: 100%` and capping each pane at 38rem. A definite-height frame would clip that stack,
+ * so the frame stops constraining anything and the page scrolls, which is the correct behaviour for
+ * a stacked single-column reading order.
+ */
+@media (max-width: 840px) {
+  .workspaceFrame {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * B. Readable light theme for the workspace subtree
+ * ------------------------------------------------------------------ */
+
+/*
+ * Tailwind is configured as `hsl(var(--token))`, so these values are bare HSL triples, not colours.
+ *
+ * The console and the circuit view keep their own dark device styling: they are styled entirely
+ * from `cardiohelp-ecmo.module.css` with literal colours and read none of these tokens.
+ */
+.readableWorkspace {
+  /* `#eaf1ef`, the surface the shared workspace actually paints, expressed as a token. */
+  --background: 163 20% 93%;
+  --foreground: 200 40% 16%;
+  --card: 0 0% 100%;
+  --card-foreground: 200 40% 16%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 200 40% 16%;
+  --muted: 178 22% 90%;
+  --muted-foreground: 205 22% 40%;
+  --primary: 187 72% 24%;
+  --primary-foreground: 180 40% 98%;
+  --secondary: 187 58% 28%;
+  --secondary-foreground: 180 40% 98%;
+  --accent: 22 82% 30%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 62% 36%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 195 20% 48%;
+  --input: 195 20% 48%;
+  --ring: 184 62% 32%;
+
+  color-scheme: light;
+}
+
+/*
+ * Doubled class for specificity. The shared `.workspace` rule sets `color` at the same specificity
+ * from a different stylesheet, and which of two equally specific rules wins would otherwise depend
+ * on stylesheet order.
+ */
+.readableWorkspace.readableWorkspace {
+  color: hsl(var(--foreground));
+}
+
+/* ------------------------------------------------------------------ *
+ * C. Typography inside the reading panes
+ * ------------------------------------------------------------------ */
+
+/*
+ * The teaching and activity panes were set in `text-sm`/`text-xs` throughout — 14px and 12px for
+ * multi-paragraph clinical explanation. The utilities are promoted here rather than rewritten in
+ * the JSX because several of the components rendered into these panes are shared
+ * (`ChoiceReasoningFeedback`, `HeldDisagreement`) and are not this module's to edit.
+ */
+.readingPane {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.readingPane :global(.text-sm) {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.readingPane :global(.text-base) {
+  font-size: 1.0625rem;
+  line-height: 1.5;
+}
+
+.readingPane :global(.text-xs) {
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+/*
+ * A genuine label — short, uppercase, tracked — stays compact. Everything else that happened to be
+ * `text-xs` is supporting explanation and is now readable at 15px.
+ */
+.readingPane :global(.text-xs.uppercase) {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  letter-spacing: 0.08em;
+}
+
+.readingPane :global(.leading-5),
+.readingPane :global(.leading-6) {
+  line-height: 1.6;
+}
+
+/* Essential explanation is never dimmed. */
+.readingPane p,
+.readingPane li,
+.readingPane dd,
+.readingPane dt,
+.readingPane td,
+.readingPane th,
+.readingPane strong,
+.readingPane em {
+  opacity: 1;
+}
+
+/* A wide matrix scrolls inside its own scroller and never widens the pane. */
+.readingPane :global(.overflow-x-auto) {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+/*
+ * The console and the circuit view are dark device surfaces inside a light workspace.
+ *
+ * Both take their text colour by inheritance — `.moduleShell button { color: inherit }` is what puts
+ * the device palette on every control — so the workspace's light foreground reached them and painted
+ * the physical-control labels in near-black on near-black. That predates this package: the shared
+ * workspace has always set a dark `color` on its own light surface. `--ink` is declared on the module
+ * shell above the workspace, so handing it back is enough; no device rule changes.
+ */
+.deviceSurface {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  color: var(--ink, #eaf4f4);
+}
+
+/* The two small cards in the device pane, which sit outside the reading-pane promotions. */
+.stateCard {
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.stateCardLabel {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  letter-spacing: 0.08em;
+}
+
+.boundaryNote {
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+/* ------------------------------------------------------------------ *
+ * D. Independent pane scrolling
+ * ------------------------------------------------------------------ */
+
+/*
+ * The shared pane already declares all of this. It is restated on the scrolling element — which the
+ * activity stamps with `data-scroll-pane` — so that the guarantee the acceptance test measures
+ * belongs to this workspace rather than to a shared file this module cannot pin.
+ */
+.readableWorkspace [data-scroll-pane] {
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+/* ------------------------------------------------------------------ *
+ * E. Desktop focus / maximize
+ * ------------------------------------------------------------------ */
+
+/*
+ * `activePane` makes the shared component publish `data-mobile-visible="false"` on the panes the
+ * parent did not select, but it only applies `hidden` in compact mode. On the desktop grid the
+ * non-selected panes therefore stay laid out at their three-pane widths. These rules are what turn
+ * that published state into an actual single-pane view.
+ */
+.focusedWorkspace.focusedWorkspace {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.focusedWorkspace [data-mobile-visible='false'] {
+  display: none;
+}
+
+.focusedWorkspace [data-teaching-resize-handle] {
+  display: none;
+}
+
+.focusedWorkspace [data-mobile-visible='true'] {
+  grid-column: 1;
+}
+
+/* ------------------------------------------------------------------ *
+ * F. Fit-to-width surface
+ * ------------------------------------------------------------------ */
+
+.fitSurface {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.fitSurface[data-fit-mode='actual'] {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-gutter: stable;
+}
+
+.fitContent {
+  transform-origin: top left;
+}
+
+/* ------------------------------------------------------------------ *
+ * G. Workspace toolbar
+ * ------------------------------------------------------------------ */
+
+.workspaceToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  margin-top: 1.25rem;
+}
+
+.workspaceToolbarLabel {
+  margin-right: 0.25rem;
+  color: #a8c3c6;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.workspaceToolbarButton {
+  min-height: 2.5rem;
+  padding: 0.4rem 0.75rem;
+  color: #e6f4f5;
+  border: 1px solid rgba(163, 206, 209, 0.42);
+  border-radius: 0.7rem;
+  background: rgba(16, 46, 52, 0.72);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.workspaceToolbarButton[aria-pressed='true'] {
+  color: #04211f;
+  border-color: #71e1e5;
+  background: #71e1e5;
+}
+
+.workspaceToolbarButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

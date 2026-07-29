@@ -48,10 +48,36 @@ describe('the restore-then-act sequence is gone', () => {
     expect(activitySource).not.toMatch(/eslint-disable/)
   })
 
-  it('keeps exactly one effect, and that effect only runs the clock', () => {
-    const effects = activitySource.match(/useEffect\(/g) ?? []
-    expect(effects).toHaveLength(1)
-    expect(activitySource).toMatch(/setInterval\(\s*\n?\s*\(\) => dispatch\(\{ type: 'SIMULATION'/)
+  /**
+   * The invariant, rather than a count of effects.
+   *
+   * This used to assert that the activity had exactly one `useEffect`, as a proxy for "no effect
+   * dispatches a simulation action after a restore". The layout package added effects that measure
+   * the workspace and wire up pane scroll memory, so the count no longer means what it meant — but
+   * the thing it was protecting is directly checkable: of every effect in the file, only one may
+   * dispatch, and that one is the clock.
+   */
+  it('lets only one effect dispatch, and that effect only runs the clock', () => {
+    const effectBodies: string[] = []
+    const opener = /use(?:Isomorphic)?(?:Layout)?Effect\(/g
+    for (let match = opener.exec(activitySource); match; match = opener.exec(activitySource)) {
+      let depth = 0
+      let index = match.index + match[0].length - 1
+      const start = index
+      do {
+        const character = activitySource[index]
+        if (character === '(') depth += 1
+        if (character === ')') depth -= 1
+        index += 1
+      } while (depth > 0 && index < activitySource.length)
+      effectBodies.push(activitySource.slice(start, index))
+    }
+
+    expect(effectBodies.length).toBeGreaterThan(0)
+    const dispatching = effectBodies.filter((body) => body.includes('dispatch('))
+    expect(dispatching).toHaveLength(1)
+    expect(dispatching[0]).toMatch(/setInterval\(\s*\n?\s*\(\) => dispatch\(\{ type: 'SIMULATION'/)
+    expect(dispatching[0]).toContain("action: { type: 'STEP' }")
   })
 
   it('never records a scenario result, mastery, or Practice progress', () => {

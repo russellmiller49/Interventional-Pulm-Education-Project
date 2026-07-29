@@ -1,6 +1,14 @@
 'use client'
 
-import { useEffect, useMemo, useReducer, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react'
 import type { Route } from 'next'
 import { ArrowRight } from 'lucide-react'
 
@@ -34,7 +42,10 @@ import {
 import type { SupportMode } from '../engine/types'
 import { CardiohelpConsole } from './CardiohelpConsole'
 import { CircuitAndMonitors } from './CircuitAndMonitors'
+import { FitWidthSurface, type FitWidthMode } from './FitWidthSurface'
 import { EcmoFoundationTeachingPanel } from './teaching/EcmoFoundationTeachingPanel'
+import { useIsomorphicLayoutEffect } from './useIsomorphicLayoutEffect'
+import workspaceStyles from './EcmoFoundationWorkspace.module.css'
 
 /**
  * The Learn activity for the seven interactive foundation sections.
@@ -78,6 +89,31 @@ const DEVICE_BOUNDARY_SHORT =
 
 const DEVICE_BOUNDARY_FULL =
   'The simulated console follows the U.S. CARDIOHELP System Instructions for Use, Revision 2.3, January 2025. The VV and VA clinical teaching reflects contemporary ECMO practice and is not limited to the U.S. labeled indication or duration. This independent educational module does not replace current manufacturer instructions, local protocol, or supervised competency validation.'
+
+/** The three panes of the shared workspace, as this activity refers to them. */
+type FoundationPane = 'primary' | 'secondary' | 'tertiary'
+
+const FOUNDATION_PANES: readonly FoundationPane[] = ['primary', 'secondary', 'tertiary']
+
+const PANE_LABELS: Readonly<Record<FoundationPane, string>> = {
+  primary: 'Circuit & console',
+  secondary: 'Teaching',
+  tertiary: 'Your turn',
+}
+
+const PANE_FOCUS_LABELS: Readonly<Record<FoundationPane, string>> = {
+  primary: 'Maximize circuit & console',
+  secondary: 'Maximize teaching',
+  tertiary: 'Maximize your turn',
+}
+
+/**
+ * How much room is left below the workspace when its height is computed from the viewport.
+ *
+ * Everything above the workspace is measured; this is the only constant, and it exists so the
+ * bottom edge of the frame is not flush against the bottom of the window.
+ */
+const WORKSPACE_BOTTOM_GUTTER_PX = 24
 
 /**
  * Resolves the mode the lesson actually runs in, then mounts the workspace under a key made from
@@ -134,6 +170,142 @@ function EcmoFoundationLessonWorkspace({
   const [phase, setPhase] = useState<CriticalCareActivityPhase>(initialPhase)
   const [committedPredictionId, setCommittedPredictionId] = useState<string | null>(null)
   const [committedTransferId, setCommittedTransferId] = useState<string | null>(null)
+
+  /**
+   * Which pane, if any, currently has the whole workspace.
+   *
+   * Local state rather than a shared-component feature: `ResizableTeachingWorkspace` accepts
+   * `activePane` and publishes it as `data-mobile-visible` on each pane, but only hides panes itself
+   * in compact mode, so the desktop single-pane view is implemented in this module's CSS on top of
+   * that published state.
+   */
+  const [focusedPane, setFocusedPane] = useState<FoundationPane | null>(null)
+  const [consoleFitMode, setConsoleFitMode] = useState<FitWidthMode>('fit')
+
+  const frameRef = useRef<HTMLDivElement>(null)
+  const [workspaceOffset, setWorkspaceOffset] = useState<number | null>(null)
+
+  /**
+   * The workspace's bounded height, measured rather than guessed.
+   *
+   * `ResizableTeachingWorkspace` asks for `height: 100%`. It used to be given a `mt-4` div with no
+   * height at all, so 100% resolved against an auto-height ancestor, the panes grew to their content
+   * and the document became the scroll surface — which is exactly the reported defect. The chrome
+   * above the workspace is not a fixed height (module identity row, section nav, safety notice,
+   * lesson title block, track control, focus toolbar, all reflowing with viewport and locale), so
+   * the offset is read from the frame's own position in the document.
+   */
+  useIsomorphicLayoutEffect(() => {
+    function measureOffset() {
+      const frame = frameRef.current
+      if (!frame) return
+      const documentTop = frame.getBoundingClientRect().top + window.scrollY
+      const next = Math.max(0, Math.round(documentTop + WORKSPACE_BOTTOM_GUTTER_PX))
+      setWorkspaceOffset((current) =>
+        current !== null && Math.abs(current - next) < 2 ? current : next,
+      )
+    }
+
+    measureOffset()
+    window.addEventListener('resize', measureOffset)
+    // The chrome above the frame reflows without the window changing size — the nav wraps, the
+    // safety notice rewraps — so the body is observed rather than only the window.
+    const observer =
+      typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measureOffset)
+    observer?.observe(document.body)
+    return () => {
+      window.removeEventListener('resize', measureOffset)
+      observer?.disconnect()
+    }
+  }, [])
+
+  /*
+   * Pane scroll positions.
+   *
+   * Both the shared compact tabs and this activity's focus mode take a pane out of the layout, and a
+   * scroll container that leaves the layout comes back at the top: the browser has nowhere to keep
+   * the offset of a box it destroyed. The positions are therefore recorded as the learner scrolls
+   * and written back when a pane returns.
+   */
+  const paneContentRefs = useRef<Record<FoundationPane, HTMLElement | null>>({
+    primary: null,
+    secondary: null,
+    tertiary: null,
+  })
+  const paneScrollTops = useRef<Record<FoundationPane, number>>({
+    primary: 0,
+    secondary: 0,
+    tertiary: 0,
+  })
+  const suppressScrollRecording = useRef(0)
+
+  const paneContentRef = useCallback(
+    (pane: FoundationPane) => (node: HTMLElement | null) => {
+      paneContentRefs.current[pane] = node
+    },
+    [],
+  )
+
+  /** The element that actually scrolls: the shared pane holding this activity's pane content. */
+  const scrollerFor = useCallback(
+    (pane: FoundationPane) => paneContentRefs.current[pane]?.parentElement ?? null,
+    [],
+  )
+
+  const restorePaneScroll = useCallback(
+    (pane: FoundationPane) => {
+      const scroller = scrollerFor(pane)
+      if (!scroller) return
+      const target = paneScrollTops.current[pane]
+      if (scroller.scrollTop === target) return
+      suppressScrollRecording.current += 1
+      scroller.scrollTop = target
+      window.setTimeout(() => {
+        suppressScrollRecording.current = Math.max(0, suppressScrollRecording.current - 1)
+      }, 0)
+    },
+    [scrollerFor],
+  )
+
+  useEffect(() => {
+    const teardown: (() => void)[] = []
+    for (const pane of FOUNDATION_PANES) {
+      const scroller = scrollerFor(pane)
+      if (!scroller) continue
+      // The scrolling element belongs to the shared component, so the marker the layout CSS and the
+      // acceptance measurements need is stamped on it here rather than declared in its JSX.
+      scroller.setAttribute('data-scroll-pane', pane)
+
+      const element = scroller
+      const record = () => {
+        if (suppressScrollRecording.current > 0) return
+        paneScrollTops.current[pane] = element.scrollTop
+      }
+      element.addEventListener('scroll', record, { passive: true })
+      teardown.push(() => element.removeEventListener('scroll', record))
+
+      if (typeof MutationObserver !== 'undefined') {
+        // Covers the shared compact tab row, whose pane switching this activity never sees.
+        const observer = new MutationObserver(() => {
+          if (scroller.hasAttribute('hidden')) return
+          restorePaneScroll(pane)
+        })
+        observer.observe(scroller, { attributes: true, attributeFilter: ['hidden'] })
+        teardown.push(() => observer.disconnect())
+      }
+    }
+    return () => {
+      for (const dispose of teardown) dispose()
+    }
+  }, [restorePaneScroll, scrollerFor])
+
+  // Entering or leaving focused mode: whichever panes are on screen go back to where they were.
+  useIsomorphicLayoutEffect(() => {
+    for (const pane of FOUNDATION_PANES) {
+      if (focusedPane !== null && focusedPane !== pane) continue
+      restorePaneScroll(pane)
+    }
+  }, [focusedPane, restorePaneScroll])
 
   /**
    * Move to a phase and leave the URL saying so.
@@ -218,33 +390,53 @@ function EcmoFoundationLessonWorkspace({
   if (!section) return null
 
   const primary = (
-    <div className="grid gap-3" data-pane="circuit-and-console">
-      <div className="rounded-xl border px-3 py-2" data-active-state-variant={activeVariant.id}>
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">State on screen</p>
-        <p className="text-sm font-semibold">{activeVariant.label}</p>
+    <div className="grid gap-3" data-pane="circuit-and-console" ref={paneContentRef('primary')}>
+      <div
+        className={`rounded-xl border px-3 py-2 ${workspaceStyles.stateCard}`}
+        data-active-state-variant={activeVariant.id}
+      >
+        <p
+          className={`uppercase tracking-wide text-muted-foreground ${workspaceStyles.stateCardLabel}`}
+        >
+          State on screen
+        </p>
+        <p className="font-semibold">{activeVariant.label}</p>
         {running ? null : (
-          <p className="mt-1 text-xs leading-5 font-medium" data-clock-held>
+          <p className="mt-1 font-medium" data-clock-held>
             The clock is held here, so this state stays as it is until you start it.
           </p>
         )}
         {activeVariant.modelBoundary ? (
-          <p className="mt-1 text-xs leading-5 text-muted-foreground" data-variant-boundary>
+          <p className="mt-1 text-muted-foreground" data-variant-boundary>
             {activeVariant.modelBoundary}
           </p>
         ) : null}
       </div>
-      <CardiohelpConsole
-        state={session.simulation}
-        dispatch={(action) => dispatch({ type: 'SIMULATION', action })}
-        controlsEnabled={false}
-      />
-      <CircuitAndMonitors
-        state={session.simulation}
-        dispatch={(action) => dispatch({ type: 'SIMULATION', action })}
-        controlsEnabled={false}
-      />
+      {/*
+        The two dark device surfaces, grouped so the workspace's light foreground can be handed back
+        to them. Only the console is scaled: the state card, the circuit view and the boundary note
+        all lay out at any pane width, and scaling them too would shrink readable prose for no reason.
+      */}
+      <div className={workspaceStyles.deviceSurface}>
+        <FitWidthSurface
+          mode={consoleFitMode}
+          remeasureKey={focusedPane ?? 'all'}
+          label="CARDIOHELP console, scaled to fit the width of this panel"
+        >
+          <CardiohelpConsole
+            state={session.simulation}
+            dispatch={(action) => dispatch({ type: 'SIMULATION', action })}
+            controlsEnabled={false}
+          />
+        </FitWidthSurface>
+        <CircuitAndMonitors
+          state={session.simulation}
+          dispatch={(action) => dispatch({ type: 'SIMULATION', action })}
+          controlsEnabled={false}
+        />
+      </div>
       <p
-        className="rounded-xl border border-dashed px-3 py-2 text-xs leading-5"
+        className={`rounded-xl border border-dashed px-3 py-2 ${workspaceStyles.boundaryNote}`}
         data-device-boundary
       >
         {DEVICE_BOUNDARY_SHORT}
@@ -253,7 +445,11 @@ function EcmoFoundationLessonWorkspace({
   )
 
   const secondary = (
-    <div className="grid gap-4" data-pane="teaching">
+    <div
+      className={`grid gap-4 ${workspaceStyles.readingPane}`}
+      data-pane="teaching"
+      ref={paneContentRef('secondary')}
+    >
       <EcmoFoundationTeachingPanel
         sectionId={sectionId}
         state={session.simulation}
@@ -292,7 +488,11 @@ function EcmoFoundationLessonWorkspace({
   )
 
   const tertiary = (
-    <div className="grid gap-4" data-pane="your-turn">
+    <div
+      className={`grid gap-4 ${workspaceStyles.readingPane}`}
+      data-pane="your-turn"
+      ref={paneContentRef('tertiary')}
+    >
       <section className="rounded-2xl border p-4">
         <p className="text-xs uppercase tracking-wide text-muted-foreground">Your turn · {phase}</p>
         <h3 className="mt-1 text-base font-semibold">{phaseCopy.objective}</h3>
@@ -493,16 +693,74 @@ function EcmoFoundationLessonWorkspace({
         {activeVariant.label} loaded.
       </p>
 
-      <div className="mt-4">
+      <div
+        className={workspaceStyles.workspaceToolbar}
+        role="group"
+        aria-label="Workspace panel size"
+      >
+        <span className={workspaceStyles.workspaceToolbarLabel} aria-hidden="true">
+          Panels
+        </span>
+        {FOUNDATION_PANES.map((pane) => (
+          <button
+            key={pane}
+            type="button"
+            className={workspaceStyles.workspaceToolbarButton}
+            data-focus-pane={pane}
+            aria-pressed={focusedPane === pane}
+            onClick={() => setFocusedPane((current) => (current === pane ? null : pane))}
+          >
+            {PANE_FOCUS_LABELS[pane]}
+          </button>
+        ))}
+        <button
+          type="button"
+          className={workspaceStyles.workspaceToolbarButton}
+          data-focus-restore
+          disabled={focusedPane === null}
+          onClick={() => setFocusedPane(null)}
+        >
+          Return to three panes
+        </button>
+        <button
+          type="button"
+          className={workspaceStyles.workspaceToolbarButton}
+          data-console-fit-mode={consoleFitMode}
+          aria-pressed={consoleFitMode === 'actual'}
+          onClick={() => setConsoleFitMode((current) => (current === 'fit' ? 'actual' : 'fit'))}
+        >
+          Console at actual size
+        </button>
+      </div>
+      <p className="sr-only" role="status">
+        {focusedPane === null
+          ? 'All three workspace panels are shown.'
+          : `${PANE_LABELS[focusedPane]} is maximized. The other two panels are hidden until you return to three panes.`}
+      </p>
+
+      <div
+        ref={frameRef}
+        className={workspaceStyles.workspaceFrame}
+        style={
+          workspaceOffset === null
+            ? undefined
+            : ({ '--ecmo-workspace-offset': `${workspaceOffset}px` } as CSSProperties)
+        }
+        data-ecmo-workspace-frame
+        data-workspace-focus={focusedPane ?? 'all'}
+      >
         <ResizableTeachingWorkspace
+          className={[
+            workspaceStyles.readableWorkspace,
+            focusedPane === null ? null : workspaceStyles.focusedWorkspace,
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          activePane={focusedPane ?? undefined}
           primary={primary}
           secondary={secondary}
           tertiary={tertiary}
-          paneLabels={{
-            primary: 'Circuit & console',
-            secondary: 'Teaching',
-            tertiary: 'Your turn',
-          }}
+          paneLabels={PANE_LABELS}
           workspaceLabel="Resizable ECMO circuit, teaching, and activity workspace"
         />
       </div>

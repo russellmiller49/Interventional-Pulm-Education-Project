@@ -2111,6 +2111,16 @@
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   min-width: 0;
+  /*
+   * The aspect ratio is height-driven here: this is a stretched grid item, so its height is the row
+   * height set by the taller physical-control column, and `aspect-ratio` then resolves a width from
+   * it. Above roughly 1040px of console width that width is narrower than the screen's track and
+   * everything is as designed. Below it the computed width exceeds the track, the frame overflows to
+   * the right, and the physical-control column — later in DOM order — paints on top of the screen
+   * tabs. Clamping to the track is what stops that: the screen becomes squarer than 4:3 at narrow
+   * widths instead of disappearing under the controls. No control changes size, position or label.
+   */
+  max-width: 100%;
   overflow: hidden;
   border: 8px solid #05090a;
   border-radius: 10px;
