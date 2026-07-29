@@ -667,8 +667,11 @@ export const ecmoFoundationLessonRuntimes: Readonly<
     phases: {
       recognize: {
         objective: 'Establish that circuit flow alone cannot discriminate here.',
+        // Deliberately does not ask the learner to enter anything: this phase renders no control,
+        // and the commitment this section is built around is the one made in `predict`. Copy that
+        // asked for a record here would be promising a control the phase does not have.
         requiredAction:
-          'Read the case as it stands and record whether the problem in front of you is oxygenation, ventilation, or both.',
+          'Read the case as it stands and settle whether what is in front of you is a problem of oxygenation, of ventilation, or of both. Nothing is entered at this step; the commitment comes in the next one.',
         teachingPoint:
           'The flow display is the one signal every explanation on the list is compatible with.',
       },

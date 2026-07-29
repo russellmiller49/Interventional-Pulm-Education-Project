@@ -78,9 +78,12 @@ const DEVICE_BOUNDARY_FULL =
 export function EcmoFoundationLessonActivity({
   sectionId,
   supportMode,
+  initialPhase = 'recognize',
 }: {
   readonly sectionId: EcmoInteractiveFoundationSectionId
   readonly supportMode: SupportMode
+  /** The phase the lesson opens at, carried by the URL. Nothing about it is persisted. */
+  readonly initialPhase?: CriticalCareActivityPhase
 }) {
   const runtime = ecmoFoundationLessonRuntime(sectionId)
   // A VV-only section ignores the requested track outright: its teaching is series physiology, and
@@ -88,9 +91,10 @@ export function EcmoFoundationLessonActivity({
   const resolvedMode = runtime.supportMode ?? supportMode
   return (
     <EcmoFoundationLessonWorkspace
-      key={`${sectionId}:${resolvedMode}`}
+      key={`${sectionId}:${resolvedMode}:${initialPhase}`}
       sectionId={sectionId}
       supportMode={resolvedMode}
+      initialPhase={initialPhase}
     />
   )
 }
@@ -98,9 +102,11 @@ export function EcmoFoundationLessonActivity({
 function EcmoFoundationLessonWorkspace({
   sectionId,
   supportMode,
+  initialPhase,
 }: {
   readonly sectionId: EcmoInteractiveFoundationSectionId
   readonly supportMode: SupportMode
+  readonly initialPhase: CriticalCareActivityPhase
 }) {
   const section = ecmoFoundationSectionById.get(sectionId)
   const runtime = ecmoFoundationLessonRuntime(sectionId)
@@ -113,9 +119,29 @@ function EcmoFoundationLessonWorkspace({
     createEcmoFoundationSessionState(variant),
   )
 
-  const [phase, setPhase] = useState<CriticalCareActivityPhase>('recognize')
+  const [phase, setPhase] = useState<CriticalCareActivityPhase>(initialPhase)
   const [committedPredictionId, setCommittedPredictionId] = useState<string | null>(null)
   const [committedTransferId, setCommittedTransferId] = useState<string | null>(null)
+
+  /**
+   * Move to a phase and leave the URL saying so.
+   *
+   * The phase is the one part of "where the learner was" that nothing persists — no storage key,
+   * DTO, adapter, or payload version carries it, and `ProgressV2` is deliberately untouched. The
+   * URL is therefore the only thing that can carry it, and something has to write it there or the
+   * parameter the route reads would never be produced by the resource itself.
+   *
+   * `replaceState` rather than a router navigation: the server component has nothing new to say
+   * about a phase the client already holds, and pushing would put six history entries inside one
+   * lesson so that leaving it took six presses of the back button.
+   */
+  function goToPhase(next: CriticalCareActivityPhase) {
+    setPhase(next)
+    if (typeof window === 'undefined') return
+    const url = new URL(window.location.href)
+    url.searchParams.set('phase', next)
+    window.history.replaceState(window.history.state, '', url)
+  }
 
   // Whether the clock runs belongs to the loaded state, not to this component: a preview authored
   // to sit short of a timed change has to be held, and has to be held again on every reload.
@@ -291,7 +317,7 @@ function EcmoFoundationLessonWorkspace({
               <button
                 type="button"
                 className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-sm font-semibold"
-                onClick={() => setPhase('act')}
+                onClick={() => goToPhase('act')}
               >
                 Continue
               </button>
@@ -399,7 +425,7 @@ function EcmoFoundationLessonWorkspace({
               type="button"
               className="rounded-lg border px-2 py-1 text-xs"
               aria-current={candidate === phase ? 'step' : undefined}
-              onClick={() => setPhase(candidate)}
+              onClick={() => goToPhase(candidate)}
             >
               {candidate}
             </button>

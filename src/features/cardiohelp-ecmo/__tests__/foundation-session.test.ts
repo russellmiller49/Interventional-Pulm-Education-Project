@@ -84,8 +84,9 @@ describe('the restore-then-act sequence is gone', () => {
 
   it('commits a prediction without advancing the phase on its own', () => {
     expect(activitySource).toMatch(/onClick=\{\(\) => setCommittedPredictionId\(choice\.id\)\}/)
-    // Advancing is a separate, explicit button.
-    expect(activitySource).toMatch(/onClick=\{\(\) => setPhase\('act'\)\}/)
+    // Advancing is a separate, explicit button. `foundation-activity.test.tsx` mounts this and
+    // asserts the behaviour; the source match only pins that the two remain separate controls.
+    expect(activitySource).toMatch(/onClick=\{\(\) => goToPhase\('act'\)\}/)
   })
 })
 

@@ -1,0 +1,522 @@
+import { act, fireEvent, render, screen } from '@testing-library/react'
+import type { AnchorHTMLAttributes, ReactNode } from 'react'
+
+import { EcmoFoundationLessonActivity } from '../components/EcmoFoundationLessonActivity'
+import {
+  ecmoFoundationLessonRuntime,
+  ecmoSharedFoundationSectionIds,
+  ecmoVvOnlyFoundationSectionIds,
+} from '../content/foundationLessonRuntime'
+import type { SupportMode } from '../engine/types'
+
+/**
+ * Mount tests for the foundation Learn activity.
+ *
+ * The activity's guarantees were previously asserted by matching regular expressions against its
+ * own source text. That checks the code still looks the way it looked; it cannot check what the
+ * component does once it is running, and the one blocking defect this package found — a free
+ * running clock walking the capstone past the authored change it was supposed to sit in front of —
+ * was invisible to every one of those assertions. It is visible here in the first two cases.
+ *
+ * Everything is read through the rendered DOM: which state is loaded, whether the clock is held,
+ * which track links exist, and what the teaching panel reports.
+ */
+
+jest.mock('@/i18n/navigation', () => ({
+  Link: ({
+    href,
+    children,
+    ...props
+  }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}))
+
+// The two device panes are replaced with markers. Neither is what any assertion here reads, and
+// the circuit view pulls three.js in through EcmoCircuit3D, which does not render under jsdom.
+jest.mock('../components/CardiohelpConsole', () => ({
+  CardiohelpConsole: () => <div data-testid="cardiohelp-console" />,
+}))
+jest.mock('../components/CircuitAndMonitors', () => ({
+  CircuitAndMonitors: () => <div data-testid="circuit-and-monitors" />,
+}))
+
+function mount(
+  sectionId: Parameters<typeof EcmoFoundationLessonActivity>[0]['sectionId'],
+  supportMode: SupportMode = 'vv',
+) {
+  return render(<EcmoFoundationLessonActivity sectionId={sectionId} supportMode={supportMode} />)
+}
+
+/** The text of one row of the capstone's live findings column. */
+function liveFinding(id: string): string {
+  const cell = document.querySelector(`[data-live-finding="${id}"]`)
+  if (!cell) throw new Error(`no live finding rendered for ${id}`)
+  return cell.textContent ?? ''
+}
+
+function loadedVariantId(): string | null {
+  return (
+    document
+      .querySelector('[data-active-state-variant]')
+      ?.getAttribute('data-active-state-variant') ?? null
+  )
+}
+
+/**
+ * The text of the "State on screen" card.
+ *
+ * Assertions about which state is loaded read this card rather than the whole page: the variant
+ * label also appears in the restore button and in the status line, so a page-wide text query would
+ * be answered by copy that is not the thing under test.
+ */
+function loadedStateCard(): string {
+  const card = document.querySelector('[data-active-state-variant]')
+  if (!card) throw new Error('no loaded-state card rendered')
+  return card.textContent ?? ''
+}
+
+function clockToggle(): HTMLElement {
+  const button = document.querySelector<HTMLElement>('[data-clock-running]')
+  if (!button) throw new Error('no clock toggle rendered')
+  return button
+}
+
+function clockIsRunning(): boolean {
+  return clockToggle().getAttribute('data-clock-running') === 'true'
+}
+
+function guidedAction(id: string): HTMLElement {
+  const button = document.querySelector<HTMLElement>(`[data-guided-action="${id}"]`)
+  if (!button) throw new Error(`no guided action rendered for ${id}`)
+  return button
+}
+
+/** The phase buttons are labelled with the phase name itself. */
+function goToPhase(phase: string) {
+  fireEvent.click(screen.getByRole('button', { name: phase }))
+}
+
+function runModeledSeconds(seconds: number) {
+  act(() => {
+    jest.advanceTimersByTime(seconds * 1000)
+  })
+}
+
+beforeEach(() => {
+  jest.useFakeTimers()
+})
+
+afterEach(() => {
+  jest.useRealTimers()
+})
+
+describe('the lesson clock belongs to the loaded state, not to the component', () => {
+  it('holds the capstone in front of the change it opens on', () => {
+    mount('vv-integration-capstone')
+
+    expect(loadedVariantId()).toBe('gas-source-before-change')
+    expect(document.querySelector('[data-clock-held]')).not.toBeNull()
+    expect(clockIsRunning()).toBe(false)
+    expect(liveFinding('gas-source-status')).toContain('connected')
+
+    // The authored change is at the fifth modeled second and this state opens at the fourth. A
+    // clock left running would have crossed it within one tick and the learner would be reading a
+    // panel that says the change has not happened yet beside a circuit where it already has.
+    runModeledSeconds(5)
+
+    expect(liveFinding('gas-source-status')).toContain('connected')
+    expect(liveFinding('gas-source-status')).not.toContain('interrupted')
+    expect(loadedVariantId()).toBe('gas-source-before-change')
+  })
+
+  it('lets the learner start the clock and watch the change arrive', () => {
+    mount('vv-integration-capstone')
+
+    fireEvent.click(clockToggle())
+    expect(clockIsRunning()).toBe(true)
+    expect(screen.getByRole('button', { name: 'Pause the circuit' })).toBeInTheDocument()
+
+    runModeledSeconds(1)
+
+    expect(liveFinding('gas-source-status')).toContain('interrupted')
+  })
+
+  it('re-holds the clock every time the held state is reloaded', () => {
+    mount('vv-integration-capstone')
+
+    fireEvent.click(clockToggle())
+    runModeledSeconds(1)
+    expect(liveFinding('gas-source-status')).toContain('interrupted')
+
+    goToPhase('act')
+    fireEvent.click(guidedAction('restore-case-before-change'))
+
+    // Holding is a property of the variant, so it is re-applied by the restore rather than being
+    // something the previous state's running clock gets to carry forward.
+    expect(clockIsRunning()).toBe(false)
+    expect(liveFinding('gas-source-status')).toContain('connected')
+
+    runModeledSeconds(10)
+    expect(liveFinding('gas-source-status')).toContain('connected')
+  })
+
+  it('leaves a state that is not authored to be held running', () => {
+    mount('vv-normal-state')
+
+    expect(clockIsRunning()).toBe(true)
+    expect(document.querySelector('[data-clock-held]')).toBeNull()
+  })
+
+  it('pauses on request, and stays paused', () => {
+    mount('vv-normal-state')
+
+    fireEvent.click(clockToggle())
+    expect(clockIsRunning()).toBe(false)
+
+    runModeledSeconds(30)
+    expect(clockIsRunning()).toBe(false)
+  })
+})
+
+describe('a VV-only section never offers the VA track', () => {
+  it.each(ecmoVvOnlyFoundationSectionIds)('fixes the pathway indicator on %s', (sectionId) => {
+    mount(sectionId)
+
+    expect(document.querySelector('[data-fixed-pathway="vv"]')).not.toBeNull()
+    expect(document.querySelectorAll('[data-track-link]')).toHaveLength(0)
+  })
+
+  it.each(ecmoVvOnlyFoundationSectionIds)(
+    'ignores a requested VA track on %s and runs VV anyway',
+    (sectionId) => {
+      mount(sectionId, 'va')
+
+      expect(document.querySelector('main')).toHaveAttribute('data-support-mode', 'vv')
+      expect(document.querySelector('[data-fixed-pathway="vv"]')).not.toBeNull()
+      expect(document.querySelectorAll('[data-track-link]')).toHaveLength(0)
+    },
+  )
+
+  it('loads no VA reference behind VV teaching when VA is asked for', () => {
+    mount('vv-series-physiology', 'va')
+
+    expect(loadedVariantId()).toBe('reference-circuit')
+    expect(loadedStateCard()).toContain('VV reference circuit')
+    expect(loadedStateCard()).not.toContain('VA reference circuit')
+  })
+})
+
+describe('a shared section keeps both tracks', () => {
+  it.each(ecmoSharedFoundationSectionIds)('renders both track links on %s', (sectionId) => {
+    mount(sectionId)
+
+    expect(document.querySelector('[data-track-link="vv"]')).toHaveAttribute(
+      'href',
+      `/cardiohelp-ecmo/learn?lesson=${sectionId}&track=vv`,
+    )
+    expect(document.querySelector('[data-track-link="va"]')).toHaveAttribute(
+      'href',
+      `/cardiohelp-ecmo/learn?lesson=${sectionId}&track=va`,
+    )
+    expect(document.querySelector('[data-fixed-pathway]')).toBeNull()
+  })
+
+  it('honours the requested track, so the VV-only rule is not a blanket one', () => {
+    mount('why-extracorporeal-support', 'va')
+
+    expect(document.querySelector('main')).toHaveAttribute('data-support-mode', 'va')
+    expect(loadedStateCard()).toContain('VA reference circuit')
+  })
+})
+
+describe('bounded actions', () => {
+  it('lands a restore-and-apply directly on the settled state', () => {
+    mount('vv-integration-capstone')
+    goToPhase('observe')
+
+    fireEvent.click(guidedAction('reveal-evolved-state'))
+
+    expect(loadedVariantId()).toBe('gas-source-after-change')
+    // The values are the settled ones, in one transition — not a restored frame that then walks
+    // forward while the learner watches.
+    expect(liveFinding('gas-source-status')).toContain('interrupted')
+    expect(liveFinding('paco2-and-ph')).toContain('79.6 mmHg')
+    expect(liveFinding('paco2-and-ph')).toContain('pH 7.12')
+    // The blood path is undisturbed, which is the entire point of the case.
+    expect(liveFinding('displayed-circuit-flow')).toContain('4.05 L/min')
+  })
+
+  it('never compounds one preview onto another', () => {
+    mount('vv-integration-capstone')
+    goToPhase('explain')
+
+    fireEvent.click(guidedAction('preview-recirculation-mechanism'))
+    const recirculationFlow = liveFinding('displayed-circuit-flow')
+
+    fireEvent.click(guidedAction('preview-oxygenator-resistance-mechanism'))
+    expect(loadedVariantId()).toBe('oxygenator-resistance-preview')
+    expect(liveFinding('displayed-circuit-flow')).not.toBe(recirculationFlow)
+
+    fireEvent.click(guidedAction('preview-recirculation-mechanism'))
+    expect(liveFinding('displayed-circuit-flow')).toBe(recirculationFlow)
+  })
+
+  it('keeps every bounded action reachable in the transfer phase', () => {
+    mount('vv-integration-capstone')
+    goToPhase('transfer')
+
+    for (const guided of ecmoFoundationLessonRuntime('vv-integration-capstone').guidedActions) {
+      expect(guidedAction(guided.id)).toBeInTheDocument()
+    }
+    // The transfer item is on screen at the same time; the actions do not give way to it.
+    expect(
+      screen.getByRole('heading', {
+        name: ecmoFoundationLessonRuntime('vv-integration-capstone').phases.transfer.objective,
+      }),
+    ).toBeInTheDocument()
+  })
+
+  it('offers no state-loading action before a prediction has been asked for', () => {
+    mount('vv-integration-capstone')
+
+    expect(document.querySelectorAll('[data-guided-action]')).toHaveLength(0)
+    goToPhase('predict')
+    expect(document.querySelectorAll('[data-guided-action]')).toHaveLength(0)
+    goToPhase('act')
+    expect(document.querySelectorAll('[data-guided-action]').length).toBeGreaterThan(0)
+  })
+
+  it('records what was looked at, and clears it when the state is reloaded', () => {
+    mount('vv-integration-capstone')
+    goToPhase('act')
+
+    fireEvent.click(guidedAction('inspect-gas-source-connection'))
+    fireEvent.click(guidedAction('review-pressure-zones'))
+    expect(
+      document.querySelector('[data-interaction="inspect-gas-source-connection"]'),
+    ).not.toBeNull()
+    expect(document.querySelector('[data-interaction="review-pressure-zones"]')).not.toBeNull()
+
+    fireEvent.click(guidedAction('restore-case-before-change'))
+
+    // Evidence never carries across a state change: what is listed is what was looked at since the
+    // state on screen was loaded.
+    expect(document.querySelector('[data-interaction="inspect-gas-source-connection"]')).toBeNull()
+    expect(document.querySelector('[data-interaction="review-pressure-zones"]')).toBeNull()
+    expect(document.querySelector('[data-interaction="restore-case-before-change"]')).not.toBeNull()
+  })
+
+  it('advances the clock by the authored number of seconds without changing anything else', () => {
+    mount('vv-normal-state')
+    goToPhase('act')
+
+    fireEvent.click(guidedAction('capture-reference-snapshot'))
+    fireEvent.click(guidedAction('run-twenty-modeled-seconds'))
+
+    expect(document.querySelector('[data-interaction="run-twenty-modeled-seconds"]')).not.toBeNull()
+    // The capture survives the advance, because the comparison is the reason for advancing.
+    expect(document.querySelector('[data-interaction="capture-reference-snapshot"]')).not.toBeNull()
+  })
+})
+
+describe('committing a prediction', () => {
+  it('does not advance the phase on its own', () => {
+    mount('vv-series-physiology')
+    goToPhase('predict')
+
+    const choice = document.querySelector<HTMLElement>('#prediction-heading + div button')
+    expect(choice).not.toBeNull()
+    fireEvent.click(choice!)
+
+    // Still in predict: the reasoning is on screen and the actions have not appeared behind it.
+    expect(document.querySelectorAll('[data-guided-action]')).toHaveLength(0)
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+    expect(document.querySelectorAll('[data-guided-action]').length).toBeGreaterThan(0)
+  })
+
+  it('cannot be changed once committed', () => {
+    mount('vv-series-physiology')
+    goToPhase('predict')
+
+    const choices = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('#prediction-heading + div button'),
+    )
+    fireEvent.click(choices[0])
+
+    for (const choice of choices) expect(choice).toBeDisabled()
+    expect(choices[0]).toHaveAttribute('aria-pressed', 'true')
+  })
+})
+
+describe('the phase carried by the URL', () => {
+  // Nothing persists the phase: no storage key, DTO, adapter, or payload version, and ProgressV2 is
+  // untouched. The URL is the whole mechanism, which means the activity has to both read it and
+  // write it — a parameter the resource never produces would resume nothing.
+  it('opens at the first phase when none is supplied', () => {
+    mount('vv-integration-capstone')
+
+    expect(screen.getByRole('button', { name: 'recognize' })).toHaveAttribute(
+      'aria-current',
+      'step',
+    )
+    expect(document.querySelectorAll('[data-guided-action]')).toHaveLength(0)
+  })
+
+  it('opens directly at a supplied phase', () => {
+    render(
+      <EcmoFoundationLessonActivity
+        sectionId="vv-integration-capstone"
+        supportMode="vv"
+        initialPhase="explain"
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: 'explain' })).toHaveAttribute('aria-current', 'step')
+    // The phase's own bounded actions are available immediately, without walking the nav.
+    expect(guidedAction('preview-recirculation-mechanism')).toBeInTheDocument()
+  })
+
+  it('opens the transfer phase with its item and its actions already on screen', () => {
+    render(
+      <EcmoFoundationLessonActivity
+        sectionId="vv-integration-capstone"
+        supportMode="vv"
+        initialPhase="transfer"
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: 'transfer' })).toHaveAttribute('aria-current', 'step')
+    expect(guidedAction('preview-recirculation-mechanism')).toBeInTheDocument()
+  })
+
+  it('still opens on the authored state, held, when resumed mid-lesson', () => {
+    render(
+      <EcmoFoundationLessonActivity
+        sectionId="vv-integration-capstone"
+        supportMode="vv"
+        initialPhase="observe"
+      />,
+    )
+
+    // Resuming restores a clean state source for that phase rather than a state carried over from
+    // wherever the learner had got to, so the held case is held again.
+    expect(loadedVariantId()).toBe('gas-source-before-change')
+    expect(clockIsRunning()).toBe(false)
+    runModeledSeconds(5)
+    expect(liveFinding('gas-source-status')).toContain('connected')
+  })
+
+  it('writes the phase into the URL as the learner moves', () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/en/cardiohelp-ecmo/learn?lesson=vv-integration-capstone&track=vv',
+    )
+    mount('vv-integration-capstone')
+
+    goToPhase('observe')
+    expect(new URL(window.location.href).searchParams.get('phase')).toBe('observe')
+
+    goToPhase('transfer')
+    expect(new URL(window.location.href).searchParams.get('phase')).toBe('transfer')
+
+    // The lesson and track it was reached by are left alone.
+    const params = new URL(window.location.href).searchParams
+    expect(params.get('lesson')).toBe('vv-integration-capstone')
+    expect(params.get('track')).toBe('vv')
+  })
+
+  it('writes the phase when the prediction hands over to the next one', () => {
+    window.history.replaceState(null, '', '/en/cardiohelp-ecmo/learn?lesson=vv-series-physiology')
+    mount('vv-series-physiology')
+
+    goToPhase('predict')
+    fireEvent.click(document.querySelector<HTMLElement>('#prediction-heading + div button')!)
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+
+    expect(new URL(window.location.href).searchParams.get('phase')).toBe('act')
+  })
+
+  it('gives a clean state source when resumed at a different phase', () => {
+    const { rerender } = render(
+      <EcmoFoundationLessonActivity
+        sectionId="vv-integration-capstone"
+        supportMode="vv"
+        initialPhase="recognize"
+      />,
+    )
+
+    goToPhase('observe')
+    fireEvent.click(guidedAction('reveal-evolved-state'))
+    expect(loadedVariantId()).toBe('gas-source-after-change')
+
+    rerender(
+      <EcmoFoundationLessonActivity
+        sectionId="vv-integration-capstone"
+        supportMode="vv"
+        initialPhase="explain"
+      />,
+    )
+
+    // Arriving at a different phase remounts, exactly as a section or track change does, so the
+    // state behind the new phase is the lesson's own opening state and not whatever the previous
+    // phase happened to leave loaded.
+    expect(loadedVariantId()).toBe('gas-source-before-change')
+    expect(clockIsRunning()).toBe(false)
+    expect(screen.getByRole('button', { name: 'explain' })).toHaveAttribute('aria-current', 'step')
+  })
+
+  it('adds no history entry per phase, so leaving the lesson takes one step back', () => {
+    window.history.replaceState(null, '', '/en/cardiohelp-ecmo/learn?lesson=vv-normal-state')
+    mount('vv-normal-state')
+    const before = window.history.length
+
+    goToPhase('act')
+    goToPhase('observe')
+    goToPhase('explain')
+
+    expect(window.history.length).toBe(before)
+  })
+})
+
+describe('the recognize phase is reading only', () => {
+  // The capstone's recognize copy used to ask the learner to "record" an impression, in a phase
+  // that renders no control at all and in a module that deliberately records nothing. The copy now
+  // says nothing is entered at this step; these cases are what hold it to that.
+  it.each([...ecmoSharedFoundationSectionIds, ...ecmoVvOnlyFoundationSectionIds])(
+    'offers nothing to fill in on %s',
+    (sectionId) => {
+      mount(sectionId)
+
+      const yourTurn = document.querySelector('[data-pane="your-turn"]')
+      expect(yourTurn).not.toBeNull()
+      expect(yourTurn!.querySelectorAll('[data-guided-action]')).toHaveLength(0)
+      expect(yourTurn!.querySelectorAll('input, textarea, select')).toHaveLength(0)
+    },
+  )
+
+  it('promises no entry the capstone cannot take', () => {
+    const recognize = ecmoFoundationLessonRuntime('vv-integration-capstone').phases.recognize
+    expect(recognize.requiredAction).toContain('Nothing is entered at this step')
+    expect(recognize.requiredAction).not.toMatch(/\brecord\b/)
+  })
+})
+
+describe('every interactive section mounts', () => {
+  it.each([...ecmoSharedFoundationSectionIds, ...ecmoVvOnlyFoundationSectionIds])(
+    'renders a heading, a teaching panel, and a loaded state for %s',
+    (sectionId) => {
+      mount(sectionId)
+
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
+      expect(loadedVariantId()).toBe(ecmoFoundationLessonRuntime(sectionId).primaryVariantId)
+      expect(document.querySelector('[data-pane="teaching"]')).not.toBeNull()
+      expect(document.querySelector('[data-device-boundary]')).not.toBeNull()
+    },
+  )
+})

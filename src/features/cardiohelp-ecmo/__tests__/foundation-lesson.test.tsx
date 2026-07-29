@@ -42,6 +42,11 @@ describe('interactive foundation panel registry', () => {
     expect(ecmoSharedFoundationSectionIds).toHaveLength(4)
     expect(ecmoVvOnlyFoundationSectionIds).toHaveLength(3)
     expect(new Set(ecmoInteractiveFoundationSectionIds).size).toBe(7)
+    // The invariant the registry validator checks: a repeat in the id list collapses into a single
+    // object key, so comparing a deduplicated list against the registry would never see one.
+    expect(ecmoInteractiveFoundationSectionIds).toHaveLength(
+      new Set(ecmoInteractiveFoundationSectionIds).size,
+    )
   })
 
   it('registers no VA-only or drill section', () => {

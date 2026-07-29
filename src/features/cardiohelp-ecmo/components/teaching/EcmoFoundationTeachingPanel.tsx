@@ -69,8 +69,15 @@ export function validateEcmoFoundationPanelRegistry(): readonly string[] {
       errors.push(`panel registered for a section outside the interactive set: ${id}`)
     }
   }
-  // Object keys cannot repeat, so a duplicate would have to be a duplicate in the id list itself.
-  if (new Set(ecmoInteractiveFoundationSectionIds).size !== registered.length) {
+  // Object keys cannot repeat, so a duplicate can only be a duplicate in the id list itself —
+  // which means deduplicating that list before comparing it with the registry is precisely what
+  // would hide one. The two questions are asked separately for that reason.
+  if (
+    new Set(ecmoInteractiveFoundationSectionIds).size !== ecmoInteractiveFoundationSectionIds.length
+  ) {
+    errors.push('the interactive section list repeats a section id')
+  }
+  if (ecmoInteractiveFoundationSectionIds.length !== registered.length) {
     errors.push('the interactive section list and the panel registry differ in length')
   }
 

@@ -30,14 +30,17 @@ jest.mock('@/features/cardiohelp-ecmo/components/EcmoFoundationLessonActivity', 
   EcmoFoundationLessonActivity: ({
     sectionId,
     supportMode,
+    initialPhase,
   }: {
     sectionId: string
     supportMode: string
+    initialPhase?: string
   }) => (
     <div
       data-testid="ecmo-foundation-activity"
       data-section-id={sectionId}
       data-track={supportMode}
+      data-initial-phase={initialPhase}
     />
   ),
 }))
@@ -201,6 +204,116 @@ describe('CARDIOHELP ECMO routes', () => {
       expect(screen.getByTestId('ecmo-foundation-activity')).toHaveAttribute('data-track', 'vv')
     },
   )
+
+  it('opens a lesson at its first phase when no phase is asked for', async () => {
+    render(
+      await CardiohelpEcmoLearnPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({ lesson: 'circuit-flow-path', track: 'vv' }),
+      }),
+    )
+    expect(screen.getByTestId('ecmo-foundation-activity')).toHaveAttribute(
+      'data-initial-phase',
+      'recognize',
+    )
+  })
+
+  it.each(['recognize', 'predict', 'act', 'observe', 'explain', 'transfer'])(
+    'resumes a lesson at the requested phase %s without redirecting',
+    async (phase) => {
+      render(
+        await CardiohelpEcmoLearnPage({
+          params: Promise.resolve({ locale: 'en' }),
+          searchParams: Promise.resolve({ lesson: 'circuit-flow-path', track: 'vv', phase }),
+        }),
+      )
+      expect(screen.getByTestId('ecmo-foundation-activity')).toHaveAttribute(
+        'data-initial-phase',
+        phase,
+      )
+    },
+  )
+
+  it.each(['banana', '', 'Recognize', 'act,observe', 'reflect'])(
+    'canonicalizes a stale or malformed phase value (%s) back to the first phase',
+    async (phase) => {
+      await expect(
+        CardiohelpEcmoLearnPage({
+          params: Promise.resolve({ locale: 'en' }),
+          searchParams: Promise.resolve({ lesson: 'circuit-flow-path', track: 'vv', phase }),
+        }),
+      ).rejects.toMatchObject({
+        digest: expect.stringContaining(
+          '/en/cardiohelp-ecmo/learn?lesson=circuit-flow-path&track=vv&phase=recognize',
+        ),
+      })
+      expect(screen.queryByTestId('ecmo-foundation-activity')).not.toBeInTheDocument()
+    },
+  )
+
+  it('adds no phase parameter when canonicalizing a track that had none', async () => {
+    // The phase is optional. A track-only fix must leave the URL as short as it arrived, or every
+    // plain lesson link in the resource would acquire a parameter it never asked for.
+    await expect(
+      CardiohelpEcmoLearnPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({ lesson: 'vv-normal-state', track: 'va' }),
+      }),
+    ).rejects.toMatchObject({
+      digest: expect.not.stringContaining('phase'),
+    })
+  })
+
+  it('fixes a stale track and a stale phase in the same redirect', async () => {
+    await expect(
+      CardiohelpEcmoLearnPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({
+          lesson: 'vv-normal-state',
+          track: 'va',
+          phase: 'banana',
+        }),
+      }),
+    ).rejects.toMatchObject({
+      digest: expect.stringContaining(
+        '/en/cardiohelp-ecmo/learn?lesson=vv-normal-state&track=vv&phase=recognize',
+      ),
+    })
+  })
+
+  it('carries a valid phase through a track canonicalization', async () => {
+    await expect(
+      CardiohelpEcmoLearnPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({
+          lesson: 'vv-normal-state',
+          track: 'va',
+          phase: 'explain',
+        }),
+      }),
+    ).rejects.toMatchObject({
+      digest: expect.stringContaining(
+        '/en/cardiohelp-ecmo/learn?lesson=vv-normal-state&track=vv&phase=explain',
+      ),
+    })
+  })
+
+  it('renders the canonical phase URL directly, so the redirect cannot loop', async () => {
+    render(
+      await CardiohelpEcmoLearnPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({
+          lesson: 'vv-normal-state',
+          track: 'vv',
+          phase: 'recognize',
+        }),
+      }),
+    )
+    expect(screen.getByTestId('ecmo-foundation-activity')).toHaveAttribute(
+      'data-initial-phase',
+      'recognize',
+    )
+  })
 
   it('keeps the working track toggle for a shared section on the VA reference', async () => {
     render(
