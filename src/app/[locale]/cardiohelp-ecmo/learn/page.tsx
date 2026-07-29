@@ -82,10 +82,10 @@ export default async function CardiohelpEcmoLearnPage({ params, searchParams }: 
   const phase = requestedPhase(query?.phase)
   setRequestLocale(locale)
 
-  // Seven foundation sections open the live three-pane workspace: the four shared by both tracks
-  // over whichever reference circuit is selected, and the three VV-only ones, which always run on
-  // the VV reference. The three VA sections still render as prose until their own package lands,
-  // and drill sections open the guided workbench.
+  // Ten foundation sections open the live three-pane workspace: the four shared by both tracks over
+  // whichever reference circuit is selected, the three VV-only ones, which always run on the VV
+  // reference, and the three VA-only ones, which always run on the VA reference. Drill sections
+  // open the guided workbench.
   if (isEcmoInteractiveFoundationSectionId(lesson)) {
     const resolved = ecmoFoundationSupportMode(lesson, track)
     // A phase parameter is only canonicalized when one was actually supplied. Adding it to every

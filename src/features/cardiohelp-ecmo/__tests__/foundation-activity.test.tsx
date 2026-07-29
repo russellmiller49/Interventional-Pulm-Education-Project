@@ -1,10 +1,12 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
 import { EcmoFoundationLessonActivity } from '../components/EcmoFoundationLessonActivity'
 import {
   ecmoFoundationLessonRuntime,
+  ecmoInteractiveFoundationSectionIds,
   ecmoSharedFoundationSectionIds,
+  ecmoVaOnlyFoundationSectionIds,
   ecmoVvOnlyFoundationSectionIds,
 } from '../content/foundationLessonRuntime'
 import type { SupportMode } from '../engine/types'
@@ -206,6 +208,129 @@ describe('a VV-only section never offers the VA track', () => {
     expect(loadedVariantId()).toBe('reference-circuit')
     expect(loadedStateCard()).toContain('VV reference circuit')
     expect(loadedStateCard()).not.toContain('VA reference circuit')
+  })
+})
+
+describe('a VA-only section never offers the VV track', () => {
+  it.each(ecmoVaOnlyFoundationSectionIds)('fixes the pathway indicator on %s', (sectionId) => {
+    mount(sectionId, 'va')
+
+    expect(document.querySelector('[data-fixed-pathway="va"]')).not.toBeNull()
+    expect(document.querySelectorAll('[data-track-link]')).toHaveLength(0)
+  })
+
+  it.each(ecmoVaOnlyFoundationSectionIds)(
+    'ignores a requested VV track on %s and runs VA anyway',
+    (sectionId) => {
+      mount(sectionId, 'vv')
+
+      expect(document.querySelector('main')).toHaveAttribute('data-support-mode', 'va')
+      expect(document.querySelector('[data-fixed-pathway="va"]')).not.toBeNull()
+      expect(document.querySelectorAll('[data-track-link]')).toHaveLength(0)
+    },
+  )
+
+  it('loads no VV reference behind VA teaching when VV is asked for', () => {
+    mount('va-parallel-physiology', 'vv')
+
+    expect(loadedVariantId()).toBe('reference-circuit')
+    expect(loadedStateCard()).toContain('VA reference circuit')
+    expect(loadedStateCard()).not.toContain('VV reference circuit')
+  })
+
+  it('does not describe a VA section as teaching series physiology', () => {
+    // The indicator's copy used to be a hardcoded VV sentence. A VA section rendering it would have
+    // told the learner the circuit in front of them runs in series with the native lung.
+    mount('va-parallel-physiology', 'va')
+    const indicator = document.querySelector('[data-fixed-pathway="va"]')?.textContent ?? ''
+
+    expect(indicator).toContain('parallel circulation')
+    expect(indicator).not.toContain('series physiology')
+
+    cleanup()
+    mount('vv-series-physiology', 'vv')
+    const vvIndicator = document.querySelector('[data-fixed-pathway="vv"]')?.textContent ?? ''
+    expect(vvIndicator).toContain('series physiology')
+    expect(vvIndicator).not.toContain('parallel circulation')
+  })
+})
+
+describe('the VA lessons load the states they are authored over', () => {
+  it('opens the parallel-physiology lesson on the settled VA reference, running', () => {
+    mount('va-parallel-physiology', 'va')
+
+    expect(loadedVariantId()).toBe('reference-circuit')
+    expect(clockIsRunning()).toBe(true)
+  })
+
+  it('loads each parallel mechanism cleanly, without compounding them', () => {
+    mount('va-parallel-physiology', 'va')
+    goToPhase('act')
+
+    fireEvent.click(guidedAction('load-differential-hypoxemia-preview'))
+    expect(loadedVariantId()).toBe('differential-hypoxemia-preview')
+
+    fireEvent.click(guidedAction('load-lv-loading-preview'))
+    expect(loadedVariantId()).toBe('lv-loading-preview')
+
+    fireEvent.click(guidedAction('restore-va-reference'))
+    expect(loadedVariantId()).toBe('reference-circuit')
+  })
+
+  it('opens the VA capstone on the presenting case', () => {
+    mount('va-integration-capstone', 'va')
+
+    expect(loadedVariantId()).toBe('mixed-circulation-case')
+    // Unlike the VV capstone this case carries its finding from the first frame, so there is no
+    // authored change to sit in front of and the clock is free to run.
+    expect(clockIsRunning()).toBe(true)
+    expect(document.querySelector('[data-clock-held]')).toBeNull()
+  })
+
+  it('holds the clock on the one VA preview that sits before an authored change', () => {
+    mount('va-integration-capstone', 'va')
+    goToPhase('explain')
+
+    fireEvent.click(guidedAction('preview-va-gas-source-before-change'))
+    expect(loadedVariantId()).toBe('va-gas-source-before-change')
+    expect(clockIsRunning()).toBe(false)
+    expect(document.querySelector('[data-clock-held]')).not.toBeNull()
+
+    runModeledSeconds(5)
+    // Still held, so the gas case has not walked past its own change.
+    expect(loadedVariantId()).toBe('va-gas-source-before-change')
+    expect(clockIsRunning()).toBe(false)
+  })
+
+  it('lets the learner start that clock and watch the gas change arrive', () => {
+    mount('va-integration-capstone', 'va')
+    goToPhase('explain')
+    fireEvent.click(guidedAction('preview-va-gas-source-before-change'))
+
+    fireEvent.click(clockToggle())
+    runModeledSeconds(1)
+
+    expect(clockIsRunning()).toBe(true)
+  })
+
+  it('keeps every VA capstone action reachable in the transfer phase', () => {
+    mount('va-integration-capstone', 'va')
+    goToPhase('transfer')
+
+    for (const guided of ecmoFoundationLessonRuntime('va-integration-capstone').guidedActions) {
+      expect(guidedAction(guided.id)).toBeInTheDocument()
+    }
+  })
+
+  it('captures and advances on the VA normal state', () => {
+    mount('va-normal-state', 'va')
+    goToPhase('act')
+
+    fireEvent.click(guidedAction('capture-reference-snapshot'))
+    fireEvent.click(guidedAction('run-twenty-modeled-seconds'))
+
+    expect(document.querySelector('[data-interaction="capture-reference-snapshot"]')).not.toBeNull()
+    expect(document.querySelector('[data-interaction="run-twenty-modeled-seconds"]')).not.toBeNull()
   })
 })
 
@@ -488,17 +613,14 @@ describe('the recognize phase is reading only', () => {
   // The capstone's recognize copy used to ask the learner to "record" an impression, in a phase
   // that renders no control at all and in a module that deliberately records nothing. The copy now
   // says nothing is entered at this step; these cases are what hold it to that.
-  it.each([...ecmoSharedFoundationSectionIds, ...ecmoVvOnlyFoundationSectionIds])(
-    'offers nothing to fill in on %s',
-    (sectionId) => {
-      mount(sectionId)
+  it.each(ecmoInteractiveFoundationSectionIds)('offers nothing to fill in on %s', (sectionId) => {
+    mount(sectionId)
 
-      const yourTurn = document.querySelector('[data-pane="your-turn"]')
-      expect(yourTurn).not.toBeNull()
-      expect(yourTurn!.querySelectorAll('[data-guided-action]')).toHaveLength(0)
-      expect(yourTurn!.querySelectorAll('input, textarea, select')).toHaveLength(0)
-    },
-  )
+    const yourTurn = document.querySelector('[data-pane="your-turn"]')
+    expect(yourTurn).not.toBeNull()
+    expect(yourTurn!.querySelectorAll('[data-guided-action]')).toHaveLength(0)
+    expect(yourTurn!.querySelectorAll('input, textarea, select')).toHaveLength(0)
+  })
 
   it('promises no entry the capstone cannot take', () => {
     const recognize = ecmoFoundationLessonRuntime('vv-integration-capstone').phases.recognize
@@ -508,7 +630,7 @@ describe('the recognize phase is reading only', () => {
 })
 
 describe('every interactive section mounts', () => {
-  it.each([...ecmoSharedFoundationSectionIds, ...ecmoVvOnlyFoundationSectionIds])(
+  it.each(ecmoInteractiveFoundationSectionIds)(
     'renders a heading, a teaching panel, and a loaded state for %s',
     (sectionId) => {
       mount(sectionId)

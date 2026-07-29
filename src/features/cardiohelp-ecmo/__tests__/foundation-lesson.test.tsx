@@ -12,12 +12,16 @@ import {
 import { ecmoFoundationLearningItems } from '../content/foundationLearningItems'
 import {
   ecmoFoundationLessonRuntimes,
+  ecmoFoundationSupportMode,
+  ecmoFoundationVariants,
   ecmoInteractiveFoundationSectionIds,
   ecmoSharedFoundationSectionIds,
+  ecmoVaOnlyFoundationSectionIds,
   ecmoVvOnlyFoundationSectionIds,
   isEcmoInteractiveFoundationSectionId,
   isEcmoSharedFoundationSectionId,
 } from '../content/foundationLessonRuntime'
+import { createFoundationVariantState } from '../session/foundationSession'
 import { ecmoFoundationSectionById } from '../content/foundationLessons'
 import { ecmoReferenceProfileForMode } from '../content/referenceProfiles'
 import '../content/ecmoValueGuides'
@@ -33,15 +37,16 @@ function settled(supportMode: SupportMode, seconds = 10): EcmoSimulationState {
 }
 
 describe('interactive foundation panel registry', () => {
-  it('registers exactly the seven interactive sections', () => {
+  it('registers exactly the ten interactive sections', () => {
     expect(validateEcmoFoundationPanelRegistry()).toEqual([])
-    expect(ecmoFoundationTeachingPanelSectionIds).toHaveLength(7)
+    expect(ecmoFoundationTeachingPanelSectionIds).toHaveLength(10)
     expect([...ecmoFoundationTeachingPanelSectionIds].sort()).toEqual(
       [...ecmoInteractiveFoundationSectionIds].sort(),
     )
     expect(ecmoSharedFoundationSectionIds).toHaveLength(4)
     expect(ecmoVvOnlyFoundationSectionIds).toHaveLength(3)
-    expect(new Set(ecmoInteractiveFoundationSectionIds).size).toBe(7)
+    expect(ecmoVaOnlyFoundationSectionIds).toHaveLength(3)
+    expect(new Set(ecmoInteractiveFoundationSectionIds).size).toBe(10)
     // The invariant the registry validator checks: a repeat in the id list collapses into a single
     // object key, so comparing a deduplicated list against the registry would never see one.
     expect(ecmoInteractiveFoundationSectionIds).toHaveLength(
@@ -49,27 +54,59 @@ describe('interactive foundation panel registry', () => {
     )
   })
 
-  it('registers no VA-only or drill section', () => {
+  it('registers no drill section', () => {
     for (const excluded of [
-      'va-parallel-physiology',
-      'va-normal-state',
-      'va-integration-capstone',
       'startup-sensor-orientation',
       'vv-recirculation',
       'gas-source-interruption',
       'afterload-oxygenator-resistance',
       'vv-off-sweep-capstone',
+      'va-differential-hypoxemia',
+      'va-lv-loading',
+      'va-mixed-circulation-capstone',
     ]) {
       expect(hasEcmoFoundationTeachingPanel(excluded)).toBe(false)
       expect(isEcmoInteractiveFoundationSectionId(excluded)).toBe(false)
     }
   })
 
-  it('keeps the VV-only sections out of the track-shared set', () => {
-    for (const sectionId of ecmoVvOnlyFoundationSectionIds) {
+  it('keeps the track-fixed sections out of the track-shared set', () => {
+    for (const sectionId of [
+      ...ecmoVvOnlyFoundationSectionIds,
+      ...ecmoVaOnlyFoundationSectionIds,
+    ]) {
       expect(isEcmoSharedFoundationSectionId(sectionId)).toBe(false)
       expect(isEcmoInteractiveFoundationSectionId(sectionId)).toBe(true)
       expect(hasEcmoFoundationTeachingPanel(sectionId)).toBe(true)
+    }
+  })
+
+  it('fixes each track-fixed section to its own track, whichever track is asked for', () => {
+    for (const requested of ['vv', 'va'] as const) {
+      for (const sectionId of ecmoVvOnlyFoundationSectionIds) {
+        expect(ecmoFoundationSupportMode(sectionId, requested)).toBe('vv')
+      }
+      for (const sectionId of ecmoVaOnlyFoundationSectionIds) {
+        expect(ecmoFoundationSupportMode(sectionId, requested)).toBe('va')
+      }
+      for (const sectionId of ecmoSharedFoundationSectionIds) {
+        expect(ecmoFoundationSupportMode(sectionId, requested)).toBe(requested)
+      }
+    }
+  })
+
+  it('never offers the other track’s reference circuit behind a track-fixed section', () => {
+    for (const sectionId of ecmoVaOnlyFoundationSectionIds) {
+      const runtime = ecmoFoundationLessonRuntimes[sectionId]
+      expect(runtime.supportMode).toBe('va')
+      for (const requested of ['vv', 'va'] as const) {
+        for (const variant of ecmoFoundationVariants(runtime, requested)) {
+          if (variant.source.kind === 'reference-profile') {
+            expect(variant.source.profileId).toBe('va-reference')
+          }
+          expect(createFoundationVariantState(variant).supportMode).toBe('va')
+        }
+      }
     }
   })
 
@@ -122,6 +159,124 @@ describe('foundation reference state', () => {
       expect(circuit.bloodFlow).toBeLessThanOrEqual(expected.bloodFlow.high)
       expect(circuit.deltaP).toBeGreaterThanOrEqual(expected.deltaP.low)
       expect(circuit.deltaP).toBeLessThanOrEqual(expected.deltaP.high)
+    }
+  })
+})
+
+describe('VA foundation teaching panels', () => {
+  const authoredIds = new Set(allCriticalCareDerivedValueGuides().map((guide) => guide.id))
+
+  /**
+   * Every state a VA lesson can actually put on screen, reached the way the lesson reaches it.
+   *
+   * Rendering a panel against a hand-built state would review something no learner can get to. This
+   * walks the authored variants instead, so a panel that breaks on one of its own previews fails.
+   */
+  const vaStates = ecmoVaOnlyFoundationSectionIds.flatMap((sectionId) =>
+    ecmoFoundationVariants(ecmoFoundationLessonRuntimes[sectionId], 'va').map((variant) => ({
+      sectionId,
+      variantId: variant.id,
+      state: createFoundationVariantState(variant),
+    })),
+  )
+
+  it('has every VA variant to render', () => {
+    expect(vaStates.length).toBeGreaterThanOrEqual(9)
+    for (const { state } of vaStates) expect(state.supportMode).toBe('va')
+  })
+
+  it.each(vaStates.map((entry) => [`${entry.sectionId}/${entry.variantId}`, entry] as const))(
+    '%s renders, carries a text equivalent, and states its model boundary',
+    (_label, entry) => {
+      const { container } = render(
+        <EcmoFoundationTeachingPanel sectionId={entry.sectionId} state={entry.state} />,
+      )
+      expect(
+        container.querySelector(`[data-teaching-panel="${entry.sectionId}"]`),
+      ).toBeInTheDocument()
+      expect(container.querySelector('[data-text-equivalent]')).toBeInTheDocument()
+      expect(container.querySelector('[data-model-boundary]')).toBeInTheDocument()
+      assertNoUniversalTargetLanguage(container.textContent ?? '')
+      for (const node of container.querySelectorAll('[data-derived-value]')) {
+        expect(authoredIds).toContain(node.getAttribute('data-derived-value') ?? '')
+      }
+      // A model boundary must say it is describing the simulation, not a bedside claim.
+      for (const node of container.querySelectorAll('[data-model-boundary]')) {
+        expect(node.textContent ?? '').toMatch(/simulation/i)
+      }
+    },
+  )
+
+  it('never renders a VA panel against a VV circuit in any authored path', () => {
+    for (const sectionId of ecmoVaOnlyFoundationSectionIds) {
+      for (const requested of ['vv', 'va'] as const) {
+        for (const variant of ecmoFoundationVariants(
+          ecmoFoundationLessonRuntimes[sectionId],
+          requested,
+        )) {
+          expect(createFoundationVariantState(variant).supportMode).toBe('va')
+        }
+      }
+    }
+  })
+
+  /**
+   * The variant that is deliberately not settled: it sits one modeled second before its authored
+   * change, which is the whole reason it holds the lesson clock.
+   */
+  const UNSETTLED_BY_DESIGN = 'va-gas-source-before-change'
+
+  it.each(
+    vaStates
+      .filter((entry) => entry.variantId !== UNSETTLED_BY_DESIGN)
+      .map((entry) => [`${entry.sectionId}/${entry.variantId}`, entry] as const),
+  )('%s opens on a settled state, not mid-equilibration', (_label, entry) => {
+    // An earlier package shipped a reference profile that opened while the patient and gas side
+    // were still ramping, so a baseline review reported drift that was only the profile settling.
+    // The VA side ramps harder: at frame zero the reference has a pulse pressure and a femoral
+    // saturation well away from where they end up, and the two arterial sites read the same.
+    let later = entry.state
+    for (let tick = 0; tick < 10; tick += 1) later = ecmoSimulationReducer(later, { type: 'STEP' })
+
+    expect(later.circuit.bloodFlow).toBeCloseTo(entry.state.circuit.bloodFlow, 2)
+    expect(later.patient.rightRadialSpo2).toBeCloseTo(entry.state.patient.rightRadialSpo2, 1)
+    expect(later.patient.femoralArterialSpo2).toBeCloseTo(
+      entry.state.patient.femoralArterialSpo2,
+      1,
+    )
+    expect(later.patient.pulsePressure).toBeCloseTo(entry.state.patient.pulsePressure, 1)
+    expect(later.patient.nativeCardiacOutputLpm).toBeCloseTo(
+      entry.state.patient.nativeCardiacOutputLpm,
+      2,
+    )
+    expect(later.circuit.preOxygenatorSaturation).toBeCloseTo(
+      entry.state.circuit.preOxygenatorSaturation,
+      1,
+    )
+  })
+
+  it('leaves the held gas preview genuinely short of its authored change', () => {
+    const held = vaStates.find((entry) => entry.variantId === UNSETTLED_BY_DESIGN)
+    expect(held).toBeDefined()
+    // Before: the gas path is intact, which is what makes it worth reading first.
+    expect(held!.state.gas.sourceConnected).toBe(true)
+
+    let later = held!.state
+    for (let tick = 0; tick < 2; tick += 1) later = ecmoSimulationReducer(later, { type: 'STEP' })
+    // It really is one modeled second away, which is why the variant has to hold the clock rather
+    // than relying on the learner reading quickly.
+    expect(later.gas.sourceConnected).toBe(false)
+  })
+
+  it('carries no VV recirculation term into VA teaching', () => {
+    // Structural in the model: VA return is not in series with drainage. A VA panel that displayed
+    // a nonzero recirculating share would be describing a mechanism this track does not have.
+    for (const { state } of vaStates) {
+      expect(state.circuit.recirculationFraction).toBe(0)
+      expect(state.circuit.recirculationAdjustedCircuitFlowLpm).toBeCloseTo(
+        state.circuit.bloodFlow,
+        5,
+      )
     }
   })
 })

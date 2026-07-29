@@ -1,5 +1,6 @@
 import {
   ecmoInteractiveFoundationSectionIds,
+  isEcmoVaOnlyFoundationSectionId,
   isEcmoVvOnlyFoundationSectionId,
   type EcmoInteractiveFoundationSectionId,
 } from '../../content/foundationLessonRuntime'
@@ -10,6 +11,9 @@ import type { EcmoFoundationSnapshot } from '../../session/foundationSession'
 import { BloodFlowVsSweepPanel } from './BloodFlowVsSweepPanel'
 import { CircuitFlowPathPanel } from './CircuitFlowPathPanel'
 import { PumpPressureZonesPanel } from './PumpPressureZonesPanel'
+import { VaIntegrationCapstonePanel } from './VaIntegrationCapstonePanel'
+import { VaNormalStatePanel } from './VaNormalStatePanel'
+import { VaParallelPhysiologyPanel } from './VaParallelPhysiologyPanel'
 import { VvIntegrationCapstonePanel } from './VvIntegrationCapstonePanel'
 import { VvNormalStatePanel } from './VvNormalStatePanel'
 import { VvSeriesPhysiologyPanel } from './VvSeriesPhysiologyPanel'
@@ -24,10 +28,9 @@ export interface EcmoFoundationTeachingPanelProps {
 /**
  * Section id → panel. One entry per interactive foundation lesson, one file per panel.
  *
- * Exactly the seven sections that open the live workspace belong here: the four shared by both
- * tracks and the three VV-only ones. The three VA sections are deliberately absent and stay on the
- * prose route until their own package lands, and the twenty scenario-backed drills never belong
- * here at all — registering either early would silently change what a route renders.
+ * Exactly the ten sections that open the live workspace belong here: the four shared by both tracks,
+ * the three VV-only ones, and the three VA-only ones. The twenty scenario-backed drills never belong
+ * here at all — registering one would silently take a Practice drill off the guided workbench.
  */
 const panels: Readonly<
   Record<
@@ -42,6 +45,9 @@ const panels: Readonly<
   'vv-series-physiology': VvSeriesPhysiologyPanel,
   'vv-normal-state': VvNormalStatePanel,
   'vv-integration-capstone': VvIntegrationCapstonePanel,
+  'va-parallel-physiology': VaParallelPhysiologyPanel,
+  'va-normal-state': VaNormalStatePanel,
+  'va-integration-capstone': VaIntegrationCapstonePanel,
 }
 
 export const ecmoFoundationTeachingPanelSectionIds = Object.keys(
@@ -81,14 +87,23 @@ export function validateEcmoFoundationPanelRegistry(): readonly string[] {
     errors.push('the interactive section list and the panel registry differ in length')
   }
 
-  // A VA-only foundation section registered here would take a VA lesson off its prose route.
+  // The section records in `foundationLessons.ts` and the track-fixed id lists in the runtime are
+  // two separate declarations of the same fact. A registered panel whose section record disagrees
+  // with the list it was placed in would render one track's teaching over the other's circuit, so
+  // the two are reconciled here rather than trusted to stay in step.
   for (const section of ecmoFoundationSections) {
-    if (
-      section.supportMode === 'va' &&
-      section.id in panels &&
-      !isEcmoVvOnlyFoundationSectionId(section.id)
-    ) {
-      errors.push(`VA-only foundation section is registered: ${section.id}`)
+    if (!(section.id in panels)) continue
+    if (section.supportMode === 'va' && !isEcmoVaOnlyFoundationSectionId(section.id)) {
+      errors.push(`VA section is registered but is not declared VA-only: ${section.id}`)
+    }
+    if (section.supportMode === 'vv' && !isEcmoVvOnlyFoundationSectionId(section.id)) {
+      errors.push(`VV section is registered but is not declared VV-only: ${section.id}`)
+    }
+    if (section.supportMode === undefined && isEcmoVvOnlyFoundationSectionId(section.id)) {
+      errors.push(`shared section is declared VV-only: ${section.id}`)
+    }
+    if (section.supportMode === undefined && isEcmoVaOnlyFoundationSectionId(section.id)) {
+      errors.push(`shared section is declared VA-only: ${section.id}`)
     }
   }
 

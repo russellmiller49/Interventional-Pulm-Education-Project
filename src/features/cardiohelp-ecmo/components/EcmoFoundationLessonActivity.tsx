@@ -61,6 +61,18 @@ const PHASES: readonly CriticalCareActivityPhase[] = [
   'transfer',
 ]
 
+/**
+ * What the fixed-pathway indicator says, per track.
+ *
+ * Both track-fixed groups exist for the same reason and neither may borrow the other's sentence: a
+ * VA section is not teaching series physiology, and a learner told it was would have been given a
+ * wrong account of the circuit in front of them.
+ */
+const FIXED_PATHWAY_COPY: Readonly<Record<SupportMode, string>> = {
+  vv: 'VV pathway · this section teaches series physiology and always runs on the VV reference circuit.',
+  va: 'VA pathway · this section teaches parallel circulation and always runs on the VA reference circuit.',
+}
+
 const DEVICE_BOUNDARY_SHORT =
   'Console follows the U.S. CARDIOHELP Instructions for Use, Revision 2.3 (January 2025). The VV and VA teaching is not limited to the U.S. labeled indication or duration.'
 
@@ -455,8 +467,7 @@ function EcmoFoundationLessonWorkspace({
           className="mt-3 inline-flex rounded-xl border px-3 py-1.5 text-sm"
           data-fixed-pathway={supportMode}
         >
-          VV pathway · this section teaches series physiology and always runs on the VV reference
-          circuit.
+          {FIXED_PATHWAY_COPY[supportMode]}
         </p>
       ) : (
         <div
