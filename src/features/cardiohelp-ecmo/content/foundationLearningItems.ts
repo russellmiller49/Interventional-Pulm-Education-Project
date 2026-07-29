@@ -696,10 +696,10 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           {
             id: 'watershed-moved-distally',
             label:
-              'The heart is ejecting more of its own poorly oxygenated blood, so the place where the two circulations meet has moved further down the aorta and the upper body is now being supplied by the native lungs.',
+              'The heart is ejecting more of its own poorly oxygenated blood, so the place where the two circulations meet has moved more distally and the upper body is now being supplied by the native lungs.',
             plausibility: 'best',
             rationale:
-              'Circuit blood travels up the aorta from a femoral return cannula while native blood travels down it. Recovering ejection pushes their meeting place distally, so the vessels arising from the arch — including the coronary and cerebral circulations — receive native blood whose oxygenation reflects the native lungs.',
+              'In peripheral femoral venoarterial support the circuit returns blood retrograde up the aorta while the ventricle ejects anterograde down it. Raising native ejection relative to circuit flow moves their meeting place more distally, away from the aortic root and toward the return cannula, so the brachiocephalic, left common carotid and left subclavian arteries come to be filled from the native side. Where the meeting place sits relative to the aortic root also decides what the coronary arteries receive, and the right radial value does not settle that on its own.',
           },
           {
             id: 'membrane-losing-transfer',
@@ -903,7 +903,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
             label: 'Raise circuit flow, since more support should help a deteriorating patient.',
             plausibility: 'unsafe',
             rationale:
-              'Raising flow raises what the ventricle ejects against and pushes the watershed further from the arch. If either of the two leading explanations is operating, this makes the situation worse before it is understood.',
+              'Raising femoral venoarterial flow before the mechanism is established is premature rather than simply harmful. Raising it moves the mixing point more proximally, toward the aortic root, which can improve upper-body and cerebral oxygenation for a time. It also raises what the left ventricle must eject against, so it can reduce native ejection and worsen distension, pulmonary congestion and stasis. The same action can therefore relieve one regional oxygenation problem while deepening the loading problem underneath it, which is why the mechanism has to be named first.',
           },
           {
             id: 'change-the-membrane',

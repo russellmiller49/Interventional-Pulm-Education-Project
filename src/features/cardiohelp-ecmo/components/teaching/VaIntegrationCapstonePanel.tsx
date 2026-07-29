@@ -13,6 +13,8 @@ import {
   directionWord,
   round,
   styles,
+  VA_CONFIGURATION_BOUNDARY,
+  VaConfigurationLabel,
 } from './shared'
 
 /**
@@ -60,9 +62,9 @@ const hypotheses: readonly {
 }[] = [
   {
     id: 'differential-oxygenation',
-    label: 'Native ejection has moved the watershed',
+    label: 'Native ejection has moved the mixing point',
     mechanism:
-      'Native ejection has recovered and pushed the point where native and circuit blood meet further down the aorta, so poorly oxygenated blood from the native lung is reaching the upper body.',
+      'Native ejection has recovered and moved the point where native and circuit blood meet more distally, away from the aortic root, so blood from the native lung is filling the arch branches and reaching the upper body and the brain. Where that point sits relative to the root also decides what the coronary arteries receive.',
   },
   {
     id: 'lv-distension',
@@ -828,6 +830,8 @@ export function VaIntegrationCapstonePanel({
 
   return (
     <div className={styles.panel} data-teaching-panel="va-integration-capstone">
+      <VaConfigurationLabel />
+      <ModelBoundary>{VA_CONFIGURATION_BOUNDARY}</ModelBoundary>
       <section className={styles.section} aria-labelledby="va-capstone-flow-heading">
         <h3 id="va-capstone-flow-heading" className={styles.heading}>
           The two signals that cannot settle this

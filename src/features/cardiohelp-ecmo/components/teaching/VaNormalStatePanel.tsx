@@ -6,7 +6,16 @@ import {
 import { ecmoReferenceProfiles } from '../../content/referenceProfiles'
 import { createReferenceSimulationState, ecmoSimulationReducer } from '../../engine'
 import type { EcmoSimulationState } from '../../engine/types'
-import { GuidedValue, ModelBoundary, TextEquivalent, direction, round, styles } from './shared'
+import {
+  GuidedValue,
+  ModelBoundary,
+  TextEquivalent,
+  VA_CONFIGURATION_BOUNDARY,
+  VaConfigurationLabel,
+  direction,
+  round,
+  styles,
+} from './shared'
 
 /**
  * A baseline review of one modeled VA circuit against itself.
@@ -601,6 +610,8 @@ export function VaNormalStatePanel({
 
   return (
     <div className={styles.panel} data-teaching-panel="va-normal-state">
+      <VaConfigurationLabel />
+      <ModelBoundary>{VA_CONFIGURATION_BOUNDARY}</ModelBoundary>
       <section className={styles.section} aria-labelledby="va-baseline-heading">
         <h3 id="va-baseline-heading" className={styles.heading}>
           Baseline review — this modeled circuit against itself

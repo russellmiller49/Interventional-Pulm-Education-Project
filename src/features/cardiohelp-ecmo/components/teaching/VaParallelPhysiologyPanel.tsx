@@ -13,6 +13,8 @@ import {
   directionWord,
   round,
   styles,
+  VA_CONFIGURATION_BOUNDARY,
+  VaConfigurationLabel,
 } from './shared'
 
 /**
@@ -144,27 +146,35 @@ function parallelStages(state: EcmoSimulationState): readonly ParallelStage[] {
       carries: `Native cardiac output ${patient.nativeCardiacOutputLpm.toFixed(2)} L/min, pulse pressure ${patient.pulsePressure.toFixed(1)} mmHg, aortic valve ${valveWord(state)}`,
     },
     {
-      id: 'mixing-watershed',
-      label: 'The mixing watershed',
+      id: 'mixing-point',
+      label: 'The mixing point',
       stream: 'shared',
       detail:
-        'The two streams meet somewhere along the aorta. Where they meet is a place, and the place moves: more native ejection pushes it further down, more circuit flow pushes it further up.',
+        'The two streams meet somewhere along the aorta, and that place moves. Raising native ejection relative to circuit flow moves it more distally, away from the aortic root and toward the return cannula. Raising circuit flow relative to native ejection moves it more proximally, back toward the ascending aorta and the root.',
       carries: `Difference between the two arterial sampling sites ${gap.toFixed(1)} saturation points`,
     },
     {
-      id: 'upper-body',
-      label: 'Upper-body beds',
+      id: 'arch-branches',
+      label: 'Arch branches — upper body and brain',
       stream: 'native',
       detail:
-        'Coronary and cerebral beds sit above the watershed. When the heart is ejecting, they are supplied by blood that has just come through the native lungs — whatever those lungs managed to do to it.',
+        'The brachiocephalic, left common carotid and left subclavian arteries arise from the arch. When the mixing point lies distal to them they are filled from the native side, and what they carry is whatever the native lungs managed to do to it. When it lies proximal to them they are filled by the membrane.',
       carries: `Right radial saturation ${round(patient.rightRadialSpo2, 1)}`,
     },
     {
+      id: 'aortic-root-and-coronaries',
+      label: 'Aortic root — coronary origin',
+      stream: 'shared',
+      detail:
+        'The coronary arteries arise from the aortic root, proximal to every arch branch, so they are not an upper-body bed in the way the arch vessels are. The mixing point can sit between the root and the arch branches, and in that case the coronary supply and the right radial sample are being filled from different sides. A right radial value therefore does not establish what the coronary circulation is receiving.',
+      carries: `Right radial saturation ${round(patient.rightRadialSpo2, 1)} does not on its own establish coronary supply`,
+    },
+    {
       id: 'lower-body',
-      label: 'Lower-body beds',
+      label: 'Beds distal to the mixing point',
       stream: 'circuit',
       detail:
-        'Below the watershed the beds are supplied by circuit blood, which has just crossed a membrane running on oxygen. The cannulated limb sits down here too, distal to a cannula that occupies part of its artery.',
+        'Distal to the mixing point the beds are supplied by circuit blood, which has just crossed a membrane running on oxygen. It can look reassuring while everything proximal is being filled from somewhere else. The cannulated limb sits down here too, distal to a cannula that occupies part of its artery.',
       carries: `Femoral arterial saturation ${round(patient.femoralArterialSpo2, 1)}, distal limb perfusion ${limbPerfusionWord[patient.distalLimbPerfusion]}`,
     },
   ]
@@ -378,17 +388,17 @@ function vaSignals(state: EcmoSimulationState): readonly VaSignal[] {
   return [
     {
       name: 'rightRadialSpo2',
-      label: 'Right radial saturation — upper body',
+      label: 'Right radial saturation — arch-branch territory',
       value: patient.rightRadialSpo2.toFixed(1),
       detail:
-        'Sampled above the watershed, where native ejection arrives first. It reports what the native lungs did to that blood. Nothing on the console reports it.',
+        'Drawn from the first arch branch, so it is the most useful single site for asking what the upper body and the brain are being given. It reports the native side only while the mixing point lies distal to that branch, and it does not establish what the coronary arteries — which arise further back, at the root — are receiving. Nothing on the console reports it.',
     },
     {
       name: 'femoralArterialSpo2',
-      label: 'Femoral arterial saturation — lower body',
+      label: 'Femoral arterial saturation — distal to the mixing point',
       value: patient.femoralArterialSpo2.toFixed(1),
       detail:
-        'Sampled below the watershed, in blood the membrane lung has just oxygenated. It can look reassuring while the upper body is being supplied by something else entirely.',
+        'Drawn distal to the mixing point, in blood the membrane lung has just oxygenated. It can look reassuring while everything proximal to that point is being supplied by something else entirely.',
     },
     {
       name: 'upperToLowerSaturationGap',
@@ -456,6 +466,8 @@ export function VaParallelPhysiologyPanel({
 
   return (
     <div className={styles.panel} data-teaching-panel="va-parallel-physiology">
+      <VaConfigurationLabel />
+      <ModelBoundary>{VA_CONFIGURATION_BOUNDARY}</ModelBoundary>
       <section className={styles.section} aria-labelledby="parallel-path-heading">
         <h3 id="parallel-path-heading" className={styles.heading}>
           The circuit in parallel with the patient
@@ -693,9 +705,11 @@ export function VaParallelPhysiologyPanel({
               points.
             </p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              A recovering ventricle ejects more and pushes the watershed further down the aorta, so
-              improving native function can present as a new upper-body hypoxemia rather than as
-              good news.
+              A recovering ventricle ejects more and moves the mixing point more distally, away from
+              the aortic root, so improving native function can present as a new upper-body
+              hypoxemia rather than as good news. Raising circuit flow moves that point the other
+              way, back toward the root — which can lift the upper-body value while raising what the
+              ventricle has to eject against.
             </p>
           </div>
           <div className="rounded-xl border p-3" data-va-mechanism="lv-loading">
