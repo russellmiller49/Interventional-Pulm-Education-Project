@@ -38,9 +38,11 @@ import {
  *   - the differential-oxygenation state authors the two arterial saturations directly instead of
  *     computing a watershed position from native ejection.
  *
- * The presenting case and the differential-oxygenation state settle to the same state, so the case
- * in front of the learner *is* that mechanism. There is deliberately no separate preview for it,
- * and the panel says so rather than offering a redundant one.
+ * The presenting case and the differential-oxygenation state settle to the same state, so the
+ * presenting case *is* that mechanism. There is deliberately no separate preview for it, and the
+ * panel says so rather than offering a redundant one. It says it about the presenting case by name:
+ * this panel also renders behind the loading, membrane and gas previews, and a sentence about "the
+ * case in front of you" would be false in four of the five states the lesson can load.
  */
 
 type HypothesisId =
@@ -111,7 +113,19 @@ interface MatrixRow {
 function channelText(readout: EcmoChannelReadout, unit: string, precision = 0) {
   return readout.displayed === null
     ? { text: '--', reason: readout.reason }
-    : { text: `${readout.displayed.toFixed(precision)} ${unit}` }
+    : { text: `${readout.displayed.toFixed(precision)}${unit ? ` ${unit}` : ''}` }
+}
+
+/**
+ * The same channel as a sentence, for the text equivalent.
+ *
+ * Carries the reason a number is absent as well as the number, so a reader of the equivalent is
+ * never told less than the table beside it says.
+ */
+function channelSentence(readout: EcmoChannelReadout, unit: string, precision = 0): string {
+  return readout.displayed === null
+    ? `not available, ${readout.reason}`
+    : `${readout.displayed.toFixed(precision)}${unit ? ` ${unit}` : ''}`
 }
 
 /** The same words the other VA panels use, so one finding does not read two ways across a track. */
@@ -768,6 +782,11 @@ const comparisonWord: Readonly<Record<'up' | 'down' | 'flat', string>> = {
  * The learner's captured snapshot when there is one, and otherwise the earliest sample the circuit
  * has retained. Both belong to this same circuit; a value from any other circuit is never offered,
  * because the quantity that is interpretable is a change measured against a circuit's own history.
+ *
+ * The retained sample at time zero is a caveat rather than a measurement: this simulation writes it
+ * as the state is constructed, before the loaded condition has taken effect, so for a preview that
+ * opens with its mechanism already active it reports the undisturbed circuit. The section's model
+ * boundary says so to the learner rather than leaving it here.
  */
 function earlierGradient(
   state: EcmoSimulationState,
@@ -937,23 +956,12 @@ export function VaIntegrationCapstonePanel({
         <TextEquivalent>
           The live column reads, in the same order: displayed circuit flow{' '}
           {circuit.bloodFlow.toFixed(2)} L/min; pVen{' '}
-          {circuit.readouts.pVen.displayed === null
-            ? `not available, ${circuit.readouts.pVen.reason}`
-            : `${circuit.readouts.pVen.displayed.toFixed(0)} mmHg`}
-          ; pInt{' '}
-          {circuit.readouts.pInt.displayed === null
-            ? 'not available'
-            : `${circuit.readouts.pInt.displayed.toFixed(0)} mmHg`}{' '}
-          and pArt{' '}
-          {circuit.readouts.pArt.displayed === null
-            ? 'not available'
-            : `${circuit.readouts.pArt.displayed.toFixed(0)} mmHg`}
-          ; the gradient {gradientNow === null ? 'not available' : `${gradientNow.toFixed(0)} mmHg`}
-          ; drainage-limb saturation{' '}
-          {circuit.readouts.venousLineSaturation.displayed === null
-            ? 'not available'
-            : circuit.readouts.venousLineSaturation.displayed.toFixed(1)}
-          ; post-oxygenator saturation {circuit.postOxygenatorSaturation.toFixed(1)}; right radial{' '}
+          {channelSentence(circuit.readouts.pVen, 'mmHg')}; pInt{' '}
+          {channelSentence(circuit.readouts.pInt, 'mmHg')} and pArt{' '}
+          {channelSentence(circuit.readouts.pArt, 'mmHg')}; the gradient{' '}
+          {channelSentence(circuit.readouts.deltaP, 'mmHg')}; drainage-limb saturation{' '}
+          {channelSentence(circuit.readouts.venousLineSaturation, '', 1)}; post-oxygenator
+          saturation {circuit.postOxygenatorSaturation.toFixed(1)}; right radial{' '}
           {patient.rightRadialSpo2.toFixed(1)}; femoral {patient.femoralArterialSpo2.toFixed(1)};
           the gap between the two arterial sites{' '}
           {Math.abs(patient.femoralArterialSpo2 - patient.rightRadialSpo2).toFixed(1)}; pulse
@@ -984,8 +992,10 @@ export function VaIntegrationCapstonePanel({
         <div className="mt-3 rounded-xl border border-dashed p-3" data-presenting-case-mechanism>
           <p className="text-sm leading-6">
             The presenting case and the differential-oxygenation state settle to the same state in
-            this simulation, so the case in front of you already is that mechanism. Loading a second
-            copy of it would put an identical circuit on screen and teach nothing.
+            this simulation, so the presenting case already is that mechanism. Loading a second copy
+            of it would put an identical circuit on screen and teach nothing. This section is about
+            the presenting case whichever state you have loaded at the moment; the live column above
+            always reports the state actually on screen.
           </p>
           <p className="mt-2 text-sm leading-6">
             What separates these five explanations is therefore not another state to load. It is the
@@ -998,10 +1008,10 @@ export function VaIntegrationCapstonePanel({
           </p>
           <p className="mt-2 text-sm leading-6">
             The three explanations with previews — loading, the membrane, the gas side — are worth
-            loading one at a time and reading against this case. The two without previews are still
-            full members of the differential. Reaching one of them by ruling everything else out is
-            a different, and weaker, piece of reasoning than reaching it by finding what it
-            predicts.
+            loading one at a time and reading against the presenting case. The two without previews
+            are still full members of the differential. Reaching one of them by ruling everything
+            else out is a different, and weaker, piece of reasoning than reaching it by finding what
+            it predicts.
           </p>
         </div>
       </section>
@@ -1057,9 +1067,14 @@ export function VaIntegrationCapstonePanel({
         <ModelBoundary>
           The words higher, lower and unchanged come from a display deadband this simulation applies
           so a value moving in its last decimal does not read as movement. The raw change is printed
-          beside every one of them. Neither the deadband nor the observed window is a clinical
-          tolerance, and a window of modeled seconds is not the window over which a real circuit is
-          trended.
+          beside every one of them. When you have captured no snapshot, the earlier value comes from
+          the first sample in this circuit&rsquo;s retained trend, which this simulation writes as
+          the state is built rather than after the loaded condition has taken effect — so a preview
+          that opens with its mechanism already active is being compared with a frame that circuit
+          was never actually in. Read that particular comparison as the difference between an
+          undisturbed circuit and this one, not as a deterioration you watched happen. Neither the
+          deadband nor the observed window is a clinical tolerance, and a window of modeled seconds
+          is not the window over which a real circuit is trended.
         </ModelBoundary>
       </section>
 

@@ -268,6 +268,70 @@ describe('VA foundation teaching panels', () => {
     expect(later.gas.sourceConnected).toBe(false)
   })
 
+  it('never tells the learner the loaded state is the presenting case when it is not', () => {
+    // This panel renders behind all five of the capstone's states, not only the presenting one. A
+    // sentence about "the case in front of you" being the differential-oxygenation mechanism is
+    // true of the presenting case and false of the other four, so the claim is made about the
+    // presenting case by name.
+    for (const entry of vaStates.filter(
+      (candidate) => candidate.sectionId === 'va-integration-capstone',
+    )) {
+      const { container, unmount } = render(
+        <EcmoFoundationTeachingPanel sectionId={entry.sectionId} state={entry.state} />,
+      )
+      const mechanism =
+        container.querySelector('[data-presenting-case-mechanism]')?.textContent ?? ''
+      expect(mechanism).toContain('presenting case')
+      expect(mechanism).not.toMatch(/case in front of you/i)
+      unmount()
+    }
+  })
+
+  it('has every channel reporting in every VA state the lessons can load', () => {
+    // Stated as a fact rather than assumed: no authored VA state currently drives a channel to the
+    // unavailable indication. It matters because it is what makes the check below a defensive one
+    // rather than something a learner meets today.
+    for (const { state } of vaStates) {
+      for (const readout of Object.values(state.circuit.readouts)) {
+        expect(readout.displayed).not.toBeNull()
+      }
+    }
+  })
+
+  it('gives an absent channel its reason in the text equivalent, not only in the table', () => {
+    // The equivalent used to carry the reason for the drainage pressure and drop it for the other
+    // four channels, so a reader of the equivalent was told strictly less than the table beside it.
+    // No authored VA state reaches this path — hence the deliberately unavailable channel here.
+    // This is a check of an error path, not a state offered as teaching.
+    const base = vaStates.find((entry) => entry.variantId === 'mixed-circulation-case')!.state
+    const withAbsentChannel: EcmoSimulationState = {
+      ...base,
+      circuit: {
+        ...base.circuit,
+        readouts: {
+          ...base.circuit.readouts,
+          pInt: {
+            ...base.circuit.readouts.pInt,
+            displayed: null,
+            status: 'device-unavailable',
+            reason: 'the internal pressure sensor is not reporting',
+          },
+        },
+      },
+    }
+
+    const { container } = render(
+      <EcmoFoundationTeachingPanel sectionId="va-integration-capstone" state={withAbsentChannel} />,
+    )
+    const equivalents = [...container.querySelectorAll('[data-text-equivalent]')]
+      .map((node) => node.textContent ?? '')
+      .join(' ')
+
+    expect(equivalents).toContain('the internal pressure sensor is not reporting')
+    // Never an unexplained absence: every "not available" is followed by its reason.
+    expect(equivalents).not.toMatch(/not available(?!,)/)
+  })
+
   it('carries no VV recirculation term into VA teaching', () => {
     // Structural in the model: VA return is not in series with drainage. A VA panel that displayed
     // a nonzero recirculating share would be describing a mechanism this track does not have.
