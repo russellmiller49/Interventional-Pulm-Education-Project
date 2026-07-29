@@ -186,7 +186,11 @@
       "id": "cardiohelp-ecmo",
       "group": "critical-care",
       "owned": {
-        "source": ["src/features/cardiohelp-ecmo/**", "scripts/cardiohelp-ecmo/**"],
+        "source": [
+          "src/features/cardiohelp-ecmo/**",
+          "scripts/cardiohelp-ecmo/**",
+          "scripts/critical-care/render-ecmo-teaching-panels.mts"
+        ],
         "routes": ["src/app/[locale]/cardiohelp-ecmo/**"],
         "tests": ["src/features/cardiohelp-ecmo/**/__tests__/**"],
         "documentation": ["docs/cardiohelp-ecmo/**"],
