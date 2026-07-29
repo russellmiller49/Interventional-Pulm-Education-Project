@@ -17,6 +17,9 @@ metadata is discovered with `git rev-parse --git-common-dir`,
 `git rev-parse --git-dir`, and `git rev-parse --show-toplevel`; tooling never
 assumes that `.git` is a directory.
 
+For the short, copy-paste workflow and the complete module-ID map, see
+[`worktree-push-quick-guide.md`](./worktree-push-quick-guide.md).
+
 ## Daily workflow
 
 From any checkout, inspect context:
