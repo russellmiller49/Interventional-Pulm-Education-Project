@@ -1322,8 +1322,20 @@ async function commandRegisterCurrent(args) {
   console.log(`registered ${role} worktree ${context.topLevel} with ${mounts.length} mount(s)`)
 }
 
+function gitCheckoutProbe(cwd) {
+  try {
+    return run('git', ['rev-parse', '--show-toplevel'], { cwd, allowFailure: true })
+  } catch (error) {
+    return { status: 1, stdout: '', stderr: String(error?.message || error) }
+  }
+}
+
 async function commandInstallHooks(args) {
   if (args.length) throw new WtError('install-hooks accepts no arguments.', 'WT-ARGUMENT')
+  if (gitCheckoutProbe(process.cwd()).status !== 0) {
+    console.log('Skipping worktree hook installation: current directory is not a Git checkout.')
+    return
+  }
   const context = discoverGit(process.cwd())
   git(context.topLevel, ['config', 'extensions.worktreeConfig', 'true'])
   configureWorktreeHooks(context.topLevel)

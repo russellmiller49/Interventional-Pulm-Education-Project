@@ -35,6 +35,7 @@ import {
   provisionMounts,
   releaseLease,
   removeDisposableWorktree,
+  run,
   scopeReport,
   validateMounts,
   validateProcessRecord,
@@ -181,6 +182,67 @@ for (const signal of ['SIGHUP', 'SIGINT', 'SIGTERM']) process.once(signal, shutd
     localConfigPath,
     processRecord: join(repository, '.git', 'wt', 'processes', `port-${port}.json`),
   }
+}
+
+function runProcess(command, args, options = {}) {
+  const child = spawn(command, args, {
+    cwd: options.cwd,
+    env: { ...process.env, ...(options.env || {}) },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
+  let output = ''
+  child.stdout.on('data', (chunk) => {
+    output += chunk
+  })
+  child.stderr.on('data', (chunk) => {
+    output += chunk
+  })
+  return new Promise((resolvePromise, rejectPromise) => {
+    child.once('error', rejectPromise)
+    child.once('exit', (code, signal) => resolvePromise({ code, signal, output }))
+  })
+}
+
+function runWorktreeCommand(args, options = {}) {
+  return runProcess(
+    process.execPath,
+    [join(repositoryRoot, 'scripts', 'worktrees', 'worktree.mjs'), ...args],
+    options,
+  )
+}
+
+function createHookFixture() {
+  const root = temporaryDirectory()
+  const repository = join(root, 'repository')
+  mkdirSync(join(repository, '.husky'), { recursive: true })
+  writeFileSync(join(repository, '.husky', 'pre-commit'), '#!/bin/sh\nexit 0\n', { mode: 0o755 })
+  git(repository, ['init', '-b', 'main'])
+  git(repository, ['config', 'user.email', 'worktree-tests@example.invalid'])
+  git(repository, ['config', 'user.name', 'Worktree Tests'])
+  return { root, repository }
+}
+
+function createFailingHookFixture() {
+  const fixture = createHookFixture()
+  const binDirectory = join(fixture.root, 'bin')
+  mkdirSync(binDirectory, { recursive: true })
+  const realGit = run('sh', ['-c', 'command -v git']).stdout.trim()
+  const shim = join(binDirectory, 'git')
+  writeFileSync(
+    shim,
+    `#!/bin/sh
+for argument in "$@"; do
+  if [ "$argument" = "core.hooksPath" ]; then
+    echo "fatal: simulated hook configuration failure" >&2
+    exit 1
+  fi
+done
+exec ${realGit} "$@"
+`,
+    { mode: 0o755 },
+  )
+  chmodSync(shim, 0o755)
+  return { ...fixture, binDirectory }
 }
 
 afterEach(() => {
@@ -828,5 +890,84 @@ describe('mount and process validation', () => {
     } finally {
       if (runner.exitCode === null && runner.signalCode === null) runner.kill('SIGKILL')
     }
+  })
+})
+
+describe('hook installation', () => {
+  test('skips hook installation outside a Git checkout', async () => {
+    const root = temporaryDirectory()
+    const archive = join(root, 'archive')
+    mkdirSync(archive, { recursive: true })
+    const result = await runWorktreeCommand(['install-hooks'], {
+      cwd: archive,
+      env: { GIT_CEILING_DIRECTORIES: root },
+    })
+    assert.equal(result.code, 0, result.output)
+    assert.match(
+      result.output,
+      /Skipping worktree hook installation: current directory is not a Git checkout\./,
+      result.output,
+    )
+    assert.doesNotMatch(result.output, /configured worktree hooks/, result.output)
+    assert.equal(existsSync(join(archive, '.git')), false, result.output)
+  })
+
+  test('configures worktree hooks inside a Git checkout', async () => {
+    const fixture = createHookFixture()
+    const result = await runWorktreeCommand(['install-hooks'], { cwd: fixture.repository })
+    assert.equal(result.code, 0, result.output)
+    assert.match(result.output, /configured worktree hooks at .+\/\.husky/, result.output)
+    assert.doesNotMatch(result.output, /Skipping worktree hook installation/, result.output)
+    assert.equal(
+      git(fixture.repository, ['config', '--get', 'extensions.worktreeConfig']).stdout.trim(),
+      'true',
+    )
+    assert.equal(
+      git(fixture.repository, ['config', '--get', 'core.hooksPath']).stdout.trim(),
+      '.husky',
+    )
+  })
+
+  test('reports genuine hook configuration failures instead of skipping', async () => {
+    const fixture = createFailingHookFixture()
+    const result = await runWorktreeCommand(['install-hooks'], {
+      cwd: fixture.repository,
+      env: { PATH: `${fixture.binDirectory}:${process.env.PATH}` },
+    })
+    assert.notEqual(result.code, 0, result.output)
+    assert.match(result.output, /core\.hooksPath/, result.output)
+    assert.doesNotMatch(result.output, /Skipping worktree hook installation/, result.output)
+    assert.doesNotMatch(result.output, /configured worktree hooks/, result.output)
+  })
+
+  test('rejects positional arguments with and without Git metadata', async () => {
+    const fixture = createHookFixture()
+    const inRepository = await runWorktreeCommand(['install-hooks', 'extra'], {
+      cwd: fixture.repository,
+    })
+    assert.notEqual(inRepository.code, 0, inRepository.output)
+    assert.match(inRepository.output, /WT-ARGUMENT/, inRepository.output)
+
+    const root = temporaryDirectory()
+    const archive = join(root, 'archive')
+    mkdirSync(archive, { recursive: true })
+    const outsideRepository = await runWorktreeCommand(['install-hooks', 'extra'], {
+      cwd: archive,
+      env: { GIT_CEILING_DIRECTORIES: root },
+    })
+    assert.notEqual(outsideRepository.code, 0, outsideRepository.output)
+    assert.match(outsideRepository.output, /WT-ARGUMENT/, outsideRepository.output)
+    assert.doesNotMatch(
+      outsideRepository.output,
+      /Skipping worktree hook installation/,
+      outsideRepository.output,
+    )
+  })
+
+  test('the repository prepare script still configures hooks', async () => {
+    const result = await runProcess('npm', ['run', '--silent', 'prepare'], { cwd: repositoryRoot })
+    assert.equal(result.code, 0, result.output)
+    assert.match(result.output, /configured worktree hooks at .+\/\.husky/, result.output)
+    assert.equal(git(repositoryRoot, ['config', '--get', 'core.hooksPath']).stdout.trim(), '.husky')
   })
 })
