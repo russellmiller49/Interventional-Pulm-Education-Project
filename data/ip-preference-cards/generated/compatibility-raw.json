@@ -280,6 +280,20 @@
     "verification_grade": "verified_source"
   },
   {
+    "rule_id": "CMP-239F37772D",
+    "source_product_or_role": "PRD-934DA56D92",
+    "relationship": "compatible telescope",
+    "target_product_or_role": "PRD-EC45CB0F5D",
+    "rule_text": "Karl Storz 10435A is compatible with HOPKINS Telescope 10320AA when used in the specified rigid bronchoscopy configuration.",
+    "verification_status": "Verified - legacy manufacturer catalog and completed external clinical review; confirm current IFU and system configuration.",
+    "source_id": "SRC030",
+    "resolved_source_type": "product",
+    "resolved_source_id": "PRD-934DA56D92",
+    "resolved_target_type": "product",
+    "resolved_target_id": "PRD-EC45CB0F5D",
+    "verification_grade": "verified_source"
+  },
+  {
     "rule_id": "CMP-24006B9A46",
     "source_product_or_role": "BF-UC190F",
     "relationship": "compatible processor",
@@ -431,6 +445,20 @@
     "resolved_source_id": null,
     "resolved_target_type": null,
     "resolved_target_id": null,
+    "verification_grade": "verified_source"
+  },
+  {
+    "rule_id": "CMP-3712F5462E",
+    "source_product_or_role": "PRD-934DA56D92",
+    "relationship": "compatible bronchoscope",
+    "target_product_or_role": "PRD-6707AC67D1",
+    "rule_text": "Karl Storz 10435A is compatible with Universal Bronchoscope 10318B, size 8.5, in the specified rigid bronchoscopy configuration.",
+    "verification_status": "Verified - legacy manufacturer catalog and completed external clinical review; confirm current IFU and system configuration.",
+    "source_id": "SRC030",
+    "resolved_source_type": "product",
+    "resolved_source_id": "PRD-934DA56D92",
+    "resolved_target_type": "product",
+    "resolved_target_id": "PRD-6707AC67D1",
     "verification_grade": "verified_source"
   },
   {
@@ -686,6 +714,20 @@
     "verification_grade": "verified_source"
   },
   {
+    "rule_id": "CMP-58DE7D49C4",
+    "source_product_or_role": "PRD-58DE7D49C4",
+    "relationship": "requires compatible energy platform",
+    "target_product_or_role": "GENERIC_ENERGY_PLATFORM",
+    "rule_text": "Hot biopsy forceps require a compatible electrosurgical energy platform and current manufacturer IFU review before use.",
+    "verification_status": "Candidate - external clinical-use review; confirm the generator, accessories, settings, and current IFU.",
+    "source_id": "SRC012",
+    "resolved_source_type": "product",
+    "resolved_source_id": "PRD-58DE7D49C4",
+    "resolved_target_type": "role",
+    "resolved_target_id": "GENERIC_ENERGY_PLATFORM",
+    "verification_grade": "candidate"
+  },
+  {
     "rule_id": "CMP-592AB51EB0",
     "source_product_or_role": "SBV-1A-B",
     "relationship": "requires processor",
@@ -907,6 +949,20 @@
     "resolved_source_id": null,
     "resolved_target_type": null,
     "resolved_target_id": null,
+    "verification_grade": "verified_source"
+  },
+  {
+    "rule_id": "CMP-6DCB3DAE38",
+    "source_product_or_role": "PRD-FDAC925AF1",
+    "relationship": "accessory of endoscopy processor",
+    "target_product_or_role": "PRD-9BB524F077",
+    "rule_text": "The Scivita BRK-S01 bracket mounts or supports the HDVS-S300D visualization endoscopic image processor; it is catalog-only room equipment, not a per-case airway or navigation accessory.",
+    "verification_status": "Verified - current manufacturer/distributor catalog and completed external clinical review; confirm the current processor configuration.",
+    "source_id": "SRC036",
+    "resolved_source_type": "product",
+    "resolved_source_id": "PRD-FDAC925AF1",
+    "resolved_target_type": "product",
+    "resolved_target_id": "PRD-9BB524F077",
     "verification_grade": "verified_source"
   },
   {
@@ -1190,6 +1246,20 @@
     "verification_grade": "verified_source"
   },
   {
+    "rule_id": "CMP-96CEB218E5",
+    "source_product_or_role": "PRD-934DA56D92",
+    "relationship": "requires instrument guide",
+    "target_product_or_role": "PRD-1C70287572",
+    "rule_text": "Karl Storz 10435A is used through Instrument Guide 10329A.",
+    "verification_status": "Verified - legacy manufacturer catalog and completed external clinical review; confirm current IFU and system configuration.",
+    "source_id": "SRC030",
+    "resolved_source_type": "product",
+    "resolved_source_id": "PRD-934DA56D92",
+    "resolved_target_type": "product",
+    "resolved_target_id": "PRD-1C70287572",
+    "verification_grade": "verified_source"
+  },
+  {
     "rule_id": "CMP-96DFBE173A",
     "source_product_or_role": "AIRWAY_BALLOON_DILATOR",
     "relationship": "uses product role",
@@ -1341,6 +1411,20 @@
     "resolved_source_id": null,
     "resolved_target_type": null,
     "resolved_target_id": null,
+    "verification_grade": "verified_source"
+  },
+  {
+    "rule_id": "CMP-B102667F8B",
+    "source_product_or_role": "PRD-934DA56D92",
+    "relationship": "compatible bronchoscope",
+    "target_product_or_role": "PRD-D273A067EA",
+    "rule_text": "Karl Storz 10435A is compatible with Universal Bronchoscope 10318C, size 7.5, in the specified rigid bronchoscopy configuration.",
+    "verification_status": "Verified - legacy manufacturer catalog and completed external clinical review; confirm current IFU and system configuration.",
+    "source_id": "SRC030",
+    "resolved_source_type": "product",
+    "resolved_source_id": "PRD-934DA56D92",
+    "resolved_target_type": "product",
+    "resolved_target_id": "PRD-D273A067EA",
     "verification_grade": "verified_source"
   },
   {
@@ -1610,6 +1694,20 @@
     "verification_grade": "verified_source"
   },
   {
+    "rule_id": "CMP-D28A978526",
+    "source_product_or_role": "PRD-934DA56D92",
+    "relationship": "compatible bronchoscope",
+    "target_product_or_role": "PRD-5D0F775ADC",
+    "rule_text": "Karl Storz 10435A is compatible with Universal Bronchoscope 10318D, size 6.5, in the specified rigid bronchoscopy configuration.",
+    "verification_status": "Verified - legacy manufacturer catalog and completed external clinical review; confirm current IFU and system configuration.",
+    "source_id": "SRC030",
+    "resolved_source_type": "product",
+    "resolved_source_id": "PRD-934DA56D92",
+    "resolved_target_type": "product",
+    "resolved_target_id": "PRD-5D0F775ADC",
+    "verification_grade": "verified_source"
+  },
+  {
     "rule_id": "CMP-D30CE1C962",
     "source_product_or_role": "ILS-1000-SP",
     "relationship": "requires navigation platform",
@@ -1719,6 +1817,20 @@
     "resolved_source_id": null,
     "resolved_target_type": null,
     "resolved_target_id": null,
+    "verification_grade": "verified_source"
+  },
+  {
+    "rule_id": "CMP-E56428C687",
+    "source_product_or_role": "PRD-48C48C68BA",
+    "relationship": "requires robotic platform",
+    "target_product_or_role": "PRD-DF917ECDBF",
+    "rule_text": "The Ion Fully Articulating Catheter is restricted to the Intuitive Ion Endoluminal System and must not populate generic navigation guide-sheath slots.",
+    "verification_status": "Verified - historical manufacturer brochure and completed external clinical review; confirm the current platform generation and IFU.",
+    "source_id": "SRC037",
+    "resolved_source_type": "product",
+    "resolved_source_id": "PRD-48C48C68BA",
+    "resolved_target_type": "product",
+    "resolved_target_id": "PRD-DF917ECDBF",
     "verification_grade": "verified_source"
   },
   {

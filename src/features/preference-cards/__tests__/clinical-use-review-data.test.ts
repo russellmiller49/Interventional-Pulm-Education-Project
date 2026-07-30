@@ -126,15 +126,15 @@ describe('full-catalog clinical-use review data', () => {
 
     expect(data.counts).toEqual({
       catalogProducts: 1474,
-      productRoles: 1566,
-      currentSlots: 2080,
+      productRoles: 1567,
+      currentSlots: 2073,
     })
     expect(getClinicalUseReviewCounts()).toEqual(data.counts)
-    expect(data.roleOptions).toHaveLength(98)
+    expect(data.roleOptions).toHaveLength(116)
     expect(data.slotOptions).toHaveLength(174)
     expect(new Set(data.catalogProducts.map((row) => row.productId)).size).toBe(1474)
-    expect(new Set(data.productRoles.map((row) => row.reviewKey)).size).toBe(1566)
-    expect(new Set(data.currentSlots.map((row) => row.reviewKey)).size).toBe(2080)
+    expect(new Set(data.productRoles.map((row) => row.reviewKey)).size).toBe(1567)
+    expect(new Set(data.currentSlots.map((row) => row.reviewKey)).size).toBe(2073)
     expect(data.productRoles.every((row) => row.reviewKey.startsWith('product_role:'))).toBe(true)
     expect(data.currentSlots.every((row) => row.reviewKey.startsWith('slot_product:'))).toBe(true)
     expect(data.productRoles.every((row) => row.clinicalUseManifestHash === MANIFEST_HASH)).toBe(

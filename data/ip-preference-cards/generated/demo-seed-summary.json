@@ -6,12 +6,12 @@
     "location": "Bronchoscopy Suite 1"
   },
   "demo_only_stand_ins": 31,
-  "explicitly_resolved_required_roles_without_curated_defaults": 8,
+  "explicitly_resolved_required_roles_without_curated_defaults": 7,
   "scenarios": [
     {
       "id": "chest-tube",
       "readiness_state": "complete_with_warnings",
-      "snapshot_hash": "1dc2b25bcb571c130eab6b6bbf227efcef93475322f2b6f256a8facd3657a51b",
+      "snapshot_hash": "c13e64935ac5ff831a71781fdf81c741417fa34f030aa7be7f629963c12d5086",
       "item_count": 11,
       "suppressed_item_count": 1,
       "blocking_codes": []
@@ -35,7 +35,7 @@
     {
       "id": "flex-diagnostic",
       "readiness_state": "complete_with_warnings",
-      "snapshot_hash": "ae74299068e58395e9147dece384b1279c7203004ee57b3a4892e8060135ef07",
+      "snapshot_hash": "7118f476b924756aeba2372908dfae0e0ee7ff430bfc45ef2cf2e659362150d9",
       "item_count": 16,
       "suppressed_item_count": 0,
       "blocking_codes": []
@@ -51,7 +51,7 @@
     {
       "id": "ipc-placement",
       "readiness_state": "complete_with_warnings",
-      "snapshot_hash": "60eebae0978655f448dd1d044cfeca912baf252fdb935eb774df776468663c2b",
+      "snapshot_hash": "20154d2709721307b316a97e4dd82f7315974676b4966f84814ffb362235d848",
       "item_count": 8,
       "suppressed_item_count": 0,
       "blocking_codes": []
@@ -67,7 +67,7 @@
     {
       "id": "perc-trach",
       "readiness_state": "complete_with_warnings",
-      "snapshot_hash": "dcc3082d7688b25e564c7c6fe9aeb17ebf8e7fde4def7617a2ef05f07f175bd8",
+      "snapshot_hash": "fc060ad1f9b0cf2a4ac425f0276f69d64e286e3a1d18b4aee1fd24371a82f777",
       "item_count": 10,
       "suppressed_item_count": 0,
       "blocking_codes": []
@@ -99,7 +99,7 @@
     {
       "id": "thoracentesis",
       "readiness_state": "complete_with_warnings",
-      "snapshot_hash": "acfc533b48cfc46ae0cb540e7b03b6e360c197daa5ae0f6154a68a478fc17658",
+      "snapshot_hash": "c67df3c48c5520cf00c2d8e864c8ec4a0cac3d5ebbfa2aa32e48c5b3d0fea6e1",
       "item_count": 6,
       "suppressed_item_count": 0,
       "blocking_codes": []

@@ -97,7 +97,7 @@
   },
   {
     "product_id": "PRD-03124BDA63",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "NAV_BRONCHOSCOPE_ADAPTER",
     "role_fit": "Compatible",
     "notes": null
   },
@@ -331,7 +331,7 @@
   },
   {
     "product_id": "PRD-09AB6CA202",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "ROBOTIC_BRONCH_PLATFORM",
     "role_fit": "Primary",
     "notes": "Robotic bronchoscopy platform; current bronchoscopy configuration."
   },
@@ -391,7 +391,7 @@
   },
   {
     "product_id": "PRD-0B677E0328",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "ROBOTIC_BRONCH_PLATFORM",
     "role_fit": "Primary",
     "notes": "Robotic bronchoscopy platform; earliest P1 generation."
   },
@@ -829,7 +829,7 @@
   },
   {
     "product_id": "PRD-152A0BFA3B",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "TBNA_NEEDLE_CONVENTIONAL",
     "role_fit": "Primary",
     "notes": null
   },
@@ -841,7 +841,7 @@
   },
   {
     "product_id": "PRD-15747FB1A6",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "ENB_PROCEDURE_KIT",
     "role_fit": "Primary",
     "notes": null
   },
@@ -1345,7 +1345,7 @@
   },
   {
     "product_id": "PRD-2274D463B7",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "NAV_TBNA_NEEDLE",
     "role_fit": "Primary",
     "notes": null
   },
@@ -1507,7 +1507,7 @@
   },
   {
     "product_id": "PRD-25415AA480",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "NAV_TBNA_NEEDLE",
     "role_fit": "Primary",
     "notes": null
   },
@@ -1555,7 +1555,7 @@
   },
   {
     "product_id": "PRD-2645E5185F",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "NAV_BRONCHOSCOPE_ADAPTER",
     "role_fit": "Compatible",
     "notes": null
   },
@@ -1657,7 +1657,7 @@
   },
   {
     "product_id": "PRD-28A9600774",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "NAV_BRONCHOSCOPE_ADAPTER",
     "role_fit": "Compatible",
     "notes": null
   },
@@ -1693,7 +1693,7 @@
   },
   {
     "product_id": "PRD-296090AB66",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "NAV_ACCESSORY_SENSOR",
     "role_fit": "Primary",
     "notes": null
   },
@@ -1711,7 +1711,7 @@
   },
   {
     "product_id": "PRD-29E98A6ED6",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "NAV_CATHETER_GUIDE",
     "role_fit": "Primary",
     "notes": "Scope guide for the Galaxy bronchoscope."
   },
@@ -1735,7 +1735,7 @@
   },
   {
     "product_id": "PRD-2A9186F3F5",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "NAV_PLATFORM_ACCESSORY",
     "role_fit": "Primary",
     "notes": "Electromagnetic field generator for navigation."
   },
@@ -1963,7 +1963,7 @@
   },
   {
     "product_id": "PRD-2F1A67DE53",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "RIGID_BRONCH_ASPIRATION_BIOPSY_NEEDLE",
     "role_fit": "Exact",
     "notes": "Bronchoscopy aspiration/irrigation accessory"
   },
@@ -2137,7 +2137,7 @@
   },
   {
     "product_id": "PRD-345BB869C9",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "NAV_TBNA_NEEDLE",
     "role_fit": "Primary",
     "notes": null
   },
@@ -2275,7 +2275,7 @@
   },
   {
     "product_id": "PRD-39777E7C38",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "NAV_TBNA_NEEDLE",
     "role_fit": "Primary",
     "notes": null
   },
@@ -2587,7 +2587,7 @@
   },
   {
     "product_id": "PRD-429E40F1F3",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "ROBOTIC_PROCEDURE_KIT",
     "role_fit": "Primary",
     "notes": "Accessory kit for the Galaxy platform."
   },
@@ -2701,7 +2701,7 @@
   },
   {
     "product_id": "PRD-476DD42C80",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "ROBOTIC_BRONCHOSCOPE",
     "role_fit": "Primary",
     "notes": "Single-use robotic bronchoscope and sheath system."
   },
@@ -2737,7 +2737,7 @@
   },
   {
     "product_id": "PRD-48C48C68BA",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "ROBOTIC_CATHETER",
     "role_fit": "Primary",
     "notes": null
   },
@@ -2815,7 +2815,7 @@
   },
   {
     "product_id": "PRD-4A6E122B5D",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "NAV_BRONCHOSCOPE_ADAPTER",
     "role_fit": "Compatible",
     "notes": null
   },
@@ -2827,7 +2827,7 @@
   },
   {
     "product_id": "PRD-4AE462CF09",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "NAV_PLATFORM_ACCESSORY",
     "role_fit": "Primary",
     "notes": "Physician controller for the Monarch platform."
   },
@@ -2887,7 +2887,7 @@
   },
   {
     "product_id": "PRD-4C43134B78",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "NAV_ACCESSORY_SENSOR",
     "role_fit": "Primary",
     "notes": "Reusable navigation sensors."
   },
@@ -2983,7 +2983,7 @@
   },
   {
     "product_id": "PRD-4F08144D47",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "NAV_PLATFORM_ACCESSORY",
     "role_fit": "Primary",
     "notes": "Connector between the Galaxy bronchoscope and the platform."
   },
@@ -3139,7 +3139,7 @@
   },
   {
     "product_id": "PRD-53C2DB3A04",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "NAV_BRONCHOSCOPE_ADAPTER",
     "role_fit": "Compatible",
     "notes": null
   },
@@ -3205,7 +3205,7 @@
   },
   {
     "product_id": "PRD-55DAFF2A37",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "NAV_TBNA_NEEDLE",
     "role_fit": "Primary",
     "notes": null
   },
@@ -3265,7 +3265,7 @@
   },
   {
     "product_id": "PRD-5788C21B1E",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "TBNA_NEEDLE_CONVENTIONAL",
     "role_fit": "Primary",
     "notes": null
   },
@@ -3302,8 +3302,14 @@
   {
     "product_id": "PRD-57DAB5ECAE",
     "role_code": "FLEX_SCOPE_DIAGNOSTIC",
-    "role_fit": "Primary",
+    "role_fit": "Compatible",
     "notes": "2 mm instrument channel."
+  },
+  {
+    "product_id": "PRD-57DAB5ECAE",
+    "role_code": "FLEX_SCOPE_THIN",
+    "role_fit": "Primary",
+    "notes": "Thin 4.9 mm outer-diameter bronchoscope with a 2.0 mm instrument channel; external review retained its diagnostic exact-slot use as a compatible installed-base exception."
   },
   {
     "product_id": "PRD-57EB842692",
@@ -3337,7 +3343,7 @@
   },
   {
     "product_id": "PRD-58DE7D49C4",
-    "role_code": "BIOPSY_FORCEPS_FLEX",
+    "role_code": "BIOPSY_FORCEPS_ENERGY_ENABLED",
     "role_fit": "Primary",
     "notes": null
   },
@@ -3571,7 +3577,7 @@
   },
   {
     "product_id": "PRD-5D2D6B7B4B",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "ENB_PROCEDURE_KIT",
     "role_fit": "Primary",
     "notes": null
   },
@@ -3661,7 +3667,7 @@
   },
   {
     "product_id": "PRD-60D298A1B6",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "ROBOTIC_BRONCHOSCOPE",
     "role_fit": "Primary",
     "notes": "Reprocessed robotic bronchoscope."
   },
@@ -4303,7 +4309,7 @@
   },
   {
     "product_id": "PRD-707B8A1974",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "NAV_CATHETER_GUIDE",
     "role_fit": "Primary",
     "notes": null
   },
@@ -4435,7 +4441,7 @@
   },
   {
     "product_id": "PRD-7397B6CA00",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "ROBOTIC_BIOPSY_NEEDLE",
     "role_fit": "Primary",
     "notes": null
   },
@@ -4573,7 +4579,7 @@
   },
   {
     "product_id": "PRD-765CFB31FA",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "NAV_BRONCHOSCOPE_ADAPTER",
     "role_fit": "Compatible",
     "notes": null
   },
@@ -4597,7 +4603,7 @@
   },
   {
     "product_id": "PRD-77145058F8",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "TBNA_NEEDLE_CONVENTIONAL",
     "role_fit": "Primary",
     "notes": null
   },
@@ -4615,7 +4621,7 @@
   },
   {
     "product_id": "PRD-77D7F7892F",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "NAV_PLATFORM_ACCESSORY",
     "role_fit": "Primary",
     "notes": "Platform tower, cart, and fluidics pump."
   },
@@ -4837,7 +4843,7 @@
   },
   {
     "product_id": "PRD-7E601C1D9F",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "TBNA_NEEDLE_CONVENTIONAL",
     "role_fit": "Primary",
     "notes": null
   },
@@ -4999,7 +5005,7 @@
   },
   {
     "product_id": "PRD-83A71310E6",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "ROBOTIC_BRONCHOSCOPE",
     "role_fit": "Primary",
     "notes": "Single-use robotic bronchoscope."
   },
@@ -5209,7 +5215,7 @@
   },
   {
     "product_id": "PRD-8A4A27BDD7",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "ROBOTIC_BIOPSY_NEEDLE",
     "role_fit": "Primary",
     "notes": null
   },
@@ -5323,7 +5329,7 @@
   },
   {
     "product_id": "PRD-8D676A6B58",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "NAV_ACCESSORY_SENSOR",
     "role_fit": "Primary",
     "notes": "Electromagnetic navigation patient patches, 60 per pack."
   },
@@ -5521,7 +5527,7 @@
   },
   {
     "product_id": "PRD-934DA56D92",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "RIGID_BRONCH_PUNCTURE_NEEDLE",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscopy biopsy needle"
   },
@@ -6073,7 +6079,7 @@
   },
   {
     "product_id": "PRD-A457429809",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "TBNA_NEEDLE_CONVENTIONAL",
     "role_fit": "Primary",
     "notes": null
   },
@@ -6691,13 +6697,13 @@
   },
   {
     "product_id": "PRD-B61DBDED5A",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "ROBOTIC_BIOPSY_NEEDLE",
     "role_fit": "Primary",
     "notes": "Aspirating biopsy needle for the Monarch bronchoscope."
   },
   {
     "product_id": "PRD-B625A0B418",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "ROBOTIC_PROCEDURE_KIT",
     "role_fit": "Primary",
     "notes": "Patient introducer kit for the Monarch bronchoscope."
   },
@@ -7327,7 +7333,7 @@
   },
   {
     "product_id": "PRD-C68942362F",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "ROBOTIC_BRONCH_PLATFORM",
     "role_fit": "Primary",
     "notes": "Robotic bronchoscopy platform; P2 generation."
   },
@@ -7543,7 +7549,7 @@
   },
   {
     "product_id": "PRD-CC913540D8",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "NAV_PLATFORM_ACCESSORY",
     "role_fit": "Primary",
     "notes": null
   },
@@ -7759,7 +7765,7 @@
   },
   {
     "product_id": "PRD-D4228B0E6F",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "TBNA_NEEDLE_CONVENTIONAL",
     "role_fit": "Primary",
     "notes": null
   },
@@ -8095,7 +8101,7 @@
   },
   {
     "product_id": "PRD-DCF0AFE654",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "NAV_TBNA_NEEDLE",
     "role_fit": "Primary",
     "notes": null
   },
@@ -8185,13 +8191,13 @@
   },
   {
     "product_id": "PRD-DF917ECDBF",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "ROBOTIC_BRONCH_PLATFORM",
     "role_fit": "Primary",
     "notes": null
   },
   {
     "product_id": "PRD-DF989CBDCB",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "RIGID_BRONCH_ASPIRATION_BIOPSY_NEEDLE",
     "role_fit": "Exact",
     "notes": "Bronchoscopy aspiration/irrigation accessory"
   },
@@ -8329,7 +8335,7 @@
   },
   {
     "product_id": "PRD-E28782A64A",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "ROBOTIC_BRONCH_PLATFORM",
     "role_fit": "Primary",
     "notes": "Robotic bronchoscopy platform with tomosynthesis-based target correction."
   },
@@ -8485,7 +8491,7 @@
   },
   {
     "product_id": "PRD-E803315936",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "TBNA_NEEDLE_CONVENTIONAL",
     "role_fit": "Primary",
     "notes": null
   },
@@ -8749,7 +8755,7 @@
   },
   {
     "product_id": "PRD-EF46DA3FE4",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "ROBOTIC_BRONCHOSCOPE",
     "role_fit": "Primary",
     "notes": "Single-use bronchoscope for the Galaxy platform."
   },
@@ -8809,7 +8815,7 @@
   },
   {
     "product_id": "PRD-F14A305B8A",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "NAV_PLATFORM_ACCESSORY",
     "role_fit": "Primary",
     "notes": "Extended patient introducer mount."
   },
@@ -8905,7 +8911,7 @@
   },
   {
     "product_id": "PRD-F408B46806",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "TBNA_NEEDLE_CONVENTIONAL",
     "role_fit": "Primary",
     "notes": null
   },
@@ -8917,7 +8923,7 @@
   },
   {
     "product_id": "PRD-F43740CB5C",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "ROBOTIC_BIOPSY_NEEDLE",
     "role_fit": "Primary",
     "notes": null
   },
@@ -9199,7 +9205,7 @@
   },
   {
     "product_id": "PRD-FAE7E352C7",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "NAV_BRONCHOSCOPE_ADAPTER",
     "role_fit": "Compatible",
     "notes": null
   },
@@ -9235,7 +9241,7 @@
   },
   {
     "product_id": "PRD-FB9AE5D0C7",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "ENB_PROCEDURE_KIT",
     "role_fit": "Primary",
     "notes": null
   },
@@ -9259,7 +9265,7 @@
   },
   {
     "product_id": "PRD-FC1DF08B67",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "NAV_BRONCHOSCOPE_ADAPTER",
     "role_fit": "Compatible",
     "notes": null
   },
@@ -9313,7 +9319,7 @@
   },
   {
     "product_id": "PRD-FDAC925AF1",
-    "role_code": "GENERIC_AIRWAY_ADAPTER",
+    "role_code": "ENDOSCOPY_PROCESSOR_MOUNT_ACCESSORY",
     "role_fit": "Primary",
     "notes": null
   },

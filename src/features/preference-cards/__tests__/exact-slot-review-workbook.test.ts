@@ -294,7 +294,7 @@ describe('exact-slot clinician review workbook export', () => {
     ).toBe(false)
   })
 
-  it('selects controlled fixture scopes and exports the complete real 475-row proposal artifact', async () => {
+  it('selects controlled fixture scopes and exports the complete remediated proposal artifact', async () => {
     const fixtureRows = [
       fixtureProposal(1, { product_id: 'PRD-SHARED' }),
       fixtureProposal(2),
@@ -334,7 +334,7 @@ describe('exact-slot clinician review workbook export', () => {
     ).toHaveLength(2)
 
     const realRows = getSlotOptionReviewRows()
-    expect(realRows).toHaveLength(475)
+    expect(realRows).toHaveLength(429)
     const workbook = await createExactSlotReviewWorkbook(
       { scope: 'all', locale: 'en' },
       'https://example.test',
@@ -345,15 +345,15 @@ describe('exact-slot clinician review workbook export', () => {
         sourceCommit: 'd'.repeat(40),
       },
     )
-    expect(workbook.proposalKeys).toHaveLength(475)
+    expect(workbook.proposalKeys).toHaveLength(429)
     const parsed = await parseOoxmlWorkbookBytes(workbook.bytes)
-    expect(parsed.sheets.get('Exact Slot Review')?.maxRow).toBe(476)
+    expect(parsed.sheets.get('Exact Slot Review')?.maxRow).toBe(430)
 
     const preview = await importExactSlotReviewWorkbook(workbook.bytes, importOptions(realRows))
     expect(preview.summary).toMatchObject({
-      matchedProposalKeys: 475,
+      matchedProposalKeys: 429,
       missingCurrentProposals: 0,
-      rowsWithoutDecision: 475,
+      rowsWithoutDecision: 429,
       validCompletedDecisions: 0,
     })
     expect(preview.canExportNormalized).toBe(true)

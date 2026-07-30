@@ -21,6 +21,7 @@ interface CoverageReport {
       roleCode: string
       requiredness: string
       hasCuratedDefault: boolean
+      allowCustom: boolean
     }[]
   }[]
 }
@@ -102,7 +103,10 @@ export async function validateDemoSeed() {
   )
   const uncoveredRequiredRoles = demoCoverageProcedures.flatMap((procedure) =>
     procedure.slotCoverage.flatMap((slot) =>
-      slot.requiredness === 'required' && !slot.hasCuratedDefault && !mappedRoles.has(slot.roleCode)
+      slot.requiredness === 'required' &&
+      !slot.hasCuratedDefault &&
+      !mappedRoles.has(slot.roleCode) &&
+      !slot.allowCustom
         ? [`${procedure.procedureCode}:${slot.roleCode}`]
         : [],
     ),
@@ -166,7 +170,7 @@ export async function validateDemoSeed() {
           (slot) =>
             slot.requiredness === 'required' &&
             !slot.hasCuratedDefault &&
-            mappedRoles.has(slot.roleCode),
+            (mappedRoles.has(slot.roleCode) || slot.allowCustom),
         ).length,
       0,
     ),

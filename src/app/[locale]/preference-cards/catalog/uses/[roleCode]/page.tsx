@@ -51,11 +51,15 @@ export default async function CatalogUseDetailPage({ params, searchParams }: Pag
     unknown: t('verification.unknown'),
     usPending: t('verification.usPending'),
     notDistributed: t('verification.notDistributed'),
+    conflictingDistribution: t('verification.conflictingDistribution'),
+    legacyInstalledBase: t('verification.legacyInstalledBase'),
+    legacyInstalledBaseHelp: t('verification.legacyInstalledBaseHelp'),
     legendTitle: t('verification.legendTitle'),
     verifiedHelp: t('verification.verifiedHelp'),
     candidateHelp: t('verification.candidateHelp'),
     usPendingHelp: t('verification.usPendingHelp'),
     notDistributedHelp: t('verification.notDistributedHelp'),
+    conflictingDistributionHelp: t('verification.conflictingDistributionHelp'),
   }
 
   return (
@@ -170,6 +174,9 @@ export default async function CatalogUseDetailPage({ params, searchParams }: Pag
               unknown: t('verification.unknown'),
               usPending: t('verification.usPending'),
               notDistributed: t('verification.notDistributed'),
+              conflictingDistribution: t('verification.conflictingDistribution'),
+              legacyInstalledBase: t('verification.legacyInstalledBase'),
+              legacyInstalledBaseHelp: t('verification.legacyInstalledBaseHelp'),
             }}
           />
         ) : detail.totalProducts > 0 ? (
@@ -199,6 +206,9 @@ export default async function CatalogUseDetailPage({ params, searchParams }: Pag
               unknown: t('verification.unknown'),
               usPending: t('verification.usPending'),
               notDistributed: t('verification.notDistributed'),
+              conflictingDistribution: t('verification.conflictingDistribution'),
+              legacyInstalledBase: t('verification.legacyInstalledBase'),
+              legacyInstalledBaseHelp: t('verification.legacyInstalledBaseHelp'),
             }}
           />
         ) : (

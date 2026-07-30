@@ -177,7 +177,11 @@ describe('preference-card deterministic resolver', () => {
       roleCode: 'LOCAL_CHEST_TUBE_SECUREMENT',
       resolutionState: 'suppressed_by_kit',
     })
-    expect(card.items.some((item) => item.roleCode === 'GENERIC_SPECIMEN')).toBe(true)
+    expect(card.items.find((item) => item.id === 'SLOT-4BE1D79D6C')).toMatchObject({
+      roleCode: 'DRESSING_SECUREMENT',
+      label: 'Securement, suture, dressing, and labels',
+    })
+    expect(card.items.some((item) => item.roleCode === 'GENERIC_SPECIMEN')).toBe(false)
   })
 
   it('applies a preference overlay only to the targeted slot field', () => {

@@ -11,14 +11,10 @@
       "requiredCatalogCoverageCount": 1,
       "requiredCatalogCoveragePercentage": 33.3,
       "requiredSlotsWithoutCatalogProducts": ["SLOT-CE48C1B108", "SLOT-4BE1D79D6C"],
-      "roleCodesWithoutCatalogProducts": ["GENERIC_SPECIMEN", "GENERIC_SUCTION"],
-      "requiredDefaultOptionCoverageCount": 0,
-      "requiredDefaultOptionCoveragePercentage": 0,
-      "requiredSlotsWithoutDefaultOptions": [
-        "SLOT-3631C94D7A",
-        "SLOT-CE48C1B108",
-        "SLOT-4BE1D79D6C"
-      ],
+      "roleCodesWithoutCatalogProducts": ["DRESSING_SECUREMENT", "GENERIC_SUCTION"],
+      "requiredDefaultOptionCoverageCount": 1,
+      "requiredDefaultOptionCoveragePercentage": 33.3,
+      "requiredSlotsWithoutDefaultOptions": ["SLOT-CE48C1B108", "SLOT-4BE1D79D6C"],
       "requiredCustomAllowedCount": 3,
       "slotCount": 13,
       "slotCoverage": [
@@ -78,9 +74,9 @@
           "requiredness": "required",
           "allowCustom": true,
           "catalogProductCount": 21,
-          "curatedDefaultOptionCount": 0,
+          "curatedDefaultOptionCount": 6,
           "hasCatalogProducts": true,
-          "hasCuratedDefault": false
+          "hasCuratedDefault": true
         },
         {
           "slotId": "SLOT-CE48C1B108",
@@ -114,7 +110,7 @@
         },
         {
           "slotId": "SLOT-4BE1D79D6C",
-          "roleCode": "GENERIC_SPECIMEN",
+          "roleCode": "DRESSING_SECUREMENT",
           "requiredness": "required",
           "allowCustom": true,
           "catalogProductCount": 0,
@@ -173,7 +169,7 @@
           "requiredness": "required",
           "allowCustom": true,
           "catalogProductCount": 4,
-          "curatedDefaultOptionCount": 1,
+          "curatedDefaultOptionCount": 2,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
         },
@@ -306,9 +302,9 @@
       "requiredCatalogCoveragePercentage": 85.7,
       "requiredSlotsWithoutCatalogProducts": ["SLOT-D336807B69"],
       "roleCodesWithoutCatalogProducts": ["GENERIC_SUCTION"],
-      "requiredDefaultOptionCoverageCount": 5,
-      "requiredDefaultOptionCoveragePercentage": 71.4,
-      "requiredSlotsWithoutDefaultOptions": ["SLOT-D336807B69", "SLOT-022D0D3DC6"],
+      "requiredDefaultOptionCoverageCount": 6,
+      "requiredDefaultOptionCoveragePercentage": 85.7,
+      "requiredSlotsWithoutDefaultOptions": ["SLOT-D336807B69"],
       "requiredCustomAllowedCount": 7,
       "slotCount": 11,
       "slotCoverage": [
@@ -318,7 +314,7 @@
           "requiredness": "required",
           "allowCustom": true,
           "catalogProductCount": 14,
-          "curatedDefaultOptionCount": 3,
+          "curatedDefaultOptionCount": 5,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
         },
@@ -398,9 +394,9 @@
           "requiredness": "required",
           "allowCustom": true,
           "catalogProductCount": 21,
-          "curatedDefaultOptionCount": 0,
+          "curatedDefaultOptionCount": 6,
           "hasCatalogProducts": true,
-          "hasCuratedDefault": false
+          "hasCuratedDefault": true
         },
         {
           "slotId": "SLOT-639A3A4E14",
@@ -443,7 +439,7 @@
           "requiredness": "required",
           "allowCustom": true,
           "catalogProductCount": 24,
-          "curatedDefaultOptionCount": 6,
+          "curatedDefaultOptionCount": 9,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
         },
@@ -482,8 +478,8 @@
           "roleCode": "BIOPSY_FORCEPS_FLEX",
           "requiredness": "optional",
           "allowCustom": true,
-          "catalogProductCount": 21,
-          "curatedDefaultOptionCount": 15,
+          "catalogProductCount": 20,
+          "curatedDefaultOptionCount": 14,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
         },
@@ -499,11 +495,11 @@
         },
         {
           "slotId": "SLOT-9363E589C4",
-          "roleCode": "TBNA_NEEDLE",
+          "roleCode": "TBNA_NEEDLE_CONVENTIONAL",
           "requiredness": "optional",
           "allowCustom": true,
-          "catalogProductCount": 21,
-          "curatedDefaultOptionCount": 13,
+          "catalogProductCount": 8,
+          "curatedDefaultOptionCount": 8,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
         },
@@ -539,13 +535,13 @@
         },
         {
           "slotId": "SLOT-09EF760638",
-          "roleCode": "GUIDING_DEVICE",
+          "roleCode": "NAV_CATHETER_GUIDE",
           "requiredness": "optional",
           "allowCustom": true,
-          "catalogProductCount": 34,
-          "curatedDefaultOptionCount": 12,
+          "catalogProductCount": 2,
+          "curatedDefaultOptionCount": 0,
           "hasCatalogProducts": true,
-          "hasCuratedDefault": true
+          "hasCuratedDefault": false
         },
         {
           "slotId": "SLOT-54D7E08779",
@@ -645,8 +641,8 @@
           "roleCode": "GENERIC_AIRWAY_ADAPTER",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 9,
-          "curatedDefaultOptionCount": 9,
+          "catalogProductCount": 8,
+          "curatedDefaultOptionCount": 8,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
         },
@@ -685,8 +681,8 @@
           "roleCode": "BIOPSY_FORCEPS_FLEX",
           "requiredness": "optional",
           "allowCustom": true,
-          "catalogProductCount": 21,
-          "curatedDefaultOptionCount": 15,
+          "catalogProductCount": 20,
+          "curatedDefaultOptionCount": 14,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
         },
@@ -748,7 +744,7 @@
       "requiredCatalogCoverageCount": 4,
       "requiredCatalogCoveragePercentage": 66.7,
       "requiredSlotsWithoutCatalogProducts": ["SLOT-27D1A61598", "SLOT-01010CB364"],
-      "roleCodesWithoutCatalogProducts": ["GENERIC_SPECIMEN", "GENERIC_SUCTION"],
+      "roleCodesWithoutCatalogProducts": ["DRESSING_SECUREMENT", "GENERIC_SUCTION"],
       "requiredDefaultOptionCoverageCount": 4,
       "requiredDefaultOptionCoveragePercentage": 66.7,
       "requiredSlotsWithoutDefaultOptions": ["SLOT-27D1A61598", "SLOT-01010CB364"],
@@ -827,7 +823,7 @@
         },
         {
           "slotId": "SLOT-01010CB364",
-          "roleCode": "GENERIC_SPECIMEN",
+          "roleCode": "DRESSING_SECUREMENT",
           "requiredness": "required",
           "allowCustom": true,
           "catalogProductCount": 0,
@@ -844,15 +840,14 @@
       "requiredCatalogCoveragePercentage": 81.8,
       "requiredSlotsWithoutCatalogProducts": ["SLOT-BC9CCE1853", "SLOT-D8D781E494"],
       "roleCodesWithoutCatalogProducts": ["GENERIC_SPECIMEN", "GENERIC_SUCTION"],
-      "requiredDefaultOptionCoverageCount": 3,
-      "requiredDefaultOptionCoveragePercentage": 27.3,
+      "requiredDefaultOptionCoverageCount": 4,
+      "requiredDefaultOptionCoveragePercentage": 36.4,
       "requiredSlotsWithoutDefaultOptions": [
         "SLOT-5A9EDD575F",
         "SLOT-9448C2A991",
         "SLOT-545818F1DC",
         "SLOT-BC9CCE1853",
         "SLOT-D8D781E494",
-        "SLOT-AA3C2EAA6D",
         "SLOT-E63DC64C2F",
         "SLOT-6D737D1334"
       ],
@@ -965,9 +960,9 @@
           "requiredness": "required",
           "allowCustom": true,
           "catalogProductCount": 21,
-          "curatedDefaultOptionCount": 0,
+          "curatedDefaultOptionCount": 6,
           "hasCatalogProducts": true,
-          "hasCuratedDefault": false
+          "hasCuratedDefault": true
         },
         {
           "slotId": "SLOT-9A1C0491F9",
@@ -1047,7 +1042,7 @@
       "requiredCatalogCoverageCount": 6,
       "requiredCatalogCoveragePercentage": 75,
       "requiredSlotsWithoutCatalogProducts": ["SLOT-657F12A89F", "SLOT-126F71E1BD"],
-      "roleCodesWithoutCatalogProducts": ["GENERIC_SPECIMEN", "GENERIC_SUCTION"],
+      "roleCodesWithoutCatalogProducts": ["DRESSING_SECUREMENT", "GENERIC_SUCTION"],
       "requiredDefaultOptionCoverageCount": 3,
       "requiredDefaultOptionCoveragePercentage": 37.5,
       "requiredSlotsWithoutDefaultOptions": [
@@ -1095,8 +1090,8 @@
           "roleCode": "GENERIC_AIRWAY_ADAPTER",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 9,
-          "curatedDefaultOptionCount": 9,
+          "catalogProductCount": 8,
+          "curatedDefaultOptionCount": 8,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
         },
@@ -1152,7 +1147,7 @@
         },
         {
           "slotId": "SLOT-126F71E1BD",
-          "roleCode": "GENERIC_SPECIMEN",
+          "roleCode": "DRESSING_SECUREMENT",
           "requiredness": "required",
           "allowCustom": true,
           "catalogProductCount": 0,
@@ -1221,7 +1216,7 @@
           "requiredness": "optional",
           "allowCustom": true,
           "catalogProductCount": 14,
-          "curatedDefaultOptionCount": 3,
+          "curatedDefaultOptionCount": 5,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
         },
@@ -1483,8 +1478,8 @@
           "roleCode": "GENERIC_AIRWAY_ADAPTER",
           "requiredness": "conditional",
           "allowCustom": true,
-          "catalogProductCount": 9,
-          "curatedDefaultOptionCount": 9,
+          "catalogProductCount": 8,
+          "curatedDefaultOptionCount": 8,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
         },
@@ -1533,8 +1528,8 @@
           "roleCode": "BIOPSY_FORCEPS_FLEX",
           "requiredness": "optional",
           "allowCustom": true,
-          "catalogProductCount": 21,
-          "curatedDefaultOptionCount": 15,
+          "catalogProductCount": 20,
+          "curatedDefaultOptionCount": 14,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
         },
@@ -1579,7 +1574,7 @@
           "requiredness": "required",
           "allowCustom": true,
           "catalogProductCount": 14,
-          "curatedDefaultOptionCount": 3,
+          "curatedDefaultOptionCount": 5,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
         },
@@ -1698,8 +1693,8 @@
           "roleCode": "BIOPSY_FORCEPS_FLEX",
           "requiredness": "optional",
           "allowCustom": true,
-          "catalogProductCount": 21,
-          "curatedDefaultOptionCount": 15,
+          "catalogProductCount": 20,
+          "curatedDefaultOptionCount": 14,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
         },
@@ -1801,7 +1796,7 @@
       "requiredCatalogCoverageCount": 2,
       "requiredCatalogCoveragePercentage": 50,
       "requiredSlotsWithoutCatalogProducts": ["SLOT-CA34F60BE9", "SLOT-23A6DA3B89"],
-      "roleCodesWithoutCatalogProducts": ["GENERIC_SPECIMEN", "GENERIC_SUCTION"],
+      "roleCodesWithoutCatalogProducts": ["DRESSING_SECUREMENT", "GENERIC_SUCTION"],
       "requiredDefaultOptionCoverageCount": 1,
       "requiredDefaultOptionCoveragePercentage": 25,
       "requiredSlotsWithoutDefaultOptions": [
@@ -1854,7 +1849,7 @@
         },
         {
           "slotId": "SLOT-23A6DA3B89",
-          "roleCode": "GENERIC_SPECIMEN",
+          "roleCode": "DRESSING_SECUREMENT",
           "requiredness": "required",
           "allowCustom": true,
           "catalogProductCount": 0,
@@ -1936,8 +1931,8 @@
           "roleCode": "GENERIC_AIRWAY_ADAPTER",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 9,
-          "curatedDefaultOptionCount": 9,
+          "catalogProductCount": 8,
+          "curatedDefaultOptionCount": 8,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
         },
@@ -1985,15 +1980,18 @@
     }
   ],
   "rolesWithoutCatalogProducts": [
+    "DRESSING_SECUREMENT",
     "GENERIC_COLLATERAL_VENT",
     "GENERIC_ENERGY_PLATFORM",
     "GENERIC_PPE",
     "GENERIC_SPECIMEN",
     "GENERIC_SUCTION",
-    "GENERIC_WLL_LAVAGE"
+    "GENERIC_WLL_LAVAGE",
+    "GUIDING_DEVICE",
+    "TBNA_NEEDLE"
   ],
   "roleCounts": {
-    "total": 98,
-    "withoutCatalogProducts": 6
+    "total": 116,
+    "withoutCatalogProducts": 9
   }
 }

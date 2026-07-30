@@ -7423,7 +7423,7 @@
       "verificationStepIdentityMissing": "No local GUDID candidate is available. Identity discovery remains required.",
       "verificationStepDistribution": "Distribution and orderability",
       "verificationStepDistributionIn": "Strong GUDID records agree that the device is in commercial distribution. Current orderability still requires manufacturer or distributor confirmation.",
-      "verificationStepDistributionNot": "Strong GUDID evidence reports the device is not in commercial distribution. Confirm discontinuation, successor, and historical-use handling.",
+      "verificationStepDistributionNot": "Strong GUDID evidence reports the device is not in commercial distribution. This does not establish discontinuation or catalog lifecycle; verify manufacturer status, local availability, successors, and installed-base handling separately.",
       "verificationStepDistributionConflict": "Strong GUDID records disagree about distribution state. Resolve the exact device/package records before drawing any conclusion.",
       "verificationStepDistributionUnknown": "No unambiguous strong distribution signal is available.",
       "verificationStepIfu": "Current IFU and configuration",
@@ -7722,8 +7722,12 @@
         "verifiedHelp": "Specifications trace to a manufacturer document — a catalog, brochure, or instructions for use.",
         "candidateHelp": "Seeded from user input with no primary source captured yet. Confirm with the manufacturer before relying on the details.",
         "usPendingHelp": "Sourced from a manufacturer document, but current U.S. availability and labeling have not been confirmed.",
-        "notDistributed": "Not currently distributed",
-        "notDistributedHelp": "The FDA UDI database (GUDID) reports this device is no longer in commercial distribution. Confirm before ordering or putting it on a card."
+        "notDistributed": "GUDID: not in commercial distribution",
+        "notDistributedHelp": "GUDID reports that this device is not in commercial distribution. This evidence does not by itself determine catalog lifecycle, installed-base relevance, or local orderability.",
+        "conflictingDistribution": "Conflicting distribution evidence — manual verification required",
+        "conflictingDistributionHelp": "Strong matched GUDID rows disagree. Treat distribution as unresolved and verify manually; it does not determine lifecycle or orderability.",
+        "legacyInstalledBase": "Legacy / active installed base",
+        "legacyInstalledBaseHelp": "This model remains relevant to programs that own and use it. Verify current new-purchase availability, service support, and accessory availability locally."
       },
       "uses": {
         "metadataTitle": "Browse by clinical use",

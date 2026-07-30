@@ -70,6 +70,78 @@
     "selectable": false
   },
   {
+    "slot_id": "SLOT-022D0D3DC6",
+    "product_id": "PRD-2F1DF55F3C",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "eligibility_status": "Clinician-reviewed catalog option",
+    "visible_by_default": false,
+    "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "standard"
+  },
+  {
+    "slot_id": "SLOT-022D0D3DC6",
+    "product_id": "PRD-94C61697D9",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "eligibility_status": "Clinician-reviewed catalog option",
+    "visible_by_default": false,
+    "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "standard"
+  },
+  {
+    "slot_id": "SLOT-022D0D3DC6",
+    "product_id": "PRD-A31173136E",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "eligibility_status": "Clinician-reviewed catalog option",
+    "visible_by_default": false,
+    "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "standard"
+  },
+  {
+    "slot_id": "SLOT-022D0D3DC6",
+    "product_id": "PRD-9336231788",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "eligibility_status": "Clinician-reviewed catalog option",
+    "visible_by_default": false,
+    "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "standard"
+  },
+  {
+    "slot_id": "SLOT-022D0D3DC6",
+    "product_id": "PRD-925F0C99C6",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "eligibility_status": "Clinician-reviewed catalog option",
+    "visible_by_default": false,
+    "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "standard"
+  },
+  {
+    "slot_id": "SLOT-022D0D3DC6",
+    "product_id": "PRD-8CBA34433F",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "eligibility_status": "Clinician-reviewed catalog option",
+    "visible_by_default": false,
+    "reason": "External clinician exact-slot review approved this infant/pediatric chest drainage unit as a selectable, non-default catalog option; population metadata is retained, no brand preference is implied, and stocking remains hospital-local.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "standard"
+  },
+  {
     "slot_id": "SLOT-030A408C27",
     "product_id": "PRD-BDA5B2EF14",
     "role_code": "CHEST_TUBE_SMALL_BORE",
@@ -382,16 +454,6 @@
   {
     "slot_id": "SLOT-05F71417F2",
     "product_id": "PRD-3D26E84017",
-    "role_code": "BIOPSY_FORCEPS_FLEX",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Primary fit for BIOPSY_FORCEPS_FLEX; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-05F71417F2",
-    "product_id": "PRD-58DE7D49C4",
     "role_code": "BIOPSY_FORCEPS_FLEX",
     "eligibility_status": "Prototype candidate",
     "visible_by_default": true,
@@ -792,162 +854,12 @@
   {
     "slot_id": "SLOT-09EF760638",
     "product_id": "PRD-707B8A1974",
-    "role_code": "GUIDING_DEVICE",
+    "role_code": "NAV_CATHETER_GUIDE",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
-    "reason": "Primary fit for GUIDING_DEVICE; Hidden - current U.S. status unverified.",
+    "reason": "Primary fit for NAV_CATHETER_GUIDE; Hidden - current U.S. status unverified.",
     "product_visibility": "hidden",
     "selectable": false
-  },
-  {
-    "slot_id": "SLOT-09EF760638",
-    "product_id": "PRD-DF917ECDBF",
-    "role_code": "GUIDING_DEVICE",
-    "eligibility_status": "Needs verification",
-    "visible_by_default": false,
-    "reason": "Primary fit for GUIDING_DEVICE; Hidden - current U.S. status unverified.",
-    "product_visibility": "hidden",
-    "selectable": false
-  },
-  {
-    "slot_id": "SLOT-09EF760638",
-    "product_id": "PRD-48C48C68BA",
-    "role_code": "GUIDING_DEVICE",
-    "eligibility_status": "Needs verification",
-    "visible_by_default": false,
-    "reason": "Primary fit for GUIDING_DEVICE; Hidden - current U.S. status unverified.",
-    "product_visibility": "hidden",
-    "selectable": false
-  },
-  {
-    "slot_id": "SLOT-09EF760638",
-    "product_id": "PRD-CC913540D8",
-    "role_code": "GUIDING_DEVICE",
-    "eligibility_status": "Needs verification",
-    "visible_by_default": false,
-    "reason": "Primary fit for GUIDING_DEVICE; Hidden - current U.S. status unverified.",
-    "product_visibility": "hidden",
-    "selectable": false
-  },
-  {
-    "slot_id": "SLOT-09EF760638",
-    "product_id": "PRD-296090AB66",
-    "role_code": "GUIDING_DEVICE",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Primary fit for GUIDING_DEVICE; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-09EF760638",
-    "product_id": "PRD-765CFB31FA",
-    "role_code": "GUIDING_DEVICE",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Compatible fit for GUIDING_DEVICE; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-09EF760638",
-    "product_id": "PRD-2645E5185F",
-    "role_code": "GUIDING_DEVICE",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Compatible fit for GUIDING_DEVICE; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-09EF760638",
-    "product_id": "PRD-03124BDA63",
-    "role_code": "GUIDING_DEVICE",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Compatible fit for GUIDING_DEVICE; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-09EF760638",
-    "product_id": "PRD-4A6E122B5D",
-    "role_code": "GUIDING_DEVICE",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Compatible fit for GUIDING_DEVICE; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-09EF760638",
-    "product_id": "PRD-53C2DB3A04",
-    "role_code": "GUIDING_DEVICE",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Compatible fit for GUIDING_DEVICE; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-09EF760638",
-    "product_id": "PRD-28A9600774",
-    "role_code": "GUIDING_DEVICE",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Compatible fit for GUIDING_DEVICE; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-09EF760638",
-    "product_id": "PRD-FAE7E352C7",
-    "role_code": "GUIDING_DEVICE",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Compatible fit for GUIDING_DEVICE; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-09EF760638",
-    "product_id": "PRD-FC1DF08B67",
-    "role_code": "GUIDING_DEVICE",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Compatible fit for GUIDING_DEVICE; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-09EF760638",
-    "product_id": "PRD-15747FB1A6",
-    "role_code": "GUIDING_DEVICE",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Primary fit for GUIDING_DEVICE; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-09EF760638",
-    "product_id": "PRD-5D2D6B7B4B",
-    "role_code": "GUIDING_DEVICE",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Primary fit for GUIDING_DEVICE; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-09EF760638",
-    "product_id": "PRD-FB9AE5D0C7",
-    "role_code": "GUIDING_DEVICE",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Primary fit for GUIDING_DEVICE; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
   },
   {
     "slot_id": "SLOT-0B24E5F37A",
@@ -3514,7 +3426,7 @@
     "product_id": "PRD-0D6E4DB711",
     "role_code": "EBUS_NEEDLE_FNA",
     "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
+    "visible_by_default": false,
     "reason": "Primary fit for EBUS_NEEDLE_FNA; source-backed and prototype-visible.",
     "product_visibility": "hidden",
     "selectable": false
@@ -4808,6 +4720,114 @@
     "reason": "Compatible fit for FLEX_SCOPE_DIAGNOSTIC; source-backed and prototype-visible.",
     "product_visibility": "prototype_visible",
     "selectable": true
+  },
+  {
+    "slot_id": "SLOT-34A46FFBA2",
+    "product_id": "PRD-57DAB5ECAE",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "eligibility_status": "Reviewed installed-base option",
+    "visible_by_default": false,
+    "reason": "External review retained this legacy Olympus 180-series scope for installed-base selection only.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "installed_base"
+  },
+  {
+    "slot_id": "SLOT-34A46FFBA2",
+    "product_id": "PRD-7240BD99DA",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "eligibility_status": "Reviewed installed-base option",
+    "visible_by_default": false,
+    "reason": "External review retained this legacy Olympus 180-series scope for installed-base selection only.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "installed_base"
+  },
+  {
+    "slot_id": "SLOT-34A46FFBA2",
+    "product_id": "PRD-FB075DFB2D",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "eligibility_status": "Reviewed installed-base option",
+    "visible_by_default": false,
+    "reason": "External review retained this legacy Olympus 180-series scope for installed-base selection only.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "installed_base"
+  },
+  {
+    "slot_id": "SLOT-3631C94D7A",
+    "product_id": "PRD-2F1DF55F3C",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "eligibility_status": "Clinician-reviewed catalog option",
+    "visible_by_default": false,
+    "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "standard"
+  },
+  {
+    "slot_id": "SLOT-3631C94D7A",
+    "product_id": "PRD-94C61697D9",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "eligibility_status": "Clinician-reviewed catalog option",
+    "visible_by_default": false,
+    "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "standard"
+  },
+  {
+    "slot_id": "SLOT-3631C94D7A",
+    "product_id": "PRD-A31173136E",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "eligibility_status": "Clinician-reviewed catalog option",
+    "visible_by_default": false,
+    "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "standard"
+  },
+  {
+    "slot_id": "SLOT-3631C94D7A",
+    "product_id": "PRD-9336231788",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "eligibility_status": "Clinician-reviewed catalog option",
+    "visible_by_default": false,
+    "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "standard"
+  },
+  {
+    "slot_id": "SLOT-3631C94D7A",
+    "product_id": "PRD-925F0C99C6",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "eligibility_status": "Clinician-reviewed catalog option",
+    "visible_by_default": false,
+    "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "standard"
+  },
+  {
+    "slot_id": "SLOT-3631C94D7A",
+    "product_id": "PRD-8CBA34433F",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "eligibility_status": "Clinician-reviewed catalog option",
+    "visible_by_default": false,
+    "reason": "External clinician exact-slot review approved this infant/pediatric chest drainage unit as a selectable, non-default catalog option; population metadata is retained, no brand preference is implied, and stocking remains hospital-local.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "standard"
   },
   {
     "slot_id": "SLOT-3BE665D0CA",
@@ -7268,6 +7288,18 @@
     "reason": "Primary fit for EBUS_SCOPE; source-backed and prototype-visible.",
     "product_visibility": "prototype_visible",
     "selectable": true
+  },
+  {
+    "slot_id": "SLOT-4648848CC3",
+    "product_id": "PRD-F586C51621",
+    "role_code": "EBUS_SCOPE",
+    "eligibility_status": "Reviewed installed-base option",
+    "visible_by_default": false,
+    "reason": "External review retained this legacy Olympus 180-series scope for installed-base selection only.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "installed_base"
   },
   {
     "slot_id": "SLOT-46FDDCCF7C",
@@ -10901,16 +10933,6 @@
   },
   {
     "slot_id": "SLOT-763A2D63F1",
-    "product_id": "PRD-FDAC925AF1",
-    "role_code": "GENERIC_AIRWAY_ADAPTER",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Primary fit for GENERIC_AIRWAY_ADAPTER; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-763A2D63F1",
     "product_id": "PRD-765CFB31FA",
     "role_code": "GENERIC_AIRWAY_ADAPTER",
     "eligibility_status": "Prototype candidate",
@@ -13072,200 +13094,80 @@
   {
     "slot_id": "SLOT-9363E589C4",
     "product_id": "PRD-E803315936",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "TBNA_NEEDLE_CONVENTIONAL",
     "eligibility_status": "Prototype candidate",
     "visible_by_default": true,
-    "reason": "Primary fit for TBNA_NEEDLE; source-backed and prototype-visible.",
+    "reason": "Primary fit for TBNA_NEEDLE_CONVENTIONAL; source-backed and prototype-visible.",
     "product_visibility": "prototype_visible",
     "selectable": true
   },
   {
     "slot_id": "SLOT-9363E589C4",
     "product_id": "PRD-152A0BFA3B",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "TBNA_NEEDLE_CONVENTIONAL",
     "eligibility_status": "Prototype candidate",
     "visible_by_default": true,
-    "reason": "Primary fit for TBNA_NEEDLE; source-backed and prototype-visible.",
+    "reason": "Primary fit for TBNA_NEEDLE_CONVENTIONAL; source-backed and prototype-visible.",
     "product_visibility": "prototype_visible",
     "selectable": true
   },
   {
     "slot_id": "SLOT-9363E589C4",
     "product_id": "PRD-F408B46806",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "TBNA_NEEDLE_CONVENTIONAL",
     "eligibility_status": "Prototype candidate",
     "visible_by_default": true,
-    "reason": "Primary fit for TBNA_NEEDLE; source-backed and prototype-visible.",
+    "reason": "Primary fit for TBNA_NEEDLE_CONVENTIONAL; source-backed and prototype-visible.",
     "product_visibility": "prototype_visible",
     "selectable": true
   },
   {
     "slot_id": "SLOT-9363E589C4",
-    "product_id": "PRD-934DA56D92",
-    "role_code": "TBNA_NEEDLE",
-    "eligibility_status": "Unverified candidate",
-    "visible_by_default": false,
-    "reason": "Exact fit for TBNA_NEEDLE; Hidden - current U.S. status unverified.",
-    "product_visibility": "hidden",
-    "selectable": false
-  },
-  {
-    "slot_id": "SLOT-9363E589C4",
-    "product_id": "PRD-DF989CBDCB",
-    "role_code": "TBNA_NEEDLE",
-    "eligibility_status": "Unverified candidate",
-    "visible_by_default": false,
-    "reason": "Exact fit for TBNA_NEEDLE; Hidden - current U.S. status unverified.",
-    "product_visibility": "hidden",
-    "selectable": false
-  },
-  {
-    "slot_id": "SLOT-9363E589C4",
-    "product_id": "PRD-2F1A67DE53",
-    "role_code": "TBNA_NEEDLE",
-    "eligibility_status": "Unverified candidate",
-    "visible_by_default": false,
-    "reason": "Exact fit for TBNA_NEEDLE; Hidden - current U.S. status unverified.",
-    "product_visibility": "hidden",
-    "selectable": false
-  },
-  {
-    "slot_id": "SLOT-9363E589C4",
     "product_id": "PRD-A457429809",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "TBNA_NEEDLE_CONVENTIONAL",
     "eligibility_status": "Prototype candidate",
     "visible_by_default": true,
-    "reason": "Primary fit for TBNA_NEEDLE; source-backed and prototype-visible.",
+    "reason": "Primary fit for TBNA_NEEDLE_CONVENTIONAL; source-backed and prototype-visible.",
     "product_visibility": "prototype_visible",
     "selectable": true
   },
   {
     "slot_id": "SLOT-9363E589C4",
     "product_id": "PRD-D4228B0E6F",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "TBNA_NEEDLE_CONVENTIONAL",
     "eligibility_status": "Prototype candidate",
     "visible_by_default": true,
-    "reason": "Primary fit for TBNA_NEEDLE; source-backed and prototype-visible.",
+    "reason": "Primary fit for TBNA_NEEDLE_CONVENTIONAL; source-backed and prototype-visible.",
     "product_visibility": "prototype_visible",
     "selectable": true
   },
   {
     "slot_id": "SLOT-9363E589C4",
-    "product_id": "PRD-25415AA480",
-    "role_code": "TBNA_NEEDLE",
-    "eligibility_status": "Unverified candidate",
-    "visible_by_default": false,
-    "reason": "Primary fit for TBNA_NEEDLE; Hidden - current U.S. status unverified.",
-    "product_visibility": "hidden",
-    "selectable": false
-  },
-  {
-    "slot_id": "SLOT-9363E589C4",
     "product_id": "PRD-7E601C1D9F",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "TBNA_NEEDLE_CONVENTIONAL",
     "eligibility_status": "Prototype candidate",
     "visible_by_default": true,
-    "reason": "Primary fit for TBNA_NEEDLE; source-backed and prototype-visible.",
+    "reason": "Primary fit for TBNA_NEEDLE_CONVENTIONAL; source-backed and prototype-visible.",
     "product_visibility": "prototype_visible",
     "selectable": true
   },
   {
     "slot_id": "SLOT-9363E589C4",
     "product_id": "PRD-77145058F8",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "TBNA_NEEDLE_CONVENTIONAL",
     "eligibility_status": "Prototype candidate",
     "visible_by_default": true,
-    "reason": "Primary fit for TBNA_NEEDLE; source-backed and prototype-visible.",
+    "reason": "Primary fit for TBNA_NEEDLE_CONVENTIONAL; source-backed and prototype-visible.",
     "product_visibility": "prototype_visible",
     "selectable": true
   },
   {
     "slot_id": "SLOT-9363E589C4",
     "product_id": "PRD-5788C21B1E",
-    "role_code": "TBNA_NEEDLE",
+    "role_code": "TBNA_NEEDLE_CONVENTIONAL",
     "eligibility_status": "Prototype candidate",
     "visible_by_default": true,
-    "reason": "Primary fit for TBNA_NEEDLE; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-9363E589C4",
-    "product_id": "PRD-F43740CB5C",
-    "role_code": "TBNA_NEEDLE",
-    "eligibility_status": "Needs verification",
-    "visible_by_default": false,
-    "reason": "Primary fit for TBNA_NEEDLE; Hidden - current U.S. status unverified.",
-    "product_visibility": "hidden",
-    "selectable": false
-  },
-  {
-    "slot_id": "SLOT-9363E589C4",
-    "product_id": "PRD-8A4A27BDD7",
-    "role_code": "TBNA_NEEDLE",
-    "eligibility_status": "Needs verification",
-    "visible_by_default": false,
-    "reason": "Primary fit for TBNA_NEEDLE; Hidden - current U.S. status unverified.",
-    "product_visibility": "hidden",
-    "selectable": false
-  },
-  {
-    "slot_id": "SLOT-9363E589C4",
-    "product_id": "PRD-7397B6CA00",
-    "role_code": "TBNA_NEEDLE",
-    "eligibility_status": "Needs verification",
-    "visible_by_default": false,
-    "reason": "Primary fit for TBNA_NEEDLE; Hidden - current U.S. status unverified.",
-    "product_visibility": "hidden",
-    "selectable": false
-  },
-  {
-    "slot_id": "SLOT-9363E589C4",
-    "product_id": "PRD-2274D463B7",
-    "role_code": "TBNA_NEEDLE",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Primary fit for TBNA_NEEDLE; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-9363E589C4",
-    "product_id": "PRD-DCF0AFE654",
-    "role_code": "TBNA_NEEDLE",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Primary fit for TBNA_NEEDLE; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-9363E589C4",
-    "product_id": "PRD-345BB869C9",
-    "role_code": "TBNA_NEEDLE",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Primary fit for TBNA_NEEDLE; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-9363E589C4",
-    "product_id": "PRD-55DAFF2A37",
-    "role_code": "TBNA_NEEDLE",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Primary fit for TBNA_NEEDLE; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-9363E589C4",
-    "product_id": "PRD-39777E7C38",
-    "role_code": "TBNA_NEEDLE",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Primary fit for TBNA_NEEDLE; source-backed and prototype-visible.",
+    "reason": "Primary fit for TBNA_NEEDLE_CONVENTIONAL; source-backed and prototype-visible.",
     "product_visibility": "prototype_visible",
     "selectable": true
   },
@@ -13598,6 +13500,30 @@
     "reason": "Compatible fit for FLEX_SCOPE_THERAPEUTIC; source-backed and prototype-visible.",
     "product_visibility": "prototype_visible",
     "selectable": true
+  },
+  {
+    "slot_id": "SLOT-94783C387D",
+    "product_id": "PRD-88E003F12B",
+    "role_code": "FLEX_SCOPE_THERAPEUTIC",
+    "eligibility_status": "Reviewed installed-base option",
+    "visible_by_default": false,
+    "reason": "External review retained this legacy Olympus 180-series scope for installed-base selection only.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "installed_base"
+  },
+  {
+    "slot_id": "SLOT-94783C387D",
+    "product_id": "PRD-815B93A920",
+    "role_code": "FLEX_SCOPE_THERAPEUTIC",
+    "eligibility_status": "Reviewed installed-base option",
+    "visible_by_default": false,
+    "reason": "External review retained this legacy Olympus 180-series scope for installed-base selection only.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "installed_base"
   },
   {
     "slot_id": "SLOT-971BBE6BF8",
@@ -15840,6 +15766,78 @@
     "selectable": true
   },
   {
+    "slot_id": "SLOT-AA3C2EAA6D",
+    "product_id": "PRD-2F1DF55F3C",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "eligibility_status": "Clinician-reviewed catalog option",
+    "visible_by_default": false,
+    "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "standard"
+  },
+  {
+    "slot_id": "SLOT-AA3C2EAA6D",
+    "product_id": "PRD-94C61697D9",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "eligibility_status": "Clinician-reviewed catalog option",
+    "visible_by_default": false,
+    "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "standard"
+  },
+  {
+    "slot_id": "SLOT-AA3C2EAA6D",
+    "product_id": "PRD-A31173136E",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "eligibility_status": "Clinician-reviewed catalog option",
+    "visible_by_default": false,
+    "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "standard"
+  },
+  {
+    "slot_id": "SLOT-AA3C2EAA6D",
+    "product_id": "PRD-9336231788",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "eligibility_status": "Clinician-reviewed catalog option",
+    "visible_by_default": false,
+    "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "standard"
+  },
+  {
+    "slot_id": "SLOT-AA3C2EAA6D",
+    "product_id": "PRD-925F0C99C6",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "eligibility_status": "Clinician-reviewed catalog option",
+    "visible_by_default": false,
+    "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "standard"
+  },
+  {
+    "slot_id": "SLOT-AA3C2EAA6D",
+    "product_id": "PRD-8CBA34433F",
+    "role_code": "GENERIC_DRAINAGE_UNIT",
+    "eligibility_status": "Clinician-reviewed catalog option",
+    "visible_by_default": false,
+    "reason": "External clinician exact-slot review approved this infant/pediatric chest drainage unit as a selectable, non-default catalog option; population metadata is retained, no brand preference is implied, and stocking remains hospital-local.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "standard"
+  },
+  {
     "slot_id": "SLOT-AECDA16326",
     "product_id": "PRD-FD34401E04",
     "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
@@ -16171,16 +16169,6 @@
   },
   {
     "slot_id": "SLOT-B138BA994E",
-    "product_id": "PRD-58DE7D49C4",
-    "role_code": "BIOPSY_FORCEPS_FLEX",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Primary fit for BIOPSY_FORCEPS_FLEX; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-B138BA994E",
     "product_id": "PRD-A2F4A953C4",
     "role_code": "BIOPSY_FORCEPS_FLEX",
     "eligibility_status": "Unverified candidate",
@@ -16481,16 +16469,6 @@
   },
   {
     "slot_id": "SLOT-B6ED05FBC7",
-    "product_id": "PRD-FDAC925AF1",
-    "role_code": "GENERIC_AIRWAY_ADAPTER",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Primary fit for GENERIC_AIRWAY_ADAPTER; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-B6ED05FBC7",
     "product_id": "PRD-765CFB31FA",
     "role_code": "GENERIC_AIRWAY_ADAPTER",
     "eligibility_status": "Prototype candidate",
@@ -16630,6 +16608,30 @@
     "selectable": true
   },
   {
+    "slot_id": "SLOT-B79D3CF198",
+    "product_id": "PRD-88E003F12B",
+    "role_code": "FLEX_SCOPE_THERAPEUTIC",
+    "eligibility_status": "Reviewed installed-base option",
+    "visible_by_default": false,
+    "reason": "External review retained this legacy Olympus 180-series scope for installed-base selection only.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "installed_base"
+  },
+  {
+    "slot_id": "SLOT-B79D3CF198",
+    "product_id": "PRD-815B93A920",
+    "role_code": "FLEX_SCOPE_THERAPEUTIC",
+    "eligibility_status": "Reviewed installed-base option",
+    "visible_by_default": false,
+    "reason": "External review retained this legacy Olympus 180-series scope for installed-base selection only.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "installed_base"
+  },
+  {
     "slot_id": "SLOT-B83EBD2FBB",
     "product_id": "PRD-EB513BCB63",
     "role_code": "EBUS_NEEDLE_FNB",
@@ -16704,20 +16706,10 @@
     "product_id": "PRD-0D6E4DB711",
     "role_code": "EBUS_NEEDLE_FNB",
     "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
+    "visible_by_default": false,
     "reason": "Primary fit for EBUS_NEEDLE_FNB; source-backed and prototype-visible.",
     "product_visibility": "hidden",
     "selectable": false
-  },
-  {
-    "slot_id": "SLOT-BC6864D752",
-    "product_id": "PRD-FDAC925AF1",
-    "role_code": "GENERIC_AIRWAY_ADAPTER",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Primary fit for GENERIC_AIRWAY_ADAPTER; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
   },
   {
     "slot_id": "SLOT-BC6864D752",
@@ -18931,16 +18923,6 @@
   },
   {
     "slot_id": "SLOT-D2974FC11B",
-    "product_id": "PRD-58DE7D49C4",
-    "role_code": "BIOPSY_FORCEPS_FLEX",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Primary fit for BIOPSY_FORCEPS_FLEX; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-D2974FC11B",
     "product_id": "PRD-A2F4A953C4",
     "role_code": "BIOPSY_FORCEPS_FLEX",
     "eligibility_status": "Unverified candidate",
@@ -19138,6 +19120,30 @@
     "reason": "Compatible fit for FLEX_SCOPE_THERAPEUTIC; source-backed and prototype-visible.",
     "product_visibility": "prototype_visible",
     "selectable": true
+  },
+  {
+    "slot_id": "SLOT-D49EAA8281",
+    "product_id": "PRD-88E003F12B",
+    "role_code": "FLEX_SCOPE_THERAPEUTIC",
+    "eligibility_status": "Reviewed installed-base option",
+    "visible_by_default": false,
+    "reason": "External review retained this legacy Olympus 180-series scope for installed-base selection only.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "installed_base"
+  },
+  {
+    "slot_id": "SLOT-D49EAA8281",
+    "product_id": "PRD-815B93A920",
+    "role_code": "FLEX_SCOPE_THERAPEUTIC",
+    "eligibility_status": "Reviewed installed-base option",
+    "visible_by_default": false,
+    "reason": "External review retained this legacy Olympus 180-series scope for installed-base selection only.",
+    "product_visibility": "prototype_visible",
+    "selectable": true,
+    "review_status": "reviewed",
+    "slotting_scope": "installed_base"
   },
   {
     "slot_id": "SLOT-D5C3DB0027",
@@ -19498,16 +19504,6 @@
     "reason": "Exact fit for ENDOSCOPE_CLEANING_BRUSH; Hidden - current U.S. status unverified.",
     "product_visibility": "hidden",
     "selectable": false
-  },
-  {
-    "slot_id": "SLOT-DD40010751",
-    "product_id": "PRD-FDAC925AF1",
-    "role_code": "GENERIC_AIRWAY_ADAPTER",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Primary fit for GENERIC_AIRWAY_ADAPTER; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
   },
   {
     "slot_id": "SLOT-DD40010751",
@@ -20612,16 +20608,6 @@
   {
     "slot_id": "SLOT-EFF8BA9B93",
     "product_id": "PRD-3D26E84017",
-    "role_code": "BIOPSY_FORCEPS_FLEX",
-    "eligibility_status": "Prototype candidate",
-    "visible_by_default": true,
-    "reason": "Primary fit for BIOPSY_FORCEPS_FLEX; source-backed and prototype-visible.",
-    "product_visibility": "prototype_visible",
-    "selectable": true
-  },
-  {
-    "slot_id": "SLOT-EFF8BA9B93",
-    "product_id": "PRD-58DE7D49C4",
     "role_code": "BIOPSY_FORCEPS_FLEX",
     "eligibility_status": "Prototype candidate",
     "visible_by_default": true,

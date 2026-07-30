@@ -86,6 +86,8 @@ export function CatalogResultsTable({
                   tier={item.verificationTier}
                   usStatusPending={item.usStatusPending}
                   distributionStatus={item.distributionStatus}
+                  catalogLifecycleContext={item.catalogLifecycleContext}
+                  lifecycleNote={item.lifecycleNote}
                   labels={labels}
                 />
               </td>

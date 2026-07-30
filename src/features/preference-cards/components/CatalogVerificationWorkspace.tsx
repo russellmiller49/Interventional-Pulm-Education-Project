@@ -132,6 +132,9 @@ export function CatalogVerificationWorkspace({
     unknown: t('catalog.verification.unknown'),
     usPending: t('catalog.verification.usPending'),
     notDistributed: t('catalog.verification.notDistributed'),
+    conflictingDistribution: t('catalog.verification.conflictingDistribution'),
+    legacyInstalledBase: t('catalog.verification.legacyInstalledBase'),
+    legacyInstalledBaseHelp: t('catalog.verification.legacyInstalledBaseHelp'),
   }
 
   return (
@@ -167,6 +170,8 @@ export function CatalogVerificationWorkspace({
             tier={product.verificationTier}
             usStatusPending={product.usStatusPending}
             distributionStatus={productDetail.distributionStatus}
+            catalogLifecycleContext={product.catalogLifecycleContext}
+            lifecycleNote={product.lifecycleNote}
             labels={verificationLabels}
           />
           <Badge variant="outline">

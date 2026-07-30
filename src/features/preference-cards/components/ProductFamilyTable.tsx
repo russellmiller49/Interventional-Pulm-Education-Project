@@ -106,7 +106,8 @@ export function ProductFamilyTable({
               </Badge>
               <VerificationBadge
                 tier={family.verifiedCount === family.variants.length ? 'verified' : 'candidate'}
-                distributionStatus={family.anyNotDistributed ? 'not_in_distribution' : null}
+                distributionStatus={family.distributionStatus}
+                catalogLifecycleContext={family.catalogLifecycleContext ?? 'unknown'}
                 labels={labels}
               />
               <span className="text-xs text-muted-foreground group-open:hidden">
@@ -173,6 +174,8 @@ export function ProductFamilyTable({
                         tier={variant.verificationTier}
                         usStatusPending={variant.usStatusPending}
                         distributionStatus={variant.distributionStatus}
+                        catalogLifecycleContext={variant.catalogLifecycleContext}
+                        lifecycleNote={variant.lifecycleNote}
                         labels={labels}
                       />
                     </td>

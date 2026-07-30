@@ -17,6 +17,7 @@ import {
   normalizeReleaseState,
   normalizeRequiredness,
   normalizeSelectionMode,
+  normalizeSlotOptionVisibility,
   normalizeVerificationGrade,
   normalizeVisibility,
   readTabularSheet,
@@ -35,6 +36,17 @@ import {
   readProductOverrides,
   type OverridesReport,
 } from './apply-product-overrides'
+import {
+  applyExternalReviewRemediation,
+  readExternalReviewCorrections,
+  type ExternalReviewRemediationReport,
+} from './apply-external-review-remediation'
+import {
+  applyExternalReviewCompletedImplementation,
+  readExternalReviewCompletedImplementation,
+  readExternalReviewRemediationDecisionArtifact,
+  type ExternalReviewCompletedImplementationReport,
+} from './apply-external-review-completed-implementation'
 import {
   generateSlotOptionProposals,
   type SlotOptionProposalSummary,
@@ -96,6 +108,8 @@ interface ImportReport {
   format_version: 1
   catalog_additions?: AdditionsMergeReport
   product_overrides?: OverridesReport
+  external_review_remediation?: ExternalReviewRemediationReport
+  external_review_completed_implementation?: ExternalReviewCompletedImplementationReport
   slot_option_proposals?: SlotOptionProposalSummary
   source_file: string
   workbook_sha256: string
@@ -425,7 +439,23 @@ async function writeJson(outputDirectory: string, filename: string, value: unkno
   await writeFile(path.join(outputDirectory, filename), await formatJson(value))
 }
 
-export async function importCatalog(options?: { workbookPath?: string; outputDirectory?: string }) {
+export interface ImportCatalogOptions {
+  workbookPath?: string
+  outputDirectory?: string
+  /**
+   * Materialize the normalized upstream catalog without the governed remediation overlay.
+   * This is used by the overlay's old-state guard tests; production imports must use the
+   * default so a missing or stale corrections artifact fails closed.
+   */
+  applyExternalReview?: boolean
+  /**
+   * Apply the normalized completed-review decisions after the proposal overlay.
+   * Tests may disable this while retaining the proposal overlay as their guarded baseline.
+   */
+  applyCompletedExternalReview?: boolean
+}
+
+export async function importCatalog(options?: ImportCatalogOptions) {
   const workbookPath = path.resolve(
     process.cwd(),
     options?.workbookPath ?? process.env.IP_CARDS_WORKBOOK ?? DEFAULT_WORKBOOK,
@@ -507,22 +537,26 @@ export async function importCatalog(options?: { workbookPath?: string; outputDir
 
   const slotProductOptions = raw.Slot_Product_Options.map((record) => {
     const product = productById.get(catalogValueAsString(record, 'product_id'))
-    const productVisibility =
-      product?.visibility_state === 'prototype_visible' ? 'prototype_visible' : 'hidden'
-    const visibleByDefault = asBoolean(record.visible_by_default)
-    const selectable = productVisibility === 'prototype_visible' && visibleByDefault
-    if (visibleByDefault !== (productVisibility === 'prototype_visible')) {
+    const normalizedVisibility = normalizeSlotOptionVisibility(
+      product?.visibility_state,
+      asBoolean(record.visible_by_default),
+      record.selectable === null || record.selectable === undefined
+        ? asBoolean(record.visible_by_default)
+        : asBoolean(record.selectable),
+    )
+    if (normalizedVisibility.authoredVisibilityConflict) {
       report.visibility_conflicts.push({
         slot_id: catalogValueAsString(record, 'slot_id'),
         product_id: catalogValueAsString(record, 'product_id'),
-        slot_visible_by_default: visibleByDefault,
-        product_visibility: productVisibility,
+        slot_visible_by_default: asBoolean(record.visible_by_default),
+        product_visibility: normalizedVisibility.productVisibility,
       })
     }
     return {
       ...withoutSourceRow(record),
-      product_visibility: productVisibility,
-      selectable,
+      product_visibility: normalizedVisibility.productVisibility,
+      visible_by_default: normalizedVisibility.visibleByDefault,
+      selectable: normalizedVisibility.selectable,
     }
   })
 
@@ -557,6 +591,50 @@ export async function importCatalog(options?: { workbookPath?: string; outputDir
   )
   report.catalog_additions = additionsReport
 
+  // Versioned, externally reviewed semantic corrections are applied after source-preserving
+  // overrides and additions, and before generated JSON or nonselectable proposals are written.
+  // The applicator validates exact pre-remediation cohorts and mutates transactionally.
+  let externalReviewRemediationReport: ExternalReviewRemediationReport | undefined
+  let externalReviewCompletedImplementationReport:
+    | ExternalReviewCompletedImplementationReport
+    | undefined
+  if (options?.applyExternalReview !== false) {
+    const externalReviewCorrections = await readExternalReviewCorrections()
+    externalReviewRemediationReport = applyExternalReviewRemediation(
+      normalized as unknown as Record<string, CatalogRecord[]>,
+      externalReviewCorrections,
+    )
+    if (!externalReviewCorrections) {
+      externalReviewRemediationReport.errors.push(
+        'The governed external-review corrections file is missing.',
+      )
+    }
+    report.external_review_remediation = externalReviewRemediationReport
+
+    if (options?.applyCompletedExternalReview !== false) {
+      const [completedImplementation, completedDecisionArtifact] = await Promise.all([
+        readExternalReviewCompletedImplementation(),
+        readExternalReviewRemediationDecisionArtifact(),
+      ])
+      externalReviewCompletedImplementationReport = applyExternalReviewCompletedImplementation(
+        normalized as unknown as Record<string, CatalogRecord[]>,
+        completedImplementation,
+        completedDecisionArtifact,
+      )
+      if (!completedImplementation) {
+        externalReviewCompletedImplementationReport.errors.push(
+          'The governed completed external-review implementation file is missing.',
+        )
+      }
+      if (!completedDecisionArtifact) {
+        externalReviewCompletedImplementationReport.errors.push(
+          'The normalized completed external-review decision artifact is missing.',
+        )
+      }
+      report.external_review_completed_implementation = externalReviewCompletedImplementationReport
+    }
+  }
+
   await mkdir(outputDirectory, { recursive: true })
   for (const sheetName of IMPORTED_SHEETS) {
     const idColumn = ID_COLUMNS[sheetName]
@@ -583,6 +661,12 @@ export async function importCatalog(options?: { workbookPath?: string; outputDir
       : []),
     ...additionsReport.errors.map((error) => `catalog additions: ${error}`),
     ...overridesReport.errors.map((error) => `product overrides: ${error}`),
+    ...(externalReviewRemediationReport?.errors ?? []).map(
+      (error) => `external review remediation: ${error}`,
+    ),
+    ...(externalReviewCompletedImplementationReport?.errors ?? []).map(
+      (error) => `completed external review implementation: ${error}`,
+    ),
   ]
 
   if (hardFailures.length > 0) {

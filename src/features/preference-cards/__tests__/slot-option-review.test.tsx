@@ -14,12 +14,12 @@ describe('exact-slot proposal review data', () => {
     const summary = summarizeSlotOptionReviewRows(rows, getSlotOptionReviewArtifactSummary())
 
     expect(summary).toMatchObject({
-      totalProposals: 475,
-      affectedProducts: 222,
-      affectedSlots: 41,
-      requiredProposals: 313,
-      notInDistribution: 9,
-      conflictingDistribution: 7,
+      totalProposals: 429,
+      affectedProducts: 192,
+      affectedSlots: 40,
+      requiredProposals: 287,
+      notInDistribution: 4,
+      conflictingDistribution: 2,
       unknownDistribution: 0,
     })
     expect(new Set(rows.map((row) => `${row.slot_id}\u0000${row.product_id}`)).size).toBe(
@@ -54,7 +54,7 @@ describe('exact-slot proposal review data', () => {
     ).toBe(true)
 
     const conflicting = filterSlotOptionReviewRows(rows, { distribution: 'conflicting' })
-    expect(conflicting).toHaveLength(7)
+    expect(conflicting).toHaveLength(2)
     expect(conflicting.every((row) => row.distributionEvidence === 'conflicting')).toBe(true)
   })
 })
@@ -78,7 +78,7 @@ describe('exact-slot proposal review UI', () => {
     expect(screen.getAllByText('Unreviewed · nonselectable')).toHaveLength(2)
     expect(screen.getAllByRole('link', { name: /Review evidence/i })).toHaveLength(2)
     expect(screen.getAllByText(/canonical authored option set is unchanged/i)).toHaveLength(2)
-    expect(screen.getByText(/Role fit: Compatible/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Role fit: Compatible/i).length).toBeGreaterThan(0)
     expect(screen.getByText('Conflicting distribution records')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /accept|approve|apply/i })).not.toBeInTheDocument()
   })

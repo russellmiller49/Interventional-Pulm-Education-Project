@@ -104,6 +104,14 @@
     "requires_current_ifu": true
   },
   {
+    "role_code": "BIOPSY_FORCEPS_ENERGY_ENABLED",
+    "category": "Sampling",
+    "role_name": "Energy-enabled biopsy forceps",
+    "description": "Biopsy forceps designed to use electrosurgical energy rather than function as ordinary cold forceps.",
+    "selection_guidance": "Confirm bronchoscope channel fit and compatibility with the selected energy platform, accessories, settings, airway-fire precautions, and current IFU.",
+    "requires_current_ifu": true
+  },
+  {
     "role_code": "BIOPSY_FORCEPS_FLEX",
     "category": "Sampling",
     "role_name": "Flexible bronchoscopy biopsy forceps",
@@ -200,6 +208,14 @@
     "requires_current_ifu": true
   },
   {
+    "role_code": "DRESSING_SECUREMENT",
+    "category": "Generic supply",
+    "role_name": "Dressing and securement supplies",
+    "description": "Dressings, securement devices, sutures, labels, and related post-procedure site-care materials.",
+    "selection_guidance": "Use the organization-specific dressing and securement standard for the access site or indwelling device.",
+    "requires_current_ifu": false
+  },
+  {
     "role_code": "EBUS_BALLOON",
     "category": "EBUS accessory",
     "role_name": "EBUS balloon",
@@ -280,6 +296,14 @@
     "requires_current_ifu": true
   },
   {
+    "role_code": "ENB_PROCEDURE_KIT",
+    "category": "Peripheral bronchoscopy",
+    "role_name": "Electromagnetic navigation bronchoscopy procedure kit",
+    "description": "Single-procedure kit containing platform-specific navigation accessories.",
+    "selection_guidance": "Match the kit to the exact navigation platform, catheter workflow, and current IFU.",
+    "requires_current_ifu": true
+  },
+  {
     "role_code": "ENDOBRONCHIAL_BLOCKER",
     "category": "Airway isolation",
     "role_name": "Endobronchial blocker",
@@ -344,6 +368,14 @@
     "requires_current_ifu": true
   },
   {
+    "role_code": "ENDOSCOPY_PROCESSOR_MOUNT_ACCESSORY",
+    "category": "Endoscopy platform",
+    "role_name": "Endoscopy processor mount accessory",
+    "description": "Bracket, pole mount, or support accessory for a named endoscopic image processor or display component.",
+    "selection_guidance": "Treat as catalog-only room equipment unless a local workflow requires it; match the exact processor or display model and current manufacturer instructions.",
+    "requires_current_ifu": true
+  },
+  {
     "role_code": "ENERGY_CABLE_ADAPTER",
     "category": "Therapeutic bronchoscopy",
     "role_name": "Energy-platform cable or adapter",
@@ -373,6 +405,14 @@
     "role_name": "Therapeutic flexible bronchoscope",
     "description": "Flexible bronchoscope with a larger working channel for therapeutic accessories and suction.",
     "selection_guidance": "Filter by channel requirement of planned accessories and airway size.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "FLEX_SCOPE_THIN",
+    "category": "Bronchoscopy platform",
+    "role_name": "Thin flexible bronchoscope",
+    "description": "Flexible bronchoscope with a slender insertion tube for smaller airways or access where a standard diagnostic bronchoscope is too large.",
+    "selection_guidance": "Filter by outer diameter, working-channel diameter, airway size, image platform, and current IFU; thin classification does not by itself establish therapeutic-tool compatibility.",
     "requires_current_ifu": true
   },
   {
@@ -520,6 +560,46 @@
     "requires_current_ifu": true
   },
   {
+    "role_code": "NAV_ACCESSORY_SENSOR",
+    "category": "Peripheral bronchoscopy",
+    "role_name": "Navigation sensor or patient patch",
+    "description": "Sensor, electromagnetic patch, or related localization accessory for a navigation platform.",
+    "selection_guidance": "Match the sensor or patch to the exact platform generation, procedure configuration, and current IFU.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "NAV_BRONCHOSCOPE_ADAPTER",
+    "category": "Peripheral bronchoscopy",
+    "role_name": "Navigation bronchoscope adapter",
+    "description": "Adapter used to connect a bronchoscope to a named navigation platform or catheter workflow.",
+    "selection_guidance": "Match the adapter to the bronchoscope model, navigation platform, and current IFU.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "NAV_CATHETER_GUIDE",
+    "category": "Peripheral bronchoscopy",
+    "role_name": "Navigation catheter or guide",
+    "description": "Catheter, guide sheath, or scope guide used to direct peripheral bronchoscopy sampling tools.",
+    "selection_guidance": "Match the guide to the bronchoscope channel, navigation platform, working length, compatible tools, and current IFU.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "NAV_PLATFORM_ACCESSORY",
+    "category": "Peripheral bronchoscopy",
+    "role_name": "Navigation platform accessory",
+    "description": "Controller, cart, field generator, connector, mount, bracket, or other accessory for a named navigation or robotic platform.",
+    "selection_guidance": "Match the accessory to the exact platform and generation; do not treat capital components as disposable catheter guides.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "NAV_TBNA_NEEDLE",
+    "category": "Peripheral bronchoscopy",
+    "role_name": "Navigation-compatible TBNA needle",
+    "description": "Aspiration needle intended for a named electromagnetic or catheter-navigation workflow.",
+    "selection_guidance": "Match the needle to the navigation platform, catheter or guide, working length, channel size, and current IFU.",
+    "requires_current_ifu": true
+  },
+  {
     "role_code": "PDT_KIT",
     "category": "Percutaneous tracheostomy",
     "role_name": "Percutaneous tracheostomy kit",
@@ -600,6 +680,22 @@
     "requires_current_ifu": true
   },
   {
+    "role_code": "RIGID_BRONCH_ASPIRATION_BIOPSY_NEEDLE",
+    "category": "Rigid bronchoscopy",
+    "role_name": "Rigid bronchoscopy aspiration biopsy needle",
+    "description": "Reusable aspiration biopsy needle configured for use through a compatible rigid bronchoscopy system.",
+    "selection_guidance": "Match straight or angled geometry, diameter, working length, compatible rigid bronchoscope components, reprocessing requirements, and current IFU.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "RIGID_BRONCH_PUNCTURE_NEEDLE",
+    "category": "Rigid bronchoscopy",
+    "role_name": "Rigid bronchoscopy puncture needle",
+    "description": "Reusable puncture needle for histologic sampling through a compatible rigid bronchoscopy system.",
+    "selection_guidance": "Match the required instrument guide, telescope, bronchoscope barrel size, working length, reprocessing requirements, and current IFU.",
+    "requires_current_ifu": true
+  },
+  {
     "role_code": "RIGID_BRONCH_SHAVER",
     "category": "Rigid bronchoscopy",
     "role_name": "Rigid bronchoscopic shaver",
@@ -656,6 +752,46 @@
     "requires_current_ifu": true
   },
   {
+    "role_code": "ROBOTIC_BIOPSY_NEEDLE",
+    "category": "Robotic bronchoscopy",
+    "role_name": "Robotic bronchoscopy biopsy needle",
+    "description": "Biopsy or aspiration needle intended for a named robotic bronchoscopy platform.",
+    "selection_guidance": "Match the needle to the robotic platform, bronchoscope or catheter, working length, channel size, and current IFU.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "ROBOTIC_BRONCH_PLATFORM",
+    "category": "Robotic bronchoscopy",
+    "role_name": "Robotic bronchoscopy platform",
+    "description": "Capital platform used to navigate and control a robotic bronchoscopy system.",
+    "selection_guidance": "Treat as installed capital equipment; match all scopes, catheters, kits, and accessories to the exact platform generation and current IFU.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "ROBOTIC_BRONCHOSCOPE",
+    "category": "Robotic bronchoscopy",
+    "role_name": "Robotic bronchoscope",
+    "description": "Reusable, reprocessed, or single-use bronchoscope designed for a named robotic bronchoscopy platform.",
+    "selection_guidance": "Match the bronchoscope to the exact robotic platform generation and compatible procedure kit, accessories, and current IFU.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "ROBOTIC_CATHETER",
+    "category": "Robotic bronchoscopy",
+    "role_name": "Robotic bronchoscopy catheter",
+    "description": "Platform-specific articulating catheter used for robotic bronchoscopic navigation and tool delivery.",
+    "selection_guidance": "Restrict selection to the named robotic platform and generation; confirm tool-channel dimensions, compatible tools, procedure configuration, and current IFU.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "ROBOTIC_PROCEDURE_KIT",
+    "category": "Robotic bronchoscopy",
+    "role_name": "Robotic bronchoscopy procedure kit",
+    "description": "Single-procedure introducer or accessory kit for a named robotic bronchoscopy platform.",
+    "selection_guidance": "Match the kit to the exact robotic platform, bronchoscope or catheter, and current IFU.",
+    "requires_current_ifu": true
+  },
+  {
     "role_code": "SPECIMEN_TRAP",
     "category": "Specimen management",
     "role_name": "Bronchoscopy specimen trap",
@@ -693,6 +829,14 @@
     "role_name": "Conventional TBNA needle",
     "description": "Non-EBUS transbronchial aspiration needle.",
     "selection_guidance": "Filter by gauge, sheath diameter, and minimum channel.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "TBNA_NEEDLE_CONVENTIONAL",
+    "category": "Sampling",
+    "role_name": "Conventional TBNA needle",
+    "description": "Non-EBUS transbronchial aspiration needle used through a conventional bronchoscope.",
+    "selection_guidance": "Filter by gauge, sheath diameter, working length, and minimum working channel; confirm the current IFU.",
     "requires_current_ifu": true
   },
   {

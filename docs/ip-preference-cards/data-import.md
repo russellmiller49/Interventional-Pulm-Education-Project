@@ -67,19 +67,32 @@ The current supplied workbook has 80 non-null GTIN values, and all 80 are alread
 
 ## Authored options and unreviewed proposals
 
-The workbook's 2,080 `Slot_Product_Options` rows remain the canonical, curated exact-slot
+The source workbook carries 2,080 `Slot_Product_Options` rows. The governed proposal overlay
+removes 31 semantically invalid relationships and adds ten reviewed installed-base alternatives.
+The completed-review implementation then removes four reviewer-rejected generic options and
+adds 18 clinician-reviewed drainage options, producing 2,073 current canonical exact-slot
 options. Import does not promote every product sharing the slot's broad role into that file.
-Instead, `derive-slot-option-proposals.ts` writes a separate deterministic review artifact:
+Instead,
+`derive-slot-option-proposals.ts` writes a separate deterministic review artifact:
 
 ```text
 data/ip-preference-cards/generated/slot-product-option-proposals.json
 ```
 
-The current artifact has 475 unreviewed pairs and zero exclusions. Every proposal is
-nonselectable and hidden by default. Exceptions in
+The current artifact has 429 unreviewed pairs and zero exclusions. The pre-remediation queue
+had 475; 28 broad-role candidates no longer qualify after the proposal-level role migrations,
+and the completed focused review promoted exactly 18 drainage pairs. Every remaining proposal
+is nonselectable and hidden by default. Exceptions in
 `seed/slot-option-exceptions.json` are Zod-validated, exact, proposal-only suppressions; stale
 or contradictory exceptions fail generation. See
 [`catalog-role-and-slot-semantics.md`](./catalog-role-and-slot-semantics.md).
+
+The proposal artifact remains immutable at
+`reviewed/external-review-corrections.json`. The returned decisions are normalized in
+`reviewed/external-review-remediation-decisions.json`, and their compiled, old-state-guarded
+catalog delta is `reviewed/external-review-completed-implementation.json`. Import verifies the
+review ID, proposal SHA-256, completed workbook SHA-256, all 97 valid decision keys, and exact
+coverage of the 24 decisions that require a delta before mutating any array.
 
 ## Coverage before seed
 
@@ -91,8 +104,8 @@ helper as the scenario generator. It reports two separate metrics:
 - required curated-default coverage: required slots with at least one selectable canonical
   `Slot_Product_Options` row.
 
-Unreviewed proposals do not count toward curated-default coverage. In the current catalog, 6
-of 98 roles have no catalog product. Required slots without curated defaults in the golden
+Unreviewed proposals do not count toward curated-default coverage. In the current catalog, 9
+of 116 roles have no catalog product. Required slots without curated defaults in the golden
 source procedures are explicitly resolved by reviewed demo-only stand-ins; every stand-in and
 reason is listed in `data/ip-preference-cards/seed/demo-stand-ins.json`. Neither coverage
 metric is card readiness or clinical approval.

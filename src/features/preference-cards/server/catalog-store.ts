@@ -8,6 +8,32 @@ import {
   type CatalogVerificationTier,
 } from '@/features/preference-cards/domain/verification'
 
+export type CatalogLifecycleContext =
+  | 'current_market'
+  | 'legacy_active_installed_base'
+  | 'historical_reference'
+  | 'unknown'
+
+export type SlottingScope =
+  | 'standard'
+  | 'installed_base'
+  | 'catalog_only'
+  | 'hospital_local'
+  | 'not_applicable'
+
+/**
+ * Reviewed governance that is intentionally independent from GUDID distribution evidence.
+ * The source-controlled remediation overlay authors these values by stable product id.
+ */
+export interface ProductGovernanceRecord {
+  productId: string
+  catalogLifecycleContext: CatalogLifecycleContext
+  slottingScope: SlottingScope
+  preferredNewPurchase: boolean
+  installedBaseExactSlotIds: string[]
+  lifecycleNote: string | null
+}
+
 /**
  * Pure indexing layer over the generated catalog JSON.
  *
@@ -148,6 +174,11 @@ export interface CatalogProduct extends CatalogProductRecord {
   manufacturerDisplay: string
   verificationTier: CatalogVerificationTier
   usStatusPending: boolean
+  catalogLifecycleContext: CatalogLifecycleContext
+  slottingScope: SlottingScope
+  preferredNewPurchase: boolean | null
+  installedBaseExactSlotIds: string[]
+  lifecycleNote: string | null
   /** Lowercased, punctuation-stripped identifiers for exact lookup. */
   searchableIds: string[]
   /**
@@ -162,6 +193,7 @@ export interface CatalogProduct extends CatalogProductRecord {
 
 export interface CatalogStoreInput {
   products: CatalogProductRecord[]
+  productGovernance?: ProductGovernanceRecord[]
   roles: RoleRecord[]
   productRoles: ProductRoleRecord[]
   procedures: ProcedureRecord[]
@@ -237,7 +269,11 @@ export function productFamilyName(record: CatalogProductRecord): string {
   return record.brand_family?.trim() || record.subcategory?.trim() || record.product_name.trim()
 }
 
-export function decorateProduct(record: CatalogProductRecord): CatalogProduct {
+export function decorateProduct(
+  record: CatalogProductRecord,
+  governance?: ProductGovernanceRecord,
+  defaultSlottingScope: SlottingScope = 'catalog_only',
+): CatalogProduct {
   const identity: ManufacturerIdentity = canonicalManufacturer(
     record.manufacturer_id,
     record.manufacturer,
@@ -249,6 +285,11 @@ export function decorateProduct(record: CatalogProductRecord): CatalogProduct {
     manufacturerDisplay: identity.manufacturerDisplay,
     verificationTier: catalogVerificationTier(record),
     usStatusPending: isUsStatusPending(record),
+    catalogLifecycleContext: governance?.catalogLifecycleContext ?? 'unknown',
+    slottingScope: governance?.slottingScope ?? defaultSlottingScope,
+    preferredNewPurchase: governance?.preferredNewPurchase ?? null,
+    installedBaseExactSlotIds: governance ? [...governance.installedBaseExactSlotIds] : [],
+    lifecycleNote: governance?.lifecycleNote ?? null,
     searchableIds: collectSearchableIds(record),
     familyName,
     familyKey: [
@@ -268,7 +309,21 @@ function compareProducts(left: CatalogProduct, right: CatalogProduct): number {
 }
 
 export function buildCatalogStore(input: CatalogStoreInput): CatalogStore {
-  const products = input.products.map(decorateProduct).sort(compareProducts)
+  const governanceByProductId = new Map(
+    (input.productGovernance ?? []).map((entry) => [entry.productId, entry]),
+  )
+  const productsWithCanonicalOptions = new Set(
+    input.slotProductOptions.map((option) => option.product_id),
+  )
+  const products = input.products
+    .map((record) =>
+      decorateProduct(
+        record,
+        governanceByProductId.get(record.product_id),
+        productsWithCanonicalOptions.has(record.product_id) ? 'standard' : 'catalog_only',
+      ),
+    )
+    .sort(compareProducts)
   const productById = new Map(products.map((product) => [product.product_id, product]))
 
   const rolesByProduct = new Map<string, ProductRoleRecord[]>()

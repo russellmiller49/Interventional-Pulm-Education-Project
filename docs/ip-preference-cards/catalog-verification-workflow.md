@@ -52,7 +52,7 @@ The product workspace joins:
 - mapped product roles and authored procedure-slot uses; and
 - unreviewed exact-slot proposals for the product.
 
-The exact-slot review route exposes all 475 deterministic proposals with procedure, slot,
+The exact-slot review route exposes all 429 deterministic proposals with procedure, slot,
 role, requiredness, product verification/visibility, source locator, and GUDID distribution
 context, including conflicts. Every proposal remains `unreviewed`, `selectable: false`, and
 `visible_by_default: false`.
@@ -72,15 +72,15 @@ preview.
 
 ## Full-catalog clinical-use workbook
 
-The full-catalog workbook is deliberately separate from the 475-row proposal workbook. The
+The full-catalog workbook is deliberately separate from the 429-row proposal workbook. The
 application's current effective catalog is generated, source-controlled data rather than a live
 Supabase catalog database. Its current review surface contains:
 
 - 1,474 catalog products;
-- 1,566 current `Product_Roles` mappings; and
-- 2,080 authored `Slot_Product_Options` assignments.
+- 1,567 current `Product_Roles` mappings; and
+- 2,073 current canonical `Slot_Product_Options` assignments.
 
-All 1,185 products with authored exact-slot assignments are absent from the proposal workbook,
+All 1,176 products with canonical exact-slot assignments are absent from the proposal workbook,
 so a clinically incorrect current assignment must be reviewed through this full-catalog
 workflow. The `Catalog Products` sheet also includes the remaining products, including products
 whose current roles do not correspond to a procedure slot.
@@ -328,11 +328,11 @@ The tests pin:
 - text search across current strong and weak candidate DIs;
 - product/source relationship failures and mixed unknown distribution states;
 - strict backlog schema behavior;
-- 1,566 current product-role mappings and 2,080 authored exact-slot assignments in the
+- 1,567 current product-role mappings and 2,073 canonical exact-slot assignments in the
   full-catalog workbook;
 - deterministic six-artifact clinical-use provenance, strict role/slot workbook validation,
   and normalized discriminated review records;
-- 475 nonselectable exact-slot proposals affecting 222 products and 41 slots;
-- 313 required-slot proposals;
-- 9 not-in-distribution, 7 conflicting, and 0 otherwise unresolved distribution signals; and
+- 429 nonselectable exact-slot proposals affecting 192 products and 40 slots;
+- 287 required-slot proposals;
+- 4 not-in-distribution, 2 conflicting, and 0 otherwise unresolved distribution signals; and
 - the absence of approval/apply controls.

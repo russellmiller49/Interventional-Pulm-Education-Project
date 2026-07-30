@@ -9,7 +9,11 @@ const verificationLabels = {
   candidate: 'Unverified',
   unknown: 'Unknown',
   usPending: 'US status unconfirmed',
-  notDistributed: 'Not currently distributed',
+  notDistributed: 'GUDID: not in commercial distribution',
+  conflictingDistribution: 'Conflicting distribution evidence — manual verification required',
+  legacyInstalledBase: 'Legacy / active installed base',
+  legacyInstalledBaseHelp:
+    'This model remains relevant to programs that own and use it. Verify current new-purchase availability, service support, and accessory availability locally.',
 }
 
 function listItem(overrides: Partial<CatalogListItem> & { productId: string }): CatalogListItem {
@@ -35,6 +39,10 @@ function listItem(overrides: Partial<CatalogListItem> & { productId: string }): 
     verificationTier: 'verified',
     usStatusPending: false,
     distributionStatus: null,
+    catalogLifecycleContext: 'unknown',
+    slottingScope: 'catalog_only',
+    preferredNewPurchase: null,
+    lifecycleNote: null,
     ...overrides,
   }
 }
@@ -59,7 +67,7 @@ describe('VerificationBadge', () => {
         labels={verificationLabels}
       />,
     )
-    expect(screen.getByText('Not currently distributed')).toBeInTheDocument()
+    expect(screen.getByText('GUDID: not in commercial distribution')).toBeInTheDocument()
   })
 
   it('does not flag a device that is still in commercial distribution', () => {
@@ -70,10 +78,10 @@ describe('VerificationBadge', () => {
         labels={verificationLabels}
       />,
     )
-    expect(screen.queryByText('Not currently distributed')).not.toBeInTheDocument()
+    expect(screen.queryByText('GUDID: not in commercial distribution')).not.toBeInTheDocument()
   })
 
-  it('prefers the discontinued flag over the pending-status badge', () => {
+  it('keeps a not-in-distribution signal distinct from pending U.S. status', () => {
     render(
       <VerificationBadge
         tier="verified"
@@ -82,8 +90,38 @@ describe('VerificationBadge', () => {
         labels={verificationLabels}
       />,
     )
-    expect(screen.getByText('Not currently distributed')).toBeInTheDocument()
+    expect(screen.getByText('GUDID: not in commercial distribution')).toBeInTheDocument()
     expect(screen.queryByText('US status unconfirmed')).not.toBeInTheDocument()
+  })
+
+  it('renders conflicting evidence without presenting it as not distributed', () => {
+    render(
+      <VerificationBadge
+        tier="verified"
+        distributionStatus="conflicting"
+        labels={verificationLabels}
+      />,
+    )
+    expect(
+      screen.getByText('Conflicting distribution evidence — manual verification required'),
+    ).toBeInTheDocument()
+    expect(screen.queryByText('GUDID: not in commercial distribution')).not.toBeInTheDocument()
+  })
+
+  it('shows reviewed installed-base lifecycle with an explanatory tooltip', () => {
+    render(
+      <VerificationBadge
+        tier="verified"
+        distributionStatus="not_in_distribution"
+        catalogLifecycleContext="legacy_active_installed_base"
+        labels={verificationLabels}
+      />,
+    )
+    expect(screen.getByText('Legacy / active installed base')).toHaveAttribute(
+      'title',
+      verificationLabels.legacyInstalledBaseHelp,
+    )
+    expect(screen.getByText('GUDID: not in commercial distribution')).toBeInTheDocument()
   })
 
   it('adds the pending-status badge alongside the verified tier', () => {
