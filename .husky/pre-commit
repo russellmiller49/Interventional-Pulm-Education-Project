@@ -2,7 +2,12 @@
 
 set -eu
 
-node scripts/worktrees/worktree.mjs guard
+branch="$(git rev-parse --abbrev-ref HEAD)"
+if [ "$branch" = "main" ] && [ "${ALLOW_MAIN_COMMIT:-}" != "1" ]; then
+  echo "Blocked: direct commit to main. Use a branch (or ALLOW_MAIN_COMMIT=1 to override)." >&2
+  exit 1
+fi
+
 node scripts/check-staged-pdfs.mjs
 
 if [ ! -x node_modules/.bin/lint-staged ]; then

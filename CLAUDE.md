@@ -1,22 +1,14 @@
-# Claude worktree entrypoint
+# Claude entrypoint
 
-Before doing anything else, run:
+You are Claude. Your permanent worktree is
+`/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude`.
 
-```sh
-npm run wt -- context
-```
+- Implement there on a `claude/<short-task>` branch created from `origin/main`:
+  `git fetch origin && git switch -c claude/<short-task> origin/main`
+- Dev server: `npm run dev:claude` (port 3120).
+- Follow `AGENTS.md` for everything else: never commit to `main`, stage specific
+  reviewed paths, read-only mounts stay untouched, and Supabase/upload scripts
+  run only from the primary checkout.
 
-Confirm the role is `active` or `temporary`, the branch starts with
-`claude/`, and the reported module matches the task. The main/control checkout
-and detached review worktree are not implementation locations.
-
-Follow all rules in `AGENTS.md`. In particular:
-
-- edit only registry-owned paths;
-- claim shared files before editing them;
-- never edit any external mount reported by `wt context`;
-- acquire an exclusive Supabase mutation lease before any prepare, start,
-  stop, migrate, reset, seed, import, or upload command;
-- run `npm run wt -- context` and `npm run wt:guard` before a narrowly scoped
-  commit;
-- use a reviewed PR with a merge commit, then run `npm run wt -- finish`.
+Reading, reviewing, and analysis are fine from any checkout; implementation
+commits happen in the claude worktree.
