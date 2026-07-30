@@ -30,9 +30,11 @@ pids
 # All worktree-local mounts, caches, and writable task data
 /local-data/
 
-# Literature Explorer external corpus. Active literature worktrees receive a
-# read-only symlink at this legacy path so existing import commands keep working.
+# Literature Explorer external corpus, provided as a read-only symlink at this
+# legacy path so existing import commands keep working. The slash-less variant
+# matches the symlink itself (dir/ patterns match only real directories).
 /IP_PubMed/nbib files/
+/IP_PubMed/nbib files
 
 # Local openFDA UDI request cache and opt-in bulk partitions
 /local-data/ip-preference-cards/openfda/
@@ -282,10 +284,13 @@ next-env.d.ts
 # because they are third-party copyrighted documents, private institutional material, or
 # far too large for the repo.
 #
-# The AccessGUDID full delimited release is ~5.6 GB.
+# The AccessGUDID full delimited release is ~5.6 GB. Slash-less variants also
+# match the read-only symlink mounts (dir/ patterns match only real directories).
 Preference_card_module/AccessGUDID_Delimited_Full_Release_*/
+Preference_card_module/AccessGUDID_Delimited_Full_Release_*
 # UCSD institutional protocols and device IFUs — private reference only, never redistributed.
 Preference_card_module/UCSD/
+Preference_card_module/UCSD
 # Manufacturer catalogs and IFUs cited by source id in generated/sources.json. The citation
 # records the document; the document itself stays out of the repo.
 Preference_card_module/Catalogs and IFU for confirmation/**/*.pdf

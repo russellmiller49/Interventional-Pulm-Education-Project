@@ -9,6 +9,13 @@
       "autoPort": false
     },
     {
+      "name": "claude-worktree",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev:claude"],
+      "port": 3120,
+      "autoPort": false
+    },
+    {
       "name": "bronch-trainer",
       "runtimeExecutable": "npm",
       "runtimeArgs": [
