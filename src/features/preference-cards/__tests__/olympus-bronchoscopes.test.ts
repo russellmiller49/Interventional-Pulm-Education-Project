@@ -1,15 +1,57 @@
-import { getUseDetail, searchProductFamiliesForRole } from '../server/catalog'
+import {
+  getProductDetail,
+  getUseDetail,
+  searchProductFamiliesForRole,
+  searchProductsForRole,
+} from '../server/catalog'
 
 /**
  * Olympus bronchoscopes.
  *
- * Two things here are unlike the rest of the catalog and need pinning. Models GUDID reports
- * as no longer in commercial distribution are deliberately **included** — a preference card
- * records what is in the room, not what is orderable — so they must carry the
- * not-in-distribution badge rather than pass as current stock. And Olympus files these under
- * opaque SKUs, so the join to GUDID runs on the version/model string; if that breaks, the
- * badge silently stops appearing.
+ * Installed-base lifecycle is intentionally independent of GUDID distribution evidence. A
+ * preference card records what is in the room, not merely what is newly orderable, and strong
+ * package rows can disagree. Olympus also files these under opaque SKUs, so the join to GUDID
+ * runs on the version/model string; if that breaks, the product-level signal disappears.
  */
+
+const installedBase180Scopes = [
+  {
+    productId: 'PRD-88E003F12B',
+    role: 'FLEX_SCOPE_THERAPEUTIC',
+    catalogNumber: 'BF-1T180',
+    distributionStatus: 'not_in_distribution',
+  },
+  {
+    productId: 'PRD-815B93A920',
+    role: 'FLEX_SCOPE_THERAPEUTIC',
+    catalogNumber: 'BF-1TQ180',
+    distributionStatus: 'conflicting',
+  },
+  {
+    productId: 'PRD-57DAB5ECAE',
+    role: 'FLEX_SCOPE_DIAGNOSTIC',
+    catalogNumber: 'BF-P180',
+    distributionStatus: 'not_in_distribution',
+  },
+  {
+    productId: 'PRD-7240BD99DA',
+    role: 'FLEX_SCOPE_DIAGNOSTIC',
+    catalogNumber: 'BF-Q180',
+    distributionStatus: 'conflicting',
+  },
+  {
+    productId: 'PRD-FB075DFB2D',
+    role: 'FLEX_SCOPE_DIAGNOSTIC',
+    catalogNumber: 'BF-Q180-AC',
+    distributionStatus: 'not_in_distribution',
+  },
+  {
+    productId: 'PRD-F586C51621',
+    role: 'EBUS_SCOPE',
+    catalogNumber: 'BF-UC180F',
+    distributionStatus: 'conflicting',
+  },
+] as const
 
 function olympusItems(role: string) {
   return (getUseDetail(role)?.manufacturerGroups ?? [])
@@ -36,9 +78,7 @@ describe('Olympus bronchoscopes', () => {
     )
   })
 
-  it('badges every discontinued scope rather than passing it off as current', () => {
-    // The whole basis for including them: a card can list a scope you own, and the reader can
-    // still see it is no longer sold.
+  it('preserves unambiguous not-in-distribution evidence at product level', () => {
     for (const [role, number] of [
       ['FLEX_SCOPE_DIAGNOSTIC', 'BF-P180'],
       ['FLEX_SCOPE_DIAGNOSTIC', 'BF-Q180-AC'],
@@ -51,6 +91,43 @@ describe('Olympus bronchoscopes', () => {
       expect({ number, status: item!.distributionStatus }).toEqual({
         number,
         status: 'not_in_distribution',
+      })
+    }
+  })
+
+  it('keeps conflicting strong package rows unresolved', () => {
+    for (const { role, catalogNumber } of installedBase180Scopes.filter(
+      (scope) => scope.distributionStatus === 'conflicting',
+    )) {
+      expect(byNumber(role, catalogNumber)?.distributionStatus).toBe('conflicting')
+    }
+  })
+
+  it('keeps all six reviewed 180-series scopes searchable in their role as installed base', () => {
+    for (const scope of installedBase180Scopes) {
+      const item = byNumber(scope.role, scope.catalogNumber)
+      expect(item).toMatchObject({
+        productId: scope.productId,
+        distributionStatus: scope.distributionStatus,
+        catalogLifecycleContext: 'legacy_active_installed_base',
+        slottingScope: 'installed_base',
+        preferredNewPurchase: false,
+      })
+
+      const roleResult = searchProductsForRole({
+        roleCode: scope.role,
+        q: scope.catalogNumber,
+      }).find((candidate) => candidate.productId === scope.productId)
+      expect(roleResult).toMatchObject({
+        catalogLifecycleContext: 'legacy_active_installed_base',
+        slottingScope: 'installed_base',
+        preferredNewPurchase: false,
+      })
+
+      expect(getProductDetail(scope.productId)?.product).toMatchObject({
+        catalogLifecycleContext: 'legacy_active_installed_base',
+        slottingScope: 'installed_base',
+        preferredNewPurchase: false,
       })
     }
   })

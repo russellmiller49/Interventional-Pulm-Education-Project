@@ -139,11 +139,15 @@ export default async function CatalogSearchPage({ params, searchParams }: PagePr
     unknown: t('verification.unknown'),
     usPending: t('verification.usPending'),
     notDistributed: t('verification.notDistributed'),
+    conflictingDistribution: t('verification.conflictingDistribution'),
+    legacyInstalledBase: t('verification.legacyInstalledBase'),
+    legacyInstalledBaseHelp: t('verification.legacyInstalledBaseHelp'),
     legendTitle: t('verification.legendTitle'),
     verifiedHelp: t('verification.verifiedHelp'),
     candidateHelp: t('verification.candidateHelp'),
     usPendingHelp: t('verification.usPendingHelp'),
     notDistributedHelp: t('verification.notDistributedHelp'),
+    conflictingDistributionHelp: t('verification.conflictingDistributionHelp'),
   }
 
   return (
@@ -269,6 +273,9 @@ export default async function CatalogSearchPage({ params, searchParams }: PagePr
                   unknown: t('verification.unknown'),
                   usPending: t('verification.usPending'),
                   notDistributed: t('verification.notDistributed'),
+                  conflictingDistribution: t('verification.conflictingDistribution'),
+                  legacyInstalledBase: t('verification.legacyInstalledBase'),
+                  legacyInstalledBaseHelp: t('verification.legacyInstalledBaseHelp'),
                 }}
               />
             ) : (

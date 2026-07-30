@@ -165,7 +165,7 @@ describe('ExactSlotReviewWorkbookControls', () => {
     render(
       <ExactSlotReviewWorkbookControls
         locale="en"
-        totalCount={475}
+        totalCount={447}
         filteredCount={7}
         requiredCount={313}
         filters={{ procedure: 'EBV', requiredness: 'required' }}
@@ -216,7 +216,7 @@ describe('ExactSlotReviewWorkbookControls', () => {
     render(
       <ExactSlotReviewWorkbookControls
         locale="en"
-        totalCount={475}
+        totalCount={447}
         filteredCount={0}
         requiredCount={313}
         productId="PRD-NONE01"
@@ -257,7 +257,7 @@ describe('ExactSlotReviewWorkbookControls', () => {
     render(
       <ExactSlotReviewWorkbookControls
         locale="en"
-        totalCount={475}
+        totalCount={447}
         filteredCount={3}
         requiredCount={313}
         productId="PRD-VALVE01"
@@ -302,7 +302,7 @@ describe('ExactSlotReviewWorkbookControls', () => {
 describe('ExactSlotReviewImportWorkbench', () => {
   it('associates file constraints with the input and rejects wrong or oversized files locally', async () => {
     const user = userEvent.setup({ applyAccept: false })
-    render(<ExactSlotReviewImportWorkbench locale="en" totalCount={475} />)
+    render(<ExactSlotReviewImportWorkbench locale="en" totalCount={447} />)
 
     const region = screen.getByRole('region', { name: 'Import and validate' })
     const input = within(region).getByLabelText('Completed clinician review workbook')
@@ -355,7 +355,7 @@ describe('ExactSlotReviewImportWorkbench', () => {
       json: async () => preview,
     } as Response)
 
-    render(<ExactSlotReviewImportWorkbench locale="en" totalCount={475} />)
+    render(<ExactSlotReviewImportWorkbench locale="en" totalCount={447} />)
 
     const input = screen.getByLabelText('Completed clinician review workbook')
     const workbook = new File(['completed workbook'], 'completed review.xlsx', {

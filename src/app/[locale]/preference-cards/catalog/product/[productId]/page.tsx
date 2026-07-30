@@ -60,6 +60,9 @@ export default async function CatalogProductPage({ params }: PageProps) {
     unknown: t('verification.unknown'),
     usPending: t('verification.usPending'),
     notDistributed: t('verification.notDistributed'),
+    conflictingDistribution: t('verification.conflictingDistribution'),
+    legacyInstalledBase: t('verification.legacyInstalledBase'),
+    legacyInstalledBaseHelp: t('verification.legacyInstalledBaseHelp'),
   }
 
   const identifiers: { label: string; value: string | null }[] = [
@@ -116,6 +119,8 @@ export default async function CatalogProductPage({ params }: PageProps) {
             tier={product.verificationTier}
             usStatusPending={product.usStatusPending}
             distributionStatus={detail.distributionStatus}
+            catalogLifecycleContext={product.catalogLifecycleContext}
+            lifecycleNote={product.lifecycleNote}
             labels={verificationLabels}
           />
           {[
@@ -329,6 +334,9 @@ export default async function CatalogProductPage({ params }: PageProps) {
                     <VerificationBadge
                       tier={item.verificationTier}
                       usStatusPending={item.usStatusPending}
+                      distributionStatus={item.distributionStatus}
+                      catalogLifecycleContext={item.catalogLifecycleContext}
+                      lifecycleNote={item.lifecycleNote}
                       labels={verificationLabels}
                     />
                   </CardContent>

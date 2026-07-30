@@ -11,6 +11,8 @@ import { cn } from '@/lib/cn'
 import type { CatalogPick } from '../domain/catalog-pick'
 import type { FamilyPick, FamilySpecRange } from '../domain/family-pick'
 import { allowsSizeAtProcedure } from '../domain/size-at-procedure'
+import type { CatalogDistributionStatus } from '../server/catalog'
+import type { CatalogLifecycleContext, SlottingScope } from '../server/catalog-store'
 import { VerificationBadge, type VerificationBadgeLabels } from './VerificationBadge'
 
 /** Mirrors RolePickerOption from server/catalog.ts, which the API returns verbatim. */
@@ -24,7 +26,11 @@ export interface CatalogPickerOption {
   subcategory: string | null
   verificationTier: 'verified' | 'candidate' | 'unknown'
   usStatusPending: boolean
-  distributionStatus: 'in_distribution' | 'not_in_distribution' | null
+  distributionStatus: CatalogDistributionStatus | null
+  catalogLifecycleContext: CatalogLifecycleContext
+  slottingScope: SlottingScope
+  preferredNewPurchase: boolean | null
+  lifecycleNote: string | null
   roleFit: string | null
   minWorkingChannelMm: number | null
   deliverySystemOdMm: number | null
@@ -42,7 +48,8 @@ export interface CatalogPickerFamily {
   verifiedCount: number
   verificationTier: 'verified' | 'candidate' | 'unknown'
   usStatusPending: boolean
-  anyNotDistributed: boolean
+  distributionStatus: CatalogDistributionStatus | null
+  catalogLifecycleContext: CatalogLifecycleContext | null
   specRanges: FamilySpecRange[]
   placementMethods: string[]
   sourceId: string | null
@@ -148,6 +155,9 @@ export function CatalogOptionPicker({
       unknown: tVerification('unknown'),
       usPending: tVerification('usPending'),
       notDistributed: tVerification('notDistributed'),
+      conflictingDistribution: tVerification('conflictingDistribution'),
+      legacyInstalledBase: tVerification('legacyInstalledBase'),
+      legacyInstalledBaseHelp: tVerification('legacyInstalledBaseHelp'),
     }),
     [tVerification],
   )
@@ -233,6 +243,8 @@ export function CatalogOptionPicker({
             tier={option.verificationTier}
             usStatusPending={option.usStatusPending}
             distributionStatus={option.distributionStatus}
+            catalogLifecycleContext={option.catalogLifecycleContext}
+            lifecycleNote={option.lifecycleNote}
             labels={verificationLabels}
           />
           {option.roleFit ? (
@@ -343,9 +355,8 @@ export function CatalogOptionPicker({
                         <VerificationBadge
                           tier={family.verificationTier}
                           usStatusPending={family.usStatusPending}
-                          distributionStatus={
-                            family.anyNotDistributed ? 'not_in_distribution' : null
-                          }
+                          distributionStatus={family.distributionStatus}
+                          catalogLifecycleContext={family.catalogLifecycleContext ?? 'unknown'}
                           labels={verificationLabels}
                         />
                       </div>

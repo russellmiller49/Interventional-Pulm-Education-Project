@@ -160,6 +160,41 @@ export function normalizeVisibility(value: unknown): 'prototype_visible' | 'hidd
   return value === 'Prototype visible - reverify before production' ? 'prototype_visible' : 'hidden'
 }
 
+export interface NormalizedSlotOptionVisibility {
+  productVisibility: 'prototype_visible' | 'hidden'
+  visibleByDefault: boolean
+  selectable: boolean
+  authoredVisibilityConflict: boolean
+}
+
+/**
+ * Product visibility is the restrictive boundary for authored exact-slot defaults.
+ *
+ * A hidden product may remain in the catalog and review queues, but it cannot be surfaced as
+ * a default option or made selectable by a workbook flag. An authored `false` for a visible
+ * product stays false: visibility permits review and discovery; it does not promote a default.
+ */
+export function normalizeSlotOptionVisibility(
+  productVisibility: unknown,
+  authoredVisibleByDefault: boolean,
+  authoredSelectable: boolean = authoredVisibleByDefault,
+): NormalizedSlotOptionVisibility {
+  const normalizedProductVisibility =
+    productVisibility === 'prototype_visible' ? 'prototype_visible' : 'hidden'
+  const selectable = normalizedProductVisibility === 'prototype_visible' && authoredSelectable
+  const visibleByDefault = selectable && authoredVisibleByDefault
+
+  return {
+    productVisibility: normalizedProductVisibility,
+    visibleByDefault,
+    selectable,
+    authoredVisibilityConflict:
+      (normalizedProductVisibility === 'hidden' &&
+        (authoredVisibleByDefault || authoredSelectable)) ||
+      (authoredVisibleByDefault && !authoredSelectable),
+  }
+}
+
 export function normalizeVerificationGrade(
   value: unknown,
 ): 'verified_source' | 'candidate' | 'unknown' {

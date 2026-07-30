@@ -339,6 +339,7 @@ describe('full-catalog clinical-use review workbook export', () => {
     ]) {
       const xml = await zip.file(worksheetPath)!.async('string')
       expect(xml).toContain('<sheetProtection ')
+      expect(xml).toMatch(/<autoFilter ref="A1:[A-Z]+\d+"\/>/)
       expect(xml).toContain('<tableParts count="1">')
       const order = [
         xml.indexOf('<pageMargins '),
@@ -391,13 +392,13 @@ describe('full-catalog clinical-use review workbook export', () => {
     )
     expect(workbook.counts).toEqual({
       catalogProducts: 1_474,
-      productRoles: 1_566,
-      currentSlots: 2_080,
+      productRoles: 1_567,
+      currentSlots: 2_073,
     })
     const parsed = await parseOoxmlWorkbookBytes(workbook.bytes)
     expect(parsed.sheets.get('Catalog Products')?.maxRow).toBe(1_475)
-    expect(parsed.sheets.get('Product Role Review')?.maxRow).toBe(1_567)
-    expect(parsed.sheets.get('Current Slot Review')?.maxRow).toBe(2_081)
+    expect(parsed.sheets.get('Product Role Review')?.maxRow).toBe(1_568)
+    expect(parsed.sheets.get('Current Slot Review')?.maxRow).toBe(2_074)
     expect(workbook.metadata.clinical_use_manifest_sha256).toBe(manifest.clinicalUseManifestSha256)
     expect(await Promise.all(canonicalPaths.map((filename) => readFile(filename)))).toEqual(before)
   })

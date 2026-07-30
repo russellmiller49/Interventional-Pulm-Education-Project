@@ -10,10 +10,12 @@ import productsJson from '../../../../data/ip-preference-cards/generated/catalog
 import rolesJson from '../../../../data/ip-preference-cards/generated/roles.json'
 import slotProductOptionsJson from '../../../../data/ip-preference-cards/generated/slot-product-options.json'
 import sourcesJson from '../../../../data/ip-preference-cards/generated/sources.json'
+import externalReviewCorrectionsJson from '../../../../data/ip-preference-cards/reviewed/external-review-corrections.json'
 
 import {
   buildCatalogStore,
   normalizeIdentifier,
+  type CatalogLifecycleContext,
   type CatalogProduct,
   type CatalogProductRecord,
   type CatalogStore,
@@ -21,8 +23,10 @@ import {
   type ProcedureRecord,
   type ProcedureSlotRecord,
   type ProductRoleRecord,
+  type ProductGovernanceRecord,
   type ProductSourceRecord,
   type RoleRecord,
+  type SlottingScope,
   type SlotProductOptionRecord,
   type SourceRecord,
 } from '@/features/preference-cards/server/catalog-store'
@@ -39,41 +43,70 @@ import type { FamilyPick, FamilySpecRange } from '@/features/preference-cards/do
  * trimmed rows ever cross to the client — the 1,221-product array never does.
  */
 
+export type CatalogDistributionStatus = 'in_distribution' | 'not_in_distribution' | 'conflicting'
+
+export interface GudidDistributionConfirmation {
+  product_id: string
+  match_strength: string
+  gudid_distribution_status: string
+}
+
+function normalizedDistributionStatus(
+  value: string,
+): Exclude<CatalogDistributionStatus, 'conflicting'> | null {
+  if (/^In Commercial Distribution$/i.test(value.trim())) return 'in_distribution'
+  if (/^Not in Commercial Distribution$/i.test(value.trim())) return 'not_in_distribution'
+  return null
+}
+
 /**
- * FDA GUDID distribution status per product, from the confirmation report.
+ * FDA GUDID distribution evidence per product, from strong manufacturer-and-catalog matches.
  *
- * A product can match several device records (package configurations); it counts as
- * distributed if any strong match is in commercial distribution, and is only flagged when
- * every strong match says otherwise. Weak, catalog-number-only matches are ignored — they
- * are not strong enough evidence to tell a physician a product is discontinued.
+ * Package rows can disagree. A conflict remains a conflict instead of being collapsed to
+ * whichever row happens to say "in distribution." Weak matches never contribute. This map is
+ * distribution evidence only: it does not derive lifecycle, visibility, or orderability.
  */
-function buildDistributionMap(): Map<string, 'in_distribution' | 'not_in_distribution'> {
-  const statuses = new Map<string, { distributed: boolean; seen: boolean }>()
-  const report = gudidConfirmationsJson as unknown as {
-    confirmations: {
-      product_id: string
-      match_strength: string
-      gudid_distribution_status: string
-    }[]
-  }
-  for (const row of report.confirmations) {
+export function buildDistributionMap(
+  confirmations: readonly GudidDistributionConfirmation[],
+): Map<string, CatalogDistributionStatus> {
+  const statuses = new Map<
+    string,
+    {
+      recognized: Set<Exclude<CatalogDistributionStatus, 'conflicting'>>
+      hasUnrecognized: boolean
+    }
+  >()
+  for (const row of confirmations) {
     if (row.match_strength !== 'manufacturer_and_catalog_number') continue
-    const distributed = /^In Commercial Distribution$/i.test(row.gudid_distribution_status)
-    const existing = statuses.get(row.product_id)
-    if (existing) existing.distributed = existing.distributed || distributed
-    else statuses.set(row.product_id, { distributed, seen: true })
+    const status = normalizedDistributionStatus(row.gudid_distribution_status)
+    const existing = statuses.get(row.product_id) ?? {
+      recognized: new Set<Exclude<CatalogDistributionStatus, 'conflicting'>>(),
+      hasUnrecognized: false,
+    }
+    if (status) existing.recognized.add(status)
+    else existing.hasUnrecognized = true
+    statuses.set(row.product_id, existing)
   }
-  const result = new Map<string, 'in_distribution' | 'not_in_distribution'>()
+  const result = new Map<string, CatalogDistributionStatus>()
   for (const [productId, value] of statuses) {
-    result.set(productId, value.distributed ? 'in_distribution' : 'not_in_distribution')
+    if (value.recognized.size > 1 || (value.recognized.size > 0 && value.hasUnrecognized)) {
+      result.set(productId, 'conflicting')
+      continue
+    }
+    const status = value.recognized.values().next().value
+    if (status) result.set(productId, status)
   }
   return result
 }
 
-let cachedDistribution: Map<string, 'in_distribution' | 'not_in_distribution'> | null = null
+const gudidReport = gudidConfirmationsJson as unknown as {
+  confirmations: GudidDistributionConfirmation[]
+}
+
+let cachedDistribution: Map<string, CatalogDistributionStatus> | null = null
 
 function getDistributionMap() {
-  if (!cachedDistribution) cachedDistribution = buildDistributionMap()
+  if (!cachedDistribution) cachedDistribution = buildDistributionMap(gudidReport.confirmations)
   return cachedDistribution
 }
 
@@ -84,6 +117,11 @@ export function getCatalogStore(): CatalogStore {
   if (!cachedStore) {
     cachedStore = buildCatalogStore({
       products: productsJson as unknown as CatalogProductRecord[],
+      productGovernance: (
+        externalReviewCorrectionsJson as unknown as {
+          productGovernance: ProductGovernanceRecord[]
+        }
+      ).productGovernance,
       roles: rolesJson as unknown as RoleRecord[],
       productRoles: productRolesJson as unknown as ProductRoleRecord[],
       procedures: proceduresJson as unknown as ProcedureRecord[],
@@ -156,7 +194,11 @@ export interface CatalogListItem {
   verificationTier: CatalogVerificationTier
   usStatusPending: boolean
   /** FDA GUDID commercial-distribution status, when a confident match exists. */
-  distributionStatus: 'in_distribution' | 'not_in_distribution' | null
+  distributionStatus: CatalogDistributionStatus | null
+  catalogLifecycleContext: CatalogLifecycleContext
+  slottingScope: SlottingScope
+  preferredNewPurchase: boolean | null
+  lifecycleNote: string | null
   roleFit?: string | null
 }
 
@@ -184,6 +226,10 @@ function toListItem(product: CatalogProduct): CatalogListItem {
     verificationTier: product.verificationTier,
     usStatusPending: product.usStatusPending,
     distributionStatus: getDistributionMap().get(product.product_id) ?? null,
+    catalogLifecycleContext: product.catalogLifecycleContext,
+    slottingScope: product.slottingScope,
+    preferredNewPurchase: product.preferredNewPurchase,
+    lifecycleNote: product.lifecycleNote,
   }
 }
 
@@ -503,7 +549,12 @@ export interface ProductFamily {
   specRanges: SpecRange[]
   /** Distinct non-numeric distinguishers, e.g. straight vs right angle. */
   placementMethods: string[]
-  anyNotDistributed: boolean
+  /**
+   * Family-level evidence is shown only when every variant agrees. A signal from one package
+   * or model must never be presented as a conclusion about its siblings.
+   */
+  distributionStatus: CatalogDistributionStatus | null
+  catalogLifecycleContext: CatalogLifecycleContext | null
 }
 
 export interface UseDetailManufacturerGroup {
@@ -533,6 +584,12 @@ const NUMERIC_SPEC_KEYS: SpecColumnKey[] = [
   'min_working_channel_mm',
   'delivery_system_od_mm',
 ]
+
+function unanimousFamilyValue<T>(values: readonly (T | null)[]): T | null {
+  if (values.length === 0 || values[0] === null) return null
+  const first = values[0]
+  return values.every((value) => value === first) ? first : null
+}
 
 /** Collapse size variants of the same product line into families. */
 export function buildProductFamilies(
@@ -581,8 +638,11 @@ export function buildProductFamilies(
             .filter((value): value is string => Boolean(value)),
         ),
       ].sort(),
-      anyNotDistributed: variants.some(
-        (variant) => variant.distributionStatus === 'not_in_distribution',
+      distributionStatus: unanimousFamilyValue(
+        variants.map((variant) => variant.distributionStatus),
+      ),
+      catalogLifecycleContext: unanimousFamilyValue(
+        variants.map((variant) => variant.catalogLifecycleContext),
       ),
     })
   }
@@ -701,7 +761,7 @@ export interface ProductSlotDetail {
 
 export interface ProductDetail {
   product: CatalogProduct
-  distributionStatus: 'in_distribution' | 'not_in_distribution' | null
+  distributionStatus: CatalogDistributionStatus | null
   roles: ProductRoleDetail[]
   slots: ProductSlotDetail[]
   sources: ProductSourceDetail[]
@@ -798,7 +858,11 @@ export interface RolePickerOption {
   subcategory: string | null
   verificationTier: CatalogVerificationTier
   usStatusPending: boolean
-  distributionStatus: 'in_distribution' | 'not_in_distribution' | null
+  distributionStatus: CatalogDistributionStatus | null
+  catalogLifecycleContext: CatalogLifecycleContext
+  slottingScope: SlottingScope
+  preferredNewPurchase: boolean | null
+  lifecycleNote: string | null
   roleFit: string | null
   minWorkingChannelMm: number | null
   deliverySystemOdMm: number | null
@@ -863,6 +927,10 @@ function toRolePickerOption(
     verificationTier: product.verificationTier,
     usStatusPending: product.usStatusPending,
     distributionStatus: getDistributionMap().get(product.product_id) ?? null,
+    catalogLifecycleContext: product.catalogLifecycleContext,
+    slottingScope: product.slottingScope,
+    preferredNewPurchase: product.preferredNewPurchase,
+    lifecycleNote: product.lifecycleNote,
     roleFit: link?.role_fit ?? null,
     minWorkingChannelMm: product.min_working_channel_mm,
     deliverySystemOdMm: product.delivery_system_od_mm,
@@ -918,7 +986,10 @@ export interface RoleFamilyOption {
   /** The weakest variant's tier: a line is only as confirmed as its least-confirmed size. */
   verificationTier: CatalogVerificationTier
   usStatusPending: boolean
-  anyNotDistributed: boolean
+  /** Present only when every variant has the same product-level distribution evidence. */
+  distributionStatus: CatalogDistributionStatus | null
+  /** Present only when every variant has the same reviewed lifecycle context. */
+  catalogLifecycleContext: CatalogLifecycleContext | null
   specRanges: FamilySpecRange[]
   placementMethods: string[]
   sourceId: string | null
@@ -951,11 +1022,23 @@ export function searchProductFamiliesForRole(
     else grouped.set(product.familyKey, [product])
   }
 
+  // A text query can match only one model in a larger line. Summarize governance and
+  // distribution across the complete role-scoped family, never just the matching subset.
+  const completeFamilies = new Map<string, CatalogProduct[]>()
+  for (const productId of store.productIdsByRole.get(params.roleCode) ?? []) {
+    const product = store.productById.get(productId)
+    if (!product) continue
+    const existing = completeFamilies.get(product.familyKey)
+    if (existing) existing.push(product)
+    else completeFamilies.set(product.familyKey, [product])
+  }
+
   const distribution = getDistributionMap()
   const families: RoleFamilyOption[] = []
   for (const [familyKey, variants] of grouped) {
     if (families.length >= limit) break
     const first = variants[0]
+    const completeFamily = completeFamilies.get(familyKey) ?? variants
     const sorted = [...variants].sort(
       (left, right) =>
         (left.diameter_mm ?? 0) - (right.diameter_mm ?? 0) ||
@@ -974,8 +1057,11 @@ export function searchProductFamiliesForRole(
         ? 'verified'
         : 'candidate',
       usStatusPending: variants.some((variant) => variant.usStatusPending),
-      anyNotDistributed: variants.some(
-        (variant) => distribution.get(variant.product_id) === 'not_in_distribution',
+      distributionStatus: unanimousFamilyValue(
+        completeFamily.map((variant) => distribution.get(variant.product_id) ?? null),
+      ),
+      catalogLifecycleContext: unanimousFamilyValue(
+        completeFamily.map((variant) => variant.catalogLifecycleContext),
       ),
       specRanges: familySpecRanges(variants),
       placementMethods: [

@@ -4,6 +4,8 @@ import { promisify } from 'node:util'
 
 import JSZip from 'jszip'
 
+import slotProductOptionProposalsJson from '../../../../data/ip-preference-cards/generated/slot-product-option-proposals.json'
+
 import {
   getClinicalUseReviewArtifactManifest,
   getClinicalUseReviewData,
@@ -72,6 +74,11 @@ const MAX_REVIEWER_NAME_CHARACTERS = 200
 const MAX_REVIEW_TEXT_CHARACTERS = 4_000
 const METADATA_KEY_COLUMN = 12
 const METADATA_VALUE_COLUMN = 13
+const UNREVIEWED_PROPOSAL_COUNT = (
+  slotProductOptionProposalsJson as {
+    summary: { generated_unreviewed_proposals: number }
+  }
+).summary.generated_unreviewed_proposals
 
 type WorkbookReviewSheetName = typeof PRODUCT_ROLE_SHEET | typeof CURRENT_SLOT_SHEET
 type ReviewWorkbookRow = ClinicalUseProductRoleWorkbookRow | ClinicalUseCurrentSlotWorkbookRow
@@ -457,7 +464,7 @@ function instructionsWorksheetXml(metadata: ClinicalUseReviewWorkbookMetadata): 
     ],
     [
       'Exact-slot proposals',
-      'This workbook reviews current mappings. The separate Exact-slot clinician review workbook remains the decision surface for the 475 unreviewed proposal rows.',
+      `This workbook reviews current mappings. The separate Exact-slot clinician review workbook remains the decision surface for the ${UNREVIEWED_PROPOSAL_COUNT} unreviewed proposal rows.`,
     ],
     [
       'Editable columns',
@@ -626,6 +633,7 @@ function catalogProductsWorksheetXml(rows: ClinicalUseCatalogProductWorkbookRow[
   <cols>${columnXml}</cols>
   <sheetData>${headerRow}${dataRows.join('')}</sheetData>
   ${worksheetProtectionXml()}
+  <autoFilter ref="A1:${lastColumn}${lastRow}"/>
   ${hyperlinks}
   <pageMargins left="0.25" right="0.25" top="0.5" bottom="0.5" header="0.2" footer="0.2"/>
   <pageSetup orientation="landscape" fitToWidth="4" fitToHeight="0" paperSize="1"/>
@@ -716,6 +724,7 @@ function reviewWorksheetXml<Row extends ReviewWorkbookRow>(
   <cols>${columnXml}</cols>
   <sheetData>${headerRow}${dataRows.join('')}</sheetData>
   ${worksheetProtectionXml()}
+  <autoFilter ref="A1:${lastColumn}${lastRow}"/>
   <conditionalFormatting sqref="${columnName(decisionColumnIndex)}2:${columnName(
     decisionColumnIndex,
   )}${lastRow}">${conditionalFormatting}</conditionalFormatting>

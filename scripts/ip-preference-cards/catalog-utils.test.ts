@@ -5,6 +5,7 @@ import {
   normalizeExcelDate,
   normalizeGtin,
   normalizeSelectionMode,
+  normalizeSlotOptionVisibility,
   normalizeVisibility,
   readTabularSheet,
 } from './catalog-utils'
@@ -80,6 +81,36 @@ describe('IP preference-card catalog import utilities', () => {
       'prototype_visible',
     )
   })
+
+  it.each([
+    ['prototype_visible', false, false, false, false, false],
+    ['prototype_visible', false, true, false, true, false],
+    ['prototype_visible', true, false, false, false, true],
+    ['prototype_visible', true, true, true, true, false],
+    ['hidden', false, false, false, false, false],
+    ['hidden', false, true, false, false, true],
+    ['hidden', true, false, false, false, true],
+    ['hidden', true, true, false, false, true],
+  ] as const)(
+    'normalizes slot visibility for %s with authored default %s and selectability %s',
+    (
+      productVisibility,
+      authoredDefault,
+      authoredSelectable,
+      visibleByDefault,
+      selectable,
+      conflict,
+    ) => {
+      expect(
+        normalizeSlotOptionVisibility(productVisibility, authoredDefault, authoredSelectable),
+      ).toEqual({
+        productVisibility,
+        visibleByDefault,
+        selectable,
+        authoredVisibilityConflict: conflict,
+      })
+    },
+  )
 
   it('preserves unresolved compatibility strings as raw evidence', () => {
     const compatibility = readTabularSheet(workbook, 'Compatibility').records

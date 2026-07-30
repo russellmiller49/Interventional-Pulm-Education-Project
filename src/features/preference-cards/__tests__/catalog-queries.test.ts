@@ -6,11 +6,13 @@ import {
 } from '../server/catalog-store'
 import {
   activeSpecColumns,
+  buildDistributionMap,
   getCatalogPick,
   getProductDetail,
   getUseDetail,
   getUseIndex,
   searchCatalog,
+  searchProductFamiliesForRole,
   searchProductsForRole,
 } from '../server/catalog'
 import { catalogSearchSchema } from '../schemas/catalog-search'
@@ -73,6 +75,7 @@ function buildFixtureStore(): CatalogStoreInput {
         product_name: 'Alpha Silicone Stent',
         manufacturer_id: 'MFR-A',
         manufacturer: 'Acme Airway',
+        brand_family: 'Alpha line',
         catalog_number: 'ALP-100',
         diameter_mm: 12,
         length_mm: 40,
@@ -105,8 +108,19 @@ function buildFixtureStore(): CatalogStoreInput {
         product_name: 'Delta Silicone Stent',
         manufacturer_id: 'MFR-A',
         manufacturer: 'Acme Airway',
+        brand_family: 'Alpha line',
         material: 'Silicone',
       }),
+    ],
+    productGovernance: [
+      {
+        productId: 'PRD-AAA',
+        catalogLifecycleContext: 'legacy_active_installed_base',
+        slottingScope: 'installed_base',
+        preferredNewPurchase: false,
+        installedBaseExactSlotIds: ['SLOT-1'],
+        lifecycleNote: 'Retained for an installed clinical program.',
+      },
     ],
     roles: [
       {
@@ -305,6 +319,25 @@ describe('catalog search', () => {
     expect(getCatalogPick('PRD-BBB', 'CRYOPROBE', store)).toBeNull()
   })
 
+  it('exposes reviewed lifecycle separately from canonical slot-option defaults', () => {
+    const reviewed = searchCatalog(query({ q: 'ALP-100' }), store).items[0]
+    expect(reviewed).toMatchObject({
+      productId: 'PRD-AAA',
+      catalogLifecycleContext: 'legacy_active_installed_base',
+      slottingScope: 'installed_base',
+      preferredNewPurchase: false,
+      lifecycleNote: 'Retained for an installed clinical program.',
+    })
+    expect(store.productById.get('PRD-AAA')?.installedBaseExactSlotIds).toEqual(['SLOT-1'])
+
+    const unreviewed = store.productById.get('PRD-BBB')
+    expect(unreviewed).toMatchObject({
+      catalogLifecycleContext: 'unknown',
+      slottingScope: 'catalog_only',
+      preferredNewPurchase: null,
+    })
+  })
+
   it('counts products excluded only because the filtered spec is missing', () => {
     const result = searchCatalog(query({ role: 'AIRWAY_STENT', diameterMin: 10 }), store)
     expect(result.items.map((item) => item.productId).sort()).toEqual(['PRD-AAA', 'PRD-BBB'])
@@ -409,6 +442,11 @@ describe('product detail', () => {
       sourceLocation: 'p. 4',
       reliabilityTier: 'Tier 1 - manufacturer',
     })
+    expect(detail?.product).toMatchObject({
+      catalogLifecycleContext: 'legacy_active_installed_base',
+      slottingScope: 'installed_base',
+      preferredNewPurchase: false,
+    })
   })
 
   it('suggests same-use products from other manufacturers only', () => {
@@ -476,8 +514,62 @@ describe('product families', () => {
     )
   })
 
-  it('flags a family containing a discontinued variant', () => {
+  it('does not turn one variant lifecycle into a family-wide conclusion', () => {
     const detail = getUseDetail('AIRWAY_STENT', store)
-    expect(detail!.families.every((family) => family.anyNotDistributed === false)).toBe(true)
+    const acme = detail!.families.find((family) => family.manufacturerDisplay === 'Acme Airway')
+    expect(acme?.variants.find((variant) => variant.productId === 'PRD-AAA')).toMatchObject({
+      catalogLifecycleContext: 'legacy_active_installed_base',
+    })
+    expect(acme?.catalogLifecycleContext).toBeNull()
+    expect(acme?.distributionStatus).toBeNull()
+  })
+
+  it('summarizes the complete family even when search matches one reviewed variant', () => {
+    const [family] = searchProductFamiliesForRole({ roleCode: 'AIRWAY_STENT', q: 'ALP-100' }, store)
+    expect(family.variants.map((variant) => variant.productId)).toEqual(['PRD-AAA'])
+    expect(family.catalogLifecycleContext).toBeNull()
+    expect(family.distributionStatus).toBeNull()
+  })
+})
+
+describe('distribution evidence', () => {
+  it('preserves conflicts across strong matched package rows and ignores weak matches', () => {
+    const distribution = buildDistributionMap([
+      {
+        product_id: 'PRD-CONFLICT',
+        match_strength: 'manufacturer_and_catalog_number',
+        gudid_distribution_status: 'In Commercial Distribution',
+      },
+      {
+        product_id: 'PRD-CONFLICT',
+        match_strength: 'manufacturer_and_catalog_number',
+        gudid_distribution_status: 'Not in Commercial Distribution',
+      },
+      {
+        product_id: 'PRD-WEAK',
+        match_strength: 'catalog_number_only',
+        gudid_distribution_status: 'Not in Commercial Distribution',
+      },
+    ])
+
+    expect(distribution.get('PRD-CONFLICT')).toBe('conflicting')
+    expect(distribution.has('PRD-WEAK')).toBe(false)
+  })
+
+  it('fails closed when recognized and unrecognized strong states are mixed', () => {
+    const distribution = buildDistributionMap([
+      {
+        product_id: 'PRD-FUTURE',
+        match_strength: 'manufacturer_and_catalog_number',
+        gudid_distribution_status: 'In Commercial Distribution',
+      },
+      {
+        product_id: 'PRD-FUTURE',
+        match_strength: 'manufacturer_and_catalog_number',
+        gudid_distribution_status: 'Future distribution state',
+      },
+    ])
+
+    expect(distribution.get('PRD-FUTURE')).toBe('conflicting')
   })
 })

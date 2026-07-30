@@ -1,0 +1,579 @@
+{
+  "formatVersion": 1,
+  "implementationId": "external-review-remediation-v0.1-completed",
+  "reviewId": "external-review-remediation-v0.1",
+  "sourceWorkbook": "IP_External_Review_Focused_Remediation_2026-07-30_completed.xlsx",
+  "sourceWorkbookSha256": "78b112baa0cd84f213eef0c1f014c438e811ac7bafe3e5004c7b4e51dd119b4e",
+  "proposalCorrectionsSha256": "7b42da8eb2fc2fb94bf283af27b777eb07edc396425d384ef12a819afd6e3afd",
+  "notes": "Compiled implementation of the completed external-review workbook. It applies only after external-review-corrections.json so the proposal artifact and its workbook hash remain immutable and reproducible.",
+  "rolesToAdd": [
+    {
+      "role_code": "FLEX_SCOPE_THIN",
+      "category": "Bronchoscopy platform",
+      "role_name": "Thin flexible bronchoscope",
+      "description": "Flexible bronchoscope with a slender insertion tube for smaller airways or access where a standard diagnostic bronchoscope is too large.",
+      "selection_guidance": "Filter by outer diameter, working-channel diameter, airway size, image platform, and current IFU; thin classification does not by itself establish therapeutic-tool compatibility.",
+      "requires_current_ifu": true
+    },
+    {
+      "role_code": "RIGID_BRONCH_ASPIRATION_BIOPSY_NEEDLE",
+      "category": "Rigid bronchoscopy",
+      "role_name": "Rigid bronchoscopy aspiration biopsy needle",
+      "description": "Reusable aspiration biopsy needle configured for use through a compatible rigid bronchoscopy system.",
+      "selection_guidance": "Match straight or angled geometry, diameter, working length, compatible rigid bronchoscope components, reprocessing requirements, and current IFU.",
+      "requires_current_ifu": true
+    },
+    {
+      "role_code": "RIGID_BRONCH_PUNCTURE_NEEDLE",
+      "category": "Rigid bronchoscopy",
+      "role_name": "Rigid bronchoscopy puncture needle",
+      "description": "Reusable puncture needle for histologic sampling through a compatible rigid bronchoscopy system.",
+      "selection_guidance": "Match the required instrument guide, telescope, bronchoscope barrel size, working length, reprocessing requirements, and current IFU.",
+      "requires_current_ifu": true
+    },
+    {
+      "role_code": "ROBOTIC_CATHETER",
+      "category": "Robotic bronchoscopy",
+      "role_name": "Robotic bronchoscopy catheter",
+      "description": "Platform-specific articulating catheter used for robotic bronchoscopic navigation and tool delivery.",
+      "selection_guidance": "Restrict selection to the named robotic platform and generation; confirm tool-channel dimensions, compatible tools, procedure configuration, and current IFU.",
+      "requires_current_ifu": true
+    },
+    {
+      "role_code": "ENDOSCOPY_PROCESSOR_MOUNT_ACCESSORY",
+      "category": "Endoscopy platform",
+      "role_name": "Endoscopy processor mount accessory",
+      "description": "Bracket, pole mount, or support accessory for a named endoscopic image processor or display component.",
+      "selection_guidance": "Treat as catalog-only room equipment unless a local workflow requires it; match the exact processor or display model and current manufacturer instructions.",
+      "requires_current_ifu": true
+    }
+  ],
+  "productRoleMutations": [
+    {
+      "reviewKey": "PRODUCT:PRD-57DAB5ECAE",
+      "productId": "PRD-57DAB5ECAE",
+      "expectRoleCode": "FLEX_SCOPE_DIAGNOSTIC",
+      "setRoleCode": "FLEX_SCOPE_DIAGNOSTIC",
+      "expectRoleFit": "Primary",
+      "setRoleFit": "Compatible"
+    },
+    {
+      "reviewKey": "PRODUCT:PRD-2F1A67DE53",
+      "productId": "PRD-2F1A67DE53",
+      "expectRoleCode": "TBNA_NEEDLE_CONVENTIONAL",
+      "setRoleCode": "RIGID_BRONCH_ASPIRATION_BIOPSY_NEEDLE",
+      "expectRoleFit": "Exact",
+      "setRoleFit": "Exact"
+    },
+    {
+      "reviewKey": "PRODUCT:PRD-934DA56D92",
+      "productId": "PRD-934DA56D92",
+      "expectRoleCode": "TBNA_NEEDLE_CONVENTIONAL",
+      "setRoleCode": "RIGID_BRONCH_PUNCTURE_NEEDLE",
+      "expectRoleFit": "Exact",
+      "setRoleFit": "Exact"
+    },
+    {
+      "reviewKey": "PRODUCT:PRD-DF989CBDCB",
+      "productId": "PRD-DF989CBDCB",
+      "expectRoleCode": "TBNA_NEEDLE_CONVENTIONAL",
+      "setRoleCode": "RIGID_BRONCH_ASPIRATION_BIOPSY_NEEDLE",
+      "expectRoleFit": "Exact",
+      "setRoleFit": "Exact"
+    },
+    {
+      "reviewKey": "PRODUCT:PRD-48C48C68BA",
+      "productId": "PRD-48C48C68BA",
+      "expectRoleCode": "NAV_CATHETER_GUIDE",
+      "setRoleCode": "ROBOTIC_CATHETER",
+      "expectRoleFit": "Primary",
+      "setRoleFit": "Primary"
+    },
+    {
+      "reviewKey": "PRODUCT:PRD-FDAC925AF1",
+      "productId": "PRD-FDAC925AF1",
+      "expectRoleCode": "NAV_PLATFORM_ACCESSORY",
+      "setRoleCode": "ENDOSCOPY_PROCESSOR_MOUNT_ACCESSORY",
+      "expectRoleFit": "Primary",
+      "setRoleFit": "Primary"
+    }
+  ],
+  "productRoleAdditions": [
+    {
+      "reviewKey": "PRODUCT:PRD-57DAB5ECAE",
+      "expectAbsent": true,
+      "value": {
+        "product_id": "PRD-57DAB5ECAE",
+        "role_code": "FLEX_SCOPE_THIN",
+        "role_fit": "Primary",
+        "notes": "Thin 4.9 mm outer-diameter bronchoscope with a 2.0 mm instrument channel; external review retained its diagnostic exact-slot use as a compatible installed-base exception."
+      }
+    }
+  ],
+  "slotOptionRemovals": [
+    {
+      "reviewKey": "PRODUCT:PRD-2F1A67DE53",
+      "slotId": "SLOT-9363E589C4",
+      "productId": "PRD-2F1A67DE53",
+      "expectRoleCode": "TBNA_NEEDLE_CONVENTIONAL"
+    },
+    {
+      "reviewKey": "PRODUCT:PRD-934DA56D92",
+      "slotId": "SLOT-9363E589C4",
+      "productId": "PRD-934DA56D92",
+      "expectRoleCode": "TBNA_NEEDLE_CONVENTIONAL"
+    },
+    {
+      "reviewKey": "PRODUCT:PRD-DF989CBDCB",
+      "slotId": "SLOT-9363E589C4",
+      "productId": "PRD-DF989CBDCB",
+      "expectRoleCode": "TBNA_NEEDLE_CONVENTIONAL"
+    },
+    {
+      "reviewKey": "PRODUCT:PRD-48C48C68BA",
+      "slotId": "SLOT-09EF760638",
+      "productId": "PRD-48C48C68BA",
+      "expectRoleCode": "NAV_CATHETER_GUIDE"
+    }
+  ],
+  "expectedAbsentSlotOptions": [
+    {
+      "reviewKey": "PRODUCT:PRD-FDAC925AF1",
+      "slotId": "SLOT-763A2D63F1",
+      "productId": "PRD-FDAC925AF1"
+    },
+    {
+      "reviewKey": "PRODUCT:PRD-FDAC925AF1",
+      "slotId": "SLOT-B6ED05FBC7",
+      "productId": "PRD-FDAC925AF1"
+    },
+    {
+      "reviewKey": "PRODUCT:PRD-FDAC925AF1",
+      "slotId": "SLOT-BC6864D752",
+      "productId": "PRD-FDAC925AF1"
+    },
+    {
+      "reviewKey": "PRODUCT:PRD-FDAC925AF1",
+      "slotId": "SLOT-DD40010751",
+      "productId": "PRD-FDAC925AF1"
+    }
+  ],
+  "slotOptionUpserts": [
+    {
+      "reviewKey": "SLOT:SLOT-022D0D3DC6:PRD-2F1DF55F3C",
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-022D0D3DC6",
+        "product_id": "PRD-2F1DF55F3C",
+        "role_code": "GENERIC_DRAINAGE_UNIT",
+        "eligibility_status": "Clinician-reviewed catalog option",
+        "visible_by_default": false,
+        "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "standard"
+      }
+    },
+    {
+      "reviewKey": "SLOT:SLOT-022D0D3DC6:PRD-94C61697D9",
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-022D0D3DC6",
+        "product_id": "PRD-94C61697D9",
+        "role_code": "GENERIC_DRAINAGE_UNIT",
+        "eligibility_status": "Clinician-reviewed catalog option",
+        "visible_by_default": false,
+        "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "standard"
+      }
+    },
+    {
+      "reviewKey": "SLOT:SLOT-022D0D3DC6:PRD-A31173136E",
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-022D0D3DC6",
+        "product_id": "PRD-A31173136E",
+        "role_code": "GENERIC_DRAINAGE_UNIT",
+        "eligibility_status": "Clinician-reviewed catalog option",
+        "visible_by_default": false,
+        "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "standard"
+      }
+    },
+    {
+      "reviewKey": "SLOT:SLOT-022D0D3DC6:PRD-9336231788",
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-022D0D3DC6",
+        "product_id": "PRD-9336231788",
+        "role_code": "GENERIC_DRAINAGE_UNIT",
+        "eligibility_status": "Clinician-reviewed catalog option",
+        "visible_by_default": false,
+        "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "standard"
+      }
+    },
+    {
+      "reviewKey": "SLOT:SLOT-022D0D3DC6:PRD-925F0C99C6",
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-022D0D3DC6",
+        "product_id": "PRD-925F0C99C6",
+        "role_code": "GENERIC_DRAINAGE_UNIT",
+        "eligibility_status": "Clinician-reviewed catalog option",
+        "visible_by_default": false,
+        "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "standard"
+      }
+    },
+    {
+      "reviewKey": "SLOT:SLOT-022D0D3DC6:PRD-8CBA34433F",
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-022D0D3DC6",
+        "product_id": "PRD-8CBA34433F",
+        "role_code": "GENERIC_DRAINAGE_UNIT",
+        "eligibility_status": "Clinician-reviewed catalog option",
+        "visible_by_default": false,
+        "reason": "External clinician exact-slot review approved this infant/pediatric chest drainage unit as a selectable, non-default catalog option; population metadata is retained, no brand preference is implied, and stocking remains hospital-local.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "standard"
+      }
+    },
+    {
+      "reviewKey": "SLOT:SLOT-3631C94D7A:PRD-2F1DF55F3C",
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-3631C94D7A",
+        "product_id": "PRD-2F1DF55F3C",
+        "role_code": "GENERIC_DRAINAGE_UNIT",
+        "eligibility_status": "Clinician-reviewed catalog option",
+        "visible_by_default": false,
+        "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "standard"
+      }
+    },
+    {
+      "reviewKey": "SLOT:SLOT-3631C94D7A:PRD-94C61697D9",
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-3631C94D7A",
+        "product_id": "PRD-94C61697D9",
+        "role_code": "GENERIC_DRAINAGE_UNIT",
+        "eligibility_status": "Clinician-reviewed catalog option",
+        "visible_by_default": false,
+        "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "standard"
+      }
+    },
+    {
+      "reviewKey": "SLOT:SLOT-3631C94D7A:PRD-A31173136E",
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-3631C94D7A",
+        "product_id": "PRD-A31173136E",
+        "role_code": "GENERIC_DRAINAGE_UNIT",
+        "eligibility_status": "Clinician-reviewed catalog option",
+        "visible_by_default": false,
+        "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "standard"
+      }
+    },
+    {
+      "reviewKey": "SLOT:SLOT-3631C94D7A:PRD-9336231788",
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-3631C94D7A",
+        "product_id": "PRD-9336231788",
+        "role_code": "GENERIC_DRAINAGE_UNIT",
+        "eligibility_status": "Clinician-reviewed catalog option",
+        "visible_by_default": false,
+        "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "standard"
+      }
+    },
+    {
+      "reviewKey": "SLOT:SLOT-3631C94D7A:PRD-925F0C99C6",
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-3631C94D7A",
+        "product_id": "PRD-925F0C99C6",
+        "role_code": "GENERIC_DRAINAGE_UNIT",
+        "eligibility_status": "Clinician-reviewed catalog option",
+        "visible_by_default": false,
+        "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "standard"
+      }
+    },
+    {
+      "reviewKey": "SLOT:SLOT-3631C94D7A:PRD-8CBA34433F",
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-3631C94D7A",
+        "product_id": "PRD-8CBA34433F",
+        "role_code": "GENERIC_DRAINAGE_UNIT",
+        "eligibility_status": "Clinician-reviewed catalog option",
+        "visible_by_default": false,
+        "reason": "External clinician exact-slot review approved this infant/pediatric chest drainage unit as a selectable, non-default catalog option; population metadata is retained, no brand preference is implied, and stocking remains hospital-local.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "standard"
+      }
+    },
+    {
+      "reviewKey": "SLOT:SLOT-AA3C2EAA6D:PRD-2F1DF55F3C",
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-AA3C2EAA6D",
+        "product_id": "PRD-2F1DF55F3C",
+        "role_code": "GENERIC_DRAINAGE_UNIT",
+        "eligibility_status": "Clinician-reviewed catalog option",
+        "visible_by_default": false,
+        "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "standard"
+      }
+    },
+    {
+      "reviewKey": "SLOT:SLOT-AA3C2EAA6D:PRD-94C61697D9",
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-AA3C2EAA6D",
+        "product_id": "PRD-94C61697D9",
+        "role_code": "GENERIC_DRAINAGE_UNIT",
+        "eligibility_status": "Clinician-reviewed catalog option",
+        "visible_by_default": false,
+        "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "standard"
+      }
+    },
+    {
+      "reviewKey": "SLOT:SLOT-AA3C2EAA6D:PRD-A31173136E",
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-AA3C2EAA6D",
+        "product_id": "PRD-A31173136E",
+        "role_code": "GENERIC_DRAINAGE_UNIT",
+        "eligibility_status": "Clinician-reviewed catalog option",
+        "visible_by_default": false,
+        "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "standard"
+      }
+    },
+    {
+      "reviewKey": "SLOT:SLOT-AA3C2EAA6D:PRD-9336231788",
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-AA3C2EAA6D",
+        "product_id": "PRD-9336231788",
+        "role_code": "GENERIC_DRAINAGE_UNIT",
+        "eligibility_status": "Clinician-reviewed catalog option",
+        "visible_by_default": false,
+        "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "standard"
+      }
+    },
+    {
+      "reviewKey": "SLOT:SLOT-AA3C2EAA6D:PRD-925F0C99C6",
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-AA3C2EAA6D",
+        "product_id": "PRD-925F0C99C6",
+        "role_code": "GENERIC_DRAINAGE_UNIT",
+        "eligibility_status": "Clinician-reviewed catalog option",
+        "visible_by_default": false,
+        "reason": "External clinician exact-slot review approved this chest drainage unit as a selectable, non-default catalog option; no brand or model preference is implied and stocking remains hospital-local.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "standard"
+      }
+    },
+    {
+      "reviewKey": "SLOT:SLOT-AA3C2EAA6D:PRD-8CBA34433F",
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-AA3C2EAA6D",
+        "product_id": "PRD-8CBA34433F",
+        "role_code": "GENERIC_DRAINAGE_UNIT",
+        "eligibility_status": "Clinician-reviewed catalog option",
+        "visible_by_default": false,
+        "reason": "External clinician exact-slot review approved this infant/pediatric chest drainage unit as a selectable, non-default catalog option; population metadata is retained, no brand preference is implied, and stocking remains hospital-local.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "standard"
+      }
+    }
+  ],
+  "compatibilityAdditions": [
+    {
+      "reviewKey": "PRODUCT:PRD-934DA56D92",
+      "expectAbsent": true,
+      "value": {
+        "rule_id": "CMP-96CEB218E5",
+        "source_product_or_role": "PRD-934DA56D92",
+        "relationship": "requires instrument guide",
+        "target_product_or_role": "PRD-1C70287572",
+        "rule_text": "Karl Storz 10435A is used through Instrument Guide 10329A.",
+        "verification_status": "Verified - legacy manufacturer catalog and completed external clinical review; confirm current IFU and system configuration.",
+        "source_id": "SRC030",
+        "resolved_source_type": "product",
+        "resolved_source_id": "PRD-934DA56D92",
+        "resolved_target_type": "product",
+        "resolved_target_id": "PRD-1C70287572",
+        "verification_grade": "verified_source"
+      }
+    },
+    {
+      "reviewKey": "PRODUCT:PRD-934DA56D92",
+      "expectAbsent": true,
+      "value": {
+        "rule_id": "CMP-239F37772D",
+        "source_product_or_role": "PRD-934DA56D92",
+        "relationship": "compatible telescope",
+        "target_product_or_role": "PRD-EC45CB0F5D",
+        "rule_text": "Karl Storz 10435A is compatible with HOPKINS Telescope 10320AA when used in the specified rigid bronchoscopy configuration.",
+        "verification_status": "Verified - legacy manufacturer catalog and completed external clinical review; confirm current IFU and system configuration.",
+        "source_id": "SRC030",
+        "resolved_source_type": "product",
+        "resolved_source_id": "PRD-934DA56D92",
+        "resolved_target_type": "product",
+        "resolved_target_id": "PRD-EC45CB0F5D",
+        "verification_grade": "verified_source"
+      }
+    },
+    {
+      "reviewKey": "PRODUCT:PRD-934DA56D92",
+      "expectAbsent": true,
+      "value": {
+        "rule_id": "CMP-3712F5462E",
+        "source_product_or_role": "PRD-934DA56D92",
+        "relationship": "compatible bronchoscope",
+        "target_product_or_role": "PRD-6707AC67D1",
+        "rule_text": "Karl Storz 10435A is compatible with Universal Bronchoscope 10318B, size 8.5, in the specified rigid bronchoscopy configuration.",
+        "verification_status": "Verified - legacy manufacturer catalog and completed external clinical review; confirm current IFU and system configuration.",
+        "source_id": "SRC030",
+        "resolved_source_type": "product",
+        "resolved_source_id": "PRD-934DA56D92",
+        "resolved_target_type": "product",
+        "resolved_target_id": "PRD-6707AC67D1",
+        "verification_grade": "verified_source"
+      }
+    },
+    {
+      "reviewKey": "PRODUCT:PRD-934DA56D92",
+      "expectAbsent": true,
+      "value": {
+        "rule_id": "CMP-B102667F8B",
+        "source_product_or_role": "PRD-934DA56D92",
+        "relationship": "compatible bronchoscope",
+        "target_product_or_role": "PRD-D273A067EA",
+        "rule_text": "Karl Storz 10435A is compatible with Universal Bronchoscope 10318C, size 7.5, in the specified rigid bronchoscopy configuration.",
+        "verification_status": "Verified - legacy manufacturer catalog and completed external clinical review; confirm current IFU and system configuration.",
+        "source_id": "SRC030",
+        "resolved_source_type": "product",
+        "resolved_source_id": "PRD-934DA56D92",
+        "resolved_target_type": "product",
+        "resolved_target_id": "PRD-D273A067EA",
+        "verification_grade": "verified_source"
+      }
+    },
+    {
+      "reviewKey": "PRODUCT:PRD-934DA56D92",
+      "expectAbsent": true,
+      "value": {
+        "rule_id": "CMP-D28A978526",
+        "source_product_or_role": "PRD-934DA56D92",
+        "relationship": "compatible bronchoscope",
+        "target_product_or_role": "PRD-5D0F775ADC",
+        "rule_text": "Karl Storz 10435A is compatible with Universal Bronchoscope 10318D, size 6.5, in the specified rigid bronchoscopy configuration.",
+        "verification_status": "Verified - legacy manufacturer catalog and completed external clinical review; confirm current IFU and system configuration.",
+        "source_id": "SRC030",
+        "resolved_source_type": "product",
+        "resolved_source_id": "PRD-934DA56D92",
+        "resolved_target_type": "product",
+        "resolved_target_id": "PRD-5D0F775ADC",
+        "verification_grade": "verified_source"
+      }
+    },
+    {
+      "reviewKey": "PRODUCT:PRD-48C48C68BA",
+      "expectAbsent": true,
+      "value": {
+        "rule_id": "CMP-E56428C687",
+        "source_product_or_role": "PRD-48C48C68BA",
+        "relationship": "requires robotic platform",
+        "target_product_or_role": "PRD-DF917ECDBF",
+        "rule_text": "The Ion Fully Articulating Catheter is restricted to the Intuitive Ion Endoluminal System and must not populate generic navigation guide-sheath slots.",
+        "verification_status": "Verified - historical manufacturer brochure and completed external clinical review; confirm the current platform generation and IFU.",
+        "source_id": "SRC037",
+        "resolved_source_type": "product",
+        "resolved_source_id": "PRD-48C48C68BA",
+        "resolved_target_type": "product",
+        "resolved_target_id": "PRD-DF917ECDBF",
+        "verification_grade": "verified_source"
+      }
+    },
+    {
+      "reviewKey": "PRODUCT:PRD-FDAC925AF1",
+      "expectAbsent": true,
+      "value": {
+        "rule_id": "CMP-6DCB3DAE38",
+        "source_product_or_role": "PRD-FDAC925AF1",
+        "relationship": "accessory of endoscopy processor",
+        "target_product_or_role": "PRD-9BB524F077",
+        "rule_text": "The Scivita BRK-S01 bracket mounts or supports the HDVS-S300D visualization endoscopic image processor; it is catalog-only room equipment, not a per-case airway or navigation accessory.",
+        "verification_status": "Verified - current manufacturer/distributor catalog and completed external clinical review; confirm the current processor configuration.",
+        "source_id": "SRC036",
+        "resolved_source_type": "product",
+        "resolved_source_id": "PRD-FDAC925AF1",
+        "resolved_target_type": "product",
+        "resolved_target_id": "PRD-9BB524F077",
+        "verification_grade": "verified_source"
+      }
+    }
+  ]
+}

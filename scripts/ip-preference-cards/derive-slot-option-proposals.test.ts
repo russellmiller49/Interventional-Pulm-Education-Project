@@ -370,14 +370,42 @@ describe('slot-product-option proposal generation', () => {
     expect(() => buildSlotOptionProposalArtifact(input)).toThrow(/has no Product_Roles pair/)
   })
 
-  it('fails a canonical row that violates authored selectability rules', () => {
+  it('fails a default canonical row that is not selectable', () => {
     const input = fixture()
     input.authoredOptions[0].selectable = false
 
     expect(() => buildSlotOptionProposalArtifact(input)).toThrow(
-      /expected true from authored visibility rules/,
+      /visible by default but is not selectable/,
     )
   })
+
+  it('allows a visible installed-base alternative to be selectable without being a default', () => {
+    const input = fixture()
+    input.authoredOptions[0].visible_by_default = false
+    input.authoredOptions[0].selectable = true
+
+    const artifact = buildSlotOptionProposalArtifact(input)
+
+    expect(artifact.summary.authored_canonical_options).toBe(1)
+  })
+
+  it.each([
+    [true, false],
+    [false, true],
+    [true, true],
+  ])(
+    'fails a hidden canonical row with visible_by_default=%s and selectable=%s',
+    (visibleByDefault, selectable) => {
+      const input = fixture()
+      input.products[0].visibility_state = 'hidden'
+      input.authoredOptions[0].visible_by_default = visibleByDefault
+      input.authoredOptions[0].selectable = selectable
+
+      expect(() => buildSlotOptionProposalArtifact(input)).toThrow(
+        /hidden product and must be nondefault and nonselectable/,
+      )
+    },
+  )
 
   it.each([
     ['slot_id', 'SLOT-NOT-KNOWN', /unknown slot SLOT-NOT-KNOWN/],

@@ -64,8 +64,8 @@ Procedure_Slots
 It writes `generated/slot-product-option-proposals.json`. The artifact is deterministic and
 currently records:
 
-- 2,080 authored canonical options;
-- 475 generated unreviewed proposals;
+- 2,073 current canonical options after the governed proposal and completed-review overlays;
+- 429 generated unreviewed proposals;
 - 0 excluded proposal pairs;
 - 0 stale exceptions; and
 - 0 authored-row or proposal-generation errors.

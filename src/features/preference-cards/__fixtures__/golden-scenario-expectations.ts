@@ -11,6 +11,10 @@
 // the EVIS EUS product line and both ultrasound centres were renamed to carry their model
 // numbers (see seed/product-overrides.json). The card's ultrasound-processor line reads
 // differently, so its content hash moves; the item and suppression counts do not.
+//
+// The two chest-tube fixtures were rehashed when external-review remediation moved the
+// securement/dressing slot from GENERIC_SPECIMEN to DRESSING_SECUREMENT. No item or
+// suppression counts changed.
 export const goldenScenarioExpectations = {
   ebusRoseMolecular: {
     scenarioId: 'ebus-rose-molecular',
@@ -42,7 +46,7 @@ export const goldenScenarioExpectations = {
     readinessState: 'complete_with_warnings',
     itemCount: 11,
     suppressedItemCount: 1,
-    snapshotHash: '0724bc554558f421912d63ab80205f236fc8eeea81d8dc4cbfb3839be0e98783',
+    snapshotHash: '44d9ab11b1d45eb3b74bd0ca0bb69297b278f116c03c6d10771d58787538bc72',
   },
   chestTubeLargeBoreConventional: {
     scenarioId: 'chest-tube',
@@ -50,6 +54,6 @@ export const goldenScenarioExpectations = {
     readinessState: 'complete_with_warnings',
     itemCount: 12,
     suppressedItemCount: 0,
-    snapshotHash: '31f3d27d2a21f1fe50e81d8eb1b94a5e8e3ee1962300b9b249c77532851eb529',
+    snapshotHash: '3f4164d8927e3adced21e3240a496e4594652c461ba76defd6b09e35521c01c1',
   },
 } as const

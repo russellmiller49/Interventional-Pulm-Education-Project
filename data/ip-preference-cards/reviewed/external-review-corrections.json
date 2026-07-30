@@ -1,0 +1,572 @@
+{
+  "formatVersion": 1,
+  "reviewId": "external-review-remediation-v0.1",
+  "notes": "Governed corrections from the external clinical-use review. Every split and exact-slot transition declares the complete expected pre-remediation cohort so catalog drift fails closed.",
+  "rolesToAdd": [
+    {
+      "role_code": "TBNA_NEEDLE_CONVENTIONAL",
+      "category": "Sampling",
+      "role_name": "Conventional TBNA needle",
+      "description": "Non-EBUS transbronchial aspiration needle used through a conventional bronchoscope.",
+      "selection_guidance": "Filter by gauge, sheath diameter, working length, and minimum working channel; confirm the current IFU.",
+      "requires_current_ifu": true
+    },
+    {
+      "role_code": "NAV_TBNA_NEEDLE",
+      "category": "Peripheral bronchoscopy",
+      "role_name": "Navigation-compatible TBNA needle",
+      "description": "Aspiration needle intended for a named electromagnetic or catheter-navigation workflow.",
+      "selection_guidance": "Match the needle to the navigation platform, catheter or guide, working length, channel size, and current IFU.",
+      "requires_current_ifu": true
+    },
+    {
+      "role_code": "ROBOTIC_BIOPSY_NEEDLE",
+      "category": "Robotic bronchoscopy",
+      "role_name": "Robotic bronchoscopy biopsy needle",
+      "description": "Biopsy or aspiration needle intended for a named robotic bronchoscopy platform.",
+      "selection_guidance": "Match the needle to the robotic platform, bronchoscope or catheter, working length, channel size, and current IFU.",
+      "requires_current_ifu": true
+    },
+    {
+      "role_code": "ROBOTIC_BRONCH_PLATFORM",
+      "category": "Robotic bronchoscopy",
+      "role_name": "Robotic bronchoscopy platform",
+      "description": "Capital platform used to navigate and control a robotic bronchoscopy system.",
+      "selection_guidance": "Treat as installed capital equipment; match all scopes, catheters, kits, and accessories to the exact platform generation and current IFU.",
+      "requires_current_ifu": true
+    },
+    {
+      "role_code": "ROBOTIC_BRONCHOSCOPE",
+      "category": "Robotic bronchoscopy",
+      "role_name": "Robotic bronchoscope",
+      "description": "Reusable, reprocessed, or single-use bronchoscope designed for a named robotic bronchoscopy platform.",
+      "selection_guidance": "Match the bronchoscope to the exact robotic platform generation and compatible procedure kit, accessories, and current IFU.",
+      "requires_current_ifu": true
+    },
+    {
+      "role_code": "NAV_CATHETER_GUIDE",
+      "category": "Peripheral bronchoscopy",
+      "role_name": "Navigation catheter or guide",
+      "description": "Catheter, guide sheath, or scope guide used to direct peripheral bronchoscopy sampling tools.",
+      "selection_guidance": "Match the guide to the bronchoscope channel, navigation platform, working length, compatible tools, and current IFU.",
+      "requires_current_ifu": true
+    },
+    {
+      "role_code": "NAV_ACCESSORY_SENSOR",
+      "category": "Peripheral bronchoscopy",
+      "role_name": "Navigation sensor or patient patch",
+      "description": "Sensor, electromagnetic patch, or related localization accessory for a navigation platform.",
+      "selection_guidance": "Match the sensor or patch to the exact platform generation, procedure configuration, and current IFU.",
+      "requires_current_ifu": true
+    },
+    {
+      "role_code": "ENB_PROCEDURE_KIT",
+      "category": "Peripheral bronchoscopy",
+      "role_name": "Electromagnetic navigation bronchoscopy procedure kit",
+      "description": "Single-procedure kit containing platform-specific navigation accessories.",
+      "selection_guidance": "Match the kit to the exact navigation platform, catheter workflow, and current IFU.",
+      "requires_current_ifu": true
+    },
+    {
+      "role_code": "NAV_PLATFORM_ACCESSORY",
+      "category": "Peripheral bronchoscopy",
+      "role_name": "Navigation platform accessory",
+      "description": "Controller, cart, field generator, connector, mount, bracket, or other accessory for a named navigation or robotic platform.",
+      "selection_guidance": "Match the accessory to the exact platform and generation; do not treat capital components as disposable catheter guides.",
+      "requires_current_ifu": true
+    },
+    {
+      "role_code": "NAV_BRONCHOSCOPE_ADAPTER",
+      "category": "Peripheral bronchoscopy",
+      "role_name": "Navigation bronchoscope adapter",
+      "description": "Adapter used to connect a bronchoscope to a named navigation platform or catheter workflow.",
+      "selection_guidance": "Match the adapter to the bronchoscope model, navigation platform, and current IFU.",
+      "requires_current_ifu": true
+    },
+    {
+      "role_code": "ROBOTIC_PROCEDURE_KIT",
+      "category": "Robotic bronchoscopy",
+      "role_name": "Robotic bronchoscopy procedure kit",
+      "description": "Single-procedure introducer or accessory kit for a named robotic bronchoscopy platform.",
+      "selection_guidance": "Match the kit to the exact robotic platform, bronchoscope or catheter, and current IFU.",
+      "requires_current_ifu": true
+    },
+    {
+      "role_code": "BIOPSY_FORCEPS_ENERGY_ENABLED",
+      "category": "Sampling",
+      "role_name": "Energy-enabled biopsy forceps",
+      "description": "Biopsy forceps designed to use electrosurgical energy rather than function as ordinary cold forceps.",
+      "selection_guidance": "Confirm bronchoscope channel fit and compatibility with the selected energy platform, accessories, settings, airway-fire precautions, and current IFU.",
+      "requires_current_ifu": true
+    },
+    {
+      "role_code": "DRESSING_SECUREMENT",
+      "category": "Generic supply",
+      "role_name": "Dressing and securement supplies",
+      "description": "Dressings, securement devices, sutures, labels, and related post-procedure site-care materials.",
+      "selection_guidance": "Use the organization-specific dressing and securement standard for the access site or indwelling device.",
+      "requires_current_ifu": false
+    }
+  ],
+  "deprecatedRoleAliases": [
+    {
+      "roleCode": "TBNA_NEEDLE",
+      "replacementRoleCodes": [
+        "TBNA_NEEDLE_CONVENTIONAL",
+        "NAV_TBNA_NEEDLE",
+        "ROBOTIC_BIOPSY_NEEDLE"
+      ],
+      "note": "Retained as a deprecated source-workbook vocabulary trace; no products or exact slots remain assigned after remediation."
+    },
+    {
+      "roleCode": "GUIDING_DEVICE",
+      "replacementRoleCodes": [
+        "ROBOTIC_BRONCH_PLATFORM",
+        "ROBOTIC_BRONCHOSCOPE",
+        "NAV_CATHETER_GUIDE",
+        "NAV_ACCESSORY_SENSOR",
+        "ENB_PROCEDURE_KIT",
+        "NAV_PLATFORM_ACCESSORY",
+        "NAV_BRONCHOSCOPE_ADAPTER",
+        "ROBOTIC_PROCEDURE_KIT"
+      ],
+      "note": "Retained as a deprecated source-workbook vocabulary trace; no products or exact slots remain assigned after remediation."
+    }
+  ],
+  "productRoleSplits": [
+    {
+      "expectRoleCode": "TBNA_NEEDLE",
+      "groups": [
+        {
+          "setRoleCode": "TBNA_NEEDLE_CONVENTIONAL",
+          "productIds": [
+            "PRD-152A0BFA3B",
+            "PRD-2F1A67DE53",
+            "PRD-5788C21B1E",
+            "PRD-77145058F8",
+            "PRD-7E601C1D9F",
+            "PRD-934DA56D92",
+            "PRD-A457429809",
+            "PRD-D4228B0E6F",
+            "PRD-DF989CBDCB",
+            "PRD-E803315936",
+            "PRD-F408B46806"
+          ]
+        },
+        {
+          "setRoleCode": "NAV_TBNA_NEEDLE",
+          "productIds": [
+            "PRD-2274D463B7",
+            "PRD-25415AA480",
+            "PRD-345BB869C9",
+            "PRD-39777E7C38",
+            "PRD-55DAFF2A37",
+            "PRD-DCF0AFE654"
+          ]
+        },
+        {
+          "setRoleCode": "ROBOTIC_BIOPSY_NEEDLE",
+          "productIds": ["PRD-7397B6CA00", "PRD-8A4A27BDD7", "PRD-B61DBDED5A", "PRD-F43740CB5C"]
+        }
+      ]
+    },
+    {
+      "expectRoleCode": "GUIDING_DEVICE",
+      "groups": [
+        {
+          "setRoleCode": "ROBOTIC_BRONCH_PLATFORM",
+          "productIds": [
+            "PRD-09AB6CA202",
+            "PRD-0B677E0328",
+            "PRD-C68942362F",
+            "PRD-DF917ECDBF",
+            "PRD-E28782A64A"
+          ]
+        },
+        {
+          "setRoleCode": "ROBOTIC_BRONCHOSCOPE",
+          "productIds": ["PRD-476DD42C80", "PRD-60D298A1B6", "PRD-83A71310E6", "PRD-EF46DA3FE4"]
+        },
+        {
+          "setRoleCode": "ROBOTIC_PROCEDURE_KIT",
+          "productIds": ["PRD-429E40F1F3", "PRD-B625A0B418"]
+        },
+        {
+          "setRoleCode": "NAV_CATHETER_GUIDE",
+          "productIds": ["PRD-29E98A6ED6", "PRD-48C48C68BA", "PRD-707B8A1974"]
+        },
+        {
+          "setRoleCode": "NAV_ACCESSORY_SENSOR",
+          "productIds": ["PRD-296090AB66", "PRD-4C43134B78", "PRD-8D676A6B58"]
+        },
+        {
+          "setRoleCode": "ENB_PROCEDURE_KIT",
+          "productIds": ["PRD-15747FB1A6", "PRD-5D2D6B7B4B", "PRD-FB9AE5D0C7"]
+        },
+        {
+          "setRoleCode": "NAV_BRONCHOSCOPE_ADAPTER",
+          "productIds": [
+            "PRD-03124BDA63",
+            "PRD-2645E5185F",
+            "PRD-28A9600774",
+            "PRD-4A6E122B5D",
+            "PRD-53C2DB3A04",
+            "PRD-765CFB31FA",
+            "PRD-FAE7E352C7",
+            "PRD-FC1DF08B67"
+          ]
+        },
+        {
+          "setRoleCode": "NAV_PLATFORM_ACCESSORY",
+          "productIds": [
+            "PRD-2A9186F3F5",
+            "PRD-4AE462CF09",
+            "PRD-4F08144D47",
+            "PRD-77D7F7892F",
+            "PRD-CC913540D8",
+            "PRD-F14A305B8A"
+          ]
+        }
+      ]
+    }
+  ],
+  "productRoleReclassifications": [
+    {
+      "productId": "PRD-FDAC925AF1",
+      "expectRoleCode": "GENERIC_AIRWAY_ADAPTER",
+      "setRoleCode": "NAV_PLATFORM_ACCESSORY"
+    },
+    {
+      "productId": "PRD-58DE7D49C4",
+      "expectRoleCode": "BIOPSY_FORCEPS_FLEX",
+      "setRoleCode": "BIOPSY_FORCEPS_ENERGY_ENABLED"
+    }
+  ],
+  "slotRoleTransitions": [
+    {
+      "slotId": "SLOT-9363E589C4",
+      "expectRoleCode": "TBNA_NEEDLE",
+      "setRoleCode": "TBNA_NEEDLE_CONVENTIONAL",
+      "expectOptionProductIds": [
+        "PRD-152A0BFA3B",
+        "PRD-2274D463B7",
+        "PRD-25415AA480",
+        "PRD-2F1A67DE53",
+        "PRD-345BB869C9",
+        "PRD-39777E7C38",
+        "PRD-55DAFF2A37",
+        "PRD-5788C21B1E",
+        "PRD-7397B6CA00",
+        "PRD-77145058F8",
+        "PRD-7E601C1D9F",
+        "PRD-8A4A27BDD7",
+        "PRD-934DA56D92",
+        "PRD-A457429809",
+        "PRD-D4228B0E6F",
+        "PRD-DCF0AFE654",
+        "PRD-DF989CBDCB",
+        "PRD-E803315936",
+        "PRD-F408B46806",
+        "PRD-F43740CB5C"
+      ],
+      "retainOptionProductIds": [
+        "PRD-152A0BFA3B",
+        "PRD-2F1A67DE53",
+        "PRD-5788C21B1E",
+        "PRD-77145058F8",
+        "PRD-7E601C1D9F",
+        "PRD-934DA56D92",
+        "PRD-A457429809",
+        "PRD-D4228B0E6F",
+        "PRD-DF989CBDCB",
+        "PRD-E803315936",
+        "PRD-F408B46806"
+      ]
+    },
+    {
+      "slotId": "SLOT-09EF760638",
+      "expectRoleCode": "GUIDING_DEVICE",
+      "setRoleCode": "NAV_CATHETER_GUIDE",
+      "expectOptionProductIds": [
+        "PRD-03124BDA63",
+        "PRD-15747FB1A6",
+        "PRD-2645E5185F",
+        "PRD-28A9600774",
+        "PRD-296090AB66",
+        "PRD-48C48C68BA",
+        "PRD-4A6E122B5D",
+        "PRD-53C2DB3A04",
+        "PRD-5D2D6B7B4B",
+        "PRD-707B8A1974",
+        "PRD-765CFB31FA",
+        "PRD-CC913540D8",
+        "PRD-DF917ECDBF",
+        "PRD-FAE7E352C7",
+        "PRD-FB9AE5D0C7",
+        "PRD-FC1DF08B67"
+      ],
+      "retainOptionProductIds": ["PRD-48C48C68BA", "PRD-707B8A1974"]
+    },
+    {
+      "slotId": "SLOT-01010CB364",
+      "expectRoleCode": "GENERIC_SPECIMEN",
+      "setRoleCode": "DRESSING_SECUREMENT",
+      "expectOptionProductIds": [],
+      "retainOptionProductIds": []
+    },
+    {
+      "slotId": "SLOT-126F71E1BD",
+      "expectRoleCode": "GENERIC_SPECIMEN",
+      "setRoleCode": "DRESSING_SECUREMENT",
+      "expectOptionProductIds": [],
+      "retainOptionProductIds": []
+    },
+    {
+      "slotId": "SLOT-23A6DA3B89",
+      "expectRoleCode": "GENERIC_SPECIMEN",
+      "setRoleCode": "DRESSING_SECUREMENT",
+      "expectOptionProductIds": [],
+      "retainOptionProductIds": []
+    },
+    {
+      "slotId": "SLOT-4BE1D79D6C",
+      "expectRoleCode": "GENERIC_SPECIMEN",
+      "setRoleCode": "DRESSING_SECUREMENT",
+      "expectOptionProductIds": [],
+      "retainOptionProductIds": []
+    }
+  ],
+  "productSlotOptionRemovals": [
+    {
+      "productId": "PRD-FDAC925AF1",
+      "expectRoleCode": "GENERIC_AIRWAY_ADAPTER",
+      "expectSlotIds": ["SLOT-763A2D63F1", "SLOT-B6ED05FBC7", "SLOT-BC6864D752", "SLOT-DD40010751"]
+    },
+    {
+      "productId": "PRD-58DE7D49C4",
+      "expectRoleCode": "BIOPSY_FORCEPS_FLEX",
+      "expectSlotIds": ["SLOT-05F71417F2", "SLOT-B138BA994E", "SLOT-D2974FC11B", "SLOT-EFF8BA9B93"]
+    }
+  ],
+  "slotOptionUpserts": [
+    {
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-D49EAA8281",
+        "product_id": "PRD-88E003F12B",
+        "role_code": "FLEX_SCOPE_THERAPEUTIC",
+        "eligibility_status": "Reviewed installed-base option",
+        "visible_by_default": false,
+        "reason": "External review retained this legacy Olympus 180-series scope for installed-base selection only.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "installed_base"
+      }
+    },
+    {
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-94783C387D",
+        "product_id": "PRD-88E003F12B",
+        "role_code": "FLEX_SCOPE_THERAPEUTIC",
+        "eligibility_status": "Reviewed installed-base option",
+        "visible_by_default": false,
+        "reason": "External review retained this legacy Olympus 180-series scope for installed-base selection only.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "installed_base"
+      }
+    },
+    {
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-B79D3CF198",
+        "product_id": "PRD-88E003F12B",
+        "role_code": "FLEX_SCOPE_THERAPEUTIC",
+        "eligibility_status": "Reviewed installed-base option",
+        "visible_by_default": false,
+        "reason": "External review retained this legacy Olympus 180-series scope for installed-base selection only.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "installed_base"
+      }
+    },
+    {
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-D49EAA8281",
+        "product_id": "PRD-815B93A920",
+        "role_code": "FLEX_SCOPE_THERAPEUTIC",
+        "eligibility_status": "Reviewed installed-base option",
+        "visible_by_default": false,
+        "reason": "External review retained this legacy Olympus 180-series scope for installed-base selection only.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "installed_base"
+      }
+    },
+    {
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-94783C387D",
+        "product_id": "PRD-815B93A920",
+        "role_code": "FLEX_SCOPE_THERAPEUTIC",
+        "eligibility_status": "Reviewed installed-base option",
+        "visible_by_default": false,
+        "reason": "External review retained this legacy Olympus 180-series scope for installed-base selection only.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "installed_base"
+      }
+    },
+    {
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-B79D3CF198",
+        "product_id": "PRD-815B93A920",
+        "role_code": "FLEX_SCOPE_THERAPEUTIC",
+        "eligibility_status": "Reviewed installed-base option",
+        "visible_by_default": false,
+        "reason": "External review retained this legacy Olympus 180-series scope for installed-base selection only.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "installed_base"
+      }
+    },
+    {
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-34A46FFBA2",
+        "product_id": "PRD-57DAB5ECAE",
+        "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+        "eligibility_status": "Reviewed installed-base option",
+        "visible_by_default": false,
+        "reason": "External review retained this legacy Olympus 180-series scope for installed-base selection only.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "installed_base"
+      }
+    },
+    {
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-34A46FFBA2",
+        "product_id": "PRD-7240BD99DA",
+        "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+        "eligibility_status": "Reviewed installed-base option",
+        "visible_by_default": false,
+        "reason": "External review retained this legacy Olympus 180-series scope for installed-base selection only.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "installed_base"
+      }
+    },
+    {
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-34A46FFBA2",
+        "product_id": "PRD-FB075DFB2D",
+        "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+        "eligibility_status": "Reviewed installed-base option",
+        "visible_by_default": false,
+        "reason": "External review retained this legacy Olympus 180-series scope for installed-base selection only.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "installed_base"
+      }
+    },
+    {
+      "expectAbsent": true,
+      "value": {
+        "slot_id": "SLOT-4648848CC3",
+        "product_id": "PRD-F586C51621",
+        "role_code": "EBUS_SCOPE",
+        "eligibility_status": "Reviewed installed-base option",
+        "visible_by_default": false,
+        "reason": "External review retained this legacy Olympus 180-series scope for installed-base selection only.",
+        "product_visibility": "prototype_visible",
+        "selectable": true,
+        "review_status": "reviewed",
+        "slotting_scope": "installed_base"
+      }
+    }
+  ],
+  "compatibilityAdditions": [
+    {
+      "expectAbsent": true,
+      "value": {
+        "rule_id": "CMP-58DE7D49C4",
+        "source_product_or_role": "PRD-58DE7D49C4",
+        "relationship": "requires compatible energy platform",
+        "target_product_or_role": "GENERIC_ENERGY_PLATFORM",
+        "rule_text": "Hot biopsy forceps require a compatible electrosurgical energy platform and current manufacturer IFU review before use.",
+        "verification_status": "Candidate - external clinical-use review; confirm the generator, accessories, settings, and current IFU.",
+        "source_id": "SRC012",
+        "resolved_source_type": "product",
+        "resolved_source_id": "PRD-58DE7D49C4",
+        "resolved_target_type": "role",
+        "resolved_target_id": "GENERIC_ENERGY_PLATFORM",
+        "verification_grade": "candidate"
+      }
+    }
+  ],
+  "productGovernance": [
+    {
+      "productId": "PRD-88E003F12B",
+      "catalogLifecycleContext": "legacy_active_installed_base",
+      "slottingScope": "installed_base",
+      "preferredNewPurchase": false,
+      "installedBaseExactSlotIds": ["SLOT-D49EAA8281", "SLOT-94783C387D", "SLOT-B79D3CF198"],
+      "lifecycleNote": "Legacy Olympus 180-series therapeutic bronchoscope retained for installed-base workflows; not a preferred new purchase."
+    },
+    {
+      "productId": "PRD-815B93A920",
+      "catalogLifecycleContext": "legacy_active_installed_base",
+      "slottingScope": "installed_base",
+      "preferredNewPurchase": false,
+      "installedBaseExactSlotIds": ["SLOT-D49EAA8281", "SLOT-94783C387D", "SLOT-B79D3CF198"],
+      "lifecycleNote": "Legacy Olympus 180-series therapeutic bronchoscope retained for installed-base workflows; not a preferred new purchase."
+    },
+    {
+      "productId": "PRD-57DAB5ECAE",
+      "catalogLifecycleContext": "legacy_active_installed_base",
+      "slottingScope": "installed_base",
+      "preferredNewPurchase": false,
+      "installedBaseExactSlotIds": ["SLOT-34A46FFBA2"],
+      "lifecycleNote": "Legacy Olympus 180-series diagnostic bronchoscope retained for installed-base workflows; not a preferred new purchase."
+    },
+    {
+      "productId": "PRD-7240BD99DA",
+      "catalogLifecycleContext": "legacy_active_installed_base",
+      "slottingScope": "installed_base",
+      "preferredNewPurchase": false,
+      "installedBaseExactSlotIds": ["SLOT-34A46FFBA2"],
+      "lifecycleNote": "Legacy Olympus 180-series diagnostic bronchoscope retained for installed-base workflows; not a preferred new purchase."
+    },
+    {
+      "productId": "PRD-FB075DFB2D",
+      "catalogLifecycleContext": "legacy_active_installed_base",
+      "slottingScope": "installed_base",
+      "preferredNewPurchase": false,
+      "installedBaseExactSlotIds": ["SLOT-34A46FFBA2"],
+      "lifecycleNote": "Legacy Olympus 180-series diagnostic bronchoscope retained for installed-base workflows; not a preferred new purchase."
+    },
+    {
+      "productId": "PRD-F586C51621",
+      "catalogLifecycleContext": "legacy_active_installed_base",
+      "slottingScope": "installed_base",
+      "preferredNewPurchase": false,
+      "installedBaseExactSlotIds": ["SLOT-4648848CC3"],
+      "lifecycleNote": "Legacy Olympus 180-series EBUS bronchoscope retained for installed-base workflows; not a preferred new purchase."
+    }
+  ]
+}

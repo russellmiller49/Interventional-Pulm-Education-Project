@@ -375,11 +375,15 @@ function validateBaseRelationships(input: {
       )
     }
     if (product) {
-      const expectedSelectable =
-        product.visibility_state === 'prototype_visible' && option.visible_by_default === true
-      if (option.selectable !== expectedSelectable) {
+      const productIsVisible = product.visibility_state === 'prototype_visible'
+      if (!productIsVisible && (option.visible_by_default === true || option.selectable === true)) {
         errors.push(
-          `Authored option ${option.slot_id} × ${option.product_id} has selectable=${String(option.selectable)}; expected ${String(expectedSelectable)} from authored visibility rules.`,
+          `Authored option ${option.slot_id} × ${option.product_id} is attached to a hidden product and must be nondefault and nonselectable.`,
+        )
+      }
+      if (option.visible_by_default === true && option.selectable !== true) {
+        errors.push(
+          `Authored option ${option.slot_id} × ${option.product_id} is visible by default but is not selectable.`,
         )
       }
     }

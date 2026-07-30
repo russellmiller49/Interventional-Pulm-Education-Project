@@ -20,8 +20,8 @@ const REQUIRED_FILES = [
 describe('generated catalog integrity validation', () => {
   it('accepts the committed proposal artifact as a fresh deterministic regeneration', async () => {
     await expect(validateGeneratedCatalog()).resolves.toMatchObject({
-      authoredSlotOptions: 2080,
-      unreviewedSlotOptionProposals: 475,
+      authoredSlotOptions: 2073,
+      unreviewedSlotOptionProposals: 429,
       excludedSlotOptionProposals: 0,
       staleSlotOptionExceptions: 0,
     })

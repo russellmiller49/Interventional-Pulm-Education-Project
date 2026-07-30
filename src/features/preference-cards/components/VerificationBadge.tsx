@@ -1,9 +1,14 @@
-import { BadgeCheck, CircleHelp, FileSearch, PackageX } from 'lucide-react'
+'use client'
+
+import { BadgeCheck, CircleHelp, FileSearch, History, PackageX, TriangleAlert } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/cn'
 
 import type { CatalogVerificationTier } from '../domain/verification'
+import type { CatalogLifecycleContext } from '../server/catalog-store'
+import type { CatalogDistributionStatus } from '../server/catalog'
 
 export interface VerificationBadgeLabels {
   verified: string
@@ -11,13 +16,18 @@ export interface VerificationBadgeLabels {
   unknown: string
   usPending: string
   notDistributed: string
+  conflictingDistribution: string
+  legacyInstalledBase: string
+  legacyInstalledBaseHelp: string
 }
 
 interface VerificationBadgeProps {
   tier: CatalogVerificationTier
   usStatusPending?: boolean
   /** FDA GUDID commercial-distribution status, when a confident match exists. */
-  distributionStatus?: 'in_distribution' | 'not_in_distribution' | null
+  distributionStatus?: CatalogDistributionStatus | null
+  catalogLifecycleContext?: CatalogLifecycleContext
+  lifecycleNote?: string | null
   labels: VerificationBadgeLabels
   className?: string
 }
@@ -26,12 +36,18 @@ export function VerificationBadge({
   tier,
   usStatusPending = false,
   distributionStatus = null,
+  catalogLifecycleContext = 'unknown',
+  lifecycleNote = null,
   labels,
   className,
 }: VerificationBadgeProps) {
   const Icon = tier === 'verified' ? BadgeCheck : tier === 'candidate' ? FileSearch : CircleHelp
   const label =
     tier === 'verified' ? labels.verified : tier === 'candidate' ? labels.candidate : labels.unknown
+  const reviewedLifecycleNote = lifecycleNote?.trim()
+  const lifecycleHelp = reviewedLifecycleNote
+    ? `${labels.legacyInstalledBaseHelp} ${reviewedLifecycleNote}`
+    : labels.legacyInstalledBaseHelp
 
   return (
     <span className={cn('inline-flex flex-wrap items-center gap-1.5', className)}>
@@ -43,10 +59,38 @@ export function VerificationBadge({
         <Icon aria-hidden="true" className="h-3.5 w-3.5" />
         {label}
       </Badge>
+      {catalogLifecycleContext === 'legacy_active_installed_base' ? (
+        <TooltipProvider delayDuration={150}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge
+                variant="secondary"
+                size="sm"
+                className="gap-1 normal-case tracking-normal"
+                title={lifecycleHelp}
+                aria-label={`${labels.legacyInstalledBase}. ${lifecycleHelp}`}
+                tabIndex={0}
+              >
+                <History aria-hidden="true" className="h-3.5 w-3.5" />
+                {labels.legacyInstalledBase}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs normal-case tracking-normal">
+              {lifecycleHelp}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : null}
       {distributionStatus === 'not_in_distribution' ? (
         <Badge variant="destructive" size="sm" className="gap-1 normal-case tracking-normal">
           <PackageX aria-hidden="true" className="h-3.5 w-3.5" />
           {labels.notDistributed}
+        </Badge>
+      ) : null}
+      {distributionStatus === 'conflicting' ? (
+        <Badge variant="destructive" size="sm" className="gap-1 normal-case tracking-normal">
+          <TriangleAlert aria-hidden="true" className="h-3.5 w-3.5" />
+          {labels.conflictingDistribution}
         </Badge>
       ) : null}
       {usStatusPending && distributionStatus !== 'not_in_distribution' ? (
@@ -64,6 +108,7 @@ export interface VerificationLegendLabels extends VerificationBadgeLabels {
   candidateHelp: string
   usPendingHelp: string
   notDistributedHelp: string
+  conflictingDistributionHelp: string
 }
 
 export function VerificationLegend({
@@ -105,6 +150,29 @@ export function VerificationLegend({
             </Badge>
           </dt>
           <dd className="text-muted-foreground">{labels.notDistributedHelp}</dd>
+        </div>
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:gap-3">
+          <dt className="sm:w-32 sm:shrink-0">
+            <Badge variant="destructive" size="sm" className="gap-1 normal-case tracking-normal">
+              <TriangleAlert aria-hidden="true" className="h-3.5 w-3.5" />
+              {labels.conflictingDistribution}
+            </Badge>
+          </dt>
+          <dd className="text-muted-foreground">{labels.conflictingDistributionHelp}</dd>
+        </div>
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:gap-3">
+          <dt className="sm:w-32 sm:shrink-0">
+            <Badge
+              variant="secondary"
+              size="sm"
+              className="gap-1 normal-case tracking-normal"
+              title={labels.legacyInstalledBaseHelp}
+            >
+              <History aria-hidden="true" className="h-3.5 w-3.5" />
+              {labels.legacyInstalledBase}
+            </Badge>
+          </dt>
+          <dd className="text-muted-foreground">{labels.legacyInstalledBaseHelp}</dd>
         </div>
       </dl>
     </div>

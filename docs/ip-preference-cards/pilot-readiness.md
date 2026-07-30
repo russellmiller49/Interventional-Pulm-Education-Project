@@ -51,10 +51,12 @@ DRAFT PROTOTYPE — NOT APPROVED FOR CLINICAL USE
 - Catalog QA is read-only.
 - The verification workbench describes evidence availability and conflicts; it does not record
   reviewer decisions, approve products, release visibility, or establish local formulary state.
-- Exact-slot proposal review is read-only. All 475 proposals remain unreviewed, nonselectable,
-  and separate from the 2,080 authored canonical options.
+- Exact-slot proposal review is read-only. All 429 current proposals remain unreviewed,
+  nonselectable, and separate from the 2,073 canonical options. The 18 drainage options
+  promoted through the completed focused review are selectable but nondefault and do not
+  imply local stocking or brand preference.
 - openFDA high-confidence classifications remain unapproved candidates; they do not alter clinical readiness, procurement status, compatibility, or local formulary state.
-- The 475 current slot-option proposals are unreviewed and nonselectable; broad role equality
+- The 429 current slot-option proposals are unreviewed and nonselectable; broad role equality
   is not exact-slot eligibility.
 - Catalog alternatives and curated defaults are source-data coverage measures. Neither
   establishes compatibility, local approval, or a resolved card's readiness.

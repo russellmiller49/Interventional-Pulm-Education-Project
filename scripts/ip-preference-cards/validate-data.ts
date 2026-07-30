@@ -148,9 +148,9 @@ export async function validateGeneratedCatalog(options?: {
   if (duplicateGroups > 0) {
     throw new Error(`Generated data contains ${duplicateGroups} duplicate identifier groups.`)
   }
-  if (importReport.counts.Slot_Product_Options !== authoredOptions.length) {
+  if (importReport.slot_option_proposals.authored_canonical_options !== authoredOptions.length) {
     throw new Error(
-      `Import report records ${String(importReport.counts.Slot_Product_Options)} authored slot options, but the canonical file contains ${authoredOptions.length}.`,
+      `Proposal generation records ${String(importReport.slot_option_proposals.authored_canonical_options)} authored slot options, but the canonical file contains ${authoredOptions.length}.`,
     )
   }
 
