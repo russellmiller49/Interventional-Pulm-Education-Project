@@ -398,8 +398,11 @@ describe('product detail', () => {
       { roleCode: 'AIRWAY_STENT', roleName: 'Airway stent', roleFit: 'Primary', notes: null },
     ])
     expect(detail?.slots[0]).toMatchObject({
+      slotId: 'SLOT-1',
       procedureName: 'Therapeutic bronchoscopy',
       slotLabel: 'Airway stent',
+      eligibilityStatus: 'Eligible',
+      selectable: true,
     })
     expect(detail?.sources[0]).toMatchObject({
       title: 'Acme Airway Catalog',
