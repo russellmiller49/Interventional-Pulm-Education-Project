@@ -992,7 +992,16 @@ export const ecmoFoundationLessonRuntimes: Readonly<
         settleSeconds: 4,
       },
     ],
-    evidenceIds: [...coreSources, 'elso-adult-va-2021', 'ecmo-book-ch17'],
+    // The two ELSO configuration sources are cited here because this is where the configuration
+    // strategy card is taught in full.
+    evidenceIds: [
+      ...coreSources,
+      'elso-adult-va-2021',
+      'ecmo-book-ch17',
+      'elso-dual-circulation-2024',
+      'elso-maastricht-nomenclature-2019',
+      'elso-neuro-monitoring-2024',
+    ],
   },
 
   'va-normal-state': {
@@ -1224,6 +1233,8 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       'elso-adult-va-2021',
       'elso-neuro-monitoring-2024',
       'ecmo-book-ch17',
+      'elso-dual-circulation-2024',
+      'elso-maastricht-nomenclature-2019',
     ],
   },
 })

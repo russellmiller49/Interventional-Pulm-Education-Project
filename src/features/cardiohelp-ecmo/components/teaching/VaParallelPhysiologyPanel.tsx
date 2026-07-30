@@ -16,6 +16,10 @@ import {
   VA_CONFIGURATION_BOUNDARY,
   VaConfigurationLabel,
 } from './shared'
+import {
+  VA_CONFIGURATION_DIAGRAM_NOTE,
+  VaConfigurationStrategyCard,
+} from './VaConfigurationStrategyCard'
 
 /**
  * VA parallel physiology: two circulations filling one aorta, and the two prices of that.
@@ -473,6 +477,15 @@ export function VaParallelPhysiologyPanel({
           The circuit in parallel with the patient
         </h3>
 
+        {/*
+          Stated at the diagram rather than only in the panel's boundary note. The sequence below is
+          one topology, and a learner who reads it without that sentence has been shown a flow path
+          and told it is "VA".
+        */}
+        <p className="mt-2 text-sm leading-6" data-configuration-diagram-note>
+          {VA_CONFIGURATION_DIAGRAM_NOTE}
+        </p>
+
         <ol className="mt-3 grid gap-2" data-parallel-path>
           {stages.map((stage, index) => (
             <li
@@ -761,6 +774,16 @@ export function VaParallelPhysiologyPanel({
           evidence that arterial return can never be re-drained in any real configuration.
         </ModelBoundary>
       </section>
+
+      {/*
+        Last of the teaching sections, and deliberately so.
+
+        The card generalizes the mechanism this panel has just built — the two streams, the place
+        they meet, the two sampling sites, and what the ventricle is ejecting against — to
+        configurations that put the streams somewhere else. Placed any earlier it would read as a
+        list of rescue procedures offered before the physiology that makes any of them meaningful.
+      */}
+      <VaConfigurationStrategyCard detail="full" headingLevel={3} />
 
       <GuidedValue
         guide={ecmoDerivedValueGuides.recirculationFraction}

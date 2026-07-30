@@ -16,9 +16,11 @@ import {
   VA_CONFIGURATION_BOUNDARY,
   VaConfigurationLabel,
 } from './shared'
+import { VaConfigurationStrategyCard } from './VaConfigurationStrategyCard'
 
 /**
- * One VA presentation, five explanations, and the two reassuring numbers that settle none of them.
+ * One VA presentation, five selected explanations, and the two reassuring numbers that settle none
+ * of them.
  *
  * The VA mirror of the VV capstone, carrying one extra trap: beside displayed circuit flow the
  * console offers an arterial pressure the circuit itself is generating, so there are two
@@ -26,6 +28,14 @@ import {
  * as its VV counterpart — what separates these five is which finding moves and in which direction,
  * not any cut point — and every cell carries the finding that discriminates it and, where this
  * simulation cannot show the mechanism honestly, the limitation that applies.
+ *
+ * The matrix is five columns wide and is **not** the whole differential; its heading says so. A
+ * sixth column was the obvious way to keep cannulated-limb ischemia visible, and it is the wrong
+ * one: five columns of directional prose already need their own horizontal scroller inside the
+ * teaching pane, and a sixth would push the discriminating cells of every row out of view on the way
+ * to reading it. The limb therefore keeps its matrix *row*, where it is compared across the five,
+ * and gains a card of its own beside the matrix — which suits it better in any case, since it is the
+ * one explanation here that no console channel reports and that no other column can exclude.
  *
  * Four of those limitations are load-bearing and were read off the modeled states rather than
  * assumed:
@@ -753,7 +763,7 @@ const modelLimitations: readonly { readonly id: string; readonly text: string }[
   },
   {
     id: 'limb-fixed-across-states',
-    text: 'None of the VA states this lesson loads moves the cannulated limb either: distal limb perfusion reads normal and the NIRS value is fixed across every one of them. Ischemia of the limb distal to an arterial cannula is a real and important VA explanation, and it is one of the few that is found only by examining the limb rather than by reading anything on the console. The row is in the matrix so that it is looked for; this simulation cannot demonstrate it.',
+    text: 'None of the VA states this lesson loads moves the cannulated limb either: distal limb perfusion reads normal and the near-infrared value is fixed across every one of them. Ischemia of the limb distal to an arterial cannula is a real and important VA explanation, and it is one of the few that is found only by examining the limb rather than by reading anything on the console. It keeps a row in the matrix so that it is compared against the five, and a card of its own beside the matrix so that it is not read as a sixth competing column. This simulation cannot demonstrate it, and the absence of a modeled change is not evidence that limb perfusion is adequate.',
   },
   {
     id: 'membrane-preview-also-constrains-flow',
@@ -863,8 +873,15 @@ export function VaIntegrationCapstonePanel({
 
       <section className={styles.section} aria-labelledby="va-hypothesis-matrix-heading">
         <h3 id="va-hypothesis-matrix-heading" className={styles.heading}>
-          What each explanation predicts, and what this case shows
+          Selected high-yield explanations for deterioration with unchanged displayed flow
         </h3>
+        <p className="mt-2 text-sm leading-6" data-matrix-not-exhaustive>
+          Five selected explanations, not a complete differential. These are the competing
+          mechanisms this section holds apart because each one predicts something different
+          somewhere other than the flow display; a deteriorating venoarterial patient can have a
+          cause that appears in no column here, and cannulated-limb ischemia is set out separately
+          below for that reason.
+        </p>
         <p className="mt-2 text-sm leading-6">
           Directions, not numbers. A hypothesis is not excluded because one modeled value is absent
           or because one row does not separate it — a row that discriminates nothing is reported as
@@ -875,8 +892,9 @@ export function VaIntegrationCapstonePanel({
           <table className="w-full min-w-[76rem] text-left text-sm" data-hypothesis-matrix>
             <caption className="sr-only">
               Each observed signal with its live value in the case currently loaded, and the
-              direction each of the five explanations predicts for it, together with what makes that
-              row useful and any limitation that applies.
+              direction each of the five selected explanations predicts for it, together with what
+              makes that row useful and any limitation that applies. These five are not the whole
+              differential; cannulated-limb ischemia is described in its own card after this table.
             </caption>
             <thead>
               <tr>
@@ -989,6 +1007,52 @@ export function VaIntegrationCapstonePanel({
         </ModelBoundary>
       </section>
 
+      {/*
+        Beside the matrix rather than inside it.
+
+        The source curriculum puts cannulated-limb ischemia on this lesson's differential, and the
+        five-column matrix is where the competing mechanisms are held apart. Adding a sixth column of
+        directional prose would make every row of the matrix unreadable in a teaching pane; a card
+        immediately after it keeps the explanation prominent while leaving the comparison usable. The
+        limb still has its own matrix row, so it is compared against all five as well.
+      */}
+      <section
+        className={styles.section}
+        aria-labelledby="va-limb-ischemia-heading"
+        data-additional-va-hypothesis="cannulated-limb-ischemia"
+      >
+        <h3 id="va-limb-ischemia-heading" className={styles.heading}>
+          Additional bedside-only explanation: cannulated-limb ischemia
+        </h3>
+        <p className="mt-2 text-sm leading-6" data-limb-coexists>
+          Ischemia of the limb distal to the arterial cannula belongs on this differential. It may
+          be the whole explanation for a deteriorating patient on its own, and it may equally be
+          present alongside any of the five above — a distended ventricle, differential oxygenation,
+          a failing membrane, an interrupted gas supply or fallen vascular tone. It is not an
+          alternative to them, and finding one of them does not settle the limb.
+        </p>
+        <p className="mt-2 text-sm leading-6" data-limb-no-console-substitute>
+          No signal on this console reliably substitutes for examining the cannulated limb. Whether
+          it is being adequately perfused is established by looking at it and by whatever
+          limb-monitoring approach the program looking after the patient uses — a near-infrared
+          probe where one is in place is one such approach among others, and a single number from it
+          neither establishes nor excludes ischemia on its own. An entirely unremarkable console
+          does not exclude it.
+        </p>
+        <p className="mt-2 text-sm leading-6" data-limb-live-reading>
+          In the state on screen the limb reads {limbPerfusionWord[patient.distalLimbPerfusion]}{' '}
+          with a near-infrared value of {patient.distalLimbNirs.toFixed(0)}. Read that as what this
+          simulation was built to show, not as a finding: both values are fixed.
+        </p>
+        <ModelBoundary>
+          This simulation holds distal-limb perfusion and the near-infrared value fixed across every
+          VA state this lesson can load, so it cannot demonstrate limb ischemia developing. The
+          absence of a modeled change is therefore not evidence that limb perfusion is adequate — it
+          is the model having nothing to say. The bounded action that sends you to look at the limb
+          is in the panel beside this one, and it is there because that look is the measurement.
+        </ModelBoundary>
+      </section>
+
       <section className={styles.section} aria-labelledby="va-presenting-case-heading">
         <h3 id="va-presenting-case-heading" className={styles.heading}>
           Why there is no separate differential-oxygenation preview
@@ -1013,9 +1077,9 @@ export function VaIntegrationCapstonePanel({
           <p className="mt-2 text-sm leading-6">
             The three explanations with previews — loading, the membrane, the gas side — are worth
             loading one at a time and reading against the presenting case. The two without previews
-            are still full members of the differential. Reaching one of them by ruling everything
-            else out is a different, and weaker, piece of reasoning than reaching it by finding what
-            it predicts.
+            are still full members of the differential, as is the cannulated limb described in its
+            own card above. Reaching any of them by ruling everything else out is a different, and
+            weaker, piece of reasoning than reaching it by finding what it predicts.
           </p>
         </div>
       </section>
@@ -1081,6 +1145,16 @@ export function VaIntegrationCapstonePanel({
           is not the window over which a real circuit is trended.
         </ModelBoundary>
       </section>
+
+      {/*
+        The concise configuration card, after the differential rather than inside it.
+
+        These are responses to a mechanism, not causes of deterioration, so none of them is a matrix
+        column. What the capstone needs from the full card in the parallel-physiology section is the
+        distinction between changing what the native stream carries, changing where the circuit gives
+        blood back, and changing how much femoral flow is being run.
+      */}
+      <VaConfigurationStrategyCard detail="concise" headingLevel={3} />
 
       <section className={styles.section} aria-labelledby="va-capstone-limitations-heading">
         <h3 id="va-capstone-limitations-heading" className={styles.heading}>

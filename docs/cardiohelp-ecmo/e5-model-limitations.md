@@ -120,6 +120,70 @@ the preview mid-slide and invited a learner to read a still-moving value as the 
 This was found by a test asserting that every variant not deliberately held is at equilibrium, not
 by inspection — keep that test.
 
+## 6. The simulator models one VA configuration
+
+"VA ECMO" is not one flow topology, and this simulation is one of them: **peripheral femoral V-A ECMO
+with retrograde arterial return**. Every VA panel names it in a badge and in a model boundary, and
+the configuration strategy card names it again before any alternative is described.
+
+What is described in the learner-facing teaching but **not simulated**:
+
+| Configuration                                                    | Status in this simulation                                                                                          |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Peripheral femoral V-A, retrograde arterial return               | The modeled topology. One drainage cannula, one femoral arterial return.                                           |
+| V-AV                                                             | Described, not simulated. There is one return limb, so there is no arterial-versus-venous return split to compute. |
+| Upper-body arterial return (axillary/subclavian/brachiocephalic) | Described, not simulated. No upper-body return path exists to load.                                                |
+| Central V-A (ascending or proximal aorta)                        | Described, not simulated. Nothing places the return centrally, so the anterograde topology cannot be shown.        |
+
+Three quantities a configuration discussion invites and this simulation does not model:
+
+- **Return-flow split.** No state divides circuit flow between two return limbs, so no panel reports
+  or derives one.
+- **Cannula interaction.** Nothing models one cannula's effect on another's drainage or return, in any
+  configuration.
+- **V-AV recirculation.** In VA the authored recirculating share is zero and there is no venous return
+  limb for returned blood to be re-drained from. The parallel-physiology panel shows the arithmetic
+  that follows and says explicitly that it is not evidence about any real configuration.
+
+One further boundary belongs with these, because it is the one that is easiest to miss: even for the
+strategy this simulation _can_ apply — raising femoral circuit flow — the mixing point does not move.
+The two arterial saturations are authored by the loaded case (finding 4 above), so the direction is
+taught in words and cannot be demonstrated by changing the pump speed.
+
+**How this is handled:** every entry of the configuration strategy card carries its own model
+boundary, and the card carries a further one stating that one of the five is available on this page
+and four are not. The teaching claim is the mechanism and the caution that goes with it, never an
+order of escalation, a flow target, a dose or a timing cutoff — none of which follow from a physiology
+and nomenclature position paper.
+
+Sources added for this teaching, metadata only, with no figure reproduced and no passage quoted:
+`elso-dual-circulation-2024` (Badulak et al., _Intensive Care Med_ 2024, DOI
+10.1007/s00134-024-07645-8, with the published correction DOI 10.1007/s00134-025-07809-0 recorded in
+the same citation) and `elso-maastricht-nomenclature-2019` (Broman et al., _Crit Care_ 2019, DOI
+10.1186/s13054-019-2334-8). The hyphenated forms V-A, V-AV and V-V are the formal spellings used
+throughout; a clinical-copy guard fails on unhyphenated `VAV`.
+
+## 7. Cannulated-limb ischemia is a bedside-only hypothesis here
+
+Finding 2 above is the measurement: the limb never moves in any VA state this lesson can load. The
+consequence for the learner-facing teaching is recorded separately because it changed how the
+capstone is laid out.
+
+- The five-column hypothesis matrix is titled **"Selected high-yield explanations for deterioration
+  with unchanged displayed flow"**, and says in its first paragraph that it is not a complete
+  differential. It was never exhaustive; it now says so.
+- Cannulated-limb ischemia keeps its **matrix row**, so it is still compared against all five
+  columns, and gains a **card of its own beside the matrix** rather than a sixth column. A sixth
+  column of directional prose would push the discriminating cells of every row out of view inside a
+  teaching pane that already scrolls the matrix horizontally.
+- The card states that limb ischemia may be the whole explanation or may coexist with any of the
+  five; that no console signal reliably substitutes for examining the limb; that evaluation rests on
+  direct examination and on whatever limb-monitoring approach the program uses, with a near-infrared
+  probe being one such approach and a single number from it settling nothing; and that this
+  simulation holds distal-limb perfusion and the near-infrared value fixed, so **the absence of a
+  modeled change is not evidence that limb perfusion is adequate**.
+- The guided action that sends the learner to look at the limb is retained, and it is the measurement.
+
 ## Quantities that do move, and are therefore safe to teach from
 
 Recorded so a future package does not re-derive them. VA reference settled at eight modeled seconds

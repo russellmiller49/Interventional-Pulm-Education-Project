@@ -204,7 +204,14 @@ export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.f
       'The mixing watershed moves as native ejection changes.',
       'Sampling and saturation monitoring site is part of the measurement, not a detail.',
     ],
-    sourceIds: [...coreSources, 'elso-adult-va-2021', 'ecmo-book-ch17'],
+    sourceIds: [
+      ...coreSources,
+      'elso-adult-va-2021',
+      'ecmo-book-ch17',
+      'elso-dual-circulation-2024',
+      'elso-maastricht-nomenclature-2019',
+      'elso-neuro-monitoring-2024',
+    ],
   },
   {
     id: 'va-normal-state',
@@ -254,6 +261,8 @@ export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.f
       'elso-adult-va-2021',
       'elso-neuro-monitoring-2024',
       'ecmo-book-ch17',
+      'elso-dual-circulation-2024',
+      'elso-maastricht-nomenclature-2019',
     ],
   },
 ])
