@@ -124,6 +124,32 @@ export function GuidedValue({
   return <DerivedValueReadout guide={guide} value={value} headingLevel={headingLevel} />
 }
 
+/**
+ * The VA topology this simulation actually models, named wherever VA teaching appears.
+ *
+ * "VA ECMO" is not one flow topology. Where the arterial return enters decides which way circuit
+ * blood travels in the aorta, where it meets native ejection, and therefore which beds each side
+ * supplies. A schematic labelled only "VA" invites a learner to carry conclusions drawn here into
+ * configurations whose flow runs the other way, so the configuration is stated rather than implied.
+ */
+export const VA_MODELED_CONFIGURATION =
+  'peripheral femoral V-A ECMO with retrograde arterial return'
+
+export const VA_CONFIGURATION_BOUNDARY =
+  'This live simulation models peripheral femoral V-A ECMO with retrograde arterial return. V-AV, upper-body arterial return, and central V-A ECMO change the flow topology and are described but not simulated here.'
+
+/** The configuration badge. Rendered at the top of every VA panel, not only in a boundary note. */
+export function VaConfigurationLabel() {
+  return (
+    <p
+      className="inline-flex rounded-full border px-3 py-1 text-xs font-semibold"
+      data-va-configuration={VA_MODELED_CONFIGURATION}
+    >
+      Modeled configuration: {VA_MODELED_CONFIGURATION}
+    </p>
+  )
+}
+
 /** The support configuration in words, used by several panels' text equivalents. */
 export function trackDescription(state: EcmoSimulationState): string {
   return state.supportMode === 'va'

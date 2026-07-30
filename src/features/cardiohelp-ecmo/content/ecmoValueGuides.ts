@@ -226,6 +226,18 @@ export const ECMO_BASELINE_DISPLAY_DEADBANDS = Object.freeze({
   venousLineSaturation: 0.5,
   nativeCardiacOutputLpm: 0.1,
   recirculationAdjustedCircuitFlowLpm: 0.05,
+  // Added for the VA track, which reads several signals the VV panels never show. They live here
+  // for the same reason the rest do: a panel that classified with a number authored beside the
+  // markup could drift from the guide that tells the learner what the classification means.
+  postOxygenatorSaturation: 0.5,
+  systemicVenousSaturationEstimate: 0.5,
+  recirculationFraction: 0.005,
+  rightRadialSpo2: 0.5,
+  femoralArterialSpo2: 0.5,
+  upperToLowerSaturationGap: 2,
+  pulsePressure: 1,
+  meanArterialPressure: 2,
+  distalLimbNirs: 2,
 })
 
 const deadbandLabels: Readonly<Record<keyof typeof ECMO_BASELINE_DISPLAY_DEADBANDS, string>> = {
@@ -242,6 +254,15 @@ const deadbandLabels: Readonly<Record<keyof typeof ECMO_BASELINE_DISPLAY_DEADBAN
   venousLineSaturation: 'venous-line SvO₂',
   nativeCardiacOutputLpm: 'native cardiac output, L/min',
   recirculationAdjustedCircuitFlowLpm: 'recirculation-adjusted circuit flow, L/min',
+  postOxygenatorSaturation: 'post-oxygenator saturation',
+  systemicVenousSaturationEstimate: 'the modeled systemic venous saturation estimate',
+  recirculationFraction: 'the recirculating share of drainage',
+  rightRadialSpo2: 'right radial saturation',
+  femoralArterialSpo2: 'femoral arterial saturation',
+  upperToLowerSaturationGap: 'the difference between the femoral and right radial saturations',
+  pulsePressure: 'pulse pressure, mmHg',
+  meanArterialPressure: 'mean arterial pressure, mmHg',
+  distalLimbNirs: 'distal limb near-infrared saturation',
 }
 
 /** Built from the constants above so the guide's own statement cannot drift from the behaviour. */

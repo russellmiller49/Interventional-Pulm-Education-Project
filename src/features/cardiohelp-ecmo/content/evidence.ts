@@ -128,6 +128,43 @@ export const cardiohelpEvidence: readonly EvidenceReference[] = [
       'This draft teaches recognition and escalation only. It does not encode cannulation, unloading-device selection, numeric treatment targets, or a VA weaning protocol.',
   },
   {
+    /**
+     * The dual-circulation source for the configuration teaching.
+     *
+     * Metadata only, as every record here is: no figure is reproduced and no passage is quoted. It
+     * is cited for mechanism and for the fact that configuration — not only the amount of support —
+     * decides which circulation reaches which bed. The published correction is recorded beside the
+     * original so the corrected record is the one this module cites.
+     */
+    id: 'elso-dual-circulation-2024',
+    sourceClass: 'clinical-guidance',
+    title: 'ELSO-endorsed position paper on dual circulation during adult VA ECMO',
+    citation:
+      'Badulak J, Abrams D, Luks AM, et al. Position paper on the physiology and nomenclature of dual circulation during venoarterial extracorporeal membrane oxygenation in adults. Intensive Care Med. 2024. DOI: 10.1007/s00134-024-07645-8. Published correction DOI: 10.1007/s00134-025-07809-0.',
+    url: 'https://doi.org/10.1007/s00134-024-07645-8',
+    supports: [
+      'Dual circulation as the physiology of venoarterial support, with a mixing zone whose position depends on native ejection relative to circuit flow',
+      'Configuration changes the topology of support rather than only its amount: V-AV, upper-body arterial return, and central arterial return each move blood along a different path',
+      'Regional oxygenation is not established by one arterial sampling site, including where arterial return is central or in the upper body',
+    ],
+    limitations:
+      'A physiology and nomenclature position paper. It is used here for mechanism and terminology only. No cannulation technique, no flow target, no timing threshold, and no order of escalation is encoded from it.',
+  },
+  {
+    id: 'elso-maastricht-nomenclature-2019',
+    sourceClass: 'clinical-guidance',
+    title: 'The ELSO Maastricht Treaty for ECLS Nomenclature',
+    citation:
+      'Broman LM, Taccone FS, Lorusso R, et al. The ELSO Maastricht Treaty for ECLS Nomenclature. Crit Care. 2019. DOI: 10.1186/s13054-019-2334-8.',
+    url: 'https://doi.org/10.1186/s13054-019-2334-8',
+    supports: [
+      'Hyphenated configuration abbreviations naming drainage and return, so V-A, V-AV, and V-V read as flow topologies rather than as labels',
+      'A configuration name states where blood is drained from and where it is returned to, which is what fixes the flow path',
+    ],
+    limitations:
+      'A nomenclature standard rather than clinical guidance. It fixes how a configuration is written and read; it recommends no configuration, and nothing about patient selection or management follows from it.',
+  },
+  {
     id: 'elso-neuro-monitoring-2024',
     sourceClass: 'clinical-guidance',
     title: 'ELSO consensus guidance for neurologic monitoring during adult ECMO',

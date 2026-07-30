@@ -28,8 +28,14 @@ import {
   ecmoFoundationVariant,
   ecmoInteractiveFoundationSectionIds,
   ecmoSharedFoundationSectionIds,
+  ecmoVaOnlyFoundationSectionIds,
   ecmoVvOnlyFoundationSectionIds,
+  isEcmoSharedFoundationSectionId,
+  isEcmoVaOnlyFoundationSectionId,
+  isEcmoVvOnlyFoundationSectionId,
   type EcmoInteractiveFoundationSectionId,
+  type EcmoVaOnlyFoundationSectionId,
+  type EcmoVvOnlyFoundationSectionId,
 } from '../../src/features/cardiohelp-ecmo/content/foundationLessonRuntime.ts'
 import type { EcmoReferenceProfileId } from '../../src/features/cardiohelp-ecmo/content/referenceProfiles.ts'
 import {
@@ -107,7 +113,7 @@ function variantState(
   return session.simulation
 }
 
-function vvOnlyVariants(sectionId: EcmoInteractiveFoundationSectionId): readonly Variant[] {
+function vvOnlyVariants(sectionId: EcmoVvOnlyFoundationSectionId): readonly Variant[] {
   if (sectionId === 'vv-series-physiology') {
     const reference = variantState(sectionId, 'reference-circuit')
     return [
@@ -156,12 +162,96 @@ function vvOnlyVariants(sectionId: EcmoInteractiveFoundationSectionId): readonly
   ]
 }
 
+function vaOnlyVariants(sectionId: EcmoVaOnlyFoundationSectionId): readonly Variant[] {
+  if (sectionId === 'va-parallel-physiology') {
+    return [
+      {
+        label: 'VA reference — recognize and predict',
+        state: variantState(sectionId, 'reference-circuit'),
+      },
+      {
+        label: 'differential-oxygenation preview, settled — act and observe',
+        state: variantState(sectionId, 'differential-hypoxemia-preview'),
+      },
+      {
+        label: 'loading preview, settled — observe and transfer',
+        state: variantState(sectionId, 'lv-loading-preview'),
+      },
+    ]
+  }
+
+  if (sectionId === 'va-normal-state') {
+    const opening = variantState(sectionId, 'reference-circuit')
+    const snapshot = ecmoFoundationSnapshot(opening)
+    return [
+      { label: 'VA reference at the captured snapshot', state: opening, snapshot },
+      {
+        label: 'after 20 modeled seconds, compared with the snapshot',
+        state: advance(opening, 20),
+        snapshot,
+      },
+      {
+        label: 'transfer and narrative — compared with the retained samples',
+        state: advance(opening, 40),
+      },
+    ]
+  }
+
+  return [
+    {
+      label: 'the case as it stands — recognize and predict',
+      state: variantState(sectionId, 'mixed-circulation-case'),
+    },
+    {
+      label: 'loading mechanism preview — act and observe',
+      state: variantState(sectionId, 'lv-loading-preview'),
+    },
+    {
+      label: 'membrane-resistance mechanism preview — explain',
+      state: variantState(sectionId, 'va-oxygenator-resistance-preview'),
+    },
+    {
+      label: 'gas case before its change, held — explain',
+      state: variantState(sectionId, 'va-gas-source-before-change'),
+    },
+    {
+      label: 'gas case evolved — transfer',
+      state: variantState(sectionId, 'va-gas-source-after-change'),
+    },
+  ]
+}
+
 const profiles: readonly EcmoReferenceProfileId[] = ['vv-reference', 'va-reference']
 
+/**
+ * Section → the states it is rendered against, dispatched on which track-scope the section belongs
+ * to.
+ *
+ * Exhaustive on purpose. The previous shape asked one question — "is this shared?" — and sent
+ * everything else down the VV branch, so a VA section added to the canonical list would have been
+ * handed VV-only variant ids and thrown on the first one that did not exist. Narrowing through the
+ * three guards means an unclassified section is a loud failure naming itself rather than a puzzling
+ * missing-variant error, and the compiler rejects a section that belongs to no scope.
+ */
 function variantsFor(sectionId: EcmoInteractiveFoundationSectionId): readonly Variant[] {
-  return (ecmoSharedFoundationSectionIds as readonly string[]).includes(sectionId)
-    ? profiles.flatMap((profileId) => sharedVariants(profileId))
-    : vvOnlyVariants(sectionId)
+  if (isEcmoSharedFoundationSectionId(sectionId)) {
+    return profiles.flatMap((profileId) => sharedVariants(profileId))
+  }
+  if (isEcmoVvOnlyFoundationSectionId(sectionId)) return vvOnlyVariants(sectionId)
+  if (isEcmoVaOnlyFoundationSectionId(sectionId)) return vaOnlyVariants(sectionId)
+  throw new Error(
+    `${sectionId} is in the interactive section list but belongs to no track scope, so this harness does not know which states to render it against.`,
+  )
+}
+
+function scopeLabel(sectionId: EcmoInteractiveFoundationSectionId): string {
+  if (isEcmoVvOnlyFoundationSectionId(sectionId)) {
+    return 'VV-only — never rendered against a VA circuit'
+  }
+  if (isEcmoVaOnlyFoundationSectionId(sectionId)) {
+    return 'VA-only — never rendered against a VV circuit'
+  }
+  return 'shared by both tracks'
 }
 
 let renderedCells = 0
@@ -181,10 +271,7 @@ const sections = ecmoInteractiveFoundationSectionIds
         return `<div class="cell"><p class="cell-label">${variant.label}</p>${markup}</div>`
       })
       .join('\n')
-    const scope = (ecmoVvOnlyFoundationSectionIds as readonly string[]).includes(sectionId)
-      ? 'VV-only — never rendered against a VA circuit'
-      : 'shared by both tracks'
-    return `<section><h2>${sectionId} <span class="scope">${scope}</span></h2><div class="matrix">${columns}</div></section>`
+    return `<section><h2>${sectionId} <span class="scope">${scopeLabel(sectionId)}</span></h2><div class="matrix">${columns}</div></section>`
   })
   .join('\n')
 
@@ -248,5 +335,5 @@ const outputPath = join(outputDir, 'panels.html')
 writeFileSync(outputPath, html, 'utf8')
 console.log(`Wrote ${outputPath}`)
 console.log(
-  `${ecmoInteractiveFoundationSectionIds.length} panels (${ecmoSharedFoundationSectionIds.length} shared × 2 profiles × 3 states, ${ecmoVvOnlyFoundationSectionIds.length} VV-only) — ${renderedCells} rendered states`,
+  `${ecmoInteractiveFoundationSectionIds.length} panels (${ecmoSharedFoundationSectionIds.length} shared × 2 profiles × 3 states, ${ecmoVvOnlyFoundationSectionIds.length} VV-only, ${ecmoVaOnlyFoundationSectionIds.length} VA-only) — ${renderedCells} rendered states`,
 )

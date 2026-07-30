@@ -30,14 +30,17 @@ jest.mock('@/features/cardiohelp-ecmo/components/EcmoFoundationLessonActivity', 
   EcmoFoundationLessonActivity: ({
     sectionId,
     supportMode,
+    initialPhase,
   }: {
     sectionId: string
     supportMode: string
+    initialPhase?: string
   }) => (
     <div
       data-testid="ecmo-foundation-activity"
       data-section-id={sectionId}
       data-track={supportMode}
+      data-initial-phase={initialPhase}
     />
   ),
 }))
@@ -202,6 +205,116 @@ describe('CARDIOHELP ECMO routes', () => {
     },
   )
 
+  it('opens a lesson at its first phase when no phase is asked for', async () => {
+    render(
+      await CardiohelpEcmoLearnPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({ lesson: 'circuit-flow-path', track: 'vv' }),
+      }),
+    )
+    expect(screen.getByTestId('ecmo-foundation-activity')).toHaveAttribute(
+      'data-initial-phase',
+      'recognize',
+    )
+  })
+
+  it.each(['recognize', 'predict', 'act', 'observe', 'explain', 'transfer'])(
+    'resumes a lesson at the requested phase %s without redirecting',
+    async (phase) => {
+      render(
+        await CardiohelpEcmoLearnPage({
+          params: Promise.resolve({ locale: 'en' }),
+          searchParams: Promise.resolve({ lesson: 'circuit-flow-path', track: 'vv', phase }),
+        }),
+      )
+      expect(screen.getByTestId('ecmo-foundation-activity')).toHaveAttribute(
+        'data-initial-phase',
+        phase,
+      )
+    },
+  )
+
+  it.each(['banana', '', 'Recognize', 'act,observe', 'reflect'])(
+    'canonicalizes a stale or malformed phase value (%s) back to the first phase',
+    async (phase) => {
+      await expect(
+        CardiohelpEcmoLearnPage({
+          params: Promise.resolve({ locale: 'en' }),
+          searchParams: Promise.resolve({ lesson: 'circuit-flow-path', track: 'vv', phase }),
+        }),
+      ).rejects.toMatchObject({
+        digest: expect.stringContaining(
+          '/en/cardiohelp-ecmo/learn?lesson=circuit-flow-path&track=vv&phase=recognize',
+        ),
+      })
+      expect(screen.queryByTestId('ecmo-foundation-activity')).not.toBeInTheDocument()
+    },
+  )
+
+  it('adds no phase parameter when canonicalizing a track that had none', async () => {
+    // The phase is optional. A track-only fix must leave the URL as short as it arrived, or every
+    // plain lesson link in the resource would acquire a parameter it never asked for.
+    await expect(
+      CardiohelpEcmoLearnPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({ lesson: 'vv-normal-state', track: 'va' }),
+      }),
+    ).rejects.toMatchObject({
+      digest: expect.not.stringContaining('phase'),
+    })
+  })
+
+  it('fixes a stale track and a stale phase in the same redirect', async () => {
+    await expect(
+      CardiohelpEcmoLearnPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({
+          lesson: 'vv-normal-state',
+          track: 'va',
+          phase: 'banana',
+        }),
+      }),
+    ).rejects.toMatchObject({
+      digest: expect.stringContaining(
+        '/en/cardiohelp-ecmo/learn?lesson=vv-normal-state&track=vv&phase=recognize',
+      ),
+    })
+  })
+
+  it('carries a valid phase through a track canonicalization', async () => {
+    await expect(
+      CardiohelpEcmoLearnPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({
+          lesson: 'vv-normal-state',
+          track: 'va',
+          phase: 'explain',
+        }),
+      }),
+    ).rejects.toMatchObject({
+      digest: expect.stringContaining(
+        '/en/cardiohelp-ecmo/learn?lesson=vv-normal-state&track=vv&phase=explain',
+      ),
+    })
+  })
+
+  it('renders the canonical phase URL directly, so the redirect cannot loop', async () => {
+    render(
+      await CardiohelpEcmoLearnPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({
+          lesson: 'vv-normal-state',
+          track: 'vv',
+          phase: 'recognize',
+        }),
+      }),
+    )
+    expect(screen.getByTestId('ecmo-foundation-activity')).toHaveAttribute(
+      'data-initial-phase',
+      'recognize',
+    )
+  })
+
   it('keeps the working track toggle for a shared section on the VA reference', async () => {
     render(
       await CardiohelpEcmoLearnPage({
@@ -213,7 +326,7 @@ describe('CARDIOHELP ECMO routes', () => {
   })
 
   it.each(['va-parallel-physiology', 'va-normal-state', 'va-integration-capstone'])(
-    'leaves the VA section %s on the prose view for now',
+    'routes the VA foundation section %s to the workspace activity',
     async (lesson) => {
       render(
         await CardiohelpEcmoLearnPage({
@@ -221,11 +334,76 @@ describe('CARDIOHELP ECMO routes', () => {
           searchParams: Promise.resolve({ lesson, track: 'va' }),
         }),
       )
-      const section = screen.getByTestId('ecmo-foundation-section')
-      expect(section).toHaveAttribute('data-section-id', lesson)
+      const activity = screen.getByTestId('ecmo-foundation-activity')
+      expect(activity).toHaveAttribute('data-section-id', lesson)
+      expect(activity).toHaveAttribute('data-track', 'va')
+      expect(screen.queryByTestId('ecmo-foundation-section')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('cardiohelp-workbench')).not.toBeInTheDocument()
+    },
+  )
+
+  it.each(['va-parallel-physiology', 'va-normal-state', 'va-integration-capstone'])(
+    'canonicalizes a VV track on the VA-only section %s instead of loading a VV circuit',
+    async (lesson) => {
+      await expect(
+        CardiohelpEcmoLearnPage({
+          params: Promise.resolve({ locale: 'en' }),
+          searchParams: Promise.resolve({ lesson, track: 'vv' }),
+        }),
+      ).rejects.toMatchObject({
+        digest: expect.stringContaining(`/en/cardiohelp-ecmo/learn?lesson=${lesson}&track=va`),
+      })
       expect(screen.queryByTestId('ecmo-foundation-activity')).not.toBeInTheDocument()
     },
   )
+
+  it.each(['va-parallel-physiology', 'va-normal-state', 'va-integration-capstone'])(
+    'renders %s directly once the track is already VA, so the redirect cannot loop',
+    async (lesson) => {
+      render(
+        await CardiohelpEcmoLearnPage({
+          params: Promise.resolve({ locale: 'en' }),
+          searchParams: Promise.resolve({ lesson, track: 'va' }),
+        }),
+      )
+      expect(screen.getByTestId('ecmo-foundation-activity')).toHaveAttribute('data-track', 'va')
+    },
+  )
+
+  it.each(['banana', '', 'VV', 'va,vv'])(
+    'canonicalizes a VA-only section to VA when the track value is stale or malformed (%s)',
+    async (track) => {
+      // A malformed track resolves to VV, which for a VA-only section is not the mode it runs in,
+      // so the URL is canonicalized rather than the section being rendered under a VV query.
+      await expect(
+        CardiohelpEcmoLearnPage({
+          params: Promise.resolve({ locale: 'en' }),
+          searchParams: Promise.resolve({ lesson: 'va-normal-state', track }),
+        }),
+      ).rejects.toMatchObject({
+        digest: expect.stringContaining(
+          '/en/cardiohelp-ecmo/learn?lesson=va-normal-state&track=va',
+        ),
+      })
+    },
+  )
+
+  it('carries a valid phase through a VA track canonicalization', async () => {
+    await expect(
+      CardiohelpEcmoLearnPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({
+          lesson: 'va-integration-capstone',
+          track: 'vv',
+          phase: 'observe',
+        }),
+      }),
+    ).rejects.toMatchObject({
+      digest: expect.stringContaining(
+        '/en/cardiohelp-ecmo/learn?lesson=va-integration-capstone&track=va&phase=observe',
+      ),
+    })
+  })
 
   it('opens the guided workbench for a drill section', async () => {
     render(

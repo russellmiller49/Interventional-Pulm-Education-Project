@@ -1,4 +1,7 @@
-import type { CriticalCareActivityPhase } from '@/features/learning-module/activity/types'
+import {
+  criticalCareActivityPhases,
+  type CriticalCareActivityPhase,
+} from '@/features/learning-module/activity/types'
 
 import type { EcmoLearnStateSource } from './referenceProfiles'
 import type { EcmoSimulationState, SimulationAction, SupportMode } from '../engine/types'
@@ -6,14 +9,15 @@ import type { EcmoSimulationState, SimulationAction, SupportMode } from '../engi
 /**
  * The Learn sections that open the live three-pane workspace.
  *
- * Two groups, one record. The first four are shared by both tracks — they teach the circuit before
+ * Three groups, one record. The first four are shared by both tracks — they teach the circuit before
  * either track's physiology, so they render against whichever reference profile the learner has
  * selected. The three that follow are VV-only: their teaching is about series physiology, so a VA
- * reference circuit behind them would contradict the text on the page, and the runtime support mode
- * for them is therefore fixed rather than taken from the query.
+ * reference circuit behind them would contradict the text on the page. The last three are VA-only
+ * for the mirror-image reason: they teach what follows from the circuit running in parallel with the
+ * heart, which a VV reference circuit cannot show. The runtime support mode for both track-fixed
+ * groups is therefore fixed rather than taken from the query.
  *
- * The three VA sections are deliberately absent and stay on the prose route until E5. The section
- * records themselves live in `foundationLessons.ts`; nothing here re-declares them.
+ * The section records themselves live in `foundationLessons.ts`; nothing here re-declares them.
  */
 export const ecmoSharedFoundationSectionIds = [
   'why-extracorporeal-support',
@@ -33,10 +37,26 @@ export const ecmoVvOnlyFoundationSectionIds = [
 
 export type EcmoVvOnlyFoundationSectionId = (typeof ecmoVvOnlyFoundationSectionIds)[number]
 
-/** Every section routed to `EcmoFoundationLessonActivity`: the four shared plus the three VV. */
+/**
+ * Sections whose teaching is VA parallel physiology. The support mode is fixed to VA for these.
+ *
+ * The mirror image of the VV-only set, and fixed for the same reason: these sections teach what
+ * follows from the circuit running in parallel with the heart — loading, the mixing watershed,
+ * differential oxygenation — none of which a VV reference circuit behind them would show.
+ */
+export const ecmoVaOnlyFoundationSectionIds = [
+  'va-parallel-physiology',
+  'va-normal-state',
+  'va-integration-capstone',
+] as const
+
+export type EcmoVaOnlyFoundationSectionId = (typeof ecmoVaOnlyFoundationSectionIds)[number]
+
+/** Every section routed to `EcmoFoundationLessonActivity`: four shared, three VV, three VA. */
 export const ecmoInteractiveFoundationSectionIds = [
   ...ecmoSharedFoundationSectionIds,
   ...ecmoVvOnlyFoundationSectionIds,
+  ...ecmoVaOnlyFoundationSectionIds,
 ] as const
 
 export type EcmoInteractiveFoundationSectionId =
@@ -60,6 +80,15 @@ export function isEcmoVvOnlyFoundationSectionId(
   )
 }
 
+export function isEcmoVaOnlyFoundationSectionId(
+  value: unknown,
+): value is EcmoVaOnlyFoundationSectionId {
+  return (
+    typeof value === 'string' &&
+    (ecmoVaOnlyFoundationSectionIds as readonly string[]).includes(value)
+  )
+}
+
 export function isEcmoInteractiveFoundationSectionId(
   value: unknown,
 ): value is EcmoInteractiveFoundationSectionId {
@@ -72,14 +101,18 @@ export function isEcmoInteractiveFoundationSectionId(
 /**
  * The support mode a section actually runs in.
  *
- * A VV-only section ignores the requested track entirely. `?track=va` on one of them must never
- * load `va-reference` behind VV teaching copy, and the route canonicalizes the URL to match.
+ * A track-fixed section ignores the requested track entirely. `?track=va` on a VV-only section must
+ * never load `va-reference` behind VV teaching copy, and `?track=vv` on a VA-only section must
+ * never load `vv-reference` behind copy about parallel circulation. The route canonicalizes the URL
+ * to match in both directions.
  */
 export function ecmoFoundationSupportMode(
   sectionId: EcmoInteractiveFoundationSectionId,
   requested: SupportMode,
 ): SupportMode {
-  return isEcmoVvOnlyFoundationSectionId(sectionId) ? 'vv' : requested
+  if (isEcmoVvOnlyFoundationSectionId(sectionId)) return 'vv'
+  if (isEcmoVaOnlyFoundationSectionId(sectionId)) return 'va'
+  return requested
 }
 
 /**
@@ -161,6 +194,30 @@ export interface EcmoFoundationLessonRuntime {
   readonly variants: (supportMode: SupportMode) => readonly EcmoFoundationStateVariant[]
   /** The variant loaded when the lesson opens and when the learner restores. */
   readonly primaryVariantId: string
+  /**
+   * The clean state a phase opens on when the lesson is **mounted** at that phase.
+   *
+   * A `?phase=` URL used to restore the navigation and nothing else: every phase initialized from
+   * `primaryVariantId`, so a link into a phase whose authored content is written against a different
+   * state opened on a state that content does not describe. This is the authored fix, and it is
+   * authored rather than inferred — nothing here derives a variant from the name of a phase.
+   *
+   * Three rules the mappings are held to.
+   *
+   * A mapping exists only where the phase's own content assumes a different clean state. Absent, the
+   * phase opens on `primaryVariantId`, which is what every phase did before this field existed. Most
+   * phases are therefore unmapped, and that is the correct outcome rather than an omission.
+   *
+   * A mapping is a **clean** state and nothing more. No earlier prediction, transfer answer,
+   * snapshot, interaction record or control sequence is reconstructed from it, and nothing about it
+   * is persisted: no storage key, no DTO, no adapter, no payload version, and `ProgressV2` is
+   * untouched. The activity says so on screen whenever it opens anywhere other than the first phase.
+   *
+   * And it applies to mounting only. Clicking through the phase navigation inside a live lesson
+   * never re-resolves it, because the learner's own loaded state is the thing they are working on;
+   * replacing it under them on a phase change would discard the comparison they were reading.
+   */
+  readonly initialVariantIdByPhase?: Partial<Readonly<Record<CriticalCareActivityPhase, string>>>
   readonly phases: Readonly<Record<CriticalCareActivityPhase, EcmoFoundationPhaseCopy>>
   readonly guidedActions: readonly EcmoFoundationGuidedAction[]
   readonly evidenceIds: readonly string[]
@@ -268,6 +325,123 @@ const oxygenatorResistancePreviewVariant: EcmoFoundationStateVariant = {
     'A mechanism preview from the existing membrane-resistance drill. In this simulation the membrane resistance also constrains circuit flow, so displayed flow does fall here — read the gradient, not the flow, as the discriminating signal.',
 }
 
+// ---- VA track variants. ----
+
+const vaReferenceVariant: EcmoFoundationStateVariant = {
+  id: REFERENCE_VARIANT_ID,
+  source: { kind: 'reference-profile', profileId: 'va-reference' },
+  setupActions: advanceSeconds(REFERENCE_SETTLE_SECONDS),
+  label: 'VA reference circuit',
+  modelBoundary:
+    'An authored teaching anchor for this simulation: a running VA circuit with no injected problem, settled before the lesson opens on it. It is not a set of bedside target values.',
+}
+
+/**
+ * Seconds of modeled time each VA teaching preview is advanced by.
+ *
+ * Read off the engine, not guessed. The differential-oxygenation, loading and mixed-circulation
+ * presets are all flat by the eighth modeled second. The VA membrane preset takes longer: its
+ * discriminating signals — flow, the gradient, and the post-oxygenator saturation — are fixed from
+ * the first frame, but the drainage saturation is still falling at twelve seconds and only settles
+ * by about twenty. The gas case is the one with an authored timed change, at second five, so its
+ * pre-change state stops short of it exactly as the VV case does.
+ *
+ * The evolved gas state is **forty** seconds, not the twenty-eight its VV counterpart uses. The VV
+ * case has stopped moving by about second twenty-six; this one has not — at twenty-eight the
+ * carbon dioxide value is still climbing (79.6 on its way to 90.0) and the femoral saturation is
+ * still falling. Opening there would show the learner a state mid-slide and invite them to read a
+ * still-moving number as the case's endpoint. It is flat from second forty onward.
+ */
+const VA_PREVIEW_SECONDS = Object.freeze({
+  differentialSettled: 8,
+  lvLoadingSettled: 8,
+  mixedCirculationSettled: 8,
+  oxygenatorResistanceSettled: 20,
+  gasSourceBeforeChange: 4,
+  gasSourceAfterChange: 40,
+})
+
+const differentialHypoxemiaPreviewVariant: EcmoFoundationStateVariant = {
+  id: 'differential-hypoxemia-preview',
+  source: { kind: 'scenario', scenarioId: 'va-differential-hypoxemia' },
+  setupActions: advanceSeconds(VA_PREVIEW_SECONDS.differentialSettled),
+  label: 'Differential oxygenation — teaching preview',
+  modelBoundary:
+    'The existing differential-oxygenation drill loaded as a preview to read, with nothing recorded and nothing scored. The upper-body and lower-body saturations are authored by that scenario; this simulation does not compute a watershed position from native ejection.',
+}
+
+const lvLoadingPreviewVariant: EcmoFoundationStateVariant = {
+  id: 'lv-loading-preview',
+  source: { kind: 'scenario', scenarioId: 'va-lv-loading' },
+  setupActions: advanceSeconds(VA_PREVIEW_SECONDS.lvLoadingSettled),
+  label: 'Left ventricular loading — teaching preview',
+  modelBoundary:
+    'The existing loading drill loaded as a preview to read. Pulsatility, aortic-valve opening and pulmonary congestion are authored states in this simulation rather than quantities derived from a ventricular model.',
+}
+
+const vaMixedCirculationVariant: EcmoFoundationStateVariant = {
+  id: 'mixed-circulation-case',
+  source: { kind: 'scenario', scenarioId: 'va-mixed-circulation-capstone' },
+  setupActions: advanceSeconds(VA_PREVIEW_SECONDS.mixedCirculationSettled),
+  label: 'The case as it stands — teaching preview',
+  modelBoundary:
+    'The existing mixed-circulation case loaded as a preview to read, settled before the lesson opens on it. Nothing here is recorded or scored. Unlike the VV capstone this case carries its finding from the first frame, so there is no earlier state to watch it arrive from.',
+}
+
+const vaOxygenatorResistancePreviewVariant: EcmoFoundationStateVariant = {
+  id: 'va-oxygenator-resistance-preview',
+  source: { kind: 'scenario', scenarioId: 'va-afterload-oxygenator-resistance' },
+  setupActions: advanceSeconds(VA_PREVIEW_SECONDS.oxygenatorResistanceSettled),
+  label: 'Membrane resistance — mechanism preview',
+  modelBoundary:
+    'A mechanism preview from the existing VA membrane-resistance drill. In this simulation the membrane resistance also constrains circuit flow, so displayed flow does fall here — read the gradient, not the flow, as the discriminating signal.',
+}
+
+const vaGasSourceBeforeVariant: EcmoFoundationStateVariant = {
+  id: 'va-gas-source-before-change',
+  source: { kind: 'scenario', scenarioId: 'va-gas-source-interruption' },
+  setupActions: advanceSeconds(VA_PREVIEW_SECONDS.gasSourceBeforeChange),
+  // Held for the same reason as its VV counterpart: this state sits one modeled second short of the
+  // case's authored change, so a running clock would take it past the change before it was read.
+  holdsClock: true,
+  label: 'The gas case before the change — mechanism preview',
+  modelBoundary:
+    'The existing VA gas-source drill loaded as a preview to read, stopped one modeled second before its authored change occurs and held there. Nothing here is recorded or scored. Start the clock to watch the change happen, or load the evolved state to jump past it.',
+}
+
+const vaGasSourceAfterVariant: EcmoFoundationStateVariant = {
+  id: 'va-gas-source-after-change',
+  source: { kind: 'scenario', scenarioId: 'va-gas-source-interruption' },
+  setupActions: advanceSeconds(VA_PREVIEW_SECONDS.gasSourceAfterChange),
+  label: 'The gas case, evolved — mechanism preview',
+  modelBoundary:
+    'The same drill advanced deterministically past its authored change. The rate at which the modeled values move is this simulation’s, not a bedside time course.',
+}
+
+/**
+ * The authored phase-to-clean-state table, for all ten lessons.
+ *
+ * Every phase of every lesson was read against the state its copy assumes. Three mappings came out
+ * of that; the other fifty-seven phases open on their lesson's primary variant, which is what their
+ * own copy is written against. Recorded here because "unmapped" is a decision, and a future package
+ * that cannot see the decision will read it as an oversight.
+ *
+ * | Lesson                        | Mapped phase → variant                  | Why the rest are unmapped |
+ * | ----------------------------- | --------------------------------------- | ------------------------- |
+ * | why-extracorporeal-support    | —                                       | Every phase reads the selected reference ledger; the only variant authored is that reference. |
+ * | circuit-flow-path             | —                                       | Same: one variant exists, and each phase reads the live circuit at a named location. |
+ * | pump-and-pressure-zones       | —                                       | Its comparisons are bounded changes *from* the reference, applied by the learner; opening on a changed circuit would remove the baseline the phase asks them to compare with. |
+ * | blood-flow-versus-sweep       | —                                       | Same reasoning; both comparisons restore the reference first by design. |
+ * | vv-series-physiology          | —                                       | `transfer` is a *different* patient whose drainage saturation falls as re-drainage resolves — the opposite of the recirculation preview. Mapping it would put the contradicting state on screen. `act` asks the learner to load that preview themselves. |
+ * | vv-normal-state               | —                                       | Every phase is this circuit against itself, starting from the settled reference. `act` captures the snapshot; no phase may open with one fabricated. |
+ * | vv-integration-capstone       | `transfer` → `recirculation-preview`    | Its transfer stem opens "In the re-drainage preview beside you" and reads three of that state's values, so that state is what the item is written against. `recognize` and `predict` must stay on the held pre-fault case, and `observe` asks the learner to reveal the evolved state — so it opens before the change, not after it. |
+ * | va-parallel-physiology        | `transfer` → `lv-loading-preview`       | Its transfer stem is a flat arterial trace, a valve that has stopped opening and a congested chest with two agreeing saturations: the loading preview's findings exactly. Deliberately *not* the differential-oxygenation preview, which the lesson's `act` phase has the learner load themselves. |
+ * | va-normal-state               | —                                       | As the VV baseline: the settled VA reference, and no phase may open with a snapshot that was never captured. |
+ * | va-integration-capstone       | `transfer` → `va-gas-source-after-change` | Its transfer stem is a carbon dioxide value rising over minutes with both arterial saturations falling *together* — the evolved gas state, which is the state the item and this panel's live column are written against. The differential-oxygenation presentation, loading, membrane resistance and the held pre-change gas preview all stay distinct: none of them is mapped, and `recognize` through `explain` open on the presenting case. |
+ *
+ * No lesson maps a shared section to a track-specific preview: the four shared lessons author one
+ * variant per mode and are unmapped, so a mapping cannot select the wrong track's state.
+ */
 export const ecmoFoundationLessonRuntimes: Readonly<
   Record<EcmoInteractiveFoundationSectionId, EcmoFoundationLessonRuntime>
 > = Object.freeze({
@@ -664,11 +838,17 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       vvReferenceVariant,
     ],
     primaryVariantId: gasSourceBeforeVariant.id,
+    // The transfer item is written against the re-drainage preview by name and quotes three of its
+    // values. Every earlier phase stays on the held pre-fault case.
+    initialVariantIdByPhase: { transfer: recirculationPreviewVariant.id },
     phases: {
       recognize: {
         objective: 'Establish that circuit flow alone cannot discriminate here.',
+        // Deliberately does not ask the learner to enter anything: this phase renders no control,
+        // and the commitment this section is built around is the one made in `predict`. Copy that
+        // asked for a record here would be promising a control the phase does not have.
         requiredAction:
-          'Read the case as it stands and record whether the problem in front of you is oxygenation, ventilation, or both.',
+          'Read the case as it stands and settle whether what is in front of you is a problem of oxygenation, of ventilation, or of both. Nothing is entered at this step; the commitment comes in the next one.',
         teachingPoint:
           'The flow display is the one signal every explanation on the list is compatible with.',
       },
@@ -783,6 +963,346 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       'ecmo-book-ch18',
     ],
   },
+
+  // ---- VA track. Support mode fixed; a VV reference circuit is never loaded behind these. ----
+  'va-parallel-physiology': {
+    sectionId: 'va-parallel-physiology',
+    supportMode: 'va',
+    variants: () => [
+      vaReferenceVariant,
+      differentialHypoxemiaPreviewVariant,
+      lvLoadingPreviewVariant,
+    ],
+    primaryVariantId: REFERENCE_VARIANT_ID,
+    // The transfer item describes a flat trace, a valve that has stopped opening and a congested
+    // chest with two agreeing saturations — the loading preview, not the differential one.
+    initialVariantIdByPhase: { transfer: lvLoadingPreviewVariant.id },
+    phases: {
+      recognize: {
+        objective: 'Trace the two circulations and find where they meet.',
+        requiredAction:
+          'Follow circuit blood from drainage, through the membrane, into the arterial system, and then follow blood the native heart ejects. Note where the two streams meet and which body regions each one supplies.',
+        teachingPoint:
+          'In parallel the circuit and the heart both fill the same aorta. Where their streams meet is a place, and that place moves.',
+      },
+      predict: {
+        objective:
+          'Decide what an unchanged circuit display with a falling upper-body saturation means.',
+        requiredAction: 'Commit a prediction, then read why the other answers do not fit.',
+        teachingPoint:
+          'Recovering native function and worsening native lungs can produce the same upper-body reading, and neither of them disturbs the circuit.',
+      },
+      act: {
+        objective: 'Load the two consequences of parallelism and read each beside the reference.',
+        requiredAction:
+          'Open the differential-oxygenation preview, then the loading preview, restoring the VA reference between them. Nothing here is recorded against either drill.',
+        teachingPoint:
+          'Each preview reloads cleanly from its own source, so two mechanisms are never read compounded.',
+      },
+      observe: {
+        objective:
+          'Compare the upper-body and lower-body saturations, and the pulsatility, in each state.',
+        requiredAction:
+          'Read the right radial saturation, the femoral arterial saturation, the pulse pressure, aortic-valve opening, and pulmonary congestion in all three states.',
+        teachingPoint:
+          'Two saturations from one patient are not a duplicate measurement. The gap between them is the finding.',
+      },
+      explain: {
+        objective: 'State what parallel circulation adds and what it costs.',
+        requiredAction: 'Review the lesson narrative and the two mechanism panels.',
+        teachingPoint:
+          'VA adds circulatory support. The price is a ventricle ejecting against arterial return, and a circulation with two sources of blood at different saturations.',
+      },
+      transfer: {
+        objective: 'Separate a loading problem from an oxygenation one.',
+        requiredAction: 'Answer the transfer item and review the comparison.',
+        teachingPoint:
+          'Both leave the circuit display alone. What separates them is pulsatility and the lungs on one side, and the difference between two sampling sites on the other.',
+      },
+    },
+    guidedActions: [
+      {
+        id: 'load-differential-hypoxemia-preview',
+        label: 'Load the differential-oxygenation preview',
+        description:
+          'Opens the existing differential-oxygenation case, already settled, as a state to read. No result is recorded.',
+        kind: 'restore-and-apply',
+        variantId: differentialHypoxemiaPreviewVariant.id,
+        settleSeconds: 0,
+      },
+      {
+        id: 'load-lv-loading-preview',
+        label: 'Load the loading preview',
+        description:
+          'Opens the existing loading case, already settled, as a state to read. No result is recorded.',
+        kind: 'restore-and-apply',
+        variantId: lvLoadingPreviewVariant.id,
+        settleSeconds: 0,
+      },
+      {
+        id: 'restore-va-reference',
+        label: 'Restore VA reference',
+        description:
+          'Reload the VA reference circuit. Completion already recorded is kept; only the current interaction is cleared.',
+        kind: 'restore-and-apply',
+        variantId: REFERENCE_VARIANT_ID,
+        settleSeconds: 4,
+      },
+    ],
+    // The two ELSO configuration sources are cited here because this is where the configuration
+    // strategy card is taught in full.
+    evidenceIds: [
+      ...coreSources,
+      'elso-adult-va-2021',
+      'ecmo-book-ch17',
+      'elso-dual-circulation-2024',
+      'elso-maastricht-nomenclature-2019',
+      'elso-neuro-monitoring-2024',
+    ],
+  },
+
+  'va-normal-state': {
+    sectionId: 'va-normal-state',
+    supportMode: 'va',
+    variants: () => [vaReferenceVariant],
+    primaryVariantId: REFERENCE_VARIANT_ID,
+    phases: {
+      recognize: {
+        objective: 'Decide which signals belong in a VA baseline review.',
+        requiredAction:
+          'Walk the drainage and load group, the membrane and return group, the gas side, and then the group that exists only because the circulations are in parallel.',
+        teachingPoint:
+          'A VA baseline review is the VV one plus everything parallel circulation adds, and the added part is not on the console.',
+      },
+      predict: {
+        objective: 'Decide what an unremarkable circuit display establishes about a VA run.',
+        requiredAction: 'Commit a prediction, then read why the other answers do not fit.',
+        teachingPoint:
+          'Pulsatility, valve opening, the difference between two sampling sites, and the cannulated limb are all outside the circuit display.',
+      },
+      act: {
+        objective: 'Capture this circuit’s own starting values and watch them over a window.',
+        requiredAction:
+          'Capture the reference snapshot, run twenty modeled seconds, then compare with the snapshot. Restore the VA reference whenever you want to start again.',
+        teachingPoint:
+          'The comparison that transfers is this circuit against itself, not this circuit against a published number.',
+      },
+      observe: {
+        objective: 'Read the raw change in each signal over the observed window.',
+        requiredAction:
+          'Compare the current value, the snapshot value, and the direction of change in each group, including the parallel-circulation group.',
+        teachingPoint:
+          'A steady circuit beside a falling pulse pressure is not a steady state; it is a circuit that has not noticed yet.',
+      },
+      explain: {
+        objective: 'State what belongs to a stable VA run beyond the circuit display.',
+        requiredAction: 'Review the lesson narrative.',
+        teachingPoint:
+          'Native pulsatility, an opening aortic valve, a deliberately chosen upper-body sampling site, and a limb that is being looked at all belong to the normal state.',
+      },
+      transfer: {
+        objective: 'Recognize a stable VA baseline whose absolute values are unfamiliar.',
+        requiredAction: 'Answer the transfer item and review the comparison.',
+        teachingPoint:
+          'A steady relationship over time is stronger evidence than any single value being familiar, and in VA the relationships include two that VV does not have.',
+      },
+    },
+    guidedActions: [
+      {
+        id: 'capture-reference-snapshot',
+        label: 'Capture reference snapshot',
+        description:
+          'Record this circuit’s current values so the next reading can be compared with them.',
+        kind: 'evidence',
+        settleSeconds: 0,
+        capturesSnapshot: true,
+      },
+      {
+        id: 'run-twenty-modeled-seconds',
+        label: 'Run 20 modeled seconds',
+        description: 'Advance the clock on the circuit already loaded. Nothing else is changed.',
+        kind: 'advance',
+        settleSeconds: 20,
+      },
+      {
+        id: 'compare-with-snapshot',
+        label: 'Compare with snapshot',
+        description: 'Read each signal against the value captured earlier in this session.',
+        kind: 'evidence',
+        settleSeconds: 0,
+      },
+      {
+        id: 'restore-va-reference',
+        label: 'Restore VA reference',
+        description:
+          'Reload the VA reference circuit. Completion already recorded is kept; only the current interaction is cleared.',
+        kind: 'restore-and-apply',
+        variantId: REFERENCE_VARIANT_ID,
+        settleSeconds: 4,
+      },
+    ],
+    evidenceIds: [...coreSources, 'elso-adult-va-2021', 'elso-neuro-monitoring-2024'],
+  },
+
+  'va-integration-capstone': {
+    sectionId: 'va-integration-capstone',
+    supportMode: 'va',
+    variants: () => [
+      vaMixedCirculationVariant,
+      lvLoadingPreviewVariant,
+      vaOxygenatorResistancePreviewVariant,
+      vaGasSourceBeforeVariant,
+      vaGasSourceAfterVariant,
+      vaReferenceVariant,
+    ],
+    primaryVariantId: vaMixedCirculationVariant.id,
+    /*
+     * Only the transfer phase, and only the evolved gas state.
+     *
+     * That item's stem is a carbon dioxide value rising over minutes with both arterial saturations
+     * falling together, which is this preset after its authored change. The held pre-change preview
+     * is deliberately not mapped anywhere: it exists to be read *before* the change, and the phase
+     * that reads it — `explain` — reaches it through its own bounded action, which re-holds the clock.
+     */
+    initialVariantIdByPhase: { transfer: vaGasSourceAfterVariant.id },
+    phases: {
+      recognize: {
+        objective: 'Establish that circuit flow alone cannot discriminate here either.',
+        requiredAction:
+          'Read the case as it stands and settle whether what is in front of you is a problem of oxygenation, of the circulation, or of both. Nothing is entered at this step; the commitment comes in the next one.',
+        teachingPoint:
+          'In VA the flow display is joined by a second reassuring number: an arterial pressure the circuit is generating on the patient’s behalf.',
+      },
+      predict: {
+        objective: 'Commit to one of the explanations before looking further.',
+        requiredAction:
+          'Commit a prediction and name the finding that would support it, then read the comparison. The state does not advance when you commit.',
+        teachingPoint:
+          'Committing first is what lets the next measurement contradict you instead of confirming you.',
+      },
+      act: {
+        objective: 'Gather the findings that separate the explanations.',
+        requiredAction:
+          'Compare the right radial and femoral saturations, read the pulse pressure and whether the aortic valve is opening, review pInt, pArt and the gradient, inspect the gas-source connection, and review the bedside findings including the cannulated limb.',
+        teachingPoint:
+          'Every explanation on this list predicts something outside the circuit display. That is what makes them separable.',
+      },
+      observe: {
+        objective: 'Read each mechanism preview against the case in front of you.',
+        requiredAction:
+          'Load each mechanism preview one at a time and compare it with the presenting case. Each preview reloads cleanly, so two of them are never read compounded.',
+        teachingPoint:
+          'A mechanism you can load and look at is a hypothesis you can refute rather than one you can only assert.',
+      },
+      explain: {
+        objective: 'Work the whole differential against the hypothesis matrix.',
+        requiredAction:
+          'Read the matrix row by row, and read the limitations beside the rows this simulation cannot demonstrate.',
+        teachingPoint:
+          'Two explanations on this list have no preview at all. Knowing which they are is part of knowing what the simulation is for.',
+      },
+      transfer: {
+        objective: 'Apply the same discipline to a mechanism the circuit does report.',
+        requiredAction: 'Load the gas-source preview and answer the transfer item.',
+        teachingPoint:
+          'The gas path is the one explanation here whose consequence arrives quickly and is unmistakable once it is looked for.',
+      },
+    },
+    guidedActions: [
+      {
+        id: 'compare-upper-and-lower-body-saturations',
+        label: 'Compare the right radial and femoral saturations',
+        description:
+          'Read the upper-body and lower-body values together rather than one at a time. The gap between them is the measurement.',
+        kind: 'evidence',
+        settleSeconds: 0,
+      },
+      {
+        id: 'review-pulsatility-and-valve',
+        label: 'Review pulsatility, valve opening, and the lungs',
+        description:
+          'Read the pulse pressure, whether the aortic valve is opening, and the pulmonary congestion together.',
+        kind: 'evidence',
+        settleSeconds: 0,
+      },
+      {
+        id: 'review-va-pressure-zones',
+        label: 'Review pInt, pArt, and the gradient',
+        description: 'Read the three membrane-side pressures as a set.',
+        kind: 'evidence',
+        settleSeconds: 0,
+      },
+      {
+        id: 'inspect-va-gas-source-connection',
+        label: 'Inspect the gas-source connection',
+        description:
+          'Look at the separate gas path: source, sweep setting, and whether gas is reaching the membrane.',
+        kind: 'evidence',
+        settleSeconds: 0,
+      },
+      {
+        id: 'review-limb-and-bedside-findings',
+        label: 'Review the cannulated limb and bedside findings',
+        description:
+          'Read what the patient side reports, including the limb distal to the arterial cannula.',
+        kind: 'evidence',
+        settleSeconds: 0,
+      },
+      {
+        id: 'preview-lv-loading-mechanism',
+        label: 'Mechanism preview: ventricular loading',
+        description:
+          'Load the existing loading case as a state to read. Nothing is recorded against that drill.',
+        kind: 'restore-and-apply',
+        variantId: lvLoadingPreviewVariant.id,
+        settleSeconds: 0,
+      },
+      {
+        id: 'preview-va-oxygenator-resistance-mechanism',
+        label: 'Mechanism preview: membrane resistance',
+        description:
+          'Load the existing VA membrane-resistance case as a state to read. In this simulation its displayed flow falls as well, which the preview says explicitly.',
+        kind: 'restore-and-apply',
+        variantId: vaOxygenatorResistancePreviewVariant.id,
+        settleSeconds: 0,
+      },
+      {
+        id: 'preview-va-gas-source-before-change',
+        label: 'Mechanism preview: the gas case before its change',
+        description:
+          'Load the existing VA gas-source case one modeled second before its authored change, held there so it can be read first.',
+        kind: 'restore-and-apply',
+        variantId: vaGasSourceBeforeVariant.id,
+        settleSeconds: 0,
+      },
+      {
+        id: 'reveal-va-gas-source-evolved',
+        label: 'Reveal the gas case evolved',
+        description:
+          'Advance the same gas case deterministically past its authored change and read it again.',
+        kind: 'restore-and-apply',
+        variantId: vaGasSourceAfterVariant.id,
+        settleSeconds: 0,
+      },
+      {
+        id: 'restore-mixed-circulation-case',
+        label: 'Restore the case as it stands',
+        description:
+          'Reload the presenting state of this case. Completion already recorded is kept; only the current interaction is cleared.',
+        kind: 'restore-and-apply',
+        variantId: vaMixedCirculationVariant.id,
+        settleSeconds: 0,
+      },
+    ],
+    evidenceIds: [
+      ...coreSources,
+      'elso-adult-va-2021',
+      'elso-neuro-monitoring-2024',
+      'ecmo-book-ch17',
+      'elso-dual-circulation-2024',
+      'elso-maastricht-nomenclature-2019',
+    ],
+  },
 })
 
 export function ecmoFoundationLessonRuntime(
@@ -816,13 +1336,53 @@ export function ecmoFoundationPrimaryVariant(
 }
 
 /**
+ * The variant id a lesson opens at a given phase on. The primary variant unless a phase is authored.
+ *
+ * Deliberately total and deliberately dull: no phase name is parsed, no ordering is assumed, and an
+ * unmapped phase is not a special case but the default. The authoring is validated at import, so a
+ * mapping that names a variant the lesson does not offer cannot reach this function.
+ */
+export function ecmoFoundationInitialVariantId(
+  runtime: EcmoFoundationLessonRuntime,
+  phase: CriticalCareActivityPhase,
+): string {
+  return runtime.initialVariantIdByPhase?.[phase] ?? runtime.primaryVariantId
+}
+
+/**
+ * The clean state a lesson mounts with, for the phase it is being mounted at.
+ *
+ * Falls back to the primary variant rather than throwing: import-time validation is what makes a bad
+ * mapping loud, and a lesson that renders the wrong-but-authored state is a better failure at
+ * runtime than a lesson that renders nothing.
+ */
+export function ecmoFoundationInitialVariant(
+  runtime: EcmoFoundationLessonRuntime,
+  supportMode: SupportMode,
+  phase: CriticalCareActivityPhase,
+): EcmoFoundationStateVariant {
+  const variantId = ecmoFoundationInitialVariantId(runtime, phase)
+  return (
+    ecmoFoundationVariants(runtime, supportMode).find((variant) => variant.id === variantId) ??
+    ecmoFoundationPrimaryVariant(runtime, supportMode)
+  )
+}
+
+/**
  * Structural check, run at import so an authoring mistake fails loudly rather than rendering a
  * lesson with a dead action.
+ *
+ * Takes the record it checks so a test can hand it a deliberately malformed runtime: an invariant
+ * that can only be exercised by breaking the shipped content is an invariant nobody exercises.
  */
-export function validateEcmoFoundationRuntimes(): readonly string[] {
+export function validateEcmoFoundationRuntimes(
+  runtimes: Readonly<
+    Partial<Record<EcmoInteractiveFoundationSectionId, EcmoFoundationLessonRuntime>>
+  > = ecmoFoundationLessonRuntimes,
+): readonly string[] {
   const errors: string[] = []
   for (const sectionId of ecmoInteractiveFoundationSectionIds) {
-    const runtime = ecmoFoundationLessonRuntimes[sectionId]
+    const runtime = runtimes[sectionId]
     if (!runtime) {
       errors.push(`interactive foundation section has no runtime: ${sectionId}`)
       continue
@@ -833,6 +1393,29 @@ export function validateEcmoFoundationRuntimes(): readonly string[] {
     if (isEcmoVvOnlyFoundationSectionId(sectionId) && runtime.supportMode !== 'vv') {
       errors.push(`VV-only section does not fix its support mode: ${sectionId}`)
     }
+    if (isEcmoVaOnlyFoundationSectionId(sectionId) && runtime.supportMode !== 'va') {
+      errors.push(`VA-only section does not fix its support mode: ${sectionId}`)
+    }
+    // A section claimed by both track-fixed lists would resolve to whichever guard ran first.
+    if (isEcmoVvOnlyFoundationSectionId(sectionId) && isEcmoVaOnlyFoundationSectionId(sectionId)) {
+      errors.push(`section is declared both VV-only and VA-only: ${sectionId}`)
+    }
+    /*
+     * The phase-to-clean-state mapping, checked once per lesson.
+     *
+     * The key check is hoisted out of the support-mode loop because a malformed phase name is one
+     * mistake and would otherwise be reported twice; the variant-existence check below is inside it,
+     * because a shared lesson offers a different set of variants in each mode and a mapping has to
+     * resolve in both.
+     */
+    for (const [phase, variantId] of Object.entries(runtime.initialVariantIdByPhase ?? {})) {
+      if (!(criticalCareActivityPhases as readonly string[]).includes(phase)) {
+        errors.push(`${sectionId}: initial-state mapping names an unknown phase ${phase}`)
+      }
+      if (typeof variantId !== 'string' || variantId.length === 0) {
+        errors.push(`${sectionId}/${phase}: initial-state mapping has no variant id`)
+      }
+    }
     for (const supportMode of ['vv', 'va'] as const) {
       const variants = ecmoFoundationVariants(runtime, supportMode)
       if (variants.length === 0) errors.push(`${sectionId}: no state variant authored`)
@@ -840,6 +1423,36 @@ export function validateEcmoFoundationRuntimes(): readonly string[] {
       if (ids.size !== variants.length) errors.push(`${sectionId}: duplicate variant id`)
       if (!ids.has(runtime.primaryVariantId)) {
         errors.push(`${sectionId}: primary variant ${runtime.primaryVariantId} is not authored`)
+      }
+      /*
+       * Every authored phase mapping resolves, in this support mode, to a state that is honest for
+       * that phase.
+       *
+       * The second rule is the load-bearing one. A lesson whose primary variant holds the clock does
+       * so because it sits deliberately short of an authored change; opening its `recognize` or
+       * `predict` phase on a state that does not hold the clock would put the learner in front of a
+       * case that has already changed and then ask them to predict the change. That is precisely the
+       * defect a phase URL is most likely to introduce, so it is checked rather than commented.
+       */
+      const primary = variants.find((variant) => variant.id === runtime.primaryVariantId)
+      for (const [phase, variantId] of Object.entries(runtime.initialVariantIdByPhase ?? {})) {
+        if (typeof variantId !== 'string' || variantId.length === 0) continue
+        const mapped = variants.find((variant) => variant.id === variantId)
+        if (!mapped) {
+          errors.push(
+            `${sectionId}/${phase}: initial state ${variantId} is not authored for ${supportMode}`,
+          )
+          continue
+        }
+        if (
+          primary?.holdsClock &&
+          !mapped.holdsClock &&
+          (phase === 'recognize' || phase === 'predict')
+        ) {
+          errors.push(
+            `${sectionId}/${phase}: opens on ${variantId}, which does not hold the clock, in a lesson whose opening state does`,
+          )
+        }
       }
       if (runtime.supportMode) {
         for (const variant of variants) {

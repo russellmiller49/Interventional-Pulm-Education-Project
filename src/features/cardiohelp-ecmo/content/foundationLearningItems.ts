@@ -683,6 +683,301 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
         reviewStatus: 'draft',
       },
     },
+
+    'va-parallel-physiology': {
+      prediction: {
+        id: 'ecmo.foundation.parallel.prediction',
+        activityId: activityId('va-parallel-physiology'),
+        phase: 'predict',
+        itemType: 'mechanism-interpretation',
+        contextRequirement: 'context-independent',
+        stem: 'A patient on peripheral venoarterial support is being monitored from a right radial arterial line. Over the morning that saturation has fallen from a saturation of 96 to a saturation of 82. A sample drawn from a femoral line reads a saturation of 98. Circuit flow, both membrane pressures, the gradient across the membrane and the post-membrane saturation are all exactly what they were. What best accounts for this?',
+        choices: [
+          {
+            id: 'watershed-moved-distally',
+            label:
+              'The heart is ejecting more of its own poorly oxygenated blood, so the place where the two circulations meet has moved more distally and the upper body is now being supplied by the native lungs.',
+            plausibility: 'best',
+            rationale:
+              'In peripheral femoral venoarterial support the circuit returns blood retrograde up the aorta while the ventricle ejects anterograde down it. Raising native ejection relative to circuit flow moves their meeting place more distally, away from the aortic root and toward the return cannula, so the brachiocephalic, left common carotid and left subclavian arteries come to be filled from the native side. Where the meeting place sits relative to the aortic root also decides what the coronary arteries receive, and the right radial value does not settle that on its own.',
+          },
+          {
+            id: 'membrane-losing-transfer',
+            label: 'The membrane lung has stopped transferring oxygen properly.',
+            plausibility: 'incorrect-mechanism',
+            rationale:
+              'A membrane losing transfer lowers the post-membrane saturation, and the femoral value would fall with it. Both are unchanged, and the femoral sample is the one nearest the return cannula.',
+          },
+          {
+            id: 'circuit-flow-too-low',
+            label: 'Circuit flow has become inadequate and should be increased.',
+            plausibility: 'incorrect-mechanism',
+            rationale:
+              'Displayed flow is unchanged, and the lower body is well saturated. Raising flow acts on a circulation that is already delivering what it was delivering.',
+          },
+          {
+            id: 'sampling-artefact',
+            label: 'The two samples disagree, so one of them is unreliable and should be repeated.',
+            plausibility: 'reasonable-but-incomplete',
+            rationale:
+              'Repeating a sample is never unreasonable, but two arterial sites disagreeing is the expected consequence of two circulations in parallel rather than evidence of a bad sample. Treating the difference as noise discards the finding.',
+          },
+          {
+            id: 'reassuring-recovery',
+            label:
+              'Native cardiac function is recovering, so this is good news and needs no action.',
+            plausibility: 'unsafe',
+            rationale:
+              'Recovering ejection is indeed what produces this pattern, which is exactly why it is dangerous: the improvement in the heart is delivering poorly oxygenated blood to the brain and the coronary circulation. It is a finding that calls for attention to the native lungs, not for reassurance.',
+          },
+        ],
+        correctChoiceIds: ['watershed-moved-distally'],
+        explanation:
+          'Two arterial saturations from one patient are not a repeated measurement. In peripheral venoarterial support they sample two different circulations, and the difference between them is the finding. Every circuit signal here is unchanged, which is why the monitoring site — not the console — is what discovers this.',
+        evidenceIds: [...coreSources, 'elso-adult-va-2021', 'ecmo-book-ch17'],
+        reviewStatus: 'draft',
+      },
+      transfer: {
+        id: 'ecmo.foundation.parallel.transfer',
+        activityId: activityId('va-parallel-physiology'),
+        phase: 'transfer',
+        itemType: 'transfer-case',
+        transferVariantId: 'ecmo.foundation.parallel.transfer-variant',
+        contextRequirement: 'context-independent',
+        stem: 'A different patient on peripheral venoarterial support deteriorates. Circuit flow, both membrane pressures and the gradient are unchanged. The arterial trace has become almost flat, echocardiography reports that the aortic valve is no longer opening, and the chest has become markedly congested. Right radial and femoral saturations are close to one another and both are reassuring. Which reading is best supported?',
+        choices: [
+          {
+            id: 'ventricle-distended-against-return',
+            label:
+              'The left ventricle is distended and can no longer eject against the returning arterial blood.',
+            plausibility: 'best',
+            rationale:
+              'Arterial return raises what the ventricle must eject against while drainage lowers what reaches it. A ventricle that cannot open the aortic valve produces a flat arterial trace, and blood that cannot leave the left heart backs up into the lungs.',
+          },
+          {
+            id: 'watershed-problem',
+            label: 'The mixing watershed has moved and the upper body is receiving native blood.',
+            plausibility: 'incorrect-mechanism',
+            rationale:
+              'That mechanism separates the two arterial saturations. Here they agree with each other, and a ventricle that is not ejecting is not contributing a competing stream at all.',
+          },
+          {
+            id: 'membrane-dysfunction',
+            label: 'The membrane lung is failing.',
+            plausibility: 'incorrect-mechanism',
+            rationale:
+              'A failing membrane shows itself in the gradient across it and in the post-membrane saturation. Both are unchanged, and neither explains a valve that has stopped opening.',
+          },
+          {
+            id: 'raise-circuit-flow',
+            label: 'Raise circuit flow to improve the systemic circulation.',
+            plausibility: 'unsafe',
+            rationale:
+              'Raising flow raises the arterial pressure the ventricle is already unable to eject against. The sources for this section describe this as worsening distension rather than relieving it.',
+          },
+        ],
+        correctChoiceIds: ['ventricle-distended-against-return'],
+        explanation:
+          'The same unchanged circuit, a different mechanism. Loading shows itself in pulsatility, in whether the valve opens, and in the lungs — none of which the console reports. Two reassuring arterial saturations do not exclude it, because a ventricle that is not ejecting produces no second stream to disagree with.',
+        evidenceIds: [...coreSources, 'elso-adult-va-2021', 'ecmo-book-ch17'],
+        reviewStatus: 'draft',
+      },
+    },
+
+    'va-normal-state': {
+      prediction: {
+        id: 'ecmo.foundation.va-normal.prediction',
+        activityId: activityId('va-normal-state'),
+        phase: 'predict',
+        itemType: 'mechanism-interpretation',
+        contextRequirement: 'context-independent',
+        stem: 'You take over a peripheral venoarterial run. Drainage pressure is steadily negative, flow matches the set speed, the gradient across the membrane has not moved for hours, and gas exchange is unchanged on an unaltered sweep. Nothing on the console has moved. What does that establish about the state of this patient on support?',
+        choices: [
+          {
+            id: 'circuit-stable-patient-unestablished',
+            label:
+              'That the circuit is behaving steadily — and nothing yet about pulsatility, whether the valve is opening, the difference between two arterial sampling sites, or the cannulated limb.',
+            plausibility: 'best',
+            rationale:
+              'Every signal listed belongs to the circuit. The findings that distinguish a stable venoarterial run from a deteriorating one live outside the console, and an unchanged console is silent about all of them.',
+          },
+          {
+            id: 'run-is-stable',
+            label: 'That the run is stable and the patient can be reviewed at the next round.',
+            plausibility: 'incorrect-mechanism',
+            rationale:
+              'This treats the circuit display as a summary of the patient. In venoarterial support a distended ventricle, a moved watershed and a threatened limb can all develop with the console entirely unchanged.',
+          },
+          {
+            id: 'needs-published-targets',
+            label:
+              'Nothing, until each value is compared against the published target range for venoarterial support.',
+            plausibility: 'reasonable-but-incomplete',
+            rationale:
+              'Cannulation strategy, native function, patient size, temperature, hemoglobin and the monitoring site all move these values while the run itself is entirely unremarkable. What transfers is the relationship among the signals over time, not a value being familiar.',
+          },
+          {
+            id: 'gas-exchange-proves-circulation',
+            label:
+              'That the circulation is adequate, because gas exchange is unchanged on an unaltered sweep.',
+            plausibility: 'incorrect-mechanism',
+            rationale:
+              'Gas exchange describes what the membrane is doing. In venoarterial support the circuit also carries a circulatory role, and adequacy of that role is not reported by the sweep or by the membrane.',
+          },
+        ],
+        correctChoiceIds: ['circuit-stable-patient-unestablished'],
+        explanation:
+          'A venoarterial baseline review is the venovenous one plus everything parallel circulation adds — pulsatility, aortic-valve opening, two arterial sampling sites read against each other, and a limb distal to an arterial cannula. None of those is on the console, and none of them is established by the console being unchanged.',
+        evidenceIds: [...coreSources, 'elso-adult-va-2021', 'elso-neuro-monitoring-2024'],
+        reviewStatus: 'draft',
+      },
+      transfer: {
+        id: 'ecmo.foundation.va-normal.transfer',
+        activityId: activityId('va-normal-state'),
+        phase: 'transfer',
+        itemType: 'transfer-case',
+        transferVariantId: 'ecmo.foundation.va-normal.transfer-variant',
+        contextRequirement: 'context-independent',
+        stem: 'A colleague hands over a peripheral venoarterial patient whose absolute values are unlike any you have looked after: the drainage pressure and the membrane gradient are both further from your usual than you expect. They tell you every one of those values has held the same relationship to the others across two consecutive shifts, that pulsatility has been present and steady throughout, and that the cannulated limb has been examined each round. How should that handover be read?',
+        choices: [
+          {
+            id: 'stability-over-time-is-the-evidence',
+            label:
+              'As a stable baseline for this patient, because the relationships among the signals have held over a long observed window.',
+            plausibility: 'best',
+            rationale:
+              'A steady relationship across two shifts is far stronger evidence about this circuit than any single value resembling one seen on a different patient. The parallel-circulation signals have been watched as well, which is what completes the picture in this track.',
+          },
+          {
+            id: 'unfamiliar-values-are-concerning',
+            label:
+              'As concerning, because several values sit outside what you usually see on support.',
+            plausibility: 'incorrect-mechanism',
+            rationale:
+              'Cannula size and position, patient size, native function, temperature and hemoglobin all move these numbers while the run itself is entirely unremarkable. Unfamiliarity is a fact about your experience, not about this patient.',
+          },
+          {
+            id: 'need-a-new-baseline',
+            label:
+              'As unusable, because you did not observe the earlier readings and must establish your own baseline before interpreting anything.',
+            plausibility: 'reasonable-but-incomplete',
+            rationale:
+              'Establishing your own reading is good practice, but a documented relationship holding across two shifts is exactly the evidence a baseline review is trying to build. Discarding it starts the window again for no gain.',
+          },
+          {
+            id: 'console-values-suffice',
+            label:
+              'As adequate on the circuit values alone, since those are what the console reports.',
+            plausibility: 'incorrect-mechanism',
+            rationale:
+              'The handover is strong because it includes pulsatility and the limb alongside the circuit values. Had it covered only the console, the venoarterial-specific part of the baseline would still be unknown.',
+          },
+        ],
+        correctChoiceIds: ['stability-over-time-is-the-evidence'],
+        explanation:
+          'The same discipline as the venovenous normal state, extended by the signals that only exist because the circulations are in parallel. A relationship holding over an observed window transfers between patients; a remembered absolute value does not.',
+        evidenceIds: [...coreSources, 'elso-adult-va-2021', 'elso-neuro-monitoring-2024'],
+        reviewStatus: 'draft',
+      },
+    },
+
+    'va-integration-capstone': {
+      prediction: {
+        id: 'ecmo.foundation.va-integration.prediction',
+        activityId: activityId('va-integration-capstone'),
+        phase: 'predict',
+        itemType: 'mechanism-interpretation',
+        contextRequirement: 'context-independent',
+        stem: 'A patient on stable peripheral venoarterial support deteriorates. Displayed circuit flow is unchanged, the arterial pressure the monitor shows is unchanged, and every membrane pressure and the gradient are unchanged. Which single next step separates the largest number of the remaining explanations?',
+        choices: [
+          {
+            id: 'sample-both-arterial-sites',
+            label:
+              'Read an upper-body and a lower-body arterial saturation against each other, and look at the arterial trace and whether the valve is opening.',
+            plausibility: 'best',
+            rationale:
+              'A gap between the two sites indicates a moved watershed; a flat trace with a valve that has stopped opening indicates a distended ventricle. One look at those two things separates the two explanations that an unchanged circuit is most likely to be hiding.',
+          },
+          {
+            id: 'raise-circuit-flow',
+            label: 'Raise circuit flow, since more support should help a deteriorating patient.',
+            plausibility: 'unsafe',
+            rationale:
+              'Raising femoral venoarterial flow before the mechanism is established is premature rather than simply harmful. Raising it moves the mixing point more proximally, toward the aortic root, which can improve upper-body and cerebral oxygenation for a time. It also raises what the left ventricle must eject against, so it can reduce native ejection and worsen distension, pulmonary congestion and stasis. The same action can therefore relieve one regional oxygenation problem while deepening the loading problem underneath it, which is why the mechanism has to be named first.',
+          },
+          {
+            id: 'change-the-membrane',
+            label: 'Arrange a membrane change, since the membrane is the component that fails.',
+            plausibility: 'incorrect-mechanism',
+            rationale:
+              'A membrane losing performance shows itself in the gradient across it and in the post-membrane saturation. Both are stated to be unchanged, so this acts on the one component the findings already argue against.',
+          },
+          {
+            id: 'wait-and-repeat',
+            label: 'Repeat the same circuit observations in an hour and see whether they move.',
+            plausibility: 'reasonable-but-incomplete',
+            rationale:
+              'Repeating a set of signals that is already stated to be unchanged does not add information. The explanations still open are precisely the ones the circuit does not report.',
+          },
+        ],
+        correctChoiceIds: ['sample-both-arterial-sites'],
+        explanation:
+          'In venoarterial support the flow display is joined by a second reassuring number: an arterial pressure the circuit is generating on the patient’s behalf. Neither discriminates. The findings that do — two arterial sites read against each other, the pulsatility, the valve, the lungs and the cannulated limb — all require going and looking.',
+        evidenceIds: [...coreSources, 'elso-adult-va-2021', 'elso-neuro-monitoring-2024'],
+        reviewStatus: 'draft',
+      },
+      transfer: {
+        id: 'ecmo.foundation.va-integration.transfer',
+        activityId: activityId('va-integration-capstone'),
+        phase: 'transfer',
+        itemType: 'transfer-case',
+        transferVariantId: 'ecmo.foundation.va-integration.transfer-variant',
+        contextRequirement: 'context-independent',
+        stem: 'On another venoarterial patient the carbon dioxide value rises quickly and the pH follows it down over minutes. Displayed circuit flow, every membrane pressure, the gradient and the arterial pressure are all completely unchanged, and both arterial saturations fall together rather than apart. Which explanation does that combination point to?',
+        choices: [
+          {
+            id: 'gas-path-interrupted',
+            label:
+              'The gas supply to the membrane has been interrupted, while the pump continues to move blood through it.',
+            plausibility: 'best',
+            rationale:
+              'Nothing else on the differential moves carbon dioxide this quickly, and the gas path contains no pressure channel at all, so an interruption leaves every circuit pressure exactly where it was. Both saturations falling together implicates the blood the membrane returns rather than a competition between two circulations.',
+          },
+          {
+            id: 'watershed-moved',
+            label: 'The mixing watershed has moved and the upper body is receiving native blood.',
+            plausibility: 'incorrect-mechanism',
+            rationale:
+              'That mechanism separates the two arterial saturations rather than lowering both, and it does not move carbon dioxide quickly.',
+          },
+          {
+            id: 'ventricular-distension',
+            label: 'The left ventricle has distended against the returning arterial blood.',
+            plausibility: 'incorrect-mechanism',
+            rationale:
+              'Distension shows itself in the arterial trace, in whether the valve opens and in the lungs. It does not produce a carbon dioxide rise over minutes with an entirely undisturbed circuit.',
+          },
+          {
+            id: 'sweep-is-set-so-gas-is-flowing',
+            label:
+              'The gas side can be excluded, because the sweep control is still set where it was.',
+            plausibility: 'unsafe',
+            rationale:
+              'A setting on a control establishes what was asked for, not what is arriving at the membrane. Excluding the gas path without looking at the connection is how the fastest and most reversible explanation gets missed.',
+          },
+        ],
+        correctChoiceIds: ['gas-path-interrupted'],
+        explanation:
+          'The same discipline as the venovenous capstone, applied where the circuit does eventually report the consequence. Speed is the discriminator, and the direction the two arterial saturations move relative to each other separates a gas-side problem from a mixing one. The finding itself is at the gas panel and the tubing, and it is reached by inspection.',
+        evidenceIds: [
+          ...coreSources,
+          'elso-adult-va-2021',
+          'elso-neuro-monitoring-2024',
+          'ecmo-book-ch17',
+        ],
+        reviewStatus: 'draft',
+      },
+    },
   }
 
 // Validate at import so a malformed item or a learner-copy violation is loud and immediate.
