@@ -1,4 +1,7 @@
-import type { CriticalCareActivityPhase } from '@/features/learning-module/activity/types'
+import {
+  criticalCareActivityPhases,
+  type CriticalCareActivityPhase,
+} from '@/features/learning-module/activity/types'
 
 import type { EcmoLearnStateSource } from './referenceProfiles'
 import type { EcmoSimulationState, SimulationAction, SupportMode } from '../engine/types'
@@ -191,6 +194,30 @@ export interface EcmoFoundationLessonRuntime {
   readonly variants: (supportMode: SupportMode) => readonly EcmoFoundationStateVariant[]
   /** The variant loaded when the lesson opens and when the learner restores. */
   readonly primaryVariantId: string
+  /**
+   * The clean state a phase opens on when the lesson is **mounted** at that phase.
+   *
+   * A `?phase=` URL used to restore the navigation and nothing else: every phase initialized from
+   * `primaryVariantId`, so a link into a phase whose authored content is written against a different
+   * state opened on a state that content does not describe. This is the authored fix, and it is
+   * authored rather than inferred — nothing here derives a variant from the name of a phase.
+   *
+   * Three rules the mappings are held to.
+   *
+   * A mapping exists only where the phase's own content assumes a different clean state. Absent, the
+   * phase opens on `primaryVariantId`, which is what every phase did before this field existed. Most
+   * phases are therefore unmapped, and that is the correct outcome rather than an omission.
+   *
+   * A mapping is a **clean** state and nothing more. No earlier prediction, transfer answer,
+   * snapshot, interaction record or control sequence is reconstructed from it, and nothing about it
+   * is persisted: no storage key, no DTO, no adapter, no payload version, and `ProgressV2` is
+   * untouched. The activity says so on screen whenever it opens anywhere other than the first phase.
+   *
+   * And it applies to mounting only. Clicking through the phase navigation inside a live lesson
+   * never re-resolves it, because the learner's own loaded state is the thing they are working on;
+   * replacing it under them on a phase change would discard the comparison they were reading.
+   */
+  readonly initialVariantIdByPhase?: Partial<Readonly<Record<CriticalCareActivityPhase, string>>>
   readonly phases: Readonly<Record<CriticalCareActivityPhase, EcmoFoundationPhaseCopy>>
   readonly guidedActions: readonly EcmoFoundationGuidedAction[]
   readonly evidenceIds: readonly string[]
@@ -391,6 +418,30 @@ const vaGasSourceAfterVariant: EcmoFoundationStateVariant = {
     'The same drill advanced deterministically past its authored change. The rate at which the modeled values move is this simulation’s, not a bedside time course.',
 }
 
+/**
+ * The authored phase-to-clean-state table, for all ten lessons.
+ *
+ * Every phase of every lesson was read against the state its copy assumes. Three mappings came out
+ * of that; the other fifty-seven phases open on their lesson's primary variant, which is what their
+ * own copy is written against. Recorded here because "unmapped" is a decision, and a future package
+ * that cannot see the decision will read it as an oversight.
+ *
+ * | Lesson                        | Mapped phase → variant                  | Why the rest are unmapped |
+ * | ----------------------------- | --------------------------------------- | ------------------------- |
+ * | why-extracorporeal-support    | —                                       | Every phase reads the selected reference ledger; the only variant authored is that reference. |
+ * | circuit-flow-path             | —                                       | Same: one variant exists, and each phase reads the live circuit at a named location. |
+ * | pump-and-pressure-zones       | —                                       | Its comparisons are bounded changes *from* the reference, applied by the learner; opening on a changed circuit would remove the baseline the phase asks them to compare with. |
+ * | blood-flow-versus-sweep       | —                                       | Same reasoning; both comparisons restore the reference first by design. |
+ * | vv-series-physiology          | —                                       | `transfer` is a *different* patient whose drainage saturation falls as re-drainage resolves — the opposite of the recirculation preview. Mapping it would put the contradicting state on screen. `act` asks the learner to load that preview themselves. |
+ * | vv-normal-state               | —                                       | Every phase is this circuit against itself, starting from the settled reference. `act` captures the snapshot; no phase may open with one fabricated. |
+ * | vv-integration-capstone       | `transfer` → `recirculation-preview`    | Its transfer stem opens "In the re-drainage preview beside you" and reads three of that state's values, so that state is what the item is written against. `recognize` and `predict` must stay on the held pre-fault case, and `observe` asks the learner to reveal the evolved state — so it opens before the change, not after it. |
+ * | va-parallel-physiology        | `transfer` → `lv-loading-preview`       | Its transfer stem is a flat arterial trace, a valve that has stopped opening and a congested chest with two agreeing saturations: the loading preview's findings exactly. Deliberately *not* the differential-oxygenation preview, which the lesson's `act` phase has the learner load themselves. |
+ * | va-normal-state               | —                                       | As the VV baseline: the settled VA reference, and no phase may open with a snapshot that was never captured. |
+ * | va-integration-capstone       | `transfer` → `va-gas-source-after-change` | Its transfer stem is a carbon dioxide value rising over minutes with both arterial saturations falling *together* — the evolved gas state, which is the state the item and this panel's live column are written against. The differential-oxygenation presentation, loading, membrane resistance and the held pre-change gas preview all stay distinct: none of them is mapped, and `recognize` through `explain` open on the presenting case. |
+ *
+ * No lesson maps a shared section to a track-specific preview: the four shared lessons author one
+ * variant per mode and are unmapped, so a mapping cannot select the wrong track's state.
+ */
 export const ecmoFoundationLessonRuntimes: Readonly<
   Record<EcmoInteractiveFoundationSectionId, EcmoFoundationLessonRuntime>
 > = Object.freeze({
@@ -787,6 +838,9 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       vvReferenceVariant,
     ],
     primaryVariantId: gasSourceBeforeVariant.id,
+    // The transfer item is written against the re-drainage preview by name and quotes three of its
+    // values. Every earlier phase stays on the held pre-fault case.
+    initialVariantIdByPhase: { transfer: recirculationPreviewVariant.id },
     phases: {
       recognize: {
         objective: 'Establish that circuit flow alone cannot discriminate here.',
@@ -920,6 +974,9 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       lvLoadingPreviewVariant,
     ],
     primaryVariantId: REFERENCE_VARIANT_ID,
+    // The transfer item describes a flat trace, a valve that has stopped opening and a congested
+    // chest with two agreeing saturations — the loading preview, not the differential one.
+    initialVariantIdByPhase: { transfer: lvLoadingPreviewVariant.id },
     phases: {
       recognize: {
         objective: 'Trace the two circulations and find where they meet.',
@@ -1099,6 +1156,15 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       vaReferenceVariant,
     ],
     primaryVariantId: vaMixedCirculationVariant.id,
+    /*
+     * Only the transfer phase, and only the evolved gas state.
+     *
+     * That item's stem is a carbon dioxide value rising over minutes with both arterial saturations
+     * falling together, which is this preset after its authored change. The held pre-change preview
+     * is deliberately not mapped anywhere: it exists to be read *before* the change, and the phase
+     * that reads it — `explain` — reaches it through its own bounded action, which re-holds the clock.
+     */
+    initialVariantIdByPhase: { transfer: vaGasSourceAfterVariant.id },
     phases: {
       recognize: {
         objective: 'Establish that circuit flow alone cannot discriminate here either.',
@@ -1270,13 +1336,53 @@ export function ecmoFoundationPrimaryVariant(
 }
 
 /**
+ * The variant id a lesson opens at a given phase on. The primary variant unless a phase is authored.
+ *
+ * Deliberately total and deliberately dull: no phase name is parsed, no ordering is assumed, and an
+ * unmapped phase is not a special case but the default. The authoring is validated at import, so a
+ * mapping that names a variant the lesson does not offer cannot reach this function.
+ */
+export function ecmoFoundationInitialVariantId(
+  runtime: EcmoFoundationLessonRuntime,
+  phase: CriticalCareActivityPhase,
+): string {
+  return runtime.initialVariantIdByPhase?.[phase] ?? runtime.primaryVariantId
+}
+
+/**
+ * The clean state a lesson mounts with, for the phase it is being mounted at.
+ *
+ * Falls back to the primary variant rather than throwing: import-time validation is what makes a bad
+ * mapping loud, and a lesson that renders the wrong-but-authored state is a better failure at
+ * runtime than a lesson that renders nothing.
+ */
+export function ecmoFoundationInitialVariant(
+  runtime: EcmoFoundationLessonRuntime,
+  supportMode: SupportMode,
+  phase: CriticalCareActivityPhase,
+): EcmoFoundationStateVariant {
+  const variantId = ecmoFoundationInitialVariantId(runtime, phase)
+  return (
+    ecmoFoundationVariants(runtime, supportMode).find((variant) => variant.id === variantId) ??
+    ecmoFoundationPrimaryVariant(runtime, supportMode)
+  )
+}
+
+/**
  * Structural check, run at import so an authoring mistake fails loudly rather than rendering a
  * lesson with a dead action.
+ *
+ * Takes the record it checks so a test can hand it a deliberately malformed runtime: an invariant
+ * that can only be exercised by breaking the shipped content is an invariant nobody exercises.
  */
-export function validateEcmoFoundationRuntimes(): readonly string[] {
+export function validateEcmoFoundationRuntimes(
+  runtimes: Readonly<
+    Partial<Record<EcmoInteractiveFoundationSectionId, EcmoFoundationLessonRuntime>>
+  > = ecmoFoundationLessonRuntimes,
+): readonly string[] {
   const errors: string[] = []
   for (const sectionId of ecmoInteractiveFoundationSectionIds) {
-    const runtime = ecmoFoundationLessonRuntimes[sectionId]
+    const runtime = runtimes[sectionId]
     if (!runtime) {
       errors.push(`interactive foundation section has no runtime: ${sectionId}`)
       continue
@@ -1294,6 +1400,22 @@ export function validateEcmoFoundationRuntimes(): readonly string[] {
     if (isEcmoVvOnlyFoundationSectionId(sectionId) && isEcmoVaOnlyFoundationSectionId(sectionId)) {
       errors.push(`section is declared both VV-only and VA-only: ${sectionId}`)
     }
+    /*
+     * The phase-to-clean-state mapping, checked once per lesson.
+     *
+     * The key check is hoisted out of the support-mode loop because a malformed phase name is one
+     * mistake and would otherwise be reported twice; the variant-existence check below is inside it,
+     * because a shared lesson offers a different set of variants in each mode and a mapping has to
+     * resolve in both.
+     */
+    for (const [phase, variantId] of Object.entries(runtime.initialVariantIdByPhase ?? {})) {
+      if (!(criticalCareActivityPhases as readonly string[]).includes(phase)) {
+        errors.push(`${sectionId}: initial-state mapping names an unknown phase ${phase}`)
+      }
+      if (typeof variantId !== 'string' || variantId.length === 0) {
+        errors.push(`${sectionId}/${phase}: initial-state mapping has no variant id`)
+      }
+    }
     for (const supportMode of ['vv', 'va'] as const) {
       const variants = ecmoFoundationVariants(runtime, supportMode)
       if (variants.length === 0) errors.push(`${sectionId}: no state variant authored`)
@@ -1301,6 +1423,36 @@ export function validateEcmoFoundationRuntimes(): readonly string[] {
       if (ids.size !== variants.length) errors.push(`${sectionId}: duplicate variant id`)
       if (!ids.has(runtime.primaryVariantId)) {
         errors.push(`${sectionId}: primary variant ${runtime.primaryVariantId} is not authored`)
+      }
+      /*
+       * Every authored phase mapping resolves, in this support mode, to a state that is honest for
+       * that phase.
+       *
+       * The second rule is the load-bearing one. A lesson whose primary variant holds the clock does
+       * so because it sits deliberately short of an authored change; opening its `recognize` or
+       * `predict` phase on a state that does not hold the clock would put the learner in front of a
+       * case that has already changed and then ask them to predict the change. That is precisely the
+       * defect a phase URL is most likely to introduce, so it is checked rather than commented.
+       */
+      const primary = variants.find((variant) => variant.id === runtime.primaryVariantId)
+      for (const [phase, variantId] of Object.entries(runtime.initialVariantIdByPhase ?? {})) {
+        if (typeof variantId !== 'string' || variantId.length === 0) continue
+        const mapped = variants.find((variant) => variant.id === variantId)
+        if (!mapped) {
+          errors.push(
+            `${sectionId}/${phase}: initial state ${variantId} is not authored for ${supportMode}`,
+          )
+          continue
+        }
+        if (
+          primary?.holdsClock &&
+          !mapped.holdsClock &&
+          (phase === 'recognize' || phase === 'predict')
+        ) {
+          errors.push(
+            `${sectionId}/${phase}: opens on ${variantId}, which does not hold the clock, in a lesson whose opening state does`,
+          )
+        }
       }
       if (runtime.supportMode) {
         for (const variant of variants) {

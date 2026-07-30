@@ -27,6 +27,7 @@ import { Link } from '@/i18n/navigation'
 import { ecmoFoundationSectionById } from '../content/foundationLessons'
 import { ecmoFoundationLearningItemsFor } from '../content/foundationLearningItems'
 import {
+  ecmoFoundationInitialVariant,
   ecmoFoundationLessonRuntime,
   ecmoFoundationPrimaryVariant,
   ecmoFoundationVariant,
@@ -163,7 +164,22 @@ function EcmoFoundationLessonWorkspace({
   const primaryVariant = ecmoFoundationPrimaryVariant(runtime, supportMode)
   const trackIsFixed = runtime.supportMode !== undefined
 
-  const [session, dispatch] = useReducer(ecmoFoundationSessionReducer, primaryVariant, (variant) =>
+  /**
+   * The clean state this mount opens on.
+   *
+   * Resolved from the phase the lesson is being mounted at, not from the lesson's primary variant
+   * alone: a link into a phase whose authored content is written against a different state used to
+   * open on a state that content does not describe. Only the *initial* state is resolved this way —
+   * `initialPhase` is a mount-time prop, this component remounts when it changes, and nothing
+   * re-runs the resolver when the learner walks the phase navigation.
+   *
+   * It resolves a state, and only a state. No earlier prediction, transfer answer, snapshot,
+   * interaction record or control sequence is reconstructed, nothing is read from storage, and the
+   * note below says so wherever the lesson opens anywhere other than the first phase.
+   */
+  const initialVariant = ecmoFoundationInitialVariant(runtime, supportMode, initialPhase)
+
+  const [session, dispatch] = useReducer(ecmoFoundationSessionReducer, initialVariant, (variant) =>
     createEcmoFoundationSessionState(variant),
   )
 
@@ -658,9 +674,27 @@ function EcmoFoundationLessonWorkspace({
       </p>
       <h1 className="mt-2 text-2xl font-bold tracking-tight">{section.title}</h1>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-        Opening state: {primaryVariant.label}. Support configuration:{' '}
+        Opening state: {initialVariant.label}. Support configuration:{' '}
         {supportMode === 'va' ? 'venoarterial' : 'venovenous'}.
       </p>
+
+      {/*
+        What a phase URL did and did not do.
+
+        It selected a clean state authored for that phase. It did not restore a session, so saying
+        anything that implied one — "resumed", "your progress", "where you left off" — would be a
+        claim about state this module deliberately never keeps. Shown only while the learner is still
+        on the phase they arrived at, because once they move on it is describing a phase they left.
+      */}
+      {initialPhase !== 'recognize' && phase === initialPhase ? (
+        <p
+          className="mt-2 max-w-3xl rounded-xl border border-dashed px-3 py-2 text-sm leading-6"
+          data-phase-restoration-note={initialPhase}
+        >
+          Opened at the {initialPhase} phase with a clean teaching state. Earlier choices,
+          snapshots, and actions were not restored.
+        </p>
+      ) : null}
 
       {trackIsFixed ? (
         <p

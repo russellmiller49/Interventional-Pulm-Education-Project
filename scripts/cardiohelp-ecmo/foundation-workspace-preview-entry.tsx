@@ -41,6 +41,10 @@ import {
   type EcmoInteractiveFoundationSectionId,
 } from '../../src/features/cardiohelp-ecmo/content/foundationLessonRuntime'
 import type { SupportMode } from '../../src/features/cardiohelp-ecmo/engine/types'
+import {
+  criticalCareActivityPhases,
+  type CriticalCareActivityPhase,
+} from '../../src/features/learning-module/activity/types'
 import { cardiohelpEcmoNavBase } from '../../src/features/learning-module/moduleRoutes'
 
 /* ------------------------------------------------------------------ *
@@ -313,9 +317,23 @@ const SCOPES: readonly {
   { label: 'VA only', ids: ecmoVaOnlyFoundationSectionIds },
 ]
 
+/**
+ * The phase the fixture opens the lesson at, so a `?phase=` restoration can be reviewed here.
+ *
+ * The route validates the same parameter the same way and hands it to the same prop, and the
+ * activity's remount key includes it — so selecting a phase here reproduces a URL arrival rather than
+ * a click through the phase navigation, which is the case worth looking at.
+ */
+function requestedPhase(value: string | null): CriticalCareActivityPhase {
+  return (criticalCareActivityPhases as readonly string[]).includes(value ?? '')
+    ? (value as CriticalCareActivityPhase)
+    : 'recognize'
+}
+
 function initialSelection(): {
   lesson: EcmoInteractiveFoundationSectionId
   track: SupportMode
+  phase: CriticalCareActivityPhase
 } {
   const params = new URLSearchParams(window.location.search)
   const lesson = params.get('lesson')
@@ -325,6 +343,7 @@ function initialSelection(): {
       ? lesson
       : ecmoSharedFoundationSectionIds[0],
     track,
+    phase: requestedPhase(params.get('phase')),
   }
 }
 
@@ -337,13 +356,18 @@ function Fixture() {
   useEffect(() => {
     document.body.dataset.previewLesson = selection.lesson
     document.body.dataset.previewTrack = resolvedTrack
-  }, [selection.lesson, resolvedTrack])
+    document.body.dataset.previewPhase = selection.phase
+  }, [selection.lesson, resolvedTrack, selection.phase])
 
   useEffect(() => {
     const globals = window as unknown as Record<string, unknown>
-    globals.__ecmoWorkspaceSelect = (lesson: string, track?: string) => {
+    globals.__ecmoWorkspaceSelect = (lesson: string, track?: string, phase?: string) => {
       if (!isEcmoInteractiveFoundationSectionId(lesson)) return `unknown lesson: ${lesson}`
-      setSelection({ lesson, track: track === 'va' ? 'va' : 'vv' })
+      setSelection({
+        lesson,
+        track: track === 'va' ? 'va' : 'vv',
+        phase: requestedPhase(phase ?? null),
+      })
       return lesson
     }
     return () => {
@@ -354,7 +378,11 @@ function Fixture() {
   return (
     <>
       <CardiohelpModuleFrame locale="en" activeHref={`${cardiohelpEcmoNavBase}/learn`}>
-        <EcmoFoundationLessonActivity sectionId={selection.lesson} supportMode={resolvedTrack} />
+        <EcmoFoundationLessonActivity
+          sectionId={selection.lesson}
+          supportMode={resolvedTrack}
+          initialPhase={selection.phase}
+        />
       </CardiohelpModuleFrame>
 
       {/*
@@ -374,18 +402,49 @@ function Fixture() {
         }}
       >
         <p style={{ margin: '0 0 0.75rem', fontWeight: 800, letterSpacing: '0.06em' }}>
-          OFFLINE FIXTURE — pick a lesson. Also available as{' '}
-          <code>window.__ecmoWorkspaceSelect(&apos;id&apos;, &apos;vv|va&apos;)</code>,{' '}
-          <code>window.__ecmoWorkspaceProbe()</code> and{' '}
+          OFFLINE FIXTURE — pick a lesson and an opening phase. Also available as{' '}
+          <code>
+            window.__ecmoWorkspaceSelect(&apos;id&apos;, &apos;vv|va&apos;, &apos;phase&apos;)
+          </code>
+          , <code>window.__ecmoWorkspaceProbe()</code> and{' '}
           <code>window.__ecmoWorkspaceScrollProbe()</code>.
         </p>
         <p style={{ margin: '0 0 1rem', color: '#96b3b6' }}>
           Currently showing <strong>{selection.lesson}</strong> on the{' '}
-          <strong>{resolvedTrack.toUpperCase()}</strong> reference circuit.
+          <strong>{resolvedTrack.toUpperCase()}</strong> reference circuit, opened at the{' '}
+          <strong>{selection.phase}</strong> phase.
           {resolvedTrack === selection.track
             ? null
             : ' Track was forced by the lesson, exactly as the route forces it.'}
         </p>
+
+        {/* Opening phase, so a `?phase=` arrival can be reviewed rather than only clicked into. */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.9rem' }}>
+          {criticalCareActivityPhases.map((phase) => {
+            const active = selection.phase === phase
+            return (
+              <button
+                key={phase}
+                type="button"
+                data-preview-phase={phase}
+                onClick={() => setSelection((current) => ({ ...current, phase }))}
+                style={{
+                  minHeight: '2.25rem',
+                  padding: '0.35rem 0.6rem',
+                  color: active ? '#04211f' : '#dcecee',
+                  border: '1px solid rgba(163, 206, 209, 0.4)',
+                  borderRadius: '0.5rem',
+                  background: active ? '#a3ced1' : 'rgba(16, 46, 52, 0.7)',
+                  cursor: 'pointer',
+                  font: 'inherit',
+                  fontWeight: 700,
+                }}
+              >
+                open at {phase}
+              </button>
+            )
+          })}
+        </div>
         {SCOPES.map((scope) => (
           <div key={scope.label} style={{ marginBottom: '0.9rem' }}>
             <p
@@ -410,7 +469,8 @@ function Fixture() {
                     <button
                       key={`${id}:${track}`}
                       type="button"
-                      onClick={() => setSelection({ lesson: id, track })}
+                      // Keeps the chosen opening phase, so a phase can be compared across lessons.
+                      onClick={() => setSelection((current) => ({ ...current, lesson: id, track }))}
                       style={{
                         minHeight: '2.25rem',
                         padding: '0.35rem 0.6rem',
