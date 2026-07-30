@@ -60,8 +60,8 @@ Commit it locally:
 npm run literature:seed-taxonomy -- --commit --target local
 ```
 
-The seed is idempotent. Phase 1 seeds 21 journal/source records and 77 topic nodes from registry
-and taxonomy version `1.0.0`.
+The seed is idempotent. Phase 1 seeds 21 journal/source records and 78 topic nodes from registry
+and taxonomy version `1.1.0`.
 
 ## 3. Generate and review a provenance manifest
 

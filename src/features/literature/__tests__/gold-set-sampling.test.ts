@@ -1,5 +1,9 @@
 import type { LiteratureGoldSamplingCandidate } from '@/features/literature/gold-set/types'
-import { sampleLiteratureGoldSet } from '@/features/literature/gold-set/sampling'
+import {
+  classifyLiteratureGoldDeterministicBand,
+  sampleLiteratureGoldSet,
+} from '@/features/literature/gold-set/sampling'
+import { literatureGoldCreateOptionsSchema } from '@/features/literature/schemas/gold-set'
 
 function candidate(
   pmid: number,
@@ -55,11 +59,20 @@ describe('gold-set sampling', () => {
     expect(second.items.map((item) => item.pmid)).not.toEqual(first.items.map((item) => item.pmid))
   })
 
+  it('uses pilot-calibrated thresholds that preserve a genuine intermediate band', () => {
+    expect(classifyLiteratureGoldDeterministicBand(0)).toBe('low')
+    expect(classifyLiteratureGoldDeterministicBand(0.0999)).toBe('low')
+    expect(classifyLiteratureGoldDeterministicBand(0.1)).toBe('intermediate')
+    expect(classifyLiteratureGoldDeterministicBand(0.7499)).toBe('intermediate')
+    expect(classifyLiteratureGoldDeterministicBand(0.75)).toBe('high')
+  })
+
   it('samples unique PMIDs and produces a 70/30 split', () => {
     const report = sampleLiteratureGoldSet(candidates, options)
     const pmids = report.items.map((item) => item.pmid)
 
     expect(report.selectedCount).toBe(900)
+    expect(report.reportVersion).toBe('1.1.0')
     expect(new Set(pmids).size).toBe(900)
     expect(report.developmentCount).toBe(630)
     expect(report.testCount).toBe(270)
@@ -68,10 +81,79 @@ describe('gold-set sampling', () => {
     )
   })
 
+  it('rejects gold-standard configurations that cannot produce both splits', () => {
+    expect(
+      literatureGoldCreateOptionsSchema.safeParse({
+        ...options,
+        size: 1,
+      }).success,
+    ).toBe(false)
+    expect(
+      literatureGoldCreateOptionsSchema.safeParse({
+        ...options,
+        testPercent: 0,
+      }).success,
+    ).toBe(false)
+    expect(() =>
+      sampleLiteratureGoldSet(candidates, {
+        ...options,
+        size: 2,
+        testPercent: 1,
+      }),
+    ).toThrow('at least one development and one test item')
+  })
+
   it('keeps a single journal from filling the sample when alternatives exist', () => {
     const report = sampleLiteratureGoldSet(candidates, { ...options, size: 120 })
 
     expect(Math.max(...Object.values(report.countsByJournal))).toBeLessThan(30)
+  })
+
+  it('excludes PMIDs already used in a prior automatic batch', () => {
+    const excludedPmids = candidates.slice(0, 100).map((value) => value.pmid)
+    const report = sampleLiteratureGoldSet(candidates, {
+      ...options,
+      size: 100,
+      excludedPmids,
+    })
+
+    expect(report.originalCandidateCount).toBe(1200)
+    expect(report.excludedCandidateCount).toBe(100)
+    expect(report.candidateCount).toBe(1100)
+    expect(report.items).toHaveLength(100)
+    expect(report.items.some((item) => excludedPmids.includes(item.pmid))).toBe(false)
+    expect(report.warnings).toContain(
+      '100 previously sampled candidate PMIDs were excluded from selection.',
+    )
+  })
+
+  it('reports stratum shortages before redistributing their target slots', () => {
+    const onlyStrongCandidates = Array.from({ length: 30 }, (_, index) =>
+      candidate(index + 1, {
+        publicationYear: 2025,
+        hasAbstract: true,
+        isConferenceAbstract: false,
+        sourceKinds: ['core_journal'],
+        sourceCount: 1,
+        sourceFileCount: 1,
+        queryIds: [],
+        suggestedTopicIds: ['central-airway-obstruction'],
+        suggestionCount: 3,
+        maxSuggestionConfidence: 1,
+      }),
+    )
+    const report = sampleLiteratureGoldSet(onlyStrongCandidates, {
+      ...options,
+      size: 20,
+    })
+
+    expect(report.selectedCount).toBe(20)
+    expect(report.warnings).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('ambiguous_boundary supplied 0/'),
+        expect.stringContaining('likely_non_ip supplied 0/'),
+      ]),
+    )
   })
 
   it('keeps pilot and explicit regression sets in development only', () => {

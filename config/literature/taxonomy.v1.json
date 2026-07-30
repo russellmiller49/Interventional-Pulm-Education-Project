@@ -1,6 +1,6 @@
 {
-  "taxonomy_version": "1.0.0",
-  "prepared_date": "2026-07-28",
+  "taxonomy_version": "1.1.0",
+  "prepared_date": "2026-07-30",
   "principles": {
     "multi_label": true,
     "stable_ids": true,

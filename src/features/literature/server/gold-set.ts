@@ -27,7 +27,11 @@ interface GoldBatchRow {
   remaining_count: number | string
   return_later_count: number | string
   development_count: number | string
+  development_completed_count: number | string
   test_count: number | string
+  test_completed_count: number | string
+  test_unlocked_at: string | null
+  test_unlocked_by_email: string | null
   sampling_seed: number | string
   sampling_report: LiteratureGoldSetBatchSummary['samplingReport']
   created_at: string
@@ -252,7 +256,7 @@ export async function listLiteratureGoldSetBatches(): Promise<
   const client = createLiteratureAdmin()
   if (!client) return { data: null, error: 'The literature database is not configured.' }
 
-  const { data, error } = await client.rpc('list_literature_gold_batches_v1')
+  const { data, error } = await client.rpc('list_literature_gold_batches_v2')
   if (error) return { data: null, error: error.message }
 
   return {
@@ -267,7 +271,11 @@ export async function listLiteratureGoldSetBatches(): Promise<
       remainingCount: Number(row.remaining_count) || 0,
       returnLaterCount: Number(row.return_later_count) || 0,
       developmentCount: Number(row.development_count) || 0,
+      developmentCompletedCount: Number(row.development_completed_count) || 0,
       testCount: Number(row.test_count) || 0,
+      testCompletedCount: Number(row.test_completed_count) || 0,
+      testUnlockedAt: row.test_unlocked_at,
+      testUnlockedByEmail: row.test_unlocked_by_email,
       samplingSeed: Number(row.sampling_seed),
       samplingReport: row.sampling_report,
       createdAt: row.created_at,
@@ -286,7 +294,7 @@ export async function loadLiteratureGoldReviewItem(
   const client = createLiteratureAdmin()
   if (!client) return { data: null, error: 'The literature database is not configured.' }
 
-  const { data, error } = await client.rpc('get_literature_gold_review_item_v1', {
+  const { data, error } = await client.rpc('get_literature_gold_review_item_v2', {
     p_batch_id: batchId ?? null,
     p_item_id: itemId ?? null,
     p_status: status,
@@ -362,6 +370,24 @@ export async function freezeLiteratureGoldSetBatch(
     : { data: (data ?? {}) as Record<string, unknown>, error: null }
 }
 
+export async function unlockLiteratureGoldTestSplit(
+  batchId: string,
+  reason: string,
+  user: User,
+): Promise<LiteratureServerResult<Record<string, unknown>>> {
+  const client = createLiteratureAdmin()
+  if (!client) return { data: null, error: 'The literature database is not configured.' }
+  const { data, error } = await client.rpc('unlock_literature_gold_test_split_v1', {
+    p_batch_id: batchId,
+    p_actor_user_id: user.id,
+    p_actor_email: user.email ?? null,
+    p_reason: reason,
+  })
+  return error
+    ? { data: null, error: error.message }
+    : { data: (data ?? {}) as Record<string, unknown>, error: null }
+}
+
 function chunks<T>(values: T[], size: number) {
   return Array.from({ length: Math.ceil(values.length / size) }, (_, index) =>
     values.slice(index * size, (index + 1) * size),
@@ -407,12 +433,30 @@ export async function exportLiteratureGoldSet(
   const { data: batchData, error: batchError } = await client
     .from('literature_gold_set_batches')
     .select(
-      'id,name,kind,status,taxonomy_version,label_schema_version,relevance_definition_version,sampling_algorithm_version,sampling_seed,requested_size,frozen_at',
+      'id,name,kind,status,taxonomy_version,label_schema_version,relevance_definition_version,sampling_algorithm_version,sampling_seed,requested_size,test_unlocked_at,frozen_at',
     )
     .eq('id', batchId)
     .maybeSingle()
   if (batchError) return { data: null, error: batchError.message }
   if (!batchData) return { data: null, error: 'Gold-set batch not found.' }
+  if (
+    batchData.kind === 'gold_standard' &&
+    !batchData.test_unlocked_at &&
+    (split === 'test' || split === 'all')
+  ) {
+    const { count: testCount, error: testCountError } = await client
+      .from('literature_gold_set_items')
+      .select('id', { count: 'exact', head: true })
+      .eq('batch_id', batchId)
+      .eq('dataset_split', 'test')
+    if (testCountError) return { data: null, error: testCountError.message }
+    if ((testCount ?? 0) > 0) {
+      return {
+        data: null,
+        error: 'The gold-set test split is locked until development review is complete.',
+      }
+    }
+  }
 
   const itemRows: Array<Record<string, unknown>> = []
   for (let start = 0; ; start += 1000) {

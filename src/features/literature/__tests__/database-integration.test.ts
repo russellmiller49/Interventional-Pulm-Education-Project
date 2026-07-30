@@ -492,4 +492,203 @@ describeIntegration('literature database integration', () => {
     })
     expect(anonymousSearch.error).not.toBeNull()
   }, 120_000)
+
+  it('enforces the one-way audited gold-standard test unlock', async () => {
+    const developmentPmid = '999999990101'
+    const testPmid = '999999990102'
+    const preUnlockedInsert = await serviceClient.from('literature_gold_set_batches').insert({
+      name: `integration-preunlocked-${Date.now()}`,
+      kind: 'gold_standard',
+      taxonomy_version: 'integration',
+      label_schema_version: 'integration',
+      relevance_definition_version: 'integration',
+      sampling_algorithm_version: 'integration',
+      sampling_seed: 2,
+      requested_size: 2,
+      test_percent: 50,
+      sampling_report: {},
+      test_unlocked_at: new Date().toISOString(),
+      test_unlocked_by_email: 'integration-test@interventionalpulm.invalid',
+      test_unlock_reason: 'Attempt to bypass the audited unlock.',
+    })
+    expect(preUnlockedInsert.error?.message).toMatch(/must begin with the test lock intact/u)
+
+    const articleInsert = await serviceClient.from('literature_articles').upsert([
+      {
+        pmid: developmentPmid,
+        title: 'Gold lock development fixture.',
+        abstract: 'Development review fixture.',
+        publication_year: 2026,
+        metadata_hash: 'e'.repeat(64),
+        normalized_title: 'gold lock development fixture',
+        normalized_title_hash: 'f'.repeat(64),
+      },
+      {
+        pmid: testPmid,
+        title: 'Gold lock held-out fixture.',
+        abstract: 'Held-out review fixture.',
+        publication_year: 2026,
+        metadata_hash: '1'.repeat(64),
+        normalized_title: 'gold lock held out fixture',
+        normalized_title_hash: '2'.repeat(64),
+      },
+    ])
+    expect(articleInsert.error).toBeNull()
+
+    const name = `integration-gold-${Date.now()}`
+    const created = await serviceClient.rpc('create_literature_gold_set_batch_v1', {
+      p_batch: {
+        name,
+        kind: 'gold_standard',
+        taxonomyVersion: 'integration',
+        labelSchemaVersion: 'integration',
+        relevanceDefinitionVersion: 'integration',
+        samplingAlgorithmVersion: 'integration',
+        samplingSeed: 1,
+        requestedSize: 2,
+        testPercent: 50,
+        samplingReport: {},
+      },
+      p_items: [
+        {
+          pmid: developmentPmid,
+          sampleStratum: 'ambiguous_boundary',
+          samplingReason: 'integration development fixture',
+          samplingMetadata: {},
+          datasetSplit: 'development',
+          displayOrder: 1,
+        },
+        {
+          pmid: testPmid,
+          sampleStratum: 'ambiguous_boundary',
+          samplingReason: 'integration test fixture',
+          samplingMetadata: {},
+          datasetSplit: 'test',
+          displayOrder: 2,
+        },
+      ],
+      p_actor_user_id: null,
+      p_actor_email: 'integration-test@interventionalpulm.invalid',
+    })
+    expect(created.error).toBeNull()
+    const batchId = String((created.data as { id?: unknown } | null)?.id)
+
+    const items = await serviceClient
+      .from('literature_gold_set_items')
+      .select('id,pmid')
+      .eq('batch_id', batchId)
+    expect(items.error).toBeNull()
+    const developmentItemId = String(items.data?.find((item) => item.pmid === developmentPmid)?.id)
+    const testItemId = String(items.data?.find((item) => item.pmid === testPmid)?.id)
+
+    const lockedRead = await serviceClient.rpc('get_literature_gold_review_item_v2', {
+      p_batch_id: batchId,
+      p_item_id: testItemId,
+      p_status: 'all',
+      p_split: 'development',
+    })
+    expect(lockedRead.error?.message).toMatch(/test split is locked/u)
+
+    const retiredReader = await serviceClient.rpc('get_literature_gold_review_item_v1', {
+      p_batch_id: batchId,
+      p_item_id: testItemId,
+      p_status: 'all',
+      p_split: 'test',
+    })
+    expect(retiredReader.error).not.toBeNull()
+
+    const splitEscape = await serviceClient
+      .from('literature_gold_set_items')
+      .update({ dataset_split: 'development' })
+      .eq('id', testItemId)
+    expect(splitEscape.error?.message).toMatch(/composition is immutable/u)
+
+    const kindEscape = await serviceClient
+      .from('literature_gold_set_batches')
+      .update({ kind: 'pilot' })
+      .eq('id', batchId)
+    expect(kindEscape.error?.message).toMatch(/cannot change kind/u)
+
+    const forgedUnlockEvent = await serviceClient.from('literature_gold_set_events').insert({
+      batch_id: batchId,
+      actor_email: 'integration-test@interventionalpulm.invalid',
+      event_type: 'test_split_unlocked',
+      after_value: {
+        unlockedAt: new Date().toISOString(),
+        reason: 'Forged event while the batch is still locked.',
+        testItemCount: 1,
+      },
+    })
+    expect(forgedUnlockEvent.error?.message).toMatch(/must match the audited batch transition/u)
+
+    const prematureUnlock = await serviceClient.rpc('unlock_literature_gold_test_split_v1', {
+      p_batch_id: batchId,
+      p_actor_user_id: null,
+      p_actor_email: 'integration-test@interventionalpulm.invalid',
+      p_reason: 'Premature integration unlock attempt.',
+    })
+    expect(prematureUnlock.error?.message).toMatch(/complete the development split/u)
+
+    const completed = await serviceClient.rpc('save_literature_gold_review_v1', {
+      p_item_id: developmentItemId,
+      p_actor_user_id: null,
+      p_actor_email: 'integration-test@interventionalpulm.invalid',
+      p_review: {
+        relevanceLabel: 'exclude',
+        metadataSufficiency: 'adequate_abstract',
+        reviewerConfidence: 'high',
+        topicIds: [],
+        technologyTags: [],
+        clinicalPurposes: [],
+        diseaseTags: [],
+        studyDesign: null,
+        publicationStatus: null,
+        categorizationFromFullText: false,
+        notes: '',
+        usedSupplementalMetadata: false,
+        reviewSeconds: 1,
+      },
+      p_complete: true,
+    })
+    expect(completed.error).toBeNull()
+
+    const unlocked = await serviceClient.rpc('unlock_literature_gold_test_split_v1', {
+      p_batch_id: batchId,
+      p_actor_user_id: null,
+      p_actor_email: 'integration-test@interventionalpulm.invalid',
+      p_reason: 'Development fixture completed; open final evaluation.',
+    })
+    expect(unlocked.error).toBeNull()
+
+    const unlockedRead = await serviceClient.rpc('get_literature_gold_review_item_v2', {
+      p_batch_id: batchId,
+      p_item_id: testItemId,
+      p_status: 'all',
+      p_split: 'test',
+    })
+    expect(unlockedRead.error).toBeNull()
+    expect((unlockedRead.data as { article?: { pmid?: string } } | null)?.article?.pmid).toBe(
+      testPmid,
+    )
+
+    const auditTamper = await serviceClient
+      .from('literature_gold_set_batches')
+      .update({ test_unlock_reason: 'Changed after unlock.' })
+      .eq('id', batchId)
+    expect(auditTamper.error?.message).toMatch(/unlock is immutable/u)
+
+    const auditEvents = await serviceClient
+      .from('literature_gold_set_events')
+      .select('id,after_value')
+      .eq('batch_id', batchId)
+      .eq('event_type', 'test_split_unlocked')
+    expect(auditEvents.error).toBeNull()
+    expect(auditEvents.data).toHaveLength(1)
+    expect(auditEvents.data?.[0]?.after_value).toEqual(
+      expect.objectContaining({
+        reason: 'Development fixture completed; open final evaluation.',
+        testItemCount: 1,
+      }),
+    )
+  }, 30_000)
 })

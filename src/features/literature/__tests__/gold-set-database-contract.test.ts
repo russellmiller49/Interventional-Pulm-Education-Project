@@ -25,6 +25,11 @@ const safetyPreventionMigrationPath = join(
   process.cwd(),
   'supabase/migrations/20260728174726_add_safety_complication_prevention_clinical_purpose.sql',
 )
+const testUnlockMigrationPath = join(
+  process.cwd(),
+  'supabase/migrations/20260730194025_add_literature_gold_test_unlock.sql',
+)
+const localSupabaseScriptPath = join(process.cwd(), 'scripts/literature/local-supabase.ts')
 
 describe('gold-set database contract', () => {
   const sql = readFileSync(migrationPath, 'utf8')
@@ -33,6 +38,8 @@ describe('gold-set database contract', () => {
   const interactiveCaseSql = readFileSync(interactiveCaseMigrationPath, 'utf8')
   const immuneInflammatorySql = readFileSync(immuneInflammatoryMigrationPath, 'utf8')
   const safetyPreventionSql = readFileSync(safetyPreventionMigrationPath, 'utf8')
+  const testUnlockSql = readFileSync(testUnlockMigrationPath, 'utf8')
+  const localSupabaseScript = readFileSync(localSupabaseScriptPath, 'utf8')
   const tables = [
     'literature_gold_set_batches',
     'literature_gold_set_items',
@@ -103,5 +110,38 @@ describe('gold-set database contract', () => {
   it('allows safety/complication prevention as a clinical purpose', () => {
     expect(safetyPreventionSql).toContain("'safety-complication-prevention'")
     expect(safetyPreventionSql).toContain('clinical-purpose allowlist')
+  })
+
+  it('keeps the held-out split inaccessible until an audited unlock', () => {
+    expect(testUnlockSql).toContain('test_unlocked_at timestamptz')
+    expect(testUnlockSql).toContain('test_split_unlocked')
+    expect(testUnlockSql).toContain(
+      'complete the development split and clear its drafts before unlocking test',
+    )
+    expect(testUnlockSql).toContain(
+      'the locked test split cannot be changed before its audited unlock',
+    )
+    expect(testUnlockSql).toContain('gold-set composition is immutable after batch creation')
+    expect(testUnlockSql).toContain('new gold-set batches must begin with the test lock intact')
+    expect(testUnlockSql).toContain('a locked gold-standard batch cannot change kind')
+    expect(testUnlockSql).toContain('gold-set batch definitions are immutable after creation')
+    expect(testUnlockSql).toContain('literature_gold_set_events_one_test_unlock_idx')
+    expect(testUnlockSql).toContain('test unlock events must match the audited batch transition')
+    expect(testUnlockSql).toContain('the gold-standard batch composition must be sealed')
+    expect(testUnlockSql).toContain('selected_batch.requested_size::numeric')
+    expect(testUnlockSql).toContain('if prior_locked or next_locked then')
+    expect(testUnlockSql).toContain('the audited gold-set test unlock is immutable')
+    expect(testUnlockSql).toContain('Legacy batch predated technical test locking.')
+    expect(testUnlockSql).toContain('get_literature_gold_review_item_v2')
+    expect(testUnlockSql).toContain('security definer')
+    expect(testUnlockSql).toContain(
+      'revoke all on function public.get_literature_gold_review_item_v1',
+    )
+    expect(testUnlockSql).toContain('to service_role')
+    expect(testUnlockSql).toContain("notify pgrst, 'reload schema'")
+  })
+
+  it('installs the test-lock contract in the isolated literature stack', () => {
+    expect(localSupabaseScript).toContain("'20260730194025_add_literature_gold_test_unlock.sql'")
   })
 })

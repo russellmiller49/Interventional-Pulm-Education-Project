@@ -47,6 +47,8 @@ Options:
                          sets are always development-only.
   --pmids <path>         JSON string array or text list of explicit PMIDs. Required for
                          regression sets.
+  --allow-resample       Allow a pilot/gold-standard PMID to appear in another automatic batch.
+                         By default, prior pilot and gold-standard PMIDs are excluded.
   --output <path>        Sampling report JSON path.
   --dry-run              Read candidates and write a report only (default).
   --commit               Create the batch after the report is written.
@@ -73,6 +75,7 @@ interface CandidateRow {
 }
 
 const GOLD_CANDIDATE_PAGE_SIZE = 1_000
+const GOLD_BATCH_ITEM_PAGE_SIZE = 1_000
 
 async function exists(path: string) {
   try {
@@ -151,6 +154,40 @@ async function fetchCandidates(
   return candidates
 }
 
+async function fetchPreviouslySampledPmids(client: ReturnType<typeof createLiteratureReadClient>) {
+  const batches = await executeDatabaseCall<Array<{ id: string; name: string; kind: string }>>(
+    'Prior automatic gold-set batch lookup',
+    () =>
+      client
+        .from('literature_gold_set_batches')
+        .select('id,name,kind')
+        .in('kind', ['pilot', 'gold_standard']),
+  )
+  if (!batches?.length) return { batchNames: [], pmids: [] }
+
+  const pmids = new Set<string>()
+  const batchIds = batches.map((batch) => batch.id)
+  for (let start = 0; ; start += GOLD_BATCH_ITEM_PAGE_SIZE) {
+    const rows = await executeDatabaseCall<Array<{ pmid: string }>>(
+      'Prior automatic gold-set item page',
+      () =>
+        client
+          .from('literature_gold_set_items')
+          .select('pmid')
+          .in('batch_id', batchIds)
+          .order('batch_id', { ascending: true })
+          .order('pmid', { ascending: true })
+          .range(start, start + GOLD_BATCH_ITEM_PAGE_SIZE - 1),
+    )
+    for (const row of rows ?? []) pmids.add(row.pmid)
+    if ((rows?.length ?? 0) < GOLD_BATCH_ITEM_PAGE_SIZE) break
+  }
+  return {
+    batchNames: batches.map((batch) => batch.name).sort(),
+    pmids: [...pmids],
+  }
+}
+
 async function main() {
   const arguments_ = parseCliArguments(process.argv.slice(2))
   assertKnownArguments(arguments_, [
@@ -160,6 +197,7 @@ async function main() {
     'seed',
     'test-percent',
     'pmids',
+    'allow-resample',
     'output',
     'dry-run',
     'commit',
@@ -191,10 +229,22 @@ async function main() {
   if (candidates.length === 0) {
     throw new Error('No imported literature candidates were found.')
   }
+  const regression =
+    options.kind === 'landmark_regression' || options.kind === 'hard_negative_regression'
+  const priorSamples =
+    regression || hasFlag(arguments_, 'allow-resample')
+      ? { batchNames: [], pmids: [] }
+      : await fetchPreviouslySampledPmids(client)
+  if (priorSamples.pmids.length > 0) {
+    console.log(
+      `Excluding ${priorSamples.pmids.length} PMIDs from prior automatic batches: ${priorSamples.batchNames.join(', ')}`,
+    )
+  }
 
   const report = sampleLiteratureGoldSet(candidates, {
     ...options,
     explicitPmids: pmids,
+    excludedPmids: priorSamples.pmids,
   })
   const output = await reportPath(
     stringArgument(
@@ -211,6 +261,7 @@ async function main() {
 
   console.log(`Sampling report: ${output}`)
   console.log(`Candidates: ${report.candidateCount}`)
+  console.log(`Previously sampled exclusions: ${report.excludedCandidateCount}`)
   console.log(`Selected: ${report.selectedCount}/${report.requestedSize}`)
   console.log(`Development: ${report.developmentCount}`)
   console.log(`Test: ${report.testCount}`)

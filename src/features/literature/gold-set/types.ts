@@ -63,13 +63,15 @@ export interface LiteratureGoldSampledItem {
 }
 
 export interface LiteratureGoldSamplingReport {
-  reportVersion: '1.0.0'
+  reportVersion: '1.1.0'
   generatedAt: string
   name: string
   kind: LiteratureGoldSetKind
   samplingSeed: number
   samplingAlgorithmVersion: string
   requestedSize: number
+  originalCandidateCount: number
+  excludedCandidateCount: number
   candidateCount: number
   selectedCount: number
   developmentCount: number
@@ -85,6 +87,15 @@ export interface LiteratureGoldSamplingReport {
   warnings: string[]
   items: LiteratureGoldSampledItem[]
 }
+
+export type LiteratureGoldStoredSamplingReport =
+  | Omit<LiteratureGoldSamplingReport, 'items'>
+  | (Omit<
+      LiteratureGoldSamplingReport,
+      'reportVersion' | 'originalCandidateCount' | 'excludedCandidateCount' | 'items'
+    > & {
+      reportVersion: '1.0.0'
+    })
 
 export interface LiteratureGoldReviewPayload {
   relevanceLabel: LiteratureGoldSetRelevanceLabel | null
@@ -113,9 +124,13 @@ export interface LiteratureGoldSetBatchSummary {
   remainingCount: number
   returnLaterCount: number
   developmentCount: number
+  developmentCompletedCount: number
   testCount: number
+  testCompletedCount: number
+  testUnlockedAt: string | null
+  testUnlockedByEmail: string | null
   samplingSeed: number
-  samplingReport: Omit<LiteratureGoldSamplingReport, 'items'> | null
+  samplingReport: LiteratureGoldStoredSamplingReport | null
   createdAt: string
   frozenAt: string | null
 }

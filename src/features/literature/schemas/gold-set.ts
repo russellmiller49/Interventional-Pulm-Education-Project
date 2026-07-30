@@ -184,13 +184,30 @@ export const literatureGoldExportQuerySchema = z.object({
   includeHistory: z.boolean().default(false),
 })
 
-export const literatureGoldCreateOptionsSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .regex(/^[a-z0-9][a-z0-9._-]{2,79}$/u),
-  kind: z.enum(literatureGoldSetKinds),
-  size: z.number().int().min(1).max(5_000),
-  seed: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
-  testPercent: z.number().int().min(0).max(50),
-})
+export const literatureGoldCreateOptionsSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .regex(/^[a-z0-9][a-z0-9._-]{2,79}$/u),
+    kind: z.enum(literatureGoldSetKinds),
+    size: z.number().int().min(1).max(5_000),
+    seed: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
+    testPercent: z.number().int().min(0).max(50),
+  })
+  .superRefine((value, context) => {
+    if (value.kind === 'gold_standard' && value.size < 2) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Gold-standard batches require at least two items.',
+        path: ['size'],
+      })
+    }
+    if (value.kind === 'gold_standard' && value.testPercent === 0) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Gold-standard batches require a non-zero locked-test percentage.',
+        path: ['testPercent'],
+      })
+    }
+  })

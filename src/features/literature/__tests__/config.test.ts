@@ -26,6 +26,9 @@ describe('literature configuration', () => {
   })
 
   it('validates cross-file topic and query IDs', () => {
+    expect(literatureTaxonomy.taxonomy_version).toBe('1.1.0')
+    expect(literatureGoldSetLabels.label_schema_version).toBe('1.1.0')
+    expect(literatureGoldSetLabels.relevance_definition_version).toBe('1.0.0')
     expect(validateLiteratureConfigRelations()).toEqual({
       queryCount: 17,
       ruleCount: 20,

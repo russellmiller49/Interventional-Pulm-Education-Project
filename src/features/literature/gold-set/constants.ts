@@ -49,7 +49,9 @@ export const literatureGoldSetItemActions = [
   'reveal_automated',
 ] as const
 
-export const LITERATURE_GOLD_SAMPLING_ALGORITHM_VERSION = 'stratified-v1'
+export const LITERATURE_GOLD_SAMPLING_ALGORITHM_VERSION = 'stratified-v2'
+export const LITERATURE_GOLD_LOW_SCORE_THRESHOLD = 0.1
+export const LITERATURE_GOLD_HIGH_SCORE_THRESHOLD = 0.75
 export const DEFAULT_LITERATURE_GOLD_SET_SIZE = 900
 export const DEFAULT_LITERATURE_GOLD_SET_SEED = 20_260_727
 export const DEFAULT_LITERATURE_GOLD_TEST_PERCENT = 30
