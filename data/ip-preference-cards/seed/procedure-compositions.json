@@ -1,0 +1,336 @@
+{
+  "formatVersion": "1.0",
+  "notes": [
+    "One composition per imported procedure. A composition names the exact module versions the procedure is assembled from — never a module code resolved to 'latest'.",
+    "'selectionBehavior': 'required' modules are always included and cannot be removed in the builder; 'default_on' modules start selected and may be removed; 'optional' modules start unselected.",
+    "'compositionActions' are the only channel by which a procedure changes a requirement it inherits. Every action carries a reason, and the build script fails if an action matches nothing.",
+    "'sequence' on a module reference orders the modules and, with each requirement's own sequence, produces the card's setup order.",
+    "build with: npm run ip-cards:compositions"
+  ],
+  "compositions": [
+    {
+      "procedureCode": "EBUS_TBNA",
+      "version": "1.0",
+      "moduleReferences": [
+        {
+          "moduleCode": "FLEX_BRONCH_CORE",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 10
+        },
+        {
+          "moduleCode": "EBUS_TBNA_SPECIFIC",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 20
+        },
+        {
+          "moduleCode": "PROCEDURAL_FLUOROSCOPY",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "default_on",
+          "sequence": 30
+        }
+      ],
+      "compositionActions": [
+        {
+          "id": "ebus-tbna-suction-syringes",
+          "sequence": 10,
+          "actionType": "append_note",
+          "targetRequirementKey": "FLEX_BRONCH_SUCTION_SETUP",
+          "payload": { "note": "Include aspiration syringes for needle sampling." },
+          "reason": "The imported EBUS suction row read 'Suction source/tubing/syringes'; the syringes are restored as a note now that the line is shared."
+        }
+      ]
+    },
+    {
+      "procedureCode": "THERAPEUTIC_BRONCH",
+      "version": "1.0",
+      "moduleReferences": [
+        {
+          "moduleCode": "FLEX_BRONCH_CORE",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 10
+        },
+        {
+          "moduleCode": "THERAPEUTIC_BRONCH_CORE",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 20
+        },
+        {
+          "moduleCode": "THERAPEUTIC_BRONCH_SPECIFIC",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 30
+        },
+        {
+          "moduleCode": "PROCEDURAL_FLUOROSCOPY",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "default_on",
+          "sequence": 40
+        }
+      ],
+      "compositionActions": [
+        {
+          "id": "therapeutic-bronch-high-flow-suction",
+          "sequence": 10,
+          "actionType": "append_note",
+          "targetRequirementKey": "FLEX_BRONCH_SUCTION_SETUP",
+          "payload": {
+            "note": "High-flow suction tubing and canisters are required for therapeutic work."
+          },
+          "reason": "The imported therapeutic suction row read 'High-flow suction tubing/canisters'; the high-flow expectation is restored as a note now that the line is shared."
+        }
+      ]
+    },
+    {
+      "procedureCode": "EBV",
+      "version": "1.0",
+      "moduleReferences": [
+        {
+          "moduleCode": "THERAPEUTIC_BRONCH_CORE",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 10
+        },
+        {
+          "moduleCode": "EBV_SPECIFIC",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 20
+        },
+        {
+          "moduleCode": "PROCEDURAL_FLUOROSCOPY",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "optional",
+          "sequence": 30
+        }
+      ],
+      "compositionActions": [
+        {
+          "id": "ebv-scope-channel-note",
+          "sequence": 10,
+          "actionType": "append_note",
+          "targetRequirementKey": "THERAPEUTIC_BRONCHOSCOPE_PLATFORM",
+          "payload": { "note": "Match channel to delivery catheter." },
+          "reason": "Restores the note the imported endobronchial-valve scope row carried."
+        },
+        {
+          "id": "ebv-retrieval-forceps-requiredness",
+          "sequence": 20,
+          "actionType": "set_requiredness",
+          "targetRequirementKey": "AIRWAY_RETRIEVAL_FORCEPS",
+          "payload": { "value": "conditional", "dependencyRule": "Reposition/removal anticipated" },
+          "reason": "The imported valve card made retrieval forceps conditional on repositioning or removal; the shared requirement is optional."
+        },
+        {
+          "id": "ebv-retrieval-forceps-note",
+          "sequence": 30,
+          "actionType": "append_note",
+          "targetRequirementKey": "AIRWAY_RETRIEVAL_FORCEPS",
+          "payload": { "note": "Used here for endobronchial valve repositioning or retrieval." },
+          "reason": "The imported valve row was labelled 'Valve retrieval forceps'; the shared line carries the neutral label and the valve context moves into a note."
+        }
+      ]
+    },
+    {
+      "procedureCode": "THORACENTESIS",
+      "version": "1.0",
+      "moduleReferences": [
+        {
+          "moduleCode": "PLEURAL_PROCEDURE_CORE",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 10
+        },
+        {
+          "moduleCode": "THORACENTESIS_SPECIFIC",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 20
+        }
+      ],
+      "compositionActions": []
+    },
+    {
+      "procedureCode": "CHEST_TUBE",
+      "version": "1.0",
+      "moduleReferences": [
+        {
+          "moduleCode": "PLEURAL_PROCEDURE_CORE",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 10
+        },
+        {
+          "moduleCode": "CHEST_TUBE_SPECIFIC",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 20
+        }
+      ],
+      "compositionActions": [
+        {
+          "id": "chest-tube-ultrasound-optional",
+          "sequence": 10,
+          "actionType": "set_requiredness",
+          "targetRequirementKey": "PLEURAL_ULTRASOUND_MACHINE",
+          "payload": { "value": "optional", "dependencyRule": "Image-guided insertion" },
+          "reason": "The imported chest-tube template makes ultrasound optional and conditioned on image-guided insertion, unlike the other three pleural procedures."
+        }
+      ]
+    },
+    {
+      "procedureCode": "IPC_PLACEMENT",
+      "version": "1.0",
+      "moduleReferences": [
+        {
+          "moduleCode": "PLEURAL_PROCEDURE_CORE",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 10
+        },
+        {
+          "moduleCode": "IPC_PLACEMENT_SPECIFIC",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 20
+        }
+      ],
+      "compositionActions": [
+        {
+          "id": "ipc-ultrasound-pleural-access-note",
+          "sequence": 10,
+          "actionType": "append_note",
+          "targetRequirementKey": "PLEURAL_ULTRASOUND_MACHINE",
+          "payload": { "note": "Sterile cover for pleural access." },
+          "reason": "Restores the pleural-access wording the imported IPC row carried in its generic requirement."
+        }
+      ]
+    },
+    {
+      "procedureCode": "MED_THORACOSCOPY",
+      "version": "1.0",
+      "moduleReferences": [
+        {
+          "moduleCode": "PLEURAL_PROCEDURE_CORE",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 10
+        },
+        {
+          "moduleCode": "MED_THORACOSCOPY_SPECIFIC",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 20
+        }
+      ],
+      "compositionActions": []
+    },
+    {
+      "procedureCode": "BRONCH_ABLATION",
+      "version": "1.0",
+      "moduleReferences": [
+        {
+          "moduleCode": "BRONCH_ABLATION_SPECIFIC",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 10
+        }
+      ],
+      "compositionActions": []
+    },
+    {
+      "procedureCode": "FLEX_DIAGNOSTIC",
+      "version": "1.0",
+      "moduleReferences": [
+        {
+          "moduleCode": "FLEX_DIAGNOSTIC_SPECIFIC",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 10
+        }
+      ],
+      "compositionActions": []
+    },
+    {
+      "procedureCode": "ICU_BRONCH",
+      "version": "1.0",
+      "moduleReferences": [
+        {
+          "moduleCode": "ICU_BRONCH_SPECIFIC",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 10
+        }
+      ],
+      "compositionActions": []
+    },
+    {
+      "procedureCode": "PERC_TRACH",
+      "version": "1.0",
+      "moduleReferences": [
+        {
+          "moduleCode": "PERC_TRACH_SPECIFIC",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 10
+        }
+      ],
+      "compositionActions": []
+    },
+    {
+      "procedureCode": "PHOTODYNAMIC_THERAPY",
+      "version": "1.0",
+      "moduleReferences": [
+        {
+          "moduleCode": "PHOTODYNAMIC_THERAPY_SPECIFIC",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 10
+        }
+      ],
+      "compositionActions": []
+    },
+    {
+      "procedureCode": "RIGID_BRONCH",
+      "version": "1.0",
+      "moduleReferences": [
+        {
+          "moduleCode": "RIGID_BRONCH_SPECIFIC",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 10
+        }
+      ],
+      "compositionActions": []
+    },
+    {
+      "procedureCode": "TB_RULEOUT",
+      "version": "1.0",
+      "moduleReferences": [
+        {
+          "moduleCode": "TB_RULEOUT_SPECIFIC",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 10
+        }
+      ],
+      "compositionActions": []
+    },
+    {
+      "procedureCode": "WLL",
+      "version": "1.0",
+      "moduleReferences": [
+        {
+          "moduleCode": "WLL_SPECIFIC",
+          "moduleVersion": "1.0",
+          "selectionBehavior": "required",
+          "sequence": 10
+        }
+      ],
+      "compositionActions": []
+    }
+  ]
+}

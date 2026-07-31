@@ -1,6 +1,7 @@
 import {
   buildDemoContext,
   defaultBuildInput,
+  getComposedRecipeSlots,
   resolveDemoScenario,
 } from '../data/demo-context.server'
 import { evaluateCompatibilityRule } from '../domain/evaluate-compatibility'
@@ -95,7 +96,9 @@ describe('preference-card deterministic resolver', () => {
 
   it('honors an explicit builder selection without changing other roles', () => {
     const context = buildDemoContext('ebus-rose-molecular')
-    const target = context.recipe.slots.find((slot) => slot.requiredness === 'required')
+    const target = getComposedRecipeSlots('ebus-rose-molecular').find(
+      (slot) => slot.requiredness === 'required',
+    )
     if (!target) throw new Error('Expected a required EBUS slot')
     const baseline = resolveCard(defaultBuildInput('ebus-rose-molecular'), context)
     const input = defaultBuildInput('ebus-rose-molecular')
@@ -186,8 +189,9 @@ describe('preference-card deterministic resolver', () => {
 
   it('applies a preference overlay only to the targeted slot field', () => {
     const context = buildDemoContext('ebus-rose-molecular')
-    const target = context.recipe.slots[0]
-    const untouched = context.recipe.slots[1]
+    const composed = getComposedRecipeSlots('ebus-rose-molecular')
+    const target = composed[0]
+    const untouched = composed[1]
     context.preferenceOverlays = [
       {
         id: 'test-overlay',
@@ -241,7 +245,9 @@ describe('preference-card deterministic resolver', () => {
 
   it('does not block an undecided conditional slot', () => {
     const context = buildDemoContext('ebus-rose-molecular')
-    const conditional = context.recipe.slots.find((slot) => slot.requiredness === 'conditional')
+    const conditional = getComposedRecipeSlots('ebus-rose-molecular').find(
+      (slot) => slot.requiredness === 'conditional',
+    )
     if (!conditional) throw new Error('Expected a conditional EBUS slot')
     context.hospitalRoleOptions = context.hospitalRoleOptions.filter(
       (option) => option.roleCode !== conditional.roleCode,
@@ -257,7 +263,9 @@ describe('preference-card deterministic resolver', () => {
 
   it('warns on the same unresolved conditional slot once it is included', () => {
     const context = buildDemoContext('ebus-rose-molecular')
-    const conditional = context.recipe.slots.find((slot) => slot.requiredness === 'conditional')
+    const conditional = getComposedRecipeSlots('ebus-rose-molecular').find(
+      (slot) => slot.requiredness === 'conditional',
+    )
     if (!conditional) throw new Error('Expected a conditional EBUS slot')
     context.hospitalRoleOptions = context.hospitalRoleOptions.filter(
       (option) => option.roleCode !== conditional.roleCode,
@@ -353,14 +361,16 @@ describe('preference-card deterministic resolver', () => {
   })
 
   it('retains unmapped section assignments in the explicit unassigned group', () => {
+    // Zone and phase now live on the module's authored slot, not on the procedure.
     const context = buildDemoContext('ebus-rose-molecular')
-    context.recipe.slots[0].setupZone = 'unassigned'
-    context.recipe.slots[0].proceduralPhase = 'unassigned'
+    const target = context.recipeModules[0].slots[0]
+    target.setupZone = 'unassigned'
+    target.proceduralPhase = 'unassigned'
     const card = resolveCard(defaultBuildInput('ebus-rose-molecular'), context)
     expect(
       card.items.some(
         (item) =>
-          item.id === context.recipe.slots[0].id &&
+          item.id === target.id &&
           item.setupZone === 'unassigned' &&
           item.proceduralPhase === 'unassigned',
       ),

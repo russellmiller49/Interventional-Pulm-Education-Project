@@ -69,6 +69,11 @@ const persistedSnapshotSchema = z
     recipeVersion: z.string().min(1),
     sourceProcedureCode: z.string().min(1),
     selectedModifiers: z.array(z.string()),
+    /**
+     * Absent on snapshots written before composition. Those cards stay viewable and
+     * printable from what they recorded; only the builder needs the manifest.
+     */
+    includedModules: z.array(z.unknown()).optional(),
     items: z.array(z.unknown()),
     suppressedItems: z.array(z.unknown()),
     warnings: z.array(z.unknown()),
@@ -157,6 +162,22 @@ export function resolveForSave(
     return { ok: false, error: 'The scenario and recipe do not match.' }
   }
 
+  // The client sends module *ids*; the authored modules are reloaded here and the
+  // composition re-expanded, so a caller can never write its own module names, versions,
+  // or slot contents into a stored card. A module the composition does not offer is
+  // rejected before resolution rather than surfaced as a card warning.
+  const context = buildDemoContext(scenario.id)
+  const offeredModuleVersionIds = new Set(
+    context.recipe.moduleReferences.map((reference) => reference.moduleVersionId),
+  )
+  for (const moduleVersionId of inputs.input.selectedModuleVersionIds) {
+    if (offeredModuleVersionIds.has(moduleVersionId)) continue
+    return {
+      ok: false,
+      error: `Module ${moduleVersionId} is not part of this procedure composition.`,
+    }
+  }
+
   const picks: CatalogPick[] = []
   for (const requested of inputs.catalogPicks) {
     const result = resolveCatalogPick(requested.productId, requested.roleCode)
@@ -197,9 +218,9 @@ export function resolveForSave(
     selectedRoleBySetId[requested.id] = requested.selectedRoleCode
   }
 
-  const context = withEquipmentSets(
+  const resolveContext = withEquipmentSets(
     withCustomItems(
-      withFamilyPicks(withCatalogPicks(buildDemoContext(scenario.id), picks), familyPicks),
+      withFamilyPicks(withCatalogPicks(context, picks), familyPicks),
       inputs.customItems,
     ),
     sets,
@@ -210,7 +231,7 @@ export function resolveForSave(
       ...inputs.input,
       variables: { ...inputs.input.variables, generated_at: generatedAt },
     },
-    context,
+    resolveContext,
   )
   return { ok: true, card }
 }

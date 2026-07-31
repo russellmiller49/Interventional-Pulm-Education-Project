@@ -7,6 +7,7 @@ import {
 } from '@/features/preference-cards/components/PreferenceCardWizard'
 import {
   buildDemoContext,
+  getScenarioDefinition,
   getScenarioDefinitions,
 } from '@/features/preference-cards/data/demo-context.server'
 
@@ -31,9 +32,13 @@ export default async function NewPreferenceCardPage({ params, searchParams }: Pa
   setRequestLocale(locale)
   const scenarioParam = Array.isArray(query.scenario) ? query.scenario[0] : query.scenario
   const scenarios = getScenarioDefinitions()
-  // Only the selected scenario's context is built and serialized. Building all thirteen
+  // Only the selected scenario's context is built and serialized. Building all fifteen
   // would ship megabytes of recipe and hospital-item data on every page load.
-  const selected = scenarios.find((definition) => definition.id === scenarioParam)
+  //
+  // Looked up by id rather than found in the list, because the custom module composition is
+  // a real scenario that is deliberately absent from the procedure picker — it is offered
+  // as its own entry point instead.
+  const selected = scenarioParam ? getScenarioDefinition(scenarioParam) : null
   const bundle: PreferenceCardScenarioBundle | undefined = selected
     ? {
         definition: selected,

@@ -28,6 +28,19 @@
 // suppression counts are unchanged throughout. The role renames in the same milestone moved no
 // hash on their own — a renamed role changes the code a slot requests, not the resolved
 // content the snapshot addresses.
+//
+// 2026-07-30, recipe composition (engine 0.1.0 → 0.2.0). All four hashes moved and **no
+// item count, suppression count, or readiness state did** — which is the point. Procedures
+// are now assembled from versioned recipe modules, so the hashable domain output gained the
+// composition manifest (`includedModules`) and every item gained its `requirementKey` and
+// source module ids. The requirements themselves are the same requirements:
+//   - EBUS-TBNA         = Flexible Bronchoscopy Core + EBUS-TBNA specific + Procedural
+//                         Fluoroscopy (default-on), 19 items as before,
+//   - central airway    = Flexible Bronchoscopy Core + Therapeutic Bronchoscopy Core +
+//                         therapeutic specific + Procedural Fluoroscopy, 57 as before,
+//   - both chest-tube   = Pleural Procedure Core + chest-tube specific, 11 and 12 as before.
+// Setup order changed for the composed procedures: requirements now sort in bands by the
+// module that contributed them, so a shared core's lines lead the card.
 export const goldenScenarioExpectations = {
   ebusRoseMolecular: {
     scenarioId: 'ebus-rose-molecular',
@@ -35,7 +48,7 @@ export const goldenScenarioExpectations = {
     readinessState: 'complete_with_warnings',
     itemCount: 19,
     suppressedItemCount: 0,
-    snapshotHash: 'ee8f3ccaa7ad14d6e6b0c02aba9cf7e255e2c97d3ce4a7264c65fd954ab40daf',
+    snapshotHash: '55676fe3f17739bd8bdb511bf9aabfec1617529fc5765a6069082260e424980f',
   },
   centralAirwayObstruction: {
     scenarioId: 'central-airway-obstruction',
@@ -51,7 +64,7 @@ export const goldenScenarioExpectations = {
     readinessState: 'complete_with_warnings',
     itemCount: 57,
     suppressedItemCount: 0,
-    snapshotHash: 'f4d163f273b48556f5a24bc7d0f9fc90791395c366faad6675c0501d2e855d67',
+    snapshotHash: '3ded5dab47df58b8368dbc3594ac0bd4eff5c5057ec916cd45b2de4f5d09cb7b',
   },
   chestTubeSmallBoreDigital: {
     scenarioId: 'chest-tube',
@@ -59,7 +72,7 @@ export const goldenScenarioExpectations = {
     readinessState: 'complete_with_warnings',
     itemCount: 11,
     suppressedItemCount: 1,
-    snapshotHash: '44d9ab11b1d45eb3b74bd0ca0bb69297b278f116c03c6d10771d58787538bc72',
+    snapshotHash: 'e1b517ace65919c61825843b9dfe5c8cd33c3e524bf75729840e169cdea999af',
   },
   chestTubeLargeBoreConventional: {
     scenarioId: 'chest-tube',
@@ -67,6 +80,6 @@ export const goldenScenarioExpectations = {
     readinessState: 'complete_with_warnings',
     itemCount: 12,
     suppressedItemCount: 0,
-    snapshotHash: '3f4164d8927e3adced21e3240a496e4594652c461ba76defd6b09e35521c01c1',
+    snapshotHash: 'bb3e37c5d1b490b497441531e7b0f8576f30445b03007779cddb2fed448b2a74',
   },
 } as const

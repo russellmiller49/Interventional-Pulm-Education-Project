@@ -1,6 +1,7 @@
 import {
   buildDemoContext,
   defaultBuildInput,
+  getComposedRecipeSlots,
   getScenarioDefinition,
 } from '../data/demo-context.server'
 import { catalogPickItemId } from '../domain/catalog-pick'
@@ -63,7 +64,9 @@ describe('save-time catalog product-role integrity', () => {
   it('preserves valid existing saved-card reconstruction', () => {
     const productId = validProductId()
     const context = buildDemoContext(SCENARIO_ID)
-    const slot = context.recipe.slots.find((candidate) => candidate.roleCode === VALID_ROLE)
+    const slot = getComposedRecipeSlots(SCENARIO_ID).find(
+      (candidate) => candidate.roleCode === VALID_ROLE,
+    )
     expect(slot).toBeDefined()
     const input = defaultBuildInput(SCENARIO_ID)
     input.modifierCodes = []
@@ -147,7 +150,9 @@ describe('save-time catalog product-role integrity', () => {
   it('rebuilds and selects a valid equipment-set member at save time', () => {
     const productId = validProductId()
     const context = buildDemoContext(SCENARIO_ID)
-    const slot = context.recipe.slots.find((candidate) => candidate.roleCode === VALID_ROLE)
+    const slot = getComposedRecipeSlots(SCENARIO_ID).find(
+      (candidate) => candidate.roleCode === VALID_ROLE,
+    )
     expect(slot).toBeDefined()
     const setId = 'set-valid-integrity-test'
     const input = defaultBuildInput(SCENARIO_ID)
@@ -180,7 +185,9 @@ describe('save-time catalog product-role integrity', () => {
   it('preserves custom-item reconstruction at save time', () => {
     const roleCode = 'PLEURAL_DRAINAGE_ACCESSORY'
     const context = buildDemoContext(SCENARIO_ID)
-    const slot = context.recipe.slots.find((candidate) => candidate.roleCode === roleCode)
+    const slot = getComposedRecipeSlots(SCENARIO_ID).find(
+      (candidate) => candidate.roleCode === roleCode,
+    )
     expect(slot).toBeDefined()
     const input = defaultBuildInput(SCENARIO_ID)
     input.selectedHospitalItemIds = { [slot!.id]: customItemId('custom-integrity-test') }
@@ -213,12 +220,12 @@ describe('save-time catalog product-role integrity', () => {
     const productId = 'PRD-4CC32EE889'
     const roleCodes = ['EBV_VALVE', 'EBV_DELIVERY_CATHETER'] as const
     const definition = getScenarioDefinition(scenarioId)
-    const context = buildDemoContext(scenarioId)
+    const composedSlots = getComposedRecipeSlots(scenarioId)
     expect(definition).not.toBeNull()
 
     const selectedHospitalItemIds = Object.fromEntries(
       roleCodes.map((roleCode) => {
-        const slot = context.recipe.slots.find((candidate) => candidate.roleCode === roleCode)
+        const slot = composedSlots.find((candidate) => candidate.roleCode === roleCode)
         expect(slot).toBeDefined()
         return [slot!.id, catalogPickItemId(productId)]
       }),
@@ -254,12 +261,12 @@ describe('save-time catalog product-role integrity', () => {
     const familyKey = 'MFR-6208838930|gss|implant'
     const roleCodes = ['AIRWAY_STENT_SILICONE_STRAIGHT', 'AIRWAY_STENT_SILICONE_Y'] as const
     const definition = getScenarioDefinition(scenarioId)
-    const context = buildDemoContext(scenarioId)
+    const composedSlots = getComposedRecipeSlots(scenarioId)
     expect(definition).not.toBeNull()
 
     const selectedHospitalItemIds = Object.fromEntries(
       roleCodes.map((roleCode) => {
-        const slot = context.recipe.slots.find((candidate) => candidate.roleCode === roleCode)
+        const slot = composedSlots.find((candidate) => candidate.roleCode === roleCode)
         expect(slot).toBeDefined()
         return [slot!.id, familyPickId(familyKey, roleCode)]
       }),

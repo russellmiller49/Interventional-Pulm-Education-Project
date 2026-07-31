@@ -1,0 +1,307 @@
+[
+  {
+    "procedureCode": "BRONCH_ABLATION",
+    "version": "1.0",
+    "moduleReferences": [
+      {
+        "moduleVersionId": "module-bronch-ablation-specific-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 10
+      }
+    ],
+    "compositionActions": []
+  },
+  {
+    "procedureCode": "CHEST_TUBE",
+    "version": "1.0",
+    "moduleReferences": [
+      {
+        "moduleVersionId": "module-pleural-procedure-core-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 10
+      },
+      {
+        "moduleVersionId": "module-chest-tube-specific-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 20
+      }
+    ],
+    "compositionActions": [
+      {
+        "id": "chest-tube-ultrasound-optional",
+        "sequence": 10,
+        "actionType": "set_requiredness",
+        "targetRequirementKey": "PLEURAL_ULTRASOUND_MACHINE",
+        "payload": {
+          "value": "optional",
+          "dependencyRule": "Image-guided insertion"
+        }
+      }
+    ]
+  },
+  {
+    "procedureCode": "EBUS_TBNA",
+    "version": "1.0",
+    "moduleReferences": [
+      {
+        "moduleVersionId": "module-flex-bronch-core-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 10
+      },
+      {
+        "moduleVersionId": "module-ebus-tbna-specific-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 20
+      },
+      {
+        "moduleVersionId": "module-procedural-fluoroscopy-v1-0",
+        "selectionBehavior": "default_on",
+        "sequence": 30
+      }
+    ],
+    "compositionActions": [
+      {
+        "id": "ebus-tbna-suction-syringes",
+        "sequence": 10,
+        "actionType": "append_note",
+        "targetRequirementKey": "FLEX_BRONCH_SUCTION_SETUP",
+        "payload": {
+          "note": "Include aspiration syringes for needle sampling."
+        }
+      }
+    ]
+  },
+  {
+    "procedureCode": "EBV",
+    "version": "1.0",
+    "moduleReferences": [
+      {
+        "moduleVersionId": "module-therapeutic-bronch-core-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 10
+      },
+      {
+        "moduleVersionId": "module-ebv-specific-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 20
+      },
+      {
+        "moduleVersionId": "module-procedural-fluoroscopy-v1-0",
+        "selectionBehavior": "optional",
+        "sequence": 30
+      }
+    ],
+    "compositionActions": [
+      {
+        "id": "ebv-scope-channel-note",
+        "sequence": 10,
+        "actionType": "append_note",
+        "targetRequirementKey": "THERAPEUTIC_BRONCHOSCOPE_PLATFORM",
+        "payload": {
+          "note": "Match channel to delivery catheter."
+        }
+      },
+      {
+        "id": "ebv-retrieval-forceps-requiredness",
+        "sequence": 20,
+        "actionType": "set_requiredness",
+        "targetRequirementKey": "AIRWAY_RETRIEVAL_FORCEPS",
+        "payload": {
+          "value": "conditional",
+          "dependencyRule": "Reposition/removal anticipated"
+        }
+      },
+      {
+        "id": "ebv-retrieval-forceps-note",
+        "sequence": 30,
+        "actionType": "append_note",
+        "targetRequirementKey": "AIRWAY_RETRIEVAL_FORCEPS",
+        "payload": {
+          "note": "Used here for endobronchial valve repositioning or retrieval."
+        }
+      }
+    ]
+  },
+  {
+    "procedureCode": "FLEX_DIAGNOSTIC",
+    "version": "1.0",
+    "moduleReferences": [
+      {
+        "moduleVersionId": "module-flex-diagnostic-specific-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 10
+      }
+    ],
+    "compositionActions": []
+  },
+  {
+    "procedureCode": "ICU_BRONCH",
+    "version": "1.0",
+    "moduleReferences": [
+      {
+        "moduleVersionId": "module-icu-bronch-specific-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 10
+      }
+    ],
+    "compositionActions": []
+  },
+  {
+    "procedureCode": "IPC_PLACEMENT",
+    "version": "1.0",
+    "moduleReferences": [
+      {
+        "moduleVersionId": "module-pleural-procedure-core-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 10
+      },
+      {
+        "moduleVersionId": "module-ipc-placement-specific-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 20
+      }
+    ],
+    "compositionActions": [
+      {
+        "id": "ipc-ultrasound-pleural-access-note",
+        "sequence": 10,
+        "actionType": "append_note",
+        "targetRequirementKey": "PLEURAL_ULTRASOUND_MACHINE",
+        "payload": {
+          "note": "Sterile cover for pleural access."
+        }
+      }
+    ]
+  },
+  {
+    "procedureCode": "MED_THORACOSCOPY",
+    "version": "1.0",
+    "moduleReferences": [
+      {
+        "moduleVersionId": "module-pleural-procedure-core-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 10
+      },
+      {
+        "moduleVersionId": "module-med-thoracoscopy-specific-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 20
+      }
+    ],
+    "compositionActions": []
+  },
+  {
+    "procedureCode": "PERC_TRACH",
+    "version": "1.0",
+    "moduleReferences": [
+      {
+        "moduleVersionId": "module-perc-trach-specific-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 10
+      }
+    ],
+    "compositionActions": []
+  },
+  {
+    "procedureCode": "PHOTODYNAMIC_THERAPY",
+    "version": "1.0",
+    "moduleReferences": [
+      {
+        "moduleVersionId": "module-photodynamic-therapy-specific-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 10
+      }
+    ],
+    "compositionActions": []
+  },
+  {
+    "procedureCode": "RIGID_BRONCH",
+    "version": "1.0",
+    "moduleReferences": [
+      {
+        "moduleVersionId": "module-rigid-bronch-specific-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 10
+      }
+    ],
+    "compositionActions": []
+  },
+  {
+    "procedureCode": "TB_RULEOUT",
+    "version": "1.0",
+    "moduleReferences": [
+      {
+        "moduleVersionId": "module-tb-ruleout-specific-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 10
+      }
+    ],
+    "compositionActions": []
+  },
+  {
+    "procedureCode": "THERAPEUTIC_BRONCH",
+    "version": "1.0",
+    "moduleReferences": [
+      {
+        "moduleVersionId": "module-flex-bronch-core-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 10
+      },
+      {
+        "moduleVersionId": "module-therapeutic-bronch-core-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 20
+      },
+      {
+        "moduleVersionId": "module-therapeutic-bronch-specific-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 30
+      },
+      {
+        "moduleVersionId": "module-procedural-fluoroscopy-v1-0",
+        "selectionBehavior": "default_on",
+        "sequence": 40
+      }
+    ],
+    "compositionActions": [
+      {
+        "id": "therapeutic-bronch-high-flow-suction",
+        "sequence": 10,
+        "actionType": "append_note",
+        "targetRequirementKey": "FLEX_BRONCH_SUCTION_SETUP",
+        "payload": {
+          "note": "High-flow suction tubing and canisters are required for therapeutic work."
+        }
+      }
+    ]
+  },
+  {
+    "procedureCode": "THORACENTESIS",
+    "version": "1.0",
+    "moduleReferences": [
+      {
+        "moduleVersionId": "module-pleural-procedure-core-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 10
+      },
+      {
+        "moduleVersionId": "module-thoracentesis-specific-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 20
+      }
+    ],
+    "compositionActions": []
+  },
+  {
+    "procedureCode": "WLL",
+    "version": "1.0",
+    "moduleReferences": [
+      {
+        "moduleVersionId": "module-wll-specific-v1-0",
+        "selectionBehavior": "required",
+        "sequence": 10
+      }
+    ],
+    "compositionActions": []
+  }
+]

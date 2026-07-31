@@ -1,4 +1,5 @@
 import { evaluateCompatibilityRules } from './evaluate-compatibility'
+import { effectiveGovernanceState, expandRecipeComposition } from './expand-recipe-composition'
 import { suppressKitDuplicates } from './kit-suppression'
 import { evaluateQuantityExpression } from './quantity-expression'
 import { buildCardInputSchema, quantityExpressionSchema, recipeSlotSchema } from './schemas'
@@ -9,6 +10,7 @@ import type {
   BuildContext,
   ConditionalState,
   HospitalItem,
+  IncludedRecipeModule,
   ModifierAction,
   OpenHoldStatus,
   ProceduralPhase,
@@ -23,7 +25,12 @@ import type {
   VerificationState,
 } from './types'
 
-export const PREFERENCE_CARD_ENGINE_VERSION = 'ip-cards-resolver/0.1.0'
+/**
+ * 0.2.0 — composition. The hashable domain output gained `includedModules` and every item
+ * gained its requirement key and source modules, so snapshots written by 0.1.0 hash
+ * differently by construction and the version records why.
+ */
+export const PREFERENCE_CARD_ENGINE_VERSION = 'ip-cards-resolver/0.2.0'
 
 interface MutableResolution {
   messages: RuleMessage[]
@@ -37,6 +44,10 @@ function cloneSlot(slot: RecipeSlot): RecipeSlot {
   return {
     ...slot,
     quantityExpression: { ...slot.quantityExpression },
+    ...(slot.sourceSlotAliases ? { sourceSlotAliases: [...slot.sourceSlotAliases] } : {}),
+    ...(slot.sourceModuleVersionIds
+      ? { sourceModuleVersionIds: [...slot.sourceModuleVersionIds] }
+      : {}),
   }
 }
 
@@ -74,10 +85,23 @@ function addMessage(
   })
 }
 
+/**
+ * A modifier authored before composition targets an imported slot id. Once that
+ * requirement moves into a shared module the id it lives under changes, so the original id
+ * is kept as a provenance alias and matched here — the modifier keeps working without
+ * being rewritten.
+ */
 function matchingSlots(slots: RecipeSlot[], action: ModifierAction): RecipeSlot[] {
+  if (action.targetRequirementKey) {
+    return slots.filter((slot) => slot.requirementKey === action.targetRequirementKey)
+  }
   if (action.targetSlotId) {
+    const target = action.targetSlotId
     return slots.filter(
-      (slot) => slot.id === action.targetSlotId || slot.sourceSlotId === action.targetSlotId,
+      (slot) =>
+        slot.id === target ||
+        slot.sourceSlotId === target ||
+        (slot.sourceSlotAliases ?? []).includes(target),
     )
   }
   if (action.targetRoleCode) {
@@ -421,6 +445,10 @@ function itemResolution(
   return {
     id: slot.id,
     sourceSlotId: slot.sourceSlotId,
+    requirementKey: slot.requirementKey,
+    ...(slot.sourceModuleVersionIds && slot.sourceModuleVersionIds.length > 0
+      ? { sourceModuleVersionIds: [...slot.sourceModuleVersionIds] }
+      : {}),
     roleCode: slot.roleCode,
     label: slot.label,
     genericRequirement: slot.genericRequirement,
@@ -486,21 +514,28 @@ export function resolveCard(inputValue: BuildCardInput, context: BuildContext): 
     )
   }
 
+  // Steps 1-3 of the resolution order: expand the selected modules, add the procedure's
+  // own direct slots, and apply the explicit composition actions. Everything below this
+  // point sees one flat effective recipe and does not know composition exists.
+  const expansion = expandRecipeComposition({
+    recipe: context.recipe,
+    modules: context.recipeModules,
+    selectedModuleVersionIds: input.selectedModuleVersionIds,
+    startSequence: 1,
+  })
   const state: MutableResolution = {
-    slots: context.recipe.slots.map(cloneSlot),
-    messages: [],
-    trace: [],
+    slots: expansion.slots,
+    messages: [...expansion.messages],
+    trace: [...expansion.trace],
     rescueModuleCodes: [],
     replacementBySlot: new Map(),
   }
-  for (const slot of state.slots) {
-    trace(state, {
-      kind: 'base_recipe',
-      message: `${slot.label} was included by base recipe ${context.recipe.name} ${context.recipe.version}.`,
-      sourceId: context.recipe.id,
-      slotId: slot.id,
-    })
-  }
+  trace(state, {
+    kind: 'base_recipe',
+    message: `${context.recipe.name} ${context.recipe.version} composed ${expansion.slots.length} requirements from ${expansion.includedModules.length} module(s).`,
+    sourceId: context.recipe.id,
+    slotId: null,
+  })
 
   const selectedModifierCodes = [...new Set(input.modifierCodes)]
   const selectedModifiers = selectedModifierCodes.flatMap((code) => {
@@ -657,6 +692,10 @@ export function resolveCard(inputValue: BuildCardInput, context: BuildContext): 
     })
   }
 
+  const includedModules: IncludedRecipeModule[] = expansion.includedModules
+  // Nothing composed can present as stronger than its weakest part.
+  const governanceState = effectiveGovernanceState(context.recipe.governanceState, includedModules)
+
   const readinessState = readinessFromMessages(state.messages)
   trace(state, {
     kind: 'readiness',
@@ -679,17 +718,18 @@ export function resolveCard(inputValue: BuildCardInput, context: BuildContext): 
     siteName: context.siteName,
     locationName: context.locationName,
     selectedModifiers: selectedModifierCodes,
+    includedModules,
     items,
     suppressedItems: kitResult.suppressedItems,
     warnings: state.messages,
     readinessState,
-    governanceState: context.recipe.governanceState,
+    governanceState,
     ruleTrace: state.trace,
     engineVersion: PREFERENCE_CARD_ENGINE_VERSION,
     catalogImportId: context.recipe.catalogImportId,
     generatedAt,
     prototype:
-      context.recipe.governanceState !== 'approved' ||
+      governanceState !== 'approved' ||
       items.some(
         (item) =>
           item.verificationState === 'demo_only' || item.verificationState === 'prototype_visible',

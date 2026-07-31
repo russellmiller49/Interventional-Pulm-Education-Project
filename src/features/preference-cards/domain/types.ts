@@ -88,6 +88,22 @@ export type QuantityExpression = QuantityLiteral
 export interface RecipeSlot {
   id: string
   sourceSlotId: string | null
+  /**
+   * Stable semantic identity for the requirement this slot expresses.
+   *
+   * Two module-authored slots are the *same requirement* only when a reviewed mapping file
+   * gives them the same key. Role-code equality is never sufficient — the same role
+   * legitimately appears more than once on a card, and two procedures can ask for the same
+   * role in materially different ways.
+   */
+  requirementKey: string
+  /**
+   * Imported slot ids that this requirement absorbed when it moved into a shared module.
+   * Modifier targeting and audit trails keep working against the original ids.
+   */
+  sourceSlotAliases?: string[]
+  /** Set when the slot came from one or more recipe modules; absent for direct slots. */
+  sourceModuleVersionIds?: string[]
   roleCode: string
   label: string
   genericRequirement: string
@@ -106,6 +122,72 @@ export interface RecipeSlot {
   includedBy: string
 }
 
+/**
+ * Recipe modules are composed, never inherited. A procedure names the exact module
+ * *versions* it is built from; the modules themselves know nothing about the procedures
+ * that use them.
+ */
+export type RecipeModuleKind = 'core' | 'procedure_specific' | 'optional'
+
+export type ModuleSelectionBehavior = 'required' | 'default_on' | 'optional'
+
+export type ModuleSelectionSource = 'required' | 'default' | 'user_selected'
+
+export interface RecipeModuleVersion {
+  id: string
+  code: string
+  name: string
+  description: string
+  version: string
+  kind: RecipeModuleKind
+  governanceState: GovernanceState
+  clinicalOwner: string | null
+  operationalOwner: string | null
+  catalogImportId: string
+  slots: RecipeSlot[]
+}
+
+export interface RecipeModuleReference {
+  moduleVersionId: string
+  selectionBehavior: ModuleSelectionBehavior
+  sequence: number
+}
+
+export type ProcedureCompositionActionType =
+  | 'remove_slot'
+  | 'set_requiredness'
+  | 'set_quantity'
+  | 'set_setup_zone'
+  | 'set_procedural_phase'
+  | 'set_open_hold_status'
+  | 'append_note'
+
+/**
+ * A reviewed, explicit adjustment a procedure makes to a requirement it inherits from a
+ * module. There is no implicit override channel: what a composition changes, it says.
+ */
+export interface ProcedureCompositionAction {
+  id: string
+  sequence: number
+  actionType: ProcedureCompositionActionType
+  targetRequirementKey?: string
+  targetSlotId?: string
+  targetRoleCode?: string
+  payload: Record<string, unknown>
+}
+
+export interface IncludedRecipeModule {
+  moduleVersionId: string
+  moduleCode: string
+  moduleName: string
+  moduleVersion: string
+  kind: RecipeModuleKind
+  selectionBehavior: ModuleSelectionBehavior
+  selectionSource: ModuleSelectionSource
+  governanceState: GovernanceState
+  requirementCount: number
+}
+
 export interface RecipeVersion {
   id: string
   sourceProcedureCode: string
@@ -116,7 +198,14 @@ export interface RecipeVersion {
   clinicalOwner: string | null
   operationalOwner: string | null
   catalogImportId: string
+  /**
+   * Slots authored directly on the procedure rather than through a module. Composed
+   * procedures leave this empty; it stays available for migration and for the unusual
+   * requirement that genuinely belongs to one procedure and nothing else.
+   */
   slots: RecipeSlot[]
+  moduleReferences: RecipeModuleReference[]
+  compositionActions: ProcedureCompositionAction[]
 }
 
 export interface CatalogProductSummary {
@@ -196,7 +285,13 @@ export interface ModifierAction {
   modifierCode: string
   sequence: number
   actionType: ModifierActionType
+  /**
+   * Matches the expanded slot id, the imported `sourceSlotId`, or any value in
+   * `sourceSlotAliases` — so a modifier authored against a pre-composition slot id keeps
+   * hitting the requirement after it moves into a shared module.
+   */
   targetSlotId?: string
+  targetRequirementKey?: string
   targetRoleCode?: string
   payload: Record<string, unknown>
 }
@@ -275,6 +370,12 @@ export interface BuildCardInput {
   locationId: string
   recipeVersionId: string
   userId?: string
+  /**
+   * The exact module versions this card was built from. Stored verbatim rather than
+   * recomputed from selection behaviour, so a later change to what is default-on cannot
+   * silently reinterpret a saved card.
+   */
+  selectedModuleVersionIds: string[]
   modifierCodes: string[]
   variables: Record<string, string | number | boolean | null>
   conditionalStates?: Record<string, ConditionalState>
@@ -288,6 +389,8 @@ export interface BuildContext {
   locationName: string
   locationCapabilities: string[]
   recipe: RecipeVersion
+  /** Every module version the recipe's composition can reach. Nothing else is selectable. */
+  recipeModules: RecipeModuleVersion[]
   modifiers: ModifierDefinition[]
   rescueModules: RescueModule[]
   hospitalItems: HospitalItem[]
@@ -301,6 +404,7 @@ export interface RuleTraceEvent {
   sequence: number
   kind:
     | 'base_recipe'
+    | 'composition'
     | 'modifier'
     | 'conflict'
     | 'rescue_module'
@@ -324,6 +428,7 @@ export interface RuleMessage {
   message: string
   sourceType:
     | 'recipe'
+    | 'recipe_module'
     | 'modifier'
     | 'slot'
     | 'hospital_item'
@@ -338,6 +443,9 @@ export interface RuleMessage {
 export interface ResolvedCardItem {
   id: string
   sourceSlotId: string | null
+  /** Absent on snapshots written before composition; present on every composed line. */
+  requirementKey?: string
+  sourceModuleVersionIds?: string[]
   roleCode: string
   label: string
   genericRequirement: string
@@ -370,6 +478,15 @@ export interface ResolvedCard {
   siteName: string
   locationName: string
   selectedModifiers: string[]
+  /**
+   * The composition manifest. Part of the snapshot hash: a card built from different
+   * modules, or from a different version of the same module, is a different card.
+   *
+   * Optional because snapshots written before composition do not have one. `resolveCard`
+   * always sets it; the field is optional so every reader of a *stored* card is made to
+   * handle the older shape instead of trusting the type.
+   */
+  includedModules?: IncludedRecipeModule[]
   items: ResolvedCardItem[]
   suppressedItems: ResolvedCardItem[]
   warnings: RuleMessage[]

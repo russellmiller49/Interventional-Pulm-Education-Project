@@ -12,6 +12,13 @@ import type {
   VerificationState,
 } from '../domain/types'
 
+/**
+ * Modifier- and rescue-added lines sort after everything the composition produced, so a
+ * contingency line never lands in the middle of the base setup. Composed requirements sit
+ * in bands of `MODULE_SEQUENCE_BAND` per module reference; this base clears them all.
+ */
+const OPERATIONAL_SLOT_SEQUENCE_BASE = 100_000
+
 export const DEMO_ORGANIZATION_ID = '00000000-0000-4000-8000-000000000101'
 export const DEMO_SITE_ID = '00000000-0000-4000-8000-000000000102'
 export const DEMO_LOCATION_ID = '00000000-0000-4000-8000-000000000103'
@@ -58,6 +65,10 @@ function addedSlot(
   return {
     id,
     sourceSlotId: null,
+    // Operationally authored lines are their own requirement. Keying them by their own id
+    // makes them unique by construction, so nothing here can accidentally merge with a
+    // module-authored requirement that happens to share a role code.
+    requirementKey: id,
     roleCode,
     label,
     genericRequirement,
@@ -67,7 +78,7 @@ function addedSlot(
     selectionMode: 'single',
     setupZone,
     proceduralPhase,
-    setupSequence: sequence,
+    setupSequence: OPERATIONAL_SLOT_SEQUENCE_BASE + sequence,
     openHoldStatus,
     responsibleRole: null,
     sterileStatus: null,

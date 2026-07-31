@@ -124,10 +124,29 @@ RLS will:
 
 The demo seed is explicitly labeled `Demo IP Program / Demo Hospital / Bronchoscopy Suite 1`. Demo-only stand-ins are enumerated with reasons and cannot contribute to production readiness.
 
+## Recipe composition (v0.3)
+
+A recipe version is now a manifest of versioned **recipe modules** rather than a flat slot
+list. The full design is in [`recipe-composition.md`](./recipe-composition.md); the parts
+that change this plan:
+
+- Reviewed composition seed lives in `data/ip-preference-cards/seed/recipe-module-map.json`
+  and `procedure-compositions.json`; `npm run ip-cards:compositions` normalizes it into
+  `generated/recipe-modules.json`, `generated/procedure-compositions.json`, and a migration
+  report. Imported artifacts (`procedures.json`, `procedure-slots.json`) stay untouched.
+- The builder gains a **Setup modules** step between procedure selection and modifiers, and
+  a "build a custom card from modules" entry point. The wizard is five steps, not four.
+- `builder_inputs` gains `selectedModuleVersionIds`. It is required: a builder input written
+  before composition has no module selection to restore, and inventing one from today's
+  defaults would reinterpret a saved card, so such an input fails validation and the card
+  stays viewable and printable from its snapshot instead.
+- The resolved card gains `includedModules`, which is inside the snapshot hash. The engine
+  version moves to `ip-cards-resolver/0.2.0`.
+
 ## UI strategy
 
 - Use the existing locale route and UI component conventions.
-- Add the required dashboard, four-step builder, generated card, print, formulary, catalog QA, and recipe overview routes.
+- Add the required dashboard, five-step builder, generated card, print, formulary, catalog QA, and recipe/composition overview routes.
 - Keep English copy in the existing message-bundle structure for v0.1; the same English fallback keys will be present in active locale bundles so parity checks continue to pass.
 - Provide keyboard-operable controls, visible focus styles, textual status labels, responsive tables/cards, and print CSS for Letter/A4.
 - Display `DRAFT PROTOTYPE — NOT APPROVED FOR CLINICAL USE` on every imported/demo output.
@@ -137,6 +156,7 @@ The demo seed is explicitly labeled `Demo IP Program / Demo Hospital / Bronchosc
 
 - Import and normalization tests, including exact GTIN/catalog-number round trips.
 - Pure resolver tests for determinism, conflicts, rescue modules, compatibility unknown/failure states, conditional slots, draft governance, and kit suppression.
+- Composition tests: required modules cannot be dropped by crafted input, duplicate requirement keys merge or block, role-code equality never deduplicates, the manifest is inside the hash, and the build script re-derives the committed generated data byte-for-byte.
 - Stable golden-scenario fixtures.
 - Focused component/route tests and Playwright smoke checks when local authentication and browser execution are available.
 - Repository lint, type check, Jest suite, and production build.

@@ -1,14 +1,23 @@
 import generatedModifiersJson from '../../../../data/ip-preference-cards/generated/modifier-definitions.json'
 import generatedScenariosJson from '../../../../data/ip-preference-cards/generated/scenarios.json'
+import recipeModulesJson from '../../../../data/ip-preference-cards/generated/recipe-modules.json'
+import procedureCompositionsJson from '../../../../data/ip-preference-cards/generated/procedure-compositions.json'
 import productsJson from '../../../../data/ip-preference-cards/generated/catalog-products.json'
 import coverageJson from '../../../../data/ip-preference-cards/generated/coverage-report.json'
 import importReportJson from '../../../../data/ip-preference-cards/generated/import-report.json'
 import productRolesJson from '../../../../data/ip-preference-cards/generated/product-roles.json'
 import proceduresJson from '../../../../data/ip-preference-cards/generated/procedures.json'
-import slotsJson from '../../../../data/ip-preference-cards/generated/procedure-slots.json'
 import verificationBacklogJson from '../../../../data/ip-preference-cards/generated/verification-backlog.json'
-import sectionMapJson from '../../../../data/ip-preference-cards/seed/section-zone-phase-map.json'
 
+import {
+  defaultSelectedModuleVersionIds,
+  expandDefaultRecipeComposition,
+} from '../domain/expand-recipe-composition'
+import {
+  CUSTOM_COMPOSITION_PROCEDURE_CODE,
+  CUSTOM_COMPOSITION_RECIPE_ID,
+  CUSTOM_COMPOSITION_SCENARIO_ID,
+} from './scenario-ids'
 import { resolveCard } from '../domain/resolve-card'
 import type {
   BuildCardInput,
@@ -18,12 +27,13 @@ import type {
   ModifierDefinition,
   HospitalItem,
   HospitalRoleOption,
+  ProcedureCompositionAction,
+  RecipeModuleReference,
+  RecipeModuleVersion,
   RecipeSlot,
   RecipeVersion,
   ResolvedCard,
   ScenarioDefinition,
-  SetupZone,
-  ProceduralPhase,
 } from '../domain/types'
 import {
   DEMO_LOCATION_ID,
@@ -56,26 +66,11 @@ interface ProcedureRow {
   clinical_owner: string | null
 }
 
-interface ProcedureSlotRow {
-  slot_id: string
-  procedure_code: string
-  section: string
-  display_order: number
-  role_code: string
-  slot_label: string
-  generic_requirement: string
-  requiredness: 'required' | 'conditional' | 'optional'
-  default_qty: number
-  selection_mode: 'single' | 'multiple'
-  allow_custom: boolean
-  dependency_rule: string | null
-  notes: string | null
-}
-
-interface SectionMapping {
-  setup_zone: SetupZone
-  procedural_phase: ProceduralPhase
-  needs_review: boolean
+interface GeneratedProcedureComposition {
+  procedureCode: string
+  version: string
+  moduleReferences: RecipeModuleReference[]
+  compositionActions: ProcedureCompositionAction[]
 }
 
 interface ImportReport {
@@ -123,11 +118,17 @@ interface ProductRoleRow {
 const products = productsJson as CatalogProductRow[]
 const productRoles = productRolesJson as ProductRoleRow[]
 const procedures = proceduresJson as ProcedureRow[]
-const procedureSlots = slotsJson as ProcedureSlotRow[]
-const sectionMap = sectionMapJson as Record<string, SectionMapping>
 const importReport = importReportJson as ImportReport
 const coverageProcedures = (coverageJson as { procedures: CoverageProcedure[] }).procedures
 const verificationBacklog = verificationBacklogJson as VerificationBacklogRow[]
+const recipeModules = recipeModulesJson as unknown as RecipeModuleVersion[]
+const recipeModuleById = new Map(recipeModules.map((module) => [module.id, module]))
+const compositionByProcedure = new Map(
+  (procedureCompositionsJson as unknown as GeneratedProcedureComposition[]).map((composition) => [
+    composition.procedureCode,
+    composition,
+  ]),
+)
 
 const productById = new Map(products.map((product) => [product.product_id, product]))
 /**
@@ -211,38 +212,77 @@ function roleOptions(): HospitalRoleOption[] {
   }))
 }
 
-function toRecipeSlot(row: ProcedureSlotRow, recipeLabel: string): RecipeSlot {
-  const mapping = sectionMap[row.section]
-  const needsReview = !mapping || mapping.needs_review
+function cloneSlot(slot: RecipeSlot): RecipeSlot {
   return {
-    id: row.slot_id,
-    sourceSlotId: row.slot_id,
-    roleCode: row.role_code,
-    label: row.slot_label,
-    genericRequirement: row.generic_requirement,
-    requiredness: row.requiredness,
-    dependencyRule: row.dependency_rule,
-    quantityExpression: { op: 'literal', value: row.default_qty },
-    selectionMode: row.selection_mode,
-    setupZone: needsReview ? 'unassigned' : mapping.setup_zone,
-    proceduralPhase: needsReview ? 'unassigned' : mapping.procedural_phase,
-    setupSequence: row.display_order,
-    openHoldStatus: 'have_in_room',
-    responsibleRole: null,
-    sterileStatus: null,
-    allowCustom: row.allow_custom,
-    notes:
-      [
-        row.notes,
-        needsReview ? `Source section "${row.section}" needs setup-zone and phase review.` : null,
-      ]
-        .filter(Boolean)
-        .join(' ') || null,
-    includedBy: `Included by base recipe ${recipeLabel}`,
+    ...slot,
+    quantityExpression: { ...slot.quantityExpression },
+    ...(slot.sourceSlotAliases ? { sourceSlotAliases: [...slot.sourceSlotAliases] } : {}),
+    ...(slot.sourceModuleVersionIds
+      ? { sourceModuleVersionIds: [...slot.sourceModuleVersionIds] }
+      : {}),
+  }
+}
+
+function cloneModule(version: RecipeModuleVersion): RecipeModuleVersion {
+  return { ...version, slots: version.slots.map(cloneSlot) }
+}
+
+/**
+ * The "build a card from modules yourself" entry point. It is a real composition like any
+ * other — every module offered as `optional`, nothing required — so the server validates a
+ * custom selection through exactly the same wall as a standard procedure, and a custom card
+ * re-resolves from its stored module ids with no special case.
+ */
+const customCompositionScenario: ScenarioDefinition = {
+  id: CUSTOM_COMPOSITION_SCENARIO_ID,
+  title: 'Custom card from modules',
+  recipeName: 'Custom module composition',
+  shortDescription:
+    'Assemble a card from reusable setup modules yourself. Nothing is suggested for you — the module descriptions are what the reviewers wrote.',
+  recipeVersionId: CUSTOM_COMPOSITION_RECIPE_ID,
+  sourceProcedureCode: CUSTOM_COMPOSITION_PROCEDURE_CODE,
+  templateVersion: '1.0',
+  defaultModifierCodes: [],
+  // Modifiers target slots authored by a specific procedure template. Offering them on a
+  // free-form module selection would let a modifier land somewhere nobody reviewed.
+  availableModifierCodes: [],
+  requiredCatalogCoverageCount: 0,
+  requiredCatalogCoveragePercentage: 0,
+  requiredSlotsWithoutCatalogProducts: [],
+  roleCodesWithoutCatalogProducts: [],
+  requiredDefaultOptionCoverageCount: 0,
+  requiredDefaultOptionCoveragePercentage: 0,
+  requiredSlotsWithoutDefaultOptions: [],
+  requiredCustomAllowedCount: 0,
+  slotCount: 0,
+  requiredSlotCount: 0,
+  governanceState: 'draft',
+  owner: null,
+}
+
+function customCompositionRecipe(): RecipeVersion {
+  return {
+    id: CUSTOM_COMPOSITION_RECIPE_ID,
+    sourceProcedureCode: CUSTOM_COMPOSITION_PROCEDURE_CODE,
+    sourceTemplateVersion: '1.0',
+    name: customCompositionScenario.recipeName,
+    version: '1.0',
+    governanceState: 'draft',
+    clinicalOwner: null,
+    operationalOwner: null,
+    catalogImportId: importReport.workbook_sha256,
+    slots: [],
+    moduleReferences: recipeModules.map((version, index) => ({
+      moduleVersionId: version.id,
+      selectionBehavior: 'optional' as const,
+      sequence: (index + 1) * 10,
+    })),
+    compositionActions: [],
   }
 }
 
 function recipeForScenario(scenario: ScenarioDefinition): RecipeVersion {
+  if (scenario.id === CUSTOM_COMPOSITION_SCENARIO_ID) return customCompositionRecipe()
   const source = procedures.find(
     (procedure) => procedure.procedure_code === scenario.sourceProcedureCode,
   )
@@ -251,29 +291,85 @@ function recipeForScenario(scenario: ScenarioDefinition): RecipeVersion {
       `Source procedure ${scenario.sourceProcedureCode} is missing from generated data.`,
     )
   }
-  const name = scenario.recipeName
+  const composition = compositionByProcedure.get(source.procedure_code)
+  if (!composition) {
+    throw new Error(
+      `Procedure ${source.procedure_code} has no reviewed composition. Run "npm run ip-cards:compositions".`,
+    )
+  }
   return {
     id: scenario.recipeVersionId,
     sourceProcedureCode: source.procedure_code,
     sourceTemplateVersion: source.template_version,
-    name,
+    name: scenario.recipeName,
     version: '0.1',
     governanceState: 'draft',
     clinicalOwner: source.clinical_owner,
     operationalOwner: null,
     catalogImportId: importReport.workbook_sha256,
-    slots: procedureSlots
-      .filter((slot) => slot.procedure_code === source.procedure_code)
-      .sort(
-        (left, right) =>
-          left.display_order - right.display_order || left.slot_id.localeCompare(right.slot_id),
-      )
-      .map((slot) => toRecipeSlot(slot, `${name} v0.1`)),
+    // Every imported procedure is fully composed; direct slots stay available for the
+    // unusual requirement that belongs to one procedure and nothing else.
+    slots: [],
+    moduleReferences: composition.moduleReferences.map((reference) => ({ ...reference })),
+    compositionActions: composition.compositionActions.map((action) => ({
+      ...action,
+      payload: { ...action.payload },
+    })),
   }
 }
 
+function modulesForRecipe(recipe: RecipeVersion): RecipeModuleVersion[] {
+  return recipe.moduleReferences.map((reference) => {
+    const moduleVersion = recipeModuleById.get(reference.moduleVersionId)
+    if (!moduleVersion) {
+      throw new Error(
+        `Recipe ${recipe.id} references module version ${reference.moduleVersionId}, which is missing from generated data.`,
+      )
+    }
+    return cloneModule(moduleVersion)
+  })
+}
+
 export function getScenarioDefinition(id: string): ScenarioDefinition | null {
+  if (id === CUSTOM_COMPOSITION_SCENARIO_ID) {
+    return {
+      ...customCompositionScenario,
+      defaultModifierCodes: [],
+      availableModifierCodes: [],
+      requiredSlotsWithoutCatalogProducts: [],
+      roleCodesWithoutCatalogProducts: [],
+      requiredSlotsWithoutDefaultOptions: [],
+    }
+  }
   return scenarioById.get(id) ?? null
+}
+
+/**
+ * The effective requirement list a scenario starts from, before modifiers and resolution.
+ *
+ * This is what an administrator sees as the read-only effective preview of a composition:
+ * the procedure's own requirements plus everything it inherits, each carrying the module
+ * it came from.
+ */
+export function getComposedRecipeSlots(scenarioId: string): RecipeSlot[] {
+  const context = buildDemoContext(scenarioId)
+  return expandDefaultRecipeComposition(context).slots
+}
+
+/** Every authored module version, for the administrative composition overview. */
+export function getRecipeModuleCatalog(): RecipeModuleVersion[] {
+  return recipeModules.map(cloneModule)
+}
+
+export function getProcedureCompositions(): GeneratedProcedureComposition[] {
+  return [...compositionByProcedure.values()].map((composition) => ({
+    ...composition,
+    moduleReferences: composition.moduleReferences.map((reference) => ({ ...reference })),
+    compositionActions: composition.compositionActions.map((action) => ({
+      ...action,
+      payload: { ...action.payload },
+    })),
+  }))
 }
 
 export function getScenarioDefinitions(): ScenarioDefinition[] {
@@ -292,12 +388,14 @@ export function getScenarioDefinitions(): ScenarioDefinition[] {
 export function buildDemoContext(scenarioId: string): BuildContext {
   const scenario = getScenarioDefinition(scenarioId)
   if (!scenario) throw new Error(`Unknown preference-card scenario "${scenarioId}".`)
+  const recipe = recipeForScenario(scenario)
   return {
     organizationName: 'Demo IP Program',
     siteName: 'Demo Hospital',
     locationName: 'Bronchoscopy Suite 1',
     locationCapabilities: ['rigid_bronchoscopy', 'jet_ventilation', 'fluoroscopy'],
-    recipe: recipeForScenario(scenario),
+    recipe,
+    recipeModules: modulesForRecipe(recipe),
     modifiers: allModifierDefinitions.map((modifier) => ({
       ...modifier,
       preview: [...modifier.preview],
@@ -329,6 +427,7 @@ export function defaultBuildInput(
   options?: {
     modifierCodes?: string[]
     generatedAt?: string
+    selectedModuleVersionIds?: string[]
   },
 ): BuildCardInput {
   const scenario = getScenarioDefinition(scenarioId)
@@ -338,6 +437,9 @@ export function defaultBuildInput(
     siteId: DEMO_SITE_ID,
     locationId: DEMO_LOCATION_ID,
     recipeVersionId: scenario.recipeVersionId,
+    selectedModuleVersionIds:
+      options?.selectedModuleVersionIds ??
+      defaultSelectedModuleVersionIds(recipeForScenario(scenario)),
     modifierCodes: options?.modifierCodes ?? [...scenario.defaultModifierCodes],
     variables: {
       generated_at: options?.generatedAt ?? '2026-07-25T12:00:00.000Z',
@@ -351,6 +453,7 @@ export function resolveDemoScenario(
   options?: {
     modifierCodes?: string[]
     generatedAt?: string
+    selectedModuleVersionIds?: string[]
     conditionalStates?: BuildCardInput['conditionalStates']
     selectedHospitalItemIds?: BuildCardInput['selectedHospitalItemIds']
     waivers?: BuildCardInput['waivers']

@@ -7,11 +7,13 @@ import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
   ArrowRight,
+  Blocks,
   Check,
   ChevronRight,
   FileCheck2,
   FlaskConical,
   ListChecks,
+  Lock,
   Settings2,
   Stethoscope,
 } from 'lucide-react'
@@ -29,6 +31,9 @@ import {
 import { cn } from '@/lib/cn'
 import { saveUserCardAction } from '@/app/[locale]/preference-cards/new/actions'
 
+import { CUSTOM_COMPOSITION_SCENARIO_ID } from '../data/scenario-ids'
+
+import { defaultSelectedModuleVersionIds } from '../domain/expand-recipe-composition'
 import { resolveCard } from '../domain/resolve-card'
 import type {
   BuildContext,
@@ -36,6 +41,7 @@ import type {
   HospitalItem,
   HospitalRoleOption,
   ModifierGroup,
+  RecipeModuleVersion,
   ScenarioDefinition,
 } from '../domain/types'
 import { PreferenceCardTabs } from './PreferenceCardViews'
@@ -69,9 +75,18 @@ interface PreferenceCardWizardProps {
 
 const wizardSteps = [
   { key: 'procedure', icon: Stethoscope },
+  { key: 'modules', icon: Blocks },
   { key: 'modifiers', icon: Settings2 },
   { key: 'requirements', icon: ListChecks },
   { key: 'review', icon: FileCheck2 },
+] as const
+
+const stepHelpKeys = [
+  'selectProcedureHelp',
+  'modules.sectionHelp',
+  'configureModifiersHelp',
+  'requirementsHelp',
+  'reviewHelp',
 ] as const
 
 const modifierGroupOrder: ModifierGroup[] = [
@@ -129,6 +144,13 @@ export function PreferenceCardWizard({
   const [modifierCodes, setModifierCodes] = useState<string[]>(
     bundle?.definition.defaultModifierCodes ?? [],
   )
+  // The exact module versions this card is built from. Seeded from the composition's
+  // required and default-on modules, then stored verbatim on save, so a later change to
+  // what is default-on can never reach back into a saved card.
+  const [selectedModuleVersionIds, setSelectedModuleVersionIds] = useState<string[]>(
+    bundle ? defaultSelectedModuleVersionIds(bundle.context.recipe) : [],
+  )
+  const [moduleSourceFilter, setModuleSourceFilter] = useState<string>('')
   const [conditionalStates, setConditionalStates] = useState<Record<string, ConditionalState>>({})
   const [selectedHospitalItemIds, setSelectedHospitalItemIds] = useState<
     Record<string, string | null>
@@ -202,6 +224,7 @@ export function PreferenceCardWizard({
         siteId: bundle.context.hospitalItems[0]?.siteId ?? 'demo',
         locationId: bundle.context.hospitalItems[0]?.locationId ?? 'demo',
         recipeVersionId: bundle.context.recipe.id,
+        selectedModuleVersionIds,
         modifierCodes,
         variables: { generated_at: generatedAt },
         conditionalStates,
@@ -210,7 +233,57 @@ export function PreferenceCardWizard({
       },
       resolveContext,
     )
-  }, [bundle, resolveContext, conditionalStates, modifierCodes, selectedHospitalItemIds, waivers])
+  }, [
+    bundle,
+    resolveContext,
+    conditionalStates,
+    modifierCodes,
+    selectedHospitalItemIds,
+    selectedModuleVersionIds,
+    waivers,
+  ])
+
+  const moduleById = useMemo(
+    () => new Map((bundle?.context.recipeModules ?? []).map((module) => [module.id, module])),
+    [bundle],
+  )
+
+  /**
+   * One entry per module the composition offers, in authored order, carrying whether the
+   * user may touch it. A `required` module is shown as locked rather than as an unchecked
+   * clinical choice.
+   */
+  const moduleChoices = useMemo(() => {
+    if (!bundle) return []
+    return [...bundle.context.recipe.moduleReferences]
+      .sort(
+        (left, right) =>
+          left.sequence - right.sequence ||
+          left.moduleVersionId.localeCompare(right.moduleVersionId),
+      )
+      .flatMap((reference) => {
+        const moduleVersion = moduleById.get(reference.moduleVersionId)
+        if (!moduleVersion) return []
+        return [
+          {
+            module: moduleVersion,
+            behavior: reference.selectionBehavior,
+            locked: reference.selectionBehavior === 'required',
+            selected:
+              reference.selectionBehavior === 'required' ||
+              selectedModuleVersionIds.includes(moduleVersion.id),
+          },
+        ]
+      })
+  }, [bundle, moduleById, selectedModuleVersionIds])
+
+  const toggleModule = (target: RecipeModuleVersion) => {
+    setSelectedModuleVersionIds((current) =>
+      current.includes(target.id)
+        ? current.filter((candidate) => candidate !== target.id)
+        : [...current, target.id],
+    )
+  }
 
   const availableModifiers = bundle
     ? bundle.context.modifiers.filter((modifier) =>
@@ -345,6 +418,9 @@ export function PreferenceCardWizard({
           siteId: bundle.context.hospitalItems[0]?.siteId ?? 'personal',
           locationId: bundle.context.hospitalItems[0]?.locationId ?? 'personal',
           recipeVersionId: bundle.context.recipe.id,
+          // Ids only. The server reloads the authored modules and re-expands the
+          // composition; module contents never cross the wire.
+          selectedModuleVersionIds,
           modifierCodes,
           variables: { generated_at: generatedAt },
           conditionalStates,
@@ -423,15 +499,7 @@ export function PreferenceCardWizard({
               {t(`steps.${wizardSteps[step].key}`)}
             </p>
             <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">
-              {t(
-                step === 0
-                  ? 'selectProcedureHelp'
-                  : step === 1
-                    ? 'configureModifiersHelp'
-                    : step === 2
-                      ? 'requirementsHelp'
-                      : 'reviewHelp',
-              )}
+              {t(stepHelpKeys[step])}
             </p>
           </div>
           {card ? (
@@ -508,11 +576,128 @@ export function PreferenceCardWizard({
                 </Card>
               )
             })}
+            <Card
+              className={cn(
+                'h-full',
+                scenarioId === CUSTOM_COMPOSITION_SCENARIO_ID &&
+                  'border-2 border-primary shadow-lg shadow-primary/10',
+              )}
+            >
+              <CardHeader>
+                <Badge variant="outline">{t('modules.kind.optional')}</Badge>
+                <CardTitle className="mt-2">{t('modules.customTitle')}</CardTitle>
+                <CardDescription>{t('modules.customDescription')}</CardDescription>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                <p>{t('modules.customHelp')}</p>
+              </CardContent>
+              <CardFooter>
+                <Button
+                  type="button"
+                  variant={scenarioId === CUSTOM_COMPOSITION_SCENARIO_ID ? 'default' : 'outline'}
+                  onClick={() => selectScenario(CUSTOM_COMPOSITION_SCENARIO_ID)}
+                >
+                  {t('modules.customCta')}
+                </Button>
+              </CardFooter>
+            </Card>
           </div>
         ) : null}
 
-        {step === 1 && bundle && card ? (
+        {step === 1 && bundle ? (
+          <div className="space-y-4">
+            <p className="text-sm leading-6 text-muted-foreground">{t('modules.sectionIntro')}</p>
+            {moduleChoices.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t('modules.emptyComposition')}</p>
+            ) : null}
+            <ul className="grid gap-4 lg:grid-cols-2">
+              {moduleChoices.map(({ module: moduleVersion, behavior, locked, selected }) => (
+                <li key={moduleVersion.id}>
+                  <article
+                    className={cn(
+                      'flex h-full flex-col rounded-2xl border p-4 shadow-sm transition',
+                      selected
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border bg-background hover:border-primary/40',
+                    )}
+                  >
+                    <header className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-foreground">{moduleVersion.name}</h3>
+                        <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+                          {moduleVersion.code} · {t('modules.versionLabel')} {moduleVersion.version}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Badge variant="outline" size="sm">
+                          {t(`modules.kind.${moduleVersion.kind}`)}
+                        </Badge>
+                        <Badge variant={locked ? 'info' : 'outline'} size="sm">
+                          {t(`modules.behavior.${behavior}`)}
+                        </Badge>
+                        <Badge variant="outline" size="sm">
+                          {moduleVersion.governanceState}
+                        </Badge>
+                      </div>
+                    </header>
+
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      {moduleVersion.description}
+                    </p>
+
+                    <p className="mt-2 text-xs font-semibold text-foreground">
+                      {t('modules.requirementCount', { count: moduleVersion.slots.length })}
+                    </p>
+
+                    <details className="mt-2 text-xs">
+                      <summary className="cursor-pointer text-muted-foreground">
+                        {t('modules.previewRequirements')}
+                      </summary>
+                      <ul className="mt-2 space-y-1">
+                        {moduleVersion.slots.map((slot) => (
+                          <li key={slot.id} className="flex flex-wrap items-baseline gap-2">
+                            <span className="text-foreground">{slot.label}</span>
+                            <code className="text-[10px] text-muted-foreground">
+                              {slot.roleCode}
+                            </code>
+                            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                              {humanize(slot.requiredness)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+
+                    <div className="mt-4 flex items-center gap-3 border-t border-border pt-3">
+                      {locked ? (
+                        <p className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                          <Lock aria-hidden="true" className="h-3.5 w-3.5" />
+                          {t('modules.lockedHelp')}
+                        </p>
+                      ) : (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={selected ? 'default' : 'outline'}
+                          aria-pressed={selected}
+                          onClick={() => toggleModule(moduleVersion)}
+                        >
+                          {selected ? t('modules.remove') : t('modules.include')}
+                        </Button>
+                      )}
+                    </div>
+                  </article>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        {step === 2 && bundle && card ? (
           <div className="space-y-8">
+            {availableModifiers.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t('modules.noModifiersAvailable')}</p>
+            ) : null}
             {modifierGroupOrder.map((group) => {
               const modifiers = availableModifiers.filter(
                 (modifier) => modifier.groupCode === group,
@@ -586,217 +771,273 @@ export function PreferenceCardWizard({
           </div>
         ) : null}
 
-        {step === 2 && bundle && card ? (
+        {step === 3 && bundle && card ? (
           <div className="space-y-5">
+            <div className="flex flex-wrap items-end gap-3">
+              <label
+                htmlFor="module-source-filter"
+                className="text-xs font-semibold text-foreground"
+              >
+                {t('modules.filterLabel')}
+                <select
+                  id="module-source-filter"
+                  value={moduleSourceFilter}
+                  onChange={(event) => setModuleSourceFilter(event.target.value)}
+                  className="mt-1 h-9 w-full min-w-64 rounded-lg border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">{t('modules.allSources')}</option>
+                  {moduleChoices
+                    .filter((choice) => choice.selected)
+                    .map((choice) => (
+                      <option key={choice.module.id} value={choice.module.id}>
+                        {choice.module.name}
+                      </option>
+                    ))}
+                </select>
+              </label>
+            </div>
             {/*
               One card per requirement rather than a 13-column table. The table needed
               1,450px before it could be read at all, so on anything narrower than a desktop
               the selection controls sat off-screen behind a horizontal scrollbar.
             */}
             <ul className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
-              {card.items.map((item) => {
-                const allOptions = localOptionsByRole.get(item.roleCode) ?? []
-                const search = localOptionSearches[item.id]?.trim().toLocaleLowerCase() ?? ''
-                const matchingOptions = search
-                  ? allOptions.filter((candidate) =>
-                      builderOptionText(candidate).toLocaleLowerCase().includes(search),
-                    )
-                  : allOptions
-                const selectedOption = allOptions.find(
-                  (candidate) => candidate.item.id === item.selectedHospitalItemId,
+              {card.items
+                .filter(
+                  (item) =>
+                    !moduleSourceFilter ||
+                    (item.sourceModuleVersionIds ?? []).includes(moduleSourceFilter),
                 )
-                const visibleOptions =
-                  selectedOption &&
-                  !matchingOptions.some((candidate) => candidate.item.id === selectedOption.item.id)
-                    ? [selectedOption, ...matchingOptions]
-                    : matchingOptions
-                const facts: [string, string][] = [
-                  [t('columns.quantity'), item.quantityDisplay],
-                  [t('columns.zone'), t(`spatialZones.${item.setupZone}`)],
-                  [t('columns.phase'), t(`phases.${item.proceduralPhase}`)],
-                  [t('columns.openHold'), humanize(item.openHoldStatus)],
-                  [t('columns.verification'), humanize(item.verificationState)],
-                  [t('columns.compatibility'), humanize(item.compatibilityState)],
-                ]
-                const sourceLine =
-                  [
-                    item.selectedItemSnapshot?.catalogProduct?.manufacturer,
-                    item.selectedItemSnapshot?.catalogProduct?.catalogNumber,
+                .map((item) => {
+                  const allOptions = localOptionsByRole.get(item.roleCode) ?? []
+                  const search = localOptionSearches[item.id]?.trim().toLocaleLowerCase() ?? ''
+                  const matchingOptions = search
+                    ? allOptions.filter((candidate) =>
+                        builderOptionText(candidate).toLocaleLowerCase().includes(search),
+                      )
+                    : allOptions
+                  const selectedOption = allOptions.find(
+                    (candidate) => candidate.item.id === item.selectedHospitalItemId,
+                  )
+                  const visibleOptions =
+                    selectedOption &&
+                    !matchingOptions.some(
+                      (candidate) => candidate.item.id === selectedOption.item.id,
+                    )
+                      ? [selectedOption, ...matchingOptions]
+                      : matchingOptions
+                  const facts: [string, string][] = [
+                    [t('columns.quantity'), item.quantityDisplay],
+                    [t('columns.zone'), t(`spatialZones.${item.setupZone}`)],
+                    [t('columns.phase'), t(`phases.${item.proceduralPhase}`)],
+                    [t('columns.openHold'), humanize(item.openHoldStatus)],
+                    [t('columns.verification'), humanize(item.verificationState)],
+                    [t('columns.compatibility'), humanize(item.compatibilityState)],
                   ]
-                    .filter(Boolean)
-                    .join(' · ') || null
+                  const sourceLine =
+                    [
+                      item.selectedItemSnapshot?.catalogProduct?.manufacturer,
+                      item.selectedItemSnapshot?.catalogProduct?.catalogNumber,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ') || null
 
-                return (
-                  <li key={item.id}>
-                    <article
-                      className={cn(
-                        'flex h-full flex-col rounded-2xl border border-border bg-background p-4 shadow-sm',
-                        item.resolutionState === 'blocking' &&
-                          'border-red-300 bg-red-50/60 dark:border-red-900 dark:bg-red-950/10',
-                      )}
-                    >
-                      <header className="flex flex-wrap items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <h3 className="font-semibold text-foreground">{item.label}</h3>
-                          <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
-                            {item.roleCode}
-                          </p>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <Badge variant="outline" size="sm">
-                            {humanize(item.effectiveRequiredness)}
-                          </Badge>
-                          <Badge
-                            variant={
-                              item.resolutionState === 'blocking'
-                                ? 'destructive'
-                                : item.resolutionState === 'resolved'
-                                  ? 'success'
-                                  : 'outline'
-                            }
-                            size="sm"
-                          >
-                            {humanize(item.resolutionState)}
-                          </Badge>
-                        </div>
-                      </header>
+                  return (
+                    <li key={item.id}>
+                      <article
+                        className={cn(
+                          'flex h-full flex-col rounded-2xl border border-border bg-background p-4 shadow-sm',
+                          item.resolutionState === 'blocking' &&
+                            'border-red-300 bg-red-50/60 dark:border-red-900 dark:bg-red-950/10',
+                        )}
+                      >
+                        <header className="flex flex-wrap items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <h3 className="font-semibold text-foreground">{item.label}</h3>
+                            <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+                              {item.roleCode}
+                            </p>
+                            {/*
+                            Where the line came from, on the line itself. A reader has to be
+                            able to tell an inherited core requirement from one this
+                            procedure added without opening anything.
+                          */}
+                            <p className="mt-1 flex flex-wrap gap-1">
+                              {(item.sourceModuleVersionIds ?? []).map((moduleVersionId) => {
+                                const source = moduleById.get(moduleVersionId)
+                                if (!source) return null
+                                return (
+                                  <Badge
+                                    key={moduleVersionId}
+                                    variant={source.kind === 'core' ? 'info' : 'outline'}
+                                    size="sm"
+                                  >
+                                    {source.name}
+                                  </Badge>
+                                )
+                              })}
+                              {(item.sourceModuleVersionIds ?? []).length === 0 ? (
+                                <Badge variant="outline" size="sm">
+                                  {t('modules.sourceUnknown')}
+                                </Badge>
+                              ) : null}
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <Badge variant="outline" size="sm">
+                              {humanize(item.effectiveRequiredness)}
+                            </Badge>
+                            <Badge
+                              variant={
+                                item.resolutionState === 'blocking'
+                                  ? 'destructive'
+                                  : item.resolutionState === 'resolved'
+                                    ? 'success'
+                                    : 'outline'
+                              }
+                              size="sm"
+                            >
+                              {humanize(item.resolutionState)}
+                            </Badge>
+                          </div>
+                        </header>
 
-                      {item.dependencyRule ? (
+                        {item.dependencyRule ? (
+                          <div className="mt-3">
+                            <label
+                              htmlFor={`conditional-${item.id}`}
+                              className="text-[11px] font-semibold text-foreground"
+                            >
+                              {t('conditional.label')}
+                            </label>
+                            <select
+                              id={`conditional-${item.id}`}
+                              value={item.conditionalState ?? 'undecided'}
+                              onChange={(event) =>
+                                setConditionalStates((current) => ({
+                                  ...current,
+                                  [item.id]: event.target.value as ConditionalState,
+                                }))
+                              }
+                              className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                              {(['undecided', 'include', 'exclude'] as const).map((state) => (
+                                <option key={state} value={state}>
+                                  {t(`conditional.${state}`)}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        ) : null}
+
                         <div className="mt-3">
-                          <label
-                            htmlFor={`conditional-${item.id}`}
-                            className="text-[11px] font-semibold text-foreground"
-                          >
-                            {t('conditional.label')}
+                          <label htmlFor={`local-option-search-${item.id}`} className="sr-only">
+                            {t('searchLocalOptionsFor', { requirement: item.label })}
                           </label>
-                          <select
-                            id={`conditional-${item.id}`}
-                            value={item.conditionalState ?? 'undecided'}
+                          <input
+                            id={`local-option-search-${item.id}`}
+                            type="search"
+                            value={localOptionSearches[item.id] ?? ''}
                             onChange={(event) =>
-                              setConditionalStates((current) => ({
+                              setLocalOptionSearches((current) => ({
                                 ...current,
-                                [item.id]: event.target.value as ConditionalState,
+                                [item.id]: event.target.value,
                               }))
                             }
-                            className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            placeholder={t('searchLocalOptions')}
+                            className="h-9 w-full rounded-lg border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          />
+                          <label htmlFor={`local-option-${item.id}`} className="sr-only">
+                            {t('selectLocalOptionFor', { requirement: item.label })}
+                          </label>
+                          <select
+                            id={`local-option-${item.id}`}
+                            value={item.selectedHospitalItemId ?? ''}
+                            onChange={(event) => {
+                              const value = event.target.value || null
+                              setSelectedHospitalItemIds((current) => ({
+                                ...current,
+                                [item.id]: value,
+                              }))
+                              // A set becomes the kit for the requirement it was chosen on,
+                              // and suppresses the other requirements it covers.
+                              const setId = value ? equipmentSetIdFromItemId(value) : null
+                              if (setId) {
+                                setSetRoleBySetId((current) => ({
+                                  ...current,
+                                  [setId]: item.roleCode,
+                                }))
+                              }
+                            }}
+                            className="mt-2 h-10 w-full rounded-lg border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           >
-                            {(['undecided', 'include', 'exclude'] as const).map((state) => (
-                              <option key={state} value={state}>
-                                {t(`conditional.${state}`)}
+                            <option value="">{t('unresolved')}</option>
+                            {visibleOptions.map((candidate) => (
+                              <option key={candidate.option.id} value={candidate.item.id}>
+                                {builderOptionText(candidate)}
                               </option>
                             ))}
                           </select>
-                        </div>
-                      ) : null}
-
-                      <div className="mt-3">
-                        <label htmlFor={`local-option-search-${item.id}`} className="sr-only">
-                          {t('searchLocalOptionsFor', { requirement: item.label })}
-                        </label>
-                        <input
-                          id={`local-option-search-${item.id}`}
-                          type="search"
-                          value={localOptionSearches[item.id] ?? ''}
-                          onChange={(event) =>
-                            setLocalOptionSearches((current) => ({
-                              ...current,
-                              [item.id]: event.target.value,
-                            }))
-                          }
-                          placeholder={t('searchLocalOptions')}
-                          className="h-9 w-full rounded-lg border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        />
-                        <label htmlFor={`local-option-${item.id}`} className="sr-only">
-                          {t('selectLocalOptionFor', { requirement: item.label })}
-                        </label>
-                        <select
-                          id={`local-option-${item.id}`}
-                          value={item.selectedHospitalItemId ?? ''}
-                          onChange={(event) => {
-                            const value = event.target.value || null
-                            setSelectedHospitalItemIds((current) => ({
-                              ...current,
-                              [item.id]: value,
-                            }))
-                            // A set becomes the kit for the requirement it was chosen on,
-                            // and suppresses the other requirements it covers.
-                            const setId = value ? equipmentSetIdFromItemId(value) : null
-                            if (setId) {
-                              setSetRoleBySetId((current) => ({
-                                ...current,
-                                [setId]: item.roleCode,
-                              }))
+                          {search && matchingOptions.length === 0 ? (
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {t('noEligibleLocalOptions')}
+                            </p>
+                          ) : null}
+                          <CatalogOptionPicker
+                            roleCode={item.roleCode}
+                            roleLabel={item.label}
+                            existingProductIds={
+                              pickedProductIdsByRole.get(item.roleCode) ?? emptyProductIds
                             }
-                          }}
-                          className="mt-2 h-10 w-full rounded-lg border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        >
-                          <option value="">{t('unresolved')}</option>
-                          {visibleOptions.map((candidate) => (
-                            <option key={candidate.option.id} value={candidate.item.id}>
-                              {builderOptionText(candidate)}
-                            </option>
-                          ))}
-                        </select>
-                        {search && matchingOptions.length === 0 ? (
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {t('noEligibleLocalOptions')}
+                            onAdd={(pick) => addCatalogPick(item.id, pick)}
+                            existingFamilyKeys={
+                              pickedFamilyKeysByRole.get(item.roleCode) ?? emptyFamilyKeys
+                            }
+                            onAddFamily={(pick) => addFamilyPick(item.id, pick)}
+                          />
+                          <CustomItemForm
+                            roleCode={item.roleCode}
+                            roleLabel={item.label}
+                            onAdd={(custom) => addCustomItem(item.id, custom)}
+                          />
+                        </div>
+
+                        {sourceLine || item.selectedItemSnapshot?.localItemNumber ? (
+                          <p className="mt-3 text-xs text-muted-foreground">
+                            {sourceLine}
+                            {item.selectedItemSnapshot?.localItemNumber ? (
+                              <span className="ml-2 font-mono">
+                                {t('localNumberValue', {
+                                  number: item.selectedItemSnapshot.localItemNumber,
+                                })}
+                              </span>
+                            ) : null}
                           </p>
                         ) : null}
-                        <CatalogOptionPicker
-                          roleCode={item.roleCode}
-                          roleLabel={item.label}
-                          existingProductIds={
-                            pickedProductIdsByRole.get(item.roleCode) ?? emptyProductIds
-                          }
-                          onAdd={(pick) => addCatalogPick(item.id, pick)}
-                          existingFamilyKeys={
-                            pickedFamilyKeysByRole.get(item.roleCode) ?? emptyFamilyKeys
-                          }
-                          onAddFamily={(pick) => addFamilyPick(item.id, pick)}
-                        />
-                        <CustomItemForm
-                          roleCode={item.roleCode}
-                          roleLabel={item.label}
-                          onAdd={(custom) => addCustomItem(item.id, custom)}
-                        />
-                      </div>
 
-                      {sourceLine || item.selectedItemSnapshot?.localItemNumber ? (
-                        <p className="mt-3 text-xs text-muted-foreground">
-                          {sourceLine}
-                          {item.selectedItemSnapshot?.localItemNumber ? (
-                            <span className="ml-2 font-mono">
-                              {t('localNumberValue', {
-                                number: item.selectedItemSnapshot.localItemNumber,
-                              })}
-                            </span>
-                          ) : null}
-                        </p>
-                      ) : null}
+                        <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-border pt-3 text-xs sm:grid-cols-3">
+                          {facts.map(([label, value]) => (
+                            <div key={label} className="min-w-0">
+                              <dt className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                {label}
+                              </dt>
+                              <dd className="mt-0.5 break-words text-foreground">{value}</dd>
+                            </div>
+                          ))}
+                        </dl>
 
-                      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-border pt-3 text-xs sm:grid-cols-3">
-                        {facts.map(([label, value]) => (
-                          <div key={label} className="min-w-0">
-                            <dt className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                              {label}
-                            </dt>
-                            <dd className="mt-0.5 break-words text-foreground">{value}</dd>
-                          </div>
-                        ))}
-                      </dl>
-
-                      <details className="mt-3 text-xs">
-                        <summary className="cursor-pointer text-muted-foreground">
-                          {t('whyIncluded')}
-                        </summary>
-                        <p className="mt-1 leading-5 text-muted-foreground">
-                          {item.whyIncluded.join(' ')}
-                        </p>
-                      </details>
-                    </article>
-                  </li>
-                )
-              })}
+                        <details className="mt-3 text-xs">
+                          <summary className="cursor-pointer text-muted-foreground">
+                            {t('whyIncluded')}
+                          </summary>
+                          <p className="mt-1 leading-5 text-muted-foreground">
+                            {item.whyIncluded.join(' ')}
+                          </p>
+                        </details>
+                      </article>
+                    </li>
+                  )
+                })}
             </ul>
 
             {card.warnings.some((warning) => warning.severity === 'blocking') ? (
@@ -861,7 +1102,7 @@ export function PreferenceCardWizard({
           </div>
         ) : null}
 
-        {step === 3 && bundle && card ? (
+        {step === 4 && bundle && card ? (
           <div className="space-y-5">
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-background px-4 py-3">
               <div>
@@ -877,6 +1118,41 @@ export function PreferenceCardWizard({
                 })}
               </Badge>
             </div>
+
+            <section className="rounded-2xl border border-border bg-background p-4">
+              <h3 className="font-bold text-foreground">{t('modules.reviewTitle')}</h3>
+              <ul className="mt-3 space-y-2">
+                {(card.includedModules ?? []).map((module) => (
+                  <li
+                    key={module.moduleVersionId}
+                    className="flex flex-wrap items-center gap-2 text-sm"
+                  >
+                    <span className="font-medium text-foreground">{module.moduleName}</span>
+                    <code className="text-[11px] text-muted-foreground">
+                      {t('modules.versionLabel')} {module.moduleVersion}
+                    </code>
+                    <Badge variant={module.kind === 'core' ? 'info' : 'outline'} size="sm">
+                      {t(`modules.kind.${module.kind}`)}
+                    </Badge>
+                    <Badge variant="outline" size="sm">
+                      {t(`modules.behavior.${module.selectionBehavior}`)}
+                    </Badge>
+                    <Badge variant="outline" size="sm">
+                      {module.governanceState}
+                    </Badge>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">
+                  {t('modules.optionalSelected')}:
+                </span>{' '}
+                {(card.includedModules ?? [])
+                  .filter((module) => module.selectionSource === 'user_selected')
+                  .map((module) => module.moduleName)
+                  .join(' · ') || t('modules.noOptionalSelected')}
+              </p>
+            </section>
 
             <div className="grid gap-4 rounded-2xl border border-border bg-background p-4 md:grid-cols-3">
               <label className="text-xs font-semibold text-foreground">

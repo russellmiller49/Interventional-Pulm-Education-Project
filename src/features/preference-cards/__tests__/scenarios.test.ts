@@ -10,6 +10,7 @@ import overridesJson from '../../../../data/ip-preference-cards/seed/scenario-ov
 
 import { buildScenarios } from '../../../../scripts/ip-preference-cards/generate-scenarios'
 import { buildDemoContext, getScenarioDefinitions } from '../data/demo-context.server'
+import { expandDefaultRecipeComposition } from '../domain/expand-recipe-composition'
 import { operationalModifiers } from '../seed/operational'
 
 describe('scenario generator', () => {
@@ -109,7 +110,7 @@ describe('scenario loader', () => {
   it('builds a recipe with slots for every procedure', () => {
     for (const scenario of scenarios) {
       const context = buildDemoContext(scenario.id)
-      expect(context.recipe.slots.length).toBeGreaterThan(0)
+      expect(expandDefaultRecipeComposition(context).slots.length).toBeGreaterThan(0)
       expect(context.recipe.sourceProcedureCode).toBe(scenario.sourceProcedureCode)
     }
   })

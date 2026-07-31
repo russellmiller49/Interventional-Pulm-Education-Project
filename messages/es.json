@@ -7146,7 +7146,8 @@
       "procedure": "Select procedure",
       "modifiers": "Configure modifiers",
       "requirements": "Resolve requirements",
-      "review": "Review and generate"
+      "review": "Review and generate",
+      "modules": "Setup modules"
     },
     "selectProcedureHelp": "Choose one reviewed prototype scenario. Imported source templates remain draft.",
     "configureModifiersHelp": "Modifier effects are typed, deterministic, reversible, and shown before generation.",
@@ -7641,7 +7642,23 @@
       "noResults": "No backlog rows match these filters.",
       "formularyReadOnlyNote": "Read-only coverage view: which procedure requirements resolve to a seeded item and which do not. Cards carry their own product choices, made from the catalog in the builder, so there is no shared formulary to edit here.",
       "viewCatalogUse": "Browse catalog for this use",
-      "eligibleProductCount": "{count, plural, one {# catalogued product for this use} other {# catalogued products for this use}}"
+      "eligibleProductCount": "{count, plural, one {# catalogued product for this use} other {# catalogued products for this use}}",
+      "modulesTitle": "Setup modules",
+      "modulesDescription": "Every authored module version, the procedures composed from it, and what publishing a new version would touch.",
+      "moduleCode": "Module",
+      "moduleKind": "Type",
+      "moduleRequirements": "Requirements",
+      "moduleUsedBy": "Used by",
+      "moduleConflicts": "Composition conflicts",
+      "moduleImpact": "Impact of a new version",
+      "moduleImpactHelp": "A composition pins an exact module version. Publishing a new version changes nothing until a procedure composition is updated to reference it, and saved snapshots never move.",
+      "compositionColumn": "Modules",
+      "operationalOwner": "Operational owner",
+      "noConflicts": "None",
+      "noModuleUse": "Not referenced",
+      "effectivePreview": "Effective requirement preview",
+      "effectivePreviewHelp": "Read-only. A requirement shown as inherited belongs to the module named beside it — changing it means publishing a new version of that module and updating the compositions that pin it.",
+      "inheritedFrom": "Inherited from {module}"
     },
     "catalog": {
       "metadataTitle": "IP product catalog",
@@ -7911,6 +7928,39 @@
       "empty": "No breakthrough-designated devices are recorded.",
       "backToCatalog": "Back to the catalog",
       "evidenceCaveat": "Every entry here rests on secondary, AI-generated research rather than a manufacturer document or an FDA decision record. Designation dates come from company announcements in most cases. Re-verify against the FDA PMA, 510(k), and De Novo databases before relying on anything below."
+    },
+    "modules": {
+      "sectionHelp": "A card is assembled from reusable setup modules. Required modules are locked; the rest you decide.",
+      "sectionIntro": "These modules make up the complete card. Removing one removes only the requirements it contributes; adding it back restores them along with any selections you had already made.",
+      "emptyComposition": "This composition offers no modules yet, so the card has no requirements.",
+      "kind": {
+        "core": "Core module",
+        "procedure_specific": "Procedure-specific",
+        "optional": "Optional workflow"
+      },
+      "behavior": {
+        "required": "Required",
+        "default_on": "Included by default",
+        "optional": "Optional"
+      },
+      "versionLabel": "Version",
+      "requirementCount": "{count, plural, one {# requirement} other {# requirements}}",
+      "previewRequirements": "Show the requirements this module contributes",
+      "lockedHelp": "Required by this procedure and cannot be removed.",
+      "include": "Add module",
+      "remove": "Remove module",
+      "filterLabel": "Filter by source module",
+      "allSources": "All modules",
+      "sourceUnknown": "Base recipe",
+      "reviewTitle": "Composed from",
+      "composedFrom": "Composed from",
+      "optionalSelected": "Optional modules selected",
+      "noOptionalSelected": "None",
+      "noModifiersAvailable": "No modifiers apply to this composition. Modifiers are authored against a procedure template.",
+      "customTitle": "Build a custom card from modules",
+      "customDescription": "Pick the setup modules yourself instead of starting from a standard procedure.",
+      "customHelp": "This is a card-building tool. Nothing is recommended for you — only the module descriptions the reviewers wrote are shown.",
+      "customCta": "Start a custom card"
     }
   }
 }
