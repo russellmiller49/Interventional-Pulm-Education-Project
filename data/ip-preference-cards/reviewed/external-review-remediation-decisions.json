@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "reviewId": "external-review-remediation-v0.1",
-  "normalizedCorrectionsSha256": "7b42da8eb2fc2fb94bf283af27b777eb07edc396425d384ef12a819afd6e3afd",
+  "normalizedCorrectionsSha256": "589bd1488027c570dbc674605c8a8cd1b1b7744c348afcf1a22d2b7b707a18d9",
   "sourceWorkbook": {
     "fileName": "IP_External_Review_Focused_Remediation_2026-07-30_completed.xlsx",
     "sha256": "78b112baa0cd84f213eef0c1f014c438e811ac7bafe3e5004c7b4e51dd119b4e",

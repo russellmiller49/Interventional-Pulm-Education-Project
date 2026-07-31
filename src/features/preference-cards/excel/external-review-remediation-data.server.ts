@@ -359,9 +359,13 @@ export function getExternalReviewRemediationReviewData(
     })
   }
 
+  // `productGovernance` holds two kinds of reviewed record. The installed-base cohort is the
+  // one this export is about, and it is identified the same way the applicator identifies it:
+  // an installed-base entry names the exact slots it unlocks, and a regulatory record names
+  // none. Counting the whole table here would break the moment a regulatory record is added.
   invariant(
-    corrections.productGovernance.length ===
-      EXTERNAL_REVIEW_REMEDIATION_EXPECTED_COUNTS.olympus180Products,
+    corrections.productGovernance.filter((entry) => entry.installedBaseExactSlotIds.length > 0)
+      .length === EXTERNAL_REVIEW_REMEDIATION_EXPECTED_COUNTS.olympus180Products,
     'the governed Olympus 180 cohort must contain exactly six products',
   )
   for (const productId of OLYMPUS_180_PRODUCT_IDS) {

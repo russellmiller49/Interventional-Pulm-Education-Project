@@ -1,6 +1,6 @@
 import type { Metadata, Route } from 'next'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
@@ -10,6 +10,10 @@ import { Card, CardContent } from '@/components/ui/card'
 import { ProductFamilyTable } from '@/features/preference-cards/components/ProductFamilyTable'
 import { RoleComparisonTable } from '@/features/preference-cards/components/RoleComparisonTable'
 import { VerificationLegend } from '@/features/preference-cards/components/VerificationBadge'
+import {
+  isDeprecatedRoleCode,
+  canonicalRoleCode,
+} from '@/features/preference-cards/domain/role-taxonomy'
 import { getUseDetail, specColumnPriority } from '@/features/preference-cards/server/catalog'
 
 export const dynamic = 'force-dynamic'
@@ -22,7 +26,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale, roleCode } = await params
   const t = await getTranslations({ locale, namespace: 'preferenceCards.catalog' })
-  const detail = getUseDetail(decodeURIComponent(roleCode))
+  const detail = getUseDetail(canonicalRoleCode(decodeURIComponent(roleCode)))
   return {
     title: detail
       ? `${detail.role.role_name} — ${t('uses.metadataTitle')}`
@@ -38,7 +42,17 @@ export default async function CatalogUseDetailPage({ params, searchParams }: Pag
   setRequestLocale(locale)
   const t = await getTranslations('preferenceCards.catalog')
 
-  const detail = getUseDetail(decodeURIComponent(roleCode))
+  // A link saved before a taxonomy-v2 rename still names the old role. An alias resolves, but
+  // it is never a URL the module owns, so send the reader to the canonical one rather than
+  // rendering the same page under two addresses.
+  const requestedRoleCode = decodeURIComponent(roleCode)
+  if (isDeprecatedRoleCode(requestedRoleCode)) {
+    redirect(
+      `/${locale}/preference-cards/catalog/uses/${encodeURIComponent(canonicalRoleCode(requestedRoleCode))}` as Route,
+    )
+  }
+
+  const detail = getUseDetail(requestedRoleCode)
   if (!detail) notFound()
 
   const specLabels = Object.fromEntries(
@@ -54,6 +68,13 @@ export default async function CatalogUseDetailPage({ params, searchParams }: Pag
     conflictingDistribution: t('verification.conflictingDistribution'),
     legacyInstalledBase: t('verification.legacyInstalledBase'),
     legacyInstalledBaseHelp: t('verification.legacyInstalledBaseHelp'),
+    regulatoryCleared510k: t('verification.regulatoryCleared510k'),
+    regulatoryApprovedPma: t('verification.regulatoryApprovedPma'),
+    regulatoryGrantedDeNovo: t('verification.regulatoryGrantedDeNovo'),
+    regulatoryBreakthroughInvestigational: t('verification.regulatoryBreakthroughInvestigational'),
+    regulatoryBreakthroughPremarketReview: t('verification.regulatoryBreakthroughPremarketReview'),
+    regulatoryNotUsAuthorized: t('verification.regulatoryNotUsAuthorized'),
+    regulatoryHelp: t('verification.regulatoryHelp'),
     legendTitle: t('verification.legendTitle'),
     verifiedHelp: t('verification.verifiedHelp'),
     candidateHelp: t('verification.candidateHelp'),
@@ -177,6 +198,17 @@ export default async function CatalogUseDetailPage({ params, searchParams }: Pag
               conflictingDistribution: t('verification.conflictingDistribution'),
               legacyInstalledBase: t('verification.legacyInstalledBase'),
               legacyInstalledBaseHelp: t('verification.legacyInstalledBaseHelp'),
+              regulatoryCleared510k: t('verification.regulatoryCleared510k'),
+              regulatoryApprovedPma: t('verification.regulatoryApprovedPma'),
+              regulatoryGrantedDeNovo: t('verification.regulatoryGrantedDeNovo'),
+              regulatoryBreakthroughInvestigational: t(
+                'verification.regulatoryBreakthroughInvestigational',
+              ),
+              regulatoryBreakthroughPremarketReview: t(
+                'verification.regulatoryBreakthroughPremarketReview',
+              ),
+              regulatoryNotUsAuthorized: t('verification.regulatoryNotUsAuthorized'),
+              regulatoryHelp: t('verification.regulatoryHelp'),
             }}
           />
         ) : detail.totalProducts > 0 ? (
@@ -209,6 +241,17 @@ export default async function CatalogUseDetailPage({ params, searchParams }: Pag
               conflictingDistribution: t('verification.conflictingDistribution'),
               legacyInstalledBase: t('verification.legacyInstalledBase'),
               legacyInstalledBaseHelp: t('verification.legacyInstalledBaseHelp'),
+              regulatoryCleared510k: t('verification.regulatoryCleared510k'),
+              regulatoryApprovedPma: t('verification.regulatoryApprovedPma'),
+              regulatoryGrantedDeNovo: t('verification.regulatoryGrantedDeNovo'),
+              regulatoryBreakthroughInvestigational: t(
+                'verification.regulatoryBreakthroughInvestigational',
+              ),
+              regulatoryBreakthroughPremarketReview: t(
+                'verification.regulatoryBreakthroughPremarketReview',
+              ),
+              regulatoryNotUsAuthorized: t('verification.regulatoryNotUsAuthorized'),
+              regulatoryHelp: t('verification.regulatoryHelp'),
             }}
           />
         ) : (

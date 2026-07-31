@@ -22,6 +22,36 @@ export type SlottingScope =
   | 'not_applicable'
 
 /**
+ * US regulatory posture, as an axis of its own.
+ *
+ * Deliberately not folded into verification grade, distribution evidence, lifecycle context,
+ * visibility, or slotting scope — those answer different questions and collapsing them is what
+ * the external-review remediation plan set out to stop. GUDID says whether a device is being
+ * distributed; this says under what authority, if any, it may be marketed in the US.
+ *
+ * `breakthrough_designated_*` is the honest label for a device that FDA has agreed to review
+ * on an expedited path but has not authorized: designation is not clearance and not approval.
+ */
+export type RegulatoryStatus =
+  | 'us_cleared_510k'
+  | 'us_approved_pma'
+  | 'us_granted_de_novo'
+  | 'breakthrough_designated_investigational'
+  | 'breakthrough_designated_premarket_review'
+  | 'not_us_authorized'
+  | 'unknown'
+
+/** The two statuses that mean "designated, not authorized" — the emerging cohort. */
+export const BREAKTHROUGH_REGULATORY_STATUSES = [
+  'breakthrough_designated_investigational',
+  'breakthrough_designated_premarket_review',
+] as const
+
+export function isBreakthroughRegulatoryStatus(status: RegulatoryStatus): boolean {
+  return (BREAKTHROUGH_REGULATORY_STATUSES as readonly string[]).includes(status)
+}
+
+/**
  * Reviewed governance that is intentionally independent from GUDID distribution evidence.
  * The source-controlled remediation overlay authors these values by stable product id.
  */
@@ -32,6 +62,13 @@ export interface ProductGovernanceRecord {
   preferredNewPurchase: boolean
   installedBaseExactSlotIds: string[]
   lifecycleNote: string | null
+  regulatoryStatus?: RegulatoryStatus
+  /** e.g. "PMA P180002 approved 2018-06-29". Free text, always sourced. */
+  regulatoryNote?: string | null
+  /** ISO date from the designation announcement, when one exists. */
+  breakthroughDesignatedOn?: string | null
+  /** Grouping for the emerging view; omitted for everything outside that cohort. */
+  emergingTheme?: string | null
 }
 
 /**
@@ -62,6 +99,12 @@ export interface CatalogProductRecord {
   implantable: boolean | null
   material: string | null
   coverage: string | null
+  /**
+   * Lasing medium, e.g. "Nd:YAG" or "CO2". Recorded only where a source states it: a
+   * wavelength implies a medium to someone who already knows the pairing, which is exactly the
+   * reader this column exists for, so it is never inferred.
+   */
+  laser_type: string | null
   placement_method: string | null
   size_display: string | null
   diameter_mm: number | null
@@ -179,6 +222,10 @@ export interface CatalogProduct extends CatalogProductRecord {
   preferredNewPurchase: boolean | null
   installedBaseExactSlotIds: string[]
   lifecycleNote: string | null
+  regulatoryStatus: RegulatoryStatus
+  regulatoryNote: string | null
+  breakthroughDesignatedOn: string | null
+  emergingTheme: string | null
   /** Lowercased, punctuation-stripped identifiers for exact lookup. */
   searchableIds: string[]
   /**
@@ -290,6 +337,11 @@ export function decorateProduct(
     preferredNewPurchase: governance?.preferredNewPurchase ?? null,
     installedBaseExactSlotIds: governance ? [...governance.installedBaseExactSlotIds] : [],
     lifecycleNote: governance?.lifecycleNote ?? null,
+    // Absence of a reviewed regulatory decision is `unknown`, never an implied clearance.
+    regulatoryStatus: governance?.regulatoryStatus ?? 'unknown',
+    regulatoryNote: governance?.regulatoryNote ?? null,
+    breakthroughDesignatedOn: governance?.breakthroughDesignatedOn ?? null,
+    emergingTheme: governance?.emergingTheme ?? null,
     searchableIds: collectSearchableIds(record),
     familyName,
     familyKey: [

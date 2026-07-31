@@ -63,6 +63,13 @@ export default async function CatalogProductPage({ params }: PageProps) {
     conflictingDistribution: t('verification.conflictingDistribution'),
     legacyInstalledBase: t('verification.legacyInstalledBase'),
     legacyInstalledBaseHelp: t('verification.legacyInstalledBaseHelp'),
+    regulatoryCleared510k: t('verification.regulatoryCleared510k'),
+    regulatoryApprovedPma: t('verification.regulatoryApprovedPma'),
+    regulatoryGrantedDeNovo: t('verification.regulatoryGrantedDeNovo'),
+    regulatoryBreakthroughInvestigational: t('verification.regulatoryBreakthroughInvestigational'),
+    regulatoryBreakthroughPremarketReview: t('verification.regulatoryBreakthroughPremarketReview'),
+    regulatoryNotUsAuthorized: t('verification.regulatoryNotUsAuthorized'),
+    regulatoryHelp: t('verification.regulatoryHelp'),
   }
 
   const identifiers: { label: string; value: string | null }[] = [
@@ -121,6 +128,8 @@ export default async function CatalogProductPage({ params }: PageProps) {
             distributionStatus={detail.distributionStatus}
             catalogLifecycleContext={product.catalogLifecycleContext}
             lifecycleNote={product.lifecycleNote}
+            regulatoryStatus={product.regulatoryStatus}
+            regulatoryNote={product.regulatoryNote}
             labels={verificationLabels}
           />
           {[
@@ -337,6 +346,8 @@ export default async function CatalogProductPage({ params }: PageProps) {
                       distributionStatus={item.distributionStatus}
                       catalogLifecycleContext={item.catalogLifecycleContext}
                       lifecycleNote={item.lifecycleNote}
+                      regulatoryStatus={item.regulatoryStatus}
+                      regulatoryNote={item.regulatoryNote}
                       labels={verificationLabels}
                     />
                   </CardContent>

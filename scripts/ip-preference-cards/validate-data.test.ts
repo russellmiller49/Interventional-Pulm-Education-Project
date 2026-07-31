@@ -21,7 +21,7 @@ describe('generated catalog integrity validation', () => {
   it('accepts the committed proposal artifact as a fresh deterministic regeneration', async () => {
     await expect(validateGeneratedCatalog()).resolves.toMatchObject({
       authoredSlotOptions: 2073,
-      unreviewedSlotOptionProposals: 429,
+      unreviewedSlotOptionProposals: 813,
       excludedSlotOptionProposals: 0,
       staleSlotOptionExceptions: 0,
     })

@@ -1,7 +1,7 @@
 [
   {
     "role_code": "AIRWAY_BALLOON_DILATOR",
-    "category": "Airway dilation",
+    "category": "Therapeutic bronchoscopy",
     "role_name": "Pulmonary balloon dilator",
     "description": "Balloon catheter for airway stricture dilation.",
     "selection_guidance": "Filter by diameter range, balloon length, guidewire, and inflation device.",
@@ -9,7 +9,7 @@
   },
   {
     "role_code": "AIRWAY_STENT_PATIENT_SPECIFIC",
-    "category": "Airway stent",
+    "category": "Airway stents",
     "role_name": "Patient-specific airway stent service",
     "description": "Custom stent design/manufacturing service.",
     "selection_guidance": "Treat as a service workflow, not an off-the-shelf SKU.",
@@ -17,7 +17,7 @@
   },
   {
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
-    "category": "Airway stent",
+    "category": "Airway stents",
     "role_name": "Covered or partially covered SEMS",
     "description": "Self-expanding metallic tracheobronchial stent with covering.",
     "selection_guidance": "Filter by diameter, length, delivery profile, coverage, and release direction.",
@@ -25,7 +25,7 @@
   },
   {
     "role_code": "AIRWAY_STENT_SEMS_UNCOVERED",
-    "category": "Airway stent",
+    "category": "Airway stents",
     "role_name": "Uncovered SEMS",
     "description": "Uncovered self-expanding metallic tracheobronchial stent.",
     "selection_guidance": "Filter by diameter, length, delivery profile, and release direction.",
@@ -33,7 +33,7 @@
   },
   {
     "role_code": "AIRWAY_STENT_SILICONE_HOURGLASS",
-    "category": "Airway stent",
+    "category": "Airway stents",
     "role_name": "Hourglass silicone stent",
     "description": "Hourglass-shaped silicone stent for selected stenoses.",
     "selection_guidance": "Filter by proximal, waist, distal diameters, and segment lengths.",
@@ -41,7 +41,7 @@
   },
   {
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
-    "category": "Airway stent",
+    "category": "Airway stents",
     "role_name": "Straight silicone airway stent",
     "description": "Straight tracheal or bronchial silicone stent.",
     "selection_guidance": "Filter by model, outer diameter, length, wall thickness, and radiopaque option.",
@@ -49,7 +49,7 @@
   },
   {
     "role_code": "AIRWAY_STENT_SILICONE_Y",
-    "category": "Airway stent",
+    "category": "Airway stents",
     "role_name": "Silicone Y stent",
     "description": "Bifurcation silicone stent.",
     "selection_guidance": "Filter by tracheal/bronchial diameters and limb lengths.",
@@ -57,7 +57,7 @@
   },
   {
     "role_code": "AIRWAY_STENT_SIZING_DEVICE",
-    "category": "Airway stenting",
+    "category": "Airway stents",
     "role_name": "Airway stent sizing device",
     "description": "Device used to estimate airway stricture diameter or length for stent selection.",
     "selection_guidance": "Verify measurement method, channel, guidewire, and intended stent family.",
@@ -97,7 +97,7 @@
   },
   {
     "role_code": "BAL_KIT",
-    "category": "Bronchoscopy sampling",
+    "category": "Tissue sampling",
     "role_name": "BAL kit",
     "description": "Packaged tubing or accessory kit for bronchoalveolar lavage.",
     "selection_guidance": "Verify connectors, anti-reflux features, specimen collection, and scope compatibility.",
@@ -105,7 +105,7 @@
   },
   {
     "role_code": "BIOPSY_FORCEPS_ENERGY_ENABLED",
-    "category": "Sampling",
+    "category": "Tissue sampling",
     "role_name": "Energy-enabled biopsy forceps",
     "description": "Biopsy forceps designed to use electrosurgical energy rather than function as ordinary cold forceps.",
     "selection_guidance": "Confirm bronchoscope channel fit and compatibility with the selected energy platform, accessories, settings, airway-fire precautions, and current IFU.",
@@ -113,7 +113,7 @@
   },
   {
     "role_code": "BIOPSY_FORCEPS_FLEX",
-    "category": "Sampling",
+    "category": "Tissue sampling",
     "role_name": "Flexible bronchoscopy biopsy forceps",
     "description": "Single-use or reusable forceps for endobronchial/transbronchial biopsy.",
     "selection_guidance": "Filter by jaw type, OD, working length, and minimum channel.",
@@ -121,7 +121,7 @@
   },
   {
     "role_code": "BITE_BLOCK",
-    "category": "Bronchoscopy accessory",
+    "category": "Flexible bronchoscopy",
     "role_name": "Bite block",
     "description": "Single-use or reusable bite block used to protect the scope and patient.",
     "selection_guidance": "Match maximum endoscope outer diameter and local reprocessing policy.",
@@ -137,7 +137,7 @@
   },
   {
     "role_code": "CHEST_TUBE_LARGE_BORE",
-    "category": "Pleural procedures",
+    "category": "Pleural drainage",
     "role_name": "Large-bore chest tube set",
     "description": "Large-bore percutaneous or surgical chest tube set.",
     "selection_guidance": "Filter by French size, insertion technique, and included tray components.",
@@ -145,7 +145,7 @@
   },
   {
     "role_code": "CHEST_TUBE_SMALL_BORE",
-    "category": "Pleural procedures",
+    "category": "Pleural drainage",
     "role_name": "Small-bore chest drain",
     "description": "Seldinger or pigtail pleural drainage catheter.",
     "selection_guidance": "Filter by French size, length, locking/pigtail design, and indication.",
@@ -153,7 +153,7 @@
   },
   {
     "role_code": "CHEST_TUBE_SURGICAL",
-    "category": "Pleural procedures",
+    "category": "Pleural drainage",
     "role_name": "Surgical thoracic catheter",
     "description": "Straight/right-angle surgical chest tube or trocar catheter.",
     "selection_guidance": "Filter by French size, length, tip geometry, and trocar option.",
@@ -161,10 +161,18 @@
   },
   {
     "role_code": "CO2_INSUFFLATOR",
-    "category": "Thoracoscopy platform",
+    "category": "Medical thoracoscopy",
     "role_name": "CO2 insufflator",
     "description": "CO2 regulation or insufflation unit used for applicable endoscopic procedures.",
     "selection_guidance": "Verify institutional technique, tubing, pressure limits, and scope of indication.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "COLLATERAL_VENTILATION_SYSTEM",
+    "category": "Bronchoscopic lung volume reduction",
+    "role_name": "Collateral ventilation assessment system",
+    "description": "Platform/catheter for collateral ventilation assessment.",
+    "selection_guidance": "Match selected valve workflow and local protocol.",
     "requires_current_ifu": true
   },
   {
@@ -185,7 +193,7 @@
   },
   {
     "role_code": "CYTOLOGY_BRUSH",
-    "category": "Sampling",
+    "category": "Tissue sampling",
     "role_name": "Pulmonary cytology brush",
     "description": "Covered or uncovered brush for airway cytology or microbiology.",
     "selection_guidance": "Filter by sheath, brush dimensions, working length, and channel.",
@@ -193,7 +201,7 @@
   },
   {
     "role_code": "DLT_LEFT",
-    "category": "Airway isolation",
+    "category": "Airway isolation & tracheostomy",
     "role_name": "Left double-lumen tube",
     "description": "Left-sided double-lumen endobronchial tube.",
     "selection_guidance": "Filter by French size and bronchoscope compatibility.",
@@ -201,7 +209,7 @@
   },
   {
     "role_code": "DLT_RIGHT",
-    "category": "Airway isolation",
+    "category": "Airway isolation & tracheostomy",
     "role_name": "Right double-lumen tube",
     "description": "Right-sided double-lumen endobronchial tube.",
     "selection_guidance": "Usually a backup/selected-anatomy option; filter by French size.",
@@ -209,7 +217,7 @@
   },
   {
     "role_code": "DRESSING_SECUREMENT",
-    "category": "Generic supply",
+    "category": "Room & generic supply",
     "role_name": "Dressing and securement supplies",
     "description": "Dressings, securement devices, sutures, labels, and related post-procedure site-care materials.",
     "selection_guidance": "Use the organization-specific dressing and securement standard for the access site or indwelling device.",
@@ -217,7 +225,7 @@
   },
   {
     "role_code": "EBUS_BALLOON",
-    "category": "EBUS accessory",
+    "category": "EBUS",
     "role_name": "EBUS balloon",
     "description": "Distal balloon used for acoustic coupling during EBUS.",
     "selection_guidance": "Match the EBUS scope model and IFU.",
@@ -225,7 +233,7 @@
   },
   {
     "role_code": "EBUS_MINIFORCEPS",
-    "category": "Sampling",
+    "category": "Tissue sampling",
     "role_name": "EBUS intranodal mini-forceps",
     "description": "Mini-forceps for intranodal histology after EBUS access.",
     "selection_guidance": "Filter by channel, access-hole workflow, and scope compatibility.",
@@ -233,7 +241,7 @@
   },
   {
     "role_code": "EBUS_NEEDLE_ADAPTER",
-    "category": "EBUS accessory",
+    "category": "EBUS",
     "role_name": "EBUS needle adapter or biopsy valve",
     "description": "Adapter/biopsy valve required by a specific EBUS needle family.",
     "selection_guidance": "Match the exact needle family and scope model; do not infer cross-family compatibility.",
@@ -241,7 +249,7 @@
   },
   {
     "role_code": "EBUS_NEEDLE_FNA",
-    "category": "Sampling",
+    "category": "Tissue sampling",
     "role_name": "EBUS-TBNA FNA needle",
     "description": "Needle for EBUS-guided aspiration.",
     "selection_guidance": "Filter by gauge, scope compatibility, minimum channel, and packaging.",
@@ -249,7 +257,7 @@
   },
   {
     "role_code": "EBUS_NEEDLE_FNB",
-    "category": "Sampling",
+    "category": "Tissue sampling",
     "role_name": "EBUS FNB needle",
     "description": "Core-biopsy needle for EBUS-guided sampling.",
     "selection_guidance": "Filter by gauge, scope compatibility, and intended pathology workflow.",
@@ -257,7 +265,7 @@
   },
   {
     "role_code": "EBUS_SCOPE",
-    "category": "EBUS platform",
+    "category": "EBUS",
     "role_name": "Linear EBUS bronchoscope",
     "description": "Linear ultrasound bronchoscope for EBUS-TBNA/FNB.",
     "selection_guidance": "Match ultrasound processor, cable, balloon, needle system, and channel requirements.",
@@ -265,7 +273,7 @@
   },
   {
     "role_code": "EBV_DELIVERY_CATHETER",
-    "category": "Endobronchial valve",
+    "category": "Bronchoscopic lung volume reduction",
     "role_name": "Valve deployment catheter",
     "description": "Deployment catheter for endobronchial valves.",
     "selection_guidance": "Match valve family, size, scope channel, and anatomy.",
@@ -273,7 +281,7 @@
   },
   {
     "role_code": "EBV_SIZING_BALLOON",
-    "category": "Endobronchial valve",
+    "category": "Bronchoscopic lung volume reduction",
     "role_name": "Endobronchial valve sizing balloon catheter",
     "description": "Balloon catheter used for airway sizing in an endobronchial valve workflow.",
     "selection_guidance": "Match the valve system, scope channel, balloon diameter, and working length.",
@@ -281,7 +289,7 @@
   },
   {
     "role_code": "EBV_SIZING_KIT",
-    "category": "Endobronchial valve",
+    "category": "Bronchoscopic lung volume reduction",
     "role_name": "Endobronchial valve sizing kit",
     "description": "Kit used to size target airways before endobronchial valve deployment.",
     "selection_guidance": "Match valve family, sizing catheter/balloon, channel, and current IFU.",
@@ -289,7 +297,7 @@
   },
   {
     "role_code": "EBV_VALVE",
-    "category": "Endobronchial valve",
+    "category": "Bronchoscopic lung volume reduction",
     "role_name": "Endobronchial valve",
     "description": "One-way endobronchial valve implant.",
     "selection_guidance": "Match airway sizing workflow and manufacturer deployment system.",
@@ -297,7 +305,7 @@
   },
   {
     "role_code": "ENB_PROCEDURE_KIT",
-    "category": "Peripheral bronchoscopy",
+    "category": "Peripheral & robotic bronchoscopy",
     "role_name": "Electromagnetic navigation bronchoscopy procedure kit",
     "description": "Single-procedure kit containing platform-specific navigation accessories.",
     "selection_guidance": "Match the kit to the exact navigation platform, catheter workflow, and current IFU.",
@@ -305,7 +313,7 @@
   },
   {
     "role_code": "ENDOBRONCHIAL_BLOCKER",
-    "category": "Airway isolation",
+    "category": "Airway isolation & tracheostomy",
     "role_name": "Endobronchial blocker",
     "description": "Bronchoscopically guided bronchial blocker for lung isolation.",
     "selection_guidance": "Match blocker Fr size to ETT internal diameter and bronchoscope outer diameter; verify balloon and adapter compatibility.",
@@ -313,7 +321,7 @@
   },
   {
     "role_code": "ENDOBRONCHIAL_SPIGOT",
-    "category": "Endobronchial occlusion",
+    "category": "Bronchoscopic lung volume reduction",
     "role_name": "Endobronchial occlusion spigot/plug",
     "description": "Implantable bronchial occlusion plug or spigot used to block a selected airway.",
     "selection_guidance": "Match indication, airway size, deployment/removal technique, and current local regulatory status.",
@@ -345,7 +353,7 @@
   },
   {
     "role_code": "ENDOSCOPY_CART",
-    "category": "Bronchoscopy platform",
+    "category": "Flexible bronchoscopy",
     "role_name": "Endoscopy system cart",
     "description": "Cart or mobile stand for an endoscopy video/ultrasound platform.",
     "selection_guidance": "Match the processor/display platform and facility equipment policy.",
@@ -353,7 +361,7 @@
   },
   {
     "role_code": "ENDOSCOPY_LIGHT_CABLE",
-    "category": "Imaging platform",
+    "category": "Endoscopy platform",
     "role_name": "Endoscopy light cable",
     "description": "Fiber-optic light cable or platform-specific light connection.",
     "selection_guidance": "Match endoscope-side and light-source-side connectors and cable diameter.",
@@ -361,7 +369,7 @@
   },
   {
     "role_code": "ENDOSCOPY_MONITOR",
-    "category": "Imaging platform",
+    "category": "Endoscopy platform",
     "role_name": "Endoscopy monitor",
     "description": "Medical-grade display used with the endoscopy video platform.",
     "selection_guidance": "Match video inputs, resolution, mounting, and current platform compatibility.",
@@ -384,8 +392,24 @@
     "requires_current_ifu": true
   },
   {
+    "role_code": "ENERGY_PLATFORM",
+    "category": "Energy platforms",
+    "role_name": "Energy/hemostasis platform",
+    "description": "APC, electrocautery, laser, or other energy platform.",
+    "selection_guidance": "Match intended modality, probe, grounding/airway-fire protocol, and local credentialing.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "ENERGY_PLATFORM_ACCESSORY",
+    "category": "Energy platforms",
+    "role_name": "Energy platform accessory",
+    "description": "Footswitch, cart, mounting set, or other accessory belonging to a named electrosurgical or argon plasma platform.",
+    "selection_guidance": "Match the exact generator model and its mounting configuration; a footswitch is generation-specific and does not transfer between platforms.",
+    "requires_current_ifu": true
+  },
+  {
     "role_code": "FLEX_SCOPE_DIAGNOSTIC",
-    "category": "Bronchoscopy platform",
+    "category": "Flexible bronchoscopy",
     "role_name": "Diagnostic flexible bronchoscope",
     "description": "Reusable or single-use flexible bronchoscope suitable for diagnostic bronchoscopy.",
     "selection_guidance": "Filter by outer diameter, working channel, image platform, and single-use/reusable preference.",
@@ -393,7 +417,7 @@
   },
   {
     "role_code": "FLEX_SCOPE_SINGLE_USE",
-    "category": "Bronchoscopy platform",
+    "category": "Flexible bronchoscopy",
     "role_name": "Single-use flexible bronchoscope",
     "description": "Disposable flexible bronchoscope for ICU, OR, or isolation workflows.",
     "selection_guidance": "Filter by outer diameter, channel, ETT/DLT compatibility, and display platform.",
@@ -401,7 +425,7 @@
   },
   {
     "role_code": "FLEX_SCOPE_THERAPEUTIC",
-    "category": "Bronchoscopy platform",
+    "category": "Flexible bronchoscopy",
     "role_name": "Therapeutic flexible bronchoscope",
     "description": "Flexible bronchoscope with a larger working channel for therapeutic accessories and suction.",
     "selection_guidance": "Filter by channel requirement of planned accessories and airway size.",
@@ -409,15 +433,23 @@
   },
   {
     "role_code": "FLEX_SCOPE_THIN",
-    "category": "Bronchoscopy platform",
+    "category": "Flexible bronchoscopy",
     "role_name": "Thin flexible bronchoscope",
     "description": "Flexible bronchoscope with a slender insertion tube for smaller airways or access where a standard diagnostic bronchoscope is too large.",
     "selection_guidance": "Filter by outer diameter, working-channel diameter, airway size, image platform, and current IFU; thin classification does not by itself establish therapeutic-tool compatibility.",
     "requires_current_ifu": true
   },
   {
+    "role_code": "FLUOROSCOPY_C_ARM",
+    "category": "Procedural imaging",
+    "role_name": "Fluoroscopy C-arm",
+    "description": "Mobile C-arm providing 2D fluoroscopy and, on 3D-capable systems, cone-beam acquisition.",
+    "selection_guidance": "Confirm the room can accommodate the system and that 3D acquisition is available if the plan depends on it. Identity only is recorded here — no dose, detector, or image-quality claim is carried from a marketing brochure.",
+    "requires_current_ifu": true
+  },
+  {
     "role_code": "FOREIGN_BODY_BASKET",
-    "category": "Retrieval",
+    "category": "Therapeutic bronchoscopy",
     "role_name": "Airway retrieval basket/net",
     "description": "Flexible basket or net for foreign body retrieval.",
     "selection_guidance": "Filter by sheath OD, opening size, channel, and working length.",
@@ -425,7 +457,7 @@
   },
   {
     "role_code": "FOREIGN_BODY_FORCEPS_FLEX",
-    "category": "Retrieval",
+    "category": "Therapeutic bronchoscopy",
     "role_name": "Flexible grasping forceps",
     "description": "Flexible forceps for foreign body or tissue retrieval.",
     "selection_guidance": "Filter by jaw design, opening, OD, and channel.",
@@ -433,39 +465,23 @@
   },
   {
     "role_code": "GENERIC_AIRWAY_ADAPTER",
-    "category": "Generic supply",
+    "category": "Room & generic supply",
     "role_name": "Airway bronchoscopy adapter",
     "description": "Swivel, bronchoscopy, or ventilation adapter.",
     "selection_guidance": "Match ETT/DLT/tracheostomy tube and ventilation circuit.",
     "requires_current_ifu": true
   },
   {
-    "role_code": "GENERIC_COLLATERAL_VENT",
-    "category": "Endobronchial valve",
-    "role_name": "Collateral ventilation assessment system",
-    "description": "Platform/catheter for collateral ventilation assessment.",
-    "selection_guidance": "Match selected valve workflow and local protocol.",
-    "requires_current_ifu": true
-  },
-  {
     "role_code": "GENERIC_DRAINAGE_UNIT",
-    "category": "Generic supply",
+    "category": "Room & generic supply",
     "role_name": "Pleural drainage unit",
     "description": "Wet or dry suction chest drainage unit.",
     "selection_guidance": "Hospital formulary item.",
     "requires_current_ifu": true
   },
   {
-    "role_code": "GENERIC_ENERGY_PLATFORM",
-    "category": "Generic equipment",
-    "role_name": "Energy/hemostasis platform",
-    "description": "APC, electrocautery, laser, or other energy platform.",
-    "selection_guidance": "Match intended modality, probe, grounding/airway-fire protocol, and local credentialing.",
-    "requires_current_ifu": true
-  },
-  {
     "role_code": "GENERIC_PPE",
-    "category": "Generic supply",
+    "category": "Room & generic supply",
     "role_name": "PPE / isolation supplies",
     "description": "Procedure and isolation PPE.",
     "selection_guidance": "Hospital infection-control policy.",
@@ -473,7 +489,7 @@
   },
   {
     "role_code": "GENERIC_SPECIMEN",
-    "category": "Generic supply",
+    "category": "Room & generic supply",
     "role_name": "Specimen containers/labels",
     "description": "Laboratory containers, labels, and transport materials.",
     "selection_guidance": "Hospital and laboratory-specific item.",
@@ -481,7 +497,7 @@
   },
   {
     "role_code": "GENERIC_SUCTION",
-    "category": "Generic supply",
+    "category": "Room & generic supply",
     "role_name": "Suction source/tubing/canister",
     "description": "Generic suction setup.",
     "selection_guidance": "Hospital-specific item.",
@@ -489,23 +505,15 @@
   },
   {
     "role_code": "GENERIC_ULTRASOUND",
-    "category": "Generic equipment",
+    "category": "Room & generic supply",
     "role_name": "Ultrasound machine/probe cover",
     "description": "Ultrasound platform and sterile probe cover.",
     "selection_guidance": "Hospital-specific platform.",
     "requires_current_ifu": true
   },
   {
-    "role_code": "GENERIC_WLL_LAVAGE",
-    "category": "Whole lung lavage",
-    "role_name": "WLL saline/tubing/drainage circuit",
-    "description": "Warmed saline delivery and drainage circuit for whole-lung lavage.",
-    "selection_guidance": "Institution-designed and clinically validated setup.",
-    "requires_current_ifu": true
-  },
-  {
     "role_code": "GUIDE_SHEATH_KIT",
-    "category": "Sampling",
+    "category": "Tissue sampling",
     "role_name": "Peripheral biopsy guide-sheath kit",
     "description": "Guide sheath kit used to maintain access to a peripheral lesion for repeated sampling.",
     "selection_guidance": "Match minimum channel, working length, compatible radial probe, included forceps/brush, and local navigation workflow.",
@@ -513,7 +521,7 @@
   },
   {
     "role_code": "GUIDING_DEVICE",
-    "category": "Sampling",
+    "category": "Tissue sampling",
     "role_name": "Peripheral guiding device",
     "description": "Rotatable or articulating guiding device used to direct sampling tools.",
     "selection_guidance": "Match bronchoscope channel, working length, compatible tools, and current IFU.",
@@ -521,7 +529,7 @@
   },
   {
     "role_code": "INFLATION_DEVICE",
-    "category": "Airway dilation",
+    "category": "Therapeutic bronchoscopy",
     "role_name": "Balloon inflation device",
     "description": "Reusable or single-use inflation device for balloon dilation.",
     "selection_guidance": "Match balloon system and pressure requirements.",
@@ -529,7 +537,7 @@
   },
   {
     "role_code": "IPC_DRAINAGE_KIT",
-    "category": "Pleural procedures",
+    "category": "Pleural drainage",
     "role_name": "Indwelling pleural catheter drainage kit",
     "description": "Vacuum bottle, bag, or drainage set for an indwelling pleural catheter.",
     "selection_guidance": "Must match the implanted catheter family.",
@@ -537,7 +545,7 @@
   },
   {
     "role_code": "IPC_DRESSING_KIT",
-    "category": "Pleural procedures",
+    "category": "Pleural drainage",
     "role_name": "IPC dressing kit",
     "description": "Dressing supplies packaged for an indwelling pleural catheter.",
     "selection_guidance": "Match catheter valve/system and local home-care workflow.",
@@ -545,7 +553,7 @@
   },
   {
     "role_code": "IPC_INSERTION_KIT",
-    "category": "Pleural procedures",
+    "category": "Pleural drainage",
     "role_name": "Indwelling pleural catheter insertion kit",
     "description": "Tunneled indwelling pleural catheter and insertion kit.",
     "selection_guidance": "Match catheter family and drainage accessories.",
@@ -553,15 +561,55 @@
   },
   {
     "role_code": "IPC_MANAGEMENT_ACCESSORY",
-    "category": "Pleural procedures",
+    "category": "Pleural drainage",
     "role_name": "IPC management accessory",
     "description": "Valve, cap, drainage line, adapter, dilator, or removal accessory for an IPC system.",
     "selection_guidance": "Match exact catheter system and current IFU.",
     "requires_current_ifu": true
   },
   {
+    "role_code": "LASER_CONSOLE",
+    "category": "Laser",
+    "role_name": "Surgical laser console",
+    "description": "Laser generator used for endobronchial photoresection — deep coagulation and devascularization before debulking, vaporization of exophytic tissue, and precise cutting of webs and strictures.",
+    "selection_guidance": "Wavelength decides tissue effect, and the choice is between depth and precision. Nd:YAG 1064 nm penetrates 5-15 mm and is the airway workhorse: poorly absorbed by water and haemoglobin, so it coagulates deeply and devascularizes a tumour before debulking, at 20-40 W. Nd:YAP 1340 nm penetrates 3-10 mm at about 20 W. Diode 980 nm penetrates 2-4 mm at about 20 W and 1470 nm penetrates 2-3 mm at about 10 W, both compact and air-cooled. KTP 532 nm and Ho:YAG 2100 nm penetrate under 1 mm and cut rather than coagulate — KTP at 15-35 W is what to reach for to incise a web-like stricture before dilation. CO2 10,600 nm penetrates under 1 mm at 4-8 W and is preferred for laryngeal and subglottic strictures, where precise cutting matters and deep haemostasis does not. Nd:YAG availability in the United States is now limited, and mobile laser service is how many centres reach Nd:YAG, KTP, and Ho:YAG at all — the catalogued consoles for those three wavelengths are all mobile-service offerings, and each records how far its own paperwork actually goes. Every product carries its lasing medium where a source states one.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "LASER_FIBER",
+    "category": "Laser",
+    "role_name": "Laser delivery fibre",
+    "description": "Bare, cooled, or hollow-core fibre carrying the laser beam through the working channel. An optical fibre delivery system is the only one a bronchoscope channel can accommodate.",
+    "selection_guidance": "The fibre has to be made for the console wavelength — CO2 needs a hollow-core waveguide, the near-infrared wavelengths run on quartz. Contact with a bare fibre cuts; non-contact with an air-cooled catheter coagulates over a wider area, avoids the tip fouling with debris and blood, and is the mode to use for haemostasis. Power density is set as much by distance as by watts: close and high-power carbonizes and vaporizes, farther and low-power coagulates broadly, and most operators start low to coagulate the tumour before debulking. Check core diameter against the working channel, and keep the tip clean.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "LASER_RESISTANT_ETT",
+    "category": "Laser",
+    "role_name": "Laser-resistant endotracheal tube",
+    "description": "Endotracheal tube constructed to resist ignition when a laser is fired in the airway, with a cuff filled with saline or water rather than air.",
+    "selection_guidance": "A standard endotracheal tube is not recommended when a laser will be fired in the airway: it is a flammable fuel source sitting in an oxidizer-rich field. Select a laser-resistant tube matched to the wavelength in use — resistance is not universal across wavelengths — and fill the cuff with saline or water so a cuff strike floods rather than feeds the fire. This is separate from the airway a rigid case uses, and it is the requirement whenever laser is applied through or beside an indwelling tube or tracheostomy.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "LASER_SAFETY_EQUIPMENT",
+    "category": "Laser",
+    "role_name": "Laser safety equipment",
+    "description": "Wavelength-specific protective eyewear, room signage and window covering, system filter units, and the fire-prevention materials a laser case requires.",
+    "selection_guidance": "Eyewear is specific to the laser and is not interchangeable between systems — protection at one wavelength gives none at another, so the eyewear that comes with the console is the eyewear the room wears, and everyone inside the nominal hazard zone wears it. Airway lasers are class 3B or 4. Cover door and window signage, wet drapes or towels around the site, sterile water or saline within reach, no alcohol-based prep, no hairspray or oil-based lubricants on team or patient, and a gown, gloves, and face shield for the operator.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "MICROWAVE_ABLATION_CATHETER",
+    "category": "Therapeutic bronchoscopy",
+    "role_name": "Bronchoscopic microwave ablation catheter",
+    "description": "Flexible microwave antenna delivered bronchoscopically to ablate a peripheral lung lesion.",
+    "selection_guidance": "Every device in this category is investigational in the United States; confirm study enrolment and regulatory status before planning a case around one.",
+    "requires_current_ifu": true
+  },
+  {
     "role_code": "NAV_ACCESSORY_SENSOR",
-    "category": "Peripheral bronchoscopy",
+    "category": "Peripheral & robotic bronchoscopy",
     "role_name": "Navigation sensor or patient patch",
     "description": "Sensor, electromagnetic patch, or related localization accessory for a navigation platform.",
     "selection_guidance": "Match the sensor or patch to the exact platform generation, procedure configuration, and current IFU.",
@@ -569,7 +617,7 @@
   },
   {
     "role_code": "NAV_BRONCHOSCOPE_ADAPTER",
-    "category": "Peripheral bronchoscopy",
+    "category": "Peripheral & robotic bronchoscopy",
     "role_name": "Navigation bronchoscope adapter",
     "description": "Adapter used to connect a bronchoscope to a named navigation platform or catheter workflow.",
     "selection_guidance": "Match the adapter to the bronchoscope model, navigation platform, and current IFU.",
@@ -577,7 +625,7 @@
   },
   {
     "role_code": "NAV_CATHETER_GUIDE",
-    "category": "Peripheral bronchoscopy",
+    "category": "Peripheral & robotic bronchoscopy",
     "role_name": "Navigation catheter or guide",
     "description": "Catheter, guide sheath, or scope guide used to direct peripheral bronchoscopy sampling tools.",
     "selection_guidance": "Match the guide to the bronchoscope channel, navigation platform, working length, compatible tools, and current IFU.",
@@ -585,7 +633,7 @@
   },
   {
     "role_code": "NAV_PLATFORM_ACCESSORY",
-    "category": "Peripheral bronchoscopy",
+    "category": "Peripheral & robotic bronchoscopy",
     "role_name": "Navigation platform accessory",
     "description": "Controller, cart, field generator, connector, mount, bracket, or other accessory for a named navigation or robotic platform.",
     "selection_guidance": "Match the accessory to the exact platform and generation; do not treat capital components as disposable catheter guides.",
@@ -593,55 +641,55 @@
   },
   {
     "role_code": "NAV_TBNA_NEEDLE",
-    "category": "Peripheral bronchoscopy",
+    "category": "Peripheral & robotic bronchoscopy",
     "role_name": "Navigation-compatible TBNA needle",
     "description": "Aspiration needle intended for a named electromagnetic or catheter-navigation workflow.",
     "selection_guidance": "Match the needle to the navigation platform, catheter or guide, working length, channel size, and current IFU.",
     "requires_current_ifu": true
   },
   {
-    "role_code": "PDT_KIT",
-    "category": "Percutaneous tracheostomy",
+    "role_code": "PERC_TRACH_KIT",
+    "category": "Airway isolation & tracheostomy",
     "role_name": "Percutaneous tracheostomy kit",
     "description": "Dilational percutaneous tracheostomy kit or tray.",
     "selection_guidance": "Filter by technique, dilator/tube sizes, and included components.",
     "requires_current_ifu": true
   },
   {
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
-    "category": "Medical thoracoscopy",
-    "role_name": "Pleural biopsy forceps",
-    "description": "Biopsy forceps for pleuroscopy.",
-    "selection_guidance": "Match pleuroscope channel and working length.",
+    "role_code": "PHOTODYNAMIC_DIFFUSER",
+    "category": "Photodynamic therapy",
+    "role_name": "Photodynamic light diffuser",
+    "description": "Cylindrical diffuser fibre passed through the working channel to deliver activation light along the lesion.",
+    "selection_guidance": "Choose the diffuser length to cover the lesion while sparing normal mucosa, and avoid overlapping treatments that would overdose normal bronchial mucosa. Diffuser length sets the delivered power at a fixed fluence.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "PHOTODYNAMIC_LASER",
+    "category": "Photodynamic therapy",
+    "role_name": "Photodynamic activation laser",
+    "description": "Laser delivering the narrow activation wavelength the photosensitizer requires.",
+    "selection_guidance": "Wavelength tolerance is narrow and is part of the labelling, not a preference. A red laser with different output characteristics can under-activate, overtreat, injure normal tissue, or damage the fibre.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "PHOTODYNAMIC_PHOTOSENSITIZER",
+    "category": "Photodynamic therapy",
+    "role_name": "Photodynamic photosensitizer",
+    "description": "Systemically administered photosensitizing drug activated by light at a specific wavelength.",
+    "selection_guidance": "Dose by weight and record the administration time: light activation follows at a defined interval, and the interval is part of the therapy rather than scheduling convenience. Counsel on prolonged cutaneous photosensitivity.",
     "requires_current_ifu": true
   },
   {
     "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
-    "category": "Pleural procedures",
+    "category": "Pleural drainage",
     "role_name": "Pleural drainage accessory",
     "description": "Tubing adapter, connecting tube, one-way valve, chest-tube adapter, or aspiration accessory set.",
     "selection_guidance": "Match catheter hub, drainage system, intended air/fluid use, and current IFU.",
     "requires_current_ifu": true
   },
   {
-    "role_code": "PLEUROSCOPE",
-    "category": "Medical thoracoscopy",
-    "role_name": "Pleuroscope",
-    "description": "Semi-rigid/flexible pleuroscope.",
-    "selection_guidance": "Match processor, trocar, biopsy forceps, and channel requirements.",
-    "requires_current_ifu": true
-  },
-  {
-    "role_code": "PLEUROSCOPY_TROCAR",
-    "category": "Medical thoracoscopy",
-    "role_name": "Pleuroscopy trocar",
-    "description": "Trocar/cannula for medical thoracoscopy.",
-    "selection_guidance": "Match pleuroscope and access strategy.",
-    "requires_current_ifu": true
-  },
-  {
     "role_code": "PNEUMOTHORAX_KIT",
-    "category": "Pleural procedures",
+    "category": "Pleural drainage",
     "role_name": "Pneumothorax catheter or aspiration kit",
     "description": "Small-caliber catheter set for pneumothorax aspiration or drainage.",
     "selection_guidance": "Filter by insertion method, French size, catheter length, included one-way valve, and intended duration.",
@@ -649,15 +697,31 @@
   },
   {
     "role_code": "PULMONARY_GUIDEWIRE",
-    "category": "Guidewire",
+    "category": "Tissue sampling",
     "role_name": "Pulmonary guidewire",
     "description": "Guidewire used for airway stent or balloon delivery.",
     "selection_guidance": "Match diameter and device IFU.",
     "requires_current_ifu": true
   },
   {
+    "role_code": "PULSED_FIELD_ABLATION_CATHETER",
+    "category": "Therapeutic bronchoscopy",
+    "role_name": "Pulsed electric field electrode",
+    "description": "Single-use needle or catheter electrode used with a pulsed electric field generator.",
+    "selection_guidance": "Restrict selection to the electrode the generator manufacturer names; confirm the cleared indication and the current IFU.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "PULSED_FIELD_ABLATION_SYSTEM",
+    "category": "Energy platforms",
+    "role_name": "Pulsed electric field system",
+    "description": "Generator and system delivering short high-voltage pulses for non-thermal tissue ablation.",
+    "selection_guidance": "Confirm the cleared indication before selecting: US clearance in this category is for surgical ablation of soft tissue, not for an airway indication. Match the generator to its own single-use electrode.",
+    "requires_current_ifu": true
+  },
+  {
     "role_code": "RADIAL_EBUS_DRIVE_UNIT",
-    "category": "Peripheral bronchoscopy",
+    "category": "Peripheral & robotic bronchoscopy",
     "role_name": "Radial EBUS probe drive unit",
     "description": "Mechanical probe drive unit for radial EBUS miniature probes.",
     "selection_guidance": "Match ultrasound processor and probe family.",
@@ -665,10 +729,18 @@
   },
   {
     "role_code": "RADIAL_EBUS_PROBE",
-    "category": "Peripheral bronchoscopy",
+    "category": "Peripheral & robotic bronchoscopy",
     "role_name": "Radial EBUS probe",
     "description": "Radial ultrasound miniature probe for peripheral lesion localization.",
     "selection_guidance": "Match probe frequency, working length, minimum channel, drive unit, and guide sheath.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "RADIATION_PROTECTION",
+    "category": "Procedural imaging",
+    "role_name": "Radiation protection",
+    "description": "Lead aprons, thyroid shields, leaded eyewear, shields, and dosimetry for everyone in the room during fluoroscopy.",
+    "selection_guidance": "Sized per person and worn by every person in the room, not only the operator. Catalogued products are hospital-local, so this is normally recorded as a custom line describing what the room stocks.",
     "requires_current_ifu": true
   },
   {
@@ -753,7 +825,7 @@
   },
   {
     "role_code": "ROBOTIC_BIOPSY_NEEDLE",
-    "category": "Robotic bronchoscopy",
+    "category": "Peripheral & robotic bronchoscopy",
     "role_name": "Robotic bronchoscopy biopsy needle",
     "description": "Biopsy or aspiration needle intended for a named robotic bronchoscopy platform.",
     "selection_guidance": "Match the needle to the robotic platform, bronchoscope or catheter, working length, channel size, and current IFU.",
@@ -761,7 +833,7 @@
   },
   {
     "role_code": "ROBOTIC_BRONCH_PLATFORM",
-    "category": "Robotic bronchoscopy",
+    "category": "Peripheral & robotic bronchoscopy",
     "role_name": "Robotic bronchoscopy platform",
     "description": "Capital platform used to navigate and control a robotic bronchoscopy system.",
     "selection_guidance": "Treat as installed capital equipment; match all scopes, catheters, kits, and accessories to the exact platform generation and current IFU.",
@@ -769,7 +841,7 @@
   },
   {
     "role_code": "ROBOTIC_BRONCHOSCOPE",
-    "category": "Robotic bronchoscopy",
+    "category": "Peripheral & robotic bronchoscopy",
     "role_name": "Robotic bronchoscope",
     "description": "Reusable, reprocessed, or single-use bronchoscope designed for a named robotic bronchoscopy platform.",
     "selection_guidance": "Match the bronchoscope to the exact robotic platform generation and compatible procedure kit, accessories, and current IFU.",
@@ -777,7 +849,7 @@
   },
   {
     "role_code": "ROBOTIC_CATHETER",
-    "category": "Robotic bronchoscopy",
+    "category": "Peripheral & robotic bronchoscopy",
     "role_name": "Robotic bronchoscopy catheter",
     "description": "Platform-specific articulating catheter used for robotic bronchoscopic navigation and tool delivery.",
     "selection_guidance": "Restrict selection to the named robotic platform and generation; confirm tool-channel dimensions, compatible tools, procedure configuration, and current IFU.",
@@ -785,7 +857,7 @@
   },
   {
     "role_code": "ROBOTIC_PROCEDURE_KIT",
-    "category": "Robotic bronchoscopy",
+    "category": "Peripheral & robotic bronchoscopy",
     "role_name": "Robotic bronchoscopy procedure kit",
     "description": "Single-procedure introducer or accessory kit for a named robotic bronchoscopy platform.",
     "selection_guidance": "Match the kit to the exact robotic platform, bronchoscope or catheter, and current IFU.",
@@ -793,7 +865,7 @@
   },
   {
     "role_code": "SPECIMEN_TRAP",
-    "category": "Specimen management",
+    "category": "Tissue sampling",
     "role_name": "Bronchoscopy specimen trap",
     "description": "Sterile trap for BAL, wash, or secretion collection.",
     "selection_guidance": "Match suction tubing and local laboratory workflow.",
@@ -801,7 +873,7 @@
   },
   {
     "role_code": "STENT_APPLICATOR",
-    "category": "Airway stent accessory",
+    "category": "Airway stents",
     "role_name": "Silicone stent applicator",
     "description": "Applicator/loading system for silicone airway stents.",
     "selection_guidance": "Match stent model, dimensions, and rigid bronchoscope.",
@@ -809,7 +881,7 @@
   },
   {
     "role_code": "TALC_POUDRAGE_KIT",
-    "category": "Pleurodesis",
+    "category": "Medical thoracoscopy",
     "role_name": "Talc poudrage kit",
     "description": "Sterile talc poudrage delivery kit.",
     "selection_guidance": "Match local formulary and delivery method.",
@@ -817,7 +889,7 @@
   },
   {
     "role_code": "TALC_VIAL",
-    "category": "Pleurodesis",
+    "category": "Medical thoracoscopy",
     "role_name": "Sterile talc vial",
     "description": "Sterile talc vial for slurry or atomizer use.",
     "selection_guidance": "Match local formulary, dose, and delivery method.",
@@ -825,7 +897,7 @@
   },
   {
     "role_code": "TBNA_NEEDLE",
-    "category": "Sampling",
+    "category": "Tissue sampling",
     "role_name": "Conventional TBNA needle",
     "description": "Non-EBUS transbronchial aspiration needle.",
     "selection_guidance": "Filter by gauge, sheath diameter, and minimum channel.",
@@ -833,7 +905,7 @@
   },
   {
     "role_code": "TBNA_NEEDLE_CONVENTIONAL",
-    "category": "Sampling",
+    "category": "Tissue sampling",
     "role_name": "Conventional TBNA needle",
     "description": "Non-EBUS transbronchial aspiration needle used through a conventional bronchoscope.",
     "selection_guidance": "Filter by gauge, sheath diameter, working length, and minimum working channel; confirm the current IFU.",
@@ -841,10 +913,42 @@
   },
   {
     "role_code": "THORACENTESIS_KIT",
-    "category": "Pleural procedures",
+    "category": "Pleural drainage",
     "role_name": "Thoracentesis kit/catheter",
     "description": "Integrated thoracentesis catheter, tray, or drainage kit.",
     "selection_guidance": "Filter by French size, length, valved design, and drainage connection.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "THORACOSCOPE_RIGID",
+    "category": "Medical thoracoscopy",
+    "role_name": "Thoracoscopy telescope",
+    "description": "Rigid thoracoscopy telescope or optical endoscope.",
+    "selection_guidance": "Match diameter, working length, direction of view, trocar, camera, and light cable.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "THORACOSCOPE_SEMIRIGID",
+    "category": "Medical thoracoscopy",
+    "role_name": "Pleuroscope",
+    "description": "Semi-rigid/flexible pleuroscope.",
+    "selection_guidance": "Match processor, trocar, biopsy forceps, and channel requirements.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
+    "category": "Medical thoracoscopy",
+    "role_name": "Pleural biopsy forceps",
+    "description": "Biopsy forceps for pleuroscopy.",
+    "selection_guidance": "Match pleuroscope channel and working length.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "THORACOSCOPY_ELECTRODE",
+    "category": "Medical thoracoscopy",
+    "role_name": "Thoracoscopy electrode",
+    "description": "Monopolar hook, button, or dissection electrode passed through the thoracoscope working channel.",
+    "selection_guidance": "Match shaft diameter and working length to the telescope channel, and confirm the generator, waveform, power setting, and return electrode against the current IFU — sell sheets state none of these.",
     "requires_current_ifu": true
   },
   {
@@ -864,16 +968,24 @@
     "requires_current_ifu": true
   },
   {
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPY_TROCAR",
     "category": "Medical thoracoscopy",
-    "role_name": "Thoracoscopy telescope",
-    "description": "Rigid thoracoscopy telescope or optical endoscope.",
-    "selection_guidance": "Match diameter, working length, direction of view, trocar, camera, and light cable.",
+    "role_name": "Pleuroscopy trocar",
+    "description": "Trocar/cannula for medical thoracoscopy.",
+    "selection_guidance": "Match pleuroscope and access strategy.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "TOMOSYNTHESIS_NAVIGATION_SYSTEM",
+    "category": "Procedural imaging",
+    "role_name": "Tomosynthesis navigation system",
+    "description": "Augmented-fluoroscopy platform reconstructing intraprocedural tomosynthesis to localize peripheral lesions and confirm tool-in-lesion.",
+    "selection_guidance": "Confirm C-arm compatibility and whether a per-procedure kit is required. These platforms supplement rather than replace the navigation modality already recorded for the case.",
     "requires_current_ifu": true
   },
   {
     "role_code": "TRACH_TUBE_CUFFED",
-    "category": "Tracheostomy",
+    "category": "Airway isolation & tracheostomy",
     "role_name": "Adult cuffed tracheostomy tube",
     "description": "Cuffed adult tracheostomy tube.",
     "selection_guidance": "Filter by size, length, cuff, inner cannula, and flange geometry.",
@@ -881,7 +993,7 @@
   },
   {
     "role_code": "TRACH_TUBE_CUFFLESS",
-    "category": "Tracheostomy",
+    "category": "Airway isolation & tracheostomy",
     "role_name": "Adult cuffless tracheostomy tube",
     "description": "Cuffless adult tracheostomy tube.",
     "selection_guidance": "Filter by size, length, inner cannula, and flange geometry.",
@@ -889,7 +1001,7 @@
   },
   {
     "role_code": "TRACH_TUBE_EVAC",
-    "category": "Tracheostomy",
+    "category": "Airway isolation & tracheostomy",
     "role_name": "Subglottic suction tracheostomy tube",
     "description": "Cuffed tracheostomy tube with subglottic suction lumen.",
     "selection_guidance": "Filter by tube size/length and suction-lumen requirement.",
@@ -897,7 +1009,7 @@
   },
   {
     "role_code": "ULTRASOUND_CABLE",
-    "category": "EBUS accessory",
+    "category": "EBUS",
     "role_name": "Ultrasound cable",
     "description": "Cable linking EBUS scope and ultrasound processor.",
     "selection_guidance": "Match scope and processor.",
@@ -905,7 +1017,7 @@
   },
   {
     "role_code": "ULTRASOUND_PROCESSOR",
-    "category": "EBUS platform",
+    "category": "EBUS",
     "role_name": "Endoscopic ultrasound processor",
     "description": "Ultrasound console used with the EBUS scope.",
     "selection_guidance": "Must match scope and cable.",
@@ -913,7 +1025,7 @@
   },
   {
     "role_code": "VACUUM_LOCKING_SYRINGE",
-    "category": "Sampling accessory",
+    "category": "Tissue sampling",
     "role_name": "Vacuum locking syringe",
     "description": "Vacuum-locking syringe used for aspiration sampling.",
     "selection_guidance": "Match volume, locking positions, stopcock, and needle system.",
@@ -925,6 +1037,46 @@
     "role_name": "Video processor / light source",
     "description": "Video processor, light source, or integrated display platform.",
     "selection_guidance": "Must match the selected reusable or single-use bronchoscope.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "WLL_CHEST_PERCUSSION",
+    "category": "Whole lung lavage",
+    "role_name": "Chest percussion device",
+    "description": "Manual percussion, mechanical percussor, or high-frequency chest wall oscillation vest used between fill and drain cycles.",
+    "selection_guidance": "Confirm what the unit stocks and who applies it. Percussion during dwell is what mobilizes proteinaceous material into the effluent, so it is part of the therapy rather than an adjunct.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "WLL_EFFLUENT_COLLECTION",
+    "category": "Whole lung lavage",
+    "role_name": "Graduated effluent collection",
+    "description": "Graduated containers or canisters for measuring and inspecting the drained lavage effluent.",
+    "selection_guidance": "Graduated so input and output can be reconciled each cycle, and clear enough to judge when the effluent stops clearing — both are how the endpoint is called.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "WLL_FLUID_WARMER",
+    "category": "Whole lung lavage",
+    "role_name": "Fluid warmer",
+    "description": "Irrigation-solution warmer or blood warmer holding the lavage fluid at body temperature.",
+    "selection_guidance": "Confirm the warmer can sustain the flow rate rather than only reach the temperature; instilling cool fluid causes shivering, bronchospasm, and heat loss across tens of litres.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "WLL_LAVAGE_CIRCUIT",
+    "category": "Whole lung lavage",
+    "role_name": "WLL saline/tubing/drainage circuit",
+    "description": "Warmed saline delivery and drainage circuit for whole-lung lavage.",
+    "selection_guidance": "Institution-designed and clinically validated setup.",
+    "requires_current_ifu": true
+  },
+  {
+    "role_code": "WLL_WARMED_SALINE_SUPPLY",
+    "category": "Whole lung lavage",
+    "role_name": "Warmed saline supply",
+    "description": "Sterile saline stocked and warmed for whole lung lavage.",
+    "selection_guidance": "Plan 30 to 50 L per lung in 3 L bags, warmed to body temperature before instillation. Confirm the stock actually on hand: this is far more volume than a routine case, and running short mid-lavage is the failure mode.",
     "requires_current_ifu": true
   }
 ]

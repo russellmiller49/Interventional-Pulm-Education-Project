@@ -44,6 +44,11 @@
     "procedural_phase": "therapeutic",
     "needs_review": false
   },
+  "Debridement": {
+    "setup_zone": "back_table",
+    "procedural_phase": "post_procedure",
+    "needs_review": false
+  },
   "Dilation": {
     "setup_zone": "back_table",
     "procedural_phase": "therapeutic",
@@ -94,6 +99,11 @@
     "procedural_phase": "diagnostic",
     "needs_review": false
   },
+  "Light activation": {
+    "setup_zone": "equipment_tower",
+    "procedural_phase": "therapeutic",
+    "needs_review": false
+  },
   "Long-term drainage": {
     "setup_zone": "back_table",
     "procedural_phase": "therapeutic",
@@ -102,6 +112,11 @@
   "Peripheral biopsy": {
     "setup_zone": "back_table",
     "procedural_phase": "diagnostic",
+    "needs_review": false
+  },
+  "Photosensitizer": {
+    "setup_zone": "other",
+    "procedural_phase": "pre_room",
     "needs_review": false
   },
   "Platform": {

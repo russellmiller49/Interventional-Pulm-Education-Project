@@ -14,6 +14,14 @@ const verificationLabels = {
   legacyInstalledBase: 'Legacy / active installed base',
   legacyInstalledBaseHelp:
     'This model remains relevant to programs that own and use it. Verify current new-purchase availability, service support, and accessory availability locally.',
+  regulatoryCleared510k: 'FDA 510(k) cleared',
+  regulatoryApprovedPma: 'FDA PMA approved',
+  regulatoryGrantedDeNovo: 'FDA De Novo granted',
+  regulatoryBreakthroughInvestigational: 'Breakthrough — investigational',
+  regulatoryBreakthroughPremarketReview: 'Breakthrough — under premarket review',
+  regulatoryNotUsAuthorized: 'No US marketing authorization identified',
+  regulatoryHelp:
+    'US regulatory posture, recorded separately from distribution evidence and local availability.',
 }
 
 function listItem(overrides: Partial<CatalogListItem> & { productId: string }): CatalogListItem {
@@ -36,6 +44,7 @@ function listItem(overrides: Partial<CatalogListItem> & { productId: string }): 
     deliverySystemOdMm: null,
     material: null,
     coverage: null,
+    laserType: null,
     verificationTier: 'verified',
     usStatusPending: false,
     distributionStatus: null,
@@ -43,6 +52,9 @@ function listItem(overrides: Partial<CatalogListItem> & { productId: string }): 
     slottingScope: 'catalog_only',
     preferredNewPurchase: null,
     lifecycleNote: null,
+    regulatoryStatus: 'unknown',
+    regulatoryNote: null,
+    breakthroughDesignatedOn: null,
     ...overrides,
   }
 }
@@ -192,6 +204,7 @@ describe('RoleComparisonTable', () => {
           working_length_cm: 'Working length (cm)',
           min_working_channel_mm: 'Min channel (mm)',
           delivery_system_od_mm: 'Delivery OD (mm)',
+          laser_type: 'Laser type',
           material: 'Material',
           coverage: 'Coverage',
         }}

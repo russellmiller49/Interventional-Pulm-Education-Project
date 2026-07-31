@@ -5,7 +5,7 @@
   "rolesToAdd": [
     {
       "role_code": "TBNA_NEEDLE_CONVENTIONAL",
-      "category": "Sampling",
+      "category": "Tissue sampling",
       "role_name": "Conventional TBNA needle",
       "description": "Non-EBUS transbronchial aspiration needle used through a conventional bronchoscope.",
       "selection_guidance": "Filter by gauge, sheath diameter, working length, and minimum working channel; confirm the current IFU.",
@@ -13,7 +13,7 @@
     },
     {
       "role_code": "NAV_TBNA_NEEDLE",
-      "category": "Peripheral bronchoscopy",
+      "category": "Peripheral & robotic bronchoscopy",
       "role_name": "Navigation-compatible TBNA needle",
       "description": "Aspiration needle intended for a named electromagnetic or catheter-navigation workflow.",
       "selection_guidance": "Match the needle to the navigation platform, catheter or guide, working length, channel size, and current IFU.",
@@ -21,7 +21,7 @@
     },
     {
       "role_code": "ROBOTIC_BIOPSY_NEEDLE",
-      "category": "Robotic bronchoscopy",
+      "category": "Peripheral & robotic bronchoscopy",
       "role_name": "Robotic bronchoscopy biopsy needle",
       "description": "Biopsy or aspiration needle intended for a named robotic bronchoscopy platform.",
       "selection_guidance": "Match the needle to the robotic platform, bronchoscope or catheter, working length, channel size, and current IFU.",
@@ -29,7 +29,7 @@
     },
     {
       "role_code": "ROBOTIC_BRONCH_PLATFORM",
-      "category": "Robotic bronchoscopy",
+      "category": "Peripheral & robotic bronchoscopy",
       "role_name": "Robotic bronchoscopy platform",
       "description": "Capital platform used to navigate and control a robotic bronchoscopy system.",
       "selection_guidance": "Treat as installed capital equipment; match all scopes, catheters, kits, and accessories to the exact platform generation and current IFU.",
@@ -37,7 +37,7 @@
     },
     {
       "role_code": "ROBOTIC_BRONCHOSCOPE",
-      "category": "Robotic bronchoscopy",
+      "category": "Peripheral & robotic bronchoscopy",
       "role_name": "Robotic bronchoscope",
       "description": "Reusable, reprocessed, or single-use bronchoscope designed for a named robotic bronchoscopy platform.",
       "selection_guidance": "Match the bronchoscope to the exact robotic platform generation and compatible procedure kit, accessories, and current IFU.",
@@ -45,7 +45,7 @@
     },
     {
       "role_code": "NAV_CATHETER_GUIDE",
-      "category": "Peripheral bronchoscopy",
+      "category": "Peripheral & robotic bronchoscopy",
       "role_name": "Navigation catheter or guide",
       "description": "Catheter, guide sheath, or scope guide used to direct peripheral bronchoscopy sampling tools.",
       "selection_guidance": "Match the guide to the bronchoscope channel, navigation platform, working length, compatible tools, and current IFU.",
@@ -53,7 +53,7 @@
     },
     {
       "role_code": "NAV_ACCESSORY_SENSOR",
-      "category": "Peripheral bronchoscopy",
+      "category": "Peripheral & robotic bronchoscopy",
       "role_name": "Navigation sensor or patient patch",
       "description": "Sensor, electromagnetic patch, or related localization accessory for a navigation platform.",
       "selection_guidance": "Match the sensor or patch to the exact platform generation, procedure configuration, and current IFU.",
@@ -61,7 +61,7 @@
     },
     {
       "role_code": "ENB_PROCEDURE_KIT",
-      "category": "Peripheral bronchoscopy",
+      "category": "Peripheral & robotic bronchoscopy",
       "role_name": "Electromagnetic navigation bronchoscopy procedure kit",
       "description": "Single-procedure kit containing platform-specific navigation accessories.",
       "selection_guidance": "Match the kit to the exact navigation platform, catheter workflow, and current IFU.",
@@ -69,7 +69,7 @@
     },
     {
       "role_code": "NAV_PLATFORM_ACCESSORY",
-      "category": "Peripheral bronchoscopy",
+      "category": "Peripheral & robotic bronchoscopy",
       "role_name": "Navigation platform accessory",
       "description": "Controller, cart, field generator, connector, mount, bracket, or other accessory for a named navigation or robotic platform.",
       "selection_guidance": "Match the accessory to the exact platform and generation; do not treat capital components as disposable catheter guides.",
@@ -77,7 +77,7 @@
     },
     {
       "role_code": "NAV_BRONCHOSCOPE_ADAPTER",
-      "category": "Peripheral bronchoscopy",
+      "category": "Peripheral & robotic bronchoscopy",
       "role_name": "Navigation bronchoscope adapter",
       "description": "Adapter used to connect a bronchoscope to a named navigation platform or catheter workflow.",
       "selection_guidance": "Match the adapter to the bronchoscope model, navigation platform, and current IFU.",
@@ -85,7 +85,7 @@
     },
     {
       "role_code": "ROBOTIC_PROCEDURE_KIT",
-      "category": "Robotic bronchoscopy",
+      "category": "Peripheral & robotic bronchoscopy",
       "role_name": "Robotic bronchoscopy procedure kit",
       "description": "Single-procedure introducer or accessory kit for a named robotic bronchoscopy platform.",
       "selection_guidance": "Match the kit to the exact robotic platform, bronchoscope or catheter, and current IFU.",
@@ -93,7 +93,7 @@
     },
     {
       "role_code": "BIOPSY_FORCEPS_ENERGY_ENABLED",
-      "category": "Sampling",
+      "category": "Tissue sampling",
       "role_name": "Energy-enabled biopsy forceps",
       "description": "Biopsy forceps designed to use electrosurgical energy rather than function as ordinary cold forceps.",
       "selection_guidance": "Confirm bronchoscope channel fit and compatibility with the selected energy platform, accessories, settings, airway-fire precautions, and current IFU.",
@@ -101,7 +101,7 @@
     },
     {
       "role_code": "DRESSING_SECUREMENT",
-      "category": "Generic supply",
+      "category": "Room & generic supply",
       "role_name": "Dressing and securement supplies",
       "description": "Dressings, securement devices, sutures, labels, and related post-procedure site-care materials.",
       "selection_guidance": "Use the organization-specific dressing and securement standard for the access site or indwelling device.",
@@ -507,14 +507,14 @@
         "rule_id": "CMP-58DE7D49C4",
         "source_product_or_role": "PRD-58DE7D49C4",
         "relationship": "requires compatible energy platform",
-        "target_product_or_role": "GENERIC_ENERGY_PLATFORM",
+        "target_product_or_role": "ENERGY_PLATFORM",
         "rule_text": "Hot biopsy forceps require a compatible electrosurgical energy platform and current manufacturer IFU review before use.",
         "verification_status": "Candidate - external clinical-use review; confirm the generator, accessories, settings, and current IFU.",
         "source_id": "SRC012",
         "resolved_source_type": "product",
         "resolved_source_id": "PRD-58DE7D49C4",
         "resolved_target_type": "role",
-        "resolved_target_id": "GENERIC_ENERGY_PLATFORM",
+        "resolved_target_id": "ENERGY_PLATFORM",
         "verification_grade": "candidate"
       }
     }
@@ -567,6 +567,186 @@
       "preferredNewPurchase": false,
       "installedBaseExactSlotIds": ["SLOT-4648848CC3"],
       "lifecycleNote": "Legacy Olympus 180-series EBUS bronchoscope retained for installed-base workflows; not a preferred new purchase."
+    },
+    {
+      "productId": "PRD-6C43A37366",
+      "catalogLifecycleContext": "current_market",
+      "slottingScope": "standard",
+      "preferredNewPurchase": false,
+      "installedBaseExactSlotIds": [],
+      "lifecycleNote": "Approved and commercially marketed in the United States; the breakthrough designation is historical context, not a caveat on availability.",
+      "regulatoryStatus": "us_approved_pma",
+      "regulatoryNote": "PMA P180002, FDA approval 2018-06-29. Breakthrough status was granted 2017-05-04 under the former Expedited Access Pathway, per the FDA summary of safety and effectiveness; FDA treats former EAP devices as part of the current Breakthrough Devices Program. Designation date and PMA number are reported by a Tier-4 secondary research report and should be re-verified against the FDA PMA database.",
+      "breakthroughDesignatedOn": "2017-05-04",
+      "emergingTheme": null
+    },
+    {
+      "productId": "PRD-02AD30BCD3",
+      "catalogLifecycleContext": "current_market",
+      "slottingScope": "standard",
+      "preferredNewPurchase": false,
+      "installedBaseExactSlotIds": [],
+      "lifecycleNote": "Approved and commercially marketed in the United States; the breakthrough designation is historical context, not a caveat on availability.",
+      "regulatoryStatus": "us_approved_pma",
+      "regulatoryNote": "PMA P180002, FDA approval 2018-06-29. Breakthrough status was granted 2017-05-04 under the former Expedited Access Pathway, per the FDA summary of safety and effectiveness; FDA treats former EAP devices as part of the current Breakthrough Devices Program. Designation date and PMA number are reported by a Tier-4 secondary research report and should be re-verified against the FDA PMA database.",
+      "breakthroughDesignatedOn": "2017-05-04",
+      "emergingTheme": null
+    },
+    {
+      "productId": "PRD-C12AB8BEA4",
+      "catalogLifecycleContext": "current_market",
+      "slottingScope": "standard",
+      "preferredNewPurchase": false,
+      "installedBaseExactSlotIds": [],
+      "lifecycleNote": "Approved and commercially marketed in the United States; the breakthrough designation is historical context, not a caveat on availability.",
+      "regulatoryStatus": "us_approved_pma",
+      "regulatoryNote": "PMA P180002, FDA approval 2018-06-29. Breakthrough status was granted 2017-05-04 under the former Expedited Access Pathway, per the FDA summary of safety and effectiveness; FDA treats former EAP devices as part of the current Breakthrough Devices Program. Designation date and PMA number are reported by a Tier-4 secondary research report and should be re-verified against the FDA PMA database.",
+      "breakthroughDesignatedOn": "2017-05-04",
+      "emergingTheme": null
+    },
+    {
+      "productId": "PRD-FDC723362C",
+      "catalogLifecycleContext": "current_market",
+      "slottingScope": "standard",
+      "preferredNewPurchase": false,
+      "installedBaseExactSlotIds": [],
+      "lifecycleNote": "Approved and commercially marketed in the United States; the breakthrough designation is historical context, not a caveat on availability.",
+      "regulatoryStatus": "us_approved_pma",
+      "regulatoryNote": "PMA P180002, FDA approval 2018-06-29. Breakthrough status was granted 2017-05-04 under the former Expedited Access Pathway, per the FDA summary of safety and effectiveness; FDA treats former EAP devices as part of the current Breakthrough Devices Program. Designation date and PMA number are reported by a Tier-4 secondary research report and should be re-verified against the FDA PMA database.",
+      "breakthroughDesignatedOn": "2017-05-04",
+      "emergingTheme": null
+    },
+    {
+      "productId": "PRD-401A185759",
+      "catalogLifecycleContext": "current_market",
+      "slottingScope": "catalog_only",
+      "preferredNewPurchase": false,
+      "installedBaseExactSlotIds": [],
+      "lifecycleNote": "Cleared for soft-tissue ablation, not for an airway indication. Confirm the indication and the current IFU before planning any bronchoscopic use.",
+      "regulatoryStatus": "us_cleared_510k",
+      "regulatoryNote": "510(k) cleared in the United States for the surgical ablation of soft tissue, per the manufacturer’s own product page. The manufacturer does not promote a bronchoscopic airway indication; any airway use is outside the cleared indication. No 510(k) number is printed on the page.",
+      "breakthroughDesignatedOn": null,
+      "emergingTheme": null
+    },
+    {
+      "productId": "PRD-792DBA7A57",
+      "catalogLifecycleContext": "current_market",
+      "slottingScope": "catalog_only",
+      "preferredNewPurchase": false,
+      "installedBaseExactSlotIds": [],
+      "lifecycleNote": "Cleared for soft-tissue ablation, not for an airway indication. Confirm the indication and the current IFU before planning any bronchoscopic use.",
+      "regulatoryStatus": "us_cleared_510k",
+      "regulatoryNote": "510(k) cleared in the United States for the surgical ablation of soft tissue, per the manufacturer’s own product page. The manufacturer does not promote a bronchoscopic airway indication; any airway use is outside the cleared indication. No 510(k) number is printed on the page.",
+      "breakthroughDesignatedOn": null,
+      "emergingTheme": null
+    },
+    {
+      "productId": "PRD-50C32D45B1",
+      "catalogLifecycleContext": "current_market",
+      "slottingScope": "catalog_only",
+      "preferredNewPurchase": false,
+      "installedBaseExactSlotIds": [],
+      "lifecycleNote": "Cleared for soft-tissue ablation, not for an airway indication. Confirm the indication and the current IFU before planning any bronchoscopic use.",
+      "regulatoryStatus": "us_cleared_510k",
+      "regulatoryNote": "510(k) cleared in the United States for the surgical ablation of soft tissue, per the manufacturer’s own product page. The manufacturer does not promote a bronchoscopic airway indication; any airway use is outside the cleared indication. No 510(k) number is printed on the page.",
+      "breakthroughDesignatedOn": null,
+      "emergingTheme": null
+    },
+    {
+      "productId": "PRD-397A9C06E0",
+      "catalogLifecycleContext": "current_market",
+      "slottingScope": "catalog_only",
+      "preferredNewPurchase": false,
+      "installedBaseExactSlotIds": [],
+      "lifecycleNote": "Approved photosensitizer for endobronchial photodynamic therapy. Evidence on file is a secondary report, so the product stays hidden pending verification.",
+      "regulatoryStatus": "us_approved_pma",
+      "regulatoryNote": "NDA 20-451, initial US approval 1995, per a Tier-4 secondary research report. This is a drug approval rather than a device PMA; no label or FDA record is on file here, so re-verify against Drugs@FDA before relying on it.",
+      "breakthroughDesignatedOn": null,
+      "emergingTheme": null
+    },
+    {
+      "productId": "PRD-64B4DE25D7",
+      "catalogLifecycleContext": "current_market",
+      "slottingScope": "catalog_only",
+      "preferredNewPurchase": false,
+      "installedBaseExactSlotIds": [],
+      "lifecycleNote": "Activation laser for porfimer sodium. Output must be stable at 630 +/- 3 nm; an arbitrary red laser is not a substitute.",
+      "regulatoryStatus": "us_approved_pma",
+      "regulatoryNote": "PMA supplement P990021/S005, FDA decision 2022-03-02, per a Tier-4 secondary research report; supersedes the DIOMED 630 PDT Laser (P990021, 2000-06-30). No FDA record is on file here.",
+      "breakthroughDesignatedOn": null,
+      "emergingTheme": null
+    },
+    {
+      "productId": "PRD-CEEA076F20",
+      "catalogLifecycleContext": "current_market",
+      "slottingScope": "not_applicable",
+      "preferredNewPurchase": false,
+      "installedBaseExactSlotIds": [],
+      "lifecycleNote": "Investigational; under clinical study.",
+      "regulatoryStatus": "breakthrough_designated_investigational",
+      "regulatoryNote": "Breakthrough Device designation is an FDA agreement to review on an expedited path. It is not clearance, not approval, and not permission to market. Recorded for orientation only and excluded from preference-card selection. Designated 2020-06-15 per a company announcement; no public FDA designation letter was located. Nuvaira states the device is not commercially available in the USA.",
+      "breakthroughDesignatedOn": "2020-06-15",
+      "emergingTheme": "Airway remodeling and denervation"
+    },
+    {
+      "productId": "PRD-BCD0C2C494",
+      "catalogLifecycleContext": "current_market",
+      "slottingScope": "not_applicable",
+      "preferredNewPurchase": false,
+      "installedBaseExactSlotIds": [],
+      "lifecycleNote": "Investigational; PMA submitted, no FDA decision identified.",
+      "regulatoryStatus": "breakthrough_designated_premarket_review",
+      "regulatoryNote": "Breakthrough Device designation is an FDA agreement to review on an expedited path. It is not clearance, not approval, and not permission to market. Recorded for orientation only and excluded from preference-card selection. Designated 2019-04-03 per a company announcement alongside IDE approval for a pivotal chronic-bronchitis trial; a PMA submission was announced 2026-01-07. No public FDA designation letter or decision document was located.",
+      "breakthroughDesignatedOn": "2019-04-03",
+      "emergingTheme": "Airway remodeling and denervation"
+    },
+    {
+      "productId": "PRD-BC2FB31EE2",
+      "catalogLifecycleContext": "current_market",
+      "slottingScope": "not_applicable",
+      "preferredNewPurchase": false,
+      "installedBaseExactSlotIds": [],
+      "lifecycleNote": "Investigational; company-stated PMA review, unconfirmed against FDA records.",
+      "regulatoryStatus": "breakthrough_designated_premarket_review",
+      "regulatoryNote": "Breakthrough Device designation is an FDA agreement to review on an expedited path. It is not clearance, not approval, and not permission to market. Recorded for orientation only and excluded from preference-card selection. Designated 2019-09-16 per a Gala Therapeutics announcement; the programme now sits with Galvanize Therapeutics, whose pipeline page states it is under PMA review. No published FDA decision or final PMA action was identified.",
+      "breakthroughDesignatedOn": "2019-09-16",
+      "emergingTheme": "Airway remodeling and denervation"
+    },
+    {
+      "productId": "PRD-CBE0A76B71",
+      "catalogLifecycleContext": "current_market",
+      "slottingScope": "not_applicable",
+      "preferredNewPurchase": false,
+      "installedBaseExactSlotIds": [],
+      "lifecycleNote": "Under development; studied as the NEUWAVE FLEX system guided by the MONARCH platform.",
+      "regulatoryStatus": "breakthrough_designated_investigational",
+      "regulatoryNote": "Breakthrough Device designation is an FDA agreement to review on an expedited path. It is not clearance, not approval, and not permission to market. Recorded for orientation only and excluded from preference-card selection. Designated 2020-07-30 per a Johnson & Johnson announcement issued 2020-07-31; both dates appear in the source. No FDA PMA, De Novo, or 510(k) decision was identified for this bronchoscopic ablation indication.",
+      "breakthroughDesignatedOn": "2020-07-30",
+      "emergingTheme": "Bronchoscopic tumor ablation"
+    },
+    {
+      "productId": "PRD-8BF5C4BAB5",
+      "catalogLifecycleContext": "current_market",
+      "slottingScope": "not_applicable",
+      "preferredNewPurchase": false,
+      "installedBaseExactSlotIds": [],
+      "lifecycleNote": "Investigational; not available for sale in the United States.",
+      "regulatoryStatus": "breakthrough_designated_investigational",
+      "regulatoryNote": "Breakthrough Device designation is an FDA agreement to review on an expedited path. It is not clearance, not approval, and not permission to market. Recorded for orientation only and excluded from preference-card selection. Designated 2021-04-27 per a Medtronic announcement. Medtronic states the kit is an investigational device, not approved or cleared in the United States and not available for sale there.",
+      "breakthroughDesignatedOn": "2021-04-27",
+      "emergingTheme": "Bronchoscopic tumor ablation"
+    },
+    {
+      "productId": "PRD-31C1013C19",
+      "catalogLifecycleContext": "current_market",
+      "slottingScope": "not_applicable",
+      "preferredNewPurchase": false,
+      "installedBaseExactSlotIds": [],
+      "lifecycleNote": "Investigational; the manufacturer states the output should not be used as the primary diagnosis.",
+      "regulatoryStatus": "breakthrough_designated_investigational",
+      "regulatoryNote": "Breakthrough Device designation is an FDA agreement to review on an expedited path. It is not clearance, not approval, and not permission to market. Recorded for orientation only and excluded from preference-card selection. Designated 2024-10-30 per a company announcement. No public FDA 510(k), De Novo, or PMA authorization was identified for this indication, and the company states its own website claims have not been FDA-reviewed.",
+      "breakthroughDesignatedOn": "2024-10-30",
+      "emergingTheme": "Intraprocedural diagnosis"
     }
   ]
 }

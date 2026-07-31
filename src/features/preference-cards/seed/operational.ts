@@ -306,7 +306,7 @@ export const demoHospitalItemSeeds: DemoHospitalItemSeed[] = [
   },
   {
     id: 'demo-apc-platform',
-    roleCode: 'GENERIC_ENERGY_PLATFORM',
+    roleCode: 'ENERGY_PLATFORM',
     itemType: 'capital_asset',
     localDescription: 'Demo stand-in — APC energy platform',
     localItemNumber: 'DEMO-APC-PLATFORM-001',
@@ -724,7 +724,7 @@ const rigidSlots = [
 const apcSlots = [
   addedSlot(
     'OPS-APC-PLATFORM',
-    'GENERIC_ENERGY_PLATFORM',
+    'ENERGY_PLATFORM',
     'APC energy platform',
     'Locally approved APC generator/platform.',
     'required',

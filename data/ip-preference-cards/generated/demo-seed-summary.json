@@ -9,6 +9,14 @@
   "explicitly_resolved_required_roles_without_curated_defaults": 7,
   "scenarios": [
     {
+      "id": "bronch-ablation",
+      "readiness_state": "complete_with_warnings",
+      "snapshot_hash": "d22b86bcedfcd525eaaefa294ca977789d94ece467970758ca9ce38407ffb755",
+      "item_count": 23,
+      "suppressed_item_count": 0,
+      "blocking_codes": []
+    },
+    {
       "id": "chest-tube",
       "readiness_state": "complete_with_warnings",
       "snapshot_hash": "c13e64935ac5ff831a71781fdf81c741417fa34f030aa7be7f629963c12d5086",
@@ -19,15 +27,15 @@
     {
       "id": "ebus-rose-molecular",
       "readiness_state": "complete_with_warnings",
-      "snapshot_hash": "c618e19cb98c195fab83255495b9f2abed88e4ec2bb6592e31311e35f13b8c6c",
-      "item_count": 17,
+      "snapshot_hash": "ee8f3ccaa7ad14d6e6b0c02aba9cf7e255e2c97d3ce4a7264c65fd954ab40daf",
+      "item_count": 19,
       "suppressed_item_count": 0,
       "blocking_codes": []
     },
     {
       "id": "ebv",
       "readiness_state": "complete_with_warnings",
-      "snapshot_hash": "a655c6d60f2c4da925672d2854f456ed15f698d8864141a638c9de5ffa3ff28f",
+      "snapshot_hash": "c6407602f9f622d7ad985c2a5162b5b5f4460cddc84e3f44064eb34ba7fd86d8",
       "item_count": 11,
       "suppressed_item_count": 0,
       "blocking_codes": []
@@ -35,8 +43,8 @@
     {
       "id": "flex-diagnostic",
       "readiness_state": "complete_with_warnings",
-      "snapshot_hash": "7118f476b924756aeba2372908dfae0e0ee7ff430bfc45ef2cf2e659362150d9",
-      "item_count": 16,
+      "snapshot_hash": "fe957d6a654a64e81b25d3a9a75a1e4960253e1d4df1ddc7b2937936edb25b75",
+      "item_count": 19,
       "suppressed_item_count": 0,
       "blocking_codes": []
     },
@@ -59,24 +67,32 @@
     {
       "id": "med-thoracoscopy",
       "readiness_state": "complete_with_warnings",
-      "snapshot_hash": "5cf443d8f351b583e980659b3eacb4b285f4b0c90c8e8a74833cd8e4d08686fc",
-      "item_count": 18,
+      "snapshot_hash": "35907dd1b40b27bffc897914138c74fb1d417d607eae11fdb81c1c3c09b91b98",
+      "item_count": 20,
       "suppressed_item_count": 0,
       "blocking_codes": []
     },
     {
       "id": "perc-trach",
       "readiness_state": "complete_with_warnings",
-      "snapshot_hash": "fc060ad1f9b0cf2a4ac425f0276f69d64e286e3a1d18b4aee1fd24371a82f777",
+      "snapshot_hash": "24c2e0e61fa8f1b4777878709bc9b508865b301901a04f3aee86e0e33a8e6193",
       "item_count": 10,
+      "suppressed_item_count": 0,
+      "blocking_codes": []
+    },
+    {
+      "id": "photodynamic-therapy",
+      "readiness_state": "complete_with_warnings",
+      "snapshot_hash": "691b4af7e4d5352debfb5ae36ee47abe5e600e9d66c4b3b6075561f6c4e0f38c",
+      "item_count": 12,
       "suppressed_item_count": 0,
       "blocking_codes": []
     },
     {
       "id": "rigid-bronch",
       "readiness_state": "complete_with_warnings",
-      "snapshot_hash": "c4e04a967dd7a87323bcfc2e8f197803b059ef4cd76a3b9a3c61c20825af40e3",
-      "item_count": 25,
+      "snapshot_hash": "54b4555405bfa3c17376a7f3641601134b54046c4abfc5afe520084390732ab2",
+      "item_count": 31,
       "suppressed_item_count": 0,
       "blocking_codes": []
     },
@@ -91,8 +107,8 @@
     {
       "id": "central-airway-obstruction",
       "readiness_state": "complete_with_warnings",
-      "snapshot_hash": "59f14ff2784acabff4e67e544b181252a5932b9c8961dd64d86b9e9eaef26849",
-      "item_count": 50,
+      "snapshot_hash": "3fab224cbdbbef9d3052190ddc55c21215c9216b0dd4450cb521c8d7bef730c8",
+      "item_count": 57,
       "suppressed_item_count": 0,
       "blocking_codes": []
     },
@@ -107,8 +123,8 @@
     {
       "id": "wll",
       "readiness_state": "complete_with_warnings",
-      "snapshot_hash": "3bea39b3bbdc0d84fbe53671c5b53cb4cd93898068f6d8638c82c74cf24c2f73",
-      "item_count": 9,
+      "snapshot_hash": "f960e2c24c1ecff8eae2f9bcf9c56f3c92bf7c4baee66918dae9f8aff82c16e3",
+      "item_count": 13,
       "suppressed_item_count": 0,
       "blocking_codes": []
     }

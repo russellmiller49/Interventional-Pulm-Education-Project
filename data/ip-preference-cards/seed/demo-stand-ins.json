@@ -55,7 +55,7 @@
   },
   {
     "id": "demo-apc-platform",
-    "role_code": "GENERIC_ENERGY_PLATFORM",
+    "role_code": "ENERGY_PLATFORM",
     "local_description": "Demo stand-in — APC energy platform",
     "reason": "No approved local APC platform mapping was supplied."
   },

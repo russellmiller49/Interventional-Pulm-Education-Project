@@ -40,7 +40,7 @@
       "disposition": "needs_source_enrichment",
       "rationale": "The clinical gap is credible, but product identities, current IFUs, and US availability must be sourced before catalog insertion.",
       "affectedProductIds": [],
-      "affectedRoleCodes": ["GENERIC_COLLATERAL_VENT"],
+      "affectedRoleCodes": ["COLLATERAL_VENTILATION_SYSTEM"],
       "affectedSlotIds": ["SLOT-C4034E9595"],
       "implementationMilestone": "missing-platform-enrichment-v1",
       "evidenceNeeded": [
@@ -48,7 +48,7 @@
         "Current IFU",
         "US product identifiers and availability"
       ],
-      "status": "deferred"
+      "status": "implemented"
     },
     {
       "reviewSource": "review_2",
@@ -59,7 +59,7 @@
       "disposition": "needs_source_enrichment",
       "rationale": "Generator SKUs and platform relationships require current manufacturer evidence and must not be inferred from accessory compatibility text.",
       "affectedProductIds": [],
-      "affectedRoleCodes": ["GENERIC_ENERGY_PLATFORM"],
+      "affectedRoleCodes": ["ENERGY_PLATFORM"],
       "affectedSlotIds": ["SLOT-C2EF0C350D", "SLOT-FCE9E3810E"],
       "implementationMilestone": "missing-platform-enrichment-v1",
       "evidenceNeeded": [
@@ -67,7 +67,7 @@
         "Generator IFUs",
         "Platform-accessory compatibility evidence"
       ],
-      "status": "deferred"
+      "status": "implemented"
     },
     {
       "reviewSource": "review_2",
@@ -120,7 +120,7 @@
         "GENERIC_PPE",
         "GENERIC_SPECIMEN",
         "GENERIC_SUCTION",
-        "GENERIC_WLL_LAVAGE"
+        "WLL_LAVAGE_CIRCUIT"
       ],
       "affectedSlotIds": ["SLOT-3631C94D7A", "SLOT-022D0D3DC6", "SLOT-AA3C2EAA6D"],
       "implementationMilestone": "external-review-remediation-v0.1-policy",
@@ -140,7 +140,7 @@
       "affectedSlotIds": [],
       "implementationMilestone": "catalog-taxonomy-v2",
       "evidenceNeeded": ["Approved taxonomy migration plan", "Row-level migration review"],
-      "status": "deferred"
+      "status": "implemented"
     },
     {
       "reviewSource": "review_2",
@@ -431,7 +431,7 @@
         "NAV_PLATFORM_ACCESSORY",
         "BIOPSY_FORCEPS_FLEX",
         "BIOPSY_FORCEPS_ENERGY_ENABLED",
-        "GENERIC_ENERGY_PLATFORM"
+        "ENERGY_PLATFORM"
       ],
       "affectedSlotIds": [
         "SLOT-01010CB364",
@@ -571,12 +571,12 @@
       "affectedProductIds": [],
       "affectedRoleCodes": [
         "GENERIC_DRAINAGE_UNIT",
-        "GENERIC_COLLATERAL_VENT",
-        "GENERIC_ENERGY_PLATFORM",
+        "COLLATERAL_VENTILATION_SYSTEM",
+        "ENERGY_PLATFORM",
         "GENERIC_PPE",
         "GENERIC_SPECIMEN",
         "GENERIC_SUCTION",
-        "GENERIC_WLL_LAVAGE"
+        "WLL_LAVAGE_CIRCUIT"
       ],
       "affectedSlotIds": ["SLOT-3631C94D7A", "SLOT-022D0D3DC6", "SLOT-AA3C2EAA6D"],
       "implementationMilestone": "external-review-remediation-v0.1-policy",
@@ -803,8 +803,8 @@
       "affectedProductIds": [],
       "affectedRoleCodes": [
         "DRESSING_SECUREMENT",
-        "GENERIC_ENERGY_PLATFORM",
-        "GENERIC_COLLATERAL_VENT"
+        "ENERGY_PLATFORM",
+        "COLLATERAL_VENTILATION_SYSTEM"
       ],
       "affectedSlotIds": [
         "SLOT-01010CB364",
@@ -829,7 +829,7 @@
       "affectedSlotIds": [],
       "implementationMilestone": "catalog-taxonomy-v2",
       "evidenceNeeded": ["Approved domain vocabulary", "Backward-compatible migration plan"],
-      "status": "deferred"
+      "status": "implemented"
     },
     {
       "reviewSource": "review_2",

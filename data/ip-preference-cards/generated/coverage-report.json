@@ -6,12 +6,265 @@
   },
   "procedures": [
     {
+      "procedureCode": "BRONCH_ABLATION",
+      "requiredSlotCount": 7,
+      "requiredCatalogCoverageCount": 6,
+      "requiredCatalogCoveragePercentage": 85.7,
+      "requiredSlotsWithoutCatalogProducts": ["SLOT-89F6487409"],
+      "roleCodesWithoutCatalogProducts": ["GENERIC_SPECIMEN"],
+      "requiredDefaultOptionCoverageCount": 0,
+      "requiredDefaultOptionCoveragePercentage": 0,
+      "requiredSlotsWithoutDefaultOptions": [
+        "SLOT-F66DEC963D",
+        "SLOT-97AE031E2A",
+        "SLOT-E919659133",
+        "SLOT-E3604B09C0",
+        "SLOT-89F6487409",
+        "SLOT-DB4AA915E7",
+        "SLOT-B7C11A32AD"
+      ],
+      "requiredCustomAllowedCount": 7,
+      "slotCount": 23,
+      "slotCoverage": [
+        {
+          "slotId": "SLOT-F66DEC963D",
+          "roleCode": "FLEX_SCOPE_THERAPEUTIC",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 14,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-97AE031E2A",
+          "roleCode": "VIDEO_PROCESSOR",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 13,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-E919659133",
+          "roleCode": "GENERIC_AIRWAY_ADAPTER",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 8,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-7DBF54AF12",
+          "roleCode": "FLUOROSCOPY_C_ARM",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 3,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-8399A6050E",
+          "roleCode": "TOMOSYNTHESIS_NAVIGATION_SYSTEM",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 2,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-06198365DB",
+          "roleCode": "RADIATION_PROTECTION",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-03C81C8ED9",
+          "roleCode": "RADIAL_EBUS_PROBE",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 3,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-D0D9794E05",
+          "roleCode": "GUIDE_SHEATH_KIT",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 4,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-E3604B09C0",
+          "roleCode": "BIOPSY_FORCEPS_FLEX",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 20,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-89F6487409",
+          "roleCode": "GENERIC_SPECIMEN",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-DB4AA915E7",
+          "roleCode": "ENERGY_PLATFORM",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 2,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-213AD02F3D",
+          "roleCode": "APC_PROBE_FLEX",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 11,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-2EDD1F1A49",
+          "roleCode": "CRYOPROBE_FLEX",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 4,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-408806A1E9",
+          "roleCode": "CRYO_SYSTEM_ACCESSORY",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 14,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-90EACE8A77",
+          "roleCode": "LASER_CONSOLE",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 9,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-D8AC96F833",
+          "roleCode": "LASER_FIBER",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 8,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-5B5D976D2A",
+          "roleCode": "LASER_SAFETY_EQUIPMENT",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 1,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-C862A72632",
+          "roleCode": "MICROWAVE_ABLATION_CATHETER",
+          "requiredness": "conditional",
+          "allowCustom": false,
+          "catalogProductCount": 2,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-063C99B0F4",
+          "roleCode": "PULSED_FIELD_ABLATION_SYSTEM",
+          "requiredness": "conditional",
+          "allowCustom": false,
+          "catalogProductCount": 3,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-B7C11A32AD",
+          "roleCode": "GENERIC_SUCTION",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 1,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-26B0E004DD",
+          "roleCode": "CHEST_TUBE_SMALL_BORE",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 18,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-8AB12F127A",
+          "roleCode": "RIGID_BRONCHOSCOPE_BARREL",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 43,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-BE38624BB8",
+          "roleCode": "LASER_RESISTANT_ETT",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        }
+      ]
+    },
+    {
       "procedureCode": "CHEST_TUBE",
       "requiredSlotCount": 3,
-      "requiredCatalogCoverageCount": 1,
-      "requiredCatalogCoveragePercentage": 33.3,
-      "requiredSlotsWithoutCatalogProducts": ["SLOT-CE48C1B108", "SLOT-4BE1D79D6C"],
-      "roleCodesWithoutCatalogProducts": ["DRESSING_SECUREMENT", "GENERIC_SUCTION"],
+      "requiredCatalogCoverageCount": 2,
+      "requiredCatalogCoveragePercentage": 66.7,
+      "requiredSlotsWithoutCatalogProducts": ["SLOT-4BE1D79D6C"],
+      "roleCodesWithoutCatalogProducts": ["DRESSING_SECUREMENT"],
       "requiredDefaultOptionCoverageCount": 1,
       "requiredDefaultOptionCoveragePercentage": 33.3,
       "requiredSlotsWithoutDefaultOptions": ["SLOT-CE48C1B108", "SLOT-4BE1D79D6C"],
@@ -83,9 +336,9 @@
           "roleCode": "GENERIC_SUCTION",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 0,
+          "catalogProductCount": 1,
           "curatedDefaultOptionCount": 0,
-          "hasCatalogProducts": false,
+          "hasCatalogProducts": true,
           "hasCuratedDefault": false
         },
         {
@@ -153,15 +406,15 @@
     {
       "procedureCode": "EBUS_TBNA",
       "requiredSlotCount": 7,
-      "requiredCatalogCoverageCount": 5,
-      "requiredCatalogCoveragePercentage": 71.4,
-      "requiredSlotsWithoutCatalogProducts": ["SLOT-12ACA27E54", "SLOT-2E3065C976"],
-      "roleCodesWithoutCatalogProducts": ["GENERIC_SPECIMEN", "GENERIC_SUCTION"],
+      "requiredCatalogCoverageCount": 6,
+      "requiredCatalogCoveragePercentage": 85.7,
+      "requiredSlotsWithoutCatalogProducts": ["SLOT-12ACA27E54"],
+      "roleCodesWithoutCatalogProducts": ["GENERIC_SPECIMEN"],
       "requiredDefaultOptionCoverageCount": 5,
       "requiredDefaultOptionCoveragePercentage": 71.4,
       "requiredSlotsWithoutDefaultOptions": ["SLOT-12ACA27E54", "SLOT-2E3065C976"],
       "requiredCustomAllowedCount": 7,
-      "slotCount": 13,
+      "slotCount": 15,
       "slotCoverage": [
         {
           "slotId": "SLOT-4648848CC3",
@@ -268,9 +521,9 @@
           "roleCode": "GENERIC_SUCTION",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 0,
+          "catalogProductCount": 1,
           "curatedDefaultOptionCount": 0,
-          "hasCatalogProducts": false,
+          "hasCatalogProducts": true,
           "hasCuratedDefault": false
         },
         {
@@ -292,16 +545,36 @@
           "curatedDefaultOptionCount": 5,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-F3BF1ECC7E",
+          "roleCode": "FLUOROSCOPY_C_ARM",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 3,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-1D13D48BD7",
+          "roleCode": "RADIATION_PROTECTION",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
         }
       ]
     },
     {
       "procedureCode": "EBV",
       "requiredSlotCount": 7,
-      "requiredCatalogCoverageCount": 6,
-      "requiredCatalogCoveragePercentage": 85.7,
-      "requiredSlotsWithoutCatalogProducts": ["SLOT-D336807B69"],
-      "roleCodesWithoutCatalogProducts": ["GENERIC_SUCTION"],
+      "requiredCatalogCoverageCount": 7,
+      "requiredCatalogCoveragePercentage": 100,
+      "requiredSlotsWithoutCatalogProducts": [],
+      "roleCodesWithoutCatalogProducts": [],
       "requiredDefaultOptionCoverageCount": 6,
       "requiredDefaultOptionCoveragePercentage": 85.7,
       "requiredSlotsWithoutDefaultOptions": ["SLOT-D336807B69"],
@@ -330,12 +603,12 @@
         },
         {
           "slotId": "SLOT-C4034E9595",
-          "roleCode": "GENERIC_COLLATERAL_VENT",
+          "roleCode": "COLLATERAL_VENTILATION_SYSTEM",
           "requiredness": "conditional",
           "allowCustom": true,
-          "catalogProductCount": 0,
+          "catalogProductCount": 4,
           "curatedDefaultOptionCount": 0,
-          "hasCatalogProducts": false,
+          "hasCatalogProducts": true,
           "hasCuratedDefault": false
         },
         {
@@ -373,9 +646,9 @@
           "roleCode": "GENERIC_SUCTION",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 0,
+          "catalogProductCount": 1,
           "curatedDefaultOptionCount": 0,
-          "hasCatalogProducts": false,
+          "hasCatalogProducts": true,
           "hasCuratedDefault": false
         },
         {
@@ -423,15 +696,15 @@
     {
       "procedureCode": "FLEX_DIAGNOSTIC",
       "requiredSlotCount": 4,
-      "requiredCatalogCoverageCount": 2,
-      "requiredCatalogCoveragePercentage": 50,
-      "requiredSlotsWithoutCatalogProducts": ["SLOT-49853F1B39", "SLOT-6C8ED671CE"],
-      "roleCodesWithoutCatalogProducts": ["GENERIC_SPECIMEN", "GENERIC_SUCTION"],
+      "requiredCatalogCoverageCount": 3,
+      "requiredCatalogCoveragePercentage": 75,
+      "requiredSlotsWithoutCatalogProducts": ["SLOT-6C8ED671CE"],
+      "roleCodesWithoutCatalogProducts": ["GENERIC_SPECIMEN"],
       "requiredDefaultOptionCoverageCount": 2,
       "requiredDefaultOptionCoveragePercentage": 50,
       "requiredSlotsWithoutDefaultOptions": ["SLOT-49853F1B39", "SLOT-6C8ED671CE"],
       "requiredCustomAllowedCount": 4,
-      "slotCount": 16,
+      "slotCount": 19,
       "slotCoverage": [
         {
           "slotId": "SLOT-34A46FFBA2",
@@ -458,9 +731,9 @@
           "roleCode": "GENERIC_SUCTION",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 0,
+          "catalogProductCount": 1,
           "curatedDefaultOptionCount": 0,
-          "hasCatalogProducts": false,
+          "hasCatalogProducts": true,
           "hasCuratedDefault": false
         },
         {
@@ -592,20 +865,46 @@
           "curatedDefaultOptionCount": 6,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-15CBA5DCD0",
+          "roleCode": "FLUOROSCOPY_C_ARM",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 3,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-7938FA701C",
+          "roleCode": "RADIATION_PROTECTION",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-37F5B1E3DF",
+          "roleCode": "TOMOSYNTHESIS_NAVIGATION_SYSTEM",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 2,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
         }
       ]
     },
     {
       "procedureCode": "ICU_BRONCH",
       "requiredSlotCount": 7,
-      "requiredCatalogCoverageCount": 4,
-      "requiredCatalogCoveragePercentage": 57.1,
-      "requiredSlotsWithoutCatalogProducts": [
-        "SLOT-49FB14CBF6",
-        "SLOT-5D918DA83D",
-        "SLOT-1A3A9B71B1"
-      ],
-      "roleCodesWithoutCatalogProducts": ["GENERIC_PPE", "GENERIC_SPECIMEN", "GENERIC_SUCTION"],
+      "requiredCatalogCoverageCount": 5,
+      "requiredCatalogCoveragePercentage": 71.4,
+      "requiredSlotsWithoutCatalogProducts": ["SLOT-5D918DA83D", "SLOT-1A3A9B71B1"],
+      "roleCodesWithoutCatalogProducts": ["GENERIC_PPE", "GENERIC_SPECIMEN"],
       "requiredDefaultOptionCoverageCount": 4,
       "requiredDefaultOptionCoveragePercentage": 57.1,
       "requiredSlotsWithoutDefaultOptions": [
@@ -651,9 +950,9 @@
           "roleCode": "GENERIC_SUCTION",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 0,
+          "catalogProductCount": 1,
           "curatedDefaultOptionCount": 0,
-          "hasCatalogProducts": false,
+          "hasCatalogProducts": true,
           "hasCuratedDefault": false
         },
         {
@@ -741,10 +1040,10 @@
     {
       "procedureCode": "IPC_PLACEMENT",
       "requiredSlotCount": 6,
-      "requiredCatalogCoverageCount": 4,
-      "requiredCatalogCoveragePercentage": 66.7,
-      "requiredSlotsWithoutCatalogProducts": ["SLOT-27D1A61598", "SLOT-01010CB364"],
-      "roleCodesWithoutCatalogProducts": ["DRESSING_SECUREMENT", "GENERIC_SUCTION"],
+      "requiredCatalogCoverageCount": 5,
+      "requiredCatalogCoveragePercentage": 83.3,
+      "requiredSlotsWithoutCatalogProducts": ["SLOT-01010CB364"],
+      "roleCodesWithoutCatalogProducts": ["DRESSING_SECUREMENT"],
       "requiredDefaultOptionCoverageCount": 4,
       "requiredDefaultOptionCoveragePercentage": 66.7,
       "requiredSlotsWithoutDefaultOptions": ["SLOT-27D1A61598", "SLOT-01010CB364"],
@@ -806,9 +1105,9 @@
           "roleCode": "GENERIC_SUCTION",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 0,
+          "catalogProductCount": 1,
           "curatedDefaultOptionCount": 0,
-          "hasCatalogProducts": false,
+          "hasCatalogProducts": true,
           "hasCuratedDefault": false
         },
         {
@@ -836,10 +1135,10 @@
     {
       "procedureCode": "MED_THORACOSCOPY",
       "requiredSlotCount": 11,
-      "requiredCatalogCoverageCount": 9,
-      "requiredCatalogCoveragePercentage": 81.8,
-      "requiredSlotsWithoutCatalogProducts": ["SLOT-BC9CCE1853", "SLOT-D8D781E494"],
-      "roleCodesWithoutCatalogProducts": ["GENERIC_SPECIMEN", "GENERIC_SUCTION"],
+      "requiredCatalogCoverageCount": 10,
+      "requiredCatalogCoveragePercentage": 90.9,
+      "requiredSlotsWithoutCatalogProducts": ["SLOT-BC9CCE1853"],
+      "roleCodesWithoutCatalogProducts": ["GENERIC_SPECIMEN"],
       "requiredDefaultOptionCoverageCount": 4,
       "requiredDefaultOptionCoveragePercentage": 36.4,
       "requiredSlotsWithoutDefaultOptions": [
@@ -852,7 +1151,7 @@
         "SLOT-6D737D1334"
       ],
       "requiredCustomAllowedCount": 11,
-      "slotCount": 18,
+      "slotCount": 20,
       "slotCoverage": [
         {
           "slotId": "SLOT-8E4B5F2EC9",
@@ -866,7 +1165,7 @@
         },
         {
           "slotId": "SLOT-5A9EDD575F",
-          "roleCode": "PLEUROSCOPE",
+          "roleCode": "THORACOSCOPE_SEMIRIGID",
           "requiredness": "required",
           "allowCustom": true,
           "catalogProductCount": 2,
@@ -886,20 +1185,20 @@
         },
         {
           "slotId": "SLOT-9448C2A991",
-          "roleCode": "PLEUROSCOPY_TROCAR",
+          "roleCode": "THORACOSCOPY_TROCAR",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 26,
+          "catalogProductCount": 28,
           "curatedDefaultOptionCount": 0,
           "hasCatalogProducts": true,
           "hasCuratedDefault": false
         },
         {
           "slotId": "SLOT-545818F1DC",
-          "roleCode": "PLEURAL_BIOPSY_FORCEPS",
+          "roleCode": "THORACOSCOPY_BIOPSY_FORCEPS",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 15,
+          "catalogProductCount": 17,
           "curatedDefaultOptionCount": 0,
           "hasCatalogProducts": true,
           "hasCuratedDefault": false
@@ -919,9 +1218,9 @@
           "roleCode": "GENERIC_SUCTION",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 0,
+          "catalogProductCount": 1,
           "curatedDefaultOptionCount": 0,
-          "hasCatalogProducts": false,
+          "hasCatalogProducts": true,
           "hasCuratedDefault": false
         },
         {
@@ -976,10 +1275,10 @@
         },
         {
           "slotId": "SLOT-E63DC64C2F",
-          "roleCode": "THORACOSCOPY_TELESCOPE",
+          "roleCode": "THORACOSCOPE_RIGID",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 17,
+          "catalogProductCount": 18,
           "curatedDefaultOptionCount": 0,
           "hasCatalogProducts": true,
           "hasCuratedDefault": false
@@ -989,7 +1288,7 @@
           "roleCode": "ENDOSCOPY_LIGHT_CABLE",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 1,
+          "catalogProductCount": 2,
           "curatedDefaultOptionCount": 0,
           "hasCatalogProducts": true,
           "hasCuratedDefault": false
@@ -1033,16 +1332,36 @@
           "curatedDefaultOptionCount": 0,
           "hasCatalogProducts": true,
           "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-8FC90750FF",
+          "roleCode": "THORACOSCOPY_ELECTRODE",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 3,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-51A2592738",
+          "roleCode": "ENERGY_PLATFORM",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 2,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
         }
       ]
     },
     {
       "procedureCode": "PERC_TRACH",
       "requiredSlotCount": 8,
-      "requiredCatalogCoverageCount": 6,
-      "requiredCatalogCoveragePercentage": 75,
-      "requiredSlotsWithoutCatalogProducts": ["SLOT-657F12A89F", "SLOT-126F71E1BD"],
-      "roleCodesWithoutCatalogProducts": ["DRESSING_SECUREMENT", "GENERIC_SUCTION"],
+      "requiredCatalogCoverageCount": 7,
+      "requiredCatalogCoveragePercentage": 87.5,
+      "requiredSlotsWithoutCatalogProducts": ["SLOT-126F71E1BD"],
+      "roleCodesWithoutCatalogProducts": ["DRESSING_SECUREMENT"],
       "requiredDefaultOptionCoverageCount": 3,
       "requiredDefaultOptionCoveragePercentage": 37.5,
       "requiredSlotsWithoutDefaultOptions": [
@@ -1097,7 +1416,7 @@
         },
         {
           "slotId": "SLOT-09D5542BAA",
-          "roleCode": "PDT_KIT",
+          "roleCode": "PERC_TRACH_KIT",
           "requiredness": "required",
           "allowCustom": true,
           "catalogProductCount": 8,
@@ -1140,9 +1459,9 @@
           "roleCode": "GENERIC_SUCTION",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 0,
+          "catalogProductCount": 1,
           "curatedDefaultOptionCount": 0,
-          "hasCatalogProducts": false,
+          "hasCatalogProducts": true,
           "hasCuratedDefault": false
         },
         {
@@ -1158,6 +1477,150 @@
       ]
     },
     {
+      "procedureCode": "PHOTODYNAMIC_THERAPY",
+      "requiredSlotCount": 8,
+      "requiredCatalogCoverageCount": 8,
+      "requiredCatalogCoveragePercentage": 100,
+      "requiredSlotsWithoutCatalogProducts": [],
+      "roleCodesWithoutCatalogProducts": [],
+      "requiredDefaultOptionCoverageCount": 0,
+      "requiredDefaultOptionCoveragePercentage": 0,
+      "requiredSlotsWithoutDefaultOptions": [
+        "SLOT-8A0CAE91FF",
+        "SLOT-C6B7BC56B1",
+        "SLOT-63B9691422",
+        "SLOT-0C667F3D98",
+        "SLOT-395F6BD985",
+        "SLOT-B0F3DFF86F",
+        "SLOT-5D4FC2EC83",
+        "SLOT-715F112605"
+      ],
+      "requiredCustomAllowedCount": 8,
+      "slotCount": 12,
+      "slotCoverage": [
+        {
+          "slotId": "SLOT-8A0CAE91FF",
+          "roleCode": "PHOTODYNAMIC_PHOTOSENSITIZER",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 1,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-C6B7BC56B1",
+          "roleCode": "FLEX_SCOPE_DIAGNOSTIC",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 24,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-63B9691422",
+          "roleCode": "VIDEO_PROCESSOR",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 13,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-0C667F3D98",
+          "roleCode": "PHOTODYNAMIC_LASER",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 1,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-395F6BD985",
+          "roleCode": "PHOTODYNAMIC_DIFFUSER",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 6,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-B0F3DFF86F",
+          "roleCode": "BITE_BLOCK",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 2,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-5D4FC2EC83",
+          "roleCode": "GENERIC_SUCTION",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 1,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-715F112605",
+          "roleCode": "FLEX_SCOPE_THERAPEUTIC",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 14,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-BE2DEBB4E7",
+          "roleCode": "FOREIGN_BODY_FORCEPS_FLEX",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 8,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-2EF6D51123",
+          "roleCode": "CRYOPROBE_FLEX",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 4,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-EADB8A307E",
+          "roleCode": "GENERIC_SPECIMEN",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-543A73947E",
+          "roleCode": "RIGID_BRONCHOSCOPE_BARREL",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 43,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        }
+      ]
+    },
+    {
       "procedureCode": "RIGID_BRONCH",
       "requiredSlotCount": 8,
       "requiredCatalogCoverageCount": 8,
@@ -1168,7 +1631,7 @@
       "requiredDefaultOptionCoveragePercentage": 75,
       "requiredSlotsWithoutDefaultOptions": ["SLOT-19FC83049A", "SLOT-72BAE3EC7C"],
       "requiredCustomAllowedCount": 8,
-      "slotCount": 25,
+      "slotCount": 31,
       "slotCoverage": [
         {
           "slotId": "SLOT-04C940D8B9",
@@ -1242,12 +1705,12 @@
         },
         {
           "slotId": "SLOT-C2EF0C350D",
-          "roleCode": "GENERIC_ENERGY_PLATFORM",
+          "roleCode": "ENERGY_PLATFORM",
           "requiredness": "conditional",
           "allowCustom": true,
-          "catalogProductCount": 0,
+          "catalogProductCount": 2,
           "curatedDefaultOptionCount": 0,
-          "hasCatalogProducts": false,
+          "hasCatalogProducts": true,
           "hasCuratedDefault": false
         },
         {
@@ -1385,7 +1848,7 @@
           "roleCode": "ENDOSCOPY_LIGHT_CABLE",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 1,
+          "catalogProductCount": 2,
           "curatedDefaultOptionCount": 0,
           "hasCatalogProducts": true,
           "hasCuratedDefault": false
@@ -1419,20 +1882,76 @@
           "curatedDefaultOptionCount": 1,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-A602F949A7",
+          "roleCode": "LASER_CONSOLE",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 9,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-35ACE7FDA1",
+          "roleCode": "LASER_FIBER",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 8,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-CD2D51CF8D",
+          "roleCode": "LASER_SAFETY_EQUIPMENT",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 1,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-678712810C",
+          "roleCode": "LASER_RESISTANT_ETT",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-A575600E20",
+          "roleCode": "FLUOROSCOPY_C_ARM",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 3,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-E8965CB331",
+          "roleCode": "RADIATION_PROTECTION",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
         }
       ]
     },
     {
       "procedureCode": "TB_RULEOUT",
       "requiredSlotCount": 6,
-      "requiredCatalogCoverageCount": 3,
-      "requiredCatalogCoveragePercentage": 50,
-      "requiredSlotsWithoutCatalogProducts": [
-        "SLOT-C46D25AF46",
-        "SLOT-2943D859CB",
-        "SLOT-D73F3C8E6D"
-      ],
-      "roleCodesWithoutCatalogProducts": ["GENERIC_PPE", "GENERIC_SPECIMEN", "GENERIC_SUCTION"],
+      "requiredCatalogCoverageCount": 4,
+      "requiredCatalogCoveragePercentage": 66.7,
+      "requiredSlotsWithoutCatalogProducts": ["SLOT-C46D25AF46", "SLOT-D73F3C8E6D"],
+      "roleCodesWithoutCatalogProducts": ["GENERIC_PPE", "GENERIC_SPECIMEN"],
       "requiredDefaultOptionCoverageCount": 3,
       "requiredDefaultOptionCoveragePercentage": 50,
       "requiredSlotsWithoutDefaultOptions": [
@@ -1488,9 +2007,9 @@
           "roleCode": "GENERIC_SUCTION",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 0,
+          "catalogProductCount": 1,
           "curatedDefaultOptionCount": 0,
-          "hasCatalogProducts": false,
+          "hasCatalogProducts": true,
           "hasCuratedDefault": false
         },
         {
@@ -1558,15 +2077,15 @@
     {
       "procedureCode": "THERAPEUTIC_BRONCH",
       "requiredSlotCount": 3,
-      "requiredCatalogCoverageCount": 2,
-      "requiredCatalogCoveragePercentage": 66.7,
-      "requiredSlotsWithoutCatalogProducts": ["SLOT-13609A744F"],
-      "roleCodesWithoutCatalogProducts": ["GENERIC_SUCTION"],
+      "requiredCatalogCoverageCount": 3,
+      "requiredCatalogCoveragePercentage": 100,
+      "requiredSlotsWithoutCatalogProducts": [],
+      "roleCodesWithoutCatalogProducts": [],
       "requiredDefaultOptionCoverageCount": 2,
       "requiredDefaultOptionCoveragePercentage": 66.7,
       "requiredSlotsWithoutDefaultOptions": ["SLOT-13609A744F"],
       "requiredCustomAllowedCount": 3,
-      "slotCount": 22,
+      "slotCount": 29,
       "slotCoverage": [
         {
           "slotId": "SLOT-B79D3CF198",
@@ -1593,19 +2112,19 @@
           "roleCode": "GENERIC_SUCTION",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 0,
+          "catalogProductCount": 1,
           "curatedDefaultOptionCount": 0,
-          "hasCatalogProducts": false,
+          "hasCatalogProducts": true,
           "hasCuratedDefault": false
         },
         {
           "slotId": "SLOT-FCE9E3810E",
-          "roleCode": "GENERIC_ENERGY_PLATFORM",
+          "roleCode": "ENERGY_PLATFORM",
           "requiredness": "conditional",
           "allowCustom": true,
-          "catalogProductCount": 0,
+          "catalogProductCount": 2,
           "curatedDefaultOptionCount": 0,
-          "hasCatalogProducts": false,
+          "hasCatalogProducts": true,
           "hasCuratedDefault": false
         },
         {
@@ -1787,16 +2306,86 @@
           "curatedDefaultOptionCount": 6,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
+        },
+        {
+          "slotId": "SLOT-185FBB545F",
+          "roleCode": "LASER_CONSOLE",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 9,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-34CDBAB683",
+          "roleCode": "LASER_FIBER",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 8,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-6630AD392A",
+          "roleCode": "LASER_SAFETY_EQUIPMENT",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 1,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-EE17F755B2",
+          "roleCode": "LASER_RESISTANT_ETT",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-49F20FD8F8",
+          "roleCode": "FLUOROSCOPY_C_ARM",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 3,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-945FA4AAF8",
+          "roleCode": "RADIATION_PROTECTION",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-38E5FB60B9",
+          "roleCode": "TOMOSYNTHESIS_NAVIGATION_SYSTEM",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 2,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
         }
       ]
     },
     {
       "procedureCode": "THORACENTESIS",
       "requiredSlotCount": 4,
-      "requiredCatalogCoverageCount": 2,
-      "requiredCatalogCoveragePercentage": 50,
-      "requiredSlotsWithoutCatalogProducts": ["SLOT-CA34F60BE9", "SLOT-23A6DA3B89"],
-      "roleCodesWithoutCatalogProducts": ["DRESSING_SECUREMENT", "GENERIC_SUCTION"],
+      "requiredCatalogCoverageCount": 3,
+      "requiredCatalogCoveragePercentage": 75,
+      "requiredSlotsWithoutCatalogProducts": ["SLOT-23A6DA3B89"],
+      "roleCodesWithoutCatalogProducts": ["DRESSING_SECUREMENT"],
       "requiredDefaultOptionCoverageCount": 1,
       "requiredDefaultOptionCoveragePercentage": 25,
       "requiredSlotsWithoutDefaultOptions": [
@@ -1832,9 +2421,9 @@
           "roleCode": "GENERIC_SUCTION",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 0,
+          "catalogProductCount": 1,
           "curatedDefaultOptionCount": 0,
-          "hasCatalogProducts": false,
+          "hasCatalogProducts": true,
           "hasCuratedDefault": false
         },
         {
@@ -1871,20 +2460,36 @@
     },
     {
       "procedureCode": "WLL",
-      "requiredSlotCount": 6,
-      "requiredCatalogCoverageCount": 4,
-      "requiredCatalogCoveragePercentage": 66.7,
-      "requiredSlotsWithoutCatalogProducts": ["SLOT-41977168DA", "SLOT-2015EC8357"],
-      "roleCodesWithoutCatalogProducts": ["GENERIC_SUCTION", "GENERIC_WLL_LAVAGE"],
+      "requiredSlotCount": 10,
+      "requiredCatalogCoverageCount": 5,
+      "requiredCatalogCoveragePercentage": 50,
+      "requiredSlotsWithoutCatalogProducts": [
+        "SLOT-41977168DA",
+        "SLOT-57741DB666",
+        "SLOT-9BD475F03A",
+        "SLOT-9EBCAD6487",
+        "SLOT-23E62136B4"
+      ],
+      "roleCodesWithoutCatalogProducts": [
+        "WLL_CHEST_PERCUSSION",
+        "WLL_EFFLUENT_COLLECTION",
+        "WLL_FLUID_WARMER",
+        "WLL_LAVAGE_CIRCUIT",
+        "WLL_WARMED_SALINE_SUPPLY"
+      ],
       "requiredDefaultOptionCoverageCount": 3,
-      "requiredDefaultOptionCoveragePercentage": 50,
+      "requiredDefaultOptionCoveragePercentage": 30,
       "requiredSlotsWithoutDefaultOptions": [
         "SLOT-2947B0846D",
         "SLOT-41977168DA",
-        "SLOT-2015EC8357"
+        "SLOT-2015EC8357",
+        "SLOT-57741DB666",
+        "SLOT-9BD475F03A",
+        "SLOT-9EBCAD6487",
+        "SLOT-23E62136B4"
       ],
-      "requiredCustomAllowedCount": 6,
-      "slotCount": 9,
+      "requiredCustomAllowedCount": 10,
+      "slotCount": 13,
       "slotCoverage": [
         {
           "slotId": "SLOT-2947B0846D",
@@ -1938,7 +2543,7 @@
         },
         {
           "slotId": "SLOT-41977168DA",
-          "roleCode": "GENERIC_WLL_LAVAGE",
+          "roleCode": "WLL_LAVAGE_CIRCUIT",
           "requiredness": "required",
           "allowCustom": true,
           "catalogProductCount": 0,
@@ -1951,9 +2556,9 @@
           "roleCode": "GENERIC_SUCTION",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 0,
+          "catalogProductCount": 1,
           "curatedDefaultOptionCount": 0,
-          "hasCatalogProducts": false,
+          "hasCatalogProducts": true,
           "hasCuratedDefault": false
         },
         {
@@ -1975,23 +2580,66 @@
           "curatedDefaultOptionCount": 0,
           "hasCatalogProducts": true,
           "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-57741DB666",
+          "roleCode": "WLL_WARMED_SALINE_SUPPLY",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-9BD475F03A",
+          "roleCode": "WLL_FLUID_WARMER",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-9EBCAD6487",
+          "roleCode": "WLL_CHEST_PERCUSSION",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-23E62136B4",
+          "roleCode": "WLL_EFFLUENT_COLLECTION",
+          "requiredness": "required",
+          "allowCustom": true,
+          "catalogProductCount": 0,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": false,
+          "hasCuratedDefault": false
         }
       ]
     }
   ],
   "rolesWithoutCatalogProducts": [
     "DRESSING_SECUREMENT",
-    "GENERIC_COLLATERAL_VENT",
-    "GENERIC_ENERGY_PLATFORM",
     "GENERIC_PPE",
     "GENERIC_SPECIMEN",
-    "GENERIC_SUCTION",
-    "GENERIC_WLL_LAVAGE",
     "GUIDING_DEVICE",
-    "TBNA_NEEDLE"
+    "LASER_RESISTANT_ETT",
+    "RADIATION_PROTECTION",
+    "TBNA_NEEDLE",
+    "WLL_CHEST_PERCUSSION",
+    "WLL_EFFLUENT_COLLECTION",
+    "WLL_FLUID_WARMER",
+    "WLL_LAVAGE_CIRCUIT",
+    "WLL_WARMED_SALINE_SUPPLY"
   ],
   "roleCounts": {
-    "total": 116,
-    "withoutCatalogProducts": 9
+    "total": 135,
+    "withoutCatalogProducts": 12
   }
 }

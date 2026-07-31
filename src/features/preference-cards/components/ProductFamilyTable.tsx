@@ -36,6 +36,11 @@ function formatRange(min: number, max: number): string {
   return min === max ? String(min) : `${min}–${max}`
 }
 
+function assertNoMissingVariantSpec(key: never): null {
+  void key
+  return null
+}
+
 function variantSpec(item: CatalogListItem, key: SpecColumnKey): string | null {
   const value = (() => {
     switch (key) {
@@ -53,11 +58,20 @@ function variantSpec(item: CatalogListItem, key: SpecColumnKey): string | null {
         return item.minWorkingChannelMm
       case 'delivery_system_od_mm':
         return item.deliverySystemOdMm
+      case 'laser_type':
+        return item.laserType
+      case 'material':
+        return item.material
+      case 'coverage':
+        return item.coverage
       default:
-        return null
+        // Exhaustive by construction, for the same reason as RoleComparisonTable: this had
+        // been silently dropping the text spec columns, so the header rendered with nothing
+        // under it. A missing case is now a compile error.
+        return assertNoMissingVariantSpec(key)
     }
   })()
-  return value === null || value === undefined ? null : String(value)
+  return value === null || value === undefined || value === '' ? null : String(value)
 }
 
 /**
@@ -108,6 +122,7 @@ export function ProductFamilyTable({
                 tier={family.verifiedCount === family.variants.length ? 'verified' : 'candidate'}
                 distributionStatus={family.distributionStatus}
                 catalogLifecycleContext={family.catalogLifecycleContext ?? 'unknown'}
+                regulatoryStatus={family.regulatoryStatus ?? 'unknown'}
                 labels={labels}
               />
               <span className="text-xs text-muted-foreground group-open:hidden">
@@ -176,6 +191,8 @@ export function ProductFamilyTable({
                         distributionStatus={variant.distributionStatus}
                         catalogLifecycleContext={variant.catalogLifecycleContext}
                         lifecycleNote={variant.lifecycleNote}
+                        regulatoryStatus={variant.regulatoryStatus}
+                        regulatoryNote={variant.regulatoryNote}
                         labels={labels}
                       />
                     </td>

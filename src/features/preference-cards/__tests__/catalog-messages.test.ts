@@ -56,6 +56,7 @@ const parameterizedMessages: Record<string, string[]> = {
   'admin.clinicalUseReviewPreviewDescription': ['filename'],
   'admin.clinicalUseReviewRowIssueSummary': ['sheet', 'row', 'key'],
   'admin.clinicalUseReviewShowingDecisions': ['shown', 'total'],
+  'emerging.designatedOn': ['date'],
   'sets.memberCount': ['count'],
   'sets.roleCount': ['count'],
   'catalog.overviewCounts': ['products', 'manufacturers', 'uses'],

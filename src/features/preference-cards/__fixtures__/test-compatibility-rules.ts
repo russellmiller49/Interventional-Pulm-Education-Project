@@ -10,7 +10,7 @@ import type { TypedCompatibilityRule } from '../domain/types'
 export const intentionallyFailingApcRule: TypedCompatibilityRule = {
   id: 'RULE-APC-PLATFORM-FAMILY',
   sourceRoleCode: 'APC_PROBE_FLEX',
-  targetRoleCode: 'GENERIC_ENERGY_PLATFORM',
+  targetRoleCode: 'ENERGY_PLATFORM',
   sourceAttribute: 'system_family',
   targetAttribute: 'system_family',
   operator: 'eq',

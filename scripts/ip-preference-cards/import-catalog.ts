@@ -37,6 +37,19 @@ import {
   type OverridesReport,
 } from './apply-product-overrides'
 import {
+  applyProcedureAdditionRoles,
+  applyProcedureAdditions,
+  readProcedureAdditions,
+  readProcedureAdditionsContext,
+  type ProcedureAdditionsReport,
+} from './apply-procedure-additions'
+import {
+  applyRoleTaxonomy,
+  assertCanonicalRoleTaxonomy,
+  type RoleTaxonomyReport,
+} from './apply-role-taxonomy'
+import { ROLE_CATEGORY_SET } from '@/features/preference-cards/domain/role-taxonomy'
+import {
   applyExternalReviewRemediation,
   readExternalReviewCorrections,
   type ExternalReviewRemediationReport,
@@ -107,6 +120,8 @@ const UNIQUE_KEYS: Partial<Record<ImportedSheetName, string[]>> = {
 interface ImportReport {
   format_version: 1
   catalog_additions?: AdditionsMergeReport
+  role_taxonomy?: RoleTaxonomyReport
+  procedure_additions?: ProcedureAdditionsReport
   product_overrides?: OverridesReport
   external_review_remediation?: ExternalReviewRemediationReport
   external_review_completed_implementation?: ExternalReviewCompletedImplementationReport
@@ -583,6 +598,27 @@ export async function importCatalog(options?: ImportCatalogOptions) {
   const overridesReport = applyProductOverrides(normalized.Products, overrides)
   report.product_overrides = overridesReport
 
+  // Taxonomy v2 (see apply-role-taxonomy.ts). Runs on the workbook's own rows before anything
+  // authored is merged, so every seed and overlay file can be written against the reviewed
+  // vocabulary alone — and an addition that still names a retired role fails the merge rather
+  // than being quietly canonicalized after the fact.
+  const roleTaxonomyReport = applyRoleTaxonomy(
+    normalized as unknown as Record<string, CatalogRecord[]>,
+  )
+  report.role_taxonomy = roleTaxonomyReport
+
+  // Reviewed vocabulary first: roles the additions introduce must exist before any product
+  // claims one or any slot requests one (see apply-procedure-additions.ts).
+  const [procedureAdditions, procedureAdditionsContext] = await Promise.all([
+    readProcedureAdditions(),
+    readProcedureAdditionsContext({ knownRoleCategories: ROLE_CATEGORY_SET }),
+  ])
+  const procedureAdditionRolesReport = applyProcedureAdditionRoles(
+    normalized as unknown as Record<string, CatalogRecord[]>,
+    procedureAdditions,
+    ROLE_CATEGORY_SET,
+  )
+
   // Curated additions the workbook does not carry (see apply-catalog-additions.ts).
   const additions = await readCatalogAdditions()
   const additionsReport = mergeCatalogAdditions(
@@ -590,6 +626,24 @@ export async function importCatalog(options?: ImportCatalogOptions) {
     additions,
   )
   report.catalog_additions = additionsReport
+
+  // Reviewed procedures, slots, and exact slot options the workbook does not carry (see
+  // apply-procedure-additions.ts). Applied after the product merge so a slot option can
+  // reference an added product, and before the reviewed overlays so a review correction can
+  // still retarget a slot added here.
+  const procedureAdditionsReport = applyProcedureAdditions(
+    normalized as unknown as Record<string, CatalogRecord[]>,
+    procedureAdditions,
+    procedureAdditionsContext,
+  )
+  report.procedure_additions = {
+    ...procedureAdditionsReport,
+    roles_added: procedureAdditionRolesReport.roles_added,
+    details: {
+      ...procedureAdditionsReport.details,
+      added_roles: procedureAdditionRolesReport.details.added_roles,
+    },
+  }
 
   // Versioned, externally reviewed semantic corrections are applied after source-preserving
   // overrides and additions, and before generated JSON or nonselectable proposals are written.
@@ -635,6 +689,12 @@ export async function importCatalog(options?: ImportCatalogOptions) {
     }
   }
 
+  // Overlays add roles of their own after the taxonomy pass, so the closed vocabulary is
+  // asserted once over the final data rather than only over the workbook's own rows.
+  const roleTaxonomyViolations = assertCanonicalRoleTaxonomy(
+    normalized as unknown as Record<string, CatalogRecord[]>,
+  )
+
   await mkdir(outputDirectory, { recursive: true })
   for (const sheetName of IMPORTED_SHEETS) {
     const idColumn = ID_COLUMNS[sheetName]
@@ -660,6 +720,10 @@ export async function importCatalog(options?: ImportCatalogOptions) {
       ? [`Modifier/role code collisions: ${modifierRoleCollisions.join(', ')}`]
       : []),
     ...additionsReport.errors.map((error) => `catalog additions: ${error}`),
+    ...roleTaxonomyReport.errors.map((error) => `role taxonomy: ${error}`),
+    ...procedureAdditionRolesReport.errors.map((error) => `procedure additions: ${error}`),
+    ...procedureAdditionsReport.errors.map((error) => `procedure additions: ${error}`),
+    ...roleTaxonomyViolations.map((error) => `role taxonomy: ${error}`),
     ...overridesReport.errors.map((error) => `product overrides: ${error}`),
     ...(externalReviewRemediationReport?.errors ?? []).map(
       (error) => `external review remediation: ${error}`,

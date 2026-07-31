@@ -1,5 +1,12 @@
 [
   {
+    "manufacturer_id": "MFR-0662FB6648",
+    "manufacturer": "Nuvaira",
+    "default_distributor": null,
+    "website": null,
+    "notes": "Added with the taxonomy-v2 energy, imaging, laser, photodynamic, and emerging-device cohorts."
+  },
+  {
     "manufacturer_id": "MFR-122B7208FA",
     "manufacturer": "VisionAir Solutions",
     "default_distributor": null,
@@ -12,6 +19,13 @@
     "default_distributor": null,
     "website": "karlstorz.com",
     "notes": "v0.3 adds exact legacy U.S. catalog records; current availability must be reverified."
+  },
+  {
+    "manufacturer_id": "MFR-1C275ED382",
+    "manufacturer": "Pinnacle Biologics",
+    "default_distributor": null,
+    "website": null,
+    "notes": "Added with the taxonomy-v2 energy, imaging, laser, photodynamic, and emerging-device cohorts."
   },
   {
     "manufacturer_id": "MFR-233A56DF24",
@@ -42,6 +56,13 @@
     "notes": null
   },
   {
+    "manufacturer_id": "MFR-32727C66CE",
+    "manufacturer": "Ziehm Imaging",
+    "default_distributor": null,
+    "website": null,
+    "notes": "Added with the taxonomy-v2 energy, imaging, laser, photodynamic, and emerging-device cohorts."
+  },
+  {
     "manufacturer_id": "MFR-32A7012B17",
     "manufacturer": "EFER",
     "default_distributor": null,
@@ -49,11 +70,25 @@
     "notes": null
   },
   {
+    "manufacturer_id": "MFR-34D936968B",
+    "manufacturer": "Body Vision Medical",
+    "default_distributor": null,
+    "website": null,
+    "notes": "Added with the taxonomy-v2 energy, imaging, laser, photodynamic, and emerging-device cohorts."
+  },
+  {
     "manufacturer_id": "MFR-42F5245630",
     "manufacturer": "Boston Scientific",
     "default_distributor": null,
     "website": null,
     "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-4D025EECF8",
+    "manufacturer": "Laserscope",
+    "default_distributor": null,
+    "website": null,
+    "notes": "Added with the taxonomy-v2 energy, imaging, laser, photodynamic, and emerging-device cohorts."
   },
   {
     "manufacturer_id": "MFR-52C1D02F96",
@@ -68,6 +103,13 @@
     "default_distributor": null,
     "website": "erbe-med.com",
     "notes": "New exact records from uploaded ERBE catalogs are non-U.S. reference records and hidden by default."
+  },
+  {
+    "manufacturer_id": "MFR-5FA553CAC7",
+    "manufacturer": "Quanta System",
+    "default_distributor": null,
+    "website": null,
+    "notes": "Added with the taxonomy-v2 energy, imaging, laser, photodynamic, and emerging-device cohorts."
   },
   {
     "manufacturer_id": "MFR-6208838930",
@@ -119,6 +161,20 @@
     "notes": null
   },
   {
+    "manufacturer_id": "MFR-6CC2118446",
+    "manufacturer": "ForTec Medical",
+    "default_distributor": null,
+    "website": null,
+    "notes": "Added with the taxonomy-v2 energy, imaging, laser, photodynamic, and emerging-device cohorts."
+  },
+  {
+    "manufacturer_id": "MFR-6F5A167E04",
+    "manufacturer": "Siemens Healthineers",
+    "default_distributor": null,
+    "website": null,
+    "notes": "Added with the taxonomy-v2 energy, imaging, laser, photodynamic, and emerging-device cohorts."
+  },
+  {
     "manufacturer_id": "MFR-711B8B255D",
     "manufacturer": "Auris Health (Johnson & Johnson)",
     "default_distributor": null,
@@ -133,11 +189,25 @@
     "notes": "Butterfly iQ3 system and accessory identifiers are sourced from the 2025 user manual."
   },
   {
+    "manufacturer_id": "MFR-7944C7D12F",
+    "manufacturer": "Galvanize Therapeutics",
+    "default_distributor": null,
+    "website": null,
+    "notes": "Added with the taxonomy-v2 energy, imaging, laser, photodynamic, and emerging-device cohorts."
+  },
+  {
     "manufacturer_id": "MFR-797F07B3AC",
     "manufacturer": "Micro-Tech / Thoracent",
     "default_distributor": null,
     "website": null,
     "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-7D78A9A150",
+    "manufacturer": "CSA Medical",
+    "default_distributor": null,
+    "website": null,
+    "notes": "Added with the taxonomy-v2 energy, imaging, laser, photodynamic, and emerging-device cohorts."
   },
   {
     "manufacturer_id": "MFR-80D24820DF",
@@ -175,6 +245,20 @@
     "notes": "SonoSite LX/PX systems and transducer models are represented as source-backed model records; exact orderable configurations require verification."
   },
   {
+    "manufacturer_id": "MFR-B70B2D18DF",
+    "manufacturer": "GE HealthCare",
+    "default_distributor": null,
+    "website": null,
+    "notes": "Added with the taxonomy-v2 energy, imaging, laser, photodynamic, and emerging-device cohorts."
+  },
+  {
+    "manufacturer_id": "MFR-B824D58F93",
+    "manufacturer": "Invenio Imaging",
+    "default_distributor": null,
+    "website": null,
+    "notes": "Added with the taxonomy-v2 energy, imaging, laser, photodynamic, and emerging-device cohorts."
+  },
+  {
     "manufacturer_id": "MFR-B91AF4A147",
     "manufacturer": "Noah Medical",
     "default_distributor": null,
@@ -196,6 +280,13 @@
     "notes": null
   },
   {
+    "manufacturer_id": "MFR-C516A50D3D",
+    "manufacturer": "OmniGuide",
+    "default_distributor": null,
+    "website": null,
+    "notes": "Added with the taxonomy-v2 energy, imaging, laser, photodynamic, and emerging-device cohorts."
+  },
+  {
     "manufacturer_id": "MFR-C84E13E4FD",
     "manufacturer": "Ambu",
     "default_distributor": null,
@@ -210,6 +301,13 @@
     "notes": null
   },
   {
+    "manufacturer_id": "MFR-D6BCA5B922",
+    "manufacturer": "LISA Laser Products",
+    "default_distributor": null,
+    "website": null,
+    "notes": "Added with the taxonomy-v2 energy, imaging, laser, photodynamic, and emerging-device cohorts."
+  },
+  {
     "manufacturer_id": "MFR-DF7E28B2EB",
     "manufacturer": "FUJIFILM",
     "default_distributor": null,
@@ -222,6 +320,13 @@
     "default_distributor": null,
     "website": null,
     "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-F36BD4C4D8",
+    "manufacturer": "biolitec",
+    "default_distributor": null,
+    "website": null,
+    "notes": "Added with the taxonomy-v2 energy, imaging, laser, photodynamic, and emerging-device cohorts."
   },
   {
     "manufacturer_id": "MFR-FEE2053E6E",

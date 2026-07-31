@@ -717,14 +717,14 @@
     "rule_id": "CMP-58DE7D49C4",
     "source_product_or_role": "PRD-58DE7D49C4",
     "relationship": "requires compatible energy platform",
-    "target_product_or_role": "GENERIC_ENERGY_PLATFORM",
+    "target_product_or_role": "ENERGY_PLATFORM",
     "rule_text": "Hot biopsy forceps require a compatible electrosurgical energy platform and current manufacturer IFU review before use.",
     "verification_status": "Candidate - external clinical-use review; confirm the generator, accessories, settings, and current IFU.",
     "source_id": "SRC012",
     "resolved_source_type": "product",
     "resolved_source_id": "PRD-58DE7D49C4",
     "resolved_target_type": "role",
-    "resolved_target_id": "GENERIC_ENERGY_PLATFORM",
+    "resolved_target_id": "ENERGY_PLATFORM",
     "verification_grade": "candidate"
   },
   {
@@ -2115,16 +2115,16 @@
   },
   {
     "rule_id": "RULE-0985D460F3",
-    "source_product_or_role": "THORACOSCOPY_TELESCOPE",
+    "source_product_or_role": "THORACOSCOPE_RIGID",
     "relationship": "requires",
-    "target_product_or_role": "PLEUROSCOPY_TROCAR",
+    "target_product_or_role": "THORACOSCOPY_TROCAR",
     "rule_text": "Trocar capacity must exceed the selected telescope/instrument outer diameter.",
     "verification_status": "Source-backed platform rule",
     "source_id": "SRC021",
     "resolved_source_type": "role",
-    "resolved_source_id": "THORACOSCOPY_TELESCOPE",
+    "resolved_source_id": "THORACOSCOPE_RIGID",
     "resolved_target_type": "role",
-    "resolved_target_id": "PLEUROSCOPY_TROCAR",
+    "resolved_target_id": "THORACOSCOPY_TROCAR",
     "verification_grade": "unknown"
   },
   {

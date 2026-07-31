@@ -88,6 +88,8 @@ export function CatalogResultsTable({
                   distributionStatus={item.distributionStatus}
                   catalogLifecycleContext={item.catalogLifecycleContext}
                   lifecycleNote={item.lifecycleNote}
+                  regulatoryStatus={item.regulatoryStatus}
+                  regulatoryNote={item.regulatoryNote}
                   labels={labels}
                 />
               </td>
