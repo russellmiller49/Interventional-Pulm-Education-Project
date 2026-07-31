@@ -35,8 +35,9 @@ the coordinator's post-screening evaluation command.
   validation, quarantine/retry decisions, evaluation, and reporting.
 
 Sol must not be substituted for Luna screening. Terra must not be used for routine first-pass
-volume. Every worker is started with no inherited conversation history and is instructed to read
-only its sanitized packet and write only its assigned output.
+volume unless the coordinator records a later explicit user authorization in the run manifest.
+Every worker is started with no inherited conversation history and is instructed to read only its
+sanitized packet and write only its assigned output.
 
 The requested logical smoke-test fanout is eight Luna worker assignments. The current collaboration
 runtime exposes four total slots, including the Sol coordinator, so at most three workers can
@@ -95,6 +96,16 @@ Exclude includes incidental BAL/bronchoscopy specimen collection for unrelated b
 immunology, microbiology, vaccine, or mechanism work; animal respiratory research without a
 procedural question; nonprocedural pulmonary/oncology/imaging/AI/surgery/anesthesia/education;
 non-airway stents; and nonpulmonary endoscopy.
+
+Before assigning a high-confidence `exclude`, workers must perform a protected-cue check across
+the supplied title, abstract, MeSH, and keywords. Direct bronchoscopy, endobronchial,
+transbronchial, EBUS/EUS-B, pleural-procedure, and explicit interventional-pulmonology fellowship
+or training terms are protected when they occur in the title or are tied to the study cohort,
+method, outcome, access/localization, safety, yield, adequacy, or training/workforce question.
+Such records receive the established include label when direct, or `uncertain` with
+`requiresHumanReview: true` and `scope_boundary` when centrality cannot be resolved. A mere
+background, confirmation, or specimen-source mention remains excludable; generic imaging,
+anesthesia, pathology, molecular, surgery, and education records are not automatically included.
 
 ## Exact worker result schema
 
@@ -236,13 +247,16 @@ when every chunk is valid; partial progress remains resumable.
 7. Prepare Terra review packets for disagreements, uncertain/low-confidence results, no-abstract
    boundary cases, deterministic QC exclusions, and animal/preclinical boundary cases.
 8. Compare Luna first pass, Luna challenge, and Terra against the physician pilot labels.
-9. Present the required preflight facts before corpus fanout: available article count, chunk size,
-   worker count, output location, manifest location, exact schema, and validation status.
-10. Prepare corpus packets in deterministic 25-item chunks and dispatch Luna.
-11. Validate and persist each completed chunk immediately.
-12. Challenge every first-pass exclusion with a second independent Luna pass.
-13. Route rescued exclusions and disagreements to Terra or human review.
-14. Continue until all packets finish, credits reset, throttling requires a lower concurrency, or a
+9. If repeated dangerous false negatives expose a systematic boundary error, add the narrowest
+   metadata-operational guardrail and pass a fresh blinded pilot exclusion challenge before corpus
+   fanout.
+10. Present the required preflight facts before corpus fanout: available article count, chunk size,
+    worker count, output location, manifest location, exact schema, and validation status.
+11. Prepare corpus packets in deterministic 25-item chunks and dispatch Luna.
+12. Validate and persist each completed chunk immediately.
+13. Challenge every first-pass exclusion with a second independent Luna pass.
+14. Route rescued exclusions and disagreements to Terra or human review.
+15. Continue until all packets finish, credits reset, throttling requires a lower concurrency, or a
     genuine runtime blocker is recorded.
 
 ## Evaluation

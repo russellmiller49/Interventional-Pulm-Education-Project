@@ -125,6 +125,15 @@ interface ScreeningManifest {
     reasoningLevel: string
     error: string
   }>
+  allocationChanges: Array<{
+    recordedAt: string
+    phaseId: string
+    fromModelFamily: ExpectedModelFamily
+    toModelFamily: ExpectedModelFamily
+    authorizedBy: string
+    authorization: string
+    rationale: string
+  }>
 }
 
 interface ArticleRow {
@@ -149,6 +158,7 @@ Usage:
   npm run literature:ultra-screen -- validate --run-root <path> --chunk <id>
   npm run literature:ultra-screen -- worker-failed --run-root <path> --chunk <id> --error <text>
   npm run literature:ultra-screen -- dispatch-blocked --run-root <path> --chunk <id> --model <model> --reasoning ultra --error <text>
+  npm run literature:ultra-screen -- authorize-substitution --run-root <path> --phase <id> --from luna --to terra --authorized-by user --authorization <text> --rationale <text>
   npm run literature:ultra-screen -- derive --run-root <path> --kind sensitivity --source-phase <id> --phase <neutral-id>
   npm run literature:ultra-screen -- derive --run-root <path> --kind terra --source-phase <id> --challenge-phase <id> --phase <neutral-id>
   npm run literature:ultra-screen -- evaluate --run-root <path> --phase <id> --batch pilot-v1
@@ -347,6 +357,7 @@ async function readManifest(rootPath: string) {
     throw new Error('The screening manifest has an unsupported version or root path.')
   }
   manifest.dispatchBlockers ??= []
+  manifest.allocationChanges ??= []
   return manifest
 }
 
@@ -691,6 +702,7 @@ async function prepare(arguments_: ParsedCliArguments) {
       phases: {},
       chunks: {},
       dispatchBlockers: [],
+      allocationChanges: [],
     }
   }
 
@@ -983,6 +995,79 @@ async function recordDispatchBlocker(arguments_: ParsedCliArguments) {
   )
 }
 
+async function authorizeModelSubstitution(arguments_: ParsedCliArguments) {
+  assertKnownArguments(arguments_, [
+    'run-root',
+    'phase',
+    'from',
+    'to',
+    'authorized-by',
+    'authorization',
+    'rationale',
+  ])
+  const rootPath = resolve(requireValue(arguments_, 'run-root'))
+  const phaseId = requireValue(arguments_, 'phase')
+  const fromModelFamily = requireValue(arguments_, 'from')
+  const toModelFamily = requireValue(arguments_, 'to')
+  if (
+    (fromModelFamily !== 'luna' && fromModelFamily !== 'terra') ||
+    (toModelFamily !== 'luna' && toModelFamily !== 'terra')
+  ) {
+    throw new Error('--from and --to must be luna or terra.')
+  }
+  if (fromModelFamily === toModelFamily) {
+    throw new Error('--from and --to must differ.')
+  }
+  const authorizedBy = requireValue(arguments_, 'authorized-by')
+  const authorization = requireValue(arguments_, 'authorization')
+  const rationale = requireValue(arguments_, 'rationale')
+  const manifest = await readManifest(rootPath)
+  const phase = manifest.phases[phaseId]
+  if (!phase) throw new Error(`Unknown phase: ${phaseId}`)
+  if (phase.status !== 'pending') {
+    throw new Error(`Model substitution requires a pending phase; ${phaseId} is ${phase.status}.`)
+  }
+  if (phase.expectedModelFamily !== fromModelFamily) {
+    throw new Error(
+      `Phase ${phaseId} expects ${phase.expectedModelFamily}, not ${fromModelFamily}.`,
+    )
+  }
+  const attemptedChunks = phase.chunkIds.filter(
+    (chunkId) => manifest.chunks[chunkId].attempts.length > 0,
+  )
+  if (attemptedChunks.length > 0) {
+    throw new Error(
+      `Model substitution must occur before worker attempts exist: ${attemptedChunks.join(', ')}`,
+    )
+  }
+  phase.expectedModelFamily = toModelFamily
+  manifest.allocationChanges.push({
+    recordedAt: now(),
+    phaseId,
+    fromModelFamily,
+    toModelFamily,
+    authorizedBy,
+    authorization,
+    rationale,
+  })
+  await saveManifest(rootPath, manifest)
+  console.log(
+    JSON.stringify(
+      {
+        phaseId,
+        fromModelFamily,
+        toModelFamily,
+        authorizedBy,
+        authorization,
+        rationale,
+        phaseStatus: phase.status,
+      },
+      null,
+      2,
+    ),
+  )
+}
+
 async function derivePhase(arguments_: ParsedCliArguments) {
   assertKnownArguments(arguments_, [
     'run-root',
@@ -1230,6 +1315,7 @@ function manifestSummary(manifest: ScreeningManifest) {
       }
     }),
     dispatchBlockers: manifest.dispatchBlockers,
+    allocationChanges: manifest.allocationChanges,
   }
 }
 
@@ -1325,6 +1411,9 @@ async function main() {
       break
     case 'dispatch-blocked':
       await recordDispatchBlocker(arguments_)
+      break
+    case 'authorize-substitution':
+      await authorizeModelSubstitution(arguments_)
       break
     case 'derive':
       await derivePhase(arguments_)
