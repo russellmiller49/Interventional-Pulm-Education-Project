@@ -29,6 +29,11 @@ code, label similarity, or clinical resemblance. Two requirements are the same r
 only when a reviewed mapping gave them the same `requirementKey`; see
 [`recipe-composition.md`](./recipe-composition.md).
 
+The final item order is a single sort on `setupSequence`, and that number is the reviewed
+template's own position for the requirement — never the module that contributed it. A card
+sorted by contributing module is sorted by an assembly detail nobody authored. See
+[Setup order](./recipe-composition.md#setup-order).
+
 Engine version `ip-cards-resolver/0.2.0`. The hashable domain output gained the composition
 manifest (`includedModules`) and each item's `requirementKey` and source modules, so 0.1.0
 snapshots hash differently by construction.

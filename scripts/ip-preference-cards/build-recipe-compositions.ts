@@ -96,6 +96,14 @@ export interface GeneratedProcedureComposition {
   version: string
   moduleReferences: RecipeModuleReference[]
   compositionActions: ProcedureCompositionAction[]
+  /**
+   * The reviewed template's own setup order, keyed by `requirementKey`.
+   *
+   * Composition decides *what* is on the card; this decides *where*. Without it the card
+   * would sort by whichever module contributed each line, which is an assembly detail no
+   * clinician authored — see `effectiveSetupSequence` in the domain.
+   */
+  requirementSequences: Record<string, number>
 }
 
 interface FieldReconciliation {
@@ -420,9 +428,26 @@ export function buildRecipeCompositions(input: {
         if (seenActionIds.has(action.id)) fail(`Composition action id ${action.id} is reused.`)
         seenActionIds.add(action.id)
       }
+      // Where this procedure wants each requirement, taken from the reviewed template it
+      // was imported from. A row absorbed into a shared requirement contributes its own
+      // procedure's position, which is exactly the point: the core owns the definition,
+      // the procedure owns the sequence. `min` settles the rare case of one procedure
+      // contributing two rows to one requirement — the earlier need wins, matching how a
+      // merge takes the earlier sequence.
+      const requirementSequences: Record<string, number> = {}
+      for (const row of slotsByProcedure.get(composition.procedureCode) ?? []) {
+        const requirementKey = claimedBy.get(row.slot_id)?.requirementKey ?? row.slot_id
+        const existing = requirementSequences[requirementKey]
+        requirementSequences[requirementKey] =
+          existing === undefined ? row.display_order : Math.min(existing, row.display_order)
+      }
+
       return {
         procedureCode: composition.procedureCode,
         version: composition.version,
+        requirementSequences: Object.fromEntries(
+          Object.entries(requirementSequences).sort(([left], [right]) => left.localeCompare(right)),
+        ),
         moduleReferences: references.sort(
           (left, right) =>
             left.sequence - right.sequence ||

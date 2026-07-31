@@ -9,7 +9,7 @@ import { customItemId } from '../domain/custom-item'
 import { equipmentSetItemId } from '../domain/equipment-set'
 import { familyPickId } from '../domain/size-at-procedure'
 import type { BuilderInputs, SaveCardRequest } from '../schemas/saved-card'
-import { saveCardRequestSchema } from '../schemas/saved-card'
+import { BUILDER_INPUTS_SCHEMA_VERSION, saveCardRequestSchema } from '../schemas/saved-card'
 import { getCatalogStore, searchProductsForRole } from '../server/catalog'
 import { resolveForSave } from '../server/user-cards'
 
@@ -19,6 +19,7 @@ const VALID_ROLE = 'GENERIC_DRAINAGE_UNIT'
 
 function baseInputs(): BuilderInputs {
   return {
+    schemaVersion: BUILDER_INPUTS_SCHEMA_VERSION,
     scenarioId: SCENARIO_ID,
     input: defaultBuildInput(SCENARIO_ID),
     catalogPicks: [],
@@ -98,6 +99,7 @@ describe('save-time catalog product-role integrity', () => {
 
     expect(resolveForSave(request, GENERATED_AT)).toEqual({
       ok: false,
+      code: 'catalog_pick_unavailable',
       error: `Catalog product ${productId} is not mapped to role ${wrongRole}.`,
     })
   })
@@ -109,6 +111,7 @@ describe('save-time catalog product-role integrity', () => {
 
     expect(resolveForSave(request, GENERATED_AT)).toEqual({
       ok: false,
+      code: 'catalog_pick_unavailable',
       error: 'Unknown catalog product PRD-DOESNOTEXIST.',
     })
   })
@@ -121,6 +124,7 @@ describe('save-time catalog product-role integrity', () => {
 
     expect(resolveForSave(request, GENERATED_AT)).toEqual({
       ok: false,
+      code: 'catalog_pick_unavailable',
       error: 'Unknown catalog role NOT_A_REAL_ROLE.',
     })
   })
@@ -143,6 +147,7 @@ describe('save-time catalog product-role integrity', () => {
 
     expect(resolveForSave(request, GENERATED_AT)).toEqual({
       ok: false,
+      code: 'equipment_set_unavailable',
       error: `Catalog product ${productId} is not mapped to role ${wrongRole} in set "Tampered set".`,
     })
   })

@@ -1,9 +1,11 @@
 import {
+  UNPLACED_REQUIREMENT_SEQUENCE_BASE,
   defaultSelectedModuleVersionIds,
   effectiveGovernanceState,
   expandRecipeComposition,
 } from '../domain/expand-recipe-composition'
 import { resolveCard } from '../domain/resolve-card'
+import { OPERATIONAL_SLOT_SEQUENCE_BASE } from '../seed/operational'
 import type {
   BuildCardInput,
   BuildContext,
@@ -381,7 +383,7 @@ describe('recipe composition expansion', () => {
     ).toMatchObject({ severity: 'warning' })
   })
 
-  it('lays requirements out in bands so a module keeps its own internal order', () => {
+  it('lays unplaced requirements out in bands so a module keeps its own internal order', () => {
     const modules = [
       module('core', [
         slot({ id: 'S1', requirementKey: 'K1', setupSequence: 9 }),
@@ -398,12 +400,95 @@ describe('recipe composition expansion', () => {
       [],
     )
 
-    expect(result.slots.map((entry) => entry.setupSequence)).toEqual([10009, 10001, 20001])
+    // This recipe places nothing, so every line falls back to the band and lands above
+    // UNPLACED_REQUIREMENT_SEQUENCE_BASE — never inside the range a procedure authors.
+    // The band comes from the module's position among the included modules (0, then 1),
+    // not from its authored reference sequence (10, then 20).
+    expect(result.slots.map((entry) => entry.setupSequence)).toEqual([10009, 10001, 11001])
     expect(
       [...result.slots]
         .sort((a, b) => a.setupSequence - b.setupSequence)
         .map((s) => s.requirementKey),
     ).toEqual(['K2', 'K1', 'K3'])
+  })
+
+  it("uses the procedure's own reviewed order rather than the module that contributed a line", () => {
+    const modules = [
+      // The core authors its lines in the order they make sense inside the core.
+      module('core', [
+        slot({ id: 'S1', requirementKey: 'PROCESSOR', setupSequence: 1 }),
+        slot({ id: 'S2', requirementKey: 'SUCTION', setupSequence: 2 }),
+      ]),
+      module('specific', [slot({ id: 'S3', requirementKey: 'SCOPE', setupSequence: 1 })]),
+    ]
+    const result = expand(
+      recipe(
+        [
+          { moduleVersionId: 'core', selectionBehavior: 'required', sequence: 10 },
+          { moduleVersionId: 'specific', selectionBehavior: 'required', sequence: 20 },
+        ],
+        // The procedure wants its own instrument first, which no module can know.
+        { requirementSequences: { SCOPE: 1, PROCESSOR: 2, SUCTION: 3 } },
+      ),
+      modules,
+      [],
+    )
+
+    expect(
+      [...result.slots]
+        .sort((left, right) => left.setupSequence - right.setupSequence)
+        .map((entry) => entry.requirementKey),
+    ).toEqual(['SCOPE', 'PROCESSOR', 'SUCTION'])
+  })
+
+  it('sorts a requirement the procedure never placed after every one it did', () => {
+    const modules = [
+      module('core', [slot({ id: 'S1', requirementKey: 'PLACED', setupSequence: 1 })]),
+      module('extra', [slot({ id: 'S2', requirementKey: 'UNPLACED', setupSequence: 1 })]),
+    ]
+    const result = expand(
+      recipe(
+        [
+          { moduleVersionId: 'core', selectionBehavior: 'required', sequence: 10 },
+          { moduleVersionId: 'extra', selectionBehavior: 'required', sequence: 20 },
+        ],
+        // Only PLACED has a reviewed position; the optional module's line has none.
+        { requirementSequences: { PLACED: 40 } },
+      ),
+      modules,
+      [],
+    )
+
+    const byKey = new Map(result.slots.map((entry) => [entry.requirementKey, entry.setupSequence]))
+    expect(byKey.get('PLACED')).toBe(40)
+    expect(byKey.get('UNPLACED')).toBeGreaterThan(UNPLACED_REQUIREMENT_SEQUENCE_BASE)
+  })
+
+  it('keeps every unplaced line below the operational base, however sparse the sequences', () => {
+    // The custom composition offers nineteen modules at reference sequences 10…190. Banding
+    // on the raw sequence would put the last module's lines near 200 000 — above the
+    // 100 000 floor modifier and rescue lines use — and sort a contingency line into the
+    // middle of the card.
+    const modules = Array.from({ length: 30 }, (_, index) =>
+      module(`m${index}`, [slot({ id: `S${index}`, requirementKey: `K${index}` })]),
+    )
+    const result = expand(
+      recipe(
+        modules.map((moduleVersion, index) => ({
+          moduleVersionId: moduleVersion.id,
+          selectionBehavior: 'required' as const,
+          sequence: (index + 1) * 10,
+        })),
+      ),
+      modules,
+      [],
+    )
+
+    expect(result.slots).toHaveLength(30)
+    for (const entry of result.slots) {
+      expect(entry.setupSequence).toBeGreaterThanOrEqual(UNPLACED_REQUIREMENT_SEQUENCE_BASE)
+      expect(entry.setupSequence).toBeLessThan(OPERATIONAL_SLOT_SEQUENCE_BASE)
+    }
   })
 })
 

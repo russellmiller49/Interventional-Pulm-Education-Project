@@ -49,7 +49,28 @@ export const customItemSchema = z.object({
   notes: z.string().trim().max(MAX_CUSTOM_NOTE).nullable().default(null),
 })
 
+/**
+ * The format version of `builder_inputs`, so a future migration can tell persisted shapes
+ * apart instead of guessing from which fields happen to be present.
+ *
+ * - **1 — pre-composition (flat).** Recorded no module selection at all, because there were
+ *   no modules. Never written with an explicit version, and never converted: reconstructing
+ *   one would mean choosing modules on the physician's behalf, and a card that says which
+ *   modules it was built from is the whole basis for reopening it safely. These cards stay
+ *   viewable, printable, shareable, and duplicable from their immutable snapshot; only the
+ *   builder is closed to them. They fail this schema on `selectedModuleVersionIds` alone —
+ *   the version field is not what excludes them.
+ * - **2 — composed.** Carries the exact module versions and every pick as an identifier.
+ *
+ * Absent is normalized to 2: the only writer that ever omitted it is the composition work
+ * that introduced module selections, so an input that satisfies this schema without naming
+ * a version is a version-2 input by construction. An input declaring any *other* version is
+ * rejected rather than coerced — a format this code does not know is not one it can read.
+ */
+export const BUILDER_INPUTS_SCHEMA_VERSION = 2
+
 export const builderInputsSchema = z.object({
+  schemaVersion: z.literal(BUILDER_INPUTS_SCHEMA_VERSION).default(BUILDER_INPUTS_SCHEMA_VERSION),
   scenarioId: z.string().trim().min(1).max(100),
   input: buildCardInputSchema,
   catalogPicks: z.array(catalogPickRefSchema).max(100).default([]),

@@ -1,7 +1,8 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useState, useTransition } from 'react'
 import type { Route } from 'next'
+import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import {
@@ -14,6 +15,8 @@ import {
   FlaskConical,
   ListChecks,
   Lock,
+  PencilLine,
+  Save,
   Settings2,
   Stethoscope,
 } from 'lucide-react'
@@ -35,6 +38,8 @@ import { CUSTOM_COMPOSITION_SCENARIO_ID } from '../data/scenario-ids'
 
 import { defaultSelectedModuleVersionIds } from '../domain/expand-recipe-composition'
 import { resolveCard } from '../domain/resolve-card'
+import { stableStringify } from '../domain/stable-hash'
+import { BUILDER_INPUTS_SCHEMA_VERSION, type BuilderInputs } from '../schemas/saved-card'
 import type {
   BuildContext,
   ConditionalState,
@@ -53,7 +58,12 @@ import { withFamilyPicks, type FamilyPick } from '../domain/family-pick'
 import { customItemId, withCustomItems, type CustomItem } from '../domain/custom-item'
 import { CustomItemForm } from './CustomItemForm'
 import { familyPickId } from '../domain/size-at-procedure'
-import { equipmentSetIdFromItemId, withEquipmentSets } from '../domain/equipment-set'
+import {
+  equipmentSetCoveredRoles,
+  equipmentSetIdFromItemId,
+  withEquipmentSets,
+  type EquipmentSet,
+} from '../domain/equipment-set'
 import { useEquipmentSets } from '../hooks/useEquipmentSets'
 
 export interface PreferenceCardScenarioBundle {
@@ -62,7 +72,36 @@ export interface PreferenceCardScenarioBundle {
   availableModifierCodes: string[]
 }
 
+export type PreferenceCardWizardMode = 'create' | 'edit'
+
+/**
+ * A saved card's own selections, reopened.
+ *
+ * Three things are kept apart on purpose. `bundle` is the server-authored build context for
+ * the pinned recipe version — what the procedure offers. This is what the physician chose
+ * from it, all of it reconstructed server-side from stored identifiers. And the card's
+ * metadata is a third thing again, because a rename is not a rebuild.
+ *
+ * `catalogPicks`, `familyPicks`, and `equipmentSets` arrive as whole objects rather than
+ * the identifiers `builderInputs` stores: the builder previews a card live, and it can only
+ * do that with the same product records the server would resolve against. They are the
+ * server's reconstruction, not the client's.
+ */
+export interface PreferenceCardBuilderInitialState {
+  cardId: string
+  title: string
+  physicianName: string | null
+  status: 'draft' | 'final'
+  builderInputs: BuilderInputs
+  catalogPicks: CatalogPick[]
+  familyPicks: FamilyPick[]
+  /** This card's own copy of every set it uses, revalidated against the catalog. */
+  equipmentSets: EquipmentSet[]
+}
+
 interface PreferenceCardWizardProps {
+  /** `edit` reopens a saved card in place; the procedure is fixed and saving overwrites. */
+  mode?: PreferenceCardWizardMode
   /** Lightweight summaries for the procedure picker; no build context attached. */
   scenarios: ScenarioDefinition[]
   /**
@@ -71,6 +110,7 @@ interface PreferenceCardWizardProps {
    */
   bundle?: PreferenceCardScenarioBundle
   initialScenarioId?: string
+  initialState?: PreferenceCardBuilderInitialState
 }
 
 const wizardSteps = [
@@ -132,44 +172,83 @@ const emptyProductIds: Set<string> = new Set()
 const emptyFamilyKeys: Set<string> = new Set()
 
 export function PreferenceCardWizard({
+  mode = 'create',
   scenarios,
   bundle,
   initialScenarioId,
+  initialState,
 }: PreferenceCardWizardProps) {
   const t = useTranslations('preferenceCards')
   const locale = useLocale()
   const router = useRouter()
+  // One flag for "this is a reopened card", so no branch below can be in edit mode without
+  // the saved state it needs to hydrate from.
+  const editing = mode === 'edit' && initialState ? initialState : null
+  const savedInput = editing?.builderInputs.input
   const [step, setStep] = useState(bundle ? 1 : 0)
   const scenarioId = bundle?.definition.id ?? initialScenarioId ?? ''
   const [modifierCodes, setModifierCodes] = useState<string[]>(
-    bundle?.definition.defaultModifierCodes ?? [],
+    // A reopened card restores what was saved, defaults included and defaults *removed*.
+    // Falling back to the scenario's defaults here would silently re-add a modifier the
+    // physician had turned off.
+    savedInput ? [...savedInput.modifierCodes] : (bundle?.definition.defaultModifierCodes ?? []),
   )
   // The exact module versions this card is built from. Seeded from the composition's
   // required and default-on modules, then stored verbatim on save, so a later change to
   // what is default-on can never reach back into a saved card.
   const [selectedModuleVersionIds, setSelectedModuleVersionIds] = useState<string[]>(
-    bundle ? defaultSelectedModuleVersionIds(bundle.context.recipe) : [],
+    savedInput
+      ? [...savedInput.selectedModuleVersionIds]
+      : bundle
+        ? defaultSelectedModuleVersionIds(bundle.context.recipe)
+        : [],
   )
   const [moduleSourceFilter, setModuleSourceFilter] = useState<string>('')
-  const [conditionalStates, setConditionalStates] = useState<Record<string, ConditionalState>>({})
+  const [conditionalStates, setConditionalStates] = useState<Record<string, ConditionalState>>(
+    savedInput?.conditionalStates ? { ...savedInput.conditionalStates } : {},
+  )
   const [selectedHospitalItemIds, setSelectedHospitalItemIds] = useState<
     Record<string, string | null>
-  >({})
+  >(savedInput?.selectedHospitalItemIds ? { ...savedInput.selectedHospitalItemIds } : {})
   const [localOptionSearches, setLocalOptionSearches] = useState<Record<string, string>>({})
-  const [waiverDrafts, setWaiverDrafts] = useState<Record<string, string>>({})
+  const [waiverDrafts, setWaiverDrafts] = useState<Record<string, string>>(
+    savedInput?.waivers ? { ...savedInput.waivers } : {},
+  )
   // Products promoted out of the catalog into this card's eligible local options.
-  const [catalogPicks, setCatalogPicks] = useState<CatalogPick[]>([])
+  const [catalogPicks, setCatalogPicks] = useState<CatalogPick[]>(editing?.catalogPicks ?? [])
   // Whole product lines, for requirements whose size is decided during the procedure.
-  const [familyPicks, setFamilyPicks] = useState<FamilyPick[]>([])
+  const [familyPicks, setFamilyPicks] = useState<FamilyPick[]>(editing?.familyPicks ?? [])
   // Free-text lines, for the requirements with nothing catalogued.
-  const [customItems, setCustomItems] = useState<CustomItem[]>([])
+  const [customItems, setCustomItems] = useState<CustomItem[]>(
+    editing ? editing.builderInputs.customItems.map((item) => ({ ...item })) : [],
+  )
   // Saved equipment sets are offered on every requirement they cover.
-  const { sets: equipmentSets } = useEquipmentSets()
-  const [setRoleBySetId, setSetRoleBySetId] = useState<Record<string, string>>({})
+  const { sets: reusableSets } = useEquipmentSets()
+  const cardEquipmentSets = editing?.equipmentSets
+  /**
+   * A reopened card uses its own copy of the sets it was built from, not whichever sets
+   * happen to be in this browser.
+   *
+   * Sets live in `localStorage` and are edited freely between sessions, so the set that
+   * built a card may no longer exist here, or may have changed. Neither should silently
+   * rewrite a saved card. The card's copy wins for the ids it pinned; the physician's other
+   * reusable sets stay offerable so they can still add one. Nothing here writes back to
+   * storage — a card's older copy must never overwrite a newer set the physician owns.
+   */
+  const equipmentSets = useMemo(() => {
+    if (!cardEquipmentSets) return reusableSets
+    const pinnedIds = new Set(cardEquipmentSets.map((set) => set.id))
+    return [...cardEquipmentSets, ...reusableSets.filter((set) => !pinnedIds.has(set.id))]
+  }, [cardEquipmentSets, reusableSets])
+  const [setRoleBySetId, setSetRoleBySetId] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      (editing?.builderInputs.equipmentSets ?? []).map((set) => [set.id, set.selectedRoleCode]),
+    ),
+  )
   const [isGenerating, startGenerating] = useTransition()
-  const [title, setTitle] = useState(bundle?.definition.title ?? '')
-  const [physicianName, setPhysicianName] = useState('')
-  const [status, setStatus] = useState<'draft' | 'final'>('draft')
+  const [title, setTitle] = useState(editing?.title ?? bundle?.definition.title ?? '')
+  const [physicianName, setPhysicianName] = useState(editing?.physicianName ?? '')
+  const [status, setStatus] = useState<'draft' | 'final'>(editing?.status ?? 'draft')
   const [saveError, setSaveError] = useState<string | null>(null)
   // Preview only. The server stamps the real value at save time, and the snapshot hash
   // excludes it, so a frozen constant here keeps the preview hash stable while typing.
@@ -382,65 +461,181 @@ export function PreferenceCardWizard({
     })
   }
 
+  /**
+   * Exactly what gets sent, memoized so the unsaved-changes check and the save itself can
+   * never disagree about what "the current card" is.
+   */
+  /**
+   * The sets the previewed card actually uses, which is the only correct answer to "which
+   * sets does this card have".
+   *
+   * Reading a role binding instead would be wrong in both directions. A set the physician
+   * never chose can still resolve a requirement — `withEquipmentSets` offers every set on
+   * every role it covers, and a requirement with no explicit selection takes its first
+   * option — so a tray that happens to be in this browser could satisfy a line in the
+   * preview and then be missing from the stored card. And a binding is never cleared when
+   * the physician picks something else, so a set they moved away from would be saved
+   * anyway, where it silently suppresses the requirements it covers.
+   */
+  const usedEquipmentSets = useMemo(() => {
+    if (!card) return []
+    const usedIds = new Set(
+      card.items
+        .map((item) =>
+          item.selectedHospitalItemId
+            ? equipmentSetIdFromItemId(item.selectedHospitalItemId)
+            : null,
+        )
+        .filter((setId): setId is string => setId !== null),
+    )
+    return equipmentSets
+      .filter((set) => usedIds.has(set.id))
+      .map((set) => ({
+        set,
+        // The role the preview resolved against — `withEquipmentSets` falls back to the
+        // first covered role when nothing is bound, and the stored card has to say the
+        // same thing or it will rebuild differently.
+        selectedRoleCode: setRoleBySetId[set.id] ?? equipmentSetCoveredRoles(set)[0],
+      }))
+      .filter((entry) => Boolean(entry.selectedRoleCode))
+  }, [card, equipmentSets, setRoleBySetId])
+
+  const saveRequest = useMemo(() => {
+    if (!bundle) return null
+    return {
+      ...(editing ? { cardId: editing.cardId } : {}),
+      schemaVersion: BUILDER_INPUTS_SCHEMA_VERSION,
+      title: title.trim() || bundle.definition.title,
+      physicianName: physicianName.trim() || null,
+      status,
+      scenarioId: bundle.definition.id,
+      catalogPicks: catalogPicks.map((pick) => ({
+        productId: pick.productId,
+        roleCode: pick.roleCode,
+      })),
+      familyPicks: familyPicks.map((pick) => ({
+        familyKey: pick.familyKey,
+        roleCode: pick.roleCode,
+      })),
+      customItems,
+      equipmentSets: usedEquipmentSets.map(({ set, selectedRoleCode }) => ({
+        id: set.id,
+        name: set.name,
+        description: set.description,
+        selectedRoleCode,
+        additionalCoveredRoles: set.additionalCoveredRoles,
+        members: set.members.map((member) => ({
+          productId: member.productId,
+          roleCode: member.roleCode,
+        })),
+      })),
+      input: {
+        organizationId: bundle.context.hospitalItems[0]?.organizationId ?? 'personal',
+        siteId: bundle.context.hospitalItems[0]?.siteId ?? 'personal',
+        locationId: bundle.context.hospitalItems[0]?.locationId ?? 'personal',
+        recipeVersionId: bundle.context.recipe.id,
+        // Ids only. The server reloads the authored modules and re-expands the
+        // composition; module contents never cross the wire.
+        selectedModuleVersionIds,
+        modifierCodes,
+        // Any variable the card already carried is kept; only the timestamp is restamped,
+        // and the server overwrites that anyway.
+        variables: { ...savedInput?.variables, generated_at: generatedAt },
+        conditionalStates,
+        selectedHospitalItemIds,
+        waivers,
+      },
+    }
+  }, [
+    bundle,
+    catalogPicks,
+    conditionalStates,
+    customItems,
+    editing,
+    familyPicks,
+    generatedAt,
+    modifierCodes,
+    physicianName,
+    savedInput,
+    selectedHospitalItemIds,
+    selectedModuleVersionIds,
+    status,
+    title,
+    usedEquipmentSets,
+    waivers,
+  ])
+
+  /**
+   * A comparable fingerprint of the request, with the collections that are conceptually
+   * sets actually sorted — toggling a module off and on again reorders the array without
+   * changing the card, and that must not read as an unsaved change.
+   */
+  const builderSignature = useMemo(() => {
+    if (!saveRequest) return ''
+    return stableStringify({
+      ...saveRequest,
+      selectedModuleVersionIds: undefined,
+      input: {
+        ...saveRequest.input,
+        selectedModuleVersionIds: [...saveRequest.input.selectedModuleVersionIds].sort(),
+        modifierCodes: [...saveRequest.input.modifierCodes].sort(),
+      },
+    })
+  }, [saveRequest])
+  const [savedSignature, setSavedSignature] = useState(builderSignature)
+  const hasUnsavedChanges = builderSignature !== savedSignature
+
+  // The browser's own guard, and only that. A saved card is a real artefact and leaving the
+  // page is the one way to lose an edit; anything more elaborate would be a navigation
+  // framework this feature does not need.
+  useEffect(() => {
+    if (!hasUnsavedChanges) return
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault()
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [hasUnsavedChanges])
+
   const saveCard = () => {
-    if (!bundle || !card) return
+    if (!bundle || !card || !saveRequest) return
     setSaveError(null)
     startGenerating(async () => {
-      const result = await saveUserCardAction({
-        title: title.trim() || bundle.definition.title,
-        physicianName: physicianName.trim() || null,
-        status,
-        scenarioId: bundle.definition.id,
-        catalogPicks: catalogPicks.map((pick) => ({
-          productId: pick.productId,
-          roleCode: pick.roleCode,
-        })),
-        familyPicks: familyPicks.map((pick) => ({
-          familyKey: pick.familyKey,
-          roleCode: pick.roleCode,
-        })),
-        customItems,
-        equipmentSets: equipmentSets
-          .filter((set) => setRoleBySetId[set.id])
-          .map((set) => ({
-            id: set.id,
-            name: set.name,
-            description: set.description,
-            selectedRoleCode: setRoleBySetId[set.id],
-            additionalCoveredRoles: set.additionalCoveredRoles,
-            members: set.members.map((member) => ({
-              productId: member.productId,
-              roleCode: member.roleCode,
-            })),
-          })),
-        input: {
-          organizationId: bundle.context.hospitalItems[0]?.organizationId ?? 'personal',
-          siteId: bundle.context.hospitalItems[0]?.siteId ?? 'personal',
-          locationId: bundle.context.hospitalItems[0]?.locationId ?? 'personal',
-          recipeVersionId: bundle.context.recipe.id,
-          // Ids only. The server reloads the authored modules and re-expands the
-          // composition; module contents never cross the wire.
-          selectedModuleVersionIds,
-          modifierCodes,
-          variables: { generated_at: generatedAt },
-          conditionalStates,
-          selectedHospitalItemIds,
-          waivers,
-        },
-      })
+      const result = await saveUserCardAction(saveRequest)
       // A failed save says so. It used to fall through to a URL that encoded the whole card,
       // which looked like success and lost the card as soon as the link was gone.
       if (!result.ok || !result.cardId) {
         setSaveError(result.error ?? t('saveFailed'))
         return
       }
+      // Clear the guard before navigating, so a successful save never prompts.
+      setSavedSignature(builderSignature)
       router.push(`/${locale}/preference-cards/${result.cardId}` as Route)
     })
   }
 
+  const cardHref = editing
+    ? (`/${locale}/preference-cards/${editing.cardId}` as Route)
+    : (`/${locale}/preference-cards` as Route)
+
   return (
     <div className="space-y-6">
       <PrototypeBanner title={t('prototypeBanner')} disclaimer={t('disclaimer')} />
+
+      {editing ? (
+        <section className="no-print flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/40 bg-primary/5 px-4 py-3">
+          <div className="min-w-0">
+            <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <PencilLine aria-hidden="true" className="h-4 w-4 text-primary" />
+              {t('edit.editingCard', { title: editing.title })}
+            </p>
+            <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
+              {t('edit.editingHelp')}
+            </p>
+          </div>
+          <Button asChild size="sm" variant="outline">
+            <Link href={cardHref}>{t('edit.cancel')}</Link>
+          </Button>
+        </section>
+      ) : null}
 
       <nav aria-label={t('step', { step: step + 1, total: wizardSteps.length })}>
         <ol className="grid gap-2 md:grid-cols-4">
@@ -510,7 +705,54 @@ export function PreferenceCardWizard({
           ) : null}
         </div>
 
-        {step === 0 ? (
+        {/*
+          A saved card's procedure is its identity, so editing shows it rather than offering
+          it. Switching procedures here would keep the card id, the share link, and the
+          history while replacing everything the card says — which is a different card
+          wearing this one's name. Duplicating or creating is the honest way to get one.
+        */}
+        {step === 0 && editing && bundle ? (
+          <div className="rounded-2xl border border-border bg-background p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  <Lock aria-hidden="true" className="h-3.5 w-3.5" />
+                  {t('edit.procedureLocked')}
+                </p>
+                <h3 className="mt-1 text-lg font-semibold text-foreground">
+                  {bundle.definition.title}
+                </h3>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  {bundle.definition.shortDescription}
+                </p>
+              </div>
+              <Badge variant="outline">{bundle.definition.sourceProcedureCode}</Badge>
+            </div>
+            <dl className="mt-4 grid gap-x-6 gap-y-2 border-t border-border pt-3 text-xs sm:grid-cols-2">
+              <div>
+                <dt className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  {t('cardMetadata.recipeVersion')}
+                </dt>
+                <dd className="mt-0.5 break-words font-mono text-foreground">
+                  {bundle.context.recipe.id}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  {t('modules.reviewTitle')}
+                </dt>
+                <dd className="mt-0.5 text-foreground">
+                  {t('edit.moduleCount', { count: moduleChoices.length })}
+                </dd>
+              </div>
+            </dl>
+            <p className="mt-3 text-xs leading-5 text-muted-foreground">
+              {t('edit.procedureLockedHelp')}
+            </p>
+          </div>
+        ) : null}
+
+        {step === 0 && !editing ? (
           <div className="grid gap-4 lg:grid-cols-3">
             {scenarios.map((definition) => {
               const selected = definition.id === scenarioId
@@ -1221,6 +1463,21 @@ export function PreferenceCardWizard({
               {t('continue')}
               <ArrowRight aria-hidden="true" className="h-4 w-4" />
             </Button>
+          ) : editing ? (
+            <div className="flex flex-wrap items-center gap-3">
+              {hasUnsavedChanges ? null : (
+                <p className="text-xs text-muted-foreground">{t('edit.noChanges')}</p>
+              )}
+              <Button
+                type="button"
+                onClick={saveCard}
+                disabled={isGenerating || !hasUnsavedChanges}
+                elevated
+              >
+                <Save aria-hidden="true" className="h-4 w-4" />
+                {isGenerating ? t('edit.saving') : t('edit.saveChanges')}
+              </Button>
+            </div>
           ) : (
             <Button type="button" onClick={saveCard} disabled={isGenerating} elevated>
               <FlaskConical aria-hidden="true" className="h-4 w-4" />

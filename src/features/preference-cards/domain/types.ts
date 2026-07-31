@@ -206,6 +206,20 @@ export interface RecipeVersion {
   slots: RecipeSlot[]
   moduleReferences: RecipeModuleReference[]
   compositionActions: ProcedureCompositionAction[]
+  /**
+   * Where this procedure wants each requirement in its own setup order, keyed by
+   * `requirementKey`.
+   *
+   * A module authors the order of its requirements *within itself*, which is the only
+   * order it can know; a shared core has no idea where a therapeutic bronchoscopy wants
+   * suction relative to a cryoprobe it has never heard of. The procedure does, and this is
+   * where it says so. Generated from the reviewed template's own `display_order`, so the
+   * clinical sequence a reviewer signed off on survives being assembled from modules.
+   *
+   * A requirement with no entry here — an optional module on a procedure whose template
+   * never listed it — falls back to the module band and lands after everything authored.
+   */
+  requirementSequences?: Record<string, number>
 }
 
 export interface CatalogProductSummary {

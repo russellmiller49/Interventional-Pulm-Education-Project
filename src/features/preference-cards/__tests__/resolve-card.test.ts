@@ -7,7 +7,10 @@ import {
 import { evaluateCompatibilityRule } from '../domain/evaluate-compatibility'
 import { resolveCard } from '../domain/resolve-card'
 import type { ResolvedCardItem, TypedCompatibilityRule } from '../domain/types'
-import { goldenScenarioExpectations } from '../__fixtures__/golden-scenario-expectations'
+import {
+  goldenScenarioExpectations,
+  goldenScenarioItemOrder,
+} from '../__fixtures__/golden-scenario-expectations'
 import { intentionallyFailingApcRule } from '../__fixtures__/test-compatibility-rules'
 
 /**
@@ -396,4 +399,36 @@ describe('preference-card deterministic resolver', () => {
       })
     },
   )
+
+  /**
+   * Setup order is a clinical statement, so it is asserted as one.
+   *
+   * The hash above proves a card did not change; it cannot say the card is *right*. When
+   * composition first landed, every line reordered to group by contributing module and the
+   * only visible sign was four new hashes.
+   */
+  it.each(Object.values(goldenScenarioItemOrder))(
+    'lays $scenarioId out in the reviewed clinical order',
+    (expectation) => {
+      const card = resolveDemoScenario(expectation.scenarioId, {
+        modifierCodes: [...expectation.modifierCodes],
+      })
+      expect(card.items.map((item) => item.requirementKey)).toEqual([
+        ...expectation.requirementKeys,
+      ])
+    },
+  )
+
+  it('places a shared core requirement where the procedure wants it, not where the core does', () => {
+    // FLEX_BRONCH_SUCTION_SETUP is one requirement defined once by the flexible core. EBUS
+    // wants it eleventh and therapeutic bronchoscopy wants it third, and both get what they
+    // asked for — which is only possible because the procedure owns the sequence.
+    const ebus = resolveDemoScenario('ebus-rose-molecular')
+    const therapeutic = resolveDemoScenario('central-airway-obstruction')
+    const positionOf = (card: { items: ResolvedCardItem[] }) =>
+      card.items.findIndex((item) => item.requirementKey === 'FLEX_BRONCH_SUCTION_SETUP') + 1
+
+    expect(positionOf(ebus)).toBe(11)
+    expect(positionOf(therapeutic)).toBe(3)
+  })
 })

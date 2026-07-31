@@ -49,7 +49,17 @@ export default async function NewPreferenceCardPage({ params, searchParams }: Pa
 
   return (
     <div className="container py-8 md:py-12">
+      {/*
+        Keyed on the scenario so choosing a different procedure remounts the builder.
+        `selectScenario` navigates by search param only, and the App Router deliberately
+        preserves segment state across that — without a key the wizard keeps the previous
+        procedure's `useState` seeds, so a card saved after switching carries the *old*
+        procedure's modules (rejected server-side) and a card built from the picker after
+        landing here with no `?scenario=` saves with no default modules and no default
+        modifiers at all.
+      */}
       <PreferenceCardWizard
+        key={scenarioParam ?? 'no-scenario'}
         scenarios={scenarios}
         bundle={bundle}
         initialScenarioId={scenarioParam}

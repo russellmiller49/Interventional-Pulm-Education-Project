@@ -90,6 +90,13 @@ The builder stores `selectedModuleVersionIds` verbatim in `builder_inputs`. It d
 store "the defaults" and recompute them later, so changing which modules are default-on
 cannot reach back into a card someone already saved.
 
+A saved card is reopened through `buildPinnedContext(scenarioId, recipeVersionId)`, which
+resolves the recipe **by version id** against an index of every recipe version the generated
+data still publishes. It never falls back to "the current version of this scenario". A pin
+that no longer resolves returns `recipe_version_unavailable` and the card becomes view-only;
+no other version is substituted for it. See
+[`saved-card-editing.md`](./saved-card-editing.md).
+
 ## Resolution order
 
 `resolveCard` runs, in this order:
@@ -117,11 +124,46 @@ match, or automatic clinical inference participates at any step.
 
 ### Setup order
 
-Each module reference lays its requirements out in a band of 1 000:
-`setupSequence = moduleReference.sequence × 1000 + slot.setupSequence`. A module's internal
-order therefore survives into every procedure that uses it, and a card reads grouped by
-where each line came from. Modifier- and rescue-added lines start at 100 000 so a
-contingency line still lands at the end of the card.
+**The procedure owns the setup order, not the modules.** Each generated composition carries
+`requirementSequences`, a map from `requirementKey` to the position that procedure's reviewed
+template gave the line — generated from `procedure-slots.json`'s own `display_order`, so it is
+the sequence a clinician signed off on rather than anything the composition invented.
+`effectiveSetupSequence` uses that number verbatim.
+
+A module can only author the order of its requirements _within itself_, which is the one
+order it cannot generalize: the flexible core has no idea whether a therapeutic
+bronchoscopy wants suction before or after a cryoprobe it has never heard of. The procedure
+does. This is why `FLEX_BRONCH_SUCTION_SETUP` — one requirement, defined once — is eleventh
+on an EBUS card and third on a therapeutic bronchoscopy card.
+
+Only a requirement the procedure never placed falls back to the module band:
+
+```
+UNPLACED_REQUIREMENT_SEQUENCE_BASE (10 000) + moduleOrdinal × 1 000 + slot.setupSequence
+```
+
+That is an optional module offered on a procedure whose template never listed it — nobody
+authored where it goes, so it lands after everything that was authored, grouped by module and
+keeping that module's internal order. The custom module composition, which has no procedure
+template at all, takes this path for every line.
+
+`moduleOrdinal` is the module's **position among the included modules**, not its authored
+reference sequence. Reference sequences only have to be distinct and ascending, and the custom
+composition spaces nineteen of them out to 190 — banding on the raw value would push a late
+module's lines past 200 000. Modifier- and rescue-added lines start at
+`OPERATIONAL_SLOT_SEQUENCE_BASE` (100 000), so that would have sorted a contingency line into
+the middle of the card. An ordinal is bounded by the module count and gives the same relative
+order.
+
+**Why this is written down.** The first composition pass sorted primarily by the contributing
+module, and the result was clinically wrong in a way nothing caught: an EBUS card opened with
+the video processor and the linear EBUS bronchoscope — first on the reviewed template — sat
+third; the EBV card promoted the retrieval forceps, a contingency line, to second. The golden
+fixtures pinned counts, readiness, and a content hash, so the whole reordering arrived as four
+new hashes and no failing test. `goldenScenarioItemOrder` in
+`__fixtures__/golden-scenario-expectations.ts` now pins the intended item order for EBUS-TBNA,
+therapeutic flexible bronchoscopy, and EBV as an explicit list, and `resolve-card.test.ts`
+asserts it. A hash proves a card did not change; it cannot say the card is right.
 
 ## Explicit conflict behaviour
 

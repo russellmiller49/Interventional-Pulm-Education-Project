@@ -37,12 +37,57 @@ import type {
  */
 
 /**
- * Width of each module's setup-order band. A module reference at sequence 20 lays its
- * requirements out from 20 000; anything a modifier or rescue module adds later starts
- * above every band (see `OPERATIONAL_SLOT_SEQUENCE_BASE` in the operational seed) so
- * contingency lines still land at the end of the card.
+ * Setup order is a clinical statement, so the procedure makes it.
+ *
+ * `recipe.requirementSequences` carries the reviewed template's own order for every
+ * requirement the procedure knows about, and that number is used verbatim. Sorting a card
+ * by the module a line came from would be sorting by an assembly detail: it would open an
+ * EBUS card with the video processor and push the linear EBUS bronchoscope — the defining
+ * instrument, first on the reviewed template — to third.
+ *
+ * Only a requirement the procedure never authored falls back to the module band: an
+ * optional module offered on a procedure whose template never listed it has no reviewed
+ * position, so it lands after everything that does, grouped by module and keeping that
+ * module's internal order. A module reference at sequence 20 lays those out from 30 000.
+ * Anything a modifier or rescue module adds later starts above every band (see
+ * `OPERATIONAL_SLOT_SEQUENCE_BASE` in the operational seed), so contingency lines still
+ * land at the end of the card.
  */
 export const MODULE_SEQUENCE_BAND = 1000
+
+/**
+ * Floor for requirements the procedure did not place. Comfortably above the largest
+ * authored `display_order` in the workbook (31), so an unplaced line can never sort into
+ * the middle of the reviewed sequence.
+ */
+export const UNPLACED_REQUIREMENT_SEQUENCE_BASE = 10_000
+
+/**
+ * Where a composed requirement sits in the card's setup order.
+ *
+ * The fallback bands on the module's **position among the included modules**, not on its
+ * authored reference sequence. Those sequences are only required to be distinct and
+ * ascending, and the custom composition spaces nineteen of them out to 190 — banding on
+ * the raw value would put a late module's lines above `OPERATIONAL_SLOT_SEQUENCE_BASE` and
+ * sort a rescue line into the middle of the card. An ordinal is bounded by the module
+ * count and preserves exactly the same relative order.
+ *
+ * Exported because the composition generator has to prove the two paths agree, and because
+ * the ordering fixtures assert against it directly rather than against a number copied out
+ * of the resolver.
+ */
+export function effectiveSetupSequence(
+  recipe: Pick<RecipeVersion, 'requirementSequences'>,
+  requirementKey: string,
+  moduleOrdinal: number,
+  slotSetupSequence: number,
+): number {
+  const authored = recipe.requirementSequences?.[requirementKey]
+  if (typeof authored === 'number') return authored
+  return (
+    UNPLACED_REQUIREMENT_SEQUENCE_BASE + moduleOrdinal * MODULE_SEQUENCE_BAND + slotSetupSequence
+  )
+}
 
 export interface ExpandRecipeCompositionInput {
   recipe: RecipeVersion
@@ -334,16 +379,19 @@ export function expandRecipeComposition(input: ExpandRecipeCompositionInput): Ex
     )
   }
 
-  for (const { module: moduleVersion, sequence } of orderedIncluded) {
+  for (const [moduleOrdinal, { module: moduleVersion }] of orderedIncluded.entries()) {
     for (const slot of moduleVersion.slots) {
       addSlot(
         {
           ...cloneSlot(slot),
-          // A module authors the order of its own requirements; the composition authors the
-          // order of its modules. Banding them keeps a card grouped by where each line came
-          // from, and keeps a shared module's internal order intact in every procedure that
-          // uses it — a module slot's own sequence means nothing outside its band.
-          setupSequence: sequence * MODULE_SEQUENCE_BAND + slot.setupSequence,
+          // The procedure's reviewed order wins; a module slot's own sequence only means
+          // something inside its module, so it is the fallback rather than the rule.
+          setupSequence: effectiveSetupSequence(
+            recipe,
+            slot.requirementKey,
+            moduleOrdinal,
+            slot.setupSequence,
+          ),
           sourceModuleVersionIds: [moduleVersion.id],
           includedBy: `Included by ${moduleLabel(moduleVersion)}`,
         },

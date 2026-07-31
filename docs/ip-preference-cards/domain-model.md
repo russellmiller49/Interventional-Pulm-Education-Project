@@ -39,6 +39,24 @@ modifier targeting and audit trails survive the move. The complete rules, includ
 composition was chosen over inheritance and what happens when two modules disagree, are in
 [`recipe-composition.md`](./recipe-composition.md).
 
+## Saved cards: selections versus snapshot
+
+A saved card stores two things that are never interchangeable:
+
+- **`builder_inputs`** — the physician's selections, as identifiers only, carrying an explicit
+  `schemaVersion`. This is the only thing a builder reopens from, and every identifier in it is
+  re-checked against the authoritative catalog and the pinned composition on the way back in.
+- **`card_snapshot`** — the immutable, content-addressed resolution. Evidence of what was
+  printed. Never edited, never recomputed on read, and never used as editable state.
+
+A card whose builder inputs no longer parse — anything written before module composition —
+stays fully viewable, printable, shareable, and duplicable from its snapshot, and is simply
+not offered for editing. It is not migrated, because reconstructing a module selection would
+mean choosing modules on the physician's behalf.
+[`saved-card-editing.md`](./saved-card-editing.md) covers the whole lifecycle: exact-version
+reopening, shared server-side reconstruction, equipment-set restoration, schema versioning,
+and save-in-place semantics.
+
 ## Access and immutability
 
 The migration uses the existing Supabase Auth and `site_entitlements` model:

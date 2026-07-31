@@ -14,10 +14,11 @@ import type {
 
 /**
  * Modifier- and rescue-added lines sort after everything the composition produced, so a
- * contingency line never lands in the middle of the base setup. Composed requirements sit
- * in bands of `MODULE_SEQUENCE_BAND` per module reference; this base clears them all.
+ * contingency line never lands in the middle of the base setup. A composed requirement
+ * takes either the procedure's own reviewed position or, when the procedure never placed
+ * it, a module band above `UNPLACED_REQUIREMENT_SEQUENCE_BASE`; this base clears both.
  */
-const OPERATIONAL_SLOT_SEQUENCE_BASE = 100_000
+export const OPERATIONAL_SLOT_SEQUENCE_BASE = 100_000
 
 export const DEMO_ORGANIZATION_ID = '00000000-0000-4000-8000-000000000101'
 export const DEMO_SITE_ID = '00000000-0000-4000-8000-000000000102'

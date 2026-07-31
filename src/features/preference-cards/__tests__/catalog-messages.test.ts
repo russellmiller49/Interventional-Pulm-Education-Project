@@ -33,6 +33,8 @@ const parameterizedMessages: Record<string, string[]> = {
   quantityValue: ['quantity'],
   localNumberValue: ['number'],
   duplicateTitle: ['title'],
+  'edit.editingCard': ['title'],
+  'edit.moduleCount': ['count'],
   'customItem.descriptionPlaceholder': ['requirement'],
   'printNotes.unverifiedFootnote': ['count'],
   'printNotes.customFootnote': ['count'],

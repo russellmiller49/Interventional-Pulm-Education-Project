@@ -1,0 +1,761 @@
+import {
+  defaultBuildInput,
+  getComposedRecipeSlots,
+  getScenarioDefinition,
+} from '../data/demo-context.server'
+import { catalogPickItemId } from '../domain/catalog-pick'
+import { customItemId } from '../domain/custom-item'
+import { equipmentSetItemId } from '../domain/equipment-set'
+import {
+  BUILDER_INPUTS_SCHEMA_VERSION,
+  builderInputsSchema,
+  saveCardRequestSchema,
+  type SaveCardRequest,
+} from '../schemas/saved-card'
+import { searchProductsForRole } from '../server/catalog'
+
+jest.mock('@/lib/supabase/server', () => ({
+  supabaseServer: jest.fn(),
+}))
+
+const { supabaseServer } = jest.requireMock('@/lib/supabase/server') as {
+  supabaseServer: jest.Mock
+}
+
+const {
+  deleteUserCard,
+  duplicateUserCard,
+  loadEditableUserCard,
+  loadUserCard,
+  listUserCards,
+  renameUserCard,
+  resolveForSave,
+  saveUserCard,
+  setShareEnabled,
+} = jest.requireActual('../server/user-cards') as typeof import('../server/user-cards')
+
+/**
+ * The saved-card edit lifecycle, against a table that behaves like the real one.
+ *
+ * The fake below enforces the property the production code leans on hardest: row-level
+ * security means a statement simply does not see another user's rows. Emulating that rather
+ * than stubbing "is this yours?" is what makes the authorization tests worth anything —
+ * `user-cards.ts` deliberately contains no ownership check of its own, so a test that
+ * mocked one would be testing the mock.
+ */
+
+const SCENARIO_ID = 'ebus-rose-molecular'
+const FLEX_CORE = 'module-flex-bronch-core-v1-0'
+const EBUS_SPECIFIC = 'module-ebus-tbna-specific-v1-0'
+const FLUOROSCOPY = 'module-procedural-fluoroscopy-v1-0'
+const OWNER = 'user-owner'
+const OTHER_USER = 'user-other'
+
+interface FakeRow {
+  id: string
+  user_id: string
+  title: string
+  physician_name: string | null
+  procedure_code: string
+  scenario_id: string
+  status: 'draft' | 'final'
+  builder_inputs: unknown
+  card_snapshot: unknown
+  snapshot_hash: string
+  engine_version: string
+  catalog_import_id: string
+  share_enabled: boolean
+  share_token: string
+  created_at: string
+  updated_at: string
+}
+
+let rows: FakeRow[] = []
+let currentUserId: string | null = OWNER
+let nextId = 1
+let clock = 0
+
+/** UUID-shaped, because `cardId` is validated as one before it reaches the server. */
+function fakeCardId(sequence: number): string {
+  return `00000000-0000-4000-8000-${String(sequence).padStart(12, '0')}`
+}
+
+function nowIso(): string {
+  clock += 1
+  return `2026-07-30T12:00:${String(clock).padStart(2, '0')}.000Z`
+}
+
+/** A chainable stand-in for the postgrest builder, scoped to the signed-in user. */
+function fakeTable() {
+  let filterId: string | null = null
+  let operation: 'select' | 'insert' | 'update' | 'delete' = 'select'
+  let payload: Record<string, unknown> = {}
+
+  const visible = () => rows.filter((row) => row.user_id === currentUserId)
+
+  const builder = {
+    select() {
+      return builder
+    },
+    order() {
+      return builder
+    },
+    limit() {
+      const data = [...visible()].sort((left, right) =>
+        right.updated_at.localeCompare(left.updated_at),
+      )
+      return Promise.resolve({ data, error: null })
+    },
+    insert(next: Record<string, unknown>) {
+      operation = 'insert'
+      payload = next
+      return builder
+    },
+    update(next: Record<string, unknown>) {
+      operation = 'update'
+      payload = next
+      return builder
+    },
+    delete() {
+      operation = 'delete'
+      return builder
+    },
+    eq(_column: string, value: string) {
+      filterId = value
+      if (operation === 'delete') {
+        rows = rows.filter((row) => !(row.id === filterId && row.user_id === currentUserId))
+        return Promise.resolve({ data: null, error: null })
+      }
+      return builder
+    },
+    maybeSingle() {
+      if (operation === 'insert') {
+        const created = nowIso()
+        // Column defaults last, exactly as the table applies them: the insert payload has
+        // no business naming an id, a share token, or a timestamp, and does not.
+        const row: FakeRow = {
+          ...(payload as unknown as FakeRow),
+          id: fakeCardId(nextId++),
+          share_enabled: (payload.share_enabled as boolean | undefined) ?? false,
+          share_token: `token-${nextId}`,
+          created_at: created,
+          updated_at: created,
+        }
+        rows.push(row)
+        return Promise.resolve({ data: row, error: null })
+      }
+      if (operation === 'update') {
+        const index = rows.findIndex((row) => row.id === filterId && row.user_id === currentUserId)
+        if (index < 0) return Promise.resolve({ data: null, error: null })
+        // The table's own trigger bumps `updated_at` on every update.
+        rows[index] = { ...rows[index], ...payload, updated_at: nowIso() } as FakeRow
+        return Promise.resolve({ data: rows[index], error: null })
+      }
+      const found = visible().find((row) => row.id === filterId) ?? null
+      return Promise.resolve({ data: found, error: null })
+    },
+  }
+  return builder
+}
+
+beforeEach(() => {
+  rows = []
+  currentUserId = OWNER
+  nextId = 1
+  clock = 0
+  supabaseServer.mockResolvedValue({
+    auth: {
+      getUser: async () => ({
+        data: { user: currentUserId ? { id: currentUserId } : null },
+      }),
+    },
+    from: () => fakeTable(),
+    rpc: async () => ({ data: [], error: null }),
+  })
+})
+
+function ebusProductPick(): { productId: string; roleCode: string } {
+  const roleCode = 'EBUS_NEEDLE_FNA'
+  const option = searchProductsForRole({ roleCode, limit: 1 })[0]
+  expect(option).toBeDefined()
+  return { productId: option.productId, roleCode }
+}
+
+/** Selections are keyed by the composed slot's id, not by its role. */
+function slotIdForRole(roleCode: string): string {
+  const slot = getComposedRecipeSlots(SCENARIO_ID).find(
+    (candidate) => candidate.roleCode === roleCode,
+  )
+  expect(slot).toBeDefined()
+  return slot!.id
+}
+
+/**
+ * The end-to-end fixture: an EBUS card with something saved in every channel the builder
+ * writes to, so "reopening restores everything" is a claim about all of them at once.
+ */
+function ebusEditFixture(): SaveCardRequest {
+  const scenario = getScenarioDefinition(SCENARIO_ID)!
+  const base = defaultBuildInput(SCENARIO_ID)
+  const pick = ebusProductPick()
+  const needleSlot = slotIdForRole('EBUS_NEEDLE_FNA')
+  const specimenSlot = slotIdForRole('GENERIC_SPECIMEN')
+  // A slot that genuinely carries a dependency rule, so the conditional state is a real
+  // clinical decision rather than an inert key.
+  const balloonSlot = slotIdForRole('EBUS_BALLOON')
+
+  return saveCardRequestSchema.parse({
+    scenarioId: SCENARIO_ID,
+    title: 'Dr Miller EBUS with ROSE',
+    physicianName: 'R. Miller',
+    status: 'final',
+    catalogPicks: [pick],
+    familyPicks: [],
+    customItems: [
+      {
+        id: 'custom-ebus-1',
+        roleCode: 'GENERIC_SPECIMEN',
+        description: 'Locally printed node-station label sheet',
+        itemNumber: 'LOC-4412',
+        notes: 'Kept in the ROSE cart',
+      },
+    ],
+    equipmentSets: [
+      {
+        id: 'set-ebus-tray',
+        name: 'EBUS needle tray',
+        description: 'Standing tray for the EBUS room',
+        selectedRoleCode: pick.roleCode,
+        additionalCoveredRoles: [],
+        members: [pick],
+      },
+    ],
+    input: {
+      ...base,
+      recipeVersionId: scenario.recipeVersionId,
+      // Fluoroscopy is default-on and deliberately removed here.
+      selectedModuleVersionIds: [FLEX_CORE, EBUS_SPECIFIC],
+      modifierCodes: ['ROSE', 'SPEC_MOLECULAR'],
+      conditionalStates: { [balloonSlot]: 'exclude' },
+      selectedHospitalItemIds: {
+        [needleSlot]: catalogPickItemId(pick.productId),
+        [specimenSlot]: customItemId('custom-ebus-1'),
+      },
+    },
+  })
+}
+
+async function saveFixture(): Promise<string> {
+  const result = await saveUserCard(ebusEditFixture())
+  expect(result.ok).toBe(true)
+  return result.data!
+}
+
+describe('reopening a saved composed card', () => {
+  it('restores every persisted selection and every piece of card metadata', async () => {
+    const cardId = await saveFixture()
+
+    const editable = await loadEditableUserCard(cardId)
+    expect(editable.ok).toBe(true)
+    if (!editable.ok) return
+
+    const { record, builderInputs, rebuilt } = editable
+    const pick = ebusProductPick()
+
+    expect(record.title).toBe('Dr Miller EBUS with ROSE')
+    expect(record.physicianName).toBe('R. Miller')
+    expect(record.status).toBe('final')
+
+    expect(builderInputs.schemaVersion).toBe(BUILDER_INPUTS_SCHEMA_VERSION)
+    expect(builderInputs.input.selectedModuleVersionIds).toEqual([FLEX_CORE, EBUS_SPECIFIC])
+    expect(builderInputs.input.modifierCodes).toEqual(['ROSE', 'SPEC_MOLECULAR'])
+    expect(builderInputs.input.conditionalStates).toEqual({
+      [slotIdForRole('EBUS_BALLOON')]: 'exclude',
+    })
+    expect(builderInputs.input.selectedHospitalItemIds).toEqual({
+      [slotIdForRole('EBUS_NEEDLE_FNA')]: catalogPickItemId(pick.productId),
+      [slotIdForRole('GENERIC_SPECIMEN')]: customItemId('custom-ebus-1'),
+    })
+    // The conditional decision reaches the resolved card, not just the stored input.
+    expect(
+      record.card.items.find((item) => item.roleCode === 'EBUS_BALLOON')?.conditionalState,
+    ).toBe('exclude')
+    expect(builderInputs.customItems).toHaveLength(1)
+    expect(builderInputs.customItems[0]).toMatchObject({
+      id: 'custom-ebus-1',
+      itemNumber: 'LOC-4412',
+      notes: 'Kept in the ROSE cart',
+    })
+
+    // Picks come back as whole catalog records, not the identifiers that were stored.
+    expect(rebuilt.catalogPicks).toHaveLength(1)
+    expect(rebuilt.catalogPicks[0].productId).toBe(pick.productId)
+    expect(rebuilt.catalogPicks[0].productName).toBeTruthy()
+
+    expect(rebuilt.equipmentSets).toHaveLength(1)
+    expect(rebuilt.equipmentSets[0].name).toBe('EBUS needle tray')
+    expect(rebuilt.equipmentSets[0].members[0].productId).toBe(pick.productId)
+    expect(rebuilt.selectedRoleBySetId).toEqual({ 'set-ebus-tray': pick.roleCode })
+  })
+
+  it('keeps a removed default-on module removed and the required modules included', async () => {
+    const cardId = await saveFixture()
+    const editable = await loadEditableUserCard(cardId)
+    if (!editable.ok) throw new Error('expected an editable card')
+
+    expect(editable.builderInputs.input.selectedModuleVersionIds).not.toContain(FLUOROSCOPY)
+    const included = editable.record.card.includedModules ?? []
+    expect(included.map((module) => module.moduleVersionId)).toEqual([FLEX_CORE, EBUS_SPECIFIC])
+    expect(
+      included.filter((module) => module.selectionBehavior === 'required').length,
+    ).toBeGreaterThan(0)
+  })
+
+  it('reproduces the stored snapshot exactly when nothing is changed', async () => {
+    const cardId = await saveFixture()
+    const editable = await loadEditableUserCard(cardId)
+    if (!editable.ok) throw new Error('expected an editable card')
+
+    // The card the builder would preview and the card a fresh save would store are the same
+    // card. A divergence here is the failure the shared reconstruction exists to prevent.
+    const fresh = resolveForSave(editable.builderInputs, '2099-01-01T00:00:00.000Z')
+    expect(fresh.ok).toBe(true)
+    if (!fresh.ok) return
+    expect(fresh.card.snapshotHash).toBe(editable.record.card.snapshotHash)
+  })
+
+  it('survives a reload of the edit route with the same persisted state', async () => {
+    const cardId = await saveFixture()
+    const first = await loadEditableUserCard(cardId)
+    const second = await loadEditableUserCard(cardId)
+    expect(first.ok && second.ok).toBe(true)
+    if (!first.ok || !second.ok) return
+    expect(second.builderInputs).toEqual(first.builderInputs)
+    expect(second.record.card.snapshotHash).toBe(first.record.card.snapshotHash)
+  })
+})
+
+describe('saving an edited card', () => {
+  it('updates the same row and leaves sharing, ownership, and creation untouched', async () => {
+    const cardId = await saveFixture()
+    const shared = await setShareEnabled(cardId, true)
+    expect(shared.ok).toBe(true)
+    const before = rows.find((row) => row.id === cardId)!
+    const beforeToken = before.share_token
+    const beforeCreatedAt = before.created_at
+    const beforeUpdatedAt = before.updated_at
+
+    const editable = await loadEditableUserCard(cardId)
+    if (!editable.ok) throw new Error('expected an editable card')
+    const edited = saveCardRequestSchema.parse({
+      ...editable.builderInputs,
+      cardId,
+      title: 'Dr Miller EBUS with ROSE (revised)',
+      physicianName: 'R. Miller',
+      status: editable.record.status,
+      input: {
+        ...editable.builderInputs.input,
+        // Add the fluoroscopy module back — an ordinary edit.
+        selectedModuleVersionIds: [FLEX_CORE, EBUS_SPECIFIC, FLUOROSCOPY],
+      },
+    })
+
+    const result = await saveUserCard(edited)
+    expect(result).toEqual({ ok: true, data: cardId })
+    expect(rows).toHaveLength(1)
+
+    const after = rows.find((row) => row.id === cardId)!
+    expect(after.share_enabled).toBe(true)
+    expect(after.share_token).toBe(beforeToken)
+    expect(after.user_id).toBe(OWNER)
+    expect(after.created_at).toBe(beforeCreatedAt)
+    expect(after.updated_at).not.toBe(beforeUpdatedAt)
+    expect(after.title).toBe('Dr Miller EBUS with ROSE (revised)')
+    expect(after.snapshot_hash).not.toBe(before.snapshot_hash)
+
+    const reloaded = await loadUserCard(cardId)
+    expect(reloaded!.card.snapshotHash).toBe(after.snapshot_hash)
+    expect(
+      (reloaded!.card.includedModules ?? []).map((module) => module.moduleVersionId),
+    ).toContain(FLUOROSCOPY)
+  })
+
+  it('does not churn the snapshot hash for a metadata-only edit', async () => {
+    const cardId = await saveFixture()
+    const before = rows.find((row) => row.id === cardId)!.snapshot_hash
+
+    const editable = await loadEditableUserCard(cardId)
+    if (!editable.ok) throw new Error('expected an editable card')
+    await saveUserCard(
+      saveCardRequestSchema.parse({
+        ...editable.builderInputs,
+        cardId,
+        title: 'Renamed in the builder',
+        physicianName: 'R. Miller',
+        status: editable.record.status,
+      }),
+    )
+
+    const after = rows.find((row) => row.id === cardId)!
+    expect(after.snapshot_hash).toBe(before)
+    expect(after.title).toBe('Renamed in the builder')
+  })
+
+  it('stores builder inputs at the current schema version', async () => {
+    const cardId = await saveFixture()
+    const stored = rows.find((row) => row.id === cardId)!.builder_inputs as {
+      schemaVersion: number
+    }
+    expect(stored.schemaVersion).toBe(BUILDER_INPUTS_SCHEMA_VERSION)
+  })
+})
+
+describe('exact version pinning', () => {
+  it('resolves through the stored module ids rather than the composition defaults', async () => {
+    const cardId = await saveFixture()
+    const editable = await loadEditableUserCard(cardId)
+    if (!editable.ok) throw new Error('expected an editable card')
+
+    // The composition still offers fluoroscopy as default-on. The reopened card does not
+    // acquire it, because the card names its modules and the defaults are not consulted.
+    const offered = editable.rebuilt.context.recipe.moduleReferences.map(
+      (reference) => reference.moduleVersionId,
+    )
+    expect(offered).toContain(FLUOROSCOPY)
+    expect(editable.builderInputs.input.selectedModuleVersionIds).not.toContain(FLUOROSCOPY)
+  })
+
+  it('reports a pinned recipe version the generated data no longer publishes', async () => {
+    const cardId = await saveFixture()
+    const row = rows.find((card) => card.id === cardId)!
+    const inputs = builderInputsSchema.parse(row.builder_inputs)
+    row.builder_inputs = {
+      ...inputs,
+      input: { ...inputs.input, recipeVersionId: 'recipe-ebus-tbna-v9-9' },
+    }
+
+    const editable = await loadEditableUserCard(cardId)
+    expect(editable.ok).toBe(false)
+    if (editable.ok) return
+    expect(editable.code).toBe('recipe_version_unavailable')
+
+    // The card itself is untouched and still views and prints.
+    const viewed = await loadUserCard(cardId)
+    expect(viewed).not.toBeNull()
+    expect(viewed!.card.snapshotHash).toBe(row.snapshot_hash)
+  })
+
+  it('reports a pinned module version the composition does not offer', async () => {
+    const cardId = await saveFixture()
+    const row = rows.find((card) => card.id === cardId)!
+    const inputs = builderInputsSchema.parse(row.builder_inputs)
+    row.builder_inputs = {
+      ...inputs,
+      input: {
+        ...inputs.input,
+        selectedModuleVersionIds: [FLEX_CORE, 'module-flex-bronch-core-v9-9'],
+      },
+    }
+
+    const editable = await loadEditableUserCard(cardId)
+    expect(editable.ok).toBe(false)
+    if (editable.ok) return
+    expect(editable.code).toBe('module_not_offered')
+  })
+
+  it('rejects a crafted save that adds a module the composition never offered', async () => {
+    const cardId = await saveFixture()
+    const editable = await loadEditableUserCard(cardId)
+    if (!editable.ok) throw new Error('expected an editable card')
+
+    const tampered = saveCardRequestSchema.parse({
+      ...editable.builderInputs,
+      cardId,
+      title: editable.record.title,
+      status: editable.record.status,
+      input: {
+        ...editable.builderInputs.input,
+        selectedModuleVersionIds: [
+          ...editable.builderInputs.input.selectedModuleVersionIds,
+          'module-pleural-procedure-core-v1-0',
+        ],
+      },
+    })
+
+    const result = await saveUserCard(tampered)
+    expect(result.ok).toBe(false)
+    expect(result.error).toMatch(/is not part of this procedure composition/)
+    // Nothing was written.
+    expect(rows.find((row) => row.id === cardId)!.title).toBe('Dr Miller EBUS with ROSE')
+  })
+
+  it('includes a required module even when the request omits it', async () => {
+    const cardId = await saveFixture()
+    const editable = await loadEditableUserCard(cardId)
+    if (!editable.ok) throw new Error('expected an editable card')
+
+    const stripped = saveCardRequestSchema.parse({
+      ...editable.builderInputs,
+      cardId,
+      title: editable.record.title,
+      status: editable.record.status,
+      input: { ...editable.builderInputs.input, selectedModuleVersionIds: [] },
+    })
+
+    const result = await saveUserCard(stripped)
+    expect(result.ok).toBe(true)
+    const stored = await loadUserCard(cardId)
+    const included = (stored!.card.includedModules ?? []).filter(
+      (module) => module.selectionBehavior === 'required',
+    )
+    expect(included.length).toBeGreaterThan(0)
+    expect(included.every((module) => module.selectionSource === 'required')).toBe(true)
+  })
+})
+
+describe('authorization', () => {
+  it('hides another user’s card behind the same answer an unknown id gets', async () => {
+    const cardId = await saveFixture()
+
+    currentUserId = OTHER_USER
+    expect(await loadEditableUserCard(cardId)).toEqual({ ok: false, code: 'not_found' })
+    expect(await loadEditableUserCard(fakeCardId(999))).toEqual({
+      ok: false,
+      code: 'not_found',
+    })
+    expect(await loadUserCard(cardId)).toBeNull()
+    expect(await listUserCards()).toEqual([])
+  })
+
+  it('will not let another signed-in user overwrite a card by submitting its id', async () => {
+    const cardId = await saveFixture()
+    const editable = await loadEditableUserCard(cardId)
+    if (!editable.ok) throw new Error('expected an editable card')
+    const before = rows.find((row) => row.id === cardId)!.title
+
+    currentUserId = OTHER_USER
+    const result = await saveUserCard(
+      saveCardRequestSchema.parse({
+        ...editable.builderInputs,
+        cardId,
+        title: 'Taken over',
+        status: 'draft',
+      }),
+    )
+
+    expect(result.ok).toBe(false)
+    expect(rows).toHaveLength(1)
+    expect(rows[0].title).toBe(before)
+    expect(rows[0].user_id).toBe(OWNER)
+  })
+
+  it('requires a signed-in account to save at all', async () => {
+    currentUserId = null
+    const result = await saveUserCard(ebusEditFixture())
+    expect(result).toEqual({ ok: false, error: 'Sign in to save a preference card.' })
+    expect(rows).toHaveLength(0)
+  })
+})
+
+describe('legacy cards', () => {
+  /** A card written before module selection existed: no `selectedModuleVersionIds`. */
+  async function seedLegacyCard(): Promise<string> {
+    const cardId = await saveFixture()
+    const row = rows.find((card) => card.id === cardId)!
+    const inputs = builderInputsSchema.parse(row.builder_inputs)
+    const legacyInput: Record<string, unknown> = { ...inputs.input }
+    delete legacyInput.selectedModuleVersionIds
+    row.builder_inputs = {
+      scenarioId: inputs.scenarioId,
+      input: legacyInput,
+      catalogPicks: inputs.catalogPicks,
+      familyPicks: inputs.familyPicks,
+      customItems: inputs.customItems,
+      equipmentSets: inputs.equipmentSets,
+    }
+    return cardId
+  }
+
+  it('still loads, still verifies, and is not offered for editing', async () => {
+    const cardId = await seedLegacyCard()
+    const before = { ...rows.find((row) => row.id === cardId)! }
+
+    const record = await loadUserCard(cardId)
+    expect(record).not.toBeNull()
+    expect(record!.builderInputs).toBeNull()
+    expect(record!.editable).toBe(false)
+    expect(record!.card.snapshotHash).toBe(before.snapshot_hash)
+
+    const listed = await listUserCards()
+    expect(listed).toHaveLength(1)
+    expect(listed[0].editable).toBe(false)
+
+    const editable = await loadEditableUserCard(cardId)
+    expect(editable).toEqual({ ok: false, code: 'legacy_builder_inputs' })
+  })
+
+  it('does not offer Edit on a card whose snapshot no longer verifies', async () => {
+    const cardId = await saveFixture()
+    const row = rows.find((card) => card.id === cardId)!
+    row.snapshot_hash = 'f'.repeat(64)
+
+    // The card cannot be opened at all, so the dashboard must not link to its editor.
+    expect(await loadUserCard(cardId)).toBeNull()
+    const listed = await listUserCards()
+    expect(listed).toHaveLength(1)
+    expect(listed[0].editable).toBe(false)
+    expect(await loadEditableUserCard(cardId)).toEqual({ ok: false, code: 'not_found' })
+  })
+
+  it('is not converted, recomputed, or rewritten by being viewed', async () => {
+    const cardId = await seedLegacyCard()
+    const before = JSON.stringify(rows.find((row) => row.id === cardId))
+
+    await loadUserCard(cardId)
+    await loadEditableUserCard(cardId)
+    await listUserCards()
+
+    expect(JSON.stringify(rows.find((row) => row.id === cardId))).toBe(before)
+  })
+
+  it('keeps rename, duplicate, sharing, and delete working', async () => {
+    const cardId = await seedLegacyCard()
+    const hash = rows.find((row) => row.id === cardId)!.snapshot_hash
+
+    expect(await renameUserCard(cardId, 'Renamed legacy card')).toEqual({ ok: true, data: null })
+    expect(rows.find((row) => row.id === cardId)!.snapshot_hash).toBe(hash)
+
+    const copy = await duplicateUserCard(cardId, 'Copy of legacy card')
+    expect(copy.ok).toBe(true)
+    const copied = rows.find((row) => row.id === copy.data)!
+    // A copy of a legacy card is still legacy: duplicating does not make it editable.
+    expect(copied.share_enabled).toBe(false)
+    const copiedRecord = await loadUserCard(copy.data!)
+    expect(copiedRecord!.editable).toBe(false)
+
+    expect((await setShareEnabled(cardId, true)).ok).toBe(true)
+    expect(rows.find((row) => row.id === cardId)!.share_enabled).toBe(true)
+
+    expect(await deleteUserCard(cardId)).toEqual({ ok: true, data: null })
+    expect(rows.some((row) => row.id === cardId)).toBe(false)
+  })
+})
+
+describe('builder-input schema versioning', () => {
+  it('normalizes an unversioned composed input to the current version', () => {
+    const request = ebusEditFixture()
+    const unversioned = {
+      scenarioId: request.scenarioId,
+      input: request.input,
+      catalogPicks: request.catalogPicks,
+      familyPicks: request.familyPicks,
+      customItems: request.customItems,
+      equipmentSets: request.equipmentSets,
+    }
+
+    const parsed = builderInputsSchema.safeParse(unversioned)
+    expect(parsed.success).toBe(true)
+    expect(parsed.success && parsed.data.schemaVersion).toBe(BUILDER_INPUTS_SCHEMA_VERSION)
+  })
+
+  it('refuses a format it does not know rather than coercing it', () => {
+    const request = ebusEditFixture()
+    const parsed = builderInputsSchema.safeParse({ ...request, schemaVersion: 3 })
+    expect(parsed.success).toBe(false)
+  })
+
+  it('refuses a pre-composition input on its missing module selection alone', () => {
+    const request = ebusEditFixture()
+    const legacyInput: Record<string, unknown> = { ...request.input }
+    delete legacyInput.selectedModuleVersionIds
+
+    const parsed = builderInputsSchema.safeParse({
+      schemaVersion: BUILDER_INPUTS_SCHEMA_VERSION,
+      scenarioId: request.scenarioId,
+      input: legacyInput,
+      catalogPicks: [],
+      familyPicks: [],
+      customItems: [],
+      equipmentSets: [],
+    })
+    expect(parsed.success).toBe(false)
+  })
+})
+
+describe('role renames on a reopened card', () => {
+  /**
+   * Role aliases are permanent because a saved card stores role codes, and taxonomy v2
+   * renamed eight of them. Picks were already canonicalized by `resolveCatalogPick` and
+   * `getFamilyPick`; a custom line and a set's covered roles reach the resolver without
+   * touching either, so they needed their own pass — otherwise a pre-rename card reopens
+   * with the line silently missing.
+   */
+  it('canonicalizes a pre-rename role on a custom line so it still lands on its requirement', () => {
+    const scenario = getScenarioDefinition('med-thoracoscopy')!
+    const slot = getComposedRecipeSlots('med-thoracoscopy').find(
+      (candidate) => candidate.roleCode === 'THORACOSCOPE_SEMIRIGID',
+    )
+    expect(slot).toBeDefined()
+
+    const inputs = builderInputsSchema.parse({
+      scenarioId: 'med-thoracoscopy',
+      input: {
+        ...defaultBuildInput('med-thoracoscopy'),
+        recipeVersionId: scenario.recipeVersionId,
+        selectedHospitalItemIds: { [slot!.id]: customItemId('custom-pleuroscope') },
+      },
+      catalogPicks: [],
+      familyPicks: [],
+      customItems: [
+        {
+          id: 'custom-pleuroscope',
+          // The pre-taxonomy-v2 code for THORACOSCOPE_SEMIRIGID.
+          roleCode: 'PLEUROSCOPE',
+          description: 'Ward-stocked semirigid pleuroscope',
+          itemNumber: null,
+          notes: null,
+        },
+      ],
+      equipmentSets: [],
+    })
+
+    const resolved = resolveForSave(inputs, '2026-07-30T12:00:00.000Z')
+    expect(resolved.ok).toBe(true)
+    if (!resolved.ok) return
+    expect(
+      resolved.card.items.find((item) => item.roleCode === 'THORACOSCOPE_SEMIRIGID')
+        ?.selectedItemSnapshot?.localDescription,
+    ).toBe('Ward-stocked semirigid pleuroscope')
+  })
+})
+
+describe('equipment sets on a reopened card', () => {
+  it('rebuilds the card’s own set and its selected role from stored identifiers', async () => {
+    const pick = ebusProductPick()
+    const request = saveCardRequestSchema.parse({
+      ...ebusEditFixture(),
+      input: {
+        ...ebusEditFixture().input,
+        selectedHospitalItemIds: {
+          [slotIdForRole('EBUS_NEEDLE_FNA')]: equipmentSetItemId('set-ebus-tray'),
+        },
+      },
+    })
+    const saved = await saveUserCard(request)
+    expect(saved.ok).toBe(true)
+
+    const editable = await loadEditableUserCard(saved.data!)
+    if (!editable.ok) throw new Error('expected an editable card')
+
+    const [set] = editable.rebuilt.equipmentSets
+    expect(set.id).toBe('set-ebus-tray')
+    expect(set.members[0]).toMatchObject({ productId: pick.productId, roleCode: pick.roleCode })
+    // The member arrives as a full catalog record, so it never depended on this browser.
+    expect(set.members[0].productName).toBeTruthy()
+    expect(editable.rebuilt.selectedRoleBySetId['set-ebus-tray']).toBe(pick.roleCode)
+    expect(
+      editable.record.card.items.find((item) => item.roleCode === pick.roleCode)
+        ?.selectedHospitalItemId,
+    ).toBe(equipmentSetItemId('set-ebus-tray'))
+  })
+})

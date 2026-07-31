@@ -71,6 +71,8 @@ interface GeneratedProcedureComposition {
   version: string
   moduleReferences: RecipeModuleReference[]
   compositionActions: ProcedureCompositionAction[]
+  /** The reviewed template's setup order, keyed by `requirementKey`. */
+  requirementSequences: Record<string, number>
 }
 
 interface ImportReport {
@@ -278,6 +280,10 @@ function customCompositionRecipe(): RecipeVersion {
       sequence: (index + 1) * 10,
     })),
     compositionActions: [],
+    // No procedure template authored this card, so nothing has a reviewed position and
+    // every line falls back to the module band. That is the honest ordering for a card
+    // the builder assembled: grouped by module, in the order the modules were offered.
+    requirementSequences: {},
   }
 }
 
@@ -315,6 +321,7 @@ function recipeForScenario(scenario: ScenarioDefinition): RecipeVersion {
       ...action,
       payload: { ...action.payload },
     })),
+    requirementSequences: { ...composition.requirementSequences },
   }
 }
 
@@ -345,6 +352,83 @@ export function getScenarioDefinition(id: string): ScenarioDefinition | null {
 }
 
 /**
+ * Every recipe version the generated data still holds, keyed by the id a saved card pins.
+ *
+ * Built once at module load, and it asserts uniqueness: two scenarios claiming one recipe
+ * version id would make a pinned lookup ambiguous, which is the one thing a version pin
+ * cannot be. Retaining a superseded composition means adding its scenario entry back to the
+ * generated data under its own recipe version id — this map resolves it the moment it is
+ * there, and reports it unavailable until then.
+ */
+const scenarioByRecipeVersionId = (() => {
+  const index = new Map<string, ScenarioDefinition>()
+  for (const scenario of [...scenarioDefinitions, customCompositionScenario]) {
+    const existing = index.get(scenario.recipeVersionId)
+    if (existing && existing.id !== scenario.id) {
+      throw new Error(
+        `Recipe version ${scenario.recipeVersionId} is claimed by both scenario "${existing.id}" and "${scenario.id}". A pinned recipe version must identify exactly one composition.`,
+      )
+    }
+    index.set(scenario.recipeVersionId, scenario)
+  }
+  return index
+})()
+
+export type PinnedRecipeErrorCode =
+  | 'unknown_scenario'
+  | 'recipe_version_unavailable'
+  | 'recipe_module_unavailable'
+
+export type PinnedRecipeResult =
+  | { ok: true; scenario: ScenarioDefinition; context: BuildContext }
+  | { ok: false; code: PinnedRecipeErrorCode; message: string }
+
+/**
+ * The build context for the exact recipe version a saved card was built from.
+ *
+ * The whole point of taking `recipeVersionId` rather than trusting `scenarioId` alone: a
+ * card reopened after its procedure's composition moved on must not be silently rebuilt
+ * from the new one. Nothing here falls back to "the current version of this scenario" or
+ * "the latest version of this module" — a pin that no longer resolves is reported, and the
+ * caller turns that into a view-only card.
+ */
+export function buildPinnedContext(
+  scenarioId: string,
+  recipeVersionId: string,
+): PinnedRecipeResult {
+  const scenario = getScenarioDefinition(scenarioId)
+  if (!scenario) {
+    return {
+      ok: false,
+      code: 'unknown_scenario',
+      message: `This card was built for a procedure ("${scenarioId}") that is no longer available.`,
+    }
+  }
+
+  const pinned = scenarioByRecipeVersionId.get(recipeVersionId)
+  if (!pinned || pinned.id !== scenario.id) {
+    return {
+      ok: false,
+      code: 'recipe_version_unavailable',
+      message: `This card is pinned to ${scenario.title} recipe version ${recipeVersionId}, which is no longer published.`,
+    }
+  }
+
+  try {
+    return { ok: true, scenario, context: buildDemoContext(scenario.id) }
+  } catch (error) {
+    // `modulesForRecipe` throws when a referenced module *version* is gone. Exact module
+    // versions are authoritative, so a missing one is reported rather than swapped for a
+    // newer publication of the same module.
+    return {
+      ok: false,
+      code: 'recipe_module_unavailable',
+      message: error instanceof Error ? error.message : 'A module this card uses is unavailable.',
+    }
+  }
+}
+
+/**
  * The effective requirement list a scenario starts from, before modifiers and resolution.
  *
  * This is what an administrator sees as the read-only effective preview of a composition:
@@ -353,7 +437,12 @@ export function getScenarioDefinition(id: string): ScenarioDefinition | null {
  */
 export function getComposedRecipeSlots(scenarioId: string): RecipeSlot[] {
   const context = buildDemoContext(scenarioId)
-  return expandDefaultRecipeComposition(context).slots
+  // Sorted the way the resolver sorts, so the administrative preview is the order a card
+  // actually prints in. Expansion returns slots in the order it added them — by module —
+  // and showing that would be showing an assembly detail as if it were the setup order.
+  return expandDefaultRecipeComposition(context).slots.sort(
+    (left, right) => left.setupSequence - right.setupSequence || left.id.localeCompare(right.id),
+  )
 }
 
 /** Every authored module version, for the administrative composition overview. */
@@ -369,6 +458,7 @@ export function getProcedureCompositions(): GeneratedProcedureComposition[] {
       ...action,
       payload: { ...action.payload },
     })),
+    requirementSequences: { ...composition.requirementSequences },
   }))
 }
 

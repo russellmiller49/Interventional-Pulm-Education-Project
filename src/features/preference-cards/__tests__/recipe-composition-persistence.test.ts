@@ -97,6 +97,7 @@ describe('saving and reopening a composed card', () => {
 
     expect(resolveForSave(saveRequest({ input }), GENERATED_AT)).toEqual({
       ok: false,
+      code: 'module_not_offered',
       error: 'Module module-pleural-procedure-core-v1-0 is not part of this procedure composition.',
     })
   })
@@ -208,6 +209,7 @@ describe('a custom composition', () => {
 
     expect(resolveForSave(request, GENERATED_AT)).toEqual({
       ok: false,
+      code: 'module_not_offered',
       error: 'Module module-not-real-v1-0 is not part of this procedure composition.',
     })
   })
