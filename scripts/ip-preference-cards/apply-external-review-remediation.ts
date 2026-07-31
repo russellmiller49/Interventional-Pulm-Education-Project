@@ -69,14 +69,44 @@ export interface CompatibilityAddition {
   }
 }
 
+/**
+ * Two kinds of reviewed governance now live in this array, validated separately below.
+ *
+ * The original kind is the installed-base cohort: a legacy device a program still owns, made
+ * selectable on named exact slots. The second is a regulatory record — what US authority, if
+ * any, a device is marketed under. They share a table because they are both per-product
+ * reviewed governance, and they share nothing else: an installed-base entry must name the
+ * slots it unlocks, and a regulatory entry must name none.
+ */
+export type ReviewedRegulatoryStatus =
+  | 'us_cleared_510k'
+  | 'us_approved_pma'
+  | 'us_granted_de_novo'
+  | 'breakthrough_designated_investigational'
+  | 'breakthrough_designated_premarket_review'
+  | 'not_us_authorized'
+
 export interface ProductGovernanceEntry {
   productId: string
-  catalogLifecycleContext: 'legacy_active_installed_base'
-  slottingScope: 'installed_base'
-  preferredNewPurchase: false
+  catalogLifecycleContext: 'legacy_active_installed_base' | 'current_market' | 'unknown'
+  slottingScope: 'installed_base' | 'standard' | 'catalog_only' | 'not_applicable'
+  preferredNewPurchase: boolean
   installedBaseExactSlotIds: string[]
   lifecycleNote: string
+  regulatoryStatus?: ReviewedRegulatoryStatus
+  regulatoryNote?: string | null
+  breakthroughDesignatedOn?: string | null
+  emergingTheme?: string | null
 }
+
+const REVIEWED_REGULATORY_STATUSES = new Set<string>([
+  'us_cleared_510k',
+  'us_approved_pma',
+  'us_granted_de_novo',
+  'breakthrough_designated_investigational',
+  'breakthrough_designated_premarket_review',
+  'not_us_authorized',
+])
 
 export interface ExternalReviewCorrectionsFile {
   formatVersion: 1
@@ -599,14 +629,48 @@ export function applyExternalReviewRemediation(
     if (!productById.has(governance.productId)) {
       errors.push(`Product governance references unknown product ${governance.productId}.`)
     }
-    if (
-      governance.catalogLifecycleContext !== 'legacy_active_installed_base' ||
-      governance.slottingScope !== 'installed_base' ||
-      governance.preferredNewPurchase !== false
-    ) {
-      errors.push(
-        `Product governance for ${governance.productId} must be legacy_active_installed_base, installed_base, and not preferred for new purchase.`,
-      )
+    const isInstalledBaseEntry = governance.installedBaseExactSlotIds.length > 0
+    if (isInstalledBaseEntry) {
+      if (
+        governance.catalogLifecycleContext !== 'legacy_active_installed_base' ||
+        governance.slottingScope !== 'installed_base' ||
+        governance.preferredNewPurchase !== false
+      ) {
+        errors.push(
+          `Product governance for ${governance.productId} must be legacy_active_installed_base, installed_base, and not preferred for new purchase.`,
+        )
+      }
+    } else {
+      // A regulatory entry unlocks nothing, so it must not claim installed-base scope, and it
+      // has to say what authority it is actually recording.
+      if (!governance.regulatoryStatus) {
+        errors.push(
+          `Product governance for ${governance.productId} names no exact slots, so it must record a regulatoryStatus.`,
+        )
+      } else if (!REVIEWED_REGULATORY_STATUSES.has(governance.regulatoryStatus)) {
+        errors.push(
+          `Product governance for ${governance.productId} uses unknown regulatoryStatus ${governance.regulatoryStatus}.`,
+        )
+      }
+      if (governance.slottingScope === 'installed_base') {
+        errors.push(
+          `Product governance for ${governance.productId} claims installed-base scope but names no exact slots.`,
+        )
+      }
+      if (!(governance.regulatoryNote ?? '').trim()) {
+        errors.push(
+          `Product governance for ${governance.productId} requires a regulatoryNote naming the record behind the status.`,
+        )
+      }
+      if (
+        governance.breakthroughDesignatedOn !== undefined &&
+        governance.breakthroughDesignatedOn !== null &&
+        !/^\d{4}-\d{2}-\d{2}$/.test(governance.breakthroughDesignatedOn)
+      ) {
+        errors.push(
+          `Product governance for ${governance.productId} has a non-ISO breakthroughDesignatedOn.`,
+        )
+      }
     }
     if (!governance.lifecycleNote.trim()) {
       errors.push(`Product governance for ${governance.productId} requires a lifecycle note.`)

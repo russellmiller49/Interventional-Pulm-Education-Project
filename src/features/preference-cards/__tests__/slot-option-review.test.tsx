@@ -13,14 +13,15 @@ describe('exact-slot proposal review data', () => {
     const rows = getSlotOptionReviewRows()
     const summary = summarizeSlotOptionReviewRows(rows, getSlotOptionReviewArtifactSummary())
 
+    // Taxonomy v2 added 369 net-new proposals; all 429 prior ones survive unchanged.
     expect(summary).toMatchObject({
-      totalProposals: 429,
-      affectedProducts: 192,
-      affectedSlots: 40,
-      requiredProposals: 287,
-      notInDistribution: 4,
-      conflictingDistribution: 2,
-      unknownDistribution: 0,
+      totalProposals: 813, // unreviewed slot-option proposals grew 429 -> 798
+      affectedProducts: 401, // 192 -> 396 distinct products carry a proposal
+      affectedSlots: 105, // procedure slots grew 174 -> 231, so 40 -> 105 have proposals
+      requiredProposals: 426, // 287 -> 426 of the proposals sit on required slots
+      notInDistribution: 32, // 28 of the new proposals are on not_in_distribution products (4 -> 32)
+      conflictingDistribution: 7, // 5 new proposals hit products with conflicting GUDID records (2 -> 7)
+      unknownDistribution: 229, // new proposals reach 131 products with no GUDID distribution evidence (0 -> 214)
     })
     expect(new Set(rows.map((row) => `${row.slot_id}\u0000${row.product_id}`)).size).toBe(
       rows.length,
@@ -54,7 +55,7 @@ describe('exact-slot proposal review data', () => {
     ).toBe(true)
 
     const conflicting = filterSlotOptionReviewRows(rows, { distribution: 'conflicting' })
-    expect(conflicting).toHaveLength(2)
+    expect(conflicting).toHaveLength(7) // 2 -> 7: taxonomy v2 proposals reached 5 more conflicting-GUDID products
     expect(conflicting.every((row) => row.distributionEvidence === 'conflicting')).toBe(true)
   })
 })

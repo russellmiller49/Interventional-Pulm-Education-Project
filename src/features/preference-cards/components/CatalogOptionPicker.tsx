@@ -12,7 +12,11 @@ import type { CatalogPick } from '../domain/catalog-pick'
 import type { FamilyPick, FamilySpecRange } from '../domain/family-pick'
 import { allowsSizeAtProcedure } from '../domain/size-at-procedure'
 import type { CatalogDistributionStatus } from '../server/catalog'
-import type { CatalogLifecycleContext, SlottingScope } from '../server/catalog-store'
+import type {
+  CatalogLifecycleContext,
+  RegulatoryStatus,
+  SlottingScope,
+} from '../server/catalog-store'
 import { VerificationBadge, type VerificationBadgeLabels } from './VerificationBadge'
 
 /** Mirrors RolePickerOption from server/catalog.ts, which the API returns verbatim. */
@@ -31,6 +35,8 @@ export interface CatalogPickerOption {
   slottingScope: SlottingScope
   preferredNewPurchase: boolean | null
   lifecycleNote: string | null
+  regulatoryStatus: RegulatoryStatus
+  regulatoryNote: string | null
   roleFit: string | null
   minWorkingChannelMm: number | null
   deliverySystemOdMm: number | null
@@ -50,6 +56,7 @@ export interface CatalogPickerFamily {
   usStatusPending: boolean
   distributionStatus: CatalogDistributionStatus | null
   catalogLifecycleContext: CatalogLifecycleContext | null
+  regulatoryStatus: RegulatoryStatus | null
   specRanges: FamilySpecRange[]
   placementMethods: string[]
   sourceId: string | null
@@ -158,6 +165,13 @@ export function CatalogOptionPicker({
       conflictingDistribution: tVerification('conflictingDistribution'),
       legacyInstalledBase: tVerification('legacyInstalledBase'),
       legacyInstalledBaseHelp: tVerification('legacyInstalledBaseHelp'),
+      regulatoryCleared510k: tVerification('regulatoryCleared510k'),
+      regulatoryApprovedPma: tVerification('regulatoryApprovedPma'),
+      regulatoryGrantedDeNovo: tVerification('regulatoryGrantedDeNovo'),
+      regulatoryBreakthroughInvestigational: tVerification('regulatoryBreakthroughInvestigational'),
+      regulatoryBreakthroughPremarketReview: tVerification('regulatoryBreakthroughPremarketReview'),
+      regulatoryNotUsAuthorized: tVerification('regulatoryNotUsAuthorized'),
+      regulatoryHelp: tVerification('regulatoryHelp'),
     }),
     [tVerification],
   )
@@ -245,6 +259,8 @@ export function CatalogOptionPicker({
             distributionStatus={option.distributionStatus}
             catalogLifecycleContext={option.catalogLifecycleContext}
             lifecycleNote={option.lifecycleNote}
+            regulatoryStatus={option.regulatoryStatus}
+            regulatoryNote={option.regulatoryNote}
             labels={verificationLabels}
           />
           {option.roleFit ? (
@@ -357,6 +373,7 @@ export function CatalogOptionPicker({
                           usStatusPending={family.usStatusPending}
                           distributionStatus={family.distributionStatus}
                           catalogLifecycleContext={family.catalogLifecycleContext ?? 'unknown'}
+                          regulatoryStatus={family.regulatoryStatus ?? 'unknown'}
                           labels={verificationLabels}
                         />
                       </div>

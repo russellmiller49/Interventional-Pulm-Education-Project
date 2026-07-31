@@ -522,6 +522,18 @@ export async function sha256File(path: string): Promise<string> {
     .digest('hex')
 }
 
+/**
+ * Stable ids derived from a natural key so re-running a generator never churns the data.
+ *
+ * Lives here rather than in a generator because both `build-catalog-additions.ts` (product
+ * ids) and `apply-procedure-additions.ts` (slot ids) need the identical derivation, and
+ * `build-catalog-additions.ts` runs `main()` on import so it can never be a source of shared
+ * helpers.
+ */
+export function stableId(prefix: string, naturalKey: string): string {
+  return `${prefix}-${createHash('sha1').update(naturalKey).digest('hex').slice(0, 10).toUpperCase()}`
+}
+
 export function findDuplicateValues(
   records: CatalogRecord[],
   key: string,

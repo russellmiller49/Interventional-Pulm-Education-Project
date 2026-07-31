@@ -3,10 +3,12 @@
   "notes": "Curated per-procedure overrides applied on top of the values generated from the workbook. The three original golden scenarios pin their ids so existing links, tests, and snapshot fixtures keep their meaning. Everything omitted here is derived.",
   "procedureGroups": {
     "bronchoscopy": [
+      "BRONCH_ABLATION",
       "EBUS_TBNA",
       "EBV",
       "FLEX_DIAGNOSTIC",
       "ICU_BRONCH",
+      "PHOTODYNAMIC_THERAPY",
       "RIGID_BRONCH",
       "TB_RULEOUT",
       "THERAPEUTIC_BRONCH",
@@ -15,9 +17,10 @@
     "pleural": ["CHEST_TUBE", "IPC_PLACEMENT", "MED_THORACOSCOPY", "THORACENTESIS"],
     "airway_access": ["PERC_TRACH"],
     "rigid": ["RIGID_BRONCH", "THERAPEUTIC_BRONCH"],
-    "peripheral": ["FLEX_DIAGNOSTIC", "THERAPEUTIC_BRONCH"],
+    "peripheral": ["BRONCH_ABLATION", "FLEX_DIAGNOSTIC", "THERAPEUTIC_BRONCH"],
     "thoracoscopy": ["MED_THORACOSCOPY"],
-    "stent": ["RIGID_BRONCH", "THERAPEUTIC_BRONCH"]
+    "stent": ["RIGID_BRONCH", "THERAPEUTIC_BRONCH"],
+    "ablation": ["BRONCH_ABLATION", "PHOTODYNAMIC_THERAPY", "THERAPEUTIC_BRONCH"]
   },
   "appliesToProcedures": {
     "All": ["*"],
@@ -43,7 +46,8 @@
     "EBUS / pleural / biopsy": ["EBUS_TBNA", "@pleural"],
     "Chest tube / PAL / thoracoscopy": ["CHEST_TUBE", "MED_THORACOSCOPY"],
     "Thoracentesis / pleural drainage": ["THORACENTESIS", "CHEST_TUBE", "IPC_PLACEMENT"],
-    "Medical thoracoscopy": ["MED_THORACOSCOPY"]
+    "Medical thoracoscopy": ["MED_THORACOSCOPY"],
+    "Bronchoscopic ablation": ["@ablation"]
   },
   "modifierGroupCodes": {
     "AIRBORNE_ISOLATION": "location",

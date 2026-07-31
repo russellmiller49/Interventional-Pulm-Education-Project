@@ -4,12 +4,12 @@
   "reviewId": "external-review-remediation-v0.1",
   "sourceWorkbook": "IP_External_Review_Focused_Remediation_2026-07-30_completed.xlsx",
   "sourceWorkbookSha256": "78b112baa0cd84f213eef0c1f014c438e811ac7bafe3e5004c7b4e51dd119b4e",
-  "proposalCorrectionsSha256": "7b42da8eb2fc2fb94bf283af27b777eb07edc396425d384ef12a819afd6e3afd",
+  "proposalCorrectionsSha256": "589bd1488027c570dbc674605c8a8cd1b1b7744c348afcf1a22d2b7b707a18d9",
   "notes": "Compiled implementation of the completed external-review workbook. It applies only after external-review-corrections.json so the proposal artifact and its workbook hash remain immutable and reproducible.",
   "rolesToAdd": [
     {
       "role_code": "FLEX_SCOPE_THIN",
-      "category": "Bronchoscopy platform",
+      "category": "Flexible bronchoscopy",
       "role_name": "Thin flexible bronchoscope",
       "description": "Flexible bronchoscope with a slender insertion tube for smaller airways or access where a standard diagnostic bronchoscope is too large.",
       "selection_guidance": "Filter by outer diameter, working-channel diameter, airway size, image platform, and current IFU; thin classification does not by itself establish therapeutic-tool compatibility.",
@@ -33,7 +33,7 @@
     },
     {
       "role_code": "ROBOTIC_CATHETER",
-      "category": "Robotic bronchoscopy",
+      "category": "Peripheral & robotic bronchoscopy",
       "role_name": "Robotic bronchoscopy catheter",
       "description": "Platform-specific articulating catheter used for robotic bronchoscopic navigation and tool delivery.",
       "selection_guidance": "Restrict selection to the named robotic platform and generation; confirm tool-channel dimensions, compatible tools, procedure configuration, and current IFU.",

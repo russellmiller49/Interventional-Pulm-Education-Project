@@ -32,6 +32,11 @@ interface RoleComparisonTableProps {
   className?: string
 }
 
+function assertNoMissingSpecColumn(key: never): null {
+  void key
+  return null
+}
+
 function readSpec(item: CatalogListItem, key: SpecColumnKey): string | null {
   const raw = (() => {
     switch (key) {
@@ -49,12 +54,18 @@ function readSpec(item: CatalogListItem, key: SpecColumnKey): string | null {
         return item.minWorkingChannelMm
       case 'delivery_system_od_mm':
         return item.deliverySystemOdMm
+      case 'laser_type':
+        return item.laserType
       case 'material':
         return item.material
       case 'coverage':
         return item.coverage
       default:
-        return null
+        // Exhaustive by construction: this mirrors specValue() in server/catalog.ts, which
+        // cannot be imported here because it lives beside the statically-imported catalog
+        // JSON. Adding a spec column without adding it here rendered a silent em-dash, so a
+        // missing case is now a compile error instead.
+        return assertNoMissingSpecColumn(key)
     }
   })()
   if (raw === null || raw === undefined || raw === '') return null
@@ -157,6 +168,8 @@ export function RoleComparisonTable({
                     distributionStatus={item.distributionStatus}
                     catalogLifecycleContext={item.catalogLifecycleContext}
                     lifecycleNote={item.lifecycleNote}
+                    regulatoryStatus={item.regulatoryStatus}
+                    regulatoryNote={item.regulatoryNote}
                     labels={labels}
                   />
                 </td>

@@ -23,6 +23,54 @@ Hashes in the “after” column were calculated after the complete validation s
 | `scripts/ip-preference-cards/openfda/classify-match.ts`                                           | `863c3bf58f2a7e2fd9ca8b616fcf4a25dcc8526bbf5899024970b3c95a69ff7a` | `863c3bf58f2a7e2fd9ca8b616fcf4a25dcc8526bbf5899024970b3c95a69ff7a` | unchanged |
 | `scripts/ip-preference-cards/openfda/query-plan.ts`                                               | `7fe7af1615adc84ed39b2e12db042bdb3e63d61e01cf95ac808e69e6a6d71f84` | `7fe7af1615adc84ed39b2e12db042bdb3e63d61e01cf95ac808e69e6a6d71f84` | unchanged |
 
+## Taxonomy v2 — 2026-07-30
+
+Four protected artifacts moved in this milestone, deliberately and in one commit. Every other
+protected target above is byte-identical, including the source workbook: nothing here was done
+by editing the xlsx.
+
+What moved them: the ERBE VIO 3 (`10160-000`) and APC 3 (`10135-000`) with their two
+footswitches, the Pulmonx Chartis catheters and both consoles, nine Richard Wolf
+mini-thoracoscopy instruments including the hook and coagulation electrodes, the Karl Storz
+optical dissection electrode, three mobile C-arms, the Body Vision LungVision platform and
+procedure kit, the Galvanize Aliya line, thirteen laser items, eight photodynamic-therapy
+items, and the six breakthrough-designated devices — 53 products in total, with their twelve
+new sources and their manufacturers.
+
+`product-roles.json`, `procedure-slots.json`, `slot-product-options.json`, `roles.json`, and
+`compatibility-raw.json` are not byte-protected by design, and they regenerated as expected
+from the role renames and the new slots.
+
+| Protected target                                           | Before                                                             | After                                                              | Result  |
+| ---------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------ | ------- |
+| `data/ip-preference-cards/generated/catalog-products.json` | `1948f00c20f673dfbe2092bde6315c78ca02b8cb5f3f1e308e33c223175861fe` | `0bad1db25c47015a7da2f6dd4162cd897506a5be89a9383f7191f87cdeee4f33` | changed |
+| `data/ip-preference-cards/generated/product-sources.json`  | `d4bafc05a981830a88a1e55cb0ce6a04c2601a1bb7ab26d60ce8ee3025ffaafb` | `1ab96b0bd7ec8665cfed8934193179f04e837fcd5f1cb7cbfffbfed5ba9c927c` | changed |
+| `data/ip-preference-cards/generated/sources.json`          | `db872cd434925a272b400f45047f7d4a17ace75f21ac0fa20c7623f7217a0dca` | `f392aef08ba17577d6fd8e7a6339c0b02582f3306c5189dbb04322fc167fb061` | changed |
+| `data/ip-preference-cards/generated/manufacturers.json`    | `20a72ee6c8e99751efbb8c14dfa549987ffef9023d3b1fd5338189388ed646c6` | `22b1768a036caa92e4d2a2a7c81841e04578dd5f91e1f4c36d1090f159409e25` | changed |
+
+Deliberately **not** rewritten, even though both contain retired role codes:
+`verification-backlog.json` and `hospital-formulary-staging.json`. Both mirror the source
+workbook as staging evidence rather than live catalog data, neither is read by the catalog
+store, and renaming a role inside them would rewrite the record a later reviewer checks this
+migration against.
+
+### Reviewed-artifact binding
+
+`external-review-corrections.json` gained a `roleCodeAliases`-driven rename of its
+compatibility target, the closed browse vocabulary on its `rolesToAdd` categories, and fifteen
+regulatory governance records. It is bound by content hash to two other reviewed artifacts, so
+that binding was re-derived in the same commit:
+
+| Binding                                                              | Before                                                             | After                                                              |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| `external-review-completed-implementation.proposalCorrectionsSha256` | `7b42da8eb2fc2fb94bf283af27b777eb07edc396425d384ef12a819afd6e3afd` | `589bd1488027c570dbc674605c8a8cd1b1b7744c348afcf1a22d2b7b707a18d9` |
+| `external-review-remediation-decisions.normalizedCorrectionsSha256`  | `7b42da8eb2fc2fb94bf283af27b777eb07edc396425d384ef12a819afd6e3afd` | `589bd1488027c570dbc674605c8a8cd1b1b7744c348afcf1a22d2b7b707a18d9` |
+
+The value is `sha256(JSON.stringify(parsedCorrections))` — the round-trip hash
+`normalizedContentHash()` computes, not the hash of the file's bytes. Recompute it _after_ the
+last edit to the corrections file, not during: an intermediate value looks correct and silently
+stops identifying the artifact it is supposed to pin.
+
 ## OpenFDA generated artifacts
 
 The manifest is the SHA-256 of the sorted 48-line `SHA-256 path` list. Its before and after

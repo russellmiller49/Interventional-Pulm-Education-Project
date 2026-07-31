@@ -62,7 +62,11 @@ const CONFIDENCE_COLUMN = columnName(REFERENCE_COLUMN_COUNT + 5)
 const REVIEW_DATE_COLUMN = columnName(REFERENCE_COLUMN_COUNT + 6)
 const SECOND_REVIEW_COLUMN = columnName(REFERENCE_COLUMN_COUNT + 8)
 const ZIP_ENTRY_DATE = new Date(1980, 0, 1, 0, 0, 0)
-const MAX_REVIEW_IMPORT_ROWS = 500
+// One row per derived proposal, so this bound has to clear whatever the module's own export
+// produces or the round trip breaks on its own output. Taxonomy v2 took the proposal set from
+// 429 to 798 by adding 57 procedure slots; 2,000 keeps a real bound on an untrusted upload
+// while leaving headroom for the next content milestone.
+const MAX_REVIEW_IMPORT_ROWS = 2_000
 const MAX_PROPOSAL_KEY_CHARACTERS = 512
 const MAX_PREVIEW_VALUE_CHARACTERS = 256
 const MAX_ROW_ISSUE_DETAILS = 8

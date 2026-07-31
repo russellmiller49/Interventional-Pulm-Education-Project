@@ -49,6 +49,65 @@ Readiness is calculated only after an actual card has been resolved against its 
 items, modifiers, conditional states, compatibility rules, and warnings. Source-data coverage
 does not set or predict `ResolvedCard.readinessState`.
 
+## 5. `Roles.category`: the browse vocabulary, and it is closed
+
+`Roles.category` renders as the section headings on `/preference-cards/catalog/uses`. It is
+**not** free text. The reviewed set lives in
+`src/features/preference-cards/domain/role-taxonomy.ts`, and
+`scripts/ip-preference-cards/apply-role-taxonomy.ts` canonicalizes every role against it during
+import, failing the import on any heading the vocabulary does not cover.
+
+It is closed because it drifted badly when it was open: 33 headings for 116 roles, with
+`Medical thoracoscopy` / `Thoracoscopy platform` / `Pleurodesis` / `Pleural procedures` all
+naming parts of one procedure, `Airway stent` / `Airway stenting` / `Airway stent accessory`
+naming one shelf, and four separate `* platform` sections. A heading is a navigational promise;
+33 of them for a catalog a clinician reads in one sitting is an accident, not a taxonomy.
+
+Adding a heading is a deliberate edit to `ROLE_CATEGORIES` plus, if a historical value maps onto
+it, an entry in `LEGACY_ROLE_CATEGORY_MAP`. `validate-data` rejects any category outside the set,
+so a workbook refresh reintroducing a retired heading fails loudly rather than appearing as a
+twentieth section nobody chose.
+
+### Role codes are renameable; saved cards are not re-writable
+
+`ROLE_CODE_ALIASES` in the same module maps every retired role code to its replacement. The
+aliases are **permanent**. `ip_user_preference_cards.builder_inputs` stores `roleCode` strings
+and family item ids embed the role as `family-role:{role}:{key}`, so a card saved before a rename
+still carries the old code; without the alias, reopening it fails with `unknown_role` and the
+selection silently disappears.
+
+An alias resolves on the way in — `resolveCatalogPick` and `getFamilyPick` canonicalize before
+any lookup — and is never surfaced. It does not appear in facets, in search, on the browse page,
+or in a rebuilt pick, which always carries the canonical code, so re-saving an old card quietly
+migrates it.
+
+## 6. `regulatoryStatus`: under what authority, if any
+
+Recorded per product in the reviewed `productGovernance` overlay and decorated onto the store in
+`decorateProduct`. It answers a question none of the other axes answer:
+
+- **Verification grade** says how well this catalog knows the product.
+- **GUDID distribution evidence** says whether the FDA database reports it in commercial
+  distribution.
+- **`catalogLifecycleContext`** says where it sits in its own market life.
+- **`slottingScope`** says whether a card may call for it.
+- **`regulatoryStatus`** says under what US marketing authority it may be sold at all.
+
+These do not imply one another and must not be collapsed. A device can be in commercial
+distribution and cleared for something other than the airway (the Galvanize Aliya line). A device
+can be FDA-approved and still be historical. A device can be breakthrough-designated, widely
+discussed, and not marketable.
+
+Absence of a reviewed decision is `unknown`, never an implied clearance.
+
+**Breakthrough designation is not authorization.** It is an FDA agreement to review on an
+expedited path. Products in that cohort take `slottingScope: 'not_applicable'`, which excludes
+them from `searchProductsForRole`, `searchProductFamiliesForRole`, `getUseDetail`, `getUseIndex`
+counts, `getFamilyPick`, and — the wall that actually matters — `resolveCatalogPick`, which
+returns `product_not_slottable` for them at save time. They are visible, badged, and grouped by
+therapeutic theme on `/preference-cards/emerging`, so the catalog can name what is coming without
+implying any of it is stocked.
+
 ## Review proposals for missing pairs
 
 `scripts/ip-preference-cards/derive-slot-option-proposals.ts` computes:

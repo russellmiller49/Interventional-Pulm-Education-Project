@@ -7710,6 +7710,7 @@
         "working_length_cm": "Working length (cm)",
         "min_working_channel_mm": "Min channel (mm)",
         "delivery_system_od_mm": "Delivery OD (mm)",
+        "laser_type": "Laser type",
         "material": "Material",
         "coverage": "Coverage"
       },
@@ -7727,7 +7728,14 @@
         "conflictingDistribution": "Conflicting distribution evidence — manual verification required",
         "conflictingDistributionHelp": "Strong matched GUDID rows disagree. Treat distribution as unresolved and verify manually; it does not determine lifecycle or orderability.",
         "legacyInstalledBase": "Legacy / active installed base",
-        "legacyInstalledBaseHelp": "This model remains relevant to programs that own and use it. Verify current new-purchase availability, service support, and accessory availability locally."
+        "legacyInstalledBaseHelp": "This model remains relevant to programs that own and use it. Verify current new-purchase availability, service support, and accessory availability locally.",
+        "regulatoryCleared510k": "FDA 510(k) cleared",
+        "regulatoryApprovedPma": "FDA PMA approved",
+        "regulatoryGrantedDeNovo": "FDA De Novo granted",
+        "regulatoryBreakthroughInvestigational": "Breakthrough — investigational",
+        "regulatoryBreakthroughPremarketReview": "Breakthrough — under premarket review",
+        "regulatoryNotUsAuthorized": "No US marketing authorization identified",
+        "regulatoryHelp": "US regulatory posture, recorded separately from distribution evidence and local availability. Breakthrough Device designation means FDA agreed to an expedited review; it is not clearance or approval, and a designated device may not be marketed in the US until it is authorized."
       },
       "uses": {
         "metadataTitle": "Browse by clinical use",
@@ -7815,7 +7823,8 @@
         "addFamily": "Add line — size at procedure",
         "addFamilyHelp": "Records the whole product line. The size is chosen once the airway is measured, so no catalog number is committed.",
         "familyAdded": "Line added"
-      }
+      },
+      "browseEmerging": "Emerging devices"
     },
     "sets": {
       "metadataTitle": "Equipment sets",
@@ -7885,6 +7894,23 @@
       "unverifiedFootnote": "{count, plural, one {# line has not been verified against a manufacturer catalog or IFU. Confirm availability and specifications before use.} other {# lines have not been verified against a manufacturer catalog or IFU. Confirm availability and specifications before use.}}",
       "customFootnote": "{count, plural, one {# line was written for this card and is not from the product catalog.} other {# lines were written for this card and are not from the product catalog.}}",
       "customItemNote": "Written for this card"
+    },
+    "emerging": {
+      "metadataTitle": "Emerging devices — IP preference cards",
+      "metadataDescription": "FDA Breakthrough Device designated technologies in interventional pulmonology, recorded for orientation and deliberately excluded from preference-card selection.",
+      "eyebrow": "Emerging devices",
+      "heading": "Breakthrough-designated devices",
+      "description": "FDA Breakthrough Device designation means the agency agreed to review a device on an expedited path. It is not clearance, it is not approval, and it does not permit US marketing. These entries exist so the catalog can name what is coming without implying any of it is stocked — none of them can be added to a preference card.",
+      "designatedOn": "Designated {date}",
+      "designationDateUnknown": "Designation date not established",
+      "regulatoryStatusLabel": "Regulatory status",
+      "evidenceLabel": "Evidence",
+      "wouldServeLabel": "Would serve",
+      "noRoles": "No catalog requirement maps to it yet.",
+      "excludedNotice": "Excluded from every requirement, picker, and saved card by design.",
+      "empty": "No breakthrough-designated devices are recorded.",
+      "backToCatalog": "Back to the catalog",
+      "evidenceCaveat": "Every entry here rests on secondary, AI-generated research rather than a manufacturer document or an FDA decision record. Designation dates come from company announcements in most cases. Re-verify against the FDA PMA, 510(k), and De Novo databases before relying on anything below."
     }
   }
 }

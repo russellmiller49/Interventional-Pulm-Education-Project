@@ -31,13 +31,13 @@ describe('generated IP preference-card import contract', () => {
       authored_canonical_options: 2073,
       generated_unreviewed_proposals: slotOptionProposals.proposals.length,
       excluded_proposal_pairs: 0,
-      required_slots_with_catalog_coverage: 56,
+      required_slots_with_catalog_coverage: 82,
       required_slots_with_curated_defaults: 44,
       authored_row_errors: 0,
       stale_exceptions: 0,
       proposal_generation_errors: 0,
     })
-    expect(slotOptionProposals.proposals).toHaveLength(429)
+    expect(slotOptionProposals.proposals).toHaveLength(813)
     expect(
       slotOptionProposals.proposals.every(
         (proposal) =>
@@ -63,7 +63,7 @@ describe('generated IP preference-card import contract', () => {
         procedure_slots: 6,
         slot_product_options: 13,
       },
-      product_governance_entries: 6,
+      product_governance_entries: 21,
       errors: [],
     })
   })
@@ -75,7 +75,7 @@ describe('generated IP preference-card import contract', () => {
       review_id: 'external-review-remediation-v0.1',
       source_workbook_sha256: '78b112baa0cd84f213eef0c1f014c438e811ac7bafe3e5004c7b4e51dd119b4e',
       proposal_corrections_sha256:
-        '7b42da8eb2fc2fb94bf283af27b777eb07edc396425d384ef12a819afd6e3afd',
+        '589bd1488027c570dbc674605c8a8cd1b1b7744c348afcf1a22d2b7b707a18d9',
       adds: {
         roles: 5,
         product_roles: 1,

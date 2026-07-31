@@ -136,6 +136,8 @@ function catalogPickLookupError(
       return `Unknown catalog role ${result.roleCode}${suffix}.`
     case 'product_role_mismatch':
       return `Catalog product ${result.productId} is not mapped to role ${result.roleCode}${suffix}.`
+    case 'product_not_slottable':
+      return `Catalog product ${result.productId} is not available for preference-card selection${suffix}; it is recorded for reference only.`
   }
 }
 

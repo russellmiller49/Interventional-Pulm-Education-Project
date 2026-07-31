@@ -132,7 +132,8 @@ describe('external-review catalog remediation', () => {
         procedure_slots: 6,
         slot_product_options: 13,
       },
-      product_governance_entries: 6,
+      // Taxonomy v2 added 15 regulatory-record entries alongside the original 6 installed-base ones.
+      product_governance_entries: 21,
       deprecated_role_aliases_preserved: 2,
       errors: [],
     })
@@ -233,7 +234,7 @@ describe('external-review catalog remediation', () => {
       normalized.Compatibility.find((rule) => rule.rule_id === 'CMP-58DE7D49C4'),
     ).toMatchObject({
       source_product_or_role: 'PRD-58DE7D49C4',
-      target_product_or_role: 'GENERIC_ENERGY_PLATFORM',
+      target_product_or_role: 'ENERGY_PLATFORM',
       resolved_source_type: 'product',
       resolved_target_type: 'role',
       verification_grade: 'candidate',
@@ -271,8 +272,13 @@ describe('external-review catalog remediation', () => {
 
     expect(applyExternalReviewRemediation(normalized, corrections).applied).toBe(true)
 
-    expect(corrections.productGovernance).toHaveLength(6)
-    for (const entry of corrections.productGovernance) {
+    // Taxonomy v2 added 15 slot-less regulatory-record entries; the installed-base cohort is still 6.
+    expect(corrections.productGovernance).toHaveLength(21)
+    const installedBaseGovernance = corrections.productGovernance.filter(
+      (entry) => entry.installedBaseExactSlotIds.length > 0,
+    )
+    expect(installedBaseGovernance).toHaveLength(6)
+    for (const entry of installedBaseGovernance) {
       expect(sorted(Object.keys(entry))).toEqual(
         sorted([
           'productId',

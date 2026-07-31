@@ -15,14 +15,27 @@
 // The two chest-tube fixtures were rehashed when external-review remediation moved the
 // securement/dressing slot from GENERIC_SPECIMEN to DRESSING_SECUREMENT. No item or
 // suppression counts changed.
+//
+// 2026-07-30, taxonomy v2. `ebusRoseMolecular` and `centralAirwayObstruction` were rehashed
+// and their item counts moved, because both scenarios gained slots rather than because
+// anything about them was reinterpreted:
+//   - EBUS-TBNA gained a fluoroscopy C-arm and a radiation-protection requirement (17 → 19),
+//   - central airway obstruction gained the three laser requirements — console, fibre, and
+//     safety equipment — plus the same two imaging requirements and a tomosynthesis
+//     navigation requirement (50 → 56), and then a laser-resistant endotracheal tube when the
+//     laser section was rebuilt from the manufacturer IFUs and the airway literature (56 → 57).
+// The two chest-tube fixtures are untouched: chest tube gained no slots. Readiness states and
+// suppression counts are unchanged throughout. The role renames in the same milestone moved no
+// hash on their own — a renamed role changes the code a slot requests, not the resolved
+// content the snapshot addresses.
 export const goldenScenarioExpectations = {
   ebusRoseMolecular: {
     scenarioId: 'ebus-rose-molecular',
     modifierCodes: ['ROSE', 'SPEC_MOLECULAR'],
     readinessState: 'complete_with_warnings',
-    itemCount: 17,
+    itemCount: 19,
     suppressedItemCount: 0,
-    snapshotHash: 'c618e19cb98c195fab83255495b9f2abed88e4ec2bb6592e31311e35f13b8c6c',
+    snapshotHash: 'ee8f3ccaa7ad14d6e6b0c02aba9cf7e255e2c97d3ce4a7264c65fd954ab40daf',
   },
   centralAirwayObstruction: {
     scenarioId: 'central-airway-obstruction',
@@ -36,9 +49,9 @@ export const goldenScenarioExpectations = {
       'HIGH_BLEED_RISK',
     ],
     readinessState: 'complete_with_warnings',
-    itemCount: 50,
+    itemCount: 57,
     suppressedItemCount: 0,
-    snapshotHash: 'ef39991f0cbadc6102f2cda039ffc54b67432b757324916ce435b899df7b29cd',
+    snapshotHash: 'f4d163f273b48556f5a24bc7d0f9fc90791395c366faad6675c0501d2e855d67',
   },
   chestTubeSmallBoreDigital: {
     scenarioId: 'chest-tube',

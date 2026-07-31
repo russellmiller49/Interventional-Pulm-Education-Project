@@ -1,8 +1,15 @@
-import { createHash } from 'node:crypto'
 import { readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
 import { normalizeCatalogKey, type GudidIndexEntry } from './build-gudid-index'
+import { stableId } from './catalog-utils'
+import {
+  buildProductRecord,
+  GUDID_RELEASE_DATE,
+  GUDID_SOURCE_ID,
+  type AdditionRecord,
+} from './catalog-addition-records'
+import { buildTaxonomyV2Additions } from './catalog-additions-taxonomy-v2'
 
 /**
  * Builds the curated catalog additions the workbook does not carry: the Getinge/Atrium
@@ -22,7 +29,6 @@ const SEED_DIRECTORY = 'data/ip-preference-cards/seed'
 
 const MANUFACTURER_NAME = 'Atrium Medical (Getinge)'
 const FUJIFILM_MANUFACTURER_NAME = 'FUJIFILM'
-const GUDID_SOURCE_ID = 'SRC046'
 const GETINGE_SOURCE_ID = 'SRC047'
 const FUJIFILM_SOURCE_ID = 'SRC048'
 const TELEFLEX_MANUFACTURER_NAME = 'Teleflex'
@@ -34,7 +40,6 @@ const FUJIFILM_PULM_SOURCE_ID = 'SRC051'
 const ICU_MEDICAL_MANUFACTURER_NAME = 'ICU Medical'
 const BIVONA_COMPANY_KEY = 'Bivona (ICU Medical)'
 const BIVONA_SOURCE_ID = 'SRC049'
-const GUDID_RELEASE_DATE = '2026-07-23'
 
 /**
  * Physical sanity check on a transcribed tube row.
@@ -582,11 +587,6 @@ interface BivonaTube {
   cuffRestingDiameterMm: number | null
 }
 
-/** Stable ids derived from the natural key so re-running never churns the data. */
-function stableId(prefix: string, naturalKey: string): string {
-  return `${prefix}-${createHash('sha1').update(naturalKey).digest('hex').slice(0, 10).toUpperCase()}`
-}
-
 interface DrainDefinition {
   primaryDi: string
   productName: string
@@ -1017,102 +1017,6 @@ const FUJIFILM_SYSTEMS: FujifilmSystemDefinition[] = [
 
 /** "20 FR Straight – Firm PVC Catheter" → structured fields. */
 const CATHETER_DESCRIPTION = /^(\d+)\s*FR\s+(Straight|Right Angle)\s*[–-]\s*(Soft|Firm)\s+PVC/i
-
-interface AdditionRecord {
-  [key: string]: unknown
-}
-
-function buildProductRecord(options: {
-  productId: string
-  manufacturerId: string
-  manufacturerName?: string
-  /** Overrides the GUDID brand name, for lines the brand alone does not distinguish. */
-  brandFamily?: string | null
-  /**
-   * Overrides the ordering number. GUDID sometimes records a configuration-specific model
-   * ("SU-1 FV652A") where the commercial catalog number is the shorter family name; the
-   * GUDID value stays on `global_part_number` so nothing is lost.
-   */
-  catalogNumber?: string
-  alternateIds?: string | null
-  minWorkingChannelMm?: number | null
-  workingLengthCm?: number | null
-  diameterMm?: number | null
-  lengthMm?: number | null
-  extraSpec?: Record<string, unknown>
-  productName: string
-  gudid: GudidIndexEntry
-  primaryCategory: string
-  subcategory: string
-  productKind: string
-  frenchSize: number | null
-  placementMethod: string | null
-  material: string | null
-  sizeDisplay: string | null
-  adultPeds: string
-  description: string
-  notes: string | null
-  sourceLocation: string
-}): AdditionRecord {
-  const { gudid } = options
-  return {
-    product_id: options.productId,
-    manufacturer_id: options.manufacturerId,
-    manufacturer: options.manufacturerName ?? MANUFACTURER_NAME,
-    distributor: null,
-    brand_family: options.brandFamily ?? (gudid.brandName || null),
-    product_name: options.productName,
-    catalog_number:
-      options.catalogNumber ?? (gudid.catalogNumber || gudid.versionModelNumber || null),
-    alternate_ids: options.alternateIds ?? null,
-    gtin: gudid.gtins[0] ?? null,
-    primary_category: options.primaryCategory,
-    subcategory: options.subcategory,
-    product_kind: options.productKind,
-    reuse_status: gudid.singleUse ? 'Single use' : null,
-    sterile_status: gudid.sterile ? 'Sterile' : null,
-    implantable: false,
-    material: options.material,
-    coverage: null,
-    placement_method: options.placementMethod,
-    size_display: options.sizeDisplay,
-    diameter_mm: options.diameterMm ?? null,
-    length_mm: options.lengthMm ?? null,
-    french_size: options.frenchSize,
-    gauge: null,
-    working_length_cm: options.workingLengthCm ?? null,
-    min_working_channel_mm: options.minWorkingChannelMm ?? null,
-    delivery_system_od_mm: null,
-    package_uom: 'Each',
-    adult_peds: options.adultPeds,
-    description: options.description,
-    compatibility_text: null,
-    verification_status: `Verified - FDA GUDID device record (DI ${gudid.primaryDi}) and manufacturer product page; GUDID reports "${gudid.distributionStatus}" as of ${GUDID_RELEASE_DATE}.`,
-    // Discontinued models stay selectable — a card records what is in the room — but the
-    // status must not claim they are still being distributed.
-    live_dropdown_status: /^In Commercial Distribution$/i.test(gudid.distributionStatus)
-      ? 'Visible - GUDID in commercial distribution and manufacturer-listed'
-      : 'Visible - GUDID reports no longer in commercial distribution; confirm before ordering',
-    primary_source_id: GUDID_SOURCE_ID,
-    primary_source_location: `device.txt, PrimaryDI ${gudid.primaryDi}`,
-    source_as_of: GUDID_RELEASE_DATE,
-    availability_note:
-      'GUDID distribution status is not by itself proof of local orderability; confirm with your supply chain.',
-    notes: options.notes,
-    spec_json: {
-      gudid_primary_di: gudid.primaryDi,
-      gudid_distribution_status: gudid.distributionStatus,
-      ...(gudid.versionModelNumber ? { manufacturer_model_number: gudid.versionModelNumber } : {}),
-      ...(options.extraSpec ?? {}),
-    },
-    global_part_number: gudid.versionModelNumber || null,
-    reference_part_number: null,
-    gtin_raw: gudid.gtins[0] ?? null,
-    spec_json_raw: null,
-    visibility_state: 'prototype_visible',
-    verification_grade: 'verified_source',
-  }
-}
 
 async function main() {
   const gudid = JSON.parse(
@@ -1940,6 +1844,40 @@ async function main() {
     })
   }
 
+  // Taxonomy-v2 cohorts: energy platforms, collateral ventilation, thoracoscopy energy,
+  // procedural imaging, laser, photodynamic therapy, and the breakthrough-designated devices.
+  // Emitted last so its dedupe sees every product id this run has already produced.
+  const taxonomyV2 = buildTaxonomyV2Additions({
+    gudid,
+    resolveManufacturerId,
+    // catalog-products.json is the merged output, so it already contains this script's own
+    // previous run. The map is keyed by catalog number (or product name where there is none)
+    // and carries the existing product_id, so the emitter can tell one of its own rows from a
+    // workbook row rather than skipping both.
+    existingProductIdsByKey: new Map(
+      (
+        JSON.parse(
+          await readFile(path.join(GENERATED_DIRECTORY, 'catalog-products.json'), 'utf8'),
+        ) as { product_id: string; catalog_number: string | null; product_name: string }[]
+      )
+        .concat(
+          products.map((product) => ({
+            product_id: String(product.product_id),
+            catalog_number: (product.catalog_number as string | null) ?? null,
+            product_name: String(product.product_name),
+          })),
+        )
+        .map((product) => [
+          (product.catalog_number ?? product.product_name).toUpperCase(),
+          product.product_id,
+        ]),
+    ),
+  })
+  products.push(...taxonomyV2.products)
+  productRoles.push(...taxonomyV2.productRoles)
+  productSources.push(...taxonomyV2.productSources)
+  for (const warning of taxonomyV2.warnings) console.warn(warning)
+
   const additions = {
     format_version: '1.0',
     generated_by: 'scripts/ip-preference-cards/build-catalog-additions.ts',
@@ -1995,6 +1933,7 @@ async function main() {
         notes:
           'ICU Medical is the GUDID labeler for the Bivona silicone tracheostomy tubes, and for Portex.',
       },
+      ...taxonomyV2.manufacturers,
     ],
     sources: [
       {
@@ -2081,6 +2020,7 @@ async function main() {
         notes:
           'Cuff status is taken from the product line, not from the presence of the word "cuffed": Fome-Cuf, Aire-Cuf, and TTS lines are all cuffed.',
       },
+      ...taxonomyV2.sources,
     ],
     products,
     product_roles: productRoles,

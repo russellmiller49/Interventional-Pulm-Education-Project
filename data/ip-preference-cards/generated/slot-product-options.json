@@ -774,7 +774,7 @@
   {
     "slot_id": "SLOT-09D5542BAA",
     "product_id": "PRD-6AAA7898E9",
-    "role_code": "PDT_KIT",
+    "role_code": "PERC_TRACH_KIT",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Primary fit for PDT_KIT; Hidden until verified.",
@@ -784,7 +784,7 @@
   {
     "slot_id": "SLOT-09D5542BAA",
     "product_id": "PRD-8446D3EB4E",
-    "role_code": "PDT_KIT",
+    "role_code": "PERC_TRACH_KIT",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Primary fit for PDT_KIT; Hidden until verified.",
@@ -794,7 +794,7 @@
   {
     "slot_id": "SLOT-09D5542BAA",
     "product_id": "PRD-C4C8CC5CF5",
-    "role_code": "PDT_KIT",
+    "role_code": "PERC_TRACH_KIT",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Primary fit for PDT_KIT; Hidden until verified.",
@@ -804,7 +804,7 @@
   {
     "slot_id": "SLOT-09D5542BAA",
     "product_id": "PRD-C7EB76131F",
-    "role_code": "PDT_KIT",
+    "role_code": "PERC_TRACH_KIT",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Primary fit for PDT_KIT; Hidden until verified.",
@@ -814,7 +814,7 @@
   {
     "slot_id": "SLOT-09D5542BAA",
     "product_id": "PRD-EA6F3E44C1",
-    "role_code": "PDT_KIT",
+    "role_code": "PERC_TRACH_KIT",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Primary fit for PDT_KIT; Hidden until verified.",
@@ -824,7 +824,7 @@
   {
     "slot_id": "SLOT-09D5542BAA",
     "product_id": "PRD-64481A5C4F",
-    "role_code": "PDT_KIT",
+    "role_code": "PERC_TRACH_KIT",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Primary fit for PDT_KIT; Hidden until verified.",
@@ -834,7 +834,7 @@
   {
     "slot_id": "SLOT-09D5542BAA",
     "product_id": "PRD-20CB4910F8",
-    "role_code": "PDT_KIT",
+    "role_code": "PERC_TRACH_KIT",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Primary fit for PDT_KIT; Hidden until verified.",
@@ -844,7 +844,7 @@
   {
     "slot_id": "SLOT-09D5542BAA",
     "product_id": "PRD-FFA21E88CC",
-    "role_code": "PDT_KIT",
+    "role_code": "PERC_TRACH_KIT",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Primary fit for PDT_KIT; Hidden until verified.",
@@ -7864,7 +7864,7 @@
   {
     "slot_id": "SLOT-545818F1DC",
     "product_id": "PRD-61EE4D5DE6",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEURAL_BIOPSY_FORCEPS; Hidden - current U.S. status unverified.",
@@ -7874,7 +7874,7 @@
   {
     "slot_id": "SLOT-545818F1DC",
     "product_id": "PRD-16C811C696",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEURAL_BIOPSY_FORCEPS; Hidden - current U.S. status unverified.",
@@ -7884,7 +7884,7 @@
   {
     "slot_id": "SLOT-545818F1DC",
     "product_id": "PRD-B76CB39194",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Primary fit for PLEURAL_BIOPSY_FORCEPS; Hidden until verified.",
@@ -7894,7 +7894,7 @@
   {
     "slot_id": "SLOT-545818F1DC",
     "product_id": "PRD-6CB8BD3445",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEURAL_BIOPSY_FORCEPS; Hidden - current U.S. status unverified.",
@@ -7904,7 +7904,7 @@
   {
     "slot_id": "SLOT-545818F1DC",
     "product_id": "PRD-A8A5497344",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEURAL_BIOPSY_FORCEPS; Hidden - current U.S. status unverified.",
@@ -7914,7 +7914,7 @@
   {
     "slot_id": "SLOT-545818F1DC",
     "product_id": "PRD-529E58AC8C",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEURAL_BIOPSY_FORCEPS; Hidden - current U.S. status unverified.",
@@ -7924,7 +7924,7 @@
   {
     "slot_id": "SLOT-545818F1DC",
     "product_id": "PRD-023092D446",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEURAL_BIOPSY_FORCEPS; Hidden - current U.S. status unverified.",
@@ -7934,7 +7934,7 @@
   {
     "slot_id": "SLOT-545818F1DC",
     "product_id": "PRD-2BD5C6261D",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEURAL_BIOPSY_FORCEPS; Hidden - current U.S. status unverified.",
@@ -7944,7 +7944,7 @@
   {
     "slot_id": "SLOT-545818F1DC",
     "product_id": "PRD-9C5FCF73E5",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEURAL_BIOPSY_FORCEPS; Hidden - current U.S. status unverified.",
@@ -7954,7 +7954,7 @@
   {
     "slot_id": "SLOT-545818F1DC",
     "product_id": "PRD-6D2D08656C",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEURAL_BIOPSY_FORCEPS; Hidden - current U.S. status unverified.",
@@ -7964,7 +7964,7 @@
   {
     "slot_id": "SLOT-545818F1DC",
     "product_id": "PRD-58CFB02C8E",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEURAL_BIOPSY_FORCEPS; Hidden - current U.S. status unverified.",
@@ -7974,7 +7974,7 @@
   {
     "slot_id": "SLOT-545818F1DC",
     "product_id": "PRD-901A1A1C5C",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEURAL_BIOPSY_FORCEPS; Hidden - current U.S. status unverified.",
@@ -7984,7 +7984,7 @@
   {
     "slot_id": "SLOT-545818F1DC",
     "product_id": "PRD-F6BB76BECF",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEURAL_BIOPSY_FORCEPS; Hidden - current U.S. status unverified.",
@@ -7994,7 +7994,7 @@
   {
     "slot_id": "SLOT-545818F1DC",
     "product_id": "PRD-635FE10D65",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEURAL_BIOPSY_FORCEPS; Hidden - current U.S. status unverified.",
@@ -8004,7 +8004,7 @@
   {
     "slot_id": "SLOT-545818F1DC",
     "product_id": "PRD-5E2713887A",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEURAL_BIOPSY_FORCEPS; Hidden - current U.S. status unverified.",
@@ -8144,7 +8144,7 @@
   {
     "slot_id": "SLOT-5A9EDD575F",
     "product_id": "PRD-ADAEAEFCA8",
-    "role_code": "PLEUROSCOPE",
+    "role_code": "THORACOSCOPE_SEMIRIGID",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Primary fit for PLEUROSCOPE; Hidden until verified.",
@@ -8154,7 +8154,7 @@
   {
     "slot_id": "SLOT-5A9EDD575F",
     "product_id": "PRD-5FA4880E82",
-    "role_code": "PLEUROSCOPE",
+    "role_code": "THORACOSCOPE_SEMIRIGID",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPE; Hidden - current U.S. status unverified.",
@@ -13184,7 +13184,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-FE67FEA4F0",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13194,7 +13194,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-EAED780757",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13204,7 +13204,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-CCDCC41B7E",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13214,7 +13214,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-377440703A",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13224,7 +13224,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-427A070734",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13234,7 +13234,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-1F69D6AD05",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13244,7 +13244,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-247C9B978C",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13254,7 +13254,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-0EA65ED2D3",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13264,7 +13264,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-A7209784C9",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Primary fit for PLEUROSCOPY_TROCAR; Hidden until verified.",
@@ -13274,7 +13274,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-BA7CBE6482",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13284,7 +13284,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-ED212D7E3C",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13294,7 +13294,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-9CCC6DB32E",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13304,7 +13304,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-DFFE75EB48",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13314,7 +13314,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-68E4686E4B",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13324,7 +13324,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-7E7BC96506",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13334,7 +13334,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-A12A620A18",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13344,7 +13344,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-C1F90B7445",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13354,7 +13354,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-AD1CD2C1B2",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13364,7 +13364,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-8287E5FFEF",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13374,7 +13374,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-3236D0CEDC",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13384,7 +13384,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-67D1D03D3F",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13394,7 +13394,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-D2F1921685",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13404,7 +13404,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-4F64240AD0",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13414,7 +13414,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-A8B69D1E0B",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13424,7 +13424,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-40B834E981",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -13434,7 +13434,7 @@
   {
     "slot_id": "SLOT-9448C2A991",
     "product_id": "PRD-8509EF4D1E",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for PLEUROSCOPY_TROCAR; Hidden - current U.S. status unverified.",
@@ -19588,7 +19588,7 @@
   {
     "slot_id": "SLOT-E63DC64C2F",
     "product_id": "PRD-F1712066B6",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for THORACOSCOPY_TELESCOPE; Hidden - current U.S. status unverified.",
@@ -19598,7 +19598,7 @@
   {
     "slot_id": "SLOT-E63DC64C2F",
     "product_id": "PRD-B6A919EF32",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for THORACOSCOPY_TELESCOPE; Hidden - current U.S. status unverified.",
@@ -19608,7 +19608,7 @@
   {
     "slot_id": "SLOT-E63DC64C2F",
     "product_id": "PRD-2058BA100A",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for THORACOSCOPY_TELESCOPE; Hidden - current U.S. status unverified.",
@@ -19618,7 +19618,7 @@
   {
     "slot_id": "SLOT-E63DC64C2F",
     "product_id": "PRD-AD5DB57EBC",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for THORACOSCOPY_TELESCOPE; Hidden - current U.S. status unverified.",
@@ -19628,7 +19628,7 @@
   {
     "slot_id": "SLOT-E63DC64C2F",
     "product_id": "PRD-5B271EC93B",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for THORACOSCOPY_TELESCOPE; Hidden - current U.S. status unverified.",
@@ -19638,7 +19638,7 @@
   {
     "slot_id": "SLOT-E63DC64C2F",
     "product_id": "PRD-B4E0EB9EFB",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for THORACOSCOPY_TELESCOPE; Hidden - current U.S. status unverified.",
@@ -19648,7 +19648,7 @@
   {
     "slot_id": "SLOT-E63DC64C2F",
     "product_id": "PRD-2FBD344316",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for THORACOSCOPY_TELESCOPE; Hidden - current U.S. status unverified.",
@@ -19658,7 +19658,7 @@
   {
     "slot_id": "SLOT-E63DC64C2F",
     "product_id": "PRD-1FE403B84C",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for THORACOSCOPY_TELESCOPE; Hidden - current U.S. status unverified.",
@@ -19668,7 +19668,7 @@
   {
     "slot_id": "SLOT-E63DC64C2F",
     "product_id": "PRD-2ACB51E58C",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for THORACOSCOPY_TELESCOPE; Hidden - current U.S. status unverified.",
@@ -19678,7 +19678,7 @@
   {
     "slot_id": "SLOT-E63DC64C2F",
     "product_id": "PRD-D99A37C035",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for THORACOSCOPY_TELESCOPE; Hidden - current U.S. status unverified.",
@@ -19688,7 +19688,7 @@
   {
     "slot_id": "SLOT-E63DC64C2F",
     "product_id": "PRD-BA86F45760",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for THORACOSCOPY_TELESCOPE; Hidden - current U.S. status unverified.",
@@ -19698,7 +19698,7 @@
   {
     "slot_id": "SLOT-E63DC64C2F",
     "product_id": "PRD-A1B7FC0BD4",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for THORACOSCOPY_TELESCOPE; Hidden - current U.S. status unverified.",
@@ -19708,7 +19708,7 @@
   {
     "slot_id": "SLOT-E63DC64C2F",
     "product_id": "PRD-6BF80B6E0D",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for THORACOSCOPY_TELESCOPE; Hidden - current U.S. status unverified.",
@@ -19718,7 +19718,7 @@
   {
     "slot_id": "SLOT-E63DC64C2F",
     "product_id": "PRD-4BB84F196B",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for THORACOSCOPY_TELESCOPE; Hidden - current U.S. status unverified.",
@@ -19728,7 +19728,7 @@
   {
     "slot_id": "SLOT-E63DC64C2F",
     "product_id": "PRD-01F519887A",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for THORACOSCOPY_TELESCOPE; Hidden - current U.S. status unverified.",
@@ -19738,7 +19738,7 @@
   {
     "slot_id": "SLOT-E63DC64C2F",
     "product_id": "PRD-0221D4FEAA",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for THORACOSCOPY_TELESCOPE; Hidden - current U.S. status unverified.",
@@ -19748,7 +19748,7 @@
   {
     "slot_id": "SLOT-E63DC64C2F",
     "product_id": "PRD-6E580584DD",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "eligibility_status": "Unverified candidate",
     "visible_by_default": false,
     "reason": "Exact fit for THORACOSCOPY_TELESCOPE; Hidden - current U.S. status unverified.",

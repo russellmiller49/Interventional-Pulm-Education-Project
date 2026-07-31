@@ -125,15 +125,17 @@ describe('full-catalog clinical-use review data', () => {
     })
 
     expect(data.counts).toEqual({
-      catalogProducts: 1474,
-      productRoles: 1567,
+      // taxonomy v2 grew the catalog: products 1474 -> 1527, product-roles 1567 -> 1617.
+      catalogProducts: 1532,
+      productRoles: 1622,
+      // Unchanged: the new slots ship only unreviewed proposals, no authored options.
       currentSlots: 2073,
     })
     expect(getClinicalUseReviewCounts()).toEqual(data.counts)
-    expect(data.roleOptions).toHaveLength(116)
-    expect(data.slotOptions).toHaveLength(174)
-    expect(new Set(data.catalogProducts.map((row) => row.productId)).size).toBe(1474)
-    expect(new Set(data.productRoles.map((row) => row.reviewKey)).size).toBe(1567)
+    expect(data.roleOptions).toHaveLength(135) // taxonomy v2 roles 116 -> 134
+    expect(data.slotOptions).toHaveLength(233) // taxonomy v2 procedure slots 174 -> 233
+    expect(new Set(data.catalogProducts.map((row) => row.productId)).size).toBe(1532)
+    expect(new Set(data.productRoles.map((row) => row.reviewKey)).size).toBe(1622)
     expect(new Set(data.currentSlots.map((row) => row.reviewKey)).size).toBe(2073)
     expect(data.productRoles.every((row) => row.reviewKey.startsWith('product_role:'))).toBe(true)
     expect(data.currentSlots.every((row) => row.reviewKey.startsWith('slot_product:'))).toBe(true)

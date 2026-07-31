@@ -23,13 +23,19 @@ import {
   type ProcedureRecord,
   type ProcedureSlotRecord,
   type ProductRoleRecord,
+  isBreakthroughRegulatoryStatus,
   type ProductGovernanceRecord,
   type ProductSourceRecord,
+  type RegulatoryStatus,
   type RoleRecord,
   type SlottingScope,
   type SlotProductOptionRecord,
   type SourceRecord,
 } from '@/features/preference-cards/server/catalog-store'
+import {
+  canonicalRoleCode,
+  roleCategoryOrder,
+} from '@/features/preference-cards/domain/role-taxonomy'
 import type { CatalogSearchQuery } from '@/features/preference-cards/schemas/catalog-search'
 import type { CatalogVerificationTier } from '@/features/preference-cards/domain/verification'
 import type { CatalogPick } from '@/features/preference-cards/domain/catalog-pick'
@@ -165,6 +171,7 @@ export const specColumnPriority = [
   'working_length_cm',
   'min_working_channel_mm',
   'delivery_system_od_mm',
+  'laser_type',
   'material',
   'coverage',
 ] as const
@@ -191,6 +198,7 @@ export interface CatalogListItem {
   deliverySystemOdMm: number | null
   material: string | null
   coverage: string | null
+  laserType: string | null
   verificationTier: CatalogVerificationTier
   usStatusPending: boolean
   /** FDA GUDID commercial-distribution status, when a confident match exists. */
@@ -199,6 +207,9 @@ export interface CatalogListItem {
   slottingScope: SlottingScope
   preferredNewPurchase: boolean | null
   lifecycleNote: string | null
+  regulatoryStatus: RegulatoryStatus
+  regulatoryNote: string | null
+  breakthroughDesignatedOn: string | null
   roleFit?: string | null
 }
 
@@ -223,6 +234,7 @@ function toListItem(product: CatalogProduct): CatalogListItem {
     deliverySystemOdMm: product.delivery_system_od_mm,
     material: product.material,
     coverage: product.coverage,
+    laserType: product.laser_type ?? null,
     verificationTier: product.verificationTier,
     usStatusPending: product.usStatusPending,
     distributionStatus: getDistributionMap().get(product.product_id) ?? null,
@@ -230,6 +242,9 @@ function toListItem(product: CatalogProduct): CatalogListItem {
     slottingScope: product.slottingScope,
     preferredNewPurchase: product.preferredNewPurchase,
     lifecycleNote: product.lifecycleNote,
+    regulatoryStatus: product.regulatoryStatus,
+    regulatoryNote: product.regulatoryNote,
+    breakthroughDesignatedOn: product.breakthroughDesignatedOn,
   }
 }
 
@@ -249,6 +264,8 @@ export function specValue(item: CatalogListItem, key: SpecColumnKey): string | n
       return item.minWorkingChannelMm
     case 'delivery_system_od_mm':
       return item.deliverySystemOdMm
+    case 'laser_type':
+      return item.laserType
     case 'material':
       return item.material
     case 'coverage':
@@ -352,7 +369,11 @@ export function searchCatalog(
     candidates = store.products
   }
 
-  const roleProductIds = query.role ? new Set(store.productIdsByRole.get(query.role) ?? []) : null
+  // A stale bookmark or an old saved filter can still name a retired role code.
+  const filterRoleCode = query.role ? canonicalRoleCode(query.role) : null
+  const roleProductIds = filterRoleCode
+    ? new Set(store.productIdsByRole.get(filterRoleCode) ?? [])
+    : null
   const procedureRoleCodes = query.procedure
     ? new Set((store.slotsByProcedure.get(query.procedure) ?? []).map((slot) => slot.role_code))
     : null
@@ -478,7 +499,12 @@ export function getUseIndex(
     : store.roles
 
   const entries: UseIndexEntry[] = roles.map((role) => {
-    const productIds = store.productIdsByRole.get(role.role_code) ?? []
+    // Counted the same way getUseDetail lists them, so the index never promises a product the
+    // role page then withholds.
+    const productIds = (store.productIdsByRole.get(role.role_code) ?? []).filter((productId) => {
+      const product = store.productById.get(productId)
+      return product ? isSlottableProduct(product) : false
+    })
     const manufacturers = new Set<string>()
     let verifiedCount = 0
     for (const productId of productIds) {
@@ -517,12 +543,18 @@ export function getUseIndex(
     if (existing) existing.push(entry)
     else grouped.set(entry.category, [entry])
   }
+  // Headings are ordered by the reviewed clinical sequence in role-taxonomy.ts rather than
+  // alphabetically, so related sections sit together on the browse page.
   return [...grouped.entries()]
     .map(([category, groupEntries]) => ({
       category,
       entries: groupEntries.sort((left, right) => left.roleName.localeCompare(right.roleName)),
     }))
-    .sort((left, right) => left.category.localeCompare(right.category))
+    .sort(
+      (left, right) =>
+        roleCategoryOrder(left.category) - roleCategoryOrder(right.category) ||
+        left.category.localeCompare(right.category),
+    )
 }
 
 export interface UseDetailProcedureLink {
@@ -555,6 +587,8 @@ export interface ProductFamily {
    */
   distributionStatus: CatalogDistributionStatus | null
   catalogLifecycleContext: CatalogLifecycleContext | null
+  /** Same unanimity rule: a regulatory record for one size is not a claim about its siblings. */
+  regulatoryStatus: RegulatoryStatus | null
 }
 
 export interface UseDetailManufacturerGroup {
@@ -644,6 +678,7 @@ export function buildProductFamilies(
       catalogLifecycleContext: unanimousFamilyValue(
         variants.map((variant) => variant.catalogLifecycleContext),
       ),
+      regulatoryStatus: unanimousFamilyValue(variants.map((variant) => variant.regulatoryStatus)),
     })
   }
 
@@ -656,14 +691,20 @@ export function buildProductFamilies(
 }
 
 export function getUseDetail(
-  roleCode: string,
+  requestedRoleCode: string,
   store: CatalogStore = getCatalogStore(),
 ): UseDetail | null {
+  const roleCode = canonicalRoleCode(requestedRoleCode)
   const role = store.roleByCode.get(roleCode)
   if (!role) return null
 
   const roleFitByProduct = new Map<string, string | null>()
-  const productIds = store.productIdsByRole.get(roleCode) ?? []
+  // The emerging cohort is excluded here as well as from the picker: a role page that lists
+  // an investigational catheter beside stocked equipment reads as an equivalent choice.
+  const productIds = (store.productIdsByRole.get(roleCode) ?? []).filter((productId) => {
+    const product = store.productById.get(productId)
+    return product ? isSlottableProduct(product) : false
+  })
   for (const productId of productIds) {
     const link = (store.rolesByProduct.get(productId) ?? []).find(
       (candidate) => candidate.role_code === roleCode,
@@ -863,6 +904,8 @@ export interface RolePickerOption {
   slottingScope: SlottingScope
   preferredNewPurchase: boolean | null
   lifecycleNote: string | null
+  regulatoryStatus: RegulatoryStatus
+  regulatoryNote: string | null
   roleFit: string | null
   minWorkingChannelMm: number | null
   deliverySystemOdMm: number | null
@@ -870,12 +913,31 @@ export interface RolePickerOption {
   sourceLocation: string | null
 }
 
+/**
+ * Whether a product may be attached to a preference-card requirement at all.
+ *
+ * `not_applicable` is the reviewed way of saying "this is real, and it is not something a
+ * card can call for" — today, the breakthrough-designated cohort. Those devices are
+ * investigational or under premarket review; listing one as a pickable option would imply a
+ * hospital stocks it. They stay discoverable, badged, and on the emerging view instead.
+ */
+export function isSlottableProduct(product: CatalogProduct): boolean {
+  return product.slottingScope !== 'not_applicable'
+}
+
 /** Role-scoped product ordering shared by the flat and family-grouped pickers. */
 function orderedRoleProducts(
   params: { roleCode: string; q?: string },
   store: CatalogStore,
 ): CatalogProduct[] {
-  const productIds = store.productIdsByRole.get(params.roleCode) ?? []
+  // The picker is reached by URL and by API, so a pre-rename bookmark or a stale client can
+  // still ask for a retired code. Canonicalize before the lookup or it silently returns
+  // nothing, which reads as "no products exist for this requirement".
+  const roleCode = canonicalRoleCode(params.roleCode)
+  const productIds = (store.productIdsByRole.get(roleCode) ?? []).filter((productId) => {
+    const product = store.productById.get(productId)
+    return product ? isSlottableProduct(product) : false
+  })
   if (productIds.length === 0) return []
 
   const trimmed = (params.q ?? '').trim()
@@ -931,6 +993,8 @@ function toRolePickerOption(
     slottingScope: product.slottingScope,
     preferredNewPurchase: product.preferredNewPurchase,
     lifecycleNote: product.lifecycleNote,
+    regulatoryStatus: product.regulatoryStatus,
+    regulatoryNote: product.regulatoryNote,
     roleFit: link?.role_fit ?? null,
     minWorkingChannelMm: product.min_working_channel_mm,
     deliverySystemOdMm: product.delivery_system_od_mm,
@@ -950,7 +1014,7 @@ export function searchProductsForRole(
   const limit = params.limit ?? 30
   return orderedRoleProducts(params, store)
     .slice(0, limit)
-    .map((product) => toRolePickerOption(product, params.roleCode, store))
+    .map((product) => toRolePickerOption(product, canonicalRoleCode(params.roleCode), store))
 }
 
 const NUMERIC_SPEC_ACCESSORS: { key: SpecColumnKey; read: (p: CatalogProduct) => number | null }[] =
@@ -990,6 +1054,8 @@ export interface RoleFamilyOption {
   distributionStatus: CatalogDistributionStatus | null
   /** Present only when every variant has the same reviewed lifecycle context. */
   catalogLifecycleContext: CatalogLifecycleContext | null
+  /** Present only when every variant carries the same reviewed regulatory record. */
+  regulatoryStatus: RegulatoryStatus | null
   specRanges: FamilySpecRange[]
   placementMethods: string[]
   sourceId: string | null
@@ -1011,6 +1077,7 @@ export function searchProductFamiliesForRole(
   store: CatalogStore = getCatalogStore(),
 ): RoleFamilyOption[] {
   const limit = params.limit ?? 40
+  const roleCode = canonicalRoleCode(params.roleCode)
   const ordered = orderedRoleProducts(params, store)
   if (ordered.length === 0) return []
 
@@ -1025,9 +1092,9 @@ export function searchProductFamiliesForRole(
   // A text query can match only one model in a larger line. Summarize governance and
   // distribution across the complete role-scoped family, never just the matching subset.
   const completeFamilies = new Map<string, CatalogProduct[]>()
-  for (const productId of store.productIdsByRole.get(params.roleCode) ?? []) {
+  for (const productId of store.productIdsByRole.get(roleCode) ?? []) {
     const product = store.productById.get(productId)
-    if (!product) continue
+    if (!product || !isSlottableProduct(product)) continue
     const existing = completeFamilies.get(product.familyKey)
     if (existing) existing.push(product)
     else completeFamilies.set(product.familyKey, [product])
@@ -1063,6 +1130,9 @@ export function searchProductFamiliesForRole(
       catalogLifecycleContext: unanimousFamilyValue(
         completeFamily.map((variant) => variant.catalogLifecycleContext),
       ),
+      regulatoryStatus: unanimousFamilyValue(
+        completeFamily.map((variant) => variant.regulatoryStatus),
+      ),
       specRanges: familySpecRanges(variants),
       placementMethods: [
         ...new Set(
@@ -1073,7 +1143,7 @@ export function searchProductFamiliesForRole(
       ].sort(),
       sourceId: first.primary_source_id,
       sourceLocation: first.primary_source_location,
-      variants: sorted.map((variant) => toRolePickerOption(variant, params.roleCode, store)),
+      variants: sorted.map((variant) => toRolePickerOption(variant, roleCode, store)),
     })
   }
   return families
@@ -1087,13 +1157,16 @@ export function searchProductFamiliesForRole(
  */
 export function getFamilyPick(
   familyKey: string,
-  roleCode: string,
+  requestedRoleCode: string,
   store: CatalogStore = getCatalogStore(),
 ): FamilyPick | null {
+  // Same reasoning as resolveCatalogPick: family item ids embed the role as
+  // `family-role:{role}:{key}`, so a pre-rename saved card asks for the old code.
+  const roleCode = canonicalRoleCode(requestedRoleCode)
   const variants = (store.productIdsByRole.get(roleCode) ?? [])
     .map((productId) => store.productById.get(productId))
     .filter((product): product is CatalogProduct => Boolean(product))
-    .filter((product) => product.familyKey === familyKey)
+    .filter((product) => isSlottableProduct(product) && product.familyKey === familyKey)
   if (variants.length === 0) return null
 
   const first = variants[0]
@@ -1111,6 +1184,78 @@ export function getFamilyPick(
     sourceId: first.primary_source_id,
     sourceLocation: first.primary_source_location,
   }
+}
+
+export interface EmergingDevice {
+  productId: string
+  productName: string
+  manufacturerDisplay: string
+  regulatoryStatus: RegulatoryStatus
+  regulatoryNote: string | null
+  breakthroughDesignatedOn: string | null
+  description: string | null
+  availabilityNote: string | null
+  /** The Tier-4 discovery source behind the entry, so the page can name its own evidence. */
+  sources: { sourceId: string; title: string; reliabilityTier: string | null }[]
+  /** Roles it would serve if it were ever authorized, for orientation only. */
+  roleNames: string[]
+}
+
+export interface EmergingDeviceGroup {
+  theme: string
+  devices: EmergingDevice[]
+}
+
+/**
+ * The breakthrough-designated cohort, grouped by therapeutic theme.
+ *
+ * FDA breakthrough designation means the agency agreed to review a device on an expedited
+ * path. It is not clearance, not approval, and not permission to market. Everything here is
+ * therefore walled off from card building — this query exists so the module can say so out
+ * loud rather than by omission.
+ */
+export function getEmergingDevices(store: CatalogStore = getCatalogStore()): EmergingDeviceGroup[] {
+  const groups = new Map<string, EmergingDevice[]>()
+  for (const product of store.products) {
+    if (!isBreakthroughRegulatoryStatus(product.regulatoryStatus)) continue
+    const theme = product.emergingTheme ?? product.primary_category ?? 'Other'
+    const device: EmergingDevice = {
+      productId: product.product_id,
+      productName: product.product_name,
+      manufacturerDisplay: product.manufacturerDisplay,
+      regulatoryStatus: product.regulatoryStatus,
+      regulatoryNote: product.regulatoryNote,
+      breakthroughDesignatedOn: product.breakthroughDesignatedOn,
+      description: product.description,
+      availabilityNote: product.availability_note,
+      sources: (store.sourcesByProduct.get(product.product_id) ?? []).map((link) => {
+        const source = store.sourceById.get(link.source_id)
+        return {
+          sourceId: link.source_id,
+          title: source?.title ?? link.source_id,
+          reliabilityTier: source?.reliability_tier ?? null,
+        }
+      }),
+      roleNames: (store.rolesByProduct.get(product.product_id) ?? []).map(
+        (link) => store.roleByCode.get(link.role_code)?.role_name ?? link.role_code,
+      ),
+    }
+    const existing = groups.get(theme)
+    if (existing) existing.push(device)
+    else groups.set(theme, [device])
+  }
+
+  return [...groups.entries()]
+    .map(([theme, devices]) => ({
+      theme,
+      devices: devices.sort(
+        (left, right) =>
+          (left.breakthroughDesignatedOn ?? '').localeCompare(
+            right.breakthroughDesignatedOn ?? '',
+          ) || left.productName.localeCompare(right.productName),
+      ),
+    }))
+    .sort((left, right) => left.theme.localeCompare(right.theme))
 }
 
 export interface CatalogFacets {
@@ -1164,7 +1309,7 @@ export function validateKnownCatalogFilters(
   query: CatalogSearchQuery,
   store: CatalogStore = getCatalogStore(),
 ): string | null {
-  if (query.role && !store.roleByCode.has(query.role)) return 'role'
+  if (query.role && !store.roleByCode.has(canonicalRoleCode(query.role))) return 'role'
   if (query.procedure && !store.procedureByCode.has(query.procedure)) return 'procedure'
   const knownManufacturers = new Set(store.manufacturerFacets.map((facet) => facet.id))
   if (query.manufacturers.some((id) => !knownManufacturers.has(id))) return 'manufacturer'
@@ -1175,6 +1320,7 @@ export type CatalogPickLookupErrorCode =
   | 'unknown_product'
   | 'unknown_role'
   | 'product_role_mismatch'
+  | 'product_not_slottable'
 
 export type CatalogPickLookupResult =
   | { ok: true; pick: CatalogPick }
@@ -1193,10 +1339,15 @@ export type CatalogPickLookupResult =
  * exact Product_Roles pair again.
  */
 export function resolveCatalogPick(
-  productId: string,
-  roleCode: string,
+  requestedProductId: string,
+  requestedRoleCode: string,
   store: CatalogStore = getCatalogStore(),
 ): CatalogPickLookupResult {
+  const productId = requestedProductId
+  // A card saved before the taxonomy-v2 rename still carries the old code in
+  // `builder_inputs`. The alias resolves on the way in and the rebuilt pick carries the
+  // canonical code, so re-saving quietly migrates the card.
+  const roleCode = canonicalRoleCode(requestedRoleCode)
   const product = store.productById.get(productId)
   if (!product) return { ok: false, code: 'unknown_product', productId, roleCode }
   if (!store.roleByCode.has(roleCode)) {
@@ -1207,6 +1358,10 @@ export function resolveCatalogPick(
   )
   if (!carriesRole) {
     return { ok: false, code: 'product_role_mismatch', productId, roleCode }
+  }
+  // The last wall. The picker already excludes these, but save-time callers are untrusted.
+  if (!isSlottableProduct(product)) {
+    return { ok: false, code: 'product_not_slottable', productId, roleCode }
   }
   return {
     ok: true,

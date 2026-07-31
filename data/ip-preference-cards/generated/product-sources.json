@@ -80,6 +80,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-024D6B3E35",
+    "source_id": "SRC065",
+    "source_location": "VELOCITY fibre IFU — user settings and warnings",
+    "claim_type": "Wavelength, airway pressure and power limits, and oxygen limit",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
     "product_id": "PRD-02641F9166",
     "source_id": "SRC030",
     "source_location": "p. 88",
@@ -581,6 +589,22 @@
     "source_location": "Product code 67P030",
     "claim_type": "Tube dimensions, cuff type, and product line",
     "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0A93A5E8C4",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04050147015685",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0A93A5E8C4",
+    "source_id": "SRC053",
+    "source_location": "Product data — Products table; Technical data table",
+    "claim_type": "Order number and technical data",
+    "verification_status": "Manufacturer document",
     "notes": null
   },
   {
@@ -1232,6 +1256,14 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-14F0A7735B",
+    "source_id": "SRC063",
+    "source_location": "Bronchoscopic photodynamic therapy report — diffuser section",
+    "claim_type": "Diffuser lengths and construction",
+    "verification_status": "Recorded from a secondary research report only. No manufacturer document or FDA record is on file for it here, so it is hidden from selection until one is attached.",
+    "notes": null
+  },
+  {
     "product_id": "PRD-150ECDCD05",
     "source_id": "SRC022",
     "source_location": "p. 7.08",
@@ -1589,6 +1621,14 @@
     "source_location": "Product list 2025!Sheet8",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1A381F0381",
+    "source_id": "SRC062",
+    "source_location": "IntelliGuide IFU — indications, warnings, and user settings",
+    "claim_type": "Model identity, wavelength, and airway operating limits",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
     "notes": null
   },
   {
@@ -2168,6 +2208,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-23E2441568",
+    "source_id": "SRC063",
+    "source_location": "Bronchoscopic photodynamic therapy report — diffuser section",
+    "claim_type": "Diffuser lengths and construction",
+    "verification_status": "Recorded from a secondary research report only. No manufacturer document or FDA record is on file for it here, so it is hidden from selection until one is attached.",
+    "notes": null
+  },
+  {
     "product_id": "PRD-23E592FF23",
     "source_id": "SRC006",
     "source_location": "Product list 2025!Sheet5",
@@ -2389,6 +2437,14 @@
     "source_location": "Product code 670185",
     "claim_type": "Tube dimensions, cuff type, and product line",
     "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-272F711392",
+    "source_id": "SRC063",
+    "source_location": "Bronchoscopic photodynamic therapy report — diffuser section",
+    "claim_type": "Diffuser lengths and construction",
+    "verification_status": "Recorded from a secondary research report only. No manufacturer document or FDA record is on file for it here, so it is hidden from selection until one is attached.",
     "notes": null
   },
   {
@@ -2760,6 +2816,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2C5302C206",
+    "source_id": "SRC060",
+    "source_location": "LungVision System product page and MOSS brochure",
+    "claim_type": "System identity and intended use",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2C648B78A4",
     "source_id": "SRC026",
     "source_location": "p. 6",
@@ -2928,6 +2992,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2E3D684EEA",
+    "source_id": "SRC070",
+    "source_location": "ForTec EVOLVE sheet and Interventional Pulmonology product listing",
+    "claim_type": "System identity, wavelength, and power ceiling",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2E6996BA6A",
     "source_id": "SRC026",
     "source_location": "p. 6",
@@ -3056,6 +3128,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2FD8B78EEA",
+    "source_id": "SRC070",
+    "source_location": "ForTec KTP/YAG sheet and Interventional Pulmonology product listing",
+    "claim_type": "System identity, wavelengths, and power ranges",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2FFEEB98B2",
     "source_id": "SRC002",
     "source_location": "pp. 2-5",
@@ -3069,6 +3149,22 @@
     "source_location": "pp. 14-15",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. HUD manufacturer brochure",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-3065186BDC",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04050147015692",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-3065186BDC",
+    "source_id": "SRC053",
+    "source_location": "APC waveforms available with APC 3 module",
+    "claim_type": "Device identity and platform pairing",
+    "verification_status": "Manufacturer document",
     "notes": null
   },
   {
@@ -3141,6 +3237,14 @@
     "source_location": "Product code 60N025",
     "claim_type": "Tube dimensions, cuff type, and product line",
     "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-31C1013C19",
+    "source_id": "SRC064",
+    "source_location": "Breakthrough devices report — NIO Lung Cancer Reveal profile",
+    "claim_type": "Device identity and regulatory status",
+    "verification_status": "Recorded from a secondary research report only. No manufacturer document or FDA record is on file for it here, so it is hidden from selection until one is attached.",
     "notes": null
   },
   {
@@ -3424,6 +3528,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-370FFF1D04",
+    "source_id": "SRC068",
+    "source_location": "Surgical laser fibres brochure — application matrix",
+    "claim_type": "Order number, fibre dimensions, and ticked clinical applications",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
     "product_id": "PRD-377440703A",
     "source_id": "SRC030",
     "source_location": "p. 144",
@@ -3469,6 +3581,14 @@
     "source_location": "p. 1",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer ordering-page capture",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-397A9C06E0",
+    "source_id": "SRC063",
+    "source_location": "Bronchoscopic photodynamic therapy report — drug section",
+    "claim_type": "Presentation, reconstitution, and dose",
+    "verification_status": "Recorded from a secondary research report only. No manufacturer document or FDA record is on file for it here, so it is hidden from selection until one is attached.",
     "notes": null
   },
   {
@@ -3589,6 +3709,14 @@
     "source_location": "p. 7",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-3C27441753",
+    "source_id": "SRC070",
+    "source_location": "ForTec Holmium Laser Fibers - Inter. Pulmonology product page",
+    "claim_type": "Fibre construction, sheath function, and stated pulmonary use",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
     "notes": null
   },
   {
@@ -3744,6 +3872,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-401A185759",
+    "source_id": "SRC061",
+    "source_location": "Aliya System product page",
+    "claim_type": "Device identity and 510(k) indication wording",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4073AAF637",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 15021312013702",
@@ -3864,6 +4000,14 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-41AAD08DBF",
+    "source_id": "SRC055",
+    "source_location": "Mini-Thoracoscopy Set ordering table",
+    "claim_type": "Order number and configuration",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
     "product_id": "PRD-41BA4FDFE6",
     "source_id": "SRC007",
     "source_location": "pleural seed",
@@ -3957,6 +4101,14 @@
     "source_location": "device.txt, PrimaryDI 00850048825055",
     "claim_type": "Device identity, model number, and distribution status",
     "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-43308BC331",
+    "source_id": "SRC069",
+    "source_location": "Opera EVO brochure — Thoracic Surgery application panel",
+    "claim_type": "System identity, wavelengths, and stated thoracic applications",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
     "notes": null
   },
   {
@@ -4096,6 +4248,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-45AEBC6DFE",
+    "source_id": "SRC060",
+    "source_location": "LungVision MOSS brochure",
+    "claim_type": "Component identity",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
     "product_id": "PRD-460DB62059",
     "source_id": "SRC025",
     "source_location": "pp. 2-3",
@@ -4109,6 +4269,14 @@
     "source_location": "p. 14",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog and IFU",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4692570E45",
+    "source_id": "SRC063",
+    "source_location": "Bronchoscopic photodynamic therapy report — diffuser section",
+    "claim_type": "Diffuser lengths and construction",
+    "verification_status": "Recorded from a secondary research report only. No manufacturer document or FDA record is on file for it here, so it is hidden from selection until one is attached.",
     "notes": null
   },
   {
@@ -4264,6 +4432,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-49D1B94318",
+    "source_id": "SRC067",
+    "source_location": "LEONARDO brochure — family indications and technical data",
+    "claim_type": "Model identity, wavelengths, and stated indications",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4A023D6489",
     "source_id": "SRC030",
     "source_location": "p. 86",
@@ -4293,6 +4469,14 @@
     "source_location": "Product code 60P030",
     "claim_type": "Tube dimensions, cuff type, and product line",
     "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4A1701C80B",
+    "source_id": "SRC056",
+    "source_location": "Pleurodesis search-results page",
+    "claim_type": "Article number and product name",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
     "notes": null
   },
   {
@@ -4664,6 +4848,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-50C32D45B1",
+    "source_id": "SRC061",
+    "source_location": "Aliya System product page",
+    "claim_type": "Device identity and 510(k) indication wording",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
     "product_id": "PRD-50DCC12BE8",
     "source_id": "SRC030",
     "source_location": "p. 72",
@@ -4853,6 +5045,14 @@
     "source_location": "pp. 49-53",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer brochure; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5567CCE50B",
+    "source_id": "SRC070",
+    "source_location": "ForTec neoV Laser - Pulmonology product page",
+    "claim_type": "System identity, wavelength, mode, power, and stated bronchoscopic use",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
     "notes": null
   },
   {
@@ -5520,11 +5720,43 @@
     "notes": null
   },
   {
+    "product_id": "PRD-5F8443871A",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04050147015708",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5F8443871A",
+    "source_id": "SRC053",
+    "source_location": "Product data — Products table",
+    "claim_type": "Order number and configuration",
+    "verification_status": "Manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-5FA4880E82",
     "source_id": "SRC021",
     "source_location": "p. 43",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5FEA4F31EA",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI M776CHRCO100",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5FEA4F31EA",
+    "source_id": "SRC054",
+    "source_location": "Section 1.0; Section 2.0; Section 4.0",
+    "claim_type": "Device identity and function",
+    "verification_status": "Manufacturer document",
     "notes": null
   },
   {
@@ -5824,6 +6056,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-64B4DE25D7",
+    "source_id": "SRC063",
+    "source_location": "Bronchoscopic photodynamic therapy report — laser section",
+    "claim_type": "Model designation and required output wavelength",
+    "verification_status": "Recorded from a secondary research report only. No manufacturer document or FDA record is on file for it here, so it is hidden from selection until one is attached.",
+    "notes": null
+  },
+  {
     "product_id": "PRD-64F3BFC979",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 04547410337419",
@@ -5949,6 +6189,22 @@
     "source_location": "Perc trach and WLL",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-685E69DACA",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 00811907030928",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-685E69DACA",
+    "source_id": "SRC054",
+    "source_location": "Section 1.0 specifications table; Section 4.0 warnings",
+    "claim_type": "Working length, outer diameter, and bronchoscope requirement",
+    "verification_status": "Manufacturer document",
     "notes": null
   },
   {
@@ -6584,6 +6840,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-709E07B50A",
+    "source_id": "SRC070",
+    "source_location": "ForTec Holmium Laser Fibers - Inter. Pulmonology product page",
+    "claim_type": "Fibre sizes, packaging, and compatibility",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
     "product_id": "PRD-709ED0842B",
     "source_id": "SRC007",
     "source_location": "Perc trach and WLL",
@@ -7112,11 +7376,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-792DBA7A57",
+    "source_id": "SRC061",
+    "source_location": "Aliya System product page",
+    "claim_type": "Device identity and 510(k) indication wording",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
     "product_id": "PRD-795FD16DE8",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 04026704558377",
     "claim_type": "Device identity, configuration, and distribution status",
     "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-79735E8DC9",
+    "source_id": "SRC063",
+    "source_location": "Bronchoscopic photodynamic therapy report — diffuser section",
+    "claim_type": "Diffuser lengths and construction",
+    "verification_status": "Recorded from a secondary research report only. No manufacturer document or FDA record is on file for it here, so it is hidden from selection until one is attached.",
     "notes": null
   },
   {
@@ -7245,6 +7525,14 @@
     "source_location": "p. 73",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - U.S. manufacturer brochure; current orderability pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7C2BC9D752",
+    "source_id": "SRC059",
+    "source_location": "Ziehm Vision RFD 3D product brochure",
+    "claim_type": "System identity",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
     "notes": null
   },
   {
@@ -7728,6 +8016,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8711E4A1C9",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 00811907031925",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-8776B50EA8",
     "source_id": "SRC008",
     "source_location": "CSV row 5",
@@ -7936,6 +8232,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8B374A11AC",
+    "source_id": "SRC055",
+    "source_location": "Mini-Thoracoscopy Set ordering table",
+    "claim_type": "Order number and configuration",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
     "product_id": "PRD-8B542204C5",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 15019517077360",
@@ -7973,6 +8277,14 @@
     "source_location": "Product code 60P045",
     "claim_type": "Tube dimensions, cuff type, and product line",
     "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-8BF5C4BAB5",
+    "source_id": "SRC064",
+    "source_location": "Breakthrough devices report — Emprint profile",
+    "claim_type": "Device identity and regulatory status",
+    "verification_status": "Recorded from a secondary research report only. No manufacturer document or FDA record is on file for it here, so it is hidden from selection until one is attached.",
     "notes": null
   },
   {
@@ -8117,6 +8429,14 @@
     "source_location": "p. 5",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-8E3A12AFF4",
+    "source_id": "SRC055",
+    "source_location": "Mini-Thoracoscopy Set ordering table",
+    "claim_type": "Order number and configuration",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
     "notes": null
   },
   {
@@ -8536,11 +8856,27 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-95B12463A5",
+    "source_id": "SRC055",
+    "source_location": "Mini-Thoracoscopy Set ordering table",
+    "claim_type": "Order number and configuration",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
     "product_id": "PRD-95C0E7E548",
     "source_id": "SRC006",
     "source_location": "Product list 2025!bonastent",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9610100EDA",
+    "source_id": "SRC063",
+    "source_location": "Bronchoscopic photodynamic therapy report — diffuser section",
+    "claim_type": "Diffuser lengths and construction",
+    "verification_status": "Recorded from a secondary research report only. No manufacturer document or FDA record is on file for it here, so it is hidden from selection until one is attached.",
     "notes": null
   },
   {
@@ -8581,6 +8917,14 @@
     "source_location": "p. 18",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-981BD7EC93",
+    "source_id": "SRC062",
+    "source_location": "IntelliGuide IFU — gas connection section",
+    "claim_type": "Order number and required-accessory status",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
     "notes": null
   },
   {
@@ -9021,6 +9365,14 @@
     "source_location": "Product list 2025!bonastent",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A108804498",
+    "source_id": "SRC067",
+    "source_location": "LEONARDO brochure — family indications and technical data",
+    "claim_type": "Model identity, wavelengths, and stated indications",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
     "notes": null
   },
   {
@@ -9904,6 +10256,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B12CE929DE",
+    "source_id": "SRC068",
+    "source_location": "Surgical laser fibres brochure — application matrix",
+    "claim_type": "Order number, fibre dimensions, and ticked clinical applications",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
     "product_id": "PRD-B1E837841F",
     "source_id": "SRC027",
     "source_location": "p. 15",
@@ -10141,6 +10501,14 @@
     "source_location": "device.txt, PrimaryDI 04026704558520",
     "claim_type": "Device identity, configuration, and distribution status",
     "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B5C8A167EC",
+    "source_id": "SRC068",
+    "source_location": "RevoLix jr. brochure — Applications page, Pneumology block",
+    "claim_type": "System identity, wavelength, and stated pulmonary applications",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
     "notes": null
   },
   {
@@ -10608,6 +10976,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-BC2FB31EE2",
+    "source_id": "SRC064",
+    "source_location": "Breakthrough devices report — RheOx profile",
+    "claim_type": "Device identity and regulatory status",
+    "verification_status": "Recorded from a secondary research report only. No manufacturer document or FDA record is on file for it here, so it is hidden from selection until one is attached.",
+    "notes": null
+  },
+  {
     "product_id": "PRD-BC936E9D71",
     "source_id": "SRC012",
     "source_location": "Respiratory 14.12 (PDF p. 125)",
@@ -10621,6 +10997,14 @@
     "source_location": "Perc trach and WLL",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-BCD0C2C494",
+    "source_id": "SRC064",
+    "source_location": "Breakthrough devices report — RejuvenAir profile",
+    "claim_type": "Device identity and regulatory status",
+    "verification_status": "Recorded from a secondary research report only. No manufacturer document or FDA record is on file for it here, so it is hidden from selection until one is attached.",
     "notes": null
   },
   {
@@ -11392,6 +11776,14 @@
     "notes": "Exact catalog/SKU evidence from an older global manufacturer catalog; U.S. status unverified."
   },
   {
+    "product_id": "PRD-C9FE364632",
+    "source_id": "SRC055",
+    "source_location": "Mini-Thoracoscopy Set ordering table",
+    "claim_type": "Order number, configuration, and bundle contents",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
     "product_id": "PRD-CA18ADF836",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 15021312006216",
@@ -11501,6 +11893,22 @@
     "source_location": "Product list 2025!bonastent",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-CBE0A76B71",
+    "source_id": "SRC064",
+    "source_location": "Breakthrough devices report — Monarch/NeuWave profile",
+    "claim_type": "Device identity and regulatory status",
+    "verification_status": "Recorded from a secondary research report only. No manufacturer document or FDA record is on file for it here, so it is hidden from selection until one is attached.",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-CBE34A56E9",
+    "source_id": "SRC068",
+    "source_location": "Surgical laser fibres brochure — application matrix",
+    "claim_type": "Order number, fibre dimensions, and ticked clinical applications",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
     "notes": null
   },
   {
@@ -11632,6 +12040,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-CEEA076F20",
+    "source_id": "SRC064",
+    "source_location": "Breakthrough devices report — dNerva profile",
+    "claim_type": "Device identity and regulatory status",
+    "verification_status": "Recorded from a secondary research report only. No manufacturer document or FDA record is on file for it here, so it is hidden from selection until one is attached.",
+    "notes": null
+  },
+  {
     "product_id": "PRD-CEED2FDA83",
     "source_id": "SRC007",
     "source_location": "Flexible bronchoscopy platforms!6",
@@ -11653,6 +12069,14 @@
     "source_location": "p. 11",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-CF779363F3",
+    "source_id": "SRC057",
+    "source_location": "Siemens Healthineers USA product page",
+    "claim_type": "System identity",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
     "notes": null
   },
   {
@@ -11912,11 +12336,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-D52ED4EF06",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 00811907031123",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
     "product_id": "PRD-D532D5406F",
     "source_id": "SRC006",
     "source_location": "Product list 2025!thoracent",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D53D4686EF",
+    "source_id": "SRC070",
+    "source_location": "ForTec Quanta Holmium sheet and Interventional Pulmonology product listing",
+    "claim_type": "System identity, wavelength, power options, and stated penetration",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
     "notes": null
   },
   {
@@ -12384,11 +12824,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-DCFC448718",
+    "source_id": "SRC058",
+    "source_location": "OEC 3D brochure",
+    "claim_type": "System identity",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
     "product_id": "PRD-DD4AFE7DE4",
     "source_id": "SRC008",
     "source_location": "CSV row 10",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DD7EE55F5C",
+    "source_id": "SRC068",
+    "source_location": "Surgical laser fibres brochure — application matrix",
+    "claim_type": "Order number, fibre dimensions, and ticked clinical applications",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
     "notes": null
   },
   {
@@ -12469,6 +12925,22 @@
     "source_location": "p. 3",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DF4958E82D",
+    "source_id": "SRC046",
+    "source_location": "device.txt, PrimaryDI 04050147015753",
+    "claim_type": "Device identity and distribution status",
+    "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DF4958E82D",
+    "source_id": "SRC053",
+    "source_location": "Product data — Products table",
+    "claim_type": "Order number and configuration",
+    "verification_status": "Manufacturer document",
     "notes": null
   },
   {
@@ -12957,6 +13429,14 @@
     "source_location": "device.txt, PrimaryDI 04026704558414",
     "claim_type": "Device identity, configuration, and distribution status",
     "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-E8AA815321",
+    "source_id": "SRC055",
+    "source_location": "Mini-Thoracoscopy Set ordering table",
+    "claim_type": "Order number and configuration",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
     "notes": null
   },
   {
@@ -13504,6 +13984,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F1A94DDA3B",
+    "source_id": "SRC055",
+    "source_location": "Mini-Thoracoscopy Set ordering table",
+    "claim_type": "Order number, configuration, and bundle contents",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
     "product_id": "PRD-F1D5F37924",
     "source_id": "SRC007",
     "source_location": "Therapeutic bronchoscopy",
@@ -13688,6 +14176,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F53A443D66",
+    "source_id": "SRC055",
+    "source_location": "Mini-Thoracoscopy Set ordering table",
+    "claim_type": "Order number, configuration, and bundle contents",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
     "product_id": "PRD-F54BF5D38E",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
@@ -13741,6 +14237,14 @@
     "source_location": "Specifications table, brochure p. 2",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer/distributor brochure",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F5D70D6AB9",
+    "source_id": "SRC066",
+    "source_location": "510(k) K070157 summary and FDA-stamped Indications for Use",
+    "claim_type": "Cleared indications and wavelength",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
     "notes": null
   },
   {
@@ -14109,6 +14613,14 @@
     "source_location": "CSV row 27",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-FD23D11B2B",
+    "source_id": "SRC055",
+    "source_location": "Mini-Thoracoscopy Set ordering table",
+    "claim_type": "Order number, configuration, and bundle contents",
+    "verification_status": "Manufacturer document; no FDA UDI record located",
     "notes": null
   },
   {

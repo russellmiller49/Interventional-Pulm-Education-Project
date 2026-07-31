@@ -1,6 +1,6 @@
 import type { Metadata, Route } from 'next'
 import Link from 'next/link'
-import { Layers, SlidersHorizontal } from 'lucide-react'
+import { FlaskConical, Layers, SlidersHorizontal } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { Badge } from '@/components/ui/badge'
@@ -142,6 +142,13 @@ export default async function CatalogSearchPage({ params, searchParams }: PagePr
     conflictingDistribution: t('verification.conflictingDistribution'),
     legacyInstalledBase: t('verification.legacyInstalledBase'),
     legacyInstalledBaseHelp: t('verification.legacyInstalledBaseHelp'),
+    regulatoryCleared510k: t('verification.regulatoryCleared510k'),
+    regulatoryApprovedPma: t('verification.regulatoryApprovedPma'),
+    regulatoryGrantedDeNovo: t('verification.regulatoryGrantedDeNovo'),
+    regulatoryBreakthroughInvestigational: t('verification.regulatoryBreakthroughInvestigational'),
+    regulatoryBreakthroughPremarketReview: t('verification.regulatoryBreakthroughPremarketReview'),
+    regulatoryNotUsAuthorized: t('verification.regulatoryNotUsAuthorized'),
+    regulatoryHelp: t('verification.regulatoryHelp'),
     legendTitle: t('verification.legendTitle'),
     verifiedHelp: t('verification.verifiedHelp'),
     candidateHelp: t('verification.candidateHelp'),
@@ -170,6 +177,12 @@ export default async function CatalogSearchPage({ params, searchParams }: PagePr
             <Link href={`/${locale}/preference-cards/catalog/uses` as Route}>
               <Layers aria-hidden="true" className="h-4 w-4" />
               {t('browseByUse')}
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/${locale}/preference-cards/emerging` as Route}>
+              <FlaskConical aria-hidden="true" className="h-4 w-4" />
+              {t('browseEmerging')}
             </Link>
           </Button>
         </div>
@@ -276,6 +289,17 @@ export default async function CatalogSearchPage({ params, searchParams }: PagePr
                   conflictingDistribution: t('verification.conflictingDistribution'),
                   legacyInstalledBase: t('verification.legacyInstalledBase'),
                   legacyInstalledBaseHelp: t('verification.legacyInstalledBaseHelp'),
+                  regulatoryCleared510k: t('verification.regulatoryCleared510k'),
+                  regulatoryApprovedPma: t('verification.regulatoryApprovedPma'),
+                  regulatoryGrantedDeNovo: t('verification.regulatoryGrantedDeNovo'),
+                  regulatoryBreakthroughInvestigational: t(
+                    'verification.regulatoryBreakthroughInvestigational',
+                  ),
+                  regulatoryBreakthroughPremarketReview: t(
+                    'verification.regulatoryBreakthroughPremarketReview',
+                  ),
+                  regulatoryNotUsAuthorized: t('verification.regulatoryNotUsAuthorized'),
+                  regulatoryHelp: t('verification.regulatoryHelp'),
                 }}
               />
             ) : (

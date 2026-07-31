@@ -31,19 +31,19 @@
   },
   {
     "product_id": "PRD-01F519887A",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
   },
   {
     "product_id": "PRD-0221D4FEAA",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
   },
   {
     "product_id": "PRD-023092D446",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Exact",
     "notes": "Thoracoscopy instrument"
   },
@@ -52,6 +52,12 @@
     "role_code": "TRACH_TUBE_CUFFED",
     "role_fit": "Primary",
     "notes": "Adult silicone tracheostomy tube, 8 mm I.D."
+  },
+  {
+    "product_id": "PRD-024D6B3E35",
+    "role_code": "LASER_FIBER",
+    "role_fit": "Primary",
+    "notes": null
   },
   {
     "product_id": "PRD-02641F9166",
@@ -372,6 +378,12 @@
     "notes": "Pediatric silicone tracheostomy tube, 3 mm I.D."
   },
   {
+    "product_id": "PRD-0A93A5E8C4",
+    "role_code": "ENERGY_PLATFORM",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-0A9806F6F2",
     "role_code": "ENERGY_CABLE_ADAPTER",
     "role_fit": "Primary",
@@ -541,7 +553,7 @@
   },
   {
     "product_id": "PRD-0EA65ED2D3",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -816,6 +828,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-14F0A7735B",
+    "role_code": "PHOTODYNAMIC_DIFFUSER",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-150ECDCD05",
     "role_code": "ENDOSCOPIC_SUCTION_PUMP",
     "role_fit": "Exact",
@@ -913,7 +931,7 @@
   },
   {
     "product_id": "PRD-16C811C696",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Exact",
     "notes": "Pleural biopsy forceps"
   },
@@ -1070,6 +1088,12 @@
   {
     "product_id": "PRD-1A152615A0",
     "role_code": "AIRWAY_STENT_PATIENT_SPECIFIC",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1A381F0381",
+    "role_code": "LASER_CONSOLE",
     "role_fit": "Primary",
     "notes": null
   },
@@ -1243,7 +1267,7 @@
   },
   {
     "product_id": "PRD-1F69D6AD05",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -1255,7 +1279,7 @@
   },
   {
     "product_id": "PRD-1FE403B84C",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
   },
@@ -1267,7 +1291,7 @@
   },
   {
     "product_id": "PRD-2058BA100A",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
   },
@@ -1279,7 +1303,7 @@
   },
   {
     "product_id": "PRD-20CB4910F8",
-    "role_code": "PDT_KIT",
+    "role_code": "PERC_TRACH_KIT",
     "role_fit": "Primary",
     "notes": null
   },
@@ -1428,6 +1452,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-23E2441568",
+    "role_code": "PHOTODYNAMIC_DIFFUSER",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-23E592FF23",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -1465,7 +1495,7 @@
   },
   {
     "product_id": "PRD-247C9B978C",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -1582,6 +1612,12 @@
     "role_code": "TRACH_TUBE_CUFFED",
     "role_fit": "Primary",
     "notes": "Adult silicone tracheostomy tube, 8.5 mm I.D."
+  },
+  {
+    "product_id": "PRD-272F711392",
+    "role_code": "PHOTODYNAMIC_DIFFUSER",
+    "role_fit": "Primary",
+    "notes": null
   },
   {
     "product_id": "PRD-27460DB568",
@@ -1747,7 +1783,7 @@
   },
   {
     "product_id": "PRD-2ACB51E58C",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
   },
@@ -1783,7 +1819,7 @@
   },
   {
     "product_id": "PRD-2BD5C6261D",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Exact",
     "notes": "Thoracoscopy instrument"
   },
@@ -1808,6 +1844,12 @@
   {
     "product_id": "PRD-2C4537F4D4",
     "role_code": "BIOPSY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2C5302C206",
+    "role_code": "TOMOSYNTHESIS_NAVIGATION_SYSTEM",
     "role_fit": "Primary",
     "notes": null
   },
@@ -1920,6 +1962,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2E3D684EEA",
+    "role_code": "LASER_CONSOLE",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2E6996BA6A",
     "role_code": "IPC_MANAGEMENT_ACCESSORY",
     "role_fit": "Exact",
@@ -1999,7 +2047,7 @@
   },
   {
     "product_id": "PRD-2FBD344316",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
   },
@@ -2010,6 +2058,12 @@
     "notes": "Pediatric silicone tracheostomy tube, 5.5 mm I.D."
   },
   {
+    "product_id": "PRD-2FD8B78EEA",
+    "role_code": "LASER_CONSOLE",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2FFEEB98B2",
     "role_code": "EBUS_SCOPE",
     "role_fit": "Primary",
@@ -2018,6 +2072,12 @@
   {
     "product_id": "PRD-302A6FF548",
     "role_code": "EBV_SIZING_KIT",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-3065186BDC",
+    "role_code": "ENERGY_PLATFORM",
     "role_fit": "Primary",
     "notes": null
   },
@@ -2077,7 +2137,7 @@
   },
   {
     "product_id": "PRD-3236D0CEDC",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -2244,8 +2304,14 @@
     "notes": "Rigid bronchoscope telescope adapter"
   },
   {
+    "product_id": "PRD-370FFF1D04",
+    "role_code": "LASER_FIBER",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-377440703A",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -2276,6 +2342,12 @@
   {
     "product_id": "PRD-39777E7C38",
     "role_code": "NAV_TBNA_NEEDLE",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-397A9C06E0",
+    "role_code": "PHOTODYNAMIC_PHOTOSENSITIZER",
     "role_fit": "Primary",
     "notes": null
   },
@@ -2356,6 +2428,12 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Exact",
     "notes": "Direct-visualization covered airway SEMS"
+  },
+  {
+    "product_id": "PRD-3C27441753",
+    "role_code": "LASER_FIBER",
+    "role_fit": "Primary",
+    "notes": null
   },
   {
     "product_id": "PRD-3C6D28844E",
@@ -2460,6 +2538,12 @@
     "notes": "Rigid suction catheter"
   },
   {
+    "product_id": "PRD-401A185759",
+    "role_code": "PULSED_FIELD_ABLATION_SYSTEM",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4073AAF637",
     "role_code": "TRACH_TUBE_CUFFED",
     "role_fit": "Primary",
@@ -2485,7 +2569,7 @@
   },
   {
     "product_id": "PRD-40B834E981",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -2532,6 +2616,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-41AAD08DBF",
+    "role_code": "GENERIC_SUCTION",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-41BA4FDFE6",
     "role_code": "IPC_DRAINAGE_KIT",
     "role_fit": "Primary",
@@ -2569,7 +2659,7 @@
   },
   {
     "product_id": "PRD-427A070734",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -2590,6 +2680,12 @@
     "role_code": "ROBOTIC_PROCEDURE_KIT",
     "role_fit": "Primary",
     "notes": "Accessory kit for the Galaxy platform."
+  },
+  {
+    "product_id": "PRD-43308BC331",
+    "role_code": "LASER_CONSOLE",
+    "role_fit": "Primary",
+    "notes": null
   },
   {
     "product_id": "PRD-4361785147",
@@ -2676,10 +2772,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-45AEBC6DFE",
+    "role_code": "TOMOSYNTHESIS_NAVIGATION_SYSTEM",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-460DB62059",
     "role_code": "IPC_INSERTION_KIT",
     "role_fit": "Exact",
     "notes": "Aspira IPC insertion system"
+  },
+  {
+    "product_id": "PRD-4692570E45",
+    "role_code": "PHOTODYNAMIC_DIFFUSER",
+    "role_fit": "Primary",
+    "notes": null
   },
   {
     "product_id": "PRD-470EA6C7BA",
@@ -2778,6 +2886,12 @@
     "notes": "Adult silicone tracheostomy tube, 6 mm I.D."
   },
   {
+    "product_id": "PRD-49D1B94318",
+    "role_code": "LASER_CONSOLE",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4A023D6489",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -2794,6 +2908,12 @@
     "role_code": "TRACH_TUBE_CUFFLESS",
     "role_fit": "Primary",
     "notes": "Pediatric silicone tracheostomy tube, 3 mm I.D."
+  },
+  {
+    "product_id": "PRD-4A1701C80B",
+    "role_code": "THORACOSCOPY_ELECTRODE",
+    "role_fit": "Primary",
+    "notes": null
   },
   {
     "product_id": "PRD-4A329E27C5",
@@ -2857,7 +2977,7 @@
   },
   {
     "product_id": "PRD-4BB84F196B",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
   },
@@ -2995,7 +3115,7 @@
   },
   {
     "product_id": "PRD-4F64240AD0",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -3034,6 +3154,12 @@
     "role_code": "RIGID_TELESCOPE",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscopy telescope"
+  },
+  {
+    "product_id": "PRD-50C32D45B1",
+    "role_code": "PULSED_FIELD_ABLATION_CATHETER",
+    "role_fit": "Primary",
+    "notes": null
   },
   {
     "product_id": "PRD-50DCC12BE8",
@@ -3103,7 +3229,7 @@
   },
   {
     "product_id": "PRD-529E58AC8C",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Exact",
     "notes": "Thoracoscopy instrument"
   },
@@ -3194,6 +3320,12 @@
   {
     "product_id": "PRD-5543746F59",
     "role_code": "AUTOMATED_ENDOSCOPE_REPROCESSOR",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5567CCE50B",
+    "role_code": "LASER_CONSOLE",
     "role_fit": "Primary",
     "notes": null
   },
@@ -3331,7 +3463,7 @@
   },
   {
     "product_id": "PRD-58CFB02C8E",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Exact",
     "notes": "Thoracoscopy instrument"
   },
@@ -3475,7 +3607,7 @@
   },
   {
     "product_id": "PRD-5B271EC93B",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
   },
@@ -3595,7 +3727,7 @@
   },
   {
     "product_id": "PRD-5E2713887A",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Exact",
     "notes": "Pleural biopsy forceps"
   },
@@ -3636,10 +3768,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-5F8443871A",
+    "role_code": "ENERGY_PLATFORM_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-5FA4880E82",
-    "role_code": "PLEUROSCOPE",
+    "role_code": "THORACOSCOPE_SEMIRIGID",
     "role_fit": "Exact",
     "notes": "Mini thoracoscope"
+  },
+  {
+    "product_id": "PRD-5FEA4F31EA",
+    "role_code": "COLLATERAL_VENTILATION_SYSTEM",
+    "role_fit": "Primary",
+    "notes": null
   },
   {
     "product_id": "PRD-602AA2F147",
@@ -3709,7 +3853,7 @@
   },
   {
     "product_id": "PRD-61EE4D5DE6",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Exact",
     "notes": "Pleural biopsy needle"
   },
@@ -3757,7 +3901,7 @@
   },
   {
     "product_id": "PRD-635FE10D65",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Exact",
     "notes": "Thoracoscopy instrument"
   },
@@ -3799,7 +3943,7 @@
   },
   {
     "product_id": "PRD-64481A5C4F",
-    "role_code": "PDT_KIT",
+    "role_code": "PERC_TRACH_KIT",
     "role_fit": "Primary",
     "notes": null
   },
@@ -3812,6 +3956,12 @@
   {
     "product_id": "PRD-64B1BB919D",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-64B4DE25D7",
+    "role_code": "PHOTODYNAMIC_LASER",
     "role_fit": "Primary",
     "notes": null
   },
@@ -3889,7 +4039,7 @@
   },
   {
     "product_id": "PRD-67D1D03D3F",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -3900,8 +4050,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-685E69DACA",
+    "role_code": "COLLATERAL_VENTILATION_SYSTEM",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-68E4686E4B",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -3991,7 +4147,7 @@
   },
   {
     "product_id": "PRD-6AAA7898E9",
-    "role_code": "PDT_KIT",
+    "role_code": "PERC_TRACH_KIT",
     "role_fit": "Primary",
     "notes": null
   },
@@ -4051,7 +4207,7 @@
   },
   {
     "product_id": "PRD-6BF80B6E0D",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
   },
@@ -4087,7 +4243,7 @@
   },
   {
     "product_id": "PRD-6CB8BD3445",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Exact",
     "notes": "Thoracoscopy instrument"
   },
@@ -4111,7 +4267,7 @@
   },
   {
     "product_id": "PRD-6D2D08656C",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Exact",
     "notes": "Thoracoscopy instrument"
   },
@@ -4189,7 +4345,7 @@
   },
   {
     "product_id": "PRD-6E580584DD",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
   },
@@ -4310,6 +4466,12 @@
   {
     "product_id": "PRD-707B8A1974",
     "role_code": "NAV_CATHETER_GUIDE",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-709E07B50A",
+    "role_code": "LASER_FIBER",
     "role_fit": "Primary",
     "notes": null
   },
@@ -4674,6 +4836,12 @@
     "notes": "Adult silicone tracheostomy tube, 2.5 mm I.D."
   },
   {
+    "product_id": "PRD-792DBA7A57",
+    "role_code": "PULSED_FIELD_ABLATION_SYSTEM",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-795FD16DE8",
     "role_code": "CHEST_TUBE_SURGICAL",
     "role_fit": "Primary",
@@ -4684,6 +4852,12 @@
     "role_code": "CHEST_TUBE_LARGE_BORE",
     "role_fit": "Compatible",
     "notes": "16 Fr thoracic catheter."
+  },
+  {
+    "product_id": "PRD-79735E8DC9",
+    "role_code": "PHOTODYNAMIC_DIFFUSER",
+    "role_fit": "Primary",
+    "notes": null
   },
   {
     "product_id": "PRD-79B8CF6846",
@@ -4770,6 +4944,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-7C2BC9D752",
+    "role_code": "FLUOROSCOPY_C_ARM",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-7C4A3CE094",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
@@ -4849,7 +5029,7 @@
   },
   {
     "product_id": "PRD-7E7BC96506",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -4975,7 +5155,7 @@
   },
   {
     "product_id": "PRD-8287E5FFEF",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -5029,7 +5209,7 @@
   },
   {
     "product_id": "PRD-8446D3EB4E",
-    "role_code": "PDT_KIT",
+    "role_code": "PERC_TRACH_KIT",
     "role_fit": "Primary",
     "notes": null
   },
@@ -5053,7 +5233,7 @@
   },
   {
     "product_id": "PRD-8509EF4D1E",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -5114,6 +5294,12 @@
   {
     "product_id": "PRD-87011FE827",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-8711E4A1C9",
+    "role_code": "COLLATERAL_VENTILATION_SYSTEM",
     "role_fit": "Primary",
     "notes": null
   },
@@ -5256,6 +5442,12 @@
     "notes": "Adult PVC tracheostomy tube, 10 mm I.D., cuffless, fenestrated."
   },
   {
+    "product_id": "PRD-8B374A11AC",
+    "role_code": "THORACOSCOPY_TROCAR",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-8B542204C5",
     "role_code": "TRACH_TUBE_CUFFED",
     "role_fit": "Primary",
@@ -5272,6 +5464,12 @@
     "role_code": "TRACH_TUBE_CUFFLESS",
     "role_fit": "Primary",
     "notes": "Pediatric silicone tracheostomy tube, 4.5 mm I.D."
+  },
+  {
+    "product_id": "PRD-8BF5C4BAB5",
+    "role_code": "MICROWAVE_ABLATION_CATHETER",
+    "role_fit": "Primary",
+    "notes": null
   },
   {
     "product_id": "PRD-8C032DCD3A",
@@ -5358,6 +5556,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8E3A12AFF4",
+    "role_code": "THORACOSCOPY_ELECTRODE",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-8E8D4D1565",
     "role_code": "THORACENTESIS_KIT",
     "role_fit": "Primary",
@@ -5383,7 +5587,7 @@
   },
   {
     "product_id": "PRD-901A1A1C5C",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Exact",
     "notes": "Thoracoscopy instrument"
   },
@@ -5622,8 +5826,20 @@
     "notes": null
   },
   {
+    "product_id": "PRD-95B12463A5",
+    "role_code": "THORACOSCOPY_ELECTRODE",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-95C0E7E548",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9610100EDA",
+    "role_code": "PHOTODYNAMIC_DIFFUSER",
     "role_fit": "Primary",
     "notes": null
   },
@@ -5656,6 +5872,12 @@
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscope accessory"
+  },
+  {
+    "product_id": "PRD-981BD7EC93",
+    "role_code": "LASER_SAFETY_EQUIPMENT",
+    "role_fit": "Primary",
+    "notes": null
   },
   {
     "product_id": "PRD-9844E2B578",
@@ -5791,7 +6013,7 @@
   },
   {
     "product_id": "PRD-9C5FCF73E5",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Exact",
     "notes": "Thoracoscopy instrument"
   },
@@ -5815,7 +6037,7 @@
   },
   {
     "product_id": "PRD-9CCC6DB32E",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -5964,8 +6186,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-A108804498",
+    "role_code": "LASER_CONSOLE",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-A12A620A18",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -5989,7 +6217,7 @@
   },
   {
     "product_id": "PRD-A1B7FC0BD4",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
   },
@@ -6163,7 +6391,7 @@
   },
   {
     "product_id": "PRD-A7209784C9",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Primary",
     "notes": null
   },
@@ -6217,13 +6445,13 @@
   },
   {
     "product_id": "PRD-A8A5497344",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Exact",
     "notes": "Thoracoscopy instrument"
   },
   {
     "product_id": "PRD-A8B69D1E0B",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -6373,7 +6601,7 @@
   },
   {
     "product_id": "PRD-AD1CD2C1B2",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -6391,13 +6619,13 @@
   },
   {
     "product_id": "PRD-AD5DB57EBC",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
   },
   {
     "product_id": "PRD-ADAEAEFCA8",
-    "role_code": "PLEUROSCOPE",
+    "role_code": "THORACOSCOPE_SEMIRIGID",
     "role_fit": "Primary",
     "notes": null
   },
@@ -6504,6 +6732,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B12CE929DE",
+    "role_code": "LASER_FIBER",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-B1E837841F",
     "role_code": "CHEST_TUBE_SMALL_BORE",
     "role_fit": "Exact",
@@ -6595,7 +6829,7 @@
   },
   {
     "product_id": "PRD-B4E0EB9EFB",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
   },
@@ -6672,6 +6906,12 @@
     "notes": "16 Fr thoracic catheter."
   },
   {
+    "product_id": "PRD-B5C8A167EC",
+    "role_code": "LASER_CONSOLE",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-B5E107E3AE",
     "role_code": "STENT_APPLICATOR",
     "role_fit": "Primary",
@@ -6721,7 +6961,7 @@
   },
   {
     "product_id": "PRD-B6A919EF32",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
   },
@@ -6751,7 +6991,7 @@
   },
   {
     "product_id": "PRD-B76CB39194",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Primary",
     "notes": null
   },
@@ -6859,7 +7099,7 @@
   },
   {
     "product_id": "PRD-BA7CBE6482",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -6871,7 +7111,7 @@
   },
   {
     "product_id": "PRD-BA86F45760",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
   },
@@ -6964,6 +7204,12 @@
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Exact",
     "notes": "Rigid tracheoscope"
+  },
+  {
+    "product_id": "PRD-BC2FB31EE2",
+    "role_code": "PULSED_FIELD_ABLATION_SYSTEM",
+    "role_fit": "Primary",
+    "notes": null
   },
   {
     "product_id": "PRD-BC936E9D71",
@@ -7183,7 +7429,7 @@
   },
   {
     "product_id": "PRD-C1F90B7445",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -7285,7 +7531,7 @@
   },
   {
     "product_id": "PRD-C4C8CC5CF5",
-    "role_code": "PDT_KIT",
+    "role_code": "PERC_TRACH_KIT",
     "role_fit": "Primary",
     "notes": null
   },
@@ -7399,7 +7645,7 @@
   },
   {
     "product_id": "PRD-C7EB76131F",
-    "role_code": "PDT_KIT",
+    "role_code": "PERC_TRACH_KIT",
     "role_fit": "Primary",
     "notes": null
   },
@@ -7448,6 +7694,12 @@
   {
     "product_id": "PRD-C9704EAA93",
     "role_code": "AIRWAY_STENT_SEMS_UNCOVERED",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C9FE364632",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Primary",
     "notes": null
   },
@@ -7518,6 +7770,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-CBE0A76B71",
+    "role_code": "MICROWAVE_ABLATION_CATHETER",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-CBE34A56E9",
+    "role_code": "LASER_FIBER",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-CC28627AEB",
     "role_code": "VIDEO_PROCESSOR",
     "role_fit": "Primary",
@@ -7561,7 +7825,7 @@
   },
   {
     "product_id": "PRD-CCDCC41B7E",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -7618,6 +7882,12 @@
     "role_code": "INFLATION_DEVICE",
     "role_fit": "Exact",
     "notes": "Balloon inflation device"
+  },
+  {
+    "product_id": "PRD-CF779363F3",
+    "role_code": "FLUOROSCOPY_C_ARM",
+    "role_fit": "Primary",
+    "notes": null
   },
   {
     "product_id": "PRD-D0139E750F",
@@ -7735,7 +8005,7 @@
   },
   {
     "product_id": "PRD-D2F1921685",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -7788,8 +8058,20 @@
     "notes": null
   },
   {
+    "product_id": "PRD-D52ED4EF06",
+    "role_code": "COLLATERAL_VENTILATION_SYSTEM",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-D532D5406F",
     "role_code": "FOREIGN_BODY_BASKET",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D53D4686EF",
+    "role_code": "LASER_CONSOLE",
     "role_fit": "Primary",
     "notes": null
   },
@@ -7963,7 +8245,7 @@
   },
   {
     "product_id": "PRD-D99A37C035",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
   },
@@ -8106,8 +8388,20 @@
     "notes": null
   },
   {
+    "product_id": "PRD-DCFC448718",
+    "role_code": "FLUOROSCOPY_C_ARM",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-DD4AFE7DE4",
     "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DD7EE55F5C",
+    "role_code": "LASER_FIBER",
     "role_fit": "Primary",
     "notes": null
   },
@@ -8172,6 +8466,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-DF4958E82D",
+    "role_code": "ENERGY_PLATFORM_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-DF5BFBB99D",
     "role_code": "RADIAL_EBUS_PROBE",
     "role_fit": "Exact",
@@ -8215,7 +8515,7 @@
   },
   {
     "product_id": "PRD-DFFE75EB48",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -8508,6 +8808,12 @@
     "notes": "24 Fr thoracic catheter."
   },
   {
+    "product_id": "PRD-E8AA815321",
+    "role_code": "THORACOSCOPY_TROCAR",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-E8C63D6C64",
     "role_code": "CYTOLOGY_BRUSH",
     "role_fit": "Primary",
@@ -8581,13 +8887,13 @@
   },
   {
     "product_id": "PRD-EA6F3E44C1",
-    "role_code": "PDT_KIT",
+    "role_code": "PERC_TRACH_KIT",
     "role_fit": "Primary",
     "notes": null
   },
   {
     "product_id": "PRD-EAED780757",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -8695,7 +9001,7 @@
   },
   {
     "product_id": "PRD-ED212D7E3C",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy trocar"
   },
@@ -8833,9 +9139,15 @@
   },
   {
     "product_id": "PRD-F1712066B6",
-    "role_code": "THORACOSCOPY_TELESCOPE",
+    "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
+  },
+  {
+    "product_id": "PRD-F1A94DDA3B",
+    "role_code": "ENDOSCOPY_LIGHT_CABLE",
+    "role_fit": "Primary",
+    "notes": null
   },
   {
     "product_id": "PRD-F1D5F37924",
@@ -8970,6 +9282,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F53A443D66",
+    "role_code": "THORACOSCOPE_RIGID",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-F54BF5D38E",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
@@ -9006,6 +9324,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F5D70D6AB9",
+    "role_code": "LASER_FIBER",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-F60C3305B4",
     "role_code": "FLEX_SCOPE_SINGLE_USE",
     "role_fit": "Primary",
@@ -9031,7 +9355,7 @@
   },
   {
     "product_id": "PRD-F6BB76BECF",
-    "role_code": "PLEURAL_BIOPSY_FORCEPS",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Exact",
     "notes": "Thoracoscopy instrument"
   },
@@ -9288,6 +9612,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-FD23D11B2B",
+    "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
+    "role_fit": "Primary",
+    "notes": null
+  },
+  {
     "product_id": "PRD-FD2FA688FB",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
@@ -9355,7 +9685,7 @@
   },
   {
     "product_id": "PRD-FE67FEA4F0",
-    "role_code": "PLEUROSCOPY_TROCAR",
+    "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
     "notes": "Thoracoscopy access needle"
   },
@@ -9397,7 +9727,7 @@
   },
   {
     "product_id": "PRD-FFA21E88CC",
-    "role_code": "PDT_KIT",
+    "role_code": "PERC_TRACH_KIT",
     "role_fit": "Primary",
     "notes": null
   }
