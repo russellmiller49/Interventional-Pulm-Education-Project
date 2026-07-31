@@ -54,6 +54,7 @@
     "literature:report": "tsx scripts/literature/generate-import-report.ts",
     "literature:create-gold-set": "tsx scripts/literature/create-gold-set.ts",
     "literature:export-gold-set": "tsx scripts/literature/export-gold-set.ts",
+    "literature:analyze-gold-set": "tsx scripts/literature/analyze-gold-set.ts",
     "literature:import-gold-reviews": "node scripts/require-primary-checkout.mjs -- tsx scripts/literature/import-gold-reviews.ts",
     "rose:qupath": "tsx scripts/rapid-onsite-cytology/open-slide-in-qupath.ts",
     "rose:qupath:convert": "node scripts/rapid-onsite-cytology/qupath-geojson-to-shapes.mjs",

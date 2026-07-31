@@ -56,9 +56,9 @@ journal text remain stored even when no curated journal-registry ID exists.
 ## 1. Start the isolated local literature database
 
 The Literature Explorer has its own local-only Supabase stack. It uses ports `55320`–`55329`, so
-it can run beside another project using the standard `5432x` ports. Only the two canonical
-literature migrations are copied into its ignored generated work directory; the repository's
-unrelated legacy migrations are not applied.
+it can run beside another project using the standard `5432x` ports. Only the canonical literature
+migrations in the local-stack allowlist are copied into its ignored generated work directory; the
+repository's unrelated legacy migrations are not applied.
 
 ```bash
 npm install
@@ -158,6 +158,21 @@ Pilot batches are development-only. Use the pilot to validate the relevance defi
 technology tags, topic names, common boundary cases, and keyboard workflow. Do not treat it as a
 locked test set.
 
+After completing and exporting the pilot, run the strict, no-database readiness analysis:
+
+```bash
+npm run literature:analyze-gold-set -- \
+  --input /absolute/path/pilot-v1-all.csv \
+  --batch pilot-v1 \
+  --expected-count 100
+```
+
+The command writes JSON and Markdown reports under the ignored
+`local-data/literature/gold-sets/` directory. It validates the exact CSV contract, completion,
+blinding, controlled labels, coverage, sampling-stratum yield, old and calibrated rule bands,
+review timing, and candidate regression PMIDs. Pilot metrics are sampling diagnostics, not
+population classifier performance.
+
 ## 5. Review in the development server
 
 Start the application:
@@ -226,13 +241,28 @@ npm run literature:create-gold-set -- \
 Review the sampling report before repeating with `--commit --target local` or the separately
 confirmed remote flags.
 
+`stratified-v2` automatically excludes PMIDs present in an earlier pilot or gold-standard batch,
+so the reviewed pilot cannot leak into the new development or held-out test split. The report
+shows the original, excluded, and eligible candidate counts. `--allow-resample` is an explicit
+escape hatch for exceptional editorial use and should not be used for the definitive gold set.
+
+The report also warns whenever a requested stratum has too few candidates before its slots are
+redistributed. Resolve or explicitly accept every coverage warning before creating the batch.
+
 Review the **development** split first. Use only those labels for prompt, rule, threshold, and
-classifier development. Do not inspect or evaluate the **locked test** split during iteration.
-When the workflow is finalized, select the test split in the admin page, review it, run the final
-evaluation, and avoid further tuning against its errors.
+classifier development. The admin application blocks test-item reads and test/all exports while
+database triggers block test-item mutation and preserve the sampled composition. The trusted
+service role remains the database administration boundary and must not be used to inspect held-out
+rows directly. Test controls remain hidden until every development item is complete and its drafts
+are cleared.
+
+When development is final, select **Unlock test for final evaluation**, enter the audit reason, and
+confirm the irreversible unlock. The event, actor, reason, and timestamp are stored with the
+batch. Review the test split once, run the final evaluation, and avoid further tuning against its
+errors.
 
 The 70/30 split is deterministic and stratified. Split membership is not shown inside an article
-card, but the queue selector controls which partition is being reviewed.
+card, and test rows cannot be retrieved through the review workspace before unlock.
 
 ## 7. Add regression collections
 

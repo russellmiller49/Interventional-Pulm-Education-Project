@@ -22,14 +22,16 @@ interface GoldSetItemRouteContext {
   params: Promise<{ itemId: string }>
 }
 
-export async function GET(_request: Request, context: GoldSetItemRouteContext) {
+export async function GET(request: Request, context: GoldSetItemRouteContext) {
   const auth = await requireLiteratureSiteAdminApi()
   if (!auth.ok) return auth.response
   const { itemId: rawItemId } = await context.params
   const itemId = itemIdSchema.safeParse(rawItemId)
   if (!itemId.success) return literatureValidationError(itemId.error)
 
-  const result = await loadLiteratureGoldReviewItem(undefined, itemId.data, 'all', 'all')
+  const splitValue = new URL(request.url).searchParams.get('split')
+  const split = splitValue === 'test' || splitValue === 'all' ? splitValue : 'development'
+  const result = await loadLiteratureGoldReviewItem(undefined, itemId.data, 'all', split)
   if (result.error) {
     return literatureApiError('LITERATURE_GOLD_SET_LOAD_FAILED', result.error, 503)
   }

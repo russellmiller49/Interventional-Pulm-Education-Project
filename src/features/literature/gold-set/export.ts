@@ -1,3 +1,14 @@
+import {
+  literatureGoldSetDatasetSplits,
+  literatureGoldSetReviewStatuses,
+  literatureGoldSetStrata,
+} from './constants'
+import type {
+  LiteratureGoldSetDatasetSplit,
+  LiteratureGoldSetReviewStatus,
+  LiteratureGoldSetStratum,
+} from './types'
+
 export interface LiteratureGoldExportReview {
   id: string | null
   revision: number | null
@@ -60,6 +71,27 @@ export interface LiteratureGoldExport {
   records: LiteratureGoldExportRecord[]
 }
 
+export interface LiteratureGoldCsvRow {
+  batchId: string
+  batchName: string
+  itemId: string
+  pmid: string
+  title: string
+  abstract: string | null
+  authors: unknown[]
+  journalTitle: string | null
+  journalAbbreviation: string | null
+  publicationYear: number | null
+  publicationTypes: string[]
+  sampleStratum: LiteratureGoldSetStratum | null
+  samplingReason: string | null
+  datasetSplit: LiteratureGoldSetDatasetSplit
+  displayOrder: number
+  reviewStatus: LiteratureGoldSetReviewStatus
+  reviewSource: 'completed' | 'draft' | 'empty'
+  review: LiteratureGoldExportReview
+}
+
 export function literatureGoldExportSamplingContext(
   hasCompletedDecision: boolean,
   sampleStratum: string,
@@ -70,7 +102,7 @@ export function literatureGoldExportSamplingContext(
     : { sampleStratum: null, samplingReason: null }
 }
 
-const CSV_COLUMNS = [
+export const LITERATURE_GOLD_CSV_COLUMNS = [
   'batch_id',
   'batch_name',
   'item_id',
@@ -115,10 +147,10 @@ function csvCell(value: unknown) {
 }
 
 export function serializeLiteratureGoldSetCsv(exported: LiteratureGoldExport) {
-  const lines = [CSV_COLUMNS.map(csvCell).join(',')]
+  const lines = [LITERATURE_GOLD_CSV_COLUMNS.map(csvCell).join(',')]
   for (const record of exported.records) {
     const review = record.review
-    const values: Record<(typeof CSV_COLUMNS)[number], unknown> = {
+    const values: Record<(typeof LITERATURE_GOLD_CSV_COLUMNS)[number], unknown> = {
       batch_id: exported.batch.id,
       batch_name: exported.batch.name,
       item_id: record.itemId,
@@ -155,7 +187,7 @@ export function serializeLiteratureGoldSetCsv(exported: LiteratureGoldExport) {
       reviewer_email: review?.reviewerEmail,
       completed_at: review?.completedAt,
     }
-    lines.push(CSV_COLUMNS.map((column) => csvCell(values[column])).join(','))
+    lines.push(LITERATURE_GOLD_CSV_COLUMNS.map((column) => csvCell(values[column])).join(','))
   }
   return `${lines.join('\r\n')}\r\n`
 }
@@ -199,54 +231,251 @@ export function parseCsvRows(input: string) {
   return rows
 }
 
-export function parseLiteratureGoldSetCsv(input: string) {
-  const rows = parseCsvRows(input)
-  const headers = rows.shift()
-  if (!headers) return []
-  const indexByHeader = new Map(headers.map((header, index) => [header, index]))
-  const required = [
-    'item_id',
-    'pmid',
-    'relevance_label',
-    'metadata_sufficiency',
-    'reviewer_confidence',
-  ]
-  for (const header of required) {
-    if (!indexByHeader.has(header)) throw new Error(`CSV is missing required column ${header}.`)
+function csvRecordError(recordNumber: number, column: string, message: string): never {
+  throw new Error(`CSV record ${recordNumber}, column ${column}: ${message}`)
+}
+
+function csvInteger(
+  raw: string,
+  recordNumber: number,
+  column: string,
+  options: { maximum?: number; minimum?: number; nullable: true },
+): number | null
+function csvInteger(
+  raw: string,
+  recordNumber: number,
+  column: string,
+  options?: { maximum?: number; minimum?: number; nullable?: false },
+): number
+function csvInteger(
+  raw: string,
+  recordNumber: number,
+  column: string,
+  options: { maximum?: number; minimum?: number; nullable?: boolean } = {},
+) {
+  if (raw === '' && options.nullable) return null
+  if (!/^(?:0|[1-9][0-9]*)$/u.test(raw)) {
+    return csvRecordError(recordNumber, column, 'must contain a decimal integer.')
   }
-  const field = (row: string[], name: string) => row[indexByHeader.get(name) ?? -1] ?? ''
-  const decodedField = (row: string[], name: string) =>
-    field(row, name).replace(/^'(?=[=+\-@])/u, '')
-  const jsonArray = (row: string[], name: string) => {
-    const parsed = JSON.parse(decodedField(row, name) || '[]') as unknown
-    if (!Array.isArray(parsed) || parsed.some((value) => typeof value !== 'string')) {
-      throw new Error(`${name} must contain a JSON string array.`)
-    }
-    return parsed
+  const value = Number(raw)
+  if (
+    !Number.isSafeInteger(value) ||
+    value < (options.minimum ?? 0) ||
+    value > (options.maximum ?? Number.MAX_SAFE_INTEGER)
+  ) {
+    return csvRecordError(recordNumber, column, 'contains an out-of-range integer.')
+  }
+  return value
+}
+
+function csvBoolean(
+  raw: string,
+  recordNumber: number,
+  column: string,
+  nullable: true,
+): boolean | null
+function csvBoolean(raw: string, recordNumber: number, column: string, nullable?: false): boolean
+function csvBoolean(raw: string, recordNumber: number, column: string, nullable = false) {
+  if (raw === '' && nullable) return null
+  if (raw === 'true') return true
+  if (raw === 'false') return false
+  return csvRecordError(recordNumber, column, 'must be exactly true or false.')
+}
+
+function csvJson(raw: string, recordNumber: number, column: string) {
+  if (raw === '') {
+    return csvRecordError(recordNumber, column, 'must contain JSON.')
+  }
+  try {
+    return JSON.parse(raw) as unknown
+  } catch {
+    return csvRecordError(recordNumber, column, 'contains malformed JSON.')
+  }
+}
+
+function csvJsonArray(raw: string, recordNumber: number, column: string) {
+  const value = csvJson(raw, recordNumber, column)
+  if (!Array.isArray(value)) {
+    return csvRecordError(recordNumber, column, 'must contain a JSON array.')
+  }
+  return value
+}
+
+function csvStringArray(raw: string, recordNumber: number, column: string) {
+  const value = csvJsonArray(raw, recordNumber, column)
+  if (value.some((item) => typeof item !== 'string')) {
+    return csvRecordError(recordNumber, column, 'must contain a JSON string array.')
+  }
+  return value as string[]
+}
+
+function csvEnum<T extends string>(
+  raw: string,
+  values: readonly T[],
+  recordNumber: number,
+  column: string,
+  nullable: true,
+): T | null
+function csvEnum<T extends string>(
+  raw: string,
+  values: readonly T[],
+  recordNumber: number,
+  column: string,
+  nullable?: false,
+): T
+function csvEnum<T extends string>(
+  raw: string,
+  values: readonly T[],
+  recordNumber: number,
+  column: string,
+  nullable = false,
+): T | null {
+  if (raw === '' && nullable) return null
+  if ((values as readonly string[]).includes(raw)) return raw as T
+  return csvRecordError(
+    recordNumber,
+    column,
+    `must be one of ${values.join(', ')}${nullable ? ', or blank' : ''}.`,
+  )
+}
+
+export function parseLiteratureGoldSetCsv(input: string): LiteratureGoldCsvRow[] {
+  const parsedRows = parseCsvRows(input)
+  const originalHeaders = parsedRows.shift()
+  if (!originalHeaders) return []
+
+  const headers = originalHeaders.map((header, index) =>
+    index === 0 ? header.replace(/^\uFEFF/u, '') : header,
+  )
+  const duplicateHeaders = [
+    ...new Set(headers.filter((header, index) => headers.indexOf(header) !== index)),
+  ]
+  if (duplicateHeaders.length > 0) {
+    throw new Error(`CSV contains duplicate column(s): ${duplicateHeaders.join(', ')}.`)
   }
 
-  return rows
-    .filter((row) => row.some(Boolean))
-    .map((row) => ({
-      batchId: decodedField(row, 'batch_id') || null,
-      itemId: decodedField(row, 'item_id'),
-      pmid: decodedField(row, 'pmid'),
-      reviewSource: decodedField(row, 'review_source') || 'completed',
-      sourceReviewId: decodedField(row, 'review_id') || null,
-      review: {
-        relevanceLabel: decodedField(row, 'relevance_label') || null,
-        metadataSufficiency: decodedField(row, 'metadata_sufficiency') || null,
-        reviewerConfidence: decodedField(row, 'reviewer_confidence') || null,
-        topicIds: jsonArray(row, 'topic_ids_json'),
-        technologyTags: jsonArray(row, 'technology_tags_json'),
-        clinicalPurposes: jsonArray(row, 'clinical_purposes_json'),
-        diseaseTags: jsonArray(row, 'disease_tags_json'),
-        studyDesign: decodedField(row, 'study_design') || null,
-        publicationStatus: decodedField(row, 'publication_status') || null,
-        categorizationFromFullText: decodedField(row, 'categorization_from_full_text') === 'true',
-        notes: decodedField(row, 'notes'),
-        usedSupplementalMetadata: decodedField(row, 'used_supplemental_metadata') === 'true',
-        reviewSeconds: Number(decodedField(row, 'review_seconds')) || 0,
+  const expectedColumns = new Set<string>(LITERATURE_GOLD_CSV_COLUMNS)
+  const missingColumns = LITERATURE_GOLD_CSV_COLUMNS.filter((column) => !headers.includes(column))
+  const unexpectedColumns = headers.filter((header) => !expectedColumns.has(header))
+  if (missingColumns.length > 0) {
+    throw new Error(`CSV is missing required column(s): ${missingColumns.join(', ')}.`)
+  }
+  if (unexpectedColumns.length > 0) {
+    throw new Error(`CSV contains unexpected column(s): ${unexpectedColumns.join(', ')}.`)
+  }
+
+  const indexByHeader = new Map(headers.map((header, index) => [header, index]))
+  const rows = parsedRows
+    .map((row, index) => ({ recordNumber: index + 2, row }))
+    .filter(({ row }) => row.some(Boolean))
+
+  return rows.map(({ recordNumber, row }) => {
+    if (row.length !== headers.length) {
+      throw new Error(
+        `CSV record ${recordNumber} has ${row.length} columns; expected ${headers.length}.`,
+      )
+    }
+
+    const field = (name: (typeof LITERATURE_GOLD_CSV_COLUMNS)[number]) =>
+      (row[indexByHeader.get(name) ?? -1] ?? '').replace(/^'(?=[=+\-@])/u, '')
+    const nullableText = (name: (typeof LITERATURE_GOLD_CSV_COLUMNS)[number]) => field(name) || null
+    const authors = csvJsonArray(field('authors_json'), recordNumber, 'authors_json')
+    const publicationYear = csvInteger(
+      field('publication_year'),
+      recordNumber,
+      'publication_year',
+      {
+        minimum: 1000,
+        maximum: 9999,
+        nullable: true,
       },
-    }))
+    )
+    const reviewSource = csvEnum(
+      field('review_source'),
+      ['completed', 'draft', 'empty'] as const,
+      recordNumber,
+      'review_source',
+    )
+
+    return {
+      batchId: field('batch_id'),
+      batchName: field('batch_name'),
+      itemId: field('item_id'),
+      pmid: field('pmid'),
+      title: field('title'),
+      abstract: nullableText('abstract'),
+      authors,
+      journalTitle: nullableText('journal_title'),
+      journalAbbreviation: nullableText('journal_abbreviation'),
+      publicationYear,
+      publicationTypes: csvStringArray(
+        field('publication_types_json'),
+        recordNumber,
+        'publication_types_json',
+      ),
+      sampleStratum: csvEnum(
+        field('sample_stratum'),
+        literatureGoldSetStrata,
+        recordNumber,
+        'sample_stratum',
+        true,
+      ),
+      samplingReason: nullableText('sampling_reason'),
+      datasetSplit: csvEnum(
+        field('dataset_split'),
+        literatureGoldSetDatasetSplits,
+        recordNumber,
+        'dataset_split',
+      ),
+      displayOrder: csvInteger(field('display_order'), recordNumber, 'display_order', {
+        minimum: 1,
+      }),
+      reviewStatus: csvEnum(
+        field('review_status'),
+        literatureGoldSetReviewStatuses,
+        recordNumber,
+        'review_status',
+      ),
+      reviewSource,
+      review: {
+        id: nullableText('review_id'),
+        revision: csvInteger(field('revision'), recordNumber, 'revision', {
+          minimum: 1,
+          nullable: true,
+        }),
+        relevanceLabel: nullableText('relevance_label'),
+        metadataSufficiency: nullableText('metadata_sufficiency'),
+        reviewerConfidence: nullableText('reviewer_confidence'),
+        topicIds: csvStringArray(field('topic_ids_json'), recordNumber, 'topic_ids_json'),
+        technologyTags: csvStringArray(
+          field('technology_tags_json'),
+          recordNumber,
+          'technology_tags_json',
+        ),
+        clinicalPurposes: csvStringArray(
+          field('clinical_purposes_json'),
+          recordNumber,
+          'clinical_purposes_json',
+        ),
+        diseaseTags: csvStringArray(field('disease_tags_json'), recordNumber, 'disease_tags_json'),
+        studyDesign: nullableText('study_design'),
+        publicationStatus: nullableText('publication_status'),
+        categorizationFromFullText: csvBoolean(
+          field('categorization_from_full_text'),
+          recordNumber,
+          'categorization_from_full_text',
+        ),
+        notes: field('notes'),
+        usedSupplementalMetadata: csvBoolean(
+          field('used_supplemental_metadata'),
+          recordNumber,
+          'used_supplemental_metadata',
+        ),
+        reviewSeconds: csvInteger(field('review_seconds'), recordNumber, 'review_seconds'),
+        isBlinded: csvBoolean(field('is_blinded'), recordNumber, 'is_blinded', true),
+        reviewerEmail: nullableText('reviewer_email'),
+        completedAt: nullableText('completed_at'),
+      },
+    }
+  })
 }

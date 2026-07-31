@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { ArrowLeft, Database, Download, FlaskConical, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Database, Download, FlaskConical, LockKeyhole, ShieldCheck } from 'lucide-react'
 import { setRequestLocale } from 'next-intl/server'
 
 import { Badge } from '@/components/ui/badge'
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { GoldSetBatchFreezeButton } from '@/features/literature/components/GoldSetBatchFreezeButton'
 import { GoldSetReviewWorkspace } from '@/features/literature/components/GoldSetReviewWorkspace'
+import { GoldSetTestUnlockButton } from '@/features/literature/components/GoldSetTestUnlockButton'
 import { literatureGoldBatchQuerySchema } from '@/features/literature/schemas/gold-set'
 import { requireLiteratureSiteAdminPage } from '@/features/literature/server/access'
 import {
@@ -50,14 +51,21 @@ export default async function LiteratureGoldSetPage({ params, searchParams }: Go
     split: first(rawQuery?.split) ?? 'development',
   })
   const filters = query.success ? query.data : literatureGoldBatchQuerySchema.parse({})
-  const [batchesResult, itemResult] = await Promise.all([
-    listLiteratureGoldSetBatches(),
-    loadLiteratureGoldReviewItem(filters.batchId, filters.itemId, filters.status, filters.split),
-  ])
+  const batchesResult = await listLiteratureGoldSetBatches()
   const batches = batchesResult.data ?? []
-  const selectedBatch =
-    batches.find((batch) => batch.id === (filters.batchId ?? itemResult.data?.batchId)) ??
-    batches[0]
+  const selectedBatch = batches.find((batch) => batch.id === filters.batchId) ?? batches[0]
+  const testLocked =
+    selectedBatch?.kind === 'gold_standard' &&
+    selectedBatch.testCount > 0 &&
+    !selectedBatch.testUnlockedAt
+  const queueSplit = testLocked && filters.split !== 'development' ? 'development' : filters.split
+  const itemResult = await loadLiteratureGoldReviewItem(
+    selectedBatch?.id,
+    filters.itemId,
+    filters.status,
+    queueSplit,
+  )
+  const exportSplit = testLocked ? 'development' : 'all'
 
   return (
     <div className="container space-y-7 py-8 md:py-12">
@@ -75,6 +83,7 @@ export default async function LiteratureGoldSetPage({ params, searchParams }: Go
             <Badge variant="info">Single reviewer</Badge>
             <Badge variant="outline">Blinded first pass</Badge>
             <Badge variant="outline">Immutable revisions</Badge>
+            {testLocked ? <Badge variant="outline">Test split locked</Badge> : null}
           </div>
           <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">
             Literature Gold Set Review
@@ -89,17 +98,17 @@ export default async function LiteratureGoldSetPage({ params, searchParams }: Go
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline">
               <a
-                href={`/api/admin/literature/gold-set/export?batchId=${selectedBatch.id}&format=csv&split=all`}
+                href={`/api/admin/literature/gold-set/export?batchId=${selectedBatch.id}&format=csv&split=${exportSplit}`}
               >
                 <Download className="h-4 w-4" aria-hidden="true" />
-                Export CSV
+                Export {exportSplit === 'development' ? 'development ' : ''}CSV
               </a>
             </Button>
             <Button asChild variant="outline">
               <a
-                href={`/api/admin/literature/gold-set/export?batchId=${selectedBatch.id}&format=json&split=all`}
+                href={`/api/admin/literature/gold-set/export?batchId=${selectedBatch.id}&format=json&split=${exportSplit}`}
               >
-                Export JSON
+                Export {exportSplit === 'development' ? 'development ' : ''}JSON
               </a>
             </Button>
           </div>
@@ -142,12 +151,12 @@ export default async function LiteratureGoldSetPage({ params, searchParams }: Go
                   <span>Dataset split</span>
                   <select
                     name="split"
-                    defaultValue={filters.split}
+                    defaultValue={queueSplit}
                     className="h-11 w-full rounded-xl border border-input bg-background px-3"
                   >
                     <option value="development">Development</option>
-                    <option value="test">Locked test</option>
-                    <option value="all">All (inspection)</option>
+                    {!testLocked ? <option value="test">Test</option> : null}
+                    {!testLocked ? <option value="all">All (inspection)</option> : null}
                   </select>
                 </label>
                 <label className="space-y-2 text-sm font-medium">
@@ -185,13 +194,40 @@ export default async function LiteratureGoldSetPage({ params, searchParams }: Go
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Development</p>
-                    <p className="font-semibold">{selectedBatch.developmentCount}</p>
+                    <p className="font-semibold">
+                      {selectedBatch.developmentCompletedCount}/{selectedBatch.developmentCount}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Locked test</p>
-                    <p className="font-semibold">{selectedBatch.testCount}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {testLocked ? 'Locked test' : 'Test'}
+                    </p>
+                    <p className="font-semibold">
+                      {selectedBatch.testCompletedCount}/{selectedBatch.testCount}
+                    </p>
                   </div>
                 </div>
+              ) : null}
+              {testLocked ? (
+                <div className="flex items-start gap-3 rounded-xl border border-amber-500/35 bg-amber-500/10 p-4 text-sm">
+                  <LockKeyhole
+                    className="mt-0.5 h-5 w-5 shrink-0 text-amber-700 dark:text-amber-300"
+                    aria-hidden="true"
+                  />
+                  <div className="space-y-1">
+                    <p className="font-semibold">Held-out test labels are not accessible yet</p>
+                    <p className="text-muted-foreground">
+                      Complete every development item first. Test review, direct item access, and
+                      test/all exports stay blocked until an explicit audited unlock.
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+              {selectedBatch?.status === 'active' &&
+              testLocked &&
+              selectedBatch.developmentCount > 0 &&
+              selectedBatch.developmentCompletedCount === selectedBatch.developmentCount ? (
+                <GoldSetTestUnlockButton batchId={selectedBatch.id} />
               ) : null}
               {selectedBatch?.status === 'active' &&
               selectedBatch.totalCount > 0 &&
@@ -206,7 +242,7 @@ export default async function LiteratureGoldSetPage({ params, searchParams }: Go
               key={itemResult.data.id}
               item={itemResult.data}
               locale={locale}
-              queueSplit={filters.split}
+              queueSplit={queueSplit}
             />
           ) : (
             <Card>

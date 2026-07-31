@@ -1,7 +1,10 @@
 import { readFile } from 'node:fs/promises'
 import { extname, resolve } from 'node:path'
 
-import { parseLiteratureGoldSetCsv } from '@/features/literature/gold-set/export'
+import {
+  parseLiteratureGoldReviewImportCsv,
+  type LiteratureGoldReviewImportDecision,
+} from '@/features/literature/gold-set/import'
 import type { LiteratureGoldReviewPayload } from '@/features/literature/gold-set/types'
 import {
   literatureGoldCompleteReviewSchema,
@@ -29,18 +32,9 @@ Options:
   --help                Show this help.
 `.trim()
 
-interface ImportDecision {
-  batchId: string | null
-  itemId: string
-  pmid: string
-  reviewSource: 'completed' | 'draft'
-  sourceReviewId: string | null
-  review: LiteratureGoldReviewPayload
-}
-
 function parseJsonExport(input: string): {
   batchId: string | null
-  decisions: ImportDecision[]
+  decisions: LiteratureGoldReviewImportDecision[]
 } {
   const value = JSON.parse(input) as unknown
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -54,7 +48,7 @@ function parseJsonExport(input: string): {
   if (!Array.isArray(exported.records)) {
     throw new Error('JSON import is missing the records array.')
   }
-  const decisions = exported.records.flatMap((record): ImportDecision[] => {
+  const decisions = exported.records.flatMap((record): LiteratureGoldReviewImportDecision[] => {
     if (!record || typeof record !== 'object' || Array.isArray(record)) return []
     const row = record as Record<string, unknown>
     if (!row.review || typeof row.review !== 'object' || Array.isArray(row.review)) return []
@@ -78,34 +72,6 @@ function parseJsonExport(input: string): {
   return {
     batchId: typeof batch?.id === 'string' ? batch.id : null,
     decisions,
-  }
-}
-
-function parseCsvExport(input: string): {
-  batchId: string | null
-  decisions: ImportDecision[]
-} {
-  const rows = parseLiteratureGoldSetCsv(input)
-  return {
-    batchId: rows[0]?.batchId ?? null,
-    decisions: rows.flatMap((row): ImportDecision[] => {
-      if (row.reviewSource === 'empty') return []
-      const reviewSource = row.reviewSource === 'draft' ? 'draft' : 'completed'
-      const review =
-        reviewSource === 'completed'
-          ? literatureGoldCompleteReviewSchema.parse(row.review)
-          : literatureGoldReviewPayloadSchema.parse(row.review)
-      return [
-        {
-          batchId: row.batchId,
-          itemId: row.itemId,
-          pmid: row.pmid,
-          reviewSource,
-          sourceReviewId: row.sourceReviewId,
-          review,
-        },
-      ]
-    }),
   }
 }
 
@@ -162,9 +128,12 @@ async function main() {
   const inputPath = stringArgument(arguments_, 'input')
   if (!inputPath) throw new Error('--input is required.')
   const input = await readFile(resolve(inputPath), 'utf8')
+  const requestedBatch = stringArgument(arguments_, 'batch')
   const parsed =
     extname(inputPath).toLocaleLowerCase('en-US') === '.csv'
-      ? parseCsvExport(input)
+      ? parseLiteratureGoldReviewImportCsv(input, {
+          expectedBatchReference: requestedBatch,
+        })
       : parseJsonExport(input)
   if (parsed.decisions.length === 0) {
     throw new Error('The import contains no draft or completed review decisions.')
@@ -198,7 +167,7 @@ async function main() {
   const writeMode = resolveLiteratureWriteMode(arguments_, parsed.decisions.length)
   if (!writeMode.commit || !writeMode.client) return
   const client = writeMode.client
-  const batchReference = stringArgument(arguments_, 'batch') ?? parsed.batchId
+  const batchReference = requestedBatch ?? parsed.batchId
   if (!batchReference) throw new Error('--batch is required when the export has no batch ID.')
 
   let batchQuery = client.from('literature_gold_set_batches').select('id,name,status').limit(2)

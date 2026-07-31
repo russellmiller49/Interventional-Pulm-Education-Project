@@ -4,6 +4,8 @@ import { flattenLiteratureTaxonomy, literatureTaxonomy } from '@/features/litera
 
 import {
   DEFAULT_LITERATURE_GOLD_TEST_PERCENT,
+  LITERATURE_GOLD_HIGH_SCORE_THRESHOLD,
+  LITERATURE_GOLD_LOW_SCORE_THRESHOLD,
   LITERATURE_GOLD_SAMPLING_ALGORITHM_VERSION,
 } from './constants'
 import type {
@@ -41,6 +43,7 @@ export interface LiteratureGoldSamplingOptions {
   seed: number
   testPercent?: number
   explicitPmids?: string[]
+  excludedPmids?: string[]
   generatedAt?: string
 }
 
@@ -91,9 +94,11 @@ function deterministicScore(candidate: LiteratureGoldSamplingCandidate) {
   )
 }
 
-function deterministicBand(score: number): LiteratureGoldDeterministicBand {
-  if (score >= 0.65) return 'high'
-  if (score <= 0.2) return 'low'
+export function classifyLiteratureGoldDeterministicBand(
+  score: number,
+): LiteratureGoldDeterministicBand {
+  if (score >= LITERATURE_GOLD_HIGH_SCORE_THRESHOLD) return 'high'
+  if (score < LITERATURE_GOLD_LOW_SCORE_THRESHOLD) return 'low'
   return 'intermediate'
 }
 
@@ -234,7 +239,7 @@ function prepareCandidates(
 
   const prepared = candidates.map<PreparedCandidate>((candidate) => {
     const score = deterministicScore(candidate)
-    const band = deterministicBand(score)
+    const band = classifyLiteratureGoldDeterministicBand(score)
     const candidateBroadTopics = [
       ...new Set(
         candidate.suggestedTopicIds
@@ -356,14 +361,23 @@ export function sampleLiteratureGoldSet(
   }
 
   const explicitPmids = new Set(options.explicitPmids ?? [])
-  let candidates = uniqueCandidates
+  const excludedPmids = new Set(options.excludedPmids ?? [])
+  let candidates = uniqueCandidates.filter((candidate) => !excludedPmids.has(candidate.pmid))
+  const excludedCandidateCount = uniqueCandidates.length - candidates.length
+  if (excludedCandidateCount > 0) {
+    warnings.push(
+      `${excludedCandidateCount} previously sampled candidate PMIDs were excluded from selection.`,
+    )
+  }
   if (explicitPmids.size > 0) {
-    candidates = uniqueCandidates.filter((candidate) => explicitPmids.has(candidate.pmid))
+    candidates = candidates.filter((candidate) => explicitPmids.has(candidate.pmid))
     const missing = [...explicitPmids].filter(
-      (pmid) => !uniqueCandidates.some((candidate) => candidate.pmid === pmid),
+      (pmid) => !candidates.some((candidate) => candidate.pmid === pmid),
     )
     if (missing.length > 0) {
-      warnings.push(`${missing.length} explicitly requested PMIDs were not found in the corpus.`)
+      warnings.push(
+        `${missing.length} explicitly requested PMIDs were not eligible after corpus and exclusion filters.`,
+      )
     }
   }
 
@@ -399,11 +413,16 @@ export function sampleLiteratureGoldSet(
       bucket.push(candidate)
       candidatesByStratum.set(candidate.stratum, bucket)
     }
-    const targets = fillShortages(
-      allocateTargets(sampleSize, BASE_STRATUM_TARGETS),
-      candidatesByStratum,
-      sampleSize,
-    )
+    const requestedTargets = allocateTargets(sampleSize, BASE_STRATUM_TARGETS)
+    for (const [stratum, target] of requestedTargets) {
+      const available = candidatesByStratum.get(stratum)?.length ?? 0
+      if (available < target) {
+        warnings.push(
+          `${stratum} supplied ${available}/${target} requested candidates; the ${target - available} item shortfall was redistributed.`,
+        )
+      }
+    }
+    const targets = fillShortages(new Map(requestedTargets), candidatesByStratum, sampleSize)
 
     // Reserve one candidate for each broad topic when that topic is available.
     for (const topicId of stableSort(broadTopicIds, options.seed, (id) => id)) {
@@ -480,15 +499,20 @@ export function sampleLiteratureGoldSet(
 
   const developmentCount = items.filter((item) => item.datasetSplit === 'development').length
   const testCount = items.length - developmentCount
+  if (options.kind === 'gold_standard' && (developmentCount === 0 || testCount === 0)) {
+    throw new Error('Gold-standard samples require at least one development and one test item.')
+  }
 
   return {
-    reportVersion: '1.0.0',
+    reportVersion: '1.1.0',
     generatedAt: options.generatedAt ?? new Date().toISOString(),
     name: options.name,
     kind: options.kind,
     samplingSeed: options.seed,
     samplingAlgorithmVersion: LITERATURE_GOLD_SAMPLING_ALGORITHM_VERSION,
     requestedSize,
+    originalCandidateCount: uniqueCandidates.length,
+    excludedCandidateCount,
     candidateCount: candidates.length,
     selectedCount: items.length,
     developmentCount,
