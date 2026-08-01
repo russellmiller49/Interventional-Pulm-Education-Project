@@ -20,9 +20,36 @@ import {
   withPublishedModules,
   type ModuleLedger,
 } from '../../src/features/preference-cards/domain/module-ledger'
+import {
+  emptyHistoricalCatalogReleaseFile,
+  emptyHistoricalCatalogRowStore,
+  validateHistoricalCatalog,
+  withRetainedCatalogRelease,
+  withRetainedCatalogRows,
+  type HistoricalCatalogReleaseFile,
+  type HistoricalCatalogRowStore,
+} from '../../src/features/preference-cards/domain/historical-catalog'
+import {
+  emptyProductFamilyLedger,
+  validateProductFamilyLedger,
+  type ProductFamilyLedger,
+  type ReviewedProductFamilyVersion,
+} from '../../src/features/preference-cards/domain/product-family'
 import { PREFERENCE_CARD_RESOLVER_CONTRACT_VERSION } from '../../src/features/preference-cards/domain/resolve-card'
+import type {
+  CatalogProductRecord,
+  ProductGovernanceRecord,
+  ProductRoleRecord,
+  RoleRecord,
+} from '../../src/features/preference-cards/server/catalog-store'
 
 import { computeCatalogRelease } from './catalog-release-id'
+import { deriveCatalogRetention } from './catalog-retention'
+import {
+  deriveReviewedProductFamilyVersion,
+  productFamilyVersionIdFor,
+  type SeedProductFamilyFile,
+} from './product-family-derivation'
 import { computeResolverRelease } from './resolver-release-id'
 import { formatJson } from './format-json'
 
@@ -45,6 +72,7 @@ import { formatJson } from './format-json'
 
 const GENERATED_DIRECTORY = 'data/ip-preference-cards/generated'
 const SEED_DIRECTORY = 'data/ip-preference-cards/seed'
+const REVIEWED_DIRECTORY = 'data/ip-preference-cards/reviewed'
 
 interface SeedRelease {
   id: string
@@ -214,9 +242,123 @@ async function writeJsonWhenChanged(directory: string, filename: string, value: 
   await writeFile(outputPath, await formatJson(value), 'utf8')
 }
 
+/**
+ * Retain the current catalog release as immutable, content-addressed rows.
+ *
+ * Returns everything the caller needs to decide whether to write: the merged artifacts, the
+ * problems found, and the membership index the family build checks against. Nothing is written
+ * here — a generated file that disagreed with a failed validation would be a record of the
+ * mutation rather than a barrier to it.
+ */
+async function retainCatalog(input: {
+  generatedDirectory: string
+  catalogRelease: Awaited<ReturnType<typeof computeCatalogRelease>>
+  products: CatalogProductRecord[]
+  roles: RoleRecord[]
+  productRoles: ProductRoleRecord[]
+  pinnedCatalogReleaseIds: ReadonlySet<string>
+}) {
+  const derived = deriveCatalogRetention({
+    release: input.catalogRelease,
+    products: input.products,
+    roles: input.roles,
+    productRoles: input.productRoles,
+  })
+
+  const storeBefore = await readJsonOrDefault<HistoricalCatalogRowStore>(
+    input.generatedDirectory,
+    'catalog-rows.json',
+    emptyHistoricalCatalogRowStore(),
+  )
+  const releasesBefore = await readJsonOrDefault<HistoricalCatalogReleaseFile>(
+    input.generatedDirectory,
+    'catalog-release-manifests.json',
+    emptyHistoricalCatalogReleaseFile(),
+  )
+
+  const store = withRetainedCatalogRows(storeBefore, derived.rows)
+  const releases = withRetainedCatalogRelease(releasesBefore, derived.manifest)
+
+  const problems = validateHistoricalCatalog({
+    store,
+    releases,
+    rederived: new Map([[derived.manifest.catalogReleaseId, derived.manifest]]),
+    pinnedCatalogReleaseIds: input.pinnedCatalogReleaseIds,
+  })
+
+  return { store, releases, manifest: derived.manifest, problems }
+}
+
+/**
+ * Materialize the reviewed product families the seed declares, and freeze them.
+ *
+ * Same division of labour as releases: the seed carries lifecycle facts and the authoritative
+ * basis, this computes the membership and the hash, and approval is the act of freezing the
+ * computed hash into the seed. Nobody hand-writes a member list, because a hand-written member
+ * list is a claim about which products a physician is asking the room for that nothing checked.
+ */
+function buildProductFamilies(input: {
+  seed: SeedProductFamilyFile
+  catalogReleaseId: string
+  products: CatalogProductRecord[]
+  productRoles: ProductRoleRecord[]
+  unselectableProductIds: ReadonlySet<string>
+}): { versions: ReviewedProductFamilyVersion[]; failures: string[] } {
+  const versions: ReviewedProductFamilyVersion[] = []
+  const failures: string[] = []
+
+  for (const family of input.seed.families) {
+    const versionId = productFamilyVersionIdFor(family.productFamilyCode, family.version)
+    const frozen = family.governanceState !== 'draft'
+    if (frozen && !family.definitionHash) {
+      failures.push(
+        `Product family ${versionId} is ${family.governanceState} but records no definition hash. Run this while it is a draft, then freeze the hash it reports.`,
+      )
+    }
+    if (!frozen && family.definitionHash) {
+      failures.push(
+        `Product family ${versionId} is a draft but records a frozen definition hash. A draft's membership is still moving; freeze the hash when approving it.`,
+      )
+    }
+    if (frozen && !family.catalogReleaseId) {
+      failures.push(
+        `Product family ${versionId} is ${family.governanceState} but does not record the catalog release its membership was reviewed against.`,
+      )
+    }
+
+    // Membership is derived against the catalog release the family was reviewed against. For an
+    // already-approved family that is a historical release, and re-deriving it from the *current*
+    // catalog would be checking a frozen statement against data it never described.
+    const derived = deriveReviewedProductFamilyVersion({
+      seed: family,
+      catalogReleaseId: family.catalogReleaseId ?? input.catalogReleaseId,
+      products: input.products,
+      productRoles: input.productRoles,
+      unselectableProductIds: input.unselectableProductIds,
+    })
+    if (!derived.ok) {
+      failures.push(derived.message)
+      continue
+    }
+    // An approved family keeps the hash it was approved with. Writing the recomputed one would
+    // turn the guard into a rubber stamp.
+    versions.push(
+      frozen && family.definitionHash
+        ? { ...derived.version, definitionHash: family.definitionHash }
+        : derived.version,
+    )
+  }
+
+  versions.sort((left, right) =>
+    left.productFamilyVersionId.localeCompare(right.productFamilyVersionId),
+  )
+  return { versions, failures }
+}
+
 async function main() {
   const generatedDirectory = process.argv[2] ?? GENERATED_DIRECTORY
   const seedDirectory = process.argv[3] ?? SEED_DIRECTORY
+  const reviewedDirectory = process.argv[4] ?? REVIEWED_DIRECTORY
 
   // Recomputed before anything else reads it, so the runtime's notion of "which catalog
   // release is current" is never staler than the catalog itself.
@@ -275,6 +417,74 @@ async function main() {
   )
   const ledgerProblems = validateModuleLedger({ ledger, liveModules, pinnedModuleVersionIds })
 
+  // The catalog release every published bundle pins has to stay retrievable, or the cards pinned
+  // to those bundles lose the product and role identity they were saved against.
+  const pinnedCatalogReleaseIds = new Set(
+    result.bundles
+      .filter((bundle) => bundle.releaseState !== 'draft')
+      .map((bundle) => bundle.catalogImportId),
+  )
+  const products = await readJson<CatalogProductRecord[]>(
+    generatedDirectory,
+    'catalog-products.json',
+  )
+  const roles = await readJson<RoleRecord[]>(generatedDirectory, 'roles.json')
+  const productRoles = await readJson<ProductRoleRecord[]>(generatedDirectory, 'product-roles.json')
+  const retained = await retainCatalog({
+    generatedDirectory,
+    catalogRelease,
+    products,
+    roles,
+    productRoles,
+    pinnedCatalogReleaseIds,
+  })
+
+  const productGovernance = (
+    await readJson<{ productGovernance: ProductGovernanceRecord[] }>(
+      reviewedDirectory,
+      'external-review-corrections.json',
+    )
+  ).productGovernance
+  const unselectableProductIds = new Set(
+    productGovernance
+      .filter((entry) => entry.slottingScope === 'not_applicable')
+      .map((entry) => entry.productId),
+  )
+
+  const familySeed = await readJsonOrDefault<SeedProductFamilyFile>(
+    seedDirectory,
+    'product-families.json',
+    { formatVersion: '1.0', families: [] },
+  )
+  const families = buildProductFamilies({
+    seed: familySeed,
+    catalogReleaseId: catalogRelease.catalogReleaseId,
+    products,
+    productRoles,
+    unselectableProductIds,
+  })
+  const familyLedger: ProductFamilyLedger = {
+    ...emptyProductFamilyLedger(),
+    versions: families.versions,
+  }
+  const familyProblems = validateProductFamilyLedger({
+    ledger: familyLedger,
+    catalogReleaseMembership: new Map([
+      [
+        catalogRelease.catalogReleaseId,
+        {
+          productIds: new Set(products.map((product) => product.product_id)),
+          rolesByProductId: productRoles.reduce((index, link) => {
+            const existing = index.get(link.product_id) ?? new Set<string>()
+            existing.add(link.role_code)
+            index.set(link.product_id, existing)
+            return index
+          }, new Map<string, Set<string>>()),
+        },
+      ],
+    ]),
+  })
+
   const blocking = result.messages.filter((message) => message.severity === 'blocking')
   const warnings = result.messages.filter((message) => message.severity === 'warning')
 
@@ -288,16 +498,52 @@ async function main() {
     )
   }
 
+  const catalogProblems = retained.problems.filter((problem) => problem.severity === 'blocking')
+  const catalogNotes = retained.problems.filter((problem) => problem.severity === 'info')
+
+  console.log('')
+  console.log(
+    `Catalog release ${retained.manifest.catalogReleaseId.slice(0, 16)} retains ${retained.manifest.productRowHashes.length} product, ${retained.manifest.roleRowHashes.length} role, and ${retained.manifest.productRoleRowHashes.length} product-role row(s); the store holds ${Object.keys(retained.store.rows).length} across ${retained.releases.releases.length} release(s).`,
+  )
+  console.log(
+    `${families.versions.length} reviewed product family version(s): ${families.versions.filter((version) => version.governanceState === 'approved').length} approved, ${families.versions.filter((version) => version.governanceState === 'draft').length} draft, ${families.versions.filter((version) => version.governanceState === 'retired').length} retired.`,
+  )
+  for (const version of families.versions.filter(
+    (candidate) => candidate.governanceState === 'draft',
+  )) {
+    console.log(
+      `  draft ${version.productFamilyVersionId} — ${version.memberProductIds.length} member(s), hash ${version.definitionHash}`,
+    )
+  }
+
   if (warnings.length > 0) {
     console.log('')
     console.log(`${warnings.length} advisory condition(s):`)
     for (const message of warnings) console.log(`  · ${message.code}: ${message.message}`)
   }
+  for (const note of catalogNotes) console.log(`  · ${note.code}: ${note.message}`)
 
   if (ledgerProblems.length > 0) {
     console.log('')
     console.error(`${ledgerProblems.length} module retention problem(s):`)
     for (const problem of ledgerProblems) console.error(`  ✗ ${problem.code}: ${problem.message}`)
+    process.exitCode = 1
+    return
+  }
+
+  if (catalogProblems.length > 0) {
+    console.log('')
+    console.error(`${catalogProblems.length} catalog retention problem(s):`)
+    for (const problem of catalogProblems) console.error(`  ✗ ${problem.code}: ${problem.message}`)
+    process.exitCode = 1
+    return
+  }
+
+  if (families.failures.length > 0 || familyProblems.length > 0) {
+    console.log('')
+    console.error(`${families.failures.length + familyProblems.length} product family problem(s):`)
+    for (const failure of families.failures) console.error(`  ✗ ${failure}`)
+    for (const problem of familyProblems) console.error(`  ✗ ${problem.code}: ${problem.message}`)
     process.exitCode = 1
     return
   }
@@ -312,6 +558,13 @@ async function main() {
     return
   }
 
+  await writeJsonWhenChanged(generatedDirectory, 'catalog-rows.json', retained.store)
+  await writeJsonWhenChanged(
+    generatedDirectory,
+    'catalog-release-manifests.json',
+    retained.releases,
+  )
+  await writeJsonWhenChanged(generatedDirectory, 'product-family-versions.json', familyLedger)
   await writeJsonWhenChanged(generatedDirectory, 'module-ledger.json', ledger)
   await writeJsonWhenChanged(generatedDirectory, 'release-bundles.json', {
     pointers: result.pointers,

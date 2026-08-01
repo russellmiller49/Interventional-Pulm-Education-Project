@@ -5,17 +5,25 @@ import {
   withFamilyPicks,
   type FamilyPick,
 } from '../domain/family-pick'
-import { familyKeyFromPickId, familyPickId, isFamilyPickId } from '../domain/size-at-procedure'
+import { familyPickId, isFamilyPickId } from '../domain/size-at-procedure'
 import { isCatalogPickItemId } from '../domain/catalog-pick'
 import { buildDemoContext, defaultBuildInput } from '../data/demo-context.server'
 import { resolveCard } from '../domain/resolve-card'
-import { getFamilyPick, searchProductFamiliesForRole } from '../server/catalog'
+import { getApprovedProductFamiliesForRole } from '../data/product-families.server'
+import { getFamilyPickForVersion, searchProductFamiliesForRole } from '../server/catalog'
 
 const STENT_ROLE = 'AIRWAY_STENT_SILICONE_STRAIGHT'
 
+const FIXTURE_VERSION_ID = 'family-fixture-dumon-td-v1-0'
+const FIXTURE_CATALOG_RELEASE = 'a'.repeat(64)
+const FIXTURE_DEFINITION_HASH = 'b'.repeat(64)
+
 function pick(overrides: Partial<FamilyPick> = {}): FamilyPick {
   return {
-    familyKey: 'MFR-TEST|dumon td|implant',
+    productFamilyVersionId: FIXTURE_VERSION_ID,
+    productFamilyCode: 'FIXTURE_DUMON_TD',
+    catalogReleaseId: FIXTURE_CATALOG_RELEASE,
+    definitionHash: FIXTURE_DEFINITION_HASH,
     roleCode: STENT_ROLE,
     familyName: 'DUMON TD',
     manufacturerDisplay: 'Novatech',
@@ -35,9 +43,9 @@ function pick(overrides: Partial<FamilyPick> = {}): FamilyPick {
 const scope = { organizationId: 'org', siteId: 'site', locationId: 'loc' }
 
 describe('family pick identity', () => {
-  it('namespaces item ids apart from product and set ids', () => {
+  it('is addressed by reviewed family version, not by a catalog-browsing key', () => {
     const item = familyPickToHospitalItem(pick(), scope)
-    expect(item.id).toBe('family:MFR-TEST|dumon td|implant')
+    expect(item.id).toBe(`family-version:${FIXTURE_VERSION_ID}`)
     expect(isFamilyPickId(item.id)).toBe(true)
     expect(isCatalogPickItemId(item.id)).toBe(false)
   })
@@ -78,7 +86,7 @@ describe('family pick identity', () => {
 
   it('builds a role option pointing at the line', () => {
     const option = familyPickToRoleOption(pick())
-    expect(option.hospitalItemId).toBe(familyPickId('MFR-TEST|dumon td|implant'))
+    expect(option.hospitalItemId).toBe(familyPickId(FIXTURE_VERSION_ID))
     expect(option.roleCode).toBe(STENT_ROLE)
     expect(option.active).toBe(true)
   })
@@ -113,7 +121,7 @@ describe('withFamilyPicks', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it('retains a distinct role option when the same line serves two roles', () => {
+  it('retains a distinct role option when the same family version serves two roles', () => {
     const context = buildDemoContext('rigid-bronch')
     const straight = pick()
     const yStent = pick({
@@ -126,11 +134,12 @@ describe('withFamilyPicks', () => {
     const merged = withFamilyPicks(context, [straight, yStent])
     const familyItems = merged.hospitalItems.filter((item) =>
       [straight, yStent].some(
-        (candidate) => item.id === familyPickId(candidate.familyKey, candidate.roleCode),
+        (candidate) =>
+          item.id === familyPickId(candidate.productFamilyVersionId, candidate.roleCode),
       ),
     )
-    const familyOptions = merged.hospitalRoleOptions.filter(
-      (option) => familyKeyFromPickId(option.hospitalItemId) === straight.familyKey,
+    const familyOptions = merged.hospitalRoleOptions.filter((option) =>
+      option.hospitalItemId.endsWith(FIXTURE_VERSION_ID),
     )
 
     expect(familyItems).toHaveLength(2)
@@ -161,28 +170,28 @@ describe('resolving a card with a family pick', () => {
     const { context, slotId } = stentSlot()
     const picked = pick()
     const input = defaultBuildInput('rigid-bronch')
-    input.selectedHospitalItemIds = { [slotId]: familyPickId(picked.familyKey) }
+    input.selectedHospitalItemIds = { [slotId]: familyPickId(picked.productFamilyVersionId) }
 
     const after = resolveCard(input, withFamilyPicks(context, [picked]))
     const item = after.items.find((entry) => entry.id === slotId)
 
-    expect(item?.selectedHospitalItemId).toBe(familyPickId(picked.familyKey))
+    expect(item?.selectedHospitalItemId).toBe(familyPickId(picked.productFamilyVersionId))
     expect(item?.selectedItemSnapshot?.localDescription).toContain('size at time of procedure')
     expect(item?.resolutionState).not.toBe('unresolved')
   })
 
   it('changes the snapshot hash when a different line is picked', () => {
     const { context, slotId } = stentSlot()
-    const build = (familyKey: string) => {
-      const picked = pick({ familyKey })
+    const build = (productFamilyVersionId: string) => {
+      const picked = pick({ productFamilyVersionId })
       const input = defaultBuildInput('rigid-bronch')
-      input.selectedHospitalItemIds = { [slotId]: familyPickId(familyKey) }
+      input.selectedHospitalItemIds = { [slotId]: familyPickId(productFamilyVersionId) }
       return resolveCard(input, withFamilyPicks(context, [picked])).snapshotHash
     }
-    expect(build('MFR-TEST|dumon td|implant')).not.toBe(build('MFR-TEST|dumon tf|implant'))
+    expect(build('family-fixture-dumon-td-v1-0')).not.toBe(build('family-fixture-dumon-tf-v1-0'))
   })
 
-  it('upgrades a legacy family id to the exact role slice when a family serves two roles', () => {
+  it('scopes the item id by role when one family version serves two requirements', () => {
     const context = buildDemoContext('rigid-bronch')
     const straight = pick()
     const yStent = pick({ roleCode: 'AIRWAY_STENT_SILICONE_Y' })
@@ -193,17 +202,17 @@ describe('resolving a card with a family pick', () => {
     expect(ySlot).toBeDefined()
     const input = defaultBuildInput('rigid-bronch')
     input.selectedHospitalItemIds = {
-      [straightSlot!.id]: familyPickId(straight.familyKey),
-      [ySlot!.id]: familyPickId(yStent.familyKey),
+      [straightSlot!.id]: familyPickId(straight.productFamilyVersionId, straight.roleCode),
+      [ySlot!.id]: familyPickId(yStent.productFamilyVersionId, yStent.roleCode),
     }
 
     const resolved = resolveCard(input, withFamilyPicks(context, [straight, yStent]))
 
     expect(
       resolved.items.find((item) => item.id === straightSlot!.id)?.selectedHospitalItemId,
-    ).toBe(familyPickId(straight.familyKey, straight.roleCode))
+    ).toBe(familyPickId(straight.productFamilyVersionId, straight.roleCode))
     expect(resolved.items.find((item) => item.id === ySlot!.id)?.selectedHospitalItemId).toBe(
-      familyPickId(yStent.familyKey, yStent.roleCode),
+      familyPickId(yStent.productFamilyVersionId, yStent.roleCode),
     )
   })
 })
@@ -230,22 +239,35 @@ describe('server-side family search and rebuild', () => {
     }
   })
 
-  it('rebuilds a real product line from its key alone', () => {
-    const families = searchProductFamiliesForRole({ roleCode: STENT_ROLE })
-    const first = families[0]
-    const rebuilt = getFamilyPick(first.familyKey, STENT_ROLE)
+  it('rebuilds a real product line from an approved reviewed family version', () => {
+    const approved = getApprovedProductFamiliesForRole(STENT_ROLE)
+    expect(approved.length).toBeGreaterThan(0)
+    const version = approved[0]
+    const rebuilt = getFamilyPickForVersion(version, STENT_ROLE)
+
     expect(rebuilt).not.toBeNull()
-    expect(rebuilt!.familyName).toBe(first.familyName)
-    expect(rebuilt!.manufacturerDisplay).toBe(first.manufacturerDisplay)
-    expect(rebuilt!.variantCount).toBe(first.variantCount)
-    expect(rebuilt!.specRanges).toEqual(first.specRanges)
-    expect(rebuilt!.verificationTier).toBe(first.verificationTier)
+    expect(rebuilt!.productFamilyVersionId).toBe(version.productFamilyVersionId)
+    expect(rebuilt!.definitionHash).toBe(version.definitionHash)
+    expect(rebuilt!.catalogReleaseId).toBe(version.catalogReleaseId)
+    expect(rebuilt!.familyName).toBe(version.displayName)
+    expect(rebuilt!.variantCount).toBe(version.memberProductIds.length)
   })
 
-  it('refuses a family that does not serve the requested role', () => {
+  it('reports which discovery groupings correspond to a reviewed family and which do not', () => {
     const families = searchProductFamiliesForRole({ roleCode: STENT_ROLE })
-    expect(getFamilyPick(families[0].familyKey, 'CHEST_TUBE_SURGICAL')).toBeNull()
-    expect(getFamilyPick('not-a-family', STENT_ROLE)).toBeNull()
+    const approvedIds = new Set(
+      getApprovedProductFamiliesForRole(STENT_ROLE).map(
+        (version) => version.productFamilyVersionId,
+      ),
+    )
+    for (const family of families) {
+      if (family.reviewedFamilyVersionId === null) {
+        expect(family.reviewedFamilyDefinitionHash).toBeNull()
+        continue
+      }
+      expect(approvedIds.has(family.reviewedFamilyVersionId)).toBe(true)
+      expect(family.reviewedFamilyDefinitionHash).toMatch(/^[a-f0-9]{64}$/)
+    }
   })
 
   it('narrows the lines by search text', () => {
@@ -254,5 +276,14 @@ describe('server-side family search and rebuild', () => {
     expect(narrowed.length).toBeGreaterThan(0)
     expect(narrowed.length).toBeLessThanOrEqual(all.length)
     expect(narrowed.some((family) => /dumon td/i.test(family.familyName))).toBe(true)
+  })
+
+  it('still names the reviewed family when a text query matches only some of its sizes', () => {
+    // The grouping is matched against the *complete* role-scoped family, so a query that narrows
+    // eighteen sizes to three must not make the line look like a smaller, different family.
+    const narrowed = searchProductFamiliesForRole({ roleCode: STENT_ROLE, q: 'DUMON TD' })
+    const line = narrowed.find((family) => /dumon td/i.test(family.familyName))
+    expect(line).toBeDefined()
+    expect(line!.reviewedFamilyVersionId).not.toBeNull()
   })
 })

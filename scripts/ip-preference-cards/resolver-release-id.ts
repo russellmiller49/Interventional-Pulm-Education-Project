@@ -25,6 +25,7 @@ import { readFile } from 'node:fs/promises'
  */
 export const RESOLVER_SOURCE_FILES = [
   'src/features/preference-cards/domain/resolve-card.ts',
+  'src/features/preference-cards/domain/card-hashes.ts',
   'src/features/preference-cards/domain/expand-recipe-composition.ts',
   'src/features/preference-cards/domain/evaluate-compatibility.ts',
   'src/features/preference-cards/domain/kit-suppression.ts',

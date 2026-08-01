@@ -44,9 +44,17 @@ const explanationKeyByCode: Record<Exclude<EditableCardErrorCode, 'not_found'>, 
   // Reconstruction requires a release pin; an input without one is refused rather than
   // rebuilt by a weaker route.
   builder_inputs_not_release_pinned: 'edit.unavailableSuperseded',
+  // A product line recorded as a catalog-browsing key rather than a reviewed family. Reopening
+  // would mean deciding which products that key stands for today, which is a guess about what the
+  // physician is asking the room for — so the card stays exactly as it was saved.
+  legacy_family_identity: 'edit.unavailableLegacyFamily',
   scenario_recipe_mismatch: 'edit.unavailableRecipeVersion',
   module_not_offered: 'edit.unavailableModule',
   modifier_not_offered: 'edit.unavailableModifier',
+  // The catalog release this card was saved against is no longer retrievable intact, so product
+  // and role identity cannot be reconstructed. Substituting today's catalog is the one thing the
+  // pin exists to prevent.
+  historical_catalog_unavailable: 'edit.unavailableCatalogRelease',
   catalog_pick_unavailable: 'edit.unavailableCatalog',
   product_family_unavailable: 'edit.unavailableCatalog',
   equipment_set_unavailable: 'edit.unavailableCatalog',

@@ -76,6 +76,7 @@
     "ip-cards:scenarios": "tsx scripts/ip-preference-cards/generate-scenarios.ts",
     "ip-cards:compositions": "tsx scripts/ip-preference-cards/build-recipe-compositions.ts",
     "ip-cards:releases": "tsx scripts/ip-preference-cards/build-release-bundles.ts",
+    "ip-cards:release:check-base": "tsx scripts/ip-preference-cards/check-publication-baseline.ts",
     "ip-cards:gudid": "tsx scripts/ip-preference-cards/build-gudid-index.ts",
     "ip-cards:additions": "tsx scripts/ip-preference-cards/build-catalog-additions.ts",
     "ip-cards:gudid-confirm": "tsx scripts/ip-preference-cards/gudid-confirm.ts"

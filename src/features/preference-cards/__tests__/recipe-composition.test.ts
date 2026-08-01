@@ -551,6 +551,7 @@ describe('the composition manifest is part of the card identity', () => {
       siteName: 'Site',
       locationName: 'Room',
       locationCapabilities: [],
+      releaseIdentity: null,
       recipe: composition,
       recipeModules: overrideModules,
       modifiers: [],

@@ -38,7 +38,13 @@ function option(overrides: Partial<CatalogPickerOption> & { productId: string })
 
 function family(overrides: Partial<CatalogPickerFamily> = {}): CatalogPickerFamily {
   return {
-    familyKey: 'MFR-NOVA|dumon td|implant',
+    discoveryKey: 'MFR-NOVA|dumon td|implant',
+    // Reviewed by default, because the interesting default is the one that can be persisted; the
+    // unreviewed case is exercised explicitly below by nulling these four.
+    reviewedFamilyVersionId: 'family-novatech-dumon-td-v1-0',
+    reviewedFamilyCode: 'NOVATECH_DUMON_TD',
+    reviewedFamilyCatalogReleaseId: 'a'.repeat(64),
+    reviewedFamilyDefinitionHash: 'b'.repeat(64),
     familyName: 'DUMON TD',
     manufacturerDisplay: 'Novatech',
     manufacturerGroupId: 'MFR-NOVA',
@@ -175,7 +181,8 @@ describe('CatalogOptionPicker', () => {
 
     expect(onAddFamily).toHaveBeenCalledWith(
       expect.objectContaining({
-        familyKey: 'MFR-NOVA|dumon td|implant',
+        productFamilyVersionId: 'family-novatech-dumon-td-v1-0',
+        definitionHash: 'b'.repeat(64),
         familyName: 'DUMON TD',
         roleCode: STENT_ROLE,
         variantCount: 2,
@@ -215,7 +222,7 @@ describe('CatalogOptionPicker', () => {
         roleLabel="Silicone stent"
         existingProductIds={new Set()}
         onAdd={jest.fn()}
-        existingFamilyKeys={new Set(['MFR-NOVA|dumon td|implant'])}
+        existingFamilyVersionIds={new Set(['family-novatech-dumon-td-v1-0'])}
         onAddFamily={jest.fn()}
       />,
     )
@@ -224,5 +231,36 @@ describe('CatalogOptionPicker', () => {
     await waitFor(() => expect(screen.getByText('DUMON TD')).toBeInTheDocument())
     const added = screen.getByRole('button', { name: /line added/i })
     expect(added).toBeDisabled()
+  })
+
+  it('withholds the whole-line action when the grouping is not a reviewed family', async () => {
+    const user = userEvent.setup()
+    mockCatalogSearch({
+      families: [
+        family({
+          reviewedFamilyVersionId: null,
+          reviewedFamilyCode: null,
+          reviewedFamilyCatalogReleaseId: null,
+          reviewedFamilyDefinitionHash: null,
+        }),
+      ],
+    })
+
+    render(
+      <CatalogOptionPicker
+        roleCode={STENT_ROLE}
+        roleLabel="Silicone stent"
+        existingProductIds={new Set()}
+        onAdd={jest.fn()}
+        onAddFamily={jest.fn()}
+      />,
+    )
+    await user.click(screen.getByRole('button', { name: /search full catalog/i }))
+    await waitFor(() => expect(screen.getByText('DUMON TD')).toBeInTheDocument())
+
+    // Browsable, expandable, and individually selectable — just not persistable as a line.
+    expect(screen.queryByRole('button', { name: /add line/i })).not.toBeInTheDocument()
+    expect(screen.getByText(/not an approved product family/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /show sizes/i })).toBeInTheDocument()
   })
 })

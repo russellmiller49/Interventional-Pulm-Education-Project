@@ -7276,6 +7276,7 @@
       "governance": "Governance",
       "readiness": "Readiness",
       "snapshot": "Snapshot hash",
+      "documentHash": "Document",
       "engine": "Engine",
       "physician": "Physician",
       "physicianNotSet": "Not recorded",
@@ -7853,6 +7854,7 @@
         "hideSizes": "Hide sizes",
         "addFamily": "Add line — size at procedure",
         "addFamilyHelp": "Records the whole product line. The size is chosen once the airway is measured, so no catalog number is committed.",
+        "unreviewedFamilyHelp": "This grouping is a way to browse the catalogue, not an approved product family, so it cannot be added as a whole line. Choose the exact size below.",
         "familyAdded": "Line added"
       },
       "browseEmerging": "Emerging devices"
@@ -7917,6 +7919,8 @@
       "unavailableReleaseMissing": "The published release this card was built from is no longer retained, so the exact definitions it recorded cannot be loaded. No other release is substituted for it.",
       "unavailableReleaseChanged": "The published release this card was built from no longer matches what was published — one of the definitions it pins has changed. The card is shown as it was saved rather than rebuilt from content its author never reviewed.",
       "unavailableSuperseded": "This card was built before releases pinned the full rule set, so reopening it would rebuild it against setup rules it never recorded. Its saved snapshot stays available to view, print, share, duplicate, and retain for reference.",
+      "unavailableLegacyFamily": "This card records a product line by a catalogue-browsing key rather than a reviewed product family, so reopening it would mean deciding which products that key stands for today. The card is shown exactly as it was saved.",
+      "unavailableCatalogRelease": "The catalogue release this card was saved against can no longer be retrieved intact, so the products and roles it recorded cannot be reconstructed. Today's catalogue is not substituted for it.",
       "unavailableModifier": "This card records a setup option that the procedure release it is pinned to does not offer, so it cannot be rebuilt without granting a permission that release never granted."
     },
     "duplicateTitle": "{title} (copy)",

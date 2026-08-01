@@ -425,11 +425,51 @@ export interface BuildCardInput {
   waivers?: Record<string, string>
 }
 
+/**
+ * Which release, catalog, and resolver contract a card was resolved through.
+ *
+ * Carried onto the resolved card because the semantic content projection needs stable release and
+ * catalog identity, and the card previously had neither: `catalogImportId` on a card is the source
+ * *workbook* digest — provenance printed on the page — while the catalog *release* digest a
+ * release bundle pins lives only on the bundle. Two different questions that happened to share a
+ * field name.
+ *
+ * Every field is nullable except the contract version, because the resolver is also driven from
+ * places where no release exists: administrative previews of a composition, the generated scenario
+ * fixtures, and the demo context. Those resolve honestly with nulls rather than being handed a
+ * release nobody selected.
+ */
+export interface CardResolutionProvenance {
+  releaseBundleId: string | null
+  releaseDefinitionHash: string | null
+  /** The catalog release the card's product identity is reconstructable from. */
+  catalogReleaseId: string | null
+  resolverContractVersion: string
+}
+
+/** Stable organization/site/location identifiers, as distinct from the display names. */
+export interface CardScope {
+  organizationId: string
+  siteId: string
+  locationId: string
+}
+
 export interface BuildContext {
   organizationName: string
   siteName: string
   locationName: string
   locationCapabilities: string[]
+  /**
+   * The release identity this context was built from, when it was built from one.
+   *
+   * Release-pinned rather than hospital-local: it names the immutable definition set the rest of
+   * the pinned half came from. Null when the context was assembled without a release.
+   */
+  releaseIdentity: {
+    releaseBundleId: string
+    releaseDefinitionHash: string
+    catalogReleaseId: string
+  } | null
   recipe: RecipeVersion
   /** Every module version the recipe's composition can reach. Nothing else is selectable. */
   recipeModules: RecipeModuleVersion[]
@@ -519,6 +559,10 @@ export interface ResolvedCard {
   organizationName: string
   siteName: string
   locationName: string
+  /** Stable identifiers behind the three display names above. */
+  scope: CardScope
+  /** Which release, catalog release, and resolver contract produced this card. */
+  resolutionProvenance: CardResolutionProvenance
   selectedModifiers: string[]
   /**
    * The composition manifest. Part of the snapshot hash: a card built from different
@@ -537,7 +581,16 @@ export interface ResolvedCard {
   ruleTrace: RuleTraceEvent[]
   engineVersion: string
   catalogImportId: string
+  /**
+   * Storage identity: stable across re-saves of unchanged content, and what the `snapshot_hash`
+   * column holds. Not proof of what was printed and not a semantic comparison — see
+   * `card-hashes.ts`, which explains why one hash could not be all three.
+   */
   snapshotHash: string
+  /** Tamper detection over the complete stored snapshot, including `generatedAt`. */
+  snapshotIntegrityHash: string
+  /** The documented semantic projection: what the resolver decided, without implementation prose. */
+  resolvedContentHash: string
   generatedAt: string
   prototype: boolean
 }

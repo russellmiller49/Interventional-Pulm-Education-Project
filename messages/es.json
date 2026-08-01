@@ -7276,6 +7276,7 @@
       "governance": "Governance",
       "readiness": "Readiness",
       "snapshot": "Snapshot hash",
+      "documentHash": "Documento",
       "engine": "Engine",
       "physician": "Physician",
       "physicianNotSet": "Not recorded",
@@ -7853,6 +7854,7 @@
         "hideSizes": "Hide sizes",
         "addFamily": "Add line — size at procedure",
         "addFamilyHelp": "Records the whole product line. The size is chosen once the airway is measured, so no catalog number is committed.",
+        "unreviewedFamilyHelp": "Esta agrupación es una forma de explorar el catálogo, no una familia de productos aprobada, por lo que no puede añadirse como línea completa. Elija el tamaño exacto a continuación.",
         "familyAdded": "Line added"
       },
       "browseEmerging": "Emerging devices"
@@ -7917,6 +7919,8 @@
       "unavailableReleaseMissing": "La versión publicada con la que se creó esta tarjeta ya no se conserva, por lo que no se pueden cargar las definiciones exactas que registró. No se sustituye por ninguna otra versión.",
       "unavailableReleaseChanged": "La versión publicada con la que se creó esta tarjeta ya no coincide con lo que se publicó: una de las definiciones que fija ha cambiado. La tarjeta se muestra tal como se guardó, en lugar de reconstruirse a partir de contenido que su autor nunca revisó.",
       "unavailableSuperseded": "Esta tarjeta se creó antes de que las versiones fijaran el conjunto completo de reglas, por lo que reabrirla la reconstruiría con reglas de preparación que nunca registró. Su instantánea guardada sigue disponible para ver, imprimir, compartir, duplicar y conservar como referencia.",
+      "unavailableLegacyFamily": "Esta tarjeta identifica una línea de productos mediante una clave de exploración del catálogo y no mediante una familia de productos revisada, por lo que reabrirla exigiría decidir qué productos representa hoy esa clave. La tarjeta se muestra exactamente como se guardó.",
+      "unavailableCatalogRelease": "La versión del catálogo con la que se guardó esta tarjeta ya no puede recuperarse íntegra, por lo que no es posible reconstruir los productos y las funciones que registró. No se sustituye por el catálogo actual.",
       "unavailableModifier": "Esta tarjeta registra una opción de preparación que la versión del procedimiento a la que está fijada no ofrece, por lo que no puede reconstruirse sin conceder un permiso que esa versión nunca otorgó."
     },
     "duplicateTitle": "{title} (copy)",

@@ -182,7 +182,7 @@ function builderOptionText({ item, option }: BuilderLocalOption): string {
 }
 
 const emptyProductIds: Set<string> = new Set()
-const emptyFamilyKeys: Set<string> = new Set()
+const emptyFamilyVersionIds: Set<string> = new Set()
 
 export function PreferenceCardWizard({
   mode = 'create',
@@ -406,11 +406,11 @@ export function PreferenceCardWizard({
     return result
   }, [catalogPicks])
 
-  const pickedFamilyKeysByRole = useMemo(() => {
+  const pickedFamilyVersionIdsByRole = useMemo(() => {
     const result = new Map<string, Set<string>>()
     for (const pick of familyPicks) {
       const existing = result.get(pick.roleCode) ?? new Set<string>()
-      existing.add(pick.familyKey)
+      existing.add(pick.productFamilyVersionId)
       result.set(pick.roleCode, existing)
     }
     return result
@@ -441,15 +441,18 @@ export function PreferenceCardWizard({
     }))
   }
 
-  /** Promote a whole product line, leaving the size to the procedure. */
+  /** Promote a whole reviewed product line, leaving the size to the procedure. */
   const addFamilyPick = (slotId: string, pick: FamilyPick) => {
     const requiresRoleScopedIdentity = familyPicks.some(
-      (candidate) => candidate.familyKey === pick.familyKey && candidate.roleCode !== pick.roleCode,
+      (candidate) =>
+        candidate.productFamilyVersionId === pick.productFamilyVersionId &&
+        candidate.roleCode !== pick.roleCode,
     )
     setFamilyPicks((current) =>
       current.some(
         (candidate) =>
-          candidate.familyKey === pick.familyKey && candidate.roleCode === pick.roleCode,
+          candidate.productFamilyVersionId === pick.productFamilyVersionId &&
+          candidate.roleCode === pick.roleCode,
       )
         ? current
         : [...current, pick],
@@ -457,17 +460,17 @@ export function PreferenceCardWizard({
     setSelectedHospitalItemIds((current) => {
       const next = { ...current }
       if (requiresRoleScopedIdentity) {
-        const legacyId = familyPickId(pick.familyKey)
+        const unscopedId = familyPickId(pick.productFamilyVersionId)
         for (const [selectedSlotId, selectedItemId] of Object.entries(next)) {
-          if (selectedItemId !== legacyId) continue
+          if (selectedItemId !== unscopedId) continue
           const selectedRole = card?.items.find((item) => item.id === selectedSlotId)?.roleCode
           if (selectedRole) {
-            next[selectedSlotId] = familyPickId(pick.familyKey, selectedRole)
+            next[selectedSlotId] = familyPickId(pick.productFamilyVersionId, selectedRole)
           }
         }
       }
       next[slotId] = familyPickId(
-        pick.familyKey,
+        pick.productFamilyVersionId,
         requiresRoleScopedIdentity ? pick.roleCode : undefined,
       )
       return next
@@ -538,8 +541,12 @@ export function PreferenceCardWizard({
         productId: pick.productId,
         roleCode: pick.roleCode,
       })),
+      // Identifiers only, exactly as every other pick crosses the wire. All four are re-verified
+      // server-side against the retained family ledger before anything is stored.
       familyPicks: familyPicks.map((pick) => ({
-        familyKey: pick.familyKey,
+        productFamilyVersionId: pick.productFamilyVersionId,
+        catalogReleaseId: pick.catalogReleaseId,
+        definitionHash: pick.definitionHash,
         roleCode: pick.roleCode,
       })),
       customItems,
@@ -1275,8 +1282,9 @@ export function PreferenceCardWizard({
                               pickedProductIdsByRole.get(item.roleCode) ?? emptyProductIds
                             }
                             onAdd={(pick) => addCatalogPick(item.id, pick)}
-                            existingFamilyKeys={
-                              pickedFamilyKeysByRole.get(item.roleCode) ?? emptyFamilyKeys
+                            existingFamilyVersionIds={
+                              pickedFamilyVersionIdsByRole.get(item.roleCode) ??
+                              emptyFamilyVersionIds
                             }
                             onAddFamily={(pick) => addFamilyPick(item.id, pick)}
                           />

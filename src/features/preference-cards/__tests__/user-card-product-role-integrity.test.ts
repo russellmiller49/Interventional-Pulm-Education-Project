@@ -4,6 +4,7 @@ import {
   getComposedRecipeSlots,
   getScenarioDefinition,
 } from '../data/demo-context.server'
+import { getApprovedProductFamiliesForRole } from '../data/product-families.server'
 import { getCurrentReleaseBundleForScenario } from '../data/release-bundles.server'
 import { catalogPickItemId } from '../domain/catalog-pick'
 import { customItemId } from '../domain/custom-item'
@@ -271,19 +272,33 @@ describe('save-time catalog product-role integrity', () => {
     }
   })
 
-  it('preserves two role-scoped selections from the same product family', () => {
+  it('keeps the two role-scoped GSS lines apart as separate reviewed families', () => {
+    // The Novatech GSS brand family serves both the straight and the Y stent requirements, and the
+    // discovery grouping merged them into one key. Reviewed families are role-scoped, so the two
+    // are separate versions with separate memberships — a card asking for the straight line is not
+    // also asking for the bifurcation.
     const scenarioId = 'rigid-bronch'
-    const familyKey = 'MFR-6208838930|gss|implant'
     const roleCodes = ['AIRWAY_STENT_SILICONE_STRAIGHT', 'AIRWAY_STENT_SILICONE_Y'] as const
     const definition = getScenarioDefinition(scenarioId)
     const composedSlots = getComposedRecipeSlots(scenarioId)
     expect(definition).not.toBeNull()
 
+    const versions = roleCodes.map((roleCode) => {
+      const version = getApprovedProductFamiliesForRole(roleCode).find((candidate) =>
+        candidate.productFamilyCode.startsWith('NOVATECH_GSS'),
+      )
+      expect(version).toBeDefined()
+      return { roleCode, version: version! }
+    })
+    expect(new Set(versions.map((entry) => entry.version.productFamilyVersionId)).size).toBe(2)
+    // Separate memberships, not one list shown twice.
+    expect(versions[0].version.memberProductIds).not.toEqual(versions[1].version.memberProductIds)
+
     const selectedHospitalItemIds = Object.fromEntries(
-      roleCodes.map((roleCode) => {
+      versions.map(({ roleCode, version }) => {
         const slot = composedSlots.find((candidate) => candidate.roleCode === roleCode)
         expect(slot).toBeDefined()
-        return [slot!.id, familyPickId(familyKey, roleCode)]
+        return [slot!.id, familyPickId(version.productFamilyVersionId)]
       }),
     )
     const input = defaultBuildInput(scenarioId)
@@ -297,7 +312,12 @@ describe('save-time catalog product-role integrity', () => {
       status: 'draft',
       input: { ...input, recipeVersionId: definition!.recipeVersionId },
       catalogPicks: [],
-      familyPicks: roleCodes.map((roleCode) => ({ familyKey, roleCode })),
+      familyPicks: versions.map(({ roleCode, version }) => ({
+        productFamilyVersionId: version.productFamilyVersionId,
+        catalogReleaseId: version.catalogReleaseId,
+        definitionHash: version.definitionHash,
+        roleCode,
+      })),
       customItems: [],
       equipmentSets: [],
     })
@@ -306,9 +326,9 @@ describe('save-time catalog product-role integrity', () => {
 
     expect(result.ok).toBe(true)
     if (result.ok) {
-      for (const roleCode of roleCodes) {
+      for (const { roleCode, version } of versions) {
         const item = result.card.items.find((candidate) => candidate.roleCode === roleCode)
-        expect(item?.selectedHospitalItemId).toBe(familyPickId(familyKey, roleCode))
+        expect(item?.selectedHospitalItemId).toBe(familyPickId(version.productFamilyVersionId))
         expect(item?.selectedItemSnapshot?.roleCode).toBe(roleCode)
       }
     }

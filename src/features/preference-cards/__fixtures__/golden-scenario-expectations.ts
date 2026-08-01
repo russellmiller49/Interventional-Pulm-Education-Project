@@ -50,6 +50,20 @@
 // Every composed card's item order is back to the reviewed pre-composition sequence; the
 // hashes move because `setupSequence` is part of the resolved item and its values changed.
 // `goldenScenarioItemOrder` below pins the result so it cannot drift again unnoticed.
+//
+// 2026-08-01, hash separation and resolution provenance (engine 0.2.0 → 0.3.0). All four
+// `snapshotHash` values moved and **no item count, suppression count, or readiness state did** —
+// again the point. The hashable output gained `scope` (the stable organization/site/location
+// identifiers behind the three display names) and `resolutionProvenance` (which release, catalog
+// release, and resolver contract produced the card), so a snapshot written at 0.2.0 hashes
+// differently by construction. The requirements, their order, and what each resolved to are
+// untouched.
+//
+// `resolvedContentHash` is pinned here from the same milestone. It is the *semantic* projection —
+// what the resolver decided and what the card prints as instructions, without implementation prose
+// — so a future change that reworded a rule-trace message would move `snapshotHash` and leave this
+// alone, and a change to effective requiredness would move both. Having both in the fixture is what
+// makes that distinction visible in a diff rather than an argument about which hash to trust.
 export const goldenScenarioExpectations = {
   ebusRoseMolecular: {
     scenarioId: 'ebus-rose-molecular',
@@ -57,7 +71,8 @@ export const goldenScenarioExpectations = {
     readinessState: 'complete_with_warnings',
     itemCount: 19,
     suppressedItemCount: 0,
-    snapshotHash: 'e7a086475ee5583b4f08d35e176b40a6526664582783ec0b0fe9f1e448d8dcbc',
+    snapshotHash: '09084ae504ca33e8bc87c29d0d62cc9564f7f8b3b185483924639dfc21251f7e',
+    resolvedContentHash: '78e77e4e542e756914856906158b19fd31e7d45211312c941270ed170b4aaffa',
   },
   centralAirwayObstruction: {
     scenarioId: 'central-airway-obstruction',
@@ -73,7 +88,8 @@ export const goldenScenarioExpectations = {
     readinessState: 'complete_with_warnings',
     itemCount: 57,
     suppressedItemCount: 0,
-    snapshotHash: '0271343ec05b0f962a443e466b9b16f5c3bb926ecd6c0b898dd087c97a1b31f3',
+    snapshotHash: 'efc1eb5a5babd1bd4e95d1097fc076c2758cfbe839c7a72adffe4942de1b1495',
+    resolvedContentHash: 'e953535778dc3f55d827f93fe9c60b32f74558dfc7667fc5af98ea15b437b4f1',
   },
   chestTubeSmallBoreDigital: {
     scenarioId: 'chest-tube',
@@ -81,7 +97,8 @@ export const goldenScenarioExpectations = {
     readinessState: 'complete_with_warnings',
     itemCount: 11,
     suppressedItemCount: 1,
-    snapshotHash: '3771ee2f5f15aad7677df860d6fddd61c868409b300cec445502662b6304503d',
+    snapshotHash: '7d8cbd5f08dce37e3d66dde70e9753405c4588ef7c834f0a47f4289ff151dd81',
+    resolvedContentHash: 'df53244739c30de6d3c81088f88542189797e7075e8d2a144e36bd45ae64d7d3',
   },
   chestTubeLargeBoreConventional: {
     scenarioId: 'chest-tube',
@@ -89,7 +106,8 @@ export const goldenScenarioExpectations = {
     readinessState: 'complete_with_warnings',
     itemCount: 12,
     suppressedItemCount: 0,
-    snapshotHash: '38cab5bd9691abcca18f77e938405fae124daeb57b00d094fdb6e1271eb8ba70',
+    snapshotHash: '72f3311726219af5099d2ddec261f95ae541f4583970dbf1c8a8a7e02850ca59',
+    resolvedContentHash: 'ae632f4f94066c588822bf9aa8b583aa1c08900350156b7ab411ccbf860ec732',
   },
 } as const
 

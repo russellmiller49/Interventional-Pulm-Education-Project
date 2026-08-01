@@ -186,3 +186,12 @@ that fires on a rename is a signal nobody reads, and treating it as the boundary
 every historical card unsupported for an extracted helper.
 
 Both sit outside `definitionHash`; only the contract move is a warning.
+
+## What sits on top of this
+
+[`historical-reconstruction.md`](./historical-reconstruction.md) covers the four things a release
+bundle alone did not give a saved card: the retained catalog release its product and role identity
+comes from, the reviewed product families a card may name, the split between snapshot integrity and
+semantic content, and `npm run ip-cards:release:check-base` — the append-only publication check that
+closes the one hole in-tree validation cannot see, where a definition and its frozen hash are
+updated in the same commit.

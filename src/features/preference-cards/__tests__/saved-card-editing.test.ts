@@ -719,7 +719,7 @@ describe('builder-input schema versioning', () => {
 
   it('refuses a format it does not know rather than coercing it', () => {
     const request = ebusEditFixture()
-    const parsed = builderInputsSchema.safeParse({ ...request, schemaVersion: 4 })
+    const parsed = builderInputsSchema.safeParse({ ...request, schemaVersion: 5 })
     expect(parsed.success).toBe(false)
   })
 

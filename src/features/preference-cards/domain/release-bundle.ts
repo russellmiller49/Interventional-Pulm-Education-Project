@@ -174,6 +174,10 @@ export const RELEASE_BUNDLE_HASH_EXCLUSIONS: Readonly<Record<string, string>> = 
  * without deciding which side it belongs on does not compile.
  */
 export const RELEASE_PINNED_CONTEXT_FIELDS = [
+  // Not a definition the release pins — it *is* the release. Classified here because it names the
+  // immutable set the other five came from, and because a context assembled from current data has
+  // no honest value for it and carries null.
+  'releaseIdentity',
   'recipe',
   'recipeModules',
   'modifiers',

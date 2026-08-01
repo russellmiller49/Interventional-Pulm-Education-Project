@@ -195,7 +195,18 @@ export function buildReleaseContext(
 
   // Every pin verified above, so the current definitions *are* the published ones and the
   // ordinary context builder reconstructs them. If any had moved, we would not be here.
-  return { ok: true, bundle, scenario, context: buildContextForRecipe(sources.recipe) }
+  return {
+    ok: true,
+    bundle,
+    scenario,
+    context: buildContextForRecipe(sources.recipe, {
+      releaseBundleId: bundle.id,
+      releaseDefinitionHash: bundle.definitionHash,
+      // The bundle's `catalogImportId` is the catalog *release* digest — the one the retained
+      // catalog manifests are addressed by — not the source workbook digest a card prints.
+      catalogReleaseId: bundle.catalogImportId,
+    }),
+  }
 }
 
 /**

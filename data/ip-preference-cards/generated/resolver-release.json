@@ -1,13 +1,14 @@
 {
   "resolverContractVersion": "ip-cards-resolver-contract/1",
-  "resolverImplementationHash": "befeb2e5ff9a536e6dfafc77fb7272c0c2271621eceee1dea8e58c2e5d290a9f",
+  "resolverImplementationHash": "57def41ce6c51c9e5a26fa2ce1cd1e2c6be0d4c5449165ece2d36484a71c6854",
   "sources": {
-    "src/features/preference-cards/domain/resolve-card.ts": "ce6f8ca6795e0a5eeada8ef8be9815e4a90cfb1d05078489f22f7d7155aacc54",
+    "src/features/preference-cards/domain/resolve-card.ts": "dfaafe2996d84763067c2f2ff05e0dcc350b5c1f51c273c8a05cb0ed4afbf93f",
+    "src/features/preference-cards/domain/card-hashes.ts": "012739b57f32a8bb930b91b44f9c084c0178909cda7431739a40ed272f97bb70",
     "src/features/preference-cards/domain/expand-recipe-composition.ts": "1a15838d3a04bbaf2f159a8d9985da1a276aee726a93846725e7fba43fa5d9eb",
     "src/features/preference-cards/domain/evaluate-compatibility.ts": "90b52dcdb98446fde4766e5a88dc6a985a3454b7b8119576b67a846c2ad9ac22",
     "src/features/preference-cards/domain/kit-suppression.ts": "0f86b1081947baecba940681fbe14452960a48a9dae160e369059f9f004e99af",
     "src/features/preference-cards/domain/quantity-expression.ts": "65dbeda0caa7e24cf06e658cc42bf46bc90d1daa6da09cbd94f8304c0cc58baa",
-    "src/features/preference-cards/domain/size-at-procedure.ts": "d3475b857839ded035561c3e13acf2cb91691df4e1f1fa6ab29ccf294fc2171a",
+    "src/features/preference-cards/domain/size-at-procedure.ts": "fe8e3e8af72005bb351cd533f44452b66e45b249a3991ac63d3d1dbd651eb015",
     "src/features/preference-cards/domain/verification.ts": "89b6a60b087d5bdbcac7441c43ad675c31d3578d5ad9924b7adc567b253954c6",
     "src/features/preference-cards/domain/stable-hash.ts": "5a0cfbd6bd64402a5b5db453f1b8db5c57696f82da40e75971073df3e4fa1b92"
   }

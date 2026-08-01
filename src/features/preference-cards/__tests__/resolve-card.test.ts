@@ -395,11 +395,15 @@ describe('preference-card deterministic resolver', () => {
         itemCount: card.items.length,
         suppressedItemCount: card.suppressedItems.length,
         snapshotHash: card.snapshotHash,
+        // Pinned alongside the storage identity so the two can be seen to move independently:
+        // rewording a rule-trace message moves `snapshotHash` and not this one.
+        resolvedContentHash: card.resolvedContentHash,
       }).toEqual({
         readinessState: expectation.readinessState,
         itemCount: expectation.itemCount,
         suppressedItemCount: expectation.suppressedItemCount,
         snapshotHash: expectation.snapshotHash,
+        resolvedContentHash: expectation.resolvedContentHash,
       })
     },
   )

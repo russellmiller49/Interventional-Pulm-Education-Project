@@ -2,10 +2,12 @@ import { z } from 'zod'
 
 import { supabaseServer } from '@/lib/supabase/server'
 
+import { verifySnapshotIntegrity } from '../domain/card-hashes'
 import { resolveCard } from '../domain/resolve-card'
 import type { ResolvedCard } from '../domain/types'
 import {
   builderInputsSchema,
+  carriesUnreconcilableFamilyIdentity,
   isSupersededBuilderInputsVersion,
   type BuilderInputs,
   type SaveCardRequest,
@@ -93,6 +95,19 @@ const persistedSnapshotSchema = z
     engineVersion: z.string().min(1),
     catalogImportId: z.string().min(1),
     snapshotHash: z.string().regex(/^[a-f0-9]{64}$/),
+    /**
+     * Absent on snapshots written before the hashes were split. Those rows stay viewable and
+     * printable and keep verifying against the storage identity they were written with; nothing is
+     * rewritten on read. Present, they are checked — see `parseSnapshot`.
+     */
+    snapshotIntegrityHash: z
+      .string()
+      .regex(/^[a-f0-9]{64}$/)
+      .optional(),
+    resolvedContentHash: z
+      .string()
+      .regex(/^[a-f0-9]{64}$/)
+      .optional(),
     generatedAt: z.string().datetime(),
   })
   .passthrough()
@@ -148,13 +163,29 @@ function toSummary(
  */
 function inputsCanBackAnEdit(builderInputs: unknown): boolean {
   const parsed = builderInputsSchema.safeParse(builderInputs)
-  return parsed.success && !isSupersededBuilderInputsVersion(parsed.data.schemaVersion)
+  if (!parsed.success) return false
+  if (isSupersededBuilderInputsVersion(parsed.data.schemaVersion)) return false
+  // A card that recorded a product line by a discovery grouping key cannot be re-resolved without
+  // guessing which products that key stands for now. It stays viewable, printable, shareable, and
+  // duplicable; the edit control is simply not offered rather than offered and then failing.
+  return !carriesUnreconcilableFamilyIdentity(parsed.data)
 }
 
-/** A stored snapshot is only usable if it still hashes to what was written. */
+/**
+ * A stored snapshot is only usable if it still verifies.
+ *
+ * Two checks, because rows exist in two shapes and neither may be rewritten on read. Every row
+ * carries the storage identity hash the `snapshot_hash` column holds, and that is compared as it
+ * always was. Rows written from the split onward *also* carry an integrity hash over the complete
+ * snapshot — including `generatedAt` and the warning acknowledgements, the fields the storage hash
+ * deliberately excludes — and where one is present it is recomputed and must match. Its absence on
+ * an older row is not a failure: an unverifiable-by-that-means row is not a tampered row, and
+ * treating it as one would make every pre-existing card unopenable.
+ */
 function parseSnapshot(snapshot: unknown, expectedHash: string): ResolvedCard | null {
   const parsed = persistedSnapshotSchema.safeParse(snapshot)
   if (!parsed.success || parsed.data.snapshotHash !== expectedHash) return null
+  if (verifySnapshotIntegrity(snapshot) === false) return null
   return parsed.data as unknown as ResolvedCard
 }
 
@@ -347,6 +378,12 @@ export async function loadEditableUserCard(cardId: string): Promise<EditableUser
   // rewrites it into something its author never approved.
   if (isSupersededBuilderInputsVersion(record.builderInputs.schemaVersion)) {
     return { ok: false, code: 'superseded_builder_inputs' }
+  }
+  // Reopening a card whose product line is named by a discovery key would mean deciding which
+  // products that key stands for today. `rebuildBuilderContext` refuses it too; the check is
+  // repeated here so the dashboard's `editable` flag and this route give the same answer.
+  if (carriesUnreconcilableFamilyIdentity(record.builderInputs)) {
+    return { ok: false, code: 'legacy_family_identity' }
   }
 
   // The same reconstruction the save path runs, so what opens is what would be stored.

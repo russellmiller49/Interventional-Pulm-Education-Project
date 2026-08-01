@@ -1,13 +1,27 @@
+import {
+  getHistoricalCatalog,
+  historicalFamilyPick,
+  resolveHistoricalCatalogPick,
+  type HistoricalPickResult,
+} from '../data/historical-catalog.server'
+import { resolveProductFamilyPin } from '../data/product-families.server'
 import { buildReleaseContext, type ReleaseContextErrorCode } from '../data/release-bundles.server'
 import { withCatalogPicks, type CatalogPick } from '../domain/catalog-pick'
 import { withCustomItems } from '../domain/custom-item'
 import { withEquipmentSets, type EquipmentSet } from '../domain/equipment-set'
 import { withFamilyPicks, type FamilyPick } from '../domain/family-pick'
+import type { HistoricalCatalog } from '../domain/historical-catalog'
+import { LEGACY_FAMILY_IDENTITY_MESSAGE } from '../domain/product-family'
 import { canonicalRoleCode } from '../domain/role-taxonomy'
 import type { BuildContext, ScenarioDefinition } from '../domain/types'
-import { isReleasePinned, type BuilderInputs } from '../schemas/saved-card'
+import {
+  carriesUnreconcilableFamilyIdentity,
+  isReleasePinned,
+  isReviewedFamilyPickRef,
+  type BuilderInputs,
+} from '../schemas/saved-card'
 import type { PreferenceCardReleaseBundle } from '../domain/release-bundle'
-import { getFamilyPick, resolveCatalogPick, type CatalogPickLookupResult } from './catalog'
+import { isProductCurrentlyUnselectable } from './catalog'
 
 /**
  * Rebuilding a card's build context from its stored selections.
@@ -19,18 +33,34 @@ import { getFamilyPick, resolveCatalogPick, type CatalogPickLookupResult } from 
  * prevent.
  *
  * Nothing here trusts the caller for content. Builder inputs carry identifiers only, and
- * every one of them is looked up in the authoritative catalog and the pinned composition:
- * a product that is not mapped to the role it claims, a product held out of preference-card
- * selection, a product line that no longer exists, or a module the composition does not
- * offer is an error, not a line on the card.
+ * every one of them is looked up in authoritative retained data: a product that is not mapped
+ * to the role it claims, a product held out of preference-card selection, a product family
+ * whose reviewed membership has moved, or a module the composition does not offer is an error,
+ * not a line on the card.
+ *
+ * ## Where "authoritative" now points
+ *
+ * Product and role identity come from the **pinned catalog release**, not from today's catalog.
+ * That is the Phase 4A.1 change and it is the difference between a release bundle that *detects* a
+ * catalog move and one that survives it: a product discontinued and dropped from the workbook used
+ * to take the identity of every saved pick that named it. Nothing falls back to current catalog
+ * data — a retained release that cannot be reconstructed produces a typed failure and a view-only
+ * card, because a card silently rebuilt against a product its author never saw is worse than one
+ * that will not open.
+ *
+ * Hospital-local operational state stays current, deliberately and as before: what the room stocks,
+ * how the site ranks it, what the location can do. A physician reopening a card should see the
+ * requirements they reviewed and the equipment the room has today.
  */
 
 export type RehydratedBuilderErrorCode =
   | 'unknown_scenario'
   | 'builder_inputs_not_release_pinned'
+  | 'legacy_family_identity'
   | 'scenario_recipe_mismatch'
   | 'module_not_offered'
   | 'modifier_not_offered'
+  | 'historical_catalog_unavailable'
   | 'catalog_pick_unavailable'
   | 'product_family_unavailable'
   | 'equipment_set_unavailable'
@@ -45,6 +75,8 @@ export interface RehydratedBuilderContext {
    * route — see the guard in `rebuildBuilderContext`.
    */
   releaseBundle: PreferenceCardReleaseBundle
+  /** The retained catalog the card's product identity was reconstructed from. */
+  historicalCatalog: HistoricalCatalog
   /** The pinned composition's context, before any of this card's own picks. */
   context: BuildContext
   /** The same context with every stored pick, custom line, and set folded in. */
@@ -61,7 +93,7 @@ export type RehydratedBuilderContextResult =
   | { ok: false; code: RehydratedBuilderErrorCode; message: string }
 
 function catalogPickLookupError(
-  result: Exclude<CatalogPickLookupResult, { ok: true }>,
+  result: Exclude<HistoricalPickResult, { ok: true }>,
   location?: string,
 ): string {
   const suffix = location ? ` ${location}` : ''
@@ -99,6 +131,18 @@ export function rebuildBuilderContext(
     }
   }
 
+  // A version-3 card that selected a product line names it by a discovery grouping key. Turning
+  // one into a reviewed family would mean deciding which products that key stands for today — by
+  // label, by manufacturer-plus-role, or by resemblance — and each of those is a guess about what
+  // a physician is asking the room for. The card keeps viewing and printing from its snapshot.
+  if (carriesUnreconcilableFamilyIdentity(inputs)) {
+    return {
+      ok: false,
+      code: 'legacy_family_identity',
+      message: LEGACY_FAMILY_IDENTITY_MESSAGE,
+    }
+  }
+
   const released = buildReleaseContext(inputs.releaseBundleId, {
     scenarioId: inputs.scenarioId,
     recipeVersionId: inputs.input.recipeVersionId,
@@ -112,6 +156,14 @@ export function rebuildBuilderContext(
       code: 'scenario_recipe_mismatch',
       message: 'The scenario and recipe do not match.',
     }
+  }
+
+  // The catalog the card was saved against, verified row by row. A failure here is typed and
+  // final: there is no fallback to the current catalog, because substituting it is exactly the
+  // silent behaviour the pin exists to prevent.
+  const historical = getHistoricalCatalog(releaseBundle.catalogImportId)
+  if (!historical.ok) {
+    return { ok: false, code: 'historical_catalog_unavailable', message: historical.message }
   }
 
   // The client sends module *ids*; the authored modules are reloaded from the pinned
@@ -146,7 +198,12 @@ export function rebuildBuilderContext(
 
   const catalogPicks: CatalogPick[] = []
   for (const requested of inputs.catalogPicks) {
-    const result = resolveCatalogPick(requested.productId, requested.roleCode)
+    const result = resolveHistoricalCatalogPick(
+      historical,
+      requested.productId,
+      requested.roleCode,
+      isProductCurrentlyUnselectable,
+    )
     if (!result.ok) {
       return {
         ok: false,
@@ -159,26 +216,49 @@ export function rebuildBuilderContext(
 
   const familyPicks: FamilyPick[] = []
   for (const requested of inputs.familyPicks) {
-    const pick = getFamilyPick(requested.familyKey, requested.roleCode)
-    if (!pick) {
+    // The schema already rejects a discovery key at version 4; this is the type-level twin, and
+    // it is here rather than assumed because `familyPicks` is a union and a future reader should
+    // not have to prove the refinement ran.
+    if (!isReviewedFamilyPickRef(requested)) {
+      return { ok: false, code: 'legacy_family_identity', message: LEGACY_FAMILY_IDENTITY_MESSAGE }
+    }
+    // Every part of the pin is re-verified: which family, which catalog release, which membership
+    // hash, which role. A client that altered any of them gets this, not a card.
+    const resolved = resolveProductFamilyPin(requested)
+    if (!resolved.ok) {
+      return { ok: false, code: 'product_family_unavailable', message: resolved.message }
+    }
+    // Retired families still reconstruct — retirement governs what a *new* card may select, which
+    // the create path checks — but the card's membership must come from the catalog release the
+    // family was reviewed against, and the card must be pinned to that same release.
+    if (resolved.version.catalogReleaseId !== releaseBundle.catalogImportId) {
       return {
         ok: false,
         code: 'product_family_unavailable',
-        message: `Unknown product line ${requested.familyKey}.`,
+        message: `Product family ${resolved.version.productFamilyVersionId} was reviewed against catalog release ${resolved.version.catalogReleaseId}, which is not the release ${releaseBundle.id} pins.`,
       }
     }
-    familyPicks.push(pick)
+    const pick = historicalFamilyPick(historical, resolved.version, requested.roleCode)
+    if (!pick.ok) {
+      return { ok: false, code: 'product_family_unavailable', message: pick.message }
+    }
+    familyPicks.push(pick.pick)
   }
 
-  // The card's own copy of each set it uses. Every member is re-checked against the catalog
-  // here rather than taken on the card's word — a set is stored as identifiers for the same
-  // reason every other pick is.
+  // The card's own copy of each set it uses. Every member is re-checked against the pinned
+  // catalog release here rather than taken on the card's word — a set is stored as identifiers
+  // for the same reason every other pick is.
   const equipmentSets: EquipmentSet[] = []
   const selectedRoleBySetId: Record<string, string> = {}
   for (const requested of inputs.equipmentSets) {
     const members: CatalogPick[] = []
     for (const member of requested.members) {
-      const result = resolveCatalogPick(member.productId, member.roleCode)
+      const result = resolveHistoricalCatalogPick(
+        historical,
+        member.productId,
+        member.roleCode,
+        isProductCurrentlyUnselectable,
+      )
       if (!result.ok) {
         return {
           ok: false,
@@ -201,10 +281,10 @@ export function rebuildBuilderContext(
   }
 
   // Role aliases are permanent, and a stored card can name a role by a code that has since
-  // been renamed. `resolveCatalogPick` and `getFamilyPick` canonicalize on the way in, so
-  // picks were already covered; a custom line and a set's covered roles carry a role code
-  // without going through either, and would otherwise stop matching their requirement —
-  // the line would simply vanish from a reopened pre-rename card.
+  // been renamed. The pick resolvers canonicalize on the way in, so picks were already covered;
+  // a custom line and a set's covered roles carry a role code without going through one, and
+  // would otherwise stop matching their requirement — the line would simply vanish from a
+  // reopened pre-rename card.
   const customItems = inputs.customItems.map((item) => ({
     ...item,
     roleCode: canonicalRoleCode(item.roleCode),
@@ -223,6 +303,7 @@ export function rebuildBuilderContext(
     ok: true,
     scenario,
     releaseBundle,
+    historicalCatalog: historical,
     context,
     resolveContext,
     catalogPicks,

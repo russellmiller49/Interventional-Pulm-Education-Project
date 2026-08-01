@@ -582,12 +582,24 @@ export function buildDemoContext(scenarioId: string): BuildContext {
  * reconstruct against the clinical content its author reviewed, and against the equipment
  * the room actually has today.
  */
-export function buildContextForRecipe(recipe: RecipeVersion): BuildContext {
+export function buildContextForRecipe(
+  recipe: RecipeVersion,
+  /**
+   * The release this context is being assembled for, when there is one.
+   *
+   * Passed in rather than looked up: the release index lives in `release-bundles.server.ts`, which
+   * imports this module, and reaching back for it here would close the cycle. Absent for the demo
+   * scenarios, the administrative composition preview, and the generated fixtures — all of which
+   * resolve honestly with null provenance rather than borrowing a release nobody selected.
+   */
+  releaseIdentity: BuildContext['releaseIdentity'] = null,
+): BuildContext {
   return {
     organizationName: 'Demo IP Program',
     siteName: 'Demo Hospital',
     locationName: 'Bronchoscopy Suite 1',
     locationCapabilities: ['rigid_bronchoscopy', 'jet_ventilation', 'fluoroscopy'],
+    releaseIdentity,
     recipe,
     recipeModules: modulesForRecipe(recipe),
     // Only the modifiers this recipe offers reach the resolver. The picker already hid the
