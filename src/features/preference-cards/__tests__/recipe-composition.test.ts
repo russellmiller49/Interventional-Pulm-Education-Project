@@ -90,6 +90,7 @@ function recipe(
     operationalOwner: null,
     catalogImportId: 'test-import',
     slots: [],
+    allowedModifierCodes: [],
     moduleReferences: references,
     compositionActions: [],
     ...overrides,

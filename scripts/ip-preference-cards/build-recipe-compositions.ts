@@ -57,6 +57,7 @@ interface ScenarioIdentityRow {
   recipeVersionId: string
   sourceProcedureCode: string
   templateVersion: string
+  availableModifierCodes: string[]
 }
 
 interface SeedModuleRequirement {
@@ -141,6 +142,8 @@ export interface GeneratedProcedureComposition {
   sourceTemplateVersion: string
   governanceState: 'draft' | 'in_review' | 'approved' | 'retired'
   clinicalOwner: string | null
+  /** Which modifiers this procedure offers. Frozen here so a release can pin the permission. */
+  allowedModifierCodes: string[]
   moduleReferences: RecipeModuleReference[]
   compositionActions: ProcedureCompositionAction[]
   /**
@@ -245,6 +248,11 @@ function fieldValue(row: ProcedureSlotRow, field: string): string | null {
 export function buildRecipeCompositions(input: {
   procedures: ProcedureRow[]
   scenarios: ScenarioIdentityRow[]
+  /**
+   * Module versions kept alive because a published release pins them, even though no current
+   * composition references them any more. Supplied by the caller from the retention ledger.
+   */
+  retainedModuleVersionIds?: ReadonlySet<string>
   slots: ProcedureSlotRow[]
   sectionMap: Record<string, SectionMapping>
   catalogImportId: string
@@ -535,6 +543,7 @@ export function buildRecipeCompositions(input: {
         // release. The two axes are independent: see `ReleaseState` in domain/release-bundle.
         governanceState: 'draft' as const,
         clinicalOwner: procedure.clinical_owner,
+        allowedModifierCodes: [...scenario.availableModifierCodes].sort(),
         requirementSequences: Object.fromEntries(
           Object.entries(requirementSequences).sort(([left], [right]) => left.localeCompare(right)),
         ),
@@ -583,11 +592,16 @@ export function buildRecipeCompositions(input: {
     }
   }
   for (const version of modules) {
-    if (!usedModuleIds.has(version.id)) {
-      fail(
-        `Module ${version.code}@${version.version} is declared but referenced by no composition.`,
-      )
-    }
+    if (usedModuleIds.has(version.id)) continue
+    // "Declared but unused" and "retained because a published release pins it" are different
+    // situations that used to be indistinguishable, and treating both as an error is what made
+    // a superseded module version impossible to keep: the moment the last composition moved to
+    // v1.1, v1.0 became unreferenced and the build rejected it — taking every card pinned to
+    // it with it. A module the retention ledger lists is deliberately kept.
+    if (input.retainedModuleVersionIds?.has(version.id)) continue
+    fail(
+      `Module ${version.code}@${version.version} is declared but referenced by no composition and retained by no published release.`,
+    )
   }
 
   // --- migration safety: every imported row is composed exactly once ------------------
@@ -837,6 +851,11 @@ async function main() {
   const generatedDirectory = process.argv[2] ?? GENERATED_DIRECTORY
   const seedDirectory = process.argv[3] ?? SEED_DIRECTORY
 
+  const ledger = await readJson<{ entries: { moduleVersionId: string }[] }>(
+    generatedDirectory,
+    'module-ledger.json',
+  ).catch(() => ({ entries: [] as { moduleVersionId: string }[] }))
+
   const [procedures, scenarios, slots, sectionMap, importReport, moduleMap, compositionFile] =
     await Promise.all([
       readJson<ProcedureRow[]>(generatedDirectory, 'procedures.json'),
@@ -851,6 +870,10 @@ async function main() {
   const result = buildRecipeCompositions({
     procedures,
     scenarios,
+    // A module version a published release pins stays declarable after the last composition
+    // stops referencing it. Without this the build would reject the very versions the
+    // retention ledger exists to keep.
+    retainedModuleVersionIds: new Set(ledger.entries.map((entry) => entry.moduleVersionId)),
     slots,
     sectionMap,
     catalogImportId: importReport.workbook_sha256,

@@ -3,7 +3,12 @@ import {
   defaultBuildInput,
   resolveDemoScenario,
 } from '../data/demo-context.server'
-import { builderInputsSchema, saveCardRequestSchema } from '../schemas/saved-card'
+import { getCurrentReleaseBundleForScenario } from '../data/release-bundles.server'
+import {
+  BUILDER_INPUTS_SCHEMA_VERSION,
+  builderInputsSchema,
+  saveCardRequestSchema,
+} from '../schemas/saved-card'
 import { resolveForSave } from '../server/user-cards'
 
 /**
@@ -17,8 +22,19 @@ const FLEX_CORE = 'module-flex-bronch-core-v1-0'
 const EBUS_SPECIFIC = 'module-ebus-tbna-specific-v1-0'
 const FLUOROSCOPY = 'module-procedural-fluoroscopy-v1-0'
 
+function currentReleaseBundleId(scenarioId = SCENARIO_ID): string {
+  const bundle = getCurrentReleaseBundleForScenario(scenarioId)
+  expect(bundle).not.toBeNull()
+  return bundle!.id
+}
+
 function saveRequest(overrides: Partial<Record<string, unknown>> = {}) {
   return saveCardRequestSchema.parse({
+    // A card being created now is release-pinned; version 2 is read-only and cannot be saved.
+    schemaVersion: BUILDER_INPUTS_SCHEMA_VERSION,
+    releaseBundleId: currentReleaseBundleId(
+      typeof overrides.scenarioId === 'string' ? overrides.scenarioId : SCENARIO_ID,
+    ),
     scenarioId: SCENARIO_ID,
     title: 'Composition persistence test',
     physicianName: null,
@@ -53,6 +69,8 @@ describe('saving and reopening a composed card', () => {
   it('stores the exact module selection rather than a promise to recompute it', () => {
     const request = saveRequest()
     const stored = builderInputsSchema.parse({
+      schemaVersion: request.schemaVersion,
+      releaseBundleId: request.releaseBundleId,
       scenarioId: request.scenarioId,
       input: request.input,
       catalogPicks: request.catalogPicks,
@@ -127,6 +145,8 @@ describe('saving and reopening a composed card', () => {
     // The schema accepts ids and nothing else; a smuggled module object is dropped rather
     // than trusted, and the id it carried is then unknown to the composition.
     const parsed = saveCardRequestSchema.parse({
+      schemaVersion: BUILDER_INPUTS_SCHEMA_VERSION,
+      releaseBundleId: currentReleaseBundleId(),
       scenarioId: SCENARIO_ID,
       title: 'Injection attempt',
       status: 'draft',
@@ -167,6 +187,8 @@ describe('a custom composition', () => {
     const input = defaultBuildInput(CUSTOM)
     input.selectedModuleVersionIds = [FLEX_CORE, 'module-pleural-procedure-core-v1-0']
     const request = saveCardRequestSchema.parse({
+      schemaVersion: BUILDER_INPUTS_SCHEMA_VERSION,
+      releaseBundleId: currentReleaseBundleId(CUSTOM),
       scenarioId: CUSTOM,
       title: 'Custom composition test',
       status: 'draft',
@@ -197,6 +219,8 @@ describe('a custom composition', () => {
     const input = defaultBuildInput(CUSTOM)
     input.selectedModuleVersionIds = ['module-not-real-v1-0']
     const request = saveCardRequestSchema.parse({
+      schemaVersion: BUILDER_INPUTS_SCHEMA_VERSION,
+      releaseBundleId: currentReleaseBundleId(CUSTOM),
       scenarioId: CUSTOM,
       title: 'Custom composition rejection test',
       status: 'draft',

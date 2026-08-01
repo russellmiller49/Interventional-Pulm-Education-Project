@@ -6,6 +6,7 @@ import { resolveCard } from '../domain/resolve-card'
 import type { ResolvedCard } from '../domain/types'
 import {
   builderInputsSchema,
+  isSupersededBuilderInputsVersion,
   type BuilderInputs,
   type SaveCardRequest,
 } from '../schemas/saved-card'
@@ -39,10 +40,13 @@ export interface UserCardSummary {
   updatedAt: string
   createdAt: string
   /**
-   * Whether the stored builder inputs still parse, i.e. whether this card can be reopened
-   * in the builder. A card created before module selection existed is `false` and stays
-   * fully viewable, printable, shareable, and duplicable — the edit control is simply not
-   * offered rather than offered and then failing.
+   * Whether this card can be reopened in the builder — the stored inputs parse *and* are at a
+   * version still entitled to back an edit session.
+   *
+   * Two kinds of card are `false`, neither of them broken: one created before module selection
+   * existed, and one written at a superseded version whose whole-set dependencies were never
+   * pinned. Both stay fully viewable, printable, shareable, and duplicable; the edit control is
+   * simply not offered rather than offered and then failing.
    */
   editable: boolean
 }
@@ -133,6 +137,18 @@ function toSummary(
     createdAt: row.created_at,
     editable,
   }
+}
+
+/**
+ * Whether stored inputs may back an edit session.
+ *
+ * One helper, used by both the dashboard listing and the card loader, so the control the
+ * dashboard offers and the answer the edit route gives cannot disagree — a card whose Edit
+ * button appears and then explains why it cannot be edited is worse than no button.
+ */
+function inputsCanBackAnEdit(builderInputs: unknown): boolean {
+  const parsed = builderInputsSchema.safeParse(builderInputs)
+  return parsed.success && !isSupersededBuilderInputsVersion(parsed.data.schemaVersion)
 }
 
 /** A stored snapshot is only usable if it still hashes to what was written. */
@@ -258,7 +274,7 @@ export async function listUserCards(limit = 25): Promise<UserCardSummary[]> {
     return toSummary(
       row,
       card?.readinessState ?? 'blocked',
-      card !== null && builderInputsSchema.safeParse(row.builder_inputs).success,
+      card !== null && inputsCanBackAnEdit(row.builder_inputs),
     )
   })
 }
@@ -278,7 +294,10 @@ export async function loadUserCard(cardId: string): Promise<UserCardRecord | nul
   const inputs = builderInputsSchema.safeParse(row.builder_inputs)
 
   return {
-    ...toSummary(row, card.readinessState, inputs.success),
+    // `editable` is the narrower question: a version-2 card's inputs parse and are still
+    // returned below — they are what the view needs to explain itself — but they may not
+    // back an edit.
+    ...toSummary(row, card.readinessState, inputsCanBackAnEdit(row.builder_inputs)),
     card,
     builderInputs: inputs.success ? inputs.data : null,
   }
@@ -295,6 +314,7 @@ export async function loadUserCard(cardId: string): Promise<UserCardRecord | nul
 export type EditableCardErrorCode =
   | 'not_found'
   | 'legacy_builder_inputs'
+  | 'superseded_builder_inputs'
   | RehydratedBuilderErrorCode
 
 export interface EditableUserCard {
@@ -320,6 +340,14 @@ export async function loadEditableUserCard(cardId: string): Promise<EditableUser
   const record = await loadUserCard(cardId)
   if (!record) return { ok: false, code: 'not_found' }
   if (!record.builderInputs) return { ok: false, code: 'legacy_builder_inputs' }
+  // Parseable but not editable. A version-2 card pins its recipe and modules exactly and
+  // nothing underneath them, so re-resolving it would quietly substitute the current modifier
+  // set, rescue modules, compatibility rules, and role table for the ones it was built
+  // against. Refusing to open the builder is the only answer that neither loses the card nor
+  // rewrites it into something its author never approved.
+  if (isSupersededBuilderInputsVersion(record.builderInputs.schemaVersion)) {
+    return { ok: false, code: 'superseded_builder_inputs' }
+  }
 
   // The same reconstruction the save path runs, so what opens is what would be stored.
   // The timestamp only stamps rebuilt equipment sets and is outside the hashed payload.

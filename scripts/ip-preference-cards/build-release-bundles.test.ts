@@ -2,7 +2,8 @@ import generatedReleasesJson from '../../data/ip-preference-cards/generated/rele
 import generatedImpactJson from '../../data/ip-preference-cards/generated/release-impact-report.json'
 import seedReleasesJson from '../../data/ip-preference-cards/seed/release-bundles.json'
 import { getReleaseDefinitionSources } from '../../src/features/preference-cards/data/demo-context.server'
-import { PREFERENCE_CARD_ENGINE_VERSION } from '../../src/features/preference-cards/domain/resolve-card'
+import { PREFERENCE_CARD_RESOLVER_CONTRACT_VERSION } from '../../src/features/preference-cards/domain/resolve-card'
+import { RUNTIME_RESOLVER_CONTRACT } from '../../src/features/preference-cards/data/release-bundles.server'
 
 import { buildReleaseBundles } from './build-release-bundles'
 
@@ -16,11 +17,11 @@ import { buildReleaseBundles } from './build-release-bundles'
  */
 
 const loadSources = (recipeVersionId: string) =>
-  getReleaseDefinitionSources(recipeVersionId, PREFERENCE_CARD_ENGINE_VERSION)
+  getReleaseDefinitionSources(recipeVersionId, RUNTIME_RESOLVER_CONTRACT)
 
 const baseInput = () => ({
   seed: JSON.parse(JSON.stringify(seedReleasesJson)) as never,
-  resolverContractVersion: PREFERENCE_CARD_ENGINE_VERSION,
+  resolverContractVersion: PREFERENCE_CARD_RESOLVER_CONTRACT_VERSION,
   loadSources,
 })
 

@@ -29,9 +29,10 @@
       "retiredAt": null,
       "supersedesReleaseBundleId": null,
       "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
-      "definitionHash": "95337c4b49f930d77806e649f077c30625ebbddd4bbb0e6d364640054c629adb",
+      "definitionHash": "ce82343b0080fa443c5a4d971cf8b5cdb9271e3a14cb6b597fe3c28874c97a57",
       "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "resolverContractVersion": "ip-cards-resolver/0.2.0"
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c"
     },
     {
       "id": "release-chest-tube-v1-0",
@@ -43,9 +44,10 @@
       "retiredAt": null,
       "supersedesReleaseBundleId": null,
       "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
-      "definitionHash": "cd984789f642fcf480b150977ed658cb0ceddd07ad9ad01b95d82ee4ffb0c42f",
+      "definitionHash": "ccfa44053d1096744732a0e9c56e20b15967854988bd8a953e1c372add9a2e4d",
       "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "resolverContractVersion": "ip-cards-resolver/0.2.0"
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c"
     },
     {
       "id": "release-custom-composition-v1-0",
@@ -57,9 +59,10 @@
       "retiredAt": null,
       "supersedesReleaseBundleId": null,
       "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
-      "definitionHash": "292e7d5a14bb96ecbc9007edfdd1c60726f82fbbd35a520b836405f476a73a11",
+      "definitionHash": "229c870d61ff3c106a8c4a985956add797c4d883724876a53ab0a12dcda0debf",
       "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "resolverContractVersion": "ip-cards-resolver/0.2.0"
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c"
     },
     {
       "id": "release-ebus-tbna-v1-0",
@@ -71,9 +74,10 @@
       "retiredAt": null,
       "supersedesReleaseBundleId": null,
       "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
-      "definitionHash": "9ac293d40a2bd89653c180e3a53e0f28f619d0c113330f6975061e135cffd0e9",
+      "definitionHash": "db46d9cca5db256ed3e7025aee36069eb4676b970f0648db7407b2040b660ea8",
       "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "resolverContractVersion": "ip-cards-resolver/0.2.0"
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c"
     },
     {
       "id": "release-ebv-v1-0",
@@ -85,9 +89,10 @@
       "retiredAt": null,
       "supersedesReleaseBundleId": null,
       "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
-      "definitionHash": "0efb89c614eaa9e9cfa8066214adffdc730be32d1abd791152c0639567203518",
+      "definitionHash": "83331d1e12a36a688f22eb0c44d8555d57b370da32fd67361027c92e89a61a54",
       "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "resolverContractVersion": "ip-cards-resolver/0.2.0"
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c"
     },
     {
       "id": "release-flex-diagnostic-v1-0",
@@ -99,9 +104,10 @@
       "retiredAt": null,
       "supersedesReleaseBundleId": null,
       "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
-      "definitionHash": "934156b5cf8bdb2788fbee4d3d309843225df37222bf8f76c23d908458c53bdb",
+      "definitionHash": "3b163b8b7d223461a6c604883be48ba4949dfbac3dd6ea88114865af7345613f",
       "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "resolverContractVersion": "ip-cards-resolver/0.2.0"
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c"
     },
     {
       "id": "release-icu-bronch-v1-0",
@@ -113,9 +119,10 @@
       "retiredAt": null,
       "supersedesReleaseBundleId": null,
       "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
-      "definitionHash": "6fae373b21686c4f7a2c7778cd3a53eccf111f35d5a35def72a91a0ed3b1b365",
+      "definitionHash": "366353fa2a66c4da0df0937af760b2344c31ab071a1447a2a2f20f605f34db6e",
       "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "resolverContractVersion": "ip-cards-resolver/0.2.0"
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c"
     },
     {
       "id": "release-ipc-placement-v1-0",
@@ -127,9 +134,10 @@
       "retiredAt": null,
       "supersedesReleaseBundleId": null,
       "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
-      "definitionHash": "c7ad2b8d9ad063d139d4d7a4b80f0896b3c62c3da84fd316fb768fe0e06fbafe",
+      "definitionHash": "6b51ab3cc173c865e7d5d60f2aa2c0914a4a75711592a54ebda74ee499624d16",
       "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "resolverContractVersion": "ip-cards-resolver/0.2.0"
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c"
     },
     {
       "id": "release-med-thoracoscopy-v1-0",
@@ -141,9 +149,10 @@
       "retiredAt": null,
       "supersedesReleaseBundleId": null,
       "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
-      "definitionHash": "ef0812688c1b84bd9d09b7cfaabb591495a95f2d0a8d6a39a05139a914cf061b",
+      "definitionHash": "8b8878eb3f02ee1be4567c596ec0042bc5e88a26da80a764c4001bc95cb0cec7",
       "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "resolverContractVersion": "ip-cards-resolver/0.2.0"
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c"
     },
     {
       "id": "release-perc-trach-v1-0",
@@ -155,9 +164,10 @@
       "retiredAt": null,
       "supersedesReleaseBundleId": null,
       "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
-      "definitionHash": "b40e5cffb3c3f3c7b62cb9e15c2af721dd33fa9e72e7930443b7a6980f82dff3",
+      "definitionHash": "13b8606bad18a7b381528c9c1393e6ec1d5719752fdc39364f7e6126bb6db4a6",
       "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "resolverContractVersion": "ip-cards-resolver/0.2.0"
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c"
     },
     {
       "id": "release-photodynamic-therapy-v1-0",
@@ -169,9 +179,10 @@
       "retiredAt": null,
       "supersedesReleaseBundleId": null,
       "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
-      "definitionHash": "39ffe49dc01163fa96ffde81790f69c4a9b40ed0e6ca4026edd8d9e8987bd442",
+      "definitionHash": "bb2ca4c45bbde0f24a5fd661ddbdf534fc20d6d84e73db159c3b0308da4b1060",
       "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "resolverContractVersion": "ip-cards-resolver/0.2.0"
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c"
     },
     {
       "id": "release-rigid-bronch-v1-0",
@@ -183,9 +194,10 @@
       "retiredAt": null,
       "supersedesReleaseBundleId": null,
       "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
-      "definitionHash": "b40d5f0b4ba7ed9e581a27bc426317721019b1f2f109fa135d34cadf5f99ee90",
+      "definitionHash": "4a9676ea84ecc2eb74fea7e55c7bfc600b398c9638a4feeb10cd67939f736885",
       "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "resolverContractVersion": "ip-cards-resolver/0.2.0"
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c"
     },
     {
       "id": "release-tb-ruleout-v1-0",
@@ -197,9 +209,10 @@
       "retiredAt": null,
       "supersedesReleaseBundleId": null,
       "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
-      "definitionHash": "b1e64275f8d55a1c58434e02914a8e24750c27e4517a933e629997e5ad35eac6",
+      "definitionHash": "86aa250a9772757c3aaa656e7245d1f650e72ba932ec0fd5e9f39ba73e49f63f",
       "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "resolverContractVersion": "ip-cards-resolver/0.2.0"
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c"
     },
     {
       "id": "release-therapeutic-bronch-v1-0",
@@ -211,9 +224,10 @@
       "retiredAt": null,
       "supersedesReleaseBundleId": null,
       "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
-      "definitionHash": "dfa520f18de8b6562741adfcbceaec1116790d00cdc8867ad90b2a6079151b40",
+      "definitionHash": "10b7a6ed40b4d73855c514275697522978133734be6feb3c975711d5691217ed",
       "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "resolverContractVersion": "ip-cards-resolver/0.2.0"
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c"
     },
     {
       "id": "release-thoracentesis-v1-0",
@@ -225,9 +239,10 @@
       "retiredAt": null,
       "supersedesReleaseBundleId": null,
       "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
-      "definitionHash": "51f69e69492932329f1ec0ff62ebc14dd06012ef7edc171f738782603b5902e2",
+      "definitionHash": "e4d69a5f09af247baee0905e4035bb1d06579276a1b64bf37caf7addd1e16505",
       "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "resolverContractVersion": "ip-cards-resolver/0.2.0"
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c"
     },
     {
       "id": "release-wll-v1-0",
@@ -239,9 +254,10 @@
       "retiredAt": null,
       "supersedesReleaseBundleId": null,
       "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
-      "definitionHash": "ab86cb273dede58ac6a4cda60141e135cedd9f22388c25a8510091f69286f60a",
+      "definitionHash": "cd17245b0c74cd7dab45e5e59173b47895dd6f39a2ad759dbcb361ce3c4fe6e5",
       "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "resolverContractVersion": "ip-cards-resolver/0.2.0"
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c"
     }
   ]
 }

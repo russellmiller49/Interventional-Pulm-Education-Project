@@ -246,6 +246,8 @@ describe('save-time catalog product-role integrity', () => {
     const input = defaultBuildInput(scenarioId)
     input.selectedHospitalItemIds = selectedHospitalItemIds
     const request = saveCardRequestSchema.parse({
+      schemaVersion: BUILDER_INPUTS_SCHEMA_VERSION,
+      releaseBundleId: getCurrentReleaseBundleForScenario(scenarioId)!.id,
       scenarioId,
       title: 'Multi-role product integrity test',
       physicianName: null,
@@ -287,6 +289,8 @@ describe('save-time catalog product-role integrity', () => {
     const input = defaultBuildInput(scenarioId)
     input.selectedHospitalItemIds = selectedHospitalItemIds
     const request = saveCardRequestSchema.parse({
+      schemaVersion: BUILDER_INPUTS_SCHEMA_VERSION,
+      releaseBundleId: getCurrentReleaseBundleForScenario(scenarioId)!.id,
       scenarioId,
       title: 'Multi-role family integrity test',
       physicianName: null,

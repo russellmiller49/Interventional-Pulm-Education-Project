@@ -1,4 +1,3 @@
-import { buildPinnedContext } from '../data/demo-context.server'
 import { buildReleaseContext, type ReleaseContextErrorCode } from '../data/release-bundles.server'
 import { withCatalogPicks, type CatalogPick } from '../domain/catalog-pick'
 import { withCustomItems } from '../domain/custom-item'
@@ -28,10 +27,10 @@ import { getFamilyPick, resolveCatalogPick, type CatalogPickLookupResult } from 
 
 export type RehydratedBuilderErrorCode =
   | 'unknown_scenario'
-  | 'recipe_version_unavailable'
-  | 'recipe_module_unavailable'
+  | 'builder_inputs_not_release_pinned'
   | 'scenario_recipe_mismatch'
   | 'module_not_offered'
+  | 'modifier_not_offered'
   | 'catalog_pick_unavailable'
   | 'product_family_unavailable'
   | 'equipment_set_unavailable'
@@ -41,11 +40,11 @@ export interface RehydratedBuilderContext {
   ok: true
   scenario: ScenarioDefinition
   /**
-   * The release this card resolves through, when it pins one. Null for a version-2 card,
-   * which is exact about its recipe and modules and unpinned below that — see
-   * `BUILDER_INPUTS_SCHEMA_VERSION`.
+   * The release this card resolves through. Never null: reconstruction requires a release
+   * pin, so an input that does not carry one is refused rather than resolved by a weaker
+   * route — see the guard in `rebuildBuilderContext`.
    */
-  releaseBundle: PreferenceCardReleaseBundle | null
+  releaseBundle: PreferenceCardReleaseBundle
   /** The pinned composition's context, before any of this card's own picks. */
   context: BuildContext
   /** The same context with every stored pick, custom line, and set folded in. */
@@ -83,32 +82,29 @@ export function rebuildBuilderContext(
   /** Stamped onto rebuilt equipment sets. Not part of what the snapshot hash addresses. */
   timestamp: string,
 ): RehydratedBuilderContextResult {
-  // The exact definitions the card was built from, never "whatever this procedure means
-  // today". A release whose pinned definitions have moved leaves the card view-only rather
-  // than quietly re-resolving it against content its author never saw.
+  // Reconstruction requires a release pin, and there is no second route.
   //
-  // Two paths, because there are two persisted formats and neither is converted into the
-  // other. A version-3 card verifies the whole hashed dependency set; a version-2 card
-  // verifies its recipe version and module versions, which is everything it recorded.
-  let scenario: ScenarioDefinition
-  let context: BuildContext
-  let releaseBundle: PreferenceCardReleaseBundle | null = null
-
-  if (isReleasePinned(inputs)) {
-    const released = buildReleaseContext(inputs.releaseBundleId, {
-      scenarioId: inputs.scenarioId,
-      recipeVersionId: inputs.input.recipeVersionId,
-    })
-    if (!released.ok) return released
-    scenario = released.scenario
-    context = released.context
-    releaseBundle = released.bundle
-  } else {
-    const pinned = buildPinnedContext(inputs.scenarioId, inputs.input.recipeVersionId)
-    if (!pinned.ok) return pinned
-    scenario = pinned.scenario
-    context = pinned.context
+  // There used to be one: a version-2 card resolved through its recipe version and module
+  // versions alone, which is exact as far as it goes and says nothing about the modifier set,
+  // rescue modules, compatibility rules, or role table the same card also resolves through.
+  // Keeping that route once version 2 became view-only would have left a weaker reconstruction
+  // path in the codebase that nothing could reach on purpose and something could reach by
+  // accident. Refusing here means both callers — reopening and saving — get the invariant.
+  if (!isReleasePinned(inputs)) {
+    return {
+      ok: false,
+      code: 'builder_inputs_not_release_pinned',
+      message:
+        'This card was built before releases pinned the full rule set, so it cannot be rebuilt without resolving it against definitions it never recorded.',
+    }
   }
+
+  const released = buildReleaseContext(inputs.releaseBundleId, {
+    scenarioId: inputs.scenarioId,
+    recipeVersionId: inputs.input.recipeVersionId,
+  })
+  if (!released.ok) return released
+  const { scenario, context, bundle: releaseBundle } = released
 
   if (context.recipe.id !== inputs.input.recipeVersionId) {
     return {
@@ -131,6 +127,20 @@ export function rebuildBuilderContext(
       ok: false,
       code: 'module_not_offered',
       message: `Module ${moduleVersionId} is not part of this procedure composition.`,
+    }
+  }
+
+  // The same wall the modules go through. A modifier code is a permission the release
+  // granted, so a code the pinned recipe does not offer is rejected before resolution rather
+  // than surfaced as a card warning — and rejected on the server, because the picker hiding a
+  // control has never been a security boundary.
+  const offeredModifierCodes = new Set(context.recipe.allowedModifierCodes)
+  for (const modifierCode of inputs.input.modifierCodes) {
+    if (offeredModifierCodes.has(modifierCode)) continue
+    return {
+      ok: false,
+      code: 'modifier_not_offered',
+      message: `Modifier ${modifierCode} is not offered by this procedure release.`,
     }
   }
 

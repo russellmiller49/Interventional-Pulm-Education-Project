@@ -7915,7 +7915,9 @@
       "unavailableCatalog": "A product this card records can no longer be reconstructed from the catalog, so the builder cannot reopen it without changing what it says.",
       "unavailableSnapshotIntact": "The saved card itself is unchanged and stays available to view, print, share, and duplicate.",
       "unavailableReleaseMissing": "La versión publicada con la que se creó esta tarjeta ya no se conserva, por lo que no se pueden cargar las definiciones exactas que registró. No se sustituye por ninguna otra versión.",
-      "unavailableReleaseChanged": "La versión publicada con la que se creó esta tarjeta ya no coincide con lo que se publicó: una de las definiciones que fija ha cambiado. La tarjeta se muestra tal como se guardó, en lugar de reconstruirse a partir de contenido que su autor nunca revisó."
+      "unavailableReleaseChanged": "La versión publicada con la que se creó esta tarjeta ya no coincide con lo que se publicó: una de las definiciones que fija ha cambiado. La tarjeta se muestra tal como se guardó, en lugar de reconstruirse a partir de contenido que su autor nunca revisó.",
+      "unavailableSuperseded": "Esta tarjeta se creó antes de que las versiones fijaran el conjunto completo de reglas, por lo que reabrirla la reconstruiría con reglas de preparación que nunca registró. Su instantánea guardada sigue disponible para ver, imprimir, compartir, duplicar y conservar como referencia.",
+      "unavailableModifier": "Esta tarjeta registra una opción de preparación que la versión del procedimiento a la que está fijada no ofrece, por lo que no puede reconstruirse sin conceder un permiso que esa versión nunca otorgó."
     },
     "duplicateTitle": "{title} (copy)",
     "deleteCard": "Delete",

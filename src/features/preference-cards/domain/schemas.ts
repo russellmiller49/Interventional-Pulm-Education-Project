@@ -29,6 +29,8 @@ export const buildCardInputSchema = z.object({
       message: 'At most 250 hospital-item selections are allowed.',
     })
     .optional(),
+  /** See `BuildCardInput.selectionsAreExplicit`. Absent means the legacy fallback applies. */
+  selectionsAreExplicit: z.boolean().optional(),
   waivers: z
     .record(z.string(), z.string().trim().min(10).max(500))
     .refine((value) => Object.keys(value).length <= 100, {

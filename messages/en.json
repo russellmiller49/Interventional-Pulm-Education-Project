@@ -7915,7 +7915,9 @@
       "unavailableCatalog": "A product this card records can no longer be reconstructed from the catalog, so the builder cannot reopen it without changing what it says.",
       "unavailableSnapshotIntact": "The saved card itself is unchanged and stays available to view, print, share, and duplicate.",
       "unavailableReleaseMissing": "The published release this card was built from is no longer retained, so the exact definitions it recorded cannot be loaded. No other release is substituted for it.",
-      "unavailableReleaseChanged": "The published release this card was built from no longer matches what was published — one of the definitions it pins has changed. The card is shown as it was saved rather than rebuilt from content its author never reviewed."
+      "unavailableReleaseChanged": "The published release this card was built from no longer matches what was published — one of the definitions it pins has changed. The card is shown as it was saved rather than rebuilt from content its author never reviewed.",
+      "unavailableSuperseded": "This card was built before releases pinned the full rule set, so reopening it would rebuild it against setup rules it never recorded. Its saved snapshot stays available to view, print, share, duplicate, and retain for reference.",
+      "unavailableModifier": "This card records a setup option that the procedure release it is pinned to does not offer, so it cannot be rebuilt without granting a permission that release never granted."
     },
     "duplicateTitle": "{title} (copy)",
     "deleteCard": "Delete",

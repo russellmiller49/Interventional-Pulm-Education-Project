@@ -1,4 +1,5 @@
 import {
+  buildDemoContext,
   defaultBuildInput,
   getComposedRecipeSlots,
   getScenarioDefinition,
@@ -174,6 +175,11 @@ beforeEach(() => {
     rpc: async () => ({ data: [], error: null }),
   })
 })
+
+/** Every modifier code the merged definition set actually contains, offered or not. */
+function buildDemoContextModifierCodes(): string[] {
+  return getScenarioDefinition('flex-diagnostic')!.availableModifierCodes
+}
 
 function ebusProductPick(): { productId: string; roleCode: string } {
   const roleCode = 'EBUS_NEEDLE_FNA'
@@ -454,28 +460,44 @@ describe('exact version pinning', () => {
     expect(viewed!.card.snapshotHash).toBe(row.snapshot_hash)
   })
 
-  it('reports a pinned recipe version the generated data no longer publishes, on a version-2 card', async () => {
+  it('refuses to reopen a version-2 card, and leaves it fully usable as a document', async () => {
     const cardId = await saveFixture()
     const row = rows.find((card) => card.id === cardId)!
     const inputs = builderInputsSchema.parse(row.builder_inputs)
-    // A card written before release bundles pins its recipe version and nothing else, so the
-    // recipe version is what fails when it goes.
+    // A card written before release bundles pins its recipe and modules exactly and nothing
+    // underneath them. Reopening it would re-resolve it against today's modifier set, rescue
+    // modules, compatibility rules, and role table — so the builder is closed to it.
     const withoutPin: Record<string, unknown> = { ...inputs }
     delete withoutPin.releaseBundleId
-    row.builder_inputs = {
-      ...withoutPin,
-      schemaVersion: 2,
-      input: { ...inputs.input, recipeVersionId: 'recipe-ebus-tbna-v9-9' },
-    }
+    row.builder_inputs = { ...withoutPin, schemaVersion: 2 }
 
     const editable = await loadEditableUserCard(cardId)
     expect(editable.ok).toBe(false)
     if (editable.ok) return
-    expect(editable.code).toBe('recipe_version_unavailable')
+    expect(editable.code).toBe('superseded_builder_inputs')
 
+    // Nothing about the card itself changed: it still loads, still verifies, still lists,
+    // and still duplicates. Only the edit control is withheld.
     const viewed = await loadUserCard(cardId)
     expect(viewed).not.toBeNull()
     expect(viewed!.card.snapshotHash).toBe(row.snapshot_hash)
+    expect(viewed!.editable).toBe(false)
+    expect((await listUserCards()).find((card) => card.id === cardId)?.editable).toBe(false)
+
+    const copy = await duplicateUserCard(cardId, 'Copy of a version-2 card')
+    expect(copy.ok).toBe(true)
+    // A duplicate of a view-only card is also view-only. Duplication copies the stored
+    // inputs verbatim; it is not a back door to an edit session.
+    expect((await loadUserCard(copy.data!))!.editable).toBe(false)
+  })
+
+  it('refuses to write builder inputs at a superseded version', () => {
+    const request = ebusEditFixture()
+    const asVersionTwo: Record<string, unknown> = { ...request, schemaVersion: 2 }
+    delete asVersionTwo.releaseBundleId
+
+    // Enforced by the schema, so both writers — create and overwrite — are covered.
+    expect(saveCardRequestSchema.safeParse(asVersionTwo).success).toBe(false)
   })
 
   it('reports a pinned module version the composition does not offer', async () => {
@@ -755,6 +777,8 @@ describe('role renames on a reopened card', () => {
     expect(slot).toBeDefined()
 
     const inputs = builderInputsSchema.parse({
+      schemaVersion: BUILDER_INPUTS_SCHEMA_VERSION,
+      releaseBundleId: getCurrentReleaseBundleForScenario('med-thoracoscopy')!.id,
       scenarioId: 'med-thoracoscopy',
       input: {
         ...defaultBuildInput('med-thoracoscopy'),
@@ -814,5 +838,52 @@ describe('equipment sets on a reopened card', () => {
       editable.record.card.items.find((item) => item.roleCode === pick.roleCode)
         ?.selectedHospitalItemId,
     ).toBe(equipmentSetItemId('set-ebus-tray'))
+  })
+})
+
+describe('modifier authorization', () => {
+  /**
+   * The picker only ever offered the modifiers a procedure lists, and the server used to take
+   * the client's word for it: `resolveCard` looked a submitted code up in the whole merged
+   * modifier set, so a crafted request naming a real modifier the procedure never offered was
+   * applied and stored. Hiding a control is not authorization.
+   */
+  function unofferedButRealModifierCode(): string {
+    const scenario = getScenarioDefinition(SCENARIO_ID)!
+    const offered = new Set(scenario.availableModifierCodes)
+    // A code that genuinely exists — the point is that it is real and simply not granted here.
+    const code = buildDemoContextModifierCodes().find((candidate) => !offered.has(candidate))
+    expect(code).toBeDefined()
+    return code!
+  }
+
+  it('rejects a modifier the pinned release does not offer, even from a crafted request', () => {
+    const code = unofferedButRealModifierCode()
+    const request = ebusEditFixture()
+    const crafted = saveCardRequestSchema.parse({
+      ...request,
+      input: { ...request.input, modifierCodes: [...request.input.modifierCodes, code] },
+    })
+
+    const result = resolveForSave(crafted, '2026-07-30T12:00:00.000Z')
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.code).toBe('modifier_not_offered')
+    expect(result.error).toContain(code)
+  })
+
+  it('builds the resolver context from only the modifiers the release granted', () => {
+    const scenario = getScenarioDefinition(SCENARIO_ID)!
+    const context = buildDemoContext(SCENARIO_ID)
+    // Not "every modifier that exists, and we trust the caller to pick a legal one".
+    expect(context.modifiers.map((modifier) => modifier.code).sort()).toEqual(
+      [...scenario.availableModifierCodes].sort(),
+    )
+    expect(context.recipe.allowedModifierCodes).toEqual([...scenario.availableModifierCodes].sort())
+  })
+
+  it('still accepts every modifier the release does offer', () => {
+    const request = ebusEditFixture()
+    expect(resolveForSave(request, '2026-07-30T12:00:00.000Z').ok).toBe(true)
   })
 })

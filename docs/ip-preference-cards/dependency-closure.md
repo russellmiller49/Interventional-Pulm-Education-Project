@@ -104,28 +104,48 @@ reopened card restores its own `modifierCodes`.
 
 ## Known gaps, named rather than closed
 
-Honest scope. Each was identified by the audit, is outside this phase, and is written down so
-it is not mistaken for something already handled.
+Honest scope. Each is written down so it is not mistaken for something already handled.
 
-1. **Version-2 cards are not release-pinned, and are not converted.** A card written before
-   release bundles pins its recipe version and module versions exactly, and resolves the four
-   whole-set dependencies from whatever is current. Backfilling a `releaseBundleId` would
-   assert those cards were resolved against content nobody verified at save time, so they are
-   re-saved as version 2 and the limitation is stated instead. See
-   `BUILDER_INPUTS_SCHEMA_VERSION`.
-2. **`availableModifierCodes` is authored governance the server never enforces.**
-   `rebuildBuilderContext` rejects a module the composition does not offer but accepts any
-   modifier code. Symmetry would move it into category 1.
-3. **The hospital-local layer holds implicit authority.** A requirement with no explicit
-   selection takes `options[0]`, so the resolved item depends on preference-rank ordering that
-   the card never recorded.
-4. **`familyKey` is a computed identifier that saved cards store verbatim**, so a change to
-   its derivation orphans a stored family pick.
-5. **The snapshot hash is broad and format-unversioned.** It covers `ruleTrace` prose and the
-   site/location display names, so hash churn is routine and therefore uninformative.
-6. **Nothing compares a re-resolution against the stored snapshot.** Save overwrites
+**Closed in Phase 4A:**
+
+1. ~~Version-2 cards are not release-pinned~~ — they are now **view-only**. They still view,
+   print, share, and duplicate; the builder is closed to them, and `saveCardRequestSchema`
+   refuses to write at a superseded version. `rebuildBuilderContext` requires a release pin, so
+   the weaker reconstruction path is gone rather than merely unused.
+2. ~~`availableModifierCodes` is authored governance the server never enforces~~ — it is now
+   `RecipeVersion.allowedModifierCodes`, inside `recipeDefinitionHash`, enforced by
+   `rebuildBuilderContext` and applied by building the context from permitted modifiers only.
+3. ~~The hospital-local layer holds implicit authority~~ (the `options[0]` half) — selections
+   are materialized from the **resolved preview** into `selectedHospitalItemIds`, and
+   `selectionsAreExplicit` turns off the fallback. A re-ranked formulary no longer changes what
+   a saved card asks for.
+4. ~~A superseded module version cannot be retained~~ — `module-ledger.ts` freezes every
+   published module version, the composition build accepts retained-but-unreferenced versions,
+   and mutating or deleting a ledger entry fails validation.
+5. ~~The resolver contract is a hand-typed literal nothing compares~~ — split into a semantic
+   `resolverContractVersion` (asserted behaviourally) and a provenance
+   `resolverImplementationHash` (recorded, reported, never a support boundary).
+
+**Still open:**
+
+6. **`familyKey` is a computed identifier that saved cards store verbatim.** Replacing it with
+   a stable `productFamilyId` is designed but **not implemented**, and deliberately so: today's
+   derivation already over-merges. `MFR-E3F284CAE2|thoracentesis catheter|candidate` holds both
+   the Safe-T-Centesis 6 Fr Tray and the Safe-T-Centesis PLUS Tray;
+   `MFR-90D85DB52E|surgical chest tube|candidate` holds eight Argyle catheters spanning
+   16–36 Fr. Minting permanent ids from that would freeze a **clinically wrong grouping** into
+   card identity, and un-merging it later would be the migration this phase forbids. The
+   grouping needs clinical review first. See the Phase 4A report.
+7. **Historical catalog retention is designed but not implemented.** The identity fix landed
+   (`catalogImportId` is a content digest over the artifacts the resolver reads), but there is
+   no per-release frozen catalog artifact, so an old card's product identity still comes from
+   the current catalog. Design: a content-addressed row store plus a thin per-release manifest
+   (~531 KB once, then 2–90 KB per release), not a 3 MB copy per release.
+8. **The snapshot hash is broad and format-unversioned**, and is not yet split into
+   `snapshotIntegrityHash` and `resolvedContentHash`. It still covers `ruleTrace` prose and the
+   site/location display names, so hash churn remains routine and therefore uninformative.
+9. **Nothing compares a re-resolution against the stored snapshot.** Save overwrites
    `card_snapshot` and `snapshot_hash` without reporting that the content moved.
-7. **A superseded _module_ version cannot yet be retained in production.** Bumping a seed
-   module's version mints a new id, but the build then fails the module with "declared but
-   referenced by no composition". Retaining a superseded recipe version works today; retaining
-   a superseded module version needs that coverage rule relaxed to the pointed-to composition.
+10. **A missing or inactive pinned local item does not yet raise a reconciliation warning.** It
+    resolves to "nothing selected", which is honest and visible but not the explicit
+    reconciliation state Phase 4A asks for.

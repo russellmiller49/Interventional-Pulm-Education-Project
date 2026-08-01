@@ -7915,7 +7915,9 @@
       "unavailableCatalog": "A product this card records can no longer be reconstructed from the catalog, so the builder cannot reopen it without changing what it says.",
       "unavailableSnapshotIntact": "The saved card itself is unchanged and stays available to view, print, share, and duplicate.",
       "unavailableReleaseMissing": "创建此卡片所用的已发布版本不再保留，因此无法载入它所记录的确切定义。系统不会以其他版本替代。",
-      "unavailableReleaseChanged": "创建此卡片所用的已发布版本与当初发布的内容不再一致——它锁定的某项定义已发生变更。此卡片按保存时的原样显示，而不会基于其作者从未审阅过的内容重新生成。"
+      "unavailableReleaseChanged": "创建此卡片所用的已发布版本与当初发布的内容不再一致——它锁定的某项定义已发生变更。此卡片按保存时的原样显示，而不会基于其作者从未审阅过的内容重新生成。",
+      "unavailableSuperseded": "此卡片创建于发布包锁定完整规则集之前，因此重新打开会依据它从未记录过的准备规则重新生成。其保存的快照仍可查看、打印、共享、复制并留存备查。",
+      "unavailableModifier": "此卡片记录了一项其所锁定的操作发布包并未提供的准备选项，因此若不授予该发布包从未授予的权限便无法重新生成。"
     },
     "duplicateTitle": "{title} (copy)",
     "deleteCard": "Delete",

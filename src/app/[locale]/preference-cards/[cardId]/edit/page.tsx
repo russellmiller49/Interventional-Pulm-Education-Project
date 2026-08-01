@@ -36,11 +36,17 @@ export const metadata: Metadata = {
  */
 const explanationKeyByCode: Record<Exclude<EditableCardErrorCode, 'not_found'>, string> = {
   legacy_builder_inputs: 'edit.unavailableLegacy',
+  // Parseable, exact about its recipe and modules, and still unable to back an edit: the
+  // whole-set dependencies underneath were never pinned, so re-resolving would substitute
+  // today's for the ones the card was built against.
+  superseded_builder_inputs: 'edit.unavailableSuperseded',
   unknown_scenario: 'edit.unavailableProcedure',
-  recipe_version_unavailable: 'edit.unavailableRecipeVersion',
-  recipe_module_unavailable: 'edit.unavailableModule',
+  // Reconstruction requires a release pin; an input without one is refused rather than
+  // rebuilt by a weaker route.
+  builder_inputs_not_release_pinned: 'edit.unavailableSuperseded',
   scenario_recipe_mismatch: 'edit.unavailableRecipeVersion',
   module_not_offered: 'edit.unavailableModule',
+  modifier_not_offered: 'edit.unavailableModifier',
   catalog_pick_unavailable: 'edit.unavailableCatalog',
   product_family_unavailable: 'edit.unavailableCatalog',
   equipment_set_unavailable: 'edit.unavailableCatalog',

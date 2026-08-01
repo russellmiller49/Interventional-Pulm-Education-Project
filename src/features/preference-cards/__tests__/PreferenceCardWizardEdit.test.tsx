@@ -64,6 +64,10 @@ function savedBuilderInputs() {
   const scenario = getScenarioDefinition(SCENARIO_ID)!
   const pick = needlePick()
   return builderInputsSchema.parse({
+    // Reopening requires a release pin: version 2 is view-only and the builder is closed
+    // to it, so a fixture for an *editable* card has to be a version-3 card.
+    schemaVersion: BUILDER_INPUTS_SCHEMA_VERSION,
+    releaseBundleId: getCurrentReleaseBundleForScenario(SCENARIO_ID)!.id,
     scenarioId: SCENARIO_ID,
     input: {
       ...defaultBuildInput(SCENARIO_ID),
@@ -291,7 +295,7 @@ describe('saving changes', () => {
     expect(saveUserCardAction).toHaveBeenCalledTimes(1)
     const request = saveUserCardAction.mock.calls[0][0]
     expect(request.cardId).toBe(CARD_ID)
-    expect(request.schemaVersion).toBe(2)
+    expect(request.schemaVersion).toBe(BUILDER_INPUTS_SCHEMA_VERSION)
     expect(request.title).toBe('Dr Miller EBUS with ROSE v2')
     expect(request.status).toBe('final')
     expect(request.input.selectedModuleVersionIds).toEqual([FLEX_CORE, EBUS_SPECIFIC])

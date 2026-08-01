@@ -15,6 +15,7 @@ import {
   getReleasePointers,
   getRetainedReleaseBundles,
   validateRetainedReleases,
+  RUNTIME_RESOLVER_CONTRACT,
 } from '../data/release-bundles.server'
 import {
   HOSPITAL_LOCAL_CURRENT_CONTEXT_FIELDS,
@@ -23,8 +24,10 @@ import {
   recipeDefinitionHash,
   releaseBundleDefinitionHash,
   resolvePinnedRelease,
+  validateReleaseBundles,
 } from '../domain/release-bundle'
-import { PREFERENCE_CARD_ENGINE_VERSION } from '../domain/resolve-card'
+import { PREFERENCE_CARD_RESOLVER_CONTRACT_VERSION } from '../domain/resolve-card'
+import { RESOLVER_SOURCE_FILES } from '../../../../scripts/ip-preference-cards/resolver-release-id'
 
 /**
  * The retained release set as it is actually committed, checked on every CI run.
@@ -84,10 +87,7 @@ describe('the committed release set', () => {
 
   it('pins the exact module versions each recipe references, and hashes their content', () => {
     for (const bundle of getRetainedReleaseBundles()) {
-      const sources = getReleaseDefinitionSources(
-        bundle.recipeVersionId,
-        PREFERENCE_CARD_ENGINE_VERSION,
-      )
+      const sources = getReleaseDefinitionSources(bundle.recipeVersionId, RUNTIME_RESOLVER_CONTRACT)
       expect(sources).not.toBeNull()
       expect(bundle.recipeDefinitionHash).toBe(recipeDefinitionHash(sources!.recipe))
       expect(bundle.modulePins.map((pin) => pin.moduleVersionId).sort()).toEqual(
@@ -124,7 +124,7 @@ describe('tampering with the committed release set', () => {
       tampered.id,
       new Map([[tampered.id, tampered]]),
       (candidate) =>
-        getReleaseDefinitionSources(candidate.recipeVersionId, PREFERENCE_CARD_ENGINE_VERSION),
+        getReleaseDefinitionSources(candidate.recipeVersionId, RUNTIME_RESOLVER_CONTRACT),
     )
     expect(result.ok).toBe(false)
     if (result.ok) return
@@ -141,7 +141,7 @@ describe('tampering with the committed release set', () => {
       tampered.id,
       new Map([[tampered.id, tampered]]),
       (candidate) =>
-        getReleaseDefinitionSources(candidate.recipeVersionId, PREFERENCE_CARD_ENGINE_VERSION),
+        getReleaseDefinitionSources(candidate.recipeVersionId, RUNTIME_RESOLVER_CONTRACT),
     )
     expect(result.ok).toBe(false)
     if (result.ok) return
@@ -180,42 +180,61 @@ describe('the pinned / hospital-local boundary', () => {
 })
 
 /**
- * The resolver is code, so it cannot be retained the way authored data can. What *can* be
- * retained is the promise that its version string means something: this fails when the
- * resolution semantics move without `PREFERENCE_CARD_ENGINE_VERSION` moving with them.
+ * The resolver is code and cannot be retained, so a release records two different things
+ * about it and they are checked differently.
  *
- * Raising the baseline is the deliberate act. When it fails, read the diff and decide whether
- * the change alters what an existing card resolves to. If it does, bump the engine version
- * and republish the affected releases; if it does not, record the new digest here and say so.
+ * `resolverContractVersion` is the semantic boundary — what resolution *means* — and it is
+ * asserted behaviourally in `resolver-contract.test.ts`, not by hashing anything. A refactor
+ * that preserves the contract passes those tests and stays supported.
+ *
+ * `resolverImplementationHash` is provenance: which build produced a card. It moves on every
+ * source edit including pure refactors, which is exactly why it must not be a support
+ * boundary — a signal that fires on renames is a signal nobody reads.
  */
-const RESOLVER_CONTRACT_SOURCES = [
-  'src/features/preference-cards/domain/resolve-card.ts',
-  'src/features/preference-cards/domain/expand-recipe-composition.ts',
-  'src/features/preference-cards/domain/evaluate-compatibility.ts',
-  'src/features/preference-cards/domain/kit-suppression.ts',
-  'src/features/preference-cards/domain/quantity-expression.ts',
-  'src/features/preference-cards/domain/size-at-procedure.ts',
-  'src/features/preference-cards/domain/verification.ts',
-  'src/features/preference-cards/domain/stable-hash.ts',
-] as const
-
-describe('the resolver contract', () => {
-  it('is declared by every published release', () => {
+describe('the resolver contract and the build that implements it', () => {
+  it('is declared, at the semantic version, by every published release', () => {
     for (const bundle of getRetainedReleaseBundles()) {
-      expect(bundle.resolverContractVersion).toBe(PREFERENCE_CARD_ENGINE_VERSION)
+      expect(bundle.resolverContractVersion).toBe(PREFERENCE_CARD_RESOLVER_CONTRACT_VERSION)
     }
   })
 
-  it('has not changed without its version changing', () => {
-    const manifest = RESOLVER_CONTRACT_SOURCES.map(
+  it('records a provenance digest that matches the resolver sources on disk', () => {
+    // Recomputed here the same way the build computes it, so the committed artifact cannot
+    // drift from the code it claims to describe.
+    const manifest = RESOLVER_SOURCE_FILES.map(
       (filename) =>
         `${createHash('sha256').update(readFileSync(filename)).digest('hex')}  ${filename}\n`,
     ).join('')
     const digest = createHash('sha256').update(manifest).digest('hex')
 
-    expect({ version: PREFERENCE_CARD_ENGINE_VERSION, digest }).toEqual({
-      version: 'ip-cards-resolver/0.2.0',
-      digest: '1a7b780a3f1c78519756732241bac6c4c65a9ea8aa709faa14c5448629bd640a',
+    expect(RUNTIME_RESOLVER_CONTRACT.implementationHash).toBe(digest)
+  })
+
+  it('treats a moved implementation digest as information, not as a broken release', () => {
+    const bundles = getRetainedReleaseBundles().map((bundle) => ({
+      ...bundle,
+      resolverImplementationHash: 'refactored'.padEnd(64, '0'),
+    }))
+    const messages = validateReleaseBundles({
+      bundles,
+      pointers: getReleasePointers(),
+      sourcesByBundleId: new Map(
+        bundles.map((bundle) => [
+          bundle.id,
+          getReleaseDefinitionSources(bundle.recipeVersionId, RUNTIME_RESOLVER_CONTRACT),
+        ]),
+      ),
     })
+
+    // Reported, so the provenance difference is visible...
+    expect(messages.map((message) => message.code)).toContain(
+      'release_resolver_implementation_advanced',
+    )
+    // ...and never blocking, so a source-only refactor cannot make historical cards
+    // unsupported. That separation is the whole point of splitting the two fields.
+    expect(messages.filter((message) => message.severity === 'blocking')).toEqual([])
+    for (const bundle of bundles) {
+      expect(buildReleaseContext(bundle.id).ok).toBe(true)
+    }
   })
 })

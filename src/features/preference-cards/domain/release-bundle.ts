@@ -84,8 +84,21 @@ export interface PreferenceCardReleaseBundle {
    * See `RELEASE_BUNDLE_HASH_EXCLUSIONS`.
    */
   catalogImportId: string
-  /** The resolver contract the bundle was published against. Also outside `definitionHash`. */
+  /**
+   * The **semantic** resolver contract the bundle was published against. Outside
+   * `definitionHash`. A move here means resolution means something different now, and every
+   * release published under the old contract is reported.
+   */
   resolverContractVersion: string
+  /**
+   * A digest of the resolver sources at publication — **provenance only**.
+   *
+   * Recorded so a card can be traced to the build that produced it, and deliberately not a
+   * support boundary: a pure refactor moves this and changes nothing a card resolves to.
+   * Reporting it as a contract change would make every historical card look unsupported for a
+   * rename, so drift here is informational where a contract move is a warning.
+   */
+  resolverImplementationHash: string
 
   releaseState: ReleaseState
   /** Weakest clinical state across the pinned recipe and its modules. Derived from the pins. */
@@ -138,6 +151,8 @@ export const RELEASE_BUNDLE_HASH_EXCLUSIONS: Readonly<Record<string, string>> = 
     'Independently versioned external content. The catalog is re-imported on its own cadence; forcing every procedure to republish on each import would make republication routine and therefore meaningless. Drift is reported explicitly instead.',
   resolverContractVersion:
     'The resolver is code, not retained data. A contract change is surfaced as an explicit condition rather than pretending an older engine could be reconstituted.',
+  resolverImplementationHash:
+    'Provenance only. A pure refactor moves the source digest without changing what any card resolves to, and hashing it would turn every rename into a mutation.',
 }
 
 /**
@@ -226,6 +241,7 @@ export interface ReleaseDefinitionSources {
   roleTaxonomy: RoleTaxonomySnapshot
   catalogImportId: string
   resolverContractVersion: string
+  resolverImplementationHash: string
 }
 
 function hash(kind: string, payload: unknown): string {
@@ -395,6 +411,7 @@ export interface ReleaseBundleAuthoredFields {
    */
   publishedCatalogImportId?: string | null
   publishedResolverContractVersion?: string | null
+  publishedResolverImplementationHash?: string | null
 }
 
 /**
@@ -442,6 +459,8 @@ export function computeReleaseBundle(
     catalogImportId: authored.publishedCatalogImportId ?? sources.catalogImportId,
     resolverContractVersion:
       authored.publishedResolverContractVersion ?? sources.resolverContractVersion,
+    resolverImplementationHash:
+      authored.publishedResolverImplementationHash ?? sources.resolverImplementationHash,
     releaseState: authored.releaseState,
     governanceState: bundleGovernanceState(sources),
     publishedAt: authored.publishedAt,
@@ -473,10 +492,11 @@ export type ReleaseValidationCode =
   /* Independently versioned context */
   | 'release_catalog_import_advanced'
   | 'release_resolver_contract_advanced'
+  | 'release_resolver_implementation_advanced'
 
 export interface ReleaseValidationMessage {
   code: ReleaseValidationCode
-  severity: 'blocking' | 'warning'
+  severity: 'blocking' | 'warning' | 'info'
   releaseBundleId: string | null
   message: string
   /** Which pinned definitions differ, when the code is about a hash. */
@@ -657,6 +677,16 @@ export function validateReleaseBundles(input: ReleaseValidationInput): ReleaseVa
         severity: 'warning',
         releaseBundleId: bundle.id,
         message: `Release ${bundle.id} was published against resolver contract ${bundle.resolverContractVersion}; the current contract is ${sources.resolverContractVersion}. The resolver is code and is not retained, so a contract change is surfaced rather than pinned.`,
+      })
+    }
+    // Provenance drift, not a support boundary. A refactor that preserves the contract lands
+    // here and nowhere else — which is the whole point of separating the two.
+    if (frozen && sources.resolverImplementationHash !== bundle.resolverImplementationHash) {
+      messages.push({
+        code: 'release_resolver_implementation_advanced',
+        severity: 'info',
+        releaseBundleId: bundle.id,
+        message: `Release ${bundle.id} was published by resolver build ${bundle.resolverImplementationHash.slice(0, 12)}; the current build is ${sources.resolverImplementationHash.slice(0, 12)}. The semantic contract ${bundle.resolverContractVersion} is unchanged, so cards pinned to this release are unaffected.`,
       })
     }
   }

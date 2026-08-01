@@ -57,7 +57,8 @@ export const CHARLIE_RELEASE_ID = 'release-fixture-procedure-v9-9'
 export const REVISED_REQUIREMENT_KEY = 'FIXTURE_BACKUP_SCOPE'
 
 const CATALOG_IMPORT_ID = 'fixture-catalog-import-0001'
-const RESOLVER_CONTRACT = 'ip-cards-resolver/0.2.0'
+const RESOLVER_CONTRACT = 'ip-cards-resolver-contract/1'
+const RESOLVER_IMPLEMENTATION = 'fixture-resolver-build-0001'
 
 function slot(
   overrides: Partial<RecipeSlot> & Pick<RecipeSlot, 'id' | 'requirementKey'>,
@@ -127,6 +128,7 @@ function fixtureRecipe(recipeVersionId: string, moduleVersionId: string): Recipe
     operationalOwner: null,
     catalogImportId: CATALOG_IMPORT_ID,
     slots: [],
+    allowedModifierCodes: ['FIXTURE_MODIFIER'],
     moduleReferences: [{ moduleVersionId, selectionBehavior: 'required', sequence: 10 }],
     compositionActions: [],
     requirementSequences: { FIXTURE_PRIMARY_SCOPE: 1, [REVISED_REQUIREMENT_KEY]: 2 },
@@ -202,6 +204,7 @@ export interface FixtureDefinitionStore {
   roleTaxonomy: RoleTaxonomySnapshot
   catalogImportId: string
   resolverContractVersion: string
+  resolverImplementationHash: string
 }
 
 export function createFixtureDefinitionStore(): FixtureDefinitionStore {
@@ -220,6 +223,7 @@ export function createFixtureDefinitionStore(): FixtureDefinitionStore {
     roleTaxonomy: fixtureRoleTaxonomy,
     catalogImportId: CATALOG_IMPORT_ID,
     resolverContractVersion: RESOLVER_CONTRACT,
+    resolverImplementationHash: RESOLVER_IMPLEMENTATION,
   }
 }
 
@@ -245,6 +249,7 @@ export function fixtureSourcesFor(
     roleTaxonomy: store.roleTaxonomy,
     catalogImportId: store.catalogImportId,
     resolverContractVersion: store.resolverContractVersion,
+    resolverImplementationHash: store.resolverImplementationHash,
   }
 }
 
@@ -262,6 +267,7 @@ const authoredReleases: Array<ReleaseBundleAuthoredFields & { recipeVersionId: s
     releaseNotes: 'Initial synthetic release.',
     publishedCatalogImportId: CATALOG_IMPORT_ID,
     publishedResolverContractVersion: RESOLVER_CONTRACT,
+    publishedResolverImplementationHash: RESOLVER_IMPLEMENTATION,
   },
   {
     id: BRAVO_RELEASE_ID,
@@ -275,6 +281,7 @@ const authoredReleases: Array<ReleaseBundleAuthoredFields & { recipeVersionId: s
     releaseNotes: 'Backup scope becomes required.',
     publishedCatalogImportId: CATALOG_IMPORT_ID,
     publishedResolverContractVersion: RESOLVER_CONTRACT,
+    publishedResolverImplementationHash: RESOLVER_IMPLEMENTATION,
   },
   {
     id: CHARLIE_RELEASE_ID,
@@ -290,6 +297,7 @@ const authoredReleases: Array<ReleaseBundleAuthoredFields & { recipeVersionId: s
     releaseNotes: 'Published for review; the pointer has not been advanced to it.',
     publishedCatalogImportId: CATALOG_IMPORT_ID,
     publishedResolverContractVersion: RESOLVER_CONTRACT,
+    publishedResolverImplementationHash: RESOLVER_IMPLEMENTATION,
   },
 ]
 

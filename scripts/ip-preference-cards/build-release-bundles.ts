@@ -14,9 +14,16 @@ import {
   type ReleaseState,
   type ReleaseValidationMessage,
 } from '../../src/features/preference-cards/domain/release-bundle'
-import { PREFERENCE_CARD_ENGINE_VERSION } from '../../src/features/preference-cards/domain/resolve-card'
+import type { RecipeModuleVersion } from '../../src/features/preference-cards/domain/types'
+import {
+  validateModuleLedger,
+  withPublishedModules,
+  type ModuleLedger,
+} from '../../src/features/preference-cards/domain/module-ledger'
+import { PREFERENCE_CARD_RESOLVER_CONTRACT_VERSION } from '../../src/features/preference-cards/domain/resolve-card'
 
 import { computeCatalogRelease } from './catalog-release-id'
+import { computeResolverRelease } from './resolver-release-id'
 import { formatJson } from './format-json'
 
 /**
@@ -58,6 +65,7 @@ interface SeedRelease {
   /** Independently versioned context, frozen at publication. Required once published. */
   catalogImportId?: string
   resolverContractVersion?: string
+  resolverImplementationHash?: string
 }
 
 interface SeedReleaseFile {
@@ -109,9 +117,14 @@ export function buildReleaseBundles(input: {
         `Release ${release.id} is a draft but records a frozen definition hash. A draft's definitions are still moving; freeze the hash when publishing it.`,
       )
     }
-    if (frozen && (!release.catalogImportId || !release.resolverContractVersion)) {
+    if (
+      frozen &&
+      (!release.catalogImportId ||
+        !release.resolverContractVersion ||
+        !release.resolverImplementationHash)
+    ) {
       fail(
-        `Release ${release.id} is ${release.releaseState} but does not record the catalog import and resolver contract it was published against.`,
+        `Release ${release.id} is ${release.releaseState} but does not record the catalog release, resolver contract, and resolver build it was published against.`,
       )
     }
 
@@ -133,6 +146,7 @@ export function buildReleaseBundles(input: {
       releaseNotes: release.releaseNotes,
       publishedCatalogImportId: release.catalogImportId ?? null,
       publishedResolverContractVersion: release.resolverContractVersion ?? null,
+      publishedResolverImplementationHash: release.resolverImplementationHash ?? null,
     }
 
     const computed = computeReleaseBundle(authored, sources)
@@ -180,6 +194,15 @@ async function readJson<T>(directory: string, filename: string): Promise<T> {
   return JSON.parse(await readFile(path.join(directory, filename), 'utf8')) as T
 }
 
+/** The ledger starts empty on the first run; after that it is only ever added to. */
+async function readJsonOrDefault<T>(directory: string, filename: string, fallback: T): Promise<T> {
+  try {
+    return await readJson<T>(directory, filename)
+  } catch {
+    return fallback
+  }
+}
+
 async function writeJsonWhenChanged(directory: string, filename: string, value: unknown) {
   const outputPath = path.join(directory, filename)
   try {
@@ -207,13 +230,50 @@ async function main() {
   )
   await writeJsonWhenChanged(generatedDirectory, 'catalog-release.json', catalogRelease)
 
+  // Recomputed from source here rather than read back from the generated file, so a bundle
+  // published in this run records the build that is actually producing it.
+  const resolverRelease = await computeResolverRelease(PREFERENCE_CARD_RESOLVER_CONTRACT_VERSION)
+  await writeJsonWhenChanged(generatedDirectory, 'resolver-release.json', resolverRelease)
+  const resolverContract = {
+    version: resolverRelease.resolverContractVersion,
+    implementationHash: resolverRelease.resolverImplementationHash,
+  }
+
   const seed = await readJson<SeedReleaseFile>(seedDirectory, 'release-bundles.json')
   const result = buildReleaseBundles({
     seed,
-    resolverContractVersion: PREFERENCE_CARD_ENGINE_VERSION,
+    resolverContractVersion: resolverContract.version,
     loadSources: (recipeVersionId) =>
-      getReleaseDefinitionSources(recipeVersionId, PREFERENCE_CARD_ENGINE_VERSION),
+      getReleaseDefinitionSources(recipeVersionId, resolverContract),
   })
+
+  // Every module version a published release pins is copied into the retention ledger, once,
+  // verbatim. That is what lets the composition build stop producing a version without taking
+  // the cards pinned to it down — see `module-ledger.ts`.
+  const ledgerBefore = await readJsonOrDefault<ModuleLedger>(
+    generatedDirectory,
+    'module-ledger.json',
+    { formatVersion: '1.0', entries: [] },
+  )
+  const publishedModules: Array<{ moduleVersion: RecipeModuleVersion; releaseBundleId: string }> =
+    []
+  const pinnedModuleVersionIds = new Set<string>()
+  for (const bundle of result.bundles) {
+    if (bundle.releaseState === 'draft') continue
+    const sources = getReleaseDefinitionSources(bundle.recipeVersionId, resolverContract)
+    for (const moduleVersion of sources?.modules ?? []) {
+      pinnedModuleVersionIds.add(moduleVersion.id)
+      publishedModules.push({ moduleVersion, releaseBundleId: bundle.id })
+    }
+  }
+  const ledger = withPublishedModules(ledgerBefore, publishedModules)
+
+  const liveModules = new Map(
+    (await readJson<RecipeModuleVersion[]>(generatedDirectory, 'recipe-modules.json')).map(
+      (moduleVersion) => [moduleVersion.id, moduleVersion],
+    ),
+  )
+  const ledgerProblems = validateModuleLedger({ ledger, liveModules, pinnedModuleVersionIds })
 
   const blocking = result.messages.filter((message) => message.severity === 'blocking')
   const warnings = result.messages.filter((message) => message.severity === 'warning')
@@ -234,6 +294,14 @@ async function main() {
     for (const message of warnings) console.log(`  · ${message.code}: ${message.message}`)
   }
 
+  if (ledgerProblems.length > 0) {
+    console.log('')
+    console.error(`${ledgerProblems.length} module retention problem(s):`)
+    for (const problem of ledgerProblems) console.error(`  ✗ ${problem.code}: ${problem.message}`)
+    process.exitCode = 1
+    return
+  }
+
   if (blocking.length > 0) {
     console.log('')
     console.error(`${blocking.length} blocking problem(s):`)
@@ -244,6 +312,7 @@ async function main() {
     return
   }
 
+  await writeJsonWhenChanged(generatedDirectory, 'module-ledger.json', ledger)
   await writeJsonWhenChanged(generatedDirectory, 'release-bundles.json', {
     pointers: result.pointers,
     bundles: result.bundles,

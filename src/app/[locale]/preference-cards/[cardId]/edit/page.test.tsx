@@ -4,7 +4,11 @@ import {
   defaultBuildInput,
   getScenarioDefinition,
 } from '@/features/preference-cards/data/demo-context.server'
-import { builderInputsSchema } from '@/features/preference-cards/schemas/saved-card'
+import { getCurrentReleaseBundleForScenario } from '@/features/preference-cards/data/release-bundles.server'
+import {
+  BUILDER_INPUTS_SCHEMA_VERSION,
+  builderInputsSchema,
+} from '@/features/preference-cards/schemas/saved-card'
 import { rebuildBuilderContext } from '@/features/preference-cards/server/rebuild-builder-context'
 import type {
   EditableUserCardResult,
@@ -59,6 +63,9 @@ async function renderPage(cardId = CARD_ID) {
 function editableFixture(): EditableUserCardResult {
   const scenario = getScenarioDefinition(SCENARIO_ID)!
   const builderInputs = builderInputsSchema.parse({
+    // Reconstruction requires a release pin; version 2 is view-only.
+    schemaVersion: BUILDER_INPUTS_SCHEMA_VERSION,
+    releaseBundleId: getCurrentReleaseBundleForScenario(SCENARIO_ID)!.id,
     scenarioId: SCENARIO_ID,
     input: { ...defaultBuildInput(SCENARIO_ID), recipeVersionId: scenario.recipeVersionId },
     catalogPicks: [],
@@ -113,8 +120,11 @@ describe('the edit route', () => {
   })
 
   it.each([
-    ['recipe_version_unavailable', /pinned to a recipe version that is no longer published/],
-    ['recipe_module_unavailable', /no longer published at the version the card recorded/],
+    // Version 2 is view-only, so reconstruction now requires a release pin and the two
+    // recipe-level codes it used to produce no longer exist.
+    ['superseded_builder_inputs', /before releases pinned the full rule set/],
+    ['builder_inputs_not_release_pinned', /before releases pinned the full rule set/],
+    ['modifier_not_offered', /does not offer/],
     ['module_not_offered', /no longer published at the version the card recorded/],
     ['unknown_scenario', /procedure this card was built for is no longer published/],
     ['catalog_pick_unavailable', /can no longer be reconstructed from the catalog/],

@@ -1,6 +1,7 @@
 import catalogReleaseJson from '../../../../data/ip-preference-cards/generated/catalog-release.json'
 import generatedModifiersJson from '../../../../data/ip-preference-cards/generated/modifier-definitions.json'
 import generatedScenariosJson from '../../../../data/ip-preference-cards/generated/scenarios.json'
+import moduleLedgerJson from '../../../../data/ip-preference-cards/generated/module-ledger.json'
 import recipeModulesJson from '../../../../data/ip-preference-cards/generated/recipe-modules.json'
 import procedureCompositionsJson from '../../../../data/ip-preference-cards/generated/procedure-compositions.json'
 import productsJson from '../../../../data/ip-preference-cards/generated/catalog-products.json'
@@ -13,6 +14,8 @@ import {
   defaultSelectedModuleVersionIds,
   expandDefaultRecipeComposition,
 } from '../domain/expand-recipe-composition'
+import { selectionsFromResolvedCard } from '../domain/hospital-selection'
+import { resolveRetainedModules, type ModuleLedger } from '../domain/module-ledger'
 import type { ReleaseDefinitionSources } from '../domain/release-bundle'
 import {
   LEGACY_ROLE_CATEGORY_MAP,
@@ -85,6 +88,7 @@ interface GeneratedProcedureComposition {
   sourceTemplateVersion: string
   governanceState: RecipeVersion['governanceState']
   clinicalOwner: string | null
+  allowedModifierCodes: string[]
   moduleReferences: RecipeModuleReference[]
   compositionActions: ProcedureCompositionAction[]
   /** The reviewed template's setup order, keyed by `requirementKey`. */
@@ -139,7 +143,20 @@ const importReport = importReportJson as ImportReport
 const coverageProcedures = (coverageJson as { procedures: CoverageProcedure[] }).procedures
 const verificationBacklog = verificationBacklogJson as VerificationBacklogRow[]
 const recipeModules = recipeModulesJson as unknown as RecipeModuleVersion[]
-const recipeModuleById = new Map(recipeModules.map((module) => [module.id, module]))
+
+/**
+ * Every module version a pin can name: everything the current composition build produces, plus
+ * everything the retention ledger froze when a release published it.
+ *
+ * The union is what lets a superseded module version outlive the composition that referenced
+ * it. Preferring the live copy where both exist is safe only because the release build fails
+ * when the two disagree — otherwise this would be a route for an edited definition to reach a
+ * card that pinned the frozen one.
+ */
+const recipeModuleById = resolveRetainedModules(
+  new Map(recipeModules.map((module) => [module.id, module])),
+  moduleLedgerJson as unknown as ModuleLedger,
+)
 const generatedCompositions =
   procedureCompositionsJson as unknown as GeneratedProcedureComposition[]
 
@@ -182,6 +199,18 @@ const allModifierDefinitions: ModifierDefinition[] = [
   ...operationalModifiers,
   ...generatedModifierDefinitions.filter((modifier) => !handTunedModifierCodes.has(modifier.code)),
 ].sort((left, right) => left.code.localeCompare(right.code))
+
+/**
+ * The modifier definitions a recipe permits, in the merged set's own order.
+ *
+ * `allowedModifierCodes` is authored clinical governance frozen into the composition and
+ * pinned by `recipeDefinitionHash`, so this filter is the release's permission being applied
+ * rather than a convenience.
+ */
+function allowedModifiers(recipe: RecipeVersion): ModifierDefinition[] {
+  const allowed = new Set(recipe.allowedModifierCodes)
+  return allModifierDefinitions.filter((modifier) => allowed.has(modifier.code))
+}
 
 function catalogProductSummary(productId: string | undefined): CatalogProductSummary | null {
   if (!productId) return null
@@ -306,6 +335,10 @@ function customCompositionRecipe(): RecipeVersion {
     governanceState: 'draft',
     clinicalOwner: null,
     operationalOwner: null,
+    // Modifiers target slots authored by a specific procedure template, so a free-form module
+    // selection offers none. Same statement as `availableModifierCodes` on the scenario, now
+    // in the place the server actually enforces.
+    allowedModifierCodes: [],
     catalogImportId: importReport.workbook_sha256,
     slots: [],
     moduleReferences: recipeModules.map((version, index) => ({
@@ -338,6 +371,7 @@ function recipeForComposition(composition: GeneratedProcedureComposition): Recip
     governanceState: composition.governanceState,
     clinicalOwner: composition.clinicalOwner,
     operationalOwner: null,
+    allowedModifierCodes: [...composition.allowedModifierCodes],
     catalogImportId: importReport.workbook_sha256,
     // Every imported procedure is fully composed; direct slots stay available for the
     // unusual requirement that belongs to one procedure and nothing else.
@@ -399,86 +433,20 @@ export function getScenarioDefinition(id: string): ScenarioDefinition | null {
 }
 
 /**
- * Every recipe version the generated data still holds, keyed by the id a saved card pins.
+ * Every retained composition names a scenario that exists.
  *
- * Built once at module load, and it asserts uniqueness: two scenarios claiming one recipe
- * version id would make a pinned lookup ambiguous, which is the one thing a version pin
- * cannot be. Retaining a superseded composition means adding its scenario entry back to the
- * generated data under its own recipe version id — this map resolves it the moment it is
- * there, and reports it unavailable until then.
+ * Asserted at module load rather than discovered when someone reopens a card: a composition
+ * whose scenario has been removed cannot be presented, and finding that out at read time would
+ * mean finding it out one card at a time.
  */
-const scenarioByRecipeVersionId = (() => {
-  const index = new Map<string, ScenarioDefinition>()
+;(() => {
   for (const composition of generatedCompositions) {
-    const scenario = scenarioById.get(composition.scenarioId)
-    if (!scenario) {
-      throw new Error(
-        `Composition ${composition.recipeVersionId} names scenario "${composition.scenarioId}", which the generated scenarios do not define.`,
-      )
-    }
-    index.set(composition.recipeVersionId, scenario)
+    if (scenarioById.has(composition.scenarioId)) continue
+    throw new Error(
+      `Composition ${composition.recipeVersionId} names scenario "${composition.scenarioId}", which the generated scenarios do not define.`,
+    )
   }
-  index.set(CUSTOM_COMPOSITION_RECIPE_ID, customCompositionScenario)
-  return index
 })()
-
-export type PinnedRecipeErrorCode =
-  | 'unknown_scenario'
-  | 'recipe_version_unavailable'
-  | 'recipe_module_unavailable'
-
-export type PinnedRecipeResult =
-  | { ok: true; scenario: ScenarioDefinition; context: BuildContext }
-  | { ok: false; code: PinnedRecipeErrorCode; message: string }
-
-/**
- * The build context for the exact recipe version a saved card was built from.
- *
- * The whole point of taking `recipeVersionId` rather than trusting `scenarioId` alone: a
- * card reopened after its procedure's composition moved on must not be silently rebuilt
- * from the new one. Nothing here falls back to "the current version of this scenario" or
- * "the latest version of this module" — a pin that no longer resolves is reported, and the
- * caller turns that into a view-only card.
- */
-export function buildPinnedContext(
-  scenarioId: string,
-  recipeVersionId: string,
-): PinnedRecipeResult {
-  const scenario = getScenarioDefinition(scenarioId)
-  if (!scenario) {
-    return {
-      ok: false,
-      code: 'unknown_scenario',
-      message: `This card was built for a procedure ("${scenarioId}") that is no longer available.`,
-    }
-  }
-
-  const pinned = scenarioByRecipeVersionId.get(recipeVersionId)
-  const pinnedRecipe = recipeForRecipeVersionId(recipeVersionId)
-  if (!pinned || !pinnedRecipe || pinned.id !== scenario.id) {
-    return {
-      ok: false,
-      code: 'recipe_version_unavailable',
-      message: `This card is pinned to ${scenario.title} recipe version ${recipeVersionId}, which is no longer published.`,
-    }
-  }
-
-  try {
-    // Built from the composition that *published this version*, not from whatever the
-    // scenario composes today. Resolving the scenario and then checking the id matched was
-    // only ever a sound pin while a procedure could hold exactly one composition.
-    return { ok: true, scenario, context: buildContextForRecipe(pinnedRecipe) }
-  } catch (error) {
-    // `modulesForRecipe` throws when a referenced module *version* is gone. Exact module
-    // versions are authoritative, so a missing one is reported rather than swapped for a
-    // newer publication of the same module.
-    return {
-      ok: false,
-      code: 'recipe_module_unavailable',
-      message: error instanceof Error ? error.message : 'A module this card uses is unavailable.',
-    }
-  }
-}
 
 /**
  * The effective requirement list a scenario starts from, before modifiers and resolution.
@@ -535,7 +503,12 @@ export function getCatalogReleaseId(): string {
  */
 export function getReleaseDefinitionSources(
   recipeVersionId: string,
-  resolverContractVersion: string,
+  /**
+   * Passed in rather than read here, because the release build recomputes the implementation
+   * digest from source in the same process that writes it. Reading a generated file at module
+   * load would hand the build a value one run out of date and freeze it into a bundle.
+   */
+  resolverContract: { version: string; implementationHash: string },
 ): ReleaseDefinitionSources | null {
   const recipe = recipeForRecipeVersionId(recipeVersionId)
   if (!recipe) return null
@@ -562,7 +535,8 @@ export function getReleaseDefinitionSources(
       roleCodeAliases: ROLE_CODE_ALIASES,
     },
     catalogImportId: getCatalogReleaseId(),
-    resolverContractVersion,
+    resolverContractVersion: resolverContract.version,
+    resolverImplementationHash: resolverContract.implementationHash,
   }
 }
 
@@ -616,7 +590,12 @@ export function buildContextForRecipe(recipe: RecipeVersion): BuildContext {
     locationCapabilities: ['rigid_bronchoscopy', 'jet_ventilation', 'fluoroscopy'],
     recipe,
     recipeModules: modulesForRecipe(recipe),
-    modifiers: allModifierDefinitions.map((modifier) => ({
+    // Only the modifiers this recipe offers reach the resolver. The picker already hid the
+    // rest, but hiding a control is not authorization — a crafted request naming a real
+    // modifier the procedure never offered used to be applied and stored, because the
+    // resolver looked codes up in the whole merged set. Now the permission the release pinned
+    // is what builds the context, so an unauthorized code has nothing to resolve against.
+    modifiers: allowedModifiers(recipe).map((modifier) => ({
       ...modifier,
       preview: [...modifier.preview],
       conflictsWith: [...modifier.conflictsWith],
@@ -648,23 +627,45 @@ export function defaultBuildInput(
     modifierCodes?: string[]
     generatedAt?: string
     selectedModuleVersionIds?: string[]
+    selectedHospitalItemIds?: Record<string, string | null>
   },
 ): BuildCardInput {
   const scenario = getScenarioDefinition(scenarioId)
   if (!scenario) throw new Error(`Unknown preference-card scenario "${scenarioId}".`)
-  return {
+  const recipe = recipeForScenario(scenario)
+  const selectedModuleVersionIds =
+    options?.selectedModuleVersionIds ?? defaultSelectedModuleVersionIds(recipe)
+  const modifierCodes = options?.modifierCodes ?? [...scenario.defaultModifierCodes]
+
+  const input: BuildCardInput = {
     organizationId: DEMO_ORGANIZATION_ID,
     siteId: DEMO_SITE_ID,
     locationId: DEMO_LOCATION_ID,
     recipeVersionId: scenario.recipeVersionId,
-    selectedModuleVersionIds:
-      options?.selectedModuleVersionIds ??
-      defaultSelectedModuleVersionIds(recipeForScenario(scenario)),
-    modifierCodes: options?.modifierCodes ?? [...scenario.defaultModifierCodes],
+    selectedModuleVersionIds,
+    modifierCodes,
     variables: {
       generated_at: options?.generatedAt ?? '2026-07-25T12:00:00.000Z',
     },
     conditionalStates: {},
+  }
+
+  if (options?.selectedHospitalItemIds) {
+    input.selectedHospitalItemIds = { ...options.selectedHospitalItemIds }
+  }
+
+  // Resolve once with the formulary's own ranking still in play, then record what that
+  // actually chose. Densifying from the composition instead would miss every requirement a
+  // modifier or rescue module adds, leaving exactly those lines on the implicit fallback this
+  // replaces — so the pass has to run over the resolved card.
+  const resolved = resolveCard(input, buildContextForRecipe(recipe))
+  return {
+    ...input,
+    selectedHospitalItemIds: {
+      ...selectionsFromResolvedCard(resolved),
+      ...(options?.selectedHospitalItemIds ?? {}),
+    },
+    selectionsAreExplicit: true,
   }
 }
 

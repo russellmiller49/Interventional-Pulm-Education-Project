@@ -60,18 +60,21 @@ export const customItemSchema = z.object({
  *   viewable, printable, shareable, and duplicable from their immutable snapshot; only the
  *   builder is closed to them. They fail this schema on `selectedModuleVersionIds` alone —
  *   the version field is not what excludes them.
- * - **2 — composed.** Carries the exact module versions and every pick as an identifier. Still
- *   read, still re-saved as version 2. Its recipe and module pins are exact; the modifier set,
- *   rescue modules, compatibility rules, and role alias table it also resolves through are not
- *   pinned, because when it was written nothing pinned them. That is a stated limitation of
- *   these cards rather than a defect introduced by version 3.
+ * - **2 — composed. Read, never written.** Carries exact module versions and every pick as an
+ *   identifier. Its recipe and module pins are exact, but the modifier set, rescue modules,
+ *   compatibility rules, and role alias table it also resolves through are **not** pinned,
+ *   because nothing pinned them when it was written. Re-saving such a card would re-resolve it
+ *   against whatever those are *now* and store the result as the physician's card — so it is
+ *   view-only. See `SUPERSEDED_BUILDER_INPUTS_SCHEMA_VERSIONS`.
  * - **3 — release-pinned.** Adds `releaseBundleId`: the whole authored dependency set, hashed.
  *
- * **No version is ever upgraded in place.** A version-2 card that is edited and saved is
- * written back as version 2. Stamping the current release onto it would be moving a saved card
- * to a release its author never selected, which is the automatic migration this phase
- * deliberately does not do — and it would be a *silent* one, since nothing about the card
- * would say the pin was chosen by the system rather than the physician.
+ * **No version is ever upgraded in place.** Version 2 is not converted to version 3 on save,
+ * on read, or anywhere else. Stamping the current release onto one would move a saved card to a
+ * release its author never selected, silently — nothing on the card would say the pin was the
+ * system's choice rather than the physician's. Moving a version-2 card forward is reserved for
+ * an explicit "rebuild as a new version-3 card" workflow that produces a *new* card and leaves
+ * the original intact. That workflow does not exist yet, and its absence is why version 2 is
+ * view-only rather than quietly re-saved.
  *
  * Absent is normalized to 2: the only writer that ever omitted it is the composition work
  * that introduced module selections, so an input that satisfies this schema without naming
@@ -85,6 +88,23 @@ export const BUILDER_INPUTS_SCHEMA_VERSION = 3
  * is rewritten on read, and nothing is upgraded on save.
  */
 export const READABLE_BUILDER_INPUTS_SCHEMA_VERSIONS = [2, 3] as const
+
+/**
+ * Formats that still parse but can no longer back an edit session.
+ *
+ * Being able to *read* a stored input and being entitled to *re-resolve and overwrite the card
+ * from it* are different rights, and version 2 has the first without the second. Its recipe and
+ * module pins are exact, but the four whole-set dependencies underneath them are read from
+ * whatever is current — so saving a reopened version-2 card would silently replace the
+ * physician's stored card with one resolved against a modifier set, rescue module set,
+ * compatibility rule set, and role table that may all have moved since. The card is intact and
+ * stays fully usable as a document; only the builder is closed to it.
+ */
+export const SUPERSEDED_BUILDER_INPUTS_SCHEMA_VERSIONS: readonly number[] = [2]
+
+export function isSupersededBuilderInputsVersion(schemaVersion: number): boolean {
+  return SUPERSEDED_BUILDER_INPUTS_SCHEMA_VERSIONS.includes(schemaVersion)
+}
 
 const builderInputsObject = z.object({
   schemaVersion: z
@@ -159,6 +179,18 @@ export const saveCardRequestSchema = builderInputsObject
     status: z.enum(['draft', 'final']).default('draft'),
   })
   .superRefine(requireVersionPinAgreement)
+  .superRefine((value, ctx) => {
+    // Nothing may be *written* at a superseded version, which is what makes version 2
+    // view-only rather than merely discouraged. Enforced in the schema rather than at the
+    // call site because there are two writers — create and overwrite — and a rule that lives
+    // in one of them is a rule the other can forget.
+    if (!isSupersededBuilderInputsVersion(value.schemaVersion)) return
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['schemaVersion'],
+      message: `Builder inputs at version ${value.schemaVersion} are read-only. Saving would re-resolve the card against definitions it never pinned.`,
+    })
+  })
 
 export type SaveCardRequest = z.infer<typeof saveCardRequestSchema>
 

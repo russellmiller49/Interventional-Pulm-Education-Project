@@ -1,5 +1,6 @@
 import releaseBundlesJson from '../../../../data/ip-preference-cards/generated/release-bundles.json'
 import releaseImpactJson from '../../../../data/ip-preference-cards/generated/release-impact-report.json'
+import resolverReleaseJson from '../../../../data/ip-preference-cards/generated/resolver-release.json'
 
 import {
   resolveCurrentRelease,
@@ -13,7 +14,7 @@ import {
   type ReleaseResolutionErrorCode,
   type ReleaseValidationMessage,
 } from '../domain/release-bundle'
-import { PREFERENCE_CARD_ENGINE_VERSION } from '../domain/resolve-card'
+import { PREFERENCE_CARD_RESOLVER_CONTRACT_VERSION } from '../domain/resolve-card'
 import type { BuildContext, ScenarioDefinition } from '../domain/types'
 
 import {
@@ -85,8 +86,20 @@ const currentBundleByScenarioId = (() => {
   return index
 })()
 
+/**
+ * The contract the running code implements, and the build that implements it.
+ *
+ * The version comes from the constant so a bump takes effect immediately; the implementation
+ * digest comes from the generated artifact because runtime code cannot hash its own sources.
+ */
+export const RUNTIME_RESOLVER_CONTRACT = {
+  version: PREFERENCE_CARD_RESOLVER_CONTRACT_VERSION,
+  implementationHash: (resolverReleaseJson as { resolverImplementationHash: string })
+    .resolverImplementationHash,
+}
+
 function loadSources(bundle: PreferenceCardReleaseBundle): ReleaseDefinitionSources | null {
-  return getReleaseDefinitionSources(bundle.recipeVersionId, PREFERENCE_CARD_ENGINE_VERSION)
+  return getReleaseDefinitionSources(bundle.recipeVersionId, RUNTIME_RESOLVER_CONTRACT)
 }
 
 export function getReleaseBundle(releaseBundleId: string): PreferenceCardReleaseBundle | null {

@@ -148,3 +148,41 @@ npm run ip-cards:releases       # computes hashes, prints the impact diff
    `resolverContractVersion`.
 5. Move the pointer.
 6. Retire the superseded release if it should stop backing new cards. **Leave it in the file.**
+
+## Retaining a superseded module version
+
+A release pins module versions by exact id, and the composition build regenerates
+`recipe-modules.json` from the current module map on every run. Those two facts used to be in
+direct conflict: once the last composition moved from `FLEX_BRONCH_CORE` v1.0 to v1.1, nothing
+produced v1.0 any more, and the build additionally rejected it as "declared but referenced by no
+composition" — taking every card pinned to it down with it.
+
+`data/ip-preference-cards/generated/module-ledger.json` closes that. Every module version a
+published release pins is copied into it once, verbatim, and never rewritten:
+
+- The release build appends newly published versions. `withPublishedModules` returns an existing
+  entry untouched, so it can never be the thing that rewrites history.
+- The composition build accepts a module version the ledger retains even when no composition
+  references it. "Declared but unused" and "retained because a release pins it" are different
+  situations and are now distinguishable.
+- Runtime lookup is the union — live map first, ledger for anything current data no longer
+  produces — always keyed by exact `moduleVersionId`, never by module code.
+- `validateModuleLedger` fails the build when an entry no longer hashes to what it published,
+  when the live map contradicts a published definition, and when a pinned version has gone from
+  both. Deleting or mutating a retained module is a build failure, not a silent loss.
+
+Re-deriving an old version from the current mapping was considered and rejected: it would
+produce something _plausible_ under the old id, which is exactly the substitution every pin in
+this module exists to prevent.
+
+## The resolver: two things, checked differently
+
+`resolverContractVersion` is the **semantic** boundary — what resolution means. It is bumped by
+a human and asserted behaviourally; a release published under an older contract is reported.
+
+`resolverImplementationHash` is **provenance** — which build produced a card. It moves on every
+source edit, including pure refactors, which is precisely why it must not gate support. A signal
+that fires on a rename is a signal nobody reads, and treating it as the boundary would mark
+every historical card unsupported for an extracted helper.
+
+Both sit outside `definitionHash`; only the contract move is a warning.

@@ -207,6 +207,18 @@ export interface RecipeVersion {
   moduleReferences: RecipeModuleReference[]
   compositionActions: ProcedureCompositionAction[]
   /**
+   * The modifier codes this procedure offers, as reviewed clinical governance rather than a
+   * UI hint.
+   *
+   * It used to live only on `ScenarioDefinition`, where it gated the picker and nothing else:
+   * `resolveCard` looked a submitted code up in the *whole* merged modifier set, so a crafted
+   * request naming a real modifier the procedure never offered was applied and stored. Hiding
+   * a control is not authorization. Living here makes it part of `recipeDefinitionHash`, so a
+   * release pins which modifiers were offered and a card cannot be resolved against a
+   * permission the release never granted.
+   */
+  allowedModifierCodes: string[]
+  /**
    * Where this procedure wants each requirement in its own setup order, keyed by
    * `requirementKey`.
    *
@@ -393,7 +405,23 @@ export interface BuildCardInput {
   modifierCodes: string[]
   variables: Record<string, string | number | boolean | null>
   conditionalStates?: Record<string, ConditionalState>
+  /**
+   * Which hospital item each requirement resolves to, keyed by composed slot id.
+   *
+   * `null` means "deliberately nothing", which is a decision and not a gap. A key that is
+   * absent entirely means the card has never expressed an opinion about that requirement.
+   */
   selectedHospitalItemIds?: Record<string, string | null>
+  /**
+   * Whether `selectedHospitalItemIds` is the complete record of this card's choices.
+   *
+   * Set once the builder has materialized a default for every requirement. From then on an
+   * absent key means "not chosen" rather than "fall back to whatever the formulary ranks
+   * first" — so a re-ranked formulary can no longer change what a saved card asks for. Cards
+   * written before densification leave it unset and keep the old fallback, because inventing
+   * an explicit selection for them would be choosing on the physician's behalf.
+   */
+  selectionsAreExplicit?: boolean
   waivers?: Record<string, string>
 }
 

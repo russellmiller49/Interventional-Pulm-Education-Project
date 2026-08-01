@@ -37,6 +37,7 @@ import { saveUserCardAction } from '@/app/[locale]/preference-cards/new/actions'
 import { CUSTOM_COMPOSITION_SCENARIO_ID } from '../data/scenario-ids'
 
 import { defaultSelectedModuleVersionIds } from '../domain/expand-recipe-composition'
+import { selectionsFromResolvedCard } from '../domain/hospital-selection'
 import { resolveCard } from '../domain/resolve-card'
 import { stableStringify } from '../domain/stable-hash'
 import { BUILDER_INPUTS_SCHEMA_VERSION, type BuilderInputs } from '../schemas/saved-card'
@@ -562,16 +563,25 @@ export function PreferenceCardWizard({
         // composition; module contents never cross the wire.
         selectedModuleVersionIds,
         modifierCodes,
+        // Every requirement's selection written down, taken from the card the physician is
+        // looking at. Storing only the lines they *changed* left the rest to be recomputed
+        // from the local formulary's ranking on every later resolution, so a re-ranked
+        // formulary silently changed what a saved card asked for. The user's own state is
+        // merged on top, though the preview already reflects it.
+        selectedHospitalItemIds: card
+          ? { ...selectionsFromResolvedCard(card), ...selectedHospitalItemIds }
+          : selectedHospitalItemIds,
+        selectionsAreExplicit: Boolean(card),
         // Any variable the card already carried is kept; only the timestamp is restamped,
         // and the server overwrites that anyway.
         variables: { ...savedInput?.variables, generated_at: generatedAt },
         conditionalStates,
-        selectedHospitalItemIds,
         waivers,
       },
     }
   }, [
     bundle,
+    card,
     catalogPicks,
     conditionalStates,
     customItems,

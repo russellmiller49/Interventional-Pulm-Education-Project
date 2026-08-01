@@ -29,8 +29,32 @@ import type {
  * 0.2.0 — composition. The hashable domain output gained `includedModules` and every item
  * gained its requirement key and source modules, so snapshots written by 0.1.0 hash
  * differently by construction and the version records why.
+ *
+ * Stamped onto every resolved card and inside its content hash, so it describes the *output
+ * shape* a snapshot was written in. That is a narrower thing than the resolver contract below.
  */
 export const PREFERENCE_CARD_ENGINE_VERSION = 'ip-cards-resolver/0.2.0'
+
+/**
+ * The **semantic** resolver contract: what resolution means, independent of how it is written.
+ *
+ * A release records the contract it was published against, and a card pinned to that release
+ * is only reconstructable while the contract holds. So the thing recorded has to be the thing
+ * that actually matters, and a source digest is not it — renaming a local variable, extracting
+ * a helper, or reformatting a file all move a digest while changing nothing a card resolves
+ * to. Treating that as "the contract moved" would mark every historical card unsupported for a
+ * refactor, which trains everyone to ignore the signal.
+ *
+ * So this version is bumped by a human, deliberately, when resolution *semantics* change —
+ * ordering, deduplication, governance folding, kit suppression, conditional handling, and the
+ * rest of the invariants enumerated in `resolver-contract.test.ts`. Those tests are what give
+ * the string meaning: they assert the contract behaviourally, so a refactor that preserves it
+ * passes and a change that breaks it fails whether or not anyone remembered to bump this.
+ *
+ * The source digest still exists — see `resolverImplementationHash` on a release bundle — but
+ * it is provenance ("which build produced this"), never a support boundary.
+ */
+export const PREFERENCE_CARD_RESOLVER_CONTRACT_VERSION = 'ip-cards-resolver-contract/1'
 
 interface MutableResolution {
   messages: RuleMessage[]
@@ -316,7 +340,14 @@ function itemResolution(
     )
   const selectedOption =
     selectedItemOverride === undefined
-      ? options[0]
+      ? // A card whose selections are explicit has already recorded a decision for every
+        // requirement it knows about, so an absent key means "not chosen" rather than "use
+        // whatever the formulary ranks first today". Falling back here is what let a
+        // re-ranked local formulary change which product a saved card asked for, with nothing
+        // about the stored card having moved.
+        input.selectionsAreExplicit
+        ? undefined
+        : options[0]
       : selectedItemOverride === null
         ? undefined
         : options.find(

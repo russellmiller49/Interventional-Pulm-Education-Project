@@ -104,8 +104,12 @@ describe('preference-card deterministic resolver', () => {
     )
     if (!target) throw new Error('Expected a required EBUS slot')
     const baseline = resolveCard(defaultBuildInput('ebus-rose-molecular'), context)
-    const input = defaultBuildInput('ebus-rose-molecular')
-    input.selectedHospitalItemIds = { [target.id]: null }
+    // Overriding one requirement now *merges* into the card's explicit selections rather than
+    // replacing them. Replacing used to leave every other line to the formulary-ranking
+    // fallback, which is the implicit behaviour explicit selections exist to remove.
+    const input = defaultBuildInput('ebus-rose-molecular', {
+      selectedHospitalItemIds: { [target.id]: null },
+    })
     const changed = resolveCard(input, context)
 
     expect(changed.items.find((item) => item.id === target.id)).toMatchObject({
