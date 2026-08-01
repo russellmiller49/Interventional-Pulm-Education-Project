@@ -4,6 +4,7 @@ import {
   getComposedRecipeSlots,
   getScenarioDefinition,
 } from '../data/demo-context.server'
+import { getCurrentReleaseBundleForScenario } from '../data/release-bundles.server'
 import { catalogPickItemId } from '../domain/catalog-pick'
 import { customItemId } from '../domain/custom-item'
 import { equipmentSetItemId } from '../domain/equipment-set'
@@ -17,9 +18,16 @@ const GENERATED_AT = '2026-07-28T12:00:00.000Z'
 const SCENARIO_ID = 'chest-tube'
 const VALID_ROLE = 'GENERIC_DRAINAGE_UNIT'
 
+function currentReleaseBundleId(): string {
+  const bundle = getCurrentReleaseBundleForScenario(SCENARIO_ID)
+  expect(bundle).not.toBeNull()
+  return bundle!.id
+}
+
 function baseInputs(): BuilderInputs {
   return {
     schemaVersion: BUILDER_INPUTS_SCHEMA_VERSION,
+    releaseBundleId: currentReleaseBundleId(),
     scenarioId: SCENARIO_ID,
     input: defaultBuildInput(SCENARIO_ID),
     catalogPicks: [],

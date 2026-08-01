@@ -4,6 +4,12 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Badge } from '@/components/ui/badge'
 import { AdminPreferenceCardNav } from '@/features/preference-cards/components/AdminPreferenceCardNav'
 import { ReadinessBadge } from '@/features/preference-cards/components/ReadinessBadge'
+import { ReleaseBundleTable } from '@/features/preference-cards/components/ReleaseBundleTable'
+import {
+  getReleaseImpactReports,
+  getReleasePointers,
+  getRetainedReleaseBundles,
+} from '@/features/preference-cards/data/release-bundles.server'
 import {
   buildDemoContext,
   getComposedRecipeSlots,
@@ -78,6 +84,29 @@ export default async function PreferenceCardRecipesPage({
         <p className="max-w-3xl text-muted-foreground">{t('admin.adminDescription')}</p>
         <AdminPreferenceCardNav locale={locale} />
       </header>
+
+      <ReleaseBundleTable
+        bundles={getRetainedReleaseBundles()}
+        pointers={getReleasePointers()}
+        impact={getReleaseImpactReports()}
+        labels={{
+          heading: t('admin.releasesTitle'),
+          description: t('admin.releasesDescription'),
+          release: t('admin.release'),
+          procedure: t('admin.procedure'),
+          state: t('admin.releaseState'),
+          published: t('admin.publishedRetired'),
+          pins: t('admin.pinnedDefinitions'),
+          impactColumn: t('admin.releaseImpact'),
+          current: t('admin.currentRelease'),
+          superseded: t('admin.supersedes'),
+          noChange: t('admin.releaseNoChange'),
+          initial: t('admin.releaseInitial'),
+          modules: t('admin.modulePins'),
+          recipe: t('admin.recipe'),
+          requirementChanges: t('admin.requirementChanges'),
+        }}
+      />
 
       <p id="recipe-coverage-help" className="max-w-4xl text-sm text-muted-foreground">
         {t('coverageMetricHelp')}

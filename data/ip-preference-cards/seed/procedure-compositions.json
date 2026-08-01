@@ -1,5 +1,5 @@
 {
-  "formatVersion": "1.0",
+  "formatVersion": "2.0",
   "notes": [
     "One composition per imported procedure. A composition names the exact module versions the procedure is assembled from — never a module code resolved to 'latest'.",
     "'selectionBehavior': 'required' modules are always included and cannot be removed in the builder; 'default_on' modules start selected and may be removed; 'optional' modules start unselected.",
@@ -10,6 +10,8 @@
   "compositions": [
     {
       "procedureCode": "EBUS_TBNA",
+      "recipeVersionId": "recipe-ebus-tbna-v0-1",
+      "recipeVersion": "0.1",
       "version": "1.0",
       "moduleReferences": [
         {
@@ -37,13 +39,17 @@
           "sequence": 10,
           "actionType": "append_note",
           "targetRequirementKey": "FLEX_BRONCH_SUCTION_SETUP",
-          "payload": { "note": "Include aspiration syringes for needle sampling." },
+          "payload": {
+            "note": "Include aspiration syringes for needle sampling."
+          },
           "reason": "The imported EBUS suction row read 'Suction source/tubing/syringes'; the syringes are restored as a note now that the line is shared."
         }
       ]
     },
     {
       "procedureCode": "THERAPEUTIC_BRONCH",
+      "recipeVersionId": "recipe-therapeutic-bronch-v0-1",
+      "recipeVersion": "0.1",
       "version": "1.0",
       "moduleReferences": [
         {
@@ -86,6 +92,8 @@
     },
     {
       "procedureCode": "EBV",
+      "recipeVersionId": "recipe-ebv-v0-1",
+      "recipeVersion": "0.1",
       "version": "1.0",
       "moduleReferences": [
         {
@@ -113,7 +121,9 @@
           "sequence": 10,
           "actionType": "append_note",
           "targetRequirementKey": "THERAPEUTIC_BRONCHOSCOPE_PLATFORM",
-          "payload": { "note": "Match channel to delivery catheter." },
+          "payload": {
+            "note": "Match channel to delivery catheter."
+          },
           "reason": "Restores the note the imported endobronchial-valve scope row carried."
         },
         {
@@ -121,7 +131,10 @@
           "sequence": 20,
           "actionType": "set_requiredness",
           "targetRequirementKey": "AIRWAY_RETRIEVAL_FORCEPS",
-          "payload": { "value": "conditional", "dependencyRule": "Reposition/removal anticipated" },
+          "payload": {
+            "value": "conditional",
+            "dependencyRule": "Reposition/removal anticipated"
+          },
           "reason": "The imported valve card made retrieval forceps conditional on repositioning or removal; the shared requirement is optional."
         },
         {
@@ -129,13 +142,17 @@
           "sequence": 30,
           "actionType": "append_note",
           "targetRequirementKey": "AIRWAY_RETRIEVAL_FORCEPS",
-          "payload": { "note": "Used here for endobronchial valve repositioning or retrieval." },
+          "payload": {
+            "note": "Used here for endobronchial valve repositioning or retrieval."
+          },
           "reason": "The imported valve row was labelled 'Valve retrieval forceps'; the shared line carries the neutral label and the valve context moves into a note."
         }
       ]
     },
     {
       "procedureCode": "THORACENTESIS",
+      "recipeVersionId": "recipe-thoracentesis-v0-1",
+      "recipeVersion": "0.1",
       "version": "1.0",
       "moduleReferences": [
         {
@@ -155,6 +172,8 @@
     },
     {
       "procedureCode": "CHEST_TUBE",
+      "recipeVersionId": "recipe-chest-tube-v0-1",
+      "recipeVersion": "0.1",
       "version": "1.0",
       "moduleReferences": [
         {
@@ -176,13 +195,18 @@
           "sequence": 10,
           "actionType": "set_requiredness",
           "targetRequirementKey": "PLEURAL_ULTRASOUND_MACHINE",
-          "payload": { "value": "optional", "dependencyRule": "Image-guided insertion" },
+          "payload": {
+            "value": "optional",
+            "dependencyRule": "Image-guided insertion"
+          },
           "reason": "The imported chest-tube template makes ultrasound optional and conditioned on image-guided insertion, unlike the other three pleural procedures."
         }
       ]
     },
     {
       "procedureCode": "IPC_PLACEMENT",
+      "recipeVersionId": "recipe-ipc-placement-v0-1",
+      "recipeVersion": "0.1",
       "version": "1.0",
       "moduleReferences": [
         {
@@ -204,13 +228,17 @@
           "sequence": 10,
           "actionType": "append_note",
           "targetRequirementKey": "PLEURAL_ULTRASOUND_MACHINE",
-          "payload": { "note": "Sterile cover for pleural access." },
+          "payload": {
+            "note": "Sterile cover for pleural access."
+          },
           "reason": "Restores the pleural-access wording the imported IPC row carried in its generic requirement."
         }
       ]
     },
     {
       "procedureCode": "MED_THORACOSCOPY",
+      "recipeVersionId": "recipe-med-thoracoscopy-v0-1",
+      "recipeVersion": "0.1",
       "version": "1.0",
       "moduleReferences": [
         {
@@ -230,6 +258,8 @@
     },
     {
       "procedureCode": "BRONCH_ABLATION",
+      "recipeVersionId": "recipe-bronch-ablation-v0-1",
+      "recipeVersion": "0.1",
       "version": "1.0",
       "moduleReferences": [
         {
@@ -243,6 +273,8 @@
     },
     {
       "procedureCode": "FLEX_DIAGNOSTIC",
+      "recipeVersionId": "recipe-flex-diagnostic-v0-1",
+      "recipeVersion": "0.1",
       "version": "1.0",
       "moduleReferences": [
         {
@@ -256,6 +288,8 @@
     },
     {
       "procedureCode": "ICU_BRONCH",
+      "recipeVersionId": "recipe-icu-bronch-v0-1",
+      "recipeVersion": "0.1",
       "version": "1.0",
       "moduleReferences": [
         {
@@ -269,6 +303,8 @@
     },
     {
       "procedureCode": "PERC_TRACH",
+      "recipeVersionId": "recipe-perc-trach-v0-1",
+      "recipeVersion": "0.1",
       "version": "1.0",
       "moduleReferences": [
         {
@@ -282,6 +318,8 @@
     },
     {
       "procedureCode": "PHOTODYNAMIC_THERAPY",
+      "recipeVersionId": "recipe-photodynamic-therapy-v0-1",
+      "recipeVersion": "0.1",
       "version": "1.0",
       "moduleReferences": [
         {
@@ -295,6 +333,8 @@
     },
     {
       "procedureCode": "RIGID_BRONCH",
+      "recipeVersionId": "recipe-rigid-bronch-v0-1",
+      "recipeVersion": "0.1",
       "version": "1.0",
       "moduleReferences": [
         {
@@ -308,6 +348,8 @@
     },
     {
       "procedureCode": "TB_RULEOUT",
+      "recipeVersionId": "recipe-tb-ruleout-v0-1",
+      "recipeVersion": "0.1",
       "version": "1.0",
       "moduleReferences": [
         {
@@ -321,6 +363,8 @@
     },
     {
       "procedureCode": "WLL",
+      "recipeVersionId": "recipe-wll-v0-1",
+      "recipeVersion": "0.1",
       "version": "1.0",
       "moduleReferences": [
         {

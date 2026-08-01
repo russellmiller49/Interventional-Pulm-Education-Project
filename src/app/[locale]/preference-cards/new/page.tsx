@@ -10,6 +10,7 @@ import {
   getScenarioDefinition,
   getScenarioDefinitions,
 } from '@/features/preference-cards/data/demo-context.server'
+import { getCurrentReleaseBundleForScenario } from '@/features/preference-cards/data/release-bundles.server'
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -39,11 +40,17 @@ export default async function NewPreferenceCardPage({ params, searchParams }: Pa
   // a real scenario that is deliberately absent from the procedure picker — it is offered
   // as its own entry point instead.
   const selected = scenarioParam ? getScenarioDefinition(scenarioParam) : null
+  // Which release a new card is pinned to comes from the explicit current-release pointer and
+  // from nowhere else — not the highest version, not the newest publication date, not the last
+  // entry in the file. Null when nothing points at one, and the builder then refuses to save
+  // rather than producing an unpinned card that looks pinned.
+  const currentRelease = selected ? getCurrentReleaseBundleForScenario(selected.id) : null
   const bundle: PreferenceCardScenarioBundle | undefined = selected
     ? {
         definition: selected,
         context: buildDemoContext(selected.id),
         availableModifierCodes: selected.availableModifierCodes,
+        releaseBundleId: currentRelease?.id ?? null,
       }
     : undefined
 

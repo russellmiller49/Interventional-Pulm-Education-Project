@@ -1,3 +1,4 @@
+import catalogReleaseJson from '../../../../data/ip-preference-cards/generated/catalog-release.json'
 import generatedModifiersJson from '../../../../data/ip-preference-cards/generated/modifier-definitions.json'
 import generatedScenariosJson from '../../../../data/ip-preference-cards/generated/scenarios.json'
 import recipeModulesJson from '../../../../data/ip-preference-cards/generated/recipe-modules.json'
@@ -6,13 +7,19 @@ import productsJson from '../../../../data/ip-preference-cards/generated/catalog
 import coverageJson from '../../../../data/ip-preference-cards/generated/coverage-report.json'
 import importReportJson from '../../../../data/ip-preference-cards/generated/import-report.json'
 import productRolesJson from '../../../../data/ip-preference-cards/generated/product-roles.json'
-import proceduresJson from '../../../../data/ip-preference-cards/generated/procedures.json'
 import verificationBacklogJson from '../../../../data/ip-preference-cards/generated/verification-backlog.json'
 
 import {
   defaultSelectedModuleVersionIds,
   expandDefaultRecipeComposition,
 } from '../domain/expand-recipe-composition'
+import type { ReleaseDefinitionSources } from '../domain/release-bundle'
+import {
+  LEGACY_ROLE_CATEGORY_MAP,
+  ROLE_CATEGORIES,
+  ROLE_CATEGORY_OVERRIDES,
+  ROLE_CODE_ALIASES,
+} from '../domain/role-taxonomy'
 import {
   CUSTOM_COMPOSITION_PROCEDURE_CODE,
   CUSTOM_COMPOSITION_RECIPE_ID,
@@ -59,16 +66,25 @@ interface CatalogProductRow {
   primary_source_location: string | null
 }
 
-interface ProcedureRow {
-  procedure_code: string
-  procedure_name: string
-  template_version: string
-  clinical_owner: string | null
-}
-
+/**
+ * A generated composition, addressed by the recipe version it publishes.
+ *
+ * It carries the recipe's whole identity — name, version, template version, owner — rather
+ * than having the runtime reassemble it from `scenarios.json` and `procedures.json`. Those
+ * are regenerated on every workbook import, and `recipeName` lands in the resolved card and
+ * inside its snapshot hash, so reading them at resolution time made a scenario retitle able
+ * to move a saved card's identity with its pin untouched.
+ */
 interface GeneratedProcedureComposition {
+  recipeVersionId: string
+  scenarioId: string
   procedureCode: string
   version: string
+  recipeName: string
+  recipeVersion: string
+  sourceTemplateVersion: string
+  governanceState: RecipeVersion['governanceState']
+  clinicalOwner: string | null
   moduleReferences: RecipeModuleReference[]
   compositionActions: ProcedureCompositionAction[]
   /** The reviewed template's setup order, keyed by `requirementKey`. */
@@ -119,18 +135,36 @@ interface ProductRoleRow {
 
 const products = productsJson as CatalogProductRow[]
 const productRoles = productRolesJson as ProductRoleRow[]
-const procedures = proceduresJson as ProcedureRow[]
 const importReport = importReportJson as ImportReport
 const coverageProcedures = (coverageJson as { procedures: CoverageProcedure[] }).procedures
 const verificationBacklog = verificationBacklogJson as VerificationBacklogRow[]
 const recipeModules = recipeModulesJson as unknown as RecipeModuleVersion[]
 const recipeModuleById = new Map(recipeModules.map((module) => [module.id, module]))
-const compositionByProcedure = new Map(
-  (procedureCompositionsJson as unknown as GeneratedProcedureComposition[]).map((composition) => [
-    composition.procedureCode,
-    composition,
-  ]),
-)
+const generatedCompositions =
+  procedureCompositionsJson as unknown as GeneratedProcedureComposition[]
+
+/**
+ * Every composition the generated data retains, keyed by the recipe version a card pins.
+ *
+ * A map keyed by *procedure* was the structural reason a superseded composition could not be
+ * kept: one procedure, one entry, and republishing overwrote the definition a saved card was
+ * pinned to. Keying on the recipe version lets a procedure retain as many as it has published,
+ * and makes the id a card stores address exactly one of them. Uniqueness is asserted at load
+ * rather than assumed — two entries claiming one version would make a pin ambiguous.
+ */
+const compositionByRecipeVersionId = (() => {
+  const index = new Map<string, GeneratedProcedureComposition>()
+  for (const composition of generatedCompositions) {
+    const existing = index.get(composition.recipeVersionId)
+    if (existing) {
+      throw new Error(
+        `Recipe version ${composition.recipeVersionId} is published by both the ${existing.procedureCode} and ${composition.procedureCode} compositions. A pinned recipe version must identify exactly one composition.`,
+      )
+    }
+    index.set(composition.recipeVersionId, composition)
+  }
+  return index
+})()
 
 const productById = new Map(products.map((product) => [product.product_id, product]))
 /**
@@ -287,30 +321,22 @@ function customCompositionRecipe(): RecipeVersion {
   }
 }
 
-function recipeForScenario(scenario: ScenarioDefinition): RecipeVersion {
-  if (scenario.id === CUSTOM_COMPOSITION_SCENARIO_ID) return customCompositionRecipe()
-  const source = procedures.find(
-    (procedure) => procedure.procedure_code === scenario.sourceProcedureCode,
-  )
-  if (!source) {
-    throw new Error(
-      `Source procedure ${scenario.sourceProcedureCode} is missing from generated data.`,
-    )
-  }
-  const composition = compositionByProcedure.get(source.procedure_code)
-  if (!composition) {
-    throw new Error(
-      `Procedure ${source.procedure_code} has no reviewed composition. Run "npm run ip-cards:compositions".`,
-    )
-  }
+/**
+ * The recipe a composition publishes, built from the composition and nothing else.
+ *
+ * `catalogImportId` is the one field taken from ambient state, and deliberately so: the
+ * catalog is independently versioned content on its own cadence, and a release bundle records
+ * which import it was published against rather than pretending the recipe owns it.
+ */
+function recipeForComposition(composition: GeneratedProcedureComposition): RecipeVersion {
   return {
-    id: scenario.recipeVersionId,
-    sourceProcedureCode: source.procedure_code,
-    sourceTemplateVersion: source.template_version,
-    name: scenario.recipeName,
-    version: '0.1',
-    governanceState: 'draft',
-    clinicalOwner: source.clinical_owner,
+    id: composition.recipeVersionId,
+    sourceProcedureCode: composition.procedureCode,
+    sourceTemplateVersion: composition.sourceTemplateVersion,
+    name: composition.recipeName,
+    version: composition.recipeVersion,
+    governanceState: composition.governanceState,
+    clinicalOwner: composition.clinicalOwner,
     operationalOwner: null,
     catalogImportId: importReport.workbook_sha256,
     // Every imported procedure is fully composed; direct slots stay available for the
@@ -323,6 +349,27 @@ function recipeForScenario(scenario: ScenarioDefinition): RecipeVersion {
     })),
     requirementSequences: { ...composition.requirementSequences },
   }
+}
+
+/**
+ * The recipe for an exact recipe version id. Null when that version is not retained — never
+ * a newer publication of the same procedure.
+ */
+export function recipeForRecipeVersionId(recipeVersionId: string): RecipeVersion | null {
+  if (recipeVersionId === CUSTOM_COMPOSITION_RECIPE_ID) return customCompositionRecipe()
+  const composition = compositionByRecipeVersionId.get(recipeVersionId)
+  return composition ? recipeForComposition(composition) : null
+}
+
+/** The recipe version a scenario currently publishes. Used to *start* a card, never to reopen one. */
+function recipeForScenario(scenario: ScenarioDefinition): RecipeVersion {
+  const recipe = recipeForRecipeVersionId(scenario.recipeVersionId)
+  if (!recipe) {
+    throw new Error(
+      `Scenario "${scenario.id}" names recipe version ${scenario.recipeVersionId}, which has no reviewed composition. Run "npm run ip-cards:compositions".`,
+    )
+  }
+  return recipe
 }
 
 function modulesForRecipe(recipe: RecipeVersion): RecipeModuleVersion[] {
@@ -362,15 +409,16 @@ export function getScenarioDefinition(id: string): ScenarioDefinition | null {
  */
 const scenarioByRecipeVersionId = (() => {
   const index = new Map<string, ScenarioDefinition>()
-  for (const scenario of [...scenarioDefinitions, customCompositionScenario]) {
-    const existing = index.get(scenario.recipeVersionId)
-    if (existing && existing.id !== scenario.id) {
+  for (const composition of generatedCompositions) {
+    const scenario = scenarioById.get(composition.scenarioId)
+    if (!scenario) {
       throw new Error(
-        `Recipe version ${scenario.recipeVersionId} is claimed by both scenario "${existing.id}" and "${scenario.id}". A pinned recipe version must identify exactly one composition.`,
+        `Composition ${composition.recipeVersionId} names scenario "${composition.scenarioId}", which the generated scenarios do not define.`,
       )
     }
-    index.set(scenario.recipeVersionId, scenario)
+    index.set(composition.recipeVersionId, scenario)
   }
+  index.set(CUSTOM_COMPOSITION_RECIPE_ID, customCompositionScenario)
   return index
 })()
 
@@ -406,7 +454,8 @@ export function buildPinnedContext(
   }
 
   const pinned = scenarioByRecipeVersionId.get(recipeVersionId)
-  if (!pinned || pinned.id !== scenario.id) {
+  const pinnedRecipe = recipeForRecipeVersionId(recipeVersionId)
+  if (!pinned || !pinnedRecipe || pinned.id !== scenario.id) {
     return {
       ok: false,
       code: 'recipe_version_unavailable',
@@ -415,7 +464,10 @@ export function buildPinnedContext(
   }
 
   try {
-    return { ok: true, scenario, context: buildDemoContext(scenario.id) }
+    // Built from the composition that *published this version*, not from whatever the
+    // scenario composes today. Resolving the scenario and then checking the id matched was
+    // only ever a sound pin while a procedure could hold exactly one composition.
+    return { ok: true, scenario, context: buildContextForRecipe(pinnedRecipe) }
   } catch (error) {
     // `modulesForRecipe` throws when a referenced module *version* is gone. Exact module
     // versions are authoritative, so a missing one is reported rather than swapped for a
@@ -450,8 +502,72 @@ export function getRecipeModuleCatalog(): RecipeModuleVersion[] {
   return recipeModules.map(cloneModule)
 }
 
+/**
+ * The catalog release the generated data currently is, as a content digest.
+ *
+ * Not `import-report.json`'s `workbook_sha256`, which identifies the source workbook rather
+ * than the catalog: the additions, override, taxonomy, and remediation passes all rewrite
+ * product identity, role mappings, and slotting governance downstream of the import, and each
+ * of those can change whether a saved card's pick still resolves — while the workbook digest
+ * does not move at all. See `scripts/ip-preference-cards/catalog-release-id.ts`.
+ *
+ * `RecipeVersion.catalogImportId` deliberately keeps carrying the workbook digest. The two
+ * answer different questions: that one is provenance ("which workbook did this come from"),
+ * printed on the card; this one is a release identity ("which catalog is this").
+ */
+export function getCatalogReleaseId(): string {
+  return (catalogReleaseJson as { catalogReleaseId: string }).catalogReleaseId
+}
+
+/**
+ * The complete set of immutable authored definitions a release bundle pins for one recipe
+ * version — the dependency closure of everything a card resolves through that is *not*
+ * hospital-local-current and *not* purely presentational.
+ *
+ * `modifiers` is the merged effective set rather than the hand-tuned seed alone, because the
+ * merge is what `resolveCard` sees. The four whole-set dependencies below it — modifiers,
+ * rescue modules, typed compatibility rules, and the role alias table — reach the resolver
+ * from module-level constants with no version of their own, which is exactly why a release
+ * has to hash them: editing a compatibility rule changes what an already-saved card
+ * re-resolves to while its recipe and module pins sit untouched.
+ *
+ * Returns null when the recipe version is not retained. It never falls back to another one.
+ */
+export function getReleaseDefinitionSources(
+  recipeVersionId: string,
+  resolverContractVersion: string,
+): ReleaseDefinitionSources | null {
+  const recipe = recipeForRecipeVersionId(recipeVersionId)
+  if (!recipe) return null
+
+  const modules: RecipeModuleVersion[] = []
+  for (const reference of recipe.moduleReferences) {
+    const moduleVersion = recipeModuleById.get(reference.moduleVersionId)
+    // A missing module version is reported by the caller as a broken pin, never swapped for
+    // a newer publication of the same module code.
+    if (!moduleVersion) return null
+    modules.push(cloneModule(moduleVersion))
+  }
+
+  return {
+    recipe,
+    modules,
+    modifiers: allModifierDefinitions,
+    rescueModules,
+    compatibilityRules: typedCompatibilityRules,
+    roleTaxonomy: {
+      categories: ROLE_CATEGORIES,
+      legacyCategoryMap: LEGACY_ROLE_CATEGORY_MAP,
+      categoryOverrides: ROLE_CATEGORY_OVERRIDES,
+      roleCodeAliases: ROLE_CODE_ALIASES,
+    },
+    catalogImportId: getCatalogReleaseId(),
+    resolverContractVersion,
+  }
+}
+
 export function getProcedureCompositions(): GeneratedProcedureComposition[] {
-  return [...compositionByProcedure.values()].map((composition) => ({
+  return [...compositionByRecipeVersionId.values()].map((composition) => ({
     ...composition,
     moduleReferences: composition.moduleReferences.map((reference) => ({ ...reference })),
     compositionActions: composition.compositionActions.map((action) => ({
@@ -478,7 +594,21 @@ export function getScenarioDefinitions(): ScenarioDefinition[] {
 export function buildDemoContext(scenarioId: string): BuildContext {
   const scenario = getScenarioDefinition(scenarioId)
   if (!scenario) throw new Error(`Unknown preference-card scenario "${scenarioId}".`)
-  const recipe = recipeForScenario(scenario)
+  return buildContextForRecipe(recipeForScenario(scenario))
+}
+
+/**
+ * The build context for an exact recipe version.
+ *
+ * Everything below the recipe is either immutable authored content pinned by a release
+ * bundle (`recipeModules`, `modifiers`, `rescueModules`, `compatibilityRules`) or
+ * intentionally current hospital-local content (`hospitalItems`, `hospitalRoleOptions`,
+ * `locationCapabilities`, the organization/site/location names, `preferenceOverlays`). That
+ * split is not incidental and is asserted by `release-bundle.test.ts`: a card must
+ * reconstruct against the clinical content its author reviewed, and against the equipment
+ * the room actually has today.
+ */
+export function buildContextForRecipe(recipe: RecipeVersion): BuildContext {
   return {
     organizationName: 'Demo IP Program',
     siteName: 'Demo Hospital',

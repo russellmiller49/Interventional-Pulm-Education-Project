@@ -1,7 +1,14 @@
 [
   {
+    "recipeVersionId": "recipe-bronch-ablation-v0-1",
+    "scenarioId": "bronch-ablation",
     "procedureCode": "BRONCH_ABLATION",
     "version": "1.0",
+    "recipeName": "Bronchoscopic tumor ablation",
+    "recipeVersion": "0.1",
+    "sourceTemplateVersion": "0.1",
+    "governanceState": "draft",
+    "clinicalOwner": null,
     "requirementSequences": {
       "SLOT-03C81C8ED9": 7,
       "SLOT-06198365DB": 6,
@@ -37,8 +44,15 @@
     "compositionActions": []
   },
   {
+    "recipeVersionId": "recipe-chest-tube-v0-1",
+    "scenarioId": "chest-tube",
     "procedureCode": "CHEST_TUBE",
     "version": "1.0",
+    "recipeName": "Chest tube insertion",
+    "recipeVersion": "0.1",
+    "sourceTemplateVersion": "0.3",
+    "governanceState": "draft",
+    "clinicalOwner": null,
     "requirementSequences": {
       "PLEURAL_ULTRASOUND_MACHINE": 1,
       "SLOT-20D17E94D4": 5,
@@ -80,8 +94,15 @@
     ]
   },
   {
+    "recipeVersionId": "recipe-ebus-tbna-v0-1",
+    "scenarioId": "ebus-rose-molecular",
     "procedureCode": "EBUS_TBNA",
     "version": "1.0",
+    "recipeName": "EBUS-TBNA / EBUS-FNB",
+    "recipeVersion": "0.1",
+    "sourceTemplateVersion": "0.3",
+    "governanceState": "draft",
+    "clinicalOwner": null,
     "requirementSequences": {
       "FLEX_BRONCH_SUCTION_SETUP": 11,
       "FLEX_BRONCH_VIDEO_PROCESSOR": 2,
@@ -129,8 +150,15 @@
     ]
   },
   {
+    "recipeVersionId": "recipe-ebv-v0-1",
+    "scenarioId": "ebv",
     "procedureCode": "EBV",
     "version": "1.0",
+    "recipeName": "Endobronchial valve placement",
+    "recipeVersion": "0.1",
+    "sourceTemplateVersion": "0.2",
+    "governanceState": "draft",
+    "clinicalOwner": null,
     "requirementSequences": {
       "AIRWAY_RETRIEVAL_FORCEPS": 6,
       "SLOT-022D0D3DC6": 9,
@@ -193,8 +221,15 @@
     ]
   },
   {
+    "recipeVersionId": "recipe-flex-diagnostic-v0-1",
+    "scenarioId": "flex-diagnostic",
     "procedureCode": "FLEX_DIAGNOSTIC",
     "version": "1.0",
+    "recipeName": "Diagnostic flexible bronchoscopy",
+    "recipeVersion": "0.1",
+    "sourceTemplateVersion": "0.3",
+    "governanceState": "draft",
+    "clinicalOwner": null,
     "requirementSequences": {
       "SLOT-09EF760638": 11,
       "SLOT-15CBA5DCD0": 17,
@@ -226,8 +261,15 @@
     "compositionActions": []
   },
   {
+    "recipeVersionId": "recipe-icu-bronch-v0-1",
+    "scenarioId": "icu-bronch",
     "procedureCode": "ICU_BRONCH",
     "version": "1.0",
+    "recipeName": "ICU / bedside bronchoscopy",
+    "recipeVersion": "0.1",
+    "sourceTemplateVersion": "0.3",
+    "governanceState": "draft",
+    "clinicalOwner": null,
     "requirementSequences": {
       "SLOT-1A3A9B71B1": 10,
       "SLOT-3BE665D0CA": 11,
@@ -252,8 +294,15 @@
     "compositionActions": []
   },
   {
+    "recipeVersionId": "recipe-ipc-placement-v0-1",
+    "scenarioId": "ipc-placement",
     "procedureCode": "IPC_PLACEMENT",
     "version": "1.0",
+    "recipeName": "Tunneled indwelling pleural catheter placement",
+    "recipeVersion": "0.1",
+    "sourceTemplateVersion": "0.3",
+    "governanceState": "draft",
+    "clinicalOwner": null,
     "requirementSequences": {
       "PLEURAL_ULTRASOUND_MACHINE": 1,
       "SLOT-01010CB364": 8,
@@ -289,8 +338,15 @@
     ]
   },
   {
+    "recipeVersionId": "recipe-med-thoracoscopy-v0-1",
+    "scenarioId": "med-thoracoscopy",
     "procedureCode": "MED_THORACOSCOPY",
     "version": "1.0",
+    "recipeName": "Medical thoracoscopy / pleuroscopy",
+    "recipeVersion": "0.1",
+    "sourceTemplateVersion": "0.3",
+    "governanceState": "draft",
+    "clinicalOwner": null,
     "requirementSequences": {
       "PLEURAL_ULTRASOUND_MACHINE": 1,
       "SLOT-0037091804": 16,
@@ -328,8 +384,15 @@
     "compositionActions": []
   },
   {
+    "recipeVersionId": "recipe-perc-trach-v0-1",
+    "scenarioId": "perc-trach",
     "procedureCode": "PERC_TRACH",
     "version": "1.0",
+    "recipeName": "Percutaneous dilational tracheostomy",
+    "recipeVersion": "0.1",
+    "sourceTemplateVersion": "0.1",
+    "governanceState": "draft",
+    "clinicalOwner": null,
     "requirementSequences": {
       "SLOT-09D5542BAA": 5,
       "SLOT-126F71E1BD": 10,
@@ -352,8 +415,15 @@
     "compositionActions": []
   },
   {
+    "recipeVersionId": "recipe-photodynamic-therapy-v0-1",
+    "scenarioId": "photodynamic-therapy",
     "procedureCode": "PHOTODYNAMIC_THERAPY",
     "version": "1.0",
+    "recipeName": "Photodynamic therapy (endobronchial)",
+    "recipeVersion": "0.1",
+    "sourceTemplateVersion": "0.1",
+    "governanceState": "draft",
+    "clinicalOwner": null,
     "requirementSequences": {
       "SLOT-0C667F3D98": 4,
       "SLOT-2EF6D51123": 10,
@@ -378,8 +448,15 @@
     "compositionActions": []
   },
   {
+    "recipeVersionId": "recipe-rigid-bronch-v0-1",
+    "scenarioId": "rigid-bronch",
     "procedureCode": "RIGID_BRONCH",
     "version": "1.0",
+    "recipeName": "Rigid bronchoscopy",
+    "recipeVersion": "0.1",
+    "sourceTemplateVersion": "0.3",
+    "governanceState": "draft",
+    "clinicalOwner": null,
     "requirementSequences": {
       "SLOT-00E8CCAE2A": 9,
       "SLOT-04C940D8B9": 1,
@@ -423,8 +500,15 @@
     "compositionActions": []
   },
   {
+    "recipeVersionId": "recipe-tb-ruleout-v0-1",
+    "scenarioId": "tb-ruleout",
     "procedureCode": "TB_RULEOUT",
     "version": "1.0",
+    "recipeName": "TB rule-out bronchoscopy",
+    "recipeVersion": "0.1",
+    "sourceTemplateVersion": "0.3",
+    "governanceState": "draft",
+    "clinicalOwner": null,
     "requirementSequences": {
       "SLOT-05F71417F2": 9,
       "SLOT-0F96B1FA45": 2,
@@ -448,8 +532,15 @@
     "compositionActions": []
   },
   {
+    "recipeVersionId": "recipe-therapeutic-bronch-v0-1",
+    "scenarioId": "central-airway-obstruction",
     "procedureCode": "THERAPEUTIC_BRONCH",
     "version": "1.0",
+    "recipeName": "Central airway obstruction / tumor debulking",
+    "recipeVersion": "0.1",
+    "sourceTemplateVersion": "0.3",
+    "governanceState": "draft",
+    "clinicalOwner": null,
     "requirementSequences": {
       "AIRWAY_RETRIEVAL_FORCEPS": 6,
       "FLEX_BRONCH_SUCTION_SETUP": 3,
@@ -516,8 +607,15 @@
     ]
   },
   {
+    "recipeVersionId": "recipe-thoracentesis-v0-1",
+    "scenarioId": "thoracentesis",
     "procedureCode": "THORACENTESIS",
     "version": "1.0",
+    "recipeName": "Thoracentesis",
+    "recipeVersion": "0.1",
+    "sourceTemplateVersion": "0.2",
+    "governanceState": "draft",
+    "clinicalOwner": null,
     "requirementSequences": {
       "PLEURAL_ULTRASOUND_MACHINE": 1,
       "SLOT-103FF61AAC": 4,
@@ -541,8 +639,15 @@
     "compositionActions": []
   },
   {
+    "recipeVersionId": "recipe-wll-v0-1",
+    "scenarioId": "wll",
     "procedureCode": "WLL",
     "version": "1.0",
+    "recipeName": "Whole lung lavage",
+    "recipeVersion": "0.1",
+    "sourceTemplateVersion": "0.3",
+    "governanceState": "draft",
+    "clinicalOwner": null,
     "requirementSequences": {
       "SLOT-1039D6C9E8": 3,
       "SLOT-2015EC8357": 7,

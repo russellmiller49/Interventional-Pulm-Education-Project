@@ -39,6 +39,24 @@ interface ProcedureRow {
   procedure_code: string
   procedure_name: string
   template_version: string | null
+  clinical_owner: string | null
+}
+
+/**
+ * The scenario fields that are *recipe identity* rather than presentation.
+ *
+ * These used to be read at runtime, which quietly made `scenarios.json` — a file regenerated
+ * from the workbook on every import — part of what a saved card resolves through. A retitled
+ * scenario changed `recipeName`, `recipeName` lands in the resolved card, and the card's
+ * snapshot hash moved underneath a pin that had not changed. Resolving them here and writing
+ * them into the composition freezes them alongside everything else the composition authors.
+ */
+interface ScenarioIdentityRow {
+  id: string
+  recipeName: string
+  recipeVersionId: string
+  sourceProcedureCode: string
+  templateVersion: string
 }
 
 interface SeedModuleRequirement {
@@ -81,6 +99,17 @@ interface SeedCompositionAction extends ProcedureCompositionAction {
 
 interface SeedComposition {
   procedureCode: string
+  /**
+   * The recipe version id this composition publishes under, authored rather than derived.
+   *
+   * Deriving it from the scenario would mean a procedure can only ever have one composition,
+   * because there would be exactly one string to derive. Authoring it is what allows a
+   * superseded composition to be retained beside the one that replaced it — a released card
+   * pins this string, and the pin is worth nothing if the only thing it can name is whatever
+   * the procedure means now.
+   */
+  recipeVersionId: string
+  recipeVersion: string
   version: string
   moduleReferences: SeedModuleReference[]
   compositionActions: SeedCompositionAction[]
@@ -92,8 +121,26 @@ interface SeedCompositionFile {
 }
 
 export interface GeneratedProcedureComposition {
+  /**
+   * The recipe version this composition *is*, and the key the generated file is addressed by.
+   *
+   * A composition used to be looked up by procedure code, which made it a current singleton:
+   * one procedure, one composition, no way for a superseded version to coexist with the one
+   * that replaced it. A saved card pinning the old id had nothing to resolve against. Keying
+   * on the recipe version is what lets a procedure retain more than one, which is the whole
+   * basis for a pin outliving the release that created it.
+   */
+  recipeVersionId: string
+  scenarioId: string
   procedureCode: string
+  /** Composition-format version. Distinct from `recipeVersion`, which the card prints. */
   version: string
+  /** Recipe identity, resolved once at build time so nothing reassembles it at read time. */
+  recipeName: string
+  recipeVersion: string
+  sourceTemplateVersion: string
+  governanceState: 'draft' | 'in_review' | 'approved' | 'retired'
+  clinicalOwner: string | null
   moduleReferences: RecipeModuleReference[]
   compositionActions: ProcedureCompositionAction[]
   /**
@@ -197,6 +244,7 @@ function fieldValue(row: ProcedureSlotRow, field: string): string | null {
 
 export function buildRecipeCompositions(input: {
   procedures: ProcedureRow[]
+  scenarios: ScenarioIdentityRow[]
   slots: ProcedureSlotRow[]
   sectionMap: Record<string, SectionMapping>
   catalogImportId: string
@@ -204,10 +252,27 @@ export function buildRecipeCompositions(input: {
   compositionFile: SeedCompositionFile
   modifierTargets: { modifierCode: string; actionId: string; targetSlotId: string }[]
 }): BuildRecipeCompositionsResult {
-  const { procedures, slots, sectionMap, catalogImportId, moduleMap, compositionFile } = input
+  const { procedures, scenarios, slots, sectionMap, catalogImportId, moduleMap, compositionFile } =
+    input
 
   const slotById = new Map(slots.map((slot) => [slot.slot_id, slot]))
   const procedureCodes = new Set(procedures.map((procedure) => procedure.procedure_code))
+  const procedureByCode = new Map(
+    procedures.map((procedure) => [procedure.procedure_code, procedure]),
+  )
+  // One scenario per procedure today. Asserted rather than assumed: a second scenario naming
+  // the same procedure would make "which recipe identity does this composition carry" a
+  // question with two answers, and picking either would be picking one at random.
+  const scenarioByProcedure = new Map<string, ScenarioIdentityRow>()
+  for (const scenario of scenarios) {
+    const existing = scenarioByProcedure.get(scenario.sourceProcedureCode)
+    if (existing) {
+      fail(
+        `Procedure ${scenario.sourceProcedureCode} is claimed by scenarios "${existing.id}" and "${scenario.id}". Recipe identity would be ambiguous.`,
+      )
+    }
+    scenarioByProcedure.set(scenario.sourceProcedureCode, scenario)
+  }
   const slotsByProcedure = new Map<string, ProcedureSlotRow[]>()
   for (const slot of slots) {
     const existing = slotsByProcedure.get(slot.procedure_code)
@@ -442,9 +507,34 @@ export function buildRecipeCompositions(input: {
           existing === undefined ? row.display_order : Math.min(existing, row.display_order)
       }
 
+      const scenario = scenarioByProcedure.get(composition.procedureCode)
+      if (!scenario) {
+        fail(
+          `Composition ${composition.procedureCode} has no scenario, so its recipe has no identity. Run "npm run ip-cards:scenarios" first.`,
+        )
+      }
+      // The seed authors the version it publishes under; the scenario says what that
+      // procedure's recipe version currently is. They agreeing is what keeps a saved card's
+      // pin and the composition it resolves through describing the same thing.
+      if (scenario.recipeVersionId !== composition.recipeVersionId) {
+        fail(
+          `Composition ${composition.procedureCode} publishes recipe version ${composition.recipeVersionId}, but scenario "${scenario.id}" names ${scenario.recipeVersionId}.`,
+        )
+      }
+      const procedure = procedureByCode.get(composition.procedureCode) as ProcedureRow
+
       return {
+        recipeVersionId: composition.recipeVersionId,
+        scenarioId: scenario.id,
         procedureCode: composition.procedureCode,
         version: composition.version,
+        recipeName: scenario.recipeName,
+        recipeVersion: composition.recipeVersion,
+        sourceTemplateVersion: procedure.template_version ?? '0.1',
+        // Every composition in this prototype is draft content published under an immutable
+        // release. The two axes are independent: see `ReleaseState` in domain/release-bundle.
+        governanceState: 'draft' as const,
+        clinicalOwner: procedure.clinical_owner,
         requirementSequences: Object.fromEntries(
           Object.entries(requirementSequences).sort(([left], [right]) => left.localeCompare(right)),
         ),
@@ -470,7 +560,19 @@ export function buildRecipeCompositions(input: {
           .sort((left, right) => left.sequence - right.sequence || left.id.localeCompare(right.id)),
       }
     })
-    .sort((left, right) => left.procedureCode.localeCompare(right.procedureCode))
+    .sort((left, right) => left.recipeVersionId.localeCompare(right.recipeVersionId))
+
+  // The generated file is addressed by recipe version, so two entries claiming one version
+  // would make a pinned lookup ambiguous — the one thing a pin cannot be.
+  const seenRecipeVersionIds = new Set<string>()
+  for (const composition of compositions) {
+    if (seenRecipeVersionIds.has(composition.recipeVersionId)) {
+      fail(
+        `Recipe version ${composition.recipeVersionId} is published by more than one composition. A pinned recipe version must identify exactly one composition.`,
+      )
+    }
+    seenRecipeVersionIds.add(composition.recipeVersionId)
+  }
 
   const composedProcedures = new Set(compositions.map((composition) => composition.procedureCode))
   for (const procedureCode of procedureCodes) {
@@ -735,9 +837,10 @@ async function main() {
   const generatedDirectory = process.argv[2] ?? GENERATED_DIRECTORY
   const seedDirectory = process.argv[3] ?? SEED_DIRECTORY
 
-  const [procedures, slots, sectionMap, importReport, moduleMap, compositionFile] =
+  const [procedures, scenarios, slots, sectionMap, importReport, moduleMap, compositionFile] =
     await Promise.all([
       readJson<ProcedureRow[]>(generatedDirectory, 'procedures.json'),
+      readJson<ScenarioIdentityRow[]>(generatedDirectory, 'scenarios.json'),
       readJson<ProcedureSlotRow[]>(generatedDirectory, 'procedure-slots.json'),
       readJson<Record<string, SectionMapping>>(seedDirectory, 'section-zone-phase-map.json'),
       readJson<{ workbook_sha256: string }>(generatedDirectory, 'import-report.json'),
@@ -747,6 +850,7 @@ async function main() {
 
   const result = buildRecipeCompositions({
     procedures,
+    scenarios,
     slots,
     sectionMap,
     catalogImportId: importReport.workbook_sha256,

@@ -3,6 +3,7 @@ import generatedModulesJson from '../../data/ip-preference-cards/generated/recip
 import generatedReportJson from '../../data/ip-preference-cards/generated/recipe-composition-report.json'
 import importReportJson from '../../data/ip-preference-cards/generated/import-report.json'
 import proceduresJson from '../../data/ip-preference-cards/generated/procedures.json'
+import scenariosJson from '../../data/ip-preference-cards/generated/scenarios.json'
 import slotsJson from '../../data/ip-preference-cards/generated/procedure-slots.json'
 import moduleMapJson from '../../data/ip-preference-cards/seed/recipe-module-map.json'
 import compositionsJson from '../../data/ip-preference-cards/seed/procedure-compositions.json'
@@ -18,6 +19,7 @@ import { buildRecipeCompositions, collectModifierTargets } from './build-recipe-
 
 const baseInput = () => ({
   procedures: proceduresJson as never,
+  scenarios: scenariosJson as never,
   slots: slotsJson as never,
   sectionMap: sectionMapJson as never,
   catalogImportId: (importReportJson as { workbook_sha256: string }).workbook_sha256,

@@ -70,6 +70,18 @@ export interface PreferenceCardScenarioBundle {
   definition: ScenarioDefinition
   context: BuildContext
   availableModifierCodes: string[]
+  /**
+   * The immutable release this builder session resolves through.
+   *
+   * On create it is the procedure's *current* release, read from the explicit release
+   * pointer. On edit it is **the card's own pin**, which is a different thing and must stay
+   * different: reopening a card is not an occasion to move it onto a newer release.
+   *
+   * Null only when a procedure has no current release, which leaves the builder unable to say
+   * what a new card would be pinned to. Saving is blocked rather than falling back to an
+   * unpinned card that looks like every other one.
+   */
+  releaseBundleId: string | null
 }
 
 export type PreferenceCardWizardMode = 'create' | 'edit'
@@ -502,9 +514,21 @@ export function PreferenceCardWizard({
 
   const saveRequest = useMemo(() => {
     if (!bundle) return null
+    // A reopened card is re-saved at the version it was written at. Only a card that is
+    // *being created* takes the current schema version and the current release pointer; an
+    // existing one keeps its own, because moving a saved card onto a newer release is a
+    // migration and this builder does not perform one. A version-2 card therefore stays
+    // version 2 and stays unpinned, which is what it has always been.
+    const schemaVersion = savedInput
+      ? editing!.builderInputs.schemaVersion
+      : BUILDER_INPUTS_SCHEMA_VERSION
+    const releaseBundleId = savedInput
+      ? editing!.builderInputs.releaseBundleId
+      : (bundle.releaseBundleId ?? undefined)
     return {
       ...(editing ? { cardId: editing.cardId } : {}),
-      schemaVersion: BUILDER_INPUTS_SCHEMA_VERSION,
+      schemaVersion,
+      ...(releaseBundleId ? { releaseBundleId } : {}),
       title: title.trim() || bundle.definition.title,
       physicianName: physicianName.trim() || null,
       status,
@@ -595,8 +619,17 @@ export function PreferenceCardWizard({
     return () => window.removeEventListener('beforeunload', warn)
   }, [hasUnsavedChanges])
 
+  /**
+   * A new card needs a current release to be pinned to, and there is no substitute for one.
+   *
+   * Falling back to an unpinned card would produce something indistinguishable from a pinned
+   * one on screen while carrying none of the guarantee, so the builder refuses instead. Edit
+   * mode is exempt: an existing card already has whatever pin it has, including none.
+   */
+  const missingCurrentRelease = !editing && bundle !== undefined && bundle.releaseBundleId === null
+
   const saveCard = () => {
-    if (!bundle || !card || !saveRequest) return
+    if (!bundle || !card || !saveRequest || missingCurrentRelease) return
     setSaveError(null)
     startGenerating(async () => {
       const result = await saveUserCardAction(saveRequest)
@@ -1479,11 +1512,23 @@ export function PreferenceCardWizard({
               </Button>
             </div>
           ) : (
-            <Button type="button" onClick={saveCard} disabled={isGenerating} elevated>
-              <FlaskConical aria-hidden="true" className="h-4 w-4" />
-              {isGenerating ? t('generating') : t('generate')}
-              <ChevronRight aria-hidden="true" className="h-4 w-4" />
-            </Button>
+            <div className="flex flex-wrap items-center gap-3">
+              {missingCurrentRelease ? (
+                <p className="max-w-md text-xs leading-5 text-destructive">
+                  {t('release.noCurrentRelease')}
+                </p>
+              ) : null}
+              <Button
+                type="button"
+                onClick={saveCard}
+                disabled={isGenerating || missingCurrentRelease}
+                elevated
+              >
+                <FlaskConical aria-hidden="true" className="h-4 w-4" />
+                {isGenerating ? t('generating') : t('generate')}
+                <ChevronRight aria-hidden="true" className="h-4 w-4" />
+              </Button>
+            </div>
           )}
         </div>
       </section>

@@ -60,17 +60,47 @@ export const customItemSchema = z.object({
  *   viewable, printable, shareable, and duplicable from their immutable snapshot; only the
  *   builder is closed to them. They fail this schema on `selectedModuleVersionIds` alone —
  *   the version field is not what excludes them.
- * - **2 — composed.** Carries the exact module versions and every pick as an identifier.
+ * - **2 — composed.** Carries the exact module versions and every pick as an identifier. Still
+ *   read, still re-saved as version 2. Its recipe and module pins are exact; the modifier set,
+ *   rescue modules, compatibility rules, and role alias table it also resolves through are not
+ *   pinned, because when it was written nothing pinned them. That is a stated limitation of
+ *   these cards rather than a defect introduced by version 3.
+ * - **3 — release-pinned.** Adds `releaseBundleId`: the whole authored dependency set, hashed.
+ *
+ * **No version is ever upgraded in place.** A version-2 card that is edited and saved is
+ * written back as version 2. Stamping the current release onto it would be moving a saved card
+ * to a release its author never selected, which is the automatic migration this phase
+ * deliberately does not do — and it would be a *silent* one, since nothing about the card
+ * would say the pin was chosen by the system rather than the physician.
  *
  * Absent is normalized to 2: the only writer that ever omitted it is the composition work
  * that introduced module selections, so an input that satisfies this schema without naming
  * a version is a version-2 input by construction. An input declaring any *other* version is
  * rejected rather than coerced — a format this code does not know is not one it can read.
  */
-export const BUILDER_INPUTS_SCHEMA_VERSION = 2
+export const BUILDER_INPUTS_SCHEMA_VERSION = 3
 
-export const builderInputsSchema = z.object({
-  schemaVersion: z.literal(BUILDER_INPUTS_SCHEMA_VERSION).default(BUILDER_INPUTS_SCHEMA_VERSION),
+/**
+ * Every accepted persisted format. A card is read at the version it was written at; nothing
+ * is rewritten on read, and nothing is upgraded on save.
+ */
+export const READABLE_BUILDER_INPUTS_SCHEMA_VERSIONS = [2, 3] as const
+
+const builderInputsObject = z.object({
+  schemaVersion: z
+    .union([z.literal(2), z.literal(3)])
+    // Absent means 2 — see the note above. A version this code does not know is rejected
+    // rather than coerced: a format we cannot read is not one we may guess at.
+    .default(2),
+  /**
+   * The immutable release bundle this card resolves through — present from version 3.
+   *
+   * `recipeVersionId` alone pins a name; this pins the whole authored dependency set behind
+   * it, hash by hash. Without it a card is still exact about its recipe and modules while the
+   * modifier set, rescue modules, compatibility rules, and role alias table it also resolves
+   * through are read from whatever is current.
+   */
+  releaseBundleId: z.string().trim().min(1).max(120).optional(),
   scenarioId: z.string().trim().min(1).max(100),
   input: buildCardInputSchema,
   catalogPicks: z.array(catalogPickRefSchema).max(100).default([]),
@@ -79,15 +109,56 @@ export const builderInputsSchema = z.object({
   equipmentSets: z.array(equipmentSetRefSchema).max(20).default([]),
 })
 
+/**
+ * The version and the release pin have to agree, in both directions.
+ *
+ * A version-3 input without a pin would claim a guarantee it cannot deliver. A version-2
+ * input *with* one is the more dangerous shape: it looks pinned, and a reader that trusted
+ * the field would resolve a card through a release its author never selected.
+ */
+function requireVersionPinAgreement(
+  value: { schemaVersion: number; releaseBundleId?: string },
+  ctx: z.RefinementCtx,
+) {
+  if (value.schemaVersion === 3 && !value.releaseBundleId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['releaseBundleId'],
+      message: 'A version-3 builder input must name the release bundle it was built from.',
+    })
+  }
+  if (value.schemaVersion === 2 && value.releaseBundleId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['releaseBundleId'],
+      message: 'A version-2 builder input predates release bundles and cannot name one.',
+    })
+  }
+}
+
+export const builderInputsSchema = builderInputsObject.superRefine(requireVersionPinAgreement)
+
 export type BuilderInputs = z.infer<typeof builderInputsSchema>
 
-export const saveCardRequestSchema = builderInputsSchema.extend({
-  /** Absent for a new card; present when overwriting one the caller owns. */
-  cardId: z.string().uuid().optional(),
-  title: z.string().trim().min(1).max(160),
-  physicianName: z.string().trim().max(160).nullable().optional(),
-  status: z.enum(['draft', 'final']).default('draft'),
-})
+/** A card that pins a release bundle, narrowed so the pin is not optional at the type level. */
+export type ReleasePinnedBuilderInputs = BuilderInputs & {
+  schemaVersion: 3
+  releaseBundleId: string
+}
+
+export function isReleasePinned(inputs: BuilderInputs): inputs is ReleasePinnedBuilderInputs {
+  return inputs.schemaVersion === 3 && typeof inputs.releaseBundleId === 'string'
+}
+
+export const saveCardRequestSchema = builderInputsObject
+  .extend({
+    /** Absent for a new card; present when overwriting one the caller owns. */
+    cardId: z.string().uuid().optional(),
+    title: z.string().trim().min(1).max(160),
+    physicianName: z.string().trim().max(160).nullable().optional(),
+    status: z.enum(['draft', 'final']).default('draft'),
+  })
+  .superRefine(requireVersionPinAgreement)
 
 export type SaveCardRequest = z.infer<typeof saveCardRequestSchema>
 

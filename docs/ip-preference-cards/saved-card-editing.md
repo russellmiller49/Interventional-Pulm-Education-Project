@@ -75,21 +75,34 @@ one is looked up in the authoritative catalog and the pinned composition:
 
 ## Exact-version reopening
 
-A card reopens against the composition it was built from, never "what this procedure means
-today". `buildPinnedContext(scenarioId, recipeVersionId)` resolves through an index keyed on
-recipe version id, built once at module load and asserted unique — two scenarios claiming one
-recipe version would make a pin ambiguous, which is the one thing a pin cannot be.
+A card reopens against the definitions it was built from, never "what this procedure means
+today". Version-3 cards resolve through a **release bundle**, which pins the whole authored
+dependency set by content hash — the composition, every module version, the modifier set, the
+rescue modules, the typed compatibility rules, and the role alias table. Version-2 cards
+resolve through `buildPinnedContext(scenarioId, recipeVersionId)`, which is exact about the
+recipe and the modules and unpinned below them. See
+[`release-bundles.md`](./release-bundles.md).
 
 - Module versions are exact. `module-flex-bronch-core-v1-0` is looked up by that id; there is
   no lookup by code, and therefore no "latest module" anywhere in the edit or save path.
 - A pin that does not resolve is reported, not substituted.
-- Publishing a new module version, or changing which modules are default-on, moves nothing
-  about a saved card.
+- A pin whose definitions have been **edited since publication** is also reported. This is the
+  one a version id alone could never catch: the name still resolves, and the content behind it
+  is not what the physician reviewed.
+- Publishing a new release, or changing which modules are default-on, moves nothing about a
+  saved card.
 
-**Versioning policy.** A change to a procedure's composition that alters what a card resolves
-to must publish a new `recipeVersionId` and retain the previous entry in the generated data.
-Until it is retained, an older pin resolves to `recipe_version_unavailable` and its card
-becomes view-only — which is the safe direction to fail, and visible rather than silent.
+| Failure                                                  | Code                                                   |
+| -------------------------------------------------------- | ------------------------------------------------------ |
+| Pinned release no longer retained                        | `release_unknown`                                      |
+| A definition the release pins is gone                    | `release_pin_missing`                                  |
+| A definition the release pins has changed                | `release_definition_mutated`                           |
+| The card's scenario or recipe disagrees with the release | `release_scenario_mismatch`, `release_recipe_mismatch` |
+
+**Versioning policy.** A change that alters what a card resolves to must publish a new release
+and retain the previous one. Until it is retained, the older pin fails and its card becomes
+view-only — the safe direction to fail, and visible rather than silent. The build enforces
+retention: dropping a release that another supersedes, or a composition a release pins, fails.
 
 ## What the builder restores
 
@@ -159,12 +172,27 @@ have to infer one from which fields happen to be present.
   Never written with an explicit version and **never converted**: reconstructing one means
   choosing modules on the physician's behalf. These fail `builderInputsSchema` on
   `selectedModuleVersionIds` alone — the version field is not what excludes them.
-- **2 — composed.** Current. Carries exact module versions and every pick as an identifier.
+- **2 — composed.** Carries exact module versions and every pick as an identifier. Still read,
+  still re-saved as version 2.
+- **3 — release-pinned.** Current. Adds `releaseBundleId`: the whole authored dependency set,
+  hashed.
 
-Absent normalizes to 2: the only writer that ever omitted it is the composition work that
-introduced module selections, so an input satisfying the schema without naming a version is a
-version-2 input by construction. An input declaring any _other_ version is rejected rather
-than coerced. Parsing and normalization are server-side only.
+Absent normalizes to **2, not to the current version**: the only writer that ever omitted it is
+the composition work that introduced module selections, so an input satisfying the schema
+without naming a version is a version-2 input by construction. An input declaring any _other_
+version is rejected rather than coerced. Parsing and normalization are server-side only.
+
+**No version is upgraded in place.** A version-2 card that is edited and saved is written back
+as version 2. Stamping the current release onto it would move a saved card to a release its
+author never selected — an automatic migration this phase deliberately does not perform, and a
+silent one, since nothing on the card would say the pin was the system's choice rather than the
+physician's. The schema enforces the pairing in both directions: a version-3 input without a
+pin is rejected, and so is a version-2 input carrying one it could not have had.
+
+A version-2 card's recipe and module pins are exact. What it does **not** pin — the modifier
+set, rescue modules, compatibility rules, role aliases — is a stated limitation of those cards
+rather than a defect introduced by version 3; nothing pinned them when they were written. See
+[`dependency-closure.md`](./dependency-closure.md).
 
 ## Legacy and non-editable cards
 

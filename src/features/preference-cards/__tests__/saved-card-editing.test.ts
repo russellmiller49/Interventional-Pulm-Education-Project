@@ -3,6 +3,7 @@ import {
   getComposedRecipeSlots,
   getScenarioDefinition,
 } from '../data/demo-context.server'
+import { getCurrentReleaseBundleForScenario } from '../data/release-bundles.server'
 import { catalogPickItemId } from '../domain/catalog-pick'
 import { customItemId } from '../domain/custom-item'
 import { equipmentSetItemId } from '../domain/equipment-set'
@@ -204,7 +205,13 @@ function ebusEditFixture(): SaveCardRequest {
   // clinical decision rather than an inert key.
   const balloonSlot = slotIdForRole('EBUS_BALLOON')
 
+  const release = getCurrentReleaseBundleForScenario(SCENARIO_ID)
+  expect(release).not.toBeNull()
+
   return saveCardRequestSchema.parse({
+    // A card created today is release-pinned, so the fixture is one.
+    schemaVersion: BUILDER_INPUTS_SCHEMA_VERSION,
+    releaseBundleId: release!.id,
     scenarioId: SCENARIO_ID,
     title: 'Dr Miller EBUS with ROSE',
     physicianName: 'R. Miller',
@@ -425,7 +432,7 @@ describe('exact version pinning', () => {
     expect(editable.builderInputs.input.selectedModuleVersionIds).not.toContain(FLUOROSCOPY)
   })
 
-  it('reports a pinned recipe version the generated data no longer publishes', async () => {
+  it('reports a recipe version its pinned release does not publish', async () => {
     const cardId = await saveFixture()
     const row = rows.find((card) => card.id === cardId)!
     const inputs = builderInputsSchema.parse(row.builder_inputs)
@@ -437,9 +444,35 @@ describe('exact version pinning', () => {
     const editable = await loadEditableUserCard(cardId)
     expect(editable.ok).toBe(false)
     if (editable.ok) return
-    expect(editable.code).toBe('recipe_version_unavailable')
+    // A release-pinned card is checked against its release first, so the disagreement is
+    // named as what it is rather than as a missing recipe. Either way nothing is substituted.
+    expect(editable.code).toBe('release_recipe_mismatch')
 
     // The card itself is untouched and still views and prints.
+    const viewed = await loadUserCard(cardId)
+    expect(viewed).not.toBeNull()
+    expect(viewed!.card.snapshotHash).toBe(row.snapshot_hash)
+  })
+
+  it('reports a pinned recipe version the generated data no longer publishes, on a version-2 card', async () => {
+    const cardId = await saveFixture()
+    const row = rows.find((card) => card.id === cardId)!
+    const inputs = builderInputsSchema.parse(row.builder_inputs)
+    // A card written before release bundles pins its recipe version and nothing else, so the
+    // recipe version is what fails when it goes.
+    const withoutPin: Record<string, unknown> = { ...inputs }
+    delete withoutPin.releaseBundleId
+    row.builder_inputs = {
+      ...withoutPin,
+      schemaVersion: 2,
+      input: { ...inputs.input, recipeVersionId: 'recipe-ebus-tbna-v9-9' },
+    }
+
+    const editable = await loadEditableUserCard(cardId)
+    expect(editable.ok).toBe(false)
+    if (editable.ok) return
+    expect(editable.code).toBe('recipe_version_unavailable')
+
     const viewed = await loadUserCard(cardId)
     expect(viewed).not.toBeNull()
     expect(viewed!.card.snapshotHash).toBe(row.snapshot_hash)
@@ -642,7 +675,7 @@ describe('legacy cards', () => {
 })
 
 describe('builder-input schema versioning', () => {
-  it('normalizes an unversioned composed input to the current version', () => {
+  it('normalizes an unversioned composed input to version 2, not to the current version', () => {
     const request = ebusEditFixture()
     const unversioned = {
       scenarioId: request.scenarioId,
@@ -653,14 +686,37 @@ describe('builder-input schema versioning', () => {
       equipmentSets: request.equipmentSets,
     }
 
+    // The absent version means "written before versions were recorded", which is version 2 —
+    // it does not mean "whatever the current version happens to be". Normalizing it forward
+    // would claim a release pin the card never had.
     const parsed = builderInputsSchema.safeParse(unversioned)
     expect(parsed.success).toBe(true)
-    expect(parsed.success && parsed.data.schemaVersion).toBe(BUILDER_INPUTS_SCHEMA_VERSION)
+    expect(parsed.success && parsed.data.schemaVersion).toBe(2)
+    expect(parsed.success && parsed.data.releaseBundleId).toBeUndefined()
   })
 
   it('refuses a format it does not know rather than coercing it', () => {
     const request = ebusEditFixture()
-    const parsed = builderInputsSchema.safeParse({ ...request, schemaVersion: 3 })
+    const parsed = builderInputsSchema.safeParse({ ...request, schemaVersion: 4 })
+    expect(parsed.success).toBe(false)
+  })
+
+  it('refuses a version-3 input that names no release bundle', () => {
+    const request = ebusEditFixture()
+    const withoutPin: Record<string, unknown> = { ...request, schemaVersion: 3 }
+    delete withoutPin.releaseBundleId
+
+    const parsed = builderInputsSchema.safeParse(withoutPin)
+    expect(parsed.success).toBe(false)
+  })
+
+  it('refuses a version-2 input that names a release bundle it could not have had', () => {
+    const request = ebusEditFixture()
+    const parsed = builderInputsSchema.safeParse({
+      ...request,
+      schemaVersion: 2,
+      releaseBundleId: request.releaseBundleId,
+    })
     expect(parsed.success).toBe(false)
   })
 
@@ -671,6 +727,7 @@ describe('builder-input schema versioning', () => {
 
     const parsed = builderInputsSchema.safeParse({
       schemaVersion: BUILDER_INPUTS_SCHEMA_VERSION,
+      releaseBundleId: request.releaseBundleId,
       scenarioId: request.scenarioId,
       input: legacyInput,
       catalogPicks: [],

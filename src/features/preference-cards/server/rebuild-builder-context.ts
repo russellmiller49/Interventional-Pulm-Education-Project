@@ -1,11 +1,13 @@
 import { buildPinnedContext } from '../data/demo-context.server'
+import { buildReleaseContext, type ReleaseContextErrorCode } from '../data/release-bundles.server'
 import { withCatalogPicks, type CatalogPick } from '../domain/catalog-pick'
 import { withCustomItems } from '../domain/custom-item'
 import { withEquipmentSets, type EquipmentSet } from '../domain/equipment-set'
 import { withFamilyPicks, type FamilyPick } from '../domain/family-pick'
 import { canonicalRoleCode } from '../domain/role-taxonomy'
 import type { BuildContext, ScenarioDefinition } from '../domain/types'
-import type { BuilderInputs } from '../schemas/saved-card'
+import { isReleasePinned, type BuilderInputs } from '../schemas/saved-card'
+import type { PreferenceCardReleaseBundle } from '../domain/release-bundle'
 import { getFamilyPick, resolveCatalogPick, type CatalogPickLookupResult } from './catalog'
 
 /**
@@ -33,10 +35,17 @@ export type RehydratedBuilderErrorCode =
   | 'catalog_pick_unavailable'
   | 'product_family_unavailable'
   | 'equipment_set_unavailable'
+  | ReleaseContextErrorCode
 
 export interface RehydratedBuilderContext {
   ok: true
   scenario: ScenarioDefinition
+  /**
+   * The release this card resolves through, when it pins one. Null for a version-2 card,
+   * which is exact about its recipe and modules and unpinned below that — see
+   * `BUILDER_INPUTS_SCHEMA_VERSION`.
+   */
+  releaseBundle: PreferenceCardReleaseBundle | null
   /** The pinned composition's context, before any of this card's own picks. */
   context: BuildContext
   /** The same context with every stored pick, custom line, and set folded in. */
@@ -74,14 +83,34 @@ export function rebuildBuilderContext(
   /** Stamped onto rebuilt equipment sets. Not part of what the snapshot hash addresses. */
   timestamp: string,
 ): RehydratedBuilderContextResult {
-  // The exact recipe version the card was built from, never "whatever this scenario means
-  // today". A composition that has moved on leaves the card view-only rather than quietly
-  // recomposing it.
-  const pinned = buildPinnedContext(inputs.scenarioId, inputs.input.recipeVersionId)
-  if (!pinned.ok) return pinned
-  const { scenario, context } = pinned
+  // The exact definitions the card was built from, never "whatever this procedure means
+  // today". A release whose pinned definitions have moved leaves the card view-only rather
+  // than quietly re-resolving it against content its author never saw.
+  //
+  // Two paths, because there are two persisted formats and neither is converted into the
+  // other. A version-3 card verifies the whole hashed dependency set; a version-2 card
+  // verifies its recipe version and module versions, which is everything it recorded.
+  let scenario: ScenarioDefinition
+  let context: BuildContext
+  let releaseBundle: PreferenceCardReleaseBundle | null = null
 
-  if (scenario.recipeVersionId !== inputs.input.recipeVersionId) {
+  if (isReleasePinned(inputs)) {
+    const released = buildReleaseContext(inputs.releaseBundleId, {
+      scenarioId: inputs.scenarioId,
+      recipeVersionId: inputs.input.recipeVersionId,
+    })
+    if (!released.ok) return released
+    scenario = released.scenario
+    context = released.context
+    releaseBundle = released.bundle
+  } else {
+    const pinned = buildPinnedContext(inputs.scenarioId, inputs.input.recipeVersionId)
+    if (!pinned.ok) return pinned
+    scenario = pinned.scenario
+    context = pinned.context
+  }
+
+  if (context.recipe.id !== inputs.input.recipeVersionId) {
     return {
       ok: false,
       code: 'scenario_recipe_mismatch',
@@ -183,6 +212,7 @@ export function rebuildBuilderContext(
   return {
     ok: true,
     scenario,
+    releaseBundle,
     context,
     resolveContext,
     catalogPicks,

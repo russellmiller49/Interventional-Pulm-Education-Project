@@ -5,7 +5,6 @@ import { supabaseServer } from '@/lib/supabase/server'
 import { resolveCard } from '../domain/resolve-card'
 import type { ResolvedCard } from '../domain/types'
 import {
-  BUILDER_INPUTS_SCHEMA_VERSION,
   builderInputsSchema,
   type BuilderInputs,
   type SaveCardRequest,
@@ -189,7 +188,12 @@ export async function saveUserCard(request: SaveCardRequest): Promise<UserCardRe
     scenario_id: request.scenarioId,
     status: request.status,
     builder_inputs: {
-      schemaVersion: BUILDER_INPUTS_SCHEMA_VERSION,
+      // The version the request came in at, not the current one. Re-saving a version-2 card
+      // must not stamp today's release onto it: that would move a saved card to a release its
+      // author never chose, and would do it silently, with nothing on the card to say the pin
+      // was the system's decision rather than the physician's.
+      schemaVersion: request.schemaVersion,
+      ...(request.releaseBundleId ? { releaseBundleId: request.releaseBundleId } : {}),
       scenarioId: request.scenarioId,
       input: request.input,
       catalogPicks: request.catalogPicks,

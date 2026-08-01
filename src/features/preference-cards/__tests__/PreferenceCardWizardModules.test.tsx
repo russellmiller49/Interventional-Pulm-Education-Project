@@ -28,6 +28,7 @@ function renderEbusWizard() {
         definition,
         context,
         availableModifierCodes: definition.availableModifierCodes,
+        releaseBundleId: null,
       }}
     />,
   )

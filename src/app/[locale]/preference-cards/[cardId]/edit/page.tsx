@@ -44,6 +44,16 @@ const explanationKeyByCode: Record<Exclude<EditableCardErrorCode, 'not_found'>, 
   catalog_pick_unavailable: 'edit.unavailableCatalog',
   product_family_unavailable: 'edit.unavailableCatalog',
   equipment_set_unavailable: 'edit.unavailableCatalog',
+  // A pinned release that is gone, incomplete, or no longer hashes to what it published.
+  // Each says the card was not rebuilt against something its author never reviewed, which is
+  // the reason the builder is closed rather than an apology for closing it.
+  release_unknown: 'edit.unavailableReleaseMissing',
+  release_pin_missing: 'edit.unavailableReleaseMissing',
+  release_definition_mutated: 'edit.unavailableReleaseChanged',
+  release_not_selectable: 'edit.unavailableReleaseChanged',
+  release_scenario_unavailable: 'edit.unavailableProcedure',
+  release_scenario_mismatch: 'edit.unavailableRecipeVersion',
+  release_recipe_mismatch: 'edit.unavailableRecipeVersion',
 }
 
 export default async function EditPreferenceCardPage({ params }: PageProps) {
@@ -91,6 +101,9 @@ export default async function EditPreferenceCardPage({ params }: PageProps) {
     definition: rebuilt.scenario,
     context: rebuilt.context,
     availableModifierCodes: rebuilt.scenario.availableModifierCodes,
+    // The card's *own* release, not the procedure's current one. Reopening a card is not an
+    // occasion to move it forward, and a newer release existing changes nothing about it.
+    releaseBundleId: rebuilt.releaseBundle?.id ?? null,
   }
 
   return (

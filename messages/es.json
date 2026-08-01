@@ -7618,7 +7618,7 @@
       "manufacturer": "Manufacturer",
       "workstream": "Workstream",
       "reviewStatus": "Review status",
-      "procedure": "Procedure",
+      "procedure": "Procedimiento",
       "role": "Role",
       "gudid": "GUDID result",
       "distribution": "Distribution",
@@ -7658,7 +7658,21 @@
       "noModuleUse": "Not referenced",
       "effectivePreview": "Effective requirement preview",
       "effectivePreviewHelp": "Read-only. A requirement shown as inherited belongs to the module named beside it — changing it means publishing a new version of that module and updating the compositions that pin it.",
-      "inheritedFrom": "Inherited from {module}"
+      "inheritedFrom": "Inherited from {module}",
+      "releasesTitle": "Versiones inmutables",
+      "releasesDescription": "Cada versión congela el conjunto completo de dependencias creadas por las que se resuelve un procedimiento —la composición, sus versiones de módulo, el conjunto de modificadores, los módulos de rescate, las reglas de compatibilidad tipadas y la tabla de alias de roles—, cada una identificada por un hash de contenido. Una tarjeta guardada queda fijada a una versión y así permanece; una versión más reciente nunca la modifica. La versión que usa una tarjeta nueva proviene de un puntero explícito, nunca de una comparación de versiones.",
+      "release": "Versión",
+      "releaseState": "Estado",
+      "publishedRetired": "Publicada / retirada",
+      "pinnedDefinitions": "Definiciones fijadas",
+      "releaseImpact": "Impacto frente a la versión que sustituye",
+      "currentRelease": "Actual",
+      "supersedes": "sustituye a",
+      "releaseNoChange": "No difiere nada de lo que resuelve una tarjeta.",
+      "releaseInitial": "Versión inicial: no hay nada con que compararla.",
+      "modulePins": "módulos:",
+      "requirementChanges": "cambio(s) de requisito",
+      "procedureColumn": "Procedimiento"
     },
     "catalog": {
       "metadataTitle": "IP product catalog",
@@ -7899,7 +7913,9 @@
       "unavailableRecipeVersion": "This card is pinned to a recipe version that is no longer published. Reopening it against a newer version would change what the card asks for, so the builder leaves it as saved.",
       "unavailableModule": "A setup module this card was built from is no longer published at the version the card recorded. A different version is not substituted for it.",
       "unavailableCatalog": "A product this card records can no longer be reconstructed from the catalog, so the builder cannot reopen it without changing what it says.",
-      "unavailableSnapshotIntact": "The saved card itself is unchanged and stays available to view, print, share, and duplicate."
+      "unavailableSnapshotIntact": "The saved card itself is unchanged and stays available to view, print, share, and duplicate.",
+      "unavailableReleaseMissing": "La versión publicada con la que se creó esta tarjeta ya no se conserva, por lo que no se pueden cargar las definiciones exactas que registró. No se sustituye por ninguna otra versión.",
+      "unavailableReleaseChanged": "La versión publicada con la que se creó esta tarjeta ya no coincide con lo que se publicó: una de las definiciones que fija ha cambiado. La tarjeta se muestra tal como se guardó, en lugar de reconstruirse a partir de contenido que su autor nunca revisó."
     },
     "duplicateTitle": "{title} (copy)",
     "deleteCard": "Delete",
@@ -7982,6 +7998,9 @@
       "customDescription": "Pick the setup modules yourself instead of starting from a standard procedure.",
       "customHelp": "This is a card-building tool. Nothing is recommended for you — only the module descriptions the reviewers wrote are shown.",
       "customCta": "Start a custom card"
+    },
+    "release": {
+      "noCurrentRelease": "Este procedimiento no tiene una versión publicada actual, por lo que no hay nada a lo que fijar una tarjeta nueva. No se guarda ninguna tarjeta sin ella."
     }
   }
 }

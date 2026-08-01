@@ -7658,7 +7658,21 @@
       "noModuleUse": "Not referenced",
       "effectivePreview": "Effective requirement preview",
       "effectivePreviewHelp": "Read-only. A requirement shown as inherited belongs to the module named beside it — changing it means publishing a new version of that module and updating the compositions that pin it.",
-      "inheritedFrom": "Inherited from {module}"
+      "inheritedFrom": "Inherited from {module}",
+      "releasesTitle": "Immutable release bundles",
+      "releasesDescription": "Each release freezes the complete authored dependency set one procedure resolves through — the composition, its module versions, the modifier set, the rescue modules, the typed compatibility rules, and the role alias table — each addressed by a content hash. A saved card is pinned to a release and stays pinned; a newer release never reaches back into it. Which release a new card uses comes from an explicit pointer, never from a version comparison.",
+      "release": "Release",
+      "releaseState": "State",
+      "publishedRetired": "Published / retired",
+      "pinnedDefinitions": "Pinned definitions",
+      "releaseImpact": "Impact against the release it supersedes",
+      "currentRelease": "Current",
+      "supersedes": "supersedes",
+      "releaseNoChange": "Nothing a card resolves from differs.",
+      "releaseInitial": "Initial release — nothing to compare against.",
+      "modulePins": "modules:",
+      "requirementChanges": "requirement change(s)",
+      "procedureColumn": "Procedure"
     },
     "catalog": {
       "metadataTitle": "IP product catalog",
@@ -7899,7 +7913,9 @@
       "unavailableRecipeVersion": "This card is pinned to a recipe version that is no longer published. Reopening it against a newer version would change what the card asks for, so the builder leaves it as saved.",
       "unavailableModule": "A setup module this card was built from is no longer published at the version the card recorded. A different version is not substituted for it.",
       "unavailableCatalog": "A product this card records can no longer be reconstructed from the catalog, so the builder cannot reopen it without changing what it says.",
-      "unavailableSnapshotIntact": "The saved card itself is unchanged and stays available to view, print, share, and duplicate."
+      "unavailableSnapshotIntact": "The saved card itself is unchanged and stays available to view, print, share, and duplicate.",
+      "unavailableReleaseMissing": "The published release this card was built from is no longer retained, so the exact definitions it recorded cannot be loaded. No other release is substituted for it.",
+      "unavailableReleaseChanged": "The published release this card was built from no longer matches what was published — one of the definitions it pins has changed. The card is shown as it was saved rather than rebuilt from content its author never reviewed."
     },
     "duplicateTitle": "{title} (copy)",
     "deleteCard": "Delete",
@@ -7982,6 +7998,9 @@
       "customDescription": "Pick the setup modules yourself instead of starting from a standard procedure.",
       "customHelp": "This is a card-building tool. Nothing is recommended for you — only the module descriptions the reviewers wrote are shown.",
       "customCta": "Start a custom card"
+    },
+    "release": {
+      "noCurrentRelease": "This procedure has no current published release, so there is nothing to pin a new card to. A card is not saved without one."
     }
   }
 }

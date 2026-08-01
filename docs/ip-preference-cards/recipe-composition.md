@@ -90,12 +90,23 @@ The builder stores `selectedModuleVersionIds` verbatim in `builder_inputs`. It d
 store "the defaults" and recompute them later, so changing which modules are default-on
 cannot reach back into a card someone already saved.
 
-A saved card is reopened through `buildPinnedContext(scenarioId, recipeVersionId)`, which
-resolves the recipe **by version id** against an index of every recipe version the generated
-data still publishes. It never falls back to "the current version of this scenario". A pin
-that no longer resolves returns `recipe_version_unavailable` and the card becomes view-only;
-no other version is substituted for it. See
+A saved card is reopened through its **release bundle**, which pins the exact recipe version,
+the exact module versions, and — the part a module version id could never cover — the modifier
+set, rescue modules, typed compatibility rules, and role alias table it also resolves through,
+each by content hash. A pin that no longer resolves, or whose definitions have been edited
+since publication, leaves the card view-only; no other version is substituted for it. See
+[`release-bundles.md`](./release-bundles.md) and
 [`saved-card-editing.md`](./saved-card-editing.md).
+
+Cards written before release bundles (`builder_inputs.schemaVersion` 2) still reopen through
+`buildPinnedContext(scenarioId, recipeVersionId)`, which resolves the recipe by version id
+against every composition the generated data retains and returns `recipe_version_unavailable`
+when the pin is gone. That path is exact about the recipe and the modules and unpinned below
+them, which is everything those cards ever recorded.
+
+Compositions are keyed by `recipeVersionId`, not by procedure code. A map keyed by procedure
+was the structural reason a superseded composition could not be kept at all: one procedure, one
+entry, and republishing overwrote the definition a saved card was pinned to.
 
 ## Resolution order
 
@@ -283,10 +294,18 @@ which of their requirements belong in a shared core is exactly what this file fo
 ## How a procedure adopts a new module version
 
 1. Author the new module version alongside the old one — both may exist at once.
-2. Change that procedure's `moduleReferences` entry to the new `moduleVersion`.
-3. Rebuild. Every other procedure still pins the old version and its card does not move.
-4. Saved snapshots never move at all: they carry their own `includedModules` manifest and
+2. Author a new `recipeVersionId` for that procedure, referencing the new `moduleVersion`, and
+   keep the old composition entry.
+3. Publish a release bundle for the new recipe version and advance the pointer. See
+   [`release-bundles.md`](./release-bundles.md).
+4. Rebuild. Every other procedure still pins the old version and its card does not move.
+5. Saved snapshots never move at all: they carry their own `includedModules` manifest and
    their hash addresses it.
+
+Step 2 currently has a limitation worth knowing before you start: the build requires every
+declared module version to be referenced by some composition, so a _superseded_ module version
+cannot yet be retained after the last composition stops referencing it. Retaining a superseded
+**recipe** version works today.
 
 ## What composition is not
 

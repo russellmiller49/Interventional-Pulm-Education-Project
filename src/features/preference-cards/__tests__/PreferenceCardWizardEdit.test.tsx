@@ -10,11 +10,12 @@ import {
   getComposedRecipeSlots,
   getScenarioDefinition,
 } from '../data/demo-context.server'
+import { getCurrentReleaseBundleForScenario } from '../data/release-bundles.server'
 import { catalogPickItemId } from '../domain/catalog-pick'
 import { customItemId } from '../domain/custom-item'
 import { equipmentSetItemId } from '../domain/equipment-set'
 import { EQUIPMENT_SETS_STORAGE_KEY } from '../domain/equipment-set'
-import { builderInputsSchema } from '../schemas/saved-card'
+import { BUILDER_INPUTS_SCHEMA_VERSION, builderInputsSchema } from '../schemas/saved-card'
 import { searchProductsForRole } from '../server/catalog'
 import { rebuildBuilderContext } from '../server/rebuild-builder-context'
 
@@ -127,6 +128,7 @@ function renderEditWizard(): PreferenceCardBuilderInitialState {
         definition: rebuilt.scenario,
         context: rebuilt.context,
         availableModifierCodes: rebuilt.scenario.availableModifierCodes,
+        releaseBundleId: rebuilt.releaseBundle?.id ?? null,
       }}
       initialScenarioId={SCENARIO_ID}
       initialState={initialState}
@@ -362,7 +364,38 @@ describe('saving changes', () => {
     expect(saved.map((set) => set.id)).toEqual(['set-ebus-tray'])
   })
 
-  it('never sends a card id from the create flow', async () => {
+  it('never sends a card id from the create flow, and pins the current release', async () => {
+    const user = userEvent.setup()
+    const definition = getScenarioDefinition(SCENARIO_ID)!
+    const currentRelease = getCurrentReleaseBundleForScenario(SCENARIO_ID)!
+    expect(currentRelease).toBeDefined()
+    const rebuilt = rebuildBuilderContext(savedBuilderInputs(), REBUILT_AT)
+    if (!rebuilt.ok) throw new Error('fixture did not rebuild')
+    render(
+      <PreferenceCardWizard
+        scenarios={[definition]}
+        bundle={{
+          definition,
+          context: rebuilt.context,
+          availableModifierCodes: definition.availableModifierCodes,
+          releaseBundleId: currentRelease.id,
+        }}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: /Step 5 of 5/ }))
+    await user.click(screen.getByRole('button', { name: /Generate immutable draft snapshot/ }))
+
+    expect(saveUserCardAction).toHaveBeenCalledTimes(1)
+    const request = saveUserCardAction.mock.calls[0][0]
+    expect(request.cardId).toBeUndefined()
+    // A new card takes the current schema version and the current release pointer — unlike
+    // the edit flow above, which re-sends the version-2 card's own (absent) pin.
+    expect(request.schemaVersion).toBe(BUILDER_INPUTS_SCHEMA_VERSION)
+    expect(request.releaseBundleId).toBe(currentRelease.id)
+  })
+
+  it('will not save a new card when the procedure has no current release to pin it to', async () => {
     const user = userEvent.setup()
     const definition = getScenarioDefinition(SCENARIO_ID)!
     const rebuilt = rebuildBuilderContext(savedBuilderInputs(), REBUILT_AT)
@@ -374,14 +407,16 @@ describe('saving changes', () => {
           definition,
           context: rebuilt.context,
           availableModifierCodes: definition.availableModifierCodes,
+          releaseBundleId: null,
         }}
       />,
     )
 
     await user.click(screen.getByRole('button', { name: /Step 5 of 5/ }))
-    await user.click(screen.getByRole('button', { name: /Generate immutable draft snapshot/ }))
-
-    expect(saveUserCardAction).toHaveBeenCalledTimes(1)
-    expect(saveUserCardAction.mock.calls[0][0].cardId).toBeUndefined()
+    const generate = screen.getByRole('button', { name: /Generate immutable draft snapshot/ })
+    expect(generate).toBeDisabled()
+    // Refusing is the point: an unpinned card would look exactly like a pinned one.
+    await user.click(generate)
+    expect(saveUserCardAction).not.toHaveBeenCalled()
   })
 })
