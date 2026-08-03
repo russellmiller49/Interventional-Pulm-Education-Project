@@ -130,7 +130,10 @@ export function BedsideScene({
     () => bloodColor(state.circuit.postOxygenatorSaturation / 100),
     [state.circuit.postOxygenatorSaturation],
   )
-  const drainageCollapse = state.device.pumpRunning && state.circuit.pVen <= -300 ? 1 : 0
+  // Gated on the readout, not the raw value: a collapsing tube is a visual claim about a pressure,
+  // so it may only be shown when that pressure is one the model stands behind.
+  const drainageCollapse =
+    state.device.pumpRunning && (state.circuit.readouts.pVen.displayed ?? 0) <= -300 ? 1 : 0
 
   return (
     <>

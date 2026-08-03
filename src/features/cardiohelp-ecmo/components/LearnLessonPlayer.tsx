@@ -40,6 +40,7 @@ import type {
   GuidedWalkthroughStep,
   SimulationAction,
 } from '../engine'
+import { formatChannelGroup, formatChannelReadout } from './channelReadout'
 import styles from './cardiohelp-ecmo.module.css'
 
 interface LearnLessonPlayerProps {
@@ -352,9 +353,10 @@ export function LearnLessonPlayer({
     () => ({
       time: state.simulationTime,
       flow: state.circuit.bloodFlow.toFixed(2),
-      pVen: state.circuit.pVen,
-      pInt: state.circuit.pInt,
-      pArt: state.circuit.pArt,
+      // Formatted from the engine readouts, so a stopped circuit's intercepts never appear here as
+      // though the console had measured them.
+      pVen: formatChannelReadout('pVen', state.circuit.readouts.pVen, 'mmHg'),
+      pIntPArt: formatChannelGroup([state.circuit.readouts.pInt, state.circuit.readouts.pArt], ''),
       sweep: state.gas.sweepLpm.toFixed(1),
       spo2: state.patient.spo2.toFixed(1),
       paCO2: state.patient.paCO2.toFixed(1),
@@ -585,15 +587,14 @@ export function LearnLessonPlayer({
             <small>Flow</small>
             <strong>{simulatorSnapshot.flow} L/min</strong>
           </span>
-          <span>
+          <span data-readout-status={simulatorSnapshot.pVen.status}>
             <small>pVen</small>
-            <strong>{simulatorSnapshot.pVen}</strong>
+            <strong aria-hidden="true">{simulatorSnapshot.pVen.valueText}</strong>
+            <span className="sr-only">{simulatorSnapshot.pVen.screenReaderText}</span>
           </span>
           <span>
             <small>pInt / pArt</small>
-            <strong>
-              {simulatorSnapshot.pInt} / {simulatorSnapshot.pArt}
-            </strong>
+            <strong>{simulatorSnapshot.pIntPArt.text}</strong>
           </span>
           <span>
             <small>Sweep</small>

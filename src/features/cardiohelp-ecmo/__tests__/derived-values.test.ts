@@ -388,13 +388,62 @@ describe('pressure signal validity', () => {
     }
   })
 
-  it('keeps a clamped line valid, because that pressure is modelled and teachable', () => {
+  it('keeps the clamp response itself valid, because that pressure is modelled and teachable', () => {
+    // The pump is still turning on the tick the clamp closes, so the clamp overrides apply and the
+    // console must show them: this is the pressure the learner is meant to read.
+    const drainage = run(createReferenceSimulationState('vv-reference'), [
+      { type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'drainage', closed: true },
+    ])
+    expect(drainage.circuit.readouts.pVen.status).toBe('valid')
+    expect(drainage.circuit.readouts.pVen.displayed).toBe(-350)
+    expect(drainage.alarms.some((alarm) => alarm.code === 'PVEN_STOP')).toBe(true)
+
+    const returnLimb = run(createReferenceSimulationState('vv-reference'), [
+      { type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return', closed: true },
+    ])
+    expect(returnLimb.circuit.readouts.pInt.status).toBe('valid')
+    expect(returnLimb.circuit.readouts.pInt.displayed).toBe(690)
+    expect(returnLimb.alarms.some((alarm) => alarm.code === 'PINT_STOP')).toBe(true)
+  })
+
+  it('stops reporting once the pump has stopped behind the clamp', () => {
+    // The clamp overrides in `calculatePressures` require a turning pump. Once the pressure
+    // intervention stops it, the equations fall back to the zero-flow intercepts of a flowing
+    // circuit — the exact artefact the readout system exists to suppress. A closed clamp must not
+    // launder those intercepts into apparently measured values.
     let state = createReferenceSimulationState('vv-reference')
     state = run(state, [{ type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return', closed: true }])
     for (let step = 0; step < 3; step += 1) state = run(state, [{ type: 'STEP' }])
-    if (state.circuit.returnClampClosed) {
-      expect(state.circuit.readouts.pVen.status).toBe('valid')
+
+    expect(state.circuit.returnClampClosed).toBe(true)
+    expect(state.device.pumpRunning).toBe(false)
+    for (const channel of ['pVen', 'pInt', 'pArt', 'deltaP'] as const) {
+      expect(state.circuit.readouts[channel].status).toBe('simulation-unmodeled')
+      expect(state.circuit.readouts[channel].displayed).toBeNull()
     }
+    // The clamp itself is still an alarming condition; only the pressure numbers went away.
+    expect(state.alarms.some((alarm) => alarm.code === 'CIRCUIT_CLAMP')).toBe(true)
+    expect(
+      state.alarms.filter((alarm) => ['pVen', 'pInt', 'pArt'].includes(alarm.parameter ?? '')),
+    ).toHaveLength(0)
+  })
+
+  it('records only display-eligible pressures in the trend buffer', () => {
+    // A trend that plotted the stopped-pump intercepts would teach a shape that never happened.
+    const stopped = settle('startup-sensor-orientation', 12)
+    expect(stopped.circuit.readouts.pVen.status).toBe('simulation-unmodeled')
+    const unmodeledSamples = stopped.trends.filter((sample) => sample.pVen === null)
+    expect(unmodeledSamples.length).toBeGreaterThan(0)
+    for (const sample of unmodeledSamples) {
+      expect(sample.pInt).toBeNull()
+      expect(sample.pArt).toBeNull()
+      expect(sample.deltaP).toBeNull()
+      // Non-pressure channels are unaffected — a stopped circuit still has a patient.
+      expect(Number.isFinite(sample.spo2)).toBe(true)
+    }
+
+    const flowing = createReferenceSimulationState('vv-reference')
+    expect(flowing.trends.every((sample) => sample.pVen !== null)).toBe(true)
   })
 })
 

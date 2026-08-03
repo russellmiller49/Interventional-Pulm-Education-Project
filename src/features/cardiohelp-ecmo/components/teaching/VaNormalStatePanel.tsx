@@ -15,6 +15,8 @@ import {
   direction,
   round,
   styles,
+  trendCell,
+  trendPhrase,
 } from './shared'
 
 /**
@@ -575,7 +577,12 @@ function rowSentence(row: BaselineRow, windowLabel: string): string {
   if (row.stateWords) {
     return `${row.label} is ${row.stateWords.current}, and this circuit’s reference state reports ${row.stateWords.reference} (${referencePhrase}), with no earlier state retained to compare against`
   }
-  const now = row.current === null ? 'not reported' : format(row.current, row.precision, row.unit)
+  // "not reported" alone leaves the listener unable to tell a device-side unavailability from a
+  // limitation of this model, which is the same distinction the table cell already spells out.
+  const now =
+    row.current === null
+      ? `not available, ${row.unavailableReason ?? 'the channel is not reporting a value'}`
+      : format(row.current, row.precision, row.unit)
   const referenceValue =
     row.reference === null
       ? 'not reported in the reference state'
@@ -843,8 +850,8 @@ export function VaNormalStatePanel({
                     {sample.time.toFixed(0)} s
                   </th>
                   <td className="py-1 pr-3">{sample.flow.toFixed(2)}</td>
-                  <td className="py-1 pr-3">{sample.pVen.toFixed(0)}</td>
-                  <td className="py-1 pr-3">{sample.deltaP.toFixed(0)}</td>
+                  <td className="py-1 pr-3">{trendCell(sample.pVen)}</td>
+                  <td className="py-1 pr-3">{trendCell(sample.deltaP)}</td>
                   <td className="py-1 pr-3">{sample.spo2.toFixed(1)}</td>
                   <td className="py-1 pr-3">{sample.map.toFixed(0)}</td>
                   <td className="py-1">{sample.lactate.toFixed(1)}</td>
@@ -861,7 +868,7 @@ export function VaNormalStatePanel({
                 .slice(-6)
                 .map(
                   (sample) =>
-                    `at ${sample.time.toFixed(0)} seconds flow ${sample.flow.toFixed(2)}, pVen ${sample.pVen.toFixed(0)}, gradient ${sample.deltaP.toFixed(0)}, saturation ${sample.spo2.toFixed(1)}, mean arterial pressure ${sample.map.toFixed(0)}, lactate ${sample.lactate.toFixed(1)}`,
+                    `at ${sample.time.toFixed(0)} seconds flow ${sample.flow.toFixed(2)}, pVen ${trendPhrase(sample.pVen)}, gradient ${trendPhrase(sample.deltaP)}, saturation ${sample.spo2.toFixed(1)}, mean arterial pressure ${sample.map.toFixed(0)}, lactate ${sample.lactate.toFixed(1)}`,
                 )
                 .join(
                   '; ',

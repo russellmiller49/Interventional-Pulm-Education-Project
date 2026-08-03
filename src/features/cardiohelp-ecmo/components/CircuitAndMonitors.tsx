@@ -14,6 +14,7 @@ import {
 
 import type {
   ClinicalInitiationTargets,
+  EcmoChannelReadout,
   EcmoSimulationState,
   GuidedControlId,
   GuidedTarget,
@@ -22,6 +23,7 @@ import type {
 } from '../engine'
 import { TIP_TO_TIP_CHECK_ID } from '../content/scenarios'
 import { SimulationLaunchGate } from '@/features/learning-module/components/SimulationLaunchGate'
+import { UNAVAILABLE_INDICATION, formatChannelReadout, isInterpretable } from './channelReadout'
 import styles from './cardiohelp-ecmo.module.css'
 import { EcmoCircuit3D } from './EcmoCircuit3D'
 
@@ -33,6 +35,29 @@ interface SimulationPanelProps {
   guidedControlId?: GuidedControlId | null
   initiationTargets?: ClinicalInitiationTargets | null
   onSaveForLater?: () => void
+}
+
+/**
+ * A pressure zone in the circuit readout grid, rendered from the engine readout rather than the raw
+ * model value so this map and the console cannot disagree about whether a channel is interpretable.
+ */
+function CircuitChannelReadout({
+  label,
+  readout,
+  spokenLabel,
+}: {
+  label: string
+  readout: EcmoChannelReadout
+  spokenLabel?: string
+}) {
+  const formatted = formatChannelReadout(spokenLabel ?? label, readout, 'mmHg', 0)
+  return (
+    <div data-channel={label} data-readout-status={formatted.status}>
+      <span>{label}</span>
+      <strong aria-hidden="true">{formatted.displayText}</strong>
+      <span className="sr-only">{formatted.screenReaderText}</span>
+    </div>
+  )
 }
 
 function CircuitSchematic({
@@ -56,6 +81,9 @@ function CircuitSchematic({
     if (clampGuidedHelpActive) setCircuitView('bedside')
   }
   const lowFlow = state.circuit.bloodFlow < state.device.limits.flowLow
+  // A pressure pattern is a comparison across zones, so it needs zones that are reporting. On a
+  // stopped circuit the model's intercepts are not measurements and must not be read as a pattern.
+  const pressuresInterpretable = isInterpretable(state.circuit.readouts.pVen)
   const diagnosisRevealed = state.scenario.phase === 'complete'
   const isVa = state.supportMode === 'va'
   const supportModeLabel = isVa ? 'VA' : 'VV'
@@ -469,7 +497,11 @@ function CircuitSchematic({
 
             <path d="M584 259 V240 H884 V259" className={styles.deltaBracket} />
             <text x="734" y="226" textAnchor="middle" className={styles.deltaLabel}>
-              Δp TREND = pInt − pArt · {state.circuit.deltaP} mmHg
+              Δp TREND = pInt − pArt ·{' '}
+              {
+                formatChannelReadout('Δp trend', state.circuit.readouts.deltaP, 'mmHg', 0)
+                  .displayText
+              }
             </text>
 
             <g transform="translate(340 321)" className={styles.sensorFlag}>
@@ -570,22 +602,14 @@ function CircuitSchematic({
           <span>Flow</span>
           <strong>{state.circuit.bloodFlow.toFixed(2)} L/min</strong>
         </div>
-        <div>
-          <span>pVen</span>
-          <strong>{state.circuit.pVen} mmHg</strong>
-        </div>
-        <div>
-          <span>pInt</span>
-          <strong>{state.circuit.pInt} mmHg</strong>
-        </div>
-        <div>
-          <span>pArt</span>
-          <strong>{state.circuit.pArt} mmHg</strong>
-        </div>
-        <div>
-          <span>Δp trend</span>
-          <strong>{state.circuit.deltaP} mmHg</strong>
-        </div>
+        <CircuitChannelReadout label="pVen" readout={state.circuit.readouts.pVen} />
+        <CircuitChannelReadout label="pInt" readout={state.circuit.readouts.pInt} />
+        <CircuitChannelReadout label="pArt" readout={state.circuit.readouts.pArt} />
+        <CircuitChannelReadout
+          label="Δp trend"
+          readout={state.circuit.readouts.deltaP}
+          spokenLabel="Δp trend"
+        />
         <div>
           <span>Pre-oxygenator saturation</span>
           <strong>{state.circuit.preOxygenatorSaturation.toFixed(1)}%</strong>
@@ -605,9 +629,11 @@ function CircuitSchematic({
         <div>
           <strong>{resistancePattern}</strong>
           <span>
-            {state.circuit.drainageChatter
+            {state.circuit.drainageChatter && pressuresInterpretable
               ? 'Visible + text cue: drainage line chattering with increasingly negative pVen.'
-              : 'Compare flow and all three pressure locations; do not interpret one value in isolation.'}
+              : pressuresInterpretable
+                ? 'Compare flow and all three pressure locations; do not interpret one value in isolation.'
+                : 'The pressure zones are not reporting an interpretable value, so no pressure pattern can be read from this frame.'}
           </span>
         </div>
       </div>
@@ -1017,17 +1043,32 @@ function TrendPanel({
   const [parameter, setParameter] = useState<TrendParameter>('flow')
   const samples = state.trends.slice(-60)
   const values = samples.map((sample) => sample[parameter])
-  const minimum = Math.min(...values)
-  const maximum = Math.max(...values)
+  // A frame the model could not report is a gap, not a zero. Excluding it from the domain keeps a
+  // stopped-pump stretch from rescaling the axis, and splitting the polyline keeps the chart from
+  // drawing a line across time the circuit never described.
+  const reported = values.filter((value): value is number => value !== null)
+  const minimum = reported.length ? Math.min(...reported) : 0
+  const maximum = reported.length ? Math.max(...reported) : 0
   const range = Math.max(1, maximum - minimum)
-  const points = samples
-    .map((sample, index) => {
-      const x = samples.length <= 1 ? 0 : (index / (samples.length - 1)) * 560
-      const y = 150 - ((sample[parameter] - minimum) / range) * 120
-      return `${x.toFixed(1)},${y.toFixed(1)}`
-    })
-    .join(' ')
-  const latest = values.at(-1) ?? 0
+  const segments: string[] = []
+  let current: string[] = []
+  samples.forEach((sample, index) => {
+    const value = sample[parameter]
+    if (value === null) {
+      if (current.length) segments.push(current.join(' '))
+      current = []
+      return
+    }
+    const x = samples.length <= 1 ? 0 : (index / (samples.length - 1)) * 560
+    const y = 150 - ((value - minimum) / range) * 120
+    current.push(`${x.toFixed(1)},${y.toFixed(1)}`)
+  })
+  if (current.length) segments.push(current.join(' '))
+  const latest = values.at(-1) ?? null
+  const latestReadout =
+    parameter === 'pVen' || parameter === 'pInt' || parameter === 'pArt' || parameter === 'deltaP'
+      ? state.circuit.readouts[parameter]
+      : null
   const parameterLabel =
     state.supportMode === 'va' && parameter === 'spo2'
       ? 'Right-arm SpO₂'
@@ -1052,9 +1093,20 @@ function TrendPanel({
           <span className={styles.kicker}>Reassessment</span>
           <h2 id="trend-heading">Device + patient trends</h2>
         </div>
-        <span>
-          <strong>{latest.toFixed(parameter === 'flow' ? 2 : 1)}</strong>{' '}
-          {trendMeta[parameter].unit}
+        <span data-readout-status={latestReadout?.status}>
+          {latest === null ? (
+            <>
+              <strong aria-hidden="true">{UNAVAILABLE_INDICATION}</strong>
+              <span className="sr-only">
+                {`${parameterLabel} not available.${latestReadout ? ` ${latestReadout.reason}` : ''}`}
+              </span>
+            </>
+          ) : (
+            <>
+              <strong>{latest.toFixed(parameter === 'flow' ? 2 : 1)}</strong>{' '}
+              {trendMeta[parameter].unit}
+            </>
+          )}
         </span>
       </div>
       <div className={styles.trendTabs} role="tablist" aria-label="Trend parameter">
@@ -1079,21 +1131,30 @@ function TrendPanel({
         <line x1="20" x2="580" y1="30" y2="30" className={styles.chartGrid} />
         <line x1="20" x2="580" y1="90" y2="90" className={styles.chartGrid} />
         <line x1="20" x2="580" y1="150" y2="150" className={styles.chartGrid} />
-        <polyline
-          transform="translate(20 0)"
-          points={points}
-          fill="none"
-          stroke={trendMeta[parameter].color}
-          strokeWidth="4"
-          vectorEffect="non-scaling-stroke"
-        />
+        {segments.map((points, index) => (
+          <polyline
+            key={index}
+            transform="translate(20 0)"
+            points={points}
+            fill="none"
+            stroke={trendMeta[parameter].color}
+            strokeWidth="4"
+            vectorEffect="non-scaling-stroke"
+          />
+        ))}
         <text x="18" y="22">
-          {maximum.toFixed(1)}
+          {reported.length ? maximum.toFixed(1) : UNAVAILABLE_INDICATION}
         </text>
         <text x="18" y="170">
-          {minimum.toFixed(1)}
+          {reported.length ? minimum.toFixed(1) : UNAVAILABLE_INDICATION}
         </text>
       </svg>
+      {reported.length < values.length ? (
+        <p className={styles.deltaBoundary}>
+          Gaps in this trace are frames where the channel had nothing to report, not values of zero.
+          {latestReadout ? ` ${latestReadout.reason}` : ''}
+        </p>
+      ) : null}
       {parameter === 'deltaP' ? (
         <p className={styles.deltaBoundary}>
           Δp is presented as a trend only. No fixed alarm priority is encoded pending target-device

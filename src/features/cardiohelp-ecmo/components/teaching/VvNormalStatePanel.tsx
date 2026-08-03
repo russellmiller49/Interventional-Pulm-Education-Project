@@ -6,7 +6,15 @@ import {
 import { ecmoReferenceProfiles } from '../../content/referenceProfiles'
 import { createReferenceSimulationState, ecmoSimulationReducer } from '../../engine'
 import type { EcmoSimulationState } from '../../engine/types'
-import { GuidedValue, ModelBoundary, TextEquivalent, direction, round, styles } from './shared'
+import {
+  GuidedValue,
+  ModelBoundary,
+  TextEquivalent,
+  direction,
+  round,
+  styles,
+  trendCell,
+} from './shared'
 
 /**
  * A baseline review of one modeled circuit against itself.
@@ -468,14 +476,16 @@ export function VvNormalStatePanel({
 
         <TextEquivalent>
           {rows
-            .filter((row) => row.current !== null)
-            .map(
-              (row) =>
-                `${row.label} is ${format(row.current, row.precision, row.unit)}${
-                  row.start === null || row.current === null
-                    ? ''
-                    : `, ${changeWord[direction(row.current - row.start, row.deadband)]} ${window.label} by ${signed(row.current - row.start, row.precision)}`
-                }`,
+            .map((row) =>
+              row.current === null
+                ? `${row.label} is not available, ${
+                    row.unavailableReason ?? 'the channel is not reporting a value'
+                  }`
+                : `${row.label} is ${format(row.current, row.precision, row.unit)}${
+                    row.start === null
+                      ? ''
+                      : `, ${changeWord[direction(row.current - row.start, row.deadband)]} ${window.label} by ${signed(row.current - row.start, row.precision)}`
+                  }`,
             )
             .join('. ')}
           .
@@ -560,8 +570,8 @@ export function VvNormalStatePanel({
                     {sample.time.toFixed(0)} s
                   </th>
                   <td className="py-1 pr-3">{sample.flow.toFixed(2)}</td>
-                  <td className="py-1 pr-3">{sample.pVen.toFixed(0)}</td>
-                  <td className="py-1 pr-3">{sample.deltaP.toFixed(0)}</td>
+                  <td className="py-1 pr-3">{trendCell(sample.pVen)}</td>
+                  <td className="py-1 pr-3">{trendCell(sample.deltaP)}</td>
                   <td className="py-1 pr-3">{sample.spo2.toFixed(1)}</td>
                   <td className="py-1">{sample.paCO2.toFixed(1)}</td>
                 </tr>
