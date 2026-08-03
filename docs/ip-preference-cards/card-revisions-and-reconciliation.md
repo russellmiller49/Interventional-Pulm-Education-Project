@@ -338,22 +338,69 @@ Reconciliation reads and reports. The saved card, its snapshot, and every revisi
 by it — asserted as a fact about the code (`tables.writes` records every mutating statement and is
 checked to be empty) rather than as an intention in a comment.
 
-## Applying and verifying the migration
+## Migration status
 
-The migration is `supabase/migrations/20260803052432_add_ip_preference_card_revisions.sql`. This
-project's local and remote migration histories have diverged, so it is applied one at a time
-through the Supabase MCP migration action from the primary checkout — never `supabase db push`.
+### Applied: the revision schema
 
-Immediately afterwards, run `supabase/verification/20260803052432_verify_ip_preference_card_revisions.sql`
-in the SQL editor. It is one transaction ending in `rollback`, so it is non-destructive by
-construction: the temporary card it creates, edits, renames, shares and deletes never exists
-outside the transaction, and no card belonging to anybody is touched. It checks the structure
-(table, RLS, SELECT-only grants, one SELECT-only policy, definer trigger with an empty
-`search_path`, no client-callable functions), the existing data (every card has dense history,
-every extracted column agrees with its payload, every revision belongs to its card's owner), and
-the behaviour (revision 1 on create, 2 on edit, 3 on rename, none on a share toggle with the
-content timestamp held still, a stale conditional update matching nothing while a current one
-still applies, cascade on delete, and direct insert/update/delete refused as `authenticated`).
+`supabase/migrations/20260803052432_add_ip_preference_card_revisions.sql` **has been applied** to
+the Endoreels project (`tqnhxlwvkkswuckszlee`), through the Supabase MCP migration action from the
+primary checkout — never `supabase db push`, because this project's local and remote migration
+histories have diverged.
+
+Supabase assigned it the remote version **`20260803113527_add_ip_preference_card_revisions`**. The
+local filename keeps its own earlier timestamp; the two differ, and that is expected here rather
+than a mistake to correct. What matters is that the file is now a record of something that
+happened.
+
+`supabase/verification/20260803052432_verify_ip_preference_card_revisions.sql` **passed against the
+live database**, covering the structure (table, RLS, SELECT-only grants for `authenticated` and
+`service_role`, one SELECT-only policy, definer triggers in `private` with empty search paths, no
+client-callable functions), the data (dense history, extracted columns agreeing with their
+payloads, every revision owned by its card's owner), and the behaviour (revision 1 on create, 2 on
+edit, 3 on rename, none on a share toggle with the content timestamp held still, a stale
+conditional update matching nothing while a current one applies, cascade on delete, and direct
+writes refused as both `authenticated` and `service_role`).
+
+**The backfill touched one card.** A single pre-existing legacy card was recorded as revision 1
+with `created_at` set to its own `updated_at`. The card itself was not rewritten — not its
+snapshot, not its hashes, not its timestamp. That is the whole intent of the backfill: it
+establishes a floor for the history, and takes nothing from the card to do it.
+
+From here that file is not editable. An applied migration edited afterwards describes a state no
+environment ever passed through, and makes the record of what was verified untrue.
+`migration-contract.test.ts` pins its SHA-256 so a later edit fails a test rather than diverging
+silently.
+
+### Pending: the foreign-key indexes
+
+Applying it moved the Supabase performance advisor from **147 findings (51 WARN / 96 INFO)** to
+**149 (51 WARN / 98 INFO)**. Both additions are the same finding twice: the revision table's two
+foreign keys have no covering index, because Postgres indexes the _referenced_ side of a foreign
+key automatically and never the referencing side.
+
+`supabase/migrations/20260803151005_index_ip_preference_card_revision_foreign_keys.sql` is the
+forward migration that closes them. It adds two indexes and does nothing else:
+
+| Index                | Columns              | Covers                                                                                      |
+| -------------------- | -------------------- | ------------------------------------------------------------------------------------------- |
+| `..._user_id_idx`    | `(user_id)`          | `..._user_id_fkey` → `auth.users(id)`, its delete cascade, and the owner-scoped read policy |
+| `..._card_owner_idx` | `(card_id, user_id)` | `..._card_owner_fkey` → `ip_user_preference_cards (id, user_id)`                            |
+
+The composite one is written out even though two existing indexes already lead with `card_id`. A
+leading-column match lets the planner use an index; it does not make it a covering index for a
+constraint checked on the full pair, which would still mean scanning every revision of the card and
+rechecking `user_id` on each. The cost of being explicit is one small index on a table with one
+row.
+
+Verify with `supabase/verification/20260803151005_verify_ip_preference_card_revision_foreign_keys.sql`,
+which reads only — wrapped in `begin`/`rollback`, with row counts and content digests compared
+before and after — and resolves each index's key columns positionally out of `pg_index.indkey`
+rather than trusting its name. It also asserts neither index is unique or partial, that both are
+valid ready B-trees, that the three original indexes and both foreign keys survive, and that the
+table carries exactly five indexes and no sixth.
+
+**This migration has not been applied.** The PR stays draft until it has been, and until the
+advisor delta returns to the 147 / 51 / 96 baseline.
 
 ## Commands
 
