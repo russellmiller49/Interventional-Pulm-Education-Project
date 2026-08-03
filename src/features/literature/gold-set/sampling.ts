@@ -48,6 +48,7 @@ export interface LiteratureGoldSamplingOptions {
   exclusionSources?: LiteratureGoldSamplingExclusionSource[]
   /** @deprecated Use exclusionSources so each exclusion has explicit provenance. */
   excludedPmids?: string[]
+  /** Optional compatibility metadata; it must be fixed by the caller to preserve byte identity. */
   generatedAt?: string
 }
 
@@ -626,8 +627,8 @@ export function sampleLiteratureGoldSet(
   }
 
   return {
-    reportVersion: '1.2.0',
-    generatedAt: options.generatedAt ?? new Date().toISOString(),
+    reportVersion: '1.3.0',
+    ...(options.generatedAt === undefined ? {} : { generatedAt: options.generatedAt }),
     name: options.name,
     kind: options.kind,
     samplingSeed: options.seed,

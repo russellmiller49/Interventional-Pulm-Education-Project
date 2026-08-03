@@ -1,4 +1,7 @@
-import type { LiteratureGoldSamplingCandidate } from '@/features/literature/gold-set/types'
+import type {
+  LiteratureGoldSamplingCandidate,
+  LiteratureGoldStoredSamplingReport,
+} from '@/features/literature/gold-set/types'
 import {
   assertLiteratureGoldPriorAutomaticSamplesUnchanged,
   classifyLiteratureGoldDeterministicBand,
@@ -43,14 +46,47 @@ describe('gold-set sampling', () => {
     size: 900,
     seed: 20_260_727,
     testPercent: 30,
-    generatedAt: '2026-07-27T00:00:00.000Z',
   }
 
-  it('is reproducible for the same seed', () => {
-    const first = sampleLiteratureGoldSet(candidates, options)
-    const second = sampleLiteratureGoldSet(candidates, options)
+  it('produces byte-identical reports without depending on the wall clock', () => {
+    jest.useFakeTimers()
+    try {
+      jest.setSystemTime(Date.parse('2026-07-27T00:00:00.000Z'))
+      const first = sampleLiteratureGoldSet(candidates, options)
+      const firstBytes = `${JSON.stringify(first, null, 2)}\n`
 
-    expect(second).toEqual(first)
+      jest.setSystemTime(Date.parse('2036-12-31T23:59:59.999Z'))
+      const second = sampleLiteratureGoldSet(candidates, options)
+      const secondBytes = `${JSON.stringify(second, null, 2)}\n`
+
+      expect(first).not.toHaveProperty('generatedAt')
+      expect(second).not.toHaveProperty('generatedAt')
+      expect(secondBytes).toBe(firstBytes)
+    } finally {
+      jest.useRealTimers()
+    }
+  })
+
+  it('does not access the clock when no timestamp is supplied', () => {
+    const dateSpy = jest.spyOn(globalThis, 'Date')
+    try {
+      sampleLiteratureGoldSet(candidates, options)
+      expect(dateSpy).not.toHaveBeenCalled()
+    } finally {
+      dateSpy.mockRestore()
+    }
+  })
+
+  it('retains an explicit fixed timestamp without changing selection or splits', () => {
+    const deterministic = sampleLiteratureGoldSet(candidates, options)
+    const withTimestamp = sampleLiteratureGoldSet(candidates, {
+      ...options,
+      generatedAt: '2026-07-27T00:00:00.000Z',
+    })
+    const { generatedAt, ...timestampIndependentReport } = withTimestamp
+
+    expect(generatedAt).toBe('2026-07-27T00:00:00.000Z')
+    expect(timestampIndependentReport).toEqual(deterministic)
   })
 
   it('changes the selection order for a different seed', () => {
@@ -73,7 +109,7 @@ describe('gold-set sampling', () => {
     const pmids = report.items.map((item) => item.pmid)
 
     expect(report.selectedCount).toBe(900)
-    expect(report.reportVersion).toBe('1.2.0')
+    expect(report.reportVersion).toBe('1.3.0')
     expect(new Set(pmids).size).toBe(900)
     expect(report.developmentCount).toBe(630)
     expect(report.testCount).toBe(270)
@@ -108,6 +144,41 @@ describe('gold-set sampling', () => {
     const report = sampleLiteratureGoldSet(candidates, { ...options, size: 120 })
 
     expect(Math.max(...Object.values(report.countsByJournal))).toBeLessThan(30)
+  })
+
+  it('retains stored-report compatibility for versions 1.2, 1.1, and 1.0', () => {
+    const { items, ...current } = sampleLiteratureGoldSet(candidates, {
+      ...options,
+      size: 100,
+    })
+    const generatedAt = '2026-07-27T00:00:00.000Z'
+    const legacyV12: LiteratureGoldStoredSamplingReport = {
+      ...current,
+      reportVersion: '1.2.0',
+      generatedAt,
+    }
+    const { exclusionSources: legacyExclusionSources, ...legacyV11Fields } = legacyV12
+    const legacyV11: LiteratureGoldStoredSamplingReport = {
+      ...legacyV11Fields,
+      reportVersion: '1.1.0',
+    }
+    const {
+      originalCandidateCount: legacyOriginalCandidateCount,
+      excludedCandidateCount: legacyExcludedCandidateCount,
+      ...legacyV10Fields
+    } = legacyV11
+    const legacyV10: LiteratureGoldStoredSamplingReport = {
+      ...legacyV10Fields,
+      reportVersion: '1.0.0',
+    }
+
+    expect(items).toHaveLength(100)
+    expect(legacyExclusionSources).toEqual(current.exclusionSources)
+    expect(legacyOriginalCandidateCount).toBe(current.originalCandidateCount)
+    expect(legacyExcludedCandidateCount).toBe(current.excludedCandidateCount)
+    expect(
+      [current, legacyV12, legacyV11, legacyV10].map((report) => report.reportVersion),
+    ).toEqual(['1.3.0', '1.2.0', '1.1.0', '1.0.0'])
   })
 
   it('excludes PMIDs already used in a prior automatic batch', () => {

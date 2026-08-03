@@ -91,8 +91,9 @@ export interface LiteratureGoldSampledItem {
 }
 
 export interface LiteratureGoldSamplingReport {
-  reportVersion: '1.2.0'
-  generatedAt: string
+  reportVersion: '1.3.0'
+  /** Present only when the caller supplies a fixed, input-controlled timestamp. */
+  generatedAt?: string
   name: string
   kind: LiteratureGoldSetKind
   samplingSeed: number
@@ -119,18 +120,28 @@ export interface LiteratureGoldSamplingReport {
 
 export type LiteratureGoldStoredSamplingReport =
   | Omit<LiteratureGoldSamplingReport, 'items'>
-  | (Omit<LiteratureGoldSamplingReport, 'reportVersion' | 'exclusionSources' | 'items'> & {
+  | (Omit<LiteratureGoldSamplingReport, 'reportVersion' | 'generatedAt' | 'items'> & {
+      reportVersion: '1.2.0'
+      generatedAt: string
+    })
+  | (Omit<
+      LiteratureGoldSamplingReport,
+      'reportVersion' | 'generatedAt' | 'exclusionSources' | 'items'
+    > & {
       reportVersion: '1.1.0'
+      generatedAt: string
     })
   | (Omit<
       LiteratureGoldSamplingReport,
       | 'reportVersion'
+      | 'generatedAt'
       | 'originalCandidateCount'
       | 'excludedCandidateCount'
       | 'exclusionSources'
       | 'items'
     > & {
       reportVersion: '1.0.0'
+      generatedAt: string
     })
 
 export interface LiteratureGoldReviewPayload {
