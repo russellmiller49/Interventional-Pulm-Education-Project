@@ -81,29 +81,33 @@ export const defaultDeviceState: DeviceState = {
 export const RECIRCULATION_FRACTION = Object.freeze({
   baseline: 0.08,
   established: 0.48,
-  /**
-   * Ceiling on the modeled share. Nothing physical happens at this number — it exists so the
-   * fraction stays a fraction at the top of the rpm range instead of approaching 1 and driving
-   * effective flow to zero, which would turn a teaching gradient into a cliff.
-   */
-  maximum: 0.85,
 })
 
 /**
- * How much effective flow this model gives up for each extra litre per minute the circuit is asked
- * for once recirculation is established.
+ * How sharply effective flow gives way as the circuit is asked for more than the case opened with.
  *
- * At zero this would express "speed buys you nothing"; above zero it expresses the stronger and
- * clinically recognised claim that pulling harder on a circuit which is already re-draining its own
- * return recruits more of that return than it recruits systemic venous blood, so the support the
- * patient receives falls. The value is authored for teaching legibility — large enough that the
- * direction is unmistakable within the rpm range a learner can reach, small enough that the fall is
- * gradual rather than a cliff.
+ * The share is not authored directly. What is authored is the flow left after re-drainage, as a
+ * power of the flow demanded:
  *
- * Evidence boundary: bounded-educational-model. A model coefficient, not a measured entrainment
+ *   effective(Q) = effective(Q₀) · (Q₀ / Q)^(exponent − 1)
+ *
+ * so the share follows as `1 − effective(Q)/Q`. At an exponent of 1 this would say speed buys you
+ * nothing; above 1 it says the stronger and clinically recognised thing — that pulling harder on a
+ * circuit already re-draining its own return recruits more of that return than it recruits systemic
+ * venous blood, so the support reaching the patient falls.
+ *
+ * Chosen in this form rather than as a subtracted penalty because the bound is then structural. The
+ * share approaches 1 only as demanded flow approaches infinity and effective flow approaches zero
+ * without reaching it, so no ceiling has to be imposed on the fraction. An imposed ceiling was the
+ * first form of this model and it was wrong: once the fraction pinned at its maximum, effective flow
+ * became a fixed multiple of demanded flow and started rising with speed again — the exact defect
+ * this model exists to remove, reappearing at the top of the range for any case authored at a low
+ * enough opening speed.
+ *
+ * Evidence boundary: bounded-educational-model. A teaching coefficient, not a measured entrainment
  * ratio, and not a number to carry to a bedside circuit.
  */
-const RECIRCULATION_ENTRAINMENT_PENALTY = 0.35
+const RECIRCULATION_DEMAND_EXPONENT = 2
 
 export const defaultCircuitState: CircuitState = {
   bloodFlow: 4,
@@ -853,20 +857,19 @@ export function deriveRecirculationFraction(state: EcmoSimulationState): number 
   const demandedFlow = calculateNominalCardiohelpBloodFlowLMin(rpm)
   if (baselineFlow <= 0 || demandedFlow <= 0) return RECIRCULATION_FRACTION.established
 
+  // Author the flow left after re-drainage, then solve the share back out of it, so the teaching
+  // claim — speed cannot buy effective support here — is what the arithmetic enforces rather than
+  // something asserted beside it.
   const baselineEffectiveFlow = baselineFlow * (1 - RECIRCULATION_FRACTION.established)
-  const effectiveFlowCeiling = Math.max(
-    0,
-    baselineEffectiveFlow - RECIRCULATION_ENTRAINMENT_PENALTY * (demandedFlow - baselineFlow),
-  )
-  // Solve the share back out of the flow it is allowed to leave behind, so the teaching claim —
-  // speed cannot buy effective support here — is what the arithmetic enforces rather than something
-  // asserted beside it. Never below the authored share: slowing the pump does not undo a cannula
-  // relationship, and letting it read as a fix would compete with the correction the case teaches.
-  return clamp(
-    1 - effectiveFlowCeiling / demandedFlow,
-    RECIRCULATION_FRACTION.established,
-    RECIRCULATION_FRACTION.maximum,
-  )
+  const effectiveFlow =
+    baselineEffectiveFlow * (baselineFlow / demandedFlow) ** (RECIRCULATION_DEMAND_EXPONENT - 1)
+
+  // No upper clamp is needed or wanted. `effectiveFlow` is strictly positive and strictly falling in
+  // demanded flow, so the share is strictly below 1 and strictly rising, for every opening speed and
+  // every reachable rpm. Never below the authored share either: slowing the pump does not undo a
+  // cannula relationship, and letting it read as a fix would compete with the correction the case
+  // teaches.
+  return Math.max(RECIRCULATION_FRACTION.established, 1 - effectiveFlow / demandedFlow)
 }
 
 /**

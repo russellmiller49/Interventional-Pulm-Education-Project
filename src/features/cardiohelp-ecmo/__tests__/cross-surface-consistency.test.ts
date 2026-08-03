@@ -7,7 +7,10 @@ import {
 import { clinicalPracticeScenarios } from '../content/clinicalCases'
 import {
   RECIRCULATION_FRACTION,
+  calculateNominalCardiohelpBloodFlowLMin,
   createInitialSimulationState,
+  deriveRecirculationAdjustedCircuitFlow,
+  deriveRecirculationFraction,
   ecmoSimulationReducer,
   type EcmoSimulationState,
   type SimulationAction,
@@ -150,10 +153,51 @@ describe('A2: the recirculation model stays bounded', () => {
       )
       const fraction = state.circuit.recirculationFraction
       expect(fraction).toBeGreaterThanOrEqual(previous)
-      expect(fraction).toBeLessThanOrEqual(RECIRCULATION_FRACTION.maximum)
       expect(fraction).toBeLessThan(1)
       expect(state.circuit.recirculationAdjustedCircuitFlowLpm).toBeGreaterThanOrEqual(0)
       previous = fraction
+    }
+  })
+
+  it('never lets effective flow rise with speed, from ANY opening speed', () => {
+    // The load-bearing invariant, and the one that matters most.
+    //
+    // The first version of this model subtracted a linear penalty and then clamped the fraction to
+    // an authored ceiling. That passed every assertion above, because the shipped case opens at
+    // 3800 rpm and never reaches the ceiling. It was still wrong: once the fraction pinned at its
+    // maximum, effective flow became a fixed multiple of demanded flow and rose with speed again —
+    // the original defect, waiting for the first recirculation case authored at a lower speed.
+    //
+    // Sweeping the opening speed as well as the setpoint is what catches that. A guarantee that
+    // only holds for the case that happens to ship is not a guarantee.
+    const base = createInitialSimulationState('vv-recirculation')
+    expect(base.scenario.activeFaults).toContain('recirculation')
+
+    for (let openingRpm = 1000; openingRpm <= 4500; openingRpm += 100) {
+      let previousEffective = Number.POSITIVE_INFINITY
+      let previousFraction = 0
+      for (let rpm = openingRpm; rpm <= 5000; rpm += 100) {
+        const state: EcmoSimulationState = {
+          ...base,
+          device: { ...base.device, rpmSetpoint: rpm },
+          scenario: { ...base.scenario, baselineRpmSetpoint: openingRpm },
+        }
+        const fraction = deriveRecirculationFraction(state)
+        const effective = deriveRecirculationAdjustedCircuitFlow(
+          calculateNominalCardiohelpBloodFlowLMin(rpm),
+          fraction,
+        )
+
+        expect(fraction).toBeGreaterThanOrEqual(RECIRCULATION_FRACTION.established)
+        expect(fraction).toBeLessThan(1)
+        expect(effective).toBeGreaterThan(0)
+        if (rpm > openingRpm) {
+          expect(fraction).toBeGreaterThanOrEqual(previousFraction - 1e-9)
+          expect(effective).toBeLessThanOrEqual(previousEffective + 1e-9)
+        }
+        previousEffective = effective
+        previousFraction = fraction
+      }
     }
   })
 
