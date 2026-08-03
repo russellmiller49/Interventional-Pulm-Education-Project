@@ -185,6 +185,8 @@ Introduce `EcmoInteractiveFoundationSectionId` (or `EcmoWorkspaceFoundationSecti
 
 Keep public section IDs unchanged. Do not redefine the six source-authored foundation sections separately from `foundationLessons.ts` — keep one authoritative record. Route all seven to `EcmoFoundationLessonActivity`; keep the three VA IDs on `EcmoFoundationSectionView`; keep drill IDs on `CardiohelpWorkbench`/`LearnLessonPlayer`; keep the no-lesson landing unchanged. Update route comments so they no longer describe all six track-specific lessons as prose.
 
+> **Superseded (A3, 2026-08-03).** The three VA IDs moved to `EcmoFoundationLessonActivity` in commit `c66c8288`, which left `EcmoFoundationSectionView` with no reachable caller. All ten foundation sections are now interactive; the component and its routing branch were deleted, and `routes.test.tsx` pins the id-set identity that keeps the second path from reappearing. Read the sentence above as history, not as an instruction.
+
 Add import-time registry validation proving all seven have panels, no VA-only section is registered, no drill/scenario ID is registered, and nothing is registered twice.
 
 ### Task 3 — canonicalize VV-only routing
