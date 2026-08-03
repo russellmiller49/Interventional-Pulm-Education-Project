@@ -12,6 +12,8 @@ import type {
   LiteratureGoldDeterministicBand,
   LiteratureGoldSampledItem,
   LiteratureGoldSamplingCandidate,
+  LiteratureGoldSamplingExclusionSource,
+  LiteratureGoldSamplingExclusionSourceReport,
   LiteratureGoldSamplingReport,
   LiteratureGoldSetDatasetSplit,
   LiteratureGoldSetKind,
@@ -43,9 +45,15 @@ export interface LiteratureGoldSamplingOptions {
   seed: number
   testPercent?: number
   explicitPmids?: string[]
+  exclusionSources?: LiteratureGoldSamplingExclusionSource[]
+  /** @deprecated Use exclusionSources so each exclusion has explicit provenance. */
   excludedPmids?: string[]
+  /** Optional compatibility metadata; it must be fixed by the caller to preserve byte identity. */
   generatedAt?: string
 }
+
+const PMID_PATTERN = /^[0-9]{1,12}$/u
+const SHA256_PATTERN = /^[0-9a-f]{64}$/u
 
 function stableHash(seed: number, ...parts: Array<string | number>) {
   return createHash('sha256')
@@ -215,6 +223,115 @@ function countValues(values: string[]) {
   }, {})
 }
 
+function normalizedExclusionSources(options: LiteratureGoldSamplingOptions) {
+  const sources = [...(options.exclusionSources ?? [])]
+  if (options.excludedPmids) {
+    sources.push({
+      sourceType: 'prior_automatic_batches',
+      pmids: options.excludedPmids,
+      batchNames: [],
+    })
+  }
+
+  return sources.sort((left, right) => {
+    const leftKey =
+      left.sourceType === 'prior_automatic_batches'
+        ? `0:${[...left.batchNames].sort().join(',')}`
+        : `1:${left.path}:${left.sha256}`
+    const rightKey =
+      right.sourceType === 'prior_automatic_batches'
+        ? `0:${[...right.batchNames].sort().join(',')}`
+        : `1:${right.path}:${right.sha256}`
+    return leftKey.localeCompare(rightKey)
+  })
+}
+
+function validateExclusionSource(source: LiteratureGoldSamplingExclusionSource) {
+  const seen = new Set<string>()
+  for (const pmid of source.pmids) {
+    if (!PMID_PATTERN.test(pmid)) {
+      throw new Error(
+        `${source.sourceType} exclusion source contains invalid PMID ${JSON.stringify(pmid)}.`,
+      )
+    }
+    if (seen.has(pmid)) {
+      throw new Error(`${source.sourceType} exclusion source contains duplicate PMID ${pmid}.`)
+    }
+    seen.add(pmid)
+  }
+
+  if (source.sourceType === 'pmid_manifest') {
+    if (source.pmids.length === 0) {
+      throw new Error('PMID exclusion manifest must contain at least one PMID.')
+    }
+    if (!source.path.trim()) throw new Error('PMID exclusion manifest path is required.')
+    if (!SHA256_PATTERN.test(source.sha256)) {
+      throw new Error('PMID exclusion manifest SHA-256 must be 64 lowercase hexadecimal digits.')
+    }
+  }
+}
+
+function applyExclusionSources(
+  candidates: LiteratureGoldSamplingCandidate[],
+  sources: LiteratureGoldSamplingExclusionSource[],
+) {
+  const corpusPmids = new Set(candidates.map((candidate) => candidate.pmid))
+  let remaining = candidates
+  const reports: LiteratureGoldSamplingExclusionSourceReport[] = []
+
+  for (const source of sources) {
+    validateExclusionSource(source)
+    const sourcePmids = new Set(source.pmids)
+    const remainingPmids = new Set(remaining.map((candidate) => candidate.pmid))
+    const eligibleCount = source.pmids.filter((pmid) => remainingPmids.has(pmid)).length
+    reports.push({
+      sourceType: source.sourceType,
+      path: source.sourceType === 'pmid_manifest' ? source.path : null,
+      sha256: source.sourceType === 'pmid_manifest' ? source.sha256 : null,
+      batchNames:
+        source.sourceType === 'prior_automatic_batches'
+          ? [...new Set(source.batchNames)].sort()
+          : [],
+      suppliedCount: source.pmids.length,
+      corpusPresentCount: source.pmids.filter((pmid) => corpusPmids.has(pmid)).length,
+      eligibleCount,
+      excludedCount: eligibleCount,
+    })
+    if (eligibleCount > 0) {
+      remaining = remaining.filter((candidate) => !sourcePmids.has(candidate.pmid))
+    }
+  }
+
+  return { candidates: remaining, reports }
+}
+
+function normalizedPriorAutomaticSamples(snapshot: { batchNames: string[]; pmids: string[] }) {
+  const batchNames = [...snapshot.batchNames].sort()
+  const pmids = [...snapshot.pmids].sort()
+  if (new Set(batchNames).size !== batchNames.length) {
+    throw new Error('Prior automatic sampling snapshot contains duplicate batch names.')
+  }
+  validateExclusionSource({
+    sourceType: 'prior_automatic_batches',
+    batchNames,
+    pmids,
+  })
+  return { batchNames, pmids }
+}
+
+export function assertLiteratureGoldPriorAutomaticSamplesUnchanged(
+  expected: { batchNames: string[]; pmids: string[] },
+  current: { batchNames: string[]; pmids: string[] },
+) {
+  const normalizedExpected = normalizedPriorAutomaticSamples(expected)
+  const normalizedCurrent = normalizedPriorAutomaticSamples(current)
+  if (JSON.stringify(normalizedCurrent) !== JSON.stringify(normalizedExpected)) {
+    throw new Error(
+      'Prior automatic pilot/gold-standard exclusions changed during sampling; rerun from a fresh candidate snapshot.',
+    )
+  }
+}
+
 function buildTopicMaps() {
   const parentByTopic = new Map(
     flattenLiteratureTaxonomy().map((topic) => [topic.id, topic.parentId ?? topic.id]),
@@ -361,12 +478,18 @@ export function sampleLiteratureGoldSet(
   }
 
   const explicitPmids = new Set(options.explicitPmids ?? [])
-  const excludedPmids = new Set(options.excludedPmids ?? [])
-  let candidates = uniqueCandidates.filter((candidate) => !excludedPmids.has(candidate.pmid))
+  const exclusionResult = applyExclusionSources(
+    uniqueCandidates,
+    normalizedExclusionSources(options),
+  )
+  let candidates = exclusionResult.candidates
   const excludedCandidateCount = uniqueCandidates.length - candidates.length
-  if (excludedCandidateCount > 0) {
+  const priorAutomaticExcludedCount = exclusionResult.reports
+    .filter((source) => source.sourceType === 'prior_automatic_batches')
+    .reduce((total, source) => total + source.excludedCount, 0)
+  if (priorAutomaticExcludedCount > 0) {
     warnings.push(
-      `${excludedCandidateCount} previously sampled candidate PMIDs were excluded from selection.`,
+      `${priorAutomaticExcludedCount} previously sampled candidate PMIDs were excluded from selection.`,
     )
   }
   if (explicitPmids.size > 0) {
@@ -504,8 +627,8 @@ export function sampleLiteratureGoldSet(
   }
 
   return {
-    reportVersion: '1.1.0',
-    generatedAt: options.generatedAt ?? new Date().toISOString(),
+    reportVersion: '1.3.0',
+    ...(options.generatedAt === undefined ? {} : { generatedAt: options.generatedAt }),
     name: options.name,
     kind: options.kind,
     samplingSeed: options.seed,
@@ -513,6 +636,7 @@ export function sampleLiteratureGoldSet(
     requestedSize,
     originalCandidateCount: uniqueCandidates.length,
     excludedCandidateCount,
+    exclusionSources: exclusionResult.reports,
     candidateCount: candidates.length,
     selectedCount: items.length,
     developmentCount,

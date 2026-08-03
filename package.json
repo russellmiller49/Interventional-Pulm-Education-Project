@@ -52,6 +52,7 @@
     "literature:seed-taxonomy": "node scripts/require-primary-checkout.mjs -- tsx scripts/literature/seed-taxonomy.ts",
     "literature:suggest-topics": "tsx scripts/literature/run-rule-suggestions.ts",
     "literature:report": "tsx scripts/literature/generate-import-report.ts",
+    "literature:audit-curated-collection": "tsx scripts/literature/audit-curated-collection.ts",
     "literature:create-gold-set": "tsx scripts/literature/create-gold-set.ts",
     "literature:export-gold-set": "tsx scripts/literature/export-gold-set.ts",
     "literature:analyze-gold-set": "tsx scripts/literature/analyze-gold-set.ts",

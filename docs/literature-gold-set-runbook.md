@@ -143,7 +143,10 @@ npm run literature:create-gold-set -- \
 
 Inspect the JSON report under `local-data/literature/gold-sets/`, especially strata, source tiers,
 years, abstract availability, journals, deterministic bands, represented broad topics, and
-warnings. Then create the local batch:
+warnings. Sampling report format `1.3.0` omits `generatedAt` by default so the same corpus,
+options, exclusions, and seed produce byte-identical JSON. Library callers may retain a timestamp
+only by supplying an explicit fixed `generatedAt` value; the CLI never injects the wall clock into
+the canonical report payload. Then create the local batch:
 
 ```bash
 npm run literature:create-gold-set -- \
