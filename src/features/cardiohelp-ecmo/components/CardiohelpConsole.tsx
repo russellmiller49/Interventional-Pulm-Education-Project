@@ -31,6 +31,7 @@ import type {
   PressureLimits,
   SimulationAction,
 } from '../engine'
+import { formatChannelReadout } from './channelReadout'
 import styles from './cardiohelp-ecmo.module.css'
 
 interface CardiohelpConsoleProps {
@@ -119,7 +120,7 @@ function ReadoutTile({
   large?: boolean
   description?: string
 }) {
-  const available = readout.displayed !== null
+  const formatted = formatChannelReadout(label, readout, unit, precision, description)
   return (
     <div
       className={`${styles.parameterTile} ${large ? styles.parameterTileLarge : ''}`}
@@ -127,15 +128,9 @@ function ReadoutTile({
       data-readout-status={readout.status}
     >
       <span className={styles.parameterLabel}>{label}</span>
-      <span className={styles.parameterValue}>
-        {available ? readout.displayed?.toFixed(precision) : '--'}
-      </span>
-      <span className={styles.parameterUnit}>{available ? unit : ''}</span>
-      <span className="sr-only">
-        {available
-          ? `${label} ${readout.displayed?.toFixed(precision)} ${unit}.${description ? ` ${description}` : ''}`
-          : `${label} not available. ${readout.reason}`}
-      </span>
+      <span className={styles.parameterValue}>{formatted.valueText}</span>
+      <span className={styles.parameterUnit}>{formatted.unitText}</span>
+      <span className="sr-only">{formatted.screenReaderText}</span>
       {alarm ? <span className={styles.parameterAlarmText}>{alarm.priority} alarm</span> : null}
     </div>
   )
@@ -286,8 +281,8 @@ function ScreenBody({ state, dispatch, controlsEnabled, guidedControlId }: Cardi
       <div className={styles.transportGrid}>
         <ParameterTile label="Flow" value={state.circuit.bloodFlow.toFixed(2)} unit="L/min" large />
         <ParameterTile label="Speed" value={state.device.rpmSetpoint} unit="RPM" large />
-        <ParameterTile label="pVen" value={state.circuit.pVen} unit="mmHg" />
-        <ParameterTile label="pArt" value={state.circuit.pArt} unit="mmHg" />
+        <ReadoutTile label="pVen" readout={state.circuit.readouts.pVen} unit="mmHg" precision={0} />
+        <ReadoutTile label="pArt" readout={state.circuit.readouts.pArt} unit="mmHg" precision={0} />
         <ParameterTile label="Battery" value={state.device.batteryPercent.toFixed(0)} unit="%" />
         {state.device.powerSource !== 'ac' ? (
           <button
@@ -366,26 +361,34 @@ function ScreenBody({ state, dispatch, controlsEnabled, guidedControlId }: Cardi
   if (screen === 'parameters') {
     return (
       <div className={styles.parameterGrid}>
-        <ParameterTile
+        <ReadoutTile
           label="pVen"
-          value={state.circuit.pVen}
+          readout={state.circuit.readouts.pVen}
           unit="mmHg"
+          precision={0}
           alarm={alarmFor('pVen')}
         />
-        <ParameterTile
+        <ReadoutTile
           label="pInt"
-          value={state.circuit.pInt}
+          readout={state.circuit.readouts.pInt}
           unit="mmHg"
+          precision={0}
           alarm={alarmFor('pInt')}
         />
-        <ParameterTile
+        <ReadoutTile
           label="pArt"
-          value={state.circuit.pArt}
+          readout={state.circuit.readouts.pArt}
           unit="mmHg"
+          precision={0}
           alarm={alarmFor('pArt')}
         />
         <ParameterTile label="pAux" value={state.circuit.pAux ?? '---'} unit="mmHg" />
-        <ParameterTile label="Δp" value={state.circuit.deltaP} unit="mmHg · trend" />
+        <ReadoutTile
+          label="Δp"
+          readout={state.circuit.readouts.deltaP}
+          unit="mmHg · trend"
+          precision={0}
+        />
         <ParameterTile
           label="Flow"
           value={state.circuit.flowSensorConnected ? state.circuit.bloodFlow.toFixed(2) : '---'}
@@ -409,25 +412,33 @@ function ScreenBody({ state, dispatch, controlsEnabled, guidedControlId }: Cardi
         <ParameterTile label="Speed" value={state.device.rpmSetpoint} unit="RPM" large />
       </div>
       <div className={styles.startupSecondary}>
-        <ParameterTile
+        <ReadoutTile
           label="pVen"
-          value={state.circuit.pVen}
+          readout={state.circuit.readouts.pVen}
           unit="mmHg"
+          precision={0}
           alarm={alarmFor('pVen')}
         />
-        <ParameterTile
+        <ReadoutTile
           label="pInt"
-          value={state.circuit.pInt}
+          readout={state.circuit.readouts.pInt}
           unit="mmHg"
+          precision={0}
           alarm={alarmFor('pInt')}
         />
-        <ParameterTile
+        <ReadoutTile
           label="pArt"
-          value={state.circuit.pArt}
+          readout={state.circuit.readouts.pArt}
           unit="mmHg"
+          precision={0}
           alarm={alarmFor('pArt')}
         />
-        <ParameterTile label="Δp" value={state.circuit.deltaP} unit="mmHg · trend" />
+        <ReadoutTile
+          label="Δp"
+          readout={state.circuit.readouts.deltaP}
+          unit="mmHg · trend"
+          precision={0}
+        />
         <ReadoutTile
           label="SvO₂"
           readout={state.circuit.readouts.venousLineSaturation}

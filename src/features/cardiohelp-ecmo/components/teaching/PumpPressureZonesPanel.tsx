@@ -46,7 +46,14 @@ export function PumpPressureZonesPanel({ state }: { readonly state: EcmoSimulati
   const referenceDeltaP = (profile.expected.deltaP.low + profile.expected.deltaP.high) / 2
 
   const flowShift = direction(circuit.bloodFlow - referenceFlow, 0.05)
-  const deltaPShift = direction(circuit.deltaP - referenceDeltaP, 2)
+  // A direction is an interpretation, so it needs a value the model stands behind. Comparing the
+  // stopped circuit's intercept against the reference would print "about the same" underneath a
+  // tile that already reads `--`.
+  const deltaPReadout = circuit.readouts.deltaP
+  const deltaPShift =
+    deltaPReadout.displayed === null
+      ? null
+      : direction(deltaPReadout.displayed - referenceDeltaP, 2)
 
   return (
     <div className={styles.panel} data-teaching-panel="pump-and-pressure-zones">
@@ -82,7 +89,9 @@ export function PumpPressureZonesPanel({ state }: { readonly state: EcmoSimulati
           <ChannelValue label="ΔP" readout={circuit.readouts.deltaP} unit="mmHg" />
         </div>
         <p className="mt-2 text-xs leading-5 text-muted-foreground">
-          The gradient is {directionWord[deltaPShift]} than this circuit&rsquo;s reference state.
+          {deltaPShift === null
+            ? `The gradient is not being reported, so it cannot be compared with this circuit’s reference state. ${deltaPReadout.reason}`
+            : `The gradient is ${directionWord[deltaPShift]} than this circuit’s reference state.`}{' '}
           Read the four together: one zone moving alone means something different from two moving
           together.
         </p>
@@ -90,9 +99,11 @@ export function PumpPressureZonesPanel({ state }: { readonly state: EcmoSimulati
         <TextEquivalent>
           The pump is set to {device.rpmSetpoint} rpm and the circuit is returning{' '}
           {circuit.bloodFlow.toFixed(2)} L/min, {directionWord[flowShift]} than this circuit&rsquo;s
-          reference flow of {referenceFlow.toFixed(2)} L/min. The gradient across the membrane is{' '}
-          {directionWord[deltaPShift]} than its reference value of {referenceDeltaP.toFixed(0)}{' '}
-          mmHg. Speed is a setting; flow is the result of that speed under the loading the circuit
+          reference flow of {referenceFlow.toFixed(2)} L/min.{' '}
+          {deltaPShift === null
+            ? `The gradient across the membrane is not available, ${deltaPReadout.reason}`
+            : `The gradient across the membrane is ${directionWord[deltaPShift]} than its reference value of ${referenceDeltaP.toFixed(0)} mmHg.`}{' '}
+          Speed is a setting; flow is the result of that speed under the loading the circuit
           currently has.
         </TextEquivalent>
 
