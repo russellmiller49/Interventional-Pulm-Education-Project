@@ -21,6 +21,7 @@ import {
   type CriticalCareResumePointer,
 } from '@/features/learning-module/activity'
 import { ActivityShell } from '@/features/learning-module/components/ActivityShell'
+import { AnswerVerdict } from '@/features/learning-module/components/AnswerVerdict'
 import { ChoiceReasoningFeedback } from '@/features/learning-module/components/ChoiceReasoningFeedback'
 import { DebriefPanel } from '@/features/learning-module/components/DebriefPanel'
 import { EvidenceDrawer } from '@/features/learning-module/components/EvidenceDrawer'
@@ -219,80 +220,6 @@ function LearningItemChoices({
         </label>
       ))}
     </fieldset>
-  )
-}
-
-/**
- * What the learner gets back the moment they answer, in the pane they answered in.
- *
- * The reasoning feedback already existed, but it rendered in the task panel *after*
- * `commitPrediction` had advanced the phase — so the question was replaced before any verdict
- * appeared and the answer read as unacknowledged. This says plainly whether the answer was right,
- * why, and why each of the others is not, before anything moves.
- *
- * Styled for the light "Your turn" pane rather than reusing the dark shared panel; that pane
- * re-declares light theme tokens locally (§1.3 item 8) and the shared component is written for the
- * dark workbench.
- */
-const verdictCopy: Readonly<
-  Record<ClinicalLearningItem['choices'][number]['plausibility'], { title: string; tone: string }>
-> = {
-  best: { title: 'Correct', tone: 'border-emerald-500/60 bg-emerald-50' },
-  'reasonable-but-incomplete': {
-    title: 'Partly right — defensible, but not the whole picture',
-    tone: 'border-amber-500/60 bg-amber-50',
-  },
-  'incorrect-mechanism': {
-    title: 'Not quite — that mechanism predicts a different pattern',
-    tone: 'border-rose-500/60 bg-rose-50',
-  },
-  unsafe: {
-    title: 'Unsafe — this would harm a real patient',
-    tone: 'border-rose-600/70 bg-rose-100',
-  },
-}
-
-function AnswerVerdict({
-  item,
-  choiceId,
-}: {
-  readonly item: ClinicalLearningItem
-  readonly choiceId: string
-}) {
-  const chosen = item.choices.find((choice) => choice.id === choiceId)
-  if (!chosen) return null
-  const others = item.choices.filter((choice) => choice.id !== choiceId)
-  const copy = verdictCopy[chosen.plausibility]
-  return (
-    <article
-      className={`rounded-xl border p-3 text-sm leading-6 ${copy.tone}`}
-      role={chosen.plausibility === 'unsafe' ? 'alert' : 'status'}
-      aria-live="polite"
-      data-plausibility={chosen.plausibility}
-    >
-      <p className="font-semibold">{copy.title}</p>
-      <p className="mt-1">
-        <span className="font-medium">You chose:</span> {chosen.label}
-      </p>
-      <p className="mt-2">{chosen.rationale}</p>
-      {others.length > 0 ? (
-        <details className="mt-3 rounded-lg border border-black/10 bg-white/60 p-2">
-          <summary className="min-h-9 cursor-pointer font-medium">
-            Why the other answers do not fit
-          </summary>
-          <ul className="mt-2 grid gap-2">
-            {others.map((choice) => (
-              <li key={choice.id}>
-                <span className="font-medium">{choice.label}</span> — {choice.rationale}
-              </li>
-            ))}
-          </ul>
-        </details>
-      ) : null}
-      <p className="mt-3 border-t border-black/10 pt-2">
-        <span className="font-medium">How to tell them apart:</span> {item.explanation}
-      </p>
-    </article>
   )
 }
 
@@ -771,7 +698,17 @@ export function MechanicalVentilationLessonActivity({
         />
         {predictionCommitted && predictionChoice ? (
           <>
-            <AnswerVerdict item={learningItems.prediction} choiceId={predictionChoice} />
+            {/*
+             * The shared verdict, in the light "Your turn" pane rather than the dark workbench.
+             * Continue stays the pane's own control below: it carries this pane's styling and its
+             * own copy, and the shared component advances nothing on its own either way.
+             */}
+            <AnswerVerdict
+              item={learningItems.prediction}
+              choiceId={predictionChoice}
+              timing="immediate-after-commit"
+              theme="light"
+            />
             <button
               type="button"
               className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
@@ -854,7 +791,12 @@ export function MechanicalVentilationLessonActivity({
         />
         {/* Same verdict the prediction gets, as soon as an interpretation is chosen. */}
         {transferChoice ? (
-          <AnswerVerdict item={learningItems.transfer} choiceId={transferChoice} />
+          <AnswerVerdict
+            item={learningItems.transfer}
+            choiceId={transferChoice}
+            timing="immediate-after-commit"
+            theme="light"
+          />
         ) : null}
         <GuidedActions
           actions={runtime.transfer.actions}

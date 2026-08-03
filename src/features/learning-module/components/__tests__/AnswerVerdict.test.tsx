@@ -204,3 +204,18 @@ describe('AnswerVerdict timing policy', () => {
     expect(screen.getByText(/Drainage pressure fell further/i)).toBeInTheDocument()
   })
 })
+
+describe('AnswerVerdict and ChoiceReasoningFeedback are not interchangeable', () => {
+  /*
+   * The audit's boundary, pinned so a later "finish the migration" pass cannot quietly drop the
+   * sources block from the surfaces that show one. This component renders neither concept links nor
+   * citations, so a consumer that depends on them stays with `ChoiceReasoningFeedback`.
+   */
+  it('renders no evidence citations or concept links of its own', () => {
+    const { container } = render(<AnswerVerdict item={item} choiceId="drainage-limited" />)
+
+    expect(container.querySelectorAll('a')).toHaveLength(0)
+    expect(screen.queryByText(/^Sources$/)).toBeNull()
+    expect(screen.queryByLabelText(/related concepts/i)).toBeNull()
+  })
+})

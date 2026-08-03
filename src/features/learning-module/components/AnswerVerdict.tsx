@@ -34,6 +34,19 @@ type Plausibility = ClinicalLearningItem['choices'][number]['plausibility']
  * A safety-critical choice is the one exception the plan allows: an `unsafe` selection is announced
  * whatever the timing, because letting a learner carry on believing a harmful action was acceptable
  * is not a pedagogic trade-off worth making.
+ *
+ * Scope of the migration, audited across every immediate-feedback Learn surface:
+ *
+ *  - Migrated — the two local duplicates. Mechanical Ventilation Learn's own copy (which this was
+ *    promoted from) and the PAC guided-skill copy that shadowed `ChoiceReasoningFeedback`'s name.
+ *    Both gained an assertive unsafe announcement, and PAC gained an announcement at all and the
+ *    comparison against the answers not taken; PAC's extra framing rides along as
+ *    `branchExplanation`. Feedback timing, scoring and completion are untouched in both.
+ *  - Not migrated — the consumers of the shared `ChoiceReasoningFeedback`: ECMO foundation, the MCS
+ *    workbench, CRRT Learn and MV's own case debrief. That component resolves and renders concept
+ *    links and the citation list for the item's evidence, which this one does not; swapping it in
+ *    would silently drop the sources those surfaces show. They are a separate component because
+ *    they do a genuinely different job, not because nobody has got round to them.
  */
 export type VerdictTiming = 'immediate-after-commit' | 'after-action-response' | 'debrief-only'
 

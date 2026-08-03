@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { criticalCareActivityById } from '@/features/critical-care/content/activities'
 import { criticalCareReferences } from '@/features/critical-care/content/references'
 import { ActivityShell } from '@/features/learning-module/components/ActivityShell'
+import { AnswerVerdict } from '@/features/learning-module/components/AnswerVerdict'
 import { DebriefPanel } from '@/features/learning-module/components/DebriefPanel'
 import { EvidenceDrawer } from '@/features/learning-module/components/EvidenceDrawer'
 import { PatientContextBar } from '@/features/learning-module/components/PatientContextBar'
@@ -86,35 +87,46 @@ const likelyFrameByPlausibility: Readonly<Record<ClinicalLearningChoice['plausib
       'The selected interpretation could lead to action before the signal or catheter state is safe to use.',
   }
 
+/**
+ * The shared verdict, wearing this activity's two extra sentences.
+ *
+ * What lived here before was a third implementation of the same idea: it named the plausibility,
+ * gave the choice's reasoning and the item's distinguishing cue, and added a frame and a next move.
+ * The first three are what the shared `AnswerVerdict` already does — and does with an announcement
+ * and a comparison against the answers not taken, neither of which a plain `aside` could offer. The
+ * last two are this activity's own and are passed through as the branch explanation.
+ *
+ * Timing is unchanged: this renders in Act, where committing already put the learner, and it
+ * advances nothing.
+ */
 function ChoiceReasoningFeedback({
-  choice,
-  explanation,
+  item,
+  choiceId,
 }: {
-  readonly choice: ClinicalLearningChoice
-  readonly explanation: string
+  readonly item: ClinicalLearningItem
+  readonly choiceId: string
 }) {
+  const choice = item.choices.find((candidate) => candidate.id === choiceId)
+  if (!choice) return null
   return (
-    <aside className="grid gap-2 rounded-xl border border-sky-500/30 bg-sky-500/10 p-3 text-xs leading-5">
-      <p className="font-bold text-foreground">{plausibilityLabels[choice.plausibility]}</p>
-      <dl className="grid gap-2">
-        <div>
-          <dt className="font-semibold">Why this reasoning lands here</dt>
-          <dd>{choice.rationale}</dd>
-        </div>
-        <div>
-          <dt className="font-semibold">A reasonable frame</dt>
-          <dd>{likelyFrameByPlausibility[choice.plausibility]}</dd>
-        </div>
-        <div>
-          <dt className="font-semibold">The distinguishing cue</dt>
-          <dd>{explanation}</dd>
-        </div>
-        <div>
-          <dt className="font-semibold">Next move</dt>
-          <dd>Use the visual workspace to test that interpretation against the live signal.</dd>
-        </div>
-      </dl>
-    </aside>
+    <AnswerVerdict
+      item={item}
+      choiceId={choiceId}
+      timing="immediate-after-commit"
+      theme="dark"
+      branchExplanation={
+        <dl className="grid gap-2">
+          <div>
+            <dt className="font-semibold">A reasonable frame</dt>
+            <dd>{likelyFrameByPlausibility[choice.plausibility]}</dd>
+          </div>
+          <div>
+            <dt className="font-semibold">Next move</dt>
+            <dd>Use the visual workspace to test that interpretation against the live signal.</dd>
+          </div>
+        </dl>
+      }
+    />
   )
 }
 
@@ -727,8 +739,8 @@ export function PacGuidedSkillActivity({
     <div className="grid gap-3">
       {predictionFeedbackChoice ? (
         <ChoiceReasoningFeedback
-          choice={predictionFeedbackChoice}
-          explanation={learningItems.prediction.explanation}
+          item={learningItems.prediction}
+          choiceId={predictionFeedbackChoice.id}
         />
       ) : null}
       <button
@@ -784,8 +796,8 @@ export function PacGuidedSkillActivity({
       </fieldset>
       {transferFeedbackChoice ? (
         <ChoiceReasoningFeedback
-          choice={transferFeedbackChoice}
-          explanation={learningItems.transfer.explanation}
+          item={learningItems.transfer}
+          choiceId={transferFeedbackChoice.id}
         />
       ) : null}
       <p className="rounded-xl bg-muted p-3 text-xs leading-5">
