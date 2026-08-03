@@ -8,9 +8,17 @@ import {
   DEFAULT_LITERATURE_GOLD_TEST_PERCENT,
   LITERATURE_GOLD_SAMPLING_ALGORITHM_VERSION,
 } from '@/features/literature/gold-set/constants'
-import { sampleLiteratureGoldSet } from '@/features/literature/gold-set/sampling'
+import {
+  assertLiteratureGoldPmidExclusionManifestUnchanged,
+  loadLiteratureGoldPmidExclusionManifest,
+} from '@/features/literature/gold-set/exclusion-manifest'
+import {
+  assertLiteratureGoldPriorAutomaticSamplesUnchanged,
+  sampleLiteratureGoldSet,
+} from '@/features/literature/gold-set/sampling'
 import type {
   LiteratureGoldSamplingCandidate,
+  LiteratureGoldSamplingExclusionSource,
   LiteratureGoldSetKind,
 } from '@/features/literature/gold-set/types'
 import { literatureGoldCreateOptionsSchema } from '@/features/literature/schemas/gold-set'
@@ -47,6 +55,8 @@ Options:
                          sets are always development-only.
   --pmids <path>         JSON string array or text list of explicit PMIDs. Required for
                          regression sets.
+  --exclude-pmids <path> Numeric, unique PMID manifest to exclude from automatic pilot or
+                         gold-standard sampling. The report records its absolute path and SHA-256.
   --allow-resample       Allow a pilot/gold-standard PMID to appear in another automatic batch.
                          By default, prior pilot and gold-standard PMIDs are excluded.
   --output <path>        Sampling report JSON path.
@@ -197,6 +207,7 @@ async function main() {
     'seed',
     'test-percent',
     'pmids',
+    'exclude-pmids',
     'allow-resample',
     'output',
     'dry-run',
@@ -222,30 +233,62 @@ async function main() {
       DEFAULT_LITERATURE_GOLD_TEST_PERCENT,
     ),
   })
+  if ((arguments_.values.get('exclude-pmids')?.length ?? 0) > 1) {
+    throw new Error('--exclude-pmids may be supplied only once.')
+  }
   const pmids = await explicitPmids(stringArgument(arguments_, 'pmids'))
+  const regression =
+    options.kind === 'landmark_regression' || options.kind === 'hard_negative_regression'
+  const excludePmidsPath = stringArgument(arguments_, 'exclude-pmids')
+  if (regression && excludePmidsPath) {
+    throw new Error(
+      '--exclude-pmids is supported only for automatic pilot and gold-standard sampling.',
+    )
+  }
+  const exclusionManifest = excludePmidsPath
+    ? await loadLiteratureGoldPmidExclusionManifest(excludePmidsPath)
+    : null
   const client = createLiteratureReadClient(arguments_)
   console.log('Loading unique PMID candidates…')
   const candidates = await fetchCandidates(client)
   if (candidates.length === 0) {
     throw new Error('No imported literature candidates were found.')
   }
-  const regression =
-    options.kind === 'landmark_regression' || options.kind === 'hard_negative_regression'
-  const priorSamples =
-    regression || hasFlag(arguments_, 'allow-resample')
-      ? { batchNames: [], pmids: [] }
-      : await fetchPreviouslySampledPmids(client)
+  const excludePriorAutomaticSamples = !regression && !hasFlag(arguments_, 'allow-resample')
+  const priorSamples = excludePriorAutomaticSamples
+    ? await fetchPreviouslySampledPmids(client)
+    : { batchNames: [], pmids: [] }
   if (priorSamples.pmids.length > 0) {
     console.log(
       `Excluding ${priorSamples.pmids.length} PMIDs from prior automatic batches: ${priorSamples.batchNames.join(', ')}`,
     )
   }
 
+  const exclusionSources: LiteratureGoldSamplingExclusionSource[] = []
+  if (excludePriorAutomaticSamples) {
+    exclusionSources.push({
+      sourceType: 'prior_automatic_batches',
+      pmids: priorSamples.pmids,
+      batchNames: priorSamples.batchNames,
+    })
+  }
+  if (exclusionManifest) {
+    exclusionSources.push({
+      sourceType: 'pmid_manifest',
+      pmids: exclusionManifest.pmids,
+      path: exclusionManifest.path,
+      sha256: exclusionManifest.sha256,
+    })
+  }
+
   const report = sampleLiteratureGoldSet(candidates, {
     ...options,
     explicitPmids: pmids,
-    excludedPmids: priorSamples.pmids,
+    exclusionSources,
   })
+  if (exclusionManifest) {
+    await assertLiteratureGoldPmidExclusionManifestUnchanged(exclusionManifest)
+  }
   const output = await reportPath(
     stringArgument(
       arguments_,
@@ -258,10 +301,19 @@ async function main() {
     encoding: 'utf8',
     flag: 'wx',
   })
+  // Report publication is part of dry-run behavior, so detect a path replacement before success.
+  if (exclusionManifest) {
+    await assertLiteratureGoldPmidExclusionManifestUnchanged(exclusionManifest)
+  }
 
   console.log(`Sampling report: ${output}`)
   console.log(`Candidates: ${report.candidateCount}`)
-  console.log(`Previously sampled exclusions: ${report.excludedCandidateCount}`)
+  console.log(`Excluded candidates: ${report.excludedCandidateCount}`)
+  report.exclusionSources.forEach((source) => {
+    console.log(
+      `Exclusion source ${source.sourceType}: supplied=${source.suppliedCount}, corpus-present=${source.corpusPresentCount}, eligible=${source.eligibleCount}, excluded=${source.excludedCount}`,
+    )
+  })
   console.log(`Selected: ${report.selectedCount}/${report.requestedSize}`)
   console.log(`Development: ${report.developmentCount}`)
   console.log(`Test: ${report.testCount}`)
@@ -272,6 +324,13 @@ async function main() {
   if (!writeMode.commit || !writeMode.client) return
   if (report.selectedCount !== report.requestedSize) {
     throw new Error('Refusing to create a partial batch; resolve sampling warnings first.')
+  }
+  if (excludePriorAutomaticSamples) {
+    const currentPriorSamples = await fetchPreviouslySampledPmids(client)
+    assertLiteratureGoldPriorAutomaticSamplesUnchanged(priorSamples, currentPriorSamples)
+  }
+  if (exclusionManifest) {
+    await assertLiteratureGoldPmidExclusionManifestUnchanged(exclusionManifest)
   }
 
   const { items, ...storedReport } = report

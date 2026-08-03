@@ -40,6 +40,34 @@ export interface LiteratureGoldSamplingCandidate {
 
 export type LiteratureGoldDeterministicBand = 'high' | 'intermediate' | 'low'
 
+export type LiteratureGoldSamplingExclusionSource =
+  | {
+      sourceType: 'prior_automatic_batches'
+      pmids: string[]
+      batchNames: string[]
+    }
+  | {
+      sourceType: 'pmid_manifest'
+      pmids: string[]
+      path: string
+      sha256: string
+    }
+
+export interface LiteratureGoldSamplingExclusionSourceReport {
+  sourceType: LiteratureGoldSamplingExclusionSource['sourceType']
+  path: string | null
+  sha256: string | null
+  batchNames: string[]
+  /** Unique PMIDs supplied by this source, including PMIDs absent from the corpus. */
+  suppliedCount: number
+  /** Supplied PMIDs present in the original candidate corpus. */
+  corpusPresentCount: number
+  /** Supplied PMIDs still in the sampling pool immediately before this source is applied. */
+  eligibleCount: number
+  /** Candidates removed by this source, without double-counting earlier sources. */
+  excludedCount: number
+}
+
 export interface LiteratureGoldSampledItem {
   pmid: string
   sampleStratum: LiteratureGoldSetStratum
@@ -63,7 +91,7 @@ export interface LiteratureGoldSampledItem {
 }
 
 export interface LiteratureGoldSamplingReport {
-  reportVersion: '1.1.0'
+  reportVersion: '1.2.0'
   generatedAt: string
   name: string
   kind: LiteratureGoldSetKind
@@ -72,6 +100,7 @@ export interface LiteratureGoldSamplingReport {
   requestedSize: number
   originalCandidateCount: number
   excludedCandidateCount: number
+  exclusionSources: LiteratureGoldSamplingExclusionSourceReport[]
   candidateCount: number
   selectedCount: number
   developmentCount: number
@@ -90,9 +119,16 @@ export interface LiteratureGoldSamplingReport {
 
 export type LiteratureGoldStoredSamplingReport =
   | Omit<LiteratureGoldSamplingReport, 'items'>
+  | (Omit<LiteratureGoldSamplingReport, 'reportVersion' | 'exclusionSources' | 'items'> & {
+      reportVersion: '1.1.0'
+    })
   | (Omit<
       LiteratureGoldSamplingReport,
-      'reportVersion' | 'originalCandidateCount' | 'excludedCandidateCount' | 'items'
+      | 'reportVersion'
+      | 'originalCandidateCount'
+      | 'excludedCandidateCount'
+      | 'exclusionSources'
+      | 'items'
     > & {
       reportVersion: '1.0.0'
     })
