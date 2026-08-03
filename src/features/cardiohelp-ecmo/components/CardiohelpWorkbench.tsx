@@ -59,6 +59,7 @@ import {
   type SupportMode,
 } from '../engine'
 import { CardiohelpConsole } from './CardiohelpConsole'
+import { formatChannelGroup } from './channelReadout'
 import { CircuitAndMonitors } from './CircuitAndMonitors'
 import { LearnLessonPlayer, resolveGuidedLesson } from './LearnLessonPlayer'
 import {
@@ -780,11 +781,18 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
                 },
                 {
                   label: 'Drainage / pre-oxygenator / return',
-                  value: `${state.circuit.pVen} / ${state.circuit.pInt} / ${state.circuit.pArt} mm Hg`,
+                  value: formatChannelGroup(
+                    [
+                      state.circuit.readouts.pVen,
+                      state.circuit.readouts.pInt,
+                      state.circuit.readouts.pArt,
+                    ],
+                    'mm Hg',
+                  ).text,
                 },
                 {
                   label: 'Oxygenator ΔP',
-                  value: `${state.circuit.deltaP} mm Hg`,
+                  value: formatChannelGroup([state.circuit.readouts.deltaP], 'mm Hg').text,
                 },
                 {
                   label: 'Sweep / circuit FdO₂',
