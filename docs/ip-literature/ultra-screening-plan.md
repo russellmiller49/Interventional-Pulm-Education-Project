@@ -282,3 +282,79 @@ The pipeline is read-only with respect to the literature database. It creates ig
 files only. It never writes classifier payloads back to `literature_articles`, changes relevance
 or visibility state, imports reviews, reveals held-out gold-test labels, or modifies source NBIB
 files.
+
+## Stabilized state storage and provenance
+
+The original `ip-literature-ultra-v1` directory is retained as immutable experimental evidence.
+Its `progress-manifest.json`, `manifest-history/`, packets, worker outputs, validation reports,
+quarantine records, and completed outputs must not be renamed, rewritten, compressed, or deleted.
+No further screening may be dispatched into that run.
+
+State storage v2 is created additively in the sibling run directory
+`<legacy-run-id>-v2/state-v2/` and has four layers:
+
+- `run-definition.json` is immutable and contains the source checksum, corpus and packet inventory,
+  phase configuration, policy identity, and dispatch authorization.
+- `events.jsonl` is an append-only, monotonically sequenced, SHA-256-linked event log. A lock and
+  atomic append protocol protect its single-writer boundary.
+- `checkpoints/` contains compressed projections written through an explicit configurable event
+  cadence and optional clean-shutdown trigger. Resume verifies a checkpoint against the event
+  prefix, then strictly replays all later events; truncated, reordered, or corrupted events fail
+  closed.
+- `progress-summary.json` is a replaceable human-readable projection and is never canonical state.
+
+State transitions append bounded events. They do not copy the full chunk inventory or retain a new
+manifest snapshot per attempt. Migration inventories every legacy artifact without changing it,
+records unavailable historical prompt and Git fields as `unavailable_legacy`, and verifies exact
+phase, chunk, attempt, outcome, blocker, allocation, artifact, and next-pending equivalence.
+Migration is checksum-guarded, resumable, and idempotent:
+
+```sh
+npm run literature:ultra-migrate-v1 -- dry-run --v1-root <legacy-run> \
+  --expected-source-sha256 <progress-manifest-sha256> --migration-git-commit <commit>
+npm run literature:ultra-migrate-v1 -- commit --v1-root <legacy-run> \
+  --expected-source-sha256 <progress-manifest-sha256> --migration-git-commit <commit>
+npm run literature:ultra-migrate-v1 -- audit --v1-root <legacy-run> \
+  --expected-source-sha256 <progress-manifest-sha256> --migration-git-commit <commit>
+```
+
+The migrated v1 definition remains dispatch-disabled. Future screening requires a separately
+versioned run or an explicit immutable authorization amendment that identifies the clean repository
+commit, policy and prompt versions and checksums, worker-output root, retry limit, and packet
+inventory. A nonlegacy attempt is refused when the working tree is dirty or when any approved
+packet, policy, prompt, rendered prompt, bootstrap prompt, or output path escapes or differs from
+the authorized run definition.
+
+`npm run literature:ultra-attempt -- prepare` renders and hashes the exact immutable prompt and
+records the attempt start; it does not launch an agent. `terminal-record` records a validated,
+invalid, or failed terminal outcome without erasing start-time provenance. Every future attempt
+records repository commit and cleanliness, policy and prompt-template identity, rendered prompt and
+bootstrap checksums, worker/session and assignment identity, model and reasoning level, packet and
+output checksums, and deterministic per-chunk output and validation paths.
+
+H1 does not dispatch workers and does not yet supply the bounded reusable-worker scheduler. Before
+v2 screening begins, that dispatcher must add deterministic assignment bundles and auditable
+per-chunk leases while preserving the original 25-article packet boundaries. Sanitized worker
+artifacts must continue to exclude physician labels, prior AI classifications, sampling strata,
+and coordinator-only selection reasons.
+
+## Frozen-truth evaluation and resolution
+
+Post-freeze evaluation reads only the immutable full-history pilot export and checksum-verified
+screening artifacts; it never connects to Supabase. Each phase receives a unique versioned sibling
+bundle containing the four-class confusion matrix, binary include metrics, per-label metrics, core
+and adjacent recall, all and high-confidence false exclusions, no-abstract and animal/preclinical
+performance, pass comparisons, and physician-review disagreement JSONL/CSV. Analyses that cannot be
+supported from the frozen export—currently direct-procedure, publication-type, and major-topic
+breakdowns—are marked explicitly unavailable instead of being inferred. Bundles are published
+atomically and are complete only when their hash-bearing completion receipt is present.
+
+```sh
+npm run literature:ultra-evaluate-frozen -- --help
+```
+
+The deterministic resolver is deliberately conservative. A first-pass exclusion cannot finalize
+without an independent exclusion challenge. Challenge disagreements, uncertain or low-confidence
+results, protected-cue cases, and escalation-created exclusions require human review. Automatic
+article hiding or public-release exclusion is outside this workflow, and the enriched 100-article
+pilot is not a prevalence estimate or approval for automatic exclusion.
