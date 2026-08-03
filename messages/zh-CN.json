@@ -7922,7 +7922,8 @@
       "unavailableSuperseded": "此卡片创建于发布包锁定完整规则集之前，因此重新打开会依据它从未记录过的准备规则重新生成。其保存的快照仍可查看、打印、共享、复制并留存备查。",
       "unavailableLegacyFamily": "此卡片使用目录浏览键而非经审核的产品系列来标识产品线，因此重新打开它意味着要判断该键在今天代表哪些产品。卡片按保存时的原样显示。",
       "unavailableCatalogRelease": "保存此卡片时所依据的目录版本已无法完整取回，因此无法重建它记录的产品与角色。不会以当前目录代替。",
-      "unavailableModifier": "此卡片记录了一项其所锁定的操作发布包并未提供的准备选项，因此若不授予该发布包从未授予的权限便无法重新生成。"
+      "unavailableModifier": "此卡片记录了一项其所锁定的操作发布包并未提供的准备选项，因此若不授予该发布包从未授予的权限便无法重新生成。",
+      "staleEdit": "This card was saved from somewhere else after you opened it. Reload to see the current version, then reapply your change — nothing you were looking at has been overwritten."
     },
     "duplicateTitle": "{title} (copy)",
     "deleteCard": "Delete",

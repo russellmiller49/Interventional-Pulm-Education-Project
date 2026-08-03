@@ -115,6 +115,7 @@ function renderEditWizard(): PreferenceCardBuilderInitialState {
 
   const initialState: PreferenceCardBuilderInitialState = {
     cardId: CARD_ID,
+    updatedAt: REBUILT_AT,
     title: 'Dr Miller EBUS with ROSE',
     physicianName: 'R. Miller',
     status: 'final',

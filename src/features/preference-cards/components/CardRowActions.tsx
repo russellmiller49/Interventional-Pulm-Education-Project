@@ -39,6 +39,11 @@ export async function CardRowActions({ locale, card, layout }: CardRowActionsPro
         <form action={renameCardAction} className="flex flex-wrap items-end gap-3">
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="cardId" value={card.id} />
+          {/*
+            The content version this form was rendered against. A rename submitted from a stale
+            page is refused rather than applied on top of whatever replaced it.
+          */}
+          <input type="hidden" name="expectedUpdatedAt" value={card.updatedAt} />
           <label className="min-w-56 flex-1 text-xs font-semibold text-foreground">
             {t('cardTitleLabel')}
             <input

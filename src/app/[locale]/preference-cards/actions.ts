@@ -39,8 +39,16 @@ export async function renameCardAction(formData: FormData): Promise<void> {
   const title = parse(z.string().trim().min(1).max(160), field(formData, 'title'), 'title')
   const rawPhysician = field(formData, 'physicianName').trim()
   const physicianName = parse(z.string().max(160), rawPhysician, 'physician name')
+  // The content version the form was rendered against. A rename is revision-bearing — the title
+  // and the physician are printed and hashed — so it takes the same conditional update a save
+  // does, and a rename typed against a state somebody has since replaced is refused.
+  const expectedUpdatedAt = parse(
+    z.string().datetime({ offset: true }),
+    field(formData, 'expectedUpdatedAt'),
+    'card version',
+  )
 
-  const result = await renameUserCard(cardId, title, physicianName || null)
+  const result = await renameUserCard(cardId, title, expectedUpdatedAt, physicianName || null)
   if (!result.ok) throw new Error(result.error ?? 'The preference card could not be renamed.')
 
   revalidatePath(`/${locale}/preference-cards`)

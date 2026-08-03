@@ -41,12 +41,17 @@ revision, and building the rebuild first would have meant pointing it at a card 
 
 ```
 id · card_id · user_id · revision_number
-title · physician_name · status
+title · physician_name · status · procedure_code · scenario_id
 builder_inputs · card_snapshot
 snapshot_hash · snapshot_integrity_hash · resolved_content_hash
 engine_version · release_bundle_id · catalog_release_id
 created_at · created_by
 ```
+
+`procedure_code` and `scenario_id` are there even though edit mode cannot change either — the
+picker is a read-only panel. The revision is meant to be the complete row state, so a reader
+reconstructing one does not have to assume a rule that held when it was written still holds, and a
+future writer that did change the procedure could not produce a revision that failed to say so.
 
 ### Written by the database, not by application code
 
@@ -74,20 +79,54 @@ snapshot, snapshot hash, engine version, catalog import id — and appends only 
   `printDocumentHash`. A renamed card is a different document even though it says the same
   clinical thing — and the revision list shows exactly that: an unchanged `resolvedContentHash`
   beside a moved `printDocumentHash`.
-- **A share toggle does not.** It bumps `updated_at` and changes nothing this table records. A
-  revision for it would be an identical row claiming something happened.
+- **A share toggle does not.** It changes nothing this table records. A revision for it would be
+  an identical row claiming something happened.
 
-The one consequence worth stating plainly: because a share toggle moves `updated_at` and
-`printDocumentHash` covers the printed "updated" value, the live card's document hash can differ
-from the latest revision's without any state having changed. That is the hash doing its job —
-the printed page did change — rather than a gap in the history.
+That last one only works because `updated_at` was made to mean something narrower — see below.
+Under the generic `set_site_updated_at`, sharing a card moved its timestamp, which is printed on
+the card and covered by `printDocumentHash`; the live document hash would then have differed from
+the latest revision's with no state having changed. The card table now carries its own content
+timestamp trigger instead, so the two agree and there is no caveat to remember.
 
-### Append-only, three times over
+### `updated_at` is a content version
 
-No update policy, no update grant, and a `before update` trigger that raises. The third exists
-because it is the one that still holds if a future migration widens either of the first two.
-Service role gets `select, insert` and no more: an append-only table that one role may rewrite is
-append-only for everyone not holding that key.
+`ip_set_preference_card_content_updated_at` moves the timestamp only when revision-bearing content
+changes, and leaves it exactly where it was for an access-control-only update. `set_site_updated_at`
+is shared by a dozen other tables and is untouched; only this table's trigger is replaced.
+
+Two things depend on that, and neither would be safe under a row-touch timestamp:
+
+- **The printed document.** `printDocumentHash` covers the "updated" value the page shows. Sharing
+  a card must not change what the card printed.
+- **The concurrency token.** An open editor holds `updated_at` and submits it back. If sharing a
+  card moved it, a colleague sharing the card would eject every open editor for no reason.
+
+Both triggers read one function, `ip_preference_card_content_changed`. Two hand-maintained column
+lists would drift, and the drift would be silent in both directions — a timestamp that moved
+without a revision, or a revision whose recorded timestamp belongs to a different state.
+
+### Trigger-only, and append-only three times over
+
+**No Data API role may insert.** `authenticated` and `service_role` hold `select` and nothing else,
+and there is no insert policy. That is what makes "revisions are trigger-written" a property rather
+than a convention: a signed-in owner cannot PostgREST an append of their own construction, and the
+service role — which bypasses RLS entirely — cannot either, so the guarantee does not quietly
+exclude whoever holds that key.
+
+The trigger therefore cannot run as the invoker. It is `security definer`, owned by the migration
+role, with `search_path` pinned empty and every reference schema-qualified. Its `execute` is revoked
+from `public`, `anon`, and `authenticated`; it returns `trigger`, so PostgREST will not expose it as
+an RPC in any case; it refuses to run attached to any table but the cards table; and every value it
+writes comes from `new.*`, so it takes no caller-supplied input at all.
+
+**What still authorizes the write is the cards table's own RLS, unchanged.** The function only runs
+because an insert or update on a card already passed those policies. The caller's right to change
+the card is the caller's right to produce its revision, and nothing in the definer function
+re-decides that or can be reached without it.
+
+For rewriting: no update policy, no update grant, and a `before update` trigger that raises. The
+third exists because it is the one that still holds if a future migration widens either of the
+first two.
 
 There is deliberately **no** delete trigger. A foreign-key cascade is a referential action rather
 than a statement, so a trigger raising on delete would make deleting a _card_ fail. The cascade
@@ -95,12 +134,50 @@ is the single delete path: revisions are append-only relative to the card's own 
 owner deleting their own card takes its history with it. A revision outliving the document its
 owner asked to be rid of would be the wrong default for a personal card.
 
-### Numbering
+### Numbering, which is not concurrency control
 
 `revision_number` is dense and monotonic per card, assigned by a `before insert` trigger reading
 `max() + 1`. That read is racy on its own; the unique index on `(card_id, revision_number)` is
-what makes it safe. Two concurrent saves both read 2, both try to write 3, and one insert fails.
-A failed save is recoverable. Two rows both calling themselves revision 3 are not.
+what makes it safe. Two concurrent inserts both read 2, both try to write 3, and one fails. A
+failed statement is recoverable. Two rows both calling themselves revision 3 are not.
+
+**This is a uniqueness guarantee and nothing more.** It says two revisions cannot share a number.
+It says nothing about an editor that loaded revision 1 saving over revision 2 — that insert would
+simply become revision 3, and the state it overwrote would survive as history while silently
+ceasing to be the card. Stale-edit protection is the conditional update below: a different
+mechanism, solving a different problem.
+
+### Optimistic concurrency
+
+Every content-changing update to a card is conditional on the content version it was built from:
+
+```sql
+update public.ip_user_preference_cards
+   set ...
+ where id = $1 and updated_at = $2
+```
+
+Both predicates are in the same statement, which is the whole point — reading the row and comparing
+before updating would leave a window between the two for a concurrent save to land in. The editor
+records `updated_at` when it loads and submits it as `expectedUpdatedAt`;
+`saveCardRequestSchema` requires it whenever `cardId` is present and rejects it when `cardId` is
+absent, so an unguarded overwrite cannot be constructed and a create needs no token.
+
+A miss then needs a name, because the update alone cannot tell three situations apart — somebody
+saved first, the card is gone, it was never yours — and all three match zero rows. One owner-scoped
+follow-up select separates the first from the other two and deliberately cannot separate the other
+two from each other:
+
+| Outcome      | Meaning                               | Remedy          |
+| ------------ | ------------------------------------- | --------------- |
+| `stale_edit` | the card exists and has moved on      | reload, reapply |
+| `not_found`  | gone, or never visible to this caller | nothing to do   |
+
+A foreign card id and an unknown card id give the identical answer, exactly as they do everywhere
+else in this module — a different answer here would turn a save into a probe for whether a card id
+is real. `renameUserCard` takes the same token for the same reason: a rename is revision-bearing.
+
+A rejected save changes nothing and records nothing. It is not a partial write.
 
 ### `printDocumentHash` is derived, not stored
 
@@ -110,7 +187,21 @@ that could disagree with its own inputs, and would need a second implementation 
 canonical-JSON hash inside PL/pgSQL.
 
 `created_at` serves as both "when this state came to be" and the `updatedAt` the document hash
-covers, because they are the same fact. One column, so they cannot drift.
+covers, because — now that `updated_at` moves only on a content change — they are the same fact.
+One column, so they cannot drift.
+
+### The extracted columns cannot lie
+
+`snapshot_integrity_hash`, `resolved_content_hash`, `release_bundle_id`, and `catalog_release_id`
+are lifted out of the JSON so a reader does not have to dig for them. That convenience is only safe
+while they cannot disagree with their source, so each is constrained against it with
+`is not distinct from` — which keeps the legacy shapes valid, since a pre-split snapshot carries
+neither the key nor the column and null on both sides is a match.
+
+Ownership is a database fact too: `(card_id, user_id)` is a composite foreign key into
+`ip_user_preference_cards (id, user_id)`, so a revision naming an owner other than its card's is
+rejected on every write, including a future one nobody has thought of yet. That reference is also
+what cascades a card's history away with the card.
 
 ### The backfill
 
@@ -221,6 +312,23 @@ no fuzzy matching, no matching by role code alone, no automatic waiver transfer.
 Reconciliation reads and reports. The saved card, its snapshot, and every revision are unchanged
 by it — asserted as a fact about the code (`tables.writes` records every mutating statement and is
 checked to be empty) rather than as an intention in a comment.
+
+## Applying and verifying the migration
+
+The migration is `supabase/migrations/20260803052432_add_ip_preference_card_revisions.sql`. This
+project's local and remote migration histories have diverged, so it is applied one at a time
+through the Supabase MCP migration action from the primary checkout — never `supabase db push`.
+
+Immediately afterwards, run `supabase/verification/20260803052432_verify_ip_preference_card_revisions.sql`
+in the SQL editor. It is one transaction ending in `rollback`, so it is non-destructive by
+construction: the temporary card it creates, edits, renames, shares and deletes never exists
+outside the transaction, and no card belonging to anybody is touched. It checks the structure
+(table, RLS, SELECT-only grants, one SELECT-only policy, definer trigger with an empty
+`search_path`, no client-callable functions), the existing data (every card has dense history,
+every extracted column agrees with its payload, every revision belongs to its card's owner), and
+the behaviour (revision 1 on create, 2 on edit, 3 on rename, none on a share toggle with the
+content timestamp held still, a stale conditional update matching nothing while a current one
+still applies, cascade on delete, and direct insert/update/delete refused as `authenticated`).
 
 ## Commands
 

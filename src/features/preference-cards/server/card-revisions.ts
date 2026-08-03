@@ -35,6 +35,16 @@ export interface PreferenceCardRevisionSummary {
   title: string
   physicianName: string | null
   status: 'draft' | 'final'
+  /**
+   * The card's full identity at this revision, not just its editable metadata.
+   *
+   * Edit mode cannot change the procedure today — the picker is a read-only panel — so on every
+   * revision written so far these match the card. They are recorded anyway because the revision
+   * is meant to be the complete row state: a reader reconstructing what a revision *was* should
+   * not have to assume a rule that held when it was written still holds now.
+   */
+  procedureCode: string
+  scenarioId: string
 
   snapshotHash: string
   /**
@@ -79,6 +89,8 @@ interface RevisionRow {
   title: string
   physician_name: string | null
   status: 'draft' | 'final'
+  procedure_code: string
+  scenario_id: string
   builder_inputs: unknown
   card_snapshot: unknown
   snapshot_hash: string
@@ -92,7 +104,7 @@ interface RevisionRow {
 }
 
 const SUMMARY_COLUMNS =
-  'id, card_id, revision_number, title, physician_name, status, snapshot_hash, snapshot_integrity_hash, resolved_content_hash, engine_version, release_bundle_id, catalog_release_id, created_at, created_by'
+  'id, card_id, revision_number, title, physician_name, status, procedure_code, scenario_id, snapshot_hash, snapshot_integrity_hash, resolved_content_hash, engine_version, release_bundle_id, catalog_release_id, created_at, created_by'
 
 const FULL_COLUMNS = `${SUMMARY_COLUMNS}, builder_inputs, card_snapshot`
 
@@ -104,6 +116,8 @@ function toSummary(row: RevisionRow): PreferenceCardRevisionSummary {
     title: row.title,
     physicianName: row.physician_name,
     status: row.status,
+    procedureCode: row.procedure_code,
+    scenarioId: row.scenario_id,
     snapshotHash: row.snapshot_hash,
     snapshotIntegrityHash: row.snapshot_integrity_hash,
     resolvedContentHash: row.resolved_content_hash,

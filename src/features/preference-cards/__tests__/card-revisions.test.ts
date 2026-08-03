@@ -71,6 +71,28 @@ function cardRequest(overrides: Partial<SaveCardRequest> = {}): SaveCardRequest 
   })
 }
 
+/**
+ * The content version a card is currently at, as the editor would have loaded it.
+ *
+ * Overwriting requires stating the version the edit was built from; the concurrency tests below
+ * pass a deliberately older one.
+ */
+function currentVersion(cardId: string): string {
+  const row = tables.cards.find((candidate) => candidate.id === cardId)
+  expect(row).toBeDefined()
+  return row!.updated_at
+}
+
+/** Save an edit to an existing card at whatever version it is currently at. */
+async function saveEdit(
+  cardId: string,
+  overrides: Partial<SaveCardRequest> = {},
+): Promise<Awaited<ReturnType<typeof saveUserCard>>> {
+  return saveUserCard(
+    cardRequest({ cardId, expectedUpdatedAt: currentVersion(cardId), ...overrides }),
+  )
+}
+
 async function saveNewCard(overrides: Partial<SaveCardRequest> = {}): Promise<string> {
   const result = await saveUserCard(cardRequest(overrides))
   expect(result.ok).toBe(true)
@@ -92,7 +114,7 @@ describe('every saved state becomes a revision', () => {
     const cardId = await saveNewCard()
     const [first] = await listCardRevisions(cardId)
 
-    await saveUserCard(cardRequest({ cardId, status: 'final' }))
+    await saveEdit(cardId, { status: 'final' })
 
     const revisions = await listCardRevisions(cardId)
     expect(revisions.map((revision) => revision.revisionNumber)).toEqual([2, 1])
@@ -107,7 +129,7 @@ describe('every saved state becomes a revision', () => {
 
   it('appends a revision for a rename, because the printed document changed', async () => {
     const cardId = await saveNewCard()
-    await renameUserCard(cardId, 'Renamed card', 'A. Colleague')
+    await renameUserCard(cardId, 'Renamed card', currentVersion(cardId), 'A. Colleague')
 
     const revisions = await listCardRevisions(cardId)
     expect(revisions).toHaveLength(2)
@@ -129,7 +151,7 @@ describe('every saved state becomes a revision', () => {
 
   it('gives a duplicate its own revision 1 rather than the original’s history', async () => {
     const cardId = await saveNewCard()
-    await saveUserCard(cardRequest({ cardId, status: 'final' }))
+    await saveEdit(cardId, { status: 'final' })
 
     const duplicated = await duplicateUserCard(cardId, 'A copy')
     expect(duplicated.ok).toBe(true)
@@ -144,8 +166,8 @@ describe('every saved state becomes a revision', () => {
 
   it('numbers revisions monotonically and lists them newest first', async () => {
     const cardId = await saveNewCard()
-    await saveUserCard(cardRequest({ cardId, title: 'Second' }))
-    await saveUserCard(cardRequest({ cardId, title: 'Third' }))
+    await saveEdit(cardId, { title: 'Second' })
+    await saveEdit(cardId, { title: 'Third' })
 
     const revisions = await listCardRevisions(cardId)
     expect(revisions.map((revision) => revision.revisionNumber)).toEqual([3, 2, 1])
@@ -289,7 +311,7 @@ describe('reconciliation reviews and changes nothing', () => {
 
   it('names the exact revision it reviewed, so a later rebuild can cite it', async () => {
     const cardId = await saveNewCard()
-    await saveUserCard(cardRequest({ cardId, status: 'final' }))
+    await saveEdit(cardId, { status: 'final' })
 
     const result = await reconcileSavedCard(cardId)
     expect(result.ok).toBe(true)
@@ -440,5 +462,185 @@ describe('the operational review actually detects a difference', () => {
 
     // Still nothing but hospital-local resolution moved: the release is held fixed throughout.
     expect(operational.delta.otherChangedProjectionKeys).toEqual([])
+  })
+})
+
+describe('optimistic concurrency: a stale edit cannot overwrite a newer save', () => {
+  /**
+   * Two editors, one card.
+   *
+   * This is the failure the revision-number unique index does *not* prevent and was never meant
+   * to: that index stops two rows calling themselves revision 3, which is a different problem.
+   * Nothing about it stops an editor that loaded revision 1 from saving over revision 2 — the
+   * insert would simply become revision 3 and the intervening state would survive only as
+   * history, having been silently overwritten as the current card.
+   *
+   * The mechanism under test is the conditional update: `id = ? and updated_at = ?` in one
+   * statement. The fake models it by applying every `.eq()` filter, so a mismatch here is a real
+   * predicate miss rather than a canned answer.
+   */
+  it('rejects B’s save when A saved first, and changes nothing', async () => {
+    const cardId = await saveNewCard()
+
+    // Both sessions open the same content version.
+    const sessionA = currentVersion(cardId)
+    const sessionB = currentVersion(cardId)
+    expect(sessionA).toBe(sessionB)
+
+    const first = await saveUserCard(
+      cardRequest({ cardId, expectedUpdatedAt: sessionA, title: 'Saved by A' }),
+    )
+    expect(first.ok).toBe(true)
+
+    const cardAfterA = { ...tables.cards.find((row) => row.id === cardId)! }
+    const revisionsAfterA = tables.revisions.length
+
+    const second = await saveUserCard(
+      cardRequest({ cardId, expectedUpdatedAt: sessionB, title: 'Saved by B' }),
+    )
+
+    expect(second.ok).toBe(false)
+    expect(second.code).toBe('stale_edit')
+
+    // B did not become the current card...
+    const cardAfterB = tables.cards.find((row) => row.id === cardId)!
+    expect(cardAfterB.title).toBe('Saved by A')
+    expect(stableStringify(cardAfterB)).toBe(stableStringify(cardAfterA))
+    // ...and left no revision behind either. A refused write writes nothing at all.
+    expect(tables.revisions).toHaveLength(revisionsAfterA)
+    expect(tables.revisions.map((revision) => revision.title)).not.toContain('Saved by B')
+  })
+
+  it('appends only A’s revision', async () => {
+    const cardId = await saveNewCard()
+    const shared = currentVersion(cardId)
+
+    await saveUserCard(cardRequest({ cardId, expectedUpdatedAt: shared, title: 'Saved by A' }))
+    await saveUserCard(cardRequest({ cardId, expectedUpdatedAt: shared, title: 'Saved by B' }))
+
+    const revisions = await listCardRevisions(cardId)
+    expect(revisions.map((revision) => revision.revisionNumber)).toEqual([2, 1])
+    expect(revisions[0].title).toBe('Saved by A')
+  })
+
+  it('lets B succeed once it reloads the current content version', async () => {
+    const cardId = await saveNewCard()
+    const shared = currentVersion(cardId)
+
+    await saveUserCard(cardRequest({ cardId, expectedUpdatedAt: shared, title: 'Saved by A' }))
+    const stale = await saveUserCard(
+      cardRequest({ cardId, expectedUpdatedAt: shared, title: 'Saved by B' }),
+    )
+    expect(stale.code).toBe('stale_edit')
+
+    // Reloading the editor is the whole remedy, and it has to actually work.
+    const reloaded = await loadUserCard(cardId)
+    expect(reloaded!.updatedAt).not.toBe(shared)
+
+    const retried = await saveUserCard(
+      cardRequest({ cardId, expectedUpdatedAt: reloaded!.updatedAt, title: 'Saved by B' }),
+    )
+    expect(retried.ok).toBe(true)
+    expect(tables.cards.find((row) => row.id === cardId)!.title).toBe('Saved by B')
+    expect((await listCardRevisions(cardId)).map((r) => r.revisionNumber)).toEqual([3, 2, 1])
+  })
+
+  it('rejects a stale rename the same way', async () => {
+    const cardId = await saveNewCard()
+    const stale = currentVersion(cardId)
+
+    await saveUserCard(cardRequest({ cardId, expectedUpdatedAt: stale, title: 'Saved by A' }))
+
+    const result = await renameUserCard(cardId, 'Renamed from a stale page', stale, null)
+    expect(result.ok).toBe(false)
+    expect(result.code).toBe('stale_edit')
+    expect(tables.cards.find((row) => row.id === cardId)!.title).toBe('Saved by A')
+  })
+
+  it('does not invalidate an open edit session when only sharing changed', async () => {
+    const cardId = await saveNewCard()
+    const opened = currentVersion(cardId)
+
+    // A colleague shares the card while the editor sits open. Nothing the card *says* moved, so
+    // the content version must not move either — otherwise every share toggle would eject every
+    // open editor, and `updated_at` would be tracking row activity rather than content.
+    expect((await setShareEnabled(cardId, true)).ok).toBe(true)
+    expect(currentVersion(cardId)).toBe(opened)
+
+    const saved = await saveUserCard(
+      cardRequest({ cardId, expectedUpdatedAt: opened, title: 'Still saves fine' }),
+    )
+    expect(saved.ok).toBe(true)
+    expect(tables.cards.find((row) => row.id === cardId)!.share_enabled).toBe(true)
+  })
+
+  it('does invalidate an open edit session when the content genuinely changed', async () => {
+    const cardId = await saveNewCard()
+    const opened = currentVersion(cardId)
+
+    await renameUserCard(cardId, 'Renamed by a colleague', opened, null)
+    expect(currentVersion(cardId)).not.toBe(opened)
+
+    const saved = await saveUserCard(
+      cardRequest({ cardId, expectedUpdatedAt: opened, title: 'Built before the rename' }),
+    )
+    expect(saved.ok).toBe(false)
+    expect(saved.code).toBe('stale_edit')
+  })
+
+  it('says the same thing about an unknown card and a foreign one', async () => {
+    const cardId = await saveNewCard()
+    const version = currentVersion(cardId)
+    const unknownId = tables.cardId(999)
+
+    const unknown = await saveUserCard(
+      cardRequest({ cardId: unknownId, expectedUpdatedAt: version }),
+    )
+    expect(unknown).toEqual(
+      expect.objectContaining({ ok: false, code: 'not_found', error: expect.any(String) }),
+    )
+
+    // The same card, seen by somebody it does not belong to. Row-level security makes it
+    // invisible, so it must be reported exactly as an id that never existed — a different answer
+    // here would turn a save into a probe for whether a card id is real.
+    tables.currentUserId = OTHER_USER
+    const foreign = await saveUserCard(cardRequest({ cardId, expectedUpdatedAt: version }))
+    expect(foreign.code).toBe('not_found')
+    expect(foreign.error).toBe(unknown.error)
+
+    const foreignRename = await renameUserCard(cardId, 'Renamed by a stranger', version, null)
+    const unknownRename = await renameUserCard(unknownId, 'Renamed by a stranger', version, null)
+    expect(foreignRename.code).toBe('not_found')
+    expect(foreignRename.error).toBe(unknownRename.error)
+  })
+
+  it('refuses at the schema to overwrite a card without stating a version', async () => {
+    const cardId = await saveNewCard()
+    // The last line of defence, and the one that makes the guard non-optional: a caller that
+    // simply omits the token cannot reach the update at all.
+    expect(() => cardRequest({ cardId })).toThrow(/content version/i)
+  })
+})
+
+describe('a revision records the card’s full identity', () => {
+  it('carries the procedure and scenario, not just the editable metadata', async () => {
+    const cardId = await saveNewCard()
+    const [revision] = await listCardRevisions(cardId)
+    const card = tables.cards.find((row) => row.id === cardId)!
+
+    expect(revision.procedureCode).toBe(card.procedure_code)
+    expect(revision.scenarioId).toBe(card.scenario_id)
+    expect(revision.scenarioId).toBe(SCENARIO_ID)
+  })
+
+  it('reports them as the reviewed revision’s own, in the reconciliation source', async () => {
+    const cardId = await saveNewCard()
+    const result = await reconcileSavedCard(cardId)
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    const [revision] = await listCardRevisions(cardId)
+    expect(result.reconciliation.source.procedureCode).toBe(revision.procedureCode)
+    expect(result.reconciliation.source.scenarioId).toBe(revision.scenarioId)
   })
 })

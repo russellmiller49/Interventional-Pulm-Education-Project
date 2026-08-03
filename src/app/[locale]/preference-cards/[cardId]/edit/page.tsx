@@ -131,6 +131,9 @@ export default async function EditPreferenceCardPage({ params }: PageProps) {
         initialScenarioId={rebuilt.scenario.id}
         initialState={{
           cardId: record.id,
+          // The content version this editor was opened against. It travels back with the save so
+          // the database can refuse to apply it to a state somebody has since replaced.
+          updatedAt: record.updatedAt,
           title: record.title,
           physicianName: record.physicianName,
           status: record.status,

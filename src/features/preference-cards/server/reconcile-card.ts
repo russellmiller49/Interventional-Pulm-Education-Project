@@ -57,6 +57,14 @@ export interface CardReconciliationSource {
   /** Null only for a card whose revision history is somehow absent; the trigger appends on insert. */
   revisionId: string | null
   revisionNumber: number | null
+  /**
+   * The procedure and scenario the reviewed revision recorded — the revision's own copy, not the
+   * card's current columns. A rebuild citing this revision has to know which procedure it was,
+   * and reading that from the live card would reintroduce exactly the moving target revisions
+   * exist to remove.
+   */
+  procedureCode: string | null
+  scenarioId: string | null
   snapshotHash: string
   snapshotIntegrityHash: string | null
   resolvedContentHash: string | null
@@ -247,6 +255,8 @@ export async function reconcileSavedCard(cardId: string): Promise<CardReconcilia
     cardId,
     revisionId: currentRevision?.id ?? null,
     revisionNumber: currentRevision?.revisionNumber ?? null,
+    procedureCode: currentRevision?.procedureCode ?? null,
+    scenarioId: currentRevision?.scenarioId ?? null,
     snapshotHash: storedCard.snapshotHash,
     snapshotIntegrityHash: storedCard.snapshotIntegrityHash ?? null,
     resolvedContentHash: storedCard.resolvedContentHash ?? null,

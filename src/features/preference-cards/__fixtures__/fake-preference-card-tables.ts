@@ -43,6 +43,8 @@ export interface FakeRevisionRow {
   title: string
   physician_name: string | null
   status: 'draft' | 'final'
+  procedure_code: string
+  scenario_id: string
   builder_inputs: unknown
   card_snapshot: unknown
   snapshot_hash: string
@@ -60,17 +62,33 @@ export interface FakeWrite {
   operation: 'insert' | 'update' | 'delete'
 }
 
-/** The columns the trigger compares. A change to any of them is a new card state. */
+/**
+ * The single definition of revision-bearing content, mirroring
+ * `public.ip_preference_card_content_changed`.
+ *
+ * Two database triggers read it — the one that moves `updated_at` and the one that appends a
+ * revision — and so do the two places below, for the same reason the migration has one function
+ * rather than two column lists: a content change that moved the timestamp without writing a
+ * revision, or the reverse, would be silent and wrong in both directions.
+ */
 const REVISION_CONTENT_COLUMNS = [
   'title',
   'physician_name',
   'status',
+  'procedure_code',
+  'scenario_id',
   'builder_inputs',
   'card_snapshot',
   'snapshot_hash',
   'engine_version',
   'catalog_import_id',
 ] as const
+
+function contentChanged(before: FakeCardRow, after: FakeCardRow): boolean {
+  return REVISION_CONTENT_COLUMNS.some(
+    (column) => JSON.stringify(before[column]) !== JSON.stringify(after[column]),
+  )
+}
 
 function jsonField(value: unknown, ...path: string[]): string | null {
   let current: unknown = value
@@ -122,14 +140,7 @@ export class FakePreferenceCardTables {
    * revision — toggling sharing bumps `updated_at` and changes nothing this table records.
    */
   private appendRevision(row: FakeCardRow, previous: FakeCardRow | null): void {
-    if (
-      previous &&
-      REVISION_CONTENT_COLUMNS.every(
-        (column) => JSON.stringify(row[column]) === JSON.stringify(previous[column]),
-      )
-    ) {
-      return
-    }
+    if (previous && !contentChanged(previous, row)) return
 
     const nextNumber =
       this.revisions
@@ -144,6 +155,8 @@ export class FakePreferenceCardTables {
       title: row.title,
       physician_name: row.physician_name,
       status: row.status,
+      procedure_code: row.procedure_code,
+      scenario_id: row.scenario_id,
       builder_inputs: row.builder_inputs,
       card_snapshot: row.card_snapshot,
       snapshot_hash: row.snapshot_hash,
@@ -270,8 +283,15 @@ export class FakePreferenceCardTables {
           )
           if (index < 0) return Promise.resolve({ data: null, error: null })
           const previous = this.cards[index]
-          // The table's own trigger bumps `updated_at` on every update.
-          const updated = { ...previous, ...payload, updated_at: this.now() } as FakeCardRow
+          // `ip_set_preference_card_content_updated_at`: the timestamp is a content version, so a
+          // share-only update leaves it exactly where it was. That is what keeps a share toggle
+          // from invalidating an open edit session, and it is modelled here rather than assumed
+          // because the concurrency tests turn on it.
+          const patched = { ...previous, ...payload } as FakeCardRow
+          const updated = {
+            ...patched,
+            updated_at: contentChanged(previous, patched) ? this.now() : previous.updated_at,
+          } as FakeCardRow
           this.cards[index] = updated
           this.appendRevision(updated, previous)
           return Promise.resolve({ data: updated, error: null })

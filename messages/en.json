@@ -7922,7 +7922,8 @@
       "unavailableSuperseded": "This card was built before releases pinned the full rule set, so reopening it would rebuild it against setup rules it never recorded. Its saved snapshot stays available to view, print, share, duplicate, and retain for reference.",
       "unavailableLegacyFamily": "This card records a product line by a catalogue-browsing key rather than a reviewed product family, so reopening it would mean deciding which products that key stands for today. The card is shown exactly as it was saved.",
       "unavailableCatalogRelease": "The catalogue release this card was saved against can no longer be retrieved intact, so the products and roles it recorded cannot be reconstructed. Today's catalogue is not substituted for it.",
-      "unavailableModifier": "This card records a setup option that the procedure release it is pinned to does not offer, so it cannot be rebuilt without granting a permission that release never granted."
+      "unavailableModifier": "This card records a setup option that the procedure release it is pinned to does not offer, so it cannot be rebuilt without granting a permission that release never granted.",
+      "staleEdit": "This card was saved from somewhere else after you opened it. Reload to see the current version, then reapply your change — nothing you were looking at has been overwritten."
     },
     "duplicateTitle": "{title} (copy)",
     "deleteCard": "Delete",

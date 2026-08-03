@@ -102,6 +102,14 @@ export type PreferenceCardWizardMode = 'create' | 'edit'
  */
 export interface PreferenceCardBuilderInitialState {
   cardId: string
+  /**
+   * The card's `updated_at` when this editor loaded it — its content version.
+   *
+   * Submitted with the save as `expectedUpdatedAt`, so an edit built against a state a colleague
+   * has since replaced is refused instead of overwriting them. It moves only when revision-bearing
+   * content changes, so somebody sharing the card while this editor is open does not invalidate it.
+   */
+  updatedAt: string
   title: string
   physicianName: string | null
   status: 'draft' | 'final'
@@ -530,7 +538,7 @@ export function PreferenceCardWizard({
       ? editing!.builderInputs.releaseBundleId
       : (bundle.releaseBundleId ?? undefined)
     return {
-      ...(editing ? { cardId: editing.cardId } : {}),
+      ...(editing ? { cardId: editing.cardId, expectedUpdatedAt: editing.updatedAt } : {}),
       schemaVersion,
       ...(releaseBundleId ? { releaseBundleId } : {}),
       title: title.trim() || bundle.definition.title,
@@ -653,7 +661,11 @@ export function PreferenceCardWizard({
       // A failed save says so. It used to fall through to a URL that encoded the whole card,
       // which looked like success and lost the card as soon as the link was gone.
       if (!result.ok || !result.cardId) {
-        setSaveError(result.error ?? t('saveFailed'))
+        // A stale save is not a failure the physician caused, and it has a specific remedy —
+        // reload, then reapply — so it gets its own sentence rather than the generic one.
+        setSaveError(
+          result.code === 'stale_edit' ? t('edit.staleEdit') : (result.error ?? t('saveFailed')),
+        )
         return
       }
       // Clear the guard before navigating, so a successful save never prompts.

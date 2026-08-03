@@ -103,6 +103,9 @@ describe('save-time catalog product-role integrity', () => {
     const wrongRole = unrelatedKnownRole(productId)
     const request = saveRequest({
       cardId: '00000000-0000-4000-8000-000000000999',
+      // An overwrite must state the content version it edited from. A well-formed one is supplied
+      // here so the rejection under test is the role mismatch and not the missing token.
+      expectedUpdatedAt: GENERATED_AT,
       catalogPicks: [{ productId, roleCode: wrongRole }],
     })
 

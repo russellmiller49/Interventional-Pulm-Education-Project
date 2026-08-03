@@ -7922,7 +7922,8 @@
       "unavailableSuperseded": "Esta tarjeta se creó antes de que las versiones fijaran el conjunto completo de reglas, por lo que reabrirla la reconstruiría con reglas de preparación que nunca registró. Su instantánea guardada sigue disponible para ver, imprimir, compartir, duplicar y conservar como referencia.",
       "unavailableLegacyFamily": "Esta tarjeta identifica una línea de productos mediante una clave de exploración del catálogo y no mediante una familia de productos revisada, por lo que reabrirla exigiría decidir qué productos representa hoy esa clave. La tarjeta se muestra exactamente como se guardó.",
       "unavailableCatalogRelease": "La versión del catálogo con la que se guardó esta tarjeta ya no puede recuperarse íntegra, por lo que no es posible reconstruir los productos y las funciones que registró. No se sustituye por el catálogo actual.",
-      "unavailableModifier": "Esta tarjeta registra una opción de preparación que la versión del procedimiento a la que está fijada no ofrece, por lo que no puede reconstruirse sin conceder un permiso que esa versión nunca otorgó."
+      "unavailableModifier": "Esta tarjeta registra una opción de preparación que la versión del procedimiento a la que está fijada no ofrece, por lo que no puede reconstruirse sin conceder un permiso que esa versión nunca otorgó.",
+      "staleEdit": "This card was saved from somewhere else after you opened it. Reload to see the current version, then reapply your change — nothing you were looking at has been overwritten."
     },
     "duplicateTitle": "{title} (copy)",
     "deleteCard": "Delete",
