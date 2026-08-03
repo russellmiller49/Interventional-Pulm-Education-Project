@@ -22,8 +22,9 @@
 --
 -- WHAT IT DOES NOT DO
 --   It does not exercise PostgREST, so "authenticated cannot insert a revision" is verified at the
---   database level — role privileges, RLS policies, and actual attempted writes as `authenticated`
---   — rather than over HTTP. That is the layer the guarantee lives at; the API inherits it.
+--   database level — role privileges, RLS policies, and actual attempted writes as both
+--   `authenticated` and `service_role` — rather than over HTTP. That is the layer the guarantee
+--   lives at; the API inherits it.
 
 begin;
 
@@ -180,6 +181,17 @@ end $$;
 
 -- Every function must pin an empty search_path, or a caller-controlled one could resolve names
 -- inside a definer function to something of the caller's choosing.
+--
+-- The stored representation is `search_path=""`, not `search_path=`. `pg_proc.proconfig` holds
+-- `name=value` strings whose value went through the same quoting rules a `SET` would use, and an
+-- empty string has to be written as a quoted empty literal or it would read as "no value at all"
+-- and round-trip back to the default. An earlier draft of this file matched on `search_path=`,
+-- which nothing ever equals — so every function was reported as unpinned and the check was a
+-- guaranteed false failure.
+--
+-- Matching is on the parsed value rather than on the raw string, so a future `SET search_path =
+-- ''` written with different spacing, or with other GUCs alongside it in `proconfig`, still
+-- passes for the right reason.
 do $$
 declare
   bad text;
@@ -189,7 +201,11 @@ begin
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname = 'private'
      and p.proname like 'ip_%'
-     and not coalesce(p.proconfig, '{}') @> array['search_path=']::text[];
+     and not exists (
+       select 1
+         from unnest(coalesce(p.proconfig, '{}')) as setting
+        where setting in ('search_path=""', 'search_path=')
+     );
   if bad is not null then
     raise exception 'FAIL: these private functions do not pin an empty search_path: %', bad;
   end if;
@@ -222,24 +238,38 @@ begin
   raise notice 'OK  every trigger function that reaches into private is SECURITY DEFINER';
 end $$;
 
+-- No client role may hold EXECUTE on the internal machinery.
+--
+-- PUBLIC is the grantee that matters most and is the one easiest to miss: `aclexplode` reports it
+-- as grantee OID **0**, and `pg_get_userbyid(0)` does not return 'PUBLIC' — it returns a
+-- placeholder like `unknown (OID=0)`, because no `pg_authid` row has that OID. An earlier draft
+-- filtered on `pg_get_userbyid(a.grantee) in ('public', …)`, which therefore never matched a
+-- PUBLIC grant at all. That failed in the dangerous direction: a function left executable by
+-- everyone would have been reported as locked down. It is mapped explicitly below.
+--
+-- `acldefault('f', proowner)` stands in when `proacl` is null, which is exactly the
+-- never-granted-never-revoked case — and the default ACL for a function grants EXECUTE to PUBLIC.
+-- So a function nobody ever touched must be caught here, and now is.
 do $$
 declare
   callable text;
 begin
-  select string_agg(format('%s->%s', p.proname, g.grantee), ', ')
+  select string_agg(format('%s->%s', p.proname, g.grantee), ', ' order by p.proname, g.grantee)
     into callable
     from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
     cross join lateral aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
-    join lateral (select pg_get_userbyid(a.grantee) as grantee) g on true
+    join lateral (
+      select case when a.grantee = 0 then 'PUBLIC' else pg_get_userbyid(a.grantee) end as grantee
+    ) g on true
    where n.nspname = 'private'
      and p.proname like 'ip_%'
      and a.privilege_type = 'EXECUTE'
-     and g.grantee in ('public', 'anon', 'authenticated', 'service_role');
+     and g.grantee in ('PUBLIC', 'anon', 'authenticated', 'service_role');
   if callable is not null then
     raise exception 'FAIL: private functions are directly callable by a client role: %', callable;
   end if;
-  raise notice 'OK  private functions are not callable by any Data API role';
+  raise notice 'OK  private functions are not callable by PUBLIC, anon, authenticated, or service_role';
 end $$;
 
 -- Every existing card has history. "Exactly one" is only true the instant the migration lands —
@@ -675,6 +705,140 @@ begin
   end if;
 
   reset role;
+end $$;
+
+-- =============================================================================================
+-- Part 4 — as the `service_role`. It reads revisions and must not be able to write them.
+-- =============================================================================================
+--
+-- The grant inspection in Part 1 already reports what the catalog says. This proves what the
+-- database actually does, which is a different claim and the one that matters — `service_role`
+-- bypasses row-level security entirely, so a privilege that survives here is a hole no policy
+-- could ever close. It is also the role most likely to acquire a verb by accident: Supabase ships
+-- `alter default privileges in schema public grant all on tables to service_role`, so a table
+-- created in `public` arrives with insert/update/delete already granted without any statement in
+-- the migration saying so.
+
+do $$
+declare
+  test_user uuid;
+  test_card uuid;
+  visible integer;
+  n integer;
+  failed boolean;
+begin
+  select id into test_user from auth.users order by created_at limit 1;
+  if test_user is null then
+    raise notice 'SKIP service_role checks: no auth.users row available';
+    return;
+  end if;
+
+  -- A card with a revision, created as the migration owner before dropping privileges.
+  insert into public.ip_user_preference_cards (
+    user_id, title, procedure_code, scenario_id, status,
+    builder_inputs, card_snapshot, snapshot_hash, engine_version, catalog_import_id
+  )
+  values (
+    test_user, 'VERIFY service_role card', 'FLEX_BRONCH', 'verify-scenario', 'draft',
+    '{}'::jsonb, '{}'::jsonb, repeat('7', 64), 'verify-engine', 'verify-catalog'
+  )
+  returning id into test_card;
+
+  set local role service_role;
+  if current_user <> 'service_role' then
+    raise exception 'FAIL: could not assume service_role; the checks below would be meaningless';
+  end if;
+
+  -- ---- it can still read -----------------------------------------------------------------
+  -- Losing read access would break the service role's legitimate uses, so this is asserted
+  -- rather than assumed. RLS does not apply to it, so it sees the row regardless of owner.
+  select count(*) into visible
+    from public.ip_user_preference_card_revisions where card_id = test_card;
+  if visible <> 1 then
+    raise exception 'FAIL: service_role sees % revision(s) for the test card, expected 1', visible;
+  end if;
+  raise notice 'OK  service_role retains SELECT on revisions';
+
+  -- ---- insert ------------------------------------------------------------------------------
+  -- Only `insufficient_privilege` is caught. If the grant were still present the insert would
+  -- instead fail on a constraint or succeed outright, and either outcome must surface rather
+  -- than be mistaken for the refusal under test.
+  failed := false;
+  begin
+    insert into public.ip_user_preference_card_revisions (
+      card_id, user_id, revision_number, title, status, procedure_code, scenario_id,
+      builder_inputs, card_snapshot, snapshot_hash, engine_version, created_at, created_by
+    )
+    values (
+      test_card, test_user, 77, 'VERIFY service_role forged', 'final', 'FLEX_BRONCH',
+      'verify-scenario', '{}'::jsonb, '{}'::jsonb, repeat('8', 64), 'forged',
+      clock_timestamp(), test_user
+    );
+  exception when insufficient_privilege then
+    failed := true;
+  end;
+  if not failed then
+    raise exception 'FAIL: service_role inserted a revision directly (42501 expected)';
+  end if;
+  -- A SET LOCAL made inside an aborted subtransaction would be undone. This one was made outside
+  -- it, so it stands — reaffirmed and asserted anyway, because a silent revert to the superuser
+  -- would make every remaining negative check pass for entirely the wrong reason.
+  set local role service_role;
+  if current_user <> 'service_role' then
+    raise exception 'FAIL: role reverted after the insert attempt; later checks are untrustworthy';
+  end if;
+  raise notice 'OK  service_role cannot insert a revision (42501)';
+
+  -- ---- update ------------------------------------------------------------------------------
+  failed := false;
+  begin
+    update public.ip_user_preference_card_revisions
+       set title = 'VERIFY service_role rewrite' where card_id = test_card;
+  exception when insufficient_privilege then
+    failed := true;
+  end;
+  if not failed then
+    raise exception 'FAIL: service_role updated a revision directly (42501 expected)';
+  end if;
+  set local role service_role;
+  if current_user <> 'service_role' then
+    raise exception 'FAIL: role reverted after the update attempt; later checks are untrustworthy';
+  end if;
+  raise notice 'OK  service_role cannot update a revision (42501)';
+
+  -- ---- delete ------------------------------------------------------------------------------
+  failed := false;
+  begin
+    delete from public.ip_user_preference_card_revisions where card_id = test_card;
+  exception when insufficient_privilege then
+    failed := true;
+  end;
+  if not failed then
+    raise exception 'FAIL: service_role deleted a revision directly (42501 expected)';
+  end if;
+  set local role service_role;
+  if current_user <> 'service_role' then
+    raise exception 'FAIL: role reverted after the delete attempt';
+  end if;
+  raise notice 'OK  service_role cannot delete a revision (42501)';
+
+  -- Nothing above changed anything.
+  select count(*) into n
+    from public.ip_user_preference_card_revisions where card_id = test_card;
+  if n <> 1 then
+    raise exception 'FAIL: the revision row changed count during the service_role checks (now %)', n;
+  end if;
+  perform 1 from public.ip_user_preference_card_revisions
+   where card_id = test_card and title = 'VERIFY service_role card';
+  if not found then
+    raise exception 'FAIL: the revision row was modified during the service_role checks';
+  end if;
+  raise notice 'OK  the revision row is untouched by all three refused writes';
+
+  reset role;
+  if current_user = 'service_role' then
+    raise exception 'FAIL: role was not reset after the service_role checks';
+  end if;
 end $$;
 
 do $$
