@@ -15,6 +15,52 @@ const callbackPageHeaders = {
   'X-Robots-Tag': 'noindex, nofollow',
 }
 
+function isLocalHostname(hostname: string) {
+  const normalizedHostname = hostname.toLowerCase()
+
+  return (
+    normalizedHostname === 'localhost' ||
+    normalizedHostname.endsWith('.localhost') ||
+    normalizedHostname === '0.0.0.0' ||
+    normalizedHostname === '::1' ||
+    normalizedHostname === '[::1]' ||
+    /^127(?:\.\d{1,3}){3}$/.test(normalizedHostname)
+  )
+}
+
+function resolveCallbackOrigin(requestUrl: URL) {
+  const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim()
+
+  if (configuredSiteUrl) {
+    try {
+      const siteUrl = new URL(configuredSiteUrl)
+      const isHttpUrl = siteUrl.protocol === 'http:' || siteUrl.protocol === 'https:'
+      const isValidProductionUrl =
+        process.env.NODE_ENV !== 'production' ||
+        (siteUrl.protocol === 'https:' && !isLocalHostname(siteUrl.hostname))
+
+      if (isHttpUrl && isValidProductionUrl) {
+        return siteUrl.origin
+      }
+    } catch {
+      // Outside production, an invalid local configuration may use the request origin below.
+    }
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    return requestUrl.origin
+  }
+
+  return null
+}
+
+function renderAuthConfigurationError() {
+  return new NextResponse('Authentication callback is temporarily unavailable.', {
+    status: 500,
+    headers: callbackPageHeaders,
+  })
+}
+
 function renderSharedAuthCallbackPage() {
   const targetsJson = JSON.stringify(SHARED_AUTH_CALLBACK_TARGETS)
 
@@ -189,9 +235,18 @@ export async function GET(request: NextRequest) {
     return renderSharedAuthCallbackPage()
   }
 
+  const callbackOrigin = resolveCallbackOrigin(url)
+
+  if (!callbackOrigin) {
+    console.error(
+      'Authentication callback requires NEXT_PUBLIC_SITE_URL to be a valid public HTTPS URL in production',
+    )
+    return renderAuthConfigurationError()
+  }
+
   const redirectTarget = new URL(
     resolvePostAuthRedirectPath(url.searchParams.get('next')),
-    url.origin,
+    callbackOrigin,
   )
   const response = NextResponse.redirect(redirectTarget)
   type CookieOptions = Parameters<typeof response.cookies.set>[2]
