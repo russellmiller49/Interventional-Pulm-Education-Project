@@ -1792,7 +1792,19 @@ export function PracticeCasePlayer(props: PracticeCasePlayerProps) {
               {state.scenario.clinical?.lastResponse}
             </span>
             <span>
-              {state.scenario.criticalErrors.map((error) => error.replaceAll('-', ' ')).join(', ')}
+              {/*
+                The authored label, not the identifier. De-hyphenating the id produced "rpm during
+                recirculation" where the content says "Increased speed against established
+                recirculation" — the learner was being shown a key instead of the sentence written
+                for them.
+              */}
+              {state.scenario.criticalErrors
+                .map(
+                  (error) =>
+                    scenario.unsafeActionPenalties.find((penalty) => penalty.id === error)?.label ??
+                    error.replaceAll('-', ' '),
+                )
+                .join(', ')}
             </span>
             <button type="button" onClick={() => onLoadScenario(scenario.id, state.simulationMode)}>
               Restart from the clean case

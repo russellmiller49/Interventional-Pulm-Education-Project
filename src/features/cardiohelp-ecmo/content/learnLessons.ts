@@ -766,7 +766,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       instruction:
         'Compare displayed flow with patient SpO₂ and pre-oxygenator saturation rather than assuming more L/min means more support.',
       rationale:
-        'Oxygenated return blood can be drawn back into the drainage cannula, raising displayed flow without proportional patient benefit.',
+        'Oxygenated return blood can be drawn back into the drainage cannula, raising displayed flow without proportional patient benefit. Asking for still more flow widens that share, so past the speed this case opened at the displayed number and the support the patient receives move in opposite directions.',
       expectedResponse: [
         'High displayed flow',
         'Limited oxygenation response',
@@ -786,6 +786,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         expectedResponse: [
           'Recirculation decreases',
           'Effective support can improve without a higher displayed flow',
+          'No speed escalation was needed, and none would have helped',
         ],
       },
     ],
@@ -1676,14 +1677,17 @@ export function validateGuidedLessonRegistry(): string[] {
       }
     }
 
-    if (scenario?.family === 'preload') {
+    // Families where escalating speed is the reflex the lesson exists to discourage, and where the
+    // engine now issues a critical error for it. A scripted step that told the learner to do it
+    // would score them for following the instructions.
+    if (scenario?.family === 'preload' || scenario?.family === 'recirculation') {
       const initialRpm = scenario?.initialState.device?.rpmSetpoint ?? 0
       if (
         lesson.steps.some((item) =>
           item.actions.some((action) => action.type === 'SET_RPM' && action.rpm > initialRpm),
         )
       ) {
-        errors.push(`${lesson.id}: preload lesson cannot escalate RPM`)
+        errors.push(`${lesson.id}: ${scenario.family} lesson cannot escalate RPM`)
       }
     }
 

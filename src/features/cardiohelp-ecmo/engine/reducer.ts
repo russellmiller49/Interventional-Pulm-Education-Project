@@ -545,14 +545,31 @@ export function ecmoSimulationReducer(
           displayedSetpoint: Math.round(clamp(action.rpm, 0, 5000)),
         },
       }
+      const raisingSpeed = action.rpm > state.device.rpmSetpoint
       if (
         (hasFault(state, 'preload-limited') ||
           hasFault(state, 'hemorrhagic-hypovolemia') ||
           hasFault(state, 'tension-pneumothorax') ||
           hasFault(state, 'tamponade')) &&
-        action.rpm > state.device.rpmSetpoint
+        raisingSpeed
       ) {
         next = addCriticalError(next, 'rpm-during-collapse', 50)
+      }
+      // Same reflex, different mechanism. Pulling harder against established recirculation widens
+      // the recirculating share rather than the support the patient receives, so it belongs in the
+      // RPM-escalation guard family — but under its own name, because calling it drainage collapse
+      // would teach the wrong cause.
+      //
+      // Gated on the case's own opening speed as well as on the direction of travel, because that
+      // is exactly where the model starts charging for it. A learner who has backed the pump off
+      // and is returning toward the speed the case opened at is not escalating, and scoring them as
+      // though they were would punish an action the simulation itself treats as harmless.
+      if (
+        hasFault(state, 'recirculation') &&
+        raisingSpeed &&
+        action.rpm > state.scenario.baselineRpmSetpoint
+      ) {
+        next = addCriticalError(next, 'rpm-during-recirculation', 50)
       }
       if (
         definition.assessmentPolicy?.preserveCircuitBloodFlow &&
