@@ -6,6 +6,7 @@ import type {
   SimulationAction,
   SupportMode,
 } from '../engine/types'
+import { requireEcmoLearnPrediction } from './learnPredictionItems'
 import { cardiohelpScenarioById, cardiohelpScenarios, TIP_TO_TIP_CHECK_ID } from './scenarios'
 
 interface ResponseStepInput {
@@ -62,13 +63,34 @@ function eventActions(scenario: ScenarioDefinition): SimulationAction[] {
   return Array.from({ length: eventSecond }, () => ({ type: 'STEP' as const }))
 }
 
-function predictionAction(scenario: ScenarioDefinition): SimulationAction {
-  return {
-    type: 'COMMIT_PREDICTION',
-    goalId: scenario.expectation.goalId,
-    control: scenario.expectation.control,
-    direction: scenario.expectation.direction,
-  }
+/**
+ * The one step in a lesson the learner answers rather than performs.
+ *
+ * Everything the step says has to survive being read by someone who has not answered yet, so the
+ * copy here is deliberately the same for every lesson: the clinical question, its options and its
+ * reasoning all live in the authored item, which the player does not show until the learner has
+ * committed. The step carries no action — the selected choice supplies the payload — and no
+ * expected response, because previewing the response would be the answer.
+ *
+ * `requireEcmoLearnPrediction` is called for its failure: a lesson that declares a prediction step
+ * without an authored item to answer refuses to construct rather than rendering an empty question.
+ */
+function predictionStep(scenario: ScenarioDefinition, target: GuidedTarget): GuidedWalkthroughStep {
+  requireEcmoLearnPrediction(scenario.id)
+  return step({
+    id: `${scenario.id}-interpret`,
+    phase: 'interpret',
+    target,
+    title: 'Commit to a prediction before you act',
+    instruction:
+      'Read the pattern in front of you and commit to one course of action, together with what you expect it to do. The options are alternatives a reasoning clinician would weigh, and the reasoning behind each of them is held back until you have chosen.',
+    rationale:
+      'Committing before acting is what makes the next few minutes diagnostic rather than merely eventful. A read that is only stated after the response has been seen cannot be shown to have been mistaken, so the model it came from is never examined — and it is the model, not the single action, that carries forward to the next patient.',
+    actionLabel: 'Commit this prediction',
+    actions: [],
+    expectedResponse: [],
+    predictionScenarioId: scenario.id,
+  })
 }
 
 function standardLesson(input: StandardLessonInput): GuidedLessonDefinition {
@@ -94,21 +116,7 @@ function standardLesson(input: StandardLessonInput): GuidedLessonDefinition {
         actions: timedActions,
         expectedResponse: input.observe.expectedResponse,
       }),
-      step({
-        id: `${scenario.id}-interpret`,
-        phase: 'interpret',
-        target: input.observe.target,
-        title: 'Connect the observation to the goal',
-        instruction: `The safe goal is “${scenario.debrief.correctWorkflow[0]}” Use ${scenario.expectation.control} and predict ${scenario.expectation.direction}.`,
-        rationale: scenario.debrief.causalChain.join(' '),
-        actionLabel: 'Commit the guided prediction',
-        actions: [predictionAction(scenario)],
-        expectedResponse: [
-          `Goal: ${scenario.expectation.goalId}`,
-          `Control: ${scenario.expectation.control}`,
-          `Direction: ${scenario.expectation.direction}`,
-        ],
-      }),
+      predictionStep(scenario, input.observe.target),
       ...input.responseSteps.map((response) =>
         step({
           ...response,
@@ -345,19 +353,9 @@ const orientationLesson: GuidedLessonDefinition = {
         'Gas-source connection state',
       ],
     }),
-    step({
-      id: 'startup-interpret',
-      phase: 'interpret',
-      target: 'console',
-      title: 'Commit the safe-startup goal',
-      instruction:
-        'Before operating support, choose a safe startup state, tip-to-tip inspection, and independent patient check.',
-      rationale:
-        'A passed self-test checks device functions; it does not verify every circuit connection, sensor orientation, gas source, cannula, or backup system.',
-      actionLabel: 'Commit the guided startup prediction',
-      actions: [predictionAction(orientationScenario)],
-      expectedResponse: ['Goal: safe-startup', 'Control: inspect-circuit', 'Direction: inspect'],
-    }),
+    // Shares its id shape with the drills so the VA lesson below can substitute its own scenario's
+    // prediction while remapping the rest of the tour.
+    { ...predictionStep(orientationScenario, 'console'), id: 'startup-interpret' },
     step({
       id: 'startup-respond',
       phase: 'respond',
@@ -407,6 +405,10 @@ const orientationLesson: GuidedLessonDefinition = {
 }
 
 const vaOrientationScenario = requireScenario('va-startup-sensor-orientation')
+// This lesson remaps the venovenous tour rather than building its own steps, so the authored VA
+// prediction has to be demanded here or its absence would only show up as an empty question.
+requireEcmoLearnPrediction(vaOrientationScenario.id)
+
 const vaOrientationLesson: GuidedLessonDefinition = {
   ...orientationLesson,
   id: 'learn-va-startup-sensor-orientation',
@@ -427,8 +429,9 @@ const vaOrientationLesson: GuidedLessonDefinition = {
         : item.instruction,
     rationale:
       item.id === 'startup-transfer' ? vaOrientationScenario.debrief.diagnosis : item.rationale,
-    actions:
-      item.id === 'startup-interpret' ? [predictionAction(vaOrientationScenario)] : item.actions,
+    // The VA lesson asks its own authored question, not the venovenous one.
+    predictionScenarioId:
+      item.id === 'startup-interpret' ? vaOrientationScenario.id : item.predictionScenarioId,
   })),
 }
 

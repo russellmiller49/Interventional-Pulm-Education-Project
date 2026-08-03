@@ -1248,6 +1248,74 @@
   gap: 0.45rem;
 }
 
+/*
+ * The Learn prediction: an answerable question rather than a single button that submitted the
+ * scenario's own expectation. The options carry the learner's whole decision, so they are given the
+ * same target size and focus treatment as the simulator controls.
+ */
+.guidedPrediction {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.85rem;
+}
+
+.guidedPrediction fieldset {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.8rem;
+  border: 1px solid rgba(113, 225, 229, 0.34);
+  border-radius: 12px;
+  background: rgba(31, 104, 112, 0.14);
+}
+
+.guidedPrediction legend {
+  padding: 0 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.guidedPrediction label {
+  display: grid;
+  grid-template-columns: 1.1rem minmax(0, 1fr);
+  gap: 0.6rem;
+  align-items: start;
+  min-height: 44px;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid rgba(113, 225, 229, 0.22);
+  border-radius: 10px;
+  background: rgba(8, 32, 37, 0.55);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  cursor: pointer;
+}
+
+.guidedPrediction label[data-selected='true'] {
+  border-color: var(--cyan-bright);
+  background: rgba(31, 104, 112, 0.38);
+}
+
+.guidedPrediction fieldset:disabled label {
+  cursor: default;
+}
+
+.guidedPrediction input {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.2rem;
+  accent-color: var(--cyan-bright);
+}
+
+.guidedPrediction input:focus-visible {
+  outline: 2px solid var(--cyan-bright);
+  outline-offset: 2px;
+}
+
+.guidedPrediction .guidedPerformAction {
+  margin-top: 0;
+}
+
 .guidedHelpAction {
   display: inline-flex;
   gap: 0.4rem;

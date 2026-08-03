@@ -19,9 +19,11 @@ import {
 
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 import type { CriticalCareActivityPhase } from '@/features/learning-module/activity'
+import { AnswerVerdict } from '@/features/learning-module/components/AnswerVerdict'
 import { PathwayNav, nextPathwaySection } from '@/features/learning-module/curriculum'
 
 import { cardiohelpLearnLessons, cardiohelpLearnLessonByScenarioId } from '../content/learnLessons'
+import { ecmoLearnPredictionFor } from '../content/learnPredictionItems'
 import {
   cardiohelpCurriculum,
   curriculumUnitById,
@@ -307,9 +309,18 @@ export function LearnLessonPlayer({
   const [completedStepIds, setCompletedStepIds] = useState<Set<string>>(() => new Set())
   const [lessonFinished, setLessonFinished] = useState(false)
   const [helpRequestCount, setHelpRequestCount] = useState(0)
+  // Kept per step rather than per lesson so stepping back to a committed prediction still shows the
+  // learner what they answered beside the verdict on it.
+  const [predictionChoiceByStepId, setPredictionChoiceByStepId] = useState<
+    Readonly<Record<string, string>>
+  >({})
   const activePanelRef = useRef<HTMLDivElement>(null)
   const activeStep = lesson.steps[activeStepIndex] ?? lesson.steps[0]
   const stepPerformed = completedStepIds.has(activeStep.id)
+  const prediction = activeStep.predictionScenarioId
+    ? ecmoLearnPredictionFor(activeStep.predictionScenarioId)
+    : undefined
+  const selectedPredictionChoiceId = predictionChoiceByStepId[activeStep.id] ?? null
   const simulatorTask = resolveGuidedSimulatorTask(activeStep, state)
   const simulatorTaskSatisfied = simulatorTask?.satisfied ?? false
   const helpControlId = simulatorTask?.controlId ?? panelControlIds[activeStep.target]
@@ -435,6 +446,26 @@ export function LearnLessonPlayer({
     completeActiveStep()
   }
 
+  /**
+   * The learner's own selection becomes the committed prediction.
+   *
+   * This is the whole point of the step: the payload is read off the choice that was picked, so a
+   * learner who holds the wrong model commits the wrong triple and the existing engine scoring —
+   * untouched here — sees what they actually decided rather than what the scenario expected.
+   */
+  function commitPrediction() {
+    if (!prediction || !selectedPredictionChoiceId || stepPerformed) return
+    const commitment = prediction.commitments[selectedPredictionChoiceId]
+    if (!commitment) return
+    dispatch({
+      type: 'COMMIT_PREDICTION',
+      goalId: commitment.goalId,
+      control: commitment.control,
+      direction: commitment.direction,
+    })
+    completeActiveStep()
+  }
+
   function goToStep(index: number) {
     if (index < 0 || index >= lesson.steps.length) return
     if (index > activeStepIndex && !stepPerformed) return
@@ -460,6 +491,7 @@ export function LearnLessonPlayer({
     setCompletedStepIds(new Set())
     setLessonFinished(false)
     setHelpRequestCount(0)
+    setPredictionChoiceByStepId({})
     onControlHelpChange(null)
     onSelectLesson(lesson.scenarioId)
   }
@@ -619,7 +651,57 @@ export function LearnLessonPlayer({
           )}
         </div>
 
-        {!stepPerformed && simulatorTask ? (
+        {prediction ? (
+          /*
+           * The prediction step is answered, not performed. The options are the only thing shown
+           * before commitment — every rationale, the comparison between them and the explanation
+           * live in the verdict below, which does not exist until a choice has been committed.
+           */
+          <div className={styles.guidedPrediction}>
+            <fieldset disabled={stepPerformed}>
+              <legend>{prediction.item.stem}</legend>
+              {prediction.item.choices.map((choice) => (
+                <label key={choice.id} data-selected={selectedPredictionChoiceId === choice.id}>
+                  <input
+                    type="radio"
+                    name={`ecmo-prediction-${activeStep.id}`}
+                    value={choice.id}
+                    checked={selectedPredictionChoiceId === choice.id}
+                    onChange={() =>
+                      setPredictionChoiceByStepId((current) => ({
+                        ...current,
+                        [activeStep.id]: choice.id,
+                      }))
+                    }
+                  />
+                  <span>{choice.label}</span>
+                </label>
+              ))}
+            </fieldset>
+            {stepPerformed && selectedPredictionChoiceId ? (
+              <AnswerVerdict
+                item={prediction.item}
+                choiceId={selectedPredictionChoiceId}
+                timing="immediate-after-commit"
+                theme="dark"
+                onContinue={
+                  activeStepIndex < lesson.steps.length - 1
+                    ? () => goToStep(activeStepIndex + 1)
+                    : undefined
+                }
+              />
+            ) : (
+              <button
+                type="button"
+                className={styles.guidedPerformAction}
+                disabled={!selectedPredictionChoiceId}
+                onClick={commitPrediction}
+              >
+                <SlidersHorizontal aria-hidden="true" /> {activeStep.actionLabel}
+              </button>
+            )}
+          </div>
+        ) : !stepPerformed && simulatorTask ? (
           <div className={styles.guidedSimulatorTask} role="status" aria-live="polite">
             <LocateFixed aria-hidden="true" />
             <div>

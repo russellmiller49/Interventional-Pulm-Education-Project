@@ -765,6 +765,16 @@ export interface GuidedWalkthroughStep {
   actionLabel: string
   actions: readonly SimulationAction[]
   expectedResponse: readonly string[]
+  /**
+   * Marks this step as one the learner answers rather than performs, and names the scenario whose
+   * authored prediction supplies the options.
+   *
+   * The step carries no `actions` of its own: the `COMMIT_PREDICTION` payload comes from whichever
+   * authored choice the learner selects. A prepopulated action here would be the defect this field
+   * replaces — a single button that submitted the scenario's own expectation whatever the learner
+   * believed.
+   */
+  predictionScenarioId?: string
   /** A distinct authored scenario loaded when this transfer step becomes active. */
   transferScenarioId?: string
   /** Stable identifier used to audit that this is a real transfer variant. */

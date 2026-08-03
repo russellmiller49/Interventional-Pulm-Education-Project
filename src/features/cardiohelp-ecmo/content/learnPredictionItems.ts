@@ -6,7 +6,11 @@ import {
 import type { PredictionControl, PredictionDirection } from '../engine/types'
 
 /**
- * The authored prediction a learner answers before acting on a drill.
+ * The authored prediction a learner answers before acting, one for every Learn lesson.
+ *
+ * All twenty Learn prediction steps are here: the eighteen drills and the two console-orientation
+ * lessons, which had the same defect in a quieter form — they did not print the answer in prose,
+ * but they still handed the payload over with no option set to choose from.
  *
  * These replace a generated step that handed over the answer. The old prompt read "The safe goal is
  * X. Use <control> and predict <direction>.", its rationale printed the scenario's whole causal
@@ -21,22 +25,111 @@ import type { PredictionControl, PredictionDirection } from '../engine/types'
  * Authored to the standard set by `foundationLearningItems.ts` and validated at import, so a
  * malformed item or a learner-copy violation is loud and immediate rather than a runtime surprise.
  */
-export interface EcmoDrillPredictionCommitment {
+export interface EcmoLearnPredictionCommitment {
   readonly goalId: string
   readonly control: PredictionControl
   readonly direction: PredictionDirection
 }
 
-export interface EcmoDrillPrediction {
+export interface EcmoLearnPrediction {
   readonly item: ClinicalLearningItem
   /** Choice id → the prediction that choice commits. Every choice must appear. */
-  readonly commitments: Readonly<Record<string, EcmoDrillPredictionCommitment>>
+  readonly commitments: Readonly<Record<string, EcmoLearnPredictionCommitment>>
 }
 
-const authored: Readonly<Record<string, EcmoDrillPrediction>> = {
+const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
+  'startup-sensor-orientation': {
+    item: {
+      id: 'ecmo.learn.startup-sensor-orientation.prediction',
+      activityId: 'ecmo:learn:startup-sensor-orientation',
+      phase: 'predict',
+      itemType: 'management-decision',
+      contextRequirement: 'context-independent',
+      stem: 'You have finished the tour of the console on a freshly primed venovenous circuit and brought the pump back to a stop. The startup diagnostic has not yet been allowed to run through, the ordered speed and sweep are written on the chart, and the flow reads zero while pVen, pInt and pArt show the unavailable indication rather than numbers. Nothing about the circuit has been touched by hand yet: the tubing runs from the drainage cannula to the pump, through the oxygenator and back to the return cannula, and the gas line and the blender are hanging on the side of the trolley. What do you commit to before support is established?',
+      choices: [
+        {
+          id: 'verify-the-whole-system-first',
+          label:
+            'Work the whole pre-use sequence before support is set: let the startup diagnostic run through, then walk the circuit by hand from drainage cannula to return cannula — flow-probe orientation, which pressure location sits on which limb, the gas source and blender, every connection and both cannulas, power and an immediately available backup — and pair it with the patient data the console has no way of producing.',
+          plausibility: 'best',
+          rationale:
+            'This is the only option that treats the four information domains the tour just established as four separate things to verify. The console reports on itself and on the sensors it can see; it says nothing about which way round the flow probe was clipped on, which limb a pressure line was tied to, whether the gas is actually flowing, how the cannulas are secured, or what the patient looks like. Doing it now, on a stopped and unpressurised circuit, is also the only moment when finding a problem costs nothing.',
+        },
+        {
+          id: 'diagnostic-is-the-verified-state',
+          label:
+            'Let the startup diagnostic run through and confirm the startup screen and the audible indicator — a device that reports itself ready is the verified starting state, so move on to setting support.',
+          plausibility: 'reasonable-but-incomplete',
+          rationale:
+            'Everything named here is real and does have to happen; a device that will not come up ready must not be used. What makes it a partial commitment is the inference drawn from it. The diagnostic exercises device functions and the sensors the device can interrogate, and it reports on that scope only. It cannot look at flow-probe direction, at which limb carries which pressure line, at an unopened gas cylinder, at a connection that is finger-tight, or at whether a backup console is in the room — and it has no view of the patient at all. Declaring the system verified on the strength of the one component that reports on itself leaves the rest unexamined.',
+        },
+        {
+          id: 'start-then-inspect-under-flow',
+          label:
+            'Nothing on the console is showing a fault, so bring the pump up to the ordered speed now and walk the tubing and sensors once support is running and the numbers are live.',
+          plausibility: 'unsafe',
+          rationale:
+            'A quiet console is not a verified circuit, and the reasoning inverts the sequence that makes the walk safe. Every finding this step exists to catch — a flow probe clipped on backwards, a pressure line on the limb it is not labelled for, a gas source still closed, a connection that has not been tightened — is invisible to the device and becomes far more dangerous to put right once the patient’s blood is moving through the circuit under pressure. Waiting for the numbers to go live also gets the dependency backwards: the numbers only become interpretable once you know which sensor is on which limb.',
+        },
+        {
+          id: 'chase-the-missing-pressures',
+          label:
+            'The pressure channels are showing nothing where pVen, pInt and pArt should be, so start with the pressure sensors and their cables — no reading can be trusted until those three report.',
+          plausibility: 'incorrect-mechanism',
+          rationale:
+            'Absent numbers usually do mean a sensor or cable problem, and that reflex is worth having. It is refuted here by the state the circuit is in rather than by anything clinical. The pump is stopped, and the three circuit pressures are flow-dependent patterns that this educational model has nothing to report for a settled pump-off circuit — which is why the console shows the unavailable indication rather than a number. Flow is the contrast that gives it away: with its sensor connected it reads zero, and zero is a real value rather than an absent one. The pressure channels are expected to start reporting once the pump is brought up.',
+        },
+        {
+          id: 'gas-path-first',
+          label:
+            'Open and confirm the gas source and set sweep and sweep-gas oxygen on the blender first, so membrane gas exchange is ready the instant the pump starts; the tubing can be traced after that.',
+          plausibility: 'reasonable-but-incomplete',
+          rationale:
+            'The gas path genuinely does need verifying by hand, and it is one of the things the console will not warn about — a separate blender and a closed cylinder look identical from the touchscreen. The gap is that this names one limb of the check and then treats it as the check. The gas source sits on the same list as flow-probe orientation, the three pressure locations, the cannulas and connections, power and backup readiness, and the independent patient data. Setting the blender establishes nothing about whether the blood path is right.',
+        },
+      ],
+      correctChoiceIds: ['verify-the-whole-system-first'],
+      explanation:
+        'What separates these is the scope each one claims. A device diagnostic is a statement about device functions; a walk from cannula to cannula is a statement about the circuit; the blender is a statement about the gas path; the bedside and the blood gas are statements about the patient. None of the four substitutes for another, and the console can only speak to the first two. The stopped, unpressurised circuit in front of you is the one state in which the other three can be checked without cost, which is why the verification comes before support rather than after it. Model boundary: this is a bounded educational simulation rather than a patient twin. The circuit walk here resolves to a single check rather than to the dozens of individual confirmations a real pre-use list contains, and the absent pressure numbers are this model declining to produce flow-dependent values for a stopped pump rather than a reproduction of what any particular console displays. Local pre-use documentation, the manufacturer instructions, and the unit’s backup and escalation policy govern the real sequence.',
+      evidenceIds: [
+        'ifu-console-workflow',
+        'ifu-us-2025-scope',
+        'ecmo-book-ch9',
+        'bounded-educational-model',
+      ],
+      reviewStatus: 'draft',
+    },
+    commitments: {
+      'verify-the-whole-system-first': {
+        goalId: 'safe-startup',
+        control: 'inspect-circuit',
+        direction: 'inspect',
+      },
+      'diagnostic-is-the-verified-state': {
+        goalId: 'safe-startup',
+        control: 'initiate-support',
+        direction: 'increase',
+      },
+      'start-then-inspect-under-flow': {
+        goalId: 'initiate-vv-support',
+        control: 'rpm',
+        direction: 'increase',
+      },
+      'chase-the-missing-pressures': {
+        goalId: 'localize-resistance',
+        control: 'inspect-circuit',
+        direction: 'inspect',
+      },
+      'gas-path-first': {
+        goalId: 'restore-gas-transfer',
+        control: 'restore-gas',
+        direction: 'restore',
+      },
+    },
+  },
   'preload-drainage-collapse': {
     item: {
-      id: 'ecmo.drill.preload-drainage-collapse.prediction',
+      id: 'ecmo.learn.preload-drainage-collapse.prediction',
       activityId: 'ecmo:learn:preload-drainage-collapse',
       phase: 'predict',
       itemType: 'management-decision',
@@ -125,7 +218,7 @@ const authored: Readonly<Record<string, EcmoDrillPrediction>> = {
   },
   'afterload-return-obstruction': {
     item: {
-      id: 'ecmo.drill.afterload-return-obstruction.prediction',
+      id: 'ecmo.learn.afterload-return-obstruction.prediction',
       activityId: 'ecmo:learn:afterload-return-obstruction',
       phase: 'predict',
       itemType: 'management-decision',
@@ -214,7 +307,7 @@ const authored: Readonly<Record<string, EcmoDrillPrediction>> = {
   },
   'afterload-oxygenator-resistance': {
     item: {
-      id: 'ecmo.drill.afterload-oxygenator-resistance.prediction',
+      id: 'ecmo.learn.afterload-oxygenator-resistance.prediction',
       activityId: 'ecmo:learn:afterload-oxygenator-resistance',
       phase: 'predict',
       itemType: 'management-decision',
@@ -304,7 +397,7 @@ const authored: Readonly<Record<string, EcmoDrillPrediction>> = {
   },
   'vv-recirculation': {
     item: {
-      id: 'ecmo.drill.vv-recirculation.prediction',
+      id: 'ecmo.learn.vv-recirculation.prediction',
       activityId: 'ecmo:learn:vv-recirculation',
       phase: 'predict',
       itemType: 'management-decision',
@@ -393,7 +486,7 @@ const authored: Readonly<Record<string, EcmoDrillPrediction>> = {
   },
   'acute-hypercapnia': {
     item: {
-      id: 'ecmo.drill.acute-hypercapnia.prediction',
+      id: 'ecmo.learn.acute-hypercapnia.prediction',
       activityId: 'ecmo:learn:acute-hypercapnia',
       phase: 'predict',
       itemType: 'management-decision',
@@ -482,7 +575,7 @@ const authored: Readonly<Record<string, EcmoDrillPrediction>> = {
   },
   'compensated-hypercapnia': {
     item: {
-      id: 'ecmo.drill.compensated-hypercapnia.prediction',
+      id: 'ecmo.learn.compensated-hypercapnia.prediction',
       activityId: 'ecmo:learn:compensated-hypercapnia',
       phase: 'predict',
       itemType: 'management-decision',
@@ -572,7 +665,7 @@ const authored: Readonly<Record<string, EcmoDrillPrediction>> = {
   },
   'gas-source-interruption': {
     item: {
-      id: 'ecmo.drill.gas-source-interruption.prediction',
+      id: 'ecmo.learn.gas-source-interruption.prediction',
       activityId: 'ecmo:learn:gas-source-interruption',
       phase: 'predict',
       itemType: 'management-decision',
@@ -657,7 +750,7 @@ const authored: Readonly<Record<string, EcmoDrillPrediction>> = {
   },
   'arterial-bubble-stop': {
     item: {
-      id: 'ecmo.drill.arterial-bubble-stop.prediction',
+      id: 'ecmo.learn.arterial-bubble-stop.prediction',
       activityId: 'ecmo:learn:arterial-bubble-stop',
       phase: 'predict',
       itemType: 'management-decision',
@@ -746,7 +839,7 @@ const authored: Readonly<Record<string, EcmoDrillPrediction>> = {
   },
   'transport-power-loss': {
     item: {
-      id: 'ecmo.drill.transport-power-loss.prediction',
+      id: 'ecmo.learn.transport-power-loss.prediction',
       activityId: 'ecmo:learn:transport-power-loss',
       phase: 'predict',
       itemType: 'management-decision',
@@ -819,9 +912,98 @@ const authored: Readonly<Record<string, EcmoDrillPrediction>> = {
       },
     },
   },
+  'va-startup-sensor-orientation': {
+    item: {
+      id: 'ecmo.learn.va-startup-sensor-orientation.prediction',
+      activityId: 'ecmo:learn:va-startup-sensor-orientation',
+      phase: 'predict',
+      itemType: 'management-decision',
+      contextRequirement: 'context-independent',
+      stem: 'A peripheral venoarterial circuit is primed and connected: a femoral venous drainage cannula, the same pump and oxygenator hardware you have just toured, and a femoral arterial return cannula. The pump is stopped, the startup diagnostic has not been allowed to run through, and the ordered speed and sweep are written on the chart. The bedside monitor is showing a single pulse oximetry probe on the left hand, there is no arterial line yet, and the pulse pressure recorded before this circuit was connected was 18 mmHg. The console in front of you is the identical unit used for the venovenous circuits on this ward. What do you commit to before support is established?',
+      choices: [
+        {
+          id: 'verify-as-a-va-circuit',
+          label:
+            'Work the pre-use sequence on this circuit as a peripheral venoarterial circuit specifically: let the startup diagnostic run through, walk drainage to return by hand confirming which vessel each limb actually enters and which pressure line sits where, verify gas, power and an immediately available backup — and put the independent monitoring in place first, meaning right-arm oximetry, an arterial line, and a way of watching the native heart and the cannulated leg.',
+          plausibility: 'best',
+          rationale:
+            'The hardware is shared with the venovenous circuits but the consequences are not, and both halves of that follow from the same fact: the console cannot tell you which vessel the return limb enters. It reads the same circuit pressure either way. So the hand-walk is what establishes the configuration, and the independent monitoring is what makes the configuration’s two signature problems visible — mixed circulation in the upper body, and perfusion of the leg the arterial cannula sits in. Both begin the moment the pump does, so both have to be watchable before it starts.',
+        },
+        {
+          id: 'same-check-then-add-monitoring',
+          label:
+            'Run the same startup sequence used on the venovenous circuits — diagnostic, walk from cannula to cannula, gas, power and backup — then add right-arm oximetry, the arterial line and a look at the heart once the patient is on support and settled.',
+          plausibility: 'reasonable-but-incomplete',
+          rationale:
+            'The circuit walk is right and it is the larger half of the work; nothing in it is wasted. What is deferred is the half that is specific to peripheral venoarterial support. Retrograde flow up the aorta begins meeting native ejection the instant the pump starts, and where the two meet moves with both. Right-arm oximetry, an arterial line and a view of the native heart are what make that visible, and adding them afterwards means the minutes in which the mixing point moves most are the minutes nothing is watching it. The cannulated leg has the same problem: distal perfusion is easiest to judge against a baseline taken before the arterial cannula started carrying full flow.',
+        },
+        {
+          id: 'shared-hardware-start-now',
+          label:
+            'This is the same hardware and the same console as a venovenous circuit and it is reporting no fault, so bring the pump up to the ordered speed and sort the monitoring out once support is running.',
+          plausibility: 'unsafe',
+          rationale:
+            'Identical hardware with a different consequence is exactly why this cannot be reasoned from the console. A return limb connected to a vessel it was never meant to enter, or an arterial cannula that is not where it is believed to be, produces no distinguishing reading: pArt is a pressure measured inside the disposable and it rises against a vein or an artery alike. Starting first also commits the patient to mixed circulation with nothing in place to detect it — with the only oximetry probe on the left hand there is no upper-body signal to compare, and no baseline for the cannulated leg to be judged against later.',
+        },
+        {
+          id: 'part-is-the-arterial-pressure',
+          label:
+            'With the return limb in the femoral artery, the post-oxygenator pressure the console already reports is the patient’s arterial pressure — so read it as the arterial line, confirm it is adequate, and start support.',
+          plausibility: 'incorrect-mechanism',
+          rationale:
+            'This is refuted by where the sensor sits rather than by anything clinical. pArt is measured inside the disposable, after the membrane and before the cannula, so what it reports is the pressure the pump is generating against everything downstream of it at once — the remaining tubing, the cannula, and the patient’s circulation together. It rises when the return limb kinks and it rises when the patient’s vascular tone rises, and nothing in the number separates the two. A patient arterial line measures the patient, and on peripheral venoarterial support where it is sited also decides which circulation it is reporting on.',
+        },
+        {
+          id: 'distal-perfusion-plan-first',
+          label:
+            'Limb ischaemia is the complication peripheral venoarterial support is known for, so settle the distal perfusion plan for the cannulated leg before anything else on the circuit is revisited.',
+          plausibility: 'reasonable-but-incomplete',
+          rationale:
+            'Ischaemia of the cannulated limb is a real and characteristic problem, and having the plan settled before it is needed is good practice rather than an error. It is incomplete as the commitment here because it promotes one item on the list above the item the whole sequence depends on. The circuit still has to be shown to run the way it is believed to run, the pressure lines still have to be on the limbs they are labelled for, and the gas, power and backup still have to be verified by hand. A distal perfusion plan does nothing about a return limb that is not in the vessel it is believed to be in.',
+        },
+      ],
+      correctChoiceIds: ['verify-as-a-va-circuit'],
+      explanation:
+        'The console is the same on both configurations, and that is the whole difficulty: nothing it displays distinguishes a venovenous circuit from a peripheral venoarterial one, because every channel it carries is a circuit measurement. Which vessel each limb enters is established by hand, before support. What the configuration then produces — retrograde arterial flow meeting native ejection somewhere in the aorta, and a leg whose supply now runs past a cannula — is visible only through data the console does not hold: right-arm oximetry against a lower-body site, an arterial line, a view of the native heart, and the leg itself. Putting those in place before the pump starts is what makes the first minutes of support readable rather than reconstructed afterwards. Model boundary: this is a bounded educational simulation rather than a patient twin. It reports right-arm and femoral values directly and resolves the pre-use walk to a single check, where the bedside would involve echocardiography, imaging of cannula position, serial limb examination and a full pre-use list. No target value for pulse pressure, right-arm oxygenation or distal perfusion is taught here; those depend on the patient, the cannulae and the local protocol.',
+      evidenceIds: [
+        'ifu-console-workflow',
+        'ecmo-book-ch9',
+        'elso-adult-va-2021',
+        'bounded-educational-model',
+      ],
+      reviewStatus: 'draft',
+    },
+    commitments: {
+      'verify-as-a-va-circuit': {
+        goalId: 'safe-startup',
+        control: 'inspect-circuit',
+        direction: 'inspect',
+      },
+      'same-check-then-add-monitoring': {
+        goalId: 'safe-startup',
+        control: 'initiate-support',
+        direction: 'increase',
+      },
+      'shared-hardware-start-now': {
+        goalId: 'initiate-va-support',
+        control: 'rpm',
+        direction: 'increase',
+      },
+      'part-is-the-arterial-pressure': {
+        goalId: 'initiate-va-support',
+        control: 'initiate-support',
+        direction: 'perfusion',
+      },
+      'distal-perfusion-plan-first': {
+        goalId: 'protect-cannulated-limb',
+        control: 'restore-distal-perfusion',
+        direction: 'perfusion',
+      },
+    },
+  },
   'va-preload-drainage-collapse': {
     item: {
-      id: 'ecmo.drill.va-preload-drainage-collapse.prediction',
+      id: 'ecmo.learn.va-preload-drainage-collapse.prediction',
       activityId: 'ecmo:learn:va-preload-drainage-collapse',
       phase: 'predict',
       itemType: 'management-decision',
@@ -910,7 +1092,7 @@ const authored: Readonly<Record<string, EcmoDrillPrediction>> = {
   },
   'va-afterload-arterial-return-obstruction': {
     item: {
-      id: 'ecmo.drill.va-afterload-arterial-return-obstruction.prediction',
+      id: 'ecmo.learn.va-afterload-arterial-return-obstruction.prediction',
       activityId: 'ecmo:learn:va-afterload-arterial-return-obstruction',
       phase: 'predict',
       itemType: 'management-decision',
@@ -998,7 +1180,7 @@ const authored: Readonly<Record<string, EcmoDrillPrediction>> = {
   },
   'va-afterload-oxygenator-resistance': {
     item: {
-      id: 'ecmo.drill.va-afterload-oxygenator-resistance.prediction',
+      id: 'ecmo.learn.va-afterload-oxygenator-resistance.prediction',
       activityId: 'ecmo:learn:va-afterload-oxygenator-resistance',
       phase: 'predict',
       itemType: 'management-decision',
@@ -1088,7 +1270,7 @@ const authored: Readonly<Record<string, EcmoDrillPrediction>> = {
   },
   'va-differential-hypoxemia': {
     item: {
-      id: 'ecmo.drill.va-differential-hypoxemia.prediction',
+      id: 'ecmo.learn.va-differential-hypoxemia.prediction',
       activityId: 'ecmo:learn:va-differential-hypoxemia',
       phase: 'predict',
       itemType: 'management-decision',
@@ -1178,7 +1360,7 @@ const authored: Readonly<Record<string, EcmoDrillPrediction>> = {
   },
   'va-lv-loading': {
     item: {
-      id: 'ecmo.drill.va-lv-loading.prediction',
+      id: 'ecmo.learn.va-lv-loading.prediction',
       activityId: 'ecmo:learn:va-lv-loading',
       phase: 'predict',
       itemType: 'management-decision',
@@ -1267,7 +1449,7 @@ const authored: Readonly<Record<string, EcmoDrillPrediction>> = {
   },
   'va-acute-hypercapnia': {
     item: {
-      id: 'ecmo.drill.va-acute-hypercapnia.prediction',
+      id: 'ecmo.learn.va-acute-hypercapnia.prediction',
       activityId: 'ecmo:learn:va-acute-hypercapnia',
       phase: 'predict',
       itemType: 'management-decision',
@@ -1352,7 +1534,7 @@ const authored: Readonly<Record<string, EcmoDrillPrediction>> = {
   },
   'va-gas-source-interruption': {
     item: {
-      id: 'ecmo.drill.va-gas-source-interruption.prediction',
+      id: 'ecmo.learn.va-gas-source-interruption.prediction',
       activityId: 'ecmo:learn:va-gas-source-interruption',
       phase: 'predict',
       itemType: 'management-decision',
@@ -1442,7 +1624,7 @@ const authored: Readonly<Record<string, EcmoDrillPrediction>> = {
   },
   'va-arterial-bubble-stop': {
     item: {
-      id: 'ecmo.drill.va-arterial-bubble-stop.prediction',
+      id: 'ecmo.learn.va-arterial-bubble-stop.prediction',
       activityId: 'ecmo:learn:va-arterial-bubble-stop',
       phase: 'predict',
       itemType: 'management-decision',
@@ -1538,7 +1720,7 @@ const authored: Readonly<Record<string, EcmoDrillPrediction>> = {
   },
   'va-transport-power-loss': {
     item: {
-      id: 'ecmo.drill.va-transport-power-loss.prediction',
+      id: 'ecmo.learn.va-transport-power-loss.prediction',
       activityId: 'ecmo:learn:va-transport-power-loss',
       phase: 'predict',
       itemType: 'management-decision',
@@ -1620,18 +1802,33 @@ for (const [scenarioId, entry] of Object.entries(authored)) {
   clinicalLearningItemSchema.parse(entry.item)
   for (const choice of entry.item.choices) {
     if (!entry.commitments[choice.id]) {
-      throw new Error(`Drill ${scenarioId}: choice ${choice.id} commits no prediction`)
+      throw new Error(`Learn prediction ${scenarioId}: choice ${choice.id} commits no prediction`)
     }
   }
   for (const choiceId of Object.keys(entry.commitments)) {
     if (!entry.item.choices.some((choice) => choice.id === choiceId)) {
-      throw new Error(`Drill ${scenarioId}: commitment ${choiceId} has no choice`)
+      throw new Error(`Learn prediction ${scenarioId}: commitment ${choiceId} has no choice`)
     }
   }
 }
 
-export const ecmoDrillPredictions = authored
+export const ecmoLearnPredictions = authored
 
-export function ecmoDrillPredictionFor(scenarioId: string): EcmoDrillPrediction | undefined {
+export function ecmoLearnPredictionFor(scenarioId: string): EcmoLearnPrediction | undefined {
   return authored[scenarioId]
+}
+
+/**
+ * The same lookup, but a missing entry is a build-time failure rather than an empty question.
+ *
+ * A Learn step that declares itself a prediction and then finds no authored item would fall back to
+ * the defect this package removes — a step with no real choice — so the lesson table refuses to
+ * construct instead.
+ */
+export function requireEcmoLearnPrediction(scenarioId: string): EcmoLearnPrediction {
+  const prediction = authored[scenarioId]
+  if (!prediction) {
+    throw new Error(`Missing authored Learn prediction for scenario: ${scenarioId}`)
+  }
+  return prediction
 }
