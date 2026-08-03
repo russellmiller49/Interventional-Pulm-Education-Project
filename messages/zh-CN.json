@@ -7855,6 +7855,7 @@
         "addFamily": "Add line — size at procedure",
         "addFamilyHelp": "Records the whole product line. The size is chosen once the airway is measured, so no catalog number is committed.",
         "unreviewedFamilyHelp": "此分组只是浏览目录的方式，并非已批准的产品系列，因此不能作为整条产品线添加。请在下方选择具体规格。",
+        "pendingReviewFamilyHelp": "此产品线已确定且成员已固定，但临床审核尚未完成，因此暂不能作为整条产品线添加。请在下方选择具体规格。",
         "familyAdded": "Line added"
       },
       "browseEmerging": "Emerging devices"

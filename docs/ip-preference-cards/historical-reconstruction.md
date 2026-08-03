@@ -174,21 +174,29 @@ one is re-verified server-side on reconstruction.
 
 ### What was seeded, and what was not
 
-`seed/product-families.json` declares **18 approved family versions**, all under the airway-stent
+`seed/product-families.json` declares **18 family versions, all `draft`**, under the airway-stent
 roles (the only roles where `allowsSizeAtProcedure` permits a whole-line selection). Each was
-seeded under one documented rule:
+identified under one documented structural rule:
 
 > Within the role, the manufacturer's own `brand_family` is authored (never a subcategory or
 > product-name fallback), every member shares one `product_kind` and one `coverage` value, and the
 > line has at least two members.
 
-Membership is derived once at build time from that authoritative basis and frozen; the seed records
-the reviewer's own member count, and a mismatch fails the build rather than letting a reviewed
-membership drift. Each `reviewBasis` names the brand family, the role, the shared kind and
-coverage, the primary source, and states plainly that the individual devices have not been
-re-reviewed device by device.
+That rule establishes an _identity_, not a clinical endorsement. It says the grouping is the
+manufacturer's own named line and is structurally homogeneous; it does not say anyone reviewed the
+individual devices for interchangeability within it. Membership is derived once at build time from
+that basis and frozen — the seed records the counted member total, and a mismatch fails the build
+rather than letting a membership drift — and every `reviewBasis` states plainly that **clinical
+membership review is pending**.
 
-**Left unreviewed, deliberately:**
+So none of them is approved, and none of them is selectable. Merging makes these identities,
+memberships, and definition hashes append-only against `main`, and publishing an unreviewed
+clinical grouping as reviewed is the one thing that would be hard to walk back. Approval is a
+_lifecycle_ move: `governanceState` sits outside `productFamilyDefinitionHash`, so a reviewer
+approving a family later changes nothing about the identity or the membership a card would pin, and
+the publication-baseline check permits `draft → approved` while refusing the reverse.
+
+**Not identified at all, deliberately:**
 
 | Grouping                                                | Why                                            |
 | ------------------------------------------------------- | ---------------------------------------------- |
@@ -197,12 +205,26 @@ re-reviewed device by device.
 | VisionAir patient-specific stent service                | one product, a design service, no brand family |
 | Everything outside the airway-stent roles               | not persistable at all today                   |
 
-For an unreviewed grouping the picker keeps the line view for browsing, keeps every size
-individually selectable, labels the grouping as catalog browsing, and **withholds** the whole-line
-action. No custom "size at time of procedure" line is invented in its place.
+### What a draft family does and does not do
 
-`governanceState` here is about **family identity**, not clinical endorsement of the devices — a
-card built from one still carries its prototype watermark like every other card in this prototype.
+|                                               | Draft reviewed family             | No reviewed family |
+| --------------------------------------------- | --------------------------------- | ------------------ |
+| Line view, drill-down, exact size selection   | yes                               | yes                |
+| Whole-line "size at time of procedure" action | withheld                          | withheld           |
+| Pin fields in the catalog API                 | withheld                          | withheld           |
+| `reviewedFamilyGovernanceState`               | `'draft'`                         | `null`             |
+| Visible to a reviewer as an identified family | yes                               | no                 |
+| Accepted by the save path                     | no — `product_family_unpublished` | no                 |
+
+The two are kept distinguishable on purpose. Both withhold the same action, and they are not the
+same situation: one has a frozen membership waiting on a clinician, the other has nobody looking at
+it. The picker says so in different words.
+
+Draft and retired are treated asymmetrically at the save path, and the asymmetry is the rule. A
+retired family **resolves**, because a card already pinned to one must still reconstruct. A draft
+family **does not**, because it has never been selectable — so a pin naming one is not a historical
+card being rebuilt, it is a request naming a membership nobody approved, arriving through the one
+door that bypasses the picker.
 
 ### Builder inputs advanced to version 4
 

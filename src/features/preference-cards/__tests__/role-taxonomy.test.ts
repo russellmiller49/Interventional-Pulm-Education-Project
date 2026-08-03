@@ -16,9 +16,9 @@ import {
   getUseIndex,
   searchProductFamiliesForRole,
   searchProductsForRole,
-  getFamilyPickForVersion,
 } from '../server/catalog'
-import { getApprovedProductFamiliesForRole } from '../data/product-families.server'
+import { getHistoricalCatalog, historicalFamilyPick } from '../data/historical-catalog.server'
+import { getReviewedProductFamiliesForRole } from '../data/product-families.server'
 
 /**
  * Taxonomy v2.
@@ -101,10 +101,15 @@ describe('permanent role-code aliases', () => {
     for (const [oldCode, newCode] of Object.entries(ROLE_CODE_ALIASES)) {
       // Families are looked up by reviewed version id, so the alias has to survive the *role*
       // check rather than a key lookup: a card saved before the rename names the old code.
-      for (const version of getApprovedProductFamiliesForRole(newCode)) {
-        const pick = getFamilyPickForVersion(version, oldCode)
-        expect(pick).not.toBeNull()
-        expect(pick!.roleCode).toBe(newCode)
+      // Every retained version, not only approved ones — governance is a separate question and
+      // this is about the alias.
+      for (const version of getReviewedProductFamiliesForRole(newCode)) {
+        const historical = getHistoricalCatalog(version.catalogReleaseId)
+        expect(historical.ok).toBe(true)
+        if (!historical.ok) continue
+        const pick = historicalFamilyPick(historical, version, oldCode)
+        expect(pick.ok).toBe(true)
+        if (pick.ok) expect(pick.pick.roleCode).toBe(newCode)
         checked.push(oldCode)
       }
     }

@@ -160,6 +160,18 @@ export function buildPublicationBaselineSnapshot(
     })
   }
 
+  // Drafts are included here, unlike release bundles above, and the asymmetry is deliberate.
+  //
+  // A draft *release* is an authoring workspace: its pins are recomputed on every build and it
+  // carries no frozen hash at all, so freezing it against the base would make revising an
+  // unpublished release a violation.
+  //
+  // A draft *family* is the opposite situation. Its membership is derived once and checked against
+  // the member count a reviewer counted, and the whole reason it exists in this state is that the
+  // identity is settled while clinical review is not. Locking it on merge is the point: a reviewer
+  // approves the membership that was put in front of them, and a membership that could be edited
+  // out from under a pending review would make the approval meaningless. Correcting one after merge
+  // takes a new family version, which is the same discipline every other definition here follows.
   for (const version of artifacts.productFamilies?.versions ?? []) {
     entries.push({
       kind: 'product-family-version',

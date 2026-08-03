@@ -6,342 +6,324 @@
       "version": "1.0",
       "displayName": "Boston Scientific Ultraflex",
       "manufacturerDisplay": "Boston Scientific",
-      "governanceState": "approved",
-      "approvedAt": "2026-08-01T00:00:00.000Z",
+      "governanceState": "draft",
+      "approvedAt": null,
       "retiredAt": null,
       "supersedesProductFamilyVersionId": null,
-      "reviewBasis": "Seeded from the catalog's authored brand_family \"Ultraflex\" for Boston Scientific, scoped to AIRWAY_STENT_SEMS_COVERED. All 18 members share product_kind \"Implant\" and coverage \"Partially covered\". Primary source: SRC015 (Ultraflex Tracheobronchial Stent System manufacturer product page). The manufacturer's own line grouping, made explicit and frozen; the individual devices have not been re-reviewed here.",
+      "reviewBasis": "Identity and explicit membership seeded from the manufacturer-authored brand_family \"Ultraflex\" for Boston Scientific, scoped to AIRWAY_STENT_SEMS_COVERED. The grouping passed the structural homogeneity checks: all 18 members share product_kind \"Implant\" and coverage \"Partially covered\". Primary source: SRC015 (Ultraflex Tracheobronchial Stent System manufacturer product page). Clinical membership review is PENDING \u2014 no individual device in this line has been clinically reviewed for interchangeability within it. The family stays draft and is not offered as a persistent \"size at time of procedure\" selection until a reviewer approves it; approval moves this version forward without rewriting its identity or membership.",
       "membership": {
         "manufacturerGroupId": "MFR-42F5245630",
         "brandFamily": "Ultraflex",
         "roleCodes": ["AIRWAY_STENT_SEMS_COVERED"],
         "expectedMemberCount": 18
       },
-      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "definitionHash": "aa367d2fcc81fb48b7b89b0db3f436776bba490dd1e7628da28bbc3282983c8d"
+      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7"
     },
     {
       "productFamilyCode": "BOSTON_SCIENTIFIC_ULTRAFLEX__AIRWAY_STENT_SEMS_UNCOVERED",
       "version": "1.0",
       "displayName": "Boston Scientific Ultraflex",
       "manufacturerDisplay": "Boston Scientific",
-      "governanceState": "approved",
-      "approvedAt": "2026-08-01T00:00:00.000Z",
+      "governanceState": "draft",
+      "approvedAt": null,
       "retiredAt": null,
       "supersedesProductFamilyVersionId": null,
-      "reviewBasis": "Seeded from the catalog's authored brand_family \"Ultraflex\" for Boston Scientific, scoped to AIRWAY_STENT_SEMS_UNCOVERED. All 18 members share product_kind \"Implant\" and coverage \"Uncovered\". Primary source: SRC015 (Ultraflex Tracheobronchial Stent System manufacturer product page). The manufacturer's own line grouping, made explicit and frozen; the individual devices have not been re-reviewed here.",
+      "reviewBasis": "Identity and explicit membership seeded from the manufacturer-authored brand_family \"Ultraflex\" for Boston Scientific, scoped to AIRWAY_STENT_SEMS_UNCOVERED. The grouping passed the structural homogeneity checks: all 18 members share product_kind \"Implant\" and coverage \"Uncovered\". Primary source: SRC015 (Ultraflex Tracheobronchial Stent System manufacturer product page). Clinical membership review is PENDING \u2014 no individual device in this line has been clinically reviewed for interchangeability within it. The family stays draft and is not offered as a persistent \"size at time of procedure\" selection until a reviewer approves it; approval moves this version forward without rewriting its identity or membership.",
       "membership": {
         "manufacturerGroupId": "MFR-42F5245630",
         "brandFamily": "Ultraflex",
         "roleCodes": ["AIRWAY_STENT_SEMS_UNCOVERED"],
         "expectedMemberCount": 18
       },
-      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "definitionHash": "46ba23fefd40c3768f34b86907327d127ac0b118f0a0b833b251084ab00c9d9c"
+      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7"
     },
     {
       "productFamilyCode": "MERIT_MEDICAL_AERO__AIRWAY_STENT_SEMS_COVERED",
       "version": "1.0",
       "displayName": "Merit Medical AERO",
       "manufacturerDisplay": "Merit Medical",
-      "governanceState": "approved",
-      "approvedAt": "2026-08-01T00:00:00.000Z",
+      "governanceState": "draft",
+      "approvedAt": null,
       "retiredAt": null,
       "supersedesProductFamilyVersionId": null,
-      "reviewBasis": "Seeded from the catalog's authored brand_family \"AERO\" for Merit Medical, scoped to AIRWAY_STENT_SEMS_COVERED. All 18 members share product_kind \"Implant with delivery system\" and coverage \"Fully covered\". Primary source: SRC027 (Merit Endotek Pulmonary Product Catalog). The manufacturer's own line grouping, made explicit and frozen; the individual devices have not been re-reviewed here.",
+      "reviewBasis": "Identity and explicit membership seeded from the manufacturer-authored brand_family \"AERO\" for Merit Medical, scoped to AIRWAY_STENT_SEMS_COVERED. The grouping passed the structural homogeneity checks: all 18 members share product_kind \"Implant with delivery system\" and coverage \"Fully covered\". Primary source: SRC027 (Merit Endotek Pulmonary Product Catalog). Clinical membership review is PENDING \u2014 no individual device in this line has been clinically reviewed for interchangeability within it. The family stays draft and is not offered as a persistent \"size at time of procedure\" selection until a reviewer approves it; approval moves this version forward without rewriting its identity or membership.",
       "membership": {
         "manufacturerGroupId": "MFR-80D24820DF",
         "brandFamily": "AERO",
         "roleCodes": ["AIRWAY_STENT_SEMS_COVERED"],
         "expectedMemberCount": 18
       },
-      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "definitionHash": "b7f1f32c51df54e6845d73e4664642f23ac757626e2d785b15495f825c086f91"
+      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7"
     },
     {
       "productFamilyCode": "MERIT_MEDICAL_AERO_DV__AIRWAY_STENT_SEMS_COVERED",
       "version": "1.0",
       "displayName": "Merit Medical AERO DV",
       "manufacturerDisplay": "Merit Medical",
-      "governanceState": "approved",
-      "approvedAt": "2026-08-01T00:00:00.000Z",
+      "governanceState": "draft",
+      "approvedAt": null,
       "retiredAt": null,
       "supersedesProductFamilyVersionId": null,
-      "reviewBasis": "Seeded from the catalog's authored brand_family \"AERO DV\" for Merit Medical, scoped to AIRWAY_STENT_SEMS_COVERED. All 15 members share product_kind \"Implant with direct-visualization delivery system\" and coverage \"Fully covered\". Primary source: SRC027 (Merit Endotek Pulmonary Product Catalog). The manufacturer's own line grouping, made explicit and frozen; the individual devices have not been re-reviewed here.",
+      "reviewBasis": "Identity and explicit membership seeded from the manufacturer-authored brand_family \"AERO DV\" for Merit Medical, scoped to AIRWAY_STENT_SEMS_COVERED. The grouping passed the structural homogeneity checks: all 15 members share product_kind \"Implant with direct-visualization delivery system\" and coverage \"Fully covered\". Primary source: SRC027 (Merit Endotek Pulmonary Product Catalog). Clinical membership review is PENDING \u2014 no individual device in this line has been clinically reviewed for interchangeability within it. The family stays draft and is not offered as a persistent \"size at time of procedure\" selection until a reviewer approves it; approval moves this version forward without rewriting its identity or membership.",
       "membership": {
         "manufacturerGroupId": "MFR-80D24820DF",
         "brandFamily": "AERO DV",
         "roleCodes": ["AIRWAY_STENT_SEMS_COVERED"],
         "expectedMemberCount": 15
       },
-      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "definitionHash": "0d56139106398897e33f825ff34d4b847034faa5681223c93b6852fb356c5dbb"
+      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7"
     },
     {
       "productFamilyCode": "MERIT_MEDICAL_AEROMINI__AIRWAY_STENT_SEMS_COVERED",
       "version": "1.0",
       "displayName": "Merit Medical AEROmini",
       "manufacturerDisplay": "Merit Medical",
-      "governanceState": "approved",
-      "approvedAt": "2026-08-01T00:00:00.000Z",
+      "governanceState": "draft",
+      "approvedAt": null,
       "retiredAt": null,
       "supersedesProductFamilyVersionId": null,
-      "reviewBasis": "Seeded from the catalog's authored brand_family \"AEROmini\" for Merit Medical, scoped to AIRWAY_STENT_SEMS_COVERED. All 11 members share product_kind \"Implant with delivery system\" and coverage \"Fully covered\". Primary source: SRC027 (Merit Endotek Pulmonary Product Catalog). The manufacturer's own line grouping, made explicit and frozen; the individual devices have not been re-reviewed here.",
+      "reviewBasis": "Identity and explicit membership seeded from the manufacturer-authored brand_family \"AEROmini\" for Merit Medical, scoped to AIRWAY_STENT_SEMS_COVERED. The grouping passed the structural homogeneity checks: all 11 members share product_kind \"Implant with delivery system\" and coverage \"Fully covered\". Primary source: SRC027 (Merit Endotek Pulmonary Product Catalog). Clinical membership review is PENDING \u2014 no individual device in this line has been clinically reviewed for interchangeability within it. The family stays draft and is not offered as a persistent \"size at time of procedure\" selection until a reviewer approves it; approval moves this version forward without rewriting its identity or membership.",
       "membership": {
         "manufacturerGroupId": "MFR-80D24820DF",
         "brandFamily": "AEROmini",
         "roleCodes": ["AIRWAY_STENT_SEMS_COVERED"],
         "expectedMemberCount": 11
       },
-      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "definitionHash": "be135c7ab3e94db3bf2e141c97b5ae3b0169e7ef0464e38a71dfd08238918744"
+      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7"
     },
     {
       "productFamilyCode": "MICRO_TECH_ENDOSCOPY_MICRO_TECH_J_SHAPED_TRACHEAL_STENT__AIRWAY_STENT_SEMS_COVERED",
       "version": "1.0",
       "displayName": "Micro-Tech Endoscopy Micro-Tech J-Shaped Tracheal Stent",
       "manufacturerDisplay": "Micro-Tech Endoscopy",
-      "governanceState": "approved",
-      "approvedAt": "2026-08-01T00:00:00.000Z",
+      "governanceState": "draft",
+      "approvedAt": null,
       "retiredAt": null,
       "supersedesProductFamilyVersionId": null,
-      "reviewBasis": "Seeded from the catalog's authored brand_family \"Micro-Tech J-Shaped Tracheal Stent\" for Micro-Tech Endoscopy, scoped to AIRWAY_STENT_SEMS_COVERED. All 2 members share product_kind \"Implant\" and coverage \"Fully covered\". Primary source: SRC013 (Micro-Tech GI Endoscopy Devices & Accessories Product Catalog). The manufacturer's own line grouping, made explicit and frozen; the individual devices have not been re-reviewed here.",
+      "reviewBasis": "Identity and explicit membership seeded from the manufacturer-authored brand_family \"Micro-Tech J-Shaped Tracheal Stent\" for Micro-Tech Endoscopy, scoped to AIRWAY_STENT_SEMS_COVERED. The grouping passed the structural homogeneity checks: all 2 members share product_kind \"Implant\" and coverage \"Fully covered\". Primary source: SRC013 (Micro-Tech GI Endoscopy Devices & Accessories Product Catalog). Clinical membership review is PENDING \u2014 no individual device in this line has been clinically reviewed for interchangeability within it. The family stays draft and is not offered as a persistent \"size at time of procedure\" selection until a reviewer approves it; approval moves this version forward without rewriting its identity or membership.",
       "membership": {
         "manufacturerGroupId": "MFR-52C1D02F96",
         "brandFamily": "Micro-Tech J-Shaped Tracheal Stent",
         "roleCodes": ["AIRWAY_STENT_SEMS_COVERED"],
         "expectedMemberCount": 2
       },
-      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "definitionHash": "414e72e0b55cf52e42783604a9d66e97bdc0aaa0e30775bc8c2ff59ade231409"
+      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7"
     },
     {
       "productFamilyCode": "MICRO_TECH_ENDOSCOPY_MICRO_TECH_TRACHEAL_STENT__AIRWAY_STENT_SEMS_UNCOVERED",
       "version": "1.0",
       "displayName": "Micro-Tech Endoscopy Micro-Tech Tracheal Stent",
       "manufacturerDisplay": "Micro-Tech Endoscopy",
-      "governanceState": "approved",
-      "approvedAt": "2026-08-01T00:00:00.000Z",
+      "governanceState": "draft",
+      "approvedAt": null,
       "retiredAt": null,
       "supersedesProductFamilyVersionId": null,
-      "reviewBasis": "Seeded from the catalog's authored brand_family \"Micro-Tech Tracheal Stent\" for Micro-Tech Endoscopy, scoped to AIRWAY_STENT_SEMS_UNCOVERED. All 6 members share product_kind \"Implant\" and coverage \"Uncovered\". Primary source: SRC013 (Micro-Tech GI Endoscopy Devices & Accessories Product Catalog). The manufacturer's own line grouping, made explicit and frozen; the individual devices have not been re-reviewed here.",
+      "reviewBasis": "Identity and explicit membership seeded from the manufacturer-authored brand_family \"Micro-Tech Tracheal Stent\" for Micro-Tech Endoscopy, scoped to AIRWAY_STENT_SEMS_UNCOVERED. The grouping passed the structural homogeneity checks: all 6 members share product_kind \"Implant\" and coverage \"Uncovered\". Primary source: SRC013 (Micro-Tech GI Endoscopy Devices & Accessories Product Catalog). Clinical membership review is PENDING \u2014 no individual device in this line has been clinically reviewed for interchangeability within it. The family stays draft and is not offered as a persistent \"size at time of procedure\" selection until a reviewer approves it; approval moves this version forward without rewriting its identity or membership.",
       "membership": {
         "manufacturerGroupId": "MFR-52C1D02F96",
         "brandFamily": "Micro-Tech Tracheal Stent",
         "roleCodes": ["AIRWAY_STENT_SEMS_UNCOVERED"],
         "expectedMemberCount": 6
       },
-      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "definitionHash": "e880d5d2c2ba3938d6f982c368523364933e0f0f9ed97f79e558145bd62fb4e2"
+      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7"
     },
     {
       "productFamilyCode": "MICRO_TECH_ENDOSCOPY_MICRO_TECH_Y_SHAPED_TRACHEAL_STENT__AIRWAY_STENT_SEMS_UNCOVERED",
       "version": "1.0",
       "displayName": "Micro-Tech Endoscopy Micro-Tech Y-Shaped Tracheal Stent",
       "manufacturerDisplay": "Micro-Tech Endoscopy",
-      "governanceState": "approved",
-      "approvedAt": "2026-08-01T00:00:00.000Z",
+      "governanceState": "draft",
+      "approvedAt": null,
       "retiredAt": null,
       "supersedesProductFamilyVersionId": null,
-      "reviewBasis": "Seeded from the catalog's authored brand_family \"Micro-Tech Y-Shaped Tracheal Stent\" for Micro-Tech Endoscopy, scoped to AIRWAY_STENT_SEMS_UNCOVERED. All 2 members share product_kind \"Implant\" and coverage \"Uncovered\". Primary source: SRC013 (Micro-Tech GI Endoscopy Devices & Accessories Product Catalog). The manufacturer's own line grouping, made explicit and frozen; the individual devices have not been re-reviewed here.",
+      "reviewBasis": "Identity and explicit membership seeded from the manufacturer-authored brand_family \"Micro-Tech Y-Shaped Tracheal Stent\" for Micro-Tech Endoscopy, scoped to AIRWAY_STENT_SEMS_UNCOVERED. The grouping passed the structural homogeneity checks: all 2 members share product_kind \"Implant\" and coverage \"Uncovered\". Primary source: SRC013 (Micro-Tech GI Endoscopy Devices & Accessories Product Catalog). Clinical membership review is PENDING \u2014 no individual device in this line has been clinically reviewed for interchangeability within it. The family stays draft and is not offered as a persistent \"size at time of procedure\" selection until a reviewer approves it; approval moves this version forward without rewriting its identity or membership.",
       "membership": {
         "manufacturerGroupId": "MFR-52C1D02F96",
         "brandFamily": "Micro-Tech Y-Shaped Tracheal Stent",
         "roleCodes": ["AIRWAY_STENT_SEMS_UNCOVERED"],
         "expectedMemberCount": 2
       },
-      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "definitionHash": "b816af8e8b846a52dc555377d049c1296c19f63b5942d4a42584a4557d4623aa"
+      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7"
     },
     {
       "productFamilyCode": "MICRO_TECH_ENDOSCOPY_MICRO_TECH_Y_STENT__AIRWAY_STENT_SEMS_COVERED",
       "version": "1.0",
       "displayName": "Micro-Tech Endoscopy Micro-Tech Y-Stent",
       "manufacturerDisplay": "Micro-Tech Endoscopy",
-      "governanceState": "approved",
-      "approvedAt": "2026-08-01T00:00:00.000Z",
+      "governanceState": "draft",
+      "approvedAt": null,
       "retiredAt": null,
       "supersedesProductFamilyVersionId": null,
-      "reviewBasis": "Seeded from the catalog's authored brand_family \"Micro-Tech Y-Stent\" for Micro-Tech Endoscopy, scoped to AIRWAY_STENT_SEMS_COVERED. All 4 members share product_kind \"Implant\" and record no coverage value. Primary source: SRC006 (Product list 2025). The manufacturer's own line grouping, made explicit and frozen; the individual devices have not been re-reviewed here.",
+      "reviewBasis": "Identity and explicit membership seeded from the manufacturer-authored brand_family \"Micro-Tech Y-Stent\" for Micro-Tech Endoscopy, scoped to AIRWAY_STENT_SEMS_COVERED. The grouping passed the structural homogeneity checks: all 4 members share product_kind \"Implant\" and record no coverage value. Primary source: SRC006 (Product list 2025). Clinical membership review is PENDING \u2014 no individual device in this line has been clinically reviewed for interchangeability within it. The family stays draft and is not offered as a persistent \"size at time of procedure\" selection until a reviewer approves it; approval moves this version forward without rewriting its identity or membership.",
       "membership": {
         "manufacturerGroupId": "MFR-52C1D02F96",
         "brandFamily": "Micro-Tech Y-Stent",
         "roleCodes": ["AIRWAY_STENT_SEMS_COVERED"],
         "expectedMemberCount": 4
       },
-      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "definitionHash": "cf980fda243400848d089fde01e454f59b8ae5c74fdf417e3b15f6050c1bdb1b"
+      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7"
     },
     {
       "productFamilyCode": "MICRO_TECH_ENDOSCOPY_THORACENT_MICRO_TECH_Y_SHAPED_TRACHEAL_STENT__AIRWAY_STENT_SEMS_COVERED",
       "version": "1.0",
       "displayName": "Micro-Tech Endoscopy Thoracent / Micro-Tech Y-Shaped Tracheal Stent",
       "manufacturerDisplay": "Micro-Tech Endoscopy",
-      "governanceState": "approved",
-      "approvedAt": "2026-08-01T00:00:00.000Z",
+      "governanceState": "draft",
+      "approvedAt": null,
       "retiredAt": null,
       "supersedesProductFamilyVersionId": null,
-      "reviewBasis": "Seeded from the catalog's authored brand_family \"Thoracent / Micro-Tech Y-Shaped Tracheal Stent\" for Micro-Tech Endoscopy, scoped to AIRWAY_STENT_SEMS_COVERED. All 19 members share product_kind \"Implant\" and coverage \"Thin silicone covering\". Primary source: SRC016 (Y-Shaped Tracheal Stent brochure). The manufacturer's own line grouping, made explicit and frozen; the individual devices have not been re-reviewed here.",
+      "reviewBasis": "Identity and explicit membership seeded from the manufacturer-authored brand_family \"Thoracent / Micro-Tech Y-Shaped Tracheal Stent\" for Micro-Tech Endoscopy, scoped to AIRWAY_STENT_SEMS_COVERED. The grouping passed the structural homogeneity checks: all 19 members share product_kind \"Implant\" and coverage \"Thin silicone covering\". Primary source: SRC016 (Y-Shaped Tracheal Stent brochure). Clinical membership review is PENDING \u2014 no individual device in this line has been clinically reviewed for interchangeability within it. The family stays draft and is not offered as a persistent \"size at time of procedure\" selection until a reviewer approves it; approval moves this version forward without rewriting its identity or membership.",
       "membership": {
         "manufacturerGroupId": "MFR-52C1D02F96",
         "brandFamily": "Thoracent / Micro-Tech Y-Shaped Tracheal Stent",
         "roleCodes": ["AIRWAY_STENT_SEMS_COVERED"],
         "expectedMemberCount": 19
       },
-      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "definitionHash": "fe421ab418182c9e716793b788a1ab1d4970211d13584c803a076fbef40cc1d9"
+      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7"
     },
     {
       "productFamilyCode": "NOVATECH_DUMON_BD__AIRWAY_STENT_SILICONE_STRAIGHT",
       "version": "1.0",
       "displayName": "Novatech DUMON BD",
       "manufacturerDisplay": "Novatech",
-      "governanceState": "approved",
-      "approvedAt": "2026-08-01T00:00:00.000Z",
+      "governanceState": "draft",
+      "approvedAt": null,
       "retiredAt": null,
       "supersedesProductFamilyVersionId": null,
-      "reviewBasis": "Seeded from the catalog's authored brand_family \"DUMON BD\" for Novatech, scoped to AIRWAY_STENT_SILICONE_STRAIGHT. All 23 members share product_kind \"Implant\" and coverage \"Solid silicone\". Primary source: SRC001 (NOVATECH Products for Interventional Pulmonology). The manufacturer's own line grouping, made explicit and frozen; the individual devices have not been re-reviewed here.",
+      "reviewBasis": "Identity and explicit membership seeded from the manufacturer-authored brand_family \"DUMON BD\" for Novatech, scoped to AIRWAY_STENT_SILICONE_STRAIGHT. The grouping passed the structural homogeneity checks: all 23 members share product_kind \"Implant\" and coverage \"Solid silicone\". Primary source: SRC001 (NOVATECH Products for Interventional Pulmonology). Clinical membership review is PENDING \u2014 no individual device in this line has been clinically reviewed for interchangeability within it. The family stays draft and is not offered as a persistent \"size at time of procedure\" selection until a reviewer approves it; approval moves this version forward without rewriting its identity or membership.",
       "membership": {
         "manufacturerGroupId": "MFR-6208838930",
         "brandFamily": "DUMON BD",
         "roleCodes": ["AIRWAY_STENT_SILICONE_STRAIGHT"],
         "expectedMemberCount": 23
       },
-      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "definitionHash": "40aa116ebc5a024538b4603c441d62fe168c4003a9e2e66ae19b42e2b6a3218c"
+      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7"
     },
     {
       "productFamilyCode": "NOVATECH_DUMON_ST__AIRWAY_STENT_SILICONE_HOURGLASS",
       "version": "1.0",
       "displayName": "Novatech DUMON ST",
       "manufacturerDisplay": "Novatech",
-      "governanceState": "approved",
-      "approvedAt": "2026-08-01T00:00:00.000Z",
+      "governanceState": "draft",
+      "approvedAt": null,
       "retiredAt": null,
       "supersedesProductFamilyVersionId": null,
-      "reviewBasis": "Seeded from the catalog's authored brand_family \"DUMON ST\" for Novatech, scoped to AIRWAY_STENT_SILICONE_HOURGLASS. All 4 members share product_kind \"Implant\" and coverage \"Solid silicone\". Primary source: SRC001 (NOVATECH Products for Interventional Pulmonology). The manufacturer's own line grouping, made explicit and frozen; the individual devices have not been re-reviewed here.",
+      "reviewBasis": "Identity and explicit membership seeded from the manufacturer-authored brand_family \"DUMON ST\" for Novatech, scoped to AIRWAY_STENT_SILICONE_HOURGLASS. The grouping passed the structural homogeneity checks: all 4 members share product_kind \"Implant\" and coverage \"Solid silicone\". Primary source: SRC001 (NOVATECH Products for Interventional Pulmonology). Clinical membership review is PENDING \u2014 no individual device in this line has been clinically reviewed for interchangeability within it. The family stays draft and is not offered as a persistent \"size at time of procedure\" selection until a reviewer approves it; approval moves this version forward without rewriting its identity or membership.",
       "membership": {
         "manufacturerGroupId": "MFR-6208838930",
         "brandFamily": "DUMON ST",
         "roleCodes": ["AIRWAY_STENT_SILICONE_HOURGLASS"],
         "expectedMemberCount": 4
       },
-      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "definitionHash": "22b46a5649f4e20f1ef30f83896b544d5b2ed0bdc6412e2fe7fce4fd96d9374b"
+      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7"
     },
     {
       "productFamilyCode": "NOVATECH_DUMON_TD__AIRWAY_STENT_SILICONE_STRAIGHT",
       "version": "1.0",
       "displayName": "Novatech DUMON TD",
       "manufacturerDisplay": "Novatech",
-      "governanceState": "approved",
-      "approvedAt": "2026-08-01T00:00:00.000Z",
+      "governanceState": "draft",
+      "approvedAt": null,
       "retiredAt": null,
       "supersedesProductFamilyVersionId": null,
-      "reviewBasis": "Seeded from the catalog's authored brand_family \"DUMON TD\" for Novatech, scoped to AIRWAY_STENT_SILICONE_STRAIGHT. All 43 members share product_kind \"Implant\" and coverage \"Solid silicone\". Primary source: SRC001 (NOVATECH Products for Interventional Pulmonology). The manufacturer's own line grouping, made explicit and frozen; the individual devices have not been re-reviewed here.",
+      "reviewBasis": "Identity and explicit membership seeded from the manufacturer-authored brand_family \"DUMON TD\" for Novatech, scoped to AIRWAY_STENT_SILICONE_STRAIGHT. The grouping passed the structural homogeneity checks: all 43 members share product_kind \"Implant\" and coverage \"Solid silicone\". Primary source: SRC001 (NOVATECH Products for Interventional Pulmonology). Clinical membership review is PENDING \u2014 no individual device in this line has been clinically reviewed for interchangeability within it. The family stays draft and is not offered as a persistent \"size at time of procedure\" selection until a reviewer approves it; approval moves this version forward without rewriting its identity or membership.",
       "membership": {
         "manufacturerGroupId": "MFR-6208838930",
         "brandFamily": "DUMON TD",
         "roleCodes": ["AIRWAY_STENT_SILICONE_STRAIGHT"],
         "expectedMemberCount": 43
       },
-      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "definitionHash": "1ab085b0bae51ccee3037543ef6eecd3181abc818709e17c7ff506c25b91dd0e"
+      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7"
     },
     {
       "productFamilyCode": "NOVATECH_DUMON_TF__AIRWAY_STENT_SILICONE_STRAIGHT",
       "version": "1.0",
       "displayName": "Novatech DUMON TF",
       "manufacturerDisplay": "Novatech",
-      "governanceState": "approved",
-      "approvedAt": "2026-08-01T00:00:00.000Z",
+      "governanceState": "draft",
+      "approvedAt": null,
       "retiredAt": null,
       "supersedesProductFamilyVersionId": null,
-      "reviewBasis": "Seeded from the catalog's authored brand_family \"DUMON TF\" for Novatech, scoped to AIRWAY_STENT_SILICONE_STRAIGHT. All 34 members share product_kind \"Implant\" and coverage \"Solid silicone\". Primary source: SRC001 (NOVATECH Products for Interventional Pulmonology). The manufacturer's own line grouping, made explicit and frozen; the individual devices have not been re-reviewed here.",
+      "reviewBasis": "Identity and explicit membership seeded from the manufacturer-authored brand_family \"DUMON TF\" for Novatech, scoped to AIRWAY_STENT_SILICONE_STRAIGHT. The grouping passed the structural homogeneity checks: all 34 members share product_kind \"Implant\" and coverage \"Solid silicone\". Primary source: SRC001 (NOVATECH Products for Interventional Pulmonology). Clinical membership review is PENDING \u2014 no individual device in this line has been clinically reviewed for interchangeability within it. The family stays draft and is not offered as a persistent \"size at time of procedure\" selection until a reviewer approves it; approval moves this version forward without rewriting its identity or membership.",
       "membership": {
         "manufacturerGroupId": "MFR-6208838930",
         "brandFamily": "DUMON TF",
         "roleCodes": ["AIRWAY_STENT_SILICONE_STRAIGHT"],
         "expectedMemberCount": 34
       },
-      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "definitionHash": "f8c57e6bb72d09c391337a8e82e257ce3997c625342428ba25683f3ac6459431"
+      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7"
     },
     {
       "productFamilyCode": "NOVATECH_DUMON_Y__AIRWAY_STENT_SILICONE_Y",
       "version": "1.0",
       "displayName": "Novatech DUMON Y",
       "manufacturerDisplay": "Novatech",
-      "governanceState": "approved",
-      "approvedAt": "2026-08-01T00:00:00.000Z",
+      "governanceState": "draft",
+      "approvedAt": null,
       "retiredAt": null,
       "supersedesProductFamilyVersionId": null,
-      "reviewBasis": "Seeded from the catalog's authored brand_family \"DUMON Y\" for Novatech, scoped to AIRWAY_STENT_SILICONE_Y. All 4 members share product_kind \"Implant\" and coverage \"Solid silicone\". Primary source: SRC001 (NOVATECH Products for Interventional Pulmonology). The manufacturer's own line grouping, made explicit and frozen; the individual devices have not been re-reviewed here.",
+      "reviewBasis": "Identity and explicit membership seeded from the manufacturer-authored brand_family \"DUMON Y\" for Novatech, scoped to AIRWAY_STENT_SILICONE_Y. The grouping passed the structural homogeneity checks: all 4 members share product_kind \"Implant\" and coverage \"Solid silicone\". Primary source: SRC001 (NOVATECH Products for Interventional Pulmonology). Clinical membership review is PENDING \u2014 no individual device in this line has been clinically reviewed for interchangeability within it. The family stays draft and is not offered as a persistent \"size at time of procedure\" selection until a reviewer approves it; approval moves this version forward without rewriting its identity or membership.",
       "membership": {
         "manufacturerGroupId": "MFR-6208838930",
         "brandFamily": "DUMON Y",
         "roleCodes": ["AIRWAY_STENT_SILICONE_Y"],
         "expectedMemberCount": 4
       },
-      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "definitionHash": "6036df11bc5a44b2eb74631806825b0c7f31d159e80a9ea079ed48ce9daa8fff"
+      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7"
     },
     {
       "productFamilyCode": "NOVATECH_GSS__AIRWAY_STENT_SILICONE_STRAIGHT",
       "version": "1.0",
       "displayName": "Novatech GSS",
       "manufacturerDisplay": "Novatech",
-      "governanceState": "approved",
-      "approvedAt": "2026-08-01T00:00:00.000Z",
+      "governanceState": "draft",
+      "approvedAt": null,
       "retiredAt": null,
       "supersedesProductFamilyVersionId": null,
-      "reviewBasis": "Seeded from the catalog's authored brand_family \"GSS\" for Novatech, scoped to AIRWAY_STENT_SILICONE_STRAIGHT. All 5 members share product_kind \"Implant\" and record no coverage value. Primary source: SRC006 (Product list 2025). The manufacturer's own line grouping, made explicit and frozen; the individual devices have not been re-reviewed here.",
+      "reviewBasis": "Identity and explicit membership seeded from the manufacturer-authored brand_family \"GSS\" for Novatech, scoped to AIRWAY_STENT_SILICONE_STRAIGHT. The grouping passed the structural homogeneity checks: all 5 members share product_kind \"Implant\" and record no coverage value. Primary source: SRC006 (Product list 2025). Clinical membership review is PENDING \u2014 no individual device in this line has been clinically reviewed for interchangeability within it. The family stays draft and is not offered as a persistent \"size at time of procedure\" selection until a reviewer approves it; approval moves this version forward without rewriting its identity or membership.",
       "membership": {
         "manufacturerGroupId": "MFR-6208838930",
         "brandFamily": "GSS",
         "roleCodes": ["AIRWAY_STENT_SILICONE_STRAIGHT"],
         "expectedMemberCount": 5
       },
-      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "definitionHash": "f7c87adcfbf85588416f9732661bf65d4e86b725ae5bc983ec92308c7074346f"
+      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7"
     },
     {
       "productFamilyCode": "NOVATECH_GSS__AIRWAY_STENT_SILICONE_Y",
       "version": "1.0",
       "displayName": "Novatech GSS",
       "manufacturerDisplay": "Novatech",
-      "governanceState": "approved",
-      "approvedAt": "2026-08-01T00:00:00.000Z",
+      "governanceState": "draft",
+      "approvedAt": null,
       "retiredAt": null,
       "supersedesProductFamilyVersionId": null,
-      "reviewBasis": "Seeded from the catalog's authored brand_family \"GSS\" for Novatech, scoped to AIRWAY_STENT_SILICONE_Y. All 2 members share product_kind \"Implant\" and record no coverage value. Primary source: SRC006 (Product list 2025). The manufacturer's own line grouping, made explicit and frozen; the individual devices have not been re-reviewed here.",
+      "reviewBasis": "Identity and explicit membership seeded from the manufacturer-authored brand_family \"GSS\" for Novatech, scoped to AIRWAY_STENT_SILICONE_Y. The grouping passed the structural homogeneity checks: all 2 members share product_kind \"Implant\" and record no coverage value. Primary source: SRC006 (Product list 2025). Clinical membership review is PENDING \u2014 no individual device in this line has been clinically reviewed for interchangeability within it. The family stays draft and is not offered as a persistent \"size at time of procedure\" selection until a reviewer approves it; approval moves this version forward without rewriting its identity or membership.",
       "membership": {
         "manufacturerGroupId": "MFR-6208838930",
         "brandFamily": "GSS",
         "roleCodes": ["AIRWAY_STENT_SILICONE_Y"],
         "expectedMemberCount": 2
       },
-      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "definitionHash": "9da81e5bfceb19c0cd1302c5c28d79e8bc17554d6e7e49089f22552aca33f37f"
+      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7"
     },
     {
       "productFamilyCode": "THORACENT_M_I_TECH_BONASTENT__AIRWAY_STENT_SEMS_COVERED",
       "version": "1.0",
       "displayName": "Thoracent / M.I.Tech Bonastent",
       "manufacturerDisplay": "Thoracent / M.I.Tech",
-      "governanceState": "approved",
-      "approvedAt": "2026-08-01T00:00:00.000Z",
+      "governanceState": "draft",
+      "approvedAt": null,
       "retiredAt": null,
       "supersedesProductFamilyVersionId": null,
-      "reviewBasis": "Seeded from the catalog's authored brand_family \"Bonastent\" for Thoracent / M.I.Tech, scoped to AIRWAY_STENT_SEMS_COVERED. All 39 members share product_kind \"Implant\" and record no coverage value. Primary source: SRC006 (Product list 2025). The manufacturer's own line grouping, made explicit and frozen; the individual devices have not been re-reviewed here.",
+      "reviewBasis": "Identity and explicit membership seeded from the manufacturer-authored brand_family \"Bonastent\" for Thoracent / M.I.Tech, scoped to AIRWAY_STENT_SEMS_COVERED. The grouping passed the structural homogeneity checks: all 39 members share product_kind \"Implant\" and record no coverage value. Primary source: SRC006 (Product list 2025). Clinical membership review is PENDING \u2014 no individual device in this line has been clinically reviewed for interchangeability within it. The family stays draft and is not offered as a persistent \"size at time of procedure\" selection until a reviewer approves it; approval moves this version forward without rewriting its identity or membership.",
       "membership": {
         "manufacturerGroupId": "MFR-CC1ABBE64F",
         "brandFamily": "Bonastent",
         "roleCodes": ["AIRWAY_STENT_SEMS_COVERED"],
         "expectedMemberCount": 39
       },
-      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
-      "definitionHash": "177a196426e3204e8c35e0c8854ec16218145de70f7fb6e947360a13d81000da"
+      "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7"
     }
   ]
 }

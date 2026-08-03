@@ -41,12 +41,11 @@ import type { CatalogVerificationTier } from '@/features/preference-cards/domain
 import type { CatalogPick } from '@/features/preference-cards/domain/catalog-pick'
 import {
   familySpecRanges,
-  type FamilyPick,
   type FamilySpecRange,
   type FamilySpecSource,
 } from '@/features/preference-cards/domain/family-pick'
-import type { ReviewedProductFamilyVersion } from '@/features/preference-cards/domain/product-family'
-import { getApprovedProductFamiliesForRole } from '@/features/preference-cards/data/product-families.server'
+import type { ProductFamilyGovernanceState } from '@/features/preference-cards/domain/product-family'
+import { getReviewedProductFamiliesForRole } from '@/features/preference-cards/data/product-families.server'
 
 /**
  * Server-only catalog queries.
@@ -1071,7 +1070,23 @@ function catalogFamilySpecRanges(products: CatalogProduct[]): FamilySpecRange[] 
  */
 export interface RoleFamilyOption {
   discoveryKey: string
-  /** Present only when an approved reviewed family version covers this grouping for this role. */
+  /**
+   * The governance state of the reviewed family covering this grouping, or null when no reviewed
+   * family covers it at all.
+   *
+   * Null and `'draft'` are different situations and must not present identically: null is "nobody
+   * has identified a family here", `'draft'` is "the family is identified and its membership is
+   * frozen, and a clinician has not signed off on it yet". A reviewer looking at a catalog surface
+   * needs to be able to tell those apart; a card may act on neither.
+   */
+  reviewedFamilyGovernanceState: ProductFamilyGovernanceState | null
+  /**
+   * Present only when an **approved** reviewed family version covers this grouping for this role.
+   *
+   * Withheld for draft and retired on purpose rather than gated by a flag downstream: a pick cannot
+   * be constructed from fields that are not there, so a caller that forgets to check governance
+   * gets nothing instead of an unapproved selection.
+   */
   reviewedFamilyVersionId: string | null
   reviewedFamilyCode: string | null
   reviewedFamilyCatalogReleaseId: string | null
@@ -1134,19 +1149,23 @@ export function searchProductFamiliesForRole(
     else completeFamilies.set(product.familyKey, [product])
   }
 
-  // The approved reviewed families for this role, indexed by the exact member set they cover. A
-  // grouping is matched to a family version only when the family's membership *contains* every
-  // product the grouping holds for this role — never by name, manufacturer, or resemblance, which
-  // is the mapping this whole phase exists to refuse.
-  const approvedFamilies = getApprovedProductFamiliesForRole(roleCode)
+  // The reviewed families for this role, indexed by the exact member set they cover. A grouping is
+  // matched to a family version only when the family's membership is exactly the set of products
+  // the grouping holds for this role — never by name, manufacturer, or resemblance, which is the
+  // mapping this whole phase exists to refuse.
+  //
+  // Matched across every governance state so a draft can be *reported*; only an approved match
+  // yields the pin fields below, so only an approved family can be selected.
+  const reviewedFamilies = getReviewedProductFamiliesForRole(roleCode)
   const reviewedFor = (variants: CatalogProduct[]) => {
     const ids = new Set(variants.map((variant) => variant.product_id))
-    return (
-      approvedFamilies.find((family) => {
-        const members = new Set(family.memberProductIds)
-        return members.size === ids.size && [...ids].every((id) => members.has(id))
-      }) ?? null
-    )
+    const matches = reviewedFamilies.filter((family) => {
+      const members = new Set(family.memberProductIds)
+      return members.size === ids.size && [...ids].every((id) => members.has(id))
+    })
+    // An approved match wins over a retired predecessor with the same membership; otherwise the
+    // first retained match reports the state the reviewer needs to see.
+    return matches.find((family) => family.governanceState === 'approved') ?? matches[0] ?? null
   }
 
   const distribution = getDistributionMap()
@@ -1166,12 +1185,14 @@ export function searchProductFamiliesForRole(
     // query that matches three of a line's eighteen sizes must not make the line look like a
     // different, smaller family than the one that was reviewed.
     const reviewed = reviewedFor(completeFamily)
+    const selectable = reviewed?.governanceState === 'approved' ? reviewed : null
     families.push({
       discoveryKey: familyKey,
-      reviewedFamilyVersionId: reviewed?.productFamilyVersionId ?? null,
-      reviewedFamilyCode: reviewed?.productFamilyCode ?? null,
-      reviewedFamilyCatalogReleaseId: reviewed?.catalogReleaseId ?? null,
-      reviewedFamilyDefinitionHash: reviewed?.definitionHash ?? null,
+      reviewedFamilyGovernanceState: reviewed?.governanceState ?? null,
+      reviewedFamilyVersionId: selectable?.productFamilyVersionId ?? null,
+      reviewedFamilyCode: selectable?.productFamilyCode ?? null,
+      reviewedFamilyCatalogReleaseId: selectable?.catalogReleaseId ?? null,
+      reviewedFamilyDefinitionHash: selectable?.definitionHash ?? null,
       familyName: first.familyName,
       manufacturerDisplay: first.manufacturerDisplay,
       manufacturerGroupId: first.manufacturerGroupId,
@@ -1207,52 +1228,19 @@ export function searchProductFamiliesForRole(
 }
 
 /**
- * Rebuild a family pick from a reviewed family version, the family-level twin of
- * {@link getCatalogPick}.
+ * There is deliberately no current-catalog family-pick builder here.
  *
- * The wizard sends identifiers only, so the line's identity always comes from retained data rather
- * than from the caller. This is the *current-catalog* form, used when a new card is being built
- * against the current release; reconstruction of an already-saved card goes through
- * `historicalFamilyPick`, which reads the same family version against the retained rows of the
- * catalog release it was pinned to.
+ * One existed and was removed: nothing in production called it, and it built a `FamilyPick` from a
+ * family version *without* consulting governance — an ungoverned twin sitting next to the governed
+ * path, waiting for someone to wire it up believing it was the picker. Family picks are built in
+ * exactly two places now: `toFamilyPick` in the picker, which only receives pin fields for an
+ * approved family, and `historicalFamilyPick`, which rebuilds a saved card's line from the catalog
+ * release it was pinned to.
  *
- * Note what is no longer possible: there is no lookup by discovery key. A saved card that carries
- * one cannot be turned into a family pick at all, which is the whole point — the key names a
- * grouping, not a membership.
+ * Note also what has no builder at all: there is no lookup by discovery key. A saved card carrying
+ * one cannot be turned into a family pick, which is the point — the key names a grouping, not a
+ * membership.
  */
-export function getFamilyPickForVersion(
-  version: ReviewedProductFamilyVersion,
-  requestedRoleCode: string,
-  store: CatalogStore = getCatalogStore(),
-): FamilyPick | null {
-  // Same reasoning as resolveCatalogPick: family item ids embed the role, so a pre-rename saved
-  // card asks for the old code and the alias resolves it.
-  const roleCode = canonicalRoleCode(requestedRoleCode)
-  const variants = version.memberProductIds
-    .map((productId) => store.productById.get(productId))
-    .filter((product): product is CatalogProduct => Boolean(product))
-    .filter(isSlottableProduct)
-  if (variants.length === 0) return null
-
-  const first = variants[0]
-  return {
-    productFamilyVersionId: version.productFamilyVersionId,
-    productFamilyCode: version.productFamilyCode,
-    catalogReleaseId: version.catalogReleaseId,
-    definitionHash: version.definitionHash,
-    roleCode,
-    familyName: version.displayName,
-    manufacturerDisplay: version.manufacturerDisplay,
-    variantCount: variants.length,
-    specRanges: catalogFamilySpecRanges(variants),
-    verificationTier: variants.every((variant) => variant.verificationTier === 'verified')
-      ? 'verified'
-      : 'candidate',
-    usStatusPending: variants.some((variant) => variant.usStatusPending),
-    sourceId: first.primary_source_id,
-    sourceLocation: first.primary_source_location,
-  }
-}
 
 export interface EmergingDevice {
   productId: string

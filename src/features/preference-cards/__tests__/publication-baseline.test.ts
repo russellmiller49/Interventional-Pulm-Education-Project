@@ -14,6 +14,10 @@ import {
   createFixtureReleaseWorld,
 } from '../__fixtures__/release-bundle-fixtures'
 import {
+  computeReviewedProductFamilyVersion,
+  type ReviewedProductFamilyVersion,
+} from '../domain/product-family'
+import {
   buildPublicationBaselineSnapshot,
   comparePublicationBaseline,
   type PublicationArtifacts,
@@ -202,6 +206,99 @@ describe('what a branch may legitimately do', () => {
     const result = compare([alpha, bravo], [alpha, reworded])
     expect(result.violations).toEqual([])
     expect(result.lifecycleAdvanced.map(({ entry }) => entry.id)).toContain(BRAVO_RELEASE_ID)
+  })
+})
+
+describe('product-family governance across the baseline', () => {
+  const draft = computeReviewedProductFamilyVersion({
+    productFamilyVersionId: 'family-fixture-line-v1-0',
+    productFamilyCode: 'FIXTURE_LINE',
+    version: '1.0',
+    catalogReleaseId: 'a'.repeat(64),
+    roleCodes: ['AIRWAY_STENT_SILICONE_STRAIGHT'],
+    displayName: 'Fixture Line',
+    manufacturerGroupId: 'MFR-FIXTURE',
+    manufacturerDisplay: 'Fixture Devices',
+    memberProductIds: ['PRD-FIXTUREAA', 'PRD-FIXTUREBB'],
+    governanceState: 'draft',
+    supersedesProductFamilyVersionId: null,
+    reviewBasis: 'Seeded from the manufacturer-authored brand family. Clinical review pending.',
+    approvedAt: null,
+    retiredAt: null,
+  })
+
+  function familyArtifacts(versions: ReviewedProductFamilyVersion[]): PublicationArtifacts {
+    return {
+      releaseBundles: null,
+      moduleLedger: null,
+      catalogReleases: null,
+      productFamilies: { formatVersion: '1.0', hashVersion: 'x', versions },
+    }
+  }
+
+  function compareFamilies(
+    base: ReviewedProductFamilyVersion[],
+    head: ReviewedProductFamilyVersion[],
+  ) {
+    return comparePublicationBaseline({
+      base: buildPublicationBaselineSnapshot(familyArtifacts(base)),
+      head: buildPublicationBaselineSnapshot(familyArtifacts(head)),
+    })
+  }
+
+  it('permits a draft family to move forward to approved after review', () => {
+    // The reason the eighteen seeded families can merge as drafts: approving one later is a
+    // permitted lifecycle move, not a rewrite. Governance sits outside the definition hash, so the
+    // identity and membership a card would pin are already final.
+    const approved = computeReviewedProductFamilyVersion({
+      ...draft,
+      governanceState: 'approved',
+      approvedAt: '2026-09-01T00:00:00.000Z',
+      reviewBasis: 'Reviewed device by device on 2026-09-01.',
+    })
+
+    const result = compareFamilies([draft], [approved])
+    expect(result.violations).toEqual([])
+    expect(result.lifecycleAdvanced.map(({ entry }) => entry.id)).toEqual([
+      draft.productFamilyVersionId,
+    ])
+    expect(approved.definitionHash).toBe(draft.definitionHash)
+    expect(approved.memberProductIds).toEqual(draft.memberProductIds)
+  })
+
+  it('refuses an approved family being reverted to draft', () => {
+    const approved = computeReviewedProductFamilyVersion({
+      ...draft,
+      governanceState: 'approved',
+      approvedAt: '2026-09-01T00:00:00.000Z',
+    })
+    const result = compareFamilies([approved], [draft])
+    expect(result.violations.map((violation) => violation.code)).toContain(
+      'publication_lifecycle_regressed',
+    )
+  })
+
+  it('locks a draft family, unlike a draft release', () => {
+    // The asymmetry, asserted so it stays deliberate. A draft release is content being authored and
+    // is excluded from the baseline entirely; a draft family has a settled identity awaiting
+    // clinical sign-off, and locking it on merge is what makes the eventual approval mean something.
+    const familyBase = buildPublicationBaselineSnapshot(familyArtifacts([draft]))
+    expect(familyBase.entries.map((entry) => entry.id)).toEqual([draft.productFamilyVersionId])
+
+    const draftRelease = { ...charlie, releaseState: 'draft' as const }
+    const releaseBase = buildPublicationBaselineSnapshot(artifacts([draftRelease]))
+    expect(releaseBase.entries).toEqual([])
+  })
+
+  it('refuses a published family whose membership changed', () => {
+    const rewritten = computeReviewedProductFamilyVersion({
+      ...draft,
+      memberProductIds: [...draft.memberProductIds, 'PRD-FIXTURECC'],
+    })
+    const result = compareFamilies([draft], [rewritten])
+    expect(result.violations.map((violation) => violation.code)).toContain(
+      'publication_definition_mutated',
+    )
   })
 })
 

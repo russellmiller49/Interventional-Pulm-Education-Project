@@ -345,6 +345,7 @@ export interface ReviewedProductFamilyPin {
 
 export type ProductFamilyResolutionErrorCode =
   | 'product_family_unknown'
+  | 'product_family_unpublished'
   | 'product_family_definition_mutated'
   | 'product_family_catalog_release_mismatch'
   | 'product_family_role_not_covered'
@@ -357,10 +358,20 @@ export type ProductFamilyResolutionResult =
 /**
  * Resolve a pinned family for reconstruction, verifying every part of the pin.
  *
- * Retired families resolve, exactly as retired releases do: retirement governs what a *new* card
- * may select, and a card already pinned to a retired family must still reconstruct or "retired
- * but retained" would mean nothing. `assertProductFamilySelectableForNewCard` is the separate
- * check the create path runs.
+ * Draft and retired are treated asymmetrically, and the asymmetry is the whole rule:
+ *
+ * - **Retired resolves.** Retirement governs what a *new* card may select. A card already pinned to
+ *   a retired family must still reconstruct, or "retired but retained" would mean nothing. What a
+ *   new card may select is decided one step earlier, by which families the picker is offered at
+ *   all — `getApprovedProductFamiliesForRole`, which filters through
+ *   `assertProductFamilySelectableForNewCard`.
+ * - **Draft does not.** A draft family has never been selectable, so no stored card can contain
+ *   one. A pin naming a draft is therefore not a historical card being reconstructed — it is a
+ *   request naming a membership no reviewer has approved, and accepting it would put an
+ *   unreviewed clinical grouping on a card through the one door that bypasses the picker.
+ *
+ * That door matters: the picker withholding a control has never been a security boundary here, and
+ * a save-time caller is untrusted.
  */
 export function resolveReviewedProductFamily(
   pin: ReviewedProductFamilyPin,
@@ -372,6 +383,13 @@ export function resolveReviewedProductFamily(
       ok: false,
       code: 'product_family_unknown',
       message: `This card selects product family ${pin.productFamilyVersionId}, which is no longer retained.`,
+    }
+  }
+  if (version.governanceState === 'draft') {
+    return {
+      ok: false,
+      code: 'product_family_unpublished',
+      message: `Product family ${version.productFamilyVersionId} is a draft awaiting clinical review and cannot back a card selection. Its identity and membership are retained; only approval is missing.`,
     }
   }
   if (version.definitionHash !== pin.definitionHash) {

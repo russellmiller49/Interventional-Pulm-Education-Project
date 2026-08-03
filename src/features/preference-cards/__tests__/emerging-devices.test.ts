@@ -7,7 +7,7 @@ import {
   searchProductsForRole,
 } from '../server/catalog'
 import { isBreakthroughRegulatoryStatus } from '../server/catalog-store'
-import { getApprovedProductFamiliesForRole } from '../data/product-families.server'
+import { getReviewedProductFamiliesForRole } from '../data/product-families.server'
 
 /**
  * The breakthrough-designated cohort, and the wall around it.
@@ -96,7 +96,7 @@ describe('breakthrough-designated cohort', () => {
         ).not.toContain(product.product_id)
         // A reviewed family can never contain it either: family membership is derived only from
         // products the reviewed governance still permits on a card.
-        for (const version of getApprovedProductFamiliesForRole(roleCode)) {
+        for (const version of getReviewedProductFamiliesForRole(roleCode)) {
           expect(version.memberProductIds).not.toContain(product.product_id)
         }
       }

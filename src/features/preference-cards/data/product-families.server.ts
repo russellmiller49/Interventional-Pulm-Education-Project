@@ -54,7 +54,10 @@ const approvedByRole = (() => {
   const index = new Map<string, ReviewedProductFamilyVersion[]>()
   const seen = new Map<string, string>()
   for (const version of ledger.versions) {
-    if (version.governanceState !== 'approved') continue
+    // Through the shared predicate rather than an inline state comparison, so "which families may
+    // a new card select" has exactly one answer in the codebase. An inline check here would be a
+    // second definition of selectable that could drift from the first without anything noticing.
+    if (!assertProductFamilySelectableForNewCard(version).ok) continue
     for (const roleCode of version.roleCodes) {
       const key = `${roleCode}::${version.productFamilyCode}`
       const existing = seen.get(key)
@@ -71,6 +74,26 @@ const approvedByRole = (() => {
   }
   for (const versions of index.values()) {
     versions.sort((left, right) => left.displayName.localeCompare(right.displayName))
+  }
+  return index
+})()
+
+/** Every retained version by role, regardless of state. See `getReviewedProductFamiliesForRole`. */
+const allByRole = (() => {
+  const index = new Map<string, ReviewedProductFamilyVersion[]>()
+  for (const version of ledger.versions) {
+    for (const roleCode of version.roleCodes) {
+      const forRole = index.get(roleCode)
+      if (forRole) forRole.push(version)
+      else index.set(roleCode, [version])
+    }
+  }
+  for (const versions of index.values()) {
+    versions.sort(
+      (left, right) =>
+        left.displayName.localeCompare(right.displayName) ||
+        left.productFamilyVersionId.localeCompare(right.productFamilyVersionId),
+    )
   }
   return index
 })()
@@ -96,6 +119,24 @@ export function getApprovedProductFamiliesForRole(
   // Canonicalized on the way in for the same reason every other role lookup is: the picker is
   // reachable by URL and by API, and a pre-rename code must not silently return nothing.
   return approvedByRole.get(canonicalRoleCode(requestedRoleCode)) ?? []
+}
+
+/**
+ * Every retained family version serving a role, whatever its governance state.
+ *
+ * Separate from the approved index and never used to decide what a card may select. It exists so a
+ * reviewer can *see* that a family has been identified and is waiting on clinical review — which is
+ * a different situation from "no reviewed family exists for this grouping at all", and one the
+ * catalog surfaces would otherwise present identically. Reporting them the same way would make an
+ * 18-member line awaiting sign-off indistinguishable from a grouping nobody has looked at.
+ *
+ * No uniqueness assertion here, deliberately: a retired version and its approved successor both
+ * serve the role and both belong in a review listing.
+ */
+export function getReviewedProductFamiliesForRole(
+  requestedRoleCode: string,
+): ReviewedProductFamilyVersion[] {
+  return allByRole.get(canonicalRoleCode(requestedRoleCode)) ?? []
 }
 
 export function resolveProductFamilyPin(

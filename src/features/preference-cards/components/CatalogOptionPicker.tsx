@@ -55,6 +55,8 @@ export interface CatalogPickerOption {
  */
 export interface CatalogPickerFamily {
   discoveryKey: string
+  /** null = no reviewed family here at all; 'draft' = identified, awaiting clinical review. */
+  reviewedFamilyGovernanceState: 'draft' | 'approved' | 'retired' | null
   reviewedFamilyVersionId: string | null
   reviewedFamilyCode: string | null
   reviewedFamilyCatalogReleaseId: string | null
@@ -437,13 +439,19 @@ export function CatalogOptionPicker({
                           </p>
                         </>
                       ) : sizeAtProcedure && onAddFamily ? (
-                        // No reviewed family covers this grouping for this role, so the grouping is
-                        // labelled as what it is — a way to browse the catalog — and the sizes below
-                        // stay individually selectable. Offering the whole line here would persist a
-                        // membership nobody defined, and inventing a custom "size at time of
-                        // procedure" line in its place would do the same thing with worse provenance.
+                        // No *approved* family covers this grouping, so the whole line cannot be
+                        // added and the sizes below stay individually selectable. Offering the line
+                        // here would persist a membership nobody approved, and inventing a custom
+                        // "size at time of procedure" entry in its place would do the same thing
+                        // with worse provenance.
+                        //
+                        // The two reasons read differently, because they are different: a draft
+                        // family has an identified, frozen membership waiting on a clinician, while
+                        // a grouping with no reviewed family is nothing but a way to browse.
                         <p className="mt-1.5 rounded-md border border-dashed border-border/70 px-2 py-1 text-[10px] leading-4 text-muted-foreground">
-                          {t('unreviewedFamilyHelp')}
+                          {family.reviewedFamilyGovernanceState === 'draft'
+                            ? t('pendingReviewFamilyHelp')
+                            : t('unreviewedFamilyHelp')}
                         </p>
                       ) : null}
 

@@ -9,8 +9,12 @@ import { familyPickId, isFamilyPickId } from '../domain/size-at-procedure'
 import { isCatalogPickItemId } from '../domain/catalog-pick'
 import { buildDemoContext, defaultBuildInput } from '../data/demo-context.server'
 import { resolveCard } from '../domain/resolve-card'
-import { getApprovedProductFamiliesForRole } from '../data/product-families.server'
-import { getFamilyPickForVersion, searchProductFamiliesForRole } from '../server/catalog'
+import {
+  getApprovedProductFamiliesForRole,
+  getReviewedProductFamiliesForRole,
+} from '../data/product-families.server'
+import { searchProductFamiliesForRole } from '../server/catalog'
+import { getHistoricalCatalog, historicalFamilyPick } from '../data/historical-catalog.server'
 
 const STENT_ROLE = 'AIRWAY_STENT_SILICONE_STRAIGHT'
 
@@ -239,21 +243,30 @@ describe('server-side family search and rebuild', () => {
     }
   })
 
-  it('rebuilds a real product line from an approved reviewed family version', () => {
-    const approved = getApprovedProductFamiliesForRole(STENT_ROLE)
-    expect(approved.length).toBeGreaterThan(0)
-    const version = approved[0]
-    const rebuilt = getFamilyPickForVersion(version, STENT_ROLE)
+  it('rebuilds a real product line from its retained catalog release', () => {
+    // The production rebuild path, and the only one: a family pick is reconstructed from the
+    // frozen membership against the rows the pinned catalog release retained. Rebuilding is not
+    // gated on governance — a retired family must still rebuild for the cards pinned to it — and
+    // what governance gates is *selection*, proved in product-family.test.ts.
+    const retained = getReviewedProductFamiliesForRole(STENT_ROLE)
+    expect(retained.length).toBeGreaterThan(0)
+    const version = retained[0]
+    const historical = getHistoricalCatalog(version.catalogReleaseId)
+    expect(historical.ok).toBe(true)
+    if (!historical.ok) return
 
-    expect(rebuilt).not.toBeNull()
-    expect(rebuilt!.productFamilyVersionId).toBe(version.productFamilyVersionId)
-    expect(rebuilt!.definitionHash).toBe(version.definitionHash)
-    expect(rebuilt!.catalogReleaseId).toBe(version.catalogReleaseId)
-    expect(rebuilt!.familyName).toBe(version.displayName)
-    expect(rebuilt!.variantCount).toBe(version.memberProductIds.length)
+    const rebuilt = historicalFamilyPick(historical, version, STENT_ROLE)
+    expect(rebuilt.ok).toBe(true)
+    if (!rebuilt.ok) return
+    expect(rebuilt.pick.productFamilyVersionId).toBe(version.productFamilyVersionId)
+    expect(rebuilt.pick.definitionHash).toBe(version.definitionHash)
+    expect(rebuilt.pick.catalogReleaseId).toBe(version.catalogReleaseId)
+    expect(rebuilt.pick.familyName).toBe(version.displayName)
+    expect(rebuilt.pick.variantCount).toBe(version.memberProductIds.length)
+    expect(rebuilt.pick.specRanges.length).toBeGreaterThan(0)
   })
 
-  it('reports which discovery groupings correspond to a reviewed family and which do not', () => {
+  it('reports the pin fields only for an approved family, whatever state the grouping is in', () => {
     const families = searchProductFamiliesForRole({ roleCode: STENT_ROLE })
     const approvedIds = new Set(
       getApprovedProductFamiliesForRole(STENT_ROLE).map(
@@ -261,11 +274,15 @@ describe('server-side family search and rebuild', () => {
       ),
     )
     for (const family of families) {
-      if (family.reviewedFamilyVersionId === null) {
+      if (family.reviewedFamilyGovernanceState !== 'approved') {
+        // Withheld by construction — a pick cannot be built from fields that are not there.
+        expect(family.reviewedFamilyVersionId).toBeNull()
+        expect(family.reviewedFamilyCode).toBeNull()
+        expect(family.reviewedFamilyCatalogReleaseId).toBeNull()
         expect(family.reviewedFamilyDefinitionHash).toBeNull()
         continue
       }
-      expect(approvedIds.has(family.reviewedFamilyVersionId)).toBe(true)
+      expect(approvedIds.has(family.reviewedFamilyVersionId!)).toBe(true)
       expect(family.reviewedFamilyDefinitionHash).toMatch(/^[a-f0-9]{64}$/)
     }
   })
@@ -280,10 +297,11 @@ describe('server-side family search and rebuild', () => {
 
   it('still names the reviewed family when a text query matches only some of its sizes', () => {
     // The grouping is matched against the *complete* role-scoped family, so a query that narrows
-    // eighteen sizes to three must not make the line look like a smaller, different family.
+    // forty-three sizes to a handful must not make the line look like a smaller, different family
+    // — or like no reviewed family at all.
     const narrowed = searchProductFamiliesForRole({ roleCode: STENT_ROLE, q: 'DUMON TD' })
     const line = narrowed.find((family) => /dumon td/i.test(family.familyName))
     expect(line).toBeDefined()
-    expect(line!.reviewedFamilyVersionId).not.toBeNull()
+    expect(line!.reviewedFamilyGovernanceState).not.toBeNull()
   })
 })

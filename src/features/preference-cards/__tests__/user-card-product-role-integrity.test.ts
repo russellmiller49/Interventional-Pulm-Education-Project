@@ -4,7 +4,7 @@ import {
   getComposedRecipeSlots,
   getScenarioDefinition,
 } from '../data/demo-context.server'
-import { getApprovedProductFamiliesForRole } from '../data/product-families.server'
+import { getReviewedProductFamiliesForRole } from '../data/product-families.server'
 import { getCurrentReleaseBundleForScenario } from '../data/release-bundles.server'
 import { catalogPickItemId } from '../domain/catalog-pick'
 import { customItemId } from '../domain/custom-item'
@@ -277,60 +277,68 @@ describe('save-time catalog product-role integrity', () => {
     // discovery grouping merged them into one key. Reviewed families are role-scoped, so the two
     // are separate versions with separate memberships — a card asking for the straight line is not
     // also asking for the bifurcation.
-    const scenarioId = 'rigid-bronch'
     const roleCodes = ['AIRWAY_STENT_SILICONE_STRAIGHT', 'AIRWAY_STENT_SILICONE_Y'] as const
-    const definition = getScenarioDefinition(scenarioId)
-    const composedSlots = getComposedRecipeSlots(scenarioId)
-    expect(definition).not.toBeNull()
 
     const versions = roleCodes.map((roleCode) => {
-      const version = getApprovedProductFamiliesForRole(roleCode).find((candidate) =>
+      const version = getReviewedProductFamiliesForRole(roleCode).find((candidate) =>
         candidate.productFamilyCode.startsWith('NOVATECH_GSS'),
       )
       expect(version).toBeDefined()
       return { roleCode, version: version! }
     })
+
     expect(new Set(versions.map((entry) => entry.version.productFamilyVersionId)).size).toBe(2)
     // Separate memberships, not one list shown twice.
     expect(versions[0].version.memberProductIds).not.toEqual(versions[1].version.memberProductIds)
+    for (const { roleCode, version } of versions) {
+      expect(version.roleCodes).toEqual([roleCode])
+    }
+  })
 
-    const selectedHospitalItemIds = Object.fromEntries(
-      versions.map(({ roleCode, version }) => {
-        const slot = composedSlots.find((candidate) => candidate.roleCode === roleCode)
-        expect(slot).toBeDefined()
-        return [slot!.id, familyPickId(version.productFamilyVersionId)]
-      }),
+  it('refuses to save a card that names a draft family, however well-formed the pin', () => {
+    // Every seeded family is awaiting clinical review, so none of them may reach a stored card —
+    // and the wall is the save path rather than the picker, because a save-time caller is
+    // untrusted.
+    const scenarioId = 'rigid-bronch'
+    const roleCode = 'AIRWAY_STENT_SILICONE_STRAIGHT'
+    const definition = getScenarioDefinition(scenarioId)
+    expect(definition).not.toBeNull()
+    const version = getReviewedProductFamiliesForRole(roleCode)[0]
+    expect(version.governanceState).toBe('draft')
+
+    const slot = getComposedRecipeSlots(scenarioId).find(
+      (candidate) => candidate.roleCode === roleCode,
     )
+    expect(slot).toBeDefined()
     const input = defaultBuildInput(scenarioId)
-    input.selectedHospitalItemIds = selectedHospitalItemIds
+    input.selectedHospitalItemIds = {
+      ...input.selectedHospitalItemIds,
+      [slot!.id]: familyPickId(version.productFamilyVersionId),
+    }
+
     const request = saveCardRequestSchema.parse({
       schemaVersion: BUILDER_INPUTS_SCHEMA_VERSION,
       releaseBundleId: getCurrentReleaseBundleForScenario(scenarioId)!.id,
       scenarioId,
-      title: 'Multi-role family integrity test',
+      title: 'Draft family refusal',
       physicianName: null,
       status: 'draft',
       input: { ...input, recipeVersionId: definition!.recipeVersionId },
       catalogPicks: [],
-      familyPicks: versions.map(({ roleCode, version }) => ({
-        productFamilyVersionId: version.productFamilyVersionId,
-        catalogReleaseId: version.catalogReleaseId,
-        definitionHash: version.definitionHash,
-        roleCode,
-      })),
+      familyPicks: [
+        {
+          productFamilyVersionId: version.productFamilyVersionId,
+          catalogReleaseId: version.catalogReleaseId,
+          definitionHash: version.definitionHash,
+          roleCode,
+        },
+      ],
       customItems: [],
       equipmentSets: [],
     })
 
     const result = resolveForSave(request, GENERATED_AT)
-
-    expect(result.ok).toBe(true)
-    if (result.ok) {
-      for (const { roleCode, version } of versions) {
-        const item = result.card.items.find((candidate) => candidate.roleCode === roleCode)
-        expect(item?.selectedHospitalItemId).toBe(familyPickId(version.productFamilyVersionId))
-        expect(item?.selectedItemSnapshot?.roleCode).toBe(roleCode)
-      }
-    }
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.code).toBe('product_family_unavailable')
   })
 })

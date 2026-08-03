@@ -1,9 +1,15 @@
 import {
   getApprovedProductFamiliesForRole,
+  getReviewedProductFamiliesForRole,
   getReviewedProductFamilyVersion,
   getReviewedProductFamilyVersions,
   resolveProductFamilyPin,
 } from '../data/product-families.server'
+import {
+  resolveCatalogPick,
+  searchProductFamiliesForRole,
+  searchProductsForRole,
+} from '../server/catalog'
 import { getCurrentReleaseBundleForScenario } from '../data/release-bundles.server'
 import {
   defaultBuildInput,
@@ -42,9 +48,10 @@ const STENT_ROLE = 'AIRWAY_STENT_SILICONE_STRAIGHT'
 const SCENARIO_ID = 'rigid-bronch'
 const GENERATED_AT = '2026-08-01T12:00:00.000Z'
 
-function approvedStentFamily(): ReviewedProductFamilyVersion {
-  const [version] = getApprovedProductFamiliesForRole(STENT_ROLE)
+function draftStentFamily(): ReviewedProductFamilyVersion {
+  const [version] = getReviewedProductFamiliesForRole(STENT_ROLE)
   expect(version).toBeDefined()
+  expect(version.governanceState).toBe('draft')
   return version
 }
 
@@ -108,14 +115,44 @@ function saveRequestWithFamilies(
 }
 
 describe('the seeded reviewed families', () => {
-  it('are all approved, hashed, and pinned to a catalog release', () => {
+  it('are all draft, hashed, and pinned to a catalog release', () => {
     const versions = getReviewedProductFamilyVersions()
-    expect(versions.length).toBeGreaterThan(0)
+    expect(versions).toHaveLength(18)
     for (const version of versions) {
+      expect(version.governanceState).toBe('draft')
+      expect(version.approvedAt).toBeNull()
       expect(version.definitionHash).toBe(productFamilyDefinitionHash(version))
       expect(version.catalogReleaseId).toMatch(/^[a-f0-9]{64}$/)
       expect(version.memberProductIds.length).toBeGreaterThan(1)
       expect(version.reviewBasis.trim().length).toBeGreaterThan(0)
+    }
+  })
+
+  /**
+   * The rule that keeps the seed honest.
+   *
+   * These families were seeded from the manufacturer's own `brand_family` grouping and passed a
+   * structural homogeneity check. That is an identity claim, not a clinical one: nobody has
+   * reviewed the individual devices for interchangeability within a line. Approving them on that
+   * basis would publish an unreviewed clinical grouping as reviewed, and merging makes those
+   * identities append-only — so the approval would be the hard part to undo.
+   */
+  it('leaves nothing approved without a review basis recording an explicit clinical review', () => {
+    for (const version of getReviewedProductFamilyVersions()) {
+      if (version.governanceState !== 'approved') continue
+      expect(version.reviewBasis).toMatch(/clinical(ly)? review(ed)?/i)
+      expect(version.reviewBasis).not.toMatch(/pending/i)
+      expect(version.approvedAt).not.toBeNull()
+    }
+  })
+
+  it('says in every review basis that clinical membership review is still pending', () => {
+    for (const version of getReviewedProductFamilyVersions()) {
+      expect(version.reviewBasis).toContain('Clinical membership review is PENDING')
+      // And never claims a device-level review happened.
+      expect(version.reviewBasis).toMatch(
+        /no individual device .* has been\s+clinically reviewed|no individual device[\s\S]*clinically reviewed/i,
+      )
     }
   })
 
@@ -135,10 +172,10 @@ describe('the seeded reviewed families', () => {
   it('scope membership by role, so one brand family serving two roles is two families', () => {
     // Novatech GSS covers both the straight and the Y stent requirements, and the discovery
     // grouping merged them.
-    const straight = getApprovedProductFamiliesForRole('AIRWAY_STENT_SILICONE_STRAIGHT').find(
+    const straight = getReviewedProductFamiliesForRole('AIRWAY_STENT_SILICONE_STRAIGHT').find(
       (version) => version.productFamilyCode.startsWith('NOVATECH_GSS'),
     )
-    const bifurcation = getApprovedProductFamiliesForRole('AIRWAY_STENT_SILICONE_Y').find(
+    const bifurcation = getReviewedProductFamiliesForRole('AIRWAY_STENT_SILICONE_Y').find(
       (version) => version.productFamilyCode.startsWith('NOVATECH_GSS'),
     )
     expect(straight).toBeDefined()
@@ -149,6 +186,7 @@ describe('the seeded reviewed families', () => {
 
   it('offers none for a role that has no reviewed line', () => {
     // Chest tubes are the other known over-merge and are deliberately not seeded.
+    expect(getReviewedProductFamiliesForRole('CHEST_TUBE_SURGICAL')).toEqual([])
     expect(getApprovedProductFamiliesForRole('CHEST_TUBE_SURGICAL')).toEqual([])
   })
 })
@@ -179,7 +217,7 @@ describe('a discovery grouping cannot become a card selection', () => {
     // The one thing that would make an old card openable is a lookup from key to family, and there
     // is no such function. This asserts the absence at the level that matters: an input carrying a
     // key is refused rather than resolved, whatever a reviewed family for the same role looks like.
-    expect(getApprovedProductFamiliesForRole(STENT_ROLE).length).toBeGreaterThan(0)
+    expect(getReviewedProductFamiliesForRole(STENT_ROLE).length).toBeGreaterThan(0)
     expect(
       carriesUnreconcilableFamilyIdentity({
         schemaVersion: 3,
@@ -196,73 +234,155 @@ describe('a discovery grouping cannot become a card selection', () => {
   })
 })
 
-describe('a reviewed family can be persisted and reopened', () => {
-  it('saves and rebuilds from the four-field pin', () => {
-    const version = approvedStentFamily()
-    const request = saveCardRequestSchema.parse(
-      saveRequestWithFamilies([{ version, roleCode: STENT_ROLE }]),
+describe('a draft family is identified but not selectable', () => {
+  it('is never offered to the picker', () => {
+    expect(getApprovedProductFamiliesForRole(STENT_ROLE)).toEqual([])
+    expect(getReviewedProductFamiliesForRole(STENT_ROLE).length).toBeGreaterThan(0)
+  })
+
+  it('withholds the pin fields the picker would build a selection from', () => {
+    // Withheld by construction rather than flagged: a pick cannot be assembled from fields that
+    // are not there, so a caller that forgets to check governance gets nothing rather than an
+    // unapproved selection.
+    const groupings = searchProductFamiliesForRole({ roleCode: STENT_ROLE })
+    const backedByDraft = groupings.filter(
+      (family) => family.reviewedFamilyGovernanceState === 'draft',
     )
-
-    const saved = resolveForSave(request, GENERATED_AT)
-    expect(saved.ok).toBe(true)
-    if (!saved.ok) return
-    expect(saved.rebuilt.familyPicks).toHaveLength(1)
-    expect(saved.rebuilt.familyPicks[0].productFamilyVersionId).toBe(version.productFamilyVersionId)
-    expect(saved.rebuilt.familyPicks[0].definitionHash).toBe(version.definitionHash)
-
-    // Reopening runs the same reconstruction, so what opens is what would be stored.
-    const reopened = rebuildBuilderContext(builderInputsSchema.parse(request), GENERATED_AT)
-    expect(reopened.ok).toBe(true)
-    if (reopened.ok) {
-      expect(reopened.familyPicks[0].productFamilyVersionId).toBe(version.productFamilyVersionId)
-      expect(reopened.familyPicks[0].variantCount).toBe(version.memberProductIds.length)
+    expect(backedByDraft.length).toBeGreaterThan(0)
+    for (const family of backedByDraft) {
+      expect(family.reviewedFamilyVersionId).toBeNull()
+      expect(family.reviewedFamilyCode).toBeNull()
+      expect(family.reviewedFamilyCatalogReleaseId).toBeNull()
+      expect(family.reviewedFamilyDefinitionHash).toBeNull()
     }
   })
 
-  it('rebuilds the family from the pinned catalog release, not from today’s catalog', () => {
-    const version = approvedStentFamily()
-    const request = saveCardRequestSchema.parse(
-      saveRequestWithFamilies([{ version, roleCode: STENT_ROLE }]),
-    )
-    const rebuilt = rebuildBuilderContext(builderInputsSchema.parse(request), GENERATED_AT)
-    expect(rebuilt.ok).toBe(true)
-    if (!rebuilt.ok) return
-    expect(rebuilt.historicalCatalog.catalogReleaseId).toBe(version.catalogReleaseId)
-  })
-
-  it('refuses a pin whose membership hash no longer matches', () => {
-    const version = approvedStentFamily()
-    const request = saveRequestWithFamilies([{ version, roleCode: STENT_ROLE }])
-    const tampered = builderInputsSchema.parse({
-      ...request,
-      familyPicks: [{ ...request.familyPicks[0], definitionHash: 'c'.repeat(64) }],
-    })
-
-    const rebuilt = rebuildBuilderContext(tampered, GENERATED_AT)
-    expect(rebuilt.ok).toBe(false)
-    if (!rebuilt.ok) expect(rebuilt.code).toBe('product_family_unavailable')
-  })
-
-  it('refuses a pin naming a role the family does not serve', () => {
-    const version = approvedStentFamily()
+  it('produces no valid version-4 family pick', () => {
+    const version = draftStentFamily()
     const resolved = resolveProductFamilyPin({
       productFamilyVersionId: version.productFamilyVersionId,
       catalogReleaseId: version.catalogReleaseId,
       definitionHash: version.definitionHash,
-      roleCode: 'CHEST_TUBE_SURGICAL',
+      roleCode: STENT_ROLE,
     })
+    expect(resolved.ok).toBe(false)
+    if (!resolved.ok) expect(resolved.code).toBe('product_family_unpublished')
+  })
+
+  it('is refused at save time even when the pin is otherwise perfectly formed', () => {
+    // The picker withholding a control has never been a security boundary here. A crafted request
+    // naming a draft family carries a correct version id, catalog release, hash, and role — and is
+    // still refused, because no reviewer has approved the membership.
+    const version = draftStentFamily()
+    const request = saveCardRequestSchema.parse(
+      saveRequestWithFamilies([{ version, roleCode: STENT_ROLE }]),
+    )
+    const saved = resolveForSave(request, GENERATED_AT)
+    expect(saved.ok).toBe(false)
+    if (!saved.ok) expect(saved.code).toBe('product_family_unavailable')
+
+    const rebuilt = rebuildBuilderContext(builderInputsSchema.parse(request), GENERATED_AT)
+    expect(rebuilt.ok).toBe(false)
+    if (!rebuilt.ok) expect(rebuilt.message).toContain('awaiting clinical review')
+  })
+
+  it('stays distinguishable from a grouping with no reviewed family at all', () => {
+    // Both withhold the whole-line action, and they are not the same situation: one has a frozen
+    // membership waiting on a clinician, the other has nobody looking at it.
+    const stent = searchProductFamiliesForRole({ roleCode: STENT_ROLE })
+    expect(stent.some((family) => family.reviewedFamilyGovernanceState === 'draft')).toBe(true)
+
+    const chestTubes = searchProductFamiliesForRole({ roleCode: 'CHEST_TUBE_SURGICAL' })
+    expect(chestTubes.length).toBeGreaterThan(0)
+    for (const family of chestTubes) {
+      expect(family.reviewedFamilyGovernanceState).toBeNull()
+    }
+  })
+
+  it('does not interfere with exact product selection', () => {
+    // The sizes are still individually pickable, which is the fallback the whole design leans on
+    // while a family waits for review.
+    const products = searchProductsForRole({ roleCode: STENT_ROLE, limit: 5 })
+    expect(products.length).toBeGreaterThan(0)
+    const [option] = products
+    const pick = resolveCatalogPick(option.productId, STENT_ROLE)
+    expect(pick.ok).toBe(true)
+  })
+
+  it('can move to approved without rewriting its identity or membership', () => {
+    // Governance is outside the definition hash, so approval is a lifecycle act and not an edit.
+    // That is what makes it safe for these to merge as drafts: the hash a card would later pin is
+    // the hash they already have.
+    const version = draftStentFamily()
+    const approved = computeReviewedProductFamilyVersion({
+      ...version,
+      governanceState: 'approved',
+      approvedAt: '2026-09-01T00:00:00.000Z',
+      reviewBasis: 'Reviewed device by device on 2026-09-01.',
+    })
+
+    expect(approved.productFamilyVersionId).toBe(version.productFamilyVersionId)
+    expect(approved.memberProductIds).toEqual(version.memberProductIds)
+    expect(approved.definitionHash).toBe(version.definitionHash)
+    expect(assertProductFamilySelectableForNewCard(approved).ok).toBe(true)
+  })
+})
+
+describe('a reviewed pin is verified in every part', () => {
+  const version = fixtureVersion()
+  const versions = new Map([[version.productFamilyVersionId, version]])
+
+  it('accepts a pin that matches the retained family exactly', () => {
+    const resolved = resolveReviewedProductFamily(
+      {
+        productFamilyVersionId: version.productFamilyVersionId,
+        catalogReleaseId: version.catalogReleaseId,
+        definitionHash: version.definitionHash,
+        roleCode: STENT_ROLE,
+      },
+      versions,
+    )
+    expect(resolved.ok).toBe(true)
+  })
+
+  it('refuses a pin whose membership hash no longer matches', () => {
+    const resolved = resolveReviewedProductFamily(
+      {
+        productFamilyVersionId: version.productFamilyVersionId,
+        catalogReleaseId: version.catalogReleaseId,
+        definitionHash: 'c'.repeat(64),
+        roleCode: STENT_ROLE,
+      },
+      versions,
+    )
+    expect(resolved.ok).toBe(false)
+    if (!resolved.ok) expect(resolved.code).toBe('product_family_definition_mutated')
+  })
+
+  it('refuses a pin naming a role the family does not serve', () => {
+    const resolved = resolveReviewedProductFamily(
+      {
+        productFamilyVersionId: version.productFamilyVersionId,
+        catalogReleaseId: version.catalogReleaseId,
+        definitionHash: version.definitionHash,
+        roleCode: 'CHEST_TUBE_SURGICAL',
+      },
+      versions,
+    )
     expect(resolved.ok).toBe(false)
     if (!resolved.ok) expect(resolved.code).toBe('product_family_role_not_covered')
   })
 
   it('refuses a pin naming a catalog release the family was not reviewed against', () => {
-    const version = approvedStentFamily()
-    const resolved = resolveProductFamilyPin({
-      productFamilyVersionId: version.productFamilyVersionId,
-      catalogReleaseId: 'd'.repeat(64),
-      definitionHash: version.definitionHash,
-      roleCode: STENT_ROLE,
-    })
+    const resolved = resolveReviewedProductFamily(
+      {
+        productFamilyVersionId: version.productFamilyVersionId,
+        catalogReleaseId: 'd'.repeat(64),
+        definitionHash: version.definitionHash,
+        roleCode: STENT_ROLE,
+      },
+      versions,
+    )
     expect(resolved.ok).toBe(false)
     if (!resolved.ok) expect(resolved.code).toBe('product_family_catalog_release_mismatch')
   })
