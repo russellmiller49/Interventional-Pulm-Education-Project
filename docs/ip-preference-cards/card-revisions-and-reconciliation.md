@@ -88,11 +88,20 @@ the card and covered by `printDocumentHash`; the live document hash would then h
 the latest revision's with no state having changed. The card table now carries its own content
 timestamp trigger instead, so the two agree and there is no caveat to remember.
 
-### `updated_at` is a content version
+### `updated_at` is a strictly advancing content version
 
-`ip_set_preference_card_content_updated_at` moves the timestamp only when revision-bearing content
-changes, and leaves it exactly where it was for an access-control-only update. `set_site_updated_at`
-is shared by a dozen other tables and is untouched; only this table's trigger is replaced.
+`private.ip_set_preference_card_content_updated_at` moves the timestamp only when revision-bearing
+content changes, and leaves it exactly where it was for an access-control-only update.
+`set_site_updated_at` is shared by a dozen other tables and is untouched; only this table's trigger
+is replaced.
+
+It uses `greatest(clock_timestamp(), old.updated_at + interval '1 microsecond')`, not `now()`.
+`now()` is **transaction start time**, so two content changes in one transaction would produce the
+same content version and the second would be indistinguishable from a stale replay of the first —
+the exact confusion the token exists to prevent. `clock_timestamp()` advances within a transaction,
+and the floor makes the advance strict whatever the clock's resolution does or if it steps
+backwards. `clock_timestamp()` is used unwrapped because the column is `timestamptz` and already
+stores an absolute instant.
 
 Two things depend on that, and neither would be safe under a row-touch timestamp:
 
@@ -113,11 +122,27 @@ than a convention: a signed-in owner cannot PostgREST an append of their own con
 service role — which bypasses RLS entirely — cannot either, so the guarantee does not quietly
 exclude whoever holds that key.
 
+`service_role` has to be named in the `revoke` explicitly. Supabase ships
+`alter default privileges in schema public grant all on tables to service_role`, so a table created
+in `public` arrives with `insert`, `update`, and `delete` already granted to it without any
+statement in the migration saying so. Granting `select` afterwards neither adds nor removes
+anything. A revoke list of `public, anon, authenticated` leaves the hole wide open and looks
+complete.
+
 The trigger therefore cannot run as the invoker. It is `security definer`, owned by the migration
-role, with `search_path` pinned empty and every reference schema-qualified. Its `execute` is revoked
-from `public`, `anon`, and `authenticated`; it returns `trigger`, so PostgREST will not expose it as
-an RPC in any case; it refuses to run attached to any table but the cards table; and every value it
-writes comes from `new.*`, so it takes no caller-supplied input at all.
+role, with `search_path` pinned empty and every reference schema-qualified. It lives in a `private`
+schema no Data API role has `usage` on; its `execute` is revoked from `public`, `anon`,
+`authenticated`, and `service_role`; it returns `trigger`, so PostgREST will not expose it as an RPC
+in any case; it refuses to run attached to any table but the cards table; and every value it writes
+comes from `new.*`, so it takes no caller-supplied input at all.
+
+**Every trigger function that reaches into `private` must be `security definer`, and this is the
+sharp edge.** PostgreSQL does not re-check `execute` on a trigger function when the trigger fires,
+but it does check it on anything that function then calls. A `security invoker` trigger calling the
+content helper therefore fails with `42501 permission denied for function` on every card write a
+signed-in owner makes — the helper being correctly locked down is precisely what breaks the caller.
+The one function that stays `security invoker` is the append-only rejector, which calls nothing and
+reads nothing and so needs no privilege at all.
 
 **What still authorizes the write is the cards table's own RLS, unchanged.** The function only runs
 because an insert or update on a card already passed those policies. The caller's right to change

@@ -13,19 +13,69 @@
 --
 -- Three properties this file is responsible for, none of which the application can provide:
 --
---  1. **`updated_at` means "the content changed".** It is the optimistic-concurrency token an
---     edit session holds, so a change that does not alter what the card says must not move it —
---     otherwise toggling a share link would invalidate somebody's open editor.
+--  1. **`updated_at` means "the content changed", and strictly advances.** It is the optimistic-
+--     concurrency token an edit session holds, so a change that does not alter what the card says
+--     must not move it — and two content changes must never share a value, or the second would be
+--     indistinguishable from a stale replay of the first.
 --  2. **Revisions are written by the trigger and by nothing else.** No Data API role holds
 --     `insert` on the revision table, so a signed-in owner cannot append a revision of their own
 --     construction through PostgREST.
 --  3. **A revision cannot disagree with the card state it claims to record.** The extracted
 --     columns are constrained against their own JSON source, and the owner against the card's.
 --
+-- ## The privilege model, which is the subtle part
+--
+-- The internal machinery lives in a `private` schema that no Data API role can even see, and every
+-- trigger function that calls into it is `security definer`.
+--
+-- That is not decoration. A `security invoker` trigger function runs as the *caller*, and while
+-- PostgreSQL does not re-check `execute` on the trigger function itself when a trigger fires, it
+-- absolutely checks it on any function that function then calls. An invoker trigger calling a
+-- helper whose `execute` is revoked from `authenticated` therefore fails with
+-- `42501 permission denied for function` — on every card update a signed-in owner makes. The
+-- helper being correctly locked down is exactly what breaks the caller.
+--
+-- So: helpers in `private`, callers `security definer`, and the one function that calls nothing
+-- stays `security invoker` because it needs no privilege at all.
+--
 -- No PHI, exactly as the cards table: a revision names a procedure, a physician, and equipment.
 
 -- ---------------------------------------------------------------------------------------------
--- 0. One definition of "revision-bearing content"
+-- 0. Clean slate for the objects this migration owns
+-- ---------------------------------------------------------------------------------------------
+--
+-- This migration has never been applied anywhere, so these are no-ops on a live database. They
+-- exist so a partially-applied state — an earlier draft of this same file — converges rather than
+-- colliding. Triggers go first because a function with a dependent trigger cannot be dropped.
+
+drop trigger if exists set_ip_user_preference_cards_content_updated_at
+  on public.ip_user_preference_cards;
+drop trigger if exists append_ip_user_preference_card_revision
+  on public.ip_user_preference_cards;
+
+drop function if exists public.ip_set_preference_card_content_updated_at();
+drop function if exists public.ip_append_preference_card_revision();
+drop function if exists public.ip_assign_preference_card_revision_number();
+drop function if exists public.ip_reject_preference_card_revision_rewrite();
+drop function if exists public.ip_preference_card_content_changed(
+  public.ip_user_preference_cards, public.ip_user_preference_cards
+);
+
+-- ---------------------------------------------------------------------------------------------
+-- 1. A schema the Data API cannot reach
+-- ---------------------------------------------------------------------------------------------
+--
+-- PostgREST exposes `public`. Everything below is machinery — trigger bodies and one comparison
+-- helper — and none of it is an API. Putting it here removes it from the exposed surface entirely,
+-- rather than leaving it exposed and relying on per-function revokes to hide it.
+
+create schema if not exists private;
+
+revoke all on schema private from public;
+revoke all on schema private from anon, authenticated, service_role;
+
+-- ---------------------------------------------------------------------------------------------
+-- 2. One definition of "revision-bearing content"
 -- ---------------------------------------------------------------------------------------------
 --
 -- Two triggers need to agree on what a content change is: the one that moves `updated_at` and the
@@ -36,7 +86,7 @@
 -- So there is one function and both call it. Adding a column to a card is now a decision made in
 -- exactly one place.
 
-create or replace function public.ip_preference_card_content_changed(
+create or replace function private.ip_preference_card_content_changed(
   before_row public.ip_user_preference_cards,
   after_row public.ip_user_preference_cards
 )
@@ -46,44 +96,61 @@ immutable
 set search_path = ''
 as $$
   select
-       before_row.title            is distinct from after_row.title
-    or before_row.physician_name   is distinct from after_row.physician_name
-    or before_row.procedure_code   is distinct from after_row.procedure_code
-    or before_row.scenario_id      is distinct from after_row.scenario_id
-    or before_row.status           is distinct from after_row.status
-    or before_row.builder_inputs   is distinct from after_row.builder_inputs
-    or before_row.card_snapshot    is distinct from after_row.card_snapshot
-    or before_row.snapshot_hash    is distinct from after_row.snapshot_hash
-    or before_row.engine_version   is distinct from after_row.engine_version
+       before_row.title             is distinct from after_row.title
+    or before_row.physician_name    is distinct from after_row.physician_name
+    or before_row.procedure_code    is distinct from after_row.procedure_code
+    or before_row.scenario_id       is distinct from after_row.scenario_id
+    or before_row.status            is distinct from after_row.status
+    or before_row.builder_inputs    is distinct from after_row.builder_inputs
+    or before_row.card_snapshot     is distinct from after_row.card_snapshot
+    or before_row.snapshot_hash     is distinct from after_row.snapshot_hash
+    or before_row.engine_version    is distinct from after_row.engine_version
     or before_row.catalog_import_id is distinct from after_row.catalog_import_id;
 $$;
 
-revoke execute on function public.ip_preference_card_content_changed(
+revoke all on function private.ip_preference_card_content_changed(
   public.ip_user_preference_cards, public.ip_user_preference_cards
-) from public, anon, authenticated;
+) from public;
+revoke all on function private.ip_preference_card_content_changed(
+  public.ip_user_preference_cards, public.ip_user_preference_cards
+) from anon, authenticated, service_role;
 
 -- ---------------------------------------------------------------------------------------------
--- 1. `updated_at` becomes a content version, not a row-touch timestamp
+-- 3. `updated_at` becomes a strictly advancing content version
 -- ---------------------------------------------------------------------------------------------
 --
--- The generic `set_site_updated_at` moves the timestamp on *every* update, including one that
--- only flips `share_enabled`. That is wrong here for two compounding reasons: the printed card
--- shows "last saved" and `printDocumentHash` covers it, so sharing a card changed its printed
--- document; and `updated_at` is the token an edit session compares against, so sharing a card
--- would invalidate an editor that had been open the whole time and changed nothing.
+-- The generic `set_site_updated_at` is wrong here twice over.
+--
+-- It moves the timestamp on *every* update, including one that only flips `share_enabled`. The
+-- printed card shows "last saved" and `printDocumentHash` covers it, so sharing a card would
+-- change its printed document; and `updated_at` is the token an edit session compares against, so
+-- sharing a card would invalidate an editor that had been open the whole time and changed nothing.
+--
+-- And it uses `now()`, which is **transaction start time** and therefore constant within a
+-- transaction. Two content changes in one transaction would produce the same content version, so
+-- the second would be indistinguishable from a stale replay of the first — the exact confusion the
+-- token exists to prevent. `clock_timestamp()` actually advances, and `greatest(..., old + 1µs)`
+-- makes the advance *strict* whatever the clock's resolution does or if it steps backwards.
+--
+-- `clock_timestamp()` is used unwrapped rather than through `timezone('utc', …)`: the column is
+-- `timestamptz`, so it already stores an absolute instant, and the wrapper would convert to a
+-- local wall-clock reading and then implicitly cast it back using the session's time zone.
 --
 -- `set_site_updated_at` is shared by a dozen other tables and is left exactly as it is. Only this
 -- table's trigger is replaced.
 
-create or replace function public.ip_set_preference_card_content_updated_at()
+create or replace function private.ip_set_preference_card_content_updated_at()
 returns trigger
 language plpgsql
-security invoker
+-- Definer, because it calls `private.ip_preference_card_content_changed`. As invoker it would run
+-- as the signed-in owner, who has no `execute` on that helper and no `usage` on this schema, and
+-- every authenticated card update would fail with 42501.
+security definer
 set search_path = ''
 as $$
 begin
-  if public.ip_preference_card_content_changed(old, new) then
-    new.updated_at = timezone('utc', now());
+  if private.ip_preference_card_content_changed(old, new) then
+    new.updated_at = greatest(clock_timestamp(), old.updated_at + interval '1 microsecond');
   else
     -- Access-control-only change: `share_enabled`, and `share_token` if it is ever deliberately
     -- rotated. The card still says exactly what it said, so its content version must not move.
@@ -93,8 +160,9 @@ begin
 end;
 $$;
 
-revoke execute on function public.ip_set_preference_card_content_updated_at()
-  from public, anon, authenticated;
+revoke all on function private.ip_set_preference_card_content_updated_at() from public;
+revoke all on function private.ip_set_preference_card_content_updated_at()
+  from anon, authenticated, service_role;
 
 drop trigger if exists set_ip_user_preference_cards_updated_at
   on public.ip_user_preference_cards;
@@ -102,7 +170,7 @@ drop trigger if exists set_ip_user_preference_cards_updated_at
 create trigger set_ip_user_preference_cards_content_updated_at
   before update on public.ip_user_preference_cards
   for each row
-  execute function public.ip_set_preference_card_content_updated_at();
+  execute function private.ip_set_preference_card_content_updated_at();
 
 -- The composite target an owner-checked foreign key needs. `id` is already the primary key, so
 -- this adds no new uniqueness — it exists purely so `(card_id, user_id)` can be pointed at it,
@@ -113,7 +181,7 @@ alter table public.ip_user_preference_cards
   add constraint ip_user_preference_cards_id_user_id_key unique (id, user_id);
 
 -- ---------------------------------------------------------------------------------------------
--- 2. The revision table
+-- 4. The revision table
 -- ---------------------------------------------------------------------------------------------
 
 create table if not exists public.ip_user_preference_card_revisions (
@@ -224,16 +292,18 @@ create index if not exists ip_user_preference_card_revisions_card_created_idx
   on public.ip_user_preference_card_revisions (card_id, created_at desc);
 
 -- ---------------------------------------------------------------------------------------------
--- 3. Revision numbering
+-- 5. Revision numbering
 -- ---------------------------------------------------------------------------------------------
 --
 -- Dense and monotonic per card. Reading `max() + 1` is racy on its own; the unique index above is
 -- what makes it safe. Two concurrent inserts both read 2, both try to write 3, and one of them
 -- fails. A failed statement is recoverable. Two rows both calling themselves revision 3 are not.
 
-create or replace function public.ip_assign_preference_card_revision_number()
+create or replace function private.ip_assign_preference_card_revision_number()
 returns trigger
 language plpgsql
+-- Definer: the caller has no privilege on the revision table at all, so the `max()` read below
+-- has to run as the owner.
 security definer
 set search_path = ''
 as $$
@@ -246,28 +316,33 @@ begin
 end;
 $$;
 
-revoke execute on function public.ip_assign_preference_card_revision_number()
-  from public, anon, authenticated;
+revoke all on function private.ip_assign_preference_card_revision_number() from public;
+revoke all on function private.ip_assign_preference_card_revision_number()
+  from anon, authenticated, service_role;
 
 drop trigger if exists assign_ip_user_preference_card_revision_number
   on public.ip_user_preference_card_revisions;
 create trigger assign_ip_user_preference_card_revision_number
   before insert on public.ip_user_preference_card_revisions
   for each row
-  execute function public.ip_assign_preference_card_revision_number();
+  execute function private.ip_assign_preference_card_revision_number();
 
 -- ---------------------------------------------------------------------------------------------
--- 4. Append-only, enforced
+-- 6. Append-only, enforced
 -- ---------------------------------------------------------------------------------------------
 --
 -- There is no update policy and no update grant below, which is already two barriers; this is the
--- third, and it is the one that still holds if a future migration widens either. There is
--- deliberately no matching delete trigger: a foreign-key cascade is a referential action, not a
--- statement, so a trigger that raised on delete would make deleting a *card* fail.
+-- third, and it is the one that still holds if a future migration widens either — including
+-- against the table owner, who is subject to triggers even though it is subject to neither of the
+-- other two. There is deliberately no matching delete trigger: a foreign-key cascade is a
+-- referential action, not a statement, so a trigger that raised on delete would make deleting a
+-- *card* fail.
 
-create or replace function public.ip_reject_preference_card_revision_rewrite()
+create or replace function private.ip_reject_preference_card_revision_rewrite()
 returns trigger
 language plpgsql
+-- Invoker, and correctly so: it calls nothing and reads nothing, so it needs no privilege. Making
+-- it definer would be an escalation bought for nothing.
 security invoker
 set search_path = ''
 as $$
@@ -279,18 +354,19 @@ begin
 end;
 $$;
 
-revoke execute on function public.ip_reject_preference_card_revision_rewrite()
-  from public, anon, authenticated;
+revoke all on function private.ip_reject_preference_card_revision_rewrite() from public;
+revoke all on function private.ip_reject_preference_card_revision_rewrite()
+  from anon, authenticated, service_role;
 
 drop trigger if exists reject_ip_user_preference_card_revision_rewrite
   on public.ip_user_preference_card_revisions;
 create trigger reject_ip_user_preference_card_revision_rewrite
   before update on public.ip_user_preference_card_revisions
   for each row
-  execute function public.ip_reject_preference_card_revision_rewrite();
+  execute function private.ip_reject_preference_card_revision_rewrite();
 
 -- ---------------------------------------------------------------------------------------------
--- 5. The one writer
+-- 7. The one writer
 -- ---------------------------------------------------------------------------------------------
 --
 -- Every saved state becomes a revision, written here and reachable no other way.
@@ -304,24 +380,25 @@ create trigger reject_ip_user_preference_card_revision_rewrite
 -- **Why `security definer`.** No Data API role holds `insert` on the revision table, which is
 -- what makes "revisions are trigger-written" true rather than merely conventional — a signed-in
 -- owner cannot PostgREST an append of their own construction. The trigger therefore cannot run as
--- the invoker, so it runs as this function's owner (the migration role), which owns the table and
--- is not subject to its policies.
+-- the invoker, so it runs as this function's owner, which owns the table and is not subject to
+-- its policies.
 --
 -- **What still authorizes the write.** Row-level security on the *cards* table, unchanged. This
 -- function only ever runs because an insert or update on a card already passed those policies, so
 -- the caller's right to change the card is the caller's right to produce its revision. Nothing
 -- here re-decides that, and nothing here can be reached without it:
 --
---   * `execute` is revoked from `public`, `anon`, and `authenticated`.
---   * It returns `trigger`, so PostgREST will not expose it as an RPC in any case.
---   * It refuses to run attached to any table but the cards table, so it cannot be borrowed.
---   * Every value it writes comes from `new.*` — the row that fired it. It takes no arguments and
+--   * it lives in `private`, which no Data API role has `usage` on;
+--   * `execute` is revoked from `public`, `anon`, `authenticated`, and `service_role`;
+--   * it returns `trigger`, so PostgREST will not expose it as an RPC in any case;
+--   * it refuses to run attached to any table but the cards table, so it cannot be borrowed;
+--   * every value it writes comes from `new.*` — the row that fired it. It takes no arguments and
 --     reads no caller-supplied input, so there is nothing to inject a different card through.
 --
 -- `search_path` is empty and every reference is schema-qualified, so a `search_path` a caller
 -- controls cannot resolve any name in here to something of their choosing.
 
-create or replace function public.ip_append_preference_card_revision()
+create or replace function private.ip_append_preference_card_revision()
 returns trigger
 language plpgsql
 security definer
@@ -340,7 +417,7 @@ begin
   -- What makes a new revision is a change to the card's *state*, not to the row's access control.
   -- Toggling sharing changes nothing this table records and — since the content timestamp trigger
   -- above leaves `updated_at` alone for it — nothing the printed document shows either.
-  if tg_op = 'UPDATE' and not public.ip_preference_card_content_changed(old, new) then
+  if tg_op = 'UPDATE' and not private.ip_preference_card_content_changed(old, new) then
     return null;
   end if;
 
@@ -395,18 +472,19 @@ begin
 end;
 $$;
 
-revoke execute on function public.ip_append_preference_card_revision()
-  from public, anon, authenticated;
+revoke all on function private.ip_append_preference_card_revision() from public;
+revoke all on function private.ip_append_preference_card_revision()
+  from anon, authenticated, service_role;
 
 drop trigger if exists append_ip_user_preference_card_revision
   on public.ip_user_preference_cards;
 create trigger append_ip_user_preference_card_revision
   after insert or update on public.ip_user_preference_cards
   for each row
-  execute function public.ip_append_preference_card_revision();
+  execute function private.ip_append_preference_card_revision();
 
 -- ---------------------------------------------------------------------------------------------
--- 6. Backfill
+-- 8. Backfill
 -- ---------------------------------------------------------------------------------------------
 --
 -- Existing cards get one revision recording the state they are in now.
@@ -466,7 +544,7 @@ where not exists (
 );
 
 -- ---------------------------------------------------------------------------------------------
--- 7. Grants and policies
+-- 9. Grants and policies
 -- ---------------------------------------------------------------------------------------------
 
 alter table public.ip_user_preference_card_revisions enable row level security;
@@ -485,14 +563,19 @@ create policy ip_user_preference_card_revisions_select_own
 drop policy if exists ip_user_preference_card_revisions_insert_own
   on public.ip_user_preference_card_revisions;
 
-revoke all on table public.ip_user_preference_card_revisions from public, anon, authenticated;
+-- `service_role` is in this revoke list, and leaving it out was a real hole rather than a
+-- tidiness point. Supabase ships `alter default privileges in schema public grant all on tables
+-- to service_role`, so a table created here arrives with `insert`, `update`, and `delete` already
+-- granted to it — silently, without appearing anywhere in this file. Granting `select` afterwards
+-- adds nothing and removes nothing. And `service_role` bypasses row-level security, so those
+-- inherited verbs are a hole no policy could close: "revisions are written by the trigger" would
+-- have held only for callers not holding that key.
+revoke all on table public.ip_user_preference_card_revisions from public;
+revoke all on table public.ip_user_preference_card_revisions
+  from anon, authenticated, service_role;
 
--- `select` and nothing else, for every Data API role including the service role.
---
--- The service role is the interesting one: it bypasses row-level security, so an `insert` grant
--- there would be a hole no policy could close, and "revisions are written by the trigger" would
--- hold only for callers not holding that key. It reads them and does not write them. The trigger
--- and the migration owner are the only writers, which is the property the whole design rests on.
+-- `select` and nothing else, for every Data API role. The trigger and the migration owner are the
+-- only writers, which is the property the whole design rests on.
 grant select on table public.ip_user_preference_card_revisions to authenticated;
 grant select on table public.ip_user_preference_card_revisions to service_role;
 

@@ -128,6 +128,15 @@ export class FakePreferenceCardTables {
     return `00000000-0000-4000-9000-${String(sequence).padStart(12, '0')}`
   }
 
+  /**
+   * A strictly advancing clock, which is the property the content version depends on.
+   *
+   * The database gets there with `greatest(clock_timestamp(), old.updated_at + 1 microsecond)`
+   * rather than `now()`, because `now()` is transaction start time and two content changes in one
+   * transaction would share a version — making the second indistinguishable from a stale replay
+   * of the first. A counter models the guarantee that matters here: no two content versions of a
+   * card are ever equal.
+   */
   private now(): string {
     this.clock += 1
     return `2026-08-02T12:00:${String(this.clock).padStart(2, '0')}.000Z`
