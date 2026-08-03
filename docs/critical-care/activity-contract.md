@@ -39,6 +39,36 @@ Modes are:
 - **Challenge:** minimal prompting, masked cues, no automatic hints, and existing mastery/critical
   error rules.
 
+## Answer verdict and feedback timing
+
+A learner-facing judgement of a committed answer is rendered by one shared component,
+`features/learning-module/components/AnswerVerdict`. It keys its framing to the chosen answer's
+plausibility, echoes the answer back, gives that answer's reasoning and the item's distinguishing
+explanation, offers a disclosure covering why the other answers do not fit, announces itself, and —
+critically — advances nothing. Advancing is always the caller's decision, taken when the learner
+presses Continue.
+
+Timing is the caller's too, because the modes legitimately differ:
+
+- **Guided (Learn):** commit → verdict immediately → separate Continue.
+- **Guided Practice:** commit → act → observe the modeled response → branch-specific coaching. The
+  full causal synthesis waits for the debrief.
+- **Practice and Challenge:** no correctness labelling before the debrief.
+
+One exception overrides every timing rule: an answer classified `unsafe` is revealed and announced
+assertively whatever the mode. Letting a learner carry on believing a harmful action was acceptable
+is not a pedagogic trade-off worth making.
+
+`ChoiceReasoningFeedback` remains a separate component and is not a legacy copy of the above: it
+additionally resolves concept links and the citation list for an item's evidence, which surfaces
+such as ECMO foundation, the MCS workbench and CRRT Learn depend on.
+
+A prediction step must be answerable. It may state the clinical situation and ask a genuine
+question; it may not name the expected goal, control or direction in its title, instruction,
+rationale, expected response, help text, highlighted control or button label, and it may not print
+the debrief's causal chain before the answer is committed. The payload submitted on commitment comes
+from the learner's selected choice, never from the scenario's own expectation.
+
 ## Explicit completion
 
 An activity is not complete merely because its route was opened. Its named completion rule must be
