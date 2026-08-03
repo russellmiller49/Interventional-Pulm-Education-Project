@@ -1,0 +1,9 @@
+{
+  "catalogReleaseId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+  "workbookSha256": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+  "inputs": {
+    "catalog-products.json": "acd86c3976db62296821fa9093e66a91d373c5c2b4d72f211156924befaacecf",
+    "product-roles.json": "d33255ae0cd3342ec47d5ccf196ccc6bd4af678db8c9897a892a91f2813b202e",
+    "roles.json": "0c406abb1172d64b901e6ace4c006de9e39d66893f3af070c90eceaab49908fd"
+  }
+}

@@ -1,14 +1,17 @@
+import { resolvedContentHash, snapshotIntegrityHash } from './card-hashes'
 import { evaluateCompatibilityRules } from './evaluate-compatibility'
+import { effectiveGovernanceState, expandRecipeComposition } from './expand-recipe-composition'
 import { suppressKitDuplicates } from './kit-suppression'
 import { evaluateQuantityExpression } from './quantity-expression'
 import { buildCardInputSchema, quantityExpressionSchema, recipeSlotSchema } from './schemas'
-import { familyKeyFromPickId, isLegacyFamilyPickId } from './size-at-procedure'
+import { familyKeyFromPickId, isUnqualifiedLegacyFamilyPickId } from './size-at-procedure'
 import { stableSnapshotHash } from './stable-hash'
 import type {
   BuildCardInput,
   BuildContext,
   ConditionalState,
   HospitalItem,
+  IncludedRecipeModule,
   ModifierAction,
   OpenHoldStatus,
   ProceduralPhase,
@@ -23,7 +26,40 @@ import type {
   VerificationState,
 } from './types'
 
-export const PREFERENCE_CARD_ENGINE_VERSION = 'ip-cards-resolver/0.1.0'
+/**
+ * 0.3.0 — hash separation and resolution provenance. The hashable domain output gained
+ * `scope`, `resolutionProvenance`, `snapshotIntegrityHash`, and `resolvedContentHash`, so
+ * snapshots written by 0.2.0 hash differently by construction and the version records why.
+ *
+ * 0.2.0 — composition. The output gained `includedModules` and every item gained its
+ * requirement key and source modules.
+ *
+ * Stamped onto every resolved card and inside its content hash, so it describes the *output
+ * shape* a snapshot was written in. That is a narrower thing than the resolver contract below:
+ * the shape of the record changed here, and what resolution *means* did not.
+ */
+export const PREFERENCE_CARD_ENGINE_VERSION = 'ip-cards-resolver/0.3.0'
+
+/**
+ * The **semantic** resolver contract: what resolution means, independent of how it is written.
+ *
+ * A release records the contract it was published against, and a card pinned to that release
+ * is only reconstructable while the contract holds. So the thing recorded has to be the thing
+ * that actually matters, and a source digest is not it — renaming a local variable, extracting
+ * a helper, or reformatting a file all move a digest while changing nothing a card resolves
+ * to. Treating that as "the contract moved" would mark every historical card unsupported for a
+ * refactor, which trains everyone to ignore the signal.
+ *
+ * So this version is bumped by a human, deliberately, when resolution *semantics* change —
+ * ordering, deduplication, governance folding, kit suppression, conditional handling, and the
+ * rest of the invariants enumerated in `resolver-contract.test.ts`. Those tests are what give
+ * the string meaning: they assert the contract behaviourally, so a refactor that preserves it
+ * passes and a change that breaks it fails whether or not anyone remembered to bump this.
+ *
+ * The source digest still exists — see `resolverImplementationHash` on a release bundle — but
+ * it is provenance ("which build produced this"), never a support boundary.
+ */
+export const PREFERENCE_CARD_RESOLVER_CONTRACT_VERSION = 'ip-cards-resolver-contract/1'
 
 interface MutableResolution {
   messages: RuleMessage[]
@@ -37,6 +73,10 @@ function cloneSlot(slot: RecipeSlot): RecipeSlot {
   return {
     ...slot,
     quantityExpression: { ...slot.quantityExpression },
+    ...(slot.sourceSlotAliases ? { sourceSlotAliases: [...slot.sourceSlotAliases] } : {}),
+    ...(slot.sourceModuleVersionIds
+      ? { sourceModuleVersionIds: [...slot.sourceModuleVersionIds] }
+      : {}),
   }
 }
 
@@ -74,10 +114,23 @@ function addMessage(
   })
 }
 
+/**
+ * A modifier authored before composition targets an imported slot id. Once that
+ * requirement moves into a shared module the id it lives under changes, so the original id
+ * is kept as a provenance alias and matched here — the modifier keeps working without
+ * being rewritten.
+ */
 function matchingSlots(slots: RecipeSlot[], action: ModifierAction): RecipeSlot[] {
+  if (action.targetRequirementKey) {
+    return slots.filter((slot) => slot.requirementKey === action.targetRequirementKey)
+  }
   if (action.targetSlotId) {
+    const target = action.targetSlotId
     return slots.filter(
-      (slot) => slot.id === action.targetSlotId || slot.sourceSlotId === action.targetSlotId,
+      (slot) =>
+        slot.id === target ||
+        slot.sourceSlotId === target ||
+        (slot.sourceSlotAliases ?? []).includes(target),
     )
   }
   if (action.targetRoleCode) {
@@ -292,13 +345,24 @@ function itemResolution(
     )
   const selectedOption =
     selectedItemOverride === undefined
-      ? options[0]
+      ? // A card whose selections are explicit has already recorded a decision for every
+        // requirement it knows about, so an absent key means "not chosen" rather than "use
+        // whatever the formulary ranks first today". Falling back here is what let a
+        // re-ranked local formulary change which product a saved card asked for, with nothing
+        // about the stored card having moved.
+        input.selectionsAreExplicit
+        ? undefined
+        : options[0]
       : selectedItemOverride === null
         ? undefined
         : options.find(
             (option) =>
               option.hospitalItemId === selectedItemOverride ||
-              (isLegacyFamilyPickId(selectedItemOverride) &&
+              // Only the *unqualified* legacy form widens the match: `family:{key}` predates role
+              // scoping and has to find the role-scoped option the rebuilt context now produces.
+              // A `family-role:` id already names its role, and matching it on key alone would let
+              // a selection for one requirement satisfy a different one.
+              (isUnqualifiedLegacyFamilyPickId(selectedItemOverride) &&
                 familyKeyFromPickId(option.hospitalItemId) ===
                   familyKeyFromPickId(selectedItemOverride)),
           )
@@ -421,6 +485,10 @@ function itemResolution(
   return {
     id: slot.id,
     sourceSlotId: slot.sourceSlotId,
+    requirementKey: slot.requirementKey,
+    ...(slot.sourceModuleVersionIds && slot.sourceModuleVersionIds.length > 0
+      ? { sourceModuleVersionIds: [...slot.sourceModuleVersionIds] }
+      : {}),
     roleCode: slot.roleCode,
     label: slot.label,
     genericRequirement: slot.genericRequirement,
@@ -453,16 +521,30 @@ function readinessFromMessages(messages: RuleMessage[]): ReadinessState {
   return 'complete'
 }
 
-function snapshotPayload(card: Omit<ResolvedCard, 'snapshotHash'>) {
+type UnhashedCard = Omit<
+  ResolvedCard,
+  'snapshotHash' | 'snapshotIntegrityHash' | 'resolvedContentHash'
+>
+
+/**
+ * The *storage identity* payload — deliberately unchanged in construction.
+ *
+ * This is what the `snapshot_hash` column has always held: a digest of card content that stays put
+ * when the same card is re-saved, so re-saving is a no-op and a share link keeps verifying. It
+ * excludes `generatedAt` for that reason, which also means it never detected an edited timestamp —
+ * the job `snapshotIntegrityHash` now does, over the complete stored snapshot.
+ *
+ * It is *not* the semantic comparison either; `resolvedContentHash` is. Three hashes because there
+ * were three questions, and the single hash could only answer one of them well.
+ */
+function snapshotPayload(card: UnhashedCard) {
   const waivers = card.warnings
     .filter((warning) => warning.waiverReason)
     .map((warning) => ({
       id: warning.id,
       waiverReason: warning.waiverReason,
     }))
-  // The hash addresses card *content*, so re-saving an unchanged card keeps its identity.
-  // When it was generated is carried by the row's timestamps, not the hash.
-  const hashableCard: Omit<ResolvedCard, 'snapshotHash' | 'generatedAt'> & {
+  const hashableCard: Omit<UnhashedCard, 'generatedAt'> & {
     generatedAt?: string
   } = { ...card }
   delete hashableCard.generatedAt
@@ -486,21 +568,28 @@ export function resolveCard(inputValue: BuildCardInput, context: BuildContext): 
     )
   }
 
+  // Steps 1-3 of the resolution order: expand the selected modules, add the procedure's
+  // own direct slots, and apply the explicit composition actions. Everything below this
+  // point sees one flat effective recipe and does not know composition exists.
+  const expansion = expandRecipeComposition({
+    recipe: context.recipe,
+    modules: context.recipeModules,
+    selectedModuleVersionIds: input.selectedModuleVersionIds,
+    startSequence: 1,
+  })
   const state: MutableResolution = {
-    slots: context.recipe.slots.map(cloneSlot),
-    messages: [],
-    trace: [],
+    slots: expansion.slots,
+    messages: [...expansion.messages],
+    trace: [...expansion.trace],
     rescueModuleCodes: [],
     replacementBySlot: new Map(),
   }
-  for (const slot of state.slots) {
-    trace(state, {
-      kind: 'base_recipe',
-      message: `${slot.label} was included by base recipe ${context.recipe.name} ${context.recipe.version}.`,
-      sourceId: context.recipe.id,
-      slotId: slot.id,
-    })
-  }
+  trace(state, {
+    kind: 'base_recipe',
+    message: `${context.recipe.name} ${context.recipe.version} composed ${expansion.slots.length} requirements from ${expansion.includedModules.length} module(s).`,
+    sourceId: context.recipe.id,
+    slotId: null,
+  })
 
   const selectedModifierCodes = [...new Set(input.modifierCodes)]
   const selectedModifiers = selectedModifierCodes.flatMap((code) => {
@@ -657,6 +746,10 @@ export function resolveCard(inputValue: BuildCardInput, context: BuildContext): 
     })
   }
 
+  const includedModules: IncludedRecipeModule[] = expansion.includedModules
+  // Nothing composed can present as stronger than its weakest part.
+  const governanceState = effectiveGovernanceState(context.recipe.governanceState, includedModules)
+
   const readinessState = readinessFromMessages(state.messages)
   trace(state, {
     kind: 'readiness',
@@ -670,7 +763,7 @@ export function resolveCard(inputValue: BuildCardInput, context: BuildContext): 
     typeof generatedAtValue === 'string' && !Number.isNaN(Date.parse(generatedAtValue))
       ? new Date(generatedAtValue).toISOString()
       : '1970-01-01T00:00:00.000Z'
-  const cardWithoutHash: Omit<ResolvedCard, 'snapshotHash'> = {
+  const cardWithoutHash: UnhashedCard = {
     recipeVersionId: context.recipe.id,
     recipeName: context.recipe.name,
     recipeVersion: context.recipe.version,
@@ -678,25 +771,48 @@ export function resolveCard(inputValue: BuildCardInput, context: BuildContext): 
     organizationName: context.organizationName,
     siteName: context.siteName,
     locationName: context.locationName,
+    scope: {
+      organizationId: input.organizationId,
+      siteId: input.siteId,
+      locationId: input.locationId,
+    },
+    // Taken from the context, never from the input: a client that could name its own release
+    // would be writing provenance for a resolution it did not perform.
+    resolutionProvenance: {
+      releaseBundleId: context.releaseIdentity?.releaseBundleId ?? null,
+      releaseDefinitionHash: context.releaseIdentity?.releaseDefinitionHash ?? null,
+      catalogReleaseId: context.releaseIdentity?.catalogReleaseId ?? null,
+      resolverContractVersion: PREFERENCE_CARD_RESOLVER_CONTRACT_VERSION,
+    },
     selectedModifiers: selectedModifierCodes,
+    includedModules,
     items,
     suppressedItems: kitResult.suppressedItems,
     warnings: state.messages,
     readinessState,
-    governanceState: context.recipe.governanceState,
+    governanceState,
     ruleTrace: state.trace,
     engineVersion: PREFERENCE_CARD_ENGINE_VERSION,
     catalogImportId: context.recipe.catalogImportId,
     generatedAt,
     prototype:
-      context.recipe.governanceState !== 'approved' ||
+      governanceState !== 'approved' ||
       items.some(
         (item) =>
           item.verificationState === 'demo_only' || item.verificationState === 'prototype_visible',
       ),
   }
-  return {
+  // Ordered so each hash can cover the ones computed before it. Storage identity and semantic
+  // content are independent projections of the same card; integrity then covers the whole stored
+  // snapshot *including* both of them, so neither can be edited to agree with a doctored payload.
+  const snapshotHash = stableSnapshotHash(snapshotPayload(cardWithoutHash))
+  const withContentHashes = {
     ...cardWithoutHash,
-    snapshotHash: stableSnapshotHash(snapshotPayload(cardWithoutHash)),
+    snapshotHash,
+    resolvedContentHash: resolvedContentHash(cardWithoutHash),
+  }
+  return {
+    ...withContentHashes,
+    snapshotIntegrityHash: snapshotIntegrityHash(withContentHashes),
   }
 }

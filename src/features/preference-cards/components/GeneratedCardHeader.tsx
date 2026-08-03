@@ -8,6 +8,7 @@ import { ArrowLeft, FileDown } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
+import { printDocumentHash } from '../domain/print-document'
 import type { ResolvedCard } from '../domain/types'
 import { PrototypeBanner } from './PrototypeBanner'
 import { ReadinessBadge } from './ReadinessBadge'
@@ -40,6 +41,31 @@ export function GeneratedCardHeader({
   const dashboardHref = `/${locale}/preference-cards` as Route
   const printHref = `/${locale}/preference-cards/${cardId}/print?mode=spatial` as Route
 
+  /**
+   * The hash of the *page*, not of the snapshot.
+   *
+   * Everything in the block below that comes from outside `card_snapshot` — the heading, the
+   * physician, the draft/final badge, the last-updated timestamp — is printed and is editable
+   * without the card re-resolving; `renameUserCard` changes the title and deliberately leaves the
+   * snapshot alone. So the snapshot hash was never evidence of what the page said, and this is.
+   *
+   * Null on a snapshot written before the hashes were split: those rows have no integrity hash to
+   * build a document hash over, and computing one from the storage identity instead would give a
+   * value that means something different under the same label.
+   */
+  const documentHash = card.snapshotIntegrityHash
+    ? printDocumentHash({
+        snapshotIntegrityHash: card.snapshotIntegrityHash,
+        metadata: {
+          cardId,
+          title,
+          physicianName: physicianName ?? null,
+          status: status ?? null,
+          updatedAt: updatedAt ?? null,
+        },
+      })
+    : null
+
   // A personal card names a physician and a procedure. Organization, site, and room came
   // from the abandoned hospital-governance model and said "demo" on every card.
   const metadata = [
@@ -53,6 +79,9 @@ export function GeneratedCardHeader({
       ? ([[t('cardMetadata.updatedAt'), new Date(updatedAt).toLocaleString()]] as const)
       : []),
     [t('cardMetadata.snapshot'), card.snapshotHash.slice(0, 20)],
+    ...(documentHash
+      ? ([[t('cardMetadata.documentHash'), documentHash.slice(0, 20)]] as const)
+      : []),
     [t('cardMetadata.engine'), card.engineVersion],
   ] as const
 

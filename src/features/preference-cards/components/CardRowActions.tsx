@@ -1,7 +1,7 @@
 import type { Route } from 'next'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
-import { Copy, Link2, Link2Off, Trash2 } from 'lucide-react'
+import { Copy, Link2, Link2Off, PencilLine, Trash2 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -30,6 +30,7 @@ interface CardRowActionsProps {
 export async function CardRowActions({ locale, card, layout }: CardRowActionsProps) {
   const t = await getTranslations('preferenceCards')
   const shareHref = `/${locale}/preference-cards/shared/${card.shareToken}` as Route
+  const editHref = `/${locale}/preference-cards/${card.id}/edit` as Route
 
   return (
     <div className="no-print rounded-2xl border border-border bg-card p-4">
@@ -63,6 +64,26 @@ export async function CardRowActions({ locale, card, layout }: CardRowActionsPro
       ) : null}
 
       <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3 first:mt-0 first:border-0 first:pt-0">
+        {/*
+          Edit and duplicate are deliberately adjacent and deliberately distinct: edit
+          rewrites this card, duplicate makes a separate one with its own id and its own
+          sharing state. A card whose stored selections predate module composition is not
+          offered the control at all — offering it and then failing would read as a fault
+          in a card that is perfectly intact.
+        */}
+        {card.editable ? (
+          <Button asChild size="sm" variant="outline">
+            <Link href={editHref}>
+              <PencilLine aria-hidden="true" className="h-3.5 w-3.5" />
+              {t('edit.editCard')}
+            </Link>
+          </Button>
+        ) : layout === 'page' ? (
+          <p className="max-w-xl text-xs leading-5 text-muted-foreground">
+            {t('edit.notEditableExplanation')}
+          </p>
+        ) : null}
+
         <form action={duplicateCardAction}>
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="cardId" value={card.id} />

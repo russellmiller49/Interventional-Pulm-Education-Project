@@ -19,27 +19,62 @@ export function allowsSizeAtProcedure(roleCode: string): boolean {
 /**
  * Family-level pick id, distinct from a product id so the two can never be confused.
  *
- * The one-argument form is the persisted v1 identity and remains stable for the common case
- * where a line is selected for one role. A role-qualified identity is used only when the same
- * family key is selected for multiple role-scoped slices with different variant metadata.
+ * Addressed by *reviewed family version id* rather than by the discovery grouping key. The two
+ * prefixes are different strings on purpose: `family:` and `family-role:` are the discovery-keyed
+ * forms written by builder-inputs versions 2 and 3, and a card carrying one of those is asking for
+ * whatever a mutable label happened to group at the time. They stay parseable, because a stored
+ * snapshot that used them still has to render; they are never written again.
+ *
+ * The one-argument form is the ordinary case, where a family version is selected for one role. A
+ * role-qualified identity is used only when the same family version is selected for more than one
+ * of the roles it serves, which would otherwise collapse two requirements onto one item.
  */
-export function familyPickId(familyKey: string, roleCode?: string): string {
-  return roleCode ? `family-role:${roleCode}:${familyKey}` : `family:${familyKey}`
+export function familyPickId(productFamilyVersionId: string, roleCode?: string): string {
+  return roleCode
+    ? `family-version-role:${roleCode}:${productFamilyVersionId}`
+    : `family-version:${productFamilyVersionId}`
 }
 
+const FAMILY_PICK_ID_PREFIXES = [
+  'family-version:',
+  'family-version-role:',
+  'family:',
+  'family-role:',
+] as const
+
 export function isFamilyPickId(value: string | null | undefined): boolean {
+  return (
+    typeof value === 'string' && FAMILY_PICK_ID_PREFIXES.some((prefix) => value.startsWith(prefix))
+  )
+}
+
+/**
+ * The discovery-keyed forms, written by builder-inputs versions 2 and 3 and never again.
+ *
+ * `family:` alone is the oldest, unqualified by role. Both are recognized so a stored snapshot
+ * still renders; neither can be turned back into a reviewed family, because the key they carry is
+ * a grouping recomputed from labels rather than an identity — see `product-family.ts`.
+ */
+export function isLegacyFamilyPickId(value: string | null | undefined): boolean {
   return (
     typeof value === 'string' && (value.startsWith('family:') || value.startsWith('family-role:'))
   )
 }
 
-export function isLegacyFamilyPickId(value: string | null | undefined): boolean {
+export function isUnqualifiedLegacyFamilyPickId(value: string | null | undefined): boolean {
   return typeof value === 'string' && value.startsWith('family:')
 }
 
 export function familyKeyFromPickId(value: string): string | null {
-  if (isLegacyFamilyPickId(value)) return value.slice('family:'.length)
+  if (isUnqualifiedLegacyFamilyPickId(value)) return value.slice('family:'.length)
   if (!value.startsWith('family-role:')) return null
   const roleSeparator = value.indexOf(':', 'family-role:'.length)
+  return roleSeparator === -1 ? null : value.slice(roleSeparator + 1)
+}
+
+export function productFamilyVersionIdFromPickId(value: string): string | null {
+  if (value.startsWith('family-version:')) return value.slice('family-version:'.length)
+  if (!value.startsWith('family-version-role:')) return null
+  const roleSeparator = value.indexOf(':', 'family-version-role:'.length)
   return roleSeparator === -1 ? null : value.slice(roleSeparator + 1)
 }

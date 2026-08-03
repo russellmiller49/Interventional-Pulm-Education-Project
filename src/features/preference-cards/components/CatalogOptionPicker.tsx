@@ -44,9 +44,23 @@ export interface CatalogPickerOption {
   sourceLocation: string | null
 }
 
-/** Mirrors RoleFamilyOption from server/catalog.ts. */
+/**
+ * Mirrors RoleFamilyOption from server/catalog.ts.
+ *
+ * `discoveryKey` groups the role's products for browsing. It is *not* an identity a card may
+ * record: it is recomputed from mutable labels and over-merges — nine Argyle chest tubes from
+ * 16 Fr to 40 Fr share one, and two sizes of one BD Safe-T-Centesis tray do not. The whole-line
+ * action below is offered only when `reviewedFamilyVersionId` is present, which means a reviewed,
+ * versioned, explicit membership exists and is approved for this role.
+ */
 export interface CatalogPickerFamily {
-  familyKey: string
+  discoveryKey: string
+  /** null = no reviewed family here at all; 'draft' = identified, awaiting clinical review. */
+  reviewedFamilyGovernanceState: 'draft' | 'approved' | 'retired' | null
+  reviewedFamilyVersionId: string | null
+  reviewedFamilyCode: string | null
+  reviewedFamilyCatalogReleaseId: string | null
+  reviewedFamilyDefinitionHash: string | null
   familyName: string
   manufacturerDisplay: string
   manufacturerGroupId: string
@@ -72,8 +86,8 @@ interface CatalogOptionPickerProps {
   /** Product ids already available as local options for this requirement. */
   existingProductIds: Set<string>
   onAdd: (pick: CatalogPick) => void
-  /** Family keys already added as whole-line options for this requirement. */
-  existingFamilyKeys?: Set<string>
+  /** Reviewed family version ids already added as whole-line options for this requirement. */
+  existingFamilyVersionIds?: Set<string>
   /**
    * Omitted by callers that cannot carry a family — the equipment-set manager builds sets of
    * specific products, so the whole-line button is hidden there.
@@ -102,9 +116,29 @@ export function toCatalogPick(option: CatalogPickerOption, roleCode: string): Ca
   }
 }
 
-export function toFamilyPick(family: CatalogPickerFamily, roleCode: string): FamilyPick {
+/**
+ * A whole-line pick, or null when the grouping is catalog browsing rather than a reviewed family.
+ *
+ * Nullable on purpose: there is no way to construct a persistable family selection from a
+ * discovery grouping, and a function that returned one anyway — with the discovery key standing in
+ * for an identity — is precisely the shape this phase removed. The preview a client builds is
+ * discarded server-side and rebuilt from these identifiers, so the four pin fields are what
+ * actually decide what gets stored.
+ */
+export function toFamilyPick(family: CatalogPickerFamily, roleCode: string): FamilyPick | null {
+  if (
+    !family.reviewedFamilyVersionId ||
+    !family.reviewedFamilyCode ||
+    !family.reviewedFamilyCatalogReleaseId ||
+    !family.reviewedFamilyDefinitionHash
+  ) {
+    return null
+  }
   return {
-    familyKey: family.familyKey,
+    productFamilyVersionId: family.reviewedFamilyVersionId,
+    productFamilyCode: family.reviewedFamilyCode,
+    catalogReleaseId: family.reviewedFamilyCatalogReleaseId,
+    definitionHash: family.reviewedFamilyDefinitionHash,
     roleCode,
     familyName: family.familyName,
     manufacturerDisplay: family.manufacturerDisplay,
@@ -117,7 +151,7 @@ export function toFamilyPick(family: CatalogPickerFamily, roleCode: string): Fam
   }
 }
 
-const emptyFamilyKeys: Set<string> = new Set()
+const emptyFamilyVersionIds: Set<string> = new Set()
 
 /**
  * Searches the whole product catalog for one requirement's role and lets the user promote a
@@ -134,7 +168,7 @@ export function CatalogOptionPicker({
   roleLabel,
   existingProductIds,
   onAdd,
-  existingFamilyKeys = emptyFamilyKeys,
+  existingFamilyVersionIds = emptyFamilyVersionIds,
   onAddFamily,
   addLabel,
   className,
@@ -345,12 +379,15 @@ export function CatalogOptionPicker({
               </p>
               <ul className="max-h-96 space-y-1.5 overflow-y-auto">
                 {families.map((family) => {
-                  const expanded = expandedFamilies[family.familyKey] ?? false
-                  const lineAdded = existingFamilyKeys.has(family.familyKey)
+                  const expanded = expandedFamilies[family.discoveryKey] ?? false
+                  const reviewedPick = toFamilyPick(family, roleCode)
+                  const lineAdded = reviewedPick
+                    ? existingFamilyVersionIds.has(reviewedPick.productFamilyVersionId)
+                    : false
                   const ranges = formatRanges(family.specRanges)
                   return (
                     <li
-                      key={family.familyKey}
+                      key={family.discoveryKey}
                       className="rounded-lg border border-border/70 bg-background p-2"
                     >
                       <p className="text-[11px] font-semibold text-primary">
@@ -378,7 +415,7 @@ export function CatalogOptionPicker({
                         />
                       </div>
 
-                      {sizeAtProcedure && onAddFamily ? (
+                      {sizeAtProcedure && onAddFamily && reviewedPick ? (
                         <>
                           <Button
                             type="button"
@@ -386,7 +423,7 @@ export function CatalogOptionPicker({
                             size="sm"
                             disabled={lineAdded}
                             className="mt-1.5 h-7 w-full gap-1 text-[11px]"
-                            onClick={() => onAddFamily(toFamilyPick(family, roleCode))}
+                            onClick={() => onAddFamily(reviewedPick)}
                           >
                             {lineAdded ? (
                               t('familyAdded')
@@ -401,6 +438,21 @@ export function CatalogOptionPicker({
                             {t('addFamilyHelp')}
                           </p>
                         </>
+                      ) : sizeAtProcedure && onAddFamily ? (
+                        // No *approved* family covers this grouping, so the whole line cannot be
+                        // added and the sizes below stay individually selectable. Offering the line
+                        // here would persist a membership nobody approved, and inventing a custom
+                        // "size at time of procedure" entry in its place would do the same thing
+                        // with worse provenance.
+                        //
+                        // The two reasons read differently, because they are different: a draft
+                        // family has an identified, frozen membership waiting on a clinician, while
+                        // a grouping with no reviewed family is nothing but a way to browse.
+                        <p className="mt-1.5 rounded-md border border-dashed border-border/70 px-2 py-1 text-[10px] leading-4 text-muted-foreground">
+                          {family.reviewedFamilyGovernanceState === 'draft'
+                            ? t('pendingReviewFamilyHelp')
+                            : t('unreviewedFamilyHelp')}
+                        </p>
                       ) : null}
 
                       <Button
@@ -412,7 +464,7 @@ export function CatalogOptionPicker({
                         onClick={() =>
                           setExpandedFamilies((current) => ({
                             ...current,
-                            [family.familyKey]: !expanded,
+                            [family.discoveryKey]: !expanded,
                           }))
                         }
                       >

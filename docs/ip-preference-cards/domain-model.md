@@ -15,11 +15,47 @@ Imported catalog data and local operational decisions remain separate.
 
 1. **Imported catalog** — versioned workbook provenance, manufacturers, sources, products, roles, procedure templates, raw slot options, raw compatibility evidence, and verification backlog.
 2. **Hospital-local operations** — organization, membership, site, procedure location and capabilities, hospital items, and ranked role mappings.
-3. **Recipes and rules** — separately governed recipe versions, reviewed setup-zone/phase assignments, typed modifiers/actions, rescue modules, typed compatibility rules, and kit/BOM components.
+3. **Recipes and rules** — separately governed recipe versions, reviewed setup-zone/phase assignments, typed modifiers/actions, rescue modules, typed compatibility rules, and kit/BOM components. A recipe version is a _composition_: it names the exact recipe-module versions it is assembled from rather than owning a flat slot list. See [`recipe-composition.md`](./recipe-composition.md).
 4. **User differences** — sparse preference overlays only; complete recipes are not cloned.
 5. **Generated output** — a case-card header plus denormalized modifiers, items, warnings, trace, and complete JSON snapshot.
 
-All imported recipes remain `draft`. A catalog visibility state, manufacturer source, or GUDID match never creates local approval. Production eligibility requires an explicit hospital-local mapping and current governance review.
+All imported recipes remain `draft`. A catalog visibility state, manufacturer source, or GUDID match never creates local approval. Production eligibility requires an explicit hospital-local mapping and current governance review. A composed card is never represented as stronger than its weakest component: one draft module keeps the whole card draft, and a retired module blocks it.
+
+## Recipe modules (v0.3)
+
+A procedure composition is a versioned manifest of **recipe modules**, not a recipe that
+inherits from a parent:
+
+- **core module** — requirements shared by more than one procedure (Flexible Bronchoscopy
+  Core, Therapeutic Bronchoscopy Core, Pleural Procedure Core);
+- **procedure-specific module** — what one procedure needs beyond its cores;
+- **optional module** — a selectable workflow such as Procedural Fluoroscopy.
+
+Each reference carries a selection behaviour — `required` (locked), `default_on` (starts
+selected, removable), `optional` (starts unselected) — and the builder stores the exact
+`selectedModuleVersionIds` it used. Every requirement carries a reviewed `requirementKey`,
+and imported slot ids a shared requirement absorbed are kept as `sourceSlotAliases` so
+modifier targeting and audit trails survive the move. The complete rules, including why
+composition was chosen over inheritance and what happens when two modules disagree, are in
+[`recipe-composition.md`](./recipe-composition.md).
+
+## Saved cards: selections versus snapshot
+
+A saved card stores two things that are never interchangeable:
+
+- **`builder_inputs`** — the physician's selections, as identifiers only, carrying an explicit
+  `schemaVersion`. This is the only thing a builder reopens from, and every identifier in it is
+  re-checked against the authoritative catalog and the pinned composition on the way back in.
+- **`card_snapshot`** — the immutable, content-addressed resolution. Evidence of what was
+  printed. Never edited, never recomputed on read, and never used as editable state.
+
+A card whose builder inputs no longer parse — anything written before module composition —
+stays fully viewable, printable, shareable, and duplicable from its snapshot, and is simply
+not offered for editing. It is not migrated, because reconstructing a module selection would
+mean choosing modules on the physician's behalf.
+[`saved-card-editing.md`](./saved-card-editing.md) covers the whole lifecycle: exact-version
+reopening, shared server-side reconstruction, equipment-set restoration, schema versioning,
+and save-in-place semantics.
 
 ## Access and immutability
 
