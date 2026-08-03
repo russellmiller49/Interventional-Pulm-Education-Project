@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react'
+import { act, fireEvent, render, within } from '@testing-library/react'
 
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 import { allCriticalCareDerivedValueGuides } from '@/features/critical-care/content/derivedValueGuides'
@@ -7,7 +7,12 @@ import { EcmoFoundationTeachingPanel } from '../components/teaching/EcmoFoundati
 import { ecmoDerivedValueGuides } from '../content/ecmoValueGuides'
 import { isEcmoFoundationSectionId } from '../content/foundationLessons'
 import { cardiohelpLearnLessonsBySupportMode } from '../content/learnLessons'
-import { createReferenceSimulationState, ecmoSimulationReducer } from '../engine'
+import { CardiohelpConsole } from '../components/CardiohelpConsole'
+import {
+  createInitialSimulationState,
+  createReferenceSimulationState,
+  ecmoSimulationReducer,
+} from '../engine'
 
 function settledReference(profileId: 'vv-reference' | 'va-reference') {
   let state = createReferenceSimulationState(profileId)
@@ -80,25 +85,54 @@ describe('A3.2: CARDIOHELP channel names are named as this manufacturer’s', ()
   })
 
   it.each([
-    [ecmoDerivedValueGuides.circuitBloodFlow, /return limb/i],
+    [ecmoDerivedValueGuides.circuitBloodFlow, /sensor sits on the return limb|sensor sits/i],
     [ecmoDerivedValueGuides.pVen, /drainage limb/i],
     [ecmoDerivedValueGuides.pInt, /between the pump outlet and the membrane lung/i],
-    [ecmoDerivedValueGuides.pArt, /return limb/i],
+    [ecmoDerivedValueGuides.pArt, /post-oxygenator, return-side circuit tubing|return limb/i],
   ])('expands $label by physical location and points at local values', (guide, location) => {
     const references = guide.references.map((reference) => reference.statement).join(' ')
     expect(references).toMatch(location)
-    expect(references).toMatch(/CARDIOHELP\/Getinge label/i)
-    expect(references).toMatch(/not standard ECMO vocabulary/i)
     // The plan's exact ask: send the learner to their own unit rather than to a number invented here.
     expect(references).toMatch(/Your unit will have local reference values\. Ask for them\./)
   })
 
-  it('separates pArt from the patient’s arterial pressure wherever it is introduced', () => {
+  it.each([
+    ['pVen', ecmoDerivedValueGuides.pVen],
+    ['pInt', ecmoDerivedValueGuides.pInt],
+    ['pArt', ecmoDerivedValueGuides.pArt],
+  ])('names %s as a CARDIOHELP/Getinge channel label', (_channel, guide) => {
+    const references = guide.references.map((reference) => reference.statement).join(' ')
+    expect(references).toMatch(/CARDIOHELP\/Getinge label/i)
+    expect(references).toMatch(/not standard ECMO vocabulary/i)
+  })
+
+  it('does not call circuit blood flow a manufacturer term', () => {
+    // "Flow" is ECMO vocabulary, not Getinge's word. What is device-specific is the measurement:
+    // where the sensor sits, what is displayed, and when the value is available.
+    const references = ecmoDerivedValueGuides.circuitBloodFlow.references
+      .map((reference) => reference.statement)
+      .join(' ')
+    expect(references).not.toMatch(/CARDIOHELP\/Getinge label/i)
+    expect(references).not.toMatch(/not standard ECMO vocabulary/i)
+    expect(references).toMatch(/general ECMO concept rather than a manufacturer term/i)
+    expect(references).toMatch(/specific to the CARDIOHELP is the measurement/i)
+    expect(references).toMatch(/when the value is available/i)
+  })
+
+  it('separates pArt from the patient’s arterial blood pressure wherever it is introduced', () => {
     const references = ecmoDerivedValueGuides.pArt.references
       .map((reference) => `${reference.statement} ${reference.caveat ?? ''}`)
       .join(' ')
-    expect(references).toMatch(/not the patient’s systemic arterial pressure/i)
-    expect(references).toMatch(/return limb is venous/i)
+    expect(references).toMatch(/post-oxygenator, return-side circuit tubing/i)
+    expect(references).toMatch(/not the patient’s arterial blood pressure/i)
+    // The VV nuance must be stated as where the cannula returns to, not as a claim that nothing
+    // arterial is involved — the returned blood is oxygenated.
+    expect(references).toMatch(
+      /return cannula enters the venous circulation even though the returned blood is oxygenated/i,
+    )
+    expect(references).not.toMatch(/not a blood-pressure measurement of any kind/i)
+    expect(references).not.toMatch(/return limb is venous/i)
+    expect(references).not.toMatch(/not measuring anything arterial at all/i)
     expect(ecmoDerivedValueGuides.pArt.doNotInfer).toMatch(/do not read it as the patient/i)
   })
 
@@ -111,8 +145,16 @@ describe('A3.2: CARDIOHELP channel names are named as this manufacturer’s', ()
     )
     const vocabulary = container.querySelector('[data-channel-vocabulary]')
     expect(vocabulary).not.toBeNull()
-    expect(vocabulary?.textContent).toMatch(/CARDIOHELP\/Getinge channel labels/i)
-    expect(vocabulary?.textContent).toMatch(/pArt is not the patient’s arterial pressure/i)
+    expect(vocabulary?.textContent).toMatch(
+      /pVen, pInt and pArt are CARDIOHELP\/Getinge channel labels/i,
+    )
+    expect(vocabulary?.textContent).toMatch(/pArt is not the patient’s arterial blood pressure/i)
+    expect(vocabulary?.textContent).toMatch(
+      /return cannula enters the venous circulation even though the returned blood is oxygenated/i,
+    )
+    // Flow is named as the general concept it is, on the same surface.
+    expect(vocabulary?.textContent).toMatch(/Circuit blood flow is different in kind/i)
+    expect(vocabulary?.textContent).toMatch(/general ECMO vocabulary/i)
     expect(vocabulary?.textContent).toMatch(/Ask for them/i)
   })
 })
@@ -120,12 +162,26 @@ describe('A3.2: CARDIOHELP channel names are named as this manufacturer’s', ()
 describe('A3.3: the stopped pump is one question, not the whole tour', () => {
   const orientation = cardiohelpLearnLessonsBySupportMode.vv[0]
 
-  it('asks which channels remain interpretable while the pump is stopped', () => {
+  it('asks what the console can still tell you in the settled pump-off state', () => {
     const step = orientation.steps.find((item) => item.id === 'startup-screen-parameters')
     expect(step).toBeDefined()
     expect(step?.title).toMatch(/which channels still mean anything/i)
     expect(step?.instruction).toMatch(/unavailable indication rather than a number/i)
-    expect(step?.expectedResponse.join(' ')).toMatch(/no blood is moving/i)
+
+    const answers = step?.expectedResponse.join(' ') ?? ''
+    // Flow is interpretable here: zero is a reading, not an absence, while its sensor is connected.
+    expect(answers).toMatch(/flow reads zero/i)
+    expect(answers).toMatch(/sensor connected that is a real value/i)
+    // Speed, power and alarm/device state — not timers — are the other interpretable information.
+    expect(answers).toMatch(/speed setpoint, power source and alarm or device state/i)
+    expect(answers).not.toMatch(/timers/i)
+    // Flow-dependent patterns this model does not report, rather than an absolute claim.
+    expect(answers).toMatch(/flow-dependent patterns this model does not produce/i)
+
+    const settledLanguage = `${step?.instruction ?? ''} ${step?.rationale ?? ''} ${answers}`
+    expect(settledLanguage).toMatch(/settled pump-off state/i)
+    expect(settledLanguage).not.toMatch(/while the pump is stopped/i)
+    expect(settledLanguage).not.toMatch(/each is a pressure produced by flow/i)
   })
 
   it('brings the circuit up before the rest of the console tour', () => {
@@ -144,6 +200,15 @@ describe('A3.3: the stopped pump is one question, not the whole tour', () => {
     ]) {
       expect(ids.indexOf(screenStepId)).toBeGreaterThan(rampIndex)
     }
+  })
+
+  it('describes the ramp as a simulated progressive climb, not as bedside technique', () => {
+    const step = orientation.steps.find((item) => item.id === 'startup-bring-circuit-up')
+    expect(step?.instruction).toMatch(/climbs progressively while it is held/i)
+    const copy = `${step?.instruction ?? ''} ${step?.rationale ?? ''}`
+    expect(copy).toMatch(/simulates a ramp/i)
+    // The removed claim: holding a computer key is not how a bedside pump is brought up.
+    expect(copy).not.toMatch(/the way speed is brought up at the bedside/i)
   })
 
   it('re-reads the parameter list once the channels report', () => {
@@ -188,6 +253,26 @@ describe('A3.4: boundaries sit beside the thing they constrain', () => {
     const node = container.querySelector(`[data-local-model-boundary="${boundary}"]`)
     expect(node).not.toBeNull()
     expect(node?.textContent?.length ?? 0).toBeGreaterThan(60)
+  })
+
+  it('describes real CO₂ removal as diminishing and multiply limited, not as saturation', () => {
+    const { container } = render(
+      <EcmoFoundationTeachingPanel
+        sectionId="blood-flow-versus-sweep"
+        state={settledReference('vv-reference')}
+      />,
+    )
+    const sweep = container.querySelector('[data-local-model-boundary="sweep-linearity"]')
+    const text = sweep?.textContent ?? ''
+    // The central boundary survives...
+    expect(text).toMatch(/straight line in this simulation, by construction/i)
+    expect(text).toMatch(/read the direction here, not the slope/i)
+    // ...and the reason real removal differs is stated properly.
+    expect(text).toMatch(/diminishing returns/i)
+    expect(text).toMatch(/blood flow through the membrane/i)
+    expect(text).toMatch(/membrane performance/i)
+    expect(text).toMatch(/remaining gas-side gradient/i)
+    expect(text).not.toMatch(/a real membrane saturates/i)
   })
 
   it('keeps every boundary phrased as a statement about this simulation', () => {
@@ -242,6 +327,83 @@ describe('A3: the panels still render for every foundation section', () => {
       )
       expect(panel.container.querySelector('[data-teaching-panel]')).not.toBeNull()
       panel.unmount()
+    }
+  })
+})
+
+describe('A3.5-adjacent: the rotary ramp is reachable by pointer as well as keyboard', () => {
+  function mountConsole() {
+    let state = createInitialSimulationState('startup-sensor-orientation')
+    const rerenderRef: { current: (next: typeof state) => void } = { current: () => {} }
+    const dispatch = (action: Parameters<typeof ecmoSimulationReducer>[1]) => {
+      state = ecmoSimulationReducer(state, action)
+      rerenderRef.current(state)
+    }
+    const view = render(<CardiohelpConsole state={state} dispatch={dispatch} controlsEnabled />)
+    rerenderRef.current = (next) =>
+      view.rerender(<CardiohelpConsole state={next} dispatch={dispatch} controlsEnabled />)
+    return {
+      view,
+      rpm: () => state.device.rpmSetpoint,
+    }
+  }
+
+  it('steps once on a plain pointer tap, without double-counting the click', () => {
+    const { view, rpm } = mountConsole()
+    const increase = within(view.container).getByRole('button', { name: /Increase setpoint/i })
+    fireEvent.pointerDown(increase)
+    fireEvent.pointerUp(increase)
+    fireEvent.click(increase)
+    // One tap is one rotary step, even though pointerdown and click both fire.
+    expect(rpm()).toBe(50)
+  })
+
+  it('ramps while the pointer is held, so 0 to 3200 is not sixty-four clicks', () => {
+    jest.useFakeTimers()
+    try {
+      const { view, rpm } = mountConsole()
+      const increase = within(view.container).getByRole('button', { name: /Increase setpoint/i })
+      fireEvent.pointerDown(increase)
+      act(() => {
+        jest.advanceTimersByTime(3000)
+      })
+      fireEvent.pointerUp(increase)
+      expect(rpm()).toBeGreaterThanOrEqual(3200)
+
+      // And the hold stops when the pointer is released.
+      const settled = rpm()
+      act(() => {
+        jest.advanceTimersByTime(1000)
+      })
+      expect(rpm()).toBe(settled)
+    } finally {
+      jest.useRealTimers()
+    }
+  })
+
+  it('still steps once for a keyboard activation of the stepper', () => {
+    const { view, rpm } = mountConsole()
+    const decrease = within(view.container).getByRole('button', { name: /Decrease setpoint/i })
+    // Enter or Space on a button fires click without any pointer event.
+    fireEvent.click(decrease)
+    expect(rpm()).toBe(0)
+
+    const increase = within(view.container).getByRole('button', { name: /Increase setpoint/i })
+    fireEvent.click(increase)
+    fireEvent.click(increase)
+    expect(rpm()).toBe(100)
+  })
+
+  it('tells the learner both ways of driving the dial', () => {
+    const { view } = mountConsole()
+    const hint = view.container.querySelector('#cardiohelp-rotary-hold-hint')
+    expect(hint?.textContent).toMatch(/press and hold to ramp/i)
+    expect(hint?.textContent).toMatch(/hold an arrow key/i)
+    for (const name of [/Increase setpoint/i, /Decrease setpoint/i]) {
+      expect(within(view.container).getByRole('button', { name })).toHaveAttribute(
+        'aria-describedby',
+        'cardiohelp-rotary-hold-hint',
+      )
     }
   })
 })

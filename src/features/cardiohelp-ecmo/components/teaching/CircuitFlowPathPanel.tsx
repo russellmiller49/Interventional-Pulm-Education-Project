@@ -132,11 +132,14 @@ export function CircuitFlowPathPanel({ state }: { readonly state: EcmoSimulation
             pVen, pInt and pArt are CARDIOHELP/Getinge channel labels rather than standard ECMO
             vocabulary — another console may name the same measurements differently, or not report
             them at all. All three are pressures inside the circuit. In particular{' '}
-            <strong>pArt is not the patient&rsquo;s arterial pressure</strong>: it is the pressure
-            on the return limb, and in VV support that limb is venous. The patient&rsquo;s blood
-            pressure comes from the independent monitor, never from this console. This simulation
-            asserts no expected value for any of them — your unit will have local reference values.
-            Ask for them.
+            <strong>pArt is not the patient&rsquo;s arterial blood pressure</strong>: it is a
+            pressure measurement in the post-oxygenator, return-side circuit tubing, and the
+            patient&rsquo;s blood pressure comes from the independent monitor. In VV ECMO the return
+            cannula enters the venous circulation even though the returned blood is oxygenated.
+            Circuit blood flow is different in kind: the quantity is general ECMO vocabulary, and
+            what belongs to this device is where the sensor sits, what the console displays, and
+            when the value is available. This simulation asserts no expected value for any of them —
+            your unit will have local reference values. Ask for them.
           </span>
         </ModelBoundary>
       </section>

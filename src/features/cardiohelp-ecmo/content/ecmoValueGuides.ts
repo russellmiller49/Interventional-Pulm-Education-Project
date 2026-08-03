@@ -12,13 +12,17 @@ import {
  */
 
 /**
- * The four channels a learner reads first, each named the way this console names them.
+ * The four channels a learner reads first.
  *
- * `pVen`, `pInt` and `pArt` are CARDIOHELP/Getinge channel labels, not ECMO vocabulary. A learner
- * who carries them to another console will not find them, and — the sharper hazard — `pArt` names a
- * pressure inside the circuit while sounding exactly like the patient's arterial pressure. Each
- * guide therefore expands the abbreviation by physical location, says whose label it is, and points
- * the learner at their own unit's reference values rather than at a number invented here.
+ * Two different claims live here and must not be blurred. Circuit blood flow is a **general ECMO
+ * concept** — every circuit has one and every console reports one; what is device-specific is where
+ * this console measures it, what exactly it displays, and when it is available at all. By contrast
+ * `pVen`, `pInt` and `pArt` are **CARDIOHELP/Getinge channel labels**: a learner who carries those
+ * names to another console will not find them, and `pArt` is the sharper hazard, naming a pressure
+ * inside the circuit while sounding exactly like the patient's arterial pressure.
+ *
+ * Every guide expands its abbreviation by physical location and points the learner at their own
+ * unit's reference values rather than at a number invented here.
  */
 const localReferenceValues = (channel: string) =>
   ({
@@ -51,7 +55,18 @@ const circuitBloodFlow: CriticalCareDerivedValueGuide = {
   interpretation:
     'What the pump moved past the flow sensor on the return limb. It counts every litre the same way, including blood that was drained again immediately after being returned, so it is a measure of pump output rather than of the support the patient received.',
   references: [
-    cardiohelpLabelBoundary('Flow', 'the blood flow measured by the sensor on the return limb'),
+    {
+      // Deliberately NOT the manufacturer-label boundary the pressure channels carry. "Flow" is not
+      // Getinge's word for anything — circuit blood flow is ECMO vocabulary. What belongs to the
+      // device is the rest of this statement.
+      id: 'ecmo.channel.Flow.general-concept-device-specific-measurement',
+      kind: 'device-specification',
+      statement:
+        'Circuit blood flow is a general ECMO concept rather than a manufacturer term: every circuit has one and every console reports one. What is specific to the CARDIOHELP is the measurement — where the sensor sits on the return limb, what the console displays, when the value is available, and how it behaves when the sensor is disconnected or the pump is stopped. Another console measures the same physical quantity, and may site the sensor, display it, or withhold it differently.',
+      appliesWhen:
+        'CARDIOHELP-i, US Instructions for Use Revision 2.3 (January 2025), software 03.04.10.00 or higher, for the device-specific half. The concept itself applies to any ECMO circuit.',
+      evidenceIds: ['ifu-us-2025-scope', 'ifu-console-workflow'],
+    },
     localReferenceValues('Flow'),
   ],
   caveats:
@@ -109,7 +124,7 @@ const returnPressure: CriticalCareDerivedValueGuide = {
   unit: 'mmHg',
   liveValueType: 'device-displayed',
   interpretation:
-    'Pressure measured on the return limb, after the membrane lung, as blood leaves the circuit for the patient. It reports what the circuit is pushing against on its way out.',
+    'Pressure measured in the post-oxygenator, return-side circuit tubing, as blood leaves the circuit for the patient. It reports what the circuit is pushing against on its way out.',
   references: [
     cardiohelpLabelBoundary(
       'pArt',
@@ -119,19 +134,19 @@ const returnPressure: CriticalCareDerivedValueGuide = {
       id: 'ecmo.pArt.not-patient-arterial-pressure',
       kind: 'device-specification',
       statement:
-        'This is a pressure inside the circuit tubing. It is not the patient’s systemic arterial pressure, and it is not a blood-pressure measurement of any kind — the patient’s arterial pressure comes from the independent monitor, not from this console.',
+        'This is a pressure measurement in the post-oxygenator, return-side circuit tubing. It is not the patient’s arterial blood pressure — that comes from the independent monitor, not from this console.',
       appliesWhen:
         'Always. The name is the hazard: "pArt" reads like arterial blood pressure and is not.',
       evidenceIds: ['ifu-us-2025-scope', 'ifu-console-workflow'],
       caveat:
-        'In VV support the return limb is venous, so the channel called pArt is not measuring anything arterial at all.',
+        'In VV ECMO the return cannula enters the venous circulation even though the returned blood is oxygenated, so the channel named pArt sits on a line returning to the venous side.',
     },
     localReferenceValues('pArt'),
   ],
   caveats:
     'It rises with anything that obstructs the return path — cannula position, kinking, or the resistance the patient’s own circulation offers.',
   doNotInfer:
-    'Do not read it as the patient’s blood pressure, do not compare it with a MAP, and in VV do not read the word "arterial" as describing the blood in it.',
+    'Do not read it as the patient’s arterial blood pressure and do not compare it with a MAP. In VV ECMO, do not read the word "arterial" as describing where the line returns to: the returned blood is oxygenated, but the cannula enters the venous circulation.',
   conceptIds: ['cc.circuit.pressure-zones', 'cc.measurement.measurand'],
   reviewStatus: 'draft',
 }

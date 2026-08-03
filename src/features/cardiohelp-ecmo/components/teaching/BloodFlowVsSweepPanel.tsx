@@ -127,8 +127,10 @@ export function BloodFlowVsSweepPanel({ state }: { readonly state: EcmoSimulatio
         <ModelBoundary>
           <span data-local-model-boundary="sweep-linearity">
             PaCO₂ responds to sweep as a straight line in this simulation, by construction. There is
-            no plateau and no diminishing return, because none is modeled — a real membrane
-            saturates.
+            no plateau and no diminishing return, because none is modeled. Real CO₂ removal shows
+            diminishing returns and becomes limited by blood flow through the membrane, membrane
+            performance, and the remaining gas-side gradient — so read the direction here, not the
+            slope.
           </span>
         </ModelBoundary>
 

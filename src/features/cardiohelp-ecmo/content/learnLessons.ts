@@ -181,15 +181,15 @@ const orientationLesson: GuidedLessonDefinition = {
       target: 'console',
       title: 'The pump is stopped: which channels still mean anything?',
       instruction:
-        'Open Parameter list. The pump has not been started, so pVen, pInt, pArt and the Δp trend show the unavailable indication rather than a number. Work out which channels remain interpretable in this state, and why the pressure channels are not among them.',
+        'Open Parameter list. In this settled initial pump-off state pVen, pInt, pArt and the Δp trend show the unavailable indication rather than a number. Work out what the console can still tell you here, and why the pressure channels are not part of it.',
       rationale:
-        'Dashes are a statement, not a gap. The three pressure locations distinguish drainage limitation, return obstruction and oxygenator resistance — but only once blood is moving, because each is a pressure produced by flow. A channel that reports nothing is telling you the circuit is not doing the thing those numbers describe.',
+        'Dashes are a statement, not a gap. The three pressure locations distinguish drainage limitation, return obstruction and oxygenator resistance, but they are flow-dependent circuit-pressure patterns that this educational model does not report in the settled pump-off state. Flow is different: with the sensor connected, zero is a real reading rather than an absent one.',
       actionLabel: 'Open Parameter list',
       actions: [{ type: 'SET_SCREEN', screen: 'parameters' }],
       expectedResponse: [
-        'Speed, battery, timers and alarm state remain interpretable',
-        'The pressure channels do not, because no blood is moving',
-        'No pressure number is reportable while the pump is stopped',
+        'Flow reads zero, and with its sensor connected that is a real value rather than an absent one',
+        'Speed setpoint, power source and alarm or device state remain interpretable',
+        'The pressure channels do not report, being flow-dependent patterns this model does not produce in the settled pump-off state',
       ],
     }),
     step({
@@ -198,9 +198,9 @@ const orientationLesson: GuidedLessonDefinition = {
       target: 'console',
       title: 'Bring the circuit up before touring the rest',
       instruction:
-        'Ramp the pump to 3200 rpm on the rotary control — hold the arrow key rather than clicking, the way speed is brought up at the bedside — and let the circuit settle. Everything from here on is read on a running circuit.',
+        'Bring the pump up to 3200 rpm on the rotary control and let the circuit settle. Hold the control rather than tapping it — the simulated setpoint climbs progressively while it is held. Everything from here on is read on a running circuit.',
       rationale:
-        'Speed is ramped rather than set. The climb from zero is itself worth feeling: flow appears, the pressure channels start reporting, and the console stops showing dashes. Meeting every tile on a dead circuit would teach the wrong first impression of what each one looks like.',
+        'The climb from zero is worth watching rather than skipping: flow appears, the pressure channels start reporting, and the console stops showing dashes. Meeting every tile on a stopped circuit would teach the wrong first impression of what each one looks like. The progressive climb here simulates a ramp; it is not a claim about how any particular unit brings a pump up.',
       actionLabel: 'Ramp to 3200 rpm and let it settle',
       actions: [{ type: 'SET_RPM', rpm: 3200 }],
       expectedResponse: [

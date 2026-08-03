@@ -460,6 +460,9 @@ export function CardiohelpConsole({
 }: CardiohelpConsoleProps) {
   const topAlarm = state.alarms[0]
   const unlockTimerRef = useRef<number | null>(null)
+  const holdTimerRef = useRef<number | null>(null)
+  /** Set by a pointer press so the click it also fires does not step a second time. */
+  const pointerHeldRef = useRef(false)
   const rpmBars = useMemo(
     () => Math.round((state.device.rpmSetpoint / 5000) * 12),
     [state.device.rpmSetpoint],
@@ -477,6 +480,7 @@ export function CardiohelpConsole({
   useEffect(
     () => () => {
       if (unlockTimerRef.current) window.clearTimeout(unlockTimerRef.current)
+      if (holdTimerRef.current) window.clearInterval(holdTimerRef.current)
     },
     [],
   )
@@ -484,6 +488,37 @@ export function CardiohelpConsole({
   function rotate(delta: number) {
     if (!controlsEnabled) return
     dispatch({ type: 'ROTARY_DELTA', delta })
+  }
+
+  /**
+   * Press-and-hold on the rotary steppers, so a long ramp is not a long click count.
+   *
+   * One tap is one step, as before. Holding starts a repeat that widens its step after a moment,
+   * which is what makes bringing a stopped pump up to a working speed a couple of seconds of hold
+   * rather than sixty-four separate clicks. Purely an input affordance: every repeat goes through
+   * the same `ROTARY_DELTA` the single click uses, so the engine sees nothing new.
+   *
+   * Keyboard users are unaffected — Enter or Space on these buttons still steps once through the
+   * click handler, and the knob itself takes held arrow keys via the browser's own key repeat.
+   */
+  function beginHold(direction: number) {
+    if (!controlsEnabled || state.device.locked) return
+    pointerHeldRef.current = true
+    rotate(direction)
+    let repeats = 0
+    holdTimerRef.current = window.setInterval(() => {
+      repeats += 1
+      // Widen the step rather than shortening the interval: the setpoint stays readable while it
+      // climbs, and a learner can still stop on a value they meant to stop on.
+      const step = repeats > 20 ? 4 : repeats > 8 ? 2 : 1
+      rotate(direction * step)
+    }, 90)
+  }
+
+  function endHold() {
+    if (holdTimerRef.current === null) return
+    window.clearInterval(holdTimerRef.current)
+    holdTimerRef.current = null
   }
 
   function beginUnlockHold() {
@@ -780,8 +815,19 @@ export function CardiohelpConsole({
               <button
                 type="button"
                 aria-label="Decrease setpoint"
+                aria-describedby="cardiohelp-rotary-hold-hint"
                 disabled={!controlsEnabled || state.device.locked}
-                onClick={() => rotate(-1)}
+                onPointerDown={() => beginHold(-1)}
+                onPointerUp={endHold}
+                onPointerLeave={endHold}
+                onPointerCancel={endHold}
+                onClick={() => {
+                  if (pointerHeldRef.current) {
+                    pointerHeldRef.current = false
+                    return
+                  }
+                  rotate(-1)
+                }}
               >
                 <ChevronDown aria-hidden="true" />
               </button>
@@ -820,12 +866,27 @@ export function CardiohelpConsole({
               <button
                 type="button"
                 aria-label="Increase setpoint"
+                aria-describedby="cardiohelp-rotary-hold-hint"
                 disabled={!controlsEnabled || state.device.locked}
-                onClick={() => rotate(1)}
+                onPointerDown={() => beginHold(1)}
+                onPointerUp={endHold}
+                onPointerLeave={endHold}
+                onPointerCancel={endHold}
+                onClick={() => {
+                  if (pointerHeldRef.current) {
+                    pointerHeldRef.current = false
+                    return
+                  }
+                  rotate(1)
+                }}
               >
                 <ChevronUp aria-hidden="true" />
               </button>
             </div>
+            <p className={styles.safetyChordHint} id="cardiohelp-rotary-hold-hint">
+              Tap to step the setpoint, or press and hold to ramp it. Keyboard: focus the dial and
+              hold an arrow key.
+            </p>
 
             <button
               type="button"
