@@ -228,16 +228,21 @@ describe('vv-series-physiology panel', () => {
     expect(boundaries).toMatch(/model estimate rather than anything the CARDIOHELP measures/i)
   })
 
-  it('states the limitation rather than implying pump speed changes the modeled fraction', () => {
+  it('states what the case authors and what speed moves, and bounds both', () => {
+    // Before A2 this asserted the opposite — that raising the speed did not move the fraction —
+    // because that was true of the engine at the time. The engine now raises the share above the
+    // speed the case opened with, so the panel has to say so, and has to keep saying which part of
+    // the relationship is authored rather than physiologic.
     const { container } = render(
       <EcmoFoundationTeachingPanel sectionId="vv-series-physiology" state={state} />,
     )
     const text = container.textContent ?? ''
-    expect(text).toMatch(/authored by the case/i)
-    expect(text).toMatch(/[Rr]aising the pump speed here does not move it/)
-    expect(text).not.toMatch(
-      /raising (the )?(pump )?speed (increases|raises|worsens) (the )?recirculation fraction/i,
-    )
+    expect(text).toMatch(/the case authors where this starts/i)
+    expect(text).toMatch(/more flow than (it|the case) opened with raises/i)
+    // The direction is the teaching object; the coefficient is not a bedside quantity.
+    expect(text).toMatch(/the direction is the teaching object here, not the size/i)
+    // And the parts the simulation still does not model must not quietly disappear.
+    expect(text).toMatch(/cannula position and volume state.*are not modeled at all/i)
   })
 
   it('carries no recirculation band, and only the guides this lesson is allowed', () => {

@@ -35,6 +35,12 @@ const clinicalUnsafeActions: readonly UnsafeActionPenalty[] = [
     critical: true,
   },
   {
+    id: 'rpm-during-recirculation',
+    label: 'Increased speed against established recirculation',
+    points: 50,
+    critical: true,
+  },
+  {
     id: 'global-override',
     label: 'Used Global Override as routine troubleshooting',
     points: 50,
@@ -677,7 +683,11 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           response:
             'More oxygenated return blood is recaptured; systemic saturation falls further.',
           patch: { device: { rpmSetpoint: 3900 }, patient: { spo2: 74 } },
-          penalty: { id: 'unsafe-clinical-shortcut', points: 40, critical: true },
+          // The mechanism-specific penalty rather than the generic shortcut, so the debrief names
+          // what actually went wrong. It shares its id with the engine's RPM-escalation guard, which
+          // deduplicates by id — one action is charged once, whether the learner reaches it through
+          // this intervention card or by turning the rotary control on the console.
+          penalty: { id: 'rpm-during-recirculation', points: 50, critical: true },
           simulatorAction: {
             control: 'rpm',
             targetValue: 3900,

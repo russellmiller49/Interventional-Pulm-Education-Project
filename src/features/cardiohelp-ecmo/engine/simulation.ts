@@ -81,7 +81,29 @@ export const defaultDeviceState: DeviceState = {
 export const RECIRCULATION_FRACTION = Object.freeze({
   baseline: 0.08,
   established: 0.48,
+  /**
+   * Ceiling on the modeled share. Nothing physical happens at this number — it exists so the
+   * fraction stays a fraction at the top of the rpm range instead of approaching 1 and driving
+   * effective flow to zero, which would turn a teaching gradient into a cliff.
+   */
+  maximum: 0.85,
 })
+
+/**
+ * How much effective flow this model gives up for each extra litre per minute the circuit is asked
+ * for once recirculation is established.
+ *
+ * At zero this would express "speed buys you nothing"; above zero it expresses the stronger and
+ * clinically recognised claim that pulling harder on a circuit which is already re-draining its own
+ * return recruits more of that return than it recruits systemic venous blood, so the support the
+ * patient receives falls. The value is authored for teaching legibility — large enough that the
+ * direction is unmistakable within the rpm range a learner can reach, small enough that the fall is
+ * gradual rather than a cliff.
+ *
+ * Evidence boundary: bounded-educational-model. A model coefficient, not a measured entrainment
+ * ratio, and not a number to carry to a bedside circuit.
+ */
+const RECIRCULATION_ENTRAINMENT_PENALTY = 0.35
 
 export const defaultCircuitState: CircuitState = {
   bloodFlow: 4,
@@ -157,6 +179,8 @@ function createReferenceRuntime(profileId: string): ScenarioRuntime {
   return {
     scenarioId: profileId,
     family: 'orientation',
+    baselineRpmSetpoint:
+      ecmoReferenceProfiles[profileId as EcmoReferenceProfileId].inputs.rpmSetpoint,
     // The circuit is there to be read, not acted on toward a scored goal.
     phase: 'act',
     activeFaults: [],
@@ -180,6 +204,8 @@ function createScenarioRuntime(definition: ScenarioDefinition): ScenarioRuntime 
   return {
     scenarioId: definition.id,
     family: definition.family,
+    baselineRpmSetpoint:
+      definition.initialState.device?.rpmSetpoint ?? defaultDeviceState.rpmSetpoint,
     phase: 'predict',
     activeFaults: [...(definition.initialState.activeFaults ?? [])],
     correctedFaults: [],
@@ -812,9 +838,35 @@ export function deriveRecirculationFraction(state: EcmoSimulationState): number 
   // VA return is arterial, so drained blood is not in series with it and the VV recirculation
   // mechanism does not apply.
   if (state.supportMode === 'va') return 0
-  return hasFault(state, 'recirculation')
-    ? RECIRCULATION_FRACTION.established
-    : RECIRCULATION_FRACTION.baseline
+  if (!hasFault(state, 'recirculation')) return RECIRCULATION_FRACTION.baseline
+
+  // Established recirculation is a relationship between the cannulae, so the case authors its
+  // starting share. What the learner controls is how hard the circuit pulls against it.
+  const baselineRpm = state.scenario.baselineRpmSetpoint
+  const rpm = state.device.rpmSetpoint
+  if (!Number.isFinite(rpm) || rpm <= baselineRpm) return RECIRCULATION_FRACTION.established
+
+  // Nominal, rpm-derived flow on both sides rather than the circuit's computed flow: the fraction is
+  // an input to the flow calculation's consumers, and reading the output back in would make the
+  // relationship circular.
+  const baselineFlow = calculateNominalCardiohelpBloodFlowLMin(baselineRpm)
+  const demandedFlow = calculateNominalCardiohelpBloodFlowLMin(rpm)
+  if (baselineFlow <= 0 || demandedFlow <= 0) return RECIRCULATION_FRACTION.established
+
+  const baselineEffectiveFlow = baselineFlow * (1 - RECIRCULATION_FRACTION.established)
+  const effectiveFlowCeiling = Math.max(
+    0,
+    baselineEffectiveFlow - RECIRCULATION_ENTRAINMENT_PENALTY * (demandedFlow - baselineFlow),
+  )
+  // Solve the share back out of the flow it is allowed to leave behind, so the teaching claim —
+  // speed cannot buy effective support here — is what the arithmetic enforces rather than something
+  // asserted beside it. Never below the authored share: slowing the pump does not undo a cannula
+  // relationship, and letting it read as a fix would compete with the correction the case teaches.
+  return clamp(
+    1 - effectiveFlowCeiling / demandedFlow,
+    RECIRCULATION_FRACTION.established,
+    RECIRCULATION_FRACTION.maximum,
+  )
 }
 
 /**
@@ -1077,7 +1129,9 @@ export function deriveSimulation(state: EcmoSimulationState): EcmoSimulationStat
   }
   const pressures = calculatePressures(state, flow, device.zeroFlowActive ? 0 : device.rpmSetpoint)
   const pressuresModeled = pressuresAreModeled(state, device, flow)
-  const recirculationFraction = deriveRecirculationFraction(state)
+  // The locally-updated device, not `state.device`: the fraction now reads the speed setpoint, and
+  // LPM mode rewrites that setpoint earlier in this same derivation.
+  const recirculationFraction = deriveRecirculationFraction({ ...state, device })
   const recirculationAdjustedCircuitFlowLpm = deriveRecirculationAdjustedCircuitFlow(
     flow,
     recirculationFraction,

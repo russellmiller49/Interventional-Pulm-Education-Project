@@ -251,7 +251,8 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
             </p>
             <p className="text-2xl font-semibold">{circuit.recirculationFraction.toFixed(3)}</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              Authored by the case in this simulation. It does not move when the pump speed moves.
+              The case authors where this starts. Asking the circuit for more flow than it opened
+              with raises it from there.
             </p>
           </div>
           <div className="rounded-xl border p-3" data-series-signal="native-cardiac-output">
@@ -454,9 +455,13 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
         </ModelBoundary>
 
         <ModelBoundary>
-          This simulation takes the recirculating share from the authored case. Raising the pump
-          speed here does not move it, so nothing on this page should be read as showing what speed
-          does to recirculation at the bedside.
+          This simulation takes the recirculating share the cannula relationship starts at from the
+          authored case. Asking the circuit for more flow than the case opened with raises that
+          share, so the flow left after re-drainage falls while the displayed L/min keeps rising —
+          the direction is the teaching object here, not the size of the change. Lowering the speed
+          does not move the share back below the authored value, because turning a pump down does
+          not reposition a cannula. Cannula position and volume state, which set recirculation at
+          the bedside, are not modeled at all.
         </ModelBoundary>
       </section>
 

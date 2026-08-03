@@ -34,7 +34,10 @@ const VENOUS_LINE_MAPPING_CONFIRMED = true
 const PRESSURE_RANGE = { low: -500, high: 900 }
 const SVO2_RANGE = { low: 40, high: 99.9 }
 
-function run(state: EcmoSimulationState, actions: readonly SimulationAction[]): EcmoSimulationState {
+function run(
+  state: EcmoSimulationState,
+  actions: readonly SimulationAction[],
+): EcmoSimulationState {
   return actions.reduce(ecmoSimulationReducer, state)
 }
 
@@ -125,7 +128,10 @@ function inspect(scenarioId: string, frames: readonly EcmoSimulationState[]): vo
       svo2Readout.displayed !== null &&
       (svo2Readout.displayed < SVO2_RANGE.low || svo2Readout.displayed > SVO2_RANGE.high)
     ) {
-      flags.push({ scenarioId, reason: 'venous-line saturation displayed outside its sourced range' })
+      flags.push({
+        scenarioId,
+        reason: 'venous-line saturation displayed outside its sourced range',
+      })
     }
 
     // 4 — a pressure alarm consuming an unavailable channel.
@@ -161,7 +167,10 @@ function inspect(scenarioId: string, frames: readonly EcmoSimulationState[]): vo
 
     // The drainage limb is a mixture, so it must sit between its two constituents.
     const low = Math.min(patient.systemicVenousSaturationEstimate, circuit.postOxygenatorSaturation)
-    const high = Math.max(patient.systemicVenousSaturationEstimate, circuit.postOxygenatorSaturation)
+    const high = Math.max(
+      patient.systemicVenousSaturationEstimate,
+      circuit.postOxygenatorSaturation,
+    )
     if (
       circuit.preOxygenatorSaturation < low - 0.2 ||
       circuit.preOxygenatorSaturation > high + 0.2
@@ -343,6 +352,81 @@ function checkReferenceProfiles(): void {
     inspect(profile.id, frames)
   }
 }
+
+/**
+ * The A2 claim, checked as numbers rather than as prose.
+ *
+ * Practice classifies escalating speed against established recirculation as harmful. This sweep is
+ * what makes that claim checkable: across the speed range a learner can actually reach, the
+ * displayed L/min must keep rising while the flow left after re-drainage and the modeled patient
+ * saturation must not. If those columns ever move together again, the module is teaching the
+ * opposite of what it says.
+ */
+function checkRecirculationSpeedResponse(): void {
+  const scenarioId = 'vv-recirculation'
+  const definition = cardiohelpScenarios.find((scenario) => scenario.id === scenarioId)
+  if (!definition) return
+  const baselineRpm = definition.initialState.device?.rpmSetpoint ?? 0
+
+  console.log(
+    `\n\nRecirculation versus pump speed — ${scenarioId} (case baseline ${baselineRpm} rpm)\n`,
+  )
+  console.log('    rpm    flow      Rf  adjFlow  drainSat   SvEst    SpO2  guard')
+
+  let previousFraction = -1
+  let previousAdjusted = Number.POSITIVE_INFINITY
+  let previousFlow = -1
+  for (const rpm of [2600, 3000, 3400, 3800, 4200, 4600, 5000]) {
+    const frames = advance(
+      run(createInitialSimulationState(scenarioId), [{ type: 'SET_RPM', rpm }]),
+      STEPS,
+    )
+    const state = frames.at(-1)!
+    const c = state.circuit
+    const guard = state.scenario.criticalErrors.includes('rpm-during-recirculation') ? 'yes' : '—'
+    console.log(
+      [
+        String(rpm).padStart(7),
+        n(c.bloodFlow, 2),
+        n(c.recirculationFraction, 3),
+        n(c.recirculationAdjustedCircuitFlowLpm, 2),
+        n(c.preOxygenatorSaturation, 1),
+        n(state.patient.systemicVenousSaturationEstimate, 1),
+        n(state.patient.spo2, 2),
+        `  ${guard}`,
+      ].join(' '),
+    )
+
+    if (rpm > baselineRpm) {
+      if (c.bloodFlow <= previousFlow) {
+        flags.push({
+          scenarioId,
+          reason: `displayed flow did not rise at ${rpm} rpm — the module's spine claim needs it to`,
+        })
+      }
+      if (c.recirculationFraction < previousFraction - 0.0005) {
+        flags.push({ scenarioId, reason: `recirculation fraction fell at ${rpm} rpm` })
+      }
+      if (c.recirculationAdjustedCircuitFlowLpm > previousAdjusted + 0.005) {
+        flags.push({
+          scenarioId,
+          reason: `effective flow rose at ${rpm} rpm — speed must not buy support here`,
+        })
+      }
+      if (!state.scenario.criticalErrors.includes('rpm-during-recirculation')) {
+        flags.push({ scenarioId, reason: `no escalation guard fired at ${rpm} rpm` })
+      }
+    }
+    if (c.recirculationFraction >= 1 || c.recirculationAdjustedCircuitFlowLpm < 0) {
+      flags.push({ scenarioId, reason: `fraction or effective flow left its bounds at ${rpm} rpm` })
+    }
+    previousFraction = c.recirculationFraction
+    previousAdjusted = c.recirculationAdjustedCircuitFlowLpm
+    previousFlow = c.bloodFlow
+  }
+}
+
+if (!ONLY) checkRecirculationSpeedResponse()
 
 console.log(`\n${flags.length} flag(s)`)
 for (const flag of flags) {
