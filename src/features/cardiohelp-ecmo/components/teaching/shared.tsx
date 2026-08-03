@@ -82,6 +82,40 @@ export function ModelBoundary({ children }: { readonly children: ReactNode }) {
   )
 }
 
+/**
+ * Working that a learner may open, behind the warning about what it must not be used for.
+ *
+ * Some of this module's arithmetic is genuinely useful to see and genuinely dangerous to carry to a
+ * bedside — the recirculation algebra most of all, because it looks like a formula for estimating
+ * recirculation from two saturations and is not one. Presenting the caution first and the algebra
+ * behind a disclosure means the learner meets the limit before the method, rather than reading the
+ * warning after they have already memorised the equation.
+ *
+ * Plain `<details>` rather than a new widget: it is keyboard-operable, announced as a disclosure by
+ * screen readers, and searchable in most browsers without any script.
+ */
+export function DisclosedWorking({
+  summary,
+  caution,
+  children,
+}: {
+  readonly summary: string
+  readonly caution: ReactNode
+  readonly children: ReactNode
+}) {
+  return (
+    <div className="mt-3" data-disclosed-working>
+      <p className="text-xs font-semibold leading-5" data-do-not-infer-lead>
+        {caution}
+      </p>
+      <details className="mt-2 rounded-xl border border-dashed px-3 py-2">
+        <summary className="cursor-pointer text-xs font-semibold">{summary}</summary>
+        <div className="mt-2">{children}</div>
+      </details>
+    </div>
+  )
+}
+
 /** Rendered while the reference circuit has not yet produced a reading. */
 export function AwaitingCircuit({ label }: { readonly label: string }) {
   return (

@@ -122,8 +122,45 @@ export function CircuitFlowPathPanel({ state }: { readonly state: EcmoSimulation
           The schematic is a teaching diagram of order and location, not a scale drawing of tubing
           lengths, cannula sizes, or component geometry.
         </ModelBoundary>
+
+        {/*
+          Stated at first use, beside the channels themselves. These three names are this
+          manufacturer's, and one of them reads like a patient measurement it is not.
+        */}
+        <ModelBoundary>
+          <span data-channel-vocabulary>
+            pVen, pInt and pArt are CARDIOHELP/Getinge channel labels rather than standard ECMO
+            vocabulary — another console may name the same measurements differently, or not report
+            them at all. All three are pressures inside the circuit. In particular{' '}
+            <strong>pArt is not the patient&rsquo;s arterial pressure</strong>: it is the pressure
+            on the return limb, and in VV support that limb is venous. The patient&rsquo;s blood
+            pressure comes from the independent monitor, never from this console. This simulation
+            asserts no expected value for any of them — your unit will have local reference values.
+            Ask for them.
+          </span>
+        </ModelBoundary>
       </section>
 
+      <GuidedValue
+        guide={ecmoDerivedValueGuides.circuitBloodFlow}
+        value={circuit.bloodFlow}
+        headingLevel={3}
+      />
+      <GuidedValue
+        guide={ecmoDerivedValueGuides.pVen}
+        value={circuit.readouts.pVen.displayed}
+        headingLevel={3}
+      />
+      <GuidedValue
+        guide={ecmoDerivedValueGuides.pInt}
+        value={circuit.readouts.pInt.displayed}
+        headingLevel={3}
+      />
+      <GuidedValue
+        guide={ecmoDerivedValueGuides.pArt}
+        value={circuit.readouts.pArt.displayed}
+        headingLevel={3}
+      />
       <GuidedValue
         guide={ecmoDerivedValueGuides.venousLineSaturation}
         value={circuit.readouts.venousLineSaturation.displayed}

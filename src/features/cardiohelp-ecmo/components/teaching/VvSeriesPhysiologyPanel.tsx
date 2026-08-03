@@ -2,6 +2,7 @@ import { ecmoDerivedValueGuides } from '../../content/ecmoValueGuides'
 import { createReferenceSimulationState, ecmoSimulationReducer } from '../../engine'
 import type { EcmoSimulationState } from '../../engine/types'
 import {
+  DisclosedWorking,
   GuidedValue,
   ModelBoundary,
   TextEquivalent,
@@ -408,51 +409,64 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
         <h3 id="mixture-heading" className={styles.heading}>
           This simulation’s mixture relationship
         </h3>
-        <p className="mt-2 text-sm leading-6">
-          The drainage limb is a mixture of the two saturations either side of it. In this
-          simulation the venous-line value is produced as
-        </p>
-        <p className="mt-2 rounded-xl border bg-muted/40 px-3 py-2 text-sm" data-mixture-formula>
-          pre-oxygenator = systemic + fraction × (post-oxygenator − systemic)
-        </p>
-        <dl className="mt-3 grid gap-2 sm:grid-cols-2" data-mixture-values>
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-muted-foreground">systemic</dt>
-            <dd className="text-sm font-semibold">{round(systemic, 1)}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-muted-foreground">
-              post-oxygenator
-            </dt>
-            <dd className="text-sm font-semibold">{round(post, 1)}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-muted-foreground">
-              pre-oxygenator
-            </dt>
-            <dd className="text-sm font-semibold">{round(pre, 1)}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-muted-foreground">
-              share this reproduces
-            </dt>
-            <dd className="text-sm font-semibold" data-implied-fraction>
-              {impliedFraction === null ? 'not separable here' : impliedFraction.toFixed(3)}
-            </dd>
-          </div>
-        </dl>
+        <DisclosedWorking
+          summary="Show this simulation’s mixing arithmetic"
+          caution={
+            <>
+              Do not infer a bedside recirculation fraction from two saturations. There is no
+              validated way to do it, the systemic value the arithmetic below needs is not measured
+              anywhere on a real circuit, and this simulation only reproduces its own authored share
+              because it was the input in the first place.
+            </>
+          }
+        >
+          <p className="mt-2 text-sm leading-6">
+            The drainage limb is a mixture of the two saturations either side of it. In this
+            simulation the venous-line value is produced as
+          </p>
+          <p className="mt-2 rounded-xl border bg-muted/40 px-3 py-2 text-sm" data-mixture-formula>
+            pre-oxygenator = systemic + fraction × (post-oxygenator − systemic)
+          </p>
+          <dl className="mt-3 grid gap-2 sm:grid-cols-2" data-mixture-values>
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-muted-foreground">systemic</dt>
+              <dd className="text-sm font-semibold">{round(systemic, 1)}</dd>
+            </div>
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+                post-oxygenator
+              </dt>
+              <dd className="text-sm font-semibold">{round(post, 1)}</dd>
+            </div>
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+                pre-oxygenator
+              </dt>
+              <dd className="text-sm font-semibold">{round(pre, 1)}</dd>
+            </div>
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+                share this reproduces
+              </dt>
+              <dd className="text-sm font-semibold" data-implied-fraction>
+                {impliedFraction === null ? 'not separable here' : impliedFraction.toFixed(3)}
+              </dd>
+            </div>
+          </dl>
 
-        <TextEquivalent>
-          {impliedFraction === null
-            ? `The two saturations either side of the drainage limb are too close together here for the share to be separated from them, so no share is shown. The simulation is using ${circuit.recirculationFraction.toFixed(3)}.`
-            : `Rearranged, the same relationship returns a share of ${impliedFraction.toFixed(3)}, which is the ${circuit.recirculationFraction.toFixed(3)} this simulation is using. That agreement is a property of the model, not a measurement.`}
-        </TextEquivalent>
+          <TextEquivalent>
+            {impliedFraction === null
+              ? `The two saturations either side of the drainage limb are too close together here for the share to be separated from them, so no share is shown. The simulation is using ${circuit.recirculationFraction.toFixed(3)}.`
+              : `Rearranged, the same relationship returns a share of ${impliedFraction.toFixed(3)}, which is the ${circuit.recirculationFraction.toFixed(3)} this simulation is using. That agreement is a property of the model, not a measurement.`}
+          </TextEquivalent>
 
-        <ModelBoundary>
-          This is the mixing relationship this simulation uses to produce its own numbers. It is not
-          a validated bedside method for estimating recirculation from two saturations, and the
-          systemic value in it is a model estimate rather than anything the CARDIOHELP measures.
-        </ModelBoundary>
+          <ModelBoundary>
+            This is the mixing relationship this simulation uses to produce its own numbers. It is
+            not a validated bedside method for estimating recirculation from two saturations, and
+            the systemic value in it is a model estimate rather than anything the CARDIOHELP
+            measures.
+          </ModelBoundary>
+        </DisclosedWorking>
 
         <ModelBoundary>
           This simulation takes the recirculating share the cannula relationship starts at from the

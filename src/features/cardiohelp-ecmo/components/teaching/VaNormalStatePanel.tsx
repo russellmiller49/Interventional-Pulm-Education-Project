@@ -619,6 +619,31 @@ export function VaNormalStatePanel({
     <div className={styles.panel} data-teaching-panel="va-normal-state">
       <VaConfigurationLabel />
       <ModelBoundary>{VA_CONFIGURATION_BOUNDARY}</ModelBoundary>
+      {/*
+        A short topology statement before the stable state, because this section now comes before
+        the one that draws the parallel path in detail. A baseline is unreadable without knowing
+        what the circuit is a baseline of.
+      */}
+      <section className={styles.section} aria-labelledby="va-topology-heading" data-topology-lead>
+        <h3 id="va-topology-heading" className={styles.heading}>
+          Where this circuit sits, in one paragraph
+        </h3>
+        <p className="mt-2 text-sm leading-6">
+          Venoarterial support drains blood from the venous side and returns it to the{' '}
+          <strong>arterial</strong> side, downstream of the heart. The circuit therefore runs{' '}
+          <strong>in parallel</strong> with the patient&rsquo;s own circulation rather than in
+          series with it: it both carries blood and exchanges gas, and the two circulations fill the
+          same aorta from opposite ends. Where they meet moves, and what each side supplies depends
+          on where that is — the mechanism the next section works through in detail. Everything that
+          separates one parallel state from another is measured on the patient, not on the console.
+        </p>
+        <TextEquivalent>
+          In venoarterial support the circuit is in parallel with the patient: venous drainage,
+          membrane lung, arterial return. It provides both gas exchange and circulatory support, and
+          it meets native ejection somewhere along the aorta.
+        </TextEquivalent>
+      </section>
+
       <section className={styles.section} aria-labelledby="va-baseline-heading">
         <h3 id="va-baseline-heading" className={styles.heading}>
           Baseline review — this modeled circuit against itself

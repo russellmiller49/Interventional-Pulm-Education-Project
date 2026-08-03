@@ -11,6 +11,131 @@ import {
  * say *what kind of number this is*, not to draw a band around it.
  */
 
+/**
+ * The four channels a learner reads first, each named the way this console names them.
+ *
+ * `pVen`, `pInt` and `pArt` are CARDIOHELP/Getinge channel labels, not ECMO vocabulary. A learner
+ * who carries them to another console will not find them, and — the sharper hazard — `pArt` names a
+ * pressure inside the circuit while sounding exactly like the patient's arterial pressure. Each
+ * guide therefore expands the abbreviation by physical location, says whose label it is, and points
+ * the learner at their own unit's reference values rather than at a number invented here.
+ */
+const localReferenceValues = (channel: string) =>
+  ({
+    // Reference ids are globally unique across the whole registry, so this is built per channel
+    // rather than shared. The statement is deliberately identical on all four.
+    id: `ecmo.channel.${channel}.local-reference-values`,
+    kind: 'local-protocol',
+    statement:
+      'Expected values for this channel depend on cannula sizes, circuit and oxygenator, patient size, and the support the circuit is being asked for. Your unit will have local reference values. Ask for them.',
+    appliesWhen:
+      'Any real circuit. Nothing in this simulation is a substitute for the values your own program works to.',
+    evidenceIds: ['bounded-educational-model'],
+  }) as const
+
+const cardiohelpLabelBoundary = (channel: string, expansion: string) =>
+  ({
+    id: `ecmo.channel.${channel}.getinge-label`,
+    kind: 'device-specification',
+    statement: `"${channel}" is the CARDIOHELP/Getinge label for ${expansion}. It is this manufacturer's channel name, not standard ECMO vocabulary — another console may name the same measurement differently, or not report it at all.`,
+    appliesWhen:
+      'CARDIOHELP-i, US Instructions for Use Revision 2.3 (January 2025), software 03.04.10.00 or higher.',
+    evidenceIds: ['ifu-us-2025-scope', 'ifu-console-workflow'],
+  }) as const
+
+const circuitBloodFlow: CriticalCareDerivedValueGuide = {
+  id: 'ecmo.circuitBloodFlow',
+  label: 'Flow (circuit blood flow)',
+  unit: 'L/min',
+  liveValueType: 'device-displayed',
+  interpretation:
+    'What the pump moved past the flow sensor on the return limb. It counts every litre the same way, including blood that was drained again immediately after being returned, so it is a measure of pump output rather than of the support the patient received.',
+  references: [
+    cardiohelpLabelBoundary('Flow', 'the blood flow measured by the sensor on the return limb'),
+    localReferenceValues('Flow'),
+  ],
+  caveats:
+    'Displayed flow and effective support come apart whenever blood is re-drained. In VV support the circuit adds no circulatory support at all, so this number is never a cardiac output.',
+  doNotInfer:
+    'Do not read a higher number as more support, and do not add it to native cardiac output to make a systemic flow.',
+  conceptIds: ['cc.device.native-device-effective-flow', 'cc.circuit.recirculation'],
+  reviewStatus: 'draft',
+}
+
+const drainagePressure: CriticalCareDerivedValueGuide = {
+  id: 'ecmo.pVen',
+  label: 'pVen (drainage-limb pressure)',
+  unit: 'mmHg',
+  liveValueType: 'device-displayed',
+  interpretation:
+    'Pressure measured on the drainage limb, before the pump — the suction side. It is normally negative, because the pump is pulling against it, and it becomes more negative as the circuit asks for more than the drainage can supply.',
+  references: [
+    cardiohelpLabelBoundary('pVen', 'the pressure on the drainage limb, upstream of the pump'),
+    localReferenceValues('pVen'),
+  ],
+  caveats:
+    'How negative this can go before it matters depends on cannula size and position, volume state, and the flow being asked for. It is a suction pressure inside tubing, not a measurement of the patient.',
+  doNotInfer:
+    'Do not read it as a central venous pressure, and do not treat any particular negative number as a universal limit.',
+  conceptIds: ['cc.circuit.pressure-zones', 'cc.measurement.measurand'],
+  reviewStatus: 'draft',
+}
+
+const preMembranePressure: CriticalCareDerivedValueGuide = {
+  id: 'ecmo.pInt',
+  label: 'pInt (pre-membrane, internal pressure)',
+  unit: 'mmHg',
+  liveValueType: 'device-displayed',
+  interpretation:
+    'Pressure measured after the pump and before the membrane lung — internal to the circuit, between the two components. It is the higher of the two post-pump pressures, because the membrane still lies downstream of it.',
+  references: [
+    cardiohelpLabelBoundary(
+      'pInt',
+      'the internal pressure between the pump outlet and the membrane lung',
+    ),
+    localReferenceValues('pInt'),
+  ],
+  caveats:
+    'It rises both when the membrane resists more and when everything downstream resists more. Read together with pArt: what separates those two situations is the gradient between them, not either value alone.',
+  doNotInfer:
+    'Do not read a rise here as a membrane verdict on its own — the return path is downstream of it too.',
+  conceptIds: ['cc.circuit.pressure-zones', 'cc.membrane.resistance-and-aging'],
+  reviewStatus: 'draft',
+}
+
+const returnPressure: CriticalCareDerivedValueGuide = {
+  id: 'ecmo.pArt',
+  label: 'pArt (return-limb circuit pressure)',
+  unit: 'mmHg',
+  liveValueType: 'device-displayed',
+  interpretation:
+    'Pressure measured on the return limb, after the membrane lung, as blood leaves the circuit for the patient. It reports what the circuit is pushing against on its way out.',
+  references: [
+    cardiohelpLabelBoundary(
+      'pArt',
+      'the pressure on the return limb, downstream of the membrane lung',
+    ),
+    {
+      id: 'ecmo.pArt.not-patient-arterial-pressure',
+      kind: 'device-specification',
+      statement:
+        'This is a pressure inside the circuit tubing. It is not the patient’s systemic arterial pressure, and it is not a blood-pressure measurement of any kind — the patient’s arterial pressure comes from the independent monitor, not from this console.',
+      appliesWhen:
+        'Always. The name is the hazard: "pArt" reads like arterial blood pressure and is not.',
+      evidenceIds: ['ifu-us-2025-scope', 'ifu-console-workflow'],
+      caveat:
+        'In VV support the return limb is venous, so the channel called pArt is not measuring anything arterial at all.',
+    },
+    localReferenceValues('pArt'),
+  ],
+  caveats:
+    'It rises with anything that obstructs the return path — cannula position, kinking, or the resistance the patient’s own circulation offers.',
+  doNotInfer:
+    'Do not read it as the patient’s blood pressure, do not compare it with a MAP, and in VV do not read the word "arterial" as describing the blood in it.',
+  conceptIds: ['cc.circuit.pressure-zones', 'cc.measurement.measurand'],
+  reviewStatus: 'draft',
+}
+
 const deltaPTrend: CriticalCareDerivedValueGuide = {
   id: 'ecmo.transmembraneDeltaP',
   label: 'ΔP across the membrane',
@@ -320,6 +445,10 @@ const baselineChange: CriticalCareDerivedValueGuide = {
 }
 
 export const ecmoDerivedValueGuideList = registerCriticalCareDerivedValueGuides([
+  circuitBloodFlow,
+  drainagePressure,
+  preMembranePressure,
+  returnPressure,
   deltaPTrend,
   venousLineSaturation,
   systemicVenousEstimate,
@@ -330,6 +459,10 @@ export const ecmoDerivedValueGuideList = registerCriticalCareDerivedValueGuides(
 ])
 
 export const ecmoDerivedValueGuides = {
+  circuitBloodFlow,
+  pVen: drainagePressure,
+  pInt: preMembranePressure,
+  pArt: returnPressure,
   transmembraneDeltaP: deltaPTrend,
   venousLineSaturation,
   systemicVenousSaturationEstimate: systemicVenousEstimate,

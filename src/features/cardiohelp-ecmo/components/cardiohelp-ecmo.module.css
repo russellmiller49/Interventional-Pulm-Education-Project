@@ -3697,6 +3697,13 @@
   font-size: 0.72rem;
 }
 
+/* A model boundary stated beside the control it constrains, rather than in distant documentation. */
+.controlBoundary {
+  border-left: 2px dashed var(--muted);
+  padding-left: 0.55rem;
+  line-height: 1.45;
+}
+
 .sourceState {
   border-left-color: var(--green);
 }
