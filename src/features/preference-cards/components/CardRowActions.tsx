@@ -1,7 +1,7 @@
 import type { Route } from 'next'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
-import { Copy, Link2, Link2Off, PencilLine, Trash2 } from 'lucide-react'
+import { Copy, GitCompareArrows, Link2, Link2Off, PencilLine, Trash2 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -31,6 +31,7 @@ export async function CardRowActions({ locale, card, layout }: CardRowActionsPro
   const t = await getTranslations('preferenceCards')
   const shareHref = `/${locale}/preference-cards/shared/${card.shareToken}` as Route
   const editHref = `/${locale}/preference-cards/${card.id}/edit` as Route
+  const reconcileHref = `/${locale}/preference-cards/${card.id}/reconcile` as Route
 
   return (
     <div className="no-print rounded-2xl border border-border bg-card p-4">
@@ -83,6 +84,20 @@ export async function CardRowActions({ locale, card, layout }: CardRowActionsPro
             {t('edit.notEditableExplanation')}
           </p>
         ) : null}
+
+        {/*
+          Offered on every card, including one the builder will not reopen. Reviewing what has
+          moved underneath a card is not editing it, and a card whose selections cannot be
+          re-resolved still has a pinned release that compares against the current one perfectly
+          well — withholding the control would hide the answer that exists behind the one that
+          does not.
+        */}
+        <Button asChild size="sm" variant="outline">
+          <Link href={reconcileHref}>
+            <GitCompareArrows aria-hidden="true" className="h-3.5 w-3.5" />
+            {t('reconcile.action')}
+          </Link>
+        </Button>
 
         <form action={duplicateCardAction}>
           <input type="hidden" name="locale" value={locale} />

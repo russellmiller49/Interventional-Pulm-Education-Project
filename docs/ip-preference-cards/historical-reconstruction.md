@@ -334,3 +334,12 @@ No card upgrades, no release migration, no reconciliation UI, no "rebuild using 
 no re-resolution comparison, no version-2 editing, no legacy family guessing, no new clinical
 family definitions, no fuzzy matching, and no "latest" release selection. A newer release still
 never reaches back into a saved card.
+
+## What sits on top of this
+
+[`card-revisions-and-reconciliation.md`](./card-revisions-and-reconciliation.md) makes every saved
+card state an addressable, append-only revision, and adds the read-only review this phase left
+open: what current hospital-local data does to a card with its authored release held fixed, and
+how that pinned release differs from the one the procedure's pointer names today. It still does
+not rebuild, upgrade, or migrate anything — a newer release continues never to reach back into a
+saved card.

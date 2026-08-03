@@ -1,10 +1,8 @@
-import { z } from 'zod'
-
 import { supabaseServer } from '@/lib/supabase/server'
 
-import { verifySnapshotIntegrity } from '../domain/card-hashes'
 import { resolveCard } from '../domain/resolve-card'
 import type { ResolvedCard } from '../domain/types'
+import { parsePersistedSnapshot } from '../schemas/persisted-snapshot'
 import {
   builderInputsSchema,
   carriesUnreconcilableFamilyIdentity,
@@ -69,49 +67,6 @@ export interface UserCardResult<T> {
   error?: string
 }
 
-/**
- * The stored snapshot, re-validated on the way out. `passthrough` keeps fields the schema
- * does not enumerate; the hash check below is what actually guarantees the payload is the
- * one that was written.
- */
-const persistedSnapshotSchema = z
-  .object({
-    recipeVersionId: z.string().min(1),
-    recipeName: z.string().min(1),
-    recipeVersion: z.string().min(1),
-    sourceProcedureCode: z.string().min(1),
-    selectedModifiers: z.array(z.string()),
-    /**
-     * Absent on snapshots written before composition. Those cards stay viewable and
-     * printable from what they recorded; only the builder needs the manifest.
-     */
-    includedModules: z.array(z.unknown()).optional(),
-    items: z.array(z.unknown()),
-    suppressedItems: z.array(z.unknown()),
-    warnings: z.array(z.unknown()),
-    readinessState: z.enum(['blocked', 'complete_with_warnings', 'complete']),
-    governanceState: z.enum(['draft', 'in_review', 'approved', 'retired']),
-    ruleTrace: z.array(z.unknown()),
-    engineVersion: z.string().min(1),
-    catalogImportId: z.string().min(1),
-    snapshotHash: z.string().regex(/^[a-f0-9]{64}$/),
-    /**
-     * Absent on snapshots written before the hashes were split. Those rows stay viewable and
-     * printable and keep verifying against the storage identity they were written with; nothing is
-     * rewritten on read. Present, they are checked — see `parseSnapshot`.
-     */
-    snapshotIntegrityHash: z
-      .string()
-      .regex(/^[a-f0-9]{64}$/)
-      .optional(),
-    resolvedContentHash: z
-      .string()
-      .regex(/^[a-f0-9]{64}$/)
-      .optional(),
-    generatedAt: z.string().datetime(),
-  })
-  .passthrough()
-
 interface CardRow {
   id: string
   title: string
@@ -169,24 +124,6 @@ function inputsCanBackAnEdit(builderInputs: unknown): boolean {
   // guessing which products that key stands for now. It stays viewable, printable, shareable, and
   // duplicable; the edit control is simply not offered rather than offered and then failing.
   return !carriesUnreconcilableFamilyIdentity(parsed.data)
-}
-
-/**
- * A stored snapshot is only usable if it still verifies.
- *
- * Two checks, because rows exist in two shapes and neither may be rewritten on read. Every row
- * carries the storage identity hash the `snapshot_hash` column holds, and that is compared as it
- * always was. Rows written from the split onward *also* carry an integrity hash over the complete
- * snapshot — including `generatedAt` and the warning acknowledgements, the fields the storage hash
- * deliberately excludes — and where one is present it is recomputed and must match. Its absence on
- * an older row is not a failure: an unverifiable-by-that-means row is not a tampered row, and
- * treating it as one would make every pre-existing card unopenable.
- */
-function parseSnapshot(snapshot: unknown, expectedHash: string): ResolvedCard | null {
-  const parsed = persistedSnapshotSchema.safeParse(snapshot)
-  if (!parsed.success || parsed.data.snapshotHash !== expectedHash) return null
-  if (verifySnapshotIntegrity(snapshot) === false) return null
-  return parsed.data as unknown as ResolvedCard
 }
 
 /**
@@ -296,7 +233,7 @@ export async function listUserCards(limit = 25): Promise<UserCardSummary[]> {
   if (error || !data) return []
 
   return (data as unknown as CardRow[]).map((row) => {
-    const card = parseSnapshot(row.card_snapshot, row.snapshot_hash)
+    const card = parsePersistedSnapshot(row.card_snapshot, row.snapshot_hash)
     // A row whose snapshot no longer verifies still lists, so it can be opened or deleted;
     // the readiness badge just cannot claim anything about it.
     // Editable needs both halves: reopening also loads the card, and a snapshot that no
@@ -320,7 +257,7 @@ export async function loadUserCard(cardId: string): Promise<UserCardRecord | nul
   if (error || !data) return null
 
   const row = data as unknown as CardRow
-  const card = parseSnapshot(row.card_snapshot, row.snapshot_hash)
+  const card = parsePersistedSnapshot(row.card_snapshot, row.snapshot_hash)
   if (!card) return null
   const inputs = builderInputsSchema.safeParse(row.builder_inputs)
 
@@ -412,7 +349,7 @@ export async function loadSharedCard(token: string): Promise<{
     snapshot_hash: string
     updated_at: string
   }
-  const card = parseSnapshot(row.card_snapshot, row.snapshot_hash)
+  const card = parsePersistedSnapshot(row.card_snapshot, row.snapshot_hash)
   if (!card) return null
   return {
     title: row.title,
