@@ -244,21 +244,6 @@ function resolveSimulationDefinition(scenarioId: string): ScenarioDefinition {
   )
 }
 
-function initialTrend(state: Omit<EcmoSimulationState, 'trends'>): TrendSample {
-  return {
-    time: state.simulationTime,
-    flow: state.circuit.bloodFlow,
-    pVen: state.circuit.pVen,
-    pInt: state.circuit.pInt,
-    pArt: state.circuit.pArt,
-    deltaP: state.circuit.deltaP,
-    paCO2: state.patient.paCO2,
-    spo2: state.supportMode === 'va' ? state.patient.rightRadialSpo2 : state.patient.spo2,
-    map: state.patient.meanArterialPressure,
-    lactate: state.patient.lactate,
-  }
-}
-
 export function createInitialSimulationState(
   scenarioId = DEFAULT_SCENARIO_ID,
   mode: EcmoSimulationState['simulationMode'] = 'guided',
@@ -288,7 +273,11 @@ export function createInitialSimulationState(
     ],
   }
 
-  return deriveSimulation({ ...base, trends: [initialTrend(base)] })
+  // No seeded sample. `defaultCircuitState.readouts` is a placeholder taken from a flowing circuit
+  // so the shape is complete before the first derivation; recording it would write a reference
+  // circuit's pressures into t=0 of a scenario that starts with the pump stopped. The derivation
+  // below writes the first sample from state that has actually been computed.
+  return deriveSimulation({ ...base, trends: [] })
 }
 
 /**
@@ -334,7 +323,10 @@ export function createReferenceSimulationState(
     ],
   }
 
-  return deriveSimulation({ ...base, trends: [initialTrend(base)] })
+  // No seeded sample, for the same reason as `createInitialSimulationState`: the first trend frame
+  // is written by the derivation below, from pressures this profile actually produced rather than
+  // from the placeholder readouts on `defaultCircuitState`.
+  return deriveSimulation({ ...base, trends: [] })
 }
 
 export function hasFault(state: EcmoSimulationState, fault: FaultId): boolean {
@@ -476,6 +468,10 @@ function alarmDescriptors(state: EcmoSimulationState): AlarmDescriptor[] {
   // A channel that is not reporting a supported value cannot breach a limit. Alarming on the
   // zero-flow intercept of a stopped circuit would be alarming on an artefact. Power, gas and
   // patient alarms below are unaffected — a stopped pump on battery must still alarm.
+  //
+  // Each block is keyed on its own channel. The four channels share one `pressuresModeled` flag
+  // today, so this is behaviour-identical; keying pInt and pArt off pVen's status was a coupling
+  // waiting to mislead the first time a channel could go unavailable on its own.
   if (circuit.readouts.pVen.status === 'valid') {
     if (circuit.pVen < device.limits.pVenAlarmLow - 10) {
       descriptors.push({
@@ -506,7 +502,9 @@ function alarmDescriptors(state: EcmoSimulationState): AlarmDescriptor[] {
         parameter: 'pVen',
       })
     }
+  }
 
+  if (circuit.readouts.pInt.status === 'valid') {
     if (circuit.pInt > device.limits.pIntAlarmHigh + 10) {
       descriptors.push({
         code: 'PINT_STOP',
@@ -536,7 +534,9 @@ function alarmDescriptors(state: EcmoSimulationState): AlarmDescriptor[] {
         parameter: 'pInt',
       })
     }
+  }
 
+  if (circuit.readouts.pArt.status === 'valid') {
     if (circuit.pArt > device.limits.pArtAlarmHigh + 10) {
       descriptors.push({
         code: 'PART_STOP',
@@ -723,8 +723,15 @@ function pressuresAreModeled(
   device: DeviceState,
   flow: number,
 ): boolean {
-  // A clamped line is a modelled state with a real, teachable pressure response.
-  if (state.circuit.drainageClampClosed || state.circuit.returnClampClosed) return true
+  // A clamped line is a modelled state with a real, teachable pressure response — but only while
+  // the pump is turning against it. `calculatePressures` applies the clamp overrides under exactly
+  // that condition, so once the pump stops the equations fall back to the zero-flow intercepts of a
+  // flowing circuit. Reporting those as valid because a clamp happens to be closed would mean
+  // closing a clamp could turn an unmodeled pressure into a modeled one, which it cannot.
+  const pumpTurning = device.pumpRunning && !device.zeroFlowActive && device.rpmSetpoint > 0
+  if ((state.circuit.drainageClampClosed || state.circuit.returnClampClosed) && pumpTurning) {
+    return true
+  }
   return device.pumpRunning && !device.zeroFlowActive && flow > 0
 }
 
@@ -805,6 +812,20 @@ function applyLpmControl(state: EcmoSimulationState): DeviceState {
   }
 }
 
+/**
+ * The device's protective interlock. Deliberately reads the raw model pressures, not the readouts.
+ *
+ * This is not a display: nothing here is shown to a learner, so the rule that an uninterpretable
+ * channel must not be rendered does not apply. The restart branch below is the load-bearing case —
+ * it is only ever evaluated on a stopped circuit, where every channel is by definition unmodeled,
+ * so gating it on readout status would latch the pump off permanently and make every pressure stop
+ * unrecoverable.
+ *
+ * Known consequence, left as-is because changing it is engine behaviour rather than display
+ * truthfulness: with learner-adjusted limits the first two branches can hold the pump off using
+ * intercepts the alarm surface has (correctly) suppressed, so the learner sees a stopped pump and
+ * `--` on every pressure with no alarm saying why.
+ */
 function applyPressureIntervention(
   state: EcmoSimulationState,
   device: DeviceState,
@@ -1241,10 +1262,10 @@ export function deriveSimulation(state: EcmoSimulationState): EcmoSimulationStat
   const trend: TrendSample = {
     time: intermediate.simulationTime,
     flow: circuit.bloodFlow,
-    pVen: circuit.pVen,
-    pInt: circuit.pInt,
-    pArt: circuit.pArt,
-    deltaP: circuit.deltaP,
+    pVen: circuit.readouts.pVen.displayed,
+    pInt: circuit.readouts.pInt.displayed,
+    pArt: circuit.readouts.pArt.displayed,
+    deltaP: circuit.readouts.deltaP.displayed,
     paCO2: patient.paCO2,
     spo2: state.supportMode === 'va' ? patient.rightRadialSpo2 : patient.spo2,
     map: patient.meanArterialPressure,

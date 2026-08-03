@@ -425,13 +425,22 @@ export interface ClinicalRuntime {
   lastResponse: string | null
 }
 
+/**
+ * One retained frame of the signals a reassessment reads.
+ *
+ * The four pressure channels are `number | null` for the same reason `EcmoChannelReadout.displayed`
+ * is: a frame recorded while the circuit was not flowing has no pressure the model can stand
+ * behind, and a trend that plots the zero-flow intercepts of a stopped pump would teach a shape
+ * that never happened. `null` means "this frame had nothing to report", and every consumer must
+ * break the line rather than interpolate across it.
+ */
 export interface TrendSample {
   time: number
   flow: number
-  pVen: number
-  pInt: number
-  pArt: number
-  deltaP: number
+  pVen: number | null
+  pInt: number | null
+  pArt: number | null
+  deltaP: number | null
   paCO2: number
   spo2: number
   map: number

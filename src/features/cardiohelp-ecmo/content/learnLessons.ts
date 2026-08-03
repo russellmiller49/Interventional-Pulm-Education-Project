@@ -178,15 +178,16 @@ const orientationLesson: GuidedLessonDefinition = {
       target: 'console',
       title: 'Open the parameter list',
       instruction:
-        'Open Parameter list and locate pVen, pInt, pArt, flow, and the Δp trend. Read them as a pattern rather than isolated numbers.',
+        'Open Parameter list and locate pVen, pInt, pArt, flow, and the Δp trend. The pump is stopped, so the pressure channels report no number — note where each one sits in the circuit, and which channels remain interpretable in this state.',
       rationale:
-        'The three pressure locations help distinguish drainage limitation, return obstruction, and oxygenator resistance.',
+        'The three pressure locations help distinguish drainage limitation, return obstruction, and oxygenator resistance — but only once the circuit is flowing. A channel showing the unavailable indication is telling you something, and it is not zero.',
       actionLabel: 'Open Parameter list',
       actions: [{ type: 'SET_SCREEN', screen: 'parameters' }],
       expectedResponse: [
         'pVen before the pump',
         'pInt before the oxygenator',
         'pArt after the oxygenator',
+        'No pressure number is reportable while the pump is stopped',
       ],
     }),
     step({

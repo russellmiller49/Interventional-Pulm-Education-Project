@@ -4,6 +4,7 @@ import { DerivedValueReadout } from '@/features/critical-care/components/teachin
 import type { CriticalCareDerivedValueGuide } from '@/features/critical-care/content/derivedValueGuides'
 
 import type { EcmoChannelReadout, EcmoSimulationState } from '../../engine/types'
+import { UNAVAILABLE_INDICATION, formatChannelReadout } from '../channelReadout'
 
 /**
  * Primitives shared by the ECMO foundation teaching panels.
@@ -28,6 +29,22 @@ export const styles = {
 export function round(value: number, places = 0): number {
   const scale = 10 ** places
   return Math.round(value * scale) / scale
+}
+
+/**
+ * A retained trend value in a table cell.
+ *
+ * A frame recorded while the circuit was not flowing carries `null` rather than the pressure
+ * equations' zero-flow intercept, so the cell shows the same unavailable indication the console
+ * shows rather than a number the model never stood behind.
+ */
+export function trendCell(value: number | null, precision = 0): string {
+  return value === null ? UNAVAILABLE_INDICATION : value.toFixed(precision)
+}
+
+/** The same value in prose, for a text equivalent. */
+export function trendPhrase(value: number | null, precision = 0): string {
+  return value === null ? 'not reported' : value.toFixed(precision)
 }
 
 /** Direction of a change, with a deadband so noise does not read as movement. */
@@ -76,7 +93,11 @@ export function AwaitingCircuit({ label }: { readonly label: string }) {
 
 /**
  * A readout rendered the way the console must render it: the number, or the unavailable
- * indication with the reason it is unavailable spelled out for a screen reader.
+ * indication with the reason it is unavailable.
+ *
+ * The reason is visible, not only spoken. A bare `--` tells a sighted learner that something is
+ * missing but not whether the device would have nothing to show or whether this simulation simply
+ * does not model it — two different claims, and the distinction is the teaching point.
  */
 export function ChannelValue({
   label,
@@ -89,7 +110,7 @@ export function ChannelValue({
   readonly unit: string
   readonly precision?: number
 }) {
-  const available = readout.displayed !== null
+  const formatted = formatChannelReadout(label, readout, unit, precision)
   return (
     <span
       className="inline-flex flex-col"
@@ -98,15 +119,17 @@ export function ChannelValue({
     >
       <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
       <span className="text-lg font-semibold">
-        <span aria-hidden="true">
-          {available ? `${readout.displayed?.toFixed(precision)} ${unit}` : '--'}
-        </span>
-        <span className="sr-only">
-          {available
-            ? `${label} ${readout.displayed?.toFixed(precision)} ${unit}.`
-            : `${label} not available. ${readout.reason}`}
-        </span>
+        <span aria-hidden="true">{formatted.displayText}</span>
+        <span className="sr-only">{formatted.screenReaderText}</span>
       </span>
+      {formatted.available ? null : (
+        <span
+          className="mt-1 max-w-[22rem] text-xs leading-5 text-muted-foreground"
+          aria-hidden="true"
+        >
+          {readout.reason}
+        </span>
+      )}
     </span>
   )
 }

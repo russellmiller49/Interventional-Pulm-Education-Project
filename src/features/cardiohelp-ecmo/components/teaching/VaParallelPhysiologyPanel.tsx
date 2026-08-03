@@ -16,6 +16,7 @@ import {
   VA_CONFIGURATION_BOUNDARY,
   VaConfigurationLabel,
 } from './shared'
+import { UNAVAILABLE_INDICATION } from '../channelReadout'
 import {
   VA_CONFIGURATION_DIAGRAM_NOTE,
   VaConfigurationStrategyCard,
@@ -359,9 +360,16 @@ const COMPARISON_GROUPS: readonly ComparisonGroupId[] = [
   'parallel',
 ]
 
+/** For a table cell, where the console's unavailable indication is the right thing to show. */
 function format(value: number | null, precision: number, unit: string): string {
-  if (value === null) return 'no number reported'
+  if (value === null) return UNAVAILABLE_INDICATION
   return unit ? `${value.toFixed(precision)} ${unit}` : value.toFixed(precision)
+}
+
+/** For prose and text equivalents, where a screen reader would announce the dashes as characters. */
+function formatPhrase(value: number | null, precision: number, unit: string): string {
+  if (value === null) return 'not reported'
+  return format(value, precision, unit)
 }
 
 /** Direction against the reference circuit, with the unavailable case kept separate from flat. */
@@ -372,11 +380,20 @@ function comparisonWord(row: ComparisonRow, state: EcmoSimulationState): string 
   return directionWord[direction(live - reference, row.deadband)]
 }
 
-function isFlatAgainstReference(row: ComparisonRow, state: EcmoSimulationState): boolean {
+/**
+ * Three outcomes, not two.
+ *
+ * Collapsing "this channel is not reporting" into "not flat" made the panel assert that a channel
+ * had *moved away from* the reference — a claim about the circuit built from the absence of a
+ * number. Unavailable is its own answer and gets its own sentence.
+ */
+type ComparisonState = 'flat' | 'moved' | 'not-comparable'
+
+function comparisonState(row: ComparisonRow, state: EcmoSimulationState): ComparisonState {
   const live = row.read(state)
   const reference = row.read(vaReferenceCircuit())
-  if (live === null || reference === null) return false
-  return direction(live - reference, row.deadband) === 'flat'
+  if (live === null || reference === null) return 'not-comparable'
+  return direction(live - reference, row.deadband) === 'flat' ? 'flat' : 'moved'
 }
 
 interface VaSignal {
@@ -466,7 +483,12 @@ export function VaParallelPhysiologyPanel({
   const reference = vaReferenceCircuit()
 
   const consoleRows = COMPARISON_ROWS.filter((row) => row.group === 'circuit-display')
-  const consoleUnchanged = consoleRows.every((row) => isFlatAgainstReference(row, state))
+  const consoleStates = consoleRows.map((row) => comparisonState(row, state))
+  const consoleComparable = !consoleStates.includes('not-comparable')
+  const consoleUnchanged = consoleComparable && consoleStates.every((item) => item === 'flat')
+  const unreportedConsoleChannels = consoleRows
+    .filter((_, index) => consoleStates[index] === 'not-comparable')
+    .map((row) => row.label)
 
   return (
     <div className={styles.panel} data-teaching-panel="va-parallel-physiology">
@@ -660,11 +682,19 @@ export function VaParallelPhysiologyPanel({
 
         <p
           className="mt-3 text-sm leading-6"
-          data-circuit-signals-unchanged={consoleUnchanged ? 'true' : 'false'}
+          data-circuit-signals-unchanged={
+            consoleComparable ? (consoleUnchanged ? 'true' : 'false') : 'not-comparable'
+          }
         >
-          {consoleUnchanged
-            ? `All five console channels read about the same as the VA reference circuit: flow ${circuit.bloodFlow.toFixed(2)} L/min, pVen ${format(circuit.readouts.pVen.displayed, 0, 'mmHg')}, pInt ${format(circuit.readouts.pInt.displayed, 0, 'mmHg')}, pArt ${format(circuit.readouts.pArt.displayed, 0, 'mmHg')} and a membrane gradient of ${format(circuit.readouts.deltaP.displayed, 0, 'mmHg')}. Differential oxygenation and a loaded ventricle both leave every one of them exactly where the reference put them. What separates this state from the reference is a property of the patient rather than of the pump — including the drainage-limb saturation below, which the circuit reports but the patient sets.`
-            : `At least one of the five console channels has moved away from the VA reference circuit, so what is on screen is not one of the two patient-side mechanisms in this section acting on its own. The rows above show which channel moved and by how much.`}
+          {!consoleComparable
+            ? `${unreportedConsoleChannels.join(' and ')} ${
+                unreportedConsoleChannels.length === 1 ? 'is' : 'are'
+              } not reporting a number in this state, so the five console channels cannot be read as a set here. ${
+                circuit.readouts.pVen.reason
+              } Until they report, nothing on the console can be said to have moved or held.`
+            : consoleUnchanged
+              ? `All five console channels read about the same as the VA reference circuit: flow ${circuit.bloodFlow.toFixed(2)} L/min, pVen ${format(circuit.readouts.pVen.displayed, 0, 'mmHg')}, pInt ${format(circuit.readouts.pInt.displayed, 0, 'mmHg')}, pArt ${format(circuit.readouts.pArt.displayed, 0, 'mmHg')} and a membrane gradient of ${format(circuit.readouts.deltaP.displayed, 0, 'mmHg')}. Differential oxygenation and a loaded ventricle both leave every one of them exactly where the reference put them. What separates this state from the reference is a property of the patient rather than of the pump — including the drainage-limb saturation below, which the circuit reports but the patient sets.`
+              : `At least one of the five console channels has moved away from the VA reference circuit, so what is on screen is not one of the two patient-side mechanisms in this section acting on its own. The rows above show which channel moved and by how much.`}
         </p>
 
         <p className="mt-2 text-sm leading-6" data-drainage-saturation-note>
@@ -675,13 +705,13 @@ export function VaParallelPhysiologyPanel({
           it is why the two groups are kept apart here. With no recirculating share to dilute it,
           the systemic venous estimate in the same group is that same blood, so the two move
           together rather than one of them moving alone.{' '}
-          {`In this state the drainage-limb saturation reads ${format(circuit.readouts.venousLineSaturation.displayed, 1, '')} against the reference circuit’s ${format(reference.circuit.readouts.venousLineSaturation.displayed, 1, '')}, and the systemic venous estimate ${format(patient.systemicVenousSaturationEstimate, 1, '')} against ${format(reference.patient.systemicVenousSaturationEstimate, 1, '')}.`}
+          {`In this state the drainage-limb saturation reads ${formatPhrase(circuit.readouts.venousLineSaturation.displayed, 1, '')} against the reference circuit’s ${formatPhrase(reference.circuit.readouts.venousLineSaturation.displayed, 1, '')}, and the systemic venous estimate ${formatPhrase(patient.systemicVenousSaturationEstimate, 1, '')} against ${formatPhrase(reference.patient.systemicVenousSaturationEstimate, 1, '')}.`}
         </p>
 
         <TextEquivalent>
           {COMPARISON_ROWS.map(
             (row) =>
-              `${row.label} is ${format(row.read(state), row.precision, row.unit)} against the reference circuit's ${format(row.read(reference), row.precision, row.unit)}, ${comparisonWord(row, state)}`,
+              `${row.label} is ${formatPhrase(row.read(state), row.precision, row.unit)} against the reference circuit's ${formatPhrase(row.read(reference), row.precision, row.unit)}, ${comparisonWord(row, state)}`,
           ).join('. ')}
           . The aortic valve is {valveWord(state)} against the reference circuit&rsquo;s{' '}
           {valveWord(reference)}, the lungs show {congestionWord[patient.pulmonaryCongestion]}{' '}
