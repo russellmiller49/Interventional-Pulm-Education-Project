@@ -494,6 +494,14 @@ export interface ScenarioHint {
 export interface ScenarioRuntime {
   scenarioId: string
   family: ScenarioFamily
+  /**
+   * The pump speed this case opened on.
+   *
+   * Recorded so the engine can express "faster than the speed this circuit was already running at"
+   * without any scenario's number being written into the engine. It is a property of the authored
+   * case, captured once at load and never moved by a learner turning the rotary control.
+   */
+  baselineRpmSetpoint: number
   phase: 'predict' | 'act' | 'reassess' | 'debrief' | 'complete'
   activeFaults: readonly FaultId[]
   correctedFaults: readonly FaultId[]

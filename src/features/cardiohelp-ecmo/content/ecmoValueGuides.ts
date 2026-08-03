@@ -146,7 +146,7 @@ const recirculationAdjustedFlow: CriticalCareDerivedValueGuide = {
       id: 'ecmo.adjusted-flow.model-quantity',
       kind: 'educational-model-boundary',
       statement:
-        'This simulation derives the adjusted flow from an authored recirculation fraction rather than from a measurement.',
+        'This simulation derives the adjusted flow from a modeled recirculation fraction rather than from a measurement. Because that fraction rises once the circuit is asked for more flow than the case opened with, this value can fall while the displayed L/min rises.',
       appliesWhen:
         'Inside this simulation only. It is not a quantity the console computes or displays.',
       evidenceIds: ['bounded-educational-model'],
@@ -162,27 +162,36 @@ const recirculationAdjustedFlow: CriticalCareDerivedValueGuide = {
 
 /**
  * Deliberately carries no band. The supplied sources do not give a universal "normal recirculation"
- * range, and this simulation does not derive the fraction from anything the learner can change — so
- * the guide's whole job is to say what kind of number it is and what it cannot be read as.
+ * range, so the guide's whole job is to say what kind of number it is, what moves it inside this
+ * simulation, and what it cannot be read as.
  */
 const recirculationFraction: CriticalCareDerivedValueGuide = {
   id: 'ecmo.recirculationFraction',
   label: 'Recirculation fraction',
   formula: 'fraction of drained blood that is freshly returned circuit blood',
-  liveValueType: 'configured',
+  liveValueType: 'derived',
   interpretation:
-    'The share of what the circuit drains that is blood it returned a moment ago rather than systemic venous return. At the bedside it is a consequence of where the cannulae sit relative to one another, the volume state, and how hard the circuit is being asked to pull. In this simulation it is authored by the case rather than computed, and the observable it produces — the drainage-limb saturation — is derived from it.',
+    'The share of what the circuit drains that is blood it returned a moment ago rather than systemic venous return. At the bedside it is a consequence of where the cannulae sit relative to one another, the volume state, and how hard the circuit is being asked to pull. In this simulation the case authors the share the cannula relationship starts at, and asking the circuit for more flow than the case opened with raises it from there.',
   references: [
     {
       id: 'ecmo.recirculation-fraction.authored-by-case',
       kind: 'educational-model-boundary',
       statement:
-        'This simulation sets the recirculation fraction from the authored case. It does not vary it with pump speed, cannula position, or volume state.',
+        'This simulation authors the starting recirculation share from the case. It does not vary that share with cannula position or volume state, which at the bedside are the things that set it.',
       appliesWhen:
         'Inside this simulation only. It exists so that the difference between displayed flow and the flow left after re-drainage can be shown at all.',
       evidenceIds: ['bounded-educational-model'],
+    },
+    {
+      id: 'ecmo.recirculation-fraction.rises-with-speed',
+      kind: 'educational-model-boundary',
+      statement:
+        'Once recirculation is established, raising the pump speed above the speed the case opened with raises the modeled share, so the flow left after re-drainage falls even though the displayed L/min rises.',
+      appliesWhen:
+        'Only above the case’s own starting speed, and only while the recirculation state is active. Lowering the speed does not move the share back below the authored value: a cannula relationship is not undone by turning the pump down.',
+      evidenceIds: ['bounded-educational-model'],
       caveat:
-        'Raising the pump speed here therefore does not move the modeled fraction, even though speed is one of the things that changes recirculation at the bedside.',
+        'The rate at which the share rises is an authored teaching coefficient chosen so the direction is unmistakable across the speed range, not a measured entrainment ratio. Read the direction, never the number.',
     },
     {
       id: 'ecmo.recirculation-fraction.mixture-relationship',
@@ -197,7 +206,7 @@ const recirculationFraction: CriticalCareDerivedValueGuide = {
   caveats:
     'The two saturations this relationship uses are themselves modeled, and one of them — the systemic venous value — has no sensor anywhere on the circuit.',
   doNotInfer:
-    'Do not read this as a measured quantity, do not treat the rearranged relationship as a bedside formula for estimating recirculation, and do not conclude that changing pump speed changes the fraction this simulation uses.',
+    'Do not read this as a measured quantity, do not treat the rearranged relationship as a bedside formula for estimating recirculation, and do not carry the modeled speed-to-share relationship to a real circuit as a quantitative rule — the direction is the teaching point, not the size.',
   conceptIds: ['cc.circuit.recirculation', 'cc.device.native-device-effective-flow'],
   reviewStatus: 'draft',
 }

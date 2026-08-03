@@ -66,6 +66,14 @@ const standardUnsafeActions: readonly UnsafeActionPenalty[] = [
     critical: true,
   },
   {
+    // Kept separate from `rpm-during-collapse`: recirculation is not a drainage-collapse state, and
+    // labelling it as one would name the wrong mechanism in the debrief the learner reads.
+    id: 'rpm-during-recirculation',
+    label: 'Increased speed against established recirculation',
+    points: 50,
+    critical: true,
+  },
+  {
     id: 'capstone-flow-reduction',
     label: 'Changed or stopped circuit blood flow during a protected assessment sequence',
     points: 50,
@@ -323,12 +331,16 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         'Some oxygenated return blood is drawn back into the drainage cannula.',
         'Displayed circuit flow rises without a proportional increase in effective patient support.',
         'Pre-oxygenator saturation rises and the patient/pre-oxygenator saturation gap narrows.',
+        'Asking the circuit for more flow recruits more of that returned blood, so the displayed number keeps climbing while the support reaching the patient falls.',
       ],
       correctWorkflow: [
         'Confirm the pattern with patient oxygenation and pre-oxygenator data.',
         'Reassess cannula position/configuration and seek the efficient flow point.',
       ],
-      safetyNotes: ['Displayed L/min is not equivalent to effective systemic support.'],
+      safetyNotes: [
+        'Displayed L/min is not equivalent to effective systemic support.',
+        'Speed is not a treatment for recirculation. Escalating it against an established recirculating share moves the displayed number and not the patient.',
+      ],
     },
     evidenceIds: ['ecmo-book-ch17', 'elso-adult-vv-2021', 'bounded-educational-model'],
   }),

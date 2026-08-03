@@ -673,7 +673,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
             label: 'The pump is simply running faster, so all three readings move together.',
             plausibility: 'reasonable-but-incomplete',
             rationale:
-              'A faster pump accounts for the higher displayed flow and nothing else. It does not explain why the drainage saturation climbed or why the flow left after re-drainage fell.',
+              'A faster pump accounts for the higher displayed flow. On its own it would raise the flow left after re-drainage as well — that this one fell instead, while the drainage saturation climbed, is what tells you blood is being returned and drained again. Speed can widen that share once it is established; it is not what put it there.',
           },
         ],
         correctChoiceIds: ['returned-blood-drained-again'],

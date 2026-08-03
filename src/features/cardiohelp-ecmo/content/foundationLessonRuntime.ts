@@ -292,7 +292,7 @@ const recirculationPreviewVariant: EcmoFoundationStateVariant = {
   setupActions: advanceSeconds(PREVIEW_SECONDS.recirculationSettled),
   label: 'Established recirculation — teaching preview',
   modelBoundary:
-    'The existing recirculation drill loaded as a preview to read, with nothing recorded and nothing scored. Its recirculation fraction is authored by that scenario; this simulation does not derive it from pump speed.',
+    'The existing recirculation drill loaded as a preview to read, with nothing recorded and nothing scored. The share the drill opens at is authored by that scenario; asking the circuit for more flow than it opened with raises the share from there, while cannula position and volume state — the things that set recirculation at the bedside — are not modeled at all.',
 }
 
 const gasSourceBeforeVariant: EcmoFoundationStateVariant = {

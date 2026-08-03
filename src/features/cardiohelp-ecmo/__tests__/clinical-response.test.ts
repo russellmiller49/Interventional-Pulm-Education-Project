@@ -202,8 +202,14 @@ describe('CARDIOHELP clinical Practice response engine', () => {
     expect(state.scenario.activeFaults).toContain('recirculation')
     expect(state.scenario.correctedFaults).not.toContain('recirculation')
     expect(state.scenario.clinical?.trajectory).toBe('deteriorating')
-    expect(state.scenario.criticalErrors).toContain('unsafe-clinical-shortcut')
-    expect(state.scenario.penalties).toBe(40)
+    // The mechanism-specific error, not the generic shortcut: the debrief has to name recirculation.
+    expect(state.scenario.criticalErrors).toContain('rpm-during-recirculation')
+    // Charged exactly once. The intervention card and the engine's RPM-escalation guard both raise
+    // this id, and `addCriticalError` deduplicates — one action must not cost two critical errors.
+    expect(state.scenario.criticalErrors.filter((id) => id === 'rpm-during-recirculation')).toEqual(
+      ['rpm-during-recirculation'],
+    )
+    expect(state.scenario.penalties).toBe(50)
     expect(selectScenarioOutcome(state).mastery).toBe(false)
   })
 
