@@ -316,7 +316,9 @@ export function LearnLessonPlayer({
   const helpRequested = helpRequestCount > 0
   const trackPathway = criticalCareLearningPathway('cardiohelp-ecmo', state.supportMode)
 
-  // Physiology sections are prose on their own route; drill sections stay inside this player.
+  // Foundation sections open the interactive three-pane workspace on their own route; drill
+  // sections stay inside this player. They were prose when this navigation was written, and the
+  // static view that rendered them has since been removed entirely.
   const onSelectSection = (sectionId: string) => {
     if (isEcmoFoundationSectionId(sectionId)) {
       window.location.assign(

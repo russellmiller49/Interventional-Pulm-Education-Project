@@ -6,8 +6,6 @@ import { CardiohelpLearnLanding } from '@/features/cardiohelp-ecmo/components/Ca
 import { CardiohelpModuleFrame } from '@/features/cardiohelp-ecmo/components/CardiohelpModuleFrame'
 import { CardiohelpWorkbench } from '@/features/cardiohelp-ecmo/components/CardiohelpWorkbench'
 import { EcmoFoundationLessonActivity } from '@/features/cardiohelp-ecmo/components/EcmoFoundationLessonActivity'
-import { EcmoFoundationSectionView } from '@/features/cardiohelp-ecmo/components/EcmoFoundationSectionView'
-import { isEcmoFoundationSectionId } from '@/features/cardiohelp-ecmo/content/foundationLessons'
 import {
   ecmoFoundationSupportMode,
   isEcmoInteractiveFoundationSectionId,
@@ -115,13 +113,12 @@ export default async function CardiohelpEcmoLearnPage({ params, searchParams }: 
     )
   }
 
-  if (isEcmoFoundationSectionId(lesson)) {
-    return (
-      <CardiohelpModuleFrame locale={locale} activeHref={`${cardiohelpEcmoNavBase}/learn`}>
-        <EcmoFoundationSectionView sectionId={lesson} supportMode={track} />
-      </CardiohelpModuleFrame>
-    )
-  }
+  // There is deliberately no second foundation branch here. Every authored foundation section is
+  // also an interactive one — `ecmoInteractiveFoundationSectionIds` is the concatenation of the
+  // shared, VV-only and VA-only lists, and `ecmoFoundationSections` is a frozen literal of the same
+  // ten ids — so the block above always returns for a foundation id. A static read-only view used
+  // to sit here for the three VA sections; it became unreachable when those moved to the live
+  // workspace, and `routes.test.tsx` now pins the id-set identity that keeps it that way.
 
   if (lesson === undefined) {
     return (

@@ -172,22 +172,58 @@ const orientationLesson: GuidedLessonDefinition = {
         'Independent patient data',
       ],
     }),
+    // A short recognition activity on the stopped circuit, and then the tour proper on a running
+    // one. The stopped pump is worth exactly one question — which channels still mean anything —
+    // and is a poor state in which to meet every tile for the first time.
     step({
       id: 'startup-screen-parameters',
       phase: 'orient',
       target: 'console',
-      title: 'Open the parameter list',
+      title: 'The pump is stopped: which channels still mean anything?',
       instruction:
-        'Open Parameter list and locate pVen, pInt, pArt, flow, and the Δp trend. The pump is stopped, so the pressure channels report no number — note where each one sits in the circuit, and which channels remain interpretable in this state.',
+        'Open Parameter list. In this settled initial pump-off state pVen, pInt, pArt and the Δp trend show the unavailable indication rather than a number. Work out what the console can still tell you here, and why the pressure channels are not part of it.',
       rationale:
-        'The three pressure locations help distinguish drainage limitation, return obstruction, and oxygenator resistance — but only once the circuit is flowing. A channel showing the unavailable indication is telling you something, and it is not zero.',
+        'Dashes are a statement, not a gap. The three pressure locations distinguish drainage limitation, return obstruction and oxygenator resistance, but they are flow-dependent circuit-pressure patterns that this educational model does not report in the settled pump-off state. Flow is different: with the sensor connected, zero is a real reading rather than an absent one.',
+      actionLabel: 'Open Parameter list',
+      actions: [{ type: 'SET_SCREEN', screen: 'parameters' }],
+      expectedResponse: [
+        'Flow reads zero, and with its sensor connected that is a real value rather than an absent one',
+        'Speed setpoint, power source and alarm or device state remain interpretable',
+        'The pressure channels do not report, being flow-dependent patterns this model does not produce in the settled pump-off state',
+      ],
+    }),
+    step({
+      id: 'startup-bring-circuit-up',
+      phase: 'orient',
+      target: 'console',
+      title: 'Bring the circuit up before touring the rest',
+      instruction:
+        'Bring the pump up to 3200 rpm on the rotary control and let the circuit settle. Hold the control rather than tapping it — the simulated setpoint climbs progressively while it is held. Everything from here on is read on a running circuit.',
+      rationale:
+        'The climb from zero is worth watching rather than skipping: flow appears, the pressure channels start reporting, and the console stops showing dashes. Meeting every tile on a stopped circuit would teach the wrong first impression of what each one looks like. The progressive climb here simulates a ramp; it is not a claim about how any particular unit brings a pump up.',
+      actionLabel: 'Ramp to 3200 rpm and let it settle',
+      actions: [{ type: 'SET_RPM', rpm: 3200 }],
+      expectedResponse: [
+        'The pump starts and flow appears',
+        'The pressure channels begin reporting numbers',
+      ],
+    }),
+    step({
+      id: 'startup-screen-parameters-running',
+      phase: 'orient',
+      target: 'console',
+      title: 'Read the parameter list again, now that it reports',
+      instruction:
+        'Return to Parameter list and locate pVen, pInt, pArt, flow and the Δp trend now that each one carries a value. Note where each sits in the circuit rather than what the number happens to be.',
+      rationale:
+        'This is the first exposure that should stick: the four channels as they look on a circuit that is working. pVen, pInt and pArt are this console’s own labels for three locations, and pArt is a circuit pressure rather than the patient’s arterial pressure.',
       actionLabel: 'Open Parameter list',
       actions: [{ type: 'SET_SCREEN', screen: 'parameters' }],
       expectedResponse: [
         'pVen before the pump',
         'pInt before the oxygenator',
         'pArt after the oxygenator',
-        'No pressure number is reportable while the pump is stopped',
+        'pArt is a circuit pressure, not the patient’s arterial pressure',
       ],
     }),
     step({

@@ -103,6 +103,19 @@ function performAndAdvance(actionName: string | RegExp) {
   fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
 }
 
+/** Ramps the rotary from a stopped circuit to the reference speed, the way the lesson asks. */
+async function rampToReferenceSpeedAndAdvance() {
+  const knob = screen.getByRole('slider', { name: /RPM rotary setpoint/i })
+  while (Number(screen.getByTestId('rpm').textContent) < 3200) {
+    fireEvent.keyDown(knob, { key: 'ArrowUp' })
+  }
+  expect(screen.getByTestId('rpm')).toHaveTextContent('3200')
+  await waitFor(() => {
+    expect(screen.getByRole('button', { name: /Next step/i })).toBeEnabled()
+  })
+  fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
+}
+
 async function useConsoleScreenAndAdvance(buttonName: string) {
   fireEvent.click(screen.getByRole('button', { name: buttonName }))
   await waitFor(() => {
@@ -138,7 +151,9 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     expect(screen.getByRole('button', { name: /Next step/i })).toBeEnabled()
     fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
 
-    expect(screen.getByRole('heading', { name: 'Open the parameter list' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: /which channels still mean anything/i }),
+    ).toBeInTheDocument()
     expect(screen.getByText('Focus: Device console')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /^Open Parameter list$/i })).not.toBeInTheDocument()
     expect(screen.getByText(/This step completes automatically/i)).toBeInTheDocument()
@@ -186,6 +201,10 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     render(<LearnHarness initialScenarioId="startup-sensor-orientation" />)
 
     performAndAdvance(/identify all four domains/i)
+    await useConsoleScreenAndAdvance('Parameter list')
+    // A3.3: the stopped-pump recognition is followed by a ramp, so the rest of the tour is read on
+    // a running circuit rather than a dead one.
+    await rampToReferenceSpeedAndAdvance()
     await useConsoleScreenAndAdvance('Parameter list')
     await useConsoleScreenAndAdvance('Blood parameters')
     await useConsoleScreenAndAdvance('Transport')

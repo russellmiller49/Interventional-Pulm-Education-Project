@@ -572,6 +572,14 @@ function CircuitSchematic({
           On a narrow screen, swipe the diagram or focus it and use horizontal arrow keys to inspect
           the full circuit.
         </p>
+        {isVa ? (
+          <p className={styles.circuitPanHint} data-local-model-boundary="va-mixing-fixed">
+            Model boundary: the mixing region is drawn where this diagram places it and does not
+            move. In a real VA circuit its position shifts with the balance between native ejection
+            and circuit flow, and that shift is what decides which beds each side supplies. This
+            simulation does not derive it, so nothing you change here will move the label.
+          </p>
+        ) : null}
 
         <ul className={styles.circuitLegend} aria-label="Circuit schematic legend">
           <li>
@@ -777,6 +785,12 @@ function GasBlenderPanel({
         <small id="cardiohelp-sweep-help">
           Primarily changes membrane CO₂ clearance in this educational model. Use the slider or
           arrow keys.
+        </small>
+        <small className={styles.controlBoundary} data-local-model-boundary="sweep-linearity">
+          Model boundary: in this simulation PaCO₂ responds to sweep as a straight line by
+          construction, with no plateau and no diminishing return. Real CO₂ removal shows
+          diminishing returns and becomes limited by blood flow through the membrane, membrane
+          performance, and the remaining gas-side gradient. Read the direction, not the slope.
         </small>
       </label>
 
@@ -1009,6 +1023,11 @@ function PatientMonitor({
                 <strong>
                   {state.patient.distalLimbPerfusion} · NIRS {state.patient.distalLimbNirs}%
                 </strong>
+                <small data-local-model-boundary="limb-perfusion-fixed">
+                  Model boundary: this simulation holds the limb state where the case authored it.
+                  Nothing you do to the circuit moves it, so it cannot be used to judge whether an
+                  intervention helped the limb.
+                </small>
               </div>
             ) : null}
           </>

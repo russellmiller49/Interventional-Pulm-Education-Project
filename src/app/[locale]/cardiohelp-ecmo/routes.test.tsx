@@ -45,23 +45,6 @@ jest.mock('@/features/cardiohelp-ecmo/components/EcmoFoundationLessonActivity', 
   ),
 }))
 
-jest.mock('@/features/cardiohelp-ecmo/components/EcmoFoundationSectionView', () => ({
-  __esModule: true,
-  EcmoFoundationSectionView: ({
-    sectionId,
-    supportMode,
-  }: {
-    sectionId: string
-    supportMode: string
-  }) => (
-    <div
-      data-testid="ecmo-foundation-section"
-      data-section-id={sectionId}
-      data-track={supportMode}
-    />
-  ),
-}))
-
 jest.mock('@/features/cardiohelp-ecmo/components/CardiohelpModuleFrame', () => ({
   __esModule: true,
   CardiohelpModuleFrame: ({ children }: { children: React.ReactNode }) => (
@@ -72,6 +55,17 @@ jest.mock('@/features/cardiohelp-ecmo/components/CardiohelpModuleFrame', () => (
 jest.mock('@/i18n/handoff-server', () => ({
   localizeHandoffServerValue: async (_locale: string, value: unknown) => value,
 }))
+
+import {
+  ecmoFoundationSections,
+  isEcmoFoundationSectionId,
+} from '@/features/cardiohelp-ecmo/content/foundationLessons'
+import {
+  ecmoFoundationSupportMode,
+  ecmoInteractiveFoundationSectionIds,
+  isEcmoInteractiveFoundationSectionId,
+  type EcmoInteractiveFoundationSectionId,
+} from '@/features/cardiohelp-ecmo/content/foundationLessonRuntime'
 
 import CardiohelpEcmoPage, { generateMetadata as hubMetadata } from './page'
 import CardiohelpEcmoLearnPage, { generateMetadata as learnMetadata } from './learn/page'
@@ -136,8 +130,9 @@ describe('CARDIOHELP ECMO routes', () => {
       const activity = screen.getByTestId('ecmo-foundation-activity')
       expect(activity).toHaveAttribute('data-section-id', 'circuit-flow-path')
       expect(activity).toHaveAttribute('data-track', track)
-      expect(screen.queryByTestId('ecmo-foundation-section')).not.toBeInTheDocument()
+      // A foundation id must never fall through to the drill workbench or the landing.
       expect(screen.queryByTestId('cardiohelp-workbench')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('cardiohelp-learn-landing')).not.toBeInTheDocument()
     },
   )
 
@@ -160,8 +155,9 @@ describe('CARDIOHELP ECMO routes', () => {
       'data-section-id',
       lesson,
     )
-    expect(screen.queryByTestId('ecmo-foundation-section')).not.toBeInTheDocument()
+    // A foundation id must never fall through to the drill workbench or the landing.
     expect(screen.queryByTestId('cardiohelp-workbench')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('cardiohelp-learn-landing')).not.toBeInTheDocument()
   })
 
   it.each(['vv-series-physiology', 'vv-normal-state', 'vv-integration-capstone'])(
@@ -337,8 +333,58 @@ describe('CARDIOHELP ECMO routes', () => {
       const activity = screen.getByTestId('ecmo-foundation-activity')
       expect(activity).toHaveAttribute('data-section-id', lesson)
       expect(activity).toHaveAttribute('data-track', 'va')
-      expect(screen.queryByTestId('ecmo-foundation-section')).not.toBeInTheDocument()
+      // A foundation id must never fall through to the drill workbench or the landing.
       expect(screen.queryByTestId('cardiohelp-workbench')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('cardiohelp-learn-landing')).not.toBeInTheDocument()
+    },
+  )
+
+  /**
+   * The invariant that let the old static foundation view be deleted.
+   *
+   * A read-only `EcmoFoundationSectionView` used to render foundation sections that were not yet
+   * interactive. Every authored section became interactive, so its routing branch stopped being
+   * reachable and both were removed. This is the guard that keeps that true: if a new foundation
+   * section is ever authored without being added to the interactive list, the route would fall
+   * through to the drill workbench and silently render the wrong thing. Failing here says so.
+   */
+  it('routes every authored foundation section to the workspace, leaving no second path', () => {
+    const authored = [...ecmoFoundationSections].map((section) => section.id).sort()
+    const interactive = [...ecmoInteractiveFoundationSectionIds].sort()
+    expect(authored).toEqual(interactive)
+
+    for (const id of authored) {
+      expect(isEcmoFoundationSectionId(id)).toBe(true)
+      expect(isEcmoInteractiveFoundationSectionId(id)).toBe(true)
+    }
+  })
+
+  it.each(['vv', 'va'] as const)(
+    'renders every authored foundation section on the %s track without falling through',
+    async (track) => {
+      for (const section of ecmoFoundationSections) {
+        // VV-only sections on the VA track (and the reverse) canonicalize by redirect rather than
+        // rendering; that path is covered by its own tests. Here we only assert that a section
+        // asked for on its own track reaches the live activity.
+        //
+        // The narrowing is safe because the assertion above pins the two id lists as equal — if
+        // that ever stops holding, this cast is not what fails, that test is.
+        const sectionId = section.id as EcmoInteractiveFoundationSectionId
+        const resolved = ecmoFoundationSupportMode(sectionId, track)
+        if (resolved !== track) continue
+        const { unmount } = render(
+          await CardiohelpEcmoLearnPage({
+            params: Promise.resolve({ locale: 'en' }),
+            searchParams: Promise.resolve({ lesson: sectionId, track }),
+          }),
+        )
+        expect(screen.getByTestId('ecmo-foundation-activity')).toHaveAttribute(
+          'data-section-id',
+          section.id,
+        )
+        expect(screen.queryByTestId('cardiohelp-workbench')).not.toBeInTheDocument()
+        unmount()
+      }
     },
   )
 

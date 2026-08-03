@@ -391,6 +391,32 @@ export function VvNormalStatePanel({
 
   return (
     <div className={styles.panel} data-teaching-panel="vv-normal-state">
+      {/*
+        A short topology statement before the stable state, because this section now comes before
+        the one that draws the series path in detail. A baseline is unreadable without knowing what
+        the circuit is a baseline of.
+      */}
+      <section className={styles.section} aria-labelledby="vv-topology-heading" data-topology-lead>
+        <h3 id="vv-topology-heading" className={styles.heading}>
+          Where this circuit sits, in one paragraph
+        </h3>
+        <p className="mt-2 text-sm leading-6">
+          Venovenous support drains blood from the venous side, carries it through the membrane
+          lung, and returns it to the venous side. The circuit therefore sits{' '}
+          <strong>in series</strong> with the patient&rsquo;s own circulation: it changes the oxygen
+          content of blood arriving at the right heart, and adds no circulatory support at all. The
+          native heart still does every bit of the pumping, and the native lungs are still in the
+          path. Because both cannulae sit in the venous circulation, some of what the circuit
+          returns can be drained again before it has been anywhere — the mechanism the next section
+          works through in detail.
+        </p>
+        <TextEquivalent>
+          In venovenous support the circuit is in series with the patient: venous drainage, membrane
+          lung, venous return. It changes blood oxygen content and provides no circulatory support.
+          Native cardiac output remains the systemic pump.
+        </TextEquivalent>
+      </section>
+
       <section className={styles.section} aria-labelledby="baseline-heading">
         <h3 id="baseline-heading" className={styles.heading}>
           Baseline review — this modeled circuit against itself

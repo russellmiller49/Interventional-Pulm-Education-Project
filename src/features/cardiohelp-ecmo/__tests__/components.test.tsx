@@ -108,9 +108,13 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(within(currentTask).getByText('Start with four information domains')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /identify all four domains/i }))
     fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
-    expect(within(currentTask).getByText('Open the parameter list')).toBeInTheDocument()
+    // A3.3: the first console step is now a stopped-pump recognition activity, and the tour
+    // proper runs after the circuit has been ramped up.
     expect(
-      within(currentTask).getByText(/Open Parameter list and locate pVen, pInt, pArt/i),
+      within(currentTask).getByText('The pump is stopped: which channels still mean anything?'),
+    ).toBeInTheDocument()
+    expect(
+      within(currentTask).getByText(/show the unavailable indication rather than a number/i),
     ).toBeInTheDocument()
     expect(window.localStorage.getItem('cardiohelp-ecmo-progress-v1')).toBeNull()
   })

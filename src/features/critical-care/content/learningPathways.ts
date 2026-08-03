@@ -503,23 +503,24 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         activityId: 'ecmo:learn:blood-flow-versus-sweep',
       },
       {
+        id: 'vv-normal-state',
+        shortTitle: 'Normal VV',
+        title: 'The normal VV patient–circuit state',
+        minutes: 12,
+        description:
+          'A short statement of how the circuit sits relative to the patient, then the stable run every later section is read against.',
+        stage: 'foundation',
+        activityId: 'ecmo:learn:vv-normal-state',
+      },
+      {
         id: 'vv-series-physiology',
         shortTitle: 'Series & recirculation',
         title: 'VV series physiology, effective flow, and recirculation',
         minutes: 14,
         description:
-          'The circuit sits in series with the patient, and part of what it pumps can be blood it just returned.',
+          'Now that the stable state is known: the circuit sits in series with the patient, and part of what it pumps can be blood it just returned.',
         stage: 'mechanism',
         activityId: 'ecmo:learn:vv-series-physiology',
-      },
-      {
-        id: 'vv-normal-state',
-        shortTitle: 'Normal VV',
-        title: 'The normal VV patient–circuit state',
-        minutes: 12,
-        description: 'The stable run every later failure section is read against.',
-        stage: 'foundation',
-        activityId: 'ecmo:learn:vv-normal-state',
       },
       {
         id: 'startup-sensor-orientation',
@@ -673,24 +674,24 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         activityId: 'ecmo:learn:blood-flow-versus-sweep',
       },
       {
-        id: 'va-parallel-physiology',
-        shortTitle: 'Parallel & loading',
-        title: 'VA parallel circulation, LV loading, and differential oxygenation',
-        minutes: 14,
-        description:
-          'The circuit runs in parallel with the heart, and the two circulations compete for the same aorta.',
-        stage: 'mechanism',
-        activityId: 'ecmo:learn:va-parallel-physiology',
-      },
-      {
         id: 'va-normal-state',
         shortTitle: 'Normal VA',
         title: 'The normal VA patient–circuit state',
         minutes: 12,
         description:
-          'The stable run, including the signals that exist only because the circulations are in parallel.',
+          'A short statement of how the circuit sits relative to the patient, then the stable run, including the signals that exist only because the circulations are in parallel.',
         stage: 'foundation',
         activityId: 'ecmo:learn:va-normal-state',
+      },
+      {
+        id: 'va-parallel-physiology',
+        shortTitle: 'Parallel & loading',
+        title: 'VA parallel circulation, LV loading, and differential oxygenation',
+        minutes: 14,
+        description:
+          'Now that the stable state is known: the circuit runs in parallel with the heart, and the two circulations compete for the same aorta.',
+        stage: 'mechanism',
+        activityId: 'ecmo:learn:va-parallel-physiology',
       },
       {
         id: 'va-startup-sensor-orientation',
