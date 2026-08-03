@@ -14,6 +14,7 @@ const badgeVariants = cva(
         outline: 'border-border text-muted-foreground',
         success: 'border-transparent bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
         info: 'border-transparent bg-sky-500/15 text-sky-600 dark:text-sky-400',
+        warning: 'border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-400',
       },
       size: {
         sm: 'text-[10px] px-2 py-0.5',
@@ -29,8 +30,7 @@ const badgeVariants = cva(
 )
 
 export interface BadgeProps
-  extends React.HTMLAttributes<HTMLSpanElement>,
-    VariantProps<typeof badgeVariants> {}
+  extends React.HTMLAttributes<HTMLSpanElement>, VariantProps<typeof badgeVariants> {}
 
 function Badge({ className, variant, size, ...props }: BadgeProps) {
   return <span className={cn(badgeVariants({ variant, size }), className)} {...props} />

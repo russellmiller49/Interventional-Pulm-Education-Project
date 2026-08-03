@@ -25,6 +25,8 @@ function option(overrides: Partial<CatalogPickerOption> & { productId: string })
     slottingScope: 'catalog_only' as const,
     preferredNewPurchase: null,
     lifecycleNote: null,
+    regulatoryStatus: 'unknown' as const,
+    regulatoryNote: null,
     roleFit: null,
     minWorkingChannelMm: null,
     deliverySystemOdMm: null,
@@ -36,7 +38,14 @@ function option(overrides: Partial<CatalogPickerOption> & { productId: string })
 
 function family(overrides: Partial<CatalogPickerFamily> = {}): CatalogPickerFamily {
   return {
-    familyKey: 'MFR-NOVA|dumon td|implant',
+    discoveryKey: 'MFR-NOVA|dumon td|implant',
+    // Approved by default, because the interesting default is the one that can be persisted; the
+    // draft and discovery-only cases are exercised explicitly below.
+    reviewedFamilyGovernanceState: 'approved',
+    reviewedFamilyVersionId: 'family-novatech-dumon-td-v1-0',
+    reviewedFamilyCode: 'NOVATECH_DUMON_TD',
+    reviewedFamilyCatalogReleaseId: 'a'.repeat(64),
+    reviewedFamilyDefinitionHash: 'b'.repeat(64),
     familyName: 'DUMON TD',
     manufacturerDisplay: 'Novatech',
     manufacturerGroupId: 'MFR-NOVA',
@@ -46,6 +55,7 @@ function family(overrides: Partial<CatalogPickerFamily> = {}): CatalogPickerFami
     usStatusPending: false,
     distributionStatus: null,
     catalogLifecycleContext: null,
+    regulatoryStatus: null,
     specRanges: [{ key: 'diameter_mm', min: 11, max: 18 }],
     placementMethods: ['Rigid bronchoscopy'],
     sourceId: null,
@@ -172,7 +182,8 @@ describe('CatalogOptionPicker', () => {
 
     expect(onAddFamily).toHaveBeenCalledWith(
       expect.objectContaining({
-        familyKey: 'MFR-NOVA|dumon td|implant',
+        productFamilyVersionId: 'family-novatech-dumon-td-v1-0',
+        definitionHash: 'b'.repeat(64),
         familyName: 'DUMON TD',
         roleCode: STENT_ROLE,
         variantCount: 2,
@@ -212,7 +223,7 @@ describe('CatalogOptionPicker', () => {
         roleLabel="Silicone stent"
         existingProductIds={new Set()}
         onAdd={jest.fn()}
-        existingFamilyKeys={new Set(['MFR-NOVA|dumon td|implant'])}
+        existingFamilyVersionIds={new Set(['family-novatech-dumon-td-v1-0'])}
         onAddFamily={jest.fn()}
       />,
     )
@@ -221,5 +232,74 @@ describe('CatalogOptionPicker', () => {
     await waitFor(() => expect(screen.getByText('DUMON TD')).toBeInTheDocument())
     const added = screen.getByRole('button', { name: /line added/i })
     expect(added).toBeDisabled()
+  })
+
+  it('withholds the whole-line action when the grouping is not a reviewed family', async () => {
+    const user = userEvent.setup()
+    mockCatalogSearch({
+      families: [
+        family({
+          reviewedFamilyGovernanceState: null,
+          reviewedFamilyVersionId: null,
+          reviewedFamilyCode: null,
+          reviewedFamilyCatalogReleaseId: null,
+          reviewedFamilyDefinitionHash: null,
+        }),
+      ],
+    })
+
+    render(
+      <CatalogOptionPicker
+        roleCode={STENT_ROLE}
+        roleLabel="Silicone stent"
+        existingProductIds={new Set()}
+        onAdd={jest.fn()}
+        onAddFamily={jest.fn()}
+      />,
+    )
+    await user.click(screen.getByRole('button', { name: /search full catalog/i }))
+    await waitFor(() => expect(screen.getByText('DUMON TD')).toBeInTheDocument())
+
+    // Browsable, expandable, and individually selectable — just not persistable as a line.
+    expect(screen.queryByRole('button', { name: /add line/i })).not.toBeInTheDocument()
+    expect(screen.getByText(/not an approved product family/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /show sizes/i })).toBeInTheDocument()
+  })
+
+  it('withholds the whole-line action for a draft family and says why it differs', async () => {
+    // A draft family is identified and its membership frozen; only clinical sign-off is missing.
+    // The server withholds the pin fields so no pick can be built, and the wording distinguishes
+    // this from a grouping nobody has reviewed at all.
+    const user = userEvent.setup()
+    mockCatalogSearch({
+      families: [
+        family({
+          reviewedFamilyGovernanceState: 'draft',
+          reviewedFamilyVersionId: null,
+          reviewedFamilyCode: null,
+          reviewedFamilyCatalogReleaseId: null,
+          reviewedFamilyDefinitionHash: null,
+        }),
+      ],
+    })
+
+    render(
+      <CatalogOptionPicker
+        roleCode={STENT_ROLE}
+        roleLabel="Silicone stent"
+        existingProductIds={new Set()}
+        onAdd={jest.fn()}
+        onAddFamily={jest.fn()}
+      />,
+    )
+    await user.click(screen.getByRole('button', { name: /search full catalog/i }))
+    await waitFor(() => expect(screen.getByText('DUMON TD')).toBeInTheDocument())
+
+    expect(screen.queryByRole('button', { name: /add line/i })).not.toBeInTheDocument()
+    expect(screen.getByText(/clinical review is still pending/i)).toBeInTheDocument()
+    expect(screen.queryByText(/not an approved product family/i)).not.toBeInTheDocument()
+    // Exact product selection is unaffected: the sizes are still there and still addable.
+    await user.click(screen.getByRole('button', { name: /show sizes/i }))
+    expect(screen.getByText('DUMON TD 14 x 40')).toBeInTheDocument()
   })
 })

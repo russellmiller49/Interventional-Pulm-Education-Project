@@ -1,0 +1,366 @@
+{
+  "generatedFrom": {
+    "procedures": 15,
+    "procedureSlots": 233,
+    "modules": 19,
+    "duplicateRequirementsRemoved": 9
+  },
+  "procedures": [
+    {
+      "procedureCode": "BRONCH_ABLATION",
+      "originalSlotCount": 23,
+      "coreModuleSlotCount": 0,
+      "optionalModuleSlotCount": 0,
+      "procedureSpecificSlotCount": 23,
+      "defaultComposedSlotCount": 23,
+      "duplicateRequirementsRemoved": 0,
+      "moduleCodes": ["BRONCH_ABLATION_SPECIFIC"],
+      "hasReviewedCoreMapping": false
+    },
+    {
+      "procedureCode": "CHEST_TUBE",
+      "originalSlotCount": 13,
+      "coreModuleSlotCount": 1,
+      "optionalModuleSlotCount": 0,
+      "procedureSpecificSlotCount": 12,
+      "defaultComposedSlotCount": 13,
+      "duplicateRequirementsRemoved": 1,
+      "moduleCodes": ["PLEURAL_PROCEDURE_CORE", "CHEST_TUBE_SPECIFIC"],
+      "hasReviewedCoreMapping": true
+    },
+    {
+      "procedureCode": "EBUS_TBNA",
+      "originalSlotCount": 15,
+      "coreModuleSlotCount": 2,
+      "optionalModuleSlotCount": 2,
+      "procedureSpecificSlotCount": 11,
+      "defaultComposedSlotCount": 15,
+      "duplicateRequirementsRemoved": 0,
+      "moduleCodes": ["FLEX_BRONCH_CORE", "EBUS_TBNA_SPECIFIC", "PROCEDURAL_FLUOROSCOPY"],
+      "hasReviewedCoreMapping": true
+    },
+    {
+      "procedureCode": "EBV",
+      "originalSlotCount": 11,
+      "coreModuleSlotCount": 2,
+      "optionalModuleSlotCount": 0,
+      "procedureSpecificSlotCount": 9,
+      "defaultComposedSlotCount": 11,
+      "duplicateRequirementsRemoved": 2,
+      "moduleCodes": ["THERAPEUTIC_BRONCH_CORE", "EBV_SPECIFIC", "PROCEDURAL_FLUOROSCOPY"],
+      "hasReviewedCoreMapping": true
+    },
+    {
+      "procedureCode": "FLEX_DIAGNOSTIC",
+      "originalSlotCount": 19,
+      "coreModuleSlotCount": 0,
+      "optionalModuleSlotCount": 0,
+      "procedureSpecificSlotCount": 19,
+      "defaultComposedSlotCount": 19,
+      "duplicateRequirementsRemoved": 0,
+      "moduleCodes": ["FLEX_DIAGNOSTIC_SPECIFIC"],
+      "hasReviewedCoreMapping": false
+    },
+    {
+      "procedureCode": "ICU_BRONCH",
+      "originalSlotCount": 12,
+      "coreModuleSlotCount": 0,
+      "optionalModuleSlotCount": 0,
+      "procedureSpecificSlotCount": 12,
+      "defaultComposedSlotCount": 12,
+      "duplicateRequirementsRemoved": 0,
+      "moduleCodes": ["ICU_BRONCH_SPECIFIC"],
+      "hasReviewedCoreMapping": false
+    },
+    {
+      "procedureCode": "IPC_PLACEMENT",
+      "originalSlotCount": 8,
+      "coreModuleSlotCount": 1,
+      "optionalModuleSlotCount": 0,
+      "procedureSpecificSlotCount": 7,
+      "defaultComposedSlotCount": 8,
+      "duplicateRequirementsRemoved": 1,
+      "moduleCodes": ["PLEURAL_PROCEDURE_CORE", "IPC_PLACEMENT_SPECIFIC"],
+      "hasReviewedCoreMapping": true
+    },
+    {
+      "procedureCode": "MED_THORACOSCOPY",
+      "originalSlotCount": 20,
+      "coreModuleSlotCount": 1,
+      "optionalModuleSlotCount": 0,
+      "procedureSpecificSlotCount": 19,
+      "defaultComposedSlotCount": 20,
+      "duplicateRequirementsRemoved": 1,
+      "moduleCodes": ["PLEURAL_PROCEDURE_CORE", "MED_THORACOSCOPY_SPECIFIC"],
+      "hasReviewedCoreMapping": true
+    },
+    {
+      "procedureCode": "PERC_TRACH",
+      "originalSlotCount": 10,
+      "coreModuleSlotCount": 0,
+      "optionalModuleSlotCount": 0,
+      "procedureSpecificSlotCount": 10,
+      "defaultComposedSlotCount": 10,
+      "duplicateRequirementsRemoved": 0,
+      "moduleCodes": ["PERC_TRACH_SPECIFIC"],
+      "hasReviewedCoreMapping": false
+    },
+    {
+      "procedureCode": "PHOTODYNAMIC_THERAPY",
+      "originalSlotCount": 12,
+      "coreModuleSlotCount": 0,
+      "optionalModuleSlotCount": 0,
+      "procedureSpecificSlotCount": 12,
+      "defaultComposedSlotCount": 12,
+      "duplicateRequirementsRemoved": 0,
+      "moduleCodes": ["PHOTODYNAMIC_THERAPY_SPECIFIC"],
+      "hasReviewedCoreMapping": false
+    },
+    {
+      "procedureCode": "RIGID_BRONCH",
+      "originalSlotCount": 31,
+      "coreModuleSlotCount": 0,
+      "optionalModuleSlotCount": 0,
+      "procedureSpecificSlotCount": 31,
+      "defaultComposedSlotCount": 31,
+      "duplicateRequirementsRemoved": 0,
+      "moduleCodes": ["RIGID_BRONCH_SPECIFIC"],
+      "hasReviewedCoreMapping": false
+    },
+    {
+      "procedureCode": "TB_RULEOUT",
+      "originalSlotCount": 11,
+      "coreModuleSlotCount": 0,
+      "optionalModuleSlotCount": 0,
+      "procedureSpecificSlotCount": 11,
+      "defaultComposedSlotCount": 11,
+      "duplicateRequirementsRemoved": 0,
+      "moduleCodes": ["TB_RULEOUT_SPECIFIC"],
+      "hasReviewedCoreMapping": false
+    },
+    {
+      "procedureCode": "THERAPEUTIC_BRONCH",
+      "originalSlotCount": 29,
+      "coreModuleSlotCount": 4,
+      "optionalModuleSlotCount": 2,
+      "procedureSpecificSlotCount": 23,
+      "defaultComposedSlotCount": 29,
+      "duplicateRequirementsRemoved": 4,
+      "moduleCodes": [
+        "FLEX_BRONCH_CORE",
+        "THERAPEUTIC_BRONCH_CORE",
+        "THERAPEUTIC_BRONCH_SPECIFIC",
+        "PROCEDURAL_FLUOROSCOPY"
+      ],
+      "hasReviewedCoreMapping": true
+    },
+    {
+      "procedureCode": "THORACENTESIS",
+      "originalSlotCount": 6,
+      "coreModuleSlotCount": 1,
+      "optionalModuleSlotCount": 0,
+      "procedureSpecificSlotCount": 5,
+      "defaultComposedSlotCount": 6,
+      "duplicateRequirementsRemoved": 0,
+      "moduleCodes": ["PLEURAL_PROCEDURE_CORE", "THORACENTESIS_SPECIFIC"],
+      "hasReviewedCoreMapping": true
+    },
+    {
+      "procedureCode": "WLL",
+      "originalSlotCount": 13,
+      "coreModuleSlotCount": 0,
+      "optionalModuleSlotCount": 0,
+      "procedureSpecificSlotCount": 13,
+      "defaultComposedSlotCount": 13,
+      "duplicateRequirementsRemoved": 0,
+      "moduleCodes": ["WLL_SPECIFIC"],
+      "hasReviewedCoreMapping": false
+    }
+  ],
+  "sharedRequirements": [
+    {
+      "requirementKey": "AIRWAY_RETRIEVAL_FORCEPS",
+      "moduleCode": "THERAPEUTIC_BRONCH_CORE",
+      "definitionSourceSlotId": "SLOT-1647A73048",
+      "absorbedSlotIds": ["SLOT-6AC64B5E3D"],
+      "procedureCodes": ["EBV", "THERAPEUTIC_BRONCH"]
+    },
+    {
+      "requirementKey": "FLEX_BRONCH_SUCTION_SETUP",
+      "moduleCode": "FLEX_BRONCH_CORE",
+      "definitionSourceSlotId": "SLOT-2E3065C976",
+      "absorbedSlotIds": ["SLOT-13609A744F"],
+      "procedureCodes": ["EBUS_TBNA", "THERAPEUTIC_BRONCH"]
+    },
+    {
+      "requirementKey": "FLEX_BRONCH_VIDEO_PROCESSOR",
+      "moduleCode": "FLEX_BRONCH_CORE",
+      "definitionSourceSlotId": "SLOT-7DFA66EA2D",
+      "absorbedSlotIds": ["SLOT-6BCA0B7A49"],
+      "procedureCodes": ["EBUS_TBNA", "THERAPEUTIC_BRONCH"]
+    },
+    {
+      "requirementKey": "PLEURAL_ULTRASOUND_MACHINE",
+      "moduleCode": "PLEURAL_PROCEDURE_CORE",
+      "definitionSourceSlotId": "SLOT-E91A13EE9E",
+      "absorbedSlotIds": ["SLOT-6E9F37C656", "SLOT-8E4B5F2EC9", "SLOT-C7DBD5BC4C"],
+      "procedureCodes": ["CHEST_TUBE", "IPC_PLACEMENT", "MED_THORACOSCOPY", "THORACENTESIS"]
+    },
+    {
+      "requirementKey": "PROCEDURAL_FLUOROSCOPY_C_ARM",
+      "moduleCode": "PROCEDURAL_FLUOROSCOPY",
+      "definitionSourceSlotId": "SLOT-F3BF1ECC7E",
+      "absorbedSlotIds": ["SLOT-49F20FD8F8"],
+      "procedureCodes": ["EBUS_TBNA", "THERAPEUTIC_BRONCH"]
+    },
+    {
+      "requirementKey": "PROCEDURAL_RADIATION_PROTECTION",
+      "moduleCode": "PROCEDURAL_FLUOROSCOPY",
+      "definitionSourceSlotId": "SLOT-1D13D48BD7",
+      "absorbedSlotIds": ["SLOT-945FA4AAF8"],
+      "procedureCodes": ["EBUS_TBNA", "THERAPEUTIC_BRONCH"]
+    },
+    {
+      "requirementKey": "THERAPEUTIC_BRONCHOSCOPE_PLATFORM",
+      "moduleCode": "THERAPEUTIC_BRONCH_CORE",
+      "definitionSourceSlotId": "SLOT-B79D3CF198",
+      "absorbedSlotIds": ["SLOT-D49EAA8281"],
+      "procedureCodes": ["EBV", "THERAPEUTIC_BRONCH"]
+    }
+  ],
+  "reconciliations": [
+    {
+      "requirementKey": "AIRWAY_RETRIEVAL_FORCEPS",
+      "moduleCode": "THERAPEUTIC_BRONCH_CORE",
+      "field": "dependency_rule",
+      "definitionValue": null,
+      "aliasSlotId": "SLOT-6AC64B5E3D",
+      "aliasProcedureCode": "EBV",
+      "aliasValue": "Reposition/removal anticipated"
+    },
+    {
+      "requirementKey": "AIRWAY_RETRIEVAL_FORCEPS",
+      "moduleCode": "THERAPEUTIC_BRONCH_CORE",
+      "field": "requiredness",
+      "definitionValue": "optional",
+      "aliasSlotId": "SLOT-6AC64B5E3D",
+      "aliasProcedureCode": "EBV",
+      "aliasValue": "conditional"
+    },
+    {
+      "requirementKey": "AIRWAY_RETRIEVAL_FORCEPS",
+      "moduleCode": "THERAPEUTIC_BRONCH_CORE",
+      "field": "slot_label",
+      "definitionValue": "Flexible grasping forceps",
+      "aliasSlotId": "SLOT-6AC64B5E3D",
+      "aliasProcedureCode": "EBV",
+      "aliasValue": "Valve retrieval forceps"
+    },
+    {
+      "requirementKey": "FLEX_BRONCH_SUCTION_SETUP",
+      "moduleCode": "FLEX_BRONCH_CORE",
+      "field": "slot_label",
+      "definitionValue": "Suction source/tubing/syringes",
+      "aliasSlotId": "SLOT-13609A744F",
+      "aliasProcedureCode": "THERAPEUTIC_BRONCH",
+      "aliasValue": "High-flow suction tubing/canisters"
+    },
+    {
+      "requirementKey": "FLEX_BRONCH_VIDEO_PROCESSOR",
+      "moduleCode": "FLEX_BRONCH_CORE",
+      "field": "slot_label",
+      "definitionValue": "Compatible video processor/light source",
+      "aliasSlotId": "SLOT-6BCA0B7A49",
+      "aliasProcedureCode": "THERAPEUTIC_BRONCH",
+      "aliasValue": "Compatible processor/light source"
+    },
+    {
+      "requirementKey": "PLEURAL_ULTRASOUND_MACHINE",
+      "moduleCode": "PLEURAL_PROCEDURE_CORE",
+      "field": "generic_requirement",
+      "definitionValue": "Ultrasound platform and sterile probe cover.",
+      "aliasSlotId": "SLOT-6E9F37C656",
+      "aliasProcedureCode": "IPC_PLACEMENT",
+      "aliasValue": "Ultrasound platform and sterile cover for pleural access."
+    },
+    {
+      "requirementKey": "PLEURAL_ULTRASOUND_MACHINE",
+      "moduleCode": "PLEURAL_PROCEDURE_CORE",
+      "field": "slot_label",
+      "definitionValue": "Ultrasound machine and sterile probe cover",
+      "aliasSlotId": "SLOT-8E4B5F2EC9",
+      "aliasProcedureCode": "MED_THORACOSCOPY",
+      "aliasValue": "Ultrasound machine and sterile cover"
+    },
+    {
+      "requirementKey": "PLEURAL_ULTRASOUND_MACHINE",
+      "moduleCode": "PLEURAL_PROCEDURE_CORE",
+      "field": "dependency_rule",
+      "definitionValue": null,
+      "aliasSlotId": "SLOT-C7DBD5BC4C",
+      "aliasProcedureCode": "CHEST_TUBE",
+      "aliasValue": "Image-guided insertion"
+    },
+    {
+      "requirementKey": "PLEURAL_ULTRASOUND_MACHINE",
+      "moduleCode": "PLEURAL_PROCEDURE_CORE",
+      "field": "requiredness",
+      "definitionValue": "required",
+      "aliasSlotId": "SLOT-C7DBD5BC4C",
+      "aliasProcedureCode": "CHEST_TUBE",
+      "aliasValue": "optional"
+    },
+    {
+      "requirementKey": "THERAPEUTIC_BRONCHOSCOPE_PLATFORM",
+      "moduleCode": "THERAPEUTIC_BRONCH_CORE",
+      "field": "notes",
+      "definitionValue": null,
+      "aliasSlotId": "SLOT-D49EAA8281",
+      "aliasProcedureCode": "EBV",
+      "aliasValue": "Match channel to delivery catheter."
+    }
+  ],
+  "unmappedProcedures": [
+    {
+      "procedureCode": "BRONCH_ABLATION",
+      "moduleCode": "BRONCH_ABLATION_SPECIFIC",
+      "reason": "No clinician-reviewed core mapping exists for this procedure; its card is preserved exactly."
+    },
+    {
+      "procedureCode": "FLEX_DIAGNOSTIC",
+      "moduleCode": "FLEX_DIAGNOSTIC_SPECIFIC",
+      "reason": "Its GENERIC_SUCTION row is selection_mode 'single' where FLEX_BRONCH_SUCTION_SETUP is 'multiple'; adopting the core would silently change the requirement. Left for clinical review."
+    },
+    {
+      "procedureCode": "ICU_BRONCH",
+      "moduleCode": "ICU_BRONCH_SPECIFIC",
+      "reason": "No clinician-reviewed core mapping exists for this procedure; its card is preserved exactly."
+    },
+    {
+      "procedureCode": "PERC_TRACH",
+      "moduleCode": "PERC_TRACH_SPECIFIC",
+      "reason": "No clinician-reviewed core mapping exists for this procedure; its card is preserved exactly."
+    },
+    {
+      "procedureCode": "PHOTODYNAMIC_THERAPY",
+      "moduleCode": "PHOTODYNAMIC_THERAPY_SPECIFIC",
+      "reason": "No clinician-reviewed core mapping exists for this procedure; its card is preserved exactly."
+    },
+    {
+      "procedureCode": "RIGID_BRONCH",
+      "moduleCode": "RIGID_BRONCH_SPECIFIC",
+      "reason": "Shares energy, dilation, stent, and retrieval content with THERAPEUTIC_BRONCH but has no GENERIC_SUCTION row and a different platform. Left for clinical review."
+    },
+    {
+      "procedureCode": "TB_RULEOUT",
+      "moduleCode": "TB_RULEOUT_SPECIFIC",
+      "reason": "No clinician-reviewed core mapping exists for this procedure; its card is preserved exactly."
+    },
+    {
+      "procedureCode": "WLL",
+      "moduleCode": "WLL_SPECIFIC",
+      "reason": "No clinician-reviewed core mapping exists for this procedure; its card is preserved exactly."
+    }
+  ],
+  "modifierTargetAliasMigrations": []
+}

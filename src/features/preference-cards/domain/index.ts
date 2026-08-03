@@ -1,4 +1,5 @@
 export * from './evaluate-compatibility'
+export * from './expand-recipe-composition'
 export * from './kit-suppression'
 export * from './quantity-expression'
 export * from './resolve-card'

@@ -1,5 +1,14 @@
 [
   {
+    "procedure_code": "BRONCH_ABLATION",
+    "procedure_name": "Bronchoscopic tumor ablation",
+    "template_version": "0.1",
+    "scope": "Adult draft",
+    "status": "Draft - clinician review required",
+    "clinical_owner": null,
+    "notes": "One comparative card across the ablation modalities. Cryo, APC, and laser carry real catalog content; microwave and pulsed electric field are named as conditional slots with no selectable product, because every bronchoscopic device in those two categories is investigational in the United States. See /preference-cards/emerging."
+  },
+  {
     "procedure_code": "CHEST_TUBE",
     "procedure_name": "Chest tube insertion",
     "template_version": "0.3",
@@ -70,6 +79,15 @@
     "status": "Draft - ICU/surgery review required",
     "clinical_owner": null,
     "notes": null
+  },
+  {
+    "procedure_code": "PHOTODYNAMIC_THERAPY",
+    "procedure_name": "Photodynamic therapy (endobronchial)",
+    "template_version": "0.1",
+    "scope": "Adult draft",
+    "status": "Draft - clinician review required",
+    "clinical_owner": null,
+    "notes": "A staged workflow rather than a modifier: photosensitizer on day one, light activation at a defined interval, and a mandatory debridement bronchoscopy after that. The sections mirror those stages."
   },
   {
     "procedure_code": "RIGID_BRONCH",

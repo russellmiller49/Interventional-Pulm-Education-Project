@@ -1,13 +1,22 @@
 'use client'
 
-import { BadgeCheck, CircleHelp, FileSearch, History, PackageX, TriangleAlert } from 'lucide-react'
+import {
+  BadgeCheck,
+  CircleHelp,
+  FileSearch,
+  FlaskConical,
+  History,
+  PackageX,
+  ScrollText,
+  TriangleAlert,
+} from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/cn'
 
 import type { CatalogVerificationTier } from '../domain/verification'
-import type { CatalogLifecycleContext } from '../server/catalog-store'
+import type { CatalogLifecycleContext, RegulatoryStatus } from '../server/catalog-store'
 import type { CatalogDistributionStatus } from '../server/catalog'
 
 export interface VerificationBadgeLabels {
@@ -19,6 +28,13 @@ export interface VerificationBadgeLabels {
   conflictingDistribution: string
   legacyInstalledBase: string
   legacyInstalledBaseHelp: string
+  regulatoryCleared510k: string
+  regulatoryApprovedPma: string
+  regulatoryGrantedDeNovo: string
+  regulatoryBreakthroughInvestigational: string
+  regulatoryBreakthroughPremarketReview: string
+  regulatoryNotUsAuthorized: string
+  regulatoryHelp: string
 }
 
 interface VerificationBadgeProps {
@@ -28,8 +44,51 @@ interface VerificationBadgeProps {
   distributionStatus?: CatalogDistributionStatus | null
   catalogLifecycleContext?: CatalogLifecycleContext
   lifecycleNote?: string | null
+  /** US marketing authorization, an axis of its own. `unknown` renders nothing. */
+  regulatoryStatus?: RegulatoryStatus
+  regulatoryNote?: string | null
   labels: VerificationBadgeLabels
   className?: string
+}
+
+/**
+ * The regulatory badge, styled by what the status actually permits.
+ *
+ * A breakthrough designation is an agreement to review, not an authorization, so it renders
+ * in the warning style rather than the reassuring one an approval gets.
+ */
+function regulatoryBadgeFor(
+  status: RegulatoryStatus,
+  labels: VerificationBadgeLabels,
+): {
+  label: string
+  variant: 'success' | 'info' | 'warning' | 'outline'
+  investigational: boolean
+} | null {
+  switch (status) {
+    case 'us_cleared_510k':
+      return { label: labels.regulatoryCleared510k, variant: 'info', investigational: false }
+    case 'us_approved_pma':
+      return { label: labels.regulatoryApprovedPma, variant: 'success', investigational: false }
+    case 'us_granted_de_novo':
+      return { label: labels.regulatoryGrantedDeNovo, variant: 'info', investigational: false }
+    case 'breakthrough_designated_investigational':
+      return {
+        label: labels.regulatoryBreakthroughInvestigational,
+        variant: 'warning',
+        investigational: true,
+      }
+    case 'breakthrough_designated_premarket_review':
+      return {
+        label: labels.regulatoryBreakthroughPremarketReview,
+        variant: 'warning',
+        investigational: true,
+      }
+    case 'not_us_authorized':
+      return { label: labels.regulatoryNotUsAuthorized, variant: 'warning', investigational: true }
+    default:
+      return null
+  }
 }
 
 export function VerificationBadge({
@@ -38,6 +97,8 @@ export function VerificationBadge({
   distributionStatus = null,
   catalogLifecycleContext = 'unknown',
   lifecycleNote = null,
+  regulatoryStatus = 'unknown',
+  regulatoryNote = null,
   labels,
   className,
 }: VerificationBadgeProps) {
@@ -48,6 +109,11 @@ export function VerificationBadge({
   const lifecycleHelp = reviewedLifecycleNote
     ? `${labels.legacyInstalledBaseHelp} ${reviewedLifecycleNote}`
     : labels.legacyInstalledBaseHelp
+  const regulatory = regulatoryBadgeFor(regulatoryStatus, labels)
+  const reviewedRegulatoryNote = regulatoryNote?.trim()
+  const regulatoryHelp = reviewedRegulatoryNote
+    ? `${labels.regulatoryHelp} ${reviewedRegulatoryNote}`
+    : labels.regulatoryHelp
 
   return (
     <span className={cn('inline-flex flex-wrap items-center gap-1.5', className)}>
@@ -77,6 +143,32 @@ export function VerificationBadge({
             </TooltipTrigger>
             <TooltipContent className="max-w-xs normal-case tracking-normal">
               {lifecycleHelp}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : null}
+      {regulatory ? (
+        <TooltipProvider delayDuration={150}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge
+                variant={regulatory.variant}
+                size="sm"
+                className="gap-1 normal-case tracking-normal"
+                title={regulatoryHelp}
+                aria-label={`${regulatory.label}. ${regulatoryHelp}`}
+                tabIndex={0}
+              >
+                {regulatory.investigational ? (
+                  <FlaskConical aria-hidden="true" className="h-3.5 w-3.5" />
+                ) : (
+                  <ScrollText aria-hidden="true" className="h-3.5 w-3.5" />
+                )}
+                {regulatory.label}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs normal-case tracking-normal">
+              {regulatoryHelp}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -173,6 +265,20 @@ export function VerificationLegend({
             </Badge>
           </dt>
           <dd className="text-muted-foreground">{labels.legacyInstalledBaseHelp}</dd>
+        </div>
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:gap-3">
+          <dt className="sm:w-32 sm:shrink-0">
+            <Badge
+              variant="warning"
+              size="sm"
+              className="gap-1 normal-case tracking-normal"
+              title={labels.regulatoryHelp}
+            >
+              <FlaskConical aria-hidden="true" className="h-3.5 w-3.5" />
+              {labels.regulatoryBreakthroughInvestigational}
+            </Badge>
+          </dt>
+          <dd className="text-muted-foreground">{labels.regulatoryHelp}</dd>
         </div>
       </dl>
     </div>

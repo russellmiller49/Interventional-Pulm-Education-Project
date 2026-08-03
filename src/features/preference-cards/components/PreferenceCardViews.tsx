@@ -241,6 +241,26 @@ function ExceptionLine({ warning }: { warning: RuleMessage }) {
   )
 }
 
+/**
+ * One compact line naming the modules the card was assembled from.
+ *
+ * Deliberately not repeated on every printed requirement: the card is carried into a room
+ * and read as a pull list, and per-line provenance belongs in the trace and the
+ * why-included detail, not in the margin of every row. Renders nothing for a snapshot
+ * written before composition.
+ */
+export function ComposedFromSummary({ card }: { card: ResolvedCard }) {
+  const t = useTranslations('preferenceCards')
+  const includedModules = card.includedModules ?? []
+  if (includedModules.length === 0) return null
+  return (
+    <p className="break-inside-avoid text-xs leading-5 text-muted-foreground">
+      <span className="font-semibold text-foreground">{t('modules.composedFrom')}:</span>{' '}
+      {includedModules.map((module) => `${module.moduleName} v${module.moduleVersion}`).join(' · ')}
+    </p>
+  )
+}
+
 export function SpatialCardView({ card }: { card: ResolvedCard }) {
   return <GroupedItems card={card} mode="spatial" />
 }
@@ -297,6 +317,9 @@ export function PreferenceCardTabs({
   const t = useTranslations('preferenceCards')
   return (
     <Tabs defaultValue={defaultTab}>
+      <div className="mb-3">
+        <ComposedFromSummary card={card} />
+      </div>
       <TabsList className="no-print h-auto flex-wrap rounded-2xl">
         <TabsTrigger value="spatial" className="gap-2">
           <Box aria-hidden="true" className="h-4 w-4" />
@@ -348,13 +371,16 @@ export function PrintCardView({
 
   return (
     <div>
-      <div className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
         {mode === 'spatial' ? (
           <PackageCheck aria-hidden="true" className="h-4 w-4" />
         ) : (
           <CheckSquare2 aria-hidden="true" className="h-4 w-4" />
         )}
         {mode === 'spatial' ? t('tabs.spatial') : t('tabs.chronological')}
+      </div>
+      <div className="mb-4">
+        <ComposedFromSummary card={card} />
       </div>
       {mode === 'spatial' ? <SpatialCardView card={card} /> : <ChronologicalCardView card={card} />}
 

@@ -4,6 +4,10 @@ import path from 'node:path'
 import { z } from 'zod'
 
 import {
+  DEPRECATED_ROLE_CODES,
+  ROLE_CATEGORIES,
+} from '@/features/preference-cards/domain/role-taxonomy'
+import {
   generateSlotOptionProposals,
   serializeSlotOptionProposalArtifact,
   SLOT_OPTION_PROPOSAL_FILENAME,
@@ -36,6 +40,9 @@ const roleSchema = z
   .object({
     role_code: z.string().min(1),
     role_name: z.string().min(1),
+    // The browse headings are a closed reviewed vocabulary, not free text. A category outside
+    // it would render as an extra section on /catalog/uses that nobody chose.
+    category: z.enum(ROLE_CATEGORIES),
   })
   .passthrough()
 
@@ -147,6 +154,28 @@ export async function validateGeneratedCatalog(options?: {
   )
   if (duplicateGroups > 0) {
     throw new Error(`Generated data contains ${duplicateGroups} duplicate identifier groups.`)
+  }
+
+  // A deprecated code must resolve through the alias table, never exist as a live role or be
+  // referenced by a product, slot, or exact-slot option.
+  const deprecatedRoleReferences = [
+    ...roles
+      .filter((role) => DEPRECATED_ROLE_CODES.has(role.role_code))
+      .map((role) => `Roles ${role.role_code}`),
+    ...productRoles
+      .filter((link) => DEPRECATED_ROLE_CODES.has(link.role_code))
+      .map((link) => `Product_Roles ${link.product_id} × ${link.role_code}`),
+    ...slots
+      .filter((slot) => DEPRECATED_ROLE_CODES.has(slot.role_code))
+      .map((slot) => `Procedure_Slots ${slot.slot_id} × ${slot.role_code}`),
+    ...authoredOptions
+      .filter((option) => DEPRECATED_ROLE_CODES.has(option.role_code))
+      .map((option) => `Slot_Product_Options ${option.slot_id} × ${option.role_code}`),
+  ]
+  if (deprecatedRoleReferences.length > 0) {
+    throw new Error(
+      `Generated data still references deprecated role codes: ${deprecatedRoleReferences.slice(0, 10).join('; ')}${deprecatedRoleReferences.length > 10 ? ` (+${deprecatedRoleReferences.length - 10} more)` : ''}.`,
+    )
   }
   if (importReport.slot_option_proposals.authored_canonical_options !== authoredOptions.length) {
     throw new Error(

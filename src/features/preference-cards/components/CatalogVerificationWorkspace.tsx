@@ -135,6 +135,17 @@ export function CatalogVerificationWorkspace({
     conflictingDistribution: t('catalog.verification.conflictingDistribution'),
     legacyInstalledBase: t('catalog.verification.legacyInstalledBase'),
     legacyInstalledBaseHelp: t('catalog.verification.legacyInstalledBaseHelp'),
+    regulatoryCleared510k: t('catalog.verification.regulatoryCleared510k'),
+    regulatoryApprovedPma: t('catalog.verification.regulatoryApprovedPma'),
+    regulatoryGrantedDeNovo: t('catalog.verification.regulatoryGrantedDeNovo'),
+    regulatoryBreakthroughInvestigational: t(
+      'catalog.verification.regulatoryBreakthroughInvestigational',
+    ),
+    regulatoryBreakthroughPremarketReview: t(
+      'catalog.verification.regulatoryBreakthroughPremarketReview',
+    ),
+    regulatoryNotUsAuthorized: t('catalog.verification.regulatoryNotUsAuthorized'),
+    regulatoryHelp: t('catalog.verification.regulatoryHelp'),
   }
 
   return (
@@ -172,6 +183,8 @@ export function CatalogVerificationWorkspace({
             distributionStatus={productDetail.distributionStatus}
             catalogLifecycleContext={product.catalogLifecycleContext}
             lifecycleNote={product.lifecycleNote}
+            regulatoryStatus={product.regulatoryStatus}
+            regulatoryNote={product.regulatoryNote}
             labels={verificationLabels}
           />
           <Badge variant="outline">

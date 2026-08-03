@@ -277,8 +277,12 @@ describe('focused external-review remediation completed-workbook import', () => 
     expect(artifact).toMatchObject({
       formatVersion: 1,
       reviewId: 'external-review-remediation-v0.1',
+      // Rebound in taxonomy v2: the corrections file's compatibility target moved from
+      // GENERIC_ENERGY_PLATFORM to ENERGY_PLATFORM and its rolesToAdd categories moved onto
+      // the closed browse vocabulary. The binding exists so exactly this kind of edit has to
+      // be paid for deliberately rather than drifting.
       normalizedCorrectionsSha256:
-        '7b42da8eb2fc2fb94bf283af27b777eb07edc396425d384ef12a819afd6e3afd',
+        '589bd1488027c570dbc674605c8a8cd1b1b7744c348afcf1a22d2b7b707a18d9',
       sourceWorkbook: {
         fileName: FILE_NAME,
         sha256: '78b112baa0cd84f213eef0c1f014c438e811ac7bafe3e5004c7b4e51dd119b4e',

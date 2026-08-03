@@ -222,6 +222,29 @@ missing products. It also does not perform taxonomy v2, full Product Kind normal
 manufacturer consolidation, typed multi-GTIN migration, the 140-row variant campaign, or
 automatic acceptance of the proposal artifact.
 
+### Closed by taxonomy v2 — 2026-07-30
+
+Four of the items deferred above are now done. Their ledger dispositions in
+`reviewed/external-review-remediation.json` are unchanged — `needs_source_enrichment` is still
+the correct description of what F-02 and F-03 were waiting for — but the evidence arrived and
+the enrichment happened, so their `status` moved to `implemented`.
+
+| Finding  | Was                                                       | Now                                                                                                                                                                                                                    |
+| -------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **F-02** | Chartis missing; `GENERIC_COLLATERAL_VENT` had 0 products | `COLLATERAL_VENTILATION_SYSTEM` holds the Chartis Catheter (`CHR-CA-12.0`), Precision Catheter (`CHR-CA-15.0`), and both consoles, with the ≥2.8 mm working-channel requirement and 72 cm working length from the IFU. |
+| **F-03** | No electrosurgical/APC generator                          | `ENERGY_PLATFORM` holds the ERBE VIO 3 (`10160-000`) and APC 3 (`10135-000`); `ENERGY_PLATFORM_ACCESSORY` holds both VIO 3 footswitches. The reviewed compatibility rule `CMP-58DE7D49C4` now resolves.                |
+| **F-07** | Role/category vocabulary drifted into synonyms            | `domain/role-taxonomy.ts` defines a closed 19-heading vocabulary; the import canonicalizes against it and fails closed on anything unmapped. 33 free-text headings → a closed set of 19.                               |
+| **R-05** | Role codes drifted, `PDT_KIT` collided with PDT           | Eight role codes renamed behind a permanent alias table, freeing the photodynamic-therapy namespace for the real thing.                                                                                                |
+
+**Still deferred, still for lack of evidence:**
+
+- **F-04** — no ERBECRYO 2 console document was supplied, so the fourteen ERBECRYO accessories
+  in the catalog still have no console to attach to. The AccessGUDID release does carry
+  `20402-000 ERBECRYO 2 Cryosurgical unit`; adding it needs the same manufacturer document the
+  VIO 3 had.
+- **F-05** — the Steris catalog's snares are GI cold snares, not airway electrocautery snares.
+  No airway snare evidence has arrived.
+
 ## Validation and protected data
 
 Regeneration must preserve every existing product ID, catalog number, primary source ID, source

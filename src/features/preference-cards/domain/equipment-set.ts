@@ -1,5 +1,6 @@
 import type { CatalogPick } from './catalog-pick'
 import type { HospitalItem, HospitalRoleOption } from './types'
+import { canonicalRoleCode } from './role-taxonomy'
 
 /**
  * A user-defined equipment set: the tray or cart a physician actually owns, listed once and
@@ -213,9 +214,14 @@ export function parseStoredEquipmentSets(raw: string | null): EquipmentSet[] {
       .slice(0, MAX_EQUIPMENT_SETS)
       .map((set) => ({
         ...set,
-        members: set.members.slice(0, MAX_EQUIPMENT_SET_MEMBERS),
+        // Sets live in localStorage and long outlive a role rename, so canonicalize on read.
+        // The save path resolves aliases anyway; without this the *preview* would quietly
+        // stop matching the slot and the set would look like it covered nothing.
+        members: set.members
+          .slice(0, MAX_EQUIPMENT_SET_MEMBERS)
+          .map((member) => ({ ...member, roleCode: canonicalRoleCode(member.roleCode) })),
         additionalCoveredRoles: Array.isArray(set.additionalCoveredRoles)
-          ? set.additionalCoveredRoles
+          ? [...new Set(set.additionalCoveredRoles.map(canonicalRoleCode))]
           : [],
       }))
   } catch {

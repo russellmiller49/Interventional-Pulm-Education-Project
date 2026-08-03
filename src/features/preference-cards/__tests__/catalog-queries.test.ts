@@ -40,6 +40,7 @@ function product(
     implantable: null,
     material: null,
     coverage: null,
+    laser_type: null,
     placement_method: null,
     size_display: null,
     diameter_mm: null,

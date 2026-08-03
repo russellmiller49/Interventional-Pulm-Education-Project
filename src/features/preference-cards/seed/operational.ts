@@ -12,6 +12,14 @@ import type {
   VerificationState,
 } from '../domain/types'
 
+/**
+ * Modifier- and rescue-added lines sort after everything the composition produced, so a
+ * contingency line never lands in the middle of the base setup. A composed requirement
+ * takes either the procedure's own reviewed position or, when the procedure never placed
+ * it, a module band above `UNPLACED_REQUIREMENT_SEQUENCE_BASE`; this base clears both.
+ */
+export const OPERATIONAL_SLOT_SEQUENCE_BASE = 100_000
+
 export const DEMO_ORGANIZATION_ID = '00000000-0000-4000-8000-000000000101'
 export const DEMO_SITE_ID = '00000000-0000-4000-8000-000000000102'
 export const DEMO_LOCATION_ID = '00000000-0000-4000-8000-000000000103'
@@ -58,6 +66,10 @@ function addedSlot(
   return {
     id,
     sourceSlotId: null,
+    // Operationally authored lines are their own requirement. Keying them by their own id
+    // makes them unique by construction, so nothing here can accidentally merge with a
+    // module-authored requirement that happens to share a role code.
+    requirementKey: id,
     roleCode,
     label,
     genericRequirement,
@@ -67,7 +79,7 @@ function addedSlot(
     selectionMode: 'single',
     setupZone,
     proceduralPhase,
-    setupSequence: sequence,
+    setupSequence: OPERATIONAL_SLOT_SEQUENCE_BASE + sequence,
     openHoldStatus,
     responsibleRole: null,
     sterileStatus: null,
@@ -306,7 +318,7 @@ export const demoHospitalItemSeeds: DemoHospitalItemSeed[] = [
   },
   {
     id: 'demo-apc-platform',
-    roleCode: 'GENERIC_ENERGY_PLATFORM',
+    roleCode: 'ENERGY_PLATFORM',
     itemType: 'capital_asset',
     localDescription: 'Demo stand-in — APC energy platform',
     localItemNumber: 'DEMO-APC-PLATFORM-001',
@@ -724,7 +736,7 @@ const rigidSlots = [
 const apcSlots = [
   addedSlot(
     'OPS-APC-PLATFORM',
-    'GENERIC_ENERGY_PLATFORM',
+    'ENERGY_PLATFORM',
     'APC energy platform',
     'Locally approved APC generator/platform.',
     'required',
