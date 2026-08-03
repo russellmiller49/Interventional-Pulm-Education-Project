@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabaseCookieBrowser } from '@/lib/supabase/browser'
-import { buildLocalSupabaseRedirectUrl } from '@/lib/supabase/url'
+import { buildSignInRedirectUrl } from '@/lib/supabase/auth-redirect'
 import { HandoffContent } from '@/i18n/handoff'
 
 type SubmitStatus = 'idle' | 'submitting' | 'sent' | 'error'
@@ -22,7 +22,7 @@ export function ForgotPasswordForm() {
       return undefined
     }
 
-    return buildLocalSupabaseRedirectUrl(window.location.origin, '/auth/update-password')
+    return buildSignInRedirectUrl(window.location.origin, '/auth/update-password')
   }, [])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {

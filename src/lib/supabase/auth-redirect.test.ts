@@ -24,6 +24,12 @@ describe('buildSignInRedirectUrl', () => {
       buildSignInRedirectUrl('https://interventionalpulm.org', '/socal-ebus-course?mode=sync'),
     ).toBe('https://interventionalpulm.org/auth/callback?next=%2Fsocal-ebus-course%3Fmode%3Dsync')
   })
+
+  it('routes password recovery through the server callback before showing the reset form', () => {
+    expect(buildSignInRedirectUrl('https://interventionalpulm.org', '/auth/update-password')).toBe(
+      'https://interventionalpulm.org/auth/callback?next=%2Fauth%2Fupdate-password',
+    )
+  })
 })
 
 describe('resolveSharedAuthCallbackRedirect', () => {

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 import {
@@ -181,7 +181,7 @@ function renderSharedAuthCallbackPage() {
   )
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const url = new URL(request.url)
   const code = url.searchParams.get('code')
 
@@ -201,15 +201,13 @@ export async function GET(request: Request) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          void name
-          return undefined
+        getAll() {
+          return request.cookies.getAll()
         },
-        set(name: string, value: string, options?: CookieOptions) {
-          response.cookies.set(name, value, options)
-        },
-        remove(name: string, options?: CookieOptions) {
-          response.cookies.set(name, '', { ...options, maxAge: 0 })
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options as CookieOptions)
+          })
         },
       },
     },
@@ -217,10 +215,15 @@ export async function GET(request: Request) {
 
   if (code) {
     try {
-      await supabase.auth.exchangeCodeForSession(code)
+      const { error } = await supabase.auth.exchangeCodeForSession(code)
+
+      if (error) {
+        throw error
+      }
     } catch (error) {
       console.error('Supabase session exchange failed', error)
-      response.headers.set('Location', new URL('/', url.origin).toString())
+      redirectTarget.searchParams.set('authError', 'session-exchange-failed')
+      response.headers.set('Location', redirectTarget.toString())
     }
   }
 
