@@ -288,7 +288,10 @@ files.
 The original `ip-literature-ultra-v1` directory is retained as immutable experimental evidence.
 Its `progress-manifest.json`, `manifest-history/`, packets, worker outputs, validation reports,
 quarantine records, and completed outputs must not be renamed, rewritten, compressed, or deleted.
-No further screening may be dispatched into that run.
+No further screening may be dispatched into that run. The legacy CLI enforces this boundary before
+any command handler runs: `status` and `audit` remain available, while `prepare`, `start`,
+`validate`, failure/blocker recording, model substitution, phase derivation, and evaluation fail
+closed for the preserved v1 run.
 
 State storage v2 is created additively in the sibling run directory
 `<legacy-run-id>-v2/state-v2/` and has four layers:

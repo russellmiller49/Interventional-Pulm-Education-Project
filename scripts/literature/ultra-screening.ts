@@ -38,6 +38,7 @@ import {
   type ParsedCliArguments,
 } from './lib/cli'
 import { createLiteratureReadClient, executeDatabaseCall } from './lib/database'
+import { assertFrozenLegacyUltraRunIsReadOnly } from './ultra-v1-freeze'
 
 const MANIFEST_VERSION = '1.0.0'
 const DEFAULT_ROOT_PARENT = 'local-data/literature/ultra-screening'
@@ -163,6 +164,7 @@ Usage:
   npm run literature:ultra-screen -- derive --run-root <path> --kind terra --source-phase <id> --challenge-phase <id> --phase <neutral-id>
   npm run literature:ultra-screen -- evaluate --run-root <path> --phase <id> --batch pilot-v1
   npm run literature:ultra-screen -- status --run-root <path>
+  npm run literature:ultra-screen -- audit --run-root <path>
 
 Prepare options:
   --run-id <id>           Required stable run identifier.
@@ -176,6 +178,10 @@ Prepare options:
   --batch <name>          Pilot batch; default pilot-v1.
 
 The script is read-only with respect to Supabase and writes ignored local artifacts only.
+
+Legacy safety boundary:
+  ip-literature-ultra-v1 is frozen experimental evidence. Only status and audit are allowed;
+  every command that could mutate its artifacts fails closed.
 `.trim()
 
 function now() {
@@ -1396,6 +1402,11 @@ async function main() {
     return
   }
   const arguments_ = parseCliArguments(rest)
+  await assertFrozenLegacyUltraRunIsReadOnly({
+    command,
+    runId: stringArgument(arguments_, 'run-id'),
+    runRoot: stringArgument(arguments_, 'run-root'),
+  })
   switch (command) {
     case 'prepare':
       await prepare(arguments_)
