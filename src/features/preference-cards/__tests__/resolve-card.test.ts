@@ -1,12 +1,16 @@
 import {
   buildDemoContext,
   defaultBuildInput,
+  getComposedRecipeSlots,
   resolveDemoScenario,
 } from '../data/demo-context.server'
 import { evaluateCompatibilityRule } from '../domain/evaluate-compatibility'
 import { resolveCard } from '../domain/resolve-card'
 import type { ResolvedCardItem, TypedCompatibilityRule } from '../domain/types'
-import { goldenScenarioExpectations } from '../__fixtures__/golden-scenario-expectations'
+import {
+  goldenScenarioExpectations,
+  goldenScenarioItemOrder,
+} from '../__fixtures__/golden-scenario-expectations'
 import { intentionallyFailingApcRule } from '../__fixtures__/test-compatibility-rules'
 
 /**
@@ -95,11 +99,17 @@ describe('preference-card deterministic resolver', () => {
 
   it('honors an explicit builder selection without changing other roles', () => {
     const context = buildDemoContext('ebus-rose-molecular')
-    const target = context.recipe.slots.find((slot) => slot.requiredness === 'required')
+    const target = getComposedRecipeSlots('ebus-rose-molecular').find(
+      (slot) => slot.requiredness === 'required',
+    )
     if (!target) throw new Error('Expected a required EBUS slot')
     const baseline = resolveCard(defaultBuildInput('ebus-rose-molecular'), context)
-    const input = defaultBuildInput('ebus-rose-molecular')
-    input.selectedHospitalItemIds = { [target.id]: null }
+    // Overriding one requirement now *merges* into the card's explicit selections rather than
+    // replacing them. Replacing used to leave every other line to the formulary-ranking
+    // fallback, which is the implicit behaviour explicit selections exist to remove.
+    const input = defaultBuildInput('ebus-rose-molecular', {
+      selectedHospitalItemIds: { [target.id]: null },
+    })
     const changed = resolveCard(input, context)
 
     expect(changed.items.find((item) => item.id === target.id)).toMatchObject({
@@ -186,8 +196,9 @@ describe('preference-card deterministic resolver', () => {
 
   it('applies a preference overlay only to the targeted slot field', () => {
     const context = buildDemoContext('ebus-rose-molecular')
-    const target = context.recipe.slots[0]
-    const untouched = context.recipe.slots[1]
+    const composed = getComposedRecipeSlots('ebus-rose-molecular')
+    const target = composed[0]
+    const untouched = composed[1]
     context.preferenceOverlays = [
       {
         id: 'test-overlay',
@@ -241,7 +252,9 @@ describe('preference-card deterministic resolver', () => {
 
   it('does not block an undecided conditional slot', () => {
     const context = buildDemoContext('ebus-rose-molecular')
-    const conditional = context.recipe.slots.find((slot) => slot.requiredness === 'conditional')
+    const conditional = getComposedRecipeSlots('ebus-rose-molecular').find(
+      (slot) => slot.requiredness === 'conditional',
+    )
     if (!conditional) throw new Error('Expected a conditional EBUS slot')
     context.hospitalRoleOptions = context.hospitalRoleOptions.filter(
       (option) => option.roleCode !== conditional.roleCode,
@@ -257,7 +270,9 @@ describe('preference-card deterministic resolver', () => {
 
   it('warns on the same unresolved conditional slot once it is included', () => {
     const context = buildDemoContext('ebus-rose-molecular')
-    const conditional = context.recipe.slots.find((slot) => slot.requiredness === 'conditional')
+    const conditional = getComposedRecipeSlots('ebus-rose-molecular').find(
+      (slot) => slot.requiredness === 'conditional',
+    )
     if (!conditional) throw new Error('Expected a conditional EBUS slot')
     context.hospitalRoleOptions = context.hospitalRoleOptions.filter(
       (option) => option.roleCode !== conditional.roleCode,
@@ -353,14 +368,16 @@ describe('preference-card deterministic resolver', () => {
   })
 
   it('retains unmapped section assignments in the explicit unassigned group', () => {
+    // Zone and phase now live on the module's authored slot, not on the procedure.
     const context = buildDemoContext('ebus-rose-molecular')
-    context.recipe.slots[0].setupZone = 'unassigned'
-    context.recipe.slots[0].proceduralPhase = 'unassigned'
+    const target = context.recipeModules[0].slots[0]
+    target.setupZone = 'unassigned'
+    target.proceduralPhase = 'unassigned'
     const card = resolveCard(defaultBuildInput('ebus-rose-molecular'), context)
     expect(
       card.items.some(
         (item) =>
-          item.id === context.recipe.slots[0].id &&
+          item.id === target.id &&
           item.setupZone === 'unassigned' &&
           item.proceduralPhase === 'unassigned',
       ),
@@ -378,12 +395,48 @@ describe('preference-card deterministic resolver', () => {
         itemCount: card.items.length,
         suppressedItemCount: card.suppressedItems.length,
         snapshotHash: card.snapshotHash,
+        // Pinned alongside the storage identity so the two can be seen to move independently:
+        // rewording a rule-trace message moves `snapshotHash` and not this one.
+        resolvedContentHash: card.resolvedContentHash,
       }).toEqual({
         readinessState: expectation.readinessState,
         itemCount: expectation.itemCount,
         suppressedItemCount: expectation.suppressedItemCount,
         snapshotHash: expectation.snapshotHash,
+        resolvedContentHash: expectation.resolvedContentHash,
       })
     },
   )
+
+  /**
+   * Setup order is a clinical statement, so it is asserted as one.
+   *
+   * The hash above proves a card did not change; it cannot say the card is *right*. When
+   * composition first landed, every line reordered to group by contributing module and the
+   * only visible sign was four new hashes.
+   */
+  it.each(Object.values(goldenScenarioItemOrder))(
+    'lays $scenarioId out in the reviewed clinical order',
+    (expectation) => {
+      const card = resolveDemoScenario(expectation.scenarioId, {
+        modifierCodes: [...expectation.modifierCodes],
+      })
+      expect(card.items.map((item) => item.requirementKey)).toEqual([
+        ...expectation.requirementKeys,
+      ])
+    },
+  )
+
+  it('places a shared core requirement where the procedure wants it, not where the core does', () => {
+    // FLEX_BRONCH_SUCTION_SETUP is one requirement defined once by the flexible core. EBUS
+    // wants it eleventh and therapeutic bronchoscopy wants it third, and both get what they
+    // asked for — which is only possible because the procedure owns the sequence.
+    const ebus = resolveDemoScenario('ebus-rose-molecular')
+    const therapeutic = resolveDemoScenario('central-airway-obstruction')
+    const positionOf = (card: { items: ResolvedCardItem[] }) =>
+      card.items.findIndex((item) => item.requirementKey === 'FLEX_BRONCH_SUCTION_SETUP') + 1
+
+    expect(positionOf(ebus)).toBe(11)
+    expect(positionOf(therapeutic)).toBe(3)
+  })
 })

@@ -39,7 +39,13 @@ import {
 import type { CatalogSearchQuery } from '@/features/preference-cards/schemas/catalog-search'
 import type { CatalogVerificationTier } from '@/features/preference-cards/domain/verification'
 import type { CatalogPick } from '@/features/preference-cards/domain/catalog-pick'
-import type { FamilyPick, FamilySpecRange } from '@/features/preference-cards/domain/family-pick'
+import {
+  familySpecRanges,
+  type FamilySpecRange,
+  type FamilySpecSource,
+} from '@/features/preference-cards/domain/family-pick'
+import type { ProductFamilyGovernanceState } from '@/features/preference-cards/domain/product-family'
+import { getReviewedProductFamiliesForRole } from '@/features/preference-cards/data/product-families.server'
 
 /**
  * Server-only catalog queries.
@@ -925,6 +931,24 @@ export function isSlottableProduct(product: CatalogProduct): boolean {
   return product.slottingScope !== 'not_applicable'
 }
 
+/**
+ * Whether reviewed governance currently holds a product out of preference-card selection.
+ *
+ * Asked of *current* data even when everything else about a card is reconstructed from its pinned
+ * catalog release, because it answers a question about today: a device that has since been
+ * reclassified as investigational should stop being attachable to a card, not stay attachable
+ * because it was attachable once. A product the current catalog no longer lists at all is not
+ * "unselectable" — it is simply gone from current data, and its identity comes from the retained
+ * release.
+ */
+export function isProductCurrentlyUnselectable(
+  productId: string,
+  store: CatalogStore = getCatalogStore(),
+): boolean {
+  const product = store.productById.get(productId)
+  return product ? !isSlottableProduct(product) : false
+}
+
 /** Role-scoped product ordering shared by the flat and family-grouped pickers. */
 function orderedRoleProducts(
   params: { roleCode: string; q?: string },
@@ -1017,31 +1041,56 @@ export function searchProductsForRole(
     .map((product) => toRolePickerOption(product, canonicalRoleCode(params.roleCode), store))
 }
 
-const NUMERIC_SPEC_ACCESSORS: { key: SpecColumnKey; read: (p: CatalogProduct) => number | null }[] =
-  [
-    { key: 'diameter_mm', read: (product) => product.diameter_mm },
-    { key: 'length_mm', read: (product) => product.length_mm },
-    { key: 'french_size', read: (product) => product.french_size },
-    { key: 'gauge', read: (product) => product.gauge },
-    { key: 'working_length_cm', read: (product) => product.working_length_cm },
-    { key: 'min_working_channel_mm', read: (product) => product.min_working_channel_mm },
-    { key: 'delivery_system_od_mm', read: (product) => product.delivery_system_od_mm },
-  ]
-
-function familySpecRanges(products: CatalogProduct[]): FamilySpecRange[] {
-  const ranges: FamilySpecRange[] = []
-  for (const accessor of NUMERIC_SPEC_ACCESSORS) {
-    const values = products
-      .map(accessor.read)
-      .filter((value): value is number => typeof value === 'number')
-    if (values.length === 0) continue
-    ranges.push({ key: accessor.key, min: Math.min(...values), max: Math.max(...values) })
+/** Adapt a catalog product to the shared spec-span shape the family modules agree on. */
+function toFamilySpecSource(product: CatalogProduct): FamilySpecSource {
+  return {
+    diameterMm: product.diameter_mm,
+    lengthMm: product.length_mm,
+    frenchSize: product.french_size,
+    gauge: product.gauge,
+    workingLengthCm: product.working_length_cm,
+    minWorkingChannelMm: product.min_working_channel_mm,
+    deliverySystemOdMm: product.delivery_system_od_mm,
   }
-  return ranges
 }
 
+function catalogFamilySpecRanges(products: CatalogProduct[]): FamilySpecRange[] {
+  return familySpecRanges(products.map(toFamilySpecSource))
+}
+
+/**
+ * A catalog-browsing grouping of one role's products, and — when one exists — the reviewed family
+ * version it corresponds to.
+ *
+ * `discoveryKey` was called `familyKey` and is renamed here rather than merely re-documented,
+ * because the whole point of Phase 4A.1 is that this string may be shown and may not be persisted.
+ * A rename makes passing one where a persistable identity belongs a type error rather than a
+ * subtle bug; the picker reads `reviewedFamilyVersionId`, and a null there means the grouping is
+ * browsing only and the whole-line action is withheld.
+ */
 export interface RoleFamilyOption {
-  familyKey: string
+  discoveryKey: string
+  /**
+   * The governance state of the reviewed family covering this grouping, or null when no reviewed
+   * family covers it at all.
+   *
+   * Null and `'draft'` are different situations and must not present identically: null is "nobody
+   * has identified a family here", `'draft'` is "the family is identified and its membership is
+   * frozen, and a clinician has not signed off on it yet". A reviewer looking at a catalog surface
+   * needs to be able to tell those apart; a card may act on neither.
+   */
+  reviewedFamilyGovernanceState: ProductFamilyGovernanceState | null
+  /**
+   * Present only when an **approved** reviewed family version covers this grouping for this role.
+   *
+   * Withheld for draft and retired on purpose rather than gated by a flag downstream: a pick cannot
+   * be constructed from fields that are not there, so a caller that forgets to check governance
+   * gets nothing instead of an unapproved selection.
+   */
+  reviewedFamilyVersionId: string | null
+  reviewedFamilyCode: string | null
+  reviewedFamilyCatalogReleaseId: string | null
+  reviewedFamilyDefinitionHash: string | null
   familyName: string
   manufacturerDisplay: string
   manufacturerGroupId: string
@@ -1100,6 +1149,25 @@ export function searchProductFamiliesForRole(
     else completeFamilies.set(product.familyKey, [product])
   }
 
+  // The reviewed families for this role, indexed by the exact member set they cover. A grouping is
+  // matched to a family version only when the family's membership is exactly the set of products
+  // the grouping holds for this role — never by name, manufacturer, or resemblance, which is the
+  // mapping this whole phase exists to refuse.
+  //
+  // Matched across every governance state so a draft can be *reported*; only an approved match
+  // yields the pin fields below, so only an approved family can be selected.
+  const reviewedFamilies = getReviewedProductFamiliesForRole(roleCode)
+  const reviewedFor = (variants: CatalogProduct[]) => {
+    const ids = new Set(variants.map((variant) => variant.product_id))
+    const matches = reviewedFamilies.filter((family) => {
+      const members = new Set(family.memberProductIds)
+      return members.size === ids.size && [...ids].every((id) => members.has(id))
+    })
+    // An approved match wins over a retired predecessor with the same membership; otherwise the
+    // first retained match reports the state the reviewer needs to see.
+    return matches.find((family) => family.governanceState === 'approved') ?? matches[0] ?? null
+  }
+
   const distribution = getDistributionMap()
   const families: RoleFamilyOption[] = []
   for (const [familyKey, variants] of grouped) {
@@ -1113,8 +1181,18 @@ export function searchProductFamiliesForRole(
         (left.french_size ?? 0) - (right.french_size ?? 0) ||
         left.product_name.localeCompare(right.product_name),
     )
+    // Matched against the *complete* role-scoped grouping, not the search-filtered subset: a text
+    // query that matches three of a line's eighteen sizes must not make the line look like a
+    // different, smaller family than the one that was reviewed.
+    const reviewed = reviewedFor(completeFamily)
+    const selectable = reviewed?.governanceState === 'approved' ? reviewed : null
     families.push({
-      familyKey,
+      discoveryKey: familyKey,
+      reviewedFamilyGovernanceState: reviewed?.governanceState ?? null,
+      reviewedFamilyVersionId: selectable?.productFamilyVersionId ?? null,
+      reviewedFamilyCode: selectable?.productFamilyCode ?? null,
+      reviewedFamilyCatalogReleaseId: selectable?.catalogReleaseId ?? null,
+      reviewedFamilyDefinitionHash: selectable?.definitionHash ?? null,
       familyName: first.familyName,
       manufacturerDisplay: first.manufacturerDisplay,
       manufacturerGroupId: first.manufacturerGroupId,
@@ -1133,7 +1211,7 @@ export function searchProductFamiliesForRole(
       regulatoryStatus: unanimousFamilyValue(
         completeFamily.map((variant) => variant.regulatoryStatus),
       ),
-      specRanges: familySpecRanges(variants),
+      specRanges: catalogFamilySpecRanges(variants),
       placementMethods: [
         ...new Set(
           variants
@@ -1150,41 +1228,19 @@ export function searchProductFamiliesForRole(
 }
 
 /**
- * Rebuild a family pick from its key alone, the family-level twin of {@link getCatalogPick}.
- * The wizard sends only the key on save, so the line's identity always comes from the
- * catalog. Scoped to the role so a family that does not serve the requirement cannot be
- * attached to it.
+ * There is deliberately no current-catalog family-pick builder here.
+ *
+ * One existed and was removed: nothing in production called it, and it built a `FamilyPick` from a
+ * family version *without* consulting governance — an ungoverned twin sitting next to the governed
+ * path, waiting for someone to wire it up believing it was the picker. Family picks are built in
+ * exactly two places now: `toFamilyPick` in the picker, which only receives pin fields for an
+ * approved family, and `historicalFamilyPick`, which rebuilds a saved card's line from the catalog
+ * release it was pinned to.
+ *
+ * Note also what has no builder at all: there is no lookup by discovery key. A saved card carrying
+ * one cannot be turned into a family pick, which is the point — the key names a grouping, not a
+ * membership.
  */
-export function getFamilyPick(
-  familyKey: string,
-  requestedRoleCode: string,
-  store: CatalogStore = getCatalogStore(),
-): FamilyPick | null {
-  // Same reasoning as resolveCatalogPick: family item ids embed the role as
-  // `family-role:{role}:{key}`, so a pre-rename saved card asks for the old code.
-  const roleCode = canonicalRoleCode(requestedRoleCode)
-  const variants = (store.productIdsByRole.get(roleCode) ?? [])
-    .map((productId) => store.productById.get(productId))
-    .filter((product): product is CatalogProduct => Boolean(product))
-    .filter((product) => isSlottableProduct(product) && product.familyKey === familyKey)
-  if (variants.length === 0) return null
-
-  const first = variants[0]
-  return {
-    familyKey,
-    roleCode,
-    familyName: first.familyName,
-    manufacturerDisplay: first.manufacturerDisplay,
-    variantCount: variants.length,
-    specRanges: familySpecRanges(variants),
-    verificationTier: variants.every((variant) => variant.verificationTier === 'verified')
-      ? 'verified'
-      : 'candidate',
-    usStatusPending: variants.some((variant) => variant.usStatusPending),
-    sourceId: first.primary_source_id,
-    sourceLocation: first.primary_source_location,
-  }
-}
 
 export interface EmergingDevice {
   productId: string

@@ -1,14 +1,17 @@
 import {
   buildDemoContext,
   defaultBuildInput,
+  getComposedRecipeSlots,
   getScenarioDefinition,
 } from '../data/demo-context.server'
+import { getReviewedProductFamiliesForRole } from '../data/product-families.server'
+import { getCurrentReleaseBundleForScenario } from '../data/release-bundles.server'
 import { catalogPickItemId } from '../domain/catalog-pick'
 import { customItemId } from '../domain/custom-item'
 import { equipmentSetItemId } from '../domain/equipment-set'
 import { familyPickId } from '../domain/size-at-procedure'
 import type { BuilderInputs, SaveCardRequest } from '../schemas/saved-card'
-import { saveCardRequestSchema } from '../schemas/saved-card'
+import { BUILDER_INPUTS_SCHEMA_VERSION, saveCardRequestSchema } from '../schemas/saved-card'
 import { getCatalogStore, searchProductsForRole } from '../server/catalog'
 import { resolveForSave } from '../server/user-cards'
 
@@ -16,8 +19,16 @@ const GENERATED_AT = '2026-07-28T12:00:00.000Z'
 const SCENARIO_ID = 'chest-tube'
 const VALID_ROLE = 'GENERIC_DRAINAGE_UNIT'
 
+function currentReleaseBundleId(): string {
+  const bundle = getCurrentReleaseBundleForScenario(SCENARIO_ID)
+  expect(bundle).not.toBeNull()
+  return bundle!.id
+}
+
 function baseInputs(): BuilderInputs {
   return {
+    schemaVersion: BUILDER_INPUTS_SCHEMA_VERSION,
+    releaseBundleId: currentReleaseBundleId(),
     scenarioId: SCENARIO_ID,
     input: defaultBuildInput(SCENARIO_ID),
     catalogPicks: [],
@@ -63,7 +74,9 @@ describe('save-time catalog product-role integrity', () => {
   it('preserves valid existing saved-card reconstruction', () => {
     const productId = validProductId()
     const context = buildDemoContext(SCENARIO_ID)
-    const slot = context.recipe.slots.find((candidate) => candidate.roleCode === VALID_ROLE)
+    const slot = getComposedRecipeSlots(SCENARIO_ID).find(
+      (candidate) => candidate.roleCode === VALID_ROLE,
+    )
     expect(slot).toBeDefined()
     const input = defaultBuildInput(SCENARIO_ID)
     input.modifierCodes = []
@@ -95,6 +108,7 @@ describe('save-time catalog product-role integrity', () => {
 
     expect(resolveForSave(request, GENERATED_AT)).toEqual({
       ok: false,
+      code: 'catalog_pick_unavailable',
       error: `Catalog product ${productId} is not mapped to role ${wrongRole}.`,
     })
   })
@@ -106,6 +120,7 @@ describe('save-time catalog product-role integrity', () => {
 
     expect(resolveForSave(request, GENERATED_AT)).toEqual({
       ok: false,
+      code: 'catalog_pick_unavailable',
       error: 'Unknown catalog product PRD-DOESNOTEXIST.',
     })
   })
@@ -118,6 +133,7 @@ describe('save-time catalog product-role integrity', () => {
 
     expect(resolveForSave(request, GENERATED_AT)).toEqual({
       ok: false,
+      code: 'catalog_pick_unavailable',
       error: 'Unknown catalog role NOT_A_REAL_ROLE.',
     })
   })
@@ -140,6 +156,7 @@ describe('save-time catalog product-role integrity', () => {
 
     expect(resolveForSave(request, GENERATED_AT)).toEqual({
       ok: false,
+      code: 'equipment_set_unavailable',
       error: `Catalog product ${productId} is not mapped to role ${wrongRole} in set "Tampered set".`,
     })
   })
@@ -147,7 +164,9 @@ describe('save-time catalog product-role integrity', () => {
   it('rebuilds and selects a valid equipment-set member at save time', () => {
     const productId = validProductId()
     const context = buildDemoContext(SCENARIO_ID)
-    const slot = context.recipe.slots.find((candidate) => candidate.roleCode === VALID_ROLE)
+    const slot = getComposedRecipeSlots(SCENARIO_ID).find(
+      (candidate) => candidate.roleCode === VALID_ROLE,
+    )
     expect(slot).toBeDefined()
     const setId = 'set-valid-integrity-test'
     const input = defaultBuildInput(SCENARIO_ID)
@@ -180,7 +199,9 @@ describe('save-time catalog product-role integrity', () => {
   it('preserves custom-item reconstruction at save time', () => {
     const roleCode = 'PLEURAL_DRAINAGE_ACCESSORY'
     const context = buildDemoContext(SCENARIO_ID)
-    const slot = context.recipe.slots.find((candidate) => candidate.roleCode === roleCode)
+    const slot = getComposedRecipeSlots(SCENARIO_ID).find(
+      (candidate) => candidate.roleCode === roleCode,
+    )
     expect(slot).toBeDefined()
     const input = defaultBuildInput(SCENARIO_ID)
     input.selectedHospitalItemIds = { [slot!.id]: customItemId('custom-integrity-test') }
@@ -213,12 +234,12 @@ describe('save-time catalog product-role integrity', () => {
     const productId = 'PRD-4CC32EE889'
     const roleCodes = ['EBV_VALVE', 'EBV_DELIVERY_CATHETER'] as const
     const definition = getScenarioDefinition(scenarioId)
-    const context = buildDemoContext(scenarioId)
+    const composedSlots = getComposedRecipeSlots(scenarioId)
     expect(definition).not.toBeNull()
 
     const selectedHospitalItemIds = Object.fromEntries(
       roleCodes.map((roleCode) => {
-        const slot = context.recipe.slots.find((candidate) => candidate.roleCode === roleCode)
+        const slot = composedSlots.find((candidate) => candidate.roleCode === roleCode)
         expect(slot).toBeDefined()
         return [slot!.id, catalogPickItemId(productId)]
       }),
@@ -226,6 +247,8 @@ describe('save-time catalog product-role integrity', () => {
     const input = defaultBuildInput(scenarioId)
     input.selectedHospitalItemIds = selectedHospitalItemIds
     const request = saveCardRequestSchema.parse({
+      schemaVersion: BUILDER_INPUTS_SCHEMA_VERSION,
+      releaseBundleId: getCurrentReleaseBundleForScenario(scenarioId)!.id,
       scenarioId,
       title: 'Multi-role product integrity test',
       physicianName: null,
@@ -249,44 +272,73 @@ describe('save-time catalog product-role integrity', () => {
     }
   })
 
-  it('preserves two role-scoped selections from the same product family', () => {
-    const scenarioId = 'rigid-bronch'
-    const familyKey = 'MFR-6208838930|gss|implant'
+  it('keeps the two role-scoped GSS lines apart as separate reviewed families', () => {
+    // The Novatech GSS brand family serves both the straight and the Y stent requirements, and the
+    // discovery grouping merged them into one key. Reviewed families are role-scoped, so the two
+    // are separate versions with separate memberships — a card asking for the straight line is not
+    // also asking for the bifurcation.
     const roleCodes = ['AIRWAY_STENT_SILICONE_STRAIGHT', 'AIRWAY_STENT_SILICONE_Y'] as const
-    const definition = getScenarioDefinition(scenarioId)
-    const context = buildDemoContext(scenarioId)
-    expect(definition).not.toBeNull()
 
-    const selectedHospitalItemIds = Object.fromEntries(
-      roleCodes.map((roleCode) => {
-        const slot = context.recipe.slots.find((candidate) => candidate.roleCode === roleCode)
-        expect(slot).toBeDefined()
-        return [slot!.id, familyPickId(familyKey, roleCode)]
-      }),
+    const versions = roleCodes.map((roleCode) => {
+      const version = getReviewedProductFamiliesForRole(roleCode).find((candidate) =>
+        candidate.productFamilyCode.startsWith('NOVATECH_GSS'),
+      )
+      expect(version).toBeDefined()
+      return { roleCode, version: version! }
+    })
+
+    expect(new Set(versions.map((entry) => entry.version.productFamilyVersionId)).size).toBe(2)
+    // Separate memberships, not one list shown twice.
+    expect(versions[0].version.memberProductIds).not.toEqual(versions[1].version.memberProductIds)
+    for (const { roleCode, version } of versions) {
+      expect(version.roleCodes).toEqual([roleCode])
+    }
+  })
+
+  it('refuses to save a card that names a draft family, however well-formed the pin', () => {
+    // Every seeded family is awaiting clinical review, so none of them may reach a stored card —
+    // and the wall is the save path rather than the picker, because a save-time caller is
+    // untrusted.
+    const scenarioId = 'rigid-bronch'
+    const roleCode = 'AIRWAY_STENT_SILICONE_STRAIGHT'
+    const definition = getScenarioDefinition(scenarioId)
+    expect(definition).not.toBeNull()
+    const version = getReviewedProductFamiliesForRole(roleCode)[0]
+    expect(version.governanceState).toBe('draft')
+
+    const slot = getComposedRecipeSlots(scenarioId).find(
+      (candidate) => candidate.roleCode === roleCode,
     )
+    expect(slot).toBeDefined()
     const input = defaultBuildInput(scenarioId)
-    input.selectedHospitalItemIds = selectedHospitalItemIds
+    input.selectedHospitalItemIds = {
+      ...input.selectedHospitalItemIds,
+      [slot!.id]: familyPickId(version.productFamilyVersionId),
+    }
+
     const request = saveCardRequestSchema.parse({
+      schemaVersion: BUILDER_INPUTS_SCHEMA_VERSION,
+      releaseBundleId: getCurrentReleaseBundleForScenario(scenarioId)!.id,
       scenarioId,
-      title: 'Multi-role family integrity test',
+      title: 'Draft family refusal',
       physicianName: null,
       status: 'draft',
       input: { ...input, recipeVersionId: definition!.recipeVersionId },
       catalogPicks: [],
-      familyPicks: roleCodes.map((roleCode) => ({ familyKey, roleCode })),
+      familyPicks: [
+        {
+          productFamilyVersionId: version.productFamilyVersionId,
+          catalogReleaseId: version.catalogReleaseId,
+          definitionHash: version.definitionHash,
+          roleCode,
+        },
+      ],
       customItems: [],
       equipmentSets: [],
     })
 
     const result = resolveForSave(request, GENERATED_AT)
-
-    expect(result.ok).toBe(true)
-    if (result.ok) {
-      for (const roleCode of roleCodes) {
-        const item = result.card.items.find((candidate) => candidate.roleCode === roleCode)
-        expect(item?.selectedHospitalItemId).toBe(familyPickId(familyKey, roleCode))
-        expect(item?.selectedItemSnapshot?.roleCode).toBe(roleCode)
-      }
-    }
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.code).toBe('product_family_unavailable')
   })
 })

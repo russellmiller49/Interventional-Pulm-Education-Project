@@ -1,0 +1,289 @@
+{
+  "formatVersion": "1.0",
+  "notes": [
+    "Reviewed assignment of imported procedure slots to reusable recipe modules.",
+    "A requirement joins a shared module only by an explicit entry here. Matching role codes, similar labels, and clinical resemblance never create membership on their own — the same role legitimately appears more than once on a card, and two procedures can want the same role in materially different ways.",
+    "'definitionSourceSlotId' names the imported row whose content the module carries. 'sourceSlotAliases' names the rows that requirement absorbed; they are kept so modifier targeting and audit trails written against the original ids keep working.",
+    "'remainingSlotsFromProcedure' assigns every slot of one procedure that no other module in this file claims. It is the identity mapping — it creates no cross-procedure equivalence — and it is how a procedure with no reviewed core mapping keeps its current card exactly.",
+    "build with: npm run ip-cards:compositions"
+  ],
+  "modules": [
+    {
+      "code": "FLEX_BRONCH_CORE",
+      "version": "1.0",
+      "name": "Flexible Bronchoscopy Core",
+      "kind": "core",
+      "governanceState": "draft",
+      "clinicalOwner": null,
+      "operationalOwner": null,
+      "description": "The imaging and suction setup every flexible bronchoscopy shares, whatever is done through the scope.",
+      "requirements": [
+        {
+          "requirementKey": "FLEX_BRONCH_VIDEO_PROCESSOR",
+          "definitionSourceSlotId": "SLOT-7DFA66EA2D",
+          "sourceSlotAliases": ["SLOT-6BCA0B7A49"],
+          "sequence": 2,
+          "reason": "EBUS-TBNA and therapeutic flexible bronchoscopy both open with a compatible video processor and light source. The two imported rows differ only in label wording; role, requiredness, selection mode, quantity, section, and generic requirement are identical."
+        },
+        {
+          "requirementKey": "FLEX_BRONCH_SUCTION_SETUP",
+          "definitionSourceSlotId": "SLOT-2E3065C976",
+          "sourceSlotAliases": ["SLOT-13609A744F"],
+          "sequence": 11,
+          "reason": "Both procedures require a suction source with tubing and canisters as a multiple-selection line. The therapeutic card's high-flow expectation and the EBUS card's aspiration syringes are restored as procedure notes rather than by forking the requirement."
+        }
+      ]
+    },
+    {
+      "code": "THERAPEUTIC_BRONCH_CORE",
+      "version": "1.0",
+      "name": "Therapeutic Bronchoscopy Core",
+      "kind": "core",
+      "governanceState": "draft",
+      "clinicalOwner": null,
+      "operationalOwner": null,
+      "description": "The therapeutic platform shared by flexible airway intervention: a large-channel therapeutic bronchoscope and flexible grasping forceps.",
+      "requirements": [
+        {
+          "requirementKey": "THERAPEUTIC_BRONCHOSCOPE_PLATFORM",
+          "definitionSourceSlotId": "SLOT-B79D3CF198",
+          "sourceSlotAliases": ["SLOT-D49EAA8281"],
+          "sequence": 1,
+          "reason": "Therapeutic flexible bronchoscopy and endobronchial valve placement both require a therapeutic bronchoscope, with byte-identical label, generic requirement, role, requiredness, selection mode, quantity, and section. The valve card's channel-matching note is restored by a composition action."
+        },
+        {
+          "requirementKey": "AIRWAY_RETRIEVAL_FORCEPS",
+          "definitionSourceSlotId": "SLOT-1647A73048",
+          "sourceSlotAliases": ["SLOT-6AC64B5E3D"],
+          "sequence": 6,
+          "reason": "Both rows carry the identical generic requirement 'Flexible forceps for foreign body or tissue retrieval' in the Retrieval section. The valve card's requiredness, dependency, and retrieval-specific wording are restored by composition actions rather than by keeping two copies of one requirement."
+        }
+      ]
+    },
+    {
+      "code": "PLEURAL_PROCEDURE_CORE",
+      "version": "1.0",
+      "name": "Pleural Procedure Core",
+      "kind": "core",
+      "governanceState": "draft",
+      "clinicalOwner": null,
+      "operationalOwner": null,
+      "description": "The ultrasound setup every pleural intervention is planned around.",
+      "requirements": [
+        {
+          "requirementKey": "PLEURAL_ULTRASOUND_MACHINE",
+          "definitionSourceSlotId": "SLOT-E91A13EE9E",
+          "sourceSlotAliases": ["SLOT-C7DBD5BC4C", "SLOT-6E9F37C656", "SLOT-8E4B5F2EC9"],
+          "sequence": 1,
+          "reason": "Thoracentesis, chest tube insertion, tunnelled IPC placement, and medical thoracoscopy all open on an ultrasound machine with a sterile probe cover, as a single-selection Imaging line with the same quantity. The chest-tube card's optional requiredness and image-guidance condition, and the IPC card's pleural-access wording, are restored by composition actions."
+        }
+      ]
+    },
+    {
+      "code": "PROCEDURAL_FLUOROSCOPY",
+      "version": "1.0",
+      "name": "Procedural Fluoroscopy",
+      "kind": "optional",
+      "governanceState": "draft",
+      "clinicalOwner": null,
+      "operationalOwner": null,
+      "description": "Mobile C-arm and the radiation protection that has to be in the room with it. Included by default where the imported template already asked for it, and available to add where fluoroscopy is a local practice.",
+      "requirements": [
+        {
+          "requirementKey": "PROCEDURAL_FLUOROSCOPY_C_ARM",
+          "definitionSourceSlotId": "SLOT-F3BF1ECC7E",
+          "sourceSlotAliases": ["SLOT-49F20FD8F8"],
+          "sequence": 14,
+          "reason": "The EBUS-TBNA and therapeutic-bronchoscopy C-arm rows are identical in every field except display order."
+        },
+        {
+          "requirementKey": "PROCEDURAL_RADIATION_PROTECTION",
+          "definitionSourceSlotId": "SLOT-1D13D48BD7",
+          "sourceSlotAliases": ["SLOT-945FA4AAF8"],
+          "sequence": 15,
+          "reason": "The two radiation-protection rows are identical in every field except display order, and travel with the C-arm rather than standing alone."
+        }
+      ]
+    },
+    {
+      "code": "EBUS_TBNA_SPECIFIC",
+      "version": "1.0",
+      "name": "EBUS-TBNA specific requirements",
+      "kind": "procedure_specific",
+      "governanceState": "draft",
+      "clinicalOwner": null,
+      "operationalOwner": null,
+      "description": "What EBUS-TBNA needs beyond the flexible bronchoscopy core: the linear EBUS scope, its ultrasound chain, and the needle and specimen workflow.",
+      "remainingSlotsFromProcedure": "EBUS_TBNA",
+      "reason": "Every EBUS-TBNA row not claimed by the flexible bronchoscopy core or the fluoroscopy module."
+    },
+    {
+      "code": "THERAPEUTIC_BRONCH_SPECIFIC",
+      "version": "1.0",
+      "name": "Therapeutic flexible bronchoscopy specific requirements",
+      "kind": "procedure_specific",
+      "governanceState": "draft",
+      "clinicalOwner": null,
+      "operationalOwner": null,
+      "description": "What therapeutic flexible bronchoscopy needs beyond the shared cores: energy, cryotherapy, dilation, stents, retrieval, and peripheral navigation.",
+      "remainingSlotsFromProcedure": "THERAPEUTIC_BRONCH",
+      "reason": "Every therapeutic-bronchoscopy row not claimed by the flexible bronchoscopy core, the therapeutic bronchoscopy core, or the fluoroscopy module."
+    },
+    {
+      "code": "EBV_SPECIFIC",
+      "version": "1.0",
+      "name": "Endobronchial valve specific requirements",
+      "kind": "procedure_specific",
+      "governanceState": "draft",
+      "clinicalOwner": null,
+      "operationalOwner": null,
+      "description": "What endobronchial valve placement needs beyond the therapeutic bronchoscopy core: collateral ventilation assessment, the valve and its delivery and sizing systems, and the chest-drainage rescue readiness.",
+      "remainingSlotsFromProcedure": "EBV",
+      "reason": "Every endobronchial-valve row not claimed by the therapeutic bronchoscopy core."
+    },
+    {
+      "code": "THORACENTESIS_SPECIFIC",
+      "version": "1.0",
+      "name": "Thoracentesis specific requirements",
+      "kind": "procedure_specific",
+      "governanceState": "draft",
+      "clinicalOwner": null,
+      "operationalOwner": null,
+      "description": "What thoracentesis needs beyond the pleural core: the catheter tray, the drainage path, specimen containers, and the dressing.",
+      "remainingSlotsFromProcedure": "THORACENTESIS",
+      "reason": "Every thoracentesis row not claimed by the pleural procedure core."
+    },
+    {
+      "code": "CHEST_TUBE_SPECIFIC",
+      "version": "1.0",
+      "name": "Chest tube insertion specific requirements",
+      "kind": "procedure_specific",
+      "governanceState": "draft",
+      "clinicalOwner": null,
+      "operationalOwner": null,
+      "description": "What chest tube insertion needs beyond the pleural core: the small-bore, large-bore, and surgical tube branches, the drainage unit, and the securement and long-term drainage pathways.",
+      "remainingSlotsFromProcedure": "CHEST_TUBE",
+      "reason": "Every chest-tube row not claimed by the pleural procedure core."
+    },
+    {
+      "code": "IPC_PLACEMENT_SPECIFIC",
+      "version": "1.0",
+      "name": "Tunnelled indwelling pleural catheter specific requirements",
+      "kind": "procedure_specific",
+      "governanceState": "draft",
+      "clinicalOwner": null,
+      "operationalOwner": null,
+      "description": "What tunnelled IPC placement needs beyond the pleural core: the insertion, drainage, and dressing kits and the patient-education handover.",
+      "remainingSlotsFromProcedure": "IPC_PLACEMENT",
+      "reason": "Every IPC-placement row not claimed by the pleural procedure core."
+    },
+    {
+      "code": "MED_THORACOSCOPY_SPECIFIC",
+      "version": "1.0",
+      "name": "Medical thoracoscopy specific requirements",
+      "kind": "procedure_specific",
+      "governanceState": "draft",
+      "clinicalOwner": null,
+      "operationalOwner": null,
+      "description": "What medical thoracoscopy needs beyond the pleural core: the pleuroscope and telescope, access and instrumentation, pleurodesis, energy, and post-procedure drainage.",
+      "remainingSlotsFromProcedure": "MED_THORACOSCOPY",
+      "reason": "Every medical-thoracoscopy row not claimed by the pleural procedure core."
+    },
+    {
+      "code": "BRONCH_ABLATION_SPECIFIC",
+      "version": "1.0",
+      "name": "Bronchoscopic tumor ablation requirements",
+      "kind": "procedure_specific",
+      "governanceState": "draft",
+      "clinicalOwner": null,
+      "operationalOwner": null,
+      "description": "The imported bronchoscopic tumor ablation template, unchanged. No reviewed common-core mapping exists for this procedure yet.",
+      "remainingSlotsFromProcedure": "BRONCH_ABLATION",
+      "reason": "No clinician-reviewed core mapping exists for this procedure; its card is preserved exactly."
+    },
+    {
+      "code": "FLEX_DIAGNOSTIC_SPECIFIC",
+      "version": "1.0",
+      "name": "Diagnostic flexible bronchoscopy requirements",
+      "kind": "procedure_specific",
+      "governanceState": "draft",
+      "clinicalOwner": null,
+      "operationalOwner": null,
+      "description": "The imported diagnostic flexible bronchoscopy template, unchanged. Its suction row is a single-selection line where the flexible bronchoscopy core's is multiple, so joining the core would change what the card asks for.",
+      "remainingSlotsFromProcedure": "FLEX_DIAGNOSTIC",
+      "reason": "Its GENERIC_SUCTION row is selection_mode 'single' where FLEX_BRONCH_SUCTION_SETUP is 'multiple'; adopting the core would silently change the requirement. Left for clinical review."
+    },
+    {
+      "code": "ICU_BRONCH_SPECIFIC",
+      "version": "1.0",
+      "name": "ICU / bedside bronchoscopy requirements",
+      "kind": "procedure_specific",
+      "governanceState": "draft",
+      "clinicalOwner": null,
+      "operationalOwner": null,
+      "description": "The imported ICU / bedside bronchoscopy template, unchanged. No reviewed common-core mapping exists for this procedure yet.",
+      "remainingSlotsFromProcedure": "ICU_BRONCH",
+      "reason": "No clinician-reviewed core mapping exists for this procedure; its card is preserved exactly."
+    },
+    {
+      "code": "PERC_TRACH_SPECIFIC",
+      "version": "1.0",
+      "name": "Percutaneous dilational tracheostomy requirements",
+      "kind": "procedure_specific",
+      "governanceState": "draft",
+      "clinicalOwner": null,
+      "operationalOwner": null,
+      "description": "The imported percutaneous dilational tracheostomy template, unchanged. No reviewed common-core mapping exists for this procedure yet.",
+      "remainingSlotsFromProcedure": "PERC_TRACH",
+      "reason": "No clinician-reviewed core mapping exists for this procedure; its card is preserved exactly."
+    },
+    {
+      "code": "PHOTODYNAMIC_THERAPY_SPECIFIC",
+      "version": "1.0",
+      "name": "Photodynamic therapy requirements",
+      "kind": "procedure_specific",
+      "governanceState": "draft",
+      "clinicalOwner": null,
+      "operationalOwner": null,
+      "description": "The imported endobronchial photodynamic therapy template, unchanged. No reviewed common-core mapping exists for this procedure yet.",
+      "remainingSlotsFromProcedure": "PHOTODYNAMIC_THERAPY",
+      "reason": "No clinician-reviewed core mapping exists for this procedure; its card is preserved exactly."
+    },
+    {
+      "code": "RIGID_BRONCH_SPECIFIC",
+      "version": "1.0",
+      "name": "Rigid bronchoscopy requirements",
+      "kind": "procedure_specific",
+      "governanceState": "draft",
+      "clinicalOwner": null,
+      "operationalOwner": null,
+      "description": "The imported rigid bronchoscopy template, unchanged. It shares a great deal of therapeutic content with flexible therapeutic bronchoscopy, but it is the one procedure with no suction row at all and its platform assumptions differ.",
+      "remainingSlotsFromProcedure": "RIGID_BRONCH",
+      "reason": "Shares energy, dilation, stent, and retrieval content with THERAPEUTIC_BRONCH but has no GENERIC_SUCTION row and a different platform. Left for clinical review."
+    },
+    {
+      "code": "TB_RULEOUT_SPECIFIC",
+      "version": "1.0",
+      "name": "TB rule-out bronchoscopy requirements",
+      "kind": "procedure_specific",
+      "governanceState": "draft",
+      "clinicalOwner": null,
+      "operationalOwner": null,
+      "description": "The imported TB rule-out bronchoscopy template, unchanged. No reviewed common-core mapping exists for this procedure yet.",
+      "remainingSlotsFromProcedure": "TB_RULEOUT",
+      "reason": "No clinician-reviewed core mapping exists for this procedure; its card is preserved exactly."
+    },
+    {
+      "code": "WLL_SPECIFIC",
+      "version": "1.0",
+      "name": "Whole lung lavage requirements",
+      "kind": "procedure_specific",
+      "governanceState": "draft",
+      "clinicalOwner": null,
+      "operationalOwner": null,
+      "description": "The imported whole lung lavage template, unchanged. No reviewed common-core mapping exists for this procedure yet.",
+      "remainingSlotsFromProcedure": "WLL",
+      "reason": "No clinician-reviewed core mapping exists for this procedure; its card is preserved exactly."
+    }
+  ]
+}

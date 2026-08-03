@@ -3,18 +3,25 @@ import type { HospitalItem, HospitalRoleOption, VerificationState } from './type
 import { familyPickId } from './size-at-procedure'
 
 /**
- * A whole product line chosen for a requirement, with the size left to the procedure.
+ * A whole reviewed product line chosen for a requirement, with the size left to the procedure.
  *
  * Airway stents are the reason this exists: the diameter and length are chosen once the
  * stenosis is measured, so a card that says "Novatech DUMON TD, size at time of procedure"
  * is more honest than one naming a size nobody can know in advance. The expectation the
  * card sets is that the line is available in the room.
  *
+ * Which makes the identity load-bearing. A card asking for "the line" is asking for a *specific
+ * set of products*, and until Phase 4A.1 it named that set with a discovery key — a string built
+ * from a manufacturer, a label that falls back to a subcategory, and a product kind, recomputed on
+ * every request. A pick now names a reviewed family version, and carries the three fields that
+ * make the naming verifiable: the catalog release the membership is true of, the definition hash
+ * the membership had when it was chosen, and the role it was chosen for.
+ *
  * Like {@link CatalogPick}, the wizard builds one of these from the picker API for immediate
- * preview and the server rebuilds it from the catalog at save time using only the family
- * key, so a client cannot forge product identity into a saved card. Both paths run the same
- * construction below, so preview and saved output agree — including the snapshot hash, which
- * is why the size-range wording is derived here rather than passed in.
+ * preview and the server rebuilds it at save time from identifiers alone, so a client cannot forge
+ * product identity into a saved card. Both paths run the same construction below, so preview and
+ * saved output agree — including the snapshot hash, which is why the size-range wording is derived
+ * here rather than passed in.
  */
 
 export interface FamilySpecRange {
@@ -24,7 +31,13 @@ export interface FamilySpecRange {
 }
 
 export interface FamilyPick {
-  familyKey: string
+  /** The reviewed, versioned, immutable identity. Never a discovery key. */
+  productFamilyVersionId: string
+  productFamilyCode: string
+  /** The catalog release this family's membership was reviewed against. */
+  catalogReleaseId: string
+  /** The membership hash at the moment of selection, re-verified on every reconstruction. */
+  definitionHash: string
   roleCode: string
   familyName: string
   manufacturerDisplay: string
@@ -71,6 +84,50 @@ export function formatFamilySizeRange(specRanges: FamilySpecRange[]): string {
     .join(' · ')
 }
 
+/** The numeric spec fields a family's size span is summarized over, in display order. */
+export interface FamilySpecSource {
+  diameterMm: number | null
+  lengthMm: number | null
+  frenchSize: number | null
+  gauge: number | null
+  workingLengthCm: number | null
+  minWorkingChannelMm: number | null
+  deliverySystemOdMm: number | null
+}
+
+const FAMILY_SPEC_ACCESSORS: Array<{
+  key: string
+  read: (source: FamilySpecSource) => number | null
+}> = [
+  { key: 'diameter_mm', read: (source) => source.diameterMm },
+  { key: 'length_mm', read: (source) => source.lengthMm },
+  { key: 'french_size', read: (source) => source.frenchSize },
+  { key: 'gauge', read: (source) => source.gauge },
+  { key: 'working_length_cm', read: (source) => source.workingLengthCm },
+  { key: 'min_working_channel_mm', read: (source) => source.minWorkingChannelMm },
+  { key: 'delivery_system_od_mm', read: (source) => source.deliverySystemOdMm },
+]
+
+/**
+ * The size span across a line's variants.
+ *
+ * Lives here rather than in the catalog query layer because two callers must agree on it exactly:
+ * the picker, which computes it from the current catalog, and reconstruction, which computes it
+ * from the retained rows of the pinned catalog release. The wording it produces is inside the
+ * snapshot hash, so two implementations would be two cards.
+ */
+export function familySpecRanges(sources: FamilySpecSource[]): FamilySpecRange[] {
+  const ranges: FamilySpecRange[] = []
+  for (const accessor of FAMILY_SPEC_ACCESSORS) {
+    const values = sources
+      .map(accessor.read)
+      .filter((value): value is number => typeof value === 'number')
+    if (values.length === 0) continue
+    ranges.push({ key: accessor.key, min: Math.min(...values), max: Math.max(...values) })
+  }
+  return ranges
+}
+
 export function familyPickDescription(pick: FamilyPick): string {
   return `${pick.manufacturerDisplay} ${pick.familyName} — size at time of procedure`
 }
@@ -93,7 +150,10 @@ export function familyPickToHospitalItem(
   scope: { organizationId: string; siteId: string; locationId: string },
   roleScopedIdentity = false,
 ): HospitalItem {
-  const itemId = familyPickId(pick.familyKey, roleScopedIdentity ? pick.roleCode : undefined)
+  const itemId = familyPickId(
+    pick.productFamilyVersionId,
+    roleScopedIdentity ? pick.roleCode : undefined,
+  )
   return {
     id: itemId,
     organizationId: scope.organizationId,
@@ -135,11 +195,14 @@ export function familyPickToRoleOption(
   pick: FamilyPick,
   roleScopedIdentity = false,
 ): HospitalRoleOption {
-  const itemId = familyPickId(pick.familyKey, roleScopedIdentity ? pick.roleCode : undefined)
+  const itemId = familyPickId(
+    pick.productFamilyVersionId,
+    roleScopedIdentity ? pick.roleCode : undefined,
+  )
   return {
     id: roleScopedIdentity
-      ? `family-option-${pick.roleCode}-${pick.familyKey}`
-      : `family-option-${pick.familyKey}`,
+      ? `family-option-${pick.roleCode}-${pick.productFamilyVersionId}`
+      : `family-option-${pick.productFamilyVersionId}`,
     roleCode: pick.roleCode,
     hospitalItemId: itemId,
     preferenceRank: 99,
@@ -169,13 +232,16 @@ export function withFamilyPicks<
   const extraItems: HospitalItem[] = []
   const rolesByFamily = new Map<string, Set<string>>()
   for (const pick of picks) {
-    const roles = rolesByFamily.get(pick.familyKey) ?? new Set<string>()
+    const roles = rolesByFamily.get(pick.productFamilyVersionId) ?? new Set<string>()
     roles.add(pick.roleCode)
-    rolesByFamily.set(pick.familyKey, roles)
+    rolesByFamily.set(pick.productFamilyVersionId, roles)
   }
   for (const pick of picks) {
-    const roleScopedIdentity = (rolesByFamily.get(pick.familyKey)?.size ?? 0) > 1
-    const itemId = familyPickId(pick.familyKey, roleScopedIdentity ? pick.roleCode : undefined)
+    const roleScopedIdentity = (rolesByFamily.get(pick.productFamilyVersionId)?.size ?? 0) > 1
+    const itemId = familyPickId(
+      pick.productFamilyVersionId,
+      roleScopedIdentity ? pick.roleCode : undefined,
+    )
     if (seenItemIds.has(itemId)) continue
     seenItemIds.add(itemId)
     extraItems.push(familyPickToHospitalItem(pick, scope, roleScopedIdentity))
@@ -184,7 +250,7 @@ export function withFamilyPicks<
   const seenOptionIds = new Set(context.hospitalRoleOptions.map((option) => option.id))
   const extraOptions: HospitalRoleOption[] = []
   for (const pick of picks) {
-    const roleScopedIdentity = (rolesByFamily.get(pick.familyKey)?.size ?? 0) > 1
+    const roleScopedIdentity = (rolesByFamily.get(pick.productFamilyVersionId)?.size ?? 0) > 1
     const option = familyPickToRoleOption(pick, roleScopedIdentity)
     if (seenOptionIds.has(option.id)) continue
     seenOptionIds.add(option.id)

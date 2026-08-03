@@ -88,6 +88,22 @@ export type QuantityExpression = QuantityLiteral
 export interface RecipeSlot {
   id: string
   sourceSlotId: string | null
+  /**
+   * Stable semantic identity for the requirement this slot expresses.
+   *
+   * Two module-authored slots are the *same requirement* only when a reviewed mapping file
+   * gives them the same key. Role-code equality is never sufficient — the same role
+   * legitimately appears more than once on a card, and two procedures can ask for the same
+   * role in materially different ways.
+   */
+  requirementKey: string
+  /**
+   * Imported slot ids that this requirement absorbed when it moved into a shared module.
+   * Modifier targeting and audit trails keep working against the original ids.
+   */
+  sourceSlotAliases?: string[]
+  /** Set when the slot came from one or more recipe modules; absent for direct slots. */
+  sourceModuleVersionIds?: string[]
   roleCode: string
   label: string
   genericRequirement: string
@@ -106,6 +122,72 @@ export interface RecipeSlot {
   includedBy: string
 }
 
+/**
+ * Recipe modules are composed, never inherited. A procedure names the exact module
+ * *versions* it is built from; the modules themselves know nothing about the procedures
+ * that use them.
+ */
+export type RecipeModuleKind = 'core' | 'procedure_specific' | 'optional'
+
+export type ModuleSelectionBehavior = 'required' | 'default_on' | 'optional'
+
+export type ModuleSelectionSource = 'required' | 'default' | 'user_selected'
+
+export interface RecipeModuleVersion {
+  id: string
+  code: string
+  name: string
+  description: string
+  version: string
+  kind: RecipeModuleKind
+  governanceState: GovernanceState
+  clinicalOwner: string | null
+  operationalOwner: string | null
+  catalogImportId: string
+  slots: RecipeSlot[]
+}
+
+export interface RecipeModuleReference {
+  moduleVersionId: string
+  selectionBehavior: ModuleSelectionBehavior
+  sequence: number
+}
+
+export type ProcedureCompositionActionType =
+  | 'remove_slot'
+  | 'set_requiredness'
+  | 'set_quantity'
+  | 'set_setup_zone'
+  | 'set_procedural_phase'
+  | 'set_open_hold_status'
+  | 'append_note'
+
+/**
+ * A reviewed, explicit adjustment a procedure makes to a requirement it inherits from a
+ * module. There is no implicit override channel: what a composition changes, it says.
+ */
+export interface ProcedureCompositionAction {
+  id: string
+  sequence: number
+  actionType: ProcedureCompositionActionType
+  targetRequirementKey?: string
+  targetSlotId?: string
+  targetRoleCode?: string
+  payload: Record<string, unknown>
+}
+
+export interface IncludedRecipeModule {
+  moduleVersionId: string
+  moduleCode: string
+  moduleName: string
+  moduleVersion: string
+  kind: RecipeModuleKind
+  selectionBehavior: ModuleSelectionBehavior
+  selectionSource: ModuleSelectionSource
+  governanceState: GovernanceState
+  requirementCount: number
+}
+
 export interface RecipeVersion {
   id: string
   sourceProcedureCode: string
@@ -116,7 +198,40 @@ export interface RecipeVersion {
   clinicalOwner: string | null
   operationalOwner: string | null
   catalogImportId: string
+  /**
+   * Slots authored directly on the procedure rather than through a module. Composed
+   * procedures leave this empty; it stays available for migration and for the unusual
+   * requirement that genuinely belongs to one procedure and nothing else.
+   */
   slots: RecipeSlot[]
+  moduleReferences: RecipeModuleReference[]
+  compositionActions: ProcedureCompositionAction[]
+  /**
+   * The modifier codes this procedure offers, as reviewed clinical governance rather than a
+   * UI hint.
+   *
+   * It used to live only on `ScenarioDefinition`, where it gated the picker and nothing else:
+   * `resolveCard` looked a submitted code up in the *whole* merged modifier set, so a crafted
+   * request naming a real modifier the procedure never offered was applied and stored. Hiding
+   * a control is not authorization. Living here makes it part of `recipeDefinitionHash`, so a
+   * release pins which modifiers were offered and a card cannot be resolved against a
+   * permission the release never granted.
+   */
+  allowedModifierCodes: string[]
+  /**
+   * Where this procedure wants each requirement in its own setup order, keyed by
+   * `requirementKey`.
+   *
+   * A module authors the order of its requirements *within itself*, which is the only
+   * order it can know; a shared core has no idea where a therapeutic bronchoscopy wants
+   * suction relative to a cryoprobe it has never heard of. The procedure does, and this is
+   * where it says so. Generated from the reviewed template's own `display_order`, so the
+   * clinical sequence a reviewer signed off on survives being assembled from modules.
+   *
+   * A requirement with no entry here — an optional module on a procedure whose template
+   * never listed it — falls back to the module band and lands after everything authored.
+   */
+  requirementSequences?: Record<string, number>
 }
 
 export interface CatalogProductSummary {
@@ -196,7 +311,13 @@ export interface ModifierAction {
   modifierCode: string
   sequence: number
   actionType: ModifierActionType
+  /**
+   * Matches the expanded slot id, the imported `sourceSlotId`, or any value in
+   * `sourceSlotAliases` — so a modifier authored against a pre-composition slot id keeps
+   * hitting the requirement after it moves into a shared module.
+   */
   targetSlotId?: string
+  targetRequirementKey?: string
   targetRoleCode?: string
   payload: Record<string, unknown>
 }
@@ -275,11 +396,62 @@ export interface BuildCardInput {
   locationId: string
   recipeVersionId: string
   userId?: string
+  /**
+   * The exact module versions this card was built from. Stored verbatim rather than
+   * recomputed from selection behaviour, so a later change to what is default-on cannot
+   * silently reinterpret a saved card.
+   */
+  selectedModuleVersionIds: string[]
   modifierCodes: string[]
   variables: Record<string, string | number | boolean | null>
   conditionalStates?: Record<string, ConditionalState>
+  /**
+   * Which hospital item each requirement resolves to, keyed by composed slot id.
+   *
+   * `null` means "deliberately nothing", which is a decision and not a gap. A key that is
+   * absent entirely means the card has never expressed an opinion about that requirement.
+   */
   selectedHospitalItemIds?: Record<string, string | null>
+  /**
+   * Whether `selectedHospitalItemIds` is the complete record of this card's choices.
+   *
+   * Set once the builder has materialized a default for every requirement. From then on an
+   * absent key means "not chosen" rather than "fall back to whatever the formulary ranks
+   * first" — so a re-ranked formulary can no longer change what a saved card asks for. Cards
+   * written before densification leave it unset and keep the old fallback, because inventing
+   * an explicit selection for them would be choosing on the physician's behalf.
+   */
+  selectionsAreExplicit?: boolean
   waivers?: Record<string, string>
+}
+
+/**
+ * Which release, catalog, and resolver contract a card was resolved through.
+ *
+ * Carried onto the resolved card because the semantic content projection needs stable release and
+ * catalog identity, and the card previously had neither: `catalogImportId` on a card is the source
+ * *workbook* digest — provenance printed on the page — while the catalog *release* digest a
+ * release bundle pins lives only on the bundle. Two different questions that happened to share a
+ * field name.
+ *
+ * Every field is nullable except the contract version, because the resolver is also driven from
+ * places where no release exists: administrative previews of a composition, the generated scenario
+ * fixtures, and the demo context. Those resolve honestly with nulls rather than being handed a
+ * release nobody selected.
+ */
+export interface CardResolutionProvenance {
+  releaseBundleId: string | null
+  releaseDefinitionHash: string | null
+  /** The catalog release the card's product identity is reconstructable from. */
+  catalogReleaseId: string | null
+  resolverContractVersion: string
+}
+
+/** Stable organization/site/location identifiers, as distinct from the display names. */
+export interface CardScope {
+  organizationId: string
+  siteId: string
+  locationId: string
 }
 
 export interface BuildContext {
@@ -287,7 +459,20 @@ export interface BuildContext {
   siteName: string
   locationName: string
   locationCapabilities: string[]
+  /**
+   * The release identity this context was built from, when it was built from one.
+   *
+   * Release-pinned rather than hospital-local: it names the immutable definition set the rest of
+   * the pinned half came from. Null when the context was assembled without a release.
+   */
+  releaseIdentity: {
+    releaseBundleId: string
+    releaseDefinitionHash: string
+    catalogReleaseId: string
+  } | null
   recipe: RecipeVersion
+  /** Every module version the recipe's composition can reach. Nothing else is selectable. */
+  recipeModules: RecipeModuleVersion[]
   modifiers: ModifierDefinition[]
   rescueModules: RescueModule[]
   hospitalItems: HospitalItem[]
@@ -301,6 +486,7 @@ export interface RuleTraceEvent {
   sequence: number
   kind:
     | 'base_recipe'
+    | 'composition'
     | 'modifier'
     | 'conflict'
     | 'rescue_module'
@@ -324,6 +510,7 @@ export interface RuleMessage {
   message: string
   sourceType:
     | 'recipe'
+    | 'recipe_module'
     | 'modifier'
     | 'slot'
     | 'hospital_item'
@@ -338,6 +525,9 @@ export interface RuleMessage {
 export interface ResolvedCardItem {
   id: string
   sourceSlotId: string | null
+  /** Absent on snapshots written before composition; present on every composed line. */
+  requirementKey?: string
+  sourceModuleVersionIds?: string[]
   roleCode: string
   label: string
   genericRequirement: string
@@ -369,7 +559,20 @@ export interface ResolvedCard {
   organizationName: string
   siteName: string
   locationName: string
+  /** Stable identifiers behind the three display names above. */
+  scope: CardScope
+  /** Which release, catalog release, and resolver contract produced this card. */
+  resolutionProvenance: CardResolutionProvenance
   selectedModifiers: string[]
+  /**
+   * The composition manifest. Part of the snapshot hash: a card built from different
+   * modules, or from a different version of the same module, is a different card.
+   *
+   * Optional because snapshots written before composition do not have one. `resolveCard`
+   * always sets it; the field is optional so every reader of a *stored* card is made to
+   * handle the older shape instead of trusting the type.
+   */
+  includedModules?: IncludedRecipeModule[]
   items: ResolvedCardItem[]
   suppressedItems: ResolvedCardItem[]
   warnings: RuleMessage[]
@@ -378,7 +581,16 @@ export interface ResolvedCard {
   ruleTrace: RuleTraceEvent[]
   engineVersion: string
   catalogImportId: string
+  /**
+   * Storage identity: stable across re-saves of unchanged content, and what the `snapshot_hash`
+   * column holds. Not proof of what was printed and not a semantic comparison — see
+   * `card-hashes.ts`, which explains why one hash could not be all three.
+   */
   snapshotHash: string
+  /** Tamper detection over the complete stored snapshot, including `generatedAt`. */
+  snapshotIntegrityHash: string
+  /** The documented semantic projection: what the resolver decided, without implementation prose. */
+  resolvedContentHash: string
   generatedAt: string
   prototype: boolean
 }

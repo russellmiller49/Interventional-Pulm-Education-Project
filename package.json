@@ -74,6 +74,9 @@
     "dump:ecmo-signals": "esbuild scripts/critical-care/dump-ecmo-signals.mts --bundle --platform=node --format=cjs --log-level=error --outfile=node_modules/.cache/ecmo/dump.cjs && node node_modules/.cache/ecmo/dump.cjs",
     "dump:mv-waveforms": "esbuild scripts/critical-care/dump-mv-waveforms.mts --bundle --platform=node --format=cjs --log-level=error --outfile=node_modules/.cache/mv-console/dump.cjs && node node_modules/.cache/mv-console/dump.cjs",
     "ip-cards:scenarios": "tsx scripts/ip-preference-cards/generate-scenarios.ts",
+    "ip-cards:compositions": "tsx scripts/ip-preference-cards/build-recipe-compositions.ts",
+    "ip-cards:releases": "tsx scripts/ip-preference-cards/build-release-bundles.ts",
+    "ip-cards:release:check-base": "tsx scripts/ip-preference-cards/check-publication-baseline.ts",
     "ip-cards:gudid": "tsx scripts/ip-preference-cards/build-gudid-index.ts",
     "ip-cards:additions": "tsx scripts/ip-preference-cards/build-catalog-additions.ts",
     "ip-cards:gudid-confirm": "tsx scripts/ip-preference-cards/gudid-confirm.ts"

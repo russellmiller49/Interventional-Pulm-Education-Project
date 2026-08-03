@@ -1,0 +1,852 @@
+{
+  "pointers": {
+    "BRONCH_ABLATION": "release-bronch-ablation-v1-0",
+    "CHEST_TUBE": "release-chest-tube-v1-0",
+    "CUSTOM_COMPOSITION": "release-custom-composition-v1-0",
+    "EBUS_TBNA": "release-ebus-tbna-v1-0",
+    "EBV": "release-ebv-v1-0",
+    "FLEX_DIAGNOSTIC": "release-flex-diagnostic-v1-0",
+    "ICU_BRONCH": "release-icu-bronch-v1-0",
+    "IPC_PLACEMENT": "release-ipc-placement-v1-0",
+    "MED_THORACOSCOPY": "release-med-thoracoscopy-v1-0",
+    "PERC_TRACH": "release-perc-trach-v1-0",
+    "PHOTODYNAMIC_THERAPY": "release-photodynamic-therapy-v1-0",
+    "RIGID_BRONCH": "release-rigid-bronch-v1-0",
+    "TB_RULEOUT": "release-tb-ruleout-v1-0",
+    "THERAPEUTIC_BRONCH": "release-therapeutic-bronch-v1-0",
+    "THORACENTESIS": "release-thoracentesis-v1-0",
+    "WLL": "release-wll-v1-0"
+  },
+  "bundles": [
+    {
+      "id": "release-bronch-ablation-v1-0",
+      "sourceProcedureCode": "BRONCH_ABLATION",
+      "scenarioId": "bronch-ablation",
+      "recipeVersionId": "recipe-bronch-ablation-v0-1",
+      "recipeDefinitionHash": "46ee98c1b4b20d36b21fe3794b7dca43f90b78e71f997d3f49b88fba9bc96d32",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-bronch-ablation-specific-v1-0",
+          "moduleCode": "BRONCH_ABLATION_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "215eee2349d547c0e0afa5de623110bdc4559337c0ae37743d9203bebe22cb7a"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-07-31T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": null,
+      "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
+      "definitionHash": "ce82343b0080fa443c5a4d971cf8b5cdb9271e3a14cb6b597fe3c28874c97a57"
+    },
+    {
+      "id": "release-chest-tube-v1-0",
+      "sourceProcedureCode": "CHEST_TUBE",
+      "scenarioId": "chest-tube",
+      "recipeVersionId": "recipe-chest-tube-v0-1",
+      "recipeDefinitionHash": "0ee6a826648d845662a536db35503a9683bac35d6fce8a7e886a68e775e12ee0",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-chest-tube-specific-v1-0",
+          "moduleCode": "CHEST_TUBE_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "d24829c0fd1dd6f3577fe0a8544a89a1023b3a4e896879fddc127bd42ec3f97e"
+        },
+        {
+          "moduleVersionId": "module-pleural-procedure-core-v1-0",
+          "moduleCode": "PLEURAL_PROCEDURE_CORE",
+          "moduleVersion": "1.0",
+          "definitionHash": "7ecc7767daa0ba06993cafb67fe1ea1ce6b63374bf2d4d029ad16aeac1544c32"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-07-31T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": null,
+      "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
+      "definitionHash": "ccfa44053d1096744732a0e9c56e20b15967854988bd8a953e1c372add9a2e4d"
+    },
+    {
+      "id": "release-custom-composition-v1-0",
+      "sourceProcedureCode": "CUSTOM_COMPOSITION",
+      "scenarioId": "custom-composition",
+      "recipeVersionId": "recipe-custom-composition-v1-0",
+      "recipeDefinitionHash": "541dadf452338b1eeb904d88405e7df0bfbf37fc6ee2d68f737727677d6508bf",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-bronch-ablation-specific-v1-0",
+          "moduleCode": "BRONCH_ABLATION_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "215eee2349d547c0e0afa5de623110bdc4559337c0ae37743d9203bebe22cb7a"
+        },
+        {
+          "moduleVersionId": "module-chest-tube-specific-v1-0",
+          "moduleCode": "CHEST_TUBE_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "d24829c0fd1dd6f3577fe0a8544a89a1023b3a4e896879fddc127bd42ec3f97e"
+        },
+        {
+          "moduleVersionId": "module-ebus-tbna-specific-v1-0",
+          "moduleCode": "EBUS_TBNA_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "15039c48c4b727737a7852bcf69e529b9edd5287058f32dabd0a3c6051f1a1b9"
+        },
+        {
+          "moduleVersionId": "module-ebv-specific-v1-0",
+          "moduleCode": "EBV_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "4cfb67d73588169ab6f58e1f46cbe5b0db99b80e4e6f85b1542a34ba4b252216"
+        },
+        {
+          "moduleVersionId": "module-flex-bronch-core-v1-0",
+          "moduleCode": "FLEX_BRONCH_CORE",
+          "moduleVersion": "1.0",
+          "definitionHash": "57aadaf01a58ecddec1b12de6d4be3dc11ff86a362b141f3f109494dc0b11fc4"
+        },
+        {
+          "moduleVersionId": "module-flex-diagnostic-specific-v1-0",
+          "moduleCode": "FLEX_DIAGNOSTIC_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "2c056de53c0ef627bfb78fd105d7968448755d1ec00fb47d364f3c4077fe6195"
+        },
+        {
+          "moduleVersionId": "module-icu-bronch-specific-v1-0",
+          "moduleCode": "ICU_BRONCH_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "0c46ed7fd57d4cdcabcdd0bdb9dd4c3d0a1342abaf444891b67282640d1e89c0"
+        },
+        {
+          "moduleVersionId": "module-ipc-placement-specific-v1-0",
+          "moduleCode": "IPC_PLACEMENT_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "04558dbdb71b09cca69ecac109d71fa64e2acebf3ceabc6a944848cd0a97f1d8"
+        },
+        {
+          "moduleVersionId": "module-med-thoracoscopy-specific-v1-0",
+          "moduleCode": "MED_THORACOSCOPY_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "73f248e4adcd04b2cacdceec574b04f49bf13da415d5c0a4cf3132b3bf342735"
+        },
+        {
+          "moduleVersionId": "module-perc-trach-specific-v1-0",
+          "moduleCode": "PERC_TRACH_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "d6fbc561ecacd0253f170b34d748e25936e35c55b81ae6a3a9cb46e46b4db70e"
+        },
+        {
+          "moduleVersionId": "module-photodynamic-therapy-specific-v1-0",
+          "moduleCode": "PHOTODYNAMIC_THERAPY_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "80362d1440a2fa70d53f96ee80b59e681448a04c949a656bbd55450e65b7a9d1"
+        },
+        {
+          "moduleVersionId": "module-pleural-procedure-core-v1-0",
+          "moduleCode": "PLEURAL_PROCEDURE_CORE",
+          "moduleVersion": "1.0",
+          "definitionHash": "7ecc7767daa0ba06993cafb67fe1ea1ce6b63374bf2d4d029ad16aeac1544c32"
+        },
+        {
+          "moduleVersionId": "module-procedural-fluoroscopy-v1-0",
+          "moduleCode": "PROCEDURAL_FLUOROSCOPY",
+          "moduleVersion": "1.0",
+          "definitionHash": "eb323e693de084f5dd620a45e195b1df1d5603b91f84d015240c23a4732d7278"
+        },
+        {
+          "moduleVersionId": "module-rigid-bronch-specific-v1-0",
+          "moduleCode": "RIGID_BRONCH_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "60871cc2b9a82a9d56beb7ce91644f446e131a81825c8589dddb966d2873615f"
+        },
+        {
+          "moduleVersionId": "module-tb-ruleout-specific-v1-0",
+          "moduleCode": "TB_RULEOUT_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "878ef6f9599e4ac872b19e1686e62ffd5115d0bd2b995bdd35fed4dc1dec7eb1"
+        },
+        {
+          "moduleVersionId": "module-therapeutic-bronch-core-v1-0",
+          "moduleCode": "THERAPEUTIC_BRONCH_CORE",
+          "moduleVersion": "1.0",
+          "definitionHash": "73d6dc9aad0f4b9367707373252564e68190398d84e792936aee630c6a0d874c"
+        },
+        {
+          "moduleVersionId": "module-therapeutic-bronch-specific-v1-0",
+          "moduleCode": "THERAPEUTIC_BRONCH_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "8052d3bcb2ab075efb25575abb7fc96c2863bbdfd84ecd1be831bb55b281858a"
+        },
+        {
+          "moduleVersionId": "module-thoracentesis-specific-v1-0",
+          "moduleCode": "THORACENTESIS_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "06ddde2d38482c217e4a21d2aa5f42d8b05cfa7b3924467884141a0f11d62834"
+        },
+        {
+          "moduleVersionId": "module-wll-specific-v1-0",
+          "moduleCode": "WLL_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "e1707612175e1e6bb3875d65d6918d2349b7bdc444b04f92cf062b7af30bae1b"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-07-31T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": null,
+      "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
+      "definitionHash": "229c870d61ff3c106a8c4a985956add797c4d883724876a53ab0a12dcda0debf"
+    },
+    {
+      "id": "release-ebus-tbna-v1-0",
+      "sourceProcedureCode": "EBUS_TBNA",
+      "scenarioId": "ebus-rose-molecular",
+      "recipeVersionId": "recipe-ebus-tbna-v0-1",
+      "recipeDefinitionHash": "178ad4be92e4bd53d594d7fc795dbabc9b55a6d97cabf2b930b86e9d2e3495a7",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-ebus-tbna-specific-v1-0",
+          "moduleCode": "EBUS_TBNA_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "15039c48c4b727737a7852bcf69e529b9edd5287058f32dabd0a3c6051f1a1b9"
+        },
+        {
+          "moduleVersionId": "module-flex-bronch-core-v1-0",
+          "moduleCode": "FLEX_BRONCH_CORE",
+          "moduleVersion": "1.0",
+          "definitionHash": "57aadaf01a58ecddec1b12de6d4be3dc11ff86a362b141f3f109494dc0b11fc4"
+        },
+        {
+          "moduleVersionId": "module-procedural-fluoroscopy-v1-0",
+          "moduleCode": "PROCEDURAL_FLUOROSCOPY",
+          "moduleVersion": "1.0",
+          "definitionHash": "eb323e693de084f5dd620a45e195b1df1d5603b91f84d015240c23a4732d7278"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-07-31T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": null,
+      "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
+      "definitionHash": "db46d9cca5db256ed3e7025aee36069eb4676b970f0648db7407b2040b660ea8"
+    },
+    {
+      "id": "release-ebv-v1-0",
+      "sourceProcedureCode": "EBV",
+      "scenarioId": "ebv",
+      "recipeVersionId": "recipe-ebv-v0-1",
+      "recipeDefinitionHash": "0c069b63b93a58c937fabcfa90ca359803d33a35685e0da58aac0bf21495a61d",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-ebv-specific-v1-0",
+          "moduleCode": "EBV_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "4cfb67d73588169ab6f58e1f46cbe5b0db99b80e4e6f85b1542a34ba4b252216"
+        },
+        {
+          "moduleVersionId": "module-procedural-fluoroscopy-v1-0",
+          "moduleCode": "PROCEDURAL_FLUOROSCOPY",
+          "moduleVersion": "1.0",
+          "definitionHash": "eb323e693de084f5dd620a45e195b1df1d5603b91f84d015240c23a4732d7278"
+        },
+        {
+          "moduleVersionId": "module-therapeutic-bronch-core-v1-0",
+          "moduleCode": "THERAPEUTIC_BRONCH_CORE",
+          "moduleVersion": "1.0",
+          "definitionHash": "73d6dc9aad0f4b9367707373252564e68190398d84e792936aee630c6a0d874c"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-07-31T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": null,
+      "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
+      "definitionHash": "83331d1e12a36a688f22eb0c44d8555d57b370da32fd67361027c92e89a61a54"
+    },
+    {
+      "id": "release-flex-diagnostic-v1-0",
+      "sourceProcedureCode": "FLEX_DIAGNOSTIC",
+      "scenarioId": "flex-diagnostic",
+      "recipeVersionId": "recipe-flex-diagnostic-v0-1",
+      "recipeDefinitionHash": "2d892623214e79e1da6529792fd203cb002bb534fe00e80cc6fe26963201c411",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-flex-diagnostic-specific-v1-0",
+          "moduleCode": "FLEX_DIAGNOSTIC_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "2c056de53c0ef627bfb78fd105d7968448755d1ec00fb47d364f3c4077fe6195"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-07-31T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": null,
+      "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
+      "definitionHash": "3b163b8b7d223461a6c604883be48ba4949dfbac3dd6ea88114865af7345613f"
+    },
+    {
+      "id": "release-icu-bronch-v1-0",
+      "sourceProcedureCode": "ICU_BRONCH",
+      "scenarioId": "icu-bronch",
+      "recipeVersionId": "recipe-icu-bronch-v0-1",
+      "recipeDefinitionHash": "c1104ee97a25cd037256dc230fa50e9486be225bcf14bed1d71b312827fe89d6",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-icu-bronch-specific-v1-0",
+          "moduleCode": "ICU_BRONCH_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "0c46ed7fd57d4cdcabcdd0bdb9dd4c3d0a1342abaf444891b67282640d1e89c0"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-07-31T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": null,
+      "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
+      "definitionHash": "366353fa2a66c4da0df0937af760b2344c31ab071a1447a2a2f20f605f34db6e"
+    },
+    {
+      "id": "release-ipc-placement-v1-0",
+      "sourceProcedureCode": "IPC_PLACEMENT",
+      "scenarioId": "ipc-placement",
+      "recipeVersionId": "recipe-ipc-placement-v0-1",
+      "recipeDefinitionHash": "fe455332f7ed9b4141978a01d841cd169b3868feb5f15354d67d775fd94aa021",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-ipc-placement-specific-v1-0",
+          "moduleCode": "IPC_PLACEMENT_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "04558dbdb71b09cca69ecac109d71fa64e2acebf3ceabc6a944848cd0a97f1d8"
+        },
+        {
+          "moduleVersionId": "module-pleural-procedure-core-v1-0",
+          "moduleCode": "PLEURAL_PROCEDURE_CORE",
+          "moduleVersion": "1.0",
+          "definitionHash": "7ecc7767daa0ba06993cafb67fe1ea1ce6b63374bf2d4d029ad16aeac1544c32"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-07-31T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": null,
+      "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
+      "definitionHash": "6b51ab3cc173c865e7d5d60f2aa2c0914a4a75711592a54ebda74ee499624d16"
+    },
+    {
+      "id": "release-med-thoracoscopy-v1-0",
+      "sourceProcedureCode": "MED_THORACOSCOPY",
+      "scenarioId": "med-thoracoscopy",
+      "recipeVersionId": "recipe-med-thoracoscopy-v0-1",
+      "recipeDefinitionHash": "19e52f71ad40d2298ea9533b20430c9dd47971fa657741211e018f1aac389b06",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-med-thoracoscopy-specific-v1-0",
+          "moduleCode": "MED_THORACOSCOPY_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "73f248e4adcd04b2cacdceec574b04f49bf13da415d5c0a4cf3132b3bf342735"
+        },
+        {
+          "moduleVersionId": "module-pleural-procedure-core-v1-0",
+          "moduleCode": "PLEURAL_PROCEDURE_CORE",
+          "moduleVersion": "1.0",
+          "definitionHash": "7ecc7767daa0ba06993cafb67fe1ea1ce6b63374bf2d4d029ad16aeac1544c32"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-07-31T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": null,
+      "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
+      "definitionHash": "8b8878eb3f02ee1be4567c596ec0042bc5e88a26da80a764c4001bc95cb0cec7"
+    },
+    {
+      "id": "release-perc-trach-v1-0",
+      "sourceProcedureCode": "PERC_TRACH",
+      "scenarioId": "perc-trach",
+      "recipeVersionId": "recipe-perc-trach-v0-1",
+      "recipeDefinitionHash": "b6969a7cd568ebbec98a9e7f6f0c0dcbeaccb7996e1c72e298c97df374407825",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-perc-trach-specific-v1-0",
+          "moduleCode": "PERC_TRACH_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "d6fbc561ecacd0253f170b34d748e25936e35c55b81ae6a3a9cb46e46b4db70e"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-07-31T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": null,
+      "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
+      "definitionHash": "13b8606bad18a7b381528c9c1393e6ec1d5719752fdc39364f7e6126bb6db4a6"
+    },
+    {
+      "id": "release-photodynamic-therapy-v1-0",
+      "sourceProcedureCode": "PHOTODYNAMIC_THERAPY",
+      "scenarioId": "photodynamic-therapy",
+      "recipeVersionId": "recipe-photodynamic-therapy-v0-1",
+      "recipeDefinitionHash": "78af479cc3389f456fd42b5c82f8f63e977fdac2df6a9cbdc9776941121bb584",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-photodynamic-therapy-specific-v1-0",
+          "moduleCode": "PHOTODYNAMIC_THERAPY_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "80362d1440a2fa70d53f96ee80b59e681448a04c949a656bbd55450e65b7a9d1"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-07-31T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": null,
+      "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
+      "definitionHash": "bb2ca4c45bbde0f24a5fd661ddbdf534fc20d6d84e73db159c3b0308da4b1060"
+    },
+    {
+      "id": "release-rigid-bronch-v1-0",
+      "sourceProcedureCode": "RIGID_BRONCH",
+      "scenarioId": "rigid-bronch",
+      "recipeVersionId": "recipe-rigid-bronch-v0-1",
+      "recipeDefinitionHash": "1046f6674c847b2e95685325e99dc8e95b16e3960e97cb0697593e48a3fc956b",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-rigid-bronch-specific-v1-0",
+          "moduleCode": "RIGID_BRONCH_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "60871cc2b9a82a9d56beb7ce91644f446e131a81825c8589dddb966d2873615f"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-07-31T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": null,
+      "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
+      "definitionHash": "4a9676ea84ecc2eb74fea7e55c7bfc600b398c9638a4feeb10cd67939f736885"
+    },
+    {
+      "id": "release-tb-ruleout-v1-0",
+      "sourceProcedureCode": "TB_RULEOUT",
+      "scenarioId": "tb-ruleout",
+      "recipeVersionId": "recipe-tb-ruleout-v0-1",
+      "recipeDefinitionHash": "28d8f11a40022db04de04dcd0db7a89f92b974f1d19889174a3ce8a875d5e3b8",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-tb-ruleout-specific-v1-0",
+          "moduleCode": "TB_RULEOUT_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "878ef6f9599e4ac872b19e1686e62ffd5115d0bd2b995bdd35fed4dc1dec7eb1"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-07-31T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": null,
+      "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
+      "definitionHash": "86aa250a9772757c3aaa656e7245d1f650e72ba932ec0fd5e9f39ba73e49f63f"
+    },
+    {
+      "id": "release-therapeutic-bronch-v1-0",
+      "sourceProcedureCode": "THERAPEUTIC_BRONCH",
+      "scenarioId": "central-airway-obstruction",
+      "recipeVersionId": "recipe-therapeutic-bronch-v0-1",
+      "recipeDefinitionHash": "d8a141e8fe4c3646db676cf9de403d2c3a41b8118e984f07c58519aaf4648dba",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-flex-bronch-core-v1-0",
+          "moduleCode": "FLEX_BRONCH_CORE",
+          "moduleVersion": "1.0",
+          "definitionHash": "57aadaf01a58ecddec1b12de6d4be3dc11ff86a362b141f3f109494dc0b11fc4"
+        },
+        {
+          "moduleVersionId": "module-procedural-fluoroscopy-v1-0",
+          "moduleCode": "PROCEDURAL_FLUOROSCOPY",
+          "moduleVersion": "1.0",
+          "definitionHash": "eb323e693de084f5dd620a45e195b1df1d5603b91f84d015240c23a4732d7278"
+        },
+        {
+          "moduleVersionId": "module-therapeutic-bronch-core-v1-0",
+          "moduleCode": "THERAPEUTIC_BRONCH_CORE",
+          "moduleVersion": "1.0",
+          "definitionHash": "73d6dc9aad0f4b9367707373252564e68190398d84e792936aee630c6a0d874c"
+        },
+        {
+          "moduleVersionId": "module-therapeutic-bronch-specific-v1-0",
+          "moduleCode": "THERAPEUTIC_BRONCH_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "8052d3bcb2ab075efb25575abb7fc96c2863bbdfd84ecd1be831bb55b281858a"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-07-31T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": null,
+      "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
+      "definitionHash": "10b7a6ed40b4d73855c514275697522978133734be6feb3c975711d5691217ed"
+    },
+    {
+      "id": "release-thoracentesis-v1-0",
+      "sourceProcedureCode": "THORACENTESIS",
+      "scenarioId": "thoracentesis",
+      "recipeVersionId": "recipe-thoracentesis-v0-1",
+      "recipeDefinitionHash": "051867fdab177a991916edfe43b2e7d316494ebe87bc4347de1c3df00f77a1c0",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-pleural-procedure-core-v1-0",
+          "moduleCode": "PLEURAL_PROCEDURE_CORE",
+          "moduleVersion": "1.0",
+          "definitionHash": "7ecc7767daa0ba06993cafb67fe1ea1ce6b63374bf2d4d029ad16aeac1544c32"
+        },
+        {
+          "moduleVersionId": "module-thoracentesis-specific-v1-0",
+          "moduleCode": "THORACENTESIS_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "06ddde2d38482c217e4a21d2aa5f42d8b05cfa7b3924467884141a0f11d62834"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-07-31T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": null,
+      "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
+      "definitionHash": "e4d69a5f09af247baee0905e4035bb1d06579276a1b64bf37caf7addd1e16505"
+    },
+    {
+      "id": "release-wll-v1-0",
+      "sourceProcedureCode": "WLL",
+      "scenarioId": "wll",
+      "recipeVersionId": "recipe-wll-v0-1",
+      "recipeDefinitionHash": "b1ba09f4c08bb22b858f1c5e3c0e0ebed530c88c1219a3c3d7e21a55cd7583b8",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-wll-specific-v1-0",
+          "moduleCode": "WLL_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "e1707612175e1e6bb3875d65d6918d2349b7bdc444b04f92cf062b7af30bae1b"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-07-31T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": null,
+      "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
+      "definitionHash": "cd17245b0c74cd7dab45e5e59173b47895dd6f39a2ad759dbcb361ce3c4fe6e5"
+    }
+  ]
+}

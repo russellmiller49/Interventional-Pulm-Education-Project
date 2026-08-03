@@ -1,0 +1,3698 @@
+[
+  {
+    "previousReleaseBundleId": null,
+    "nextReleaseBundleId": "release-bronch-ablation-v1-0",
+    "sourceProcedureCode": "BRONCH_ABLATION",
+    "identical": false,
+    "pinChanges": [
+      {
+        "pin": "definition-set-compatibility-rules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      {
+        "pin": "definition-set-modifiers",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      {
+        "pin": "definition-set-rescue-modules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      {
+        "pin": "definition-set-role-taxonomy",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      {
+        "pin": "module:module-bronch-ablation-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "215eee2349d547c0e0afa5de623110bdc4559337c0ae37743d9203bebe22cb7a"
+      },
+      {
+        "pin": "recipe:recipe-bronch-ablation-v0-1",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "46ee98c1b4b20d36b21fe3794b7dca43f90b78e71f997d3f49b88fba9bc96d32"
+      }
+    ],
+    "requirementChanges": [
+      {
+        "requirementKey": "SLOT-03C81C8ED9",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-06198365DB",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-063C99B0F4",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-213AD02F3D",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-26B0E004DD",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-2EDD1F1A49",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-408806A1E9",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-5B5D976D2A",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-7DBF54AF12",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-8399A6050E",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-89F6487409",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-8AB12F127A",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-90EACE8A77",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-97AE031E2A",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-B7C11A32AD",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-BE38624BB8",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-C862A72632",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D0D9794E05",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D8AC96F833",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-DB4AA915E7",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-E3604B09C0",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-E919659133",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-F66DEC963D",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      }
+    ],
+    "catalogImportChanged": false,
+    "resolverContractChanged": false
+  },
+  {
+    "previousReleaseBundleId": null,
+    "nextReleaseBundleId": "release-chest-tube-v1-0",
+    "sourceProcedureCode": "CHEST_TUBE",
+    "identical": false,
+    "pinChanges": [
+      {
+        "pin": "definition-set-compatibility-rules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      {
+        "pin": "definition-set-modifiers",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      {
+        "pin": "definition-set-rescue-modules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      {
+        "pin": "definition-set-role-taxonomy",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      {
+        "pin": "module:module-chest-tube-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "d24829c0fd1dd6f3577fe0a8544a89a1023b3a4e896879fddc127bd42ec3f97e"
+      },
+      {
+        "pin": "module:module-pleural-procedure-core-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "7ecc7767daa0ba06993cafb67fe1ea1ce6b63374bf2d4d029ad16aeac1544c32"
+      },
+      {
+        "pin": "recipe:recipe-chest-tube-v0-1",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "0ee6a826648d845662a536db35503a9683bac35d6fce8a7e886a68e775e12ee0"
+      }
+    ],
+    "requirementChanges": [
+      {
+        "requirementKey": "PLEURAL_ULTRASOUND_MACHINE",
+        "kind": "added",
+        "moduleVersionIds": ["module-pleural-procedure-core-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-20D17E94D4",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-3631C94D7A",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-4BE1D79D6C",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-4D849E266F",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-67171A33D4",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-702914B1CF",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-708736B8C2",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-AECDA16326",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-B4E5C6A7A9",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-CE48C1B108",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D02F71E583",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D5C3DB0027",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      }
+    ],
+    "catalogImportChanged": false,
+    "resolverContractChanged": false
+  },
+  {
+    "previousReleaseBundleId": null,
+    "nextReleaseBundleId": "release-custom-composition-v1-0",
+    "sourceProcedureCode": "CUSTOM_COMPOSITION",
+    "identical": false,
+    "pinChanges": [
+      {
+        "pin": "definition-set-compatibility-rules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      {
+        "pin": "definition-set-modifiers",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      {
+        "pin": "definition-set-rescue-modules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      {
+        "pin": "definition-set-role-taxonomy",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      {
+        "pin": "module:module-bronch-ablation-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "215eee2349d547c0e0afa5de623110bdc4559337c0ae37743d9203bebe22cb7a"
+      },
+      {
+        "pin": "module:module-chest-tube-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "d24829c0fd1dd6f3577fe0a8544a89a1023b3a4e896879fddc127bd42ec3f97e"
+      },
+      {
+        "pin": "module:module-ebus-tbna-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "15039c48c4b727737a7852bcf69e529b9edd5287058f32dabd0a3c6051f1a1b9"
+      },
+      {
+        "pin": "module:module-ebv-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "4cfb67d73588169ab6f58e1f46cbe5b0db99b80e4e6f85b1542a34ba4b252216"
+      },
+      {
+        "pin": "module:module-flex-bronch-core-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "57aadaf01a58ecddec1b12de6d4be3dc11ff86a362b141f3f109494dc0b11fc4"
+      },
+      {
+        "pin": "module:module-flex-diagnostic-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "2c056de53c0ef627bfb78fd105d7968448755d1ec00fb47d364f3c4077fe6195"
+      },
+      {
+        "pin": "module:module-icu-bronch-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "0c46ed7fd57d4cdcabcdd0bdb9dd4c3d0a1342abaf444891b67282640d1e89c0"
+      },
+      {
+        "pin": "module:module-ipc-placement-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "04558dbdb71b09cca69ecac109d71fa64e2acebf3ceabc6a944848cd0a97f1d8"
+      },
+      {
+        "pin": "module:module-med-thoracoscopy-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "73f248e4adcd04b2cacdceec574b04f49bf13da415d5c0a4cf3132b3bf342735"
+      },
+      {
+        "pin": "module:module-perc-trach-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "d6fbc561ecacd0253f170b34d748e25936e35c55b81ae6a3a9cb46e46b4db70e"
+      },
+      {
+        "pin": "module:module-photodynamic-therapy-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "80362d1440a2fa70d53f96ee80b59e681448a04c949a656bbd55450e65b7a9d1"
+      },
+      {
+        "pin": "module:module-pleural-procedure-core-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "7ecc7767daa0ba06993cafb67fe1ea1ce6b63374bf2d4d029ad16aeac1544c32"
+      },
+      {
+        "pin": "module:module-procedural-fluoroscopy-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "eb323e693de084f5dd620a45e195b1df1d5603b91f84d015240c23a4732d7278"
+      },
+      {
+        "pin": "module:module-rigid-bronch-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "60871cc2b9a82a9d56beb7ce91644f446e131a81825c8589dddb966d2873615f"
+      },
+      {
+        "pin": "module:module-tb-ruleout-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "878ef6f9599e4ac872b19e1686e62ffd5115d0bd2b995bdd35fed4dc1dec7eb1"
+      },
+      {
+        "pin": "module:module-therapeutic-bronch-core-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "73d6dc9aad0f4b9367707373252564e68190398d84e792936aee630c6a0d874c"
+      },
+      {
+        "pin": "module:module-therapeutic-bronch-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "8052d3bcb2ab075efb25575abb7fc96c2863bbdfd84ecd1be831bb55b281858a"
+      },
+      {
+        "pin": "module:module-thoracentesis-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "06ddde2d38482c217e4a21d2aa5f42d8b05cfa7b3924467884141a0f11d62834"
+      },
+      {
+        "pin": "module:module-wll-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e1707612175e1e6bb3875d65d6918d2349b7bdc444b04f92cf062b7af30bae1b"
+      },
+      {
+        "pin": "recipe:recipe-custom-composition-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "541dadf452338b1eeb904d88405e7df0bfbf37fc6ee2d68f737727677d6508bf"
+      }
+    ],
+    "requirementChanges": [
+      {
+        "requirementKey": "AIRWAY_RETRIEVAL_FORCEPS",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-core-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "FLEX_BRONCH_SUCTION_SETUP",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-bronch-core-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "FLEX_BRONCH_VIDEO_PROCESSOR",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-bronch-core-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "PLEURAL_ULTRASOUND_MACHINE",
+        "kind": "added",
+        "moduleVersionIds": ["module-pleural-procedure-core-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "PROCEDURAL_FLUOROSCOPY_C_ARM",
+        "kind": "added",
+        "moduleVersionIds": ["module-procedural-fluoroscopy-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "PROCEDURAL_RADIATION_PROTECTION",
+        "kind": "added",
+        "moduleVersionIds": ["module-procedural-fluoroscopy-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-0037091804",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-00E8CCAE2A",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-01010CB364",
+        "kind": "added",
+        "moduleVersionIds": ["module-ipc-placement-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-022D0D3DC6",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebv-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-030A408C27",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebv-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-03C81C8ED9",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-04C940D8B9",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-05F71417F2",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-06198365DB",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-063C99B0F4",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-081FB0C695",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-09A64B2C62",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-09D5542BAA",
+        "kind": "added",
+        "moduleVersionIds": ["module-perc-trach-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-09EF760638",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-0B24E5F37A",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-0C667F3D98",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-0F8FA96C28",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-0F96B1FA45",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-1039D6C9E8",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-103FF61AAC",
+        "kind": "added",
+        "moduleVersionIds": ["module-thoracentesis-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-113FCB30ED",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-115310F554",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-126F71E1BD",
+        "kind": "added",
+        "moduleVersionIds": ["module-perc-trach-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-12ACA27E54",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-140B672D52",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-14453819D5",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-1538BC9076",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-15CBA5DCD0",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-175CA9F5B4",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-185FBB545F",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-18617846CD",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-19FC83049A",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-1A3A9B71B1",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-1AF4BEFE3B",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-1BCF3D0702",
+        "kind": "added",
+        "moduleVersionIds": ["module-ipc-placement-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-1D10D8A2BF",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-1E91C231E5",
+        "kind": "added",
+        "moduleVersionIds": ["module-ipc-placement-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-2015EC8357",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-20D17E94D4",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-213AD02F3D",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-239938A6A9",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-23A6DA3B89",
+        "kind": "added",
+        "moduleVersionIds": ["module-thoracentesis-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-23E62136B4",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-26B0E004DD",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-27D1A61598",
+        "kind": "added",
+        "moduleVersionIds": ["module-ipc-placement-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-2943D859CB",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-2947B0846D",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-2C4CF749E6",
+        "kind": "added",
+        "moduleVersionIds": ["module-perc-trach-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-2D59E32F4B",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-2E7FF49D2D",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-2EDD1F1A49",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-2EF6D51123",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-313877F69F",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-32739F7002",
+        "kind": "added",
+        "moduleVersionIds": ["module-perc-trach-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-34A46FFBA2",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-34CDBAB683",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-35ACE7FDA1",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-3631C94D7A",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-37F5B1E3DF",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-38E5FB60B9",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-395F6BD985",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-3BE665D0CA",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-3C8165659D",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-3CA143BB11",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-3D6358F157",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-3FBC244FAF",
+        "kind": "added",
+        "moduleVersionIds": ["module-ipc-placement-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-3FE6796B6D",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-3FFB2D272E",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-408806A1E9",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-41977168DA",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-42AC1F18B2",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-45D721710F",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-4648848CC3",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-46FDDCCF7C",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-49853F1B39",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-49FB14CBF6",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-4BE1D79D6C",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-4C2FE905D3",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-4CC66ADF82",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-4D849E266F",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-506C864DCC",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-51A2592738",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-53400A7A7C",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-543A73947E",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-545818F1DC",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-54D7E08779",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-57741DB666",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-57CA4B1298",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-5A9EDD575F",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-5B5D976D2A",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-5B9AA7A469",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-5D4FC2EC83",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-5D918DA83D",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-5F3642C851",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-639A3A4E14",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebv-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-63B9691422",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-63E328321A",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-657F12A89F",
+        "kind": "added",
+        "moduleVersionIds": ["module-perc-trach-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-658CF18CF0",
+        "kind": "added",
+        "moduleVersionIds": ["module-perc-trach-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-65FFA3703B",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-6630AD392A",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-6693BCAEE1",
+        "kind": "added",
+        "moduleVersionIds": ["module-ipc-placement-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-66C8ADA940",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-67171A33D4",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-678712810C",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-694FCE203D",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-6A75E6D661",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-6BDDC6260B",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-6BFE5046B8",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-6C8ED671CE",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-6D737D1334",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-6EAB7FD727",
+        "kind": "added",
+        "moduleVersionIds": ["module-perc-trach-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-702914B1CF",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-702FD644B7",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-708736B8C2",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-715F112605",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-72BAE3EC7C",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-738A987A4C",
+        "kind": "added",
+        "moduleVersionIds": ["module-perc-trach-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-7412B3318B",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-763A2D63F1",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-76F4405D68",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-7938FA701C",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-7BAF2FC882",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-7BFC6EB54E",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-7DBF54AF12",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-8399A6050E",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-8790F5F0AE",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-89F6487409",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-8A0CAE91FF",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-8AA6269352",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-8AB12F127A",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-8FC90750FF",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-9029673D34",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-90A43CBAEF",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-90EACE8A77",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-92874E31E1",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-9363E589C4",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-93655BF7C4",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-9448C2A991",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-94783C387D",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-971BBE6BF8",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-97AE031E2A",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-97CFA5C9A2",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-99199F9B11",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-99F995A756",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-9A1C0491F9",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-9BD475F03A",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-9EBCAD6487",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-A13A73CA93",
+        "kind": "added",
+        "moduleVersionIds": ["module-thoracentesis-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-A19D105581",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-A24CA7DB72",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebv-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-A575600E20",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-A602F949A7",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-AA3C2EAA6D",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-AECDA16326",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-B0F3DFF86F",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-B138BA994E",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-B14DF27813",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebv-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-B19121A5B9",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-B4E5C6A7A9",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-B6ED05FBC7",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-B7C11A32AD",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-B83EBD2FBB",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-BC6864D752",
+        "kind": "added",
+        "moduleVersionIds": ["module-perc-trach-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-BC936B7BD8",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-BC9CCE1853",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-BE2DEBB4E7",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-BE38624BB8",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-C174DA0A4E",
+        "kind": "added",
+        "moduleVersionIds": ["module-thoracentesis-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-C2EF0C350D",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-C3D82E151B",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-C4034E9595",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebv-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-C46D25AF46",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-C629C55E61",
+        "kind": "added",
+        "moduleVersionIds": ["module-perc-trach-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-C657258C05",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebv-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-C6B7BC56B1",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-C862A72632",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-C9A4F576D5",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-CA2DF6D3A0",
+        "kind": "added",
+        "moduleVersionIds": ["module-ipc-placement-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-CA34F60BE9",
+        "kind": "added",
+        "moduleVersionIds": ["module-thoracentesis-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-CD12842559",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-CD2D51CF8D",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-CD96ECF1DB",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-CE48C1B108",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D02F71E583",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D08C74941A",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D0D9794E05",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D2974FC11B",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D336807B69",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebv-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D43C866FB5",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D48FE87D5A",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebv-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D5C3DB0027",
+        "kind": "added",
+        "moduleVersionIds": ["module-chest-tube-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D6219069A9",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D6B291DC80",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D6B6FF156F",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D73F3C8E6D",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D7F2D36301",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D8AC96F833",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D8D781E494",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-DB4AA915E7",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-DD40010751",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-E3604B09C0",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-E63DC64C2F",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-E8281AFEA1",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-E8965CB331",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-E8F0B48B49",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-E919659133",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-EA38AE186D",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-EADB8A307E",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-EB37262191",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-ECF1B0860E",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-EE17F755B2",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-EFF8BA9B93",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-F66DEC963D",
+        "kind": "added",
+        "moduleVersionIds": ["module-bronch-ablation-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-F969CF31B0",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-FCE9E3810E",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-FDF73730B0",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "THERAPEUTIC_BRONCHOSCOPE_PLATFORM",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-core-v1-0"],
+        "changedFields": []
+      }
+    ],
+    "catalogImportChanged": false,
+    "resolverContractChanged": false
+  },
+  {
+    "previousReleaseBundleId": null,
+    "nextReleaseBundleId": "release-ebus-tbna-v1-0",
+    "sourceProcedureCode": "EBUS_TBNA",
+    "identical": false,
+    "pinChanges": [
+      {
+        "pin": "definition-set-compatibility-rules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      {
+        "pin": "definition-set-modifiers",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      {
+        "pin": "definition-set-rescue-modules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      {
+        "pin": "definition-set-role-taxonomy",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      {
+        "pin": "module:module-ebus-tbna-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "15039c48c4b727737a7852bcf69e529b9edd5287058f32dabd0a3c6051f1a1b9"
+      },
+      {
+        "pin": "module:module-flex-bronch-core-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "57aadaf01a58ecddec1b12de6d4be3dc11ff86a362b141f3f109494dc0b11fc4"
+      },
+      {
+        "pin": "module:module-procedural-fluoroscopy-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "eb323e693de084f5dd620a45e195b1df1d5603b91f84d015240c23a4732d7278"
+      },
+      {
+        "pin": "recipe:recipe-ebus-tbna-v0-1",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "178ad4be92e4bd53d594d7fc795dbabc9b55a6d97cabf2b930b86e9d2e3495a7"
+      }
+    ],
+    "requirementChanges": [
+      {
+        "requirementKey": "FLEX_BRONCH_SUCTION_SETUP",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-bronch-core-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "FLEX_BRONCH_VIDEO_PROCESSOR",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-bronch-core-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "PROCEDURAL_FLUOROSCOPY_C_ARM",
+        "kind": "added",
+        "moduleVersionIds": ["module-procedural-fluoroscopy-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "PROCEDURAL_RADIATION_PROTECTION",
+        "kind": "added",
+        "moduleVersionIds": ["module-procedural-fluoroscopy-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-12ACA27E54",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-1AF4BEFE3B",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-4648848CC3",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-76F4405D68",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-92874E31E1",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-93655BF7C4",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-B19121A5B9",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-B83EBD2FBB",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-CD12842559",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D08C74941A",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-E8F0B48B49",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": []
+      }
+    ],
+    "catalogImportChanged": false,
+    "resolverContractChanged": false
+  },
+  {
+    "previousReleaseBundleId": null,
+    "nextReleaseBundleId": "release-ebv-v1-0",
+    "sourceProcedureCode": "EBV",
+    "identical": false,
+    "pinChanges": [
+      {
+        "pin": "definition-set-compatibility-rules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      {
+        "pin": "definition-set-modifiers",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      {
+        "pin": "definition-set-rescue-modules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      {
+        "pin": "definition-set-role-taxonomy",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      {
+        "pin": "module:module-ebv-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "4cfb67d73588169ab6f58e1f46cbe5b0db99b80e4e6f85b1542a34ba4b252216"
+      },
+      {
+        "pin": "module:module-procedural-fluoroscopy-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "eb323e693de084f5dd620a45e195b1df1d5603b91f84d015240c23a4732d7278"
+      },
+      {
+        "pin": "module:module-therapeutic-bronch-core-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "73d6dc9aad0f4b9367707373252564e68190398d84e792936aee630c6a0d874c"
+      },
+      {
+        "pin": "recipe:recipe-ebv-v0-1",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "0c069b63b93a58c937fabcfa90ca359803d33a35685e0da58aac0bf21495a61d"
+      }
+    ],
+    "requirementChanges": [
+      {
+        "requirementKey": "AIRWAY_RETRIEVAL_FORCEPS",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-core-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "PROCEDURAL_FLUOROSCOPY_C_ARM",
+        "kind": "added",
+        "moduleVersionIds": ["module-procedural-fluoroscopy-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "PROCEDURAL_RADIATION_PROTECTION",
+        "kind": "added",
+        "moduleVersionIds": ["module-procedural-fluoroscopy-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-022D0D3DC6",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebv-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-030A408C27",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebv-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-639A3A4E14",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebv-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-A24CA7DB72",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebv-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-B14DF27813",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebv-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-C4034E9595",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebv-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-C657258C05",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebv-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D336807B69",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebv-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D48FE87D5A",
+        "kind": "added",
+        "moduleVersionIds": ["module-ebv-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "THERAPEUTIC_BRONCHOSCOPE_PLATFORM",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-core-v1-0"],
+        "changedFields": []
+      }
+    ],
+    "catalogImportChanged": false,
+    "resolverContractChanged": false
+  },
+  {
+    "previousReleaseBundleId": null,
+    "nextReleaseBundleId": "release-flex-diagnostic-v1-0",
+    "sourceProcedureCode": "FLEX_DIAGNOSTIC",
+    "identical": false,
+    "pinChanges": [
+      {
+        "pin": "definition-set-compatibility-rules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      {
+        "pin": "definition-set-modifiers",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      {
+        "pin": "definition-set-rescue-modules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      {
+        "pin": "definition-set-role-taxonomy",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      {
+        "pin": "module:module-flex-diagnostic-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "2c056de53c0ef627bfb78fd105d7968448755d1ec00fb47d364f3c4077fe6195"
+      },
+      {
+        "pin": "recipe:recipe-flex-diagnostic-v0-1",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "2d892623214e79e1da6529792fd203cb002bb534fe00e80cc6fe26963201c411"
+      }
+    ],
+    "requirementChanges": [
+      {
+        "requirementKey": "SLOT-09EF760638",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-15CBA5DCD0",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-239938A6A9",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-34A46FFBA2",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-37F5B1E3DF",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-49853F1B39",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-4C2FE905D3",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-54D7E08779",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-6BFE5046B8",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-6C8ED671CE",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-7938FA701C",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-7BFC6EB54E",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-9363E589C4",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-C9A4F576D5",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-CD96ECF1DB",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-EA38AE186D",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-EB37262191",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-EFF8BA9B93",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-F969CF31B0",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-diagnostic-specific-v1-0"],
+        "changedFields": []
+      }
+    ],
+    "catalogImportChanged": false,
+    "resolverContractChanged": false
+  },
+  {
+    "previousReleaseBundleId": null,
+    "nextReleaseBundleId": "release-icu-bronch-v1-0",
+    "sourceProcedureCode": "ICU_BRONCH",
+    "identical": false,
+    "pinChanges": [
+      {
+        "pin": "definition-set-compatibility-rules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      {
+        "pin": "definition-set-modifiers",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      {
+        "pin": "definition-set-rescue-modules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      {
+        "pin": "definition-set-role-taxonomy",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      {
+        "pin": "module:module-icu-bronch-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "0c46ed7fd57d4cdcabcdd0bdb9dd4c3d0a1342abaf444891b67282640d1e89c0"
+      },
+      {
+        "pin": "recipe:recipe-icu-bronch-v0-1",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "c1104ee97a25cd037256dc230fa50e9486be225bcf14bed1d71b312827fe89d6"
+      }
+    ],
+    "requirementChanges": [
+      {
+        "requirementKey": "SLOT-1A3A9B71B1",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-3BE665D0CA",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-42AC1F18B2",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-49FB14CBF6",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-4CC66ADF82",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-53400A7A7C",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-5D918DA83D",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-63E328321A",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-7BAF2FC882",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-8790F5F0AE",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-B138BA994E",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-B6ED05FBC7",
+        "kind": "added",
+        "moduleVersionIds": ["module-icu-bronch-specific-v1-0"],
+        "changedFields": []
+      }
+    ],
+    "catalogImportChanged": false,
+    "resolverContractChanged": false
+  },
+  {
+    "previousReleaseBundleId": null,
+    "nextReleaseBundleId": "release-ipc-placement-v1-0",
+    "sourceProcedureCode": "IPC_PLACEMENT",
+    "identical": false,
+    "pinChanges": [
+      {
+        "pin": "definition-set-compatibility-rules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      {
+        "pin": "definition-set-modifiers",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      {
+        "pin": "definition-set-rescue-modules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      {
+        "pin": "definition-set-role-taxonomy",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      {
+        "pin": "module:module-ipc-placement-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "04558dbdb71b09cca69ecac109d71fa64e2acebf3ceabc6a944848cd0a97f1d8"
+      },
+      {
+        "pin": "module:module-pleural-procedure-core-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "7ecc7767daa0ba06993cafb67fe1ea1ce6b63374bf2d4d029ad16aeac1544c32"
+      },
+      {
+        "pin": "recipe:recipe-ipc-placement-v0-1",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "fe455332f7ed9b4141978a01d841cd169b3868feb5f15354d67d775fd94aa021"
+      }
+    ],
+    "requirementChanges": [
+      {
+        "requirementKey": "PLEURAL_ULTRASOUND_MACHINE",
+        "kind": "added",
+        "moduleVersionIds": ["module-pleural-procedure-core-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-01010CB364",
+        "kind": "added",
+        "moduleVersionIds": ["module-ipc-placement-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-1BCF3D0702",
+        "kind": "added",
+        "moduleVersionIds": ["module-ipc-placement-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-1E91C231E5",
+        "kind": "added",
+        "moduleVersionIds": ["module-ipc-placement-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-27D1A61598",
+        "kind": "added",
+        "moduleVersionIds": ["module-ipc-placement-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-3FBC244FAF",
+        "kind": "added",
+        "moduleVersionIds": ["module-ipc-placement-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-6693BCAEE1",
+        "kind": "added",
+        "moduleVersionIds": ["module-ipc-placement-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-CA2DF6D3A0",
+        "kind": "added",
+        "moduleVersionIds": ["module-ipc-placement-specific-v1-0"],
+        "changedFields": []
+      }
+    ],
+    "catalogImportChanged": false,
+    "resolverContractChanged": false
+  },
+  {
+    "previousReleaseBundleId": null,
+    "nextReleaseBundleId": "release-med-thoracoscopy-v1-0",
+    "sourceProcedureCode": "MED_THORACOSCOPY",
+    "identical": false,
+    "pinChanges": [
+      {
+        "pin": "definition-set-compatibility-rules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      {
+        "pin": "definition-set-modifiers",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      {
+        "pin": "definition-set-rescue-modules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      {
+        "pin": "definition-set-role-taxonomy",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      {
+        "pin": "module:module-med-thoracoscopy-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "73f248e4adcd04b2cacdceec574b04f49bf13da415d5c0a4cf3132b3bf342735"
+      },
+      {
+        "pin": "module:module-pleural-procedure-core-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "7ecc7767daa0ba06993cafb67fe1ea1ce6b63374bf2d4d029ad16aeac1544c32"
+      },
+      {
+        "pin": "recipe:recipe-med-thoracoscopy-v0-1",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "19e52f71ad40d2298ea9533b20430c9dd47971fa657741211e018f1aac389b06"
+      }
+    ],
+    "requirementChanges": [
+      {
+        "requirementKey": "PLEURAL_ULTRASOUND_MACHINE",
+        "kind": "added",
+        "moduleVersionIds": ["module-pleural-procedure-core-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-0037091804",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-0B24E5F37A",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-1D10D8A2BF",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-3CA143BB11",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-51A2592738",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-545818F1DC",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-57CA4B1298",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-5A9EDD575F",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-65FFA3703B",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-694FCE203D",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-6D737D1334",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-8FC90750FF",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-9448C2A991",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-99F995A756",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-9A1C0491F9",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-AA3C2EAA6D",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-BC9CCE1853",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D8D781E494",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-E63DC64C2F",
+        "kind": "added",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-0"],
+        "changedFields": []
+      }
+    ],
+    "catalogImportChanged": false,
+    "resolverContractChanged": false
+  },
+  {
+    "previousReleaseBundleId": null,
+    "nextReleaseBundleId": "release-perc-trach-v1-0",
+    "sourceProcedureCode": "PERC_TRACH",
+    "identical": false,
+    "pinChanges": [
+      {
+        "pin": "definition-set-compatibility-rules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      {
+        "pin": "definition-set-modifiers",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      {
+        "pin": "definition-set-rescue-modules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      {
+        "pin": "definition-set-role-taxonomy",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      {
+        "pin": "module:module-perc-trach-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "d6fbc561ecacd0253f170b34d748e25936e35c55b81ae6a3a9cb46e46b4db70e"
+      },
+      {
+        "pin": "recipe:recipe-perc-trach-v0-1",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "b6969a7cd568ebbec98a9e7f6f0c0dcbeaccb7996e1c72e298c97df374407825"
+      }
+    ],
+    "requirementChanges": [
+      {
+        "requirementKey": "SLOT-09D5542BAA",
+        "kind": "added",
+        "moduleVersionIds": ["module-perc-trach-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-126F71E1BD",
+        "kind": "added",
+        "moduleVersionIds": ["module-perc-trach-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-2C4CF749E6",
+        "kind": "added",
+        "moduleVersionIds": ["module-perc-trach-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-32739F7002",
+        "kind": "added",
+        "moduleVersionIds": ["module-perc-trach-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-657F12A89F",
+        "kind": "added",
+        "moduleVersionIds": ["module-perc-trach-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-658CF18CF0",
+        "kind": "added",
+        "moduleVersionIds": ["module-perc-trach-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-6EAB7FD727",
+        "kind": "added",
+        "moduleVersionIds": ["module-perc-trach-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-738A987A4C",
+        "kind": "added",
+        "moduleVersionIds": ["module-perc-trach-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-BC6864D752",
+        "kind": "added",
+        "moduleVersionIds": ["module-perc-trach-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-C629C55E61",
+        "kind": "added",
+        "moduleVersionIds": ["module-perc-trach-specific-v1-0"],
+        "changedFields": []
+      }
+    ],
+    "catalogImportChanged": false,
+    "resolverContractChanged": false
+  },
+  {
+    "previousReleaseBundleId": null,
+    "nextReleaseBundleId": "release-photodynamic-therapy-v1-0",
+    "sourceProcedureCode": "PHOTODYNAMIC_THERAPY",
+    "identical": false,
+    "pinChanges": [
+      {
+        "pin": "definition-set-compatibility-rules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      {
+        "pin": "definition-set-modifiers",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      {
+        "pin": "definition-set-rescue-modules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      {
+        "pin": "definition-set-role-taxonomy",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      {
+        "pin": "module:module-photodynamic-therapy-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "80362d1440a2fa70d53f96ee80b59e681448a04c949a656bbd55450e65b7a9d1"
+      },
+      {
+        "pin": "recipe:recipe-photodynamic-therapy-v0-1",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "78af479cc3389f456fd42b5c82f8f63e977fdac2df6a9cbdc9776941121bb584"
+      }
+    ],
+    "requirementChanges": [
+      {
+        "requirementKey": "SLOT-0C667F3D98",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-2EF6D51123",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-395F6BD985",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-543A73947E",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-5D4FC2EC83",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-63B9691422",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-715F112605",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-8A0CAE91FF",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-B0F3DFF86F",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-BE2DEBB4E7",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-C6B7BC56B1",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-EADB8A307E",
+        "kind": "added",
+        "moduleVersionIds": ["module-photodynamic-therapy-specific-v1-0"],
+        "changedFields": []
+      }
+    ],
+    "catalogImportChanged": false,
+    "resolverContractChanged": false
+  },
+  {
+    "previousReleaseBundleId": null,
+    "nextReleaseBundleId": "release-rigid-bronch-v1-0",
+    "sourceProcedureCode": "RIGID_BRONCH",
+    "identical": false,
+    "pinChanges": [
+      {
+        "pin": "definition-set-compatibility-rules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      {
+        "pin": "definition-set-modifiers",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      {
+        "pin": "definition-set-rescue-modules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      {
+        "pin": "definition-set-role-taxonomy",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      {
+        "pin": "module:module-rigid-bronch-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "60871cc2b9a82a9d56beb7ce91644f446e131a81825c8589dddb966d2873615f"
+      },
+      {
+        "pin": "recipe:recipe-rigid-bronch-v0-1",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "1046f6674c847b2e95685325e99dc8e95b16e3960e97cb0697593e48a3fc956b"
+      }
+    ],
+    "requirementChanges": [
+      {
+        "requirementKey": "SLOT-00E8CCAE2A",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-04C940D8B9",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-113FCB30ED",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-140B672D52",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-175CA9F5B4",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-18617846CD",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-19FC83049A",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-2D59E32F4B",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-35ACE7FDA1",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-3C8165659D",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-3D6358F157",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-3FFB2D272E",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-5F3642C851",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-66C8ADA940",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-678712810C",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-6A75E6D661",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-6BDDC6260B",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-702FD644B7",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-72BAE3EC7C",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-8AA6269352",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-94783C387D",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-99199F9B11",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-A575600E20",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-A602F949A7",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-BC936B7BD8",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-C2EF0C350D",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-CD2D51CF8D",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D6219069A9",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D6B6FF156F",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-E8281AFEA1",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-E8965CB331",
+        "kind": "added",
+        "moduleVersionIds": ["module-rigid-bronch-specific-v1-0"],
+        "changedFields": []
+      }
+    ],
+    "catalogImportChanged": false,
+    "resolverContractChanged": false
+  },
+  {
+    "previousReleaseBundleId": null,
+    "nextReleaseBundleId": "release-tb-ruleout-v1-0",
+    "sourceProcedureCode": "TB_RULEOUT",
+    "identical": false,
+    "pinChanges": [
+      {
+        "pin": "definition-set-compatibility-rules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      {
+        "pin": "definition-set-modifiers",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      {
+        "pin": "definition-set-rescue-modules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      {
+        "pin": "definition-set-role-taxonomy",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      {
+        "pin": "module:module-tb-ruleout-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "878ef6f9599e4ac872b19e1686e62ffd5115d0bd2b995bdd35fed4dc1dec7eb1"
+      },
+      {
+        "pin": "recipe:recipe-tb-ruleout-v0-1",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "28d8f11a40022db04de04dcd0db7a89f92b974f1d19889174a3ce8a875d5e3b8"
+      }
+    ],
+    "requirementChanges": [
+      {
+        "requirementKey": "SLOT-05F71417F2",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-0F96B1FA45",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-2943D859CB",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-2E7FF49D2D",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-313877F69F",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-46FDDCCF7C",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-763A2D63F1",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-9029673D34",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-A19D105581",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-C46D25AF46",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D73F3C8E6D",
+        "kind": "added",
+        "moduleVersionIds": ["module-tb-ruleout-specific-v1-0"],
+        "changedFields": []
+      }
+    ],
+    "catalogImportChanged": false,
+    "resolverContractChanged": false
+  },
+  {
+    "previousReleaseBundleId": null,
+    "nextReleaseBundleId": "release-therapeutic-bronch-v1-0",
+    "sourceProcedureCode": "THERAPEUTIC_BRONCH",
+    "identical": false,
+    "pinChanges": [
+      {
+        "pin": "definition-set-compatibility-rules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      {
+        "pin": "definition-set-modifiers",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      {
+        "pin": "definition-set-rescue-modules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      {
+        "pin": "definition-set-role-taxonomy",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      {
+        "pin": "module:module-flex-bronch-core-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "57aadaf01a58ecddec1b12de6d4be3dc11ff86a362b141f3f109494dc0b11fc4"
+      },
+      {
+        "pin": "module:module-procedural-fluoroscopy-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "eb323e693de084f5dd620a45e195b1df1d5603b91f84d015240c23a4732d7278"
+      },
+      {
+        "pin": "module:module-therapeutic-bronch-core-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "73d6dc9aad0f4b9367707373252564e68190398d84e792936aee630c6a0d874c"
+      },
+      {
+        "pin": "module:module-therapeutic-bronch-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "8052d3bcb2ab075efb25575abb7fc96c2863bbdfd84ecd1be831bb55b281858a"
+      },
+      {
+        "pin": "recipe:recipe-therapeutic-bronch-v0-1",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "d8a141e8fe4c3646db676cf9de403d2c3a41b8118e984f07c58519aaf4648dba"
+      }
+    ],
+    "requirementChanges": [
+      {
+        "requirementKey": "AIRWAY_RETRIEVAL_FORCEPS",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-core-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "FLEX_BRONCH_SUCTION_SETUP",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-bronch-core-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "FLEX_BRONCH_VIDEO_PROCESSOR",
+        "kind": "added",
+        "moduleVersionIds": ["module-flex-bronch-core-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "PROCEDURAL_FLUOROSCOPY_C_ARM",
+        "kind": "added",
+        "moduleVersionIds": ["module-procedural-fluoroscopy-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "PROCEDURAL_RADIATION_PROTECTION",
+        "kind": "added",
+        "moduleVersionIds": ["module-procedural-fluoroscopy-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-081FB0C695",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-09A64B2C62",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-0F8FA96C28",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-115310F554",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-14453819D5",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-1538BC9076",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-185FBB545F",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-34CDBAB683",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-38E5FB60B9",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-3FE6796B6D",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-45D721710F",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-6630AD392A",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-7412B3318B",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-90A43CBAEF",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-971BBE6BF8",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-97CFA5C9A2",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D2974FC11B",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D43C866FB5",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D6B291DC80",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-D7F2D36301",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-EE17F755B2",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-FCE9E3810E",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-FDF73730B0",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "THERAPEUTIC_BRONCHOSCOPE_PLATFORM",
+        "kind": "added",
+        "moduleVersionIds": ["module-therapeutic-bronch-core-v1-0"],
+        "changedFields": []
+      }
+    ],
+    "catalogImportChanged": false,
+    "resolverContractChanged": false
+  },
+  {
+    "previousReleaseBundleId": null,
+    "nextReleaseBundleId": "release-thoracentesis-v1-0",
+    "sourceProcedureCode": "THORACENTESIS",
+    "identical": false,
+    "pinChanges": [
+      {
+        "pin": "definition-set-compatibility-rules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      {
+        "pin": "definition-set-modifiers",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      {
+        "pin": "definition-set-rescue-modules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      {
+        "pin": "definition-set-role-taxonomy",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      {
+        "pin": "module:module-pleural-procedure-core-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "7ecc7767daa0ba06993cafb67fe1ea1ce6b63374bf2d4d029ad16aeac1544c32"
+      },
+      {
+        "pin": "module:module-thoracentesis-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "06ddde2d38482c217e4a21d2aa5f42d8b05cfa7b3924467884141a0f11d62834"
+      },
+      {
+        "pin": "recipe:recipe-thoracentesis-v0-1",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "051867fdab177a991916edfe43b2e7d316494ebe87bc4347de1c3df00f77a1c0"
+      }
+    ],
+    "requirementChanges": [
+      {
+        "requirementKey": "PLEURAL_ULTRASOUND_MACHINE",
+        "kind": "added",
+        "moduleVersionIds": ["module-pleural-procedure-core-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-103FF61AAC",
+        "kind": "added",
+        "moduleVersionIds": ["module-thoracentesis-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-23A6DA3B89",
+        "kind": "added",
+        "moduleVersionIds": ["module-thoracentesis-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-A13A73CA93",
+        "kind": "added",
+        "moduleVersionIds": ["module-thoracentesis-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-C174DA0A4E",
+        "kind": "added",
+        "moduleVersionIds": ["module-thoracentesis-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-CA34F60BE9",
+        "kind": "added",
+        "moduleVersionIds": ["module-thoracentesis-specific-v1-0"],
+        "changedFields": []
+      }
+    ],
+    "catalogImportChanged": false,
+    "resolverContractChanged": false
+  },
+  {
+    "previousReleaseBundleId": null,
+    "nextReleaseBundleId": "release-wll-v1-0",
+    "sourceProcedureCode": "WLL",
+    "identical": false,
+    "pinChanges": [
+      {
+        "pin": "definition-set-compatibility-rules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      {
+        "pin": "definition-set-modifiers",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      {
+        "pin": "definition-set-rescue-modules",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      {
+        "pin": "definition-set-role-taxonomy",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      {
+        "pin": "module:module-wll-specific-v1-0",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "e1707612175e1e6bb3875d65d6918d2349b7bdc444b04f92cf062b7af30bae1b"
+      },
+      {
+        "pin": "recipe:recipe-wll-v0-1",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "b1ba09f4c08bb22b858f1c5e3c0e0ebed530c88c1219a3c3d7e21a55cd7583b8"
+      }
+    ],
+    "requirementChanges": [
+      {
+        "requirementKey": "SLOT-1039D6C9E8",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-2015EC8357",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-23E62136B4",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-2947B0846D",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-41977168DA",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-506C864DCC",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-57741DB666",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-5B9AA7A469",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-9BD475F03A",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-9EBCAD6487",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-C3D82E151B",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-DD40010751",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-ECF1B0860E",
+        "kind": "added",
+        "moduleVersionIds": ["module-wll-specific-v1-0"],
+        "changedFields": []
+      }
+    ],
+    "catalogImportChanged": false,
+    "resolverContractChanged": false
+  }
+]
