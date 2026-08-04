@@ -58,17 +58,6 @@
 }
 
 /*
- * Below 1100px the strip stacks, and the viewport widens its own gutter.
- *
- * The gutter is not cosmetic. `ResizableTeachingWorkspace` collapses to one tabbed pane when its
- * usable width falls under 960px, and at 1024px the three-pane arrangement landed within 2px of
- * that line: the same display produced three ~300px panes or one full-width pane depending on
- * whether a scrollbar happened to be present. Three panes that narrow cannot hold a ventilator
- * facsimile without scrolling it sideways inside its own pane. A 0.75rem gutter puts 1024px
- * decisively on the tabbed side (usable 950px), and moves the flip point to about 1034px where no
- * standard display sits.
- */
-/*
  * The strip stays on one line down to 900px. Stacking it at 1024x768 cost 82px of an already
  * short workspace and left the ventilator pane 143px tall — under the height a trace needs to be
  * read. Below 900px there is no longer room for the rail and the run control side by side, and the

@@ -19,14 +19,6 @@ const LAPTOP_DENSITY_BELOW_PX = 500
 export type VentilationWorkspaceDensity = 'comfortable' | 'laptop'
 
 /**
- * Density measured from the Learn viewport's own box.
- *
- * Deliberately not the window: what matters is the height the shared shell has left after its
- * header, clinical context strip, and bottom bar, and that is not a function of the display size
- * alone. Deliberately not the workspace frame either — the frame's height depends on how tall the
- * rail is, and the rail's height depends on the density, which would oscillate.
- */
-/**
  * How much of the viewport's box the shell actually leaves on screen.
  *
  * At and below 1199px the shared shell keeps a 30rem minimum on the simulation viewport while its
@@ -47,6 +39,14 @@ function visibleHeightFor(viewport: HTMLElement): number | null {
   return available > 0 ? available : null
 }
 
+/**
+ * Density and available height, measured from the Learn viewport's own box.
+ *
+ * Deliberately not the window: what matters is the height the shared shell has left after its
+ * header, clinical context strip, and bottom bar, and that is not a function of the display size
+ * alone. Deliberately not the workspace frame either — the frame's height depends on how tall the
+ * rail is, and the rail's height depends on the density, which would oscillate.
+ */
 export function useVentilationWorkspaceDensity(): {
   readonly density: VentilationWorkspaceDensity
   /** Pixels the shell actually leaves visible, or null while nothing has been laid out. */
