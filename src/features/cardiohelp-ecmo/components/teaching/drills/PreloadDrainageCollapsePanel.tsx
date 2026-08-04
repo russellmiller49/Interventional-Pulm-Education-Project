@@ -43,9 +43,10 @@ export function PreloadDrainageCollapsePanel({ state }: { readonly state: EcmoSi
       supportMode="vv"
       clinicalQuestion="Circuit flow has fallen and is swinging, drainage pressure has become steadily more negative, and the drainage limb is juddering. Which side of the pump is the limitation on, and what does that make the first move?"
       boundaries={[
-        'The judder is a flag this simulation switches on below a drainage pressure it chooses. It is not a rendering of how a real drainage line kicks, and the numbers around it come from simplified response curves.',
+        'The judder is a flag this simulation switches on below a drainage pressure it chooses, and only while one of a few authored faults is active — it is not a general consequence of suction in this model. It is not a rendering of how a real drainage line kicks, and the numbers around it come from simplified response curves.',
         'This simulation offers no number for how negative drainage pressure may become before it matters, because that value depends on cannula size, patient size, and configuration. The console does carry adjustable pressure limits, but those are device alarm limits rather than a taught cut point.',
         'Echocardiography, imaging of cannula position, and the volume picture decide this at the bedside, and none of the three is reproduced here. The single corrective action in this lab stands for all of them.',
+        'This simulation does not model the harm of escalating speed against a collapsing drainage path. Its patient response follows circuit flow, so raising speed here makes the modeled saturation look better while the safety event is charged. Read the safety event, not the saturation.',
       ]}
     >
       <SignalRegister
@@ -133,7 +134,7 @@ export function PreloadDrainageCollapsePanel({ state }: { readonly state: EcmoSi
             movement: 'Shown here as a labelled flag rather than as motion.',
           },
         ]}
-        summary={`The channel upstream of the pump and the channels downstream of it are listed separately, because which of them moved is what has to be established. ${collapseActive ? 'A drainage limitation is active on this circuit.' : corrected ? 'The drainage cause has been corrected on this circuit.' : 'No drainage limitation is active on this circuit.'}`}
+        summary="The channel upstream of the pump and the channels downstream of it are listed separately, because which of them moved is what has to be established."
       />
 
       <Discriminators
@@ -151,9 +152,9 @@ export function PreloadDrainageCollapsePanel({ state }: { readonly state: EcmoSi
           },
           {
             question:
-              'Is reducing pump demand a treatment for the cause, or a way of making the circuit steady enough to search?',
+              'If a setting were changed now, would that be a treatment for whatever is limiting this circuit, or something else?',
             whereToLook:
-              'The active-fault line in the pattern above, before and after any speed change.',
+              'The signal table: nothing in it is a setting the circuit is short of. Ask what a change would and would not correct.',
           },
         ]}
       />
@@ -164,8 +165,9 @@ export function PreloadDrainageCollapsePanel({ state }: { readonly state: EcmoSi
             The location of the pressure change localises this. Available venous return has become
             insufficient for what the pump is asking for; suction climbs, flow stops tracking the
             speed, and the vessel or cannula intermittently draws shut, which is what the judder is.
-            Nothing downstream is limiting this circuit, because the post-pump pressures and the
-            gradient across the membrane fell with the flow rather than rising against it.
+            Nothing on this display points downstream: the post-pump pressures and the gradient
+            across the membrane fell with the flow rather than rising against it, which is evidence
+            against a downstream limitation rather than proof there is none.
           </p>
           <p data-live-fault-state>
             {collapseActive
@@ -187,6 +189,11 @@ export function PreloadDrainageCollapsePanel({ state }: { readonly state: EcmoSi
               candidate: 'Hypovolaemia specifically',
               standing:
                 'Volume is one of the reasons venous return can fall short, and it stays on the list. It is not the only one, and a bolus given before the cause has been named treats a category rather than a finding.',
+            },
+            {
+              candidate: 'Change nothing and go straight to the patient and the limb',
+              standing:
+                'The most defensible of the alternatives, and it gets the priority right: the setting is not the cause and looking is what finds it. What it gives up is the quieter circuit — a collapse that is still being driven is harder to examine, and the reduction costs nothing that correcting the cause will not give back.',
             },
             {
               candidate: 'Cannula position, a kinked or compressed limb, coughing and straining',
@@ -217,42 +224,54 @@ export function PreloadDrainageCollapsePanel({ state }: { readonly state: EcmoSi
 
         <HarmfulReflex action="Raising the speed until the flow display comes back to where it was.">
           <p>
-            The display can be made to move, and it is the only thing that will. Asking a collapsing
-            drainage path for more makes the suction worse and the collapse more complete, so the
-            number the learner was chasing becomes less stable rather than more. This simulation
-            records escalating speed during a drainage collapse as a safety event under its own
-            mechanism name.
+            At a bedside, asking a collapsing drainage path for more makes the suction worse and the
+            collapse more complete, and the flow that comes back is bought from a vessel that is
+            being drawn shut. This simulation records escalating speed during a drainage collapse as
+            a safety event under its own mechanism name.
+          </p>
+          <p data-model-response-caveat>
+            Be careful what you take from the numbers if you try it here. This simulation raises
+            displayed flow — and the modeled patient saturation with it — when speed is raised in
+            this state, because its patient response is a simple function of flow and carries no
+            penalty for the collapse. The improvement you would see is an artefact of a bounded
+            teaching model, not a result, and the safety event is charged precisely because the
+            model cannot show you the cost.
           </p>
         </HarmfulReflex>
-      </AfterCommitment>
 
-      <section className={styles.section} aria-labelledby="preload-guides-heading">
-        <h3 id="preload-guides-heading" className={styles.heading}>
-          The channels this turns on
-        </h3>
-        <TextEquivalent>
-          Drainage pressure, circuit blood flow, and the transmembrane gradient with their authored
-          interpretations. Each shows no value rather than an invented one where the channel is not
-          reporting.
-        </TextEquivalent>
-        <div className="mt-3 grid gap-3">
-          <GuidedValue
-            guide={ecmoDerivedValueGuides.pVen}
-            value={readouts.pVen.displayed}
-            headingLevel={4}
-          />
-          <GuidedValue
-            guide={ecmoDerivedValueGuides.circuitBloodFlow}
-            value={state.circuit.bloodFlow}
-            headingLevel={4}
-          />
-          <GuidedValue
-            guide={ecmoDerivedValueGuides.transmembraneDeltaP}
-            value={readouts.deltaP.displayed}
-            headingLevel={4}
-          />
-        </div>
-      </section>
+        {/*
+          Inside the gate: the authored interpretation of the drainage-pressure guide states the
+          mechanism in as many words, so a learner scrolling the panel before choosing would meet
+          the answer in a reference block.
+        */}
+        <section className={styles.section} aria-labelledby="preload-guides-heading">
+          <h3 id="preload-guides-heading" className={styles.heading}>
+            The channels this turns on
+          </h3>
+          <TextEquivalent>
+            Drainage pressure, circuit blood flow, and the transmembrane gradient with their
+            authored interpretations. Each shows no value rather than an invented one where the
+            channel is not reporting.
+          </TextEquivalent>
+          <div className="mt-3 grid gap-3">
+            <GuidedValue
+              guide={ecmoDerivedValueGuides.pVen}
+              value={readouts.pVen.displayed}
+              headingLevel={4}
+            />
+            <GuidedValue
+              guide={ecmoDerivedValueGuides.circuitBloodFlow}
+              value={state.circuit.bloodFlow}
+              headingLevel={4}
+            />
+            <GuidedValue
+              guide={ecmoDerivedValueGuides.transmembraneDeltaP}
+              value={readouts.deltaP.displayed}
+              headingLevel={4}
+            />
+          </div>
+        </section>
+      </AfterCommitment>
     </DrillPanelFrame>
   )
 }

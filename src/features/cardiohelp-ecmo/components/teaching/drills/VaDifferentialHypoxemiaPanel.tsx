@@ -1,4 +1,7 @@
-import { ecmoDerivedValueGuides } from '../../../content/ecmoValueGuides'
+import {
+  ECMO_BASELINE_DISPLAY_DEADBANDS,
+  ecmoDerivedValueGuides,
+} from '../../../content/ecmoValueGuides'
 import type { EcmoSimulationState } from '../../../engine/types'
 import { GuidedValue, TextEquivalent, VaConfigurationLabel, styles } from '../shared'
 import {
@@ -13,6 +16,7 @@ import {
   SignalRegister,
   ThreeDomainResponse,
   channelSignalRow,
+  offConsoleSignalRow,
   valueSignalRow,
 } from './drillPanelPrimitives'
 
@@ -33,6 +37,15 @@ export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSi
   const differentialActive = state.scenario.activeFaults.includes('differential-hypoxemia')
   const corrected = state.scenario.correctedFaults.includes('differential-hypoxemia')
   const gap = patient.femoralArterialSpo2 - patient.rightRadialSpo2
+  /*
+   * The authored display deadband, not a clinical rule.
+   *
+   * There is no two-point rule for agreement between two arterial sites. This is the value this
+   * module uses to decide whether a difference is worth drawing attention to on a display, imported
+   * rather than copied so it cannot drift away from the one the rest of the module uses.
+   */
+  const gapExceedsDisplayDeadband =
+    Math.abs(gap) > ECMO_BASELINE_DISPLAY_DEADBANDS.upperToLowerSaturationGap
 
   return (
     <DrillPanelFrame
@@ -54,51 +67,51 @@ export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSi
         </div>
         <p className="mt-2">
           Retrograde oxygenated return from the femoral cannula travels up the aorta; blood the
-          heart ejects travels down it. Which beds each stream supplies therefore depends on where
-          they meet, and that is why the site a sample is drawn from is part of what the number
-          means.
+          heart ejects travels down it. Every arterial value below is therefore labelled with the
+          site it was taken from, because in this configuration the site is part of what the number
+          is.
         </p>
       </section>
 
       <SignalRegister
         rows={[
-          valueSignalRow(
+          offConsoleSignalRow(
             'Right radial saturation',
             'Right upper limb — the bed nearest the aortic root and the head vessels',
             `${patient.rightRadialSpo2.toFixed(1)} %`,
             'An arterial saturation sampled in the right upper limb. It is a proxy for that territory and a direct measurement of nothing else.',
           ),
-          valueSignalRow(
+          offConsoleSignalRow(
             'Femoral arterial saturation',
             'Lower limb — the bed nearest the return cannula',
             `${patient.femoralArterialSpo2.toFixed(1)} %`,
             'An arterial saturation sampled in the lower body, near where the circuit returns blood.',
           ),
-          valueSignalRow(
+          offConsoleSignalRow(
             'Post-oxygenator saturation',
             'Return limb, after the membrane — inside the circuit',
             `${circuit.postOxygenatorSaturation.toFixed(1)} %`,
-            'A circuit measurement, taken inside the return limb rather than on the patient.',
+            'A sampled circuit value, taken inside the return limb rather than on the patient, and not a channel on this console.',
           ),
-          valueSignalRow(
+          offConsoleSignalRow(
             'Pulse pressure',
             'Arterial line, from native ejection',
             `${patient.pulsePressure.toFixed(0)} mmHg`,
-            'Evidence about whether the ventricle is ejecting.',
+            'Evidence about whether the ventricle is ejecting. Read from the patient arterial line, not from this console.',
           ),
           valueSignalRow(
             'Native cardiac output',
-            'Echocardiographic estimate, authored by this case',
+            'Echocardiographic estimate',
             `${patient.nativeCardiacOutputLpm.toFixed(1)} L/min`,
-            'The size of the native stream, authored by this case rather than measured by anything on this console.',
-            'authored',
+            'The size of the native stream. This case opens it at a chosen value and the model then drifts it toward its own resting value as the clock runs, so it is a moving estimate rather than a fixed fact.',
+            'estimated',
           ),
           valueSignalRow(
             'Aortic valve',
             'Echocardiography',
             patient.aorticValveOpening ? 'Opening' : 'Not opening',
-            'Whether the ventricle is opening the valve at all.',
-            'authored',
+            'Whether the ventricle is opening the valve at all. Recomputed by the model each tick rather than fixed by the case.',
+            'estimated',
           ),
           valueSignalRow(
             'Circuit blood flow',
@@ -113,7 +126,7 @@ export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSi
             'mmHg',
             'A circuit pressure. It is not the patient arterial blood pressure and must not be read as one.',
           ),
-          valueSignalRow(
+          offConsoleSignalRow(
             'Mean arterial pressure',
             'Patient arterial line',
             `${patient.meanArterialPressure.toFixed(0)} mmHg`,
@@ -147,7 +160,7 @@ export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSi
             movement: 'Three findings about whether the heart is ejecting, and how much.',
           },
         ]}
-        summary={`Two arterial sites ${Math.abs(gap) > 2 ? `${gap.toFixed(1)} points apart` : 'reading close together'}, with a native stream present. ${differentialActive ? 'The differential-oxygenation state is active on this circuit.' : corrected ? 'The differential-oxygenation state has been addressed on this circuit.' : 'No differential-oxygenation state is active on this circuit.'}`}
+        summary={`Two arterial sites ${gap.toFixed(1)} points apart${gapExceedsDisplayDeadband ? ', which is more than this module treats as display noise' : ', which is within what this module treats as display noise'}, with a native stream ${patient.aorticValveOpening ? 'present' : 'absent'}.`}
       />
 
       <Discriminators
@@ -166,9 +179,9 @@ export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSi
           },
           {
             question:
-              'If the three readings cannot all be trusted, which one would you doubt — and which one is nearest the return cannula?',
+              'Do these three readings have to agree with one another for all three to be correct?',
             whereToLook:
-              'The femoral and post-membrane rows, and where each sits relative to the arterial return.',
+              'The measured-at column. Ask what each site would have to have in common with the others for agreement to be expected at all.',
           },
         ]}
       />
@@ -240,14 +253,27 @@ export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSi
           patient="Right radial blood gas obtained; native ejection and native lung function assessed; upper-body monitoring chosen for the territory at risk; the strategy escalated to the ECMO team."
         />
 
-        <HarmfulReflex action="Raising pump speed because a systemic saturation of this level means the patient is under-supported.">
+        <HarmfulReflex action="Raising pump speed reflexively, because a saturation of this level is read as the patient being under-supported.">
           <p>
-            The reflex treats one of the two arterial numbers as the patient&apos;s systemic
-            saturation and the circuit as the only supply. It spends the time in which the
-            upper-body value could have been confirmed and the two circulations read apart. In this
-            simulation the modeled right-radial value does not respond to circuit flow at all —
-            which is a limitation of the model rather than a claim about the bedside, where
-            retrograde flow and native ejection do determine where the streams meet.
+            Start with what is true of it. Raising retrograde flow does move the meeting place of
+            the two streams more proximally and can lift the right-hand value for a time; it is a
+            recognised temporising manoeuvre, and nothing here says flow is irrelevant.
+          </p>
+          <p>
+            The harm is what buying that costs. More retrograde flow is more afterload presented to
+            a ventricle that is ejecting — pulse pressure {patient.pulsePressure.toFixed(0)} mmHg
+            with the aortic valve {patient.aorticValveOpening ? 'opening' : 'closed'} on this
+            circuit — so it can suppress the native ejection that was competing, load the left
+            ventricle, and worsen pulmonary congestion. Taken reflexively it also spends the time in
+            which the upper-body value could have been confirmed and the two circulations read
+            apart, and it treats one of two arterial numbers as though it were the patient&apos;s
+            systemic saturation.
+          </p>
+          <p data-model-response-caveat>
+            None of that is visible here. In this simulation the modeled right-radial value does not
+            respond to circuit flow at all, so the manoeuvre appears to do nothing rather than to
+            trade one problem for another. That is a limitation of the model, and it is why the
+            reasoning above is written out rather than demonstrated.
           </p>
         </HarmfulReflex>
       </AfterCommitment>

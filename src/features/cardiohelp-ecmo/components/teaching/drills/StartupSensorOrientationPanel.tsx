@@ -12,7 +12,9 @@ import {
   PatternReading,
   SignalRegister,
   ThreeDomainResponse,
+  UNAVAILABLE_INDICATION,
   channelSignalRow,
+  offConsoleSignalRow,
   valueSignalRow,
 } from './drillPanelPrimitives'
 
@@ -30,7 +32,11 @@ type StartupStage = 'pre-use' | 'demonstration' | 'verified'
 
 function stageOf(state: EcmoSimulationState): StartupStage {
   if (state.circuit.circuitInspected) return 'verified'
-  return state.device.pumpRunning && state.circuit.bloodFlow > 0 ? 'demonstration' : 'pre-use'
+  // The pump turning is the question, not the flow it produces: a clamped limb holds flow at zero
+  // while the pump is very much running, and calling that "stopped" would be wrong on both counts.
+  const pumpTurning =
+    state.device.pumpRunning && !state.device.zeroFlowActive && state.device.rpmSetpoint > 0
+  return pumpTurning ? 'demonstration' : 'pre-use'
 }
 
 const STAGE_SUMMARY: Readonly<Record<StartupStage, string>> = {
@@ -51,7 +57,7 @@ export function StartupSensorOrientationPanel({ state }: { readonly state: EcmoS
     {
       label: 'Device',
       reading: `Self-test ${state.device.selfTest}, ${state.device.rpmSetpoint} rpm set, power on ${state.device.powerSource.toUpperCase()} at ${Math.round(state.device.batteryPercent)}% battery.`,
-      movement: 'The console can speak for this domain, and only this one, on its own.',
+      movement: 'Everything in this row comes from the console itself.',
     },
     {
       label: 'Circuit and sensors',
@@ -70,7 +76,7 @@ export function StartupSensorOrientationPanel({ state }: { readonly state: EcmoS
     {
       label: 'Independent patient data',
       reading: `Bedside saturation ${state.patient.spo2.toFixed(0)}%, arterial carbon dioxide ${state.patient.paCO2.toFixed(0)}, mean arterial pressure ${state.patient.meanArterialPressure.toFixed(0)}.`,
-      movement: 'Nothing on the console produces any of this. It arrives from the patient.',
+      movement: 'None of this comes from the console. It arrives from the patient and the bedside.',
     },
   ]
 
@@ -111,10 +117,12 @@ export function StartupSensorOrientationPanel({ state }: { readonly state: EcmoS
           valueSignalRow(
             'Flow',
             'Flow probe on the circuit tubing',
-            `${state.circuit.bloodFlow.toFixed(2)} L/min`,
             state.circuit.flowSensorConnected
-              ? 'With its sensor connected, zero is a real reading rather than an absent one. That is what separates it from the pressure channels beside it.'
-              : 'The flow sensor is not connected, so the console has nothing to measure.',
+              ? `${state.circuit.bloodFlow.toFixed(2)} L/min`
+              : UNAVAILABLE_INDICATION,
+            state.circuit.flowSensorConnected
+              ? 'The circuit flow this probe is reporting. With the sensor connected it reports whatever the circuit is doing, including nothing.'
+              : 'The flow sensor is not connected, so this console has nothing to report here.',
             state.circuit.flowSensorConnected ? 'valid' : 'device-unavailable',
           ),
           channelSignalRow(
@@ -122,7 +130,7 @@ export function StartupSensorOrientationPanel({ state }: { readonly state: EcmoS
             'Drainage limb, before the pump',
             readouts.pVen,
             'mmHg',
-            'Says how hard the pump is pulling against what the patient can give it.',
+            'A circuit pressure taken on the drainage limb, upstream of the pump.',
           ),
           channelSignalRow(
             'pInt',
@@ -155,14 +163,13 @@ export function StartupSensorOrientationPanel({ state }: { readonly state: EcmoS
             'Self-test',
             'Console device diagnostic',
             state.device.selfTest,
-            'A statement about device functions. It says nothing about the tubing between the two cannulas.',
+            'The result of the diagnostic this console runs on itself.',
           ),
-          valueSignalRow(
+          offConsoleSignalRow(
             'Sweep and sweep-gas oxygen fraction',
             'Separate external blender',
             `${state.gas.sweepLpm.toFixed(1)} L/min · ${state.gas.fio2.toFixed(2)}`,
             'Set on a different device from the one displaying the blood-path numbers.',
-            'authored',
           ),
         ]}
         summary={`Flow reads ${state.circuit.bloodFlow.toFixed(2)} L/min from a ${state.circuit.flowSensorConnected ? 'connected' : 'disconnected'} sensor. The three pressure channels and the gradient are ${readouts.pVen.displayed === null ? 'not reporting in this state' : 'reporting numbers'}. The speed setpoint, self-test result, power source, and the two blender settings are readable either way.`}
@@ -189,9 +196,9 @@ export function StartupSensorOrientationPanel({ state }: { readonly state: EcmoS
           },
           {
             question:
-              'Is a channel that has stopped reporting a fault to be chased, or a property of the state the circuit is in?',
+              'Is a channel that reports nothing a fault to be chased, or a property of the state the circuit is in?',
             whereToLook:
-              'Bring the reference circuit up and watch which rows change kind, then stop it again.',
+              'The kind column and the reason beside each dash. The console tour earlier in this lesson took a reference circuit through both states; compare what you saw then with what is here now.',
           },
         ]}
       />

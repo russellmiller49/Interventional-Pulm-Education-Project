@@ -13,6 +13,7 @@ import {
   SignalRegister,
   ThreeDomainResponse,
   channelSignalRow,
+  offConsoleSignalRow,
   valueSignalRow,
 } from './drillPanelPrimitives'
 
@@ -44,9 +45,9 @@ export function VvRecirculationPanel({ state }: { readonly state: EcmoSimulation
       supportMode="vv"
       clinicalQuestion="Displayed circuit flow is high and every circuit pressure is where it has been all shift, yet the patient is losing ground. Is the number on the screen measuring the support this patient is receiving?"
       boundaries={[
-        'The re-drained share is authored as a property of this case at and below the speed it opened at, and widens when the circuit is asked for more. Cannula position, cannula design, volume state and native venous return — the things that actually set recirculation at the bedside — are not modeled here at all.',
-        'The systemic venous value that the drainage saturation is read against is a modeled estimate, not a device reading. The direction the teaching coefficient moves in is an educational statement about pulling harder on a re-draining circuit, not a bedside equation.',
-        'Separating re-drainage from a genuinely high systemic venous saturation at the bedside takes cannula and imaging data this console cannot supply. No share threshold, flow target, or cannula position is taught in this simulation.',
+        'The quantity that governs this case is authored by it: fixed at and below the speed the case opened at, and widening when the circuit is asked for more, with a floor it never falls below however far the speed is reduced. Cannula position, cannula design, volume state and native venous return — the things that actually set it at a bedside — are not modeled here at all.',
+        'The systemic venous value the drainage saturation is compared against is a modeled estimate, not a device reading. The direction this simulation moves its teaching coefficient in is an educational statement, not a bedside equation.',
+        'Telling the two possible readings of a drainage-limb saturation apart at a bedside takes cannula and imaging data this console cannot supply. No share threshold, flow target, or cannula position is taught in this simulation.',
       ]}
     >
       <SignalRegister
@@ -65,11 +66,11 @@ export function VvRecirculationPanel({ state }: { readonly state: EcmoSimulation
             'The saturation of whatever the pump is drawing. It is a drainage-limb value, not a systemic mixed-venous saturation.',
             1,
           ),
-          valueSignalRow(
+          offConsoleSignalRow(
             'Post-oxygenator saturation',
             'Return limb, after the membrane',
             `${state.circuit.postOxygenatorSaturation.toFixed(1)} %`,
-            'The saturation of what the membrane is sending back into the circuit.',
+            'The saturation of what the membrane is sending back. A sampled value in this module, not a channel on this console.',
           ),
           valueSignalRow(
             'Systemic venous saturation',
@@ -78,7 +79,7 @@ export function VvRecirculationPanel({ state }: { readonly state: EcmoSimulation
             'A model estimate of the patient venous saturation. The device does not produce this number.',
             'estimated',
           ),
-          valueSignalRow(
+          offConsoleSignalRow(
             'Patient arterial saturation',
             'Bedside pulse oximeter',
             `${state.patient.spo2.toFixed(1)} %`,
@@ -123,7 +124,7 @@ export function VvRecirculationPanel({ state }: { readonly state: EcmoSimulation
             movement: 'Compare each with where it has sat all shift.',
           },
         ]}
-        summary={`Displayed flow, the two saturations either side of the pump, what the membrane returns, and the pressure channels — four separate readings to compare rather than one status. ${recirculationActive ? 'A recirculation state is active on this circuit.' : corrected ? 'The recirculation cause has been corrected on this circuit.' : 'No recirculation state is active on this circuit.'}`}
+        summary="Displayed flow, the two saturations either side of the pump, what the membrane returns, and the pressure channels — four separate readings to compare rather than one status."
       />
 
       <Discriminators
@@ -141,9 +142,9 @@ export function VvRecirculationPanel({ state }: { readonly state: EcmoSimulation
           },
           {
             question:
-              'When the circuit is asked for more, do the displayed flow and the adjusted flow move the same way?',
+              'Displayed litres are a count of what passed the probe. What would have to be true for that count and the support this patient receives to be different numbers?',
             whereToLook:
-              'The two flow numbers, before and after any change to the speed. This is the observation the whole drill turns on.',
+              'The two saturations either side of the pump, and how far apart they are. Do not test this by changing the speed — whether that is safe here is part of what you are being asked to decide.',
           },
         ]}
       />
@@ -162,7 +163,7 @@ export function VvRecirculationPanel({ state }: { readonly state: EcmoSimulation
               'Recirculation-adjusted circuit flow',
               'Derived by this model from displayed flow and the re-drained share',
               `${effectiveFlow.toFixed(2)} L/min`,
-              'The part of the displayed flow on its first circuit. In venovenous support this is the quantity the patient follows.',
+              'The part of the displayed flow on its first circuit. It is the quantity this model drives the patient from; at a bedside arterial saturation follows this against native cardiac output and whatever the native lung is contributing, not this alone.',
               'estimated',
             ),
             valueSignalRow(
@@ -192,6 +193,13 @@ export function VvRecirculationPanel({ state }: { readonly state: EcmoSimulation
               ? ` The speed has been taken above the ${baselineRpm} rpm this case opened at, and the two numbers have separated further as a result.`
               : ' The speed is at or below the one this case opened at.'}
           </p>
+          <p data-live-fault-state>
+            {recirculationActive
+              ? 'The re-draining state is still active on this circuit, so the two flow numbers stay apart however the display reads.'
+              : corrected
+                ? 'The cause has been corrected on this circuit, and the model is updating toward the corrected state.'
+                : 'No re-draining state is active on this circuit at the moment.'}
+          </p>
           <DisclosedWorking
             summary="Show how this simulation gets from a share to an adjusted flow"
             caution="Do not carry this to a bedside. It looks like a method for estimating recirculation from two saturations and it is not one: the share here is authored by this case, and the systemic venous value is a model estimate rather than a measurement."
@@ -211,12 +219,12 @@ export function VvRecirculationPanel({ state }: { readonly state: EcmoSimulation
             {
               candidate: 'The membrane lung has stopped transferring oxygen',
               standing:
-                'A real cause of a deteriorating patient on unchanged settings, and it would show as a falling post-membrane saturation and usually a widening gradient. Both are available on this display and neither is doing that here.',
+                'A real cause of a deteriorating patient on unchanged settings, and it would show as a falling post-membrane saturation and usually a widening gradient. The gradient is on this console and the post-membrane value is a sample you can send; neither is doing that here.',
             },
             {
               candidate: 'Gas transfer across the membrane is the limit',
               standing:
-                'Sweep and sweep-gas oxygen fraction are the controls for carbon-dioxide clearance and membrane oxygen delivery. Raising sweep in this model moves the carbon-dioxide value and leaves the arterial saturation where it is, which is a different problem from this one.',
+                'Sweep flow is the control for carbon-dioxide clearance; the oxygen fraction of the sweep gas is what the membrane oxygenates with. Raising sweep in this model moves the carbon-dioxide value and leaves the arterial saturation exactly where it is, which is a different problem from this one.',
             },
             {
               candidate: 'Support is being lost somewhere in the circuit, mechanism unnamed',

@@ -227,9 +227,21 @@ export function EcmoLearnWorkspace({
     </div>
   )
 
+  /*
+   * The step teaching is rendered only once the published step belongs to the lesson on screen.
+   *
+   * Selecting a new lesson remounts the player, and the new player publishes its first step from an
+   * effect — one frame after the render that swapped it in. Without this check that frame would show
+   * the previous lesson's rationale beside the new lesson's circuit.
+   */
+  const stepBelongsToLesson =
+    stepStatus !== null && lesson.steps.some((step) => step.id === stepStatus.step.id)
+
   const secondary = (
     <div className={styles.readingPane} data-pane="teaching" ref={paneContentRef('secondary')}>
-      {stepStatus ? <LearnStepTeaching state={state} status={stepStatus} /> : null}
+      {stepBelongsToLesson && stepStatus ? (
+        <LearnStepTeaching state={state} status={stepStatus} />
+      ) : null}
       <EcmoDrillTeachingPanel state={state} />
     </div>
   )

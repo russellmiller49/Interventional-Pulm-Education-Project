@@ -16,6 +16,16 @@ import { CircuitAndMonitors } from '../components/CircuitAndMonitors'
 import { LearnLessonPlayer, resolveGuidedLesson } from '../components/LearnLessonPlayer'
 import { LearnStepTeaching, type LearnStepStatus } from '../components/LearnStepTeaching'
 
+/*
+ * These walkthroughs drive a seventeen-step console tour through a real reducer and a real console,
+ * with a `waitFor` at most steps. Isolated they run in a couple of seconds; in a full-suite run on a
+ * machine that gives Jest a worker per core they can exceed the five-second default, and the B3/B4
+ * suites added enough load to make that regular rather than rare. Nothing here is slow because it is
+ * doing more work than it should — the budget simply has to match what a seventeen-step UI
+ * walkthrough costs under contention.
+ */
+jest.setTimeout(30_000)
+
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
     href,

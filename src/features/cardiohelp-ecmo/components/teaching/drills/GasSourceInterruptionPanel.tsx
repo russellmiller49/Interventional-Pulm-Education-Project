@@ -13,6 +13,7 @@ import {
   SignalRegister,
   ThreeDomainResponse,
   channelSignalRow,
+  offConsoleSignalRow,
   valueSignalRow,
 } from './drillPanelPrimitives'
 
@@ -54,13 +55,13 @@ export function GasSourceInterruptionPanel({ state }: { readonly state: EcmoSimu
             'Whether the supply upstream of the blender is continuous.',
             'authored',
           ),
-          valueSignalRow(
+          offConsoleSignalRow(
             'Sweep flow setting',
             'Separate external blender',
             `${state.gas.sweepLpm.toFixed(1)} L/min`,
             'A setpoint on the blender, requesting a gas flow through the membrane.',
           ),
-          valueSignalRow(
+          offConsoleSignalRow(
             'Sweep-gas oxygen fraction',
             'Separate external blender',
             state.gas.fio2.toFixed(2),
@@ -86,19 +87,19 @@ export function GasSourceInterruptionPanel({ state }: { readonly state: EcmoSimu
             'mmHg',
             'Also blood-path: the pressure lost across the membrane.',
           ),
-          valueSignalRow(
+          offConsoleSignalRow(
             'Post-oxygenator saturation',
             'Return limb, after the membrane',
             `${state.circuit.postOxygenatorSaturation.toFixed(1)} %`,
-            'The saturation of the blood the membrane is returning to the circuit.',
+            'The saturation of the blood the membrane is returning. A sampled value in this module, not a channel on this console.',
           ),
-          valueSignalRow(
+          offConsoleSignalRow(
             'Patient arterial carbon dioxide',
             'Arterial blood gas from the patient',
             state.patient.paCO2.toFixed(0),
             'A patient measurement. Note how fast it has moved as well as how far.',
           ),
-          valueSignalRow(
+          offConsoleSignalRow(
             'Patient arterial saturation',
             'Bedside pulse oximeter',
             `${state.patient.spo2.toFixed(1)} %`,
@@ -135,7 +136,7 @@ export function GasSourceInterruptionPanel({ state }: { readonly state: EcmoSimu
             movement: 'Note the size of the change and how quickly it came on.',
           },
         ]}
-        summary={`Four rows to compare rather than one status: the blood path, the gas path, what the membrane is returning, and the patient. ${interrupted ? 'The gas-source interruption is active on this circuit.' : restored ? 'The gas source has been restored on this circuit.' : 'No gas-source interruption is active on this circuit.'}`}
+        summary="Four rows to compare rather than one status: the blood path, the gas path, what the membrane is returning, and the patient."
       />
 
       <Discriminators
@@ -228,29 +229,28 @@ export function GasSourceInterruptionPanel({ state }: { readonly state: EcmoSimu
             normal-looking blood-flow number — that this drill exists to remove.
           </p>
         </HarmfulReflex>
-      </AfterCommitment>
 
-      <section className={styles.section} aria-labelledby="gas-guides-heading">
-        <h3 id="gas-guides-heading" className={styles.heading}>
-          The blood-path channels that stayed still
-        </h3>
-        <TextEquivalent>
-          Circuit blood flow and the transmembrane gradient, with their authored interpretations.
-          They are shown here because they are the evidence that the blood path is not the problem.
-        </TextEquivalent>
-        <div className="mt-3 grid gap-3">
-          <GuidedValue
-            guide={ecmoDerivedValueGuides.circuitBloodFlow}
-            value={state.circuit.bloodFlow}
-            headingLevel={4}
-          />
-          <GuidedValue
-            guide={ecmoDerivedValueGuides.transmembraneDeltaP}
-            value={readouts.deltaP.displayed}
-            headingLevel={4}
-          />
-        </div>
-      </section>
+        <section className={styles.section} aria-labelledby="gas-guides-heading">
+          <h3 id="gas-guides-heading" className={styles.heading}>
+            The blood-path channels, and what they were able to tell you
+          </h3>
+          <TextEquivalent>
+            Circuit blood flow and the transmembrane gradient, with their authored interpretations.
+          </TextEquivalent>
+          <div className="mt-3 grid gap-3">
+            <GuidedValue
+              guide={ecmoDerivedValueGuides.circuitBloodFlow}
+              value={state.circuit.bloodFlow}
+              headingLevel={4}
+            />
+            <GuidedValue
+              guide={ecmoDerivedValueGuides.transmembraneDeltaP}
+              value={readouts.deltaP.displayed}
+              headingLevel={4}
+            />
+          </div>
+        </section>
+      </AfterCommitment>
     </DrillPanelFrame>
   )
 }

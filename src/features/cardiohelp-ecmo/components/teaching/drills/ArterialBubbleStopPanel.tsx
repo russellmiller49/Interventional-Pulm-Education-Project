@@ -13,6 +13,7 @@ import {
   SignalRegister,
   ThreeDomainResponse,
   channelSignalRow,
+  offConsoleSignalRow,
   valueSignalRow,
 } from './drillPanelPrimitives'
 
@@ -78,7 +79,7 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
       clinicalQuestion="The bubble channel has raised a high-priority alarm and the pump has stopped on its own. What has that stop actually achieved, and what has to be true before this circuit carries blood to the patient again?"
       boundaries={[
         'This exercise injects an air event with no volume assigned to it and no threshold behind it. The manufacturer document supplied for this module is internally inconsistent on a bubble-size threshold, so this simulation offers no trigger value and teaches a sequence instead.',
-        'The order taught here — return limb then drainage limb to isolate, drainage limb then return limb to resume — is one bounded sequence chosen for consistency. Local protocol governs at the bedside.',
+        'The order taught here — return limb then drainage limb to isolate, drainage limb then return limb to resume — is one bounded sequence this module chose for consistency, and it is not the only one in use. Some protocols re-establish forward flow before the return limb is opened, on the grounds that a centrifugal pump is non-occlusive and a stopped one does not hold a column in place. Follow local protocol; this simulation is not the authority on the sequence.',
         'This simulation does not represent the physical work of de-airing a real circuit, and it does not model the patient being carried conventionally while the circuit is off. Both are real and both happen in the time this lab compresses to a button.',
       ]}
     >
@@ -113,30 +114,30 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
             'Circuit blood flow',
             'Flow probe on the circuit tubing',
             `${circuit.bloodFlow.toFixed(2)} L/min`,
-            'Zero with the pump stopped, and a real zero: the sensor is connected and reporting it.',
+            'A real reading either way: the sensor is connected, so a zero here is the circuit reporting zero rather than the console reporting nothing.',
           ),
           channelSignalRow(
             'pVen',
             'Drainage limb, before the pump',
             circuit.readouts.pVen,
             'mmHg',
-            'Pressure response is not modeled for a stopped pump in this simulation.',
+            'A circuit pressure on the drainage limb.',
           ),
           channelSignalRow(
             'pArt',
             'Return limb, after the oxygenator',
             circuit.readouts.pArt,
             'mmHg',
-            'Same limitation, and a circuit pressure in any case — never the patient arterial blood pressure.',
+            'A circuit pressure on the return limb — never the patient arterial blood pressure.',
           ),
-          valueSignalRow(
+          offConsoleSignalRow(
             'Patient arterial saturation',
             'Bedside pulse oximeter',
             `${state.patient.spo2.toFixed(1)} %`,
             'The independent reading. Note which way it is going while the circuit is not running.',
           ),
         ]}
-        summary={`Pump ${device.pumpRunning ? 'running' : 'stopped'}, reset latch ${circuit.bubbleResetRequired ? 'set' : 'clear'}, drainage clamp ${circuit.drainageClampClosed ? 'closed' : 'open'}, return clamp ${circuit.returnClampClosed ? 'closed' : 'open'}, air source ${sourceCorrected ? 'corrected' : 'not corrected'}. Flow ${circuit.bloodFlow.toFixed(2)} L/min; the pressure channels are not reporting while the pump is stopped.`}
+        summary={`Pump ${device.pumpRunning ? 'running' : 'stopped'}, reset latch ${circuit.bubbleResetRequired ? 'set' : 'clear'}, drainage clamp ${circuit.drainageClampClosed ? 'closed' : 'open'}, return clamp ${circuit.returnClampClosed ? 'closed' : 'open'}, air source ${sourceCorrected ? 'corrected' : 'not corrected'}. Flow ${circuit.bloodFlow.toFixed(2)} L/min; the pressure channels ${circuit.readouts.pVen.displayed === null ? 'are not reporting in this state' : 'are reporting'}.`}
       />
 
       <PatternReading
@@ -175,14 +176,14 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
           },
           {
             question:
-              'Which of the steps in the list above addresses where air is entering, rather than what air already in the circuit is doing?',
-            whereToLook: 'The sequence above, read as five separate claims rather than one status.',
+              'Which of the states in the table above is about where air is entering, rather than about what air already in the circuit is doing?',
+            whereToLook:
+              'The five rows of the pattern. They are five separate facts; ask what each one would and would not change.',
           },
           {
-            question:
-              'The saturation is falling. Does that change what has to be true before the circuit is resumed, or only how uncomfortable the wait is?',
+            question: 'The saturation is falling. What does that change, and what does it not?',
             whereToLook:
-              'The patient row against the reset-latch row. One of them is a reason to hurry; neither is a reason to skip a step.',
+              'The patient row against the reset-latch row, and what resetting the latch would and would not do to the circuit.',
           },
         ]}
       />
@@ -238,17 +239,23 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
             {
               candidate: 'The membrane lung is the source and should be exchanged',
               standing:
-                'Air appearing on the return side is consistent with a membrane problem and an exchange may end up being right. It is a conclusion that follows finding the source, not one that substitutes for it.',
+                'An exchange may end up being right, but a return-side detection is weak evidence for it: the detector reports where air was found, not where it entered. Air is entrained wherever circuit pressure is below atmospheric — the drainage limb, its connections, and any line handled near the patient — and the return side is simply where it announces itself. This is a conclusion that follows finding the source, not one that substitutes for it.',
             },
           ]}
         />
 
         <FittingResponse>
           <p>
-            In this order: recognise that the device has stopped forward flow and nothing else;
+            The acts, in order: recognise that the device has stopped forward flow and nothing else;
             close the return limb and then the drainage limb near the patient to isolate; find and
-            correct where air is entering and confirm the circuit is clear; open the drainage limb
-            and then the return limb; and only then reset the intervention deliberately.
+            correct where air is entering and confirm the circuit is clear; then bring the circuit
+            back and reset the intervention deliberately.
+          </p>
+          <p>
+            The sequence this simulation accepts for coming back is drainage limb, then return limb,
+            then reset. Read that as this lab&apos;s bounded convention rather than as the taught
+            order — the boundary below records that protocols differ on whether forward flow is
+            re-established before the return limb is opened.
           </p>
           <p>
             Acknowledgement is not correction, and reset is not source control. Each is a separate

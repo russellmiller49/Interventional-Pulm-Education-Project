@@ -32,13 +32,20 @@ import { ModelBoundary, TextEquivalent, styles } from '../shared'
  * What kind of claim a displayed number is.
  *
  * The first three mirror `EcmoReadoutStatus` exactly, because a panel that re-derived them would be
- * a second opinion about the same question. The last two exist because a panel shows quantities the
- * console never displays: a model estimate, and a value this case simply asserts.
+ * a second opinion about a question A1 already settled. The last three exist because a panel shows
+ * quantities this console never displays at all: a value measured somewhere else entirely, a model
+ * estimate, and a value this case simply asserts.
+ *
+ * `off-console` is load-bearing rather than a nicety. A bedside oximeter, an arterial blood gas, the
+ * blender settings and an echocardiographic estimate are the other three of the four domains this
+ * module teaches, and calling any of them `valid` would say the console can display them — which is
+ * exactly the conflation the startup drill exists to break.
  */
 export type DrillSignalKind =
   | 'valid'
   | 'device-unavailable'
   | 'simulation-unmodeled'
+  | 'off-console'
   | 'estimated'
   | 'authored'
 
@@ -51,22 +58,28 @@ export type DrillSignalKind =
  * words rather than carried by colour — they are just said once.
  */
 const SIGNAL_KIND_LABEL: Readonly<Record<DrillSignalKind, string>> = {
-  valid: 'Valid',
+  valid: 'On the console',
   'device-unavailable': 'Unavailable on this console',
   'simulation-unmodeled': 'Not modeled here',
+  'off-console': 'Measured off the console',
   estimated: 'Model estimate',
   authored: 'Authored by this case',
 }
 
 const SIGNAL_KIND_LEGEND: Readonly<Record<DrillSignalKind, string>> = {
-  valid: 'the model produced it and the console can display it',
+  valid: 'this console measures and displays it, and the model produced a value it can show',
   'device-unavailable':
-    'the value is outside the range this console displays, so it shows the unavailable indication',
+    'the console would not show a number here — the sensor is not reporting, or the value is outside the range it displays',
   'simulation-unmodeled':
     'this simulation has no value to offer for this state, which is not a claim about what the device would show',
-  estimated: 'derived by the model rather than measured by the device',
+  'off-console':
+    'measured on the patient or on another device. This console neither produces nor displays it',
+  estimated: 'derived by the model rather than measured by anything',
   authored: 'set by this case rather than measured',
 }
+
+/** The kinds, as a value, so a test cannot pin a stale count of them. */
+export const DRILL_SIGNAL_KINDS = Object.keys(SIGNAL_KIND_LABEL) as readonly DrillSignalKind[]
 
 export interface DrillSignalRow {
   readonly label: string
@@ -95,6 +108,16 @@ export function channelSignalRow(
     kind: readout.status,
     note: formatted.available ? note : `${note} ${readout.reason}`.trim(),
   }
+}
+
+/** A value measured on the patient or on a device other than this console. */
+export function offConsoleSignalRow(
+  label: string,
+  measuredAt: string,
+  value: string,
+  note: string,
+): DrillSignalRow {
+  return { label, measuredAt, value, kind: 'off-console', note }
 }
 
 export function valueSignalRow(
