@@ -278,6 +278,7 @@ next-env.d.ts
 
 # Offline console renders from `npm run render:mv-console` — look-at-it artifacts, not build output.
 /public/mv-console-preview/
+/public/mcs-preview/
 
 # IP preference-card authoring sources. The import pipeline reads these locally; only the
 # distilled JSON under data/ip-preference-cards/generated/ is committed. Kept out of Git
