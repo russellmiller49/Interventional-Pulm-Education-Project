@@ -3605,7 +3605,12 @@
  */
 .learnWorkspaceShell {
   height: 100%;
-  min-height: 30rem;
+  /*
+   * The floor is deliberately low. Above it the shell simply fills the activity viewport; below it
+   * — a 720-pixel-tall laptop, where the module chrome already takes 338 of them — a taller floor
+   * would push Continue past the fold for the sake of panes nobody asked to be that tall.
+   */
+  min-height: 24rem;
   max-height: 60rem;
   overflow: hidden;
   border: 1px solid var(--line);
