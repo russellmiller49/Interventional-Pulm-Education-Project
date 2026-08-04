@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Section 3 — Modes: trigger, target, cycle, and expiration.
+ * Section 4 — Modes: trigger, target, cycle, and expiration.
  *
  * The lesson's claim is that a device label is not a description of the breath. So the figure is
  * the live breath with its four variables marked on it, and the table underneath states what the

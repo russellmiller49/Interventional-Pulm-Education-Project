@@ -10,7 +10,7 @@ export function MechanicalVentilationLearnLandingV2() {
       sectionHref={(sectionId) => `/mechanical-ventilation/learn?activity=${sectionId}`}
       intro="Mechanics and a repeatable waveform-reading sequence come first, because a mode is only legible once you can read what it does to the waveforms. Timing, dyssynchrony, oxygenation, and ventilation each isolate one interaction between the patient and the machine. The last section puts four of them behind a single alarm. Move in order or open any section directly."
       startLabel="Start with the mechanics"
-      sectionsNote="Modes sit third on purpose: they are device-facing, and they belong after the physiology they operate on."
+      sectionsNote="Modes sit fourth on purpose: they are device-facing, and they belong after the physiology they operate on."
       notice={
         <aside
           role="note"
