@@ -1,6 +1,6 @@
 'use client'
 
-import type { Dispatch, ReactNode } from 'react'
+import { useEffect, useRef, type Dispatch, type ReactNode } from 'react'
 import { ArrowRight, Check, ShieldAlert } from 'lucide-react'
 
 import { AnswerVerdict } from '@/features/learning-module/components/AnswerVerdict'
@@ -162,6 +162,7 @@ export function McsLearnActionPane({
   sectionNav: ReactNode
   afterCompletion: ReactNode
 }) {
+  const paneRef = useRef<HTMLElement>(null)
   const phaseIndex = MCS_LEARN_PHASES.indexOf(phase)
   const targetControl = contract.targetControl
     ? mcsLearnControls[contract.targetControl]
@@ -196,8 +197,39 @@ export function McsLearnActionPane({
     transfer: transfer.item.explanation,
   }
 
+  /*
+   * A new phase starts at the top of its own pane. Without this the learner arrives at Observe
+   * already scrolled to wherever the previous phase left them, and the new instruction is above the
+   * fold of a pane they did not know had scrolled.
+   */
+  useEffect(() => {
+    const pane = paneRef.current?.parentElement
+    if (pane) pane.scrollTop = 0
+  }, [phase])
+
+  /*
+   * Committing an answer unmounts the button that had focus. Left alone that drops focus to the
+   * document, which is exactly the moment a keyboard learner most needs to be somewhere useful — so
+   * focus moves to the control the commitment produced, and the verdict is scrolled into the pane.
+   */
+  useEffect(() => {
+    const root = paneRef.current
+    if (!root) return
+    const next =
+      root.querySelector<HTMLElement>('[data-verdict-continue]') ??
+      root.querySelector<HTMLElement>('[data-learn-continue]:not(:disabled)')
+    if (!next) return
+    // jsdom has no scrollIntoView, and a browser that lacks it should still move focus.
+    next.scrollIntoView?.({ block: 'nearest' })
+    next.focus({ preventScroll: true })
+  }, [predictionCommitted, recognizeCommitted, transferCommitted])
+
   return (
-    <section className={styles.learnActionPane} aria-labelledby="mcs-learn-action-heading">
+    <section
+      ref={paneRef}
+      className={styles.learnActionPane}
+      aria-labelledby="mcs-learn-action-heading"
+    >
       <header className={styles.learnPaneHeader}>
         <span className={styles.kicker}>
           YOUR TURN · {contract.lessonSequenceLabel.toUpperCase()}

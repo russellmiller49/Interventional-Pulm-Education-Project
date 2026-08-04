@@ -808,6 +808,23 @@ describe('M2/M3 — pane order, labels, and keyboard reach', () => {
     expect(document.querySelector('[data-learn-help]')).not.toBeNull()
   })
 
+  it('moves focus to the control a commitment produces, rather than dropping it', () => {
+    render(<McsWorkbench section="learn" />)
+    fireEvent.click(screen.getByRole('radio', { name: /The displayed device contribution/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Record what you identified' }))
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: /Continue to the prediction/i }),
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /Continue to the prediction/i }))
+    fireEvent.click(screen.getAllByRole('radio')[0])
+    fireEvent.click(screen.getByRole('button', { name: 'Commit this answer' }))
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: /Continue to the task/i }),
+    )
+    expect(document.activeElement).not.toBe(document.body)
+  })
+
   it('keeps section navigation reachable from inside the action pane', () => {
     render(<McsWorkbench section="learn" initialActivityId="iabp-timing-triggering" />)
     const nav = screen.getByRole('navigation', { name: /Move to another section/i })

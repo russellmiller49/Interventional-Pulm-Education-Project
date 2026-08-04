@@ -3598,9 +3598,15 @@
  * The shared teaching workspace owns pane widths, the separators and the compact fallback, so what
  * is here is only the shell it needs a height from, and the styling of the three panes' contents.
  */
+/*
+ * The shell fills the activity viewport rather than guessing at the chrome above it. Sizing it from
+ * `100vh` looked right at one window height and pushed the panes past the fold at every other, which
+ * left the workspace scrolling inside a viewport that was also scrolling — the nested-scroll trap.
+ */
 .learnWorkspaceShell {
-  height: min(calc(100vh - 13rem), 60rem);
-  min-height: 34rem;
+  height: 100%;
+  min-height: 30rem;
+  max-height: 60rem;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 1rem;
@@ -4280,4 +4286,13 @@
   margin: 0;
   font-size: 0.76rem;
   line-height: 1.5;
+}
+
+.foundationDisclosure > summary {
+  min-height: 2.6rem;
+  padding: 0.55rem 0.3rem;
+  color: var(--navy-2);
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 800;
 }

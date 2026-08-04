@@ -147,10 +147,17 @@ export function McsLearnTeachingPane({
         </p>
       ) : null}
 
+      {/*
+       * The foundation material is long — it is the whole common model, and on the mechanisms
+       * section the eight pathway cards as well. It stays complete and open by default, inside a
+       * disclosure so a learner who has read it can fold it away and keep the section-specific
+       * teaching above it within reach.
+       */}
       {foundationMaterial ? (
-        <div className={styles.foundationMaterial} data-foundation-material>
-          {foundationMaterial}
-        </div>
+        <details open className={styles.foundationDisclosure} data-foundation-material>
+          <summary>The common model this section builds, and the pathways it compares</summary>
+          <div className={styles.foundationMaterial}>{foundationMaterial}</div>
+        </details>
       ) : null}
     </section>
   )
