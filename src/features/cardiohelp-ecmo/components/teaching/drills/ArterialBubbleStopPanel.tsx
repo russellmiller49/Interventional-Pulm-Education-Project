@@ -65,10 +65,14 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
         'The only step that stops air returning as soon as flow does. Nothing before it addresses the cause.',
     },
     {
-      label: 'Bubble latch cleared',
-      done: !circuit.bubbleResetRequired,
+      label: 'Support resumed on the verified protocol',
+      done:
+        !circuit.bubbleResetRequired &&
+        !circuit.drainageClampClosed &&
+        !circuit.returnClampClosed &&
+        device.pumpRunning,
       detail:
-        'A deliberate last act, after the source and the circuit state are both right. Reset restarts the pump.',
+        'One bounded step in this simulation, taken only once the source and the circuit are both right. The order of clamps, pump and reset at the bedside belongs to the manufacturer instructions and local protocol.',
     },
   ]
 
@@ -79,7 +83,7 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
       clinicalQuestion="The bubble channel has raised a high-priority alarm and the pump has stopped on its own. What has that stop actually achieved, and what has to be true before this circuit carries blood to the patient again?"
       boundaries={[
         'This exercise injects an air event with no volume assigned to it and no threshold behind it. The manufacturer document supplied for this module is internally inconsistent on a bubble-size threshold, so this simulation offers no trigger value and teaches a sequence instead.',
-        'The order taught here — return limb then drainage limb to isolate, drainage limb then return limb to resume — is one bounded sequence this module chose for consistency, and it is not the only one in use. Some protocols re-establish forward flow before the return limb is opened, on the grounds that a centrifugal pump is non-occlusive and a stopped one does not hold a column in place. Follow local protocol; this simulation is not the authority on the sequence.',
+        'This module teaches isolation — return limb, then drainage limb, near the patient — because that is what separates a patient from an air column wherever the air is found. It deliberately teaches no clamp, pump and reset order for coming back: approved protocols differ on whether forward flow is re-established before the return limb is opened, since a centrifugal pump is non-occlusive and a stopped one does not hold a column in place. Resumption here is one bounded action standing in for the verified manufacturer and local protocol.',
         'This simulation does not represent the physical work of de-airing a real circuit, and it does not model the patient being carried conventionally while the circuit is off. Both are real and both happen in the time this lab compresses to a button.',
       ]}
     >
@@ -217,7 +221,7 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
             {sourceCorrected
               ? circuit.bubbleResetRequired
                 ? 'The source has been corrected on this circuit and the latch is still set — which is correct: the reset is a separate, deliberate act.'
-                : 'The source has been corrected and the latch cleared, so this circuit has been resumed in the intended order.'
+                : 'The source has been corrected and support resumed, so this circuit came back only once the air had been dealt with.'
               : circuit.bubbleResetRequired
                 ? 'The source has not been corrected on this circuit and the latch is still set. Resetting now would restart the pump on a circuit whose air source is still there.'
                 : 'The latch is clear on this circuit.'}
@@ -252,10 +256,10 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
             back and reset the intervention deliberately.
           </p>
           <p>
-            The sequence this simulation accepts for coming back is drainage limb, then return limb,
-            then reset. Read that as this lab&apos;s bounded convention rather than as the taught
-            order — the boundary below records that protocols differ on whether forward flow is
-            re-established before the return limb is opened.
+            Coming back is deliberately one act here, and not a clamp order. Which limb opens first,
+            when the pump turns, and where the console reset falls in that sequence are set by the
+            current manufacturer instructions and your unit&apos;s protocol — this simulation is not
+            the authority on any of it, and teaching a single order would imply that it were.
           </p>
           <p>
             Acknowledgement is not correction, and reset is not source control. Each is a separate
@@ -264,18 +268,23 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
         </FittingResponse>
 
         <ThreeDomainResponse
-          device="Alarm recognised rather than merely silenced; the intervention left latched until the circuit is right; reset performed as a deliberate final step through the Interventions screen."
-          circuitOrGas="Return limb clamped, then the drainage limb, near the patient; the air source found and eliminated; the circuit confirmed bubble free; then drainage opened and return opened, in that order."
+          device="Alarm recognised rather than merely silenced; the intervention left latched until the circuit is right; the device brought back only as part of a verified resumption."
+          circuitOrGas="Return limb clamped, then the drainage limb, near the patient; the air source found and eliminated; the circuit confirmed bubble free; then support resumed on the verified manufacturer and local protocol."
           patient="Carried conventionally while the circuit is off, with oxygenation and haemodynamics followed independently of a console that has nothing to report while the pump is stopped."
         />
 
-        <HarmfulReflex action="Acknowledging the alarm and resetting the intervention to get the pump turning again.">
+        <HarmfulReflex action="Getting the pump turning again before the air source has been dealt with.">
           <p>
             The falling saturation makes this the most tempting action in the drill, and it is the
-            one that returns air to a patient. Reset restarts the pump; it does not remove air and
-            it does not close the way air got in. This simulation records a reset before the cause
-            has been corrected as a critical safety error, and it records opening a clamp on a
-            circuit whose air is neither corrected nor cleared as a separate one.
+            one that returns air to a patient. Resuming restores forward flow; it does not remove
+            air and it does not close the way air got in. This simulation records a resume before
+            the cause has been corrected as a critical safety error, and it records opening a clamp
+            on a circuit whose air is neither corrected nor cleared as a separate one.
+          </p>
+          <p>
+            It also refuses to let you open the last closed limb by hand while the latch still holds
+            the pump. That would put the patient back on both limbs of a circuit moving no blood,
+            which is exactly the state the bounded resumption exists to skip past.
           </p>
         </HarmfulReflex>
       </AfterCommitment>

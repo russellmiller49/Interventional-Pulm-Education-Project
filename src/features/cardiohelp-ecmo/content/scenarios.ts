@@ -497,11 +497,11 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Clamp the return limb, then the drainage limb, near the patient to isolate the circuit.',
         'Correct the source of air and confirm the circuit is bubble free.',
-        'Open the drainage limb, then the return limb, then use Interventions > Bubble > Reset > Confirm and reassess.',
+        'Resume support on the verified manufacturer and local protocol, then reassess. The order of clamps, pump and reset at the bedside is set by those documents, not by this module.',
       ],
       safetyNotes: [
         'Premature reset is a critical safety error.',
-        'Clamp/unclamp order follows local protocol; this module teaches one bounded sequence for consistency.',
+        'The order of clamps, pump and reset for coming back follows the current manufacturer instructions and local protocol; this module teaches the precondition rather than one sequence.',
       ],
     },
     evidenceIds: ['ifu-console-workflow', 'ifu-anomaly-boundary', 'elso-circuit-2022'],
@@ -968,11 +968,11 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Clamp the arterial return limb, then the drainage limb, near the patient to isolate the circulation.',
         'Identify and correct the air source and confirm the return path is clear.',
-        'Open the drainage limb, then the return limb, reset deliberately, re-establish support, and reassess perfusion.',
+        'Resume venoarterial support on the verified manufacturer and local protocol, then reassess perfusion. The order of clamps, pump and reset at the bedside is set by those documents, not by this module.',
       ],
       safetyNotes: [
         'Premature reset and alarm acknowledgement without correction remain critical errors.',
-        'Clamp/unclamp order follows local protocol; this module teaches one bounded sequence for consistency.',
+        'The order of clamps, pump and reset for coming back follows the current manufacturer instructions and local protocol; this module teaches the precondition rather than one sequence.',
       ],
     },
     evidenceIds: [

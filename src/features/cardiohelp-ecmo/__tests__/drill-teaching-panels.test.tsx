@@ -292,53 +292,6 @@ describe('B4: no pilot panel leaks the authored answer before commitment', () =>
   })
 })
 
-describe('B4: the model boundaries describe this engine, not a hoped-for one', () => {
-  /*
-   * Characterization, and the reason the preload panel carries the boundary it does.
-   *
-   * Adversarial review found that escalating speed during a drainage collapse raises the modeled
-   * patient's saturation: the patient response is a function of circuit flow and carries no penalty
-   * for the collapse, while the reducer charges a critical safety error for the same action. A
-   * learner who tests the reflex sees the patient improve and gets a safety event.
-   *
-   * The engine is deliberately not changed here — that is out of this package's scope — so the
-   * behaviour is pinned instead, and the panel states it as a boundary. If the engine is ever given
-   * a preload penalty, this test fails and the boundary text has to be revisited with it.
-   */
-  it('raises the modeled saturation when speed is escalated into a drainage collapse', () => {
-    const opening = settled('preload-drainage-collapse')
-    let escalated = ecmoSimulationReducer(opening, { type: 'SET_RPM', rpm: 4200 })
-    for (let tick = 0; tick < 12; tick += 1) {
-      escalated = ecmoSimulationReducer(escalated, { type: 'STEP' })
-    }
-
-    expect(escalated.circuit.bloodFlow).toBeGreaterThan(opening.circuit.bloodFlow)
-    expect(escalated.patient.spo2).toBeGreaterThan(opening.patient.spo2)
-    expect(escalated.scenario.criticalErrors).toContain('rpm-during-collapse')
-
-    const { container } = render(<EcmoDrillTeachingPanel state={escalated} />)
-    const boundaries = [...container.querySelectorAll('[data-model-boundary]')]
-      .map((node) => node.textContent ?? '')
-      .join(' ')
-    expect(boundaries).toMatch(/does not model the harm of escalating speed/i)
-    expect(boundaries).toMatch(/Read the safety event, not the saturation/i)
-  })
-
-  it('leaves the recirculation drill the other way round, which is why A2 exists', () => {
-    // The contrast the two boundaries turn on: here effective flow does fall with speed, so the
-    // recirculation panel can show the cost and the preload panel cannot.
-    const opening = settled('vv-recirculation')
-    let escalated = ecmoSimulationReducer(opening, { type: 'SET_RPM', rpm: 4400 })
-    for (let tick = 0; tick < 12; tick += 1) {
-      escalated = ecmoSimulationReducer(escalated, { type: 'STEP' })
-    }
-    expect(escalated.circuit.bloodFlow).toBeGreaterThan(opening.circuit.bloodFlow)
-    expect(escalated.circuit.recirculationAdjustedCircuitFlowLpm).toBeLessThan(
-      opening.circuit.recirculationAdjustedCircuitFlowLpm,
-    )
-  })
-})
-
 describe('B4: the panels read the live circuit rather than static prose', () => {
   it('follows the settled pump-off state, the running reference, and the recorded inspection', () => {
     const stopped = settled('startup-sensor-orientation', 2)

@@ -365,6 +365,7 @@ export interface ClinicalInterventionDefinition {
       | 'clamp-return'
       | 'unclamp-drainage'
       | 'unclamp-return'
+      | 'resume-after-bubble'
     targetValue?: number
     tolerance?: number
     comparison?: 'within' | 'at-least' | 'at-most'
@@ -502,6 +503,14 @@ export interface ScenarioRuntime {
    * case, captured once at load and never moved by a learner turning the rotary control.
    */
   baselineRpmSetpoint: number
+  /**
+   * The drainage capacity this case authored, captured at load beside the opening speed.
+   *
+   * `null` means the case authored none, in which case the active drainage-limited fault's own
+   * default applies. Like `baselineRpmSetpoint` it is a property of the authored case and no
+   * learner action moves it.
+   */
+  drainageCapacityLpm: number | null
   phase: 'predict' | 'act' | 'reassess' | 'debrief' | 'complete'
   activeFaults: readonly FaultId[]
   correctedFaults: readonly FaultId[]
@@ -620,6 +629,18 @@ export interface ScenarioDefinition {
   clinicalCase?: ClinicalCaseDefinition
   hiddenUntilAssessment?: boolean
   initialState: ScenarioInitialState
+  /**
+   * How much venous drainage this case can actually supply, in L/min.
+   *
+   * The drainage-limited faults model a circuit asking for more than the patient can give it, and
+   * the quantity that decides "more than" belongs to the case rather than to the engine — a
+   * hypovolaemic patient, a malpositioned cannula and a tamponade do not run out of drainage at the
+   * same flow. Omitted, the fault's own authored default applies.
+   *
+   * Evidence boundary: bounded-educational-model. A teaching quantity, not a measurable one, and
+   * not a clinical threshold of any kind.
+   */
+  drainageCapacityLpm?: number
   timedFaults: readonly TimedFault[]
   allowedActions: readonly SimulationAction['type'][]
   objectives: readonly ScenarioObjective[]
@@ -698,6 +719,18 @@ export type SimulationAction =
   | { type: 'RESET_TIMER'; timerIndex: number }
   | { type: 'ACK_ALARM'; alarmId?: string }
   | { type: 'RESET_BUBBLE' }
+  /**
+   * Resume support after an air event, as one bounded transition.
+   *
+   * Deliberately not a clamp action and not the console reset. Past isolation, source correction
+   * and de-airing, this module does not teach a clamp/pump/reset choreography: no single order is
+   * supported by both the current instructions for use and every approved local protocol, and the
+   * order this module used to teach walked the learner through both limbs open on a stopped
+   * centrifugal pump. This action stands for "resume support using the verified manufacturer and
+   * local protocol" and moves the circuit from corrected-and-isolated to safely running in one
+   * step, so that intermediate state is never rendered.
+   */
+  | { type: 'RESUME_SUPPORT_AFTER_BUBBLE' }
   | { type: 'TOGGLE_CIRCUIT_CLAMP'; limb: 'drainage' | 'return'; closed?: boolean }
   | { type: 'CORRECT_FAULT'; fault: FaultId }
   | { type: 'PERFORM_CHECK'; checkId: string }
@@ -744,6 +777,7 @@ export type GuidedControlId =
   | 'cardiohelp-restore-gas-source'
   | 'cardiohelp-reset-bubble'
   | 'cardiohelp-restore-ac-power'
+  | 'cardiohelp-resume-support'
   | 'cardiohelp-clamp-drainage'
   | 'cardiohelp-clamp-return'
 

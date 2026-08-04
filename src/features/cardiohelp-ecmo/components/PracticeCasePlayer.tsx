@@ -623,6 +623,9 @@ function simulatorActionCurrentValue(
   if (action.control === 'restore-gas') {
     return state.gas.sourceConnected ? 'Gas source connected' : 'Gas source disconnected'
   }
+  if (action.control === 'resume-after-bubble') {
+    return `Support: ${state.device.pumpRunning ? 'RUNNING' : 'STOPPED'}`
+  }
   if (action.control === 'clamp-drainage' || action.control === 'unclamp-drainage') {
     return `Drainage clamp: ${state.circuit.drainageClampClosed ? 'CLOSED' : 'OPEN'}`
   }

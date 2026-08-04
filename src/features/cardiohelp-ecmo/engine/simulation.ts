@@ -185,6 +185,8 @@ function createReferenceRuntime(profileId: string): ScenarioRuntime {
     family: 'orientation',
     baselineRpmSetpoint:
       ecmoReferenceProfiles[profileId as EcmoReferenceProfileId].inputs.rpmSetpoint,
+    // A reference circuit carries no drainage-limited fault, so it never needs a capacity.
+    drainageCapacityLpm: null,
     // The circuit is there to be read, not acted on toward a scored goal.
     phase: 'act',
     activeFaults: [],
@@ -210,6 +212,8 @@ function createScenarioRuntime(definition: ScenarioDefinition): ScenarioRuntime 
     family: definition.family,
     baselineRpmSetpoint:
       definition.initialState.device?.rpmSetpoint ?? defaultDeviceState.rpmSetpoint,
+    // Captured at load beside the opening speed, and never moved by anything the learner does.
+    drainageCapacityLpm: definition.drainageCapacityLpm ?? null,
     phase: 'predict',
     activeFaults: [...(definition.initialState.activeFaults ?? [])],
     correctedFaults: [],
@@ -656,6 +660,101 @@ export function calculateNominalCardiohelpBloodFlowLMin(rpm: number): number {
   return round(clamp(rpm / 790, 0, 9.9), 2)
 }
 
+/**
+ * The faults that model a circuit asking for more venous drainage than the patient can supply.
+ *
+ * They differ in why drainage is short — volume, a collapsing vessel or cannula, obstructive
+ * physiology holding venous return out of the chest — but they share the shape that matters: past
+ * some flow the circuit cannot get more, and pulling harder makes the suction worse rather than the
+ * support better. That shape is what the module teaches, so it is modelled once.
+ *
+ * Evidence boundary: bounded-educational-model. These are teaching quantities and not thresholds.
+ */
+export const DRAINAGE_CAPACITY_LPM = Object.freeze({
+  'preload-limited': 3.5,
+  'hemorrhagic-hypovolemia': 3.3,
+  'tension-pneumothorax': 3.1,
+  tamponade: 3.1,
+} as const)
+
+const DRAINAGE_LIMITED_FAULTS = Object.keys(DRAINAGE_CAPACITY_LPM) as readonly (
+  | 'preload-limited'
+  | 'hemorrhagic-hypovolemia'
+  | 'tension-pneumothorax'
+  | 'tamponade'
+)[]
+
+/**
+ * How the circuit behaves past its drainage capacity.
+ *
+ * `collapsePerExcessLpm` is the whole correction. The model used to multiply the pump curve by a
+ * constant, which left flow — and, through it, the modelled patient's saturation — rising with every
+ * extra revolution while the reducer charged a critical error for exactly that. Delivered flow now
+ * *falls* as demand climbs past what the drainage can give, so the display and the safety guard
+ * finally say the same thing.
+ *
+ * `minimumFraction` is a floor rather than a physiological claim: it keeps the relationship bounded
+ * at speeds no authored case reaches.
+ */
+const DRAINAGE_COLLAPSE = Object.freeze({
+  collapsePerExcessLpm: 0.35,
+  minimumFraction: 0.55,
+  /** Suction per L/min of unmet demand, by fault. */
+  suctionMmHgPerExcessLpm: Object.freeze({
+    'preload-limited': 42,
+    'hemorrhagic-hypovolemia': 75,
+    'tension-pneumothorax': 79,
+    tamponade: 79,
+  } as const),
+  /** Drainage pressure at the capacity point, by fault. */
+  suctionBaseMmHg: Object.freeze({
+    'preload-limited': -35,
+    'hemorrhagic-hypovolemia': -45,
+    'tension-pneumothorax': -65,
+    tamponade: -65,
+  } as const),
+})
+
+interface DrainageLimitation {
+  readonly fault: (typeof DRAINAGE_LIMITED_FAULTS)[number]
+  readonly capacityLpm: number
+  readonly demandedLpm: number
+  /** How much more the pump is asking for than the drainage can give. Zero when within capacity. */
+  readonly excessLpm: number
+  readonly limited: boolean
+}
+
+/**
+ * The drainage limitation in force at a given speed, or `null` when no such fault is active.
+ *
+ * The capacity comes from the case when the case authored one, and otherwise from the fault. Where
+ * more than one such fault is active the tightest capacity wins, because the circuit is limited by
+ * whichever constraint binds first.
+ */
+export function resolveDrainageLimitation(
+  state: EcmoSimulationState,
+  rpm: number,
+): DrainageLimitation | null {
+  let tightest: DrainageLimitation | null = null
+  for (const fault of DRAINAGE_LIMITED_FAULTS) {
+    if (!hasFault(state, fault)) continue
+    const capacityLpm = state.scenario.drainageCapacityLpm ?? DRAINAGE_CAPACITY_LPM[fault]
+    if (tightest && tightest.capacityLpm <= capacityLpm) continue
+    const demandedLpm = calculateNominalCardiohelpBloodFlowLMin(rpm)
+    const excessLpm = Math.max(0, demandedLpm - capacityLpm)
+    tightest = { fault, capacityLpm, demandedLpm, excessLpm, limited: excessLpm > 0 }
+  }
+  return tightest
+}
+
+/** Flow actually delivered against a drainage limitation. Never rises once demand passes capacity. */
+function drainageLimitedFlow(limitation: DrainageLimitation): number {
+  if (!limitation.limited) return limitation.demandedLpm
+  const collapsed =
+    limitation.capacityLpm - DRAINAGE_COLLAPSE.collapsePerExcessLpm * limitation.excessLpm
+  return Math.max(collapsed, limitation.capacityLpm * DRAINAGE_COLLAPSE.minimumFraction)
+}
+
 function calculateBloodFlow(state: EcmoSimulationState, rpm: number): number {
   if (
     !state.device.pumpRunning ||
@@ -670,13 +769,13 @@ function calculateBloodFlow(state: EcmoSimulationState, rpm: number): number {
   // must not attenuate this sentinel flow.
   if (rpm < 200) return calculateNominalCardiohelpBloodFlowLMin(rpm)
   let flow = calculateNominalCardiohelpBloodFlowLMin(rpm)
-  if (hasFault(state, 'preload-limited') || hasFault(state, 'hemorrhagic-hypovolemia')) {
-    const oscillation = state.simulationTime % 4 < 2 ? -0.3 : 0.12
-    flow = flow * 0.68 + oscillation
-  }
-  if (hasFault(state, 'tension-pneumothorax') || hasFault(state, 'tamponade')) {
-    const oscillation = state.simulationTime % 4 < 2 ? -0.24 : 0.08
-    flow = flow * 0.65 + oscillation
+  const drainage = resolveDrainageLimitation(state, rpm)
+  if (drainage) {
+    flow = drainageLimitedFlow(drainage)
+    // Instability is a consequence of being past capacity, not of the fault existing. Within the
+    // drainage the circuit can supply there is nothing intermittently drawing shut, so there is
+    // nothing for the flow to swing about.
+    if (drainage.limited) flow += state.simulationTime % 4 < 2 ? -0.3 : 0.12
   }
   if (hasFault(state, 'return-obstruction')) flow *= 0.7
   if (hasFault(state, 'oxygenator-resistance')) flow *= 0.76
@@ -764,14 +863,19 @@ function calculatePressures(state: EcmoSimulationState, flow: number, rpm: numbe
   let pArt = 146 + flow * 16
   let pInt = pArt + flow * MEMBRANE_RESISTANCE_MMHG_PER_LPM.reference
 
-  if (hasFault(state, 'preload-limited')) {
-    pVen = -35 - Math.max(0, rpm - 2700) * 0.052
-  }
-  if (hasFault(state, 'hemorrhagic-hypovolemia')) {
-    pVen = -45 - Math.max(0, rpm - 2700) * 0.105
-  }
-  if (hasFault(state, 'tension-pneumothorax') || hasFault(state, 'tamponade')) {
-    pVen = -65 - Math.max(0, rpm - 2700) * 0.15
+  /*
+   * Suction is driven by unmet demand, not by the raw speed.
+   *
+   * The previous form keyed off `rpm - 2700`, a constant with no relationship to what this
+   * particular patient can drain. Reading it off the shortfall instead is what makes the whole
+   * pattern move together: past capacity the pump pulls harder, pVen falls further, the line
+   * judders, and delivered flow drops — and backing the speed off relieves all four at once.
+   */
+  const drainage = resolveDrainageLimitation(state, rpm)
+  if (drainage) {
+    pVen =
+      DRAINAGE_COLLAPSE.suctionBaseMmHg[drainage.fault] -
+      DRAINAGE_COLLAPSE.suctionMmHgPerExcessLpm[drainage.fault] * drainage.excessLpm
   }
   if (hasFault(state, 'return-obstruction')) {
     // Obstruction sits downstream of the membrane, so both pressures rise together and the
@@ -1225,11 +1329,10 @@ export function deriveSimulation(state: EcmoSimulationState): EcmoSimulationStat
         'Venous saturation is outside the range this console displays, so it shows the unavailable indication instead.',
       ),
     },
+    // Juddering is the bedside sign of a vessel or cannula being intermittently drawn shut, so it
+    // belongs to being past the drainage capacity rather than to a pressure number on its own.
     drainageChatter:
-      (hasFault(state, 'preload-limited') ||
-        hasFault(state, 'hemorrhagic-hypovolemia') ||
-        hasFault(state, 'tension-pneumothorax') ||
-        hasFault(state, 'tamponade')) &&
+      (resolveDrainageLimitation(state, device.rpmSetpoint)?.limited ?? false) &&
       pressures.pVen < -75,
     preOxygenatorSaturation: venousLineSaturation,
     postOxygenatorSaturation,

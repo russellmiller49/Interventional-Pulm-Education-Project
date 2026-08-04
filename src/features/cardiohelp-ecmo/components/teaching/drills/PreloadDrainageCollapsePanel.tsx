@@ -43,10 +43,10 @@ export function PreloadDrainageCollapsePanel({ state }: { readonly state: EcmoSi
       supportMode="vv"
       clinicalQuestion="Circuit flow has fallen and is swinging, drainage pressure has become steadily more negative, and the drainage limb is juddering. Which side of the pump is the limitation on, and what does that make the first move?"
       boundaries={[
-        'The judder is a flag this simulation switches on below a drainage pressure it chooses, and only while one of a few authored faults is active — it is not a general consequence of suction in this model. It is not a rendering of how a real drainage line kicks, and the numbers around it come from simplified response curves.',
+        'The judder is a flag this simulation switches on once demand passes the drainage this case can supply, not a rendering of how a real drainage line kicks. The numbers around it come from simplified response curves.',
         'This simulation offers no number for how negative drainage pressure may become before it matters, because that value depends on cannula size, patient size, and configuration. The console does carry adjustable pressure limits, but those are device alarm limits rather than a taught cut point.',
+        'How much drainage this case can supply is a quantity this simulation authors, and everything past it — the flow that stops rising, the deepening suction, the judder — follows from that one number. It is a teaching quantity chosen to make the relationship visible, not a measurement and not a flow any real patient is limited to.',
         'Echocardiography, imaging of cannula position, and the volume picture decide this at the bedside, and none of the three is reproduced here. The single corrective action in this lab stands for all of them.',
-        'This simulation does not model the harm of escalating speed against a collapsing drainage path. Its patient response follows circuit flow, so raising speed here makes the modeled saturation look better while the safety event is charged. Read the safety event, not the saturation.',
       ]}
     >
       <SignalRegister
@@ -95,7 +95,7 @@ export function PreloadDrainageCollapsePanel({ state }: { readonly state: EcmoSi
             'Drainage chatter',
             'Bedside circuit view',
             state.circuit.drainageChatter ? 'Present' : 'Not present',
-            'A visible and text-labelled flag in this model, switched on below a drainage pressure the model chooses.',
+            'A visible and text-labelled flag, switched on in this model once the pump is asking for more than the drainage can supply.',
             'authored',
           ),
         ]}
@@ -230,12 +230,11 @@ export function PreloadDrainageCollapsePanel({ state }: { readonly state: EcmoSi
             a safety event under its own mechanism name.
           </p>
           <p data-model-response-caveat>
-            Be careful what you take from the numbers if you try it here. This simulation raises
-            displayed flow — and the modeled patient saturation with it — when speed is raised in
-            this state, because its patient response is a simple function of flow and carries no
-            penalty for the collapse. The improvement you would see is an artefact of a bounded
-            teaching model, not a result, and the safety event is charged precisely because the
-            model cannot show you the cost.
+            You can watch that here. Past the drainage this case can supply, asking for more speed
+            makes the displayed flow fall rather than rise, the suction deepen, and the modeled
+            patient saturation follow the flow down — and backing the speed off moves all three the
+            other way. The magnitudes are bounded teaching quantities rather than clinical numbers,
+            but the directions are the point.
           </p>
         </HarmfulReflex>
 

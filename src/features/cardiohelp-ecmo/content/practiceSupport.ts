@@ -976,7 +976,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
       {
         id: 'vv-air-action',
         title: 'Clue 2 · Isolate, de-air, resume in order',
-        text: 'Clamp the return limb, then the drainage limb. De-air and confirm the circuit is clear. Then open the drainage limb, then the return limb, and let flow re-establish.',
+        text: 'Clamp the return limb, then the drainage limb. De-air and confirm the circuit is clear. Then resume support on the verified manufacturer and local protocol.',
         penalty: 10,
         target: 'circuit',
         controlId: 'cardiohelp-clamp-drainage',
@@ -993,7 +993,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
         options: [
           option(
             'va-air-device-correct',
-            'The pump resumes only after de-airing and ordered reopening of both clamps.',
+            'The pump resumes only after de-airing, and as one bounded step on the verified protocol.',
           ),
           option(
             'va-air-device-early-restart',
@@ -1056,7 +1056,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
       {
         id: 'va-air-action',
         title: 'Clue 2 · Isolate, de-air, resume in order',
-        text: 'Clamp return then drainage. Secure the connector, de-air, and confirm clear. Open drainage then return, and let VA support re-establish while you reassess perfusion.',
+        text: 'Clamp return then drainage. Secure the connector, de-air, and confirm clear. Then resume venoarterial support on the verified manufacturer and local protocol while you reassess perfusion.',
         penalty: 10,
         target: 'circuit',
         controlId: 'cardiohelp-clamp-drainage',

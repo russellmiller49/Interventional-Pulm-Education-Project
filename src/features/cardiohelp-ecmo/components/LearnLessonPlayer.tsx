@@ -156,6 +156,13 @@ function guidedActionSatisfied(action: SimulationAction, state: EcmoSimulationSt
         !state.circuit.bubbleResetRequired &&
         state.scenario.correctedFaults.includes('arterial-bubble')
       )
+    case 'RESUME_SUPPORT_AFTER_BUBBLE':
+      return (
+        !state.circuit.bubbleResetRequired &&
+        !state.circuit.drainageClampClosed &&
+        !state.circuit.returnClampClosed &&
+        state.device.pumpRunning
+      )
     case 'PERFORM_CHECK':
       return (
         state.circuit.circuitInspected &&
@@ -272,6 +279,13 @@ function resolveGuidedSimulatorTask(
       return {
         controlId: 'cardiohelp-restore-gas-source',
         instruction: 'On the separate gas panel, select Restore verified gas source.',
+        satisfied,
+      }
+    case 'RESUME_SUPPORT_AFTER_BUBBLE':
+      return {
+        controlId: 'cardiohelp-resume-support',
+        instruction:
+          'On the bedside circuit, resume support on the verified manufacturer and local protocol.',
         satisfied,
       }
     case 'RESET_BUBBLE':
