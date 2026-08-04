@@ -14,6 +14,24 @@ Generated reports, PubMed responses, and undo logs belong under ignored `local-d
 read-only `local-data/inputs/` mount is explicitly rejected, as are output paths that escape the
 checkout or traverse a symlink.
 
+## Current diagnosis and disposition
+
+Merge-readiness audits establish a clear boundary between the canonical local literature database
+and the supplied enrichment export:
+
+- The canonical database is already clean with respect to the supplied mojibake defect.
+- It already contains the PubMed metadata available under the backfill command's conflict-safe
+  policy. Fetching all 630 scoped PMIDs produced no unavailable records, missing article rows,
+  proposed fields, or planned writes. The remaining blank MeSH and author-keyword fields therefore
+  are not currently backfillable from the fetched source.
+- The external-QA findings remain valid findings against the supplied enrichment export, but the
+  corrupt text and missing metadata observed there are not present in the canonical database.
+- No text-repair commit or PubMed-backfill commit is currently indicated. The next separate
+  engineering target is enrichment-source and export fidelity, not database mutation.
+
+The repair and backfill commands below remain fail-closed maintenance infrastructure for future,
+separately approved defects.
+
 ## Reversible text-encoding audit and repair
 
 The detector scans canonical `literature_articles.title` and `abstract` values rather than a
@@ -120,7 +138,7 @@ consistency checks, and global data-quality findings separate, with severity/cat
 summaries. It records unchanged source-input hashes and a before/after hash over physician fields;
 the mutation plan is always `null`.
 
-This PR1 command is cryptographically pinned to the supplied 630-row development source
+This command is cryptographically pinned to the supplied 630-row quality-cleaned enrichment export
 (`62003ac04650a4d303a8cc73785452a0bdf3ddeeca3c1ea87bdf2e4e4bc0b15c`) and findings export
 (`1c7992f29bb7c03afc370f3cb0e7a978a237dc9cbb964966e0dcec0cd07b6edd`). Renaming a held-out,
 combined, or modified CSV cannot make it pass the development-only boundary.
@@ -130,5 +148,5 @@ combined, or modified CSV cannot make it pass the development-only boundary.
 This foundation deliberately does not import enrichment/review rows, apply external QA tag/topic
 suggestions, change physician relevance labels, resume screening, or read the held-out test split.
 PubMed backfill is an independent sparse correction path; a future NBIB re-import still needs an
-explicit merge-precedence policy if its older blank metadata would otherwise replace backfilled
-values.
+explicit merge-precedence policy if its older blank metadata would otherwise replace populated
+canonical values or values added by any future approved backfill.
