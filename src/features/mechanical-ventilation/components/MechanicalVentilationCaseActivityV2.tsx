@@ -34,6 +34,7 @@ import {
   ventilationLessonActionEvidence,
   type VentilationEvidenceReference,
 } from '../content'
+import { classifyCaseFindings, type FindingKind } from '../content/caseFindings'
 import {
   MECHANICAL_VENTILATION_REPLAY_PAYLOAD_VERSION,
   clearMechanicalVentilationSession,
@@ -62,6 +63,13 @@ import { BedsidePanel } from './BedsidePanel'
 import { CaseWorkflow } from './CaseWorkflow'
 import { MechanicalVentilatorConsole } from './MechanicalVentilatorConsole'
 import styles from './mechanical-ventilation-v2.module.css'
+
+/** Titles that say what kind of claim a finding is, instead of numbering them all as present. */
+const findingTitles: Readonly<Record<FindingKind, string>> = {
+  present: 'Finding in this patient',
+  byBranch: 'One of these fits — still to be separated',
+  onAction: 'Would appear if you did this',
+}
 
 const MODULE_ID = 'mechanical-ventilation'
 const MAX_REPLAY_EVENTS = 512
@@ -492,47 +500,40 @@ export default function MechanicalVentilationCaseActivityV2(
     [profile.sourceIds],
   )
 
+  /*
+   * The reference drawer is a learner surface, so two things that were in it are not any more.
+   *
+   * `Visible finding N` asserted every authored finding as present, and the authored list is a
+   * teaching menu: for MV-13 it names three mutually exclusive causes at once, each tagged with its
+   * own internal branch name. It is now titled by what the finding actually is.
+   *
+   * `runTips` is faculty facilitation copy written about the learner rather than to them, and it
+   * gives the case away — MV-13's says "use three randomized versions under the same case number",
+   * MV-08's enumerates its own branch set. It is not learner content and has been dropped from this
+   * surface entirely.
+   */
   const referenceEntries = useMemo(
     () =>
       maskedAssessment
         ? []
-        : [
-            ...definition.visibleFindings.map((finding, index) => ({
-              id: `${caseId}-finding-${index}`,
-              title: `Visible finding ${index + 1}`,
-              summary: finding,
-            })),
-            {
-              id: `${caseId}-run-tip`,
-              title: 'Run tip',
-              summary: definition.runTips,
-            },
-          ],
-    [caseId, definition.runTips, definition.visibleFindings, maskedAssessment],
+        : classifyCaseFindings(caseId).map((finding, index) => ({
+            id: `${caseId}-finding-${index}`,
+            title: findingTitles[finding.kind],
+            summary: finding.text,
+          })),
+    [caseId, maskedAssessment],
   )
 
   const transferReferenceEntries = useMemo(
     () =>
       maskedAssessment
         ? []
-        : [
-            ...transferDefinition.visibleFindings.map((finding, index) => ({
-              id: `${transferCaseId}-finding-${index}`,
-              title: `Transfer finding ${index + 1}`,
-              summary: finding,
-            })),
-            {
-              id: `${transferCaseId}-run-tip`,
-              title: 'Transfer run tip',
-              summary: transferDefinition.runTips,
-            },
-          ],
-    [
-      maskedAssessment,
-      transferCaseId,
-      transferDefinition.runTips,
-      transferDefinition.visibleFindings,
-    ],
+        : classifyCaseFindings(transferCaseId).map((finding, index) => ({
+            id: `${transferCaseId}-finding-${index}`,
+            title: findingTitles[finding.kind],
+            summary: finding.text,
+          })),
+    [maskedAssessment, transferCaseId],
   )
 
   const buildPointer = useCallback(

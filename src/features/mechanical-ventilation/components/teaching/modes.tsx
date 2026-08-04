@@ -11,6 +11,11 @@
 import { useMemo, useState } from 'react'
 
 import { getVentilatorDeviceProfile, getVentilatorModeLabel } from '../../content'
+import {
+  isAdaptivePressureMode,
+  isAdaptiveSupportMode,
+  isSpontaneousAdaptiveMode,
+} from '../../engine'
 import type { VentilationSimulationState } from '../../engine'
 import {
   AwaitingBreath,
@@ -74,6 +79,18 @@ export function VentilationModeVariables({
   const profile = getVentilatorDeviceProfile(state.deviceId)
   const deviceLabel = getVentilatorModeLabel(state.deviceId, settings.deviceMode)
   const names = profile.controlLabels
+
+  /*
+   * Every adaptive or dual-control mode this console actually offers, under its own labels. Read
+   * off the source-bound profile rather than listed here, so the caveat below names what this
+   * device calls them and stays right when the learner changes console.
+   */
+  const adaptiveModes = profile.modes.filter(
+    (mode) =>
+      isAdaptivePressureMode(mode.id) ||
+      isAdaptiveSupportMode(mode.id) ||
+      isSpontaneousAdaptiveMode(mode.id),
+  )
 
   const supported = settings.mode !== 'pressure-support'
   const pressureTargeted = settings.mode === 'pressure-ac'
@@ -225,6 +242,51 @@ export function VentilationModeVariables({
         <div className={styles.stepDetail}>
           <span>Why this variable earns its own question</span>
           <p>{variableCopy[selected].body}</p>
+        </div>
+      ) : null}
+
+      {/*
+       * The caveat to the rule the pathway opened with.
+       *
+       * Section 1 states that a ventilator sets one of pressure or volume and cannot set both, and
+       * that scaffold is worth keeping — it is what makes a trace readable at sight. But it is a
+       * simplification, and this is the right place to say so: the learner has just spent a section
+       * reading breaths by their four variables, which is exactly the apparatus needed to see what
+       * the adaptive modes actually do.
+       *
+       * The names come from the active console's own source-bound profile rather than a hardcoded
+       * list, so they are examples of what one manufacturer calls it, not universal vocabulary.
+       */}
+      {adaptiveModes.length > 0 ? (
+        <div className={styles.stepDetail}>
+          <span>Where the one-of-two rule stops being exact</span>
+          <p>
+            &ldquo;The ventilator sets one of pressure or volume&rdquo; is the rule that makes a
+            breath readable, and it holds for every mode above. It is a simplification, though, and
+            the adaptive or dual-control modes are where it stops being exact: they set{' '}
+            <em>pressure</em> on each breath, then adjust that pressure over the next several
+            breaths to chase a volume you asked for. So the controlled variable within a breath is
+            pressure, while the thing being defended across breaths is volume — and neither answer
+            alone describes what the machine is doing.
+          </p>
+          <p>
+            That has a consequence worth carrying to the bedside: the delivered volume can look
+            stable while the pressure required to produce it climbs, so the number that would have
+            warned you is the one the mode is quietly changing. Read the pressure trace on these
+            modes, not only the volume.
+          </p>
+          <p>
+            This console offers {adaptiveModes.length === 1 ? 'one such mode' : 'several'}, under{' '}
+            {profile.manufacturer}&rsquo;s own names:{' '}
+            {adaptiveModes.map((mode, index) => (
+              <span key={mode.id}>
+                {index > 0 ? ', ' : ''}
+                <strong>{mode.label}</strong>
+              </span>
+            ))}
+            . Another manufacturer will call the same behaviour something else, which is the reason
+            to read a mode by its variables rather than by its name.
+          </p>
         </div>
       ) : null}
 
