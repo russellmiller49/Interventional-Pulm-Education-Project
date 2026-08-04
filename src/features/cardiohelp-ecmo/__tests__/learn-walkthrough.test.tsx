@@ -4,6 +4,7 @@ import { useReducer, useState, type AnchorHTMLAttributes, type ReactNode } from 
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 
 import { cardiohelpLearnLessonsBySupportMode } from '../content/learnLessons'
+import { ecmoLearnPredictionFor } from '../content/learnPredictionItems'
 import {
   createInitialSimulationState,
   ecmoSimulationReducer,
@@ -60,6 +61,22 @@ function LearnHarness({
       <output data-testid="rpm">{state.device.rpmSetpoint}</output>
       <output data-testid="gas-source">{String(state.gas.sourceConnected)}</output>
       <output data-testid="faults">{state.scenario.activeFaults.join(',')}</output>
+      {/* What the engine actually received, so a test can tell a real commitment from a rendered one. */}
+      <output data-testid="prediction">
+        {[
+          String(state.scenario.prediction.committed),
+          state.scenario.prediction.goalId ?? '',
+          state.scenario.prediction.control ?? '',
+          state.scenario.prediction.direction ?? '',
+        ].join('|')}
+      </output>
+      <output data-testid="credit">
+        {[
+          `goal:${state.scenario.credit.goal}`,
+          `control:${state.scenario.credit.control}`,
+          `direction:${state.scenario.credit.direction}`,
+        ].join('|')}
+      </output>
       <LearnLessonPlayer
         key={lesson.id}
         state={state}
@@ -101,6 +118,23 @@ function LearnHarness({
 function performAndAdvance(actionName: string | RegExp) {
   fireEvent.click(screen.getByRole('button', { name: actionName }))
   fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
+}
+
+function predictionChoice(scenarioId: string, plausibility: string) {
+  const prediction = ecmoLearnPredictionFor(scenarioId)
+  if (!prediction) throw new Error(`No authored prediction for ${scenarioId}`)
+  const choice = prediction.item.choices.find((item) => item.plausibility === plausibility)
+  if (!choice) throw new Error(`No ${plausibility} choice for ${scenarioId}`)
+  return { ...choice, commitment: prediction.commitments[choice.id] }
+}
+
+/** Answers the prediction the way the lesson intends, then takes the separate Continue. */
+function answerPredictionAndAdvance(scenarioId: string, plausibility = 'best') {
+  fireEvent.click(
+    screen.getByRole('radio', { name: predictionChoice(scenarioId, plausibility).label }),
+  )
+  fireEvent.click(screen.getByRole('button', { name: /Commit this prediction/i }))
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
 }
 
 /** Ramps the rotary from a stopped circuit to the reference speed, the way the lesson asks. */
@@ -179,7 +213,7 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     render(<LearnHarness initialScenarioId="preload-drainage-collapse" />)
 
     performAndAdvance(/Inspect the starting pattern/i)
-    performAndAdvance(/Commit the guided prediction/i)
+    answerPredictionAndAdvance('preload-drainage-collapse')
     expect(
       screen.queryByRole('button', { name: /Reduce RPM from 3600 to 3300/i }),
     ).not.toBeInTheDocument()
@@ -205,6 +239,8 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     // A3.3: the stopped-pump recognition is followed by a ramp, so the rest of the tour is read on
     // a running circuit rather than a dead one.
     await rampToReferenceSpeedAndAdvance()
+    // The reference circuit only responds once the model is advanced; the tour is read on that.
+    performAndAdvance(/Advance the model and let the circuit settle/i)
     await useConsoleScreenAndAdvance('Parameter list')
     await useConsoleScreenAndAdvance('Blood parameters')
     await useConsoleScreenAndAdvance('Transport')
@@ -265,7 +301,7 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     render(<LearnHarness initialScenarioId="acute-hypercapnia" />)
 
     performAndAdvance(/Inspect the starting pattern/i)
-    performAndAdvance(/Commit the guided prediction/i)
+    answerPredictionAndAdvance('acute-hypercapnia')
 
     fireEvent.click(screen.getByRole('button', { name: /Show me where/i }))
     const sweepControl = screen.getByRole('slider', { name: 'Sweep flow control' })
@@ -293,7 +329,7 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     )
 
     performAndAdvance(/Inspect the starting pattern/i)
-    performAndAdvance(/Commit the guided prediction/i)
+    answerPredictionAndAdvance('acute-hypercapnia')
     fireEvent.change(screen.getByRole('slider', { name: 'Sweep flow control' }), {
       target: { value: '3' },
     })
@@ -317,7 +353,7 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     render(<LearnHarness initialScenarioId="gas-source-interruption" />)
 
     performAndAdvance(/Advance 5 simulated seconds to the event/i)
-    performAndAdvance(/Commit the guided prediction/i)
+    answerPredictionAndAdvance('gas-source-interruption')
 
     fireEvent.click(screen.getByRole('button', { name: /Show me where/i }))
     const restoreGas = screen.getByRole('button', { name: /Restore verified gas source/i })
@@ -337,7 +373,7 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     render(<LearnHarness initialScenarioId="transport-power-loss" />)
 
     performAndAdvance(/Advance .* simulated seconds to the event/i)
-    performAndAdvance(/Commit the guided prediction/i)
+    answerPredictionAndAdvance('transport-power-loss')
 
     fireEvent.click(screen.getByRole('button', { name: /Show me where/i }))
     const restorePower = await screen.findByRole('button', {
@@ -358,7 +394,7 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     render(<LearnHarness initialScenarioId="arterial-bubble-stop" />)
 
     performAndAdvance(/Advance 4 simulated seconds to the event/i)
-    performAndAdvance(/Commit the guided prediction/i)
+    answerPredictionAndAdvance('arterial-bubble-stop')
 
     // Isolate: the clamp steps auto-complete when the real clamp buttons reach
     // the requested state, and guided help highlights the matching button.
@@ -433,5 +469,193 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     ).toBeInTheDocument()
     expect(screen.getByTestId('screen')).toHaveTextContent('startup')
     expect(screen.getByRole('button', { name: /Next step/i })).toBeDisabled()
+  })
+})
+
+/**
+ * B1/B2 — the Learn prediction is answered, and the answer is the learner's.
+ *
+ * Three separate leaks used to make this step unanswerable: the instruction named the goal, the
+ * control and the direction; the rationale printed the scenario's whole causal chain above the
+ * button; and the single button dispatched the scenario's own expectation whatever the learner
+ * believed. Each block below fails if any one of them is restored.
+ */
+describe('CARDIOHELP ECMO Learn prediction', () => {
+  function openPredictionStep(scenarioId: string, firstAction: RegExp) {
+    render(<LearnHarness initialScenarioId={scenarioId} />)
+    performAndAdvance(firstAction)
+  }
+
+  it('offers the authored options and commits nothing until one is chosen', () => {
+    openPredictionStep('preload-drainage-collapse', /Inspect the starting pattern/i)
+
+    const prediction = ecmoLearnPredictionFor('preload-drainage-collapse')
+    if (!prediction) throw new Error('missing prediction')
+    const radios = screen.getAllByRole('radio')
+    expect(radios).toHaveLength(prediction.item.choices.length)
+    expect(radios.length).toBeGreaterThan(1)
+    for (const choice of prediction.item.choices) {
+      expect(screen.getByRole('radio', { name: choice.label })).toBeInTheDocument()
+    }
+
+    // Nothing has reached the engine, and the commit control refuses to run without an answer.
+    expect(screen.getByTestId('prediction')).toHaveTextContent('false|||')
+    expect(screen.getByRole('button', { name: /Commit this prediction/i })).toBeDisabled()
+    expect(document.querySelector('[data-answer-verdict]')).toBeNull()
+  })
+
+  it('says nothing about the expected answer before the learner has committed', () => {
+    openPredictionStep('preload-drainage-collapse', /Inspect the starting pattern/i)
+
+    // Everything on the prediction step that is not an answer option. A choice label naming an
+    // action is the point of the exercise; the surrounding copy must not settle it.
+    const visible = [
+      screen.getByRole('heading', { name: /Commit to a prediction/i }).textContent ?? '',
+      document.querySelector('[class*="guidedStepFocus"]')?.textContent ?? '',
+      document.querySelector('[class*="guidedWhy"]')?.textContent ?? '',
+      screen.getByRole('button', { name: /Commit this prediction/i }).textContent ?? '',
+    ]
+      .join(' ')
+      .toLowerCase()
+
+    expect(visible).not.toContain('restore-drainage')
+    expect(visible).not.toMatch(/\bthe safe goal is\b/)
+    expect(visible).not.toMatch(/\bpredict decrease\b/)
+    // The causal chain is the debrief's job, not the question's.
+    expect(visible).not.toContain('available venous return becomes insufficient')
+    // No rationale is on screen yet — every one of them belongs to the verdict.
+    for (const choice of ecmoLearnPredictionFor('preload-drainage-collapse')?.item.choices ?? []) {
+      expect(screen.queryByText(choice.rationale)).toBeNull()
+    }
+  })
+
+  it('sends the learner’s own triple to the engine, including when it is the wrong one', () => {
+    openPredictionStep('preload-drainage-collapse', /Inspect the starting pattern/i)
+
+    const unsafe = predictionChoice('preload-drainage-collapse', 'unsafe')
+    fireEvent.click(screen.getByRole('radio', { name: unsafe.label }))
+    fireEvent.click(screen.getByRole('button', { name: /Commit this prediction/i }))
+
+    expect(screen.getByTestId('prediction')).toHaveTextContent(
+      `true|${unsafe.commitment.goalId}|${unsafe.commitment.control}|${unsafe.commitment.direction}`,
+    )
+    // The engine scored what was actually decided; it is not the scenario's expectation.
+    expect(screen.getByTestId('credit')).toHaveTextContent(
+      'goal:false|control:true|direction:false',
+    )
+  })
+
+  it('credits the expectation only when the learner selects the choice that carries it', () => {
+    openPredictionStep('preload-drainage-collapse', /Inspect the starting pattern/i)
+
+    const best = predictionChoice('preload-drainage-collapse', 'best')
+    fireEvent.click(screen.getByRole('radio', { name: best.label }))
+    fireEvent.click(screen.getByRole('button', { name: /Commit this prediction/i }))
+
+    expect(screen.getByTestId('prediction')).toHaveTextContent(
+      `true|${best.commitment.goalId}|${best.commitment.control}|${best.commitment.direction}`,
+    )
+    expect(screen.getByTestId('credit')).toHaveTextContent('goal:true|control:true|direction:true')
+  })
+
+  it('shows the verdict on commitment, stays on the step, and advances only on Continue', () => {
+    openPredictionStep('preload-drainage-collapse', /Inspect the starting pattern/i)
+
+    const best = predictionChoice('preload-drainage-collapse', 'best')
+    fireEvent.click(screen.getByRole('radio', { name: best.label }))
+    fireEvent.click(screen.getByRole('button', { name: /Commit this prediction/i }))
+
+    const verdict = document.querySelector('[data-answer-verdict]')
+    expect(verdict).not.toBeNull()
+    expect(verdict).toHaveAttribute('data-plausibility', 'best')
+    expect(verdict?.textContent).toContain(best.rationale)
+    expect(screen.getByText(/why the other answers do not fit/i)).toBeInTheDocument()
+
+    // Committing did not move the learner on.
+    expect(
+      screen.getByRole('heading', { name: /Commit to a prediction before you act/i }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /Reduce pump demand first/i })).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+    expect(screen.getByRole('heading', { name: /Reduce pump demand first/i })).toBeInTheDocument()
+  })
+
+  it('keeps the committed answer selected and locked while the verdict is on screen', () => {
+    openPredictionStep('preload-drainage-collapse', /Inspect the starting pattern/i)
+
+    const incomplete = predictionChoice('preload-drainage-collapse', 'reasonable-but-incomplete')
+    fireEvent.click(screen.getByRole('radio', { name: incomplete.label }))
+    fireEvent.click(screen.getByRole('button', { name: /Commit this prediction/i }))
+
+    const chosen = screen.getByRole('radio', { name: incomplete.label })
+    expect(chosen).toBeChecked()
+    expect(chosen).toBeDisabled()
+    expect(document.querySelector('[data-answer-verdict]')?.textContent).toContain(incomplete.label)
+  })
+
+  it('announces an unsafe commitment assertively', () => {
+    openPredictionStep('preload-drainage-collapse', /Inspect the starting pattern/i)
+
+    const unsafe = predictionChoice('preload-drainage-collapse', 'unsafe')
+    fireEvent.click(screen.getByRole('radio', { name: unsafe.label }))
+    fireEvent.click(screen.getByRole('button', { name: /Commit this prediction/i }))
+
+    const verdict = document.querySelector('[data-answer-verdict]')
+    expect(verdict).toHaveAttribute('data-plausibility', 'unsafe')
+    expect(verdict).toHaveAttribute('role', 'alert')
+    expect(verdict).toHaveAttribute('aria-live', 'assertive')
+  })
+
+  it('reaches an answerable prediction at the end of the console tour', async () => {
+    // The orientation lessons had the leak in its quietest form: the prompt did not name the
+    // answer, but there was still nothing to choose between and the payload was already filled in.
+    render(<LearnHarness initialScenarioId="startup-sensor-orientation" />)
+
+    performAndAdvance(/identify all four domains/i)
+    await useConsoleScreenAndAdvance('Parameter list')
+    await rampToReferenceSpeedAndAdvance()
+    // The reference circuit only responds once the model is advanced; the tour is read on that.
+    performAndAdvance(/Advance the model and let the circuit settle/i)
+    await useConsoleScreenAndAdvance('Parameter list')
+    await useConsoleScreenAndAdvance('Blood parameters')
+    await useConsoleScreenAndAdvance('Transport')
+    await useConsoleScreenAndAdvance('Interventions')
+    await useConsoleScreenAndAdvance('Timers')
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }))
+    await useConsoleScreenAndAdvance('Alarm list')
+    await useConsoleScreenAndAdvance('Home')
+    performAndAdvance(/I can distinguish the two gas controls/i)
+    // The demonstration ends and the circuit goes back to the state a startup actually begins from.
+    performAndAdvance(/Return the circuit to its pre-use state/i)
+
+    const prediction = ecmoLearnPredictionFor('startup-sensor-orientation')
+    if (!prediction) throw new Error('missing orientation prediction')
+    expect(screen.getAllByRole('radio')).toHaveLength(prediction.item.choices.length)
+    expect(screen.getByTestId('prediction')).toHaveTextContent('false|||')
+
+    const unsafe = predictionChoice('startup-sensor-orientation', 'unsafe')
+    fireEvent.click(screen.getByRole('radio', { name: unsafe.label }))
+    fireEvent.click(screen.getByRole('button', { name: /Commit this prediction/i }))
+    expect(screen.getByTestId('prediction')).toHaveTextContent(
+      `true|${unsafe.commitment.goalId}|${unsafe.commitment.control}|${unsafe.commitment.direction}`,
+    )
+    expect(document.querySelector('[data-answer-verdict]')).toHaveAttribute('role', 'alert')
+  })
+
+  it('gives the VA orientation lesson its own question rather than the venovenous one', () => {
+    const vaBest = predictionChoice('va-startup-sensor-orientation', 'best')
+    const vvBest = predictionChoice('startup-sensor-orientation', 'best')
+
+    // Both scenarios carry the same expectation, so inheriting the venovenous question would look
+    // correct and teach nothing about a femoral arterial return.
+    expect(vaBest.commitment).toEqual(vvBest.commitment)
+    expect(vaBest.label).not.toEqual(vvBest.label)
+    const vaLesson = cardiohelpLearnLessonsBySupportMode.va.find(
+      (lesson) => lesson.scenarioId === 'va-startup-sensor-orientation',
+    )
+    const predictionSteps = (vaLesson?.steps ?? []).filter((step) => step.predictionScenarioId)
+    expect(predictionSteps).toHaveLength(1)
+    expect(predictionSteps[0].predictionScenarioId).toBe('va-startup-sensor-orientation')
   })
 })

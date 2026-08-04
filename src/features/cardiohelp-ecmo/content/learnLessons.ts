@@ -6,6 +6,7 @@ import type {
   SimulationAction,
   SupportMode,
 } from '../engine/types'
+import { requireEcmoLearnPrediction } from './learnPredictionItems'
 import { cardiohelpScenarioById, cardiohelpScenarios, TIP_TO_TIP_CHECK_ID } from './scenarios'
 
 interface ResponseStepInput {
@@ -62,13 +63,34 @@ function eventActions(scenario: ScenarioDefinition): SimulationAction[] {
   return Array.from({ length: eventSecond }, () => ({ type: 'STEP' as const }))
 }
 
-function predictionAction(scenario: ScenarioDefinition): SimulationAction {
-  return {
-    type: 'COMMIT_PREDICTION',
-    goalId: scenario.expectation.goalId,
-    control: scenario.expectation.control,
-    direction: scenario.expectation.direction,
-  }
+/**
+ * The one step in a lesson the learner answers rather than performs.
+ *
+ * Everything the step says has to survive being read by someone who has not answered yet, so the
+ * copy here is deliberately the same for every lesson: the clinical question, its options and its
+ * reasoning all live in the authored item, which the player does not show until the learner has
+ * committed. The step carries no action — the selected choice supplies the payload — and no
+ * expected response, because previewing the response would be the answer.
+ *
+ * `requireEcmoLearnPrediction` is called for its failure: a lesson that declares a prediction step
+ * without an authored item to answer refuses to construct rather than rendering an empty question.
+ */
+function predictionStep(scenario: ScenarioDefinition, target: GuidedTarget): GuidedWalkthroughStep {
+  requireEcmoLearnPrediction(scenario.id)
+  return step({
+    id: `${scenario.id}-interpret`,
+    phase: 'interpret',
+    target,
+    title: 'Commit to a prediction before you act',
+    instruction:
+      'Read the pattern in front of you and commit to one course of action, together with what you expect it to do. The options are alternatives a reasoning clinician would weigh, and the reasoning behind each of them is held back until you have chosen.',
+    rationale:
+      'Committing before acting is what makes the next few minutes diagnostic rather than merely eventful. A read that is only stated after the response has been seen cannot be shown to have been mistaken, so the model it came from is never examined — and it is the model, not the single action, that carries forward to the next patient.',
+    actionLabel: 'Commit this prediction',
+    actions: [],
+    expectedResponse: [],
+    predictionScenarioId: scenario.id,
+  })
 }
 
 function standardLesson(input: StandardLessonInput): GuidedLessonDefinition {
@@ -94,21 +116,7 @@ function standardLesson(input: StandardLessonInput): GuidedLessonDefinition {
         actions: timedActions,
         expectedResponse: input.observe.expectedResponse,
       }),
-      step({
-        id: `${scenario.id}-interpret`,
-        phase: 'interpret',
-        target: input.observe.target,
-        title: 'Connect the observation to the goal',
-        instruction: `The safe goal is “${scenario.debrief.correctWorkflow[0]}” Use ${scenario.expectation.control} and predict ${scenario.expectation.direction}.`,
-        rationale: scenario.debrief.causalChain.join(' '),
-        actionLabel: 'Commit the guided prediction',
-        actions: [predictionAction(scenario)],
-        expectedResponse: [
-          `Goal: ${scenario.expectation.goalId}`,
-          `Control: ${scenario.expectation.control}`,
-          `Direction: ${scenario.expectation.direction}`,
-        ],
-      }),
+      predictionStep(scenario, input.observe.target),
       ...input.responseSteps.map((response) =>
         step({
           ...response,
@@ -196,16 +204,43 @@ const orientationLesson: GuidedLessonDefinition = {
       id: 'startup-bring-circuit-up',
       phase: 'orient',
       target: 'console',
-      title: 'Bring the circuit up before touring the rest',
+      title: 'Bring a reference circuit up before touring the rest',
       instruction:
-        'Bring the pump up to 3200 rpm on the rotary control and let the circuit settle. Hold the control rather than tapping it — the simulated setpoint climbs progressively while it is held. Everything from here on is read on a running circuit.',
+        'Bring the pump up to 3200 rpm on the rotary control. Hold the control rather than tapping it — the simulated setpoint climbs progressively while it is held. This is a reference circuit brought up so the console has something to report; it is not the startup sequence, which comes later on a fresh one.',
       rationale:
-        'The climb from zero is worth watching rather than skipping: flow appears, the pressure channels start reporting, and the console stops showing dashes. Meeting every tile on a stopped circuit would teach the wrong first impression of what each one looks like. The progressive climb here simulates a ramp; it is not a claim about how any particular unit brings a pump up.',
-      actionLabel: 'Ramp to 3200 rpm and let it settle',
+        'Meeting every tile on a stopped circuit would teach the wrong first impression of what each one looks like, so the tour needs a circuit that is working. What it does not need is a completed startup — nothing here has been diagnostically checked or inspected, and none of it counts toward the pre-use sequence. The progressive climb simulates a ramp; it is not a claim about how any particular unit brings a pump up.',
+      actionLabel: 'Ramp to 3200 rpm',
       actions: [{ type: 'SET_RPM', rpm: 3200 }],
       expectedResponse: [
-        'The pump starts and flow appears',
-        'The pressure channels begin reporting numbers',
+        'The speed setpoint reaches 3200 rpm',
+        'The circuit’s response follows when the model is advanced, which is the next step',
+      ],
+    }),
+    /*
+     * The step this correction added, and the reason it exists.
+     *
+     * `SET_RPM` moves a setpoint and nothing else: this model restarts the pump and recomputes flow
+     * and the pressure channels inside `advance`. On a paused scenario with no `STEP` the learner
+     * arrived at "now that it reports" with the pump still stopped, flow at zero and all four
+     * channels still showing the unavailable indication — the exact state the previous step had
+     * taught them to recognise. Advancing the model is a statement about the simulation, not about
+     * how a pump behaves when its speed is raised.
+     */
+    step({
+      id: 'startup-settle-circuit',
+      phase: 'orient',
+      target: 'console',
+      title: 'Advance the model and let the circuit reach its new state',
+      instruction:
+        'Advance the simulation so the circuit responds to the new speed. Flow appears and the three pressure locations start reporting numbers; the tour from here on is read on those.',
+      rationale:
+        'This model advances in discrete steps, so a changed setting and the circuit’s response to it are two separate moments. The console showing dashes a moment ago and numbers now is that mechanic, not a device behaviour: on a real unit the response follows the speed continuously.',
+      actionLabel: 'Advance the model and let the circuit settle',
+      actions: [{ type: 'STEP' }, { type: 'STEP' }],
+      expectedResponse: [
+        'The pump is running and flow appears',
+        'pVen, pInt, pArt and the Δp trend begin reporting numbers',
+        'Nothing about this circuit has been verified — this is orientation, not startup',
       ],
     }),
     step({
@@ -345,19 +380,36 @@ const orientationLesson: GuidedLessonDefinition = {
         'Gas-source connection state',
       ],
     }),
+    /*
+     * The demonstration ends here, and the circuit goes back to the state a pre-use sequence
+     * actually starts from.
+     *
+     * Without this the startup prediction was asked of a circuit already turning at 3200 rpm: the
+     * learner planned a pre-use check for a machine that was, on its own display, already
+     * supporting a patient — and the authored stem described a stopped one. Reloading the scenario
+     * is the module's existing reset, and it restores exactly the opening state: setpoint zero,
+     * pump stopped, diagnostic not run through, circuit uninspected.
+     */
     step({
-      id: 'startup-interpret',
-      phase: 'interpret',
-      target: 'console',
-      title: 'Commit the safe-startup goal',
+      id: 'startup-return-to-pre-use',
+      phase: 'orient',
+      target: 'circuit',
+      title: 'End the demonstration and return to the pre-use state',
       instruction:
-        'Before operating support, choose a safe startup state, tip-to-tip inspection, and independent patient check.',
+        'The tour is finished. Put the circuit back to the state a pre-use sequence starts from — pump stopped, nothing yet verified — because everything from here on is that sequence rather than a demonstration.',
       rationale:
-        'A passed self-test checks device functions; it does not verify every circuit connection, sensor orientation, gas source, cannula, or backup system.',
-      actionLabel: 'Commit the guided startup prediction',
-      actions: [predictionAction(orientationScenario)],
-      expectedResponse: ['Goal: safe-startup', 'Control: inspect-circuit', 'Direction: inspect'],
+        'Running the circuit showed you what the console looks like when it has something to report. It was not a startup: the diagnostic has not been run through and no one has walked the tubing, so none of what you have just seen is evidence that this circuit is fit to support a patient. Planning a startup from a circuit that happens to be turning would be planning from a state that should not have existed.',
+      actionLabel: 'Return the circuit to its pre-use state',
+      actions: [{ type: 'LOAD_SCENARIO', scenarioId: orientationScenario.id, mode: 'guided' }],
+      expectedResponse: [
+        'The pump is stopped and the speed setpoint returns to zero',
+        'The pressure channels stop reporting, as they did at the start',
+        'The startup diagnostic and the tip-to-tip inspection are both still outstanding',
+      ],
     }),
+    // Shares its id shape with the drills so the VA lesson below can substitute its own scenario's
+    // prediction while remapping the rest of the tour.
+    { ...predictionStep(orientationScenario, 'console'), id: 'startup-interpret' },
     step({
       id: 'startup-respond',
       phase: 'respond',
@@ -407,6 +459,10 @@ const orientationLesson: GuidedLessonDefinition = {
 }
 
 const vaOrientationScenario = requireScenario('va-startup-sensor-orientation')
+// This lesson remaps the venovenous tour rather than building its own steps, so the authored VA
+// prediction has to be demanded here or its absence would only show up as an empty question.
+requireEcmoLearnPrediction(vaOrientationScenario.id)
+
 const vaOrientationLesson: GuidedLessonDefinition = {
   ...orientationLesson,
   id: 'learn-va-startup-sensor-orientation',
@@ -427,8 +483,15 @@ const vaOrientationLesson: GuidedLessonDefinition = {
         : item.instruction,
     rationale:
       item.id === 'startup-transfer' ? vaOrientationScenario.debrief.diagnosis : item.rationale,
+    // The VA lesson asks its own authored question, not the venovenous one.
+    predictionScenarioId:
+      item.id === 'startup-interpret' ? vaOrientationScenario.id : item.predictionScenarioId,
+    // And returns to its own circuit. Inheriting the venovenous reload would drop the learner onto
+    // a VV circuit for the startup plan and every step after it.
     actions:
-      item.id === 'startup-interpret' ? [predictionAction(vaOrientationScenario)] : item.actions,
+      item.id === 'startup-return-to-pre-use'
+        ? [{ type: 'LOAD_SCENARIO', scenarioId: vaOrientationScenario.id, mode: 'guided' }]
+        : item.actions,
   })),
 }
 
