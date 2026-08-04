@@ -55,6 +55,11 @@ Timing is the caller's too, because the modes legitimately differ:
   full causal synthesis waits for the debrief.
 - **Practice and Challenge:** no correctness labelling before the debrief.
 
+While a verdict is being withheld it must be genuinely neutral. It carries no red-amber-green tone,
+no correctness label, no reasoning, no comparison against the answers not taken, no caller-supplied
+branch note, and no plausibility attribute in the DOM — a colour or an attribute answers the question
+just as effectively as a sentence does.
+
 One exception overrides every timing rule: an answer classified `unsafe` is revealed and announced
 assertively whatever the mode. Letting a learner carry on believing a harmful action was acceptable
 is not a pedagogic trade-off worth making.

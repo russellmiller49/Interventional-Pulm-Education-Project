@@ -219,3 +219,75 @@ describe('AnswerVerdict and ChoiceReasoningFeedback are not interchangeable', ()
     expect(screen.queryByLabelText(/related concepts/i)).toBeNull()
   })
 })
+
+describe('an unrevealed verdict gives nothing away', () => {
+  /*
+   * Withholding the words while keeping the colour is not withholding the answer. The unrevealed
+   * card kept its plausibility-keyed tone — emerald for a best answer, rose for an incorrect one —
+   * and kept `data-plausibility` in the DOM, so "the reasoning is held until the debrief" was
+   * announced on a card that had already said which kind of answer it was. A caller-supplied branch
+   * explanation was rendered at the same time, before the learner had acted.
+   */
+  const timings = ['after-action-response', 'debrief-only'] as const
+
+  it.each(timings)('%s: a best and an incorrect answer look identical', (timing) => {
+    const best = render(<AnswerVerdict item={item} choiceId="drainage-limited" timing={timing} />)
+    const bestNode = best.container.querySelector('[data-answer-verdict]')
+    expect(bestNode).toHaveAttribute('data-revealed', 'false')
+    const bestClass = bestNode?.className
+    const bestText = bestNode?.textContent
+    best.unmount()
+
+    const wrong = render(<AnswerVerdict item={item} choiceId="membrane-clotting" timing={timing} />)
+    const wrongNode = wrong.container.querySelector('[data-answer-verdict]')
+    expect(wrongNode).toHaveAttribute('data-revealed', 'false')
+
+    // Same styling, and the only difference in the text is the answer the learner chose.
+    expect(wrongNode?.className).toBe(bestClass)
+    expect(
+      bestText?.replace('The circuit is asking for more flow than the drainage can supply.', ''),
+    ).toBe(wrongNode?.textContent?.replace('The membrane lung is clotting.', ''))
+  })
+
+  it.each(timings)('%s: exposes no correctness label, reasoning or comparison', (timing) => {
+    const { container } = render(
+      <AnswerVerdict
+        item={item}
+        choiceId="membrane-clotting"
+        timing={timing}
+        branchExplanation={<p>Drainage pressure fell further after the change.</p>}
+      />,
+    )
+    const node = container.querySelector('[data-answer-verdict]')
+
+    // Not even as an attribute: a stylesheet or a devtools glance would read it straight off.
+    expect(node?.hasAttribute('data-plausibility')).toBe(false)
+    expect(screen.getByText(/Answer recorded/i)).toBeInTheDocument()
+    expect(screen.queryByText(/predicts a different pattern/i)).toBeNull()
+    expect(screen.queryByText(item.choices[1].rationale)).toBeNull()
+    expect(screen.queryByText(/why the other answers do not fit/i)).toBeNull()
+    expect(screen.queryByText(item.explanation)).toBeNull()
+    // The branch note describes what the action produced, so it waits for the action too.
+    expect(container.querySelector('[data-branch-explanation]')).toBeNull()
+    expect(screen.queryByText(/Drainage pressure fell further/i)).toBeNull()
+  })
+
+  it('still reveals an unsafe answer in full, whatever the timing', () => {
+    for (const timing of timings) {
+      const { container, unmount } = render(
+        <AnswerVerdict
+          item={item}
+          choiceId="raise-speed"
+          timing={timing}
+          branchExplanation={<p>The collapse deepened.</p>}
+        />,
+      )
+      const node = container.querySelector('[data-answer-verdict]')
+      expect(node).toHaveAttribute('data-revealed', 'true')
+      expect(node).toHaveAttribute('data-plausibility', 'unsafe')
+      expect(node).toHaveAttribute('role', 'alert')
+      expect(container.querySelector('[data-branch-explanation]')).not.toBeNull()
+      unmount()
+    }
+  })
+})

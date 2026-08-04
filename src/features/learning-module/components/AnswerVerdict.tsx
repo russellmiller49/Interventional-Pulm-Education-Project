@@ -31,6 +31,10 @@ type Plausibility = ClinicalLearningItem['choices'][number]['plausibility']
  *  - `debrief-only`           — independent Practice and Challenge. No correctness labelling before
  *    the debrief at all. The device and the patient still respond; nothing here grades that.
  *
+ * While a verdict is withheld the card says nothing at all — see `withheldTone`. Withholding the
+ * sentences while keeping the colour, or the `data-plausibility` attribute, would answer the
+ * question by another route.
+ *
  * A safety-critical choice is the one exception the plan allows: an `unsafe` selection is announced
  * whatever the timing, because letting a learner carry on believing a harmful action was acceptable
  * is not a pedagogic trade-off worth making.
@@ -77,6 +81,20 @@ const verdictCopy: Readonly<Record<Plausibility, VerdictCopy>> = {
     light: 'border-rose-600/70 bg-rose-100',
     dark: 'border-red-400/50 bg-red-950/30',
   },
+}
+
+/**
+ * How the card looks while it is still withholding the verdict.
+ *
+ * Deliberately carries no red-amber-green signal, because a card that says "the reasoning is held
+ * until the debrief" while sitting on an emerald background has not withheld anything. The same
+ * reasoning removes `data-plausibility` from the unrevealed DOM: an attribute is readable by a
+ * stylesheet and by anyone who opens the inspector, and neither is a route the timing policy should
+ * leave open.
+ */
+const withheldTone: Readonly<Record<'light' | 'dark', string>> = {
+  light: 'border-slate-300 bg-slate-50',
+  dark: 'border-white/15 bg-white/5',
 }
 
 /** Whether a verdict may be shown at all yet, given the mode and what the learner has done. */
@@ -142,7 +160,7 @@ export function AnswerVerdict({
   })
   const copy = verdictCopy[chosen.plausibility]
   const isUnsafe = chosen.plausibility === 'unsafe'
-  const tone = theme === 'light' ? copy.light : copy.dark
+  const tone = revealed ? (theme === 'light' ? copy.light : copy.dark) : withheldTone[theme]
   const others = item.choices.filter((choice) => choice.id !== choiceId)
   // The full comparison is a Learn/debrief affordance. Guided Practice gets the branch note only,
   // so the mechanism is not handed over before the learner has worked it.
@@ -154,7 +172,8 @@ export function AnswerVerdict({
       role={isUnsafe ? 'alert' : 'status'}
       aria-live={isUnsafe ? 'assertive' : 'polite'}
       data-answer-verdict
-      data-plausibility={chosen.plausibility}
+      // Only once it is being told. See `withheldTone`.
+      data-plausibility={revealed ? chosen.plausibility : undefined}
       data-timing={timing}
       data-revealed={revealed}
     >
@@ -165,7 +184,7 @@ export function AnswerVerdict({
 
       {revealed ? <p className="mt-2">{chosen.rationale}</p> : null}
 
-      {branchExplanation ? (
+      {revealed && branchExplanation ? (
         <div className="mt-2" data-branch-explanation>
           {branchExplanation}
         </div>

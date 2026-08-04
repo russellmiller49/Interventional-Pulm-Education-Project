@@ -239,6 +239,8 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     // A3.3: the stopped-pump recognition is followed by a ramp, so the rest of the tour is read on
     // a running circuit rather than a dead one.
     await rampToReferenceSpeedAndAdvance()
+    // The reference circuit only responds once the model is advanced; the tour is read on that.
+    performAndAdvance(/Advance the model and let the circuit settle/i)
     await useConsoleScreenAndAdvance('Parameter list')
     await useConsoleScreenAndAdvance('Blood parameters')
     await useConsoleScreenAndAdvance('Transport')
@@ -613,6 +615,8 @@ describe('CARDIOHELP ECMO Learn prediction', () => {
     performAndAdvance(/identify all four domains/i)
     await useConsoleScreenAndAdvance('Parameter list')
     await rampToReferenceSpeedAndAdvance()
+    // The reference circuit only responds once the model is advanced; the tour is read on that.
+    performAndAdvance(/Advance the model and let the circuit settle/i)
     await useConsoleScreenAndAdvance('Parameter list')
     await useConsoleScreenAndAdvance('Blood parameters')
     await useConsoleScreenAndAdvance('Transport')
@@ -622,6 +626,8 @@ describe('CARDIOHELP ECMO Learn prediction', () => {
     await useConsoleScreenAndAdvance('Alarm list')
     await useConsoleScreenAndAdvance('Home')
     performAndAdvance(/I can distinguish the two gas controls/i)
+    // The demonstration ends and the circuit goes back to the state a startup actually begins from.
+    performAndAdvance(/Return the circuit to its pre-use state/i)
 
     const prediction = ecmoLearnPredictionFor('startup-sensor-orientation')
     if (!prediction) throw new Error('missing orientation prediction')

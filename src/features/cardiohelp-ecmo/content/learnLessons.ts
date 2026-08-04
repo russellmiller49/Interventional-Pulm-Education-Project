@@ -204,16 +204,43 @@ const orientationLesson: GuidedLessonDefinition = {
       id: 'startup-bring-circuit-up',
       phase: 'orient',
       target: 'console',
-      title: 'Bring the circuit up before touring the rest',
+      title: 'Bring a reference circuit up before touring the rest',
       instruction:
-        'Bring the pump up to 3200 rpm on the rotary control and let the circuit settle. Hold the control rather than tapping it — the simulated setpoint climbs progressively while it is held. Everything from here on is read on a running circuit.',
+        'Bring the pump up to 3200 rpm on the rotary control. Hold the control rather than tapping it — the simulated setpoint climbs progressively while it is held. This is a reference circuit brought up so the console has something to report; it is not the startup sequence, which comes later on a fresh one.',
       rationale:
-        'The climb from zero is worth watching rather than skipping: flow appears, the pressure channels start reporting, and the console stops showing dashes. Meeting every tile on a stopped circuit would teach the wrong first impression of what each one looks like. The progressive climb here simulates a ramp; it is not a claim about how any particular unit brings a pump up.',
-      actionLabel: 'Ramp to 3200 rpm and let it settle',
+        'Meeting every tile on a stopped circuit would teach the wrong first impression of what each one looks like, so the tour needs a circuit that is working. What it does not need is a completed startup — nothing here has been diagnostically checked or inspected, and none of it counts toward the pre-use sequence. The progressive climb simulates a ramp; it is not a claim about how any particular unit brings a pump up.',
+      actionLabel: 'Ramp to 3200 rpm',
       actions: [{ type: 'SET_RPM', rpm: 3200 }],
       expectedResponse: [
-        'The pump starts and flow appears',
-        'The pressure channels begin reporting numbers',
+        'The speed setpoint reaches 3200 rpm',
+        'The circuit’s response follows when the model is advanced, which is the next step',
+      ],
+    }),
+    /*
+     * The step this correction added, and the reason it exists.
+     *
+     * `SET_RPM` moves a setpoint and nothing else: this model restarts the pump and recomputes flow
+     * and the pressure channels inside `advance`. On a paused scenario with no `STEP` the learner
+     * arrived at "now that it reports" with the pump still stopped, flow at zero and all four
+     * channels still showing the unavailable indication — the exact state the previous step had
+     * taught them to recognise. Advancing the model is a statement about the simulation, not about
+     * how a pump behaves when its speed is raised.
+     */
+    step({
+      id: 'startup-settle-circuit',
+      phase: 'orient',
+      target: 'console',
+      title: 'Advance the model and let the circuit reach its new state',
+      instruction:
+        'Advance the simulation so the circuit responds to the new speed. Flow appears and the three pressure locations start reporting numbers; the tour from here on is read on those.',
+      rationale:
+        'This model advances in discrete steps, so a changed setting and the circuit’s response to it are two separate moments. The console showing dashes a moment ago and numbers now is that mechanic, not a device behaviour: on a real unit the response follows the speed continuously.',
+      actionLabel: 'Advance the model and let the circuit settle',
+      actions: [{ type: 'STEP' }, { type: 'STEP' }],
+      expectedResponse: [
+        'The pump is running and flow appears',
+        'pVen, pInt, pArt and the Δp trend begin reporting numbers',
+        'Nothing about this circuit has been verified — this is orientation, not startup',
       ],
     }),
     step({
@@ -353,6 +380,33 @@ const orientationLesson: GuidedLessonDefinition = {
         'Gas-source connection state',
       ],
     }),
+    /*
+     * The demonstration ends here, and the circuit goes back to the state a pre-use sequence
+     * actually starts from.
+     *
+     * Without this the startup prediction was asked of a circuit already turning at 3200 rpm: the
+     * learner planned a pre-use check for a machine that was, on its own display, already
+     * supporting a patient — and the authored stem described a stopped one. Reloading the scenario
+     * is the module's existing reset, and it restores exactly the opening state: setpoint zero,
+     * pump stopped, diagnostic not run through, circuit uninspected.
+     */
+    step({
+      id: 'startup-return-to-pre-use',
+      phase: 'orient',
+      target: 'circuit',
+      title: 'End the demonstration and return to the pre-use state',
+      instruction:
+        'The tour is finished. Put the circuit back to the state a pre-use sequence starts from — pump stopped, nothing yet verified — because everything from here on is that sequence rather than a demonstration.',
+      rationale:
+        'Running the circuit showed you what the console looks like when it has something to report. It was not a startup: the diagnostic has not been run through and no one has walked the tubing, so none of what you have just seen is evidence that this circuit is fit to support a patient. Planning a startup from a circuit that happens to be turning would be planning from a state that should not have existed.',
+      actionLabel: 'Return the circuit to its pre-use state',
+      actions: [{ type: 'LOAD_SCENARIO', scenarioId: orientationScenario.id, mode: 'guided' }],
+      expectedResponse: [
+        'The pump is stopped and the speed setpoint returns to zero',
+        'The pressure channels stop reporting, as they did at the start',
+        'The startup diagnostic and the tip-to-tip inspection are both still outstanding',
+      ],
+    }),
     // Shares its id shape with the drills so the VA lesson below can substitute its own scenario's
     // prediction while remapping the rest of the tour.
     { ...predictionStep(orientationScenario, 'console'), id: 'startup-interpret' },
@@ -432,6 +486,12 @@ const vaOrientationLesson: GuidedLessonDefinition = {
     // The VA lesson asks its own authored question, not the venovenous one.
     predictionScenarioId:
       item.id === 'startup-interpret' ? vaOrientationScenario.id : item.predictionScenarioId,
+    // And returns to its own circuit. Inheriting the venovenous reload would drop the learner onto
+    // a VV circuit for the startup plan and every step after it.
+    actions:
+      item.id === 'startup-return-to-pre-use'
+        ? [{ type: 'LOAD_SCENARIO', scenarioId: vaOrientationScenario.id, mode: 'guided' }]
+        : item.actions,
   })),
 }
 
