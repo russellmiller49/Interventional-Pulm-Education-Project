@@ -3016,3 +3016,579 @@
     white-space: normal;
   }
 }
+
+/* ── M0/M1 common cardiovascular model and standardized pathway cards ─────────────
+   Rendered before any device-specific control: on the two foundation sections inside
+   the workbench, and on the module front door before the product tracks. */
+
+.commonModel {
+  display: grid;
+  gap: 1.6rem;
+  padding: 1.4rem clamp(0.9rem, 2vw, 1.6rem);
+  margin: 1.2rem 0;
+  border: 1px solid var(--line);
+  border-radius: 1.1rem;
+  background: linear-gradient(180deg, #ffffff, var(--paper));
+}
+.commonModelIntro h2 {
+  margin: 0.5rem 0 0;
+  color: var(--navy);
+  font-size: clamp(1.3rem, 2.4vw, 2rem);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.commonModelIntro p {
+  max-width: 76ch;
+  margin: 0.7rem 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+.commonModelHeading h3 {
+  margin: 0.4rem 0 0;
+  color: var(--navy);
+  font-size: 1.05rem;
+  letter-spacing: -0.015em;
+}
+.commonModelHeading p {
+  max-width: 72ch;
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+.commonModelGrid {
+  display: grid;
+  gap: 1.2rem;
+}
+@media (min-width: 1100px) {
+  .commonModelGrid {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.modelQuestions ol {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0;
+  margin: 0.9rem 0 0;
+  list-style: none;
+}
+.modelQuestions li {
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: #fff;
+}
+.modelQuestions h4 {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  margin: 0;
+  color: var(--navy);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+.modelQuestions h4 span {
+  color: var(--teal);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+.modelQuestions li > p {
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+.modelQuestions li ul {
+  display: grid;
+  gap: 0.2rem;
+  padding-left: 1.05rem;
+  margin: 0.5rem 0 0;
+  color: var(--ink);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.causalLadder ol,
+.flowAccount ol {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0;
+  margin: 0.9rem 0 0;
+  list-style: none;
+}
+.causalLadder li {
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--line);
+  border-left: 0.28rem solid var(--teal);
+  border-radius: 0.7rem;
+  background: #fff;
+}
+.causalLevelHead {
+  display: flex;
+  gap: 0.55rem;
+  align-items: baseline;
+}
+.causalLevelHead span {
+  color: var(--teal);
+  font-size: 0.72rem;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+.causalLevelHead strong {
+  color: var(--navy);
+  font-size: 0.95rem;
+}
+.causalLevelQuestion {
+  margin: 0.35rem 0 0;
+  color: var(--ink);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+.causalLevelLive {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.45rem 0.55rem;
+  margin: 0.5rem 0 0;
+  border-radius: 0.5rem;
+  background: var(--teal-soft);
+  font-size: 0.79rem;
+  line-height: 1.5;
+}
+.causalLevelLive small {
+  color: var(--teal);
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.causalLadder dl {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.55rem 0 0;
+}
+.causalLadder dt {
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.causalLadder dd {
+  margin: 0.12rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+.causalLadder dl div[data-emphasis='true'] dd {
+  color: #7a3d20;
+}
+
+.flowAccount li {
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  background: #fff;
+}
+.flowAccountHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
+.flowAccountHead strong {
+  color: var(--navy);
+  font-size: 0.92rem;
+}
+.valueTypeChip {
+  padding: 0.12rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.valueTypeChip[data-value-type='estimated'],
+.valueTypeChip[data-value-type='inferred'] {
+  border-color: var(--amber);
+  color: #7a5410;
+  background: var(--amber-soft);
+}
+.valueTypeChip[data-value-type='measured'] {
+  border-color: var(--teal);
+  color: #0d5f5b;
+  background: var(--teal-soft);
+}
+.flowAccountLive {
+  margin: 0.45rem 0 0;
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.5rem;
+  background: var(--teal-soft);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+}
+.flowAccount li > p {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+.flowAccountValueType,
+.flowAccountMisleads {
+  color: var(--muted);
+}
+.flowAccountMisleads small,
+.termQuestion small,
+.termMisleads small,
+.pathwayCardAdditivity small,
+.pathwayCardComparison small,
+.distinctionConfusion small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.additivityWarning {
+  display: flex;
+  gap: 0.7rem;
+  padding: 0.85rem 0.95rem;
+  margin: 0.9rem 0 0;
+  border: 1px solid var(--amber);
+  border-radius: 0.8rem;
+  background: var(--amber-soft);
+}
+.additivityWarning svg {
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  color: #9a6a12;
+}
+.additivityWarning strong {
+  color: #6d4a09;
+  font-size: 0.9rem;
+}
+.additivityWarning p {
+  margin: 0.35rem 0 0;
+  color: #6d4a09;
+  font-size: 0.81rem;
+  line-height: 1.6;
+}
+.additivityWarning ul {
+  display: grid;
+  gap: 0.3rem;
+  padding-left: 1.05rem;
+  margin: 0.55rem 0 0;
+  color: #6d4a09;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.firstUseTerms dl {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0.9rem 0 0;
+}
+@media (min-width: 900px) {
+  .firstUseTerms dl {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.firstUseTerms dl > div {
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  background: #fff;
+}
+.firstUseTerms dt {
+  color: var(--navy);
+  font-size: 0.88rem;
+  font-weight: 850;
+}
+.firstUseTerms dd {
+  margin: 0.35rem 0 0;
+}
+.firstUseTerms dd p {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+.firstUseTerms dd p:last-child {
+  margin-bottom: 0;
+}
+.termQuestion,
+.termMisleads {
+  color: var(--muted);
+}
+
+.completionBoundary {
+  padding: 0.85rem 1rem;
+  border-left: 0.28rem solid var(--navy-2);
+  border-radius: 0.4rem;
+  background: #eef4f4;
+}
+.completionBoundary strong {
+  color: var(--navy);
+  font-size: 0.9rem;
+}
+.completionBoundary p {
+  max-width: 82ch;
+  margin: 0.35rem 0 0;
+  color: var(--ink);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.pathwayCards {
+  display: grid;
+  gap: 1.2rem;
+  margin: 1.6rem 0;
+}
+.pathwayCards h2 {
+  margin: 0.4rem 0 0;
+  color: var(--navy);
+  font-size: clamp(1.25rem, 2.2vw, 1.85rem);
+  letter-spacing: -0.03em;
+}
+.pathwayCardGrid {
+  display: grid;
+  gap: 1rem;
+}
+@media (min-width: 1200px) {
+  .pathwayCardGrid {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+.pathwayCard {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem 1.05rem;
+  border: 1px solid var(--line);
+  border-radius: 0.95rem;
+  background: #fff;
+}
+.pathwayCard[data-availability='comparison-only'] {
+  background: var(--paper);
+}
+.pathwayCard h3 {
+  margin: 0.35rem 0 0;
+  color: var(--navy);
+  font-size: 1rem;
+  line-height: 1.3;
+}
+.pathwayCardRole {
+  padding: 0.12rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.64rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.pathwayCardRole[data-support-role='durable'] {
+  border-color: var(--navy-2);
+  color: #fff;
+  background: var(--navy-2);
+}
+.pathwayCardRole[data-support-role='temporary'] {
+  color: var(--teal);
+}
+.pathwayCardComparison {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+.pathwayCardFields {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+}
+.pathwayCardFields > div {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--line);
+}
+.pathwayCardFields dt {
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.pathwayCardFields dd {
+  margin: 0.25rem 0 0;
+  font-size: 0.81rem;
+  line-height: 1.55;
+}
+.pathwayCardFields dd p {
+  margin: 0.35rem 0 0;
+}
+.pathwayCardConstraints {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0;
+  margin: 0.15rem 0 0;
+  list-style: none;
+}
+.pathwayCardConstraints li {
+  padding-left: 0.6rem;
+  border-left: 2px solid var(--line);
+  font-size: 0.79rem;
+  line-height: 1.5;
+}
+.pathwayCardConstraints small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.63rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.pathwayCardFlag {
+  display: inline-block;
+  margin-right: 0.45rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.pathwayCardFlag[data-gas-exchange='yes'] {
+  color: #0d5f5b;
+  background: var(--teal-soft);
+}
+.pathwayCardFlag[data-gas-exchange='no'] {
+  color: var(--muted);
+  background: #eef2f1;
+}
+.pathwayCardAdditivity {
+  color: #7a3d20;
+}
+.pathwayCardProduct {
+  padding: 0.7rem 0.8rem;
+  border: 1px dashed var(--line);
+  border-radius: 0.7rem;
+  background: var(--paper);
+}
+.pathwayCardProduct h4 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.pathwayCardProduct ul {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  list-style: none;
+}
+.pathwayCardProduct li {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+.pathwayCardProduct li strong {
+  color: var(--navy);
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+}
+.pathwayCardProduct li span {
+  color: var(--teal);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+.pathwayCardProduct li small {
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+.pathwayCardNotATarget {
+  margin: 0.55rem 0 0;
+  color: #6d4a09;
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+.pathwayCardEvidence {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.requiredDistinctions ol {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0;
+  margin: 0.9rem 0 0;
+  list-style: none;
+}
+.requiredDistinctions li {
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--line);
+  border-left: 0.28rem solid var(--navy-2);
+  border-radius: 0.7rem;
+  background: #fff;
+}
+.distinctionClaim {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+.distinctionConfusion {
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.startHere {
+  display: grid;
+  gap: 0.9rem;
+  justify-items: start;
+  padding: 1.1rem clamp(0.9rem, 2vw, 1.5rem);
+  margin: 1.4rem 0 0;
+  border: 1px solid var(--teal);
+  border-radius: 1rem;
+  background: var(--teal-soft);
+}
+.startHere h2 {
+  margin: 0.4rem 0 0;
+  color: var(--navy);
+  font-size: clamp(1.2rem, 2.2vw, 1.75rem);
+  letter-spacing: -0.03em;
+}
+.startHere p {
+  max-width: 78ch;
+  margin: 0.6rem 0 0;
+  color: var(--ink);
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+.startHere a {
+  display: inline-flex;
+  gap: 0.45rem;
+  align-items: center;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-decoration: none;
+  background: var(--teal);
+}
+.startHere a svg {
+  width: 1rem;
+  height: 1rem;
+}
