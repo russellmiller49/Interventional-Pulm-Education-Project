@@ -723,12 +723,12 @@ export type SimulationAction =
    * Resume support after an air event, as one bounded transition.
    *
    * Deliberately not a clamp action and not the console reset. Past isolation, source correction
-   * and de-airing, this module does not teach a clamp/pump/reset choreography: no single order is
-   * supported by both the current instructions for use and every approved local protocol, and the
-   * order this module used to teach walked the learner through both limbs open on a stopped
-   * centrifugal pump. This action stands for "resume support using the verified manufacturer and
-   * local protocol" and moves the circuit from corrected-and-isolated to safely running in one
-   * step, so that intermediate state is never rendered.
+   * and de-airing, this module does not teach where clamp opening, pump restart and console reset
+   * fall relative to one another: that choreography is device- and program-specific, and the order
+   * this module used to teach walked the learner through both limbs open on a stopped centrifugal
+   * pump. This bounded action stands in for the device- and program-specific resumption sequence;
+   * it does not reproduce or teach that sequence. It moves the circuit from corrected-and-isolated
+   * to safely running in one step, so that intermediate state is never rendered.
    */
   | { type: 'RESUME_SUPPORT_AFTER_BUBBLE' }
   | { type: 'TOGGLE_CIRCUIT_CLAMP'; limb: 'drainage' | 'return'; closed?: boolean }

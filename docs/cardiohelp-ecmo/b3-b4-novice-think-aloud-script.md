@@ -94,8 +94,8 @@ early. Let them attempt an early resume if they choose to — the safety respons
 being tested.
 
 Then watch the resumption step specifically. The module teaches isolation and source control, and
-then hands the learner one bounded action — _resume support using the verified manufacturer and
-local protocol_ — rather than a clamp, pump and reset order. **The question to ask afterwards is
+then hands the learner one bounded action — _resume support per the current IFU and approved local
+protocol_ — rather than a clamp, pump and reset order. **The question to ask afterwards is
 whether they understood that the lab deliberately did not tell them the order**, or whether they
 came away thinking there was no order to know. The first is the intended reading; the second is a
 failure of the abstraction and should be recorded as one.

@@ -949,7 +949,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
         options: [
           option(
             'vv-air-patient-correct',
-            'Oxygenation recovers after ordered resumption with no embolic deterioration.',
+            'Oxygenation recovers after protocol-governed resumption with no embolic deterioration.',
           ),
           option(
             'vv-air-patient-flow-only',
@@ -975,8 +975,8 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
       },
       {
         id: 'vv-air-action',
-        title: 'Clue 2 · Isolate, de-air, resume in order',
-        text: 'Clamp the return limb, then the drainage limb. De-air and confirm the circuit is clear. Then resume support on the verified manufacturer and local protocol.',
+        title: 'Clue 2 · Isolate, de-air, then resume per protocol',
+        text: 'Clamp the return limb, then the drainage limb. De-air and confirm the circuit is clear. Then resume support per the current IFU and approved local protocol.',
         penalty: 10,
         target: 'circuit',
         controlId: 'cardiohelp-clamp-drainage',
@@ -993,7 +993,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
         options: [
           option(
             'va-air-device-correct',
-            'The pump resumes only after de-airing, and as one bounded step on the verified protocol.',
+            'The pump resumes only after de-airing, through the resumption governed by the current IFU and approved local protocol.',
           ),
           option(
             'va-air-device-early-restart',
@@ -1029,7 +1029,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
         options: [
           option(
             'va-air-patient-correct',
-            'MAP and perfusion recover after ordered resumption with no arterial embolic event.',
+            'MAP and perfusion recover after protocol-governed resumption with no arterial embolic event.',
           ),
           option(
             'va-air-patient-map-only',
@@ -1055,8 +1055,8 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
       },
       {
         id: 'va-air-action',
-        title: 'Clue 2 · Isolate, de-air, resume in order',
-        text: 'Clamp return then drainage. Secure the connector, de-air, and confirm clear. Then resume venoarterial support on the verified manufacturer and local protocol while you reassess perfusion.',
+        title: 'Clue 2 · Isolate, de-air, then resume per protocol',
+        text: 'Clamp return then drainage. Secure the connector, de-air, and confirm clear. Then resume venoarterial support per the current IFU and approved local protocol while you reassess perfusion.',
         penalty: 10,
         target: 'circuit',
         controlId: 'cardiohelp-clamp-drainage',

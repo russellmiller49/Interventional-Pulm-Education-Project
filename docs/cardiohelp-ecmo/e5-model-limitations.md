@@ -226,15 +226,30 @@ nothing holds a column in place. The panel taught that non-occlusiveness two blo
 that contradicted it.
 
 **What was decided.** The module does not teach any universal clamp/pump/reset choreography for
-coming back, because no single order is supported by both the current CARDIOHELP instructions for
-use and every approved local protocol. What is preserved is everything up to and including
-de-airing: recognise the event and the device stop, clamp the return limb near the patient, complete
-isolation, identify and correct the source, de-air and verify.
+coming back: that sequence is device- and program-specific. What is preserved is everything up to
+and including de-airing: recognise the event and the device stop, clamp the return limb near the
+patient, complete isolation, identify and correct the source, de-air and verify. Reset is never a
+response to the alarm and never a substitute for source correction and de-airing; where it falls
+within resumption is governed by the IFU and the unit's protocol.
 
-**What replaced it.** `RESUME_SUPPORT_AFTER_BUBBLE` — "resume support using the verified
-manufacturer and local protocol" — which moves the circuit from corrected-and-isolated to safely
-running in one transition. It is deliberately neither a clamp action nor the console reset button:
-making the reset button appear to operate circuit clamps would be a different false claim.
+**What replaced it.** `RESUME_SUPPORT_AFTER_BUBBLE` — _"resume support per the current IFU and
+approved local protocol"_ — which moves the circuit from corrected-and-isolated to safely running in
+one transition. It is deliberately neither a clamp action nor the console reset button: making the
+reset button appear to operate circuit clamps would be a different false claim.
+
+The canonical teaching, in the module's own words: recognise the bubble event and device stop;
+isolate the patient; identify and correct the air source; de-air and verify the circuit; then resume
+support according to the current manufacturer instructions for use (IFU) and the unit's approved
+ECMO air-emergency protocol. **The module does not teach where clamp opening, pump restart and
+console reset fall relative to one another during resumption.** Every learner-facing surface says
+so, and everywhere the action is described it carries the same sentence:
+
+> This bounded simulation action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.
+
+Nothing claims the protocol itself was "verified", and nothing claims the simulator checked that a
+real protocol was followed. Reset is never a response to the alarm and never a substitute for source
+correction and de-airing; where it falls within resumption is governed by the IFU and the unit's
+protocol.
 
 Preserved: source correction and de-airing remain prerequisites; a premature resume is still
 `premature-bubble-reset`; a premature unclamp is still `unsafe-unclamp-before-deair`.

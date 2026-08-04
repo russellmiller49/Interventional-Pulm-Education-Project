@@ -474,7 +474,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
     stationId: 'troubleshooting',
     title: 'Arterial bubble alarm with pump stop',
     summary:
-      'A scenario-triggered arterial bubble event stops the pump; correct the source before deliberate reset.',
+      'A scenario-triggered arterial bubble event stops the pump; correct the source and confirm the circuit clear before support is resumed.',
     clinicalPhase: 'maintenance',
     initialState: {},
     timedFaults: [
@@ -497,11 +497,11 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Clamp the return limb, then the drainage limb, near the patient to isolate the circuit.',
         'Correct the source of air and confirm the circuit is bubble free.',
-        'Resume support on the verified manufacturer and local protocol, then reassess. The order of clamps, pump and reset at the bedside is set by those documents, not by this module.',
+        'Resume support per the current IFU and approved local protocol, then reassess. Where clamp opening, pump restart and console reset fall relative to one another is set by those documents, not by this module.',
       ],
       safetyNotes: [
         'Premature reset is a critical safety error.',
-        'The order of clamps, pump and reset for coming back follows the current manufacturer instructions and local protocol; this module teaches the precondition rather than one sequence.',
+        'Isolation is taught explicitly. The clamp, pump, and device-reset choreography for resumption is governed by the current manufacturer IFU and your unit’s approved ECMO air-emergency protocol; this simulation does not teach that choreography.',
       ],
     },
     evidenceIds: ['ifu-console-workflow', 'ifu-anomaly-boundary', 'elso-circuit-2022'],
@@ -968,11 +968,11 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Clamp the arterial return limb, then the drainage limb, near the patient to isolate the circulation.',
         'Identify and correct the air source and confirm the return path is clear.',
-        'Resume venoarterial support on the verified manufacturer and local protocol, then reassess perfusion. The order of clamps, pump and reset at the bedside is set by those documents, not by this module.',
+        'Resume venoarterial support per the current IFU and approved local protocol, then reassess perfusion. Where clamp opening, pump restart and console reset fall relative to one another is set by those documents, not by this module.',
       ],
       safetyNotes: [
         'Premature reset and alarm acknowledgement without correction remain critical errors.',
-        'The order of clamps, pump and reset for coming back follows the current manufacturer instructions and local protocol; this module teaches the precondition rather than one sequence.',
+        'Isolation is taught explicitly. The clamp, pump, and device-reset choreography for resumption is governed by the current manufacturer IFU and your unit’s approved ECMO air-emergency protocol; this simulation does not teach that choreography.',
       ],
     },
     evidenceIds: [

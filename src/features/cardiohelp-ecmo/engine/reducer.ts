@@ -860,10 +860,12 @@ export function ecmoSimulationReducer(
      *
      * The old lesson walked the learner out through open-drainage, open-return, reset — which put
      * the patient back on both limbs of a stopped centrifugal circuit before anything was turning.
-     * There is no single clamp/pump/reset order supported by both the current instructions for use
-     * and every approved local protocol, so this module stopped teaching one. What it teaches
-     * instead is the precondition: the source is corrected and the circuit is clear. This action is
-     * the bounded stand-in for carrying that out on the verified protocol.
+     * Where clamp opening, pump restart and console reset fall relative to one another during
+     * resumption is device- and program-specific, so this module stopped teaching an order. What it
+     * teaches instead is the precondition: the source is corrected and the circuit is clear. This
+     * bounded action stands in for the device- and program-specific resumption sequence; it does not
+     * reproduce or teach that sequence, and completing it is not evidence that any real protocol was
+     * followed.
      */
     case 'RESUME_SUPPORT_AFTER_BUBBLE': {
       if (!airIsCorrectedAndClear(state)) {
@@ -909,7 +911,7 @@ export function ecmoSimulationReducer(
       return appendHistory(
         next,
         'action',
-        'Support resumed on the verified manufacturer and local protocol',
+        "Completed the simulation's protocol-governed resumption abstraction",
       )
     }
     case 'TOGGLE_CIRCUIT_CLAMP': {
@@ -926,8 +928,13 @@ export function ecmoSimulationReducer(
        *
        * Opening the last closed limb while the bubble latch still holds the pump would put the
        * patient back on both limbs of a circuit that is not moving blood — and a centrifugal head
-       * is non-occlusive, so nothing holds a column in place. Refused rather than charged: the
-       * learner has done nothing unsafe yet, and the resume action is the way out.
+       * is non-occlusive, so nothing holds a column in place.
+       *
+       * What happens, precisely: the transition is always refused, so the state is never reached.
+       * It is additionally charged while air remains outstanding, because reaching for a clamp then
+       * is the same unsafe act whether or not the model lets it land. Once the source is corrected
+       * there is nothing unsafe about wanting to resume, so the learner is redirected to the bounded
+       * resumption action with no further safety penalty.
        *
        * Scoped to the latch on purpose. Both limbs open with a stopped pump is the ordinary pre-use
        * state of every circuit in this module, and making it globally illegal would break startup.
@@ -939,17 +946,15 @@ export function ecmoSimulationReducer(
         state.circuit.bubbleResetRequired &&
         !state.device.pumpRunning
       ) {
-        // Refusing the opening does not excuse it. Reaching for a clamp while the air is still
-        // outstanding is the same unsafe act whether or not the model lets it land, so it is still
-        // charged; once the source is corrected there is nothing unsafe about wanting to resume,
-        // and the learner is pointed at the action that does it safely.
+        // Charged only while the air is still outstanding; after correction the refusal is a
+        // redirection rather than a penalty. See the note above the guard for the full rule.
         const held = airIsCorrectedAndClear(state)
           ? state
           : addCriticalError(state, 'unsafe-unclamp-before-deair', 50)
         return appendHistory(
           held,
           'action',
-          'Clamp held: resume support on the verified protocol rather than opening the last limb onto a stopped pump',
+          'Clamp held: resume support per the current IFU and approved local protocol rather than opening the last limb onto a stopped pump',
         )
       }
       const canResumeAfterOpening =

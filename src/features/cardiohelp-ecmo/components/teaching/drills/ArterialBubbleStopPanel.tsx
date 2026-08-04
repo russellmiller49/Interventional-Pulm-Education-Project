@@ -30,6 +30,17 @@ import {
  * than a rule about how much air matters.
  */
 
+/**
+ * What the one resumption action is, said in the same words everywhere it appears.
+ *
+ * The module teaches recognition, isolation, source correction and de-airing. It does not teach
+ * where clamp opening, pump restart and console reset fall relative to one another afterwards —
+ * that is device- and program-specific — so the action that stands in for it has to say so wherever
+ * it is described.
+ */
+const BOUNDED_ACTION_NOTE =
+  'This bounded simulation action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.'
+
 interface BubbleStep {
   readonly label: string
   readonly done: boolean
@@ -65,14 +76,14 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
         'The only step that stops air returning as soon as flow does. Nothing before it addresses the cause.',
     },
     {
-      label: 'Support resumed on the verified protocol',
+      label: 'Support resumed per the current IFU and approved local protocol',
       done:
         !circuit.bubbleResetRequired &&
         !circuit.drainageClampClosed &&
         !circuit.returnClampClosed &&
         device.pumpRunning,
       detail:
-        'One bounded step in this simulation, taken only once the source and the circuit are both right. The order of clamps, pump and reset at the bedside belongs to the manufacturer instructions and local protocol.',
+        'One bounded step here, taken only once the source and the circuit are both right. This bounded simulation action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
     },
   ]
 
@@ -83,7 +94,7 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
       clinicalQuestion="The bubble channel has raised a high-priority alarm and the pump has stopped on its own. What has that stop actually achieved, and what has to be true before this circuit carries blood to the patient again?"
       boundaries={[
         'This exercise injects an air event with no volume assigned to it and no threshold behind it. The manufacturer document supplied for this module is internally inconsistent on a bubble-size threshold, so this simulation offers no trigger value and teaches a sequence instead.',
-        'This module teaches isolation — return limb, then drainage limb, near the patient — because that is what separates a patient from an air column wherever the air is found. It deliberately teaches no clamp, pump and reset order for coming back: approved protocols differ on whether forward flow is re-established before the return limb is opened, since a centrifugal pump is non-occlusive and a stopped one does not hold a column in place. Resumption here is one bounded action standing in for the verified manufacturer and local protocol.',
+        'This module teaches isolation — return limb, then drainage limb, near the patient — because that is what separates a patient from an air column wherever the air is found. It deliberately does not teach where clamp opening, pump restart and console reset fall relative to one another during resumption: that choreography is device- and program-specific, and approved protocols differ on it. This bounded simulation action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
         'This simulation does not represent the physical work of de-airing a real circuit, and it does not model the patient being carried conventionally while the circuit is off. Both are real and both happen in the time this lab compresses to a button.',
       ]}
     >
@@ -214,13 +225,15 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
             The device intervention and the isolation are two different acts. Stopping the pump
             removes the forward push; only the near-patient clamps separate the patient from an air
             column; and only finding where air is entering keeps it from returning as soon as flow
-            does. That ordering is why the reset is a deliberate last step rather than a response to
-            the alarm, and why the patient is carried conventionally in the meantime.
+            does. Reset is never a response to the alarm, and never a substitute for source
+            correction and de-airing; where it falls within resumption is governed by the current
+            IFU and your unit&apos;s approved protocol. The patient is carried conventionally
+            throughout.
           </p>
           <p data-live-bubble-state>
             {sourceCorrected
               ? circuit.bubbleResetRequired
-                ? 'The source has been corrected on this circuit and the latch is still set — which is correct: the reset is a separate, deliberate act.'
+                ? 'The source has been corrected on this circuit and the latch is still set — which is correct: clearing it is a separate act from correcting the cause.'
                 : 'The source has been corrected and support resumed, so this circuit came back only once the air had been dealt with.'
               : circuit.bubbleResetRequired
                 ? 'The source has not been corrected on this circuit and the latch is still set. Resetting now would restart the pump on a circuit whose air source is still there.'
@@ -250,16 +263,17 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
 
         <FittingResponse>
           <p>
-            The acts, in order: recognise that the device has stopped forward flow and nothing else;
-            close the return limb and then the drainage limb near the patient to isolate; find and
-            correct where air is entering and confirm the circuit is clear; then bring the circuit
-            back and reset the intervention deliberately.
+            Recognise that the device has stopped forward flow and nothing else; close the return
+            limb and then the drainage limb near the patient to isolate; find and correct where air
+            is entering and confirm the circuit is clear. After the source is corrected and the
+            circuit is confirmed clear, resume support through the protocol-governed clamp, pump,
+            and device sequence.
           </p>
           <p>
-            Coming back is deliberately one act here, and not a clamp order. Which limb opens first,
-            when the pump turns, and where the console reset falls in that sequence are set by the
-            current manufacturer instructions and your unit&apos;s protocol — this simulation is not
-            the authority on any of it, and teaching a single order would imply that it were.
+            Which limb opens first, when the pump turns, and where the console reset falls are
+            device- and program-specific, and are governed by the current IFU and your unit&apos;s
+            approved ECMO air-emergency protocol. This simulation is not the authority on any of it.{' '}
+            {BOUNDED_ACTION_NOTE}
           </p>
           <p>
             Acknowledgement is not correction, and reset is not source control. Each is a separate
@@ -268,8 +282,8 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
         </FittingResponse>
 
         <ThreeDomainResponse
-          device="Alarm recognised rather than merely silenced; the intervention left latched until the circuit is right; the device brought back only as part of a verified resumption."
-          circuitOrGas="Return limb clamped, then the drainage limb, near the patient; the air source found and eliminated; the circuit confirmed bubble free; then support resumed on the verified manufacturer and local protocol."
+          device="Alarm recognised rather than merely silenced; the intervention left latched until the circuit is right; the device brought back only as part of the protocol-governed resumption."
+          circuitOrGas="Return limb clamped, then the drainage limb, near the patient; the air source found and eliminated; the circuit confirmed bubble free; then support resumed per the current IFU and approved local protocol."
           patient="Carried conventionally while the circuit is off, with oxygenation and haemodynamics followed independently of a console that has nothing to report while the pump is stopped."
         />
 

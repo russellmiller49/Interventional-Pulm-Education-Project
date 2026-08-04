@@ -274,9 +274,9 @@ export function EcmoCircuit3D({
           {/*
             Resumption after an air event, as one bounded act.
             Deliberately not the console reset and deliberately not a clamp: this module does not
-            teach a clamp/pump/reset order for coming back, because no single order is supported by
-            both the current instructions for use and every approved local protocol. The button says
-            what it stands for, and the label says it is a simulation abstraction.
+            teach where clamp opening, pump restart and console reset fall relative to one another,
+            because that choreography is device- and program-specific. The button says what it
+            stands for, and the helper text says it is a simulation abstraction.
           */}
           <button
             type="button"
@@ -290,10 +290,10 @@ export function EcmoCircuit3D({
               ▶
             </span>
             <span>
-              <strong>Resume support on the verified protocol</strong>
+              <strong>Resume support per current IFU and approved local protocol</strong>
               <small>
-                One bounded step in this simulation. At the bedside the order of clamps, pump and
-                reset follows the current manufacturer instructions and local protocol.
+                A bounded simulation abstraction. It stands in for the device- and program-specific
+                resumption sequence and does not reproduce or teach that sequence.
               </small>
             </span>
           </button>

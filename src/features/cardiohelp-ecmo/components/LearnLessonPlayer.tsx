@@ -285,7 +285,7 @@ function resolveGuidedSimulatorTask(
       return {
         controlId: 'cardiohelp-resume-support',
         instruction:
-          'On the bedside circuit, resume support on the verified manufacturer and local protocol.',
+          'On the bedside circuit, resume support per the current IFU and approved local protocol.',
         satisfied,
       }
     case 'RESET_BUBBLE':

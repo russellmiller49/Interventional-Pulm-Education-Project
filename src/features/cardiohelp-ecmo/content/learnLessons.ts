@@ -649,7 +649,7 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
     scenarioId: 'va-arterial-bubble-stop',
     target: 'circuit',
     instruction:
-      'A distinct VA arterial-return bubble event stops forward support. Begin isolation by closing the arterial return-limb clamp near the patient before source correction and deliberate reset.',
+      'A distinct VA arterial-return bubble event stops forward support. Begin isolation by closing the arterial return-limb clamp near the patient, before source correction, de-airing, and resumption.',
     actionLabel: 'Close the VA return-limb clamp',
     action: { type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return', closed: true },
     setupActions: [{ type: 'TICK', seconds: 4 }],
@@ -1049,7 +1049,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
     learningObjectives: [
       'Recognize the scenario-triggered bubble alarm and automatic pump stop.',
       'Isolate the patient with near-patient clamps before de-airing the circuit.',
-      'Correct and clear the air source before support is resumed on the verified protocol.',
+      'Correct and clear the air source before support is resumed per the current IFU and approved local protocol.',
     ],
     observe: {
       target: 'console',
@@ -1107,17 +1107,17 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       {
         id: 'resume-support',
         target: 'circuit',
-        title: 'Resume support on the verified protocol',
+        title: 'Resume support per the current IFU and approved local protocol',
         instruction:
-          'With the source corrected and the circuit clear, resume support using the verified manufacturer instructions and your unit protocol.',
+          'With the source corrected and the circuit confirmed clear, resume support according to the current manufacturer instructions for use (IFU) and your unit’s approved ECMO air-emergency protocol.',
         rationale:
-          'This module does not teach one clamp, pump and reset order for coming back, because no single order is supported by both the current instructions for use and every approved local protocol. What it does teach is the precondition: nothing resumes until the air source is corrected and the circuit is confirmed clear.',
-        actionLabel: 'Resume support on the verified protocol',
+          'This module does not teach where clamp opening, pump restart and console reset fall relative to one another during resumption: that choreography is device- and program-specific. What it does teach is the precondition — nothing resumes until the air source is corrected and the circuit is confirmed clear. This bounded simulation action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
+        actionLabel: 'Resume support per current IFU and approved local protocol',
         actions: [{ type: 'RESUME_SUPPORT_AFTER_BUBBLE' }],
         expectedResponse: [
           'Support resumes as one bounded step, with no moment where both limbs are open on a stopped pump',
           'The bubble latch clears and the pump runs',
-          'The order of clamps, pump and reset at the bedside is set by the manufacturer instructions and local protocol, not by this simulation',
+          'Where clamp opening, pump restart and console reset fall relative to one another is governed by the current IFU and your approved local protocol, not by this simulation',
         ],
       },
     ],
@@ -1512,7 +1512,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
     learningObjectives: [
       'Recognize the bubble intervention and loss of forward VA support.',
       'Isolate the arterial circulation with near-patient clamps before de-airing.',
-      'Correct and clear the source before support is resumed on the verified protocol.',
+      'Correct and clear the source before support is resumed per the current IFU and approved local protocol.',
     ],
     observe: {
       target: 'console',
@@ -1565,17 +1565,17 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       {
         id: 'resume-support',
         target: 'circuit',
-        title: 'Resume support on the verified protocol',
+        title: 'Resume support per the current IFU and approved local protocol',
         instruction:
-          'With the source corrected and the circuit clear, resume venoarterial support using the verified manufacturer instructions and your unit protocol.',
+          'With the source corrected and the circuit confirmed clear, resume venoarterial support according to the current manufacturer instructions for use (IFU) and your unit’s approved ECMO air-emergency protocol.',
         rationale:
-          'This module does not teach one clamp, pump and reset order for coming back, because no single order is supported by both the current instructions for use and every approved local protocol. What it does teach is the precondition: nothing resumes until the air source is corrected and the circuit is confirmed clear.',
-        actionLabel: 'Resume support on the verified protocol',
+          'This module does not teach where clamp opening, pump restart and console reset fall relative to one another during resumption: that choreography is device- and program-specific. What it does teach is the precondition — nothing resumes until the air source is corrected and the circuit is confirmed clear. This bounded simulation action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
+        actionLabel: 'Resume support per current IFU and approved local protocol',
         actions: [{ type: 'RESUME_SUPPORT_AFTER_BUBBLE' }],
         expectedResponse: [
           'Support resumes as one bounded step, with no moment where both limbs are open on a stopped pump',
           'The bubble latch clears and the pump runs',
-          'The order of clamps, pump and reset at the bedside is set by the manufacturer instructions and local protocol, not by this simulation',
+          'Where clamp opening, pump restart and console reset fall relative to one another is governed by the current IFU and your approved local protocol, not by this simulation',
         ],
       },
     ],
