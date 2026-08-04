@@ -30,6 +30,7 @@ const REVIEW_CHECKLIST: readonly string[] = [
   'The fluid-conservation ledger balances, and total effluent is visibly distinct from machine patient removal.',
   'The text equivalent below each figure names every path drawn as active in it.',
   'No universal pressure target, normal range, or alarm threshold appears anywhere.',
+  'In the final section the ledger is suppressed, not balanced: the dependent rows read "Withheld", no check reports "Balances", and no volume is attributed to patient loss.',
 ]
 
 function escapeHtml(value: string): string {
@@ -91,6 +92,38 @@ async function main(): Promise<void> {
     ].join('\n')
   })
 
+  // One extra section renders the state the makeup source conflict produces, so
+  // the suppressed ledger gets the same visual review as the nine overlays.
+  const unresolvedMarkup = renderToStaticMarkup(
+    createElement(CrrtPilotCircuit, {
+      running: true,
+      setReady: true,
+      fluidsReady: true,
+      bloodFlowMlMin: crrtWorkedLedgerExample.flows.bloodFlowMlMin,
+      dialysateFlowMlHour: crrtWorkedLedgerExample.flows.dialysateFlowMlHour,
+      patientFluidRemovalMlHour: crrtWorkedLedgerExample.flows.patientFluidRemovalMlHour,
+      flows: { ...crrtWorkedLedgerExample.flows, makeupFlowMlHour: 40 },
+      initialOverlayId: 'fluid-conservation',
+      pressure: {
+        access: -72,
+        filter: 146,
+        return: 64,
+        effluent: 28,
+        TMP: 77,
+        filterDrop: 82,
+      },
+    }),
+  )
+  sections.push(
+    [
+      '<section class="review-item" id="unresolved-makeup">',
+      '<h2>Unresolved makeup attribution <code>not an overlay</code></h2>',
+      '<p class="review-summary">The same fluid-conservation view with a 40 mL/h makeup flow running. The registered sources disagree about where that volume belongs, so the ledger is suppressed rather than closed.</p>',
+      unresolvedMarkup,
+      '</section>',
+    ].join('\n'),
+  )
+
   const page = [
     '<!doctype html>',
     '<meta charset="utf-8">',
@@ -124,7 +157,7 @@ async function main(): Promise<void> {
   const outputPath = join(outputDir, 'circuit-overlays.html')
   writeFileSync(outputPath, page, 'utf8')
 
-  console.log(`Rendered ${crrtCircuitOverlays.length} overlays.`)
+  console.log(`Rendered ${crrtCircuitOverlays.length} overlays plus the suppressed-ledger state.`)
   console.log(`Wrote ${outputPath}`)
 }
 
