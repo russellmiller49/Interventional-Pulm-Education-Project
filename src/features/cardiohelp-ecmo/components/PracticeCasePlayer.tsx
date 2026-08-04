@@ -26,7 +26,13 @@ import { Link } from '@/i18n/navigation'
 import type { CriticalCareActivityPhase } from '@/features/learning-module/activity'
 import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 
-import { cardiohelpScenarioById, predictionGoals, TIP_TO_TIP_CHECK_ID } from '../content/scenarios'
+import {
+  cardiohelpScenarioById,
+  predictionControls,
+  predictionDirections,
+  predictionGoals,
+  TIP_TO_TIP_CHECK_ID,
+} from '../content/scenarios'
 import { clinicalPracticeScenarioById, clinicalPracticeScenarios } from '../content/clinicalCases'
 import {
   cardiohelpCurriculum,
@@ -70,90 +76,6 @@ interface PracticeCasePlayerProps {
   onPhaseChange?: (phase: CriticalCareActivityPhase) => void
   onActiveStageChange?: (stage: EcmoPracticeStage) => void
 }
-
-const predictionControls: readonly {
-  value: PredictionControl
-  label: string
-  supportModes: readonly SupportMode[]
-}[] = [
-  { value: 'inspect-circuit', label: 'Inspect circuit / sensors', supportModes: ['vv', 'va'] },
-  {
-    value: 'assess-upper-body',
-    label: 'Review right-arm oxygenation and mixed circulation',
-    supportModes: ['va'],
-  },
-  {
-    value: 'assess-lv-loading',
-    label: 'Review pulsatility, aortic valve, LV, and lungs',
-    supportModes: ['va'],
-  },
-  { value: 'rpm', label: 'Pump RPM', supportModes: ['vv', 'va'] },
-  { value: 'sweep', label: 'External sweep flow', supportModes: ['vv', 'va'] },
-  { value: 'gas-fio2', label: 'External sweep-gas FiO₂', supportModes: ['vv', 'va'] },
-  { value: 'restore-gas', label: 'Restore gas source', supportModes: ['vv', 'va'] },
-  { value: 'correct-cause', label: 'Resolve cause before reset', supportModes: ['vv', 'va'] },
-  { value: 'restore-power', label: 'Restore verified AC power', supportModes: ['vv', 'va'] },
-  { value: 'off-sweep-trial', label: 'VV off-sweep trial', supportModes: ['vv'] },
-  {
-    value: 'initiate-support',
-    label: 'Initiate ECMO with verified settings',
-    supportModes: ['vv', 'va'],
-  },
-  {
-    value: 'resuscitate-preload',
-    label: 'Restore preload while finding the cause',
-    supportModes: ['vv', 'va'],
-  },
-  {
-    value: 'transfuse-and-control',
-    label: 'Transfuse and control hemorrhage',
-    supportModes: ['vv', 'va'],
-  },
-  {
-    value: 'decompress-chest',
-    label: 'Relieve obstructive thoracic/cardiac pressure',
-    supportModes: ['vv', 'va'],
-  },
-  {
-    value: 'reposition-cannula',
-    label: 'Review and restore cannula position',
-    supportModes: ['vv'],
-  },
-  {
-    value: 'exchange-oxygenator',
-    label: 'Prepare and exchange the failing component',
-    supportModes: ['vv', 'va'],
-  },
-  {
-    value: 'vasopressor',
-    label: 'Treat vascular tone and reassess perfusion',
-    supportModes: ['va'],
-  },
-  {
-    value: 'restore-distal-perfusion',
-    label: 'Restore cannulated-limb perfusion',
-    supportModes: ['va'],
-  },
-  {
-    value: 'isolate-circuit',
-    label: 'Clamp to isolate the circuit and come off support',
-    supportModes: ['vv', 'va'],
-  },
-]
-
-const predictionDirections: readonly { value: PredictionDirection; label: string }[] = [
-  { value: 'increase', label: 'Increase' },
-  { value: 'decrease', label: 'Decrease' },
-  { value: 'hold', label: 'Hold / do not chase the number' },
-  { value: 'inspect', label: 'Inspect and localize first' },
-  { value: 'restore', label: 'Restore source' },
-  { value: 'off', label: 'Turn off while maintaining blood flow' },
-  { value: 'gas-exchange', label: 'Improve oxygenation / CO₂ clearance' },
-  { value: 'perfusion', label: 'Improve systemic perfusion' },
-  { value: 'drainage', label: 'Restore effective venous drainage' },
-  { value: 'temporary', label: 'Temporize while the cause remains' },
-  { value: 'definitive', label: 'Definitively resolve the cause' },
-]
 
 const faultLabels: Record<FaultId, string> = {
   'startup-inspection': 'Complete startup diagnostic, circuit, sensor, and backup check',
