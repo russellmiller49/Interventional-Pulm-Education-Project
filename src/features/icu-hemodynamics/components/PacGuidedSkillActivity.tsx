@@ -45,10 +45,14 @@ import {
 } from '../engine'
 import { BedsideMonitor } from './BedsideMonitor'
 import { FormulaDrawer } from './FormulaDrawer'
+import { NormalWaveformReference } from './NormalWaveformReference'
 import { PacActionDock } from './PacActionDock'
 import { PacAdvancementOrientation } from './PacAdvancementOrientation'
+import { PacAdvancementPrebrief } from './PacAdvancementPrebrief'
 import { PacLearningPathwayViewport } from './PacLearningPathwayNav'
 import { PacSectionCompletionActions } from './PacSectionCompletionActions'
+import { PacSectionReadinessCard } from './PacSectionReadiness'
+import { PressureSystemValidityPanel } from './PressureSystemValidityPanel'
 import {
   CardiacOutputTeachingPanel,
   DerivedHemodynamicsTeachingPanel,
@@ -374,10 +378,12 @@ function SkillSurface({
   skillId,
   state,
   dispatch,
+  advancementUnlocked,
 }: {
   readonly skillId: PacGuidedSkillId
   readonly state: HemodynamicSimulationState
   readonly dispatch: (action: HemodynamicAction) => void
+  readonly advancementUnlocked: boolean
 }) {
   if (skillId === 'pressure-system') {
     return (
@@ -390,10 +396,26 @@ function SkillSurface({
     )
   }
   if (skillId === 'catheter-advancement') {
+    // The manipulation controls stay out of reach until the prebrief is acknowledged, from
+    // wherever the learner arrives — including a direct jump to a later phase from the phase
+    // navigation. The prebrief itself lives in the task panel; duplicating it here would give the
+    // learner two copies of the same acknowledgement.
+    if (!advancementUnlocked) {
+      return (
+        <div className="grid h-full place-items-center overflow-auto p-4">
+          <p className="max-w-sm rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-center text-sm leading-6">
+            The simulated advancement controls open once you have read the safety prebrief in the
+            current-task panel.
+          </p>
+        </div>
+      )
+    }
     return <PacActionDock state={state} dispatch={dispatch} focus="advancement" />
   }
   if (skillId === 'waveform-interpretation') {
-    return <WaveformAtlasPanel initialEntryId="ra-tamponade" heading="Full waveform atlas" />
+    // H0/H1 §4: the atlas opens on the normal right atrium rather than on an abnormality. A novice
+    // needs the reference before the deviation from it.
+    return <WaveformAtlasPanel initialEntryId="ra-normal" heading="Full waveform atlas" />
   }
   if (skillId === 'pawp-capture') {
     return <PacActionDock state={state} dispatch={dispatch} focus="wedge" />
@@ -427,6 +449,12 @@ export function PacGuidedSkillActivity({
   const [transferChoiceId, setTransferChoiceId] = useState<string | null>(null)
   const [hintVisible, setHintVisible] = useState(false)
   const [completed, setCompleted] = useState(false)
+  /**
+   * H0/H1 §5. Advancement is the one section where the learner manipulates a simulated catheter, so
+   * the safety prebrief precedes its controls. This sequences the section; it does not gate it —
+   * every pathway station stays reachable by URL and every phase button stays enabled.
+   */
+  const [prebriefAcknowledged, setPrebriefAcknowledged] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const attempt = useRef(1)
   const recordedSafetyEvents = useRef(new Set<string>())
@@ -674,6 +702,7 @@ export function PacGuidedSkillActivity({
   const advancementOrientationPosition =
     pacAdvancementOrientationSteps.find((step) => step.position === state.catheter.position)
       ?.position ?? 'introducer'
+  const advancementUnlocked = skillId !== 'catheter-advancement' || prebriefAcknowledged
   const taskControls = completed ? (
     <PacSectionCompletionActions
       sectionTitle={spec.title}
@@ -683,16 +712,31 @@ export function PacGuidedSkillActivity({
       onContinue={continueToNextSection}
     />
   ) : phase === 'recognize' ? (
-    <button
-      type="button"
-      className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
-      onClick={() => {
-        setState(predictionSkillState(skillId))
-        advance('predict')
-      }}
-    >
-      Orient to this skill station
-    </button>
+    <div className="grid gap-3">
+      <PacSectionReadinessCard sectionId={skillId} />
+      {skillId === 'catheter-advancement' ? (
+        <PacAdvancementPrebrief
+          acknowledged={prebriefAcknowledged}
+          onAcknowledge={() => setPrebriefAcknowledged(true)}
+        />
+      ) : null}
+      <button
+        type="button"
+        disabled={skillId === 'catheter-advancement' && !prebriefAcknowledged}
+        className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+        onClick={() => {
+          setState(predictionSkillState(skillId))
+          advance('predict')
+        }}
+      >
+        Orient to this skill station
+      </button>
+    </div>
+  ) : phase === 'predict' && skillId === 'catheter-advancement' && !advancementUnlocked ? (
+    <PacAdvancementPrebrief
+      acknowledged={false}
+      onAcknowledge={() => setPrebriefAcknowledged(true)}
+    />
   ) : phase === 'predict' && skillId === 'catheter-advancement' ? (
     <PacAdvancementOrientation
       currentPosition={advancementOrientationPosition}
@@ -816,8 +860,15 @@ export function PacGuidedSkillActivity({
   )
 
   const learningPane =
-    skillId === 'waveform-interpretation' ? (
-      <WaveformRecognitionDrill dispatch={dispatch} />
+    skillId === 'pressure-system' ? (
+      <PressureSystemValidityPanel state={state} commitment={learningItems.validityCommitment} />
+    ) : skillId === 'waveform-interpretation' ? (
+      // The normal reference is established first; the recognition drill follows it.
+      phase === 'recognize' ? (
+        <NormalWaveformReference />
+      ) : (
+        <WaveformRecognitionDrill dispatch={dispatch} />
+      )
     ) : skillId === 'thermodilution-series' ? (
       <CardiacOutputTeachingPanel />
     ) : skillId === 'derived-hemodynamics' ? (
@@ -857,6 +908,7 @@ export function PacGuidedSkillActivity({
             skillId={skillId}
             state={state}
             dispatch={dispatch}
+            advancementUnlocked={advancementUnlocked}
           />
         }
       />
