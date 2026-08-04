@@ -330,8 +330,17 @@ const panelOrder: readonly { readonly id: PanelId; readonly label: string }[] = 
   { id: 'urgency', label: 'Urgent, or abnormal?' },
 ]
 
-export function MechanicalVentilationNoviceRunway() {
-  const [panel, setPanel] = useState<PanelId>('controls')
+export function MechanicalVentilationNoviceRunway({
+  /**
+   * Which panel is open on first mount. Exists for the offline render harness, which cannot press a
+   * button and has to mount each state separately to review it — the same reason the teaching
+   * panels render with no dispatch. In the app it is left at its default.
+   */
+  initialPanel = 'controls',
+}: {
+  readonly initialPanel?: PanelId
+} = {}) {
+  const [panel, setPanel] = useState<PanelId>(initialPanel)
   const [control, setControl] = useState<string>(controls[0].id)
   const [stage, setStage] = useState<string>(breathStages[0].id)
 
@@ -403,7 +412,7 @@ export function MechanicalVentilationNoviceRunway() {
 
       {panel === 'breath' ? (
         <>
-          <figure className={styles.figure}>
+          <figure className={`${styles.figure} ${styles.wideSurfaceFigure}`}>
             <svg viewBox="0 0 300 186" role="img" aria-label={breathSummary}>
               {[
                 { id: 'pressure', label: 'Pressure', d: pressurePath },
@@ -421,8 +430,9 @@ export function MechanicalVentilationNoviceRunway() {
                   </text>
                 </g>
               ))}
+              {/* Starts below the label band so the marker never strikes through a trace name. */}
               <g className={styles.variableMarker}>
-                <path d={`M${(selectedStage.at * 300).toFixed(1)} 0 V186`} />
+                <path d={`M${(selectedStage.at * 300).toFixed(1)} 12 V186`} />
               </g>
             </svg>
             <figcaption>

@@ -51,6 +51,18 @@
   line-height: 1.45;
 }
 
+/*
+ * A figure on a full-width page rather than in the workspace's 420px middle pane.
+ *
+ * `.figure svg` is width:100% height:auto, which is right in the pane and wrong on the Learn
+ * landing: at a 1152px content column the runway's breath figure scaled its 300×186 viewBox to
+ * 1105×685, so one trace filled the screen. Capping the figure keeps the aspect ratio and the
+ * primitive, and leaves the trace at a size you can actually read against its own caption.
+ */
+.wideSurfaceFigure {
+  max-width: 30rem;
+}
+
 /* Pressure decomposition */
 .axis {
   fill: none;
