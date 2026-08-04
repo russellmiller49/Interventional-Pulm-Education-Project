@@ -132,7 +132,9 @@ something.
 - Change the procedure. The picker is replaced by a read-only panel. A saved card's procedure
   is its identity; switching it would keep the id, the share link, and the history while
   replacing everything the card says. Create or duplicate instead.
-- Move to a newer recipe or module version. See above.
+- Move to a newer recipe or module version. See above. Editing is not the route for this and never
+  becomes it; [`reviewed-rebuild.md`](./reviewed-rebuild.md) is, and it produces a separate new card
+  rather than moving this one.
 
 ## Equipment sets
 
@@ -182,11 +184,13 @@ the composition work that introduced module selections, so an input satisfying t
 without naming a version is a version-2 input by construction. An input declaring any _other_
 version is rejected rather than coerced. Parsing and normalization are server-side only.
 
-**No version is upgraded in place.** A version-2 card that is edited and saved is written back
-as version 2. Stamping the current release onto it would move a saved card to a release its
-author never selected — an automatic migration this phase deliberately does not perform, and a
-silent one, since nothing on the card would say the pin was the system's choice rather than the
-physician's. The schema enforces the pairing in both directions: a version-3 input without a
+**No version is upgraded in place.** A version-2 card is refused a save outright — see
+`SUPERSEDED_BUILDER_INPUTS_SCHEMA_VERSIONS` — and no card of any version has its pin rewritten by
+an edit. Stamping the current release onto one would move a saved card to a release its author never
+selected, and would do it silently, since nothing on the card would say the pin was the system's
+choice rather than the physician's. Moving forward goes through
+[`reviewed-rebuild.md`](./reviewed-rebuild.md), which produces a new version-4 card and leaves the
+original exactly as it was. The schema enforces the pairing in both directions: a version-3 input without a
 pin is rejected, and so is a version-2 input carrying one it could not have had.
 
 A version-2 card's recipe and module pins are exact. What it does **not** pin — the modifier
@@ -207,7 +211,11 @@ A card whose builder inputs will not parse is not a broken card.
   available to view, print, share, duplicate, and retain for reference."_
 - Duplicating one produces another legacy card. Duplication does not make a card editable.
 
-There is no automatic migration in this phase, and adding one would mean inventing selections.
+There is still no automatic migration, and there is not going to be one: adding it would mean
+inventing selections. What exists instead is the reviewed rebuild
+([`reviewed-rebuild.md`](./reviewed-rebuild.md)), which is neither automatic nor in place — it cites
+one exact revision, requires a physician to answer every changed decision, and creates a new card.
+It refuses a legacy or version-2 source for exactly the reason above.
 
 ## Save-in-place semantics
 

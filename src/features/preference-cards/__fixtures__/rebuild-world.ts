@@ -1,0 +1,168 @@
+import { expandRecipeComposition } from '../domain/expand-recipe-composition'
+import type {
+  BuildContext,
+  HospitalItem,
+  HospitalRoleOption,
+  ScenarioDefinition,
+} from '../domain/types'
+import type { PreferenceCardReleaseBundle } from '../domain/release-bundle'
+import {
+  ALPHA_RELEASE_ID,
+  BRAVO_RELEASE_ID,
+  FIXTURE_PROCEDURE_CODE,
+  FIXTURE_SCENARIO_ID,
+  createFixtureDefinitionStore,
+  createFixtureReleaseWorld,
+  fixtureSourcesFor,
+} from './release-bundle-fixtures'
+
+/**
+ * The fixture release world, dressed up far enough to resolve a whole card.
+ *
+ * `release-bundle-fixtures.ts` gives three releases and their authored definitions, which is
+ * everything the pure release machinery needs and not quite everything a *card* needs: resolution
+ * also reads hospital-local data — what the room stocks and how the site ranks it — which is
+ * current by design and therefore lives outside every release.
+ *
+ * Two hospital items exist here and both are deliberately ordinary. The rebuild tests are about
+ * what crosses between releases, so the local formulary is arranged to be uninteresting: one
+ * preferred item for the fixture role, one alternative, both active, neither restricted. A test
+ * that wants an item to disappear removes it, and that removal is then the only thing that moved.
+ */
+
+export const FIXTURE_PRIMARY_ITEM_ID = 'fixture-item-primary'
+export const FIXTURE_ALTERNATE_ITEM_ID = 'fixture-item-alternate'
+
+export const FIXTURE_SCOPE = {
+  organizationId: 'fixture-org',
+  siteId: 'fixture-site',
+  locationId: 'fixture-location',
+}
+
+function hospitalItem(id: string, description: string): HospitalItem {
+  return {
+    id,
+    organizationId: FIXTURE_SCOPE.organizationId,
+    siteId: FIXTURE_SCOPE.siteId,
+    locationId: FIXTURE_SCOPE.locationId,
+    itemType: 'commercial_product',
+    roleCode: 'FIXTURE_ROLE',
+    catalogProduct: null,
+    localItemNumber: null,
+    localDescription: description,
+    localUom: null,
+    storageLocation: null,
+    verificationState: 'locally_approved',
+    active: true,
+    notes: null,
+    attributes: { min_working_channel_mm: 2.8 },
+    kitComponents: [],
+  }
+}
+
+function roleOption(id: string, hospitalItemId: string, rank: number): HospitalRoleOption {
+  return {
+    id,
+    roleCode: 'FIXTURE_ROLE',
+    hospitalItemId,
+    preferenceRank: rank,
+    substitutionClass: rank === 1 ? 'preferred' : 'acceptable',
+    noSubstitute: false,
+    active: true,
+    rationale: null,
+  }
+}
+
+export function fixtureScenario(recipeVersionId: string): ScenarioDefinition {
+  return {
+    id: FIXTURE_SCENARIO_ID,
+    title: 'Fixture procedure',
+    recipeName: 'Fixture procedure',
+    shortDescription: 'A synthetic procedure that exists only in the fixtures.',
+    recipeVersionId,
+    sourceProcedureCode: FIXTURE_PROCEDURE_CODE,
+    templateVersion: '1.0',
+    defaultModifierCodes: [],
+    availableModifierCodes: ['FIXTURE_MODIFIER'],
+    requiredCatalogCoverageCount: 2,
+    requiredCatalogCoveragePercentage: 100,
+    requiredSlotsWithoutCatalogProducts: [],
+    roleCodesWithoutCatalogProducts: [],
+    requiredDefaultOptionCoverageCount: 2,
+    requiredDefaultOptionCoveragePercentage: 100,
+    requiredSlotsWithoutDefaultOptions: [],
+    requiredCustomAllowedCount: 0,
+    slotCount: 2,
+    requiredSlotCount: 2,
+    governanceState: 'draft',
+    owner: null,
+  }
+}
+
+export interface RebuildFixtureWorld {
+  world: ReturnType<typeof createFixtureReleaseWorld>
+  alpha: PreferenceCardReleaseBundle
+  bravo: PreferenceCardReleaseBundle
+  /** Mutable, so a test can make an item vanish and nothing else move. */
+  hospitalItems: HospitalItem[]
+  hospitalRoleOptions: HospitalRoleOption[]
+  contextFor: (releaseBundleId: string) => BuildContext
+  composedSlotsFor: (releaseBundleId: string) => ReturnType<typeof expandRecipeComposition>['slots']
+}
+
+export function createRebuildFixtureWorld(): RebuildFixtureWorld {
+  const world = createFixtureReleaseWorld()
+  const alpha = world.bundleById.get(ALPHA_RELEASE_ID)!
+  const bravo = world.bundleById.get(BRAVO_RELEASE_ID)!
+  const store = createFixtureDefinitionStore()
+
+  const hospitalItems = [
+    hospitalItem(FIXTURE_PRIMARY_ITEM_ID, 'Fixture primary scope'),
+    hospitalItem(FIXTURE_ALTERNATE_ITEM_ID, 'Fixture alternate scope'),
+  ]
+  const hospitalRoleOptions = [
+    roleOption('fixture-option-primary', FIXTURE_PRIMARY_ITEM_ID, 1),
+    roleOption('fixture-option-alternate', FIXTURE_ALTERNATE_ITEM_ID, 2),
+  ]
+
+  const contextFor = (releaseBundleId: string): BuildContext => {
+    const bundle = world.bundleById.get(releaseBundleId)!
+    const sources = fixtureSourcesFor(store, bundle.recipeVersionId)!
+    return {
+      organizationName: 'Fixture Organization',
+      siteName: 'Fixture Site',
+      locationName: 'Fixture Location',
+      locationCapabilities: [],
+      releaseIdentity: {
+        releaseBundleId: bundle.id,
+        releaseDefinitionHash: bundle.definitionHash,
+        catalogReleaseId: bundle.catalogImportId,
+      },
+      recipe: sources.recipe,
+      recipeModules: sources.modules,
+      modifiers: sources.modifiers,
+      rescueModules: sources.rescueModules,
+      // Deliberately shared references: hospital-local data is *current* on both sides of a
+      // rebuild, and giving the two releases different formularies would smuggle an operational
+      // change into a comparison that is supposed to isolate authored ones.
+      hospitalItems,
+      hospitalRoleOptions,
+      compatibilityRules: sources.compatibilityRules,
+      preferenceOverlays: [],
+    }
+  }
+
+  const composedSlotsFor = (releaseBundleId: string) => {
+    const context = contextFor(releaseBundleId)
+    return expandRecipeComposition({
+      recipe: context.recipe,
+      modules: context.recipeModules,
+      selectedModuleVersionIds: context.recipe.moduleReferences.map(
+        (reference) => reference.moduleVersionId,
+      ),
+      startSequence: 1,
+    }).slots
+  }
+
+  return { world, alpha, bravo, hospitalItems, hospitalRoleOptions, contextFor, composedSlotsFor }
+}

@@ -334,6 +334,14 @@ decisions, no new card from an old one, no automatic migration, no in-place rele
 version-2 editing, no legacy-family guessing, no new clinical content, no new family membership,
 no fuzzy matching, no matching by role code alone, no automatic waiver transfer.
 
+Phase 4B.2 has since built the carry-forward half — see
+[`reviewed-rebuild.md`](./reviewed-rebuild.md). The fence above is still an accurate account of this
+phase and of this page: the reconciliation route remains read-only, offers no control that could
+change a card, and is still asserted to render no form and no button. What changed is that a
+separate route now cites a revision and produces a **new** card from it. The items that stay true
+everywhere are the ones about guessing: no fuzzy matching, no matching by role code alone, and no
+automatic waiver transfer are constraints on the rebuild too.
+
 Reconciliation reads and reports. The saved card, its snapshot, and every revision are unchanged
 by it — asserted as a fact about the code (`tables.writes` records every mutating statement and is
 checked to be empty) rather than as an intention in a comment.
@@ -411,3 +419,10 @@ npx jest src/features/preference-cards 'src/app/.*preference-cards' --runInBand
 ```bash
 npm run ip-cards:release:check-base
 ```
+
+## What sits on top of this
+
+[`reviewed-rebuild.md`](./reviewed-rebuild.md) — Phase 4B.2. Revisions exist so that something can
+cite one; the rebuild is that something. It binds to an exact revision id, reuses both comparisons
+described above verbatim rather than deriving its own, and creates a separate new card once every
+changed decision has been answered.

@@ -4,6 +4,7 @@ import type {
   GovernanceState,
   ModifierDefinition,
   RecipeModuleVersion,
+  RecipeSlot,
   RecipeVersion,
   RescueModule,
   TypedCompatibilityRule,
@@ -876,7 +877,18 @@ export interface ReleaseImpactReport {
   resolverContractChanged: boolean
 }
 
-const requirementComparedFields = [
+/**
+ * What makes two authored requirements different.
+ *
+ * Exported because the rebuild planner compares composed slots across two releases and must use
+ * exactly this list. A second list would drift, and the drift would surface as a rebuild carrying
+ * a selection forward unchanged on a requirement this diff had already reported as changed to the
+ * reviewer who published the release.
+ *
+ * `release-bundle.ts` is deliberately outside `RESOLVER_SOURCE_FILES`, so exporting from here does
+ * not move `resolverImplementationHash` and no release artifact needs rebuilding.
+ */
+export const REQUIREMENT_COMPARED_FIELDS = [
   'roleCode',
   'label',
   'genericRequirement',
@@ -892,7 +904,7 @@ const requirementComparedFields = [
   'sterileStatus',
   'allowCustom',
   'notes',
-] as const
+] as const satisfies readonly (keyof RecipeSlot)[]
 
 function requirementIndex(sources: ReleaseDefinitionSources) {
   const index = new Map<string, { slot: Record<string, unknown>; moduleVersionIds: string[] }>()
@@ -1000,7 +1012,7 @@ export function diffReleaseBundles(
       continue
     }
     if (!before || !after) continue
-    const changedFields = requirementComparedFields.filter(
+    const changedFields = REQUIREMENT_COMPARED_FIELDS.filter(
       (field) => stableStringify(before.slot[field]) !== stableStringify(after.slot[field]),
     )
     if (changedFields.length === 0) continue

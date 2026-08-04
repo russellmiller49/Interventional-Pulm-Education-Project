@@ -31,6 +31,14 @@ export interface FakeCardRow {
   catalog_import_id: string
   share_enabled: boolean
   share_token: string
+  /**
+   * Set once, when a rebuilt card is created, and never again — the write-once trigger from
+   * `20260804013000_add_ip_preference_card_rebuild_provenance.sql`, modelled below.
+   *
+   * Deliberately absent from `REVISION_CONTENT_COLUMNS`: it can never change, so it can never be
+   * the reason `updated_at` advances or a revision is appended.
+   */
+  rebuild_provenance: unknown
   created_at: string
   updated_at: string
 }
@@ -194,6 +202,14 @@ export class FakePreferenceCardTables {
     const filters: Array<[string, unknown]> = []
     let orderColumn: string | null = null
     let orderAscending = true
+    /** The requested column list, or null for "everything" when `select()` was called bare. */
+    let projection: string[] | null = null
+
+    const project = (row: object): Record<string, unknown> => {
+      if (!projection) return row as Record<string, unknown>
+      const source = row as Record<string, unknown>
+      return Object.fromEntries(projection.map((column) => [column, source[column]]))
+    }
 
     const matches = (row: Record<string, unknown>) =>
       filters.every(([column, value]) => row[column] === value)
@@ -219,7 +235,13 @@ export class FakePreferenceCardTables {
     }
 
     const builder = {
-      select: () => {
+      select: (columns?: string) => {
+        // PostgREST returns the columns it was asked for and no others. Honouring that matters
+        // beyond tidiness: `duplicateUserCard` copies a card by selecting a named column list and
+        // re-inserting the result, so a fake that returned whole rows would copy columns the real
+        // query never sees — and would have quietly duplicated a rebuilt card's provenance onto a
+        // copy that was never rebuilt.
+        projection = columns ? columns.split(',').map((column) => column.trim()) : null
         return builder
       },
       order: (column: string, options?: { ascending?: boolean }) => {
@@ -228,7 +250,7 @@ export class FakePreferenceCardTables {
         return builder
       },
       limit: (count: number) => {
-        return Promise.resolve({ data: collection().slice(0, count), error: null })
+        return Promise.resolve({ data: collection().slice(0, count).map(project), error: null })
       },
       insert: (next: Record<string, unknown>) => {
         operation = 'insert'
@@ -275,12 +297,13 @@ export class FakePreferenceCardTables {
             id: this.cardId(this.nextCardSequence++),
             share_enabled: (payload.share_enabled as boolean | undefined) ?? false,
             share_token: `token-${this.nextCardSequence}`,
+            rebuild_provenance: payload.rebuild_provenance ?? null,
             created_at: created,
             updated_at: created,
           }
           this.cards.push(row)
           this.appendRevision(row, null)
-          return Promise.resolve({ data: row, error: null })
+          return Promise.resolve({ data: project(row), error: null })
         }
 
         if (operation === 'update') {
@@ -292,6 +315,18 @@ export class FakePreferenceCardTables {
           )
           if (index < 0) return Promise.resolve({ data: null, error: null })
           const previous = this.cards[index]
+          // `private.ip_reject_preference_card_rebuild_provenance_rewrite`. Modelled rather than
+          // stubbed, because "a rebuilt card's provenance cannot be edited afterwards" is a claim
+          // the suite makes and a test against a stub would be testing the stub.
+          if (
+            Object.prototype.hasOwnProperty.call(payload, 'rebuild_provenance') &&
+            JSON.stringify(payload.rebuild_provenance ?? null) !==
+              JSON.stringify(previous.rebuild_provenance ?? null)
+          ) {
+            throw new Error(
+              'ip_user_preference_cards.rebuild_provenance is write-once and cannot be changed after the card is created',
+            )
+          }
           // `ip_set_preference_card_content_updated_at`: the timestamp is a content version, so a
           // share-only update leaves it exactly where it was. That is what keeps a share toggle
           // from invalidating an open edit session, and it is modelled here rather than assumed
@@ -303,10 +338,11 @@ export class FakePreferenceCardTables {
           } as FakeCardRow
           this.cards[index] = updated
           this.appendRevision(updated, previous)
-          return Promise.resolve({ data: updated, error: null })
+          return Promise.resolve({ data: project(updated), error: null })
         }
 
-        return Promise.resolve({ data: collection()[0] ?? null, error: null })
+        const first = collection()[0]
+        return Promise.resolve({ data: first ? project(first) : null, error: null })
       },
     }
     return builder

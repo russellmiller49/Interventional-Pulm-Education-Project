@@ -240,3 +240,90 @@ describe('preference-card revision migrations', () => {
     }
   })
 })
+
+/**
+ * The rebuild-provenance migration.
+ *
+ * A rebuilt card is an ordinary card in every respect — its own id, its own share token, its own
+ * revision 1 — so nothing on it would otherwise say it was rebuilt, from what, or which decisions a
+ * person actually answered. One nullable jsonb column carries that, and the properties worth
+ * policing at source level are what it deliberately does *not* touch: the applied revision
+ * machinery, and the definition of revision-bearing content.
+ */
+describe('preference-card rebuild provenance migration', () => {
+  const REBUILD_MIGRATION = '20260804013000_add_ip_preference_card_rebuild_provenance.sql'
+  const REBUILD_VERIFIER = '20260804013000_verify_ip_preference_card_rebuild_provenance.sql'
+  const VERIFICATION_DIR = path.resolve(process.cwd(), 'supabase/verification')
+
+  const rebuildMigration = fs.readFileSync(path.join(MIGRATIONS_DIR, REBUILD_MIGRATION), 'utf8')
+  const rebuildVerifier = fs.readFileSync(path.join(VERIFICATION_DIR, REBUILD_VERIFIER), 'utf8')
+
+  /** Statements only. The file argues at length about what it does not do; prose is not a check. */
+  const rebuildMigrationSql = rebuildMigration
+    .split('\n')
+    .filter((line) => !line.trimStart().startsWith('--'))
+    .join('\n')
+
+  it('sorts after both revision migrations', () => {
+    const files = fs
+      .readdirSync(MIGRATIONS_DIR)
+      .filter((file) => file.endsWith('.sql'))
+      .sort()
+    expect(files).toContain(REBUILD_MIGRATION)
+    expect(files.indexOf(REBUILD_MIGRATION)).toBeGreaterThan(
+      files.indexOf('20260803151005_index_ip_preference_card_revision_foreign_keys.sql'),
+    )
+  })
+
+  it('adds one nullable jsonb column, constrained to an object', () => {
+    expect(rebuildMigrationSql).toContain('add column if not exists rebuild_provenance jsonb')
+    expect(rebuildMigrationSql).toContain('ip_user_preference_cards_rebuild_provenance_check')
+    expect(rebuildMigrationSql).toContain("jsonb_typeof(rebuild_provenance) = 'object'")
+    // Nullable: almost no card is a rebuild, and a default object on the rest would be a claim.
+    expect(rebuildMigrationSql).not.toMatch(/rebuild_provenance jsonb[^;]*not null/i)
+  })
+
+  it('makes the column write-once with a before-update trigger', () => {
+    expect(rebuildMigrationSql).toContain(
+      'create or replace function private.ip_reject_preference_card_rebuild_provenance_rewrite()',
+    )
+    expect(rebuildMigrationSql).toContain('before update on public.ip_user_preference_cards')
+    expect(rebuildMigrationSql).toContain(
+      'new.rebuild_provenance is distinct from old.rebuild_provenance',
+    )
+    expect(rebuildMigrationSql).toContain("errcode = 'restrict_violation'")
+    // It calls nothing and reads nothing outside its own row, so it needs no privilege at all.
+    expect(rebuildMigrationSql).toContain('security invoker')
+    expect(rebuildMigrationSql).toContain("set search_path = ''")
+  })
+
+  it('leaves the applied revision machinery alone', () => {
+    // The one function this migration must not redefine: it decides whether `updated_at` advances
+    // and whether a revision is appended, and a column that can never change must not be in it.
+    expect(rebuildMigrationSql).not.toContain('ip_preference_card_content_changed')
+    expect(rebuildMigrationSql).not.toContain('ip_append_preference_card_revision')
+    expect(rebuildMigrationSql).not.toMatch(
+      /alter table public\.ip_user_preference_card_revisions/i,
+    )
+    expect(rebuildMigrationSql).not.toMatch(/^drop table/im)
+    expect(rebuildMigrationSql).toContain("notify pgrst, 'reload schema'")
+  })
+
+  it('does not introduce common PHI fields', () => {
+    expect(rebuildMigration).not.toMatch(
+      /\b(patient_name|mrn|date_of_birth|dob|encounter_number|diagnosis)\b/i,
+    )
+  })
+
+  it('ships a verifier that rolls back and proves the write-once rule behaviourally', () => {
+    expect(rebuildVerifier.trimEnd().endsWith('rollback;')).toBe(true)
+    // Existence of a trigger and a trigger firing are different facts; only the second is the
+    // guarantee, so the verifier attempts the rewrite and requires it to fail.
+    expect(rebuildVerifier).toContain('was overwritten and should not have been')
+    expect(rebuildVerifier).toContain('was cleared and should not have been')
+    expect(rebuildVerifier).toContain('a card that was not rebuilt was given rebuild provenance')
+    // And it re-checks that this migration did not quietly become revision-bearing.
+    expect(rebuildVerifier).toContain('ip_preference_card_content_changed')
+    expect(rebuildVerifier).toContain('ALL CHECKS PASSED')
+  })
+})

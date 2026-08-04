@@ -79,6 +79,14 @@ export const equipmentSetRefSchema = z.object({
 })
 
 /**
+ * A stored equipment set, as identifiers. Exported because the rebuild planner carries whole sets
+ * forward and has to name the shape it is writing rather than inferring it from a `.map()`.
+ */
+export type EquipmentSetRef = z.infer<typeof equipmentSetRefSchema>
+export type CatalogPickRef = z.infer<typeof catalogPickRefSchema>
+export type CustomItemRef = z.infer<typeof customItemSchema>
+
+/**
  * Free-text lines carry no catalog identity to rebuild, so unlike every other pick their
  * content is stored verbatim — bounded, trimmed, and always presented as unverified.
  */
@@ -115,13 +123,16 @@ export const customItemSchema = z.object({
  * - **4 — reviewed family identity.** Product-line selections name a reviewed family version, the
  *   catalog release its membership is true of, and that membership's hash.
  *
- * **No version is ever upgraded in place.** Version 2 is not converted to version 3 on save,
+ * **No version is ever upgraded in place.** Version 2 is not converted to version 3 or 4 on save,
  * on read, or anywhere else. Stamping the current release onto one would move a saved card to a
  * release its author never selected, silently — nothing on the card would say the pin was the
- * system's choice rather than the physician's. Moving a version-2 card forward is reserved for
- * an explicit "rebuild as a new version-3 card" workflow that produces a *new* card and leaves
- * the original intact. That workflow does not exist yet, and its absence is why version 2 is
- * view-only rather than quietly re-saved.
+ * system's choice rather than the physician's. Moving a card forward goes through the reviewed
+ * rebuild instead, which produces a *new* version-4 card from one exact immutable revision and
+ * leaves the original untouched — see `server/rebuild-card.ts` and
+ * `docs/ip-preference-cards/reviewed-rebuild.md`. That workflow deliberately refuses a version-2
+ * source, because a version-2 input records no release and rebuilding it would mean choosing which
+ * rules it was built against; version 2 stays view-only, and now says where the boundary is rather
+ * than only that there is one.
  *
  * Absent is normalized to 2: the only writer that ever omitted it is the composition work
  * that introduced module selections, so an input that satisfies this schema without naming

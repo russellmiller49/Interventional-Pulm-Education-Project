@@ -6,6 +6,7 @@ import { GeneratedCardHeader } from '@/features/preference-cards/components/Gene
 import { PreferenceCardTabs } from '@/features/preference-cards/components/PreferenceCardViews'
 import { CardRowActions } from '@/features/preference-cards/components/CardRowActions'
 import { cardIdSchema } from '@/features/preference-cards/schemas/saved-card'
+import { loadCurrentCardRevision } from '@/features/preference-cards/server/card-revisions'
 import { loadUserCard } from '@/features/preference-cards/server/user-cards'
 
 export const dynamic = 'force-dynamic'
@@ -28,6 +29,11 @@ export default async function GeneratedPreferenceCardPage({ params }: PageProps)
   const record = await loadUserCard(cardId)
   if (!record) notFound()
 
+  // A rebuild cites a revision, never a card id — the card is a moving target and the reference
+  // would point at a state nobody read. The current one is what the control offers; the whole
+  // history is on the reconciliation page.
+  const currentRevision = await loadCurrentCardRevision(cardId)
+
   return (
     <div className="container space-y-8 py-8 md:py-12">
       <GeneratedCardHeader
@@ -38,7 +44,12 @@ export default async function GeneratedPreferenceCardPage({ params }: PageProps)
         status={record.status}
         updatedAt={record.updatedAt}
       />
-      <CardRowActions locale={locale} card={record} layout="page" />
+      <CardRowActions
+        locale={locale}
+        card={record}
+        layout="page"
+        currentRevisionId={currentRevision?.id ?? null}
+      />
       <section className="rounded-3xl border border-border bg-card p-5 shadow-sm md:p-7">
         <PreferenceCardTabs card={record.card} />
       </section>
