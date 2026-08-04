@@ -80,6 +80,34 @@ The main evidence-to-runtime boundaries are implemented in:
 - `src/features/baxter-crrt/components/SourcesPanel.tsx`
 - `src/lib/baxter-crrt-analytics.ts`
 
+### Universal circuit, fluid ledger, and numeric audit (C0/C1)
+
+One circuit-and-fluid model is reused by every later modality explanation, prescription control,
+pressure story, and case. Its geometry, overlays, and pressure semantics are authored data rather
+than component branches, so the fixed orientation is testable rather than a drawing convention.
+
+- `src/features/baxter-crrt/content/circuitModel.ts` — the single coordinate table, the nine overlays,
+  and the authored measured-versus-calculated distinction. Overlay and pressure citations are
+  validated at import against the pilot, supplemental, and device-math registries together, because
+  the Learn surface resolves only the first two and drops unknown ids silently.
+- `src/features/baxter-crrt/circuitFluidLedger.ts` — the conservation ledger, derived from
+  `MATH-PM-001` and `FLUID-PM-002` rather than from new physiology, plus the authored worked example
+  in which 2,100 mL/h of effluent accompanies 100 mL/h of patient loss.
+- `src/features/baxter-crrt/numericAudit.ts` — the flag logic behind the numeric dump, kept in the
+  feature so every flag class is covered by tests rather than only by a script.
+- `src/features/baxter-crrt/components/CrrtPilotCircuit.tsx` — the renderer over that data.
+
+Two module-local harnesses run directly, with nothing added to `package.json`:
+
+```
+npx tsx scripts/baxter-crrt/dump-crrt-numbers.ts
+npx tsx scripts/baxter-crrt/render-crrt-circuit.ts
+```
+
+The dump treats the makeup term explicitly: `MATH-PM-001` carries it into the effluent total and
+`FLUID-PM-002` omits it, so any non-zero makeup flow is flagged rather than displayed as patient
+loss. Authored examples keep it at zero.
+
 Local manuals are reference inputs and remain uncommitted. The repository stores citations,
 revision identifiers, hashes, paraphrased claims, limitations, and original educational visuals—not
 copyrighted manual reproductions.
