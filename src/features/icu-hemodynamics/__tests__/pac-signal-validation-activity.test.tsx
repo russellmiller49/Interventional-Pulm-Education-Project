@@ -292,6 +292,12 @@ describe('PAC signal-validation vertical slice', () => {
     ).toBeInTheDocument()
     expect(screen.getByText('Position introducer')).toBeInTheDocument()
 
+    // H0/H1 §5: the safety prebrief precedes the manipulation controls.
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'I have read the prebrief — open the simulated advancement',
+      }),
+    )
     fireEvent.click(screen.getByRole('button', { name: 'Orient to this skill station' }))
     expect(screen.getByText('Position introducer')).toBeInTheDocument()
     expect(screen.getByText('Orientation 1 of 5')).toBeInTheDocument()
@@ -372,17 +378,24 @@ describe('PAC signal-validation vertical slice', () => {
     ).toBeEnabled()
   })
 
-  it('presents an ungated advancement-first pathway with signal validation last', () => {
+  it('presents an ungated signal-validity-first pathway with signal validation last', () => {
     const onSelect = jest.fn()
-    render(<PacLearningPathwayNav activeSectionId="catheter-advancement" onSelect={onSelect} />)
+    render(<PacLearningPathwayNav activeSectionId="pressure-system" onSelect={onSelect} />)
 
     const sectionButtons = screen.getAllByRole('button')
     expect(sectionButtons).toHaveLength(7)
-    expect(sectionButtons[0]).toHaveAccessibleName(/^1\. Advance the PAC by waveform/)
+    // H0/H1: measurement validity opens the runway; catheter manipulation comes after the learner
+    // can both trust the signal and recognize the normal chamber waveforms.
+    expect(sectionButtons[0]).toHaveAccessibleName(/^1\. Level, zero, and dynamic response/)
+    expect(sectionButtons[1]).toHaveAccessibleName(/^2\. Interpret normal and abnormal waveforms/)
+    expect(sectionButtons[2]).toHaveAccessibleName(/^3\. Advance the PAC by waveform/)
     expect(sectionButtons[6]).toHaveAccessibleName(
       /^7\. PAC signal-validation capstone, integration capstone/,
     )
     expect(sectionButtons[0]).toHaveAttribute('aria-current', 'step')
+
+    // Nothing gates: every station stays selectable, including ones "ahead" of the active one.
+    for (const button of sectionButtons) expect(button).toBeEnabled()
 
     fireEvent.click(
       screen.getByRole('button', {
