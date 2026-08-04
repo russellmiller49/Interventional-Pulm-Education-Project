@@ -215,13 +215,35 @@ describe('CRRT circuit overlays', () => {
     expect(copy).not.toMatch(/mmol|ratio|dose|titrat/i)
   })
 
-  it('includes every active path in the text equivalent', () => {
+  it('gives all nine overlays a complete text equivalent', () => {
+    expect(crrtCircuitOverlayIds).toHaveLength(9)
+
     for (const overlayId of crrtCircuitOverlayIds) {
       const overlay = crrtCircuitOverlay(overlayId)
       const text = crrtCircuitTextEquivalent(overlayId)
+
+      // Names itself, every fluid it runs, where each fluid ends up, and what
+      // the view is for — the four things a reader who cannot see it needs.
+      expect(text).toContain(overlay.label)
+      expect(text).toContain(overlay.summary)
+      expect(text).toContain(overlay.teachingPoint)
       for (const pathId of overlay.activePathIds) {
         expect(text).toContain(crrtCircuitPath(pathId).textEquivalent)
       }
+      expect(text).toMatch(/enters the patient/i)
+
+      // A pressure view must name the measured/calculated split; a citrate view
+      // must name both sampling domains.
+      if (overlay.showsPressureProfile) {
+        expect(text).toMatch(/directly modelled pressure sites/i)
+        expect(text).toMatch(/calculated relationships with no location of their own/i)
+      }
+      if (overlay.showsSamplingDomains) {
+        expect(text).toMatch(/circuit sampling domain/i)
+        expect(text).toMatch(/systemic sampling domain/i)
+      }
+
+      expect(text.trim().length).toBeGreaterThan(200)
     }
   })
 
@@ -295,13 +317,38 @@ describe('CRRT pressure semantics', () => {
   })
 
   it('answers all seven required questions for every pressure', () => {
+    // The closeout list. Each field is required to be substantive prose rather
+    // than a placeholder, so an empty-but-present field cannot pass.
     for (const detail of crrtPressureSignalDetails) {
-      expect(detail.physicalLocation.length).toBeGreaterThan(0)
-      expect(detail.whatProducesTheValue.length).toBeGreaterThan(0)
-      expect(detail.bloodFlowEffect.length).toBeGreaterThan(0)
-      expect(detail.patientOrAccessCauses.length).toBeGreaterThan(0)
-      expect(detail.circuitCauses.length).toBeGreaterThan(0)
-      expect(detail.whenUnreliable.length).toBeGreaterThan(0)
+      const scalar: Readonly<Record<string, string>> = {
+        'physical location': detail.physicalLocation,
+        'what produces the value': detail.whatProducesTheValue,
+        'how blood flow changes it': detail.bloodFlowEffect,
+        'unreliable-signal conditions': detail.whenUnreliable,
+        'first safe inspection and escalation boundary': detail.firstInspectionBoundary,
+      }
+      for (const [requirement, text] of Object.entries(scalar)) {
+        expect({ signal: detail.id, requirement, chars: text.trim().length }).toEqual({
+          signal: detail.id,
+          requirement,
+          chars: expect.any(Number),
+        })
+        expect(text.trim().length).toBeGreaterThan(40)
+      }
+
+      const listed: Readonly<Record<string, readonly string[]>> = {
+        'patient and access causes': detail.patientOrAccessCauses,
+        'circuit causes': detail.circuitCauses,
+      }
+      for (const [requirement, entries] of Object.entries(listed)) {
+        expect({ signal: detail.id, requirement, count: entries.length }).not.toEqual({
+          signal: detail.id,
+          requirement,
+          count: 0,
+        })
+        for (const entry of entries) expect(entry.trim().length).toBeGreaterThan(20)
+      }
+
       expect(detail.firstInspectionBoundary).toMatch(
         /responsible clinical team and the local protocol/i,
       )

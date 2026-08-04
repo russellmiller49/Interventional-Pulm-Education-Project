@@ -16,6 +16,7 @@ import {
   crrtCircuitPathKindStyleByKind,
   crrtCircuitPaths,
   crrtCircuitTextEquivalent,
+  crrtCitrateCalciumTerms,
   crrtOverlayFluidDestinations,
   crrtPressureSignalDetails,
   type CrrtCircuitNodeId,
@@ -149,6 +150,27 @@ const nodeOwnerPathId: Readonly<Partial<Record<CrrtCircuitNodeId, CrrtCircuitPat
 
 function formatMlHour(value: number): string {
   return `${Math.round(value).toLocaleString('en-US')} mL/h`
+}
+
+/**
+ * A suppressed quantity renders as an explicit withholding, never as a dash that
+ * could read as zero and never as a number the sources do not support.
+ */
+function LedgerValue({ value, caption }: { value: number | null; caption: string }) {
+  if (value === null) {
+    return (
+      <dd data-withheld="true">
+        Withheld
+        <small>Not stated while the makeup attribution is unresolved.</small>
+      </dd>
+    )
+  }
+  return (
+    <dd>
+      {formatMlHour(value)}
+      <small>{caption}</small>
+    </dd>
+  )
 }
 
 function SignalValue({ value, unit }: { value: number | null; unit: string }) {
@@ -763,17 +785,17 @@ export function CrrtPilotCircuit({
               </div>
               <div>
                 <dt>Crosses the membrane</dt>
-                <dd>
-                  {formatMlHour(ledger.crossingMembraneMlHour)}
-                  <small>Pulled from the blood side to the fluid side.</small>
-                </dd>
+                <LedgerValue
+                  value={ledger.crossingMembraneMlHour}
+                  caption="Pulled from the blood side to the fluid side."
+                />
               </div>
               <div>
                 <dt>Net fluid returned to the patient</dt>
-                <dd>
-                  {formatMlHour(ledger.netFluidToPatientMlHour)}
-                  <small>Negative means the patient is losing fluid to the machine.</small>
-                </dd>
+                <LedgerValue
+                  value={ledger.netFluidToPatientMlHour}
+                  caption="Negative means the patient is losing fluid to the machine."
+                />
               </div>
               <div data-emphasis="true">
                 <dt>Total effluent</dt>
@@ -784,13 +806,17 @@ export function CrrtPilotCircuit({
               </div>
               <div data-emphasis="true">
                 <dt>Machine patient-fluid-removal term</dt>
-                <dd>
-                  {formatMlHour(ledger.machinePatientFluidRemovalMlHour)}
-                  <small>What the patient actually lost to the machine.</small>
-                </dd>
+                <LedgerValue
+                  value={ledger.machinePatientFluidRemovalMlHour}
+                  caption="What the patient actually lost to the machine."
+                />
               </div>
             </dl>
-            {ledger.effluentPerMillilitreRemoved !== null ? (
+            {ledger.resolution === 'unresolved-makeup-attribution' ? (
+              <p className={styles.ledgerUnresolved} role="note">
+                <strong>This ledger cannot be closed.</strong> {ledger.unresolvedReason}
+              </p>
+            ) : ledger.effluentPerMillilitreRemoved !== null ? (
               <p className={styles.ledgerHeadline}>
                 The effluent bag fills{' '}
                 <strong>
@@ -806,12 +832,21 @@ export function CrrtPilotCircuit({
             )}
             <ul className={styles.conservationList} aria-label="Fluid conservation checks">
               {conservation.map((check) => (
-                <li key={check.id} data-balanced={check.balanced}>
-                  <strong>{check.balanced ? 'Balances' : 'Does not balance'}</strong>
+                <li key={check.id} data-status={check.status}>
+                  <strong>
+                    {check.status === 'balanced'
+                      ? 'Balances'
+                      : check.status === 'unbalanced'
+                        ? 'Does not balance'
+                        : 'Cannot be checked'}
+                  </strong>
                   <span>{check.label}</span>
-                  {check.balanced ? null : (
+                  {check.status === 'balanced' ? null : (
                     <em>
-                      Residual {formatMlHour(check.residualMlHour)}. {check.explanation}
+                      {check.residualMlHour === null
+                        ? ''
+                        : `Residual ${formatMlHour(check.residualMlHour)}. `}
+                      {check.explanation}
                     </em>
                   )}
                 </li>
@@ -852,6 +887,34 @@ export function CrrtPilotCircuit({
             </div>
             <p className={styles.teachingPoint}>{overlay.teachingPoint}</p>
           </section>
+
+          {overlay.showsSamplingDomains ? (
+            <section className={styles.termPanel} aria-labelledby={`${idPrefix}-terms-heading`}>
+              <div className={styles.subheading}>
+                <span>First use</span>
+                <h3 id={`${idPrefix}-terms-heading`}>Words this view introduces</h3>
+              </div>
+              <p className={styles.panelNote}>
+                Where citrate acts and which sample answers which question. This view carries no
+                dose, ratio, target, or timing — those belong to the citrate lesson, not to the
+                circuit.
+              </p>
+              <dl className={styles.termList}>
+                {crrtCitrateCalciumTerms.map((term) => (
+                  <div key={term.id} data-term={term.id}>
+                    <dt>{term.term}</dt>
+                    <dd>
+                      {term.definition}
+                      <em>{term.whyItMatters}</em>
+                      <small data-evidence-ids={term.sourceIds.join(' ')}>
+                        Sources: {term.sourceIds.join(', ')}
+                      </small>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          ) : null}
         </div>
       </div>
     </section>

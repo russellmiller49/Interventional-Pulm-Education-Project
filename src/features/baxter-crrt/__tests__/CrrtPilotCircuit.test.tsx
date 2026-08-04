@@ -10,6 +10,7 @@ import {
   crrtCircuitOverlays,
   crrtCircuitPaths,
   crrtCircuitTextEquivalent,
+  crrtCitrateCalciumTerms,
 } from '../content/circuitModel'
 import {
   PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG,
@@ -334,12 +335,13 @@ describe('CRRT universal educational circuit', () => {
     const items = within(checks).getAllByRole('listitem')
     expect(items).toHaveLength(4)
     for (const item of items) {
-      expect(item).toHaveAttribute('data-balanced', 'true')
+      expect(item).toHaveAttribute('data-status', 'balanced')
     }
     expect(within(checks).queryByText(/Does not balance/)).not.toBeInTheDocument()
+    expect(within(checks).queryByText(/Cannot be checked/)).not.toBeInTheDocument()
   })
 
-  it('shows a live ledger and flags an unexplained makeup term when flows are supplied', () => {
+  it('suppresses the ledger rather than balancing it when a makeup flow is running', () => {
     renderCircuit({
       flows: {
         bloodFlowMlMin: 150,
@@ -355,13 +357,50 @@ describe('CRRT universal educational circuit', () => {
 
     const ledger = screen.getByRole('region', { name: 'Where every millilitre goes' })
     expect(ledger).toHaveTextContent(/Computed from the flows currently set on this circuit/i)
+    expect(ledger).toHaveTextContent(/This ledger cannot be closed/i)
+    expect(ledger).toHaveTextContent(/none of this volume is attributed to patient fluid loss/i)
+
+    // The three dependent quantities are withheld, not printed.
+    expect(within(ledger).getAllByText('Withheld')).toHaveLength(3)
+    // No ratio headline may appear off a suppressed removal term.
+    expect(ledger).not.toHaveTextContent(/times.*faster than the patient loses fluid/i)
 
     const checks = screen.getByRole('list', { name: 'Fluid conservation checks' })
-    const unbalanced = within(checks)
-      .getAllByRole('listitem')
-      .filter((item) => item.getAttribute('data-balanced') === 'false')
-    expect(unbalanced).toHaveLength(1)
-    expect(unbalanced[0]).toHaveTextContent(/Residual 40 mL\/h/)
+    const items = within(checks).getAllByRole('listitem')
+    expect(items.filter((item) => item.getAttribute('data-status') === 'balanced')).toHaveLength(0)
+    expect(
+      items.filter((item) => item.getAttribute('data-status') === 'unresolved').length,
+    ).toBeGreaterThan(0)
+    expect(within(checks).getAllByText('Cannot be checked').length).toBeGreaterThan(0)
+  })
+
+  it('introduces the citrate vocabulary only in the citrate view, each term cited', () => {
+    renderCircuit()
+
+    expect(
+      screen.queryByRole('region', { name: 'Words this view introduces' }),
+    ).not.toBeInTheDocument()
+
+    fireEvent.click(overlayButton('Citrate and calcium path'))
+    const terms = screen.getByRole('region', { name: 'Words this view introduces' })
+
+    for (const term of crrtCitrateCalciumTerms) {
+      expect(within(terms).getByText(term.term)).toBeInTheDocument()
+    }
+    // Every learner-facing term carries its own provenance.
+    const cited = [...terms.querySelectorAll('[data-evidence-ids]')]
+    expect(cited).toHaveLength(crrtCitrateCalciumTerms.length)
+    for (const node of cited) {
+      expect((node.getAttribute('data-evidence-ids') ?? '').trim().length).toBeGreaterThan(0)
+    }
+    // Bounded: the definitions themselves carry no dose, ratio, target, or
+    // timing instruction. Scoped to the term list so the panel's own disclaimer
+    // — which names those words in order to disclaim them — is not the thing
+    // under test.
+    const definitions = terms.querySelector('dl')?.textContent ?? ''
+    expect(definitions.length).toBeGreaterThan(0)
+    expect(definitions).not.toMatch(/mmol|mg\/|\bratio\b|titrat|every \d|\bq\d|\btarget\b/i)
+    expect(definitions).not.toMatch(/\d+(\.\d+)?\s*(mL|mmol|mg|%)/i)
   })
 
   it('communicates running and readiness states with visible text', () => {

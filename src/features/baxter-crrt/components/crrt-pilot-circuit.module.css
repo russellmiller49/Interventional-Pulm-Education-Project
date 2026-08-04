@@ -687,7 +687,8 @@
 .pressurePanel,
 .scalePanel,
 .ledgerPanel,
-.destinationPanel {
+.destinationPanel,
+.termPanel {
   min-width: 0;
   padding: 0.9rem;
   border: 1px solid var(--circuit-line);
@@ -923,6 +924,20 @@
   line-height: 1.4;
 }
 
+.ledgerGrid dd[data-withheld='true'] {
+  color: #ffe0a8;
+}
+
+.ledgerUnresolved {
+  margin: 0.7rem 0 0;
+  padding: 0.7rem 0.8rem;
+  color: #ffeccc;
+  border-left: 4px solid #f1c153;
+  background: rgba(104, 75, 18, 0.42);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
 .ledgerHeadline {
   margin: 0.7rem 0 0;
   padding: 0.7rem 0.8rem;
@@ -951,7 +966,8 @@
   font-size: 0.72rem;
 }
 
-.conservationList > li[data-balanced='false'] {
+.conservationList > li[data-status='unbalanced'],
+.conservationList > li[data-status='unresolved'] {
   border-color: rgba(241, 193, 83, 0.7);
   background: rgba(104, 75, 18, 0.4);
 }
@@ -964,7 +980,8 @@
   text-transform: uppercase;
 }
 
-.conservationList > li[data-balanced='false'] strong {
+.conservationList > li[data-status='unbalanced'] strong,
+.conservationList > li[data-status='unresolved'] strong {
   color: #ffe477;
 }
 
@@ -1140,6 +1157,7 @@
   .ledgerPanel,
   .destinationPanel,
   .legend > span,
+  .termPanel,
   .pressureDetails details {
     border: 1px solid CanvasText;
   }
@@ -1163,7 +1181,8 @@
   }
 
   .ledgerGrid > div[data-emphasis='true'],
-  .conservationList > li[data-balanced='false'] {
+  .conservationList > li[data-status='unbalanced'],
+  .conservationList > li[data-status='unresolved'] {
     border: 2px solid CanvasText;
   }
 }
@@ -1173,4 +1192,55 @@
   font-size: 10px;
   font-weight: 900;
   letter-spacing: 0.07em;
+}
+
+/* ---------------------------------------------------------------- *
+ * First-use terms (citrate view)
+ * ---------------------------------------------------------------- */
+
+.termPanel {
+  min-width: 0;
+  padding: 0.9rem;
+  border: 1px solid var(--circuit-line);
+  border-radius: 16px;
+  background: rgba(7, 27, 33, 0.78);
+}
+
+.termList {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+}
+
+.termList > div {
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--circuit-line);
+  border-radius: 12px;
+  background: rgba(18, 56, 65, 0.65);
+}
+
+.termList dt {
+  color: #75dce3;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.termList dd {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0.2rem 0 0;
+  color: #cfe2e6;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.termList em {
+  color: var(--circuit-muted);
+  font-style: normal;
+}
+
+.termList small {
+  color: #8fa8ae;
+  font-size: 0.64rem;
+  letter-spacing: 0.02em;
 }

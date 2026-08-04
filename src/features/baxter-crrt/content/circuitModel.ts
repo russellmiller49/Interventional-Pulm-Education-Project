@@ -17,8 +17,7 @@ import {
   PRISMAX_TMP_HYDROSTATIC_OFFSET_MMHG,
 } from '../engine/pressureModel'
 import type { CrrtModality } from '../engine/types'
-import { baxterCrrtSupplementalSourceReferences } from './phase7ReviewSources'
-import { baxterCrrtEngineSourceRecords, baxterCrrtPilotSourceReferences } from './provenance'
+import { unresolvableCrrtSourceIds } from './learnerSourceMap'
 
 /* ------------------------------------------------------------------ *
  * Geometry
@@ -1059,30 +1058,120 @@ export function crrtCircuitTextEquivalent(overlayId: CrrtCircuitOverlayId): stri
 }
 
 /* ------------------------------------------------------------------ *
+ * Citrate and calcium: first-use terms only
+ * ------------------------------------------------------------------ */
+
+/**
+ * The vocabulary the citrate view needs, and nothing beyond it.
+ *
+ * This is a bounded topology-and-first-use layer, approved as such. It names
+ * where citrate enters, what it does inside the circuit, where the calcium it
+ * binds can leave, where calcium replacement is given, and which sample
+ * describes which compartment. It deliberately carries no dose, no ratio, no
+ * numeric goal, no titration or timing instruction, and no accumulation
+ * differential — those belong to a later package, and `ConceptualCitrateState`
+ * in the engine draws the same boundary in code.
+ *
+ * Every term is a learner-facing string, so every term carries its own CRRT
+ * provenance rather than inheriting the overlay's.
+ */
+export interface CrrtCitrateCalciumTerm {
+  readonly id: string
+  /** The term as a learner meets it. */
+  readonly term: string
+  /** What it means, in the compartment it belongs to. */
+  readonly definition: string
+  /** Why the distinction matters when reading a result. */
+  readonly whyItMatters: string
+  readonly sourceIds: readonly string[]
+}
+
+const CITRATE_CONTEXT_SOURCE_IDS = Object.freeze([
+  'REVIEW-CKRT-CORE-2025',
+  'TEXT-CRRT-NEYRA-2026',
+  'GUID-RRT-ICU-2026',
+])
+
+export const crrtCitrateCalciumTerms: readonly CrrtCitrateCalciumTerm[] = Object.freeze([
+  {
+    id: 'citrate-entry-point',
+    term: 'Citrate enters before the filter',
+    definition:
+      'Citrate joins the blood path at the pre-blood-pump entry, upstream of both the pump and the membrane.',
+    whyItMatters:
+      'Entering before the filter is what lets it act on the blood while that blood is outside the patient. Where a fluid joins the circuit decides which compartment it acts in.',
+    sourceIds: CITRATE_CONTEXT_SOURCE_IDS,
+  },
+  {
+    id: 'circuit-anticoagulation',
+    term: 'Anticoagulation inside the circuit',
+    definition:
+      'Citrate binds calcium in the blood travelling through the circuit, which is how clotting is slowed there.',
+    whyItMatters:
+      'The intended effect is local to the extracorporeal blood. That is the whole reason the circuit and the patient have to be thought about as two separate compartments.',
+    sourceIds: CITRATE_CONTEXT_SOURCE_IDS,
+  },
+  {
+    id: 'circuit-sample',
+    term: 'Circuit sample',
+    definition:
+      'A sample drawn from the circuit after the filter. It describes conditions inside the circuit.',
+    whyItMatters:
+      'It answers a question about the circuit, not about the patient. Reading it as if it described the patient swaps one compartment for the other.',
+    sourceIds: CITRATE_CONTEXT_SOURCE_IDS,
+  },
+  {
+    id: 'systemic-sample',
+    term: 'Systemic sample',
+    definition: 'A sample drawn from the patient. It describes the patient.',
+    whyItMatters:
+      'A circuit sample and a systemic sample are not interchangeable, and neither one substitutes for the other.',
+    sourceIds: CITRATE_CONTEXT_SOURCE_IDS,
+  },
+  {
+    id: 'citrate-calcium-in-effluent',
+    term: 'Citrate-calcium complexes can leave in the effluent',
+    definition:
+      'Some of what citrate binds crosses the membrane and leaves with everything else on the fluid side.',
+    whyItMatters:
+      'It explains why calcium has to be given back somewhere, and why the effluent is a route out of the circuit for more than water.',
+    sourceIds: CITRATE_CONTEXT_SOURCE_IDS,
+  },
+  {
+    id: 'calcium-replacement',
+    term: 'Calcium replacement',
+    definition:
+      'A separate infusion running to the patient. It is not part of the extracorporeal circuit and does not pass through the filter.',
+    whyItMatters:
+      'It supports the patient rather than the circuit, which is why it is drawn on its own line and why it is judged against a systemic sample.',
+    sourceIds: CITRATE_CONTEXT_SOURCE_IDS,
+  },
+  {
+    id: 'blood-returns-to-patient',
+    term: 'Blood still returns to the patient',
+    definition:
+      'The blood that citrate acted on continues around the circuit and re-enters the patient through the return lumen.',
+    whyItMatters:
+      'The two compartments are connected, not sealed off from one another. That is why a circuit-directed treatment needs a patient-directed one alongside it.',
+    sourceIds: CITRATE_CONTEXT_SOURCE_IDS,
+  },
+])
+
+export const crrtCitrateCalciumTermById: ReadonlyMap<string, CrrtCitrateCalciumTerm> = new Map(
+  crrtCitrateCalciumTerms.map((term) => [term.id, term]),
+)
+
+/* ------------------------------------------------------------------ *
  * Provenance closure
  * ------------------------------------------------------------------ */
 
 /**
- * The registry an overlay citation must resolve in.
- *
- * The Learn surface resolves lesson citations against the pilot and
- * supplemental registries only, and drops anything it cannot find without
- * complaining. `MATH-PM-002` — the TMP formula, the single most important
- * citation on the pressure overlay — lives in the device-math registry alone,
- * so validating against the Learn pair would silently lose it. This union is
- * therefore the right closure, and the check below fails closed rather than
- * letting a citation evaporate.
+ * Every citation the circuit makes must resolve in the merged learner-facing
+ * registry, and this throws at import if one does not. The merge itself lives in
+ * `learnerSourceMap.ts` so a citation cannot resolve here while disappearing on
+ * the Learn surface.
  */
-function knownCrrtSourceIds(): ReadonlySet<string> {
-  return new Set([
-    ...baxterCrrtPilotSourceReferences.map((reference) => reference.id),
-    ...baxterCrrtSupplementalSourceReferences.map((reference) => reference.id),
-    ...baxterCrrtEngineSourceRecords.map((record) => record.id),
-  ])
-}
-
 export function unresolvedCrrtCircuitSourceIds(): readonly string[] {
-  const known = knownCrrtSourceIds()
   const cited = new Set<string>()
   for (const overlay of crrtCircuitOverlays) {
     for (const id of overlay.sourceIds) cited.add(id)
@@ -1090,7 +1179,10 @@ export function unresolvedCrrtCircuitSourceIds(): readonly string[] {
   for (const detail of crrtPressureSignalDetails) {
     for (const id of detail.sourceIds) cited.add(id)
   }
-  return [...cited].filter((id) => !known.has(id)).sort()
+  for (const term of crrtCitrateCalciumTerms) {
+    for (const id of term.sourceIds) cited.add(id)
+  }
+  return unresolvableCrrtSourceIds(cited)
 }
 
 const unresolvedAtImport = unresolvedCrrtCircuitSourceIds()
