@@ -37,8 +37,7 @@ import {
   baxterCrrtPriorPlatformAdvancedBlock,
 } from '../content/learnLessons'
 import type { BaxterCrrtLearnLessonId } from '../content/learnerRegistry'
-import { baxterCrrtSupplementalSourceReferences } from '../content/phase7ReviewSources'
-import { baxterCrrtPilotSourceReferences } from '../content/provenance'
+import { baxterCrrtLearnerFacingSourceById } from '../content/learnerSourceMap'
 import {
   createDefaultProgress,
   readProgress,
@@ -69,12 +68,10 @@ const prismaxReferenceProfile = getBaxterCrrtDeviceProfile('prismax-aw8035-2xx')
 
 const crrtLearningPathway = criticalCareLearningPathway('baxter-crrt')
 
-const crrtSourceById = new Map(
-  [...baxterCrrtPilotSourceReferences, ...baxterCrrtSupplementalSourceReferences].map((source) => [
-    source.id,
-    source,
-  ]),
-)
+// Resolves against all three registries, not two. The device-math registry
+// holds MATH-PM-002 and FLUID-PM-002, which are cited by lessons and by the
+// circuit but used to resolve nowhere and disappear without a warning.
+const crrtSourceById = baxterCrrtLearnerFacingSourceById
 
 function validLessonId(value: string | undefined): value is BaxterCrrtLearnLessonId {
   return value !== undefined && baxterCrrtLearnLessonById.has(value as BaxterCrrtLearnLessonId)
