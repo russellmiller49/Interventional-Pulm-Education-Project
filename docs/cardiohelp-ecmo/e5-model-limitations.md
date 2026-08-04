@@ -208,3 +208,95 @@ the femoral saturation 93.7 → 96.5 → 97.9 → 98.5 over the first eight mode
 right radial and femoral values are equal at t=0. Opening a VA lesson at frame zero would therefore
 show no differential at all. `REFERENCE_SETTLE_SECONDS = 8` covers this for both tracks; do not
 remove it.
+
+---
+
+# Two owner decisions taken after the B3/B4 vertical slice
+
+Both came out of adversarial review of the six pilot drill panels. Both were engine changes, and
+both were explicitly authorised because the defect was a safety or honesty one rather than a
+refinement.
+
+## 8. Air resumption is one bounded action, not a taught clamp order
+
+**What was wrong.** The module taught: correct and de-air, open the drainage limb, open the return
+limb, then reset the console latch to restart the pump. That order walks the learner through both
+near-patient limbs open on a stopped centrifugal pump — and a centrifugal head is non-occlusive, so
+nothing holds a column in place. The panel taught that non-occlusiveness two blocks above the step
+that contradicted it.
+
+**What was decided.** The module does not teach any universal clamp/pump/reset choreography for
+coming back, because no single order is supported by both the current CARDIOHELP instructions for
+use and every approved local protocol. What is preserved is everything up to and including
+de-airing: recognise the event and the device stop, clamp the return limb near the patient, complete
+isolation, identify and correct the source, de-air and verify.
+
+**What replaced it.** `RESUME_SUPPORT_AFTER_BUBBLE` — "resume support using the verified
+manufacturer and local protocol" — which moves the circuit from corrected-and-isolated to safely
+running in one transition. It is deliberately neither a clamp action nor the console reset button:
+making the reset button appear to operate circuit clamps would be a different false claim.
+
+Preserved: source correction and de-airing remain prerequisites; a premature resume is still
+`premature-bubble-reset`; a premature unclamp is still `unsafe-unclamp-before-deair`.
+
+**The new invariant.** Once the air source is recorded as corrected, no accepted path reaches both
+limbs open with the pump stopped. Opening the last closed limb by hand while the bubble latch still
+holds the pump is refused (and still charged if the air is outstanding). The refusal is scoped to
+the latch on purpose — both limbs open with a stopped pump is the ordinary pre-use state of every
+circuit in this module, and making it globally illegal would break startup.
+
+Applies to: the VV and VA bubble lessons, their panels, the guided-lesson validator, and both
+clinical air-embolism cases, whose two unclamp interventions became one `air-resume-support`.
+
+## 9. Drainage-limited flow is a capacity, not a multiplier
+
+**What was wrong.** `preload-limited` (and its three guard-family siblings) multiplied the pump
+curve by a constant. Displayed flow — and, through it, the modelled patient's saturation — therefore
+rose with every extra revolution, while the reducer charged `rpm-during-collapse` as a critical
+error for exactly that action. A learner who tested the reflex watched the patient improve and was
+scored as though they had harmed them. A model boundary telling the learner to ignore the patient
+response was not an acceptable substitute for fixing it.
+
+**What replaced it.** A scenario-authored drainage capacity. `ScenarioDefinition.drainageCapacityLpm`
+overrides a per-fault default; `resolveDrainageLimitation` reports the demand, the capacity and the
+shortfall. Below the capacity, flow tracks the pump curve normally. Past it, delivered flow _falls_
+as demand climbs, drainage pressure deepens in proportion to the shortfall, and the judder appears.
+
+| Fault                     | Default capacity (L/min) | Suction base (mmHg) | Suction per L/min of shortfall |
+| ------------------------- | ------------------------ | ------------------- | ------------------------------ |
+| `preload-limited`         | 3.5                      | −35                 | 42                             |
+| `hemorrhagic-hypovolemia` | 3.3                      | −45                 | 75                             |
+| `tension-pneumothorax`    | 3.1                      | −65                 | 79                             |
+| `tamponade`               | 3.1                      | −65                 | 79                             |
+
+All bounded educational-model quantities. None is a threshold, and none is a flow any real patient
+is limited to. The suction constants were calibrated so each case's drainage pressure at its own
+opening speed is unchanged from the previous model.
+
+**Guard alignment.** `rpm-during-collapse` now fires when the _new_ speed asks for more than the
+drainage can supply, rather than on any increase. A learner who backed the pump well off and is
+bringing it back inside the supported range is no longer penalised for an action the model itself
+treats as helpful.
+
+**Guard-family audit.** All four faults that share the guard were aligned rather than narrowed: they
+differ in why drainage is short but share the shape that matters, so the shape is modelled once.
+
+**The shape, from `npm run dump:ecmo-signals`** (`preload-drainage-collapse`, capacity 3.50 L/min):
+
+| rpm  | demand | flow | pVen | chatter | SpO2 | past capacity | guard |
+| ---- | ------ | ---- | ---- | ------- | ---- | ------------- | ----- |
+| 2400 | 3.04   | 3.04 | −35  | —       | 93.2 | —             | —     |
+| 2800 | 3.54   | 3.19 | −37  | —       | 94.4 | yes           | —     |
+| 3200 | 4.05   | 3.01 | −58  | —       | 93.8 | yes           | —     |
+| 3600 | 4.56   | 2.83 | −80  | yes     | 93.1 | yes           | —     |
+| 4000 | 5.06   | 2.65 | −101 | yes     | 92.5 | yes           | yes   |
+| 4800 | 6.08   | 2.30 | −143 | yes     | 91.3 | yes           | yes   |
+
+Flow peaks _at_ the capacity and falls past it, which is the whole teaching point: only samples both
+past the capacity are comparable, and the authored 3600 → 3300 action moves flow up and suction
+back. Backing the speed off is never charged. The underlying fault stays active until the
+patient/cannula/drainage cause itself is corrected, so the reduction never reads as a cure.
+
+**What did not change.** A2 recirculation is untouched — displayed flow still rises while effective
+flow falls, under its own separately-named guard. The cross-surface causal-consistency claim for
+drainage collapse no longer needs the `authoredContextDifference` exception it used to carry.

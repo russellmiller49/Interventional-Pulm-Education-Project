@@ -64,6 +64,12 @@ If they commit to raising speed, let them do it on the rotary control and watch 
 live line — displayed flow up, effective flow down — lands. That is the single most important
 observation in this script.
 
+**Then do the same in the drainage drill** (_Falling flow with increasingly negative pVen_), where
+the model now behaves the opposite way: past the drainage the case can supply, raising speed makes
+displayed flow _fall_, the suction deepen, and the judder appear. Two drills, two different answers
+to "what does more speed buy you" — watch whether a participant carries the recirculation answer
+into the drainage case, or reads each circuit on its own.
+
 ### 3. Gas-source loss with preserved blood flow
 
 Open **Gas transfer falls while blood flow persists** and advance to the event.
@@ -81,11 +87,22 @@ Open **Arterial bubble alarm with pump stop** and advance to the event.
 Ask: _the pump has stopped on its own. What has that achieved, and what has to happen before this
 circuit carries blood again?_
 
-Watch for: whether they distinguish **source correction**, **circuit isolation**, **de-airing**, and
-**reset** as four separate acts, or collapse them into "deal with the alarm"; whether they believe a
-stopped pump has isolated the patient; whether the falling saturation pushes them toward an early
-reset. Let them attempt a premature reset if they choose to — the safety response is part of what is
+Watch for: whether they distinguish **circuit isolation**, **source correction**, **de-airing**, and
+**resumption** as separate acts, or collapse them into "deal with the alarm"; whether they believe a
+stopped pump has isolated the patient; whether the falling saturation pushes them toward resuming
+early. Let them attempt an early resume if they choose to — the safety response is part of what is
 being tested.
+
+Then watch the resumption step specifically. The module teaches isolation and source control, and
+then hands the learner one bounded action — _resume support using the verified manufacturer and
+local protocol_ — rather than a clamp, pump and reset order. **The question to ask afterwards is
+whether they understood that the lab deliberately did not tell them the order**, or whether they
+came away thinking there was no order to know. The first is the intended reading; the second is a
+failure of the abstraction and should be recorded as one.
+
+Also try to open the last clamp by hand after correcting the source. The model refuses, and the
+learner should be able to say why — the patient would be back on both limbs of a circuit that is not
+moving blood.
 
 ### 5. Right radial low, femoral preserved
 
@@ -132,7 +149,8 @@ verdict, the simulator state, and each pane's scroll position.
 
 - A participant cannot say why a channel is blank after task 1.
 - A participant leaves task 2 believing more speed is the treatment for recirculation.
-- A participant collapses the four bubble acts into one after task 4.
+- A participant collapses the bubble acts into one after task 4, or leaves believing there is no
+  clamp/pump/reset order to learn at all rather than that this lab declines to teach one.
 - A participant leaves task 5 believing circuit flow is clinically irrelevant to the mixing point.
 - A participant loses their answer, their step, or their place when the window changes in task 6.
 - A participant reads the mechanism before committing a prediction. This should be structurally
