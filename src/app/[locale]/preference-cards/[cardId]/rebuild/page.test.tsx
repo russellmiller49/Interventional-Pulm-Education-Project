@@ -111,6 +111,7 @@ function preparation(): CardRebuildPreparationResult {
           recipeVersionId: 'recipe-fixture-procedure-v1-1',
           sourceProcedureCode: 'FIXTURE_PROCEDURE',
         },
+        comparisons: { operationalHash: '2'.repeat(64), releaseDiffHash: '3'.repeat(64) },
         decisions: [
           {
             key: 'requirement:FIXTURE_BACKUP_SCOPE',
@@ -161,10 +162,24 @@ function preparation(): CardRebuildPreparationResult {
             carriedSelection: null,
             carriedConditionalState: null,
           },
+          {
+            key: 'waiver:unresolved-required-SLOT-FIXTURE-PRIMARY',
+            kind: 'waiver',
+            state: 'not_carried',
+            reasonCodes: ['waiver_never_carries'],
+            requiresExplicitConfirmation: true,
+            blocking: false,
+            warningCode: 'required_role_unresolved',
+            warningSourceType: 'slot',
+            warningSourceId: 'SLOT-FIXTURE-PRIMARY',
+            requirementKey: 'FIXTURE_PRIMARY_SCOPE',
+            priorRationale: 'Accepted for this case only.',
+            targetWarningId: 'unresolved-required-SLOT-FIXTURE-PRIMARY',
+          },
         ],
         proposedInputs: {} as never,
         blockingCount: 0,
-        reviewCount: 1,
+        reviewCount: 2,
       },
       planHash: '1'.repeat(64),
       operational: { ok: true, delta: { identical: true } as never },
@@ -216,8 +231,9 @@ it('offers exactly one thing that writes, and it creates a separate card', async
 it('requires an answer for every decision that needs one, and asks for none otherwise', async () => {
   const { container } = await renderPage()
   const radios = container.querySelectorAll('input[type="radio"]')
-  // One decision requires review and offers confirm-or-drop; the unchanged one asks nothing.
-  expect(radios).toHaveLength(2)
+  // Three: confirm-or-drop for the requirement whose definition moved, and one acknowledgement for
+  // the prior waiver. The `carried_unchanged` requirement asks nothing.
+  expect(radios).toHaveLength(3)
   for (const radio of radios) expect(radio).toHaveAttribute('required')
   expect(
     container.querySelector('input[name="decision:requirement:FIXTURE_PRIMARY_SCOPE"]'),
@@ -262,6 +278,28 @@ it.each([
   // An unavailable rebuild offers nothing that writes, and says the source is intact.
   expect(screen.queryAllByRole('button')).toHaveLength(0)
   expect(screen.getByText(/The card itself is unaffected/i)).toBeInTheDocument()
+})
+
+it('renders the prior waiver in its own group rather than among removed requirements', async () => {
+  const { container } = await renderPage()
+  // Every waiver decision is `not_carried` by construction, so a group filtered on
+  // `state !== 'not_carried'` matched nothing and the rationale fell into the removed-requirements
+  // list, where it read as equipment rather than as a judgement somebody has to make again.
+  expect(screen.getByText(/Accepted for this case only/i)).toBeInTheDocument()
+  // The group's own help text plus the decision's reason line — the point is that both render at
+  // all, which they did not when the group filtered on a state no waiver can have.
+  expect(screen.getAllByText(/A waiver is never carried/i).length).toBeGreaterThan(0)
+  expect(
+    container.querySelector(
+      'input[name="decision:waiver:unresolved-required-SLOT-FIXTURE-PRIMARY"]',
+    ),
+  ).not.toBeNull()
+})
+
+it('shows the comparisons its provenance will record', async () => {
+  await renderPage()
+  expect(screen.getByText(/Hospital-local comparison/i)).toBeInTheDocument()
+  expect(screen.getByText(/Authored-release comparison/i)).toBeInTheDocument()
 })
 
 it('shows why a submitted review was refused, and keeps the decisions on screen', async () => {

@@ -217,10 +217,12 @@ export function CardRebuildReview({
     (decision) => decision.state === 'carried_requires_review',
   )
   const added = plan.decisions.filter((decision) => decision.state === 'new_requirement')
-  const removed = plan.decisions.filter(
-    (decision) => decision.state === 'removed_requirement' || decision.state === 'not_carried',
-  )
   const waivers = plan.decisions.filter((decision) => decision.kind === 'waiver')
+  const removed = plan.decisions.filter(
+    (decision) =>
+      decision.kind !== 'waiver' &&
+      (decision.state === 'removed_requirement' || decision.state === 'not_carried'),
+  )
   const blocking = plan.decisions.filter((decision) => decision.blocking)
 
   return (
@@ -253,6 +255,29 @@ export function CardRebuildReview({
               {t('rebuild.planHashLabel')}
             </dt>
             <dd className="mt-1 font-mono text-xs text-foreground">{planHash.slice(0, 16)}</dd>
+          </div>
+          {/*
+            Both comparisons are written into the new card's provenance as what was compared, so
+            they are shown here rather than only recorded. They are inside the plan hash as well —
+            the operational one re-reads current hospital-local data, which is precisely what moves
+            underneath a card, and a provenance field outside the hash could otherwise differ
+            between the page rendering and the form posting.
+          */}
+          <div>
+            <dt className="text-xs font-semibold text-muted-foreground">
+              {t('rebuild.operationalHashLabel')}
+            </dt>
+            <dd className="mt-1 font-mono text-xs text-foreground">
+              {plan.comparisons.operationalHash.slice(0, 16)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs font-semibold text-muted-foreground">
+              {t('rebuild.releaseDiffHashLabel')}
+            </dt>
+            <dd className="mt-1 font-mono text-xs text-foreground">
+              {plan.comparisons.releaseDiffHash.slice(0, 16)}
+            </dd>
           </div>
         </dl>
         <p className="rounded-2xl border border-border bg-muted/40 p-4 text-sm leading-6 text-foreground">
@@ -316,9 +341,14 @@ export function CardRebuildReview({
           <DecisionGroup
             title={t('rebuild.waiverHeading')}
             help={t('rebuild.waiverHelp')}
-            decisions={waivers.filter(
-              (decision) => !decision.blocking && decision.state !== 'not_carried',
-            )}
+            /*
+              Every waiver decision is `not_carried` — that is the rule, not an outcome — so the
+              group is filtered on whether it still needs an answer rather than on its state. The
+              previous filter excluded the only state a waiver can have and rendered nothing, which
+              pushed prior rationales into the removed-requirements list where they read as
+              equipment rather than as a judgement somebody has to make again.
+            */
+            decisions={waivers}
             unanswered={unanswered}
           />
 

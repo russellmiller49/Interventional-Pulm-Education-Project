@@ -102,6 +102,7 @@ export type RebuildReasonCode =
   | 'requirement_added_by_target'
   | 'requirement_removed_by_target'
   | 'requirement_key_absent_from_snapshot'
+  | 'requirement_key_ambiguous'
   | 'provenance_only_module_move'
   // What was selected
   | 'selection_absent_in_source'
@@ -286,6 +287,18 @@ export interface CardRebuildPlan {
     recipeVersionId: string
     sourceProcedureCode: string
   }
+  /**
+   * The two read-only comparisons this review was taken against, by hash.
+   *
+   * Inside the hashed plan because they are written into the new card's provenance as *what was
+   * compared*, and a provenance field outside the plan hash can move between the page rendering and
+   * the form posting — recording a comparison nobody was shown. The operational half in particular
+   * reads current hospital-local data, which is exactly the thing that changes underneath a card.
+   */
+  comparisons: {
+    operationalHash: string
+    releaseDiffHash: string
+  }
   /** Sorted by key. Every decision the review gate reads, in one list. */
   decisions: RebuildDecision[]
   /**
@@ -385,6 +398,11 @@ export interface RebuildPlanInput {
   selection: {
     moduleVersionIds: string[]
     modifierCodes: string[]
+  }
+  /** Hashes of the operational and authored-release comparisons the caller computed. */
+  comparisons: {
+    operationalHash: string
+    releaseDiffHash: string
   }
   probe: RebuildProbe
 }
@@ -533,12 +551,36 @@ function sourceRequirementIndex(card: UnhashedResolvedCard) {
   return index
 }
 
-function slotIndex(slots: RecipeSlot[]): Map<string, RecipeSlot> {
-  const index = new Map<string, RecipeSlot>()
+/**
+ * Requirements by reviewed identity, and the keys that more than one slot claims.
+ *
+ * `expandRecipeComposition` already collapses or blocks a duplicated `requirementKey`, so on
+ * today's data the ambiguous set is always empty. It is computed anyway, and blocks rather than
+ * resolves, because this function is the *only* place a requirement key becomes a single slot and
+ * "something upstream guarantees uniqueness" is a property of another module that this one would
+ * silently depend on. Taking the first of two slots would mean carrying a physician's selection
+ * onto whichever requirement happened to sort first — a guess, wearing the costume of a match.
+ *
+ * A modifier-added or rescue-module requirement reaches the effective slot list without passing
+ * through the composition's merge, which is exactly the route by which a duplicate could arrive.
+ */
+function slotIndex(slots: RecipeSlot[]): {
+  byKey: Map<string, RecipeSlot>
+  ambiguous: Set<string>
+} {
+  const byKey = new Map<string, RecipeSlot>()
+  const ambiguous = new Set<string>()
   for (const slot of slots) {
-    if (!index.has(slot.requirementKey)) index.set(slot.requirementKey, slot)
+    const existing = byKey.get(slot.requirementKey)
+    if (!existing) {
+      byKey.set(slot.requirementKey, slot)
+      continue
+    }
+    // Two slots that are byte-identical in everything the comparison reads are one requirement
+    // expressed twice, not two requirements. Only a genuine disagreement is ambiguous.
+    if (changedDefinitionFields(existing, slot).length > 0) ambiguous.add(slot.requirementKey)
   }
-  return index
+  return { byKey, ambiguous }
 }
 
 /**
@@ -710,12 +752,15 @@ export function proposeRebuildSelection(input: {
  * singleton.
  */
 export function planCardRebuild(input: RebuildPlanInput): CardRebuildPlan {
-  const { source, target, probe, selection } = input
+  const { source, target, probe, selection, comparisons } = input
 
   const decisions: RebuildDecision[] = []
   const sourceItems = sourceRequirementIndex(source.card)
-  const sourceSlots = slotIndex(source.slots)
-  const targetSlots = slotIndex(target.slots)
+  const sourceIndex = slotIndex(source.slots)
+  const targetIndex = slotIndex(target.slots)
+  const sourceSlots = sourceIndex.byKey
+  const targetSlots = targetIndex.byKey
+  const ambiguousKeys = new Set([...sourceIndex.ambiguous, ...targetIndex.ambiguous])
   const sourceModuleCodeByVersionId = moduleCodesByVersionId(source.releaseBundle)
   const targetModuleCodeByVersionId = moduleCodesByVersionId(target.releaseBundle)
 
@@ -734,6 +779,46 @@ export function planCardRebuild(input: RebuildPlanInput): CardRebuildPlan {
     const sourceEntry = sourceItems.get(requirementKey)
     const sourceSlot = sourceSlots.get(requirementKey)
     const targetSlot = targetSlots.get(requirementKey)
+
+    // Two slots on one side disagree about what this requirement is. There is no answer to "which
+    // one did the physician choose for", so the plan refuses to have one: nothing is carried and
+    // the rebuild is blocked until the release is fixed. Picking either would be a coin toss
+    // recorded as a reviewed decision.
+    if (ambiguousKeys.has(requirementKey)) {
+      decisions.push({
+        key: requirementDecisionKey(requirementKey),
+        kind: 'requirement',
+        requirementKey,
+        state: 'incompatible',
+        reasonCodes: ['requirement_key_ambiguous'],
+        requiresExplicitConfirmation: false,
+        blocking: true,
+        source: sourceEntry
+          ? {
+              slotId: sourceEntry.item.id,
+              roleCode: sourceEntry.item.roleCode,
+              label: sourceEntry.item.label,
+              presence: sourceEntry.presence,
+              selection: readSelection(sourceEntry.item, source.inputs),
+              conditionalState: sourceEntry.item.conditionalState,
+            }
+          : null,
+        target: targetSlot
+          ? {
+              slotId: targetSlot.id,
+              roleCode: targetSlot.roleCode,
+              label: targetSlot.label,
+              requiredness: targetSlot.requiredness,
+              allowCustom: targetSlot.allowCustom,
+              dependencyRule: targetSlot.dependencyRule,
+            }
+          : null,
+        changedDefinitionFields: [],
+        carriedSelection: null,
+        carriedConditionalState: null,
+      })
+      continue
+    }
 
     if (!targetSlot) {
       // The target release does not express this requirement. Nothing is carried and nothing is
@@ -1120,6 +1205,7 @@ export function planCardRebuild(input: RebuildPlanInput): CardRebuildPlan {
       recipeVersionId: target.releaseBundle.recipeVersionId,
       sourceProcedureCode: target.releaseBundle.sourceProcedureCode,
     },
+    comparisons,
     decisions,
     proposedInputs,
     blockingCount: decisions.filter((decision) => decision.blocking).length,
@@ -1214,6 +1300,24 @@ export function blockingDecisions(plan: CardRebuildPlan): RebuildDecision[] {
 }
 
 /**
+ * Blocking decisions that no answer can dispose of.
+ *
+ * Most blocking decisions *are* answerable: a required requirement the target adds cannot be filled
+ * in here, so it is acknowledged and the draft carries the gap into the builder. That is the
+ * designed path and it is not an error.
+ *
+ * An ambiguous requirement key is different in kind. Two slots disagree about what one requirement
+ * is, so there is no selection to acknowledge and no draft that could be honest about it — the
+ * release itself has to be fixed. Those decisions are blocking *and* carry no answer, and
+ * `createRebuiltCard` refuses outright rather than creating a card nobody could interpret.
+ */
+export function unanswerableBlockingDecisions(plan: CardRebuildPlan): RebuildDecision[] {
+  return plan.decisions.filter(
+    (decision) => decision.blocking && !decision.requiresExplicitConfirmation,
+  )
+}
+
+/**
  * What a physician may say about one decision.
  *
  * Three answers, and deliberately no fourth that means "all of the above". There is no
@@ -1292,11 +1396,16 @@ export function reviewRebuildAcknowledgements(
 
   for (const decision of plan.decisions) {
     const answer = acknowledgements[decision.key]
-    if (!decision.requiresExplicitConfirmation) continue
     if (answer === undefined) {
-      missing.push(decision.key)
+      if (decision.requiresExplicitConfirmation) missing.push(decision.key)
       continue
     }
+    // Every *supplied* answer is checked, including one on a decision that required none. Skipping
+    // those let a caller attach `dropped` to a `carried_unchanged` requirement: the answer changed
+    // nothing, because `applyRebuildAcknowledgements` only drops what required confirmation — and
+    // it was still written verbatim into the card's provenance, which would then record a decision
+    // to discard a selection the card in fact carries. Provenance is evidence; an answer that had
+    // no effect must not be able to appear in it as though it did.
     if (!allowedAcknowledgements(decision).includes(answer)) invalid.push(decision.key)
   }
 

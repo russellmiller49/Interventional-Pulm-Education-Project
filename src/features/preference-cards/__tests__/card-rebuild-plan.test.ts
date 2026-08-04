@@ -5,6 +5,7 @@ import {
   proposeRebuildSelection,
   rebuildPlanHash,
   reviewRebuildAcknowledgements,
+  unanswerableBlockingDecisions,
   type CardRebuildPlan,
   type RebuildPlanInput,
   type RebuildProbe,
@@ -193,6 +194,7 @@ function plan(
     probe?: RebuildProbe
     selection?: { moduleVersionIds: string[]; modifierCodes: string[] }
     targetModifierHashes?: Record<string, string>
+    comparisons?: { operationalHash: string; releaseDiffHash: string }
   } = {},
 ): CardRebuildPlan {
   const sourceInputs = overrides.inputs ?? inputs()
@@ -227,6 +229,10 @@ function plan(
     selection: overrides.selection ?? {
       moduleVersionIds: [FIXTURE_MODULE_V1_1],
       modifierCodes: sourceInputs.input.modifierCodes,
+    },
+    comparisons: overrides.comparisons ?? {
+      operationalHash: '7'.repeat(64),
+      releaseDiffHash: '8'.repeat(64),
     },
     probe: overrides.probe ?? permissiveProbe(),
   }
@@ -338,6 +344,7 @@ describe('matching is by reviewed requirement identity and nothing else', () => 
         modifierDefinitionHashes: {},
       },
       selection: { moduleVersionIds: [], modifierCodes: [] },
+      comparisons: { operationalHash: '7'.repeat(64), releaseDiffHash: '8'.repeat(64) },
       probe: permissiveProbe(),
     })
 
@@ -483,6 +490,7 @@ describe('a selection crosses only by exact stable identity', () => {
         modifierDefinitionHashes: {},
       },
       selection: { moduleVersionIds: [], modifierCodes: [] },
+      comparisons: { operationalHash: '7'.repeat(64), releaseDiffHash: '8'.repeat(64) },
       probe: permissiveProbe(),
     })
 
@@ -525,6 +533,7 @@ describe('a selection crosses only by exact stable identity', () => {
         modifierDefinitionHashes: {},
       },
       selection: { moduleVersionIds: [], modifierCodes: [] },
+      comparisons: { operationalHash: '7'.repeat(64), releaseDiffHash: '8'.repeat(64) },
       probe: permissiveProbe(),
     })
 
@@ -617,6 +626,7 @@ describe('conditional state survives only an unchanged rule', () => {
         modifierDefinitionHashes: {},
       },
       selection: { moduleVersionIds: [], modifierCodes: [] },
+      comparisons: { operationalHash: '7'.repeat(64), releaseDiffHash: '8'.repeat(64) },
       probe: permissiveProbe(),
     })
 
@@ -672,6 +682,7 @@ describe('modifiers carry on an exact definition hash', () => {
         modifierDefinitionHashes: {},
       },
       selection: { moduleVersionIds: [], modifierCodes: [] },
+      comparisons: { operationalHash: '7'.repeat(64), releaseDiffHash: '8'.repeat(64) },
       probe: permissiveProbe(),
     })
     const modifier = decision(result, 'modifier:FIXTURE_MODIFIER')
@@ -802,6 +813,18 @@ describe('the plan is deterministic and addressable', () => {
     const before = rebuildPlanHash(plan({ card: withSelection }))
     const after = rebuildPlanHash(
       plan({ card: withSelection, probe: permissiveProbe({ hospitalItemOffered: () => false }) }),
+    )
+    expect(after).not.toBe(before)
+  })
+
+  it('covers the comparisons the review was taken against', () => {
+    // These two are written into write-once provenance as *what was compared*. Outside the hash
+    // they could move between the page rendering and the form posting, and the card would record a
+    // comparison nobody was shown — the operational half reads current hospital-local data, which
+    // is exactly the thing that moves underneath a card.
+    const before = rebuildPlanHash(plan())
+    const after = rebuildPlanHash(
+      plan({ comparisons: { operationalHash: '9'.repeat(64), releaseDiffHash: '8'.repeat(64) } }),
     )
     expect(after).not.toBe(before)
   })
@@ -953,6 +976,111 @@ describe('answers become the inputs the new card is built from', () => {
     expect(applied.catalogPicks).toHaveLength(1)
     expect(applied.input.selectedHospitalItemIds?.[PRIMARY_SLOT]).toBe(sharedProduct)
     expect(applied.input.selectedHospitalItemIds?.[BACKUP_SLOT]).toBeNull()
+  })
+})
+
+describe('an ambiguous requirement key blocks rather than choosing', () => {
+  /** Two target slots claiming one key, disagreeing about what the requirement is. */
+  function ambiguousTargetSlots() {
+    const conflicting = {
+      ...targetSlots.find((slot) => slot.requirementKey === PRIMARY_KEY)!,
+      id: 'SLOT-FIXTURE-PRIMARY-DUPLICATE',
+      requiredness: 'optional' as const,
+      label: 'Primary scope, expressed a second way',
+    }
+    return [...targetSlots, conflicting]
+  }
+
+  function ambiguousPlan() {
+    return planCardRebuild({
+      source: {
+        cardId: 'c',
+        revisionId: 'r',
+        revisionNumber: 1,
+        inputs: inputs(),
+        card: snapshot({
+          items: [item({ id: PRIMARY_SLOT, selectedHospitalItemId: 'local-scope-1' })],
+        }),
+        slots: sourceSlots,
+        releaseBundle: alpha,
+        modifierDefinitionHashes: {},
+      },
+      target: {
+        slots: ambiguousTargetSlots(),
+        releaseBundle: bravo,
+        offeredModules: [],
+        allowedModifierCodes: [],
+        modifierDefinitionHashes: {},
+      },
+      selection: { moduleVersionIds: [], modifierCodes: [] },
+      comparisons: { operationalHash: '7'.repeat(64), releaseDiffHash: '8'.repeat(64) },
+      probe: permissiveProbe(),
+    })
+  }
+
+  it('refuses to pick one of two slots claiming the same requirement', () => {
+    const primary = decision(ambiguousPlan(), `requirement:${PRIMARY_KEY}`)
+    expect(primary.state).toBe('incompatible')
+    expect(primary.reasonCodes).toContain('requirement_key_ambiguous')
+    expect(primary.blocking).toBe(true)
+  })
+
+  it('carries nothing for it, rather than carrying onto whichever sorted first', () => {
+    const result = ambiguousPlan()
+    expect(result.proposedInputs.input.selectedHospitalItemIds).not.toHaveProperty(PRIMARY_SLOT)
+    expect(result.proposedInputs.input.selectedHospitalItemIds).not.toHaveProperty(
+      'SLOT-FIXTURE-PRIMARY-DUPLICATE',
+    )
+  })
+
+  it('is unanswerable, so no acknowledgement can dispose of it', () => {
+    const result = ambiguousPlan()
+    const primary = decision(result, `requirement:${PRIMARY_KEY}`)
+    expect(primary.requiresExplicitConfirmation).toBe(false)
+    expect(unanswerableBlockingDecisions(result).map((entry) => entry.key)).toContain(
+      `requirement:${PRIMARY_KEY}`,
+    )
+    // The review gate never asks about it, which is exactly why the server checks both: answering
+    // every question the gate does ask would otherwise be enough to create the card.
+    const review = reviewRebuildAcknowledgements(result, {})
+    expect(review.ok === false && review.missing).not.toContain(`requirement:${PRIMARY_KEY}`)
+    expect(review.ok === false && review.invalid).not.toContain(`requirement:${PRIMARY_KEY}`)
+  })
+
+  it('treats a requirement expressed twice identically as one requirement, not an ambiguity', () => {
+    const duplicated = [
+      ...targetSlots,
+      {
+        ...targetSlots.find((slot) => slot.requirementKey === PRIMARY_KEY)!,
+        id: 'SLOT-FIXTURE-PRIMARY-COPY',
+      },
+    ]
+    const result = planCardRebuild({
+      source: {
+        cardId: 'c',
+        revisionId: 'r',
+        revisionNumber: 1,
+        inputs: inputs(),
+        card: snapshot({
+          items: [item({ id: PRIMARY_SLOT, selectedHospitalItemId: 'local-scope-1' })],
+        }),
+        slots: sourceSlots,
+        releaseBundle: alpha,
+        modifierDefinitionHashes: {},
+      },
+      target: {
+        slots: duplicated,
+        releaseBundle: bravo,
+        offeredModules: [],
+        allowedModifierCodes: [],
+        modifierDefinitionHashes: {},
+      },
+      selection: { moduleVersionIds: [], modifierCodes: [] },
+      comparisons: { operationalHash: '7'.repeat(64), releaseDiffHash: '8'.repeat(64) },
+      probe: permissiveProbe(),
+    })
+    // Same id is excluded from the comparison, so two byte-identical expressions collapse.
+    expect(decision(result, `requirement:${PRIMARY_KEY}`).state).toBe('carried_unchanged')
   })
 })
 

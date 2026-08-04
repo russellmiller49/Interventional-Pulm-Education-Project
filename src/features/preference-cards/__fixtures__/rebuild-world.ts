@@ -3,6 +3,7 @@ import type {
   BuildContext,
   HospitalItem,
   HospitalRoleOption,
+  ModifierDefinition,
   ScenarioDefinition,
 } from '../domain/types'
 import type { PreferenceCardReleaseBundle } from '../domain/release-bundle'
@@ -32,6 +33,43 @@ import {
 
 export const FIXTURE_PRIMARY_ITEM_ID = 'fixture-item-primary'
 export const FIXTURE_ALTERNATE_ITEM_ID = 'fixture-item-alternate'
+
+/**
+ * A modifier that pulls in a rescue module, mirroring the real `HIGH_BLEED_RISK`.
+ *
+ * It exists because a rescue module's requirements reach a resolved card without ever appearing in
+ * `expandRecipeComposition` — the route by which the rebuild plan once reported them as removed by
+ * the target release while the modifier that adds them carried forward untouched.
+ *
+ * Injected into the build *context* rather than into the definition store, deliberately: the three
+ * fixture release bundles were hashed from the pristine store at world creation, and adding an
+ * action to a modifier there would move `modifierSetPin` and every bundle `definitionHash` with it,
+ * breaking release fixtures that have nothing to do with rebuilds.
+ */
+export const FIXTURE_RESCUE_MODIFIER_CODE = 'FIXTURE_ADDS_RESCUE'
+export const FIXTURE_RESCUE_REQUIREMENT_KEY = 'FIXTURE_RESCUE_TRAY'
+export const FIXTURE_RESCUE_SLOT_ID = 'SLOT-FIXTURE-RESCUE'
+
+const rescueModifier: ModifierDefinition = {
+  code: FIXTURE_RESCUE_MODIFIER_CODE,
+  name: 'Fixture rescue-adding modifier',
+  groupCode: 'risk_rescue',
+  description: 'Synthetic; adds the fixture rescue module the way HIGH_BLEED_RISK does.',
+  releaseState: 'mvp',
+  active: true,
+  appliesTo: FIXTURE_PROCEDURE_CODE,
+  preview: ['Adds the fixture rescue module.'],
+  conflictsWith: [],
+  actions: [
+    {
+      id: 'fixture-adds-rescue',
+      modifierCode: FIXTURE_RESCUE_MODIFIER_CODE,
+      sequence: 10,
+      actionType: 'add_rescue_module',
+      payload: { code: 'FIXTURE_RESCUE' },
+    },
+  ],
+}
 
 export const FIXTURE_SCOPE = {
   organizationId: 'fixture-org',
@@ -138,9 +176,17 @@ export function createRebuildFixtureWorld(): RebuildFixtureWorld {
         releaseDefinitionHash: bundle.definitionHash,
         catalogReleaseId: bundle.catalogImportId,
       },
-      recipe: sources.recipe,
+      // The rescue-adding modifier is offered as well as defined, or `prepareCardRebuild` would
+      // refuse a request that names it.
+      recipe: {
+        ...sources.recipe,
+        allowedModifierCodes: [
+          ...sources.recipe.allowedModifierCodes,
+          FIXTURE_RESCUE_MODIFIER_CODE,
+        ],
+      },
       recipeModules: sources.modules,
-      modifiers: sources.modifiers,
+      modifiers: [...sources.modifiers, rescueModifier],
       rescueModules: sources.rescueModules,
       // Deliberately shared references: hospital-local data is *current* on both sides of a
       // rebuild, and giving the two releases different formularies would smuggle an operational

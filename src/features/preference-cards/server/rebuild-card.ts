@@ -17,6 +17,7 @@ import {
   proposeRebuildSelection,
   rebuildPlanHash,
   reviewRebuildAcknowledgements,
+  unanswerableBlockingDecisions,
   type CardRebuildPlan,
   type RebuildAcknowledgements,
   type RebuildProbe,
@@ -29,6 +30,7 @@ import {
   type ReleaseDefinitionSources,
 } from '../domain/release-bundle'
 import { canonicalRoleCode } from '../domain/role-taxonomy'
+import { recipeSlotSchema } from '../domain/schemas'
 import { stableSnapshotHash } from '../domain/stable-hash'
 import type { BuildContext, RecipeSlot } from '../domain/types'
 import {
@@ -161,13 +163,74 @@ function modifierDefinitionHashes(sources: ReleaseDefinitionSources): Record<str
   )
 }
 
-function composedSlots(context: BuildContext, selectedModuleVersionIds: string[]): RecipeSlot[] {
-  return expandRecipeComposition({
+/**
+ * Every requirement a release expresses for one composition **and one modifier selection**.
+ *
+ * The composition alone is not the card's requirement set, and using it as one was a real defect
+ * rather than a theoretical gap: `HIGH_BLEED_RISK` carries an `add_rescue_module` action, so a card
+ * that selects it resolves with the major-airway-bleeding requirements on it. Those requirements are
+ * in the stored snapshot and absent from `expandRecipeComposition`, so the plan reported each of
+ * them as **removed by the target release** and carried none of their selections — while the
+ * modifier itself carried perfectly well and the new card promptly re-added the same requirements,
+ * empty. The physician would have been told a line was gone and then handed a card asking for it.
+ *
+ * Only the two *additive* action types are applied here, and that asymmetry is deliberate:
+ *
+ * - Adding is what the composition misses, and missing it produces the false removal above.
+ * - `remove_slot` and `replace_role` are not applied, so a requirement a modifier would remove stays
+ *   in the effective set and its selection is carried. That is the safe direction — a carried
+ *   `selectedHospitalItemIds` key for a slot the resolved card does not contain is simply never
+ *   read, whereas dropping a selection for a requirement that turns out to be present loses a
+ *   decision. `resolveCard` remains the authority on what the card actually contains.
+ *
+ * This is not a second resolver. It reads which requirements the release *offers* under a modifier
+ * selection; it does not order them, override them, or resolve anything. Re-implementing modifier
+ * evaluation properly would mean exporting the effective slot list from `resolve-card.ts`, which is
+ * inside `RESOLVER_SOURCE_FILES` and would move `resolverImplementationHash` and every release
+ * artifact with it.
+ */
+function effectiveSlots(
+  context: BuildContext,
+  selectedModuleVersionIds: string[],
+  modifierCodes: string[],
+): RecipeSlot[] {
+  const slots = expandRecipeComposition({
     recipe: context.recipe,
     modules: context.recipeModules,
     selectedModuleVersionIds,
     startSequence: 1,
   }).slots
+
+  const selected = new Set(modifierCodes)
+  const rescueCodes = new Set<string>()
+  const added: RecipeSlot[] = []
+  for (const modifier of context.modifiers) {
+    if (!selected.has(modifier.code)) continue
+    for (const action of modifier.actions) {
+      if (action.actionType === 'add_rescue_module') {
+        const code = action.payload.code
+        if (typeof code === 'string') rescueCodes.add(code)
+        continue
+      }
+      if (action.actionType !== 'add_slot') continue
+      const parsed = recipeSlotSchema.safeParse(action.payload.slot)
+      if (parsed.success) added.push(parsed.data as RecipeSlot)
+    }
+  }
+  for (const rescue of context.rescueModules) {
+    if (rescueCodes.has(rescue.code)) added.push(...rescue.slots)
+  }
+
+  // First declaration wins, exactly as the composition's own merge does: a requirement a rescue
+  // module and the composition both express is the composition's, and the rescue copy does not
+  // silently replace it.
+  const seen = new Set(slots.map((slot) => slot.requirementKey))
+  for (const slot of added) {
+    if (seen.has(slot.requirementKey)) continue
+    seen.add(slot.requirementKey)
+    slots.push(slot)
+  }
+  return slots
 }
 
 /**
@@ -372,7 +435,19 @@ export async function prepareCardRebuild(
     modifierCodes: [...new Set(selection.modifierCodes)].sort(),
   }
 
-  targetShape.slots = composedSlots(targetContext.context, effectiveSelection.moduleVersionIds)
+  targetShape.slots = effectiveSlots(
+    targetContext.context,
+    effectiveSelection.moduleVersionIds,
+    effectiveSelection.modifierCodes,
+  )
+
+  // The two read-only comparisons, asked of the *revision* rather than of the live card: this
+  // review is of one exact state, and the card may have been edited since it was written.
+  const revisionRecord = { builderInputs: revision.builderInputs }
+  const operational = reconcileOperational(revisionRecord, revision.cardSnapshot)
+  const release = reconcileRelease(revisionRecord, revision.cardSnapshot)
+  const operationalHash = stableSnapshotHash({ kind: 'rebuild-operational', payload: operational })
+  const releaseDiffHash = stableSnapshotHash({ kind: 'rebuild-release-diff', payload: release })
 
   const plan = planCardRebuild({
     source: {
@@ -381,20 +456,21 @@ export async function prepareCardRebuild(
       revisionNumber: revision.revisionNumber,
       inputs: pinnedInputs,
       card: revision.cardSnapshot,
-      slots: composedSlots(sourceContext.context, pinnedInputs.input.selectedModuleVersionIds),
+      // The source side gets the same treatment, and must: an asymmetric slot list would compare a
+      // rescue requirement's definition against nothing and report it changed.
+      slots: effectiveSlots(
+        sourceContext.context,
+        pinnedInputs.input.selectedModuleVersionIds,
+        pinnedInputs.input.modifierCodes,
+      ),
       releaseBundle: source.bundle,
       modifierDefinitionHashes: modifierDefinitionHashes(source.sources),
     },
     target: targetShape,
     selection: effectiveSelection,
+    comparisons: { operationalHash, releaseDiffHash },
     probe: createProbe(targetContext.context, target, historical),
   })
-
-  // The two read-only comparisons, asked of the *revision* rather than of the live card: this
-  // review is of one exact state, and the card may have been edited since it was written.
-  const revisionRecord = { builderInputs: revision.builderInputs }
-  const operational = reconcileOperational(revisionRecord, revision.cardSnapshot)
-  const release = reconcileRelease(revisionRecord, revision.cardSnapshot)
 
   return {
     ok: true,
@@ -408,8 +484,8 @@ export async function prepareCardRebuild(
       planHash: rebuildPlanHash(plan),
       operational,
       release,
-      operationalHash: stableSnapshotHash({ kind: 'rebuild-operational', payload: operational }),
-      releaseDiffHash: stableSnapshotHash({ kind: 'rebuild-release-diff', payload: release }),
+      operationalHash,
+      releaseDiffHash,
     },
   }
 }
@@ -449,6 +525,9 @@ export interface CardRebuildProvenance {
   createdAt: string
 }
 
+const PLAN_MOVED_MESSAGE =
+  'The rebuild plan has changed since this page was opened, so the decisions recorded on it describe choices this rebuild would no longer make. Reload to review the current plan.'
+
 export type CreateRebuiltCardResult =
   | { ok: true; cardId: string }
   | {
@@ -456,11 +535,15 @@ export type CreateRebuiltCardResult =
       code:
         | CardRebuildErrorCode
         | 'plan_moved'
+        | 'plan_blocked'
         | 'review_incomplete'
         | 'not_resolvable'
         | 'write_failed'
       message?: string
-      /** Present on `review_incomplete`, so the page can say which decisions still need an answer. */
+      /**
+       * Which decisions the refusal is about — the ones still needing an answer on
+       * `review_incomplete`, and the ones no answer can dispose of on `plan_blocked`.
+       */
       missing?: string[]
     }
 
@@ -488,18 +571,44 @@ export async function createRebuiltCard(
     parsed.data
 
   const prepared = await prepareCardRebuild(cardId, revisionId, selection)
-  if (!prepared.ok) return { ok: false, code: prepared.code, message: prepared.message }
+  if (!prepared.ok) {
+    // A composition the target does not offer is `module_not_offered` on the GET path, where it
+    // means "this request is malformed". On *submit* it means something else: the only composition
+    // a client ever sends back is the one the server itself proposed, so a module that is no longer
+    // offered is a target release that moved under an open review — and republishing a module
+    // renumbers its version ids, which makes this the most likely shape of a pointer advance.
+    // Reported as `plan_moved`, because that is what happened, and because the alternative was a
+    // refusal the page rendered no message for: the physician's answers vanished and a fresh plan
+    // appeared in their place with nothing saying why.
+    const movedUnderReview =
+      prepared.code === 'module_not_offered' || prepared.code === 'modifier_not_offered'
+    return {
+      ok: false,
+      code: movedUnderReview ? 'plan_moved' : prepared.code,
+      message: movedUnderReview ? PLAN_MOVED_MESSAGE : prepared.message,
+    }
+  }
   const { plan, revision, sourceReleaseBundle, targetReleaseBundle, preparation } = {
     ...prepared.preparation,
     preparation: prepared.preparation,
   }
 
   if (preparation.planHash !== planHash) {
+    return { ok: false, code: 'plan_moved', message: PLAN_MOVED_MESSAGE }
+  }
+
+  // Blocking *and* unanswerable: an ambiguous requirement key, where two slots disagree about what
+  // one requirement is. There is nothing to acknowledge and no honest card to create, so this is a
+  // refusal rather than a decision — checked before the review gate, because a physician should not
+  // be asked to answer thirty questions and then told the release itself is malformed.
+  const unanswerable = unanswerableBlockingDecisions(plan)
+  if (unanswerable.length > 0) {
     return {
       ok: false,
-      code: 'plan_moved',
+      code: 'plan_blocked',
+      missing: unanswerable.map((decision) => decision.key),
       message:
-        'The rebuild plan has changed since this page was opened, so the decisions recorded on it describe choices this rebuild would no longer make. Reload to review the current plan.',
+        'This rebuild cannot be planned: the target release expresses a requirement in more than one way, so there is no single requirement to carry a selection onto. Nothing was created.',
     }
   }
 

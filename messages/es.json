@@ -8125,7 +8125,8 @@
         "review_incomplete": "Every changed or unresolved decision has to be answered before a new card can be created. The ones still needing an answer are highlighted below.",
         "plan_moved": "The definitions underneath this rebuild changed while the page was open, so the decisions recorded on it describe choices this rebuild would no longer make. The plan below is the current one; please read it again.",
         "not_resolvable": "The reviewed selections do not resolve into a card against the target release. Nothing was created.",
-        "write_failed": "The new card could not be saved. Nothing was created."
+        "write_failed": "The new card could not be saved. Nothing was created.",
+        "plan_blocked": "This rebuild cannot be planned: the target release expresses a requirement in more than one way, so there is no single requirement to carry a selection onto. Nothing was created, and the release itself has to be corrected first."
       },
       "state": {
         "carried_unchanged": "Carried unchanged",
@@ -8181,8 +8182,11 @@
         "modifier_definition_changed": "The newer release defines this modifier differently.",
         "modifier_not_offered": "The newer release does not offer this modifier.",
         "waiver_never_carries": "A waiver is never carried forward. If the new card raises this warning, enter a new waiver against it there.",
-        "waiver_warning_absent_from_target": "The requirement this waiver was entered against is not on the new card."
-      }
+        "waiver_warning_absent_from_target": "The requirement this waiver was entered against is not on the new card.",
+        "requirement_key_ambiguous": "The target release expresses this requirement in more than one way, so there is no single requirement to carry a selection onto."
+      },
+      "operationalHashLabel": "Hospital-local comparison",
+      "releaseDiffHashLabel": "Authored-release comparison"
     }
   }
 }

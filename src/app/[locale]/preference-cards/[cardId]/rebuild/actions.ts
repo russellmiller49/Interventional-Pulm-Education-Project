@@ -31,6 +31,7 @@ const idSchema = z.string().uuid()
 /** The failures a submitted review can cause, as opposed to reasons a rebuild is not on offer. */
 const submissionErrorCodes: readonly string[] = [
   'plan_moved',
+  'plan_blocked',
   'review_incomplete',
   'not_resolvable',
   'write_failed',

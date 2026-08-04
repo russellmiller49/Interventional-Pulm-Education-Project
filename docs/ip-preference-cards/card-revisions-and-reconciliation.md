@@ -379,9 +379,10 @@ environment ever passed through, and makes the record of what was verified untru
 `migration-contract.test.ts` pins its SHA-256 so a later edit fails a test rather than diverging
 silently.
 
-### Pending: the foreign-key indexes
+### Applied: the foreign-key indexes
 
-Applying it moved the Supabase performance advisor from **147 findings (51 WARN / 96 INFO)** to
+Applying the revision schema moved the Supabase performance advisor from **147 findings (51 WARN /
+96 INFO)** to
 **149 (51 WARN / 98 INFO)**. Both additions are the same finding twice: the revision table's two
 foreign keys have no covering index, because Postgres indexes the _referenced_ side of a foreign
 key automatically and never the referencing side.
@@ -407,8 +408,13 @@ rather than trusting its name. It also asserts neither index is unique or partia
 valid ready B-trees, that the three original indexes and both foreign keys survive, and that the
 table carries exactly five indexes and no sixth.
 
-**This migration has not been applied.** The PR stays draft until it has been, and until the
-advisor delta returns to the 147 / 51 / 96 baseline.
+**This migration has since been applied**, to the Endoreels project through the Supabase MCP
+migration action from the primary checkout, and Supabase assigned it the remote version
+**`20260804015322_index_ip_preference_card_revision_foreign_keys`**. The local filename keeps its own
+earlier timestamp; the two differ, which is expected here for the same reason it is expected of the
+revision migration above.
+
+Both migrations in this phase are therefore deployed, and neither file is editable from here.
 
 ## Commands
 

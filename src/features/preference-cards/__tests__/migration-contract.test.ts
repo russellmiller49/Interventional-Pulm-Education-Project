@@ -106,21 +106,21 @@ describe('preference-card migration contract', () => {
 })
 
 /**
- * The revision migrations, and the boundary between the one that has shipped and the one that
- * has not.
+ * The revision migrations. Both have shipped.
  *
  * `20260803052432_add_ip_preference_card_revisions.sql` was applied to the Endoreels project as
- * remote version `20260803113527_add_ip_preference_card_revisions`, and its verifier passed
- * against the live database. From that moment it stopped being a file this branch may edit: an
- * applied migration edited afterwards describes a state no environment ever passed through, and
- * the record of what was actually verified becomes untrue. Its content is pinned below, so a
- * later edit is a failing test rather than a silent divergence between the repository and the
- * database.
+ * remote version `20260803113527_add_ip_preference_card_revisions`, and
+ * `20260803151005_index_ip_preference_card_revision_foreign_keys.sql` followed as
+ * `20260804015322_index_ip_preference_card_revision_foreign_keys`. Both verifiers passed against
+ * the live database. From those moments each stopped being a file this branch may edit: an applied
+ * migration edited afterwards describes a state no environment ever passed through, and the record
+ * of what was actually verified becomes untrue. Both are pinned by content below, so a later edit
+ * is a failing test rather than a silent divergence between the repository and the database.
  *
- * Everything after it goes in a new forward migration. This suite is the source-level half of
- * that guarantee; the catalog-level half is
- * `supabase/verification/20260803151005_verify_ip_preference_card_revision_foreign_keys.sql`,
- * which runs after application.
+ * The index migration's pin was added when it was applied, which is the point the rule starts to
+ * bite. Everything after them goes in a new forward migration — Phase 4B.2's provenance column is
+ * the next one, and it is deliberately not pinned because it has *not* been applied and is still
+ * open to review.
  */
 describe('preference-card revision migrations', () => {
   const APPLIED_REVISION_MIGRATION = '20260803052432_add_ip_preference_card_revisions.sql'
@@ -129,6 +129,8 @@ describe('preference-card revision migrations', () => {
     'd10aa34dc55374b7f122db8cff6c0fd31393e34d07c15e142648a758d8bdff7a'
 
   const INDEX_MIGRATION = '20260803151005_index_ip_preference_card_revision_foreign_keys.sql'
+  /** Applied as remote version 20260804015322; see the note above before changing this. */
+  const INDEX_MIGRATION_SHA256 = '4f171acd9fafeaa1947ec64e343c03853d9171d584368ac2f89043c98440cc3f'
   const INDEX_VERIFIER = '20260803151005_verify_ip_preference_card_revision_foreign_keys.sql'
   const VERIFICATION_DIR = path.resolve(process.cwd(), 'supabase/verification')
 
@@ -153,6 +155,11 @@ describe('preference-card revision migrations', () => {
     expect(createHash('sha256').update(applied).digest('hex')).toBe(
       APPLIED_REVISION_MIGRATION_SHA256,
     )
+  })
+
+  it('leaves the already-applied index migration byte-identical', () => {
+    const applied = fs.readFileSync(path.join(MIGRATIONS_DIR, INDEX_MIGRATION))
+    expect(createHash('sha256').update(applied).digest('hex')).toBe(INDEX_MIGRATION_SHA256)
   })
 
   it('adds the index work as a new forward migration, ordered after the applied one', () => {

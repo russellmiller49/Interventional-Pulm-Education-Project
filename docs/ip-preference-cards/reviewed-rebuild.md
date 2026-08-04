@@ -49,6 +49,22 @@ while the requirement the physician chose for is unchanged.
 reviewed mapping file says so — and it is what the plan joins on. Everything carried is re-keyed
 from the source's slot id, through the requirement key, onto the target's slot id.
 
+### The composition is not the requirement set
+
+Both sides are expanded through `effectiveSlots`, which is the composition **plus** whatever the
+selected modifiers add — `add_slot` payloads and the slots of any rescue module an
+`add_rescue_module` action pulls in. Using the composition alone was a real defect: `HIGH_BLEED_RISK`
+adds the major-airway-bleeding rescue module, so a card selecting it carries those requirements on
+its snapshot and not in `expandRecipeComposition`. The plan reported each as _removed by the target
+release_ and carried none of their selections, while the modifier itself carried perfectly well and
+the new card promptly re-added the same requirements, empty.
+
+`remove_slot` and `replace_role` are deliberately not applied. A requirement a modifier would remove
+stays in the effective set and its selection is carried, which is the safe direction — a carried key
+for a slot the resolved card does not contain is simply never read, whereas dropping a selection for
+a requirement that turns out to be present loses a decision. `resolveCard` remains the authority on
+what the card actually contains.
+
 `card-rebuild-plan.test.ts` pins the consequence: a card whose requirement key is absent from both
 releases matches nothing, and the target's own requirements are reported as **added** rather than
 quietly adopting it, even though both lines carry the same role code.
@@ -90,7 +106,21 @@ introduces this and the source had no counterpart", which is the same fact about
 | `new_requirement`         | Reported as added and unresolved             | A default selection — none is authored, so none is invented |
 | `removed_requirement`     | Reported, with what was selected for it      | Which target requirement it "really" became                 |
 | `unresolved`              | Reported                                     | A selection for a line that resolves to nothing             |
-| `incompatible`            | Reported                                     | Whether a rejected selection is acceptable anyway           |
+| `incompatible`            | Reported, and blocks the rebuild outright    | Which of two slots claiming one requirement key was meant   |
+
+### Ambiguity blocks; it does not choose
+
+If either side expresses one `requirementKey` through two slots that disagree, `slotIndex` records
+the key as ambiguous and the decision is `incompatible`, `blocking`, and **unanswerable** — no
+acknowledgement disposes of it, and `createRebuiltCard` refuses with `plan_blocked` before the review
+gate runs. Taking the first of two slots would mean carrying a physician's selection onto whichever
+sorted first: a guess wearing the costume of a match.
+
+`expandRecipeComposition` already collapses or blocks duplicate keys, so on today's data the
+ambiguous set is always empty. It is computed anyway because this is the only place a key becomes a
+single slot, and because a modifier-added or rescue-module requirement reaches the effective slot
+list _without_ passing through that merge — which is exactly the route by which a duplicate could
+arrive.
 
 An added **required** requirement is `blocking`: the card cannot ask for it, and the review says so
 rather than filling it in. No default is materialized for it, because a default here would come from
@@ -153,6 +183,28 @@ changing a composition is what the interface is for.
 filled in, and the new draft opens in the builder to be completed. Duplicating the selection UI here
 would create a second path to making a selection, and the one place the two disagreed would be the
 place it mattered.
+
+### Acknowledgement is not resolution, and what that costs
+
+Confirming a decision records that a physician read it. It chooses nothing. A requirement whose
+selection could not be carried arrives on the new card with `selectedHospitalItemId: null`, and the
+resolver reports it — so the card is never silently complete.
+
+The honest limitation, pinned by `card-rebuild.test.ts` so it cannot drift: `resolve-card.ts`
+deliberately raises `required_role_unresolved` at **warning** severity rather than blocking, because
+many roles have no catalogued product and are met by a custom line, and blocking would make most
+procedures unbuildable. A rebuilt card with an unresolved required requirement is therefore
+`complete_with_warnings`, **not** `blocked`. It is never `complete`.
+
+There is also **no hard finalization gate** anywhere in this module: `saveCardRequestSchema` accepts
+`status: 'final'` without consulting readiness. A physician can mark such a card final in the builder.
+The rebuild does not compensate for that by growing a picker — it always creates a `draft`, records
+what was unresolved in provenance, and leaves the gate question where it already lives. Closing it is
+a separate change to the save path, for every card, not a special case for rebuilt ones.
+
+An `acknowledged_unresolved` answer writes no selection anywhere, and
+`applyRebuildAcknowledgements` has no branch that could: only `dropped` touches
+`selectedHospitalItemIds`, and only ever to `null`.
 
 ## 5. Determinism, and what the hash is for
 
@@ -243,14 +295,19 @@ applied.** The rebuild write path inserts `rebuild_provenance`, so creating a re
 against the live database until it is applied — every other path, including the whole review, works
 without it.
 
-Apply it through the Supabase MCP migration action **from the primary checkout**, never
-`supabase db push`, because this project's local and remote migration histories have diverged. Then
-run `supabase/verification/20260804013000_verify_ip_preference_card_rebuild_provenance.sql`, which
-reads only, wraps itself in `begin`/`rollback`, and proves the write-once rule behaviourally by
-attempting three rewrites and requiring all three to fail.
+It is **the only pending database migration on this branch.** Both Phase 4B.1 migrations are already
+deployed — the revision schema as remote version `20260803113527_add_ip_preference_card_revisions`,
+and the foreign-key indexes as `20260804015322_index_ip_preference_card_revision_foreign_keys` — and
+neither file is editable from here.
 
-`supabase/migrations/20260803151005_index_ip_preference_card_revision_foreign_keys.sql` is still
-unapplied and sorts ahead of this one.
+Apply it through the Supabase MCP migration action **from the primary checkout**, never
+`supabase db push`, because this project's local and remote migration histories have diverged. The
+rollback rehearsal is not optional and comes first:
+`supabase/verification/20260804013000_verify_ip_preference_card_rebuild_provenance.sql` reads only,
+wraps itself in `begin`/`rollback`, and proves the write-once rule _behaviourally_ — it creates a
+rebuilt card and an ordinary one, attempts all three forbidden provenance updates, requires every one
+to fail, and then requires an ordinary rename to still apply. A trigger that exists and a trigger
+that fires are different facts, and only the second is the guarantee.
 
 ## Commands
 

@@ -15,6 +15,9 @@ import {
 } from '../__fixtures__/release-bundle-fixtures'
 import {
   FIXTURE_PRIMARY_ITEM_ID,
+  FIXTURE_RESCUE_MODIFIER_CODE,
+  FIXTURE_RESCUE_REQUIREMENT_KEY,
+  FIXTURE_RESCUE_SLOT_ID,
   FIXTURE_SCOPE,
   createRebuildFixtureWorld,
   fixtureScenario,
@@ -464,7 +467,10 @@ describe('the review gate is enforced on the server', () => {
       title: 'Fixture card (rebuilt)',
     })
 
-    expect(result.ok === false && result.code).toBe('module_not_offered')
+    // On submit this is a target that moved under an open review, not a malformed request: the
+    // only composition a client sends back is the one the server proposed. Reported as
+    // `plan_moved` so the page can say so, instead of refusing with a code it renders nothing for.
+    expect(result.ok === false && result.code).toBe('plan_moved')
   })
 
   it('refuses a modifier the target release does not offer', async () => {
@@ -480,7 +486,7 @@ describe('the review gate is enforced on the server', () => {
       title: 'Fixture card (rebuilt)',
     })
 
-    expect(result.ok === false && result.code).toBe('modifier_not_offered')
+    expect(result.ok === false && result.code).toBe('plan_moved')
   })
 })
 
@@ -550,6 +556,280 @@ describe('rebuild provenance is write-once', () => {
     // them. A duplicate did not come from a reviewed rebuild and must not claim to have.
     const copy = tables.cards.find((row) => row.id === duplicated.data)!
     expect(copy.rebuild_provenance).toBeNull()
+  })
+})
+
+describe('a requirement a modifier adds is not mistaken for one the release removed', () => {
+  /** A card that selects the rescue-adding modifier, so the rescue requirement is on its snapshot. */
+  function seedRescueCard() {
+    const base = alphaInputs()
+    return seedAlphaCard({
+      inputs: {
+        ...base,
+        input: {
+          ...base.input,
+          modifierCodes: [FIXTURE_RESCUE_MODIFIER_CODE],
+          selectedHospitalItemIds: {
+            ...base.input.selectedHospitalItemIds,
+            [FIXTURE_RESCUE_SLOT_ID]: FIXTURE_PRIMARY_ITEM_ID,
+          },
+        },
+      } as BuilderInputs,
+    })
+  }
+
+  it('puts the rescue requirement on the source snapshot in the first place', () => {
+    const { cardId } = seedRescueCard()
+    const card = tables.cards.find((row) => row.id === cardId)!.card_snapshot as {
+      items: Array<{ requirementKey?: string }>
+    }
+    expect(card.items.map((entry) => entry.requirementKey)).toContain(
+      FIXTURE_RESCUE_REQUIREMENT_KEY,
+    )
+  })
+
+  it('carries it instead of reporting it removed by the target release', async () => {
+    const { cardId, revisionId } = seedRescueCard()
+    const prepared = await prepareCardRebuild(cardId, revisionId)
+    expect(prepared.ok).toBe(true)
+    if (!prepared.ok) return
+
+    const rescue = prepared.preparation.plan.decisions.find(
+      (entry) => entry.key === `requirement:${FIXTURE_RESCUE_REQUIREMENT_KEY}`,
+    )
+    expect(rescue).toBeDefined()
+    // A rescue module's requirements reach a resolved card without ever appearing in
+    // `expandRecipeComposition`. Before the effective-slot fix each was reported removed and its
+    // selection dropped, while the modifier that adds them carried forward untouched — so the new
+    // card asked for a line the review had just said was gone.
+    expect(rescue!.state).not.toBe('removed_requirement')
+    expect(rescue!.reasonCodes).not.toContain('requirement_removed_by_target')
+    expect(prepared.preparation.plan.proposedInputs.input.selectedHospitalItemIds).toEqual(
+      expect.objectContaining({ [FIXTURE_RESCUE_SLOT_ID]: FIXTURE_PRIMARY_ITEM_ID }),
+    )
+  })
+
+  it('keeps the selection on the created card', async () => {
+    const { cardId, revisionId } = seedRescueCard()
+    const { prepared, acknowledgements } = await answerEverything(cardId, revisionId)
+    const result = await createRebuiltCard({
+      cardId,
+      revisionId,
+      selection: prepared.selection,
+      planHash: prepared.planHash,
+      acknowledgements,
+      title: 'Fixture card (rebuilt)',
+    })
+    if (!result.ok) throw new Error(result.message)
+
+    const created = tables.cards.find((row) => row.id === result.cardId)!
+    const inputs = created.builder_inputs as BuilderInputs
+    expect(inputs.input.modifierCodes).toContain(FIXTURE_RESCUE_MODIFIER_CODE)
+    expect(inputs.input.selectedHospitalItemIds?.[FIXTURE_RESCUE_SLOT_ID]).toBe(
+      FIXTURE_PRIMARY_ITEM_ID,
+    )
+  })
+})
+
+describe('an answer that had no effect cannot appear in the record as though it did', () => {
+  it('rejects an out-of-vocabulary answer on a decision that required none', async () => {
+    const { cardId, revisionId } = seedAlphaCard()
+    const { prepared, acknowledgements } = await answerEverything(cardId, revisionId)
+    const quiet = prepared.plan.decisions.filter(
+      (decision) => !decision.requiresExplicitConfirmation,
+    )
+    // Non-vacuity: there has to be a decision that asks nothing for this to test anything.
+    expect(quiet.length).toBeGreaterThan(0)
+
+    const cardsBefore = tables.cards.length
+    const result = await createRebuiltCard({
+      cardId,
+      revisionId,
+      selection: prepared.selection,
+      planHash: prepared.planHash,
+      // `dropped` on a `carried_unchanged` requirement changes nothing —
+      // `applyRebuildAcknowledgements` only drops what required confirmation — and was still
+      // written verbatim into provenance, recording a decision to discard a selection the card in
+      // fact carries. Provenance is evidence; an answer with no effect must not appear in it.
+      acknowledgements: Object.fromEntries([
+        ...Object.entries(acknowledgements),
+        ...quiet.map((decision) => [decision.key, 'dropped' as const]),
+      ]),
+      title: 'Fixture card (rebuilt)',
+    })
+
+    expect(result.ok).toBe(false)
+    expect(result.ok === false && result.code).toBe('review_incomplete')
+    expect(result.ok === false && result.missing).toEqual(
+      expect.arrayContaining(quiet.map((decision) => decision.key)),
+    )
+    expect(tables.cards).toHaveLength(cardsBefore)
+  })
+
+  it('still accepts the answer each decision does allow', async () => {
+    const { cardId, revisionId } = seedAlphaCard()
+    const { prepared, acknowledgements } = await answerEverything(cardId, revisionId)
+    const result = await createRebuiltCard({
+      cardId,
+      revisionId,
+      selection: prepared.selection,
+      planHash: prepared.planHash,
+      acknowledgements: Object.fromEntries([
+        ...Object.entries(acknowledgements),
+        ...prepared.plan.decisions
+          .filter((decision) => decision.state === 'carried_unchanged')
+          .map((decision) => [decision.key, 'confirmed' as const]),
+      ]),
+      title: 'Fixture card (rebuilt)',
+    })
+    expect(result.ok).toBe(true)
+  })
+})
+
+describe('a target that moves under an open review is reported, not silently discarded', () => {
+  it('still names the composition problem precisely when the review page is being built', async () => {
+    const { cardId, revisionId } = seedAlphaCard()
+    // The GET path keeps the typed code: there, an un-offered module really is a malformed request
+    // rather than a release that moved, and the route renders an explanation for it.
+    const prepared = await prepareCardRebuild(cardId, revisionId, {
+      moduleVersionIds: ['module-fixture-core-v9-9'],
+      modifierCodes: [],
+    })
+    expect(prepared.ok === false && prepared.code).toBe('module_not_offered')
+
+    const modifier = await prepareCardRebuild(cardId, revisionId, {
+      moduleVersionIds: [FIXTURE_MODULE_V1_1],
+      modifierCodes: ['MODIFIER_NOBODY_OFFERS'],
+    })
+    expect(modifier.ok === false && modifier.code).toBe('modifier_not_offered')
+  })
+
+  it('reports a composition the target no longer offers as a moved plan', async () => {
+    const { cardId, revisionId } = seedAlphaCard()
+    const { prepared, acknowledgements } = await answerEverything(cardId, revisionId)
+    const cardsBefore = tables.cards.length
+
+    // Exactly the shape a pointer advance takes: the page's hidden module id is one the target no
+    // longer pins, because republishing a module renumbers its version id.
+    const result = await createRebuiltCard({
+      cardId,
+      revisionId,
+      selection: { ...prepared.selection, moduleVersionIds: ['module-fixture-core-v9-9'] },
+      planHash: prepared.planHash,
+      acknowledgements,
+      title: 'Fixture card (rebuilt)',
+    })
+
+    expect(result.ok === false && result.code).toBe('plan_moved')
+    expect(result.ok === false && result.message).toMatch(/Reload to review the current plan/i)
+    expect(tables.cards).toHaveLength(cardsBefore)
+  })
+})
+
+describe('an unresolved required requirement stays unresolved on the new card', () => {
+  /**
+   * A card whose required backup line resolved to nothing.
+   *
+   * The stored input names an item the formulary does not have, so the *snapshot* — which is what
+   * the plan reads, because it is what the physician actually saw — records no selection for that
+   * line. The rebuild carries the blank forward as a blank, which is the whole point: it is a
+   * decision, not a gap nobody has looked at.
+   */
+  function seedUnresolvedRequiredCard() {
+    const base = alphaInputs()
+    return seedAlphaCard({
+      inputs: {
+        ...base,
+        input: {
+          ...base.input,
+          selectedHospitalItemIds: {
+            ...base.input.selectedHospitalItemIds,
+            [BACKUP_SLOT]: 'fixture-item-retired-from-the-formulary',
+          },
+        },
+      } as BuilderInputs,
+    })
+  }
+
+  it('carries the blank as a blank, and asks about it because the requirement changed', async () => {
+    const { cardId, revisionId } = seedUnresolvedRequiredCard()
+    const prepared = await prepareCardRebuild(cardId, revisionId)
+    if (!prepared.ok) throw new Error(prepared.code)
+
+    const backup = prepared.preparation.plan.decisions.find(
+      (entry) => entry.key === `requirement:${REVISED_REQUIREMENT_KEY}`,
+    )!
+    expect(backup.reasonCodes).toContain('selection_deliberately_empty')
+    // BRAVO makes this requirement required where ALPHA had it optional, so the physician is asked
+    // — the line they left empty is not the line they left empty any more.
+    expect(backup.state).toBe('carried_requires_review')
+    expect(backup.kind === 'requirement' && backup.carriedSelection).toEqual({ kind: 'none' })
+  })
+
+  it('creates a draft that reports the gap rather than resolving it', async () => {
+    const { cardId, revisionId } = seedUnresolvedRequiredCard()
+    const { prepared, acknowledgements } = await answerEverything(cardId, revisionId)
+    const result = await createRebuiltCard({
+      cardId,
+      revisionId,
+      selection: prepared.selection,
+      planHash: prepared.planHash,
+      acknowledgements,
+      title: 'Fixture card (rebuilt)',
+    })
+    if (!result.ok) throw new Error(result.message)
+
+    const created = tables.cards.find((row) => row.id === result.cardId)!
+    const snapshotOut = created.card_snapshot as {
+      readinessState: string
+      warnings: Array<{ code: string }>
+      items: Array<{
+        requirementKey?: string
+        resolutionState: string
+        selectedHospitalItemId: string | null
+      }>
+    }
+
+    // Acknowledgement is not resolution. Confirming the decision recorded that the physician read
+    // it; it chose no product, because the rebuild has no picker and does not pretend to.
+    const line = snapshotOut.items.find(
+      (entry) => entry.requirementKey === REVISED_REQUIREMENT_KEY,
+    )!
+    expect(line.selectedHospitalItemId).toBeNull()
+    expect(line.resolutionState).not.toBe('resolved')
+    expect(snapshotOut.warnings.map((warning) => warning.code)).toContain(
+      'required_role_unresolved',
+    )
+
+    // The documented limitation, pinned so it cannot drift silently: `resolve-card.ts` deliberately
+    // raises a *warning* rather than a blocking message for a required role with nothing chosen,
+    // because many roles have no catalogued product and are met by a custom line. So the card is
+    // `complete_with_warnings`, not `blocked`. What matters here is that it is never `complete`.
+    expect(snapshotOut.readinessState).toBe('complete_with_warnings')
+    expect(snapshotOut.readinessState).not.toBe('complete')
+    expect(created.status).toBe('draft')
+  })
+
+  it('leaves the card reopenable, so the builder is where the gap gets filled', async () => {
+    const { cardId, revisionId } = seedUnresolvedRequiredCard()
+    const { prepared, acknowledgements } = await answerEverything(cardId, revisionId)
+    const result = await createRebuiltCard({
+      cardId,
+      revisionId,
+      selection: prepared.selection,
+      planHash: prepared.planHash,
+      acknowledgements,
+      title: 'Fixture card (rebuilt)',
+    })
+    if (!result.ok) throw new Error(result.message)
+
+    const inputs = tables.cards.find((row) => row.id === result.cardId)!
+      .builder_inputs as BuilderInputs
+    // Version 4, release-pinned, no legacy family key: everything `inputsCanBackAnEdit` requires,
+    // so the Edit control is offered and the canonical builder is the next step.
+    expect(inputs.schemaVersion).toBe(4)
+    expect(inputs.releaseBundleId).toBe(BRAVO_RELEASE_ID)
+    expect(inputs.familyPicks).toEqual([])
   })
 })
 
