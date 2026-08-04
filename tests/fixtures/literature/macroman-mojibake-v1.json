@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "1.0.0",
+  "sourceAuditSha256": "838dbff4cb4c73ff12863c4a6e74b7308af9cb6112e5fe0553ffdff7b7b8bac1",
+  "expected": {
+    "rowCount": 115,
+    "cellCount": 120,
+    "replacementCount": 429,
+    "spanTypeCount": 31
+  },
+  "spans": [
+    { "corrupt": "¬¨¬®‚Äö√†√´", "clean": "·", "count": 130 },
+    { "corrupt": "¬¨¬®¬¨¬±", "clean": "±", "count": 104 },
+    { "corrupt": "‚Äö√Ñ√∂‚àö¬¢‚Äö√Ñ¬¢", "clean": "≥", "count": 37 },
+    { "corrupt": "‚âà√≠‚Äö√¢¬ß", "clean": "β", "count": 26 },
+    { "corrupt": "‚Äö√†√∂‚àö‚â•", "clean": "×", "count": 20 },
+    { "corrupt": "‚âà√≠¬¨¬±", "clean": "α", "count": 20 },
+    { "corrupt": "‚Äö√Ñ√∂‚àö¬¢¬¨√ü", "clean": "≤", "count": 18 },
+    { "corrupt": "‚Äö√Ñ√∂‚àö√ë‚àö¬®", "clean": "–", "count": 16 },
+    { "corrupt": "¬¨¬®‚Äö√†√ª", "clean": "°", "count": 14 },
+    { "corrupt": "‚âà√≠‚Äö√¢‚Ä¢‚âà√≠¬¨‚Ä¢", "clean": "γδ", "count": 7 },
+    { "corrupt": "¬¨¬®¬¨¬£", "clean": "£", "count": 5 },
+    { "corrupt": "¬¨¬®‚àö√ú", "clean": "®", "count": 4 },
+    { "corrupt": "‚âà√≠‚Äö√†¬¥", "clean": "κ", "count": 3 },
+    { "corrupt": "‚Äö√Ñ√∂‚àö√´¬¨¬¢", "clean": "™", "count": 3 },
+    { "corrupt": "‚Äö√†√∂‚Äö√¢‚Ä¢", "clean": "ó", "count": 2 },
+    { "corrupt": "‚âà√≠‚Äö√¢‚Ä¢", "clean": "γ", "count": 2 },
+    { "corrupt": "‚âà√≠¬¨‚à´", "clean": "μ", "count": 2 },
+    { "corrupt": "¬¨‚àë‚àö¬∂≈í¬©", "clean": "᾽", "count": 2 },
+    { "corrupt": "‚Äö√Ñ√∂‚àö√∫‚àö‚â†", "clean": "→", "count": 2 },
+    { "corrupt": "¬¨¬®¬¨‚Ä¢", "clean": "´", "count": 1 },
+    { "corrupt": "¬¨¬®≈í¬©", "clean": "½", "count": 1 },
+    { "corrupt": "‚Äö√†√∂‚àö√º", "clean": "ç", "count": 1 },
+    { "corrupt": "‚Äö√†√∂‚àö√≤", "clean": "ï", "count": 1 },
+    { "corrupt": "‚âà√≠¬¨¬±‚âà√≠‚Äö√¢¬ß", "clean": "αβ", "count": 1 },
+    { "corrupt": "‚âà√≠¬¨‚Ä¢", "clean": "δ", "count": 1 },
+    { "corrupt": "‚âà√¨‚àö¬∞", "clean": "χ", "count": 1 },
+    { "corrupt": "‚Äö√Ñ√∂‚àö√°¬¨¬Æ", "clean": "€", "count": 1 },
+    { "corrupt": "‚Äö√Ñ√∂‚àö‚Ä†¬¨‚à´", "clean": "∼", "count": 1 },
+    { "corrupt": "‚Äö√Ñ√∂‚àö√Ü‚àö√ë", "clean": "─", "count": 1 },
+    { "corrupt": "‚Äö√Ñ√∂¬¨¬©≈í¬©", "clean": "⩽", "count": 1 },
+    { "corrupt": "‚Äö√Ñ√∂¬¨¬©‚àö¬∂", "clean": "⩾", "count": 1 }
+  ]
+}
