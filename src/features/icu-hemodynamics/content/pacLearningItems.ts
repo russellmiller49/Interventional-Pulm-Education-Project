@@ -26,9 +26,62 @@ function item(input: unknown): ClinicalLearningItem {
 }
 
 export const pacGuidedLearningItems: Readonly<
-  Record<PacGuidedSkillId, { prediction: ClinicalLearningItem; transfer: ClinicalLearningItem }>
+  Record<
+    PacGuidedSkillId,
+    {
+      prediction: ClinicalLearningItem
+      transfer: ClinicalLearningItem
+      /**
+       * An optional commitment made *before* the section's reasoning is revealed. H0/H1 added one
+       * for `pressure-system`: the validity sequence is only worth teaching if the learner has to
+       * commit to what each step does and does not license.
+       */
+      validityCommitment?: ClinicalLearningItem
+    }
+  >
 > = {
   'pressure-system': {
+    validityCommitment: item({
+      id: 'pac-pressure-validity-commit-1',
+      activityId: 'hemodynamics:learn:pressure-system',
+      phase: 'recognize',
+      itemType: 'signal-recognition',
+      contextRequirement: 'technical',
+      clinicalContextId: 'pac-pressure-system-validity-sequence',
+      visualAssetIds: ['fast-flush-trace'],
+      stem: 'A pulmonary-artery tracing is handed to you. The transducer is level and zeroed, the circuit and stopcocks are intact, and the scale fits the signal — but the fast-flush release rings for several beats before settling. The displayed mean pressure looks entirely plausible for this patient. What is the most defensible reading of this signal?',
+      choices: [
+        {
+          id: 'mean-only-withhold-systolic',
+          label:
+            'Read the mean with caution, and withhold systolic, diastolic, and pulse pressure until the ringing is resolved.',
+          rationale:
+            'A resonating system exaggerates rapid pressure change, so systolic reads high and diastolic reads low while the mean stays relatively preserved.',
+          plausibility: 'best',
+        },
+        {
+          id: 'accept-because-earlier-steps-clean',
+          label:
+            'Accept the whole tracing, because level, zero, the circuit, and the scale were all confirmed.',
+          rationale:
+            'Those steps establish the reference, the fluid path, and the display. None of them describes how the system responds to rapid pressure change.',
+          plausibility: 'reasonable-but-incomplete',
+        },
+        {
+          id: 'report-widened-pulse-pressure',
+          label:
+            'Report a widened pulse pressure, since the systolic and diastolic separation is clearly visible.',
+          rationale:
+            'The separation is a property of the tubing rather than the circulation; resonance widens pulse pressure independently of the patient.',
+          plausibility: 'incorrect-mechanism',
+        },
+      ],
+      correctChoiceIds: ['mean-only-withhold-systolic'],
+      explanation:
+        'The sequence has an order for a reason. Level, zero, the fluid path, and the scale establish the reference, the connection, and the display; only the dynamic-response step describes whether rapid pressure change survives the journey. A plausible mean is the usual reason that step gets skipped.',
+      evidenceIds: pressureEvidence,
+      reviewStatus: 'sme-review',
+    }),
     prediction: item({
       id: 'pac-pressure-predict-1',
       activityId: 'hemodynamics:learn:pressure-system',
