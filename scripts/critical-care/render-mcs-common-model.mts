@@ -23,8 +23,12 @@
  * emits the collected CSS as a sibling of the JS bundle, which is why the file reads itself back
  * with the `.cjs` → `.css` rename below.
  *
- * Output: public/mcs-preview/*.html, served through the `trainer-prod-static` launch config on
- * :8099. The output directory is gitignored.
+ * Output: node_modules/.cache/mcs/preview/*.html — beside the esbuild bundle, inside a directory
+ * git already ignores, so the harness adds nothing to the repository's ignore rules and leaves no
+ * build product anywhere a reviewer has to think about. Point a static server at that directory to
+ * look at the pages:
+ *
+ *   python3 -m http.server 8100 --directory node_modules/.cache/mcs/preview
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -84,7 +88,7 @@ function page(title: string, body: string, shellWidth = '1580px'): string {
 </html>`
 }
 
-const outDir = join(process.cwd(), 'public', 'mcs-preview')
+const outDir = join(process.cwd(), 'node_modules', '.cache', 'mcs', 'preview')
 mkdirSync(outDir, { recursive: true })
 
 const written: string[] = []
