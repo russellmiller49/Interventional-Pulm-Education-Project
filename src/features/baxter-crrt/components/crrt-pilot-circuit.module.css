@@ -4,10 +4,22 @@
   --circuit-line: rgba(159, 205, 214, 0.24);
   --circuit-panel: #0b252c;
   --circuit-panel-strong: #071a20;
+
+  /* One colour per fluid, always paired with a dash pattern and a text label so
+     the schematic never depends on colour alone. */
   --blood: #e85e73;
-  --blood-dark: #9f3d50;
-  --dialysate: #53d18f;
-  --effluent: #f2c84b;
+  --blood-trace: #ff91a2;
+  --dialysate: #2f8a5d;
+  --dialysate-trace: #7cf0ad;
+  --replacement: #6f45a0;
+  --replacement-trace: #c79bf0;
+  --pbp-citrate: #2b7f8e;
+  --pbp-citrate-trace: #7fe0ef;
+  --effluent: #8b7424;
+  --effluent-trace: #ffe477;
+  --calcium: #a45c22;
+  --calcium-trace: #ffbe86;
+
   color: var(--circuit-ink);
   border: 1px solid var(--circuit-line);
   border-radius: 22px;
@@ -94,6 +106,71 @@
   background: currentColor;
 }
 
+/* ---------------------------------------------------------------- *
+ * Overlay switcher
+ * ---------------------------------------------------------------- */
+
+.overlayBar {
+  margin-bottom: 1rem;
+  padding: 0.9rem;
+  border: 1px solid var(--circuit-line);
+  border-radius: 16px;
+  background: rgba(7, 27, 33, 0.78);
+}
+
+.overlayButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.overlayButtons button {
+  min-height: 44px;
+  padding: 0.5rem 0.9rem;
+  color: #d7e8eb;
+  border: 1px solid var(--circuit-line);
+  border-radius: 999px;
+  background: rgba(18, 56, 65, 0.8);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.overlayButtons button:hover {
+  border-color: rgba(117, 220, 227, 0.6);
+}
+
+.overlayButtons button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+.overlayButtons button[data-selected='true'] {
+  color: #04212a;
+  border-color: #75dce3;
+  background: #75dce3;
+}
+
+/* Selection is carried by more than colour: the chosen view is also underlined
+   and marked with aria-checked. */
+.overlayButtons button[data-selected='true']::before {
+  content: '● ';
+}
+
+.overlaySummary {
+  margin: 0.7rem 0 0;
+  color: #cfe2e6;
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.overlayNote {
+  margin: 0.35rem 0 0;
+  color: var(--circuit-muted);
+  font-size: 0.74rem;
+}
+
 .readinessGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -155,6 +232,10 @@
   line-height: 1.55;
 }
 
+/* ---------------------------------------------------------------- *
+ * Schematic
+ * ---------------------------------------------------------------- */
+
 .diagramViewport {
   width: 100%;
   overflow-x: auto;
@@ -175,9 +256,9 @@
 .circuitSvg {
   display: block;
   width: 100%;
-  min-width: 1040px;
+  min-width: 1180px;
   height: auto;
-  min-height: 430px;
+  min-height: 470px;
 }
 
 .circuitSvg text {
@@ -199,41 +280,32 @@
   letter-spacing: 0.08em;
 }
 
-.patientNode {
-  fill: #173a43;
-  stroke: #75dce3;
-  stroke-width: 3;
-}
+/* --- paths ------------------------------------------------------- */
 
-.patientGlyph {
-  fill: #e85e73;
-  stroke: #ffc1cb;
-  stroke-width: 2;
-}
-
-.tube,
-.fluidLine {
+.tube {
   fill: none;
-  stroke-width: 16;
+  stroke-width: 15;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.accessTube {
-  stroke: #9f3d50;
+.tube[data-kind='blood'] {
+  stroke: var(--blood);
 }
-
-.preFilterTube,
-.returnTube {
-  stroke: #be4a60;
+.tube[data-kind='dialysate'] {
+  stroke: var(--dialysate);
 }
-
-.dialysateLine {
-  stroke: #226d4a;
+.tube[data-kind='replacement'] {
+  stroke: var(--replacement);
 }
-
-.effluentLine {
-  stroke: #8b7424;
+.tube[data-kind='pbp-citrate'] {
+  stroke: var(--pbp-citrate);
+}
+.tube[data-kind='effluent'] {
+  stroke: var(--effluent);
+}
+.tube[data-kind='calcium'] {
+  stroke: var(--calcium);
 }
 
 .flowTrace {
@@ -241,48 +313,74 @@
   stroke-width: 4;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: 10 11;
 }
 
-.accessFlow,
-.preFilterFlow,
-.returnFlow {
-  stroke: #ff91a2;
+.flowTrace[data-kind='blood'] {
+  stroke: var(--blood-trace);
+}
+.flowTrace[data-kind='dialysate'] {
+  stroke: var(--dialysate-trace);
+}
+.flowTrace[data-kind='replacement'] {
+  stroke: var(--replacement-trace);
+}
+.flowTrace[data-kind='pbp-citrate'] {
+  stroke: var(--pbp-citrate-trace);
+}
+.flowTrace[data-kind='effluent'] {
+  stroke: var(--effluent-trace);
+}
+.flowTrace[data-kind='calcium'] {
+  stroke: var(--calcium-trace);
 }
 
-.dialysateFlow {
-  stroke: #7cf0ad;
+/* Inactive paths stay in place and stay visible, so the learner can see that
+   the circuit has not changed — only the fluids running through it. */
+.pathLayer > g[data-active='false'] {
+  opacity: 0.16;
 }
 
-.effluentFlow {
-  stroke: #ffe477;
+.pathLayer > g[data-active='false'] .flowTrace {
+  stroke-dasharray: 3 9 !important;
 }
 
-.circuitSvg[data-running='true'] .flowTrace {
+.circuitSvg[data-running='true'] .pathLayer > g[data-active='true'] .flowTrace {
   animation: crrt-flow 1.05s linear infinite;
 }
 
-.circuitSvg[data-running='true'] .pumpRotor {
+.circuitSvg[data-running='true'] .pumpRotor,
+.circuitSvg[data-running='true'] .fluidRotor {
   animation: crrt-pump 1.4s linear infinite;
   transform-box: fill-box;
   transform-origin: center;
 }
 
-.bloodArrow {
-  fill: #ff91a2;
+.flowArrow[data-kind='blood'] {
+  fill: var(--blood-trace);
+}
+.flowArrow[data-kind='dialysate'] {
+  fill: var(--dialysate-trace);
+}
+.flowArrow[data-kind='replacement'] {
+  fill: var(--replacement-trace);
+}
+.flowArrow[data-kind='pbp-citrate'] {
+  fill: var(--pbp-citrate-trace);
+}
+.flowArrow[data-kind='effluent'] {
+  fill: var(--effluent-trace);
+}
+.flowArrow[data-kind='calcium'] {
+  fill: var(--calcium-trace);
 }
 
-.fluidArrow {
-  fill: #7cf0ad;
+/* --- nodes ------------------------------------------------------- */
+
+.node[data-active='false'] {
+  opacity: 0.24;
 }
 
-.effluentArrow {
-  fill: #ffe477;
-}
-
-.componentLabel,
-.pathLabel,
-.bagLabel {
+.componentLabel {
   font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.04em;
@@ -295,8 +393,35 @@
   letter-spacing: 0.05em;
 }
 
-.pathLabel {
-  fill: #ffb4bf !important;
+.compartmentLabel {
+  fill: #9fc4cc !important;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.patientNode {
+  fill: #173a43;
+  stroke: #75dce3;
+  stroke-width: 3;
+}
+
+.patientGlyph {
+  fill: var(--blood);
+  stroke: #ffc1cb;
+  stroke-width: 2;
+}
+
+.lumenPort {
+  fill: #0f333c;
+  stroke: #cfe4e8;
+  stroke-width: 3;
+}
+
+.lumenMark {
+  fill: #ecf8fb !important;
+  font-size: 14px;
+  font-weight: 900;
 }
 
 .pumpBody {
@@ -317,21 +442,30 @@
   stroke-width: 2;
 }
 
+.fluidRotor {
+  fill: #3f7f92;
+  stroke: #a8dbe6;
+  stroke-width: 2;
+}
+
 .pumpHub {
   fill: #ecf8fb;
 }
 
-.pressureSite circle {
+.pressureSiteRing {
   fill: #143841;
   stroke: #75dce3;
   stroke-width: 4;
 }
 
-.pressureSite text {
-  fill: #aeeaf0 !important;
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: 0.04em;
+.pressureSiteCore {
+  fill: #aeeaf0;
+}
+
+.portGlyph {
+  fill: #d7e8eb;
+  stroke: #071a20;
+  stroke-width: 1.5;
 }
 
 .filterBody {
@@ -342,19 +476,14 @@
 
 .filterFiber {
   stroke: #a8cbd1;
-  stroke-width: 4;
-  opacity: 0.55;
+  stroke-width: 3;
+  opacity: 0.5;
 }
 
-.filterBloodPath {
-  stroke: #ef7186;
-  stroke-width: 14;
-}
-
-.filterFluidPath {
-  stroke: #75d8aa;
-  stroke-width: 6;
-  stroke-dasharray: 8 8;
+.filterMembrane {
+  stroke: #e6f4f7;
+  stroke-width: 3;
+  stroke-dasharray: 6 5;
 }
 
 .deaerationBody {
@@ -366,7 +495,7 @@
 .deaerationPath {
   fill: none;
   stroke: #f77a8f;
-  stroke-width: 8;
+  stroke-width: 7;
   stroke-linecap: round;
 }
 
@@ -398,15 +527,27 @@
   stroke-width: 3;
 }
 
+.sourceBag {
+  fill: rgba(90, 62, 128, 0.72);
+  stroke: var(--replacement-trace);
+  stroke-width: 3;
+}
+
 .dialysateBag {
   fill: rgba(40, 133, 84, 0.76);
-  stroke: #7cf0ad;
+  stroke: var(--dialysate-trace);
   stroke-width: 3;
 }
 
 .effluentBag {
   fill: rgba(136, 112, 31, 0.8);
-  stroke: #ffe477;
+  stroke: var(--effluent-trace);
+  stroke-width: 3;
+}
+
+.calciumBag {
+  fill: rgba(140, 76, 30, 0.76);
+  stroke: var(--calcium-trace);
   stroke-width: 3;
 }
 
@@ -414,8 +555,39 @@
   fill: #c2d9dd;
 }
 
-.bagLabel {
-  fill: #fff !important;
+.scaleBar {
+  stroke: #cfe4e8;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.samplingDomain {
+  fill: rgba(117, 220, 227, 0.12);
+  stroke: #75dce3;
+  stroke-width: 2.5;
+  stroke-dasharray: 9 7;
+}
+
+/* --- calculated-value annotations --------------------------------- */
+
+.derivationBracket {
+  fill: none;
+  stroke: #f0b3c4;
+  stroke-width: 2;
+  stroke-dasharray: 5 6;
+}
+
+.derivationChip {
+  fill: rgba(97, 34, 52, 0.86);
+  stroke: #f0b3c4;
+  stroke-width: 2;
+}
+
+.derivationLabel {
+  fill: #ffd9e2 !important;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.03em;
 }
 
 .motionStatus {
@@ -431,15 +603,92 @@
   font-size: 0.74rem;
 }
 
+/* ---------------------------------------------------------------- *
+ * Legend
+ * ---------------------------------------------------------------- */
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+}
+
+.legend > span {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 0.1rem 0.5rem;
+  align-items: center;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--circuit-line);
+  border-radius: 10px;
+  background: rgba(18, 56, 65, 0.65);
+}
+
+.legend i {
+  grid-row: 1 / span 2;
+  height: 0;
+  border-top-width: 4px;
+  border-top-style: solid;
+}
+
+.legend i[data-kind='blood'] {
+  border-top-color: var(--blood-trace);
+  border-top-style: solid;
+}
+.legend i[data-kind='dialysate'] {
+  border-top-color: var(--dialysate-trace);
+  border-top-style: dashed;
+}
+.legend i[data-kind='replacement'] {
+  border-top-color: var(--replacement-trace);
+  border-top-style: dotted;
+}
+.legend i[data-kind='pbp-citrate'] {
+  border-top-color: var(--pbp-citrate-trace);
+  border-top-style: dashed;
+}
+.legend i[data-kind='effluent'] {
+  border-top-color: var(--effluent-trace);
+  border-top-style: dashed;
+}
+.legend i[data-kind='calcium'] {
+  border-top-color: var(--calcium-trace);
+  border-top-style: dotted;
+}
+
+.legend strong {
+  font-size: 0.76rem;
+}
+
+.legend small {
+  color: var(--circuit-muted);
+  font-size: 0.65rem;
+}
+
+/* ---------------------------------------------------------------- *
+ * Data panels
+ * ---------------------------------------------------------------- */
+
 .dataGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
   gap: 0.8rem;
   margin-top: 1rem;
 }
 
+.sideColumn {
+  display: grid;
+  gap: 0.8rem;
+  align-content: start;
+  min-width: 0;
+}
+
 .pressurePanel,
-.scalePanel {
+.scalePanel,
+.ledgerPanel,
+.destinationPanel {
+  min-width: 0;
   padding: 0.9rem;
   border: 1px solid var(--circuit-line);
   border-radius: 16px;
@@ -454,10 +703,109 @@
   font-size: 1rem;
 }
 
+.panelNote {
+  margin: 0 0 0.7rem;
+  color: var(--circuit-muted);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
 .pressureGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.45rem;
+}
+
+.pressureGrid > div[data-kind='calculated-relationship'] {
+  border-style: dashed;
+  border-color: rgba(240, 179, 196, 0.62);
+  background: rgba(66, 26, 38, 0.55);
+}
+
+.pressureGrid em {
+  color: #9be8b8;
+  font-size: 0.62rem;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.pressureGrid em[data-kind='calculated-relationship'] {
+  color: #ffc2d1;
+}
+
+.pressureDetails {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+}
+
+.pressureDetails details {
+  border: 1px solid var(--circuit-line);
+  border-radius: 12px;
+  background: rgba(18, 56, 65, 0.55);
+}
+
+.pressureDetails summary {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.pressureDetails summary:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: -3px;
+}
+
+.pressureDetails summary i {
+  padding: 0.2rem 0.5rem;
+  color: #04212a;
+  border-radius: 999px;
+  background: #9be8b8;
+  font-size: 0.6rem;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.pressureDetails summary i[data-kind='calculated-relationship'] {
+  background: #ffc2d1;
+}
+
+.pressureDetails dl {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0 0.7rem 0.8rem;
+}
+
+.pressureDetails dt {
+  color: #75dce3;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pressureDetails dd {
+  margin: 0.15rem 0 0;
+  color: #cfe2e6;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.pressureDetails ul {
+  margin: 0;
+  padding-left: 1.1rem;
 }
 
 .scaleGrid {
@@ -532,6 +880,146 @@
   clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%);
 }
 
+/* --- fluid ledger ------------------------------------------------- */
+
+.ledgerGrid {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+}
+
+.ledgerGrid > div {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--circuit-line);
+  border-radius: 12px;
+  background: rgba(18, 56, 65, 0.65);
+}
+
+.ledgerGrid > div[data-emphasis='true'] {
+  border-color: rgba(117, 220, 227, 0.55);
+  background: rgba(19, 70, 82, 0.85);
+}
+
+.ledgerGrid dt {
+  color: var(--circuit-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.ledgerGrid dd {
+  display: grid;
+  gap: 0.1rem;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.ledgerGrid dd small {
+  color: var(--circuit-muted);
+  font-size: 0.66rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.ledgerHeadline {
+  margin: 0.7rem 0 0;
+  padding: 0.7rem 0.8rem;
+  color: #eaf6f8;
+  border-left: 4px solid #f2c84b;
+  background: rgba(70, 56, 14, 0.5);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.conservationList {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.7rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.conservationList > li {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--circuit-line);
+  border-radius: 10px;
+  background: rgba(18, 56, 65, 0.55);
+  font-size: 0.72rem;
+}
+
+.conservationList > li[data-balanced='false'] {
+  border-color: rgba(241, 193, 83, 0.7);
+  background: rgba(104, 75, 18, 0.4);
+}
+
+.conservationList strong {
+  color: #9be8b8;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.conservationList > li[data-balanced='false'] strong {
+  color: #ffe477;
+}
+
+.conservationList em {
+  color: #ffe0a8;
+  font-size: 0.68rem;
+  font-style: normal;
+  line-height: 1.45;
+}
+
+/* --- destinations -------------------------------------------------- */
+
+.destinationLists {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.destinationLists > div {
+  min-width: 0;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--circuit-line);
+  border-radius: 12px;
+  background: rgba(18, 56, 65, 0.65);
+}
+
+.destinationLists h4 {
+  margin: 0 0 0.3rem;
+  color: #75dce3;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.destinationLists ul {
+  margin: 0;
+  padding-left: 1.05rem;
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.destinationLists p {
+  margin: 0;
+  color: var(--circuit-muted);
+  font-size: 0.74rem;
+}
+
+.teachingPoint {
+  margin: 0.7rem 0 0;
+  color: #cfe2e6;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
 @keyframes crrt-flow {
   to {
     stroke-dashoffset: -42;
@@ -585,6 +1073,10 @@
     grid-column: 2;
     text-align: left;
   }
+
+  .destinationLists {
+    grid-template-columns: 1fr;
+  }
 }
 
 @container crrt-circuit (max-width: 380px) {
@@ -605,7 +1097,7 @@
   }
 
   .circuitSvg {
-    min-width: 1040px;
+    min-width: 1180px;
   }
 
   .scaleGrid > div {
@@ -627,7 +1119,58 @@
 
 @media (prefers-reduced-motion: reduce) {
   .circuitSvg[data-running='true'] .flowTrace,
-  .circuitSvg[data-running='true'] .pumpRotor {
+  .circuitSvg[data-running='true'] .pumpRotor,
+  .circuitSvg[data-running='true'] .fluidRotor {
     animation: none !important;
   }
+}
+
+/*
+ * In forced-colours mode the palette is replaced entirely, so every distinction
+ * this surface makes with colour has to survive on borders, patterns, and text.
+ * The dash patterns and the written legend already carry the fluid identities;
+ * these rules keep the panel structure and the selected overlay legible.
+ */
+@media (forced-colors: active) {
+  .panel,
+  .overlayBar,
+  .diagramViewport,
+  .pressurePanel,
+  .scalePanel,
+  .ledgerPanel,
+  .destinationPanel,
+  .legend > span,
+  .pressureDetails details {
+    border: 1px solid CanvasText;
+  }
+
+  .overlayButtons button[data-selected='true'],
+  .pressureDetails summary i {
+    color: HighlightText;
+    background: Highlight;
+    forced-color-adjust: none;
+  }
+
+  .pathLayer > g[data-active='false'],
+  .node[data-active='false'] {
+    opacity: 1;
+  }
+
+  /* Dimming is a colour effect and does not survive here, so inactive paths are
+     re-encoded as a hairline while active paths keep full weight. */
+  .pathLayer > g[data-active='false'] .tube {
+    stroke-width: 2;
+  }
+
+  .ledgerGrid > div[data-emphasis='true'],
+  .conservationList > li[data-balanced='false'] {
+    border: 2px solid CanvasText;
+  }
+}
+
+.derivationCaption {
+  fill: #f0b3c4 !important;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.07em;
 }

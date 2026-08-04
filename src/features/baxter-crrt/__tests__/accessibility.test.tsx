@@ -1,11 +1,14 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
+import { axe } from 'jest-axe'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { useReducer, type AnchorHTMLAttributes, type ReactNode } from 'react'
 
 import { CrrtCasePlayer } from '../components/CrrtCasePlayer'
 import { BaxterCrrtModuleNav } from '../components/BaxterCrrtModuleNav'
+import { CrrtPilotCircuit } from '../components/CrrtPilotCircuit'
 import { getBaxterCrrtCase } from '../content'
+import { crrtCircuitOverlays } from '../content/circuitModel'
 import { createCrrtLearningSession, crrtLearningSessionReducer } from '../engine'
 
 jest.mock('@/i18n/navigation', () => ({
@@ -109,5 +112,76 @@ describe('Baxter CRRT accessibility contract', () => {
     expect(playerCss).toContain('.surfaceSummary[data-mobile-active=')
     expect(playerCss).toContain('@media (max-width: 780px)')
     expect(drillCss).toContain('min-width: 0')
+  })
+
+  it.each(crrtCircuitOverlays.map((overlay) => [overlay.label, overlay.id] as const))(
+    'renders the %s circuit view without an accessibility violation',
+    async (_label, overlayId) => {
+      const view = render(
+        <CrrtPilotCircuit
+          running={true}
+          setReady={true}
+          fluidsReady={true}
+          bloodFlowMlMin={150}
+          dialysateFlowMlHour={1_000}
+          patientFluidRemovalMlHour={100}
+          initialOverlayId={overlayId}
+          pressure={{
+            access: -72,
+            filter: 146,
+            return: 64,
+            effluent: 28,
+            TMP: 77,
+            filterDrop: 82,
+          }}
+        />,
+      )
+
+      expect(await axe(view.container)).toHaveNoViolations()
+      view.unmount()
+    },
+  )
+
+  it('namespaces every generated circuit id so two mounted circuits cannot collide', () => {
+    const view = render(
+      <>
+        <CrrtPilotCircuit
+          running={false}
+          setReady={false}
+          fluidsReady={false}
+          bloodFlowMlMin={null}
+          dialysateFlowMlHour={null}
+          patientFluidRemovalMlHour={null}
+          pressure={{
+            access: null,
+            filter: null,
+            return: null,
+            effluent: null,
+            TMP: null,
+            filterDrop: null,
+          }}
+        />
+        <CrrtPilotCircuit
+          running={false}
+          setReady={false}
+          fluidsReady={false}
+          bloodFlowMlMin={null}
+          dialysateFlowMlHour={null}
+          patientFluidRemovalMlHour={null}
+          pressure={{
+            access: null,
+            filter: null,
+            return: null,
+            effluent: null,
+            TMP: null,
+            filterDrop: null,
+          }}
+        />
+      </>,
+    )
+
+    const ids = [...view.container.querySelectorAll('[id]')].map((node) => node.id)
+    expect(ids.length).toBeGreaterThan(0)
+    expect(new Set(ids).size).toBe(ids.length)
   })
 })
