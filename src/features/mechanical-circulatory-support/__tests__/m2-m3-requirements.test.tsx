@@ -606,6 +606,32 @@ describe('M2/M3 — the clinical distinctions survive the rewrite', () => {
     expect(contract.commonMisinterpretation).toMatch(/adding|added/i)
   })
 
+  it('never presents the two serial pump flows as one summed total', () => {
+    render(<McsWorkbench section="learn" initialActivityId="impella-suction-purge-rv" />)
+    // Walk to the act phase and start right-sided support, so both pumps are running.
+    fireEvent.click(screen.getAllByRole('radio')[0])
+    fireEvent.click(screen.getByRole('button', { name: 'Record what you identified' }))
+    fireEvent.click(screen.getByRole('button', { name: /Continue to the prediction/i }))
+    fireEvent.click(screen.getAllByRole('radio')[0])
+    fireEvent.click(screen.getByRole('button', { name: 'Commit this answer' }))
+    fireEvent.click(screen.getByRole('button', { name: /Continue to the task/i }))
+    fireEvent.change(screen.getByRole('combobox', { name: /Right-sided Impella configuration/i }), {
+      target: { value: 'rp' },
+    })
+
+    // The teaching pane reports the two pumps as two destinations, never as one figure.
+    const readout = document.querySelector('[data-live-readout]')!
+    expect(readout.textContent).toMatch(
+      /Left [\d.]+ L\/min into the aorta · right [\d.]+ L\/min into the lung/,
+    )
+    // And the before-and-after comparison keeps them on separate rows.
+    fireEvent.click(screen.getByRole('button', { name: /Continue to what changed/i }))
+    const table = screen.getByRole('table')
+    expect(table.querySelector('[data-signal="leftDeviceFlowLMin"]')).not.toBeNull()
+    expect(table.querySelector('[data-signal="rightDeviceFlowLMin"]')).not.toBeNull()
+    expect(table.querySelector('[data-signal="deviceFlowLMin"]')).not.toBeNull()
+  })
+
   it('keeps durable support distinct from a larger temporary pathway', () => {
     const durable = mcsSectionLearningContracts.filter(
       (contract) => contract.startingDevice === 'lvad',
