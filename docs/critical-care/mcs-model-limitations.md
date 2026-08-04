@@ -120,7 +120,7 @@ Left unchanged by this package, deliberately: it is a cross-module document that
 hemodynamics, and ventilation sessions in this parallel round may also need to touch, and three
 sessions editing one audit table concurrently is how a merge conflict becomes a wrong number.
 
-Three claims in it are stale with respect to the code as of this branch. Each should be corrected in
+Four claims in it are stale with respect to the code as of this branch. Each should be corrected in
 a **single serialized integration pass after the parallel round merges**, not in a module PR:
 
 | Location                        | Document says                                                      | Source of truth says                                                                                           |
