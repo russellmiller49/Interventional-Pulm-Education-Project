@@ -215,13 +215,14 @@ learner the case has three randomized versions; MV-08's enumerated its own branc
 ```
 npm run type-check                  clean for MV *
 npm run lint                        0 errors, 0 MV findings (18 pre-existing warnings elsewhere)
-npx jest src/features/mechanical-ventilation      18 suites / 449 tests
-npx jest src/features/critical-care               all green, incl. learner-copy + public-client-boundary
+npx jest src/features/mechanical-ventilation      19 suites / 468 tests
+npx jest src/features/critical-care               22 suites / 176 tests, incl. learner-copy + public-client-boundary
 npm run test:a11y                   4 passed
 npm run validate:critical-care-assets   19 assets validated
-npm run dump:mv-waveforms           no flags (engine unchanged)
+npm run dump:mv-waveforms           no flags, byte-identical to main — confirming no engine change
 npm run render:mv-console           4 consoles
 npm run render:mv-teaching          10 panels
+render-mv-novice-runway.mts         20/20 blocks clean at the four widths
 ```
 
 \* `src/lib/board-review-loader.ts` and `src/lib/mdx-utils.ts` report missing
@@ -263,27 +264,40 @@ to 480×298. The stage marker also struck through the trace labels and now start
   unstable obstructive-shock patient and the guided actions on the same screen are an expiratory
   hold and manual release. That is a change to what is credited, and it should be confirmed.
 
-### Found, not fixed — outside this package's named corrections
+### Fixed in the second round — four lessons that disagreed with their own patient
 
-Each is real and measured; none is in D0/D1's scope, and the first has clinical implications that
-are the owner's call rather than mine.
+All four were found by the adversarial pass over the first round and are now corrected, each with a
+regression test taken at the exact learner observation point: the session is built unpaused, the
+guided actions dispatch, and `runResponse` fires one `TICK { seconds: responseSeconds }`.
 
-1. **`oxygenation-response`'s guided PEEP step lands 1 cmH₂O short of the modelled window.** The
-   credited answer names oxygenation, plateau, compliance and blood pressure. The action is
-   PEEP 5 → 7; recruitment in the model is gated at ≥ 8. Measured at 45 s: SpO₂ 84 → 91.8, plateau
-   13.9 → 15.9 (_rises_), compliance **25 → 25**, MAP **77 → 77**. At PEEP 8: compliance 25 → 32,
-   plateau falls to 13.3. Two of the four signals the answer names never move and a third moves the
-   other way. Changing the step changes what the lesson teaches, so it wants a decision.
-2. **`waveform-reading-sequence`'s transfer names a finding its branch does not produce.** The stem
-   asserts _"condensate oscillates near the flow sensor"_; MV-08 at attempt 2 selects
-   `cardiogenic-oscillation`, so `airway.condensate` is false. The autotriggering is real and the
-   credited answer survives, but the named finding is not there on a first run.
-3. **`triggering-and-cycling`'s transfer action shows nothing.** The answer says to reassess
-   inspiratory time; the cycling change is clamped by `tiMaxSeconds`, so mechanical inspiratory time
-   stays at 1.50 s before and after. Intrinsic PEEP does fall, so half the claim holds.
-4. **`ventilation-and-co2`'s transfer inverts the module's own sign convention** — "expiratory flow
-   remains above zero" where the source case says "markedly negative" and MV-06 measures
-   −12.4 L/min. A one-word correction, but in a lesson this package otherwise did not touch.
+| Lesson                      | Was                                                                                                                                                                  | Is                                                                                                                                           |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `oxygenation-response`      | PEEP 5 → 7, one below the recruitment window. SpO₂ 84.00 → 91.87, but shunt 0.30 → 0.30, compliance 25 → 25, MAP 77 → 77, **plateau 13.90 → 15.90 (rising)**         | PEEP 5 → 8. SpO₂ 84.00 → 93.93, shunt 0.30 → 0.20, plateau 13.90 → 13.30, peak 24.90 → 24.30, exhaled VT unchanged at 422 mL                 |
+| `waveform-reading-sequence` | Stem names condensate; MV-08 selects `cardiogenic-oscillation` on attempts 1, 2 and 4, so the finding was absent on a learner's first two runs                       | Variant pinned to `branch: 'condensate'`, resolved to attempt 3 and memoized. `airway.condensate` true, autotrigger fraction 0.68            |
+| `triggering-and-cycling`    | ets +10 %; MV-10's time constant is 1.76 s, so the criterion needed 4.05 s at 10 % and 2.83 s at 20 % — both past the 1.5 s `tiMaxSeconds` cap. **Ti 1.50 → 1.50 s** | ets → 50 %. Ti 1.50 → 1.21 s, intrinsic PEEP 8.90 → 5.60, expiratory flow at next breath −24.30 → −15.30 L/min                               |
+| `ventilation-and-co2`       | "expiratory flow remains above zero", inverting the module's own sign convention against a measured −55.0 L/min                                                      | "has not returned to zero before the next inspiration", plus a copy contract over every stem, explanation, label and rationale in the module |
+
+**Why the oxygenation fix is a step change and not an engine change.** The recruitment window is
+gated at a set PEEP of 8 and stays exactly where it was; the maneuver moved into it. The credited
+copy now names only what the learner can observe — the same tidal volume arriving for less pressure
+— and deliberately no longer leans on compliance, which is model truth rather than something this
+patient's trace reveals, since the plateau it would be computed from is not interpretable here. MAP
+stays in the prediction and is stated as unchanged: a direction of "no change" is a real prediction,
+and it is the answer to why the signal is checked at all.
+
+**Why the cycling step is decisive rather than incremental.** A ten-point nudge cannot move a breath
+that the safety backstop is already ending. Raising the expiratory trigger into the 40–60 % region is
+the ordinary move in obstructive physiology, and the breath still outlasts the patient's own
+inspiration afterwards — the maneuver improves the mismatch without pretending to abolish it.
+
+**The capstone priority is now conditional on the patient, not assumed.** MV-06 at the observation
+point measures MAP 33 mmHg, systolic 49, intrinsic PEEP 33.9, expiratory flow −55.0 L/min. A test
+ties the credited "relieve the trapped gas" to that instability, so if the runtime ever stops being
+an unstable obstructive-shock patient the credit stops being defensible and the suite says so.
+
+Each regression test was confirmed to fail against its own restored defect — PEEP +2 fails three,
+unpinning the branch fails four, the clamped cycling step fails two, the inverted sign fails two —
+and to pass again once restored.
 
 ### Unchanged, deliberately
 
