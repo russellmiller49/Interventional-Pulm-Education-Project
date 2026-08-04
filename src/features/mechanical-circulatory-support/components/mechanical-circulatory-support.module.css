@@ -4296,3 +4296,63 @@
   font-size: 0.74rem;
   font-weight: 800;
 }
+
+/*
+ * Nothing inside a pane may be wider than the pane.
+ *
+ * A grid column sized `auto` takes the width of its widest descendant, and both the common model
+ * and the pathway cards switch to two columns on a *viewport* media query — which is the wrong
+ * question inside a 420-pixel pane. Without these the whole teaching pane grew to the width of the
+ * card grid and every paragraph in it was clipped at the pane edge.
+ */
+.learnPrimaryPane,
+.learnTeachingPane,
+.learnActionPane,
+.teachingBlock,
+.learnResponse,
+.learnContextStrip,
+.liveFlowLines,
+.learnExplainList,
+.foundationMaterial {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.foundationMaterial .commonModelGrid,
+.foundationMaterial .pathwayCardGrid,
+.foundationMaterial .commonModel,
+.foundationMaterial .pathwayCards {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.learnPrimaryPane img,
+.learnTeachingPane img,
+.learnActionPane img,
+.learnPrimaryPane svg,
+.learnTeachingPane svg {
+  max-width: 100%;
+}
+
+/* Wide authored content keeps its own scroll rather than pushing the pane sideways. */
+.learnActionPane .beforeAfterTable {
+  display: block;
+  overflow-x: auto;
+}
+
+/*
+ * Help and Continue stay on screen.
+ *
+ * Sections with longer response options pushed Continue past the bottom of the action pane, so the
+ * learner had to discover that the pane scrolled before they could move on. Pinning the row to the
+ * bottom of the pane keeps the one control that advances the section always visible, whatever is
+ * above it.
+ */
+.learnPaneActions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: 0.5rem 0;
+  margin-top: 0.2rem;
+  border-top: 1px solid var(--line);
+  background: linear-gradient(to bottom, rgba(234, 241, 239, 0.86), #eaf1ef 38%);
+  backdrop-filter: blur(2px);
+}
