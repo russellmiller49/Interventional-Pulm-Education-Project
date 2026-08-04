@@ -46,7 +46,7 @@ export const mechanicalVentilationLessonItems: Readonly<
       phase: 'predict',
       itemType: 'mechanism-interpretation',
       contextRequirement: 'patient',
-      clinicalContextId: 'mv13-high-pressure',
+      clinicalContextId: 'mv01-volume-control',
       visualAssetIds: ['vent-pressure-flow-volume'],
       stem: 'A patient is on volume-controlled ventilation with a square inspiratory flow. Respiratory-system compliance falls. What happens on the traces?',
       choices: [
@@ -85,24 +85,24 @@ export const mechanicalVentilationLessonItems: Readonly<
       phase: 'transfer',
       itemType: 'transfer-case',
       contextRequirement: 'patient',
-      clinicalContextId: 'mv13-high-pressure',
+      clinicalContextId: 'mv04-pressure-control',
       visualAssetIds: ['vent-pressure-flow-volume'],
-      transferVariantId: 'mv02-controlled-variable',
-      stem: 'A different breath shows a square-topped pressure trace and an inspiratory flow that decays smoothly toward zero before inspiration ends. Which variable is the ventilator controlling, and what follows from it?',
+      transferVariantId: 'mv04-controlled-variable',
+      stem: 'A different breath holds its pressure flat at one level from early inspiration until the ventilator cycles, while inspiratory flow falls away from the peak it reached at the start. Which variable is the ventilator controlling, and what follows from it?',
       choices: [
         {
           id: 'pressure-controlled',
           label:
             'Pressure — so the delivered volume is free to change with the mechanics and must be monitored',
           rationale:
-            'A held rectangular pressure with decelerating flow is pressure-targeted delivery; flow decays as the lung fills and the gradient closes.',
+            'A pressure held flat while flow is free to move is pressure-targeted delivery: the ventilator defends the pressure, and the size of the breath follows the lung and the patient’s own effort.',
           plausibility: 'best',
         },
         {
           id: 'volume-controlled',
-          label: 'Volume — the square top means a set tidal volume was reached',
+          label: 'Volume — the flat top means a set tidal volume was reached',
           rationale:
-            'A volume-targeted breath makes the *flow* trace rectangular, not the pressure trace.',
+            'A volume-targeted breath makes the *flow* trace rectangular and lets the pressure trace move, which is what the breath earlier in this section showed.',
           plausibility: 'incorrect-mechanism',
         },
         {
@@ -129,20 +129,20 @@ export const mechanicalVentilationLessonItems: Readonly<
       contextRequirement: 'patient',
       clinicalContextId: 'mv13-high-pressure',
       visualAssetIds: ['vent-pressure-flow-volume', 'vent-bedside-findings'],
-      stem: 'Peak airway pressure has risen. An inspiratory hold shows that plateau pressure is nearly unchanged, and expiratory wheeze or airway secretions are present. Which mechanism best fits the combined findings?',
+      stem: 'Peak airway pressure has risen sharply. An inspiratory hold leaves a plateau far below peak, but the patient is pulling as it is read, so the plateau is depressed by their own effort. Expiratory wheeze or airway secretions are present and the expiratory limb is prolonged. Which mechanism best fits the combined findings?',
       choices: [
         {
           id: 'resistive-load',
           label: 'Increased resistive load between the ventilator and alveoli',
           rationale:
-            'A wider peak-to-plateau difference localizes additional pressure to flow resistance.',
+            'The bedside findings and the prolonged expiratory limb localize the added pressure to flow resistance, and they do so without relying on the plateau. That matters here: effort depresses the plateau, which widens the apparent peak-to-plateau difference, so the gap on its own would overstate the case.',
           plausibility: 'best',
         },
         {
           id: 'elastic-load',
           label: 'Abrupt loss of respiratory-system compliance',
           rationale:
-            'A major compliance loss would usually raise plateau pressure along with peak pressure.',
+            'A major compliance loss raises the distending pressure, and effort pushes the measured plateau in the opposite direction — so a low plateau here is weak evidence either way, while the wheeze and the expiratory limb point elsewhere.',
           plausibility: 'reasonable-but-incomplete',
         },
         {
@@ -155,7 +155,7 @@ export const mechanicalVentilationLessonItems: Readonly<
       ],
       correctChoiceIds: ['resistive-load'],
       explanation:
-        'Peak pressure includes resistive and elastic components. The hold removes flow, so a relatively stable plateau with a larger peak-to-plateau gap supports increased resistance.',
+        'Peak pressure includes resistive and elastic components, and an inspiratory hold is what separates them — but only in a patient whose respiratory muscles are quiet. This patient’s are not, so the plateau reads low and the peak-to-plateau difference is not purely resistive. The mechanism is still localizable, from the examination and the expiratory limb rather than from the split.',
       evidenceIds: mechanicsEvidence,
       reviewStatus: 'sme-review',
     }),
@@ -759,34 +759,34 @@ export const mechanicalVentilationLessonItems: Readonly<
       contextRequirement: 'patient',
       clinicalContextId: 'mv13-high-pressure',
       visualAssetIds: ['vent-pressure-flow-volume', 'vent-bedside-findings'],
-      stem: 'Peak pressure has risen sharply. Plateau pressure is unchanged and expiratory flow still returns to zero before the next breath. Which mechanism does this combination implicate?',
+      stem: 'Peak pressure has risen sharply while the pressure needed to distend the lung has not followed it up. Wheeze is audible, the expiratory limb is prolonged but very nearly empties before the next breath, and the patient is pulling as the hold is read. Which mechanism does this combination implicate?',
       choices: [
         {
           id: 'resistive-dominant',
           label:
-            'A resistive problem between the ventilator and the alveoli — the peak-to-plateau difference widened while distending pressure did not change',
+            'A resistive problem between the ventilator and the alveoli — the added pressure is being spent moving gas rather than distending the lung',
           rationale:
-            'An unchanged plateau means the pressure needed to distend the respiratory system at end-inspiration is the same, so the additional peak pressure was spent moving gas. Expiratory flow reaching zero argues against trapped volume as the dominant contributor.',
+            'The examination and the prolonged expiratory limb both localize the added pressure to flow resistance. Note what is carrying the argument: the patient’s effort depresses the plateau, so the peak-to-plateau difference is inflated and cannot be the evidence on its own.',
           plausibility: 'best',
         },
         {
           id: 'compliance-dominant',
           label: 'A fall in respiratory-system compliance',
           rationale:
-            'A compliance fall raises the plateau, because more pressure is then required to distend the system by the same volume. The plateau here did not move.',
+            'A compliance fall raises the distending pressure. Effort pushes the measured plateau the other way, so a low plateau is weak evidence here — but the wheeze and the expiratory limb point away from stiffness regardless.',
           plausibility: 'incorrect-mechanism',
         },
         {
           id: 'auto-peep-dominant',
           label: 'Dynamic hyperinflation with trapped end-expiratory volume',
           rationale:
-            'Trapping is a genuine member of the differential and belongs on the list, but expiratory flow that reaches zero before the next breath argues against it being dominant now.',
+            'Trapping is a genuine member of the differential and belongs on the list — the expiratory limb here is prolonged, and a little gas is still moving at the next breath. It is not the dominant contributor at this magnitude, and an expiratory hold is what would settle it.',
           plausibility: 'reasonable-but-incomplete',
         },
       ],
       correctChoiceIds: ['resistive-dominant'],
       explanation:
-        'Peak pressure is a sum. Separating it into the pressure spent moving gas and the pressure spent distending the respiratory system is what makes the alarm interpretable; the expiratory limb then excludes or implicates trapped volume. More than one mechanism can coexist, so the claim is about which is dominant now.',
+        'Peak pressure is a sum, and separating it is what makes the alarm interpretable — but the separation needs a plateau taken while the respiratory muscles are quiet, and this patient’s are not. The examination and the expiratory limb localize the mechanism without it. More than one mechanism can coexist, so the claim is about which is dominant now.',
       evidenceIds: mechanicsEvidence,
       reviewStatus: 'sme-review',
     }),
@@ -799,34 +799,35 @@ export const mechanicalVentilationLessonItems: Readonly<
       clinicalContextId: 'mv06-auto-peep',
       transferVariantId: 'vent-high-pressure-integration-transfer',
       visualAssetIds: ['vent-pressure-flow-volume', 'vent-bedside-findings'],
-      stem: 'A different patient triggers the same alarm. Plateau pressure has risen with an unchanged peak-to-plateau difference, and the patient is making visible inspiratory effort. What should be established first?',
+      stem: 'A different patient triggers the same alarm and is hypotensive. Expiratory flow is still running out of the chest when the next breath begins, an expiratory hold reveals a large trapped pressure, and the patient is making visible inspiratory effort. What takes priority?',
       choices: [
         {
-          id: 'measurement-validity',
+          id: 'release-trapped-gas',
           label:
-            'Whether the hold measurements are interpretable at all, because effort during the maneuver invalidates the plateau before any mechanism can be assigned',
+            'Let the lungs empty and support ventilation by hand, then reassess — the expiratory limb has already localized the mechanism',
           rationale:
-            'A hold assumes a relaxed patient. An active effort can produce the same tracing, so measurement validity has to precede mechanism assignment.',
+            'Expiratory flow that never reaches zero, a large trapped pressure, and hypotension together describe gas that cannot get out and a circulation being squeezed by it. This one is answered on the expiratory limb, and it is answered before anything else because the patient is unstable.',
           plausibility: 'best',
         },
         {
-          id: 'assume-compliance',
-          label: 'Assume a compliance fall and act on it, since the plateau rose',
+          id: 'measurement-validity',
+          label:
+            'Establish whether the hold measurements are interpretable at all, since effort invalidates the plateau before any mechanism can be assigned',
           rationale:
-            'The pattern is consistent with a compliance problem but is not yet distinguishable from effort alone.',
+            'The right habit, and true here — the plateau cannot be read while this patient is pulling. But it is not the step to take first: the expiratory limb has already given the mechanism without needing the plateau, and this patient does not have time for the deliberation.',
           plausibility: 'reasonable-but-incomplete',
         },
         {
           id: 'raise-alarm-limit',
           label: 'Raise the pressure alarm limit so the alarm stops, and reassess later',
           rationale:
-            'Silencing the signal removes the information without addressing the condition it detected.',
+            'Silencing the signal removes the information without addressing the condition it detected, and here that condition is obstructive shock.',
           plausibility: 'unsafe',
         },
       ],
-      correctChoiceIds: ['measurement-validity'],
+      correctChoiceIds: ['release-trapped-gas'],
       explanation:
-        'The reading sequence transfers; the answer does not. Establish that the measurement means what it appears to mean, then localize, then act.',
+        'The reading sequence transfers; the answer does not. The same alarm arrives from a fourth mechanism, and the expiratory limb — not the plateau — is what separates it. When the trapped gas is also causing hypotension, relieving it comes before any further measurement.',
       evidenceIds: mechanicsEvidence,
       reviewStatus: 'sme-review',
     }),

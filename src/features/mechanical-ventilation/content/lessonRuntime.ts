@@ -192,9 +192,21 @@ const lessonRuntimes: readonly VentilationLessonRuntimeDefinition[] = [
       requiredEvidence: ['intervention:review-waveforms'],
       responseSeconds: 12,
     },
+    /*
+     * The transfer has to run on a breath whose controlled variable is the *other* one, or it is
+     * not a transfer. It used to run on MV-02, which is volume-controlled — the same targeting as
+     * the primary, and with flow starvation scooping the pressure trace it is the most emphatically
+     * volume-controlled breath in the casebook. The item asked the learner to name a
+     * pressure-targeted breath over a trace that showed the opposite, and the header printed
+     * "Volume-control flow starvation" above it.
+     *
+     * MV-04 is the only pressure-targeted assist/control case. Its inspiratory pressure sits flat
+     * at the set level for the whole second half of inspiration while flow falls away from its
+     * early peak, so the shape the question asks about is the shape on the screen.
+     */
     transfer: {
-      caseId: 'MV-02',
-      goal: 'Read the controlled variable from the trace shapes on a second breath, without using the mode name.',
+      caseId: 'MV-04',
+      goal: 'Read the controlled variable from the trace shapes on a pressure-targeted breath, without using the mode name.',
       actions: [
         screen('main', 'Return to the monitoring screen', 'Read the live breath as delivered.'),
         reviewWaveforms,

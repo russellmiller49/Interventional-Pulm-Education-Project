@@ -55,7 +55,7 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
     domain: 'Waveforms',
     summary:
       'Name what each trace plots and what sets its shape, then separate a volume-targeted breath from a pressure-targeted one on sight.',
-    relatedCaseIds: ['MV-01', 'MV-02'],
+    relatedCaseIds: ['MV-01', 'MV-04'],
     phases: {
       recognize: {
         objective: 'Name what each of the three traces is plotting.',
@@ -108,14 +108,14 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
     },
     transfer: {
       prompt:
-        'A breath shows a square-topped pressure trace and an inspiratory flow that decays toward zero. Which variable is the ventilator controlling?',
+        'A breath holds its pressure flat at one level until the ventilator cycles, while inspiratory flow falls away from its early peak. Which variable is the ventilator controlling?',
       choices: [
         { id: 'pressure', label: 'Pressure — flow and volume follow the mechanics' },
         { id: 'volume', label: 'Volume — pressure follows the mechanics' },
       ],
       correctChoiceId: 'pressure',
       explanation:
-        'A held, rectangular pressure with decelerating flow is pressure-targeted delivery. The decay is the lung filling until the pressure gradient closes.',
+        'A pressure held flat while flow is free to move is pressure-targeted delivery. The ventilator defends the pressure, and the size of the breath follows the lung.',
     },
     references: [
       {
@@ -154,7 +154,7 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
       act: {
         objective: 'Choose a bounded assessment action.',
         requiredAction:
-          'Compare peak and plateau behavior and inspect the airway/circuit when indicated.',
+          'Compare peak and plateau behaviour and inspect the airway/circuit when indicated — and establish whether the patient is quiet enough for the plateau to be read at all before leaning on the difference.',
         teachingPoint:
           'The simulator keeps assessment, ventilator changes, and airway/circuit actions as distinct semantic commands.',
       },
@@ -750,7 +750,8 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
       choices: [
         {
           id: 'clean-case',
-          label: 'Patient examination, airway/circuit inspection, and peak-to-plateau comparison',
+          label:
+            'Patient examination, airway/circuit inspection, and a peak-to-plateau comparison once the plateau can be read',
         },
         {
           id: 'altered-state',
@@ -833,7 +834,7 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
         {
           id: 'resistance',
           label:
-            'A resistive problem in the airway or circuit — the peak-to-plateau gap widened while the distending pressure did not change',
+            'A resistive problem in the airway or circuit — the added pressure is being spent moving gas rather than distending the lung',
         },
         {
           id: 'compliance',
@@ -846,16 +847,16 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
       ],
       correctChoiceId: 'resistance',
       explanation:
-        'An unchanged plateau means the pressure required to distend the respiratory system at end-inspiration has not changed, so the extra peak pressure was spent moving gas — secretions, a kinked or obstructed tube, bronchospasm, or a circuit problem. Expiratory flow reaching zero argues against trapped volume as the dominant contributor.',
+        'The extra peak pressure is being spent moving gas — secretions, a kinked or obstructed tube, bronchospasm, or a circuit problem. The examination and the prolonged expiratory limb carry that argument; the peak-to-plateau difference cannot, because this patient’s effort depresses the plateau and inflates the gap.',
     },
     transfer: {
       prompt:
-        'A different patient triggers the same high-pressure alarm. Plateau pressure has risen with an unchanged peak-to-plateau difference, and the patient is making visible inspiratory effort. What should be established first?',
+        'A different patient triggers the same high-pressure alarm and is hypotensive. Expiratory flow is still running out of the chest when the next breath begins, an expiratory hold reveals a large trapped pressure, and the patient is making visible inspiratory effort. What takes priority?',
       choices: [
         {
           id: 'relaxed-measurement',
           label:
-            'Whether the hold measurements are interpretable at all, since active effort during the maneuver invalidates the plateau before any mechanism can be assigned',
+            'Let the lungs empty and support ventilation by hand, then reassess — the expiratory limb has already localized the mechanism',
         },
         {
           id: 'raise-alarm-limit',
@@ -863,12 +864,13 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
         },
         {
           id: 'assume-compliance',
-          label: 'Assume a compliance fall and act on it, since the plateau rose',
+          label:
+            'Establish whether the hold measurements are interpretable at all before assigning any mechanism',
         },
       ],
       correctChoiceId: 'relaxed-measurement',
       explanation:
-        'The pattern is consistent with a compliance problem, but patient effort during an inspiratory hold makes the plateau uninterpretable — the same tracing can be produced by effort alone. Establish measurement validity before assigning a mechanism, exactly as the waveform-reading sequence requires.',
+        'Expiratory flow that never reaches zero, a large trapped pressure, and hypotension together describe gas that cannot get out and a circulation being squeezed by it. Checking whether the plateau can be read is the right habit and true here, but it is the wrong step to take first: the expiratory limb has already given the mechanism, and this patient does not have time for the deliberation.',
     },
     references: [
       {

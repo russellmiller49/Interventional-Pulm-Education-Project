@@ -80,6 +80,15 @@
   opacity: 0.32;
 }
 
+/*
+ * The pressure above baseline when it cannot be attributed to elastic or resistive load — drawn as
+ * one hatched band rather than two solid ones, because splitting it would be the claim the patient's
+ * own effort has just invalidated. Deliberately not the elastic or resistive colour.
+ */
+.segmentUnattributed {
+  fill: #b9c6c9;
+}
+
 .segmentLabel {
   fill: #24454b;
   font-size: 9px;
