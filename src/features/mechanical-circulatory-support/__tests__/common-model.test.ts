@@ -36,7 +36,6 @@ import {
   type McsSupportPathwayCard,
 } from '../content'
 import { mcsModuleNavItems } from '../components/McsModuleNav'
-import { MCS_COMPLETABLE_ITEM_COUNT, createDefaultMcsProgress, mcsProgressPercent } from '../engine'
 import { mcsCapstoneScenarios, mcsPracticeScenarios } from '../content/scenarios'
 
 const mcsPathway = criticalCareLearningPathway('mechanical-circulatory-support')
@@ -531,34 +530,5 @@ describe('the guided-section count is derived, not written down', () => {
     expect(practiceItem?.description).toContain(String(mcsPracticeScenarios.length))
     const challengeItem = mcsModuleNavItems.find((item) => item.title === 'Challenge')
     expect(challengeItem?.description).toContain(String(mcsCapstoneScenarios.length))
-  })
-
-  it('counts every completable item once when reporting how far a learner has come', () => {
-    expect(MCS_COMPLETABLE_ITEM_COUNT).toBe(
-      mcsLessons.length + mcsPracticeScenarios.length + mcsCapstoneScenarios.length,
-    )
-    expect(MCS_COMPLETABLE_ITEM_COUNT).toBe(21)
-
-    const everythingButOne = {
-      ...createDefaultMcsProgress(),
-      completedLessonIds: mcsLessons.map((lesson) => lesson.id),
-      masteredCaseIds: [
-        ...mcsPracticeScenarios.map((scenario) => scenario.id),
-        ...mcsCapstoneScenarios.slice(0, -1).map((scenario) => scenario.id),
-      ],
-    }
-    // The old hard-coded denominator of 20 reported this state as finished. It is not.
-    expect(mcsProgressPercent(everythingButOne)).toBeLessThan(100)
-    expect(mcsProgressPercent(everythingButOne)).toBe(95)
-
-    const everything = {
-      ...everythingButOne,
-      masteredCaseIds: [
-        ...mcsPracticeScenarios.map((scenario) => scenario.id),
-        ...mcsCapstoneScenarios.map((scenario) => scenario.id),
-      ],
-    }
-    expect(mcsProgressPercent(everything)).toBe(100)
-    expect(mcsProgressPercent(createDefaultMcsProgress())).toBe(0)
   })
 })

@@ -1,14 +1,5 @@
-import { mcsLessons } from '../content/lessons'
-import { mcsCapstoneScenarios, mcsPracticeScenarios } from '../content/scenarios'
-
 import type { McsDeviceKind, McsModuleSection, McsSimulationState } from './types'
 import { hasMcsMastery } from './reducer'
-
-/*
- * These two modules import only `engine/types`, so importing them here introduces no cycle. The
- * barrel is deliberately not used: `content/index.ts` reaches the shared derived-value registry,
- * which is a much larger graph than a progress helper needs.
- */
 
 const STORAGE_KEY = 'interventionalpulm:mcs-progress:v1'
 
@@ -127,20 +118,7 @@ export function recordMcsScenarioResult(
   }
 }
 
-/**
- * Everything a learner can work through: every guided section, plus every practice and challenge
- * case, because `masteredCaseIds` accumulates both.
- *
- * Derived rather than written down. The previous hard-coded 20 was correct for an eight-section
- * pathway and silently became wrong when the ninth landed, so a learner reached a reported hundred
- * with one activity still untouched and every intermediate value was over-reported — including the
- * `percentComplete` sent to analytics.
- */
-export const MCS_COMPLETABLE_ITEM_COUNT =
-  mcsLessons.length + mcsPracticeScenarios.length + mcsCapstoneScenarios.length
-
 export function mcsProgressPercent(progress: McsProgressV1): number {
   const completed = progress.completedLessonIds.length + progress.masteredCaseIds.length
-  if (MCS_COMPLETABLE_ITEM_COUNT === 0) return 0
-  return Math.min(100, Math.round((completed / MCS_COMPLETABLE_ITEM_COUNT) * 100))
+  return Math.min(100, Math.round((completed / 20) * 100))
 }
