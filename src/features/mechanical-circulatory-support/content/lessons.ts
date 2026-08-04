@@ -1,86 +1,108 @@
 import type { McsLessonDefinition } from '../engine/types'
 
 export const mcsLessons: readonly McsLessonDefinition[] = [
+  /**
+   * The two foundation sections carry the common cardiovascular model (M0/M1). Their ids, stage,
+   * device, and titles are load-bearing — the titles are shared verbatim with the locked pathway
+   * and activity catalog, and the stage drives `mcsFoundationLessonIds`.
+   *
+   * Every step keeps an `inspect:*` or `device:select:*` target, which are the only action ids the
+   * guided-step button can dispatch. A foundation step that reached for a device-specific control
+   * would render with no button and be completable only by accident.
+   */
   {
     id: 'mcs-foundations-signals',
-    version: '1.0.0',
+    version: '1.1.0',
     curriculumStage: 'foundation',
     device: 'shared',
     title: 'Validate the signal before the device',
     summary:
-      'Build a pressure–flow baseline and separate patient, measurement, and device problems.',
+      'Work the questions that come before any device control, and keep pressure, flow, oxygen delivery, and organ response as four separate answers.',
     objectives: [
-      'Confirm rhythm, arterial waveform fidelity, filling pressures, flow, and perfusion before changing support.',
-      'Use trends and internal consistency instead of reacting to one displayed number.',
+      'Name the dominant problem, the path blood takes, and what would count as success — before touching a device control.',
+      'Read pressure, flow, oxygen delivery, and organ response as four separate levels, and refuse to report a finding from one level as an answer at another.',
+      'Keep native contribution, displayed device contribution, and effective systemic delivery as three separate lines rather than one number.',
     ],
     steps: [
       {
         id: 'baseline-arterial',
-        title: 'Read pressure and pulsatility',
-        instruction: 'Inspect the arterial waveform and MAP before changing a device setting.',
-        rationale: 'A preserved peak pressure can coexist with very low forward stroke volume.',
+        title: 'Start at pressure, and stop there',
+        instruction:
+          'Read the arterial waveform and mean pressure, then say what this does and does not tell you about how much blood is moving.',
+        rationale:
+          'Pressure is the first level of the model and it answers only its own question. A preserved or augmented pressure can sit on top of a very small forward stroke volume, so the honest answer at this level is that flow is still unknown.',
         targetActionId: 'inspect:arterial',
       },
       {
         id: 'baseline-filling',
-        title: 'Read both ventricles',
+        title: 'Ask what is filling each ventricle',
         instruction:
-          'Review RAP, PCWP, PAPi, and the relationship between RV delivery and LV filling.',
-        rationale: 'Most LV support devices depend on adequate right-sided delivery.',
+          'Review right atrial pressure, wedge pressure, PAPi, and the relationship between right-sided delivery and left-sided filling.',
+        rationale:
+          'Every left-sided device inherits the right ventricle: a pump can only move blood that has already crossed the lungs. This is where the model asks which chamber is being relieved, which one may inherit the burden, and what is limiting performance.',
         targetActionId: 'inspect:preload',
       },
       {
         id: 'baseline-device',
-        title: 'Separate native and device flow',
+        title: 'Separate the three flow lines',
         instruction:
-          'Compare native flow, device flow, effective systemic flow, and recirculation.',
+          'Compare the native contribution, the displayed device contribution, and effective systemic delivery — and check whether the displayed number is a measurement or an estimate.',
         rationale:
-          'A larger displayed device flow is not automatically a larger effective systemic flow.',
+          'These are three different quantities and only the third is the one the patient experiences. They are not automatically additive: whether two streams sum, compete, or pass through one another depends on the pathway, so the arithmetic has to be argued rather than performed.',
         targetActionId: 'inspect:device',
       },
     ],
-    sourceIds: ['master-hemodynamics-reference', 'ishlt-hfsa-acute-mcs-2023'],
+    sourceIds: [
+      'master-hemodynamics-reference',
+      'mcs-bedside-reference-supplied',
+      'ishlt-hfsa-acute-mcs-2023',
+    ],
   },
   {
     id: 'mcs-foundations-mechanisms',
-    version: '1.0.0',
+    version: '1.1.0',
     curriculumStage: 'foundation',
     device: 'shared',
     title: 'Unloading, augmentation, and total flow',
     summary:
-      'Compare counterpulsation, transvalvular unloading, and durable continuous-flow support.',
+      'Trace source, active component, and destination for three mechanisms, and separate a device that changes timing from one that moves blood.',
     objectives: [
-      'Explain where each device takes blood from and where it returns it.',
-      'Predict changes in LVEDV/LVEDP, pulsatility, MAP, and oxygen demand.',
+      'Trace where blood enters and where it returns for each mechanism, before naming what the device is for.',
+      'Say whether a device alters pressure timing, pumps blood directly, or creates an extracorporeal path — and what each of those means for the number on its screen.',
+      'Name which chamber each mechanism relieves and which chamber or vascular bed may inherit the burden.',
     ],
     steps: [
       {
         id: 'mechanism-iabp',
-        title: 'Counterpulsation',
-        instruction: 'Select IABP and observe the assisted versus unassisted arterial beats.',
+        title: 'A mechanism that moves no blood',
+        instruction:
+          'Select counterpulsation and compare the assisted with the unassisted beat. Notice that no device flow appears anywhere on the display.',
         rationale:
-          'IABP changes timing and impedance rather than providing a continuous pump flow.',
+          'This mechanism changes the timing and shape of pressure around a beat the patient is still generating. There is no second stream to add to the native contribution, which is why the flow account for counterpulsation has only one line that carries blood.',
         targetActionId: 'device:select:iabp',
       },
       {
         id: 'mechanism-impella',
-        title: 'Direct LV unloading',
-        instruction: 'Select Impella and compare LV volume, PCWP, native flow, and device flow.',
+        title: 'A mechanism that moves blood across a valve',
+        instruction:
+          'Select the transvalvular pump and follow the path — left ventricle in, aorta out. Compare left ventricular volume, wedge pressure, the native contribution, and the displayed pump flow.',
         rationale:
-          'Continuous LV-to-aorta flow can unload the LV while reducing native aortic-valve flow.',
+          'Here there really is a second stream, and the left ventricle is directly relieved. But the displayed flow is an estimate of blood moved from chamber to artery, not blood arriving at an organ, and the right ventricle still has to deliver everything the pump moves.',
         targetActionId: 'device:select:impella',
       },
       {
         id: 'mechanism-lvad',
-        title: 'Durable continuous flow',
+        title: 'The same path, a different decision',
         instruction:
-          'Select LVAD and inspect flow, speed, power, PI, and aortic-valve opening together.',
-        rationale: 'Controller estimates require patient and hemodynamic context.',
+          'Select durable continuous flow and inspect flow, speed, power, pulsatility index, and aortic-valve opening as one interdependent set.',
+        rationale:
+          'The blood follows the same left-ventricle-to-aorta path as the temporary pump, but the decision is different in kind: candidacy, implantation, and an agreed exit strategy are settled before support begins. The displayed flow is computed from power and speed, so it is least trustworthy in exactly the states that disturb that relationship.',
         targetActionId: 'device:select:lvad',
       },
     ],
     sourceIds: [
       'master-hemodynamics-reference',
+      'mcs-bedside-reference-supplied',
       'ishlt-hfsa-acute-mcs-2023',
       'ishlt-durable-mcs-2023',
     ],
