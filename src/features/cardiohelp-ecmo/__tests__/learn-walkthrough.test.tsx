@@ -14,6 +14,7 @@ import {
 import { CardiohelpConsole } from '../components/CardiohelpConsole'
 import { CircuitAndMonitors } from '../components/CircuitAndMonitors'
 import { LearnLessonPlayer, resolveGuidedLesson } from '../components/LearnLessonPlayer'
+import { LearnStepTeaching, type LearnStepStatus } from '../components/LearnStepTeaching'
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -47,6 +48,10 @@ function LearnHarness({
   const [, setCompletedLessonIds] = useState<Set<string>>(() => new Set())
   const [guidedTarget, setGuidedTarget] = useState<GuidedTarget>('circuit')
   const [guidedControlId, setGuidedControlId] = useState<GuidedControlId | null>(null)
+  // B3 moved the step's rationale, the live snapshot, and the completed-step response into the
+  // workspace's teaching pane. The harness composes the same surfaces the workspace composes, so
+  // these assertions still walk one lesson through one engine rather than two copies of it.
+  const [stepStatus, setStepStatus] = useState<LearnStepStatus | null>(null)
   const lesson = resolveGuidedLesson(scenarioId)
 
   function selectLesson(nextScenarioId: string) {
@@ -96,7 +101,9 @@ function LearnHarness({
           setGuidedControlId(controlId)
           onControlHelpChange(controlId)
         }}
+        onStepStatusChange={setStepStatus}
       />
+      {stepStatus ? <LearnStepTeaching state={state} status={stepStatus} /> : null}
       <CardiohelpConsole
         state={state}
         dispatch={dispatch}
