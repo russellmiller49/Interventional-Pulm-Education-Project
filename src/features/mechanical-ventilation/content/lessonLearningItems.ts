@@ -526,9 +526,9 @@ export const mechanicalVentilationLessonItems: Readonly<
         {
           id: 'coupled-response',
           label:
-            'Predict the direction of oxygenation, plateau pressure, compliance, and blood pressure',
+            'Predict a direction for oxygenation, for the pressure the same breath costs, and for the blood pressure — including “no change”',
           rationale:
-            'PEEP can recruit lung while also increasing distending pressure and affecting venous return.',
+            'PEEP can open lung that was collapsing, which shows up as the same tidal volume arriving for less pressure. It also raises the pressure inside the chest, which can reduce the blood returning to the heart. A prediction that names only the benefit cannot tell you whether you have bought it too dearly — and a direction of “no change” is a real prediction, which is what makes the reassessment falsifiable.',
           plausibility: 'best',
         },
         {
@@ -541,13 +541,13 @@ export const mechanicalVentilationLessonItems: Readonly<
           id: 'pressure-only',
           label: 'Predict only that airway pressure will rise',
           rationale:
-            'This omits the intended oxygenation response and the hemodynamic consequence.',
+            'This omits the intended oxygenation response, and it assumes the direction: if the added pressure recruits lung, the pressure the same breath costs can fall rather than rise.',
           plausibility: 'reasonable-but-incomplete',
         },
       ],
       correctChoiceIds: ['coupled-response'],
       explanation:
-        'The reassessment must couple benefit and burden: oxygenation, plateau pressure, compliance, and MAP should be interpreted together.',
+        'Reassessment couples benefit against burden. Watch what this patient actually does: oxygenation improves, and the same tidal volume now arrives at a lower peak and plateau than before — the signature of lung that was collapsing and is now open, and the reason the pressure cost is worth reading as a pair with the volume it bought. The mean arterial pressure does not move here, which is not a reason to have skipped it; it is the answer to why you look.',
       evidenceIds: oxygenationEvidence,
       reviewStatus: 'sme-review',
     }),
@@ -640,7 +640,7 @@ export const mechanicalVentilationLessonItems: Readonly<
       clinicalContextId: 'mv06-obstructive-shock',
       visualAssetIds: ['vent-pressure-flow-volume', 'vent-vital-monitor'],
       transferVariantId: 'mv06-obstructive-shock',
-      stem: 'A new patient with severe asthma becomes hypotensive while expiratory flow remains above zero and intrinsic PEEP is very high. What is the immediate priority?',
+      stem: 'A new patient with severe asthma becomes hypotensive while expiratory flow has not returned to zero before the next inspiration and intrinsic PEEP is very high. What is the immediate priority?',
       choices: [
         {
           id: 'release-trapped-gas',
@@ -806,7 +806,7 @@ export const mechanicalVentilationLessonItems: Readonly<
           label:
             'Let the lungs empty and support ventilation by hand, then reassess — the expiratory limb has already localized the mechanism',
           rationale:
-            'Expiratory flow that never reaches zero, a large trapped pressure, and hypotension together describe gas that cannot get out and a circulation being squeezed by it. This one is answered on the expiratory limb, and it is answered before anything else because the patient is unstable.',
+            'Expiratory flow that has not returned to zero, a large trapped pressure, and hypotension together describe gas that cannot get out and a circulation being squeezed by it. This one is answered on the expiratory limb, and it is answered before anything else because the patient is unstable. Note what it is and is not: letting the lungs empty is the immediate stabilizing act, not the diagnosis and not the fix. The measurement that quantifies the trapping and the ventilator changes that stop it recurring both come after the circulation is no longer being squeezed.',
           plausibility: 'best',
         },
         {
@@ -827,7 +827,7 @@ export const mechanicalVentilationLessonItems: Readonly<
       ],
       correctChoiceIds: ['release-trapped-gas'],
       explanation:
-        'The reading sequence transfers; the answer does not. The same alarm arrives from a fourth mechanism, and the expiratory limb — not the plateau — is what separates it. When the trapped gas is also causing hypotension, relieving it comes before any further measurement.',
+        'The reading sequence transfers; the answer does not. The same alarm arrives from a fourth mechanism, and the expiratory limb — not the plateau — is what separates it. Three things are being kept apart here. Relieving the trapped gas is immediate stabilization, taken because the circulation is failing now. Measuring what was trapped, and whether the plateau can be read at all, comes once the patient tolerates the pause. Changing the ventilator so the lungs have time to empty — and treating the obstruction itself — is the definitive correction, and it is the only one of the three that stops this recurring.',
       evidenceIds: mechanicsEvidence,
       reviewStatus: 'sme-review',
     }),

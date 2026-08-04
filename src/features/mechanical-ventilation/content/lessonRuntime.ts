@@ -1,3 +1,6 @@
+// Imported from the module rather than the barrel: `engine/index` re-exports `session`, which pulls
+// the learning-module activity barrel and with it a `'use client'` analytics module.
+import { createInitialSimulationState } from '../engine/simulation'
 import type {
   VentilationAction,
   VentilationSimulationState,
@@ -17,6 +20,19 @@ export interface VentilationLessonGuidedAction {
 
 export interface VentilationLessonRuntimeVariant {
   readonly caseId: string
+  /**
+   * Pin this variant to one authored branch of its case.
+   *
+   * A case's branch is chosen from a hash of `(caseId, experience, attempt)`, and the lesson's
+   * attempt number climbs with every visit — so a variant whose question names a specific finding
+   * gets it on some runs and not others. `waveform-reading-sequence`'s transfer asks about
+   * condensate at the flow sensor, and MV-08 selects `cardiogenic-oscillation` on attempts 1, 2 and
+   * 4: the named finding was absent on a learner's first two runs.
+   *
+   * Set this only where the question names a branch-specific finding. Everywhere else the variation
+   * is the point and should stay.
+   */
+  readonly branch?: string
   readonly goal: string
   readonly actions: readonly VentilationLessonGuidedAction[]
   readonly requiredEvidence: readonly string[]
@@ -277,6 +293,10 @@ const lessonRuntimes: readonly VentilationLessonRuntimeDefinition[] = [
     },
     transfer: {
       caseId: 'MV-08',
+      // The question names condensate at the flow sensor, so the patient has to have it. Without
+      // this the lesson loaded `cardiogenic-oscillation` on a learner's first two runs and the
+      // named finding was simply not there — the autotriggering was real, the reason given was not.
+      branch: 'condensate',
       goal: 'Validate an extra-breath pattern against the patient and circuit before assigning a cause.',
       actions: [
         assessPatient,
@@ -317,13 +337,30 @@ const lessonRuntimes: readonly VentilationLessonRuntimeDefinition[] = [
       goal: 'Recognize delayed cycling in obstructive physiology and test an earlier cycling threshold.',
       actions: [
         screen('controls', 'Open cycling controls', 'Locate the expiratory trigger sensitivity.'),
+        /*
+         * A decisive step rather than a nudge, because on this patient a nudge changes nothing.
+         *
+         * The breath ends at whichever comes first: the flow-cycle criterion, or the ventilator's
+         * `tiMaxSeconds` backstop. MV-10's time constant is 1.76 s (compliance 80 mL/cmH₂O against
+         * resistance 22), so the flow-cycle criterion is not reached until roughly 42 % — at 10 %
+         * it would need 4.05 s and at 20 % still 2.83 s, both past the 1.5 s cap. The authored
+         * +10 % step therefore left mechanical inspiratory time at exactly 1.50 s before and after,
+         * and the lesson credited an answer about reassessing inspiratory time over an intervention
+         * that could not move it.
+         *
+         * 50 % puts the criterion at 1.22 s, inside the cap, so cycling becomes the determinant and
+         * the trace responds. It is also the clinically ordinary move: in obstructive physiology
+         * the expiratory trigger is raised into the 40–60 % region, not by ten points at a time.
+         * The breath still outlasts the patient's own inspiration afterwards, so the maneuver
+         * improves the mismatch without pretending to abolish it.
+         */
         control(
           'etsPercent',
-          'Increase the cycling threshold one step',
-          'Cycle earlier, then compare mechanical inspiratory time and expiratory flow.',
+          'Raise the cycling threshold decisively',
+          'End inspiration earlier, then compare mechanical inspiratory time and expiratory emptying.',
           (state) =>
             state.ventilator.settings.mode === 'pressure-support'
-              ? Math.min(80, state.ventilator.settings.etsPercent + 10)
+              ? Math.min(80, Math.max(50, state.ventilator.settings.etsPercent + 10))
               : 35,
         ),
         reviewWaveforms,
@@ -380,11 +417,23 @@ const lessonRuntimes: readonly VentilationLessonRuntimeDefinition[] = [
       goal: 'Test a small PEEP change while watching oxygenation, plateau pressure, and MAP together.',
       actions: [
         screen('controls', 'Open oxygenation controls', 'Locate PEEP and oxygen controls.'),
+        /*
+         * Three, not two. The modeled recruitment window opens at a set PEEP of 8, so from this
+         * case's baseline of 5 a +2 step lands one centimetre short of it: oxygenation improved
+         * (the shunt term responds continuously) while compliance and the shunt fraction did not
+         * move at all, and the plateau went *up* with the baseline rather than down. The lesson
+         * credits a recruitment prediction, so the step has to reach the recruitment the model
+         * actually has.
+         *
+         * Still one bounded change, and still small enough that the response remains attributable
+         * to it. The engine is untouched: this moves the maneuver into the window, rather than
+         * moving the window onto the maneuver.
+         */
         control(
           'peepCmH2O',
-          'Increase PEEP by 2 cmH₂O',
+          'Increase PEEP by 3 cmH₂O',
           'Make one bounded change and preserve the ability to attribute the response.',
-          (state) => state.ventilator.settings.peepCmH2O + 2,
+          (state) => state.ventilator.settings.peepCmH2O + 3,
         ),
         screen(
           'tools',
@@ -576,6 +625,40 @@ const lessonRuntimes: readonly VentilationLessonRuntimeDefinition[] = [
     },
   },
 ] as const
+
+/* ------------------------------------------------------------------------------------------------
+ * Pinning a variant to its branch
+ * ---------------------------------------------------------------------------------------------- */
+
+/**
+ * The lowest attempt number on which `caseId` selects `branch`.
+ *
+ * The branch is a pure function of the attempt — `hashSeed(caseId:experience:attempt)` indexed into
+ * the case's `branchOptions` — but `hashSeed` is private to the engine, and reaching into it to
+ * recompute the selection here would duplicate a rule that already exists. So this asks the engine
+ * the same way the waveform dump harness does: build the state and read the branch it chose.
+ *
+ * Bounded and memoized. A miss returns the caller's own attempt, so a branch that stops existing
+ * degrades to the current behaviour rather than throwing at import.
+ */
+const attemptForBranchCache = new Map<string, number>()
+
+export function ventilationLessonAttempt(
+  variant: VentilationLessonRuntimeVariant,
+  requestedAttempt: number,
+): number {
+  if (!variant.branch) return requestedAttempt
+  const key = `${variant.caseId}:${variant.branch}`
+  const cached = attemptForBranchCache.get(key)
+  if (cached !== undefined) return cached
+  for (let attempt = 1; attempt <= 64; attempt += 1) {
+    if (createInitialSimulationState(variant.caseId, 'learn', attempt).branch === variant.branch) {
+      attemptForBranchCache.set(key, attempt)
+      return attempt
+    }
+  }
+  return requestedAttempt
+}
 
 export const ventilationLessonRuntimeById = new Map(
   lessonRuntimes.map((definition) => [definition.lessonId, definition]),
