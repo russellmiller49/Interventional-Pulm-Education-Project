@@ -271,6 +271,32 @@ export function EcmoCircuit3D({
             guidedHelp={guidedControlId === 'cardiohelp-clamp-return'}
             onToggle={() => dispatch({ type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return' })}
           />
+          {/*
+            Resumption after an air event, as one bounded act.
+            Deliberately not the console reset and deliberately not a clamp: this module does not
+            teach where clamp opening, pump restart and console reset fall relative to one another,
+            because that choreography is device- and program-specific. The button says what it
+            stands for, and the helper text says it is a simulation abstraction.
+          */}
+          <button
+            type="button"
+            id="cardiohelp-resume-support"
+            className={styles.clampControl}
+            data-guided-help={guidedControlId === 'cardiohelp-resume-support'}
+            disabled={!clampControlsEnabled || !state.circuit.bubbleResetRequired}
+            onClick={() => dispatch({ type: 'RESUME_SUPPORT_AFTER_BUBBLE' })}
+          >
+            <span aria-hidden="true" className={styles.clampControlIcon}>
+              ▶
+            </span>
+            <span>
+              <strong>Resume support per current IFU and approved local protocol</strong>
+              <small>
+                A bounded simulation abstraction. It stands in for the device- and program-specific
+                resumption sequence and does not reproduce or teach that sequence.
+              </small>
+            </span>
+          </button>
         </div>
         <div
           className={styles.clampStatus}

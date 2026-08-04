@@ -61,7 +61,8 @@ import {
 import { CardiohelpConsole } from './CardiohelpConsole'
 import { formatChannelGroup } from './channelReadout'
 import { CircuitAndMonitors } from './CircuitAndMonitors'
-import { LearnLessonPlayer, resolveGuidedLesson } from './LearnLessonPlayer'
+import { EcmoLearnWorkspace } from './EcmoLearnWorkspace'
+import { resolveGuidedLesson } from './LearnLessonPlayer'
 import {
   PracticeCasePlayer,
   resolveScenarioDefinition,
@@ -733,6 +734,40 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
     setHelpVisible(true)
   }
 
+  /*
+   * The one live simulator, built once.
+   *
+   * Learn hands this node to the three-pane workspace and Practice/Assess render it beside the case
+   * player. Constructing a second copy for the workspace would put a second set of guided control
+   * ids in the document, and both the guided help targeting and the practice hint focus resolve
+   * controls by id — so `document.getElementById` would start returning whichever came first.
+   */
+  const simulatorColumn = (
+    <div className={styles.simulatorColumn}>
+      <CardiohelpConsole
+        state={state}
+        dispatch={dispatch}
+        controlsEnabled
+        guidedTarget={activeGuidedTarget}
+        guidedControlId={activeGuidedControlId}
+        initiationTargets={
+          section !== 'learn' ? (scenario.clinicalCase?.initiationTargets ?? null) : null
+        }
+      />
+      <CircuitAndMonitors
+        state={state}
+        dispatch={dispatch}
+        controlsEnabled
+        guidedTarget={activeGuidedTarget}
+        guidedControlId={activeGuidedControlId}
+        initiationTargets={
+          section !== 'learn' ? (scenario.clinicalCase?.initiationTargets ?? null) : null
+        }
+        onSaveForLater={() => router.push(cardiohelpEcmoNavBase)}
+      />
+    </div>
+  )
+
   return (
     <CardiohelpModuleFrame
       locale={locale}
@@ -883,13 +918,13 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
               aria-label={`CARDIOHELP ${section} workbench`}
               data-hydrated={hydrated}
             >
-              <div className={styles.workbench}>
+              <div className={styles.workbench} data-learn-workspace={section === 'learn'}>
                 {section === 'learn' ? (
-                  <LearnLessonPlayer
-                    key={learnLesson.id}
+                  <EcmoLearnWorkspace
                     state={state}
                     lesson={learnLesson}
                     dispatch={dispatch}
+                    simulator={simulatorColumn}
                     onSelectLesson={loadLearnScenario}
                     onCompleteLesson={completeLearnLesson}
                     onTryPractice={(scenarioId) =>
@@ -904,47 +939,23 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
                     onActiveStepChange={handleActiveLearnStepChange}
                   />
                 ) : (
-                  <PracticeCasePlayer
-                    state={state}
-                    scenario={scenario}
-                    progress={progress}
-                    outcome={outcome}
-                    dispatch={dispatch}
-                    onLoadScenario={loadPracticeScenario}
-                    onReveal={revealDebrief}
-                    section={section === 'assess' ? 'assess' : 'practice'}
-                    phaseRequest={phaseRequest}
-                    onPhaseChange={setSemanticPhase}
-                    onActiveStageChange={handleActivePracticeStageChange}
-                  />
+                  <>
+                    <PracticeCasePlayer
+                      state={state}
+                      scenario={scenario}
+                      progress={progress}
+                      outcome={outcome}
+                      dispatch={dispatch}
+                      onLoadScenario={loadPracticeScenario}
+                      onReveal={revealDebrief}
+                      section={section === 'assess' ? 'assess' : 'practice'}
+                      phaseRequest={phaseRequest}
+                      onPhaseChange={setSemanticPhase}
+                      onActiveStageChange={handleActivePracticeStageChange}
+                    />
+                    {simulatorColumn}
+                  </>
                 )}
-                <div className={styles.simulatorColumn}>
-                  <CardiohelpConsole
-                    state={state}
-                    dispatch={dispatch}
-                    controlsEnabled
-                    guidedTarget={activeGuidedTarget}
-                    guidedControlId={activeGuidedControlId}
-                    initiationTargets={
-                      section !== 'learn'
-                        ? (scenario.clinicalCase?.initiationTargets ?? null)
-                        : null
-                    }
-                  />
-                  <CircuitAndMonitors
-                    state={state}
-                    dispatch={dispatch}
-                    controlsEnabled
-                    guidedTarget={activeGuidedTarget}
-                    guidedControlId={activeGuidedControlId}
-                    initiationTargets={
-                      section !== 'learn'
-                        ? (scenario.clinicalCase?.initiationTargets ?? null)
-                        : null
-                    }
-                    onSaveForLater={() => router.push(cardiohelpEcmoNavBase)}
-                  />
-                </div>
               </div>
               {section !== 'learn' && state.scenario.phase === 'complete' ? (
                 <DebriefPanel

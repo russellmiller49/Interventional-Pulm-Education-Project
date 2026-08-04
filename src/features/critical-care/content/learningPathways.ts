@@ -601,7 +601,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         shortTitle: 'Air',
         title: 'Arterial bubble intervention and cause-before-reset',
         minutes: 12,
-        description: 'Isolate, correct the source, then reset — in that order.',
+        description:
+          'Isolate, correct the source, then resume per the current IFU and approved local protocol.',
         stage: 'application',
         activityId: 'ecmo:learn:arterial-bubble-stop',
       },
@@ -772,7 +773,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         shortTitle: 'Air',
         title: 'VA arterial-return bubble and cause-before-reset',
         minutes: 12,
-        description: 'Isolate, correct the source, then reset — in that order.',
+        description:
+          'Isolate, correct the source, then resume per the current IFU and approved local protocol.',
         stage: 'application',
         activityId: 'ecmo:learn:va-arterial-bubble-stop',
       },

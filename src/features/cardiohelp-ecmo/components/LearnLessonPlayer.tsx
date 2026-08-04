@@ -4,9 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeft,
   ArrowRight,
-  BookOpenCheck,
   Check,
-  CheckCircle2,
   CircleHelp,
   CircleDot,
   GraduationCap,
@@ -42,7 +40,7 @@ import type {
   GuidedWalkthroughStep,
   SimulationAction,
 } from '../engine'
-import { formatChannelGroup, formatChannelReadout } from './channelReadout'
+import type { LearnStepStatus } from './LearnStepTeaching'
 import styles from './cardiohelp-ecmo.module.css'
 
 interface LearnLessonPlayerProps {
@@ -56,6 +54,22 @@ interface LearnLessonPlayerProps {
   onControlHelpChange: (controlId: GuidedControlId | null) => void
   onPhaseChange?: (phase: CriticalCareActivityPhase) => void
   onActiveStepChange?: (step: GuidedWalkthroughStep) => void
+  /**
+   * Published for the teaching pane, which renders this step's explanation beside the live circuit.
+   *
+   * The step and whether it has been performed are the only things the teaching surface needs, and
+   * they stay owned here: the pane split moved where the explanation is rendered, not who decides
+   * which step is active.
+   */
+  onStepStatusChange?: (status: LearnStepStatus) => void
+  /**
+   * Called with the control a help request is about to focus, before the focus is scheduled.
+   *
+   * The workspace uses it to bring the pane holding that control back on screen first. A control
+   * inside a pane the learner has switched away from is `display: none`, and neither `focus()` nor
+   * `scrollIntoView()` does anything to a box that is not laid out.
+   */
+  onBeforeRevealTarget?: (controlId: GuidedControlId) => void
 }
 
 const targetLabels: Record<GuidedTarget, string> = {
@@ -141,6 +155,13 @@ function guidedActionSatisfied(action: SimulationAction, state: EcmoSimulationSt
       return (
         !state.circuit.bubbleResetRequired &&
         state.scenario.correctedFaults.includes('arterial-bubble')
+      )
+    case 'RESUME_SUPPORT_AFTER_BUBBLE':
+      return (
+        !state.circuit.bubbleResetRequired &&
+        !state.circuit.drainageClampClosed &&
+        !state.circuit.returnClampClosed &&
+        state.device.pumpRunning
       )
     case 'PERFORM_CHECK':
       return (
@@ -260,6 +281,13 @@ function resolveGuidedSimulatorTask(
         instruction: 'On the separate gas panel, select Restore verified gas source.',
         satisfied,
       }
+    case 'RESUME_SUPPORT_AFTER_BUBBLE':
+      return {
+        controlId: 'cardiohelp-resume-support',
+        instruction:
+          'On the bedside circuit, resume support per the current IFU and approved local protocol.',
+        satisfied,
+      }
     case 'RESET_BUBBLE':
       return state.device.screen === 'interventions'
         ? {
@@ -304,6 +332,8 @@ export function LearnLessonPlayer({
   onControlHelpChange,
   onPhaseChange,
   onActiveStepChange,
+  onStepStatusChange,
+  onBeforeRevealTarget,
 }: LearnLessonPlayerProps) {
   const [activeStepIndex, setActiveStepIndex] = useState(0)
   const [completedStepIds, setCompletedStepIds] = useState<Set<string>>(() => new Set())
@@ -362,22 +392,6 @@ export function LearnLessonPlayer({
     : null
   const pairedCaseId = pairedCaseIdsForLesson(lesson.scenarioId)[0]
   const pairedCase = pairedCaseId ? clinicalPracticeScenarioById.get(pairedCaseId) : undefined
-  const simulatorSnapshot = useMemo(
-    () => ({
-      time: state.simulationTime,
-      flow: state.circuit.bloodFlow.toFixed(2),
-      // Formatted from the engine readouts, so a stopped circuit's intercepts never appear here as
-      // though the console had measured them.
-      pVen: formatChannelReadout('pVen', state.circuit.readouts.pVen, 'mmHg'),
-      pIntPArt: formatChannelGroup([state.circuit.readouts.pInt, state.circuit.readouts.pArt], ''),
-      sweep: state.gas.sweepLpm.toFixed(1),
-      spo2: state.patient.spo2.toFixed(1),
-      paCO2: state.patient.paCO2.toFixed(1),
-      rightRadialSpo2: state.patient.rightRadialSpo2.toFixed(1),
-      femoralArterialSpo2: state.patient.femoralArterialSpo2.toFixed(1),
-    }),
-    [state],
-  )
 
   useEffect(() => {
     onTargetChange(activeStep.target)
@@ -392,6 +406,23 @@ export function LearnLessonPlayer({
   useEffect(() => {
     onActiveStepChange?.(activeStep)
   }, [activeStep, onActiveStepChange])
+
+  useEffect(() => {
+    onStepStatusChange?.({
+      step: activeStep,
+      stepIndex: activeStepIndex,
+      stepCount: lesson.steps.length,
+      performed: stepPerformed,
+      lessonFinished,
+    })
+  }, [
+    activeStep,
+    activeStepIndex,
+    lesson.steps.length,
+    lessonFinished,
+    onStepStatusChange,
+    stepPerformed,
+  ])
 
   useEffect(
     () => () => {
@@ -428,6 +459,9 @@ export function LearnLessonPlayer({
   useEffect(() => {
     if (!helpRequested) return
     onControlHelpChange(helpControlId)
+    // Before the frame, not inside it: the pane holding this control may be switched away, and the
+    // reveal has to be laid out before anything can focus or scroll it.
+    onBeforeRevealTarget?.(helpControlId)
     const frame = window.requestAnimationFrame(() => {
       const control = document.getElementById(helpControlId)
       if (!control) return
@@ -439,7 +473,7 @@ export function LearnLessonPlayer({
       })
     })
     return () => window.cancelAnimationFrame(frame)
-  }, [helpControlId, helpRequestCount, helpRequested, onControlHelpChange])
+  }, [helpControlId, helpRequestCount, helpRequested, onBeforeRevealTarget, onControlHelpChange])
 
   function performStep() {
     for (const action of activeStep.actions) dispatch(action)
@@ -496,8 +530,16 @@ export function LearnLessonPlayer({
     onSelectLesson(lesson.scenarioId)
   }
 
+  /*
+   * The player's root is a labelled region, not a complementary landmark.
+   *
+   * It was an `<aside>` while it was a column beside the simulator. Inside the workspace it is one
+   * of three panes, each already a labelled region, and a complementary landmark nested inside
+   * another landmark is both an axe violation and a wrong description: this is the surface the
+   * learner acts through, not material supplementary to something else.
+   */
   return (
-    <aside
+    <section
       className={styles.learningColumn}
       aria-label={`Guided CARDIOHELP ${state.supportMode.toUpperCase()} lesson player`}
     >
@@ -604,52 +646,11 @@ export function LearnLessonPlayer({
           <p>{activeStep.instruction}</p>
         </div>
 
-        <div className={styles.guidedWhy}>
-          <BookOpenCheck aria-hidden="true" />
-          <div>
-            <strong>Why this step matters</strong>
-            <p>{activeStep.rationale}</p>
-          </div>
-        </div>
-
-        <div className={styles.guidedSnapshot} aria-label="Current simulated values">
-          <span>
-            <small>Clock</small>
-            <strong>{simulatorSnapshot.time}s</strong>
-          </span>
-          <span>
-            <small>Flow</small>
-            <strong>{simulatorSnapshot.flow} L/min</strong>
-          </span>
-          <span data-readout-status={simulatorSnapshot.pVen.status}>
-            <small>pVen</small>
-            <strong aria-hidden="true">{simulatorSnapshot.pVen.valueText}</strong>
-            <span className="sr-only">{simulatorSnapshot.pVen.screenReaderText}</span>
-          </span>
-          <span>
-            <small>pInt / pArt</small>
-            <strong>{simulatorSnapshot.pIntPArt.text}</strong>
-          </span>
-          <span>
-            <small>Sweep</small>
-            <strong>{simulatorSnapshot.sweep} L/min</strong>
-          </span>
-          {state.supportMode === 'va' ? (
-            <span>
-              <small>Right arm / femoral SpO₂</small>
-              <strong>
-                {simulatorSnapshot.rightRadialSpo2}% / {simulatorSnapshot.femoralArterialSpo2}%
-              </strong>
-            </span>
-          ) : (
-            <span>
-              <small>SpO₂ / PaCO₂</small>
-              <strong>
-                {simulatorSnapshot.spo2}% / {simulatorSnapshot.paCO2}
-              </strong>
-            </span>
-          )}
-        </div>
+        {/*
+          The step's rationale, the live snapshot, and the completed-step response used to sit here.
+          B3 moved them to `LearnStepTeaching` in the workspace's teaching pane: what a learner reads
+          and what a learner operates no longer share one scroll region.
+        */}
 
         {prediction ? (
           /*
@@ -735,23 +736,7 @@ export function LearnLessonPlayer({
               {helpRequested ? 'Highlight it again' : 'I need help finding it'}
             </button>
           </div>
-        ) : (
-          <div className={styles.guidedExpectedResponse} role="status">
-            <CheckCircle2 aria-hidden="true" />
-            <div>
-              <strong>Step complete—now verify what changed</strong>
-              {activeStep.expectedResponse.length ? (
-                <ul>
-                  {activeStep.expectedResponse.map((response) => (
-                    <li key={response}>{response}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No control change was required for this observation step.</p>
-              )}
-            </div>
-          </div>
-        )}
+        ) : null}
 
         <div className={styles.guidedStepActions}>
           <button
@@ -805,6 +790,6 @@ export function LearnLessonPlayer({
           </div>
         </section>
       ) : null}
-    </aside>
+    </section>
   )
 }

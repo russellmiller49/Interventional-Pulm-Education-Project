@@ -497,6 +497,55 @@
   align-items: start;
 }
 
+/*
+ * The guided drill Learn route holds one child — the three-pane workspace — which sizes itself and
+ * scrolls internally. Stretching it rather than aligning it to the start is what lets it use the
+ * height it asked for.
+ */
+.workbench[data-learn-workspace='true'] {
+  align-items: stretch;
+  min-height: 0;
+}
+
+/*
+ * The teaching half of a guided drill step, in the workspace's teaching pane.
+ *
+ * The blocks inside are the same ones that used to sit in the lesson player's step card, so they
+ * keep its classes and its palette. What changes is the width they lay out in: a pane, not a
+ * full-bleed column. The snapshot's three fixed columns and its single-line clipping were sized for
+ * the latter, and a clipped readout reason is precisely the honesty this module spent A1 buying.
+ */
+.learnStepTeaching {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.learnStepTeaching .guidedSnapshot,
+.learnStepTeaching .guidedWhy,
+.learnStepTeaching .guidedExpectedResponse {
+  margin-top: 0;
+}
+
+.learnStepTeaching .guidedSnapshot {
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+}
+
+.learnStepTeaching .guidedSnapshot small,
+.learnStepTeaching .guidedSnapshot strong {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.learnStepTeaching .guidedSnapshot small {
+  font-size: 0.68rem;
+}
+
+.learnStepTeaching .guidedSnapshot strong {
+  font-size: 0.82rem;
+}
+
 .learningColumn,
 .simulatorColumn,
 .monitoringWorkspace {

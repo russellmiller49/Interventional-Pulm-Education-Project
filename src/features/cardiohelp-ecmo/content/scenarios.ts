@@ -1,4 +1,6 @@
 import type {
+  PredictionControl,
+  PredictionDirection,
   ScenarioDefinition,
   ScenarioObjective,
   SimulationAction,
@@ -472,7 +474,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
     stationId: 'troubleshooting',
     title: 'Arterial bubble alarm with pump stop',
     summary:
-      'A scenario-triggered arterial bubble event stops the pump; correct the source before deliberate reset.',
+      'A scenario-triggered arterial bubble event stops the pump; correct the source and confirm the circuit clear before support is resumed.',
     clinicalPhase: 'maintenance',
     initialState: {},
     timedFaults: [
@@ -495,11 +497,11 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Clamp the return limb, then the drainage limb, near the patient to isolate the circuit.',
         'Correct the source of air and confirm the circuit is bubble free.',
-        'Open the drainage limb, then the return limb, then use Interventions > Bubble > Reset > Confirm and reassess.',
+        'Resume support per the current IFU and approved local protocol, then reassess. Where clamp opening, pump restart and console reset fall relative to one another is set by those documents, not by this module.',
       ],
       safetyNotes: [
         'Premature reset is a critical safety error.',
-        'Clamp/unclamp order follows local protocol; this module teaches one bounded sequence for consistency.',
+        'Isolation is taught explicitly. The clamp, pump, and device-reset choreography for resumption is governed by the current manufacturer IFU and your unit’s approved ECMO air-emergency protocol; this simulation does not teach that choreography.',
       ],
     },
     evidenceIds: ['ifu-console-workflow', 'ifu-anomaly-boundary', 'elso-circuit-2022'],
@@ -966,11 +968,11 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Clamp the arterial return limb, then the drainage limb, near the patient to isolate the circulation.',
         'Identify and correct the air source and confirm the return path is clear.',
-        'Open the drainage limb, then the return limb, reset deliberately, re-establish support, and reassess perfusion.',
+        'Resume venoarterial support per the current IFU and approved local protocol, then reassess perfusion. Where clamp opening, pump restart and console reset fall relative to one another is set by those documents, not by this module.',
       ],
       safetyNotes: [
         'Premature reset and alarm acknowledgement without correction remain critical errors.',
-        'Clamp/unclamp order follows local protocol; this module teaches one bounded sequence for consistency.',
+        'Isolation is taught explicitly. The clamp, pump, and device-reset choreography for resumption is governed by the current manufacturer IFU and your unit’s approved ECMO air-emergency protocol; this simulation does not teach that choreography.',
       ],
     },
     evidenceIds: [
@@ -1268,6 +1270,100 @@ export const predictionGoals = [
     supportModes: ['vv'],
   },
 ] as const
+
+/**
+ * The authored words for the other two thirds of a prediction.
+ *
+ * These lists are the vocabulary of a commitment, not a property of the surface that collects it.
+ * They sat inside `PracticeCasePlayer` while it was the only place a commitment was made or read
+ * back; the Learn teaching panels now echo the learner's own committed triple, and two copies of a
+ * label list is how the two surfaces start describing the same choice differently. Relocated
+ * verbatim — same entries, same order, same labels — so the Practice selects render exactly as
+ * before.
+ */
+export const predictionControls: readonly {
+  value: PredictionControl
+  label: string
+  supportModes: readonly SupportMode[]
+}[] = [
+  { value: 'inspect-circuit', label: 'Inspect circuit / sensors', supportModes: ['vv', 'va'] },
+  {
+    value: 'assess-upper-body',
+    label: 'Review right-arm oxygenation and mixed circulation',
+    supportModes: ['va'],
+  },
+  {
+    value: 'assess-lv-loading',
+    label: 'Review pulsatility, aortic valve, LV, and lungs',
+    supportModes: ['va'],
+  },
+  { value: 'rpm', label: 'Pump RPM', supportModes: ['vv', 'va'] },
+  { value: 'sweep', label: 'External sweep flow', supportModes: ['vv', 'va'] },
+  { value: 'gas-fio2', label: 'External sweep-gas FiO₂', supportModes: ['vv', 'va'] },
+  { value: 'restore-gas', label: 'Restore gas source', supportModes: ['vv', 'va'] },
+  { value: 'correct-cause', label: 'Resolve cause before reset', supportModes: ['vv', 'va'] },
+  { value: 'restore-power', label: 'Restore verified AC power', supportModes: ['vv', 'va'] },
+  { value: 'off-sweep-trial', label: 'VV off-sweep trial', supportModes: ['vv'] },
+  {
+    value: 'initiate-support',
+    label: 'Initiate ECMO with verified settings',
+    supportModes: ['vv', 'va'],
+  },
+  {
+    value: 'resuscitate-preload',
+    label: 'Restore preload while finding the cause',
+    supportModes: ['vv', 'va'],
+  },
+  {
+    value: 'transfuse-and-control',
+    label: 'Transfuse and control hemorrhage',
+    supportModes: ['vv', 'va'],
+  },
+  {
+    value: 'decompress-chest',
+    label: 'Relieve obstructive thoracic/cardiac pressure',
+    supportModes: ['vv', 'va'],
+  },
+  {
+    value: 'reposition-cannula',
+    label: 'Review and restore cannula position',
+    supportModes: ['vv'],
+  },
+  {
+    value: 'exchange-oxygenator',
+    label: 'Prepare and exchange the failing component',
+    supportModes: ['vv', 'va'],
+  },
+  {
+    value: 'vasopressor',
+    label: 'Treat vascular tone and reassess perfusion',
+    supportModes: ['va'],
+  },
+  {
+    value: 'restore-distal-perfusion',
+    label: 'Restore cannulated-limb perfusion',
+    supportModes: ['va'],
+  },
+  {
+    value: 'isolate-circuit',
+    label: 'Clamp to isolate the circuit and come off support',
+    supportModes: ['vv', 'va'],
+  },
+]
+
+export const predictionDirections: readonly { value: PredictionDirection; label: string }[] = [
+  { value: 'increase', label: 'Increase' },
+  { value: 'decrease', label: 'Decrease' },
+  { value: 'hold', label: 'Hold / do not chase the number' },
+  { value: 'inspect', label: 'Inspect and localize first' },
+  { value: 'restore', label: 'Restore source' },
+  { value: 'off', label: 'Turn off while maintaining blood flow' },
+  { value: 'gas-exchange', label: 'Improve oxygenation / CO₂ clearance' },
+  { value: 'perfusion', label: 'Improve systemic perfusion' },
+  { value: 'drainage', label: 'Restore effective venous drainage' },
+  { value: 'temporary', label: 'Temporize while the cause remains' },
+  { value: 'definitive', label: 'Definitively resolve the cause' },
+]
 
 export function validateScenarioRegistry(): string[] {
   const errors: string[] = []
