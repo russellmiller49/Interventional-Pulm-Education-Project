@@ -6,10 +6,10 @@
  * simulator action it produces, what variable it changes, and — the part that keeps the module
  * honest — what moving it does *not* guarantee.
  *
- * `domId` is the contract with the components: every control tagged here carries
- * `data-mcs-control="<id>"` where it renders, so the learner-action pane can highlight exactly one
- * control and a test can prove the control a section points at is on the screen. Renaming a visible
- * label is then a cosmetic change; deleting a control is a build-visible one.
+ * The id is the contract with the components: every control listed here renders carrying
+ * `data-mcs-control="<id>"`, so the learner-action pane can highlight exactly one control and a test
+ * can prove the control a section points at is on the screen. Renaming a visible label is then a
+ * cosmetic change; removing a control is one a test catches.
  */
 
 import type { McsDeviceKind } from '../engine/types'
