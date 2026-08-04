@@ -44,6 +44,7 @@ import {
   mechanicalVentilationLessonItems,
   ventilationEvidenceById,
   ventilationLessonActionEvidence,
+  ventilationLessonAttempt,
   ventilationLessonObservationActions,
   ventilationLessonObservationEvidence,
   ventilationLessonRecognitionActions,
@@ -134,7 +135,18 @@ function createLessonSession(
   attempt: number,
 ): LessonSimulationSession {
   const definition = runtime[variant]
-  const initial = createInitialSimulationState(definition.caseId, 'learn', attempt, 'hamilton-c6')
+  /*
+   * A variant that pins a branch gets the attempt that selects it, rather than whichever attempt
+   * the learner happens to be on — otherwise a question naming a branch-specific finding is right
+   * on some visits and wrong on others. Only the simulation's seed is affected; the attempt
+   * recorded against progress is unchanged.
+   */
+  const initial = createInitialSimulationState(
+    definition.caseId,
+    'learn',
+    ventilationLessonAttempt(definition, attempt),
+    'hamilton-c6',
+  )
   return {
     // Open on a running ventilator. The shared initializer pauses after priming four seconds of
     // waveform, which froze every lesson at 0 s — and a maneuver such as an inspiratory hold only

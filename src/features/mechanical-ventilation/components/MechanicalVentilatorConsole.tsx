@@ -29,6 +29,7 @@ import {
   orderControlsForDevice,
   resolveBreathPhase,
 } from '../content'
+import { plateauReadingValidity, plateauWithheldNote } from '../content/plateauValidity'
 import {
   isAdaptivePressureMode,
   isAdaptiveSupportMode,
@@ -206,6 +207,12 @@ function DynamicLungPanel({
     0,
     state.measurements.peakPressureCmH2O - state.measurements.plateauPressureCmH2O,
   )
+  /*
+   * Peak minus plateau is the resistive gap only when the plateau is the elastic pressure. While
+   * the patient is pulling it is not, so this panel withholds the number instead of printing a gap
+   * the pressure readouts two panes away have just marked uninterpretable.
+   */
+  const gapIsAttributable = plateauReadingValidity(state).interpretable
   const effort = state.patient.drive.effortAmplitudeCmH2O
   return (
     <section className={styles.dynamicLung} aria-label="Simplified dynamic lung panel">
@@ -225,7 +232,13 @@ function DynamicLungPanel({
         <div>
           <dt>Resistive gap</dt>
           <dd>
-            {resistanceGap.toFixed(0)} {pressureUnit}
+            {gapIsAttributable ? (
+              <>
+                {resistanceGap.toFixed(0)} {pressureUnit}
+              </>
+            ) : (
+              <>— while the patient is pulling</>
+            )}
           </dd>
         </div>
         <div>
@@ -760,29 +773,40 @@ export function MechanicalVentilatorConsole({
    * device would show the number either way; the learner is the one who has to know it is not
    * usable.
    */
-  const plateauUnreliable = !state.measurements.plateauIsInterpretable
+  const plateauValidity = plateauReadingValidity(state)
+  const plateauUnreliable = !plateauValidity.interpretable
   const pressureReadouts = [
     { label: pressureNames.peak, value: state.measurements.peakPressureCmH2O },
     {
       label: pressureNames.plateau,
       value: state.measurements.plateauPressureCmH2O,
       unreliable: plateauUnreliable,
-      caveat: plateauUnreliable
-        ? `not interpretable: patient effort ${state.measurements.endInspiratoryEffortCmH2O.toFixed(0)} cmH₂O at end-inspiration`
-        : undefined,
+      caveat: plateauUnreliable ? plateauWithheldNote(plateauValidity) : undefined,
     },
     { label: pressureNames.mean, value: state.measurements.meanAirwayPressureCmH2O },
     { label: pressureNames.peep, value: settings.peepCmH2O },
   ]
+  /*
+   * The annotations name what each level *is*. While the patient is pulling, the plateau is not the
+   * elastic load and the gap to peak is not the resistive one, so those two labels state the level
+   * without the attribution — otherwise the trace annotation contradicts the caveat printed on the
+   * readout beside it, in the same render.
+   */
   const pressureAnnotations = [
     {
       id: 'peak',
-      label: `${pressureNames.peak} ${state.measurements.peakPressureCmH2O.toFixed(0)} — resistive + elastic`,
+      label: `${pressureNames.peak} ${state.measurements.peakPressureCmH2O.toFixed(0)}${
+        plateauUnreliable ? '' : ' — resistive + elastic'
+      }`,
       value: state.measurements.peakPressureCmH2O,
     },
     {
       id: 'plateau',
-      label: `${pressureNames.plateau} ${state.measurements.plateauPressureCmH2O.toFixed(0)} — elastic load only; gap to peak is resistive`,
+      label: `${pressureNames.plateau} ${state.measurements.plateauPressureCmH2O.toFixed(0)} — ${
+        plateauUnreliable
+          ? 'depressed by the patient’s own effort; the gap to peak is not purely resistive'
+          : 'elastic load only; gap to peak is resistive'
+      }`,
       value: state.measurements.plateauPressureCmH2O,
     },
     {
