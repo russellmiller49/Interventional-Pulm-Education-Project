@@ -7922,7 +7922,8 @@
       "unavailableSuperseded": "此卡片创建于发布包锁定完整规则集之前，因此重新打开会依据它从未记录过的准备规则重新生成。其保存的快照仍可查看、打印、共享、复制并留存备查。",
       "unavailableLegacyFamily": "此卡片使用目录浏览键而非经审核的产品系列来标识产品线，因此重新打开它意味着要判断该键在今天代表哪些产品。卡片按保存时的原样显示。",
       "unavailableCatalogRelease": "保存此卡片时所依据的目录版本已无法完整取回，因此无法重建它记录的产品与角色。不会以当前目录代替。",
-      "unavailableModifier": "此卡片记录了一项其所锁定的操作发布包并未提供的准备选项，因此若不授予该发布包从未授予的权限便无法重新生成。"
+      "unavailableModifier": "此卡片记录了一项其所锁定的操作发布包并未提供的准备选项，因此若不授予该发布包从未授予的权限便无法重新生成。",
+      "staleEdit": "This card was saved from somewhere else after you opened it. Reload to see the current version, then reapply your change — nothing you were looking at has been overwritten."
     },
     "duplicateTitle": "{title} (copy)",
     "deleteCard": "Delete",
@@ -8008,6 +8009,64 @@
     },
     "release": {
       "noCurrentRelease": "此操作目前没有当前已发布的版本，因此新卡片无法锁定到任何版本。缺少该版本时不会保存卡片。"
+    },
+    "reconcile": {
+      "action": "Review changes",
+      "pageTitle": "What has changed under “{title}”",
+      "intro": "This page compares your saved card with what the data underneath it says today. It is a read-only review: nothing here edits, rebuilds, upgrades, or re-saves the card, and the saved snapshot is untouched.",
+      "backToCard": "Back to card",
+      "sourceHeading": "The state being reviewed",
+      "sourceHelp": "Every comparison below is against this exact saved state, named by its revision so it stays identifiable after the card is edited again.",
+      "revisionLabel": "Revision",
+      "revisionUnavailable": "Not recorded",
+      "operationalHeading": "Current hospital-local data",
+      "operationalHelp": "The authored release, the pinned catalogue release, and every reviewed definition are held exactly as this card recorded them. Only what the room stocks, how the site ranks it, and what the location can do are read as they are today — so everything below is caused by those and by nothing else.",
+      "operationalIdentical": "Nothing has changed. Re-resolving this card against today's hospital-local data produces the card you saved.",
+      "operationalHeldBroken": "Something outside hospital-local data differs, which should not be possible while the release is held fixed: {keys}",
+      "releaseHeading": "Authored release",
+      "releaseHelp": "How the release this card is pinned to compares with the release this procedure currently points at. The comparison is between the two definition sets; the card itself is never resolved against the newer one.",
+      "releaseOnCurrent": "This card is pinned to the release this procedure currently points at. There is nothing to compare.",
+      "releaseNoCurrent": "This procedure does not currently point at any published release, so there is nothing to compare this card's pinned release with.",
+      "releasePinned": "Pinned by this card",
+      "releaseCurrent": "Current for this procedure",
+      "releaseIdentical": "The two releases pin the same definitions. Nothing a card resolves from differs between them.",
+      "releaseCatalogChanged": "The two releases were published against different catalogue releases.",
+      "releaseContractChanged": "The two releases were published under different resolver contract versions.",
+      "requirementChanges": "Requirement changes",
+      "requirementChangesHelp": "Matched on the reviewed requirement identity each line carries, and on nothing else — never on role code alone and never on resembling labels.",
+      "onCard": "On this card",
+      "notOnCard": "Not on this card",
+      "hasSelection": "You selected a product for it",
+      "changedFields": "Changed: {fields}",
+      "lineChanges": "Lines affected",
+      "warningChanges": "Warnings",
+      "warningAdded": "New",
+      "warningRemoved": "No longer raised",
+      "readinessChanged": "Readiness would move from {before} to {after}.",
+      "presence": {
+        "active": "on the card",
+        "suppressed": "suppressed by a kit",
+        "absent": "not present"
+      },
+      "kind": {
+        "added": "Added",
+        "removed": "Removed",
+        "changed": "Changed"
+      },
+      "noRebuildNotice": "Reviewing changes does not rebuild this card. Moving a card to a newer release, or carrying its selections forward, is not something this version does — the card stays exactly as you saved it."
+    },
+    "revisions": {
+      "heading": "Saved states",
+      "help": "Every state this card has been saved in, newest first. Revisions are append-only: they are written when the card is saved and are never rewritten.",
+      "empty": "No saved states have been recorded for this card yet.",
+      "revisionNumber": "Revision {number}",
+      "savedAt": "Saved",
+      "current": "Current",
+      "contentHash": "Content",
+      "documentHash": "Document",
+      "notHashed": "—",
+      "sameContent": "Same content as the revision before it",
+      "releasePin": "Release"
     }
   }
 }

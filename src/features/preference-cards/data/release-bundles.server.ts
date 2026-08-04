@@ -12,6 +12,7 @@ import {
   type ReleaseImpactReport,
   type ReleasePointerMap,
   type ReleaseResolutionErrorCode,
+  type ReleaseResolutionResult,
   type ReleaseValidationMessage,
 } from '../domain/release-bundle'
 import { PREFERENCE_CARD_RESOLVER_CONTRACT_VERSION } from '../domain/resolve-card'
@@ -132,6 +133,22 @@ export function getCurrentReleaseBundleForScenario(
   const bundle = currentBundleByScenarioId.get(scenarioId)
   if (!bundle) return null
   return assertSelectableForNewCard(bundle).ok ? bundle : null
+}
+
+/**
+ * A retained release together with the definitions it pins, with every pin verified.
+ *
+ * Exported for the release comparison, which needs the authored definitions of *two* releases —
+ * the one a card pins and the one the pointer currently names — in order to diff them at the
+ * requirement level. It deliberately returns the same verified pair `buildReleaseContext` builds
+ * on rather than a looser lookup: a release whose definitions have moved must not be readable
+ * through a second, weaker door just because the caller only wanted to compare it.
+ *
+ * This resolves definitions. It does not resolve a *card* against them, and nothing here builds
+ * a context a card could be re-resolved through.
+ */
+export function resolveReleaseDefinitions(releaseBundleId: string): ReleaseResolutionResult {
+  return resolvePinnedRelease(releaseBundleId, bundleById, loadSources)
 }
 
 export type ReleaseContextErrorCode =

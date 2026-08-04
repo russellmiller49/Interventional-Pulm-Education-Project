@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -100,6 +101,142 @@ describe('preference-card migration contract', () => {
     for (const dependency of DEPENDENCY_MIGRATIONS) {
       expect(files.indexOf(dependency)).toBeGreaterThanOrEqual(0)
       expect(files.indexOf(dependency)).toBeLessThan(migrationIndex)
+    }
+  })
+})
+
+/**
+ * The revision migrations, and the boundary between the one that has shipped and the one that
+ * has not.
+ *
+ * `20260803052432_add_ip_preference_card_revisions.sql` was applied to the Endoreels project as
+ * remote version `20260803113527_add_ip_preference_card_revisions`, and its verifier passed
+ * against the live database. From that moment it stopped being a file this branch may edit: an
+ * applied migration edited afterwards describes a state no environment ever passed through, and
+ * the record of what was actually verified becomes untrue. Its content is pinned below, so a
+ * later edit is a failing test rather than a silent divergence between the repository and the
+ * database.
+ *
+ * Everything after it goes in a new forward migration. This suite is the source-level half of
+ * that guarantee; the catalog-level half is
+ * `supabase/verification/20260803151005_verify_ip_preference_card_revision_foreign_keys.sql`,
+ * which runs after application.
+ */
+describe('preference-card revision migrations', () => {
+  const APPLIED_REVISION_MIGRATION = '20260803052432_add_ip_preference_card_revisions.sql'
+  /** Applied as remote version 20260803113527; see the note above before changing this. */
+  const APPLIED_REVISION_MIGRATION_SHA256 =
+    'd10aa34dc55374b7f122db8cff6c0fd31393e34d07c15e142648a758d8bdff7a'
+
+  const INDEX_MIGRATION = '20260803151005_index_ip_preference_card_revision_foreign_keys.sql'
+  const INDEX_VERIFIER = '20260803151005_verify_ip_preference_card_revision_foreign_keys.sql'
+  const VERIFICATION_DIR = path.resolve(process.cwd(), 'supabase/verification')
+
+  const indexMigration = fs.readFileSync(path.join(MIGRATIONS_DIR, INDEX_MIGRATION), 'utf8')
+  const indexVerifier = fs.readFileSync(path.join(VERIFICATION_DIR, INDEX_VERIFIER), 'utf8')
+
+  /**
+   * The migration with its `--` comments removed.
+   *
+   * Structural assertions have to read statements, not prose. This file explains at length why it
+   * does *not* use `create index concurrently` and what it deliberately leaves un-altered, so a
+   * naive `not.toMatch(/create index concurrently/)` over the raw text fails on the sentence
+   * saying the thing is not done — which is the opposite of what it means to check.
+   */
+  const indexMigrationSql = indexMigration
+    .split('\n')
+    .filter((line) => !line.trimStart().startsWith('--'))
+    .join('\n')
+
+  it('leaves the already-applied revision migration byte-identical', () => {
+    const applied = fs.readFileSync(path.join(MIGRATIONS_DIR, APPLIED_REVISION_MIGRATION))
+    expect(createHash('sha256').update(applied).digest('hex')).toBe(
+      APPLIED_REVISION_MIGRATION_SHA256,
+    )
+  })
+
+  it('adds the index work as a new forward migration, ordered after the applied one', () => {
+    const files = fs
+      .readdirSync(MIGRATIONS_DIR)
+      .filter((file) => file.endsWith('.sql'))
+      .sort()
+    expect(files).toContain(INDEX_MIGRATION)
+    expect(files.indexOf(INDEX_MIGRATION)).toBeGreaterThan(
+      files.indexOf(APPLIED_REVISION_MIGRATION),
+    )
+  })
+
+  it('creates exactly the two foreign-key covering indexes, with the columns in order', () => {
+    expect(indexMigrationSql).toContain(
+      'create index ip_user_preference_card_revisions_user_id_idx\n  on public.ip_user_preference_card_revisions (user_id);',
+    )
+    expect(indexMigrationSql).toContain(
+      'create index ip_user_preference_card_revisions_card_owner_idx\n  on public.ip_user_preference_card_revisions (card_id, user_id);',
+    )
+    // Two `create index` statements and no more — an index nobody reviewed must not ride along.
+    expect(indexMigrationSql.match(/^create index /gm)).toHaveLength(2)
+  })
+
+  it('uses a plain transactional create index, and refuses to adopt a name it did not create', () => {
+    // Supabase applies migrations in a transaction, which `concurrently` cannot run inside.
+    expect(indexMigrationSql).not.toMatch(/create index concurrently/i)
+    // `if not exists` would silently accept a pre-existing index of unknown definition.
+    expect(indexMigrationSql).not.toMatch(/create index if not exists/i)
+  })
+
+  it('drops and alters nothing', () => {
+    for (const forbidden of [/^drop index/im, /^drop /im, /^alter table/im, /^alter index/im]) {
+      expect(indexMigrationSql).not.toMatch(forbidden)
+    }
+    // The indexes published by the applied migration appear in this file only as commentary about
+    // what is preserved — named, so a reader knows exactly what is being left alone, and never as
+    // the object of a statement.
+    for (const preserved of [
+      'ip_user_preference_card_revisions_pkey',
+      'ip_user_preference_card_revisions_card_number_idx',
+      'ip_user_preference_card_revisions_card_created_idx',
+    ]) {
+      expect(indexMigration).toContain(preserved)
+      expect(indexMigrationSql).not.toContain(preserved)
+    }
+  })
+
+  it('ships a verifier that checks column order rather than index names', () => {
+    // The load-bearing part: key columns resolved positionally out of `indkey`, so
+    // `(user_id, card_id)` cannot pass as `(card_id, user_id)`.
+    expect(indexVerifier).toContain('pg_index')
+    expect(indexVerifier).toContain('pg_attribute')
+    expect(indexVerifier).toContain('with ordinality')
+    expect(indexVerifier).toContain("array['card_id', 'user_id']")
+    expect(indexVerifier).toContain("array['user_id']")
+    // And the properties a name check would miss entirely.
+    for (const property of ['indisunique', 'indpred', 'indisvalid', 'indisready', 'amname']) {
+      expect(indexVerifier).toContain(property)
+    }
+  })
+
+  it('ships a verifier that reads only and proves it', () => {
+    expect(indexVerifier.trimEnd().endsWith('rollback;')).toBe(true)
+    for (const mutation of [
+      /^insert into public\./im,
+      /^update public\./im,
+      /^delete from public\./im,
+    ]) {
+      expect(indexVerifier).not.toMatch(mutation)
+    }
+    // Row counts and content digests are compared before and after.
+    expect(indexVerifier).toContain('verify_index_baseline')
+  })
+
+  it('asserts the original three indexes and both foreign keys survive', () => {
+    for (const preserved of [
+      'ip_user_preference_card_revisions_pkey',
+      'ip_user_preference_card_revisions_card_number_idx',
+      'ip_user_preference_card_revisions_card_created_idx',
+      'ip_user_preference_card_revisions_user_id_fkey',
+      'ip_user_preference_card_revisions_card_owner_fkey',
+    ]) {
+      expect(indexVerifier).toContain(preserved)
     }
   })
 })

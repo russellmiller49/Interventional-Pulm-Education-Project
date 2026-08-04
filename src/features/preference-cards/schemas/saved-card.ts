@@ -264,9 +264,41 @@ export const saveCardRequestSchema = builderInputsObject
   .extend({
     /** Absent for a new card; present when overwriting one the caller owns. */
     cardId: z.string().uuid().optional(),
+    /**
+     * The card's content version as the editor loaded it — its `updated_at` at that moment.
+     *
+     * The optimistic-concurrency token. The update statement matches on it as well as on the id,
+     * so a save built against a state someone has since replaced matches no row and is refused
+     * rather than silently overwriting the newer one. It is deliberately not part of
+     * `builderInputsObject`: it describes *this request*, not the card, and is never persisted.
+     *
+     * `updated_at` moves only when revision-bearing content changes — a share toggle leaves it
+     * alone — so holding an editor open while a colleague shares the card does not invalidate it.
+     */
+    expectedUpdatedAt: z.string().datetime({ offset: true }).optional(),
     title: z.string().trim().min(1).max(160),
     physicianName: z.string().trim().max(160).nullable().optional(),
     status: z.enum(['draft', 'final']).default('draft'),
+  })
+  .superRefine((value, ctx) => {
+    // The token and the id imply each other. A create has nothing to be stale against; an
+    // overwrite without one would be the unguarded update this exists to remove, and accepting it
+    // silently is how a concurrency check quietly stops applying to the one caller that forgot.
+    if (value.cardId && !value.expectedUpdatedAt) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['expectedUpdatedAt'],
+        message:
+          'Overwriting a saved card must state the content version it was edited from, so a newer save cannot be replaced by an older one.',
+      })
+    }
+    if (!value.cardId && value.expectedUpdatedAt) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['expectedUpdatedAt'],
+        message: 'A new preference card has no previous content version to expect.',
+      })
+    }
   })
   .superRefine(requireVersionPinAgreement)
   .superRefine((value, ctx) => {

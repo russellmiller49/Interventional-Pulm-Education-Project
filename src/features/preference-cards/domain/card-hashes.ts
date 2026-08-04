@@ -74,8 +74,15 @@ export type UnhashedResolvedCard = Omit<
   'snapshotHash' | 'snapshotIntegrityHash' | 'resolvedContentHash'
 >
 
-/** The stable, comparable form of one resolved requirement. */
-function projectItem(item: ResolvedCardItem) {
+/**
+ * The stable, comparable form of one resolved requirement.
+ *
+ * Exported because the reconciliation diff compares items field by field, and it must compare
+ * exactly the fields the semantic hash covers. Two definitions of "what counts as a difference"
+ * would drift, and the drift would show up as a review that reports no changes on a card whose
+ * content hash moved.
+ */
+export function projectResolvedItem(item: ResolvedCardItem) {
   return {
     id: item.id,
     requirementKey: item.requirementKey ?? null,
@@ -154,8 +161,8 @@ export function resolvedContentProjection(card: UnhashedResolvedCard) {
         governanceState: module.governanceState,
       }))
       .sort((left, right) => left.moduleVersionId.localeCompare(right.moduleVersionId)),
-    items: card.items.map(projectItem),
-    suppressedItems: card.suppressedItems.map(projectItem),
+    items: card.items.map(projectResolvedItem),
+    suppressedItems: card.suppressedItems.map(projectResolvedItem),
     warnings: projectWarnings(card.warnings),
     readinessState: card.readinessState,
     governanceState: card.governanceState,
