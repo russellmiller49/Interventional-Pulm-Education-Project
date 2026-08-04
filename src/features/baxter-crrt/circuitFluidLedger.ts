@@ -14,6 +14,9 @@
  * Nothing here introduces new physiology. Every quantity is either read straight
  * off `CrrtFlowRates` or computed by the existing engine functions, so the
  * ledger cannot drift away from what the simulation actually did.
+ *
+ * One term does not reconcile between those two expressions, and the ledger
+ * refuses to guess. See `CRRT_MAKEUP_ATTRIBUTION_CONFLICT` below.
  */
 
 import {
@@ -28,6 +31,46 @@ import type { CrrtFlowRates, ExternalFluidRates, FluidLedgerTotals } from './eng
 /** Rounding guard for float comparisons, in mL/h. Not a clinical tolerance. */
 const CONSERVATION_EPSILON_ML_HOUR = 1e-6
 
+/**
+ * The makeup term does not reconcile between the two registered expressions, and
+ * no third record settles it.
+ *
+ * `MATH-PM-001` (manual p217) defines the effluent target as
+ * `Qeff = Qpfr + Qpbp + Qrep + Qdial + Qsyr + Qmakeup` — makeup is carried.
+ * `FLUID-PM-002` (manual p219) defines the machine's patient-fluid-removed term
+ * as `Vpfr = Veff - Vpbp - Vdial - Vrep - Vsyr` — makeup is absent.
+ *
+ * Subtracting an effluent total that contains makeup using an expression that
+ * does not subtract it leaves the makeup volume sitting inside the patient
+ * removal term. Nothing in the registered sources says whether makeup reached
+ * the patient, so attributing it either way would be an invention.
+ *
+ * This is recorded rather than resolved, in the same spirit as the existing
+ * CONFLICT-001 and CONFLICT-002 gates in `engine/clinicalMath.ts`. The
+ * consequence is enforced, not merely documented: when makeup is non-zero, every
+ * quantity that depends on the attribution is suppressed and the ledger reports
+ * itself unresolved. It is never shown as a balanced limb, and the unattributed
+ * volume is never added to patient fluid loss.
+ */
+export const CRRT_MAKEUP_ATTRIBUTION_CONFLICT = Object.freeze({
+  id: 'CONFLICT-CRRT-MAKEUP-001' as const,
+  sourceRecordIds: Object.freeze(['MATH-PM-001', 'FLUID-PM-002']),
+  symbol: 'Qmakeup' as const,
+  observation:
+    'The effluent-target expression carries the makeup term and the patient-fluid-removed expression omits it, so the makeup volume is left inside the removal term with no source statement about where it belongs.',
+  requiredDisposition:
+    'Suppress every quantity that depends on the attribution and report the ledger as unresolved. Authored C0/C1 examples hold makeup at zero.',
+  status: 'unresolved-source-attribution-conflict' as const,
+  reviewStatus: 'pending' as const,
+})
+
+/**
+ * Whether the ledger's patient-facing quantities can be stated at all.
+ * `unresolved-makeup-attribution` is not a warning attached to a number — it
+ * means the number is withheld.
+ */
+export type CrrtLedgerResolution = 'resolved' | 'unresolved-makeup-attribution'
+
 export interface CrrtMachineFluidLedger {
   /**
    * Fluid added to the blood path and therefore reaching the patient unless it
@@ -40,17 +83,26 @@ export interface CrrtMachineFluidLedger {
    * effluent without ever joining the blood path. Dialysate only.
    */
   readonly neverEnteringPatientMlHour: number
-  /** Everything pulled from the blood side to the fluid side across the membrane. */
-  readonly crossingMembraneMlHour: number
+  /**
+   * Everything pulled from the blood side to the fluid side across the membrane.
+   * Null when the makeup attribution is unresolved, because an unattributed
+   * volume inside the effluent total may or may not have crossed.
+   */
+  readonly crossingMembraneMlHour: number | null
   /**
    * Net fluid handed back to the patient by the circuit. Negative means the
-   * patient is losing fluid to the machine, which is the usual case.
+   * patient is losing fluid to the machine, which is the usual case. Null when
+   * the makeup attribution is unresolved.
    */
-  readonly netFluidToPatientMlHour: number
-  /** Total effluent the effluent pump must carry. MATH-PM-001. */
+  readonly netFluidToPatientMlHour: number | null
+  /** Total effluent the effluent pump must carry. MATH-PM-001. Always stateable. */
   readonly totalEffluentMlHour: number
-  /** The machine's own patient-fluid-removed term. FLUID-PM-002. */
-  readonly machinePatientFluidRemovalMlHour: number
+  /**
+   * The machine's own patient-fluid-removed term. FLUID-PM-002. Null when the
+   * makeup attribution is unresolved — the expression would otherwise report an
+   * unattributed volume as fluid the patient lost.
+   */
+  readonly machinePatientFluidRemovalMlHour: number | null
   /** Prescribed patient fluid removal, read straight off the flow settings. */
   readonly prescribedPatientFluidRemovalMlHour: number
   /**
@@ -59,14 +111,12 @@ export interface CrrtMachineFluidLedger {
    * undefined rather than infinite.
    */
   readonly effluentPerMillilitreRemoved: number | null
-  /**
-   * The device makeup term. It appears in the effluent target expression
-   * (MATH-PM-001) but not in the patient-fluid-removed expression
-   * (FLUID-PM-002), so a non-zero value makes the machine's removal term exceed
-   * the prescribed removal. Authored examples keep this at zero and the dump
-   * harness flags any state where it is not.
-   */
+  /** The device makeup term. See `CRRT_MAKEUP_ATTRIBUTION_CONFLICT`. */
   readonly makeupMlHour: number
+  /** `resolved` only when the makeup term is zero. */
+  readonly resolution: CrrtLedgerResolution
+  /** Learner-facing reason the suppressed quantities are withheld. Null when resolved. */
+  readonly unresolvedReason: string | null
   readonly sourceIds: readonly string[]
 }
 
@@ -98,6 +148,40 @@ export function calculateCrrtMachineFluidLedger(flows: CrrtFlowRates): CrrtMachi
     makeupMlPerHour: flows.makeupFlowMlHour,
   })
 
+  const enteringBloodPathMlHour = finite(
+    flows.pbpFlowMlHour + totalReplacementMlHour + flows.syringeFlowMlHour,
+    'enteringBloodPathMlHour',
+  )
+  const neverEnteringPatientMlHour = finite(flows.dialysateFlowMlHour, 'neverEnteringPatientMlHour')
+
+  const makeupMlHour = finite(flows.makeupFlowMlHour, 'makeupMlHour')
+  const unresolved = Math.abs(makeupMlHour) > CONSERVATION_EPSILON_ML_HOUR
+
+  const sourceIds = Object.freeze([
+    PRISMAX_EFFLUENT_TARGET_SOURCE_ID,
+    PRISMAX_PATIENT_FLUID_REMOVED_SOURCE_ID,
+  ])
+
+  if (unresolved) {
+    // Every quantity below the membrane depends on knowing where the makeup
+    // volume went, and no registered source says. Withhold them rather than
+    // publish a number the sources do not support.
+    return Object.freeze({
+      enteringBloodPathMlHour,
+      neverEnteringPatientMlHour,
+      crossingMembraneMlHour: null,
+      netFluidToPatientMlHour: null,
+      totalEffluentMlHour,
+      machinePatientFluidRemovalMlHour: null,
+      prescribedPatientFluidRemovalMlHour: flows.patientFluidRemovalMlHour,
+      effluentPerMillilitreRemoved: null,
+      makeupMlHour,
+      resolution: 'unresolved-makeup-attribution' as const,
+      unresolvedReason: `A makeup flow of ${makeupMlHour} mL/h is running. The effluent expression counts it and the patient-fluid-removed expression does not, and no registered source says which side of the membrane it belongs to. Everything that depends on that answer is withheld rather than guessed, so this circuit cannot be shown as a balanced ledger and none of this volume is attributed to patient fluid loss.`,
+      sourceIds,
+    })
+  }
+
   // FLUID-PM-002 is defined over volumes; one hour of each rate keeps the units
   // honest and leaves the expression untouched.
   const machinePatientFluidRemovalMlHour = calculatePrismaxPatientFluidRemovedMl({
@@ -108,11 +192,6 @@ export function calculateCrrtMachineFluidLedger(flows: CrrtFlowRates): CrrtMachi
     syringeVolumeMl: flows.syringeFlowMlHour,
   })
 
-  const enteringBloodPathMlHour = finite(
-    flows.pbpFlowMlHour + totalReplacementMlHour + flows.syringeFlowMlHour,
-    'enteringBloodPathMlHour',
-  )
-  const neverEnteringPatientMlHour = finite(flows.dialysateFlowMlHour, 'neverEnteringPatientMlHour')
   const crossingMembraneMlHour = finite(
     totalEffluentMlHour - neverEnteringPatientMlHour,
     'crossingMembraneMlHour',
@@ -134,77 +213,115 @@ export function calculateCrrtMachineFluidLedger(flows: CrrtFlowRates): CrrtMachi
       machinePatientFluidRemovalMlHour === 0
         ? null
         : totalEffluentMlHour / machinePatientFluidRemovalMlHour,
-    makeupMlHour: flows.makeupFlowMlHour,
-    sourceIds: Object.freeze([
-      PRISMAX_EFFLUENT_TARGET_SOURCE_ID,
-      PRISMAX_PATIENT_FLUID_REMOVED_SOURCE_ID,
-    ]),
+    makeupMlHour,
+    resolution: 'resolved' as const,
+    unresolvedReason: null,
+    sourceIds,
   })
 }
+
+/**
+ * A check is `balanced`, `unbalanced`, or `unresolved`. The third state exists so
+ * a suppressed ledger can never be mistaken for a balanced one: an unresolved
+ * check is not a passing check.
+ */
+export type CrrtConservationStatus = 'balanced' | 'unbalanced' | 'unresolved'
 
 export interface CrrtConservationCheck {
   readonly id:
     | 'effluent-equals-membrane-plus-dialysate'
     | 'membrane-minus-added-equals-machine-removal'
     | 'net-to-patient-mirrors-machine-removal'
-    | 'makeup-term-inflates-machine-removal'
+    | 'makeup-attribution-resolved'
   readonly label: string
-  readonly balanced: boolean
-  readonly residualMlHour: number
+  readonly status: CrrtConservationStatus
+  /** Null when the check could not be evaluated at all. */
+  readonly residualMlHour: number | null
   readonly explanation: string
+}
+
+/** True only when every identity was evaluated and every one balanced. */
+export function crrtLedgerIsFullyBalanced(checks: readonly CrrtConservationCheck[]): boolean {
+  return checks.length > 0 && checks.every((check) => check.status === 'balanced')
+}
+
+function identity(
+  id: CrrtConservationCheck['id'],
+  label: string,
+  residual: number | null,
+  explanation: string,
+): CrrtConservationCheck {
+  return {
+    id,
+    label,
+    status:
+      residual === null
+        ? 'unresolved'
+        : Math.abs(residual) <= CONSERVATION_EPSILON_ML_HOUR
+          ? 'balanced'
+          : 'unbalanced',
+    residualMlHour: residual,
+    explanation,
+  }
 }
 
 /**
  * The conservation identities the ledger must satisfy. These are arithmetic
  * facts about the two source expressions, not clinical judgements, so a failure
  * means the ledger or the flows are wrong rather than that the therapy is.
+ *
+ * When the makeup attribution is unresolved the dependent identities report
+ * `unresolved` rather than being silently skipped or reported as balanced.
  */
 export function checkCrrtFluidConservation(
   ledger: CrrtMachineFluidLedger,
 ): readonly CrrtConservationCheck[] {
+  const { crossingMembraneMlHour, netFluidToPatientMlHour, machinePatientFluidRemovalMlHour } =
+    ledger
+
   const membranePlusDialysate =
-    ledger.crossingMembraneMlHour + ledger.neverEnteringPatientMlHour - ledger.totalEffluentMlHour
+    crossingMembraneMlHour === null
+      ? null
+      : crossingMembraneMlHour + ledger.neverEnteringPatientMlHour - ledger.totalEffluentMlHour
   const membraneMinusAdded =
-    ledger.crossingMembraneMlHour -
-    ledger.enteringBloodPathMlHour -
-    ledger.machinePatientFluidRemovalMlHour
-  const netMirror = ledger.netFluidToPatientMlHour + ledger.machinePatientFluidRemovalMlHour
+    crossingMembraneMlHour === null || machinePatientFluidRemovalMlHour === null
+      ? null
+      : crossingMembraneMlHour - ledger.enteringBloodPathMlHour - machinePatientFluidRemovalMlHour
+  const netMirror =
+    netFluidToPatientMlHour === null || machinePatientFluidRemovalMlHour === null
+      ? null
+      : netFluidToPatientMlHour + machinePatientFluidRemovalMlHour
   const makeupResidual =
-    ledger.machinePatientFluidRemovalMlHour - ledger.prescribedPatientFluidRemovalMlHour
+    ledger.resolution === 'resolved' && machinePatientFluidRemovalMlHour !== null
+      ? machinePatientFluidRemovalMlHour - ledger.prescribedPatientFluidRemovalMlHour
+      : null
 
   return Object.freeze([
-    {
-      id: 'effluent-equals-membrane-plus-dialysate',
-      label: 'Total effluent equals what crossed the membrane plus the dialysate that never did',
-      balanced: Math.abs(membranePlusDialysate) <= CONSERVATION_EPSILON_ML_HOUR,
-      residualMlHour: membranePlusDialysate,
-      explanation:
-        'Everything in the effluent bag either crossed the membrane out of the blood or ran past the membrane as dialysate. There is no third source.',
-    },
-    {
-      id: 'membrane-minus-added-equals-machine-removal',
-      label: 'What crossed the membrane, less what was given back, is what the patient lost',
-      balanced: Math.abs(membraneMinusAdded) <= CONSERVATION_EPSILON_ML_HOUR,
-      residualMlHour: membraneMinusAdded,
-      explanation:
-        'The membrane volume is large because replacement and pre-blood-pump fluid are pulled off again along with the patient’s own fluid. Subtracting what was given back leaves the net loss.',
-    },
-    {
-      id: 'net-to-patient-mirrors-machine-removal',
-      label: 'Net fluid to the patient is the machine removal term with the opposite sign',
-      balanced: Math.abs(netMirror) <= CONSERVATION_EPSILON_ML_HOUR,
-      residualMlHour: netMirror,
-      explanation:
-        'Fluid the circuit hands back and fluid the machine records as removed are the same quantity seen from the two ends.',
-    },
-    {
-      id: 'makeup-term-inflates-machine-removal',
-      label: 'The machine removal term matches the prescribed removal',
-      balanced: Math.abs(makeupResidual) <= CONSERVATION_EPSILON_ML_HOUR,
-      residualMlHour: makeupResidual,
-      explanation:
-        'The makeup term is carried by the effluent target expression but not by the patient-fluid-removed expression, so any non-zero makeup flow makes the machine record more removal than was prescribed. Authored examples keep makeup at zero; a residual here means the difference must be explained rather than displayed as patient loss.',
-    },
+    identity(
+      'effluent-equals-membrane-plus-dialysate',
+      'Total effluent equals what crossed the membrane plus the dialysate that never did',
+      membranePlusDialysate,
+      'Everything in the effluent bag either crossed the membrane out of the blood or ran past the membrane as dialysate. There is no third source.',
+    ),
+    identity(
+      'membrane-minus-added-equals-machine-removal',
+      'What crossed the membrane, less what was given back, is what the patient lost',
+      membraneMinusAdded,
+      'The membrane volume is large because replacement and pre-blood-pump fluid are pulled off again along with the patient’s own fluid. Subtracting what was given back leaves the net loss.',
+    ),
+    identity(
+      'net-to-patient-mirrors-machine-removal',
+      'Net fluid to the patient is the machine removal term with the opposite sign',
+      netMirror,
+      'Fluid the circuit hands back and fluid the machine records as removed are the same quantity seen from the two ends.',
+    ),
+    identity(
+      'makeup-attribution-resolved',
+      'Every fluid in the effluent total can be attributed to a side of the membrane',
+      makeupResidual,
+      ledger.unresolvedReason ??
+        'With no makeup flow running, every term in the effluent total is accounted for on one side of the membrane or the other.',
+    ),
   ])
 }
 

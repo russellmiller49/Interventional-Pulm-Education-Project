@@ -4,6 +4,11 @@ import { crrtSimulationReducer } from '../engine/reducer'
 import { createSyntheticFixture } from '../engine/testSupport/syntheticFixture'
 import type { CrrtEngineFixture, CrrtSimulationState } from '../engine/types'
 import {
+  calculateCrrtMachineFluidLedger,
+  checkCrrtFluidConservation,
+  crrtLedgerIsFullyBalanced,
+} from '../circuitFluidLedger'
+import {
   auditCrrtFrames,
   auditCrrtSimulationFrame,
   collectCrrtNumericRows,
@@ -41,36 +46,63 @@ describe('CRRT numeric audit on real engine runs', () => {
     }
   })
 
-  it('carries every metric the dump is expected to print', () => {
+  it('carries every metric the dump is required to print', () => {
     const frames = syntheticFrames(1)
-    const names = crrtNumericMetricNames(frames[frames.length - 1])
+    const last = frames[frames.length - 1]
+    const names = crrtNumericMetricNames(last)
+    const rows = collectCrrtNumericRows(last)
 
-    for (const expected of [
-      'access-pressure',
-      'filter-pressure',
-      'return-pressure',
-      'effluent-pressure',
-      'transmembrane-pressure',
-      'filter-pressure-drop',
-      'filtration-fraction',
-      'prescribed-effluent-rate',
-      'prescribed-effluent-dose',
-      'delivered-dose',
-      'cumulative-downtime',
-      'ledger.total-effluent',
-      'ledger.machine-patient-fluid-removal',
-      'ledger.crossing-membrane',
-      'ledger.never-enters-patient',
-      'patient-ledger.net-balance',
-      'cumulative-whole-patient-balance',
-      'downtime.not-started',
-      'downtime.paused',
-      'downtime.access',
-      'downtime.alarm',
-      'downtime.bag-scale',
-      'downtime.other',
-    ]) {
-      expect(names).toContain(expected)
+    // The closeout list, item by item, so a field cannot silently drop out.
+    const required: Readonly<Record<string, readonly string[]>> = {
+      'access pressure': ['access-pressure'],
+      'filter pressure': ['filter-pressure'],
+      'return pressure': ['return-pressure'],
+      'effluent pressure': ['effluent-pressure'],
+      TMP: ['transmembrane-pressure'],
+      'filter pressure drop': ['filter-pressure-drop'],
+      'filtration fraction': ['filtration-fraction'],
+      'prescribed intensity': ['prescribed-effluent-rate', 'prescribed-effluent-dose'],
+      'delivered intensity': ['delivered-dose', 'cumulative-actual-effluent'],
+      'cumulative downtime': ['cumulative-downtime'],
+      'downtime by reason': [
+        'downtime.not-started',
+        'downtime.paused',
+        'downtime.access',
+        'downtime.alarm',
+        'downtime.bag-scale',
+        'downtime.other',
+      ],
+      'machine fluid ledger': [
+        'ledger.entering-blood-path',
+        'ledger.never-enters-patient',
+        'ledger.crossing-membrane',
+        'ledger.total-effluent',
+        'ledger.machine-patient-fluid-removal',
+        'ledger.net-to-patient',
+      ],
+      'whole-patient ledger': [
+        'patient-ledger.external-input',
+        'patient-ledger.external-output',
+        'patient-ledger.net-balance',
+        'cumulative-whole-patient-balance',
+        'cumulative-machine-patient-fluid-removal',
+      ],
+    }
+
+    for (const [requirement, metrics] of Object.entries(required)) {
+      for (const metric of metrics) {
+        expect({ requirement, metric, present: names.includes(metric) }).toEqual({
+          requirement,
+          metric,
+          present: true,
+        })
+      }
+    }
+
+    // Every printed row is a real value or an explicit null, never undefined.
+    for (const row of rows) {
+      expect(row.value === null || Number.isFinite(row.value)).toBe(true)
+      expect(row.unit.length).toBeGreaterThan(0)
     }
   })
 
@@ -270,8 +302,36 @@ describe('CRRT numeric audit flag classes', () => {
     }
 
     const flags = auditCrrtSimulationFrame(broken)
-    const makeup = flags.find((item) => item.kind === 'unexplained-makeup')
-    expect(makeup).toBeDefined()
-    expect(makeup?.reason).toMatch(/must be explained rather than displayed as patient loss/i)
+    const makeup = flags.filter((item) => item.kind === 'unexplained-makeup')
+    expect(makeup.length).toBeGreaterThan(0)
+    expect(makeup[0].reason).toMatch(/could not be checked/i)
+    expect(makeup.some((item) => /makeup flow of 40 mL\/h/i.test(item.reason))).toBe(true)
+
+    // The suppressed quantities must be reported as withheld, not as numbers.
+    const rows = collectCrrtNumericRows(broken)
+    const value = (metric: string) => rows.find((row) => row.metric === metric)?.value
+    expect(value('ledger.machine-patient-fluid-removal')).toBeNull()
+    expect(value('ledger.net-to-patient')).toBeNull()
+    expect(value('ledger.crossing-membrane')).toBeNull()
+    expect(value('patient-ledger.net-balance')).toBeNull()
+    // And the effluent total, which the sources do state, is still stated.
+    expect(value('ledger.total-effluent')).not.toBeNull()
+  })
+
+  it('never lets a suppressed makeup state read as a balanced ledger', () => {
+    const base = lastFrame()
+    const broken: CrrtSimulationState = {
+      ...base,
+      circuit: { ...base.circuit, flows: { ...base.circuit.flows, makeupFlowMlHour: 250 } },
+    }
+
+    const ledger = calculateCrrtMachineFluidLedger(broken.circuit.flows)
+    const checks = checkCrrtFluidConservation(ledger)
+
+    expect(ledger.resolution).toBe('unresolved-makeup-attribution')
+    expect(crrtLedgerIsFullyBalanced(checks)).toBe(false)
+    expect(checks.filter((check) => check.status === 'balanced')).toHaveLength(0)
+    // The audit must speak up rather than pass silently.
+    expect(auditCrrtSimulationFrame(broken).length).toBeGreaterThan(0)
   })
 })

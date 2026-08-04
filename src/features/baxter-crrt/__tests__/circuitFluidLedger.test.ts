@@ -2,6 +2,8 @@ import {
   calculateCrrtMachineFluidLedger,
   calculateCrrtWholePatientLedger,
   checkCrrtFluidConservation,
+  CRRT_MAKEUP_ATTRIBUTION_CONFLICT,
+  crrtLedgerIsFullyBalanced,
   crrtWorkedLedgerExample,
 } from '../circuitFluidLedger'
 import { emptyExternalFluidRates } from '../engine/fluidModel'
@@ -23,7 +25,7 @@ function flows(overrides: Partial<CrrtFlowRates>): CrrtFlowRates {
 }
 
 function allBalanced(ledger: ReturnType<typeof calculateCrrtMachineFluidLedger>) {
-  return checkCrrtFluidConservation(ledger).every((check) => check.balanced)
+  return crrtLedgerIsFullyBalanced(checkCrrtFluidConservation(ledger))
 }
 
 describe('CRRT machine fluid ledger', () => {
@@ -81,7 +83,9 @@ describe('CRRT machine fluid ledger', () => {
       if (onlyRemoval) {
         expect(ledger.totalEffluentMlHour).toBe(ledger.machinePatientFluidRemovalMlHour)
       } else {
-        expect(ledger.totalEffluentMlHour).toBeGreaterThan(ledger.machinePatientFluidRemovalMlHour)
+        expect(ledger.totalEffluentMlHour).toBeGreaterThan(
+          ledger.machinePatientFluidRemovalMlHour ?? Number.NEGATIVE_INFINITY,
+        )
       }
     }
   })
@@ -120,32 +124,92 @@ describe('CRRT machine fluid ledger', () => {
     expect(ledger.effluentPerMillilitreRemoved).toBeNull()
   })
 
-  it('flags the makeup term rather than silently reporting it as patient loss', () => {
+  it('withholds every dependent quantity when a makeup flow is running', () => {
     const ledger = calculateCrrtMachineFluidLedger(
-      flows({ patientFluidRemovalMlHour: 100, makeupFlowMlHour: 40 }),
-    )
-    const makeupCheck = checkCrrtFluidConservation(ledger).find(
-      (check) => check.id === 'makeup-term-inflates-machine-removal',
+      flows({ dialysateFlowMlHour: 1_000, patientFluidRemovalMlHour: 100, makeupFlowMlHour: 40 }),
     )
 
-    expect(ledger.machinePatientFluidRemovalMlHour).toBe(140)
+    expect(ledger.resolution).toBe('unresolved-makeup-attribution')
+    // The volume is never attributed to the patient — not as removal, not as
+    // net fluid, not as a ratio.
+    expect(ledger.machinePatientFluidRemovalMlHour).toBeNull()
+    expect(ledger.netFluidToPatientMlHour).toBeNull()
+    expect(ledger.crossingMembraneMlHour).toBeNull()
+    expect(ledger.effluentPerMillilitreRemoved).toBeNull()
+    expect(ledger.unresolvedReason).toMatch(/makeup flow of 40 mL\/h/i)
+
+    // What the sources do state is still stated.
+    expect(ledger.totalEffluentMlHour).toBe(1_140)
+    expect(ledger.neverEnteringPatientMlHour).toBe(1_000)
     expect(ledger.prescribedPatientFluidRemovalMlHour).toBe(100)
-    expect(makeupCheck?.balanced).toBe(false)
-    expect(makeupCheck?.residualMlHour).toBe(40)
-    // The conservation identities themselves still hold; only the makeup
-    // reconciliation is flagged.
-    expect(
-      checkCrrtFluidConservation(ledger)
-        .filter((check) => check.id !== 'makeup-term-inflates-machine-removal')
-        .every((check) => check.balanced),
-    ).toBe(true)
+  })
+
+  it('cannot present a non-zero makeup term as a resolved, balanced ledger', () => {
+    // The invariant the owner decision turns on: an unresolved attribution must
+    // never reach a learner as a closed ledger. Swept across a range of makeup
+    // values and therapy shapes so it cannot pass by coincidence.
+    // A negative makeup is not swept: the source expression itself rejects it
+    // (`assertNonNegativeNumber` in engine/units.ts), so it is unreachable state.
+    for (const makeupFlowMlHour of [0.5, 1, 40, 250, 5_000]) {
+      for (const shape of [
+        { patientFluidRemovalMlHour: 100 },
+        { dialysateFlowMlHour: 1_000, patientFluidRemovalMlHour: 100 },
+        { postReplacementFlowMlHour: 1_000, patientFluidRemovalMlHour: 100 },
+        { dialysateFlowMlHour: 800, preReplacementFlowMlHour: 400, pbpFlowMlHour: 100 },
+      ]) {
+        const ledger = calculateCrrtMachineFluidLedger(flows({ ...shape, makeupFlowMlHour }))
+        const checks = checkCrrtFluidConservation(ledger)
+
+        expect(ledger.resolution).toBe('unresolved-makeup-attribution')
+        expect(crrtLedgerIsFullyBalanced(checks)).toBe(false)
+        expect(checks.some((check) => check.status === 'unresolved')).toBe(true)
+        // No check may report "balanced" off a suppressed quantity.
+        expect(checks.filter((check) => check.status === 'balanced')).toHaveLength(0)
+        expect(ledger.machinePatientFluidRemovalMlHour).toBeNull()
+      }
+    }
+  })
+
+  it('returns to a resolved balanced ledger the moment makeup is zero', () => {
+    const ledger = calculateCrrtMachineFluidLedger(
+      flows({ dialysateFlowMlHour: 1_000, patientFluidRemovalMlHour: 100, makeupFlowMlHour: 0 }),
+    )
+
+    expect(ledger.resolution).toBe('resolved')
+    expect(ledger.unresolvedReason).toBeNull()
+    expect(allBalanced(ledger)).toBe(true)
+  })
+
+  it('records the makeup attribution conflict rather than resolving it', () => {
+    expect(CRRT_MAKEUP_ATTRIBUTION_CONFLICT.status).toBe('unresolved-source-attribution-conflict')
+    expect(CRRT_MAKEUP_ATTRIBUTION_CONFLICT.sourceRecordIds).toEqual([
+      'MATH-PM-001',
+      'FLUID-PM-002',
+    ])
+    expect(CRRT_MAKEUP_ATTRIBUTION_CONFLICT.symbol).toBe('Qmakeup')
+    expect(CRRT_MAKEUP_ATTRIBUTION_CONFLICT.observation).toMatch(/omits it/i)
+  })
+
+  it('holds every authored C0/C1 example at zero makeup', () => {
+    expect(crrtWorkedLedgerExample.flows.makeupFlowMlHour).toBe(0)
+    expect(calculateCrrtMachineFluidLedger(crrtWorkedLedgerExample.flows).resolution).toBe(
+      'resolved',
+    )
   })
 
   it('detects a deliberately broken ledger', () => {
     const ledger = calculateCrrtMachineFluidLedger(crrtWorkedLedgerExample.flows)
-    const tampered = { ...ledger, crossingMembraneMlHour: ledger.crossingMembraneMlHour + 250 }
+    // The worked example resolves, so the membrane term is a number here; the
+    // assertion states that rather than assuming it.
+    expect(ledger.crossingMembraneMlHour).not.toBeNull()
+    const tampered = {
+      ...ledger,
+      crossingMembraneMlHour: (ledger.crossingMembraneMlHour ?? 0) + 250,
+    }
 
-    const failures = checkCrrtFluidConservation(tampered).filter((check) => !check.balanced)
+    const failures = checkCrrtFluidConservation(tampered).filter(
+      (check) => check.status !== 'balanced',
+    )
     expect(failures.map((check) => check.id)).toEqual(
       expect.arrayContaining([
         'effluent-equals-membrane-plus-dialysate',
@@ -165,7 +229,7 @@ describe('CRRT whole-patient ledger', () => {
         nutritionInputMlHour: 40,
         urineOutputMlHour: 10,
       },
-      machine.machinePatientFluidRemovalMlHour,
+      machine.machinePatientFluidRemovalMlHour ?? 0,
       0,
     )
 

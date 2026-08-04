@@ -95,11 +95,17 @@ export function collectCrrtNumericRows(state: CrrtSimulationState): readonly Crr
   const therapy = state.deliveredTherapy
   const flows = state.circuit.flows
   const ledger = calculateCrrtMachineFluidLedger(flows)
-  const patientLedger = calculateCrrtWholePatientLedger(
-    state.scenario.externalFluidRates,
-    ledger.machinePatientFluidRemovalMlHour,
-    state.scenario.unintendedDeviceNetGainRateMlHour,
-  )
+  // The whole-patient ledger consumes the machine removal term. When that term is
+  // withheld the patient balance cannot be stated either, and is reported as
+  // withheld rather than computed from a substituted zero.
+  const patientLedger =
+    ledger.machinePatientFluidRemovalMlHour === null
+      ? null
+      : calculateCrrtWholePatientLedger(
+          state.scenario.externalFluidRates,
+          ledger.machinePatientFluidRemovalMlHour,
+          state.scenario.unintendedDeviceNetGainRateMlHour,
+        )
 
   const rows: CrrtNumericRow[] = [
     {
@@ -244,21 +250,21 @@ export function collectCrrtNumericRows(state: CrrtSimulationState): readonly Crr
     },
     {
       metric: 'patient-ledger.external-input',
-      value: patientLedger.externalInputMlHour,
+      value: patientLedger?.externalInputMlHour ?? null,
       kind: 'authored',
       unit: 'mL/h',
       note: null,
     },
     {
       metric: 'patient-ledger.external-output',
-      value: patientLedger.externalOutputMlHour,
+      value: patientLedger?.externalOutputMlHour ?? null,
       kind: 'authored',
       unit: 'mL/h',
       note: null,
     },
     {
       metric: 'patient-ledger.net-balance',
-      value: patientLedger.netBalanceMlHour,
+      value: patientLedger?.netBalanceMlHour ?? null,
       kind: 'calculated',
       unit: 'mL/h',
       note: 'A different quantity from total effluent, and from machine removal.',
@@ -321,14 +327,14 @@ export function auditCrrtSimulationFrame(state: CrrtSimulationState): readonly C
   //    balance, either the flows or the regrouping is wrong.
   const ledger = calculateCrrtMachineFluidLedger(flows)
   for (const check of checkCrrtFluidConservation(ledger)) {
-    if (check.balanced) continue
-    if (check.id === 'makeup-term-inflates-machine-removal') {
+    if (check.status === 'balanced') continue
+    if (check.status === 'unresolved') {
       flags.push(
         flag(
           'unexplained-makeup',
           state,
-          'ledger.machine-patient-fluid-removal',
-          `Makeup flow of ${flows.makeupFlowMlHour} mL/h makes the machine removal term exceed the prescribed removal by ${check.residualMlHour} mL/h. The effluent expression carries makeup and the patient-fluid-removed expression does not, so this difference must be explained rather than displayed as patient loss.`,
+          check.id,
+          `${check.label} could not be checked. ${ledger.unresolvedReason ?? check.explanation}`,
         ),
       )
       continue
@@ -338,7 +344,7 @@ export function auditCrrtSimulationFrame(state: CrrtSimulationState): readonly C
         'impossible-conservation',
         state,
         check.id,
-        `${check.label} is off by ${check.residualMlHour} mL/h.`,
+        `${check.label} is off by ${String(check.residualMlHour)} mL/h.`,
       ),
     )
   }
