@@ -229,15 +229,19 @@ const hemodynamicsEvidence = [
 ] as const
 
 const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
+  // H0/H1: signal validity now opens the hemodynamics runway. `stageOrder` is the authored ordinal
+  // within (module, stage) and `validateCriticalCareLearningPathways` requires the pathway to visit
+  // a stage in that order, so the ordinals and the prerequisite chain move with the pathway rather
+  // than contradicting it. Ids, routes, storage keys, and progress payloads are untouched.
   {
     sourceId: 'catheter-advancement',
     difficulty: 'foundation',
     curriculumStage: 'foundation',
-    stageOrder: 1,
+    stageOrder: 2,
     title: 'Advance the PAC by waveform',
     competencyIds: ['signal-validation', 'critical-care-safety'],
     pathwayIds: ['shock-and-perfusion'],
-    prerequisiteActivityIds: [],
+    prerequisiteActivityIds: ['hemodynamics:learn:waveform-interpretation'],
     evidenceIds: [...hemodynamicsEvidence, 'monitor-workflow-supplied'],
     estimatedMinutes: 15,
   },
@@ -245,11 +249,11 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
     sourceId: 'pressure-system',
     difficulty: 'foundation',
     curriculumStage: 'foundation',
-    stageOrder: 2,
+    stageOrder: 1,
     title: 'Level, zero, and dynamic response',
     competencyIds: ['signal-validation', 'critical-care-safety'],
     pathwayIds: ['shock-and-perfusion'],
-    prerequisiteActivityIds: ['hemodynamics:learn:catheter-advancement'],
+    prerequisiteActivityIds: [],
     evidenceIds: [
       ...hemodynamicsEvidence,
       'monitor-workflow-supplied',
@@ -276,7 +280,7 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
     title: 'Brief end-expiratory PAWP capture',
     competencyIds: ['signal-validation', 'critical-care-safety'],
     pathwayIds: ['shock-and-perfusion'],
-    prerequisiteActivityIds: ['hemodynamics:learn:waveform-interpretation'],
+    prerequisiteActivityIds: ['hemodynamics:learn:catheter-advancement'],
     evidenceIds: [...hemodynamicsEvidence, 'monitor-workflow-supplied'],
     estimatedMinutes: 15,
   },

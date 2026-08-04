@@ -14,6 +14,17 @@ import {
 import { CardiohelpConsole } from '../components/CardiohelpConsole'
 import { CircuitAndMonitors } from '../components/CircuitAndMonitors'
 import { LearnLessonPlayer, resolveGuidedLesson } from '../components/LearnLessonPlayer'
+import { LearnStepTeaching, type LearnStepStatus } from '../components/LearnStepTeaching'
+
+/*
+ * These walkthroughs drive a seventeen-step console tour through a real reducer and a real console,
+ * with a `waitFor` at most steps. Isolated they run in a couple of seconds; in a full-suite run on a
+ * machine that gives Jest a worker per core they can exceed the five-second default, and the B3/B4
+ * suites added enough load to make that regular rather than rare. Nothing here is slow because it is
+ * doing more work than it should — the budget simply has to match what a seventeen-step UI
+ * walkthrough costs under contention.
+ */
+jest.setTimeout(30_000)
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -47,6 +58,10 @@ function LearnHarness({
   const [, setCompletedLessonIds] = useState<Set<string>>(() => new Set())
   const [guidedTarget, setGuidedTarget] = useState<GuidedTarget>('circuit')
   const [guidedControlId, setGuidedControlId] = useState<GuidedControlId | null>(null)
+  // B3 moved the step's rationale, the live snapshot, and the completed-step response into the
+  // workspace's teaching pane. The harness composes the same surfaces the workspace composes, so
+  // these assertions still walk one lesson through one engine rather than two copies of it.
+  const [stepStatus, setStepStatus] = useState<LearnStepStatus | null>(null)
   const lesson = resolveGuidedLesson(scenarioId)
 
   function selectLesson(nextScenarioId: string) {
@@ -60,6 +75,13 @@ function LearnHarness({
       <output data-testid="screen">{state.device.screen}</output>
       <output data-testid="rpm">{state.device.rpmSetpoint}</output>
       <output data-testid="gas-source">{String(state.gas.sourceConnected)}</output>
+      <output data-testid="clamps">
+        {[
+          state.circuit.drainageClampClosed ? 'closed' : 'open',
+          state.circuit.returnClampClosed ? 'closed' : 'open',
+        ].join('|')}
+      </output>
+      <output data-testid="pump">{state.device.pumpRunning ? 'running' : 'stopped'}</output>
       <output data-testid="faults">{state.scenario.activeFaults.join(',')}</output>
       {/* What the engine actually received, so a test can tell a real commitment from a rendered one. */}
       <output data-testid="prediction">
@@ -96,7 +118,9 @@ function LearnHarness({
           setGuidedControlId(controlId)
           onControlHelpChange(controlId)
         }}
+        onStepStatusChange={setStepStatus}
       />
+      {stepStatus ? <LearnStepTeaching state={state} status={stepStatus} /> : null}
       <CardiohelpConsole
         state={state}
         dispatch={dispatch}
@@ -390,7 +414,7 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     })
   })
 
-  it('progressively guides isolate, de-air, ordered unclamp, and reset through the real controls', async () => {
+  it('progressively guides isolation, source correction, and bounded resumption through the real controls', async () => {
     render(<LearnHarness initialScenarioId="arterial-bubble-stop" />)
 
     performAndAdvance(/Advance 4 simulated seconds to the event/i)
@@ -418,36 +442,31 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
 
     performAndAdvance(/Correct the source and clear the circuit/i)
 
-    // Resume: drainage first, then return.
-    fireEvent.click(screen.getByRole('button', { name: /Drainage clamp/i }))
-    await waitFor(() => {
-      expect(screen.getByText(/Step complete—now verify what changed/i)).toBeInTheDocument()
-    })
-    fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
-    fireEvent.click(screen.getByRole('button', { name: /Return clamp/i }))
-    await waitFor(() => {
-      expect(screen.getByText(/Step complete—now verify what changed/i)).toBeInTheDocument()
-    })
-    fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
-
+    /*
+     * Coming back is one act, on its own control.
+     *
+     * The lesson used to walk the learner out through open-drainage, open-return, reset — which put
+     * the patient back on both limbs of a stopped centrifugal circuit before anything was turning.
+     * There is no clamp step here to find any more, and the control the guided help points at is
+     * neither a clamp nor the console reset.
+     */
     fireEvent.click(screen.getByRole('button', { name: /Show me where/i }))
-    const interventionsTab = screen.getByRole('button', { name: 'Interventions' })
+    // By id rather than by name: the stepper entry for this step carries the same words, and the
+    // control this asserts on is the one on the bedside circuit.
+    const resume = document.getElementById('cardiohelp-resume-support')
+    if (!resume) throw new Error('The bedside circuit did not render the resume control')
     await waitFor(() => {
-      expect(interventionsTab).toHaveFocus()
-      expect(interventionsTab).toHaveAttribute('data-guided-help', 'true')
+      expect(resume).toHaveFocus()
+      expect(resume).toHaveAttribute('data-guided-help', 'true')
     })
-    fireEvent.click(interventionsTab)
-
-    const resetBubble = screen.getByRole('button', { name: /Reset bubble intervention/i })
-    await waitFor(() => {
-      expect(resetBubble).toHaveFocus()
-      expect(resetBubble).toHaveAttribute('data-guided-help', 'true')
-    })
-    fireEvent.click(resetBubble)
+    fireEvent.click(resume)
 
     await waitFor(() => {
       expect(screen.getByText(/Step complete—now verify what changed/i)).toBeInTheDocument()
     })
+    // One transition: both limbs open and the pump running, with no frame in between.
+    expect(screen.getByTestId('clamps')).toHaveTextContent('open|open')
+    expect(screen.getByTestId('pump')).toHaveTextContent('running')
   })
 
   it('resets to the first step and clean simulation state when the lesson changes', async () => {

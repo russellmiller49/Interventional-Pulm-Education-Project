@@ -71,7 +71,9 @@ function CircuitSchematic({
   const diagramScrollRef = useRef<HTMLDivElement>(null)
   const [circuitView, setCircuitView] = useState<'bedside' | 'diagnostic'>('bedside')
   const clampGuidedHelpActive =
-    guidedControlId === 'cardiohelp-clamp-drainage' || guidedControlId === 'cardiohelp-clamp-return'
+    guidedControlId === 'cardiohelp-clamp-drainage' ||
+    guidedControlId === 'cardiohelp-clamp-return' ||
+    guidedControlId === 'cardiohelp-resume-support'
 
   // Guided help / prompted checklist items that target a clamp must land on a
   // visible control, so surface the bedside tab whenever a clamp becomes highlighted.

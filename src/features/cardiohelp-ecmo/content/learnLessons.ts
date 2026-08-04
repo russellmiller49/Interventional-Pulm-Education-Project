@@ -649,7 +649,7 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
     scenarioId: 'va-arterial-bubble-stop',
     target: 'circuit',
     instruction:
-      'A distinct VA arterial-return bubble event stops forward support. Begin isolation by closing the arterial return-limb clamp near the patient before source correction and deliberate reset.',
+      'A distinct VA arterial-return bubble event stops forward support. Begin isolation by closing the arterial return-limb clamp near the patient, before source correction, de-airing, and resumption.',
     actionLabel: 'Close the VA return-limb clamp',
     action: { type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return', closed: true },
     setupActions: [{ type: 'TICK', seconds: 4 }],
@@ -1049,7 +1049,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
     learningObjectives: [
       'Recognize the scenario-triggered bubble alarm and automatic pump stop.',
       'Isolate the patient with near-patient clamps before de-airing the circuit.',
-      'Correct and clear the air source, then unclamp in order before deliberate reset.',
+      'Correct and clear the air source before support is resumed per the current IFU and approved local protocol.',
     ],
     observe: {
       target: 'console',
@@ -1105,41 +1105,19 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         ],
       },
       {
-        id: 'resume-drainage-clamp',
+        id: 'resume-support',
         target: 'circuit',
-        title: 'Resume: open the drainage limb first',
+        title: 'Resume support per the current IFU and approved local protocol',
         instruction:
-          'Open the drainage-limb clamp first so venous drainage is re-established before forward return.',
+          'With the source corrected and the circuit confirmed clear, resume support according to the current manufacturer instructions for use (IFU) and your unit’s approved ECMO air-emergency protocol.',
         rationale:
-          'Restoring drainage before return avoids pressurizing the circuit against a closed limb.',
-        actionLabel: 'Open the drainage-limb clamp',
-        actions: [{ type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'drainage', closed: false }],
-        expectedResponse: ['Drainage clamp OPEN', 'Pump remains stopped by the bubble latch'],
-      },
-      {
-        id: 'resume-return-clamp',
-        target: 'circuit',
-        title: 'Open the return limb',
-        instruction: 'Open the return-limb clamp to complete the flow path.',
-        rationale:
-          'With the source corrected and both clamps open, the circuit is ready for the deliberate reset.',
-        actionLabel: 'Open the return-limb clamp',
-        actions: [{ type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return', closed: false }],
-        expectedResponse: ['Return clamp OPEN', 'Flow path restored; reset still required'],
-      },
-      {
-        id: 'reset-bubble-intervention',
-        target: 'console',
-        title: 'Reset only after the circuit is clear and unclamped',
-        instruction:
-          'Use the deliberate intervention reset after cause correction, de-airing, and unclamping in order.',
-        rationale: 'Acknowledgement or reset does not substitute for eliminating the air source.',
-        actionLabel: 'Reset the bubble intervention',
-        actions: [{ type: 'RESET_BUBBLE' }],
+          'This module does not teach where clamp opening, pump restart and console reset fall relative to one another during resumption: that choreography is device- and program-specific. What it does teach is the precondition — nothing resumes until the air source is corrected and the circuit is confirmed clear. This bounded simulation action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
+        actionLabel: 'Resume support per current IFU and approved local protocol',
+        actions: [{ type: 'RESUME_SUPPORT_AFTER_BUBBLE' }],
         expectedResponse: [
-          'Pump restarts',
-          'Bubble latch clears',
-          'No premature-reset penalty is created',
+          'Support resumes as one bounded step, with no moment where both limbs are open on a stopped pump',
+          'The bubble latch clears and the pump runs',
+          'Where clamp opening, pump restart and console reset fall relative to one another is governed by the current IFU and your approved local protocol, not by this simulation',
         ],
       },
     ],
@@ -1534,7 +1512,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
     learningObjectives: [
       'Recognize the bubble intervention and loss of forward VA support.',
       'Isolate the arterial circulation with near-patient clamps before de-airing.',
-      'Correct and clear the source, then unclamp in order before deliberate reset.',
+      'Correct and clear the source before support is resumed per the current IFU and approved local protocol.',
     ],
     observe: {
       target: 'console',
@@ -1585,36 +1563,20 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         expectedResponse: ['Air source corrected', 'Reset remains deliberate and separate'],
       },
       {
-        id: 'resume-drainage-clamp',
+        id: 'resume-support',
         target: 'circuit',
-        title: 'Resume: open the drainage limb first',
-        instruction: 'Open the drainage-limb clamp to re-establish venous drainage.',
-        rationale: 'Drainage before return avoids pressurizing against a closed arterial limb.',
-        actionLabel: 'Open the drainage-limb clamp',
-        actions: [{ type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'drainage', closed: false }],
-        expectedResponse: ['Drainage clamp OPEN', 'Pump remains stopped by the bubble latch'],
-      },
-      {
-        id: 'resume-return-clamp',
-        target: 'circuit',
-        title: 'Open the arterial return limb',
-        instruction: 'Open the return-limb clamp to complete the flow path.',
-        rationale:
-          'With a clear circuit and both clamps open, VA support is ready for the deliberate reset.',
-        actionLabel: 'Open the return-limb clamp',
-        actions: [{ type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return', closed: false }],
-        expectedResponse: ['Return clamp OPEN', 'Flow path restored; reset still required'],
-      },
-      {
-        id: 'reset-bubble',
-        target: 'console',
-        title: 'Reset only after the return path is clear and unclamped',
+        title: 'Resume support per the current IFU and approved local protocol',
         instruction:
-          'Use the intervention reset after cause correction, de-airing, and ordered unclamping, then re-establish support.',
-        rationale: 'Acknowledgement and reset do not substitute for eliminating the air source.',
-        actionLabel: 'Reset the bubble intervention',
-        actions: [{ type: 'RESET_BUBBLE' }],
-        expectedResponse: ['Pump restarts', 'Bubble latch clears', 'No premature-reset penalty'],
+          'With the source corrected and the circuit confirmed clear, resume venoarterial support according to the current manufacturer instructions for use (IFU) and your unit’s approved ECMO air-emergency protocol.',
+        rationale:
+          'This module does not teach where clamp opening, pump restart and console reset fall relative to one another during resumption: that choreography is device- and program-specific. What it does teach is the precondition — nothing resumes until the air source is corrected and the circuit is confirmed clear. This bounded simulation action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
+        actionLabel: 'Resume support per current IFU and approved local protocol',
+        actions: [{ type: 'RESUME_SUPPORT_AFTER_BUBBLE' }],
+        expectedResponse: [
+          'Support resumes as one bounded step, with no moment where both limbs are open on a stopped pump',
+          'The bubble latch clears and the pump runs',
+          'Where clamp opening, pump restart and console reset fall relative to one another is governed by the current IFU and your approved local protocol, not by this simulation',
+        ],
       },
     ],
     reassessment: {
@@ -1795,9 +1757,11 @@ export function validateGuidedLessonRegistry(): string[] {
       const correctIndex = actions.findIndex(
         (action) => action.type === 'CORRECT_FAULT' && action.fault === 'arterial-bubble',
       )
-      const resetIndex = actions.findIndex((action) => action.type === 'RESET_BUBBLE')
-      if (correctIndex < 0 || resetIndex < 0 || resetIndex < correctIndex) {
-        errors.push(`${lesson.id}: bubble source correction must precede reset`)
+      const resumeIndex = actions.findIndex(
+        (action) => action.type === 'RESUME_SUPPORT_AFTER_BUBBLE',
+      )
+      if (correctIndex < 0 || resumeIndex < 0 || resumeIndex < correctIndex) {
+        errors.push(`${lesson.id}: bubble source correction must precede resumption`)
       }
       const clampIndex = (limb: 'drainage' | 'return', closed: boolean) =>
         actions.findIndex(
@@ -1808,8 +1772,6 @@ export function validateGuidedLessonRegistry(): string[] {
         )
       const closeReturn = clampIndex('return', true)
       const closeDrainage = clampIndex('drainage', true)
-      const openDrainage = clampIndex('drainage', false)
-      const openReturn = clampIndex('return', false)
       if (
         closeReturn < 0 ||
         closeDrainage < 0 ||
@@ -1818,14 +1780,21 @@ export function validateGuidedLessonRegistry(): string[] {
       ) {
         errors.push(`${lesson.id}: both clamps must close before the air source is corrected`)
       }
+      /*
+       * Nothing may touch a clamp after the source is corrected.
+       *
+       * Isolation is taught because it is what separates the patient from an air column, and it is
+       * supported wherever air is found. Coming back is different: the order of clamps, pump and
+       * reset is set by the manufacturer instructions and the unit's own protocol, and the order
+       * this module used to teach walked the learner through both limbs open on a stopped
+       * centrifugal pump. Resumption is one bounded action now, and this keeps it that way.
+       */
       if (
-        openDrainage < correctIndex ||
-        openReturn < correctIndex ||
-        openDrainage > resetIndex ||
-        openReturn > resetIndex ||
-        openReturn < openDrainage
+        actions.slice(correctIndex + 1).some((action) => action.type === 'TOGGLE_CIRCUIT_CLAMP')
       ) {
-        errors.push(`${lesson.id}: unclamp drainage then return, after correction and before reset`)
+        errors.push(
+          `${lesson.id}: teaches a clamp order for resumption; resume with one bounded action instead`,
+        )
       }
     }
   }

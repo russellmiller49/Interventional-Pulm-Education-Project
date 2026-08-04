@@ -971,7 +971,9 @@
 .pacActionDock,
 .skillsLab,
 .caseWorkflow,
-.sourcesPanel {
+.sourcesPanel,
+.validityPanel,
+.normalReference {
   --ink: #15323a;
   --muted: #62767b;
   --line: #d9e4e3;
@@ -4869,4 +4871,256 @@
   border-radius: 0.5rem;
   background: #fff8ea;
   color: #6b4409;
+}
+
+/*
+ * H0/H1 teaching panes: the pressure-system validity sequence and the normal waveform reference.
+ *
+ * Both sit in the middle pane of the guided workspace, whose chrome is dark. They therefore follow
+ * the same rule as every other pane surface in this module — a light card that declares its own ink
+ * colors — rather than the app's semantic tokens, which resolve to near-black text and disappear
+ * against the dark workspace.
+ */
+.validityPanel,
+.normalReference {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 690px;
+  padding: 1rem;
+  overflow: auto;
+}
+
+.validityPanel h2,
+.normalReference h2 {
+  margin: 0.2rem 0 0;
+  color: var(--navy);
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
+.validityPanel h3,
+.normalReference h3 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 0.9rem;
+}
+
+.paneEyebrow {
+  color: var(--teal);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.paneIntro {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.validitySteps {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.validityStep {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.65rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--paper);
+}
+
+.validityStepHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.validityStepOrdinal {
+  display: grid;
+  place-items: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 0.45rem;
+  background: var(--teal-soft);
+  color: var(--teal);
+  font-size: 0.7rem;
+  font-weight: 850;
+}
+
+.validityStatus {
+  padding: 0.14rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.56rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.validityStatus[data-status='done'] {
+  background: #dff2e6;
+  color: #1f6b43;
+}
+
+.validityStatus[data-status='outstanding'] {
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
+.validityStatus[data-status='judge'] {
+  background: #e8eeed;
+  color: var(--muted);
+}
+
+.validityQuestion {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.79rem;
+  font-style: italic;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.validityFacets {
+  display: grid;
+  gap: 0.22rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.73rem;
+  line-height: 1.5;
+}
+
+.validityFacets dt {
+  display: inline;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.validityFacets dd {
+  display: inline;
+  margin: 0;
+}
+
+.validityCommitment {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid #9fcfc4;
+  border-radius: 0.8rem;
+  background: var(--teal-soft);
+}
+
+.validityCommitment fieldset {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.validityCommitment legend {
+  padding: 0;
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.validityChoice {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  background: #fff;
+  color: var(--ink);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.paneButton {
+  min-height: 2.75rem;
+  padding: 0.6rem 0.9rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: var(--teal);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.paneButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.referenceTabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.3rem;
+}
+
+.referenceTab {
+  min-height: 2.75rem;
+  padding: 0.45rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  background: #fff;
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.referenceTab[aria-selected='true'] {
+  border-color: var(--teal);
+  background: var(--teal-soft);
+  color: var(--teal);
+}
+
+.referenceFacets {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.referenceFacets dt {
+  color: var(--teal);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.referenceFacets dd {
+  margin: 0.12rem 0 0;
+  color: var(--ink);
+}
+
+.referenceFacets div[data-unsafe='true'] dt {
+  color: var(--red);
+}
+
+.paneCaveat {
+  margin: 0;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.6rem;
+  background: var(--paper);
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.5;
 }
