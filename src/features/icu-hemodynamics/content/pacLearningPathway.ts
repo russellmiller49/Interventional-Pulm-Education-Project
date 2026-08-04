@@ -16,10 +16,15 @@ export type PacLearningPathwaySectionId = PacGuidedSkillId | 'pac-signal-validat
 export type PacLearningPathwaySection = LearningPathwaySection
 
 /**
- * The PAC pathway now consumes the shared `LearningPathway` abstraction rather than keeping its
- * own copy. The order is unchanged: it begins at the introducer and follows the catheter through
- * the right heart, with signal validation as an ungated final integration station rather than a
- * duplicate introductory module.
+ * The PAC pathway consumes the shared `LearningPathway` abstraction rather than keeping its own
+ * copy.
+ *
+ * H0/H1 reordered it around measurement validity: the runway now opens with the pressure system
+ * ("can I trust this signal?"), establishes a normal RA/RV/PA/PAWP reference, and only then asks
+ * the learner to advance a simulated catheter. `pac-signal-validation` stays where it was — the
+ * ungated final integration station, not a duplicate introductory lesson.
+ *
+ * Nothing here gates. The order is a recommendation; every section stays reachable by URL.
  */
 export const pacLearningPathway: LearningPathway = criticalCareLearningPathway('icu-hemodynamics')
 

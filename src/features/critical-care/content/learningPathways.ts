@@ -16,37 +16,38 @@ import { criticalCareModuleCatalog, type CriticalCareCatalogModuleId } from './m
 export const criticalCareLearningPathways: readonly LearningPathway[] = Object.freeze([
   {
     moduleId: 'icu-hemodynamics',
-    arcSentence: 'Advance, validate, interpret, measure, and integrate',
+    arcSentence:
+      'Trust the signal, read the waveform, advance the catheter, measure, and integrate',
     sections: [
+      {
+        id: 'pressure-system',
+        shortTitle: 'Trust the signal',
+        title: 'Level, zero, and dynamic response',
+        minutes: 12,
+        description:
+          'Start here: can I trust this pressure signal? Level and zero the system, then classify its fast-flush response before any number is read.',
+        stage: 'foundation',
+        activityId: 'hemodynamics:learn:pressure-system',
+      },
+      {
+        id: 'waveform-interpretation',
+        shortTitle: 'Read the waveform',
+        title: 'Interpret normal and abnormal waveforms',
+        minutes: 18,
+        description:
+          'Build the normal RA, RV, PA, and wedge reference first, then read the wave components that carry a diagnosis.',
+        stage: 'mechanism',
+        activityId: 'hemodynamics:learn:waveform-interpretation',
+      },
       {
         id: 'catheter-advancement',
         shortTitle: 'Advance',
         title: 'Advance the PAC by waveform',
         minutes: 15,
         description:
-          'Start at the introducer, then confirm the RA, RV, and PA transitions from pressure morphology.',
+          'With a trusted signal and a normal reference in hand, work from the introducer and confirm each RA, RV, and PA transition from morphology.',
         stage: 'foundation',
         activityId: 'hemodynamics:learn:catheter-advancement',
-      },
-      {
-        id: 'pressure-system',
-        shortTitle: 'Validate setup',
-        title: 'Level, zero, and dynamic response',
-        minutes: 12,
-        description:
-          'Establish a valid pressure-measurement system and classify its fast-flush response.',
-        stage: 'foundation',
-        activityId: 'hemodynamics:learn:pressure-system',
-      },
-      {
-        id: 'waveform-interpretation',
-        shortTitle: 'Interpret',
-        title: 'Interpret normal and abnormal waveforms',
-        minutes: 18,
-        description:
-          'Identify chambers by morphology and read the wave components that carry a diagnosis.',
-        stage: 'mechanism',
-        activityId: 'hemodynamics:learn:waveform-interpretation',
       },
       {
         id: 'pawp-capture',
@@ -54,7 +55,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         title: 'Brief end-expiratory PAWP capture',
         minutes: 15,
         description:
-          'Capture, store, and promptly deflate while confirming safe return of the PA waveform.',
+          'From the confirmed PA position, capture and store at end expiration, then deflate promptly and confirm the PA waveform returns.',
         stage: 'mechanism',
         activityId: 'hemodynamics:learn:pawp-capture',
       },
@@ -84,7 +85,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         title: 'PAC signal-validation capstone',
         minutes: 20,
         description:
-          'Integrate setup, catheter position, curve quality, derived values, and reassessment.',
+          'Run the whole validity screen at once on a discordant case: setup, catheter position, curve quality, derived values, and reassessment.',
         stage: 'integration',
         activityId: 'hemodynamics:learn:pac-signal-validation',
       },
