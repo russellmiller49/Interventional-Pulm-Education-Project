@@ -609,17 +609,19 @@ function sourceRequirementIndex(card: UnhashedResolvedCard) {
 }
 
 /**
- * Requirements by reviewed identity, and the keys that more than one slot claims.
+ * Requirements by reviewed identity, and every key that more than one slot claims.
  *
- * `expandRecipeComposition` already collapses or blocks a duplicated `requirementKey`, so on
- * today's data the ambiguous set is always empty. It is computed anyway, and blocks rather than
- * resolves, because this function is the *only* place a requirement key becomes a single slot and
- * "something upstream guarantees uniqueness" is a property of another module that this one would
- * silently depend on. Taking the first of two slots would mean carrying a physician's selection
- * onto whichever requirement happened to sort first — a guess, wearing the costume of a match.
+ * `expandRecipeComposition` collapses or blocks a duplicated `requirementKey`, so on the composition
+ * path the ambiguous set is always empty. A modifier-added or rescue-module slot does not pass
+ * through that merge — both deduplicate by slot **id** — so a second slot claiming an existing key
+ * reaches the card intact, and that is the route this exists for.
  *
- * A modifier-added or rescue-module requirement reaches the effective slot list without passing
- * through the composition's merge, which is exactly the route by which a duplicate could arrive.
+ * **Any** duplicate is ambiguous, including one whose compared fields are identical. An earlier
+ * version exempted those on the grounds that two identical expressions are one requirement said
+ * twice, which is true of the *definition* and false of the *card*: the resolver emits both slots,
+ * so collapsing them here would have meant one decision, one re-keyed selection, and a second
+ * permanently empty line nobody reviewed. Collapsing only in the planner while the resolver emits
+ * two is precisely the divergence this phase exists to remove.
  */
 function slotIndex(slots: RecipeSlot[]): {
   byKey: Map<string, RecipeSlot>
@@ -633,9 +635,8 @@ function slotIndex(slots: RecipeSlot[]): {
       byKey.set(slot.requirementKey, slot)
       continue
     }
-    // Two slots that are byte-identical in everything the comparison reads are one requirement
-    // expressed twice, not two requirements. Only a genuine disagreement is ambiguous.
-    if (changedDefinitionFields(existing, slot).length > 0) ambiguous.add(slot.requirementKey)
+    // The same slot listed twice is not a duplicate requirement; two slot ids are.
+    if (existing.id !== slot.id) ambiguous.add(slot.requirementKey)
   }
   return { byKey, ambiguous }
 }
@@ -1480,7 +1481,7 @@ export function blockingDecisions(plan: CardRebuildPlan): RebuildDecision[] {
 }
 
 /**
- * Blocking decisions that no answer can dispose of.
+ * Blocking decisions that no answer can dispose of. (Documents `unanswerableBlockingDecisions`.)
  *
  * Most blocking decisions *are* answerable: a required requirement the target adds cannot be filled
  * in here, so it is acknowledged and the draft carries the gap into the builder. That is the
@@ -1492,19 +1493,39 @@ export function blockingDecisions(plan: CardRebuildPlan): RebuildDecision[] {
  * `createRebuiltCard` refuses outright rather than creating a card nobody could interpret.
  */
 /**
- * Whether a freshly resolved card is the one the review described.
+ * Blocking conditions in the card about to be written that the review never showed.
  *
- * The last gate before the write. Everything between the review and here is recomputed, but
- * resolution reads current hospital-local data, so the final card can still differ from the one the
- * plan projected — and a card whose final state nobody reviewed must not be inserted.
+ * The last gate, and it took two attempts to get right. Comparing the *answered* resolution against
+ * the plan's projection failed every legitimate use of the drop control, because the two differ by
+ * exactly the answers. Comparing a re-resolution of `proposedInputs` against that same projection
+ * fixed the false positive by making the check compare a pure function against itself — it could
+ * not fail at all, while three comments said it was the last line of defence.
+ *
+ * So it compares the thing that matters: blocking conditions. The physician's answers may legitimately
+ * *remove* requirements and introduce warnings — dropping a selection raises `required_role_unresolved`,
+ * which is a warning by design and was reviewed. What must never happen is the finished card carrying
+ * a **blocking** condition that was not in the projection the physician read, whatever the cause.
+ *
+ * Returns the offending codes so the refusal can say what they were rather than only that there were
+ * some.
  */
-export function targetResolutionMatches(
+export function unplannedBlockingConditions(
   plan: CardRebuildPlan,
   resolved: UnhashedResolvedCard | null,
-): boolean {
-  return (
-    stableStringify(projectTargetResolution(resolved)) === stableStringify(plan.targetResolution)
+): string[] {
+  if (!resolved) return ['not_resolvable']
+  const reviewed = new Set(
+    plan.targetResolution.warnings
+      .filter((warning) => warning.severity === 'blocking')
+      .map((warning) => `${warning.code}|${warning.sourceType}|${warning.sourceId ?? ''}`),
   )
+  return projectTargetResolution(resolved)
+    .warnings.filter((warning) => warning.severity === 'blocking')
+    .filter(
+      (warning) => !reviewed.has(`${warning.code}|${warning.sourceType}|${warning.sourceId ?? ''}`),
+    )
+    .map((warning) => warning.code)
+    .sort()
 }
 
 export function unanswerableBlockingDecisions(plan: CardRebuildPlan): RebuildDecision[] {
@@ -1548,6 +1569,14 @@ export function allowedAcknowledgements(
   // no control for; it changed nothing, and was still written verbatim into immutable provenance as
   // an acknowledgement — evidence of a confirmation that was never required or displayed.
   if (!decision.requiresExplicitConfirmation) return []
+  // A requirement that carries a selection can always be dropped once it is being asked about,
+  // whatever put it on the list. Keying this on `state` alone meant a `carried_unchanged` decision
+  // promoted by the final-resolution pass — its selection rejected by the target — could only be
+  // "confirmed", so the physician was asked to affirm a line they had just been told does not work
+  // and given no way to clear it.
+  if (decision.kind === 'requirement' && decision.carriedSelection) {
+    return ['confirmed', 'dropped']
+  }
   switch (decision.state) {
     case 'carried_requires_review':
       return decision.kind === 'requirement' ? ['confirmed', 'dropped'] : ['confirmed']

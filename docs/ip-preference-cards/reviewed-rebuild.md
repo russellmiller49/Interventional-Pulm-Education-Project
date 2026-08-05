@@ -332,11 +332,27 @@ authenticated cookie client under row-level security. Only the final write uses
 which carries `import 'server-only'` and exports one function. Replacing the reads with a service
 client would turn an owner-scoped feature into an unscoped one to solve a write problem.
 
+### What the trust boundary does not cover
+
+A compromised `service_role` key remains a trust-boundary compromise. The writer function takes the
+owner as a parameter, so whoever holds that key can create a provenance-bearing card for a user who
+never asked for one. The function narrows what the key can do — always a draft, never a share token,
+and the provenance document must describe the same source the parameters are re-checked against —
+but it does not remove the key as the boundary, and this document does not pretend otherwise.
+
+What the three layers _do_ establish is that no API role can forge provenance: not a signed-in user
+through PostgREST, not `service_role` through the table, and not anybody through a later update.
+
 ### Source deletion is allowed, and leaves a tombstone
 
 Deleting a source card after a successful rebuild remains permitted, and takes its revisions with it
 under the existing cascade. No foreign key is added: a physician's own card must stay deletable, and
 a constraint that silently prevented it would be a worse surprise than the one it prevents.
+
+The recheck and the insert are a single statement, which removes the application-level gap between
+verifying the source and writing the row. It does not take a row lock, so a delete committing inside
+that statement's own window can still leave a card citing a revision that has cascaded away — which
+is exactly the state a later deletion produces anyway, and which this section documents as allowed.
 
 What survives on the rebuilt card is the immutable record — source card id, revision id, both
 releases, all four source hashes, the comparison hashes, the plan hash and every decision. That is a

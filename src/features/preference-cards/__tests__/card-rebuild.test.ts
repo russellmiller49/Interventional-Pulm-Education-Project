@@ -938,7 +938,7 @@ describe('duplicate requirement keys survive the integration path to the blocker
     expect(tables.cards).toHaveLength(cardsBefore)
   })
 
-  it('does not block when the second expression agrees on every compared field', async () => {
+  it('blocks an identical duplicate too, because the resolver emits both slots', async () => {
     const { cardId, revisionId } = seedWithModifier(FIXTURE_DUPLICATE_IDENTICAL_MODIFIER)
     const prepared = await prepareCardRebuild(cardId, revisionId)
     if (!prepared.ok) throw new Error(prepared.code)
@@ -946,8 +946,8 @@ describe('duplicate requirement keys survive the integration path to the blocker
     const primary = prepared.preparation.plan.decisions.find(
       (entry) => entry.key === 'requirement:FIXTURE_PRIMARY_SCOPE',
     )!
-    expect(primary.state).not.toBe('incompatible')
-    expect(primary.reasonCodes).not.toContain('requirement_key_ambiguous')
+    expect(primary.state).toBe('incompatible')
+    expect(primary.reasonCodes).toContain('requirement_key_ambiguous')
   })
 })
 

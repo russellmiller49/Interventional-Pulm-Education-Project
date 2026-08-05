@@ -1,8 +1,15 @@
 -- IP preference cards: authentic, server-only rebuild provenance.
 --
 -- Phase 4B.2 creates a new card from one exact immutable revision of another, after a physician has
--- confirmed every changed decision. `rebuild_provenance` is the record of that review, and the whole
--- value of the record is that it could not have been written by anyone else.
+-- confirmed every changed decision. `rebuild_provenance` is the record of that review, and its value
+-- rests on it not being writable by any API role — not by a signed-in user through PostgREST, not by
+-- the service role through the table, and not by a later update from anybody.
+--
+-- What it is *not* is proof against a compromised service-role key. That key can execute the writer
+-- function below, and the function takes the owner as a parameter, so whoever holds it can create a
+-- provenance-bearing card for a user who never asked for one. That is the accepted trust boundary
+-- for this design and is stated here rather than implied away: the key is the boundary, and the
+-- function narrows what can be done with it rather than removing it.
 --
 -- An earlier draft of this migration added the column plus a `before update` write-once trigger and
 -- claimed exactly that. It was wrong, and an independent review found it: `authenticated` holds
@@ -198,9 +205,16 @@ create trigger reject_ip_user_preference_card_rebuild_provenance_rewrite
 -- card, belongs to the named owner, and still carries the exact hashes and release identity the
 -- provenance claims. A payload describing a revision that has changed or vanished writes nothing.
 --
--- The recheck and the insert are one statement. That is what closes the validation-to-insert race:
--- there is no window between "the source was verified" and "the row was written" for a concurrent
--- delete to land in, and no separate lock is needed to create one.
+-- The recheck and the insert are one statement, which removes the application-level gap between
+-- "the source was verified" and "the row was written". It does not take a row lock, so under READ
+-- COMMITTED a delete committing between this statement's snapshot and its commit can still leave a
+-- card citing a revision that has cascaded away.
+--
+-- That residue is deliberate rather than overlooked, because it lands in a state the design already
+-- allows: deleting a source *after* a completed rebuild is permitted and leaves exactly the same
+-- hash-addressed tombstone. Closing it with `for key share` would also require giving the writer role
+-- an UPDATE policy purely so it may lock, which widens the role for a window whose only outcome is a
+-- state the product accepts. See reviewed-rebuild.md.
 --
 -- Id, share token, share state and timestamps are all left to column defaults, so the new card gets
 -- its own identity with sharing off and cannot inherit the source's. Status is always 'draft'.
@@ -232,6 +246,17 @@ declare
 begin
   if p_rebuild_provenance is null or jsonb_typeof(p_rebuild_provenance) <> 'object' then
     raise exception 'a rebuilt card must carry a provenance object'
+      using errcode = 'invalid_parameter_value';
+  end if;
+
+  -- The document has to describe the source the parameters are checked against. Without this the
+  -- recheck below proves something about the *arguments* and nothing about the evidence that
+  -- actually gets stored and read back: a caller could pass one real tuple to satisfy the join and
+  -- embed an entirely different, fabricated source in the provenance.
+  if p_rebuild_provenance->>'sourceCardId' is distinct from p_source_card_id::text
+     or p_rebuild_provenance->>'sourceRevisionId' is distinct from p_source_revision_id::text
+     or p_rebuild_provenance->>'sourceSnapshotHash' is distinct from p_source_snapshot_hash then
+    raise exception 'the provenance document does not describe the source it was checked against'
       using errcode = 'invalid_parameter_value';
   end if;
 

@@ -17,8 +17,8 @@ import {
   proposeRebuildSelection,
   rebuildPlanHash,
   reviewRebuildAcknowledgements,
-  targetResolutionMatches,
   unanswerableBlockingDecisions,
+  unplannedBlockingConditions,
   type CardRebuildPlan,
   type RebuildAcknowledgements,
   type RebuildProbe,
@@ -633,20 +633,25 @@ export async function createRebuiltCard(
   const resolved = resolveForSave(builderInputs, generatedAt)
   if (!resolved.ok) return { ok: false, code: 'not_resolvable', message: resolved.error }
 
-  // The final invariant: nothing moved underneath the review between reading it and writing.
+  // The final invariant, over the card that is actually about to be written.
   //
-  // It re-resolves the plan's own `proposedInputs` — deliberately not `builderInputs`. The two
-  // differ exactly by the physician's answers, and a `dropped` requirement is a reviewed decision,
-  // not drift; comparing the answered inputs would have made every use of the drop control look
-  // like a moved plan and blocked it. What this detects is the world changing: hospital-local data
-  // is read as current by design, so a re-ranked formulary or a withdrawn item can change what the
-  // same inputs resolve to between the page rendering and the form posting.
+  // Not a byte comparison against the plan's projection: that projection is of `proposedInputs`, and
+  // `builderInputs` differs from it by exactly the physician's answers, so comparing them refused
+  // every legitimate use of the drop control. Comparing a re-resolution of `proposedInputs` instead
+  // fixed the false positive by comparing a pure function against itself, which could never fail.
   //
-  // Re-resolved at the plan's own fixed timestamp, because `generatedAt` is outside every
-  // projection and comparing at two clocks would compare two different things.
-  const driftCheck = resolveForSave(plan.proposedInputs, '1970-01-01T00:00:00.000Z')
-  if (!driftCheck.ok || !targetResolutionMatches(plan, driftCheck.card)) {
-    return { ok: false, code: 'plan_moved', message: PLAN_MOVED_MESSAGE }
+  // What must hold is narrower and actually load-bearing: the finished card may not carry a
+  // **blocking** condition the review did not show. Answers may legitimately introduce warnings — a
+  // dropped selection raises `required_role_unresolved`, which is a warning by design and was
+  // acknowledged — but an unreviewed blocking condition means the card nobody read is the card that
+  // would exist.
+  const unplanned = unplannedBlockingConditions(plan, resolved.card)
+  if (unplanned.length > 0) {
+    return {
+      ok: false,
+      code: 'plan_moved',
+      message: `${PLAN_MOVED_MESSAGE} (${unplanned.join(', ')})`,
+    }
   }
 
   const provenance: CardRebuildProvenance = {

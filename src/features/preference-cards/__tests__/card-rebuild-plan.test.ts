@@ -5,7 +5,7 @@ import {
   proposeRebuildSelection,
   rebuildPlanHash,
   reviewRebuildAcknowledgements,
-  targetResolutionMatches,
+  unplannedBlockingConditions,
   unanswerableBlockingDecisions,
   type CardRebuildPlan,
   type RebuildPlanInput,
@@ -1084,7 +1084,7 @@ describe('an ambiguous requirement key blocks rather than choosing', () => {
     expect(review.ok === false && review.invalid).not.toContain(`requirement:${PRIMARY_KEY}`)
   })
 
-  it('treats a requirement expressed twice identically as one requirement, not an ambiguity', () => {
+  it('blocks even when the second expression agrees on every compared field', () => {
     const duplicated = [
       ...targetSlots,
       {
@@ -1116,8 +1116,12 @@ describe('an ambiguous requirement key blocks rather than choosing', () => {
       comparisons: { operationalHash: '7'.repeat(64), releaseDiffHash: '8'.repeat(64) },
       probe: permissiveProbe(),
     })
-    // Same id is excluded from the comparison, so two byte-identical expressions collapse.
-    expect(decision(result, `requirement:${PRIMARY_KEY}`).state).toBe('carried_unchanged')
+    // The resolver emits both slots because their ids differ, so collapsing here would mean one
+    // decision, one re-keyed selection, and a second permanently empty line nobody reviewed.
+    expect(decision(result, `requirement:${PRIMARY_KEY}`).state).toBe('incompatible')
+    expect(decision(result, `requirement:${PRIMARY_KEY}`).reasonCodes).toContain(
+      'requirement_key_ambiguous',
+    )
   })
 })
 
@@ -1228,14 +1232,45 @@ describe('the plan describes the card the target actually resolves to', () => {
     )
   })
 
-  it('refuses a resolved card that is not the one the plan described', () => {
+  it('refuses a finished card carrying a blocking condition the review never showed', () => {
+    // Reviewed with nothing blocking.
+    const reviewed = plan({ card: carriedCard() })
+    // The card that would actually be written has one.
+    expect(unplannedBlockingConditions(reviewed, incompatibleTarget())).toEqual([
+      'compatibility_failed',
+    ])
+  })
+
+  it('accepts a blocking condition that was in the projection the physician read', () => {
     const reviewed = plan({
       card: carriedCard(),
       probe: permissiveProbe({ resolveTarget: () => incompatibleTarget() }),
     })
-    // The card that would actually be written has moved since the review.
-    expect(targetResolutionMatches(reviewed, carriedCard())).toBe(false)
-    expect(targetResolutionMatches(reviewed, incompatibleTarget())).toBe(true)
+    // Same condition, and it was reviewed — so it is not a reason to refuse the write.
+    expect(unplannedBlockingConditions(reviewed, incompatibleTarget())).toEqual([])
+  })
+
+  it('does not treat a warning introduced by the physician answering as a blocking condition', () => {
+    const reviewed = plan({ card: carriedCard() })
+    const droppedResult = snapshot({
+      items: [item({ id: PRIMARY_SLOT, selectedHospitalItemId: null, resolutionState: 'warning' })],
+      warnings: [
+        {
+          id: 'unresolved-1',
+          severity: 'warning',
+          code: 'required_role_unresolved',
+          message: 'No product is selected yet.',
+          sourceType: 'slot',
+          sourceId: PRIMARY_SLOT,
+          acknowledged: false,
+          waiverReason: null,
+        },
+      ],
+      readinessState: 'complete_with_warnings',
+    })
+    // Dropping a selection is a reviewed decision and raises a warning by design. An invariant that
+    // refused this would have made the drop control unusable.
+    expect(unplannedBlockingConditions(reviewed, droppedResult)).toEqual([])
   })
 })
 

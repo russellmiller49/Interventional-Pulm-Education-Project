@@ -31,6 +31,16 @@ import { createRebuiltCardAction } from './actions'
 
 export const dynamic = 'force-dynamic'
 
+/** The failures a submitted review can report back, and the only values `?error=` may take. */
+const SUBMISSION_ERROR_CODES = [
+  'plan_moved',
+  'plan_blocked',
+  'source_moved',
+  'review_incomplete',
+  'not_resolvable',
+  'write_failed',
+] as const
+
 interface PageProps {
   params: Promise<{ locale: string; cardId: string }>
   searchParams: Promise<{ revision?: string; error?: string; unanswered?: string }>
@@ -77,6 +87,11 @@ export default async function RebuildPreferenceCardPage({ params, searchParams }
 
   const { revision, error, unanswered } = await searchParams
   if (!revision || !cardIdSchema.safeParse(revision).success) notFound()
+
+  // Only codes this workflow actually produces reach a message lookup. `error` is a query
+  // parameter, so without the allowlist `?error=anything` rendered the raw key it failed to
+  // resolve — an attacker-chosen string inside the page's destructive banner.
+  const reviewedError = SUBMISSION_ERROR_CODES.find((code) => code === error)
 
   const t = await getTranslations('preferenceCards')
   const prepared = await prepareCardRebuild(cardId, revision)
@@ -136,9 +151,9 @@ export default async function RebuildPreferenceCardPage({ params, searchParams }
         locale={locale}
         createAction={createRebuiltCardAction}
         error={
-          error
+          reviewedError
             ? {
-                message: t(`rebuild.error.${error}` as 'rebuild.error.review_incomplete'),
+                message: t(`rebuild.error.${reviewedError}` as 'rebuild.error.review_incomplete'),
                 unanswered: unanswered ? unanswered.split(',').filter(Boolean) : [],
               }
             : null

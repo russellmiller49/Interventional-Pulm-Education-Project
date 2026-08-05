@@ -95,7 +95,12 @@ export async function writeRebuiltCard(write: RebuiltCardWrite): Promise<Rebuilt
   if (error) {
     // `no_data_found` is the RPC's deliberate signal that its own recheck failed — the source card
     // or revision no longer matches what the review was taken against.
-    if (error.code === '02000' || /no longer matches the database/i.test(error.message)) {
+    //
+    // Its SQLSTATE is `P0002`. It was written here as `02000` (`no_data`, a different condition
+    // that this function never raises), so the code branch never fired and the only thing
+    // distinguishing "your source moved" from "the write failed" was a regex over an English
+    // sentence — one reword away from silently degrading the message a physician sees.
+    if (error.code === 'P0002' || /no longer matches the database/i.test(error.message)) {
       return {
         ok: false,
         code: 'source_moved',
