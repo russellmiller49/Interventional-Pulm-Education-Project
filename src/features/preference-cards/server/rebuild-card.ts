@@ -633,14 +633,19 @@ export async function createRebuiltCard(
   const resolved = resolveForSave(builderInputs, generatedAt)
   if (!resolved.ok) return { ok: false, code: 'not_resolvable', message: resolved.error }
 
-  // The final invariant: the card about to be written must be the card the review described. The
-  // plan already projected this exact resolution and hashed it, so a mismatch means something moved
-  // between the review and now — and a card whose final state nobody read is not inserted.
+  // The final invariant: nothing moved underneath the review between reading it and writing.
+  //
+  // It re-resolves the plan's own `proposedInputs` — deliberately not `builderInputs`. The two
+  // differ exactly by the physician's answers, and a `dropped` requirement is a reviewed decision,
+  // not drift; comparing the answered inputs would have made every use of the drop control look
+  // like a moved plan and blocked it. What this detects is the world changing: hospital-local data
+  // is read as current by design, so a re-ranked formulary or a withdrawn item can change what the
+  // same inputs resolve to between the page rendering and the form posting.
   //
   // Re-resolved at the plan's own fixed timestamp, because `generatedAt` is outside every
   // projection and comparing at two clocks would compare two different things.
-  const finalCheck = resolveForSave(builderInputs, '1970-01-01T00:00:00.000Z')
-  if (!finalCheck.ok || !targetResolutionMatches(plan, finalCheck.card)) {
+  const driftCheck = resolveForSave(plan.proposedInputs, '1970-01-01T00:00:00.000Z')
+  if (!driftCheck.ok || !targetResolutionMatches(plan, driftCheck.card)) {
     return { ok: false, code: 'plan_moved', message: PLAN_MOVED_MESSAGE }
   }
 

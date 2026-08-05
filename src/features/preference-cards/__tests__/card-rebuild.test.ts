@@ -1149,6 +1149,47 @@ describe('the source is re-derived at write time, not trusted from the review', 
   })
 })
 
+describe('the pre-write drift check does not punish the physician for answering', () => {
+  it('creates the card when a changed requirement is dropped', async () => {
+    const { cardId, revisionId } = seedAlphaCard()
+    const prepared = await prepareCardRebuild(cardId, revisionId)
+    if (!prepared.ok) throw new Error(prepared.code)
+
+    const acknowledgements: Record<string, 'confirmed' | 'dropped' | 'acknowledged_unresolved'> = {}
+    let droppedSomething = false
+    for (const decision of prepared.preparation.plan.decisions) {
+      if (!decision.requiresExplicitConfirmation) continue
+      if (decision.kind === 'requirement' && decision.state === 'carried_requires_review') {
+        acknowledgements[decision.key] = 'dropped'
+        droppedSomething = true
+        continue
+      }
+      acknowledgements[decision.key] =
+        decision.state === 'carried_requires_review' ? 'confirmed' : 'acknowledged_unresolved'
+    }
+    // Non-vacuity: there has to be something droppable for this to test anything.
+    expect(droppedSomething).toBe(true)
+
+    const result = await createRebuiltCard({
+      cardId,
+      revisionId,
+      selection: prepared.preparation.selection,
+      planHash: prepared.preparation.planHash,
+      acknowledgements,
+      title: 'Fixture card (rebuilt)',
+    })
+
+    // The drift check compares a re-resolution of the plan's own proposed inputs, not the answered
+    // ones. Comparing the answered inputs would have made every use of the drop control read as a
+    // moved plan — the control would have been unusable.
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    const created = tables.cards.find((row) => row.id === result.cardId)!
+    const inputs = created.builder_inputs as BuilderInputs
+    expect(inputs.input.selectedHospitalItemIds?.[BACKUP_SLOT]).toBeNull()
+  })
+})
+
 describe('the fixture world is the one the pointer describes', () => {
   it('does not treat the highest-numbered published release as current', () => {
     expect(world.world.pointers[FIXTURE_PROCEDURE_CODE]).toBe(BRAVO_RELEASE_ID)
