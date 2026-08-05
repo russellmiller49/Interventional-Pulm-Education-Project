@@ -31,6 +31,7 @@ import {
   MCS_MODEL_BOUNDARIES,
   mcsCapstoneScenarios,
   mcsDerivedValueGuides,
+  mcsFoundationLessonIds,
   mcsLessonTransferByLessonId,
   mcsLessons,
   mcsPracticeScenarios,
@@ -53,10 +54,12 @@ import {
 } from '../engine'
 import { McsAnatomy3D } from './McsAnatomy3D'
 import { McsCaseWorkflow } from './McsCaseWorkflow'
+import { McsCommonModel } from './McsCommonModel'
 import { McsControls } from './McsControls'
 import { McsModuleFrame } from './McsModuleFrame'
 import { McsMonitor } from './McsMonitor'
 import { McsSourcesPanel } from './McsSourcesPanel'
+import { McsSupportPathwayCards } from './McsSupportPathwayCards'
 import styles from './mechanical-circulatory-support.module.css'
 
 const mcsLearningPathway = criticalCareLearningPathway('mechanical-circulatory-support')
@@ -585,6 +588,13 @@ export function McsWorkbench({
       ? (mcsLessons[mcsLessons.findIndex((candidate) => candidate.id === lesson.id) + 1] ?? null)
       : null
   const lessonComplete = progress.completedLessonIds.includes(lesson.id)
+  /*
+   * The common model is rendered on the two foundation sections, above the simulator and therefore
+   * above every device-specific control. The pathway cards join it on the mechanisms section, which
+   * is the one that asks the learner to hold the three mechanisms against each other.
+   */
+  const showCommonModel = section === 'learn' && mcsFoundationLessonIds.includes(lesson.id)
+  const showPathwayCards = section === 'learn' && lesson.id === 'mcs-foundations-mechanisms'
   const nextPractice =
     section === 'practice'
       ? (devicePractice.find(
@@ -1097,6 +1107,9 @@ export function McsWorkbench({
                 ) : null}
               </section>
             ) : null}
+
+            {showCommonModel ? <McsCommonModel state={state} /> : null}
+            {showPathwayCards ? <McsSupportPathwayCards /> : null}
 
             <div
               className={styles.mobileSurfaceTabs}
