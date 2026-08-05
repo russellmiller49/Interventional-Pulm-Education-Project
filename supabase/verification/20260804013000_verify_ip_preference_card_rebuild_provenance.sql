@@ -156,14 +156,7 @@ begin
        and a.attname = 'rebuild_provenance' and a.attnum > 0 and not a.attisdropped
   ) then raise exception 'the revision table gained rebuild_provenance'; end if;
 
-  for content_definition in
-    select t.tgname from pg_trigger t join pg_class c on c.oid = t.tgrelid
-     where c.relname = 'ip_user_preference_cards' and not t.tgisinternal
-       and t.tgname in ('append_ip_user_preference_card_revision',
-                        'set_ip_user_preference_cards_content_updated_at')
-  loop
-    null;
-  end loop;
+  -- Both deployed card triggers are still attached; this migration adds to them, never replaces.
   if (select count(*) from pg_trigger t join pg_class c on c.oid = t.tgrelid
        where c.relname = 'ip_user_preference_cards' and not t.tgisinternal
          and t.tgname in ('append_ip_user_preference_card_revision',
