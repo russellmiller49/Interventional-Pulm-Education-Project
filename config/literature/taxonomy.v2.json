@@ -1,0 +1,533 @@
+{
+  "taxonomy_version": "2.0.0",
+  "prepared_date": "2026-08-05",
+  "principles": {
+    "multi_label": true,
+    "stable_ids": true,
+    "query_matches_are_suggestions_only": true,
+    "human_decisions_override_automation": true
+  },
+  "topics": [
+    {
+      "id": "basic-bronchoscopy",
+      "label_en": "Basic bronchoscopy",
+      "description_en": "Routine flexible bronchoscopy, airway inspection, bronchoalveolar lavage, brushing, washing, and conventional endobronchial or transbronchial sampling.",
+      "synonyms": [
+        "basic bronchoscopy",
+        "flexible bronchoscopy",
+        "diagnostic bronchoscopy",
+        "routine bronchoscopy",
+        "bronchoalveolar lavage",
+        "BAL",
+        "bronchial washing",
+        "endobronchial biopsy",
+        "transbronchial biopsy"
+      ],
+      "children": []
+    },
+    {
+      "id": "ebus-mediastinal-staging",
+      "label_en": "EBUS and mediastinal staging",
+      "description_en": "Convex-probe EBUS, EUS-B, mediastinal/hilar sampling and staging strategies.",
+      "synonyms": ["EBUS", "EBUS-TBNA", "CP-EBUS", "EUS-B", "mediastinal staging"],
+      "children": [
+        {
+          "id": "ebus-mediastinal-staging.convex-ebus-tbna",
+          "label_en": "Convex EBUS-TBNA"
+        },
+        {
+          "id": "ebus-mediastinal-staging.eus-b-fna",
+          "label_en": "EUS-B-FNA"
+        },
+        {
+          "id": "ebus-mediastinal-staging.staging-strategy",
+          "label_en": "Mediastinal staging strategy"
+        },
+        {
+          "id": "ebus-mediastinal-staging.restaging",
+          "label_en": "Mediastinal restaging"
+        },
+        {
+          "id": "ebus-mediastinal-staging.intranodal-forceps",
+          "label_en": "Intranodal forceps biopsy"
+        },
+        {
+          "id": "ebus-mediastinal-staging.mediastinal-cryobiopsy",
+          "label_en": "Mediastinal cryobiopsy"
+        },
+        {
+          "id": "ebus-mediastinal-staging.specimen-molecular",
+          "label_en": "Specimen processing and molecular adequacy"
+        }
+      ]
+    },
+    {
+      "id": "peripheral-navigation",
+      "label_en": "Peripheral pulmonary lesions and navigation",
+      "description_en": "Guidance, confirmation, and navigation technologies used to reach peripheral pulmonary lesions.",
+      "synonyms": [
+        "PPL",
+        "peripheral pulmonary lesion",
+        "navigation bronchoscopy",
+        "guided bronchoscopy"
+      ],
+      "children": [
+        {
+          "id": "peripheral-navigation.radial-ebus",
+          "label_en": "Radial EBUS"
+        },
+        {
+          "id": "peripheral-navigation.electromagnetic-navigation",
+          "label_en": "Electromagnetic navigation"
+        },
+        {
+          "id": "peripheral-navigation.robotic-bronchoscopy",
+          "label_en": "Robotic bronchoscopy"
+        },
+        {
+          "id": "peripheral-navigation.cone-beam-ct",
+          "label_en": "Cone-beam CT"
+        },
+        {
+          "id": "peripheral-navigation.augmented-fluoroscopy",
+          "label_en": "Augmented fluoroscopy"
+        },
+        {
+          "id": "peripheral-navigation.virtual-bronchoscopy",
+          "label_en": "Virtual bronchoscopy and pathway planning"
+        },
+        {
+          "id": "peripheral-navigation.tool-in-lesion",
+          "label_en": "Tool-in-lesion confirmation"
+        }
+      ]
+    },
+    {
+      "id": "peripheral-biopsy-localization",
+      "label_en": "Peripheral biopsy and localization tools",
+      "description_en": "Sampling tools, localization methods, and specimen adequacy for peripheral lesions.",
+      "synonyms": ["peripheral biopsy", "fiducial", "dye marking", "localization"],
+      "children": [
+        {
+          "id": "peripheral-biopsy-localization.needles-forceps-brushes",
+          "label_en": "Needles, forceps, brushes, and catheters"
+        },
+        {
+          "id": "peripheral-biopsy-localization.peripheral-cryobiopsy",
+          "label_en": "Peripheral lesion cryobiopsy"
+        },
+        {
+          "id": "peripheral-biopsy-localization.fiducials",
+          "label_en": "Fiducial placement"
+        },
+        {
+          "id": "peripheral-biopsy-localization.dye-surgical-localization",
+          "label_en": "Dye and surgical localization"
+        },
+        {
+          "id": "peripheral-biopsy-localization.molecular-adequacy",
+          "label_en": "Molecular and biomarker adequacy"
+        }
+      ]
+    },
+    {
+      "id": "central-airway-obstruction",
+      "label_en": "Central airway obstruction",
+      "description_en": "Malignant and benign central airway obstruction and bronchoscopic recanalization techniques.",
+      "synonyms": ["CAO", "central airway obstruction", "airway debulking"],
+      "children": [
+        {
+          "id": "central-airway-obstruction.malignant",
+          "label_en": "Malignant obstruction"
+        },
+        {
+          "id": "central-airway-obstruction.benign",
+          "label_en": "Benign obstruction"
+        },
+        {
+          "id": "central-airway-obstruction.rigid-bronchoscopy",
+          "label_en": "Rigid bronchoscopy"
+        },
+        {
+          "id": "central-airway-obstruction.mechanical-debulking",
+          "label_en": "Mechanical debulking"
+        },
+        {
+          "id": "central-airway-obstruction.balloon-dilation",
+          "label_en": "Balloon dilation"
+        },
+        {
+          "id": "central-airway-obstruction.electrocautery-apc",
+          "label_en": "Electrocautery and APC"
+        },
+        {
+          "id": "central-airway-obstruction.laser",
+          "label_en": "Laser"
+        },
+        {
+          "id": "central-airway-obstruction.cryotherapy",
+          "label_en": "Cryotherapy and cryorecanalization"
+        },
+        {
+          "id": "central-airway-obstruction.pdt-spray-cryo",
+          "label_en": "PDT and spray cryotherapy"
+        }
+      ]
+    },
+    {
+      "id": "airway-stents-stenosis",
+      "label_en": "Airway stents and stenosis",
+      "description_en": "Airway stent selection, placement, removal, stenosis, and complications.",
+      "synonyms": ["airway stent", "tracheobronchial stent", "silicone stent", "airway stenosis"],
+      "children": [
+        {
+          "id": "airway-stents-stenosis.silicone",
+          "label_en": "Silicone stents"
+        },
+        {
+          "id": "airway-stents-stenosis.metal-hybrid",
+          "label_en": "Metallic and hybrid stents"
+        },
+        {
+          "id": "airway-stents-stenosis.benign-stenosis",
+          "label_en": "Benign airway stenosis"
+        },
+        {
+          "id": "airway-stents-stenosis.complications",
+          "label_en": "Stent complications"
+        },
+        {
+          "id": "airway-stents-stenosis.removal-revision",
+          "label_en": "Stent removal and revision"
+        }
+      ]
+    },
+    {
+      "id": "pleural-interventions",
+      "label_en": "Pleural procedures",
+      "description_en": "Diagnostic and therapeutic pleural procedures.",
+      "synonyms": [
+        "pleural procedure",
+        "pleural procedures",
+        "pleural intervention",
+        "pleuroscopy",
+        "medical thoracoscopy",
+        "IPC",
+        "thoracentesis"
+      ],
+      "children": [
+        {
+          "id": "pleural-interventions.ultrasound",
+          "label_en": "Thoracic ultrasound"
+        },
+        {
+          "id": "pleural-interventions.thoracentesis",
+          "label_en": "Thoracentesis"
+        },
+        {
+          "id": "pleural-interventions.chest-tubes",
+          "label_en": "Chest tubes and pleural drainage"
+        },
+        {
+          "id": "pleural-interventions.ipc",
+          "label_en": "Indwelling pleural catheters"
+        },
+        {
+          "id": "pleural-interventions.pleurodesis",
+          "label_en": "Pleurodesis"
+        },
+        {
+          "id": "pleural-interventions.pleuroscopy",
+          "label_en": "Pleuroscopy and medical thoracoscopy"
+        },
+        {
+          "id": "pleural-interventions.pleural-biopsy",
+          "label_en": "Pleural biopsy"
+        }
+      ]
+    },
+    {
+      "id": "bronchoscopic-lung-volume-reduction",
+      "label_en": "Bronchoscopic lung-volume reduction",
+      "description_en": "Bronchoscopic emphysema therapies and patient selection.",
+      "synonyms": ["BLVR", "bronchoscopic lung volume reduction", "endobronchial valve emphysema"],
+      "children": [
+        {
+          "id": "bronchoscopic-lung-volume-reduction.valves",
+          "label_en": "Endobronchial valves for emphysema"
+        },
+        {
+          "id": "bronchoscopic-lung-volume-reduction.collateral-ventilation",
+          "label_en": "Collateral ventilation and fissure assessment"
+        },
+        {
+          "id": "bronchoscopic-lung-volume-reduction.coils-vapor-other",
+          "label_en": "Coils, vapor, and other therapies"
+        }
+      ]
+    },
+    {
+      "id": "persistent-air-leak-fistula",
+      "label_en": "Persistent air leak and fistula closure",
+      "description_en": "Bronchoscopic management of persistent air leak and bronchopleural or other airway fistulas.",
+      "synonyms": ["persistent air leak", "PAL", "bronchopleural fistula", "BPF"],
+      "children": [
+        {
+          "id": "persistent-air-leak-fistula.valves",
+          "label_en": "Endobronchial valves for air leak"
+        },
+        {
+          "id": "persistent-air-leak-fistula.blockers-plugs-sealants",
+          "label_en": "Blockers, plugs, and sealants"
+        },
+        {
+          "id": "persistent-air-leak-fistula.bronchopleural-fistula",
+          "label_en": "Bronchopleural fistula"
+        }
+      ]
+    },
+    {
+      "id": "transbronchial-cryobiopsy",
+      "label_en": "Transbronchial cryobiopsy",
+      "description_en": "Cryobiopsy techniques and outcomes across ILD, peripheral, mediastinal, and endobronchial applications.",
+      "synonyms": ["TBCB", "TBLC", "transbronchial cryobiopsy", "lung cryobiopsy"],
+      "children": [
+        {
+          "id": "transbronchial-cryobiopsy.ild",
+          "label_en": "ILD cryobiopsy"
+        },
+        {
+          "id": "transbronchial-cryobiopsy.peripheral-lesions",
+          "label_en": "Peripheral lesion cryobiopsy"
+        },
+        {
+          "id": "transbronchial-cryobiopsy.mediastinal",
+          "label_en": "Mediastinal cryobiopsy"
+        },
+        {
+          "id": "transbronchial-cryobiopsy.endobronchial",
+          "label_en": "Endobronchial cryobiopsy"
+        },
+        {
+          "id": "transbronchial-cryobiopsy.technique-safety",
+          "label_en": "Technique and safety"
+        }
+      ]
+    },
+    {
+      "id": "hemoptysis-airway-bleeding",
+      "label_en": "Hemoptysis and airway bleeding",
+      "description_en": "Bronchoscopic localization, control, tamponade, blockers, and procedural bleeding management.",
+      "synonyms": ["hemoptysis", "haemoptysis", "airway bleeding", "bronchial blocker"],
+      "children": []
+    },
+    {
+      "id": "tracheostomy-airway-access",
+      "label_en": "Tracheostomy and airway access",
+      "description_en": "Percutaneous tracheostomy, procedural guidance, difficult access, and complications.",
+      "synonyms": ["percutaneous tracheostomy", "PDT", "percutaneous dilatational tracheostomy"],
+      "children": []
+    },
+    {
+      "id": "bronchoscopic-tumor-ablation",
+      "label_en": "Bronchoscopic tumor ablation",
+      "description_en": "Endobronchial or transbronchial focal tumor ablation technologies.",
+      "synonyms": [
+        "bronchoscopic ablation",
+        "microwave ablation",
+        "pulsed electric field",
+        "brachytherapy"
+      ],
+      "children": [
+        {
+          "id": "bronchoscopic-tumor-ablation.microwave-rf",
+          "label_en": "Microwave and radiofrequency ablation"
+        },
+        {
+          "id": "bronchoscopic-tumor-ablation.pulsed-electric-field",
+          "label_en": "Pulsed electric field ablation"
+        },
+        {
+          "id": "bronchoscopic-tumor-ablation.brachytherapy",
+          "label_en": "Endobronchial brachytherapy"
+        },
+        {
+          "id": "bronchoscopic-tumor-ablation.pdt",
+          "label_en": "Photodynamic therapy"
+        },
+        {
+          "id": "bronchoscopic-tumor-ablation.spray-cryo",
+          "label_en": "Spray cryotherapy"
+        }
+      ]
+    },
+    {
+      "id": "other-advanced-bronchoscopy",
+      "label_en": "Other advanced bronchoscopy",
+      "description_en": "Advanced procedural topics not captured by the other primary categories.",
+      "synonyms": ["advanced bronchoscopy"],
+      "children": [
+        {
+          "id": "other-advanced-bronchoscopy.foreign-bodies",
+          "label_en": "Foreign body removal"
+        },
+        {
+          "id": "other-advanced-bronchoscopy.transplant-airways",
+          "label_en": "Transplant airway complications"
+        },
+        {
+          "id": "other-advanced-bronchoscopy.bronchial-thermoplasty",
+          "label_en": "Bronchial thermoplasty"
+        },
+        {
+          "id": "other-advanced-bronchoscopy.whole-lung-lavage",
+          "label_en": "Whole-lung lavage"
+        },
+        {
+          "id": "other-advanced-bronchoscopy.airway-trauma",
+          "label_en": "Airway trauma and disruption"
+        }
+      ]
+    },
+    {
+      "id": "safety-anesthesia-complications",
+      "label_en": "Safety, anesthesia, and complications",
+      "description_en": "Sedation, general anesthesia, ventilation, procedural complications, and emergency management.",
+      "synonyms": ["bronchoscopy safety", "bronchoscopy anesthesia", "procedural complications"],
+      "children": []
+    },
+    {
+      "id": "education-simulation-quality",
+      "label_en": "Education, simulation, and quality",
+      "description_en": "Training, competency, simulation, workflow, ergonomics, quality improvement, and program outcomes.",
+      "synonyms": ["simulation", "competency", "bronchoscopy training", "quality improvement"],
+      "children": []
+    },
+    {
+      "id": "ai-imaging-technology",
+      "label_en": "AI, imaging, and technology",
+      "description_en": "Computer vision, image guidance, segmentation, procedural prediction, devices, and technical innovation.",
+      "synonyms": [
+        "artificial intelligence",
+        "computer vision",
+        "image guidance",
+        "segmentation",
+        "radiomics"
+      ],
+      "children": []
+    },
+    {
+      "id": "adjacent-surgical-procedural-analogue",
+      "label_en": "Adjacent surgical and procedural analogues",
+      "description_en": "Surgical or nonbronchoscopic procedures used as comparators, alternatives, or technical analogues for interventional pulmonology without being bronchoscopic interventions themselves.",
+      "synonyms": [
+        "surgical procedural analogue",
+        "surgical comparator",
+        "video-assisted thoracic surgery",
+        "VATS",
+        "lung volume reduction surgery",
+        "LVRS"
+      ],
+      "children": []
+    },
+    {
+      "id": "specimen-adequacy-molecular-pathology",
+      "label_en": "Specimen adequacy and molecular pathology",
+      "description_en": "Cytology, histopathology, biomarker, and molecular-testing adequacy of specimens obtained during pulmonary or pleural procedures.",
+      "synonyms": [
+        "specimen adequacy",
+        "molecular adequacy",
+        "molecular pathology",
+        "cytopathology adequacy",
+        "biomarker adequacy"
+      ],
+      "children": []
+    },
+    {
+      "id": "health-services-economics",
+      "label_en": "Health services and economics",
+      "description_en": "Care delivery, workflow, operations, quality, utilization, access, costs, and economic evaluation related to interventional pulmonary services.",
+      "synonyms": [
+        "health services research",
+        "health economics",
+        "cost effectiveness",
+        "workflow",
+        "operations",
+        "quality improvement"
+      ],
+      "children": []
+    }
+  ],
+  "facets": {
+    "clinical_purpose": [
+      "diagnosis",
+      "staging",
+      "treatment",
+      "palliation",
+      "surveillance",
+      "localization",
+      "training",
+      "safety-complication-prevention",
+      "multiple-general-overview",
+      "not-assessable-from-available-metadata",
+      "cost-effectiveness-health-services",
+      "specimen-adequacy",
+      "workflow-operations-quality"
+    ],
+    "disease": [
+      "lung-cancer",
+      "mesothelioma",
+      "emphysema",
+      "interstitial-lung-disease",
+      "immune-inflammatory-disease",
+      "infection",
+      "transplant",
+      "benign-airway-stenosis",
+      "pleural-disease",
+      "lymphoma-hematologic-malignancy",
+      "metastatic-extrathoracic-malignancy",
+      "tracheobronchomalacia-edac",
+      "asthma",
+      "foreign-body-aspiration",
+      "hemoptysis",
+      "bronchiectasis",
+      "pulmonary-alveolar-proteinosis",
+      "airway-amyloidosis",
+      "congenital-airway-disorder"
+    ],
+    "study_design": [
+      "randomized-trial",
+      "prospective-cohort",
+      "retrospective-cohort",
+      "diagnostic-accuracy",
+      "systematic-review",
+      "meta-analysis",
+      "guideline",
+      "consensus",
+      "case-series",
+      "case-report",
+      "technical-note",
+      "editorial",
+      "review-article",
+      "not-assessable-from-available-metadata",
+      "cross-sectional-survey",
+      "economic-evaluation",
+      "animal-preclinical",
+      "bench-in-vitro",
+      "qualitative-study",
+      "case-control"
+    ],
+    "publication_class": [
+      "full-article",
+      "conference-abstract",
+      "letter",
+      "editorial",
+      "correction",
+      "retraction",
+      "protocol",
+      "interactive-clinical-case",
+      "not-assessable-from-available-metadata"
+    ],
+    "population": ["adult", "pediatric", "transplant", "critically-ill", "mixed"]
+  }
+}
