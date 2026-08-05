@@ -51,19 +51,28 @@ from the source's slot id, through the requirement key, onto the target's slot i
 
 ### The composition is not the requirement set
 
-Both sides are expanded through `effectiveSlots`, which is the composition **plus** whatever the
-selected modifiers add — `add_slot` payloads and the slots of any rescue module an
-`add_rescue_module` action pulls in. Using the composition alone was a real defect: `HIGH_BLEED_RISK`
-adds the major-airway-bleeding rescue module, so a card selecting it carries those requirements on
-its snapshot and not in `expandRecipeComposition`. The plan reported each as _removed by the target
-release_ and carried none of their selections, while the modifier itself carried perfectly well and
-the new card promptly re-added the same requirements, empty.
+The composition alone is not a card's requirement set. `HIGH_BLEED_RISK` adds the
+major-airway-bleeding rescue module, so a card selecting it carries those requirements on its
+snapshot and not in `expandRecipeComposition` — and the plan reported each as _removed by the target
+release_ while the modifier itself carried perfectly well and the new card promptly re-added them,
+empty.
 
-`remove_slot` and `replace_role` are deliberately not applied. A requirement a modifier would remove
-stays in the effective set and its selection is carried, which is the safe direction — a carried key
-for a slot the resolved card does not contain is simply never read, whereas dropping a selection for
-a requirement that turns out to be present loses a decision. `resolveCard` remains the authority on
-what the card actually contains.
+A first fix applied `add_slot` and `add_rescue_module` and skipped the rest. That approximation is
+also gone. Both sides now expand through `expandEffectiveSlots` in
+[`effective-slots.ts`](../../src/features/preference-cards/domain/effective-slots.ts), which is the
+resolver's own steps 1 to 4 — composition, then every modifier action in authored order, then rescue
+modules — lifted out so the planner and `resolveCard` are two callers of one function rather than
+two opinions. Calling the omissions safe was wrong on real data: `TECH_CHEST_TUBE_SMALL_BORE` and
+`_LARGE_BORE` remove the alternate technique's slots and change requiredness, and `DIGITAL_DRAINAGE`
+replaces `GENERIC_DRAINAGE_UNIT`'s role — so a stored selection for the digital role was tested
+against the generic one and could be declared ineligible for a role the target was about to create.
+
+`effective-slots-equivalence.test.ts` asserts the two agree for every scenario, every modifier that
+scenario offers, and all of them at once, on the real catalogue.
+
+Extracting it moved `resolverImplementationHash`, which is provenance rather than the support
+boundary. The new file is in `RESOLVER_SOURCE_FILES`, `resolver-release.json` was regenerated, and no
+published release definition hash changed.
 
 `card-rebuild-plan.test.ts` pins the consequence: a card whose requirement key is absent from both
 releases matches nothing, and the target's own requirements are reported as **added** rather than
@@ -288,6 +297,62 @@ that is gone, no matching by role code or label, no recommendation from patient 
 new clinical recipe content, no product-family approval, no new release, no advancing of any release
 pointer, no marking of the source card as superseded, and no change to the reconciliation page.
 
+## 10. Where provenance comes from, and why it can be believed
+
+`rebuild_provenance` is evidence, so the property that matters is not that it cannot be _edited_ but
+that it cannot be _written_ by anything except the reviewed rebuild. An earlier draft of this phase
+had only the write-once update trigger and claimed the stronger thing; an independent review showed
+that `authenticated` holds INSERT on the cards table and the live insert policy checked only
+ownership, so a signed-in user could POST a forged object straight to PostgREST and the update
+trigger would then have frozen the forgery into something indistinguishable from reviewed evidence.
+Immutability is not authenticity.
+
+Three layers now stand between a caller and a provenance-bearing row:
+
+| Layer                             | Stops                                                                                 |
+| --------------------------------- | ------------------------------------------------------------------------------------- |
+| The `authenticated` insert policy | A signed-in user inserting their own row with provenance                              |
+| A `before insert` trigger         | Any other role, including `service_role`, whose `bypassrls` makes policies irrelevant |
+| One `security definer` function   | Everything else: it is the only writer, and it is narrow                              |
+
+`public.ip_create_rebuilt_preference_card` is owned by `ip_preference_card_rebuild_writer`, a
+`nologin` role that exists for nothing else, has `execute` revoked from `public`, `anon` and
+`authenticated`, and granted only to `service_role`. It is not a general card-insert endpoint: it
+always writes `status = 'draft'`, never accepts a share token, leaves sharing and identity to column
+defaults, and re-derives from the database every source fact it can — that the revision exists,
+belongs to the named card, belongs to the named owner, and still carries the hashes and release the
+provenance claims. The recheck and the insert are **one statement**, which is what closes the
+validation-to-insert race: there is no window between "the source was verified" and "the row was
+written".
+
+The application keeps the authority split that makes this worth having. Every owner-scoped read —
+source card, source revision, current release, plan, review, final resolve — runs on the
+authenticated cookie client under row-level security. Only the final write uses
+[`rebuild-writer.server.ts`](../../src/features/preference-cards/server/rebuild-writer.server.ts),
+which carries `import 'server-only'` and exports one function. Replacing the reads with a service
+client would turn an owner-scoped feature into an unscoped one to solve a write problem.
+
+### Source deletion is allowed, and leaves a tombstone
+
+Deleting a source card after a successful rebuild remains permitted, and takes its revisions with it
+under the existing cascade. No foreign key is added: a physician's own card must stay deletable, and
+a constraint that silently prevented it would be a worse surprise than the one it prevents.
+
+What survives on the rebuilt card is the immutable record — source card id, revision id, both
+releases, all four source hashes, the comparison hashes, the plan hash and every decision. That is a
+**hash-addressed tombstone**: enough to say exactly what was reviewed and to verify it against a copy
+of the revision if one exists, and not enough to reconstruct the revision itself. The interface must
+not claim otherwise; where the source is gone it says the revision is no longer available and shows
+the recorded hashes and decisions rather than pretending they can be followed.
+
+## 11. The review shows the comparisons, not their digests
+
+`CardRebuildReview` renders the operational reconciliation and the authored-release comparison
+through `CardReconciliationView` — the same component the read-only review page uses, so there is one
+presentation of one comparison — plus the target's final resolution, its readiness, and every warning
+it raises. The four hashes remain on the page as identifiers of exactly those objects, because they
+are what the card records; they are not a substitute for the content.
+
 ## Migration status
 
 `supabase/migrations/20260804013000_add_ip_preference_card_rebuild_provenance.sql` **has not been
@@ -295,7 +360,10 @@ applied.** The rebuild write path inserts `rebuild_provenance`, so creating a re
 against the live database until it is applied — every other path, including the whole review, works
 without it.
 
-It is **the only pending database migration on this branch.** Both Phase 4B.1 migrations are already
+It is **the only pending database migration on this branch**, and it has been rewritten since the
+independent review: strict first-use DDL throughout (`add column`, `add constraint`, `create
+function`, `create trigger`, no `if not exists` and no `or replace`), so unexpected pre-existing
+drift fails loudly at the point of application rather than being absorbed. Both Phase 4B.1 migrations are already
 deployed — the revision schema as remote version `20260803113527_add_ip_preference_card_revisions`,
 and the foreign-key indexes as `20260804015322_index_ip_preference_card_revision_foreign_keys` — and
 neither file is editable from here.

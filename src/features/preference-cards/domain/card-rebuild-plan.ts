@@ -123,6 +123,8 @@ export type RebuildReasonCode =
   | 'conditional_rule_changed'
   | 'compatibility_rejected'
   | 'resolution_unresolved'
+  | 'room_capability_missing'
+  | 'target_presence_changed'
   // Modules and modifiers
   | 'module_unchanged'
   | 'module_version_changed'
@@ -265,6 +267,38 @@ export type RebuildDecision =
   | RebuildModifierDecision
   | RebuildWaiverDecision
 
+/**
+ * What the target release actually resolves the proposed inputs to.
+ *
+ * The plan used to stop at "this selection is still allowed", which is a statement about identity
+ * and availability and says nothing about what the *card* does with it. A target release can keep
+ * the requirement, keep the product, and still activate a compatibility rule that rejects the pair,
+ * or lack a room capability a carried modifier requires, or suppress the line behind a kit. Those
+ * are exactly the changes a physician needs to see, and the plan reported none of them: it said
+ * `carried_unchanged`, required no answer, and the card was inserted blocked.
+ *
+ * So the proposed inputs are resolved through the canonical resolver during planning, projected to
+ * stable codes, and hashed with the rest of the plan. Structured, never prose: this is compared and
+ * hashed, and prose is localized.
+ */
+export interface RebuildTargetResolutionItem {
+  requirementKey: string
+  slotId: string
+  roleCode: string
+  presence: 'active' | 'suppressed'
+  selectedHospitalItemId: string | null
+  resolutionState: string
+  compatibilityState: string
+}
+
+export interface RebuildTargetResolution {
+  ok: boolean
+  readinessState: string | null
+  items: RebuildTargetResolutionItem[]
+  /** Blocking and warning codes with their stable source identity, sorted. */
+  warnings: Array<{ code: string; severity: string; sourceType: string; sourceId: string | null }>
+}
+
 export interface CardRebuildPlan {
   version: typeof CARD_REBUILD_PLAN_VERSION
   source: {
@@ -299,6 +333,14 @@ export interface CardRebuildPlan {
     operationalHash: string
     releaseDiffHash: string
   }
+  /**
+   * The final resolution of `proposedInputs` under the target release, projected and hashed.
+   *
+   * Inside the plan because the review is only honest if it describes the card that will exist, and
+   * because `createRebuiltCard` re-resolves immediately before writing and refuses when this no
+   * longer matches — a card whose final state was never reviewed is not inserted.
+   */
+  targetResolution: RebuildTargetResolution
   /** Sorted by key. Every decision the review gate reads, in one list. */
   decisions: RebuildDecision[]
   /**
@@ -339,6 +381,21 @@ export interface RebuildProbe {
    * that refuses to reopen the moment it is saved — the physician would have confirmed a change
    * and been handed a card that denies the change happened.
    */
+  /**
+   * Resolve the proposed inputs through the canonical resolver, under the target release.
+   *
+   * Null when they will not resolve at all. Supplied by the server rather than imported so the
+   * planner stays pure: same inputs and same probe answers, same plan, same hash.
+   */
+  resolveTarget(inputs: BuilderInputs): UnhashedResolvedCard | null
+  /**
+   * Whether every member of a stored equipment set still resolves against the target catalogue.
+   *
+   * A set is atomic. Checking only its covered roles let a set whose members had gone missing be
+   * recorded as carried unchanged, and the failure surfaced afterwards as a generic
+   * `not_resolvable` — after the physician had answered the whole review.
+   */
+  equipmentSetMembersAvailable(setId: string): boolean
   reviewedFamilyAvailable(ref: ReviewedFamilyPickRef):
     | {
         ok: true
@@ -681,6 +738,11 @@ function carrySelection(
       if (!selection.coveredRoles.includes(targetRole)) {
         return { carried: null, reasons: ['equipment_set_role_not_covered'], lost: true }
       }
+      // Atomic: a set with one unavailable member is not carried at all. Binding the survivors
+      // would hand the physician a tray that is missing a piece and say nothing about it.
+      if (!probe.equipmentSetMembersAvailable(selection.setId)) {
+        return { carried: null, reasons: ['equipment_set_member_unavailable'], lost: true }
+      }
       return { carried: selection, reasons: [], lost: false }
     }
 
@@ -742,6 +804,120 @@ export function proposeRebuildSelection(input: {
     .sort()
 
   return { moduleVersionIds, modifierCodes }
+}
+
+/**
+ * Project a resolved target card to the stable facts a review is about.
+ *
+ * Display names, prose and ordering are deliberately absent: this is hashed, compared before the
+ * write, and read by a physician through translated labels, so anything localized or cosmetic in it
+ * would make an identical card look changed.
+ */
+function projectTargetResolution(card: UnhashedResolvedCard | null): RebuildTargetResolution {
+  if (!card) return { ok: false, readinessState: null, items: [], warnings: [] }
+  const items: RebuildTargetResolutionItem[] = [
+    ...card.items.map((item) => ({ item, presence: 'active' as const })),
+    ...card.suppressedItems.map((item) => ({ item, presence: 'suppressed' as const })),
+  ]
+    .filter((entry) => typeof entry.item.requirementKey === 'string')
+    .map((entry) => ({
+      requirementKey: entry.item.requirementKey as string,
+      slotId: entry.item.id,
+      roleCode: entry.item.roleCode,
+      presence: entry.presence,
+      selectedHospitalItemId: entry.item.selectedHospitalItemId,
+      resolutionState: entry.item.resolutionState,
+      compatibilityState: entry.item.compatibilityState,
+    }))
+    .sort((left, right) => left.requirementKey.localeCompare(right.requirementKey))
+
+  const warnings = card.warnings
+    .map((warning) => ({
+      code: warning.code,
+      severity: warning.severity,
+      sourceType: warning.sourceType,
+      sourceId: warning.sourceId,
+    }))
+    .sort((left, right) =>
+      `${left.code}|${left.sourceType}|${left.sourceId ?? ''}`.localeCompare(
+        `${right.code}|${right.sourceType}|${right.sourceId ?? ''}`,
+      ),
+    )
+
+  return { ok: true, readinessState: card.readinessState, items, warnings }
+}
+
+/**
+ * Fold what the target actually resolved to back into the decisions.
+ *
+ * A carried selection may only stay `carried_unchanged` when the final card agrees about presence,
+ * role, what was selected, and whether the pair is compatible and resolvable. Anything else becomes
+ * a decision the physician answers — which is the whole difference between a plan and a receipt.
+ */
+function annotateWithTargetResolution(
+  decisions: RebuildDecision[],
+  resolution: RebuildTargetResolution,
+): RebuildDecision[] {
+  const byKey = new Map(resolution.items.map((item) => [item.requirementKey, item]))
+  // A room capability a carried modifier requires, missing at this location. It belongs to the card
+  // rather than to one requirement, so it is attached to the modifier decisions that could have
+  // caused it rather than invented as a requirement.
+  const capabilityMissing = resolution.warnings.some(
+    (warning) => warning.code === 'room_capability_missing',
+  )
+
+  return decisions.map((decision) => {
+    if (decision.kind === 'modifier') {
+      if (!capabilityMissing || !decision.carriedSelected) return decision
+      return {
+        ...decision,
+        state: 'carried_requires_review',
+        reasonCodes: sortReasons([...decision.reasonCodes, 'room_capability_missing']),
+        requiresExplicitConfirmation: true,
+      }
+    }
+    if (decision.kind !== 'requirement') return decision
+    if (!resolution.ok) return decision
+
+    const resolved = byKey.get(decision.requirementKey)
+    const reasons: RebuildReasonCode[] = []
+
+    // The target resolved this requirement away, or never expressed it, while the plan carried a
+    // selection onto it. Presence is a fact about the final card and outranks the mapping.
+    if (decision.carriedSelection && !resolved) {
+      reasons.push('resolution_unresolved')
+    }
+    if (resolved) {
+      if (resolved.compatibilityState === 'fail') reasons.push('compatibility_rejected')
+      if (
+        decision.carriedSelection &&
+        decision.carriedSelection.kind !== 'none' &&
+        resolved.selectedHospitalItemId !== decision.carriedSelection.hospitalItemId
+      ) {
+        reasons.push('resolution_unresolved')
+      }
+      if (
+        decision.carriedSelection &&
+        decision.carriedSelection.kind !== 'none' &&
+        (resolved.resolutionState === 'unresolved' || resolved.resolutionState === 'blocking')
+      ) {
+        reasons.push('resolution_unresolved')
+      }
+      if (decision.target && resolved.presence === 'suppressed' && decision.carriedSelection) {
+        reasons.push('target_presence_changed')
+      }
+    }
+
+    if (reasons.length === 0) return decision
+    return {
+      ...decision,
+      state: reasons.includes('compatibility_rejected') ? 'incompatible' : decision.state,
+      reasonCodes: sortReasons([...decision.reasonCodes, ...reasons]),
+      // Answerable: the draft can be created with the problem recorded, and the builder is where a
+      // different product is chosen. What is not allowed is passing silently.
+      requiresExplicitConfirmation: true,
+    }
+  })
 }
 
 /**
@@ -1183,6 +1359,9 @@ export function planCardRebuild(input: RebuildPlanInput): CardRebuildPlan {
       ),
   }
 
+  const targetResolution = projectTargetResolution(probe.resolveTarget(proposedInputs))
+  const annotated = annotateWithTargetResolution(decisions, targetResolution)
+
   return {
     version: CARD_REBUILD_PLAN_VERSION,
     source: {
@@ -1206,10 +1385,11 @@ export function planCardRebuild(input: RebuildPlanInput): CardRebuildPlan {
       sourceProcedureCode: target.releaseBundle.sourceProcedureCode,
     },
     comparisons,
-    decisions,
+    targetResolution,
+    decisions: annotated,
     proposedInputs,
-    blockingCount: decisions.filter((decision) => decision.blocking).length,
-    reviewCount: decisions.filter((decision) => decision.requiresExplicitConfirmation).length,
+    blockingCount: annotated.filter((decision) => decision.blocking).length,
+    reviewCount: annotated.filter((decision) => decision.requiresExplicitConfirmation).length,
   }
 }
 
@@ -1311,6 +1491,22 @@ export function blockingDecisions(plan: CardRebuildPlan): RebuildDecision[] {
  * release itself has to be fixed. Those decisions are blocking *and* carry no answer, and
  * `createRebuiltCard` refuses outright rather than creating a card nobody could interpret.
  */
+/**
+ * Whether a freshly resolved card is the one the review described.
+ *
+ * The last gate before the write. Everything between the review and here is recomputed, but
+ * resolution reads current hospital-local data, so the final card can still differ from the one the
+ * plan projected — and a card whose final state nobody reviewed must not be inserted.
+ */
+export function targetResolutionMatches(
+  plan: CardRebuildPlan,
+  resolved: UnhashedResolvedCard | null,
+): boolean {
+  return (
+    stableStringify(projectTargetResolution(resolved)) === stableStringify(plan.targetResolution)
+  )
+}
+
 export function unanswerableBlockingDecisions(plan: CardRebuildPlan): RebuildDecision[] {
   return plan.decisions.filter(
     (decision) => decision.blocking && !decision.requiresExplicitConfirmation,
@@ -1347,6 +1543,11 @@ export type RebuildAcknowledgements = Record<string, RebuildAcknowledgement>
 export function allowedAcknowledgements(
   decision: RebuildDecision,
 ): readonly RebuildAcknowledgement[] {
+  // A decision the workflow never asked about accepts nothing at all. Returning `['confirmed']` for
+  // a quiet `carried_unchanged` requirement let a direct caller attach an answer the UI had emitted
+  // no control for; it changed nothing, and was still written verbatim into immutable provenance as
+  // an acknowledgement — evidence of a confirmation that was never required or displayed.
+  if (!decision.requiresExplicitConfirmation) return []
   switch (decision.state) {
     case 'carried_requires_review':
       return decision.kind === 'requirement' ? ['confirmed', 'dropped'] : ['confirmed']

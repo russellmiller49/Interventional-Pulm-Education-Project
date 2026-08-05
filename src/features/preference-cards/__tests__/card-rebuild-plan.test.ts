@@ -5,6 +5,7 @@ import {
   proposeRebuildSelection,
   rebuildPlanHash,
   reviewRebuildAcknowledgements,
+  targetResolutionMatches,
   unanswerableBlockingDecisions,
   type CardRebuildPlan,
   type RebuildPlanInput,
@@ -173,6 +174,11 @@ function inputs(overrides: Partial<ReleasePinnedBuilderInputs> = {}): ReleasePin
 /** Everything available, so a test only has to say what it wants to be missing. */
 function permissiveProbe(overrides: Partial<RebuildProbe> = {}): RebuildProbe {
   return {
+    // The pure planner is exercised without a resolver by default: `null` projects to
+    // `ok: false`, which the annotation step deliberately treats as "nothing extra is known"
+    // rather than as a finding. Tests that care supply one.
+    resolveTarget: () => null,
+    equipmentSetMembersAvailable: () => true,
     hospitalItemOffered: () => true,
     catalogProductAvailable: () => true,
     reviewedFamilyAvailable: (ref) => ({
@@ -579,6 +585,37 @@ describe('a selection crosses only by exact stable identity', () => {
       'equipment_set_role_not_covered',
     )
     expect(uncovered.proposedInputs.equipmentSets).toEqual([])
+  })
+
+  it('does not carry a set when one of its members is gone from the target catalogue', () => {
+    const set = {
+      id: 'set-1',
+      name: 'Fixture tray',
+      description: null,
+      selectedRoleCode: ROLE,
+      additionalCoveredRoles: [],
+      members: [
+        { productId: 'PRD-ABC123', roleCode: ROLE },
+        { productId: 'PRD-GONE99', roleCode: ROLE },
+      ],
+    }
+    const result = plan({
+      inputs: inputs({ equipmentSets: [set] }),
+      card: snapshot({
+        items: [item({ id: PRIMARY_SLOT, selectedHospitalItemId: equipmentSetItemId('set-1') })],
+      }),
+      // Coverage is intact; one member is not. The old planner checked only the first of those.
+      probe: permissiveProbe({ equipmentSetMembersAvailable: () => false }),
+    })
+
+    const primary = decision(result, `requirement:${PRIMARY_KEY}`)
+    expect(primary.state).toBe('not_carried')
+    expect(primary.reasonCodes).toContain('equipment_set_member_unavailable')
+    // Atomic: no partial tray reaches the new card.
+    expect(result.proposedInputs.equipmentSets).toEqual([])
+    expect(result.proposedInputs.input.selectedHospitalItemIds).not.toHaveProperty(PRIMARY_SLOT)
+    // And it is a decision the physician sees before finishing the review, not a late failure.
+    expect(primary.requiresExplicitConfirmation).toBe(true)
   })
 
   it('keeps a deliberate blank as a deliberate blank', () => {
@@ -1081,6 +1118,124 @@ describe('an ambiguous requirement key blocks rather than choosing', () => {
     })
     // Same id is excluded from the comparison, so two byte-identical expressions collapse.
     expect(decision(result, `requirement:${PRIMARY_KEY}`).state).toBe('carried_unchanged')
+  })
+})
+
+describe('the plan describes the card the target actually resolves to', () => {
+  /** A resolved target in which the carried selection is rejected by a compatibility rule. */
+  function incompatibleTarget(): ResolvedCard {
+    return snapshot({
+      items: [
+        item({
+          id: PRIMARY_SLOT,
+          requirementKey: PRIMARY_KEY,
+          selectedHospitalItemId: 'local-scope-1',
+          compatibilityState: 'fail',
+        }),
+      ],
+      warnings: [
+        {
+          id: 'compatibility-1',
+          severity: 'blocking',
+          code: 'compatibility_failed',
+          message: 'The chosen scope is too large for the chosen sheath.',
+          sourceType: 'compatibility_rule',
+          sourceId: 'rule-1',
+          acknowledged: false,
+          waiverReason: null,
+        },
+      ],
+      readinessState: 'blocked',
+    })
+  }
+
+  const carriedCard = () =>
+    snapshot({ items: [item({ id: PRIMARY_SLOT, selectedHospitalItemId: 'local-scope-1' })] })
+
+  it('does not call a selection carried unchanged when the target rejects it', () => {
+    const result = plan({
+      card: carriedCard(),
+      probe: permissiveProbe({ resolveTarget: () => incompatibleTarget() }),
+    })
+    const primary = decision(result, `requirement:${PRIMARY_KEY}`)
+
+    // Identity and availability both held, so the old planner said carried_unchanged and asked
+    // nothing — and the card was inserted blocked with provenance claiming it was unchanged.
+    expect(primary.state).toBe('incompatible')
+    expect(primary.reasonCodes).toContain('compatibility_rejected')
+    expect(primary.requiresExplicitConfirmation).toBe(true)
+  })
+
+  it('records the final resolution in the plan, and hashes it', () => {
+    const clean = plan({ card: carriedCard() })
+    const rejected = plan({
+      card: carriedCard(),
+      probe: permissiveProbe({ resolveTarget: () => incompatibleTarget() }),
+    })
+
+    expect(rejected.targetResolution.ok).toBe(true)
+    expect(rejected.targetResolution.readinessState).toBe('blocked')
+    expect(rejected.targetResolution.warnings.map((warning) => warning.code)).toContain(
+      'compatibility_failed',
+    )
+    expect(rebuildPlanHash(rejected)).not.toBe(rebuildPlanHash(clean))
+  })
+
+  it('surfaces a missing room capability against the modifier that requires it', () => {
+    const capabilityMissing = snapshot({
+      warnings: [
+        {
+          id: 'capability-1',
+          severity: 'blocking',
+          code: 'room_capability_missing',
+          message: 'Required room capability is not mapped at this location.',
+          sourceType: 'room_capability',
+          sourceId: 'fluoroscopy',
+          acknowledged: false,
+          waiverReason: null,
+        },
+      ],
+      readinessState: 'blocked',
+    })
+    const result = plan({
+      inputs: inputs({ input: { ...inputs().input, modifierCodes: ['FIXTURE_MODIFIER'] } }),
+      selection: { moduleVersionIds: [FIXTURE_MODULE_V1_1], modifierCodes: ['FIXTURE_MODIFIER'] },
+      probe: permissiveProbe({ resolveTarget: () => capabilityMissing }),
+    })
+
+    const modifier = decision(result, 'modifier:FIXTURE_MODIFIER')
+    expect(modifier.reasonCodes).toContain('room_capability_missing')
+    expect(modifier.requiresExplicitConfirmation).toBe(true)
+  })
+
+  it('reports a requirement the target suppresses behind a kit', () => {
+    const suppressed = snapshot({
+      items: [],
+      suppressedItems: [
+        item({
+          id: PRIMARY_SLOT,
+          requirementKey: PRIMARY_KEY,
+          selectedHospitalItemId: 'local-scope-1',
+        }),
+      ],
+    })
+    const result = plan({
+      card: carriedCard(),
+      probe: permissiveProbe({ resolveTarget: () => suppressed }),
+    })
+    expect(decision(result, `requirement:${PRIMARY_KEY}`).reasonCodes).toContain(
+      'target_presence_changed',
+    )
+  })
+
+  it('refuses a resolved card that is not the one the plan described', () => {
+    const reviewed = plan({
+      card: carriedCard(),
+      probe: permissiveProbe({ resolveTarget: () => incompatibleTarget() }),
+    })
+    // The card that would actually be written has moved since the review.
+    expect(targetResolutionMatches(reviewed, carriedCard())).toBe(false)
+    expect(targetResolutionMatches(reviewed, incompatibleTarget())).toBe(true)
   })
 })
 

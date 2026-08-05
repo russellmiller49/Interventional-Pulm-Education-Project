@@ -4,6 +4,7 @@ import type {
   HospitalItem,
   HospitalRoleOption,
   ModifierDefinition,
+  RecipeSlot,
   ScenarioDefinition,
 } from '../domain/types'
 import type { PreferenceCardReleaseBundle } from '../domain/release-bundle'
@@ -70,6 +71,84 @@ const rescueModifier: ModifierDefinition = {
     },
   ],
 }
+
+/**
+ * Two modifiers that add a slot claiming a requirement key the composition already expresses.
+ *
+ * The resolver deduplicates added slots by **slot id**, not by requirement key, so both of these
+ * really do produce a second requirement on the card. That is the case the planner's ambiguity
+ * blocker exists for, and the case a "first declaration wins" pre-deduplication in the rebuild
+ * server hid: the plan saw one requirement, the card was built with two.
+ *
+ * `CONFLICTING` disagrees about role and requiredness and must block. `IDENTICAL` agrees on every
+ * compared field and must not, because two byte-identical expressions of one requirement are one
+ * requirement said twice.
+ */
+export const FIXTURE_DUPLICATE_CONFLICTING_MODIFIER = 'FIXTURE_DUPLICATE_CONFLICTING'
+export const FIXTURE_DUPLICATE_IDENTICAL_MODIFIER = 'FIXTURE_DUPLICATE_IDENTICAL'
+
+function duplicateSlot(id: string, overrides: Partial<RecipeSlot>): RecipeSlot {
+  return {
+    id,
+    sourceSlotId: id,
+    requirementKey: 'FIXTURE_PRIMARY_SCOPE',
+    roleCode: 'FIXTURE_ROLE',
+    label: 'Fixture requirement',
+    genericRequirement: 'A requirement that exists only in this fixture.',
+    requiredness: 'required',
+    dependencyRule: null,
+    quantityExpression: { op: 'literal', value: 1 },
+    selectionMode: 'single',
+    setupZone: 'back_table',
+    proceduralPhase: 'airway_access',
+    setupSequence: 1,
+    openHoldStatus: 'open_or_set_up_now',
+    responsibleRole: null,
+    sterileStatus: null,
+    allowCustom: false,
+    notes: null,
+    includedBy: 'Added by fixture modifier',
+    ...overrides,
+  }
+}
+
+function duplicateModifier(code: string, slot: RecipeSlot): ModifierDefinition {
+  return {
+    code,
+    name: `Fixture duplicate-key modifier (${code})`,
+    groupCode: 'imaging_navigation',
+    description: 'Synthetic; adds a second slot claiming an existing requirement key.',
+    releaseState: 'mvp',
+    active: true,
+    appliesTo: FIXTURE_PROCEDURE_CODE,
+    preview: ['Adds a duplicate requirement key.'],
+    conflictsWith: [],
+    actions: [
+      {
+        id: `${code}-add-duplicate`,
+        modifierCode: code,
+        sequence: 20,
+        actionType: 'add_slot',
+        payload: { slot },
+      },
+    ],
+  }
+}
+
+const conflictingDuplicateModifier = duplicateModifier(
+  FIXTURE_DUPLICATE_CONFLICTING_MODIFIER,
+  duplicateSlot('SLOT-FIXTURE-PRIMARY-CONFLICT', {
+    roleCode: 'FIXTURE_OTHER_ROLE',
+    requiredness: 'optional',
+    label: 'Primary scope, expressed a second and different way',
+  }),
+)
+
+/** Same requirement key, different slot id, and every compared field identical. */
+const identicalDuplicateModifier = duplicateModifier(
+  FIXTURE_DUPLICATE_IDENTICAL_MODIFIER,
+  duplicateSlot('SLOT-FIXTURE-PRIMARY-ECHO', {}),
+)
 
 export const FIXTURE_SCOPE = {
   organizationId: 'fixture-org',
@@ -183,10 +262,17 @@ export function createRebuildFixtureWorld(): RebuildFixtureWorld {
         allowedModifierCodes: [
           ...sources.recipe.allowedModifierCodes,
           FIXTURE_RESCUE_MODIFIER_CODE,
+          FIXTURE_DUPLICATE_CONFLICTING_MODIFIER,
+          FIXTURE_DUPLICATE_IDENTICAL_MODIFIER,
         ],
       },
       recipeModules: sources.modules,
-      modifiers: [...sources.modifiers, rescueModifier],
+      modifiers: [
+        ...sources.modifiers,
+        rescueModifier,
+        conflictingDuplicateModifier,
+        identicalDuplicateModifier,
+      ],
       rescueModules: sources.rescueModules,
       // Deliberately shared references: hospital-local data is *current* on both sides of a
       // rebuild, and giving the two releases different formularies would smuggle an operational

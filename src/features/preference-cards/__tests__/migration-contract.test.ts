@@ -264,6 +264,16 @@ describe('preference-card rebuild provenance migration', () => {
 
   const rebuildMigration = fs.readFileSync(path.join(MIGRATIONS_DIR, REBUILD_MIGRATION), 'utf8')
   const rebuildVerifier = fs.readFileSync(path.join(VERIFICATION_DIR, REBUILD_VERIFIER), 'utf8')
+  /**
+   * The verifier's statements, without its prose.
+   *
+   * It explains at length that it contains no `when others`, so a naive search over the raw text
+   * finds the sentence saying the thing is not done — the same trap the index migration documents.
+   */
+  const rebuildVerifierSql = rebuildVerifier
+    .split('\n')
+    .filter((line) => !line.trimStart().startsWith('--'))
+    .join('\n')
 
   /** Statements only. The file argues at length about what it does not do; prose is not a check. */
   const rebuildMigrationSql = rebuildMigration
@@ -282,17 +292,74 @@ describe('preference-card rebuild provenance migration', () => {
     )
   })
 
-  it('adds one nullable jsonb column, constrained to an object', () => {
-    expect(rebuildMigrationSql).toContain('add column if not exists rebuild_provenance jsonb')
+  it('adds one nullable jsonb column with strict first-use DDL', () => {
+    expect(rebuildMigrationSql).toContain('add column rebuild_provenance jsonb')
     expect(rebuildMigrationSql).toContain('ip_user_preference_cards_rebuild_provenance_check')
     expect(rebuildMigrationSql).toContain("jsonb_typeof(rebuild_provenance) = 'object'")
     // Nullable: almost no card is a rebuild, and a default object on the rest would be a claim.
     expect(rebuildMigrationSql).not.toMatch(/rebuild_provenance jsonb[^;]*not null/i)
+    // This migration has never been applied, so tolerance buys nothing and hides drift. The only
+    // `drop` it may contain is the live insert policy it deliberately replaces.
+    expect(rebuildMigrationSql).not.toMatch(/if not exists/i)
+    expect(rebuildMigrationSql).not.toMatch(/create or replace/i)
+    expect(rebuildMigrationSql).not.toMatch(/drop\s+(trigger|function|constraint)\s+if exists/i)
+    const drops = rebuildMigrationSql.match(/^drop /gm) ?? []
+    expect(drops).toHaveLength(1)
+    expect(rebuildMigrationSql).toContain(
+      'drop policy ip_user_preference_cards_insert_own on public.ip_user_preference_cards',
+    )
+  })
+
+  it('narrows the authenticated insert policy so provenance cannot be forged', () => {
+    // BLOCKER 1: the live policy checked ownership only, and `authenticated` holds INSERT.
+    expect(rebuildMigrationSql).toContain('create policy ip_user_preference_cards_insert_own')
+    expect(rebuildMigrationSql).toContain(
+      'with check (user_id = (select auth.uid()) and rebuild_provenance is null)',
+    )
+  })
+
+  it('rejects a non-null provenance insert from every role but the dedicated writer', () => {
+    // `service_role` has bypassrls, so a policy cannot stop it. A trigger can.
+    expect(rebuildMigrationSql).toContain(
+      'create function private.ip_reject_untrusted_preference_card_rebuild_provenance()',
+    )
+    expect(rebuildMigrationSql).toContain("current_user <> 'ip_preference_card_rebuild_writer'")
+    expect(rebuildMigrationSql).toContain('before insert on public.ip_user_preference_cards')
+  })
+
+  it('creates one narrow trusted writer, executable only by the service role', () => {
+    expect(rebuildMigrationSql).toContain('create role ip_preference_card_rebuild_writer nologin')
+    expect(rebuildMigrationSql).toContain(
+      'create function public.ip_create_rebuilt_preference_card(',
+    )
+    expect(rebuildMigrationSql).toContain('security definer')
+    expect(rebuildMigrationSql).toContain("set search_path = ''")
+    expect(rebuildMigrationSql).toContain('owner to ip_preference_card_rebuild_writer')
+    expect(rebuildMigrationSql).toMatch(
+      /revoke all on function public\.ip_create_rebuilt_preference_card\([^)]*\) from public, anon, authenticated/,
+    )
+    expect(rebuildMigrationSql).toMatch(
+      /grant execute on function public\.ip_create_rebuilt_preference_card\([^)]*\) to service_role/,
+    )
+    // Always a draft, and the source's sharing state is never carried.
+    expect(rebuildMigrationSql).toContain("'draft'")
+    expect(rebuildMigrationSql).not.toMatch(/share_token/)
+  })
+
+  it('re-derives the source inside the same statement that inserts', () => {
+    // The validation-to-insert race: no separate select, so there is no window for a concurrent
+    // delete between "the source was verified" and "the row was written".
+    expect(rebuildMigrationSql).toContain(
+      'from public.ip_user_preference_card_revisions as revision',
+    )
+    expect(rebuildMigrationSql).toContain('and revision.card_id = p_source_card_id')
+    expect(rebuildMigrationSql).toContain('and revision.user_id = p_owner_id')
+    expect(rebuildMigrationSql).toContain('and revision.snapshot_hash = p_source_snapshot_hash')
   })
 
   it('makes the column write-once with a before-update trigger', () => {
     expect(rebuildMigrationSql).toContain(
-      'create or replace function private.ip_reject_preference_card_rebuild_provenance_rewrite()',
+      'create function private.ip_reject_preference_card_rebuild_provenance_rewrite()',
     )
     expect(rebuildMigrationSql).toContain('before update on public.ip_user_preference_cards')
     expect(rebuildMigrationSql).toContain(
@@ -322,15 +389,49 @@ describe('preference-card rebuild provenance migration', () => {
     )
   })
 
-  it('ships a verifier that rolls back and proves the write-once rule behaviourally', () => {
+  it('ships a verifier that is a role matrix, not a postgres-only smoke test', () => {
     expect(rebuildVerifier.trimEnd().endsWith('rollback;')).toBe(true)
-    // Existence of a trigger and a trigger firing are different facts; only the second is the
-    // guarantee, so the verifier attempts the rewrite and requires it to fail.
-    expect(rebuildVerifier).toContain('was overwritten and should not have been')
-    expect(rebuildVerifier).toContain('was cleared and should not have been')
-    expect(rebuildVerifier).toContain('a card that was not rebuilt was given rebuild provenance')
-    // And it re-checks that this migration did not quietly become revision-bearing.
+    // The failure that made the previous verifier worthless: it inserted as `postgres`, so it never
+    // met the insert policy at all, and it caught every negative case with `when others`.
+    expect(rebuildVerifierSql).not.toMatch(/when others/i)
+    for (const role of ['set local role authenticated', 'set local role service_role']) {
+      expect(rebuildVerifier).toContain(role)
+    }
+    expect(rebuildVerifier).toContain("current_user <> 'authenticated'")
+    expect(rebuildVerifier).toContain("current_user <> 'service_role'")
+    expect(rebuildVerifier).toContain('request.jwt.claims')
+    // Exact codes, never a bare catch.
+    expect(rebuildVerifier).toContain('when restrict_violation then null')
+    expect(rebuildVerifier).toContain('when insufficient_privilege then null')
+    expect(rebuildVerifier).toContain('when no_data_found then null')
+  })
+
+  it('ships a verifier that proves authenticity, not only immutability', () => {
+    // The blocker, as a behavioural check.
+    expect(rebuildVerifier).toContain('an authenticated user forged rebuild_provenance at INSERT')
+    expect(rebuildVerifier).toContain(
+      'service_role forged rebuild_provenance through a direct table insert',
+    )
+    // The trusted path, its source recheck, and the shape of what it creates.
+    expect(rebuildVerifier).toContain('public.ip_create_rebuilt_preference_card(')
+    expect(rebuildVerifier).toContain(
+      'the writer accepted a payload that disagrees with the stored revision',
+    )
+    expect(rebuildVerifier).toContain('the writer accepted a payload naming a different owner')
+    expect(rebuildVerifier).toContain('the rebuilt card inherited the source share token')
+    expect(rebuildVerifier).toContain('the source card changed during the rebuild')
+    // All three write-once directions, plus ordinary operations surviving.
+    expect(rebuildVerifier).toContain('provenance was overwritten')
+    expect(rebuildVerifier).toContain('provenance was cleared')
+    expect(rebuildVerifier).toContain('a card that was not rebuilt was given provenance')
+    expect(rebuildVerifier).toContain('an ordinary update disturbed provenance')
+    // Structure, cleanup, and an exact baseline comparison rather than a lower bound.
     expect(rebuildVerifier).toContain('ip_preference_card_content_changed')
+    expect(rebuildVerifier).toContain('card content digest changed')
+    expect(rebuildVerifier).toContain('revision content digest changed')
+    expect(rebuildVerifier).toContain(
+      "delete from public.ip_user_preference_cards where procedure_code = 'VERIFY_ONLY'",
+    )
     expect(rebuildVerifier).toContain('ALL CHECKS PASSED')
   })
 })

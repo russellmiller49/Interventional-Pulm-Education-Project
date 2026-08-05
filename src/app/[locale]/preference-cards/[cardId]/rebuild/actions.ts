@@ -32,6 +32,7 @@ const idSchema = z.string().uuid()
 const submissionErrorCodes: readonly string[] = [
   'plan_moved',
   'plan_blocked',
+  'source_moved',
   'review_incomplete',
   'not_resolvable',
   'write_failed',
@@ -104,5 +105,8 @@ export async function createRebuiltCardAction(formData: FormData): Promise<void>
   // pointing at it, and its own revision list is what a reader follows back.
   revalidatePath(`/${locale}/preference-cards`)
   revalidatePath(`/${locale}/preference-cards/${cardId}`)
-  redirect(`/${locale}/preference-cards/${result.cardId}`)
+  // Straight to the builder, not the read-only card page. The rebuild deliberately has no product
+  // picker, so anything it left unresolved is finished here — and the copy has always said the new
+  // draft opens in the builder.
+  redirect(`/${locale}/preference-cards/${result.cardId}/edit`)
 }

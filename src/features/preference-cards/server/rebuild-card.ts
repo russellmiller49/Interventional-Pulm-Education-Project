@@ -17,12 +17,13 @@ import {
   proposeRebuildSelection,
   rebuildPlanHash,
   reviewRebuildAcknowledgements,
+  targetResolutionMatches,
   unanswerableBlockingDecisions,
   type CardRebuildPlan,
   type RebuildAcknowledgements,
   type RebuildProbe,
 } from '../domain/card-rebuild-plan'
-import { expandRecipeComposition } from '../domain/expand-recipe-composition'
+import { expandEffectiveSlots } from '../domain/effective-slots'
 import {
   assertSelectableForNewCard,
   modifierSetDefinitionHash,
@@ -30,7 +31,6 @@ import {
   type ReleaseDefinitionSources,
 } from '../domain/release-bundle'
 import { canonicalRoleCode } from '../domain/role-taxonomy'
-import { recipeSlotSchema } from '../domain/schemas'
 import { stableSnapshotHash } from '../domain/stable-hash'
 import type { BuildContext, RecipeSlot } from '../domain/types'
 import {
@@ -52,6 +52,7 @@ import {
   type OperationalReconciliationResult,
   type ReleaseReconciliationResult,
 } from './reconcile-card'
+import { writeRebuiltCard } from './rebuild-writer.server'
 import { loadUserCard, resolveForSave, type UserCardRecord } from './user-cards'
 
 /**
@@ -164,73 +165,23 @@ function modifierDefinitionHashes(sources: ReleaseDefinitionSources): Record<str
 }
 
 /**
- * Every requirement a release expresses for one composition **and one modifier selection**.
+ * Every requirement a release expresses for one composition and one modifier selection.
  *
- * The composition alone is not the card's requirement set, and using it as one was a real defect
- * rather than a theoretical gap: `HIGH_BLEED_RISK` carries an `add_rescue_module` action, so a card
- * that selects it resolves with the major-airway-bleeding requirements on it. Those requirements are
- * in the stored snapshot and absent from `expandRecipeComposition`, so the plan reported each of
- * them as **removed by the target release** and carried none of their selections — while the
- * modifier itself carried perfectly well and the new card promptly re-added the same requirements,
- * empty. The physician would have been told a line was gone and then handed a card asking for it.
+ * `expandEffectiveSlots` is the resolver's own steps 1 to 4, shared rather than approximated — see
+ * `domain/effective-slots.ts` for why the previous add-only approximation was wrong on real data.
  *
- * Only the two *additive* action types are applied here, and that asymmetry is deliberate:
- *
- * - Adding is what the composition misses, and missing it produces the false removal above.
- * - `remove_slot` and `replace_role` are not applied, so a requirement a modifier would remove stays
- *   in the effective set and its selection is carried. That is the safe direction — a carried
- *   `selectedHospitalItemIds` key for a slot the resolved card does not contain is simply never
- *   read, whereas dropping a selection for a requirement that turns out to be present loses a
- *   decision. `resolveCard` remains the authority on what the card actually contains.
- *
- * This is not a second resolver. It reads which requirements the release *offers* under a modifier
- * selection; it does not order them, override them, or resolve anything. Re-implementing modifier
- * evaluation properly would mean exporting the effective slot list from `resolve-card.ts`, which is
- * inside `RESOLVER_SOURCE_FILES` and would move `resolverImplementationHash` and every release
- * artifact with it.
+ * Nothing is deduplicated here. The resolver deduplicates *added* slots by slot id, not by
+ * requirement key, so a modifier or rescue module can legitimately produce a second slot claiming a
+ * key the composition already expresses. Collapsing that here — which the earlier "first
+ * declaration wins" pass did — hid the one case the planner's ambiguity blocker exists to catch:
+ * the plan saw one requirement and the card was built with two.
  */
 function effectiveSlots(
   context: BuildContext,
   selectedModuleVersionIds: string[],
   modifierCodes: string[],
 ): RecipeSlot[] {
-  const slots = expandRecipeComposition({
-    recipe: context.recipe,
-    modules: context.recipeModules,
-    selectedModuleVersionIds,
-    startSequence: 1,
-  }).slots
-
-  const selected = new Set(modifierCodes)
-  const rescueCodes = new Set<string>()
-  const added: RecipeSlot[] = []
-  for (const modifier of context.modifiers) {
-    if (!selected.has(modifier.code)) continue
-    for (const action of modifier.actions) {
-      if (action.actionType === 'add_rescue_module') {
-        const code = action.payload.code
-        if (typeof code === 'string') rescueCodes.add(code)
-        continue
-      }
-      if (action.actionType !== 'add_slot') continue
-      const parsed = recipeSlotSchema.safeParse(action.payload.slot)
-      if (parsed.success) added.push(parsed.data as RecipeSlot)
-    }
-  }
-  for (const rescue of context.rescueModules) {
-    if (rescueCodes.has(rescue.code)) added.push(...rescue.slots)
-  }
-
-  // First declaration wins, exactly as the composition's own merge does: a requirement a rescue
-  // module and the composition both express is the composition's, and the rescue copy does not
-  // silently replace it.
-  const seen = new Set(slots.map((slot) => slot.requirementKey))
-  for (const slot of added) {
-    if (seen.has(slot.requirementKey)) continue
-    seen.add(slot.requirementKey)
-    slots.push(slot)
-  }
-  return slots
+  return expandEffectiveSlots({ selectedModuleVersionIds, modifierCodes }, context).slots
 }
 
 /**
@@ -245,6 +196,10 @@ function createProbe(
   targetContext: BuildContext,
   targetBundle: PreferenceCardReleaseBundle,
   historical: ReturnType<typeof getHistoricalCatalog> & { ok: true },
+  equipmentSets: readonly {
+    id: string
+    members: readonly { productId: string; roleCode: string }[]
+  }[],
 ): RebuildProbe {
   const activeItemIds = new Set(
     targetContext.hospitalItems.filter((item) => item.active).map((item) => item.id),
@@ -259,6 +214,28 @@ function createProbe(
   }
 
   return {
+    resolveTarget(inputs) {
+      // The same resolver the builder and the save path use, so the plan describes the card the
+      // save would produce rather than a second opinion about it. `generatedAt` is fixed because
+      // it is outside every projection and a clock here would make the plan hash unstable.
+      const resolved = resolveForSave(inputs, '1970-01-01T00:00:00.000Z')
+      return resolved.ok ? resolved.card : null
+    },
+    equipmentSetMembersAvailable(setId) {
+      const set = equipmentSets.find((candidate) => candidate.id === setId)
+      if (!set) return false
+      // The same row-by-row check `rebuildBuilderContext` runs at save time, moved forward to
+      // planning so the problem is a reviewable decision rather than a late failure.
+      return set.members.every(
+        (member) =>
+          resolveHistoricalCatalogPick(
+            historical,
+            member.productId,
+            member.roleCode,
+            isProductCurrentlyUnselectable,
+          ).ok,
+      )
+    },
     hospitalItemOffered(hospitalItemId, roleCode) {
       if (!activeItemIds.has(hospitalItemId)) return false
       return offeredByRole.get(canonicalRoleCode(roleCode))?.has(hospitalItemId) ?? false
@@ -469,7 +446,7 @@ export async function prepareCardRebuild(
     target: targetShape,
     selection: effectiveSelection,
     comparisons: { operationalHash, releaseDiffHash },
-    probe: createProbe(targetContext.context, target, historical),
+    probe: createProbe(targetContext.context, target, historical, pinnedInputs.equipmentSets),
   })
 
   return {
@@ -536,6 +513,7 @@ export type CreateRebuiltCardResult =
         | CardRebuildErrorCode
         | 'plan_moved'
         | 'plan_blocked'
+        | 'source_moved'
         | 'review_incomplete'
         | 'not_resolvable'
         | 'write_failed'
@@ -580,8 +558,22 @@ export async function createRebuiltCard(
     // Reported as `plan_moved`, because that is what happened, and because the alternative was a
     // refusal the page rendered no message for: the physician's answers vanished and a fresh plan
     // appeared in their place with nothing saying why.
-    const movedUnderReview =
-      prepared.code === 'module_not_offered' || prepared.code === 'modifier_not_offered'
+    // Every way the *target* can move under an open review reads the same to the physician: the
+    // plan they answered is not the plan this rebuild would make now. Source-side and
+    // authorization failures are deliberately not folded in — those must keep their own
+    // nondisclosing answers.
+    const movedUnderReview = (
+      [
+        'module_not_offered',
+        'modifier_not_offered',
+        'already_on_current_release',
+        'no_current_release',
+        'target_release_not_selectable',
+        'target_release_unavailable',
+        'target_context_unavailable',
+        'target_catalog_unavailable',
+      ] as CardRebuildErrorCode[]
+    ).includes(prepared.code)
     return {
       ok: false,
       code: movedUnderReview ? 'plan_moved' : prepared.code,
@@ -641,6 +633,17 @@ export async function createRebuiltCard(
   const resolved = resolveForSave(builderInputs, generatedAt)
   if (!resolved.ok) return { ok: false, code: 'not_resolvable', message: resolved.error }
 
+  // The final invariant: the card about to be written must be the card the review described. The
+  // plan already projected this exact resolution and hashed it, so a mismatch means something moved
+  // between the review and now — and a card whose final state nobody read is not inserted.
+  //
+  // Re-resolved at the plan's own fixed timestamp, because `generatedAt` is outside every
+  // projection and comparing at two clocks would compare two different things.
+  const finalCheck = resolveForSave(builderInputs, '1970-01-01T00:00:00.000Z')
+  if (!finalCheck.ok || !targetResolutionMatches(plan, finalCheck.card)) {
+    return { ok: false, code: 'plan_moved', message: PLAN_MOVED_MESSAGE }
+  }
+
   const provenance: CardRebuildProvenance = {
     version: 'ip-cards-rebuild/1',
     sourceCardId: cardId,
@@ -668,43 +671,44 @@ export async function createRebuiltCard(
     createdAt: generatedAt,
   }
 
-  // A create, not an overwrite: no id, no share token, no `share_enabled`, no timestamps. Every one
-  // comes from a column default, so the new card gets its own identity and its own sharing state
-  // and cannot inherit the source's. The revision trigger writes its revision 1.
-  const { data, error } = await supabase
-    .from('ip_user_preference_cards')
-    .insert({
-      user_id: user.id,
-      title,
-      physician_name: physicianName?.trim() ? physicianName.trim() : null,
-      procedure_code: resolved.rebuilt.scenario.sourceProcedureCode,
-      scenario_id: builderInputs.scenarioId,
-      status: 'draft',
-      builder_inputs: {
-        schemaVersion: builderInputs.schemaVersion,
-        releaseBundleId: builderInputs.releaseBundleId,
-        scenarioId: builderInputs.scenarioId,
-        input: builderInputs.input,
-        catalogPicks: builderInputs.catalogPicks,
-        familyPicks: builderInputs.familyPicks,
-        customItems: builderInputs.customItems,
-        equipmentSets: builderInputs.equipmentSets,
-      },
-      card_snapshot: resolved.card,
-      snapshot_hash: resolved.card.snapshotHash,
-      engine_version: resolved.card.engineVersion,
-      catalog_import_id: resolved.card.catalogImportId,
-      rebuild_provenance: provenance,
-    })
-    .select('id')
-    .maybeSingle()
+  // The one privileged step, and the only write in this file. Everything above ran on the
+  // authenticated cookie client under row-level security; this hands the finished, server-computed
+  // card to a narrow RPC that re-derives the source facts from the database and refuses if they
+  // have moved. `authenticated` cannot insert a provenance-bearing row at all, and a direct
+  // `service_role` table insert is refused by a trigger — see the migration.
+  const written = await writeRebuiltCard({
+    ownerId: user.id,
+    sourceCardId: cardId,
+    sourceRevisionId: revisionId,
+    sourceSnapshotHash: revision.snapshotHash,
+    sourceReleaseBundleId: revision.releaseBundleId,
+    title,
+    physicianName: physicianName?.trim() ? physicianName.trim() : null,
+    procedureCode: resolved.rebuilt.scenario.sourceProcedureCode,
+    scenarioId: builderInputs.scenarioId,
+    builderInputs: {
+      schemaVersion: builderInputs.schemaVersion,
+      releaseBundleId: builderInputs.releaseBundleId,
+      scenarioId: builderInputs.scenarioId,
+      input: builderInputs.input,
+      catalogPicks: builderInputs.catalogPicks,
+      familyPicks: builderInputs.familyPicks,
+      customItems: builderInputs.customItems,
+      equipmentSets: builderInputs.equipmentSets,
+    },
+    cardSnapshot: resolved.card,
+    snapshotHash: resolved.card.snapshotHash,
+    engineVersion: resolved.card.engineVersion,
+    catalogImportId: resolved.card.catalogImportId,
+    rebuildProvenance: provenance,
+  })
 
-  if (error) return { ok: false, code: 'write_failed', message: error.message }
-  if (!data)
+  if (!written.ok) {
     return {
       ok: false,
-      code: 'write_failed',
-      message: 'The database did not return a card identifier.',
+      code: written.code === 'source_moved' ? 'source_moved' : 'write_failed',
+      message: written.message,
     }
-  return { ok: true, cardId: data.id as string }
+  }
+  return { ok: true, cardId: written.cardId }
 }

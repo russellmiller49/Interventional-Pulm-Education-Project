@@ -112,6 +112,19 @@ function preparation(): CardRebuildPreparationResult {
           sourceProcedureCode: 'FIXTURE_PROCEDURE',
         },
         comparisons: { operationalHash: '2'.repeat(64), releaseDiffHash: '3'.repeat(64) },
+        targetResolution: {
+          ok: true,
+          readinessState: 'complete_with_warnings',
+          items: [],
+          warnings: [
+            {
+              code: 'compatibility_failed',
+              severity: 'blocking',
+              sourceType: 'compatibility_rule',
+              sourceId: 'rule-1',
+            },
+          ],
+        },
         decisions: [
           {
             key: 'requirement:FIXTURE_BACKUP_SCOPE',
@@ -182,8 +195,57 @@ function preparation(): CardRebuildPreparationResult {
         reviewCount: 2,
       },
       planHash: '1'.repeat(64),
-      operational: { ok: true, delta: { identical: true } as never },
-      release: { ok: false, code: 'release_unknown', message: 'not compared' },
+      operational: {
+        ok: true,
+        delta: {
+          identical: false,
+          items: [
+            {
+              itemId: 'SLOT-FIXTURE-PRIMARY',
+              requirementKey: 'FIXTURE_PRIMARY_SCOPE',
+              roleCode: 'FIXTURE_ROLE',
+              label: 'Primary scope line that moved',
+              beforePresence: 'active',
+              afterPresence: 'active',
+              changedFields: ['selectedHospitalItemId'],
+              before: null,
+              after: null,
+            },
+          ],
+          warnings: [],
+          readinessState: null,
+          governanceState: null,
+          otherChangedProjectionKeys: [],
+        } as never,
+      },
+      release: {
+        ok: true,
+        pinnedReleaseBundleId: 'release-fixture-procedure-v1-0',
+        currentReleaseBundleId: 'release-fixture-procedure-v1-1',
+        onCurrentRelease: false,
+        impact: {
+          previousReleaseBundleId: 'release-fixture-procedure-v1-0',
+          nextReleaseBundleId: 'release-fixture-procedure-v1-1',
+          sourceProcedureCode: 'FIXTURE_PROCEDURE',
+          identical: false,
+          pinChanges: [],
+          requirementChanges: [],
+          catalogImportChanged: false,
+          resolverContractChanged: false,
+        } as never,
+        affecting: [
+          {
+            requirementKey: 'FIXTURE_BACKUP_SCOPE',
+            kind: 'changed',
+            moduleVersionIds: [],
+            changedFields: ['requiredness'],
+            onCard: true,
+            presence: 'active',
+            hasSelection: true,
+            label: 'Backup scope',
+          },
+        ],
+      },
       operationalHash: '2'.repeat(64),
       releaseDiffHash: '3'.repeat(64),
     },
@@ -302,6 +364,23 @@ it('shows the comparisons its provenance will record', async () => {
   expect(screen.getByText(/Authored-release comparison/i)).toBeInTheDocument()
 })
 
+it('renders the comparisons themselves, not only their digests', async () => {
+  await renderPage()
+  // MEDIUM 7: the page used to show sixteen hex characters and call that the comparison, while the
+  // card recorded those digests as evidence of what was reviewed.
+  expect(screen.getByText(/Primary scope line that moved/i)).toBeInTheDocument()
+  // It appears in the authored-release comparison and again as a decision, which is the point.
+  expect(screen.getAllByText(/FIXTURE_BACKUP_SCOPE/).length).toBeGreaterThan(1)
+  // And the digests remain, as identifiers.
+  expect(screen.getByText(/Hospital-local comparison/i)).toBeInTheDocument()
+})
+
+it('shows what the new card would resolve to, including a blocking rule', async () => {
+  await renderPage()
+  expect(screen.getByText(/compatibility_failed/)).toBeInTheDocument()
+  expect(screen.getByText(/Readiness of the card this rebuild would create/i)).toBeInTheDocument()
+})
+
 it('shows why a submitted review was refused, and keeps the decisions on screen', async () => {
   await renderPage({
     revision: REVISION_ID,
@@ -311,5 +390,5 @@ it('shows why a submitted review was refused, and keeps the decisions on screen'
   expect(
     screen.getByText(/has to be answered before a new card can be created/i),
   ).toBeInTheDocument()
-  expect(screen.getByText('FIXTURE_BACKUP_SCOPE')).toBeInTheDocument()
+  expect(screen.getAllByText('FIXTURE_BACKUP_SCOPE').length).toBeGreaterThan(0)
 })

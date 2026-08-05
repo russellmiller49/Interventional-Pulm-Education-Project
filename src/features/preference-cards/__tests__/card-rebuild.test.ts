@@ -14,6 +14,8 @@ import {
   REVISED_REQUIREMENT_KEY,
 } from '../__fixtures__/release-bundle-fixtures'
 import {
+  FIXTURE_DUPLICATE_CONFLICTING_MODIFIER,
+  FIXTURE_DUPLICATE_IDENTICAL_MODIFIER,
   FIXTURE_PRIMARY_ITEM_ID,
   FIXTURE_RESCUE_MODIFIER_CODE,
   FIXTURE_RESCUE_REQUIREMENT_KEY,
@@ -74,6 +76,12 @@ jest.mock('../data/release-bundles.server', () => {
   }
 })
 
+// The privileged writer is replaced by the fake's own model of the RPC, so the trusted path is
+// exercised through the same recheck-then-insert the migration performs rather than stubbed out.
+jest.mock('../server/rebuild-writer.server', () => ({
+  writeRebuiltCard: jest.fn(),
+}))
+
 jest.mock('../data/historical-catalog.server', () => ({
   // The fixture cards select hospital-local items rather than catalogue products, so the retained
   // catalogue is present and empty: reachable, so the rebuild does not fail on it, and unused, so
@@ -94,6 +102,10 @@ const { prepareCardRebuild, createRebuiltCard } = jest.requireActual(
 
 const { supabaseServer } = jest.requireMock('@/lib/supabase/server') as {
   supabaseServer: jest.Mock
+}
+
+const { writeRebuiltCard } = jest.requireMock('../server/rebuild-writer.server') as {
+  writeRebuiltCard: jest.Mock
 }
 
 const OWNER = 'user-owner'
@@ -189,6 +201,18 @@ function seedAlphaCard(overrides: { inputs?: BuilderInputs; userId?: string } = 
 beforeEach(() => {
   tables.reset(OWNER)
   supabaseServer.mockResolvedValue(tables.client())
+  writeRebuiltCard.mockImplementation(
+    async (write: Parameters<typeof tables.createRebuiltCard>[0]) => {
+      const result = tables.createRebuiltCard(write)
+      if (result.ok) return { ok: true, cardId: result.cardId }
+      return {
+        ok: false,
+        code: 'source_moved',
+        message:
+          'The card this rebuild was taken from has changed or been deleted, so nothing was created.',
+      }
+    },
+  )
 })
 
 describe('a rebuild binds to one exact revision the caller owns', () => {
@@ -666,7 +690,35 @@ describe('an answer that had no effect cannot appear in the record as though it 
     expect(tables.cards).toHaveLength(cardsBefore)
   })
 
-  it('still accepts the answer each decision does allow', async () => {
+  it.each(['confirmed', 'dropped', 'acknowledged_unresolved'] as const)(
+    'rejects a forged %s on a decision that required no answer',
+    async (answer) => {
+      const { cardId, revisionId } = seedAlphaCard()
+      const { prepared, acknowledgements } = await answerEverything(cardId, revisionId)
+      const quiet = prepared.plan.decisions.filter(
+        (decision) => !decision.requiresExplicitConfirmation,
+      )
+      expect(quiet.length).toBeGreaterThan(0)
+      const cardsBefore = tables.cards.length
+
+      const result = await createRebuiltCard({
+        cardId,
+        revisionId,
+        selection: prepared.selection,
+        planHash: prepared.planHash,
+        acknowledgements: Object.fromEntries([
+          ...Object.entries(acknowledgements),
+          ...quiet.map((decision) => [decision.key, answer]),
+        ]),
+        title: 'Fixture card (rebuilt)',
+      })
+
+      expect(result.ok === false && result.code).toBe('review_incomplete')
+      expect(tables.cards).toHaveLength(cardsBefore)
+    },
+  )
+
+  it('records null for every quiet decision on a valid submission', async () => {
     const { cardId, revisionId } = seedAlphaCard()
     const { prepared, acknowledgements } = await answerEverything(cardId, revisionId)
     const result = await createRebuiltCard({
@@ -674,15 +726,24 @@ describe('an answer that had no effect cannot appear in the record as though it 
       revisionId,
       selection: prepared.selection,
       planHash: prepared.planHash,
-      acknowledgements: Object.fromEntries([
-        ...Object.entries(acknowledgements),
-        ...prepared.plan.decisions
-          .filter((decision) => decision.state === 'carried_unchanged')
-          .map((decision) => [decision.key, 'confirmed' as const]),
-      ]),
+      acknowledgements,
       title: 'Fixture card (rebuilt)',
     })
-    expect(result.ok).toBe(true)
+    if (!result.ok) throw new Error(result.message)
+
+    const provenance = tables.cards.find((row) => row.id === result.cardId)!.rebuild_provenance as {
+      decisions: Array<{ key: string; acknowledgement: string | null }>
+    }
+    const quietKeys = new Set(
+      prepared.plan.decisions
+        .filter((decision) => !decision.requiresExplicitConfirmation)
+        .map((decision) => decision.key),
+    )
+    expect(quietKeys.size).toBeGreaterThan(0)
+    for (const entry of provenance.decisions) {
+      if (!quietKeys.has(entry.key)) continue
+      expect(entry.acknowledgement).toBeNull()
+    }
   })
 })
 
@@ -830,6 +891,261 @@ describe('an unresolved required requirement stays unresolved on the new card', 
     expect(inputs.schemaVersion).toBe(4)
     expect(inputs.releaseBundleId).toBe(BRAVO_RELEASE_ID)
     expect(inputs.familyPicks).toEqual([])
+  })
+})
+
+describe('duplicate requirement keys survive the integration path to the blocker', () => {
+  function seedWithModifier(modifierCode: string) {
+    const base = alphaInputs()
+    return seedAlphaCard({
+      inputs: {
+        ...base,
+        input: { ...base.input, modifierCodes: [modifierCode] },
+      } as BuilderInputs,
+    })
+  }
+
+  it('blocks when a modifier adds a conflicting second expression of a key', async () => {
+    const { cardId, revisionId } = seedWithModifier(FIXTURE_DUPLICATE_CONFLICTING_MODIFIER)
+    const prepared = await prepareCardRebuild(cardId, revisionId)
+    if (!prepared.ok) throw new Error(prepared.code)
+
+    const primary = prepared.preparation.plan.decisions.find(
+      (entry) => entry.key === 'requirement:FIXTURE_PRIMARY_SCOPE',
+    )!
+    // The server used to collapse this before the planner ever saw it, so the plan described one
+    // requirement and the resolver built two.
+    expect(primary.state).toBe('incompatible')
+    expect(primary.reasonCodes).toContain('requirement_key_ambiguous')
+    expect(primary.blocking).toBe(true)
+  })
+
+  it('refuses to create the card, with no answer able to dispose of it', async () => {
+    const { cardId, revisionId } = seedWithModifier(FIXTURE_DUPLICATE_CONFLICTING_MODIFIER)
+    const { prepared, acknowledgements } = await answerEverything(cardId, revisionId)
+    const cardsBefore = tables.cards.length
+
+    const result = await createRebuiltCard({
+      cardId,
+      revisionId,
+      selection: prepared.selection,
+      planHash: prepared.planHash,
+      acknowledgements,
+      title: 'Fixture card (rebuilt)',
+    })
+
+    expect(result.ok === false && result.code).toBe('plan_blocked')
+    expect(tables.cards).toHaveLength(cardsBefore)
+  })
+
+  it('does not block when the second expression agrees on every compared field', async () => {
+    const { cardId, revisionId } = seedWithModifier(FIXTURE_DUPLICATE_IDENTICAL_MODIFIER)
+    const prepared = await prepareCardRebuild(cardId, revisionId)
+    if (!prepared.ok) throw new Error(prepared.code)
+
+    const primary = prepared.preparation.plan.decisions.find(
+      (entry) => entry.key === 'requirement:FIXTURE_PRIMARY_SCOPE',
+    )!
+    expect(primary.state).not.toBe('incompatible')
+    expect(primary.reasonCodes).not.toContain('requirement_key_ambiguous')
+  })
+})
+
+describe('provenance can only be written by the trusted rebuild writer', () => {
+  /** A payload an ordinary card insert would carry, plus a forged provenance object. */
+  function forgedInsert() {
+    return {
+      user_id: OWNER,
+      title: 'Forged',
+      physician_name: null,
+      procedure_code: FIXTURE_PROCEDURE_CODE,
+      scenario_id: FIXTURE_SCENARIO_ID,
+      status: 'draft' as const,
+      builder_inputs: {},
+      card_snapshot: { resolutionProvenance: {} },
+      snapshot_hash: 'f'.repeat(64),
+      engine_version: 'forged',
+      catalog_import_id: 'forged',
+      rebuild_provenance: { version: 'ip-cards-rebuild/1', sourceCardId: 'invented' },
+    }
+  }
+
+  it('refuses a forged provenance insert from an authenticated caller', () => {
+    // BLOCKER 1. `authenticated` holds INSERT on this table and the old policy checked only
+    // ownership, so this exact statement used to succeed — and the write-once update trigger then
+    // froze the forgery into something indistinguishable from reviewed evidence.
+    tables.role = 'authenticated'
+    const cardsBefore = tables.cards.length
+    expect(() =>
+      tables
+        .client()
+        .from('ip_user_preference_cards')
+        .insert(forgedInsert())
+        .select('id')
+        .maybeSingle(),
+    ).toThrow(/may only be written by public\.ip_create_rebuilt_preference_card/)
+    expect(tables.cards).toHaveLength(cardsBefore)
+  })
+
+  it('refuses a forged provenance insert from the service role', () => {
+    // `service_role` has bypassrls, so no policy can stop it. The before-insert trigger can, and
+    // does: holding the key is not evidence that a review happened.
+    tables.role = 'service_role'
+    const cardsBefore = tables.cards.length
+    expect(() =>
+      tables
+        .client()
+        .from('ip_user_preference_cards')
+        .insert(forgedInsert())
+        .select('id')
+        .maybeSingle(),
+    ).toThrow(/may only be written by public\.ip_create_rebuilt_preference_card/)
+    expect(tables.cards).toHaveLength(cardsBefore)
+  })
+
+  it('still lets an ordinary authenticated card insert through', async () => {
+    tables.role = 'authenticated'
+    const ordinary = { ...forgedInsert() }
+    delete (ordinary as { rebuild_provenance?: unknown }).rebuild_provenance
+    const result = await tables
+      .client()
+      .from('ip_user_preference_cards')
+      .insert(ordinary)
+      .select('id')
+      .maybeSingle()
+    expect(result.data).not.toBeNull()
+    expect(tables.cards.at(-1)!.rebuild_provenance).toBeNull()
+  })
+
+  it('creates the card through the trusted writer, and only there', async () => {
+    const { cardId, revisionId } = seedAlphaCard()
+    const { prepared, acknowledgements } = await answerEverything(cardId, revisionId)
+    const result = await createRebuiltCard({
+      cardId,
+      revisionId,
+      selection: prepared.selection,
+      planHash: prepared.planHash,
+      acknowledgements,
+      title: 'Fixture card (rebuilt)',
+    })
+    if (!result.ok) throw new Error(result.message)
+
+    expect(writeRebuiltCard).toHaveBeenCalledTimes(1)
+    const created = tables.cards.find((row) => row.id === result.cardId)!
+    expect(created.rebuild_provenance).not.toBeNull()
+    expect(created.status).toBe('draft')
+    expect(created.share_enabled).toBe(false)
+    expect(created.share_token).not.toBe('token-source')
+    expect(tables.revisions.filter((row) => row.card_id === result.cardId)).toHaveLength(1)
+  })
+})
+
+describe('the source is re-derived at write time, not trusted from the review', () => {
+  it('creates nothing when the source revision was deleted after the review', async () => {
+    const { cardId, revisionId } = seedAlphaCard()
+    const { prepared, acknowledgements } = await answerEverything(cardId, revisionId)
+
+    // The race the RPC closes: validated, then deleted, then submitted.
+    tables.cards = tables.cards.filter((row) => row.id !== cardId)
+    tables.revisions = tables.revisions.filter((row) => row.card_id !== cardId)
+    const cardsBefore = tables.cards.length
+
+    const result = await createRebuiltCard({
+      cardId,
+      revisionId,
+      selection: prepared.selection,
+      planHash: prepared.planHash,
+      acknowledgements,
+      title: 'Fixture card (rebuilt)',
+    })
+
+    expect(result.ok).toBe(false)
+    expect(tables.cards).toHaveLength(cardsBefore)
+  })
+
+  it('creates nothing when the payload disagrees with the stored revision', () => {
+    const { cardId, revisionId } = seedAlphaCard()
+    const revision = tables.revisions.find((row) => row.id === revisionId)!
+    const cardsBefore = tables.cards.length
+
+    // Driven at the writer directly, because that is the only place this can be observed: the
+    // application re-reads the revision immediately before writing, so a change to the database
+    // moves the payload with it. The RPC's predicate is what protects the window *after* that read
+    // — a source edited or deleted between validation and insert — and it compares the payload it
+    // was handed against the row as it stands at insert time.
+    const stale = tables.createRebuiltCard({
+      ownerId: OWNER,
+      sourceCardId: cardId,
+      sourceRevisionId: revisionId,
+      sourceSnapshotHash: '0'.repeat(64),
+      sourceReleaseBundleId: revision.release_bundle_id,
+      title: 'Fixture card (rebuilt)',
+      physicianName: null,
+      procedureCode: FIXTURE_PROCEDURE_CODE,
+      scenarioId: FIXTURE_SCENARIO_ID,
+      builderInputs: {},
+      cardSnapshot: {},
+      snapshotHash: 'a'.repeat(64),
+      engineVersion: 'fixture',
+      catalogImportId: 'fixture',
+      rebuildProvenance: { version: 'ip-cards-rebuild/1' },
+    })
+
+    expect(stale).toEqual({ ok: false, code: 'source_moved' })
+    expect(tables.cards).toHaveLength(cardsBefore)
+  })
+
+  it('creates nothing when the owner named by the payload does not own the revision', () => {
+    const { cardId, revisionId } = seedAlphaCard()
+    const revision = tables.revisions.find((row) => row.id === revisionId)!
+    const cardsBefore = tables.cards.length
+
+    const foreign = tables.createRebuiltCard({
+      ownerId: OTHER_USER,
+      sourceCardId: cardId,
+      sourceRevisionId: revisionId,
+      sourceSnapshotHash: revision.snapshot_hash,
+      sourceReleaseBundleId: revision.release_bundle_id,
+      title: 'Fixture card (rebuilt)',
+      physicianName: null,
+      procedureCode: FIXTURE_PROCEDURE_CODE,
+      scenarioId: FIXTURE_SCENARIO_ID,
+      builderInputs: {},
+      cardSnapshot: {},
+      snapshotHash: 'a'.repeat(64),
+      engineVersion: 'fixture',
+      catalogImportId: 'fixture',
+      rebuildProvenance: { version: 'ip-cards-rebuild/1' },
+    })
+
+    expect(foreign).toEqual({ ok: false, code: 'source_moved' })
+    expect(tables.cards).toHaveLength(cardsBefore)
+  })
+
+  it('leaves the rebuilt card standing as a tombstone when the source is deleted afterwards', async () => {
+    const { cardId, revisionId } = seedAlphaCard()
+    const { prepared, acknowledgements } = await answerEverything(cardId, revisionId)
+    const result = await createRebuiltCard({
+      cardId,
+      revisionId,
+      selection: prepared.selection,
+      planHash: prepared.planHash,
+      acknowledgements,
+      title: 'Fixture card (rebuilt)',
+    })
+    if (!result.ok) throw new Error(result.message)
+
+    // Deleting the source is still allowed, and takes its revisions with it under the cascade.
+    await tables.client().from('ip_user_preference_cards').delete().eq('id', cardId)
+    expect(tables.revisions.filter((row) => row.card_id === cardId)).toHaveLength(0)
+
+    // The rebuilt card survives with its provenance intact: hash-addressed evidence of a review,
+    // pointing at ids that no longer resolve. That is the documented policy, not an accident.
+    const rebuilt = tables.cards.find((row) => row.id === result.cardId)!
+    const provenance = rebuilt.rebuild_provenance as Record<string, unknown>
+    expect(provenance.sourceCardId).toBe(cardId)
+    expect(provenance.sourceRevisionId).toBe(revisionId)
+    expect(provenance.sourceSnapshotHash).toEqual(expect.any(String))
   })
 })
 

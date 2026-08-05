@@ -73,6 +73,7 @@ const parameterizedMessages: Record<string, string[]> = {
   // Named `requirements` deliberately: `sampleValue` decides numeric-versus-string from the
   // argument name, and a plural arm handed the string 'sample' does not select.
   'rebuild.carriedCount': ['requirements'],
+  'rebuild.targetReadiness': ['readiness'],
   'revisions.revisionNumber': ['number'],
   'sets.memberCount': ['count'],
   'sets.roleCount': ['count'],

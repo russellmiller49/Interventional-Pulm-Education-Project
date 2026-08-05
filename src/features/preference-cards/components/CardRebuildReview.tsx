@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
+import { CardReconciliationView } from './CardReconciliationView'
 import { allowedAcknowledgements } from '../domain/card-rebuild-plan'
 import type { RebuildDecision, RebuildRequirementDecision } from '../domain/card-rebuild-plan'
 import type { CardRebuildPreparation } from '../server/rebuild-card'
@@ -283,6 +284,77 @@ export function CardRebuildReview({
         <p className="rounded-2xl border border-border bg-muted/40 p-4 text-sm leading-6 text-foreground">
           {t('rebuild.sourceUnchangedNotice')}
         </p>
+      </Section>
+
+      {/*
+        The comparisons themselves, not their digests. The hashes above identify what was compared
+        and are written into the card's provenance as evidence of it; a physician cannot read a
+        digest, so the structured reconciliation is rendered here through the same component the
+        read-only review page uses. Two presentations of one comparison would be two answers.
+      */}
+      <Section title={t('rebuild.comparisonsHeading')} help={t('rebuild.comparisonsHelp')}>
+        <CardReconciliationView
+          reconciliation={{
+            record: preparation.record,
+            source: {
+              cardId: plan.source.cardId,
+              revisionId: plan.source.revisionId,
+              revisionNumber: plan.source.revisionNumber,
+              procedureCode: revision.procedureCode,
+              scenarioId: revision.scenarioId,
+              snapshotHash: plan.source.snapshotHash,
+              snapshotIntegrityHash: plan.source.snapshotIntegrityHash,
+              resolvedContentHash: plan.source.resolvedContentHash,
+              printDocumentHash: revision.printDocumentHash,
+              releaseBundleId: plan.source.releaseBundleId,
+              catalogReleaseId: plan.source.catalogReleaseId,
+              updatedAt: revision.createdAt,
+            },
+            operational: preparation.operational,
+            release: preparation.release,
+          }}
+        />
+      </Section>
+
+      <Section
+        title={t('rebuild.targetResolutionHeading')}
+        help={t('rebuild.targetResolutionHelp')}
+      >
+        {plan.targetResolution.ok ? (
+          <>
+            <p className="rounded-2xl border border-border bg-muted/40 p-4 text-sm leading-6 text-foreground">
+              {t('rebuild.targetReadiness', {
+                readiness: plan.targetResolution.readinessState ?? 'unknown',
+              })}
+            </p>
+            {plan.targetResolution.warnings.length > 0 ? (
+              <ul className="space-y-2">
+                {plan.targetResolution.warnings.map((warning) => (
+                  <li
+                    key={`${warning.code}-${warning.sourceId ?? ''}`}
+                    className="rounded-2xl border border-border px-4 py-3"
+                  >
+                    <p className="text-sm font-semibold text-foreground">
+                      {t(`rebuild.targetWarning.${warning.severity}`)}
+                    </p>
+                    <p className="mt-0.5 font-mono text-xs text-muted-foreground">
+                      {warning.code}
+                      {warning.sourceId ? ` · ${warning.sourceId}` : ''}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="rounded-2xl border border-border bg-muted/40 p-4 text-sm leading-6 text-foreground">
+                {t('rebuild.targetNoWarnings')}
+              </p>
+            )}
+          </>
+        ) : (
+          <p className="rounded-2xl border border-destructive/60 bg-destructive/5 p-4 text-sm leading-6 text-foreground">
+            {t('rebuild.targetUnresolvable')}
+          </p>
+        )}
       </Section>
 
       <Section title={t('rebuild.decisionsHeading')} help={t('rebuild.decisionsHelp')}>
