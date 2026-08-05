@@ -45,7 +45,12 @@ export function VvRecirculationPanel({ state }: { readonly state: EcmoSimulation
       supportMode="vv"
       clinicalQuestion="Displayed circuit flow is high and every circuit pressure is where it has been all shift, yet the patient is losing ground. Is the number on the screen measuring the support this patient is receiving?"
       boundaries={[
-        'The quantity that governs this case is authored by it: fixed at and below the speed the case opened at, and widening when the circuit is asked for more, with a floor it never falls below however far the speed is reduced. Cannula position, cannula design, volume state and native venous return — the things that actually set it at a bedside — are not modeled here at all.',
+        // Names what the simulation omits, and nothing about how the modeled quantity moves. The
+        // frame renders these boundaries on every step, so the earlier wording — which said the
+        // governing quantity widens when the circuit is asked for more — stated the mechanism and
+        // the direction of the harmful reflex before the learner had chosen. Both are still said in
+        // full, inside the commitment gate below.
+        'One authored quantity governs this case. Cannula position, cannula design, volume state and native venous return — the things that actually set it at a bedside — are not modeled here at all.',
         'The systemic venous value the drainage saturation is compared against is a modeled estimate, not a device reading. The direction this simulation moves its teaching coefficient in is an educational statement, not a bedside equation.',
         'Telling the two possible readings of a drainage-limb saturation apart at a bedside takes cannula and imaging data this console cannot supply. No share threshold, flow target, or cannula position is taught in this simulation.',
       ]}
