@@ -112,6 +112,17 @@ export class FakePreferenceCardTables {
   revisions: FakeRevisionRow[] = []
   currentUserId: string | null = null
   writes: FakeWrite[] = []
+  /**
+   * Which database role the next table statement runs as.
+   *
+   * `20260804013000_add_ip_preference_card_rebuild_provenance.sql` makes provenance authenticity a
+   * role question rather than a shape question: the `authenticated` insert policy forbids a non-null
+   * `rebuild_provenance`, and a `before insert` trigger forbids it for every role except the one
+   * dedicated writer — which is what stops `service_role`, whose `bypassrls` makes policies
+   * irrelevant to it. Modelling the role here is the only way a test can tell those three cases
+   * apart, and the earlier fake could not, which is why it accepted a forged insert.
+   */
+  role: 'authenticated' | 'service_role' | 'ip_preference_card_rebuild_writer' = 'authenticated'
 
   private nextCardSequence = 1
   private nextRevisionSequence = 1
@@ -122,6 +133,7 @@ export class FakePreferenceCardTables {
     this.revisions = []
     this.writes = []
     this.currentUserId = userId
+    this.role = 'authenticated'
     this.nextCardSequence = 1
     this.nextRevisionSequence = 1
     this.clock = 0
@@ -289,6 +301,17 @@ export class FakePreferenceCardTables {
           if (name !== 'ip_user_preference_cards') {
             throw new Error(`Nothing may insert into ${name} directly; the trigger appends there.`)
           }
+          // `ip_user_preference_cards_insert_own` (RLS, `authenticated`) and
+          // `private.ip_reject_untrusted_preference_card_rebuild_provenance` (trigger, every role).
+          if (
+            payload.rebuild_provenance !== undefined &&
+            payload.rebuild_provenance !== null &&
+            this.role !== 'ip_preference_card_rebuild_writer'
+          ) {
+            throw new Error(
+              'rebuild_provenance may only be written by public.ip_create_rebuilt_preference_card',
+            )
+          }
           const created = this.now()
           // Column defaults last, exactly as the table applies them: the insert payload has
           // no business naming an id, a share token, or a timestamp, and does not.
@@ -346,6 +369,76 @@ export class FakePreferenceCardTables {
       },
     }
     return builder
+  }
+
+  /**
+   * `public.ip_create_rebuilt_preference_card`, modelled.
+   *
+   * The load-bearing part is the recheck: the migration performs it *in the same statement* as the
+   * insert, so a source deleted between review and submission produces no card rather than a row
+   * citing a revision that is gone. Here the same predicate runs immediately before the insert and
+   * the write is refused when it does not match.
+   */
+  createRebuiltCard(write: {
+    ownerId: string
+    sourceCardId: string
+    sourceRevisionId: string
+    sourceSnapshotHash: string
+    sourceReleaseBundleId: string | null
+    title: string
+    physicianName: string | null
+    procedureCode: string
+    scenarioId: string
+    builderInputs: unknown
+    cardSnapshot: unknown
+    snapshotHash: string
+    engineVersion: string
+    catalogImportId: string
+    rebuildProvenance: unknown
+  }): { ok: true; cardId: string } | { ok: false; code: 'source_moved' } {
+    const revision = this.revisions.find(
+      (row) =>
+        row.id === write.sourceRevisionId &&
+        row.card_id === write.sourceCardId &&
+        row.user_id === write.ownerId &&
+        row.snapshot_hash === write.sourceSnapshotHash &&
+        (row.release_bundle_id ?? null) === (write.sourceReleaseBundleId ?? null),
+    )
+    const source = revision
+      ? this.cards.find((row) => row.id === revision.card_id && row.user_id === revision.user_id)
+      : undefined
+    if (!revision || !source) return { ok: false, code: 'source_moved' }
+
+    const previousRole = this.role
+    this.role = 'ip_preference_card_rebuild_writer'
+    try {
+      this.writes.push({ table: 'ip_user_preference_cards', operation: 'insert' })
+      const created = this.now()
+      const row: FakeCardRow = {
+        id: this.cardId(this.nextCardSequence++),
+        user_id: write.ownerId,
+        title: write.title,
+        physician_name: write.physicianName,
+        procedure_code: write.procedureCode,
+        scenario_id: write.scenarioId,
+        status: 'draft',
+        builder_inputs: write.builderInputs,
+        card_snapshot: write.cardSnapshot,
+        snapshot_hash: write.snapshotHash,
+        engine_version: write.engineVersion,
+        catalog_import_id: write.catalogImportId,
+        share_enabled: false,
+        share_token: `token-${this.nextCardSequence}`,
+        rebuild_provenance: write.rebuildProvenance,
+        created_at: created,
+        updated_at: created,
+      }
+      this.cards.push(row)
+      this.appendRevision(row, null)
+      return { ok: true, cardId: row.id }
+    } finally {
+      this.role = previousRole
+    }
   }
 
   /** The object `supabaseServer()` resolves to in these tests. */
