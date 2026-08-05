@@ -25,6 +25,10 @@ import { readFile } from 'node:fs/promises'
  */
 export const RESOLVER_SOURCE_FILES = [
   'src/features/preference-cards/domain/resolve-card.ts',
+  // Steps 1-4 of resolution — composition, modifier actions, rescue modules — lifted out of
+  // `resolve-card.ts` so the rebuild planner and the resolver share one implementation instead of
+  // two approximations. It is resolver source wherever it lives, so it belongs in this digest.
+  'src/features/preference-cards/domain/effective-slots.ts',
   'src/features/preference-cards/domain/card-hashes.ts',
   'src/features/preference-cards/domain/expand-recipe-composition.ts',
   'src/features/preference-cards/domain/evaluate-compatibility.ts',
