@@ -775,7 +775,7 @@ describe('M4 — the clinical invariants survive the visuals', () => {
       view.container.querySelector('[data-high-power-boundary="flow-unchanged"]'),
     ).not.toBeNull()
     expect(
-      view.container.querySelector('[data-high-power-boundary="haemolysis"]')?.textContent,
+      view.container.querySelector('[data-high-power-boundary="hemolysis"]')?.textContent,
     ).toMatch(/not modeled/i)
     expect(
       view.container.querySelector('[data-high-power-boundary="obstruction"]')?.textContent,
@@ -814,8 +814,8 @@ describe('M4 — the clinical invariants survive the visuals', () => {
       'explanation',
       openedState(integration).metrics,
     )
-    expect(view.container.querySelector('[data-phenotype-limit]')?.textContent).toMatch(
-      /do not select a device/i,
+    expect(view.container.querySelector('[data-congestion-limit]')?.textContent).toMatch(
+      /does not .*select a support device/i,
     )
     // Gas exchange is named as information this simulation does not establish.
     expect(view.container.textContent).toMatch(/models no gas-exchange failure state/i)

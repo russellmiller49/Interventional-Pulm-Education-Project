@@ -301,6 +301,116 @@ function reviewCell(
     }
   }
 
+  /*
+   * Wording the correction pass removed. Each of these is a claim that renders perfectly and reads
+   * wrongly, so the only thing that can catch a regression is a string check against the panel.
+   */
+  const forbiddenWording: readonly (readonly [RegExp, string])[] = [
+    [/exactly as it is on the real controller/i, 'claims to reproduce a real controller display'],
+    [/Oxygen-delivery evidence/i, 'the oxygen rung is not labelled as not directly calculated'],
+    [/fills three of (?:them|the four)/i, 'claims the simulation fills three ladder rungs'],
+    [
+      /how much of the cycle the native ventricle/i,
+      'describes pulsatility index as a fraction of the cycle',
+    ],
+    [
+      /what is left of the native beat/i,
+      'describes pulsatility index as the remaining native beat',
+    ],
+    [/work the impeller is doing on the blood/i, 'reduces pump power to work done on the blood'],
+    [
+      /moves with the volume rather than with the pressure/i,
+      'claims pump power moves with volume rather than pressure',
+    ],
+    [/an expected state rather than a fault/i, 'dismisses persistent aortic-valve closure'],
+    [
+      /short of blood, not short of setting/i,
+      'states the old Impella suction aphorism instead of inlet conditions',
+    ],
+    [
+      /(?:reduces|lowers) (?:the )?delivered flow/i,
+      'claims the high-power pattern lowers delivery',
+    ],
+    [/no modeled obstruction/i, 'implies an unmodeled obstruction was examined and excluded'],
+    // Targeted at the *right-atrial-to-wedge* ratio specifically. A bare 0.6 or 0.85 is a
+    // legitimate live reading elsewhere — the pulmonary pulsatility ratio sits at 0.6 in one of the
+    // authored states — so the check is the ratio's own name beside classification language. The
+    // removed numeric comparisons are pinned in the test suite, against the source rather than the
+    // rendered text.
+    [
+      /(?:right atrial to wedge|right-atrial-to-wedge|RAP\s*\/\s*PCWP)[^.]{0,90}\b(?:dominant|phenotype|congestion pattern|classif\w+)\b/i,
+      'uses the right-atrial-to-wedge ratio as a phenotype or congestion boundary',
+    ],
+    [/haemoglobin|haemolysis|hypovolaemia|programme|behaviour|characterised/i, 'non-US spelling'],
+    [
+      /\b(?:recommended|preferred|indicated) (?:device|pathway|support)\b/i,
+      'presents a pathway as recommended, preferred or indicated',
+    ],
+    // Affirmative only. The panels say "not a measurement of oxygen delivery" on purpose.
+    [
+      /\bis a (?:measurement|calculation) of (?:whole-body )?oxygen delivery/i,
+      'describes the modeled saturation as an oxygen-delivery measurement',
+    ],
+  ]
+  for (const [pattern, reason] of forbiddenWording) {
+    if (pattern.test(text)) flag(where, reason)
+  }
+
+  /*
+   * The congestion framework has to arrive with its provenance attached. A classification with no
+   * visible framework name, no source kind and no evidence id is an unsourced claim wearing a label.
+   */
+  if (contract.sectionId === 'mcs-device-selection-integration') {
+    if (!markup.includes('data-congestion-framework')) {
+      flag(where, 'the congestion classification renders without a named framework')
+    }
+    if (!markup.includes('data-framework-label')) {
+      flag(where, 'the congestion framework has no visible label')
+    }
+    if (!/data-source-kind="expert-consensus-statement"/.test(markup)) {
+      flag(where, 'the ACC framework renders without a visible consensus source kind')
+    }
+    if (!markup.includes('data-congestion-operationalization')) {
+      flag(where, 'the ACC grid renders without its educational-operationalization label')
+    }
+    if (!markup.includes('data-evidence-ids')) {
+      flag(where, 'the congestion material renders with no evidence id')
+    }
+    if (!/data-congestion-limit/.test(markup)) {
+      flag(where, 'the congestion pattern renders without its does-not-establish boundary')
+    }
+    if (stage !== 'orientation') {
+      if (!/data-source-kind="single-center-retrospective-cohort"/.test(markup)) {
+        flag(where, 'the Ortega cohort thresholds render without cohort-specific labelling')
+      }
+      if (!markup.includes('data-ortega-euvolemic-note')) {
+        flag(where, 'the cohort “euvolemic” label renders without its qualification')
+      }
+      if (!markup.includes('data-no-averaged-threshold')) {
+        flag(where, 'the two threshold sets render without the no-averaging statement')
+      }
+      for (const invented of ['13.5 mm Hg', '15.5 mm Hg', '16.5 mm Hg']) {
+        if (text.includes(invented)) {
+          flag(where, `an averaged or reconciled threshold appears: ${invented}`)
+        }
+      }
+    }
+    // "Euvolemic" belongs only inside the cohort disclosure, never as the primary output.
+    const primaryBlock = markup.slice(
+      markup.indexOf('data-panel-section="integration-congestion"'),
+      markup.indexOf('data-panel-section="integration-congestion-evidence"'),
+    )
+    if (/euvolemic/i.test(textOf(primaryBlock))) {
+      flag(where, 'the primary ACC output uses the word euvolemic')
+    }
+  }
+
+  if (contract.sectionId === 'lvad-alarms-emergencies') {
+    if (/data-alarm-domain="preload-rv"[^>]*data-domain-modeled-state="present"/.test(markup)) {
+      flag(where, 'the preload/right-sided domain is marked a positive finding')
+    }
+  }
+
   if (contract.sectionId === 'impella-unloading-placement' && stage !== 'orientation') {
     const hasClarification = markup.includes(
       'data-measurement-clarification="clarification.mcs.impella-cp-flow-measurands"',
