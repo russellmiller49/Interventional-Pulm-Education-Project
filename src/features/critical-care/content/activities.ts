@@ -233,18 +233,17 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
   // within (module, stage) and `validateCriticalCareLearningPathways` requires the pathway to visit
   // a stage in that order, so the ordinals and the prerequisite chain move with the pathway rather
   // than contradicting it. Ids, routes, storage keys, and progress payloads are untouched.
-  {
-    sourceId: 'catheter-advancement',
-    difficulty: 'foundation',
-    curriculumStage: 'foundation',
-    stageOrder: 2,
-    title: 'Advance the PAC by waveform',
-    competencyIds: ['signal-validation', 'critical-care-safety'],
-    pathwayIds: ['shock-and-perfusion'],
-    prerequisiteActivityIds: ['hemodynamics:learn:waveform-interpretation'],
-    evidenceIds: [...hemodynamicsEvidence, 'monitor-workflow-supplied'],
-    estimatedMinutes: 15,
-  },
+  //
+  // H1.1: seed position is itself curriculum. `getCriticalCareRecommendations` breaks ties on
+  // catalog index, and the shared Critical Care hub asks it for one start with no module or
+  // pathway preference — so whichever hemodynamics Learn seed is written first is what the hub
+  // calls "Start here". H0/H1 moved the ordinals and the pathway but left `catheter-advancement`
+  // sitting at index 0, and the hub went on recommending catheter manipulation as a novice's first
+  // activity while the module's own runway opened on the pressure system. This array is therefore
+  // kept in the pathway's order (`content/learningPathways`, icu-hemodynamics), not in
+  // (stage, stageOrder) order: the pathway deliberately interleaves stages — a mechanism station
+  // teaches the normal reference before the second foundation station advances a catheter against
+  // it. `hub-pathway-start-alignment.test.ts` pins the two together so neither can drift alone.
   {
     sourceId: 'pressure-system',
     difficulty: 'foundation',
@@ -271,6 +270,18 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
     prerequisiteActivityIds: ['hemodynamics:learn:pressure-system'],
     evidenceIds: [...hemodynamicsEvidence, 'clinical-hemodynamics-waveforms'],
     estimatedMinutes: 18,
+  },
+  {
+    sourceId: 'catheter-advancement',
+    difficulty: 'foundation',
+    curriculumStage: 'foundation',
+    stageOrder: 2,
+    title: 'Advance the PAC by waveform',
+    competencyIds: ['signal-validation', 'critical-care-safety'],
+    pathwayIds: ['shock-and-perfusion'],
+    prerequisiteActivityIds: ['hemodynamics:learn:waveform-interpretation'],
+    evidenceIds: [...hemodynamicsEvidence, 'monitor-workflow-supplied'],
+    estimatedMinutes: 15,
   },
   {
     sourceId: 'pawp-capture',
