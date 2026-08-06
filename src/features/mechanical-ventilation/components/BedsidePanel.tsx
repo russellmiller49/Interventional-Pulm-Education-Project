@@ -2,6 +2,7 @@
 
 import { ClipboardPlus, HeartPulse, Stethoscope, TestTube2, UserRound } from 'lucide-react'
 
+import { classifyCaseFindings } from '../content/caseFindings'
 import type { VentilationCaseDefinition, VentilationSimulationState } from '../engine'
 import styles from './mechanical-ventilation.module.css'
 
@@ -49,6 +50,10 @@ export function BedsidePanel({
 }) {
   const assessed = state.experience === 'learn' || performed(state, 'assess-patient')
   const circuitInspected = state.experience === 'learn' || performed(state, 'inspect-circuit')
+  const classified = classifyCaseFindings(definition.id)
+  const presentFindings = classified.filter((finding) => finding.kind === 'present')
+  const differentialFindings = classified.filter((finding) => finding.kind === 'byBranch')
+  const conditionalFindings = classified.filter((finding) => finding.kind === 'onAction')
   const repeatAbgOrdered = state.lastAbgAt !== null
   const repeatAbgReady = repeatAbgOrdered && state.simulationTime >= state.lastAbgAt!
   const mean = state.patient.hemodynamics.mapMmHg
@@ -123,14 +128,48 @@ export function BedsidePanel({
           </summary>
           <div>
             {assessed ? (
-              <ul>
-                {definition.visibleFindings.map((finding) => (
-                  <li key={finding}>{finding}</li>
-                ))}
-                {bedsideFindings(state).map((finding) => (
-                  <li key={finding}>{finding}</li>
-                ))}
-              </ul>
+              <>
+                {/*
+                 * What this patient has, kept apart from what they might have had. The authored
+                 * list mixes the two — for MV-13 it names all three candidate causes at once, each
+                 * tagged with its own internal branch name — so listing it flat asserted three
+                 * mutually exclusive findings as present simultaneously.
+                 */}
+                <ul>
+                  {presentFindings.map((finding) => (
+                    <li key={finding.text}>{finding.text}</li>
+                  ))}
+                  {bedsideFindings(state).map((finding) => (
+                    <li key={finding}>{finding}</li>
+                  ))}
+                </ul>
+                {differentialFindings.length ? (
+                  <>
+                    <p>
+                      <strong>Still open:</strong> one of these fits this patient. The examination
+                      and the traces are what separate them.
+                    </p>
+                    <ul>
+                      {differentialFindings.map((finding) => (
+                        <li key={finding.text}>{finding.text}</li>
+                      ))}
+                    </ul>
+                  </>
+                ) : null}
+                {conditionalFindings.length ? (
+                  <>
+                    <p>
+                      <strong>Only if you look:</strong> these appear in response to something you
+                      have not done yet.
+                    </p>
+                    <ul>
+                      {conditionalFindings.map((finding) => (
+                        <li key={finding.text}>{finding.text}</li>
+                      ))}
+                    </ul>
+                  </>
+                ) : null}
+              </>
             ) : (
               <p>Repeat a bedside evaluation to reveal dynamic examination findings.</p>
             )}

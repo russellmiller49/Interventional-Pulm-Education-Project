@@ -20,6 +20,7 @@ import {
   Stethoscope,
 } from 'lucide-react'
 
+import { branchResolution } from '../content/caseFindings'
 import {
   selectCaseOutcome,
   type CaseOutcome,
@@ -37,6 +38,133 @@ const categoryLabels: Record<InterventionCategory, string> = {
   medication: 'Medication / whole-patient treatment',
   procedure: 'Emergency recognition',
   'comfort-communication': 'Communication & comfort',
+}
+
+/**
+ * Whether the development calibration block renders.
+ *
+ * The only authorization mechanism this feature has is the build environment, and it already uses
+ * it for the lab's calibration panel. Exported so a test can pin the predicate rather than reaching
+ * for `process.env` — the same shape the CRRT module settled on.
+ */
+export function shouldRenderVentilationCalibration(environment: string | undefined): boolean {
+  return environment === 'development'
+}
+
+/**
+ * What this patient turned out to have, and why the learner's action did or did not move anything.
+ *
+ * The debrief used to answer this with `{state.seed} · {state.branch}` — a reproducibility key and
+ * an internal token — printed under "Educator mechanics and hidden risk record" and expanded by
+ * default in Learn. For eleven of the fifteen cases that token is a one-element constant and
+ * therefore a bare answer key: MV-11 printed `rise-time-mismatch`, which is precisely the mechanism
+ * the learner was being asked to name.
+ *
+ * The branch is still the lookup key here; it is never the output. Cases whose branches do not
+ * change what is wrong with the patient have nothing to resolve, and this renders nothing for them.
+ */
+function CaseCauseDebrief({
+  state,
+  definition,
+}: {
+  state: VentilationSimulationState
+  definition: VentilationCaseDefinition
+}) {
+  const resolution = branchResolution(definition.id, state.branch)
+  if (!resolution) return null
+
+  const performedEffects = new Set<string>(
+    state.interventions.flatMap((record) => {
+      const effectId = definition.interventions.find(
+        (item) => item.id === record.interventionId,
+      )?.effectId
+      return effectId ? [String(effectId)] : []
+    }),
+  )
+  /*
+   * The cardiogenic-oscillation version is settled at the trigger setting rather than by any
+   * intervention, so an empty effect list means "there was no action that would have done it" and
+   * the explanation reads from the mechanism instead.
+   */
+  const addressed =
+    resolution.resolvedByEffectIds.length > 0 &&
+    resolution.resolvedByEffectIds.some((effectId) => performedEffects.has(effectId))
+
+  return (
+    <div className={styles.debriefColumns}>
+      <div>
+        <h4>What this patient turned out to have</h4>
+        <p>{resolution.cause}</p>
+      </div>
+      <div>
+        <h4>{addressed ? 'Why the numbers moved' : 'Why the numbers stayed where they were'}</h4>
+        <p>{addressed ? resolution.whenAddressed : resolution.whenNotAddressed}</p>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * The hidden-model record, behind the build-environment gate the lab's calibration panel already
+ * uses. Seed, branch, risk accumulators, and buffer depths are development instrumentation; they
+ * were never learner content, and in Learn the block that held them opened by default.
+ */
+function VentilationCaseCalibration({
+  state,
+  definition,
+}: {
+  state: VentilationSimulationState
+  definition: VentilationCaseDefinition
+}) {
+  if (!shouldRenderVentilationCalibration(process.env.NODE_ENV)) return null
+  return (
+    <details className={styles.educatorDebrief} data-testid="mv-development-calibration">
+      <summary>Development calibration — hidden model state</summary>
+      <dl>
+        <div>
+          <dt>Case variation / response path</dt>
+          <dd>
+            {state.seed} · {state.branch}
+          </dd>
+        </div>
+        <div>
+          <dt>Plateau burden</dt>
+          <dd>{state.risk.highPlateau.toFixed(1)} s</dd>
+        </div>
+        <div>
+          <dt>Stacked-volume burden</dt>
+          <dd>{state.risk.stackedVolume.toFixed(1)} s</dd>
+        </div>
+        <div>
+          <dt>Hyperinflation burden</dt>
+          <dd>{state.risk.dynamicHyperinflation.toFixed(1)} s</dd>
+        </div>
+        <div>
+          <dt>Hypoxemia burden</dt>
+          <dd>{state.risk.hypoxemia.toFixed(1)} s</dd>
+        </div>
+        <div>
+          <dt>Hypotension burden</dt>
+          <dd>{state.risk.hypotension.toFixed(1)} s</dd>
+        </div>
+        <div>
+          <dt>Sedation burden</dt>
+          <dd>{state.risk.excessiveSedation.toFixed(1)} s</dd>
+        </div>
+        <div>
+          <dt>Buffer</dt>
+          <dd>{state.waveforms.length} / 600 samples</dd>
+        </div>
+      </dl>
+      {definition.deviceAdaptationNotes.length ? (
+        <ul>
+          {definition.deviceAdaptationNotes.map((note) => (
+            <li key={note}>{note}</li>
+          ))}
+        </ul>
+      ) : null}
+    </details>
+  )
 }
 
 function workflowStepState(
@@ -491,52 +619,8 @@ export function CaseWorkflow({
                 </div>
               </div>
             ) : null}
-            <details className={styles.educatorDebrief} open={state.experience === 'learn'}>
-              <summary>Educator mechanics and hidden risk record</summary>
-              <dl>
-                <div>
-                  <dt>Case variation / response path</dt>
-                  <dd>
-                    {state.seed} · {state.branch}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Plateau burden</dt>
-                  <dd>{state.risk.highPlateau.toFixed(1)} s</dd>
-                </div>
-                <div>
-                  <dt>Stacked-volume burden</dt>
-                  <dd>{state.risk.stackedVolume.toFixed(1)} s</dd>
-                </div>
-                <div>
-                  <dt>Hyperinflation burden</dt>
-                  <dd>{state.risk.dynamicHyperinflation.toFixed(1)} s</dd>
-                </div>
-                <div>
-                  <dt>Hypoxemia burden</dt>
-                  <dd>{state.risk.hypoxemia.toFixed(1)} s</dd>
-                </div>
-                <div>
-                  <dt>Hypotension burden</dt>
-                  <dd>{state.risk.hypotension.toFixed(1)} s</dd>
-                </div>
-                <div>
-                  <dt>Sedation burden</dt>
-                  <dd>{state.risk.excessiveSedation.toFixed(1)} s</dd>
-                </div>
-                <div>
-                  <dt>Buffer</dt>
-                  <dd>{state.waveforms.length} / 600 samples</dd>
-                </div>
-              </dl>
-              {definition.deviceAdaptationNotes.length ? (
-                <ul>
-                  {definition.deviceAdaptationNotes.map((note) => (
-                    <li key={note}>{note}</li>
-                  ))}
-                </ul>
-              ) : null}
-            </details>
+            <CaseCauseDebrief state={state} definition={definition} />
+            <VentilationCaseCalibration state={state} definition={definition} />
           </div>
         )}
       </section>

@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Section 6 — Oxygenation: action and consequence.
+ * Section 7 — Oxygenation: action and consequence.
  *
  * The lesson asks the learner to predict a benefit *and* a safety consequence, so the panel is
  * built as two facing columns over the same trend window: what the action is meant to buy, and

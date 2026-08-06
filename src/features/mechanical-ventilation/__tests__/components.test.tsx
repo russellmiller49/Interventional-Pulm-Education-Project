@@ -373,8 +373,14 @@ describe('multi-device mechanical ventilation learner interface', () => {
 
   it('leaves the plateau unmarked once the patient is passive', () => {
     const state = createInitialSimulationState('MV-01', 'learn')
+    /*
+     * Passivity has to be taken out of the trace, not only out of the derived flag: the console
+     * asks whether the patient has been quiet across the recent waveform buffer, because the
+     * engine's instantaneous flag flips several times inside a single occlusion.
+     */
     const passive = {
       ...state,
+      waveforms: state.waveforms.map((sample) => ({ ...sample, pmusCmH2O: 0 })),
       measurements: {
         ...state.measurements,
         plateauIsInterpretable: true,
@@ -385,15 +391,36 @@ describe('multi-device mechanical ventilation learner interface', () => {
     expect(screen.queryByText(/not interpretable/)).not.toBeInTheDocument()
   })
 
-  it('labels the pressure components while the trace is held still by an occlusion', () => {
+  /**
+   * The defect this replaced: the trace annotation called the plateau "elastic load only" and the
+   * readout beside it, in the same render, said the plateau was not interpretable. Every case that
+   * teaches the split has a patient who is pulling, so this was the normal state of the lesson.
+   */
+  it('does not call the plateau an elastic load while the patient is pulling', () => {
     render(<MechanicalVentilationLab />)
     fireEvent.click(screen.getByRole('button', { name: 'Tools' }))
     const consoleRegion = screen.getByRole('region', { name: /C6 functional training facsimile/i })
     fireEvent.click(within(consoleRegion).getByRole('button', { name: /Inspiratory hold/i }))
 
-    // Rendered on the trace and again in the strip's text alternative.
+    expect(within(consoleRegion).queryByText(/elastic load only/i)).not.toBeInTheDocument()
     expect(
-      within(consoleRegion).getAllByText(/Pplateau .* elastic load only/i).length,
+      within(consoleRegion).getAllByText(/depressed by the patient’s own effort/i).length,
     ).toBeGreaterThan(0)
+  })
+
+  it('labels the pressure components once the patient is passive', () => {
+    const state = createInitialSimulationState('MV-01', 'learn')
+    const passive = {
+      ...state,
+      paused: true,
+      waveforms: state.waveforms.map((sample) => ({ ...sample, pmusCmH2O: 0 })),
+      measurements: {
+        ...state.measurements,
+        plateauIsInterpretable: true,
+        endInspiratoryEffortCmH2O: 0,
+      },
+    }
+    render(<MechanicalVentilatorConsole state={passive} dispatch={jest.fn()} controlsEnabled />)
+    expect(screen.getAllByText(/Pplateau .* elastic load only/i).length).toBeGreaterThan(0)
   })
 })

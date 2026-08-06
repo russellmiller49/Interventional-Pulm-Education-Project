@@ -35,6 +35,28 @@ function stateFor(caseId: string, seconds = 12): VentilationSimulationState {
   return state
 }
 
+/**
+ * A genuinely passive patient, for the surfaces that read a plateau.
+ *
+ * Zeroing `plateauIsInterpretable` alone is not enough and should not be: the panels ask whether
+ * the patient has been quiet *across the recent trace*, because the engine's instantaneous flag
+ * flips several times inside one occlusion as the neural breath re-fires under the closed valves.
+ * A state whose waveform buffer is full of 8 cmH₂O efforts is not a passive patient however the
+ * derived flag is set, so the effort has to come out of the trace too.
+ */
+function passiveState(state: VentilationSimulationState): VentilationSimulationState {
+  return {
+    ...state,
+    waveforms: state.waveforms.map((sample) => ({ ...sample, pmusCmH2O: 0 })),
+    measurements: {
+      ...state.measurements,
+      plateauIsInterpretable: true,
+      endInspiratoryEffortCmH2O: 0,
+      plateauPressureCmH2O: state.measurements.relaxedPlateauPressureCmH2O,
+    },
+  }
+}
+
 describe('mechanical-ventilation teaching panels', () => {
   it('declares panels only for sections that exist in the pathway', () => {
     const lessonIds = new Set(mechanicalVentilationLessons.map((lesson) => lesson.id))
@@ -90,7 +112,8 @@ describe('mechanical-ventilation teaching panels', () => {
 
   describe('pressure decomposition', () => {
     it('splits peak pressure into baseline, elastic, and resistive components that sum back', () => {
-      const state = stateFor('MV-13')
+      // Only a passive patient's plateau can carry the split, so the arithmetic is pinned there.
+      const state = passiveState(stateFor('MV-13'))
       render(
         <MechanicalVentilationTeachingPanel lessonId="mechanics-load-and-pressure" state={state} />,
       )
@@ -101,6 +124,51 @@ describe('mechanical-ventilation teaching panels', () => {
       const [peak, baseline, , , elastic, resistive] = numbers
       expect(peak).toBeGreaterThan(0)
       expect(baseline + elastic + resistive).toBeCloseTo(peak, 1)
+    })
+
+    /**
+     * The defect this replaced: the figure drew an Elastic band of 3 cmH₂O and a Resistive band of
+     * 33.5 against a relaxed elastic pressure of 18, and the validity note directly underneath said
+     * the plateau could not be read. The split and its own withdrawal in one render.
+     */
+    it('withholds the elastic and resistive split while the patient is pulling', () => {
+      const active = stateFor('MV-13')
+      render(
+        <MechanicalVentilationTeachingPanel
+          lessonId="mechanics-load-and-pressure"
+          state={active}
+        />,
+      )
+
+      const label =
+        screen.getByRole('img', { name: /Peak airway pressure/i }).getAttribute('aria-label') ?? ''
+      expect(label).toMatch(/not separated into elastic and resistive components/i)
+      expect(label).not.toMatch(/an elastic component of/i)
+      expect(label).not.toMatch(/a resistive component of/i)
+
+      // And the readout that states the split as a number is withheld with it.
+      const readouts = screen.getByLabelText('Live derived mechanics')
+      const gap = within(readouts).getByText('Peak − plateau').closest('div')
+      expect(gap).toHaveAttribute('data-state', 'unavailable')
+      expect(gap?.textContent).toMatch(/Not separable while the patient is pulling/i)
+    })
+
+    it('states the split again once the patient is passive', () => {
+      const passive = passiveState(stateFor('MV-13'))
+      render(
+        <MechanicalVentilationTeachingPanel
+          lessonId="mechanics-load-and-pressure"
+          state={passive}
+        />,
+      )
+      const label =
+        screen.getByRole('img', { name: /Peak airway pressure/i }).getAttribute('aria-label') ?? ''
+      expect(label).toMatch(/an elastic component of/i)
+      const readouts = screen.getByLabelText('Live derived mechanics')
+      expect(within(readouts).getByText('Peak − plateau').closest('div')).not.toHaveAttribute(
+        'data-state',
+        'unavailable',
+      )
     })
 
     it('explains a component only after the learner selects it', () => {
@@ -375,15 +443,7 @@ describe('mechanical-ventilation teaching panels', () => {
     })
 
     it('confirms the conditions instead when the patient is passive', () => {
-      const passive = stateFor('MV-01', 14)
-      const relaxed: VentilationSimulationState = {
-        ...passive,
-        measurements: {
-          ...passive.measurements,
-          plateauIsInterpretable: true,
-          endInspiratoryEffortCmH2O: 0,
-        },
-      }
+      const relaxed = passiveState(stateFor('MV-01', 14))
       render(
         <MechanicalVentilationTeachingPanel
           lessonId="mechanics-load-and-pressure"
@@ -401,7 +461,29 @@ describe('mechanical-ventilation teaching panels', () => {
           state={stateFor('MV-01', 14)}
         />,
       )
-      expect(screen.getByText(/does not report mechanics alone/i)).toBeInTheDocument()
+      expect(screen.getByText(/the split is withheld rather than drawn/i)).toBeInTheDocument()
+    })
+
+    /**
+     * The flag the engine publishes is instantaneous, and the patient keeps breathing through an
+     * occlusion — on MV-13 it reads false, then true from t+0.3, false again at t+2.6, true at
+     * t+3.3, with the displayed plateau swinging 17.4 → 9.4 → 17.3. Gating each render on it would
+     * make the interpretation flicker three times per hold, so the verdict is taken over a window.
+     */
+    it('holds one verdict across an occlusion rather than following the instantaneous flag', () => {
+      const active = stateFor('MV-13')
+      const quietInstant: VentilationSimulationState = {
+        ...active,
+        measurements: { ...active.measurements, plateauIsInterpretable: true },
+      }
+      render(
+        <MechanicalVentilationTeachingPanel
+          lessonId="mechanics-load-and-pressure"
+          state={quietInstant}
+        />,
+      )
+      // The trace still carries the patient's effort, so the verdict does not flip with the flag.
+      expect(screen.getByText('Plateau not interpretable')).toBeInTheDocument()
     })
   })
 

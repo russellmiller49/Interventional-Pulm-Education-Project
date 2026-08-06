@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Section 8 — Safety, reassessment, and the whole patient.
+ * Section 9 — Safety, reassessment, and the whole patient.
  *
  * The lesson's first objective is recognizing when the patient needs a bedside assessment rather
  * than another look at the screen. So this panel deliberately does not decide urgency from
