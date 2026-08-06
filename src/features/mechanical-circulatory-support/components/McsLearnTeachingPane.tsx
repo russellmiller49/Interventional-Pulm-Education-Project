@@ -3,40 +3,51 @@
 import type { ReactNode } from 'react'
 import { AlertTriangle } from 'lucide-react'
 
+import { mcsLearnControls, mcsSurfaceTarget, type McsSectionLearningContract } from '../content'
+import type { McsDerivedMetrics, McsSimulationState } from '../engine'
+import { McsTeachingPanel } from './teaching/McsTeachingPanel'
 import {
-  MCS_MODEL_BOUNDARY_REFERENCES,
-  mcsLearnControls,
-  mcsSurfaceTarget,
-  type McsSectionLearningContract,
-} from '../content'
-import type { McsSimulationState } from '../engine'
+  mcsMechanismDisclosed,
+  mcsRevealStageAtLeast,
+  type McsRevealStage,
+} from './teaching/revealStage'
 import styles from './mechanical-circulatory-support.module.css'
 
 /**
  * Pane two: what the learner is looking at, what it can establish, and what it cannot.
  *
- * Section-specific by construction — every sentence here comes from that section's contract, so
- * there is no generic fallback to fall back to. It also carries the live numeric readout, which is
- * why the primary pane can be a single surface without the complementary half disappearing: an
- * anatomy-led section still shows its flow lines, in words, here.
+ * The pane is a shell now rather than the teaching itself. Its middle is the section's own live
+ * panel — nine bespoke figures, one per section, each computed from the state on screen — and what
+ * remains around that panel is the authored prose the panel organizes rather than replaces.
+ *
+ * The prose is disclosed in stages, and the stage is the single reason this component takes a
+ * `reveal` rather than a phase. Before the learner has committed an answer the pane shows what is
+ * physically on the screen and withholds the mechanism, because on several sections the sentence
+ * that explains the figure *is* the prediction. Withholding means not rendering: none of the gated
+ * blocks below exists in the DOM before its stage, so nothing is recoverable by turning off a
+ * stylesheet.
  *
  * The two foundation sections additionally carry the common model and the standardized pathway
- * cards, unchanged, through `foundationMaterial`. Those are the teaching for those sections rather
- * than an aside beside it, so they belong in this pane and not below the workspace.
+ * cards, unchanged, through `foundationMaterial`.
  */
 export function McsLearnTeachingPane({
   contract,
   state,
+  reveal,
+  beforeMetrics,
   foundationMaterial,
 }: {
   contract: McsSectionLearningContract
   state: McsSimulationState
+  reveal: McsRevealStage
+  /** The action-entry snapshot the section captured. Read-only here; never re-captured. */
+  beforeMetrics: McsDerivedMetrics | null
   foundationMaterial?: ReactNode
 }) {
   const target = mcsSurfaceTarget(contract.primarySurface, contract.primaryTarget)
   const control = contract.targetControl ? mcsLearnControls[contract.targetControl] : undefined
-  const metrics = state.metrics
-  const impella = state.device.kind === 'impella'
+  const disclosed = mcsMechanismDisclosed(reveal)
+  const explaining = mcsRevealStageAtLeast(reveal, 'explanation')
 
   return (
     <section className={styles.learnTeachingPane} aria-labelledby="mcs-learn-teaching-heading">
@@ -57,94 +68,86 @@ export function McsLearnTeachingPane({
         </p>
       </div>
 
-      <div className={styles.teachingBlock} data-live-readout>
-        <h3>The three flow lines, right now</h3>
-        <dl className={styles.liveFlowLines}>
-          <div>
-            <dt>Native contribution</dt>
-            <dd>{metrics.nativeFlowLMin.toFixed(1)} L/min</dd>
-          </div>
-          <div>
-            <dt>Displayed device contribution</dt>
-            <dd>
-              {state.device.kind === 'iabp'
-                ? 'None reported — this pathway moves no blood of its own'
-                : impella
-                  ? `Left ${metrics.leftDeviceFlowLMin.toFixed(1)} L/min into the aorta · right ${metrics.rightDeviceFlowLMin.toFixed(1)} L/min into the lung`
-                  : `${metrics.deviceFlowLMin.toFixed(1)} L/min (an estimate, not a probe reading)`}
-            </dd>
-          </div>
-          <div>
-            <dt>Effective systemic delivery</dt>
-            <dd>{metrics.effectiveSystemicFlowLMin.toFixed(1)} L/min</dd>
-          </div>
-        </dl>
-        <p>{contract.teaching.flowAccountNote}</p>
+      <div
+        className={styles.teachingPanelHost}
+        data-mcs-teaching-panel-host
+        data-reveal-stage={reveal}
+      >
+        <McsTeachingPanel
+          contract={contract}
+          state={state}
+          reveal={reveal}
+          beforeMetrics={beforeMetrics}
+        />
       </div>
 
-      <div className={styles.teachingBlock}>
-        <h3>What the requested action does to the model</h3>
-        <p>{contract.teaching.howTheActionAffectsTheModel}</p>
-        {control ? (
-          <p className={styles.teachingAside}>
-            <strong>{control.label}</strong> changes {control.changes.toLowerCase()}{' '}
-            {control.doesNotGuarantee}
+      {/*
+       * Everything below sits after the shared answer verdict. The flow-account note and the
+       * action's effect on the model both name the mechanism, and on the sections whose prediction
+       * is about the mechanism they would answer the question before it was asked.
+       */}
+      {disclosed ? (
+        <div className={styles.teachingBlock}>
+          <h3>What the requested action does to the model</h3>
+          <p>{contract.teaching.howTheActionAffectsTheModel}</p>
+          <p>{contract.teaching.flowAccountNote}</p>
+          {control ? (
+            <p className={styles.teachingAside}>
+              <strong>{control.label}</strong> changes {control.changes.toLowerCase()}{' '}
+              {control.doesNotGuarantee}
+            </p>
+          ) : (
+            <p className={styles.teachingAside}>
+              <strong>No adjustment is expected here.</strong> {contract.noActionExplanation}
+            </p>
+          )}
+        </div>
+      ) : null}
+
+      {disclosed ? (
+        <div className={styles.teachingBlock}>
+          <h3>What this can and cannot establish</h3>
+          <p>
+            <strong>Establishes:</strong> {contract.whatThisEstablishes}
           </p>
-        ) : (
-          <p className={styles.teachingAside}>
-            <strong>No adjustment is expected here.</strong> {contract.noActionExplanation}
+          <p data-does-not-establish>
+            <strong>Does not establish:</strong> {contract.whatThisDoesNotEstablish}
           </p>
-        )}
-      </div>
+          <p className={styles.teachingWarning} data-common-misinterpretation>
+            <AlertTriangle aria-hidden="true" />
+            <span>
+              <strong>One way this is read wrongly:</strong> {contract.commonMisinterpretation}
+            </span>
+          </p>
+        </div>
+      ) : null}
 
-      <div className={styles.teachingBlock} data-causal-ladder-summary>
-        <h3>Pressure, flow, oxygen delivery, organ response</h3>
-        <ol className={styles.ladderList}>
-          <li>
-            <strong>Pressure</strong>
-            <span>{contract.pressureLevelExplanation}</span>
-          </li>
-          <li>
-            <strong>Flow</strong>
-            <span>{contract.flowLevelExplanation}</span>
-          </li>
-          <li>
-            <strong>Oxygen delivery</strong>
-            <span>{contract.oxygenDeliveryExplanation}</span>
-          </li>
-          <li>
-            <strong>Organ response</strong>
-            <span>{contract.organResponseExplanation}</span>
-          </li>
-        </ol>
-      </div>
-
-      <div className={styles.teachingBlock}>
-        <h3>What this can and cannot establish</h3>
-        <p>
-          <strong>Establishes:</strong> {contract.whatThisEstablishes}
-        </p>
-        <p data-does-not-establish>
-          <strong>Does not establish:</strong> {contract.whatThisDoesNotEstablish}
-        </p>
-        <p className={styles.teachingWarning} data-common-misinterpretation>
-          <AlertTriangle aria-hidden="true" />
-          <span>
-            <strong>One way this is read wrongly:</strong> {contract.commonMisinterpretation}
-          </span>
-        </p>
-      </div>
-
-      {contract.sectionId === 'impella-suction-purge-rv' ||
-      contract.sectionId === 'mcs-device-selection-integration' ? (
-        <p className={styles.teachingAside} data-papi-limitation>
-          <strong>A limit of this model.</strong>{' '}
-          {MCS_MODEL_BOUNDARY_REFERENCES.rvLimitedPapiMax.statement}{' '}
-          {MCS_MODEL_BOUNDARY_REFERENCES.rvLimitedPapiMax.appliesWhen} The pulmonary pulsatility
-          ratio moves only weakly with right-sided support here, and mostly through right atrial
-          pressure, so it must not be used on its own to judge whether right-sided support is
-          working.
-        </p>
+      {/*
+       * The full causal account belongs to Explain. It is the section's answer written out, so it
+       * arrives once the learner has been through the observation rather than beside the question.
+       */}
+      {explaining ? (
+        <div className={styles.teachingBlock} data-causal-ladder-summary>
+          <h3>Pressure, flow, oxygen delivery, organ response</h3>
+          <ol className={styles.ladderList}>
+            <li>
+              <strong>Pressure</strong>
+              <span>{contract.pressureLevelExplanation}</span>
+            </li>
+            <li>
+              <strong>Flow</strong>
+              <span>{contract.flowLevelExplanation}</span>
+            </li>
+            <li>
+              <strong>Oxygen delivery</strong>
+              <span>{contract.oxygenDeliveryExplanation}</span>
+            </li>
+            <li>
+              <strong>Organ response</strong>
+              <span>{contract.organResponseExplanation}</span>
+            </li>
+          </ol>
+        </div>
       ) : null}
 
       {/*

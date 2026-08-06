@@ -1,4 +1,6 @@
 export * from './commonModel'
+export * from './congestionEvidence'
+export * from './congestionProfile'
 export * from './curriculum'
 export * from './derivedValueGuides'
 export * from './deviceProfiles'
