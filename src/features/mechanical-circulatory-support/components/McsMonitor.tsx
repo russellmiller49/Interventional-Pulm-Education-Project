@@ -1,10 +1,32 @@
 'use client'
 
-import { interpretMcsCardiacPowerOutput, interpretMcsPapi, mcsDerivedValueGuides } from '../content'
+import {
+  interpretMcsCardiacPowerOutput,
+  interpretMcsPapi,
+  mcsDerivedValueGuides,
+  mcsMonitorTargets,
+  type McsMonitorTargetId,
+} from '../content'
 import type { McsSimulationState, McsWaveformSample } from '../engine'
 import styles from './mechanical-circulatory-support.module.css'
 
 type WaveformField = 'ecgMv' | 'arterialMmHg' | 'papMmHg' | 'cvpMmHg'
+
+/**
+ * Marks a region as one of the authored monitor targets a Learn section can lead with.
+ *
+ * A target may cover more than one node — the flow account is three tiles, the filling pressures are
+ * a tile and two traces — so the highlight is applied per element rather than by wrapping, which
+ * keeps the monitor's grid exactly as it was.
+ */
+function target(
+  id: McsMonitorTargetId,
+  highlighted: McsMonitorTargetId | undefined,
+): { 'data-monitor-target': McsMonitorTargetId; 'data-monitor-highlighted'?: 'true' } {
+  return highlighted === id
+    ? { 'data-monitor-target': id, 'data-monitor-highlighted': 'true' }
+    : { 'data-monitor-target': id }
+}
 
 function linePath(
   values: readonly { x: number; y: number }[],
@@ -35,6 +57,7 @@ function WaveStrip({
   minimum,
   maximum,
   color,
+  targetProps,
 }: {
   samples: readonly McsWaveformSample[]
   field: WaveformField
@@ -43,6 +66,7 @@ function WaveStrip({
   minimum: number
   maximum: number
   color: string
+  targetProps?: Record<string, string>
 }) {
   const latest = samples.at(-1)?.[field] ?? 0
   const path = linePath(
@@ -53,7 +77,7 @@ function WaveStrip({
     maximum,
   )
   return (
-    <div className={styles.waveStrip}>
+    <div className={styles.waveStrip} {...targetProps}>
       <div>
         <strong style={{ color }}>{label}</strong>
         <span>
@@ -127,7 +151,13 @@ function PressureVolumeLoop({ samples }: { samples: readonly McsWaveformSample[]
   )
 }
 
-function TrendPlot({ state }: { state: McsSimulationState }) {
+function TrendPlot({
+  state,
+  targetProps,
+}: {
+  state: McsSimulationState
+  targetProps?: Record<string, string>
+}) {
   const recent = state.trends.slice(-160)
   const mapPath = linePath(
     recent.map((sample) => ({ x: sample.time, y: sample.mapMmHg })),
@@ -158,7 +188,7 @@ function TrendPlot({ state }: { state: McsSimulationState }) {
     150,
   )
   return (
-    <figure className={styles.trendFigure}>
+    <figure className={styles.trendFigure} {...targetProps}>
       <figcaption>
         <strong>Response trend</strong>
         <span>
@@ -209,12 +239,16 @@ function metric(value: number, digits = 0) {
 export function McsMonitor({
   state,
   revealCausality = true,
+  highlightTarget,
 }: {
   state: McsSimulationState
   revealCausality?: boolean
+  /** The authored Learn target to emphasize, when this monitor is a section's primary surface. */
+  highlightTarget?: McsMonitorTargetId
 }) {
   const metrics = state.metrics
   const activeAlarms = state.alarms.filter((alarm) => alarm.active)
+  const highlighted = highlightTarget ? mcsMonitorTargets[highlightTarget] : undefined
   const impellaMode =
     state.device.kind === 'impella'
       ? state.device.left.enabled && state.device.right.enabled
@@ -237,7 +271,17 @@ export function McsMonitor({
         </div>
         <time>{state.timeSeconds.toFixed(1)} s</time>
       </header>
-      <div className={styles.alarmBar} role="status" aria-live="polite">
+      {highlighted ? (
+        <p className={styles.surfaceHighlightNote} data-monitor-highlight-note>
+          <strong>Look here now:</strong> {highlighted.label}. {highlighted.textEquivalent}
+        </p>
+      ) : null}
+      <div
+        className={styles.alarmBar}
+        role="status"
+        aria-live="polite"
+        {...target('monitor:alarms', highlightTarget)}
+      >
         {activeAlarms.length === 0 ? (
           <span data-priority="clear">NO ACTIVE MODEL ALARMS</span>
         ) : (
@@ -267,6 +311,7 @@ export function McsMonitor({
             minimum={0}
             maximum={180}
             color="#ff7185"
+            targetProps={target('monitor:arterial-waveform', highlightTarget)}
           />
           <WaveStrip
             samples={state.waveforms}
@@ -276,6 +321,7 @@ export function McsMonitor({
             minimum={0}
             maximum={80}
             color="#f5c867"
+            targetProps={target('monitor:filling-pressures', highlightTarget)}
           />
           <WaveStrip
             samples={state.waveforms}
@@ -285,40 +331,41 @@ export function McsMonitor({
             minimum={0}
             maximum={35}
             color="#69c9ff"
+            targetProps={target('monitor:filling-pressures', highlightTarget)}
           />
         </div>
         <div className={styles.metricGrid} aria-label="Current hemodynamic values" role="group">
-          <div data-color="native">
+          <div data-color="native" {...target('monitor:flow-account', highlightTarget)}>
             <span>NATIVE FLOW</span>
             <strong>{metric(metrics.nativeFlowLMin, 1)}</strong>
             <small>L/min</small>
           </div>
           {state.device.kind === 'impella' ? (
             <>
-              <div data-color="left-device">
+              <div data-color="left-device" {...target('monitor:flow-account', highlightTarget)}>
                 <span>LV PUMP FLOW</span>
                 <strong>{metric(metrics.leftDeviceFlowLMin, 1)}</strong>
                 <small>L/min · systemic assist</small>
               </div>
-              <div data-color="right-device">
+              <div data-color="right-device" {...target('monitor:flow-account', highlightTarget)}>
                 <span>RP PUMP FLOW</span>
                 <strong>{metric(metrics.rightDeviceFlowLMin, 1)}</strong>
                 <small>L/min · pulmonary delivery</small>
               </div>
-              <div>
+              <div {...target('monitor:flow-account', highlightTarget)}>
                 <span>RP − LEFT PUMP</span>
                 <strong>{metric(metrics.pumpBalanceLMin, 1)}</strong>
                 <small>L/min · reconcile with filling</small>
               </div>
             </>
           ) : (
-            <div data-color="device">
+            <div data-color="device" {...target('monitor:flow-account', highlightTarget)}>
               <span>DEVICE FLOW</span>
               <strong>{metric(metrics.deviceFlowLMin, 1)}</strong>
               <small>L/min</small>
             </div>
           )}
-          <div data-color="effective">
+          <div data-color="effective" {...target('monitor:flow-account', highlightTarget)}>
             <span>EFFECTIVE FLOW</span>
             <strong>{metric(metrics.effectiveSystemicFlowLMin, 1)}</strong>
             <small>L/min</small>
@@ -330,14 +377,14 @@ export function McsMonitor({
             </strong>
             <small>mm Hg</small>
           </div>
-          <div>
+          <div {...target('monitor:filling-pressures', highlightTarget)}>
             <span>RAP / PCWP</span>
             <strong>
               {metric(metrics.rapMmHg)} / {metric(metrics.pcwpMmHg)}
             </strong>
             <small>mm Hg</small>
           </div>
-          <div>
+          <div {...target('monitor:filling-pressures', highlightTarget)}>
             <span>PAP</span>
             <strong>
               {metric(metrics.papSystolicMmHg)} / {metric(metrics.papDiastolicMmHg)}
@@ -371,7 +418,7 @@ export function McsMonitor({
             </div>
           ) : null}
           {metrics.pumpPowerW !== null ? (
-            <div data-color="device">
+            <div data-color="device" {...target('monitor:power-pulsatility', highlightTarget)}>
               <span>POWER / PI</span>
               <strong>
                 {metric(metrics.pumpPowerW, 1)} / {metric(metrics.pulsatilityIndex ?? 0, 1)}
@@ -409,7 +456,7 @@ export function McsMonitor({
       </section>
       <div className={styles.chartGrid}>
         <PressureVolumeLoop samples={state.waveforms} />
-        <TrendPlot state={state} />
+        <TrendPlot state={state} targetProps={target('monitor:response-trend', highlightTarget)} />
       </div>
       <p className={styles.causalCallout}>
         <strong>{revealCausality ? 'Why the display changed:' : 'Challenge mode:'}</strong>{' '}
@@ -418,7 +465,7 @@ export function McsMonitor({
           : 'Causal coaching is withheld until you complete the reassessment.'}
       </p>
       {revealCausality && activeAlarms.length > 0 ? (
-        <div className={styles.alarmExplanations}>
+        <div className={styles.alarmExplanations} {...target('monitor:alarms', highlightTarget)}>
           {activeAlarms.map((alarm) => (
             <p key={alarm.id}>
               <strong>{alarm.label}:</strong> {alarm.explanation}

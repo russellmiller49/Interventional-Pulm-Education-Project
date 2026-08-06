@@ -2,6 +2,7 @@
 
 import type { Dispatch } from 'react'
 
+import type { McsLearnControlId } from '../content/learnControls'
 import {
   isMcsActionIdPermitted,
   type ImpellaDeviceState,
@@ -11,6 +12,28 @@ import {
   type McsSimulationState,
 } from '../engine'
 import styles from './mechanical-circulatory-support.module.css'
+
+/**
+ * Tags one control with the id a Learn section can point at.
+ *
+ * The registry in `content/learnControls.ts` is the authoring side of this; these attributes are the
+ * rendering side. A section that names a control the learner cannot find has failed to give an
+ * instruction, so the pairing is asserted by test rather than left to review.
+ */
+function controlProps(
+  id: McsLearnControlId,
+  highlighted: McsLearnControlId | undefined,
+): { 'data-mcs-control': McsLearnControlId; 'data-mcs-control-highlighted'?: 'true' } {
+  return highlighted === id
+    ? { 'data-mcs-control': id, 'data-mcs-control-highlighted': 'true' }
+    : { 'data-mcs-control': id }
+}
+
+/** The registry id for each patient-condition slider that a Learn section may point at. */
+const patientControlIds: Partial<Record<McsPatientControl, McsLearnControlId>> = {
+  rightVentricularContractility: 'control:patient-rv-contractility',
+  systemicVascularResistanceDynSecCm5: 'control:patient-svr',
+}
 
 const patientControls: readonly {
   id: McsPatientControl
@@ -74,6 +97,8 @@ function RangeControl({
   unit,
   disabled,
   onChange,
+  controlId,
+  highlightControl,
 }: {
   label: string
   value: number
@@ -83,9 +108,14 @@ function RangeControl({
   unit: string
   disabled: boolean
   onChange: (value: number) => void
+  controlId?: McsLearnControlId
+  highlightControl?: McsLearnControlId
 }) {
   return (
-    <label className={styles.rangeControl}>
+    <label
+      className={styles.rangeControl}
+      {...(controlId ? controlProps(controlId, highlightControl) : {})}
+    >
       <span>
         <strong>{label}</strong>
         <output>
@@ -111,11 +141,13 @@ function ImpellaPumpControls({
   device,
   disabled,
   dispatch,
+  highlightControl,
 }: {
   side: ImpellaSide
   device: ImpellaDeviceState
   disabled: (actionId: string) => boolean
   dispatch: Dispatch<McsAction>
+  highlightControl?: McsLearnControlId
 }) {
   const pump = device[side]
   const sideLabel =
@@ -169,11 +201,18 @@ function ImpellaPumpControls({
           step={1}
           unit="P-level"
           disabled={disabled(actionId('performanceLevel'))}
+          controlId={side === 'left' ? 'control:impella-left-level' : undefined}
+          highlightControl={highlightControl}
           onChange={(value) =>
             dispatch({ type: 'SET_IMPELLA_CONTROL', side, control: 'performanceLevel', value })
           }
         />
-        <label className={styles.selectControl}>
+        <label
+          className={styles.selectControl}
+          {...(side === 'left'
+            ? controlProps('control:impella-left-position', highlightControl)
+            : {})}
+        >
           <span>Placement state</span>
           <select
             value={pump.position}
@@ -221,9 +260,12 @@ function ImpellaPumpControls({
 export function McsControls({
   state,
   dispatch,
+  highlightControl,
 }: {
   state: McsSimulationState
   dispatch: Dispatch<McsAction>
+  /** The one control the current Learn phase is asking for, if any. */
+  highlightControl?: McsLearnControlId
 }) {
   const unavailable = (actionId: string) => !isMcsActionIdPermitted(state, actionId)
   const patientActionId = (control: McsPatientControl) =>
@@ -258,6 +300,8 @@ export function McsControls({
               step={control.step}
               unit={control.unit}
               disabled={unavailable(patientActionId(control.id))}
+              controlId={patientControlIds[control.id]}
+              highlightControl={highlightControl}
               onChange={(value) =>
                 dispatch({ type: 'SET_PATIENT_CONTROL', control: control.id, value })
               }
@@ -343,7 +387,10 @@ export function McsControls({
                 <option value={3}>1:3</option>
               </select>
             </label>
-            <label className={styles.selectControl}>
+            <label
+              className={styles.selectControl}
+              {...controlProps('control:iabp-trigger', highlightControl)}
+            >
               <span>Trigger source</span>
               <select
                 value={state.device.triggerSource}
@@ -369,6 +416,8 @@ export function McsControls({
               step={5}
               unit="ms"
               disabled={unavailable('iabp:set-inflation')}
+              controlId="control:iabp-inflation"
+              highlightControl={highlightControl}
               onChange={(value) =>
                 dispatch({ type: 'SET_IABP_CONTROL', control: 'inflationOffsetMs', value })
               }
@@ -418,7 +467,10 @@ export function McsControls({
                   <option value="55">Impella 5.5</option>
                 </select>
               </label>
-              <label className={styles.selectControl}>
+              <label
+                className={styles.selectControl}
+                {...controlProps('control:impella-right-enable', highlightControl)}
+              >
                 <span>Right-sided support</span>
                 <select
                   aria-label="Right-sided Impella configuration"
@@ -448,6 +500,7 @@ export function McsControls({
                 device={state.device}
                 disabled={unavailable}
                 dispatch={dispatch}
+                highlightControl={highlightControl}
               />
             ) : null}
             {state.device.right.enabled ? (
@@ -456,6 +509,7 @@ export function McsControls({
                 device={state.device}
                 disabled={unavailable}
                 dispatch={dispatch}
+                highlightControl={highlightControl}
               />
             ) : null}
           </div>
@@ -527,7 +581,10 @@ export function McsControls({
                 <small>Selected device fault</small>
               </span>
             </label>
-            <label className={styles.checkControl}>
+            <label
+              className={styles.checkControl}
+              {...controlProps('control:lvad-thrombosis', highlightControl)}
+            >
               <input
                 type="checkbox"
                 checked={state.device.suspectedPumpThrombosis}

@@ -13,7 +13,6 @@ import {
   type CriticalCareActivityPhase,
 } from '@/features/learning-module/activity'
 import { ActivityShell } from '@/features/learning-module/components/ActivityShell'
-import { ChoiceReasoningFeedback } from '@/features/learning-module/components/ChoiceReasoningFeedback'
 import { DebriefPanel } from '@/features/learning-module/components/DebriefPanel'
 import { EvidenceDrawer } from '@/features/learning-module/components/EvidenceDrawer'
 import { PatientContextBar } from '@/features/learning-module/components/PatientContextBar'
@@ -28,6 +27,7 @@ import { Link, useRouter } from '@/i18n/navigation'
 
 import {
   MCS_ANALYTICS_MODULE_ID,
+  MCS_LEARN_PHASES,
   MCS_MODEL_BOUNDARIES,
   mcsCapstoneScenarios,
   mcsDerivedValueGuides,
@@ -35,7 +35,10 @@ import {
   mcsLessonTransferByLessonId,
   mcsLessons,
   mcsPracticeScenarios,
+  mcsSectionLearningContractById,
   mcsSources,
+  type McsLearnPhase,
+  type McsSectionLearningContract,
 } from '../content'
 import {
   createDefaultMcsProgress,
@@ -47,6 +50,7 @@ import {
   recordMcsLessonComplete,
   recordMcsScenarioResult,
   writeMcsProgress,
+  type McsAction,
   type McsDeviceKind,
   type McsModuleSection,
   type McsProgressV1,
@@ -56,6 +60,7 @@ import { McsAnatomy3D } from './McsAnatomy3D'
 import { McsCaseWorkflow } from './McsCaseWorkflow'
 import { McsCommonModel } from './McsCommonModel'
 import { McsControls } from './McsControls'
+import { McsLearnSection } from './McsLearnSection'
 import { McsModuleFrame } from './McsModuleFrame'
 import { McsMonitor } from './McsMonitor'
 import { McsSourcesPanel } from './McsSourcesPanel'
@@ -127,38 +132,19 @@ function deviceSetting(state: McsSimulationState): string {
   return `${state.device.speedRpm} RPM · ${state.device.powerConnected ? 'power verified' : 'power lost'}`
 }
 
-function guidedSurfaceForActionId(
-  actionId: string | undefined,
-): 'anatomy' | 'monitor' | 'controls' | 'workflow' {
-  if (!actionId) return 'anatomy'
-  if (actionId.startsWith('device:select:')) return 'anatomy'
-  if (actionId.startsWith('inspect:')) return 'monitor'
-  if (actionId === 'team:escalate') return 'workflow'
-  return 'controls'
-}
-
-function learnPhaseForAction(
-  actionId: string | undefined,
-  performed: boolean,
-  transferActive: boolean,
-): CriticalCareActivityPhase {
-  if (transferActive) return 'transfer'
-  if (performed) return 'observe'
-  if (!actionId || actionId.startsWith('inspect:') || actionId.startsWith('device:select:')) {
-    return 'recognize'
-  }
-  return 'act'
-}
-
-function guidedActionLabel(actionId: string): string | null {
-  if (actionId === 'inspect:arterial') return 'Inspect arterial waveform'
-  if (actionId === 'inspect:preload') return 'Inspect filling pressures and RV delivery'
-  if (actionId === 'inspect:device') return 'Inspect device and effective flow'
-  if (actionId === 'team:escalate') return 'Escalate to shock/MCS team'
-  if (actionId === 'device:select:iabp') return 'Select the IABP mechanism'
-  if (actionId === 'device:select:impella') return 'Select the Impella mechanism'
-  if (actionId === 'device:select:lvad') return 'Select the LVAD mechanism'
-  return null
+/**
+ * Opens a Learn section on its authored starting state.
+ *
+ * The section decides the topology and any loading it needs; nothing else changes when a learner
+ * moves between sections, which is what keeps a section from silently resetting state a neighbouring
+ * one had established.
+ */
+function openLearnSection(
+  dispatch: (action: McsAction) => void,
+  contract: McsSectionLearningContract,
+): void {
+  dispatch({ type: 'OPEN_STUDIO', device: contract.startingDevice })
+  for (const action of contract.startingActions) dispatch(action)
 }
 
 export function McsWorkbench({
@@ -198,7 +184,14 @@ export function McsWorkbench({
   const initialCapstoneForDevice = mcsCapstoneScenarios.find(
     (candidate) => candidate.device === activeInitialDevice,
   )
+  const initialContract =
+    section === 'learn' ? mcsSectionLearningContractById.get(initialLesson.id) : undefined
   const [state, dispatch] = useReducer(mcsReducer, undefined, () => {
+    if (initialContract) {
+      let next = createInitialMcsState(section, initialContract.startingDevice)
+      for (const action of initialContract.startingActions) next = mcsReducer(next, action)
+      return next
+    }
     const initial = createInitialMcsState(section, activeInitialDevice)
     const requestedScenario = requestedPractice ?? requestedCapstone
     return requestedScenario
@@ -217,35 +210,16 @@ export function McsWorkbench({
   )
   const [mobileSurface, setMobileSurface] = useState<MobileSurface>('anatomy')
   const [helpVisible, setHelpVisible] = useState(false)
-  const [activeLessonStepIndex, setActiveLessonStepIndex] = useState(0)
-  const [lessonTransferActive, setLessonTransferActive] = useState(false)
-  const [transferChoiceId, setTransferChoiceId] = useState<string | null>(null)
-  const [transferFeedback, setTransferFeedback] = useState<string | null>(null)
+  const [learnPhase, setLearnPhase] = useState<McsLearnPhase>('recognize')
+  const [furthestLearnPhase, setFurthestLearnPhase] = useState<McsLearnPhase>('recognize')
   const [showChallengeFeedback, setShowChallengeFeedback] = useState(false)
   const recordedCompletion = useRef<string | null>(null)
   const recordedSafetyEvents = useRef(new Set<string>())
   const activeHref = `${mechanicalCirculatorySupportNavBase}/${section}`
   const lesson = mcsLessons.find((candidate) => candidate.id === selectedLessonId) ?? mcsLessons[0]
   const lessonTransfer = mcsLessonTransferByLessonId.get(lesson.id)
-  const transferChoice = lessonTransfer?.item.choices.find(
-    (choice) => choice.id === transferChoiceId,
-  )
-  const activeLessonStep =
-    lesson.steps[activeLessonStepIndex] ?? lesson.steps[lesson.steps.length - 1]
-  const activeLessonStepPerformed = activeLessonStep.targetActionId
-    ? state.actionIds.includes(activeLessonStep.targetActionId)
-    : false
-  const transferActionsMet =
-    lessonTransfer?.requiredActionIds.every((id) => state.actionIds.includes(id)) ?? false
-  const guidedSurface =
-    section === 'learn'
-      ? guidedSurfaceForActionId(
-          lessonTransferActive
-            ? (lessonTransfer?.requiredActionIds.find((id) => !state.actionIds.includes(id)) ??
-                lessonTransfer?.requiredActionIds[0])
-            : activeLessonStep.targetActionId,
-        )
-      : 'workflow'
+  const learnContract = mcsSectionLearningContractById.get(lesson.id)
+  const lessonIndex = mcsLessons.findIndex((candidate) => candidate.id === lesson.id)
   const revealCausality =
     section !== 'assess' ||
     showChallengeFeedback ||
@@ -263,13 +237,9 @@ export function McsWorkbench({
       : section === 'practice'
         ? `mcs:practice:${state.scenario?.id ?? `studio-${state.deviceKind}`}`
         : `mcs:assess:${state.scenario?.id ?? selectedActivityId}`
-  const lifecyclePhase =
+  const lifecyclePhase: CriticalCareActivityPhase =
     section === 'learn'
-      ? learnPhaseForAction(
-          activeLessonStep.targetActionId,
-          activeLessonStepPerformed,
-          lessonTransferActive,
-        )
+      ? learnPhase
       : !state.scenario
         ? ('recognize' as const)
         : semanticPhaseByMcsPhase[state.scenarioPhase]
@@ -389,10 +359,16 @@ export function McsWorkbench({
   }
 
   function resetLessonRuntime() {
-    setActiveLessonStepIndex(0)
-    setLessonTransferActive(false)
-    setTransferChoiceId(null)
-    setTransferFeedback(null)
+    setLearnPhase('recognize')
+    setFurthestLearnPhase('recognize')
+  }
+
+  function moveToLearnPhase(next: McsLearnPhase) {
+    setLearnPhase(next)
+    setHelpVisible(false)
+    if (MCS_LEARN_PHASES.indexOf(next) > MCS_LEARN_PHASES.indexOf(furthestLearnPhase)) {
+      setFurthestLearnPhase(next)
+    }
   }
 
   function selectDevice(device: McsDeviceKind) {
@@ -408,41 +384,36 @@ export function McsWorkbench({
     }
     const deviceLesson = mcsLessons.find((candidate) => candidate.device === device)
     if (deviceLesson) {
-      setHelpVisible(false)
-      resetLessonRuntime()
-      setSelectedLessonId(deviceLesson.id)
-      setSelectedActivityId(deviceLesson.id)
-      recordCriticalCareActivitySelection(window.localStorage, {
-        activityId: `mcs:learn:${deviceLesson.id}`,
-        mode: 'guided',
-        query: { lesson: deviceLesson.id },
-        payloadVersion: 'mcs-selection-v1',
-      })
+      chooseLesson(deviceLesson.id)
+      return
     }
     dispatch({ type: 'OPEN_STUDIO', device })
   }
 
   function chooseLesson(id: string) {
-    const next = mcsLessons.find((candidate) => candidate.id === id)
+    const next = mcsSectionLearningContractById.get(id)
     if (!next) return
     setHelpVisible(false)
     resetLessonRuntime()
     setSelectedLessonId(id)
     setSelectedActivityId(id)
-    dispatch({
-      type: 'OPEN_STUDIO',
-      device: next.device === 'shared' ? state.deviceKind : next.device,
-    })
+    openLearnSection(dispatch, next)
     recordCriticalCareActivitySelection(window.localStorage, {
-      activityId: `mcs:learn:${next.id}`,
+      activityId: `mcs:learn:${next.sectionId}`,
       mode: 'guided',
-      query: { lesson: next.id },
+      query: { lesson: next.sectionId },
       payloadVersion: 'mcs-selection-v1',
     })
   }
 
-  function completeLessonFromEvidence() {
-    if (!lessonTransfer || !transferChoiceId || !transferActionsMet) return
+  /**
+   * The only place a Learn section is recorded.
+   *
+   * Called by the section runtime once the whole authored sequence has been worked through — there
+   * is no learner-facing control that records a section, and reaching a phase, committing an answer,
+   * or performing the action alone does not reach here.
+   */
+  function recordSectionWorkedThrough() {
     const device = lesson.device === 'shared' ? state.deviceKind : lesson.device
     setProgress((current) => {
       if (current.completedLessonIds.includes(lesson.id)) return current
@@ -452,52 +423,6 @@ export function McsWorkbench({
     })
     lifecycleAnalytics.recordGoalMet()
     lifecycleAnalytics.recordActivityCompleted()
-  }
-
-  function dispatchGuidedAction(actionId: string) {
-    if (actionId === 'inspect:arterial') dispatch({ type: 'INSPECT', id: 'arterial' })
-    else if (actionId === 'inspect:preload') dispatch({ type: 'INSPECT', id: 'preload' })
-    else if (actionId === 'inspect:device') dispatch({ type: 'INSPECT', id: 'device' })
-    else if (actionId === 'team:escalate') dispatch({ type: 'ESCALATE' })
-    else if (actionId.startsWith('device:select:')) {
-      const device = actionId.replace('device:select:', '') as McsDeviceKind
-      dispatch({ type: 'SELECT_DEVICE', device })
-    }
-  }
-
-  function beginLessonTransfer() {
-    if (!lessonTransfer) return
-    setLessonTransferActive(true)
-    setTransferChoiceId(null)
-    setTransferFeedback(null)
-    dispatch({ type: 'OPEN_STUDIO', device: lessonTransfer.setupDevice })
-    for (const action of lessonTransfer.setupActions) dispatch(action)
-  }
-
-  function advanceLessonStep() {
-    if (activeLessonStepIndex >= lesson.steps.length - 1) {
-      beginLessonTransfer()
-      return
-    }
-    setActiveLessonStepIndex((index) => index + 1)
-    setHelpVisible(false)
-  }
-
-  function checkTransferDecision() {
-    if (!lessonTransfer || !transferChoiceId) {
-      setTransferFeedback('Choose the best response before checking the transfer case.')
-      return
-    }
-    if (!transferActionsMet) {
-      setTransferFeedback(
-        'The reasoning feedback is available below. Try the paired live interaction when you are ready.',
-      )
-      return
-    }
-    setTransferFeedback(
-      'The transfer decision and paired live interaction are now in your history.',
-    )
-    completeLessonFromEvidence()
   }
 
   function choosePractice(id: string) {
@@ -523,25 +448,35 @@ export function McsWorkbench({
   const capstone = mcsCapstoneScenarios.find((scenario) => scenario.device === state.deviceKind)
   const activeTitle =
     section === 'learn' ? lesson.title : (state.scenario?.title ?? 'Mechanism Studio')
+  const learnPhaseInstruction =
+    learnContract && section === 'learn'
+      ? learnPhase === 'recognize'
+        ? learnContract.recognizePrompt
+        : learnPhase === 'predict'
+          ? learnContract.predictionPrompt
+          : learnPhase === 'act'
+            ? learnContract.actionInstruction
+            : learnPhase === 'observe'
+              ? learnContract.observationFocus
+              : learnPhase === 'explain'
+                ? learnContract.reassessmentPrompt
+                : learnContract.transferPrompt
+      : null
   const currentObjective =
     section === 'learn'
-      ? lessonTransferActive
-        ? (lessonTransfer?.title ?? 'Apply the mechanism to a new loading condition.')
-        : activeLessonStep.title
+      ? (learnContract?.clinicalQuestion ?? lesson.summary)
       : (state.scenario?.learningObjectives[0] ??
         'Compare device support with the synchronized patient and circuit response.')
   const requiredAction =
     section === 'learn'
-      ? lessonTransferActive
-        ? (lessonTransfer?.requiredActionLabel ?? 'Complete the transfer interaction.')
-        : activeLessonStep.instruction
+      ? (learnPhaseInstruction ?? lesson.summary)
       : state.scenario
         ? state.scenarioPhase === 'predict'
           ? state.scenario.predictionPrompt
           : state.scenario.guidedPrompt
         : 'Change one bounded variable and reconcile the patient, monitor, and device response.'
   const activeSourceIds =
-    section === 'learn' && lessonTransferActive && lessonTransfer
+    section === 'learn' && learnPhase === 'transfer' && lessonTransfer
       ? [...lesson.sourceIds, ...lessonTransfer.item.evidenceIds]
       : state.scenario
         ? [...state.scenario.sourceIds, ...state.scenario.evidenceSourceIds]
@@ -583,15 +518,13 @@ export function McsWorkbench({
             candidate.id !== lesson.id && !progress.completedLessonIds.includes(candidate.id),
         ) ?? null)
       : null
-  const followingLesson =
-    section === 'learn'
-      ? (mcsLessons[mcsLessons.findIndex((candidate) => candidate.id === lesson.id) + 1] ?? null)
-      : null
+  const previousLesson = section === 'learn' ? (mcsLessons[lessonIndex - 1] ?? null) : null
+  const followingLesson = section === 'learn' ? (mcsLessons[lessonIndex + 1] ?? null) : null
   const lessonComplete = progress.completedLessonIds.includes(lesson.id)
   /*
-   * The common model is rendered on the two foundation sections, above the simulator and therefore
-   * above every device-specific control. The pathway cards join it on the mechanisms section, which
-   * is the one that asks the learner to hold the three mechanisms against each other.
+   * The common model still opens the two foundation sections, and the pathway cards still join it on
+   * the mechanisms section. They now sit in the teaching pane rather than above the simulator,
+   * because that pane is where a learner reads why the surface beside it looks the way it does.
    */
   const showCommonModel = section === 'learn' && mcsFoundationLessonIds.includes(lesson.id)
   const showPathwayCards = section === 'learn' && lesson.id === 'mcs-foundations-mechanisms'
@@ -625,19 +558,18 @@ export function McsWorkbench({
   function selectActivityPhase(phase: CriticalCareActivityPhase) {
     setHelpVisible(false)
     if (section === 'learn') {
-      if (phase === 'transfer') {
-        beginLessonTransfer()
-      } else {
-        setLessonTransferActive(false)
-        const stepIndex =
-          phase === 'recognize' || phase === 'predict'
-            ? 0
-            : phase === 'act'
-              ? Math.min(1, lesson.steps.length - 1)
-              : lesson.steps.length - 1
-        setActiveLessonStepIndex(Math.max(0, stepIndex))
+      /*
+       * Moving back through phases already worked through is free. Jumping ahead is not: the six
+       * phases are the instructional sequence, and skipping into a later one would present an
+       * observation with nothing observed and a transfer with nothing to transfer.
+       */
+      const requested = MCS_LEARN_PHASES.find((candidate) => candidate === phase)
+      if (
+        requested &&
+        MCS_LEARN_PHASES.indexOf(requested) <= MCS_LEARN_PHASES.indexOf(furthestLearnPhase)
+      ) {
+        setLearnPhase(requested)
       }
-      setMobileSurface(phase === 'observe' ? 'monitor' : phase === 'act' ? 'controls' : 'workflow')
       window.requestAnimationFrame(focusRestoredActivity)
       return
     }
@@ -744,17 +676,13 @@ export function McsWorkbench({
             objective={currentObjective}
             requiredAction={requiredAction}
             targets={
-              section === 'learn'
-                ? lessonTransferActive
-                  ? [lessonTransfer?.item.stem ?? requiredAction]
-                  : [activeLessonStep.title]
+              section === 'learn' && learnContract
+                ? [learnContract.learningObjective, learnContract.observationFocus]
                 : (state.scenario?.learningObjectives ?? [])
             }
             hint={
               section === 'learn'
-                ? lessonTransferActive
-                  ? lessonTransfer?.item.explanation
-                  : activeLessonStep.rationale
+                ? (learnContract?.predictionReasoning ?? lesson.summary)
                 : state.scenario?.guidedPrompt
             }
             mode={activityMode}
@@ -900,275 +828,128 @@ export function McsWorkbench({
         }
         viewport={
           <div id="mcs-activity-viewport" className={styles.activityViewport} tabIndex={-1}>
-            {section === 'learn' ? (
-              <section className={styles.lessonRuntime} aria-label="Active guided MCS lesson">
-                <header>
-                  <div>
-                    <span className={styles.kicker}>
-                      {lessonTransferActive
-                        ? 'AUTHORED TRANSFER'
-                        : `STEP ${activeLessonStepIndex + 1} OF ${lesson.steps.length}`}
-                    </span>
-                    <h2>
-                      {lessonTransferActive
-                        ? (lessonTransfer?.title ?? 'Transfer case')
-                        : activeLessonStep.title}
-                    </h2>
-                  </div>
-                  <span className={styles.lessonEvidenceBadge} data-complete={lessonComplete}>
-                    {lessonComplete
-                      ? 'Evidence complete'
-                      : lessonTransferActive
-                        ? 'Transfer evidence required'
-                        : activeLessonStepPerformed
-                          ? 'Interaction observed'
-                          : 'Interaction pending'}
-                  </span>
-                </header>
-
-                {!lessonTransferActive ? (
-                  <>
-                    <nav className={styles.lessonStepRail} aria-label="Lesson interaction steps">
-                      {lesson.steps.map((step, index) => {
-                        const completed = step.targetActionId
-                          ? state.actionIds.includes(step.targetActionId)
-                          : false
-                        return (
-                          <button
-                            type="button"
-                            key={step.id}
-                            aria-current={index === activeLessonStepIndex ? 'step' : undefined}
-                            data-complete={completed}
-                            onClick={() => setActiveLessonStepIndex(index)}
-                          >
-                            <span aria-hidden="true">{completed ? <Check /> : index + 1}</span>
-                            <span className="sr-only">
-                              {completed ? 'Worked through. ' : `Step ${index + 1}. `}
-                            </span>
-                            <small>{step.title}</small>
-                          </button>
-                        )
-                      })}
-                    </nav>
-                    <div className={styles.lessonRuntimeBody}>
-                      <div>
-                        <strong>Do this in the live workbench</strong>
-                        <p>{activeLessonStep.instruction}</p>
-                        <small>
-                          <strong>Why:</strong> {activeLessonStep.rationale}
-                        </small>
-                      </div>
-                      <div className={styles.lessonRuntimeActions}>
-                        {activeLessonStep.targetActionId &&
-                        guidedActionLabel(activeLessonStep.targetActionId) ? (
-                          <button
-                            type="button"
-                            disabled={activeLessonStepPerformed}
-                            onClick={() =>
-                              dispatchGuidedAction(activeLessonStep.targetActionId ?? '')
-                            }
-                          >
-                            {activeLessonStepPerformed ? (
-                              <>
-                                <Check aria-hidden="true" /> Interaction observed
-                              </>
-                            ) : (
-                              guidedActionLabel(activeLessonStep.targetActionId)
-                            )}
-                          </button>
-                        ) : (
-                          <p className={styles.guidedControlPrompt}>
-                            Use the highlighted {guidedSurface} surface to try the authored
-                            interaction, or move to another step and return later.
-                          </p>
-                        )}
-                        <button type="button" onClick={advanceLessonStep}>
-                          {activeLessonStepIndex === lesson.steps.length - 1
-                            ? 'Load transfer patient'
-                            : 'Continue to next step'}
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                ) : lessonTransfer ? (
-                  <div className={styles.transferWorkspace}>
-                    <div className={styles.transferContext}>
-                      {lessonTransfer.contextItems.map((item) => (
-                        <span key={item.label}>
-                          <small>{item.label}</small>
-                          <strong>{item.value}</strong>
-                        </span>
-                      ))}
-                    </div>
-                    <div className={styles.transferGrid}>
-                      <fieldset disabled={lessonComplete}>
-                        <legend>{lessonTransfer.item.stem}</legend>
-                        {lessonTransfer.item.choices.map((choice) => (
-                          <label key={choice.id}>
-                            <input
-                              type="radio"
-                              name={`transfer-${lesson.id}`}
-                              value={choice.id}
-                              checked={transferChoiceId === choice.id}
-                              onChange={() => {
-                                setTransferChoiceId(choice.id)
-                                setTransferFeedback(null)
-                              }}
-                            />
-                            <span>{choice.label}</span>
-                          </label>
-                        ))}
-                      </fieldset>
-                      <div className={styles.transferAction}>
-                        <strong>Required simulator evidence</strong>
-                        <p>{lessonTransfer.requiredActionLabel}</p>
-                        <div>
-                          {lessonTransfer.requiredActionIds
-                            .filter((id) => guidedActionLabel(id))
-                            .map((id) => (
-                              <button
-                                type="button"
-                                key={id}
-                                disabled={state.actionIds.includes(id)}
-                                onClick={() => dispatchGuidedAction(id)}
-                              >
-                                {state.actionIds.includes(id) ? (
-                                  <>
-                                    <Check aria-hidden="true" /> {guidedActionLabel(id)}
-                                  </>
-                                ) : (
-                                  guidedActionLabel(id)
-                                )}
-                              </button>
-                            ))}
-                        </div>
-                        {lessonTransfer.requiredActionIds.every((id) => !guidedActionLabel(id)) ? (
-                          <p className={styles.guidedControlPrompt}>
-                            Use the highlighted {guidedSurface} controls, then return here to check
-                            the transfer decision.
-                          </p>
-                        ) : null}
-                        {!lessonComplete ? (
-                          <button type="button" onClick={checkTransferDecision}>
-                            Check transfer decision
-                          </button>
-                        ) : null}
-                      </div>
-                    </div>
-                    {transferFeedback ? (
-                      <div
-                        className={styles.transferFeedback}
-                        data-complete={lessonComplete}
-                        role="status"
-                      >
-                        {lessonComplete ? <Check aria-hidden="true" /> : null}
-                        <span>{transferFeedback}</span>
-                      </div>
-                    ) : null}
-                    {transferChoice ? (
-                      <ChoiceReasoningFeedback
-                        choice={transferChoice}
-                        explanation={lessonTransfer.item.explanation}
-                        evidenceIds={lessonTransfer.item.evidenceIds}
-                        conceptIds={catalogActivity?.teachesConceptIds}
-                      />
-                    ) : null}
-                    {lessonComplete ? (
-                      <section
-                        className={styles.lessonCompletion}
-                        aria-label="Lesson worked through"
-                      >
-                        <div aria-live="polite">
-                          <Check aria-hidden="true" />
-                          <span>
-                            <strong>Lesson worked through</strong>
-                            <small>
-                              Your transfer evidence is saved. Continue when you are ready.
-                            </small>
-                          </span>
-                        </div>
-                        {followingLesson ? (
-                          <button type="button" onClick={() => chooseLesson(followingLesson.id)}>
-                            <span>Continue to next section: {followingLesson.title}</span>
-                            <ArrowRight aria-hidden="true" />
-                          </button>
-                        ) : (
-                          <Link href={`${mechanicalCirculatorySupportNavBase}/practice`}>
-                            <span>
-                              Continue to practice
-                              <small>Apply the completed lessons in coached cases</small>
-                            </span>
-                            <ArrowRight aria-hidden="true" />
-                          </Link>
-                        )}
-                      </section>
-                    ) : null}
-                  </div>
-                ) : null}
-              </section>
-            ) : null}
-
-            {showCommonModel ? <McsCommonModel state={state} /> : null}
-            {showPathwayCards ? <McsSupportPathwayCards /> : null}
-
-            <div
-              className={styles.mobileSurfaceTabs}
-              role="group"
-              aria-label="Choose mobile workspace surface"
-            >
-              {(['anatomy', 'monitor', 'controls', 'workflow'] as const).map((surface) => (
-                <button
-                  type="button"
-                  key={surface}
-                  aria-pressed={mobileSurface === surface}
-                  onClick={() => setMobileSurface(surface)}
-                >
-                  {surface}
-                </button>
-              ))}
-            </div>
-            <section className={styles.simulationGrid} aria-label="Synchronized support simulation">
-              <div
-                data-mobile-visible={mobileSurface === 'anatomy'}
-                data-guided-focus={section === 'learn' && guidedSurface === 'anatomy'}
-              >
-                <SimulationLaunchGate
-                  activityTitle="Mechanical circulatory support 3D anatomy"
-                  minimumViewport="desktop"
-                  bandwidthClass="heavy"
-                  estimatedSizeLabel="Interactive heart and device model"
-                  lightweightAlternativeHref="/critical-care/reference?item=mcs-cardiac-text-summary"
-                  onSaveForLater={() => router.push(mechanicalCirculatorySupportNavBase as Route)}
-                >
-                  <McsAnatomy3D state={state} revealCausality={revealCausality} />
-                </SimulationLaunchGate>
-              </div>
-              <div
-                data-mobile-visible={mobileSurface === 'monitor'}
-                data-guided-focus={section === 'learn' && guidedSurface === 'monitor'}
-              >
-                <McsMonitor state={state} revealCausality={revealCausality} />
-              </div>
-              <div
-                className={styles.liveControlsRail}
-                data-mobile-visible={mobileSurface === 'controls'}
-                data-guided-focus={section === 'learn' && guidedSurface === 'controls'}
-              >
-                <McsControls state={state} dispatch={dispatch} />
-              </div>
-            </section>
-            <section
-              className={styles.taskGrid}
-              data-mobile-visible={mobileSurface === 'workflow'}
-              data-guided-focus={section === 'learn' && guidedSurface === 'workflow'}
-            >
-              <McsCaseWorkflow
+            {section === 'learn' && learnContract && lessonTransfer ? (
+              /*
+               * Learn only. Practice and Challenge keep the surface grid below unchanged, because
+               * their timing, feedback and debrief rules are not part of this package.
+               *
+               * Keyed by section id so a learner's recognition, prediction, captured readings and
+               * transfer answer cannot survive a move to another section.
+               */
+              <McsLearnSection
+                key={learnContract.sectionId}
+                contract={learnContract}
+                transfer={lessonTransfer}
                 state={state}
                 dispatch={dispatch}
-                showChallengeFeedback={showChallengeFeedback}
-                onShowChallengeFeedbackChange={setShowChallengeFeedback}
+                phase={learnPhase}
+                onPhaseChange={moveToLearnPhase}
+                sectionComplete={lessonComplete}
+                onSectionWorkedThrough={recordSectionWorkedThrough}
+                helpVisible={helpVisible}
+                onHelp={showHelp}
+                conceptIds={catalogActivity?.teachesConceptIds}
+                foundationMaterial={
+                  showCommonModel ? (
+                    <>
+                      <McsCommonModel state={state} />
+                      {showPathwayCards ? <McsSupportPathwayCards /> : null}
+                    </>
+                  ) : null
+                }
+                sectionNav={
+                  <>
+                    <span>
+                      Section {lessonIndex + 1} of {mcsLessons.length}
+                    </span>
+                    {previousLesson ? (
+                      <button type="button" onClick={() => chooseLesson(previousLesson.id)}>
+                        Back to {previousLesson.title}
+                      </button>
+                    ) : null}
+                    {followingLesson ? (
+                      <button type="button" onClick={() => chooseLesson(followingLesson.id)}>
+                        Ahead to {followingLesson.title}
+                      </button>
+                    ) : null}
+                  </>
+                }
+                afterCompletion={
+                  followingLesson ? (
+                    <button type="button" onClick={() => chooseLesson(followingLesson.id)}>
+                      <span>Continue to the next section: {followingLesson.title}</span>
+                      <ArrowRight aria-hidden="true" />
+                    </button>
+                  ) : (
+                    <Link href={`${mechanicalCirculatorySupportNavBase}/practice`}>
+                      <span>
+                        Continue to practice
+                        <small>Apply what these sections built in coached patient cases</small>
+                      </span>
+                      <ArrowRight aria-hidden="true" />
+                    </Link>
+                  )
+                }
               />
-            </section>
+            ) : (
+              <>
+                <div
+                  className={styles.mobileSurfaceTabs}
+                  role="group"
+                  aria-label="Choose mobile workspace surface"
+                >
+                  {(['anatomy', 'monitor', 'controls', 'workflow'] as const).map((surface) => (
+                    <button
+                      type="button"
+                      key={surface}
+                      aria-pressed={mobileSurface === surface}
+                      onClick={() => setMobileSurface(surface)}
+                    >
+                      {surface}
+                    </button>
+                  ))}
+                </div>
+                <section
+                  className={styles.simulationGrid}
+                  aria-label="Synchronized support simulation"
+                >
+                  <div data-mobile-visible={mobileSurface === 'anatomy'}>
+                    <SimulationLaunchGate
+                      activityTitle="Mechanical circulatory support 3D anatomy"
+                      minimumViewport="desktop"
+                      bandwidthClass="heavy"
+                      estimatedSizeLabel="Interactive heart and device model"
+                      lightweightAlternativeHref="/critical-care/reference?item=mcs-cardiac-text-summary"
+                      onSaveForLater={() =>
+                        router.push(mechanicalCirculatorySupportNavBase as Route)
+                      }
+                    >
+                      <McsAnatomy3D state={state} revealCausality={revealCausality} />
+                    </SimulationLaunchGate>
+                  </div>
+                  <div data-mobile-visible={mobileSurface === 'monitor'}>
+                    <McsMonitor state={state} revealCausality={revealCausality} />
+                  </div>
+                  <div
+                    className={styles.liveControlsRail}
+                    data-mobile-visible={mobileSurface === 'controls'}
+                  >
+                    <McsControls state={state} dispatch={dispatch} />
+                  </div>
+                </section>
+                <section
+                  className={styles.taskGrid}
+                  data-mobile-visible={mobileSurface === 'workflow'}
+                >
+                  <McsCaseWorkflow
+                    state={state}
+                    dispatch={dispatch}
+                    showChallengeFeedback={showChallengeFeedback}
+                    onShowChallengeFeedbackChange={setShowChallengeFeedback}
+                  />
+                </section>
+              </>
+            )}
 
             {state.completed && state.scenario && state.score ? (
               <DebriefPanel
