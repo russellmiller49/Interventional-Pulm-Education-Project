@@ -1,0 +1,757 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://interventionalpulm.com/schemas/literature/gold-enrichment-v3/included-metadata-only-result.schema.json",
+  "title": "Gold-set V3 included metadata-only result row",
+  "description": "A parsed CSV row for an included metadata-only packet. CSV cells are represented as strings; the application validator additionally enforces source membership, order, immutable values, and duplicate-free list cells.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-csv-columns": [
+    "packet_id",
+    "packet_family",
+    "workflow_id",
+    "prompt_template_version",
+    "result_schema_version",
+    "taxonomy_version",
+    "label_schema_version",
+    "enrichment_schema_version",
+    "source_projection_sha256",
+    "source_row_sha256",
+    "master_row_id",
+    "pmid",
+    "physician_final_label",
+    "physician_final_confidence",
+    "metadata_sufficiency",
+    "topic_ids",
+    "technology_tags",
+    "technology_tag_status",
+    "clinical_purposes",
+    "disease_tags",
+    "disease_tag_status",
+    "study_design",
+    "publication_status",
+    "categorization_from_full_text",
+    "full_text_used",
+    "enrichment_confidence",
+    "requires_physician_enrichment_review",
+    "evidence_1_field",
+    "evidence_1_excerpt",
+    "evidence_1_location",
+    "evidence_2_field",
+    "evidence_2_excerpt",
+    "evidence_2_location",
+    "enrichment_rationale",
+    "processing_status",
+    "processing_error"
+  ],
+  "required": [
+    "packet_id",
+    "packet_family",
+    "workflow_id",
+    "prompt_template_version",
+    "result_schema_version",
+    "taxonomy_version",
+    "label_schema_version",
+    "enrichment_schema_version",
+    "source_projection_sha256",
+    "source_row_sha256",
+    "master_row_id",
+    "pmid",
+    "physician_final_label",
+    "physician_final_confidence",
+    "metadata_sufficiency",
+    "topic_ids",
+    "technology_tags",
+    "technology_tag_status",
+    "clinical_purposes",
+    "disease_tags",
+    "disease_tag_status",
+    "study_design",
+    "publication_status",
+    "categorization_from_full_text",
+    "full_text_used",
+    "enrichment_confidence",
+    "requires_physician_enrichment_review",
+    "evidence_1_field",
+    "evidence_1_excerpt",
+    "evidence_1_location",
+    "evidence_2_field",
+    "evidence_2_excerpt",
+    "evidence_2_location",
+    "enrichment_rationale",
+    "processing_status",
+    "processing_error"
+  ],
+  "properties": {
+    "packet_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "packet_family": {
+      "const": "included_metadata_only"
+    },
+    "workflow_id": {
+      "const": "gold-set-v1-enrichment-v3"
+    },
+    "prompt_template_version": {
+      "const": "3.0.0"
+    },
+    "result_schema_version": {
+      "const": "3.0.0"
+    },
+    "taxonomy_version": {
+      "const": "2.0.0"
+    },
+    "label_schema_version": {
+      "const": "2.0.0"
+    },
+    "enrichment_schema_version": {
+      "const": "2.0.0"
+    },
+    "source_projection_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "source_row_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "master_row_id": {
+      "$ref": "#/$defs/positiveDecimal"
+    },
+    "pmid": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]{0,11}$"
+    },
+    "physician_final_label": {
+      "enum": ["include_core", "include_adjacent"]
+    },
+    "physician_final_confidence": {
+      "$ref": "#/$defs/confidence"
+    },
+    "metadata_sufficiency": {
+      "$ref": "#/$defs/metadataSufficiency"
+    },
+    "topic_ids": {
+      "$ref": "#/$defs/topicListOrBlank"
+    },
+    "technology_tags": {
+      "$ref": "#/$defs/technologyListOrBlank"
+    },
+    "technology_tag_status": {
+      "$ref": "#/$defs/tagStatusOrBlank"
+    },
+    "clinical_purposes": {
+      "$ref": "#/$defs/clinicalPurposeListOrBlank"
+    },
+    "disease_tags": {
+      "$ref": "#/$defs/diseaseListOrBlank"
+    },
+    "disease_tag_status": {
+      "$ref": "#/$defs/tagStatusOrBlank"
+    },
+    "study_design": {
+      "$ref": "#/$defs/studyDesignOrBlank"
+    },
+    "publication_status": {
+      "$ref": "#/$defs/publicationStatusOrBlank"
+    },
+    "categorization_from_full_text": {
+      "const": "false"
+    },
+    "full_text_used": {
+      "const": "false"
+    },
+    "enrichment_confidence": {
+      "$ref": "#/$defs/confidenceOrBlank"
+    },
+    "requires_physician_enrichment_review": {
+      "$ref": "#/$defs/csvBoolean"
+    },
+    "evidence_1_field": {
+      "$ref": "#/$defs/evidenceFieldOrBlank"
+    },
+    "evidence_1_excerpt": {
+      "type": "string",
+      "maxLength": 1200
+    },
+    "evidence_1_location": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "evidence_2_field": {
+      "$ref": "#/$defs/evidenceFieldOrBlank"
+    },
+    "evidence_2_excerpt": {
+      "type": "string",
+      "maxLength": 1200
+    },
+    "evidence_2_location": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "enrichment_rationale": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "processing_status": {
+      "enum": ["valid", "error"]
+    },
+    "processing_error": {
+      "type": "string",
+      "maxLength": 2000
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "processing_status": {
+            "const": "valid"
+          }
+        },
+        "required": ["processing_status"]
+      },
+      "then": {
+        "properties": {
+          "topic_ids": {
+            "$ref": "#/$defs/topicList"
+          },
+          "clinical_purposes": {
+            "$ref": "#/$defs/clinicalPurposeList"
+          },
+          "study_design": {
+            "$ref": "#/$defs/studyDesign"
+          },
+          "publication_status": {
+            "$ref": "#/$defs/publicationStatus"
+          },
+          "technology_tag_status": {
+            "$ref": "#/$defs/tagStatus"
+          },
+          "disease_tag_status": {
+            "$ref": "#/$defs/tagStatus"
+          },
+          "enrichment_confidence": {
+            "$ref": "#/$defs/confidence"
+          },
+          "evidence_1_field": {
+            "$ref": "#/$defs/evidenceField"
+          },
+          "evidence_1_excerpt": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence_1_location": {
+            "type": "string",
+            "minLength": 1
+          },
+          "enrichment_rationale": {
+            "type": "string",
+            "minLength": 1
+          },
+          "processing_error": {
+            "const": ""
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "topic_ids": {
+            "const": ""
+          },
+          "technology_tags": {
+            "const": ""
+          },
+          "technology_tag_status": {
+            "const": ""
+          },
+          "clinical_purposes": {
+            "const": ""
+          },
+          "disease_tags": {
+            "const": ""
+          },
+          "disease_tag_status": {
+            "const": ""
+          },
+          "study_design": {
+            "const": ""
+          },
+          "publication_status": {
+            "const": ""
+          },
+          "enrichment_confidence": {
+            "const": ""
+          },
+          "requires_physician_enrichment_review": {
+            "const": "true"
+          },
+          "evidence_1_field": {
+            "const": ""
+          },
+          "evidence_1_excerpt": {
+            "const": ""
+          },
+          "evidence_1_location": {
+            "const": ""
+          },
+          "evidence_2_field": {
+            "const": ""
+          },
+          "evidence_2_excerpt": {
+            "const": ""
+          },
+          "evidence_2_location": {
+            "const": ""
+          },
+          "enrichment_rationale": {
+            "const": ""
+          },
+          "processing_error": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "processing_status": {
+            "const": "valid"
+          },
+          "technology_tags": {
+            "const": ""
+          }
+        },
+        "required": ["processing_status", "technology_tags"]
+      },
+      "then": {
+        "properties": {
+          "technology_tag_status": {
+            "enum": ["not_applicable", "not_assessable"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "processing_status": {
+            "const": "valid"
+          },
+          "technology_tags": {
+            "pattern": ".+"
+          }
+        },
+        "required": ["processing_status", "technology_tags"]
+      },
+      "then": {
+        "properties": {
+          "technology_tag_status": {
+            "const": "tagged"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "processing_status": {
+            "const": "valid"
+          },
+          "disease_tags": {
+            "const": ""
+          }
+        },
+        "required": ["processing_status", "disease_tags"]
+      },
+      "then": {
+        "properties": {
+          "disease_tag_status": {
+            "enum": ["not_applicable", "not_assessable"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "processing_status": {
+            "const": "valid"
+          },
+          "disease_tags": {
+            "pattern": ".+"
+          }
+        },
+        "required": ["processing_status", "disease_tags"]
+      },
+      "then": {
+        "properties": {
+          "disease_tag_status": {
+            "const": "tagged"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "evidence_2_field": {
+            "const": ""
+          }
+        },
+        "required": ["evidence_2_field"]
+      },
+      "then": {
+        "properties": {
+          "evidence_2_excerpt": {
+            "const": ""
+          },
+          "evidence_2_location": {
+            "const": ""
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "evidence_2_excerpt": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence_2_location": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "anyOf": [
+          {
+            "properties": {
+              "physician_final_label": {
+                "const": "include_adjacent"
+              }
+            },
+            "required": ["physician_final_label"]
+          },
+          {
+            "properties": {
+              "enrichment_confidence": {
+                "enum": ["moderate", "low"]
+              }
+            },
+            "required": ["enrichment_confidence"]
+          },
+          {
+            "properties": {
+              "metadata_sufficiency": {
+                "enum": ["limited_abstract", "no_abstract", "conflicting_metadata"]
+              }
+            },
+            "required": ["metadata_sufficiency"]
+          },
+          {
+            "properties": {
+              "technology_tag_status": {
+                "const": "not_assessable"
+              }
+            },
+            "required": ["technology_tag_status"]
+          },
+          {
+            "properties": {
+              "disease_tag_status": {
+                "const": "not_assessable"
+              }
+            },
+            "required": ["disease_tag_status"]
+          },
+          {
+            "properties": {
+              "study_design": {
+                "const": "not-assessable-from-available-metadata"
+              }
+            },
+            "required": ["study_design"]
+          },
+          {
+            "properties": {
+              "publication_status": {
+                "const": "not-assessable-from-available-metadata"
+              }
+            },
+            "required": ["publication_status"]
+          },
+          {
+            "properties": {
+              "processing_status": {
+                "const": "error"
+              }
+            },
+            "required": ["processing_status"]
+          }
+        ]
+      },
+      "then": {
+        "properties": {
+          "requires_physician_enrichment_review": {
+            "const": "true"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "positiveDecimal": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]*$"
+    },
+    "csvBoolean": {
+      "enum": ["true", "false"]
+    },
+    "confidence": {
+      "enum": ["high", "moderate", "low"]
+    },
+    "confidenceOrBlank": {
+      "enum": ["", "high", "moderate", "low"]
+    },
+    "metadataSufficiency": {
+      "enum": ["adequate_abstract", "limited_abstract", "no_abstract", "conflicting_metadata"]
+    },
+    "tagStatus": {
+      "enum": ["tagged", "not_applicable", "not_assessable"]
+    },
+    "tagStatusOrBlank": {
+      "enum": ["", "tagged", "not_applicable", "not_assessable"]
+    },
+    "evidenceField": {
+      "enum": ["title", "abstract", "mesh_terms", "author_keywords", "publication_types"]
+    },
+    "evidenceFieldOrBlank": {
+      "enum": ["", "title", "abstract", "mesh_terms", "author_keywords", "publication_types"]
+    },
+    "topicList": {
+      "type": "string",
+      "pattern": "^(?:basic-bronchoscopy|ebus-mediastinal-staging|peripheral-navigation|peripheral-biopsy-localization|central-airway-obstruction|airway-stents-stenosis|pleural-interventions|bronchoscopic-lung-volume-reduction|persistent-air-leak-fistula|transbronchial-cryobiopsy|hemoptysis-airway-bleeding|tracheostomy-airway-access|bronchoscopic-tumor-ablation|other-advanced-bronchoscopy|safety-anesthesia-complications|education-simulation-quality|ai-imaging-technology|adjacent-surgical-procedural-analogue|specimen-adequacy-molecular-pathology|health-services-economics)(?:\\|(?:basic-bronchoscopy|ebus-mediastinal-staging|peripheral-navigation|peripheral-biopsy-localization|central-airway-obstruction|airway-stents-stenosis|pleural-interventions|bronchoscopic-lung-volume-reduction|persistent-air-leak-fistula|transbronchial-cryobiopsy|hemoptysis-airway-bleeding|tracheostomy-airway-access|bronchoscopic-tumor-ablation|other-advanced-bronchoscopy|safety-anesthesia-complications|education-simulation-quality|ai-imaging-technology|adjacent-surgical-procedural-analogue|specimen-adequacy-molecular-pathology|health-services-economics))*$",
+      "x-csv-list-delimiter": "|",
+      "x-controlled-values": [
+        "basic-bronchoscopy",
+        "ebus-mediastinal-staging",
+        "peripheral-navigation",
+        "peripheral-biopsy-localization",
+        "central-airway-obstruction",
+        "airway-stents-stenosis",
+        "pleural-interventions",
+        "bronchoscopic-lung-volume-reduction",
+        "persistent-air-leak-fistula",
+        "transbronchial-cryobiopsy",
+        "hemoptysis-airway-bleeding",
+        "tracheostomy-airway-access",
+        "bronchoscopic-tumor-ablation",
+        "other-advanced-bronchoscopy",
+        "safety-anesthesia-complications",
+        "education-simulation-quality",
+        "ai-imaging-technology",
+        "adjacent-surgical-procedural-analogue",
+        "specimen-adequacy-molecular-pathology",
+        "health-services-economics"
+      ]
+    },
+    "topicListOrBlank": {
+      "anyOf": [
+        {
+          "const": ""
+        },
+        {
+          "$ref": "#/$defs/topicList"
+        }
+      ]
+    },
+    "technologyList": {
+      "type": "string",
+      "pattern": "^(?:convex-ebus|eus-b|radial-ebus|robotic-bronchoscopy|electromagnetic-navigation|cone-beam-ct|augmented-fluoroscopy|virtual-bronchoscopy|transbronchial-cryobiopsy|endobronchial-valve|airway-stent|rigid-bronchoscopy|electrocautery|argon-plasma-coagulation|laser|cryotherapy|photodynamic-therapy|brachytherapy|indwelling-pleural-catheter|medical-thoracoscopy|bronchial-thermoplasty|whole-lung-lavage|percutaneous-tracheostomy|thoracentesis|chest-tube|pleurodesis|bronchoalveolar-lavage|conventional-tbna|rapid-on-site-evaluation|endobronchial-coils|balloon-bronchoplasty|mediastinal-cryobiopsy|foreign-body-removal|bronchial-artery-embolization|narrow-band-imaging|autofluorescence-bronchoscopy|confocal-laser-endomicroscopy|topical-hemostatic-agent|transbronchial-thermal-ablation|surgical-vats)(?:\\|(?:convex-ebus|eus-b|radial-ebus|robotic-bronchoscopy|electromagnetic-navigation|cone-beam-ct|augmented-fluoroscopy|virtual-bronchoscopy|transbronchial-cryobiopsy|endobronchial-valve|airway-stent|rigid-bronchoscopy|electrocautery|argon-plasma-coagulation|laser|cryotherapy|photodynamic-therapy|brachytherapy|indwelling-pleural-catheter|medical-thoracoscopy|bronchial-thermoplasty|whole-lung-lavage|percutaneous-tracheostomy|thoracentesis|chest-tube|pleurodesis|bronchoalveolar-lavage|conventional-tbna|rapid-on-site-evaluation|endobronchial-coils|balloon-bronchoplasty|mediastinal-cryobiopsy|foreign-body-removal|bronchial-artery-embolization|narrow-band-imaging|autofluorescence-bronchoscopy|confocal-laser-endomicroscopy|topical-hemostatic-agent|transbronchial-thermal-ablation|surgical-vats))*$",
+      "x-csv-list-delimiter": "|",
+      "x-controlled-values": [
+        "convex-ebus",
+        "eus-b",
+        "radial-ebus",
+        "robotic-bronchoscopy",
+        "electromagnetic-navigation",
+        "cone-beam-ct",
+        "augmented-fluoroscopy",
+        "virtual-bronchoscopy",
+        "transbronchial-cryobiopsy",
+        "endobronchial-valve",
+        "airway-stent",
+        "rigid-bronchoscopy",
+        "electrocautery",
+        "argon-plasma-coagulation",
+        "laser",
+        "cryotherapy",
+        "photodynamic-therapy",
+        "brachytherapy",
+        "indwelling-pleural-catheter",
+        "medical-thoracoscopy",
+        "bronchial-thermoplasty",
+        "whole-lung-lavage",
+        "percutaneous-tracheostomy",
+        "thoracentesis",
+        "chest-tube",
+        "pleurodesis",
+        "bronchoalveolar-lavage",
+        "conventional-tbna",
+        "rapid-on-site-evaluation",
+        "endobronchial-coils",
+        "balloon-bronchoplasty",
+        "mediastinal-cryobiopsy",
+        "foreign-body-removal",
+        "bronchial-artery-embolization",
+        "narrow-band-imaging",
+        "autofluorescence-bronchoscopy",
+        "confocal-laser-endomicroscopy",
+        "topical-hemostatic-agent",
+        "transbronchial-thermal-ablation",
+        "surgical-vats"
+      ]
+    },
+    "technologyListOrBlank": {
+      "anyOf": [
+        {
+          "const": ""
+        },
+        {
+          "$ref": "#/$defs/technologyList"
+        }
+      ]
+    },
+    "clinicalPurposeList": {
+      "type": "string",
+      "pattern": "^(?:diagnosis|staging|treatment|palliation|surveillance|localization|training|safety-complication-prevention|multiple-general-overview|not-assessable-from-available-metadata|cost-effectiveness-health-services|specimen-adequacy|workflow-operations-quality)(?:\\|(?:diagnosis|staging|treatment|palliation|surveillance|localization|training|safety-complication-prevention|multiple-general-overview|not-assessable-from-available-metadata|cost-effectiveness-health-services|specimen-adequacy|workflow-operations-quality))*$",
+      "x-csv-list-delimiter": "|",
+      "x-controlled-values": [
+        "diagnosis",
+        "staging",
+        "treatment",
+        "palliation",
+        "surveillance",
+        "localization",
+        "training",
+        "safety-complication-prevention",
+        "multiple-general-overview",
+        "not-assessable-from-available-metadata",
+        "cost-effectiveness-health-services",
+        "specimen-adequacy",
+        "workflow-operations-quality"
+      ]
+    },
+    "clinicalPurposeListOrBlank": {
+      "anyOf": [
+        {
+          "const": ""
+        },
+        {
+          "$ref": "#/$defs/clinicalPurposeList"
+        }
+      ]
+    },
+    "diseaseList": {
+      "type": "string",
+      "pattern": "^(?:lung-cancer|mesothelioma|emphysema|interstitial-lung-disease|immune-inflammatory-disease|infection|transplant|benign-airway-stenosis|pleural-disease|lymphoma-hematologic-malignancy|metastatic-extrathoracic-malignancy|tracheobronchomalacia-edac|asthma|foreign-body-aspiration|hemoptysis|bronchiectasis|pulmonary-alveolar-proteinosis|airway-amyloidosis|congenital-airway-disorder)(?:\\|(?:lung-cancer|mesothelioma|emphysema|interstitial-lung-disease|immune-inflammatory-disease|infection|transplant|benign-airway-stenosis|pleural-disease|lymphoma-hematologic-malignancy|metastatic-extrathoracic-malignancy|tracheobronchomalacia-edac|asthma|foreign-body-aspiration|hemoptysis|bronchiectasis|pulmonary-alveolar-proteinosis|airway-amyloidosis|congenital-airway-disorder))*$",
+      "x-csv-list-delimiter": "|",
+      "x-controlled-values": [
+        "lung-cancer",
+        "mesothelioma",
+        "emphysema",
+        "interstitial-lung-disease",
+        "immune-inflammatory-disease",
+        "infection",
+        "transplant",
+        "benign-airway-stenosis",
+        "pleural-disease",
+        "lymphoma-hematologic-malignancy",
+        "metastatic-extrathoracic-malignancy",
+        "tracheobronchomalacia-edac",
+        "asthma",
+        "foreign-body-aspiration",
+        "hemoptysis",
+        "bronchiectasis",
+        "pulmonary-alveolar-proteinosis",
+        "airway-amyloidosis",
+        "congenital-airway-disorder"
+      ]
+    },
+    "diseaseListOrBlank": {
+      "anyOf": [
+        {
+          "const": ""
+        },
+        {
+          "$ref": "#/$defs/diseaseList"
+        }
+      ]
+    },
+    "studyDesign": {
+      "enum": [
+        "randomized-trial",
+        "prospective-cohort",
+        "retrospective-cohort",
+        "diagnostic-accuracy",
+        "systematic-review",
+        "meta-analysis",
+        "guideline",
+        "consensus",
+        "case-series",
+        "case-report",
+        "technical-note",
+        "editorial",
+        "review-article",
+        "not-assessable-from-available-metadata",
+        "cross-sectional-survey",
+        "economic-evaluation",
+        "animal-preclinical",
+        "bench-in-vitro",
+        "qualitative-study",
+        "case-control"
+      ]
+    },
+    "studyDesignOrBlank": {
+      "anyOf": [
+        {
+          "const": ""
+        },
+        {
+          "$ref": "#/$defs/studyDesign"
+        }
+      ]
+    },
+    "publicationStatus": {
+      "enum": [
+        "full-article",
+        "conference-abstract",
+        "letter",
+        "editorial",
+        "correction",
+        "retraction",
+        "protocol",
+        "interactive-clinical-case",
+        "not-assessable-from-available-metadata"
+      ]
+    },
+    "publicationStatusOrBlank": {
+      "anyOf": [
+        {
+          "const": ""
+        },
+        {
+          "$ref": "#/$defs/publicationStatus"
+        }
+      ]
+    }
+  }
+}
