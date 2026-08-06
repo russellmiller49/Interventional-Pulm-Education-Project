@@ -10,6 +10,7 @@ import { useState } from 'react'
 import { act, render, screen } from '@testing-library/react'
 
 import { CaseWorkflow } from '../components/CaseWorkflow'
+import { PostActionCoachingPanel } from '../components/PostActionCoachingPanel'
 import { mechanicalVentilationCaseById, mechanicalVentilationCases } from '../content'
 import {
   capturePostActionBaseline,
@@ -900,13 +901,21 @@ describe('MV-13 — a treatment only reaches the narrowing this patient has', ()
     'produces no false response and credits nothing: $branch + $action',
     ({ branch, action }) => {
       const run = runHighResistance(branch, action)
+      /*
+       * The target may read `held` or `small-drift` here. A treatment that reaches nothing leaves the
+       * resistance alone, but the patient's own trajectory still wanders the printed peak by well
+       * under a cmH₂O, and where that wander crosses a print boundary the row says so. What must not
+       * vary is everything that follows from it: no valence, no branch correction, no credit.
+       */
       expect({
         resistanceUnchanged: run.resistanceAfter === run.resistanceBefore,
-        direction: run.target?.direction,
+        nonResponse: run.target?.direction === 'held' || run.target?.direction === 'small-drift',
+        favourable: run.target?.favourable,
         branchCorrected: run.branchCorrected,
       }).toEqual({
         resistanceUnchanged: true,
-        direction: 'held',
+        nonResponse: true,
+        favourable: null,
         branchCorrected: false,
       })
       // The block must not read a mechanism off a response that did not happen.
@@ -1110,5 +1119,173 @@ describe('clinical copy', () => {
       })
       expect(coaching.interpretation).toContain('over this interval')
     }
+  })
+})
+/* ------------------------------------------------------------------------------------------------
+ * 6 — a visible drift is an observation, not a response
+ * ---------------------------------------------------------------------------------------------- */
+
+/**
+ * Build coaching for one peak-pressure run with the "before" peak set by hand.
+ *
+ * The reading is pinned rather than simulated so the raw movement is exactly the number under test —
+ * 0.6 cmH₂O across a printed boundary, or a whole 1.0 — and everything else about the run is the real
+ * engine. MV-13's tube version is used because suction reaches nothing there, so any credit the block
+ * gives is credit it invented.
+ */
+function peakMovement(rawBefore: number) {
+  const definition = definitionFor('MV-13')
+  const state = committedPracticeState(definition, 'hme-or-ett')
+  const acted = applyIntervention(state, definition, 'suction-airway')
+  const record = acted.interventions.at(-1)
+  if (!record) throw new Error('Expected a suction record')
+  let settled = acted
+  const probe = capturePostActionBaseline(acted, definition, record)
+  for (let g = 0; !postActionObservation(settled, probe).complete && g < 20000; g += 1) {
+    settled = advanceSimulation(settled, 0.1, definition)
+  }
+  const rawAfter = 43.2
+  const pinned: VentilationSimulationState = {
+    ...settled,
+    measurements: { ...settled.measurements, peakPressureCmH2O: rawAfter },
+  }
+  const coaching = ventilationPostActionCoaching(pinned, definition, {
+    ...probe,
+    readings: { ...coachingReadingSnapshot(pinned), 'peak-pressure': rawBefore },
+  })
+  if (!coaching) throw new Error('Expected coaching once the interval has elapsed')
+  const peak = coaching.observed.find((reading) => reading.id === 'peak-pressure')
+  if (!peak) throw new Error('Expected a peak-pressure row')
+  return { coaching, peak, rawBefore, rawAfter }
+}
+
+/** Render one reading row on its own, so the printed strings are the component's and not a guess. */
+function renderReadingRow(coaching: ReturnType<typeof peakMovement>['coaching']) {
+  const { container } = render(<PostActionCoachingPanel coaching={coaching} />)
+  const row = container.querySelector('[data-reading="peak-pressure"]')
+  if (!row) throw new Error('Expected a rendered peak-pressure row')
+  return { row, text: row.textContent ?? '' }
+}
+
+describe('a change smaller than one printed unit that still changes the printed number', () => {
+  it('reports 43.8 → 43.2 as a small drift, shows 44 → 43, and credits nothing', () => {
+    const { coaching, peak } = peakMovement(43.8)
+
+    expect({
+      raw: [peak.before, peak.after],
+      direction: peak.direction,
+      favourable: peak.favourable,
+      targeted: peak.targeted,
+    }).toEqual({
+      raw: [43.8, 43.2],
+      direction: 'small-drift',
+      favourable: null,
+      targeted: true,
+    })
+
+    const { row, text } = renderReadingRow(coaching)
+    expect(row).toHaveAttribute('data-direction', 'small-drift')
+    expect(text).toContain('44')
+    expect(text).toContain('43')
+    expect(text).toContain('small drift')
+    expect(text).toContain('less than one full display unit')
+    expect(text).not.toContain('unchanged')
+
+    // Not a response: the non-response copy, and none of the crediting sentences.
+    expect(coaching.interpretation).toContain(
+      'does not support material in the lumen as the dominant narrowing over this interval',
+    )
+    expect(coaching.interpretation).not.toContain('was part of what the same breath')
+    expect(coaching.interpretation).not.toContain('moved the other way instead')
+
+    // No better/worse contribution, and the summary says what the row shows.
+    expect(coaching.verdict).not.toBe('improved')
+    expect(coaching.observedSummary).not.toContain(
+      'None of the readings above is printing a different number',
+    )
+    expect(coaching.observedSummary).toContain('without having moved a whole unit of it')
+    expect(coaching.observedSummary).toContain('rounding boundary')
+  })
+
+  it('applies the same rule upward for 43.2 → 43.8', () => {
+    const definition = definitionFor('MV-13')
+    const state = committedPracticeState(definition, 'hme-or-ett')
+    const acted = applyIntervention(state, definition, 'suction-airway')
+    const record = acted.interventions.at(-1)
+    if (!record) throw new Error('Expected a suction record')
+    let settled = acted
+    const probe = capturePostActionBaseline(acted, definition, record)
+    for (let g = 0; !postActionObservation(settled, probe).complete && g < 20000; g += 1) {
+      settled = advanceSimulation(settled, 0.1, definition)
+    }
+    const pinned: VentilationSimulationState = {
+      ...settled,
+      measurements: { ...settled.measurements, peakPressureCmH2O: 43.8 },
+    }
+    const coaching = ventilationPostActionCoaching(pinned, definition, {
+      ...probe,
+      readings: { ...coachingReadingSnapshot(pinned), 'peak-pressure': 43.2 },
+    })
+    if (!coaching) throw new Error('Expected coaching once the interval has elapsed')
+    const peak = coaching.observed.find((reading) => reading.id === 'peak-pressure')
+
+    expect({ direction: peak?.direction, favourable: peak?.favourable }).toEqual({
+      direction: 'small-drift',
+      favourable: null,
+    })
+
+    const { row, text } = renderReadingRow(coaching)
+    expect(row).toHaveAttribute('data-direction', 'small-drift')
+    expect(text).toContain('43')
+    expect(text).toContain('44')
+    expect(text).toContain('small drift')
+    expect(text).not.toContain('unchanged')
+
+    expect(coaching.interpretation).toContain('does not support material in the lumen')
+    expect(coaching.interpretation).not.toContain('moved the other way instead')
+    expect(coaching.verdict).not.toBe('worsened')
+    expect(coaching.observedSummary).toContain('rounding boundary')
+  })
+
+  it('classifies a whole unit as a movement, and lets it qualify as a response', () => {
+    const fell = peakMovement(44.2)
+    expect(fell.peak.direction).toBe('fell')
+    expect(fell.peak.favourable).toBe(true)
+    expect(fell.coaching.interpretation).toContain(
+      'material in the lumen was part of what the same breath was being pushed through',
+    )
+    expect(renderReadingRow(fell.coaching).text).toContain('fell')
+
+    const rose = peakMovement(42.2)
+    expect(rose.peak.direction).toBe('rose')
+    expect(rose.peak.favourable).toBe(false)
+    // Suction is aimed at the pressure falling, so a whole unit the other way is opposed movement.
+    expect(rose.coaching.interpretation).toContain('moved the other way instead')
+  })
+
+  it('still calls a sub-unit move with the same printed number unchanged', () => {
+    const { coaching, peak } = peakMovement(43.4)
+    expect({ direction: peak.direction, favourable: peak.favourable }).toEqual({
+      direction: 'held',
+      favourable: null,
+    })
+    expect(renderReadingRow(coaching).text).toContain('unchanged')
+    expect(renderReadingRow(coaching).text).not.toContain('small drift')
+    expect(coaching.observedSummary).toContain(
+      'None of the readings above is printing a different number',
+    )
+  })
+
+  it('says three different things for unchanged, drifted, and moved', () => {
+    const unchanged = peakMovement(43.4).coaching.observedSummary
+    const drifted = peakMovement(43.8).coaching.observedSummary
+    const movedSummary = peakMovement(44.2).coaching.observedSummary
+
+    expect(new Set([unchanged, drifted, movedSummary]).size).toBe(3)
+    expect(unchanged).toContain('None of the readings above is printing a different number')
+    expect(drifted).not.toContain('None of the readings above is printing a different number')
+    expect(drifted).toContain('rounding boundary crossed rather than a change')
+    expect(movedSummary).toContain('peak airway pressure fell')
+    expect(movedSummary).not.toContain('rounding boundary')
   })
 })
