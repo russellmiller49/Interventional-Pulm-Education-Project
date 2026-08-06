@@ -24,8 +24,9 @@ import { waveformAtlasById } from './waveformAtlas'
  * deflation can produce and makes the return of the pulmonary-artery waveform an answer rather than
  * a reassurance — including the case where it does not return, where continuation is withheld.
  *
- * No inflation-time limit and no balloon volume appears anywhere in this file. This module has no
- * source that supplies either, and the boundary is stated instead.
+ * No inflation-time limit and no balloon volume appears anywhere in this file. Those are properties
+ * of a specific catheter and a specific local protocol rather than of this station, so the boundary
+ * is stated and the learner is sent to the current instructions for the catheter actually in use.
  */
 
 export interface PawpCaptureStep {
@@ -81,7 +82,7 @@ export const pawpCaptureSteps: readonly PawpCaptureStep[] = [
     shortLabel: 'Predict',
     question: 'What should a plausible occlusion tracing do?',
     whatYouDo:
-      'Say in advance what should change: pulsatility and the dicrotic notch disappear, amplitude collapses to an atrial-looking tracing, the waves arrive late relative to the ECG, the mean sits a little below pulmonary-artery diastolic pressure, and depth does not change.',
+      'Say in advance what should change: pulsatility and the dicrotic notch disappear, amplitude collapses to an atrial-looking tracing, the wave components arrive late relative to the ECG, the mean typically sits a little below pulmonary-artery diastolic pressure, and depth does not change.',
     whatItEstablishes:
       'Something for the result to be compared against. Without it, whatever appears will be accepted.',
     whatItDoesNotEstablish:
@@ -107,7 +108,7 @@ export const pawpCaptureSteps: readonly PawpCaptureStep[] = [
     shortLabel: 'Observe',
     question: 'What is actually on the screen?',
     whatYouDo:
-      'Read the morphology, the timing of the a and v waves against the ECG, the behaviour across the respiratory cycle, and the displayed value — as four separate observations rather than one impression.',
+      'Read the morphology, the timing of the wave components against the ECG, the behaviour across the respiratory cycle, and the displayed value — as four separate observations rather than one impression. Note which value you are reading: the displayed mean and the end-diastolic point are different measurements.',
     whatItEstablishes: 'The evidence the plausibility judgement will be made from.',
     whatItDoesNotEstablish:
       'Observing carefully does not make a tracing interpretable. The next step is where that is decided.',
@@ -119,11 +120,11 @@ export const pawpCaptureSteps: readonly PawpCaptureStep[] = [
     shortLabel: 'Plausible?',
     question: 'Is this tracing plausibly an occlusion pressure at all?',
     whatYouDo:
-      'Decide explicitly, and allow the answer to be no. Reconcile the shape with the signal validity, the wave timing, the respiratory phase you read at, the clinical context, and the depth the tip is at.',
+      'Decide explicitly, and allow the answer to be no. Reconcile the shape with the signal validity, the wave timing, the respiratory phase you read at, the clinical context, and the depth the tip is at. In sinus rhythm that includes the a wave; in atrial fibrillation it does not, and its absence is a property of the rhythm rather than a fault in the tracing.',
     whatItEstablishes:
       'That "this is not a usable occlusion pressure" is a real available answer, reached deliberately rather than by default.',
     whatItDoesNotEstablish:
-      'A plausible tracing is not yet a confirmed one. The most confirmatory checks — paired oximetry, and an abrupt return of pulmonary-artery pressure on deflation — have not been made yet.',
+      'A plausible tracing is not yet a confirmed one, and the relationship between the occlusion pressure and pulmonary-artery diastolic pressure does not settle it by itself. The most confirmatory checks — paired oximetry, and an abrupt return of pulmonary-artery pressure on deflation — have not been made yet.',
     sourceIds: [...OCCLUSION_EVIDENCE, ...TIMING_EVIDENCE],
   },
   {
@@ -185,11 +186,11 @@ export const pawpOcclusionOutcomes: readonly PawpOcclusionOutcome[] = [
     atlasEntryId: 'wedge-normal',
     plausiblyInterpretable: true,
     whatYouSee:
-      'Pulsatility and the notch are gone. Amplitude collapses to a venous tracing with identifiable a and v waves, the v wave larger than the a wave, both arriving late against the ECG. The mean sits a little below pulmonary-artery diastolic pressure and the depth has not changed.',
+      'Pulsatility and the notch are gone. Amplitude collapses to a venous tracing with interpretable atrial wave components arriving late against the ECG — in sinus rhythm a and v waves, with the v wave typically the larger of the two. The mean sits a little below pulmonary-artery diastolic pressure and the depth has not changed.',
     verdict:
-      'Plausibly an occlusion pressure. Every predicted change is present and none of the physiologically impossible ones are.',
+      'Plausibly an occlusion pressure. Every predicted change is present, the wave components are interpretable, and nothing about the tracing needs reconciling before it is read.',
     nextAction:
-      'Read at end expiration, then deflate promptly and confirm the pulmonary-artery waveform returns. Plausible is not the same as confirmed.',
+      'Read at end expiration — the end-diastolic point if you are estimating left ventricular end-diastolic pressure, the mean if that is the value you want, and not the two interchangeably. Then deflate promptly and confirm the pulmonary-artery waveform returns. Plausible is not the same as confirmed.',
     sourceIds: ['clinical-hemodynamics-waveforms', 'pac-review-2014'],
   },
   {
@@ -198,9 +199,9 @@ export const pawpOcclusionOutcomes: readonly PawpOcclusionOutcome[] = [
     atlasEntryId: 'wedge-overwedged',
     plausiblyInterpretable: false,
     whatYouSee:
-      'A wavering line with no a or v waves that drifts upward over seconds instead of settling, often reading higher than pulmonary-artery diastolic pressure.',
+      'A wavering line whose atrial wave components cannot be made out, drifting upward over seconds instead of settling, and often reading above pulmonary-artery diastolic pressure.',
     verdict:
-      'Not an occlusion pressure. A reading above pulmonary-artery diastolic pressure is physiologically impossible for a true wedge, and the absent wave components are the defining feature.',
+      'Not an occlusion pressure. The defining features are the upward drift and the loss of interpretable wave components; the reading sitting above pulmonary-artery diastolic pressure is a relationship that needs reconciling, and on its own it does not establish over-wedging.',
     nextAction:
       'Deflate immediately. Do not flush or manipulate the catheter, and reassess or reposition only under appropriate supervision.',
     sourceIds: ['clinical-hemodynamics-waveforms', 'pac-review-2014'],
@@ -314,15 +315,15 @@ export const pawpPlausibilityCommitment: ClinicalLearningItem = item({
     {
       id: 'shape-plus-value-enough',
       label:
-        'That it is an occlusion pressure, provided the displayed value is lower than the pulmonary-artery diastolic pressure.',
+        'That it is an occlusion pressure, provided the displayed value sits below the pulmonary-artery diastolic pressure.',
       rationale:
-        'That comparison is genuinely useful — a value above pulmonary-artery diastolic pressure is physiologically impossible for a true wedge. It rules something out rather than ruling this in.',
+        'That comparison is genuinely useful and it is not decisive in either direction. An unexpected relationship between the two is a warning to reconcile them rather than a finding that establishes over-wedging, and a large v wave can lift the displayed mean toward or past pulmonary-artery diastolic pressure without the end-diastolic value moving with it.',
       plausibility: 'reasonable-but-incomplete',
     },
   ],
   correctChoiceIds: ['shape-alone-establishes-little'],
   explanation:
-    'Recognizing the morphology is where the judgement starts. What makes an occlusion pressure believable is the set of things that have to agree with it — a trustworthy signal, well-defined and correctly timed waves, an end-expiratory reading, a plausible depth, and an abrupt return of pulmonary-artery pressure and morphology when the balloon comes down.',
+    'Recognizing the morphology is where the judgement starts. What makes an occlusion pressure believable is the set of things that have to agree with it — a trustworthy signal, interpretable and correctly timed wave components, an end-expiratory reading of the value you actually want, a plausible depth, and an abrupt return of pulmonary-artery pressure and morphology when the balloon comes down. In atrial fibrillation the a wave is gone, and the remaining landmarks do that work instead.',
   evidenceIds: [...OCCLUSION_EVIDENCE, ...TIMING_EVIDENCE],
   reviewStatus: 'sme-review',
 })
@@ -389,7 +390,7 @@ export const pawpRecoveryCommitment: ClinicalLearningItem = item({
  * learner most wants a number and where the module has none to give.
  */
 export const PAWP_BALLOON_NUMBERS_BOUNDARY =
-  'This station gives no inflation volume in millilitres and no inflation-time limit, because no reviewed source in this module supplies either. Both come from the manufacturer’s instructions for the catheter in use and from your local procedure protocol. The simulator ends a prolonged occlusion at a fixed cutoff of its own so that an inflation is never left running here; that cutoff is a property of this simulation and is not a clinical limit.'
+  'This station does not teach a universal inflation volume or duration. Use the current manufacturer instructions for the exact catheter in use and the applicable local procedure protocol. The simulator ends a prolonged occlusion at a fixed cutoff of its own so that an inflation is never left running here; that cutoff is an educational safety rail, not a clinical limit.'
 
 export const PAWP_BOUNDARY_NOTICE = pacPrebriefNotCoveredNotice
 

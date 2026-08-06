@@ -61,7 +61,7 @@ function balloonStateLine(state: HemodynamicSimulationState): {
   }
   return {
     words:
-      'Balloon DEFLATED. Nothing is occluding, so any occlusion morphology on screen is unaccounted for.',
+      'Balloon DEFLATED. No balloon inflation accounts for an occlusion waveform. Persistent occlusion morphology after deflation is abnormal and requires reassessment — deflating the balloon does not by itself establish that distal occlusion has ended.',
     inflated: false,
   }
 }

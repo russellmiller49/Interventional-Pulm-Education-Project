@@ -340,9 +340,9 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
     displayedChannelLabel: 'PAC · RV',
     fault: { artifact: 'underdamped', dampingRatio: 0.24, naturalFrequencyHz: 11 },
     whatYouSee:
-      'An exaggerated systolic peak with rapid oscillations after it that run down into the diastolic segment and obscure its slope.',
+      'An exaggerated systolic peak with rapid oscillations after it that run down into the diastolic segment and obscure its contour.',
     whatItInvites:
-      'A raised right-ventricular systolic pressure, and — because the up-sloping diastole is buried under the ringing — the conclusion that the tip has already reached the pulmonary artery.',
+      'A raised right-ventricular systolic pressure, and — because the diastolic contour is buried under the ringing — the conclusion that the tip has already reached the pulmonary artery.',
     whyInterpretationIsWithheld:
       'Resonance exaggerates rapid pressure change: systolic reads high, diastolic reads low, and the pulse pressure widens independently of the patient. Here it also destroys the one feature that separates this chamber from the next one.',
     repairFirst:
@@ -362,9 +362,9 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
         {
           id: 'resolve-ringing-before-naming',
           label:
-            'Neither the peak nor the chamber can be settled here. Resolve the ringing first, because the diastolic contour it obscures is what distinguishes the right ventricle from the pulmonary artery.',
+            'Neither the peak nor the chamber can be settled here. Resolve the ringing first, because the diastolic contour it obscures is part of what distinguishes the right ventricle from the pulmonary artery.',
           rationale:
-            'Resonance widens pulse pressure independently of the circulation, and the oscillations sit exactly where the diastolic slope has to be read.',
+            'Resonance widens pulse pressure independently of the circulation, and the oscillations sit exactly where the diastolic contour has to be read.',
           plausibility: 'best',
         },
         {
@@ -380,7 +380,7 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
           label:
             'The tip has reached the pulmonary artery, because the diastolic segment no longer slopes up.',
           rationale:
-            'It no longer looks like it slopes up, which is not the same thing. Losing a feature to artifact is not the same as the feature being absent.',
+            'It no longer looks as though it climbs, which is not the same thing. Losing a feature to artifact is not the same as the feature being absent — and a pulmonary-artery position would also need a diastolic step-up, a downward runoff, and a notch, none of which this tracing can show through the ringing.',
           plausibility: 'unsafe',
         },
       ],

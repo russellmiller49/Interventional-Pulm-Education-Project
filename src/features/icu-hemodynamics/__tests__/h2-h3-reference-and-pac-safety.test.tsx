@@ -18,6 +18,7 @@ import {
   NORMAL_WAVEFORM_DETAIL_SCALE_MAX_MMHG,
   NORMAL_WAVEFORM_INTERPRETATION_WITHHELD,
   NORMAL_WAVEFORM_RESPIRATORY_CONTEXT,
+  NORMAL_WAVEFORM_RHYTHM_CONTEXT,
   NORMAL_WAVEFORM_SHARED_SCALE_MAX_MMHG,
   PAWP_BALLOON_NUMBERS_BOUNDARY,
   advancementMayContinue,
@@ -37,14 +38,18 @@ import {
   pawpRecoveryCommitment,
   pawpRecoveryOutcomes,
   safeAdvancementCommitments,
+  waveformAtlasById,
   type PacLearningPathwaySectionId,
 } from '../content'
 import {
   ICU_HEMODYNAMICS_LEGACY_PROGRESS_STORAGE_KEY,
   ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY,
   ICU_HEMODYNAMICS_PROGRESS_VERSION,
+  advanceHemodynamicSimulation,
   createInitialHemodynamicState,
   icuHemodynamicsReducer,
+  wedgeCaptureDelaySeconds,
+  WEDGE_AUTO_DEFLATION_SECONDS,
   type HemodynamicSimulationState,
 } from '../engine'
 import {
@@ -153,7 +158,38 @@ function newLearnerCopy(): readonly string[] {
       outcome.requiredResponse,
     ]),
     PAWP_BALLOON_NUMBERS_BOUNDARY,
+    NORMAL_WAVEFORM_RHYTHM_CONTEXT.assumption,
+    NORMAL_WAVEFORM_RHYTHM_CONTEXT.whyItMatters,
+    NORMAL_WAVEFORM_RHYTHM_CONTEXT.atrialFibrillation,
+    NORMAL_WAVEFORM_RHYTHM_CONTEXT.whatToUseInstead,
   ].filter((entry) => entry.length > 0)
+}
+
+/**
+ * The corpus the clinical-copy corrections are policed against.
+ *
+ * Wider than `newLearnerCopy` because the correction pass reached into atlas records this package
+ * did not author, and an assertion that stopped at the package boundary would police half the
+ * surface. It is kept separate rather than merged, because those older records carry copy that
+ * predates this work — a saturation percentage in the wedge pitfall, for one — and the banned-term
+ * contract above was written for this package's own sentences.
+ */
+function correctedClinicalCopy(): readonly string[] {
+  return [...newLearnerCopy(), ...atlasWedgeAndVentricleCopy()].filter((entry) => entry.length > 0)
+}
+
+/** Learner-visible strings on the atlas entries this correction pass touched. */
+function atlasWedgeAndVentricleCopy(): readonly string[] {
+  return ['wedge-normal', 'rv-normal', 'pa-normal', 'wedge-overwedged'].flatMap((id) => {
+    const entry = waveformAtlasById.get(id)
+    if (!entry) throw new Error(`Missing atlas entry: ${id}`)
+    return [
+      entry.summary,
+      entry.pitfall ?? '',
+      ...entry.recognitionCues,
+      ...entry.annotations.map((annotation) => annotation.description),
+    ]
+  })
 }
 
 function pawpState(
@@ -262,7 +298,16 @@ describe('H2 canonical normal waveform reference', () => {
     ).toContain(`0 to ${NORMAL_WAVEFORM_DETAIL_SCALE_MAX_MMHG} mmHg`)
   })
 
-  it('resolves every claim it shows to a registered source', () => {
+  /**
+   * Named for what it actually establishes.
+   *
+   * It was titled as proving that every claim resolves to a source, which it does not do and cannot
+   * do at this level: it checks that each record carries source ids that exist in the registry. That
+   * is a real and useful contract — an unregistered id fails the import — but it is a statement about
+   * records, not about sentences. Claim-level locator validation would need the source texts, and the
+   * supplied PDFs are not in this repository.
+   */
+  it('has every reference record cite registered evidence (records, not sentences)', () => {
     for (const entry of normalWaveformReference) {
       expect(entry.evidenceIds.length).toBeGreaterThan(0)
       for (const sourceId of entry.evidenceIds) {
@@ -547,7 +592,9 @@ describe('H3 PAWP acquisition closes its safety loop', () => {
     expect(screen.getByText(/Occlusion balloon INFLATED/i)).toBeInTheDocument()
 
     rerender(<PawpSafetySequencePanel state={pawpState()} onRecoveryConfirmed={jest.fn()} />)
-    expect(screen.getByText(/Balloon DEFLATED\. Nothing is occluding/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Balloon DEFLATED\. No balloon inflation accounts for/i),
+    ).toBeInTheDocument()
   })
 
   it('refuses to let a wedge-like shape alone establish a valid PAWP', () => {
@@ -677,6 +724,198 @@ describe('H2/H3 non-regression', () => {
       expect(text).not.toMatch(/reasonable-but-incomplete|incorrect-mechanism|sme-review/i)
       expect(text).not.toMatch(/signal-invalid|position-depth-mismatch|rhythm-concern/i)
     }
+  })
+})
+
+/**
+ * The clinical-copy correction pass requested before merge.
+ *
+ * Each of these pins a specific sentence that was wrong, not a general property. They are grouped
+ * together deliberately: read as a set, they are the record of what a clinician reviewer objected to
+ * and what replaced it.
+ */
+describe('clinical-copy corrections', () => {
+  const wedgeEntry = () => normalWaveformReference.find((entry) => entry.position === 'wedge')!
+  const rvEntry = () => normalWaveformReference.find((entry) => entry.position === 'rv')!
+  const wedgeAtlas = () => waveformAtlasById.get('wedge-normal')!
+  const overWedgeAtlas = () => waveformAtlasById.get('wedge-overwedged')!
+
+  it('never calls a PAWP above pulmonary-artery diastolic pressure physiologically impossible', () => {
+    for (const text of correctedClinicalCopy()) {
+      expect(text).not.toMatch(/physiologically impossible/i)
+      expect(text).not.toMatch(/impossible for (a |one)?(true )?wedge/i)
+    }
+  })
+
+  it('treats an unexpected PAWP/PADP relationship as something to reconcile, not as a verdict', () => {
+    const overWedged = pawpOcclusionOutcomes.find((outcome) => outcome.id === 'over-wedged')!
+    // The relationship is named, and named as insufficient on its own.
+    expect(overWedged.verdict).toMatch(/above pulmonary-artery diastolic pressure/i)
+    expect(overWedged.verdict).toMatch(/on its own it does not establish over-wedging/i)
+    // What actually identifies it is the drift plus the loss of interpretable wave components.
+    expect(overWedged.verdict).toMatch(
+      /upward drift and the loss of interpretable wave components/i,
+    )
+
+    const pressureOnlyChoice = pawpPlausibilityCommitment.choices.find(
+      (choice) => choice.id === 'shape-plus-value-enough',
+    )!
+    expect(pressureOnlyChoice.plausibility).not.toBe('best')
+    expect(pressureOnlyChoice.rationale).toMatch(/not decisive in either direction/i)
+
+    expect(overWedgeAtlas().recognitionCues.join(' ')).toMatch(
+      /on its own it does not establish over-wedging/i,
+    )
+    expect(wedgeEntry().unsafeToInterpret).toMatch(
+      /pressure relationship alone does not establish over-wedging/i,
+    )
+  })
+
+  it('distinguishes mean PAWP from end-diastolic PAWP wherever LVEDP is estimated', () => {
+    expect(wedgeEntry().pressureDirection).toMatch(
+      /displayed mean and that end-diastolic value are different measurements and are not interchangeable/i,
+    )
+    const aWave = wedgeAtlas().annotations.find((annotation) => annotation.id === 'a')!
+    expect(aWave.description).toMatch(/that end-diastolic value is not the displayed mean/i)
+    // And the reason the two diverge is named where over-wedging is discussed.
+    expect(wedgeEntry().unsafeToInterpret).toMatch(
+      /large v wave can raise the displayed mean without the end-diastolic value moving with it/i,
+    )
+  })
+
+  it('reads end-diastolic PAWP just before the c wave rather than at the peak of the a wave', () => {
+    const aWave = wedgeAtlas().annotations.find((annotation) => annotation.id === 'a')!
+    for (const text of [aWave.description, wedgeEntry().pressureDirection]) {
+      expect(text).not.toMatch(/peak of the a wave is the best/i)
+      expect(text).not.toMatch(/best single estimate/i)
+    }
+    expect(aWave.description).toMatch(/read just before the c wave/i)
+    expect(aWave.description).toMatch(
+      /average the peak and the trough of this a wave|average the peak and the trough/i,
+    )
+    expect(wedgeEntry().pressureDirection).toMatch(/just before the c wave/i)
+    expect(wedgeEntry().pressureDirection).toMatch(/average the peak and the trough of the a wave/i)
+    // The averaging fallback is scoped to sinus rhythm, where an a wave exists at all.
+    expect(wedgeEntry().pressureDirection).toMatch(/in sinus rhythm/i)
+  })
+
+  it('states on the reference itself that it assumes sinus rhythm', () => {
+    expect(NORMAL_WAVEFORM_RHYTHM_CONTEXT.assumption).toMatch(/assumes sinus rhythm/i)
+
+    render(<NormalWaveformReference />)
+    const note = screen.getByLabelText('Rhythm this reference assumes')
+    expect(within(note).getByText(/This reference assumes sinus rhythm/i)).toBeInTheDocument()
+    expect(within(note).getByText(/Atrial fibrillation removes the a wave/i)).toBeInTheDocument()
+  })
+
+  it('accommodates the missing a wave of atrial fibrillation in the wedge validity language', () => {
+    expect(NORMAL_WAVEFORM_RHYTHM_CONTEXT.atrialFibrillation).toMatch(
+      /absence does not by itself make the tracing invalid/i,
+    )
+    expect(wedgeEntry().unsafeToInterpret).toMatch(/In atrial fibrillation the a wave is absent/i)
+    expect(wedgeEntry().unsafeToInterpret).toMatch(
+      /does not invalidate|by itself does not invalidate|that by itself does not invalidate/i,
+    )
+    expect(wedgeEntry().unsafeToInterpret).toMatch(/remaining ECG and pressure landmarks/i)
+    // v > a is a typical feature, not a validity requirement.
+    expect(wedgeEntry().expectedMorphology).toMatch(/typically larger than the a wave/i)
+    expect(wedgeEntry().expectedMorphology).toMatch(/typical normal feature, not a requirement/i)
+    expect(wedgeAtlas().recognitionCues.join(' ')).toMatch(
+      /typical normal feature rather than a validity requirement/i,
+    )
+    expect(wedgeAtlas().pitfall ?? '').toMatch(/the v wave alone in atrial fibrillation/i)
+    for (const text of correctedClinicalCopy()) {
+      expect(text).not.toMatch(/v wave normally exceeds the a wave/i)
+      expect(text).not.toMatch(/v wave normally EXCEEDS/)
+    }
+  })
+
+  it('never makes a conspicuous up-sloping RV diastole a single mandatory criterion', () => {
+    const rv = rvEntry()
+    for (const text of [
+      rv.expectedMorphology,
+      rv.expectedChangeFromPrevious,
+      rv.unsafeToInterpret,
+      ...rv.technicalDistortions.map((distortion) => distortion.whatItMimics),
+    ]) {
+      expect(text).not.toMatch(/only feature separating/i)
+      expect(text).not.toMatch(/single most reliable/i)
+      expect(text).not.toMatch(/no up-sloping diastole is not a confirmed/i)
+    }
+    // The climb is offered as possible, and read alongside the rest of the transition.
+    expect(rv.expectedMorphology).toMatch(/may climb gradually/i)
+    expect(rv.expectedChangeFromPrevious).toMatch(/whole transition rather than any one feature/i)
+    expect(rv.expectedChangeFromPrevious).toMatch(
+      /read together with the rest of the transition|rather than required on its own/i,
+    )
+    // And the pulmonary-artery side is what the discrimination actually rests on.
+    expect(rv.unsafeToInterpret).toMatch(
+      /diastolic step-up, a downward runoff, and a dicrotic notch/i,
+    )
+    expect(waveformAtlasById.get('rv-normal')!.summary).toMatch(/may climb gradually/i)
+  })
+
+  it('does not describe a deflated balloon as proving that nothing is occluding', () => {
+    render(<PawpSafetySequencePanel state={pawpState()} onRecoveryConfirmed={jest.fn()} />)
+    const balloon = screen.getByText(/Balloon DEFLATED\./i)
+    expect(balloon).not.toHaveTextContent(/Nothing is occluding/i)
+    expect(balloon).toHaveTextContent(/No balloon inflation accounts for an occlusion waveform/i)
+    expect(balloon).toHaveTextContent(
+      /Persistent occlusion morphology after deflation is abnormal and requires reassessment/i,
+    )
+    expect(balloon).toHaveTextContent(
+      /does not by itself establish that distal occlusion has ended/i,
+    )
+  })
+
+  it('introduces no universal balloon volume or inflation duration, and says why', () => {
+    const volume = /\b\d+(\.\d+)?\s*(ml\b|millilit|cc\b)/i
+    const duration =
+      /\b(inflat|occlu|wedge|balloon)[^.]{0,80}\b\d+(\.\d+)?\s*(second|sec\b|s\b|minute)/i
+    for (const text of correctedClinicalCopy()) {
+      expect(text).not.toMatch(volume)
+      expect(text).not.toMatch(duration)
+    }
+    // The boundary is framed as scope, not as an absence of sources.
+    expect(PAWP_BALLOON_NUMBERS_BOUNDARY).toMatch(
+      /does not teach a universal inflation volume or duration/i,
+    )
+    expect(PAWP_BALLOON_NUMBERS_BOUNDARY).toMatch(/exact catheter in use/i)
+    expect(PAWP_BALLOON_NUMBERS_BOUNDARY).toMatch(/applicable local procedure protocol/i)
+    expect(PAWP_BALLOON_NUMBERS_BOUNDARY).toMatch(/educational safety rail, not a clinical limit/i)
+    expect(PAWP_BALLOON_NUMBERS_BOUNDARY).not.toMatch(/no reviewed source/i)
+  })
+
+  it('leaves the simulator cutoff and its inability to complete the station untouched', () => {
+    // The constant, the auto-deflation, and the recorded safety event are all unchanged.
+    expect(WEDGE_AUTO_DEFLATION_SECONDS).toBe(10)
+
+    const definition = hemodynamicCaseById.get('HD-01')!
+    let state = icuHemodynamicsReducer(createInitialHemodynamicState(definition, 'learn', 3), {
+      type: 'ZERO_TRANSDUCER',
+    })
+    state = icuHemodynamicsReducer(state, { type: 'START_WEDGE' })
+    state = advanceHemodynamicSimulation(
+      state,
+      wedgeCaptureDelaySeconds(state.parameters.respiratoryRateBpm) + 0.2,
+    )
+    state = icuHemodynamicsReducer(state, { type: 'PLACE_WEDGE_CURSOR' })
+    state = icuHemodynamicsReducer(state, { type: 'STORE_WEDGE' })
+    const elapsed = state.timeSeconds - (state.catheter.wedgeStartedAt ?? 0)
+    state = advanceHemodynamicSimulation(state, WEDGE_AUTO_DEFLATION_SECONDS - elapsed + 0.1)
+
+    expect(state.catheter.forcedSafetyRecovery).toBe(true)
+    expect(state.catheter.balloonInflated).toBe(false)
+    expect(state.catheter.position).toBe('pa')
+    expect(state.criticalErrors).toContain('wedge-prolonged-inflation')
+    // And that path still cannot finish the station, with or without the learner's own assessment.
+    expect(pacGuidedObjectiveComplete('pawp-capture', state)).toBe(false)
+    expect(
+      pacGuidedObjectiveComplete('pawp-capture', {
+        ...state,
+        signalValidationChecks: [...state.signalValidationChecks, PA_RETURN_CHECK],
+      }),
+    ).toBe(false)
   })
 })
 

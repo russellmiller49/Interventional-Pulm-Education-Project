@@ -6114,3 +6114,32 @@
   outline-offset: 2px;
   border-radius: 0.4rem;
 }
+
+/*
+ * The rhythm the reference assumes, stated before the first tracing.
+ *
+ * Deliberately not a footnote: every entry below times its waves against a P wave, and a learner who
+ * misses that will read a missing a wave in atrial fibrillation as an invalid tracing.
+ */
+.referenceRhythmNote {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid #cfe0dc;
+  border-left: 3px solid var(--teal);
+  border-radius: 0.7rem;
+  background: var(--teal-soft);
+}
+
+.referenceRhythmNote strong {
+  color: #0f5a58;
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
+.referenceRhythmNote p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.72rem;
+  line-height: 1.55;
+}

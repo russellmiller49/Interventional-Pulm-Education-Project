@@ -5,6 +5,7 @@ import { useId, useRef, useState, type KeyboardEvent } from 'react'
 import {
   NORMAL_WAVEFORM_RANGE_CAVEAT,
   NORMAL_WAVEFORM_RESPIRATORY_CONTEXT,
+  NORMAL_WAVEFORM_RHYTHM_CONTEXT,
   normalWaveformAtlasEntry,
   normalWaveformReference,
   normalWaveformReferenceTextEquivalent,
@@ -87,6 +88,18 @@ export function NormalWaveformReference() {
           anatomy, the trace, the ECG, the breath, and the axis below all describe the same moment.
         </p>
       </header>
+
+      {/*
+        The rhythm this whole reference is drawn in, stated before the first tracing rather than
+        left to be inferred. Every entry times its waves against a P wave; a learner who never reads
+        that will meet atrial fibrillation and conclude the tracing is invalid.
+      */}
+      <section className={styles.referenceRhythmNote} aria-label="Rhythm this reference assumes">
+        <strong>{NORMAL_WAVEFORM_RHYTHM_CONTEXT.assumption}</strong>
+        <p>{NORMAL_WAVEFORM_RHYTHM_CONTEXT.whyItMatters}</p>
+        <p>{NORMAL_WAVEFORM_RHYTHM_CONTEXT.atrialFibrillation}</p>
+        <p>{NORMAL_WAVEFORM_RHYTHM_CONTEXT.whatToUseInstead}</p>
+      </section>
 
       <div
         role="tablist"

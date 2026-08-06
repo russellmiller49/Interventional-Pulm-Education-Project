@@ -338,9 +338,9 @@ export const pacAdvancementScenarios: readonly PacAdvancementScenario[] = [
         {
           id: 'advance',
           label:
-            'Advance, expecting a steep systolic rise with a diastole that slopes upward through filling.',
+            'Advance, expecting a rapid systolic rise and a fall toward a low diastole that may climb gradually through filling, with no step-up, no runoff, and no notch.',
           rationale:
-            'Nothing says stop, and the reference names exactly what should change: a large systolic step with an up-sloping diastole, not simply a higher number.',
+            'Nothing says stop, and the reference names exactly what should change: a large systolic step with a low diastole that may climb through filling, and none of the features that mark the pulmonary artery — not simply a higher number.',
           plausibility: 'best',
         },
         {
@@ -364,9 +364,9 @@ export const pacAdvancementScenarios: readonly PacAdvancementScenario[] = [
       evidenceIds: PLACEMENT_EVIDENCE,
     }),
     observed:
-      'Systolic pressure steps up sharply, and diastole begins low and slopes upward as the ventricle fills. There is no dicrotic notch.',
+      'Systolic pressure steps up sharply, and diastole begins low and climbs gradually as the ventricle fills. There is no diastolic step-up, no runoff, and no dicrotic notch.',
     reconciliation:
-      'The contour, not the peak, identifies the chamber: an up-sloping diastole is what a right ventricle does and a pulmonary artery does not. Depth, rhythm, and patient all still agree.',
+      'The whole transition identifies the chamber rather than the peak: a low diastole that may climb through filling, and none of the step-up, runoff, or notch that would mark the pulmonary artery. Depth, rhythm, and patient all still agree.',
     justification:
       'Continuing is defensible. The right ventricle is a transit position, so stopping here would leave the catheter somewhere it should not be left — which is itself a stop condition in the prebrief.',
     prebriefStopConditionId: null,
@@ -400,7 +400,7 @@ export const pacAdvancementScenarios: readonly PacAdvancementScenario[] = [
     commitment: commitmentItem({
       id: 'pac-advance-commit-rv',
       clinicalContextId: 'pac-advancement-rv-to-pa',
-      stem: 'A right-ventricular waveform is confirmed by its up-sloping diastole, every other observable is unchanged, and the flow-directed balloon is inflated. What do you commit to?',
+      stem: 'A right-ventricular waveform is confirmed — a low diastole climbing through filling, with no step-up, no runoff, and no notch — every other observable is unchanged, and the flow-directed balloon is inflated. What do you commit to?',
       choices: [
         {
           id: 'advance',
@@ -422,7 +422,7 @@ export const pacAdvancementScenarios: readonly PacAdvancementScenario[] = [
           label:
             'Stop, because right-ventricular and pulmonary-artery systolic pressures are the same and the transition therefore cannot be confirmed.',
           rationale:
-            'The premise is right and the conclusion does not follow. Systolic pressure cannot distinguish the two chambers, which is why the diastolic step-up, the reversed slope, and the notch are what confirm the crossing.',
+            'The premise is right and the conclusion does not follow. Systolic pressure cannot distinguish the two chambers, which is why the diastolic step-up, the change in the direction diastole runs, and the notch are together what confirm the crossing.',
           plausibility: 'reasonable-but-incomplete',
         },
       ],
@@ -450,7 +450,7 @@ export const pacAdvancementScenarios: readonly PacAdvancementScenario[] = [
     signalValidity: clean.signal,
     currentTracing: {
       statement:
-        'A textbook right-ventricular tracing — steep upstroke, low end-diastolic pressure, unmistakably up-sloping diastole. Exactly what this position predicts.',
+        'A textbook right-ventricular tracing — rapid systolic rise, low end-diastolic pressure, a diastole climbing through filling, and none of the pulmonary-artery features. Exactly what this position predicts.',
       concerning: false,
       matchesPosition: 'rv',
     },
