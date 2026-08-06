@@ -20,8 +20,11 @@ describe('Baxter CRRT learner composition', () => {
     expect(graph).toMatch(/content\/learnLessons/)
     expect(graph).toMatch(/content\/curriculum/)
     expect(graph).toMatch(/deviceAdapters\/prismax/)
-    expect(graph).toMatch(/CrrtPrescriptionWorkbench/)
+    expect(graph).toMatch(/CrrtStagedPrescriptionBuilder/)
+    expect(graph).toMatch(/CrrtCitrateDifferential/)
     expect(graph).toMatch(/CrrtPressureLocalizationLab/)
+    // The dense all-at-once workbench is gone, not merely unmounted.
+    expect(graph).not.toMatch(/CrrtPrescriptionWorkbench/)
     expect(graph).not.toMatch(/deviceAdapters\/prismaflex/)
     expect(graph).not.toMatch(/crossDeviceTransfer/)
     expect(graph).not.toMatch(/CrrtPhase7InstructionalTools/)

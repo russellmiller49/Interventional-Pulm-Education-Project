@@ -148,7 +148,7 @@ function WorkspaceHarness({
   const [state, dispatch] = useReducer(ecmoSimulationReducer, initialScenarioId, (id) =>
     createInitialSimulationState(id, 'guided'),
   )
-  const [guidedTarget, setGuidedTarget] = useState<GuidedTarget>('circuit')
+  const [guidedTarget, setGuidedTarget] = useState<GuidedTarget | null>('circuit')
   const [guidedControlId, setGuidedControlId] = useState<GuidedControlId | null>(null)
   const lesson = resolveGuidedLesson(scenarioId)
 

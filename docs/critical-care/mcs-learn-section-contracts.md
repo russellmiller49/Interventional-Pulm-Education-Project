@@ -76,6 +76,16 @@ cannot be satisfied, a duplicate instruction or explanation, a non-finite readin
 in which nothing changes. `MCS_SECTION=<id>` narrows it to one section.
 
 ```bash
+npx tsx scripts/critical-care/render-mcs-teaching-panels.ts
+```
+
+Renders all nine live teaching panels at every reveal stage and both pane widths onto one page, and
+gates on the checks a screenshot cannot make — including the wording the correction pass removed, the
+congestion framework's provenance, and the cohort thresholds' cohort-specific labelling. Added by M4;
+see [`mcs-live-teaching-panels.md`](./mcs-live-teaching-panels.md) for what each panel claims, what it
+refuses to claim, and where the filling-pressure congestion framework comes from.
+
+```bash
 npx tsx scripts/critical-care/dump-mcs-signals.ts
 ```
 

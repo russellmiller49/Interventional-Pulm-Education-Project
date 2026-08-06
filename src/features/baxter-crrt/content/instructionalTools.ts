@@ -31,9 +31,9 @@ const tools: readonly Omit<
 >[] = [
   {
     id: 'LAB-PRESCRIPTION',
-    title: 'Full Prescription Workbench',
+    title: 'Staged Prescription Builder',
     purpose:
-      'Compare source-backed device calculations while keeping clinical goals, solution choices, and protocols explicitly separate.',
+      'Build a prescription in three steps — the job it has to do, the flows that do it, and what those flows predict — while keeping clinical goals, solution choices, and protocols explicitly separate.',
     sourceRecordIds: [
       'MATH-PM-001',
       'MATH-PM-003',

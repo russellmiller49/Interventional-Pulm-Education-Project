@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 
 import type {
+  CircuitViewPreference,
   ClinicalInitiationTargets,
   EcmoChannelReadout,
   EcmoSimulationState,
@@ -24,6 +25,7 @@ import type {
 import { TIP_TO_TIP_CHECK_ID } from '../content/scenarios'
 import { SimulationLaunchGate } from '@/features/learning-module/components/SimulationLaunchGate'
 import { UNAVAILABLE_INDICATION, formatChannelReadout, isInterpretable } from './channelReadout'
+import { drainageChatterActive } from './ecmo-circuit/chatter'
 import styles from './cardiohelp-ecmo.module.css'
 import { EcmoCircuit3D } from './EcmoCircuit3D'
 
@@ -33,6 +35,14 @@ interface SimulationPanelProps {
   controlsEnabled: boolean
   guidedTarget?: GuidedTarget | null
   guidedControlId?: GuidedControlId | null
+  /**
+   * The circuit surface the active guided step is read on, tagged with that step's id.
+   *
+   * Applied once per step entry. Authored on the step rather than matched on a scenario id here, so
+   * this component never has to know which case is loaded — and so a learner who switches tabs
+   * mid-step is not dragged back.
+   */
+  circuitViewPreference?: { readonly view: CircuitViewPreference; readonly stepId: string } | null
   initiationTargets?: ClinicalInitiationTargets | null
   onSaveForLater?: () => void
 }
@@ -66,10 +76,25 @@ function CircuitSchematic({
   controlsEnabled,
   guidedTarget,
   guidedControlId,
+  circuitViewPreference,
   onSaveForLater,
 }: SimulationPanelProps) {
   const diagramScrollRef = useRef<HTMLDivElement>(null)
-  const [circuitView, setCircuitView] = useState<'bedside' | 'diagnostic'>('bedside')
+  const [circuitView, setCircuitView] = useState<CircuitViewPreference>(
+    () => circuitViewPreference?.view ?? 'bedside',
+  )
+
+  // Step entry, not step state: keyed on the step id so arriving at a pressure-localization step
+  // opens its view once, and a learner who then picks the other tab keeps it for that step.
+  const preferenceKey = circuitViewPreference
+    ? `${circuitViewPreference.stepId}:${circuitViewPreference.view}`
+    : null
+  const [appliedPreferenceKey, setAppliedPreferenceKey] = useState<string | null>(preferenceKey)
+  if (preferenceKey !== appliedPreferenceKey) {
+    setAppliedPreferenceKey(preferenceKey)
+    if (circuitViewPreference) setCircuitView(circuitViewPreference.view)
+  }
+
   const clampGuidedHelpActive =
     guidedControlId === 'cardiohelp-clamp-drainage' ||
     guidedControlId === 'cardiohelp-clamp-return' ||
@@ -93,6 +118,16 @@ function CircuitSchematic({
   const returnDestinationLabel = isVa ? 'arterial circulation / aorta' : 'right atrium'
   const returnPortX = isVa ? 244 : 214
   const bloodMoving = state.device.pumpRunning && Math.abs(state.circuit.bloodFlow) > 0.05
+  /*
+   * The same owner the 3D scene and the HUD read, not the raw engine flag.
+   *
+   * `drainageChatter` survives the pump stopping — close the drainage clamp on this case and the
+   * flag stays true on an isolated circuit at 0.00 L/min. Reading it raw here painted a juddering
+   * limb and a DRAINAGE CHATTER badge two rows above a readout grid saying the clamp was closed,
+   * while the bedside scene correctly showed nothing. That is the map-vs-3D disagreement this cue
+   * exists to end, with the sign flipped.
+   */
+  const drainageChattering = drainageChatterActive(state)
   const gasMoving = state.gas.sourceConnected && state.gas.sweepLpm > 0
   const startupInspectionCompleted = state.scenario.correctedFaults.includes('startup-inspection')
   const postPumpPath = 'M486 346 Q512 346 526 364 Q536 377 552 385 H700'
@@ -103,7 +138,13 @@ function CircuitSchematic({
     isVa
       ? ' Native cardiac ejection, the approximate mixing region, right-arm monitoring, and the need for a separate distal-limb review are also shown.'
       : ' Both cannulas remain in the venous circulation and systemic flow still depends on the native heart.'
-  } The pump uses a center-inlet to tangential-outflow schematic. In the oxygenator, blood is shown moving around simplified hollow fibers while sweep gas moves through them. Static arrows show direction. Moving dashes show simulated blood motion when circuit flow is present. Component geometry is conceptual rather than device-exact.`
+  } The pump uses a center-inlet to tangential-outflow schematic. In the oxygenator, blood is shown moving around simplified hollow fibers while sweep gas moves through them. Static arrows show direction. Moving dashes show simulated blood motion when circuit flow is present. Component geometry is conceptual rather than device-exact.${
+    // The chatter badge is drawn inside an SVG with role="img", so its text is not exposed to
+    // assistive technology. The description this SVG is named by has to carry it instead.
+    drainageChattering
+      ? ' The drainage limb is currently marked as chattering: it is drawn with a broken outline and labelled DRAINAGE CHATTER.'
+      : ''
+  }`
   const resistancePattern = !diagnosisRevealed
     ? 'Pattern label withheld until reassessment and reveal'
     : state.scenario.activeFaults.includes('oxygenator-resistance') ||
@@ -399,7 +440,17 @@ function CircuitSchematic({
               Follow the arrows from drainage to return
             </text>
 
-            <g className={state.circuit.drainageChatter ? styles.chatteringTube : undefined}>
+            {/*
+              Chatter is drawn from the engine flag, and it is drawn three ways: the limb judders,
+              its wall goes to a broken outline, and a bordered badge names it in words. Motion is
+              suppressed under reduced motion and colour alone is never the carrier, so the cue
+              survives both.
+            */}
+            <g
+              data-limb="drainage"
+              data-chattering={drainageChattering || undefined}
+              className={drainageChattering ? styles.chatteringTube : undefined}
+            >
               <path
                 d="M96 447 C215 467 293 385 405 385"
                 className={`${styles.circuitLimb} ${styles.drainageLimb}`}
@@ -413,6 +464,20 @@ function CircuitSchematic({
             <text x="286" y="361" textAnchor="middle" className={styles.limbLabel}>
               DRAINAGE LIMB · NEGATIVE PRESSURE
             </text>
+            {/*
+              Directly under the limb's own label, not down in the anatomy panel.
+              It was at (286, 500), where its opaque plate covered the VA `DISTAL LIMB CHECK` label
+              at (288, 493) and clipped `Femoral vein/artery return` at (158, 519). Here it names the
+              limb it sits beside and the box is clear of every other text anchor — asserted by test.
+            */}
+            {drainageChattering ? (
+              <g className={styles.limbStatusBadge} transform="translate(286 378)">
+                <rect x="-76" y="-11" width="152" height="22" rx="7" />
+                <text y="5" textAnchor="middle">
+                  DRAINAGE CHATTER
+                </text>
+              </g>
+            ) : null}
 
             <path d={postPumpPath} className={`${styles.circuitLimb} ${styles.postPumpLimb}`} />
             <path
@@ -634,12 +699,30 @@ function CircuitSchematic({
         </div>
       </div>
 
-      <div className={styles.patternCallout} data-alert={lowFlow || state.circuit.drainageChatter}>
+      {/*
+        Outside both tabpanels, and outside the launch gate, on purpose.
+
+        This started life inside `EcmoCircuit3D`, which put it inside the bedside tabpanel — and the
+        drainage lesson now opens on the *map*, so the one statement written to carry the chatter to
+        a screen reader was `hidden` exactly when it mattered. It is also below the launch gate's
+        desktop minimum and below the WebGL check, neither of which should decide whether a learner
+        is told what the circuit is doing. Here it survives all three.
+      */}
+      {drainageChattering ? (
+        <p className={styles.circuitSceneStatus} role="status" data-alert="true">
+          <strong>Drainage chatter.</strong> The drainage limb is repeatedly being drawn shut and
+          springing open. It judders in the bedside 3D circuit and is drawn with a broken outline
+          and a DRAINAGE CHATTER badge on the pressure-zone map. This marker is drawn from the
+          model’s own flag; it does not change any displayed number.
+        </p>
+      ) : null}
+
+      <div className={styles.patternCallout} data-alert={lowFlow || drainageChattering}>
         <Activity aria-hidden="true" />
         <div>
           <strong>{resistancePattern}</strong>
           <span>
-            {state.circuit.drainageChatter && pressuresInterpretable
+            {drainageChattering && pressuresInterpretable
               ? 'Visible + text cue: drainage line chattering with increasingly negative pVen.'
               : pressuresInterpretable
                 ? 'Compare flow and all three pressure locations; do not interpret one value in isolation.'

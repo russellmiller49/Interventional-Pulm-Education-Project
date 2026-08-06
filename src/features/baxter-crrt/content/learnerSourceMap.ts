@@ -104,3 +104,128 @@ export function unresolvableCrrtSourceIds(ids: Iterable<string>): readonly strin
   }
   return [...missing].sort()
 }
+
+/* ------------------------------------------------------------------ *
+ * Claim-specific support — a different question from resolution
+ * ------------------------------------------------------------------ */
+
+/**
+ * Everything above answers one question: *does this citation resolve to a registered record?*
+ * That is syntactic closure, and it is necessary but not sufficient. A citation can resolve
+ * perfectly and still be misleading, because the record it resolves to says nothing about the
+ * statement it is attached to.
+ *
+ * The C0/C1 citrate first-use terms were the case that made the distinction concrete. All seven
+ * cited `REVIEW-CKRT-CORE-2025`, `TEXT-CRRT-NEYRA-2026`, and `GUID-RRT-ICU-2026`, all three ids
+ * resolved, and the panel printed them as "Sources:" under each definition — yet those records'
+ * registered claims are about transport mechanisms, modality concepts, treatment goals, delivered
+ * therapy, access, fluid-removal tolerance, and the prescribed-versus-delivered gap. None of them
+ * says anything about where citrate enters a circuit, what it binds, which sample describes which
+ * compartment, or where calcium replacement runs.
+ *
+ * So this second layer asks: *does the record's own registered `claim` string cover the topic the
+ * statement needs?* The map below is a hand audit of those `claim` strings and nothing more. It is
+ * deliberately conservative: a topic is listed only when the record's claim names it. Adding a
+ * topic to a record here is a provenance decision, not a formatting one.
+ */
+export const CRRT_CLAIM_TOPICS = [
+  /* Topics the registered clinical records do cover. */
+  'solute-transport-mechanisms',
+  'modality-concepts',
+  'modality-selection',
+  'treatment-goals',
+  'modality-logistics',
+  'delivered-therapy',
+  'prescribed-versus-delivered',
+  'vascular-access',
+  'fluid-removal-tolerance',
+  'continuous-therapy-for-instability',
+  /* Topics this module's own authored artefacts cover. */
+  'circuit-topology',
+  'authored-citrate-teaching-structure',
+  /**
+   * Deliberately unmapped. No record in this module's registered set carries a claim about what
+   * citrate binds, what becomes of it, or how it moves across a membrane. A statement needing this
+   * topic is a source gap by construction, and stays one until an SME expands the source set.
+   */
+  'citrate-pharmacology',
+] as const
+
+export type CrrtClaimTopic = (typeof CRRT_CLAIM_TOPICS)[number]
+
+/**
+ * Source id → the topics that record's own registered `claim` string actually covers.
+ *
+ * Only records cited as claim support need an entry. An unmapped id supports nothing, which is the
+ * safe default: a new citation has to be audited into this map before it can be presented as
+ * support for anything.
+ */
+const claimTopicsBySourceId: ReadonlyMap<string, readonly CrrtClaimTopic[]> = new Map([
+  // "The review describes diffusion, convection, ultrafiltration, adsorption, and continuous
+  //  kidney-replacement modality concepts."
+  ['REVIEW-CKRT-CORE-2025', ['solute-transport-mechanisms', 'modality-concepts'] as const],
+  // "The chapter frames kidney-replacement decisions around patient-specific solute and
+  //  volume-control goals, modality logistics, delivered therapy, access, and iterative tolerance
+  //  of fluid removal."
+  [
+    'TEXT-CRRT-NEYRA-2026',
+    [
+      'treatment-goals',
+      'modality-logistics',
+      'delivered-therapy',
+      'vascular-access',
+      'fluid-removal-tolerance',
+    ] as const,
+  ],
+  // "The multidisciplinary guideline describes individualized modality selection, continuous or
+  //  prolonged therapy for hemodynamic instability, and the gap between prescribed and delivered
+  //  continuous therapy during interruptions."
+  [
+    'GUID-RRT-ICU-2026',
+    [
+      'modality-selection',
+      'continuous-therapy-for-instability',
+      'prescribed-versus-delivered',
+    ] as const,
+  ],
+  // The module's own authored citrate-teaching record, whose claim covers the authored structure
+  // and the circuit schematic those statements are read off.
+  ['SYNTH-LAB-CITRATE-001', ['authored-citrate-teaching-structure', 'circuit-topology'] as const],
+])
+
+/**
+ * True only when the record resolves *and* its registered claim covers the topic.
+ *
+ * `isResolvableCrrtSourceId(id)` being true says nothing about this.
+ */
+export function crrtSourceSupportsClaim(sourceId: string, topic: CrrtClaimTopic): boolean {
+  if (!byId.has(sourceId)) return false
+  return (claimTopicsBySourceId.get(sourceId) ?? []).includes(topic)
+}
+
+/** Every registered record whose claim covers the topic. Empty means the set has a gap. */
+export function crrtSourcesSupportingClaim(topic: CrrtClaimTopic): readonly string[] {
+  return [...claimTopicsBySourceId]
+    .filter(([, topics]) => topics.includes(topic))
+    .map(([id]) => id)
+    .sort()
+}
+
+export interface CrrtClaimCitation {
+  /** Where the citation appears, for the failure message. */
+  readonly label: string
+  readonly sourceId: string
+  readonly topic: CrrtClaimTopic
+}
+
+/**
+ * The semantic counterpart of `unresolvableCrrtSourceIds`. Returns the citations that resolve but
+ * are not supported by the record they resolve to.
+ */
+export function unsupportedCrrtClaimCitations(
+  citations: Iterable<CrrtClaimCitation>,
+): readonly CrrtClaimCitation[] {
+  return [...citations].filter(
+    (citation) => !crrtSourceSupportsClaim(citation.sourceId, citation.topic),
+  )
+}

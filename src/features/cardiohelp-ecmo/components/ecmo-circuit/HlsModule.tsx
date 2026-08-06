@@ -68,18 +68,18 @@ export function HlsModule({
   running,
   rpm,
   animate,
-  consolePosition,
 }: {
   layout: CircuitLayout
   running: boolean
   rpm: number
   animate: boolean
-  consolePosition: THREE.Vector3
 }) {
   const { scene } = useGLTF(OXYGENATOR_ASSET)
   const holder = useMemo(() => {
     const from = layout.hlsModulePosition.clone().add(new THREE.Vector3(0.08, 0.05, 0))
-    const to = consolePosition.clone().add(new THREE.Vector3(-0.18, 0.35, -0.05))
+    // Lands on the console's upper body, taken from its transformed bounds. A fixed offset from the
+    // console's floor position left the arm ending in mid-air once the console stood up.
+    const to = layout.consoleHolderAnchor
     const mid = from.clone().lerp(to, 0.5)
     const span = to.clone().sub(from)
     const quaternion = new THREE.Quaternion().setFromUnitVectors(
@@ -87,7 +87,7 @@ export function HlsModule({
       span.clone().normalize(),
     )
     return { mid, length: span.length(), quaternion }
-  }, [consolePosition, layout.hlsModulePosition])
+  }, [layout.consoleHolderAnchor, layout.hlsModulePosition])
 
   return (
     <group>

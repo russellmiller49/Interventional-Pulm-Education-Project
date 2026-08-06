@@ -1,4 +1,5 @@
 import type {
+  CircuitViewPreference,
   GuidedLessonDefinition,
   GuidedTarget,
   GuidedWalkthroughStep,
@@ -18,6 +19,11 @@ interface ResponseStepInput {
   actionLabel: string
   actions: readonly SimulationAction[]
   expectedResponse: readonly string[]
+  /**
+   * Declared on the clamp and resumption steps: those controls exist in the bedside 3D scene, so a
+   * learner who arrived from a pressure step reading the map is taken back to where the clamp is.
+   */
+  preferredCircuitView?: CircuitViewPreference
 }
 
 interface StandardLessonInput {
@@ -29,6 +35,14 @@ interface StandardLessonInput {
     instruction: string
     rationale: string
     expectedResponse: readonly string[]
+    /**
+     * The circuit surface the observe step — and the prediction that follows it — are read on.
+     *
+     * A pressure-pattern case is answered by comparing pVen, pInt, pArt and the Δp trend, which
+     * only the pressure-zone map lays out side by side. The prediction inherits it because the
+     * learner is answering the same question they were just asked to look at.
+     */
+    preferredCircuitView?: CircuitViewPreference
   }
   responseSteps: readonly ResponseStepInput[]
   reassessment: {
@@ -75,12 +89,17 @@ function eventActions(scenario: ScenarioDefinition): SimulationAction[] {
  * `requireEcmoLearnPrediction` is called for its failure: a lesson that declares a prediction step
  * without an authored item to answer refuses to construct rather than rendering an empty question.
  */
-function predictionStep(scenario: ScenarioDefinition, target: GuidedTarget): GuidedWalkthroughStep {
+function predictionStep(
+  scenario: ScenarioDefinition,
+  target: GuidedTarget,
+  preferredCircuitView?: CircuitViewPreference,
+): GuidedWalkthroughStep {
   requireEcmoLearnPrediction(scenario.id)
   return step({
     id: `${scenario.id}-interpret`,
     phase: 'interpret',
     target,
+    preferredCircuitView,
     title: 'Commit to a prediction before you act',
     instruction:
       'Read the pattern in front of you and commit to one course of action, together with what you expect it to do. The options are alternatives a reasoning clinician would weigh, and the reasoning behind each of them is held back until you have chosen.',
@@ -107,6 +126,7 @@ function standardLesson(input: StandardLessonInput): GuidedLessonDefinition {
         id: `${scenario.id}-observe`,
         phase: 'observe',
         target: input.observe.target,
+        preferredCircuitView: input.observe.preferredCircuitView,
         title: 'Read the pattern before touching a control',
         instruction: input.observe.instruction,
         rationale: input.observe.rationale,
@@ -116,7 +136,7 @@ function standardLesson(input: StandardLessonInput): GuidedLessonDefinition {
         actions: timedActions,
         expectedResponse: input.observe.expectedResponse,
       }),
-      predictionStep(scenario, input.observe.target),
+      predictionStep(scenario, input.observe.target, input.observe.preferredCircuitView),
       ...input.responseSteps.map((response) =>
         step({
           ...response,
@@ -225,17 +245,21 @@ const orientationLesson: GuidedLessonDefinition = {
      * channels still showing the unavailable indication — the exact state the previous step had
      * taught them to recognise. Advancing the model is a statement about the simulation, not about
      * how a pump behaves when its speed is raised.
+     *
+     * Which is why it is `task-pane`. Presented as a console step it read as an instruction to find
+     * a control on the CARDIOHELP — there is none, and the owner's smoke test caught exactly that.
      */
     step({
       id: 'startup-settle-circuit',
       phase: 'orient',
       target: 'console',
-      title: 'Advance the model and let the circuit reach its new state',
+      interaction: 'task-pane',
+      title: 'Let the circuit respond',
       instruction:
-        'Advance the simulation so the circuit responds to the new speed. Flow appears and the three pressure locations start reporting numbers; the tour from here on is read on those.',
+        'No console action is required. Select the button below to update the simulation after the RPM change.',
       rationale:
         'This model advances in discrete steps, so a changed setting and the circuit’s response to it are two separate moments. The console showing dashes a moment ago and numbers now is that mechanic, not a device behaviour: on a real unit the response follows the speed continuously.',
-      actionLabel: 'Advance the model and let the circuit settle',
+      actionLabel: 'Let the circuit respond',
       actions: [{ type: 'STEP' }, { type: 'STEP' }],
       expectedResponse: [
         'The pump is running and flow appears',
@@ -502,6 +526,8 @@ interface GuidedTransferVariant {
   readonly actionLabel: string
   readonly action: SimulationAction
   readonly setupActions?: readonly SimulationAction[]
+  /** Set where the transfer action is a bedside control rather than a pressure comparison. */
+  readonly preferredCircuitView?: CircuitViewPreference
 }
 
 const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTransferVariant>> = {
@@ -569,6 +595,7 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
       'A distinct arterial-bubble event stops the pump. Begin the authored isolation sequence by closing the return-limb clamp near the patient; do not treat acknowledgement as correction.',
     actionLabel: 'Close the transfer patient return-limb clamp',
     action: { type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return', closed: true },
+    preferredCircuitView: 'bedside',
     setupActions: [{ type: 'TICK', seconds: 4 }],
   },
   'arterial-bubble-stop': {
@@ -652,6 +679,7 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
       'A distinct VA arterial-return bubble event stops forward support. Begin isolation by closing the arterial return-limb clamp near the patient, before source correction, de-airing, and resumption.',
     actionLabel: 'Close the VA return-limb clamp',
     action: { type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return', closed: true },
+    preferredCircuitView: 'bedside',
     setupActions: [{ type: 'TICK', seconds: 4 }],
   },
   'va-arterial-bubble-stop': {
@@ -687,6 +715,7 @@ function withRealTransferVariant(lesson: GuidedLessonDefinition): GuidedLessonDe
             instruction: variant.instruction,
             rationale: transferScenario.debrief.causalChain.join(' '),
             target: variant.target,
+            preferredCircuitView: variant.preferredCircuitView,
             actionLabel: variant.actionLabel,
             actions: [variant.action],
             expectedResponse: transferScenario.debrief.safetyNotes,
@@ -716,6 +745,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       target: 'circuit',
       instruction:
         'Compare blood flow, pVen, and the drainage line. Do not begin by chasing the lower flow number.',
+      preferredCircuitView: 'diagnostic',
       rationale:
         'When venous return cannot meet pump demand, drainage pressure becomes more negative and the cannula or vessel can intermittently collapse.',
       expectedResponse: [
@@ -774,6 +804,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
     observe: {
       target: 'circuit',
       instruction: 'Compare pInt, pArt, Δp trend, and flow as one pressure pattern.',
+      preferredCircuitView: 'diagnostic',
       rationale:
         'Resistance after the oxygenator raises both pre- and post-oxygenator pressures, while the pressure drop across the oxygenator may change little.',
       expectedResponse: [
@@ -821,6 +852,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       target: 'circuit',
       instruction:
         'Compare pre-oxygenator pInt with post-oxygenator pArt and the direction of the Δp trend.',
+      preferredCircuitView: 'diagnostic',
       rationale:
         'Resistance across the membrane increases the pressure difference between pInt and pArt and can constrain flow.',
       expectedResponse: [
@@ -1075,6 +1107,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       {
         id: 'isolate-return-clamp',
         target: 'circuit',
+        preferredCircuitView: 'bedside',
         title: 'Isolate the patient: clamp the return limb',
         instruction:
           'The device stopped the pump, but a stopped pump does not isolate the air column. Close the return-limb clamp near the patient first.',
@@ -1087,6 +1120,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       {
         id: 'isolate-drainage-clamp',
         target: 'circuit',
+        preferredCircuitView: 'bedside',
         title: 'Complete isolation: clamp the drainage limb',
         instruction:
           'Close the drainage-limb clamp near the patient so the circuit is fully isolated before de-airing.',
@@ -1099,6 +1133,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       {
         id: 'correct-bubble-source',
         target: 'circuit',
+        preferredCircuitView: 'bedside',
         title: 'Correct and clear the air source',
         instruction:
           'With the circuit isolated, correct the source of air and confirm the return path is bubble free.',
@@ -1115,6 +1150,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       {
         id: 'resume-support',
         target: 'circuit',
+        preferredCircuitView: 'bedside',
         title: 'Resume support per the current IFU and approved local protocol',
         instruction:
           'With the source corrected and the circuit confirmed clear, resume support according to the current manufacturer instructions for use (IFU) and your unit’s approved ECMO air-emergency protocol.',
@@ -1201,6 +1237,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       target: 'circuit',
       instruction:
         'Compare flow, pVen, venous drainage-line motion, MAP, and patient perfusion before changing the pump.',
+      preferredCircuitView: 'diagnostic',
       rationale:
         'The pump cannot create venous return; escalating RPM can worsen caval or cannula collapse.',
       expectedResponse: [
@@ -1260,6 +1297,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       target: 'circuit',
       instruction:
         'Compare pInt, pArt, pressure-drop trend, flow, the arterial return limb, and independent MAP.',
+      preferredCircuitView: 'diagnostic',
       rationale:
         'Resistance after the oxygenator raises both post-pump circuit pressures; patient afterload may contribute but is not measured by pArt.',
       expectedResponse: [
@@ -1307,6 +1345,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
     observe: {
       target: 'circuit',
       instruction: 'Compare pInt, pArt, pressure-drop trend, matched flow/RPM, and gas transfer.',
+      preferredCircuitView: 'diagnostic',
       rationale:
         'Resistance across the oxygenator raises pre-oxygenator pressure relative to post-oxygenator pressure.',
       expectedResponse: [
@@ -1539,6 +1578,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       {
         id: 'isolate-return-clamp',
         target: 'circuit',
+        preferredCircuitView: 'bedside',
         title: 'Isolate the patient: clamp the arterial return limb',
         instruction:
           'The device stopped the pump, but arterial air remains a direct embolic threat. Close the return-limb clamp near the patient first.',
@@ -1551,6 +1591,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       {
         id: 'isolate-drainage-clamp',
         target: 'circuit',
+        preferredCircuitView: 'bedside',
         title: 'Complete isolation: clamp the drainage limb',
         instruction: 'Close the drainage-limb clamp so the circuit is fully isolated.',
         rationale:
@@ -1562,6 +1603,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       {
         id: 'correct-bubble-source',
         target: 'circuit',
+        preferredCircuitView: 'bedside',
         title: 'Correct and clear the air source',
         instruction:
           'Identify and correct the source of air and confirm the arterial return path is clear.',
@@ -1573,6 +1615,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       {
         id: 'resume-support',
         target: 'circuit',
+        preferredCircuitView: 'bedside',
         title: 'Resume support per the current IFU and approved local protocol',
         instruction:
           'With the source corrected and the circuit confirmed clear, resume venoarterial support according to the current manufacturer instructions for use (IFU) and your unit’s approved ECMO air-emergency protocol.',
