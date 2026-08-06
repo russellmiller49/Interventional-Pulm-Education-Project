@@ -212,6 +212,25 @@ create trigger reject_ip_user_preference_card_rebuild_provenance_rewrite
 -- rather than a weakened version 1 — and since this migration has never been applied there is no
 -- deployed card that predates any field here.
 
+-- One definition of "canonical text", used by the validator for every bounded string it checks.
+-- Mirrors `canonicalText` in `schemas/card-rebuild.ts`: non-empty, within bounds, and already equal
+-- to its own trim, so a stored value and a read value are the same bytes.
+create function private.ip_is_canonical_text(value text, max_length integer)
+returns boolean
+language sql
+immutable
+security invoker
+set search_path = ''
+as $$
+  select value is not null
+     and length(value) between 1 and max_length
+     and value = btrim(value);
+$$;
+
+revoke all on function private.ip_is_canonical_text(text, integer) from public;
+revoke all on function private.ip_is_canonical_text(text, integer)
+  from anon, authenticated, service_role;
+
 create function private.ip_validate_preference_card_rebuild_provenance_v1(document jsonb)
 returns void
 language plpgsql
@@ -309,9 +328,12 @@ begin
     end if;
   end loop;
 
+  -- The runtime schema's own uuid pattern, restated: version nibble 1-5 and variant 8/9/a/b, or the
+  -- nil uuid. A looser pattern here would accept ids the reader then rejects, which is the exact
+  -- class of divergence this validator exists to close.
   foreach key in array uuid_keys loop
     if jsonb_typeof(document -> key) <> 'string'
-       or (document ->> key) !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+       or (document ->> key) !~ '^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$'
     then
       raise exception 'the provenance document has a % that is not a uuid', key
         using errcode = 'invalid_parameter_value';
@@ -327,22 +349,27 @@ begin
     end if;
   end loop;
 
-  -- Trimmed and bounded, matching `storedRebuildProvenanceSchema`'s `.trim().min(1).max(120)`. A
-  -- whitespace-only or overlong id passed the old `length(...) = 0` check and then failed on read,
-  -- which is precisely the divergence this validator exists to remove.
+  -- Already canonical, not merely trimmable.
+  --
+  -- `z.string().trim().min(1)` *accepts* ' x ' and parses it to 'x', so a `btrim`-based check here
+  -- would agree to store bytes the reader silently rewrites. Both sides now require the value to
+  -- equal its own trim, so what is stored is what is read. See `canonicalText` in
+  -- `schemas/card-rebuild.ts`.
   foreach key in array text_keys loop
     if jsonb_typeof(document -> key) <> 'string'
-       or length(btrim(document ->> key)) = 0
-       or length(btrim(document ->> key)) > 120 then
-      raise exception 'the provenance document has an empty, blank or overlong %', key
+       or not private.ip_is_canonical_text(document ->> key, 120) then
+      raise exception 'the provenance document has an empty, padded or overlong %', key
         using errcode = 'invalid_parameter_value';
     end if;
   end loop;
 
+  -- Bounded above as well as below: the runtime schema is `z.number().int().min(1)` on a JavaScript
+  -- number, so anything past `Number.MAX_SAFE_INTEGER` is a value it cannot represent faithfully.
   if jsonb_typeof(document -> 'sourceRevisionNumber') <> 'number'
      or (document ->> 'sourceRevisionNumber') !~ '^[0-9]+$'
-     or (document ->> 'sourceRevisionNumber')::bigint < 1 then
-    raise exception 'the provenance document has a sourceRevisionNumber that is not a positive integer'
+     or (document ->> 'sourceRevisionNumber')::numeric < 1
+     or (document ->> 'sourceRevisionNumber')::numeric > 9007199254740991 then
+    raise exception 'the provenance document has a sourceRevisionNumber that is not a safe positive integer'
       using errcode = 'invalid_parameter_value';
   end if;
 
@@ -352,7 +379,7 @@ begin
   -- rather than caught generically.
   if jsonb_typeof(document -> 'createdAt') <> 'string'
      or (document ->> 'createdAt')
-        !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$'
+        !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}([.][0-9]{1,3})?(Z|[+-][0-9]{2}:[0-9]{2})$'
   then
     raise exception 'the provenance document has a createdAt that is not an ISO-8601 timestamp with an offset'
       using errcode = 'invalid_parameter_value';
@@ -403,22 +430,22 @@ begin
     end if;
     -- Bounds, matching the runtime schema field for field. An empty `acknowledgement` is the one
     -- worth naming: it is a *claim* that an answer was recorded, spelled as no answer at all.
-    if length(btrim(decision ->> 'key')) not between 1 and 200
-       or length(btrim(decision ->> 'kind')) not between 1 and 40
-       or length(btrim(decision ->> 'state')) not between 1 and 60
+    if not private.ip_is_canonical_text(decision ->> 'key', 200)
+       or not private.ip_is_canonical_text(decision ->> 'kind', 40)
+       or not private.ip_is_canonical_text(decision ->> 'state', 60)
        or (jsonb_typeof(decision -> 'acknowledgement') = 'string'
-           and length(btrim(decision ->> 'acknowledgement')) not between 1 and 40)
+           and not private.ip_is_canonical_text(decision ->> 'acknowledgement', 40))
        or jsonb_array_length(decision -> 'reasonCodes') > 40
     then
-      raise exception 'a provenance decision entry has an empty, blank or overlong field'
+      raise exception 'a provenance decision entry has an empty, padded or overlong field'
         using errcode = 'invalid_parameter_value';
     end if;
     for reason in
       select value from jsonb_array_elements(decision -> 'reasonCodes') as t(value)
     loop
       if jsonb_typeof(reason) <> 'string'
-         or length(btrim(reason #>> '{}')) not between 1 and 80 then
-        raise exception 'a provenance decision reason code is not a bounded, non-blank string'
+         or not private.ip_is_canonical_text(reason #>> '{}', 80) then
+        raise exception 'a provenance decision reason code is not a bounded, canonical string'
           using errcode = 'invalid_parameter_value';
       end if;
     end loop;
@@ -447,6 +474,12 @@ revoke all on function private.ip_validate_preference_card_rebuild_provenance_v1
 grant usage on schema private to ip_preference_card_rebuild_writer;
 
 grant execute on function private.ip_validate_preference_card_rebuild_provenance_v1(jsonb)
+  to ip_preference_card_rebuild_writer;
+
+-- The validator's own helper, and nothing else in `private`. Two named signatures, deliberately
+-- not a schema-wide blanket: that would hand the writer every helper the revision machinery owns
+-- today and every one added to the schema later.
+grant execute on function private.ip_is_canonical_text(text, integer)
   to ip_preference_card_rebuild_writer;
 
 -- ---------------------------------------------------------------------------------------------

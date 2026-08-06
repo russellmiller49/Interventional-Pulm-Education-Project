@@ -18,6 +18,48 @@ const sha256Schema = z
   .trim()
   .regex(/^[a-f0-9]{64}$/)
 
+/**
+ * The canonical subset the runtime schema and the SQL validator both accept, exactly.
+ *
+ * These three helpers exist because "compatible bounds" is not parity. `z.string().trim().min(1)`
+ * *accepts* `' x '` and parses it to `'x'`, so a document could be stored with bytes the reader
+ * silently rewrites — and a SQL check written as `length(btrim(x)) between 1 and n` would agree to
+ * store it while a check written as `length(x) between 1 and n` would not. Rather than pick which
+ * side to loosen, both sides are narrowed to values that are already canonical: no leading or
+ * trailing whitespace, so what is stored is what is read.
+ *
+ * `private.ip_validate_preference_card_rebuild_provenance_v1` mirrors each of these, and
+ * `provenance-contract.test.ts` drives both from one table of examples.
+ */
+const canonicalText = (max: number) =>
+  z
+    .string()
+    .max(max)
+    .refine((value) => value.length > 0 && value === value.trim(), {
+      message: 'must be non-empty and carry no leading or trailing whitespace',
+    })
+
+/** Zod's own `.uuid()`, restated so the SQL regex can be pinned to the same shape. */
+const CANONICAL_UUID =
+  /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$/
+
+const canonicalUuid = z.string().regex(CANONICAL_UUID)
+
+/**
+ * An instant, not a string that resembles one.
+ *
+ * `.datetime({ offset: true })` accepts several spellings of the same moment and — depending on the
+ * version — an offset without a colon, which PostgreSQL's pattern would then have to guess at. One
+ * spelling is required here, and the calendar is checked: `2026-99-99T00:00:00.000Z` matches every
+ * shape rule and is not a date, which is exactly what the old prefix-only SQL check let through.
+ */
+const canonicalTimestamp = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?(Z|[+-]\d{2}:\d{2})$/)
+  .refine((value) => !Number.isNaN(Date.parse(value)), {
+    message: 'must name a real instant',
+  })
+
 export const rebuildAcknowledgementSchema = z.enum([
   'confirmed',
   'dropped',
@@ -89,12 +131,12 @@ export type CreateRebuiltCardRequest = z.infer<typeof createRebuiltCardRequestSc
 export const storedRebuildProvenanceSchema = z
   .object({
     version: z.literal('ip-cards-rebuild/1'),
-    sourceCardId: z.string().uuid(),
-    sourceRevisionId: z.string().uuid(),
+    sourceCardId: canonicalUuid,
+    sourceRevisionId: canonicalUuid,
     /** From `auth.getUser()`, never the browser. Bound by the RPC to both source rows. */
-    sourceOwnerId: z.string().uuid(),
-    sourceRevisionNumber: z.number().int().min(1),
-    sourceReleaseBundleId: z.string().trim().min(1).max(120),
+    sourceOwnerId: canonicalUuid,
+    sourceRevisionNumber: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
+    sourceReleaseBundleId: canonicalText(120),
     sourceReleaseDefinitionHash: sha256Schema,
     sourceSnapshotHash: sha256Schema,
     /** Null only where the source revision genuinely predates the split hashes. */
@@ -102,9 +144,9 @@ export const storedRebuildProvenanceSchema = z
     sourceResolvedContentHash: sha256Schema.nullable(),
     /** Derived in TypeScript from the integrity hash and the printed columns; app-only. */
     sourcePrintDocumentHash: sha256Schema.nullable(),
-    targetReleaseBundleId: z.string().trim().min(1).max(120),
+    targetReleaseBundleId: canonicalText(120),
     targetReleaseDefinitionHash: sha256Schema,
-    targetCatalogReleaseId: z.string().trim().min(1).max(120),
+    targetCatalogReleaseId: canonicalText(120),
     operationalReconciliationHash: sha256Schema,
     authoredReleaseDiffHash: sha256Schema,
     mappingPlanHash: sha256Schema,
@@ -113,16 +155,16 @@ export const storedRebuildProvenanceSchema = z
       .array(
         z
           .object({
-            key: z.string().trim().min(1).max(200),
-            kind: z.string().trim().min(1).max(40),
-            state: z.string().trim().min(1).max(60),
-            reasonCodes: z.array(z.string().trim().min(1).max(80)).max(40),
-            acknowledgement: z.string().trim().min(1).max(40).nullable(),
+            key: canonicalText(200),
+            kind: canonicalText(40),
+            state: canonicalText(60),
+            reasonCodes: z.array(canonicalText(80)).max(40),
+            acknowledgement: canonicalText(40).nullable(),
           })
           .strict(),
       )
       .max(1000),
-    createdAt: z.string().datetime({ offset: true }),
+    createdAt: canonicalTimestamp,
   })
   .strict()
 

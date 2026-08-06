@@ -2,6 +2,11 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import {
+  PROVENANCE_V1_EXAMPLES,
+  validProvenanceV1Document,
+  type ProvenanceExampleCategory,
+} from '../__fixtures__/provenance-v1-examples'
+import {
   REBUILD_PROVENANCE_V1_DECISION_KEYS,
   REBUILD_PROVENANCE_V1_KEYS,
   REBUILD_PROVENANCE_V1_NULLABLE_KEYS,
@@ -172,7 +177,7 @@ describe('the version-1 provenance shape is one shape', () => {
       'select 1 from jsonb_object_keys(decision) as k where not (k = any (decision_keys))',
     )
     // And the schema rejects the exact document that used to slip through.
-    const swapped = validDocument()
+    const swapped = validProvenanceV1Document()
     swapped.decisions = [
       {
         key: 'x',
@@ -213,7 +218,8 @@ describe('the version-1 provenance shape is one shape', () => {
 
   it('rejects an unknown top-level key in both descriptions', () => {
     expect(
-      storedRebuildProvenanceSchema.safeParse({ ...validDocument(), invented: true }).success,
+      storedRebuildProvenanceSchema.safeParse({ ...validProvenanceV1Document(), invented: true })
+        .success,
     ).toBe(false)
     expect(migrationSql).toContain(
       'the provenance document carries a key version 1 does not define',
@@ -221,20 +227,20 @@ describe('the version-1 provenance shape is one shape', () => {
   })
 
   it('requires an explicitly stated null rather than an absent key', () => {
-    const document = validDocument()
+    const document = validProvenanceV1Document()
     delete (document as Record<string, unknown>).sourceSnapshotIntegrityHash
     expect(storedRebuildProvenanceSchema.safeParse(document).success).toBe(false)
     expect(migrationSql).toContain('the provenance document is missing a required version-1 key')
   })
 
   it.each([...REBUILD_PROVENANCE_V1_KEYS])('requires %s', (key) => {
-    const document = validDocument() as Record<string, unknown>
+    const document = validProvenanceV1Document() as Record<string, unknown>
     delete document[key]
     expect(storedRebuildProvenanceSchema.safeParse(document).success).toBe(false)
   })
 
   it('accepts the complete document', () => {
-    expect(storedRebuildProvenanceSchema.safeParse(validDocument()).success).toBe(true)
+    expect(storedRebuildProvenanceSchema.safeParse(validProvenanceV1Document()).success).toBe(true)
   })
 
   it('lets the writer role reach the validator its own function calls', () => {
@@ -262,20 +268,32 @@ describe('the version-1 provenance shape is one shape', () => {
     )
   })
 
-  it('bounds and trims every text field the way the runtime schema does', () => {
-    // Whitespace-only and overlong ids passed `length(...) = 0` and then failed on read.
-    expect(migrationSql).toContain('length(btrim(document ->> key)) = 0')
-    expect(migrationSql).toContain('length(btrim(document ->> key)) > 120')
+  it('bounds every text field to the same canonical subset the runtime schema does', () => {
+    // Not `btrim`-based: `z.string().trim().min(1)` accepts ' x ' and parses it to 'x', so a
+    // btrim-based check would agree to store bytes the reader silently rewrites. Both sides now
+    // require the value to equal its own trim, through one shared predicate.
+    expect(migrationSql).toContain('create function private.ip_is_canonical_text(')
+    expect(migrationSql).toContain('and value = btrim(value)')
+    expect(migrationSql).toContain('private.ip_is_canonical_text(document ->> key, 120)')
     // An empty acknowledgement is a claim that an answer was recorded, spelled as no answer.
     expect(migrationSql).toContain(
-      "length(btrim(decision ->> 'acknowledgement')) not between 1 and 40",
+      "private.ip_is_canonical_text(decision ->> 'acknowledgement', 40)",
     )
+    // The writer may execute the helper as well as the validator, or the RPC dies on it — and by
+    // exact signature, never a blanket grant over everything in `private`.
+    expect(migrationSql).toMatch(
+      /grant execute on function private\.ip_is_canonical_text\(text, integer\)\s+to ip_preference_card_rebuild_writer/,
+    )
+    expect(migrationSql).not.toMatch(/grant execute on all functions in schema private/i)
     // And a createdAt that is shaped like a timestamp but is not one.
     expect(migrationSql).toContain("perform (document ->> 'createdAt')::timestamptz")
     expect(migrationSql).toContain('when invalid_datetime_format or datetime_field_overflow then')
     for (const bad of ['2026-99-99Tgarbage', '2026-02-01T00:00:00.000', 'yesterday']) {
       expect(
-        storedRebuildProvenanceSchema.safeParse({ ...validDocument(), createdAt: bad }).success,
+        storedRebuildProvenanceSchema.safeParse({
+          ...validProvenanceV1Document(),
+          createdAt: bad,
+        }).success,
       ).toBe(false)
     }
   })
@@ -308,36 +326,92 @@ describe('the version-1 provenance shape is one shape', () => {
   })
 })
 
-/** A complete, internally consistent version-1 document. The tests above mutate copies of it. */
-function validDocument() {
-  return {
-    version: 'ip-cards-rebuild/1' as const,
-    sourceCardId: '00000000-0000-4000-8000-000000000001',
-    sourceRevisionId: '00000000-0000-4000-9000-000000000001',
-    sourceOwnerId: '00000000-0000-4000-a000-000000000001',
-    sourceRevisionNumber: 1,
-    sourceReleaseBundleId: 'release-fixture-procedure-v1-0',
-    sourceReleaseDefinitionHash: 'e'.repeat(64),
-    sourceSnapshotHash: 'a'.repeat(64),
-    sourceSnapshotIntegrityHash: 'b'.repeat(64),
-    sourceResolvedContentHash: 'c'.repeat(64),
-    sourcePrintDocumentHash: 'd'.repeat(64),
-    targetReleaseBundleId: 'release-fixture-procedure-v1-1',
-    targetReleaseDefinitionHash: 'f'.repeat(64),
-    targetCatalogReleaseId: 'fixture-catalog-import-0001',
-    operationalReconciliationHash: '2'.repeat(64),
-    authoredReleaseDiffHash: '3'.repeat(64),
-    mappingPlanHash: '1'.repeat(64),
-    allowedFinalStateHash: '4'.repeat(64),
-    decisions: [
-      {
-        key: 'requirement:FIXTURE_BACKUP_SCOPE',
-        kind: 'requirement',
-        state: 'carried_requires_review',
-        reasonCodes: ['requirement_definition_changed'],
-        acknowledgement: 'confirmed',
-      },
-    ],
-    createdAt: '2026-02-01T00:00:00.000Z',
-  }
+/**
+ * The one place a category is tied to the SQL rule that implements it.
+ *
+ * A source-text map rather than an execution, and it says so: what it establishes is that the SQL
+ * validator has *a named rule* for every category the shared table exercises, so a category can no
+ * longer be added on the TypeScript side alone. What PostgreSQL does with each document is the
+ * verification script's job.
+ */
+const SQL_RULE_FOR_CATEGORY: Record<Exclude<ProvenanceExampleCategory, 'valid'>, string> = {
+  unknown_top_level_key: 'the provenance document carries a key version 1 does not define',
+  omitted_top_level_key: 'the provenance document is missing a required version-1 key',
+  wrong_typed_top_level_key: 'foreach key in array uuid_keys loop',
+  null_on_non_nullable_key: 'which version 1 does not allow',
+  explicit_nullable_null: 'nullable_keys text[] := array[',
+  padded_or_overlong_text: 'the provenance document has an empty, padded or overlong %',
+  malformed_uuid: 'the provenance document has a % that is not a uuid',
+  malformed_hash: 'the provenance document has a % that is not a sha-256 digest',
+  malformed_revision_number: 'is not a safe positive integer',
+  malformed_timestamp: 'the provenance document has a createdAt that is not a real instant',
+  unknown_nested_key: 'a provenance decision entry does not carry exactly the version-1 keys',
+  omitted_nested_key: 'a provenance decision entry does not carry exactly the version-1 keys',
+  malformed_nested_text: 'a provenance decision entry has an empty, padded or overlong field',
+  malformed_reason_code: 'a provenance decision reason code is not a bounded, canonical string',
+  oversized_collection: "jsonb_array_length(decision -> 'reasonCodes') > 40",
 }
+
+describe('the shared example table describes both implementations', () => {
+  it.each(PROVENANCE_V1_EXAMPLES.map((example) => [example.label, example] as const))(
+    'the runtime schema agrees about %s',
+    (_label, example) => {
+      expect(storedRebuildProvenanceSchema.safeParse(example.document).success).toBe(example.valid)
+    },
+  )
+
+  it.each(
+    [...new Set(PROVENANCE_V1_EXAMPLES.map((example) => example.category))]
+      .filter(
+        (category): category is Exclude<ProvenanceExampleCategory, 'valid'> => category !== 'valid',
+      )
+      .map((category) => [category] as const),
+  )('the SQL validator carries a rule for %s', (category) => {
+    expect(migrationSql).toContain(SQL_RULE_FOR_CATEGORY[category])
+  })
+
+  it('covers every top-level key in both the omission and the wrong-type dimension', () => {
+    // The defect this replaces: Zod's tests omitted all twenty keys and the SQL matrix omitted
+    // seven, and nothing compared the two lists.
+    for (const dimension of ['omitted_top_level_key', 'wrong_typed_top_level_key'] as const) {
+      const covered = PROVENANCE_V1_EXAMPLES.filter(
+        (example) => example.category === dimension,
+      ).length
+      expect(covered).toBe(REBUILD_PROVENANCE_V1_KEYS.length)
+    }
+  })
+
+  it('covers every nested key in the omission dimension', () => {
+    const covered = PROVENANCE_V1_EXAMPLES.filter(
+      (example) => example.category === 'omitted_nested_key',
+    ).length
+    expect(covered).toBe(REBUILD_PROVENANCE_V1_DECISION_KEYS.length)
+  })
+
+  it('states one reason per invalid example, so a rejection names something', () => {
+    // An example that is wrong in two ways proves only that something rejected it.
+    for (const example of PROVENANCE_V1_EXAMPLES) {
+      if (example.valid) continue
+      const issues = storedRebuildProvenanceSchema.safeParse(example.document)
+      expect(issues.success).toBe(false)
+      if (!issues.success) expect(issues.error.issues.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('cannot lose a field from a SQL type array while staying green', () => {
+    // Every typed field is in exactly one class, and the class lists are derived from the schema —
+    // so deleting `mappingPlanHash` from `hash_keys` fails the parity test above rather than
+    // silently weakening the RPC. This asserts the classes actually partition the typed fields.
+    const classes = schemaTypeClasses()
+    const classified = [...classes.uuid, ...classes.hash, ...classes.text]
+    expect(new Set(classified).size).toBe(classified.length)
+    // Everything not in a string class is checked by its own named rule.
+    const unclassified = REBUILD_PROVENANCE_V1_KEYS.filter((key) => !classified.includes(key))
+    expect([...unclassified].sort()).toEqual(
+      ['createdAt', 'decisions', 'sourceRevisionNumber', 'version'].sort(),
+    )
+    for (const key of unclassified) {
+      expect(migrationSql).toContain(`'${key}'`)
+    }
+  })
+})

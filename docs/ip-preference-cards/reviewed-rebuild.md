@@ -365,8 +365,28 @@ deployed card that predates any field.
 `private.ip_validate_preference_card_rebuild_provenance_v1` is the database's half, raising `22023`
 for every shape failure — including the exact nested key set (counting to five and then reading five
 names let a swapped key through, because `jsonb_typeof` on an absent key is SQL NULL and a NULL
-condition does not raise), trimmed and bounded text, a non-empty acknowledgement, and a `createdAt`
+condition does not raise), bounded text, a non-empty acknowledgement, and a `createdAt`
 that is cast rather than pattern-matched, so `2026-99-99T00:00:00.000Z` is refused.
+
+#### One canonical subset, not two compatible ones
+
+"Compatible bounds" is not parity, and the difference is storable bytes. `z.string().trim().min(1)`
+_accepts_ `' x '` and parses it to `'x'`, so a SQL check written with `btrim` would agree to store a
+value the reader silently rewrites, while one written without it would not. Rather than pick a side
+to loosen, both were narrowed to values that are **already canonical**, and the narrowing is
+deliberate:
+
+| Field kind | The common subset                                                                            |
+| ---------- | -------------------------------------------------------------------------------------------- |
+| Text       | non-empty, within bound, and equal to its own trim — no padding, ever                        |
+| Hash       | exactly 64 lowercase hex characters                                                          |
+| UUID       | version nibble 1–5 and variant 8/9/a/b, or the nil uuid — Zod's own pattern, restated in SQL |
+| Number     | a safe positive integer, bounded above at `Number.MAX_SAFE_INTEGER`                          |
+| Timestamp  | one spelling — `YYYY-MM-DDThh:mm:ss[.sss](Z\|±hh:mm)` — and a real calendar date             |
+
+`canonicalText` in the schema and `private.ip_is_canonical_text` in the migration are the two halves
+of the first row, and the writer is granted `execute` on that helper as well as on the validator —
+a function the RPC cannot call is a function the RPC dies on.
 
 It stays in `private` and stays `security invoker`, and the writer role is granted exactly `usage` on
 that schema and `execute` on that signature. Nothing else may call it. Those two grants are

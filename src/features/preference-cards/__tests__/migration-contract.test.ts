@@ -600,6 +600,24 @@ describe('preference-card rebuild provenance migration', () => {
     expect(rebuildVerifier).toContain('the writer role still has members')
     expect(rebuildVerifier).toContain('the migration role can still assume the writer role')
     expect(rebuildVerifier).toContain('a member of the writer role remains at the end of the run')
+    // The private surface, asserted in the run rather than only read out of the migration.
+    expect(rebuildVerifier).toContain(
+      'the writer role cannot use schema private, so it cannot call its own validator',
+    )
+    expect(rebuildVerifier).toContain('the writer role can create objects in schema private')
+    expect(rebuildVerifier).toContain('has USAGE on schema private')
+    expect(rebuildVerifier).toContain('which is not on the API surface')
+    expect(rebuildVerifier).toContain(
+      'the writer role can execute private functions beyond its own validator pair',
+    )
+    // ...and re-checked at the end, so a grant issued midway is not invisible.
+    expect(rebuildVerifier).toContain(
+      'the migration role can assume the writer role at the end of the run',
+    )
+    expect(rebuildVerifier).toContain(
+      'the writer role holds CREATE on a schema at the end of the run',
+    )
+    expect(rebuildVerifier).toContain('the writer role lost a USAGE grant it needs')
     expect(rebuildVerifier).toContain('the writer role does not own exactly one function')
     expect(rebuildVerifier).toContain('the writer role holds a write privilege it does not need')
     // The ACL by grantee, so PUBLIC and any extra grantee are rejected rather than two names.
@@ -645,6 +663,16 @@ describe('preference-card rebuild provenance migration', () => {
     expect(rebuildVerifier).toContain('the writer accepted a boolean %')
     expect(rebuildVerifier).toContain('the refused omission of % still wrote rows')
     expect(rebuildVerifier).toContain('the refused wrong-typed % still wrote rows')
+    // Nested keys, collections past their bound, and the nullable pair in both directions.
+    expect(rebuildVerifier).toContain('foreach omitted_key in array decision_keys loop')
+    expect(rebuildVerifier).toContain('the writer accepted a decision with no %')
+    expect(rebuildVerifier).toContain('a document carrying more than a thousand decisions')
+    expect(rebuildVerifier).toContain('a decision carrying more than forty reason codes')
+    expect(rebuildVerifier).toContain('the writer accepted a null % for a revision that has one')
+    expect(rebuildVerifier).toContain(
+      "the writer refused a document naming the revision''s real hashes",
+    )
+    expect(rebuildVerifier).toContain('a refused writer call created a card after all')
     // And the stored row read back as the exact document, not as a count plus four names.
     expect(rebuildVerifier).toContain('the stored provenance key set is not the version-1 key set')
     expect(rebuildVerifier).toContain(

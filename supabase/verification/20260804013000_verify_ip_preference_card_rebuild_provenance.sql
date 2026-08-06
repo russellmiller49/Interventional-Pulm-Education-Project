@@ -83,6 +83,8 @@ declare
   grantee_count integer;
   member_names text;
   table_name text;
+  validator_signature text;
+  api_role text;
 begin
   select a.atttypid::regtype::text, not a.attnotnull, a.atthasdef
     into data_type, is_nullable, has_default
@@ -271,6 +273,51 @@ begin
           'public.ip_create_rebuilt_preference_card(uuid, uuid, uuid, text, text, text, text, text, text, jsonb, jsonb, text, text, text, jsonb)',
           'EXECUTE') then
     raise exception 'an API role can execute the writer function';
+  end if;
+
+  -- --- The private validator, and who may reach it ----------------------------------------------
+  --
+  -- The whole writer path depends on these two grants: the RPC is `security definer` owned by the
+  -- writer, so inside it `current_user` is the writer, and the deployed revision migration revoked
+  -- all access to schema `private` from everyone else. Without them the first statement of the RPC
+  -- raises 42501 and every real rebuild write fails at the last step, after the review.
+  if not has_schema_privilege('ip_preference_card_rebuild_writer', 'private', 'USAGE') then
+    raise exception 'the writer role cannot use schema private, so it cannot call its own validator';
+  end if;
+  if has_schema_privilege('ip_preference_card_rebuild_writer', 'private', 'CREATE') then
+    raise exception 'the writer role can create objects in schema private';
+  end if;
+  for validator_signature in
+    select 'private.ip_validate_preference_card_rebuild_provenance_v1(jsonb)'
+    union all select 'private.ip_is_canonical_text(text, integer)'
+  loop
+    if not has_function_privilege('ip_preference_card_rebuild_writer', validator_signature, 'EXECUTE')
+    then
+      raise exception 'the writer role cannot execute %', validator_signature;
+    end if;
+    -- ...and nobody on the API surface can, in either direction.
+    for api_role in select unnest(array['anon', 'authenticated', 'service_role']) loop
+      if has_function_privilege(api_role, validator_signature, 'EXECUTE') then
+        raise exception '% can execute %, which is not on the API surface', api_role,
+          validator_signature;
+      end if;
+    end loop;
+  end loop;
+  for api_role in select unnest(array['anon', 'authenticated', 'service_role']) loop
+    if has_schema_privilege(api_role, 'private', 'USAGE') then
+      raise exception '% has USAGE on schema private', api_role;
+    end if;
+  end loop;
+
+  -- Narrow, not blanket: exactly two private functions are reachable by the writer, so a future
+  -- schema-wide grant would be visible here rather than only in the migration text.
+  if (select count(*)
+        from pg_proc p
+        join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname = 'private'
+         and has_function_privilege('ip_preference_card_rebuild_writer', p.oid, 'EXECUTE')) <> 2
+  then
+    raise exception 'the writer role can execute private functions beyond its own validator pair';
   end if;
 
   raise notice 'Part 1 passed: column, policy, guards, writer role and privileges, function ACL.';
@@ -571,6 +618,10 @@ declare
   state text;
   stored_keys text[];
   wrong_owner uuid := '00000000-0000-4000-b000-0000000000ff';
+  hashed_id uuid;
+  hashed_revision uuid;
+  hashed_created uuid;
+  hashed_provenance jsonb;
   v1_keys text[] := array[
     'version', 'sourceCardId', 'sourceRevisionId', 'sourceOwnerId', 'sourceRevisionNumber',
     'sourceReleaseBundleId', 'sourceReleaseDefinitionHash', 'sourceSnapshotHash',
@@ -580,6 +631,7 @@ declare
     'allowedFinalStateHash', 'decisions', 'createdAt'
   ];
   omitted_key text;
+  decision_keys text[] := array['key', 'kind', 'state', 'reasonCodes', 'acknowledgement'];
 begin
   select id into owner_id from auth.users order by created_at limit 1;
 
@@ -881,6 +933,68 @@ begin
     end if;
   end loop;
 
+  -- Every nested decision key, omitted one at a time. The five-key count check used to make this
+  -- dimension untestable: removing a key and adding another kept the count, and `jsonb_typeof` on
+  -- the absent one turned the whole predicate into SQL NULL.
+  foreach omitted_key in array decision_keys loop
+    cards_at := (select count(*) from public.ip_user_preference_cards);
+    revisions_at := (select count(*) from public.ip_user_preference_card_revisions);
+    begin
+      perform public.ip_create_rebuilt_preference_card(
+        owner_id, source_id, source_revision, source_hash, release_id,
+        'verify rejected', null::text, 'VERIFY_ONLY', 'verify-only',
+        '{}'::jsonb, snapshot, repeat('f', 64), 'verify', 'verify',
+        provenance || jsonb_build_object('decisions',
+          jsonb_build_array(decisions_fixture -> 0 - omitted_key)));
+      raise exception 'the writer accepted a decision with no %', omitted_key;
+    exception
+      when invalid_parameter_value then null;
+    end;
+    if (select count(*) from public.ip_user_preference_cards) <> cards_at
+       or (select count(*) from public.ip_user_preference_card_revisions) <> revisions_at then
+      raise exception 'the refused decision omission of % still wrote rows', omitted_key;
+    end if;
+  end loop;
+
+  -- Collections past their bound. Both limits are in the runtime schema too, so a document either
+  -- side accepted alone would be one the other refuses.
+  for case_row in
+    select * from (values
+      ('a decision carrying more than forty reason codes',
+       provenance || jsonb_build_object('decisions', jsonb_build_array(
+         (decisions_fixture -> 0) || jsonb_build_object('reasonCodes',
+           (select jsonb_agg('reason_' || g) from generate_series(1, 41) as g))))),
+      ('a document carrying more than a thousand decisions',
+       provenance || jsonb_build_object('decisions',
+         (select jsonb_agg((decisions_fixture -> 0) || jsonb_build_object('key', 'requirement:R' || g))
+            from generate_series(1, 1001) as g))),
+      ('a decision whose reason code is not a string',
+       provenance || jsonb_build_object('decisions', jsonb_build_array(
+         (decisions_fixture -> 0) || jsonb_build_object('reasonCodes', jsonb_build_array(7)))))
+    ) as t(label, p_document)
+  loop
+    cards_at := (select count(*) from public.ip_user_preference_cards);
+    revisions_at := (select count(*) from public.ip_user_preference_card_revisions);
+    begin
+      perform public.ip_create_rebuilt_preference_card(
+        owner_id, source_id, source_revision, source_hash, release_id,
+        'verify rejected', null::text, 'VERIFY_ONLY', 'verify-only',
+        '{}'::jsonb, snapshot, repeat('f', 64), 'verify', 'verify', case_row.p_document);
+      raise exception 'the writer accepted %', case_row.label;
+    exception
+      when invalid_parameter_value then null;
+    end;
+    if (select count(*) from public.ip_user_preference_cards) <> cards_at
+       or (select count(*) from public.ip_user_preference_card_revisions) <> revisions_at then
+      raise exception 'the refused case "%" still wrote rows', case_row.label;
+    end if;
+  end loop;
+
+  -- Nothing above created anything: every refusal was checked in place, and no rejected title exists.
+  if exists (select 1 from public.ip_user_preference_cards where title = 'verify rejected') then
+    raise exception 'a refused writer call created a card after all';
+  end if;
+
   -- The correct payload succeeds, exactly once. That it succeeds *at all* is the proof that
   -- `current_user` inside this `security definer` function is the writer role: the same row
   -- refused in Part 4 as `service_role` and as the table owner passes here, and the only thing
@@ -935,6 +1049,92 @@ begin
      <> 1 then
     raise exception 'the rebuilt card''s first revision is not numbered 1';
   end if;
+
+  -- --- The nullable keys, in both directions, against a source that has the hashes --------------
+  --
+  -- The fixture above states all three nullables as JSON null, which is correct for `verify source`:
+  -- its snapshot carries neither hash, so the revision columns are null and the RPC's binding
+  -- requires the document to say so. That proves "explicit null is accepted" and nothing about the
+  -- other direction, so a second source is seeded here whose snapshot *does* carry both hashes.
+  --
+  -- Two facts fall out of it. A document naming the real values is accepted; a document naming null
+  -- for a revision that has a value is refused — which is the binding working, not a shape error,
+  -- so it is `P0002` rather than `22023`.
+  --
+  -- Seeded as the session role, which is where Part 5 left us: provenance is null, so the insert
+  -- guard has nothing to object to.
+  insert into public.ip_user_preference_cards
+    (user_id, title, procedure_code, scenario_id, status, builder_inputs, card_snapshot,
+     snapshot_hash, engine_version, catalog_import_id)
+  values
+    (owner_id, 'verify source hashed', 'VERIFY_ONLY', 'verify-only', 'draft',
+     jsonb_build_object('releaseBundleId', release_id),
+     jsonb_build_object('resolutionProvenance', jsonb_build_object(),
+                        'snapshotIntegrityHash', repeat('7', 64),
+                        'resolvedContentHash', repeat('8', 64)),
+     repeat('9', 64), 'verify', 'verify')
+  returning id into hashed_id;
+
+  select id into hashed_revision
+    from public.ip_user_preference_card_revisions
+   where card_id = hashed_id order by revision_number desc limit 1;
+  if (select snapshot_integrity_hash from public.ip_user_preference_card_revisions
+       where id = hashed_revision) is distinct from repeat('7', 64) then
+    raise exception 'the hashed source revision did not pick up its integrity hash';
+  end if;
+
+  hashed_provenance := provenance
+    || jsonb_build_object(
+         'sourceCardId', hashed_id,
+         'sourceRevisionId', hashed_revision,
+         'sourceSnapshotHash', repeat('9', 64),
+         'sourceSnapshotIntegrityHash', repeat('7', 64),
+         'sourceResolvedContentHash', repeat('8', 64));
+
+  set local role service_role;
+
+  -- Null where the revision has a value: refused by the binding, not by the shape.
+  foreach omitted_key in array array['sourceSnapshotIntegrityHash', 'sourceResolvedContentHash'] loop
+    cards_at := (select count(*) from public.ip_user_preference_cards);
+    revisions_at := (select count(*) from public.ip_user_preference_card_revisions);
+    begin
+      perform public.ip_create_rebuilt_preference_card(
+        owner_id, hashed_id, hashed_revision, repeat('9', 64), release_id,
+        'verify rejected', null::text, 'VERIFY_ONLY', 'verify-only',
+        '{}'::jsonb, snapshot, repeat('f', 64), 'verify', 'verify',
+        hashed_provenance || jsonb_build_object(omitted_key, null::text));
+      raise exception 'the writer accepted a null % for a revision that has one', omitted_key;
+    exception
+      when no_data_found then null;
+    end;
+    if (select count(*) from public.ip_user_preference_cards) <> cards_at
+       or (select count(*) from public.ip_user_preference_card_revisions) <> revisions_at then
+      raise exception 'the refused null % still wrote rows', omitted_key;
+    end if;
+  end loop;
+
+  -- And the real values are accepted, which is the half a null-only fixture cannot show.
+  hashed_created := public.ip_create_rebuilt_preference_card(
+    owner_id, hashed_id, hashed_revision, repeat('9', 64), release_id,
+    'verify rebuilt hashed', null::text, 'VERIFY_ONLY', 'verify-only',
+    '{}'::jsonb, snapshot, repeat('f', 64), 'verify', 'verify', hashed_provenance);
+  if hashed_created is null then
+    raise exception 'the writer refused a document naming the revision''s real hashes';
+  end if;
+
+  -- `sourcePrintDocumentHash` is the one nullable the database cannot bind, because no column holds
+  -- it. Both a real digest and an explicit null are therefore accepted, and that is the honest
+  -- statement of what this field is: required, typed, and an application claim.
+  hashed_created := public.ip_create_rebuilt_preference_card(
+    owner_id, hashed_id, hashed_revision, repeat('9', 64), release_id,
+    'verify rebuilt hashed print', null::text, 'VERIFY_ONLY', 'verify-only',
+    '{}'::jsonb, snapshot, repeat('f', 64), 'verify', 'verify',
+    hashed_provenance || jsonb_build_object('sourcePrintDocumentHash', repeat('6', 64)));
+  if hashed_created is null then
+    raise exception 'the writer refused a document carrying a print-document hash';
+  end if;
+
+  reset role;
 
   -- The source is byte-identical.
   if md5((select c.*::text from public.ip_user_preference_cards c where c.id = source_id))
@@ -1139,6 +1339,36 @@ begin
      where r.rolname = 'ip_preference_card_rebuild_writer'
   ) then
     raise exception 'a member of the writer role remains at the end of the run';
+  end if;
+
+  -- And nothing this script did widened the boundary it spent seven parts describing. Re-checked at
+  -- the end rather than only at the start: `set local role`, a policy, or a grant issued midway
+  -- would otherwise be invisible to a run that only ever looked once.
+  begin
+    set local role ip_preference_card_rebuild_writer;
+    reset role;
+    raise exception 'the migration role can assume the writer role at the end of the run';
+  exception
+    when insufficient_privilege then null;
+  end;
+  if has_schema_privilege('ip_preference_card_rebuild_writer', 'public', 'CREATE')
+     or has_schema_privilege('ip_preference_card_rebuild_writer', 'private', 'CREATE') then
+    raise exception 'the writer role holds CREATE on a schema at the end of the run';
+  end if;
+  if not (has_schema_privilege('ip_preference_card_rebuild_writer', 'public', 'USAGE')
+          and has_schema_privilege('ip_preference_card_rebuild_writer', 'private', 'USAGE')) then
+    raise exception 'the writer role lost a USAGE grant it needs';
+  end if;
+  if (select count(*)
+        from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname = 'private'
+         and has_function_privilege('ip_preference_card_rebuild_writer', p.oid, 'EXECUTE')) <> 2
+  then
+    raise exception 'the writer role can execute a different set of private functions than it began with';
+  end if;
+  if (select count(*) from pg_proc where proowner =
+        (select oid from pg_roles where rolname = 'ip_preference_card_rebuild_writer')) <> 1 then
+    raise exception 'the writer role does not still own exactly one function';
   end if;
 
   raise notice 'Part 7 passed: synthetic rows removed and every digest matches the baseline.';
