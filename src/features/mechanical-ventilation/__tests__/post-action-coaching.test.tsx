@@ -20,6 +20,7 @@ import {
   type PostActionBaseline,
 } from '../content/postActionCoaching'
 import { advanceSimulation, applyIntervention, createInitialSimulationState } from '../engine'
+import { deriveEffectivePatient, isCaseResolved } from '../engine/physics'
 import { ventilationSimulationReducer } from '../engine/reducer'
 import type { VentilationCaseDefinition, VentilationSimulationState } from '../engine/types'
 
@@ -228,7 +229,7 @@ describe('Practice prediction releases nothing', () => {
       actionLabel: 'Commit prediction',
       actionSeconds: 0,
       effectiveAtSeconds: 0,
-      breathPeriodSeconds: 0,
+      settleSeconds: 0,
       readings: coachingReadingSnapshot(state),
       criticalErrorCount: 0,
       settingsFingerprint: JSON.stringify(state.ventilator.settings),
@@ -362,13 +363,16 @@ describe('branch-specific coaching', () => {
     expect(respondedText).not.toEqual(notRespondedText)
 
     expect(respondedText).toContain('had been reading that movement as the start of a breath')
-    expect(notRespondedText).toContain('is not what the ventilator was answering')
+    expect(notRespondedText).toContain(
+      'does not support water at the sensor as the operative trigger source',
+    )
     expect(notRespondedText).toContain('evidence against condensate being the trigger source')
     // The response variant must not carry the non-response caveat, and vice versa.
     expect(respondedText).not.toContain('evidence against condensate being the trigger source')
     expect(notRespondedText).not.toContain(
       'had been reading that movement as the start of a breath',
     )
+    expect(respondedText).not.toContain('does not support water at the sensor')
   })
 
   it('never prints the response-path identifier, the reproducibility key, or model bookkeeping', () => {
@@ -437,7 +441,9 @@ describe('successful, ineffective, and harmful responses', () => {
     expect(successful.coachingText()).toContain(
       'the circulation was being obstructed rather than merely underfilled',
     )
-    expect(ineffective.coachingText()).toContain('is not what the ventilator was answering')
+    expect(ineffective.coachingText()).toContain(
+      'does not support water at the sensor as the operative trigger source',
+    )
     expect(harmful.coachingText()).toContain('Quiet is not correction')
 
     const texts = [successful.coachingText(), ineffective.coachingText(), harmful.coachingText()]
@@ -456,7 +462,9 @@ describe('successful, ineffective, and harmful responses', () => {
       'data-stabilization-required',
       'false',
     )
-    expect(stable.coachingText()).toContain('No high-priority alarm is active')
+    expect(stable.coachingText()).toContain(
+      'No active safety interruption or high-priority ventilator alarm is shown',
+    )
   })
 })
 
@@ -484,7 +492,9 @@ describe('unchanged physiology', () => {
     expect(coaching.verdict).toBe('unchanged')
     expect(coaching.verdictLabel).toBe('No better, no worse')
     expect(coaching.observedSummary).toContain('None of the readings above is printing a different')
-    expect(coaching.interpretation).toContain('is not what is narrowing the path in this patient')
+    expect(coaching.interpretation).toContain(
+      'does not support material in the lumen as the dominant narrowing over this interval',
+    )
     expect(coaching.interpretation).not.toContain('was part of what the same breath')
     expect(coaching.observed.every((reading) => reading.direction === 'held')).toBe(true)
   })
@@ -555,9 +565,11 @@ describe('what the readings actually did', () => {
     })
     if (!held || !opposed) throw new Error('Expected coaching once the interval has elapsed')
 
-    expect(held.interpretation).toContain('releasing it changed nothing')
+    expect(held.interpretation).toContain(
+      'does not support trapped gas as the dominant load on this patient',
+    )
     expect(opposed.interpretation).toContain('moved the other way instead')
-    expect(opposed.interpretation).not.toContain('changed nothing')
+    expect(opposed.interpretation).not.toContain('does not support trapped gas')
     expect(opposed.observed.find((reading) => reading.targeted)?.direction).toBe('rose')
   })
 
@@ -791,5 +803,312 @@ describe('the surrounding workflow', () => {
     )
     expect(postActionObservation(second, staleBaseline).complete).toBe(true)
     expect(ventilationPostActionCoaching(second, definition, staleBaseline)).toBeNull()
+  })
+})
+
+/* ------------------------------------------------------------------------------------------------
+ * 5 — the branch a treatment reaches, read off the patient
+ * ---------------------------------------------------------------------------------------------- */
+
+/**
+ * Run one MV-13 branch through one treatment and stop exactly where the learner is shown the block.
+ *
+ * Everything comes from the real engine: the branch is whatever attempt selects it, the prerequisite
+ * inspection is performed where the case requires one, and the clock is advanced in the 0.1 s steps
+ * the workspace ticks in until `postActionObservation` says the interval has closed. No settle time
+ * is chosen by hand, so a change to the authored latency or to the trace window moves this with it.
+ */
+function runHighResistance(branch: string, interventionId: string) {
+  const definition = definitionFor('MV-13')
+  let state = committedPracticeState(definition, branch)
+  const intervention = definition.interventions.find((item) => item.id === interventionId)
+  if (!intervention) throw new Error(`MV-13 has no ${interventionId}`)
+  if (intervention.prerequisites?.length) {
+    state = advanceSimulation(
+      applyIntervention(state, definition, 'inspect-circuit'),
+      30,
+      definition,
+    )
+  }
+  const resistanceBefore = deriveEffectivePatient(state, definition).mechanics.resistanceCmH2OPerLps
+  const acted = applyIntervention(state, definition, interventionId)
+  const record = acted.interventions.at(-1)
+  if (!record) throw new Error(`${interventionId} produced no record`)
+  const baseline = capturePostActionBaseline(acted, definition, record)
+  let settled = acted
+  for (
+    let guard = 0;
+    !postActionObservation(settled, baseline).complete && guard < 8000;
+    guard += 1
+  ) {
+    settled = advanceSimulation(settled, 0.1, definition)
+  }
+  const coaching = ventilationPostActionCoaching(settled, definition, baseline)
+  if (!coaching)
+    throw new Error(`${branch}/${interventionId}: no coaching at the observation point`)
+  return {
+    definition,
+    settled,
+    coaching,
+    resistanceBefore,
+    resistanceAfter: deriveEffectivePatient(settled, definition).mechanics.resistanceCmH2OPerLps,
+    target: coaching.observed.find((reading) => reading.targeted),
+    branchCorrected: isCaseResolved(settled, definition),
+  }
+}
+
+/** Every branch of MV-13, with the treatment that reaches it and the ones that do not. */
+const HIGH_RESISTANCE_MATRIX = [
+  { branch: 'secretions', matching: 'suction-airway' },
+  { branch: 'hme-or-ett', matching: 'remove-hme' },
+  { branch: 'hme-or-ett', matching: 'reposition-ett' },
+  { branch: 'bronchospasm', matching: 'bronchodilator' },
+] as const
+
+const HIGH_RESISTANCE_MISMATCHES = [
+  { branch: 'secretions', action: 'bronchodilator' },
+  { branch: 'secretions', action: 'remove-hme' },
+  { branch: 'secretions', action: 'reposition-ett' },
+  { branch: 'hme-or-ett', action: 'suction-airway' },
+  { branch: 'hme-or-ett', action: 'bronchodilator' },
+  { branch: 'bronchospasm', action: 'suction-airway' },
+  { branch: 'bronchospasm', action: 'remove-hme' },
+  { branch: 'bronchospasm', action: 'reposition-ett' },
+] as const
+
+describe('MV-13 — a treatment only reaches the narrowing this patient has', () => {
+  it.each(HIGH_RESISTANCE_MATRIX)(
+    'moves the target and satisfies the branch rule: $branch + $matching',
+    ({ branch, matching }) => {
+      const run = runHighResistance(branch, matching)
+      expect({
+        resistanceFell: run.resistanceAfter < run.resistanceBefore,
+        target: run.target?.id,
+        direction: run.target?.direction,
+        branchCorrected: run.branchCorrected,
+      }).toEqual({
+        resistanceFell: true,
+        target: 'peak-pressure',
+        direction: 'fell',
+        branchCorrected: true,
+      })
+      expect(run.coaching.interpretation).not.toContain('does not support')
+    },
+  )
+
+  it.each(HIGH_RESISTANCE_MISMATCHES)(
+    'produces no false response and credits nothing: $branch + $action',
+    ({ branch, action }) => {
+      const run = runHighResistance(branch, action)
+      expect({
+        resistanceUnchanged: run.resistanceAfter === run.resistanceBefore,
+        direction: run.target?.direction,
+        branchCorrected: run.branchCorrected,
+      }).toEqual({
+        resistanceUnchanged: true,
+        direction: 'held',
+        branchCorrected: false,
+      })
+      // The block must not read a mechanism off a response that did not happen.
+      expect(run.coaching.interpretation).toContain('does not support')
+      for (const credit of [
+        'was part of what the same breath was being pushed through',
+        'the obstruction was in the apparatus',
+        'the tube was the narrowing',
+        'constricted airways were part of the resistance',
+      ]) {
+        expect(run.coaching.interpretation).not.toContain(credit)
+      }
+    },
+  )
+
+  it('leaves the intended response intact outside the high-resistance phenotype', () => {
+    // MV-05, MV-06 and MV-10 declare no competing cause, so their partial effects are unchanged.
+    for (const caseId of ['MV-05', 'MV-06', 'MV-10']) {
+      const definition = definitionFor(caseId)
+      const state = committedPracticeState(definition, definition.branchOptions[0])
+      const before = deriveEffectivePatient(state, definition).mechanics.resistanceCmH2OPerLps
+      for (const action of ['suction-airway', 'bronchodilator']) {
+        const acted = advanceSimulation(
+          applyIntervention(state, definition, action),
+          400,
+          definition,
+        )
+        const after = deriveEffectivePatient(acted, definition).mechanics.resistanceCmH2OPerLps
+        expect({ caseId, action, lowered: after < before }).toEqual({
+          caseId,
+          action,
+          lowered: true,
+        })
+      }
+    }
+  })
+})
+
+describe('MV-14 — securing the space is judged on the mechanics, not the blood pressure', () => {
+  it('does not call drainage ineffective when the blood pressure holds', () => {
+    const definition = definitionFor('MV-14')
+    let state = committedPracticeState(definition, 'unstable')
+
+    // The rescue first, watched to its own observation point.
+    const rescue = applyIntervention(state, definition, 'decompress-pneumothorax')
+    const rescueRecord = rescue.interventions.at(-1)
+    if (!rescueRecord) throw new Error('Expected a decompression record')
+    const rescueBaseline = capturePostActionBaseline(rescue, definition, rescueRecord)
+    state = rescue
+    for (let g = 0; !postActionObservation(state, rescueBaseline).complete && g < 8000; g += 1) {
+      state = advanceSimulation(state, 0.1, definition)
+    }
+    const rescueCoaching = ventilationPostActionCoaching(state, definition, rescueBaseline)
+    if (!rescueCoaching) throw new Error('Expected coaching for the decompression')
+    expect(rescueCoaching.observed.find((reading) => reading.targeted)?.id).toBe('map')
+
+    // Then the definitive drainage, again watched to its own observation point.
+    const drained = applyIntervention(state, definition, 'pleural-drainage')
+    const record = drained.interventions.at(-1)
+    if (!record) throw new Error('Expected a drainage record')
+    const baseline = capturePostActionBaseline(drained, definition, record)
+    let settled = drained
+    for (let g = 0; !postActionObservation(settled, baseline).complete && g < 20000; g += 1) {
+      settled = advanceSimulation(settled, 0.1, definition)
+    }
+    const coaching = ventilationPostActionCoaching(settled, definition, baseline)
+    if (!coaching) throw new Error('Expected coaching for the drainage')
+
+    const target = coaching.observed.find((reading) => reading.targeted)
+    expect(target?.id).toBe('peak-pressure')
+    expect(target?.direction).toBe('fell')
+    expect(coaching.interpretation).toContain(
+      'the same breath is being delivered for less pressure',
+    )
+    expect(coaching.reassess).toContain('the rescue that raised it was the decompression')
+
+    /*
+     * The load-bearing assertion: hold the blood pressure exactly where the decompression left it and
+     * the drainage is still reported as having responded. Before this correction the profile was
+     * keyed on the blood pressure, so a patient whose circulation had already been rescued read as a
+     * drainage that had failed.
+     */
+    const mapHeld = ventilationPostActionCoaching(settled, definition, {
+      ...baseline,
+      readings: { ...baseline.readings, map: coachingReadingSnapshot(settled).map },
+    })
+    if (!mapHeld) throw new Error('Expected coaching with the blood pressure held')
+    expect(mapHeld.observed.find((reading) => reading.id === 'map')?.direction).toBe('held')
+    expect(mapHeld.interpretation).toBe(coaching.interpretation)
+    expect(mapHeld.interpretation).not.toContain('does not support')
+  })
+})
+
+describe('clinical copy', () => {
+  it('does not offer blockade as a way of obtaining a plateau', () => {
+    const scenario = coachedScenario('MV-03', 'short-machine-ti', ['neuromuscular-blockade'], 60)
+    const text = scenario.coachingText()
+    expect(text).not.toBe('')
+    expect(text).toContain('If blockade is complete and the hold is technically valid')
+    expect(text).toContain('Blockade is not a way of obtaining a plateau')
+    expect(text).toContain('immediate lung protection while the cause is corrected')
+    expect(text).not.toContain('the one condition in which the elastic and resistive split')
+  })
+
+  it('does not turn the absence of an alarm into a conclusion about the patient', () => {
+    const scenario = coachedScenario('MV-13', 'secretions', ['suction-airway'], 60)
+    const stabilization = scenario.container.querySelector('[data-coaching-claim="stabilization"]')
+    expect(stabilization).toHaveAttribute('data-stabilization-required', 'false')
+    const text = stabilization?.textContent ?? ''
+    expect(text).toContain(
+      'No active safety interruption or high-priority ventilator alarm is shown',
+    )
+    expect(text).toContain('Continue immediate bedside reassessment')
+    expect(text).toContain('do not establish that no stabilization or escalation is needed')
+    expect(text).not.toContain('continue localizing rather than escalating')
+  })
+
+  it('never claims a mechanism is absent because one action did not move one reading', () => {
+    /*
+     * Sweep every action of every case at the pure non-response point and read both claims the block
+     * makes about it. A treatment that did not move its reading is evidence about what is *dominant
+     * over this interval*; it is not a demonstration that the mechanism is not there, and it must not
+     * be written as one.
+     *
+     * Asked as a ban on the categorical phrasings rather than as a requirement for one sentence,
+     * because several honest non-responses name no mechanism at all: sedation that has not moved is a
+     * statement about the dose, and a communication board is not expected to move a monitor.
+     */
+    const categorical = [
+      /\bis not what\b/,
+      /\bis not the\b/,
+      /\bare not the\b/,
+      /\bis not coming from\b/,
+      /\bwas not what\b/,
+      /\bthere is none\b/,
+    ]
+    const offenders: string[] = []
+    let treatmentsSwept = 0
+    for (const definition of mechanicalVentilationCases) {
+      for (const intervention of definition.interventions) {
+        if (intervention.prerequisites?.length) continue
+        const state = committedPracticeState(definition, definition.branchOptions[0])
+        const acted = applyIntervention(state, definition, intervention.id)
+        const record = acted.interventions.at(-1)
+        if (!record) continue
+        // Baseline taken from the settled state so nothing moves: the pure non-response case.
+        let settled = acted
+        const probe = capturePostActionBaseline(acted, definition, record)
+        for (let g = 0; !postActionObservation(settled, probe).complete && g < 20000; g += 1) {
+          settled = advanceSimulation(settled, 0.1, definition)
+        }
+        const coaching = ventilationPostActionCoaching(settled, definition, {
+          ...probe,
+          readings: coachingReadingSnapshot(settled),
+        })
+        if (!coaching || coaching.kind !== 'treatment') continue
+        treatmentsSwept += 1
+        for (const claim of [coaching.interpretation, coaching.notDemonstrated]) {
+          const hit = categorical.find((pattern) => pattern.test(claim))
+          if (hit) offenders.push(`${definition.id}/${intervention.id}: ${hit} in "${claim}"`)
+        }
+      }
+    }
+    expect(offenders).toEqual([])
+    expect(treatmentsSwept).toBeGreaterThan(20)
+  })
+
+  it('uses the hedged shape wherever a non-response names a mechanism', () => {
+    for (const [caseId, branch, action, phrase] of [
+      ['MV-13', 'secretions', 'bronchodilator', 'does not support constricted airway muscle'],
+      ['MV-13', 'hme-or-ett', 'suction-airway', 'does not support material in the lumen'],
+      ['MV-08', 'leak', 'drain-condensate', 'does not support water at the sensor'],
+      ['MV-06', 'unstable-asthma', 'disconnect-bag', 'does not support trapped gas'],
+    ] as const) {
+      const definition = definitionFor(caseId)
+      let state = committedPracticeState(definition, branch)
+      if (definition.interventions.find((item) => item.id === action)?.prerequisites?.length) {
+        state = advanceSimulation(
+          applyIntervention(state, definition, 'inspect-circuit'),
+          30,
+          definition,
+        )
+      }
+      const acted = applyIntervention(state, definition, action)
+      const record = acted.interventions.at(-1)
+      if (!record) throw new Error(`${caseId}/${action} produced no record`)
+      let settled = acted
+      const probe = capturePostActionBaseline(acted, definition, record)
+      for (let g = 0; !postActionObservation(settled, probe).complete && g < 20000; g += 1) {
+        settled = advanceSimulation(settled, 0.1, definition)
+      }
+      const coaching = ventilationPostActionCoaching(settled, definition, {
+        ...probe,
+        readings: coachingReadingSnapshot(settled),
+      })
+      if (!coaching) throw new Error(`${caseId}/${action}: no coaching`)
+      expect({ caseId, action, hedged: coaching.interpretation.includes(phrase) }).toEqual({
+        caseId,
+        action,
+        hedged: true,
+      })
+      expect(coaching.interpretation).toContain('over this interval')
+    }
   })
 })
