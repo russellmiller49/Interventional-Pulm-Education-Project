@@ -148,6 +148,7 @@ export function EcmoCircuit3D({
   const flowState =
     closedClampCount > 0 ? 'ISOLATED' : state.device.pumpRunning ? 'FLOWING' : 'PUMP STOPPED'
   const isVa = state.supportMode === 'va'
+  const drainageChattering = state.device.pumpRunning && state.circuit.drainageChatter
 
   useEffect(() => {
     const node = viewportRef.current
@@ -221,6 +222,7 @@ export function EcmoCircuit3D({
         <div className={styles.circuit3dHud}>
           <span data-state={flowState}>{flowState}</span>
           <span data-mode={state.supportMode}>{state.supportMode.toUpperCase()}</span>
+          {drainageChattering ? <span data-state="CHATTER">DRAINAGE CHATTER</span> : null}
           <strong>{state.circuit.bloodFlow.toFixed(2)} L/min</strong>
           <small>Drag to orbit · scroll to zoom · select a clamp or use the controls below</small>
         </div>
@@ -235,6 +237,18 @@ export function EcmoCircuit3D({
           </div>
         ) : null}
       </div>
+      {/*
+        Outside the viewport on purpose. Everything inside that div is `aria-hidden`, including the
+        HUD chip that names the chatter, so without this line a screen-reader user would have no way
+        to know the limb is juddering — and neither would anyone whose browser cannot run WebGL.
+      */}
+      {drainageChattering ? (
+        <p className={styles.circuit3dSceneStatus} role="status" data-alert="true">
+          <strong>Drainage chatter.</strong> The drainage limb is repeatedly being drawn shut and
+          springing open: it judders in the bedside view and is marked on the pressure-zone map.
+          Displayed pVen and flow are unchanged by this cue.
+        </p>
+      ) : null}
       {webglReady && !contextLost && !compactViewport ? (
         <button
           type="button"

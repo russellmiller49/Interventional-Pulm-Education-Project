@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
@@ -29,10 +29,21 @@ export interface FlowTubeProps {
   pinchU: number
   /** Secondary wide pinch (drainage suck-down cue), 0..1. */
   collapseTarget?: number
+  /**
+   * Drives the suck-down as a repeating judder rather than a held deformation.
+   *
+   * This is what a chattering drainage line does at the bedside: the vessel or cannula is drawn
+   * shut and springs open again several times a second. Under reduced motion the same
+   * `collapseTarget` is held static instead — deep enough to be unmistakable, but still.
+   */
+  chatter?: boolean
   reduceMotion: boolean
   wallColor?: string
   cacheKey: string
 }
+
+/** Judders per second. Fast enough to read as chatter, slow enough not to strobe. */
+const CHATTER_HZ = 4.5
 
 export function FlowTube({
   curve,
@@ -45,10 +56,12 @@ export function FlowTube({
   pinchTarget,
   pinchU,
   collapseTarget = 0,
+  chatter = false,
   reduceMotion,
   wallColor = PALETTE.tubeWall,
   cacheKey,
 }: FlowTubeProps) {
+  const chatterPhase = useRef(0)
   const uniforms = useMemo<FlowUniforms>(createFlowUniforms, [])
   const wallUniforms = useMemo(
     () => ({
@@ -110,13 +123,28 @@ export function FlowTube({
     const useCollapse = collapse > pinch
     const targetU = useCollapse ? 0.5 : pinchU
     const targetWidth = useCollapse ? 0.45 : 0.045
-    const targetAmount = useCollapse ? collapse * 0.35 : pinch
+    let targetAmount = useCollapse ? collapse * 0.35 : pinch
+    if (useCollapse && chatter) {
+      if (reduceMotion) {
+        // Held, not oscillating: the limb sits visibly sucked down for as long as the engine says
+        // it is chattering. The word "chatter" is carried by the status cue beside the viewport.
+        targetAmount = collapse * 0.42
+      } else {
+        chatterPhase.current = (chatterPhase.current + delta * CHATTER_HZ) % 1
+        // Snaps shut, springs back: raised sine, so the limb spends longer open than crimped.
+        const judder = Math.pow(Math.sin(chatterPhase.current * Math.PI * 2) * 0.5 + 0.5, 1.6)
+        targetAmount = collapse * (0.12 + judder * 0.5)
+      }
+    }
     for (const set of [uniforms, wallUniforms]) {
       set.uPinchU.value = THREE.MathUtils.damp(set.uPinchU.value, targetU, 10, delta)
       set.uPinchWidth.value = THREE.MathUtils.damp(set.uPinchWidth.value, targetWidth, 10, delta)
-      set.uPinchAmount.value = reduceMotion
-        ? targetAmount
-        : THREE.MathUtils.damp(set.uPinchAmount.value, targetAmount, 9, delta)
+      // The judder is the signal, so it is written straight through rather than damped toward —
+      // a 9/s damp against a 4.5 Hz square-ish drive would smooth the chatter into a hum.
+      set.uPinchAmount.value =
+        reduceMotion || (useCollapse && chatter)
+          ? targetAmount
+          : THREE.MathUtils.damp(set.uPinchAmount.value, targetAmount, 9, delta)
     }
   })
 
