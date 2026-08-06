@@ -17,6 +17,7 @@ import {
 import { ImpellaVariantPreview } from './ImpellaVariantPreview'
 import { McsCommonModel } from './McsCommonModel'
 import { McsModuleFrame } from './McsModuleFrame'
+import { McsRouteOrientation } from './McsRouteOrientation'
 import { McsSourcesPanel } from './McsSourcesPanel'
 import { McsSupportPathwayCards } from './McsSupportPathwayCards'
 import styles from './mechanical-circulatory-support.module.css'
@@ -87,7 +88,7 @@ export function McsHub({ locale = 'en' }: { locale?: string }) {
         <div>
           <HeartPulse aria-hidden="true" />
           <strong>{mcsLessons.length}</strong>
-          <span>guided lessons</span>
+          <span>guided sections</span>
         </div>
         <div>
           <Activity aria-hidden="true" />
@@ -100,6 +101,8 @@ export function McsHub({ locale = 'en' }: { locale?: string }) {
           <span>all cases from the start</span>
         </div>
       </section>
+
+      <McsRouteOrientation />
 
       <section className={styles.startHere} aria-labelledby="mcs-start-here-heading">
         <div className={styles.sectionHeading}>

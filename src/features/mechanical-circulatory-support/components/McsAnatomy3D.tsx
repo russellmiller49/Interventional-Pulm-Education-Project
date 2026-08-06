@@ -29,7 +29,9 @@ import {
   type CardiacCameraPreset,
 } from '@/features/cardiac-anatomy/content/paths'
 
+import type { McsAnatomyTargetId } from '../content/primarySurfaces'
 import type { McsSimulationState } from '../engine'
+import { McsAnatomyPathwaySummary } from './McsAnatomyPathwaySummary'
 import {
   fitCardiacCameraToViewport,
   MCS_HEART_CAMERA_FIT,
@@ -147,9 +149,12 @@ function ManagedOrbitControls({
 export function McsAnatomy3D({
   state,
   revealCausality = true,
+  highlightTarget,
 }: {
   state: McsSimulationState
   revealCausality?: boolean
+  /** The authored Learn target to emphasize, when this anatomy is a section's primary surface. */
+  highlightTarget?: McsAnatomyTargetId
 }) {
   const webglReady = useWebGLSupport()
   const reducedMotion = useReducedMotionPreference()
@@ -380,6 +385,7 @@ export function McsAnatomy3D({
           <span>{placementSummary}</span>
         </div>
       </div>
+      <McsAnatomyPathwaySummary state={state} highlightTarget={highlightTarget} />
       <div className={styles.anatomyTextEquivalent} role="status">
         <strong>Text equivalent</strong>
         <span>{impellaLocation}</span>

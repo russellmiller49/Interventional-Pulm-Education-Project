@@ -18,13 +18,32 @@ jest.mock('@/i18n/navigation', () => ({
   ),
   useRouter: () => ({ push: mockRouterPush }),
 }))
-jest.mock('../components/McsAnatomy3D', () => ({
-  McsAnatomy3D: ({ revealCausality }: { revealCausality: boolean }) => (
-    <section aria-label="Animated mechanical-support anatomy">
-      3D mechanism · coaching {revealCausality ? 'visible' : 'withheld'}
-    </section>
-  ),
-}))
+/*
+ * The WebGL canvas is stubbed, but the authored pathway summary is not: it carries the anatomy
+ * highlight targets a Learn section points at, and stubbing it away would let a section point at a
+ * region that does not render.
+ */
+jest.mock('../components/McsAnatomy3D', () => {
+  const { McsAnatomyPathwaySummary } = jest.requireActual<
+    typeof import('../components/McsAnatomyPathwaySummary')
+  >('../components/McsAnatomyPathwaySummary')
+  return {
+    McsAnatomy3D: ({
+      revealCausality = true,
+      state,
+      highlightTarget,
+    }: {
+      revealCausality?: boolean
+      state: Parameters<typeof McsAnatomyPathwaySummary>[0]['state']
+      highlightTarget?: Parameters<typeof McsAnatomyPathwaySummary>[0]['highlightTarget']
+    }) => (
+      <section aria-label="Animated mechanical-support anatomy">
+        3D mechanism · coaching {revealCausality ? 'visible' : 'withheld'}
+        <McsAnatomyPathwaySummary state={state} highlightTarget={highlightTarget} />
+      </section>
+    ),
+  }
+})
 jest.mock('../components/EcmoCannulationPreview', () => ({
   EcmoCannulationPreview: () => <div>ECMO preview</div>,
 }))
@@ -36,6 +55,10 @@ import { McsHub } from '../components/McsHub'
 import { McsWorkbench } from '../components/McsWorkbench'
 
 const progressKey = 'interventionalpulm:mcs-progress:v1'
+
+function savedLessonIds(): readonly string[] {
+  return JSON.parse(window.localStorage.getItem(progressKey) ?? '{}').completedLessonIds ?? []
+}
 
 describe('Mechanical Circulatory Support learner interface', () => {
   beforeEach(() => {
@@ -269,103 +292,106 @@ describe('Mechanical Circulatory Support learner interface', () => {
     expect(lifecycleInteractions).not.toContain('critical_care_transfer_completed')
   })
 
-  it('requires authored interactions and a transfer decision before lesson completion', async () => {
+  it('walks a Learn section through all six phases before it is recorded', async () => {
     render(<McsWorkbench section="learn" />)
     const rail = screen.getByRole('navigation', { name: /MCS learning pathway sections/i })
     // Eight device sections plus the cross-device integration capstone (WP10 §5.3).
     expect(within(rail).getAllByRole('button')).toHaveLength(9)
     expect(screen.queryByRole('button', { name: /Mark lesson complete/i })).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Inspect arterial waveform' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to next step' }))
-    expect(
-      screen.getByRole('heading', { name: 'Ask what is filling each ventricle' }),
-    ).toBeInTheDocument()
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Inspect filling pressures and RV delivery' }),
-    )
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to next step' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Inspect device and effective flow' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Load transfer patient' }))
+    // Recognize.
+    fireEvent.click(screen.getByRole('radio', { name: /The displayed device contribution/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Record what you identified' }))
+    expect(savedLessonIds()).toEqual([])
+    fireEvent.click(screen.getByRole('button', { name: /Continue to the prediction/i }))
 
-    expect(
-      screen.getByRole('heading', {
-        name: /Transfer after transport: plausible pressure, falling perfusion/i,
-      }),
-    ).toBeInTheDocument()
-    expect(
-      JSON.parse(window.localStorage.getItem(progressKey) ?? '{}').completedLessonIds ?? [],
-    ).toEqual([])
-
-    fireEvent.click(screen.getByRole('button', { name: 'Inspect arterial waveform' }))
+    // Predict: committing shows the verdict and does not advance on its own.
     fireEvent.click(
-      screen.getByRole('button', { name: 'Inspect filling pressures and RV delivery' }),
+      screen.getByRole('radio', { name: /A native contribution, an effective systemic delivery/i }),
     )
-    fireEvent.click(screen.getByRole('button', { name: 'Inspect device and effective flow' }))
-    fireEvent.click(
-      screen.getByRole('radio', {
-        name: /Reassess the patient, validate the pressure signal/i,
-      }),
-    )
-    fireEvent.click(screen.getByRole('button', { name: 'Check transfer decision' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Commit this answer' }))
+    expect(screen.getByText(/That read holds/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /^Predict — step 2 of 6$/ })).toBeInTheDocument()
+    expect(savedLessonIds()).toEqual([])
+    fireEvent.click(screen.getByRole('button', { name: /Continue to the task/i }))
 
-    await waitFor(() => {
-      const saved = JSON.parse(window.localStorage.getItem(progressKey) ?? '{}')
-      expect(saved.completedLessonIds).toContain('mcs-foundations-signals')
-    })
-    expect(screen.getByText('Evidence complete')).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', {
-        name: /Continue to next section: Unloading, augmentation, and total flow/i,
-      }),
-    ).toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: /Recheck transfer evidence/i }),
-    ).not.toBeInTheDocument()
+    // Act: this section is inspect-only and says so.
+    expect(screen.getByText(/No adjustment is expected in this section/i)).toBeInTheDocument()
+    for (const label of [
+      'Read the arterial pressure',
+      'Read the filling pressures and right-sided delivery',
+      'Read the device and effective flow',
+    ]) {
+      fireEvent.click(screen.getByRole('button', { name: label }))
+    }
+    expect(savedLessonIds()).toEqual([])
+    fireEvent.click(screen.getByRole('button', { name: /Continue to what changed/i }))
+
+    // Observe reads from the resulting live state.
+    const beforeAfter = screen.getByRole('table')
+    expect(within(beforeAfter).getByText('Effective systemic delivery')).toBeInTheDocument()
+    expect(within(beforeAfter).getByText('Displayed device contribution')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Continue to the explanation/i }))
+
+    // Explain connects the ladder and names what the section does not establish.
+    expect(screen.getByText('This does not establish')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Continue to the transfer patient/i }))
+
+    // Transfer: a response and the paired live work are both required.
+    expect(savedLessonIds()).toEqual([])
+    fireEvent.click(
+      screen.getByRole('radio', { name: /Reassess the patient, validate the pressure signal/i }),
+    )
+    expect(screen.getByRole('button', { name: 'Commit this transfer answer' })).toBeDisabled()
+    for (const label of [
+      'Read the arterial pressure',
+      'Read the filling pressures and right-sided delivery',
+      'Read the device and effective flow',
+    ]) {
+      fireEvent.click(screen.getByRole('button', { name: label }))
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Commit this transfer answer' }))
+
+    await waitFor(() => expect(savedLessonIds()).toContain('mcs-foundations-signals'))
+    expect(screen.getByRole('region', { name: 'Section worked through' })).toBeInTheDocument()
+    expect(screen.getByText(/records participation in an educational module/i)).toBeInTheDocument()
   })
 
-  it('continues from completed Impella transfer evidence to the next Impella lesson', async () => {
+  it('continues from a worked-through Impella section to the next Impella section', async () => {
     render(<McsWorkbench section="learn" initialDevice="impella" />)
 
-    fireEvent.change(screen.getByRole('combobox', { name: /Left-sided Impella configuration/i }), {
-      target: { value: '55' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to next step' }))
-    fireEvent.change(screen.getByRole('slider', { name: 'Performance level' }), {
-      target: { value: '6' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to next step' }))
+    fireEvent.click(screen.getByRole('radio', { name: /The left ventricle is relieved directly/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Record what you identified' }))
+    fireEvent.click(screen.getByRole('button', { name: /Continue to the prediction/i }))
+    fireEvent.click(screen.getByRole('radio', { name: /Displayed pump flow falls by about half/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Commit this answer' }))
+    fireEvent.click(screen.getByRole('button', { name: /Continue to the task/i }))
+
+    // The adjustment phase points at one real control, and Continue waits for it.
+    expect(screen.getByRole('button', { name: /Continue to what changed/i })).toBeDisabled()
     fireEvent.change(screen.getByRole('combobox', { name: 'Placement state' }), {
       target: { value: 'too-deep' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to next step' }))
-    fireEvent.change(screen.getByRole('slider', { name: 'SVR' }), {
-      target: { value: '1950' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Load transfer patient' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Inspect device and effective flow' }))
-    fireEvent.click(
-      screen.getByRole('radio', {
-        name: /The pump is pressure-gradient dependent/i,
-      }),
-    )
-    fireEvent.click(screen.getByRole('button', { name: 'Check transfer decision' }))
+    fireEvent.click(screen.getByRole('button', { name: /Continue to what changed/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Continue to the explanation/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Continue to the transfer patient/i }))
+
+    fireEvent.click(screen.getByRole('radio', { name: /The pump is pressure-gradient dependent/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Read the device and effective flow' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Commit this transfer answer' }))
 
     const continueButton = await screen.findByRole('button', {
-      name: /Continue to next section: Impella suction, purge, hemolysis, and RV delivery/i,
+      name: /Continue to the next section: Impella suction, purge, hemolysis, and RV delivery/i,
     })
-    expect(screen.getByRole('region', { name: 'Lesson worked through' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /Recheck transfer evidence/i })).toBeNull()
-
     fireEvent.click(continueButton)
     expect(
-      screen.getByRole('heading', {
+      screen.getAllByRole('heading', {
         name: 'Impella suction, purge, hemolysis, and RV delivery',
-      }),
-    ).toBeInTheDocument()
+      }).length,
+    ).toBeGreaterThan(0)
     expect(
-      screen.getByRole('heading', { name: 'Build RP and BiPella support' }),
-    ).toBeInTheDocument()
+      screen.getAllByText(/where a right-sided pump returns the blood it draws/i).length,
+    ).toBeGreaterThan(0)
   })
 
   it('keeps capstones open, named, and source-visible regardless of local history', async () => {
@@ -432,23 +458,26 @@ describe('Mechanical Circulatory Support learner interface', () => {
       return Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING)
     }
 
-    it('renders the model above the live controls on a foundation section', () => {
+    it('carries the model in the teaching pane, after the live surface and before the task', () => {
       const { container } = render(<McsWorkbench section="learn" />)
 
       const model = container.querySelector('[data-mcs-common-model="root"]')
       expect(model).not.toBeNull()
 
-      // The controls card is the only surface carrying device-specific settings.
-      const controls = screen.getByRole('region', {
-        name: /Patient and mechanical-support controls/i,
-      })
-      expect(precedesInDocument(model!, controls)).toBe(true)
+      // Pane order is primary surface → teaching → learner action, and the model sits in the
+      // teaching pane rather than above a simulator that no longer exists on this surface.
+      const primary = screen.getByRole('region', { name: /Live monitor panel/i })
+      const teaching = screen.getByRole('region', { name: /Teaching panel/i })
+      const action = screen.getByRole('region', { name: /Your turn panel/i })
+      expect(precedesInDocument(primary, teaching)).toBe(true)
+      expect(precedesInDocument(teaching, action)).toBe(true)
+      expect(teaching.contains(model)).toBe(true)
 
-      // And above the simulator as a whole.
-      const simulation = screen.getByRole('region', {
-        name: /Synchronized support simulation/i,
-      })
-      expect(precedesInDocument(model!, simulation)).toBe(true)
+      // The device-specific controls are not on this surface at all until the act phase asks for
+      // them, so the model cannot be buried beneath them.
+      expect(
+        screen.queryByRole('region', { name: /Patient and mechanical-support controls/i }),
+      ).not.toBeInTheDocument()
     })
 
     it('shows all four levels, all three flow lines, and the additivity warning', () => {

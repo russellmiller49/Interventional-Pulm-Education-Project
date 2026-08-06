@@ -3592,3 +3592,772 @@
   width: 1rem;
   height: 1rem;
 }
+
+/* ── Learn: three-pane workbench ──────────────────────────────────────────────
+ *
+ * The shared teaching workspace owns pane widths, the separators and the compact fallback, so what
+ * is here is only the shell it needs a height from, and the styling of the three panes' contents.
+ */
+/*
+ * The shell fills the activity viewport rather than guessing at the chrome above it. Sizing it from
+ * `100vh` looked right at one window height and pushed the panes past the fold at every other, which
+ * left the workspace scrolling inside a viewport that was also scrolling — the nested-scroll trap.
+ */
+.learnWorkspaceShell {
+  height: 100%;
+  /*
+   * The floor is deliberately low. Above it the shell simply fills the activity viewport; below it
+   * — a 720-pixel-tall laptop, where the module chrome already takes 338 of them — a taller floor
+   * would push Continue past the fold for the sake of panes nobody asked to be that tall.
+   */
+  min-height: 24rem;
+  max-height: 60rem;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: #eaf1ef;
+}
+
+.learnPrimaryPane,
+.learnTeachingPane,
+.learnActionPane {
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
+  padding: 0.75rem;
+  color: var(--ink);
+}
+
+.learnPaneHeader {
+  display: grid;
+  gap: 0.25rem;
+}
+.learnPaneHeader h2 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 1.02rem;
+  line-height: 1.35;
+}
+
+.learnContextStrip {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.65rem 0.8rem;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: #fff;
+}
+.learnContextStrip > div {
+  display: grid;
+  gap: 0.1rem;
+}
+.learnContextStrip dt {
+  color: var(--muted);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.learnContextStrip dd {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.whyThisView {
+  padding: 0.55rem 0.75rem;
+  margin: 0;
+  border: 1px dashed #7fbdb4;
+  border-radius: 0.7rem;
+  background: #eff9f6;
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+/* The highlight note is text, so the emphasis is never carried by colour alone. */
+.surfaceHighlightNote {
+  padding: 0.5rem 0.75rem;
+  margin: 0;
+  color: #04302c;
+  background: #b9ece1;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.pathwaySummary {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem 0.9rem;
+  border-top: 1px solid #244650;
+  color: #d9eeea;
+  background: #0b2833;
+}
+.pathwaySummary > header {
+  display: grid;
+  gap: 0.15rem;
+}
+.pathwaySummary > header strong {
+  font-size: 0.74rem;
+}
+.pathwaySummary ul {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.pathwaySummary li {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #23505c;
+  border-radius: 0.6rem;
+  background: #0e3441;
+}
+.pathwaySummary li[data-running='false'] {
+  opacity: 0.72;
+}
+.pathwaySummary li > strong {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: #8fe6d6;
+  font-size: 0.72rem;
+}
+.pathwaySummary dl {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+}
+.pathwaySummary dt {
+  color: #7fa3a8;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.pathwaySummary dd {
+  margin: 0;
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+.pathwayDirectionNote {
+  margin: 0;
+  color: #a8c4c6;
+  font-size: 0.66rem;
+  line-height: 1.45;
+}
+
+/* Highlighting is an outline plus a text note, never colour on its own. */
+.monitorCard [data-monitor-highlighted='true'],
+.anatomyCard [data-anatomy-highlighted='true'] {
+  outline: 3px solid #34c9b8;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px rgba(52, 201, 184, 0.16);
+}
+.learnActionPane [data-mcs-control-highlighted='true'] {
+  outline: 3px solid #0f7f76;
+  outline-offset: 3px;
+  border-radius: 0.55rem;
+}
+
+.teachingBlock {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: #fff;
+}
+.teachingBlock h3 {
+  margin: 0;
+  color: var(--navy-2);
+  font-size: 0.74rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.teachingBlock p {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+.teachingAside {
+  padding: 0.5rem 0.65rem;
+  border-left: 3px solid #7fbdb4;
+  background: #f2faf8;
+  font-size: 0.73rem;
+  line-height: 1.5;
+}
+.teachingWarning {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #e3c07f;
+  border-radius: 0.6rem;
+  background: #fdf6e7;
+  font-size: 0.73rem;
+  line-height: 1.5;
+}
+.teachingWarning svg {
+  width: 1rem;
+  height: 1rem;
+  color: #96700f;
+}
+
+.liveFlowLines {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+}
+.liveFlowLines > div {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.5rem;
+  background: #f3f8f7;
+}
+.liveFlowLines dt {
+  color: var(--muted);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.liveFlowLines dd {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.ladderList {
+  display: grid;
+  gap: 0.4rem;
+  padding-left: 1.1rem;
+  margin: 0;
+}
+.ladderList li {
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+.ladderList strong {
+  display: block;
+  color: var(--navy-2);
+}
+
+.foundationMaterial {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.learnPhaseRail {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.25rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.learnPhaseRail li {
+  display: grid;
+  gap: 0.1rem;
+  justify-items: center;
+  padding: 0.35rem 0.15rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: #fff;
+  text-align: center;
+}
+.learnPhaseRail li[data-worked-through='true'] {
+  border-color: #8ccbc1;
+  background: #eaf8f4;
+}
+.learnPhaseRail li[data-current='true'] {
+  border-color: #0f7f76;
+  background: #0f7f76;
+}
+.learnPhaseRail li[data-current='true'] span,
+.learnPhaseRail li[data-current='true'] small {
+  color: #f2fffd;
+}
+.learnPhaseRail span {
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 900;
+}
+.learnPhaseRail small {
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-weight: 700;
+}
+
+.learnInstruction {
+  padding: 0.7rem 0.85rem;
+  border: 1px solid #0f7f76;
+  border-radius: 0.8rem;
+  background: #f0fbf8;
+}
+.learnInstruction strong {
+  color: var(--navy);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.learnResponse {
+  display: grid;
+  gap: 0.6rem;
+}
+.learnResponse fieldset {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: #fff;
+}
+.learnResponse legend {
+  padding: 0 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+.learnResponse label {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem;
+  align-items: start;
+  padding: 0.45rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+.learnResponse label:hover {
+  border-color: #b7d6d1;
+  background: #f4faf9;
+}
+.learnResponse > button,
+.learnResponse .transferAction button {
+  min-height: 2.6rem;
+  padding: 0.6rem 0.9rem;
+  border: 0;
+  border-radius: 0.6rem;
+  color: #fff;
+  background: var(--navy-2);
+  cursor: pointer;
+  font-weight: 800;
+}
+.learnResponse > button:disabled,
+.learnResponse .transferAction button:disabled {
+  color: #6d8085;
+  background: #dbe6e5;
+  cursor: not-allowed;
+}
+
+.learnFeedback {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  background: #f7fbfa;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.learnFeedback[data-right='true'] {
+  border-color: #79c4a7;
+  background: #eef9f3;
+}
+.learnFeedback[data-right='false'] {
+  border-color: #dfa79f;
+  background: #fdf3f1;
+}
+.learnFeedback p {
+  margin: 0;
+}
+
+.learnNoAction {
+  padding: 0.65rem 0.8rem;
+  margin: 0;
+  border: 1px dashed #9ab3b7;
+  border-radius: 0.7rem;
+  background: #f5f8f8;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.learnAside {
+  margin: 0;
+  font-size: 0.73rem;
+  line-height: 1.5;
+}
+
+.learnResponseStatus {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.71rem;
+  line-height: 1.45;
+}
+
+.learnControlsHost > summary {
+  min-height: 2.4rem;
+  padding: 0.5rem 0.3rem;
+  cursor: pointer;
+  font-size: 0.73rem;
+  font-weight: 750;
+}
+.learnControlsHost .controlsCard {
+  box-shadow: none;
+}
+
+.guidedActionButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.guidedActionButtons button {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  min-height: 2.4rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid #0f7f76;
+  border-radius: 0.55rem;
+  color: #0b4b47;
+  background: #eaf8f5;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.guidedActionButtons button svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+.guidedActionButtons button:disabled {
+  border-color: #9dbfba;
+  color: #4c6a6d;
+  cursor: default;
+}
+
+.beforeAfterTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.71rem;
+}
+.beforeAfterTable th,
+.beforeAfterTable td {
+  padding: 0.35rem 0.4rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.beforeAfterTable thead th {
+  color: var(--muted);
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.beforeAfterTable tbody th small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-weight: 600;
+}
+
+.learnExplainList {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+}
+.learnExplainList > div {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.55rem;
+  background: #f5f9f8;
+}
+.learnExplainList > div[data-emphasis='true'] {
+  border-left: 3px solid #d38f4c;
+  background: #fdf6ec;
+}
+.learnExplainList dt {
+  color: var(--muted);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.learnExplainList dd {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.learnAlarmList {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #e0b1a8;
+  border-radius: 0.6rem;
+  background: #fdf3f1;
+}
+.learnAlarmList svg {
+  width: 1rem;
+  height: 1rem;
+  color: #a2463a;
+}
+.learnAlarmList ul {
+  display: grid;
+  gap: 0.3rem;
+  padding-left: 1rem;
+  margin: 0;
+  font-size: 0.71rem;
+  line-height: 1.45;
+}
+
+.learnPaneActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.learnPaneActions button {
+  min-height: 2.6rem;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--navy-2);
+  border-radius: 0.6rem;
+  color: var(--navy-2);
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+.learnPaneActions button[data-learn-continue] {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  border-color: var(--navy-2);
+  color: #fff;
+  background: var(--navy-2);
+}
+.learnPaneActions button svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+.learnPaneActions button:disabled {
+  border-color: #c3d3d3;
+  color: #7c8f92;
+  background: #eef2f2;
+  cursor: not-allowed;
+}
+
+.learnHelp {
+  padding: 0.55rem 0.7rem;
+  margin: 0;
+  border-left: 3px solid #d3a94c;
+  background: #fdf8ea;
+  font-size: 0.73rem;
+  line-height: 1.5;
+}
+
+.learnSectionNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--line);
+}
+.learnSectionNav > span {
+  color: var(--muted);
+  font-size: 0.63rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.learnSectionNav button {
+  min-height: 2.4rem;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  color: var(--navy-2);
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+/* The 3D viewport is sized for a full-width rail; inside a resizable pane it needs to be shorter
+ * so the pathway summary beneath it is reachable without a long scroll. */
+.learnPrimaryPane .anatomyViewport {
+  height: 420px;
+}
+
+@media (max-width: 840px) {
+  .learnWorkspaceShell {
+    height: auto;
+    overflow: visible;
+  }
+  .learnPhaseRail {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learnPhaseRail li,
+  .guidedActionButtons button,
+  .learnPaneActions button {
+    transition: none;
+  }
+}
+
+/* ── Route and case orientation ─────────────────────────────────────────────── */
+.routeOrientation {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 1.1rem;
+  background: #fff;
+}
+.routeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.85rem;
+}
+.routeGrid article {
+  display: grid;
+  gap: 0.45rem;
+  align-content: start;
+  padding: 0.95rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: #f5faf8;
+}
+.routeGrid article > span {
+  color: var(--teal, #14847f);
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.routeGrid article > strong {
+  color: var(--navy);
+  font-size: 0.95rem;
+}
+.routeGrid article p {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+.routeGrid article ul {
+  display: grid;
+  gap: 0.3rem;
+  padding-left: 1rem;
+  margin: 0;
+  font-size: 0.73rem;
+  line-height: 1.45;
+}
+.routeGrid article > small {
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  color: #0b4b47;
+  background: #ccece5;
+  font-size: 0.63rem;
+  font-weight: 800;
+  justify-self: start;
+}
+
+.caseIdentity {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.8rem 0.95rem;
+  margin: 0.6rem 0 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: #f6faf9;
+}
+.caseIdentity > div {
+  display: grid;
+  gap: 0.12rem;
+}
+.caseIdentity dt {
+  color: var(--muted);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.caseIdentity dd {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.foundationDisclosure > summary {
+  min-height: 2.6rem;
+  padding: 0.55rem 0.3rem;
+  color: var(--navy-2);
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+/*
+ * Nothing inside a pane may be wider than the pane.
+ *
+ * A grid column sized `auto` takes the width of its widest descendant, and both the common model
+ * and the pathway cards switch to two columns on a *viewport* media query — which is the wrong
+ * question inside a 420-pixel pane. Without these the whole teaching pane grew to the width of the
+ * card grid and every paragraph in it was clipped at the pane edge.
+ */
+.learnPrimaryPane,
+.learnTeachingPane,
+.learnActionPane,
+.teachingBlock,
+.learnResponse,
+.learnContextStrip,
+.liveFlowLines,
+.learnExplainList,
+.foundationMaterial {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.foundationMaterial .commonModelGrid,
+.foundationMaterial .pathwayCardGrid,
+.foundationMaterial .commonModel,
+.foundationMaterial .pathwayCards {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.learnPrimaryPane img,
+.learnTeachingPane img,
+.learnActionPane img,
+.learnPrimaryPane svg,
+.learnTeachingPane svg {
+  max-width: 100%;
+}
+
+/* Wide authored content keeps its own scroll rather than pushing the pane sideways. */
+.learnActionPane .beforeAfterTable {
+  display: block;
+  overflow-x: auto;
+}
+
+/*
+ * Help and Continue stay on screen.
+ *
+ * Sections with longer response options pushed Continue past the bottom of the action pane, so the
+ * learner had to discover that the pane scrolled before they could move on. Pinning the row to the
+ * bottom of the pane keeps the one control that advances the section always visible, whatever is
+ * above it.
+ */
+.learnPaneActions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: 0.5rem 0;
+  margin-top: 0.2rem;
+  border-top: 1px solid var(--line);
+  background: linear-gradient(to bottom, rgba(234, 241, 239, 0.86), #eaf1ef 38%);
+  backdrop-filter: blur(2px);
+}
