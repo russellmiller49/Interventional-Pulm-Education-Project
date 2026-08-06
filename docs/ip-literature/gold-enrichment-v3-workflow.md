@@ -24,8 +24,11 @@ database-import rows, download full text, or access held-out identities.
 | Workflow schema                  | `3.0.0`                     |
 | Prompt template                  | `3.0.1`                     |
 | Raw packet result schema         | `3.0.1`                     |
+| Coordinator implementation       | `3.0.1`                     |
 | Raw merge schema                 | `1.0.0`                     |
-| Merged artifact schema           | `3.0.1`                     |
+| Merged artifact schema           | `3.0.2`                     |
+| Validation report schema         | `3.0.2`                     |
+| Readiness schema                 | `3.0.2`                     |
 | Enrichment taxonomy              | `2.0.0`                     |
 | Enrichment label schema          | `2.0.0`                     |
 | Enrichment artifact schema       | `2.0.0`                     |
@@ -42,6 +45,13 @@ historical evidence. In particular, `enrichment-v3-real-prep-a`, `enrichment-v3-
 `enrichment-v3-mergecheck-c`, and `enrichment-v3-mergecheck-d` must never be used for a real
 classification. Preserve them unchanged for audit history. Only a corrected preparation using
 prompt and raw-result schema `3.0.1` with a passing model-input independence audit is executable.
+
+Workflow schema `3.0.0` remains frozen because it identifies the already prepared packet contract.
+Coordinator implementation `3.0.1` adds post-result conflict quarantine without changing any
+model-facing input or raw-result column. Merged, validation-report, and readiness schemas `3.0.2`
+make that new audit state explicit. An executable preparation whose run definition names the legacy
+merged schema `3.0.1` may be recovered by this coordinator, but every newly emitted merged artifact
+uses `3.0.2`.
 
 ## Tracked configuration identity
 
@@ -238,22 +248,38 @@ must use status `not_applicable` or `not_assessable`; nonempty arrays require `t
 
 ## Returned-result validation
 
-`npm run literature:validate-gold-enrichment-v3-results` validates raw files without modifying them.
-It binds packet ID/family, prompt and schema versions, projection and row hashes, exact identifiers,
-row order, physician fields, controlled values, optional-tag statuses, evidence flags, full-text
-registry status, and complete packet coverage. It rejects duplicates, omissions, extras, changed
-metadata or identities, partial packets, malformed booleans, aliases, unsupported terms, taxonomy
-on exclusions, incomplete included taxonomy, wrong full-text flags, and preview/missing full-text
-claims. It never corrects a returned value.
+`npm run literature:validate-gold-enrichment-v3-results` performs two ordered stages without
+modifying a raw file.
+
+Stage 1 is fail-closed raw structural and contract validation. It binds the filename, packet
+ID/family, prompt and raw-result schema versions, packet/source projection and row hashes, exact
+identifiers and row order, physician relevance fields, controlled values, optional-tag statuses,
+booleans, confidence, evidence requirements, full-text identity and registry status, and complete
+packet coverage. Invalid UTF-8 or CSV, duplicates, omissions, extras, changed metadata or identity,
+partial packets, aliases or unsupported terms, excluded-row taxonomy, incomplete included
+taxonomy, and invalid full-text claims remain fatal.
+
+Stage 2 runs only on Stage-1-valid rows. Coordinator-only semantic rules emit `clear`, `warning`, or
+`conflict`; they never turn a structurally valid raw value into corruption and never rewrite it.
+Raw row status is `valid` or `invalid`. Packet status is `valid`,
+`valid_with_coordinator_conflicts`, or `invalid`. A validation report may therefore be structurally
+valid and complete while carrying unresolved coordinator conflicts that block readiness.
 
 The validator preserves `model_requests_physician_enrichment_review` as a distinct raw boolean. It
 requires `true` for a processing or evidence failure, but it does not infer the flag from relevance,
 confidence, packet family, full-text membership, metadata sufficiency, taxonomy, or any other
 controlled result. Prompt `3.0.0` results and all other superseded version identities are rejected.
 
-The validator also applies local safety constraints that are deliberately absent from model input.
-Those constraints may reject a result, but must never rewrite it or inject a replacement taxonomy
-value.
+The coordinator-only rule
+`forbidden-bronchoscopic-lvr-topic-for-surgical-lvrs` quarantines the known surgical-LVRS boundary
+conflict. The rule and its expected disposition remain absent from all model-facing files. Its
+conflict record preserves the raw value, records the rule/version and diagnostic, prohibits an
+automatic correction, and requires physician adjudication.
+
+Validation emits both a raw structural report and a deterministic coordinator-conflict CSV. It also
+emits an immutable raw-attempt ledger. The ledger binds packet, attempt ordinal, filename, bytes,
+SHA-256, validation outcome, conflict count, diagnostic, active state, and no-content-modification
+assertion. Archived attempts remain outside active raw-result discovery.
 
 ## Operator-only raw-result merge
 
@@ -281,14 +307,20 @@ review context; prior enrichment never supplies those fields. The row then carri
 taxonomy or exclusion assessment, normalized evidence slots, full-text identity when actually
 used, the raw `model_requests_physician_enrichment_review` value, the separately computed
 `coordinator_requires_physician_enrichment_review` value, three post-merge review-overlay flags,
-physician-enrichment review fields, enrichment provenance, and protocol-authorization state.
+physician-enrichment review fields, enrichment provenance, and protocol-authorization state. The
+explicit `model_*` fields preserve the untouched raw model taxonomy. Separate coordinator candidate
+fields hold only policy-cleared candidates. A conflicted field has an unresolved coordinator
+candidate and a blank physician field until adjudication; QA and taxonomy-upgrade suggestions stay
+in their own post-model overlays.
 `import_ready` is fixed to `false`, and `database_mutation_plan` is fixed blank. The merged schema is
-`3.0.1`; it rejects historical V1 enrichment as a V3 proposal and prevents unreviewed rows from
+`3.0.2`; it rejects historical V1 enrichment as a V3 proposal and prevents unreviewed rows from
 claiming physician-confirmed provenance.
 
-The merge also writes packet coverage, controlled-value validation, full-text usage, prior-version
-comparison, external-QA overlay, taxonomy-upgrade overlay, and physician-review-candidate reports.
-It does not create an import file.
+The merge also writes packet coverage, raw structural validation, coordinator conflicts, raw-attempt
+provenance, controlled-value validation, full-text usage, prior-version comparison, external-QA
+overlay, taxonomy-upgrade overlay, and physician-review-candidate reports. A complete Stage-1-valid
+run may merge with recorded conflicts, but its candidate status remains `non_import_ready`. The
+merge does not create an import file.
 
 ## QA and taxonomy-upgrade overlays
 
@@ -299,8 +331,9 @@ the concern, whether it remains open, candidate values, independent agreement, a
 need. Direct findings remain auditable, rule-based findings are rerun against V3, global findings
 remain in the final report, and every upgrade candidate remains physician-review eligible.
 
-Row-specific hard safety rules may fail validation. They may propose review flags or a
-physician-adjudication candidate, but cannot change relevance or inject a taxonomy correction.
+Row-specific hard safety rules run after structural validation. They may emit warnings or conflicts
+and require physician adjudication, but cannot change relevance, overwrite raw model output, or
+inject a taxonomy correction.
 
 ## Physician review workbook and QC
 
@@ -317,6 +350,12 @@ upgrade candidates, direct QA targets, moderate/low-confidence results, not-asse
 tags, unresolved design/status, limited or absent metadata, disagreements, and invalid/warning
 results. A raw model value of `false` never removes a coordinator-required row, while a value of
 `true` adds the row. Duplicate records appear once.
+
+Every coordinator conflict is in Required Review even when the raw model review flag is `false`.
+The sheet shows raw model output, coordinator diagnostic, and QA/upgrade candidates as separate
+evidence. For a conflicted topic, `physician_topic_ids` starts blank. Completion requires
+`physician_action=adjudicate`, an explicit allowed topic selection, `reviewed=true`, and a note;
+nonconflicted fields on the same row may remain prefilled.
 
 The QC sample contains 25 otherwise eligible `include_core` rows and 25 otherwise eligible
 exclusions selected by stable SHA-256 rank. Required-review, relevance-concern, full-text-exception,
@@ -361,6 +400,12 @@ optional-tag distributions, taxonomy coverage, metadata sufficiency, full-text u
 status, relevance concerns, provenance, physician hash, zero held-out access, and
 `database mutation plan=null`. It never creates import rows and reports `import readiness=false`
 unless every explicit gate passes.
+
+Readiness checksum-binds the coordinator-conflict artifact to the merged receipt and reconstructs
+each adjudication against the preserved raw value. Any unresolved conflict, forbidden final value,
+incomplete Required Review or QC row, or required-but-invalid protocol authorization keeps
+`import readiness=false`. The audit reports unresolved conflict counts, zero automatic corrections,
+`database mutation plan=null`, and zero import rows.
 
 Protocol authorization is deliberately bound to the post-QC decision artifacts, not just the
 merged proposal. Create it only after the required-review and QC CSVs are final. The JSON must use
@@ -495,9 +540,9 @@ bytes.
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Preparation       | `run-definition.json`, `artifact-manifest.json`, `packet-index.json`, `model-facing-inventory.json`, `model-input-independence-audit.json`, `full-text-registry-v3.csv`, `full-text-registry-v3.receipt.json`, operator-only source templates/README/handoff, four schemas, 20 packet CSVs plus their operator-only receipts, 20 rendered model-facing prompts, and ten packet-scoped complete-full-text manifests (50 generated model-facing artifacts total); the inventory additionally records 50 checksum-bound external PDFs as logical model-facing entries, not generated outputs |
 | Manual raw result | One `<packet-id>.result.csv` per packet, using the exact filename in its receipt; raw files are never rewritten                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| Validation        | `packet-validation-report.json`, `controlled-value-validation-report.json`, `result-coverage-report.json`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Validation        | `packet-validation-report.json`, `raw-structural-validation-report.json`, `controlled-value-validation-report.json`, `result-coverage-report.json`, `coordinator-conflict-report.csv`, `raw-attempt-ledger.json`                                                                                                                                                                                                                                                                                                                                                                          |
 | Raw-result merge  | `gold-set-v1-enrichment-v3-raw-merged.csv`, `gold-set-v1-enrichment-v3-raw-merged.receipt.json`; no coordinator inputs or decisions                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Merge             | `gold-set-v1-enrichment-v3-merged.csv`, `gold-set-v1-enrichment-v3-merged.receipt.json`, `packet-coverage-report.json`, `controlled-value-validation-report.json`, `full-text-usage-report.json`, `comparison-against-prior-v1-v2.csv`, `external-qa-overlay.csv`, `taxonomy-v2-upgrade-overlay.csv`, `physician-review-candidate-report.csv`                                                                                                                                                                                                                                             |
+| Merge             | `gold-set-v1-enrichment-v3-merged.csv`, `gold-set-v1-enrichment-v3-merged.receipt.json`, `packet-coverage-report.json`, `raw-structural-validation-report.json`, `coordinator-conflict-report.csv`, `raw-attempt-ledger.json`, `controlled-value-validation-report.json`, `full-text-usage-report.json`, `comparison-against-prior-v1-v2.csv`, `external-qa-overlay.csv`, `taxonomy-v2-upgrade-overlay.csv`, `physician-review-candidate-report.csv`                                                                                                                                      |
 | Review            | `gold-set-v1-enrichment-v3-physician-review.xlsx`, `required-review.csv`, `qc-sample-50.csv`, `protocol-acceptance-candidates.csv`, `review-cohorts.receipt.json`                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | Readiness         | `readiness-audit.json` only; no import file is ever produced                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 

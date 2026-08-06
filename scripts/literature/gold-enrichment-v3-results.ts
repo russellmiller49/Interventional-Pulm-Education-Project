@@ -1,5 +1,6 @@
 import { lstat, readdir, readFile, realpath } from 'node:fs/promises'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import type { ValidateFunction } from 'ajv'
 import Ajv2020 from 'ajv/dist/2020'
@@ -16,16 +17,20 @@ import type {
 import {
   GOLD_ENRICHMENT_V3_CANONICAL_RECEIPT_SHA256,
   GOLD_ENRICHMENT_V3_CANONICAL_SOURCE_SHA256,
+  GOLD_ENRICHMENT_V3_COORDINATOR_SCHEMA_VERSION,
   GOLD_ENRICHMENT_V3_ENRICHMENT_SCHEMA_VERSION,
   GOLD_ENRICHMENT_V3_LABEL_SCHEMA_VERSION,
+  GOLD_ENRICHMENT_V3_LEGACY_PREPARED_MERGED_SCHEMA_VERSION,
   GOLD_ENRICHMENT_V3_MERGED_SCHEMA_VERSION,
   GOLD_ENRICHMENT_V3_PACKET_FAMILIES,
   GOLD_ENRICHMENT_V3_PACKET_MEMBERSHIP_ORDER_SHA256,
   GOLD_ENRICHMENT_V3_PHYSICIAN_FIELD_SHA256,
   GOLD_ENRICHMENT_V3_PROMPT_TEMPLATE_VERSION,
+  GOLD_ENRICHMENT_V3_READINESS_SCHEMA_VERSION,
   GOLD_ENRICHMENT_V3_RESULT_SCHEMA_VERSION,
   GOLD_ENRICHMENT_V3_TAXONOMY_VERSION,
   GOLD_ENRICHMENT_V3_UPGRADE_PLAN_SHA256,
+  GOLD_ENRICHMENT_V3_VALIDATION_REPORT_SCHEMA_VERSION,
   GOLD_ENRICHMENT_V3_WORKFLOW_ID,
   GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION,
   assertGoldEnrichmentV3QaContract,
@@ -187,6 +192,8 @@ export const GOLD_ENRICHMENT_V3_MERGED_COLUMNS = [
   'physician_field_sha256',
   'result_packet_id',
   'result_packet_family',
+  'raw_result_filename',
+  'raw_result_sha256',
   'source_projection_sha256',
   'source_row_sha256',
   'batch_id',
@@ -211,6 +218,14 @@ export const GOLD_ENRICHMENT_V3_MERGED_COLUMNS = [
   'is_blinded',
   'relevance_review_complete',
   'metadata_sufficiency',
+  'model_topic_ids',
+  'model_technology_tags',
+  'model_technology_tag_status',
+  'model_clinical_purposes',
+  'model_disease_tags',
+  'model_disease_tag_status',
+  'model_study_design',
+  'model_publication_status',
   'topic_ids',
   'technology_tags',
   'technology_tag_status',
@@ -226,6 +241,14 @@ export const GOLD_ENRICHMENT_V3_MERGED_COLUMNS = [
   'enrichment_confidence',
   'assessment_confidence',
   'model_requests_physician_enrichment_review',
+  'raw_row_validation_status',
+  'coordinator_schema_version',
+  'coordinator_policy_status',
+  'coordinator_conflict_count',
+  'coordinator_conflict_fields',
+  'coordinator_conflict_rule_ids',
+  'coordinator_conflict_diagnostics',
+  'coordinator_candidate_status',
   'coordinator_requires_physician_enrichment_review',
   'coordinator_review_reasons',
   'evidence_1_field',
@@ -261,6 +284,48 @@ export type GoldEnrichmentV3MergedRow = Record<GoldEnrichmentV3MergedColumn, str
 type IncludedRawResult = Record<IncludedMetadataColumn | IncludedFullTextColumn, string>
 type ExcludedRawResult = Record<ExcludedResultColumn, string>
 
+export type GoldEnrichmentV3RawRowValidationStatus = 'valid' | 'invalid'
+export type GoldEnrichmentV3CoordinatorPolicyStatus = 'clear' | 'conflict' | 'warning'
+export type GoldEnrichmentV3PacketValidationStatus =
+  | 'valid'
+  | 'valid_with_coordinator_conflicts'
+  | 'invalid'
+
+export interface GoldEnrichmentV3CoordinatorConflict {
+  packet_id: string
+  packet_family: GoldEnrichmentV3PacketFamily
+  raw_result_filename: string
+  raw_result_sha256: string
+  master_row_id: string
+  pmid: string
+  field: string
+  raw_model_value: string
+  coordinator_rule_id: string
+  coordinator_rule_version: string
+  diagnostic: string
+  severity: 'hard_safety' | 'error' | 'warning'
+  requires_physician_adjudication: 'true'
+  automatic_correction_allowed: 'false'
+  resolution_status: 'unresolved'
+  physician_resolution_action: ''
+  physician_resolved_value: ''
+  physician_resolution_note: ''
+  physician_reviewed: ''
+}
+
+export interface GoldEnrichmentV3CoordinatorPolicyEvaluation {
+  status: GoldEnrichmentV3CoordinatorPolicyStatus
+  conflicts: GoldEnrichmentV3CoordinatorConflict[]
+  warnings: string[]
+}
+
+interface GoldEnrichmentV3ValidatedRowProvenance {
+  rawResultFilename: string
+  rawResultSha256: string
+  rawRowValidationStatus: 'valid'
+  coordinatorPolicy: GoldEnrichmentV3CoordinatorPolicyEvaluation
+}
+
 export interface GoldEnrichmentV3ValidatedIncludedRow {
   family: 'included_metadata_only' | 'included_full_text'
   raw: IncludedRawResult
@@ -269,17 +334,31 @@ export interface GoldEnrichmentV3ValidatedIncludedRow {
   technologyTags: string[]
   clinicalPurposes: string[]
   diseaseTags: string[]
+  provenance: GoldEnrichmentV3ValidatedRowProvenance
 }
 
 export interface GoldEnrichmentV3ValidatedExcludedRow {
   family: 'excluded_metadata_sufficiency'
   raw: ExcludedRawResult
   packetInput: Record<PacketInputColumn, string>
+  provenance: GoldEnrichmentV3ValidatedRowProvenance
 }
 
 export type GoldEnrichmentV3ValidatedRow =
   | GoldEnrichmentV3ValidatedIncludedRow
   | GoldEnrichmentV3ValidatedExcludedRow
+
+type GoldEnrichmentV3StructurallyValidatedIncludedRow = Omit<
+  GoldEnrichmentV3ValidatedIncludedRow,
+  'provenance'
+>
+type GoldEnrichmentV3StructurallyValidatedExcludedRow = Omit<
+  GoldEnrichmentV3ValidatedExcludedRow,
+  'provenance'
+>
+type GoldEnrichmentV3StructurallyValidatedRow =
+  | GoldEnrichmentV3StructurallyValidatedIncludedRow
+  | GoldEnrichmentV3StructurallyValidatedExcludedRow
 
 interface PacketIndexEntry {
   packetId: string
@@ -315,6 +394,10 @@ export interface GoldEnrichmentV3PacketValidation {
   expectedRows: number
   receivedRows: number
   validRows: number
+  rawValidationStatus: GoldEnrichmentV3RawRowValidationStatus
+  coordinatorPolicyStatus: GoldEnrichmentV3CoordinatorPolicyStatus
+  status: GoldEnrichmentV3PacketValidationStatus
+  coordinatorConflictCount: number
   valid: boolean
   issues: string[]
 }
@@ -322,19 +405,35 @@ export interface GoldEnrichmentV3PacketValidation {
 export interface GoldEnrichmentV3ValidationReport {
   workflowId: typeof GOLD_ENRICHMENT_V3_WORKFLOW_ID
   workflowSchemaVersion: typeof GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION
+  coordinatorSchemaVersion: typeof GOLD_ENRICHMENT_V3_COORDINATOR_SCHEMA_VERSION
+  validationReportSchemaVersion: typeof GOLD_ENRICHMENT_V3_VALIDATION_REPORT_SCHEMA_VERSION
   resultSchemaVersion: typeof GOLD_ENRICHMENT_V3_RESULT_SCHEMA_VERSION
   complete: boolean
   valid: boolean
+  status: GoldEnrichmentV3PacketValidationStatus
+  rawIdentityListSha256: string
+  rawResultsReceiptSha256: string | null
   packetCoverage: {
     expectedPackets: number
     presentPackets: number
     validPackets: number
+    structurallyValidPackets: number
+    validWithCoordinatorConflicts: number
     expectedRows: number
     validRows: number
+    structurallyValidRows: number
+    coordinatorConflicts: number
     missingResultFiles: string[]
     unrecognizedResultFiles: string[]
   }
   packets: GoldEnrichmentV3PacketValidation[]
+  coordinatorPolicy: {
+    status: GoldEnrichmentV3CoordinatorPolicyStatus
+    conflicts: number
+    warnings: number
+    unresolvedConflicts: number
+    automaticCorrections: 0
+  }
   safety: {
     rawResultsModified: false
     silentCorrections: false
@@ -355,7 +454,22 @@ export interface ValidateGoldEnrichmentV3ResultsOptions {
 export interface ValidateGoldEnrichmentV3ResultsResult {
   report: GoldEnrichmentV3ValidationReport
   rows: GoldEnrichmentV3ValidatedRow[]
+  coordinatorConflicts: GoldEnrichmentV3CoordinatorConflict[]
+  attemptLedger: GoldEnrichmentV3AttemptLedgerEntry[]
   reportArtifacts: GoldEnrichmentV3ArtifactIdentity[]
+}
+
+export interface GoldEnrichmentV3AttemptLedgerEntry {
+  packet_id: string
+  attempt_ordinal: number
+  raw_filename: string
+  bytes: number
+  sha256: string
+  validation_outcome: string
+  coordinator_conflict_count: number
+  diagnostic: string
+  active: boolean
+  immutable_no_content_modification: true
 }
 
 export type GoldEnrichmentV3RawMergedColumn = (typeof GOLD_ENRICHMENT_V3_RAW_MERGED_COLUMNS)[number]
@@ -376,6 +490,12 @@ const METADATA_SUFFICIENCY = new Set([
 const PROCESSING_STATUSES = new Set(['valid', 'error'])
 const RELEVANCE_CONCERNS = new Set(['16043961', '26033136'])
 const FORBIDDEN_LVRS_PMIDS = new Set(['41229759', '18453348'])
+const FORBIDDEN_LVRS_COORDINATOR_RULE_ID = 'forbidden-bronchoscopic-lvr-topic-for-surgical-lvrs'
+const FORBIDDEN_LVRS_COORDINATOR_RULE_VERSION = '1.0.0'
+const TRACKED_MERGED_SCHEMA_PATH = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '../../config/literature/gold-enrichment-v3/merged-v3.schema.json',
+)
 const FORBIDDEN_INPUT_PATH_TOKEN =
   /(?:^|[\\/_. -])(?:test|testing|all|held[ _-]?out|holdout)(?=$|[\\/_. -])/iu
 const PACKET_PROMPT_PATHS: Record<GoldEnrichmentV3PacketFamily, string> = {
@@ -688,7 +808,10 @@ async function loadPacketContexts(runDirectory: string): Promise<PacketContext[]
     runWorkflow?.workflowSchemaVersion !== GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION ||
     runWorkflow?.promptTemplateVersion !== GOLD_ENRICHMENT_V3_PROMPT_TEMPLATE_VERSION ||
     runWorkflow?.resultSchemaVersion !== GOLD_ENRICHMENT_V3_RESULT_SCHEMA_VERSION ||
-    runWorkflow?.mergedSchemaVersion !== GOLD_ENRICHMENT_V3_MERGED_SCHEMA_VERSION ||
+    ![
+      GOLD_ENRICHMENT_V3_LEGACY_PREPARED_MERGED_SCHEMA_VERSION,
+      GOLD_ENRICHMENT_V3_MERGED_SCHEMA_VERSION,
+    ].some((version) => version === runWorkflow?.mergedSchemaVersion) ||
     runWorkflow?.taxonomyVersion !== GOLD_ENRICHMENT_V3_TAXONOMY_VERSION ||
     runWorkflow?.labelSchemaVersion !== GOLD_ENRICHMENT_V3_LABEL_SCHEMA_VERSION ||
     runWorkflow?.enrichmentSchemaVersion !== GOLD_ENRICHMENT_V3_ENRICHMENT_SCHEMA_VERSION ||
@@ -1867,7 +1990,7 @@ function validateIncludedResult(
   raw: IncludedRawResult,
   input: Record<PacketInputColumn, string>,
   family: 'included_metadata_only' | 'included_full_text',
-): GoldEnrichmentV3ValidatedIncludedRow {
+): GoldEnrichmentV3StructurallyValidatedIncludedRow {
   assertProcessingStatus(raw)
   assertMetadataSufficiency(raw, input)
   const topicIds = parsePipeList(raw.topic_ids, 'topic_ids')
@@ -1892,12 +2015,6 @@ function validateIncludedResult(
     study_design: raw.study_design,
     publication_status: raw.publication_status,
   })
-  if (
-    FORBIDDEN_LVRS_PMIDS.has(raw.pmid) &&
-    topicIds.includes('bronchoscopic-lung-volume-reduction')
-  ) {
-    throw new Error('The checksum-bound LVRS false-positive topic is forbidden for this PMID.')
-  }
   if (!CONFIDENCES.has(raw.enrichment_confidence)) {
     throw new Error('enrichment_confidence must be high, moderate, or low.')
   }
@@ -1967,7 +2084,7 @@ function validateIncludedResult(
 function validateExcludedResult(
   raw: ExcludedRawResult,
   input: Record<PacketInputColumn, string>,
-): GoldEnrichmentV3ValidatedExcludedRow {
+): GoldEnrichmentV3StructurallyValidatedExcludedRow {
   assertProcessingStatus(raw)
   assertMetadataSufficiency(raw, input)
   if (raw.physician_final_label !== 'exclude') {
@@ -1991,6 +2108,46 @@ function validateExcludedResult(
   return { family: 'excluded_metadata_sufficiency', raw, packetInput: input }
 }
 
+export function evaluateGoldEnrichmentV3CoordinatorPolicy(
+  validated: GoldEnrichmentV3StructurallyValidatedRow,
+  rawResult: { filename: string; sha256: string },
+): GoldEnrichmentV3CoordinatorPolicyEvaluation {
+  const conflicts: GoldEnrichmentV3CoordinatorConflict[] = []
+  if (
+    validated.family !== 'excluded_metadata_sufficiency' &&
+    FORBIDDEN_LVRS_PMIDS.has(validated.raw.pmid) &&
+    validated.topicIds.includes('bronchoscopic-lung-volume-reduction')
+  ) {
+    conflicts.push({
+      packet_id: validated.raw.packet_id,
+      packet_family: validated.family,
+      raw_result_filename: rawResult.filename,
+      raw_result_sha256: rawResult.sha256,
+      master_row_id: validated.raw.master_row_id,
+      pmid: validated.raw.pmid,
+      field: 'topic_ids',
+      raw_model_value: validated.raw.topic_ids,
+      coordinator_rule_id: FORBIDDEN_LVRS_COORDINATOR_RULE_ID,
+      coordinator_rule_version: FORBIDDEN_LVRS_COORDINATOR_RULE_VERSION,
+      diagnostic:
+        'The structurally valid raw model topic assigns bronchoscopic lung-volume reduction to a checksum-bound surgical-LVRS boundary record. Preserve the raw value, leave the coordinator topic candidate unresolved, and require physician adjudication.',
+      severity: 'hard_safety',
+      requires_physician_adjudication: 'true',
+      automatic_correction_allowed: 'false',
+      resolution_status: 'unresolved',
+      physician_resolution_action: '',
+      physician_resolved_value: '',
+      physician_resolution_note: '',
+      physician_reviewed: '',
+    })
+  }
+  return {
+    status: conflicts.length > 0 ? 'conflict' : 'clear',
+    conflicts,
+    warnings: [],
+  }
+}
+
 function resultColumns(family: GoldEnrichmentV3PacketFamily): readonly string[] {
   if (family === 'included_metadata_only')
     return GOLD_ENRICHMENT_V3_INCLUDED_METADATA_RESULT_COLUMNS
@@ -2001,8 +2158,10 @@ function resultColumns(family: GoldEnrichmentV3PacketFamily): readonly string[] 
 async function validatePacketResult(
   context: PacketContext,
   resultsDirectory: string,
+  resultPathOverride?: string,
 ): Promise<{ packet: GoldEnrichmentV3PacketValidation; rows: GoldEnrichmentV3ValidatedRow[] }> {
-  const resultPath = path.join(resultsDirectory, context.index.expectedOutputFilename)
+  const resultPath =
+    resultPathOverride ?? path.join(resultsDirectory, context.index.expectedOutputFilename)
   const base: GoldEnrichmentV3PacketValidation = {
     packetId: context.index.packetId,
     family: context.index.family,
@@ -2013,6 +2172,10 @@ async function validatePacketResult(
     expectedRows: context.index.rows,
     receivedRows: 0,
     validRows: 0,
+    rawValidationStatus: 'invalid',
+    coordinatorPolicyStatus: 'clear',
+    status: 'invalid',
+    coordinatorConflictCount: 0,
     valid: false,
     issues: [],
   }
@@ -2086,7 +2249,19 @@ async function validatePacketResult(
           )}`,
         )
       }
-      rows.push(validated)
+      const coordinatorPolicy = evaluateGoldEnrichmentV3CoordinatorPolicy(validated, {
+        filename: context.index.expectedOutputFilename,
+        sha256: file.sha256,
+      })
+      rows.push({
+        ...validated,
+        provenance: {
+          rawResultFilename: context.index.expectedOutputFilename,
+          rawResultSha256: file.sha256,
+          rawRowValidationStatus: 'valid',
+          coordinatorPolicy,
+        },
+      } as GoldEnrichmentV3ValidatedRow)
     } catch (error: unknown) {
       base.issues.push(
         `record ${index + 2}: ${error instanceof Error ? error.message : String(error)}`,
@@ -2096,13 +2271,245 @@ async function validatePacketResult(
   if (rawRows.length < context.inputs.length) base.issues.push('result_missing_expected_rows')
   base.validRows = rows.length
   base.valid = base.issues.length === 0 && rows.length === context.inputs.length
+  base.rawValidationStatus = base.valid ? 'valid' : 'invalid'
+  base.coordinatorConflictCount = rows.reduce(
+    (sum, row) => sum + row.provenance.coordinatorPolicy.conflicts.length,
+    0,
+  )
+  const coordinatorWarningCount = rows.reduce(
+    (sum, row) => sum + row.provenance.coordinatorPolicy.warnings.length,
+    0,
+  )
+  base.coordinatorPolicyStatus =
+    base.coordinatorConflictCount > 0
+      ? 'conflict'
+      : coordinatorWarningCount > 0
+        ? 'warning'
+        : 'clear'
+  base.status = base.valid
+    ? base.coordinatorConflictCount > 0
+      ? 'valid_with_coordinator_conflicts'
+      : 'valid'
+    : 'invalid'
   return { packet: base, rows: base.valid ? rows : [] }
+}
+
+export const GOLD_ENRICHMENT_V3_COORDINATOR_CONFLICT_COLUMNS = [
+  'packet_id',
+  'packet_family',
+  'raw_result_filename',
+  'raw_result_sha256',
+  'master_row_id',
+  'pmid',
+  'field',
+  'raw_model_value',
+  'coordinator_rule_id',
+  'coordinator_rule_version',
+  'diagnostic',
+  'severity',
+  'requires_physician_adjudication',
+  'automatic_correction_allowed',
+  'resolution_status',
+  'physician_resolution_action',
+  'physician_resolved_value',
+  'physician_resolution_note',
+  'physician_reviewed',
+] as const
+
+interface GoldEnrichmentV3AttemptLedgerBuild {
+  entries: GoldEnrichmentV3AttemptLedgerEntry[]
+  rawIdentityListSha256: string
+  receiptPath: string | null
+  receiptSha256: string | null
+}
+
+async function optionalUtf8RegularFile(inputPath: string, label: string) {
+  try {
+    return await readUtf8RegularFile(inputPath, label)
+  } catch (error: unknown) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null
+    throw error
+  }
+}
+
+function coordinatorDiagnostic(rows: readonly GoldEnrichmentV3ValidatedRow[]): string {
+  return [
+    ...new Set(
+      rows.flatMap((row) =>
+        row.provenance.coordinatorPolicy.conflicts.map((conflict) => conflict.diagnostic),
+      ),
+    ),
+  ].join(' || ')
+}
+
+async function buildGoldEnrichmentV3AttemptLedger(
+  contexts: readonly PacketContext[],
+  packetResults: readonly {
+    packet: GoldEnrichmentV3PacketValidation
+    rows: GoldEnrichmentV3ValidatedRow[]
+  }[],
+  resultsDirectory: string,
+): Promise<GoldEnrichmentV3AttemptLedgerBuild> {
+  const receiptPath = path.join(path.dirname(resultsDirectory), 'raw-results-receipt.json')
+  const receiptFile = await optionalUtf8RegularFile(receiptPath, 'Raw-results receipt')
+  const activeAttemptOrdinals = new Map<string, number>()
+  let rawIdentityListSha256 = sha256Bytes(
+    serializeGoldEnrichmentV3Json(
+      packetResults.map(({ packet }) => ({
+        packetId: packet.packetId,
+        filename: packet.expectedResultFilename,
+        bytes: packet.resultBytes,
+        sha256: packet.resultSha256,
+      })),
+    ),
+  )
+  let replacementEvent: Record<string, unknown> | null = null
+  let receipt: Record<string, unknown> | null = null
+  if (receiptFile) {
+    receipt = parseJsonObject(receiptFile.text, 'Raw-results receipt')
+    const files = requireJsonObjectArray(receipt.files, 'Raw-results receipt files')
+    if (
+      receipt.schema_version !== '1.0.0' ||
+      receipt.result_file_count !== contexts.length ||
+      receipt.raw_results_directory !== resultsDirectory ||
+      files.length !== contexts.length ||
+      receipt.checks === null ||
+      typeof receipt.checks !== 'object'
+    ) {
+      throw new Error('Raw-results receipt does not match the active result directory contract.')
+    }
+    files.forEach((entry, index) => {
+      const packet = packetResults[index]?.packet
+      if (
+        !packet ||
+        entry.execution_order !== index + 1 ||
+        entry.packet_id !== packet.packetId ||
+        entry.filename !== packet.expectedResultFilename ||
+        entry.bytes !== packet.resultBytes ||
+        entry.sha256 !== packet.resultSha256
+      ) {
+        throw new Error(`Raw-results receipt identity mismatch at execution order ${index + 1}.`)
+      }
+    })
+    const checks = requireJsonObject(receipt.checks, 'Raw-results receipt checks')
+    if (
+      checks.expected_files_present_exactly_once !== true ||
+      checks.active_files_regular_non_symlinks !== true ||
+      checks.raw_file_contents_modified !== false ||
+      JSON.stringify(checks.missing_result_files) !== '[]' ||
+      JSON.stringify(checks.unexpected_result_files) !== '[]'
+    ) {
+      throw new Error('Raw-results receipt safety assertions do not pass.')
+    }
+    if (
+      typeof receipt.ordered_identity_list_sha256 !== 'string' ||
+      !SHA256.test(receipt.ordered_identity_list_sha256)
+    ) {
+      throw new Error('Raw-results receipt ordered identity-list SHA-256 is invalid.')
+    }
+    rawIdentityListSha256 = receipt.ordered_identity_list_sha256
+    replacementEvent = receipt.replacement_event
+      ? requireJsonObject(receipt.replacement_event, 'Raw-results replacement event')
+      : null
+    if (replacementEvent) {
+      const packetId = String(replacementEvent.packet_id ?? '')
+      const activePacket = packetResults.find(
+        (result) => result.packet.packetId === packetId,
+      )?.packet
+      if (
+        !activePacket ||
+        replacementEvent.replacement_attempt_number !== 2 ||
+        replacementEvent.replacement_attempt_sha256 !== activePacket.resultSha256 ||
+        replacementEvent.active_filename !== activePacket.expectedResultFilename ||
+        replacementEvent.content_modified !== false
+      ) {
+        throw new Error('Raw-results replacement event does not bind the active attempt.')
+      }
+      activeAttemptOrdinals.set(packetId, Number(replacementEvent.replacement_attempt_number))
+    }
+  }
+
+  const entries: GoldEnrichmentV3AttemptLedgerEntry[] = packetResults.map(({ packet, rows }) => ({
+    packet_id: packet.packetId,
+    attempt_ordinal: activeAttemptOrdinals.get(packet.packetId) ?? 1,
+    raw_filename: packet.expectedResultFilename,
+    bytes: packet.resultBytes ?? 0,
+    sha256: packet.resultSha256 ?? '',
+    validation_outcome: packet.status,
+    coordinator_conflict_count: packet.coordinatorConflictCount,
+    diagnostic: coordinatorDiagnostic(rows),
+    active: true,
+    immutable_no_content_modification: true,
+  }))
+
+  if (receiptFile && receipt && replacementEvent) {
+    const packetId = String(replacementEvent.packet_id)
+    const context = contexts.find((candidate) => candidate.index.packetId === packetId)
+    const archiveReceiptRelativePath = String(replacementEvent.failed_attempt_archive_receipt ?? '')
+    assertSafeRelativeArtifactPath(archiveReceiptRelativePath, 'Archived raw-attempt receipt path')
+    const archiveReceiptPath = path.join(path.dirname(resultsDirectory), archiveReceiptRelativePath)
+    const archiveReceiptFile = await readUtf8RegularFile(
+      archiveReceiptPath,
+      'Archived raw-attempt receipt',
+    )
+    const archiveReceipt = parseJsonObject(archiveReceiptFile.text, 'Archived raw-attempt receipt')
+    const archiveRawPath = String(archiveReceipt.archive_path ?? '')
+    if (
+      !context ||
+      !path.isAbsolute(archiveRawPath) ||
+      path.dirname(archiveRawPath) === resultsDirectory ||
+      archiveReceipt.packet_id !== packetId ||
+      archiveReceipt.attempt_number !== replacementEvent.failed_attempt_number ||
+      archiveReceipt.sha256 !== replacementEvent.failed_attempt_sha256 ||
+      archiveReceipt.replacement_attempt_sha256 !== replacementEvent.replacement_attempt_sha256 ||
+      archiveReceipt.no_modification_assertion !== true
+    ) {
+      throw new Error('Archived raw-attempt receipt does not preserve the replacement provenance.')
+    }
+    const archiveValidation = await validatePacketResult(context, resultsDirectory, archiveRawPath)
+    const archiveBytes = await readFile(archiveRawPath)
+    if (
+      archiveBytes.byteLength !== archiveReceipt.byte_size ||
+      sha256Bytes(archiveBytes) !== archiveReceipt.sha256
+    ) {
+      throw new Error('Archived raw attempt no longer matches its immutable byte identity.')
+    }
+    entries.push({
+      packet_id: packetId,
+      attempt_ordinal: Number(archiveReceipt.attempt_number),
+      raw_filename: path.basename(archiveRawPath),
+      bytes: archiveBytes.byteLength,
+      sha256: String(archiveReceipt.sha256),
+      validation_outcome: archiveValidation.packet.status,
+      coordinator_conflict_count: archiveValidation.packet.coordinatorConflictCount,
+      diagnostic:
+        coordinatorDiagnostic(archiveValidation.rows) ||
+        String(archiveReceipt.exact_validation_diagnostic ?? ''),
+      active: false,
+      immutable_no_content_modification: true,
+    })
+  }
+
+  entries.sort(
+    (left, right) =>
+      contexts.findIndex((context) => context.index.packetId === left.packet_id) -
+        contexts.findIndex((context) => context.index.packetId === right.packet_id) ||
+      left.attempt_ordinal - right.attempt_ordinal,
+  )
+  return {
+    entries,
+    rawIdentityListSha256,
+    receiptPath: receiptFile ? receiptPath : null,
+    receiptSha256: receiptFile?.sha256 ?? null,
+  }
 }
 
 async function publishValidationReports(
   outputDirectory: string,
   workspaceRoot: string,
   report: GoldEnrichmentV3ValidationReport,
+  coordinatorConflicts: readonly GoldEnrichmentV3CoordinatorConflict[],
+  attemptLedger: GoldEnrichmentV3AttemptLedgerBuild,
 ) {
   const resolvedOutput = await assertGoldEnrichmentV3SafeOutputDirectory(
     outputDirectory,
@@ -2110,6 +2517,7 @@ async function publishValidationReports(
   )
   const controlledReport = {
     workflowId: GOLD_ENRICHMENT_V3_WORKFLOW_ID,
+    validationReportSchemaVersion: GOLD_ENRICHMENT_V3_VALIDATION_REPORT_SCHEMA_VERSION,
     taxonomyVersion: GOLD_ENRICHMENT_V3_TAXONOMY_VERSION,
     labelSchemaVersion: GOLD_ENRICHMENT_V3_LABEL_SCHEMA_VERSION,
     enrichmentSchemaVersion: GOLD_ENRICHMENT_V3_ENRICHMENT_SCHEMA_VERSION,
@@ -2124,14 +2532,30 @@ async function publishValidationReports(
   }
   const coverageReport = {
     workflowId: GOLD_ENRICHMENT_V3_WORKFLOW_ID,
+    validationReportSchemaVersion: GOLD_ENRICHMENT_V3_VALIDATION_REPORT_SCHEMA_VERSION,
     complete: report.complete,
     ...report.packetCoverage,
   }
+  const coordinatorConflictCsv = serializeGoldEnrichmentV3Csv(
+    GOLD_ENRICHMENT_V3_COORDINATOR_CONFLICT_COLUMNS,
+    coordinatorConflicts,
+  )
+  const attemptLedgerReport = serializeGoldEnrichmentV3Json({
+    workflowId: GOLD_ENRICHMENT_V3_WORKFLOW_ID,
+    coordinatorSchemaVersion: GOLD_ENRICHMENT_V3_COORDINATOR_SCHEMA_VERSION,
+    validationReportSchemaVersion: GOLD_ENRICHMENT_V3_VALIDATION_REPORT_SCHEMA_VERSION,
+    rawIdentityListSha256: attemptLedger.rawIdentityListSha256,
+    rawResultsReceipt: {
+      path: attemptLedger.receiptPath,
+      sha256: attemptLedger.receiptSha256,
+    },
+    attempts: attemptLedger.entries,
+    immutableNoContentModification: true,
+  })
+  const structuralReport = serializeGoldEnrichmentV3Json(report)
   const plan = [
-    plannedGoldEnrichmentV3Text(
-      'packet-validation-report.json',
-      serializeGoldEnrichmentV3Json(report),
-    ),
+    plannedGoldEnrichmentV3Text('packet-validation-report.json', structuralReport),
+    plannedGoldEnrichmentV3Text('raw-structural-validation-report.json', structuralReport),
     plannedGoldEnrichmentV3Text(
       'controlled-value-validation-report.json',
       serializeGoldEnrichmentV3Json(controlledReport),
@@ -2140,6 +2564,8 @@ async function publishValidationReports(
       'result-coverage-report.json',
       serializeGoldEnrichmentV3Json(coverageReport),
     ),
+    plannedGoldEnrichmentV3Text('coordinator-conflict-report.csv', coordinatorConflictCsv),
+    plannedGoldEnrichmentV3Text('raw-attempt-ledger.json', attemptLedgerReport),
   ]
   await preflightGoldEnrichmentV3Artifacts(resolvedOutput, plan)
   const published: GoldEnrichmentV3ArtifactIdentity[] = []
@@ -2183,22 +2609,58 @@ export async function validateGoldEnrichmentV3Results(
     unrecognizedResultFiles.length === 0 &&
     packets.every((packet) => packet.valid) &&
     rows.length === 630
+  const coordinatorConflicts = rows.flatMap((row) => row.provenance.coordinatorPolicy.conflicts)
+  const coordinatorWarnings = rows.flatMap((row) => row.provenance.coordinatorPolicy.warnings)
+  const coordinatorPolicyStatus: GoldEnrichmentV3CoordinatorPolicyStatus =
+    coordinatorConflicts.length > 0
+      ? 'conflict'
+      : coordinatorWarnings.length > 0
+        ? 'warning'
+        : 'clear'
+  const attemptLedger = await buildGoldEnrichmentV3AttemptLedger(
+    contexts,
+    packetResults,
+    resultsDirectory,
+  )
   const report: GoldEnrichmentV3ValidationReport = {
     workflowId: GOLD_ENRICHMENT_V3_WORKFLOW_ID,
     workflowSchemaVersion: GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION,
+    coordinatorSchemaVersion: GOLD_ENRICHMENT_V3_COORDINATOR_SCHEMA_VERSION,
+    validationReportSchemaVersion: GOLD_ENRICHMENT_V3_VALIDATION_REPORT_SCHEMA_VERSION,
     resultSchemaVersion: GOLD_ENRICHMENT_V3_RESULT_SCHEMA_VERSION,
     complete,
     valid,
+    status: valid
+      ? coordinatorConflicts.length > 0
+        ? 'valid_with_coordinator_conflicts'
+        : 'valid'
+      : 'invalid',
+    rawIdentityListSha256: attemptLedger.rawIdentityListSha256,
+    rawResultsReceiptSha256: attemptLedger.receiptSha256,
     packetCoverage: {
       expectedPackets: contexts.length,
       presentPackets: packets.filter((packet) => packet.resultPath !== null).length,
       validPackets: packets.filter((packet) => packet.valid).length,
+      structurallyValidPackets: packets.filter((packet) => packet.rawValidationStatus === 'valid')
+        .length,
+      validWithCoordinatorConflicts: packets.filter(
+        (packet) => packet.status === 'valid_with_coordinator_conflicts',
+      ).length,
       expectedRows: contexts.reduce((sum, context) => sum + context.index.rows, 0),
       validRows: rows.length,
+      structurallyValidRows: rows.length,
+      coordinatorConflicts: coordinatorConflicts.length,
       missingResultFiles,
       unrecognizedResultFiles,
     },
     packets,
+    coordinatorPolicy: {
+      status: coordinatorPolicyStatus,
+      conflicts: coordinatorConflicts.length,
+      warnings: coordinatorWarnings.length,
+      unresolvedConflicts: coordinatorConflicts.length,
+      automaticCorrections: 0,
+    },
     safety: {
       rawResultsModified: false,
       silentCorrections: false,
@@ -2210,8 +2672,20 @@ export async function validateGoldEnrichmentV3Results(
   const reportArtifacts =
     options.publishReports === false || !options.outputDirectory
       ? []
-      : await publishValidationReports(path.resolve(options.outputDirectory), workspaceRoot, report)
-  return { report, rows: valid ? rows : [], reportArtifacts }
+      : await publishValidationReports(
+          path.resolve(options.outputDirectory),
+          workspaceRoot,
+          report,
+          coordinatorConflicts,
+          attemptLedger,
+        )
+  return {
+    report,
+    rows: valid ? rows : [],
+    coordinatorConflicts,
+    attemptLedger: attemptLedger.entries,
+    reportArtifacts,
+  }
 }
 
 export interface MergeGoldEnrichmentV3RawResultsOptions {
@@ -2288,7 +2762,14 @@ export async function mergeGoldEnrichmentV3RawResults(
       bytes: packet.resultBytes,
       sha256: packet.resultSha256,
       rows: packet.validRows,
+      rawValidationStatus: packet.rawValidationStatus,
+      coordinatorPolicyStatus: packet.coordinatorPolicyStatus,
+      status: packet.status,
+      coordinatorConflictCount: packet.coordinatorConflictCount,
     })),
+    coordinatorPolicy: validation.report.coordinatorPolicy,
+    rawIdentityListSha256: validation.report.rawIdentityListSha256,
+    attemptLedger: validation.attemptLedger,
     output: rawMergedIdentity,
     safety: {
       rawResultValuesChanged: false,
@@ -2297,6 +2778,9 @@ export async function mergeGoldEnrichmentV3RawResults(
       externalQaRead: false,
       taxonomyUpgradePlanRead: false,
       coordinatorReviewEligibilityComputed: false,
+      coordinatorPolicyEvaluated: true,
+      coordinatorConflictsPreserved: validation.coordinatorConflicts.length,
+      automaticCorrections: 0,
       enrichmentValuesChanged: false,
       physicianRelevanceChanged: false,
       modelCalls: 0,
@@ -2373,6 +2857,14 @@ export const GOLD_ENRICHMENT_V3_REVIEW_CANDIDATE_COLUMNS = [
   'model_requests_physician_enrichment_review',
   'coordinator_requires_physician_enrichment_review',
   'coordinator_review_reasons',
+  'coordinator_policy_status',
+  'coordinator_conflict_count',
+  'coordinator_conflict_fields',
+  'coordinator_conflict_rule_ids',
+  'coordinator_conflict_diagnostics',
+  'coordinator_candidate_status',
+  'raw_result_filename',
+  'raw_result_sha256',
   'full_text_evidence_status',
   'expected_full_text_filename',
   'full_text_file_sha256',
@@ -2410,10 +2902,16 @@ function requireFlexibleColumns(
 
 function currentFieldValue(row: GoldEnrichmentV3MergedRow, field: string): string {
   const normalized = field.trim()
+  const modelField = `model_${normalized}`
+  if (modelField in row) return row[modelField as GoldEnrichmentV3MergedColumn]
   if (normalized in row) return row[normalized as GoldEnrichmentV3MergedColumn]
   return normalized
     .split('/')
-    .map((part) => (part in row ? row[part as GoldEnrichmentV3MergedColumn] : ''))
+    .map((part) => {
+      const modelPart = `model_${part}`
+      if (modelPart in row) return row[modelPart as GoldEnrichmentV3MergedColumn]
+      return part in row ? row[part as GoldEnrichmentV3MergedColumn] : ''
+    })
     .filter(Boolean)
     .join(' || ')
 }
@@ -2433,10 +2931,14 @@ function qaRuleViolation(
   merged: GoldEnrichmentV3MergedRow | undefined,
 ): boolean | null {
   if (finding.review_tier !== 'rule_based_consistency' || !merged) return null
-  const topics = new Set(parsePipeList(merged.topic_ids, 'QA rerun topic_ids'))
-  const technologies = new Set(parsePipeList(merged.technology_tags, 'QA rerun technology_tags'))
-  const diseases = new Set(parsePipeList(merged.disease_tags, 'QA rerun disease_tags'))
-  const purposes = new Set(parsePipeList(merged.clinical_purposes, 'QA rerun clinical_purposes'))
+  const topics = new Set(parsePipeList(merged.model_topic_ids, 'QA rerun topic_ids'))
+  const technologies = new Set(
+    parsePipeList(merged.model_technology_tags, 'QA rerun technology_tags'),
+  )
+  const diseases = new Set(parsePipeList(merged.model_disease_tags, 'QA rerun disease_tags'))
+  const purposes = new Set(
+    parsePipeList(merged.model_clinical_purposes, 'QA rerun clinical_purposes'),
+  )
   switch (finding.issue) {
     case 'topic=pleural-interventions but no pleural technology tag':
       return (
@@ -2472,7 +2974,9 @@ function qaRuleViolation(
     case 'purpose=training but topic lacks education-simulation-quality':
       return purposes.has('training') && !topics.has('education-simulation-quality')
     case 'study_design=editorial paired with publication_status=letter':
-      return merged.study_design === 'editorial' && merged.publication_status === 'letter'
+      return (
+        merged.model_study_design === 'editorial' && merged.model_publication_status === 'letter'
+      )
     case 'topic=tracheostomy-airway-access but no percutaneous-tracheostomy tag':
       return (
         topics.has('tracheostomy-airway-access') && !technologies.has('percutaneous-tracheostomy')
@@ -2593,6 +3097,14 @@ function mergedRowFromValidated(
   upgrade: boolean,
 ): GoldEnrichmentV3MergedRow {
   const relevanceConcern = RELEVANCE_CONCERNS.has(source.pmid)
+  const conflicts = validated.provenance.coordinatorPolicy.conflicts
+  const conflictFields = new Set(conflicts.map((conflict) => conflict.field))
+  const coordinatorCandidateStatus =
+    conflicts.length > 0
+      ? 'unresolved_coordinator_conflict'
+      : validated.family === 'excluded_metadata_sufficiency'
+        ? 'excluded_assessment'
+        : 'candidate'
   const common = {
     workflow_id: GOLD_ENRICHMENT_V3_WORKFLOW_ID,
     workflow_schema_version: GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION,
@@ -2607,6 +3119,8 @@ function mergedRowFromValidated(
     physician_field_sha256: GOLD_ENRICHMENT_V3_PHYSICIAN_FIELD_SHA256,
     result_packet_id: validated.raw.packet_id,
     result_packet_family: validated.raw.packet_family,
+    raw_result_filename: validated.provenance.rawResultFilename,
+    raw_result_sha256: validated.provenance.rawResultSha256,
     source_projection_sha256: validated.raw.source_projection_sha256,
     source_row_sha256: validated.raw.source_row_sha256,
     batch_id: source.batch_id,
@@ -2630,12 +3144,30 @@ function mergedRowFromValidated(
     decision_provenance: source.decision_provenance,
     is_blinded: source.is_blinded,
     relevance_review_complete: source.relevance_review_complete,
+    raw_row_validation_status: validated.provenance.rawRowValidationStatus,
+    coordinator_schema_version: GOLD_ENRICHMENT_V3_COORDINATOR_SCHEMA_VERSION,
+    coordinator_policy_status: validated.provenance.coordinatorPolicy.status,
+    coordinator_conflict_count: String(conflicts.length),
+    coordinator_conflict_fields: [...conflictFields].join('|'),
+    coordinator_conflict_rule_ids: [
+      ...new Set(conflicts.map((conflict) => conflict.coordinator_rule_id)),
+    ].join('|'),
+    coordinator_conflict_diagnostics: conflicts.map((conflict) => conflict.diagnostic).join(' || '),
+    coordinator_candidate_status: coordinatorCandidateStatus,
   }
   if (validated.family === 'excluded_metadata_sufficiency') {
     const raw = validated.raw
     return {
       ...common,
       metadata_sufficiency: raw.metadata_sufficiency,
+      model_topic_ids: '',
+      model_technology_tags: '',
+      model_technology_tag_status: '',
+      model_clinical_purposes: '',
+      model_disease_tags: '',
+      model_disease_tag_status: '',
+      model_study_design: '',
+      model_publication_status: '',
       topic_ids: '',
       technology_tags: '',
       technology_tag_status: '',
@@ -2679,7 +3211,15 @@ function mergedRowFromValidated(
   return {
     ...common,
     metadata_sufficiency: raw.metadata_sufficiency,
-    topic_ids: validated.topicIds.join('|'),
+    model_topic_ids: raw.topic_ids,
+    model_technology_tags: raw.technology_tags,
+    model_technology_tag_status: raw.technology_tag_status,
+    model_clinical_purposes: raw.clinical_purposes,
+    model_disease_tags: raw.disease_tags,
+    model_disease_tag_status: raw.disease_tag_status,
+    model_study_design: raw.study_design,
+    model_publication_status: raw.publication_status,
+    topic_ids: conflictFields.has('topic_ids') ? '' : validated.topicIds.join('|'),
     technology_tags: validated.technologyTags.join('|'),
     technology_tag_status: raw.technology_tag_status,
     clinical_purposes: validated.clinicalPurposes.join('|'),
@@ -2727,6 +3267,8 @@ function coordinatorReviewReasonsForRow(
   upgradeDisagreement: boolean,
 ): string[] {
   const reasons: string[] = []
+  if (row.coordinator_policy_status === 'conflict') reasons.push('coordinator_policy_conflict')
+  if (row.coordinator_policy_status === 'warning') reasons.push('coordinator_policy_warning')
   if (row.model_requests_physician_enrichment_review === 'true') {
     reasons.push('model_requests_physician_enrichment_review')
   }
@@ -2849,10 +3391,7 @@ export async function mergeGoldEnrichmentV3(
       path.join(paths[0], 'full-text-registry-v3.receipt.json'),
       'Full-text registry receipt',
     ),
-    readUtf8RegularFile(
-      path.join(paths[0], 'schemas/merged-v3.schema.json'),
-      'Merged V3 result schema',
-    ),
+    readUtf8RegularFile(TRACKED_MERGED_SCHEMA_PATH, 'Tracked coordinator merged V3 result schema'),
     readUtf8RegularFile(path.join(paths[0], 'artifact-manifest.json'), 'Artifact manifest'),
   ])
   if (sourceFile.sha256 !== 'd2942507531a4ba55a5a4195a6919c959eff77cd3473a83eeae16074861b1e64') {
@@ -2887,12 +3426,6 @@ export async function mergeGoldEnrichmentV3(
     'full-text-registry-v3.receipt.json',
     registryReceiptFile,
     'Full-text registry receipt',
-  )
-  assertManifestArtifactIdentity(
-    canonicalArtifacts,
-    'schemas/merged-v3.schema.json',
-    mergedSchemaFile,
-    'Merged V3 result schema',
   )
   const parsedMergedSchema = parseJsonObject(mergedSchemaFile.text, 'Merged V3 result schema')
   const mergedSchemaColumns = parsedMergedSchema['x-csv-columns']
@@ -3226,12 +3759,12 @@ export async function mergeGoldEnrichmentV3(
     const prior = priorByKey.get(`${row.master_row_id}:${row.pmid}`)
     if (!prior) throw new Error(`Prior V1/V2 comparison is missing PMID ${row.pmid}.`)
     const fieldPairs = [
-      ['topic_ids', prior.topic_ids, row.topic_ids],
-      ['technology_tags', prior.technology_tags, row.technology_tags],
-      ['clinical_purposes', prior.clinical_purposes, row.clinical_purposes],
-      ['disease_tags', prior.disease_tags, row.disease_tags],
-      ['study_design', prior.study_design, row.study_design],
-      ['publication_status', prior.publication_status, row.publication_status],
+      ['topic_ids', prior.topic_ids, row.model_topic_ids],
+      ['technology_tags', prior.technology_tags, row.model_technology_tags],
+      ['clinical_purposes', prior.clinical_purposes, row.model_clinical_purposes],
+      ['disease_tags', prior.disease_tags, row.model_disease_tags],
+      ['study_design', prior.study_design, row.model_study_design],
+      ['publication_status', prior.publication_status, row.model_publication_status],
     ] as const
     return {
       master_row_id: row.master_row_id,
@@ -3242,17 +3775,17 @@ export async function mergeGoldEnrichmentV3(
         .map(([field]) => field)
         .join('|'),
       prior_topic_ids: prior.topic_ids,
-      v3_topic_ids: row.topic_ids,
+      v3_topic_ids: row.model_topic_ids,
       prior_technology_tags: prior.technology_tags,
-      v3_technology_tags: row.technology_tags,
+      v3_technology_tags: row.model_technology_tags,
       prior_clinical_purposes: prior.clinical_purposes,
-      v3_clinical_purposes: row.clinical_purposes,
+      v3_clinical_purposes: row.model_clinical_purposes,
       prior_disease_tags: prior.disease_tags,
-      v3_disease_tags: row.disease_tags,
+      v3_disease_tags: row.model_disease_tags,
       prior_study_design: prior.study_design,
-      v3_study_design: row.study_design,
+      v3_study_design: row.model_study_design,
       prior_publication_status: prior.publication_status,
-      v3_publication_status: row.publication_status,
+      v3_publication_status: row.model_publication_status,
     }
   })
   const comparisonCsv = serializeGoldEnrichmentV3Csv(comparisonColumns, comparisonRows)
@@ -3280,6 +3813,14 @@ export async function mergeGoldEnrichmentV3(
       model_requests_physician_enrichment_review: row.model_requests_physician_enrichment_review,
       coordinator_requires_physician_enrichment_review: coordinatorRequired,
       coordinator_review_reasons: coordinatorReasons,
+      coordinator_policy_status: row.coordinator_policy_status,
+      coordinator_conflict_count: row.coordinator_conflict_count,
+      coordinator_conflict_fields: row.coordinator_conflict_fields,
+      coordinator_conflict_rule_ids: row.coordinator_conflict_rule_ids,
+      coordinator_conflict_diagnostics: row.coordinator_conflict_diagnostics,
+      coordinator_candidate_status: row.coordinator_candidate_status,
+      raw_result_filename: row.raw_result_filename,
+      raw_result_sha256: row.raw_result_sha256,
       full_text_evidence_status: registry?.evidence_status ?? 'not_selected',
       expected_full_text_filename: registry?.expected_filename ?? '',
       full_text_file_sha256: registry?.file_sha256 ?? '',
@@ -3298,7 +3839,21 @@ export async function mergeGoldEnrichmentV3(
   )
 
   const packetCoverageReport = serializeGoldEnrichmentV3Json(validation.report.packetCoverage)
+  const rawStructuralValidationReport = serializeGoldEnrichmentV3Json(validation.report)
+  const coordinatorConflictCsv = serializeGoldEnrichmentV3Csv(
+    GOLD_ENRICHMENT_V3_COORDINATOR_CONFLICT_COLUMNS,
+    validation.coordinatorConflicts,
+  )
+  const attemptLedgerReport = serializeGoldEnrichmentV3Json({
+    workflowId: GOLD_ENRICHMENT_V3_WORKFLOW_ID,
+    coordinatorSchemaVersion: GOLD_ENRICHMENT_V3_COORDINATOR_SCHEMA_VERSION,
+    validationReportSchemaVersion: GOLD_ENRICHMENT_V3_VALIDATION_REPORT_SCHEMA_VERSION,
+    rawIdentityListSha256: validation.report.rawIdentityListSha256,
+    attempts: validation.attemptLedger,
+    immutableNoContentModification: true,
+  })
   const controlledValueReport = serializeGoldEnrichmentV3Json({
+    validationReportSchemaVersion: GOLD_ENRICHMENT_V3_VALIDATION_REPORT_SCHEMA_VERSION,
     valid: true,
     taxonomyVersion: '2.0.0',
     labelSchemaVersion: '2.0.0',
@@ -3309,6 +3864,8 @@ export async function mergeGoldEnrichmentV3(
     legacyUnspecifiedValues: 0,
     excludedTaxonomyViolations: 0,
     hardSafetyViolations: 0,
+    coordinatorPolicyConflicts: validation.coordinatorConflicts.length,
+    fatalRawValidationFailures: 0,
   })
   const fullTextUsageReport = serializeGoldEnrichmentV3Json({
     registryRows: registryRows.length,
@@ -3326,6 +3883,8 @@ export async function mergeGoldEnrichmentV3(
   const mergeReceipt = serializeGoldEnrichmentV3Json({
     workflowId: GOLD_ENRICHMENT_V3_WORKFLOW_ID,
     workflowSchemaVersion: GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION,
+    coordinatorSchemaVersion: GOLD_ENRICHMENT_V3_COORDINATOR_SCHEMA_VERSION,
+    validationReportSchemaVersion: GOLD_ENRICHMENT_V3_VALIDATION_REPORT_SCHEMA_VERSION,
     mergedSchemaVersion: GOLD_ENRICHMENT_V3_MERGED_SCHEMA_VERSION,
     promptTemplateVersion: GOLD_ENRICHMENT_V3_PROMPT_TEMPLATE_VERSION,
     resultSchemaVersion: GOLD_ENRICHMENT_V3_RESULT_SCHEMA_VERSION,
@@ -3338,11 +3897,24 @@ export async function mergeGoldEnrichmentV3(
       path: 'gold-set-v1-enrichment-v3-merged.csv',
       bytes: Buffer.byteLength(mergedCsv),
       sha256: mergedSha256,
+      candidateStatus: 'non_import_ready',
     },
     outputs: {
       packetCoverage: deterministicArtifactIdentity(
         'packet-coverage-report.json',
         Buffer.from(packetCoverageReport),
+      ),
+      rawStructuralValidation: deterministicArtifactIdentity(
+        'raw-structural-validation-report.json',
+        Buffer.from(rawStructuralValidationReport),
+      ),
+      coordinatorConflicts: deterministicArtifactIdentity(
+        'coordinator-conflict-report.csv',
+        Buffer.from(coordinatorConflictCsv),
+      ),
+      rawAttemptLedger: deterministicArtifactIdentity(
+        'raw-attempt-ledger.json',
+        Buffer.from(attemptLedgerReport),
       ),
       controlledValueValidation: deterministicArtifactIdentity(
         'controlled-value-validation-report.json',
@@ -3372,12 +3944,31 @@ export async function mergeGoldEnrichmentV3(
     rows: { total: 630, included: 358, excluded: 272, uniquePmids: 630 },
     fullTextUsed: 50,
     physicianFieldSha256: goldEnrichmentV3PhysicianFieldSha256(sourceRows),
-    packetValidation: { complete: true, valid: true, packets: 20, rows: 630 },
+    packetValidation: {
+      complete: true,
+      valid: true,
+      status: validation.report.status,
+      packets: 20,
+      structurallyValidPackets: validation.report.packetCoverage.structurallyValidPackets,
+      rows: 630,
+      structurallyValidRows: validation.report.packetCoverage.structurallyValidRows,
+      fatalValidationFailures: 0,
+      coordinatorConflicts: validation.coordinatorConflicts.length,
+    },
+    coordinatorPolicy: validation.report.coordinatorPolicy,
+    rawIdentityListSha256: validation.report.rawIdentityListSha256,
+    attempts: {
+      total: validation.attemptLedger.length,
+      active: validation.attemptLedger.filter((entry) => entry.active).length,
+      inactive: validation.attemptLedger.filter((entry) => !entry.active).length,
+    },
     overlays: {
       externalQaFindings: qaOverlayRows.length,
       externalQaAppliedAutomatically: 0,
       upgradeCandidates: upgradeOverlayRows.length,
       upgradeCandidatesAppliedAutomatically: 0,
+      coordinatorConflicts: validation.coordinatorConflicts.length,
+      coordinatorCorrectionsAppliedAutomatically: 0,
     },
     safety: {
       importRowsCreated: 0,
@@ -3388,6 +3979,8 @@ export async function mergeGoldEnrichmentV3(
       modelCalls: 0,
       networkRequests: 0,
       importReady: false,
+      unresolvedCoordinatorConflicts: validation.coordinatorConflicts.length,
+      rawResultValuesChanged: false,
     },
   })
   const outputDirectory = await assertGoldEnrichmentV3SafeOutputDirectory(
@@ -3398,6 +3991,12 @@ export async function mergeGoldEnrichmentV3(
     plannedGoldEnrichmentV3Text('gold-set-v1-enrichment-v3-merged.csv', mergedCsv),
     plannedGoldEnrichmentV3Text('gold-set-v1-enrichment-v3-merged.receipt.json', mergeReceipt),
     plannedGoldEnrichmentV3Text('packet-coverage-report.json', packetCoverageReport),
+    plannedGoldEnrichmentV3Text(
+      'raw-structural-validation-report.json',
+      rawStructuralValidationReport,
+    ),
+    plannedGoldEnrichmentV3Text('coordinator-conflict-report.csv', coordinatorConflictCsv),
+    plannedGoldEnrichmentV3Text('raw-attempt-ledger.json', attemptLedgerReport),
     plannedGoldEnrichmentV3Text('controlled-value-validation-report.json', controlledValueReport),
     plannedGoldEnrichmentV3Text('full-text-usage-report.json', fullTextUsageReport),
     plannedGoldEnrichmentV3Text('comparison-against-prior-v1-v2.csv', comparisonCsv),
@@ -3449,6 +4048,22 @@ export const GOLD_ENRICHMENT_V3_REVIEW_CSV_COLUMNS = [
   'qa_concerns',
   'upgrade_concerns',
   'coordinator_review_reasons',
+  'coordinator_policy_status',
+  'coordinator_conflict_count',
+  'coordinator_conflict_fields',
+  'coordinator_conflict_rule_ids',
+  'coordinator_conflict_diagnostics',
+  'coordinator_candidate_status',
+  'raw_result_filename',
+  'raw_result_sha256',
+  'model_topic_ids',
+  'model_technology_tags',
+  'model_technology_tag_status',
+  'model_clinical_purposes',
+  'model_disease_tags',
+  'model_disease_tag_status',
+  'model_study_design',
+  'model_publication_status',
   'topic_ids',
   'technology_tags',
   'technology_tag_status',
@@ -3515,6 +4130,7 @@ export function assertGoldEnrichmentV3MergedCandidateRows(
       row.workflow_id !== GOLD_ENRICHMENT_V3_WORKFLOW_ID ||
       row.workflow_schema_version !== GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION ||
       row.merged_schema_version !== GOLD_ENRICHMENT_V3_MERGED_SCHEMA_VERSION ||
+      row.coordinator_schema_version !== GOLD_ENRICHMENT_V3_COORDINATOR_SCHEMA_VERSION ||
       row.prompt_template_version !== GOLD_ENRICHMENT_V3_PROMPT_TEMPLATE_VERSION ||
       row.result_schema_version !== GOLD_ENRICHMENT_V3_RESULT_SCHEMA_VERSION ||
       row.taxonomy_version !== GOLD_ENRICHMENT_V3_TAXONOMY_VERSION ||
@@ -3523,6 +4139,9 @@ export function assertGoldEnrichmentV3MergedCandidateRows(
       row.source_sha256 !== GOLD_ENRICHMENT_V3_CANONICAL_SOURCE_SHA256 ||
       row.source_receipt_sha256 !== GOLD_ENRICHMENT_V3_CANONICAL_RECEIPT_SHA256 ||
       row.physician_field_sha256 !== GOLD_ENRICHMENT_V3_PHYSICIAN_FIELD_SHA256 ||
+      row.raw_row_validation_status !== 'valid' ||
+      !SHA256.test(row.raw_result_sha256) ||
+      row.raw_result_filename !== `${row.result_packet_id}.result.csv` ||
       row.dataset_split !== 'development' ||
       row.batch_name !== 'gold-set-v1'
     ) {
@@ -3541,9 +4160,37 @@ export function assertGoldEnrichmentV3MergedCandidateRows(
       'merged coordinator review reasons',
     )
     const hasCoordinatorReasons = coordinatorReasons.length > 0
+    const coordinatorPolicyStatus = row.coordinator_policy_status
+    if (!['clear', 'conflict', 'warning'].includes(coordinatorPolicyStatus)) {
+      throw new Error(`Merged V3 coordinator policy status is invalid for PMID ${row.pmid}.`)
+    }
+    if (!/^(?:0|[1-9][0-9]*)$/u.test(row.coordinator_conflict_count)) {
+      throw new Error(`Merged V3 coordinator conflict count is invalid for PMID ${row.pmid}.`)
+    }
+    const conflictCount = Number(row.coordinator_conflict_count)
+    const conflictFields = parsePipeList(
+      row.coordinator_conflict_fields,
+      'merged coordinator conflict fields',
+    )
+    const conflictRuleIds = parsePipeList(
+      row.coordinator_conflict_rule_ids,
+      'merged coordinator conflict rule IDs',
+    )
     if (
       coordinatorRequiresReview !== hasCoordinatorReasons ||
-      (modelRequestsReview && !coordinatorRequiresReview)
+      (modelRequestsReview && !coordinatorRequiresReview) ||
+      (coordinatorPolicyStatus === 'conflict' &&
+        (conflictCount < 1 ||
+          conflictFields.length < 1 ||
+          conflictRuleIds.length < 1 ||
+          !row.coordinator_conflict_diagnostics ||
+          row.coordinator_candidate_status !== 'unresolved_coordinator_conflict' ||
+          !coordinatorRequiresReview)) ||
+      (coordinatorPolicyStatus !== 'conflict' &&
+        (conflictCount !== 0 ||
+          conflictFields.length !== 0 ||
+          conflictRuleIds.length !== 0 ||
+          Boolean(row.coordinator_conflict_diagnostics)))
     ) {
       throw new Error(`Merged V3 review fields are inconsistent for PMID ${row.pmid}.`)
     }
@@ -3592,6 +4239,14 @@ export function assertGoldEnrichmentV3MergedCandidateRows(
       excluded += 1
       if (
         [
+          row.model_topic_ids,
+          row.model_technology_tags,
+          row.model_technology_tag_status,
+          row.model_clinical_purposes,
+          row.model_disease_tags,
+          row.model_disease_tag_status,
+          row.model_study_design,
+          row.model_publication_status,
           row.topic_ids,
           row.technology_tags,
           row.technology_tag_status,
@@ -3603,30 +4258,51 @@ export function assertGoldEnrichmentV3MergedCandidateRows(
           row.enrichment_confidence,
         ].some(Boolean) ||
         !CONFIDENCES.has(row.assessment_confidence) ||
-        fullText
+        fullText ||
+        row.coordinator_candidate_status !== 'excluded_assessment'
       ) {
         throw new Error(`Merged V3 exclusion contract failed for PMID ${row.pmid}.`)
       }
     } else {
       included += 1
-      const topicIds = parsePipeList(row.topic_ids, 'merged topic_ids')
+      const modelTopicIds = parsePipeList(row.model_topic_ids, 'merged model_topic_ids')
       literatureEnrichmentRecordV2Schema.parse({
         master_row_id: row.master_row_id,
         pmid: row.pmid,
-        topic_ids: topicIds,
-        technology_tags: parsePipeList(row.technology_tags, 'merged technology_tags'),
-        technology_tag_status: row.technology_tag_status,
-        clinical_purposes: parsePipeList(row.clinical_purposes, 'merged clinical_purposes'),
-        disease_tags: parsePipeList(row.disease_tags, 'merged disease_tags'),
-        disease_tag_status: row.disease_tag_status,
-        study_design: row.study_design,
-        publication_status: row.publication_status,
+        topic_ids: modelTopicIds,
+        technology_tags: parsePipeList(row.model_technology_tags, 'merged model_technology_tags'),
+        technology_tag_status: row.model_technology_tag_status,
+        clinical_purposes: parsePipeList(
+          row.model_clinical_purposes,
+          'merged model_clinical_purposes',
+        ),
+        disease_tags: parsePipeList(row.model_disease_tags, 'merged model_disease_tags'),
+        disease_tag_status: row.model_disease_tag_status,
+        study_design: row.model_study_design,
+        publication_status: row.model_publication_status,
       })
+      const candidatePairs = [
+        ['technology_tags', row.technology_tags, row.model_technology_tags],
+        ['technology_tag_status', row.technology_tag_status, row.model_technology_tag_status],
+        ['clinical_purposes', row.clinical_purposes, row.model_clinical_purposes],
+        ['disease_tags', row.disease_tags, row.model_disease_tags],
+        ['disease_tag_status', row.disease_tag_status, row.model_disease_tag_status],
+        ['study_design', row.study_design, row.model_study_design],
+        ['publication_status', row.publication_status, row.model_publication_status],
+      ] as const
       if (
         row.assessment_confidence ||
         !CONFIDENCES.has(row.enrichment_confidence) ||
+        candidatePairs.some(([, candidate, model]) => candidate !== model) ||
+        (conflictFields.includes('topic_ids')
+          ? Boolean(row.topic_ids)
+          : row.topic_ids !== row.model_topic_ids) ||
+        (coordinatorPolicyStatus === 'conflict' &&
+          !modelTopicIds.includes('bronchoscopic-lung-volume-reduction')) ||
         (FORBIDDEN_LVRS_PMIDS.has(row.pmid) &&
-          topicIds.includes('bronchoscopic-lung-volume-reduction'))
+          modelTopicIds.includes('bronchoscopic-lung-volume-reduction') &&
+          coordinatorPolicyStatus !== 'conflict') ||
+        (coordinatorPolicyStatus === 'clear' && row.coordinator_candidate_status !== 'candidate')
       ) {
         throw new Error(`Merged V3 included enrichment contract failed for PMID ${row.pmid}.`)
       }
@@ -3709,6 +4385,22 @@ function reviewWorkbookRow(
     qa_concerns: qaConcerns,
     upgrade_concerns: upgradeConcerns,
     coordinator_review_reasons: row.coordinator_review_reasons,
+    coordinator_policy_status: row.coordinator_policy_status,
+    coordinator_conflict_count: row.coordinator_conflict_count,
+    coordinator_conflict_fields: row.coordinator_conflict_fields,
+    coordinator_conflict_rule_ids: row.coordinator_conflict_rule_ids,
+    coordinator_conflict_diagnostics: row.coordinator_conflict_diagnostics,
+    coordinator_candidate_status: row.coordinator_candidate_status,
+    raw_result_filename: row.raw_result_filename,
+    raw_result_sha256: row.raw_result_sha256,
+    model_topic_ids: row.model_topic_ids,
+    model_technology_tags: row.model_technology_tags,
+    model_technology_tag_status: row.model_technology_tag_status,
+    model_clinical_purposes: row.model_clinical_purposes,
+    model_disease_tags: row.model_disease_tags,
+    model_disease_tag_status: row.model_disease_tag_status,
+    model_study_design: row.model_study_design,
+    model_publication_status: row.model_publication_status,
     topic_ids: row.topic_ids,
     technology_tags: row.technology_tags,
     technology_tag_status: row.technology_tag_status,
@@ -3797,7 +4489,15 @@ export function buildGoldEnrichmentV3ReviewCohorts(options: {
         row.model_requests_physician_enrichment_review ||
       candidate.coordinator_requires_physician_enrichment_review !==
         row.coordinator_requires_physician_enrichment_review ||
-      candidate.coordinator_review_reasons !== row.coordinator_review_reasons
+      candidate.coordinator_review_reasons !== row.coordinator_review_reasons ||
+      candidate.coordinator_policy_status !== row.coordinator_policy_status ||
+      candidate.coordinator_conflict_count !== row.coordinator_conflict_count ||
+      candidate.coordinator_conflict_fields !== row.coordinator_conflict_fields ||
+      candidate.coordinator_conflict_rule_ids !== row.coordinator_conflict_rule_ids ||
+      candidate.coordinator_conflict_diagnostics !== row.coordinator_conflict_diagnostics ||
+      candidate.coordinator_candidate_status !== row.coordinator_candidate_status ||
+      candidate.raw_result_filename !== row.raw_result_filename ||
+      candidate.raw_result_sha256 !== row.raw_result_sha256
     ) {
       throw new Error(`Review candidate decision disagrees with merged PMID ${row.pmid}.`)
     }
@@ -3817,6 +4517,7 @@ export function buildGoldEnrichmentV3ReviewCohorts(options: {
     const candidate = candidateByKey.get(key)
     const guaranteed =
       row.model_requests_physician_enrichment_review === 'true' ||
+      row.coordinator_policy_status !== 'clear' ||
       row.physician_final_label === 'include_adjacent' ||
       (candidate?.full_text_evidence_status ?? 'not_selected') !== 'not_selected' ||
       row.external_qa_review_flag === 'true' ||
@@ -3867,7 +4568,13 @@ export function buildGoldEnrichmentV3ReviewCohorts(options: {
 }
 
 function reviewCsv(rows: readonly GoldEnrichmentV3ReviewWorkbookRow[]) {
-  return serializeGoldEnrichmentV3Csv(GOLD_ENRICHMENT_V3_REVIEW_CSV_COLUMNS, rows)
+  return serializeGoldEnrichmentV3Csv(
+    GOLD_ENRICHMENT_V3_REVIEW_CSV_COLUMNS,
+    rows as unknown as readonly Record<
+      (typeof GOLD_ENRICHMENT_V3_REVIEW_CSV_COLUMNS)[number],
+      string
+    >[],
+  )
 }
 
 function reviewMembershipSha256(rows: readonly GoldEnrichmentV3ReviewWorkbookRow[]) {
@@ -3884,29 +4591,39 @@ export async function buildGoldEnrichmentV3Review(
   const mergeDirectory = path.resolve(options.mergeDirectory)
   assertSafeDevelopmentPath(runDirectory, 'Run directory')
   assertSafeDevelopmentPath(mergeDirectory, 'Merge directory')
-  const [mergedFile, mergeReceiptFile, candidateFile, qaOverlayFile, upgradeOverlayFile] =
-    await Promise.all([
-      readUtf8RegularFile(
-        path.join(mergeDirectory, 'gold-set-v1-enrichment-v3-merged.csv'),
-        'Merged V3 CSV',
-      ),
-      readUtf8RegularFile(
-        path.join(mergeDirectory, 'gold-set-v1-enrichment-v3-merged.receipt.json'),
-        'Merged V3 receipt',
-      ),
-      readUtf8RegularFile(
-        path.join(mergeDirectory, 'physician-review-candidate-report.csv'),
-        'Physician review candidate report',
-      ),
-      readUtf8RegularFile(
-        path.join(mergeDirectory, 'external-qa-overlay.csv'),
-        'External-QA overlay',
-      ),
-      readUtf8RegularFile(
-        path.join(mergeDirectory, 'taxonomy-v2-upgrade-overlay.csv'),
-        'Taxonomy-v2 upgrade overlay',
-      ),
-    ])
+  const [
+    mergedFile,
+    mergeReceiptFile,
+    candidateFile,
+    qaOverlayFile,
+    upgradeOverlayFile,
+    coordinatorConflictFile,
+  ] = await Promise.all([
+    readUtf8RegularFile(
+      path.join(mergeDirectory, 'gold-set-v1-enrichment-v3-merged.csv'),
+      'Merged V3 CSV',
+    ),
+    readUtf8RegularFile(
+      path.join(mergeDirectory, 'gold-set-v1-enrichment-v3-merged.receipt.json'),
+      'Merged V3 receipt',
+    ),
+    readUtf8RegularFile(
+      path.join(mergeDirectory, 'physician-review-candidate-report.csv'),
+      'Physician review candidate report',
+    ),
+    readUtf8RegularFile(
+      path.join(mergeDirectory, 'external-qa-overlay.csv'),
+      'External-QA overlay',
+    ),
+    readUtf8RegularFile(
+      path.join(mergeDirectory, 'taxonomy-v2-upgrade-overlay.csv'),
+      'Taxonomy-v2 upgrade overlay',
+    ),
+    readUtf8RegularFile(
+      path.join(mergeDirectory, 'coordinator-conflict-report.csv'),
+      'Coordinator-conflict report',
+    ),
+  ])
   const mergeReceipt = parseJsonObject(mergeReceiptFile.text, 'Merged V3 receipt')
   const mergedIdentity = mergeReceipt.merged as Record<string, unknown>
   if (
@@ -3914,6 +4631,9 @@ export async function buildGoldEnrichmentV3Review(
     mergedIdentity.sha256 !== mergedFile.sha256 ||
     mergeReceipt.workflowId !== GOLD_ENRICHMENT_V3_WORKFLOW_ID ||
     mergeReceipt.workflowSchemaVersion !== GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION ||
+    mergeReceipt.coordinatorSchemaVersion !== GOLD_ENRICHMENT_V3_COORDINATOR_SCHEMA_VERSION ||
+    mergeReceipt.validationReportSchemaVersion !==
+      GOLD_ENRICHMENT_V3_VALIDATION_REPORT_SCHEMA_VERSION ||
     mergeReceipt.mergedSchemaVersion !== GOLD_ENRICHMENT_V3_MERGED_SCHEMA_VERSION ||
     mergeReceipt.promptTemplateVersion !== GOLD_ENRICHMENT_V3_PROMPT_TEMPLATE_VERSION ||
     mergeReceipt.resultSchemaVersion !== GOLD_ENRICHMENT_V3_RESULT_SCHEMA_VERSION ||
@@ -3939,7 +4659,38 @@ export async function buildGoldEnrichmentV3Review(
     'taxonomy-v2-upgrade-overlay.csv',
     upgradeOverlayFile,
   )
+  assertMergeReceiptOutputIdentity(
+    mergeReceipt,
+    'coordinatorConflicts',
+    'coordinator-conflict-report.csv',
+    coordinatorConflictFile,
+  )
   const mergedRows = parseMergedRows(mergedFile.text)
+  const coordinatorConflicts = exactCsvRecords(
+    coordinatorConflictFile.text,
+    'Coordinator-conflict report',
+    GOLD_ENRICHMENT_V3_COORDINATOR_CONFLICT_COLUMNS,
+  )
+  if (
+    coordinatorConflicts.length !==
+      mergedRows.reduce((sum, row) => sum + Number(row.coordinator_conflict_count), 0) ||
+    coordinatorConflicts.some((conflict) => {
+      const row = mergedRows.find(
+        (candidate) =>
+          candidate.master_row_id === conflict.master_row_id && candidate.pmid === conflict.pmid,
+      )
+      return (
+        !row ||
+        row.coordinator_policy_status !== 'conflict' ||
+        !row.coordinator_conflict_fields.split('|').includes(conflict.field) ||
+        !row.coordinator_conflict_rule_ids.split('|').includes(conflict.coordinator_rule_id) ||
+        conflict.automatic_correction_allowed !== 'false' ||
+        conflict.resolution_status !== 'unresolved'
+      )
+    })
+  ) {
+    throw new Error('Coordinator-conflict report does not bind the merged quarantine state.')
+  }
   const candidates = exactCsvRecords(
     candidateFile.text,
     'Physician review candidate report',
@@ -3993,6 +4744,7 @@ export async function buildGoldEnrichmentV3Review(
   const metadata: GoldEnrichmentV3ReviewWorkbookMetadata = {
     workflow_id: GOLD_ENRICHMENT_V3_WORKFLOW_ID,
     workflow_schema_version: GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION,
+    coordinator_schema_version: GOLD_ENRICHMENT_V3_COORDINATOR_SCHEMA_VERSION,
     merged_schema_version: GOLD_ENRICHMENT_V3_MERGED_SCHEMA_VERSION,
     prompt_template_version: GOLD_ENRICHMENT_V3_PROMPT_TEMPLATE_VERSION,
     result_schema_version: GOLD_ENRICHMENT_V3_RESULT_SCHEMA_VERSION,
@@ -4014,6 +4766,8 @@ export async function buildGoldEnrichmentV3Review(
   const receipt = serializeGoldEnrichmentV3Json({
     workflowId: GOLD_ENRICHMENT_V3_WORKFLOW_ID,
     workflowSchemaVersion: GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION,
+    coordinatorSchemaVersion: GOLD_ENRICHMENT_V3_COORDINATOR_SCHEMA_VERSION,
+    validationReportSchemaVersion: GOLD_ENRICHMENT_V3_VALIDATION_REPORT_SCHEMA_VERSION,
     mergedSchemaVersion: GOLD_ENRICHMENT_V3_MERGED_SCHEMA_VERSION,
     promptTemplateVersion: GOLD_ENRICHMENT_V3_PROMPT_TEMPLATE_VERSION,
     resultSchemaVersion: GOLD_ENRICHMENT_V3_RESULT_SCHEMA_VERSION,
@@ -4075,6 +4829,8 @@ export async function buildGoldEnrichmentV3Review(
       physicianRelevanceEditable: false,
       unreviewedPhysicianConfirmedProvenance: 0,
       importOccursFromWorkbook: false,
+      unresolvedCoordinatorConflicts: coordinatorConflicts.length,
+      automaticCoordinatorCorrections: 0,
     },
   })
   const outputDirectory = await assertGoldEnrichmentV3SafeOutputDirectory(
@@ -4145,8 +4901,14 @@ function validateReviewDecision(
   })
   const action = review.physician_action.trim().toLocaleLowerCase('en-US')
   const reviewed = review.physician_reviewed.trim().toLocaleLowerCase('en-US') === 'true'
-  if (!['accept', 'modify'].includes(action)) {
-    issues.push({ field: 'physician_action', issue: 'must be accept or modify' })
+  const coordinatorConflict = merged.coordinator_policy_status === 'conflict'
+  if (coordinatorConflict ? action !== 'adjudicate' : !['accept', 'modify'].includes(action)) {
+    issues.push({
+      field: 'physician_action',
+      issue: coordinatorConflict
+        ? 'must be adjudicate for an unresolved coordinator conflict'
+        : 'must be accept or modify',
+    })
   }
   if (!reviewed) issues.push({ field: 'physician_reviewed', issue: 'must equal true' })
   if (action === 'modify' && !review.physician_notes.trim()) {
@@ -4190,6 +4952,16 @@ function validateReviewDecision(
       issue: 'checksum-bound LVRS false-positive taxonomy is forbidden for this PMID',
     })
   }
+  if (
+    coordinatorConflict &&
+    merged.coordinator_conflict_fields.split('|').includes('topic_ids') &&
+    physicianProjection.topic_ids.length === 0
+  ) {
+    issues.push({
+      field: 'physician_topic_ids',
+      issue: 'an explicit physician topic selection is required to resolve the conflict',
+    })
+  }
   if (merged.physician_final_label === 'exclude') {
     if (
       physicianProjection.topic_ids.length > 0 ||
@@ -4228,6 +5000,18 @@ function validateReviewDecision(
     review.publication_status,
     review.enrichment_confidence,
   ]
+  const rawModelValues = [
+    review.metadata_sufficiency,
+    review.model_topic_ids,
+    review.model_technology_tags,
+    review.model_technology_tag_status,
+    review.model_clinical_purposes,
+    review.model_disease_tags,
+    review.model_disease_tag_status,
+    review.model_study_design,
+    review.model_publication_status,
+    review.enrichment_confidence,
+  ]
   const physicianValues = [
     review.physician_metadata_sufficiency,
     review.physician_topic_ids,
@@ -4240,12 +5024,26 @@ function validateReviewDecision(
     review.physician_publication_status,
     review.physician_enrichment_confidence,
   ]
-  const modified = proposalValues.some((value, index) => value !== physicianValues[index])
-  if (action === 'accept' && modified) {
+  const modified = (coordinatorConflict ? rawModelValues : proposalValues).some(
+    (value, index) => value !== physicianValues[index],
+  )
+  if (!coordinatorConflict && action === 'accept' && modified) {
     issues.push({ field: 'physician_action', issue: 'accept cannot change proposal fields' })
   }
-  if (action === 'modify' && !modified) {
+  if (!coordinatorConflict && action === 'modify' && !modified) {
     issues.push({ field: 'physician_action', issue: 'modify must change at least one field' })
+  }
+  if (coordinatorConflict && !modified) {
+    issues.push({
+      field: 'physician_action',
+      issue: 'adjudication must resolve at least one conflicted raw model field',
+    })
+  }
+  if (coordinatorConflict && modified && !review.physician_notes.trim()) {
+    issues.push({
+      field: 'physician_notes',
+      issue: 'notes are required when adjudication differs from the raw model value',
+    })
   }
   const complete = issues.length === 0
   return {
@@ -4306,6 +5104,7 @@ export async function auditGoldEnrichmentV3Readiness(
     qaOverlayFile,
     upgradeOverlayFile,
     fullTextUsageFile,
+    coordinatorConflictFile,
   ] = await Promise.all([
     readUtf8RegularFile(
       path.join(mergeDirectory, 'gold-set-v1-enrichment-v3-merged.csv'),
@@ -4337,6 +5136,10 @@ export async function auditGoldEnrichmentV3Readiness(
       path.join(mergeDirectory, 'full-text-usage-report.json'),
       'Full-text usage report',
     ),
+    readUtf8RegularFile(
+      path.join(mergeDirectory, 'coordinator-conflict-report.csv'),
+      'Coordinator-conflict report',
+    ),
   ])
   const mergedRows = parseMergedRows(mergedFile.text)
   if (
@@ -4352,6 +5155,9 @@ export async function auditGoldEnrichmentV3Readiness(
   if (
     mergeReceipt.workflowId !== GOLD_ENRICHMENT_V3_WORKFLOW_ID ||
     mergeReceipt.workflowSchemaVersion !== GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION ||
+    mergeReceipt.coordinatorSchemaVersion !== GOLD_ENRICHMENT_V3_COORDINATOR_SCHEMA_VERSION ||
+    mergeReceipt.validationReportSchemaVersion !==
+      GOLD_ENRICHMENT_V3_VALIDATION_REPORT_SCHEMA_VERSION ||
     mergeReceipt.mergedSchemaVersion !== GOLD_ENRICHMENT_V3_MERGED_SCHEMA_VERSION ||
     mergeReceipt.promptTemplateVersion !== GOLD_ENRICHMENT_V3_PROMPT_TEMPLATE_VERSION ||
     mergeReceipt.resultSchemaVersion !== GOLD_ENRICHMENT_V3_RESULT_SCHEMA_VERSION ||
@@ -4385,6 +5191,12 @@ export async function auditGoldEnrichmentV3Readiness(
     'full-text-usage-report.json',
     fullTextUsageFile,
   )
+  assertMergeReceiptOutputIdentity(
+    mergeReceipt,
+    'coordinatorConflicts',
+    'coordinator-conflict-report.csv',
+    coordinatorConflictFile,
+  )
   const reviewReceipt = parseJsonObject(reviewReceiptFile.text, 'Review cohort receipt')
   const reviewMerged = reviewReceipt.merged as Record<string, unknown> | undefined
   const reviewCohorts = reviewReceipt.cohorts as Record<string, unknown> | undefined
@@ -4396,6 +5208,9 @@ export async function auditGoldEnrichmentV3Readiness(
   if (
     reviewReceipt.workflowId !== GOLD_ENRICHMENT_V3_WORKFLOW_ID ||
     reviewReceipt.workflowSchemaVersion !== GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION ||
+    reviewReceipt.coordinatorSchemaVersion !== GOLD_ENRICHMENT_V3_COORDINATOR_SCHEMA_VERSION ||
+    reviewReceipt.validationReportSchemaVersion !==
+      GOLD_ENRICHMENT_V3_VALIDATION_REPORT_SCHEMA_VERSION ||
     reviewReceipt.mergedSchemaVersion !== GOLD_ENRICHMENT_V3_MERGED_SCHEMA_VERSION ||
     reviewReceipt.promptTemplateVersion !== GOLD_ENRICHMENT_V3_PROMPT_TEMPLATE_VERSION ||
     reviewReceipt.resultSchemaVersion !== GOLD_ENRICHMENT_V3_RESULT_SCHEMA_VERSION ||
@@ -4429,6 +5244,11 @@ export async function auditGoldEnrichmentV3Readiness(
   }
   const qaOverlay = parseFlexibleCsv(qaOverlayFile.text, 'External-QA overlay')
   const upgradeOverlay = parseFlexibleCsv(upgradeOverlayFile.text, 'Taxonomy-v2 upgrade overlay')
+  const coordinatorConflicts = exactCsvRecords(
+    coordinatorConflictFile.text,
+    'Coordinator-conflict report',
+    GOLD_ENRICHMENT_V3_COORDINATOR_CONFLICT_COLUMNS,
+  )
   const qaConcerns = groupOverlayConcerns(
     qaOverlayFile.text,
     'External-QA overlay',
@@ -4543,6 +5363,19 @@ export async function auditGoldEnrichmentV3Readiness(
   const requiredAuditByPmid = new Map(
     requiredAudits.map((entry) => [entry.review.pmid, entry.audit]),
   )
+  const coordinatorConflictAdjudications = coordinatorConflicts.map((conflict) => {
+    const merged = mergedByKey.get(`${conflict.master_row_id}:${conflict.pmid}`)
+    const audit = requiredAuditByPmid.get(conflict.pmid)
+    const bound =
+      Boolean(merged) &&
+      merged?.coordinator_policy_status === 'conflict' &&
+      merged.coordinator_conflict_fields.split('|').includes(conflict.field) &&
+      merged.coordinator_conflict_rule_ids.split('|').includes(conflict.coordinator_rule_id) &&
+      conflict.raw_model_value === currentFieldValue(merged, conflict.field) &&
+      conflict.automatic_correction_allowed === 'false' &&
+      conflict.resolution_status === 'unresolved'
+    return { conflict, bound, complete: bound && audit?.complete === true, audit }
+  })
   const directQaFindings = qaOverlay.filter((row) => row.review_tier === 'direct_targeted')
   const directQaTargetPmids = [...new Set(directQaFindings.map((row) => row.pmid).filter(Boolean))]
   const directQaFindingAdjudications = directQaFindings.map((row) =>
@@ -4705,6 +5538,9 @@ export async function auditGoldEnrichmentV3Readiness(
     directQaFinalAdjudication.targets.open === 0
   const taxonomyUpgradeFinalAdjudicationComplete =
     upgradeFinalAdjudication.candidates === 133 && upgradeFinalAdjudication.open === 0
+  const coordinatorConflictsResolved = coordinatorConflictAdjudications.every(
+    (entry) => entry.complete,
+  )
   const explicitGates = {
     packetCoverageComplete:
       (mergeReceipt.packetValidation as Record<string, unknown>)?.complete === true,
@@ -4716,6 +5552,7 @@ export async function auditGoldEnrichmentV3Readiness(
     relevanceConcernsResolvedOrDocumented: relevanceConcernsDocumented,
     directQaFinalAdjudicationComplete,
     taxonomyUpgradeFinalAdjudicationComplete,
+    coordinatorConflictsResolved,
     protocolAcceptanceAuthorized:
       protocolRows === 0 || (protocolAuthorization.authorized && protocolAuthorization.valid),
   }
@@ -4727,6 +5564,8 @@ export async function auditGoldEnrichmentV3Readiness(
   const report = {
     workflowId: GOLD_ENRICHMENT_V3_WORKFLOW_ID,
     workflowSchemaVersion: GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION,
+    coordinatorSchemaVersion: GOLD_ENRICHMENT_V3_COORDINATOR_SCHEMA_VERSION,
+    readinessSchemaVersion: GOLD_ENRICHMENT_V3_READINESS_SCHEMA_VERSION,
     mergedSchemaVersion: GOLD_ENRICHMENT_V3_MERGED_SCHEMA_VERSION,
     promptTemplateVersion: GOLD_ENRICHMENT_V3_PROMPT_TEMPLATE_VERSION,
     resultSchemaVersion: GOLD_ENRICHMENT_V3_RESULT_SCHEMA_VERSION,
@@ -4737,6 +5576,14 @@ export async function auditGoldEnrichmentV3Readiness(
     },
     packetCoverage: mergeReceipt.packetValidation,
     resultValidation: mergeReceipt.packetValidation,
+    coordinatorConflicts: {
+      total: coordinatorConflicts.length,
+      resolved: coordinatorConflictAdjudications.filter((entry) => entry.complete).length,
+      unresolved: coordinatorConflictAdjudications.filter((entry) => !entry.complete).length,
+      allBoundToMergedRawValues: coordinatorConflictAdjudications.every((entry) => entry.bound),
+      automaticCorrections: 0,
+      gatePassed: coordinatorConflictsResolved,
+    },
     requiredReview: {
       rows: requiredAudits.length,
       completeRows: requiredAudits.filter((entry) => entry.audit.complete).length,
@@ -4825,6 +5672,9 @@ export async function auditGoldEnrichmentV3Readiness(
     zeroTestAccess: true,
     databaseMutationPlan: null,
     importRowsCreated: 0,
+    unresolvedCoordinatorConflicts: coordinatorConflictAdjudications.filter(
+      (entry) => !entry.complete,
+    ).length,
     explicitGates,
     importReadiness,
     safety: {
