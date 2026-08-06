@@ -124,6 +124,10 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
             'Bedside circuit, both limbs',
             `Drainage ${circuit.drainageClampClosed ? 'closed' : 'open'} · return ${circuit.returnClampClosed ? 'closed' : 'open'}`,
             'Two independent clamps on the bedside circuit, one on each limb, near the patient.',
+            // Not a console reading. The CARDIOHELP has no clamp sensor, and the whole point of this
+            // drill is that the device state and the isolation state are separate facts — so the
+            // register must not tell the learner the console can be consulted for this one.
+            'bedside',
           ),
           valueSignalRow(
             'Circuit blood flow',
@@ -193,7 +197,7 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
             question:
               'Which of the states in the table above is about where air is entering, rather than about what air already in the circuit is doing?',
             whereToLook:
-              'The five rows of the pattern. They are five separate facts; ask what each one would and would not change.',
+              'The four rows of the pattern. They are four separate facts; ask what each one would and would not change.',
           },
           {
             question: 'The saturation is falling. What does that change, and what does it not?',

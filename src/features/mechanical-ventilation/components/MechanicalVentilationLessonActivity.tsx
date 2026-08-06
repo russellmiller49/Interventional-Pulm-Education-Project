@@ -33,7 +33,6 @@ import { TaskPanel } from '@/features/learning-module/components/TaskPanel'
 import {
   PathwayNav,
   PathwaySectionCompletion,
-  ResizableTeachingWorkspace,
   nextPathwaySection,
 } from '@/features/learning-module/curriculum'
 
@@ -63,7 +62,13 @@ import {
   type VentilationSimulationState,
 } from '../engine'
 import { BedsidePanel } from './BedsidePanel'
+import {
+  MechanicalVentilationLearnWorkspace,
+  useActiveSectionInView,
+  useVentilationWorkspaceDensity,
+} from './MechanicalVentilationLearnWorkspace'
 import teachingStyles from './mechanical-ventilation-teaching.module.css'
+import styles from './mechanical-ventilation-v2.module.css'
 import {
   MechanicalVentilationTeachingPanel,
   VentilationRunControl,
@@ -326,6 +331,8 @@ export function MechanicalVentilationLessonActivity({
     description: 'Validating the saved lesson checkpoint.',
   })
   const attemptNumber = useRef(1)
+  const { density, availableHeight, measureViewport } = useVentilationWorkspaceDensity()
+  const measureRail = useActiveSectionInView(lesson.id, density)
   const [session, dispatchSession] = useReducer(lessonSessionReducer, undefined, () =>
     createLessonSession(runtime, 'primary', 1),
   )
@@ -877,109 +884,17 @@ export function MechanicalVentilationLessonActivity({
     />
   )
 
-  const viewport = (
-    <div className="grid h-full min-h-0 content-start gap-3 overflow-auto bg-background p-3">
-      <PathwayNav
-        pathway={ventilationLearningPathway}
-        label="Ventilation learning pathway"
-        activeSectionId={lesson.id}
-        onSelect={(sectionId) =>
-          router.push(`/mechanical-ventilation/learn?activity=${sectionId}` as Route)
-        }
-      />
-      <section
-        className="flex flex-wrap items-start justify-between gap-3 rounded-xl border bg-card p-3"
-        aria-label="Active lesson patient"
+  /*
+   * The causal debrief *is* the teaching explanation for the explain phase, so it takes the
+   * teaching pane rather than being appended under the workspace. Appended, it grew the viewport
+   * from 948px to 1421px of content at 1280x720 and pushed the ventilator off the top of the only
+   * scroll container; in the pane it reads beside the evidence it is explaining.
+   */
+  const teachingPaneContent =
+    phase === 'explain' ? (
+      <div
+        className={`${teachingStyles.activityPane} ${styles.debriefPane} grid min-w-0 gap-3 p-2 [&>*]:m-0`}
       >
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">
-            {session.variant === 'primary' ? 'Primary patient' : 'Transfer patient'} ·{' '}
-            {definition.id}
-          </p>
-          <h2 className="mt-1 text-base font-semibold">{definition.title}</h2>
-          <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">
-            {definition.patientDescription}
-          </p>
-        </div>
-        <p className="max-w-md rounded-lg bg-muted px-3 py-2 text-xs leading-5">
-          <strong>Immediate goal:</strong> {activeRuntime.goal}
-        </p>
-      </section>
-
-      {/*
-       * Sections with an authored teaching panel get the three-pane workspace: live bedside, the
-       * teaching panel that explains what is being taught, and the console the learner acts
-       * through. Sections without one keep the two-pane layout rather than showing an empty pane.
-       */}
-      {/*
-       * Pane order mirrors the hemodynamics workspace: the live device, then the teaching panel,
-       * then the surface the learner acts through. The activity surface previously lived only in
-       * the collapsible task panel, so at common viewports a learner saw a frozen console and
-       * nothing to do.
-       */}
-      <div className="min-h-[40rem] overflow-hidden rounded-xl border">
-        <ResizableTeachingWorkspace
-          workspaceLabel="Resizable ventilator, teaching, and activity workspace"
-          paneLabels={{ primary: 'Ventilator', secondary: 'Teaching', tertiary: 'Your turn' }}
-          primary={
-            <div className="min-w-0 p-2 [&>*]:m-0">
-              <MechanicalVentilatorConsole
-                key={`${simulation.caseId}:${simulation.ventilator.settings.deviceMode}`}
-                state={simulation}
-                dispatch={dispatchSimulation}
-                controlsEnabled
-              />
-            </div>
-          }
-          secondary={teachingPanel}
-          tertiary={
-            // The workspace is a light surface; without re-rooting the theme here the Tailwind
-            // tokens resolve from the shell's dark root and the enabled action buttons read as
-            // greyed out.
-            <div className={`${teachingStyles.activityPane} grid min-w-0 gap-3 p-2 [&>*]:m-0`}>
-              <VentilationRunControl
-                paused={simulation.paused}
-                simulationTime={simulation.simulationTime}
-                onToggle={toggleRunning}
-                onStepBreath={() => dispatchSimulation({ type: 'STEP_BREATH' })}
-              />
-              <section className="grid gap-2 rounded-xl border bg-card p-3" aria-label="Your turn">
-                <p className="text-[0.68rem] font-bold uppercase tracking-[0.14em] text-primary">
-                  Your turn · {phase}
-                </p>
-                <p className="text-sm font-semibold leading-5">{phaseCopy.objective}</p>
-                <p className="text-xs leading-5 text-muted-foreground">
-                  {phaseCopy.requiredAction}
-                </p>
-                {controls}
-              </section>
-              <BedsidePanel state={simulation} definition={definition} compact />
-            </div>
-          }
-        />
-      </div>
-
-      <dl
-        className="grid grid-cols-2 gap-2 rounded-xl border bg-card p-3 text-sm sm:grid-cols-4 xl:grid-cols-7"
-        aria-label="Current lesson measurements"
-      >
-        {[
-          ['Ppeak', `${simulation.measurements.peakPressureCmH2O.toFixed(0)} cmH₂O`],
-          ['Pplat', `${simulation.measurements.plateauPressureCmH2O.toFixed(0)} cmH₂O`],
-          ['VTE', `${simulation.measurements.exhaledVtMl.toFixed(0)} mL`],
-          ['Intrinsic PEEP', `${simulation.measurements.intrinsicPeepCmH2O.toFixed(1)} cmH₂O`],
-          ['SpO₂', `${simulation.patient.gasExchange.spo2Percent.toFixed(0)}%`],
-          ['PaCO₂', `${simulation.patient.gasExchange.paCO2MmHg.toFixed(0)} mm Hg`],
-          ['MAP', `${simulation.patient.hemodynamics.mapMmHg.toFixed(0)} mm Hg`],
-        ].map(([label, value]) => (
-          <div key={label} className="rounded-lg bg-muted p-2">
-            <dt className="text-xs text-muted-foreground">{label}</dt>
-            <dd className="mt-0.5 font-semibold tabular-nums">{value}</dd>
-          </div>
-        ))}
-      </dl>
-
-      {phase === 'explain' ? (
         <DebriefPanel
           clinicalModel={
             predictionCommitted
@@ -998,7 +913,136 @@ export function MechanicalVentilationLessonActivity({
           ]}
           transfer={<p>{learningItems.transfer.stem}</p>}
         />
-      ) : null}
+      </div>
+    ) : (
+      teachingPanel
+    )
+
+  const viewport = (
+    <div
+      className={styles.learnViewport}
+      data-mv-learn-viewport
+      data-mv-density={density}
+      ref={measureViewport}
+      style={availableHeight === null ? undefined : { maxHeight: `${availableHeight}px` }}
+    >
+      {/*
+       * The section rail and the run control share one persistent strip.
+       *
+       * The run control used to be the first child of the "Your turn" pane, which meant pause left
+       * the screen whenever that pane was scrolled or — at 1024x768, where the shared workspace
+       * collapses to one tabbed pane — tabbed away entirely, while the simulation clock kept
+       * running. It is the same single control with the same state and the same `aria-pressed`
+       * semantics; it just lives where every phase and every viewport can see it.
+       */}
+      <div className={styles.learnRail} ref={measureRail}>
+        <PathwayNav
+          pathway={ventilationLearningPathway}
+          label="Ventilation learning pathway"
+          activeSectionId={lesson.id}
+          onSelect={(sectionId) =>
+            router.push(`/mechanical-ventilation/learn?activity=${sectionId}` as Route)
+          }
+        />
+        <div className={styles.railRunControl} data-mv-run-control="strip">
+          <VentilationRunControl
+            paused={simulation.paused}
+            simulationTime={simulation.simulationTime}
+            onToggle={toggleRunning}
+            onStepBreath={() => dispatchSimulation({ type: 'STEP_BREATH' })}
+          />
+        </div>
+      </div>
+
+      {/*
+       * Sections with an authored teaching panel get the three-pane workspace: live bedside, the
+       * teaching panel that explains what is being taught, and the console the learner acts
+       * through. Sections without one keep the two-pane layout rather than showing an empty pane.
+       */}
+      {/*
+       * Pane order mirrors the hemodynamics workspace: the live device, then the teaching panel,
+       * then the surface the learner acts through. The activity surface previously lived only in
+       * the collapsible task panel, so at common viewports a learner saw a frozen console and
+       * nothing to do.
+       */}
+      <MechanicalVentilationLearnWorkspace
+        primary={
+          <div className="min-w-0 p-2 [&>*]:m-0">
+            <MechanicalVentilatorConsole
+              key={`${simulation.caseId}:${simulation.ventilator.settings.deviceMode}`}
+              state={simulation}
+              dispatch={dispatchSimulation}
+              controlsEnabled
+            />
+            {/*
+             * The derived numbers belong to the surface that produces them. As a full-width row
+             * under the workspace they cost 80px of the viewport's height and pushed the panes
+             * further off screen; here, reaching them never moves the current task.
+             */}
+            <dl
+              className={`${teachingStyles.activityPane} ${styles.paneMeasurements} mt-2 rounded-xl border bg-card p-2 text-sm`}
+              aria-label="Current lesson measurements"
+            >
+              {[
+                ['Ppeak', `${simulation.measurements.peakPressureCmH2O.toFixed(0)} cmH₂O`],
+                ['Pplat', `${simulation.measurements.plateauPressureCmH2O.toFixed(0)} cmH₂O`],
+                ['VTE', `${simulation.measurements.exhaledVtMl.toFixed(0)} mL`],
+                [
+                  'Intrinsic PEEP',
+                  `${simulation.measurements.intrinsicPeepCmH2O.toFixed(1)} cmH₂O`,
+                ],
+                ['SpO₂', `${simulation.patient.gasExchange.spo2Percent.toFixed(0)}%`],
+                ['PaCO₂', `${simulation.patient.gasExchange.paCO2MmHg.toFixed(0)} mm Hg`],
+                ['MAP', `${simulation.patient.hemodynamics.mapMmHg.toFixed(0)} mm Hg`],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-lg bg-muted p-2">
+                  <dt className="text-xs text-muted-foreground">{label}</dt>
+                  <dd className="mt-0.5 font-semibold tabular-nums">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        }
+        secondary={teachingPaneContent}
+        tertiary={
+          // The workspace is a light surface; without re-rooting the theme here the Tailwind
+          // tokens resolve from the shell's dark root and the enabled action buttons read as
+          // greyed out.
+          <div className={`${teachingStyles.activityPane} grid min-w-0 gap-3 p-2 [&>*]:m-0`}>
+            <section
+              className={`${styles.taskSection} grid gap-2 rounded-xl border bg-card p-3`}
+              aria-label="Your turn"
+            >
+              <p className="text-[0.68rem] font-bold uppercase tracking-[0.14em] text-primary">
+                Your turn · {phase}
+              </p>
+              <p className="text-sm font-semibold leading-5" data-mv-task-objective>
+                {phaseCopy.objective}
+              </p>
+              <p className="text-xs leading-5 text-muted-foreground">{phaseCopy.requiredAction}</p>
+              {/*
+               * Help is a header button, but its answer used to render only inside the collapsed
+               * "Current task" drawer, so pressing it changed nothing a learner could see. Same
+               * `hintVisible` state and the same single Help control — shown where the learner is
+               * already working, in reading order right after the task it explains. It is styled
+               * tightly rather than as a full card so that on a standard laptop it does not push
+               * the control the learner is about to use out of the pane. Pause lives in the
+               * persistent strip and is untouched either way.
+               */}
+              {hintVisible ? (
+                <p className={styles.learnHint} data-mv-learn-hint role="status">
+                  <strong>Hint</strong>
+                  {phaseCopy.teachingPoint}
+                </p>
+              ) : null}
+              {/* A stable hook for the layout harness and the layout spec: this is the block that
+                  has to be reachable without scrolling the evidence away. */}
+              <div data-mv-task-controls>{controls}</div>
+            </section>
+            <BedsidePanel state={simulation} definition={definition} compact />
+          </div>
+        }
+      />
     </div>
   )
 
@@ -1037,10 +1081,17 @@ export function MechanicalVentilationLessonActivity({
           <PatientContextBar
             title={`${session.variant === 'primary' ? 'Primary' : 'Transfer'} clinical context`}
             items={[
+              /*
+               * The case title used to head a card inside the viewport that repeated this strip's
+               * patient description and immediate goal. It joins the identifier here so the
+               * workspace keeps the height instead of the duplication — and it leads the strip
+               * rather than trailing it, because the shared "Current task" pill is absolutely
+               * positioned over the strip's right edge and would paint across the title.
+               */
+              { label: 'Case', value: `${definition.id} · ${definition.title}` },
               { label: 'Patient', value: definition.patientDescription },
               { label: 'Console', value: profile.displayName },
               { label: 'Mode', value: simulation.ventilator.settings.deviceMode },
-              { label: 'Case', value: definition.id },
               { label: 'Review status', value: 'SME review · non-credit' },
             ]}
             immediateGoal={activeRuntime.goal}

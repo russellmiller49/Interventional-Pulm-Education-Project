@@ -618,7 +618,15 @@ export function LearnLessonPlayer({
                   <span>{complete ? <Check aria-hidden="true" /> : index + 1}</span>
                   <span>
                     <strong>{phaseLabels[item.phase]}</strong>
-                    <small>{item.title}</small>
+                    {/*
+                      A step the learner has not reached shows its phase and its number, never its
+                      title. Several lessons name the fitting action in the title of the step that
+                      follows the prediction — "Reduce pump demand first", "Correct the recirculation
+                      cause" — and the stepper sits directly above the choices, so painting those
+                      titles answered the question the learner was being asked. Disabling the button
+                      never hid the text.
+                    */}
+                    <small>{available ? item.title : `Step ${index + 1}`}</small>
                   </span>
                 </button>
               </li>

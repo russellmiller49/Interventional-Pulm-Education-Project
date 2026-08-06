@@ -706,8 +706,11 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
     title: 'Preload-limited flow and drainage collapse',
     learningObjectives: [
       'Recognize falling flow, increasingly negative pVen, and chattering as a drainage pattern.',
-      'Reduce pump demand before correcting the drainage cause.',
-      'Avoid escalating RPM during collapse.',
+      // The objectives sit in the lesson header, which stays on screen through the prediction step.
+      // Naming the fitting action here — and the reflex to avoid — answered the question the step
+      // was about to ask, so they name the discrimination to make instead of the move to make.
+      'Separate what the pump is asking for from what the drainage side can supply.',
+      'Work out which side of the pump the limitation is on before changing a setting.',
     ],
     observe: {
       target: 'circuit',
@@ -865,7 +868,12 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       instruction:
         'Compare displayed flow with patient SpO₂ and pre-oxygenator saturation rather than assuming more L/min means more support.',
       rationale:
-        'Oxygenated return blood can be drawn back into the drainage cannula, raising displayed flow without proportional patient benefit. Asking for still more flow widens that share, so past the speed this case opened at the displayed number and the support the patient receives move in opposite directions.',
+        // A reason to look, not the mechanism. This rationale runs on the step before the
+        // prediction, so stating that more flow widens the recirculated share — and that the two
+        // numbers then move in opposite directions — handed over both the mechanism and the
+        // direction of the harmful reflex the drill exists to test. The panel states both, after
+        // the learner has committed.
+        'Displayed litres and the support the patient actually receives are separate quantities. Compare the saturation drawn back into the circuit with the patient’s own before deciding what the flow number is worth.',
       expectedResponse: [
         'High displayed flow',
         'Limited oxygenation response',
@@ -999,7 +1007,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
     title: 'Gas-source interruption with preserved blood flow',
     learningObjectives: [
       'Recognize that circuit blood flow can persist without membrane gas flow.',
-      'Restore the source before changing sweep or sweep-gas FiO₂.',
+      'Separate the blood path from the gas path when gas exchange falls.',
     ],
     observe: {
       target: 'gas-panel',
@@ -1048,8 +1056,8 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
     title: 'Arterial bubble intervention and cause-before-reset',
     learningObjectives: [
       'Recognize the scenario-triggered bubble alarm and automatic pump stop.',
-      'Isolate the patient with near-patient clamps before de-airing the circuit.',
-      'Correct and clear the air source before support is resumed per the current IFU and approved local protocol.',
+      'Tell the device state, the isolation state, the air source, and the patient apart.',
+      'Recognize that this lab bounds the restart rather than teaching an order for it.',
     ],
     observe: {
       target: 'console',
@@ -1339,7 +1347,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
     title: 'Peripheral VA differential upper-body oxygenation',
     learningObjectives: [
       'Recognize two competing circulations during femoral VA support.',
-      'Prioritize right-arm data over reassuring post-oxygenator or lower-body values for upper-body oxygenation.',
+      'Say which territory each arterial sampling site reports during femoral VA support.',
     ],
     observe: {
       target: 'patient-monitor',
