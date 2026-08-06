@@ -35,6 +35,11 @@
   --wave-annotation: #f6dfae;
   --wave-annotation-line: #f0c274;
   --wave-annotation-halo: rgb(3 20 26 / 85%);
+  /*
+   * The trace surface's own label baseline, shared with `.waveformLabel strong`. Declared once so
+   * the on-trace annotations can never drift below the size the rest of the trace furniture uses.
+   */
+  --wave-annotation-size: 0.65rem;
 }
 
 .moduleRoot {
@@ -811,6 +816,8 @@
 
 .waveformLabel {
   display: grid;
+  grid-column: 1;
+  grid-row: 1;
   align-content: start;
   gap: 0.18rem;
   padding: 0.75rem 0.3rem 0.5rem 0.65rem;
@@ -832,6 +839,9 @@
 
 .waveformSvg {
   display: block;
+  /* Explicit, because the annotation overlay shares this cell and would otherwise displace it. */
+  grid-column: 2;
+  grid-row: 1;
   width: 100%;
   height: 100%;
   min-height: 145px;
@@ -3632,20 +3642,67 @@
   font-variant-numeric: tabular-nums;
 }
 
-.waveformAnnotation line {
+line.waveformAnnotation {
   stroke: var(--wave-annotation-line);
   stroke-dasharray: 6 5;
   stroke-width: 1;
   opacity: 0.85;
 }
 
-.waveformAnnotation text {
-  fill: var(--wave-annotation);
-  font-size: 9px;
+/*
+ * Paused-trace annotations.
+ *
+ * These were SVG `<text>` inside a `preserveAspectRatio="none"` viewBox, so their 9px nominal size
+ * was scaled by width/1000 horizontally: 3.5px per em at 1600x900, 2.3px at 1280x720, and 1.3px at
+ * 1024x768 — illegible, and worse the narrower the pane got. As HTML over the trace they are laid
+ * out in CSS pixels, so the size below is the size on screen at every viewport, and the chip cannot
+ * shrink when the workspace does. It is deliberately not compacted at laptop density.
+ *
+ * The size is the trace surface's own label baseline (`.waveformLabel strong`), not a new number.
+ */
+.waveformAnnotationLayer {
+  position: relative;
+  z-index: 2;
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.waveformAnnotationChip {
+  position: absolute;
+  left: 0.4rem;
+  max-width: calc(100% - 0.8rem);
+  overflow: hidden;
+  border: 1px solid var(--wave-annotation-line);
+  border-radius: 0.3rem;
+  padding: 0.05rem 0.28rem;
+  color: var(--wave-annotation);
+  background: var(--wave-annotation-halo);
+  font-size: var(--wave-annotation-size);
   font-weight: 700;
-  paint-order: stroke;
-  stroke: var(--wave-annotation-halo);
-  stroke-width: 3px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform: translateY(-50%);
+}
+
+/*
+ * In forced colours the halo background and the token ink are dropped by the UA, so the chip has to
+ * stand on system colours or it becomes unreadable text over the trace.
+ */
+@media (forced-colors: active) {
+  .waveformAnnotationChip {
+    border-color: CanvasText;
+    color: CanvasText;
+    background: Canvas;
+    forced-color-adjust: none;
+  }
+
+  line.waveformAnnotation {
+    stroke: CanvasText;
+    opacity: 1;
+  }
 }
 
 /*

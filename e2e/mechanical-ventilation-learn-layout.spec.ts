@@ -160,6 +160,80 @@ for (const viewport of VIEWPORTS) {
   })
 }
 
+for (const viewport of VIEWPORTS) {
+  test(`paused-trace annotations stay readable and contained at ${viewport.name}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height })
+    await openLesson(page)
+
+    await page.locator('section[aria-label="Lesson simulation clock"] button').first().click()
+    await expect(page.getByRole('button', { name: 'Start ventilation' })).toBeVisible()
+
+    const probe = await page.evaluate(() => {
+      const figure = document.querySelector('[class*="waveformFigure"]')
+      const svg = figure?.querySelector('svg')
+      if (!figure || !svg) return null
+      const trace = svg.getBoundingClientRect()
+      const chips = Array.from(figure.querySelectorAll('[data-mv-annotation-chip]')).map((chip) => {
+        const box = chip.getBoundingClientRect()
+        return {
+          fontSizePx: Number.parseFloat(window.getComputedStyle(chip).fontSize),
+          left: box.left,
+          right: box.right,
+          top: box.top,
+          bottom: box.bottom,
+        }
+      })
+      let overlaps = 0
+      for (let i = 0; i < chips.length; i += 1) {
+        for (let j = i + 1; j < chips.length; j += 1) {
+          const a = chips[i]
+          const b = chips[j]
+          if (a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom) {
+            overlaps += 1
+          }
+        }
+      }
+      const outside = chips.filter(
+        (chip) =>
+          chip.left < trace.left - 1 ||
+          chip.top < trace.top - 1 ||
+          chip.right > trace.right + 1 ||
+          chip.bottom > trace.bottom + 1,
+      ).length
+      return { count: chips.length, sizes: chips.map((chip) => chip.fontSizePx), overlaps, outside }
+    })
+
+    expect(probe).not.toBeNull()
+    expect(probe?.count).toBeGreaterThan(0)
+    /*
+     * The rendered size, not a nominal one. As SVG text in a `preserveAspectRatio="none"` viewBox
+     * these measured 3.5px per em at 1600x900 and 1.3px at 1024x768 — the narrower the pane, the
+     * smaller they got. A rem-sized HTML chip cannot do that, and this asserts a floor rather than
+     * an exact box so it does not depend on one engine's metrics.
+     */
+    for (const size of probe?.sizes ?? []) {
+      expect(size).toBeGreaterThanOrEqual(10)
+    }
+    expect(probe?.overlaps).toBe(0)
+    expect(probe?.outside).toBe(0)
+
+    // Pausing must not cost the learner the rest of the workspace.
+    await expect(page.getByRole('region', { name: 'Lesson simulation clock' })).toBeVisible()
+    await expect(
+      page
+        .locator('[data-critical-care-activity-shell] header button')
+        .filter({ hasText: /^Help$/ }),
+    ).toBeVisible()
+    expect(
+      await visibleHeight(page, 'svg[role="img"][aria-label*="waveform"]'),
+    ).toBeGreaterThanOrEqual(READABLE_TRACE_PX)
+    await revealTaskPane(page)
+    await expect(page.locator('[data-mv-task-objective]')).toBeVisible()
+  })
+}
+
 test('a verdict never moves the evidence the learner answered from', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 })
   await openLesson(page)

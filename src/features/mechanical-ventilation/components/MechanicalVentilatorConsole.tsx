@@ -792,9 +792,15 @@ export function MechanicalVentilatorConsole({
    * without the attribution — otherwise the trace annotation contradicts the caveat printed on the
    * readout beside it, in the same render.
    */
+  /*
+   * `marker` is what fits beside the line it marks; `label` is the whole sentence, which goes to
+   * the waveform text equivalent below the console and to the trace's own screen-reader caption.
+   * Splitting them is a display decision only — no word of either clause changed.
+   */
   const pressureAnnotations = [
     {
       id: 'peak',
+      marker: `${pressureNames.peak} ${state.measurements.peakPressureCmH2O.toFixed(0)}`,
       label: `${pressureNames.peak} ${state.measurements.peakPressureCmH2O.toFixed(0)}${
         plateauUnreliable ? '' : ' — resistive + elastic'
       }`,
@@ -802,6 +808,7 @@ export function MechanicalVentilatorConsole({
     },
     {
       id: 'plateau',
+      marker: `${pressureNames.plateau} ${state.measurements.plateauPressureCmH2O.toFixed(0)}`,
       label: `${pressureNames.plateau} ${state.measurements.plateauPressureCmH2O.toFixed(0)} — ${
         plateauUnreliable
           ? 'depressed by the patient’s own effort; the gap to peak is not purely resistive'
@@ -811,6 +818,7 @@ export function MechanicalVentilatorConsole({
     },
     {
       id: 'peep',
+      marker: `${pressureNames.peep} ${settings.peepCmH2O.toFixed(0)}`,
       label: `${pressureNames.peep} ${settings.peepCmH2O.toFixed(0)} — baseline the breath starts from`,
       value: settings.peepCmH2O,
     },
@@ -818,6 +826,9 @@ export function MechanicalVentilatorConsole({
 
   const holdActive =
     state.ventilator.holdUntil !== null && state.ventilator.holdUntil > state.simulationTime
+  // An occlusion holds the trace still, so the reference levels can be named without chasing a
+  // moving line — and naming the plateau during the hold is the point of it.
+  const annotationsVisible = state.paused || holdActive
   const holdSecondsRemaining = holdActive
     ? Math.max(0, (state.ventilator.holdUntil as number) - state.simulationTime)
     : 0
@@ -840,9 +851,7 @@ export function MechanicalVentilatorConsole({
         color={channel.color}
         showPmus={state.showEducatorOverlay}
         readouts={pressureReadouts}
-        // An occlusion holds the trace still, so the reference levels can be named without
-        // chasing a moving line — and naming the plateau during the hold is the point of it.
-        annotationsVisible={state.paused || holdActive}
+        annotationsVisible={annotationsVisible}
         annotations={pressureAnnotations}
       />
     ) : (
@@ -1540,6 +1549,19 @@ export function MechanicalVentilatorConsole({
         ; measured {pressureNames.plateau} {state.measurements.plateauPressureCmH2O.toFixed(0)}{' '}
         {display.pressureUnit}; intrinsic PEEP {state.measurements.intrinsicPeepCmH2O.toFixed(1)}{' '}
         {display.pressureUnit}.
+        {/*
+         * While the trace is held still it carries labelled reference levels. The trace itself only
+         * has room beside each line for the name and the value, so what each level *is* is stated
+         * here, in the surface that already exists as this console's visible text equivalent. No
+         * new block, so pausing does not resize the screen or add a scroll container.
+         */}
+        {annotationsVisible ? (
+          <>
+            {' '}
+            Held trace, labelled levels:{' '}
+            {pressureAnnotations.map((annotation) => annotation.label).join('; ')}.
+          </>
+        ) : null}
       </p>
     </section>
   )

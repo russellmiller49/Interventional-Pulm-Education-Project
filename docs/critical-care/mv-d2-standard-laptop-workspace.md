@@ -155,6 +155,53 @@ viewport/state. Summary after the change, across nine states × four viewports:
   decisively on the three-pane side of the shared 960 px threshold rather than two pixels from it;
   the layout spec still accepts the tabbed arrangement if a host's scrollbar pushes it over.
 
+## 5a. Paused-trace annotations
+
+Pause is a persistent learner control and the held trace is part of the evidence surface, so the
+labels on it have to be readable. They were not.
+
+The annotations were SVG `<text>` inside `viewBox="0 0 1000 120"` with `preserveAspectRatio="none"`,
+so their 9 px nominal size was scaled by `width / 1000` horizontally and `height / 120` vertically —
+tall, thin smears that got worse the narrower the workspace became, which is the opposite of what a
+laptop layout needs:
+
+| Viewport   | Trace box | Horizontal scale | Nominal | **Rendered width per em** | Rendered height |
+| ---------- | --------- | ---------------- | ------- | ------------------------- | --------------- |
+| 1600 × 900 | 389 × 159 | 0.389            | 9 px    | **3.5 px**                | 11.9 px         |
+| 1440 × 900 | 320 × 159 | 0.320            | 9 px    | **2.9 px**                | 11.9 px         |
+| 1280 × 720 | 251 × 159 | 0.251            | 9 px    | **2.3 px**                | 11.9 px         |
+| 1024 × 768 | 144 × 145 | 0.144            | 9 px    | **1.3 px**                | 10.9 px         |
+
+The correction keeps the dashed reference lines in the SVG, where they belong — they are positioned
+from the data and already use `vectorEffect="non-scaling-stroke"` — and moves the labels out of the
+scaled coordinate system into HTML chips laid over the same grid cell. Because they are HTML they
+are sized in CSS pixels, so the size on screen is the size declared, at every viewport:
+
+| Viewport   | Chip size   | Chips overlapping | Chips outside the trace | Scroll containers |
+| ---------- | ----------- | ----------------- | ----------------------- | ----------------- |
+| 1600 × 900 | **10.4 px** | 0                 | 0                       | 5 (unchanged)     |
+| 1440 × 900 | **10.4 px** | 0                 | 0                       | 5 (unchanged)     |
+| 1280 × 720 | **10.4 px** | 0                 | 0                       | 5 (unchanged)     |
+| 1024 × 768 | **10.4 px** | 0                 | 0                       | 6 (unchanged)     |
+
+- **The size is not a new number.** `--wave-annotation-size` is `0.65rem`, the same baseline
+  `.waveformLabel strong` already uses for the trace's own channel label. It is deliberately _not_
+  compacted at laptop density, so narrowing the workspace can no longer shrink it.
+- **Overlap and clipping.** `annotationChipLayout` centres each chip on its own line, then separates
+  neighbours by one chip height and clamps them inside the trace. A plateau one cmH₂O under the peak
+  — the standing case in an obstructed patient — now reads as two chips instead of one smear. The
+  dashed lines stay on their true values; only the chips move.
+- **What could not fit inline.** A chip has room beside its line for the name and the value, not for
+  the clause that says what the level _is_. Those clauses now read in the console's existing visible
+  text equivalent ("Held trace, labelled levels: …"), which appears only while the trace is held.
+  Using a surface that already exists means pausing adds no block, resizes no screen, and creates no
+  scroll container — the counts above are identical to the pre-correction run.
+- **No word of either clause changed**, and the trace's screen-reader caption still carries the full
+  labels unabbreviated. Forced colours get an explicit block, because the chip's halo background and
+  token ink are dropped by the UA and it would otherwise be text floating over a trace.
+
+Waveform data and engine serialization are untouched: the dump is byte-identical.
+
 ## 6. Known limitations and owner review
 
 Found during the render review. The first two are this package's; the rest are pre-existing and are
@@ -169,8 +216,6 @@ recorded here rather than fixed, because they are outside D2's scope or outside 
    evidence is untouched and the verdict restates the chosen answer. Worth revisiting in a later
    package (anchor the scroll, or keep the stem sticky).
 3. **Pre-existing, unchanged by this package:**
-   - The freeze-frame annotations on a paused trace render at roughly 4–6 px and scale with pane
-     width with no minimum size. Byte-identical in the before renders.
    - The shared "Current task" pill is absolutely positioned over the context strip's right edge and
      overlaps whatever lands there. Mitigated here by leading the strip with the case title rather
      than trailing it.
@@ -191,5 +236,7 @@ recorded here rather than fixed, because they are outside D2's scope or outside 
 | Run control is a strip, and carries its own ink                                                                                                                                                                                                                                                                                      | `layout-regression.test.ts`                                                                                                                                                   |
 | Evidence and task coexist; pane order; measurements with the console; pause outside the panes in every phase; one pause control; Help answers in the pane in every phase; Help does not hide pause; the verdict does not move the evidence; the debrief is a pane; no pane is remounted across a phase change; identifiers unchanged | `__tests__/learn-workspace.test.tsx` (12 tests)                                                                                                                               |
 | Readable trace + task + no viewport scroll + no page horizontal overflow + no pane horizontal overflow, at 1600/1440/1280/1024; Help and pause in every phase; Help never moves pause; a verdict never moves the evidence; pane scroll survives a phase change; no pane trapped inside another scroller                              | `e2e/mechanical-ventilation-learn-layout.spec.ts` (15 tests)                                                                                                                  |
+| Paused-trace annotations use the trace-label baseline, are not sized in a pane-scaled unit, share the trace's grid cell, and survive forced colours; chip placement separates and contains adversarial levels; the full clause is shown in a visible text equivalent and in the caption                                              | `__tests__/waveform-annotations.test.tsx` (15 tests; `annotationChipLayout` is pure and exported)                                                                             |
+| Rendered chip size at least 10px, no chip overlap, no chip outside the trace, at 1600/1440/1280/1024 while paused                                                                                                                                                                                                                    | `e2e/mechanical-ventilation-learn-layout.spec.ts`                                                                                                                             |
 | No engine change                                                                                                                                                                                                                                                                                                                     | `npm run dump:mv-waveforms` byte-identical to the pre-change baseline                                                                                                         |
 | D0/D1 corrections                                                                                                                                                                                                                                                                                                                    | the existing 20 MV suites, all green (486 tests)                                                                                                                              |
