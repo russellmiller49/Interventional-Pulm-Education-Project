@@ -93,16 +93,29 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
   },
   {
     moduleId: 'baxter-crrt',
+    /**
+     * C2 §4 — the recommended novice progression: treatment trajectory, the universal circuit,
+     * transport, prescription construction, prescribed versus delivered dose, pressure
+     * localization, citrate, fluid management, integration. Eight sections carry those nine
+     * steps because prescription construction and prescribed-versus-delivered are two halves of
+     * one section (`crrt-prescription-dosing`), which is why the staged builder inside it has a
+     * construction stage and a predicted-consequences stage.
+     *
+     * The only order change is that localization now precedes citrate: a learner who cannot yet
+     * name a place on the circuit has no way to read a citrate finding as belonging to the
+     * circuit rather than the patient. Every section id, activity id, route, and storage key is
+     * unchanged, and nothing here gates.
+     */
     arcSentence:
-      'Set the goal, trace the circuit, prescribe the dose, keep it running, and localize the problem',
+      'Set the trajectory, trace one circuit, build the prescription, localize the pressure, and hold citrate and fluid together',
     sections: [
       {
         id: 'crrt-indications-modality',
-        shortTitle: 'Set the goal',
+        shortTitle: 'Set the trajectory',
         title: 'CRRT indications and modality selection',
         minutes: 12,
         description:
-          'Name the solute, acid–base, and volume problem to solve before any modality label is chosen.',
+          'Start here. Name the solute, acid–base, and volume problem the therapy is meant to work on, and the trajectory it is meant to follow, before any modality label is chosen.',
         stage: 'orientation',
         activityId: 'crrt:learn:crrt-indications-modality',
       },
@@ -112,7 +125,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         title: 'Circuit anatomy and pressure localization',
         minutes: 14,
         description:
-          'Follow the blood path from access to return, and read each pressure as a location rather than a value.',
+          'Trace the one circuit every later section reuses — access lumen, pump, filter, return lumen, and the separate fluid side — and learn where each pressure is measured on it.',
         stage: 'foundation',
         activityId: 'crrt:learn:crrt-circuit-pressures',
       },
@@ -122,7 +135,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         title: 'Solute and water transport',
         minutes: 12,
         description:
-          'Separate diffusion, convection, ultrafiltration, and adsorption across the filter you just traced.',
+          'Separate diffusion, convection, ultrafiltration, and adsorption across the membrane you just traced.',
         stage: 'foundation',
         activityId: 'crrt:learn:crrt-solute-transport',
       },
@@ -132,29 +145,29 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         title: 'Prescription and delivered dose',
         minutes: 15,
         description:
-          'Turn the goal into explicit flows, then reconcile the prescription against therapy actually delivered.',
+          'Build a prescription in three steps — the job it has to do, the flows that do it, and what those flows predict — then separate prescribed intensity from therapy actually delivered.',
         stage: 'mechanism',
         activityId: 'crrt:learn:crrt-prescription-dosing',
       },
       {
-        id: 'crrt-anticoagulation',
-        shortTitle: 'Anticoagulate',
-        title: 'Anticoagulation and citrate safety',
-        minutes: 12,
-        description:
-          'Hold circuit patency and patient bleeding risk together as one monitored problem.',
-        stage: 'application',
-        activityId: 'crrt:learn:crrt-anticoagulation',
-      },
-      {
         id: 'crrt-alarms-troubleshooting',
-        shortTitle: 'Answer alarms',
+        shortTitle: 'Localize',
         title: 'Alarms and cause-first troubleshooting',
         minutes: 12,
         description:
-          'Preserve the safe state, identify what the device detected, and verify the cause before resuming.',
+          'Turn a changed pressure pattern into a place on the circuit you can walk to and inspect, and preserve the safe state before anything resumes.',
         stage: 'application',
         activityId: 'crrt:learn:crrt-alarms-troubleshooting',
+      },
+      {
+        id: 'crrt-anticoagulation',
+        shortTitle: 'Citrate',
+        title: 'Anticoagulation and citrate safety',
+        minutes: 12,
+        description:
+          'Follow citrate into the circuit and calcium back to the patient, and keep a circuit sample and a systemic sample answering the two different questions they answer.',
+        stage: 'application',
+        activityId: 'crrt:learn:crrt-anticoagulation',
       },
       {
         id: 'crrt-fluid-liberation',
@@ -168,11 +181,11 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'crrt-pressure-profile-integration',
-        shortTitle: 'Localize',
+        shortTitle: 'Integrate',
         title: 'Read the pressure profile: where in the circuit is the problem?',
         minutes: 18,
         description:
-          'Combine circuit anatomy, the prescription, anticoagulation, and the fluid ledger to localize one deteriorating run.',
+          'Put every earlier reading on one deteriorating run: circuit anatomy, the prescription, citrate, and the fluid ledger, read together to localize the problem.',
         stage: 'integration',
         activityId: 'crrt:learn:crrt-pressure-profile-integration',
       },
