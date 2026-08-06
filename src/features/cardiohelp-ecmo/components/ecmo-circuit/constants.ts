@@ -29,22 +29,28 @@ export const CONSOLE_MODEL_BOUNDS = {
 /**
  * Where the console stands, and which way up.
  *
- * The asset is authored with its base on local −X and its display panel facing local −Y/+Z, so the
- * roll of +90° about Z is what puts it on its feet; without it the unit rests on its display face
- * with the pump-drive side to the sky. The preparation script's `stand_longest_axis` heuristic
- * assumed the longest dimension was the height and left this asset alone — the longest dimension is
- * the width of the roll frame, not the height.
+ * The asset is authored with its base on local +Y, so the flip about X is what puts it on its feet:
+ * the tubular frame's lower loop becomes the foot rail, the body stands upright and the carry
+ * handle is on top. Without it the unit rests on local −Y — which is its *top* — with the pump
+ * drive and connectors facing the sky.
  *
- * The yaw then turns the display toward the bedside camera. Order is three.js 'XYZ', so the roll is
- * applied before the yaw.
+ * The preparation script's `stand_longest_axis` heuristic left the asset alone because the longest
+ * dimension (0.950 m) already lay along Y; the heuristic has no way to tell a height from a height
+ * that is upside down.
  *
- * Single source of truth: the runtime scene, the label layout and the offline Blender harness all
- * read this, so the preview cannot disagree with the browser about which way the console faces.
+ * Read the render, not the numbers, if you change this. Flat-contact-area and mass-distribution
+ * metrics do **not** discriminate the candidates for this asset — it stands on a curved tube rail,
+ * so its true base has less flat contact than three of the wrong answers. Six candidate
+ * orientations rendered side by side are what settle it. `scripts/cardiohelp-ecmo/` has the
+ * harness.
+ *
+ * Order is three.js 'XYZ', so the flip composes after the yaw. Single source of truth: the runtime
+ * scene, the label layout and the offline Blender harness all read this.
  */
 export const CONSOLE_PLACEMENT = {
   x: 1.52,
   z: 0.56,
-  rotation: [0, -0.35, Math.PI / 2] as [number, number, number],
+  rotation: [Math.PI, -0.35, 0] as [number, number, number],
   scale: 1,
 } as const
 

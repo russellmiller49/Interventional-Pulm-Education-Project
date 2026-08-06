@@ -13,14 +13,20 @@ import { buildCircuitLayout, consolePlacement } from '../components/ecmo-circuit
 /**
  * The bedside console has to stand on its base, and the labels have to name what they point at.
  *
- * Owner smoke test, 2026-08-06: the CARDIOHELP lay on its display face with the pump-drive side to
- * the sky, and the "Sweep gas" pill sat on the console body — because the sweep curve *started
- * inside the console's own volume*. The `CARDIOHELP console` pill meanwhile floated 0.70 m above
- * the model it named and drifted into the HLS module's labels.
+ * Owner smoke test, 2026-08-06: the CARDIOHELP rested on its *top* — the pump drive and connectors
+ * faced the sky — and the "Sweep gas" pill sat on the console body, because the sweep curve started
+ * inside the console's own volume. The `CARDIOHELP console` pill floated 0.39 m clear of the model
+ * it named and drifted into the HLS module's labels.
  *
- * These are geometry contracts, not pixels: they pin the transformed box on the floor, each label
- * against the object it names, and the model-local bounds against the shipped GLB — so a future
- * placement change that re-breaks any of it fails here rather than in someone's screenshot.
+ * **Which way up is not settled here.** The first attempt at this fix leaned on measured geometry —
+ * flat contact area, support-footprint span, mass distribution — and every one of those metrics
+ * pointed at the wrong face, because the asset is a body inside a tubular cage and the cage
+ * dominates all of them. It shipped a second wrong orientation. Orientation is settled by rendering
+ * the candidates and looking, and the owner is the arbiter.
+ *
+ * What these contracts do hold is everything that follows once the orientation is chosen: the
+ * transformed box on the floor, the model bounds against the shipped GLB, and each label against
+ * the object it names.
  */
 
 const GLB_PATH = join(
@@ -41,40 +47,30 @@ const GLB_PATH = join(
  * `CONSOLE_MODEL_BOUNDS` is authored in constants so `layout.ts` and the node harness can compute
  * label anchors without loading a mesh. That is only safe if it keeps matching the shipped asset.
  */
-function readGlb(path: string): { json: GlbJson; bin: Buffer } {
+function readGlb(path: string): { json: GlbJson } {
   const buffer = readFileSync(path)
   const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength)
   expect(view.getUint32(0, true)).toBe(0x46546c67) // 'glTF'
 
   let offset = 12
   let json: GlbJson | null = null
-  let bin: Buffer | null = null
   while (offset < buffer.byteLength) {
     const chunkLength = view.getUint32(offset, true)
     const chunkType = view.getUint32(offset + 4, true)
-    const body = buffer.subarray(offset + 8, offset + 8 + chunkLength)
-    if (chunkType === 0x4e4f534a) json = JSON.parse(body.toString('utf8')) as GlbJson
-    if (chunkType === 0x004e4942) bin = body
-    // 8-byte chunk header (length + type), not 12. The 12 is the *file* header, and the original
-    // walk got away with it only because it stopped at the first chunk.
+    if (chunkType === 0x4e4f534a) {
+      json = JSON.parse(buffer.subarray(offset + 8, offset + 8 + chunkLength).toString('utf8'))
+      break
+    }
+    // 8-byte chunk header (length + type). The 12 is the *file* header.
     offset += 8 + chunkLength
   }
-  if (!json || !bin) throw new Error('GLB is missing its JSON or BIN chunk')
-  return { json, bin }
+  if (!json) throw new Error('GLB is missing its JSON chunk')
+  return { json }
 }
 
 interface GlbJson {
-  meshes: { primitives: { attributes: Record<string, number>; indices?: number }[] }[]
-  accessors: {
-    bufferView: number
-    componentType: number
-    count: number
-    type: string
-    min?: number[]
-    max?: number[]
-    byteOffset?: number
-  }[]
-  bufferViews: { buffer: number; byteOffset?: number; byteLength: number }[]
+  meshes: { primitives: { attributes: Record<string, number> }[] }[]
+  accessors: { min?: number[]; max?: number[] }[]
 }
 
 function glbPositionBounds(path: string): { min: number[]; max: number[] } {
@@ -94,70 +90,6 @@ function glbPositionBounds(path: string): { min: number[]; max: number[] } {
     }
   }
   return { min, max }
-}
-
-/**
- * Flat, floor-facing surface area at the bottom of the asset once a rotation is applied.
- *
- * This is what "which face is the base" actually means: a device that stands has a broad flat
- * plate at its lowest extreme whose normal points at the floor. Measured from the shipped mesh, so
- * the assertion is about the asset rather than about the constant that positions it.
- */
-function floorContactArea(path: string, rotation: readonly [number, number, number]): number {
-  const { json, bin } = readGlb(path)
-  const matrix = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(...rotation))
-
-  const points: THREE.Vector3[] = []
-  const triangles: [number, number, number][] = []
-  for (const mesh of json.meshes) {
-    for (const primitive of mesh.primitives) {
-      const base = points.length
-      const position = json.accessors[primitive.attributes.POSITION]
-      const positionView = json.bufferViews[position.bufferView]
-      const positionStart = (positionView.byteOffset ?? 0) + (position.byteOffset ?? 0)
-      for (let i = 0; i < position.count; i += 1) {
-        const at = positionStart + i * 12
-        points.push(
-          new THREE.Vector3(
-            bin.readFloatLE(at),
-            bin.readFloatLE(at + 4),
-            bin.readFloatLE(at + 8),
-          ).applyMatrix4(matrix),
-        )
-      }
-      if (primitive.indices === undefined) throw new Error('expected indexed geometry')
-      const index = json.accessors[primitive.indices]
-      const indexView = json.bufferViews[index.bufferView]
-      const indexStart = (indexView.byteOffset ?? 0) + (index.byteOffset ?? 0)
-      // 5123 = UNSIGNED_SHORT, 5125 = UNSIGNED_INT.
-      const width = index.componentType === 5125 ? 4 : 2
-      const read = (at: number) =>
-        width === 4 ? bin.readUInt32LE(indexStart + at * 4) : bin.readUInt16LE(indexStart + at * 2)
-      for (let i = 0; i < index.count; i += 3) {
-        triangles.push([base + read(i), base + read(i + 1), base + read(i + 2)])
-      }
-    }
-  }
-
-  const box = new THREE.Box3().setFromPoints(points)
-  const band = (box.max.y - box.min.y) * 0.04
-  const down = new THREE.Vector3(0, -1, 0)
-  let area = 0
-  for (const [i0, i1, i2] of triangles) {
-    const a = points[i0]
-    const b = points[i1]
-    const c = points[i2]
-    const cross = new THREE.Vector3().crossVectors(
-      new THREE.Vector3().subVectors(b, a),
-      new THREE.Vector3().subVectors(c, a),
-    )
-    const size = cross.length() / 2
-    if (size <= 0) continue
-    if ((a.y + b.y + c.y) / 3 - box.min.y > band) continue
-    if (cross.normalize().dot(down) < 0.85) continue
-    area += size
-  }
-  return area
 }
 
 function labelPosition(mode: 'vv' | 'va', id: string): THREE.Vector3 {
@@ -209,42 +141,38 @@ describe('the console model and its placement', () => {
     }
   })
 
-  it('stands the asset on a real flat base, measured from the shipped mesh', () => {
-    /*
-     * Measured, not restated. This is the area of triangles in the bottom 4% of the rotated asset
-     * whose normals point at the floor — a device that stands has a broad plate there, and one
-     * resting on its display face does not. Asserting `rotation[2] === π/2` would only have
-     * restated the constant it was meant to justify.
-     */
-    const standing = floorContactArea(GLB_PATH, CONSOLE_PLACEMENT.rotation)
-    const asShipped = floorContactArea(GLB_PATH, [0, CONSOLE_PLACEMENT.rotation[1], 0])
-
-    expect(standing).toBeGreaterThan(0.1)
-    expect(standing).toBeGreaterThan(asShipped * 1.5)
+  it("puts the asset's authored base on the floor", () => {
+    // The physical claim, not the raw number: the model's +Y face is the one that touches the
+    // ground. As shipped the unit rested on −Y — its top — with the pump drive facing the sky.
+    const down = new THREE.Vector3(0, 1, 0).applyEuler(
+      new THREE.Euler(...CONSOLE_PLACEMENT.rotation),
+    )
+    expect(down.y).toBeLessThan(-0.99)
   })
 
   it('rests exactly on the floor once rotated and scaled', () => {
     expect(consolePlacement.worldBounds.min.y).toBeCloseTo(FLOOR_Y, 6)
   })
 
-  it('is a plausible standing device, not a box lying down', () => {
+  it('stands taller than it is wide, and clears the bed', () => {
     const size = consolePlacement.worldBounds.getSize(new THREE.Vector3())
-    // Wider and deeper than it is tall, and short enough that the HLS module sits above it. Lying
-    // on the display face made the console the tallest thing at the bedside.
-    expect(size.y).toBeLessThan(0.75)
-    expect(size.x).toBeGreaterThan(size.y)
-    expect(size.z).toBeGreaterThan(size.y)
-    expect(consolePlacement.worldBounds.max.y).toBeLessThan(0)
+    // Upright: the 0.95 m axis is the height. It is also the tallest thing at the bedside, which is
+    // what a console standing beside a supine patient should be.
+    expect(size.y).toBeGreaterThan(size.x)
+    expect(size.y).toBeGreaterThan(size.z)
+    expect(consolePlacement.worldBounds.max.y).toBeGreaterThan(-0.56)
   })
 
-  it('points its display face at the default camera', () => {
-    // Normal of the asset's largest angled panel, measured from the mesh.
-    const displayNormal = new THREE.Vector3(0, -0.594, 0.805)
-      .normalize()
-      .applyEuler(new THREE.Euler(...CONSOLE_PLACEMENT.rotation))
-    const centre = consolePlacement.worldBounds.getCenter(new THREE.Vector3())
-    const toCamera = new THREE.Vector3(4.4, 2.75, 5.25).sub(centre).normalize()
-    expect(displayNormal.dot(toCamera)).toBeGreaterThan(0.6)
+  it('keeps its top below the HLS module it carries', () => {
+    /*
+     * There is no verified "display face" normal to assert against — the panel identified as the
+     * display during the first attempt at this fix turned out not to be one, and asserting a face
+     * whose identity is not established is how that attempt shipped the wrong orientation. What is
+     * checkable is the relationship the scene depends on: the disposable sits on the console.
+     */
+    const layout = buildCircuitLayout('vv')
+    expect(layout.consoleBounds.max.y).toBeLessThan(layout.hlsModulePosition.y + 0.3)
+    expect(layout.consoleHolderAnchor.y).toBeLessThan(layout.consoleBounds.max.y)
   })
 })
 

@@ -19,11 +19,11 @@ learner has actually used the slice. Human novice validation is still pending.
 
 ## Summary
 
-| #   | Observation                                                          | Severity | Status    |
-| --- | -------------------------------------------------------------------- | -------- | --------- |
-| 1   | A task-only simulation update was presented as a console interaction | High     | Corrected |
-| 2   | Drainage chatter described but not visible; wrong default view       | High     | Corrected |
-| 3   | Bedside 3D console resting on the wrong face; sweep label on it      | High     | Corrected |
+| #   | Observation                                                          | Severity | Status                  |
+| --- | -------------------------------------------------------------------- | -------- | ----------------------- |
+| 1   | A task-only simulation update was presented as a console interaction | High     | Corrected               |
+| 2   | Drainage chatter described but not visible; wrong default view       | High     | Corrected               |
+| 3   | Bedside 3D console resting on the wrong face; sweep label on it      | High     | Corrected (2nd attempt) |
 
 Severity rationale: all three are **high** because each teaches something false. (1) sends the
 learner hunting for a control that does not exist, (2) asks them to recognise a sign the interface
@@ -274,61 +274,55 @@ and, with an arrow to the lower face of the unit:
 The `SWEEP GAS` pill sat on the console body. The `CARDIOHELP CONSOLE` pill sat far above the unit,
 crowded into the `HLS MODULE` and `FLOW / BUBBLE SENSOR` labels.
 
-### Reproduced cause
+### Reproduced cause, and a correction that took two attempts
 
 **Orientation.** `scripts/cardiohelp-ecmo/polish_runtime_assets.py` normalises assets with
 `stand_longest_axis`, which assumes an asset's longest dimension is its height. For this model the
-longest dimension (0.950 m) is the **width of the roll frame**, not the height, so the heuristic saw
-Y already longest and did nothing. The console therefore rested on its local −Y face — the face
-carrying the display panel and the connector row — with the pump-drive side to the sky. The runtime
-applied only a yaw (`rotation={[0, -0.35, 0]}`), which cannot tip it back up.
+longest dimension (0.950 m) already lay along Y, so the heuristic did nothing — and it has no way to
+tell a height from a height that is upside down. The console therefore rested on local **−Y**, which
+is its top: the pump drive and connectors faced the sky. The runtime applied only a yaw
+(`rotation={[0, -0.35, 0]}`), which cannot turn it over.
 
-Measured, then rendered. Flat, floor-facing area at each candidate extreme — all six, no cherry
-picking:
+**The first fix was wrong, and the way it was chosen is the lesson.** It leaned on measured
+geometry — flat contact area at each candidate extreme, support-footprint span, mass distribution —
+and rolled the console 90° about Z onto local −X. The owner's second smoke test: _"ITS STILL ON ITS
+SIDE."_
 
-| Candidate base        | Flat contact area | Contact footprint span |
-| --------------------- | ----------------: | ---------------------: |
-| local +X              |      **0.146 m²** |                   0.75 |
-| local −X              |      **0.133 m²** |                   0.72 |
-| local −Z              |          0.089 m² |                   0.85 |
-| local −Y (as shipped) |          0.068 m² |                   0.40 |
-| local +Y              |          0.061 m² |                   0.61 |
-| local +Z              |         0.0007 m² |                   0.04 |
+Those metrics could not have produced the right answer. The asset is a body inside a tubular roll
+cage, and the cage dominates every one of them:
 
-**The measurement narrows it to ±X and does not on its own pick between them** — they are the two
-faces of the same slab and score within 10% of each other, which is what you would expect. What it
-rules out is the as-shipped −Y (half the contact area of either) and everything else.
+| Candidate base         | Flat contact area | Support-span fraction |
+| ---------------------- | ----------------: | --------------------: |
+| local +X               |          0.146 m² |                  0.75 |
+| local −X (1st attempt) |          0.133 m² |                  0.72 |
+| local −Z               |          0.089 m² |                  0.85 |
+| local −Y (as shipped)  |          0.068 m² |                  0.40 |
+| **local +Y (correct)** |      **0.061 m²** |              **0.70** |
+| local +Z               |         0.0007 m² |                  0.04 |
 
-The render is what discriminates the pair, which is why reviewing in a rendered browser was a
-requirement and not a formality: **+90° about Z** (base on local −X) puts the display panel forward
-with the frame rails as feet and the carry handle on top; −90° is the same slab flipped, showing the
-blank pump-drive face to the room. Six orientations were rendered in Blender and compared side by
-side.
+The correct base scores **lowest of all six on flat contact area** — it is a curved tube rail, not a
+plate — and its support span is indistinguishable from the as-shipped orientation's. Any metric that
+appeared to select a face was selecting noise. A second-order error followed from the same
+confidence: a panel with a large recessed rectangle and a control knob was identified as the display
+and used to corroborate the choice, and it is not the display.
 
-Corroborating: the display is an angled panel with local normal `(0, −0.594, 0.805)`, and only the
-+90° roll turns it toward the bedside camera — 0.837 against 0.155 as shipped. A jest test now
-measures floor-contact area from the shipped mesh directly, so a placement that stops resting the
-asset on a real flat plate fails.
+**What actually settles it is the owner's own first sentence:** _"The cardiohelp console is laying on
+its top."_ If the face it rests on is the top, the base is the opposite face — a **180° flip about
+X**, not a roll. Rendering all six candidates from the app camera side by side confirms it: only the
+flip stands the unit on the lower loop of its frame with the body upright and the carry handle on
+top. Every other candidate rests on a cage edge, a corner, or the machine's own top.
 
-**Grounding.** `GroundedAsset` computed `FLOOR_Y − bounds.min.y * scale` from the **unrotated** GLB
-and then applied the rotation to the same group. That is only correct for a yaw; with a roll the
-console would have sunk through the floor.
-
-**Labels.** Both defects are arithmetic, and both were confirmed numerically before the fix:
-
-- `CARDIOHELP console` was pinned at a fixed `y = 0.62` while the grounded console's top was at
-  `y = 0.230` — a **0.390 m** gap directly over the unit but well clear of it, which is why it
-  drifted up into the HLS module's and sensor's labels.
-- `SWEEP_SOURCE = (1.26, −0.46, 0.62)` lies **inside** the console's world bounding box. The
-  sweep-gas curve started inside the console's own volume, so the pill landed on the console and
-  read as naming it. There is no modelled blender or wall outlet anywhere in the scene.
+The lasting change is not the angle. It is that `constants.ts` now says in terms that the render
+decides this, the geometry suite says the same in its header, and the two tests that dressed up
+non-discriminating metrics as evidence are gone rather than retuned until they agreed.
 
 ### Correction
 
 **Orientation.** `CONSOLE_PLACEMENT` in `ecmo-circuit/constants.ts` is now the single source of
-truth — position, all three Euler angles (`[0, −0.35, π/2]`, three.js `'XYZ'`, so the roll applies
-before the yaw) and scale. The runtime scene, the label layout and the offline Blender harness all
-read it, so the preview can no longer disagree with the browser.
+truth — position, all three Euler angles (`[π, −0.35, 0]`, three.js `'XYZ'`) and scale. The runtime
+scene, the label layout and the offline Blender harness all read it, so the preview can no longer
+disagree with the browser. Its doc comment says plainly that the render decides this and that the
+geometry metrics do not.
 
 **Grounding.** New `ecmo-circuit/grounding.ts` transforms all eight corners of the model-local box
 and returns both the origin to render at and the world box the asset occupies. No magic Y offset,
@@ -353,49 +347,21 @@ labels at their exported anchors, so label placement is verifiable offline for t
 
 ### Before / after measurements
 
-| Measure                                                           | Before                                           | After                                |
-| ----------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------ |
-| Console rotation                                                  | `[0, −0.35, 0]`                                  | `[0, −0.35, π/2]`                    |
-| World size (w, h, d)                                              | 0.848 × **0.950** × 0.905 m                      | 1.143 × **0.636** × 1.013 m          |
-| Resting face                                                      | local −Y (the display face)                      | local −X (the flat base panel)       |
-| Lowest point vs `FLOOR_Y` (−0.72)                                 | on floor                                         | on floor (exactly, to 1e−6)          |
-| Display normal · direction to camera                              | **0.155** (edge-on, tipped back)                 | **0.837** (facing the camera)        |
-| `CARDIOHELP console` label above model top                        | **+0.390 m** (adrift)                            | **+0.200 m**                         |
-| Sweep source inside the console box                               | **yes**                                          | no                                   |
-| Sweep curve samples inside the console (oriented box, 96 samples) | not measurable — the curve began inside the unit | **0**                                |
-| Sweep label text                                                  | `Sweep gas`                                      | `Sweep-gas line / source connection` |
-| Sweep label distance to the curve's source                        | 0.175 m (but the source was inside the console)  | 0.350 m, on open floor               |
-| Console ↔ sweep label separation                                  | 0.950 m                                          | 0.763 m                              |
-| HLS holder arm end vs console top                                 | **+0.120 m** (mid-air)                           | **−0.060 m** (on the body)           |
+| Measure                                     | Before                         | After                                |
+| ------------------------------------------- | ------------------------------ | ------------------------------------ |
+| Console rotation                            | `[0, −0.35, 0]`                | `[π, −0.35, 0]`                      |
+| Face on the floor                           | local −Y (the unit's **top**)  | local +Y (its base)                  |
+| World size (w, h, d)                        | 0.848 × 0.950 × 0.905 m        | 0.848 × 0.950 × 0.905 m              |
+| Reads as                                    | lying on its top, cage legs up | upright on its foot rail, handle up  |
+| Lowest point vs `FLOOR_Y` (−0.72)           | on floor                       | on floor (exactly, to 1e−6)          |
+| `CARDIOHELP console` label above model top  | **+0.390 m** (adrift)          | **+0.200 m**                         |
+| Sweep source inside the console box         | **yes**                        | no                                   |
+| Sweep curve samples inside the oriented box | began inside the unit          | **0** of 96                          |
+| Sweep label text                            | `Sweep gas`                    | `Sweep-gas line / source connection` |
+| HLS holder arm end vs console top           | **+0.120 m** (mid-air)         | **−0.060 m** (on the body)           |
 
-The two labels are slightly _closer_ after the fix, because the console is now 0.31 m shorter. That
-is not the measure that mattered: before, the sweep anchor was **inside the console's own volume**,
-so no separation between the pills could have stopped the pill from naming the console.
-
-Offline renders (Blender, five poses, both tracks) are the visual record: the "before" render
-reproduces the owner's screenshot exactly — the unit lying with its roll bars up and the `SWEEP`
-label buried in its body — and the "after" render shows it upright with both labels on their own
-objects.
-
-### Verification
-
-`src/features/cardiohelp-ecmo/__tests__/bedside-scene-geometry.test.ts` — 24 tests: the grounding
-helper measuring rotated and scaled boxes and resting four different rotations exactly on the floor;
-`CONSOLE_MODEL_BOUNDS` checked against the shipped GLB's own POSITION accessors (zero-dependency
-chunk walk, so drift in the asset fails here); the roll; the floor contact; the standing proportions;
-the display facing the camera; and per track — the console label over the console footprint and
-within 0.35 m of its top, the sweep label within 0.4 m of the curve's source and outside the console
-box, the console never named as a gas source, the two labels ≥ 0.5 m apart, no duplicate label id
-and no two anchors within 8 cm, the sweep curve clear of the console's _oriented_ box, and the
-holder arm landing on the console body.
-
-Confirmed failing against the defect: restoring the old rotation, sweep source and label anchors
-fails **11**.
-
-Rendered-browser confirmation at 1600 × 900 (Learn and Practice, VV and VA): the console stands on
-its base with the display face toward the camera, `CARDIOHELP CONSOLE` sits on the console, and
-`SWEEP-GAS LINE / SOURCE CONNECTION` sits at the foot of the tubing rising from the floor in front of
-it. Labels stay readable after orbiting.
+The bounding box is unchanged, because the correction is a flip rather than a roll — which is
+exactly why no box-derived measurement could have caught it, and why the render is the evidence.
 
 ### Reproducing the renders
 
@@ -417,7 +383,9 @@ and the `SWEEP` pill inside its body.
 
 ### Status
 
-Corrected.
+Corrected on the second attempt, and confirmed in a rendered scene rather than by measurement. The
+first attempt is left in the git history rather than tidied away: it is the clearest record this
+package has of a measurement that looked authoritative and was not.
 
 ### Noted, not corrected
 
