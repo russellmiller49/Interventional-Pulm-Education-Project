@@ -74,7 +74,8 @@ The main evidence-to-runtime boundaries are implemented in:
 - `src/features/baxter-crrt/components/BaxterCrrtPractice.tsx`
 - `src/features/baxter-crrt/components/BaxterCrrtAssess.tsx`
 - `src/features/baxter-crrt/components/CrrtCasePlayer.tsx`
-- `src/features/baxter-crrt/components/CrrtPrescriptionWorkbench.tsx`
+- `src/features/baxter-crrt/components/CrrtStagedPrescriptionBuilder.tsx`
+- `src/features/baxter-crrt/components/CrrtCitrateDifferential.tsx`
 - `src/features/baxter-crrt/components/CrrtPressureLocalizationLab.tsx`
 - `src/features/baxter-crrt/components/CrrtRapidDrillReview.tsx`
 - `src/features/baxter-crrt/components/SourcesPanel.tsx`
@@ -103,8 +104,35 @@ The citrate view is a bounded topology-and-first-use layer, approved as such. `c
 in `src/features/baxter-crrt/content/circuitModel.ts` names where citrate enters, what it does inside
 the circuit, where the calcium it binds can leave, where calcium replacement is given, and which
 sample describes which compartment. Each term carries its own CRRT provenance. It carries no dose,
-ratio, numeric goal, titration or timing instruction, and no accumulation differential — the same
-boundary `ConceptualCitrateState` draws in the engine.
+ratio, numeric goal, or titration or timing instruction — the same boundary `ConceptualCitrateState`
+draws in the engine.
+
+### Staged prescription builder and the citrate comparison (C2/C3)
+
+- `src/features/baxter-crrt/stagedPrescriptionModel.ts` — the three stages, the goal catalogue, the
+  causal construction order, and the predicted consequences. It performs no arithmetic of its own:
+  every quantity comes from `prescriptionWorkbenchModel.ts`, `circuitFluidLedger.ts`, or
+  `engine/clinicalMath.ts`. The one composition it adds is the treatment window, so a delivered
+  intensity is the engine's own dose expression over the rate the window actually produced.
+- `src/features/baxter-crrt/components/CrrtStagedPrescriptionBuilder.tsx` — the renderer. Stage 3
+  mounts `CrrtPilotCircuit` with the constructed flows, so the module still has exactly one circuit
+  and exactly one fluid ledger.
+- `src/features/baxter-crrt/content/citrateDifferential.ts` — the mechanism walk, which points at the
+  existing `crrtCitrateCalciumTerms` by id rather than redefining them, and the four-way comparison.
+
+The four-way comparison separates insufficient citrate effect, inadequate calcium replacement,
+citrate accumulation, and citrate-related alkalosis. Citrate-related alkalosis is not treated as a
+name for accumulation or as a stage of it.
+
+**Open source boundary.** No registered CRRT source record carries a claim about citrate metabolism.
+The three clinical-context records the module cites for citrate — `TEXT-CRRT-NEYRA-2026`,
+`REVIEW-CKRT-CORE-2025`, `GUID-RRT-ICU-2026` — carry framing, mechanism-concept, and
+prescribed-versus-delivered claims, and none of them states what citrate is metabolised to, what
+accumulation is, or how alkalosis arises. Every field of the comparison is therefore typed as either
+`topology` (follows from the authored circuit) or `held-open` (not answered by the registered set,
+and rendered as an open question rather than filled in). `SYNTH-LAB-CITRATE-001` records that limit.
+Expanding the registered source set so the held-open rows can be answered is an SME task, not a code
+change.
 
 Two module-local harnesses run directly, with nothing added to `package.json`:
 
