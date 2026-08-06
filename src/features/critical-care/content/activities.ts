@@ -1149,6 +1149,17 @@ const ecmoAssessSeeds: readonly ActivitySeed[] = [
  * Ordered per WP10 §5.2. Circuit anatomy moves ahead of transport and prescription because both
  * of those assume the blood path: a learner should be shown where the filter is before being
  * asked to reason about diffusion versus convection across it.
+ *
+ * C2 §4 — pressure localization now precedes citrate, so `crrt-alarms-troubleshooting` and
+ * `crrt-anticoagulation` swap both their array position and their `application` ordinal. Neither
+ * could stay: `validateCriticalCareLearningPathways` requires the pathway to visit a stage in
+ * ascending `stageOrder` (the catalog throws at import otherwise), and
+ * `getCriticalCareRecommendations` breaks ties on catalog index, so the seed array is what the
+ * shared hub actually reads. This array therefore stays in the pathway's order, exactly as the
+ * hemodynamics seeds do. Only these two CRRT entries move; ids, routes, query keys, storage,
+ * progress payloads, scoring, prerequisites, content version, and publication status are
+ * untouched, and no other module's entries are reordered.
+ * `src/features/baxter-crrt/__tests__/pathwaySequencing.test.ts` pins the reason.
  */
 const crrtLessonSeeds: readonly ActivitySeed[] = (
   [
@@ -1189,18 +1200,18 @@ const crrtLessonSeeds: readonly ActivitySeed[] = (
       15,
     ],
     [
-      'crrt-anticoagulation',
-      'Anticoagulation and citrate safety',
-      ['crrt-safety'],
+      'crrt-alarms-troubleshooting',
+      'Alarms and cause-first troubleshooting',
+      ['crrt-device-management', 'crrt-safety'],
       'application',
       1,
       'intermediate',
       12,
     ],
     [
-      'crrt-alarms-troubleshooting',
-      'Alarms and cause-first troubleshooting',
-      ['crrt-device-management', 'crrt-safety'],
+      'crrt-anticoagulation',
+      'Anticoagulation and citrate safety',
+      ['crrt-safety'],
       'application',
       2,
       'intermediate',
@@ -1250,8 +1261,8 @@ const crrtLessonSeeds: readonly ActivitySeed[] = (
             'crrt:learn:crrt-circuit-pressures',
             'crrt:learn:crrt-solute-transport',
             'crrt:learn:crrt-prescription-dosing',
-            'crrt:learn:crrt-anticoagulation',
             'crrt:learn:crrt-alarms-troubleshooting',
+            'crrt:learn:crrt-anticoagulation',
             'crrt:learn:crrt-fluid-liberation',
           ],
         }

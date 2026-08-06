@@ -128,35 +128,21 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
       'SYNTH-LAB-PREPOST-001',
     ],
   }),
-  lesson({
-    id: 'crrt-anticoagulation',
-    title: 'Anticoagulation and citrate safety',
-    summary:
-      'Frame anticoagulation as a linked patient–circuit monitoring problem, not a single setting.',
-    paragraphs: [
-      'Anticoagulation strategy is shaped by bleeding risk, circuit behavior, treatment goals, monitoring capability, and the authorized local protocol. The circuit and the patient must be reassessed together.',
-      'For citrate-based therapy, trend recognition matters: verify sampling and timing, review circuit delivery, compare linked calcium and acid-base information, and escalate discordant patterns. This module intentionally does not provide medication quantities or a dosing protocol.',
-    ],
-    bullets: [
-      'Confirm the prescribed strategy and the monitoring plan before treatment.',
-      'Distinguish recurrent filter burden from an isolated pressure fluctuation.',
-      'Treat verification, communication, and reassessment as safety actions.',
-      'Follow the current local citrate/calcium protocol and responsible clinical team.',
-    ],
-    sourceRecordIds: ['TEXT-CRRT-NEYRA-2026', 'REVIEW-CKRT-CORE-2025', 'GUID-RRT-ICU-2026'],
-  }),
+  // C2 §4 — localization precedes citrate. A learner who cannot yet name a place on the circuit
+  // has no way to read a citrate result as belonging to the circuit rather than to the patient.
   lesson({
     id: 'crrt-alarms-troubleshooting',
     title: 'Alarms and cause-first troubleshooting',
     summary:
-      'Preserve the safe state, identify what the device detected, and verify the cause before resuming.',
+      'Turn a changed pressure pattern into a place on the circuit, then verify the cause before anything resumes.',
     paragraphs: [
-      'An alarm is a device response to a detected condition; acknowledgement is not proof that the condition has resolved. Start with the patient, then inspect the corresponding circuit, fluid, detector, scale, or power domain.',
+      'An alarm is a device response to a detected condition; acknowledgement is not proof that the condition has resolved. Start with the patient, then inspect the corresponding circuit, fluid, detector, scale, or power domain — the same circuit you traced earlier, with each pressure still sitting where it sat then.',
       'Power interruption and end-of-treatment decisions follow the same doctrine: assess the patient and circuit, verify device state and downtime, use current instructions and local policy, and never infer a universal blood-return or discard decision from the simulator.',
     ],
     bullets: [
       'Assess patient safety and call for appropriate help.',
       'Identify the device response and the interrupted therapy.',
+      'Name the location the pattern points to before naming the fix.',
       'Inspect the corresponding physical domain.',
       'Verify correction before any continuation decision.',
       'Reassess delivery, downtime, recurrence, and the patient.',
@@ -168,6 +154,30 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
       'DEV-PM-014',
       'TEXT-RRT-HOSTE-2024',
       'GUID-RRT-ICU-2026',
+    ],
+  }),
+  lesson({
+    id: 'crrt-anticoagulation',
+    title: 'Anticoagulation and citrate safety',
+    summary:
+      'Follow citrate into the circuit and calcium back to the patient, and keep the two sampling domains answering different questions.',
+    paragraphs: [
+      'Anticoagulation strategy is shaped by bleeding risk, circuit behavior, treatment goals, monitoring capability, and the authorized local protocol. The circuit and the patient must be reassessed together.',
+      'Citrate is the case where that pairing becomes concrete. It joins the blood path before the pump and therefore before the filter, so its intended effect is on blood that is outside the patient; the blood it acted on then returns through the return lumen, and calcium replacement supports the patient on its own separate line. A sample drawn from the circuit and a sample drawn from the patient describe two different compartments, and neither substitutes for the other.',
+      'For citrate-based therapy, trend recognition matters: verify sampling and timing, review circuit delivery, compare linked calcium and acid-base information, and escalate discordant patterns. This module intentionally does not provide medication quantities or a dosing protocol.',
+    ],
+    bullets: [
+      'Confirm the prescribed strategy and the monitoring plan before treatment.',
+      'Say which compartment a result describes before saying what it means.',
+      'Distinguish recurrent filter burden from an isolated pressure fluctuation.',
+      'Treat verification, communication, and reassessment as safety actions.',
+      'Follow the current local citrate/calcium protocol and responsible clinical team.',
+    ],
+    sourceRecordIds: [
+      'TEXT-CRRT-NEYRA-2026',
+      'REVIEW-CKRT-CORE-2025',
+      'GUID-RRT-ICU-2026',
+      'SYNTH-LAB-CITRATE-001',
     ],
   }),
   lesson({

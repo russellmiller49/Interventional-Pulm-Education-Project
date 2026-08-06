@@ -251,6 +251,54 @@ export const baxterCrrtLessonClinicalAnchors: Readonly<
       reviewStatus: 'sme-review',
     }),
   },
+  'crrt-alarms-troubleshooting': {
+    title: 'Therapy interrupted by a return-path alarm',
+    contextItems: [
+      { label: 'Patient', value: 'Continuous therapy with a new return-pressure alert' },
+      { label: 'Device state', value: 'Therapy interrupted; alert acknowledged' },
+      { label: 'Recent event', value: 'Patient and tubing were repositioned' },
+      { label: 'Question', value: 'Has the cause actually resolved?' },
+    ],
+    immediateGoal:
+      'Preserve patient safety, inspect the detected physical domain, and verify correction before continuation.',
+    applicationItem: item({
+      id: 'crrt-alarm-application-1',
+      activityId: 'crrt:learn:crrt-alarms-troubleshooting',
+      phase: 'predict',
+      itemType: 'management-decision',
+      contextRequirement: 'patient',
+      clinicalContextId: 'crrt-anchor-return-alarm',
+      stem: 'A return-pressure alert has been acknowledged after repositioning, but therapy remains interrupted. What should happen before any continuation decision?',
+      choices: [
+        {
+          id: 'assess-inspect-verify',
+          label:
+            'Assess the patient, inspect the return catheter and line pathway, verify the detected condition has resolved, then reassess delivery',
+          rationale:
+            'Acknowledgment changes message state; it does not prove that the patient or circuit cause has resolved.',
+          plausibility: 'best',
+        },
+        {
+          id: 'resume-after-ack',
+          label: 'Resume because acknowledging the alert confirms correction',
+          rationale: 'Acknowledgment alone does not verify the physical pathway or patient safety.',
+          plausibility: 'unsafe',
+        },
+        {
+          id: 'change-dose-first',
+          label: 'Change the effluent prescription before inspecting the return pathway',
+          rationale:
+            'The alert localizes the first inspection to the patient and corresponding circuit domain, not the solute-dose prescription.',
+          plausibility: 'incorrect-mechanism',
+        },
+      ],
+      correctChoiceIds: ['assess-inspect-verify'],
+      explanation:
+        'Cause-first troubleshooting separates device notification from physical resolution: assess, inspect, address the cause under current instructions and policy, then verify delivery and recurrence.',
+      evidenceIds: ['DEV-PM-008', 'DEV-PM-012', 'DEV-PM-013', 'DEV-PM-014', 'GUID-RRT-ICU-2026'],
+      reviewStatus: 'sme-review',
+    }),
+  },
   'crrt-anticoagulation': {
     title: 'Discordant citrate-monitoring trend',
     contextItems: [
@@ -300,54 +348,6 @@ export const baxterCrrtLessonClinicalAnchors: Readonly<
       explanation:
         'Citrate safety is a linked monitoring problem. Verify the data and delivery context, communicate the discordant pattern, and follow the authorized protocol and responsible clinical team.',
       evidenceIds: ['TEXT-CRRT-NEYRA-2026', 'REVIEW-CKRT-CORE-2025', 'GUID-RRT-ICU-2026'],
-      reviewStatus: 'sme-review',
-    }),
-  },
-  'crrt-alarms-troubleshooting': {
-    title: 'Therapy interrupted by a return-path alarm',
-    contextItems: [
-      { label: 'Patient', value: 'Continuous therapy with a new return-pressure alert' },
-      { label: 'Device state', value: 'Therapy interrupted; alert acknowledged' },
-      { label: 'Recent event', value: 'Patient and tubing were repositioned' },
-      { label: 'Question', value: 'Has the cause actually resolved?' },
-    ],
-    immediateGoal:
-      'Preserve patient safety, inspect the detected physical domain, and verify correction before continuation.',
-    applicationItem: item({
-      id: 'crrt-alarm-application-1',
-      activityId: 'crrt:learn:crrt-alarms-troubleshooting',
-      phase: 'predict',
-      itemType: 'management-decision',
-      contextRequirement: 'patient',
-      clinicalContextId: 'crrt-anchor-return-alarm',
-      stem: 'A return-pressure alert has been acknowledged after repositioning, but therapy remains interrupted. What should happen before any continuation decision?',
-      choices: [
-        {
-          id: 'assess-inspect-verify',
-          label:
-            'Assess the patient, inspect the return catheter and line pathway, verify the detected condition has resolved, then reassess delivery',
-          rationale:
-            'Acknowledgment changes message state; it does not prove that the patient or circuit cause has resolved.',
-          plausibility: 'best',
-        },
-        {
-          id: 'resume-after-ack',
-          label: 'Resume because acknowledging the alert confirms correction',
-          rationale: 'Acknowledgment alone does not verify the physical pathway or patient safety.',
-          plausibility: 'unsafe',
-        },
-        {
-          id: 'change-dose-first',
-          label: 'Change the effluent prescription before inspecting the return pathway',
-          rationale:
-            'The alert localizes the first inspection to the patient and corresponding circuit domain, not the solute-dose prescription.',
-          plausibility: 'incorrect-mechanism',
-        },
-      ],
-      correctChoiceIds: ['assess-inspect-verify'],
-      explanation:
-        'Cause-first troubleshooting separates device notification from physical resolution: assess, inspect, address the cause under current instructions and policy, then verify delivery and recurrence.',
-      evidenceIds: ['DEV-PM-008', 'DEV-PM-012', 'DEV-PM-013', 'DEV-PM-014', 'GUID-RRT-ICU-2026'],
       reviewStatus: 'sme-review',
     }),
   },
