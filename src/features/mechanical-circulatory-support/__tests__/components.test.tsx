@@ -327,8 +327,11 @@ describe('Mechanical Circulatory Support learner interface', () => {
     expect(savedLessonIds()).toEqual([])
     fireEvent.click(screen.getByRole('button', { name: /Continue to what changed/i }))
 
-    // Observe reads from the resulting live state.
-    const beforeAfter = screen.getByRole('table')
+    // Observe reads from the resulting live state. The learner-action pane's own comparison, which
+    // is the one this phase is built around — the teaching pane now carries a second, richer
+    // comparison of its own, so the query names the table it means.
+    const beforeAfter = document.querySelector<HTMLElement>('[data-before-after]')!
+    expect(beforeAfter).not.toBeNull()
     expect(within(beforeAfter).getByText('Effective systemic delivery')).toBeInTheDocument()
     expect(within(beforeAfter).getByText('Displayed device contribution')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /Continue to the explanation/i }))
