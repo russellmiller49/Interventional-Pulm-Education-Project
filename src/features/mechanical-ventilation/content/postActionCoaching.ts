@@ -59,7 +59,11 @@ import type {
   VentilationCaseDefinition,
   VentilationSimulationState,
 } from '../engine/types'
-import { deriveEffectivePatient, deriveMeasurements } from '../engine/physics'
+import {
+  deriveEffectivePatient,
+  deriveMeasurements,
+  WAVEFORM_WINDOW_SECONDS,
+} from '../engine/physics'
 import { plateauReadingValidity, plateauWithheldNote } from './plateauValidity'
 
 /* ------------------------------------------------------------------------------------------------
@@ -400,7 +404,7 @@ const interventionCoachingProfiles: Readonly<
     whenTargetMoved:
       'gas trapped behind the next breath was part of what these numbers were reporting',
     whenTargetHeld:
-      'trapped gas is not what is loading this patient now, because releasing it changed nothing',
+      'the response does not support trapped gas as the dominant load on this patient over this interval',
     reassess:
       'Watch blood pressure through the disconnection and immediately after reconnection — a rise that reverses is itself the finding.',
     notDemonstratedWhenMoved:
@@ -416,7 +420,7 @@ const interventionCoachingProfiles: Readonly<
     whenTargetMoved:
       'the drive itself was part of what the ventilator was struggling to keep up with',
     whenTargetHeld:
-      'the drive is not coming from what was treated, so the demand on the ventilator is where it was',
+      'the response does not support what was treated as the operative driver over this interval, and the demand on the ventilator is where it was',
     reassess:
       'Watch the patient’s own rate and effort over several minutes rather than at one breath — this one works slowly.',
     notDemonstratedWhenMoved:
@@ -463,13 +467,13 @@ const interventionCoachingProfiles: Readonly<
     whenTargetMoved:
       'the pressures on the screen were being shaped by that effort, and what is on them now is the respiratory system alone',
     whenTargetHeld:
-      'the pressures were already reporting the respiratory system rather than the effort',
+      'the response does not support the patient’s own effort as what was shaping these pressures over this interval',
     reassess:
-      'Repeat the plateau measurement now: this is the one condition in which the elastic and resistive split means exactly what it says.',
+      'If blockade is complete and the hold is technically valid, repeat the plateau measurement; active respiratory effort no longer confounds the pressure split. Blockade is not a way of obtaining a plateau — it is temporary, for immediate lung protection while the cause is corrected, and the measurement is a by-product of that decision rather than a reason for it.',
     notDemonstratedWhenMoved:
       'A pressure that rose when effort stopped is not a deterioration — it is the load that was always there becoming visible. Nothing about the timing problem has been corrected.',
     notDemonstratedWhenHeld:
-      'Unchanged pressures mean the effort was not shaping them. They do not mean the timing the patient was fighting has been corrected.',
+      'Pressures that did not move do not support the patient’s own effort as what was shaping them over this interval. They say nothing about whether the timing the patient was fighting has been corrected, and they are not a reason to continue blockade.',
   },
   bronchodilator: {
     kind: 'treatment',
@@ -479,13 +483,13 @@ const interventionCoachingProfiles: Readonly<
     whenTargetMoved:
       'constricted airways were part of the resistance the same breath was being pushed through',
     whenTargetHeld:
-      'the narrowing is not in muscle that this relaxes, so the pressure the same breath needs is where it was',
+      'the response does not support constricted airway muscle as the dominant narrowing over this interval — the pressure the same breath needs is where it was',
     reassess:
       'Recheck the peak-to-plateau difference over several minutes — this one keeps working after the first breath.',
     notDemonstratedWhenMoved:
       'A response in that direction does not establish that this was the whole narrowing. Read how far the pressure moved against how far it had to go: if the same breath still needs most of the pressure it did, something else is still in the path.',
     notDemonstratedWhenHeld:
-      'A pressure that did not fall is evidence against constricted airways being the operative narrowing here. It does not prove there is none, and a partial response can be hidden by a second narrowing that is still in place.',
+      'A pressure that did not fall is evidence against constricted airways being the dominant narrowing here. It does not establish the absence of bronchospasm, and a partial response can be hidden by a second narrowing that is still in place.',
   },
   'suction-airway': {
     kind: 'treatment',
@@ -495,7 +499,7 @@ const interventionCoachingProfiles: Readonly<
     whenTargetMoved:
       'material in the lumen was part of what the same breath was being pushed through',
     whenTargetHeld:
-      'material in the lumen is not what is narrowing the path in this patient, because removing it changed nothing',
+      'the response does not support material in the lumen as the dominant narrowing over this interval — removing what could be removed did not change the pressure the same breath needs',
     reassess:
       'Note whether the catheter passed freely, and recheck the peak-to-plateau difference on the next quiet breaths.',
     notDemonstratedWhenMoved:
@@ -526,7 +530,7 @@ const interventionCoachingProfiles: Readonly<
     whenTargetMoved:
       'the ventilator had been reading that movement as the start of a breath, and it has stopped',
     whenTargetHeld:
-      'water near the sensor is not what the ventilator was answering, because removing it did not change how often it delivers a breath',
+      'the response does not support water at the sensor as the operative trigger source over this interval — removing it did not change how often a breath is delivered',
     reassess:
       'Compare the delivered rate against the patient’s own rate, and watch the expiratory limb for the artifact returning.',
     notDemonstratedWhenMoved:
@@ -542,7 +546,7 @@ const interventionCoachingProfiles: Readonly<
     whenTargetMoved:
       'continuous leak flow had been crossing the trigger the way an inspiratory effort does',
     whenTargetHeld:
-      'a leak is not what the trigger was answering, because sealing it did not change how often a breath is delivered',
+      'the response does not support leak flow as the operative trigger source over this interval — sealing it did not change how often a breath is delivered',
     reassess:
       'Compare delivered and exhaled breath size now, and watch whether the breath still ends late.',
     notDemonstratedWhenMoved:
@@ -557,7 +561,7 @@ const interventionCoachingProfiles: Readonly<
     acts: 'takes an obstructed component out of the gas path',
     whenTargetMoved: 'the obstruction was in the apparatus rather than in the patient',
     whenTargetHeld:
-      'the narrowing is not in that component, because taking it out of the path changed nothing',
+      'the response does not support that component as the dominant narrowing over this interval — taking it out of the path did not change the pressure the same breath needs',
     reassess:
       'Recheck the peak-to-plateau difference, and confirm humidification is still being provided some other way.',
     notDemonstratedWhenMoved:
@@ -572,7 +576,7 @@ const interventionCoachingProfiles: Readonly<
     acts: 'corrects or replaces the tube itself as the narrowest part of the gas path',
     whenTargetMoved: 'the tube was the narrowing, and the bore the gas travels through is restored',
     whenTargetHeld:
-      'the tube is not the narrowing, because correcting it did not change the pressure the same breath needs',
+      'the response does not support the tube as the dominant narrowing over this interval — correcting it did not change the pressure the same breath needs',
     reassess:
       'Confirm tube position and passage directly, then recheck the peak-to-plateau difference on the next quiet breaths.',
     notDemonstratedWhenMoved:
@@ -588,28 +592,38 @@ const interventionCoachingProfiles: Readonly<
     whenTargetMoved:
       'the circulation was being obstructed rather than merely underfilled, and relieving it is what moved the blood pressure',
     whenTargetHeld:
-      'the obstruction being treated is not what is holding the blood pressure down here',
+      'the response does not support obstruction of cardiac filling as what is holding the blood pressure down over this interval',
     reassess:
       'Watch blood pressure, oxygenation, and chest movement together, and expect the improvement to need securing rather than to hold on its own.',
     notDemonstratedWhenMoved:
       'An emergency decompression is a rescue. It does not establish definitive treatment, and a response that fades is the expected course rather than a new problem.',
     notDemonstratedWhenHeld:
-      'A blood pressure that did not move is evidence against obstruction being what is limiting it. It does not exclude a pneumothorax that this did not reach.',
+      'A blood pressure that did not move is evidence against obstruction being the dominant limit on it. It does not exclude a pneumothorax this did not reach, and it does not exclude a second cause holding the pressure down alongside it.',
   },
   'pleural-drainage': {
     kind: 'treatment',
-    target: 'map',
-    targetDirection: 'rose',
+    /*
+     * The pressure the same breath needs, not the blood pressure.
+     *
+     * The hemodynamic rescue belongs to the emergency decompression that has to precede this: by the
+     * time drainage is established the circulation has already recovered, so a blood pressure that
+     * holds is the expected course rather than a failure. What continuing drainage moves in the model
+     * is the compliance of the respiratory system, and on this volume-targeted patient that shows as
+     * the same breath needing less pressure.
+     */
+    target: 'peak-pressure',
+    targetDirection: 'fell',
     acts: 'establishes continuing drainage so the space cannot refill',
-    whenTargetMoved: 'the improvement is now being held rather than borrowed',
+    whenTargetMoved:
+      'the lung has more room than the emergency decompression alone gave it, and the same breath is being delivered for less pressure',
     whenTargetHeld:
-      'the circulation is not being held down by that space, so something else is limiting it',
+      'the response does not support the pleural space as what is still limiting the mechanics over this interval',
     reassess:
-      'Watch whether compliance and blood pressure now stay where they were put, rather than drifting back.',
+      'Blood pressure still has to be watched, but it is not the reading that answers whether the drainage worked — the rescue that raised it was the decompression before this. Watch instead whether the pressure this breath needs stays where it has been put.',
     notDemonstratedWhenMoved:
-      'Securing the space does not treat whatever caused it, and it does not exclude a second cause of low blood pressure.',
+      'One interval does not show that the space will stay controlled. Securing it also does not treat whatever caused it, and a blood pressure that is holding is holding on the decompression, not yet on this.',
     notDemonstratedWhenHeld:
-      'No response here does not mean the drainage failed. It means the blood pressure is being limited by something the drainage does not reach.',
+      'A blood pressure that has not moved is not evidence against this action: the hemodynamic rescue was the decompression, and it has already happened. What this interval has not shown is a mechanical gain, and one interval cannot show that the space will stay controlled either.',
   },
   'communication-board': {
     kind: 'treatment',
@@ -633,13 +647,14 @@ const interventionCoachingProfiles: Readonly<
     targetDirection: 'fell',
     acts: 'treats pain directly, in a way that keeps the patient able to answer',
     whenTargetMoved: 'pain was one of the reversible things driving this patient’s breathing',
-    whenTargetHeld: 'pain is not what is driving this, or what was treated was not the source',
+    whenTargetHeld:
+      'the response does not support pain — or at least the pain this treatment reaches — as the operative driver over this interval',
     reassess:
       'Ask again, and watch the reported breathing discomfort over minutes rather than breaths.',
     notDemonstratedWhenMoved:
       'Pain falling is consistent with pain having been a driver. It does not exclude another reversible cause still in place, and comfort is not the same as corrected timing.',
     notDemonstratedWhenHeld:
-      'Pain that did not fall is evidence against what was treated being its source. It does not exclude pain from somewhere the treatment did not reach.',
+      'Pain that did not fall is evidence against what was treated being its dominant source. It does not exclude pain from somewhere the treatment did not reach, and it does not exclude pain that needs longer than this.',
   },
   'relieve-bladder': {
     kind: 'treatment',
@@ -647,7 +662,8 @@ const interventionCoachingProfiles: Readonly<
     targetDirection: 'fell',
     acts: 'relieves bladder distension as a reversible source of distress',
     whenTargetMoved: 'distension was one of the reversible things driving this patient',
-    whenTargetHeld: 'distension is not what is driving this patient’s distress',
+    whenTargetHeld:
+      'the response does not support distension as an operative source of this patient’s distress over this interval',
     reassess:
       'Ask what changed from the patient’s side, and recheck reported discomfort over the next few minutes.',
     notDemonstratedWhenMoved:
@@ -662,7 +678,7 @@ const interventionCoachingProfiles: Readonly<
     acts: 'provides calm, consistent orientation to where the patient is and what is happening',
     whenTargetMoved: 'disorientation was contributing to what this patient was showing you',
     whenTargetHeld:
-      'orientation is not the limiting problem here, or it needs longer than this to change',
+      'the response does not support disorientation as the limiting problem over this interval — which for something this slow is a weak reading either way',
     reassess:
       'Watch across a longer stretch than a ventilator change needs, and check whether the patient can follow the plan you stated.',
     notDemonstratedWhenMoved:
@@ -677,7 +693,7 @@ const interventionCoachingProfiles: Readonly<
     acts: 'removes environmental disruption that has been preventing rest',
     whenTargetMoved: 'the environment was part of what this patient was reacting to',
     whenTargetHeld:
-      'the environment is not the limiting problem, or it needs far longer than this to show',
+      'the response does not support the environment as the limiting problem over this interval — and this is the slowest change available here, so an interval this short says little',
     reassess:
       'This one is measured over a night rather than a breath — plan the reassessment accordingly.',
     notDemonstratedWhenMoved:
@@ -722,6 +738,26 @@ const interventionCoachingProfiles: Readonly<
  * ---------------------------------------------------------------------------------------------- */
 
 /**
+ * Readings the console computes from the trace it is displaying, rather than reporting directly.
+ *
+ * The peak is the maximum over the whole waveform buffer and the exhaled breath is integrated from
+ * it, so neither can report a change until the buffer holds breaths taken after the change. The
+ * plateau is estimated off the same trace, so the peak-to-plateau difference inherits it.
+ */
+const traceDerivedReadings: readonly CoachingReadingId[] = [
+  'peak-pressure',
+  'peak-plateau-gap',
+  'exhaled-vt',
+]
+
+function settleSecondsFor(effectId: InterventionEffectId | null, breathSeconds: number): number {
+  const target = effectId ? interventionCoachingProfiles[effectId]?.target : null
+  return target && traceDerivedReadings.includes(target)
+    ? Math.max(breathSeconds, WAVEFORM_WINDOW_SECONDS)
+    : breathSeconds
+}
+
+/**
  * The ventilator settings, as one comparable value.
  *
  * A control change records no intervention, so without this a learner who suctioned and then raised
@@ -740,8 +776,19 @@ export interface PostActionBaseline {
   readonly actionSeconds: number
   /** The engine's own stamp: when the case says this action's effect reaches the model. */
   readonly effectiveAtSeconds: number
-  /** One breath at the rate this patient was running when the action was taken. */
-  readonly breathPeriodSeconds: number
+  /**
+   * How long after the effect reaches the model before its response can be *read*.
+   *
+   * One breath at the rate this patient was running for a reading the model reports directly. For a
+   * reading the console computes from the trace it is displaying, one length of that trace — the
+   * displayed peak is the maximum over the whole buffer, so until the buffer is a buffer of the
+   * response it is still reporting the breaths before the action. Measured on MV-13: suctioning the
+   * patient whose airway holds secretions drops resistance from 30 to 12 at the instant the effect
+   * lands, and the printed peak stays at 43 cmH₂O for a further 11 seconds before falling to 24.
+   *
+   * Both numbers already existed: the patient's own rate, and `WAVEFORM_WINDOW_SECONDS`.
+   */
+  readonly settleSeconds: number
   readonly readings: CoachingReadingSnapshot
   readonly criticalErrorCount: number
   /** What the ventilator was set to when the action was taken. See `settingsFingerprint`. */
@@ -806,7 +853,10 @@ export function capturePostActionBaseline(
       record.effectiveAt,
       record.time + (intervention?.latencySeconds ?? 0),
     ),
-    breathPeriodSeconds: 60 / Math.max(1, before.measurements.totalRatePerMin),
+    settleSeconds: settleSecondsFor(
+      intervention?.effectId ?? null,
+      60 / Math.max(1, before.measurements.totalRatePerMin),
+    ),
     readings: coachingReadingSnapshot(before),
     criticalErrorCount: state.criticalErrors.length,
     settingsFingerprint: settingsFingerprint(state),
@@ -828,7 +878,7 @@ export function postActionObservation(
   state: VentilationSimulationState,
   baseline: PostActionBaseline,
 ): PostActionObservation {
-  const completeAtSeconds = baseline.effectiveAtSeconds + baseline.breathPeriodSeconds
+  const completeAtSeconds = baseline.effectiveAtSeconds + baseline.settleSeconds
   const secondsRemaining = Math.max(0, completeAtSeconds - state.simulationTime)
   return { completeAtSeconds, secondsRemaining, complete: secondsRemaining <= 0 }
 }
@@ -890,23 +940,25 @@ const verdictLabels: Readonly<Record<CoachingVerdict, string>> = {
   unchanged: 'No better, no worse',
 }
 
-function atPrecision(value: number, precision: number): number {
-  const scale = 10 ** precision
-  return Math.round(value * scale) / scale
-}
-
 /**
- * A reading "changed" when the number the surface prints changes.
+ * A reading "changed" when it differs by at least one unit of the precision the surface prints it at.
  *
- * Deliberately a display-resolution rule and not a clinical one. Publishing "a fall of N cmH₂O
- * counts" would be exactly the kind of universal target this module refuses to invent; "the number on
- * the screen is different" is a fact about what the learner can see.
+ * Still a display rule and not a clinical one — it is the resolution of the instrument, not a
+ * statement about how much of a change matters to a patient. Publishing "a fall of N cmH₂O counts"
+ * would be exactly the universal target this module refuses to invent.
+ *
+ * Comparing the *rounded* values instead, which is what this did first, made a rounding boundary
+ * into a finding. Measured on MV-13 with no action performed at all, the printed peak wanders 43.8
+ * to 43.2 over the same interval an action is watched across — under one cmH₂O, but across the 44/43
+ * boundary. Two treatments that reach nothing on that patient were reported as having lowered the
+ * pressure, and the block then credited the mechanism they target. One printed unit is the smallest
+ * change the surface can actually assert.
  */
 function direction(before: number, after: number, precision: number): CoachingDirection {
-  const roundedBefore = atPrecision(before, precision)
-  const roundedAfter = atPrecision(after, precision)
-  if (roundedAfter > roundedBefore) return 'rose'
-  if (roundedAfter < roundedBefore) return 'fell'
+  const resolution = 10 ** -precision
+  const change = after - before
+  if (change >= resolution - 1e-9) return 'rose'
+  if (change <= -(resolution - 1e-9)) return 'fell'
   return 'held'
 }
 
@@ -1141,9 +1193,14 @@ function stabilizationAnswer(state: VentilationSimulationState): {
       text: `Yes. ${listPhrase(urgent.map((alarm) => alarm.message))} ${urgent.length === 1 ? 'is' : 'are'} active on the ventilator now — stabilize before continuing to localize.`,
     }
   }
+  /*
+   * Two checks, named as two checks. The earlier wording — "no high-priority alarm is active, so
+   * continue localizing rather than escalating" — turned the absence of an alarm into a conclusion
+   * about the patient, which is the same error the rest of the block spends its length avoiding.
+   */
   return {
     required: false,
-    text: 'Not from what is on screen. No high-priority alarm is active, so continue localizing rather than escalating.',
+    text: 'No active safety interruption or high-priority ventilator alarm is shown. Continue immediate bedside reassessment; those two checks alone do not establish that no stabilization or escalation is needed.',
   }
 }
 
