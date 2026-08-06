@@ -3,9 +3,14 @@
  *
  * The Practice route itself is reachable in a browser — mechanical ventilation is public-unlisted —
  * and the layout geometry in the D3 review was measured there. What a browser run cannot give
- * cheaply is *all four* response branches: the branch is a function of the attempt number, so
- * reaching MV-08's leak version or MV-13's tube version through the interface means finishing the
- * case several times over. This renders each of them directly from the engine.
+ * cheaply is every response branch: a branch is a function of the attempt number, so reaching
+ * MV-08's leak version or MV-13's tube version through the interface means finishing the case
+ * several times over. This renders each of them directly from the engine.
+ *
+ * Twelve runs: the four response shapes, every MV-13 branch with the treatment that reaches it and
+ * one that does not, decompression followed by definitive drainage as a real sequence, and the
+ * neuromuscular-blockade copy. Each action is watched to its own observation point, so the renders
+ * follow the authored latencies rather than a number picked here.
  *
  * Every block is framed at the geometry the browser reported for the task drawer at that viewport —
  * 448px wide at all four, and the pane height the shell actually gave it:
@@ -109,6 +114,70 @@ const RUNS: readonly Run[] = [
     actions: ['decompress-pneumothorax'],
     settleSeconds: 40,
   },
+  {
+    title: 'Definitive drainage — judged on the mechanics, not the blood pressure',
+    note: 'MV-14, the decompression watched to its own observation point first. The blood pressure was rescued by the action before this one, so it is not the reading that answers whether the drainage responded.',
+    caseId: 'MV-14',
+    branch: 'unstable',
+    actions: ['decompress-pneumothorax', 'pleural-drainage'],
+    settleSeconds: 40,
+  },
+  {
+    title: 'MV-13 secretions — suction reaches it',
+    note: 'The treatment that matches this version of the patient.',
+    caseId: 'MV-13',
+    branch: 'secretions',
+    actions: ['suction-airway'],
+    settleSeconds: 40,
+  },
+  {
+    title: 'MV-13 secretions — a bronchodilator does not',
+    note: 'Nothing this relaxes is what is in the way here, and the block declines to credit it.',
+    caseId: 'MV-13',
+    branch: 'secretions',
+    actions: ['bronchodilator'],
+    settleSeconds: 40,
+  },
+  {
+    title: 'MV-13 tube or filter — taking the obstruction out of the path reaches it',
+    note: 'The apparatus version, with the inspection its removal requires.',
+    caseId: 'MV-13',
+    branch: 'hme-or-ett',
+    actions: ['inspect-circuit', 'remove-hme'],
+    settleSeconds: 40,
+  },
+  {
+    title: 'MV-13 tube or filter — suction does not',
+    note: 'A suction catheter removes material from a lumen that has none to remove.',
+    caseId: 'MV-13',
+    branch: 'hme-or-ett',
+    actions: ['suction-airway'],
+    settleSeconds: 40,
+  },
+  {
+    title: 'MV-13 bronchospasm — a bronchodilator reaches it',
+    note: 'The airway-wall version, treated over its authored five minutes.',
+    caseId: 'MV-13',
+    branch: 'bronchospasm',
+    actions: ['bronchodilator'],
+    settleSeconds: 40,
+  },
+  {
+    title: 'MV-13 bronchospasm — correcting the tube does not',
+    note: 'The narrowing is in the airway walls, so the apparatus has nothing to give back.',
+    caseId: 'MV-13',
+    branch: 'bronchospasm',
+    actions: ['inspect-circuit', 'reposition-ett'],
+    settleSeconds: 40,
+  },
+  {
+    title: 'Neuromuscular blockade — the plateau wording, and the indication boundary',
+    note: 'The reassessment names the condition under which the split can be repeated, and says plainly that blockade is not a way of obtaining one.',
+    caseId: 'MV-03',
+    branch: 'short-machine-ti',
+    actions: ['neuromuscular-blockade'],
+    settleSeconds: 60,
+  },
 ] as const
 
 function definitionFor(caseId: string): VentilationCaseDefinition {
@@ -142,18 +211,23 @@ function coachingFor(run: Run): PostActionCoaching {
     definition,
   )
   let baseline = null as ReturnType<typeof capturePostActionBaseline> | null
-  run.actions.forEach((id, index) => {
+  /*
+   * Each action is watched to its *own* observation point rather than for a fixed number of seconds,
+   * so a change to an authored latency or to the trace window moves these renders with it. That also
+   * makes the two-action runs real sequences: the decompression is watched to completion before the
+   * drainage is performed, which is the whole point of that pair.
+   */
+  for (const id of run.actions) {
     const before = state
     state = applyIntervention(state, definition, id)
     const record = state.interventions.at(-1)
     if (!record) throw new Error(`${run.caseId}: ${id} produced no record`)
     baseline = capturePostActionBaseline(before, definition, record)
-    state = advanceSimulation(
-      state,
-      index === run.actions.length - 1 ? run.settleSeconds : 30,
-      definition,
-    )
-  })
+    for (let guard = 0; !postActionObservation(state, baseline).complete && guard < 20000; guard += 1) {
+      state = advanceSimulation(state, 0.1, definition)
+    }
+    state = advanceSimulation(state, run.settleSeconds, definition)
+  }
   if (!baseline) throw new Error(`${run.caseId}: no action performed`)
   const observation = postActionObservation(state, baseline)
   if (!observation.complete) {
@@ -217,7 +291,7 @@ const page = `<!doctype html>
   h3 { font-size: 0.75rem; font-weight: 700; color: #eaf8f7; margin: 1.5rem 0 0.25rem; }
   p.note { color: #9fc4c2; font-size: 0.72rem; margin: 0 0 0.5rem; }
   article:first-of-type h2 { margin-top: 0; }
-  article { display: grid; grid-template-columns: repeat(auto-fit, minmax(30rem, 1fr)); gap: 1.5rem; }
+  article { display: grid; grid-template-columns: repeat(auto-fit, minmax(29rem, 1fr)); gap: 1.5rem; }
   article > h2 { grid-column: 1 / -1; }
   nav { display: flex; flex-wrap: wrap; gap: 0.9rem; margin-bottom: 1.5rem; }
   nav a { color: #79daca; font-size: 0.8rem; }
@@ -260,7 +334,7 @@ writeFileSync(file, page, 'utf8')
 console.log(`wrote ${file}`)
 for (const { run, coaching } of rendered) {
   console.log(
-    `  ${run.caseId} ${run.title.split(' — ')[0].padEnd(18)} verdict=${coaching.verdict.padEnd(9)} readings=${coaching.observed.length} stabilize=${coaching.stabilizationRequired}`,
+    `  ${run.caseId} ${run.title.split(' — ')[0].replace(/^MV-\d+ /, '').padEnd(34)} verdict=${coaching.verdict.padEnd(9)} readings=${coaching.observed.length} target=${(coaching.observed.find((r) => r.targeted)?.id ?? '—').padEnd(14)} stabilize=${coaching.stabilizationRequired}`,
   )
 }
 console.log(

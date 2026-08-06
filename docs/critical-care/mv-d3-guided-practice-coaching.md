@@ -35,7 +35,9 @@ not render at all — unless every one of these holds:
    trusting the flag.
 3. `state.prediction.committed` — nothing here can precede the commitment.
 4. an action has been performed, and the supplied baseline is that action's.
-5. `state.simulationTime >= max(record.effectiveAt, record.time + latencySeconds) + breathPeriod`.
+5. `state.simulationTime >= max(record.effectiveAt, record.time + latencySeconds) + settle`, where
+   `settle` is one of this patient's breaths, or one length of the displayed trace where the targeted
+   reading is computed from that trace.
 
 Between (4) and (5) the workspace shows one neutral line — "The response to this action is still
 developing. Read the patient and the traces while it does." — carrying no mechanism, no direction,
@@ -44,11 +46,12 @@ and no verdict.
 **The observation interval is not a new number.** It is composed only of quantities that already
 existed:
 
-| Term                              | Where it comes from                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `record.effectiveAt`              | `applyIntervention` has always stamped this from the case's own `latencySeconds`. Until it is reached, `performedEffectIds` excludes the action, so the model genuinely has not responded.                                                                                                                                                                                                                                                                |
-| the action's own `latencySeconds` | Taken as the later of the two. `effectiveAt` is stamped as _immediate_ for an assessment or ventilator action because the effect reaches the **model** at once; the authored latency is a different statement — how long before the learner can read the result. Ordering a gas is authored at 60 s and stamped immediate, so `effectiveAt` alone closed the interval after one breath and latched "the sample has not resulted yet" as the whole report. |
-| one breath                        | `60 / totalRatePerMin` at the moment of the action. The module's own observation vocabulary is already "advance one breath for reassessment" (`ventilationLessonObservationActions`).                                                                                                                                                                                                                                                                     |
+| Term                                        | Where it comes from                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `record.effectiveAt`                        | `applyIntervention` has always stamped this from the case's own `latencySeconds`. Until it is reached, `performedEffectIds` excludes the action, so the model genuinely has not responded.                                                                                                                                                                                                                                                                |
+| the action's own `latencySeconds`           | Taken as the later of the two. `effectiveAt` is stamped as _immediate_ for an assessment or ventilator action because the effect reaches the **model** at once; the authored latency is a different statement — how long before the learner can read the result. Ordering a gas is authored at 60 s and stamped immediate, so `effectiveAt` alone closed the interval after one breath and latched "the sample has not resulted yet" as the whole report. |
+| one breath                                  | `60 / totalRatePerMin` at the moment of the action. The module's own observation vocabulary is already "advance one breath for reassessment" (`ventilationLessonObservationActions`).                                                                                                                                                                                                                                                                     |
+| one trace, where the target is read off one | `WAVEFORM_WINDOW_SECONDS`. The displayed peak is the maximum over the whole buffer and the exhaled breath is integrated from it, so neither can report a change until the buffer holds breaths taken after it. Measured on MV-13: suction drops resistance from 30 to 12 the instant the effect lands, and the printed peak sits at 43 cmH₂O for a further 11 seconds before falling to 24.                                                               |
 
 **The block is latched when the interval closes, and is not recomputed afterwards.** It is a report
 of the interval the learner watched, not a second monitor. Re-deriving it live meant the parent's
@@ -96,7 +99,15 @@ the numbers before and after. Branch specificity is therefore emergent: draining
 patient who has water at the sensor and draining it on the patient who has a leak produce different
 numbers, so they produce different coaching, and neither run is told what the other would have been.
 
-**"Changed" is a display rule, not a clinical one.** A reading changed when the number the surface
+**"Changed" is one printed unit, which is a display rule and not a clinical one.** A reading changed
+when it differs by at least the smallest amount its surface can print — the resolution of the
+instrument, not a statement about how much of a change matters to a patient. Comparing the _rounded_
+values instead, which is what this did first, made a rounding boundary into a finding: measured on
+MV-13 with no action performed at all, the printed peak wanders 43.8 → 43.2 over the same interval an
+action is watched across, and two treatments that reach nothing on that patient were reported as
+having lowered the pressure.
+
+The older wording of the same rule follows, and still holds: a reading changed when the number the surface
 prints changes. Publishing "a fall of N cmH₂O counts" would be exactly the universal target the rest
 of this module refuses to invent; "the number on the screen is different" is a fact about what the
 learner can see. No threshold is printed anywhere in the block, including the stabilization answer,
@@ -223,6 +234,111 @@ all now fixed and each with a regression test:
 
 Fourteen further findings from the same pass were raised and refuted.
 
+## 4a. The content-engine correction pass
+
+The timing and presentation above were accepted; five content corrections followed before merge.
+
+### MV-13 — a treatment now only reaches the narrowing this patient has
+
+The case declares three mutually exclusive causes, and `branchCorrected` has always required the
+matching treatment before the case will resolve. The mechanics did not agree. `deriveEffectivePatient`
+let a bronchodilator relax airway muscle by 60 % on the version whose tube is obstructed, let suction
+shave 14 % off a patient with nothing to suction, and let taking out the filter cap resistance at 12
+on a bronchospastic patient whose filter was never the problem. The pressure therefore fell for a
+reason the model had invented, and the new coaching read a mechanism off it.
+
+`treatmentReachesNarrowing` gates the three resistance mutations on the branch, for the
+high-resistance phenotype only. **The intended responses are unchanged; only their reach is.** MV-05,
+MV-06 and MV-10 keep the 0.62 and 0.86 multipliers exactly as they were — `remove-hme` and
+`reposition-ett` exist only on MV-13 — and a test asserts that suction and a bronchodilator still
+lower resistance on all three of those cases.
+
+Measured at the coaching observation point, resistance in cmH₂O/L/s and peak in cmH₂O:
+
+| Branch       | Action             | R before → after | Peak before → after | Target   | Branch rule satisfied | Coaching                      |
+| ------------ | ------------------ | ---------------- | ------------------- | -------- | --------------------- | ----------------------------- |
+| secretions   | **suction**        | 30 → **12**      | 43 → **25**         | **fell** | **yes**               | credits material in the lumen |
+| secretions   | bronchodilator     | 30 → 30          | 43 → 43             | held     | no                    | "does not support …"          |
+| secretions   | remove-hme         | 30 → 30          | 44 → 44             | held     | no                    | "does not support …"          |
+| secretions   | reposition-ett     | 30 → 30          | 44 → 43             | held     | no                    | "does not support …"          |
+| hme-or-ett   | suction            | 30 → 30          | 42 → 43             | held     | no                    | "does not support …"          |
+| hme-or-ett   | bronchodilator     | 30 → 30          | 42 → 42             | held     | no                    | "does not support …"          |
+| hme-or-ett   | **remove-hme**     | 30 → **12**      | 43 → **23**         | **fell** | **yes**               | credits the apparatus         |
+| hme-or-ett   | **reposition-ett** | 30 → **12**      | 43 → **24**         | **fell** | **yes**               | credits the tube              |
+| bronchospasm | suction            | 30 → 30          | 42 → 43             | held     | no                    | "does not support …"          |
+| bronchospasm | **bronchodilator** | 30 → **12**      | 42 → **24**         | **fell** | **yes**               | credits constricted airways   |
+| bronchospasm | remove-hme         | 30 → 30          | 43 → 43             | held     | no                    | "does not support …"          |
+| bronchospasm | reposition-ett     | 30 → 30          | 43 → 42             | held     | no                    | "does not support …"          |
+
+Two of those rows needed a second correction. `reposition-ett` on the secretions and bronchospasm
+versions changes nothing in the model at all, yet the printed peak moved 44 → 43 and 43 → 42 and the
+block credited the tube. Measured with **no action performed**, the printed peak on those patients
+wanders 43.8 → 43.2 across the same interval — under one cmH₂O, but across a rounding boundary. The
+rule is now one printed unit rather than a change of printed value; no clinical threshold was
+introduced.
+
+The third correction is the settle term above: with the buffer un-refreshed, even the _matching_
+treatments read as `rose` or `held` at the observation point.
+
+Falsifiability: with `treatmentReachesNarrowing` restored to `return true`, **all eight non-matching
+rows fail** and the four matching rows still pass. Restored: 46 pass.
+
+### MV-14 — securing the space is judged on the mechanics
+
+The pleural-drainage profile targeted the blood pressure rising, but the engine's drainage effect
+raises compliance and does not touch the blood pressure. By the time drainage is established the
+circulation has already been rescued by the decompression that must precede it, so a blood pressure
+that holds was being read as a drainage that had failed.
+
+Retargeted to the pressure the same breath needs, which on this volume-targeted patient is what
+compliance moves. Measured as a real sequence — decompression watched to its own observation point,
+then drainage watched to its:
+
+| Step                      | Compliance  | Peak              | MAP     | Target         | Verdict  |
+| ------------------------- | ----------- | ----------------- | ------- | -------------- | -------- |
+| after decompression       | 28 mL/cmH₂O | 58 cmH₂O          | 42 → 45 | MAP, rose      | improved |
+| after definitive drainage | 35 mL/cmH₂O | 58 → **28** cmH₂O | 45 → 68 | **peak, fell** | improved |
+
+The block now teaches that the decompression produced the hemodynamic rescue, that drainage secures
+the mechanical response, that blood pressure still has to be watched but is not the reading that
+answers whether the drainage responded, and that one interval does not show the space will stay
+controlled. A test pins the load-bearing half: with the blood pressure held exactly where the
+decompression left it, the drainage is still reported as having responded.
+
+### Neuromuscular blockade
+
+> If blockade is complete and the hold is technically valid, repeat the plateau measurement; active
+> respiratory effort no longer confounds the pressure split. Blockade is not a way of obtaining a
+> plateau — it is temporary, for immediate lung protection while the cause is corrected, and the
+> measurement is a by-product of that decision rather than a reason for it.
+
+Replaces "this is the one condition in which the elastic and resistive split means exactly what it
+says", which read as an argument for the maneuver.
+
+### The negative stabilization answer
+
+> No active safety interruption or high-priority ventilator alarm is shown. Continue immediate bedside
+> reassessment; those two checks alone do not establish that no stabilization or escalation is needed.
+
+Replaces "no high-priority alarm is active, so continue localizing rather than escalating", which
+turned the absence of an alarm into a conclusion about the patient. **The positive paths are
+unchanged and still immediate.**
+
+### Non-response language, all 27 profiles
+
+Fourteen profiles asserted a mechanism was absent because one action did not move one reading — "the
+tube is not the narrowing", "a leak is not what the trigger was answering", "material in the lumen is
+not what is narrowing the path". All now read as evidence about what is dominant:
+
+> the response does not support the tube as the dominant narrowing over this interval — correcting it
+> did not change the pressure the same breath needs
+
+A sweep over every action of every case at the pure non-response point bans the categorical
+phrasings; it is written as a ban rather than as a required sentence because several honest
+non-responses name no mechanism at all — sedation that has not moved is a statement about the dose,
+and a communication board is not expected to move a monitor. The separate "What it has not shown"
+section is untouched and still carries the limits of both a response and a non-response.
+
 ## 5. Browser and render review
 
 **In the browser** (`npm run dev` on the Practice route — mechanical ventilation is public-unlisted,
@@ -289,7 +405,7 @@ verdict is worded about the readings rather than about the patient or the action
 ```
 npm run type-check                                 clean
 npm run lint                                       0 errors, 0 MV findings (19 pre-existing warnings elsewhere)
-npx jest src/features/mechanical-ventilation       22 suites / 530 tests
+npx jest src/features/mechanical-ventilation       22 suites / 548 tests
 npx jest src/features/critical-care                23 suites / 194 tests
 npx jest src/app                                   28 suites / 244 tests
 npm run test:a11y                                  11 passed
@@ -298,7 +414,7 @@ npx playwright test e2e/mechanical-ventilation-learn-layout.spec.ts   19 passed
 npm run dump:mv-waveforms                          identical to origin/main
 npm run render:mv-console                          4 consoles
 npm run render:mv-teaching                         10 panels
-render-mv-practice-coaching.mts                    16/16 blocks clean at the four widths
+render-mv-practice-coaching.mts                    48/48 blocks clean (12 runs × 4 widths) at the four widths
 ```
 
 **No engine change**, proven by construction rather than by eye: the waveform dump's bundle has 31
@@ -322,15 +438,19 @@ adds `content/postActionCoaching.ts` and `components/PostActionCoachingPanel.tsx
 - **Whether "No better, no worse" is the right label** for the case where only a valence-free reading
   moved. It is honest, but it is a judgement about presentation.
 
-### Flagged, no change made
+### Resolved since the first review
 
-**Suctioning helps a little on every version of MV-13.** `deriveEffectivePatient` multiplies airway
+**Suctioning helped a little on every version of MV-13**, which was flagged for the owner and is now
+corrected — see §4a. The former note read: `deriveEffectivePatient` multiplies airway
 resistance by 0.86 for `suction-airway` on branches where secretions are not the cause, so peak
 pressure falls 42 → 38 cmH₂O on the tube-obstruction and bronchospasm versions against 43 → 23 on the
 secretions one. The coaching reports the direction it sees and leaves the size to the printed numbers,
 and its "what it has not shown" clause says explicitly that a directional response does not establish
 that this was the whole narrowing. **No engine change was authorized in this package**, and none was
 made; if that 0.86 is not intended, it is an engine question rather than a coaching one.
+
+It was not intended. A narrowly scoped engine correction was authorized and applied; resistance now
+moves only for the treatment that reaches this patient's narrowing.
 
 **A safety interruption raised by the action itself is not called "opened while you were watching".**
 The baseline's critical-error count is taken at the instant of the action, which already includes
