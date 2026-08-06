@@ -27,6 +27,7 @@ import {
   createInitialPrismaxPilotInterfaceState,
   selectPrismaxPilotCaseOperationsDisplay,
 } from '../../src/features/baxter-crrt/engine/deviceAdapters/prismax'
+import { crrtCumulativeFluidReviewStates } from '../../src/features/baxter-crrt/engine/testSupport/cumulativeFluidStates'
 import {
   crrtLivePressureModelBoundaries,
   crrtLivePressureReviewStates,
@@ -276,6 +277,108 @@ function printLivePressureComparison(): readonly string[] {
   return problems
 }
 
+/* ------------------------------------------------------------------ *
+ * Cumulative fluid attribution
+ *
+ * Both cumulative operations values are built on the machine
+ * patient-fluid-removal term, which the C0/C1 ledger withholds when the makeup
+ * attribution is unresolved — and the engine accumulates that term from the
+ * entered patient-fluid-removal setting. This table exits non-zero if a
+ * withheld total is published, rendered as a zero, or replaced by the setting,
+ * and if a window that carried makeup is reported as resolved.
+ * ------------------------------------------------------------------ */
+
+function printCumulativeFluidComparison(): readonly string[] {
+  const problems: string[] = []
+  const ui = createInitialPrismaxPilotInterfaceState()
+
+  console.log(`\n${'='.repeat(100)}`)
+  console.log('CUMULATIVE FLUID  ·  attribution gate')
+  console.log('='.repeat(100))
+  console.log(
+    `\n${pad('state', 34)}${pad('resolution', 32)}${padStart('makeup mL/h', 12)}` +
+      `${padStart('makeup in window', 18)}${padStart('published PFR', 15)}${padStart('published bal', 15)}` +
+      `${padStart('engine PFR', 12)}`,
+  )
+
+  for (const review of crrtCumulativeFluidReviewStates()) {
+    const display = selectPrismaxPilotCaseOperationsDisplay(ui, review.state)
+    const cumulative = display.cumulativeFluid
+    const engine = review.state.deliveredTherapy
+    const withheld = cumulative.resolution !== 'available'
+    const pfrSettingMlHour = review.state.circuit.flows.patientFluidRemovalMlHour
+
+    if (cumulative.resolution !== review.expected) {
+      problems.push(
+        `${review.id}: resolution ${cumulative.resolution}, expected ${review.expected}`,
+      )
+    }
+    // Withheld means withheld: not a number, not a zero, not the setting.
+    if (withheld) {
+      if (display.cumulativeMachinePatientFluidRemovalMl !== null) {
+        problems.push(
+          `${review.id}: machine removal published as ${String(display.cumulativeMachinePatientFluidRemovalMl)} while attribution is unresolved`,
+        )
+      }
+      if (display.cumulativeWholePatientBalanceMl !== null) {
+        problems.push(
+          `${review.id}: whole balance published as ${String(display.cumulativeWholePatientBalanceMl)} while attribution is unresolved`,
+        )
+      }
+      if (
+        display.cumulativeMachinePatientFluidRemovalMl === 0 ||
+        display.cumulativeWholePatientBalanceMl === 0
+      ) {
+        problems.push(`${review.id}: a withheld cumulative value rendered as zero`)
+      }
+      if (
+        display.cumulativeMachinePatientFluidRemovalMl !== null &&
+        display.cumulativeMachinePatientFluidRemovalMl === pfrSettingMlHour
+      ) {
+        problems.push(`${review.id}: the entered removal setting was substituted for the result`)
+      }
+      if (cumulative.withheldReason === null) {
+        problems.push(`${review.id}: withheld with no stated reason`)
+      }
+    } else {
+      // A window that carried makeup may never be reported as resolved.
+      if (cumulative.makeupDeliveredMlInWindow > 0) {
+        problems.push(
+          `${review.id}: window carried ${cumulative.makeupDeliveredMlInWindow} mL of makeup but is reported resolved`,
+        )
+      }
+      if (review.state.circuit.flows.makeupFlowMlHour !== 0) {
+        problems.push(`${review.id}: makeup running but the attribution is reported resolved`)
+      }
+      // Available means exactly the engine value, unchanged.
+      if (
+        display.cumulativeMachinePatientFluidRemovalMl !==
+        engine.cumulativeMachinePatientFluidRemovalMl
+      ) {
+        problems.push(`${review.id}: published machine removal differs from the engine total`)
+      }
+      if (display.cumulativeWholePatientBalanceMl !== engine.cumulativeWholePatientBalanceMl) {
+        problems.push(`${review.id}: published whole balance differs from the engine total`)
+      }
+    }
+
+    console.log(
+      `${pad(review.id, 34)}${pad(cumulative.resolution, 32)}` +
+        `${padStart(num(review.state.circuit.flows.makeupFlowMlHour), 12)}` +
+        `${padStart(num(cumulative.makeupDeliveredMlInWindow), 18)}` +
+        `${padStart(withheld ? 'withheld' : num(display.cumulativeMachinePatientFluidRemovalMl ?? 0), 15)}` +
+        `${padStart(withheld ? 'withheld' : num(display.cumulativeWholePatientBalanceMl ?? 0), 15)}` +
+        `${padStart(num(engine.cumulativeMachinePatientFluidRemovalMl), 12)}`,
+    )
+  }
+
+  console.log(
+    '\nengine PFR is what the engine holds. Where it differs from the published column, the',
+  )
+  console.log('difference is the point: the total exists but its attribution is not settled.')
+  return problems
+}
+
 function main(): void {
   const fixtures: readonly CrrtEngineFixture[] = ONLY_CASE
     ? baxterCrrtPilotFixtures.filter((fixture) => fixture.id === ONLY_CASE)
@@ -316,6 +419,7 @@ function main(): void {
   }
 
   const pressureProblems = printLivePressureComparison()
+  const cumulativeProblems = printCumulativeFluidComparison()
 
   console.log(`\n${'='.repeat(100)}`)
   console.log(`${allFlags.length} flag(s)`)
@@ -325,7 +429,11 @@ function main(): void {
   }
   console.log(`${pressureProblems.length} engine/adapter pressure problem(s)`)
   for (const problem of pressureProblems) console.log(`  ${problem}`)
-  if (allFlags.length > 0 || pressureProblems.length > 0) process.exitCode = 1
+  console.log(`${cumulativeProblems.length} cumulative-fluid attribution problem(s)`)
+  for (const problem of cumulativeProblems) console.log(`  ${problem}`)
+  if (allFlags.length > 0 || pressureProblems.length > 0 || cumulativeProblems.length > 0) {
+    process.exitCode = 1
+  }
 }
 
 main()

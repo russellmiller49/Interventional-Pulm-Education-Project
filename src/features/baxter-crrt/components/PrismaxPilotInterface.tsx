@@ -715,13 +715,23 @@ function OperationsScreen({
                 </small>
               </dd>
             </div>
-            <div>
+            <div data-cumulative-fluid={operations.cumulativeFluid.resolution}>
               <dt>Machine removal / whole balance</dt>
-              <dd>
-                {formatMetric(operations.cumulativeMachinePatientFluidRemovalMl, 'mL', 0)} /{' '}
-                {formatMetric(operations.cumulativeWholePatientBalanceMl, 'mL', 0)}{' '}
-                <small>{caseContext ? 'distinct model outputs' : 'no elapsed case time'}</small>
-              </dd>
+              {operations.cumulativeFluid.resolution === 'available' ? (
+                <dd>
+                  {formatMetric(operations.cumulativeMachinePatientFluidRemovalMl, 'mL', 0)} /{' '}
+                  {formatMetric(operations.cumulativeWholePatientBalanceMl, 'mL', 0)}{' '}
+                  <small>{caseContext ? 'distinct model outputs' : 'no elapsed case time'}</small>
+                </dd>
+              ) : (
+                /* Not a dash and not a zero: both would read as a total. The
+                   two quantities are withheld, and the reason is stated where
+                   the number would have been. */
+                <dd data-withheld="true">
+                  Withheld / Withheld
+                  <small>{operations.cumulativeFluid.withheldReason}</small>
+                </dd>
+              )}
             </div>
           </dl>
         </section>

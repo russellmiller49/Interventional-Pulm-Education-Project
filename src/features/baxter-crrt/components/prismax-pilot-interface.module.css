@@ -752,6 +752,35 @@
   font-variant-numeric: tabular-nums;
 }
 
+/*
+ * A withheld total. Marked by a dashed left rule and the word itself, never by
+ * colour alone, and never by a dash that could read as zero. The reason sits
+ * where the number would have been rather than beside it as a caveat.
+ */
+.statusList dd[data-withheld='true'] {
+  padding: 0.35rem 0.5rem;
+  border-left: 6px dashed #b8860b;
+  border-radius: 0.35rem;
+  background: rgba(184, 134, 11, 0.08);
+  font-variant-numeric: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.statusList dd[data-withheld='true'] > small {
+  display: block;
+  margin-top: 0.3rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+@media (forced-colors: active) {
+  .statusList dd[data-withheld='true'] {
+    border-left-color: CanvasText;
+  }
+}
+
 .readyCard {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);

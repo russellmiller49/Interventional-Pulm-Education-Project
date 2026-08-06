@@ -162,10 +162,64 @@ in for the withheld calculated result. The numeric harness fails if
 `cumulativeMachinePatientFluidRemovalMl`, `cumulativeWholePatientBalanceMl`, or the ledger reaches
 this surface.
 
-Note for later work: `selectPrismaxPilotCaseOperationsDisplay` still republishes those two
-cumulative fields on its own (pre-existing, and unused by this surface). Every shipped fixture holds
-`makeupFlowMlHour: 0`, so it is latent rather than live, but any future surface rendering them must
-route through `calculateCrrtMachineFluidLedger(...).resolution` first.
+The two cumulative operations fields are gated the same way — see _The cumulative fluid totals_
+below. They are no longer copied from `deliveredTherapy`; both come from the projection, so an
+unresolved attribution cannot leak a volume through this surface.
+
+## The cumulative fluid totals
+
+The operations surface shows a "Machine removal / whole balance" row. Both values used to be copied
+straight off `deliveredTherapy` with no attribution check.
+
+That was a fail-open path through the C0/C1 makeup conflict. Both are built on the machine
+patient-fluid-removal term, which the ledger withholds outright when the makeup attribution is
+unresolved — and the engine accumulates that term from the **entered patient-fluid-removal
+setting** (`advanceFluidLedger`, fed `flows.patientFluidRemovalMlHour * deliveryFraction`), with the
+whole-patient balance subtracting the same term. So an unresolved run published a cumulative number
+derived from the setting and labelled it as removal, which is exactly the substitution the ledger
+exists to prevent. Every shipped fixture holds `makeupFlowMlHour: 0`, which hid it rather than
+closing it.
+
+### The window question
+
+These are cumulative values, so the ledger's rate-based resolution is not sufficient: a makeup
+setting that has since returned to zero looks resolved to it while the totals still contain the
+volume accumulated while it was running.
+
+The observer that settles this already exists: **`BagState.cumulativePumpVolumeMl` on a bag whose
+`flowTerm` is `'makeup'`**. It persists after the rate returns to zero.
+
+Zero is a proof of absence, not merely an absence of evidence, because
+`calculateCoupledBagDeliveryFraction` requires exactly one connected, closed-scale bag per active
+term. A nonzero makeup rate with no makeup bag drives the _whole circuit's_ delivery fraction to
+zero — nothing is delivered at all, including patient fluid removal — so makeup cannot be carried
+without a makeup bag registering it.
+
+`cumulativeFluidView` therefore withholds when **either**:
+
+- the C0/C1 ledger reports `unresolved-makeup-attribution` for the current flows, or
+- makeup-term bags have carried any volume during this run.
+
+| state                            | makeup rate | makeup in window | published    | engine holds |
+| -------------------------------- | ----------- | ---------------- | ------------ | ------------ |
+| Ordinary run, no makeup bag      | 0           | 0                | 1000 / 900   | 1000         |
+| Ordinary run, makeup bag unused  | 0           | 0                | 1000 / 900   | 1000         |
+| Makeup running                   | 100         | 200 mL           | **withheld** | 500          |
+| Makeup earlier, setting now zero | **0**       | 200 mL           | **withheld** | 1000         |
+| Makeup rate set, no bag          | 100         | 0                | **withheld** | 0            |
+
+The fourth row is the one the rate-based ledger cannot see on its own.
+
+### What a learner sees
+
+When settled, the numeric presentation is unchanged. When unresolved the row reads
+**Withheld / Withheld** with the reason where the number would have been — not a zero, not a bare
+dash, not the entered setting, not a previous value, and not a warning beside an otherwise
+authoritative number. The pressure panel is untouched, and delivered dose is unaffected because it
+is built on the effluent total, which the ledger states is always stateable.
+
+No new engine calculation was added. The gate composes the existing ledger and the existing bag
+observer, and the React component only branches on the resolution the adapter reports.
 
 ## Provenance
 
@@ -191,9 +245,11 @@ npx tsx scripts/baxter-crrt/dump-crrt-numbers.ts
 npx tsx scripts/baxter-crrt/render-crrt-live-pressure-device.ts
 ```
 
-`dump-crrt-numbers.ts` prints engine and adapter side by side for all eight reachable states and
-exits non-zero on a mismatch, a nonfinite value, a classification that differs from the pinned one,
-an unavailable value with no stated reason, or a series on a channel the model never sampled. The
+`dump-crrt-numbers.ts` prints engine and adapter side by side for all eight reachable states, plus
+the cumulative-fluid attribution table, and exits non-zero on a mismatch, a nonfinite value, a classification that differs from the pinned one,
+an unavailable value with no stated reason, a series on a channel the model never sampled, a
+withheld cumulative total that is nevertheless published or rendered as zero, an entered setting
+substituted for a withheld result, or a window carrying makeup reported as resolved. The
 classification is pinned per signal id rather than checked against its own node: a defect drill
 showed that a mislabelled signal usually arrives with a matching node, so comparing the two against
 each other agrees with the defect.

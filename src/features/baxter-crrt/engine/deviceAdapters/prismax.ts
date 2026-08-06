@@ -1,4 +1,8 @@
 import {
+  calculateCrrtMachineFluidLedger,
+  CRRT_MAKEUP_ATTRIBUTION_CONFLICT,
+} from '../../circuitFluidLedger'
+import {
   crrtCircuitNode,
   crrtPressureSignalDetails,
   type CrrtCircuitNodeId,
@@ -337,6 +341,38 @@ export interface CrrtDeviceTreatmentContextView {
   readonly historyTimeDomainSeconds: Readonly<{ startSeconds: number; endSeconds: number }> | null
 }
 
+/**
+ * Whether the cumulative fluid quantities can be stated at all.
+ *
+ * `unresolved-makeup-attribution` is not a caveat attached to a number. It
+ * means both cumulative values are withheld, because the registered sources
+ * disagree about where the makeup volume belongs and one of the two
+ * expressions leaves it inside the patient-removal term.
+ */
+export type CrrtCumulativeFluidResolution =
+  | 'available'
+  | 'no-case-attached'
+  | 'unresolved-makeup-attribution'
+
+export interface CrrtDeviceCumulativeFluidView {
+  readonly resolution: CrrtCumulativeFluidResolution
+  readonly cumulativeMachinePatientFluidRemovalMl: number | null
+  readonly cumulativeWholePatientBalanceMl: number | null
+  /** Learner-facing reason. Null only when the values are stated. */
+  readonly withheldReason: string | null
+  /** The makeup rate in force now, when a case is attached. */
+  readonly currentMakeupFlowMlHour: number | null
+  /**
+   * Makeup volume the charting window is known to contain, read off the
+   * makeup bag's own cumulative pump volume. Zero is a proof of absence only
+   * because a nonzero makeup rate cannot deliver anything without exactly one
+   * connected makeup bag — the coupled-delivery check drives the whole
+   * circuit's delivery fraction to zero instead.
+   */
+  readonly makeupDeliveredMlInWindow: number
+  readonly sourceIds: readonly string[]
+}
+
 export interface PrismaxPilotOperationsDisplay {
   readonly treatmentState: PrismaxPilotInterfaceState['treatmentState']
   readonly modality: CrrtModality | null
@@ -344,8 +380,11 @@ export interface PrismaxPilotOperationsDisplay {
   readonly effluentPumpTargetMlHour: number | null
   readonly effluentDoseMlKgHour: number | null
   readonly deliveredDoseMlKgHour: number | null
+  /** Withheld (null) whenever `cumulativeFluid.resolution` is not `available`. */
   readonly cumulativeMachinePatientFluidRemovalMl: number | null
   readonly cumulativeWholePatientBalanceMl: number | null
+  /** Why the two fields above are stated or withheld. */
+  readonly cumulativeFluid: CrrtDeviceCumulativeFluidView
   readonly activeAlarmCodes: readonly string[]
   readonly pressures: Readonly<{
     accessPressureMmHg: number | null
@@ -693,6 +732,95 @@ function pressureSignalViews(
   )
 }
 
+/* ------------------------------------------------------------------ *
+ * Cumulative fluid projection
+ *
+ * The two cumulative operations values are accumulated by the engine from the
+ * entered patient-fluid-removal setting, and the whole-patient balance
+ * subtracts that same term. When the makeup attribution is unresolved, the
+ * C0/C1 ledger withholds the machine patient-fluid-removal term outright — so
+ * publishing a cumulative figure built on it would republish a withheld
+ * quantity, and would do it by substituting the entered setting for the result
+ * the sources decline to state.
+ *
+ * This gate is deliberately narrow: it decides only whether the two existing
+ * numbers may be stated. It computes no fluid quantity of its own.
+ * ------------------------------------------------------------------ */
+
+/** Matches the ledger's own tolerance. */
+const MAKEUP_EPSILON_ML = 1e-6
+
+const NO_CASE_CUMULATIVE_REASON =
+  'No case is attached, so no fluid has been carried and there is nothing to total.'
+
+const CUMULATIVE_SOURCE_IDS: readonly string[] = Object.freeze([
+  CRRT_MAKEUP_ATTRIBUTION_CONFLICT.id,
+  ...CRRT_MAKEUP_ATTRIBUTION_CONFLICT.sourceRecordIds,
+])
+
+/**
+ * Makeup volume the charting window is known to contain.
+ *
+ * Read off the makeup bag rather than the makeup rate, because these are
+ * cumulative values: a rate that has since returned to zero says nothing about
+ * what the window already holds.
+ */
+function makeupDeliveredMlInWindow(state: CrrtSimulationState): number {
+  return state.circuit.bags
+    .filter((bag) => bag.flowTerm === 'makeup')
+    .reduce((total, bag) => total + bag.cumulativePumpVolumeMl, 0)
+}
+
+function cumulativeFluidView(state: CrrtSimulationState | null): CrrtDeviceCumulativeFluidView {
+  // An unconfigured prescription is the same situation as no state at all: the
+  // engine's structural zeros are not a total of anything.
+  if (state && state.prescription.status !== 'configured') return cumulativeFluidView(null)
+  if (!state) {
+    return Object.freeze({
+      resolution: 'no-case-attached' as const,
+      cumulativeMachinePatientFluidRemovalMl: null,
+      cumulativeWholePatientBalanceMl: null,
+      withheldReason: NO_CASE_CUMULATIVE_REASON,
+      currentMakeupFlowMlHour: null,
+      makeupDeliveredMlInWindow: 0,
+      sourceIds: CUMULATIVE_SOURCE_IDS,
+    })
+  }
+
+  // The existing C0/C1 contract decides the current-rate question; this adds
+  // only the window question, which the ledger cannot see because it is
+  // defined over rates.
+  const ledger = calculateCrrtMachineFluidLedger(state.circuit.flows)
+  const deliveredMl = makeupDeliveredMlInWindow(state)
+  const windowHoldsMakeup = deliveredMl > MAKEUP_EPSILON_ML
+  const unresolved = ledger.resolution !== 'resolved' || windowHoldsMakeup
+
+  if (unresolved) {
+    return Object.freeze({
+      resolution: 'unresolved-makeup-attribution' as const,
+      cumulativeMachinePatientFluidRemovalMl: null,
+      cumulativeWholePatientBalanceMl: null,
+      withheldReason: windowHoldsMakeup
+        ? `This run has already carried ${Math.round(deliveredMl)} mL of makeup fluid. The effluent expression counts that volume and the patient-fluid-removed expression does not, and no registered source says which side of the membrane it belongs to. Returning the makeup setting to zero does not settle what the totals already contain, so no volume is attributed to patient loss or to whole-patient balance.`
+        : ledger.unresolvedReason,
+      currentMakeupFlowMlHour: state.circuit.flows.makeupFlowMlHour,
+      makeupDeliveredMlInWindow: deliveredMl,
+      sourceIds: CUMULATIVE_SOURCE_IDS,
+    })
+  }
+
+  return Object.freeze({
+    resolution: 'available' as const,
+    cumulativeMachinePatientFluidRemovalMl:
+      state.deliveredTherapy.cumulativeMachinePatientFluidRemovalMl,
+    cumulativeWholePatientBalanceMl: state.deliveredTherapy.cumulativeWholePatientBalanceMl,
+    withheldReason: null,
+    currentMakeupFlowMlHour: state.circuit.flows.makeupFlowMlHour,
+    makeupDeliveredMlInWindow: deliveredMl,
+    sourceIds: CUMULATIVE_SOURCE_IDS,
+  })
+}
+
 function historyTimeDomain(
   trends: readonly TrendSample[],
 ): CrrtDeviceTreatmentContextView['historyTimeDomainSeconds'] {
@@ -717,6 +845,7 @@ export function selectPrismaxPilotOperationsDisplay(
     deliveredDoseMlKgHour: null,
     cumulativeMachinePatientFluidRemovalMl: null,
     cumulativeWholePatientBalanceMl: null,
+    cumulativeFluid: cumulativeFluidView(null),
     activeAlarmCodes: Object.freeze([]),
     pressures: nullPressures,
     pressureSignals: pressureSignalViews(null, []),
@@ -757,6 +886,7 @@ export function selectPrismaxPilotCaseOperationsDisplay(
   // rather than "nothing has been set".
   const configured = prescription.status === 'configured'
   const setting = (value: number) => (configured ? value : null)
+  const cumulativeFluid = cumulativeFluidView(simulation)
   return Object.freeze({
     treatmentState: interfaceState.treatmentState,
     modality: prescription.status === 'configured' ? prescription.modality : null,
@@ -764,9 +894,12 @@ export function selectPrismaxPilotCaseOperationsDisplay(
     effluentPumpTargetMlHour: simulation.deliveredTherapy.prescribedEffluentRateMlHour,
     effluentDoseMlKgHour: simulation.deliveredTherapy.prescribedEffluentDoseMlKgHour,
     deliveredDoseMlKgHour: simulation.deliveredTherapy.deliveredDoseMlKgHour,
-    cumulativeMachinePatientFluidRemovalMl:
-      simulation.deliveredTherapy.cumulativeMachinePatientFluidRemovalMl,
-    cumulativeWholePatientBalanceMl: simulation.deliveredTherapy.cumulativeWholePatientBalanceMl,
+    // Fail closed: both come from the projection, never straight off
+    // deliveredTherapy, so an unresolved makeup attribution cannot leak a
+    // cumulative volume through this surface.
+    cumulativeMachinePatientFluidRemovalMl: cumulativeFluid.cumulativeMachinePatientFluidRemovalMl,
+    cumulativeWholePatientBalanceMl: cumulativeFluid.cumulativeWholePatientBalanceMl,
+    cumulativeFluid,
     activeAlarmCodes: Object.freeze(
       simulation.alarms.filter((alarm) => alarm.active).map((alarm) => alarm.code),
     ),
