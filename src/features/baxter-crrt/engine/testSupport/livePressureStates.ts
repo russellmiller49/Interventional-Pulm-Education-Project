@@ -6,69 +6,35 @@
  * make a review table look complete, and where the engine cannot reach a state
  * this module says so rather than fabricating one.
  *
+ * The state primitives come from `livePressureStationModel`, which is what the
+ * learner-facing station runs on, so the review states and the shipped surface
+ * cannot drift apart.
+ *
  * Shared by the pressure-profile tests, `dump-crrt-numbers.ts`, and
- * `render-crrt-live-pressure-device.ts` so all three review the same states.
+ * `render-crrt-live-pressure-device.ts`.
  */
-import { baxterCrrtPilotFixtures } from '../../content/pilotCases'
+import {
+  advanceCrrt,
+  crrtAuthoredAccessFixture,
+  crrtRunningState,
+  crrtSteadyFixture,
+  loadCrrtFixture,
+  startCrrtTherapy,
+  withCrrtBloodFlow,
+} from '../../livePressureStationModel'
 import { createInitialCrrtSimulationState } from '../initialState'
 import { crrtSimulationReducer } from '../reducer'
 import { applyScheduledEventAction, recomputeCrrtDerivedState } from '../simulation'
-import type { ConfiguredPrescriptionState, CrrtEngineFixture, CrrtSimulationState } from '../types'
+import type { CrrtSimulationState } from '../types'
 
-function requireFixture(id: string): CrrtEngineFixture {
-  const fixture = baxterCrrtPilotFixtures.find((candidate) => candidate.id === id)
-  if (!fixture) throw new Error(`Unknown CRRT pilot fixture: ${id}`)
-  return fixture
-}
-
-/**
- * CRRT-10 runs at 120 mL/min and schedules nothing that touches a pressure, so
- * it is the only fixture that gives an unchanged baseline to compare against.
- */
-export const steadyFixture: CrrtEngineFixture = requireFixture('CRRT-10')
-
-/**
- * CRRT-13 is the authored access case: at 1 800 s it raises access resistance
- * and flags an access obstruction. Reaching the changed-access state by running
- * this fixture past its own event beats injecting a resistance by hand.
- */
-export const authoredAccessFixture: CrrtEngineFixture = requireFixture('CRRT-13')
-
-export function loadFixture(fixture: CrrtEngineFixture = steadyFixture): CrrtSimulationState {
-  return crrtSimulationReducer(createInitialCrrtSimulationState(), {
-    type: 'LOAD_FIXTURE',
-    fixture,
-    experience: 'orientation',
-    roleLens: 'integrated',
-    attempt: 1,
-  })
-}
-
-export function start(state: CrrtSimulationState): CrrtSimulationState {
-  return crrtSimulationReducer(state, { type: 'SET_DELIVERY_STATE', deliveryState: 'running' })
-}
-
-export function advance(state: CrrtSimulationState, seconds: number): CrrtSimulationState {
-  return crrtSimulationReducer(state, { type: 'ADVANCE_TIME', seconds })
-}
-
-/** Re-prescribes at a different blood flow, changing nothing else. */
-export function withBloodFlow(
-  state: CrrtSimulationState,
-  bloodFlowMlMin: number,
-): CrrtSimulationState {
-  const prescription = state.prescription
-  if (prescription.status !== 'configured') return state
-  const next: ConfiguredPrescriptionState = {
-    ...prescription,
-    flows: { ...prescription.flows, bloodFlowMlMin },
-  }
-  return crrtSimulationReducer(state, { type: 'SET_PRESCRIPTION', prescription: next })
-}
-
-/** A running case with a real recorded history behind it. */
-export function runningState(hours = 4): CrrtSimulationState {
-  return advance(start(loadFixture(steadyFixture)), hours * 3_600)
+export {
+  crrtAuthoredAccessFixture as authoredAccessFixture,
+  crrtSteadyFixture as steadyFixture,
+  loadCrrtFixture as loadFixture,
+  startCrrtTherapy as start,
+  advanceCrrt as advance,
+  withCrrtBloodFlow as withBloodFlow,
+  crrtRunningState as runningState,
 }
 
 export interface CrrtLivePressureReviewState {
@@ -80,13 +46,13 @@ export interface CrrtLivePressureReviewState {
 }
 
 /**
- * The states the engine can actually reach. Two of the states a full review
- * would want do not exist in this model and are named in
+ * The states the engine can actually reach. States a full review would want
+ * that this model cannot produce are named in
  * `crrtLivePressureModelBoundaries` instead of being faked.
  */
 export function crrtLivePressureReviewStates(): readonly CrrtLivePressureReviewState[] {
-  const running = runningState()
-  const higherFlow = advance(withBloodFlow(running, 180), 1_800)
+  const running = crrtRunningState()
+  const higherFlow = advanceCrrt(withCrrtBloodFlow(running, 180), 1_800)
 
   return Object.freeze([
     {
@@ -108,14 +74,14 @@ export function crrtLivePressureReviewStates(): readonly CrrtLivePressureReviewS
       label: 'Changed access pattern',
       focus:
         'The authored access case run past its own event at 30 minutes. Access pressure moves furthest; the profile localises it there rather than at the filter.',
-      state: advance(start(loadFixture(authoredAccessFixture)), 4 * 3_600),
+      state: advanceCrrt(startCrrtTherapy(loadCrrtFixture(crrtAuthoredAccessFixture)), 4 * 3_600),
     },
     {
       id: 'increasing-filter-burden',
       label: 'Increasing filter burden',
       focus: 'Fouling and clot burden accumulate over time, widening the filter pressure drop.',
-      state: advance(
-        applyScheduledEventAction(start(loadFixture(steadyFixture)), {
+      state: advanceCrrt(
+        applyScheduledEventAction(startCrrtTherapy(loadCrrtFixture(crrtSteadyFixture)), {
           type: 'SET_FILTER_RISK',
           procoagulantBurdenFraction: 1,
           lowEffectiveBloodFlowFraction: 1,
