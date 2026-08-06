@@ -24,6 +24,14 @@ import type {
   CrrtSimulationState,
 } from '../../src/features/baxter-crrt/engine/types'
 import {
+  createInitialPrismaxPilotInterfaceState,
+  selectPrismaxPilotCaseOperationsDisplay,
+} from '../../src/features/baxter-crrt/engine/deviceAdapters/prismax'
+import {
+  crrtLivePressureModelBoundaries,
+  crrtLivePressureReviewStates,
+} from '../../src/features/baxter-crrt/engine/testSupport/livePressureStates'
+import {
   auditCrrtFrames,
   collectCrrtNumericRows,
   type CrrtNumericFlag,
@@ -135,6 +143,128 @@ function printLedger(state: CrrtSimulationState): void {
   console.log(`  ratio                       ${ratio}`)
 }
 
+/* ------------------------------------------------------------------ *
+ * Engine versus adapter
+ *
+ * The live pressure profile may only show what the engine already computed.
+ * This table puts the two side by side for every state the surface can reach,
+ * so a divergence is a printed mismatch rather than a plausible-looking number
+ * on a screen nobody is checking.
+ * ------------------------------------------------------------------ */
+
+function pressureCell(value: number | null): string {
+  return value === null ? 'unavail' : value.toFixed(1)
+}
+
+function printLivePressureComparison(): readonly string[] {
+  const problems: string[] = []
+  const ui = createInitialPrismaxPilotInterfaceState()
+
+  console.log(`\n${'='.repeat(100)}`)
+  console.log('LIVE PRESSURE PROFILE  ·  engine versus adapter')
+  console.log('='.repeat(100))
+  console.log(
+    `\n${pad('state', 26)}${pad('delivery', 9)}${pad('Qacts', 7)}${pad('mode', 7)}${padStart('Q', 5)}  ` +
+      ['access', 'filter', 'return', 'effl', 'TMP', 'dP']
+        .map((name) => `${padStart(`${name} eng`, 11)}${padStart('adp', 9)}`)
+        .join('') +
+      `  ${pad('kinds', 8)}${pad('avail', 8)}hist`,
+  )
+
+  for (const review of crrtLivePressureReviewStates()) {
+    const display = selectPrismaxPilotCaseOperationsDisplay(ui, review.state)
+    const engine = review.state.circuit.pressures
+    const context = display.treatmentContext
+    const pairs: readonly (readonly [string, number | null, number | null])[] = [
+      ['access', engine.accessPressureMmHg, display.pressures.accessPressureMmHg],
+      ['filter', engine.filterPressureMmHg, display.pressures.filterPressureMmHg],
+      ['return', engine.returnPressureMmHg, display.pressures.returnPressureMmHg],
+      ['effluent', engine.effluentPressureMmHg, display.pressures.effluentPressureMmHg],
+      ['tmp', engine.prismaxTransmembranePressureMmHg, display.pressures.transmembranePressureMmHg],
+      [
+        'filter-drop',
+        engine.prismaxFilterPressureDropMmHg,
+        display.pressures.filterPressureDropMmHg,
+      ],
+    ]
+    const bySignalId = new Map(display.pressureSignals.map((signal) => [signal.id, signal]))
+
+    for (const [id, engineValue, adapterValue] of pairs) {
+      const described = bySignalId.get(id as never)
+      if (engineValue !== adapterValue) {
+        problems.push(
+          `${review.id}/${id}: engine ${String(engineValue)} != adapter ${String(adapterValue)}`,
+        )
+      }
+      if (described && described.valueMmHg !== engineValue) {
+        problems.push(
+          `${review.id}/${id}: described ${String(described.valueMmHg)} != engine ${String(engineValue)}`,
+        )
+      }
+      if (engineValue !== null && !Number.isFinite(engineValue)) {
+        problems.push(`${review.id}/${id}: nonfinite`)
+      }
+    }
+
+    for (const signal of display.pressureSignals) {
+      const detail = signal.kind === 'directly-modelled-site'
+      if (detail !== (signal.nodeId !== null)) {
+        problems.push(`${review.id}/${signal.id}: direct/calculated label does not match its node`)
+      }
+      if (signal.valueMmHg === null && signal.unavailableReason === null) {
+        problems.push(`${review.id}/${signal.id}: unavailable with no stated reason`)
+      }
+      if (signal.valueMmHg === null && signal.availability === 'live-model-value') {
+        problems.push(`${review.id}/${signal.id}: no value but reported as live`)
+      }
+      if (signal.historyAvailability === 'not-recorded' && signal.history.length > 0) {
+        problems.push(`${review.id}/${signal.id}: unrecorded channel carries a series`)
+      }
+    }
+
+    // The withheld quantities are the *calculated* conservation results, not the
+    // entered patient-fluid-removal setting, which is legitimate context.
+    const serialised =
+      JSON.stringify(display.pressureSignals) + JSON.stringify(display.treatmentContext)
+    for (const forbidden of [
+      'cumulativeMachinePatientFluidRemovalMl',
+      'cumulativeWholePatientBalanceMl',
+      'fluidLedger',
+      'crossingMembrane',
+      'netFluidToPatient',
+    ]) {
+      if (serialised.includes(forbidden)) {
+        problems.push(`${review.id}: ${forbidden} reached the pressure surface`)
+      }
+    }
+
+    const sites = display.pressureSignals.filter((s) => s.kind === 'directly-modelled-site').length
+    const relationships = display.pressureSignals.length - sites
+    const unavailable = display.pressureSignals.filter((s) => s.valueMmHg === null).length
+
+    console.log(
+      `${pad(review.id, 26)}${pad(context.deliveryState, 9)}` +
+        `${pad(context.bloodFlowContributesToPressures ? 'yes' : 'no', 7)}` +
+        `${pad(context.modality ? context.modality.toUpperCase() : '-', 7)}` +
+        `${padStart(String(context.bloodFlowMlMin ?? '-'), 5)}  ` +
+        pairs
+          .map(([, e, a]) => `${padStart(pressureCell(e), 11)}${padStart(pressureCell(a), 9)}`)
+          .join('') +
+        `  ${pad(`${sites}s/${relationships}r`, 8)}${pad(`${unavailable} n/a`, 8)}` +
+        display.pressureSignals.map((s) => (s.history.length > 0 ? '1' : '0')).join(''),
+    )
+  }
+
+  console.log(
+    '\nhist is one digit per channel in the order access, filter, return, effluent, TMP, filter drop.',
+  )
+  console.log('States this engine cannot produce, and which are therefore not shown:')
+  for (const line of crrtLivePressureModelBoundaries) {
+    console.log(`  - ${line}`)
+  }
+  return problems
+}
+
 function main(): void {
   const fixtures: readonly CrrtEngineFixture[] = ONLY_CASE
     ? baxterCrrtPilotFixtures.filter((fixture) => fixture.id === ONLY_CASE)
@@ -174,13 +304,17 @@ function main(): void {
     allFlags.push(...auditCrrtFrames(frames))
   }
 
+  const pressureProblems = printLivePressureComparison()
+
   console.log(`\n${'='.repeat(100)}`)
   console.log(`${allFlags.length} flag(s)`)
   for (const item of allFlags) {
     console.log(`  [${item.kind}] ${item.scenarioId} @ ${item.atSeconds}s · ${item.metric}`)
     console.log(`      ${item.reason}`)
   }
-  if (allFlags.length > 0) process.exitCode = 1
+  console.log(`${pressureProblems.length} engine/adapter pressure problem(s)`)
+  for (const problem of pressureProblems) console.log(`  ${problem}`)
+  if (allFlags.length > 0 || pressureProblems.length > 0) process.exitCode = 1
 }
 
 main()

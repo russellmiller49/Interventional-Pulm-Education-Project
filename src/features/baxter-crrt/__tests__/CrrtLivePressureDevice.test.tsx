@@ -361,6 +361,16 @@ describe('live pressure profile — architecture', () => {
     expect(source).not.toMatch(/cumulativeWholePatientBalanceMl/)
   })
 
+  it('presents patient fluid removal as a setting, never as an achieved volume', () => {
+    const { container } = renderProfile(runningState())
+    expect(screen.getByText('Patient fluid removal set to')).toBeInTheDocument()
+    expect(container.textContent).toMatch(
+      /These are the settings in force, not a statement of how much fluid has actually been removed/i,
+    )
+    // The withheld conservation results must not appear at all.
+    expect(container.textContent).not.toMatch(/removed so far|net balance|cumulative/i)
+  })
+
   it('claims no exact-device fidelity', () => {
     const { container } = renderProfile(runningState())
     const text = container.textContent ?? ''

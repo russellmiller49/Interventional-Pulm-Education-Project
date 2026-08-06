@@ -156,7 +156,7 @@ export function CrrtLivePressureDevice({
       context.bloodFlowContributesToPressures
         ? 'The blood pump is running and both lumens are connected, so blood flow is acting on these pressures.'
         : 'The blood pump is not moving blood through the circuit, so these values are the model at zero flow rather than readings taken during treatment.',
-      `Modality ${context.modality ? context.modality.toUpperCase() : 'not set'}; blood flow ${flowText(context.bloodFlowMlMin, 'millilitres per minute')}; dialysate ${flowText(context.dialysateFlowMlHour, 'millilitres per hour')}; patient fluid removal ${flowText(context.patientFluidRemovalMlHour, 'millilitres per hour')}.`,
+      `Modality ${context.modality ? context.modality.toUpperCase() : 'not set'}; blood flow ${flowText(context.bloodFlowMlMin, 'millilitres per minute')}; dialysate ${flowText(context.dialysateFlowMlHour, 'millilitres per hour')}; patient fluid removal set to ${flowText(context.patientFluidRemovalMlHour, 'millilitres per hour')}. These are the settings in force, not a statement of how much fluid has actually been removed.`,
       'Pressure profile:',
       ...signals.map((signal) => {
         const kind = KIND_LABEL[signal.kind]
@@ -213,7 +213,7 @@ export function CrrtLivePressureDevice({
           <dd>{flowText(context.dialysateFlowMlHour, 'mL/h')}</dd>
         </div>
         <div>
-          <dt>Patient fluid removal</dt>
+          <dt>Patient fluid removal set to</dt>
           <dd>{flowText(context.patientFluidRemovalMlHour, 'mL/h')}</dd>
         </div>
         <div>
