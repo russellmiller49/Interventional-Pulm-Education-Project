@@ -10,8 +10,8 @@ branch that no test names is listed as a residual gap even if some other test ha
 line.
 
 - Package: M5, component and integration test backfill.
-- Baseline: 14 suites / 378 tests. Final: 21 suites / 742 tests.
-- Production diff: `McsWorkbench.tsx` only, and only for the three cross-surface corrections in §4.
+- Baseline: 14 suites / 378 tests. Final: 21 suites / 744 tests.
+- Production diff: `McsWorkbench.tsx`, `McsLearnPrimaryPane.tsx` and `components/teaching/selectors.ts`, and only for the four cross-surface corrections in §4.
 
 ## 1. Suites
 
@@ -138,14 +138,38 @@ A source lint over the whole component tree keeps the classifier from returning 
 only in the bar: `no MCS component still ships the "%s" label` (×5) and
 `classifies congestion only through the accepted framework helper`.
 
+Correction 4 was found in the browser walkthrough rather than in the coverage map — the two surfaces
+were both fully covered, and both were internally consistent; only seeing them on one screen showed
+that they disagreed. It is the reason the walkthrough is part of the package rather than a formality.
+
 Observed and **not** corrected, because the M5 brief scopes the authorized corrections to the context
 bar: `McsMonitor`'s `DEVICE FLOW` tile renders `0.0` for counterpulsation. That tile is accepted M0–M4
 behaviour with its own tests, and changing it is a display decision for a later package rather than
 one M5 may take.
 
+## 4a. Observed outside M5's scope: the aggregate analytics payload is rejected by the API route
+
+Noticed while reading the network log during the browser walkthrough, and reported rather than
+fixed. Every `POST /api/analytics` from the MCS workbench returns **400 Invalid focused
+critical-care analytics payload**.
+
+The cause is a contract mismatch that predates M5. `src/app/api/analytics/route.ts` validates MCS
+events with a `.strict()` schema requiring four fields:
+
+    { deviceTrack, station, completion, scoreBand }
+
+The workbench sends three — device track, station, coarse completion — which is exactly what the
+accepted M0–M4 privacy contract allows and what the module's own privacy note promises. So the
+aggregate events are being dropped server-side.
+
+M5 does not correct it, and could not have: the route is a global API file this package must not
+touch, and adding `scoreBand` to the payload would add a performance signal to a payload the accepted
+contract and this package's own privacy tests hold to three fields. Either side of the mismatch is
+someone else's decision. Flagged here so it is a decision rather than an accident.
+
 ## 5. Residual uncovered branches in `McsWorkbench`
 
-`McsWorkbench.tsx` finishes at 95.9% statements, 92.7% branches, 98.7% functions, 98.1% lines. Every
+`McsWorkbench.tsx` finishes at 95.8% statements, 93.0% branches, 98.7% functions, 98.1% lines. Every
 remaining gap, with its reason:
 
 | Location                                                                                                           | Branch                                                                                                | Reason it is not covered                                                                                                                                                                                                                                            |
@@ -167,11 +191,11 @@ uncovered.
 
 | Scope                          | Baseline stmts / branch / funcs / lines | Final stmts / branch / funcs / lines        |
 | ------------------------------ | --------------------------------------- | ------------------------------------------- |
-| All collected components       | 63.54 / 62.93 / 64.50 / 65.63           | 68.22 / 67.18 / 72.46 / 70.23               |
-| `components/` (non-3D)         | 69.59 / 69.88 / 67.54 / 71.91           | 78.93 / 77.41 / 80.78 / 81.18               |
-| `components/teaching/`         | 90.50 / 74.58 / 93.75 / 93.52           | 90.90 / 75.00 / 93.75 / 93.75               |
+| All collected components       | 63.54 / 62.93 / 64.50 / 65.63           | 68.24 / 67.18 / 72.46 / 70.26               |
+| `components/` (non-3D)         | 69.59 / 69.88 / 67.54 / 71.91           | 78.88 / 77.47 / 80.65 / 81.16               |
+| `components/teaching/`         | 90.50 / 74.58 / 93.75 / 93.52           | 90.96 / 74.89 / 93.85 / 93.79               |
 | `components/three/`            | 21.68 / 8.83 / 19.35 / 22.62            | unchanged — not rendered in jsdom by design |
-| `McsWorkbench.tsx`             | 77.28 / 79.66 / 78.66 / 80.60           | **95.86 / 92.73 / 98.70 / 98.08**           |
+| `McsWorkbench.tsx`             | 77.28 / 79.66 / 78.66 / 80.60           | **95.81 / 93.03 / 98.66 / 98.06**           |
 | `McsControls.tsx`              | 60.00 / 89.28 / 51.72 / 58.97           | **100 / 100 / 100 / 100**                   |
 | `McsCaseWorkflow.tsx`          | 74.07 / 96.55 / 61.11 / 74.07           | **100 / 100 / 100 / 100**                   |
 | `McsLearnPrimaryPane.tsx`      | 90.00 / 100 / 50.00 / 90.00             | **100 / 100 / 100 / 100**                   |
@@ -184,7 +208,7 @@ uncovered.
 
 The all-files figure is held down by the WebGL components, which the brief excludes from validation.
 Excluding `McsAnatomy3D`, `components/three/` and the two lazy previews, the MCS component tree the
-M5 brief covers sits at 78.9% statements and 77.4% branches, with every uncovered branch listed above
+M5 brief covers sits at 78.9% statements and 77.5% branches, with every uncovered branch listed above
 or owned by an earlier package's suite.
 
 ## 7. Deliberate regressions
