@@ -51,6 +51,8 @@ const drift = {
   /** After this many `resolveForSave` calls, mutate the resolved card. Null disables it. */
   mutateResolveAfter: null as number | null,
   mutateResolve: (card: ResolvedCard): ResolvedCard => card,
+  /** When true, the resolve that follows `mutateResolveAfter` fails outright. */
+  failFinalResolve: false,
   resolveCalls: 0,
 }
 
@@ -63,6 +65,7 @@ function reset() {
   drift.compatibilityRules = null
   drift.mutateResolveAfter = null
   drift.mutateResolve = (card) => card
+  drift.failFinalResolve = false
   drift.resolveCalls = 0
 }
 
@@ -199,6 +202,13 @@ jest.mock('../server/user-cards', () => {
         state.resolveCalls <= state.mutateResolveAfter
       ) {
         return result
+      }
+      if (state.failFinalResolve) {
+        return {
+          ok: false as const,
+          error: 'the answered inputs do not resolve into a card',
+          code: 'not_resolvable' as const,
+        }
       }
       return { ...result, card: state.mutateResolve(result.card) }
     },
@@ -478,6 +488,67 @@ describe('the final allowed-outcome gate, on the server, writes nothing when it 
       expect(tables.revisions).toHaveLength(1)
     },
   )
+
+  it('refuses and writes nothing when the answered inputs no longer resolve at all', async () => {
+    // The `notResolvable` axis, which the projection models as its own state rather than as a delta.
+    // It surfaces as the documented `not_resolvable` result, not `plan_moved` — and either way the
+    // writer must not be reached.
+    const { cardId, revisionId } = seedCard()
+    const { prepared, acknowledgements } = await armFinalMutation(
+      cardId,
+      revisionId,
+      (card) => card,
+    )
+    drift.failFinalResolve = true
+
+    const result = await submit(cardId, revisionId, prepared, acknowledgements)
+
+    expect(result.ok).toBe(false)
+    expect(result.ok === false && result.code).toBe('not_resolvable')
+    expect(writeRebuiltCard).not.toHaveBeenCalled()
+    expect(tables.cards).toHaveLength(1)
+    expect(tables.revisions).toHaveLength(1)
+  })
+
+  it('refuses a requirement the finished card gained, and writes nothing', async () => {
+    // The added-requirement direction. The matrix above only ever removed one.
+    const { cardId, revisionId } = seedCard()
+    const { prepared, acknowledgements } = await armFinalMutation(cardId, revisionId, (card) => ({
+      ...card,
+      items: [
+        ...card.items,
+        { ...card.items[0], id: 'slot-invented', requirementKey: 'INVENTED_REQUIREMENT' },
+      ],
+    }))
+
+    const result = await submit(cardId, revisionId, prepared, acknowledgements)
+
+    expect(result.ok).toBe(false)
+    expect(result.ok === false && result.message).toMatch(/requirement_outside_plan/)
+    expect(writeRebuiltCard).not.toHaveBeenCalled()
+    expect(tables.cards).toHaveLength(1)
+  })
+
+  it('refuses a reviewed warning the finished card lost, and writes nothing', async () => {
+    // The removed-warning direction. A warning quietly disappearing is a changed card just as much
+    // as one appearing — and the physician read the version that had it.
+    const { cardId, revisionId } = seedCard()
+    // Start from a world where the room capability is missing, so the reviewed projection carries a
+    // warning there is something to lose.
+    drift.roomCapabilities = []
+    const { prepared, acknowledgements } = await armFinalMutation(cardId, revisionId, (card) => ({
+      ...card,
+      warnings: [],
+    }))
+    expect(prepared.plan.targetResolution.warnings.length).toBeGreaterThan(0)
+
+    const result = await submit(cardId, revisionId, prepared, acknowledgements)
+
+    expect(result.ok).toBe(false)
+    expect(result.ok === false && result.message).toMatch(/warning_disappeared/)
+    expect(writeRebuiltCard).not.toHaveBeenCalled()
+    expect(tables.cards).toHaveLength(1)
+  })
 
   it('writes when the final card is exactly the one the review authorized', async () => {
     // The control for the matrix above: the same arming, mutating nothing.

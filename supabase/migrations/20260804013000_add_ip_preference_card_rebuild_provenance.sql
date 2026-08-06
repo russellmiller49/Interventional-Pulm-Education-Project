@@ -249,6 +249,9 @@ declare
     'sourceResolvedContentHash',
     'sourcePrintDocumentHash'
   ];
+  -- The exact key set of one `decisions` entry. Compared against the runtime schema by
+  -- `provenance-contract.test.ts`, like the top-level list above.
+  decision_keys text[] := array['key', 'kind', 'state', 'reasonCodes', 'acknowledgement'];
   uuid_keys text[] := array['sourceCardId', 'sourceRevisionId', 'sourceOwnerId'];
   hash_keys text[] := array[
     'sourceReleaseDefinitionHash',
@@ -324,9 +327,14 @@ begin
     end if;
   end loop;
 
+  -- Trimmed and bounded, matching `storedRebuildProvenanceSchema`'s `.trim().min(1).max(120)`. A
+  -- whitespace-only or overlong id passed the old `length(...) = 0` check and then failed on read,
+  -- which is precisely the divergence this validator exists to remove.
   foreach key in array text_keys loop
-    if jsonb_typeof(document -> key) <> 'string' or length(document ->> key) = 0 then
-      raise exception 'the provenance document has an empty or non-text %', key
+    if jsonb_typeof(document -> key) <> 'string'
+       or length(btrim(document ->> key)) = 0
+       or length(btrim(document ->> key)) > 120 then
+      raise exception 'the provenance document has an empty, blank or overlong %', key
         using errcode = 'invalid_parameter_value';
     end if;
   end loop;
@@ -338,15 +346,29 @@ begin
       using errcode = 'invalid_parameter_value';
   end if;
 
+  -- `2026-99-99Tgarbage` matched the old prefix-only pattern. The shape is checked first, including
+  -- the offset the runtime schema requires, and then the value is *cast*, because only a cast knows
+  -- that the ninety-ninth of the ninety-ninth month is not a date. Both datetime SQLSTATEs are named
+  -- rather than caught generically.
   if jsonb_typeof(document -> 'createdAt') <> 'string'
-     or (document ->> 'createdAt') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T' then
-    raise exception 'the provenance document has a createdAt that is not an ISO-8601 timestamp'
+     or (document ->> 'createdAt')
+        !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$'
+  then
+    raise exception 'the provenance document has a createdAt that is not an ISO-8601 timestamp with an offset'
       using errcode = 'invalid_parameter_value';
   end if;
+  begin
+    perform (document ->> 'createdAt')::timestamptz;
+  exception
+    when invalid_datetime_format or datetime_field_overflow then
+      raise exception 'the provenance document has a createdAt that is not a real instant'
+        using errcode = 'invalid_parameter_value';
+  end;
 
   -- The reviewed decisions, which are the evidence a physician answered anything at all.
-  if jsonb_typeof(document -> 'decisions') <> 'array' then
-    raise exception 'the provenance document has a decisions value that is not an array'
+  if jsonb_typeof(document -> 'decisions') <> 'array'
+     or jsonb_array_length(document -> 'decisions') > 1000 then
+    raise exception 'the provenance document has a decisions value that is not a bounded array'
       using errcode = 'invalid_parameter_value';
   end if;
   for decision in select value from jsonb_array_elements(document -> 'decisions') as t(value) loop
@@ -354,8 +376,23 @@ begin
       raise exception 'a provenance decision entry is not an object'
         using errcode = 'invalid_parameter_value';
     end if;
-    if (select count(*) from jsonb_object_keys(decision)) <> 5
-       or jsonb_typeof(decision -> 'key') <> 'string'
+    -- The **exact** key set, not a count plus five name lookups.
+    --
+    -- Counting to five and then reading the five expected names looked equivalent and was not:
+    -- swap `acknowledgement` for an invented key and the count still passes, while
+    -- `jsonb_typeof(decision -> 'acknowledgement')` on an absent key yields SQL NULL — so
+    -- `NULL not in ('string','null')` is NULL, the whole `if` condition is NULL rather than true,
+    -- and PL/pgSQL does not raise. A document with a fabricated claim and a missing required one
+    -- was therefore stored, and then rejected by the application on every read.
+    if exists (
+      select 1 from unnest(decision_keys) as k where not (decision ? k)
+    ) or exists (
+      select 1 from jsonb_object_keys(decision) as k where not (k = any (decision_keys))
+    ) then
+      raise exception 'a provenance decision entry does not carry exactly the version-1 keys'
+        using errcode = 'invalid_parameter_value';
+    end if;
+    if jsonb_typeof(decision -> 'key') <> 'string'
        or jsonb_typeof(decision -> 'kind') <> 'string'
        or jsonb_typeof(decision -> 'state') <> 'string'
        or jsonb_typeof(decision -> 'reasonCodes') <> 'array'
@@ -364,11 +401,24 @@ begin
       raise exception 'a provenance decision entry does not match the version-1 shape'
         using errcode = 'invalid_parameter_value';
     end if;
+    -- Bounds, matching the runtime schema field for field. An empty `acknowledgement` is the one
+    -- worth naming: it is a *claim* that an answer was recorded, spelled as no answer at all.
+    if length(btrim(decision ->> 'key')) not between 1 and 200
+       or length(btrim(decision ->> 'kind')) not between 1 and 40
+       or length(btrim(decision ->> 'state')) not between 1 and 60
+       or (jsonb_typeof(decision -> 'acknowledgement') = 'string'
+           and length(btrim(decision ->> 'acknowledgement')) not between 1 and 40)
+       or jsonb_array_length(decision -> 'reasonCodes') > 40
+    then
+      raise exception 'a provenance decision entry has an empty, blank or overlong field'
+        using errcode = 'invalid_parameter_value';
+    end if;
     for reason in
       select value from jsonb_array_elements(decision -> 'reasonCodes') as t(value)
     loop
-      if jsonb_typeof(reason) <> 'string' then
-        raise exception 'a provenance decision reason code is not a string'
+      if jsonb_typeof(reason) <> 'string'
+         or length(btrim(reason #>> '{}')) not between 1 and 80 then
+        raise exception 'a provenance decision reason code is not a bounded, non-blank string'
           using errcode = 'invalid_parameter_value';
       end if;
     end loop;
@@ -379,6 +429,25 @@ $$;
 revoke all on function private.ip_validate_preference_card_rebuild_provenance_v1(jsonb) from public;
 revoke all on function private.ip_validate_preference_card_rebuild_provenance_v1(jsonb)
   from anon, authenticated, service_role;
+
+-- ...and granted to exactly one role: the one that owns the function that calls it.
+--
+-- Without these two grants the whole writer path is dead on arrival. The RPC below is
+-- `security definer` and owned by `ip_preference_card_rebuild_writer`, so inside it `current_user`
+-- is that role — not `service_role`, and not the migration role. The already-deployed revision
+-- migration revoked all access to schema `private` from PUBLIC and the API roles, and this file
+-- grants the writer `usage` on `public` only. A role that cannot resolve a schema cannot call a
+-- function in it, so the very first statement of the RPC would raise `42501` and *every* real
+-- rebuild write would fail — after the review, at the last step, with a privilege error.
+--
+-- Two grants, no more. The alternative fixes are both worse: moving the validator to `public` would
+-- put a shape-checking helper on the API surface, and making it `security definer` would give it an
+-- owner and a privilege context it has no use for — it reads one argument and touches nothing.
+-- `security invoker` with an explicit grant says exactly who may call it and why.
+grant usage on schema private to ip_preference_card_rebuild_writer;
+
+grant execute on function private.ip_validate_preference_card_rebuild_provenance_v1(jsonb)
+  to ip_preference_card_rebuild_writer;
 
 -- ---------------------------------------------------------------------------------------------
 -- 6. The one trusted writer

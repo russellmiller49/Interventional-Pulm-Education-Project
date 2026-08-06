@@ -420,6 +420,29 @@ describe('every effective-slot action, against a literal expectation', () => {
     expect(messages.find((message) => message.code === 'oracle_blocker')?.severity).toBe('blocking')
   })
 
+  it('validate_compatibility changes no slot and raises nothing during expansion', () => {
+    // A no-op *here* on purpose: compatibility is evaluated later, against the products a
+    // requirement resolves to, and nothing at slot-definition time knows what those are. That is a
+    // real meaning and it needs a literal expectation like any other — an implementation that
+    // quietly started removing slots, or started raising a message, would otherwise only be caught
+    // by whichever downstream test happened to notice.
+    const ctx = context({
+      slots: [slot({ id: BASE_SLOT_ID }), slot({ id: SECOND_SLOT_ID, requirementKey: 'OTHER' })],
+      modifiers: [
+        modifier('COMPAT', [
+          { actionType: 'validate_compatibility', targetSlotId: BASE_SLOT_ID, payload: {} },
+        ]),
+      ],
+    })
+    const before = expand(ctx, [])
+    const after = expand(ctx, ['COMPAT'])
+
+    expect(after.slots).toEqual(before.slots)
+    expect(after.messages).toEqual(before.messages)
+    expect(after.rescueModuleCodes).toEqual([])
+    expect([...after.replacementBySlot.entries()]).toEqual([])
+  })
+
   it('names a modifier it cannot resolve rather than ignoring it', () => {
     const { messages } = expand(context({}), ['NOT_DEFINED'])
     const raised = messages.find((message) => message.code === 'unknown_modifier')

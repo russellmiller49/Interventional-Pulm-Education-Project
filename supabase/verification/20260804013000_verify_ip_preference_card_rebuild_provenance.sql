@@ -508,6 +508,18 @@ begin
 
   -- And the migration role itself, which owns the table, is not exempt: the guard tests
   -- `current_user`, not a policy, so table ownership buys nothing here.
+  --
+  -- Asserted rather than assumed. Without this the block below could be running as anything at all
+  -- and its refusal would prove nothing about the owner — which is the whole claim it makes.
+  if current_user <> session_user then
+    raise exception 'Part 4 did not return to the session role, but is %', current_user;
+  end if;
+  if (select pg_get_userbyid(relowner) from pg_class where oid = 'public.ip_user_preference_cards'::regclass)
+     <> current_user then
+    raise exception 'Part 4 is running as %, which does not own ip_user_preference_cards',
+      current_user;
+  end if;
+
   begin
     insert into public.ip_user_preference_cards
       (user_id, title, procedure_code, scenario_id, status, builder_inputs, card_snapshot,
@@ -558,6 +570,16 @@ declare
   revisions_at bigint;
   state text;
   stored_keys text[];
+  wrong_owner uuid := '00000000-0000-4000-b000-0000000000ff';
+  v1_keys text[] := array[
+    'version', 'sourceCardId', 'sourceRevisionId', 'sourceOwnerId', 'sourceRevisionNumber',
+    'sourceReleaseBundleId', 'sourceReleaseDefinitionHash', 'sourceSnapshotHash',
+    'sourceSnapshotIntegrityHash', 'sourceResolvedContentHash', 'sourcePrintDocumentHash',
+    'targetReleaseBundleId', 'targetReleaseDefinitionHash', 'targetCatalogReleaseId',
+    'operationalReconciliationHash', 'authoredReleaseDiffHash', 'mappingPlanHash',
+    'allowedFinalStateHash', 'decisions', 'createdAt'
+  ];
+  omitted_key text;
 begin
   select id into owner_id from auth.users order by created_at limit 1;
 
@@ -655,9 +677,13 @@ begin
       ('a stale snapshot hash',
        owner_id, source_id, source_revision, repeat('0', 64), release_id,
        provenance || jsonb_build_object('sourceSnapshotHash', repeat('0', 64)), 'P0002'),
-      ('a different owner',
-       gen_random_uuid(), source_id, source_revision, source_hash, release_id,
-       provenance, 'P0002'),
+      -- Both the scalar owner *and* the document owner, moved together to the same wrong uuid.
+      -- Moving only the scalar made the RPC's document-versus-arguments check fire first with
+      -- `22023`, so this case expected `P0002` and could never have observed it: the source-row
+      -- owner mismatch it is named for was never reached.
+      ('a different owner, claimed consistently',
+       wrong_owner, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('sourceOwnerId', wrong_owner), 'P0002'),
       ('another card''s id',
        owner_id, other_id, source_revision, source_hash, release_id,
        provenance || jsonb_build_object('sourceCardId', other_id), 'P0002'),
@@ -714,22 +740,8 @@ begin
       ('a document naming an owner the call did not',
        owner_id, source_id, source_revision, source_hash, release_id,
        provenance || jsonb_build_object('sourceOwnerId', gen_random_uuid()), '22023'),
-      -- Shape: one omission per key class, one wrong type per key class, and an unknown key.
-      ('a document omitting the owner',
-       owner_id, source_id, source_revision, source_hash, release_id,
-       provenance - 'sourceOwnerId', '22023'),
-      ('a document omitting the allowed-final-state hash',
-       owner_id, source_id, source_revision, source_hash, release_id,
-       provenance - 'allowedFinalStateHash', '22023'),
-      ('a document omitting the reviewed decisions',
-       owner_id, source_id, source_revision, source_hash, release_id,
-       provenance - 'decisions', '22023'),
-      ('a document omitting createdAt',
-       owner_id, source_id, source_revision, source_hash, release_id,
-       provenance - 'createdAt', '22023'),
-      ('a document omitting the target release',
-       owner_id, source_id, source_revision, source_hash, release_id,
-       provenance - 'targetReleaseBundleId', '22023'),
+      -- Shape. Per-key omission is a loop below rather than a handful of class representatives;
+      -- what is left here is everything that is not simply "this key is missing".
       ('a document carrying a key version 1 does not define',
        owner_id, source_id, source_revision, source_hash, release_id,
        provenance || jsonb_build_object('invented', true), '22023'),
@@ -759,7 +771,45 @@ begin
          'reasonCodes', jsonb_build_array(7), 'acknowledgement', null::text))), '22023'),
       ('a document stating a non-nullable field as null',
        owner_id, source_id, source_revision, source_hash, release_id,
-       provenance || jsonb_build_object('mappingPlanHash', null::text), '22023')
+       provenance || jsonb_build_object('mappingPlanHash', null::text), '22023'),
+      -- The five-key nested swap. The old validator counted to five and then read the five expected
+      -- names, so replacing `acknowledgement` with an invented key kept the count *and* made
+      -- `jsonb_typeof(decision -> 'acknowledgement')` SQL NULL — leaving the whole condition NULL
+      -- rather than true. A fabricated claim with a required one missing was stored.
+      ('a decision entry that swaps a required key for an invented one',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('decisions', jsonb_build_array(jsonb_build_object(
+         'key', 'x', 'kind', 'requirement', 'state', 'carried_unchanged',
+         'reasonCodes', jsonb_build_array(), 'invented', true))), '22023'),
+      ('a decision entry with an empty acknowledgement',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('decisions', jsonb_build_array(jsonb_build_object(
+         'key', 'x', 'kind', 'requirement', 'state', 'carried_unchanged',
+         'reasonCodes', jsonb_build_array(), 'acknowledgement', ''))), '22023'),
+      ('a decision entry with a blank key',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('decisions', jsonb_build_array(jsonb_build_object(
+         'key', '   ', 'kind', 'requirement', 'state', 'carried_unchanged',
+         'reasonCodes', jsonb_build_array(), 'acknowledgement', null::text))), '22023'),
+      ('a decision entry with a blank reason code',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('decisions', jsonb_build_array(jsonb_build_object(
+         'key', 'x', 'kind', 'requirement', 'state', 'carried_unchanged',
+         'reasonCodes', jsonb_build_array('  '), 'acknowledgement', null::text))), '22023'),
+      -- Text that is shaped like text and is not usable as an identifier.
+      ('a document whose text field is only whitespace',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('targetCatalogReleaseId', '   '), '22023'),
+      ('a document whose text field is overlong',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('targetCatalogReleaseId', repeat('x', 200)), '22023'),
+      -- A timestamp that matches a prefix pattern and is not an instant.
+      ('a document whose createdAt is shaped like a date but is not one',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('createdAt', '2026-99-99T00:00:00.000Z'), '22023'),
+      ('a document whose createdAt carries no offset',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('createdAt', '2026-02-01T00:00:00.000'), '22023')
     ) as t(label, p_owner, p_card, p_revision, p_hash, p_release, p_document, expected)
   loop
     cards_at := (select count(*) from public.ip_user_preference_cards);
@@ -781,6 +831,53 @@ begin
     if (select count(*) from public.ip_user_preference_cards) <> cards_at
        or (select count(*) from public.ip_user_preference_card_revisions) <> revisions_at then
       raise exception 'the refused case "%" still wrote rows', case_row.label;
+    end if;
+  end loop;
+
+  -- Every required key, omitted one at a time.
+  --
+  -- A loop rather than twenty hand-written rows, because the point is *coverage of the list* and a
+  -- hand-written set is exactly the thing that ends up covering seven of twenty. `v1_keys` is
+  -- compared to the migration's `required_keys` and to the runtime schema by
+  -- `provenance-contract.test.ts`, so this loop cannot silently test a shorter list than the
+  -- validator enforces.
+  foreach omitted_key in array v1_keys loop
+    cards_at := (select count(*) from public.ip_user_preference_cards);
+    revisions_at := (select count(*) from public.ip_user_preference_card_revisions);
+    begin
+      perform public.ip_create_rebuilt_preference_card(
+        owner_id, source_id, source_revision, source_hash, release_id,
+        'verify rejected', null::text, 'VERIFY_ONLY', 'verify-only',
+        '{}'::jsonb, snapshot, repeat('f', 64), 'verify', 'verify', provenance - omitted_key);
+      raise exception 'the writer accepted a document with no %', omitted_key;
+    exception
+      when invalid_parameter_value then null;
+    end;
+    if (select count(*) from public.ip_user_preference_cards) <> cards_at
+       or (select count(*) from public.ip_user_preference_card_revisions) <> revisions_at then
+      raise exception 'the refused omission of % still wrote rows', omitted_key;
+    end if;
+  end loop;
+
+  -- And every required key given a value of the wrong JSON type, one at a time. `true` is the wrong
+  -- type for every field version 1 defines — string, number and array alike — so one substitution
+  -- covers the whole list without a per-key table that could drift from it.
+  foreach omitted_key in array v1_keys loop
+    cards_at := (select count(*) from public.ip_user_preference_cards);
+    revisions_at := (select count(*) from public.ip_user_preference_card_revisions);
+    begin
+      perform public.ip_create_rebuilt_preference_card(
+        owner_id, source_id, source_revision, source_hash, release_id,
+        'verify rejected', null::text, 'VERIFY_ONLY', 'verify-only',
+        '{}'::jsonb, snapshot, repeat('f', 64), 'verify', 'verify',
+        provenance || jsonb_build_object(omitted_key, true));
+      raise exception 'the writer accepted a boolean %', omitted_key;
+    exception
+      when invalid_parameter_value then null;
+    end;
+    if (select count(*) from public.ip_user_preference_cards) <> cards_at
+       or (select count(*) from public.ip_user_preference_card_revisions) <> revisions_at then
+      raise exception 'the refused wrong-typed % still wrote rows', omitted_key;
     end if;
   end loop;
 
@@ -817,13 +914,19 @@ begin
   select coalesce(array_agg(k order by k), array[]::text[]) into stored_keys
     from jsonb_object_keys(
       (select rebuild_provenance from public.ip_user_preference_cards where id = created)) as k;
-  if array_length(stored_keys, 1) <> 20 then
-    raise exception 'the stored provenance has % keys, expected the 20 version-1 keys',
-      coalesce(array_length(stored_keys, 1), 0);
+  -- The exact set, both directions. A count plus four named keys would pass for a row that had
+  -- twenty keys, four of them right.
+  if exists (select 1 from unnest(v1_keys) as k where not (k = any (stored_keys)))
+     or exists (select 1 from unnest(stored_keys) as k where not (k = any (v1_keys))) then
+    raise exception 'the stored provenance key set is not the version-1 key set: %',
+      array_to_string(stored_keys, ', ');
   end if;
-  if not ('sourceOwnerId' = any (stored_keys) and 'allowedFinalStateHash' = any (stored_keys)
-          and 'decisions' = any (stored_keys) and 'createdAt' = any (stored_keys)) then
-    raise exception 'the stored provenance is missing a version-1 key the application requires';
+  -- Round trip: the row reads back byte-identical to the document that was reviewed. What SQL can
+  -- establish is the shape and the bytes; `provenance-contract.test.ts` parses this same fixture
+  -- through `storedRebuildProvenanceSchema`, which is the half SQL cannot do.
+  if (select rebuild_provenance from public.ip_user_preference_cards where id = created)
+     is distinct from provenance then
+    raise exception 'the stored provenance is not byte-identical to the reviewed document';
   end if;
   if (select count(*) from public.ip_user_preference_card_revisions where card_id = created) <> 1 then
     raise exception 'the rebuilt card did not get exactly one revision';
@@ -844,7 +947,7 @@ begin
     raise exception 'the source revisions changed during the rebuild';
   end if;
 
-  raise notice 'Part 5 passed: 33 refusals with exact codes and zero writes, then one complete draft.';
+  raise notice 'Part 5 passed: every refusal exact and zero-write, then one complete draft.';
 end;
 $$;
 
@@ -860,6 +963,8 @@ declare
   provenance jsonb;
   original_provenance jsonb;
   revisions_before bigint;
+  cards_at bigint;
+  revisions_at bigint;
   owner_id uuid;
   acting_role text;
 begin
@@ -876,13 +981,29 @@ begin
   -- `service_role`, whose `bypassrls` makes it the role a compromised key would actually use. The
   -- previous version ran the matrix only after `reset role`, so it proved the guard for the owner
   -- and said nothing about the role the boundary is written against.
-  foreach acting_role in array array['postgres_owner', 'service_role'] loop
+  foreach acting_role in array array['table_owner', 'service_role'] loop
     if acting_role = 'service_role' then
       set local role service_role;
       if current_user <> 'service_role' then
         raise exception 'Part 6 is not running as service_role, but as %', current_user;
       end if;
+    else
+      -- The owner half asserted the same way as the service half. Naming a role in a loop variable
+      -- is not the same as being in it, and a matrix that ran twice as the same role would look
+      -- exactly like this one.
+      if current_user <> session_user then
+        raise exception 'Part 6 owner pass is running as %, not the session role', current_user;
+      end if;
+      if (select pg_get_userbyid(relowner)
+            from pg_class where oid = 'public.ip_user_preference_cards'::regclass) <> current_user
+      then
+        raise exception 'Part 6 owner pass is running as %, which does not own the table',
+          current_user;
+      end if;
     end if;
+
+    cards_at := (select count(*) from public.ip_user_preference_cards);
+    revisions_at := (select count(*) from public.ip_user_preference_card_revisions);
 
     begin
       update public.ip_user_preference_cards
@@ -911,6 +1032,12 @@ begin
        is not null then
       raise exception 'a refused write-once update as % still gave an ordinary card provenance',
         acting_role;
+    end if;
+    -- Counts as well as values: an update that was refused must not have appended a revision or
+    -- created anything either, and only counting rows says so.
+    if (select count(*) from public.ip_user_preference_cards) <> cards_at
+       or (select count(*) from public.ip_user_preference_card_revisions) <> revisions_at then
+      raise exception 'the refused write-once updates as % still wrote rows', acting_role;
     end if;
 
     reset role;

@@ -363,7 +363,17 @@ decision entries have their own exact five-key shape. A genuinely different docu
 deployed card that predates any field.
 
 `private.ip_validate_preference_card_rebuild_provenance_v1` is the database's half, raising `22023`
-for every shape failure. `storedRebuildProvenanceSchema` is the application's, and
+for every shape failure — including the exact nested key set (counting to five and then reading five
+names let a swapped key through, because `jsonb_typeof` on an absent key is SQL NULL and a NULL
+condition does not raise), trimmed and bounded text, a non-empty acknowledgement, and a `createdAt`
+that is cast rather than pattern-matched, so `2026-99-99T00:00:00.000Z` is refused.
+
+It stays in `private` and stays `security invoker`, and the writer role is granted exactly `usage` on
+that schema and `execute` on that signature. Nothing else may call it. Those two grants are
+load-bearing rather than tidy: the RPC is `security definer` owned by the writer, so inside it
+`current_user` is the writer — and the deployed revision migration revoked all access to `private`
+from everyone else. Without them the first statement of the RPC raises `42501` and _every_ real
+rebuild write fails at the last step, after the review. `storedRebuildProvenanceSchema` is the application's, and
 `writeRebuiltCard` parses the constructed document through it _before_ the RPC call — the database is
 the last place the shape is checked, and shipping it something the application's own reader would
 reject is how the mismatch arose in the first place.
@@ -598,6 +608,13 @@ An earlier version of this verifier could not run at all: its Part 5 provenance 
 expected `no_data_found`, and the transaction aborted before the positive case, the write-once matrix
 or `ALL CHECKS PASSED`. That is why the fixture completeness is now pinned by
 `migration-contract.test.ts` as well.
+
+The malformed-document matrix is per key, not per key _class_: every one of the twenty required keys
+is omitted once and given a wrong-typed value once, both as loops over the same key list the
+migration and the runtime schema are pinned to — a hand-written subset is exactly the thing that ends
+up covering seven of twenty. Every role-specific block asserts its own `current_user`, the two
+table-owner blocks additionally assert they are running as the table's owner, and every refusal
+anywhere in the script is bracketed by card _and_ revision counts.
 
 Note what the repository can and cannot establish about this file. The contract tests read the SQL;
 they do not execute it, and nothing in this branch has been run against a database. Applying the

@@ -2,6 +2,8 @@ import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { REBUILD_PROVENANCE_V1_KEYS } from '../schemas/card-rebuild'
+
 const MIGRATIONS_DIR = path.resolve(process.cwd(), 'supabase/migrations')
 // Named for the version Supabase assigned when it was applied, so `supabase db push` does
 // not see it as pending and try to run it a second time.
@@ -568,6 +570,14 @@ describe('preference-card rebuild provenance migration', () => {
     expect(rebuildVerifier).toContain("'verify rebuilt', null::text, 'VERIFY_ONLY'")
     expect(rebuildVerifier).toContain('the writer did not create a card')
     expect(rebuildVerifier).toContain("the rebuilt card''s first revision is not numbered 1")
+    // The verifier's own key list, pinned to the same twenty keys everything else uses.
+    const listed = rebuildVerifier.slice(
+      rebuildVerifier.indexOf('v1_keys text[] := array['),
+      rebuildVerifier.indexOf('];', rebuildVerifier.indexOf('v1_keys text[] := array[')),
+    )
+    expect(
+      [...listed.matchAll(/'([A-Za-z][A-Za-z0-9]*)'/g)].map((entry) => entry[1]).sort(),
+    ).toEqual([...REBUILD_PROVENANCE_V1_KEYS].sort())
   })
 
   it('ships a verifier that proves authenticity, not only immutability', () => {
@@ -614,17 +624,32 @@ describe('preference-card rebuild provenance migration', () => {
       'a document at an unknown version',
       'a document omitting a nullable hash instead of stating it',
       'a document naming an owner the call did not',
-      'a document omitting the owner',
-      'a document omitting the allowed-final-state hash',
-      'a document omitting the reviewed decisions',
       'a document carrying a key version 1 does not define',
       'a document whose uuid field is not a uuid',
       'a document whose decision entry is malformed',
       'a document stating a non-nullable field as null',
+      'a decision entry that swaps a required key for an invented one',
+      'a decision entry with an empty acknowledgement',
+      'a document whose text field is only whitespace',
+      'a document whose createdAt is shaped like a date but is not one',
+      'a document whose createdAt carries no offset',
+      'a different owner, claimed consistently',
     ]) {
       expect(rebuildVerifier).toContain(label)
     }
     expect(rebuildVerifier).toContain('the refused case "%" still wrote rows')
+    // Per-key coverage as a loop over the key list, not a hand-written subset of it. The previous
+    // matrix exercised seven of the twenty required keys.
+    expect(rebuildVerifier).toContain('foreach omitted_key in array v1_keys loop')
+    expect(rebuildVerifier).toContain('the writer accepted a document with no %')
+    expect(rebuildVerifier).toContain('the writer accepted a boolean %')
+    expect(rebuildVerifier).toContain('the refused omission of % still wrote rows')
+    expect(rebuildVerifier).toContain('the refused wrong-typed % still wrote rows')
+    // And the stored row read back as the exact document, not as a count plus four names.
+    expect(rebuildVerifier).toContain('the stored provenance key set is not the version-1 key set')
+    expect(rebuildVerifier).toContain(
+      'the stored provenance is not byte-identical to the reviewed document',
+    )
     expect(rebuildVerifier).toContain('the refused authenticated forgery still wrote rows')
     // The shape of what the trusted path creates, and that it left the source alone.
     expect(rebuildVerifier).toContain('the rebuilt card inherited the source share token')
@@ -637,7 +662,10 @@ describe('preference-card rebuild provenance migration', () => {
     expect(rebuildVerifier).toContain('a share toggle disturbed provenance')
     expect(rebuildVerifier).toContain('a status change disturbed provenance')
     // Both roles, not only the table owner: `service_role` is the one a compromised key would use.
-    expect(rebuildVerifier).toContain("array['postgres_owner', 'service_role']")
+    expect(rebuildVerifier).toContain("array['table_owner', 'service_role']")
+    // Naming a role in a loop variable is not the same as being in it.
+    expect(rebuildVerifier).toContain('Part 6 owner pass is running as %, not the session role')
+    expect(rebuildVerifier).toContain('the refused write-once updates as % still wrote rows')
     expect(rebuildVerifier).toContain('provenance was overwritten as %')
     expect(rebuildVerifier).toContain('a content edit disturbed provenance')
     expect(rebuildVerifier).toContain('a duplicate of a rebuilt card inherited its provenance')
