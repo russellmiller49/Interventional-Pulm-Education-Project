@@ -1225,6 +1225,32 @@
   font-weight: 900;
 }
 
+.termList dt {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+/* A source gap is stated in words as well as by the border, so it survives without colour. */
+.termList .supportTag {
+  padding: 0.1rem 0.5rem;
+  border: 1px solid currentcolor;
+  border-radius: 999px;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.termList > div[data-support='registered-source-gap'] {
+  border-left: 6px solid #f5bb65;
+}
+
+.termList > div[data-support='registered-source-gap'] .supportTag {
+  color: #f5bb65;
+}
+
 .termList dd {
   display: grid;
   gap: 0.2rem;

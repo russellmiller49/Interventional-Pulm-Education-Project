@@ -115,6 +115,27 @@ describe('CRRT citrate mechanism', () => {
     )
   })
 
+  it('does not present seven equally settled facts: the two source gaps are flagged in the walk', () => {
+    render(<CrrtCitrateDifferential />)
+
+    const gaps = crrtCitrateMechanismWalk().filter(
+      (step) => step.term.claimSupport.kind === 'registered-source-gap',
+    )
+    expect(gaps.map((step) => step.termId)).toEqual([
+      'circuit-anticoagulation',
+      'citrate-calcium-in-effluent',
+    ])
+    // Stated in words, so the flag survives without the border colour.
+    expect(screen.getAllByText('Awaiting a source')).toHaveLength(gaps.length)
+    expect(screen.getAllByText('Read off this circuit')).toHaveLength(
+      crrtCitrateMechanismWalk().length - gaps.length,
+    )
+    // And carried in the text equivalent too.
+    const text = crrtCitrateComparisonTextEquivalent()
+    expect(text).toContain('(awaiting a source)')
+    expect(text).toContain('(read off this circuit)')
+  })
+
   it('makes the purpose of calcium replacement explicit', () => {
     const term = crrtCitrateCalciumTermById.get('calcium-replacement')
     expect(term?.definition).toMatch(/separate infusion running to the patient/i)

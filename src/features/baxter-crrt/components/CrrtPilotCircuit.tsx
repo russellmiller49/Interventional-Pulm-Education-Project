@@ -900,18 +900,49 @@ export function CrrtPilotCircuit({
                 circuit.
               </p>
               <dl className={styles.termList}>
-                {crrtCitrateCalciumTerms.map((term) => (
-                  <div key={term.id} data-term={term.id}>
-                    <dt>{term.term}</dt>
-                    <dd>
-                      {term.definition}
-                      <em>{term.whyItMatters}</em>
-                      <small data-evidence-ids={term.sourceIds.join(' ')}>
-                        Sources: {term.sourceIds.join(', ')}
-                      </small>
-                    </dd>
-                  </div>
-                ))}
+                {crrtCitrateCalciumTerms.map((term) => {
+                  const support = term.claimSupport
+                  const isGap = support.kind === 'registered-source-gap'
+                  // Deduplicated: the PBP source node and its entry node share one label, so a
+                  // naive join printed "pbp / citrate, pbp / citrate".
+                  const readOff = [
+                    ...new Set([
+                      ...support.readOffNodeIds.map((id) =>
+                        crrtCircuitNode(id).label.toLowerCase(),
+                      ),
+                      ...support.readOffPathIds.map((id) =>
+                        crrtCircuitPath(id).label.toLowerCase(),
+                      ),
+                    ]),
+                  ]
+                  return (
+                    <div key={term.id} data-term={term.id} data-support={support.kind}>
+                      <dt>
+                        {term.term}
+                        <span className={styles.supportTag}>
+                          {isGap ? 'Awaiting a source' : 'Read off this circuit'}
+                        </span>
+                      </dt>
+                      <dd>
+                        {term.definition}
+                        <em>{term.whyItMatters}</em>
+                        {/*
+                          The ids stay in a data attribute for the provenance checks, and out of the
+                          learner's reading. Printing "Sources: REVIEW-CKRT-CORE-2025, …" under each
+                          definition was both unreadable and untrue: all three resolved, none of them
+                          said anything about citrate.
+                        */}
+                        <small
+                          data-evidence-ids={support.supportingSourceIds.join(' ')}
+                          data-required-topic={support.requiredTopic}
+                        >
+                          {support.basis}
+                          {readOff.length > 0 ? ` Trace it at: ${readOff.join(', ')}.` : ''}
+                        </small>
+                      </dd>
+                    </div>
+                  )
+                })}
               </dl>
             </section>
           ) : null}

@@ -17,7 +17,13 @@ import {
   PRISMAX_TMP_HYDROSTATIC_OFFSET_MMHG,
 } from '../engine/pressureModel'
 import type { CrrtModality } from '../engine/types'
-import { unresolvableCrrtSourceIds } from './learnerSourceMap'
+import {
+  crrtSourcesSupportingClaim,
+  unresolvableCrrtSourceIds,
+  unsupportedCrrtClaimCitations,
+  type CrrtClaimCitation,
+  type CrrtClaimTopic,
+} from './learnerSourceMap'
 
 /* ------------------------------------------------------------------ *
  * Geometry
@@ -1072,9 +1078,46 @@ export function crrtCircuitTextEquivalent(overlayId: CrrtCircuitOverlayId): stri
  * differential — those belong to a later package, and `ConceptualCitrateState`
  * in the engine draws the same boundary in code.
  *
- * Every term is a learner-facing string, so every term carries its own CRRT
- * provenance rather than inheriting the overlay's.
+ * ## What each term rests on, and what it does not
+ *
+ * Every term is a learner-facing string, so every term carries its own
+ * provenance. All seven used to carry the same three clinical-context records —
+ * `REVIEW-CKRT-CORE-2025`, `TEXT-CRRT-NEYRA-2026`, `GUID-RRT-ICU-2026` — and the
+ * circuit printed them under each definition as "Sources:". All three ids
+ * resolve, so the syntactic closure check passed. It was still wrong: those
+ * records' registered claims are about transport mechanisms, modality concepts,
+ * treatment goals, delivered therapy, access, fluid-removal tolerance, and the
+ * prescribed-versus-delivered gap. Not one of them says anything about where
+ * citrate enters a circuit, what it binds, or which sample describes which
+ * compartment. A resolving id is not a supporting id.
+ *
+ * So each term now declares the topic its statement actually needs, and
+ * `crrtSourceSupportsClaim` decides whether any registered record covers it:
+ *
+ * - `module-authored-topology` — the statement is read off this module's own
+ *   circuit schematic, and names the nodes and paths it is read off, so a
+ *   reviewer can check it against the drawing rather than against a citation.
+ * - `registered-source-gap` — the statement needs `citrate-pharmacology`, which
+ *   no record in the registered set carries. The term is preserved and the gap
+ *   is rendered explicitly; nothing is invented to close it, and no clinical
+ *   claim is expanded. Closing these is an SME source-expansion task.
  */
+export type CrrtCitrateClaimSupportKind = 'module-authored-topology' | 'registered-source-gap'
+
+export interface CrrtCitrateClaimSupport {
+  readonly kind: CrrtCitrateClaimSupportKind
+  /** The topic a record would have to cover for this statement to be supported. */
+  readonly requiredTopic: CrrtClaimTopic
+  /** Records whose own registered claim covers `requiredTopic`. Empty for a gap. */
+  readonly supportingSourceIds: readonly string[]
+  /** One learner-facing sentence saying what the statement rests on. */
+  readonly basis: string
+  /** Circuit nodes the statement is read off. Empty for a gap. */
+  readonly readOffNodeIds: readonly CrrtCircuitNodeId[]
+  /** Circuit paths the statement is read off. Empty for a gap. */
+  readonly readOffPathIds: readonly CrrtCircuitPathId[]
+}
+
 export interface CrrtCitrateCalciumTerm {
   readonly id: string
   /** The term as a learner meets it. */
@@ -1083,14 +1126,39 @@ export interface CrrtCitrateCalciumTerm {
   readonly definition: string
   /** Why the distinction matters when reading a result. */
   readonly whyItMatters: string
-  readonly sourceIds: readonly string[]
+  readonly claimSupport: CrrtCitrateClaimSupport
 }
 
-const CITRATE_CONTEXT_SOURCE_IDS = Object.freeze([
-  'REVIEW-CKRT-CORE-2025',
-  'TEXT-CRRT-NEYRA-2026',
-  'GUID-RRT-ICU-2026',
-])
+const TOPOLOGY_BASIS =
+  'Read off this module’s own circuit drawing, which you can trace above. It is an original educational schematic, not a claim taken from a published source.'
+
+const GAP_BASIS =
+  'No source registered for this module supports this particular statement. The records this module carries describe transport mechanisms, modality choice, treatment goals, and delivered therapy; none of them describes what citrate binds or what becomes of it. The wording is left as it stands rather than being filled in from elsewhere, and closing this needs a source an expert adds, not a change to this page.'
+
+function topologySupport(
+  readOffNodeIds: readonly CrrtCircuitNodeId[],
+  readOffPathIds: readonly CrrtCircuitPathId[],
+): CrrtCitrateClaimSupport {
+  return Object.freeze({
+    kind: 'module-authored-topology' as const,
+    requiredTopic: 'circuit-topology' as const,
+    supportingSourceIds: Object.freeze(crrtSourcesSupportingClaim('circuit-topology')),
+    basis: TOPOLOGY_BASIS,
+    readOffNodeIds: Object.freeze([...readOffNodeIds]),
+    readOffPathIds: Object.freeze([...readOffPathIds]),
+  })
+}
+
+function sourceGapSupport(): CrrtCitrateClaimSupport {
+  return Object.freeze({
+    kind: 'registered-source-gap' as const,
+    requiredTopic: 'citrate-pharmacology' as const,
+    supportingSourceIds: Object.freeze(crrtSourcesSupportingClaim('citrate-pharmacology')),
+    basis: GAP_BASIS,
+    readOffNodeIds: Object.freeze([]),
+    readOffPathIds: Object.freeze([]),
+  })
+}
 
 export const crrtCitrateCalciumTerms: readonly CrrtCitrateCalciumTerm[] = Object.freeze([
   {
@@ -1100,16 +1168,21 @@ export const crrtCitrateCalciumTerms: readonly CrrtCitrateCalciumTerm[] = Object
       'Citrate joins the blood path at the pre-blood-pump entry, upstream of both the pump and the membrane.',
     whyItMatters:
       'Entering before the filter is what lets it act on the blood while that blood is outside the patient. Where a fluid joins the circuit decides which compartment it acts in.',
-    sourceIds: CITRATE_CONTEXT_SOURCE_IDS,
+    claimSupport: topologySupport(
+      ['pbp-citrate-source', 'pbp-citrate-entry', 'blood-pump', 'filter'],
+      ['pbp-citrate-infusion', 'access-line', 'pump-to-filter'],
+    ),
   },
   {
+    // Source gap: the circuit says where citrate acts, but no registered record says what it binds
+    // or how that slows clotting. The wording is preserved and the gap is shown.
     id: 'circuit-anticoagulation',
     term: 'Anticoagulation inside the circuit',
     definition:
       'Citrate binds calcium in the blood travelling through the circuit, which is how clotting is slowed there.',
     whyItMatters:
       'The intended effect is local to the extracorporeal blood. That is the whole reason the circuit and the patient have to be thought about as two separate compartments.',
-    sourceIds: CITRATE_CONTEXT_SOURCE_IDS,
+    claimSupport: sourceGapSupport(),
   },
   {
     id: 'circuit-sample',
@@ -1118,7 +1191,7 @@ export const crrtCitrateCalciumTerms: readonly CrrtCitrateCalciumTerm[] = Object
       'A sample drawn from the circuit after the filter. It describes conditions inside the circuit.',
     whyItMatters:
       'It answers a question about the circuit, not about the patient. Reading it as if it described the patient swaps one compartment for the other.',
-    sourceIds: CITRATE_CONTEXT_SOURCE_IDS,
+    claimSupport: topologySupport(['circuit-sampling-domain', 'filter'], ['filter-to-return']),
   },
   {
     id: 'systemic-sample',
@@ -1126,16 +1199,18 @@ export const crrtCitrateCalciumTerms: readonly CrrtCitrateCalciumTerm[] = Object
     definition: 'A sample drawn from the patient. It describes the patient.',
     whyItMatters:
       'A circuit sample and a systemic sample are not interchangeable, and neither one substitutes for the other.',
-    sourceIds: CITRATE_CONTEXT_SOURCE_IDS,
+    claimSupport: topologySupport(['systemic-sampling-domain', 'patient'], []),
   },
   {
+    // Source gap: the effluent line is drawn, but no registered record says that what citrate
+    // binds is among the things that cross the membrane.
     id: 'citrate-calcium-in-effluent',
     term: 'Citrate-calcium complexes can leave in the effluent',
     definition:
       'Some of what citrate binds crosses the membrane and leaves with everything else on the fluid side.',
     whyItMatters:
       'It explains why calcium has to be given back somewhere, and why the effluent is a route out of the circuit for more than water.',
-    sourceIds: CITRATE_CONTEXT_SOURCE_IDS,
+    claimSupport: sourceGapSupport(),
   },
   {
     id: 'calcium-replacement',
@@ -1144,7 +1219,7 @@ export const crrtCitrateCalciumTerms: readonly CrrtCitrateCalciumTerm[] = Object
       'A separate infusion running to the patient. It is not part of the extracorporeal circuit and does not pass through the filter.',
     whyItMatters:
       'It supports the patient rather than the circuit, which is why it is drawn on its own line and why it is judged against a systemic sample.',
-    sourceIds: CITRATE_CONTEXT_SOURCE_IDS,
+    claimSupport: topologySupport(['calcium-source', 'patient'], ['calcium-infusion']),
   },
   {
     id: 'blood-returns-to-patient',
@@ -1153,7 +1228,10 @@ export const crrtCitrateCalciumTerms: readonly CrrtCitrateCalciumTerm[] = Object
       'The blood that citrate acted on continues around the circuit and re-enters the patient through the return lumen.',
     whyItMatters:
       'The two compartments are connected, not sealed off from one another. That is why a circuit-directed treatment needs a patient-directed one alongside it.',
-    sourceIds: CITRATE_CONTEXT_SOURCE_IDS,
+    claimSupport: topologySupport(
+      ['return-lumen', 'patient'],
+      ['filter-to-return', 'return-line', 'return-lumen'],
+    ),
   },
 ])
 
@@ -1166,10 +1244,13 @@ export const crrtCitrateCalciumTermById: ReadonlyMap<string, CrrtCitrateCalciumT
  * ------------------------------------------------------------------ */
 
 /**
- * Every citation the circuit makes must resolve in the merged learner-facing
- * registry, and this throws at import if one does not. The merge itself lives in
- * `learnerSourceMap.ts` so a citation cannot resolve here while disappearing on
- * the Learn surface.
+ * Syntactic closure. Every citation the circuit makes must resolve in the merged
+ * learner-facing registry, and this throws at import if one does not. The merge
+ * itself lives in `learnerSourceMap.ts` so a citation cannot resolve here while
+ * disappearing on the Learn surface.
+ *
+ * This is the weaker of the two checks. It says a record exists; it says nothing
+ * about whether that record supports the statement it is attached to.
  */
 export function unresolvedCrrtCircuitSourceIds(): readonly string[] {
   const cited = new Set<string>()
@@ -1180,9 +1261,36 @@ export function unresolvedCrrtCircuitSourceIds(): readonly string[] {
     for (const id of detail.sourceIds) cited.add(id)
   }
   for (const term of crrtCitrateCalciumTerms) {
-    for (const id of term.sourceIds) cited.add(id)
+    for (const id of term.claimSupport.supportingSourceIds) cited.add(id)
   }
   return unresolvableCrrtSourceIds(cited)
+}
+
+/**
+ * Semantic closure. Every id a citrate term presents as support must resolve
+ * *and* its registered claim must cover the topic that term's statement needs.
+ *
+ * A term with no supporting id is not a failure here — that is a declared source
+ * gap, rendered as one. The failure this catches is the opposite: a term that
+ * quietly presents a record which resolves but does not support it, which is
+ * exactly what all seven terms did before this closeout.
+ */
+export function unsupportedCrrtCitrateTermCitations(): readonly CrrtClaimCitation[] {
+  const citations: CrrtClaimCitation[] = crrtCitrateCalciumTerms.flatMap((term) =>
+    term.claimSupport.supportingSourceIds.map((sourceId) => ({
+      label: `citrate term ${term.id}`,
+      sourceId,
+      topic: term.claimSupport.requiredTopic,
+    })),
+  )
+  return unsupportedCrrtClaimCitations(citations)
+}
+
+/** The terms whose statement no registered record supports. Reported, never hidden. */
+export function crrtCitrateSourceGapTermIds(): readonly string[] {
+  return crrtCitrateCalciumTerms
+    .filter((term) => term.claimSupport.kind === 'registered-source-gap')
+    .map((term) => term.id)
 }
 
 const unresolvedAtImport = unresolvedCrrtCircuitSourceIds()
@@ -1191,3 +1299,15 @@ if (unresolvedAtImport.length > 0) {
     `CRRT circuit cites source records that do not exist: ${unresolvedAtImport.join(', ')}`,
   )
 }
+
+const unsupportedAtImport = unsupportedCrrtCitrateTermCitations()
+if (unsupportedAtImport.length > 0) {
+  throw new Error(
+    `CRRT citrate terms present sources that resolve but do not support them: ${unsupportedAtImport
+      .map((citation) => `${citation.label} → ${citation.sourceId} (needs ${citation.topic})`)
+      .join('; ')}`,
+  )
+}
+
+/** Re-exported so callers can name the topic vocabulary without a second import path. */
+export type { CrrtClaimTopic }

@@ -137,6 +137,33 @@
   line-height: 1.6;
 }
 
+.mechanismStep .supportTag {
+  justify-self: start;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid currentcolor;
+  border-radius: 999px;
+  color: #8ce2d7;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* A source gap carries a border weight and a written tag, never colour alone. */
+.mechanismStep[data-support='registered-source-gap'] {
+  border-left-color: #f5bb65;
+}
+
+.mechanismStep[data-support='registered-source-gap'] .supportTag {
+  color: #f5bb65;
+}
+
+.stepBasis {
+  color: #a5c6c3;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
 .traceLine {
   color: #f6e6cf;
   font-size: 0.82rem;

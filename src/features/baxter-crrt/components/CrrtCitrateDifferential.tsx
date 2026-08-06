@@ -39,7 +39,11 @@ export function crrtCitrateComparisonTextEquivalent(): string {
 
   for (const step of crrtCitrateMechanismWalk()) {
     lines.push(
-      `Mechanism step ${step.ordinal}. ${step.term.term}. ${step.term.definition} ${step.term.whyItMatters} On the circuit: ${step.traceOnTheCircuit}`,
+      `Mechanism step ${step.ordinal}. ${step.term.term} (${
+        step.term.claimSupport.kind === 'registered-source-gap'
+          ? 'awaiting a source'
+          : 'read off this circuit'
+      }). ${step.term.definition} ${step.term.whyItMatters} On the circuit: ${step.traceOnTheCircuit} What it rests on: ${step.term.claimSupport.basis}`,
     )
   }
 
@@ -162,19 +166,41 @@ export function CrrtCitrateDifferential({
       <section className={styles.mechanism} aria-labelledby={`${idPrefix}-mechanism-heading`}>
         <h4 id={`${idPrefix}-mechanism-heading`}>Follow it once around the circuit</h4>
         <ol>
-          {walk.map((step) => (
-            <li key={step.termId} className={styles.mechanismStep} data-term={step.termId}>
-              <span className={styles.stepOrdinal}>
-                Step {step.ordinal} of {walk.length}
-              </span>
-              <strong>{step.term.term}</strong>
-              <p>{step.term.definition}</p>
-              <em>{step.term.whyItMatters}</em>
-              <span className={styles.traceLine}>
-                <strong>Trace it:</strong> {step.traceOnTheCircuit}
-              </span>
-            </li>
-          ))}
+          {walk.map((step) => {
+            const isGap = step.term.claimSupport.kind === 'registered-source-gap'
+            return (
+              <li
+                key={step.termId}
+                className={styles.mechanismStep}
+                data-term={step.termId}
+                data-support={step.term.claimSupport.kind}
+              >
+                <span className={styles.stepOrdinal}>
+                  Step {step.ordinal} of {walk.length}
+                </span>
+                <strong>{step.term.term}</strong>
+                <span className={styles.supportTag}>
+                  {isGap ? 'Awaiting a source' : 'Read off this circuit'}
+                </span>
+                <p>{step.term.definition}</p>
+                <em>{step.term.whyItMatters}</em>
+                <span className={styles.traceLine}>
+                  <strong>Trace it:</strong> {step.traceOnTheCircuit}
+                </span>
+                {/*
+                  The same distinction the comparison below makes, applied to the walk. Two of these
+                  seven steps state something no registered source in this module carries; saying so
+                  here keeps the walk from reading as seven equally settled facts.
+                */}
+                <span
+                  className={styles.stepBasis}
+                  data-required-topic={step.term.claimSupport.requiredTopic}
+                >
+                  {step.term.claimSupport.basis}
+                </span>
+              </li>
+            )
+          })}
         </ol>
       </section>
 

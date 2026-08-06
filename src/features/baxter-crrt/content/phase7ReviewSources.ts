@@ -369,15 +369,16 @@ const candidateToolCalibrationSources = [
   {
     id: 'SYNTH-LAB-CITRATE-001',
     claim:
-      'The four-way citrate comparison is an authored teaching structure whose categories are separated by circuit-versus-systemic sampling domain and by the question each one asks, not by a registered physiologic account of citrate metabolism.',
+      'The citrate first-use terms and the four-way citrate comparison are authored teaching structures. Their statements about where citrate enters, which sample describes which compartment, and where calcium replacement runs are read off this module’s own circuit schematic; their categories are separated by circuit-versus-systemic sampling domain and by the question each one asks, not by a registered physiologic account of citrate metabolism.',
     value:
-      'Not a dose, ratio, target, titration schedule, sampling frequency, alarm limit, diagnostic rule, or local management protocol. Where a category depends on a mechanism the registered source set does not state, that mechanism is rendered as an open boundary and is not asserted.',
+      'Not a dose, ratio, target, titration schedule, sampling frequency, alarm limit, diagnostic rule, or local management protocol. This record supports circuit topology and the authored teaching structure only. It supports no claim about what citrate binds, what becomes of it, or how it crosses a membrane; where a statement depends on that, it is rendered as a source gap and is not treated as supported.',
     sourceTitle: 'Baxter CRRT v1 instructional-tool synthetic calibration record',
     sourceType: 'synthetic-calibration' as const,
     documentVersion: 'v1 SME-review build',
-    pageOrSection: 'Citrate mechanism and four-way comparison · awaiting SME source expansion',
+    pageOrSection:
+      'Citrate first-use terms, mechanism walk, and four-way comparison · awaiting SME source expansion for citrate pharmacology',
     implementationLocation:
-      'content/citrateDifferential.ts and components/CrrtCitrateDifferential.tsx',
+      'content/circuitModel.ts, content/citrateDifferential.ts, and components/CrrtCitrateDifferential.tsx',
     reviewer: null,
     reviewStatus: PENDING,
   },

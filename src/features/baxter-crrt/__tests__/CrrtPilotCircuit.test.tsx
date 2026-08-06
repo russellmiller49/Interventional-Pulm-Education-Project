@@ -387,12 +387,35 @@ describe('CRRT universal educational circuit', () => {
     for (const term of crrtCitrateCalciumTerms) {
       expect(within(terms).getByText(term.term)).toBeInTheDocument()
     }
-    // Every learner-facing term carries its own provenance.
+
+    /**
+     * Every term states what it rests on — but "carries a citation" is not the contract, and it
+     * used to be. All seven printed the same three clinical records, all three resolved, and none
+     * of them said anything about citrate. A term now either names records that genuinely support
+     * it, or declares a gap and names none.
+     */
     const cited = [...terms.querySelectorAll('[data-evidence-ids]')]
     expect(cited).toHaveLength(crrtCitrateCalciumTerms.length)
-    for (const node of cited) {
-      expect((node.getAttribute('data-evidence-ids') ?? '').trim().length).toBeGreaterThan(0)
+    for (const [index, node] of cited.entries()) {
+      const support = crrtCitrateCalciumTerms[index].claimSupport
+      const ids = (node.getAttribute('data-evidence-ids') ?? '').trim()
+      expect(node.getAttribute('data-required-topic')).toBe(support.requiredTopic)
+      if (support.kind === 'registered-source-gap') {
+        expect(ids).toBe('')
+      } else {
+        expect(ids.length).toBeGreaterThan(0)
+      }
     }
+
+    // The three clinical-context records are no longer presented as support for any definition.
+    for (const id of ['REVIEW-CKRT-CORE-2025', 'TEXT-CRRT-NEYRA-2026', 'GUID-RRT-ICU-2026']) {
+      expect(terms.innerHTML).not.toContain(id)
+    }
+    // A gap is stated in words, not only by a border colour.
+    expect(within(terms).getAllByText('Awaiting a source').length).toBe(
+      crrtCitrateCalciumTerms.filter((term) => term.claimSupport.kind === 'registered-source-gap')
+        .length,
+    )
     // Bounded: the definitions themselves carry no dose, ratio, target, or
     // timing instruction. Scoped to the term list so the panel's own disclaimer
     // — which names those words in order to disclaim them — is not the thing

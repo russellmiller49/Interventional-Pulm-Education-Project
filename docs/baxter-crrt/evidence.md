@@ -134,6 +134,57 @@ and rendered as an open question rather than filled in). `SYNTH-LAB-CITRATE-001`
 Expanding the registered source set so the held-open rows can be answered is an SME task, not a code
 change.
 
+### Two closures, not one
+
+Resolution and support are different questions, and the module now checks both.
+
+- **Syntactic closure** — does the citation resolve to a registered record?
+  `unresolvedCrrtCircuitSourceIds()` and `unresolvableCrrtSourceIds()` answer this, and throw at
+  import when they do not. Necessary, and on its own not sufficient.
+- **Claim-specific semantic support** — does that record's own registered `claim` string cover the
+  topic the statement needs? `crrtSourceSupportsClaim()` in `content/learnerSourceMap.ts` answers
+  this against a hand audit of the `claim` strings, and
+  `unsupportedCrrtCitrateTermCitations()` throws at import for any citation that resolves but does
+  not support.
+
+The seven C0/C1 citrate/calcium first-use terms are the case that made the difference concrete. All
+seven cited the same three clinical-context records; all three resolved; and the circuit printed
+them under each definition as `Sources: REVIEW-CKRT-CORE-2025, TEXT-CRRT-NEYRA-2026,
+GUID-RRT-ICU-2026`. Those records' registered claims are about transport mechanisms, modality
+concepts, treatment goals, modality logistics, delivered therapy, access, fluid-removal tolerance,
+and the prescribed-versus-delivered gap. **Not one of them says anything about where citrate enters
+a circuit, what it binds, which sample describes which compartment, or where calcium replacement
+runs.** The chips resolved and were still misleading.
+
+Each term now declares the topic its statement needs, and is one of two kinds:
+
+| Term                          | Kind              | Rests on                                         |
+| ----------------------------- | ----------------- | ------------------------------------------------ |
+| `citrate-entry-point`         | authored topology | PBP/citrate source and entry, blood pump, filter |
+| `circuit-anticoagulation`     | **source gap**    | needs `citrate-pharmacology` — unmapped          |
+| `circuit-sample`              | authored topology | circuit sampling domain, filter                  |
+| `systemic-sample`             | authored topology | systemic sampling domain, patient                |
+| `citrate-calcium-in-effluent` | **source gap**    | needs `citrate-pharmacology` — unmapped          |
+| `calcium-replacement`         | authored topology | calcium source, calcium infusion line, patient   |
+| `blood-returns-to-patient`    | authored topology | return lumen, return line, patient               |
+
+Topology terms are read off this module's own circuit schematic and name the nodes and paths a
+reviewer can check them against; `SYNTH-LAB-CITRATE-001` is their provenance and its claim was
+broadened to say exactly that. The two source-gap terms keep their landed wording — nothing was
+invented, expanded, or narrowed to close them — and render an explicit "Awaiting a source" state in
+both the circuit term panel and the C3 mechanism walk. `citrate-pharmacology` is deliberately left
+unmapped to every record, so no future citation can be pressed into supporting it by accident.
+
+Raw evidence-record ids no longer appear as learner copy in the term panel; they remain in
+`data-evidence-ids` for the provenance checks.
+
+**Still open at the overlay level.** The `citrate-calcium` overlay's own `teachingPoint` restates
+the same mechanism ("citrate-calcium complexes can leave in the effluent") and still lists the three
+clinical-context records in `overlay.sourceIds`. Those ids are not rendered as learner-facing claim
+chips — they appear only on the reviewer render page — so this closeout left them alone rather than
+re-auditing C0/C1 overlay provenance it was not scoped to. Re-auditing every overlay's `sourceIds`
+against `crrtSourceSupportsClaim` is the natural next step once an SME expands the source set.
+
 Two module-local harnesses run directly, with nothing added to `package.json`:
 
 ```

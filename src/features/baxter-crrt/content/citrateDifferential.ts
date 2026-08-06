@@ -389,7 +389,7 @@ export function unresolvedCrrtCitrateSourceIds(): readonly string[] {
     for (const id of category.sourceIds) cited.add(id)
   }
   for (const step of crrtCitrateMechanismWalk()) {
-    for (const id of step.term.sourceIds) cited.add(id)
+    for (const id of step.term.claimSupport.supportingSourceIds) cited.add(id)
   }
   return unresolvableCrrtSourceIds(cited)
 }
