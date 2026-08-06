@@ -637,8 +637,9 @@ function completionFormula(rowNumber: number): string {
   const reviewed = reviewColumnLetter('physician_reviewed')
   const notes = reviewColumnLetter('physician_notes')
   const policy = reviewColumnLetter('coordinator_policy_status')
+  const conflictFields = reviewColumnLetter('coordinator_conflict_fields')
   const physicianTopics = reviewColumnLetter('physician_topic_ids')
-  return `IF(LOWER($${policy}${rowNumber})="conflict",IF(AND(LOWER($${reviewed}${rowNumber})="true",LOWER($${action}${rowNumber})="adjudicate",LEN(TRIM($${physicianTopics}${rowNumber}))>0,LEN(TRIM($${notes}${rowNumber}))>0),"Complete","Incomplete"),IF(AND(LOWER($${reviewed}${rowNumber})="true",OR(LOWER($${action}${rowNumber})="accept",LOWER($${action}${rowNumber})="modify"),OR(LOWER($${action}${rowNumber})="accept",AND(LOWER($${action}${rowNumber})="modify",LEN(TRIM($${notes}${rowNumber}))>0))),"Complete","Incomplete"))`
+  return `IF(LOWER($${policy}${rowNumber})="conflict",IF(AND(LOWER($${reviewed}${rowNumber})="true",LOWER($${action}${rowNumber})="adjudicate",OR(NOT(ISNUMBER(SEARCH("|topic_ids|","|"&$${conflictFields}${rowNumber}&"|"))),LEN(TRIM($${physicianTopics}${rowNumber}))>0),LEN(TRIM($${notes}${rowNumber}))>0),"Complete","Incomplete"),IF(AND(LOWER($${reviewed}${rowNumber})="true",OR(LOWER($${action}${rowNumber})="accept",LOWER($${action}${rowNumber})="modify"),OR(LOWER($${action}${rowNumber})="accept",AND(LOWER($${action}${rowNumber})="modify",LEN(TRIM($${notes}${rowNumber}))>0))),"Complete","Incomplete"))`
 }
 
 function provenanceFormula(rowNumber: number): string {
@@ -652,9 +653,10 @@ function cachedCompletionStatus(row: GoldEnrichmentV3ReviewWorkbookRow): string 
   const reviewed = normalizedBoolean(row.physician_reviewed || 'false') === 'true'
   const notes = Boolean(row.physician_notes?.trim())
   if (row.coordinator_policy_status === 'conflict') {
-    return reviewed && action === 'adjudicate' && Boolean(row.physician_topic_ids.trim()) && notes
-      ? 'Complete'
-      : 'Incomplete'
+    const topicResolved =
+      !row.coordinator_conflict_fields?.split('|').includes('topic_ids') ||
+      Boolean(row.physician_topic_ids.trim())
+    return reviewed && action === 'adjudicate' && topicResolved && notes ? 'Complete' : 'Incomplete'
   }
   return reviewed && (action === 'accept' || (action === 'modify' && notes))
     ? 'Complete'
@@ -1078,8 +1080,8 @@ function instructionsWorksheetXml(
       'Blue cells are locked source/proposal evidence. Yellow cells are physician-editable. Worksheet protection is a usability aid rather than a security boundary.',
     ],
     [
-      'Accept or modify',
-      'Choose accept to retain the prefilled V3 proposal or modify to change one or more physician enrichment fields. Fixed physician relevance label/confidence cannot be edited.',
+      'Accept, modify, or adjudicate',
+      'Choose accept to retain a policy-cleared V3 proposal, modify to change one or more physician enrichment fields, or adjudicate when a coordinator conflict is present. Fixed physician relevance label/confidence cannot be edited.',
     ],
     [
       'Coordinator conflicts',
@@ -1091,11 +1093,11 @@ function instructionsWorksheetXml(
     ],
     [
       'Completion rule',
-      'completion_status is Complete only when physician_reviewed=true, physician_action is accept or modify, and physician_notes is nonblank for every modified row.',
+      'For a nonconflicted row, completion_status is Complete only when physician_reviewed=true, physician_action is accept or modify, and physician_notes is nonblank for a modification. A coordinator-conflict row instead requires adjudicate, a resolved value for every conflicted field, and a note.',
     ],
     [
       'Provenance rule',
-      'A completed accepted row proposes physician_confirmed_ai_enrichment; a completed modified row proposes physician_modified_ai_enrichment. Every incomplete or unreviewed row remains unresolved_enrichment.',
+      'A completed accepted row proposes physician_confirmed_ai_enrichment; a completed modified or adjudicated row proposes physician_modified_ai_enrichment. Every incomplete or unreviewed row remains unresolved_enrichment.',
     ],
     [
       'Protocol acceptance boundary',
