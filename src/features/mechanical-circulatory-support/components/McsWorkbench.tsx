@@ -27,9 +27,11 @@ import { Link, useRouter } from '@/i18n/navigation'
 
 import {
   MCS_ANALYTICS_MODULE_ID,
+  MCS_CONGESTION_PATTERN_BOUNDARY,
   MCS_LEARN_PHASES,
-  MCS_MODEL_BOUNDARIES,
   mcsCapstoneScenarios,
+  mcsCongestionProfileDefinition,
+  mcsCongestionProfileId,
   mcsDerivedValueGuides,
   mcsFoundationLessonIds,
   mcsLessonTransferByLessonId,
@@ -65,6 +67,7 @@ import { McsModuleFrame } from './McsModuleFrame'
 import { McsMonitor } from './McsMonitor'
 import { McsSourcesPanel } from './McsSourcesPanel'
 import { McsSupportPathwayCards } from './McsSupportPathwayCards'
+import { flowAccountView } from './teaching/selectors'
 import styles from './mechanical-circulatory-support.module.css'
 
 const mcsLearningPathway = criticalCareLearningPathway('mechanical-circulatory-support')
@@ -102,18 +105,40 @@ function rhythmLabel(state: McsSimulationState): string {
   return 'Sinus rhythm'
 }
 
-function shockPhenotype(state: McsSimulationState): string {
-  if (state.patient.tamponade) return 'Obstructive / tamponade pattern'
-  const lvLimited =
-    state.patient.leftVentricularContractility < 0.55 || state.metrics.pcwpMmHg >= 20
-  const rvLimited =
-    state.patient.rightVentricularContractility < 0.55 ||
-    state.metrics.papi < MCS_MODEL_BOUNDARIES.rvLimitedPapiMax ||
-    state.metrics.rapMmHg >= 14
-  if (lvLimited && rvLimited) return 'Biventricular / mixed shock'
-  if (rvLimited) return 'RV-dominant shock'
-  if (lvLimited) return 'LV-dominant shock'
-  return 'Supported low-output physiology'
+/**
+ * The filling-pressure congestion pattern, from the framework the module already carries.
+ *
+ * What stood here was a private classifier: left-limited below a contractility of 0.55 or a wedge of
+ * 20, right-limited below 0.55, below the simulator's PAPi boundary, or at a right atrial pressure
+ * of 14 — and from those, a confident label naming a ventricular shock mechanism. None of those cut
+ * points came from anywhere, and M4 had already removed the equivalent classifier from the teaching
+ * panel below. The bar above it went on stating the mechanism the panel had stopped claiming.
+ *
+ * It now reads the accepted ACC-described pattern, at the same threshold and through the same
+ * helper the panel uses. A pattern says where filling pressures are elevated; it does not name the
+ * cause of shock and does not select a device, which is why the boundary travels with it.
+ *
+ * The modeled pericardial constraint is named separately rather than replacing the pattern: it is a
+ * selected obstruction fault in this simulation, not a fourth congestion category.
+ */
+function congestionPattern(state: McsSimulationState): string {
+  const profile = mcsCongestionProfileDefinition(
+    mcsCongestionProfileId(state.metrics.rapMmHg, state.metrics.pcwpMmHg),
+  )
+  return state.patient.tamponade
+    ? `${profile.label} · modeled pericardial constraint`
+    : profile.label
+}
+
+/**
+ * The device slot of the flow account, read from the same selector the teaching panels use.
+ *
+ * Counterpulsation reports no device flow. Printing `0.0 L/min` for it gives a number that does not
+ * exist a precision it cannot have, and contradicts the flow account rendered directly below.
+ */
+function deviceFlowText(state: McsSimulationState): string {
+  const account = flowAccountView(state)
+  return account.lines.find((line) => line.id === 'device')?.valueText ?? 'none reported'
 }
 
 function deviceSetting(state: McsSimulationState): string {
@@ -627,7 +652,10 @@ export function McsWorkbench({
                   label: 'Support',
                   value: `${deviceLabels[state.deviceKind].short} · ${deviceSetting(state)}`,
                 },
-                { label: 'Shock phenotype', value: shockPhenotype(state) },
+                {
+                  label: 'Filling-pressure congestion pattern',
+                  value: congestionPattern(state),
+                },
                 {
                   label: 'Rhythm',
                   value: `${rhythmLabel(state)} · ${state.patient.heartRateBpm} bpm`,
@@ -642,10 +670,10 @@ export function McsWorkbench({
                 },
                 {
                   label: 'Native / device / effective flow',
-                  value: `${state.metrics.nativeFlowLMin.toFixed(1)} / ${state.metrics.deviceFlowLMin.toFixed(1)} / ${state.metrics.effectiveSystemicFlowLMin.toFixed(1)} L/min`,
+                  value: `Native ${state.metrics.nativeFlowLMin.toFixed(1)} L/min · device ${deviceFlowText(state)} · effective ${state.metrics.effectiveSystemicFlowLMin.toFixed(1)} L/min`,
                 },
                 {
-                  label: 'Perfusion',
+                  label: 'Modeled balance and pressure–flow summary',
                   value: `SvO₂ ${state.metrics.svo2Percent}% · CPO ${state.metrics.cardiacPowerOutputW.toFixed(2)} W`,
                 },
                 {
@@ -658,6 +686,13 @@ export function McsWorkbench({
               safetyConstraints={[
                 'Educational model only; verify current device instructions and local policy.',
                 'Use direct examination, imaging, and the responsible shock or LVAD team.',
+                /*
+                 * The two boundaries that belong beside the two values above, in the words the
+                 * accepted content already uses: a congestion pattern selects no device, and a
+                 * cardiac power output above the cited bands is not evidence of perfusion.
+                 */
+                MCS_CONGESTION_PATTERN_BOUNDARY.doesNotEstablish,
+                mcsDerivedValueGuides.cardiacPowerOutputW.doNotInfer,
               ]}
             />
             {initialActivityId ? (
