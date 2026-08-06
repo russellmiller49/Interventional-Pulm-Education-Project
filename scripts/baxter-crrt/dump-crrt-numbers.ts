@@ -207,8 +207,19 @@ function printLivePressureComparison(): readonly string[] {
     }
 
     for (const signal of display.pressureSignals) {
-      const detail = signal.kind === 'directly-modelled-site'
-      if (detail !== (signal.nodeId !== null)) {
+      // Pinned independently rather than checked for internal consistency: a
+      // mislabelled signal usually arrives with a matching node, so comparing
+      // the two against each other agrees with the defect.
+      const expectedKind =
+        signal.id === 'tmp' || signal.id === 'filter-drop'
+          ? 'calculated-relationship'
+          : 'directly-modelled-site'
+      if (signal.kind !== expectedKind) {
+        problems.push(
+          `${review.id}/${signal.id}: labelled ${signal.kind}, expected ${expectedKind}`,
+        )
+      }
+      if ((signal.kind === 'directly-modelled-site') !== (signal.nodeId !== null)) {
         problems.push(`${review.id}/${signal.id}: direct/calculated label does not match its node`)
       }
       if (signal.valueMmHg === null && signal.unavailableReason === null) {
