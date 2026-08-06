@@ -2334,6 +2334,18 @@
   color: var(--amber);
 }
 
+/*
+ * A drift is a visible change that is not a response, and it has to look like neither of the other
+ * two: it keeps the muted ink of "unchanged" so it cannot be mistaken for a direction, and its own
+ * note is italic so it cannot be mistaken for one either.
+ */
+.coachingReadings > div[data-direction='small-drift'] small em {
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .coachingClaims {
   display: grid;
   gap: 0.45rem;

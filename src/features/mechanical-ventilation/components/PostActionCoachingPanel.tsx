@@ -2,24 +2,33 @@
 
 import { Activity, ShieldAlert } from 'lucide-react'
 
-import type { CoachingReading, PostActionCoaching } from '../content/postActionCoaching'
+import {
+  formatReading,
+  type CoachingReading,
+  type PostActionCoaching,
+} from '../content/postActionCoaching'
 import styles from './mechanical-ventilation.module.css'
 
 const directionWords: Readonly<Record<CoachingReading['direction'], string>> = {
   rose: 'rose',
   fell: 'fell',
   held: 'unchanged',
+  'small-drift': 'small drift',
 }
 
-function formatValue(value: number, precision: number): string {
-  return value.toFixed(precision)
+/** Spelled out beside the short label, so "small drift" is not left to be guessed at. */
+const directionNotes: Readonly<Partial<Record<CoachingReading['direction'], string>>> = {
+  'small-drift': 'less than one full display unit',
 }
 
 /**
  * Reading rows.
  *
- * Before and after are printed at the precision the surface they come from prints, because that is
- * the rule the whole block uses for whether something changed: the number on the screen is different.
+ * Before and after are printed at the precision the surface they come from prints, and they are
+ * formatted independently — so the two numbers on the row can differ even when the reading moved by
+ * less than one whole unit of that precision. That is exactly what `small-drift` is for: the row says
+ * "44 → 43 · small drift", never "44 → 43 · unchanged".
+ *
  * A reading that was not available before the action shows as revealed rather than as a change of
  * zero — the difference matters, and averaging it into "unchanged" would be a small lie. It is not
  * called a first reading: the model keeps one slot for a pending gas, so after a second order it no
@@ -27,6 +36,7 @@ function formatValue(value: number, precision: number): string {
  */
 function ReadingRow({ reading }: { reading: CoachingReading }) {
   const revealed = reading.before === null
+  const note = directionNotes[reading.direction]
   return (
     <div data-reading={reading.id} data-direction={revealed ? 'revealed' : reading.direction}>
       <dt>{reading.label}</dt>
@@ -36,14 +46,17 @@ function ReadingRow({ reading }: { reading: CoachingReading }) {
             <em>not available then</em>
           ) : (
             <>
-              {formatValue(reading.before as number, reading.precision)}
+              {formatReading(reading.before as number, reading.precision)}
               <span aria-hidden="true"> → </span>
               <span className="sr-only"> to </span>
             </>
           )}
-          <strong>{formatValue(reading.after, reading.precision)}</strong> {reading.unit}
+          <strong>{formatReading(reading.after, reading.precision)}</strong> {reading.unit}
         </span>
-        <small>{revealed ? 'new reading' : directionWords[reading.direction]}</small>
+        <small>
+          {revealed ? 'new reading' : directionWords[reading.direction]}
+          {note ? <em> — {note}</em> : null}
+        </small>
       </dd>
     </div>
   )

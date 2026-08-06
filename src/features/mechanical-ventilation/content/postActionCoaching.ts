@@ -11,7 +11,8 @@
  *
  *   commit ──▶ act ──▶ observe ──▶ coaching ──▶ … ──▶ full debrief
  *              │        │
- *              │        └─ the action's own authored latency, then one of this patient's breaths
+ *              │        └─ the action's own authored latency, then long enough for its response to
+ *              │           be readable
  *              └─ `applyIntervention` stamps `effectiveAt = time + latencySeconds`
  *
  * **The observation interval is not a new number.** It is composed entirely of quantities that
@@ -19,14 +20,21 @@
  *
  * - `record.effectiveAt`, which the engine has always stamped on an intervention from the case's own
  *   `latencySeconds`. Until it is reached, `performedEffectIds` excludes the action, so the model has
- *   genuinely not responded yet and there is nothing truthful to report.
- * - one breath at the rate this patient was running when the action was taken. The module's own
- *   observation vocabulary is already "advance one breath for reassessment"
+ *   genuinely not responded yet and there is nothing truthful to report. Taken as the later of that
+ *   stamp and the authored latency itself, because an assessment or ventilator action is stamped
+ *   immediate — its effect reaches the *model* at once — while its latency says when the learner can
+ *   read the result.
+ * - then a settle term, which is one breath at the rate this patient was running when the action was
+ *   taken. The module's own observation vocabulary is already "advance one breath for reassessment"
  *   (`ventilationLessonObservationActions`); a reading taken inside the breath the learner interrupted
  *   is not a reading of the response to it.
+ * - except where the targeted reading is one the console computes from the trace it is displaying, in
+ *   which case the settle term is one length of that trace — `WAVEFORM_WINDOW_SECONDS`. The displayed
+ *   peak is the maximum over the whole buffer, so until the buffer holds breaths taken after the
+ *   action it is still reporting the ones before it. See `settleSecondsFor`.
  *
- * The period is frozen into the baseline at the moment of the action rather than read live, so that a
- * change in rate — which several of these actions cause — cannot move the finish line.
+ * Both terms are frozen into the baseline at the moment of the action rather than read live, so that
+ * a change in rate — which several of these actions cause — cannot move the finish line.
  *
  * ## Why coaching is derived rather than authored per case
  *
@@ -44,6 +52,10 @@
  * them. The third is not decoration: a treatment that moved nothing is evidence against the mechanism
  * it targets, and it is not proof that mechanism is absent — and a simulated patient keeps changing
  * whether or not anyone acts, so a reading that moved is not automatically a reading the action moved.
+ *
+ * The same separation runs through `CoachingDirection`: a number that crossed a printed boundary
+ * without covering a whole unit of its own precision is reported as visible and refused as a
+ * response. Seeing something and attributing it are different claims.
  *
  * ## What is deliberately absent
  *
@@ -90,7 +102,20 @@ export type CoachingReadingId =
   | 'sedation'
   | 'paco2'
 
-export type CoachingDirection = 'rose' | 'fell' | 'held'
+/**
+ * What a reading did, in four states rather than three.
+ *
+ * `small-drift` is the one that had to be added. The rule for a change is one whole unit of the
+ * precision the surface prints at — an instrument-resolution rule, not a clinical one — and the row
+ * formats its before and after independently. Those two facts together produced a learner-facing
+ * contradiction: a raw 43.8 → 43.2 is under one cmH₂O, so it was `held`, and the row printed
+ * "44 → 43 · unchanged". A number that visibly changed was labelled as one that had not.
+ *
+ * So a movement that crosses a printed boundary without covering a whole unit is now its own state:
+ * visible, reported, and explicitly not a response. It carries no valence, cannot qualify as the
+ * action's target response, and is not treated as movement against the action either.
+ */
+export type CoachingDirection = 'rose' | 'fell' | 'held' | 'small-drift'
 
 interface ReadingDescriptor {
   readonly label: string
@@ -940,31 +965,48 @@ const verdictLabels: Readonly<Record<CoachingVerdict, string>> = {
   unchanged: 'No better, no worse',
 }
 
+/** The number the surface prints, so classification and rendering cannot disagree about it. */
+export function formatReading(value: number, precision: number): string {
+  return value.toFixed(precision)
+}
+
 /**
- * A reading "changed" when it differs by at least one unit of the precision the surface prints it at.
+ * What a reading did, decided in two steps that answer two different questions.
  *
- * Still a display rule and not a clinical one — it is the resolution of the instrument, not a
- * statement about how much of a change matters to a patient. Publishing "a fall of N cmH₂O counts"
- * would be exactly the universal target this module refuses to invent.
+ * **Did it move?** One whole unit of the precision the surface prints at. Still a display rule and
+ * not a clinical one — it is the resolution of the instrument, not a statement about how much of a
+ * change matters to a patient. Publishing "a fall of N cmH₂O counts" would be exactly the universal
+ * target this module refuses to invent.
  *
- * Comparing the *rounded* values instead, which is what this did first, made a rounding boundary
- * into a finding. Measured on MV-13 with no action performed at all, the printed peak wanders 43.8
- * to 43.2 over the same interval an action is watched across — under one cmH₂O, but across the 44/43
- * boundary. Two treatments that reach nothing on that patient were reported as having lowered the
- * pressure, and the block then credited the mechanism they target. One printed unit is the smallest
- * change the surface can actually assert.
+ * **Did the number on the screen change?** A separate question, and the row answers it by formatting
+ * before and after independently. Measured on MV-13 with no action performed at all, the printed peak
+ * wanders 43.8 → 43.2 — under one cmH₂O but across the 44/43 boundary. Comparing the *rounded* values
+ * made that a finding, and the block credited the mechanism a treatment targets off it. Answering
+ * only the first question made it `held`, and the row then printed "44 → 43 · unchanged".
+ *
+ * Both answers are now kept: the drift is visible because it is, and it is not a response because it
+ * is not.
  */
 function direction(before: number, after: number, precision: number): CoachingDirection {
   const resolution = 10 ** -precision
   const change = after - before
   if (change >= resolution - 1e-9) return 'rose'
   if (change <= -(resolution - 1e-9)) return 'fell'
-  return 'held'
+  return formatReading(before, precision) === formatReading(after, precision)
+    ? 'held'
+    : 'small-drift'
 }
 
+/** Only a whole unit of movement carries a direction that can mean better or worse. */
 function favourability(descriptor: ReadingDescriptor, movement: CoachingDirection): boolean | null {
-  if (movement === 'held' || descriptor.betterWhen === 'context') return null
+  if (movement === 'held' || movement === 'small-drift') return null
+  if (descriptor.betterWhen === 'context') return null
   return descriptor.betterWhen === 'lower' ? movement === 'fell' : movement === 'rose'
+}
+
+/** A whole unit of movement, in either direction — the only thing that can be a response. */
+function moved(reading: CoachingReading): boolean {
+  return reading.before !== null && (reading.direction === 'rose' || reading.direction === 'fell')
 }
 
 /** Readings the console and bedside always show, so "nothing moved" is a reported finding. */
@@ -1017,9 +1059,8 @@ function observedSummary(
   readings: readonly CoachingReading[],
   newSafetyInterruption: boolean,
 ): string {
-  const moved = readings.filter(
-    (reading) => reading.direction !== 'held' && reading.before !== null,
-  )
+  const movedReadings = readings.filter(moved)
+  const drifted = readings.filter((reading) => reading.direction === 'small-drift')
   const revealed = readings.filter((reading) => reading.before === null)
   /*
    * "Was not available when you acted" rather than "for the first time": `lastAbgAt` is a single slot,
@@ -1033,17 +1074,30 @@ function observedSummary(
   const safetyClause = newSafetyInterruption
     ? ' A safety interruption opened while you were watching; it is above, and it takes precedence over the rest of this.'
     : ''
-  if (moved.length === 0) {
-    return `None of the readings above is printing a different number than it was when you acted.${revealedClause}${safetyClause}`
+  /*
+   * Said out loud, because the row shows it. A drift is a number on the screen that is different from
+   * the one that was there, and a summary claiming nothing changed would be contradicted by the row
+   * directly above it.
+   */
+  const driftClause = drifted.length
+    ? ` ${upperFirst(listPhrase(drifted.map((reading) => reading.inlineLabel)))} ${
+        drifted.length === 1 ? 'is' : 'are'
+      } printing a different number without having moved a whole unit of it — a rounding boundary crossed rather than a change.`
+    : ''
+  if (movedReadings.length === 0) {
+    return drifted.length === 0
+      ? `None of the readings above is printing a different number than it was when you acted.${revealedClause}${safetyClause}`
+      : `Nothing above moved by a whole unit of what its surface prints.${driftClause}${revealedClause}${safetyClause}`
   }
-  const fell = moved.filter((reading) => reading.direction === 'fell')
-  const rose = moved.filter((reading) => reading.direction === 'rose')
+  const fell = movedReadings.filter((reading) => reading.direction === 'fell')
+  const rose = movedReadings.filter((reading) => reading.direction === 'rose')
   const parts: string[] = []
   if (fell.length) parts.push(`${listPhrase(fell.map((r) => r.inlineLabel))} fell`)
   if (rose.length) parts.push(`${listPhrase(rose.map((r) => r.inlineLabel))} rose`)
-  const valencedMoved = moved.some((reading) => reading.favourable !== null)
+  const valencedMoved = movedReadings.some((reading) => reading.favourable !== null)
   const valenceClause = valencedMoved ? '' : ' Nothing that would say better or worse moved at all.'
-  return `Over the interval you watched, ${listPhrase(parts)}; everything else above is printing the number it was.${valenceClause}${revealedClause}${safetyClause}`
+  const tail = drifted.length ? '' : '; everything else above is printing the number it was'
+  return `Over the interval you watched, ${listPhrase(parts)}${tail}.${driftClause}${valenceClause}${revealedClause}${safetyClause}`
 }
 
 /**
@@ -1096,15 +1150,17 @@ function targetResponse(
 ): TargetResponse {
   if (profile.target === null) {
     // No monitored number is this action's to move, so the question is only whether anything moved.
-    return readings.some((reading) => reading.direction !== 'held' && reading.before !== null)
-      ? 'responded'
-      : 'held'
+    return readings.some(moved) ? 'responded' : 'held'
   }
   const targetReading = readings.find((reading) => reading.targeted)
   if (!targetReading) return 'held'
   // A value that was not available before and is now is a response to the maneuver that produced it.
   if (targetReading.before === null) return 'responded'
-  if (targetReading.direction === 'held') return 'held'
+  /*
+   * A drift falls here with a reading that did not move at all: it is neither a response nor movement
+   * against the action, so it selects the non-response copy and credits nothing.
+   */
+  if (targetReading.direction === 'held' || targetReading.direction === 'small-drift') return 'held'
   if (profile.targetDirection === 'either') return 'responded'
   return targetReading.direction === profile.targetDirection ? 'responded' : 'opposed'
 }
@@ -1159,9 +1215,7 @@ function notDemonstrated(
       'A ventilator setting was also changed while this was developing, so what moved over the interval cannot be attributed to the action on its own.',
     )
   }
-  const untargetedMovers = readings.filter(
-    (reading) => !reading.targeted && reading.before !== null && reading.direction !== 'held',
-  )
+  const untargetedMovers = readings.filter((reading) => !reading.targeted && moved(reading))
   if (untargetedMovers.length > 0) {
     clauses.push(
       'This patient keeps changing whether or not anyone acts, so a reading that moved over this interval is not automatically a reading this action moved.',
@@ -1212,8 +1266,9 @@ function stabilizationAnswer(state: VentilationSimulationState): {
  * 1. this is the independent Practice workflow (Learn shows its own answer; Assess shows none);
  * 2. the learner's frame has been committed, so nothing here can precede the commitment;
  * 3. an action has been performed and the supplied baseline is that action's;
- * 4. the case's own latency for that action has elapsed and one of this patient's breaths has been
- *    delivered since — the observation interval.
+ * 4. the observation interval has closed: the later of the action's `effectiveAt` and its authored
+ *    latency, plus the settle term — one of this patient's breaths, or one length of the displayed
+ *    trace where the targeted reading is computed from that trace.
  */
 export function ventilationPostActionCoaching(
   state: VentilationSimulationState,
