@@ -2,7 +2,7 @@
 --
 -- Run once, against the project, immediately after applying that migration.
 --
--- Two earlier versions of this file were not trustworthy and independent reviews said so. The
+-- Three earlier versions of this file were not trustworthy and independent reviews said so. The
 -- first inserted both of its synthetic cards as `postgres`, so it never met row-level security or
 -- the authenticated insert policy at all, and every negative case was wrapped in
 -- `exception when others`, so *any* error counted as the expected one. The second fixed both and
@@ -10,8 +10,18 @@
 -- writer call raised `invalid_parameter_value` where the handler expected `no_data_found`, and the
 -- transaction aborted before the positive case, the write-once matrix, or ALL CHECKS PASSED.
 --
--- This version is a role matrix with exact SQLSTATEs, one complete provenance fixture that every
--- negative case mutates by exactly one fact, and immediate zero-write counts around every refusal.
+-- The third ran, and could still print ALL CHECKS PASSED while the contract was false. Its
+-- "complete" positive fixture carried eight of the twenty version-1 keys — a document the
+-- application's own read schema rejects — so it blessed a card that would come back as `null` on
+-- every subsequent read. It also *required* the migration executor to remain a member of the writer
+-- role, blessing the residue that lets a later session `set role` into the trusted insert context
+-- and bypass the RPC entirely.
+--
+-- This version builds its positive case from the complete version-1 document — the same twenty keys
+-- `storedRebuildProvenanceSchema` reads and `provenance-contract.test.ts` pins the three
+-- descriptions of — mutates exactly one fact per negative case, takes card *and* revision counts
+-- immediately around every refusal, asserts the role context inside every role-specific block, and
+-- requires the writer role to have no members at all.
 --
 -- WHAT IT ESTABLISHES
 --   Authenticity, not merely immutability. `rebuild_provenance` is evidence that a reviewed rebuild
@@ -139,18 +149,31 @@ begin
     raise exception 'the writer role cannot use schema public, so it cannot reach its own function';
   end if;
 
-  -- It is a member of nothing. Membership *of* it is expected — that is what let the migration
-  -- role assign ownership — and is named here rather than left open-ended.
+  -- It is a member of nothing, and — the part an earlier version of this file got backwards —
+  -- *nothing is a member of it*. The migration needs membership for one statement, because
+  -- `alter function ... owner to` requires the caller to be able to `set role` to the new owner, and
+  -- it gives that membership back. Left behind, a later session as the migration role could
+  -- `set role ip_preference_card_rebuild_writer` and then satisfy both the writer-only insert guard
+  -- and the writer's own RLS policy with a direct insert, bypassing every source recheck the RPC
+  -- performs. The previous version of this check *required* that residue to be present.
   if exists (select 1 from pg_auth_members where member = writer) then
     raise exception 'the writer role is a member of another role';
   end if;
   select string_agg(r.rolname, ', ' order by r.rolname) into member_names
     from pg_auth_members m join pg_roles r on r.oid = m.member
    where m.roleid = writer;
-  if member_names is distinct from current_user::text then
-    raise exception 'roles other than the migration role are members of the writer: %',
-      coalesce(member_names, '<none>');
+  if member_names is not null then
+    raise exception 'the writer role still has members: %', member_names;
   end if;
+
+  -- And the same fact behaviourally rather than only in the catalog.
+  begin
+    set local role ip_preference_card_rebuild_writer;
+    reset role;
+    raise exception 'the migration role can still assume the writer role';
+  exception
+    when insufficient_privilege then null;
+  end;
 
   -- It owns exactly one function and nothing else at all.
   if (select count(*) from pg_proc where proowner = writer) <> 1 then
@@ -362,6 +385,8 @@ begin
   end if;
 
   -- (c) Inserting for somebody else is still refused, provenance or not.
+  cards_before := (select count(*) from public.ip_user_preference_cards);
+  revisions_before := (select count(*) from public.ip_user_preference_card_revisions);
   begin
     insert into public.ip_user_preference_cards
       (user_id, title, procedure_code, scenario_id, status, builder_inputs, card_snapshot,
@@ -373,8 +398,14 @@ begin
   exception
     when insufficient_privilege then null;
   end;
+  if (select count(*) from public.ip_user_preference_cards) <> cards_before
+     or (select count(*) from public.ip_user_preference_card_revisions) <> revisions_before then
+    raise exception 'the refused other-owner insert still wrote rows';
+  end if;
 
   -- (d) An authenticated update cannot add provenance to its own card either.
+  cards_before := (select count(*) from public.ip_user_preference_cards);
+  revisions_before := (select count(*) from public.ip_user_preference_card_revisions);
   begin
     update public.ip_user_preference_cards
        set rebuild_provenance = forged where id = created;
@@ -382,7 +413,15 @@ begin
   exception
     when restrict_violation then null;
   end;
+  if (select rebuild_provenance from public.ip_user_preference_cards where id = created)
+     is not null then
+    raise exception 'the refused authenticated update still set provenance';
+  end if;
+  if (select count(*) from public.ip_user_preference_card_revisions) <> revisions_before then
+    raise exception 'the refused authenticated update still appended a revision';
+  end if;
 
+  -- (e) And it cannot reach the trusted writer function at all: EXECUTE is not granted to it.
   begin
     perform public.ip_create_rebuilt_preference_card(
       owner_id, created, created, repeat('a', 64), null::text,
@@ -393,8 +432,9 @@ begin
     when insufficient_privilege then null;
   end;
 
-  if (select count(*) from public.ip_user_preference_cards) <> cards_before then
-    raise exception 'a refused authenticated statement wrote a card';
+  if (select count(*) from public.ip_user_preference_cards) <> cards_before
+     or (select count(*) from public.ip_user_preference_card_revisions) <> revisions_before then
+    raise exception 'a refused authenticated statement wrote rows';
   end if;
 
   reset role;
@@ -417,11 +457,13 @@ declare
   forged jsonb := jsonb_build_object('version', 'ip-cards-rebuild/1');
   ordinary_id uuid;
   cards_before bigint;
+  revisions_before bigint;
 begin
   select id into owner_id from auth.users order by created_at limit 1;
   select id into ordinary_id
     from public.ip_user_preference_cards where title = 'verify ordinary' limit 1;
   cards_before := (select count(*) from public.ip_user_preference_cards);
+  revisions_before := (select count(*) from public.ip_user_preference_card_revisions);
 
   set local role service_role;
   if current_user <> 'service_role' then
@@ -439,9 +481,14 @@ begin
   exception
     when restrict_violation then null;
   end;
+  if (select count(*) from public.ip_user_preference_cards) <> cards_before
+     or (select count(*) from public.ip_user_preference_card_revisions) <> revisions_before then
+    raise exception 'the refused service_role insert still wrote rows';
+  end if;
 
   -- The service key can reach the table for ordinary work; it still cannot add provenance to a
-  -- card that was not rebuilt.
+  -- card that was not rebuilt. Null → value is the direction that matters most here, because the
+  -- other two need a card that already carries provenance and Part 6 covers those as well.
   begin
     update public.ip_user_preference_cards
        set rebuild_provenance = forged where id = ordinary_id;
@@ -449,6 +496,13 @@ begin
   exception
     when restrict_violation then null;
   end;
+  if (select rebuild_provenance from public.ip_user_preference_cards where id = ordinary_id)
+     is not null then
+    raise exception 'the refused service_role update still set provenance';
+  end if;
+  if (select count(*) from public.ip_user_preference_card_revisions) <> revisions_before then
+    raise exception 'the refused service_role update still appended a revision';
+  end if;
 
   reset role;
 
@@ -466,8 +520,9 @@ begin
     when restrict_violation then null;
   end;
 
-  if (select count(*) from public.ip_user_preference_cards) <> cards_before then
-    raise exception 'a refused privileged insert still wrote a card';
+  if (select count(*) from public.ip_user_preference_cards) <> cards_before
+     or (select count(*) from public.ip_user_preference_card_revisions) <> revisions_before then
+    raise exception 'a refused privileged statement still wrote rows';
   end if;
 
   raise notice 'Part 4 passed: neither the service key nor table ownership writes provenance.';
@@ -497,10 +552,12 @@ declare
   source_before text;
   revisions_before text;
   provenance jsonb;
+  decisions_fixture jsonb;
   case_row record;
   cards_at bigint;
   revisions_at bigint;
   state text;
+  stored_keys text[];
 begin
   select id into owner_id from auth.users order by created_at limit 1;
 
@@ -545,20 +602,52 @@ begin
     select string_agg(md5(r.*::text), '|' order by r.id)
       from public.ip_user_preference_card_revisions r where r.card_id = source_id), ''));
 
-  -- The complete fixture: every field the function binds, agreeing with the revision row. The
-  -- nullable hashes are explicit JSON nulls rather than omitted keys, because an omitted key would
-  -- compare null-to-null against a null column and read as agreement about a claim never made.
+  -- The complete version-1 document — all twenty keys, agreeing with the revision row.
+  --
+  -- The previous version of this file built eight of them and called it complete. That object is
+  -- one the application's own read schema rejects, so the card it blessed would have come back as
+  -- `null` on every subsequent read: a row carrying rebuild evidence presented as a card that was
+  -- never rebuilt. `provenance-contract.test.ts` compares the key set built below to
+  -- `storedRebuildProvenanceSchema` and to the migration's `required_keys`, so the three cannot
+  -- drift apart again without a test failing.
+  --
+  -- The nullable hashes are stated as explicit JSON nulls rather than omitted: an absent key would
+  -- compare null-to-null against a null column and read as agreement about a claim never made, and
+  -- version 1 requires the claim to be made either way.
+  decisions_fixture := jsonb_build_array(
+    jsonb_build_object(
+      'key', 'requirement:VERIFY_ONLY',
+      'kind', 'requirement',
+      'state', 'carried_requires_review',
+      'reasonCodes', jsonb_build_array('requirement_definition_changed'),
+      'acknowledgement', 'confirmed'));
+
   provenance := jsonb_build_object(
     'version', 'ip-cards-rebuild/1',
     'sourceCardId', source_id,
     'sourceRevisionId', source_revision,
-    'sourceSnapshotHash', source_hash,
+    'sourceOwnerId', owner_id,
+    'sourceRevisionNumber', 1,
     'sourceReleaseBundleId', release_id,
-    'sourceRevisionNumber', 1)
-    || jsonb_build_object('sourceSnapshotIntegrityHash', null::text)
-    || jsonb_build_object('sourceResolvedContentHash', null::text);
+    'sourceReleaseDefinitionHash', repeat('1', 64),
+    'sourceSnapshotHash', source_hash,
+    'sourceSnapshotIntegrityHash', null::text,
+    'sourceResolvedContentHash', null::text,
+    'sourcePrintDocumentHash', null::text,
+    'targetReleaseBundleId', 'release-verify-v2',
+    'targetReleaseDefinitionHash', repeat('2', 64),
+    'targetCatalogReleaseId', 'catalog-verify-v2',
+    'operationalReconciliationHash', repeat('3', 64),
+    'authoredReleaseDiffHash', repeat('4', 64),
+    'mappingPlanHash', repeat('5', 64),
+    'allowedFinalStateHash', repeat('6', 64),
+    'decisions', decisions_fixture,
+    'createdAt', '2026-02-01T00:00:00.000Z');
 
   set local role service_role;
+  if current_user <> 'service_role' then
+    raise exception 'Part 5 is not running as service_role, but as %', current_user;
+  end if;
 
   for case_row in
     select * from (values
@@ -620,7 +709,57 @@ begin
        provenance - 'sourceSnapshotIntegrityHash', '22023'),
       ('a document that is not an object',
        owner_id, source_id, source_revision, source_hash, release_id,
-       '[]'::jsonb, '22023')
+       '[]'::jsonb, '22023'),
+      -- The owner claim, which version 1 added because the document could not previously name one.
+      ('a document naming an owner the call did not',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('sourceOwnerId', gen_random_uuid()), '22023'),
+      -- Shape: one omission per key class, one wrong type per key class, and an unknown key.
+      ('a document omitting the owner',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance - 'sourceOwnerId', '22023'),
+      ('a document omitting the allowed-final-state hash',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance - 'allowedFinalStateHash', '22023'),
+      ('a document omitting the reviewed decisions',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance - 'decisions', '22023'),
+      ('a document omitting createdAt',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance - 'createdAt', '22023'),
+      ('a document omitting the target release',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance - 'targetReleaseBundleId', '22023'),
+      ('a document carrying a key version 1 does not define',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('invented', true), '22023'),
+      ('a document whose uuid field is not a uuid',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('sourceOwnerId', 'not-a-uuid'), '22023'),
+      ('a document whose hash field is not a digest',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('allowedFinalStateHash', 'nope'), '22023'),
+      ('a document whose text field is empty',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('targetCatalogReleaseId', ''), '22023'),
+      ('a document whose timestamp is not ISO-8601',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('createdAt', 'yesterday'), '22023'),
+      ('a document whose decisions are not an array',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('decisions', jsonb_build_object()), '22023'),
+      ('a document whose decision entry is malformed',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('decisions',
+         jsonb_build_array(jsonb_build_object('key', 'x'))), '22023'),
+      ('a document whose decision reason code is not a string',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('decisions', jsonb_build_array(jsonb_build_object(
+         'key', 'x', 'kind', 'requirement', 'state', 'carried_unchanged',
+         'reasonCodes', jsonb_build_array(7), 'acknowledgement', null::text))), '22023'),
+      ('a document stating a non-nullable field as null',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('mappingPlanHash', null::text), '22023')
     ) as t(label, p_owner, p_card, p_revision, p_hash, p_release, p_document, expected)
   loop
     cards_at := (select count(*) from public.ip_user_preference_cards);
@@ -672,6 +811,20 @@ begin
      is distinct from provenance then
     raise exception 'the rebuilt card does not carry the provenance it was given';
   end if;
+  -- The stored row is readable as the *application's* document, not merely as some object. The
+  -- key set is the part SQL can check; `provenance-contract.test.ts` ties that key set to
+  -- `storedRebuildProvenanceSchema`, which is what closes the loop.
+  select coalesce(array_agg(k order by k), array[]::text[]) into stored_keys
+    from jsonb_object_keys(
+      (select rebuild_provenance from public.ip_user_preference_cards where id = created)) as k;
+  if array_length(stored_keys, 1) <> 20 then
+    raise exception 'the stored provenance has % keys, expected the 20 version-1 keys',
+      coalesce(array_length(stored_keys, 1), 0);
+  end if;
+  if not ('sourceOwnerId' = any (stored_keys) and 'allowedFinalStateHash' = any (stored_keys)
+          and 'decisions' = any (stored_keys) and 'createdAt' = any (stored_keys)) then
+    raise exception 'the stored provenance is missing a version-1 key the application requires';
+  end if;
   if (select count(*) from public.ip_user_preference_card_revisions where card_id = created) <> 1 then
     raise exception 'the rebuilt card did not get exactly one revision';
   end if;
@@ -691,7 +844,7 @@ begin
     raise exception 'the source revisions changed during the rebuild';
   end if;
 
-  raise notice 'Part 5 passed: 18 refusals with exact codes and zero writes, then one draft created.';
+  raise notice 'Part 5 passed: 33 refusals with exact codes and zero writes, then one complete draft.';
 end;
 $$;
 
@@ -708,6 +861,7 @@ declare
   original_provenance jsonb;
   revisions_before bigint;
   owner_id uuid;
+  acting_role text;
 begin
   select id, rebuild_provenance, user_id into rebuilt_id, original_provenance, owner_id
     from public.ip_user_preference_cards
@@ -718,33 +872,70 @@ begin
     raise exception 'Part 6 could not find the cards Parts 3 and 5 created';
   end if;
 
-  begin
-    update public.ip_user_preference_cards
-       set rebuild_provenance = jsonb_build_object('version', 'forged') where id = rebuilt_id;
-    raise exception 'provenance was overwritten';
-  exception when restrict_violation then null; end;
+  -- All three directions, twice: once as the table-owning migration role, and once as
+  -- `service_role`, whose `bypassrls` makes it the role a compromised key would actually use. The
+  -- previous version ran the matrix only after `reset role`, so it proved the guard for the owner
+  -- and said nothing about the role the boundary is written against.
+  foreach acting_role in array array['postgres_owner', 'service_role'] loop
+    if acting_role = 'service_role' then
+      set local role service_role;
+      if current_user <> 'service_role' then
+        raise exception 'Part 6 is not running as service_role, but as %', current_user;
+      end if;
+    end if;
 
-  begin
-    update public.ip_user_preference_cards
-       set rebuild_provenance = null where id = rebuilt_id;
-    raise exception 'provenance was cleared';
-  exception when restrict_violation then null; end;
+    begin
+      update public.ip_user_preference_cards
+         set rebuild_provenance = jsonb_build_object('version', 'forged') where id = rebuilt_id;
+      raise exception 'provenance was overwritten as %', acting_role;
+    exception when restrict_violation then null; end;
 
-  begin
-    update public.ip_user_preference_cards
-       set rebuild_provenance = jsonb_build_object('version', 'ip-cards-rebuild/1')
-     where id = ordinary_id;
-    raise exception 'a card that was not rebuilt was given provenance';
-  exception when restrict_violation then null; end;
+    begin
+      update public.ip_user_preference_cards
+         set rebuild_provenance = null where id = rebuilt_id;
+      raise exception 'provenance was cleared as %', acting_role;
+    exception when restrict_violation then null; end;
 
-  -- Ordinary metadata operations still work, and leave provenance where it was.
+    begin
+      update public.ip_user_preference_cards
+         set rebuild_provenance = jsonb_build_object('version', 'ip-cards-rebuild/1')
+       where id = ordinary_id;
+      raise exception 'a card that was not rebuilt was given provenance as %', acting_role;
+    exception when restrict_violation then null; end;
+
+    if (select rebuild_provenance from public.ip_user_preference_cards where id = rebuilt_id)
+       is distinct from original_provenance then
+      raise exception 'a refused write-once update as % still changed provenance', acting_role;
+    end if;
+    if (select rebuild_provenance from public.ip_user_preference_cards where id = ordinary_id)
+       is not null then
+      raise exception 'a refused write-once update as % still gave an ordinary card provenance',
+        acting_role;
+    end if;
+
+    reset role;
+  end loop;
+
+  -- Ordinary metadata operations still work, and each leaves provenance exactly where it was.
+  -- Checked one at a time rather than in a batch, so a guard that reacted to one of them would be
+  -- named rather than hidden behind the other two.
   update public.ip_user_preference_cards set title = 'verify rebuilt, renamed' where id = rebuilt_id;
+  if (select rebuild_provenance from public.ip_user_preference_cards where id = rebuilt_id)
+     is distinct from original_provenance then
+    raise exception 'a rename disturbed provenance';
+  end if;
+
   update public.ip_user_preference_cards set share_enabled = true where id = rebuilt_id;
+  if (select rebuild_provenance from public.ip_user_preference_cards where id = rebuilt_id)
+     is distinct from original_provenance then
+    raise exception 'a share toggle disturbed provenance';
+  end if;
+
   update public.ip_user_preference_cards set status = 'final' where id = rebuilt_id;
   select rebuild_provenance into provenance
     from public.ip_user_preference_cards where id = rebuilt_id;
   if provenance is distinct from original_provenance then
-    raise exception 'an ordinary update disturbed provenance';
+    raise exception 'a status change disturbed provenance';
   end if;
 
   -- A genuine content edit: the card says something different, so a revision is appended and
@@ -814,6 +1005,13 @@ begin
         from (select md5(r.*::text) as digest from public.ip_user_preference_card_revisions r) as t)
      is distinct from baseline.revision_digest then
     raise exception 'revision content digest changed';
+  end if;
+
+  if exists (
+    select 1 from pg_auth_members m join pg_roles r on r.oid = m.roleid
+     where r.rolname = 'ip_preference_card_rebuild_writer'
+  ) then
+    raise exception 'a member of the writer role remains at the end of the run';
   end if;
 
   raise notice 'Part 7 passed: synthetic rows removed and every digest matches the baseline.';

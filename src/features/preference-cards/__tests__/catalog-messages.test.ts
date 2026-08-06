@@ -71,6 +71,13 @@ const parameterizedMessages: Record<string, string[]> = {
   'rebuild.priorWaiver': ['rationale'],
   'rebuild.selectionMove': ['before', 'after'],
   'rebuild.presenceMove': ['before', 'after'],
+  'rebuild.consequence.intro': ['answer'],
+  'rebuild.consequence.requirementRemoved': ['requirement'],
+  'rebuild.consequence.requirementAdded': ['requirement'],
+  'rebuild.consequence.fieldChanged': ['requirement', 'field', 'from', 'to'],
+  'rebuild.consequence.warningAdded': ['warning'],
+  'rebuild.consequence.warningRemoved': ['warning'],
+  'rebuild.consequence.readinessChanged': ['from', 'to'],
   'rebuild.provenanceSourceAvailable': ['revision'],
   'rebuild.provenanceDecisionsHelp': ['answered', 'total'],
   // Named `requirements` deliberately: `sampleValue` decides numeric-versus-string from the

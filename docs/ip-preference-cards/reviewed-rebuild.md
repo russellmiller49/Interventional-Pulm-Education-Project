@@ -253,33 +253,70 @@ would not make. The hash covers `proposedInputs` as well as the decisions — a 
 reasoning but not its result would leave the one thing that gets written outside it — and it is taken
 over the canonical structured plan, never over rendered prose, which is localized.
 
-Proved in `card-rebuild-plan.test.ts` (37 tests) and `card-rebuild.test.ts` (22 tests): identical
+Proved in `card-rebuild-plan.test.ts` (78 tests) and `card-rebuild.test.ts` (77 tests): identical
 inputs hash identically, a moved probe answer moves the hash, a tampered `proposedInputs` moves the
 hash, and a submitted hash that does not match is refused with `plan_moved` and writes nothing.
 
-### The allowed post-answer state
+### Answer-scoped allowed-outcome contracts
 
 The plan hash says the server computed the same plan the physician answered. It does not say the
-card about to be written is one that plan and those answers authorize, and this gate took four
-attempts to state correctly:
+card about to be written is one that plan and those answers authorize, and this gate took five
+attempts:
 
 1. a byte comparison against the plan's projection — refused every legitimate `dropped`, because the
    two differ by exactly the answers;
 2. a re-resolution of `proposedInputs` compared to that same projection — a pure function compared
    against itself, which could not fail while three comments called it the last line of defence;
 3. new blocking warning signatures only — non-vacuous, and it accepts a card whose requirement set,
-   slot ids, roles, presences, selections, resolution states and readiness have all moved.
+   slot ids, roles, presences, selections and readiness have all moved;
+4. a state derived from the plan plus the answers, with whole comparison axes relaxed behind one
+   global `anyDropped` flag. Better, and still unsound: an independent probe supplied **one**
+   legitimate drop plus an unrelated suppression lift, an unrelated resolved-to-unresolved move, a
+   compatibility relaxation, a readiness change and a new warning, and the gate returned nothing.
 
-What is there now derives the allowed state instead. An answer can do exactly one thing — `dropped`
-clears a selection; `confirmed` and `acknowledged_unresolved` change nothing — so
-`expectedFinalState` is the reviewed projection with the dropped selections cleared, and
-`unauthorizedFinalState` checks the card about to be written against it, naming every axis that
-moved. With no drop it is exact equality, warning for warning. A drop relaxes three things and only
-three, each because a drop can cause it and nothing else can: presence may _lift_ (clearing a
-selection removes a kit, which can only un-suppress) and never fall; compatibility may relax
-(removing one half of a pair can only stop a rule matching) and never fail; resolution state,
-readiness and nonblocking warnings may move, which is what the physician was told the answer would
-do. The hash of that derived state goes into provenance as `allowedFinalStateHash`.
+The mistake in all four was treating an answer as a _global_ explanation. An answer explains exactly
+what it causes, and what it causes is not something to be guessed at — it is measured.
+
+So at review time, for every decision that requires an answer and every answer that decision allows,
+the planner applies **only that answer** to a copy of the reviewed inputs, resolves the counterfactual
+through the canonical resolver in the same reviewed target world, and diffs it against the reviewed
+baseline. That exact structured delta — added and removed requirements, per-requirement changes to
+presence, slot id, role, selected identity, resolution state and compatibility, added and removed
+warning signatures, and readiness — is that answer's `allowedOutcome` contract. All of them are in
+`rebuildPlanHash`.
+
+`confirmed` and `acknowledged_unresolved` change no input, so their contract is empty — and that is
+_checked_ by comparing the applied inputs rather than asserted, so a future change that made one of
+them write something cannot silently inherit an empty permission. Only an answer that moves the
+inputs costs a resolver call.
+
+On submit the server recomputes the plan (which detects world drift), validates the answers, selects
+only the contracts those answers name, and requires the actual delta from the reviewed baseline to be
+a **subset** of their union. Subset rather than equality, because two answers can legitimately
+overlap or supersede one another; an effect the physician was told about that then did not happen is
+not a safety failure. Two answers whose combined result is _not_ the union of their separate results
+therefore fail closed with `plan_moved` — the combination was never reviewed, and nothing is widened
+to accommodate it.
+
+Subset containment cannot express one thing, so it is stated separately: some answers **command** an
+effect rather than permitting one. Dropping a selection and then finding it on the written card
+produces an empty delta from the baseline, and an empty delta is a subset of everything. `dropped`
+and `acknowledged_unresolved` therefore carry an explicit post-condition — that line ends up with no
+selection — checked directly.
+
+If dropping `B` genuinely lifts a kit suppression on `C`, that precise `C` change is in `B`'s
+contract and is authorized. Every other `C` change is not, whatever else was dropped.
+
+**The consequences are rendered.** Each answer's measured delta is printed beside the control that
+causes it — "choosing _Do not carry_ would also raise `required_role_unresolved` and move the card's
+readiness from `complete_with_warnings` to `blocked`". A consequence that exists only inside a hash
+is not one a physician can be said to have reviewed.
+
+The hash of the selected contracts is `allowedFinalStateHash`, and it is a required version-1
+provenance field: a later reader recomputes it from the plan and the recorded answers rather than
+guessing at the rules that were in force.
+
+## 6. What the new card is
 
 ## 6. What the new card is
 
@@ -300,9 +337,57 @@ that creates the card and never again. It names the source card and revision, bo
 their definition hashes, the four source hashes, the hashes of the two reconciliation comparisons and
 of the mapping plan, and one entry per decision with the answer it actually got.
 
-It also records `allowedFinalStateHash` — the post-answer state the plan and the answers authorized,
-derived at the moment it was checked, so a later reader is not left re-deriving it from the plan and
-a guess about the rules.
+#### One version-1 shape, in four places
+
+The database, this repository's read schema, the TypeScript writer and the SQL verification script
+all have to agree about what this document is. They previously agreed about a _subset_: the RPC bound
+eight source fields and accepted any object containing them, the verifier used that eight-field object
+as its "complete" positive fixture, and the read schema required rather more. A document the database
+happily stored therefore failed to parse on read, and `loadUserCard` turned it into `null` —
+presenting a row carrying rebuild evidence as an ordinary card that was never rebuilt.
+
+Version 1 is now exactly twenty keys, and every one of them is required:
+
+`version`, `sourceCardId`, `sourceRevisionId`, `sourceOwnerId`, `sourceRevisionNumber`,
+`sourceReleaseBundleId`, `sourceReleaseDefinitionHash`, `sourceSnapshotHash`,
+`sourceSnapshotIntegrityHash`, `sourceResolvedContentHash`, `sourcePrintDocumentHash`,
+`targetReleaseBundleId`, `targetReleaseDefinitionHash`, `targetCatalogReleaseId`,
+`operationalReconciliationHash`, `authoredReleaseDiffHash`, `mappingPlanHash`,
+`allowedFinalStateHash`, `decisions`, `createdAt`.
+
+Three of them may be JSON null — the two revision-derived hashes and the print hash — and the null
+has to be _stated_: an absent key would compare null-to-null against a null column and read as
+agreement about a claim never made. An unknown top-level key is rejected rather than ignored, and the
+decision entries have their own exact five-key shape. A genuinely different document gets a new
+`version`; version 1 is never weakened, and since this migration has never been applied there is no
+deployed card that predates any field.
+
+`private.ip_validate_preference_card_rebuild_provenance_v1` is the database's half, raising `22023`
+for every shape failure. `storedRebuildProvenanceSchema` is the application's, and
+`writeRebuiltCard` parses the constructed document through it _before_ the RPC call — the database is
+the last place the shape is checked, and shipping it something the application's own reader would
+reject is how the mismatch arose in the first place.
+[`provenance-contract.test.ts`](../../src/features/preference-cards/__tests__/provenance-contract.test.ts)
+compares the SQL key list, the schema and the verifier fixture to each other, so the three cannot
+drift apart again without a test failing.
+
+#### `sourceOwnerId`
+
+New in this document, and the reason it exists is that the migration's own comment claimed the owner
+was bound to the stored evidence when it was only bound to the _call_. The RPC checked its scalar
+`p_owner_id` against the source card and revision correctly — but the persisted document could not
+name an owner at all, so a document naming a different one was not something the database could
+refuse.
+
+It comes from `auth.getUser()`, never from the browser, and the RPC compares it to the scalar owner
+argument, to the source card's `user_id`, and to the source revision's `user_id`.
+
+#### Reading it back
+
+Three states, never two. A failed parse used to collapse to `null` — the _same_ value an ordinary
+card carries — so a validation failure silently downgraded the strongest claim in the schema to no
+claim at all. `loadUserCard` now returns `none`, `valid`, or `invalid`, and the card page says a
+rebuild record it cannot read is unreadable rather than saying nothing.
 
 It is **write-once**, enforced by a `before update` trigger that refuses any change including
 null → value, so a card that was not created by a rebuild cannot be given a rebuild's provenance
@@ -389,12 +474,26 @@ columns and is not stored on the revision. Its inputs are bound; the digest itse
 claim. Re-deriving it in SQL would mean a second canonical-JSON SHA-256 implementation inside
 PL/pgSQL, which is exactly the kind of second answer this module avoids.
 
-The ownership transfer needs one more thing than membership of the new owner role: PostgreSQL
-requires the **new owner** to hold `create` on the function's schema, and the managed migration role
-is `createrole` but not `rolsuper`, so the superuser exception does not apply. The migration grants
-that privilege for exactly the `alter function ... owner to` statement and revokes it immediately —
-the writer exists to own one function, not to be a schema owner. Without it the statement fails and
-the whole transaction rolls back with nothing installed. The recheck and the insert are **one statement**, which removes the
+The ownership transfer needs two temporary privileges, and gives both back.
+
+PostgreSQL requires the caller to be able to `set role` to the new owner, and requires the **new
+owner** to hold `create` on the function's schema. The managed migration role is `createrole` but not
+`rolsuper`, so the superuser exception does not apply. The migration therefore grants membership,
+grants schema `create`, transfers ownership, revokes `create`, sets up the function ACL, and finally
+**revokes the membership**.
+
+The membership revoke is not tidiness. Left behind, a later session as the managed migration role
+could `set role ip_preference_card_rebuild_writer` and then satisfy both the writer-only insert guard
+and the writer's own RLS policy with a direct `insert`, bypassing every source recheck the RPC
+performs. The database owner is a trusted actor, but "this role exists only to own one function" has
+to be _true_ rather than nearly true. Ownership survives the revoke: ownership is recorded on the
+function, membership is only what was needed to assign it, and `security definer` execution runs as
+the owner regardless of who is a member of what.
+
+Retained schema `usage` is a different thing and is correct: PostgreSQL requires `usage` to reach
+objects in a schema, and this non-schema-owning function owner needs it for the schema-qualified
+tables it reads. The least-privilege condition is _`usage` only, no `create`, no membership, no
+unrelated ownership_. The recheck and the insert are **one statement**, which removes the
 application-level gap between "the source was verified" and "the row was written". It is not a lock:
 the residual same-statement window, and why the state it can leave is one the design already allows,
 is in [Source deletion is allowed, and leaves a tombstone](#source-deletion-is-allowed-and-leaves-a-tombstone).
@@ -470,6 +569,10 @@ Apply it through the Supabase MCP migration action **from the primary checkout**
 rollback rehearsal is not optional and comes first:
 `supabase/verification/20260804013000_verify_ip_preference_card_rebuild_provenance.sql` reads only,
 wraps itself in `begin`/`rollback`, and proves the boundary _behaviourally_ rather than structurally.
+Its positive case is built from the **complete** twenty-key version-1 document — an earlier version
+built eight of them and called it complete, blessing a card the application's own read schema
+rejects — and it requires the writer role to have **no members at all**, where an earlier version
+required the migration executor to remain one.
 It is a role matrix with exact SQLSTATEs and no `when others` anywhere: `authenticated` through
 PostgREST with a JWT subject, `service_role` with its `bypassrls`, and the table-owning migration
 role are each required to fail at the guard with `23001` — not "`23001` or `42501`", because
@@ -482,7 +585,9 @@ or either nullable hash, an unknown version, an omitted nullable key — each wi
 before/after card and revision counts proving zero writes. Only then does the correct payload
 succeed, which is also the proof that `current_user` inside the `security definer` function is the
 writer role: the same row that Part 4 refused as `service_role` and as the table owner passes here,
-and the only thing that differs is which role the guard sees. It also asserts the role holds no
+and the only thing that differs is which role the guard sees. Every role-specific block asserts its
+own `current_user` first; every refusal is bracketed by card _and_ revision counts; and the three
+write-once directions run twice, once as the table owner and once as `service_role`. It also asserts the role holds no
 `bypassrls`, no superuser or `createrole` attribute, no residual schema `create`, no membership, no
 ownership beyond its one function and no direct grant on any other table; the function ACL is read by
 grantee through `aclexplode` rather than by substring, so `PUBLIC` and any extra grantee are rejected
@@ -500,6 +605,26 @@ migration to an isolated database whose migration role matches managed Supabase 
 non-superuser, database owner — running the whole verifier as one script, and then deliberately
 breaking the insert guard, the RPC source binding and the ACL in three separate scratch runs to prove
 it fails each one, is rehearsal work and has not been done.
+
+## What the repository can and cannot establish about the database half
+
+Ten suites, 320 tests, cover the planner, the answer contracts, the server path, the canonical slot
+expansion and its independent oracles, the world-drift matrix, the migration and provenance
+contracts, and the route and card-page rendering. None of them is database-role proof.
+
+- `migration-contract.test.ts` and `provenance-contract.test.ts` read the SQL. They establish that
+  the three descriptions of the version-1 shape cannot drift apart, and that the migration's
+  privilege sequence is written in the required order. They do not execute PostgreSQL.
+- The fake tables model the intended trust boundary and the RPC's checks. That is a model, not the
+  database.
+- `card-rebuild-drift.test.ts` proves the trusted writer is called **zero** times for every drift
+  source and every final-projection axis, which is a property of the application, not of the schema.
+
+**The migration has never been applied, and no rehearsal has been run on the corrected migration.**
+Applying it to an isolated database whose migration role matches managed Supabase — `CREATEROLE`,
+non-superuser, database owner — running the verifier as one script, and then deliberately breaking
+the insert guard, the document binding, the writer membership revoke and one SQLSTATE in separate
+scratch runs to prove the verifier fails each one, is the outstanding work.
 
 ## Commands
 

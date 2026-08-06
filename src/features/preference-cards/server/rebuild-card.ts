@@ -17,8 +17,7 @@ import {
   proposeRebuildSelection,
   rebuildPlanHash,
   reviewRebuildAcknowledgements,
-  expectedFinalState,
-  expectedFinalStateHash,
+  allowedFinalStateHash,
   unanswerableBlockingDecisions,
   unauthorizedFinalState,
   type CardRebuildPlan,
@@ -506,6 +505,15 @@ export interface CardRebuildProvenance {
   version: 'ip-cards-rebuild/1'
   sourceCardId: string
   sourceRevisionId: string
+  /**
+   * Who owned the source when the rebuild was reviewed.
+   *
+   * From `auth.getUser()`, never from the browser, and cross-checked by the RPC against the scalar
+   * owner argument, the source card's `user_id` and the source revision's `user_id`. Without it the
+   * document could not name an owner at all, so the migration's claim that the owner is bound to
+   * the stored evidence was true of the *call* and false of the record it left behind.
+   */
+  sourceOwnerId: string
   sourceRevisionNumber: number
   sourceReleaseBundleId: string
   sourceReleaseDefinitionHash: string
@@ -520,11 +528,13 @@ export interface CardRebuildProvenance {
   authoredReleaseDiffHash: string
   mappingPlanHash: string
   /**
-   * The post-answer state the reviewed plan and the recorded answers authorized, by hash.
+   * The permission the recorded answers selected, by hash — over the reviewed baseline projection
+   * and the exact per-answer contracts, so a later reader can recompute it from the plan and the
+   * recorded answers rather than guessing at the rules that were in force.
    *
-   * Provenance recorded the plan and the answers but nothing about the card they were allowed to
-   * produce, so "was this card the one that was reviewed" could only ever be re-derived by a later
-   * reader guessing at the same rules. This is that derivation, made at the moment it was checked.
+   * Required at version 1. This migration has never been applied, so there is no deployed card
+   * predating the field, and making it optional would mean the only version of the shape could not
+   * be checked strictly anywhere.
    */
   allowedFinalStateHash: string
   decisions: Array<{
@@ -684,19 +694,16 @@ export async function createRebuiltCard(
 
   // The final invariant, over the card that is actually about to be written.
   //
-  // Two earlier attempts got this wrong in opposite directions. A byte comparison against the
-  // plan's projection refused every legitimate use of the drop control, because the two differ by
-  // exactly the answers. Re-resolving `proposedInputs` and comparing that instead removed the
-  // false positive by comparing a pure function against itself, which could never fail. A third
-  // compared only blocking warning signatures, which is non-vacuous but accepts a card whose
-  // requirement set, slot ids, roles, presences, selections and readiness have all moved.
-  //
-  // So the allowed state is *derived* from the hashed plan and the validated answers — the answers
-  // can do exactly one thing, which is clear a selection — and the card about to be written is
-  // checked against that. Its hash goes into provenance, so what was authorized is recorded rather
-  // than reconstructed later from the plan and a guess about the answers.
-  const expected = expectedFinalState(plan, acknowledgements as RebuildAcknowledgements)
-  const unauthorized = unauthorizedFinalState(expected, resolved.card)
+  // The answers select their pre-reviewed contracts and authorize exactly those deltas. Nothing
+  // here disables a comparison: an earlier version set one global flag whenever any drop existed,
+  // which let a single legitimate drop authorize unrelated presence, resolution, compatibility,
+  // readiness and warning drift anywhere else on the card. An answer explains what it causes, and
+  // what it causes was measured by resolving the counterfactual while the plan was built.
+  const unauthorized = unauthorizedFinalState(
+    plan,
+    acknowledgements as RebuildAcknowledgements,
+    resolved.card,
+  )
   if (unauthorized.length > 0) {
     return {
       ok: false,
@@ -709,6 +716,7 @@ export async function createRebuiltCard(
     version: 'ip-cards-rebuild/1',
     sourceCardId: cardId,
     sourceRevisionId: revisionId,
+    sourceOwnerId: user.id,
     sourceRevisionNumber: revision.revisionNumber,
     sourceReleaseBundleId: sourceReleaseBundle.id,
     sourceReleaseDefinitionHash: sourceReleaseBundle.definitionHash,
@@ -722,7 +730,7 @@ export async function createRebuiltCard(
     operationalReconciliationHash: preparation.operationalHash,
     authoredReleaseDiffHash: preparation.releaseDiffHash,
     mappingPlanHash: preparation.planHash,
-    allowedFinalStateHash: expectedFinalStateHash(expected),
+    allowedFinalStateHash: allowedFinalStateHash(plan, acknowledgements as RebuildAcknowledgements),
     decisions: plan.decisions.map((decision) => ({
       key: decision.key,
       kind: decision.kind,

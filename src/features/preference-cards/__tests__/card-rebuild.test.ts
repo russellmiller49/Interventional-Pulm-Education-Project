@@ -1,8 +1,4 @@
-import {
-  allowedAcknowledgements,
-  expectedFinalState,
-  expectedFinalStateHash,
-} from '../domain/card-rebuild-plan'
+import { allowedAcknowledgements, allowedFinalStateHash } from '../domain/card-rebuild-plan'
 import { resolveCard } from '../domain/resolve-card'
 import { stableStringify } from '../domain/stable-hash'
 import type { BuilderInputs } from '../schemas/saved-card'
@@ -114,8 +110,11 @@ const { writeRebuiltCard } = jest.requireMock('../server/rebuild-writer.server')
   writeRebuiltCard: jest.Mock
 }
 
-const OWNER = 'user-owner'
-const OTHER_USER = 'user-other'
+// Uuid-shaped, because `auth.users.id` is one and version-1 provenance names the owner as a uuid.
+const OWNER = '00000000-0000-4000-a000-000000000001'
+const OTHER_USER = '00000000-0000-4000-a000-000000000002'
+/** A real uuid that names nothing in the fixture. Used to make a document lie plausibly. */
+const OTHER_CARD_UUID = '00000000-0000-4000-8000-000000000999'
 const tables = new FakePreferenceCardTables()
 
 const PRIMARY_SLOT = 'SLOT-FIXTURE-PRIMARY'
@@ -420,12 +419,14 @@ describe('creating the new card', () => {
         )[0],
       }),
     )
-    // And the state those answers authorized, derived here from the plan and the answers alone.
-    // Provenance recorded the plan and the answers but nothing about the card they were allowed to
-    // produce, so a later reader could only re-derive it by guessing at the same rules.
+    // And the permission those answers selected, recomputed here from the plan and the recorded
+    // answers alone — which is exactly what a later reader can do, and could not before the hash
+    // existed.
     expect(provenance.allowedFinalStateHash).toBe(
-      expectedFinalStateHash(expectedFinalState(prepared.plan, acknowledgements)),
+      allowedFinalStateHash(prepared.plan, acknowledgements),
     )
+    // The owner claim the document could not previously make at all.
+    expect(provenance.sourceOwnerId).toBe(OWNER)
   })
 
   it('records a dropped answer as dropped, with the line cleared on the card', async () => {
@@ -1162,7 +1163,7 @@ describe('the source is re-derived at write time, not trusted from the review', 
     expect(tables.cards).toHaveLength(cardsBefore)
   })
 
-  /** Everything the RPC binds, agreeing with the seeded revision. Negative cases mutate one field. */
+  /** The complete version-1 document, agreeing with the seeded revision. Cases mutate one fact. */
   function writeFor(cardId: string, revisionId: string, overrides: Record<string, unknown> = {}) {
     const revision = tables.revisions.find((row) => row.id === revisionId)!
     const base = {
@@ -1188,11 +1189,23 @@ describe('the source is re-derived at write time, not trusted from the review', 
         version: 'ip-cards-rebuild/1',
         sourceCardId: base.sourceCardId,
         sourceRevisionId: base.sourceRevisionId,
-        sourceSnapshotHash: base.sourceSnapshotHash,
-        sourceReleaseBundleId: base.sourceReleaseBundleId,
+        sourceOwnerId: base.ownerId,
         sourceRevisionNumber: revision.revision_number,
-        sourceSnapshotIntegrityHash: revision.snapshot_integrity_hash,
-        sourceResolvedContentHash: revision.resolved_content_hash,
+        sourceReleaseBundleId: base.sourceReleaseBundleId,
+        sourceReleaseDefinitionHash: 'b'.repeat(64),
+        sourceSnapshotHash: base.sourceSnapshotHash,
+        sourceSnapshotIntegrityHash: revision.snapshot_integrity_hash ?? null,
+        sourceResolvedContentHash: revision.resolved_content_hash ?? null,
+        sourcePrintDocumentHash: null,
+        targetReleaseBundleId: BRAVO_RELEASE_ID,
+        targetReleaseDefinitionHash: 'c'.repeat(64),
+        targetCatalogReleaseId: 'fixture-catalog',
+        operationalReconciliationHash: 'd'.repeat(64),
+        authoredReleaseDiffHash: 'e'.repeat(64),
+        mappingPlanHash: 'f'.repeat(64),
+        allowedFinalStateHash: '0'.repeat(64),
+        decisions: [],
+        createdAt: '2026-02-01T00:00:00.000Z',
         ...((overrides.rebuildProvenance as Record<string, unknown>) ?? {}),
       },
     }
@@ -1222,7 +1235,12 @@ describe('the source is re-derived at write time, not trusted from the review', 
     const { cardId, revisionId } = seedAlphaCard()
     const cardsBefore = tables.cards.length
 
-    const foreign = tables.createRebuiltCard(writeFor(cardId, revisionId, { ownerId: OTHER_USER }))
+    const foreign = tables.createRebuiltCard(
+      writeFor(cardId, revisionId, {
+        ownerId: OTHER_USER,
+        rebuildProvenance: { sourceOwnerId: OTHER_USER },
+      }),
+    )
 
     expect(foreign).toEqual({ ok: false, code: 'source_moved' })
     expect(tables.cards).toHaveLength(cardsBefore)
@@ -1258,6 +1276,17 @@ describe('the source is re-derived at write time, not trusted from the review', 
     ['a revision number sent as a string', { sourceRevisionNumber: '1' }],
     ['an omitted nullable integrity hash', { sourceSnapshotIntegrityHash: undefined }],
     ['an omitted nullable content hash', { sourceResolvedContentHash: undefined }],
+    ['an omitted print-document hash', { sourcePrintDocumentHash: undefined }],
+    ['an omitted owner', { sourceOwnerId: undefined }],
+    ['an omitted allowed-final-state hash', { allowedFinalStateHash: undefined }],
+    ['an omitted decision list', { decisions: undefined }],
+    ['an omitted createdAt', { createdAt: undefined }],
+    ['an omitted target release', { targetReleaseBundleId: undefined }],
+    ['a key version 1 does not define', { invented: true }],
+    ['a non-nullable field stated as null', { mappingPlanHash: null }],
+    ['a malformed decision entry', { decisions: [{ key: 'x' }] }],
+    ['a uuid field that is not a uuid', { sourceOwnerId: 'not-a-uuid' }],
+    ['a hash field that is not a digest', { allowedFinalStateHash: 'nope' }],
   ])('refuses %s', (_label, override) => {
     const { cardId, revisionId } = seedAlphaCard()
     const cardsBefore = tables.cards.length
@@ -1277,20 +1306,33 @@ describe('the source is re-derived at write time, not trusted from the review', 
     expect(tables.cards).toHaveLength(cardsBefore)
   })
 
-  it.each(['sourceCardId', 'sourceRevisionId', 'sourceSnapshotHash', 'sourceReleaseBundleId'])(
-    'refuses a document whose %s disagrees with the argument it was checked against',
-    (field) => {
-      const { cardId, revisionId } = seedAlphaCard()
-      const cardsBefore = tables.cards.length
+  it.each([
+    'sourceCardId',
+    'sourceRevisionId',
+    'sourceOwnerId',
+    'sourceSnapshotHash',
+    'sourceReleaseBundleId',
+  ])('refuses a document whose %s disagrees with the argument it was checked against', (field) => {
+    const { cardId, revisionId } = seedAlphaCard()
+    const cardsBefore = tables.cards.length
 
-      const result = tables.createRebuiltCard(
-        writeFor(cardId, revisionId, { rebuildProvenance: { [field]: 'invented' } }),
-      )
+    // A well-formed value of the right type that names something else: the shape check passes
+    // and the binding check is what refuses it.
+    // Well-formed for its own field type, so the shape check passes and the *binding* check is
+    // what refuses it — a malformed value would prove only that the validator rejects garbage.
+    const invented =
+      field === 'sourceReleaseBundleId'
+        ? 'release-invented'
+        : field === 'sourceSnapshotHash'
+          ? '9'.repeat(64)
+          : OTHER_CARD_UUID
+    const result = tables.createRebuiltCard(
+      writeFor(cardId, revisionId, { rebuildProvenance: { [field]: invented } }),
+    )
 
-      expect(result).toEqual({ ok: false, code: 'provenance_mismatch' })
-      expect(tables.cards).toHaveLength(cardsBefore)
-    },
-  )
+    expect(result).toEqual({ ok: false, code: 'provenance_mismatch' })
+    expect(tables.cards).toHaveLength(cardsBefore)
+  })
 
   it('leaves the rebuilt card standing as a tombstone when the source is deleted afterwards', async () => {
     const { cardId, revisionId } = seedAlphaCard()

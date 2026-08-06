@@ -8222,7 +8222,27 @@
       "provenanceSourceLink": "打开源卡片的历史记录",
       "provenanceSourceGone": "构建本卡片所依据的卡片此后已被删除，其各版本也随之消失。以下标识符与哈希值仍准确记录了当时审阅的内容，若存在该版本的副本可据此核对；但该版本本身已不可用，也无法由本记录还原。",
       "provenanceDecisionsHeading": "当时作答的决定",
-      "provenanceDecisionsHelp": "共 {total} 项决定中有 {answered} 项需要作答，其余原样带入。"
+      "provenanceDecisionsHelp": "共 {total} 项决定中有 {answered} 项需要作答，其余原样带入。",
+      "provenanceUnreadableHeading": "无法读取本卡片的重建记录",
+      "provenanceUnreadableBody": "数据库显示本卡片由一次经审阅的重建生成，但其所带记录的格式不是本版本应用能够解读的。卡片本身没有任何变化，仍可正常使用；无法显示的只是它的生成过程。请反馈此问题——该记录为一次性写入，因此内容完好，待查明不一致原因后即可读取。",
+      "consequence": {
+        "fieldChanged": "改变 {requirement}：{field}由{from}变为{to}",
+        "intro": "选择“{answer}”还会：",
+        "nothing": "无",
+        "readinessChanged": "将卡片的就绪状态由{from}变为{to}",
+        "requirementAdded": "向新卡片中加入 {requirement}",
+        "requirementRemoved": "从新卡片中移除 {requirement}",
+        "warningAdded": "触发 {warning}",
+        "warningRemoved": "解除 {warning}"
+      },
+      "projectionField": {
+        "presence": "是否单独准备",
+        "slotId": "在组合中的位置",
+        "roleCode": "角色",
+        "selectedHospitalItemId": "所选条目",
+        "resolutionState": "解析方式",
+        "compatibilityState": "兼容性"
+      }
     }
   }
 }

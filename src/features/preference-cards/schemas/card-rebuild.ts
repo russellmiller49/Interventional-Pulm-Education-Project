@@ -64,49 +64,92 @@ export type RebuildPlanRequest = z.infer<typeof rebuildPlanRequestSchema>
 export type CreateRebuiltCardRequest = z.infer<typeof createRebuiltCardRequestSchema>
 
 /**
- * What a stored `rebuild_provenance` document may say, read back.
+ * The exact version-1 `rebuild_provenance` document — the one shape four places must agree on.
  *
- * Validated on read rather than trusted, for the same reason `builder_inputs` is: the column is
- * write-once and unwritable by any API role, which makes it *authentic*, not well-typed. A document
- * written by an older version of this code — or one that predates a field — must not make the card
- * page throw, and must not be rendered as though it said something it does not.
+ * The database, this schema, the TypeScript writer and the SQL verifier previously agreed on a
+ * *subset*: the RPC bound eight source fields and accepted any document containing them, the
+ * verifier used that eight-field object as its "complete" positive fixture, and this schema then
+ * required rather more on read. A document the database happily stored therefore failed to parse
+ * back, and `loadUserCard` turned it into `null` — presenting a row that carries rebuild evidence
+ * as an ordinary card.
  *
- * Deliberately loose about the decision list's `state` and `reasonCodes`: those are closed
- * vocabularies *at the moment a card was created*, and a card created a year ago carries the
- * vocabulary of a year ago. Narrowing them here would make old, perfectly valid evidence
- * unreadable — which is the opposite of what a permanent record is for.
+ * So there is one shape, it is strict in both directions, and `provenance-contract.test.ts` proves
+ * the SQL key list, this schema and the verifier fixture describe it identically.
+ *
+ * `.strict()` on purpose: an unknown top-level key is a document this code cannot interpret, and
+ * silently ignoring it would let a future writer smuggle claims past every reader. A genuinely
+ * different shape gets a new `version`, never a weakened version 1 — and since the migration has
+ * never been applied there is no deployed card that predates any field here.
+ *
+ * Deliberately loose about each decision's `state` and `reasonCodes`: those are closed vocabularies
+ * *at the moment a card was created*, and a card created a year from now carries that year's
+ * vocabulary. Narrowing them here would make valid permanent evidence unreadable, which is the
+ * opposite of what a permanent record is for.
  */
-export const storedRebuildProvenanceSchema = z.object({
-  version: z.literal('ip-cards-rebuild/1'),
-  sourceCardId: z.string().uuid(),
-  sourceRevisionId: z.string().uuid(),
-  sourceRevisionNumber: z.number().int().min(1),
-  sourceReleaseBundleId: z.string().trim().min(1).max(120),
-  sourceReleaseDefinitionHash: sha256Schema,
-  sourceSnapshotHash: sha256Schema,
-  sourceSnapshotIntegrityHash: sha256Schema.nullable(),
-  sourceResolvedContentHash: sha256Schema.nullable(),
-  sourcePrintDocumentHash: sha256Schema.nullable(),
-  targetReleaseBundleId: z.string().trim().min(1).max(120),
-  targetReleaseDefinitionHash: sha256Schema,
-  targetCatalogReleaseId: z.string().trim().min(1).max(120),
-  operationalReconciliationHash: sha256Schema,
-  authoredReleaseDiffHash: sha256Schema,
-  mappingPlanHash: sha256Schema,
-  /** Absent on cards created before the allowed-state derivation existed. */
-  allowedFinalStateHash: sha256Schema.optional(),
-  decisions: z
-    .array(
-      z.object({
-        key: z.string().trim().min(1).max(200),
-        kind: z.string().trim().min(1).max(40),
-        state: z.string().trim().min(1).max(60),
-        reasonCodes: z.array(z.string().trim().min(1).max(80)).max(40),
-        acknowledgement: z.string().trim().min(1).max(40).nullable(),
-      }),
-    )
-    .max(1000),
-  createdAt: z.string().datetime({ offset: true }),
-})
+export const storedRebuildProvenanceSchema = z
+  .object({
+    version: z.literal('ip-cards-rebuild/1'),
+    sourceCardId: z.string().uuid(),
+    sourceRevisionId: z.string().uuid(),
+    /** From `auth.getUser()`, never the browser. Bound by the RPC to both source rows. */
+    sourceOwnerId: z.string().uuid(),
+    sourceRevisionNumber: z.number().int().min(1),
+    sourceReleaseBundleId: z.string().trim().min(1).max(120),
+    sourceReleaseDefinitionHash: sha256Schema,
+    sourceSnapshotHash: sha256Schema,
+    /** Null only where the source revision genuinely predates the split hashes. */
+    sourceSnapshotIntegrityHash: sha256Schema.nullable(),
+    sourceResolvedContentHash: sha256Schema.nullable(),
+    /** Derived in TypeScript from the integrity hash and the printed columns; app-only. */
+    sourcePrintDocumentHash: sha256Schema.nullable(),
+    targetReleaseBundleId: z.string().trim().min(1).max(120),
+    targetReleaseDefinitionHash: sha256Schema,
+    targetCatalogReleaseId: z.string().trim().min(1).max(120),
+    operationalReconciliationHash: sha256Schema,
+    authoredReleaseDiffHash: sha256Schema,
+    mappingPlanHash: sha256Schema,
+    allowedFinalStateHash: sha256Schema,
+    decisions: z
+      .array(
+        z
+          .object({
+            key: z.string().trim().min(1).max(200),
+            kind: z.string().trim().min(1).max(40),
+            state: z.string().trim().min(1).max(60),
+            reasonCodes: z.array(z.string().trim().min(1).max(80)).max(40),
+            acknowledgement: z.string().trim().min(1).max(40).nullable(),
+          })
+          .strict(),
+      )
+      .max(1000),
+    createdAt: z.string().datetime({ offset: true }),
+  })
+  .strict()
 
 export type StoredRebuildProvenance = z.infer<typeof storedRebuildProvenanceSchema>
+
+/**
+ * The exact top-level key set, in schema order.
+ *
+ * Exported so the SQL validation function's key list and the verifier's positive fixture can be
+ * checked against it rather than maintained beside it.
+ */
+export const REBUILD_PROVENANCE_V1_KEYS = Object.keys(
+  storedRebuildProvenanceSchema.shape,
+) as ReadonlyArray<keyof StoredRebuildProvenance>
+
+/** The keys whose value may be JSON null. Every other key must carry a value. */
+export const REBUILD_PROVENANCE_V1_NULLABLE_KEYS = [
+  'sourcePrintDocumentHash',
+  'sourceResolvedContentHash',
+  'sourceSnapshotIntegrityHash',
+] as const
+
+/** The exact key set of one entry in `decisions`. */
+export const REBUILD_PROVENANCE_V1_DECISION_KEYS = [
+  'acknowledgement',
+  'key',
+  'kind',
+  'reasonCodes',
+  'state',
+] as const

@@ -2,7 +2,10 @@ import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 
-import { CardRebuildProvenanceView } from '@/features/preference-cards/components/CardRebuildProvenanceView'
+import {
+  CardRebuildProvenanceUnreadable,
+  CardRebuildProvenanceView,
+} from '@/features/preference-cards/components/CardRebuildProvenanceView'
 import { GeneratedCardHeader } from '@/features/preference-cards/components/GeneratedCardHeader'
 import { PreferenceCardTabs } from '@/features/preference-cards/components/PreferenceCardViews'
 import { CardRowActions } from '@/features/preference-cards/components/CardRowActions'
@@ -38,9 +41,13 @@ export default async function GeneratedPreferenceCardPage({ params }: PageProps)
   // A rebuilt card says so, and says whether the revision it cites is still there. Deleting the
   // source is permitted and cascades its revisions, so the honest answer once it is gone is that
   // the record is a hash-addressed tombstone — not a link that 404s and not silence.
+  //
+  // A document that does not parse is its own state, never `none`: a row carrying rebuild evidence
+  // this code cannot read must not be presented as a card that was never rebuilt.
   const provenance = record.rebuildProvenance
   const sourceAvailable =
-    provenance !== null && (await loadUserCard(provenance.sourceCardId)) !== null
+    provenance.state === 'valid' &&
+    (await loadUserCard(provenance.provenance.sourceCardId)) !== null
 
   return (
     <div className="container space-y-8 py-8 md:py-12">
@@ -58,13 +65,14 @@ export default async function GeneratedPreferenceCardPage({ params }: PageProps)
         layout="page"
         currentRevisionId={currentRevision?.id ?? null}
       />
-      {provenance ? (
+      {provenance.state === 'valid' ? (
         <CardRebuildProvenanceView
-          provenance={provenance}
+          provenance={provenance.provenance}
           locale={locale}
           sourceAvailable={sourceAvailable}
         />
       ) : null}
+      {provenance.state === 'invalid' ? <CardRebuildProvenanceUnreadable /> : null}
       <section className="rounded-3xl border border-border bg-card p-5 shadow-sm md:p-7">
         <PreferenceCardTabs card={record.card} />
       </section>

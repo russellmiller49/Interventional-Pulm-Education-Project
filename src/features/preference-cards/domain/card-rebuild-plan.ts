@@ -298,6 +298,61 @@ export interface RebuildTargetResolution {
   warnings: Array<{ code: string; severity: string; sourceType: string; sourceId: string | null }>
 }
 
+/**
+ * One structured difference between two projections of the same target world.
+ *
+ * Codes and identifiers only. This is hashed into the plan, compared byte-for-byte before the
+ * write, and shown to a physician through translated labels, so anything localized or cosmetic in
+ * here would make an identical card look changed.
+ */
+export interface RebuildProjectionFieldChange {
+  requirementKey: string
+  field:
+    | 'presence'
+    | 'slotId'
+    | 'roleCode'
+    | 'selectedHospitalItemId'
+    | 'resolutionState'
+    | 'compatibilityState'
+  from: string | null
+  to: string | null
+}
+
+/** Warnings are compared as a multiset of `code|severity|sourceType|sourceId` signatures. */
+export interface RebuildProjectionDelta {
+  /** The compared card does not resolve at all. Every other field is empty when this is true. */
+  notResolvable: boolean
+  addedRequirements: string[]
+  removedRequirements: string[]
+  changes: RebuildProjectionFieldChange[]
+  addedWarnings: string[]
+  removedWarnings: string[]
+  readiness: { from: string | null; to: string | null } | null
+}
+
+/**
+ * What one answer to one decision is permitted to change, and nothing else.
+ *
+ * The previous gate treated a single legitimate drop as a global causal explanation: one
+ * `anyDropped` flag switched off the resolution, readiness, presence-lift, compatibility-relaxation
+ * and nonblocking-warning comparisons for *every* requirement on the card. An independent probe
+ * supplied one valid drop plus an unrelated suppression lift, an unrelated resolved-to-unresolved
+ * move, an unrelated compatibility relaxation, a readiness change and a new warning, and the gate
+ * returned no violations at all.
+ *
+ * An answer is not an explanation for arbitrary drift. So each answer's permitted effect is
+ * measured, at review time, by actually resolving the counterfactual — the reviewed inputs with
+ * that one answer applied and nothing else — through the same canonical resolver in the same
+ * reviewed target world, and diffing it against the reviewed baseline. That exact delta is the
+ * contract. If dropping `B` genuinely lifts a kit suppression on `C`, that precise `C` change is in
+ * `B`'s contract and is authorized; every other `C` change is not.
+ */
+export interface RebuildAllowedOutcome {
+  decisionKey: string
+  answer: RebuildAcknowledgement
+  delta: RebuildProjectionDelta
+}
+
 export interface CardRebuildPlan {
   version: typeof CARD_REBUILD_PLAN_VERSION
   source: {
@@ -340,6 +395,14 @@ export interface CardRebuildPlan {
    * longer matches — a card whose final state was never reviewed is not inserted.
    */
   targetResolution: RebuildTargetResolution
+  /**
+   * One entry per (decision, allowed answer), sorted by key then answer.
+   *
+   * Inside the hashed plan because it *is* the review: the physician is shown these consequences,
+   * and the write is authorized against exactly these deltas. A contract computed after the answers
+   * arrived would be the server explaining the card to itself.
+   */
+  allowedOutcomes: RebuildAllowedOutcome[]
   /** Sorted by key. Every decision the review gate reads, in one list. */
   decisions: RebuildDecision[]
   /**
@@ -928,6 +991,138 @@ function annotateWithTargetResolution(
   })
 }
 
+const EMPTY_DELTA: RebuildProjectionDelta = {
+  notResolvable: false,
+  addedRequirements: [],
+  removedRequirements: [],
+  changes: [],
+  addedWarnings: [],
+  removedWarnings: [],
+  readiness: null,
+}
+
+function warningSignature(warning: RebuildTargetResolution['warnings'][number]): string {
+  return `${warning.code}|${warning.severity}|${warning.sourceType}|${warning.sourceId ?? ''}`
+}
+
+/** Multiset difference: every occurrence in `left` that `right` does not also have. */
+function missingOccurrences(left: string[], right: string[]): string[] {
+  const remaining = new Map<string, number>()
+  for (const value of right) remaining.set(value, (remaining.get(value) ?? 0) + 1)
+  const out: string[] = []
+  for (const value of left) {
+    const count = remaining.get(value) ?? 0
+    if (count > 0) remaining.set(value, count - 1)
+    else out.push(value)
+  }
+  return out.sort()
+}
+
+const COMPARED_ITEM_FIELDS: RebuildProjectionFieldChange['field'][] = [
+  'presence',
+  'slotId',
+  'roleCode',
+  'selectedHospitalItemId',
+  'resolutionState',
+  'compatibilityState',
+]
+
+/**
+ * Everything that differs between two projections of the same target world.
+ *
+ * Total and deterministic, so the same pair always produces the same bytes and the delta can be
+ * hashed into the plan alongside the projection it was taken against.
+ */
+export function diffProjections(
+  before: RebuildTargetResolution,
+  after: RebuildTargetResolution,
+): RebuildProjectionDelta {
+  if (!after.ok) return { ...EMPTY_DELTA, notResolvable: true }
+
+  const beforeByKey = new Map(before.items.map((item) => [item.requirementKey, item]))
+  const afterByKey = new Map(after.items.map((item) => [item.requirementKey, item]))
+
+  const addedRequirements = [...afterByKey.keys()].filter((key) => !beforeByKey.has(key)).sort()
+  const removedRequirements = [...beforeByKey.keys()].filter((key) => !afterByKey.has(key)).sort()
+
+  const changes: RebuildProjectionFieldChange[] = []
+  for (const [requirementKey, was] of beforeByKey) {
+    const now = afterByKey.get(requirementKey)
+    if (!now) continue
+    for (const field of COMPARED_ITEM_FIELDS) {
+      if (was[field] === now[field]) continue
+      changes.push({ requirementKey, field, from: was[field], to: now[field] })
+    }
+  }
+  changes.sort((left, right) =>
+    `${left.requirementKey}|${left.field}`.localeCompare(`${right.requirementKey}|${right.field}`),
+  )
+
+  const beforeWarnings = before.warnings.map(warningSignature)
+  const afterWarnings = after.warnings.map(warningSignature)
+
+  return {
+    notResolvable: false,
+    addedRequirements,
+    removedRequirements,
+    changes,
+    addedWarnings: missingOccurrences(afterWarnings, beforeWarnings),
+    removedWarnings: missingOccurrences(beforeWarnings, afterWarnings),
+    readiness:
+      before.readinessState === after.readinessState
+        ? null
+        : { from: before.readinessState, to: after.readinessState },
+  }
+}
+
+/** Whether a delta says nothing changed. */
+export function isEmptyDelta(delta: RebuildProjectionDelta): boolean {
+  return (
+    !delta.notResolvable &&
+    delta.addedRequirements.length === 0 &&
+    delta.removedRequirements.length === 0 &&
+    delta.changes.length === 0 &&
+    delta.addedWarnings.length === 0 &&
+    delta.removedWarnings.length === 0 &&
+    delta.readiness === null
+  )
+}
+
+/**
+ * The permitted consequence of each answer, measured rather than assumed.
+ *
+ * `confirmed` and `acknowledged_unresolved` change no input at all, so their counterfactual is the
+ * baseline and their contract is empty — and that is *checked* by comparing the applied inputs
+ * rather than asserted, because a future change to `applyAnswersToInputs` that made one of them
+ * write something would otherwise silently acquire an empty contract. Only an answer that actually
+ * moves the inputs costs a resolver call.
+ */
+function computeAllowedOutcomes(
+  decisions: RebuildDecision[],
+  proposedInputs: BuilderInputs,
+  baseline: RebuildTargetResolution,
+  probe: RebuildProbe,
+): RebuildAllowedOutcome[] {
+  const canonicalProposed = stableStringify(proposedInputs)
+  const outcomes: RebuildAllowedOutcome[] = []
+
+  for (const decision of decisions) {
+    if (!decision.requiresExplicitConfirmation) continue
+    for (const answer of allowedAcknowledgements(decision)) {
+      const inputs = applyAnswersToInputs(decisions, proposedInputs, { [decision.key]: answer })
+      const delta =
+        stableStringify(inputs) === canonicalProposed
+          ? EMPTY_DELTA
+          : diffProjections(baseline, projectTargetResolution(probe.resolveTarget(inputs)))
+      outcomes.push({ decisionKey: decision.key, answer, delta })
+    }
+  }
+
+  return outcomes.sort((left, right) =>
+    `${left.decisionKey}|${left.answer}`.localeCompare(`${right.decisionKey}|${right.answer}`),
+  )
+}
+
 /**
  * The plan.
  *
@@ -1369,6 +1564,9 @@ export function planCardRebuild(input: RebuildPlanInput): CardRebuildPlan {
 
   const targetResolution = projectTargetResolution(probe.resolveTarget(proposedInputs))
   const annotated = annotateWithTargetResolution(decisions, targetResolution)
+  // Measured against the annotated decisions, because promotion by the final-resolution pass is
+  // what decides whether a decision is asked about at all — and only asked decisions have answers.
+  const allowedOutcomes = computeAllowedOutcomes(annotated, proposedInputs, targetResolution, probe)
 
   return {
     version: CARD_REBUILD_PLAN_VERSION,
@@ -1394,6 +1592,7 @@ export function planCardRebuild(input: RebuildPlanInput): CardRebuildPlan {
     },
     comparisons,
     targetResolution,
+    allowedOutcomes,
     decisions: annotated,
     proposedInputs,
     blockingCount: annotated.filter((decision) => decision.blocking).length,
@@ -1500,175 +1699,178 @@ export function blockingDecisions(plan: CardRebuildPlan): RebuildDecision[] {
  * `createRebuiltCard` refuses outright rather than creating a card nobody could interpret.
  */
 /**
- * The states the reviewed plan plus the physician's validated answers actually authorize.
+ * The exact contracts the physician's answers selected, and nothing else.
  *
- * This gate took four attempts. A byte comparison against the plan's projection refused every
- * legitimate use of the drop control, because the two differ by exactly the answers. Re-resolving
- * `proposedInputs` and comparing that instead removed the false positive by comparing a pure
- * function against itself, which could never fail. A third compared only blocking warning
- * signatures: non-vacuous, but it accepts a card whose requirement set, slot ids, roles,
- * presences, selections, resolution states and readiness have all moved, and it cannot tell a
- * warning the physician's own answer authorized from unrelated drift.
+ * This gate took five attempts. A byte comparison against the plan's projection refused every
+ * legitimate drop, because the two differ by exactly the answers. Re-resolving `proposedInputs` and
+ * comparing that instead removed the false positive by comparing a pure function against itself,
+ * which could never fail. A third compared only blocking warning signatures, which accepts a card
+ * whose requirement set, roles, presences and readiness have all moved. A fourth derived the
+ * expected state from the plan plus the answers — better, but it relaxed whole comparison axes
+ * behind one global `anyDropped` flag, so a single legitimate drop authorized unrelated drift
+ * anywhere on the card.
  *
- * So the expected state is *derived* here, from the hashed plan and the validated answers alone,
- * and `unauthorizedFinalState` checks the card about to be written against it. Deriving rather
- * than re-resolving is the point: resolving the same helper twice and comparing the results proves
- * the helper is deterministic, which is not the claim being made.
- *
- * The derivation is small because an answer can do exactly one thing. `dropped` clears a selection;
- * `confirmed` and `acknowledged_unresolved` change nothing at all. So the expected projection *is*
- * the reviewed projection with the dropped selections cleared.
+ * The mistake in all four was treating an answer as a *global* explanation. An answer explains
+ * exactly what it causes, and what it causes was measured at review time by resolving the
+ * counterfactual. So the union below is a union of specific, pre-reviewed deltas, never a set of
+ * disabled checks.
  */
-export interface RebuildExpectedFinalState {
-  version: typeof CARD_REBUILD_PLAN_VERSION
-  /** Requirement keys whose carried selection the physician cleared. Sorted. */
-  droppedRequirementKeys: string[]
-  /** The reviewed projection, with those selections cleared. */
-  items: RebuildTargetResolutionItem[]
-  readinessState: string | null
-  warnings: RebuildTargetResolution['warnings']
-}
-
-export function expectedFinalState(
+export function selectedAllowedOutcomes(
   plan: CardRebuildPlan,
   acknowledgements: RebuildAcknowledgements,
-): RebuildExpectedFinalState {
-  const dropped = new Set<string>()
+): { outcomes: RebuildAllowedOutcome[]; unmatched: string[] } {
+  const byKeyAnswer = new Map(
+    plan.allowedOutcomes.map((outcome) => [`${outcome.decisionKey}|${outcome.answer}`, outcome]),
+  )
+  const outcomes: RebuildAllowedOutcome[] = []
+  const unmatched: string[] = []
+
   for (const decision of plan.decisions) {
-    if (decision.kind !== 'requirement') continue
     if (!decision.requiresExplicitConfirmation) continue
-    if (acknowledgements[decision.key] !== 'dropped') continue
-    dropped.add(decision.requirementKey)
+    const answer = acknowledgements[decision.key]
+    if (answer === undefined) continue
+    const outcome = byKeyAnswer.get(`${decision.key}|${answer}`)
+    // A decision the review gate accepted but the plan measured no contract for cannot be
+    // authorized by anything, so it fails closed rather than contributing an empty permission.
+    if (!outcome) unmatched.push(decision.key)
+    else outcomes.push(outcome)
   }
 
   return {
-    version: CARD_REBUILD_PLAN_VERSION,
-    droppedRequirementKeys: [...dropped].sort(),
-    items: plan.targetResolution.items.map((item) =>
-      dropped.has(item.requirementKey) ? { ...item, selectedHospitalItemId: null } : item,
-    ),
-    readinessState: plan.targetResolution.readinessState,
-    warnings: plan.targetResolution.warnings,
+    outcomes: outcomes.sort((left, right) => left.decisionKey.localeCompare(right.decisionKey)),
+    unmatched,
   }
-}
-
-/** Written into the new card's provenance, so what was authorized is recorded, not only inferred. */
-export function expectedFinalStateHash(state: RebuildExpectedFinalState): string {
-  return stableSnapshotHash({
-    v: CARD_REBUILD_PLAN_VERSION,
-    kind: 'rebuild-allowed-final-state',
-    payload: state,
-  })
-}
-
-function sameWarning(
-  left: RebuildTargetResolution['warnings'][number],
-  right: RebuildTargetResolution['warnings'][number],
-): boolean {
-  return (
-    left.code === right.code &&
-    left.severity === right.severity &&
-    left.sourceType === right.sourceType &&
-    (left.sourceId ?? null) === (right.sourceId ?? null)
-  )
 }
 
 /**
- * Every way the card about to be written departs from what the review authorized.
+ * The identity of the state those contracts authorize.
  *
- * Empty is the pass condition. Each entry names the axis and the requirement, so a refusal can say
- * what moved rather than only that something did.
+ * Over the reviewed baseline and the selected contracts, so it names the *permission* rather than
+ * the outcome — a later reader can recompute it from the plan and the recorded answers and get the
+ * same value. Required in version-1 provenance.
+ */
+export function allowedFinalStateHash(
+  plan: CardRebuildPlan,
+  acknowledgements: RebuildAcknowledgements,
+): string {
+  const { outcomes } = selectedAllowedOutcomes(plan, acknowledgements)
+  return stableSnapshotHash({
+    v: CARD_REBUILD_PLAN_VERSION,
+    kind: 'rebuild-allowed-final-state',
+    payload: { baseline: plan.targetResolution, selected: outcomes },
+  })
+}
+
+function fieldViolationCode(field: RebuildProjectionFieldChange['field']): string {
+  switch (field) {
+    case 'presence':
+      return 'presence_changed'
+    case 'slotId':
+      return 'slot_changed'
+    case 'roleCode':
+      return 'role_changed'
+    case 'selectedHospitalItemId':
+      return 'selection_changed'
+    case 'resolutionState':
+      return 'resolution_changed'
+    case 'compatibilityState':
+      return 'compatibility_changed'
+  }
+}
+
+/**
+ * Every way the card about to be written departs from what the answers authorized.
  *
- * With no dropped answer this is exact equality: the physician confirmed or acknowledged
- * everything, so the card must be the projection they read, warning for warning.
+ * Empty is the pass condition. The actual delta from the reviewed baseline must be a *subset* of
+ * the union of the selected contracts — subset rather than equality, because two answers can
+ * legitimately overlap (both remove the same warning) or supersede one another (dropping a
+ * selection that a second answer would have left unresolved). An effect the physician was told
+ * would happen and which then did not is not a safety failure; an effect nobody was told about is.
  *
- * A drop relaxes three things and only three, each because a drop can cause it and nothing else
- * can:
- *
- *  - **Presence may lift, never fall.** Suppression comes from a selected procedure kit, so
- *    clearing a selection can only remove a kit and un-suppress the lines it covered. A card that
- *    newly *suppresses* something after a drop is not a consequence of the drop.
- *  - **Compatibility may relax, never fail.** A compatibility rule rejects a pair of selections;
- *    removing one of them can only stop a rule matching.
- *  - **Resolution state, readiness and nonblocking warnings may move.** Dropping a required line
- *    raises `required_role_unresolved` and moves the card to `blocked` by design — which is what
- *    the physician was told the answer would do.
- *
- * A requirement may disappear only if it was the one dropped, because clearing a selection also
- * clears that requirement's conditional include/exclude answer. Nothing authorizes a requirement
- * the reviewed plan never contained.
+ * Two answers whose *combined* result is not the union of their separate results therefore fail
+ * closed here rather than widening anything: the combination was never reviewed.
  */
 export function unauthorizedFinalState(
-  expected: RebuildExpectedFinalState,
+  plan: CardRebuildPlan,
+  acknowledgements: RebuildAcknowledgements,
   resolved: UnhashedResolvedCard | null,
 ): string[] {
-  if (!resolved) return ['not_resolvable']
+  const { outcomes, unmatched } = selectedAllowedOutcomes(plan, acknowledgements)
+  const violations = unmatched.map((key) => `unreviewed_answer:${key}`)
+
   const final = projectTargetResolution(resolved)
-  if (!final.ok) return ['not_resolvable']
+  const actual = diffProjections(plan.targetResolution, final)
+  if (actual.notResolvable) return [...violations, 'not_resolvable'].sort()
 
-  const dropped = new Set(expected.droppedRequirementKeys)
-  const anyDropped = dropped.size > 0
-  const expectedByKey = new Map(expected.items.map((item) => [item.requirementKey, item]))
+  // Some answers *command* an effect rather than merely permitting one, and a permitted effect
+  // that simply failed to happen is not a safety failure — so the subset rule below cannot express
+  // this. Dropping a selection and then finding it on the written card produces an empty delta from
+  // the baseline, which is a subset of everything: the physician discarded a product and the card
+  // kept it, and nothing in the containment check would ever notice.
   const finalByKey = new Map(final.items.map((item) => [item.requirementKey, item]))
-  const violations: string[] = []
-
-  for (const key of finalByKey.keys()) {
-    if (!expectedByKey.has(key)) violations.push(`requirement_outside_plan:${key}`)
-  }
-
-  for (const [key, want] of expectedByKey) {
-    const got = finalByKey.get(key)
-    if (!got) {
-      if (!dropped.has(key)) violations.push(`requirement_missing:${key}`)
-      continue
-    }
-    if (got.slotId !== want.slotId) violations.push(`slot_changed:${key}`)
-    if (got.roleCode !== want.roleCode) violations.push(`role_changed:${key}`)
-    if (got.selectedHospitalItemId !== want.selectedHospitalItemId) {
+  for (const decision of plan.decisions) {
+    if (decision.kind !== 'requirement' || !decision.requiresExplicitConfirmation) continue
+    const answer = acknowledgements[decision.key]
+    if (answer !== 'dropped' && answer !== 'acknowledged_unresolved') continue
+    // `acknowledged_unresolved` is only ever offered where there is nothing to carry, so both
+    // answers have the same post-condition: this line ends up with no selection.
+    if (answer === 'acknowledged_unresolved' && decision.carriedSelection?.kind !== 'none') continue
+    const item = finalByKey.get(decision.requirementKey)
+    if (item && item.selectedHospitalItemId !== null) {
       violations.push(
-        dropped.has(key) ? `selection_not_cleared:${key}` : `selection_changed:${key}`,
+        answer === 'dropped'
+          ? `selection_not_cleared:${decision.requirementKey}`
+          : `unresolved_line_acquired_a_selection:${decision.requirementKey}`,
       )
     }
-    if (got.presence !== want.presence) {
-      const lifted = want.presence === 'suppressed' && got.presence === 'active' && anyDropped
-      if (!lifted) violations.push(`presence_changed:${key}`)
-    }
-    if (got.compatibilityState !== want.compatibilityState) {
-      const relaxed = anyDropped && got.compatibilityState !== 'fail'
-      if (!relaxed) violations.push(`compatibility_changed:${key}`)
-    }
-    if (got.resolutionState !== want.resolutionState && !anyDropped) {
-      violations.push(`resolution_changed:${key}`)
-    }
   }
 
-  if (final.readinessState !== expected.readinessState && !anyDropped) {
-    violations.push('readiness_changed')
-  }
-
-  // Blocking conditions are checked whatever the answers were: an answer may introduce a warning it
-  // was given in order to introduce, and may never introduce a *blocking* condition nobody read.
-  const reviewedBlocking = new Set(
-    expected.warnings
-      .filter((warning) => warning.severity === 'blocking')
-      .map((warning) => `${warning.code}|${warning.sourceType}|${warning.sourceId ?? ''}`),
+  const allowed = outcomes.map((outcome) => outcome.delta)
+  const allowedAdded = allowed.flatMap((delta) => delta.addedRequirements)
+  const allowedRemoved = allowed.flatMap((delta) => delta.removedRequirements)
+  const allowedChanges = new Set(
+    allowed.flatMap((delta) =>
+      delta.changes.map(
+        (change) =>
+          `${change.requirementKey}|${change.field}|${change.from ?? ''}|${change.to ?? ''}`,
+      ),
+    ),
   )
-  for (const warning of final.warnings) {
-    const signature = `${warning.code}|${warning.sourceType}|${warning.sourceId ?? ''}`
-    if (warning.severity === 'blocking' && !reviewedBlocking.has(signature)) {
-      violations.push(`unreviewed_blocking_warning:${warning.code}`)
-      continue
-    }
-    if (!anyDropped && !expected.warnings.some((candidate) => sameWarning(candidate, warning))) {
-      violations.push(`unreviewed_warning:${warning.code}`)
-    }
+  const allowedAddedWarnings = allowed.flatMap((delta) => delta.addedWarnings)
+  const allowedRemovedWarnings = allowed.flatMap((delta) => delta.removedWarnings)
+  const allowedReadiness = new Set(
+    allowed
+      .filter((delta) => delta.readiness !== null)
+      .map((delta) => `${delta.readiness?.from ?? ''}|${delta.readiness?.to ?? ''}`),
+  )
+
+  for (const key of missingOccurrences(actual.addedRequirements, allowedAdded)) {
+    violations.push(`requirement_outside_plan:${key}`)
   }
-  if (!anyDropped) {
-    for (const warning of expected.warnings) {
-      if (!final.warnings.some((candidate) => sameWarning(candidate, warning))) {
-        violations.push(`warning_disappeared:${warning.code}`)
-      }
-    }
+  for (const key of missingOccurrences(actual.removedRequirements, allowedRemoved)) {
+    violations.push(`requirement_missing:${key}`)
+  }
+  for (const change of actual.changes) {
+    const signature = `${change.requirementKey}|${change.field}|${change.from ?? ''}|${change.to ?? ''}`
+    if (allowedChanges.has(signature)) continue
+    violations.push(`${fieldViolationCode(change.field)}:${change.requirementKey}`)
+  }
+  for (const signature of missingOccurrences(actual.addedWarnings, allowedAddedWarnings)) {
+    const [code, severity] = signature.split('|')
+    violations.push(
+      severity === 'blocking'
+        ? `unreviewed_blocking_warning:${code}`
+        : `unreviewed_warning:${code}`,
+    )
+  }
+  for (const signature of missingOccurrences(actual.removedWarnings, allowedRemovedWarnings)) {
+    violations.push(`warning_disappeared:${signature.split('|')[0]}`)
+  }
+  if (
+    actual.readiness &&
+    !allowedReadiness.has(`${actual.readiness.from ?? ''}|${actual.readiness.to ?? ''}`)
+  ) {
+    violations.push('readiness_changed')
   }
 
   return [...new Set(violations)].sort()
@@ -1810,7 +2012,23 @@ export function applyRebuildAcknowledgements(
   plan: CardRebuildPlan,
   acknowledgements: RebuildAcknowledgements,
 ): BuilderInputs {
-  const inputs = plan.proposedInputs
+  return applyAnswersToInputs(plan.decisions, plan.proposedInputs, acknowledgements)
+}
+
+/**
+ * The same transformation, over the two things it actually needs.
+ *
+ * Split out so the counterfactual measurement above and the write path below cannot diverge: a
+ * contract measured with one notion of "apply this answer" and a card written with another would
+ * be a permission for a state that never gets produced, which is exactly the kind of second answer
+ * this module exists to avoid.
+ */
+function applyAnswersToInputs(
+  decisions: RebuildDecision[],
+  proposedInputs: BuilderInputs,
+  acknowledgements: RebuildAcknowledgements,
+): BuilderInputs {
+  const inputs = proposedInputs
   const selectedHospitalItemIds = { ...(inputs.input.selectedHospitalItemIds ?? {}) }
   const conditionalStates = { ...(inputs.input.conditionalStates ?? {}) }
   const droppedCatalogProductKeys = new Set<string>()
@@ -1822,7 +2040,7 @@ export function applyRebuildAcknowledgements(
   const keptCustomIds = new Set<string>()
   const keptSetIds = new Set<string>()
 
-  for (const decision of plan.decisions) {
+  for (const decision of decisions) {
     if (decision.kind !== 'requirement') continue
     const carried = decision.carriedSelection
     if (!carried || !decision.target) continue

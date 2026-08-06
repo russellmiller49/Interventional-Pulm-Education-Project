@@ -8222,7 +8222,27 @@
       "provenanceSourceLink": "Abrir el historial de la tarjeta de origen",
       "provenanceSourceGone": "La tarjeta de la que se construyó esta ha sido eliminada, y sus revisiones desaparecieron con ella. Los identificadores y las huellas de abajo siguen diciendo exactamente qué se revisó y pueden comprobarse contra una copia de esa revisión si existe, pero la revisión ya no está disponible y no puede recuperarse a partir de este registro.",
       "provenanceDecisionsHeading": "Decisiones respondidas en su momento",
-      "provenanceDecisionsHelp": "{answered} de {total} decisiones necesitaron respuesta; el resto se trasladó sin cambios."
+      "provenanceDecisionsHelp": "{answered} de {total} decisiones necesitaron respuesta; el resto se trasladó sin cambios.",
+      "provenanceUnreadableHeading": "No se puede leer el registro de reconstrucción de esta tarjeta",
+      "provenanceUnreadableBody": "La base de datos indica que esta tarjeta se creó mediante una reconstrucción revisada, pero el registro que contiene no tiene una forma que esta versión de la aplicación pueda interpretar. La tarjeta en sí no ha cambiado y sigue siendo plenamente utilizable; lo que no se puede mostrar es cómo llegó a existir. Comuníquelo: el registro es de escritura única, así que está intacto y podrá leerse cuando se aclare la discrepancia.",
+      "consequence": {
+        "fieldChanged": "cambiar {requirement}: {field} de {from} a {to}",
+        "intro": "Elegir «{answer}» también haría lo siguiente:",
+        "nothing": "nada",
+        "readinessChanged": "cambiar la preparación de la tarjeta de {from} a {to}",
+        "requirementAdded": "añadir {requirement} a la nueva tarjeta",
+        "requirementRemoved": "quitar {requirement} de la nueva tarjeta",
+        "warningAdded": "generar {warning}",
+        "warningRemoved": "eliminar {warning}"
+      },
+      "projectionField": {
+        "presence": "si se prepara",
+        "slotId": "su posición en la composición",
+        "roleCode": "su rol",
+        "selectedHospitalItemId": "lo seleccionado",
+        "resolutionState": "cómo se resuelve",
+        "compatibilityState": "su compatibilidad"
+      }
     }
   }
 }

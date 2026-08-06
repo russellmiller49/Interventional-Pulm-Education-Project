@@ -53,11 +53,13 @@ const { loadCurrentCardRevision } = jest.requireMock(
 const CARD_ID = '00000000-0000-4000-8000-000000000002'
 const SOURCE_CARD_ID = '00000000-0000-4000-8000-000000000001'
 const SOURCE_REVISION_ID = '00000000-0000-4000-9000-000000000001'
+const OWNER_ID = '00000000-0000-4000-a000-000000000001'
 
 const PROVENANCE: StoredRebuildProvenance = {
   version: 'ip-cards-rebuild/1',
   sourceCardId: SOURCE_CARD_ID,
   sourceRevisionId: SOURCE_REVISION_ID,
+  sourceOwnerId: OWNER_ID,
   sourceRevisionNumber: 3,
   sourceReleaseBundleId: 'release-fixture-procedure-v1-0',
   sourceReleaseDefinitionHash: 'e'.repeat(64),
@@ -107,7 +109,7 @@ function record(overrides: Partial<UserCardRecord> = {}): UserCardRecord {
     editable: true,
     card: {} as never,
     builderInputs: null,
-    rebuildProvenance: null,
+    rebuildProvenance: { state: 'none' },
     ...overrides,
   }
 }
@@ -131,7 +133,9 @@ it('says nothing about a rebuild on a card that was not one', async () => {
 
 it('identifies a rebuilt card and links back while the source is there', async () => {
   loadUserCard.mockImplementation(async (id: string) =>
-    id === CARD_ID ? record({ rebuildProvenance: PROVENANCE }) : record({ id: SOURCE_CARD_ID }),
+    id === CARD_ID
+      ? record({ rebuildProvenance: { state: 'valid', provenance: PROVENANCE } })
+      : record({ id: SOURCE_CARD_ID }),
   )
   const { container } = await renderPage()
 
@@ -152,7 +156,9 @@ it('identifies a rebuilt card and links back while the source is there', async (
 
 it('says the revision is gone once the source card is deleted, and claims nothing more', async () => {
   loadUserCard.mockImplementation(async (id: string) =>
-    id === CARD_ID ? record({ rebuildProvenance: PROVENANCE }) : null,
+    id === CARD_ID
+      ? record({ rebuildProvenance: { state: 'valid', provenance: PROVENANCE } })
+      : null,
   )
   const { container } = await renderPage()
 
@@ -166,4 +172,18 @@ it('says the revision is gone once the source card is deleted, and claims nothin
   expect(screen.getByText('1'.repeat(64))).toBeInTheDocument()
   expect(screen.getByText('a'.repeat(64))).toBeInTheDocument()
   expect(screen.getByText('requirement:FIXTURE_BACKUP_SCOPE')).toBeInTheDocument()
+})
+
+it('says a rebuild record it cannot read is unreadable, never that there is none', async () => {
+  // The two used to share a representation: a failed parse became `null`, which is the exact value
+  // an ordinary card carries. A row holding the strongest claim in the schema was then presented as
+  // a card that was never rebuilt — evidence that cannot be read silently becoming no evidence.
+  loadUserCard.mockResolvedValue(
+    record({ rebuildProvenance: { state: 'invalid', issues: ['sourceOwnerId: invalid_type'] } }),
+  )
+  await renderPage()
+  expect(screen.getByText(/rebuild record cannot be read/i)).toBeInTheDocument()
+  expect(screen.getByText(/remains fully usable/i)).toBeInTheDocument()
+  // And no decoded claim from a document that did not parse.
+  expect(screen.queryByText(/How this card was created/i)).toBeNull()
 })

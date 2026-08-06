@@ -2,6 +2,11 @@ import 'server-only'
 
 import { createClient } from '@supabase/supabase-js'
 
+import {
+  storedRebuildProvenanceSchema,
+  type StoredRebuildProvenance,
+} from '../schemas/card-rebuild'
+
 /**
  * The one privileged call in the rebuild, and nothing else.
  *
@@ -38,13 +43,22 @@ export interface RebuiltCardWrite {
   snapshotHash: string
   engineVersion: string
   catalogImportId: string
-  rebuildProvenance: unknown
+  /**
+   * Typed, not `unknown`. It is parsed again below before the call: the database is the last place
+   * this shape is checked, and shipping it a document that the application's own read schema would
+   * reject is how a row got written that came back as `null` on every subsequent read.
+   */
+  rebuildProvenance: StoredRebuildProvenance
 }
 
 export type RebuiltCardWriteResult =
   | { ok: true; cardId: string }
   /** `source_moved` is the RPC's own recheck failing: the revision changed or is gone. */
-  | { ok: false; code: 'source_moved' | 'write_failed' | 'not_configured'; message: string }
+  | {
+      ok: false
+      code: 'source_moved' | 'write_failed' | 'not_configured' | 'provenance_invalid'
+      message: string
+    }
 
 function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -65,6 +79,17 @@ function serviceClient() {
  * longer exists.
  */
 export async function writeRebuiltCard(write: RebuiltCardWrite): Promise<RebuiltCardWriteResult> {
+  // The document that will be frozen into a write-once column has to satisfy the schema that reads
+  // it back. Checked here rather than trusted from the caller, because this is the only door.
+  const document = storedRebuildProvenanceSchema.safeParse(write.rebuildProvenance)
+  if (!document.success) {
+    return {
+      ok: false,
+      code: 'provenance_invalid',
+      message: `The rebuild provenance document is not a valid version-1 record: ${document.error.issues[0]?.path.join('.') ?? 'unknown field'}.`,
+    }
+  }
+
   const client = serviceClient()
   if (!client) {
     return {
@@ -89,7 +114,7 @@ export async function writeRebuiltCard(write: RebuiltCardWrite): Promise<Rebuilt
     p_snapshot_hash: write.snapshotHash,
     p_engine_version: write.engineVersion,
     p_catalog_import_id: write.catalogImportId,
-    p_rebuild_provenance: write.rebuildProvenance,
+    p_rebuild_provenance: document.data,
   })
 
   if (error) {

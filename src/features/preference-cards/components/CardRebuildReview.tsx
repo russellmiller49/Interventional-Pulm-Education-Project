@@ -4,9 +4,11 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
 import { CardReconciliationView } from './CardReconciliationView'
-import { allowedAcknowledgements } from '../domain/card-rebuild-plan'
+import { allowedAcknowledgements, isEmptyDelta } from '../domain/card-rebuild-plan'
 import type {
+  RebuildAllowedOutcome,
   RebuildDecision,
+  RebuildProjectionDelta,
   RebuildRequirementDecision,
   RebuildTargetResolutionItem,
 } from '../domain/card-rebuild-plan'
@@ -125,14 +127,89 @@ function PresenceSummary({
   )
 }
 
+/**
+ * What choosing this answer would do to the rest of the card.
+ *
+ * The plan measures each answer's consequence by resolving the counterfactual, and the write is
+ * authorized against exactly that delta. A consequence that exists only inside a hash is not
+ * something a physician can be said to have reviewed, so anything an answer would change elsewhere
+ * — another requirement's presence or resolution, a warning appearing or going away, the card's
+ * readiness — is printed beside the control that causes it.
+ */
+function AnswerConsequences({
+  outcome,
+  ownRequirementKey,
+}: {
+  outcome: RebuildAllowedOutcome
+  ownRequirementKey: string | null
+}) {
+  const t = useTranslations('preferenceCards')
+  const delta: RebuildProjectionDelta = outcome.delta
+  if (isEmptyDelta(delta)) return null
+
+  const lines: string[] = []
+  for (const key of delta.removedRequirements) {
+    lines.push(t('rebuild.consequence.requirementRemoved', { requirement: key }))
+  }
+  for (const key of delta.addedRequirements) {
+    lines.push(t('rebuild.consequence.requirementAdded', { requirement: key }))
+  }
+  for (const change of delta.changes) {
+    // The line's own selection going away is the answer restated, not a consequence of it.
+    if (change.requirementKey === ownRequirementKey && change.field === 'selectedHospitalItemId') {
+      continue
+    }
+    lines.push(
+      t('rebuild.consequence.fieldChanged', {
+        requirement: change.requirementKey,
+        field: t(`rebuild.projectionField.${change.field}`),
+        from: change.from ?? t('rebuild.consequence.nothing'),
+        to: change.to ?? t('rebuild.consequence.nothing'),
+      }),
+    )
+  }
+  for (const warning of delta.addedWarnings) {
+    lines.push(t('rebuild.consequence.warningAdded', { warning: warning.split('|')[0] }))
+  }
+  for (const warning of delta.removedWarnings) {
+    lines.push(t('rebuild.consequence.warningRemoved', { warning: warning.split('|')[0] }))
+  }
+  if (delta.readiness) {
+    lines.push(
+      t('rebuild.consequence.readinessChanged', {
+        from: delta.readiness.from ?? t('rebuild.consequence.nothing'),
+        to: delta.readiness.to ?? t('rebuild.consequence.nothing'),
+      }),
+    )
+  }
+  if (lines.length === 0) return null
+
+  return (
+    <div className="mt-2 rounded-xl bg-muted/60 px-3 py-2">
+      <p className="text-xs font-semibold text-foreground">
+        {t('rebuild.consequence.intro', { answer: t(`rebuild.answer.${outcome.answer}`) })}
+      </p>
+      <ul className="mt-1 space-y-0.5">
+        {lines.map((line) => (
+          <li key={line} className="text-xs leading-5 text-muted-foreground">
+            {line}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 function DecisionRow({
   decision,
   unanswered,
   projected,
+  outcomes,
 }: {
   decision: RebuildDecision
   unanswered: boolean
   projected?: RebuildTargetResolutionItem
+  outcomes: RebuildAllowedOutcome[]
 }) {
   const t = useTranslations('preferenceCards')
   const answers = allowedAcknowledgements(decision)
@@ -208,6 +285,13 @@ function DecisionRow({
               </label>
             ))}
           </div>
+          {outcomes.map((outcome) => (
+            <AnswerConsequences
+              key={`${outcome.decisionKey}|${outcome.answer}`}
+              outcome={outcome}
+              ownRequirementKey={decision.kind === 'requirement' ? decision.requirementKey : null}
+            />
+          ))}
         </fieldset>
       ) : null}
     </li>
@@ -220,12 +304,14 @@ function DecisionGroup({
   decisions,
   unanswered,
   projected,
+  outcomes,
 }: {
   title: string
   help: string
   decisions: RebuildDecision[]
   unanswered: Set<string>
   projected: Map<string, RebuildTargetResolutionItem>
+  outcomes: Map<string, RebuildAllowedOutcome[]>
 }) {
   if (decisions.length === 0) return null
   return (
@@ -241,6 +327,7 @@ function DecisionGroup({
             projected={
               decision.kind === 'requirement' ? projected.get(decision.requirementKey) : undefined
             }
+            outcomes={outcomes.get(decision.key) ?? []}
           />
         ))}
       </ul>
@@ -261,6 +348,10 @@ export function CardRebuildReview({
   const projected = new Map(
     plan.targetResolution.items.map((item) => [item.requirementKey, item] as const),
   )
+  const outcomes = new Map<string, RebuildAllowedOutcome[]>()
+  for (const outcome of plan.allowedOutcomes) {
+    outcomes.set(outcome.decisionKey, [...(outcomes.get(outcome.decisionKey) ?? []), outcome])
+  }
 
   /*
     Partitioned on `requiresExplicitConfirmation`, not on `state`.
@@ -493,6 +584,7 @@ export function CardRebuildReview({
               decisions={blocking}
               unanswered={unanswered}
               projected={projected}
+              outcomes={outcomes}
             />
             <DecisionGroup
               title={t('rebuild.reviewHeading')}
@@ -500,6 +592,7 @@ export function CardRebuildReview({
               decisions={requiresReview}
               unanswered={unanswered}
               projected={projected}
+              outcomes={outcomes}
             />
             <DecisionGroup
               title={t('rebuild.addedHeading')}
@@ -507,6 +600,7 @@ export function CardRebuildReview({
               decisions={added}
               unanswered={unanswered}
               projected={projected}
+              outcomes={outcomes}
             />
             <DecisionGroup
               title={t('rebuild.removedHeading')}
@@ -514,6 +608,7 @@ export function CardRebuildReview({
               decisions={removed}
               unanswered={unanswered}
               projected={projected}
+              outcomes={outcomes}
             />
             <DecisionGroup
               title={t('rebuild.waiverHeading')}
@@ -528,6 +623,7 @@ export function CardRebuildReview({
               decisions={waivers}
               unanswered={unanswered}
               projected={projected}
+              outcomes={outcomes}
             />
             <DecisionGroup
               title={t('rebuild.otherHeading')}
@@ -535,6 +631,7 @@ export function CardRebuildReview({
               decisions={other}
               unanswered={unanswered}
               projected={projected}
+              outcomes={outcomes}
             />
 
             <div className="rounded-2xl border border-border bg-muted/40 p-4">

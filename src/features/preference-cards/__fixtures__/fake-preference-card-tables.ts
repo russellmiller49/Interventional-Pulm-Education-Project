@@ -16,6 +16,8 @@
  * checked as a fact about the code rather than as an intention in a comment.
  */
 
+import { storedRebuildProvenanceSchema } from '../schemas/card-rebuild'
+
 export interface FakeCardRow {
   id: string
   user_id: string
@@ -402,37 +404,19 @@ export class FakePreferenceCardTables {
         cardId: string
       }
     | { ok: false; code: 'source_moved' | 'provenance_mismatch' | 'provenance_malformed' } {
-    // The document has to describe the source the arguments are checked against. Without this the
-    // recheck proves something about the *call* and nothing about the evidence that gets stored.
-    const document = (write.rebuildProvenance ?? {}) as Record<string, unknown>
+    // The document has to describe the source the arguments are checked against, and it has to be
+    // the *complete* version-1 shape — the same one `storedRebuildProvenanceSchema` reads back and
+    // the SQL validator enforces. `provenance-contract.test.ts` proves those three descriptions
+    // agree, which is what makes checking the schema here a faithful model of the database rather
+    // than a second opinion about it.
+    const parsed = storedRebuildProvenanceSchema.safeParse(write.rebuildProvenance)
+    if (!parsed.success) return { ok: false, code: 'provenance_malformed' }
+    const document = parsed.data
 
-    // One known version, and every bound field present at the right type. A missing key would
-    // otherwise compare null-to-null against a null column below and read as agreement about a
-    // fact the document never made.
-    if (document.version !== 'ip-cards-rebuild/1')
-      return { ok: false, code: 'provenance_malformed' }
-    const required = [
-      'sourceCardId',
-      'sourceRevisionId',
-      'sourceSnapshotHash',
-      'sourceReleaseBundleId',
-    ]
-    if (required.some((field) => typeof document[field] !== 'string')) {
-      return { ok: false, code: 'provenance_malformed' }
-    }
-    if (typeof document.sourceRevisionNumber !== 'number') {
-      return { ok: false, code: 'provenance_malformed' }
-    }
-    for (const field of ['sourceSnapshotIntegrityHash', 'sourceResolvedContentHash']) {
-      if (!(field in document)) return { ok: false, code: 'provenance_malformed' }
-      const value = document[field]
-      if (value !== null && typeof value !== 'string') {
-        return { ok: false, code: 'provenance_malformed' }
-      }
-    }
     const claims: Array<[unknown, unknown]> = [
       [document.sourceCardId, write.sourceCardId],
       [document.sourceRevisionId, write.sourceRevisionId],
+      [document.sourceOwnerId, write.ownerId],
       [document.sourceSnapshotHash, write.sourceSnapshotHash],
       [document.sourceReleaseBundleId, write.sourceReleaseBundleId],
     ]
@@ -445,17 +429,22 @@ export class FakePreferenceCardTables {
         row.id === write.sourceRevisionId &&
         row.card_id === write.sourceCardId &&
         row.user_id === write.ownerId &&
+        // The document's own owner claim, bound to both source rows.
+        row.user_id === document.sourceOwnerId &&
         row.snapshot_hash === write.sourceSnapshotHash &&
         (row.release_bundle_id ?? null) === (write.sourceReleaseBundleId ?? null) &&
         // The remaining columns the revision knows, bound to the stored document.
-        String(row.revision_number) === String(document.sourceRevisionNumber ?? '') &&
-        (row.snapshot_integrity_hash ?? null) ===
-          ((document.sourceSnapshotIntegrityHash as string | null | undefined) ?? null) &&
-        (row.resolved_content_hash ?? null) ===
-          ((document.sourceResolvedContentHash as string | null | undefined) ?? null),
+        row.revision_number === document.sourceRevisionNumber &&
+        (row.snapshot_integrity_hash ?? null) === document.sourceSnapshotIntegrityHash &&
+        (row.resolved_content_hash ?? null) === document.sourceResolvedContentHash,
     )
     const source = revision
-      ? this.cards.find((row) => row.id === revision.card_id && row.user_id === revision.user_id)
+      ? this.cards.find(
+          (row) =>
+            row.id === revision.card_id &&
+            row.user_id === revision.user_id &&
+            row.user_id === document.sourceOwnerId,
+        )
       : undefined
     if (!revision || !source) return { ok: false, code: 'source_moved' }
 

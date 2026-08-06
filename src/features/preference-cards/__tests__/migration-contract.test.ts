@@ -346,6 +346,34 @@ describe('preference-card rebuild provenance migration', () => {
     expect(rebuildMigrationSql).not.toMatch(/share_token/)
   })
 
+  it('gives the writer role membership back after the ownership transfer', () => {
+    // MEDIUM 1: the grant existed for one statement — `alter function ... owner to` requires the
+    // caller to be able to `set role` to the new owner — and used to be left behind. A later
+    // session as the migration role could then `set role ip_preference_card_rebuild_writer` and
+    // satisfy both the writer-only insert guard and the writer's own RLS policy with a direct
+    // insert, bypassing every source recheck the RPC performs.
+    const grant = rebuildMigrationSql.indexOf(
+      'grant ip_preference_card_rebuild_writer to current_user',
+    )
+    const transfer = rebuildMigrationSql.indexOf('owner to ip_preference_card_rebuild_writer')
+    const execute = rebuildMigrationSql.indexOf('grant execute on function')
+    const revoke = rebuildMigrationSql.indexOf(
+      'revoke ip_preference_card_rebuild_writer from current_user',
+    )
+    expect(grant).toBeGreaterThan(-1)
+    expect(revoke).toBeGreaterThan(-1)
+    expect(grant).toBeLessThan(transfer)
+    // After the ACL is settled, so the transfer and the grants both still have what they need.
+    expect(transfer).toBeLessThan(revoke)
+    expect(execute).toBeLessThan(revoke)
+    expect(
+      rebuildMigrationSql.match(/grant ip_preference_card_rebuild_writer to current_user/g),
+    ).toHaveLength(1)
+    expect(
+      rebuildMigrationSql.match(/revoke ip_preference_card_rebuild_writer from current_user/g),
+    ).toHaveLength(1)
+  })
+
   it('grants the writer schema create for exactly the ownership transfer, then revokes it', () => {
     // `alter function ... owner to` needs the *new owner* to hold create on the function's schema,
     // and the managed migration role is `createrole` but not `rolsuper`, so the superuser exception
@@ -388,18 +416,46 @@ describe('preference-card rebuild provenance migration', () => {
         `and ${column} is not distinct from p_rebuild_provenance->>'${field}'`,
       )
     }
-    // A strict shape, so a missing key cannot compare null-to-null and read as agreement.
-    expect(rebuildMigrationSql).toContain("p_rebuild_provenance->>'version' is distinct from")
+    // One validator, called rather than restated inline, so the accepted shape has one definition.
     expect(rebuildMigrationSql).toContain(
-      'the provenance document is missing a source field or has it at the wrong type',
+      'perform private.ip_validate_preference_card_rebuild_provenance_v1(p_rebuild_provenance)',
+    )
+    expect(rebuildMigrationSql).toContain(
+      'create function private.ip_validate_preference_card_rebuild_provenance_v1(',
+    )
+    // The owner claim the document could not previously make at all.
+    expect(rebuildMigrationSql).toContain("p_rebuild_provenance->>'sourceOwnerId'")
+  })
+
+  it('keeps the shape validator private and callable by no API role', () => {
+    expect(rebuildMigrationSql).toMatch(
+      /revoke all on function private\.ip_validate_preference_card_rebuild_provenance_v1\(jsonb\)\s+from anon, authenticated, service_role/,
+    )
+    expect(rebuildMigrationSql).toContain('security invoker')
+    // Total over its input: a document that is not an object is a shape failure, not a crash.
+    expect(rebuildMigrationSql).toContain(
+      "if document is null or jsonb_typeof(document) <> 'object' then",
     )
   })
 
-  it('does not claim the print-document hash is database-authenticated', () => {
-    // Derived in TypeScript from the integrity hash and the printed columns, and not stored on the
-    // revision, so there is nothing here to bind it to. Named as an application claim rather than
-    // quietly included among the re-derived facts.
-    expect(rebuildMigrationSql).not.toContain('sourcePrintDocumentHash')
+  it('requires the print-document hash but does not claim to authenticate it', () => {
+    // Derived in TypeScript from the integrity hash and the four printed columns, and not stored on
+    // the revision, so there is nothing in the database to bind its *value* to. The key is still
+    // required and type-checked — a document may not simply omit a claim version 1 defines — and
+    // the distinction is stated rather than left to be inferred from its absence.
+    expect(rebuildMigrationSql).toContain("'sourcePrintDocumentHash'")
+    // Required and nullable, like the other two revision-derived hashes.
+    const validator = rebuildMigrationSql.slice(
+      rebuildMigrationSql.indexOf('required_keys text[] := array['),
+      rebuildMigrationSql.indexOf('uuid_keys text[] :='),
+    )
+    expect(validator).toContain("'sourcePrintDocumentHash'")
+    // But never bound to a revision column, because no revision column holds it.
+    const insert = rebuildMigrationSql.slice(
+      rebuildMigrationSql.indexOf('from public.ip_user_preference_card_revisions as revision'),
+      rebuildMigrationSql.indexOf('returning id into created_id'),
+    )
+    expect(insert).not.toContain('sourcePrintDocumentHash')
     expect(rebuildMigration).toContain('One field is deliberately **not** database-authenticated')
   })
 
@@ -500,6 +556,11 @@ describe('preference-card rebuild provenance migration', () => {
       "'sourceRevisionNumber'",
       "'sourceSnapshotIntegrityHash', null::text",
       "'sourceResolvedContentHash', null::text",
+      "'sourcePrintDocumentHash', null::text",
+      "'sourceOwnerId'",
+      "'allowedFinalStateHash'",
+      "'decisions'",
+      "'createdAt'",
     ]) {
       expect(fixture).toContain(field)
     }
@@ -526,6 +587,9 @@ describe('preference-card rebuild provenance migration', () => {
     expect(rebuildVerifier).toContain('rolbypassrls')
     expect(rebuildVerifier).toContain('the writer role retained CREATE on schema public')
     expect(rebuildVerifier).toContain('the writer role is a member of another role')
+    expect(rebuildVerifier).toContain('the writer role still has members')
+    expect(rebuildVerifier).toContain('the migration role can still assume the writer role')
+    expect(rebuildVerifier).toContain('a member of the writer role remains at the end of the run')
     expect(rebuildVerifier).toContain('the writer role does not own exactly one function')
     expect(rebuildVerifier).toContain('the writer role holds a write privilege it does not need')
     // The ACL by grantee, so PUBLIC and any extra grantee are rejected rather than two names.
@@ -549,6 +613,14 @@ describe('preference-card rebuild provenance migration', () => {
       'a document fabricating the resolved content hash',
       'a document at an unknown version',
       'a document omitting a nullable hash instead of stating it',
+      'a document naming an owner the call did not',
+      'a document omitting the owner',
+      'a document omitting the allowed-final-state hash',
+      'a document omitting the reviewed decisions',
+      'a document carrying a key version 1 does not define',
+      'a document whose uuid field is not a uuid',
+      'a document whose decision entry is malformed',
+      'a document stating a non-nullable field as null',
     ]) {
       expect(rebuildVerifier).toContain(label)
     }
@@ -561,7 +633,12 @@ describe('preference-card rebuild provenance migration', () => {
     expect(rebuildVerifier).toContain('provenance was overwritten')
     expect(rebuildVerifier).toContain('provenance was cleared')
     expect(rebuildVerifier).toContain('a card that was not rebuilt was given provenance')
-    expect(rebuildVerifier).toContain('an ordinary update disturbed provenance')
+    expect(rebuildVerifier).toContain('a rename disturbed provenance')
+    expect(rebuildVerifier).toContain('a share toggle disturbed provenance')
+    expect(rebuildVerifier).toContain('a status change disturbed provenance')
+    // Both roles, not only the table owner: `service_role` is the one a compromised key would use.
+    expect(rebuildVerifier).toContain("array['postgres_owner', 'service_role']")
+    expect(rebuildVerifier).toContain('provenance was overwritten as %')
     expect(rebuildVerifier).toContain('a content edit disturbed provenance')
     expect(rebuildVerifier).toContain('a duplicate of a rebuilt card inherited its provenance')
     // Structure, cleanup, and an exact baseline comparison rather than a lower bound.

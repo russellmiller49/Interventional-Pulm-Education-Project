@@ -8222,7 +8222,27 @@
       "provenanceSourceLink": "Open the source card’s history",
       "provenanceSourceGone": "The card this was built from has since been deleted, and its revisions went with it. The identifiers and hashes below still say exactly what was reviewed, and can be checked against a copy of that revision if one exists — but the revision itself is no longer available and cannot be recovered from this record.",
       "provenanceDecisionsHeading": "Decisions answered at the time",
-      "provenanceDecisionsHelp": "{answered} of {total} decisions needed an answer; the rest carried across unchanged."
+      "provenanceDecisionsHelp": "{answered} of {total} decisions needed an answer; the rest carried across unchanged.",
+      "provenanceUnreadableHeading": "This card’s rebuild record cannot be read",
+      "provenanceUnreadableBody": "The database says this card was produced by a reviewed rebuild, but the record it carries is not in a form this version of the application can interpret. Nothing about the card itself has changed and it remains fully usable; what cannot be shown is how it came to exist. Please report this — the record is write-once, so it is intact and can be read once the mismatch is understood.",
+      "consequence": {
+        "fieldChanged": "change {requirement} — {field} from {from} to {to}",
+        "intro": "Choosing “{answer}” would also:",
+        "nothing": "nothing",
+        "readinessChanged": "move the card’s readiness from {from} to {to}",
+        "requirementAdded": "add {requirement} to the new card",
+        "requirementRemoved": "remove {requirement} from the new card",
+        "warningAdded": "raise {warning}",
+        "warningRemoved": "clear {warning}"
+      },
+      "projectionField": {
+        "presence": "whether it is pulled",
+        "slotId": "its position in the composition",
+        "roleCode": "its role",
+        "selectedHospitalItemId": "what is selected",
+        "resolutionState": "how it resolves",
+        "compatibilityState": "its compatibility"
+      }
     }
   }
 }

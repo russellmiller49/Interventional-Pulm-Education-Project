@@ -64,16 +64,27 @@ export interface UserCardRecord extends UserCardSummary {
    */
   builderInputs: BuilderInputs | null
   /**
-   * How this card came to exist, when it was created by a reviewed rebuild. Null on every other
-   * card, and null on a rebuilt one whose document does not satisfy the read-back schema.
+   * How this card came to exist — three states, never two.
    *
-   * Read here rather than through a second query because a card page that cannot tell a rebuilt
-   * card from an ordinary one cannot say the source revision is gone — and the documentation
-   * promised exactly that. The column is owner-scoped by the same row-level security as the rest
-   * of the row.
+   * A failed parse used to collapse to `null`, which is the *same* value an ordinary card carries.
+   * A row whose database column holds a non-null provenance object would then have been presented
+   * as a card that was never rebuilt: the strongest claim in the schema, silently downgraded to no
+   * claim at all by a validation failure. Evidence that cannot be read is not the absence of
+   * evidence, and the two must not share a representation.
    */
-  rebuildProvenance: StoredRebuildProvenance | null
+  rebuildProvenance: CardRebuildProvenanceState
 }
+
+/**
+ * `none` — the column is null and this card was not rebuilt.
+ * `valid` — a complete version-1 document.
+ * `invalid` — the column is non-null and does not satisfy the version-1 schema. The card is shown
+ *   with an integrity notice rather than as an ordinary card, and never with a decoded claim.
+ */
+export type CardRebuildProvenanceState =
+  | { state: 'none' }
+  | { state: 'valid'; provenance: StoredRebuildProvenance }
+  | { state: 'invalid'; issues: string[] }
 
 /**
  * Why a write against an existing card did not happen.
@@ -337,12 +348,8 @@ export async function loadUserCard(cardId: string): Promise<UserCardRecord | nul
   if (!card) return null
   const inputs = builderInputsSchema.safeParse(row.builder_inputs)
   // Validated rather than cast. The column is authentic — unwritable by any API role and write-once
-  // — which is not the same as well-typed, and a card whose document predates a field must render
-  // as an ordinary card rather than throwing.
-  const provenance =
-    row.rebuild_provenance == null
-      ? null
-      : storedRebuildProvenanceSchema.safeParse(row.rebuild_provenance)
+  // — which is not the same as well-typed.
+  const provenance = readRebuildProvenance(row.rebuild_provenance)
 
   return {
     // `editable` is the narrower question: a version-2 card's inputs parse and are still
@@ -351,7 +358,20 @@ export async function loadUserCard(cardId: string): Promise<UserCardRecord | nul
     ...toSummary(row, card.readinessState, inputsCanBackAnEdit(row.builder_inputs)),
     card,
     builderInputs: inputs.success ? inputs.data : null,
-    rebuildProvenance: provenance?.success ? provenance.data : null,
+    rebuildProvenance: provenance,
+  }
+}
+
+function readRebuildProvenance(value: unknown): CardRebuildProvenanceState {
+  if (value == null) return { state: 'none' }
+  const parsed = storedRebuildProvenanceSchema.safeParse(value)
+  if (parsed.success) return { state: 'valid', provenance: parsed.data }
+  return {
+    state: 'invalid',
+    issues: parsed.error.issues
+      .map((issue) => `${issue.path.join('.') || '<root>'}: ${issue.code}`)
+      .sort()
+      .slice(0, 20),
   }
 }
 

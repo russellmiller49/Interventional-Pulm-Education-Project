@@ -126,3 +126,25 @@ export function CardRebuildProvenanceView({
     </section>
   )
 }
+
+/**
+ * A card whose rebuild evidence this code cannot read.
+ *
+ * Deliberately not silence. A failed parse used to collapse to the same `null` an ordinary card
+ * carries, so the strongest claim in the schema — "this card was produced by a reviewed rebuild" —
+ * was quietly downgraded to no claim at all by a validation failure. The row still holds something;
+ * what is unavailable is the reading of it, and only a person can decide what that means.
+ */
+export function CardRebuildProvenanceUnreadable() {
+  const t = useTranslations('preferenceCards')
+  return (
+    <section className="rounded-3xl border border-destructive/60 bg-destructive/5 p-5 shadow-sm md:p-7">
+      <h2 className="text-xl font-black tracking-tight text-foreground">
+        {t('rebuild.provenanceUnreadableHeading')}
+      </h2>
+      <p className="mt-2 max-w-3xl text-sm leading-6 text-foreground">
+        {t('rebuild.provenanceUnreadableBody')}
+      </p>
+    </section>
+  )
+}

@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 
+import type { RebuildProjectionDelta } from '@/features/preference-cards/domain/card-rebuild-plan'
 import type { CardRebuildPreparationResult } from '@/features/preference-cards/server/rebuild-card'
 
 /**
@@ -42,6 +43,16 @@ const { prepareCardRebuild } = jest.requireMock(
   '@/features/preference-cards/server/rebuild-card',
 ) as { prepareCardRebuild: jest.Mock }
 
+const EMPTY_DELTA: RebuildProjectionDelta = {
+  notResolvable: false,
+  addedRequirements: [],
+  removedRequirements: [],
+  changes: [],
+  addedWarnings: [],
+  removedWarnings: [],
+  readiness: null,
+}
+
 const CARD_ID = '00000000-0000-4000-8000-000000000001'
 const REVISION_ID = '00000000-0000-4000-9000-000000000001'
 
@@ -64,7 +75,7 @@ function preparation(): CardRebuildPreparationResult {
         editable: true,
         card: {} as never,
         builderInputs: null,
-        rebuildProvenance: null,
+        rebuildProvenance: { state: 'none' },
       },
       revision: {
         id: REVISION_ID,
@@ -192,6 +203,38 @@ function preparation(): CardRebuildPreparationResult {
           },
         ],
         proposedInputs: {} as never,
+        // Every asked decision has a measured contract. Both of these are answers that change no
+        // input, so their measured consequence is empty — which the plan records rather than
+        // assumes.
+        allowedOutcomes: [
+          {
+            decisionKey: 'requirement:FIXTURE_BACKUP_SCOPE',
+            answer: 'confirmed',
+            delta: EMPTY_DELTA,
+          },
+          {
+            decisionKey: 'requirement:FIXTURE_BACKUP_SCOPE',
+            answer: 'dropped',
+            delta: {
+              ...EMPTY_DELTA,
+              changes: [
+                {
+                  requirementKey: 'FIXTURE_BACKUP_SCOPE',
+                  field: 'selectedHospitalItemId',
+                  from: 'fixture-item-primary',
+                  to: null,
+                },
+              ],
+              addedWarnings: ['required_role_unresolved|warning|slot|SLOT-FIXTURE-BACKUP'],
+              readiness: { from: 'complete_with_warnings', to: 'blocked' },
+            },
+          },
+          {
+            decisionKey: 'waiver:unresolved-required-SLOT-FIXTURE-PRIMARY',
+            answer: 'acknowledged_unresolved',
+            delta: EMPTY_DELTA,
+          },
+        ],
         blockingCount: 0,
         reviewCount: 2,
       },
@@ -494,4 +537,17 @@ it.each([
   expect(screen.getByText(/This rebuild cannot be offered right now/i)).toBeInTheDocument()
   expect(screen.getByText(explanation)).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: /Create the new draft card/i })).toBeNull()
+})
+
+it('shows what an answer would do to the rest of the card, not only to its own line', async () => {
+  // A consequence that exists only inside a hash is not something a physician can be said to have
+  // reviewed. The plan measures each answer by resolving the counterfactual, and the write is
+  // authorized against exactly that delta — so the delta is printed beside the control that causes
+  // it.
+  await renderPage()
+  expect(screen.getByText(/Choosing “Do not carry” would also/i)).toBeInTheDocument()
+  expect(screen.getByText(/raise required_role_unresolved/i)).toBeInTheDocument()
+  expect(
+    screen.getByText(/move the card’s readiness from complete_with_warnings to blocked/i),
+  ).toBeInTheDocument()
 })
