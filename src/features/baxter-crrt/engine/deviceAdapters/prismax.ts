@@ -752,6 +752,11 @@ export function selectPrismaxPilotCaseOperationsDisplay(
   const accessConnected = access.status === 'configured' && access.accessConnected
   const returnConnected = access.status === 'configured' && access.returnConnected
   const flows = simulation.circuit.flows
+  // With no prescription there is no setting, and the engine's structural zero
+  // is not one. Reporting 0 mL/min would read as "the pump is set to zero"
+  // rather than "nothing has been set".
+  const configured = prescription.status === 'configured'
+  const setting = (value: number) => (configured ? value : null)
   return Object.freeze({
     treatmentState: interfaceState.treatmentState,
     modality: prescription.status === 'configured' ? prescription.modality : null,
@@ -778,12 +783,12 @@ export function selectPrismaxPilotCaseOperationsDisplay(
       deliveryState: simulation.device.deliveryState,
       treatmentState: interfaceState.treatmentState,
       bloodPumpRunning: simulation.device.bloodPumpRunning,
-      modality: prescription.status === 'configured' ? prescription.modality : null,
-      bloodFlowMlMin: flows.bloodFlowMlMin,
-      dialysateFlowMlHour: flows.dialysateFlowMlHour,
-      preReplacementFlowMlHour: flows.preReplacementFlowMlHour,
-      postReplacementFlowMlHour: flows.postReplacementFlowMlHour,
-      patientFluidRemovalMlHour: flows.patientFluidRemovalMlHour,
+      modality: configured ? prescription.modality : null,
+      bloodFlowMlMin: setting(flows.bloodFlowMlMin),
+      dialysateFlowMlHour: setting(flows.dialysateFlowMlHour),
+      preReplacementFlowMlHour: setting(flows.preReplacementFlowMlHour),
+      postReplacementFlowMlHour: setting(flows.postReplacementFlowMlHour),
+      patientFluidRemovalMlHour: setting(flows.patientFluidRemovalMlHour),
       // The engine's own gate, mirrored rather than re-derived: simulation.ts
       // feeds blood flow into the pressure model only under these three.
       bloodFlowContributesToPressures:
