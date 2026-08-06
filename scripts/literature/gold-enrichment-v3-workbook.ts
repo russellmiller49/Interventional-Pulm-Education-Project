@@ -601,7 +601,7 @@ const REVIEW_COLUMNS: readonly ReviewColumn[] = [
   },
   {
     key: 'physician_notes',
-    header: 'physician_notes (required when modified)',
+    header: 'physician_notes (required when modified/adjudicated)',
     width: 56,
     group: 'editable',
     value: (row) => row.physician_notes,
