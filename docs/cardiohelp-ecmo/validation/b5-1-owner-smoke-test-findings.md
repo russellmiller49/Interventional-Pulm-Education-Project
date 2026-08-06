@@ -379,6 +379,24 @@ its base with the display face toward the camera, `CARDIOHELP CONSOLE` sits on t
 `SWEEP-GAS LINE / SOURCE CONNECTION` sits at the foot of the tubing rising from the floor in front of
 it. Labels stay readable after orbiting.
 
+### Reproducing the renders
+
+The offline harness now draws the scene labels at their exported anchors, so both states can be
+regenerated without a browser:
+
+```sh
+npx esbuild scripts/cardiohelp-ecmo/export-circuit-layout.mts --bundle \
+  --platform=node --format=esm --outfile="$TMPDIR/export-circuit-layout.mjs" \
+  && node "$TMPDIR/export-circuit-layout.mjs"
+/Applications/Blender.app/Contents/MacOS/Blender --background \
+  --python scripts/cardiohelp-ecmo/render_scene_previews.py -- \
+  public/models/cardiohelp-ecmo scripts/cardiohelp-ecmo/circuit-layout.vv.json /tmp/ecmo-previews/vv
+```
+
+For the "before" state, set `consolePlacement.rotation` to `[0, -0.35, 0]` in the exported JSON and
+re-run the Blender step: it reproduces the owner's screenshot — the unit lying with its roll bars up
+and the `SWEEP` pill inside its body.
+
 ### Status
 
 Corrected.
