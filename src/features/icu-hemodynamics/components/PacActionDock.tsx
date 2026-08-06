@@ -56,7 +56,7 @@ export function PacActionDock({ state, dispatch, focus }: PacActionDockProps) {
       ? catheter.balloonInflated
         ? 'PAWP stored. Deflate now and confirm return of the PA waveform.'
         : catheter.position === 'pa'
-          ? 'PAWP stored. Balloon deflated and PA waveform restored.'
+          ? 'PAWP stored and balloon deflated. Confirm the return of the PA waveform yourself before the value is used.'
           : `PAWP stored. Balloon deflated; current confirmed waveform is ${catheter.position.toUpperCase()}.`
       : catheter.wedgeCursorTime !== null
         ? 'End-expiratory cursor placed. Store PAWP, then deflate.'
@@ -178,7 +178,11 @@ export function PacActionDock({ state, dispatch, focus }: PacActionDockProps) {
               className={styles.pacDockWedgeTimer}
               data-danger={wedgeElapsed >= WEDGE_AUTO_DEFLATION_SECONDS - 2}
             >
-              <span aria-live="off" aria-label="Balloon inflation elapsed time">
+              <span
+                aria-live="off"
+                aria-label="Time this simulated occlusion has been running"
+                title="Elapsed occlusion time in this simulation. The simulator ends an occlusion at a fixed cutoff of its own; that cutoff is not a clinical inflation-time limit."
+              >
                 {Math.min(WEDGE_AUTO_DEFLATION_SECONDS, wedgeElapsed).toFixed(1)} s
               </span>
               <div aria-hidden="true">
@@ -281,8 +285,11 @@ export function PacActionDock({ state, dispatch, focus }: PacActionDockProps) {
 
       {catheter.forcedSafetyRecovery && (
         <p className={styles.criticalFeedback} role="alert">
-          Safety recovery: inflation reached the 10-second hard limit, so the balloon was
-          auto-deflated and a critical error was recorded.
+          Safety recovery: this simulation ended the occlusion at its own fixed cutoff and recorded
+          a safety event. That cutoff belongs to the simulation and is not a clinical inflation-time
+          limit — inflation time and volume for a real catheter come from the manufacturer’s
+          instructions for the catheter in use and your local protocol. Confirm whether the
+          pulmonary-artery waveform has returned.
         </p>
       )}
     </section>

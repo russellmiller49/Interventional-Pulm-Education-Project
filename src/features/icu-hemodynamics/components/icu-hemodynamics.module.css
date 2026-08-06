@@ -974,6 +974,9 @@
 .sourcesPanel,
 .validityPanel,
 .validityChallengePanel,
+.advancePanel,
+.pawpPanel,
+.paneLockedNotice,
 .normalReference {
   --ink: #15323a;
   --muted: #62767b;
@@ -5610,4 +5613,482 @@
   color: var(--ink);
   font-size: 0.71rem;
   line-height: 1.55;
+}
+/* ---------------------------------------------------------------------------
+   H3 — advancement reasoning chain and the PAWP safety sequence
+
+   Same rule as every other pane in the dark guided workspace: a light card that declares its own
+   ink. Status is always carried by a word as well as a colour, because a learner who cannot
+   distinguish the two states by reading is a learner who cannot use the panel at all.
+   --------------------------------------------------------------------------- */
+
+.advancePanel,
+.pawpPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 690px;
+  padding: 1rem;
+  overflow: auto;
+}
+
+.advancePanel h3,
+.pawpPanel h2 {
+  margin: 0.2rem 0 0;
+  color: var(--navy);
+  font-size: 1.02rem;
+  letter-spacing: -0.01em;
+}
+
+.paneLockedNotice {
+  display: grid;
+  place-items: center;
+  min-height: 690px;
+  padding: 1rem;
+}
+
+.paneLockedNotice p {
+  max-width: 22rem;
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid #e3d3b4;
+  border-radius: 0.8rem;
+  background: var(--amber-soft);
+  color: #7a4d09;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.advanceCount,
+.pawpStepQuestion {
+  margin: 0.3rem 0 0;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+.advanceNav {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.advanceNav button {
+  display: grid;
+  grid-template-columns: 1.3rem 1fr auto;
+  gap: 0.45rem;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  background: #fff;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+  text-align: left;
+  cursor: pointer;
+}
+
+.advanceNav button[aria-current='true'] {
+  border-color: var(--teal);
+  background: var(--teal-soft);
+  color: var(--teal);
+}
+
+.advanceNav button > span:first-child {
+  display: grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 0.35rem;
+  background: var(--paper);
+  font-size: 0.6rem;
+  font-weight: 850;
+}
+
+.advanceNav button em {
+  color: #1f6b43;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.advanceChain {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.advanceSteps,
+.pawpSteps {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.advanceStep,
+.pawpStep {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line);
+  border-radius: 0.7rem;
+  background: var(--paper);
+}
+
+.advanceStep[data-concerning] {
+  border-left-color: var(--red);
+  background: #fdeef0;
+}
+
+.advanceStepHead,
+.pawpStepHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.advanceStepHead h4,
+.pawpStepHead h3 {
+  flex: 1 1 8rem;
+  margin: 0;
+  color: var(--navy);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.advanceStepOrdinal {
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 0.4rem;
+  background: var(--teal-soft);
+  color: var(--teal);
+  font-size: 0.66rem;
+  font-weight: 850;
+}
+
+.advanceStepStatus {
+  padding: 0.14rem 0.45rem;
+  border-radius: 999px;
+  background: #dff2e6;
+  color: #1f6b43;
+  font-size: 0.56rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.advanceStepStatus[data-concerning] {
+  background: #fadfe3;
+  color: #8f2f3d;
+}
+
+.advanceStep p,
+.pawpStep p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.74rem;
+  line-height: 1.55;
+}
+
+.advanceStopReasons {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0.15rem 0 0;
+  padding: 0 0 0 1rem;
+  color: #8f2f3d;
+  font-size: 0.73rem;
+  font-weight: 750;
+  line-height: 1.5;
+}
+
+.advanceOverridePoint {
+  padding: 0.45rem 0.6rem;
+  border-left: 3px solid var(--amber);
+  border-radius: 0.4rem;
+  background: var(--amber-soft);
+  color: #7a4d09;
+  font-size: 0.73rem;
+  line-height: 1.55;
+}
+
+.advanceCommitmentVerdict {
+  margin: 0.15rem 0 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.advanceCommit,
+.pawpChoices {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.7rem;
+  border: 1px solid #9fcfc4;
+  border-radius: 0.8rem;
+  background: var(--teal-soft);
+}
+
+.advanceCommit legend,
+.pawpChoices legend {
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  padding: 0;
+  color: var(--ink);
+  font-size: 0.77rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.advanceCommit label,
+.pawpChoices label {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  background: #fff;
+  color: var(--ink);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.advanceCommit label strong {
+  display: block;
+  color: var(--teal);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.advanceReveal {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.advancePrebriefEcho,
+.advanceBoundary {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--paper);
+}
+
+.advancePrebriefEcho h4,
+.advanceBoundary h4 {
+  margin: 0;
+  color: var(--teal);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.advanceBoundary {
+  border-color: #e3d3b4;
+  background: var(--amber-soft);
+}
+
+.advanceBoundary h4 {
+  color: #7a4d09;
+}
+
+.advancePrebriefEcho p,
+.advanceBoundary p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.73rem;
+  line-height: 1.55;
+}
+
+/* PAWP sequence. */
+.pawpBalloonState {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border-left: 3px solid var(--teal);
+  border-radius: 0.5rem;
+  background: var(--teal-soft);
+}
+
+.pawpBalloonState[data-inflated='true'] {
+  border-left-color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.pawpBalloonState > span {
+  color: var(--muted);
+  font-size: 0.6rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.pawpBalloonState > strong {
+  color: var(--navy);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.pawpStep dl {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.pawpStep dt {
+  display: inline;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.pawpStep dd {
+  display: inline;
+  margin: 0;
+}
+
+.pawpSubsection {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  background: var(--paper);
+}
+
+.pawpSubsection h4 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.pawpTeachingState {
+  margin: 0;
+  padding: 0.45rem 0.6rem;
+  border-left: 3px solid var(--muted);
+  border-radius: 0.4rem;
+  background: #fff;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.pawpOutcomeList {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pawpOutcomeList > li {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  background: #fff;
+}
+
+.pawpOutcomeList > li p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.73rem;
+  line-height: 1.55;
+}
+
+.pawpOutcomeList > li em {
+  color: var(--teal);
+  font-style: normal;
+  font-weight: 800;
+}
+
+.pawpOutcomeHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.pawpOutcomeHead strong {
+  color: var(--navy);
+  font-size: 0.78rem;
+}
+
+.pawpOutcomeHead span {
+  padding: 0.14rem 0.45rem;
+  border-radius: 999px;
+  background: #e8eeed;
+  color: var(--muted);
+  font-size: 0.56rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pawpOutcomeList > li[data-interpretable='false'] .pawpOutcomeHead span,
+.pawpOutcomeList > li[data-continuation='withheld'] .pawpOutcomeHead span {
+  background: #fadfe3;
+  color: #8f2f3d;
+}
+
+.pawpRecoveryVerdict {
+  margin: 0;
+  padding: 0.5rem 0.6rem;
+  border-left: 3px solid #1f6b43;
+  border-radius: 0.45rem;
+  background: #eef7f1;
+  color: var(--ink);
+  font-size: 0.73rem;
+  line-height: 1.55;
+}
+
+.pawpRecoveryVerdict[data-withheld='true'] {
+  border-left-color: var(--red);
+  background: #fdeef0;
+}
+
+.pawpRecoveryStatus {
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.55rem;
+  background: var(--paper);
+  color: var(--navy);
+  font-size: 0.73rem;
+  font-weight: 750;
+  line-height: 1.5;
+}
+
+/*
+ * Two pane surfaces stacked in one workspace column.
+ *
+ * Each pane surface sets its own 690px minimum so that it fills the column when it is alone. Stacked
+ * they would produce a column twice the height of the workspace before either had any content, so
+ * the minimum is released here and the column's own scrolling takes over.
+ */
+.paneStack {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.paneStack > * {
+  min-height: 0;
 }
