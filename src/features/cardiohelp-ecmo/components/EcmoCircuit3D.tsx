@@ -18,6 +18,7 @@ import {
   PATIENT_ASSET,
   SENSOR_ASSET,
 } from './ecmo-circuit/constants'
+import { drainageChatterActive } from './ecmo-circuit/chatter'
 import { BedsideScene } from './ecmo-circuit/BedsideScene'
 import { WebGLContextGuard } from './ecmo-circuit/WebGLContextGuard'
 import styles from './cardiohelp-ecmo.module.css'
@@ -148,7 +149,7 @@ export function EcmoCircuit3D({
   const flowState =
     closedClampCount > 0 ? 'ISOLATED' : state.device.pumpRunning ? 'FLOWING' : 'PUMP STOPPED'
   const isVa = state.supportMode === 'va'
-  const drainageChattering = state.device.pumpRunning && state.circuit.drainageChatter
+  const drainageChattering = drainageChatterActive(state)
 
   useEffect(() => {
     const node = viewportRef.current

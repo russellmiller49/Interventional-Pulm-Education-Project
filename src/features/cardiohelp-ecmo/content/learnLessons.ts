@@ -526,6 +526,8 @@ interface GuidedTransferVariant {
   readonly actionLabel: string
   readonly action: SimulationAction
   readonly setupActions?: readonly SimulationAction[]
+  /** Set where the transfer action is a bedside control rather than a pressure comparison. */
+  readonly preferredCircuitView?: CircuitViewPreference
 }
 
 const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTransferVariant>> = {
@@ -593,6 +595,7 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
       'A distinct arterial-bubble event stops the pump. Begin the authored isolation sequence by closing the return-limb clamp near the patient; do not treat acknowledgement as correction.',
     actionLabel: 'Close the transfer patient return-limb clamp',
     action: { type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return', closed: true },
+    preferredCircuitView: 'bedside',
     setupActions: [{ type: 'TICK', seconds: 4 }],
   },
   'arterial-bubble-stop': {
@@ -676,6 +679,7 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
       'A distinct VA arterial-return bubble event stops forward support. Begin isolation by closing the arterial return-limb clamp near the patient, before source correction, de-airing, and resumption.',
     actionLabel: 'Close the VA return-limb clamp',
     action: { type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return', closed: true },
+    preferredCircuitView: 'bedside',
     setupActions: [{ type: 'TICK', seconds: 4 }],
   },
   'va-arterial-bubble-stop': {
@@ -711,6 +715,7 @@ function withRealTransferVariant(lesson: GuidedLessonDefinition): GuidedLessonDe
             instruction: variant.instruction,
             rationale: transferScenario.debrief.causalChain.join(' '),
             target: variant.target,
+            preferredCircuitView: variant.preferredCircuitView,
             actionLabel: variant.actionLabel,
             actions: [variant.action],
             expectedResponse: transferScenario.debrief.safetyNotes,

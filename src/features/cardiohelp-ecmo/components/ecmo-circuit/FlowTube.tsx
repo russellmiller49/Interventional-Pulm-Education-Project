@@ -11,6 +11,7 @@ import {
   type FlowUniforms,
 } from './flowMaterials'
 import { buildFlowTubeGeometry } from './tubeGeometry'
+import { CHATTER_HZ, chatterPinchAmount } from './chatter'
 import { PALETTE } from './constants'
 
 const DASH_LENGTH = 0.22
@@ -41,9 +42,6 @@ export interface FlowTubeProps {
   wallColor?: string
   cacheKey: string
 }
-
-/** Judders per second. Fast enough to read as chatter, slow enough not to strobe. */
-const CHATTER_HZ = 4.5
 
 export function FlowTube({
   curve,
@@ -125,16 +123,12 @@ export function FlowTube({
     const targetWidth = useCollapse ? 0.45 : 0.045
     let targetAmount = useCollapse ? collapse * 0.35 : pinch
     if (useCollapse && chatter) {
-      if (reduceMotion) {
-        // Held, not oscillating: the limb sits visibly sucked down for as long as the engine says
-        // it is chattering. The word "chatter" is carried by the status cue beside the viewport.
-        targetAmount = collapse * 0.42
-      } else {
-        chatterPhase.current = (chatterPhase.current + delta * CHATTER_HZ) % 1
-        // Snaps shut, springs back: raised sine, so the limb spends longer open than crimped.
-        const judder = Math.pow(Math.sin(chatterPhase.current * Math.PI * 2) * 0.5 + 0.5, 1.6)
-        targetAmount = collapse * (0.12 + judder * 0.5)
-      }
+      if (!reduceMotion) chatterPhase.current = (chatterPhase.current + delta * CHATTER_HZ) % 1
+      targetAmount = chatterPinchAmount({
+        collapse,
+        phase: chatterPhase.current,
+        reduceMotion,
+      })
     }
     for (const set of [uniforms, wallUniforms]) {
       set.uPinchU.value = THREE.MathUtils.damp(set.uPinchU.value, targetU, 10, delta)

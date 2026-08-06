@@ -19,6 +19,7 @@ import {
   SENSOR_ASSET,
   TUBE_RADII,
 } from './constants'
+import { drainageChatterActive } from './chatter'
 import { groundAsset, type AssetPlacement, type ModelBounds } from './grounding'
 import { buildCircuitLayout } from './layout'
 import { FlowTube } from './FlowTube'
@@ -145,7 +146,7 @@ export function BedsideScene({
    * all said the drainage line was juddering. `drainageChatter` already carries "past drainage
    * capacity and pVen < -75"; a view has no business deriving a competing one.
    */
-  const drainageChattering = state.device.pumpRunning && state.circuit.drainageChatter
+  const drainageChattering = drainageChatterActive(state)
   const drainageCollapse = drainageChattering ? 1 : 0
 
   return (
