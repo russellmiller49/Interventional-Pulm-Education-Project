@@ -1,7 +1,16 @@
 import * as THREE from 'three'
 
 import type { SupportMode } from '../../engine/types'
-import { DRAINAGE_CLAMP_U, PATIENT_POSITION, PATIENT_SCALE, RETURN_CLAMP_U } from './constants'
+import {
+  CONSOLE_MODEL_BOUNDS,
+  CONSOLE_PLACEMENT,
+  DRAINAGE_CLAMP_U,
+  FLOOR_Y,
+  PATIENT_POSITION,
+  PATIENT_SCALE,
+  RETURN_CLAMP_U,
+} from './constants'
+import { groundAsset } from './grounding'
 
 // Pure scene geometry: every curve, anchor, and label position for the bedside
 // scene, derived from patient-local anchors so the runtime scene and the
@@ -40,8 +49,21 @@ export interface CircuitLayout {
   oxygenatorOutlet: THREE.Vector3
   sensorPosition: THREE.Vector3
   sensorTangent: THREE.Vector3
+  /** World box the grounded, rotated console occupies. Labels and the holder arm derive from it. */
+  consoleOrigin: THREE.Vector3
+  consoleBounds: THREE.Box3
+  /** Where the HLS holder arm meets the console, on its upper body rather than in mid-air. */
+  consoleHolderAnchor: THREE.Vector3
   labels: readonly CircuitLabel[]
 }
+
+/**
+ * The console, stood up and grounded once for the whole scene.
+ *
+ * Derived rather than authored: the label anchors and the holder arm all hang off these numbers, so
+ * changing the placement moves them together instead of leaving a label floating over empty floor.
+ */
+export const consolePlacement = groundAsset(CONSOLE_MODEL_BOUNDS, CONSOLE_PLACEMENT, FLOOR_Y)
 
 export function patientWorldPoint(x: number, y: number, z: number): THREE.Vector3 {
   return new THREE.Vector3(
@@ -68,7 +90,14 @@ const RETURN_HUB = vec(-0.71, -0.1, -0.13)
 const HLS_MODULE = vec(0.9, -0.05, 0.3)
 const PUMP_INLET = vec(0.9, -0.3, 0.32)
 const OXYGENATOR_OUTLET = vec(0.76, 0.1, 0.2)
-const SWEEP_SOURCE = vec(1.26, -0.46, 0.62)
+/*
+ * Where the sweep-gas line enters the scene, on the floor in front of the console.
+ *
+ * No external blender or wall outlet is modelled, so this is a tubing origin and nothing more — it
+ * was previously placed *inside* the console's own volume, which made the console read as the gas
+ * source and put the "Sweep gas" pill on top of it. The label names the connection, not a device.
+ */
+const SWEEP_SOURCE = vec(1.46, -0.66, 1.17)
 const SWEEP_CAP = vec(0.94, 0.24, 0.4)
 
 function curve(points: THREE.Vector3[]): THREE.CatmullRomCurve3 {
@@ -109,7 +138,15 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
     vec(-0.5, -0.05, -0.26),
     RETURN_HUB,
   ])
-  const sweepLine = curve([SWEEP_SOURCE, vec(1.08, -0.26, 0.58), vec(0.98, 0.0, 0.5), SWEEP_CAP])
+  // Routed round the console's near-left corner rather than through it: the console now stands on
+  // its base and occupies the volume this line used to cut across.
+  const sweepLine = curve([
+    SWEEP_SOURCE,
+    vec(1.12, -0.55, 1.12),
+    vec(0.84, -0.3, 0.84),
+    vec(0.8, -0.06, 0.56),
+    SWEEP_CAP,
+  ])
 
   const dpc =
     supportMode === 'va'
@@ -177,14 +214,28 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
       position: sensorPosition.clone().add(vec(0.05, 0.2, -0.05)),
     },
     {
+      /*
+       * Anchored to the start of the sweep curve, and named for what is actually there.
+       *
+       * Nothing in this scene models a gas blender or a wall outlet, so "Sweep gas" beside a point
+       * that happened to sit inside the console labelled the console as the gas source. This names
+       * the tubing and its connection instead — the thing the learner can see.
+       */
       id: 'sweep',
-      text: 'Sweep gas',
-      position: SWEEP_SOURCE.clone().add(vec(0.05, 0.16, 0.05)),
+      text: 'Sweep-gas line / source connection',
+      position: SWEEP_SOURCE.clone().add(vec(0.06, 0.34, 0.06)),
     },
     {
+      // Sits just above the transformed console box, so it stays on the console when the placement
+      // changes. It was a fixed 0.62 m, which floated 0.70 m clear of the model it names.
       id: 'console',
       text: 'CARDIOHELP console',
-      position: vec(1.52, 0.62, 0.56),
+      position: vec(
+        // Offset outboard of the HLS module so the pill reads as the console's, not the pump's.
+        consolePlacement.origin.x + 0.26,
+        consolePlacement.worldBounds.max.y + 0.2,
+        consolePlacement.origin.z + 0.1,
+      ),
     },
   ]
 
@@ -211,6 +262,15 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
     oxygenatorOutlet: OXYGENATOR_OUTLET,
     sensorPosition,
     sensorTangent,
+    // Cloned per layout: `consolePlacement` is computed once at module load, and handing every
+    // caller the same Box3 would let one consumer's `translate` move the console for all of them.
+    consoleOrigin: consolePlacement.origin.clone(),
+    consoleBounds: consolePlacement.worldBounds.clone(),
+    consoleHolderAnchor: new THREE.Vector3(
+      consolePlacement.origin.x - 0.18,
+      consolePlacement.worldBounds.max.y - 0.06,
+      consolePlacement.origin.z - 0.05,
+    ),
     labels,
   }
 }

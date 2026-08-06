@@ -13,6 +13,7 @@ import type { CriticalCareActivityPhase } from '@/features/learning-module/activ
 import { ResizableTeachingWorkspace } from '@/features/learning-module/curriculum/ResizableTeachingWorkspace'
 
 import type {
+  CircuitViewPreference,
   EcmoSimulationState,
   GuidedControlId,
   GuidedLessonDefinition,
@@ -89,8 +90,11 @@ export interface EcmoLearnWorkspaceProps {
   readonly onSelectLesson: (scenarioId: string) => void
   readonly onCompleteLesson: (scenarioId: string) => void
   readonly onTryPractice: (scenarioId: string) => void
-  readonly onTargetChange: (target: GuidedTarget) => void
+  readonly onTargetChange: (target: GuidedTarget | null) => void
   readonly onControlHelpChange: (controlId: GuidedControlId | null) => void
+  readonly onCircuitViewPreferenceChange?: (
+    preference: { view: CircuitViewPreference; stepId: string } | null,
+  ) => void
   readonly onPhaseChange?: (phase: CriticalCareActivityPhase) => void
   readonly onActiveStepChange?: (step: GuidedWalkthroughStep) => void
 }
@@ -105,6 +109,7 @@ export function EcmoLearnWorkspace({
   onTryPractice,
   onTargetChange,
   onControlHelpChange,
+  onCircuitViewPreferenceChange,
   onPhaseChange,
   onActiveStepChange,
 }: EcmoLearnWorkspaceProps) {
@@ -343,6 +348,7 @@ export function EcmoLearnWorkspace({
         onTryPractice={onTryPractice}
         onTargetChange={onTargetChange}
         onControlHelpChange={onControlHelpChange}
+        onCircuitViewPreferenceChange={onCircuitViewPreferenceChange}
         onPhaseChange={onPhaseChange}
         onActiveStepChange={onActiveStepChange}
         onStepStatusChange={handleStepStatusChange}

@@ -789,6 +789,24 @@ export type GuidedStepPhase =
   | 'reassess'
   | 'transfer'
 
+/**
+ * Where the learner's hands go for a step.
+ *
+ * `simulator` — the step is completed by operating a control that exists on the simulated device,
+ * circuit, gas panel, monitor or trend surface. The player focuses that panel and can highlight the
+ * control on request.
+ *
+ * `task-pane` — the step is completed in the lesson pane itself, because what it does is a
+ * statement about the *model* rather than about the device: advancing the simulation, loading a
+ * scenario, finishing a walkthrough. Nothing on the simulator can satisfy it, so publishing a focus
+ * target or offering to point at a control tells the learner to look for something that is not
+ * there.
+ */
+export type GuidedStepInteraction = 'simulator' | 'task-pane'
+
+/** The circuit surface a guided step reads its evidence from, when it has a preference. */
+export type CircuitViewPreference = 'bedside' | 'diagnostic'
+
 export interface GuidedWalkthroughStep {
   id: string
   phase: GuidedStepPhase
@@ -799,6 +817,21 @@ export interface GuidedWalkthroughStep {
   actionLabel: string
   actions: readonly SimulationAction[]
   expectedResponse: readonly string[]
+  /**
+   * Defaults to `simulator`. Authored rather than inferred from the action list: two steps can
+   * carry the same `STEP` action and still differ in whether the learner is meant to touch the
+   * device, and only the author knows which.
+   */
+  interaction?: GuidedStepInteraction
+  /**
+   * The circuit view this step is read on, applied when the step is entered.
+   *
+   * A pressure-localization step is answered by comparing pVen, pInt, pArt and Δp, which the
+   * pressure-zone map lays out side by side and the bedside 3D scene does not. Authored per step so
+   * the circuit component never has to know a scenario id. Omitted means "leave the learner's
+   * current view alone".
+   */
+  preferredCircuitView?: CircuitViewPreference
   /**
    * Marks this step as one the learner answers rather than performs, and names the scenario whose
    * authored prediction supplies the options.
