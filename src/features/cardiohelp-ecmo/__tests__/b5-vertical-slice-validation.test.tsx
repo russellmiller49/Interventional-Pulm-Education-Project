@@ -9,8 +9,9 @@ import {
   hasEcmoDrillTeachingPanel,
   validateEcmoDrillPanelRegistry,
 } from '../components/teaching/EcmoDrillTeachingPanel'
-import { cardiohelpLearnLessons } from '../content/learnLessons'
+import { cardiohelpLearnLessonByScenarioId, cardiohelpLearnLessons } from '../content/learnLessons'
 import { ecmoLearnPredictionFor, ecmoLearnPredictions } from '../content/learnPredictionItems'
+import { cardiohelpScenarioById } from '../content/scenarios'
 
 /**
  * B5: the contracts the six-scenario vertical slice is validated against.
@@ -223,5 +224,71 @@ describe('B5: the participant materials carry no answers', () => {
     // Six numbered tasks, matching the six scenarios under validation.
     const numbered = participantTasks.match(/^## Task \d/gm) ?? []
     expect(numbered).toHaveLength(6)
+  })
+
+  /**
+   * A lesson title is not a neutral way to point someone at a lesson.
+   *
+   * Four of the six authored lesson titles name the mechanism the task exists to make the learner
+   * work out — "VV recirculation despite high displayed flow" answers task 2, "Gas-source
+   * interruption with preserved blood flow" answers task 3, and "cause-before-reset" gives away the
+   * ordering task 4 asks for. So the participant sheet may not carry a lesson title at all, and the
+   * facilitator opens the lesson instead. This is the leak the title-matching test below would
+   * otherwise invite someone to introduce while fixing it.
+   */
+  it.each(PILOT_SCENARIO_IDS)('never names the %s lesson to the participant', (scenarioId) => {
+    const lessonTitle = cardiohelpLearnLessonByScenarioId.get(scenarioId)?.title
+    const scenarioTitle = cardiohelpScenarioById.get(scenarioId)?.title
+    expect(lessonTitle).toBeTruthy()
+    expect(participantTasks).not.toContain(lessonTitle)
+    // The Practice-surface title for the same case is not a usable substitute either: it does not
+    // appear anywhere on the Learn route, so it sends the participant looking for something that is
+    // not there.
+    if (scenarioTitle) expect(participantTasks).not.toContain(scenarioTitle)
+  })
+
+  it('does not ask the participant to open a lesson by name', () => {
+    expect(participantTasks).not.toMatch(/open the lesson called/i)
+  })
+})
+
+describe('B5: the facilitator guide names the lessons the learner actually sees', () => {
+  /**
+   * The guide's scope table is the one place the packet claims a lesson title, and it is what a
+   * facilitator reads before opening anything. It carried `scenario.title` for all six rows — the
+   * string the *Practice* surface uses — under a heading promising the title "as the learner sees
+   * it". The Learn route shows `lesson.title` in the lesson header and `pathway.title` in the rail,
+   * and those are the same string; `scenario.title` appears nowhere on the route. A facilitator
+   * following that table looked for six lessons that do not exist under those names.
+   *
+   * Parsed from the markdown rather than restated here, so the table cannot drift from the content
+   * again without this failing.
+   */
+  const facilitatorGuide = readFileSync(
+    join(
+      process.cwd(),
+      'docs/cardiohelp-ecmo/validation/b5-novice-think-aloud-facilitator-guide.md',
+    ),
+    'utf8',
+  )
+
+  const tableRows = [
+    ...facilitatorGuide.matchAll(/^\|\s*\d+\s*\|\s*`([a-z-]+)`\s*\|([^|]*)\|/gm),
+  ].map((match) => ({ scenarioId: match[1], title: match[2].trim() }))
+
+  it('lists exactly the six pilot scenarios', () => {
+    expect(tableRows.map((row) => row.scenarioId).sort()).toEqual([...PILOT_SCENARIO_IDS].sort())
+  })
+
+  it.each(PILOT_SCENARIO_IDS)('gives %s the title the Learn route renders', (scenarioId) => {
+    const row = tableRows.find((entry) => entry.scenarioId === scenarioId)
+    expect(row).toBeDefined()
+    expect(row?.title).toBe(cardiohelpLearnLessonByScenarioId.get(scenarioId)?.title)
+  })
+
+  it('warns that the titles themselves name the mechanism', () => {
+    // Correcting the table puts the answer into the facilitator's hands, which is where it belongs
+    // — but only if the guide says so, because the obvious next move is to read it out.
+    expect(facilitatorGuide).toMatch(/do not read the lesson title aloud/i)
   })
 })

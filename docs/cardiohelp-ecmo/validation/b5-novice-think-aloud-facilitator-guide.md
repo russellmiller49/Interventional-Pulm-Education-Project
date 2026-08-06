@@ -21,14 +21,35 @@ manage a patient. Nothing observed here should ever be reported as a judgement a
 **In scope:** the guided drill **Learn** route — the three-pane workspace (live simulator ·
 teaching · current task) and these six drills:
 
-| #   | Scenario id                  | Lesson title as the learner sees it                                         |
-| --- | ---------------------------- | --------------------------------------------------------------------------- |
-| 1   | `startup-sensor-orientation` | Startup, self-test, and sensor orientation                                  |
-| 2   | `preload-drainage-collapse`  | Falling flow with increasingly negative pVen                                |
-| 3   | `vv-recirculation`           | High displayed flow with limited oxygenation response                       |
-| 4   | `gas-source-interruption`    | Gas transfer falls while blood flow persists                                |
-| 5   | `arterial-bubble-stop`       | Arterial bubble alarm with pump stop                                        |
-| 6   | `va-differential-hypoxemia`  | Peripheral VA: upper-body oxygenation falls despite oxygenated return blood |
+| #   | Scenario id                  | Lesson title, as the lesson header shows it         | Pathway rail label | Task |
+| --- | ---------------------------- | --------------------------------------------------- | ------------------ | ---- |
+| 1   | `startup-sensor-orientation` | Console, circuit, and external-control orientation  | Console tour       | 1    |
+| 2   | `preload-drainage-collapse`  | Preload-limited flow and drainage collapse          | Drainage           | —    |
+| 3   | `vv-recirculation`           | VV recirculation despite high displayed flow        | Recirculation      | 2    |
+| 4   | `gas-source-interruption`    | Gas-source interruption with preserved blood flow   | Gas source         | 3    |
+| 5   | `arterial-bubble-stop`       | Arterial bubble intervention and cause-before-reset | Air                | 4    |
+| 6   | `va-differential-hypoxemia`  | Peripheral VA differential upper-body oxygenation   | Differential       | 5    |
+
+Open each lesson directly:
+`/cardiohelp-ecmo/learn?lesson=<scenario id>&track=vv` — and `&track=va` for row 6.
+
+> ### You open the lesson, and **do not read the lesson title aloud**
+>
+> Read the table again: four of these titles state the thing the task asks the participant to work
+> out. "VV recirculation despite high displayed flow" is the answer to task 2. "Gas-source
+> interruption with preserved blood flow" is the answer to task 3. "cause-before-reset" is the
+> ordering task 4 is asking for. "Preload-limited flow and drainage collapse" names the mechanism.
+>
+> So the participant sheet deliberately names no lesson at all. **Before each task you open the
+> lesson yourself**, from the table above, and hand the screen over with it already loaded. Say
+> "here's the next one" — not the title. The title is still visible in the lesson header once the
+> lesson is open, which is unavoidable and fine; what matters is that you do not put it in the
+> participant's ear before they have looked at the circuit.
+>
+> Task 6 changes the viewport rather than the lesson, and runs on whichever lesson is already open.
+>
+> Row 2 (`preload-drainage-collapse`) has no task of its own. It is the optional contrast case in
+> §8, task 2 — open it only if you use that contrast.
 
 **Out of scope:** Practice, Assess, the ten foundation lesson panels, and the fourteen drills that
 have no live teaching panel yet. Those fourteen show an explicit "no live teaching panel for this
@@ -52,7 +73,8 @@ minutes including debrief.
 
 ## 3. Setup
 
-- Route: `/cardiohelp-ecmo/learn`.
+- Route: `/cardiohelp-ecmo/learn`. Keep the six direct links from §1 open in your own window or on
+  paper: **you** load each lesson, the participant never navigates to one by name.
 - **No sign-in is required.** The module is reachable by direct link as unlisted tester access, and
   lesson history stays in the participant's own browser. Do not create an account for them, and do
   not sign in with your own — a signed-in session would attach their exploration to your record.
@@ -128,6 +150,9 @@ rubric, not an independent success.
 Run tasks **1 → 6 in order**. The order is deliberate: task 1 establishes what a trustworthy signal
 looks like, tasks 2–5 rely on that, and task 6 tests the layout after the participant has state
 worth losing.
+
+Before each of tasks 1–5, load that task's lesson from the §1 table and hand the screen over with it
+open. Task 6 runs on whatever is already on screen; you resize, they look.
 
 If time runs short, drop task 5 before task 4 — the bubble sequence carries the safety-critical
 reading and should not be skipped.

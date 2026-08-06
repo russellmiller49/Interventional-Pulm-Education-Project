@@ -21,11 +21,15 @@ You can stop at any time, for any reason, without giving one.
 Please do not enter any patient information, your own health information, or anything identifying
 into the module. Nothing you type is needed for this session.
 
+**Each task will already be open on the screen when it starts.** You do not need to find or choose
+anything — the person sitting with you loads it and hands it over. Once it is in front of you, go
+wherever you like in it.
+
 ---
 
 ## Task 1
 
-Open the lesson called **Startup, self-test, and sensor orientation**. Do not touch any control yet.
+A lesson is open in front of you. Do not touch any control yet.
 
 Look at the readings on screen.
 
@@ -36,8 +40,7 @@ for each one.**
 
 ## Task 2
 
-Open the lesson called **High displayed flow with limited oxygenation response**, and read what is
-in front of you.
+A new lesson is open. Read what is in front of you.
 
 The flow number on the display is rising. The saturation measured in the drainage line is rising.
 The patient's own oxygenation is getting worse.
@@ -51,8 +54,7 @@ and tell us whether what happens next matches what you expected.
 
 ## Task 3
 
-Open the lesson called **Gas transfer falls while blood flow persists** and move forward until
-something changes.
+A new lesson is open. Move forward through it until something changes.
 
 **Tell us which part of this system you think has failed, and how you decided.**
 
@@ -60,8 +62,7 @@ something changes.
 
 ## Task 4
 
-Open the lesson called **Arterial bubble alarm with pump stop** and move forward until something
-changes.
+A new lesson is open. Move forward through it until something changes.
 
 The pump has stopped on its own.
 
@@ -74,8 +75,7 @@ If you want to try something on the controls, do it and tell us what you expecte
 
 ## Task 5
 
-Open the lesson called **Peripheral VA: upper-body oxygenation falls despite oxygenated return
-blood**.
+A new lesson is open.
 
 You are shown a saturation from the right wrist, a saturation from the groin, and a reading taken
 after the artificial lung. The right wrist reading is low. The other two look preserved.
