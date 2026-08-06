@@ -29,9 +29,11 @@ import {
   type KeyboardEvent,
 } from 'react'
 
+import type { CrrtPressureSignalId } from '../content/circuitModel'
 import {
   prismaxSimulatorArtwork,
   prismaxSimulatorHotspots,
+  prismaxStaticReferenceNotice,
   type PrismaxSimulatorHotspotId,
 } from '../content/prismaxSimulator'
 import type { CrrtConsoleControlsModel } from '../engine/consoleControls'
@@ -44,6 +46,7 @@ import {
   type PrismaxPrescriptionDraft,
   type PrismaxSetupStepId,
 } from '../engine/deviceAdapters/prismax'
+import { CrrtLivePressureDevice } from './CrrtLivePressureDevice'
 import styles from './prismax-pilot-interface.module.css'
 
 interface RevealedPrismaxPilotCaseContext {
@@ -453,14 +456,10 @@ function OperationsScreen({
   consoleControls?: CrrtConsoleControlsModel
   onPerformCaseAction?: (interventionId: string) => void
 }) {
-  const pressures = [
-    ['Access', operations.pressures.accessPressureMmHg],
-    ['Filter', operations.pressures.filterPressureMmHg],
-    ['Return', operations.pressures.returnPressureMmHg],
-    ['Effluent', operations.pressures.effluentPressureMmHg],
-    ['TMP', operations.pressures.transmembranePressureMmHg],
-    ['ΔP', operations.pressures.filterPressureDropMmHg],
-  ] as const
+  // Read through the described channels rather than a hand-built tuple. The
+  // tuple gave all six the same sublabel, which quietly told a learner that a
+  // measured site and an arithmetic relationship are the same kind of thing.
+  const pressures = operations.pressureSignals
   const running = operations.treatmentState === 'running'
   const ended = operations.treatmentState === 'ended'
   const stopButtonRef = useRef<HTMLButtonElement>(null)
@@ -674,11 +673,21 @@ function OperationsScreen({
             <h4 id="phase3-pressure-heading">Pressure display</h4>
           </div>
           <div className={styles.pressureGrid} role="list" aria-label="Simulated pressure signals">
-            {pressures.map(([label, value]) => (
-              <div key={label} role="listitem">
-                <span>{label}</span>
-                <strong>{value === null ? '—' : `${value.toFixed(0)} mmHg`}</strong>
-                <small>{value === null ? 'No case signal' : 'Simulated case value'}</small>
+            {pressures.map((signal) => (
+              <div key={signal.id} role="listitem" data-kind={signal.kind}>
+                <span>{signal.label}</span>
+                <strong>
+                  {signal.valueMmHg === null
+                    ? 'Unavailable'
+                    : `${signal.valueMmHg.toFixed(0)} mmHg`}
+                </strong>
+                <small>
+                  {signal.valueMmHg === null
+                    ? 'Not being modelled'
+                    : signal.kind === 'directly-modelled-site'
+                      ? 'Directly modelled site'
+                      : 'Calculated relationship'}
+                </small>
               </div>
             ))}
           </div>
@@ -812,32 +821,32 @@ function OperationsScreen({
   )
 }
 
-function PrismaxHardwareOrientation({ state }: { state: PrismaxPilotInterfaceState }) {
+/**
+ * The static drawing, demoted.
+ *
+ * It used to open this surface and carry a badge that tracked the run, which
+ * made a fixed illustration look like a display. It is now behind a disclosure,
+ * carries no state badge, and says in its own words that nothing on it moves.
+ */
+function PrismaxStaticDeviceReference() {
   const [selectedHotspotId, setSelectedHotspotId] = useState<PrismaxSimulatorHotspotId>(
     prismaxSimulatorHotspots[0].id,
   )
   const selectedHotspot =
     prismaxSimulatorHotspots.find(({ id }) => id === selectedHotspotId) ??
     prismaxSimulatorHotspots[0]
-  const stateLabel =
-    state.treatmentState === 'running'
-      ? 'Simulated treatment active'
-      : state.treatmentState === 'ended'
-        ? 'Run ended'
-        : state.screen === 'operations'
-          ? 'Operations paused'
-          : state.screen === 'setup'
-            ? 'Setup checks underway'
-            : 'Ready for new attempt'
 
   return (
-    <section className={styles.hardwarePanel} aria-labelledby="prismax-hardware-heading">
+    <details className={styles.hardwarePanel}>
+      <summary>
+        <strong>{prismaxStaticReferenceNotice.title}</strong>
+        <span>{prismaxStaticReferenceNotice.summary}</span>
+      </summary>
+
       <header className={styles.hardwareHeading}>
-        <span>Generated equipment orientation</span>
-        <h3 id="prismax-hardware-heading">Explore the physical machine</h3>
-        <p>
-          Select a numbered region to connect the hardware layout with the functional touchscreen
-          simulator.
+        <h3 id="prismax-hardware-heading">Where the hardware sits</h3>
+        <p className={styles.staticNotice} role="note">
+          {prismaxStaticReferenceNotice.unsynchronisedNotice}
         </p>
       </header>
 
@@ -848,9 +857,6 @@ function PrismaxHardwareOrientation({ state }: { state: PrismaxPilotInterfaceSta
           sizes="(max-width: 1100px) 100vw, 32vw"
           src={prismaxSimulatorArtwork.src}
         />
-        <span className={styles.machineStateBadge} data-state={state.treatmentState}>
-          {stateLabel}
-        </span>
         <div className={styles.hotspotLayer} role="group" aria-label="CRRT machine regions">
           {prismaxSimulatorHotspots.map((hotspot) => (
             <button
@@ -873,7 +879,7 @@ function PrismaxHardwareOrientation({ state }: { state: PrismaxPilotInterfaceSta
         <div>
           <h4>{selectedHotspot.label}</h4>
           <p>{selectedHotspot.description}</p>
-          <small>PrisMax Operator&apos;s Manual · cited hardware-orientation section</small>
+          <small>{prismaxStaticReferenceNotice.fidelityBoundary}</small>
         </div>
       </div>
 
@@ -894,7 +900,19 @@ function PrismaxHardwareOrientation({ state }: { state: PrismaxPilotInterfaceSta
       <small className={styles.artworkNote}>
         {prismaxSimulatorArtwork.generationMethod} No product logo or copied screen artwork.
       </small>
-    </section>
+    </details>
+  )
+}
+
+/** Holds the selected channel so the live profile can be driven by keyboard. */
+function PrismaxLivePressurePanel({ operations }: { operations: PrismaxPilotOperationsDisplay }) {
+  const [selectedSignalId, setSelectedSignalId] = useState<CrrtPressureSignalId>('access')
+  return (
+    <CrrtLivePressureDevice
+      operations={operations}
+      selectedSignalId={selectedSignalId}
+      onSelectSignal={setSelectedSignalId}
+    />
   )
 }
 
@@ -929,7 +947,10 @@ export function PrismaxPilotInterface({
       ) : null}
 
       <div className={styles.simulatorWorkbench}>
-        <PrismaxHardwareOrientation state={state} />
+        {/* The live model leads. It sits outside the control fieldset on
+            purpose: reading the pressure profile stays available by keyboard
+            even on a read-only run, where the device controls are disabled. */}
+        <PrismaxLivePressurePanel operations={operations} />
 
         <fieldset className={styles.controlFieldset} disabled={!controlsEnabled}>
           <legend className={styles.visuallyHidden}>
@@ -1076,6 +1097,8 @@ export function PrismaxPilotInterface({
           ) : null}
         </fieldset>
       </div>
+
+      <PrismaxStaticDeviceReference />
     </div>
   )
 }
