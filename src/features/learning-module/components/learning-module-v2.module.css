@@ -405,9 +405,24 @@
   align-items: stretch;
   gap: 0.65rem;
   overflow: auto;
+  /* The strip is a tab stop that scrolls sideways, so a gesture that runs off its end stays in it
+     rather than chaining to the page the learner was not scrolling. */
+  overscroll-behavior-x: contain;
   border-bottom: 1px solid var(--lm-v2-border);
   background: var(--lm-v2-panel);
   scrollbar-gutter: stable;
+}
+
+/*
+ * The strip holds the immediate goal and the safety constraints past its right edge, so it carries
+ * `tabIndex={0}` and has to show where the keyboard is. `:focus-visible` rather than `:focus`: a
+ * pointer drag on the strip should not leave a ring sitting on a surface being read. `outline-offset`
+ * is negative because the outline would otherwise be drawn outside a box that is flush against the
+ * module chrome above it and clipped away.
+ */
+.contextStrip:focus-visible {
+  outline: 3px solid var(--lm-v2-accent, #0369a1);
+  outline-offset: -3px;
 }
 
 .contextStrip > .panelSection {
