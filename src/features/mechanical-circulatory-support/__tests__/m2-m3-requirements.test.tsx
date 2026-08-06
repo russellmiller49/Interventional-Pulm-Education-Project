@@ -502,8 +502,8 @@ describe('M2/M3 — the six phases behave as instructional states', () => {
         target: { value: position },
       })
       fireEvent.click(screen.getByRole('button', { name: /Continue to what changed/i }))
-      const row = screen
-        .getByRole('table')
+      const row = document
+        .querySelector('[data-before-after]')!
         .querySelector('[data-signal="leftDeviceFlowLMin"] td:last-child')!.textContent!
       view.unmount()
       return row
@@ -626,7 +626,7 @@ describe('M2/M3 — the clinical distinctions survive the rewrite', () => {
     )
     // And the before-and-after comparison keeps them on separate rows.
     fireEvent.click(screen.getByRole('button', { name: /Continue to what changed/i }))
-    const table = screen.getByRole('table')
+    const table = document.querySelector('[data-before-after]')!
     expect(table.querySelector('[data-signal="leftDeviceFlowLMin"]')).not.toBeNull()
     expect(table.querySelector('[data-signal="rightDeviceFlowLMin"]')).not.toBeNull()
     expect(table.querySelector('[data-signal="deviceFlowLMin"]')).not.toBeNull()
