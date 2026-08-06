@@ -284,17 +284,23 @@ export function SupportPathwayMechanismsPanel({
             </li>
             <li data-distinction="vv-ecmo-adds-no-systemic-flow">
               <span className="font-semibold">
-                Venovenous extracorporeal support adds gas exchange, not systemic flow.{' '}
+                Venovenous extracorporeal support provides gas exchange without a direct arterial
+                flow stream.{' '}
               </span>
-              It returns blood to the venous side and the native heart still does all of the
-              circulatory work.
+              It returns blood to the venous side, so it creates no direct arterial pump-flow
+              contribution and systemic circulatory flow remains native cardiac output — although
+              improved gas exchange and altered right ventricular loading may indirectly affect that
+              native output.
             </li>
             <li data-distinction="va-ecmo-loads-the-lv">
               <span className="font-semibold">
-                Venoarterial extracorporeal support can load the left ventricle.{' '}
+                Venoarterial extracorporeal support may load the left ventricle.{' '}
               </span>
-              An arterial return raises the pressure the native ventricle must open against, which
-              is the opposite of what a transvalvular pump does to the same chamber.
+              It creates an extracorporeal arterial-flow pathway and may increase left ventricular
+              afterload and loading — particularly with peripheral retrograde arterial return,
+              higher circuit flow, and limited native ejection. How much, and in which direction,
+              depends on the configuration, so it is the opposite tendency to a transvalvular pump
+              rather than a fixed quantity.
             </li>
             <li data-distinction="insertion-direction-is-not-flow-direction">
               <span className="font-semibold">

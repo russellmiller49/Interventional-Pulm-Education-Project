@@ -123,7 +123,7 @@ export function SignalToPerfusionPanel({
             className="min-w-0 rounded-xl border-l-4 border-solid p-3"
             data-ladder-rung="oxygen-delivery"
           >
-            <p className="text-sm font-semibold">3. Oxygen-delivery evidence</p>
+            <p className="text-sm font-semibold">3. Oxygen delivery — not directly calculated</p>
             <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
               <LiveValue
                 label="Mixed venous saturation"
@@ -131,7 +131,7 @@ export function SignalToPerfusionPanel({
                 unit="%"
                 digits={0}
                 kind="modeled"
-                note="A downstream balance signal: what the tissues left behind. It is not a measurement of oxygen delivery, and this module sets no value for it to be driven toward."
+                note="Modeled delivery–consumption balance signal. It moves with the modeled balance among blood flow, oxygen availability assumptions, and tissue consumption and extraction assumptions. It is not a measurement of oxygen delivery, not a calculation of it, not proof that delivery is adequate, and this module sets no value for it to be driven toward."
               />
               <div
                 className="min-w-0 rounded-xl border border-dashed p-3"
@@ -144,7 +144,7 @@ export function SignalToPerfusionPanel({
                 <p className="text-sm font-semibold">not calculated by this simulation</p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">not modeled</p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  Haemoglobin and arterial oxygen content are not modeled, so the product that would
+                  Hemoglobin and arterial oxygen content are not modeled, so the product that would
                   make an oxygen-delivery figure does not exist here.
                 </p>
               </div>
@@ -162,13 +162,14 @@ export function SignalToPerfusionPanel({
         </ol>
 
         <TextEquivalent>
-          The ladder has four rungs and this simulation fills three of them. Pressure:{' '}
-          {reading(metrics.mapMmHg, 0)} mm Hg mean arterial pressure, with a wedge pressure of{' '}
-          {reading(metrics.pcwpMmHg, 0)} and a right atrial pressure of{' '}
-          {reading(metrics.rapMmHg, 0)} mm Hg. Flow: {flowAccountSentence(account, disclosed)}{' '}
-          Oxygen-delivery evidence: a modeled mixed venous saturation of{' '}
-          {reading(metrics.svo2Percent, 0)} percent, with no whole-body oxygen delivery calculated
-          anywhere in this simulation. Organ response: nothing at all.
+          The simulation directly populates pressure and flow. It does not calculate whole-body
+          oxygen delivery because hemoglobin and arterial oxygen content are not modeled. It
+          provides a modeled downstream delivery–consumption balance signal through mixed venous
+          saturation, and it does not model organ response. Pressure: {reading(metrics.mapMmHg, 0)}{' '}
+          mm Hg mean arterial pressure, with a wedge pressure of {reading(metrics.pcwpMmHg, 0)} and
+          a right atrial pressure of {reading(metrics.rapMmHg, 0)} mm Hg. Flow:{' '}
+          {flowAccountSentence(account, disclosed)} The modeled balance signal reads{' '}
+          {reading(metrics.svo2Percent, 0)} percent. Organ response: nothing at all.
         </TextEquivalent>
 
         <ModelBoundary>
@@ -241,6 +242,7 @@ export function SignalToPerfusionPanel({
                 unit="%"
                 digits={0}
                 kind="modeled"
+                note="Modeled delivery–consumption balance signal."
               />
               <LiveValue
                 label="Cardiac power"
@@ -254,8 +256,8 @@ export function SignalToPerfusionPanel({
             <TextEquivalent>
               In the transfer patient: mean arterial pressure {reading(metrics.mapMmHg, 0)} mm Hg,
               effective systemic delivery {reading(metrics.effectiveSystemicFlowLMin, 1)} L/min,
-              modeled mixed venous saturation {reading(metrics.svo2Percent, 0)} percent, cardiac
-              power {reading(metrics.cardiacPowerOutputW, 2)} W.{' '}
+              modeled delivery–consumption balance signal {reading(metrics.svo2Percent, 0)} percent,
+              cardiac power {reading(metrics.cardiacPowerOutputW, 2)} W.{' '}
               {flowAccountSentence(account, disclosed)}
             </TextEquivalent>
           </TransferState>

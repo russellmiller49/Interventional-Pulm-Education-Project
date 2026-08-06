@@ -261,9 +261,9 @@ export function ImpellaSuctionPurgeRvPanel({
           />
         </div>
         <ModelBoundary>
-          Haemolysis is not modeled anywhere in this simulation, and neither is the detailed
-          behaviour of a purge system. The blood-trauma alarm is a modeled risk flag, not a
-          haemolysis outcome, and no purge-fluid or anticoagulation management is authored here.
+          Hemolysis is not modeled anywhere in this simulation, and neither is the detailed behavior
+          of a purge system. The blood-trauma alarm is a modeled risk flag, not a hemolysis outcome,
+          and no purge-fluid or anticoagulation management is authored here.
         </ModelBoundary>
         <FigureScope
           establishes="Which readings belong to which of the four domains, and what each domain can and cannot answer on its own."
@@ -331,7 +331,7 @@ export function ImpellaSuctionPurgeRvPanel({
 
       {reveal === 'transfer' ? (
         <PanelSection title="The transfer patient, read live" id="rv-transfer">
-          <TransferState principle="A pump in suction is short of blood, not short of setting. Raising support against an underfilled chamber worsens the underfilling and the blood trauma, whichever side of the circulation the shortage came from.">
+          <TransferState principle="A suction state means inlet conditions are inadequate for the requested support — because of underfilling, restricted inflow, or position — not that the performance level is too low. Raising support against those inlet conditions worsens both the underfilling and the blood trauma.">
             <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
               <LiveValue
                 label="Preload"
