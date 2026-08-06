@@ -353,7 +353,28 @@ export function flowAccountView(state: McsSimulationState): McsFlowAccountView {
 }
 
 /**
- * The device slot of the flow account as one line of text.
+ * The device slot of the flow account, as one line.
+ *
+ * Every presentation pushes exactly one `device` line, so the fallback is a type guard rather than a
+ * reachable state: a mechanism with no pathway of its own reports nothing, and that is itself the
+ * line rather than the absence of one.
+ */
+export function mcsDeviceFlowLine(state: McsSimulationState): McsFlowAccountLineView {
+  const account = flowAccountView(state)
+  return (
+    account.lines.find((line) => line.id === 'device') ?? {
+      id: 'device',
+      label: 'Displayed device contribution',
+      valueText: 'none reported',
+      value: null,
+      kind: 'not-available',
+      destination: 'no pathway of its own on this mechanism',
+    }
+  )
+}
+
+/**
+ * The device slot as one piece of text.
  *
  * The surfaces that summarize the three flows in a sentence — the patient-context bar and the Learn
  * context strip — were each formatting `metrics.deviceFlowLMin` themselves, which printed `0.0` for
@@ -361,9 +382,7 @@ export function flowAccountView(state: McsSimulationState): McsFlowAccountView {
  * from here, so there is one answer to what the device is reporting rather than three.
  */
 export function mcsDeviceFlowText(state: McsSimulationState): string {
-  return (
-    flowAccountView(state).lines.find((line) => line.id === 'device')?.valueText ?? 'none reported'
-  )
+  return mcsDeviceFlowLine(state).valueText
 }
 
 /* ------------------------------------------------------------------ *

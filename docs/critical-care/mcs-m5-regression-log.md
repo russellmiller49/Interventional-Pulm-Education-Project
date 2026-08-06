@@ -23,6 +23,21 @@ A test that passes is not evidence that it can fail. This is the evidence.
 | 13  | the flow item prints `state.metrics.deviceFlowLMin.toFixed(1)` instead of the flow account's own text          | `npx jest …/m5-context-bar-consistency.test.tsx -t "reports no direct device flow on counterpulsation"`                      | `expect(value).toMatch(/none reported/i)` — the bar read `device 0.0 L/min`                                                                     | yes      |
 | 14  | the balance item is labelled `Perfusion` again                                                                 | `npx jest …/m5-context-bar-consistency.test.tsx -t "labels the venous saturation and cardiac power"`                         | `expect(patientContextLabels()).not.toContain('Perfusion')`                                                                                     | yes      |
 
+## A fifteenth, after review
+
+The monitor's own `DEVICE FLOW` tile was the last surface still printing the arithmetic zero as a
+reading. Corrected test-first like the others, and regressed the same way.
+
+| #   | Temporary defect                                                              | Test command                                                                                                              | Failing assertion                                                                                                                 | Restored |
+| --- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 15  | the tile renders `metric(metrics.deviceFlowLMin, 1)` and a bare `L/min` again | `npx jest …/m5-context-bar-consistency.test.tsx -t "reports no direct pump-flow channel on the counterpulsation monitor"` | `Expected substring: "NONE REPORTED"` · `Received string: "NATIVE FLOW4.5L/min \| DEVICE FLOW0.0L/min \| EFFECTIVE FLOW4.5L/min"` | yes      |
+
+One process note worth keeping. The first attempt at this regression paired a `python … assert` with
+a `git checkout --` in the same command line. The assertion failed on a stale anchor, the checkout
+ran anyway, and it reverted the correction rather than the defect. The defect was re-applied from a
+copy taken beforehand, and the restore was verified by grep before the test ran. A restore step that
+runs whether or not the defect was applied is not a restore step.
+
 ## What the sweep changed about the tests
 
 Two of the fourteen did not fail on the first attempt, and both are recorded because the fix was to

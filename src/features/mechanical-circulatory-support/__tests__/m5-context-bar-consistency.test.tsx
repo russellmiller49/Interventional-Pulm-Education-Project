@@ -65,6 +65,18 @@ const CONGESTION_LABEL = 'Filling-pressure congestion pattern'
 const FLOW_LABEL = 'Native / device / effective flow'
 const BALANCE_LABEL = 'Modeled balance and pressure–flow summary'
 
+/**
+ * The monitor's flow account: the native, device and effective tiles, as one block of text.
+ *
+ * Scoped by the authored target rather than by position, so the assertions are about the region a
+ * Learn section can point at rather than about which tile happens to be third.
+ */
+function monitorFlowAccountText(container: HTMLElement): string {
+  const tiles = [...container.querySelectorAll('[data-monitor-target="monitor:flow-account"]')]
+  expect(tiles.length).toBeGreaterThan(0)
+  return tiles.map((tile) => tile.textContent ?? '').join(' | ')
+}
+
 /** Reads the filling pressures the monitor is showing, so the expectation comes from the screen. */
 function displayedFillingPressures(): { rapMmHg: number; pcwpMmHg: number } {
   const tile = within(screen.getByRole('group', { name: 'Current hemodynamic values' })).getByText(
@@ -241,6 +253,64 @@ describe('MCS M5 — the patient-context bar reports device flow as the model do
     const strip = container.querySelector('[data-learn-context]')?.textContent ?? ''
     expect(strip).toMatch(/displayed device \d\.\d L\/min/)
     expect(strip).not.toMatch(/none reported/)
+  })
+
+  /*
+   * The monitor was the last surface still printing the arithmetic zero as a reading. A tile headed
+   * DEVICE FLOW showing `0.0 L/min` claims a pump-flow channel that reports nothing, which is the
+   * one thing the module says counterpulsation does not have — and it said it directly beside a
+   * flow account, on the same screen, reading "none reported".
+   */
+  it('reports no direct pump-flow channel on the counterpulsation monitor', async () => {
+    const { container } = await renderWorkbench({ section: 'practice' })
+
+    const account = monitorFlowAccountText(container)
+    expect(account).toContain('DEVICE FLOW')
+    expect(account).toContain('NONE REPORTED')
+    expect(account).toMatch(/no direct pump-flow channel/i)
+    expect(account).not.toMatch(/DEVICE FLOW[^|]*0\.0/)
+    expect(account).not.toMatch(/DEVICE FLOW[^|]*L\/min/)
+  })
+
+  it('reports the same absence on an IABP Learn section, not only on a bare monitor', async () => {
+    const { container } = await renderWorkbench({
+      section: 'learn',
+      initialActivityId: 'iabp-timing-triggering',
+    })
+
+    const account = monitorFlowAccountText(container)
+    expect(account).toContain('DEVICE FLOW')
+    expect(account).toContain('NONE REPORTED')
+    expect(account).toMatch(/no direct pump-flow channel/i)
+    expect(account).not.toMatch(/DEVICE FLOW[^|]*0\.0/)
+    // The delivery the patient is actually getting stays a number on every pathway.
+    expect(account).toMatch(/EFFECTIVE FLOW\s*\d+\.\d\s*L\/min/)
+  })
+
+  it('keeps a numeric displayed flow, marked estimated, on durable support', async () => {
+    const { container } = await renderWorkbench({ section: 'practice' })
+    selectDeviceTrack('lvad')
+
+    const account = monitorFlowAccountText(container)
+    expect(account).toMatch(/DEVICE FLOW\s*\d+\.\d/)
+    expect(account).toMatch(/L\/min · estimated/)
+    expect(account).not.toContain('NONE REPORTED')
+    expect(account).toMatch(/EFFECTIVE FLOW\s*\d+\.\d\s*L\/min/)
+  })
+
+  it('keeps the two microaxial pump flows separate, and out of one systemic total', async () => {
+    const { container } = await renderWorkbench({ section: 'practice' })
+    selectDeviceTrack('impella')
+    fireEvent.change(screen.getByRole('combobox', { name: 'Right-sided Impella configuration' }), {
+      target: { value: 'rp' },
+    })
+
+    const account = monitorFlowAccountText(container)
+    expect(account).toMatch(/LV PUMP FLOW\s*\d+\.\d\s*L\/min · systemic assist/)
+    expect(account).toMatch(/RP PUMP FLOW\s*\d+\.\d\s*L\/min · pulmonary delivery/)
+    expect(account).not.toContain('DEVICE FLOW')
+    expect(account).not.toContain('NONE REPORTED')
+    expect(account).toMatch(/EFFECTIVE FLOW\s*\d+\.\d\s*L\/min/)
   })
 
   it('keeps the durable displayed flow marked as an estimate on the section that teaches it', async () => {
