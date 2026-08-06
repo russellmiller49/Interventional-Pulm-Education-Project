@@ -1206,6 +1206,38 @@
   background: rgba(7, 27, 33, 0.78);
 }
 
+/* The two claims this view holds open. Amber border weight plus a written tag, never colour alone. */
+.heldOpenPanel {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+  margin: 0 0 0.9rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid rgba(245, 187, 101, 0.5);
+  border-left: 6px solid #f5bb65;
+  border-radius: 0.75rem;
+  background: rgba(245, 187, 101, 0.08);
+}
+
+.heldOpenPanel strong {
+  color: #f5bb65;
+  font-size: 0.8rem;
+}
+
+.heldOpenPanel ul {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding-left: 1.1rem;
+  color: #f6e6cf;
+  font-size: 0.83rem;
+  line-height: 1.6;
+}
+
+.heldOpenPanel .supportTag {
+  color: #f5bb65;
+}
+
 .termList {
   display: grid;
   gap: 0.45rem;
@@ -1223,6 +1255,32 @@
   color: #75dce3;
   font-size: 0.78rem;
   font-weight: 900;
+}
+
+.termList dt {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+/* A source gap is stated in words as well as by the border, so it survives without colour. */
+.termList .supportTag {
+  padding: 0.1rem 0.5rem;
+  border: 1px solid currentcolor;
+  border-radius: 999px;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.termList > div[data-support='registered-source-gap'] {
+  border-left: 6px solid #f5bb65;
+}
+
+.termList > div[data-support='registered-source-gap'] .supportTag {
+  color: #f5bb65;
 }
 
 .termList dd {

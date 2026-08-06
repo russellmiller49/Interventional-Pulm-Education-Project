@@ -131,7 +131,7 @@ describe('Baxter CRRT Practice curation and open Challenge access', () => {
     ).not.toContain('critical_care_transfer_completed')
   })
 
-  it('requires both the prescription lab interaction and the patient application', async () => {
+  it('requires both the staged prescription build and the patient application', async () => {
     render(<BaxterCrrtLearn initialLessonId="crrt-prescription-dosing" />)
 
     fireEvent.click(
@@ -143,10 +143,13 @@ describe('Baxter CRRT Practice curation and open Challenge access', () => {
     expect(screen.getByText('Evidence in progress')).toBeInTheDocument()
     expect(readProgress().completedLessonIds).not.toContain('crrt-prescription-dosing')
 
+    // The builder opens on Goals, so the construction entries are reached by moving to step 2 —
+    // evidence now requires walking the three steps rather than editing one dense form.
+    fireEvent.click(screen.getByRole('button', { name: /Continue to Construction/ }))
     fireEvent.change(screen.getByRole('spinbutton', { name: /^Dialysate flow/ }), {
       target: { value: '1200' },
     })
-    fireEvent.focus(screen.getByRole('region', { name: 'Educational calculation outputs' }))
+    fireEvent.click(screen.getByRole('button', { name: /Continue to Predicted consequences/ }))
 
     await waitFor(() => expect(screen.getByText('Lesson evidence recorded')).toBeInTheDocument())
     expect(readProgress().completedLessonIds).toContain('crrt-prescription-dosing')
