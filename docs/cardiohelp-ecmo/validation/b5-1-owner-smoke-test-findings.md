@@ -24,8 +24,11 @@ learner has actually used the slice. Human novice validation is still pending.
 | 1   | A task-only simulation update was presented as a console interaction | High     | Corrected               |
 | 2   | Drainage chatter described but not visible; wrong default view       | High     | Corrected               |
 | 3   | Bedside 3D console resting on the wrong face; sweep label on it      | High     | Corrected (2nd attempt) |
+| 4   | Teaching pane rendered white text on a near-white surface            | High     | Corrected               |
 
-Severity rationale: all three are **high** because each teaches something false. (1) sends the
+Finding 4 arrived after the first three were pushed and is corrected on the same branch.
+
+Severity rationale: the first three are **high** because each teaches something false. (1) sends the
 learner hunting for a control that does not exist, (2) asks them to recognise a sign the interface
 does not show, and (3) presents a device in a physically impossible pose with a label that names the
 wrong object — on a module whose entire claim is that it is a faithful bounded model.
@@ -418,6 +421,87 @@ product — the same paths pass deterministically under jest, and they complete 
 fronted.
 
 ---
+
+---
+
+## Finding 4 — the teaching pane was white text on a near-white surface
+
+### What the owner saw
+
+> "in the think aloud session view the text is white on white background so you cant read it."
+
+Screenshot of the VV Learn workspace on `startup-sensor-orientation`. The middle pane's cards were
+light: the "Why this step matters" wash had gone cream with its text barely visible, and the drill
+panel's "WHAT IS BEING DECIDED" and "THE STATE ON SCREEN RIGHT NOW" sections were white boxes with
+no readable body at all. The console pane and the lesson pane beside them were still dark.
+
+### Reproduced cause
+
+Not a colour choice and not a theme toggle — the module ignores both the app's light/dark switch and
+the OS `prefers-color-scheme`, and both were checked. It is a **specificity tie whose winner is
+decided by stylesheet order**.
+
+`.workspace` in `src/features/learning-module/curriculum/teaching-workspace.module.css` paints a
+light shell:
+
+```css
+color: var(--tw-ink); /* #15323a */
+color-scheme: light;
+background: #eaf1ef;
+```
+
+`.deviceWorkspace` in `EcmoLearnWorkspace.module.css` inverts all three for the ECMO subtree. Both
+are **single-class selectors in different stylesheets**, so with equal specificity the cascade falls
+back to source order — a build and route-chunking detail, not something either file controls.
+
+`color` had already been doubled to `.deviceWorkspace.deviceWorkspace` for exactly this reason, with
+a comment saying so. `background` and `color-scheme` had not. So the inversion could lose _half_ of
+itself: the shell's light surface won, the module's near-white text won, and the two met.
+
+Everything in that pane then failed at once, because none of those cards paints an opaque
+background of its own:
+
+| Element                | Background                                 | On the dark shell | On the light shell |
+| ---------------------- | ------------------------------------------ | ----------------- | ------------------ |
+| `.guidedWhy`           | `rgba(90, 59, 13, 0.18)` — 18% opaque      | dark amber wash   | cream              |
+| Drill panel `section`  | Tailwind `border` only — **no background** | dark              | white              |
+| `.guidedSnapshot span` | `rgba(5, 24, 28, 0.62)` — 62% opaque       | dark tile         | muddy grey         |
+
+Confirmed by simulation: appending a same-specificity rule for the shared shell after the module's
+reproduces the owner's screenshot exactly, card for card.
+
+### Correction
+
+`background` and `color-scheme` move onto `.deviceWorkspace.deviceWorkspace`, alongside the `color`
+that was already there. The design tokens stay on the single class — the shell declares none of
+them, so nothing contests them and doubling would only add noise.
+
+The foundation workspace's `.readableWorkspace` was checked and left alone: it _agrees_ with the
+shared shell rather than inverting it (same `color-scheme: light`, no competing background), so
+losing the tie changes nothing. Only an inverting workspace needs the doubled selector.
+
+### Verification
+
+`src/features/cardiohelp-ecmo/__tests__/workspace-surface-contrast.test.ts` — 12 tests: that the
+shell still declares all three properties; that all three are on the doubled selector; that none is
+left on the single class; that the inversion is still an inversion; that the tokens stay where
+nothing contests them; and that the foundation workspace does not need the same treatment.
+
+Confirmed failing against the defect: restoring the pre-fix shape fails **5 of 12**.
+
+Rendered-browser confirmation: with a same-specificity shell rule appended last — the exact
+condition that produced the screenshot — the workspace stays `rgb(6, 21, 25)` and the pane is
+readable. Before the fix the same simulation turned it `rgb(234, 241, 239)`.
+
+### Status
+
+Corrected.
+
+### Why this was invisible to the test suite
+
+jsdom does not resolve a cascade across CSS-module files, so no rendered assertion in this repo
+could have caught it, and no amount of axe running against the component tree would either. The
+contract is written against the stylesheets themselves because that is where the defect lives.
 
 ## Scope retained
 

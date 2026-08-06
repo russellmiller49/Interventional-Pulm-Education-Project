@@ -96,18 +96,28 @@
   --border: 187 25% 38%;
   --input: 187 25% 38%;
   --ring: 183 58% 67%;
-
-  color-scheme: dark;
-  background: #061519;
 }
 
 /*
- * Doubled class for specificity. The shared `.workspace` rule sets `color` at the same specificity
- * from a different stylesheet, and which of two equally specific rules wins would otherwise depend
- * on stylesheet order.
+ * Doubled class for specificity, and every declaration that contradicts the shared shell has to
+ * live here.
+ *
+ * `.workspace` in `teaching-workspace.module.css` paints a light surface — `background: #eaf1ef`,
+ * `color-scheme: light`, a dark ink — and `.deviceWorkspace` inverts all three. Both are
+ * single-class selectors in different stylesheets, so with equal specificity the winner is decided
+ * by stylesheet order, which is a build and route-chunking detail rather than anything this file
+ * controls.
+ *
+ * `color` was already doubled for exactly that reason. `background` and `color-scheme` were not,
+ * and when the shared sheet won the tie the result was the module's near-white text on the shell's
+ * light surface: the "Why this step matters" wash going cream, and the drill panel's sections —
+ * which carry no background of their own — going white under white type. Reported from an owner
+ * smoke test on 2026-08-06 as unreadable.
  */
 .deviceWorkspace.deviceWorkspace {
   color: var(--ink, #eaf4f4);
+  color-scheme: dark;
+  background: #061519;
 }
 
 /* Essential explanation is never dimmed, and reading copy is not set at label sizes. */
