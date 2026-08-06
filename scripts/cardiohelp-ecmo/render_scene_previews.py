@@ -23,7 +23,7 @@ import sys
 from pathlib import Path
 
 import bpy
-from mathutils import Vector
+from mathutils import Euler, Vector
 
 RESOLUTION = (1280, 800)
 
@@ -41,6 +41,17 @@ def t2b(point) -> Vector:
     """three.js (Y-up) world coordinates -> Blender (Z-up)."""
     x, y, z = point
     return Vector((x, -z, y))
+
+
+def t2b_euler(rotation):
+    """three.js XYZ Euler -> the Blender XYZ Euler that produces the same pose.
+
+    The world map is (x, y, z) -> (x, -z, y), so a rotation about three.js Y becomes a rotation
+    about Blender Z and a rotation about three.js Z becomes a rotation about Blender -Y. Order is
+    preserved because three.js 'XYZ' and Blender 'XYZ' compose the same way.
+    """
+    rx, ry, rz = rotation
+    return Euler((rx, -rz, ry), "XYZ")
 
 
 def reset_scene() -> None:
@@ -140,6 +151,31 @@ def add_camera(name: str, position: Vector, target: Vector, fov_degrees: float):
     return camera
 
 
+def add_label(name: str, text: str, position: Vector, material) -> bpy.types.Object:
+    """A camera-facing text pill, so label anchors can be judged offline.
+
+    The runtime draws labels as DOM overlays, which no Blender render can reproduce exactly. What
+    this does reproduce is the thing that actually goes wrong: whether a label sits on the object it
+    names. Position is the exported anchor, verbatim.
+    """
+    text_data = bpy.data.curves.new(name, type="FONT")
+    text_data.body = text.upper()
+    text_data.align_x = "CENTER"
+    text_data.align_y = "CENTER"
+    text_data.size = 0.07
+    obj = bpy.data.objects.new(name, text_data)
+    obj.location = position
+    obj.data.materials.append(material)
+    bpy.context.collection.objects.link(obj)
+    return obj
+
+
+def face_camera(objects, camera: bpy.types.Object) -> None:
+    for obj in objects:
+        direction = camera.location - obj.location
+        obj.rotation_euler = direction.to_track_quat("Z", "Y").to_euler()
+
+
 def add_area_light(name: str, position: Vector, energy: float, size: float, color=(1, 1, 1)):
     light_data = bpy.data.lights.new(name, type="AREA")
     light_data.energy = energy
@@ -181,12 +217,13 @@ def main() -> None:
     patient.location = t2b(layout["patient"]["position"])
     patient.scale = (layout["patient"]["scale"],) * 3
 
-    # Console GLB, grounded
+    # Console GLB, grounded on its transformed bounds
     console_objects = import_glb(assets_dir / "cardiohelp-console.glb")
     console = group_objects(console_objects, "console-root")
     placement = layout["consolePlacement"]
     console.location = t2b((placement["x"], 0.0, placement["z"]))
-    console.rotation_euler = (0.0, 0.0, placement["rotationY"])
+    console.rotation_euler = t2b_euler(placement["rotation"])
+    console.scale = (placement.get("scale", 1.0),) * 3
     bpy.context.view_layer.update()
     console.location.z += floor_z - bounds_min_z(console_objects)
 
@@ -264,6 +301,13 @@ def main() -> None:
         ring = bpy.context.active_object
         ring.data.materials.append(make_material(f"dressing-ring-{site['name']}", site["ring"], roughness=0.36))
 
+    # Scene labels at their exported anchors
+    label_material = make_material("scene-label", "#c9fbff", emission=2.4)
+    label_objects = [
+        add_label(f"label-{label['id']}", label["text"], t2b(label["position"]), label_material)
+        for label in layout.get("labels", [])
+    ]
+
     # Lights: key + fill + rim (approximating the app rig)
     add_area_light("key", Vector((3.5, -4.0, 5.0)), 900, 3.2, (0.92, 1.0, 1.0))
     add_area_light("fill", Vector((-4.0, 3.0, 2.5)), 260, 3.6, (0.62, 0.71, 1.0))
@@ -286,6 +330,7 @@ def main() -> None:
     for name, (position, target, fov) in poses.items():
         camera = add_camera(f"camera-{name}", position, target, fov)
         scene.camera = camera
+        face_camera(label_objects, camera)
         scene.render.filepath = str(out_dir / f"{mode}-{name}-{suffix}.png")
         bpy.ops.render.render(write_still=True)
         print(f"rendered {scene.render.filepath}")

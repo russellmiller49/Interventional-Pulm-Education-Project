@@ -9,6 +9,8 @@ import {
   bloodColor,
   CAMERA_TARGET,
   CONSOLE_ASSET,
+  CONSOLE_MODEL_BOUNDS,
+  CONSOLE_PLACEMENT,
   FLOOR_Y,
   PALETTE,
   PATIENT_ASSET,
@@ -17,6 +19,7 @@ import {
   SENSOR_ASSET,
   TUBE_RADII,
 } from './constants'
+import { groundAsset, type AssetPlacement, type ModelBounds } from './grounding'
 import { buildCircuitLayout } from './layout'
 import { FlowTube } from './FlowTube'
 import { StaticFlowArrows } from './StaticFlowArrows'
@@ -25,30 +28,32 @@ import { HlsModule } from './HlsModule'
 import { InteractiveClamp } from './InteractiveClamp'
 import { SceneLabels } from './SceneLabels'
 
-const CONSOLE_POSITION = new THREE.Vector3(1.52, 0, 0.56)
 const SWEEP_TINT = new THREE.Color(PALETTE.sweepGas)
 
-/** Clone a GLB grounded so its bounding-box bottom rests on the floor. */
+/**
+ * Clone a GLB so the *transformed* asset rests on the floor.
+ *
+ * The bounding box is taken after the rotation and scale are applied, not before. Grounding on the
+ * unrotated box only ever worked for a yaw; the console needs a roll to stand on its base, and a
+ * rolled asset placed by its unrotated `min.y` sinks through the floor or hovers above it.
+ *
+ * `bounds` is the model-local box, authored in constants rather than measured from the loaded GLB,
+ * so the label layout and the offline harness ground the asset the same way this does without
+ * having to load it.
+ */
 function GroundedAsset({
   url,
-  x,
-  z,
-  rotation = [0, 0, 0],
-  scale = 1,
+  bounds,
+  placement,
 }: {
   url: string
-  x: number
-  z: number
-  rotation?: [number, number, number]
-  scale?: number
+  bounds: ModelBounds
+  placement: AssetPlacement
 }) {
   const { scene } = useGLTF(url)
-  const restY = useMemo(() => {
-    const bounds = new THREE.Box3().setFromObject(scene)
-    return FLOOR_Y - bounds.min.y * scale
-  }, [scale, scene])
+  const origin = useMemo(() => groundAsset(bounds, placement, FLOOR_Y).origin, [bounds, placement])
   return (
-    <group position={[x, restY, z]} rotation={rotation} scale={scale}>
+    <group position={origin} rotation={placement.rotation} scale={placement.scale}>
       <Clone object={scene} castShadow receiveShadow />
     </group>
   )
@@ -130,10 +135,18 @@ export function BedsideScene({
     () => bloodColor(state.circuit.postOxygenatorSaturation / 100),
     [state.circuit.postOxygenatorSaturation],
   )
-  // Gated on the readout, not the raw value: a collapsing tube is a visual claim about a pressure,
-  // so it may only be shown when that pressure is one the model stands behind.
-  const drainageCollapse =
-    state.device.pumpRunning && (state.circuit.readouts.pVen.displayed ?? 0) <= -300 ? 1 : 0
+  /*
+   * Driven by the engine's own chatter flag, not by a second pressure threshold of this view's own.
+   *
+   * The previous rule here was `pVen.displayed <= -300`, which no authored drainage scenario ever
+   * reaches — the preload sweep bottoms out near -143 mmHg — and the one state that does reach -350
+   * is a closed clamp, whose narrow pinch then wins the `collapse > pinch` race in FlowTube. So the
+   * bedside scene showed nothing at all while the lesson text, the pressure-zone map and the engine
+   * all said the drainage line was juddering. `drainageChatter` already carries "past drainage
+   * capacity and pVen < -75"; a view has no business deriving a competing one.
+   */
+  const drainageChattering = state.device.pumpRunning && state.circuit.drainageChatter
+  const drainageCollapse = drainageChattering ? 1 : 0
 
   return (
     <>
@@ -173,16 +186,14 @@ export function BedsideScene({
       {/* Equipment */}
       <GroundedAsset
         url={CONSOLE_ASSET}
-        x={CONSOLE_POSITION.x}
-        z={CONSOLE_POSITION.z}
-        rotation={[0, -0.35, 0]}
+        bounds={CONSOLE_MODEL_BOUNDS}
+        placement={CONSOLE_PLACEMENT}
       />
       <HlsModule
         layout={layout}
         running={state.device.pumpRunning}
         rpm={state.device.rpmSetpoint}
         animate={!reduceMotion}
-        consolePosition={CONSOLE_POSITION}
       />
       <group position={layout.sensorPosition} quaternion={sensorAlignment} scale={0.85}>
         <Clone object={sensor.scene} castShadow receiveShadow />
@@ -200,6 +211,7 @@ export function BedsideScene({
         pinchTarget={state.circuit.drainageClampClosed ? 1 : 0}
         pinchU={layout.drainageClampU}
         collapseTarget={drainageCollapse}
+        chatter={drainageChattering}
         reduceMotion={reduceMotion}
         cacheKey="drainage-line"
       />
@@ -274,7 +286,11 @@ export function BedsideScene({
       </mesh>
       <gridHelper args={[5.5, 22, '#1f555d', '#102f35']} position={[0, FLOOR_Y + 0.008, 0]} />
       <ContactShadow position={[-1.35, FLOOR_Y + 0.012, -0.3]} radius={1.35} opacity={0.55} />
-      <ContactShadow position={[1.52, FLOOR_Y + 0.012, 0.56]} radius={0.65} opacity={0.5} />
+      <ContactShadow
+        position={[layout.consoleOrigin.x, FLOOR_Y + 0.012, layout.consoleOrigin.z]}
+        radius={0.65}
+        opacity={0.5}
+      />
       <ContactShadow
         position={[layout.hlsModulePosition.x, FLOOR_Y + 0.012, layout.hlsModulePosition.z]}
         radius={0.5}

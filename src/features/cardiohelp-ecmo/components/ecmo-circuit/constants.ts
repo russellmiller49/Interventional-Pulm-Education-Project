@@ -14,6 +14,40 @@ export const PATIENT_POSITION: [number, number, number] = [-1.35, -0.405, -0.3]
 export const PATIENT_SCALE = 0.92
 export const FLOOR_Y = -0.72
 
+/**
+ * The console GLB's model-local bounding box, measured from `cardiohelp-console.glb`.
+ *
+ * Held here rather than read at runtime so `layout.ts` stays free of asset loading and the label
+ * anchors can be computed in node and in jest. `ecmo-circuit.test.ts` reads the GLB's own POSITION
+ * accessor and fails if this drifts from the shipped asset.
+ */
+export const CONSOLE_MODEL_BOUNDS = {
+  min: [-0.3179, -0.4745, -0.3658],
+  max: [0.3179, 0.4752, 0.3656],
+} as const
+
+/**
+ * Where the console stands, and which way up.
+ *
+ * The asset is authored with its base on local −X and its display panel facing local −Y/+Z, so the
+ * roll of +90° about Z is what puts it on its feet; without it the unit rests on its display face
+ * with the pump-drive side to the sky. The preparation script's `stand_longest_axis` heuristic
+ * assumed the longest dimension was the height and left this asset alone — the longest dimension is
+ * the width of the roll frame, not the height.
+ *
+ * The yaw then turns the display toward the bedside camera. Order is three.js 'XYZ', so the roll is
+ * applied before the yaw.
+ *
+ * Single source of truth: the runtime scene, the label layout and the offline Blender harness all
+ * read this, so the preview cannot disagree with the browser about which way the console faces.
+ */
+export const CONSOLE_PLACEMENT = {
+  x: 1.52,
+  z: 0.56,
+  rotation: [0, -0.35, Math.PI / 2] as [number, number, number],
+  scale: 1,
+} as const
+
 export const CAMERA_POSITION: [number, number, number] = [4.4, 2.75, 5.25]
 export const CAMERA_TARGET: [number, number, number] = [0, -0.05, 0.05]
 export const CAMERA_FOV = 36
