@@ -25,23 +25,30 @@
  * A. Bounded frame
  * ------------------------------------------------------------------ */
 
+/*
+ * The frame fills the activity viewport rather than estimating what is above it.
+ *
+ * This used to be `min(58rem, max(30rem, 100dvh - 16rem))`. Every term in that was a guess, and the
+ * guess was wrong in the same direction at every validated viewport: the patient-context bar wraps
+ * to a different height per scenario, so 16rem of chrome was an underestimate, and the 30rem floor
+ * alone was taller than the 479px the activity viewport actually had at 1024 × 768. The frame came
+ * out taller than its container and the activity viewport scrolled — a fourth scroller wrapping
+ * three panes that already scroll independently, which is exactly the arrangement this workspace
+ * exists to remove.
+ *
+ * `.workbench[data-learn-workspace='true']` and the `:has()` rule beside it in
+ * `cardiohelp-ecmo.module.css` make the chain from the activity viewport down definite, so `100%`
+ * resolves. The max-height is kept: on a very tall screen a 58rem workspace is already more reading
+ * height than a pane wants.
+ */
 .workspaceFrame {
-  /* Room taken by the module shell, the activity chrome, the context strip and the task drawer. */
-  --ecmo-learn-chrome: 16rem;
-  --ecmo-learn-min-height: 30rem;
   --ecmo-learn-max-height: 58rem;
 
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
   min-height: 0;
-  height: min(
-    var(--ecmo-learn-max-height),
-    max(var(--ecmo-learn-min-height), calc(100vh - var(--ecmo-learn-chrome)))
-  );
-  height: min(
-    var(--ecmo-learn-max-height),
-    max(var(--ecmo-learn-min-height), calc(100dvh - var(--ecmo-learn-chrome)))
-  );
+  height: 100%;
+  max-height: var(--ecmo-learn-max-height);
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 20px;

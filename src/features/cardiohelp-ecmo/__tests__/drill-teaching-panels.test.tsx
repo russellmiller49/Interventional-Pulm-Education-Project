@@ -169,16 +169,44 @@ describe('B4: every pilot panel satisfies the teaching-panel contract', () => {
   })
 
   it.each(PILOT_IDS)('%s does not call a bedside or blender value a console reading', (id) => {
-    // `valid` says this console measures and displays it. A pulse oximeter, an arterial blood gas,
-    // the external blender and a sampled circuit saturation are the other three of the four domains
-    // the startup drill exists to keep apart, and labelling any of them `valid` would undo that.
-    const offConsoleSites =
-      /pulse oximeter|blood gas|blender|arterial line|echocardiograph|after the membrane/i
+    /*
+     * `valid` says this console measures and displays it. The other three of the four domains the
+     * startup drill exists to keep apart must never carry it.
+     *
+     * This was a site allowlist, which meant it only ever checked rows whose wording someone had
+     * remembered to add to the pattern — a row sited at the "bedside circuit" was skipped entirely
+     * and could claim to be a console reading with nothing to stop it. The check now runs the other
+     * way round: every row is examined, and a row is only allowed to be `valid` if its site names a
+     * place this console actually measures.
+     */
+    const consoleSites =
+      /console|circuit tubing|drainage limb|return limb|between pump and oxygenator|across the membrane|derived across|flow probe|oxygenator inlet/i
+    const nonConsoleSites =
+      /pulse oximeter|blood gas|blender|arterial line|echocardiograph|bedside|by hand|after the membrane|patient/i
+
     const { container } = render(<EcmoDrillTeachingPanel state={settled(id)} />)
-    for (const row of container.querySelectorAll('[data-signal]')) {
+    const rows = [...container.querySelectorAll('[data-signal]')]
+    expect(rows.length).toBeGreaterThan(0)
+
+    for (const row of rows) {
       const site = row.querySelector('[data-signal-site]')?.textContent ?? ''
-      if (!offConsoleSites.test(site)) continue
-      expect(row.getAttribute('data-signal-kind')).not.toBe('valid')
+      const kind = row.getAttribute('data-signal-kind')
+      expect(site.trim()).not.toBe('')
+
+      // A site that names somewhere off the console may never be sold as a console reading …
+      if (nonConsoleSites.test(site) && !consoleSites.test(site)) {
+        expect({ signal: row.getAttribute('data-signal'), site, kind }).toMatchObject({
+          kind: expect.not.stringMatching(/^valid$/),
+        })
+      }
+
+      // … and a row that claims to be on the console must name a place the console measures, so a
+      // new row cannot default its way to `valid` from a site nobody classified.
+      if (kind === 'valid') {
+        expect({ signal: row.getAttribute('data-signal'), site }).toMatchObject({
+          site: expect.stringMatching(consoleSites),
+        })
+      }
     }
   })
 })

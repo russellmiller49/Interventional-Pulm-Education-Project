@@ -46,7 +46,12 @@ export function LearnStepTeaching({
       // Formatted from the engine readouts, so a stopped circuit's intercepts never appear here as
       // though the console had measured them.
       pVen: formatChannelReadout('pVen', state.circuit.readouts.pVen, 'mmHg'),
-      pIntPArt: formatChannelGroup([state.circuit.readouts.pInt, state.circuit.readouts.pArt], ''),
+      // With an empty unit this tile printed two bare numbers, so the only pressures in the snapshot
+      // that carried no unit were the two the learner is asked to compare.
+      pIntPArt: formatChannelGroup(
+        [state.circuit.readouts.pInt, state.circuit.readouts.pArt],
+        'mmHg',
+      ),
       sweep: state.gas.sweepLpm.toFixed(1),
       spo2: state.patient.spo2.toFixed(1),
       paCO2: state.patient.paCO2.toFixed(1),

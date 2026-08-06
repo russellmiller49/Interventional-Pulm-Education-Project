@@ -42,8 +42,14 @@ function stageOf(state: EcmoSimulationState): StartupStage {
 const STAGE_SUMMARY: Readonly<Record<StartupStage, string>> = {
   'pre-use':
     'The pump is stopped. Flow is a real zero because its sensor is connected; the three pressure channels and the gradient are not values this model produces for a stopped pump, so they show the unavailable indication with the reason beside it. Nothing on this circuit has been walked by hand.',
+  /*
+   * The pressure half of this sentence is filled in from the readouts, not from the stage. A
+   * running pump is what makes the model willing to produce circuit pressures, but it does not
+   * guarantee it produced them — and asserting "all three pressure channels are reporting" beside a
+   * table of dashes taught the learner to disbelieve the table rather than to read it.
+   */
   demonstration:
-    'The pump is turning, so flow and all three pressure channels are reporting numbers again. Nothing about this circuit has been verified by that: a reference circuit brought up to show you where the readings live is a demonstration, not a completed pre-use sequence.',
+    'The pump is turning, so flow is reporting. %PRESSURES% Nothing about this circuit has been verified by that: a reference circuit brought up to show you where the readings live is a demonstration, not a completed pre-use sequence.',
   verified:
     'The tip-to-tip inspection has been recorded on this circuit. That is the point at which the circuit domain has something behind it — and it is a separate claim from anything the console reported.',
 }
@@ -52,6 +58,18 @@ export function StartupSensorOrientationPanel({ state }: { readonly state: EcmoS
   const stage = stageOf(state)
   const { readouts } = state.circuit
   const inspectionOutstanding = state.scenario.activeFaults.includes('startup-inspection')
+
+  const reportingPressures = [readouts.pVen, readouts.pInt, readouts.pArt].filter(
+    (readout) => readout.displayed !== null,
+  ).length
+  const stageSummary = STAGE_SUMMARY[stage].replace(
+    '%PRESSURES%',
+    reportingPressures === 3
+      ? 'All three pressure channels are reporting numbers again.'
+      : reportingPressures === 0
+        ? 'The pressure channels are still not reporting — read the reason beside each one rather than the running pump.'
+        : `Only ${reportingPressures} of the three pressure channels is reporting — read the reason beside the others rather than the running pump.`,
+  )
 
   const domains = [
     {
@@ -102,7 +120,7 @@ export function StartupSensorOrientationPanel({ state }: { readonly state: EcmoS
               ? 'Running as a reference demonstration'
               : 'Inspection recorded'}
         </p>
-        <p className="mt-1">{STAGE_SUMMARY[stage]}</p>
+        <p className="mt-1">{stageSummary}</p>
         {inspectionOutstanding ? (
           <p className="mt-2 text-muted-foreground" data-startup-inspection-outstanding>
             The startup diagnostic and the tip-to-tip inspection are both still outstanding on this
