@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 
 import type {
+  CircuitViewPreference,
   ClinicalInitiationTargets,
   EcmoChannelReadout,
   EcmoSimulationState,
@@ -33,6 +34,14 @@ interface SimulationPanelProps {
   controlsEnabled: boolean
   guidedTarget?: GuidedTarget | null
   guidedControlId?: GuidedControlId | null
+  /**
+   * The circuit surface the active guided step is read on, tagged with that step's id.
+   *
+   * Applied once per step entry. Authored on the step rather than matched on a scenario id here, so
+   * this component never has to know which case is loaded — and so a learner who switches tabs
+   * mid-step is not dragged back.
+   */
+  circuitViewPreference?: { readonly view: CircuitViewPreference; readonly stepId: string } | null
   initiationTargets?: ClinicalInitiationTargets | null
   onSaveForLater?: () => void
 }
@@ -66,10 +75,25 @@ function CircuitSchematic({
   controlsEnabled,
   guidedTarget,
   guidedControlId,
+  circuitViewPreference,
   onSaveForLater,
 }: SimulationPanelProps) {
   const diagramScrollRef = useRef<HTMLDivElement>(null)
-  const [circuitView, setCircuitView] = useState<'bedside' | 'diagnostic'>('bedside')
+  const [circuitView, setCircuitView] = useState<CircuitViewPreference>(
+    () => circuitViewPreference?.view ?? 'bedside',
+  )
+
+  // Step entry, not step state: keyed on the step id so arriving at a pressure-localization step
+  // opens its view once, and a learner who then picks the other tab keeps it for that step.
+  const preferenceKey = circuitViewPreference
+    ? `${circuitViewPreference.stepId}:${circuitViewPreference.view}`
+    : null
+  const [appliedPreferenceKey, setAppliedPreferenceKey] = useState<string | null>(preferenceKey)
+  if (preferenceKey !== appliedPreferenceKey) {
+    setAppliedPreferenceKey(preferenceKey)
+    if (circuitViewPreference) setCircuitView(circuitViewPreference.view)
+  }
+
   const clampGuidedHelpActive =
     guidedControlId === 'cardiohelp-clamp-drainage' ||
     guidedControlId === 'cardiohelp-clamp-return' ||
@@ -399,7 +423,17 @@ function CircuitSchematic({
               Follow the arrows from drainage to return
             </text>
 
-            <g className={state.circuit.drainageChatter ? styles.chatteringTube : undefined}>
+            {/*
+              Chatter is drawn from the engine flag, and it is drawn three ways: the limb judders,
+              its wall goes to a broken outline, and a bordered badge names it in words. Motion is
+              suppressed under reduced motion and colour alone is never the carrier, so the cue
+              survives both.
+            */}
+            <g
+              data-limb="drainage"
+              data-chattering={state.circuit.drainageChatter || undefined}
+              className={state.circuit.drainageChatter ? styles.chatteringTube : undefined}
+            >
               <path
                 d="M96 447 C215 467 293 385 405 385"
                 className={`${styles.circuitLimb} ${styles.drainageLimb}`}
@@ -413,6 +447,14 @@ function CircuitSchematic({
             <text x="286" y="361" textAnchor="middle" className={styles.limbLabel}>
               DRAINAGE LIMB · NEGATIVE PRESSURE
             </text>
+            {state.circuit.drainageChatter ? (
+              <g className={styles.limbStatusBadge} transform="translate(286 500)">
+                <rect x="-104" y="-17" width="208" height="34" rx="9" />
+                <text y="6" textAnchor="middle">
+                  DRAINAGE CHATTER
+                </text>
+              </g>
+            ) : null}
 
             <path d={postPumpPath} className={`${styles.circuitLimb} ${styles.postPumpLimb}`} />
             <path

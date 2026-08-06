@@ -7,9 +7,11 @@ import {
   Check,
   CircleHelp,
   CircleDot,
+  Clock,
   GraduationCap,
   ListChecks,
   LocateFixed,
+  Play,
   RotateCcw,
   SlidersHorizontal,
   Target,
@@ -32,6 +34,7 @@ import {
 import { isEcmoFoundationSectionId } from '../content/foundationLessons'
 import { clinicalPracticeScenarioById } from '../content/clinicalCases'
 import type {
+  CircuitViewPreference,
   ConsoleScreen,
   EcmoSimulationState,
   GuidedControlId,
@@ -50,8 +53,23 @@ interface LearnLessonPlayerProps {
   onSelectLesson: (scenarioId: string) => void
   onCompleteLesson: (scenarioId: string) => void
   onTryPractice: (scenarioId: string) => void
-  onTargetChange: (target: GuidedTarget) => void
+  /**
+   * The panel this step is performed on, or `null` for a task-pane step.
+   *
+   * `null` is a real answer, not an absence: a step that only advances the model has no control on
+   * the simulator to focus, and highlighting a panel anyway sends the learner hunting.
+   */
+  onTargetChange: (target: GuidedTarget | null) => void
   onControlHelpChange: (controlId: GuidedControlId | null) => void
+  /**
+   * The circuit surface this step should be read on, published on step entry.
+   *
+   * Carries the step id so the consumer can tell "the learner arrived at a step that prefers the
+   * map" from "the learner is still on that step and has chosen a different tab".
+   */
+  onCircuitViewPreferenceChange?: (
+    preference: { view: CircuitViewPreference; stepId: string } | null,
+  ) => void
   onPhaseChange?: (phase: CriticalCareActivityPhase) => void
   onActiveStepChange?: (step: GuidedWalkthroughStep) => void
   /**
@@ -330,6 +348,7 @@ export function LearnLessonPlayer({
   onTryPractice,
   onTargetChange,
   onControlHelpChange,
+  onCircuitViewPreferenceChange,
   onPhaseChange,
   onActiveStepChange,
   onStepStatusChange,
@@ -351,10 +370,18 @@ export function LearnLessonPlayer({
     ? ecmoLearnPredictionFor(activeStep.predictionScenarioId)
     : undefined
   const selectedPredictionChoiceId = predictionChoiceByStepId[activeStep.id] ?? null
-  const simulatorTask = resolveGuidedSimulatorTask(activeStep, state)
+  /*
+   * A task-pane step is completed in this pane, so it publishes no focus target and offers no
+   * help-finding control. Both of those describe a control on the simulator, and this step has
+   * none: `STEP` advances the model. Authored, not inferred from the action list — `startup-respond`
+   * carries one action and is a genuine console task, `startup-settle-circuit` carries two and is
+   * not, and no rule over action types separates them.
+   */
+  const taskPaneOnly = activeStep.interaction === 'task-pane'
+  const simulatorTask = taskPaneOnly ? null : resolveGuidedSimulatorTask(activeStep, state)
   const simulatorTaskSatisfied = simulatorTask?.satisfied ?? false
   const helpControlId = simulatorTask?.controlId ?? panelControlIds[activeStep.target]
-  const helpRequested = helpRequestCount > 0
+  const helpRequested = helpRequestCount > 0 && !taskPaneOnly
   const trackPathway = criticalCareLearningPathway('cardiohelp-ecmo', state.supportMode)
 
   // Foundation sections open the interactive three-pane workspace on their own route; drill
@@ -394,10 +421,21 @@ export function LearnLessonPlayer({
   const pairedCase = pairedCaseId ? clinicalPracticeScenarioById.get(pairedCaseId) : undefined
 
   useEffect(() => {
-    onTargetChange(activeStep.target)
+    onTargetChange(taskPaneOnly ? null : activeStep.target)
     onControlHelpChange(null)
     window.requestAnimationFrame(() => activePanelRef.current?.focus({ preventScroll: true }))
-  }, [activeStep.id, activeStep.target, onControlHelpChange, onTargetChange])
+  }, [activeStep.id, activeStep.target, onControlHelpChange, onTargetChange, taskPaneOnly])
+
+  // Published on step entry only. Re-publishing while the learner is on the step would drag them
+  // back off a tab they chose themselves; the step id is what makes "entered" observable.
+  useEffect(() => {
+    if (!onCircuitViewPreferenceChange) return
+    onCircuitViewPreferenceChange(
+      activeStep.preferredCircuitView
+        ? { view: activeStep.preferredCircuitView, stepId: activeStep.id }
+        : null,
+    )
+  }, [activeStep.id, activeStep.preferredCircuitView, onCircuitViewPreferenceChange])
 
   useEffect(() => {
     onPhaseChange?.(semanticPhaseForGuidedStep(activeStep.phase, lessonFinished))
@@ -646,9 +684,15 @@ export function LearnLessonPlayer({
         >
           <div className={styles.guidedStepMeta}>
             <span>{phaseLabels[activeStep.phase]} focus</span>
-            <span>
-              <CircleDot aria-hidden="true" /> Focus: {targetLabels[activeStep.target]}
-            </span>
+            {taskPaneOnly ? (
+              <span data-interaction="task-pane">
+                <Clock aria-hidden="true" /> Simulation update — no console action
+              </span>
+            ) : (
+              <span>
+                <CircleDot aria-hidden="true" /> Focus: {targetLabels[activeStep.target]}
+              </span>
+            )}
           </div>
           <h3 id="guided-step-heading">{activeStep.title}</h3>
           <p>{activeStep.instruction}</p>
@@ -731,18 +775,37 @@ export function LearnLessonPlayer({
             </button>
           </div>
         ) : !stepPerformed ? (
-          <div className={styles.guidedManualActions}>
-            <button type="button" className={styles.guidedPerformAction} onClick={performStep}>
-              <SlidersHorizontal aria-hidden="true" /> {activeStep.actionLabel}
-            </button>
+          <div
+            className={styles.guidedManualActions}
+            data-interaction={taskPaneOnly && 'task-pane'}
+          >
             <button
               type="button"
-              className={styles.guidedHelpAction}
-              onClick={() => setHelpRequestCount((count) => count + 1)}
+              className={styles.guidedPerformAction}
+              data-interaction={taskPaneOnly && 'task-pane'}
+              onClick={performStep}
             >
-              <CircleHelp aria-hidden="true" />
-              {helpRequested ? 'Highlight it again' : 'I need help finding it'}
+              {taskPaneOnly ? (
+                <Play aria-hidden="true" />
+              ) : (
+                <SlidersHorizontal aria-hidden="true" />
+              )}{' '}
+              {activeStep.actionLabel}
             </button>
+            {/*
+              No help control on a task-pane step. "I need help finding it" can only point at a
+              panel, and there is nothing on that panel to find.
+            */}
+            {taskPaneOnly ? null : (
+              <button
+                type="button"
+                className={styles.guidedHelpAction}
+                onClick={() => setHelpRequestCount((count) => count + 1)}
+              >
+                <CircleHelp aria-hidden="true" />
+                {helpRequested ? 'Highlight it again' : 'I need help finding it'}
+              </button>
+            )}
           </div>
         ) : null}
 

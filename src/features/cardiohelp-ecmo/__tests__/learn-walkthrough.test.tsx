@@ -48,7 +48,7 @@ function LearnHarness({
   initialScenarioId: string
   onCompleteLesson?: (scenarioId: string) => void
   onTryPractice?: (scenarioId: string) => void
-  onTargetChange?: (target: GuidedTarget) => void
+  onTargetChange?: (target: GuidedTarget | null) => void
   onControlHelpChange?: (controlId: GuidedControlId | null) => void
 }) {
   const [scenarioId, setScenarioId] = useState(initialScenarioId)
@@ -56,7 +56,7 @@ function LearnHarness({
     createInitialSimulationState(id, 'guided'),
   )
   const [, setCompletedLessonIds] = useState<Set<string>>(() => new Set())
-  const [guidedTarget, setGuidedTarget] = useState<GuidedTarget>('circuit')
+  const [guidedTarget, setGuidedTarget] = useState<GuidedTarget | null>('circuit')
   const [guidedControlId, setGuidedControlId] = useState<GuidedControlId | null>(null)
   // B3 moved the step's rationale, the live snapshot, and the completed-step response into the
   // workspace's teaching pane. The harness composes the same surfaces the workspace composes, so
@@ -264,7 +264,7 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     // a running circuit rather than a dead one.
     await rampToReferenceSpeedAndAdvance()
     // The reference circuit only responds once the model is advanced; the tour is read on that.
-    performAndAdvance(/Advance the model and let the circuit settle/i)
+    performAndAdvance('Let the circuit respond')
     await useConsoleScreenAndAdvance('Parameter list')
     await useConsoleScreenAndAdvance('Blood parameters')
     await useConsoleScreenAndAdvance('Transport')
@@ -635,7 +635,7 @@ describe('CARDIOHELP ECMO Learn prediction', () => {
     await useConsoleScreenAndAdvance('Parameter list')
     await rampToReferenceSpeedAndAdvance()
     // The reference circuit only responds once the model is advanced; the tour is read on that.
-    performAndAdvance(/Advance the model and let the circuit settle/i)
+    performAndAdvance('Let the circuit respond')
     await useConsoleScreenAndAdvance('Parameter list')
     await useConsoleScreenAndAdvance('Blood parameters')
     await useConsoleScreenAndAdvance('Transport')

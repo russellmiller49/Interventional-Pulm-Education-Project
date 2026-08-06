@@ -3006,6 +3006,34 @@
   background: var(--amber);
 }
 
+/* Dashed edge as well as amber: the chip has to read as "chattering" without colour vision. */
+.circuit3dHud span[data-state='CHATTER'] {
+  color: #271805;
+  border: 2px dashed #7a4d05;
+  background: var(--amber);
+}
+
+/*
+ * Sits below the WebGL viewport, which is `aria-hidden` in its entirety. Visible and spoken, so the
+ * chatter reaches a screen reader, a WebGL-less browser and a compact viewport with 3D labels off.
+ */
+.circuit3dSceneStatus {
+  margin: 0.55rem 0 0;
+  padding: 0.6rem 0.75rem;
+  color: #ffe6b8;
+  border: 1px solid rgba(247, 198, 107, 0.55);
+  border-left: 4px solid var(--amber);
+  border-radius: 10px;
+  background: rgba(52, 34, 6, 0.5);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.circuit3dSceneStatus strong {
+  color: #ffd489;
+  letter-spacing: 0.03em;
+}
+
 .circuit3dHud strong {
   margin-top: 0.18rem;
   color: #e9ffff;
@@ -3429,6 +3457,30 @@
   animation: chatter 0.16s linear infinite;
   transform-box: fill-box;
   transform-origin: center;
+}
+
+/*
+ * The chattering limb also changes shape, not only position. Reduced motion switches the animation
+ * off (see the block near the end of this file), and the diagram is read by people who cannot tell
+ * two teals apart — so a broken outline carries the state when neither motion nor colour can.
+ */
+.chatteringTube .drainageLimb {
+  stroke-dasharray: 9 5;
+  stroke-linecap: butt;
+}
+
+.limbStatusBadge rect {
+  fill: rgba(10, 27, 32, 0.94);
+  stroke: #f7c66b;
+  stroke-width: 2;
+  stroke-dasharray: 7 4;
+}
+
+.limbStatusBadge text {
+  fill: #f7c66b;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.09em;
 }
 
 .circuitSvg .limbLabel,
