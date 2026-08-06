@@ -18,8 +18,8 @@ export const FLOOR_Y = -0.72
  * The console GLB's model-local bounding box, measured from `cardiohelp-console.glb`.
  *
  * Held here rather than read at runtime so `layout.ts` stays free of asset loading and the label
- * anchors can be computed in node and in jest. `ecmo-circuit.test.ts` reads the GLB's own POSITION
- * accessor and fails if this drifts from the shipped asset.
+ * anchors can be computed in node and in jest. `bedside-scene-geometry.test.ts` reads the GLB's own
+ * POSITION accessor and fails if this drifts from the shipped asset.
  */
 export const CONSOLE_MODEL_BOUNDS = {
   min: [-0.3179, -0.4745, -0.3658],

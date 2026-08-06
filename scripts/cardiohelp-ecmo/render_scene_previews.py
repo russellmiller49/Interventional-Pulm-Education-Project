@@ -23,7 +23,7 @@ import sys
 from pathlib import Path
 
 import bpy
-from mathutils import Euler, Vector
+from mathutils import Matrix, Vector
 
 RESOLUTION = (1280, 800)
 
@@ -44,14 +44,25 @@ def t2b(point) -> Vector:
 
 
 def t2b_euler(rotation):
-    """three.js XYZ Euler -> the Blender XYZ Euler that produces the same pose.
+    """three.js XYZ Euler -> the Blender rotation that produces the same pose.
 
-    The world map is (x, y, z) -> (x, -z, y), so a rotation about three.js Y becomes a rotation
-    about Blender Z and a rotation about three.js Z becomes a rotation about Blender -Y. Order is
-    preserved because three.js 'XYZ' and Blender 'XYZ' compose the same way.
+    Conjugation, not a relabelling of the angles. three.js 'XYZ' composes Rx.Ry.Rz while Blender's
+    'XYZ' composes Rz.Ry.Rx, so swapping the components is only correct when at most one of them is
+    non-zero — it happens to be right for the console's (0, yaw, roll) and would be silently wrong
+    for the next asset that needs a tilt as well.
+
+    Building the three.js rotation matrix explicitly and conjugating it by the world map
+    M: (x, y, z) -> (x, -z, y) is correct for every input.
     """
     rx, ry, rz = rotation
-    return Euler((rx, -rz, ry), "XYZ")
+    # three.js 'XYZ': the matrix is Rx * Ry * Rz.
+    three = (
+        Matrix.Rotation(rx, 3, "X")
+        @ Matrix.Rotation(ry, 3, "Y")
+        @ Matrix.Rotation(rz, 3, "Z")
+    )
+    m = Matrix(((1, 0, 0), (0, 0, -1), (0, 1, 0)))  # three.js basis -> Blender basis
+    return (m @ three @ m.transposed()).to_euler("XYZ")
 
 
 def reset_scene() -> None:
@@ -222,6 +233,11 @@ def main() -> None:
     console = group_objects(console_objects, "console-root")
     placement = layout["consolePlacement"]
     console.location = t2b((placement["x"], 0.0, placement["z"]))
+    if "rotation" not in placement:
+        raise SystemExit(
+            "circuit-layout JSON predates the console rotation fix (no 'rotation' key). "
+            "Re-run scripts/cardiohelp-ecmo/export-circuit-layout.mts."
+        )
     console.rotation_euler = t2b_euler(placement["rotation"])
     console.scale = (placement.get("scale", 1.0),) * 3
     bpy.context.view_layer.update()

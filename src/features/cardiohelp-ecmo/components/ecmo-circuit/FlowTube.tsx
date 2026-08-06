@@ -129,6 +129,10 @@ export function FlowTube({
         phase: chatterPhase.current,
         reduceMotion,
       })
+    } else {
+      // Back to rest, so a second episode opens from an open limb. Left where it stopped, the
+      // undamped write below would snap the tube shut in one frame when chatter resumed.
+      chatterPhase.current = 0
     }
     for (const set of [uniforms, wallUniforms]) {
       set.uPinchU.value = THREE.MathUtils.damp(set.uPinchU.value, targetU, 10, delta)

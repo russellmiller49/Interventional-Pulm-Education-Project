@@ -3014,11 +3014,12 @@
 }
 
 /*
- * Sits below the WebGL viewport, which is `aria-hidden` in its entirety. Visible and spoken, so the
- * chatter reaches a screen reader, a WebGL-less browser and a compact viewport with 3D labels off.
+ * Sits below the circuit tabs, outside both tabpanels and outside the launch gate. Visible and
+ * spoken, so the chatter reaches a screen reader whichever view is selected, a browser without
+ * WebGL, and a viewport too small for the bedside scene to load at all.
  */
-.circuit3dSceneStatus {
-  margin: 0.55rem 0 0;
+.circuitSceneStatus {
+  margin: 0.85rem 0 0;
   padding: 0.6rem 0.75rem;
   color: #ffe6b8;
   border: 1px solid rgba(247, 198, 107, 0.55);
@@ -3029,7 +3030,7 @@
   line-height: 1.45;
 }
 
-.circuit3dSceneStatus strong {
+.circuitSceneStatus strong {
   color: #ffd489;
   letter-spacing: 0.03em;
 }

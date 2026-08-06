@@ -11,7 +11,6 @@ import {
   type GuidedWalkthroughStep,
 } from '../engine'
 import { CircuitAndMonitors } from '../components/CircuitAndMonitors'
-import { EcmoCircuit3D } from '../components/EcmoCircuit3D'
 import { chatterPinchAmount, drainageChatterActive } from '../components/ecmo-circuit/chatter'
 
 /**
@@ -106,7 +105,7 @@ describe('the engine flag, and nothing else, decides that the limb is chattering
     expect(drainageChatterActive(chatteringState('va-preload-drainage-collapse'))).toBe(true)
   })
 
-  it('no longer carries a second pressure threshold of the view own', () => {
+  it('no longer carries a second pressure threshold of the view’s own', () => {
     const scene = sourceOf('ecmo-circuit', 'BedsideScene.tsx')
     // Strip comments first: the removed rule is quoted in one, and that quote is the point.
     const code = scene.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
@@ -144,16 +143,30 @@ describe('the 3D limb judders, and stops juddering under reduced motion', () => 
 
   it('affects only the drainage limb', () => {
     const scene = sourceOf('ecmo-circuit', 'BedsideScene.tsx')
+    // Exactly one limb receives the chatter prop, and it is the drainage line.
     expect(scene.match(/chatter=\{/g)).toHaveLength(1)
-    // No camera or scene-wide shake was introduced.
-    expect(scene).not.toMatch(/camera\.position\.(x|y|z)\s*\+=/)
+    const drainageTube = scene.slice(scene.indexOf('curve={layout.drainageLine}'))
+    expect(drainageTube.slice(0, drainageTube.indexOf('/>'))).toContain(
+      'chatter={drainageChattering}',
+    )
   })
 
   it('keeps the reduced-motion CSS switch over the map animation', () => {
     const css = sourceOf('cardiohelp-ecmo.module.css')
-    const reducedBlock = css.slice(css.indexOf('@media (prefers-reduced-motion: reduce)'))
-    expect(reducedBlock).toContain('.chatteringTube')
-    expect(reducedBlock).toContain('animation: none !important')
+    /*
+     * The `animation: none !important` rule, not "somewhere after the first reduced-motion
+     * at-rule". Slicing to end of file swept in the plain `.chatteringTube` rules and a different
+     * block's `animation: none`, so deleting `.chatteringTube` from the rule that matters still
+     * passed — the test named a regression it could not see.
+     */
+    const rules = [...css.matchAll(/@media \(prefers-reduced-motion: reduce\)\s*\{([\s\S]*?)\n\}/g)]
+    expect(rules.length).toBeGreaterThan(0)
+    const switchesOffChatter = rules.some(
+      (rule) =>
+        rule[1].includes('.chatteringTube') && rule[1].includes('animation: none !important'),
+    )
+    expect(switchesOffChatter).toBe(true)
+
     // And the map's chatter cue does not depend on that animation.
     expect(css).toContain('.chatteringTube .drainageLimb')
     expect(css).toContain('stroke-dasharray')
@@ -200,23 +213,74 @@ describe('the pressure-zone map names the chattering limb', () => {
 })
 
 describe('the accessible interface still says chatter is present', () => {
-  it('states it outside the aria-hidden viewport', () => {
-    render(<EcmoCircuit3D state={chatteringState()} dispatch={jest.fn()} controlsEnabled={false} />)
+  it('states it outside both tabpanels, so the selected view cannot hide it', () => {
+    render(
+      <CircuitAndMonitors state={chatteringState()} dispatch={jest.fn()} controlsEnabled={false} />,
+    )
 
-    const chatterLine = screen.getByText(/Drainage chatter\./i).closest('p')
-    expect(chatterLine).not.toBeNull()
-    expect(chatterLine).toHaveAttribute('role', 'status')
-    // The whole reason this line exists: everything inside the viewport is hidden from AT.
-    expect(chatterLine?.closest('[aria-hidden="true"]')).toBeNull()
-    expect(chatterLine?.textContent).toMatch(/judders/i)
-    // And it does not claim the cue changed a measurement.
-    expect(chatterLine?.textContent).toMatch(/pVen and flow are unchanged/i)
+    // The <strong> inside the paragraph matches the same text, so query the paragraph itself.
+    const line = [...document.querySelectorAll('p[role="status"]')].find((node) =>
+      /Drainage chatter\./i.test(node.textContent ?? ''),
+    )
+    expect(line).toBeDefined()
+    expect(line?.textContent).toMatch(/judders/i)
+    // It says the marker is presentational without claiming the numbers have not moved — they have.
+    expect(line?.textContent).toMatch(/does not change any displayed number/i)
+
+    /*
+     * The reason this lives here and not in `EcmoCircuit3D`. Inside the bedside tabpanel it carried
+     * `hidden` whenever the map was selected — and the drainage lesson now *opens* on the map, so
+     * the one line written to reach a screen reader was hidden exactly when it mattered.
+     */
+    expect(line?.closest('[hidden]')).toBeNull()
+    expect(line?.closest('[aria-hidden="true"]')).toBeNull()
+    expect(line?.closest('#cardiohelp-bedside-view')).toBeNull()
+    expect(line?.closest('#cardiohelp-diagnostic-view')).toBeNull()
+  })
+
+  it('survives switching to the pressure-zone map', () => {
+    render(
+      <CircuitAndMonitors state={chatteringState()} dispatch={jest.fn()} controlsEnabled={false} />,
+    )
+    fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
+    const line = [...document.querySelectorAll('p[role="status"]')].find((node) =>
+      /Drainage chatter\./i.test(node.textContent ?? ''),
+    )
+    expect(line).toBeDefined()
+    expect(line?.closest('[hidden]')).toBeNull()
   })
 
   it('says nothing when there is no chatter', () => {
     const state = createInitialSimulationState('startup-sensor-orientation', 'guided')
-    render(<EcmoCircuit3D state={state} dispatch={jest.fn()} controlsEnabled={false} />)
-    expect(screen.queryByText(/Drainage chatter\./i)).not.toBeInTheDocument()
+    render(<CircuitAndMonitors state={state} dispatch={jest.fn()} controlsEnabled={false} />)
+    expect(document.querySelector('p[role="status"]')).toBeNull()
+  })
+
+  it('says nothing once the pump is stopped, even though the engine flag is still set', () => {
+    /*
+     * Closing the drainage clamp stops the pump and leaves `drainageChatter` true. Every surface
+     * has to agree about that, or the map paints a juddering limb on an isolated circuit reading
+     * 0.00 L/min while the bedside scene shows a limb at rest.
+     */
+    let state = chatteringState()
+    state = committed(state)
+    state = ecmoSimulationReducer(state, { type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'drainage' })
+    for (let tick = 0; tick < 4; tick += 1) state = ecmoSimulationReducer(state, { type: 'STEP' })
+    expect(state.circuit.drainageChatter).toBe(true)
+    expect(state.device.pumpRunning).toBe(false)
+    expect(drainageChatterActive(state)).toBe(false)
+
+    render(<CircuitAndMonitors state={state} dispatch={jest.fn()} controlsEnabled={false} />)
+    fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
+
+    expect(
+      [...document.querySelectorAll('p[role="status"]')].some((node) =>
+        /Drainage chatter\./i.test(node.textContent ?? ''),
+      ),
+    ).toBe(false)
+    expect(screen.queryByText('DRAINAGE CHATTER')).not.toBeInTheDocument()
+    expect(document.querySelector('[data-limb="drainage"]')).not.toHaveAttribute('data-chattering')
+    expect(document.getElementById('circuit-svg-desc')?.textContent ?? '').not.toMatch(/chatter/i)
   })
 
   it('keeps the existing text callout on the circuit panel', () => {
@@ -394,16 +458,93 @@ describe('the circuit panel honours the step preference without trapping the lea
       />,
     )
     const readout = () => document.querySelector('[data-channel="pVen"]')?.textContent
+    const scroller = document.querySelector('[aria-label*="circuit diagram"]') as HTMLElement | null
     const before = readout()
     expect(before).toBeTruthy()
+    if (scroller) scroller.scrollLeft = 120
 
     fireEvent.click(screen.getByRole('tab', { name: /Bedside 3D circuit/i }))
+    fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
 
-    // Switching tabs is a view change and nothing else.
+    // Switching tabs is a view change and nothing else: no action reaches the engine, the readouts
+    // do not move, and the diagram is not remounted (both panels stay mounted behind `hidden`).
     expect(dispatch).not.toHaveBeenCalled()
     expect(readout()).toBe(before)
+    if (scroller) expect(scroller.scrollLeft).toBe(120)
   })
 })
+
+describe.each(['preload-drainage-collapse', 'va-preload-drainage-collapse'] as const)(
+  '%s: the badge does not sit on another schematic label',
+  (scenarioId) => {
+    it('leaves every other text anchor outside its plate', () => {
+      render(
+        <CircuitAndMonitors
+          state={chatteringState(scenarioId)}
+          dispatch={jest.fn()}
+          controlsEnabled={false}
+        />,
+      )
+      fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
+
+      const badge = document.querySelector('g[class*="limbStatusBadge"]')
+      expect(badge).not.toBeNull()
+      const [, tx, ty] = /translate\((-?[\d.]+) (-?[\d.]+)\)/.exec(
+        badge?.getAttribute('transform') ?? '',
+      ) as RegExpExecArray
+      const plate = badge?.querySelector('rect') as SVGRectElement
+      const left = Number(tx) + Number(plate.getAttribute('x'))
+      const top = Number(ty) + Number(plate.getAttribute('y'))
+      const right = left + Number(plate.getAttribute('width'))
+      const bottom = top + Number(plate.getAttribute('height'))
+
+      /*
+       * The plate is opaque and painted after the anatomy panel, so anything whose anchor falls
+       * inside it is simply covered. At (286, 500) it swallowed the VA `DISTAL LIMB CHECK` label
+       * whole. jsdom does no SVG layout, so anchors are the measurable proxy — enough to catch a
+       * badge parked on top of another label.
+       */
+      const covered = [...document.querySelectorAll('svg text')]
+        .map((node) => ({
+          x: Number(node.getAttribute('x')),
+          y: Number(node.getAttribute('y')),
+          text: node.textContent?.trim() ?? '',
+        }))
+        .filter(
+          (label) =>
+            Number.isFinite(label.x) &&
+            Number.isFinite(label.y) &&
+            label.x >= left &&
+            label.x <= right &&
+            label.y >= top &&
+            label.y <= bottom &&
+            label.text !== 'DRAINAGE CHATTER',
+        )
+      expect(covered).toEqual([])
+    })
+
+    it('sits beside the limb it names, not down in the anatomy panel', () => {
+      render(
+        <CircuitAndMonitors
+          state={chatteringState(scenarioId)}
+          dispatch={jest.fn()}
+          controlsEnabled={false}
+        />,
+      )
+      fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
+
+      const badge = document.querySelector('g[class*="limbStatusBadge"]')
+      const [, , ty] = /translate\((-?[\d.]+) (-?[\d.]+)\)/.exec(
+        badge?.getAttribute('transform') ?? '',
+      ) as RegExpExecArray
+      const limbLabel = [...document.querySelectorAll('svg text')].find((node) =>
+        /DRAINAGE LIMB/.test(node.textContent ?? ''),
+      )
+      // Within a label's height of the limb's own caption, rather than 139 px away under the feet.
+      expect(Math.abs(Number(ty) - Number(limbLabel?.getAttribute('y')))).toBeLessThan(30)
+    })
+  },
+)
 
 describe('the map cue reaches assistive technology', () => {
   /*

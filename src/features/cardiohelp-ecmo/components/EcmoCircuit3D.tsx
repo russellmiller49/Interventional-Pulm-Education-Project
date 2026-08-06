@@ -238,18 +238,6 @@ export function EcmoCircuit3D({
           </div>
         ) : null}
       </div>
-      {/*
-        Outside the viewport on purpose. Everything inside that div is `aria-hidden`, including the
-        HUD chip that names the chatter, so without this line a screen-reader user would have no way
-        to know the limb is juddering — and neither would anyone whose browser cannot run WebGL.
-      */}
-      {drainageChattering ? (
-        <p className={styles.circuit3dSceneStatus} role="status" data-alert="true">
-          <strong>Drainage chatter.</strong> The drainage limb is repeatedly being drawn shut and
-          springing open: it judders in the bedside view and is marked on the pressure-zone map.
-          Displayed pVen and flow are unchanged by this cue.
-        </p>
-      ) : null}
       {webglReady && !contextLost && !compactViewport ? (
         <button
           type="button"

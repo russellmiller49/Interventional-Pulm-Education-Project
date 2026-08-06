@@ -111,7 +111,8 @@ console; no help control of any kind; the new copy; both `STEP` actions dispatch
 running pump, positive flow and four `valid` readouts; and an ordinary console task keeping focus,
 help and control highlighting.
 
-Confirmed failing against the defect: removing the authored `interaction` marker fails **7 of 9**.
+Confirmed failing against the defect: removing the authored `interaction` marker fails **7** of the
+9 tests that still exist without it — the parametrised task-pane case disappears with the flag.
 
 Rendered-browser confirmation at 1600 × 900 (walked through the real lesson):
 
@@ -184,10 +185,13 @@ static crimp (0.42 vs the old static 0.35), so a still frame still reads as a dr
 the word "chatter" is carried by the status cue and the map.
 
 Because the WebGL viewport is `aria-hidden` in its entirety — HUD included — a `role="status"`
-paragraph now sits **outside** it: _"Drainage chatter. The drainage limb is repeatedly being drawn
-shut and springing open: it judders in the bedside view and is marked on the pressure-zone map.
-Displayed pVen and flow are unchanged by this cue."_ That reaches a screen reader, a browser without
-WebGL, and a compact viewport with 3D labels off.
+paragraph states the chatter in text. It sits on the circuit panel **outside both tabpanels and
+outside the launch gate**, which is the second half of this correction and was got wrong the first
+time: written inside `EcmoCircuit3D` it inherited the bedside tabpanel's `hidden`, so on the very
+lesson that now _opens_ on the map the one line meant to carry the cue to a screen reader was hidden
+exactly when it mattered — and it also sat below the gate's desktop minimum and below the WebGL
+check. Where it is now it survives the view selection, a browser without WebGL, and a viewport too
+small for the bedside scene to load at all.
 
 **B — view preference.** `GuidedWalkthroughStep.preferredCircuitView: 'bedside' | 'diagnostic'`,
 published on step entry together with the step id. `CircuitAndMonitors` applies it once per step
@@ -214,7 +218,7 @@ the existing reduced-motion rule already switches the map's `chatter` animation 
 
 ### Verification
 
-`src/features/cardiohelp-ecmo/__tests__/drainage-chatter-visibility.test.tsx` — 44 tests: the engine
+`src/features/cardiohelp-ecmo/__tests__/drainage-chatter-visibility.test.tsx` — 52 tests: the engine
 flag drives both surfaces and both clear when the cause is corrected; the pump-stopped case; the VA
 sibling; the removed threshold (comment-stripped source contract); the judder's range across the
 cycle and its single held value under reduced motion; only one limb affected; the map's attribute,
@@ -224,7 +228,7 @@ respecting a manual tab choice; re-applying on the next step; clamp help still w
 dispatch or readout change on a view switch.
 
 Confirmed failing against the defect: restoring the `pVen <= -300` rule, removing the map badge and
-limb hook, removing the accessible line and removing the view preference fails **9 of 44**.
+limb hook, removing the accessible line and removing the view preference fails **9**.
 
 **Answer-leak check.** The cue is a _sign_, not a diagnosis, and the lesson's own observe step asks
 the learner to see it ("Visible and text-labeled drainage chatter"). A dedicated test asserts that
@@ -279,18 +283,32 @@ Y already longest and did nothing. The console therefore rested on its local −
 carrying the display panel and the connector row — with the pump-drive side to the sky. The runtime
 applied only a yaw (`rotation={[0, -0.35, 0]}`), which cannot tip it back up.
 
-Measured, not guessed. Clustering the mesh into coplanar patches gives:
+Measured, then rendered. Flat, floor-facing area at each candidate extreme — all six, no cherry
+picking:
 
-| Candidate base        |             Flat contact area at that extreme | Contact footprint span |
-| --------------------- | --------------------------------------------: | ---------------------: |
-| local −X              | **0.133 m²** (a single 0.137 m² planar panel) |                   0.72 |
-| local −Z              |                                      0.089 m² |                   0.85 |
-| local −Y (as shipped) |                                      0.068 m² |                   0.40 |
-| local +Z              |                                     0.0007 m² |                   0.04 |
+| Candidate base        | Flat contact area | Contact footprint span |
+| --------------------- | ----------------: | ---------------------: |
+| local +X              |      **0.146 m²** |                   0.75 |
+| local −X              |      **0.133 m²** |                   0.72 |
+| local −Z              |          0.089 m² |                   0.85 |
+| local −Y (as shipped) |          0.068 m² |                   0.40 |
+| local +Y              |          0.061 m² |                   0.61 |
+| local +Z              |         0.0007 m² |                   0.04 |
 
-The display is an angled panel with local normal `(0, −0.594, 0.805)`. Six candidate orientations
-were rendered in Blender; only a **+90° roll about Z** puts the flat base on the floor with the
-display upright, the frame rails as feet and the carry handle on top.
+**The measurement narrows it to ±X and does not on its own pick between them** — they are the two
+faces of the same slab and score within 10% of each other, which is what you would expect. What it
+rules out is the as-shipped −Y (half the contact area of either) and everything else.
+
+The render is what discriminates the pair, which is why reviewing in a rendered browser was a
+requirement and not a formality: **+90° about Z** (base on local −X) puts the display panel forward
+with the frame rails as feet and the carry handle on top; −90° is the same slab flipped, showing the
+blank pump-drive face to the room. Six orientations were rendered in Blender and compared side by
+side.
+
+Corroborating: the display is an angled panel with local normal `(0, −0.594, 0.805)`, and only the
++90° roll turns it toward the bedside camera — 0.837 against 0.155 as shipped. A jest test now
+measures floor-contact area from the shipped mesh directly, so a placement that stops resting the
+asset on a real flat plate fails.
 
 **Grounding.** `GroundedAsset` computed `FLOOR_Y − bounds.min.y * scale` from the **unrotated** GLB
 and then applied the rotation to the same group. That is only correct for a yaw; with a roll the
@@ -361,7 +379,7 @@ objects.
 
 ### Verification
 
-`src/features/cardiohelp-ecmo/__tests__/bedside-scene-geometry.test.ts` — 22 tests: the grounding
+`src/features/cardiohelp-ecmo/__tests__/bedside-scene-geometry.test.ts` — 24 tests: the grounding
 helper measuring rotated and scaled boxes and resting four different rotations exactly on the floor;
 `CONSOLE_MODEL_BOUNDS` checked against the shipped GLB's own POSITION accessors (zero-dependency
 chunk walk, so drift in the asset fails here); the roll; the floor contact; the standing proportions;
@@ -372,7 +390,7 @@ and no two anchors within 8 cm, the sweep curve clear of the console's _oriented
 holder arm landing on the console body.
 
 Confirmed failing against the defect: restoring the old rotation, sweep source and label anchors
-fails **11 of 22**.
+fails **11**.
 
 Rendered-browser confirmation at 1600 × 900 (Learn and Practice, VV and VA): the console stands on
 its base with the display face toward the camera, `CARDIOHELP CONSOLE` sits on the console, and
