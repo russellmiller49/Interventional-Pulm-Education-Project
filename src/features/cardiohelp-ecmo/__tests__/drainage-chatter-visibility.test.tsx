@@ -404,3 +404,32 @@ describe('the circuit panel honours the step preference without trapping the lea
     expect(readout()).toBe(before)
   })
 })
+
+describe('the map cue reaches assistive technology', () => {
+  /*
+   * The badge is drawn inside an SVG with role="img", so its text is not in the accessibility tree
+   * — the accessible name and description come from the elements the SVG is labelled by. Without
+   * this the cue would be visible-only, which is the same class of gap as the aria-hidden viewport.
+   */
+  it('names the chattering limb in the description the schematic is labelled by', () => {
+    render(
+      <CircuitAndMonitors state={chatteringState()} dispatch={jest.fn()} controlsEnabled={false} />,
+    )
+    fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
+
+    const description = document.getElementById('circuit-svg-desc')?.textContent ?? ''
+    expect(description).toMatch(/drainage limb is currently marked as chattering/i)
+    expect(description).toMatch(/DRAINAGE CHATTER/)
+  })
+
+  it('says nothing about chatter once it has resolved', () => {
+    let state = chatteringState()
+    state = ecmoSimulationReducer(state, { type: 'CORRECT_FAULT', fault: 'preload-limited' })
+    for (let tick = 0; tick < 6; tick += 1) state = ecmoSimulationReducer(state, { type: 'STEP' })
+
+    render(<CircuitAndMonitors state={state} dispatch={jest.fn()} controlsEnabled={false} />)
+    fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
+
+    expect(document.getElementById('circuit-svg-desc')?.textContent ?? '').not.toMatch(/chatter/i)
+  })
+})

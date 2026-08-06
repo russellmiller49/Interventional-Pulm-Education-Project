@@ -233,6 +233,17 @@ describe.each(['vv', 'va'] as const)('%s scene labels name what they point at', 
     expect(inside).toHaveLength(0)
   })
 
+  it('hands out its own console geometry rather than one shared object', () => {
+    // `consolePlacement` is computed once at module load. Returning that same Box3 to every layout
+    // would let one consumer's `translate` silently move the console for every other consumer.
+    const other = buildCircuitLayout(mode === 'vv' ? 'va' : 'vv')
+    const before = other.consoleBounds.max.y
+    layout.consoleBounds.clone().translate(new THREE.Vector3(0, 5, 0))
+    buildCircuitLayout(mode).consoleBounds.translate(new THREE.Vector3(0, 5, 0))
+    expect(other.consoleBounds.max.y).toBeCloseTo(before)
+    expect(layout.consoleBounds.max.y).toBeCloseTo(before)
+  })
+
   it('lands the HLS holder arm on the console rather than in mid-air', () => {
     const anchor = layout.consoleHolderAnchor
     expect(anchor.y).toBeLessThan(consoleBox.max.y)

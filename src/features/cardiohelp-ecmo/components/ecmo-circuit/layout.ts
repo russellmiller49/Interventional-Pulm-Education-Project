@@ -262,8 +262,10 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
     oxygenatorOutlet: OXYGENATOR_OUTLET,
     sensorPosition,
     sensorTangent,
-    consoleOrigin: consolePlacement.origin,
-    consoleBounds: consolePlacement.worldBounds,
+    // Cloned per layout: `consolePlacement` is computed once at module load, and handing every
+    // caller the same Box3 would let one consumer's `translate` move the console for all of them.
+    consoleOrigin: consolePlacement.origin.clone(),
+    consoleBounds: consolePlacement.worldBounds.clone(),
     consoleHolderAnchor: new THREE.Vector3(
       consolePlacement.origin.x - 0.18,
       consolePlacement.worldBounds.max.y - 0.06,

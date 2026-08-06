@@ -127,7 +127,13 @@ function CircuitSchematic({
     isVa
       ? ' Native cardiac ejection, the approximate mixing region, right-arm monitoring, and the need for a separate distal-limb review are also shown.'
       : ' Both cannulas remain in the venous circulation and systemic flow still depends on the native heart.'
-  } The pump uses a center-inlet to tangential-outflow schematic. In the oxygenator, blood is shown moving around simplified hollow fibers while sweep gas moves through them. Static arrows show direction. Moving dashes show simulated blood motion when circuit flow is present. Component geometry is conceptual rather than device-exact.`
+  } The pump uses a center-inlet to tangential-outflow schematic. In the oxygenator, blood is shown moving around simplified hollow fibers while sweep gas moves through them. Static arrows show direction. Moving dashes show simulated blood motion when circuit flow is present. Component geometry is conceptual rather than device-exact.${
+    // The chatter badge is drawn inside an SVG with role="img", so its text is not exposed to
+    // assistive technology. The description this SVG is named by has to carry it instead.
+    state.circuit.drainageChatter
+      ? ' The drainage limb is currently marked as chattering: it is drawn with a broken outline and labelled DRAINAGE CHATTER.'
+      : ''
+  }`
   const resistancePattern = !diagnosisRevealed
     ? 'Pattern label withheld until reassessment and reveal'
     : state.scenario.activeFaults.includes('oxygenator-resistance') ||

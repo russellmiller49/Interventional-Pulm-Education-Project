@@ -777,12 +777,12 @@ export function LearnLessonPlayer({
         ) : !stepPerformed ? (
           <div
             className={styles.guidedManualActions}
-            data-interaction={taskPaneOnly && 'task-pane'}
+            data-interaction={taskPaneOnly ? 'task-pane' : undefined}
           >
             <button
               type="button"
               className={styles.guidedPerformAction}
-              data-interaction={taskPaneOnly && 'task-pane'}
+              data-interaction={taskPaneOnly ? 'task-pane' : undefined}
               onClick={performStep}
             >
               {taskPaneOnly ? (
