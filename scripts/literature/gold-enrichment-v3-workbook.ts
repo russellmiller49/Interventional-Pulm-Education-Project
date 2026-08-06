@@ -23,6 +23,7 @@ export type GoldEnrichmentV3ReviewWorkbookControlledValues = Readonly<
 export interface GoldEnrichmentV3ReviewWorkbookMetadata {
   workflow_id: string
   workflow_schema_version: string
+  coordinator_schema_version?: string
   merged_schema_version: string
   prompt_template_version: string
   result_schema_version: string
@@ -56,6 +57,22 @@ export interface GoldEnrichmentV3ReviewWorkbookRow {
   qa_concerns: string
   upgrade_concerns: string
   coordinator_review_reasons: string
+  coordinator_policy_status?: string
+  coordinator_conflict_count?: string
+  coordinator_conflict_fields?: string
+  coordinator_conflict_rule_ids?: string
+  coordinator_conflict_diagnostics?: string
+  coordinator_candidate_status?: string
+  raw_result_filename?: string
+  raw_result_sha256?: string
+  model_topic_ids?: string
+  model_technology_tags?: string
+  model_technology_tag_status?: string
+  model_clinical_purposes?: string
+  model_disease_tags?: string
+  model_disease_tag_status?: string
+  model_study_design?: string
+  model_publication_status?: string
   topic_ids: string
   technology_tags: string
   technology_tag_status: string
@@ -92,7 +109,7 @@ export interface GoldEnrichmentV3ReviewWorkbookCohorts {
 
 const ZIP_ENTRY_DATE = new Date(1980, 0, 1, 0, 0, 0)
 const CORE_PROPERTIES_TIMESTAMP = '2000-01-01T00:00:00Z'
-const REVIEW_ACTIONS = ['accept', 'modify'] as const
+const REVIEW_ACTIONS = ['accept', 'modify', 'adjudicate'] as const
 const BOOLEAN_VALUES = ['false', 'true'] as const
 const MAX_EXCEL_CELL_CHARACTERS = 32_767
 const MAX_EXCEL_DATA_ROWS = 1_048_575
@@ -260,6 +277,20 @@ const REVIEW_COLUMNS: readonly ReviewColumn[] = [
     value: (row) => row.full_text_evidence,
   },
   {
+    key: 'raw_result_filename',
+    header: 'raw_result_filename',
+    width: 38,
+    group: 'source',
+    value: (row) => row.raw_result_filename,
+  },
+  {
+    key: 'raw_result_sha256',
+    header: 'raw_result_sha256',
+    width: 68,
+    group: 'source',
+    value: (row) => row.raw_result_sha256,
+  },
+  {
     key: 'metadata_sufficiency',
     header: 'v3_proposed_metadata_sufficiency',
     width: 26,
@@ -267,57 +298,113 @@ const REVIEW_COLUMNS: readonly ReviewColumn[] = [
     value: (row) => row.metadata_sufficiency,
   },
   {
+    key: 'model_topic_ids',
+    header: 'raw_model_topic_ids (untouched)',
+    width: 48,
+    group: 'proposal',
+    value: (row) => row.model_topic_ids,
+  },
+  {
+    key: 'model_technology_tags',
+    header: 'raw_model_technology_tags (untouched)',
+    width: 44,
+    group: 'proposal',
+    value: (row) => row.model_technology_tags,
+  },
+  {
+    key: 'model_technology_tag_status',
+    header: 'raw_model_technology_tag_status (untouched)',
+    width: 34,
+    group: 'proposal',
+    value: (row) => row.model_technology_tag_status,
+  },
+  {
+    key: 'model_clinical_purposes',
+    header: 'raw_model_clinical_purposes (untouched)',
+    width: 44,
+    group: 'proposal',
+    value: (row) => row.model_clinical_purposes,
+  },
+  {
+    key: 'model_disease_tags',
+    header: 'raw_model_disease_tags (untouched)',
+    width: 44,
+    group: 'proposal',
+    value: (row) => row.model_disease_tags,
+  },
+  {
+    key: 'model_disease_tag_status',
+    header: 'raw_model_disease_tag_status (untouched)',
+    width: 34,
+    group: 'proposal',
+    value: (row) => row.model_disease_tag_status,
+  },
+  {
+    key: 'model_study_design',
+    header: 'raw_model_study_design (untouched)',
+    width: 32,
+    group: 'proposal',
+    value: (row) => row.model_study_design,
+  },
+  {
+    key: 'model_publication_status',
+    header: 'raw_model_publication_status (untouched)',
+    width: 32,
+    group: 'proposal',
+    value: (row) => row.model_publication_status,
+  },
+  {
     key: 'topic_ids',
-    header: 'v3_proposed_topic_ids',
+    header: 'coordinator_candidate_topic_ids',
     width: 42,
     group: 'proposal',
     value: (row) => row.topic_ids,
   },
   {
     key: 'technology_tags',
-    header: 'v3_proposed_technology_tags',
+    header: 'coordinator_candidate_technology_tags',
     width: 42,
     group: 'proposal',
     value: (row) => row.technology_tags,
   },
   {
     key: 'technology_tag_status',
-    header: 'v3_proposed_technology_tag_status',
+    header: 'coordinator_candidate_technology_tag_status',
     width: 27,
     group: 'proposal',
     value: (row) => row.technology_tag_status,
   },
   {
     key: 'clinical_purposes',
-    header: 'v3_proposed_clinical_purposes',
+    header: 'coordinator_candidate_clinical_purposes',
     width: 42,
     group: 'proposal',
     value: (row) => row.clinical_purposes,
   },
   {
     key: 'disease_tags',
-    header: 'v3_proposed_disease_tags',
+    header: 'coordinator_candidate_disease_tags',
     width: 42,
     group: 'proposal',
     value: (row) => row.disease_tags,
   },
   {
     key: 'disease_tag_status',
-    header: 'v3_proposed_disease_tag_status',
+    header: 'coordinator_candidate_disease_tag_status',
     width: 27,
     group: 'proposal',
     value: (row) => row.disease_tag_status,
   },
   {
     key: 'study_design',
-    header: 'v3_proposed_study_design',
+    header: 'coordinator_candidate_study_design',
     width: 28,
     group: 'proposal',
     value: (row) => row.study_design,
   },
   {
     key: 'publication_status',
-    header: 'v3_proposed_publication_status',
+    header: 'coordinator_candidate_publication_status',
     width: 28,
     group: 'proposal',
     value: (row) => row.publication_status,
@@ -349,6 +436,48 @@ const REVIEW_COLUMNS: readonly ReviewColumn[] = [
     width: 56,
     group: 'proposal',
     value: (row) => row.enrichment_rationale,
+  },
+  {
+    key: 'coordinator_policy_status',
+    header: 'coordinator_policy_status',
+    width: 28,
+    group: 'concern',
+    value: (row) => row.coordinator_policy_status,
+  },
+  {
+    key: 'coordinator_conflict_count',
+    header: 'coordinator_conflict_count',
+    width: 24,
+    group: 'concern',
+    value: (row) => row.coordinator_conflict_count,
+  },
+  {
+    key: 'coordinator_conflict_fields',
+    header: 'coordinator_conflict_fields',
+    width: 36,
+    group: 'concern',
+    value: (row) => row.coordinator_conflict_fields,
+  },
+  {
+    key: 'coordinator_conflict_rule_ids',
+    header: 'coordinator_conflict_rule_ids',
+    width: 54,
+    group: 'concern',
+    value: (row) => row.coordinator_conflict_rule_ids,
+  },
+  {
+    key: 'coordinator_conflict_diagnostics',
+    header: 'coordinator_conflict_diagnostics',
+    width: 72,
+    group: 'concern',
+    value: (row) => row.coordinator_conflict_diagnostics,
+  },
+  {
+    key: 'coordinator_candidate_status',
+    header: 'coordinator_candidate_status',
+    width: 34,
+    group: 'concern',
+    value: (row) => row.coordinator_candidate_status,
   },
   {
     key: 'coordinator_requires_physician_enrichment_review',
@@ -507,7 +636,9 @@ function completionFormula(rowNumber: number): string {
   const action = reviewColumnLetter('physician_action')
   const reviewed = reviewColumnLetter('physician_reviewed')
   const notes = reviewColumnLetter('physician_notes')
-  return `IF(AND(LOWER($${reviewed}${rowNumber})="true",OR(LOWER($${action}${rowNumber})="accept",LOWER($${action}${rowNumber})="modify"),OR(LOWER($${action}${rowNumber})="accept",AND(LOWER($${action}${rowNumber})="modify",LEN(TRIM($${notes}${rowNumber}))>0))),"Complete","Incomplete")`
+  const policy = reviewColumnLetter('coordinator_policy_status')
+  const physicianTopics = reviewColumnLetter('physician_topic_ids')
+  return `IF(LOWER($${policy}${rowNumber})="conflict",IF(AND(LOWER($${reviewed}${rowNumber})="true",LOWER($${action}${rowNumber})="adjudicate",LEN(TRIM($${physicianTopics}${rowNumber}))>0,LEN(TRIM($${notes}${rowNumber}))>0),"Complete","Incomplete"),IF(AND(LOWER($${reviewed}${rowNumber})="true",OR(LOWER($${action}${rowNumber})="accept",LOWER($${action}${rowNumber})="modify"),OR(LOWER($${action}${rowNumber})="accept",AND(LOWER($${action}${rowNumber})="modify",LEN(TRIM($${notes}${rowNumber}))>0))),"Complete","Incomplete"))`
 }
 
 function provenanceFormula(rowNumber: number): string {
@@ -520,6 +651,11 @@ function cachedCompletionStatus(row: GoldEnrichmentV3ReviewWorkbookRow): string 
   const action = row.physician_action?.trim().toLowerCase()
   const reviewed = normalizedBoolean(row.physician_reviewed || 'false') === 'true'
   const notes = Boolean(row.physician_notes?.trim())
+  if (row.coordinator_policy_status === 'conflict') {
+    return reviewed && action === 'adjudicate' && Boolean(row.physician_topic_ids.trim()) && notes
+      ? 'Complete'
+      : 'Incomplete'
+  }
   return reviewed && (action === 'accept' || (action === 'modify' && notes))
     ? 'Complete'
     : 'Incomplete'
@@ -628,6 +764,7 @@ function metadataEntries(
   return [
     ['workflow_id', metadata.workflow_id],
     ['workflow_schema_version', metadata.workflow_schema_version],
+    ['coordinator_schema_version', metadata.coordinator_schema_version ?? ''],
     ['merged_schema_version', metadata.merged_schema_version],
     ['prompt_template_version', metadata.prompt_template_version],
     ['result_schema_version', metadata.result_schema_version],
@@ -701,6 +838,7 @@ function assertWorkbookInput(
   const metadataStrings = [
     metadata.workflow_id,
     metadata.workflow_schema_version,
+    metadata.coordinator_schema_version ?? '',
     metadata.merged_schema_version,
     metadata.prompt_template_version,
     metadata.result_schema_version,
@@ -749,6 +887,22 @@ function assertWorkbookInput(
         throw new Error(`Workbook row identity is duplicated across cohorts: ${row.master_row_id}.`)
       }
       identities.add(identity)
+      if (row.coordinator_policy_status === 'conflict') {
+        const conflictFields = (row.coordinator_conflict_fields ?? '').split('|').filter(Boolean)
+        if (
+          cohortName !== 'required_review' ||
+          !row.coordinator_conflict_diagnostics?.trim() ||
+          row.coordinator_conflict_count === '0' ||
+          (conflictFields.includes('topic_ids') &&
+            (!row.model_topic_ids?.trim() ||
+              row.topic_ids.trim() ||
+              row.physician_topic_ids.trim()))
+        ) {
+          throw new Error(
+            `Workbook coordinator conflict is not safely quarantined for PMID ${row.pmid}.`,
+          )
+        }
+      }
     }
   }
 }
@@ -926,6 +1080,10 @@ function instructionsWorksheetXml(
     [
       'Accept or modify',
       'Choose accept to retain the prefilled V3 proposal or modify to change one or more physician enrichment fields. Fixed physician relevance label/confidence cannot be edited.',
+    ],
+    [
+      'Coordinator conflicts',
+      'A conflict preserves the untouched raw model value in raw_model_* columns, leaves the conflicted coordinator and physician field blank, and requires physician_action=adjudicate, reviewed=true, an allowed resolved value, and a note. No automatic correction is permitted.',
     ],
     [
       'Pipe-delimited fields',

@@ -19,8 +19,11 @@ coordinator inputs or value changes.
 | Workflow schema                 | `3.0.0` |
 | Prompt template                 | `3.0.1` |
 | Raw result schema               | `3.0.1` |
+| Coordinator implementation      | `3.0.1` |
 | Raw merge schema                | `1.0.0` |
-| Merged artifact schema          | `3.0.1` |
+| Merged artifact schema          | `3.0.2` |
+| Validation report schema        | `3.0.2` |
+| Readiness schema                | `3.0.2` |
 | Taxonomy                        | `2.0.0` |
 | Enrichment label schema         | `2.0.0` |
 | Enrichment artifact schema      | `2.0.0` |
@@ -42,6 +45,10 @@ preparation created with that prompt version is non-executable historical eviden
 
 Do not delete or rewrite those directories. A corrected preparation must use prompt version `3.0.1`,
 raw result schema `3.0.1`, and a passing model-input independence audit.
+
+The prepared packet and raw-result contracts remain frozen at `3.0.1`. Coordinator implementation
+`3.0.1` and the `3.0.2` post-result schemas add conflict quarantine only after raw structural
+validation; they do not authorize editing or rerunning a raw result.
 
 ## Classification conversation boundary
 
@@ -76,8 +83,11 @@ filename, and prompt/schema versions. Do not edit it or manually substitute plac
 4. Require exactly one downloadable CSV using the inventory's expected filename and no chat prose.
 5. Save the returned file unchanged under the run's raw-results directory. Never edit a raw result
    in place.
-6. Validate locally with `npm run literature:validate-gold-enrichment-v3-results`. Invalid files
-   remain raw evidence; request a fresh result rather than silently correcting them.
+6. Validate locally with `npm run literature:validate-gold-enrichment-v3-results`. Structurally
+   invalid files remain raw evidence; request a fresh result rather than silently correcting them.
+   A structurally valid result may instead be retained with
+   `valid_with_coordinator_conflicts`; preserve its bytes and route every recorded conflict to
+   physician adjudication.
 7. After every packet validates and coverage is complete, follow
    [the operator-only raw-result merge handoff](./result-merge-prompt.md). That handoff ends before
    the separate coordinator merge and review stages.

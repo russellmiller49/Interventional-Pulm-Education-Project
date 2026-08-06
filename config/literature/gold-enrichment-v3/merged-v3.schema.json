@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://interventionalpulm.com/schemas/literature/gold-enrichment-v3/merged-v3.schema.json",
   "title": "Gold-set V3 merged development enrichment row",
-  "description": "A uniform, non-import-ready parsed CSV row for the deterministic 630-row V3 candidate. CSV cells are strings. The merge validator additionally enforces canonical order, exact membership and counts, protected physician-field hashing, packet coverage, full-text registry state, overlay completeness, duplicate-free lists, and zero held-out access.",
+  "description": "A uniform, non-import-ready parsed CSV row for the deterministic 630-row V3 candidate. Schema 3.0.2 preserves explicit raw model-output fields and quarantines coordinator-conflicted candidate fields without automatic correction. CSV cells are strings. The merge validator additionally enforces canonical order, exact membership and counts, protected physician-field hashing, packet coverage, full-text registry state, overlay completeness, duplicate-free lists, and zero held-out access.",
   "type": "object",
   "additionalProperties": false,
   "x-csv-columns": [
@@ -19,6 +19,8 @@
     "physician_field_sha256",
     "result_packet_id",
     "result_packet_family",
+    "raw_result_filename",
+    "raw_result_sha256",
     "source_projection_sha256",
     "source_row_sha256",
     "batch_id",
@@ -43,6 +45,14 @@
     "is_blinded",
     "relevance_review_complete",
     "metadata_sufficiency",
+    "model_topic_ids",
+    "model_technology_tags",
+    "model_technology_tag_status",
+    "model_clinical_purposes",
+    "model_disease_tags",
+    "model_disease_tag_status",
+    "model_study_design",
+    "model_publication_status",
     "topic_ids",
     "technology_tags",
     "technology_tag_status",
@@ -58,6 +68,14 @@
     "enrichment_confidence",
     "assessment_confidence",
     "model_requests_physician_enrichment_review",
+    "raw_row_validation_status",
+    "coordinator_schema_version",
+    "coordinator_policy_status",
+    "coordinator_conflict_count",
+    "coordinator_conflict_fields",
+    "coordinator_conflict_rule_ids",
+    "coordinator_conflict_diagnostics",
+    "coordinator_candidate_status",
     "coordinator_requires_physician_enrichment_review",
     "coordinator_review_reasons",
     "evidence_1_field",
@@ -94,6 +112,8 @@
     "physician_field_sha256",
     "result_packet_id",
     "result_packet_family",
+    "raw_result_filename",
+    "raw_result_sha256",
     "source_projection_sha256",
     "source_row_sha256",
     "batch_id",
@@ -118,6 +138,14 @@
     "is_blinded",
     "relevance_review_complete",
     "metadata_sufficiency",
+    "model_topic_ids",
+    "model_technology_tags",
+    "model_technology_tag_status",
+    "model_clinical_purposes",
+    "model_disease_tags",
+    "model_disease_tag_status",
+    "model_study_design",
+    "model_publication_status",
     "topic_ids",
     "technology_tags",
     "technology_tag_status",
@@ -133,6 +161,14 @@
     "enrichment_confidence",
     "assessment_confidence",
     "model_requests_physician_enrichment_review",
+    "raw_row_validation_status",
+    "coordinator_schema_version",
+    "coordinator_policy_status",
+    "coordinator_conflict_count",
+    "coordinator_conflict_fields",
+    "coordinator_conflict_rule_ids",
+    "coordinator_conflict_diagnostics",
+    "coordinator_candidate_status",
     "coordinator_requires_physician_enrichment_review",
     "coordinator_review_reasons",
     "evidence_1_field",
@@ -163,7 +199,7 @@
       "const": "3.0.0"
     },
     "merged_schema_version": {
-      "const": "3.0.1"
+      "const": "3.0.2"
     },
     "prompt_template_version": {
       "const": "3.0.1"
@@ -196,6 +232,15 @@
     },
     "result_packet_family": {
       "enum": ["included_metadata_only", "included_full_text", "excluded_metadata_sufficiency"]
+    },
+    "raw_result_filename": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240,
+      "pattern": "^[^/\\\\]+\\.result\\.csv$"
+    },
+    "raw_result_sha256": {
+      "$ref": "#/$defs/sha256"
     },
     "source_projection_sha256": {
       "$ref": "#/$defs/sha256"
@@ -282,8 +327,39 @@
     "metadata_sufficiency": {
       "$ref": "#/$defs/metadataSufficiency"
     },
+    "model_topic_ids": {
+      "$ref": "#/$defs/topicListOrBlank",
+      "description": "Untouched raw model topic_ids copied from the structurally valid packet result."
+    },
+    "model_technology_tags": {
+      "$ref": "#/$defs/technologyListOrBlank",
+      "description": "Untouched raw model technology_tags."
+    },
+    "model_technology_tag_status": {
+      "$ref": "#/$defs/tagStatusOrBlank"
+    },
+    "model_clinical_purposes": {
+      "$ref": "#/$defs/clinicalPurposeListOrBlank",
+      "description": "Untouched raw model clinical_purposes."
+    },
+    "model_disease_tags": {
+      "$ref": "#/$defs/diseaseListOrBlank",
+      "description": "Untouched raw model disease_tags."
+    },
+    "model_disease_tag_status": {
+      "$ref": "#/$defs/tagStatusOrBlank"
+    },
+    "model_study_design": {
+      "$ref": "#/$defs/studyDesignOrBlank",
+      "description": "Untouched raw model study_design."
+    },
+    "model_publication_status": {
+      "$ref": "#/$defs/publicationStatusOrBlank",
+      "description": "Untouched raw model publication_status."
+    },
     "topic_ids": {
-      "$ref": "#/$defs/topicListOrBlank"
+      "$ref": "#/$defs/topicListOrBlank",
+      "description": "Coordinator candidate topic_ids. Blank when topic_ids has an unresolved coordinator conflict."
     },
     "technology_tags": {
       "$ref": "#/$defs/technologyListOrBlank"
@@ -327,6 +403,37 @@
     "model_requests_physician_enrichment_review": {
       "$ref": "#/$defs/csvBoolean",
       "description": "Immutable raw model self-assessment copied from the validated packet result."
+    },
+    "raw_row_validation_status": {
+      "const": "valid",
+      "description": "Stage-1 raw structural-validation status. Only valid rows may enter this merged artifact."
+    },
+    "coordinator_schema_version": {
+      "const": "3.0.1"
+    },
+    "coordinator_policy_status": {
+      "enum": ["clear", "conflict", "warning"]
+    },
+    "coordinator_conflict_count": {
+      "type": "string",
+      "pattern": "^(?:0|[1-9][0-9]*)$"
+    },
+    "coordinator_conflict_fields": {
+      "type": "string",
+      "maxLength": 1000,
+      "pattern": "^(?:|[a-z0-9_]+(?:\\|[a-z0-9_]+)*)$"
+    },
+    "coordinator_conflict_rule_ids": {
+      "type": "string",
+      "maxLength": 4000,
+      "pattern": "^(?:|[a-z0-9]+(?:-[a-z0-9]+)*(?:\\|[a-z0-9]+(?:-[a-z0-9]+)*)*)$"
+    },
+    "coordinator_conflict_diagnostics": {
+      "type": "string",
+      "maxLength": 12000
+    },
+    "coordinator_candidate_status": {
+      "enum": ["candidate", "unresolved_coordinator_conflict", "excluded_assessment"]
     },
     "coordinator_requires_physician_enrichment_review": {
       "$ref": "#/$defs/csvBoolean",
@@ -383,7 +490,7 @@
       "$ref": "#/$defs/csvBoolean"
     },
     "physician_enrichment_accept_or_modify": {
-      "enum": ["", "accept", "modify"]
+      "enum": ["", "accept", "modify", "adjudicate"]
     },
     "physician_enrichment_notes": {
       "type": "string",
@@ -427,22 +534,22 @@
           "physician_final_label": {
             "enum": ["include_core", "include_adjacent"]
           },
-          "topic_ids": {
+          "model_topic_ids": {
             "$ref": "#/$defs/topicList"
           },
-          "clinical_purposes": {
+          "model_clinical_purposes": {
             "$ref": "#/$defs/clinicalPurposeList"
           },
-          "study_design": {
+          "model_study_design": {
             "$ref": "#/$defs/studyDesign"
           },
-          "publication_status": {
+          "model_publication_status": {
             "$ref": "#/$defs/publicationStatus"
           },
-          "technology_tag_status": {
+          "model_technology_tag_status": {
             "$ref": "#/$defs/tagStatus"
           },
-          "disease_tag_status": {
+          "model_disease_tag_status": {
             "$ref": "#/$defs/tagStatus"
           },
           "enrichment_confidence": {
@@ -544,6 +651,30 @@
           "physician_final_label": {
             "const": "exclude"
           },
+          "model_topic_ids": {
+            "const": ""
+          },
+          "model_technology_tags": {
+            "const": ""
+          },
+          "model_technology_tag_status": {
+            "const": ""
+          },
+          "model_clinical_purposes": {
+            "const": ""
+          },
+          "model_disease_tags": {
+            "const": ""
+          },
+          "model_disease_tag_status": {
+            "const": ""
+          },
+          "model_study_design": {
+            "const": ""
+          },
+          "model_publication_status": {
+            "const": ""
+          },
           "topic_ids": {
             "const": ""
           },
@@ -585,6 +716,9 @@
           },
           "assessment_confidence": {
             "$ref": "#/$defs/confidence"
+          },
+          "coordinator_candidate_status": {
+            "const": "excluded_assessment"
           },
           "evidence_1_field": {
             "$ref": "#/$defs/metadataEvidenceField"
@@ -829,6 +963,84 @@
         "properties": {
           "coordinator_requires_physician_enrichment_review": {
             "const": "true"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "coordinator_policy_status": {
+            "const": "conflict"
+          }
+        },
+        "required": ["coordinator_policy_status"]
+      },
+      "then": {
+        "properties": {
+          "coordinator_conflict_count": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
+          },
+          "coordinator_conflict_fields": {
+            "type": "string",
+            "minLength": 1
+          },
+          "coordinator_conflict_rule_ids": {
+            "type": "string",
+            "minLength": 1
+          },
+          "coordinator_conflict_diagnostics": {
+            "type": "string",
+            "minLength": 1
+          },
+          "coordinator_candidate_status": {
+            "const": "unresolved_coordinator_conflict"
+          },
+          "coordinator_requires_physician_enrichment_review": {
+            "const": "true"
+          },
+          "topic_ids": {
+            "const": ""
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "coordinator_conflict_count": {
+            "const": "0"
+          },
+          "coordinator_conflict_fields": {
+            "const": ""
+          },
+          "coordinator_conflict_rule_ids": {
+            "const": ""
+          },
+          "coordinator_conflict_diagnostics": {
+            "const": ""
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "result_packet_family": {
+            "enum": ["included_metadata_only", "included_full_text"]
+          },
+          "coordinator_policy_status": {
+            "enum": ["clear", "warning"]
+          }
+        },
+        "required": ["result_packet_family", "coordinator_policy_status"]
+      },
+      "then": {
+        "properties": {
+          "topic_ids": {
+            "$ref": "#/$defs/topicList"
+          },
+          "coordinator_candidate_status": {
+            "const": "candidate"
           }
         }
       }
