@@ -450,7 +450,11 @@ export function icuHemodynamicsReducer(
           wedgeCursorTime: null,
           storedAtEndExpiration: state.catheter.storedWedgeMmHg !== null,
         },
-        responseMessage: 'Balloon deflated; PA waveform restored.',
+        // H3 §7: the simulation no longer tells the learner that the pulmonary-artery waveform came
+        // back. Whether the occlusion ended at the vessel is the question the sequence ends on, and
+        // announcing the answer is what stopped it from being asked.
+        responseMessage:
+          'Balloon deflated. Confirm on the monitor whether the pulmonary-artery waveform has returned before recording anything or moving on.',
       }
     case 'GENERATE_THERMODILUTION_TRIAL': {
       if (state.thermodilutionTrials.length >= state.caseDefinition.thermodilution.maximumTrials) {

@@ -46,7 +46,10 @@ import {
 import { BedsideMonitor } from './BedsideMonitor'
 import { FormulaDrawer } from './FormulaDrawer'
 import { NormalWaveformReference } from './NormalWaveformReference'
+import { NormalWaveformValidityChallenges } from './NormalWaveformValidityChallenges'
 import { PacActionDock } from './PacActionDock'
+import { PacAdvancementReasoningPanel } from './PacAdvancementReasoningPanel'
+import { PawpSafetySequencePanel, PA_RETURN_CHECK } from './PawpSafetySequencePanel'
 import { PacAdvancementOrientation } from './PacAdvancementOrientation'
 import { PacAdvancementPrebrief } from './PacAdvancementPrebrief'
 import { PacLearningPathwayViewport } from './PacLearningPathwayNav'
@@ -60,6 +63,7 @@ import {
 import { PacSkillsLab } from './PacSkillsLab'
 import { PhysiologyPanel } from './PhysiologyPanel'
 import { ResizablePacWorkspace } from './ResizablePacWorkspace'
+import styles from './icu-hemodynamics.module.css'
 import { WaveformAtlasPanel } from './WaveformAtlasPanel'
 import { WaveformRecognitionDrill } from './WaveformRecognitionDrill'
 
@@ -339,6 +343,20 @@ function transferSkillState(skillId: PacGuidedSkillId): HemodynamicSimulationSta
   return createInitialHemodynamicState(baseCase, 'learn', 616)
 }
 
+/**
+ * Whether the station's hands-on objective has been met.
+ *
+ * Exported so a suite can exercise the predicate against a constructed state. Rendering a whole
+ * guided workspace and driving a simulated catheter through jsdom to reach one of these states is
+ * possible and tells you almost nothing about which condition failed.
+ */
+export function pacGuidedObjectiveComplete(
+  skillId: PacGuidedSkillId,
+  state: HemodynamicSimulationState,
+): boolean {
+  return objectiveComplete(skillId, state)
+}
+
 function objectiveComplete(skillId: PacGuidedSkillId, state: HemodynamicSimulationState): boolean {
   if (skillId === 'pressure-system') {
     return (
@@ -362,10 +380,19 @@ function objectiveComplete(skillId: PacGuidedSkillId, state: HemodynamicSimulati
     return state.signalValidationChecks.includes('waveform-recognition')
   }
   if (skillId === 'pawp-capture') {
+    /**
+     * H3 §7. The first three conditions used to be the whole objective, and all three are set by the
+     * simulator's own prolonged-inflation recovery — so the one failure this station exists to catch
+     * completed it. Two conditions close that: the recovery path is excluded explicitly, and the
+     * return of the pulmonary-artery waveform has to have been assessed by the learner rather than
+     * announced by the simulation.
+     */
     return (
       state.catheter.storedWedgeMmHg !== null &&
       !state.catheter.balloonInflated &&
-      state.catheter.position === 'pa'
+      state.catheter.position === 'pa' &&
+      !state.catheter.forcedSafetyRecovery &&
+      state.signalValidationChecks.includes(PA_RETURN_CHECK)
     )
   }
   if (skillId === 'thermodilution-series') {
@@ -376,11 +403,13 @@ function objectiveComplete(skillId: PacGuidedSkillId, state: HemodynamicSimulati
 
 function SkillSurface({
   skillId,
+  phase,
   state,
   dispatch,
   advancementUnlocked,
 }: {
   readonly skillId: PacGuidedSkillId
+  readonly phase: CriticalCareActivityPhase
   readonly state: HemodynamicSimulationState
   readonly dispatch: (action: HemodynamicAction) => void
   readonly advancementUnlocked: boolean
@@ -410,11 +439,29 @@ function SkillSurface({
         </div>
       )
     }
-    return <PacActionDock state={state} dispatch={dispatch} focus="advancement" />
+    // H3 §6. From the hands-on phase onward the reasoning chain sits above the live controls, so the
+    // decision is made in the same pane the movement happens in. It stays out of the earlier phases
+    // because the ordered orientation there is already asking the learner for a commitment, and two
+    // sets of choices on screen at once is two questions competing for one answer.
+    if (phase === 'recognize' || phase === 'predict') {
+      return <PacActionDock state={state} dispatch={dispatch} focus="advancement" />
+    }
+    return (
+      <div className={styles.paneStack}>
+        <PacAdvancementReasoningPanel />
+        <PacActionDock state={state} dispatch={dispatch} focus="advancement" />
+      </div>
+    )
   }
   if (skillId === 'waveform-interpretation') {
-    // H0/H1 §4: the atlas opens on the normal right atrium rather than on an abnormality. A novice
-    // needs the reference before the deviation from it.
+    // H2 §5: while the canonical reference is on screen in the middle pane, this pane carries the
+    // interaction that keeps the reference honest — the same four normal tracings shown through a
+    // display fault, each requiring a commitment before its reasoning appears. The full atlas
+    // returns for the later phases.
+    //
+    // H0/H1 §4: the atlas still opens on the normal right atrium rather than on an abnormality. A
+    // novice needs the reference before the deviation from it.
+    if (phase === 'recognize') return <NormalWaveformValidityChallenges />
     return <WaveformAtlasPanel initialEntryId="ra-normal" heading="Full waveform atlas" />
   }
   if (skillId === 'pawp-capture') {
@@ -869,6 +916,17 @@ export function PacGuidedSkillActivity({
       ) : (
         <WaveformRecognitionDrill dispatch={dispatch} />
       )
+    ) : skillId === 'pawp-capture' ? (
+      // H3 §7. The live inflate/cursor/store/deflate controls stay in the controls pane; the
+      // judgements — plausibility, and whether the PA waveform actually came back — live here.
+      <PawpSafetySequencePanel
+        state={state}
+        onRecoveryConfirmed={() => {
+          if (!state.signalValidationChecks.includes(PA_RETURN_CHECK)) {
+            dispatch({ type: 'VALIDATE_SIGNAL', check: PA_RETURN_CHECK })
+          }
+        }}
+      />
     ) : skillId === 'thermodilution-series' ? (
       <CardiacOutputTeachingPanel />
     ) : skillId === 'derived-hemodynamics' ? (
@@ -906,6 +964,7 @@ export function PacGuidedSkillActivity({
           <SkillSurface
             key={`${skillId}-${phase}`}
             skillId={skillId}
+            phase={phase}
             state={state}
             dispatch={dispatch}
             advancementUnlocked={advancementUnlocked}

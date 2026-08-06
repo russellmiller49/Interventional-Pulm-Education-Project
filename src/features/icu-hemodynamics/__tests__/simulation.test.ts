@@ -293,7 +293,13 @@ describe('50 Hz circulation, waveforms, and measurement system', () => {
     expect(state.catheter.balloonInflated).toBe(false)
     expect(state.catheter.position).toBe('pa')
     expect(state.criticalErrors).toContain('wedge-prolonged-inflation')
-    expect(state.responseMessage).toMatch(/10-second inflation limit.*auto-deflated/i)
+    // The cutoff behavior is unchanged; how it is described is not. It must read as this
+    // simulation's own rail rather than as a clinical inflation-time limit no source here supplies,
+    // and it must not tell the learner the PA waveform came back.
+    expect(state.responseMessage).toMatch(/simulation ended the occlusion at its own fixed cutoff/i)
+    expect(state.responseMessage).toMatch(/manufacturer/i)
+    expect(state.responseMessage).not.toMatch(/\b10[-\s]second\b/i)
+    expect(state.responseMessage).not.toMatch(/waveform was restored/i)
   })
 
   it('holds the confirmed waveform position until each animated PAC transition arrives', () => {

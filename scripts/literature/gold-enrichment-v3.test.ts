@@ -48,6 +48,7 @@ import {
   GOLD_ENRICHMENT_V3_CANONICAL_SOURCE_COLUMNS,
   GOLD_ENRICHMENT_V3_CANONICAL_SOURCE_SHA256,
   GOLD_ENRICHMENT_V3_CONFIG_CONTRACT,
+  GOLD_ENRICHMENT_V3_COORDINATOR_SCHEMA_VERSION,
   GOLD_ENRICHMENT_V3_ENRICHMENT_SCHEMA_VERSION,
   GOLD_ENRICHMENT_V3_FULL_TEXT_AUDIT_COLUMNS,
   GOLD_ENRICHMENT_V3_LABEL_SCHEMA_VERSION,
@@ -56,10 +57,12 @@ import {
   GOLD_ENRICHMENT_V3_PACKET_FAMILIES,
   GOLD_ENRICHMENT_V3_PHYSICIAN_FIELD_SHA256,
   GOLD_ENRICHMENT_V3_PROMPT_TEMPLATE_VERSION,
+  GOLD_ENRICHMENT_V3_READINESS_SCHEMA_VERSION,
   GOLD_ENRICHMENT_V3_RESULT_SCHEMA_VERSION,
   GOLD_ENRICHMENT_V3_SUPERSEDED_PROMPT_SHA256,
   GOLD_ENRICHMENT_V3_TAXONOMY_VERSION,
   GOLD_ENRICHMENT_V3_UPGRADE_PLAN_SHA256,
+  GOLD_ENRICHMENT_V3_VALIDATION_REPORT_SCHEMA_VERSION,
   GOLD_ENRICHMENT_V3_WORKFLOW_ID,
   GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION,
   assertGoldEnrichmentV3SafeOutputDirectory,
@@ -1110,14 +1113,25 @@ async function materializeMergeInputs(fixture: ValidationFixture) {
 }
 
 function completedReviewCsv(input: string): string {
-  const rows = csvObjects(input, GOLD_ENRICHMENT_V3_REVIEW_CSV_COLUMNS).map((row) => ({
-    ...row,
-    physician_action: 'accept',
-    physician_reviewed: 'true',
-    physician_notes: ['16043961', '26033136'].includes(row.pmid)
-      ? 'Synthetic relevance concern reviewed and documented.'
-      : '',
-  }))
+  const rows = csvObjects(input, GOLD_ENRICHMENT_V3_REVIEW_CSV_COLUMNS).map((row) =>
+    row.coordinator_policy_status === 'conflict'
+      ? {
+          ...row,
+          physician_action: 'adjudicate',
+          physician_topic_ids: 'adjacent-surgical-procedural-analogue',
+          physician_reviewed: 'true',
+          physician_notes:
+            'Synthetic physician adjudication selected an allowed topic after reviewing the preserved raw model value.',
+        }
+      : {
+          ...row,
+          physician_action: 'accept',
+          physician_reviewed: 'true',
+          physician_notes: ['16043961', '26033136'].includes(row.pmid)
+            ? 'Synthetic relevance concern reviewed and documented.'
+            : '',
+        },
+  )
   return serializeGoldEnrichmentV3Csv(GOLD_ENRICHMENT_V3_REVIEW_CSV_COLUMNS, rows)
 }
 
@@ -1300,6 +1314,8 @@ function mergedRow(index: number): GoldEnrichmentV3MergedRow {
     physician_field_sha256: 'c'.repeat(64),
     result_packet_id: `synthetic-packet-${index}`,
     result_packet_family: included ? 'included_metadata_only' : 'excluded_metadata_sufficiency',
+    raw_result_filename: `synthetic-packet-${index}.result.csv`,
+    raw_result_sha256: sha256Bytes(`raw-result-${index}`),
     source_projection_sha256: sha256Bytes(`projection-${index}`),
     source_row_sha256: sha256Bytes(`row-${index}`),
     master_row_id: String(index),
@@ -1316,6 +1332,14 @@ function mergedRow(index: number): GoldEnrichmentV3MergedRow {
     is_blinded: 'false',
     relevance_review_complete: 'true',
     metadata_sufficiency: 'adequate_abstract',
+    model_topic_ids: included ? 'basic-bronchoscopy' : '',
+    model_technology_tags: included ? 'convex-ebus' : '',
+    model_technology_tag_status: included ? 'tagged' : '',
+    model_clinical_purposes: included ? 'diagnosis' : '',
+    model_disease_tags: included ? 'lung-cancer' : '',
+    model_disease_tag_status: included ? 'tagged' : '',
+    model_study_design: included ? 'randomized-trial' : '',
+    model_publication_status: included ? 'full-article' : '',
     topic_ids: included ? 'basic-bronchoscopy' : '',
     technology_tags: included ? 'convex-ebus' : '',
     technology_tag_status: included ? 'tagged' : '',
@@ -1329,6 +1353,14 @@ function mergedRow(index: number): GoldEnrichmentV3MergedRow {
     enrichment_confidence: included ? 'high' : '',
     assessment_confidence: included ? '' : 'high',
     model_requests_physician_enrichment_review: 'false',
+    raw_row_validation_status: 'valid',
+    coordinator_schema_version: GOLD_ENRICHMENT_V3_COORDINATOR_SCHEMA_VERSION,
+    coordinator_policy_status: 'clear',
+    coordinator_conflict_count: '0',
+    coordinator_conflict_fields: '',
+    coordinator_conflict_rule_ids: '',
+    coordinator_conflict_diagnostics: '',
+    coordinator_candidate_status: included ? 'candidate' : 'excluded_assessment',
     coordinator_requires_physician_enrichment_review: String(coordinatorRequired),
     coordinator_review_reasons: coordinatorRequired ? 'synthetic_required_review' : '',
     evidence_1_field: 'title',
@@ -1353,6 +1385,14 @@ function reviewCandidate(row: GoldEnrichmentV3MergedRow): StringRow {
     coordinator_requires_physician_enrichment_review:
       row.coordinator_requires_physician_enrichment_review,
     coordinator_review_reasons: row.coordinator_review_reasons,
+    coordinator_policy_status: row.coordinator_policy_status,
+    coordinator_conflict_count: row.coordinator_conflict_count,
+    coordinator_conflict_fields: row.coordinator_conflict_fields,
+    coordinator_conflict_rule_ids: row.coordinator_conflict_rule_ids,
+    coordinator_conflict_diagnostics: row.coordinator_conflict_diagnostics,
+    coordinator_candidate_status: row.coordinator_candidate_status,
+    raw_result_filename: row.raw_result_filename,
+    raw_result_sha256: row.raw_result_sha256,
     full_text_evidence_status: 'not_selected',
     expected_full_text_filename: '',
     full_text_file_sha256: '',
@@ -1371,7 +1411,10 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
       workflowSchema: GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION,
       prompt: GOLD_ENRICHMENT_V3_PROMPT_TEMPLATE_VERSION,
       result: GOLD_ENRICHMENT_V3_RESULT_SCHEMA_VERSION,
+      coordinator: GOLD_ENRICHMENT_V3_COORDINATOR_SCHEMA_VERSION,
       merged: GOLD_ENRICHMENT_V3_MERGED_SCHEMA_VERSION,
+      validationReport: GOLD_ENRICHMENT_V3_VALIDATION_REPORT_SCHEMA_VERSION,
+      readiness: GOLD_ENRICHMENT_V3_READINESS_SCHEMA_VERSION,
       taxonomy: GOLD_ENRICHMENT_V3_TAXONOMY_VERSION,
       labels: GOLD_ENRICHMENT_V3_LABEL_SCHEMA_VERSION,
       enrichment: GOLD_ENRICHMENT_V3_ENRICHMENT_SCHEMA_VERSION,
@@ -1380,7 +1423,10 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
       workflowSchema: '3.0.0',
       prompt: '3.0.1',
       result: '3.0.1',
-      merged: '3.0.1',
+      coordinator: '3.0.1',
+      merged: '3.0.2',
+      validationReport: '3.0.2',
+      readiness: '3.0.2',
       taxonomy: '2.0.0',
       labels: '2.0.0',
       enrichment: '2.0.0',
@@ -2007,19 +2053,70 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
         /duplicate identifier/iu,
       )
 
-      const hardRows = metadataFile.rows
-        .map((row, index) => ({ row, index }))
-        .filter(({ row }) => ['41229759', '18453348'].includes(row.pmid))
-      expect(hardRows).toHaveLength(2)
-      await expectRejectedMutation(
-        metadataFile,
-        (rows) => {
-          hardRows.forEach(({ index }) => {
-            rows[index].topic_ids = 'bronchoscopic-lung-volume-reduction'
-          })
+      const conflictIndex = metadataFile.rows.findIndex((row) => row.pmid === '18453348')
+      expect(conflictIndex).toBeGreaterThanOrEqual(0)
+      const rawConflictValue =
+        'bronchoscopic-lung-volume-reduction|adjacent-surgical-procedural-analogue'
+      await writeMutatedResult(fixture, metadataFile, (rows) => {
+        rows[conflictIndex].topic_ids = rawConflictValue
+        rows[conflictIndex].model_requests_physician_enrichment_review = 'false'
+      })
+      const quarantined = await validateFixture(fixture)
+      expect(quarantined.report).toMatchObject({
+        complete: true,
+        valid: true,
+        status: 'valid_with_coordinator_conflicts',
+        packetCoverage: {
+          structurallyValidPackets: 20,
+          structurallyValidRows: 630,
+          validWithCoordinatorConflicts: 1,
+          coordinatorConflicts: 1,
         },
-        /LVRS false-positive topic is forbidden/iu,
+        coordinatorPolicy: {
+          status: 'conflict',
+          conflicts: 1,
+          unresolvedConflicts: 1,
+          automaticCorrections: 0,
+        },
+      })
+      expect(quarantined.rows).toHaveLength(630)
+      const conflictPacket = quarantined.report.packets.find(
+        (packet) => packet.packetId === metadataFile.rows[conflictIndex].packet_id,
       )
+      expect(conflictPacket).toMatchObject({
+        rawValidationStatus: 'valid',
+        coordinatorPolicyStatus: 'conflict',
+        status: 'valid_with_coordinator_conflicts',
+        validRows: 50,
+        coordinatorConflictCount: 1,
+      })
+      expect(quarantined.coordinatorConflicts).toEqual([
+        expect.objectContaining({
+          pmid: '18453348',
+          field: 'topic_ids',
+          raw_model_value: rawConflictValue,
+          coordinator_rule_id: 'forbidden-bronchoscopic-lvr-topic-for-surgical-lvrs',
+          requires_physician_adjudication: 'true',
+          automatic_correction_allowed: 'false',
+          resolution_status: 'unresolved',
+          physician_resolved_value: '',
+        }),
+      ])
+      expect(
+        (quarantined.rows.find((row) => row.raw.pmid === '18453348')?.raw as Record<string, string>)
+          .topic_ids,
+      ).toBe(rawConflictValue)
+      expect(
+        quarantined.attemptLedger.find(
+          (entry) => entry.packet_id === metadataFile.rows[conflictIndex].packet_id,
+        ),
+      ).toMatchObject({
+        coordinator_conflict_count: 1,
+        validation_outcome: 'valid_with_coordinator_conflicts',
+        active: true,
+        immutable_no_content_modification: true,
+      })
+      await restoreResult(fixture, metadataFile)
 
       await writeMutatedResult(fixture, metadataFile, (rows) => {
         rows.pop()
@@ -2127,6 +2224,9 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
         externalQaRead: false,
         taxonomyUpgradePlanRead: false,
         coordinatorReviewEligibilityComputed: false,
+        coordinatorPolicyEvaluated: true,
+        coordinatorConflictsPreserved: 0,
+        automaticCorrections: 0,
         enrichmentValuesChanged: false,
         physicianRelevanceChanged: false,
         modelCalls: 0,
@@ -2331,6 +2431,7 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
     const metadata: GoldEnrichmentV3ReviewWorkbookMetadata = {
       workflow_id: GOLD_ENRICHMENT_V3_WORKFLOW_ID,
       workflow_schema_version: GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION,
+      coordinator_schema_version: GOLD_ENRICHMENT_V3_COORDINATOR_SCHEMA_VERSION,
       merged_schema_version: GOLD_ENRICHMENT_V3_MERGED_SCHEMA_VERSION,
       prompt_template_version: GOLD_ENRICHMENT_V3_PROMPT_TEMPLATE_VERSION,
       result_schema_version: GOLD_ENRICHMENT_V3_RESULT_SCHEMA_VERSION,
@@ -2502,6 +2603,19 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
         expect(row).toBeDefined()
         row!.model_requests_physician_enrichment_review = 'true'
       })
+      const coordinatorConflictFile = [...fixture.files.values()].find(
+        (file) =>
+          file.family === 'included_metadata_only' &&
+          file.rows.some((row) => row.pmid === '18453348'),
+      )!
+      const rawCoordinatorConflictTopic =
+        'bronchoscopic-lung-volume-reduction|adjacent-surgical-procedural-analogue'
+      await writeMutatedResult(fixture, coordinatorConflictFile, (rows) => {
+        const row = rows.find((candidate) => candidate.pmid === '18453348')
+        expect(row).toBeDefined()
+        row!.topic_ids = rawCoordinatorConflictTopic
+        row!.model_requests_physician_enrichment_review = 'false'
+      })
       for (const relativePath of [
         'full-text-registry-v3.csv',
         'full-text-registry-v3.receipt.json',
@@ -2625,6 +2739,36 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
         repeatedMerge.artifacts.every((artifact) => artifact.publication === 'verified_existing'),
       ).toBe(true)
       expect(firstMerge.rows).toHaveLength(630)
+      const conflictedMergedRow = firstMerge.rows.find((row) => row.pmid === '18453348')
+      expect(conflictedMergedRow).toMatchObject({
+        model_topic_ids: rawCoordinatorConflictTopic,
+        topic_ids: '',
+        raw_row_validation_status: 'valid',
+        coordinator_policy_status: 'conflict',
+        coordinator_conflict_count: '1',
+        coordinator_conflict_fields: 'topic_ids',
+        coordinator_conflict_rule_ids: 'forbidden-bronchoscopic-lvr-topic-for-surgical-lvrs',
+        coordinator_candidate_status: 'unresolved_coordinator_conflict',
+        coordinator_requires_physician_enrichment_review: 'true',
+        import_ready: 'false',
+        database_mutation_plan: '',
+      })
+      expect(conflictedMergedRow?.coordinator_review_reasons.split('|')).toContain(
+        'coordinator_policy_conflict',
+      )
+      const conflictReport = csvObjects(
+        await readFile(path.join(mergeDirectory, 'coordinator-conflict-report.csv'), 'utf8'),
+        workflowApi.GOLD_ENRICHMENT_V3_COORDINATOR_CONFLICT_COLUMNS,
+      )
+      expect(conflictReport).toEqual([
+        expect.objectContaining({
+          pmid: '18453348',
+          raw_model_value: rawCoordinatorConflictTopic,
+          automatic_correction_allowed: 'false',
+          resolution_status: 'unresolved',
+          physician_resolved_value: '',
+        }),
+      ])
       const modelRequestedRows = firstMerge.rows.filter(
         (row) => row.model_requests_physician_enrichment_review === 'true',
       )
@@ -2777,6 +2921,25 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
         expect(requiredReviewPmids.has(pmid)).toBe(true)
         expect(mergedByPmid.get(pmid)?.model_requests_physician_enrichment_review).toBe('false')
       }
+      const conflictedReviewRow = review.cohorts.required_review.find(
+        (row) => row.pmid === '18453348',
+      )
+      expect(conflictedReviewRow).toMatchObject({
+        model_topic_ids: rawCoordinatorConflictTopic,
+        topic_ids: '',
+        coordinator_policy_status: 'conflict',
+        coordinator_conflict_fields: 'topic_ids',
+        physician_action: '',
+        physician_topic_ids: '',
+        physician_reviewed: 'false',
+      })
+      expect(conflictedReviewRow?.coordinator_conflict_diagnostics).toContain(
+        'require physician adjudication',
+      )
+      expect(
+        review.cohorts.qc_sample_50.some((row) => row.pmid === '18453348') ||
+          review.cohorts.protocol_acceptance_candidates.some((row) => row.pmid === '18453348'),
+      ).toBe(false)
 
       const reviewReceiptPath = path.join(reviewDirectory, 'review-cohorts.receipt.json')
       const reviewReceiptText = await readFile(reviewReceiptPath, 'utf8')
@@ -2817,6 +2980,15 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
       expect(incompleteGates.qcReviewComplete).toBe(false)
       expect(incompleteGates.directQaFinalAdjudicationComplete).toBe(false)
       expect(incompleteGates.taxonomyUpgradeFinalAdjudicationComplete).toBe(false)
+      expect(incompleteGates.coordinatorConflictsResolved).toBe(false)
+      expect(incomplete.report.coordinatorConflicts).toMatchObject({
+        total: 1,
+        resolved: 0,
+        unresolved: 1,
+        automaticCorrections: 0,
+        gatePassed: false,
+      })
+      expect(incomplete.report.unresolvedCoordinatorConflicts).toBe(1)
       expect(incomplete.report.importRowsCreated).toBe(0)
       expect(incomplete.report.databaseMutationPlan).toBeNull()
       const incompleteQaMetrics = incomplete.report.externalQa as {
@@ -3121,6 +3293,14 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
       }
       expect(ready.report.importReadiness).toBe(true)
       expect(Object.values(readyGates).every(Boolean)).toBe(true)
+      expect(readyGates.coordinatorConflictsResolved).toBe(true)
+      expect(ready.report.coordinatorConflicts).toMatchObject({
+        total: 1,
+        resolved: 1,
+        unresolved: 0,
+        automaticCorrections: 0,
+        gatePassed: true,
+      })
       expect(protocolAcceptance).toMatchObject({
         provided: true,
         authorized: true,
@@ -3129,8 +3309,9 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
         decisionArtifactsBound: true,
       })
       expect(provenance.physician_confirmed_ai_enrichment).toBe(
-        review.cohorts.required_review.length + review.cohorts.qc_sample_50.length,
+        review.cohorts.required_review.length + review.cohorts.qc_sample_50.length - 1,
       )
+      expect(provenance.physician_modified_ai_enrichment).toBe(1)
       expect(provenance.ai_generated_enrichment_qc_accepted).toBe(
         review.cohorts.protocol_acceptance_candidates.length,
       )
