@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
 import { createRebuiltCard } from '@/features/preference-cards/server/rebuild-card'
+import { activeLocales } from '@/i18n/locale'
 
 /**
  * Creating a new card from a reviewed rebuild.
@@ -25,7 +26,16 @@ import { createRebuiltCard } from '@/features/preference-cards/server/rebuild-ca
  * carried back — a plan that moved must be read again, not re-submitted from memory.
  */
 
-const localeSchema = z.string().trim().min(2).max(16)
+/**
+ * The locale enum, not "two to sixteen characters".
+ *
+ * Both the refusal and the success path interpolate this after a slash, so a value such as `/x.co`
+ * produced `//x.co/...` — a protocol-relative external URL — from a schema that accepted it. The
+ * browser cannot submit anything else here, and Next.js checks the server-action origin, but an
+ * open-redirect sink in authenticated request input is a sink. A planned-but-inactive locale is
+ * refused for the same reason as an unknown one: there are no messages for it.
+ */
+const localeSchema = z.enum(activeLocales)
 const idSchema = z.string().uuid()
 
 /** The failures a submitted review can cause, as opposed to reasons a rebuild is not on offer. */
@@ -35,6 +45,7 @@ const submissionErrorCodes: readonly string[] = [
   'source_moved',
   'review_incomplete',
   'not_resolvable',
+  'review_unavailable',
   'write_failed',
 ]
 

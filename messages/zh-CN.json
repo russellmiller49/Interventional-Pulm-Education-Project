@@ -8127,7 +8127,8 @@
         "not_resolvable": "The reviewed selections do not resolve into a card against the target release. Nothing was created.",
         "write_failed": "The new card could not be saved. Nothing was created.",
         "plan_blocked": "This rebuild cannot be planned: the target release expresses a requirement in more than one way, so there is no single requirement to carry a selection onto. Nothing was created, and the release itself has to be corrected first.",
-        "source_moved": "The card this rebuild was taken from has changed or been deleted since the review, so nothing was created."
+        "source_moved": "The card this rebuild was taken from has changed or been deleted since the review, so nothing was created.",
+        "review_unavailable": "构成本次审阅的其中一项比较无法计算，因此没有可审阅的内容，也没有创建任何卡片。"
       },
       "state": {
         "carried_unchanged": "Carried unchanged",
@@ -8169,7 +8170,6 @@
         "custom_not_allowed_by_target": "The newer release does not allow a written-in line for this requirement.",
         "equipment_set_member_unavailable": "A product in this equipment set is not in the catalogue release the target release pins.",
         "equipment_set_role_not_covered": "The equipment set does not cover this requirement’s role.",
-        "equipment_set_coverage_changed": "What this equipment set covers has changed.",
         "conditional_rule_changed": "The rule this include-or-exclude decision was made against has changed, so the earlier answer was to a different question.",
         "compatibility_rejected": "The target release’s compatibility rules reject this selection.",
         "resolution_unresolved": "This requirement resolves to nothing on the new card.",
@@ -8201,7 +8201,28 @@
         "blocking": "Blocking",
         "warning": "Warning",
         "info": "For information"
-      }
+      },
+      "otherHeading": "目标版本的处理结果不同",
+      "otherHelp": "这些条目已经带入，但目标版本对它们的处理不同：组合被拒绝、不再单独准备，或者现在需要准备。创建新卡片前每一项都需要作答。",
+      "presenceMove": "在新卡片上，此条目从{before}变为{after}。",
+      "presence": {
+        "active": "单独准备",
+        "suppressed": "由成套器械覆盖"
+      },
+      "unavailableNotice": "目前无法提供此次重建。构成本次审阅的其中一项比较无法计算，因此没有可审阅的内容，也无法据此创建卡片。",
+      "blocker": {
+        "operational_comparison_unavailable": "无法计算医院当前本地数据对该版本的影响。",
+        "release_comparison_unavailable": "无法计算已锁定版本与当前版本之间的差异。",
+        "target_projection_unavailable": "无法在目标版本下解析新卡片，因此本次审阅无法描述它。"
+      },
+      "provenanceHeading": "本卡片的创建方式",
+      "provenanceHelp": "本卡片由另一张卡片某一确切的已保存状态构建而成，采用较新的版本，并在每一项发生变化的决定都经过审阅之后生成。以下记录在创建卡片时一次写入，此后不可更改。",
+      "provenanceBadge": "经审阅的重建",
+      "provenanceSourceAvailable": "构建自某张仍然存在的卡片的第 {revision} 版。",
+      "provenanceSourceLink": "打开源卡片的历史记录",
+      "provenanceSourceGone": "构建本卡片所依据的卡片此后已被删除，其各版本也随之消失。以下标识符与哈希值仍准确记录了当时审阅的内容，若存在该版本的副本可据此核对；但该版本本身已不可用，也无法由本记录还原。",
+      "provenanceDecisionsHeading": "当时作答的决定",
+      "provenanceDecisionsHelp": "共 {total} 项决定中有 {answered} 项需要作答，其余原样带入。"
     }
   }
 }

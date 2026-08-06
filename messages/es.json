@@ -8127,7 +8127,8 @@
         "not_resolvable": "The reviewed selections do not resolve into a card against the target release. Nothing was created.",
         "write_failed": "The new card could not be saved. Nothing was created.",
         "plan_blocked": "This rebuild cannot be planned: the target release expresses a requirement in more than one way, so there is no single requirement to carry a selection onto. Nothing was created, and the release itself has to be corrected first.",
-        "source_moved": "The card this rebuild was taken from has changed or been deleted since the review, so nothing was created."
+        "source_moved": "The card this rebuild was taken from has changed or been deleted since the review, so nothing was created.",
+        "review_unavailable": "No se pudo calcular una de las comparaciones que componen esta revisión, así que no hay nada que revisar y no se creó nada."
       },
       "state": {
         "carried_unchanged": "Carried unchanged",
@@ -8169,7 +8170,6 @@
         "custom_not_allowed_by_target": "The newer release does not allow a written-in line for this requirement.",
         "equipment_set_member_unavailable": "A product in this equipment set is not in the catalogue release the target release pins.",
         "equipment_set_role_not_covered": "The equipment set does not cover this requirement’s role.",
-        "equipment_set_coverage_changed": "What this equipment set covers has changed.",
         "conditional_rule_changed": "The rule this include-or-exclude decision was made against has changed, so the earlier answer was to a different question.",
         "compatibility_rejected": "The target release’s compatibility rules reject this selection.",
         "resolution_unresolved": "This requirement resolves to nothing on the new card.",
@@ -8201,7 +8201,28 @@
         "blocking": "Blocking",
         "warning": "Warning",
         "info": "For information"
-      }
+      },
+      "otherHeading": "Modificado por la versión de destino",
+      "otherHelp": "Se trasladaron y la versión de destino los resolvió de otra manera: una combinación rechazada, una línea que ya no se prepara o una que ahora sí. Cada una necesita una respuesta antes de crear la nueva tarjeta.",
+      "presenceMove": "En la nueva tarjeta esta línea pasa de {before} a {after}.",
+      "presence": {
+        "active": "se prepara",
+        "suppressed": "incluida en un kit"
+      },
+      "unavailableNotice": "Esta reconstrucción no puede ofrecerse ahora. No se pudo calcular una de las comparaciones que componen la revisión, así que no hay nada que revisar ni tarjeta que crear a partir de ella.",
+      "blocker": {
+        "operational_comparison_unavailable": "No se pudo calcular el efecto de los datos locales actuales del hospital sobre esta revisión.",
+        "release_comparison_unavailable": "No se pudo calcular la diferencia entre la versión fijada y la actual.",
+        "target_projection_unavailable": "La nueva tarjeta no se pudo resolver con la versión de destino, así que la revisión no puede describirla."
+      },
+      "provenanceHeading": "Cómo se creó esta tarjeta",
+      "provenanceHelp": "Esta tarjeta se construyó a partir de un estado guardado exacto de otra tarjeta, con una versión más reciente, después de revisar cada decisión modificada. Lo registrado abajo se escribió una sola vez, al crear la tarjeta, y no puede cambiarse.",
+      "provenanceBadge": "Reconstrucción revisada",
+      "provenanceSourceAvailable": "Construida a partir de la revisión {revision} de una tarjeta que sigue existiendo.",
+      "provenanceSourceLink": "Abrir el historial de la tarjeta de origen",
+      "provenanceSourceGone": "La tarjeta de la que se construyó esta ha sido eliminada, y sus revisiones desaparecieron con ella. Los identificadores y las huellas de abajo siguen diciendo exactamente qué se revisó y pueden comprobarse contra una copia de esa revisión si existe, pero la revisión ya no está disponible y no puede recuperarse a partir de este registro.",
+      "provenanceDecisionsHeading": "Decisiones respondidas en su momento",
+      "provenanceDecisionsHelp": "{answered} de {total} decisiones necesitaron respuesta; el resto se trasladó sin cambios."
     }
   }
 }

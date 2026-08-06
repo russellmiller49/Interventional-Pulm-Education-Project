@@ -17,8 +17,10 @@ import {
   proposeRebuildSelection,
   rebuildPlanHash,
   reviewRebuildAcknowledgements,
+  expectedFinalState,
+  expectedFinalStateHash,
   unanswerableBlockingDecisions,
-  unplannedBlockingConditions,
+  unauthorizedFinalState,
   type CardRebuildPlan,
   type RebuildAcknowledgements,
   type RebuildProbe,
@@ -99,6 +101,20 @@ export type CardRebuildErrorCode =
   | 'module_not_offered'
   | 'modifier_not_offered'
 
+/**
+ * A review input the rebuild cannot be made without.
+ *
+ * Both comparisons and the target projection are hashed into the plan and written into the new
+ * card's provenance as *what was compared*. When one of them failed, the page displayed the error
+ * and then rendered the create form anyway, and the failure hashed identically on resubmission — so
+ * the plan hash still matched and a card was written citing a comparison nobody could have read.
+ * A missing review input is a reason not to offer the action, not a footnote beside it.
+ */
+export type CardRebuildBlocker =
+  | 'operational_comparison_unavailable'
+  | 'release_comparison_unavailable'
+  | 'target_projection_unavailable'
+
 export interface CardRebuildPreparation {
   /** The live card, for its title and for the link back. Never written by this module. */
   record: UserCardRecord
@@ -119,6 +135,8 @@ export interface CardRebuildPreparation {
   /** Hashes of the two comparisons, recorded in the new card's provenance. */
   operationalHash: string
   releaseDiffHash: string
+  /** Empty when the rebuild may be offered. Non-empty hides the form and refuses a direct post. */
+  blockers: CardRebuildBlocker[]
 }
 
 export type CardRebuildPreparationResult =
@@ -449,6 +467,14 @@ export async function prepareCardRebuild(
     probe: createProbe(targetContext.context, target, historical, pinnedInputs.equipmentSets),
   })
 
+  // Everything the review is *of*. A rebuild whose comparison or final projection could not be
+  // computed is not a rebuild anyone can review, so it is refused at the point the control would
+  // have been offered rather than hashed into evidence of a review that could not have happened.
+  const blockers: CardRebuildBlocker[] = []
+  if (!operational.ok) blockers.push('operational_comparison_unavailable')
+  if (!release.ok) blockers.push('release_comparison_unavailable')
+  if (!plan.targetResolution.ok) blockers.push('target_projection_unavailable')
+
   return {
     ok: true,
     preparation: {
@@ -463,6 +489,7 @@ export async function prepareCardRebuild(
       release,
       operationalHash,
       releaseDiffHash,
+      blockers: blockers.sort(),
     },
   }
 }
@@ -492,6 +519,14 @@ export interface CardRebuildProvenance {
   operationalReconciliationHash: string
   authoredReleaseDiffHash: string
   mappingPlanHash: string
+  /**
+   * The post-answer state the reviewed plan and the recorded answers authorized, by hash.
+   *
+   * Provenance recorded the plan and the answers but nothing about the card they were allowed to
+   * produce, so "was this card the one that was reviewed" could only ever be re-derived by a later
+   * reader guessing at the same rules. This is that derivation, made at the moment it was checked.
+   */
+  allowedFinalStateHash: string
   decisions: Array<{
     key: string
     kind: string
@@ -513,6 +548,7 @@ export type CreateRebuiltCardResult =
         | CardRebuildErrorCode
         | 'plan_moved'
         | 'plan_blocked'
+        | 'review_unavailable'
         | 'source_moved'
         | 'review_incomplete'
         | 'not_resolvable'
@@ -589,6 +625,19 @@ export async function createRebuiltCard(
     return { ok: false, code: 'plan_moved', message: PLAN_MOVED_MESSAGE }
   }
 
+  // Checked here as well as in the page, because the page hiding a control has never been a
+  // boundary in this module. A failed comparison hashes deterministically, so the plan hash alone
+  // would let a direct post through with the failure recorded as the thing that was compared.
+  if (preparation.blockers.length > 0) {
+    return {
+      ok: false,
+      code: 'review_unavailable',
+      missing: preparation.blockers,
+      message:
+        'One of the comparisons this review is made of could not be computed, so there is nothing to review and nothing was created.',
+    }
+  }
+
   // Blocking *and* unanswerable: an ambiguous requirement key, where two slots disagree about what
   // one requirement is. There is nothing to acknowledge and no honest card to create, so this is a
   // refusal rather than a decision — checked before the review gate, because a physician should not
@@ -635,22 +684,24 @@ export async function createRebuiltCard(
 
   // The final invariant, over the card that is actually about to be written.
   //
-  // Not a byte comparison against the plan's projection: that projection is of `proposedInputs`, and
-  // `builderInputs` differs from it by exactly the physician's answers, so comparing them refused
-  // every legitimate use of the drop control. Comparing a re-resolution of `proposedInputs` instead
-  // fixed the false positive by comparing a pure function against itself, which could never fail.
+  // Two earlier attempts got this wrong in opposite directions. A byte comparison against the
+  // plan's projection refused every legitimate use of the drop control, because the two differ by
+  // exactly the answers. Re-resolving `proposedInputs` and comparing that instead removed the
+  // false positive by comparing a pure function against itself, which could never fail. A third
+  // compared only blocking warning signatures, which is non-vacuous but accepts a card whose
+  // requirement set, slot ids, roles, presences, selections and readiness have all moved.
   //
-  // What must hold is narrower and actually load-bearing: the finished card may not carry a
-  // **blocking** condition the review did not show. Answers may legitimately introduce warnings — a
-  // dropped selection raises `required_role_unresolved`, which is a warning by design and was
-  // acknowledged — but an unreviewed blocking condition means the card nobody read is the card that
-  // would exist.
-  const unplanned = unplannedBlockingConditions(plan, resolved.card)
-  if (unplanned.length > 0) {
+  // So the allowed state is *derived* from the hashed plan and the validated answers — the answers
+  // can do exactly one thing, which is clear a selection — and the card about to be written is
+  // checked against that. Its hash goes into provenance, so what was authorized is recorded rather
+  // than reconstructed later from the plan and a guess about the answers.
+  const expected = expectedFinalState(plan, acknowledgements as RebuildAcknowledgements)
+  const unauthorized = unauthorizedFinalState(expected, resolved.card)
+  if (unauthorized.length > 0) {
     return {
       ok: false,
       code: 'plan_moved',
-      message: `${PLAN_MOVED_MESSAGE} (${unplanned.join(', ')})`,
+      message: `${PLAN_MOVED_MESSAGE} (${unauthorized.join(', ')})`,
     }
   }
 
@@ -671,6 +722,7 @@ export async function createRebuiltCard(
     operationalReconciliationHash: preparation.operationalHash,
     authoredReleaseDiffHash: preparation.releaseDiffHash,
     mappingPlanHash: preparation.planHash,
+    allowedFinalStateHash: expectedFinalStateHash(expected),
     decisions: plan.decisions.map((decision) => ({
       key: decision.key,
       kind: decision.kind,

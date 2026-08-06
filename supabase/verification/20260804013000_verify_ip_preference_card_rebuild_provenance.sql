@@ -2,17 +2,24 @@
 --
 -- Run once, against the project, immediately after applying that migration.
 --
--- The previous version of this file was not trustworthy and an independent review said so. It
--- inserted both of its synthetic cards as `postgres`, so it never met row-level security or the
--- authenticated insert policy at all; and every negative case was wrapped in `exception when others`,
--- so *any* error counted as the expected one. It could print ALL CHECKS PASSED while the central
--- authenticity boundary was wide open. This version is a role matrix with exact SQLSTATEs.
+-- Two earlier versions of this file were not trustworthy and independent reviews said so. The
+-- first inserted both of its synthetic cards as `postgres`, so it never met row-level security or
+-- the authenticated insert policy at all, and every negative case was wrapped in
+-- `exception when others`, so *any* error counted as the expected one. The second fixed both and
+-- then could not run: its Part 5 provenance object omitted `sourceSnapshotHash`, so the very first
+-- writer call raised `invalid_parameter_value` where the handler expected `no_data_found`, and the
+-- transaction aborted before the positive case, the write-once matrix, or ALL CHECKS PASSED.
+--
+-- This version is a role matrix with exact SQLSTATEs, one complete provenance fixture that every
+-- negative case mutates by exactly one fact, and immediate zero-write counts around every refusal.
 --
 -- WHAT IT ESTABLISHES
 --   Authenticity, not merely immutability. `rebuild_provenance` is evidence that a reviewed rebuild
 --   happened, so what has to be proved is that nothing except one narrow function can write it:
---   not an authenticated user through PostgREST, not the service role through the table, and not a
---   later update by anybody.
+--   not an authenticated user through PostgREST, not the service role through the table, not a
+--   direct superuser-adjacent insert, and not a later update by anybody. And that when the one
+--   function does write it, the document it stores describes the revision it was checked against
+--   rather than an arbitrary object the caller supplied alongside a real tuple.
 --
 -- HOW TO RUN
 --   Paste the whole file into the Supabase SQL editor and execute it as one script. Everything runs
@@ -22,13 +29,16 @@
 --   condition.
 --
 -- HOW IT FAILS
---   Every negative case names the exact SQLSTATE it expects — `23001` (`restrict_violation`) for the
---   guards, `42501` for a policy refusal — and re-raises anything else. There is no `when others`
---   in this file, deliberately: a check that accepts any error is not a check.
+--   Every negative case names the exact SQLSTATE it expects — `23001` (`restrict_violation`) for
+--   the guards, `42501` for a policy refusal, `P0002` (`no_data_found`) for a source that does not
+--   match, `22023` (`invalid_parameter_value`) for a document that does not describe it — and
+--   re-raises anything else. There is no `when others` in this file, deliberately: a check that
+--   accepts any error is not a check.
 --
 --   Run it against a scratch schema whose authenticated insert policy omits the provenance
---   condition, or whose trigger raises a different code, and Part 3 must fail. A verifier that
---   cannot fail is not evidence.
+--   condition, or whose insert guard raises a different code, or whose writer function drops the
+--   document binding, and Part 3, Part 4, or Part 6 must fail. A verifier that cannot fail is not
+--   evidence.
 
 begin;
 
@@ -58,7 +68,11 @@ declare
   owner_name text;
   is_definer boolean;
   config text;
-  acl text;
+  writer oid;
+  acl_row record;
+  grantee_count integer;
+  member_names text;
+  table_name text;
 begin
   select a.atttypid::regtype::text, not a.attnotnull, a.atthasdef
     into data_type, is_nullable, has_default
@@ -100,15 +114,89 @@ begin
        and t.tgtype & 2 = 2 and t.tgtype & 16 = 16
   ) then raise exception 'the before-update write-once guard is missing'; end if;
 
-  -- The writer: a dedicated nologin role that owns one security-definer function with an empty
-  -- search path and an ACL naming only service_role.
-  if not exists (
-    select 1 from pg_roles where rolname = 'ip_preference_card_rebuild_writer' and not rolcanlogin
-  ) then raise exception 'the dedicated writer role is missing or can log in'; end if;
+  -- --- The writer role ------------------------------------------------------------------------
+  --
+  -- `nologin` was the only attribute the previous version established. A role that could bypass
+  -- row-level security, create objects in `public`, or hold write privileges on unrelated tables
+  -- would still satisfy that check while being a far larger thing than "owns one function".
 
-  select r.rolname, p.prosecdef, coalesce(array_to_string(p.proconfig, ','), '<unset>'),
-         coalesce(array_to_string(p.proacl::text[], ','), '<none>')
-    into owner_name, is_definer, config, acl
+  select oid into writer from pg_roles where rolname = 'ip_preference_card_rebuild_writer';
+  if writer is null then raise exception 'the dedicated writer role is missing'; end if;
+
+  if exists (
+    select 1 from pg_roles
+     where oid = writer
+       and (rolcanlogin or rolsuper or rolbypassrls or rolcreatedb or rolcreaterole or rolreplication)
+  ) then
+    raise exception 'the writer role holds a login or administrative attribute';
+  end if;
+
+  -- The temporary `create` needed for `alter function ... owner to` must not have survived it.
+  if has_schema_privilege('ip_preference_card_rebuild_writer', 'public', 'CREATE') then
+    raise exception 'the writer role retained CREATE on schema public';
+  end if;
+  if not has_schema_privilege('ip_preference_card_rebuild_writer', 'public', 'USAGE') then
+    raise exception 'the writer role cannot use schema public, so it cannot reach its own function';
+  end if;
+
+  -- It is a member of nothing. Membership *of* it is expected — that is what let the migration
+  -- role assign ownership — and is named here rather than left open-ended.
+  if exists (select 1 from pg_auth_members where member = writer) then
+    raise exception 'the writer role is a member of another role';
+  end if;
+  select string_agg(r.rolname, ', ' order by r.rolname) into member_names
+    from pg_auth_members m join pg_roles r on r.oid = m.member
+   where m.roleid = writer;
+  if member_names is distinct from current_user::text then
+    raise exception 'roles other than the migration role are members of the writer: %',
+      coalesce(member_names, '<none>');
+  end if;
+
+  -- It owns exactly one function and nothing else at all.
+  if (select count(*) from pg_proc where proowner = writer) <> 1 then
+    raise exception 'the writer role does not own exactly one function';
+  end if;
+  if exists (select 1 from pg_class where relowner = writer)
+     or exists (select 1 from pg_namespace where nspowner = writer)
+     or exists (select 1 from pg_type where typowner = writer)
+     or exists (select 1 from pg_default_acl where defaclrole = writer) then
+    raise exception 'the writer role owns objects other than its one function';
+  end if;
+
+  -- Table privileges: read both, insert into one, and nothing else anywhere.
+  if not has_table_privilege('ip_preference_card_rebuild_writer',
+       'public.ip_user_preference_cards', 'SELECT, INSERT') then
+    raise exception 'the writer role cannot read and insert cards';
+  end if;
+  if has_table_privilege('ip_preference_card_rebuild_writer',
+       'public.ip_user_preference_cards', 'UPDATE')
+     or has_table_privilege('ip_preference_card_rebuild_writer',
+          'public.ip_user_preference_cards', 'DELETE')
+     or has_table_privilege('ip_preference_card_rebuild_writer',
+          'public.ip_user_preference_card_revisions', 'INSERT, UPDATE, DELETE') then
+    raise exception 'the writer role holds a write privilege it does not need';
+  end if;
+  -- Direct grants only, by grantee oid rather than through `has_table_privilege`: the latter also
+  -- answers yes for anything granted to PUBLIC, which would make this fail for a reason that has
+  -- nothing to do with this role.
+  for table_name in
+    select n.nspname || '.' || c.relname
+      from pg_class c
+      join pg_namespace n on n.oid = c.relnamespace
+      cross join lateral aclexplode(c.relacl) a
+     where a.grantee = writer
+       and not (n.nspname = 'public'
+                and c.relname in ('ip_user_preference_cards',
+                                  'ip_user_preference_card_revisions'))
+  loop
+    raise exception 'the writer role holds a direct grant on %, which is outside its one job',
+      table_name;
+  end loop;
+
+  -- --- The writer function --------------------------------------------------------------------
+
+  select r.rolname, p.prosecdef, coalesce(array_to_string(p.proconfig, ','), '<unset>')
+    into owner_name, is_definer, config
     from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
     join pg_roles r on r.oid = p.proowner
@@ -122,14 +210,47 @@ begin
   if config <> 'search_path=' then
     raise exception 'the writer function must pin an empty search_path, found %', config;
   end if;
-  if acl like '%authenticated=X%' or acl like '%anon=X%' then
-    raise exception 'the writer function is executable by an API role: %', acl;
+
+  -- The ACL, by grantee rather than by substring. `like '%anon=X%'` rejected two names and let a
+  -- null ACL — which is PostgreSQL's way of spelling "PUBLIC may execute" — through untouched.
+  if (select proacl from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname = 'public' and p.proname = 'ip_create_rebuilt_preference_card') is null then
+    raise exception 'the writer function has the default ACL, which grants EXECUTE to PUBLIC';
   end if;
-  if acl not like '%service_role=X%' then
-    raise exception 'the writer function is not executable by service_role: %', acl;
+  grantee_count := 0;
+  for acl_row in
+    select coalesce(g.rolname, 'PUBLIC') as grantee, a.privilege_type
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+      cross join lateral aclexplode(p.proacl) a
+      left join pg_roles g on g.oid = a.grantee
+     where n.nspname = 'public' and p.proname = 'ip_create_rebuilt_preference_card'
+  loop
+    if acl_row.grantee not in ('ip_preference_card_rebuild_writer', 'service_role') then
+      raise exception 'the writer function is granted % to %, which is neither its owner nor the service role',
+        acl_row.privilege_type, acl_row.grantee;
+    end if;
+    if acl_row.grantee = 'service_role' then
+      if acl_row.privilege_type <> 'EXECUTE' then
+        raise exception 'service_role holds % on the writer function, expected EXECUTE only',
+          acl_row.privilege_type;
+      end if;
+      grantee_count := grantee_count + 1;
+    end if;
+  end loop;
+  if grantee_count <> 1 then
+    raise exception 'service_role does not hold exactly EXECUTE on the writer function';
+  end if;
+  if has_function_privilege('anon',
+       'public.ip_create_rebuilt_preference_card(uuid, uuid, uuid, text, text, text, text, text, text, jsonb, jsonb, text, text, text, jsonb)',
+       'EXECUTE')
+     or has_function_privilege('authenticated',
+          'public.ip_create_rebuilt_preference_card(uuid, uuid, uuid, text, text, text, text, text, text, jsonb, jsonb, text, text, text, jsonb)',
+          'EXECUTE') then
+    raise exception 'an API role can execute the writer function';
   end if;
 
-  raise notice 'Part 1 passed: column, policy, guards, writer role, ACLs.';
+  raise notice 'Part 1 passed: column, policy, guards, writer role and privileges, function ACL.';
 end;
 $$;
 
@@ -181,6 +302,8 @@ declare
   snapshot jsonb := jsonb_build_object('resolutionProvenance', jsonb_build_object());
   forged jsonb := jsonb_build_object('version', 'ip-cards-rebuild/1');
   created uuid;
+  cards_before bigint;
+  revisions_before bigint;
 begin
   select id into owner_id from auth.users order by created_at limit 1;
   if owner_id is null then
@@ -198,7 +321,9 @@ begin
     raise exception 'auth.uid() is %, expected %', auth.uid(), owner_id;
   end if;
 
-  -- (a) An ordinary create still works, with provenance omitted entirely.
+  -- (a) An ordinary create still works, with provenance omitted entirely. This also proves the
+  -- table privilege and the policy are satisfied for this role, which is what makes (b)'s exact
+  -- SQLSTATE meaningful rather than lucky.
   insert into public.ip_user_preference_cards
     (user_id, title, procedure_code, scenario_id, status, builder_inputs, card_snapshot,
      snapshot_hash, engine_version, catalog_import_id)
@@ -207,8 +332,19 @@ begin
      repeat('a', 64), 'verify', 'verify')
   returning id into created;
   if created is null then raise exception 'an ordinary authenticated insert did not succeed'; end if;
+  if (select rebuild_provenance from public.ip_user_preference_cards where id = created)
+     is not null then
+    raise exception 'an ordinary create acquired provenance from somewhere';
+  end if;
 
-  -- (b) The same insert carrying provenance must be refused, and by the guard rather than by luck.
+  -- (b) The same insert carrying provenance must be refused by the *guard*, exactly.
+  --
+  -- Not "23001 or 42501". PostgreSQL runs `BEFORE` row triggers before the policy's `WITH CHECK`,
+  -- and (a) has just proved this role satisfies the policy for an otherwise identical row, so this
+  -- statement must reach the trigger. Accepting `42501` here would let a broken guard pass on the
+  -- strength of a policy refusal — and the policy is only the first of the three layers.
+  cards_before := (select count(*) from public.ip_user_preference_cards);
+  revisions_before := (select count(*) from public.ip_user_preference_card_revisions);
   begin
     insert into public.ip_user_preference_cards
       (user_id, title, procedure_code, scenario_id, status, builder_inputs, card_snapshot,
@@ -218,9 +354,12 @@ begin
        repeat('b', 64), 'verify', 'verify', forged);
     raise exception 'an authenticated user forged rebuild_provenance at INSERT';
   exception
-    when restrict_violation then null;   -- the before-insert guard
-    when insufficient_privilege then null; -- or the row-level policy, either is the boundary
+    when restrict_violation then null;   -- the before-insert guard, and only it
   end;
+  if (select count(*) from public.ip_user_preference_cards) <> cards_before
+     or (select count(*) from public.ip_user_preference_card_revisions) <> revisions_before then
+    raise exception 'the refused authenticated forgery still wrote rows';
+  end if;
 
   -- (c) Inserting for somebody else is still refused, provenance or not.
   begin
@@ -235,24 +374,55 @@ begin
     when insufficient_privilege then null;
   end;
 
+  -- (d) An authenticated update cannot add provenance to its own card either.
+  begin
+    update public.ip_user_preference_cards
+       set rebuild_provenance = forged where id = created;
+    raise exception 'an authenticated user added provenance by UPDATE';
+  exception
+    when restrict_violation then null;
+  end;
+
+  begin
+    perform public.ip_create_rebuilt_preference_card(
+      owner_id, created, created, repeat('a', 64), null::text,
+      'verify rpc', null::text, 'VERIFY_ONLY', 'verify-only',
+      '{}'::jsonb, snapshot, repeat('b', 64), 'verify', 'verify', forged);
+    raise exception 'an authenticated user executed the trusted writer function';
+  exception
+    when insufficient_privilege then null;
+  end;
+
+  if (select count(*) from public.ip_user_preference_cards) <> cards_before then
+    raise exception 'a refused authenticated statement wrote a card';
+  end if;
+
   reset role;
-  raise notice 'Part 3 passed: authenticated cannot forge provenance, and ordinary creates work.';
+  raise notice 'Part 3 passed: authenticated cannot forge, update, or call the writer.';
 end;
 $$;
 
 -- =============================================================================================
--- Part 4 — the service role cannot forge provenance through the table either.
+-- Part 4 — neither the service role nor an ordinary owner-level session can forge it.
 -- =============================================================================================
 --
--- `service_role` has bypassrls, so no policy constrains it. The before-insert guard must.
+-- `service_role` has bypassrls, so no policy constrains it. `postgres` is the migration role and
+-- owns the table. Neither is the writer role, and the guard is written against `current_user`
+-- rather than against a policy, so both must be refused.
 
 do $$
 declare
   owner_id uuid;
   snapshot jsonb := jsonb_build_object('resolutionProvenance', jsonb_build_object());
   forged jsonb := jsonb_build_object('version', 'ip-cards-rebuild/1');
+  ordinary_id uuid;
+  cards_before bigint;
 begin
   select id into owner_id from auth.users order by created_at limit 1;
+  select id into ordinary_id
+    from public.ip_user_preference_cards where title = 'verify ordinary' limit 1;
+  cards_before := (select count(*) from public.ip_user_preference_cards);
+
   set local role service_role;
   if current_user <> 'service_role' then
     raise exception 'Part 4 is not running as service_role, but as %', current_user;
@@ -270,25 +440,67 @@ begin
     when restrict_violation then null;
   end;
 
+  -- The service key can reach the table for ordinary work; it still cannot add provenance to a
+  -- card that was not rebuilt.
+  begin
+    update public.ip_user_preference_cards
+       set rebuild_provenance = forged where id = ordinary_id;
+    raise exception 'service_role added provenance to an existing card by UPDATE';
+  exception
+    when restrict_violation then null;
+  end;
+
   reset role;
-  raise notice 'Part 4 passed: possessing the service key does not write provenance.';
+
+  -- And the migration role itself, which owns the table, is not exempt: the guard tests
+  -- `current_user`, not a policy, so table ownership buys nothing here.
+  begin
+    insert into public.ip_user_preference_cards
+      (user_id, title, procedure_code, scenario_id, status, builder_inputs, card_snapshot,
+       snapshot_hash, engine_version, catalog_import_id, rebuild_provenance)
+    values
+      (owner_id, 'verify postgres forged', 'VERIFY_ONLY', 'verify-only', 'draft', '{}'::jsonb,
+       snapshot, repeat('9', 64), 'verify', 'verify', forged);
+    raise exception 'the table owner forged rebuild_provenance through a direct table insert';
+  exception
+    when restrict_violation then null;
+  end;
+
+  if (select count(*) from public.ip_user_preference_cards) <> cards_before then
+    raise exception 'a refused privileged insert still wrote a card';
+  end if;
+
+  raise notice 'Part 4 passed: neither the service key nor table ownership writes provenance.';
 end;
 $$;
 
 -- =============================================================================================
--- Part 5 — the trusted writer, and its source recheck.
+-- Part 5 — the trusted writer, its source recheck, and its document binding.
 -- =============================================================================================
+--
+-- One complete, internally consistent provenance object is built first. Every negative case below
+-- takes that object and changes exactly the one fact it is testing, so a refusal proves something
+-- about that fact rather than about a fixture that was never valid to begin with.
 
 do $$
 declare
   owner_id uuid;
   source_id uuid;
+  other_id uuid;
   source_revision uuid;
+  other_revision uuid;
   source_hash text := repeat('e', 64);
+  other_hash text := repeat('7', 64);
+  release_id text := 'release-verify-v1';
+  snapshot jsonb := jsonb_build_object('resolutionProvenance', jsonb_build_object());
   created uuid;
   source_before text;
   revisions_before text;
   provenance jsonb;
+  case_row record;
+  cards_at bigint;
+  revisions_at bigint;
+  state text;
 begin
   select id into owner_id from auth.users order by created_at limit 1;
 
@@ -298,58 +510,149 @@ begin
      snapshot_hash, engine_version, catalog_import_id)
   values
     (owner_id, 'verify source', 'VERIFY_ONLY', 'verify-only', 'draft',
-     jsonb_build_object('releaseBundleId', 'release-verify-v1'),
-     jsonb_build_object('resolutionProvenance', jsonb_build_object()),
+     jsonb_build_object('releaseBundleId', release_id), snapshot,
      source_hash, 'verify', 'verify')
   returning id into source_id;
+
+  -- A second real card, so "wrong card" and "wrong revision" name existing rows rather than
+  -- invented uuids. A join that fails for a nonexistent id proves much less than one that fails
+  -- for a real id belonging to a different card.
+  insert into public.ip_user_preference_cards
+    (user_id, title, procedure_code, scenario_id, status, builder_inputs, card_snapshot,
+     snapshot_hash, engine_version, catalog_import_id)
+  values
+    (owner_id, 'verify source two', 'VERIFY_ONLY', 'verify-only', 'draft',
+     jsonb_build_object('releaseBundleId', release_id), snapshot,
+     other_hash, 'verify', 'verify')
+  returning id into other_id;
 
   select id into source_revision
     from public.ip_user_preference_card_revisions
    where card_id = source_id order by revision_number desc limit 1;
-  if source_revision is null then raise exception 'the append trigger wrote no source revision'; end if;
+  select id into other_revision
+    from public.ip_user_preference_card_revisions
+   where card_id = other_id order by revision_number desc limit 1;
+  if source_revision is null or other_revision is null then
+    raise exception 'the append trigger wrote no source revision';
+  end if;
+  if (select revision_number from public.ip_user_preference_card_revisions where id = source_revision)
+     <> 1 then
+    raise exception 'the source revision is not revision 1';
+  end if;
 
   source_before := md5((select c.*::text from public.ip_user_preference_cards c where c.id = source_id));
   revisions_before := md5(coalesce((
     select string_agg(md5(r.*::text), '|' order by r.id)
       from public.ip_user_preference_card_revisions r where r.card_id = source_id), ''));
 
+  -- The complete fixture: every field the function binds, agreeing with the revision row. The
+  -- nullable hashes are explicit JSON nulls rather than omitted keys, because an omitted key would
+  -- compare null-to-null against a null column and read as agreement about a claim never made.
   provenance := jsonb_build_object(
     'version', 'ip-cards-rebuild/1',
     'sourceCardId', source_id,
-    'sourceRevisionId', source_revision);
+    'sourceRevisionId', source_revision,
+    'sourceSnapshotHash', source_hash,
+    'sourceReleaseBundleId', release_id,
+    'sourceRevisionNumber', 1)
+    || jsonb_build_object('sourceSnapshotIntegrityHash', null::text)
+    || jsonb_build_object('sourceResolvedContentHash', null::text);
 
   set local role service_role;
 
-  -- (a) A payload naming a revision that does not match must write nothing.
-  begin
-    perform public.ip_create_rebuilt_preference_card(
-      owner_id, source_id, source_revision, repeat('0', 64), 'release-verify-v1',
-      'verify rebuilt', null, 'VERIFY_ONLY', 'verify-only',
-      '{}'::jsonb, jsonb_build_object('resolutionProvenance', jsonb_build_object()),
-      repeat('f', 64), 'verify', 'verify', provenance);
-    raise exception 'the writer accepted a payload that disagrees with the stored revision';
-  exception
-    when no_data_found then null;
-  end;
+  for case_row in
+    select * from (values
+      -- label, owner, card, revision, snapshot hash, release, document, expected SQLSTATE
+      ('a stale snapshot hash',
+       owner_id, source_id, source_revision, repeat('0', 64), release_id,
+       provenance || jsonb_build_object('sourceSnapshotHash', repeat('0', 64)), 'P0002'),
+      ('a different owner',
+       gen_random_uuid(), source_id, source_revision, source_hash, release_id,
+       provenance, 'P0002'),
+      ('another card''s id',
+       owner_id, other_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('sourceCardId', other_id), 'P0002'),
+      ('another card''s revision',
+       owner_id, source_id, other_revision, source_hash, release_id,
+       provenance || jsonb_build_object('sourceRevisionId', other_revision), 'P0002'),
+      ('a release the revision does not pin',
+       owner_id, source_id, source_revision, source_hash, 'release-verify-v2',
+       provenance || jsonb_build_object('sourceReleaseBundleId', 'release-verify-v2'), 'P0002'),
+      ('a revision that does not exist',
+       owner_id, source_id, '00000000-0000-4000-8000-0000000000ff'::uuid, source_hash, release_id,
+       provenance || jsonb_build_object('sourceRevisionId',
+                                        '00000000-0000-4000-8000-0000000000ff'), 'P0002'),
+      -- The document, not the arguments. One real tuple satisfies the join; the evidence lies.
+      ('a document naming a different card than the call',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('sourceCardId', other_id), '22023'),
+      ('a document naming a different revision than the call',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('sourceRevisionId', other_revision), '22023'),
+      ('a document naming a different snapshot hash than the call',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('sourceSnapshotHash', repeat('1', 64)), '22023'),
+      ('a document naming a different release than the call',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('sourceReleaseBundleId', 'release-verify-v9'), '22023'),
+      -- Facts the revision row knows and the arguments do not carry.
+      ('a document fabricating the revision number',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('sourceRevisionNumber', 7), 'P0002'),
+      ('a document fabricating the snapshot integrity hash',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('sourceSnapshotIntegrityHash', repeat('2', 64)), 'P0002'),
+      ('a document fabricating the resolved content hash',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('sourceResolvedContentHash', repeat('3', 64)), 'P0002'),
+      -- Shape.
+      ('a document at an unknown version',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('version', 'ip-cards-rebuild/2'), '22023'),
+      ('a document with no version',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance - 'version', '22023'),
+      ('a document with the revision number as a string',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('sourceRevisionNumber', '1'), '22023'),
+      ('a document omitting a nullable hash instead of stating it',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance - 'sourceSnapshotIntegrityHash', '22023'),
+      ('a document that is not an object',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       '[]'::jsonb, '22023')
+    ) as t(label, p_owner, p_card, p_revision, p_hash, p_release, p_document, expected)
+  loop
+    cards_at := (select count(*) from public.ip_user_preference_cards);
+    revisions_at := (select count(*) from public.ip_user_preference_card_revisions);
+    begin
+      perform public.ip_create_rebuilt_preference_card(
+        case_row.p_owner, case_row.p_card, case_row.p_revision, case_row.p_hash, case_row.p_release,
+        'verify rejected', null::text, 'VERIFY_ONLY', 'verify-only',
+        '{}'::jsonb, snapshot, repeat('f', 64), 'verify', 'verify', case_row.p_document);
+      raise exception 'the writer accepted %', case_row.label;
+    exception
+      when no_data_found or invalid_parameter_value then
+        get stacked diagnostics state = returned_sqlstate;
+        if state <> case_row.expected then
+          raise exception 'case "%" raised % but must raise %',
+            case_row.label, state, case_row.expected;
+        end if;
+    end;
+    if (select count(*) from public.ip_user_preference_cards) <> cards_at
+       or (select count(*) from public.ip_user_preference_card_revisions) <> revisions_at then
+      raise exception 'the refused case "%" still wrote rows', case_row.label;
+    end if;
+  end loop;
 
-  -- (b) A payload naming another owner must write nothing.
-  begin
-    perform public.ip_create_rebuilt_preference_card(
-      gen_random_uuid(), source_id, source_revision, source_hash, 'release-verify-v1',
-      'verify rebuilt', null, 'VERIFY_ONLY', 'verify-only',
-      '{}'::jsonb, jsonb_build_object('resolutionProvenance', jsonb_build_object()),
-      repeat('f', 64), 'verify', 'verify', provenance);
-    raise exception 'the writer accepted a payload naming a different owner';
-  exception
-    when no_data_found then null;
-  end;
-
-  -- (c) The correct payload succeeds, exactly once.
+  -- The correct payload succeeds, exactly once. That it succeeds *at all* is the proof that
+  -- `current_user` inside this `security definer` function is the writer role: the same row
+  -- refused in Part 4 as `service_role` and as the table owner passes here, and the only thing
+  -- that differs is which role the insert guard sees.
   created := public.ip_create_rebuilt_preference_card(
-    owner_id, source_id, source_revision, source_hash, 'release-verify-v1',
-    'verify rebuilt', null, 'VERIFY_ONLY', 'verify-only',
-    '{}'::jsonb, jsonb_build_object('resolutionProvenance', jsonb_build_object()),
-    repeat('f', 64), 'verify', 'verify', provenance);
+    owner_id, source_id, source_revision, source_hash, release_id,
+    'verify rebuilt', null::text, 'VERIFY_ONLY', 'verify-only',
+    '{}'::jsonb, snapshot, repeat('f', 64), 'verify', 'verify', provenance);
   if created is null then raise exception 'the writer did not create a card'; end if;
 
   reset role;
@@ -372,6 +675,10 @@ begin
   if (select count(*) from public.ip_user_preference_card_revisions where card_id = created) <> 1 then
     raise exception 'the rebuilt card did not get exactly one revision';
   end if;
+  if (select revision_number from public.ip_user_preference_card_revisions where card_id = created)
+     <> 1 then
+    raise exception 'the rebuilt card''s first revision is not numbered 1';
+  end if;
 
   -- The source is byte-identical.
   if md5((select c.*::text from public.ip_user_preference_cards c where c.id = source_id))
@@ -384,7 +691,7 @@ begin
     raise exception 'the source revisions changed during the rebuild';
   end if;
 
-  raise notice 'Part 5 passed: the trusted writer creates one draft and re-derives its source.';
+  raise notice 'Part 5 passed: 18 refusals with exact codes and zero writes, then one draft created.';
 end;
 $$;
 
@@ -396,10 +703,13 @@ do $$
 declare
   rebuilt_id uuid;
   ordinary_id uuid;
+  duplicate_id uuid;
   provenance jsonb;
   original_provenance jsonb;
+  revisions_before bigint;
+  owner_id uuid;
 begin
-  select id, rebuild_provenance into rebuilt_id, original_provenance
+  select id, rebuild_provenance, user_id into rebuilt_id, original_provenance, owner_id
     from public.ip_user_preference_cards
    where rebuild_provenance is not null and title = 'verify rebuilt' limit 1;
   select id into ordinary_id
@@ -427,7 +737,7 @@ begin
     raise exception 'a card that was not rebuilt was given provenance';
   exception when restrict_violation then null; end;
 
-  -- Ordinary operations still work, and leave provenance where it was.
+  -- Ordinary metadata operations still work, and leave provenance where it was.
   update public.ip_user_preference_cards set title = 'verify rebuilt, renamed' where id = rebuilt_id;
   update public.ip_user_preference_cards set share_enabled = true where id = rebuilt_id;
   update public.ip_user_preference_cards set status = 'final' where id = rebuilt_id;
@@ -437,7 +747,40 @@ begin
     raise exception 'an ordinary update disturbed provenance';
   end if;
 
-  raise notice 'Part 6 passed: write-once in all three directions; ordinary updates unaffected.';
+  -- A genuine content edit: the card says something different, so a revision is appended and
+  -- `updated_at` moves. Provenance describes how the card came to exist and must survive that
+  -- unchanged — this is the case a write-once trigger could plausibly have broken.
+  revisions_before := (select count(*) from public.ip_user_preference_card_revisions
+                        where card_id = rebuilt_id);
+  update public.ip_user_preference_cards
+     set card_snapshot = jsonb_build_object('resolutionProvenance', jsonb_build_object(),
+                                            'edited', true),
+         snapshot_hash = repeat('5', 64)
+   where id = rebuilt_id;
+  if (select count(*) from public.ip_user_preference_card_revisions where card_id = rebuilt_id)
+     <> revisions_before + 1 then
+    raise exception 'a content edit on a rebuilt card did not append a revision';
+  end if;
+  if (select rebuild_provenance from public.ip_user_preference_cards where id = rebuilt_id)
+     is distinct from original_provenance then
+    raise exception 'a content edit disturbed provenance';
+  end if;
+
+  -- Duplicating a rebuilt card copies its content through the ordinary insert path, which never
+  -- names this column — so the copy is not itself a rebuild and must say so by carrying null.
+  insert into public.ip_user_preference_cards
+    (user_id, title, procedure_code, scenario_id, status, builder_inputs, card_snapshot,
+     snapshot_hash, engine_version, catalog_import_id)
+  select user_id, 'verify duplicate', procedure_code, scenario_id, 'draft', builder_inputs,
+         card_snapshot, repeat('6', 64), engine_version, catalog_import_id
+    from public.ip_user_preference_cards where id = rebuilt_id
+  returning id into duplicate_id;
+  if (select rebuild_provenance from public.ip_user_preference_cards where id = duplicate_id)
+     is not null then
+    raise exception 'a duplicate of a rebuilt card inherited its provenance';
+  end if;
+
+  raise notice 'Part 6 passed: write-once in all three directions; edits and duplicates behave.';
 end;
 $$;
 

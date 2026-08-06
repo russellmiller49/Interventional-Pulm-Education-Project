@@ -182,11 +182,35 @@ Three answers, and deliberately no fourth that means "all of the above":
 - `dropped` — do not carry it. Offered on requirements and on nothing else.
 - `acknowledged_unresolved` — the new card will not have this, and that has been read.
 
+What a given decision may be answered with comes from `allowedAcknowledgements`, and nothing else
+reads it a second way. Two cases are worth naming because both were once wrong:
+
+- A **carried deliberate blank** — the source left the requirement empty on purpose and the target
+  changed it — is offered `acknowledged_unresolved` alone. There is no product to confirm and none to
+  drop, and offering those two asked the physician to affirm or discard something that does not
+  exist, then wrote whichever they chose into immutable provenance as the answer they gave.
+- A decision **promoted by the final-resolution pass** — carried cleanly by the mapping, then
+  rejected by the target release — keeps whatever state it had, so the review interface partitions
+  decisions on `requiresExplicitConfirmation` rather than on state. Grouping by state left promoted
+  decisions with no control anywhere on the page: the form submitted without the answer, the server
+  refused with `review_incomplete`, and the re-render offered nothing new to answer.
+
 `dropped` is a requirement-only answer because a requirement's selection is the only thing an answer
 can actually change. Turning a module off changes which requirements exist, which changes the plan —
 so the composition is an _input_ to planning, and offering it as an answer would be offering a
 control that quietly did nothing. The composition of the new draft is changed in the builder, where
 changing a composition is what the interface is for.
+
+### A review whose inputs could not be computed is not offered
+
+Both reconciliation comparisons and the target projection are hashed into the plan and written into
+the new card's provenance as _what was compared_. When one of them fails, the rebuild is not offered
+at all: `prepareCardRebuild` returns a `blockers` list, the page renders the explanation instead of
+the form, and `createRebuiltCard` refuses a direct post with `review_unavailable` and writes nothing.
+
+Displaying the failure beside a working create button was not enough. A failed comparison hashes
+deterministically, so the plan hash still matched on submit and a card was written citing a
+comparison nobody could have read.
 
 **The rebuild deliberately hosts no product picker.** A blocking requirement is acknowledged, not
 filled in, and the new draft opens in the builder to be completed. Duplicating the selection UI here
@@ -233,6 +257,30 @@ Proved in `card-rebuild-plan.test.ts` (37 tests) and `card-rebuild.test.ts` (22 
 inputs hash identically, a moved probe answer moves the hash, a tampered `proposedInputs` moves the
 hash, and a submitted hash that does not match is refused with `plan_moved` and writes nothing.
 
+### The allowed post-answer state
+
+The plan hash says the server computed the same plan the physician answered. It does not say the
+card about to be written is one that plan and those answers authorize, and this gate took four
+attempts to state correctly:
+
+1. a byte comparison against the plan's projection — refused every legitimate `dropped`, because the
+   two differ by exactly the answers;
+2. a re-resolution of `proposedInputs` compared to that same projection — a pure function compared
+   against itself, which could not fail while three comments called it the last line of defence;
+3. new blocking warning signatures only — non-vacuous, and it accepts a card whose requirement set,
+   slot ids, roles, presences, selections, resolution states and readiness have all moved.
+
+What is there now derives the allowed state instead. An answer can do exactly one thing — `dropped`
+clears a selection; `confirmed` and `acknowledged_unresolved` change nothing — so
+`expectedFinalState` is the reviewed projection with the dropped selections cleared, and
+`unauthorizedFinalState` checks the card about to be written against it, naming every axis that
+moved. With no drop it is exact equality, warning for warning. A drop relaxes three things and only
+three, each because a drop can cause it and nothing else can: presence may _lift_ (clearing a
+selection removes a kit, which can only un-suppress) and never fall; compatibility may relax
+(removing one half of a pair can only stop a rule matching) and never fail; resolution state,
+readiness and nonblocking warnings may move, which is what the physician was told the answer would
+do. The hash of that derived state goes into provenance as `allowedFinalStateHash`.
+
 ## 6. What the new card is
 
 A create, not a copy. `createRebuiltCard` names no id, no share token, no `share_enabled`, and no
@@ -251,6 +299,10 @@ is precisely what a rebuild must not do.
 that creates the card and never again. It names the source card and revision, both releases and
 their definition hashes, the four source hashes, the hashes of the two reconciliation comparisons and
 of the mapping plan, and one entry per decision with the answer it actually got.
+
+It also records `allowedFinalStateHash` — the post-answer state the plan and the answers authorized,
+derived at the moment it was checked, so a later reader is not left re-deriving it from the plan and
+a guess about the rules.
 
 It is **write-once**, enforced by a `before update` trigger that refuses any change including
 null → value, so a card that was not created by a rebuild cannot be given a rebuild's provenance
@@ -277,6 +329,10 @@ nineteenth column.
 | Requested module or modifier the target does not offer | `module_` / `modifier_not_offered`       |
 | Submitted plan hash does not match the recomputed one  | `plan_moved`, nothing written            |
 | A decision needing an answer did not get one           | `review_incomplete`, nothing written     |
+| A comparison or the target projection could not run    | `review_unavailable`, nothing written    |
+| Two target slots claim one requirement key             | `plan_blocked`, nothing written          |
+| The written card is not one the answers authorize      | `plan_moved`, nothing written            |
+| Two stored equipment sets share an id                  | `builder_inputs_unavailable`             |
 
 Every one leaves the source card fully usable. The route renders an explanation rather than an error,
 because a card that cannot be rebuilt is not a broken card.
@@ -321,9 +377,27 @@ Three layers now stand between a caller and a provenance-bearing row:
 always writes `status = 'draft'`, never accepts a share token, leaves sharing and identity to column
 defaults, and re-derives from the database every source fact it can — that the revision exists,
 belongs to the named card, belongs to the named owner, and still carries the hashes and release the
-provenance claims. The recheck and the insert are **one statement**, which is what closes the
-validation-to-insert race: there is no window between "the source was verified" and "the row was
-written".
+provenance claims. Every one of those facts is bound to the **stored document**, not merely to the
+call's own arguments: card id, revision id, owner, snapshot hash, release bundle, revision number,
+snapshot integrity hash and resolved content hash all have to agree with the revision row. Binding
+only the arguments authenticated the _call_ and not the evidence — one real tuple satisfied the join
+while a fabricated revision number or hash was frozen into a write-once column.
+
+One field is deliberately **not** database-authenticated and says so rather than being implied to be:
+`sourcePrintDocumentHash` is derived in TypeScript from the integrity hash and the four printed
+columns and is not stored on the revision. Its inputs are bound; the digest itself is an application
+claim. Re-deriving it in SQL would mean a second canonical-JSON SHA-256 implementation inside
+PL/pgSQL, which is exactly the kind of second answer this module avoids.
+
+The ownership transfer needs one more thing than membership of the new owner role: PostgreSQL
+requires the **new owner** to hold `create` on the function's schema, and the managed migration role
+is `createrole` but not `rolsuper`, so the superuser exception does not apply. The migration grants
+that privilege for exactly the `alter function ... owner to` statement and revokes it immediately —
+the writer exists to own one function, not to be a schema owner. Without it the statement fails and
+the whole transaction rolls back with nothing installed. The recheck and the insert are **one statement**, which removes the
+application-level gap between "the source was verified" and "the row was written". It is not a lock:
+the residual same-statement window, and why the state it can leave is one the design already allows,
+is in [Source deletion is allowed, and leaves a tombstone](#source-deletion-is-allowed-and-leaves-a-tombstone).
 
 The application keeps the authority split that makes this worth having. Every owner-scoped read —
 source card, source revision, current release, plan, review, final resolve — runs on the
@@ -357,9 +431,16 @@ is exactly the state a later deletion produces anyway, and which this section do
 What survives on the rebuilt card is the immutable record — source card id, revision id, both
 releases, all four source hashes, the comparison hashes, the plan hash and every decision. That is a
 **hash-addressed tombstone**: enough to say exactly what was reviewed and to verify it against a copy
-of the revision if one exists, and not enough to reconstruct the revision itself. The interface must
-not claim otherwise; where the source is gone it says the revision is no longer available and shows
-the recorded hashes and decisions rather than pretending they can be followed.
+of the revision if one exists, and not enough to reconstruct the revision itself.
+
+The card page says exactly that.
+[`CardRebuildProvenanceView`](../../src/features/preference-cards/components/CardRebuildProvenanceView.tsx)
+identifies a rebuilt card, links back to the source card's history while it is there, and once it is
+gone says the revision is no longer available and cannot be recovered from this record — showing the
+retained identifiers, hashes and answered decisions instead of a link that 404s. `loadUserCard`
+reads the column through a runtime schema rather than casting it: the column is _authentic_, which is
+not the same as well-typed, and a document written by an older version of this code must render as an
+ordinary card rather than throwing.
 
 ## 11. The review shows the comparisons, not their digests
 
@@ -388,10 +469,37 @@ Apply it through the Supabase MCP migration action **from the primary checkout**
 `supabase db push`, because this project's local and remote migration histories have diverged. The
 rollback rehearsal is not optional and comes first:
 `supabase/verification/20260804013000_verify_ip_preference_card_rebuild_provenance.sql` reads only,
-wraps itself in `begin`/`rollback`, and proves the write-once rule _behaviourally_ — it creates a
-rebuilt card and an ordinary one, attempts all three forbidden provenance updates, requires every one
-to fail, and then requires an ordinary rename to still apply. A trigger that exists and a trigger
-that fires are different facts, and only the second is the guarantee.
+wraps itself in `begin`/`rollback`, and proves the boundary _behaviourally_ rather than structurally.
+It is a role matrix with exact SQLSTATEs and no `when others` anywhere: `authenticated` through
+PostgREST with a JWT subject, `service_role` with its `bypassrls`, and the table-owning migration
+role are each required to fail at the guard with `23001` — not "`23001` or `42501`", because
+`BEFORE` row triggers run before the policy's `WITH CHECK` and the preceding ordinary insert proves
+the policy is satisfied for an otherwise identical row. It builds **one complete, internally
+consistent provenance fixture** and then mutates exactly one fact per case across eighteen refusals —
+stale hash, wrong owner, another card's id, another card's revision, a release the revision does not
+pin, a document that disagrees with its own arguments, a document that fabricates the revision number
+or either nullable hash, an unknown version, an omitted nullable key — each with immediate
+before/after card and revision counts proving zero writes. Only then does the correct payload
+succeed, which is also the proof that `current_user` inside the `security definer` function is the
+writer role: the same row that Part 4 refused as `service_role` and as the table owner passes here,
+and the only thing that differs is which role the guard sees. It also asserts the role holds no
+`bypassrls`, no superuser or `createrole` attribute, no residual schema `create`, no membership, no
+ownership beyond its one function and no direct grant on any other table; the function ACL is read by
+grantee through `aclexplode` rather than by substring, so `PUBLIC` and any extra grantee are rejected
+and a null ACL — PostgreSQL's way of spelling "PUBLIC may execute" — cannot pass.
+
+An earlier version of this verifier could not run at all: its Part 5 provenance object omitted
+`sourceSnapshotHash`, so the first writer call raised `invalid_parameter_value` where the handler
+expected `no_data_found`, and the transaction aborted before the positive case, the write-once matrix
+or `ALL CHECKS PASSED`. That is why the fixture completeness is now pinned by
+`migration-contract.test.ts` as well.
+
+Note what the repository can and cannot establish about this file. The contract tests read the SQL;
+they do not execute it, and nothing in this branch has been run against a database. Applying the
+migration to an isolated database whose migration role matches managed Supabase — `CREATEROLE`,
+non-superuser, database owner — running the whole verifier as one script, and then deliberately
+breaking the insert guard, the RPC source binding and the ACL in three separate scratch runs to prove
+it fails each one, is rehearsal work and has not been done.
 
 ## Commands
 

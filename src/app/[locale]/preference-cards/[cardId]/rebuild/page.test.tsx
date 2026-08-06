@@ -64,6 +64,7 @@ function preparation(): CardRebuildPreparationResult {
         editable: true,
         card: {} as never,
         builderInputs: null,
+        rebuildProvenance: null,
       },
       revision: {
         id: REVISION_ID,
@@ -248,14 +249,27 @@ function preparation(): CardRebuildPreparationResult {
       },
       operationalHash: '2'.repeat(64),
       releaseDiffHash: '3'.repeat(64),
+      blockers: [],
     },
   }
+}
+
+/** Deep-merges nothing; callers replace whole branches, which is all these tests need. */
+function preparationWith(
+  patch: (base: Extract<CardRebuildPreparationResult, { ok: true }>['preparation']) => void,
+): CardRebuildPreparationResult {
+  const built = preparation()
+  if (!built.ok) throw new Error('fixture must be ok')
+  patch(built.preparation)
+  return built
 }
 
 async function renderPage(
   searchParams: Record<string, string> = { revision: REVISION_ID },
   cardId = CARD_ID,
+  prepared?: CardRebuildPreparationResult,
 ) {
+  if (prepared) prepareCardRebuild.mockResolvedValue(prepared)
   const ui = await RebuildPreferenceCardPage({
     params: Promise.resolve({ locale: 'en', cardId }),
     searchParams: Promise.resolve(searchParams),
@@ -391,4 +405,93 @@ it('shows why a submitted review was refused, and keeps the decisions on screen'
     screen.getByText(/has to be answered before a new card can be created/i),
   ).toBeInTheDocument()
   expect(screen.getAllByText('FIXTURE_BACKUP_SCOPE').length).toBeGreaterThan(0)
+})
+
+it('gives every promoted decision a control, whatever its state', async () => {
+  // The deadlock this test exists for: the final-resolution pass promotes a decision the target
+  // rejected, its state stays `carried_unchanged` (or becomes a nonblocking `incompatible`), and
+  // the page grouped by state — so neither appeared anywhere with a control. The form submitted
+  // without the answer, came back `review_incomplete`, and re-rendered with nothing to answer.
+  const { container } = await renderPage(
+    { revision: REVISION_ID },
+    CARD_ID,
+    preparationWith((preparation) => {
+      const promoted = preparation.plan.decisions.find(
+        (decision) => decision.key === 'requirement:FIXTURE_PRIMARY_SCOPE',
+      )!
+      if (promoted.kind !== 'requirement') throw new Error('fixture moved')
+      promoted.requiresExplicitConfirmation = true
+      promoted.reasonCodes = ['target_presence_changed']
+      promoted.source = {
+        slotId: 'SLOT-FIXTURE-PRIMARY',
+        roleCode: 'FIXTURE_ROLE',
+        label: 'Primary scope',
+        presence: 'suppressed',
+        selection: { kind: 'hospital_item', hospitalItemId: 'fixture-item-primary' },
+        conditionalState: null,
+      }
+      promoted.carriedSelection = { kind: 'hospital_item', hospitalItemId: 'fixture-item-primary' }
+      preparation.plan.targetResolution.items = [
+        {
+          requirementKey: 'FIXTURE_PRIMARY_SCOPE',
+          slotId: 'SLOT-FIXTURE-PRIMARY',
+          roleCode: 'FIXTURE_ROLE',
+          presence: 'active',
+          selectedHospitalItemId: 'fixture-item-primary',
+          resolutionState: 'resolved',
+          compatibilityState: 'not_evaluated',
+        },
+      ]
+    }),
+  )
+
+  const confirm = container.querySelector(
+    'input[name="decision:requirement:FIXTURE_PRIMARY_SCOPE"][value="confirmed"]',
+  )
+  const drop = container.querySelector(
+    'input[name="decision:requirement:FIXTURE_PRIMARY_SCOPE"][value="dropped"]',
+  )
+  expect(confirm).not.toBeNull()
+  expect(drop).not.toBeNull()
+  // Exactly once. A decision rendered in two groups would submit two values for one name.
+  expect(
+    container.querySelectorAll('input[name="decision:requirement:FIXTURE_PRIMARY_SCOPE"]'),
+  ).toHaveLength(2)
+  // And the reason it is being asked about is on the page, as a concrete transition rather than a
+  // readiness word: this line was covered by a kit in the source and is pulled on the new card.
+  expect(screen.getByText(/moves from covered by a kit to pulled/i)).toBeInTheDocument()
+})
+
+it('renders every decision that needs an answer exactly once, and no quiet one', async () => {
+  const { container } = await renderPage()
+  const named = [...container.querySelectorAll('input[type="radio"]')].map((input) =>
+    input.getAttribute('name'),
+  )
+  const asked = new Set(named)
+  const expected = preparation()
+  if (!expected.ok) throw new Error('fixture must be ok')
+  for (const decision of expected.preparation.plan.decisions) {
+    const name = `decision:${decision.key}`
+    expect(asked.has(name)).toBe(decision.requiresExplicitConfirmation)
+  }
+})
+
+it.each([
+  ['operational_comparison_unavailable', /hospital-local data does to this revision/i],
+  ['release_comparison_unavailable', /pinned release and the current one/i],
+  ['target_projection_unavailable', /could not be resolved under the target release/i],
+])('refuses to offer the rebuild when %s', async (blocker, explanation) => {
+  // The error was visible and the create button was still under it; a failed comparison hashes
+  // deterministically, so the plan hash matched on submit and a card was written citing a
+  // comparison nobody could read.
+  await renderPage(
+    { revision: REVISION_ID },
+    CARD_ID,
+    preparationWith((preparation) => {
+      preparation.blockers = [blocker as never]
+    }),
+  )
+  expect(screen.getByText(/This rebuild cannot be offered right now/i)).toBeInTheDocument()
+  expect(screen.getByText(explanation)).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /Create the new draft card/i })).toBeNull()
 })

@@ -5,7 +5,11 @@ import { Button } from '@/components/ui/button'
 
 import { CardReconciliationView } from './CardReconciliationView'
 import { allowedAcknowledgements } from '../domain/card-rebuild-plan'
-import type { RebuildDecision, RebuildRequirementDecision } from '../domain/card-rebuild-plan'
+import type {
+  RebuildDecision,
+  RebuildRequirementDecision,
+  RebuildTargetResolutionItem,
+} from '../domain/card-rebuild-plan'
 import type { CardRebuildPreparation } from '../server/rebuild-card'
 
 /**
@@ -93,7 +97,43 @@ function SelectionSummary({ decision }: { decision: RebuildRequirementDecision }
   )
 }
 
-function DecisionRow({ decision, unanswered }: { decision: RebuildDecision; unanswered: boolean }) {
+/**
+ * What the target release actually does with this requirement, when that differs from the source.
+ *
+ * The projection was hashed into the plan and gated the write, and none of it was on the page: the
+ * physician saw a readiness word and a warning list, so a line that moved from suppressed to active
+ * — or the reverse — read as an ordinary carried requirement. The transition is the thing being
+ * asked about, so it is the thing that gets rendered.
+ */
+function PresenceSummary({
+  decision,
+  projected,
+}: {
+  decision: RebuildRequirementDecision
+  projected: RebuildTargetResolutionItem | undefined
+}) {
+  const t = useTranslations('preferenceCards')
+  if (!decision.source || !projected) return null
+  if (projected.presence === decision.source.presence) return null
+  return (
+    <p className="mt-2 text-xs leading-5 text-foreground">
+      {t('rebuild.presenceMove', {
+        before: t(`rebuild.presence.${decision.source.presence}`),
+        after: t(`rebuild.presence.${projected.presence}`),
+      })}
+    </p>
+  )
+}
+
+function DecisionRow({
+  decision,
+  unanswered,
+  projected,
+}: {
+  decision: RebuildDecision
+  unanswered: boolean
+  projected?: RebuildTargetResolutionItem
+}) {
   const t = useTranslations('preferenceCards')
   const answers = allowedAcknowledgements(decision)
   const needsAnswer = decision.requiresExplicitConfirmation
@@ -130,6 +170,9 @@ function DecisionRow({ decision, unanswered }: { decision: RebuildDecision; unan
       </p>
 
       {decision.kind === 'requirement' ? <SelectionSummary decision={decision} /> : null}
+      {decision.kind === 'requirement' ? (
+        <PresenceSummary decision={decision} projected={projected} />
+      ) : null}
 
       {decision.kind === 'requirement' && decision.changedDefinitionFields.length > 0 ? (
         <p className="mt-2 text-xs leading-5 text-muted-foreground">
@@ -176,11 +219,13 @@ function DecisionGroup({
   help,
   decisions,
   unanswered,
+  projected,
 }: {
   title: string
   help: string
   decisions: RebuildDecision[]
   unanswered: Set<string>
+  projected: Map<string, RebuildTargetResolutionItem>
 }) {
   if (decisions.length === 0) return null
   return (
@@ -193,6 +238,9 @@ function DecisionGroup({
             key={decision.key}
             decision={decision}
             unanswered={unanswered.has(decision.key)}
+            projected={
+              decision.kind === 'requirement' ? projected.get(decision.requirementKey) : undefined
+            }
           />
         ))}
       </ul>
@@ -210,21 +258,53 @@ export function CardRebuildReview({
   const { plan, planHash, revision, sourceReleaseBundle, targetReleaseBundle, selection } =
     preparation
   const unanswered = new Set(error?.unanswered ?? [])
+  const projected = new Map(
+    plan.targetResolution.items.map((item) => [item.requirementKey, item] as const),
+  )
 
-  const carriedUnchanged = plan.decisions.filter(
-    (decision) => decision.state === 'carried_unchanged',
-  )
-  const requiresReview = plan.decisions.filter(
-    (decision) => decision.state === 'carried_requires_review',
-  )
-  const added = plan.decisions.filter((decision) => decision.state === 'new_requirement')
-  const waivers = plan.decisions.filter((decision) => decision.kind === 'waiver')
-  const removed = plan.decisions.filter(
+  /*
+    Partitioned on `requiresExplicitConfirmation`, not on `state`.
+
+    Grouping by state left decisions with no control anywhere on the page. The final-resolution
+    pass promotes a decision the target rejected — its state stays `carried_unchanged` unless the
+    rejection was a compatibility failure, in which case it becomes `incompatible` — and neither
+    landed in a group: `carried_unchanged` went to the passive carried list at the bottom, and a
+    nonblocking `incompatible` matched nothing at all. The form then submitted without the answer
+    the server requires, came back `review_incomplete`, and re-rendered with the same missing
+    control. There was no way out of that loop from the browser.
+
+    So every decision requiring an answer is placed exactly once, in the first group it matches,
+    and `other` catches whatever the named groups do not — which is what makes "exactly once"
+    something the code guarantees rather than something the group list happens to achieve.
+  */
+  const explicit = plan.decisions.filter((decision) => decision.requiresExplicitConfirmation)
+  const placed = new Set<string>()
+  const take = (predicate: (decision: RebuildDecision) => boolean): RebuildDecision[] => {
+    const taken = explicit.filter((decision) => !placed.has(decision.key) && predicate(decision))
+    for (const decision of taken) placed.add(decision.key)
+    return taken
+  }
+
+  const blocking = take((decision) => decision.blocking)
+  const requiresReview = take((decision) => decision.state === 'carried_requires_review')
+  const added = take((decision) => decision.state === 'new_requirement')
+  const removed = take(
     (decision) =>
       decision.kind !== 'waiver' &&
       (decision.state === 'removed_requirement' || decision.state === 'not_carried'),
   )
-  const blocking = plan.decisions.filter((decision) => decision.blocking)
+  const waivers = take((decision) => decision.kind === 'waiver')
+  /** Promoted by the final-resolution pass: still `carried_unchanged` or `incompatible`, and asked. */
+  const other = take(() => true)
+
+  /*
+    The passive list is the exact complement: carried, unchanged, and asked about by nothing. A
+    decision that requires an answer must never appear here, because nothing in this section
+    renders a control.
+  */
+  const carriedUnchanged = plan.decisions.filter(
+    (decision) => decision.state === 'carried_unchanged' && !decision.requiresExplicitConfirmation,
+  )
 
   return (
     <div className="space-y-6">
@@ -294,6 +374,7 @@ export function CardRebuildReview({
       */}
       <Section title={t('rebuild.comparisonsHeading')} help={t('rebuild.comparisonsHelp')}>
         <CardReconciliationView
+          showNoRebuildNotice={false}
           reconciliation={{
             record: preparation.record,
             source: {
@@ -364,97 +445,129 @@ export function CardRebuildReview({
           </p>
         ) : null}
 
-        <form action={createAction} className="space-y-6">
-          <input type="hidden" name="locale" value={locale} />
-          <input type="hidden" name="cardId" value={plan.source.cardId} />
-          <input type="hidden" name="revisionId" value={plan.source.revisionId} />
-          {/*
+        {/*
+          A review whose inputs could not be computed is not a review, so the form is not rendered
+          at all rather than rendered beside the error. The reconciliation failure above was
+          visible, and the create button was still there under it; a failed comparison hashes
+          deterministically, so the plan hash matched on submit and the card was written citing a
+          comparison nobody could read. `createRebuiltCard` refuses this independently — the page
+          hiding a control has never been the boundary here.
+        */}
+        {preparation.blockers.length > 0 ? (
+          <div className="rounded-2xl border border-destructive/60 bg-destructive/5 p-4">
+            <p className="text-sm leading-6 text-foreground">{t('rebuild.unavailableNotice')}</p>
+            <ul className="mt-2 space-y-1">
+              {preparation.blockers.map((blocker) => (
+                <li key={blocker} className="text-xs leading-5 text-muted-foreground">
+                  {t(`rebuild.blocker.${blocker}`)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <form action={createAction} className="space-y-6">
+            <input type="hidden" name="locale" value={locale} />
+            <input type="hidden" name="cardId" value={plan.source.cardId} />
+            <input type="hidden" name="revisionId" value={plan.source.revisionId} />
+            {/*
             The plan the answers below are given against. The server recomputes the plan from the
             same source revision and target release and refuses the request if this no longer
             matches — a stale page's answers describe decisions this rebuild would not make.
           */}
-          <input type="hidden" name="planHash" value={planHash} />
-          {selection.moduleVersionIds.map((moduleVersionId) => (
-            <input
-              key={moduleVersionId}
-              type="hidden"
-              name="moduleVersionId"
-              value={moduleVersionId}
-            />
-          ))}
-          {selection.modifierCodes.map((modifierCode) => (
-            <input key={modifierCode} type="hidden" name="modifierCode" value={modifierCode} />
-          ))}
+            <input type="hidden" name="planHash" value={planHash} />
+            {selection.moduleVersionIds.map((moduleVersionId) => (
+              <input
+                key={moduleVersionId}
+                type="hidden"
+                name="moduleVersionId"
+                value={moduleVersionId}
+              />
+            ))}
+            {selection.modifierCodes.map((modifierCode) => (
+              <input key={modifierCode} type="hidden" name="modifierCode" value={modifierCode} />
+            ))}
 
-          <DecisionGroup
-            title={t('rebuild.blockingHeading')}
-            help={t('rebuild.blockingHelp')}
-            decisions={blocking}
-            unanswered={unanswered}
-          />
-          <DecisionGroup
-            title={t('rebuild.reviewHeading')}
-            help={t('rebuild.reviewHelp')}
-            decisions={requiresReview}
-            unanswered={unanswered}
-          />
-          <DecisionGroup
-            title={t('rebuild.addedHeading')}
-            help={t('rebuild.addedHelp')}
-            decisions={added.filter((decision) => !decision.blocking)}
-            unanswered={unanswered}
-          />
-          <DecisionGroup
-            title={t('rebuild.removedHeading')}
-            help={t('rebuild.removedHelp')}
-            decisions={removed.filter((decision) => !decision.blocking)}
-            unanswered={unanswered}
-          />
-          <DecisionGroup
-            title={t('rebuild.waiverHeading')}
-            help={t('rebuild.waiverHelp')}
-            /*
+            <DecisionGroup
+              title={t('rebuild.blockingHeading')}
+              help={t('rebuild.blockingHelp')}
+              decisions={blocking}
+              unanswered={unanswered}
+              projected={projected}
+            />
+            <DecisionGroup
+              title={t('rebuild.reviewHeading')}
+              help={t('rebuild.reviewHelp')}
+              decisions={requiresReview}
+              unanswered={unanswered}
+              projected={projected}
+            />
+            <DecisionGroup
+              title={t('rebuild.addedHeading')}
+              help={t('rebuild.addedHelp')}
+              decisions={added}
+              unanswered={unanswered}
+              projected={projected}
+            />
+            <DecisionGroup
+              title={t('rebuild.removedHeading')}
+              help={t('rebuild.removedHelp')}
+              decisions={removed}
+              unanswered={unanswered}
+              projected={projected}
+            />
+            <DecisionGroup
+              title={t('rebuild.waiverHeading')}
+              help={t('rebuild.waiverHelp')}
+              /*
               Every waiver decision is `not_carried` — that is the rule, not an outcome — so the
               group is filtered on whether it still needs an answer rather than on its state. The
               previous filter excluded the only state a waiver can have and rendered nothing, which
               pushed prior rationales into the removed-requirements list where they read as
               equipment rather than as a judgement somebody has to make again.
             */
-            decisions={waivers}
-            unanswered={unanswered}
-          />
+              decisions={waivers}
+              unanswered={unanswered}
+              projected={projected}
+            />
+            <DecisionGroup
+              title={t('rebuild.otherHeading')}
+              help={t('rebuild.otherHelp')}
+              decisions={other}
+              unanswered={unanswered}
+              projected={projected}
+            />
 
-          <div className="rounded-2xl border border-border bg-muted/40 p-4">
-            <label className="block text-xs font-semibold text-foreground">
-              {t('cardTitleLabel')}
-              <input
-                name="title"
-                required
-                maxLength={160}
-                defaultValue={t('rebuild.defaultTitle', { title: preparation.record.title }).slice(
-                  0,
-                  160,
-                )}
-                className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              />
-            </label>
-            <label className="mt-3 block text-xs font-semibold text-foreground">
-              {t('physicianLabel')}
-              <input
-                name="physicianName"
-                maxLength={160}
-                defaultValue={preparation.record.physicianName ?? ''}
-                className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              />
-            </label>
-            <p className="mt-3 text-xs leading-5 text-muted-foreground">
-              {t('rebuild.createNotice')}
-            </p>
-            <Button type="submit" className="mt-4">
-              {t('rebuild.createAction')}
-            </Button>
-          </div>
-        </form>
+            <div className="rounded-2xl border border-border bg-muted/40 p-4">
+              <label className="block text-xs font-semibold text-foreground">
+                {t('cardTitleLabel')}
+                <input
+                  name="title"
+                  required
+                  maxLength={160}
+                  defaultValue={t('rebuild.defaultTitle', {
+                    title: preparation.record.title,
+                  }).slice(0, 160)}
+                  className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+              </label>
+              <label className="mt-3 block text-xs font-semibold text-foreground">
+                {t('physicianLabel')}
+                <input
+                  name="physicianName"
+                  maxLength={160}
+                  defaultValue={preparation.record.physicianName ?? ''}
+                  className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+              </label>
+              <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                {t('rebuild.createNotice')}
+              </p>
+              <Button type="submit" className="mt-4">
+                {t('rebuild.createAction')}
+              </Button>
+            </div>
+          </form>
+        )}
       </Section>
 
       <Section title={t('rebuild.carriedHeading')} help={t('rebuild.carriedHelp')}>

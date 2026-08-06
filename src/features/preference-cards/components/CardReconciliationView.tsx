@@ -33,6 +33,14 @@ import type { ReconciledItemChange } from '../domain/card-reconciliation'
 
 interface CardReconciliationViewProps {
   reconciliation: CardReconciliation
+  /**
+   * Whether to print the "this page cannot rebuild the card" closing note.
+   *
+   * True on the read-only reconciliation route, which is what the sentence is about. False when
+   * this view is embedded in the rebuild review, where it appeared directly above the rebuild form
+   * and told the reader the page could not do the thing the next control does.
+   */
+  showNoRebuildNotice?: boolean
 }
 
 function Section({
@@ -292,7 +300,10 @@ function ReleaseSection({ result }: { result: ReleaseReconciliationResult }) {
   )
 }
 
-export function CardReconciliationView({ reconciliation }: CardReconciliationViewProps) {
+export function CardReconciliationView({
+  reconciliation,
+  showNoRebuildNotice = true,
+}: CardReconciliationViewProps) {
   const t = useTranslations('preferenceCards')
   const { source } = reconciliation
 
@@ -339,9 +350,11 @@ export function CardReconciliationView({ reconciliation }: CardReconciliationVie
       <OperationalSection result={reconciliation.operational} />
       <ReleaseSection result={reconciliation.release} />
 
-      <p className="rounded-2xl border border-border bg-muted/40 p-4 text-sm leading-6 text-muted-foreground">
-        {t('reconcile.noRebuildNotice')}
-      </p>
+      {showNoRebuildNotice ? (
+        <p className="rounded-2xl border border-border bg-muted/40 p-4 text-sm leading-6 text-muted-foreground">
+          {t('reconcile.noRebuildNotice')}
+        </p>
+      ) : null}
     </div>
   )
 }

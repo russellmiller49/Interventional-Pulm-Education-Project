@@ -70,6 +70,9 @@ const parameterizedMessages: Record<string, string[]> = {
   'rebuild.changedFields': ['fields'],
   'rebuild.priorWaiver': ['rationale'],
   'rebuild.selectionMove': ['before', 'after'],
+  'rebuild.presenceMove': ['before', 'after'],
+  'rebuild.provenanceSourceAvailable': ['revision'],
+  'rebuild.provenanceDecisionsHelp': ['answered', 'total'],
   // Named `requirements` deliberately: `sampleValue` decides numeric-versus-string from the
   // argument name, and a plural arm handed the string 'sample' does not select.
   'rebuild.carriedCount': ['requirements'],

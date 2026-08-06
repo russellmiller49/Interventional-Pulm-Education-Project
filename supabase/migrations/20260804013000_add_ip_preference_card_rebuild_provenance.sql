@@ -199,11 +199,20 @@ create trigger reject_ip_user_preference_card_rebuild_provenance_rewrite
 -- Not a generic card-insert RPC. It writes one draft, from one named source revision, and re-derives
 -- from the database every source fact it can rather than trusting the payload for it.
 --
--- The card content itself — resolved snapshot, builder inputs, provenance document — is computed by
--- the TypeScript planner and resolver and cannot be recomputed in SQL, so it is trusted as given.
--- Everything the database *does* know is checked here: that the revision exists, belongs to the named
--- card, belongs to the named owner, and still carries the exact hashes and release identity the
--- provenance claims. A payload describing a revision that has changed or vanished writes nothing.
+-- The card content itself — resolved snapshot, builder inputs, decision list — is computed by the
+-- TypeScript planner and resolver and cannot be recomputed in SQL, so it is trusted as given.
+--
+-- Every source fact the database *knows* is bound to the document that gets stored, not merely to the
+-- call's own arguments: card id, revision id, owner, snapshot hash, release bundle, revision number,
+-- snapshot integrity hash and resolved content hash all have to agree with the revision row. A
+-- payload describing a revision that has changed or vanished writes nothing, and one whose document
+-- disagrees with its own arguments writes nothing either.
+--
+-- One field is deliberately **not** database-authenticated and is documented as such rather than
+-- implied to be: `sourcePrintDocumentHash` is derived in TypeScript from the integrity hash and the
+-- four printed columns, and is not stored on the revision. Its *inputs* are bound above; the digest
+-- itself is an application claim. Re-deriving it here would mean a second canonical-JSON SHA-256
+-- implementation inside PL/pgSQL, which is exactly the kind of second answer this module avoids.
 --
 -- The recheck and the insert are one statement, which removes the application-level gap between
 -- "the source was verified" and "the row was written". It does not take a row lock, so under READ
@@ -249,13 +258,42 @@ begin
       using errcode = 'invalid_parameter_value';
   end if;
 
+  -- One known shape, named exactly. A document at some other version would be read back by code
+  -- that expects this one, so accepting it would store evidence nothing can interpret.
+  if p_rebuild_provenance->>'version' is distinct from 'ip-cards-rebuild/1' then
+    raise exception 'unsupported rebuild provenance version: %',
+      coalesce(p_rebuild_provenance->>'version', '<absent>')
+      using errcode = 'invalid_parameter_value';
+  end if;
+
+  -- Every source field this function binds has to be present and a string. Without this a missing
+  -- key compares null-to-null through `is not distinct from` further down and passes as agreement.
+  if jsonb_typeof(p_rebuild_provenance->'sourceCardId') <> 'string'
+     or jsonb_typeof(p_rebuild_provenance->'sourceRevisionId') <> 'string'
+     or jsonb_typeof(p_rebuild_provenance->'sourceSnapshotHash') <> 'string'
+     or jsonb_typeof(p_rebuild_provenance->'sourceReleaseBundleId') <> 'string'
+     or jsonb_typeof(p_rebuild_provenance->'sourceRevisionNumber') <> 'number'
+     -- Nullable on the revision, so JSON null is legal and an *absent* key is not: absent would
+     -- compare null-to-null against a null column and be read as agreement about a fact the
+     -- document never made.
+     or coalesce(jsonb_typeof(p_rebuild_provenance->'sourceSnapshotIntegrityHash'), '<absent>')
+        not in ('string', 'null')
+     or coalesce(jsonb_typeof(p_rebuild_provenance->'sourceResolvedContentHash'), '<absent>')
+        not in ('string', 'null')
+  then
+    raise exception 'the provenance document is missing a source field or has it at the wrong type'
+      using errcode = 'invalid_parameter_value';
+  end if;
+
   -- The document has to describe the source the parameters are checked against. Without this the
   -- recheck below proves something about the *arguments* and nothing about the evidence that
   -- actually gets stored and read back: a caller could pass one real tuple to satisfy the join and
   -- embed an entirely different, fabricated source in the provenance.
   if p_rebuild_provenance->>'sourceCardId' is distinct from p_source_card_id::text
      or p_rebuild_provenance->>'sourceRevisionId' is distinct from p_source_revision_id::text
-     or p_rebuild_provenance->>'sourceSnapshotHash' is distinct from p_source_snapshot_hash then
+     or p_rebuild_provenance->>'sourceSnapshotHash' is distinct from p_source_snapshot_hash
+     or p_rebuild_provenance->>'sourceReleaseBundleId' is distinct from p_source_release_bundle_id
+  then
     raise exception 'the provenance document does not describe the source it was checked against'
       using errcode = 'invalid_parameter_value';
   end if;
@@ -278,6 +316,16 @@ begin
     and revision.user_id = p_owner_id
     and revision.snapshot_hash = p_source_snapshot_hash
     and revision.release_bundle_id is not distinct from p_source_release_bundle_id
+    -- Every remaining source fact the revision row *knows*, bound to what the stored document
+    -- claims. Checking only the parallel arguments authenticated the call and not the evidence: a
+    -- caller could pass one real tuple to satisfy the join and still freeze a fabricated revision
+    -- number, release, integrity hash or content hash into a write-once column.
+    and revision.revision_number::text
+        is not distinct from p_rebuild_provenance->>'sourceRevisionNumber'
+    and revision.snapshot_integrity_hash
+        is not distinct from p_rebuild_provenance->>'sourceSnapshotIntegrityHash'
+    and revision.resolved_content_hash
+        is not distinct from p_rebuild_provenance->>'sourceResolvedContentHash'
   returning id into created_id;
 
   if created_id is null then
@@ -290,9 +338,21 @@ begin
 end;
 $$;
 
+-- `alter function ... owner to` requires two things of the caller: membership of the new owner role,
+-- which the grant above supplies, and that the **new owner** holds `create` on the function's schema.
+-- The superuser exception does not apply here — the managed migration role is `createrole` but not
+-- `rolsuper` — and `public`'s ACL grants the API roles `usage` only, so without this the statement
+-- fails and the whole transaction rolls back with nothing installed.
+--
+-- Granted for exactly one statement and revoked immediately. The writer must not keep authority to
+-- create objects in `public`; it exists to own one function, not to be a schema owner.
+grant create on schema public to ip_preference_card_rebuild_writer;
+
 alter function public.ip_create_rebuilt_preference_card(
   uuid, uuid, uuid, text, text, text, text, text, text, jsonb, jsonb, text, text, text, jsonb
 ) owner to ip_preference_card_rebuild_writer;
+
+revoke create on schema public from ip_preference_card_rebuild_writer;
 
 revoke all on function public.ip_create_rebuilt_preference_card(
   uuid, uuid, uuid, text, text, text, text, text, text, jsonb, jsonb, text, text, text, jsonb

@@ -1,13 +1,15 @@
 import {
   allowedAcknowledgements,
   applyRebuildAcknowledgements,
+  expectedFinalState,
   planCardRebuild,
   proposeRebuildSelection,
   rebuildPlanHash,
   reviewRebuildAcknowledgements,
-  unplannedBlockingConditions,
   unanswerableBlockingDecisions,
+  unauthorizedFinalState,
   type CardRebuildPlan,
+  type RebuildAcknowledgement,
   type RebuildPlanInput,
   type RebuildProbe,
 } from '../domain/card-rebuild-plan'
@@ -901,8 +903,26 @@ describe('the review gate', () => {
     )
   })
 
+  /** The same changed requirement, but carrying a real product rather than a deliberate blank. */
+  function planWithCarriedProduct() {
+    return plan({
+      card: snapshot({
+        items: [
+          item({ id: PRIMARY_SLOT }),
+          item({
+            id: BACKUP_SLOT,
+            requirementKey: REVISED_REQUIREMENT_KEY,
+            requiredness: 'optional',
+            effectiveRequiredness: 'optional',
+            selectedHospitalItemId: 'local-backup-1',
+          }),
+        ],
+      }),
+    })
+  }
+
   it('rejects an answer a decision does not allow', () => {
-    const result = plan()
+    const result = planWithCarriedProduct()
     const review = reviewRebuildAcknowledgements(result, {
       [`requirement:${REVISED_REQUIREMENT_KEY}`]: 'acknowledged_unresolved',
     })
@@ -910,6 +930,33 @@ describe('the review gate', () => {
     expect(review.ok === false && review.invalid).toContain(
       `requirement:${REVISED_REQUIREMENT_KEY}`,
     )
+  })
+
+  it('offers acknowledge-unresolved, not confirm or drop, for a carried deliberate blank', () => {
+    // The source left this requirement blank on purpose and the target changed it, so an answer is
+    // required — but there is no product to confirm and none to drop. Offering those two asked the
+    // physician to affirm or discard something that does not exist, and whichever they chose was
+    // written verbatim into immutable provenance as the answer they gave.
+    const result = plan()
+    const blank = decision(result, `requirement:${REVISED_REQUIREMENT_KEY}`)
+    expect(blank.kind === 'requirement' && blank.carriedSelection).toEqual({ kind: 'none' })
+    expect(blank.requiresExplicitConfirmation).toBe(true)
+    expect(allowedAcknowledgements(blank)).toEqual(['acknowledged_unresolved'])
+
+    expect(
+      reviewRebuildAcknowledgements(result, {
+        [`requirement:${REVISED_REQUIREMENT_KEY}`]: 'confirmed',
+      }).ok,
+    ).toBe(false)
+    const accepted = reviewRebuildAcknowledgements(result, {
+      [`requirement:${REVISED_REQUIREMENT_KEY}`]: 'acknowledged_unresolved',
+    })
+    expect(accepted.ok).toBe(true)
+    // And acknowledging it manufactures no selection: the line stays an explicit nothing.
+    const applied = applyRebuildAcknowledgements(result, {
+      [`requirement:${REVISED_REQUIREMENT_KEY}`]: 'acknowledged_unresolved',
+    })
+    expect(applied.input.selectedHospitalItemIds?.[BACKUP_SLOT]).toBeNull()
   })
 
   it('rejects an answer naming a decision this plan does not contain', () => {
@@ -940,7 +987,9 @@ describe('the review gate', () => {
       'confirmed',
     ])
     expect(
-      allowedAcknowledgements(decision(result, `requirement:${REVISED_REQUIREMENT_KEY}`)),
+      allowedAcknowledgements(
+        decision(planWithCarriedProduct(), `requirement:${REVISED_REQUIREMENT_KEY}`),
+      ),
     ).toEqual(['confirmed', 'dropped'])
   })
 })
@@ -1232,13 +1281,102 @@ describe('the plan describes the card the target actually resolves to', () => {
     )
   })
 
+  it('reports a requirement the source suppressed and the target pulls', () => {
+    // The reverse direction, which passed in silence: source equipment set A suppresses source
+    // requirement B; the target cannot carry A because a member is gone; B therefore resolves
+    // active and carries B's product. The new draft would then contain an active, selected
+    // requirement the reviewed source had suppressed, with nothing said about it.
+    const sourceSuppressed = snapshot({
+      items: [],
+      suppressedItems: [
+        item({
+          id: PRIMARY_SLOT,
+          requirementKey: PRIMARY_KEY,
+          selectedHospitalItemId: 'local-scope-1',
+        }),
+      ],
+    })
+    const targetActive = snapshot({
+      items: [
+        item({
+          id: PRIMARY_SLOT,
+          requirementKey: PRIMARY_KEY,
+          selectedHospitalItemId: 'local-scope-1',
+        }),
+      ],
+      suppressedItems: [],
+    })
+    const result = plan({
+      card: sourceSuppressed,
+      probe: permissiveProbe({ resolveTarget: () => targetActive }),
+    })
+    const primary = decision(result, `requirement:${PRIMARY_KEY}`)
+    expect(primary.kind === 'requirement' && primary.source?.presence).toBe('suppressed')
+    expect(primary.reasonCodes).toContain('target_presence_changed')
+    expect(primary.requiresExplicitConfirmation).toBe(true)
+  })
+
+  it('leaves a requirement suppressed on both sides quiet', () => {
+    // The control for the two directions above: unchanged presence is not a change, and reporting
+    // it would put every kit-covered line of every card on the review list.
+    const suppressed = snapshot({
+      items: [],
+      suppressedItems: [
+        item({
+          id: PRIMARY_SLOT,
+          requirementKey: PRIMARY_KEY,
+          selectedHospitalItemId: 'local-scope-1',
+        }),
+      ],
+    })
+    const result = plan({
+      card: suppressed,
+      probe: permissiveProbe({ resolveTarget: () => suppressed }),
+    })
+    expect(decision(result, `requirement:${PRIMARY_KEY}`).reasonCodes).not.toContain(
+      'target_presence_changed',
+    )
+  })
+
+  /** The card the plan projected, resolved again with nothing moved. The authorized outcome. */
+  function carriedTarget(): ResolvedCard {
+    return snapshot({
+      items: [
+        item({
+          id: PRIMARY_SLOT,
+          requirementKey: PRIMARY_KEY,
+          selectedHospitalItemId: 'local-scope-1',
+        }),
+      ],
+    })
+  }
+
+  /** Confirm every asked decision, so `expectedFinalState` allows exactly the projection. */
+  function confirmAll(result: ReturnType<typeof plan>): Record<string, RebuildAcknowledgement> {
+    const answers: Record<string, RebuildAcknowledgement> = {}
+    for (const entry of result.decisions) {
+      if (!entry.requiresExplicitConfirmation) continue
+      answers[entry.key] = allowedAcknowledgements(entry)[0]
+    }
+    return answers
+  }
+
+  function reviewedPlan() {
+    return plan({ card: carriedCard(), probe: permissiveProbe({ resolveTarget: carriedTarget }) })
+  }
+
+  it('accepts the card the review authorized', () => {
+    const reviewed = reviewedPlan()
+    const expected = expectedFinalState(reviewed, confirmAll(reviewed))
+    expect(unauthorizedFinalState(expected, carriedTarget())).toEqual([])
+  })
+
   it('refuses a finished card carrying a blocking condition the review never showed', () => {
-    // Reviewed with nothing blocking.
-    const reviewed = plan({ card: carriedCard() })
-    // The card that would actually be written has one.
-    expect(unplannedBlockingConditions(reviewed, incompatibleTarget())).toEqual([
-      'compatibility_failed',
-    ])
+    const reviewed = reviewedPlan()
+    const expected = expectedFinalState(reviewed, confirmAll(reviewed))
+    expect(unauthorizedFinalState(expected, incompatibleTarget())).toContain(
+      'unreviewed_blocking_warning:compatibility_failed',
+    )
   })
 
   it('accepts a blocking condition that was in the projection the physician read', () => {
@@ -1246,14 +1384,170 @@ describe('the plan describes the card the target actually resolves to', () => {
       card: carriedCard(),
       probe: permissiveProbe({ resolveTarget: () => incompatibleTarget() }),
     })
+    const expected = expectedFinalState(reviewed, confirmAll(reviewed))
     // Same condition, and it was reviewed — so it is not a reason to refuse the write.
-    expect(unplannedBlockingConditions(reviewed, incompatibleTarget())).toEqual([])
+    expect(unauthorizedFinalState(expected, incompatibleTarget())).toEqual([])
   })
 
-  it('does not treat a warning introduced by the physician answering as a blocking condition', () => {
-    const reviewed = plan({ card: carriedCard() })
+  /**
+   * The mutation matrix the previous invariant accepted in full.
+   *
+   * It compared blocking warning signatures only, so every one of these — a different product on
+   * the line, a different slot id, a different role, a requirement that vanished, one that
+   * appeared, a newly suppressed line, a newly failing compatibility state, a moved readiness, a
+   * new nonblocking warning — passed as though it had been reviewed.
+   */
+  it.each([
+    [
+      'selection_changed',
+      () =>
+        snapshot({ items: [item({ id: PRIMARY_SLOT, selectedHospitalItemId: 'local-other' })] }),
+    ],
+    [
+      'slot_changed',
+      () =>
+        snapshot({
+          items: [
+            item({
+              id: 'slot-renamed',
+              requirementKey: PRIMARY_KEY,
+              selectedHospitalItemId: 'local-scope-1',
+            }),
+          ],
+        }),
+    ],
+    [
+      'role_changed',
+      () =>
+        snapshot({
+          items: [
+            item({
+              id: PRIMARY_SLOT,
+              roleCode: 'OTHER_ROLE',
+              selectedHospitalItemId: 'local-scope-1',
+            }),
+          ],
+        }),
+    ],
+    ['requirement_missing', () => snapshot({ items: [] })],
+    [
+      'requirement_outside_plan',
+      () =>
+        snapshot({
+          items: [
+            item({ id: PRIMARY_SLOT, selectedHospitalItemId: 'local-scope-1' }),
+            item({ id: 'slot-extra', requirementKey: 'INVENTED_KEY' }),
+          ],
+        }),
+    ],
+    [
+      'presence_changed',
+      () =>
+        snapshot({
+          items: [],
+          suppressedItems: [
+            item({
+              id: PRIMARY_SLOT,
+              requirementKey: PRIMARY_KEY,
+              selectedHospitalItemId: 'local-scope-1',
+            }),
+          ],
+        }),
+    ],
+    [
+      'compatibility_changed',
+      () =>
+        snapshot({
+          items: [
+            item({
+              id: PRIMARY_SLOT,
+              selectedHospitalItemId: 'local-scope-1',
+              compatibilityState: 'fail',
+            }),
+          ],
+        }),
+    ],
+    [
+      'resolution_changed',
+      () =>
+        snapshot({
+          items: [
+            item({
+              id: PRIMARY_SLOT,
+              selectedHospitalItemId: 'local-scope-1',
+              resolutionState: 'unresolved',
+            }),
+          ],
+        }),
+    ],
+    ['readiness_changed', () => snapshot({ ...carriedTarget(), readinessState: 'blocked' })],
+    [
+      'unreviewed_warning',
+      () =>
+        snapshot({
+          ...carriedTarget(),
+          warnings: [
+            {
+              id: 'note-1',
+              severity: 'warning',
+              code: 'required_role_unresolved',
+              message: 'No product is selected yet.',
+              sourceType: 'slot',
+              sourceId: PRIMARY_SLOT,
+              acknowledged: false,
+              waiverReason: null,
+            },
+          ],
+        }),
+    ],
+  ])('refuses a card whose %s was never authorized', (axis, mutate) => {
+    const reviewed = reviewedPlan()
+    const expected = expectedFinalState(reviewed, confirmAll(reviewed))
+    const violations = unauthorizedFinalState(expected, mutate())
+    expect(violations.some((violation) => violation.startsWith(axis))).toBe(true)
+  })
+
+  /**
+   * A plan with a droppable decision: the backup requirement's definition moved between the two
+   * releases, so it is asked about, and it carries a real product — which is what makes `dropped`
+   * one of its legal answers.
+   */
+  function droppablePlan() {
+    const both = (selection: string | null, overrides: Partial<ResolvedCardItem> = {}) =>
+      snapshot({
+        items: [
+          item({ id: PRIMARY_SLOT, selectedHospitalItemId: 'local-scope-1' }),
+          item({
+            id: BACKUP_SLOT,
+            requirementKey: REVISED_REQUIREMENT_KEY,
+            requiredness: 'optional',
+            effectiveRequiredness: 'optional',
+            selectedHospitalItemId: selection,
+            ...overrides,
+          }),
+        ],
+      })
+    const result = plan({
+      card: both('local-backup-1'),
+      probe: permissiveProbe({ resolveTarget: () => both('local-backup-1') }),
+    })
+    const backup = decision(result, `requirement:${REVISED_REQUIREMENT_KEY}`)
+    const answers: Record<string, RebuildAcknowledgement> = {
+      ...confirmAll(result),
+      [backup.key]: 'dropped',
+    }
+    return { result, answers, backup, both }
+  }
+
+  it('does not treat a warning introduced by the physician answering as unauthorized', () => {
+    // Dropping a selection is a reviewed decision and raises a warning by design. An invariant that
+    // refused this would have made the drop control unusable.
+    const { result, answers, backup, both } = droppablePlan()
+    expect(backup.requiresExplicitConfirmation).toBe(true)
+    expect(allowedAcknowledgements(backup)).toContain('dropped')
+
     const droppedResult = snapshot({
-      items: [item({ id: PRIMARY_SLOT, selectedHospitalItemId: null, resolutionState: 'warning' })],
+      ...both(null, { resolutionState: 'warning' }),
       warnings: [
         {
           id: 'unresolved-1',
@@ -1261,16 +1555,66 @@ describe('the plan describes the card the target actually resolves to', () => {
           code: 'required_role_unresolved',
           message: 'No product is selected yet.',
           sourceType: 'slot',
-          sourceId: PRIMARY_SLOT,
+          sourceId: BACKUP_SLOT,
           acknowledged: false,
           waiverReason: null,
         },
       ],
       readinessState: 'complete_with_warnings',
     })
-    // Dropping a selection is a reviewed decision and raises a warning by design. An invariant that
-    // refused this would have made the drop control unusable.
-    expect(unplannedBlockingConditions(reviewed, droppedResult)).toEqual([])
+    expect(unauthorizedFinalState(expectedFinalState(result, answers), droppedResult)).toEqual([])
+  })
+
+  it('still refuses a dropped selection that survived into the finished card', () => {
+    const { result, answers, both } = droppablePlan()
+    // A mapping or application defect that left the product in place would otherwise write a card
+    // carrying the very selection the physician discarded.
+    expect(
+      unauthorizedFinalState(expectedFinalState(result, answers), both('local-backup-1')),
+    ).toEqual([`selection_not_cleared:${REVISED_REQUIREMENT_KEY}`])
+  })
+
+  it('will not let a drop justify a newly suppressed line or a new compatibility failure', () => {
+    const { result, answers } = droppablePlan()
+    const expected = expectedFinalState(result, answers)
+
+    // Clearing a selection removes a kit, so it can only *lift* suppression; and it removes one
+    // half of a compatibility pair, so it can only stop a rule matching. Neither of these follows.
+    const nowSuppressed = snapshot({
+      items: [item({ id: PRIMARY_SLOT, selectedHospitalItemId: 'local-scope-1' })],
+      suppressedItems: [
+        item({
+          id: BACKUP_SLOT,
+          requirementKey: REVISED_REQUIREMENT_KEY,
+          requiredness: 'optional',
+          effectiveRequiredness: 'optional',
+          selectedHospitalItemId: null,
+        }),
+      ],
+    })
+    expect(unauthorizedFinalState(expected, nowSuppressed)).toContain(
+      `presence_changed:${REVISED_REQUIREMENT_KEY}`,
+    )
+
+    const nowIncompatible = snapshot({
+      items: [
+        item({
+          id: PRIMARY_SLOT,
+          selectedHospitalItemId: 'local-scope-1',
+          compatibilityState: 'fail',
+        }),
+        item({
+          id: BACKUP_SLOT,
+          requirementKey: REVISED_REQUIREMENT_KEY,
+          requiredness: 'optional',
+          effectiveRequiredness: 'optional',
+          selectedHospitalItemId: null,
+        }),
+      ],
+    })
+    expect(unauthorizedFinalState(expected, nowIncompatible)).toContain(
+      `compatibility_changed:${PRIMARY_KEY}`,
+    )
   })
 })
 

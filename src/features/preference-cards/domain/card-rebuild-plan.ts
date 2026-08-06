@@ -119,7 +119,6 @@ export type RebuildReasonCode =
   | 'custom_not_allowed_by_target'
   | 'equipment_set_member_unavailable'
   | 'equipment_set_role_not_covered'
-  | 'equipment_set_coverage_changed'
   | 'conditional_rule_changed'
   | 'compatibility_rejected'
   | 'resolution_unresolved'
@@ -904,7 +903,15 @@ function annotateWithTargetResolution(
       ) {
         reasons.push('resolution_unresolved')
       }
-      if (decision.target && resolved.presence === 'suppressed' && decision.carriedSelection) {
+      // Presence, in *both* directions, and against the source rather than against a constant.
+      //
+      // The earlier version fired only on a final `presence === 'suppressed'`, so the reverse move
+      // passed in silence: source equipment set A suppresses source requirement B; the target
+      // cannot carry A because one member is gone; B therefore resolves active and carries B's
+      // product. The physician was shown a card containing an active, selected requirement that
+      // the reviewed source had suppressed, and was never asked about it. A change of presence is
+      // a change to what gets pulled in the room, whichever way it goes.
+      if (decision.source && resolved.presence !== decision.source.presence) {
         reasons.push('target_presence_changed')
       }
     }
@@ -1481,7 +1488,7 @@ export function blockingDecisions(plan: CardRebuildPlan): RebuildDecision[] {
 }
 
 /**
- * Blocking decisions that no answer can dispose of. (Documents `unanswerableBlockingDecisions`.)
+ * Blocking decisions that no answer can dispose of.
  *
  * Most blocking decisions *are* answerable: a required requirement the target adds cannot be filled
  * in here, so it is acknowledged and the draft carries the gap into the builder. That is the
@@ -1493,39 +1500,178 @@ export function blockingDecisions(plan: CardRebuildPlan): RebuildDecision[] {
  * `createRebuiltCard` refuses outright rather than creating a card nobody could interpret.
  */
 /**
- * Blocking conditions in the card about to be written that the review never showed.
+ * The states the reviewed plan plus the physician's validated answers actually authorize.
  *
- * The last gate, and it took two attempts to get right. Comparing the *answered* resolution against
- * the plan's projection failed every legitimate use of the drop control, because the two differ by
- * exactly the answers. Comparing a re-resolution of `proposedInputs` against that same projection
- * fixed the false positive by making the check compare a pure function against itself — it could
- * not fail at all, while three comments said it was the last line of defence.
+ * This gate took four attempts. A byte comparison against the plan's projection refused every
+ * legitimate use of the drop control, because the two differ by exactly the answers. Re-resolving
+ * `proposedInputs` and comparing that instead removed the false positive by comparing a pure
+ * function against itself, which could never fail. A third compared only blocking warning
+ * signatures: non-vacuous, but it accepts a card whose requirement set, slot ids, roles,
+ * presences, selections, resolution states and readiness have all moved, and it cannot tell a
+ * warning the physician's own answer authorized from unrelated drift.
  *
- * So it compares the thing that matters: blocking conditions. The physician's answers may legitimately
- * *remove* requirements and introduce warnings — dropping a selection raises `required_role_unresolved`,
- * which is a warning by design and was reviewed. What must never happen is the finished card carrying
- * a **blocking** condition that was not in the projection the physician read, whatever the cause.
+ * So the expected state is *derived* here, from the hashed plan and the validated answers alone,
+ * and `unauthorizedFinalState` checks the card about to be written against it. Deriving rather
+ * than re-resolving is the point: resolving the same helper twice and comparing the results proves
+ * the helper is deterministic, which is not the claim being made.
  *
- * Returns the offending codes so the refusal can say what they were rather than only that there were
- * some.
+ * The derivation is small because an answer can do exactly one thing. `dropped` clears a selection;
+ * `confirmed` and `acknowledged_unresolved` change nothing at all. So the expected projection *is*
+ * the reviewed projection with the dropped selections cleared.
  */
-export function unplannedBlockingConditions(
+export interface RebuildExpectedFinalState {
+  version: typeof CARD_REBUILD_PLAN_VERSION
+  /** Requirement keys whose carried selection the physician cleared. Sorted. */
+  droppedRequirementKeys: string[]
+  /** The reviewed projection, with those selections cleared. */
+  items: RebuildTargetResolutionItem[]
+  readinessState: string | null
+  warnings: RebuildTargetResolution['warnings']
+}
+
+export function expectedFinalState(
   plan: CardRebuildPlan,
+  acknowledgements: RebuildAcknowledgements,
+): RebuildExpectedFinalState {
+  const dropped = new Set<string>()
+  for (const decision of plan.decisions) {
+    if (decision.kind !== 'requirement') continue
+    if (!decision.requiresExplicitConfirmation) continue
+    if (acknowledgements[decision.key] !== 'dropped') continue
+    dropped.add(decision.requirementKey)
+  }
+
+  return {
+    version: CARD_REBUILD_PLAN_VERSION,
+    droppedRequirementKeys: [...dropped].sort(),
+    items: plan.targetResolution.items.map((item) =>
+      dropped.has(item.requirementKey) ? { ...item, selectedHospitalItemId: null } : item,
+    ),
+    readinessState: plan.targetResolution.readinessState,
+    warnings: plan.targetResolution.warnings,
+  }
+}
+
+/** Written into the new card's provenance, so what was authorized is recorded, not only inferred. */
+export function expectedFinalStateHash(state: RebuildExpectedFinalState): string {
+  return stableSnapshotHash({
+    v: CARD_REBUILD_PLAN_VERSION,
+    kind: 'rebuild-allowed-final-state',
+    payload: state,
+  })
+}
+
+function sameWarning(
+  left: RebuildTargetResolution['warnings'][number],
+  right: RebuildTargetResolution['warnings'][number],
+): boolean {
+  return (
+    left.code === right.code &&
+    left.severity === right.severity &&
+    left.sourceType === right.sourceType &&
+    (left.sourceId ?? null) === (right.sourceId ?? null)
+  )
+}
+
+/**
+ * Every way the card about to be written departs from what the review authorized.
+ *
+ * Empty is the pass condition. Each entry names the axis and the requirement, so a refusal can say
+ * what moved rather than only that something did.
+ *
+ * With no dropped answer this is exact equality: the physician confirmed or acknowledged
+ * everything, so the card must be the projection they read, warning for warning.
+ *
+ * A drop relaxes three things and only three, each because a drop can cause it and nothing else
+ * can:
+ *
+ *  - **Presence may lift, never fall.** Suppression comes from a selected procedure kit, so
+ *    clearing a selection can only remove a kit and un-suppress the lines it covered. A card that
+ *    newly *suppresses* something after a drop is not a consequence of the drop.
+ *  - **Compatibility may relax, never fail.** A compatibility rule rejects a pair of selections;
+ *    removing one of them can only stop a rule matching.
+ *  - **Resolution state, readiness and nonblocking warnings may move.** Dropping a required line
+ *    raises `required_role_unresolved` and moves the card to `blocked` by design — which is what
+ *    the physician was told the answer would do.
+ *
+ * A requirement may disappear only if it was the one dropped, because clearing a selection also
+ * clears that requirement's conditional include/exclude answer. Nothing authorizes a requirement
+ * the reviewed plan never contained.
+ */
+export function unauthorizedFinalState(
+  expected: RebuildExpectedFinalState,
   resolved: UnhashedResolvedCard | null,
 ): string[] {
   if (!resolved) return ['not_resolvable']
-  const reviewed = new Set(
-    plan.targetResolution.warnings
+  const final = projectTargetResolution(resolved)
+  if (!final.ok) return ['not_resolvable']
+
+  const dropped = new Set(expected.droppedRequirementKeys)
+  const anyDropped = dropped.size > 0
+  const expectedByKey = new Map(expected.items.map((item) => [item.requirementKey, item]))
+  const finalByKey = new Map(final.items.map((item) => [item.requirementKey, item]))
+  const violations: string[] = []
+
+  for (const key of finalByKey.keys()) {
+    if (!expectedByKey.has(key)) violations.push(`requirement_outside_plan:${key}`)
+  }
+
+  for (const [key, want] of expectedByKey) {
+    const got = finalByKey.get(key)
+    if (!got) {
+      if (!dropped.has(key)) violations.push(`requirement_missing:${key}`)
+      continue
+    }
+    if (got.slotId !== want.slotId) violations.push(`slot_changed:${key}`)
+    if (got.roleCode !== want.roleCode) violations.push(`role_changed:${key}`)
+    if (got.selectedHospitalItemId !== want.selectedHospitalItemId) {
+      violations.push(
+        dropped.has(key) ? `selection_not_cleared:${key}` : `selection_changed:${key}`,
+      )
+    }
+    if (got.presence !== want.presence) {
+      const lifted = want.presence === 'suppressed' && got.presence === 'active' && anyDropped
+      if (!lifted) violations.push(`presence_changed:${key}`)
+    }
+    if (got.compatibilityState !== want.compatibilityState) {
+      const relaxed = anyDropped && got.compatibilityState !== 'fail'
+      if (!relaxed) violations.push(`compatibility_changed:${key}`)
+    }
+    if (got.resolutionState !== want.resolutionState && !anyDropped) {
+      violations.push(`resolution_changed:${key}`)
+    }
+  }
+
+  if (final.readinessState !== expected.readinessState && !anyDropped) {
+    violations.push('readiness_changed')
+  }
+
+  // Blocking conditions are checked whatever the answers were: an answer may introduce a warning it
+  // was given in order to introduce, and may never introduce a *blocking* condition nobody read.
+  const reviewedBlocking = new Set(
+    expected.warnings
       .filter((warning) => warning.severity === 'blocking')
       .map((warning) => `${warning.code}|${warning.sourceType}|${warning.sourceId ?? ''}`),
   )
-  return projectTargetResolution(resolved)
-    .warnings.filter((warning) => warning.severity === 'blocking')
-    .filter(
-      (warning) => !reviewed.has(`${warning.code}|${warning.sourceType}|${warning.sourceId ?? ''}`),
-    )
-    .map((warning) => warning.code)
-    .sort()
+  for (const warning of final.warnings) {
+    const signature = `${warning.code}|${warning.sourceType}|${warning.sourceId ?? ''}`
+    if (warning.severity === 'blocking' && !reviewedBlocking.has(signature)) {
+      violations.push(`unreviewed_blocking_warning:${warning.code}`)
+      continue
+    }
+    if (!anyDropped && !expected.warnings.some((candidate) => sameWarning(candidate, warning))) {
+      violations.push(`unreviewed_warning:${warning.code}`)
+    }
+  }
+  if (!anyDropped) {
+    for (const warning of expected.warnings) {
+      if (!final.warnings.some((candidate) => sameWarning(candidate, warning))) {
+        violations.push(`warning_disappeared:${warning.code}`)
+      }
+    }
+  }
+
+  return [...new Set(violations)].sort()
 }
 
 export function unanswerableBlockingDecisions(plan: CardRebuildPlan): RebuildDecision[] {
@@ -1575,6 +1721,11 @@ export function allowedAcknowledgements(
   // "confirmed", so the physician was asked to affirm a line they had just been told does not work
   // and given no way to clear it.
   if (decision.kind === 'requirement' && decision.carriedSelection) {
+    // A carried *deliberate blank* is not a selection. There is no product to confirm and none to
+    // drop, so offering those two asked the physician to affirm or discard something that does not
+    // exist — and whichever they picked went into immutable provenance as the answer they gave.
+    // What they are actually being asked is whether they have read that this line is still empty.
+    if (decision.carriedSelection.kind === 'none') return ['acknowledged_unresolved']
     return ['confirmed', 'dropped']
   }
   switch (decision.state) {

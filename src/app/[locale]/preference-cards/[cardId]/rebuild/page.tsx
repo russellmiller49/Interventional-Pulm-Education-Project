@@ -38,6 +38,7 @@ const SUBMISSION_ERROR_CODES = [
   'source_moved',
   'review_incomplete',
   'not_resolvable',
+  'review_unavailable',
   'write_failed',
 ] as const
 

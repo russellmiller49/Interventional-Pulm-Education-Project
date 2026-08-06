@@ -62,3 +62,51 @@ export const createRebuiltCardRequestSchema = rebuildPlanRequestSchema.extend({
 
 export type RebuildPlanRequest = z.infer<typeof rebuildPlanRequestSchema>
 export type CreateRebuiltCardRequest = z.infer<typeof createRebuiltCardRequestSchema>
+
+/**
+ * What a stored `rebuild_provenance` document may say, read back.
+ *
+ * Validated on read rather than trusted, for the same reason `builder_inputs` is: the column is
+ * write-once and unwritable by any API role, which makes it *authentic*, not well-typed. A document
+ * written by an older version of this code — or one that predates a field — must not make the card
+ * page throw, and must not be rendered as though it said something it does not.
+ *
+ * Deliberately loose about the decision list's `state` and `reasonCodes`: those are closed
+ * vocabularies *at the moment a card was created*, and a card created a year ago carries the
+ * vocabulary of a year ago. Narrowing them here would make old, perfectly valid evidence
+ * unreadable — which is the opposite of what a permanent record is for.
+ */
+export const storedRebuildProvenanceSchema = z.object({
+  version: z.literal('ip-cards-rebuild/1'),
+  sourceCardId: z.string().uuid(),
+  sourceRevisionId: z.string().uuid(),
+  sourceRevisionNumber: z.number().int().min(1),
+  sourceReleaseBundleId: z.string().trim().min(1).max(120),
+  sourceReleaseDefinitionHash: sha256Schema,
+  sourceSnapshotHash: sha256Schema,
+  sourceSnapshotIntegrityHash: sha256Schema.nullable(),
+  sourceResolvedContentHash: sha256Schema.nullable(),
+  sourcePrintDocumentHash: sha256Schema.nullable(),
+  targetReleaseBundleId: z.string().trim().min(1).max(120),
+  targetReleaseDefinitionHash: sha256Schema,
+  targetCatalogReleaseId: z.string().trim().min(1).max(120),
+  operationalReconciliationHash: sha256Schema,
+  authoredReleaseDiffHash: sha256Schema,
+  mappingPlanHash: sha256Schema,
+  /** Absent on cards created before the allowed-state derivation existed. */
+  allowedFinalStateHash: sha256Schema.optional(),
+  decisions: z
+    .array(
+      z.object({
+        key: z.string().trim().min(1).max(200),
+        kind: z.string().trim().min(1).max(40),
+        state: z.string().trim().min(1).max(60),
+        reasonCodes: z.array(z.string().trim().min(1).max(80)).max(40),
+        acknowledgement: z.string().trim().min(1).max(40).nullable(),
+      }),
+    )
+    .max(1000),
+  createdAt: z.string().datetime({ offset: true }),
+})
+
+export type StoredRebuildProvenance = z.infer<typeof storedRebuildProvenanceSchema>

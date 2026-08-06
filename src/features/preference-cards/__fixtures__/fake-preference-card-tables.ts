@@ -385,6 +385,7 @@ export class FakePreferenceCardTables {
     sourceRevisionId: string
     sourceSnapshotHash: string
     sourceReleaseBundleId: string | null
+    /** Bound to the revision row, not merely to the arguments — see the migration. */
     title: string
     physicianName: string | null
     procedureCode: string
@@ -395,14 +396,63 @@ export class FakePreferenceCardTables {
     engineVersion: string
     catalogImportId: string
     rebuildProvenance: unknown
-  }): { ok: true; cardId: string } | { ok: false; code: 'source_moved' } {
+  }):
+    | {
+        ok: true
+        cardId: string
+      }
+    | { ok: false; code: 'source_moved' | 'provenance_mismatch' | 'provenance_malformed' } {
+    // The document has to describe the source the arguments are checked against. Without this the
+    // recheck proves something about the *call* and nothing about the evidence that gets stored.
+    const document = (write.rebuildProvenance ?? {}) as Record<string, unknown>
+
+    // One known version, and every bound field present at the right type. A missing key would
+    // otherwise compare null-to-null against a null column below and read as agreement about a
+    // fact the document never made.
+    if (document.version !== 'ip-cards-rebuild/1')
+      return { ok: false, code: 'provenance_malformed' }
+    const required = [
+      'sourceCardId',
+      'sourceRevisionId',
+      'sourceSnapshotHash',
+      'sourceReleaseBundleId',
+    ]
+    if (required.some((field) => typeof document[field] !== 'string')) {
+      return { ok: false, code: 'provenance_malformed' }
+    }
+    if (typeof document.sourceRevisionNumber !== 'number') {
+      return { ok: false, code: 'provenance_malformed' }
+    }
+    for (const field of ['sourceSnapshotIntegrityHash', 'sourceResolvedContentHash']) {
+      if (!(field in document)) return { ok: false, code: 'provenance_malformed' }
+      const value = document[field]
+      if (value !== null && typeof value !== 'string') {
+        return { ok: false, code: 'provenance_malformed' }
+      }
+    }
+    const claims: Array<[unknown, unknown]> = [
+      [document.sourceCardId, write.sourceCardId],
+      [document.sourceRevisionId, write.sourceRevisionId],
+      [document.sourceSnapshotHash, write.sourceSnapshotHash],
+      [document.sourceReleaseBundleId, write.sourceReleaseBundleId],
+    ]
+    if (claims.some(([claimed, argument]) => (claimed ?? null) !== (argument ?? null))) {
+      return { ok: false, code: 'provenance_mismatch' }
+    }
+
     const revision = this.revisions.find(
       (row) =>
         row.id === write.sourceRevisionId &&
         row.card_id === write.sourceCardId &&
         row.user_id === write.ownerId &&
         row.snapshot_hash === write.sourceSnapshotHash &&
-        (row.release_bundle_id ?? null) === (write.sourceReleaseBundleId ?? null),
+        (row.release_bundle_id ?? null) === (write.sourceReleaseBundleId ?? null) &&
+        // The remaining columns the revision knows, bound to the stored document.
+        String(row.revision_number) === String(document.sourceRevisionNumber ?? '') &&
+        (row.snapshot_integrity_hash ?? null) ===
+          ((document.sourceSnapshotIntegrityHash as string | null | undefined) ?? null) &&
+        (row.resolved_content_hash ?? null) ===
+          ((document.sourceResolvedContentHash as string | null | undefined) ?? null),
     )
     const source = revision
       ? this.cards.find((row) => row.id === revision.card_id && row.user_id === revision.user_id)

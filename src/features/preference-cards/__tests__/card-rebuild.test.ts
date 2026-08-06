@@ -1,3 +1,8 @@
+import {
+  allowedAcknowledgements,
+  expectedFinalState,
+  expectedFinalStateHash,
+} from '../domain/card-rebuild-plan'
 import { resolveCard } from '../domain/resolve-card'
 import { stableStringify } from '../domain/stable-hash'
 import type { BuilderInputs } from '../schemas/saved-card'
@@ -16,6 +21,7 @@ import {
 import {
   FIXTURE_DUPLICATE_CONFLICTING_MODIFIER,
   FIXTURE_DUPLICATE_IDENTICAL_MODIFIER,
+  FIXTURE_DUPLICATE_RESCUE_MODIFIER,
   FIXTURE_PRIMARY_ITEM_ID,
   FIXTURE_RESCUE_MODIFIER_CODE,
   FIXTURE_RESCUE_REQUIREMENT_KEY,
@@ -205,6 +211,12 @@ beforeEach(() => {
     async (write: Parameters<typeof tables.createRebuiltCard>[0]) => {
       const result = tables.createRebuiltCard(write)
       if (result.ok) return { ok: true, cardId: result.cardId }
+      // The real RPC raises `no_data_found` for a source that moved and
+      // `invalid_parameter_value` for a document that does not describe it; the writer maps the
+      // first to `source_moved` and everything else to `write_failed`.
+      if (result.code !== 'source_moved') {
+        return { ok: false, code: 'write_failed', message: `provenance rejected: ${result.code}` }
+      }
       return {
         ok: false,
         code: 'source_moved',
@@ -300,8 +312,10 @@ async function answerEverything(cardId: string, revisionId: string) {
   const acknowledgements: Record<string, 'confirmed' | 'dropped' | 'acknowledged_unresolved'> = {}
   for (const decision of prepared.preparation.plan.decisions) {
     if (!decision.requiresExplicitConfirmation) continue
-    acknowledgements[decision.key] =
-      decision.state === 'carried_requires_review' ? 'confirmed' : 'acknowledged_unresolved'
+    // Whatever the decision actually allows, rather than a second opinion derived from its state.
+    // Keying on `carried_requires_review === 'confirmed'` made every changed line answerable as a
+    // confirmation, including a carried deliberate blank, which has no product to confirm.
+    acknowledgements[decision.key] = allowedAcknowledgements(decision)[0]
   }
   return { prepared: prepared.preparation, acknowledgements }
 }
@@ -397,7 +411,60 @@ describe('creating the new card', () => {
     expect(decisions).toHaveLength(prepared.plan.decisions.length)
     expect(
       decisions.find((entry) => entry.key === `requirement:${REVISED_REQUIREMENT_KEY}`),
-    ).toEqual(expect.objectContaining({ acknowledgement: 'confirmed' }))
+    ).toEqual(
+      expect.objectContaining({
+        acknowledgement: allowedAcknowledgements(
+          prepared.plan.decisions.find(
+            (entry) => entry.key === `requirement:${REVISED_REQUIREMENT_KEY}`,
+          )!,
+        )[0],
+      }),
+    )
+    // And the state those answers authorized, derived here from the plan and the answers alone.
+    // Provenance recorded the plan and the answers but nothing about the card they were allowed to
+    // produce, so a later reader could only re-derive it by guessing at the same rules.
+    expect(provenance.allowedFinalStateHash).toBe(
+      expectedFinalStateHash(expectedFinalState(prepared.plan, acknowledgements)),
+    )
+  })
+
+  it('records a dropped answer as dropped, with the line cleared on the card', async () => {
+    const { cardId, revisionId } = seedAlphaCard()
+    const prepared = await prepareCardRebuild(cardId, revisionId)
+    if (!prepared.ok) throw new Error(prepared.code)
+
+    // The one changed requirement that carries a real product, answered by discarding it.
+    const droppable = prepared.preparation.plan.decisions.find((entry) =>
+      allowedAcknowledgements(entry).includes('dropped'),
+    )
+    expect(droppable).toBeDefined()
+    const acknowledgements: Record<string, 'confirmed' | 'dropped' | 'acknowledged_unresolved'> = {}
+    for (const entry of prepared.preparation.plan.decisions) {
+      if (!entry.requiresExplicitConfirmation) continue
+      acknowledgements[entry.key] =
+        entry.key === droppable!.key ? 'dropped' : allowedAcknowledgements(entry)[0]
+    }
+
+    const result = await createRebuiltCard({
+      cardId,
+      revisionId,
+      selection: prepared.preparation.selection,
+      planHash: prepared.preparation.planHash,
+      acknowledgements,
+      title: 'Fixture card (rebuilt)',
+    })
+    if (!result.ok) throw new Error(result.message)
+
+    const created = tables.cards.find((row) => row.id === result.cardId)!
+    const provenance = created.rebuild_provenance as {
+      decisions: Array<{ key: string; acknowledgement: string | null }>
+    }
+    expect(provenance.decisions.find((entry) => entry.key === droppable!.key)).toEqual(
+      expect.objectContaining({ acknowledgement: 'dropped' }),
+    )
+    const slotId = droppable!.kind === 'requirement' ? droppable!.target?.slotId : undefined
+    const inputs = created.builder_inputs as BuilderInputs
+    expect(inputs.input.selectedHospitalItemIds?.[slotId as string]).toBeNull()
   })
 
   it('does not mark the source card superseded or touch its sharing', async () => {
@@ -938,6 +1005,38 @@ describe('duplicate requirement keys survive the integration path to the blocker
     expect(tables.cards).toHaveLength(cardsBefore)
   })
 
+  it('blocks a rescue module that duplicates a base requirement key', async () => {
+    // The other route into the same ambiguity. A rescue module's slots are expanded in a later step
+    // than a modifier's `add_slot`, so covering one path does not cover this one — which is the
+    // reason the planner and the resolver had to end up sharing `expandEffectiveSlots` rather than
+    // each keeping its own idea of what a composition expands to.
+    const { cardId, revisionId } = seedWithModifier(FIXTURE_DUPLICATE_RESCUE_MODIFIER)
+    const prepared = await prepareCardRebuild(cardId, revisionId)
+    if (!prepared.ok) throw new Error(prepared.code)
+
+    const primary = prepared.preparation.plan.decisions.find(
+      (entry) => entry.key === 'requirement:FIXTURE_PRIMARY_SCOPE',
+    )!
+    expect(primary.state).toBe('incompatible')
+    expect(primary.reasonCodes).toContain('requirement_key_ambiguous')
+    expect(primary.blocking).toBe(true)
+
+    const { acknowledgements } = await answerEverything(cardId, revisionId)
+    const cardsBefore = tables.cards.length
+    const revisionsBefore = tables.revisions.length
+    const result = await createRebuiltCard({
+      cardId,
+      revisionId,
+      selection: prepared.preparation.selection,
+      planHash: prepared.preparation.planHash,
+      acknowledgements,
+      title: 'Fixture card (rebuilt)',
+    })
+    expect(result.ok === false && result.code).toBe('plan_blocked')
+    expect(tables.cards).toHaveLength(cardsBefore)
+    expect(tables.revisions).toHaveLength(revisionsBefore)
+  })
+
   it('blocks an identical duplicate too, because the resolver emits both slots', async () => {
     const { cardId, revisionId } = seedWithModifier(FIXTURE_DUPLICATE_IDENTICAL_MODIFIER)
     const prepared = await prepareCardRebuild(cardId, revisionId)
@@ -1063,45 +1162,11 @@ describe('the source is re-derived at write time, not trusted from the review', 
     expect(tables.cards).toHaveLength(cardsBefore)
   })
 
-  it('creates nothing when the payload disagrees with the stored revision', () => {
-    const { cardId, revisionId } = seedAlphaCard()
+  /** Everything the RPC binds, agreeing with the seeded revision. Negative cases mutate one field. */
+  function writeFor(cardId: string, revisionId: string, overrides: Record<string, unknown> = {}) {
     const revision = tables.revisions.find((row) => row.id === revisionId)!
-    const cardsBefore = tables.cards.length
-
-    // Driven at the writer directly, because that is the only place this can be observed: the
-    // application re-reads the revision immediately before writing, so a change to the database
-    // moves the payload with it. The RPC's predicate is what protects the window *after* that read
-    // — a source edited or deleted between validation and insert — and it compares the payload it
-    // was handed against the row as it stands at insert time.
-    const stale = tables.createRebuiltCard({
+    const base = {
       ownerId: OWNER,
-      sourceCardId: cardId,
-      sourceRevisionId: revisionId,
-      sourceSnapshotHash: '0'.repeat(64),
-      sourceReleaseBundleId: revision.release_bundle_id,
-      title: 'Fixture card (rebuilt)',
-      physicianName: null,
-      procedureCode: FIXTURE_PROCEDURE_CODE,
-      scenarioId: FIXTURE_SCENARIO_ID,
-      builderInputs: {},
-      cardSnapshot: {},
-      snapshotHash: 'a'.repeat(64),
-      engineVersion: 'fixture',
-      catalogImportId: 'fixture',
-      rebuildProvenance: { version: 'ip-cards-rebuild/1' },
-    })
-
-    expect(stale).toEqual({ ok: false, code: 'source_moved' })
-    expect(tables.cards).toHaveLength(cardsBefore)
-  })
-
-  it('creates nothing when the owner named by the payload does not own the revision', () => {
-    const { cardId, revisionId } = seedAlphaCard()
-    const revision = tables.revisions.find((row) => row.id === revisionId)!
-    const cardsBefore = tables.cards.length
-
-    const foreign = tables.createRebuiltCard({
-      ownerId: OTHER_USER,
       sourceCardId: cardId,
       sourceRevisionId: revisionId,
       sourceSnapshotHash: revision.snapshot_hash,
@@ -1115,12 +1180,117 @@ describe('the source is re-derived at write time, not trusted from the review', 
       snapshotHash: 'a'.repeat(64),
       engineVersion: 'fixture',
       catalogImportId: 'fixture',
-      rebuildProvenance: { version: 'ip-cards-rebuild/1' },
-    })
+      ...overrides,
+    }
+    return {
+      ...base,
+      rebuildProvenance: {
+        version: 'ip-cards-rebuild/1',
+        sourceCardId: base.sourceCardId,
+        sourceRevisionId: base.sourceRevisionId,
+        sourceSnapshotHash: base.sourceSnapshotHash,
+        sourceReleaseBundleId: base.sourceReleaseBundleId,
+        sourceRevisionNumber: revision.revision_number,
+        sourceSnapshotIntegrityHash: revision.snapshot_integrity_hash,
+        sourceResolvedContentHash: revision.resolved_content_hash,
+        ...((overrides.rebuildProvenance as Record<string, unknown>) ?? {}),
+      },
+    }
+  }
+
+  it('creates nothing when the payload disagrees with the stored revision', () => {
+    const { cardId, revisionId } = seedAlphaCard()
+    const cardsBefore = tables.cards.length
+
+    // Driven at the writer directly, because that is the only place this can be observed: the
+    // application re-reads the revision immediately before writing, so a change to the database
+    // moves the payload with it. The RPC's predicate is what protects the window *after* that read
+    // — a source edited or deleted between validation and insert — and it compares the payload it
+    // was handed against the row as it stands at insert time.
+    const stale = tables.createRebuiltCard(
+      writeFor(cardId, revisionId, {
+        sourceSnapshotHash: '0'.repeat(64),
+        rebuildProvenance: { sourceSnapshotHash: '0'.repeat(64) },
+      }),
+    )
+
+    expect(stale).toEqual({ ok: false, code: 'source_moved' })
+    expect(tables.cards).toHaveLength(cardsBefore)
+  })
+
+  it('creates nothing when the owner named by the payload does not own the revision', () => {
+    const { cardId, revisionId } = seedAlphaCard()
+    const cardsBefore = tables.cards.length
+
+    const foreign = tables.createRebuiltCard(writeFor(cardId, revisionId, { ownerId: OTHER_USER }))
 
     expect(foreign).toEqual({ ok: false, code: 'source_moved' })
     expect(tables.cards).toHaveLength(cardsBefore)
   })
+
+  it('accepts a fully consistent payload, so the negative cases are not passing vacuously', () => {
+    const { cardId, revisionId } = seedAlphaCard()
+    expect(tables.createRebuiltCard(writeFor(cardId, revisionId)).ok).toBe(true)
+  })
+
+  it.each([
+    ['sourceRevisionNumber', 99],
+    ['sourceSnapshotIntegrityHash', 'f'.repeat(64)],
+    ['sourceResolvedContentHash', 'f'.repeat(64)],
+  ])('refuses a document that fabricates %s', (field, value) => {
+    const { cardId, revisionId } = seedAlphaCard()
+    const cardsBefore = tables.cards.length
+
+    // Each of these is a column the revision row knows. Binding only the call's arguments
+    // authenticated the *call* and not the evidence: one real tuple satisfied the join while a
+    // fabricated revision number or hash was frozen into a write-once column.
+    const result = tables.createRebuiltCard(
+      writeFor(cardId, revisionId, { rebuildProvenance: { [field]: value } }),
+    )
+
+    expect(result.ok).toBe(false)
+    expect(tables.cards).toHaveLength(cardsBefore)
+  })
+
+  it.each([
+    ['a document at an unknown version', { version: 'ip-cards-rebuild/2' }],
+    ['a document with no version at all', { version: undefined }],
+    ['a revision number sent as a string', { sourceRevisionNumber: '1' }],
+    ['an omitted nullable integrity hash', { sourceSnapshotIntegrityHash: undefined }],
+    ['an omitted nullable content hash', { sourceResolvedContentHash: undefined }],
+  ])('refuses %s', (_label, override) => {
+    const { cardId, revisionId } = seedAlphaCard()
+    const cardsBefore = tables.cards.length
+
+    // An absent key is not the same claim as an explicit JSON null: absent would compare
+    // null-to-null against a null column and be read as agreement about a fact never made.
+    const write = writeFor(cardId, revisionId)
+    const provenance = { ...write.rebuildProvenance, ...override } as Record<string, unknown>
+    for (const [key, value] of Object.entries(override)) {
+      if (value === undefined) delete provenance[key]
+    }
+
+    expect(tables.createRebuiltCard({ ...write, rebuildProvenance: provenance })).toEqual({
+      ok: false,
+      code: 'provenance_malformed',
+    })
+    expect(tables.cards).toHaveLength(cardsBefore)
+  })
+
+  it.each(['sourceCardId', 'sourceRevisionId', 'sourceSnapshotHash', 'sourceReleaseBundleId'])(
+    'refuses a document whose %s disagrees with the argument it was checked against',
+    (field) => {
+      const { cardId, revisionId } = seedAlphaCard()
+      const cardsBefore = tables.cards.length
+
+      const result = tables.createRebuiltCard(
+        writeFor(cardId, revisionId, { rebuildProvenance: { [field]: 'invented' } }),
+      )
+
+      expect(result).toEqual({ ok: false, code: 'provenance_mismatch' })
+      expect(tables.cards).toHaveLength(cardsBefore)
+    },
+  )
 
   it('leaves the rebuilt card standing as a tombstone when the source is deleted afterwards', async () => {
     const { cardId, revisionId } = seedAlphaCard()
@@ -1203,5 +1373,90 @@ describe('the fixture world is the one the pointer describes', () => {
 
   it('gives the fixture scenario the recipe version its release pins', () => {
     expect(fixtureScenario(FIXTURE_RECIPE_V1_0).recipeVersionId).toBe(FIXTURE_RECIPE_V1_0)
+  })
+})
+
+describe('a review whose inputs could not be computed is not offered', () => {
+  /**
+   * A card whose stored equipment set cannot be rebuilt from the retained catalogue.
+   *
+   * The fixture catalogue is deliberately empty, so any set member fails to resolve — which is
+   * exactly what makes the operational comparison, and only the operational comparison, fail.
+   */
+  function seedCardWithUnresolvableSet(overrides: { duplicateId?: boolean } = {}) {
+    const base = seedAlphaCard()
+    const revision = tables.revisions.find((row) => row.id === base.revisionId)!
+    const inputs = revision.builder_inputs as BuilderInputs
+    const set = {
+      id: 'set-fixture-1',
+      name: 'Fixture tray',
+      selectedRoleCode: 'FIXTURE_ROLE',
+      additionalCoveredRoles: [],
+      members: [{ productId: 'PRD-MISSING', roleCode: 'FIXTURE_ROLE' }],
+    }
+    const equipmentSets = overrides.duplicateId
+      ? [
+          { ...set, members: [] },
+          { ...set, name: 'Fixture tray, said twice' },
+        ]
+      : [set]
+    revision.builder_inputs = { ...inputs, equipmentSets }
+    return base
+  }
+
+  it('reports the failed comparison as a blocker rather than hashing it into evidence', async () => {
+    const { cardId, revisionId } = seedCardWithUnresolvableSet()
+    const prepared = await prepareCardRebuild(cardId, revisionId)
+    if (!prepared.ok) throw new Error(prepared.code)
+
+    expect(prepared.preparation.operational.ok).toBe(false)
+    expect(prepared.preparation.blockers).toContain('operational_comparison_unavailable')
+  })
+
+  it('refuses a direct submission, and writes nothing', async () => {
+    const { cardId, revisionId } = seedCardWithUnresolvableSet()
+    const { prepared, acknowledgements } = await answerEverything(cardId, revisionId)
+    const cardsBefore = tables.cards.length
+    const revisionsBefore = tables.revisions.length
+
+    // The page hiding the control has never been the boundary here. A failed comparison hashes
+    // deterministically, so the plan hash still matches and the request is otherwise well formed.
+    const result = await createRebuiltCard({
+      cardId,
+      revisionId,
+      selection: prepared.selection,
+      planHash: prepared.planHash,
+      acknowledgements,
+      title: 'Fixture card (rebuilt)',
+    })
+
+    expect(result.ok === false && result.code).toBe('review_unavailable')
+    expect(result.ok === false && result.missing).toContain('operational_comparison_unavailable')
+    expect(tables.cards).toHaveLength(cardsBefore)
+    expect(tables.revisions).toHaveLength(revisionsBefore)
+  })
+
+  it('refuses a card whose stored equipment sets share an id, before any review', async () => {
+    // Two schema-valid records claiming one id made "the set this requirement chose" a question
+    // with two answers: `.find()` validated the first and offered the set as carried, and the save
+    // path iterated both and failed on the second's missing member — after the whole review had
+    // been answered.
+    const { cardId, revisionId } = seedCardWithUnresolvableSet({ duplicateId: true })
+    const cardsBefore = tables.cards.length
+
+    const prepared = await prepareCardRebuild(cardId, revisionId)
+    expect(prepared.ok).toBe(false)
+    expect(prepared.ok === false && prepared.code).toBe('builder_inputs_unavailable')
+
+    const result = await createRebuiltCard({
+      cardId,
+      revisionId,
+      selection: { moduleVersionIds: [], modifierCodes: [] },
+      planHash: '0'.repeat(64),
+      acknowledgements: {},
+      title: 'Fixture card (rebuilt)',
+    })
+    expect(result.ok).toBe(false)
+    expect(tables.cards).toHaveLength(cardsBefore)
   })
 })

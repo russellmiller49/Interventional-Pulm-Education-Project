@@ -81,3 +81,21 @@ it.each(['plan_moved', 'plan_blocked', 'source_moved'])(
     expect(await redirectTarget(form())).toContain(`error=${code}`)
   },
 )
+
+it.each(['/x.co', '//x.co', 'en/../..', 'ko', 'not-a-locale'])(
+  'refuses a tampered locale rather than redirecting to it: %s',
+  async (locale) => {
+    // The schema accepted any trimmed two-to-sixteen-character string, and both the refusal and
+    // the success path interpolate it after a slash — so `/x.co` produced `//x.co/...`, which is a
+    // protocol-relative external URL. `ko` is planned rather than active: there are no messages
+    // for it, so it is refused for the same reason.
+    createRebuiltCard.mockResolvedValue({ ok: true, cardId: NEW_ID })
+    await expect(createRebuiltCardAction(form({ locale }))).rejects.toThrow(/Invalid locale/)
+    expect(createRebuiltCard).not.toHaveBeenCalled()
+  },
+)
+
+it.each(['en', 'es', 'zh-CN'])('keeps the exact builder destination for %s', async (locale) => {
+  createRebuiltCard.mockResolvedValue({ ok: true, cardId: NEW_ID })
+  expect(await redirectTarget(form({ locale }))).toBe(`/${locale}/preference-cards/${NEW_ID}/edit`)
+})

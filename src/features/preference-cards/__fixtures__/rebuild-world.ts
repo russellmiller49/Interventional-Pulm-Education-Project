@@ -73,6 +73,38 @@ const rescueModifier: ModifierDefinition = {
 }
 
 /**
+ * A modifier that pulls in a *rescue module* whose slot claims a key the composition already has.
+ *
+ * The same ambiguity as the two modifiers below, arriving by the other route. A rescue module's
+ * slots are expanded in a later step than a modifier's `add_slot`, so a check written against one
+ * path does not automatically cover the other — and the shared `expandEffectiveSlots` extraction is
+ * exactly the thing that has to make it cover both.
+ */
+export const FIXTURE_DUPLICATE_RESCUE_MODIFIER = 'FIXTURE_DUPLICATE_RESCUE'
+const FIXTURE_DUPLICATE_RESCUE_MODULE = 'FIXTURE_DUPLICATE_RESCUE_MODULE'
+
+const duplicateRescueModifier: ModifierDefinition = {
+  code: FIXTURE_DUPLICATE_RESCUE_MODIFIER,
+  name: 'Fixture rescue-adding modifier, duplicating a base requirement',
+  groupCode: 'risk_rescue',
+  description: 'Synthetic; adds a rescue module whose slot claims a base requirement key.',
+  releaseState: 'mvp',
+  active: true,
+  appliesTo: FIXTURE_PROCEDURE_CODE,
+  preview: ['Adds a rescue module that duplicates a base requirement.'],
+  conflictsWith: [],
+  actions: [
+    {
+      id: 'fixture-adds-duplicate-rescue',
+      modifierCode: FIXTURE_DUPLICATE_RESCUE_MODIFIER,
+      sequence: 10,
+      actionType: 'add_rescue_module',
+      payload: { code: FIXTURE_DUPLICATE_RESCUE_MODULE },
+    },
+  ],
+}
+
+/**
  * Two modifiers that add a slot claiming a requirement key the composition already expresses.
  *
  * The resolver deduplicates added slots by **slot id**, not by requirement key, so both of these
@@ -262,6 +294,7 @@ export function createRebuildFixtureWorld(): RebuildFixtureWorld {
         allowedModifierCodes: [
           ...sources.recipe.allowedModifierCodes,
           FIXTURE_RESCUE_MODIFIER_CODE,
+          FIXTURE_DUPLICATE_RESCUE_MODIFIER,
           FIXTURE_DUPLICATE_CONFLICTING_MODIFIER,
           FIXTURE_DUPLICATE_IDENTICAL_MODIFIER,
         ],
@@ -270,10 +303,23 @@ export function createRebuildFixtureWorld(): RebuildFixtureWorld {
       modifiers: [
         ...sources.modifiers,
         rescueModifier,
+        duplicateRescueModifier,
         conflictingDuplicateModifier,
         identicalDuplicateModifier,
       ],
-      rescueModules: sources.rescueModules,
+      rescueModules: [
+        ...sources.rescueModules,
+        {
+          code: FIXTURE_DUPLICATE_RESCUE_MODULE,
+          name: 'Fixture rescue that duplicates a base requirement',
+          description: 'Synthetic.',
+          slots: [
+            duplicateSlot('SLOT-FIXTURE-RESCUE-DUPLICATE', {
+              label: 'Primary scope, arriving through a rescue module',
+            }),
+          ],
+        },
+      ],
       // Deliberately shared references: hospital-local data is *current* on both sides of a
       // rebuild, and giving the two releases different formularies would smuggle an operational
       // change into a comparison that is supposed to isolate authored ones.

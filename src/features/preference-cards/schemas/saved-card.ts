@@ -79,6 +79,40 @@ export const equipmentSetRefSchema = z.object({
 })
 
 /**
+ * Two stored sets may not claim one id.
+ *
+ * A set is addressed by id everywhere it is used — `set:<id>` is the hospital-item id a requirement
+ * selects, and every lookup is a `.find()`. Two records sharing an id therefore make "the set this
+ * requirement chose" a question with two answers, and `.find()` silently returns whichever was
+ * written first. The rebuild planner validated that one and offered the set as carried, while the
+ * save path iterated *both* and failed on the second's missing member — after the whole review had
+ * been answered, as a generic `not_resolvable`.
+ *
+ * Rejected rather than deduplicated. Which of two conflicting records the physician meant is not a
+ * thing this code can know, and a card that cannot be read unambiguously must not be re-resolved
+ * into a new one. Such a card stays viewable and printable from its snapshot; it is the *rebuild*
+ * and the *edit* that are refused.
+ */
+function requireUniqueEquipmentSetIds(
+  sets: { id: string }[],
+  ctx: z.RefinementCtx,
+  path: (string | number)[] = ['equipmentSets'],
+) {
+  const seen = new Set<string>()
+  for (const [index, set] of sets.entries()) {
+    if (!seen.has(set.id)) {
+      seen.add(set.id)
+      continue
+    }
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [...path, index, 'id'],
+      message: `Two equipment sets share the id ${set.id}; a set id addresses exactly one set.`,
+    })
+  }
+}
+
+/**
  * A stored equipment set, as identifiers. Exported because the rebuild planner carries whole sets
  * forward and has to name the shape it is writing rather than inferring it from a `.map()`.
  */
@@ -257,7 +291,9 @@ export function carriesUnreconcilableFamilyIdentity(inputs: {
   return (inputs.familyPicks ?? []).length > 0
 }
 
-export const builderInputsSchema = builderInputsObject.superRefine(requireVersionPinAgreement)
+export const builderInputsSchema = builderInputsObject
+  .superRefine(requireVersionPinAgreement)
+  .superRefine((inputs, ctx) => requireUniqueEquipmentSetIds(inputs.equipmentSets, ctx))
 
 export type BuilderInputs = z.infer<typeof builderInputsSchema>
 
@@ -312,6 +348,7 @@ export const saveCardRequestSchema = builderInputsObject
     }
   })
   .superRefine(requireVersionPinAgreement)
+  .superRefine((value, ctx) => requireUniqueEquipmentSetIds(value.equipmentSets, ctx))
   .superRefine((value, ctx) => {
     // Nothing may be *written* at a superseded version, which is what makes version 2
     // view-only rather than merely discouraged. Enforced in the schema rather than at the

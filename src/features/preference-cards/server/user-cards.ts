@@ -2,6 +2,10 @@ import { supabaseServer } from '@/lib/supabase/server'
 
 import { resolveCard } from '../domain/resolve-card'
 import type { ResolvedCard } from '../domain/types'
+import {
+  storedRebuildProvenanceSchema,
+  type StoredRebuildProvenance,
+} from '../schemas/card-rebuild'
 import { parsePersistedSnapshot } from '../schemas/persisted-snapshot'
 import {
   builderInputsSchema,
@@ -59,6 +63,16 @@ export interface UserCardRecord extends UserCardSummary {
    * reopening it in the builder is unavailable, which is better than reopening it wrong.
    */
   builderInputs: BuilderInputs | null
+  /**
+   * How this card came to exist, when it was created by a reviewed rebuild. Null on every other
+   * card, and null on a rebuilt one whose document does not satisfy the read-back schema.
+   *
+   * Read here rather than through a second query because a card page that cannot tell a rebuilt
+   * card from an ordinary one cannot say the source revision is gone — and the documentation
+   * promised exactly that. The column is owner-scoped by the same row-level security as the rest
+   * of the row.
+   */
+  rebuildProvenance: StoredRebuildProvenance | null
 }
 
 /**
@@ -97,6 +111,7 @@ interface CardRow {
   snapshot_hash: string
   share_enabled: boolean
   share_token: string
+  rebuild_provenance: unknown
   created_at: string
   updated_at: string
 }
@@ -105,6 +120,9 @@ interface CardRow {
 // something the dashboard has to know before it offers the control.
 const SUMMARY_COLUMNS =
   'id, title, physician_name, procedure_code, scenario_id, status, snapshot_hash, share_enabled, share_token, created_at, updated_at, card_snapshot, builder_inputs'
+
+/** The card page needs one column the dashboard listing does not: how the card came to exist. */
+const RECORD_COLUMNS = `${SUMMARY_COLUMNS}, rebuild_provenance`
 
 function toSummary(
   row: CardRow,
@@ -309,7 +327,7 @@ export async function loadUserCard(cardId: string): Promise<UserCardRecord | nul
   const supabase = await supabaseServer()
   const { data, error } = await supabase
     .from(TABLE)
-    .select(SUMMARY_COLUMNS)
+    .select(RECORD_COLUMNS)
     .eq('id', cardId)
     .maybeSingle()
   if (error || !data) return null
@@ -318,6 +336,13 @@ export async function loadUserCard(cardId: string): Promise<UserCardRecord | nul
   const card = parsePersistedSnapshot(row.card_snapshot, row.snapshot_hash)
   if (!card) return null
   const inputs = builderInputsSchema.safeParse(row.builder_inputs)
+  // Validated rather than cast. The column is authentic — unwritable by any API role and write-once
+  // — which is not the same as well-typed, and a card whose document predates a field must render
+  // as an ordinary card rather than throwing.
+  const provenance =
+    row.rebuild_provenance == null
+      ? null
+      : storedRebuildProvenanceSchema.safeParse(row.rebuild_provenance)
 
   return {
     // `editable` is the narrower question: a version-2 card's inputs parse and are still
@@ -326,6 +351,7 @@ export async function loadUserCard(cardId: string): Promise<UserCardRecord | nul
     ...toSummary(row, card.readinessState, inputsCanBackAnEdit(row.builder_inputs)),
     card,
     builderInputs: inputs.success ? inputs.data : null,
+    rebuildProvenance: provenance?.success ? provenance.data : null,
   }
 }
 
