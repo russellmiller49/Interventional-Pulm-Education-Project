@@ -177,14 +177,15 @@ export function resetProgressWrites(): void {
   progressWrites = []
 }
 
+/** Seeds prior history. Written natively so the fixture is not counted as a workbench write. */
 export function seedStoredProgress(overrides: Partial<McsProgressV1> = {}): McsProgressV1 {
   const progress = { ...createDefaultMcsProgress(), ...overrides }
-  window.localStorage.setItem(MCS_PROGRESS_KEY, JSON.stringify(progress))
+  nativeSetItem.call(window.localStorage, MCS_PROGRESS_KEY, JSON.stringify(progress))
   return progress
 }
 
 export function writeMalformedStoredProgress(raw = '{ this is not json'): void {
-  window.localStorage.setItem(MCS_PROGRESS_KEY, raw)
+  nativeSetItem.call(window.localStorage, MCS_PROGRESS_KEY, raw)
 }
 
 export function readStoredProgressRaw(): Partial<McsProgressV1> | null {
@@ -246,9 +247,52 @@ export function renderWorkbenchWithoutSettling(options: RenderWorkbenchOptions) 
   )
 }
 
+let intervalDelays: number[] = []
+let installedIntervalIds: number[] = []
+let clearedIntervalIds: number[] = []
+
+/**
+ * Every interval delay installed since the render, in order.
+ *
+ * The cadence cannot be inferred from how far the clock moves: the workbench ticks 0.1 s every
+ * 100 ms and 0.25 s every 250 ms, so a second of wall clock advances the simulation by a second
+ * either way. The installed delay is the only thing that distinguishes them.
+ */
+export function capturedIntervalDelays(): readonly number[] {
+  return intervalDelays
+}
+
+/** Whether every interval this render installed was cleared again. */
+export function everyInstalledIntervalCleared(): boolean {
+  return installedIntervalIds.every((id) => clearedIntervalIds.includes(id))
+}
+
 /** Renders under fake timers, for the suites that need to drive the simulation interval. */
 export async function renderWorkbenchOnFakeTimers(options: RenderWorkbenchOptions) {
   jest.useFakeTimers()
+  intervalDelays = []
+  installedIntervalIds = []
+  clearedIntervalIds = []
+  const fakeSetInterval = window.setInterval
+  const fakeClearInterval = window.clearInterval
+  jest.spyOn(window, 'setInterval').mockImplementation(((
+    handler: TimerHandler,
+    delay?: number,
+    ...args: unknown[]
+  ) => {
+    const id = (fakeSetInterval as typeof window.setInterval)(
+      handler as () => void,
+      delay,
+      ...(args as []),
+    )
+    if (typeof delay === 'number') intervalDelays.push(delay)
+    installedIntervalIds.push(id)
+    return id
+  }) as typeof window.setInterval)
+  jest.spyOn(window, 'clearInterval').mockImplementation(((id?: number) => {
+    if (typeof id === 'number') clearedIntervalIds.push(id)
+    return (fakeClearInterval as typeof window.clearInterval)(id)
+  }) as typeof window.clearInterval)
   const result = render(
     <McsWorkbench
       section={options.section}
@@ -582,9 +626,15 @@ export function challengeFeedbackToggle(): HTMLElement {
 
 /* ------------------------------------------------------------------ context bar */
 
+function patientContextBar(): HTMLElement {
+  const bar = screen.getByRole('heading', { name: 'Patient context' }).closest('section')
+  if (!bar) throw new Error('No patient-context section')
+  return bar as HTMLElement
+}
+
 /** Reads one Patient-context row by its label, as the `dd` beside the `dt`. */
 export function patientContextValue(label: string): string {
-  const term = screen
+  const term = within(patientContextBar())
     .getAllByRole('term')
     .find((candidate) => candidate.textContent?.trim() === label)
   if (!term) throw new Error(`No patient-context item labelled "${label}"`)
@@ -594,9 +644,22 @@ export function patientContextValue(label: string): string {
 }
 
 export function patientContextLabels(): readonly string[] {
-  const bar = screen.getByRole('heading', { name: 'Patient context' }).closest('section')
-  if (!bar) throw new Error('No patient-context section')
-  return within(bar)
+  return within(patientContextBar())
     .getAllByRole('term')
     .map((term) => term.textContent?.trim() ?? '')
+}
+
+/** Every value in the patient-context bar, for the audits that scan rather than look up. */
+export function patientContextValues(): readonly string[] {
+  return within(patientContextBar())
+    .getAllByRole('definition')
+    .map((value) => value.textContent?.trim() ?? '')
+}
+
+/** The safety constraints the context bar carries beside the values. */
+export function patientContextSafetyConstraints(): readonly string[] {
+  const list = within(patientContextBar()).getByRole('list')
+  return within(list)
+    .getAllByRole('listitem')
+    .map((item) => item.textContent?.trim() ?? '')
 }
