@@ -932,8 +932,18 @@ export const crrtCircuitOverlays: readonly CrrtCircuitOverlay[] = Object.freeze(
     id: 'citrate-calcium',
     label: 'Citrate and calcium path',
     modality: null,
+    /**
+     * Summary and teaching point carry module-authored topology only.
+     *
+     * They used to say "where the calcium it binds leaves", "citrate … acts inside the circuit",
+     * and "citrate-calcium complexes can leave in the effluent", under the same three
+     * clinical-context records that support none of it. `CrrtPilotCircuit` renders both strings
+     * straight to the learner and `crrtCircuitTextEquivalent` appends the teaching point, so this
+     * view was still asserting as settled the two claims the term panel labels "Awaiting a
+     * source". Those two claims now live in `crrtCitrateOverlayStatements` as declared gaps.
+     */
     summary:
-      'Where citrate enters, where the calcium it binds leaves, where calcium replacement is given, and which sample describes which compartment.',
+      'The pre-blood-pump and citrate line drawn entering before the pump and the filter, the calcium line drawn straight to the patient, and the two sampling domains that describe different compartments.',
     activePathIds: [
       ...BLOOD,
       'pbp-citrate-infusion',
@@ -945,8 +955,8 @@ export const crrtCircuitOverlays: readonly CrrtCircuitOverlay[] = Object.freeze(
     showsFluidLedger: false,
     showsSamplingDomains: true,
     teachingPoint:
-      'Citrate enters before the filter, so it acts inside the circuit. Citrate-calcium complexes can leave in the effluent. Blood still returns to the patient, and calcium replacement supports the patient on a separate line. A circuit sample and a systemic sample answer different questions and are not interchangeable.',
-    sourceIds: ['REVIEW-CKRT-CORE-2025', 'TEXT-CRRT-NEYRA-2026', 'GUID-RRT-ICU-2026'],
+      'Citrate joins the blood path at the pre-blood-pump entry, before the pump and before the filter, so everything downstream of that entry is inside the circuit. Blood leaves the filter, travels the return line, and re-enters the patient through the return lumen. Calcium replacement runs to the patient on its own separate line and never passes through the circuit. A circuit sample describes the circuit and a systemic sample describes the patient; neither substitutes for the other.',
+    sourceIds: ['SYNTH-LAB-CITRATE-001'],
   },
   {
     id: 'pressure-profile',
@@ -1060,6 +1070,26 @@ export function crrtCircuitTextEquivalent(overlayId: CrrtCircuitOverlayId): stri
   }
 
   lines.push(overlay.teachingPoint)
+
+  /*
+   * The citrate view holds two claims open, and the text equivalent has to say so. Otherwise a
+   * reader on the text-only path gets the topology and never learns that the pharmacology behind
+   * it is unsourced — which is the one thing the rendered panel is careful to show.
+   *
+   * `crrtCitrateOverlayHeldOpenStatements` is a `const` further down the file; this function is
+   * only ever called after module initialisation, never at module scope.
+   */
+  if (overlayId === 'citrate-calcium') {
+    const heldOpen = crrtCitrateOverlayHeldOpenStatements()
+    if (heldOpen.length > 0) {
+      lines.push(
+        `This view does not settle everything it touches. ${heldOpen
+          .map((statement) => statement.text)
+          .join(' ')}`,
+      )
+    }
+  }
+
   return lines.join(' ')
 }
 
@@ -1240,6 +1270,80 @@ export const crrtCitrateCalciumTermById: ReadonlyMap<string, CrrtCitrateCalciumT
 )
 
 /* ------------------------------------------------------------------ *
+ * The citrate overlay's own statements
+ * ------------------------------------------------------------------ */
+
+/**
+ * What the citrate view claims, split the same way the terms are.
+ *
+ * This reuses `CrrtCitrateClaimSupport` rather than inventing a second provenance rule: a
+ * statement is either read off this module's own drawing, or it needs `citrate-pharmacology` and
+ * is therefore a declared gap. The two gaps are the same two the term panel already holds open —
+ * `circuit-anticoagulation` and `citrate-calcium-in-effluent` — restated here as the questions
+ * they are, so this view names them without settling them.
+ *
+ * The landed term wording in `crrtCitrateCalciumTerms` is untouched.
+ */
+export interface CrrtCitrateOverlayStatement {
+  readonly id: string
+  /** The learner-facing sentence. */
+  readonly text: string
+  readonly claimSupport: CrrtCitrateClaimSupport
+}
+
+export const crrtCitrateOverlayStatements: readonly CrrtCitrateOverlayStatement[] = Object.freeze([
+  Object.freeze({
+    id: 'pbp-citrate-enters-before-filter',
+    text: 'The pre-blood-pump and citrate line is drawn joining the blood path before the blood pump and before the filter.',
+    claimSupport: topologySupport(
+      ['pbp-citrate-source', 'pbp-citrate-entry', 'blood-pump', 'filter'],
+      ['pbp-citrate-infusion'],
+    ),
+  }),
+  Object.freeze({
+    id: 'blood-returns-through-return-lumen',
+    text: 'Blood leaves the filter, travels the return line, and re-enters the patient through the return lumen.',
+    claimSupport: topologySupport(
+      ['return-lumen', 'patient'],
+      ['filter-to-return', 'return-line', 'return-lumen'],
+    ),
+  }),
+  Object.freeze({
+    id: 'calcium-replacement-separate-line',
+    text: 'Calcium replacement is drawn on its own line running to the patient, outside the extracorporeal circuit.',
+    claimSupport: topologySupport(['calcium-source', 'patient'], ['calcium-infusion']),
+  }),
+  Object.freeze({
+    id: 'sampling-domains-describe-different-compartments',
+    text: 'The circuit sampling domain describes the circuit and the systemic sampling domain describes the patient.',
+    claimSupport: topologySupport(['circuit-sampling-domain', 'systemic-sampling-domain'], []),
+  }),
+  Object.freeze({
+    id: 'sampling-domains-not-interchangeable',
+    text: 'Neither sampling domain substitutes for the other.',
+    claimSupport: topologySupport(['circuit-sampling-domain', 'systemic-sampling-domain'], []),
+  }),
+  /* The two the registered set does not carry. Named, not asserted. */
+  Object.freeze({
+    id: 'citrate-slows-clotting-mechanism',
+    text: 'How citrate slows clotting inside the circuit — awaiting a claim-specific source.',
+    claimSupport: sourceGapSupport(),
+  }),
+  Object.freeze({
+    id: 'citrate-calcium-leaves-in-effluent',
+    text: 'Whether citrate-bound calcium leaves in the effluent — awaiting a claim-specific source.',
+    claimSupport: sourceGapSupport(),
+  }),
+])
+
+/** The statements this view holds open. Rendered in words, never only as a colour. */
+export function crrtCitrateOverlayHeldOpenStatements(): readonly CrrtCitrateOverlayStatement[] {
+  return crrtCitrateOverlayStatements.filter(
+    (statement) => statement.claimSupport.kind === 'registered-source-gap',
+  )
+}
+
+/* ------------------------------------------------------------------ *
  * Provenance closure
  * ------------------------------------------------------------------ */
 
@@ -1293,6 +1397,33 @@ export function crrtCitrateSourceGapTermIds(): readonly string[] {
     .map((term) => term.id)
 }
 
+/**
+ * The same semantic check, applied to the citrate overlay rather than to the terms.
+ *
+ * Two things have to hold. The records the overlay cites must support what its prose actually
+ * says, which is now topology; and a statement this view holds open must present no supporting
+ * record at all. This is deliberately scoped to the citrate overlay: auditing every overlay's
+ * `sourceIds` this way is a larger job than the one this correction is for.
+ */
+export function unsupportedCrrtCitrateOverlayCitations(): readonly CrrtClaimCitation[] {
+  const overlay = crrtCircuitOverlay('citrate-calcium')
+  const citations: CrrtClaimCitation[] = [
+    ...overlay.sourceIds.map((sourceId) => ({
+      label: 'citrate overlay prose',
+      sourceId,
+      topic: 'circuit-topology' as const,
+    })),
+    ...crrtCitrateOverlayStatements.flatMap((statement) =>
+      statement.claimSupport.supportingSourceIds.map((sourceId) => ({
+        label: `citrate overlay statement ${statement.id}`,
+        sourceId,
+        topic: statement.claimSupport.requiredTopic,
+      })),
+    ),
+  ]
+  return unsupportedCrrtClaimCitations(citations)
+}
+
 const unresolvedAtImport = unresolvedCrrtCircuitSourceIds()
 if (unresolvedAtImport.length > 0) {
   throw new Error(
@@ -1300,10 +1431,13 @@ if (unresolvedAtImport.length > 0) {
   )
 }
 
-const unsupportedAtImport = unsupportedCrrtCitrateTermCitations()
+const unsupportedAtImport = [
+  ...unsupportedCrrtCitrateTermCitations(),
+  ...unsupportedCrrtCitrateOverlayCitations(),
+]
 if (unsupportedAtImport.length > 0) {
   throw new Error(
-    `CRRT citrate terms present sources that resolve but do not support them: ${unsupportedAtImport
+    `CRRT citrate content presents sources that resolve but do not support it: ${unsupportedAtImport
       .map((citation) => `${citation.label} → ${citation.sourceId} (needs ${citation.topic})`)
       .join('; ')}`,
   )

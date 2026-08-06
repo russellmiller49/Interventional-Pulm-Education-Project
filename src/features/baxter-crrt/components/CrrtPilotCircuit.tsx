@@ -17,6 +17,7 @@ import {
   crrtCircuitPaths,
   crrtCircuitTextEquivalent,
   crrtCitrateCalciumTerms,
+  crrtCitrateOverlayHeldOpenStatements,
   crrtOverlayFluidDestinations,
   crrtPressureSignalDetails,
   type CrrtCircuitNodeId,
@@ -899,6 +900,27 @@ export function CrrtPilotCircuit({
                 dose, ratio, target, or timing — those belong to the citrate lesson, not to the
                 circuit.
               </p>
+
+              {/*
+                What this view does not settle, said before the vocabulary rather than after it.
+                The summary and teaching point above carry topology only; these two claims are the
+                ones the registered source set does not reach.
+              */}
+              <div
+                className={styles.heldOpenPanel}
+                role="note"
+                aria-label="Not settled by this view"
+              >
+                <strong>What this view does not settle</strong>
+                <ul>
+                  {crrtCitrateOverlayHeldOpenStatements().map((statement) => (
+                    <li key={statement.id} data-statement={statement.id}>
+                      <span className={styles.supportTag}>Awaiting a source</span> {statement.text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
               <dl className={styles.termList}>
                 {crrtCitrateCalciumTerms.map((term) => {
                   const support = term.claimSupport

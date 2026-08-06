@@ -11,6 +11,7 @@ import {
   crrtCircuitPaths,
   crrtCircuitTextEquivalent,
   crrtCitrateCalciumTerms,
+  crrtCitrateOverlayHeldOpenStatements,
 } from '../content/circuitModel'
 import {
   PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG,
@@ -411,11 +412,23 @@ describe('CRRT universal educational circuit', () => {
     for (const id of ['REVIEW-CKRT-CORE-2025', 'TEXT-CRRT-NEYRA-2026', 'GUID-RRT-ICU-2026']) {
       expect(terms.innerHTML).not.toContain(id)
     }
-    // A gap is stated in words, not only by a border colour.
-    expect(within(terms).getAllByText('Awaiting a source').length).toBe(
+    // A gap is stated in words, not only by a border colour — in the vocabulary list…
+    const termList = terms.querySelector('dl') as HTMLElement
+    expect(within(termList).getAllByText('Awaiting a source').length).toBe(
       crrtCitrateCalciumTerms.filter((term) => term.claimSupport.kind === 'registered-source-gap')
         .length,
     )
+
+    // …and in the panel that says what the view itself does not settle. The overlay's own summary
+    // and teaching point used to assert both of these as fact.
+    const heldOpen = within(terms).getByRole('note', { name: 'Not settled by this view' })
+    expect(heldOpen).toHaveTextContent(/What this view does not settle/i)
+    expect(within(heldOpen).getAllByRole('listitem')).toHaveLength(
+      crrtCitrateOverlayHeldOpenStatements().length,
+    )
+    for (const statement of crrtCitrateOverlayHeldOpenStatements()) {
+      expect(heldOpen).toHaveTextContent(statement.text)
+    }
     // Bounded: the definitions themselves carry no dose, ratio, target, or
     // timing instruction. Scoped to the term list so the panel's own disclaimer
     // — which names those words in order to disclaim them — is not the thing

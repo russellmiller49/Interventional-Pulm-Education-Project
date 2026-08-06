@@ -178,12 +178,45 @@ unmapped to every record, so no future citation can be pressed into supporting i
 Raw evidence-record ids no longer appear as learner copy in the term panel; they remain in
 `data-evidence-ids` for the provenance checks.
 
-**Still open at the overlay level.** The `citrate-calcium` overlay's own `teachingPoint` restates
-the same mechanism ("citrate-calcium complexes can leave in the effluent") and still lists the three
-clinical-context records in `overlay.sourceIds`. Those ids are not rendered as learner-facing claim
-chips — they appear only on the reviewer render page — so this closeout left them alone rather than
-re-auditing C0/C1 overlay provenance it was not scoped to. Re-auditing every overlay's `sourceIds`
-against `crrtSourceSupportsClaim` is the natural next step once an SME expands the source set.
+### The citrate overlay, corrected the same way
+
+The overlay's own prose was not reviewer-only metadata. `CrrtPilotCircuit` renders
+`overlay.summary` and `overlay.teachingPoint` straight to the learner, and
+`crrtCircuitTextEquivalent` appends the teaching point — so while the seven terms were corrected,
+the same screen went on asserting, as settled fact under three records that support none of it,
+that citrate "acts inside the circuit" and that "citrate-calcium complexes can leave in the
+effluent".
+
+The summary and teaching point now carry module-authored topology only: where the PBP/citrate line
+joins relative to the pump and filter, that blood returns through the return lumen, that calcium
+replacement runs on its own patient line, that the two sampling domains describe different
+compartments, and that neither substitutes for the other. `sourceIds` is `SYNTH-LAB-CITRATE-001`
+alone — the authored-boundary record, never presented as clinical support.
+
+The two pharmacology claims moved into `crrtCitrateOverlayStatements`, which reuses the terms'
+`CrrtCitrateClaimSupport` rather than adding a second provenance rule:
+
+| Statement                                                | Kind              |
+| -------------------------------------------------------- | ----------------- |
+| PBP/citrate line joins before the pump and filter        | authored topology |
+| blood returns through the return lumen                   | authored topology |
+| calcium replacement on its own patient line              | authored topology |
+| the two sampling domains describe different compartments | authored topology |
+| neither sampling domain substitutes for the other        | authored topology |
+| how citrate slows clotting inside the circuit            | **source gap**    |
+| whether citrate-bound calcium leaves in the effluent     | **source gap**    |
+
+The landed term wording in `crrtCitrateCalciumTerms` is untouched. The two gaps are named as
+questions rather than asserted, appear in the rendered panel as "What this view does not settle"
+with the same "Awaiting a source" tag and amber border weight the term list uses, and are appended
+to `crrtCircuitTextEquivalent('citrate-calcium')` so the text-only path carries them too.
+`unsupportedCrrtCitrateOverlayCitations()` throws at import alongside the term check — reverting the
+old wording now fails at import naming all three citations, rather than rendering.
+
+**Still open, and deliberately out of scope here.** Every _other_ overlay's `sourceIds` remains
+un-audited against `crrtSourceSupportsClaim`. Only the citrate overlay was corrected, because only
+it restated claims the term-level audit had already found unsupported. The broad all-overlay audit
+is the natural next step once an SME expands the source set.
 
 Two module-local harnesses run directly, with nothing added to `package.json`:
 
