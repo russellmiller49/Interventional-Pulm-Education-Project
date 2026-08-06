@@ -112,7 +112,7 @@ Serve harness output through the `trainer-prod-static` launch config on :8099.
 2. **`contextRequirement: 'technical'`** requires a `clinicalContextId` or `visualAssetIds`. Use `context-independent` unless you have one.
 3. **Do not put test helpers in `__tests__/`** — Jest auto-discovers them and fails on "no tests". Use `test-support/`.
 4. **Naive negative assertions bite.** Two E3 tests failed because they searched for a phrase that appears inside a _disclaimer_ ("not to a normal range for ECMO", "Do not call the VA value effective systemic flow"). Assert on the specific claim, not the whole `textContent`.
-5. **Auth-gated routes cannot be curled.** Use the harnesses.
+5. **The critical-care routes are public-unlisted, not auth-gated.** `/critical-care`, `/icu-hemodynamics`, `/mechanical-circulatory-support`, `/baxter-crrt`, `/cardiohelp-ecmo`, and `/mechanical-ventilation` are in `PUBLIC_UNLISTED_EXACT_PATHS`/`PUBLIC_UNLISTED_PATH_PREFIXES` (`src/lib/site-auth/access.ts`) — reachable without an account, `noindex`, so the running dev server and `curl` can both check them. The harnesses are still the faster loop for pixels and for numbers that no route renders.
 6. **Barrel imports** — content modules import `learning-module/{curriculum,activity}/types` directly, never the barrels.
 
 **Verification at last run:** type-check clean · lint 0 errors (4 pre-existing warnings in `CardiohelpHub`/`CardiohelpWorkbench`/`PracticeCasePlayer`) · **370 suites / 2974 tests** · a11y 4/4 · assets 19/19 · audit 0 failures · dump 0 flags · harness 4 panels × 2 profiles × 3 states.

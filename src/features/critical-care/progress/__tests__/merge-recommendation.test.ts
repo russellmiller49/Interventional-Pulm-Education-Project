@@ -249,8 +249,10 @@ describe('deterministic critical-care recommendations', () => {
   const empty = normalizedEnvelope([])
 
   it('gives a new learner one stable first activity', () => {
+    // Ties break on catalog index, so this is the first hemodynamics Learn seed — kept equal to the
+    // pathway's opening section by `critical-care/__tests__/hub-pathway-start-alignment.test.ts`.
     expect(getCriticalCareRecommendation(criticalCareActivities, empty)).toMatchObject({
-      activity: { id: 'hemodynamics:learn:catheter-advancement' },
+      activity: { id: 'hemodynamics:learn:pressure-system' },
       reason: 'next-unblocked',
     })
   })
