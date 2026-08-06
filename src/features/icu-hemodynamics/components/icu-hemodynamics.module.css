@@ -6092,3 +6092,25 @@
 .paneStack > * {
   min-height: 0;
 }
+/*
+ * Keyboard focus on the H2/H3 pane surfaces.
+ *
+ * The module's focus ring is declared under `.labShell`, which these panes are not inside — they
+ * mount into the guided workspace. Without this they fall back to the user agent's own thin ring on
+ * a white card, which is the weakest place it appears. The existing workspace controls
+ * (`.pacPathwayNav button`, `.pacResizeHandle`) already declare their own for the same reason.
+ */
+.normalReference button:focus-visible,
+.normalReference input:focus-visible,
+.normalReference summary:focus-visible,
+.validityChallengePanel button:focus-visible,
+.validityChallengePanel input:focus-visible,
+.validityChallengePanel summary:focus-visible,
+.advancePanel button:focus-visible,
+.advancePanel input:focus-visible,
+.pawpPanel button:focus-visible,
+.pawpPanel input:focus-visible {
+  outline: 3px solid #0f766e;
+  outline-offset: 2px;
+  border-radius: 0.4rem;
+}
