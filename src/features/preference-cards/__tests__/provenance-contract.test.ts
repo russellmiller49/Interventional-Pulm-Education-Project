@@ -269,24 +269,21 @@ describe('the version-1 provenance shape is one shape', () => {
   })
 
   it('bounds every text field to the same canonical subset the runtime schema does', () => {
-    // Not `btrim`-based: `z.string().trim().min(1)` accepts ' x ' and parses it to 'x', so a
-    // btrim-based check would agree to store bytes the reader silently rewrites. Both sides now
-    // require the value to equal its own trim, through one shared predicate.
-    expect(migrationSql).toContain('create function private.ip_is_canonical_text(')
-    expect(migrationSql).toContain('and value = btrim(value)')
-    expect(migrationSql).toContain('private.ip_is_canonical_text(document ->> key, 120)')
-    // An empty acknowledgement is a claim that an answer was recorded, spelled as no answer.
+    // One alphabet rather than two whitespace definitions: `btrim` strips spaces where ECMAScript
+    // `trim()` strips a much larger set, and `length(text)` counts characters where JavaScript
+    // counts UTF-16 code units. Inside printable ASCII both pairs agree.
+    expect(migrationSql).toContain("!~ '^[!-~]([ -~]*[!-~])?$'")
     expect(migrationSql).toContain(
-      "private.ip_is_canonical_text(decision ->> 'acknowledgement', 40)",
+      'the provenance document has an empty, padded, non-ASCII or overlong %',
     )
-    // The writer may execute the helper as well as the validator, or the RPC dies on it — and by
-    // exact signature, never a blanket grant over everything in `private`.
-    expect(migrationSql).toMatch(
-      /grant execute on function private\.ip_is_canonical_text\(text, integer\)\s+to ip_preference_card_rebuild_writer/,
+    expect(migrationSql).toContain(
+      'a provenance decision entry has an empty, padded, non-ASCII or overlong field',
     )
+    // Inlined, so the writer needs execute on exactly one private function.
+    expect(migrationSql).not.toContain('ip_is_canonical_text')
     expect(migrationSql).not.toMatch(/grant execute on all functions in schema private/i)
     // And a createdAt that is shaped like a timestamp but is not one.
-    expect(migrationSql).toContain("perform (document ->> 'createdAt')::timestamptz")
+    expect(migrationSql).toContain("(document ->> 'createdAt')::timestamptz")
     expect(migrationSql).toContain('when invalid_datetime_format or datetime_field_overflow then')
     for (const bad of ['2026-99-99Tgarbage', '2026-02-01T00:00:00.000', 'yesterday']) {
       expect(
@@ -340,14 +337,17 @@ const SQL_RULE_FOR_CATEGORY: Record<Exclude<ProvenanceExampleCategory, 'valid'>,
   wrong_typed_top_level_key: 'foreach key in array uuid_keys loop',
   null_on_non_nullable_key: 'which version 1 does not allow',
   explicit_nullable_null: 'nullable_keys text[] := array[',
-  padded_or_overlong_text: 'the provenance document has an empty, padded or overlong %',
+  padded_or_overlong_text: 'the provenance document has an empty, padded, non-ASCII or overlong %',
   malformed_uuid: 'the provenance document has a % that is not a uuid',
   malformed_hash: 'the provenance document has a % that is not a sha-256 digest',
   malformed_revision_number: 'is not a safe positive integer',
   malformed_timestamp: 'the provenance document has a createdAt that is not a real instant',
+  // (the shape half is checked separately, by its own named rule)
   unknown_nested_key: 'a provenance decision entry does not carry exactly the version-1 keys',
   omitted_nested_key: 'a provenance decision entry does not carry exactly the version-1 keys',
-  malformed_nested_text: 'a provenance decision entry has an empty, padded or overlong field',
+  wrong_typed_nested_key: 'a provenance decision entry does not match the version-1 shape',
+  malformed_nested_text:
+    'a provenance decision entry has an empty, padded, non-ASCII or overlong field',
   malformed_reason_code: 'a provenance decision reason code is not a bounded, canonical string',
   oversized_collection: "jsonb_array_length(decision -> 'reasonCodes') > 40",
 }
@@ -413,5 +413,110 @@ describe('the shared example table describes both implementations', () => {
     for (const key of unclassified) {
       expect(migrationSql).toContain(`'${key}'`)
     }
+  })
+})
+
+describe('the canonical string and timestamp contracts are one contract', () => {
+  it('uses the same printable-ASCII expression in both implementations', () => {
+    // Not two whitespace definitions reconciled — one alphabet, inside which PostgreSQL's character
+    // count and JavaScript's code-unit count are the same number and "no padding" means one thing.
+    expect(migrationSql).toContain("!~ '^[!-~]([ -~]*[!-~])?$'")
+    expect(
+      fs.readFileSync(
+        path.join(process.cwd(), 'src/features/preference-cards/schemas/card-rebuild.ts'),
+        'utf8',
+      ),
+    ).toContain('const CANONICAL_TEXT = /^[!-~]([ -~]*[!-~])?$/')
+  })
+
+  it('no longer normalises anything on the way in', () => {
+    const schemaSource = fs.readFileSync(
+      path.join(process.cwd(), 'src/features/preference-cards/schemas/card-rebuild.ts'),
+      'utf8',
+    )
+    // Persisted evidence is rejected when noncanonical, never quietly rewritten: a stored value and
+    // a read value have to be the same bytes. Scoped to the stored-provenance schema — the request
+    // schemas above it legitimately trim a title the browser typed.
+    const stored = schemaSource.slice(
+      schemaSource.indexOf('export const storedRebuildProvenanceSchema'),
+      schemaSource.indexOf('export type StoredRebuildProvenance'),
+    )
+    expect(stored).not.toContain('.trim()')
+    expect(schemaSource.slice(0, schemaSource.indexOf('const canonicalText'))).not.toContain(
+      'sha256Schema = z\n  .string()\n  .trim()',
+    )
+    expect(schemaSource).toContain('const sha256Schema = z.string().regex(/^[a-f0-9]{64}$/)')
+  })
+
+  it('round-trips the timestamp rather than trusting Date.parse', () => {
+    // `Date.parse('2026-02-30T00:00:00.000Z')` succeeds and rolls over into March.
+    expect(Number.isNaN(Date.parse('2026-02-30T00:00:00.000Z'))).toBe(false)
+    expect(
+      storedRebuildProvenanceSchema.safeParse({
+        ...validProvenanceV1Document(),
+        createdAt: '2026-02-30T00:00:00.000Z',
+      }).success,
+    ).toBe(false)
+    // And the SQL side casts *and* re-serializes, so the spelling is pinned too.
+    expect(migrationSql).toContain(
+      "to_char((document ->> 'createdAt')::timestamptz at time zone 'UTC'",
+    )
+    expect(migrationSql).toContain('YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
+  })
+
+  it('grants the writer exactly one private function', () => {
+    // The canonical-text predicate is inlined rather than factored into a second private helper.
+    expect(migrationSql).not.toContain('ip_is_canonical_text')
+    expect(migrationSql.match(/grant execute on function private\./g) ?? []).toHaveLength(1)
+    expect(verifierSql).toContain(
+      "has_function_privilege('ip_preference_card_rebuild_writer', p.oid, 'EXECUTE')) <> 1",
+    )
+  })
+})
+
+describe('the verifier can actually run', () => {
+  it('parenthesises the nested-omission expression', () => {
+    // PostgreSQL gives binary `-` higher precedence than the class `->` belongs to, so
+    // `decisions_fixture -> 0 - omitted_key` parses as `decisions_fixture -> (0 - omitted_key)` —
+    // integer minus text — and raises 42883. Nothing caught it, so the script aborted before the
+    // positive writer call, Part 6, cleanup and ALL CHECKS PASSED.
+    expect(verifierSql).toContain('(decisions_fixture -> 0) - omitted_key')
+    expect(verifierSql).not.toMatch(/decisions_fixture ->\s*0\s*-\s*omitted_key/)
+  })
+
+  it('brackets every refusal with its own card and revision counts', () => {
+    // A shared baseline across a group proves only that the *net* effect was nothing, which an
+    // unexpected write followed by an unexpected delete also satisfies.
+    for (const marker of [
+      'the refused authenticated forgery still wrote rows',
+      'the refused other-owner insert still wrote rows',
+      'the refused authenticated RPC call still wrote rows',
+      'the refused service_role insert still wrote rows',
+      'a refused privileged statement still wrote rows',
+      'the refused case "%" still wrote rows',
+      'the refused omission of % still wrote rows',
+      'the refused wrong-typed % still wrote rows',
+      'the refused decision omission of % still wrote rows',
+      'the refused wrong-typed decision % still wrote rows',
+      'the refused % as % still wrote rows',
+    ]) {
+      expect(verifierSql).toContain(marker)
+    }
+    // The three write-once directions are a loop with a per-iteration baseline, not one baseline
+    // wrapped around all three.
+    expect(verifierSql).toContain('for direction in')
+    const loopBody = verifierSql.slice(
+      verifierSql.indexOf('for direction in'),
+      verifierSql.indexOf('end loop;', verifierSql.indexOf('for direction in')),
+    )
+    expect(loopBody).toContain('cards_at := (select count(*) from public.ip_user_preference_cards)')
+  })
+
+  it('covers every nested key in the wrong-type dimension too', () => {
+    expect(verifierSql).toContain('the writer accepted a boolean decision %')
+    const covered = PROVENANCE_V1_EXAMPLES.filter(
+      (example) => example.category === 'wrong_typed_nested_key',
+    ).length
+    expect(covered).toBe(REBUILD_PROVENANCE_V1_DECISION_KEYS.length)
   })
 })

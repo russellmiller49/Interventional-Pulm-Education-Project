@@ -212,25 +212,6 @@ create trigger reject_ip_user_preference_card_rebuild_provenance_rewrite
 -- rather than a weakened version 1 — and since this migration has never been applied there is no
 -- deployed card that predates any field here.
 
--- One definition of "canonical text", used by the validator for every bounded string it checks.
--- Mirrors `canonicalText` in `schemas/card-rebuild.ts`: non-empty, within bounds, and already equal
--- to its own trim, so a stored value and a read value are the same bytes.
-create function private.ip_is_canonical_text(value text, max_length integer)
-returns boolean
-language sql
-immutable
-security invoker
-set search_path = ''
-as $$
-  select value is not null
-     and length(value) between 1 and max_length
-     and value = btrim(value);
-$$;
-
-revoke all on function private.ip_is_canonical_text(text, integer) from public;
-revoke all on function private.ip_is_canonical_text(text, integer)
-  from anon, authenticated, service_role;
-
 create function private.ip_validate_preference_card_rebuild_provenance_v1(document jsonb)
 returns void
 language plpgsql
@@ -355,10 +336,19 @@ begin
   -- would agree to store bytes the reader silently rewrites. Both sides now require the value to
   -- equal its own trim, so what is stored is what is read. See `canonicalText` in
   -- `schemas/card-rebuild.ts`.
+  -- Printable ASCII, no leading or trailing space, no control characters — the same expression as
+  -- `CANONICAL_TEXT` in `schemas/card-rebuild.ts`, and inlined rather than factored into a helper so
+  -- the writer needs `execute` on exactly one private function.
+  --
+  -- The alphabet is fixed rather than the whitespace rules reconciled, because they cannot be:
+  -- `btrim` strips spaces where ECMAScript `trim()` strips a much larger set, and `length(text)`
+  -- counts characters where JavaScript counts UTF-16 code units. Inside printable ASCII both pairs
+  -- agree, so one bound means one thing on both sides.
   foreach key in array text_keys loop
     if jsonb_typeof(document -> key) <> 'string'
-       or not private.ip_is_canonical_text(document ->> key, 120) then
-      raise exception 'the provenance document has an empty, padded or overlong %', key
+       or (document ->> key) !~ '^[!-~]([ -~]*[!-~])?$'
+       or length(document ->> key) > 120 then
+      raise exception 'the provenance document has an empty, padded, non-ASCII or overlong %', key
         using errcode = 'invalid_parameter_value';
     end if;
   end loop;
@@ -373,19 +363,27 @@ begin
       using errcode = 'invalid_parameter_value';
   end if;
 
-  -- `2026-99-99Tgarbage` matched the old prefix-only pattern. The shape is checked first, including
-  -- the offset the runtime schema requires, and then the value is *cast*, because only a cast knows
-  -- that the ninety-ninth of the ninety-ninth month is not a date. Both datetime SQLSTATEs are named
-  -- rather than caught generically.
+  -- One spelling of one instant: `YYYY-MM-DDTHH:mm:ss.sssZ`, UTC, millisecond precision.
+  --
+  -- The shape is checked, then the value is *cast*, then it is re-serialized and compared to what
+  -- came in. The cast is what rejects a date the calendar does not have — `2026-02-29` in a
+  -- non-leap year raises `datetime_field_overflow` here, where JavaScript's `Date.parse` quietly
+  -- rolls it into March. The round trip is what pins the spelling, so one instant has exactly one
+  -- representation and the stored bytes are the read bytes. `new Date().toISOString()`, which is
+  -- what the writer emits, is already this form.
   if jsonb_typeof(document -> 'createdAt') <> 'string'
      or (document ->> 'createdAt')
-        !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}([.][0-9]{1,3})?(Z|[+-][0-9]{2}:[0-9]{2})$'
+        !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.][0-9]{3}Z$'
   then
-    raise exception 'the provenance document has a createdAt that is not an ISO-8601 timestamp with an offset'
+    raise exception 'the provenance document has a createdAt that is not canonical UTC millisecond form'
       using errcode = 'invalid_parameter_value';
   end if;
   begin
-    perform (document ->> 'createdAt')::timestamptz;
+    if to_char((document ->> 'createdAt')::timestamptz at time zone 'UTC',
+               'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') <> (document ->> 'createdAt') then
+      raise exception 'the provenance document has a createdAt that is not a real instant'
+        using errcode = 'invalid_parameter_value';
+    end if;
   exception
     when invalid_datetime_format or datetime_field_overflow then
       raise exception 'the provenance document has a createdAt that is not a real instant'
@@ -430,21 +428,23 @@ begin
     end if;
     -- Bounds, matching the runtime schema field for field. An empty `acknowledgement` is the one
     -- worth naming: it is a *claim* that an answer was recorded, spelled as no answer at all.
-    if not private.ip_is_canonical_text(decision ->> 'key', 200)
-       or not private.ip_is_canonical_text(decision ->> 'kind', 40)
-       or not private.ip_is_canonical_text(decision ->> 'state', 60)
+    if (decision ->> 'key') !~ '^[!-~]([ -~]*[!-~])?$' or length(decision ->> 'key') > 200
+       or (decision ->> 'kind') !~ '^[!-~]([ -~]*[!-~])?$' or length(decision ->> 'kind') > 40
+       or (decision ->> 'state') !~ '^[!-~]([ -~]*[!-~])?$' or length(decision ->> 'state') > 60
        or (jsonb_typeof(decision -> 'acknowledgement') = 'string'
-           and not private.ip_is_canonical_text(decision ->> 'acknowledgement', 40))
+           and ((decision ->> 'acknowledgement') !~ '^[!-~]([ -~]*[!-~])?$'
+                or length(decision ->> 'acknowledgement') > 40))
        or jsonb_array_length(decision -> 'reasonCodes') > 40
     then
-      raise exception 'a provenance decision entry has an empty, padded or overlong field'
+      raise exception 'a provenance decision entry has an empty, padded, non-ASCII or overlong field'
         using errcode = 'invalid_parameter_value';
     end if;
     for reason in
       select value from jsonb_array_elements(decision -> 'reasonCodes') as t(value)
     loop
       if jsonb_typeof(reason) <> 'string'
-         or not private.ip_is_canonical_text(reason #>> '{}', 80) then
+         or (reason #>> '{}') !~ '^[!-~]([ -~]*[!-~])?$'
+         or length(reason #>> '{}') > 80 then
         raise exception 'a provenance decision reason code is not a bounded, canonical string'
           using errcode = 'invalid_parameter_value';
       end if;
@@ -474,12 +474,6 @@ revoke all on function private.ip_validate_preference_card_rebuild_provenance_v1
 grant usage on schema private to ip_preference_card_rebuild_writer;
 
 grant execute on function private.ip_validate_preference_card_rebuild_provenance_v1(jsonb)
-  to ip_preference_card_rebuild_writer;
-
--- The validator's own helper, and nothing else in `private`. Two named signatures, deliberately
--- not a schema-wide blanket: that would hand the writer every helper the revision machinery owns
--- today and every one added to the schema later.
-grant execute on function private.ip_is_canonical_text(text, integer)
   to ip_preference_card_rebuild_writer;
 
 -- ---------------------------------------------------------------------------------------------

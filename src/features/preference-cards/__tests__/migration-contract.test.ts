@@ -608,7 +608,7 @@ describe('preference-card rebuild provenance migration', () => {
     expect(rebuildVerifier).toContain('has USAGE on schema private')
     expect(rebuildVerifier).toContain('which is not on the API surface')
     expect(rebuildVerifier).toContain(
-      'the writer role can execute private functions beyond its own validator pair',
+      'the writer role can execute a private function beyond its one validator',
     )
     // ...and re-checked at the end, so a grant issued midway is not invisible.
     expect(rebuildVerifier).toContain(
@@ -663,7 +663,10 @@ describe('preference-card rebuild provenance migration', () => {
     expect(rebuildVerifier).toContain('the writer accepted a boolean %')
     expect(rebuildVerifier).toContain('the refused omission of % still wrote rows')
     expect(rebuildVerifier).toContain('the refused wrong-typed % still wrote rows')
-    // Nested keys, collections past their bound, and the nullable pair in both directions.
+    // The precedence defect that made the script abort before its own positive case.
+    expect(rebuildVerifier).toContain('(decisions_fixture -> 0) - omitted_key')
+    // Nested keys in both dimensions, collections past their bound, and the nullable pair.
+    expect(rebuildVerifier).toContain('the writer accepted a boolean decision %')
     expect(rebuildVerifier).toContain('foreach omitted_key in array decision_keys loop')
     expect(rebuildVerifier).toContain('the writer accepted a decision with no %')
     expect(rebuildVerifier).toContain('a document carrying more than a thousand decisions')
@@ -683,9 +686,11 @@ describe('preference-card rebuild provenance migration', () => {
     expect(rebuildVerifier).toContain('the rebuilt card inherited the source share token')
     expect(rebuildVerifier).toContain('the source card changed during the rebuild')
     // All three write-once directions, plus ordinary work, a content edit, and a duplicate.
-    expect(rebuildVerifier).toContain('provenance was overwritten')
-    expect(rebuildVerifier).toContain('provenance was cleared')
-    expect(rebuildVerifier).toContain('a card that was not rebuilt was given provenance')
+    // The three write-once directions, each bracketed on its own rather than sharing one baseline.
+    for (const direction of ['value to another value', 'value to null', 'null to value']) {
+      expect(rebuildVerifier).toContain(`'${direction}'`)
+    }
+    expect(rebuildVerifier).toContain('provenance moved % as %')
     expect(rebuildVerifier).toContain('a rename disturbed provenance')
     expect(rebuildVerifier).toContain('a share toggle disturbed provenance')
     expect(rebuildVerifier).toContain('a status change disturbed provenance')
@@ -693,8 +698,8 @@ describe('preference-card rebuild provenance migration', () => {
     expect(rebuildVerifier).toContain("array['table_owner', 'service_role']")
     // Naming a role in a loop variable is not the same as being in it.
     expect(rebuildVerifier).toContain('Part 6 owner pass is running as %, not the session role')
-    expect(rebuildVerifier).toContain('the refused write-once updates as % still wrote rows')
-    expect(rebuildVerifier).toContain('provenance was overwritten as %')
+    expect(rebuildVerifier).toContain('the refused % as % still wrote rows')
+    expect(rebuildVerifier).toContain('provenance moved % as %')
     expect(rebuildVerifier).toContain('a content edit disturbed provenance')
     expect(rebuildVerifier).toContain('a duplicate of a rebuilt card inherited its provenance')
     // Structure, cleanup, and an exact baseline comparison rather than a lower bound.

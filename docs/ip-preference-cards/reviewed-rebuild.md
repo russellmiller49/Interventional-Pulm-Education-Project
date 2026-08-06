@@ -370,36 +370,57 @@ that is cast rather than pattern-matched, so `2026-99-99T00:00:00.000Z` is refus
 
 #### One canonical subset, not two compatible ones
 
-"Compatible bounds" is not parity, and the difference is storable bytes. `z.string().trim().min(1)`
-_accepts_ `' x '` and parses it to `'x'`, so a SQL check written with `btrim` would agree to store a
-value the reader silently rewrites, while one written without it would not. Rather than pick a side
-to loosen, both were narrowed to values that are **already canonical**, and the narrowing is
-deliberate:
+"Compatible bounds" is not parity, and the gap was storable evidence. Two pairs of operations that
+look equivalent are not:
 
-| Field kind | The common subset                                                                            |
-| ---------- | -------------------------------------------------------------------------------------------- |
-| Text       | non-empty, within bound, and equal to its own trim — no padding, ever                        |
-| Hash       | exactly 64 lowercase hex characters                                                          |
-| UUID       | version nibble 1–5 and variant 8/9/a/b, or the nil uuid — Zod's own pattern, restated in SQL |
-| Number     | a safe positive integer, bounded above at `Number.MAX_SAFE_INTEGER`                          |
-| Timestamp  | one spelling — `YYYY-MM-DDThh:mm:ss[.sss](Z\|±hh:mm)` — and a real calendar date             |
+- PostgreSQL's `btrim` strips **spaces**; ECMAScript `trim()` strips the whole WhiteSpace and
+  LineTerminator set. `"\tx\t"` passed a `btrim` equality check and failed the runtime schema.
+- PostgreSQL `length(text)` counts **characters**; JavaScript `.length` counts **UTF-16 code
+  units**. `"😀".repeat(61)` is 61 characters and 122 code units, so it passed a 120-character SQL
+  bound and failed a 120-unit Zod bound.
 
-`canonicalText` in the schema and `private.ip_is_canonical_text` in the migration are the two halves
-of the first row, and the writer is granted `execute` on that helper as well as on the validator —
-a function the RPC cannot call is a function the RPC dies on.
+Either way a direct service-role RPC could store a document `loadUserCard` then reports as
+`invalid` — the exact failure the validator exists to prevent.
 
-It stays in `private` and stays `security invoker`, and the writer role is granted exactly `usage` on
-that schema and `execute` on that signature. Nothing else may call it. Those two grants are
-load-bearing rather than tidy: the RPC is `security definer` owned by the writer, so inside it
-`current_user` is the writer — and the deployed revision migration revoked all access to `private`
-from everyone else. Without them the first statement of the RPC raises `42501` and _every_ real
-rebuild write fails at the last step, after the review. `storedRebuildProvenanceSchema` is the application's, and
-`writeRebuiltCard` parses the constructed document through it _before_ the RPC call — the database is
-the last place the shape is checked, and shipping it something the application's own reader would
-reject is how the mismatch arose in the first place.
-[`provenance-contract.test.ts`](../../src/features/preference-cards/__tests__/provenance-contract.test.ts)
-compares the SQL key list, the schema and the verifier fixture to each other, so the three cannot
-drift apart again without a test failing.
+So version 1 fixes the **alphabet** rather than trying to reconcile two whitespace definitions:
+
+| Field kind | The version-1 contract                                                                        |
+| ---------- | --------------------------------------------------------------------------------------------- |
+| Text       | printable ASCII, no leading or trailing space, no control characters: `^[!-~]([ -~]*[!-~])?$` |
+| Hash       | exactly 64 lowercase hex characters, **not trimmed**                                          |
+| UUID       | version nibble 1–5 and variant 8/9/a/b, or the nil uuid                                       |
+| Number     | a safe positive integer, bounded above at `Number.MAX_SAFE_INTEGER`                           |
+| Timestamp  | exactly `YYYY-MM-DDThh:mm:ss.sssZ` — UTC, millisecond precision, one spelling                 |
+
+Inside printable ASCII, character count and code-unit count are the same number and "no padding"
+has one meaning, so one bound means one thing on both sides. The regex in `schemas/card-rebuild.ts`
+and the one inside the SQL validator are the same expression, and the validator inlines it rather
+than factoring it into a helper — so the writer needs `execute` on exactly **one** private function.
+
+This is a contract about identifiers and codes, not prose, and it was checked against the committed
+producers rather than assumed: release and catalog ids, requirement keys, role codes and slot ids all
+come from generated release data (no value in it falls outside this range), and a decision's `kind`,
+`state`, `acknowledgement` and `reasonCodes` are closed TypeScript unions of ASCII identifiers. A
+future field that genuinely needs more than ASCII needs a new provenance version — and a length rule
+whose two implementations can be _shown_ to agree.
+
+Nothing normalises on the way in. `sha256Schema` used to `.trim()`, which accepted a padded digest
+and rewrote it while SQL refused the same bytes; persisted evidence is now rejected when
+noncanonical, never quietly rewritten, so a stored value and a read value are the same bytes.
+
+#### The timestamp is a real instant, in one spelling
+
+The previous refine accepted anything `Date.parse` did not return `NaN` for — and `Date.parse`
+_normalizes_. `2026-02-29T00:00:00.000Z` (2026 is not a leap year) and `2026-02-30T00:00:00.000Z`
+both parsed, both became March, and both were accepted as provenance. A timestamp that silently
+becomes a different day is not a record of when anything happened.
+
+Both sides now round-trip. TypeScript parses and requires `toISOString()` to reproduce the input
+exactly; SQL casts to `timestamptz` and requires `to_char(... 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')` to
+reproduce it exactly. A date the calendar does not have re-serializes differently — or raises
+`datetime_field_overflow` — and either way is refused, as are a missing offset, a numeric offset,
+second or microsecond precision, and a lowercase or space-separated spelling.
+`new Date().toISOString()`, which is what the writer emits, is already exactly this form.
 
 #### `sourceOwnerId`
 

@@ -32,6 +32,7 @@ export type ProvenanceExampleCategory =
   | 'malformed_timestamp'
   | 'unknown_nested_key'
   | 'omitted_nested_key'
+  | 'wrong_typed_nested_key'
   | 'malformed_nested_text'
   | 'malformed_reason_code'
   | 'oversized_collection'
@@ -152,12 +153,51 @@ export const PROVENANCE_V1_EXAMPLES: ProvenanceExample[] = [
       document[key] = null
     }),
   })),
+  // Every one of these was a real divergence, not a hypothetical: PostgreSQL's `btrim` strips
+  // spaces where ECMAScript `trim()` strips a much larger set, and `length(text)` counts characters
+  // where JavaScript counts UTF-16 code units. Version 1 fixes the alphabet to printable ASCII so
+  // both pairs of operations agree, and these are the cases that prove it.
+  ...(
+    [
+      ['space', ' fixture-catalog-import-0001 '],
+      ['a tab', '\tfixture-catalog-import-0001\t'],
+      ['a newline', '\nfixture-catalog-import-0001\n'],
+      ['a carriage return', '\rfixture-catalog-import-0001\r'],
+      ['a nonbreaking space', '\u00a0fixture-catalog-import-0001\u00a0'],
+      ['a form feed', '\ffixture-catalog-import-0001'],
+    ] as const
+  ).map(([what, value]) => ({
+    label: `a text field padded with ${what}`,
+    category: 'padded_or_overlong_text' as const,
+    valid: false,
+    document: withDocument((document) => {
+      document.targetCatalogReleaseId = value
+    }),
+  })),
   {
-    label: 'a text field padded with whitespace',
+    label: 'a text field carrying a control character',
     category: 'padded_or_overlong_text',
     valid: false,
     document: withDocument((document) => {
-      document.targetCatalogReleaseId = ' fixture-catalog-import-0001 '
+      document.targetCatalogReleaseId = 'fixture\u0007catalog'
+    }),
+  },
+  {
+    label: 'a text field of astral characters inside the character bound',
+    category: 'padded_or_overlong_text',
+    valid: false,
+    document: withDocument((document) => {
+      // 61 characters and 122 UTF-16 code units: it fitted a 120-character SQL bound and failed a
+      // 120-unit Zod bound, which is exactly the pair of bounds version 1 refuses to have.
+      document.targetCatalogReleaseId = '\u{1f600}'.repeat(61)
+    }),
+  },
+  {
+    label: 'a text field carrying one non-ASCII letter',
+    category: 'padded_or_overlong_text',
+    valid: false,
+    document: withDocument((document) => {
+      document.targetCatalogReleaseId = 'fixture-catalogué'
     }),
   },
   {
@@ -193,6 +233,24 @@ export const PROVENANCE_V1_EXAMPLES: ProvenanceExample[] = [
     }),
   },
   {
+    // `sha256Schema` used to `.trim()`, so it accepted a padded digest and normalised it while SQL
+    // refused the same value outright. Stricter on one side is still not parity.
+    label: 'a padded sha-256 digest',
+    category: 'malformed_hash',
+    valid: false,
+    document: withDocument((document) => {
+      document.allowedFinalStateHash = ` ${'4'.repeat(64)} `
+    }),
+  },
+  {
+    label: 'an uppercase sha-256 digest',
+    category: 'malformed_hash',
+    valid: false,
+    document: withDocument((document) => {
+      document.allowedFinalStateHash = '4'.repeat(64).toUpperCase().replace(/4/g, 'A')
+    }),
+  },
+  {
     label: 'a revision number below one',
     category: 'malformed_revision_number',
     valid: false,
@@ -208,20 +266,36 @@ export const PROVENANCE_V1_EXAMPLES: ProvenanceExample[] = [
       document.sourceRevisionNumber = 9007199254740992
     }),
   },
-  {
-    label: 'a createdAt with an impossible calendar value',
-    category: 'malformed_timestamp',
+  // `Date.parse` does not reject an impossible calendar date — it *rolls it over*. Both February
+  // dates below parsed successfully and became March, and were accepted as provenance. A timestamp
+  // that silently becomes a different day is not a record of when anything happened.
+  ...(
+    [
+      ['an impossible month', '2026-99-99T00:00:00.000Z'],
+      ['February 29 in a non-leap year', '2026-02-29T00:00:00.000Z'],
+      ['February 30', '2026-02-30T00:00:00.000Z'],
+      ['April 31', '2026-04-31T00:00:00.000Z'],
+      ['no offset', '2026-02-01T00:00:00.000'],
+      ['a numeric offset instead of UTC', '2026-02-01T01:00:00.000+01:00'],
+      ['second precision', '2026-02-01T00:00:00Z'],
+      ['microsecond precision', '2026-02-01T00:00:00.000000Z'],
+      ['a lowercase separator', '2026-02-01t00:00:00.000z'],
+      ['a space separator', '2026-02-01 00:00:00.000Z'],
+    ] as const
+  ).map(([what, value]) => ({
+    label: `a createdAt with ${what}`,
+    category: 'malformed_timestamp' as const,
     valid: false,
     document: withDocument((document) => {
-      document.createdAt = '2026-99-99T00:00:00.000Z'
+      document.createdAt = value
     }),
-  },
+  })),
   {
-    label: 'a createdAt carrying no offset',
-    category: 'malformed_timestamp',
-    valid: false,
+    label: 'a createdAt naming a real leap day in canonical form',
+    category: 'valid',
+    valid: true,
     document: withDocument((document) => {
-      document.createdAt = '2026-02-01T00:00:00.000'
+      document.createdAt = '2028-02-29T00:00:00.000Z'
     }),
   },
   {
@@ -273,6 +347,22 @@ export const PROVENANCE_V1_EXAMPLES: ProvenanceExample[] = [
       decision.state = 's'.repeat(61)
     }),
   },
+  {
+    label: 'a decision with a tab-padded kind',
+    category: 'malformed_nested_text',
+    valid: false,
+    document: withDecision((decision) => {
+      decision.kind = '\trequirement\t'
+    }),
+  },
+  ...REBUILD_PROVENANCE_V1_DECISION_KEYS.map((key) => ({
+    label: `a decision whose ${key} is a boolean`,
+    category: 'wrong_typed_nested_key' as const,
+    valid: false,
+    document: withDecision((decision) => {
+      decision[key] = true
+    }),
+  })),
   {
     label: 'a decision whose acknowledgement is explicitly null',
     category: 'valid',

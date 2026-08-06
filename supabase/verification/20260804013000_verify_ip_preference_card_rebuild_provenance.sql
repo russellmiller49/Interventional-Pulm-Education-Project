@@ -289,7 +289,6 @@ begin
   end if;
   for validator_signature in
     select 'private.ip_validate_preference_card_rebuild_provenance_v1(jsonb)'
-    union all select 'private.ip_is_canonical_text(text, integer)'
   loop
     if not has_function_privilege('ip_preference_card_rebuild_writer', validator_signature, 'EXECUTE')
     then
@@ -309,15 +308,16 @@ begin
     end if;
   end loop;
 
-  -- Narrow, not blanket: exactly two private functions are reachable by the writer, so a future
-  -- schema-wide grant would be visible here rather than only in the migration text.
+  -- Narrow, not blanket: **exactly one** private function is reachable by the writer. The canonical
+  -- text predicate used to be a second, which was a least-privilege failure rather than a dead path
+  -- — it is now inlined into the validator, and this count is what keeps it that way.
   if (select count(*)
         from pg_proc p
         join pg_namespace n on n.oid = p.pronamespace
        where n.nspname = 'private'
-         and has_function_privilege('ip_preference_card_rebuild_writer', p.oid, 'EXECUTE')) <> 2
+         and has_function_privilege('ip_preference_card_rebuild_writer', p.oid, 'EXECUTE')) <> 1
   then
-    raise exception 'the writer role can execute private functions beyond its own validator pair';
+    raise exception 'the writer role can execute a private function beyond its one validator';
   end if;
 
   raise notice 'Part 1 passed: column, policy, guards, writer role and privileges, function ACL.';
@@ -469,6 +469,12 @@ begin
   end if;
 
   -- (e) And it cannot reach the trusted writer function at all: EXECUTE is not granted to it.
+  --
+  -- Its own baseline, like every other refusal in this file. Reusing an earlier one lets a group of
+  -- refusals prove only that the *net* effect was nothing — an unexpected write followed by an
+  -- unexpected delete would pass, and so would a write whose row a later case removed.
+  cards_before := (select count(*) from public.ip_user_preference_cards);
+  revisions_before := (select count(*) from public.ip_user_preference_card_revisions);
   begin
     perform public.ip_create_rebuilt_preference_card(
       owner_id, created, created, repeat('a', 64), null::text,
@@ -478,10 +484,9 @@ begin
   exception
     when insufficient_privilege then null;
   end;
-
   if (select count(*) from public.ip_user_preference_cards) <> cards_before
      or (select count(*) from public.ip_user_preference_card_revisions) <> revisions_before then
-    raise exception 'a refused authenticated statement wrote rows';
+    raise exception 'the refused authenticated RPC call still wrote rows';
   end if;
 
   reset role;
@@ -536,6 +541,8 @@ begin
   -- The service key can reach the table for ordinary work; it still cannot add provenance to a
   -- card that was not rebuilt. Null → value is the direction that matters most here, because the
   -- other two need a card that already carries provenance and Part 6 covers those as well.
+  cards_before := (select count(*) from public.ip_user_preference_cards);
+  revisions_before := (select count(*) from public.ip_user_preference_card_revisions);
   begin
     update public.ip_user_preference_cards
        set rebuild_provenance = forged where id = ordinary_id;
@@ -558,6 +565,8 @@ begin
   --
   -- Asserted rather than assumed. Without this the block below could be running as anything at all
   -- and its refusal would prove nothing about the owner — which is the whole claim it makes.
+  cards_before := (select count(*) from public.ip_user_preference_cards);
+  revisions_before := (select count(*) from public.ip_user_preference_card_revisions);
   if current_user <> session_user then
     raise exception 'Part 4 did not return to the session role, but is %', current_user;
   end if;
@@ -944,8 +953,13 @@ begin
         owner_id, source_id, source_revision, source_hash, release_id,
         'verify rejected', null::text, 'VERIFY_ONLY', 'verify-only',
         '{}'::jsonb, snapshot, repeat('f', 64), 'verify', 'verify',
+        -- Parenthesised deliberately. PostgreSQL gives binary minus higher precedence than the
+        -- "any other operator" class that the JSON arrow belongs to, so without these parentheses
+        -- the index and the key name bind to each other instead — integer minus text — and the
+        -- statement raises 42883 before anything is validated. No handler caught it, so the script
+        -- aborted here, before the positive writer call, Part 6, cleanup and ALL CHECKS PASSED.
         provenance || jsonb_build_object('decisions',
-          jsonb_build_array(decisions_fixture -> 0 - omitted_key)));
+          jsonb_build_array((decisions_fixture -> 0) - omitted_key)));
       raise exception 'the writer accepted a decision with no %', omitted_key;
     exception
       when invalid_parameter_value then null;
@@ -953,6 +967,28 @@ begin
     if (select count(*) from public.ip_user_preference_cards) <> cards_at
        or (select count(*) from public.ip_user_preference_card_revisions) <> revisions_at then
       raise exception 'the refused decision omission of % still wrote rows', omitted_key;
+    end if;
+  end loop;
+
+  -- ...and every nested key given a value of the wrong JSON type. `true` is wrong for a string and
+  -- for an array alike, so one substitution covers all five without a table that could drift.
+  foreach omitted_key in array decision_keys loop
+    cards_at := (select count(*) from public.ip_user_preference_cards);
+    revisions_at := (select count(*) from public.ip_user_preference_card_revisions);
+    begin
+      perform public.ip_create_rebuilt_preference_card(
+        owner_id, source_id, source_revision, source_hash, release_id,
+        'verify rejected', null::text, 'VERIFY_ONLY', 'verify-only',
+        '{}'::jsonb, snapshot, repeat('f', 64), 'verify', 'verify',
+        provenance || jsonb_build_object('decisions',
+          jsonb_build_array((decisions_fixture -> 0) || jsonb_build_object(omitted_key, true))));
+      raise exception 'the writer accepted a boolean decision %', omitted_key;
+    exception
+      when invalid_parameter_value then null;
+    end;
+    if (select count(*) from public.ip_user_preference_cards) <> cards_at
+       or (select count(*) from public.ip_user_preference_card_revisions) <> revisions_at then
+      raise exception 'the refused wrong-typed decision % still wrote rows', omitted_key;
     end if;
   end loop;
 
@@ -1167,6 +1203,7 @@ declare
   revisions_at bigint;
   owner_id uuid;
   acting_role text;
+  direction record;
 begin
   select id, rebuild_provenance, user_id into rebuilt_id, original_provenance, owner_id
     from public.ip_user_preference_cards
@@ -1202,43 +1239,38 @@ begin
       end if;
     end if;
 
-    cards_at := (select count(*) from public.ip_user_preference_cards);
-    revisions_at := (select count(*) from public.ip_user_preference_card_revisions);
+    -- All three directions, each bracketed on its own. One baseline across the group proved only
+    -- that the *net* effect was nothing, which a write plus a later delete also satisfies.
+    for direction in
+      select * from (values
+        ('value to another value', rebuilt_id, jsonb_build_object('version', 'forged')),
+        ('value to null', rebuilt_id, null::jsonb),
+        ('null to value', ordinary_id, jsonb_build_object('version', 'ip-cards-rebuild/1'))
+      ) as t(label, target_id, next_provenance)
+    loop
+      cards_at := (select count(*) from public.ip_user_preference_cards);
+      revisions_at := (select count(*) from public.ip_user_preference_card_revisions);
+      begin
+        update public.ip_user_preference_cards
+           set rebuild_provenance = direction.next_provenance
+         where id = direction.target_id;
+        raise exception 'provenance moved % as %', direction.label, acting_role;
+      exception when restrict_violation then null; end;
 
-    begin
-      update public.ip_user_preference_cards
-         set rebuild_provenance = jsonb_build_object('version', 'forged') where id = rebuilt_id;
-      raise exception 'provenance was overwritten as %', acting_role;
-    exception when restrict_violation then null; end;
-
-    begin
-      update public.ip_user_preference_cards
-         set rebuild_provenance = null where id = rebuilt_id;
-      raise exception 'provenance was cleared as %', acting_role;
-    exception when restrict_violation then null; end;
-
-    begin
-      update public.ip_user_preference_cards
-         set rebuild_provenance = jsonb_build_object('version', 'ip-cards-rebuild/1')
-       where id = ordinary_id;
-      raise exception 'a card that was not rebuilt was given provenance as %', acting_role;
-    exception when restrict_violation then null; end;
-
-    if (select rebuild_provenance from public.ip_user_preference_cards where id = rebuilt_id)
-       is distinct from original_provenance then
-      raise exception 'a refused write-once update as % still changed provenance', acting_role;
-    end if;
-    if (select rebuild_provenance from public.ip_user_preference_cards where id = ordinary_id)
-       is not null then
-      raise exception 'a refused write-once update as % still gave an ordinary card provenance',
-        acting_role;
-    end if;
-    -- Counts as well as values: an update that was refused must not have appended a revision or
-    -- created anything either, and only counting rows says so.
-    if (select count(*) from public.ip_user_preference_cards) <> cards_at
-       or (select count(*) from public.ip_user_preference_card_revisions) <> revisions_at then
-      raise exception 'the refused write-once updates as % still wrote rows', acting_role;
-    end if;
+      if (select rebuild_provenance from public.ip_user_preference_cards where id = rebuilt_id)
+         is distinct from original_provenance then
+        raise exception 'the refused % as % still changed provenance', direction.label, acting_role;
+      end if;
+      if (select rebuild_provenance from public.ip_user_preference_cards where id = ordinary_id)
+         is not null then
+        raise exception 'the refused % as % still gave an ordinary card provenance',
+          direction.label, acting_role;
+      end if;
+      if (select count(*) from public.ip_user_preference_cards) <> cards_at
+         or (select count(*) from public.ip_user_preference_card_revisions) <> revisions_at then
+        raise exception 'the refused % as % still wrote rows', direction.label, acting_role;
+      end if;
+    end loop;
 
     reset role;
   end loop;
@@ -1362,7 +1394,7 @@ begin
   if (select count(*)
         from pg_proc p join pg_namespace n on n.oid = p.pronamespace
        where n.nspname = 'private'
-         and has_function_privilege('ip_preference_card_rebuild_writer', p.oid, 'EXECUTE')) <> 2
+         and has_function_privilege('ip_preference_card_rebuild_writer', p.oid, 'EXECUTE')) <> 1
   then
     raise exception 'the writer role can execute a different set of private functions than it began with';
   end if;

@@ -13,31 +13,42 @@ import { z } from 'zod'
  * was built from, which is the one thing the review gate exists to prevent.
  */
 
-const sha256Schema = z
-  .string()
-  .trim()
-  .regex(/^[a-f0-9]{64}$/)
+const sha256Schema = z.string().regex(/^[a-f0-9]{64}$/)
 
 /**
- * The canonical subset the runtime schema and the SQL validator both accept, exactly.
+ * The canonical subset the runtime schema and the SQL validator both accept, byte for byte.
  *
- * These three helpers exist because "compatible bounds" is not parity. `z.string().trim().min(1)`
- * *accepts* `' x '` and parses it to `'x'`, so a document could be stored with bytes the reader
- * silently rewrites — and a SQL check written as `length(btrim(x)) between 1 and n` would agree to
- * store it while a check written as `length(x) between 1 and n` would not. Rather than pick which
- * side to loosen, both sides are narrowed to values that are already canonical: no leading or
- * trailing whitespace, so what is stored is what is read.
+ * "Compatible bounds" is not parity, and the gap was storable evidence. Two operations that look
+ * equivalent are not:
  *
- * `private.ip_validate_preference_card_rebuild_provenance_v1` mirrors each of these, and
- * `provenance-contract.test.ts` drives both from one table of examples.
+ * - PostgreSQL's `btrim` strips spaces; ECMAScript `trim()` strips the whole WhiteSpace and
+ *   LineTerminator set. `"\tx\t"` passed a `btrim` equality check and failed Zod.
+ * - PostgreSQL `length(text)` counts characters; JavaScript `.length` counts UTF-16 code units.
+ *   `"😀".repeat(61)` is 61 characters and 122 code units, so it passed a 120-character SQL bound
+ *   and failed a 120-unit Zod bound.
+ *
+ * Either way a direct service-role RPC could store a document `loadUserCard` then reports as
+ * invalid — the exact failure the validator exists to prevent.
+ *
+ * So version 1 fixes the alphabet instead of trying to reconcile two whitespace definitions:
+ * **printable ASCII, no leading or trailing space, no control characters**. Inside that alphabet
+ * character count and code-unit count are the same number, and "no padding" has one meaning. The
+ * regex below and the one in `private.ip_validate_preference_card_rebuild_provenance_v1` are the
+ * same expression.
+ *
+ * This is a contract about *identifiers and codes*, not prose, and every committed producer already
+ * satisfies it: release and catalog ids, requirement keys, role codes and slot ids all come from
+ * generated release data (checked: no value outside this range), and a decision's `kind`, `state`,
+ * `acknowledgement` and `reasonCodes` are closed TypeScript unions of ASCII identifiers. A future
+ * field that genuinely needs more than ASCII needs a new provenance version, and a length rule whose
+ * two implementations can be shown to agree.
  */
+const CANONICAL_TEXT = /^[!-~]([ -~]*[!-~])?$/
+
 const canonicalText = (max: number) =>
-  z
-    .string()
-    .max(max)
-    .refine((value) => value.length > 0 && value === value.trim(), {
-      message: 'must be non-empty and carry no leading or trailing whitespace',
-    })
+  z.string().max(max).regex(CANONICAL_TEXT, {
+    message: 'must be printable ASCII with no leading or trailing space and no control characters',
+  })
 
 /** Zod's own `.uuid()`, restated so the SQL regex can be pinned to the same shape. */
 const CANONICAL_UUID =
@@ -46,19 +57,30 @@ const CANONICAL_UUID =
 const canonicalUuid = z.string().regex(CANONICAL_UUID)
 
 /**
- * An instant, not a string that resembles one.
+ * One spelling of one instant: `YYYY-MM-DDTHH:mm:ss.sssZ`, UTC, millisecond precision.
  *
- * `.datetime({ offset: true })` accepts several spellings of the same moment and — depending on the
- * version — an offset without a colon, which PostgreSQL's pattern would then have to guess at. One
- * spelling is required here, and the calendar is checked: `2026-99-99T00:00:00.000Z` matches every
- * shape rule and is not a date, which is exactly what the old prefix-only SQL check let through.
+ * The previous refine accepted anything `Date.parse` did not return `NaN` for, and `Date.parse`
+ * *normalizes*: `2026-02-29T00:00:00.000Z` (2026 is not a leap year) and `2026-02-30T00:00:00.000Z`
+ * both parse, both become March, and both were accepted as provenance. A timestamp that silently
+ * becomes a different day is not a record of when anything happened.
+ *
+ * Round-tripping through `toISOString()` is what makes the calendar check exact: a date the calendar
+ * does not have re-serializes as a different string and is refused. It also pins the spelling, so
+ * one instant has one representation and a stored value and a read value are the same bytes.
+ * `new Date().toISOString()` — which is what the writer emits — is already exactly this form.
  */
+const CANONICAL_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+
 const canonicalTimestamp = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?(Z|[+-]\d{2}:\d{2})$/)
-  .refine((value) => !Number.isNaN(Date.parse(value)), {
-    message: 'must name a real instant',
-  })
+  .regex(CANONICAL_TIMESTAMP)
+  .refine(
+    (value) => {
+      const parsed = new Date(value)
+      return !Number.isNaN(parsed.getTime()) && parsed.toISOString() === value
+    },
+    { message: 'must name a real instant in canonical UTC form' },
+  )
 
 export const rebuildAcknowledgementSchema = z.enum([
   'confirmed',
