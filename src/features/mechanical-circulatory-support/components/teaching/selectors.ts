@@ -17,6 +17,14 @@
  * deadband is printed, so the word never replaces the numbers.
  */
 
+import {
+  MCS_ACC_CONGESTION_FRAMEWORK,
+  MCS_ACC_CONGESTION_THRESHOLD_MMHG,
+  MCS_ORTEGA_COHORT_CUTOFFS,
+  mcsCongestionProfileDefinition,
+  mcsCongestionProfileId,
+  type McsCongestionProfileId,
+} from '../../content/congestionProfile'
 import { deriveIabpCycleState } from '../../engine/model'
 import type {
   McsAlarm,
@@ -821,56 +829,75 @@ export function lvadView(state: McsSimulationState): McsLvadView | null {
 }
 
 /* ------------------------------------------------------------------ *
- * Filling-pressure phenotype
+ * Filling-pressure congestion pattern
  * ------------------------------------------------------------------ */
 
-export type McsDominantProblem =
-  | 'left-dominant'
-  | 'right-dominant'
-  | 'biventricular'
-  | 'not-resolved'
-
-export interface McsFillingProfileView {
+export interface McsCongestionProfileView {
   readonly rapMmHg: number
   readonly pcwpMmHg: number
-  readonly ratio: number
-  readonly dominant: McsDominantProblem
+  readonly thresholdMmHg: number
+  readonly rapElevated: boolean
+  readonly pcwpElevated: boolean
+  readonly profileId: McsCongestionProfileId
+  readonly label: string
   readonly statement: string
+  readonly frameworkId: string
+  readonly frameworkLabel: string
+  readonly operationalizationNote: string
+  readonly sourceIds: readonly string[]
+  /** The same two pressures under the cohort's own cut points, for the side-by-side disclosure. */
+  readonly cohortProfileId: McsCongestionProfileId
+  readonly cohortRapElevated: boolean
+  readonly cohortPcwpElevated: boolean
+  /** Derived context only. Never a boundary, never a phenotype, never a target. */
+  readonly rapToPcwpRatio: number | null
 }
 
 /**
- * Which side the modeled filling pressures point at — as a reading of a relationship, never as a
- * device recommendation.
+ * The filling-pressure congestion pattern the two modeled pressures fall into.
  *
- * The engine already produces both pressures; nothing is recomputed. The classification is the
- * relationship between them stated in words, and it has an explicit `not-resolved` branch, because a
- * profile that does not separate is a real answer and a forced one would be a fabricated diagnosis.
- * No panel turns this into a device choice: every one of them prints the four bedside questions that
- * the two numbers cannot answer beside it.
+ * The classification is the framework's, not this module's: strictly above 15 mm Hg on each pressure,
+ * as described in the ACC consensus statement, with the four-cell grid labelled everywhere it is
+ * shown as an educational operationalization of that prose. The engine already produces both
+ * pressures; nothing is recomputed here and nothing is rounded.
+ *
+ * The cohort profile is computed alongside it so that the side-by-side disclosure can show what the
+ * *same two pressures* would have been called under the Ortega-Hernández cut points. The two are
+ * never merged, and no intermediate threshold is invented from them.
  */
-export function fillingProfileView(state: McsSimulationState): McsFillingProfileView {
+export function congestionProfileView(state: McsSimulationState): McsCongestionProfileView {
   const rap = state.metrics.rapMmHg
   const pcwp = state.metrics.pcwpMmHg
-  const ratio = pcwp > 0 ? rap / pcwp : Number.POSITIVE_INFINITY
-  const bothHigh = rap >= 15 && pcwp >= 20
-  const rightDominant = rap >= 15 && ratio >= 0.85
-  const leftDominant = pcwp >= 20 && ratio <= 0.6
-  const dominant: McsDominantProblem = bothHigh
-    ? 'biventricular'
-    : rightDominant
-      ? 'right-dominant'
-      : leftDominant
-        ? 'left-dominant'
-        : 'not-resolved'
-  const statement =
-    dominant === 'right-dominant'
-      ? 'Right atrial pressure is high relative to the wedge pressure. In this model that relationship reads as a delivery problem upstream of the left ventricle.'
-      : dominant === 'left-dominant'
-        ? 'The wedge pressure dominates the right atrial pressure. In this model that relationship reads as left-sided congestion.'
-        : dominant === 'biventricular'
-          ? 'Both filling pressures are raised together. In this model that relationship does not separate the two sides.'
-          : 'These two pressures do not separate the two sides in this model. That is the reading, not a failure to read.'
-  return { rapMmHg: rap, pcwpMmHg: pcwp, ratio, dominant, statement }
+  const threshold = MCS_ACC_CONGESTION_THRESHOLD_MMHG
+  const profileId = mcsCongestionProfileId(rap, pcwp, threshold)
+  const definition = mcsCongestionProfileDefinition(profileId)
+  const cohortRapElevated = rap >= MCS_ORTEGA_COHORT_CUTOFFS.rapMmHg
+  const cohortPcwpElevated = pcwp >= MCS_ORTEGA_COHORT_CUTOFFS.pcwpMmHg
+  return {
+    rapMmHg: rap,
+    pcwpMmHg: pcwp,
+    thresholdMmHg: threshold,
+    rapElevated: rap > threshold,
+    pcwpElevated: pcwp > threshold,
+    profileId,
+    label: definition.label,
+    statement: definition.statement,
+    frameworkId: MCS_ACC_CONGESTION_FRAMEWORK.id,
+    frameworkLabel: MCS_ACC_CONGESTION_FRAMEWORK.label,
+    operationalizationNote: MCS_ACC_CONGESTION_FRAMEWORK.operationalizationNote,
+    sourceIds: MCS_ACC_CONGESTION_FRAMEWORK.sourceIds,
+    cohortProfileId:
+      cohortRapElevated && cohortPcwpElevated
+        ? 'biventricular'
+        : cohortRapElevated
+          ? 'rv-predominant'
+          : cohortPcwpElevated
+            ? 'lv-predominant'
+            : 'neither-elevated',
+    cohortRapElevated,
+    cohortPcwpElevated,
+    rapToPcwpRatio: pcwp > 0 ? rap / pcwp : null,
+  }
 }
 
 /* ------------------------------------------------------------------ *
@@ -920,7 +947,7 @@ export const MCS_UNMODELED_ORGAN_SIGNALS: readonly McsUnmodeledSignal[] = Object
 ])
 
 export const MCS_OXYGEN_DELIVERY_BOUNDARY =
-  'This simulation does not calculate whole-body oxygen delivery. Haemoglobin and arterial oxygen content are not modeled, so no oxygen-delivery figure exists here. The mixed venous saturation below is a modeled downstream balance signal — what the tissues left behind — and it is not a measurement of delivery.'
+  'This simulation does not calculate whole-body oxygen delivery. Hemoglobin and arterial oxygen content are not modeled, so no oxygen-delivery figure exists here. The mixed venous saturation beside it is a modeled delivery–consumption balance signal, influenced by the modeled balance among blood flow, oxygen availability assumptions, and tissue consumption and extraction assumptions. It is not a measurement of delivery, not a calculation of delivery, not proof that delivery is adequate, and not a value to drive a patient toward.'
 
 export const MCS_ESTIMATED_FLOW_BOUNDARY =
-  'A displayed pump flow in this simulation is an estimate produced from pump behaviour and assumed loading, exactly as it is on the real controller. Nothing here reads blood with a probe.'
+  'Like the devices represented here, displayed pump flow is estimated rather than measured directly. This simulation does not reproduce each controller’s proprietary calculation or display. Nothing here reads blood with a probe: the figure depends on modeled pump behavior and modeled loading.'
