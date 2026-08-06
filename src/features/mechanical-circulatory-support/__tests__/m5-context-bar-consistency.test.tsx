@@ -170,6 +170,24 @@ describe('MCS M5 — the patient-context bar carries no unsourced shock phenotyp
   })
 })
 
+describe('MCS M5 — the patient-context bar names the rhythm the model is running', () => {
+  beforeEach(() => setupMcsWorkbenchEnvironment())
+  afterEach(() => teardownMcsWorkbenchEnvironment())
+
+  it.each([
+    ['sinus', 'Sinus rhythm'],
+    ['atrial-fibrillation', 'Atrial fibrillation'],
+    ['paced', 'Paced'],
+  ])('reads %s as "%s"', async (value, label) => {
+    await renderWorkbench({ section: 'practice' })
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Rhythm' }), { target: { value } })
+
+    expect(patientContextValue('Rhythm')).toContain(label)
+    expect(patientContextValue('Rhythm')).toMatch(/\d+ bpm/)
+  })
+})
+
 describe('MCS M5 — the patient-context bar reports device flow as the model does', () => {
   beforeEach(() => setupMcsWorkbenchEnvironment())
   afterEach(() => teardownMcsWorkbenchEnvironment())

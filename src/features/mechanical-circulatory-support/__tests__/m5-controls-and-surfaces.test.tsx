@@ -46,6 +46,7 @@ import {
   completeRecognizePhase,
   continueFromPhase,
   flushAnimationFrames,
+  mockRouterPush,
   renderWorkbench,
   renderWorkbenchOnFakeTimers,
   selectDeviceTrack,
@@ -471,6 +472,36 @@ describe('MCS M5 — the synchronized monitor and anatomy surfaces', () => {
       const text = metricGrid().textContent ?? ''
       expect(text).not.toMatch(/NaN|Infinity|undefined|null/)
     }
+  })
+
+  it('offers a way out of the 3D surface on a display too small for it', async () => {
+    // jsdom's default 1024×768 clears the desktop gate, so the gate only appears once the display
+    // is genuinely constrained — which is the only state in which the escape hatch exists.
+    const width = window.innerWidth
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 800 })
+    await renderWorkbench({ section: 'practice' })
+
+    expect(screen.getByRole('heading', { name: 'A larger screen is recommended' })).toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: 'Save for later' }))
+    expect(mockRouterPush).toHaveBeenCalledWith('/mechanical-circulatory-support')
+
+    // Continuing anyway is still offered, and it does not change the simulation.
+    fireEvent.click(screen.getByRole('button', { name: 'Continue on this device' }))
+    expect(
+      screen.getByRole('region', { name: 'Animated mechanical-support anatomy' }),
+    ).toBeInTheDocument()
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: width })
+  })
+
+  it('offers the same way out of the Learn anatomy pane', async () => {
+    const width = window.innerWidth
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 800 })
+    await renderWorkbench({ section: 'learn', initialActivityId: 'impella-unloading-placement' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save for later' }))
+
+    expect(mockRouterPush).toHaveBeenCalledWith('/mechanical-circulatory-support')
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: width })
   })
 
   it('states the alarm priority and the active alarm in text', async () => {

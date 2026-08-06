@@ -328,6 +328,45 @@ describe('MCS M5 — working a practice case through to its debrief', () => {
     expect(storedCompletedCaseIds()).toEqual(['IABP-01'])
   })
 
+  it('navigates the case reasoning rail and works its remaining steps', async () => {
+    await renderWorkbench({ section: 'practice', initialActivityId: 'IABP-03' })
+    const rail = screen.getByRole('list', { name: 'Case reasoning sequence' })
+
+    fireEvent.click(within(rail).getByRole('button', { name: /observe/ }))
+    expect(document.activeElement).toHaveAttribute('id', 'mcs-case-response')
+
+    // The support-ceiling case is the one that asks for an escalation rather than a setting.
+    inspectInCase('inspect:preload')
+    inspectInCase('inspect:device')
+    fireEvent.click(screen.getByRole('button', { name: 'Escalate to shock/MCS team' }))
+
+    expect(
+      screen.getByText('Shock/MCS team escalation documented in the simulation.'),
+    ).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Escalate to shock/MCS team' })).toHaveAttribute(
+      'data-complete',
+      'true',
+    )
+  })
+
+  it('returns the case to its authored start from the card\u2019s own Reset', async () => {
+    const scenario = mcsPracticeScenarios.find((candidate) => candidate.id === 'IABP-01')!
+    await renderWorkbench({ section: 'practice', initialActivityId: 'IABP-01' })
+    const workflow = screen.getByRole('region', { name: scenario.title })
+    inspectInCase('inspect:arterial')
+    expect(screen.getByRole('button', { name: 'Arterial waveform' })).toHaveAttribute(
+      'data-complete',
+      'true',
+    )
+
+    fireEvent.click(within(workflow).getByRole('button', { name: 'Reset' }))
+
+    expect(screen.getByRole('button', { name: 'Arterial waveform' })).toHaveAttribute(
+      'data-complete',
+      'false',
+    )
+  })
+
   it('replays the active case without discarding history from earlier cases', async () => {
     seedStoredProgress({ completedCaseIds: ['IMP-01'], masteredCaseIds: ['IMP-01'] })
     const scenario = mcsPracticeScenarios.find((candidate) => candidate.id === 'IABP-01')!

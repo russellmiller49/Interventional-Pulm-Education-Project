@@ -113,6 +113,26 @@ describe('MCS M5 — every Learn section opens on its authored contract', () => 
     },
   )
 
+  it('names what the pathway shows when the recognition is wrong', async () => {
+    const contract = mcsSectionLearningContracts[0]
+    await renderWorkbench({ section: 'learn', initialActivityId: contract.sectionId })
+    const wrong = contract.recognizeOptions.find((option) => !option.correct)!
+    const right = contract.recognizeOptions.find((option) => option.correct)!
+
+    fireEvent.click(screen.getByRole('radio', { name: wrong.label }))
+    fireEvent.click(screen.getByRole('button', { name: 'Record what you identified' }))
+
+    const feedback = document.querySelector('[data-recognize-feedback]') as HTMLElement
+    expect(feedback).toHaveAttribute('data-right', 'false')
+    expect(within(feedback).getByText('Not this one')).toBeInTheDocument()
+    expect(within(feedback).getByText(wrong.feedback)).toBeInTheDocument()
+    // The corrective half: what the pathway actually shows, not merely that the answer was wrong.
+    expect(within(feedback).getByText('What the pathway shows:')).toBeInTheDocument()
+    expect(within(feedback).getByText(right.feedback)).toBeInTheDocument()
+    // A wrong recognition still lets the learner continue: the phase is a step, not a gate.
+    expect(screen.getByRole('button', { name: /^Continue to the prediction/ })).toBeEnabled()
+  })
+
   it.each(sections)('presents %s with no learner-visible completion control', async (sectionId) => {
     await renderWorkbench({ section: 'learn', initialActivityId: sectionId })
 
@@ -469,6 +489,23 @@ describe('MCS M5 — Learn phase navigation', () => {
     flushAnimationFrames()
 
     expect(document.activeElement).toHaveAttribute('id', 'mcs-activity-viewport')
+  })
+
+  it('returns the section to Recognize when the activity is reset', async () => {
+    await renderWorkbench({ section: 'learn', initialActivityId: 'iabp-timing-triggering' })
+    completeRecognizePhase('iabp-timing-triggering')
+    continueFromPhase('recognize')
+    commitPredictionPhase('iabp-timing-triggering')
+    continueFromPhase('predict')
+    expect(learnPhase()).toBe('act')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+
+    expect(learnPhase()).toBe('recognize')
+    expect(document.querySelector('[data-answer-verdict]')).toBeNull()
+    // The furthest phase resets with it, so the stepper cannot jump forward again.
+    jumpToSharedPhase('Act')
+    expect(learnPhase()).toBe('recognize')
   })
 
   it('closes an open help note when the phase changes', async () => {

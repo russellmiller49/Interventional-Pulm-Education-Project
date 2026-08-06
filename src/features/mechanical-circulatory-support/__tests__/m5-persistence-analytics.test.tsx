@@ -205,6 +205,16 @@ describe('MCS M5 — the simulation interval and unmount cleanup', () => {
     expect(capturedIntervalDelays()).toEqual([250])
   })
 
+  it('still installs the simulation interval where matchMedia does not exist', async () => {
+    // Not every embedding browser exposes matchMedia; the reduced-motion read is optional for that
+    // reason, and losing it must cost the reduced cadence rather than the simulation.
+    Object.defineProperty(window, 'matchMedia', { configurable: true, value: undefined })
+
+    await renderWorkbenchOnFakeTimers({ section: 'practice' })
+
+    expect(capturedIntervalDelays()).toEqual([100])
+  })
+
   it('clears the interval it installed on unmount', async () => {
     const view = await renderWorkbenchOnFakeTimers({ section: 'practice' })
     expect(capturedIntervalDelays()).toHaveLength(1)
