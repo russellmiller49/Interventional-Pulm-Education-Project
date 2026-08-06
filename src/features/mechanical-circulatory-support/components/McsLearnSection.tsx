@@ -14,6 +14,7 @@ import type { McsAction, McsDerivedMetrics, McsSimulationState } from '../engine
 import { McsLearnActionPane } from './McsLearnActionPane'
 import { McsLearnPrimaryPane } from './McsLearnPrimaryPane'
 import { McsLearnTeachingPane } from './McsLearnTeachingPane'
+import { mcsRevealStage } from './teaching/revealStage'
 import styles from './mechanical-circulatory-support.module.css'
 
 const phaseLabels: Readonly<Record<McsLearnPhase, string>> = {
@@ -80,6 +81,12 @@ export function McsLearnSection({
   const transferStarted = useRef(false)
 
   const actionSatisfied = contract.isActionSatisfied(state)
+  /*
+   * How much of the teaching may be shown. Derived here, from the phase and the commitment this
+   * component already owns, so that the disclosure rule lives in one place rather than being
+   * re-decided by nine panels.
+   */
+  const reveal = mcsRevealStage(phase, predictionCommitted)
 
   function advance() {
     const index = MCS_LEARN_PHASES.indexOf(phase)
@@ -126,6 +133,8 @@ export function McsLearnSection({
           <McsLearnTeachingPane
             contract={contract}
             state={state}
+            reveal={reveal}
+            beforeMetrics={beforeMetrics}
             foundationMaterial={foundationMaterial}
           />
         }

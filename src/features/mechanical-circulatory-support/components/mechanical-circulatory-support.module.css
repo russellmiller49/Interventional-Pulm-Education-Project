@@ -4318,6 +4318,7 @@
 .learnContextStrip,
 .liveFlowLines,
 .learnExplainList,
+.teachingPanelHost,
 .foundationMaterial {
   grid-template-columns: minmax(0, 1fr);
 }
@@ -4325,8 +4326,35 @@
 .foundationMaterial .commonModelGrid,
 .foundationMaterial .pathwayCardGrid,
 .foundationMaterial .commonModel,
-.foundationMaterial .pathwayCards {
+.foundationMaterial .pathwayCards,
+/*
+ * The card itself, not only the grid it sits in. Constraining the grid gave each card a 304-pixel
+ * box, but the card is a grid too, and its own column was still sized by its widest field — so the
+ * card's contents ran about 30 px past the right edge of the pane and the whole teaching pane
+ * scrolled sideways on the mechanisms section. Found by measuring the pane during the M4 render
+ * review; the same one-line answer as the rule above, one level further in.
+ */
+.foundationMaterial .pathwayCard {
   grid-template-columns: minmax(0, 1fr);
+}
+
+/*
+ * And the grid *items*, not only the tracks.
+ *
+ * Constraining a track to `minmax(0, 1fr)` still leaves each item at `min-width: auto`, so the
+ * shared evidence renderers inside the pathway cards — which are laid out with their own utility
+ * classes and know nothing about this pane — sat 5 px past the pane edge and scrolled the whole
+ * teaching column sideways. Same answer as the panel host uses, applied to the material this
+ * disclosure carries.
+ */
+.foundationMaterial :global(section),
+.foundationMaterial :global(article),
+.foundationMaterial :global(div),
+.foundationMaterial :global(ul),
+.foundationMaterial :global(ol),
+.foundationMaterial :global(dl),
+.foundationMaterial :global(table) {
+  min-width: 0;
 }
 
 .learnPrimaryPane img,
@@ -4341,6 +4369,80 @@
 .learnActionPane .beforeAfterTable {
   display: block;
   overflow-x: auto;
+}
+
+/*
+ * The live teaching panel's host.
+ *
+ * The panel is built from utility classes so that the offline review harness can render it without
+ * a bundler, which means the pane has to supply the two things that are a property of *this* pane
+ * rather than of the panel: a text size that matches the prose around it, and a hard refusal to let
+ * any figure inside it set the pane's width. `min-width: 0` on the host and on every descendant grid
+ * is the load-bearing half — a grid item defaults to `min-width: auto`, so one wide comparison table
+ * would otherwise widen the whole workspace column instead of scrolling inside its own wrapper.
+ */
+.teachingPanelHost {
+  min-width: 0;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+.teachingPanelHost :global(section),
+.teachingPanelHost :global(div),
+.teachingPanelHost :global(ol),
+.teachingPanelHost :global(ul),
+.teachingPanelHost :global(dl) {
+  min-width: 0;
+}
+.teachingPanelHost :global(h4) {
+  margin: 0;
+  color: var(--navy-2);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.teachingPanelHost :global(h5) {
+  margin: 0;
+  color: var(--navy-2);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.teachingPanelHost :global(p),
+.teachingPanelHost :global(li),
+.teachingPanelHost :global(dd),
+.teachingPanelHost :global(dt),
+.teachingPanelHost :global(td),
+.teachingPanelHost :global(th) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.teachingPanelHost :global(svg) {
+  max-width: 100%;
+  height: auto;
+}
+.teachingPanelHost :global(table) {
+  border-collapse: collapse;
+}
+/*
+ * The shared evidence renderers lay their positions out on a *viewport* media query, which is the
+ * wrong question inside a 304-pixel pane: at a desktop width it splits a held disagreement into two
+ * 145-pixel columns that nothing fits in. The panels themselves use a container-fitting grid; this
+ * is the one place the shared markup has to be overridden, and it is done by widening the selector
+ * rather than by touching the shared component.
+ */
+.teachingPanelHost :global(.md\:grid-cols-2),
+.teachingPanelHost :global(.sm\:grid-cols-2) {
+  grid-template-columns: minmax(0, 1fr);
+}
+.teachingPanelHost :global(.overflow-x-auto) {
+  overflow-x: auto;
+}
+/* A figure that genuinely cannot fit scrolls inside its own wrapper, never sideways in the pane. */
+.teachingPanelHost :global([data-mechanism-comparison]),
+.teachingPanelHost :global([data-low-flow-differential]),
+.teachingPanelHost :global([data-alarm-localization]),
+.teachingPanelHost :global([data-common-model-answers]) {
+  min-width: 30rem;
 }
 
 /*
