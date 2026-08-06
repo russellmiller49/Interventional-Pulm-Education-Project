@@ -14,6 +14,46 @@ export const PATIENT_POSITION: [number, number, number] = [-1.35, -0.405, -0.3]
 export const PATIENT_SCALE = 0.92
 export const FLOOR_Y = -0.72
 
+/**
+ * The console GLB's model-local bounding box, measured from `cardiohelp-console.glb`.
+ *
+ * Held here rather than read at runtime so `layout.ts` stays free of asset loading and the label
+ * anchors can be computed in node and in jest. `bedside-scene-geometry.test.ts` reads the GLB's own
+ * POSITION accessor and fails if this drifts from the shipped asset.
+ */
+export const CONSOLE_MODEL_BOUNDS = {
+  min: [-0.3179, -0.4745, -0.3658],
+  max: [0.3179, 0.4752, 0.3656],
+} as const
+
+/**
+ * Where the console stands, and which way up.
+ *
+ * The asset is authored with its base on local +Y, so the flip about X is what puts it on its feet:
+ * the tubular frame's lower loop becomes the foot rail, the body stands upright and the carry
+ * handle is on top. Without it the unit rests on local −Y — which is its *top* — with the pump
+ * drive and connectors facing the sky.
+ *
+ * The preparation script's `stand_longest_axis` heuristic left the asset alone because the longest
+ * dimension (0.950 m) already lay along Y; the heuristic has no way to tell a height from a height
+ * that is upside down.
+ *
+ * Read the render, not the numbers, if you change this. Flat-contact-area and mass-distribution
+ * metrics do **not** discriminate the candidates for this asset — it stands on a curved tube rail,
+ * so its true base has less flat contact than three of the wrong answers. Six candidate
+ * orientations rendered side by side are what settle it. `scripts/cardiohelp-ecmo/` has the
+ * harness.
+ *
+ * Order is three.js 'XYZ', so the flip composes after the yaw. Single source of truth: the runtime
+ * scene, the label layout and the offline Blender harness all read this.
+ */
+export const CONSOLE_PLACEMENT = {
+  x: 1.52,
+  z: 0.56,
+  rotation: [Math.PI, -0.35, 0] as [number, number, number],
+  scale: 1,
+} as const
+
 export const CAMERA_POSITION: [number, number, number] = [4.4, 2.75, 5.25]
 export const CAMERA_TARGET: [number, number, number] = [0, -0.05, 0.05]
 export const CAMERA_FOV = 36

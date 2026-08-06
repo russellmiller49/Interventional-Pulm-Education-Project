@@ -84,7 +84,7 @@ function OrientationHarness({ scenarioId }: { scenarioId: string }) {
   const [state, dispatch] = useReducer(ecmoSimulationReducer, scenarioId, (id) =>
     createInitialSimulationState(id, 'guided'),
   )
-  const [guidedTarget, setGuidedTarget] = useState<GuidedTarget>('circuit')
+  const [guidedTarget, setGuidedTarget] = useState<GuidedTarget | null>('circuit')
   const [guidedControlId, setGuidedControlId] = useState<GuidedControlId | null>(null)
   const lesson = resolveGuidedLesson(scenarioId)
 
@@ -145,7 +145,7 @@ function nextStep() {
   fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
 }
 
-function performAndAdvance(actionName: RegExp) {
+function performAndAdvance(actionName: string | RegExp) {
   fireEvent.click(screen.getByRole('button', { name: actionName }))
   nextStep()
 }
@@ -186,7 +186,7 @@ async function walkOrientationToPrediction(scenarioId: string, firstStepAction: 
   await rampToReferenceSpeed()
 
   // 4 — and lets it settle, which is what actually restarts the pump in this model.
-  performAndAdvance(/Advance the model and let the circuit settle/i)
+  performAndAdvance('Let the circuit respond')
 
   const running = readProbe()
 

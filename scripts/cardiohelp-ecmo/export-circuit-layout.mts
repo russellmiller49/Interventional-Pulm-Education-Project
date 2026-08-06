@@ -24,6 +24,7 @@ import {
   CAMERA_FOV,
   CAMERA_POSITION,
   CAMERA_TARGET,
+  CONSOLE_PLACEMENT,
   FLOOR_Y,
   PALETTE,
   PATIENT_POSITION,
@@ -58,7 +59,14 @@ function exportLayout(layout: CircuitLayout) {
       sweep: PALETTE.sweepGas,
     },
     patient: { position: PATIENT_POSITION, scale: PATIENT_SCALE },
-    consolePlacement: { x: 1.52, z: 0.56, rotationY: -0.35 },
+    // Straight from the runtime constant, all three Euler angles. It used to be a hand-copied
+    // `rotationY` here, which is how the harness and the browser could disagree about the console.
+    consolePlacement: {
+      x: CONSOLE_PLACEMENT.x,
+      z: CONSOLE_PLACEMENT.z,
+      rotation: CONSOLE_PLACEMENT.rotation,
+      scale: CONSOLE_PLACEMENT.scale,
+    },
     hlsModule: [
       layout.hlsModulePosition.x,
       layout.hlsModulePosition.y,

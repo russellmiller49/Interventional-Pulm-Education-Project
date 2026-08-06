@@ -50,6 +50,7 @@ import {
   setLastVisited,
   withMastery,
   writeProgress,
+  type CircuitViewPreference,
   type EcmoSimulationState,
   type GuidedControlId,
   type GuidedTarget,
@@ -108,6 +109,10 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
     section === 'learn' ? 'circuit' : null,
   )
   const [guidedControlId, setGuidedControlId] = useState<GuidedControlId | null>(null)
+  const [circuitViewPreference, setCircuitViewPreference] = useState<{
+    readonly view: CircuitViewPreference
+    readonly stepId: string
+  } | null>(null)
   const [activeLearnStep, setActiveLearnStep] = useState<GuidedWalkthroughStep>(
     () => resolveGuidedLesson(orderedLessonScenarioIds('vv')[0]).steps[0],
   )
@@ -158,9 +163,15 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
   })
   const catalogActivity = criticalCareActivityById.get(lifecycleActivityId)
 
-  const handleGuidedTargetChange = useCallback((target: GuidedTarget) => {
+  const handleGuidedTargetChange = useCallback((target: GuidedTarget | null) => {
     setGuidedTarget(target)
   }, [])
+  const handleCircuitViewPreferenceChange = useCallback(
+    (preference: { view: CircuitViewPreference; stepId: string } | null) => {
+      setCircuitViewPreference(preference)
+    },
+    [],
+  )
   const handleGuidedControlHelpChange = useCallback((controlId: GuidedControlId | null) => {
     setGuidedControlId(controlId)
   }, [])
@@ -786,6 +797,7 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
         controlsEnabled
         guidedTarget={activeGuidedTarget}
         guidedControlId={activeGuidedControlId}
+        circuitViewPreference={section === 'learn' ? circuitViewPreference : null}
         initiationTargets={
           section !== 'learn' ? (scenario.clinicalCase?.initiationTargets ?? null) : null
         }
@@ -961,6 +973,7 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
                     }
                     onTargetChange={handleGuidedTargetChange}
                     onControlHelpChange={handleGuidedControlHelpChange}
+                    onCircuitViewPreferenceChange={handleCircuitViewPreferenceChange}
                     onPhaseChange={setSemanticPhase}
                     onActiveStepChange={handleActiveLearnStepChange}
                   />
