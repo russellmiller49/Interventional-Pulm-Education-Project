@@ -19,16 +19,22 @@ if (registryIssues.length > 0) {
 const learnerCaseIds = new Set(baxterCrrtLearnerCases.map(({ id }) => id))
 const learnerProgressCaseIds = new Set(baxterCrrtLearnerCases.map(({ id }) => id.toLowerCase()))
 /**
- * Learner-facing lesson order (WP10 §5.2). Circuit anatomy precedes transport and prescription
- * because both of those reason about a blood path the learner has not otherwise been shown.
+ * Learner-facing lesson order (WP10 §5.2, C2 §4). Circuit anatomy precedes transport and
+ * prescription because both of those reason about a blood path the learner has not otherwise been
+ * shown; pressure localization precedes citrate because a citrate finding is only readable once
+ * the learner can say whether a result belongs to the circuit or to the patient.
+ *
+ * This array is the module's single lesson sequence: `nextRecommendedCrrtActivity` walks it, and
+ * `learnLessons.ts` and `lessonClinicalAnchors.ts` are both pinned to it, so the hub, the Learn
+ * workbench, and the pathway cannot disagree about what comes next.
  */
 export const BAXTER_CRRT_LEARN_LESSON_IDS = Object.freeze([
   'crrt-indications-modality',
   'crrt-circuit-pressures',
   'crrt-solute-transport',
   'crrt-prescription-dosing',
-  'crrt-anticoagulation',
   'crrt-alarms-troubleshooting',
+  'crrt-anticoagulation',
   'crrt-fluid-liberation',
   'crrt-pressure-profile-integration',
 ] as const)

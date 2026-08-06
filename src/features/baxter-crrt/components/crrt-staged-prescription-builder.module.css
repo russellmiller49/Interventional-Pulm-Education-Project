@@ -1,0 +1,681 @@
+.builder {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  padding: clamp(1rem, 2.5vw, 1.6rem);
+  border: 1px solid rgba(117, 188, 180, 0.38);
+  border-radius: 1.1rem;
+  color: #e7f2f0;
+  background:
+    radial-gradient(circle at 96% 0%, rgba(50, 121, 119, 0.2), transparent 32rem), #071c21;
+}
+
+.builder input,
+.builder select,
+.builder button {
+  font: inherit;
+}
+
+.builder input:focus-visible,
+.builder select:focus-visible,
+.builder button:focus-visible,
+.builder [tabindex]:focus-visible {
+  outline: 3px solid #f5bb65;
+  outline-offset: 3px;
+}
+
+.header {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.header h2 {
+  margin: 0.25rem 0 0;
+  color: #f4fbfa;
+  font-size: clamp(1.3rem, 2.6vw, 1.9rem);
+  line-height: 1.15;
+}
+
+.kicker {
+  color: #8ce2d7;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pendingBadge {
+  align-self: flex-start;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid rgba(245, 187, 101, 0.55);
+  border-radius: 999px;
+  color: #f5bb65;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.reviewBoundary {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(245, 187, 101, 0.45);
+  border-radius: 0.9rem;
+  background: rgba(245, 187, 101, 0.09);
+}
+
+.reviewBoundary p {
+  margin: 0;
+  color: #d8ebe8;
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+/* ---------------- stage rail ---------------- */
+
+.stageRail ol {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.stageRail button {
+  display: grid;
+  gap: 0.2rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid rgba(140, 226, 215, 0.3);
+  border-radius: 0.8rem;
+  color: #cfe6e3;
+  text-align: left;
+  background: rgba(9, 40, 47, 0.7);
+  cursor: pointer;
+}
+
+.stageRail button[aria-current='step'] {
+  border-color: #8ce2d7;
+  border-left-width: 6px;
+  color: #f4fbfa;
+  background: rgba(21, 74, 78, 0.9);
+}
+
+.stageRail button[aria-current='step'] .stageOrdinal::after {
+  content: ' · current step';
+}
+
+.stageOrdinal {
+  color: #8ce2d7;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.stageName {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.stageState {
+  color: #a5c6c3;
+  font-size: 0.72rem;
+}
+
+/* ---------------- stage panel ---------------- */
+
+.stagePanel {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  padding: clamp(0.9rem, 2vw, 1.3rem);
+  border: 1px solid rgba(140, 226, 215, 0.24);
+  border-radius: 1rem;
+  background: rgba(6, 30, 36, 0.72);
+}
+
+.stagePanel > header h3 {
+  margin: 0.2rem 0 0;
+  color: #f4fbfa;
+  font-size: clamp(1.1rem, 2.2vw, 1.45rem);
+  line-height: 1.2;
+}
+
+.stageQuestion {
+  margin: 0.5rem 0 0;
+  color: #bfdedb;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.stageSummary {
+  margin: 0.3rem 0 0;
+  color: #9dbebb;
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.updateStatus {
+  margin: 0;
+  padding: 0.6rem 0.85rem;
+  border: 1px dashed rgba(140, 226, 215, 0.32);
+  border-radius: 0.7rem;
+  color: #cfe6e3;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+/* ---------------- goals ---------------- */
+
+.goalGroup {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(140, 226, 215, 0.22);
+  border-radius: 0.85rem;
+  min-width: 0;
+}
+
+.goalGroup legend {
+  padding: 0 0.4rem;
+  color: #8ce2d7;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.goalGroupQuestion {
+  margin: 0 0 0.7rem;
+  color: #a5c6c3;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.goalOption {
+  display: grid;
+  gap: 0.3rem;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  min-height: 44px;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid rgba(140, 226, 215, 0.18);
+  border-radius: 0.7rem;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+}
+
+.goalOption[data-selected='true'] {
+  border-color: #8ce2d7;
+  border-left-width: 6px;
+  background: rgba(21, 74, 78, 0.6);
+}
+
+.goalOption input {
+  min-width: 1.1rem;
+  min-height: 1.1rem;
+  margin-top: 0.2rem;
+}
+
+.goalOption strong {
+  color: #f4fbfa;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.goalOption small {
+  grid-column: 2;
+  color: #a5c6c3;
+  font-size: 0.79rem;
+  line-height: 1.55;
+}
+
+.contrastPanel {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(140, 226, 215, 0.3);
+  border-radius: 0.85rem;
+  background: rgba(21, 74, 78, 0.4);
+}
+
+.contrastPanel h4 {
+  margin: 0;
+  color: #f4fbfa;
+  font-size: 0.95rem;
+}
+
+.contrastPanel dl {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+
+.contrastPanel dt {
+  color: #8ce2d7;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.contrastPanel dd {
+  margin: 0.2rem 0 0;
+  color: #cfe6e3;
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.contrastPanel p {
+  margin: 0;
+  color: #e7f2f0;
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+/* ---------------- construction ---------------- */
+
+.constructionGroup {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(140, 226, 215, 0.22);
+  border-radius: 0.85rem;
+  min-width: 0;
+}
+
+.constructionGroup legend {
+  padding: 0 0.4rem;
+  color: #8ce2d7;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.causalNote {
+  margin: 0 0 0.8rem;
+  color: #a5c6c3;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.controlGrid {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+}
+
+.numberControl,
+.selectControl {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.numberControl label,
+.selectControl label {
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  justify-content: space-between;
+  color: #f4fbfa;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.numberControl label small {
+  color: #8ce2d7;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.numberControl input,
+.selectControl select {
+  /* Without this, `width: 100%` plus the padding and border overflows the control box by ~21px,
+     which cascades into the grid and clips the right edge of every entry. */
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(140, 226, 215, 0.4);
+  border-radius: 0.55rem;
+  color: #f4fbfa;
+  background: #04171c;
+}
+
+.numberControl small,
+.selectControl small {
+  color: #a5c6c3;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.inputError {
+  color: #ffc09a;
+  font-weight: 700;
+}
+
+.numberControl input[aria-invalid='true'] {
+  border-color: #ffc09a;
+  border-width: 2px;
+}
+
+/* ---------------- predicted consequences ---------------- */
+
+.goalEcho {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(140, 226, 215, 0.24);
+  border-radius: 0.85rem;
+}
+
+.goalEcho h4 {
+  margin: 0;
+  color: #f4fbfa;
+  font-size: 0.92rem;
+}
+
+.goalEcho ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: #cfe6e3;
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.consequenceSection {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(140, 226, 215, 0.24);
+  border-radius: 0.85rem;
+}
+
+.consequenceSection h4 {
+  margin: 0;
+  color: #f4fbfa;
+  font-size: 0.95rem;
+}
+
+.consequenceSection p {
+  margin: 0;
+  color: #cfe6e3;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+/* No `overflow-x` here. `CrrtPilotCircuit` already scrolls its own schematic viewport, and adding
+   a second scroller around it puts one scrolling region inside another. */
+.circuitHolder {
+  min-width: 0;
+}
+
+.intensityGrid {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.intensityGrid > div {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(140, 226, 215, 0.2);
+  border-radius: 0.7rem;
+  min-width: 0;
+}
+
+.intensityGrid dt {
+  color: #8ce2d7;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.intensityGrid dd {
+  margin: 0.25rem 0 0;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.intensityGrid strong {
+  color: #f4fbfa;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.intensityGrid small {
+  color: #a5c6c3;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.withheldValue {
+  color: #ffc09a;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.separationNote {
+  padding: 0.6rem 0.8rem;
+  border-left: 6px solid #8ce2d7;
+  border-radius: 0.5rem;
+  background: rgba(21, 74, 78, 0.45);
+}
+
+.consistencyList,
+.boundaryList,
+.implicationList,
+.unavailableList {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: #cfe6e3;
+  font-size: 0.83rem;
+  line-height: 1.6;
+}
+
+.consistencyList li,
+.boundaryList li,
+.implicationList li,
+.unavailableList li {
+  margin: 0.3rem 0;
+}
+
+.implicationList strong {
+  color: #f4fbfa;
+}
+
+.implicationKind {
+  color: #8ce2d7;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.withheldNotice {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem;
+  border: 2px solid #ffc09a;
+  border-radius: 0.85rem;
+  background: rgba(255, 192, 154, 0.1);
+  color: #ffe4d3;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.withheldNotice strong {
+  color: #ffc09a;
+}
+
+/* ---------------- split experiment ---------------- */
+
+.splitExperiment {
+  display: grid;
+  gap: 0.7rem;
+  min-width: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(140, 226, 215, 0.24);
+  border-radius: 0.85rem;
+}
+
+.splitExperiment h4 {
+  margin: 0;
+  color: #f4fbfa;
+  font-size: 0.95rem;
+}
+
+.intro,
+.conceptEquation,
+.experimentSummary,
+.proxyCaveat,
+.noBestStatement,
+.inactiveNotice {
+  margin: 0;
+  color: #cfe6e3;
+  font-size: 0.83rem;
+  line-height: 1.6;
+}
+
+.splitBar {
+  display: flex;
+  min-height: 2.2rem;
+  overflow: hidden;
+  border: 1px solid rgba(140, 226, 215, 0.4);
+  border-radius: 0.6rem;
+}
+
+.splitBar span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.4rem;
+  color: #04171c;
+  font-size: 0.74rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.splitBar span:first-child {
+  width: var(--pre-share, 50%);
+  background: repeating-linear-gradient(135deg, #8ce2d7, #8ce2d7 6px, #6fc9be 6px, #6fc9be 12px);
+}
+
+.splitBar span:last-child {
+  flex: 1;
+  background: #f5bb65;
+}
+
+.qualitativeGrid {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.qualitativeGrid > div {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(140, 226, 215, 0.2);
+  border-radius: 0.65rem;
+  min-width: 0;
+}
+
+.qualitativeGrid dt {
+  color: #8ce2d7;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.qualitativeGrid dd {
+  margin: 0.25rem 0 0;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.qualitativeGrid strong {
+  color: #f4fbfa;
+  font-size: 0.9rem;
+}
+
+.qualitativeGrid small {
+  color: #a5c6c3;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+/* ---------------- footer navigation ---------------- */
+
+.stageNav {
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.stageNav button {
+  min-height: 44px;
+  padding: 0.55rem 1.1rem;
+  border: 1px solid rgba(140, 226, 215, 0.45);
+  border-radius: 0.7rem;
+  color: #04171c;
+  font-weight: 800;
+  background: #8ce2d7;
+  cursor: pointer;
+}
+
+.stageNav button.secondary {
+  color: #cfe6e3;
+  background: transparent;
+}
+
+.sourcePanel summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: #8ce2d7;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.sourcePanel ul {
+  margin: 0.5rem 0;
+  padding-left: 1.1rem;
+  color: #cfe6e3;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.sourcePanel p {
+  margin: 0;
+  color: #a5c6c3;
+  font-size: 0.79rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 780px) {
+  .stageRail ol {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .contrastPanel dl,
+  .controlGrid,
+  .intensityGrid,
+  .qualitativeGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .builder * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

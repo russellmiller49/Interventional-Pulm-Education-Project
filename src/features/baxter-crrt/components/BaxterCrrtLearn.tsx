@@ -50,8 +50,9 @@ import {
 import type { CrrtFlowRates } from '../engine/types'
 import { BaxterCrrtLearnLanding } from './BaxterCrrtLearnLanding'
 import { BaxterCrrtModuleFrame } from './BaxterCrrtModuleFrame'
+import { CrrtCitrateDifferential } from './CrrtCitrateDifferential'
 import { CrrtPilotCircuit } from './CrrtPilotCircuit'
-import { CrrtPrescriptionWorkbench } from './CrrtPrescriptionWorkbench'
+import { CrrtStagedPrescriptionBuilder } from './CrrtStagedPrescriptionBuilder'
 import { CrrtPressureLocalizationLab } from './CrrtPressureLocalizationLab'
 import styles from './baxter-crrt.module.css'
 
@@ -636,13 +637,26 @@ function BaxterCrrtLearnWorkbench({
                       <FlaskConical aria-hidden="true" />
                       <div>
                         <span>Embedded concept lab</span>
-                        <h3 id="prescription-lab-heading">Prescription Workbench</h3>
+                        <h3 id="prescription-lab-heading">Staged Prescription Builder</h3>
                       </div>
                     </div>
-                    <CrrtPrescriptionWorkbench
+                    <CrrtStagedPrescriptionBuilder
                       onPhaseChange={advanceLessonPhase}
                       onCompletionEvidence={recordLabCompletionEvidence}
                     />
+                  </section>
+                ) : null}
+
+                {selectedLesson.id === 'crrt-anticoagulation' ? (
+                  <section className={styles.embeddedLab} aria-labelledby="citrate-section-heading">
+                    <div className={styles.embeddedLabHeading}>
+                      <Layers3 aria-hidden="true" />
+                      <div>
+                        <span>Mechanism and comparison</span>
+                        <h3 id="citrate-section-heading">Citrate and calcium</h3>
+                      </div>
+                    </div>
+                    <CrrtCitrateDifferential />
                   </section>
                 ) : null}
 

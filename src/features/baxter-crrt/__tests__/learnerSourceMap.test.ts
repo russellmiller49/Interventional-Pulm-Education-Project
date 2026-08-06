@@ -40,7 +40,7 @@ function everyLearnerFacingCitation(): readonly string[] {
     for (const id of detail.sourceIds) ids.add(id)
   }
   for (const term of crrtCitrateCalciumTerms) {
-    for (const id of term.sourceIds) ids.add(id)
+    for (const id of term.claimSupport.supportingSourceIds) ids.add(id)
   }
 
   return [...ids].sort()
