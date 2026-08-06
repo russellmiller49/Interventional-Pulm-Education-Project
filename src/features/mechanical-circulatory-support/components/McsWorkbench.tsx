@@ -67,7 +67,7 @@ import { McsModuleFrame } from './McsModuleFrame'
 import { McsMonitor } from './McsMonitor'
 import { McsSourcesPanel } from './McsSourcesPanel'
 import { McsSupportPathwayCards } from './McsSupportPathwayCards'
-import { flowAccountView } from './teaching/selectors'
+import { mcsDeviceFlowText } from './teaching/selectors'
 import styles from './mechanical-circulatory-support.module.css'
 
 const mcsLearningPathway = criticalCareLearningPathway('mechanical-circulatory-support')
@@ -128,17 +128,6 @@ function congestionPattern(state: McsSimulationState): string {
   return state.patient.tamponade
     ? `${profile.label} · modeled pericardial constraint`
     : profile.label
-}
-
-/**
- * The device slot of the flow account, read from the same selector the teaching panels use.
- *
- * Counterpulsation reports no device flow. Printing `0.0 L/min` for it gives a number that does not
- * exist a precision it cannot have, and contradicts the flow account rendered directly below.
- */
-function deviceFlowText(state: McsSimulationState): string {
-  const account = flowAccountView(state)
-  return account.lines.find((line) => line.id === 'device')?.valueText ?? 'none reported'
 }
 
 function deviceSetting(state: McsSimulationState): string {
@@ -670,7 +659,7 @@ export function McsWorkbench({
                 },
                 {
                   label: 'Native / device / effective flow',
-                  value: `Native ${state.metrics.nativeFlowLMin.toFixed(1)} L/min · device ${deviceFlowText(state)} · effective ${state.metrics.effectiveSystemicFlowLMin.toFixed(1)} L/min`,
+                  value: `Native ${state.metrics.nativeFlowLMin.toFixed(1)} L/min · device ${mcsDeviceFlowText(state)} · effective ${state.metrics.effectiveSystemicFlowLMin.toFixed(1)} L/min`,
                 },
                 {
                   label: 'Modeled balance and pressure–flow summary',

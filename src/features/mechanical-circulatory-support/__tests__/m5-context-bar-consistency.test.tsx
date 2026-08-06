@@ -216,6 +216,33 @@ describe('MCS M5 — the patient-context bar reports device flow as the model do
     expect(patientContextValue(FLOW_LABEL)).not.toMatch(/none reported/i)
   })
 
+  /*
+   * The Learn primary pane carries its own one-line flow summary, above the flow account and the
+   * teaching panel that both say counterpulsation reports nothing. Found in the browser walkthrough,
+   * not in the coverage map: it is the same claim as the context bar's, on a third surface.
+   */
+  it('reports no displayed device contribution in the Learn context strip on counterpulsation', async () => {
+    const { container } = await renderWorkbench({
+      section: 'learn',
+      initialActivityId: 'iabp-timing-triggering',
+    })
+
+    const strip = container.querySelector('[data-learn-context]')?.textContent ?? ''
+    expect(strip).toMatch(/displayed device none reported/)
+    expect(strip).not.toMatch(/displayed device 0\.0/)
+  })
+
+  it('reports the left-sided pump flow in the Learn context strip on a transvalvular pump', async () => {
+    const { container } = await renderWorkbench({
+      section: 'learn',
+      initialActivityId: 'impella-unloading-placement',
+    })
+
+    const strip = container.querySelector('[data-learn-context]')?.textContent ?? ''
+    expect(strip).toMatch(/displayed device \d\.\d L\/min/)
+    expect(strip).not.toMatch(/none reported/)
+  })
+
   it('keeps the durable displayed flow marked as an estimate on the section that teaches it', async () => {
     const { container } = await renderWorkbench({
       section: 'learn',

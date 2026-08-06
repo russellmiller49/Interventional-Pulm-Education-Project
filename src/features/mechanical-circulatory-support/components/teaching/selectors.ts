@@ -352,6 +352,20 @@ export function flowAccountView(state: McsSimulationState): McsFlowAccountView {
   }
 }
 
+/**
+ * The device slot of the flow account as one line of text.
+ *
+ * The surfaces that summarize the three flows in a sentence — the patient-context bar and the Learn
+ * context strip — were each formatting `metrics.deviceFlowLMin` themselves, which printed `0.0` for
+ * counterpulsation on the same screen as an account reading "none reported". They now read the slot
+ * from here, so there is one answer to what the device is reporting rather than three.
+ */
+export function mcsDeviceFlowText(state: McsSimulationState): string {
+  return (
+    flowAccountView(state).lines.find((line) => line.id === 'device')?.valueText ?? 'none reported'
+  )
+}
+
 /* ------------------------------------------------------------------ *
  * Support topology
  * ------------------------------------------------------------------ */
