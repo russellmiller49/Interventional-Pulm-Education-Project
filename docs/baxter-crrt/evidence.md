@@ -80,6 +80,71 @@ The main evidence-to-runtime boundaries are implemented in:
 - `src/features/baxter-crrt/components/SourcesPanel.tsx`
 - `src/lib/baxter-crrt-analytics.ts`
 
+### Universal circuit, fluid ledger, and numeric audit (C0/C1)
+
+One circuit-and-fluid model is reused by every later modality explanation, prescription control,
+pressure story, and case. Its geometry, overlays, and pressure semantics are authored data rather
+than component branches, so the fixed orientation is testable rather than a drawing convention.
+
+- `src/features/baxter-crrt/content/circuitModel.ts` — the single coordinate table, the nine overlays,
+  and the authored measured-versus-calculated distinction. Overlay and pressure citations are
+  validated at import against the pilot, supplemental, and device-math registries together, because
+  the Learn surface resolves only the first two and drops unknown ids silently.
+- `src/features/baxter-crrt/circuitFluidLedger.ts` — the conservation ledger, derived from
+  `MATH-PM-001` and `FLUID-PM-002` rather than from new physiology, plus the authored worked example
+  in which 2,100 mL/h of effluent accompanies 100 mL/h of patient loss.
+- `src/features/baxter-crrt/numericAudit.ts` — the flag logic behind the numeric dump, kept in the
+  feature so every flag class is covered by tests rather than only by a script.
+- `src/features/baxter-crrt/content/learnerSourceMap.ts` — the one registry a learner-facing citation
+  resolves against.
+- `src/features/baxter-crrt/components/CrrtPilotCircuit.tsx` — the renderer over that data.
+
+The citrate view is a bounded topology-and-first-use layer, approved as such. `crrtCitrateCalciumTerms`
+in `src/features/baxter-crrt/content/circuitModel.ts` names where citrate enters, what it does inside
+the circuit, where the calcium it binds can leave, where calcium replacement is given, and which
+sample describes which compartment. Each term carries its own CRRT provenance. It carries no dose,
+ratio, numeric goal, titration or timing instruction, and no accumulation differential — the same
+boundary `ConceptualCitrateState` draws in the engine.
+
+Two module-local harnesses run directly, with nothing added to `package.json`:
+
+```
+npx tsx scripts/baxter-crrt/dump-crrt-numbers.ts
+npx tsx scripts/baxter-crrt/render-crrt-circuit.ts
+```
+
+### CONFLICT-CRRT-MAKEUP-001 — the makeup term does not reconcile
+
+`MATH-PM-001` (manual p217) defines the effluent target as
+`Qeff = Qpfr + Qpbp + Qrep + Qdial + Qsyr + Qmakeup`, carrying the makeup term. `FLUID-PM-002`
+(manual p219) defines the machine patient-fluid-removed term as
+`Vpfr = Veff - Vpbp - Vdial - Vrep - Vsyr`, omitting it. Subtracting an effluent total that contains
+makeup with an expression that does not subtract it leaves the makeup volume inside the patient
+removal term. The registered sources were searched again at closeout and no third record reconciles
+them, so the conflict is preserved rather than resolved — the same disposition the module already
+takes for CONFLICT-001 and CONFLICT-002.
+
+The consequence is enforced in code, not merely documented. A non-zero makeup flow puts the ledger
+into `unresolved-makeup-attribution`: the membrane term, the net-fluid-to-patient term, the machine
+patient-fluid-removal term, the effluent ratio, and the whole-patient balance are all **withheld**,
+every dependent conservation identity reports `unresolved` rather than `balanced`, and the volume is
+never attributed to patient fluid loss. Authored C0/C1 examples hold makeup at zero. The record lives
+at `src/features/baxter-crrt/circuitFluidLedger.ts` as `CRRT_MAKEUP_ATTRIBUTION_CONFLICT`.
+
+### Learner-facing citations resolve against every registry
+
+`src/features/baxter-crrt/content/learnerSourceMap.ts` is the single merge point for the module's
+four source registries — pilot, supplemental, device-math, and device-profile. Before it existed the
+Learn surface merged only the first two and dropped anything else without warning, so seven cited
+records rendered nothing: `MATH-PM-002` (the TMP formula), `FLUID-PM-002` (the fluid ledger),
+`MATH-PM-004`, `MATH-PM-006`, `DEV-PM-008`, `DEV-PM-012`, and `DEV-PM-014`. Where an id appears in
+more than one registry the record the module already rendered keeps winning.
+
+`src/features/baxter-crrt/__tests__/learnerSourceMap.test.ts` enumerates every citation made by every
+learner-facing surface — lessons, clinical anchors, circuit overlays, pressure details, and citrate
+terms — and fails closed if any one does not resolve, including a case proving an unknown id is
+named rather than skipped.
+
 Local manuals are reference inputs and remain uncommitted. The repository stores citations,
 revision identifiers, hashes, paraphrased claims, limitations, and original educational visuals—not
 copyrighted manual reproductions.

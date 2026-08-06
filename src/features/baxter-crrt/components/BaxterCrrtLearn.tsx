@@ -37,8 +37,7 @@ import {
   baxterCrrtPriorPlatformAdvancedBlock,
 } from '../content/learnLessons'
 import type { BaxterCrrtLearnLessonId } from '../content/learnerRegistry'
-import { baxterCrrtSupplementalSourceReferences } from '../content/phase7ReviewSources'
-import { baxterCrrtPilotSourceReferences } from '../content/provenance'
+import { baxterCrrtLearnerFacingSourceById } from '../content/learnerSourceMap'
 import {
   createDefaultProgress,
   readProgress,
@@ -48,6 +47,7 @@ import {
   type BaxterCrrtProgressStation,
   type BaxterCrrtProgressV3,
 } from '../engine/progress'
+import type { CrrtFlowRates } from '../engine/types'
 import { BaxterCrrtLearnLanding } from './BaxterCrrtLearnLanding'
 import { BaxterCrrtModuleFrame } from './BaxterCrrtModuleFrame'
 import { CrrtPilotCircuit } from './CrrtPilotCircuit'
@@ -68,12 +68,10 @@ const prismaxReferenceProfile = getBaxterCrrtDeviceProfile('prismax-aw8035-2xx')
 
 const crrtLearningPathway = criticalCareLearningPathway('baxter-crrt')
 
-const crrtSourceById = new Map(
-  [...baxterCrrtPilotSourceReferences, ...baxterCrrtSupplementalSourceReferences].map((source) => [
-    source.id,
-    source,
-  ]),
-)
+// Resolves against all three registries, not two. The device-math registry
+// holds MATH-PM-002 and FLUID-PM-002, which are cited by lessons and by the
+// circuit but used to resolve nowhere and disappear without a warning.
+const crrtSourceById = baxterCrrtLearnerFacingSourceById
 
 function validLessonId(value: string | undefined): value is BaxterCrrtLearnLessonId {
   return value !== undefined && baxterCrrtLearnLessonById.has(value as BaxterCrrtLearnLessonId)
@@ -94,6 +92,22 @@ function sectionIndex(lessonId: BaxterCrrtLearnLessonId): number {
   return crrtLearningPathway.sections.findIndex((section) => section.id === lessonId)
 }
 
+/**
+ * The flows this figure is drawn at. They match the scalar readouts above so the
+ * conservation ledger is computed from the same case the learner is looking at,
+ * rather than from a second set of numbers that could drift.
+ */
+const circuitFigureFlows: CrrtFlowRates = {
+  bloodFlowMlMin: 100,
+  dialysateFlowMlHour: 1_000,
+  pbpFlowMlHour: 0,
+  preReplacementFlowMlHour: 0,
+  postReplacementFlowMlHour: 0,
+  patientFluidRemovalMlHour: 100,
+  syringeFlowMlHour: 0,
+  makeupFlowMlHour: 0,
+}
+
 function CircuitTeachingFigure() {
   return (
     <div className={styles.learnFigure}>
@@ -101,9 +115,11 @@ function CircuitTeachingFigure() {
         running={true}
         setReady={true}
         fluidsReady={true}
-        bloodFlowMlMin={100}
-        dialysateFlowMlHour={1_000}
-        patientFluidRemovalMlHour={100}
+        bloodFlowMlMin={circuitFigureFlows.bloodFlowMlMin}
+        dialysateFlowMlHour={circuitFigureFlows.dialysateFlowMlHour}
+        patientFluidRemovalMlHour={circuitFigureFlows.patientFluidRemovalMlHour}
+        flows={circuitFigureFlows}
+        initialOverlayId="cvvhd"
         pressure={{
           access: -72,
           filter: 146,
@@ -114,8 +130,9 @@ function CircuitTeachingFigure() {
         }}
       />
       <p>
-        Teaching figure: trace access → pump → filter → return, then follow dialysate, replacement,
-        and effluent paths separately. Values are simulated examples.
+        Teaching figure: trace access → pump → filter → return, then switch views to follow
+        dialysate, replacement, citrate, and effluent on the same unchanged circuit. Values are
+        simulated examples.
       </p>
     </div>
   )
