@@ -22,7 +22,7 @@
     "physician_final_confidence",
     "metadata_sufficiency",
     "assessment_confidence",
-    "requires_physician_enrichment_review",
+    "model_requests_physician_enrichment_review",
     "evidence_field",
     "evidence_excerpt",
     "assessment_rationale",
@@ -48,7 +48,7 @@
     "physician_final_confidence",
     "metadata_sufficiency",
     "assessment_confidence",
-    "requires_physician_enrichment_review",
+    "model_requests_physician_enrichment_review",
     "evidence_field",
     "evidence_excerpt",
     "assessment_rationale",
@@ -70,10 +70,10 @@
       "const": "gold-set-v1-enrichment-v3"
     },
     "prompt_template_version": {
-      "const": "3.0.0"
+      "const": "3.0.1"
     },
     "result_schema_version": {
-      "const": "3.0.0"
+      "const": "3.0.1"
     },
     "taxonomy_version": {
       "const": "2.0.0"
@@ -109,8 +109,9 @@
     "assessment_confidence": {
       "$ref": "#/$defs/confidenceOrBlank"
     },
-    "requires_physician_enrichment_review": {
-      "$ref": "#/$defs/csvBoolean"
+    "model_requests_physician_enrichment_review": {
+      "$ref": "#/$defs/csvBoolean",
+      "description": "Raw model self-assessment based only on unresolved ambiguity, conflicting supplied metadata, or processing failure; it is not coordinator review eligibility."
     },
     "evidence_field": {
       "$ref": "#/$defs/evidenceFieldOrBlank"
@@ -173,7 +174,7 @@
           "assessment_confidence": {
             "const": ""
           },
-          "requires_physician_enrichment_review": {
+          "model_requests_physician_enrichment_review": {
             "const": "true"
           },
           "evidence_field": {
@@ -188,43 +189,6 @@
           "processing_error": {
             "type": "string",
             "minLength": 1
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "anyOf": [
-          {
-            "properties": {
-              "metadata_sufficiency": {
-                "enum": ["limited_abstract", "no_abstract", "conflicting_metadata"]
-              }
-            },
-            "required": ["metadata_sufficiency"]
-          },
-          {
-            "properties": {
-              "assessment_confidence": {
-                "enum": ["moderate", "low"]
-              }
-            },
-            "required": ["assessment_confidence"]
-          },
-          {
-            "properties": {
-              "processing_status": {
-                "const": "error"
-              }
-            },
-            "required": ["processing_status"]
-          }
-        ]
-      },
-      "then": {
-        "properties": {
-          "requires_physician_enrichment_review": {
-            "const": "true"
           }
         }
       }

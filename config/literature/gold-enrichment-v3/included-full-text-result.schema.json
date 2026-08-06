@@ -34,7 +34,7 @@
     "full_text_filename",
     "full_text_sha256",
     "enrichment_confidence",
-    "requires_physician_enrichment_review",
+    "model_requests_physician_enrichment_review",
     "evidence_1_field",
     "evidence_1_excerpt",
     "evidence_1_location",
@@ -74,7 +74,7 @@
     "full_text_filename",
     "full_text_sha256",
     "enrichment_confidence",
-    "requires_physician_enrichment_review",
+    "model_requests_physician_enrichment_review",
     "evidence_1_field",
     "evidence_1_excerpt",
     "evidence_1_location",
@@ -98,10 +98,10 @@
       "const": "gold-set-v1-enrichment-v3"
     },
     "prompt_template_version": {
-      "const": "3.0.0"
+      "const": "3.0.1"
     },
     "result_schema_version": {
-      "const": "3.0.0"
+      "const": "3.0.1"
     },
     "taxonomy_version": {
       "const": "2.0.0"
@@ -176,8 +176,9 @@
     "enrichment_confidence": {
       "$ref": "#/$defs/confidenceOrBlank"
     },
-    "requires_physician_enrichment_review": {
-      "const": "true"
+    "model_requests_physician_enrichment_review": {
+      "$ref": "#/$defs/csvBoolean",
+      "description": "Raw model self-assessment based only on unresolved ambiguity, conflicting supplied evidence, or processing failure; it is not coordinator review eligibility."
     },
     "evidence_1_field": {
       "$ref": "#/$defs/evidenceFieldOrBlank"
@@ -301,7 +302,7 @@
           "enrichment_confidence": {
             "const": ""
           },
-          "requires_physician_enrichment_review": {
+          "model_requests_physician_enrichment_review": {
             "const": "true"
           },
           "evidence_1_field": {
@@ -446,83 +447,6 @@
           "evidence_2_location": {
             "type": "string",
             "minLength": 1
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "anyOf": [
-          {
-            "properties": {
-              "physician_final_label": {
-                "const": "include_adjacent"
-              }
-            },
-            "required": ["physician_final_label"]
-          },
-          {
-            "properties": {
-              "enrichment_confidence": {
-                "enum": ["moderate", "low"]
-              }
-            },
-            "required": ["enrichment_confidence"]
-          },
-          {
-            "properties": {
-              "metadata_sufficiency": {
-                "enum": ["limited_abstract", "no_abstract", "conflicting_metadata"]
-              }
-            },
-            "required": ["metadata_sufficiency"]
-          },
-          {
-            "properties": {
-              "technology_tag_status": {
-                "const": "not_assessable"
-              }
-            },
-            "required": ["technology_tag_status"]
-          },
-          {
-            "properties": {
-              "disease_tag_status": {
-                "const": "not_assessable"
-              }
-            },
-            "required": ["disease_tag_status"]
-          },
-          {
-            "properties": {
-              "study_design": {
-                "const": "not-assessable-from-available-metadata"
-              }
-            },
-            "required": ["study_design"]
-          },
-          {
-            "properties": {
-              "publication_status": {
-                "const": "not-assessable-from-available-metadata"
-              }
-            },
-            "required": ["publication_status"]
-          },
-          {
-            "properties": {
-              "processing_status": {
-                "const": "error"
-              }
-            },
-            "required": ["processing_status"]
-          }
-        ]
-      },
-      "then": {
-        "properties": {
-          "requires_physician_enrichment_review": {
-            "const": "true"
           }
         }
       }

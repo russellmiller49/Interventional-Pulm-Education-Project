@@ -8,6 +8,7 @@
   "x-csv-columns": [
     "workflow_id",
     "workflow_schema_version",
+    "merged_schema_version",
     "prompt_template_version",
     "result_schema_version",
     "taxonomy_version",
@@ -56,7 +57,9 @@
     "full_text_sha256",
     "enrichment_confidence",
     "assessment_confidence",
-    "requires_physician_enrichment_review",
+    "model_requests_physician_enrichment_review",
+    "coordinator_requires_physician_enrichment_review",
+    "coordinator_review_reasons",
     "evidence_1_field",
     "evidence_1_excerpt",
     "evidence_1_location",
@@ -80,6 +83,7 @@
   "required": [
     "workflow_id",
     "workflow_schema_version",
+    "merged_schema_version",
     "prompt_template_version",
     "result_schema_version",
     "taxonomy_version",
@@ -128,7 +132,9 @@
     "full_text_sha256",
     "enrichment_confidence",
     "assessment_confidence",
-    "requires_physician_enrichment_review",
+    "model_requests_physician_enrichment_review",
+    "coordinator_requires_physician_enrichment_review",
+    "coordinator_review_reasons",
     "evidence_1_field",
     "evidence_1_excerpt",
     "evidence_1_location",
@@ -156,11 +162,14 @@
     "workflow_schema_version": {
       "const": "3.0.0"
     },
+    "merged_schema_version": {
+      "const": "3.0.1"
+    },
     "prompt_template_version": {
-      "const": "3.0.0"
+      "const": "3.0.1"
     },
     "result_schema_version": {
-      "const": "3.0.0"
+      "const": "3.0.1"
     },
     "taxonomy_version": {
       "const": "2.0.0"
@@ -315,8 +324,19 @@
     "assessment_confidence": {
       "$ref": "#/$defs/confidenceOrBlank"
     },
-    "requires_physician_enrichment_review": {
-      "$ref": "#/$defs/csvBoolean"
+    "model_requests_physician_enrichment_review": {
+      "$ref": "#/$defs/csvBoolean",
+      "description": "Immutable raw model self-assessment copied from the validated packet result."
+    },
+    "coordinator_requires_physician_enrichment_review": {
+      "$ref": "#/$defs/csvBoolean",
+      "description": "Final local coordinator review eligibility computed after result validation and coordinator-only overlays."
+    },
+    "coordinator_review_reasons": {
+      "type": "string",
+      "maxLength": 4000,
+      "pattern": "^(?:|[a-z0-9_]+(?:\\|[a-z0-9_]+)*)$",
+      "description": "Deterministic pipe-delimited coordinator reasons created only after result validation and merge."
     },
     "evidence_1_field": {
       "$ref": "#/$defs/evidenceFieldOrBlank"
@@ -501,7 +521,7 @@
           "full_text_sha256": {
             "$ref": "#/$defs/sha256"
           },
-          "requires_physician_enrichment_review": {
+          "coordinator_requires_physician_enrichment_review": {
             "const": "true"
           },
           "evidence_1_field": {
@@ -807,8 +827,50 @@
       },
       "then": {
         "properties": {
-          "requires_physician_enrichment_review": {
+          "coordinator_requires_physician_enrichment_review": {
             "const": "true"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "model_requests_physician_enrichment_review": {
+            "const": "true"
+          }
+        },
+        "required": ["model_requests_physician_enrichment_review"]
+      },
+      "then": {
+        "properties": {
+          "coordinator_requires_physician_enrichment_review": {
+            "const": "true"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "coordinator_requires_physician_enrichment_review": {
+            "const": "true"
+          }
+        },
+        "required": ["coordinator_requires_physician_enrichment_review"]
+      },
+      "then": {
+        "properties": {
+          "coordinator_review_reasons": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "coordinator_review_reasons": {
+            "const": ""
           }
         }
       }
@@ -955,7 +1017,7 @@
           "physician_enrichment_reviewed": {
             "const": "false"
           },
-          "requires_physician_enrichment_review": {
+          "coordinator_requires_physician_enrichment_review": {
             "const": "false"
           },
           "protocol_acceptance_authorized": {
@@ -984,14 +1046,17 @@
     {
       "if": {
         "properties": {
-          "requires_physician_enrichment_review": {
+          "coordinator_requires_physician_enrichment_review": {
             "const": "true"
           },
           "physician_enrichment_reviewed": {
             "const": "false"
           }
         },
-        "required": ["requires_physician_enrichment_review", "physician_enrichment_reviewed"]
+        "required": [
+          "coordinator_requires_physician_enrichment_review",
+          "physician_enrichment_reviewed"
+        ]
       },
       "then": {
         "properties": {

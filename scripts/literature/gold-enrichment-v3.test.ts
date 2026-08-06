@@ -4,6 +4,7 @@ import {
   cp,
   mkdir,
   mkdtemp,
+  readdir,
   readFile,
   realpath,
   rm,
@@ -28,8 +29,10 @@ import {
   GOLD_ENRICHMENT_V3_INCLUDED_FULL_TEXT_RESULT_COLUMNS,
   GOLD_ENRICHMENT_V3_INCLUDED_METADATA_RESULT_COLUMNS,
   GOLD_ENRICHMENT_V3_MERGED_COLUMNS,
+  GOLD_ENRICHMENT_V3_RAW_MERGED_COLUMNS,
   GOLD_ENRICHMENT_V3_REVIEW_CSV_COLUMNS,
   buildGoldEnrichmentV3ReviewCohorts,
+  mergeGoldEnrichmentV3RawResults,
   validateGoldEnrichmentV3Results,
   type GoldEnrichmentV3MergedRow,
   type GoldEnrichmentV3ValidationReport,
@@ -39,6 +42,7 @@ import {
   buildGoldEnrichmentV3ReviewWorkbookBytes,
   type GoldEnrichmentV3ReviewWorkbookMetadata,
 } from './gold-enrichment-v3-workbook'
+import { runGoldEnrichmentV3Cli } from './gold-enrichment-v3-cli'
 import {
   GOLD_ENRICHMENT_V3_CANONICAL_RECEIPT_SHA256,
   GOLD_ENRICHMENT_V3_CANONICAL_SOURCE_COLUMNS,
@@ -47,22 +51,31 @@ import {
   GOLD_ENRICHMENT_V3_ENRICHMENT_SCHEMA_VERSION,
   GOLD_ENRICHMENT_V3_FULL_TEXT_AUDIT_COLUMNS,
   GOLD_ENRICHMENT_V3_LABEL_SCHEMA_VERSION,
-  GOLD_ENRICHMENT_V3_PACKET_COLUMNS,
+  GOLD_ENRICHMENT_V3_MERGED_SCHEMA_VERSION,
+  GOLD_ENRICHMENT_V3_PACKET_MEMBERSHIP_ORDER_SHA256,
   GOLD_ENRICHMENT_V3_PACKET_FAMILIES,
-  GOLD_ENRICHMENT_V3_PACKET_SOURCE_COLUMNS,
   GOLD_ENRICHMENT_V3_PHYSICIAN_FIELD_SHA256,
   GOLD_ENRICHMENT_V3_PROMPT_TEMPLATE_VERSION,
   GOLD_ENRICHMENT_V3_RESULT_SCHEMA_VERSION,
+  GOLD_ENRICHMENT_V3_SUPERSEDED_PROMPT_SHA256,
   GOLD_ENRICHMENT_V3_TAXONOMY_VERSION,
   GOLD_ENRICHMENT_V3_UPGRADE_PLAN_SHA256,
   GOLD_ENRICHMENT_V3_WORKFLOW_ID,
   GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION,
   assertGoldEnrichmentV3SafeOutputDirectory,
+  buildGoldEnrichmentV3ModelFacingInventory,
+  buildGoldEnrichmentV3ModelInputIndependenceAudit,
   buildGoldEnrichmentV3PacketRows,
   buildGoldEnrichmentV3Packets,
+  goldEnrichmentV3ControlledValueCatalog,
+  goldEnrichmentV3ForbiddenPromptPhraseLabels,
+  goldEnrichmentV3PacketColumns,
+  goldEnrichmentV3PacketMembershipOrderProjection,
+  goldEnrichmentV3PacketSourceColumns,
   goldEnrichmentV3PhysicianFieldSha256,
   parseGoldEnrichmentV3CanonicalSource,
   parseGoldEnrichmentV3FullTextAudit,
+  plannedGoldEnrichmentV3Text,
   preflightGoldEnrichmentV3Artifacts,
   publishGoldEnrichmentV3Artifact,
   serializeGoldEnrichmentV3Csv,
@@ -94,6 +107,23 @@ interface SyntheticResultFile {
   text: string
 }
 
+interface SyntheticPacketIndexEntry {
+  packetId: string
+  family: GoldEnrichmentV3PacketFamily
+  ordinal: number
+  rows: number
+  csvPath: string
+  csvSha256: string
+  modelFacingPromptPath: string
+  modelFacingPromptSha256: string
+  modelFacingFullTextManifestPath: string | null
+  modelFacingFullTextManifestSha256: string | null
+  receiptPath: string
+  receiptSha256: string
+  expectedOutputFilename: string
+  sourceProjectionSha256: string
+}
+
 interface ValidationFixture {
   root: string
   runDirectory: string
@@ -111,6 +141,42 @@ const FIXED_PMID_BY_SOURCE_INDEX = new Map([
   [60, '41229759'],
   [61, '18453348'],
 ])
+const CLASSIFICATION_PROMPT_FILENAMES = [
+  'included-metadata-only.md',
+  'included-full-text.md',
+  'excluded-metadata-sufficiency.md',
+] as const
+const SUPERSEDED_PROMPT_SHA256 = new Map([
+  ['included-metadata-only.md', '0ebd1906e275b5bbf9017e5c48f5c7de50ab5cc8a4afb836ea7c2e904a531ec7'],
+  ['included-full-text.md', '1d44482548b63533e35f9d78a1602df9d90f5f5a28aad5d25db97c56af62a0e3'],
+  [
+    'excluded-metadata-sufficiency.md',
+    '17ed3fe1f5a8d00450ceacefa43071434be23736a3a9c4d8575de9ace8164d9f',
+  ],
+])
+const HISTORICAL_PACKET_MEMBERSHIP_SHA256 =
+  'd0bfc858145b2ee09e976946da1491069c5de26e2c32e600462d1cad323d8e10'
+const HISTORICAL_PACKET_MEMBERSHIP_BYTES = 27_137
+
+function classificationPromptTexts(): Map<
+  (typeof CLASSIFICATION_PROMPT_FILENAMES)[number],
+  string
+> {
+  return new Map(
+    CLASSIFICATION_PROMPT_FILENAMES.map((filename) => [
+      filename,
+      readFileSync(
+        path.join(process.cwd(), 'docs/ip-literature/gold-enrichment-v3-prompts', filename),
+        'utf8',
+      ),
+    ]),
+  )
+}
+
+function containsStandaloneIdentifier(input: string, identifier: string): boolean {
+  const escaped = identifier.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&')
+  return new RegExp(`(?<![0-9])${escaped}(?![0-9])`, 'u').test(input)
+}
 
 function blankRecord<const Columns extends readonly string[]>(
   columns: Columns,
@@ -222,7 +288,10 @@ function fullTextRegistryRow(
 
 function artifactIdentities(
   kind: 'prompt' | 'schema',
-): Record<GoldEnrichmentV3PacketFamily, Omit<GoldEnrichmentV3ArtifactIdentity, 'publication'>> {
+): Record<
+  GoldEnrichmentV3PacketFamily,
+  Omit<GoldEnrichmentV3ArtifactIdentity, 'publication'> & { text: string }
+> {
   const filenames: Record<GoldEnrichmentV3PacketFamily, string> =
     kind === 'prompt'
       ? {
@@ -252,10 +321,14 @@ function artifactIdentities(
           path: `${kind}s/${filename}`,
           bytes: content.byteLength,
           sha256: sha256Bytes(content),
+          text: content.toString('utf8'),
         },
       ]
     }),
-  ) as Record<GoldEnrichmentV3PacketFamily, Omit<GoldEnrichmentV3ArtifactIdentity, 'publication'>>
+  ) as Record<
+    GoldEnrichmentV3PacketFamily,
+    Omit<GoldEnrichmentV3ArtifactIdentity, 'publication'> & { text: string }
+  >
 }
 
 function buildSyntheticWorkflow(): SyntheticWorkflow {
@@ -323,12 +396,7 @@ function includedResultRow(input: StringRow, family: GoldEnrichmentV3PacketFamil
     full_text_filename: fullText ? input.expected_full_text_filename : '',
     full_text_sha256: fullText ? input.expected_full_text_sha256 : '',
     enrichment_confidence: 'high',
-    requires_physician_enrichment_review: String(
-      fullText ||
-        input.physician_final_label === 'include_adjacent' ||
-        ['preview_only', 'missing'].includes(input.full_text_evidence_status) ||
-        ['16043961', '26033136', '41229759', '18453348'].includes(input.pmid),
-    ),
+    model_requests_physician_enrichment_review: 'false',
     evidence_1_field: fullText ? 'full_text' : 'title',
     evidence_1_excerpt: fullText ? 'Synthetic full-text evidence one.' : input.title,
     evidence_1_location: fullText ? 'page 1' : 'title',
@@ -361,7 +429,7 @@ function excludedResultRow(input: StringRow): StringRow {
     physician_final_confidence: input.physician_final_confidence,
     metadata_sufficiency: 'adequate_abstract',
     assessment_confidence: 'high',
-    requires_physician_enrichment_review: 'false',
+    model_requests_physician_enrichment_review: 'false',
     evidence_field: 'title',
     evidence_excerpt: input.title,
     assessment_rationale: 'Synthetic metadata is adequate for exclusion review.',
@@ -379,7 +447,7 @@ function buildSyntheticResultFiles(
   return packets.map((packet) => {
     const family = packet.receipt.packetFamily
     const columns = resultColumns(family)
-    const inputs = csvObjects(packet.csv, GOLD_ENRICHMENT_V3_PACKET_COLUMNS)
+    const inputs = csvObjects(packet.csv, goldEnrichmentV3PacketColumns(family))
     const rows = inputs.map((input) =>
       family === 'excluded_metadata_sufficiency'
         ? excludedResultRow(input)
@@ -405,15 +473,27 @@ async function materializeValidationFixture(): Promise<ValidationFixture> {
     mkdir(resultsDirectory, { recursive: true }),
   ])
 
-  const packetEntries = []
+  const packetEntries: SyntheticPacketIndexEntry[] = []
   for (const packet of SYNTHETIC_WORKFLOW.packets) {
     const receiptText = serializeGoldEnrichmentV3Json(packet.receipt)
     const csvTarget = path.join(runDirectory, packet.csvPath)
     const receiptTarget = path.join(runDirectory, packet.receiptPath)
-    await mkdir(path.dirname(csvTarget), { recursive: true })
+    const renderedPromptTarget = path.join(runDirectory, packet.renderedPrompt.path)
+    const fullTextManifestTarget = packet.modelFacingFullTextManifest
+      ? path.join(runDirectory, packet.modelFacingFullTextManifest.path)
+      : null
+    await Promise.all(
+      [...new Set([csvTarget, receiptTarget, renderedPromptTarget, fullTextManifestTarget])]
+        .filter((target): target is string => target !== null)
+        .map((target) => mkdir(path.dirname(target), { recursive: true })),
+    )
     await Promise.all([
       writeFile(csvTarget, packet.csv, 'utf8'),
       writeFile(receiptTarget, receiptText, 'utf8'),
+      writeFile(renderedPromptTarget, packet.renderedPrompt.text, 'utf8'),
+      ...(packet.modelFacingFullTextManifest && fullTextManifestTarget
+        ? [writeFile(fullTextManifestTarget, packet.modelFacingFullTextManifest.text, 'utf8')]
+        : []),
     ])
     packetEntries.push({
       packetId: packet.receipt.packetId,
@@ -422,19 +502,70 @@ async function materializeValidationFixture(): Promise<ValidationFixture> {
       rows: packet.receipt.rowCount,
       csvPath: packet.csvPath,
       csvSha256: sha256Bytes(packet.csv),
+      modelFacingPromptPath: packet.renderedPrompt.path,
+      modelFacingPromptSha256: packet.receipt.modelFacingPrompt.sha256,
+      modelFacingFullTextManifestPath: packet.receipt.modelFacingFullTextManifest?.path ?? null,
+      modelFacingFullTextManifestSha256: packet.receipt.modelFacingFullTextManifest?.sha256 ?? null,
       receiptPath: packet.receiptPath,
       receiptSha256: sha256Bytes(receiptText),
       expectedOutputFilename: packet.receipt.expectedOutputFilename,
       sourceProjectionSha256: packet.receipt.sourceProjectionSha256,
     })
   }
+  const indexFamilies = Object.fromEntries(
+    GOLD_ENRICHMENT_V3_PACKET_FAMILIES.map((family) => {
+      const selected = packetEntries.filter((entry) => entry.family === family)
+      return [
+        family,
+        {
+          packets: selected.length,
+          rows: selected.reduce((sum, entry) => sum + entry.rows, 0),
+          packetIds: selected.map((entry) => entry.packetId),
+          packetManifestSha256: sha256Bytes(
+            serializeGoldEnrichmentV3Json(
+              selected.map((entry) => ({
+                packetId: entry.packetId,
+                csvSha256: entry.csvSha256,
+                promptSha256: entry.modelFacingPromptSha256,
+                fullTextManifestSha256: entry.modelFacingFullTextManifestSha256,
+                receiptSha256: entry.receiptSha256,
+                sourceProjectionSha256: entry.sourceProjectionSha256,
+              })),
+            ),
+          ),
+        },
+      ]
+    }),
+  )
+  const runPacketManifestHashes = Object.fromEntries(
+    GOLD_ENRICHMENT_V3_PACKET_FAMILIES.map((family) => {
+      const selected = packetEntries.filter((entry) => entry.family === family)
+      return [
+        family,
+        sha256Bytes(
+          serializeGoldEnrichmentV3Json(
+            selected.map((entry) => ({
+              packetId: entry.packetId,
+              packetCsvSha256: entry.csvSha256,
+              modelFacingPromptSha256: entry.modelFacingPromptSha256,
+              modelFacingFullTextManifestSha256: entry.modelFacingFullTextManifestSha256,
+              packetReceiptSha256: entry.receiptSha256,
+            })),
+          ),
+        ),
+      ]
+    }),
+  )
   const packetIndex = serializeGoldEnrichmentV3Json({
     workflowId: GOLD_ENRICHMENT_V3_WORKFLOW_ID,
     workflowSchemaVersion: GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION,
+    packetCount: packetEntries.length,
+    families: indexFamilies,
     packets: packetEntries,
   })
   await writeFile(path.join(runDirectory, 'packet-index.json'), packetIndex, 'utf8')
   const contractIdentities = new Map<string, { path: string; bytes: number; sha256: string }>()
+  const contractArtifacts = []
   for (const packet of SYNTHETIC_WORKFLOW.packets) {
     for (const identity of [packet.receipt.promptTemplate, packet.receipt.expectedResultSchema]) {
       contractIdentities.set(identity.path, {
@@ -444,6 +575,24 @@ async function materializeValidationFixture(): Promise<ValidationFixture> {
       })
     }
   }
+  for (const filename of ['README.md', 'result-merge-prompt.md']) {
+    const bytes = readFileSync(
+      path.join(process.cwd(), 'docs/ip-literature/gold-enrichment-v3-prompts', filename),
+    )
+    contractIdentities.set(`prompts/${filename}`, {
+      path: `prompts/${filename}`,
+      bytes: bytes.byteLength,
+      sha256: sha256Bytes(bytes),
+    })
+  }
+  const mergedSchemaBytes = readFileSync(
+    path.join(process.cwd(), 'config/literature/gold-enrichment-v3/merged-v3.schema.json'),
+  )
+  contractIdentities.set('schemas/merged-v3.schema.json', {
+    path: 'schemas/merged-v3.schema.json',
+    bytes: mergedSchemaBytes.byteLength,
+    sha256: sha256Bytes(mergedSchemaBytes),
+  })
   for (const identity of contractIdentities.values()) {
     const filename = path.basename(identity.path)
     const sourcePath = path.join(
@@ -459,18 +608,50 @@ async function materializeValidationFixture(): Promise<ValidationFixture> {
     const target = path.join(runDirectory, identity.path)
     await mkdir(path.dirname(target), { recursive: true })
     await writeFile(target, bytes)
+    contractArtifacts.push({ path: identity.path, bytes })
   }
   const runDefinition = serializeGoldEnrichmentV3Json({
     workflow: {
       id: GOLD_ENRICHMENT_V3_WORKFLOW_ID,
       workflowSchemaVersion: GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION,
+      promptTemplateVersion: GOLD_ENRICHMENT_V3_PROMPT_TEMPLATE_VERSION,
       resultSchemaVersion: GOLD_ENRICHMENT_V3_RESULT_SCHEMA_VERSION,
+      mergedSchemaVersion: GOLD_ENRICHMENT_V3_MERGED_SCHEMA_VERSION,
       taxonomyVersion: GOLD_ENRICHMENT_V3_TAXONOMY_VERSION,
       labelSchemaVersion: GOLD_ENRICHMENT_V3_LABEL_SCHEMA_VERSION,
       enrichmentSchemaVersion: GOLD_ENRICHMENT_V3_ENRICHMENT_SCHEMA_VERSION,
     },
+    repository: {
+      branch: 'codex/synthetic-fixture',
+      commit: '0'.repeat(40),
+      originMainSha: '1'.repeat(40),
+      mergeBaseSha: '1'.repeat(40),
+      cleanTrackedState: true,
+    },
     developmentScope: { rows: 630, heldOutTestRows: 0, testIdentitiesAccessed: 0 },
     safety: { heldOutTestAccessed: false },
+    modelInputIndependence: {
+      status: 'preparation-blocked-unless-audit-passes',
+      modelFacingInventoryPath: 'model-facing-inventory.json',
+      auditPath: 'model-input-independence-audit.json',
+    },
+    packetization: {
+      ordering: 'canonical-source-order',
+      families: {
+        included_metadata_only: { rows: 308, packets: 7, maximumPacketSize: 50 },
+        included_full_text: { rows: 50, packets: 10, maximumPacketSize: 5 },
+        excluded_metadata_sufficiency: { rows: 272, packets: 3, maximumPacketSize: 100 },
+      },
+      packetCount: packetEntries.length,
+      packetManifestHashes: runPacketManifestHashes,
+      membershipOrderProjection: {
+        serialization: 'compact JSON.stringify preserving packet/property order plus one LF',
+        bytes: HISTORICAL_PACKET_MEMBERSHIP_BYTES,
+        sha256: GOLD_ENRICHMENT_V3_PACKET_MEMBERSHIP_ORDER_SHA256,
+        approvedSha256: GOLD_ENRICHMENT_V3_PACKET_MEMBERSHIP_ORDER_SHA256,
+        syntheticFixtureOnly: true,
+      },
+    },
     promptTemplates: Object.fromEntries(
       [...contractIdentities.values()]
         .filter((identity) => identity.path.startsWith('prompts/'))
@@ -489,27 +670,157 @@ async function materializeValidationFixture(): Promise<ValidationFixture> {
         ]),
     ),
   })
+  const registryCsv = syntheticFullTextRegistryCsv()
+  const registryIdentity = {
+    path: 'full-text-registry-v3.csv',
+    bytes: Buffer.byteLength(registryCsv),
+    sha256: sha256Bytes(registryCsv),
+  }
+  const registryReceiptText = serializeGoldEnrichmentV3Json({
+    workflowId: GOLD_ENRICHMENT_V3_WORKFLOW_ID,
+    workflowSchemaVersion: GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION,
+    registry: registryIdentity,
+    counts: { matched_complete: 50, preview_only: 1, missing: 5 },
+    binariesCopiedIntoWorkflow: false,
+  })
+  await Promise.all([
+    writeFile(path.join(runDirectory, registryIdentity.path), registryCsv, 'utf8'),
+    writeFile(
+      path.join(runDirectory, 'full-text-registry-v3.receipt.json'),
+      registryReceiptText,
+      'utf8',
+    ),
+  ])
+  const packetArtifacts = SYNTHETIC_WORKFLOW.packets.flatMap((packet) => [
+    plannedGoldEnrichmentV3Text(packet.csvPath, packet.csv),
+    plannedGoldEnrichmentV3Text(packet.renderedPrompt.path, packet.renderedPrompt.text),
+    ...(packet.modelFacingFullTextManifest
+      ? [
+          plannedGoldEnrichmentV3Text(
+            packet.modelFacingFullTextManifest.path,
+            packet.modelFacingFullTextManifest.text,
+          ),
+        ]
+      : []),
+    plannedGoldEnrichmentV3Text(packet.receiptPath, serializeGoldEnrichmentV3Json(packet.receipt)),
+  ])
+  const baseCanonicalArtifacts = [
+    plannedGoldEnrichmentV3Text('packet-index.json', packetIndex),
+    plannedGoldEnrichmentV3Text('run-definition.json', runDefinition),
+    plannedGoldEnrichmentV3Text(registryIdentity.path, registryCsv),
+    plannedGoldEnrichmentV3Text('full-text-registry-v3.receipt.json', registryReceiptText),
+    ...contractArtifacts,
+    ...packetArtifacts,
+  ].sort((left, right) => left.path.localeCompare(right.path, 'en-US'))
+  const inventory = buildGoldEnrichmentV3ModelFacingInventory(
+    baseCanonicalArtifacts,
+    SYNTHETIC_WORKFLOW.packets,
+  )
+  const inventoryText = serializeGoldEnrichmentV3Json(inventory)
+  const promptArtifacts = artifactIdentities('prompt')
+  const controlledValueCatalog = goldEnrichmentV3ControlledValueCatalog(
+    readFileSync(path.join(process.cwd(), 'config/literature/enrichment-labels.v2.json'), 'utf8'),
+  )
+  const syntheticAudit = buildGoldEnrichmentV3ModelInputIndependenceAudit({
+    sourceRows: SYNTHETIC_WORKFLOW.sourceRows,
+    fullTextRegistryRows: SYNTHETIC_WORKFLOW.registryRows,
+    packets: SYNTHETIC_WORKFLOW.packets,
+    promptTemplates: Object.fromEntries(
+      GOLD_ENRICHMENT_V3_PACKET_FAMILIES.map((family) => [
+        family,
+        { path: promptArtifacts[family].path, text: promptArtifacts[family].text },
+      ]),
+    ) as Record<GoldEnrichmentV3PacketFamily, { path: string; text: string }>,
+    inventory,
+    inventoryText,
+    generatedArtifacts: baseCanonicalArtifacts,
+    controlledValueCatalog,
+  })
+  expect(inventory.modelFacingFileCount).toBe(100)
+  expect(inventory.categories.model_facing.filter((entry) => entry.external)).toHaveLength(50)
+  expect(syntheticAudit.checks.modelFacingFileIdentities).toHaveLength(100)
+  expect(syntheticAudit.checks.packetUploadBundleAudit).toHaveLength(20)
+  expect(syntheticAudit.checks.promptPlaceholderAudit).toHaveLength(23)
+  expect(syntheticAudit.checks.canonicalPacketCoverage).toMatchObject({
+    rows: 630,
+    uniqueRows: 630,
+    pass: true,
+  })
+  expect(syntheticAudit.failures).toEqual([
+    'Packet membership/order projection changed from the approved cohort.',
+  ])
+  const syntheticMembershipProjection = goldEnrichmentV3PacketMembershipOrderProjection(
+    SYNTHETIC_WORKFLOW.packets,
+  )
+  const independenceAudit = {
+    ...syntheticAudit,
+    pass: true,
+    failures: [],
+    packetMembershipOrderIdentity: {
+      ...syntheticAudit.packetMembershipOrderIdentity,
+      bytes: Buffer.byteLength(syntheticMembershipProjection),
+      sha256: GOLD_ENRICHMENT_V3_PACKET_MEMBERSHIP_ORDER_SHA256,
+      expectedSha256: GOLD_ENRICHMENT_V3_PACKET_MEMBERSHIP_ORDER_SHA256,
+      pass: true,
+      syntheticFixtureOnly: true,
+    },
+  }
+  const independenceAuditText = serializeGoldEnrichmentV3Json(independenceAudit)
+  const canonicalArtifacts = [
+    ...baseCanonicalArtifacts,
+    plannedGoldEnrichmentV3Text('model-facing-inventory.json', inventoryText),
+    plannedGoldEnrichmentV3Text('model-input-independence-audit.json', independenceAuditText),
+  ].sort((left, right) => left.path.localeCompare(right.path, 'en-US'))
+  expect(canonicalArtifacts).toHaveLength(85)
+  const canonicalIdentities = canonicalArtifacts.map((artifact) => ({
+    path: artifact.path,
+    bytes: artifact.bytes.byteLength,
+    sha256: sha256Bytes(artifact.bytes),
+  }))
+  const canonicalTotalBytes = canonicalIdentities.reduce((sum, identity) => sum + identity.bytes, 0)
+  const manifestText = serializeGoldEnrichmentV3Json({
+    workflowId: GOLD_ENRICHMENT_V3_WORKFLOW_ID,
+    workflowSchemaVersion: GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION,
+    canonicalArtifacts: canonicalIdentities,
+    canonicalFileCount: canonicalIdentities.length,
+    canonicalTotalBytes,
+    excludes: ['artifact-manifest.json', 'execution-receipts/**'],
+  })
+  const executionTime = '2026-01-01T00:00:00.000Z'
+  const executionFilename = `execution-${executionTime.replace(/[:.]/gu, '-')}.json`
+  const executionReceiptText = serializeGoldEnrichmentV3Json({
+    canonical: false,
+    workflowId: GOLD_ENRICHMENT_V3_WORKFLOW_ID,
+    executedAt: executionTime,
+    outputDirectory: runDirectory,
+    repositoryCommit: '0'.repeat(40),
+    canonicalManifest: {
+      path: 'artifact-manifest.json',
+      bytes: Buffer.byteLength(manifestText),
+      sha256: sha256Bytes(manifestText),
+    },
+    canonicalFileCount: canonicalIdentities.length + 1,
+    canonicalTotalBytes: canonicalTotalBytes + Buffer.byteLength(manifestText),
+    publicationCounts: { created: canonicalIdentities.length + 1 },
+    modelCalls: 0,
+    networkRequests: 0,
+    databaseWrites: 0,
+    importRowsCreated: 0,
+    testIdentitiesAccessed: 0,
+  })
+  await mkdir(path.join(runDirectory, 'execution-receipts'), { recursive: true })
   await Promise.all([
     writeFile(path.join(runDirectory, 'run-definition.json'), runDefinition, 'utf8'),
+    writeFile(path.join(runDirectory, 'model-facing-inventory.json'), inventoryText, 'utf8'),
     writeFile(
-      path.join(runDirectory, 'artifact-manifest.json'),
-      serializeGoldEnrichmentV3Json({
-        workflowId: GOLD_ENRICHMENT_V3_WORKFLOW_ID,
-        workflowSchemaVersion: GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION,
-        canonicalArtifacts: [
-          {
-            path: 'packet-index.json',
-            bytes: Buffer.byteLength(packetIndex),
-            sha256: sha256Bytes(packetIndex),
-          },
-          {
-            path: 'run-definition.json',
-            bytes: Buffer.byteLength(runDefinition),
-            sha256: sha256Bytes(runDefinition),
-          },
-          ...contractIdentities.values(),
-        ],
-      }),
+      path.join(runDirectory, 'model-input-independence-audit.json'),
+      independenceAuditText,
+      'utf8',
+    ),
+    writeFile(path.join(runDirectory, 'artifact-manifest.json'), manifestText, 'utf8'),
+    writeFile(
+      path.join(runDirectory, 'execution-receipts', executionFilename),
+      executionReceiptText,
       'utf8',
     ),
   ])
@@ -605,8 +916,14 @@ function syntheticPriorCsv(): string {
 }
 
 function syntheticQaCsv(): string {
+  const directTargets = [
+    SYNTHETIC_WORKFLOW.sourceRows[59],
+    SYNTHETIC_WORKFLOW.sourceRows[60],
+    ...SYNTHETIC_WORKFLOW.sourceRows.slice(100, 142),
+  ]
+  expect(directTargets).toHaveLength(44)
   const direct = Array.from({ length: 54 }, (_, index) => {
-    const source = SYNTHETIC_WORKFLOW.sourceRows[100 + (index % 44)]
+    const source = directTargets[index % directTargets.length]
     return {
       source_review: 'synthetic_QA_review_1',
       severity: 'Medium',
@@ -685,6 +1002,44 @@ function syntheticUpgradePlan(): string {
   })
 }
 
+interface SyntheticCanonicalManifest {
+  workflowId: string
+  workflowSchemaVersion: string
+  canonicalArtifacts: Array<{ path: string; bytes: number; sha256: string }>
+  canonicalFileCount: number
+  canonicalTotalBytes: number
+  excludes: string[]
+}
+
+async function writeSyntheticManifestAndRebindExecutionReceipt(
+  runDirectory: string,
+  manifest: SyntheticCanonicalManifest,
+) {
+  manifest.canonicalArtifacts.sort((left, right) => left.path.localeCompare(right.path, 'en-US'))
+  manifest.canonicalFileCount = manifest.canonicalArtifacts.length
+  manifest.canonicalTotalBytes = manifest.canonicalArtifacts.reduce(
+    (sum, identity) => sum + identity.bytes,
+    0,
+  )
+  manifest.excludes = ['artifact-manifest.json', 'execution-receipts/**']
+  const manifestText = serializeGoldEnrichmentV3Json(manifest)
+  await writeFile(path.join(runDirectory, 'artifact-manifest.json'), manifestText, 'utf8')
+  const receiptDirectory = path.join(runDirectory, 'execution-receipts')
+  for (const filename of await readdir(receiptDirectory)) {
+    const receiptPath = path.join(receiptDirectory, filename)
+    const receipt = JSON.parse(await readFile(receiptPath, 'utf8')) as Record<string, unknown>
+    receipt.canonicalManifest = {
+      path: 'artifact-manifest.json',
+      bytes: Buffer.byteLength(manifestText),
+      sha256: sha256Bytes(manifestText),
+    }
+    receipt.canonicalFileCount = manifest.canonicalArtifacts.length + 1
+    receipt.canonicalTotalBytes = manifest.canonicalTotalBytes + Buffer.byteLength(manifestText)
+    receipt.publicationCounts = { created: manifest.canonicalArtifacts.length + 1 }
+    await writeFile(receiptPath, serializeGoldEnrichmentV3Json(receipt), 'utf8')
+  }
+}
+
 async function materializeMergeInputs(fixture: ValidationFixture) {
   const inputDirectory = path.join(fixture.root, 'coordinator-inputs')
   const localData = path.join(fixture.root, 'local-data')
@@ -737,18 +1092,13 @@ async function materializeMergeInputs(fixture: ValidationFixture) {
     ),
   ])
   const manifestPath = path.join(fixture.runDirectory, 'artifact-manifest.json')
-  const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as {
-    canonicalArtifacts: Array<{ path: string; bytes: number; sha256: string }>
-  }
-  manifest.canonicalArtifacts = [
-    ...manifest.canonicalArtifacts.filter(
-      (identity) =>
-        identity.path !== registryIdentity.path && identity.path !== registryReceiptIdentity.path,
-    ),
-    registryIdentity,
-    registryReceiptIdentity,
-  ]
-  await writeFile(manifestPath, serializeGoldEnrichmentV3Json(manifest), 'utf8')
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as SyntheticCanonicalManifest
+  manifest.canonicalArtifacts = manifest.canonicalArtifacts.map((identity) => {
+    if (identity.path === registryIdentity.path) return registryIdentity
+    if (identity.path === registryReceiptIdentity.path) return registryReceiptIdentity
+    return identity
+  })
+  await writeSyntheticManifestAndRebindExecutionReceipt(fixture.runDirectory, manifest)
   return {
     localData,
     priorPath,
@@ -794,20 +1144,17 @@ async function materializeSelfConsistentCanonicalPacketDrift(
   const packetText = await readFile(packetPath, 'utf8')
   const [packetColumns] = parseCsvRows(packetText)
   const packetRows = flexibleCsvObjects(packetText)
+  const packetSourceColumns = goldEnrichmentV3PacketSourceColumns(packet.receipt.packetFamily)
   packetRows[0].journal = 'Self-consistent but noncanonical journal'
   const packetSource = (row: StringRow) =>
-    Object.fromEntries(
-      GOLD_ENRICHMENT_V3_PACKET_SOURCE_COLUMNS.map((column) => [column, row[column]]),
-    )
+    Object.fromEntries(packetSourceColumns.map((column) => [column, row[column]]))
   packetRows[0].source_row_sha256 = sha256Bytes(
     serializeGoldEnrichmentV3Json(packetSource(packetRows[0])),
   )
   const sourceProjectionSha256 = sha256Bytes(
     serializeGoldEnrichmentV3Json({
-      columns: GOLD_ENRICHMENT_V3_PACKET_SOURCE_COLUMNS,
-      rows: packetRows.map((row) =>
-        GOLD_ENRICHMENT_V3_PACKET_SOURCE_COLUMNS.map((column) => row[column]),
-      ),
+      columns: packetSourceColumns,
+      rows: packetRows.map((row) => packetSourceColumns.map((column) => row[column])),
     }),
   )
   packetRows.forEach((row) => {
@@ -824,10 +1171,24 @@ async function materializeSelfConsistentCanonicalPacketDrift(
   const receipt = JSON.parse(await readFile(receiptPath, 'utf8')) as {
     sourceProjectionSha256: string
     packetCsv: { path: string; bytes: number; sha256: string }
+    modelFacingPrompt: { path: string; bytes: number; sha256: string }
     orderedKeys: Array<{ masterRowId: string; pmid: string; sourceRowSha256: string }>
+  }
+  const renderedPromptPath = path.join(runDirectory, receipt.modelFacingPrompt.path)
+  const renderedPromptText = await readFile(renderedPromptPath, 'utf8')
+  const driftedRenderedPromptText = renderedPromptText.replaceAll(
+    receipt.sourceProjectionSha256,
+    sourceProjectionSha256,
+  )
+  expect(driftedRenderedPromptText).not.toBe(renderedPromptText)
+  const renderedPromptIdentity = {
+    path: receipt.modelFacingPrompt.path,
+    bytes: Buffer.byteLength(driftedRenderedPromptText),
+    sha256: sha256Bytes(driftedRenderedPromptText),
   }
   receipt.sourceProjectionSha256 = sourceProjectionSha256
   receipt.packetCsv = packetIdentity
+  receipt.modelFacingPrompt = renderedPromptIdentity
   receipt.orderedKeys[0].sourceRowSha256 = packetRows[0].source_row_sha256
   const driftedReceiptText = serializeGoldEnrichmentV3Json(receipt)
   const receiptIdentity = {
@@ -841,6 +1202,7 @@ async function materializeSelfConsistentCanonicalPacketDrift(
     packets: Array<{
       packetId: string
       csvSha256: string
+      modelFacingPromptSha256: string
       receiptSha256: string
       sourceProjectionSha256: string
     }>
@@ -849,6 +1211,7 @@ async function materializeSelfConsistentCanonicalPacketDrift(
     (candidate) => candidate.packetId === packet.receipt.packetId,
   )!
   indexEntry.csvSha256 = packetIdentity.sha256
+  indexEntry.modelFacingPromptSha256 = renderedPromptIdentity.sha256
   indexEntry.receiptSha256 = receiptIdentity.sha256
   indexEntry.sourceProjectionSha256 = sourceProjectionSha256
   const driftedIndexText = serializeGoldEnrichmentV3Json(packetIndex)
@@ -859,10 +1222,8 @@ async function materializeSelfConsistentCanonicalPacketDrift(
   }
 
   const manifestPath = path.join(runDirectory, 'artifact-manifest.json')
-  const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as {
-    canonicalArtifacts: Array<{ path: string; bytes: number; sha256: string }>
-  }
-  for (const identity of [indexIdentity, packetIdentity, receiptIdentity]) {
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as SyntheticCanonicalManifest
+  for (const identity of [indexIdentity, packetIdentity, renderedPromptIdentity, receiptIdentity]) {
     const existing = manifest.canonicalArtifacts.findIndex((entry) => entry.path === identity.path)
     if (existing === -1) manifest.canonicalArtifacts.push(identity)
     else manifest.canonicalArtifacts[existing] = identity
@@ -879,11 +1240,12 @@ async function materializeSelfConsistentCanonicalPacketDrift(
 
   await Promise.all([
     writeFile(packetPath, driftedPacketText, 'utf8'),
+    writeFile(renderedPromptPath, driftedRenderedPromptText, 'utf8'),
     writeFile(receiptPath, driftedReceiptText, 'utf8'),
     writeFile(indexPath, driftedIndexText, 'utf8'),
-    writeFile(manifestPath, serializeGoldEnrichmentV3Json(manifest), 'utf8'),
     writeFile(resultPath, serializeGoldEnrichmentV3Csv(resultColumns, resultRows), 'utf8'),
   ])
+  await writeSyntheticManifestAndRebindExecutionReceipt(runDirectory, manifest)
   return { resultsDirectory, runDirectory }
 }
 
@@ -922,10 +1284,12 @@ function mergedRow(index: number): GoldEnrichmentV3MergedRow {
   const physicianLabel =
     index <= 300 ? 'include_core' : index <= 330 ? 'include_adjacent' : 'exclude'
   const included = physicianLabel !== 'exclude'
+  const coordinatorRequired = index <= 10 || (index >= 301 && index <= 330)
   return {
     ...row,
     workflow_id: GOLD_ENRICHMENT_V3_WORKFLOW_ID,
     workflow_schema_version: GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION,
+    merged_schema_version: GOLD_ENRICHMENT_V3_MERGED_SCHEMA_VERSION,
     prompt_template_version: GOLD_ENRICHMENT_V3_PROMPT_TEMPLATE_VERSION,
     result_schema_version: GOLD_ENRICHMENT_V3_RESULT_SCHEMA_VERSION,
     taxonomy_version: GOLD_ENRICHMENT_V3_TAXONOMY_VERSION,
@@ -964,7 +1328,9 @@ function mergedRow(index: number): GoldEnrichmentV3MergedRow {
     full_text_used: 'false',
     enrichment_confidence: included ? 'high' : '',
     assessment_confidence: included ? '' : 'high',
-    requires_physician_enrichment_review: 'false',
+    model_requests_physician_enrichment_review: 'false',
+    coordinator_requires_physician_enrichment_review: String(coordinatorRequired),
+    coordinator_review_reasons: coordinatorRequired ? 'synthetic_required_review' : '',
     evidence_1_field: 'title',
     evidence_1_excerpt: `Synthetic merged article ${index}`,
     enrichment_rationale: 'Synthetic deterministic proposal.',
@@ -978,14 +1344,15 @@ function mergedRow(index: number): GoldEnrichmentV3MergedRow {
   }
 }
 
-function reviewCandidate(row: GoldEnrichmentV3MergedRow, index: number): StringRow {
-  const required = index < 10 || (index >= 300 && index < 330)
+function reviewCandidate(row: GoldEnrichmentV3MergedRow): StringRow {
   return {
     master_row_id: row.master_row_id,
     pmid: row.pmid,
     physician_final_label: row.physician_final_label,
-    required_review: String(required),
-    review_reasons: required ? 'synthetic_required_review' : '',
+    model_requests_physician_enrichment_review: row.model_requests_physician_enrichment_review,
+    coordinator_requires_physician_enrichment_review:
+      row.coordinator_requires_physician_enrichment_review,
+    coordinator_review_reasons: row.coordinator_review_reasons,
     full_text_evidence_status: 'not_selected',
     expected_full_text_filename: '',
     full_text_file_sha256: '',
@@ -1004,14 +1371,16 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
       workflowSchema: GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION,
       prompt: GOLD_ENRICHMENT_V3_PROMPT_TEMPLATE_VERSION,
       result: GOLD_ENRICHMENT_V3_RESULT_SCHEMA_VERSION,
+      merged: GOLD_ENRICHMENT_V3_MERGED_SCHEMA_VERSION,
       taxonomy: GOLD_ENRICHMENT_V3_TAXONOMY_VERSION,
       labels: GOLD_ENRICHMENT_V3_LABEL_SCHEMA_VERSION,
       enrichment: GOLD_ENRICHMENT_V3_ENRICHMENT_SCHEMA_VERSION,
     }).toEqual({
       workflow: 'gold-set-v1-enrichment-v3',
       workflowSchema: '3.0.0',
-      prompt: '3.0.0',
-      result: '3.0.0',
+      prompt: '3.0.1',
+      result: '3.0.1',
+      merged: '3.0.1',
       taxonomy: '2.0.0',
       labels: '2.0.0',
       enrichment: '2.0.0',
@@ -1025,6 +1394,15 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
     expect(GOLD_ENRICHMENT_V3_PHYSICIAN_FIELD_SHA256).toBe(
       '90b4b198da5803158685a9dd89d3f59578b91bad9bbd14e1cc55ebf5fdc9a01e',
     )
+    expect(GOLD_ENRICHMENT_V3_PACKET_MEMBERSHIP_ORDER_SHA256).toBe(
+      HISTORICAL_PACKET_MEMBERSHIP_SHA256,
+    )
+    expect(GOLD_ENRICHMENT_V3_SUPERSEDED_PROMPT_SHA256).toEqual({
+      included_metadata_only: '0ebd1906e275b5bbf9017e5c48f5c7de50ab5cc8a4afb836ea7c2e904a531ec7',
+      included_full_text: '1d44482548b63533e35f9d78a1602df9d90f5f5a28aad5d25db97c56af62a0e3',
+      excluded_metadata_sufficiency:
+        '17ed3fe1f5a8d00450ceacefa43071434be23736a3a9c4d8575de9ace8164d9f',
+    })
     expect(GOLD_ENRICHMENT_V3_CONFIG_CONTRACT).toMatchObject({
       'config/literature/gold-set-labels.v1.json':
         '554cf8b0b39d5f9be0f89566939c6336e040605dba05b0ddfa0f41c7badd7ac4',
@@ -1094,6 +1472,89 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
     ).toThrow('output identity')
   })
 
+  it('removes all article identities and coordinator-only review triggers from classification prompts', () => {
+    const prompts = classificationPromptTexts()
+    const developmentPmids = SYNTHETIC_WORKFLOW.sourceRows.map((row) => row.pmid)
+    for (const [filename, prompt] of prompts) {
+      expect(sha256Bytes(prompt)).not.toBe(SUPERSEDED_PROMPT_SHA256.get(filename))
+      expect(prompt.match(/(?<![0-9])[0-9]{7,9}(?![0-9])/gu)).toBeNull()
+      for (const pmid of developmentPmids) {
+        expect(containsStandaloneIdentifier(prompt, pmid)).toBe(false)
+      }
+      expect(prompt).not.toMatch(/Required Review/iu)
+      expect(prompt).not.toMatch(/protocol-designated|relevance-concern record/iu)
+      expect(prompt).not.toMatch(/include_adjacent/iu)
+      expect(prompt).not.toMatch(/external[- ]QA|taxonomy[- ]upgrade candidate/iu)
+      expect(prompt).not.toMatch(/sampling (?:stratum|rationale)|screening score|prior AI/iu)
+      expect(prompt).not.toMatch(/\bLVRS\b|surgery[- ]only|false[- ]positive|forbidden topic/iu)
+      expect(prompt).not.toMatch(/requires_physician_enrichment_review/iu)
+      expect(prompt).not.toMatch(
+        /(?:full[-_ ]text|manifest).{0,100}(?:mandatory|required|must).{0,60}review/isu,
+      )
+      expect(prompt).not.toMatch(
+        /physician(?:_final)?_confidence.{0,100}(?:mandatory|required|must).{0,60}review/isu,
+      )
+    }
+    expect(goldEnrichmentV3ForbiddenPromptPhraseLabels('required_review')).toContain(
+      'Required Review',
+    )
+    expect(
+      goldEnrichmentV3ForbiddenPromptPhraseLabels(
+        'full_text_manifest membership must trigger physician review',
+      ),
+    ).toContain('full-text-membership mandatory review mapping')
+  })
+
+  it('does not mechanically map excluded metadata status or confidence to model review', () => {
+    const prompt = classificationPromptTexts().get('excluded-metadata-sufficiency.md')!
+    expect(prompt).toMatch(
+      /set it to `true` only when the supplied metadata leaves unresolved material ambiguity\s+or is internally conflicting/isu,
+    )
+    expect(prompt).toMatch(
+      /do not derive it mechanically from.*metadata sufficiency, assessment\s+confidence/isu,
+    )
+    expect(prompt).not.toMatch(
+      /(?:limited_abstract|no_abstract|conflicting_metadata|moderate|low).{0,100}(?:requires?|must|set).{0,40}(?:review|true)/isu,
+    )
+    expect(prompt).not.toMatch(
+      /(?:review|true).{0,40}(?:when|if|for).{0,100}(?:limited_abstract|no_abstract|conflicting_metadata|moderate|low)/isu,
+    )
+  })
+
+  it('makes physician fields immutable copy-only audit fields and the model flag independent', () => {
+    for (const prompt of classificationPromptTexts().values()) {
+      expect(prompt).toMatch(/physician.*label.*confidence.*audit fields to copy verbatim/isu)
+      expect(prompt).toMatch(/not evidence or predictive signals/iu)
+      expect(prompt).toMatch(/must not\s+influence\s+metadata sufficiency/iu)
+      expect(prompt).toMatch(/model's independent review request/iu)
+      expect(prompt).toMatch(/processing status/iu)
+      expect(prompt).toMatch(/model_requests_physician_enrichment_review/iu)
+      expect(prompt).toMatch(/independent self-assessment/iu)
+      expect(prompt).toMatch(/unresolved material ambiguity|internally conflicting/iu)
+      expect(prompt).toMatch(/processing_status=error/iu)
+      expect(prompt).toMatch(/model_requests_physician_enrichment_review=true/iu)
+    }
+  })
+
+  it('limits classification-template substitutions to the explicit packet bindings', () => {
+    for (const prompt of classificationPromptTexts().values()) {
+      const placeholders = [...prompt.matchAll(/\{\{([A-Z0-9_]+)\}\}/gu)].map((match) => match[1])
+      expect([...new Set(placeholders)].sort()).toEqual([
+        'EXPECTED_OUTPUT_FILENAME',
+        'PACKET_ID',
+        'SOURCE_PROJECTION_SHA256',
+      ])
+    }
+  })
+
+  it('keeps the V3 CLI file-only with no model, network, database, import, or held-out option', async () => {
+    for (const option of ['model', 'network', 'database', 'import', 'openai', 'worker', 'ultra']) {
+      await expect(
+        runGoldEnrichmentV3Cli(['prepare', `--${option}`], process.cwd()),
+      ).rejects.toThrow('Forbidden held-out/mutation/model option')
+    }
+  })
+
   it('separates complete, preview-only, and missing full-text states at the packet boundary', () => {
     const auditRows = fullTextAuditRows()
     const auditCsv = serializeGoldEnrichmentV3Csv(
@@ -1137,16 +1598,13 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
     const metadataByPmid = new Map(
       families.included_metadata_only.map((row) => [row.source.pmid, row]),
     )
-    expect(metadataByPmid.get(previewPmid)).toMatchObject({
-      source: {
-        full_text_evidence_status: 'preview_only',
-        expected_full_text_sha256: '',
-      },
-    })
+    expect(metadataByPmid.get(previewPmid)).toBeDefined()
+    expect(metadataByPmid.get(previewPmid)?.source).not.toHaveProperty('full_text_evidence_status')
+    expect(metadataByPmid.get(previewPmid)?.source).not.toHaveProperty('expected_full_text_sha256')
     for (const pmid of missingPmids) {
-      expect(metadataByPmid.get(pmid)).toMatchObject({
-        source: { full_text_evidence_status: 'missing', expected_full_text_sha256: '' },
-      })
+      expect(metadataByPmid.get(pmid)).toBeDefined()
+      expect(metadataByPmid.get(pmid)?.source).not.toHaveProperty('full_text_evidence_status')
+      expect(metadataByPmid.get(pmid)?.source).not.toHaveProperty('expected_full_text_sha256')
     }
     expect(families.included_full_text.every((row) => row.source.expected_full_text_sha256)).toBe(
       true,
@@ -1155,7 +1613,22 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
 
   it('packetizes deterministically with exact order, sizes, hashes, receipts, and source binding', () => {
     const packets = SYNTHETIC_WORKFLOW.packets
+    const promptArtifacts = artifactIdentities('prompt')
+    const developmentPmids = SYNTHETIC_WORKFLOW.sourceRows.map((row) => row.pmid)
+    const normalizedPrompts = new Map<GoldEnrichmentV3PacketFamily, Set<string>>()
     expect(packets).toHaveLength(20)
+    expect(
+      Object.fromEntries(
+        GOLD_ENRICHMENT_V3_PACKET_FAMILIES.map((family) => [
+          family,
+          goldEnrichmentV3PacketColumns(family).length,
+        ]),
+      ),
+    ).toEqual({
+      included_metadata_only: 27,
+      included_full_text: 29,
+      excluded_metadata_sufficiency: 27,
+    })
     expect(packets.map((packet) => packet.receipt.packetFamily)).toEqual([
       ...Array<GoldEnrichmentV3PacketFamily>(7).fill('included_metadata_only'),
       ...Array<GoldEnrichmentV3PacketFamily>(10).fill('included_full_text'),
@@ -1166,11 +1639,19 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
     ])
 
     for (const packet of packets) {
-      expect([packet.csvPath, packet.receiptPath].every((value) => !value.endsWith('.pdf'))).toBe(
-        true,
-      )
+      expect(
+        [packet.csvPath, packet.renderedPrompt.path, packet.receiptPath].every(
+          (value) => !value.endsWith('.pdf'),
+        ),
+      ).toBe(true)
       expect(packet.csv).not.toContain('%PDF-')
-      const rows = csvObjects(packet.csv, GOLD_ENRICHMENT_V3_PACKET_COLUMNS)
+      const packetColumns = goldEnrichmentV3PacketColumns(packet.receipt.packetFamily)
+      const packetSourceColumns = goldEnrichmentV3PacketSourceColumns(packet.receipt.packetFamily)
+      expect(packetColumns).toHaveLength(
+        packet.receipt.packetFamily === 'included_full_text' ? 29 : 27,
+      )
+      expect(parseCsvRows(packet.csv)[0]).toEqual(packetColumns)
+      const rows = csvObjects(packet.csv, packetColumns)
       expect(Buffer.byteLength(packet.csv)).toBe(packet.receipt.packetCsv.bytes)
       expect(sha256Bytes(packet.csv)).toBe(packet.receipt.packetCsv.sha256)
       expect(packet.receipt.orderedKeys).toEqual(
@@ -1182,30 +1663,158 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
       )
       rows.forEach((row) => {
         const source = Object.fromEntries(
-          GOLD_ENRICHMENT_V3_PACKET_SOURCE_COLUMNS.map((column) => [column, row[column]]),
+          packetSourceColumns.map((column) => [column, row[column]]),
         )
         expect(row.source_row_sha256).toBe(sha256Bytes(serializeGoldEnrichmentV3Json(source)))
         expect(row.source_projection_sha256).toBe(packet.receipt.sourceProjectionSha256)
       })
       const projection = {
-        columns: GOLD_ENRICHMENT_V3_PACKET_SOURCE_COLUMNS,
-        rows: rows.map((row) =>
-          GOLD_ENRICHMENT_V3_PACKET_SOURCE_COLUMNS.map((column) => row[column]),
-        ),
+        columns: packetSourceColumns,
+        rows: rows.map((row) => packetSourceColumns.map((column) => row[column])),
       }
       expect(packet.receipt.sourceProjectionSha256).toBe(
         sha256Bytes(serializeGoldEnrichmentV3Json(projection)),
       )
       expect(sha256Bytes(serializeGoldEnrichmentV3Json(packet.receipt))).toMatch(/^[a-f0-9]{64}$/u)
-      expect(rows[0]).not.toHaveProperty('external_qa_findings')
-      expect(rows[0]).not.toHaveProperty('taxonomy_v2_upgrade_candidates')
+      for (const forbiddenColumn of [
+        'metadata_sufficiency_constraint',
+        'full_text_evidence_status',
+        'required_review',
+        'required_review_reasons',
+        'coordinator_requires_physician_enrichment_review',
+        'coordinator_review_reasons',
+        'external_qa_findings',
+        'external_qa_severity',
+        'taxonomy_v2_upgrade_candidates',
+        'relevance_concern',
+        'review_reasons',
+        'sampling_stratum',
+        'sampling_rationale',
+        'screening_score',
+        'prior_ai_enrichment',
+        'prior_enrichment',
+      ]) {
+        expect(rows[0]).not.toHaveProperty(forbiddenColumn)
+      }
+
+      expect(packet.renderedPrompt.path).toBe(packet.receipt.modelFacingPrompt.path)
+      expect(Buffer.byteLength(packet.renderedPrompt.text)).toBe(
+        packet.receipt.modelFacingPrompt.bytes,
+      )
+      expect(sha256Bytes(packet.renderedPrompt.text)).toBe(packet.receipt.modelFacingPrompt.sha256)
+      expect(packet.renderedPrompt.text).not.toMatch(/\{\{[A-Z0-9_]+\}\}/u)
+      for (const pmid of developmentPmids) {
+        expect(containsStandaloneIdentifier(packet.renderedPrompt.text, pmid)).toBe(false)
+      }
+      expect(packet.renderedPrompt.text).not.toMatch(/Required Review/iu)
+      expect(packet.renderedPrompt.text).not.toMatch(/protocol-designated|relevance-concern/iu)
+      expect(packet.renderedPrompt.text).not.toMatch(/hard[- ]case|QA target|upgrade candidate/iu)
+      expect(packet.renderedPrompt.text).not.toMatch(
+        /include_adjacent.{0,100}(?:mandatory|required|must).{0,40}review/isu,
+      )
+      expect(packet.renderedPrompt.text).not.toMatch(
+        /physician.{0,30}confidence.{0,100}(?:mandatory|required|must).{0,40}review/isu,
+      )
+      expect(packet.renderedPrompt.text).not.toMatch(
+        /full[- ]text.{0,60}(?:manifest|membership).{0,100}(?:mandatory|required|must).{0,40}review/isu,
+      )
+      const normalizedPrompt = packet.renderedPrompt.text
+        .replaceAll(packet.receipt.expectedOutputFilename, '{{EXPECTED_OUTPUT_FILENAME}}')
+        .replaceAll(packet.receipt.sourceProjectionSha256, '{{SOURCE_PROJECTION_SHA256}}')
+        .replaceAll(packet.receipt.packetId, '{{PACKET_ID}}')
+      expect(normalizedPrompt).toBe(promptArtifacts[packet.receipt.packetFamily].text)
+      const familyNormalized =
+        normalizedPrompts.get(packet.receipt.packetFamily) ?? new Set<string>()
+      familyNormalized.add(normalizedPrompt)
+      normalizedPrompts.set(packet.receipt.packetFamily, familyNormalized)
+
+      if (packet.receipt.packetFamily === 'included_full_text') {
+        expect(
+          rows.every((row) => row.expected_full_text_filename && row.expected_full_text_sha256),
+        ).toBe(true)
+        expect(packet.modelFacingFullTextManifest).toBeDefined()
+        expect(packet.receipt.modelFacingFullTextManifest).toMatchObject({
+          path: packet.modelFacingFullTextManifest?.path,
+          bytes: Buffer.byteLength(packet.modelFacingFullTextManifest?.text ?? ''),
+          sha256: sha256Bytes(packet.modelFacingFullTextManifest?.text ?? ''),
+        })
+        const manifest = JSON.parse(packet.modelFacingFullTextManifest!.text) as {
+          workflowId: string
+          workflowSchemaVersion: string
+          promptTemplateVersion: string
+          resultSchemaVersion: string
+          packetId: string
+          packetFamily: string
+          sourceProjectionSha256: string
+          attachments: Array<Record<string, string | number>>
+        }
+        expect(Object.keys(manifest).sort()).toEqual([
+          'attachments',
+          'packetFamily',
+          'packetId',
+          'promptTemplateVersion',
+          'resultSchemaVersion',
+          'sourceProjectionSha256',
+          'workflowId',
+          'workflowSchemaVersion',
+        ])
+        expect(manifest).toMatchObject({
+          workflowId: GOLD_ENRICHMENT_V3_WORKFLOW_ID,
+          workflowSchemaVersion: GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION,
+          promptTemplateVersion: GOLD_ENRICHMENT_V3_PROMPT_TEMPLATE_VERSION,
+          resultSchemaVersion: GOLD_ENRICHMENT_V3_RESULT_SCHEMA_VERSION,
+          packetId: packet.receipt.packetId,
+          packetFamily: packet.receipt.packetFamily,
+          sourceProjectionSha256: packet.receipt.sourceProjectionSha256,
+        })
+        expect(manifest.attachments).toHaveLength(packet.receipt.rowCount)
+        manifest.attachments.forEach((attachment, index) => {
+          expect(Object.keys(attachment).sort()).toEqual([
+            'bytes',
+            'filename',
+            'masterRowId',
+            'pmid',
+            'sha256',
+            'title',
+          ])
+          expect(attachment).toMatchObject({
+            masterRowId: packet.receipt.orderedKeys[index].masterRowId,
+            pmid: packet.receipt.orderedKeys[index].pmid,
+            title: rows[index].title,
+            filename: rows[index].expected_full_text_filename,
+            sha256: rows[index].expected_full_text_sha256,
+          })
+          expect(attachment.bytes).toBeGreaterThan(0)
+        })
+      } else {
+        expect(rows[0]).not.toHaveProperty('expected_full_text_filename')
+        expect(rows[0]).not.toHaveProperty('expected_full_text_sha256')
+        expect(packet.modelFacingFullTextManifest).toBeUndefined()
+        expect(packet.receipt.modelFacingFullTextManifest).toBeUndefined()
+      }
     }
+
+    expect(
+      Object.fromEntries([...normalizedPrompts].map(([family, prompts]) => [family, prompts.size])),
+    ).toEqual({
+      included_metadata_only: 1,
+      included_full_text: 1,
+      excluded_metadata_sufficiency: 1,
+    })
 
     const rebuilt = buildSyntheticWorkflow().packets
     expect(rebuilt).toEqual(packets)
     expect(rebuilt.map((packet) => sha256Bytes(packet.csv))).toEqual(
       packets.map((packet) => sha256Bytes(packet.csv)),
     )
+    const firstMembershipProjection = goldEnrichmentV3PacketMembershipOrderProjection(packets)
+    const rebuiltMembershipProjection = goldEnrichmentV3PacketMembershipOrderProjection(rebuilt)
+    expect(rebuiltMembershipProjection).toBe(firstMembershipProjection)
+    expect(sha256Bytes(rebuiltMembershipProjection)).toBe(sha256Bytes(firstMembershipProjection))
+    expect(GOLD_ENRICHMENT_V3_PACKET_MEMBERSHIP_ORDER_SHA256).toBe(
+      HISTORICAL_PACKET_MEMBERSHIP_SHA256,
+    )
+    expect(HISTORICAL_PACKET_MEMBERSHIP_BYTES).toBe(27_137)
   })
 
   it('validates complete synthetic results and rejects every fail-closed result boundary', async () => {
@@ -1233,12 +1842,20 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
         },
       })
       expect(baseline.rows).toHaveLength(630)
+      expect(
+        baseline.rows.every(
+          (row) => row.raw.model_requests_physician_enrichment_review === 'false',
+        ),
+      ).toBe(true)
 
       const metadataFile = [...fixture.files.values()].find(
         (file) => file.family === 'included_metadata_only',
       )!
       const fullTextFile = [...fixture.files.values()].find(
         (file) => file.family === 'included_full_text',
+      )!
+      const excludedFile = [...fixture.files.values()].find(
+        (file) => file.family === 'excluded_metadata_sufficiency',
       )!
 
       const expectRejectedMutation = async (
@@ -1254,6 +1871,16 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
         await restoreResult(fixture, file)
       }
 
+      await writeMutatedResult(fixture, excludedFile, (rows) => {
+        rows[0].metadata_sufficiency = 'limited_abstract'
+        rows[0].assessment_confidence = 'low'
+        rows[0].model_requests_physician_enrichment_review = 'false'
+      })
+      const independentExcludedFlag = await validateFixture(fixture)
+      expect(independentExcludedFlag.report.valid).toBe(true)
+      expect(independentExcludedFlag.rows).toHaveLength(630)
+      await restoreResult(fixture, excludedFile)
+
       await writeFile(
         path.join(fixture.resultsDirectory, metadataFile.filename),
         metadataFile.text.replace('"packet_id"', '"unexpected_header"'),
@@ -1266,7 +1893,14 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
       await expectRejectedMutation(
         metadataFile,
         (rows) => {
-          rows[0].result_schema_version = '3.0.1'
+          rows[0].prompt_template_version = '3.0.0'
+        },
+        /version, packet, or source-projection binding/iu,
+      )
+      await expectRejectedMutation(
+        metadataFile,
+        (rows) => {
+          rows[0].result_schema_version = '3.0.0'
         },
         /version, packet, or source-projection binding/iu,
       )
@@ -1424,44 +2058,195 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
     }
   }, 60_000)
 
+  it('raw-merges validated outputs without coordinator inputs, decisions, or value changes', async () => {
+    const fixture = await materializeValidationFixture()
+    const localData = path.join(fixture.root, 'local-data')
+    const outputDirectory = path.join(localData, 'literature', 'raw-merge')
+    await mkdir(localData, { recursive: true })
+    try {
+      const validated = await validateFixture(fixture)
+      const first = await mergeGoldEnrichmentV3RawResults({
+        runDirectory: fixture.runDirectory,
+        resultsDirectory: fixture.resultsDirectory,
+        outputDirectory,
+        workspaceRoot: fixture.root,
+      })
+      const repeated = await mergeGoldEnrichmentV3RawResults({
+        runDirectory: fixture.runDirectory,
+        resultsDirectory: fixture.resultsDirectory,
+        outputDirectory,
+        workspaceRoot: fixture.root,
+      })
+      expect(first.rows).toHaveLength(630)
+      expect(repeated.rows).toEqual(first.rows)
+      expect(repeated.rawMergedArtifact.sha256).toBe(first.rawMergedArtifact.sha256)
+      expect(first.artifacts.every((artifact) => artifact.publication === 'created')).toBe(true)
+      expect(
+        repeated.artifacts.every((artifact) => artifact.publication === 'verified_existing'),
+      ).toBe(true)
+      expect(GOLD_ENRICHMENT_V3_RAW_MERGED_COLUMNS).toHaveLength(42)
+      expect(GOLD_ENRICHMENT_V3_RAW_MERGED_COLUMNS).not.toEqual(
+        expect.arrayContaining([
+          'coordinator_requires_physician_enrichment_review',
+          'coordinator_review_reasons',
+          'external_qa_review_flag',
+          'taxonomy_v2_upgrade_review_flag',
+          'relevance_concern_review_flag',
+          'prior_enrichment',
+        ]),
+      )
+      first.rows.forEach((row, index) => {
+        const original = validated.rows[index]
+        expect(original).toBeDefined()
+        const familyColumns = new Set(resultColumns(original.family))
+        for (const column of GOLD_ENRICHMENT_V3_RAW_MERGED_COLUMNS) {
+          expect(row[column]).toBe(
+            familyColumns.has(column) ? (original.raw as Record<string, string>)[column] : '',
+          )
+        }
+      })
+      const rawMergedText = await readFile(
+        path.join(outputDirectory, 'gold-set-v1-enrichment-v3-raw-merged.csv'),
+        'utf8',
+      )
+      expect(csvObjects(rawMergedText, GOLD_ENRICHMENT_V3_RAW_MERGED_COLUMNS)).toEqual(first.rows)
+      const receipt = JSON.parse(
+        await readFile(
+          path.join(outputDirectory, 'gold-set-v1-enrichment-v3-raw-merged.receipt.json'),
+          'utf8',
+        ),
+      ) as {
+        rawMergeSchemaVersion: string
+        safety: Record<string, boolean | number>
+      }
+      expect(receipt.rawMergeSchemaVersion).toBe('1.0.0')
+      expect(receipt.safety).toEqual({
+        rawResultValuesChanged: false,
+        addedBlankUnionColumnsOnly: true,
+        priorEnrichmentRead: false,
+        externalQaRead: false,
+        taxonomyUpgradePlanRead: false,
+        coordinatorReviewEligibilityComputed: false,
+        enrichmentValuesChanged: false,
+        physicianRelevanceChanged: false,
+        modelCalls: 0,
+        networkRequests: 0,
+        databaseWrites: 0,
+        importRowsCreated: 0,
+        heldOutTestAccessed: false,
+      })
+      for (const forbiddenOption of ['prior-enrichment', 'qa-findings', 'upgrade-plan']) {
+        await expect(
+          runGoldEnrichmentV3Cli(
+            [
+              'merge-raw',
+              '--run-dir',
+              fixture.runDirectory,
+              '--results-dir',
+              fixture.resultsDirectory,
+              '--output-dir',
+              outputDirectory,
+              `--${forbiddenOption}`,
+              'forbidden',
+            ],
+            fixture.root,
+          ),
+        ).rejects.toThrow(/unknown option/iu)
+      }
+    } finally {
+      await rm(fixture.root, { recursive: true, force: true })
+    }
+  }, 60_000)
+
   it('rejects packet/receipt checksum drift and forbidden held-out path semantics', async () => {
     const fixture = await materializeValidationFixture()
     try {
       const packet = SYNTHETIC_WORKFLOW.packets[0]
       const packetPath = path.join(fixture.runDirectory, packet.csvPath)
       await writeFile(packetPath, `${packet.csv}\n`, 'utf8')
-      await expect(validateFixture(fixture)).rejects.toThrow('artifact checksum mismatch')
+      await expect(validateFixture(fixture)).rejects.toThrow('does not match the artifact manifest')
       await writeFile(packetPath, packet.csv, 'utf8')
 
       const receiptPath = path.join(fixture.runDirectory, packet.receiptPath)
       const receipt = serializeGoldEnrichmentV3Json(packet.receipt)
       await writeFile(receiptPath, `${receipt}\n`, 'utf8')
-      await expect(validateFixture(fixture)).rejects.toThrow('artifact checksum mismatch')
+      await expect(validateFixture(fixture)).rejects.toThrow('does not match the artifact manifest')
       await writeFile(receiptPath, receipt, 'utf8')
 
       const promptPath = path.join(fixture.runDirectory, packet.receipt.promptTemplate.path)
       const prompt = await readFile(promptPath)
       await writeFile(promptPath, Buffer.concat([prompt, Buffer.from('\n')]))
-      await expect(validateFixture(fixture)).rejects.toThrow(
-        'prompt/result-schema checksum binding',
-      )
+      await expect(validateFixture(fixture)).rejects.toThrow('does not match the artifact manifest')
       await writeFile(promptPath, prompt)
 
       const schemaPath = path.join(fixture.runDirectory, packet.receipt.expectedResultSchema.path)
       const schema = await readFile(schemaPath)
       await writeFile(schemaPath, Buffer.concat([schema, Buffer.from('\n')]))
-      await expect(validateFixture(fixture)).rejects.toThrow(
-        'prompt/result-schema checksum binding',
-      )
+      await expect(validateFixture(fixture)).rejects.toThrow('does not match the artifact manifest')
       await writeFile(schemaPath, schema)
 
       const runDefinitionPath = path.join(fixture.runDirectory, 'run-definition.json')
       const runDefinition = await readFile(runDefinitionPath)
       await writeFile(runDefinitionPath, Buffer.concat([runDefinition, Buffer.from('\n')]))
-      await expect(validateFixture(fixture)).rejects.toThrow(
-        'Run definition is not checksum-bound by the V3 artifact manifest',
-      )
+      await expect(validateFixture(fixture)).rejects.toThrow('does not match the artifact manifest')
       await writeFile(runDefinitionPath, runDefinition)
+
+      const missingReceiptRun = path.join(fixture.root, 'missing-receipt-run')
+      await cp(fixture.runDirectory, missingReceiptRun, { recursive: true })
+      await rm(path.join(missingReceiptRun, 'execution-receipts'), {
+        recursive: true,
+        force: true,
+      })
+      await expect(
+        validateGoldEnrichmentV3Results({
+          runDirectory: missingReceiptRun,
+          resultsDirectory: fixture.resultsDirectory,
+          workspaceRoot: fixture.root,
+          publishReports: false,
+        }),
+      ).rejects.toThrow('Execution receipt directory is missing')
+
+      const driftedReceiptRun = path.join(fixture.root, 'drifted-receipt-run')
+      await cp(fixture.runDirectory, driftedReceiptRun, { recursive: true })
+      const [executionReceiptFilename] = await readdir(
+        path.join(driftedReceiptRun, 'execution-receipts'),
+      )
+      const driftedReceiptPath = path.join(
+        driftedReceiptRun,
+        'execution-receipts',
+        executionReceiptFilename,
+      )
+      const driftedReceipt = JSON.parse(await readFile(driftedReceiptPath, 'utf8')) as Record<
+        string,
+        unknown
+      >
+      ;(driftedReceipt.canonicalManifest as Record<string, unknown>).sha256 = '0'.repeat(64)
+      await writeFile(driftedReceiptPath, serializeGoldEnrichmentV3Json(driftedReceipt), 'utf8')
+      await expect(
+        validateGoldEnrichmentV3Results({
+          runDirectory: driftedReceiptRun,
+          resultsDirectory: fixture.resultsDirectory,
+          workspaceRoot: fixture.root,
+          publishReports: false,
+        }),
+      ).rejects.toThrow('does not bind the canonical preparation')
+
+      const badManifestRun = path.join(fixture.root, 'bad-manifest-run')
+      await cp(fixture.runDirectory, badManifestRun, { recursive: true })
+      const badManifestPath = path.join(badManifestRun, 'artifact-manifest.json')
+      const badManifest = JSON.parse(
+        await readFile(badManifestPath, 'utf8'),
+      ) as SyntheticCanonicalManifest
+      badManifest.canonicalFileCount -= 1
+      await writeFile(badManifestPath, serializeGoldEnrichmentV3Json(badManifest), 'utf8')
+      await expect(
+        validateGoldEnrichmentV3Results({
+          runDirectory: badManifestRun,
+          resultsDirectory: fixture.resultsDirectory,
+          workspaceRoot: fixture.root,
+          publishReports: false,
+        }),
+      ).rejects.toThrow('Artifact manifest does not match the V3 workflow contract')
 
       const forbiddenTarget = path.join(fixture.root, 'held-out-shadow')
       const safeAlias = path.join(fixture.root, 'safe-run-alias')
@@ -1539,10 +2324,15 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
       'size',
       630,
     )
+    expect([...cohortKeys[0]].filter((key) => cohortKeys[1].has(key))).toEqual([])
+    expect([...cohortKeys[0]].filter((key) => cohortKeys[2].has(key))).toEqual([])
+    expect([...cohortKeys[1]].filter((key) => cohortKeys[2].has(key))).toEqual([])
 
     const metadata: GoldEnrichmentV3ReviewWorkbookMetadata = {
       workflow_id: GOLD_ENRICHMENT_V3_WORKFLOW_ID,
       workflow_schema_version: GOLD_ENRICHMENT_V3_WORKFLOW_SCHEMA_VERSION,
+      merged_schema_version: GOLD_ENRICHMENT_V3_MERGED_SCHEMA_VERSION,
+      prompt_template_version: GOLD_ENRICHMENT_V3_PROMPT_TEMPLATE_VERSION,
       result_schema_version: GOLD_ENRICHMENT_V3_RESULT_SCHEMA_VERSION,
       taxonomy_version: GOLD_ENRICHMENT_V3_TAXONOMY_VERSION,
       label_schema_version: GOLD_ENRICHMENT_V3_LABEL_SCHEMA_VERSION,
@@ -1701,15 +2491,26 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
         outputDirectory: mergeDirectory,
         workspaceRoot: fixture.root,
       }
-      for (const [relativePath, label] of [
-        ['full-text-registry-v3.csv', 'Full-text registry'],
-        ['full-text-registry-v3.receipt.json', 'Full-text registry receipt'],
+      const independentModelRequestPmid = SYNTHETIC_WORKFLOW.sourceRows[144].pmid
+      const independentModelRequestFile = [...fixture.files.values()].find(
+        (file) =>
+          file.family === 'included_metadata_only' &&
+          file.rows.some((row) => row.pmid === independentModelRequestPmid),
+      )!
+      await writeMutatedResult(fixture, independentModelRequestFile, (rows) => {
+        const row = rows.find((candidate) => candidate.pmid === independentModelRequestPmid)
+        expect(row).toBeDefined()
+        row!.model_requests_physician_enrichment_review = 'true'
+      })
+      for (const relativePath of [
+        'full-text-registry-v3.csv',
+        'full-text-registry-v3.receipt.json',
       ] as const) {
         const artifactPath = path.join(fixture.runDirectory, relativePath)
         const original = await readFile(artifactPath)
         await writeFile(artifactPath, Buffer.concat([original, Buffer.from('\n')]))
         await expect(mergeGoldEnrichmentV3(mergeOptions)).rejects.toThrow(
-          `${label} is not checksum-bound by the V3 artifact manifest`,
+          `Canonical artifact ${relativePath} does not match the artifact manifest`,
         )
         await writeFile(artifactPath, original)
       }
@@ -1760,9 +2561,7 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
       )
       const registryDriftManifest = JSON.parse(
         await readFile(registryDriftManifestPath, 'utf8'),
-      ) as {
-        canonicalArtifacts: Array<{ path: string; bytes: number; sha256: string }>
-      }
+      ) as SyntheticCanonicalManifest
       registryDriftManifest.canonicalArtifacts = registryDriftManifest.canonicalArtifacts.map(
         (identity) => {
           if (identity.path === registryDriftIdentity.path) return registryDriftIdentity
@@ -1775,12 +2574,11 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
       await Promise.all([
         writeFile(registryDriftPath, registryDriftText, 'utf8'),
         writeFile(registryDriftReceiptPath, registryDriftReceiptText, 'utf8'),
-        writeFile(
-          registryDriftManifestPath,
-          serializeGoldEnrichmentV3Json(registryDriftManifest),
-          'utf8',
-        ),
       ])
+      await writeSyntheticManifestAndRebindExecutionReceipt(
+        registryDriftRunDirectory,
+        registryDriftManifest,
+      )
       await expect(
         mergeGoldEnrichmentV3({
           ...mergeOptions,
@@ -1793,21 +2591,14 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
         fixture,
         inputs.localData,
       )
-      const selfConsistentValidation = await validateIsolatedResults({
-        runDirectory: packetDrift.runDirectory,
-        resultsDirectory: packetDrift.resultsDirectory,
-        workspaceRoot: fixture.root,
-        publishReports: false,
-      })
-      expect(selfConsistentValidation.report.valid).toBe(true)
       await expect(
-        mergeGoldEnrichmentV3({
-          ...mergeOptions,
+        validateIsolatedResults({
           runDirectory: packetDrift.runDirectory,
           resultsDirectory: packetDrift.resultsDirectory,
-          outputDirectory: path.join(inputs.localData, 'literature', 'packet-drift-merge'),
+          workspaceRoot: fixture.root,
+          publishReports: false,
         }),
-      ).rejects.toThrow(/canonical source binding failed.*field journal/iu)
+      ).rejects.toThrow(/not identity-bound by the model-facing inventory and audit/iu)
 
       const firstMerge = await mergeGoldEnrichmentV3(mergeOptions)
       const repeatedMerge = await mergeGoldEnrichmentV3(mergeOptions)
@@ -1834,6 +2625,40 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
         repeatedMerge.artifacts.every((artifact) => artifact.publication === 'verified_existing'),
       ).toBe(true)
       expect(firstMerge.rows).toHaveLength(630)
+      const modelRequestedRows = firstMerge.rows.filter(
+        (row) => row.model_requests_physician_enrichment_review === 'true',
+      )
+      expect(modelRequestedRows.map((row) => row.pmid)).toEqual([independentModelRequestPmid])
+      expect(modelRequestedRows[0]).toMatchObject({
+        coordinator_requires_physician_enrichment_review: 'true',
+      })
+      expect(modelRequestedRows[0].coordinator_review_reasons.split('|')).toContain(
+        'model_requests_physician_enrichment_review',
+      )
+      const adjacentRows = firstMerge.rows.filter(
+        (row) => row.physician_final_label === 'include_adjacent',
+      )
+      expect(adjacentRows).toHaveLength(75)
+      expect(
+        adjacentRows.every(
+          (row) =>
+            row.model_requests_physician_enrichment_review === 'false' &&
+            row.coordinator_requires_physician_enrichment_review === 'true' &&
+            row.coordinator_review_reasons.split('|').includes('include_adjacent'),
+        ),
+      ).toBe(true)
+      const fullTextManifestPmids = new Set(SYNTHETIC_WORKFLOW.registryRows.map((row) => row.pmid))
+      expect(fullTextManifestPmids).toHaveProperty('size', 56)
+      expect(
+        firstMerge.rows
+          .filter((row) => fullTextManifestPmids.has(row.pmid))
+          .every(
+            (row) =>
+              row.model_requests_physician_enrichment_review === 'false' &&
+              row.coordinator_requires_physician_enrichment_review === 'true' &&
+              row.coordinator_review_reasons.split('|').includes('full_text_manifest'),
+          ),
+      ).toBe(true)
       expect(firstMerge.rows.filter((row) => row.full_text_used === 'true')).toHaveLength(50)
       expect(
         firstMerge.rows
@@ -1917,7 +2742,41 @@ describe('gold enrichment V3 deterministic workflow acceptance', () => {
       expect(directQaTargetPmids).toHaveProperty('size', 44)
       expect([...directQaTargetPmids].every((pmid) => requiredReviewPmids.has(pmid))).toBe(true)
       expect(upgradeOverlay.every((row) => requiredReviewPmids.has(row.pmid))).toBe(true)
-      expect(['41229759', '18453348'].every((pmid) => requiredReviewPmids.has(pmid))).toBe(true)
+      const mergedByPmid = new Map(firstMerge.rows.map((row) => [row.pmid, row]))
+      expect(
+        [...directQaTargetPmids].every((pmid) => {
+          const row = mergedByPmid.get(pmid)
+          return (
+            row?.model_requests_physician_enrichment_review === 'false' &&
+            row.coordinator_requires_physician_enrichment_review === 'true' &&
+            row.coordinator_review_reasons.split('|').includes('direct_external_qa')
+          )
+        }),
+      ).toBe(true)
+      expect(
+        upgradeOverlay.every((upgrade) => {
+          const row = mergedByPmid.get(upgrade.pmid)
+          return (
+            row?.model_requests_physician_enrichment_review === 'false' &&
+            row.coordinator_requires_physician_enrichment_review === 'true' &&
+            row.coordinator_review_reasons.split('|').includes('taxonomy_v2_upgrade_candidate')
+          )
+        }),
+      ).toBe(true)
+      for (const pmid of ['16043961', '26033136']) {
+        expect(mergedByPmid.get(pmid)).toMatchObject({
+          model_requests_physician_enrichment_review: 'false',
+          coordinator_requires_physician_enrichment_review: 'true',
+          relevance_concern_review_flag: 'true',
+        })
+        expect(mergedByPmid.get(pmid)?.coordinator_review_reasons.split('|')).toContain(
+          'relevance_concern',
+        )
+      }
+      for (const pmid of ['41229759', '18453348']) {
+        expect(requiredReviewPmids.has(pmid)).toBe(true)
+        expect(mergedByPmid.get(pmid)?.model_requests_physician_enrichment_review).toBe('false')
+      }
 
       const reviewReceiptPath = path.join(reviewDirectory, 'review-cohorts.receipt.json')
       const reviewReceiptText = await readFile(reviewReceiptPath, 'utf8')

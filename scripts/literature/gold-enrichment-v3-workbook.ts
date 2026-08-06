@@ -23,6 +23,8 @@ export type GoldEnrichmentV3ReviewWorkbookControlledValues = Readonly<
 export interface GoldEnrichmentV3ReviewWorkbookMetadata {
   workflow_id: string
   workflow_schema_version: string
+  merged_schema_version: string
+  prompt_template_version: string
   result_schema_version: string
   taxonomy_version: string
   label_schema_version: string
@@ -53,7 +55,7 @@ export interface GoldEnrichmentV3ReviewWorkbookRow {
   full_text_evidence: string
   qa_concerns: string
   upgrade_concerns: string
-  review_reasons: string
+  coordinator_review_reasons: string
   topic_ids: string
   technology_tags: string
   technology_tag_status: string
@@ -63,7 +65,8 @@ export interface GoldEnrichmentV3ReviewWorkbookRow {
   study_design: string
   publication_status: string
   enrichment_confidence: string
-  requires_physician_enrichment_review: string
+  model_requests_physician_enrichment_review: string
+  coordinator_requires_physician_enrichment_review: string
   evidence_summary: string
   enrichment_rationale: string
   physician_action: string
@@ -327,11 +330,11 @@ const REVIEW_COLUMNS: readonly ReviewColumn[] = [
     value: (row) => row.enrichment_confidence,
   },
   {
-    key: 'requires_physician_enrichment_review',
-    header: 'v3_requires_physician_enrichment_review',
+    key: 'model_requests_physician_enrichment_review',
+    header: 'v3_model_requests_physician_enrichment_review',
     width: 30,
     group: 'proposal',
-    value: (row) => row.requires_physician_enrichment_review,
+    value: (row) => row.model_requests_physician_enrichment_review,
   },
   {
     key: 'evidence_summary',
@@ -348,11 +351,18 @@ const REVIEW_COLUMNS: readonly ReviewColumn[] = [
     value: (row) => row.enrichment_rationale,
   },
   {
-    key: 'review_reasons',
-    header: 'review_reasons',
+    key: 'coordinator_requires_physician_enrichment_review',
+    header: 'coordinator_requires_physician_enrichment_review',
+    width: 34,
+    group: 'concern',
+    value: (row) => row.coordinator_requires_physician_enrichment_review,
+  },
+  {
+    key: 'coordinator_review_reasons',
+    header: 'coordinator_review_reasons',
     width: 46,
     group: 'concern',
-    value: (row) => row.review_reasons,
+    value: (row) => row.coordinator_review_reasons,
   },
   {
     key: 'qa_concerns',
@@ -618,6 +628,8 @@ function metadataEntries(
   return [
     ['workflow_id', metadata.workflow_id],
     ['workflow_schema_version', metadata.workflow_schema_version],
+    ['merged_schema_version', metadata.merged_schema_version],
+    ['prompt_template_version', metadata.prompt_template_version],
     ['result_schema_version', metadata.result_schema_version],
     ['taxonomy_version', metadata.taxonomy_version],
     ['label_schema_version', metadata.label_schema_version],
@@ -689,6 +701,8 @@ function assertWorkbookInput(
   const metadataStrings = [
     metadata.workflow_id,
     metadata.workflow_schema_version,
+    metadata.merged_schema_version,
+    metadata.prompt_template_version,
     metadata.result_schema_version,
     metadata.taxonomy_version,
     metadata.label_schema_version,
@@ -900,6 +914,10 @@ function instructionsWorksheetXml(
     [
       'Independent proposal boundary',
       'Blue V3 proposal columns appear before external-QA and taxonomy-v2 upgrade concerns. QA and upgrade evidence is shown only after the independent proposal.',
+    ],
+    [
+      'Review flag boundary',
+      'The model review request is a raw self-assessment. Required Review membership and reasons are computed later by the local coordinator; a false model request never removes a coordinator-required row.',
     ],
     [
       'Editable cells',

@@ -8,8 +8,8 @@ list, or a second file.
 
 - Workflow ID: `gold-set-v1-enrichment-v3`
 - Workflow schema version: `3.0.0`
-- Prompt template version: `3.0.0`
-- Result schema version: `3.0.0`
+- Prompt template version: `3.0.1`
+- Result schema version: `3.0.1`
 - Taxonomy version: `2.0.0`
 - Enrichment label schema version: `2.0.0`
 - Enrichment artifact schema version: `2.0.0`
@@ -18,28 +18,31 @@ list, or a second file.
 - Source projection SHA-256: `{{SOURCE_PROJECTION_SHA256}}`
 
 Treat every identifier, packet field, source hash, file identity, physician relevance label, and
-physician relevance confidence as immutable. Do not reconsider relevance. Preserve every packet
-row exactly once and in exact source order. Do not add, omit, sort, deduplicate, or combine rows.
+physician relevance confidence as immutable. Do not reconsider relevance. The physician label and
+confidence are audit fields to copy verbatim, not evidence or predictive signals. They must not
+influence metadata sufficiency, taxonomy values, tag statuses, study design, publication status,
+enrichment confidence, the model's independent review request, or processing status. Preserve every
+packet row exactly once and in exact source order. Do not add, omit, sort, deduplicate, or combine
+rows.
 
 Use only the canonical metadata in the packet and the exact complete-full-text files uploaded with
-it. Do not browse the web, retrieve another record, use outside knowledge, infer missing pages or
-held-out membership, or use an old enrichment file. Do not use external-QA findings, suggested
-corrections, taxonomy-upgrade candidates, sampling data, selection rationale, or prior AI labels.
+it. Do not browse the web, retrieve another record, use outside knowledge, infer missing pages, or
+use information from another workflow or conversation.
 
 ## Verify the evidence files before classification
 
 For each row, match the uploaded file by expected filename, PMID, title/article identity, and
 manifest SHA-256 when checksum tools are available. Fail closed for any missing, duplicate,
-ambiguous, unreadable, truncated, preview-only, citation-only, or mismatched file. A title page,
-abstract page, first-page preview, citation page, or truncated publisher preview is not complete
-full text. Never substitute one row's file for another.
+ambiguous, unreadable, truncated, partial, citation-only, or mismatched file. A title page, abstract
+page, citation page, or incomplete publisher document is not complete full text. Never substitute
+one row's file for another.
 
 ## Exact CSV header
 
 Write these columns exactly, in this order:
 
 ```text
-packet_id,packet_family,workflow_id,prompt_template_version,result_schema_version,taxonomy_version,label_schema_version,enrichment_schema_version,source_projection_sha256,source_row_sha256,master_row_id,pmid,physician_final_label,physician_final_confidence,metadata_sufficiency,topic_ids,technology_tags,technology_tag_status,clinical_purposes,disease_tags,disease_tag_status,study_design,publication_status,categorization_from_full_text,full_text_used,full_text_filename,full_text_sha256,enrichment_confidence,requires_physician_enrichment_review,evidence_1_field,evidence_1_excerpt,evidence_1_location,evidence_2_field,evidence_2_excerpt,evidence_2_location,enrichment_rationale,processing_status,processing_error
+packet_id,packet_family,workflow_id,prompt_template_version,result_schema_version,taxonomy_version,label_schema_version,enrichment_schema_version,source_projection_sha256,source_row_sha256,master_row_id,pmid,physician_final_label,physician_final_confidence,metadata_sufficiency,topic_ids,technology_tags,technology_tag_status,clinical_purposes,disease_tags,disease_tag_status,study_design,publication_status,categorization_from_full_text,full_text_used,full_text_filename,full_text_sha256,enrichment_confidence,model_requests_physician_enrichment_review,evidence_1_field,evidence_1_excerpt,evidence_1_location,evidence_2_field,evidence_2_excerpt,evidence_2_location,enrichment_rationale,processing_status,processing_error
 ```
 
 Copy packet constants, `source_row_sha256`, identifiers, physician fields, expected filename, and
@@ -233,19 +236,19 @@ For every `valid` row:
    excerpts.
 6. Give a concise rationale grounded only in the recorded evidence.
 
-Set `requires_physician_enrichment_review=true` for every `include_adjacent` row; every `moderate`
-or `low` enrichment confidence; limited, absent, or conflicting abstract metadata; either optional
-tag status `not_assessable`; a not-assessable study design or publication status; multiple
-materially plausible classifications; every full-text-manifest record; and the protocol-designated
-relevance-concern records, PMID `16043961` and PMID `26033136`. This flag must never change
-relevance. PMID `16043961` is preview-only and therefore can never appear in a complete-full-text
-packet.
+`model_requests_physician_enrichment_review` is the model's independent self-assessment. For a
+`valid` row, set it to `true` only when the supplied article evidence leaves unresolved material
+ambiguity or is internally conflicting; otherwise set it to `false`. Do not derive it mechanically
+from any immutable input field or controlled output value, including physician label, physician
+confidence, packet family, PMID, the presence of complete text, metadata sufficiency, enrichment
+confidence, optional-tag status, study design, or publication status. The flag does not determine
+any final review cohort and must never alter relevance.
 
 If any evidence check fails, preserve the row and fixed fields, expected filename, and expected
 hash; set `processing_status=error`, explain the exact failure in `processing_error`, set
-`requires_physician_enrichment_review=true`, leave classification/evidence/rationale fields blank,
+`model_requests_physician_enrichment_review=true`, leave classification/evidence/rationale fields blank,
 and set `full_text_used=false` and `categorization_from_full_text=false`. Do not fall back to a
-preview or outside source and do not fabricate a classification.
+partial document or outside source and do not fabricate a classification.
 
 ## Required self-validation before returning the file
 

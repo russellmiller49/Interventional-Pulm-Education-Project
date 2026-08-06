@@ -1,5 +1,9 @@
 # Gold-set V3 enrichment workflow
 
+> Artifact category: `coordinator_only`. Never upload or paste this document into a classification
+> conversation. It contains post-result policy and global workflow information that are deliberately
+> absent from model-facing inputs.
+
 ## Purpose and boundary
 
 `gold-set-v1-enrichment-v3` is a deterministic, file-based workflow for independently proposing
@@ -18,8 +22,10 @@ database-import rows, download full text, or access held-out identities.
 | -------------------------------- | --------------------------- |
 | Workflow ID                      | `gold-set-v1-enrichment-v3` |
 | Workflow schema                  | `3.0.0`                     |
-| Prompt template                  | `3.0.0`                     |
-| Result schema                    | `3.0.0`                     |
+| Prompt template                  | `3.0.1`                     |
+| Raw packet result schema         | `3.0.1`                     |
+| Raw merge schema                 | `1.0.0`                     |
+| Merged artifact schema           | `3.0.1`                     |
 | Enrichment taxonomy              | `2.0.0`                     |
 | Enrichment label schema          | `2.0.0`                     |
 | Enrichment artifact schema       | `2.0.0`                     |
@@ -30,6 +36,12 @@ database-import rows, download full text, or access held-out identities.
 Taxonomy V2 is explicitly selected and has no `latest` alias. Historical review payloads, the gold
 review workspace, database RPCs, and the 35-column review import/export contract remain V1. V3
 artifacts are standalone and non-importable.
+
+Prompt template `3.0.0` and every preparation generated from it are superseded, non-executable
+historical evidence. In particular, `enrichment-v3-real-prep-a`, `enrichment-v3-real-prep-b`,
+`enrichment-v3-mergecheck-c`, and `enrichment-v3-mergecheck-d` must never be used for a real
+classification. Preserve them unchanged for audit history. Only a corrected preparation using
+prompt and raw-result schema `3.0.1` with a passing model-input independence audit is executable.
 
 ## Tracked configuration identity
 
@@ -124,20 +136,48 @@ checksum-bound binary. A nonblank excerpt never by itself establishes that the q
 | `excluded_metadata_sufficiency` |  272 |                 100 | Canonical metadata; no taxonomy              |
 
 Every packet has an ID, family, ordinal, row count, exact ordered identity list, source-projection
-hash, CSV, receipt, prompt path and hash, expected output filename, and expected schema/version.
-Packetization preserves canonical source order and is byte-deterministic.
+hash, CSV, operator-only receipt, fully rendered model-facing prompt path and hash, expected output
+filename, and expected schema/version. Complete-full-text packets also have a packet-scoped
+model-facing file manifest. Every packet bundle references each authorized model-facing input by
+its `inventoryPath`. Packetization preserves canonical source order and is byte-deterministic.
 
-Packets use an explicit metadata allowlist. They never contain prior enrichment, V1 taxonomy
-labels, external-QA suggestions, taxonomy-upgrade candidates, sampling stratum, sampling reason,
-screening score, triage rationale, or a reason for review selection. QA and upgrade inputs are
-checksum-bound by the run definition but cannot enter a model packet.
+Model-facing packet CSVs use family-specific allowlists. All families contain only packet/version
+constants, hashes, canonical article metadata, immutable identifiers, and the immutable physician
+relevance label and confidence. Only a complete-full-text packet may add its exact expected file
+name and SHA-256. Model-facing packets never contain a precomputed metadata-sufficiency constraint,
+registry status, selection rationale, coordinator evidence, or post-result decision.
+
+The fixed physician label and confidence are copy-only audit fields. A model must not use them to
+determine metadata sufficiency, taxonomy, optional tags, design, publication status, result
+confidence, its independent review request, or processing status.
 
 ## Prompt and result rules
 
-The tracked prompts are under `docs/ip-literature/gold-enrichment-v3-prompts/`. Each prompt requires
-one downloadable CSV only, prohibits web browsing and outside knowledge, preserves exact row order
-and immutable fields, selects V2 explicitly, requires verbatim supplied evidence, and requires the
-model to reopen and parse its CSV before returning it.
+The tracked source templates are under `docs/ip-literature/gold-enrichment-v3-prompts/` and are
+operator-only generator inputs. They must never be pasted directly. Preparation renders one
+checksum-bound model-facing prompt per packet with no unresolved placeholders. Each rendered prompt
+requires one downloadable CSV only, prohibits web browsing and outside knowledge, preserves exact
+row order and immutable fields, selects V2 explicitly, requires verbatim supplied evidence, and
+requires the model to reopen and parse its CSV before returning it.
+
+`model_requests_physician_enrichment_review` is only the raw model self-assessment. For a valid row,
+it may be true only when the supplied article evidence leaves unresolved material ambiguity or is
+internally conflicting. A processing or evidence failure requires it to be true. No fixed input
+field, packet family, file cohort, controlled output value, or coordinator rule may determine it.
+The model never determines the final coordinator cohort.
+
+Preparation writes a deterministic model-facing inventory and model-input independence audit. The
+inventory is the sole authority for what an operator may supply in a single classification
+conversation. The audit verifies exact packet columns, rendered-prompt normalization, absence of
+article identifiers from prompts, packet-scoped file-manifest membership, category separation, and
+forbidden coordinator content. A failing audit makes a preparation non-executable.
+
+The inventory contains exactly 100 logical `model_facing` entries. Fifty are generated artifacts:
+20 packet CSVs, 20 rendered prompts, and 10 packet-scoped complete-full-text manifests. The other 50
+are checksum-bound external complete-full-text PDFs marked `external=true` and `generated=false`.
+External PDFs are logical model inputs, not generated preparation artifacts; preparation neither
+copies nor generates them. Each packet bundle binds its generated and external entries through
+their `inventoryPath` values.
 
 The exact result schemas are:
 
@@ -206,11 +246,26 @@ metadata or identities, partial packets, malformed booleans, aliases, unsupporte
 on exclusions, incomplete included taxonomy, wrong full-text flags, and preview/missing full-text
 claims. It never corrects a returned value.
 
+The validator preserves `model_requests_physician_enrichment_review` as a distinct raw boolean. It
+requires `true` for a processing or evidence failure, but it does not infer the flag from relevance,
+confidence, packet family, full-text membership, metadata sufficiency, taxonomy, or any other
+controlled result. Prompt `3.0.0` results and all other superseded version identities are rejected.
+
 The validator also applies local safety constraints that are deliberately absent from model input.
 Those constraints may reject a result, but must never rewrite it or inject a replacement taxonomy
 value.
 
-## Deterministic merge and reconciliation
+## Operator-only raw-result merge
+
+`npm run literature:merge-gold-enrichment-v3-raw-results` revalidates complete packet coverage and
+combines all 630 raw rows into one deterministic union-column CSV. It reads only the preparation
+and immutable raw-result directories. Every family-specific raw field is copied byte-for-byte as a
+CSV value; only blank cells are added where a column does not exist in that family's result schema.
+The raw model request remains distinct. This stage does not read prior enrichment, external-QA
+evidence, the taxonomy-upgrade plan, relevance concerns, or other coordinator evidence; compute
+review eligibility; apply a suggestion; or change an enrichment value.
+
+## Deterministic coordinator merge and reconciliation
 
 `npm run literature:merge-gold-enrichment-v3` requires complete validated coverage and produces one
 630-row candidate in canonical order: 358 enriched inclusions, 272 exclusion assessments, exactly
@@ -224,10 +279,12 @@ master-row, screening-row, and PMID identities plus all eight physician-decision
 title, abstract, journal, and publication year are copied from the authoritative source to retain
 review context; prior enrichment never supplies those fields. The row then carries the independent
 taxonomy or exclusion assessment, normalized evidence slots, full-text identity when actually
-used, three post-merge review-overlay flags, physician-enrichment review fields, enrichment
-provenance, and protocol-authorization state. `import_ready` is fixed to `false`, and
-`database_mutation_plan` is fixed blank. The schema rejects historical V1 enrichment as a V3
-proposal and prevents unreviewed rows from claiming physician-confirmed provenance.
+used, the raw `model_requests_physician_enrichment_review` value, the separately computed
+`coordinator_requires_physician_enrichment_review` value, three post-merge review-overlay flags,
+physician-enrichment review fields, enrichment provenance, and protocol-authorization state.
+`import_ready` is fixed to `false`, and `database_mutation_plan` is fixed blank. The merged schema is
+`3.0.1`; it rejects historical V1 enrichment as a V3 proposal and prevents unreviewed rows from
+claiming physician-confirmed provenance.
 
 The merge also writes packet coverage, controlled-value validation, full-text usage, prior-version
 comparison, external-QA overlay, taxonomy-upgrade overlay, and physician-review-candidate reports.
@@ -254,10 +311,12 @@ nonoverlapping cohorts:
 2. QC Sample 50
 3. Protocol-Based Acceptance Candidates
 
-Required review is the deterministic union of all adjacent inclusions, all full-text-manifest
-records and exceptions, relevance concerns, all upgrade candidates, direct QA targets,
-moderate/low-confidence results, not-assessable optional tags, unresolved design/status, limited or
-absent metadata, disagreements, and invalid/warning results. Duplicate records appear once.
+Required review is the deterministic union of the raw model request and all local coordinator
+triggers: adjacent inclusions, full-text-manifest records and exceptions, relevance concerns,
+upgrade candidates, direct QA targets, moderate/low-confidence results, not-assessable optional
+tags, unresolved design/status, limited or absent metadata, disagreements, and invalid/warning
+results. A raw model value of `false` never removes a coordinator-required row, while a value of
+`true` adds the row. Duplicate records appear once.
 
 The QC sample contains 25 otherwise eligible `include_core` rows and 25 otherwise eligible
 exclusions selected by stable SHA-256 rank. Required-review, relevance-concern, full-text-exception,
@@ -334,6 +393,14 @@ strict UTF-8 round-trip validation. Two fresh preparations from identical inputs
 byte-identical canonical artifacts. Execution timestamps belong only in separate noncanonical
 receipts.
 
+Every generated file and referenced external model input has exactly one category: `model_facing`,
+`operator_only`, or `coordinator_only`. The model-facing inventory lists per-packet upload paths and
+hashes but is itself operator-only. Operator-only controls—including this workflow's operator guide
+and handoff, source prompt templates, packet receipts, raw-result schemas, the packet index, the
+global artifact manifest, the model-facing inventory, and audit reports—are never supplied to a
+classification conversation. Coordinator-only controls—including the full registry and receipt,
+run definition, merged schema, and every post-result artifact—are also never supplied.
+
 ## Operator command sequence
 
 Run preparation only from a clean tracked checkout. Set the external evidence paths explicitly;
@@ -378,6 +445,7 @@ directory. The remaining local stages are:
 ```bash
 V3_RAW_RESULTS='local-data/literature/gold-sets/gold-set-v1/enrichment-v3/raw-results'
 V3_VALIDATION_DIR='local-data/literature/gold-sets/gold-set-v1/enrichment-v3/validation'
+V3_RAW_MERGE_DIR='local-data/literature/gold-sets/gold-set-v1/enrichment-v3/raw-merge'
 V3_PRIOR_ENRICHMENT='/absolute/path/gold-set-v1_enrichment_results_full-text-reconciled-v2_quality-cleaned_630.csv'
 V3_MERGE_DIR='local-data/literature/gold-sets/gold-set-v1/enrichment-v3/merge'
 V3_REVIEW_DIR='local-data/literature/gold-sets/gold-set-v1/enrichment-v3/review'
@@ -388,6 +456,12 @@ npm run literature:validate-gold-enrichment-v3-results -- \
   --results-dir "$V3_RAW_RESULTS" \
   --output-dir "$V3_VALIDATION_DIR"
 
+npm run literature:merge-gold-enrichment-v3-raw-results -- \
+  --run-dir "$V3_RUN_DIR" \
+  --results-dir "$V3_RAW_RESULTS" \
+  --output-dir "$V3_RAW_MERGE_DIR"
+
+# Coordinator-only stages begin here. The raw operator handoff ends above.
 npm run literature:merge-gold-enrichment-v3 -- \
   --run-dir "$V3_RUN_DIR" \
   --results-dir "$V3_RAW_RESULTS" \
@@ -417,14 +491,15 @@ bytes.
 
 ## Exact artifact inventory
 
-| Stage             | Deterministic outputs                                                                                                                                                                                                                                                                                                                         |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Preparation       | `run-definition.json`, `artifact-manifest.json`, `packet-index.json`, `full-text-registry-v3.csv`, `full-text-registry-v3.receipt.json`, five files below `prompts/`, four files below `schemas/`, and each `packets/<family>/<packet-id>.csv` plus matching `.receipt.json`                                                                  |
-| Manual raw result | One `<packet-id>.result.csv` per packet, using the exact filename in its receipt; raw files are never rewritten                                                                                                                                                                                                                               |
-| Validation        | `packet-validation-report.json`, `controlled-value-validation-report.json`, `result-coverage-report.json`                                                                                                                                                                                                                                     |
-| Merge             | `gold-set-v1-enrichment-v3-merged.csv`, `gold-set-v1-enrichment-v3-merged.receipt.json`, `packet-coverage-report.json`, `controlled-value-validation-report.json`, `full-text-usage-report.json`, `comparison-against-prior-v1-v2.csv`, `external-qa-overlay.csv`, `taxonomy-v2-upgrade-overlay.csv`, `physician-review-candidate-report.csv` |
-| Review            | `gold-set-v1-enrichment-v3-physician-review.xlsx`, `required-review.csv`, `qc-sample-50.csv`, `protocol-acceptance-candidates.csv`, `review-cohorts.receipt.json`                                                                                                                                                                             |
-| Readiness         | `readiness-audit.json` only; no import file is ever produced                                                                                                                                                                                                                                                                                  |
+| Stage             | Deterministic outputs                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Preparation       | `run-definition.json`, `artifact-manifest.json`, `packet-index.json`, `model-facing-inventory.json`, `model-input-independence-audit.json`, `full-text-registry-v3.csv`, `full-text-registry-v3.receipt.json`, operator-only source templates/README/handoff, four schemas, 20 packet CSVs plus their operator-only receipts, 20 rendered model-facing prompts, and ten packet-scoped complete-full-text manifests (50 generated model-facing artifacts total); the inventory additionally records 50 checksum-bound external PDFs as logical model-facing entries, not generated outputs |
+| Manual raw result | One `<packet-id>.result.csv` per packet, using the exact filename in its receipt; raw files are never rewritten                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Validation        | `packet-validation-report.json`, `controlled-value-validation-report.json`, `result-coverage-report.json`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Raw-result merge  | `gold-set-v1-enrichment-v3-raw-merged.csv`, `gold-set-v1-enrichment-v3-raw-merged.receipt.json`; no coordinator inputs or decisions                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Merge             | `gold-set-v1-enrichment-v3-merged.csv`, `gold-set-v1-enrichment-v3-merged.receipt.json`, `packet-coverage-report.json`, `controlled-value-validation-report.json`, `full-text-usage-report.json`, `comparison-against-prior-v1-v2.csv`, `external-qa-overlay.csv`, `taxonomy-v2-upgrade-overlay.csv`, `physician-review-candidate-report.csv`                                                                                                                                                                                                                                             |
+| Review            | `gold-set-v1-enrichment-v3-physician-review.xlsx`, `required-review.csv`, `qc-sample-50.csv`, `protocol-acceptance-candidates.csv`, `review-cohorts.receipt.json`                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Readiness         | `readiness-audit.json` only; no import file is ever produced                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 Preparation also writes a noncanonical
 `execution-receipts/execution-<execution-time>.json`. It is intentionally excluded from the

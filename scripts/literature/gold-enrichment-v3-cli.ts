@@ -13,6 +13,7 @@ import {
   auditGoldEnrichmentV3Readiness,
   buildGoldEnrichmentV3Review,
   mergeGoldEnrichmentV3,
+  mergeGoldEnrichmentV3RawResults,
   validateGoldEnrichmentV3Results,
 } from './gold-enrichment-v3-results'
 
@@ -22,6 +23,7 @@ Deterministic file-only gold-set-v1 enrichment V3 workflow.
 Commands:
   npm run literature:prepare-gold-enrichment-v3 -- [options]
   npm run literature:validate-gold-enrichment-v3-results -- [options]
+  npm run literature:merge-gold-enrichment-v3-raw-results -- [options]
   npm run literature:merge-gold-enrichment-v3 -- [options]
   npm run literature:build-gold-enrichment-v3-review -- [options]
   npm run literature:audit-gold-enrichment-v3-readiness -- [options]
@@ -43,7 +45,10 @@ Preparation options:
 Validation options:
   --run-dir <dir> --results-dir <dir> --output-dir <dir>
 
-Merge options:
+Raw-result merge options (operator-only; no coordinator inputs):
+  --run-dir <dir> --results-dir <dir> --output-dir <dir>
+
+Coordinator merge options:
   --run-dir <dir> --results-dir <dir> --source <csv> --prior-enrichment <csv>
   --qa-findings <csv> --upgrade-plan <json> --output-dir <dir>
 
@@ -154,6 +159,10 @@ async function prepare(arguments_: ParsedCliArguments, workspaceRoot: string) {
   console.log(`Packet rows: ${JSON.stringify(familyRows)}`)
   console.log(`Run definition SHA-256: ${result.runDefinition.sha256}`)
   console.log(`Full-text registry SHA-256: ${result.fullTextRegistry.sha256}`)
+  console.log(`Model-facing inventory SHA-256: ${result.modelFacingInventory.sha256}`)
+  console.log(
+    `Model-input independence audit SHA-256: ${result.modelInputIndependenceAudit.sha256}`,
+  )
   console.log(`Canonical manifest SHA-256: ${result.canonicalManifest.sha256}`)
 }
 
@@ -169,6 +178,18 @@ async function validate(arguments_: ParsedCliArguments, workspaceRoot: string) {
     `Validated ${result.report.packetCoverage.validPackets}/${result.report.packetCoverage.expectedPackets} packets and ${result.report.packetCoverage.validRows}/${result.report.packetCoverage.expectedRows} rows.`,
   )
   if (!result.report.valid) process.exitCode = 1
+}
+
+async function mergeRaw(arguments_: ParsedCliArguments, workspaceRoot: string) {
+  assertKnownArguments(arguments_, ['help', 'output-dir', 'results-dir', 'run-dir'])
+  const result = await mergeGoldEnrichmentV3RawResults({
+    runDirectory: absolute(workspaceRoot, required(arguments_, 'run-dir')),
+    resultsDirectory: absolute(workspaceRoot, required(arguments_, 'results-dir')),
+    outputDirectory: absolute(workspaceRoot, required(arguments_, 'output-dir')),
+    workspaceRoot,
+  })
+  console.log(`Raw-merged ${result.rows.length} validated rows: ${result.rawMergedArtifact.sha256}`)
+  console.log(`Receipt: ${result.receiptArtifact.sha256}`)
 }
 
 async function merge(arguments_: ParsedCliArguments, workspaceRoot: string) {
@@ -254,6 +275,8 @@ export async function runGoldEnrichmentV3Cli(argv: string[], workspaceRoot = pro
       return prepare(arguments_, workspaceRoot)
     case 'validate':
       return validate(arguments_, workspaceRoot)
+    case 'merge-raw':
+      return mergeRaw(arguments_, workspaceRoot)
     case 'merge':
       return merge(arguments_, workspaceRoot)
     case 'review':

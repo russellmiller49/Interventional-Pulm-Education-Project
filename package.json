@@ -61,6 +61,7 @@
     "literature:build-gold-enrichment-source": "tsx scripts/literature/build-gold-enrichment-source.ts",
     "literature:prepare-gold-enrichment-v3": "tsx scripts/literature/gold-enrichment-v3-cli.ts prepare",
     "literature:validate-gold-enrichment-v3-results": "tsx scripts/literature/gold-enrichment-v3-cli.ts validate",
+    "literature:merge-gold-enrichment-v3-raw-results": "tsx scripts/literature/gold-enrichment-v3-cli.ts merge-raw",
     "literature:merge-gold-enrichment-v3": "tsx scripts/literature/gold-enrichment-v3-cli.ts merge",
     "literature:build-gold-enrichment-v3-review": "tsx scripts/literature/gold-enrichment-v3-cli.ts review",
     "literature:audit-gold-enrichment-v3-readiness": "tsx scripts/literature/gold-enrichment-v3-cli.ts readiness",
