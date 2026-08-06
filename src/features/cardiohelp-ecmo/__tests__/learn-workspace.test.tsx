@@ -48,6 +48,12 @@ const workspaceCss = readFileSync(
   'utf8',
 )
 
+/** The module stylesheet that owns the boxes between the activity viewport and the frame. */
+const moduleCss = readFileSync(
+  join(process.cwd(), 'src/features/cardiohelp-ecmo/components/cardiohelp-ecmo.module.css'),
+  'utf8',
+)
+
 /**
  * Viewport width minus the module shell, activity chrome, and viewport padding above the workspace.
  *
@@ -501,6 +507,260 @@ describe('B3: responsive behaviour at the four validated viewports', () => {
   })
 })
 
+describe('B5: the pane tabs are operable from the keyboard alone', () => {
+  /**
+   * The tab rows are the only way to reach a pane that the arrangement has taken off screen, so a
+   * learner who cannot operate them cannot reach the teaching or the prediction at all.
+   *
+   * They are authored as an ARIA tablist with a roving tabindex, which means exactly one tab is in
+   * the tab sequence and the arrow keys are what move between them. Without the arrow-key half the
+   * roving tabindex is not an affordance, it is a lock: `Tab` reaches the selected tab and there is
+   * no key that reaches the other two.
+   */
+  /**
+   * The lesson player moves focus to its step heading one animation frame after it mounts. That is
+   * its own behaviour and is asserted elsewhere; here it only has to have finished, so that what the
+   * arrow keys are measured against is the tab row rather than a frame still in flight.
+   */
+  async function settleStepFocus() {
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 32))
+    })
+  }
+
+  async function compactWorkspace() {
+    stubFrameWidth(1024 - CHROME_ALLOWANCE_PX)
+    render(<WorkspaceHarness initialScenarioId="preload-drainage-collapse" />)
+    notifyResize()
+    await waitFor(() => expect(frame()).toHaveAttribute('data-workspace-mode', 'compact'))
+    await settleStepFocus()
+  }
+
+  it('moves selection and focus with the arrow keys, and wraps at both ends', async () => {
+    await compactWorkspace()
+    const tabs = workspaceTabs() as HTMLElement[]
+    expect(tabs.map((tab) => tab.textContent)).toEqual([
+      'Live simulator',
+      'Teaching',
+      'Current task',
+    ])
+
+    tabs[0].focus()
+    fireEvent.keyDown(tabs[0], { key: 'ArrowRight' })
+    await waitFor(() => expect(tabs[1]).toHaveAttribute('aria-selected', 'true'))
+    expect(tabs[1]).toHaveFocus()
+
+    fireEvent.keyDown(tabs[1], { key: 'ArrowRight' })
+    await waitFor(() => expect(tabs[2]).toHaveAttribute('aria-selected', 'true'))
+
+    // Wrapping at the end is what keeps every pane reachable without counting keypresses.
+    fireEvent.keyDown(tabs[2], { key: 'ArrowRight' })
+    await waitFor(() => expect(tabs[0]).toHaveAttribute('aria-selected', 'true'))
+
+    fireEvent.keyDown(tabs[0], { key: 'ArrowLeft' })
+    await waitFor(() => expect(tabs[2]).toHaveAttribute('aria-selected', 'true'))
+  })
+
+  it('jumps to the first and last pane with Home and End', async () => {
+    await compactWorkspace()
+    const tabs = workspaceTabs() as HTMLElement[]
+
+    tabs[0].focus()
+    fireEvent.keyDown(tabs[0], { key: 'End' })
+    await waitFor(() => expect(tabs[2]).toHaveAttribute('aria-selected', 'true'))
+
+    fireEvent.keyDown(tabs[2], { key: 'Home' })
+    await waitFor(() => expect(tabs[0]).toHaveAttribute('aria-selected', 'true'))
+  })
+
+  it('keeps exactly one tab in the tab sequence and points each one at the pane it controls', async () => {
+    await compactWorkspace()
+    const tabs = workspaceTabs() as HTMLElement[]
+
+    expect(tabs.filter((tab) => tab.tabIndex === 0)).toHaveLength(1)
+    for (const tab of tabs) {
+      // A `tab` with nothing to control is an unfinished pattern: the pane it shows has to be named
+      // so assistive technology can follow the learner from the tab to the panel.
+      const controls = tab.getAttribute('aria-controls')
+      expect(controls).toBeTruthy()
+      const panel = document.getElementById(controls as string)
+      expect(panel).not.toBeNull()
+      expect(panel).toHaveAttribute('data-scroll-pane', tab.getAttribute('data-pane-tab'))
+    }
+  })
+
+  it('gives the laptop context tabs the same keyboard treatment', async () => {
+    stubFrameWidth(1280 - CHROME_ALLOWANCE_PX)
+    render(<WorkspaceHarness initialScenarioId="preload-drainage-collapse" />)
+    notifyResize()
+    await waitFor(() => expect(frame()).toHaveAttribute('data-workspace-mode', 'laptop'))
+    await settleStepFocus()
+
+    const tabs = workspaceTabs() as HTMLElement[]
+    expect(tabs).toHaveLength(2)
+    tabs[0].focus()
+    fireEvent.keyDown(tabs[0], { key: 'ArrowRight' })
+    await waitFor(() => expect(frame()).toHaveAttribute('data-workspace-context', 'secondary'))
+    expect(tabs[1]).toHaveFocus()
+  })
+})
+
+describe('B5: a pane that leaves the layout comes back where the learner left it', () => {
+  /**
+   * A browser resets `scrollTop` to 0 while a box is `display: none` and does not fire a scroll
+   * event on the way in or out, so the offset has to be recorded while the pane is on screen and
+   * written back when it returns. jsdom computes no layout and therefore never performs that reset,
+   * so the reset is applied here explicitly — otherwise the assertion would pass against a
+   * workspace that had no restoration logic at all.
+   */
+  it('restores each pane scroll offset across a context switch', async () => {
+    stubFrameWidth(1280 - CHROME_ALLOWANCE_PX)
+    render(<WorkspaceHarness initialScenarioId="preload-drainage-collapse" />)
+    notifyResize()
+    await waitFor(() => expect(frame()).toHaveAttribute('data-workspace-mode', 'laptop'))
+
+    const taskPane = document.querySelector('[data-scroll-pane="tertiary"]') as HTMLElement
+    taskPane.scrollTop = 640
+    fireEvent.scroll(taskPane)
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Teaching' }))
+    await waitFor(() => expect(frame()).toHaveAttribute('data-workspace-context', 'secondary'))
+    // What the browser does to a box it stops laying out.
+    taskPane.scrollTop = 0
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Current task' }))
+    await waitFor(() => expect(frame()).toHaveAttribute('data-workspace-context', 'tertiary'))
+    expect(taskPane.scrollTop).toBe(640)
+  })
+})
+
+describe('B5: the simulator survives every mode change, not only every tab change', () => {
+  it('keeps the console screen, the scenario, and the commitment across compact → laptop → wide', async () => {
+    stubFrameWidth(1024 - CHROME_ALLOWANCE_PX)
+    render(<WorkspaceHarness initialScenarioId="preload-drainage-collapse" />)
+    notifyResize()
+    await waitFor(() => expect(frame()).toHaveAttribute('data-workspace-mode', 'compact'))
+
+    // Put the simulator in a non-default state and commit an answer, so there is something to lose.
+    showTaskPane()
+    fireEvent.click(screen.getByRole('button', { name: /Inspect the starting pattern/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
+
+    const prediction = requireEcmoLearnPrediction('preload-drainage-collapse')
+    const best = prediction.item.choices.find((choice) => choice.plausibility === 'best')
+    if (!best) throw new Error('No best choice authored')
+    fireEvent.click(screen.getByRole('radio', { name: best.label }))
+    fireEvent.click(screen.getByRole('button', { name: /Commit this prediction/i }))
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Live simulator' }))
+    const parameters = document.getElementById('cardiohelp-screen-parameters')
+    if (!parameters) throw new Error('The console did not render the PARAM control')
+    fireEvent.click(parameters)
+    expect(screen.getByTestId('screen').textContent).toBe('parameters')
+
+    // The console element itself, so a remount is detectable rather than inferred from its output.
+    const consoleBefore = document.getElementById('cardiohelp-console')
+
+    for (const [width, expectedMode] of [
+      [1280, 'laptop'],
+      [1600, 'wide'],
+      [1024, 'compact'],
+      [1600, 'wide'],
+    ] as const) {
+      stubFrameWidth(width - CHROME_ALLOWANCE_PX)
+      notifyResize()
+      await waitFor(() => expect(frame()).toHaveAttribute('data-workspace-mode', expectedMode))
+
+      expect(document.getElementById('cardiohelp-console')).toBe(consoleBefore)
+      expect(screen.getByTestId('screen').textContent).toBe('parameters')
+      expect(screen.getByTestId('scenario').textContent).toBe('preload-drainage-collapse')
+      expect(screen.getByTestId('prediction').textContent).toContain('true|')
+      expect(document.querySelector('[data-answer-verdict]')).not.toBeNull()
+      expect(document.querySelectorAll('#cardiohelp-console')).toHaveLength(1)
+    }
+  })
+})
+
+describe('B5: the help request reveals the pane before it focuses the control', () => {
+  it('orders the reveal ahead of the focus, rather than merely doing both', async () => {
+    stubFrameWidth(1024 - CHROME_ALLOWANCE_PX)
+    render(<WorkspaceHarness initialScenarioId="startup-sensor-orientation" />)
+    notifyResize()
+    await waitFor(() => expect(frame()).toHaveAttribute('data-workspace-mode', 'compact'))
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Current task' }))
+    await waitFor(() => expect(frame()).toHaveAttribute('data-workspace-context', 'tertiary'))
+    advanceToPrediction()
+
+    /*
+     * Both orderings leave the control focused and on screen, so asserting the end state alone
+     * would pass against a workspace that focused a hidden box and revealed it afterwards — which
+     * is precisely what does not work in a browser, where `focus()` on an unlaid-out element does
+     * nothing at all. The timeline is what distinguishes them.
+     */
+    const timeline: string[] = []
+    const observer = new MutationObserver(() => {
+      if (frame()?.getAttribute('data-workspace-context') === 'primary') {
+        if (!timeline.includes('reveal')) timeline.push('reveal')
+      }
+    })
+    observer.observe(frame() as Node, {
+      attributes: true,
+      attributeFilter: ['data-workspace-context'],
+    })
+
+    const control = document.getElementById('cardiohelp-screen-parameters')
+    if (!control) throw new Error('The console did not render the PARAM control')
+    control.addEventListener('focus', () => {
+      if (!timeline.includes('focus')) timeline.push('focus')
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /Show me where/i }))
+    await waitFor(() => expect(control).toHaveFocus())
+    observer.disconnect()
+
+    expect(timeline).toEqual(['reveal', 'focus'])
+  })
+})
+
+describe('B5: every control the guided drill needs is reachable from the keyboard', () => {
+  it('reaches the choices, Commit, the verdict Continue, and both separators', async () => {
+    render(<WorkspaceHarness initialScenarioId="preload-drainage-collapse" />)
+
+    // The separators belong to the wide arrangement and are operable there.
+    const separators = screen.getAllByRole('separator')
+    expect(separators).toHaveLength(2)
+    for (const separator of separators) expect(separator.tabIndex).toBe(0)
+
+    fireEvent.click(screen.getByRole('button', { name: /Inspect the starting pattern/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
+
+    const prediction = requireEcmoLearnPrediction('preload-drainage-collapse')
+    for (const choice of prediction.item.choices) {
+      const radio = screen.getByRole('radio', { name: choice.label })
+      // A radio group is one tab stop with arrow keys inside it; every option must be operable.
+      expect(radio).toBeEnabled()
+      expect(radio.tabIndex).toBeGreaterThanOrEqual(-1)
+    }
+
+    const best = prediction.item.choices.find((choice) => choice.plausibility === 'best')
+    if (!best) throw new Error('No best choice authored')
+    const radio = screen.getByRole('radio', { name: best.label })
+    radio.focus()
+    expect(radio).toHaveFocus()
+
+    fireEvent.click(radio)
+    const commit = screen.getByRole('button', { name: /Commit this prediction/i })
+    commit.focus()
+    expect(commit).toHaveFocus()
+    fireEvent.click(commit)
+
+    const continueButton = screen.getByRole('button', { name: /^Continue$/i })
+    continueButton.focus()
+    expect(continueButton).toHaveFocus()
+  })
+})
+
 describe('B3: the layout rules jsdom cannot compute', () => {
   it('gives the laptop arrangement two columns with the two context panes sharing one', () => {
     expect(workspaceCss).toContain('.laptopWorkspace.laptopWorkspace {')
@@ -538,11 +798,27 @@ describe('B3: the layout rules jsdom cannot compute', () => {
     )
   })
 
-  it('bounds the frame on the viewport so the panes scroll rather than the page', () => {
-    expect(workspaceCss).toMatch(/--ecmo-learn-max-height: 58rem;/)
-    expect(workspaceCss).toMatch(/height: min\(\s*var\(--ecmo-learn-max-height\)/)
+  it('fills the activity viewport so the panes scroll rather than the page', () => {
+    // The frame takes the height it is given instead of estimating the chrome above it — an
+    // estimate that made the frame taller than its container and put a fourth scroller around
+    // three panes that already scroll.
+    expect(workspaceCss).toMatch(/\.workspaceFrame \{[^}]*height: 100%;/)
+    expect(workspaceCss).toMatch(
+      /\.workspaceFrame \{[^}]*max-height: var\(--ecmo-learn-max-height\)/,
+    )
+    expect(workspaceCss).not.toContain('--ecmo-learn-chrome')
     expect(workspaceCss).toMatch(
       /@media \(max-width: 840px\) \{\s*\.workspaceFrame \{\s*height: auto;/,
+    )
+  })
+
+  it('gives the frame a definite-height ancestor chain, on the Learn route only', () => {
+    // `height: 100%` resolves to nothing against an auto-height parent, so the two boxes between the
+    // activity viewport and the frame are made definite — and only for this route, because Practice
+    // and Assess share those class names.
+    expect(moduleCss).toMatch(/\.workbench\[data-learn-workspace='true'\] \{[^}]*height: 100%;/)
+    expect(moduleCss).toMatch(
+      /\.experiencePanel:has\(\[data-ecmo-learn-workspace\]\) \{[^}]*height: 100%;/,
     )
   })
 

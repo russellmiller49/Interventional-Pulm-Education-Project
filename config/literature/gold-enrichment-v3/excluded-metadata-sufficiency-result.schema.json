@@ -1,0 +1,225 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://interventionalpulm.com/schemas/literature/gold-enrichment-v3/excluded-metadata-sufficiency-result.schema.json",
+  "title": "Gold-set V3 excluded metadata-sufficiency result row",
+  "description": "A parsed CSV row for a final physician exclusion. The absence of taxonomy properties is intentional and enforced by additionalProperties=false.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-csv-columns": [
+    "packet_id",
+    "packet_family",
+    "workflow_id",
+    "prompt_template_version",
+    "result_schema_version",
+    "taxonomy_version",
+    "label_schema_version",
+    "enrichment_schema_version",
+    "source_projection_sha256",
+    "source_row_sha256",
+    "master_row_id",
+    "pmid",
+    "physician_final_label",
+    "physician_final_confidence",
+    "metadata_sufficiency",
+    "assessment_confidence",
+    "model_requests_physician_enrichment_review",
+    "evidence_field",
+    "evidence_excerpt",
+    "assessment_rationale",
+    "categorization_from_full_text",
+    "full_text_used",
+    "processing_status",
+    "processing_error"
+  ],
+  "required": [
+    "packet_id",
+    "packet_family",
+    "workflow_id",
+    "prompt_template_version",
+    "result_schema_version",
+    "taxonomy_version",
+    "label_schema_version",
+    "enrichment_schema_version",
+    "source_projection_sha256",
+    "source_row_sha256",
+    "master_row_id",
+    "pmid",
+    "physician_final_label",
+    "physician_final_confidence",
+    "metadata_sufficiency",
+    "assessment_confidence",
+    "model_requests_physician_enrichment_review",
+    "evidence_field",
+    "evidence_excerpt",
+    "assessment_rationale",
+    "categorization_from_full_text",
+    "full_text_used",
+    "processing_status",
+    "processing_error"
+  ],
+  "properties": {
+    "packet_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "packet_family": {
+      "const": "excluded_metadata_sufficiency"
+    },
+    "workflow_id": {
+      "const": "gold-set-v1-enrichment-v3"
+    },
+    "prompt_template_version": {
+      "const": "3.0.1"
+    },
+    "result_schema_version": {
+      "const": "3.0.1"
+    },
+    "taxonomy_version": {
+      "const": "2.0.0"
+    },
+    "label_schema_version": {
+      "const": "2.0.0"
+    },
+    "enrichment_schema_version": {
+      "const": "2.0.0"
+    },
+    "source_projection_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "source_row_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "master_row_id": {
+      "$ref": "#/$defs/positiveDecimal"
+    },
+    "pmid": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]{0,11}$"
+    },
+    "physician_final_label": {
+      "const": "exclude"
+    },
+    "physician_final_confidence": {
+      "$ref": "#/$defs/confidence"
+    },
+    "metadata_sufficiency": {
+      "$ref": "#/$defs/metadataSufficiency"
+    },
+    "assessment_confidence": {
+      "$ref": "#/$defs/confidenceOrBlank"
+    },
+    "model_requests_physician_enrichment_review": {
+      "$ref": "#/$defs/csvBoolean",
+      "description": "Raw model self-assessment based only on unresolved ambiguity, conflicting supplied metadata, or processing failure; it is not coordinator review eligibility."
+    },
+    "evidence_field": {
+      "$ref": "#/$defs/evidenceFieldOrBlank"
+    },
+    "evidence_excerpt": {
+      "type": "string",
+      "maxLength": 1200
+    },
+    "assessment_rationale": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "categorization_from_full_text": {
+      "const": "false"
+    },
+    "full_text_used": {
+      "const": "false"
+    },
+    "processing_status": {
+      "enum": ["valid", "error"]
+    },
+    "processing_error": {
+      "type": "string",
+      "maxLength": 2000
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "processing_status": {
+            "const": "valid"
+          }
+        },
+        "required": ["processing_status"]
+      },
+      "then": {
+        "properties": {
+          "assessment_confidence": {
+            "$ref": "#/$defs/confidence"
+          },
+          "evidence_field": {
+            "$ref": "#/$defs/evidenceField"
+          },
+          "evidence_excerpt": {
+            "type": "string",
+            "minLength": 1
+          },
+          "assessment_rationale": {
+            "type": "string",
+            "minLength": 1
+          },
+          "processing_error": {
+            "const": ""
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "assessment_confidence": {
+            "const": ""
+          },
+          "model_requests_physician_enrichment_review": {
+            "const": "true"
+          },
+          "evidence_field": {
+            "const": ""
+          },
+          "evidence_excerpt": {
+            "const": ""
+          },
+          "assessment_rationale": {
+            "const": ""
+          },
+          "processing_error": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "positiveDecimal": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]*$"
+    },
+    "csvBoolean": {
+      "enum": ["true", "false"]
+    },
+    "confidence": {
+      "enum": ["high", "moderate", "low"]
+    },
+    "confidenceOrBlank": {
+      "enum": ["", "high", "moderate", "low"]
+    },
+    "metadataSufficiency": {
+      "enum": ["adequate_abstract", "limited_abstract", "no_abstract", "conflicting_metadata"]
+    },
+    "evidenceField": {
+      "enum": ["title", "abstract", "mesh_terms", "author_keywords", "publication_types"]
+    },
+    "evidenceFieldOrBlank": {
+      "enum": ["", "title", "abstract", "mesh_terms", "author_keywords", "publication_types"]
+    }
+  }
+}

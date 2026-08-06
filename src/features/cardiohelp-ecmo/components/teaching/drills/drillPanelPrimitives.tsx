@@ -48,6 +48,14 @@ export type DrillSignalKind =
   | 'off-console'
   | 'estimated'
   | 'authored'
+  /**
+   * A physical state of the circuit that exists at the bedside and has no console channel at all —
+   * a manual clamp, for instance. Distinct from `off-console`, which is measured by *something*;
+   * nothing measures these. Calling one `valid` would tell a learner the console can be consulted
+   * to confirm whether the patient is isolated, which is the exact conflation the air drill exists
+   * to break.
+   */
+  | 'bedside'
 
 /*
  * Short on the row, explained once under the table.
@@ -64,6 +72,7 @@ const SIGNAL_KIND_LABEL: Readonly<Record<DrillSignalKind, string>> = {
   'off-console': 'Measured off the console',
   estimated: 'Model estimate',
   authored: 'Authored by this case',
+  bedside: 'At the bedside, not on the console',
 }
 
 const SIGNAL_KIND_LEGEND: Readonly<Record<DrillSignalKind, string>> = {
@@ -76,6 +85,8 @@ const SIGNAL_KIND_LEGEND: Readonly<Record<DrillSignalKind, string>> = {
     'measured on the patient or on another device. This console neither produces nor displays it',
   estimated: 'derived by the model rather than measured by anything',
   authored: 'set by this case rather than measured',
+  bedside:
+    'a physical state of the circuit at the bedside. This console has no sensor for it and never displays it',
 }
 
 /** The kinds, as a value, so a test cannot pin a stale count of them. */
@@ -155,11 +166,23 @@ export function SignalRegister({
       <h3 id={headingId} className={styles.heading}>
         {title}
       </h3>
-      <div className="mt-3 overflow-x-auto">
+      {/*
+        Focusable, because it is the only way to reach the columns it clips. The teaching pane is
+        `overflow-x: hidden`, so when this table is wider than the pane a pointer user can drag it
+        sideways and a keyboard user previously could not reach the "what it is worth" column at all.
+        A scroll container that holds content needs a name and a tab stop.
+      */}
+      <div
+        className="mt-3 overflow-x-auto"
+        tabIndex={0}
+        role="group"
+        aria-labelledby={headingId}
+        data-signal-register-scroller
+      >
         <table className="w-full text-sm" data-signal-register>
           <caption className="sr-only">
             Every signal this drill turns on, where it is measured, and whether it is valid,
-            unavailable, unmodeled, estimated, or authored.
+            unavailable, unmodeled, estimated, off the console, at the bedside, or authored.
           </caption>
           <thead>
             <tr className="text-left">

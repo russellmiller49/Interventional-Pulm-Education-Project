@@ -505,6 +505,27 @@
 .workbench[data-learn-workspace='true'] {
   align-items: stretch;
   min-height: 0;
+  /*
+   * A definite height, so the workspace inside can fill the activity viewport instead of guessing
+   * how much chrome sits above it.
+   *
+   * `.activityViewport` is `height: 100%; overflow: auto`, so it is already a definite box. The two
+   * boxes between it and the workspace were auto-height, which meant a percentage height on the
+   * workspace resolved to nothing and the workspace had to estimate the chrome instead. Its estimate
+   * was low, so the frame came out taller than the space it had and the activity viewport scrolled —
+   * a fourth scroller wrapping three panes that already scroll themselves.
+   *
+   * Scoped to the guided drill Learn route on both selectors. Practice and Assess put a case player
+   * and the simulator in this same grid and are deliberately left auto-height.
+   */
+  height: 100%;
+}
+
+.experiencePanel:has([data-ecmo-learn-workspace]) {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
 }
 
 /*

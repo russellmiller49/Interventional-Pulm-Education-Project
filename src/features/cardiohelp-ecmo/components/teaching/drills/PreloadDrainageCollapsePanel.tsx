@@ -41,9 +41,17 @@ export function PreloadDrainageCollapsePanel({ state }: { readonly state: EcmoSi
     <DrillPanelFrame
       scenarioId="preload-drainage-collapse"
       supportMode="vv"
-      clinicalQuestion="Circuit flow has fallen and is swinging, drainage pressure has become steadily more negative, and the drainage limb is juddering. Which side of the pump is the limitation on, and what does that make the first move?"
+      // Phrased about the presentation the case opened with, not about the circuit right now: the
+      // judder is conditional on both the capacity and the suction depth, so a question that
+      // asserted a juddering limb contradicted its own live signal row whenever it was not set.
+      clinicalQuestion="This circuit's flow fell and began swinging while drainage pressure deepened and the limb juddered. Which side of the pump is the limitation on, and what does that make the first move?"
       boundaries={[
-        'The judder is a flag this simulation switches on once demand passes the drainage this case can supply, not a rendering of how a real drainage line kicks. The numbers around it come from simplified response curves.',
+        // Both conditions, because the engine requires both: `drainageChatter` is set only when the
+        // case is drainage-limited *and* pVen has passed the authored suction depth. Naming only the
+        // first made the flag look like a direct readout of being past capacity, so a learner who
+        // was past capacity with shallower suction would see no judder and conclude the panel was
+        // wrong about the case.
+        'The judder is a flag this simulation switches on only once demand has passed the drainage this case can supply and the suction has deepened past a pressure this model picks, not a rendering of how a real drainage line kicks. The numbers around it come from simplified response curves.',
         'This simulation offers no number for how negative drainage pressure may become before it matters, because that value depends on cannula size, patient size, and configuration. The console does carry adjustable pressure limits, but those are device alarm limits rather than a taught cut point.',
         'How much drainage this case can supply is a quantity this simulation authors, and everything past it — the flow that stops rising, the deepening suction, the judder — follows from that one number. It is a teaching quantity chosen to make the relationship visible, not a measurement and not a flow any real patient is limited to.',
         'Echocardiography, imaging of cannula position, and the volume picture decide this at the bedside, and none of the three is reproduced here. The single corrective action in this lab stands for all of them.',
@@ -95,7 +103,7 @@ export function PreloadDrainageCollapsePanel({ state }: { readonly state: EcmoSi
             'Drainage chatter',
             'Bedside circuit view',
             state.circuit.drainageChatter ? 'Present' : 'Not present',
-            'A visible and text-labelled flag, switched on in this model once the pump is asking for more than the drainage can supply.',
+            'A visible and text-labelled flag, switched on in this model only when the pump is asking for more than the drainage can supply and the suction has deepened past the pressure this model draws attention at.',
             'authored',
           ),
         ]}

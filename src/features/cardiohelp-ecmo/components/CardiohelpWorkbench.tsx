@@ -62,6 +62,7 @@ import { CardiohelpConsole } from './CardiohelpConsole'
 import { formatChannelGroup } from './channelReadout'
 import { CircuitAndMonitors } from './CircuitAndMonitors'
 import { EcmoLearnWorkspace } from './EcmoLearnWorkspace'
+import { FitWidthSurface } from './FitWidthSurface'
 import { resolveGuidedLesson } from './LearnLessonPlayer'
 import {
   PracticeCasePlayer,
@@ -742,18 +743,43 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
    * ids in the document, and both the guided help targeting and the practice hint focus resolve
    * controls by id — so `document.getElementById` would start returning whichever came first.
    */
+  const consoleNode = (
+    <CardiohelpConsole
+      state={state}
+      dispatch={dispatch}
+      controlsEnabled
+      guidedTarget={activeGuidedTarget}
+      guidedControlId={activeGuidedControlId}
+      initiationTargets={
+        section !== 'learn' ? (scenario.clinicalCase?.initiationTargets ?? null) : null
+      }
+    />
+  )
+
   const simulatorColumn = (
     <div className={styles.simulatorColumn}>
-      <CardiohelpConsole
-        state={state}
-        dispatch={dispatch}
-        controlsEnabled
-        guidedTarget={activeGuidedTarget}
-        guidedControlId={activeGuidedControlId}
-        initiationTargets={
-          section !== 'learn' ? (scenario.clinicalCase?.initiationTargets ?? null) : null
-        }
-      />
+      {/*
+        Learn puts the console in a workspace pane, and the console's device grid cannot lay out
+        narrower than about 840px of `min-content`. The widest validated viewport gives that pane
+        roughly 650px, so before this the right-hand column of the facsimile — the physical control
+        panel, the power indicators, and the "simulated values" badge that says the numbers are not a
+        device reading — was cut off by 200px or more with `overflow-x: hidden` and no way to reach
+        it. Scaling is what the foundation route already does, and for the same reason.
+
+        Only the console is scaled. The circuit view, gas panel, patient monitor and trend panel have
+        `min-content` widths of 159–366px, so they lay out in any of these panes; shrinking their
+        prose to fit a constraint they do not have would cost readability for nothing.
+
+        Practice and Assess render this column beside the case player in a different arrangement and
+        are deliberately left exactly as they were.
+      */}
+      {section === 'learn' ? (
+        <FitWidthSurface label="CARDIOHELP console, scaled to fit the width of this panel">
+          {consoleNode}
+        </FitWidthSurface>
+      ) : (
+        consoleNode
+      )}
       <CircuitAndMonitors
         state={state}
         dispatch={dispatch}
