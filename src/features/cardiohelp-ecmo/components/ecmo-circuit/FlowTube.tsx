@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
@@ -11,6 +11,7 @@ import {
   type FlowUniforms,
 } from './flowMaterials'
 import { buildFlowTubeGeometry } from './tubeGeometry'
+import { CHATTER_HZ, chatterPinchAmount } from './chatter'
 import { PALETTE } from './constants'
 
 const DASH_LENGTH = 0.22
@@ -29,6 +30,14 @@ export interface FlowTubeProps {
   pinchU: number
   /** Secondary wide pinch (drainage suck-down cue), 0..1. */
   collapseTarget?: number
+  /**
+   * Drives the suck-down as a repeating judder rather than a held deformation.
+   *
+   * This is what a chattering drainage line does at the bedside: the vessel or cannula is drawn
+   * shut and springs open again several times a second. Under reduced motion the same
+   * `collapseTarget` is held static instead — deep enough to be unmistakable, but still.
+   */
+  chatter?: boolean
   reduceMotion: boolean
   wallColor?: string
   cacheKey: string
@@ -45,10 +54,12 @@ export function FlowTube({
   pinchTarget,
   pinchU,
   collapseTarget = 0,
+  chatter = false,
   reduceMotion,
   wallColor = PALETTE.tubeWall,
   cacheKey,
 }: FlowTubeProps) {
+  const chatterPhase = useRef(0)
   const uniforms = useMemo<FlowUniforms>(createFlowUniforms, [])
   const wallUniforms = useMemo(
     () => ({
@@ -110,13 +121,28 @@ export function FlowTube({
     const useCollapse = collapse > pinch
     const targetU = useCollapse ? 0.5 : pinchU
     const targetWidth = useCollapse ? 0.45 : 0.045
-    const targetAmount = useCollapse ? collapse * 0.35 : pinch
+    let targetAmount = useCollapse ? collapse * 0.35 : pinch
+    if (useCollapse && chatter) {
+      if (!reduceMotion) chatterPhase.current = (chatterPhase.current + delta * CHATTER_HZ) % 1
+      targetAmount = chatterPinchAmount({
+        collapse,
+        phase: chatterPhase.current,
+        reduceMotion,
+      })
+    } else {
+      // Back to rest, so a second episode opens from an open limb. Left where it stopped, the
+      // undamped write below would snap the tube shut in one frame when chatter resumed.
+      chatterPhase.current = 0
+    }
     for (const set of [uniforms, wallUniforms]) {
       set.uPinchU.value = THREE.MathUtils.damp(set.uPinchU.value, targetU, 10, delta)
       set.uPinchWidth.value = THREE.MathUtils.damp(set.uPinchWidth.value, targetWidth, 10, delta)
-      set.uPinchAmount.value = reduceMotion
-        ? targetAmount
-        : THREE.MathUtils.damp(set.uPinchAmount.value, targetAmount, 9, delta)
+      // The judder is the signal, so it is written straight through rather than damped toward —
+      // a 9/s damp against a 4.5 Hz square-ish drive would smooth the chatter into a hum.
+      set.uPinchAmount.value =
+        reduceMotion || (useCollapse && chatter)
+          ? targetAmount
+          : THREE.MathUtils.damp(set.uPinchAmount.value, targetAmount, 9, delta)
     }
   })
 
