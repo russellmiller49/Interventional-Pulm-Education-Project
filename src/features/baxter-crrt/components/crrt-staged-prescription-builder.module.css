@@ -335,6 +335,9 @@
 
 .numberControl input,
 .selectControl select {
+  /* Without this, `width: 100%` plus the padding and border overflows the control box by ~21px,
+     which cascades into the grid and clips the right edge of every entry. */
+  box-sizing: border-box;
   width: 100%;
   min-height: 44px;
   padding: 0.4rem 0.6rem;
@@ -407,9 +410,10 @@
   line-height: 1.6;
 }
 
+/* No `overflow-x` here. `CrrtPilotCircuit` already scrolls its own schematic viewport, and adding
+   a second scroller around it puts one scrolling region inside another. */
 .circuitHolder {
   min-width: 0;
-  overflow-x: auto;
 }
 
 .intensityGrid {
