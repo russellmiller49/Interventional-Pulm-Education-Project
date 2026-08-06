@@ -124,7 +124,7 @@ export function LvadParametersAssessmentPanel({
             value={metrics.pumpPowerW}
             unit="W"
             kind="displayed"
-            note="The work the impeller is doing on the blood it is actually moving. It falls when less blood crosses at an unchanged resistance."
+            note="The electrical power required to maintain the set speed under the current hydraulic and mechanical load. Read it with speed, estimated flow, preload, afterload, viscosity assumptions, and possible mechanical drag."
           />
           <LiveValue
             label="Displayed pump flow"
@@ -138,7 +138,7 @@ export function LvadParametersAssessmentPanel({
             value={metrics.pulsatilityIndex}
             unit=""
             kind="displayed"
-            note="How much of the cycle the native ventricle is still contributing. It is not a measure of volume status, of right ventricular function, or of adequacy."
+            note="The magnitude of cyclic variation in estimated pump flow or power. Native contractility, preload, afterload and speed all influence it; it is not a direct measure of any one of them."
           />
           <LiveValue
             label="Pressure the pump works across"
@@ -164,18 +164,35 @@ export function LvadParametersAssessmentPanel({
             currently {reading(gradient, 0)} mm Hg across the pump.
           </li>
           <li>
-            Power tracks the work being done on the blood that crosses, so it moves with the volume
-            rather than with the pressure alone.
+            Power is the electrical power needed to hold that speed against the current hydraulic
+            and mechanical load. It is related to flow, but not one-to-one, and mechanical drag can
+            disturb the relationship entirely.
           </li>
           <li>
             The displayed flow is computed from power and speed, so it moves when they move — which
             is not the same thing as measuring the blood.
           </li>
           <li>
-            Pulsatility index reports what is left of the native beat. The same displayed flow can
-            sit beside very different values of it.
+            Pulsatility index is the size of the cyclic swing in that estimate. The same value can
+            arise in different clinical states, so it is read with the whole controller trend and
+            the patient rather than on its own.
           </li>
         </ol>
+
+        <ul className="mt-3 grid gap-2 text-xs leading-5" data-controller-value-boundaries>
+          <li data-controller-boundary="power">
+            <span className="font-semibold">Pump power. </span>Power and estimated flow are related,
+            but the relationship is not one-to-one, and a change in mechanical drag can disrupt the
+            relationship that is expected between them. Power does not directly measure systemic
+            delivery, and a single power value does not diagnose thrombosis.
+          </li>
+          <li data-controller-boundary="pulsatility-index">
+            <span className="font-semibold">Pulsatility index. </span>The same pulsatility index can
+            occur in different clinical states. It must be interpreted with the complete controller
+            trend and the patient in front of you, and it cannot on its own diagnose hypovolemia,
+            right ventricular failure, recovery, or adequate unloading.
+          </li>
+        </ul>
 
         <TextEquivalent>
           Speed {reading(controller ? controller.speedRpm : null, 0)} rpm, pump power{' '}
@@ -189,9 +206,11 @@ export function LvadParametersAssessmentPanel({
 
         <ModelBoundary>{MCS_ESTIMATED_FLOW_BOUNDARY}</ModelBoundary>
         <p className="mt-2 text-xs leading-5" data-no-published-targets>
-          This module publishes no speed, power, pulsatility-index or alarm value for a durable
-          pump. Speed is prescribed per patient by the implanting programme, and a change belongs to
-          that team working from the current instructions for the implanted device.
+          This module publishes no universal speed, power, pulsatility-index, or alarm target.
+          Specific devices define their own settings, displayed values and alarms; what this module
+          refuses is to convert any of them into a universal bedside target. Speed is prescribed per
+          patient by the implanting program, and a change belongs to that team working from the
+          current instructions for the implanted device.
         </p>
         <FigureScope
           establishes="What each controller value is, how it is produced, and which of them is computed rather than read."
@@ -243,7 +262,7 @@ export function LvadParametersAssessmentPanel({
             note={
               metrics.aorticValveOpening
                 ? 'The native ventricle is still ejecting through it.'
-                : 'On durable support an intermittently opening or closed valve is an expected state rather than a fault.'
+                : 'Aortic-valve opening may be intermittent or absent during durable support. That is not automatically a controller fault, but persistent closure must be interpreted with unloading goals, LV size, aortic insufficiency, and the implanting program’s strategy.'
             }
           />
         </div>

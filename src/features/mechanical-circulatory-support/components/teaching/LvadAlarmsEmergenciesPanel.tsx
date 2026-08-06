@@ -30,23 +30,36 @@ import {
 /**
  * Section 8 — where an alarm on this pathway can be coming from, and which of those is present.
  *
- * The figure is a localization table across eight domains, and its two columns do different jobs.
- * "Present in this state" is read from the live model and can only say what the model has actually
- * entered. "In the differential" is a list of things that would have to be excluded at a bedside and
- * that this simulation mostly does not represent at all. Keeping them in separate columns is the
- * whole point: a learner who reads the second column as findings has invented a patient.
+ * The figure is a localization table across eight domains, and its three columns do different jobs.
+ * Current modeled evidence is read from the live model. What this raises is the question that
+ * evidence opens. What remains in the differential is what a bedside would still have to exclude,
+ * most of which this simulation does not represent at all. Keeping them apart is the whole point: a
+ * learner who reads the third column as findings has invented a patient, and a learner who reads a
+ * single raised pressure as a diagnosis has done the same thing one column earlier.
  *
  * The high-power row is written against what this engine really does. It raises the power signature
- * and leaves the delivered flow where it was. It does not reduce flow, it does not produce
- * haemolysis, and it does not collapse or progressively obstruct anything, because none of that is
+ * and leaves the delivered flow where it was. It does not lower delivery, it does not produce
+ * hemolysis, and it does not collapse or progressively obstruct anything, because none of that is
  * modeled — and the panel says so rather than implying the absence is reassurance.
  */
 
+/**
+ * One row of the localization table.
+ *
+ * `modeledState` is a tri-state on purpose. A binary present/absent is honest for the states this
+ * model explicitly enters — power disconnected, controller fault, suction, high afterload,
+ * regurgitant recirculation, the high-power flag — and dishonest everywhere else, because a
+ * pressure is not a finding. Domains without an explicit modeled state carry `'reading-only'`, and
+ * the table prints their readings without attaching a verdict to them.
+ */
 interface Domain {
   readonly id: string
   readonly title: string
-  readonly present: boolean
-  readonly presentText: string
+  readonly modeledState: 'present' | 'absent' | 'reading-only'
+  /** What the model currently shows for this domain. Readings, not conclusions. */
+  readonly evidence: string
+  /** What that evidence raises as a question — never what it proves. */
+  readonly raises: string
   readonly differential: string
 }
 
@@ -97,75 +110,95 @@ export function LvadAlarmsEmergenciesPanel({
     {
       id: 'external-power',
       title: 'External power path',
-      present: controller ? !controller.powerConnected : false,
-      presentText: controller?.powerConnected
+      modeledState: controller?.powerConnected === false ? 'present' : 'absent',
+      evidence: controller?.powerConnected
         ? 'an approved power path is connected in this model'
         : 'the modeled external power path is not connected',
+      raises: controller?.powerConnected
+        ? 'Nothing in this domain in this state.'
+        : 'An interrupted power path, which is time-critical and is corrected before anything else is investigated.',
       differential:
         'Battery state, cable seating, the controller connection, and the source the patient is on. Power is preserved rather than interrupted to test a theory.',
     },
     {
       id: 'controller',
       title: 'Controller and device state',
-      present: controller?.controllerFault ?? false,
-      presentText: controller?.controllerFault
+      modeledState: controller?.controllerFault ? 'present' : 'absent',
+      evidence: controller?.controllerFault
         ? 'a modeled controller fault is present'
         : 'no modeled controller fault',
+      raises: controller?.controllerFault
+        ? 'A device state the controller is reporting about itself.'
+        : 'Nothing in this domain in this state.',
       differential:
         'A controller fault, a device state the controller cannot interpret, or an alarm the controller raises about itself. Controller exchange and device-specific emergency operation are not taught here.',
     },
     {
       id: 'preload-rv',
       title: 'Preload and right-sided delivery',
-      present: metrics.rapMmHg >= 15,
-      presentText: `right atrial pressure ${reading(metrics.rapMmHg, 0)} mm Hg, wedge ${reading(metrics.pcwpMmHg, 0)} mm Hg, end-diastolic volume ${reading(metrics.lvedvMl, 0)} mL`,
+      modeledState: 'reading-only',
+      evidence: `right atrial pressure ${reading(metrics.rapMmHg, 0)} mm Hg · wedge ${reading(metrics.pcwpMmHg, 0)} mm Hg · end-diastolic volume ${reading(metrics.lvedvMl, 0)} mL · modeled RV contractility ${reading(state.patient.rightVentricularContractility, 2)} · pulmonary vascular resistance ${reading(state.patient.pulmonaryVascularResistanceWU, 1)} Wood units · rhythm ${state.patient.rhythm} · tamponade ${state.patient.tamponade ? 'modeled present' : 'modeled not present'} · suction alarm ${hasAlarm(state, 'lvad-suction') ? 'active' : 'not active'}`,
+      raises:
+        'Whether the pump is being filled. These readings are read together; no single one of them, the right atrial pressure included, establishes right ventricular failure or inadequate filling on its own.',
       differential:
-        'Hypovolaemia, right ventricular failure, tamponade, and arrhythmia — several of which produce the same low displayed flow from opposite loading states.',
+        'Hypovolemia, right ventricular failure, tamponade, and arrhythmia — several of which produce the same low displayed flow from opposite loading states.',
     },
     {
       id: 'afterload',
       title: 'Afterload',
-      present: hasAlarm(state, 'lvad-high-afterload'),
-      presentText: `mean arterial pressure ${reading(metrics.mapMmHg, 0)} mm Hg, systemic vascular resistance ${reading(state.patient.systemicVascularResistanceDynSecCm5, 0)} dyn·s·cm⁻⁵`,
+      modeledState: hasAlarm(state, 'lvad-high-afterload') ? 'present' : 'absent',
+      evidence: `mean arterial pressure ${reading(metrics.mapMmHg, 0)} mm Hg · systemic vascular resistance ${reading(state.patient.systemicVascularResistanceDynSecCm5, 0)} dyn·s·cm⁻⁵ · high-afterload alarm ${hasAlarm(state, 'lvad-high-afterload') ? 'active' : 'not active'}`,
+      raises:
+        'Whether the pressure the pump ejects against is limiting what crosses it at this speed.',
       differential:
         'Hypertension reduces flow at a fixed speed. On this pathway a blood-pressure problem is a flow problem.',
     },
     {
       id: 'suction',
       title: 'Inflow suction',
-      present: hasAlarm(state, 'lvad-suction'),
-      presentText: hasAlarm(state, 'lvad-suction')
+      modeledState: hasAlarm(state, 'lvad-suction') ? 'present' : 'absent',
+      evidence: hasAlarm(state, 'lvad-suction')
         ? 'a modeled inflow suction pattern is present'
         : 'no modeled suction pattern',
+      raises: hasAlarm(state, 'lvad-suction')
+        ? 'Inlet conditions inadequate for the speed set — a loading problem rather than an obstruction.'
+        : 'Nothing in this domain in this state.',
       differential:
         'The ventricle underfilled relative to the speed set, with the septum or free wall drawn toward the inlet. It is a loading problem, not an obstruction.',
     },
     {
       id: 'obstruction',
       title: 'Inflow or outflow obstruction, or malposition',
-      present: false,
-      presentText: 'not represented in this simulation',
+      modeledState: 'reading-only',
+      evidence: 'not represented in this simulation',
+      raises:
+        'Nothing this model can raise. It carries no reading for this domain, so nothing on this screen speaks to it either way.',
       differential:
         'Inflow cannula malposition and outflow graft obstruction. This simulation models neither the physical narrowing nor its progression, so nothing on this screen can exclude them.',
     },
     {
       id: 'recirculation',
       title: 'Aortic regurgitant recirculation',
-      present: hasAlarm(state, 'lvad-recirculation'),
-      presentText:
+      modeledState: hasAlarm(state, 'lvad-recirculation') ? 'present' : 'absent',
+      evidence:
         metrics.recirculatingFlowLMin > 0
           ? `${reading(metrics.recirculatingFlowLMin, 1)} L/min returns across the valve and is counted out of the effective line`
           : 'no modeled regurgitant return',
+      raises:
+        'Whether part of what the pump moves is returning to the chamber it came from, so that a plausible displayed flow sits beside a smaller delivery.',
       differential:
         'Blood pumped into the aorta returning to the chamber it came from, so the displayed flow can look adequate while delivery is not.',
     },
     {
       id: 'high-power',
       title: 'High-power pattern',
-      present: highPower,
-      presentText: highPower
+      modeledState: highPower ? 'present' : 'absent',
+      evidence: highPower
         ? `a suspected high-power pattern is present: power ${reading(metrics.pumpPowerW, 1)} W with a displayed flow of ${reading(metrics.deviceFlowLMin, 1)} L/min`
         : 'no high-power pattern in this state',
+      raises: highPower
+        ? 'A power signature that has stopped tracking the flow it is supposed to imply — a reason for urgent specialist evaluation, not a diagnosis.'
+        : 'Nothing in this domain in this state.',
       differential:
         'A power signature that stops tracking the flow it is supposed to imply. It is a reason for urgent specialist evaluation and imaging — not, on its own, a diagnosis.',
     },
@@ -225,9 +258,10 @@ export function LvadAlarmsEmergenciesPanel({
         <div className={styles.scroller}>
           <table className={`${styles.table} min-w-[36rem]`} data-alarm-localization>
             <caption className="text-left text-xs leading-5 text-muted-foreground">
-              Eight domains. The middle column is read from the live model and says only what is
-              actually present. The right-hand column is what would still have to be worked through
-              at a bedside, most of which this simulation does not represent.
+              Eight domains, and three columns that do different jobs. Current modeled evidence is
+              read from the live model. What this raises is the question that evidence opens — never
+              a conclusion it proves. What remains in the differential is what a bedside would still
+              have to work through, most of which this simulation does not represent.
             </caption>
             <thead>
               <tr>
@@ -235,10 +269,13 @@ export function LvadAlarmsEmergenciesPanel({
                   Domain
                 </th>
                 <th scope="col" className="pb-1 pr-3 font-semibold">
-                  Present in this state
+                  Current modeled evidence
+                </th>
+                <th scope="col" className="pb-1 pr-3 font-semibold">
+                  What this raises
                 </th>
                 <th scope="col" className="pb-1 font-semibold">
-                  Still in the differential
+                  What remains in the differential
                 </th>
               </tr>
             </thead>
@@ -247,15 +284,20 @@ export function LvadAlarmsEmergenciesPanel({
                 <tr
                   key={domain.id}
                   data-alarm-domain={domain.id}
-                  data-domain-present={domain.present ? 'true' : 'false'}
+                  data-domain-modeled-state={domain.modeledState}
                 >
                   <th scope="row" className="py-1 pr-3 align-top font-medium">
                     {domain.title}
                     <span className="block text-xs font-normal text-muted-foreground">
-                      {domain.present ? 'finding present' : 'not a finding here'}
+                      {domain.modeledState === 'present'
+                        ? 'modeled state present'
+                        : domain.modeledState === 'absent'
+                          ? 'modeled state not present'
+                          : 'readings only — no modeled verdict'}
                     </span>
                   </th>
-                  <td className="py-1 pr-3 align-top">{domain.presentText}</td>
+                  <td className="py-1 pr-3 align-top">{domain.evidence}</td>
+                  <td className="py-1 pr-3 align-top">{domain.raises}</td>
                   <td className="py-1 align-top">{domain.differential}</td>
                 </tr>
               ))}
@@ -266,13 +308,18 @@ export function LvadAlarmsEmergenciesPanel({
           {domains
             .map(
               (domain) =>
-                `${domain.title}: ${domain.present ? 'finding present' : 'not a finding here'} — ${domain.presentText}`,
+                `${domain.title}: ${
+                  domain.modeledState === 'present'
+                    ? 'modeled state present'
+                    : domain.modeledState === 'absent'
+                      ? 'modeled state not present'
+                      : 'readings only, no modeled verdict'
+                } — ${domain.evidence}. This raises: ${domain.raises}`,
             )
-            .join('. ')}
-          .
+            .join(' ')}
         </TextEquivalent>
         <FigureScope
-          establishes="Which of the eight domains this model has actually entered, and which readings speak to each."
+          establishes="Which explicit modeled states this simulation has entered, and which readings speak to each domain."
           doesNotEstablish="A diagnosis. Findings present in a simulation are not a differential worked through at a bedside, and several of these domains are not represented here at all."
         />
       </PanelSection>
@@ -286,8 +333,9 @@ export function LvadAlarmsEmergenciesPanel({
             ? `A suspected high-power pattern is present. Pump power reads ${reading(metrics.pumpPowerW, 1)} W and the displayed flow reads ${reading(metrics.deviceFlowLMin, 1)} L/min, with an effective systemic delivery of ${reading(metrics.effectiveSystemicFlowLMin, 1)} L/min.`
             : 'No high-power pattern is present in this state.'}{' '}
           The word this module uses is <em>suspected</em>. A power signature is a pattern, and pump
-          thrombosis is a diagnosis reached from the patient, the flow path, the power sources, the
-          trend and focused imaging together — never from a power value alone.
+          thrombosis is a diagnosis reached from clinical status, power and flow trends, device logs
+          where available, hemolysis evaluation, focused imaging, and evaluation for loading and
+          inflow/outflow causes — never from a power value alone.
         </p>
         <ul className="mt-3 grid gap-2 text-xs leading-5" data-high-power-boundaries>
           <li data-high-power-boundary="flow-unchanged">
@@ -299,10 +347,10 @@ export function LvadAlarmsEmergenciesPanel({
             the modeled pattern leaves delivery unchanged, so nothing on this screen establishes any
             fall in what the patient is receiving.
           </li>
-          <li data-high-power-boundary="haemolysis">
-            <span className="font-semibold">Haemolysis is not modeled. </span>No value on this
-            screen rises or falls with red-cell destruction, and its absence here is a limit of the
-            model rather than a statement about the state.
+          <li data-high-power-boundary="hemolysis">
+            <span className="font-semibold">Hemolysis is not modeled. </span>No value on this screen
+            rises or falls with red-cell destruction, and its absence here is a limit of the model
+            rather than a statement about the state.
           </li>
           <li data-high-power-boundary="obstruction">
             <span className="font-semibold">
@@ -321,7 +369,7 @@ export function LvadAlarmsEmergenciesPanel({
         </ul>
         <TextEquivalent>
           A high-power pattern is {highPower ? 'present' : 'not present'} in this state. In this
-          model it raises the power signature and does not change delivered flow. Haemolysis is not
+          model it raises the power signature and does not change delivered flow. Hemolysis is not
           modeled. Physical collapse or progressive obstruction of a flow path is not modeled. The
           pattern is a reason to preserve power and call the mechanical-support team, not a
           diagnosis.
