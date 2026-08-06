@@ -73,9 +73,11 @@ describe('CriticalCareHub', () => {
       '/cardiohelp-ecmo',
     )
 
+    // The rendered half of the H1.1 contract: the visible "Start here" is the first section of the
+    // hemodynamics pathway. `__tests__/hub-pathway-start-alignment.test.ts` pins the two together.
     expect(await screen.findByRole('link', { name: 'Start here' })).toHaveAttribute(
       'href',
-      '/icu-hemodynamics/learn?activity=catheter-advancement',
+      '/icu-hemodynamics/learn?activity=pressure-system',
     )
     expect(screen.getByRole('heading', { name: 'Quick launch a lab' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Browse all cases' })).toHaveAttribute(
