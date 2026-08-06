@@ -1,0 +1,936 @@
+{
+  "label_schema_version": "2.0.0",
+  "taxonomy_version": "2.0.0",
+  "default_locale": "en",
+  "fallback_locale": "en",
+  "localization_status": {
+    "english": "complete",
+    "translations": "pending_human_review",
+    "fallback_behavior": "Use English when a localized label or description is unavailable."
+  },
+  "fields": {
+    "topic_ids": [
+      {
+        "id": "basic-bronchoscopy",
+        "label_en": "Basic bronchoscopy",
+        "description_en": "Routine flexible bronchoscopy, airway inspection, bronchoalveolar lavage, brushing, washing, and conventional endobronchial or transbronchial sampling.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "ebus-mediastinal-staging",
+        "label_en": "EBUS and mediastinal staging",
+        "description_en": "Convex-probe EBUS, EUS-B, mediastinal/hilar sampling and staging strategies.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "peripheral-navigation",
+        "label_en": "Peripheral pulmonary lesions and navigation",
+        "description_en": "Guidance, confirmation, and navigation technologies used to reach peripheral pulmonary lesions.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "peripheral-biopsy-localization",
+        "label_en": "Peripheral biopsy and localization tools",
+        "description_en": "Sampling tools, localization methods, and specimen adequacy for peripheral lesions.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "central-airway-obstruction",
+        "label_en": "Central airway obstruction",
+        "description_en": "Malignant and benign central airway obstruction and bronchoscopic recanalization techniques.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "airway-stents-stenosis",
+        "label_en": "Airway stents and stenosis",
+        "description_en": "Airway stent selection, placement, removal, stenosis, and complications.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "pleural-interventions",
+        "label_en": "Pleural procedures",
+        "description_en": "Diagnostic and therapeutic pleural procedures.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "bronchoscopic-lung-volume-reduction",
+        "label_en": "Bronchoscopic lung-volume reduction",
+        "description_en": "Bronchoscopic emphysema therapies and patient selection.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "persistent-air-leak-fistula",
+        "label_en": "Persistent air leak and fistula closure",
+        "description_en": "Bronchoscopic management of persistent air leak and bronchopleural or other airway fistulas.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "transbronchial-cryobiopsy",
+        "label_en": "Transbronchial cryobiopsy",
+        "description_en": "Cryobiopsy techniques and outcomes across ILD, peripheral, mediastinal, and endobronchial applications.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "hemoptysis-airway-bleeding",
+        "label_en": "Hemoptysis and airway bleeding",
+        "description_en": "Bronchoscopic localization, control, tamponade, blockers, and procedural bleeding management.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "tracheostomy-airway-access",
+        "label_en": "Tracheostomy and airway access",
+        "description_en": "Percutaneous tracheostomy, procedural guidance, difficult access, and complications.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "bronchoscopic-tumor-ablation",
+        "label_en": "Bronchoscopic tumor ablation",
+        "description_en": "Endobronchial or transbronchial focal tumor ablation technologies.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "other-advanced-bronchoscopy",
+        "label_en": "Other advanced bronchoscopy",
+        "description_en": "Advanced procedural topics not captured by the other primary categories.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "safety-anesthesia-complications",
+        "label_en": "Safety, anesthesia, and complications",
+        "description_en": "Sedation, general anesthesia, ventilation, procedural complications, and emergency management.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "education-simulation-quality",
+        "label_en": "Education, simulation, and quality",
+        "description_en": "Training, competency, simulation, workflow, ergonomics, quality improvement, and program outcomes.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "ai-imaging-technology",
+        "label_en": "AI, imaging, and technology",
+        "description_en": "Computer vision, image guidance, segmentation, procedural prediction, devices, and technical innovation.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "adjacent-surgical-procedural-analogue",
+        "label_en": "Adjacent surgical and procedural analogues",
+        "description_en": "Surgical or nonbronchoscopic procedures used as comparators, alternatives, or technical analogues for interventional pulmonology without being bronchoscopic interventions themselves.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for surgical or nonbronchoscopic procedures when they are relevant as comparators, alternatives, or technical analogues to interventional pulmonology.",
+        "exclusion_boundary_en": "Exclude articles whose primary intervention is bronchoscopic; classify those under the corresponding bronchoscopic topic instead.",
+        "examples_en": [
+          "Surgical lung-volume reduction compared with bronchoscopic lung-volume reduction",
+          "VATS localization or resection used as an adjacent procedural comparator"
+        ]
+      },
+      {
+        "id": "specimen-adequacy-molecular-pathology",
+        "label_en": "Specimen adequacy and molecular pathology",
+        "description_en": "Cytology, histopathology, biomarker, and molecular-testing adequacy of specimens obtained during pulmonary or pleural procedures.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use when specimen sufficiency, processing, cytology or histopathology yield, biomarkers, or molecular testing is a primary focus.",
+        "exclusion_boundary_en": "Exclude studies reporting only diagnostic yield without evaluating specimen quality, processing, or downstream pathology testing.",
+        "examples_en": [
+          "Adequacy of EBUS-TBNA specimens for molecular profiling",
+          "Cytology workflow and biomarker sufficiency after bronchoscopic biopsy"
+        ]
+      },
+      {
+        "id": "health-services-economics",
+        "label_en": "Health services and economics",
+        "description_en": "Care delivery, workflow, operations, quality, utilization, access, costs, and economic evaluation related to interventional pulmonary services.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for interventional pulmonary care delivery, operations, access, utilization, quality, program outcomes, costs, or formal economic evaluation.",
+        "exclusion_boundary_en": "Exclude purely clinical efficacy or safety studies without a health-services, operational, quality, or economic objective.",
+        "examples_en": [
+          "Cost-effectiveness of a diagnostic pathway",
+          "Operational outcomes after establishing an interventional pulmonology service"
+        ]
+      }
+    ],
+    "technology_tags": [
+      {
+        "id": "convex-ebus",
+        "label_en": "Convex-probe EBUS",
+        "description_en": "Convex-probe endobronchial ultrasound used for real-time mediastinal or hilar needle sampling.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "eus-b",
+        "label_en": "EUS-B",
+        "description_en": "Transesophageal ultrasound examination or sampling performed with an EBUS bronchoscope.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "radial-ebus",
+        "label_en": "Radial EBUS",
+        "description_en": "Radial-probe endobronchial ultrasound used to localize or characterize peripheral pulmonary lesions.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "robotic-bronchoscopy",
+        "label_en": "Robotic bronchoscopy",
+        "description_en": "Robot-assisted bronchoscopy platforms used for navigation, localization, sampling, or therapy.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "electromagnetic-navigation",
+        "label_en": "Electromagnetic navigation",
+        "description_en": "Electromagnetic navigation systems used to guide bronchoscopic access to pulmonary targets.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "cone-beam-ct",
+        "label_en": "Cone-beam CT",
+        "description_en": "Cone-beam computed tomography used for intraprocedural guidance or target confirmation.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "augmented-fluoroscopy",
+        "label_en": "Augmented fluoroscopy",
+        "description_en": "Fluoroscopic guidance enhanced by image registration, overlay, or tomosynthesis.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "virtual-bronchoscopy",
+        "label_en": "Virtual bronchoscopy",
+        "description_en": "Computed virtual bronchoscopic pathways or airway reconstructions used for procedural planning or guidance.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "transbronchial-cryobiopsy",
+        "label_en": "Transbronchial cryobiopsy",
+        "description_en": "Cryoprobe tissue acquisition from lung parenchyma or a peripheral pulmonary lesion through the bronchial tree.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "endobronchial-valve",
+        "label_en": "Endobronchial valve",
+        "description_en": "One-way endobronchial valve placement for lung-volume reduction or management of an air leak.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "airway-stent",
+        "label_en": "Airway stent",
+        "description_en": "Tracheal or bronchial stent placement, revision, or removal.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "rigid-bronchoscopy",
+        "label_en": "Rigid bronchoscopy",
+        "description_en": "Rigid bronchoscopy used for airway access, ventilation, recanalization, extraction, or device delivery.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "electrocautery",
+        "label_en": "Electrocautery",
+        "description_en": "Bronchoscopic electrocautery used for tissue cutting, coagulation, or ablation.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "argon-plasma-coagulation",
+        "label_en": "Argon plasma coagulation",
+        "description_en": "Noncontact argon plasma coagulation used for endobronchial coagulation or ablation.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "laser",
+        "label_en": "Bronchoscopic laser",
+        "description_en": "Bronchoscopic laser therapy used for coagulation, vaporization, or airway recanalization.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "cryotherapy",
+        "label_en": "Cryotherapy",
+        "description_en": "Bronchoscopic cryotherapy or cryorecanalization other than tissue-acquisition cryobiopsy.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "photodynamic-therapy",
+        "label_en": "Photodynamic therapy",
+        "description_en": "Photodynamic therapy delivered for endobronchial tumor treatment.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "brachytherapy",
+        "label_en": "Endobronchial brachytherapy",
+        "description_en": "Endobronchial brachytherapy delivered through an airway catheter.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "indwelling-pleural-catheter",
+        "label_en": "Indwelling pleural catheter",
+        "description_en": "Long-term tunneled pleural catheter placement or management.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "medical-thoracoscopy",
+        "label_en": "Medical thoracoscopy / pleuroscopy",
+        "description_en": "Physician-performed pleuroscopy or medical thoracoscopy for pleural diagnosis or treatment.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "bronchial-thermoplasty",
+        "label_en": "Bronchial thermoplasty",
+        "description_en": "Controlled radiofrequency thermal treatment of bronchial airways for severe asthma.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "whole-lung-lavage",
+        "label_en": "Whole-lung lavage",
+        "description_en": "Sequential whole-lung lavage performed for pulmonary alveolar proteinosis or a comparable indication.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "percutaneous-tracheostomy",
+        "label_en": "Percutaneous tracheostomy",
+        "description_en": "Percutaneous dilatational tracheostomy and its bronchoscopic or ultrasound guidance.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "thoracentesis",
+        "label_en": "Thoracentesis",
+        "description_en": "Percutaneous aspiration or drainage of pleural fluid with a needle or temporary catheter.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for needle or temporary-catheter aspiration of pleural fluid.",
+        "exclusion_boundary_en": "Exclude an indwelling drain left for ongoing evacuation; use chest-tube or indwelling-pleural-catheter as appropriate.",
+        "examples_en": ["Diagnostic thoracentesis", "Therapeutic large-volume thoracentesis"]
+      },
+      {
+        "id": "chest-tube",
+        "label_en": "Chest tube",
+        "description_en": "Tube thoracostomy or small-bore pleural catheter drainage left in place for ongoing evacuation.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for tube thoracostomy or small-bore pleural drainage maintained after insertion.",
+        "exclusion_boundary_en": "Exclude single-session pleural aspiration and tunneled long-term catheters.",
+        "examples_en": ["Pigtail catheter drainage", "Chest tube for pneumothorax"]
+      },
+      {
+        "id": "pleurodesis",
+        "label_en": "Pleurodesis",
+        "description_en": "Chemical or mechanical pleural symphysis intended to prevent recurrent pleural fluid or air.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for chemical or mechanical attempts to create pleural symphysis.",
+        "exclusion_boundary_en": "Exclude drainage alone and indwelling pleural catheter placement without pleurodesis.",
+        "examples_en": ["Talc poudrage", "Talc slurry pleurodesis"]
+      },
+      {
+        "id": "bronchoalveolar-lavage",
+        "label_en": "Bronchoalveolar lavage",
+        "description_en": "Bronchoalveolar lavage performed through a bronchoscope for diagnostic sampling or therapeutic clearance.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use when bronchoalveolar lavage is a named diagnostic sampling or therapeutic technique.",
+        "exclusion_boundary_en": "Exclude generic bronchoscopy, bronchial washing, and whole-lung lavage.",
+        "examples_en": ["BAL for microbiologic diagnosis", "BAL cellular differential"]
+      },
+      {
+        "id": "conventional-tbna",
+        "label_en": "Conventional TBNA",
+        "description_en": "Non-ultrasound-guided transbronchial needle aspiration using anatomic landmarks.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for landmark-guided TBNA performed without real-time convex EBUS guidance.",
+        "exclusion_boundary_en": "Exclude convex EBUS-TBNA and EUS-B-FNA.",
+        "examples_en": ["Wang needle TBNA", "Conventional subcarinal TBNA"]
+      },
+      {
+        "id": "rapid-on-site-evaluation",
+        "label_en": "Rapid on-site evaluation",
+        "description_en": "Immediate on-site cytologic assessment of procedural specimens to evaluate adequacy or guide further sampling.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use when immediate cytology review is used to assess specimen adequacy or guide additional sampling.",
+        "exclusion_boundary_en": "Exclude routine final cytopathology and biopsy-device descriptions without on-site assessment.",
+        "examples_en": ["ROSE during EBUS-TBNA", "On-site smear adequacy assessment"]
+      },
+      {
+        "id": "endobronchial-coils",
+        "label_en": "Endobronchial coils",
+        "description_en": "Endobronchial coil implantation for bronchoscopic lung-volume reduction.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for implanted bronchoscopic coils intended for lung-volume reduction.",
+        "exclusion_boundary_en": "Exclude endobronchial valves, vapor ablation, and surgical lung-volume reduction.",
+        "examples_en": ["Lung-volume reduction coil treatment", "REVOLENS coil intervention"]
+      },
+      {
+        "id": "balloon-bronchoplasty",
+        "label_en": "Balloon bronchoplasty",
+        "description_en": "Balloon dilation of a tracheal or bronchial narrowing.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for balloon dilation of tracheal or bronchial stenosis.",
+        "exclusion_boundary_en": "Exclude airway stenting unless a stent is separately placed or studied.",
+        "examples_en": [
+          "Balloon dilation of post-intubation stenosis",
+          "Bronchoplasty for anastomotic stenosis"
+        ]
+      },
+      {
+        "id": "mediastinal-cryobiopsy",
+        "label_en": "Mediastinal cryobiopsy",
+        "description_en": "Cryoprobe tissue acquisition from mediastinal or hilar lymph nodes or masses, typically through an EBUS-guided tract.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for cryobiopsy of a mediastinal or hilar node or mass through an airway or EBUS-created tract.",
+        "exclusion_boundary_en": "Exclude transbronchial lung or peripheral-lesion cryobiopsy.",
+        "examples_en": [
+          "EBUS-guided transbronchial mediastinal cryobiopsy",
+          "Cryobiopsy of a mediastinal lymph node"
+        ]
+      },
+      {
+        "id": "foreign-body-removal",
+        "label_en": "Foreign-body removal",
+        "description_en": "Bronchoscopic extraction of an aspirated or retained airway foreign body.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for bronchoscopic extraction of an aspirated or retained airway object.",
+        "exclusion_boundary_en": "Exclude the disease or presentation alone when no removal procedure is described.",
+        "examples_en": [
+          "Rigid bronchoscopic foreign-body extraction",
+          "Flexible bronchoscopic removal with forceps"
+        ]
+      },
+      {
+        "id": "bronchial-artery-embolization",
+        "label_en": "Bronchial artery embolization",
+        "description_en": "Endovascular embolization of bronchial or systemic arteries to control hemoptysis.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for endovascular bronchial or systemic arterial embolization undertaken for hemoptysis.",
+        "exclusion_boundary_en": "Exclude bronchoscopic topical or ablative hemostasis.",
+        "examples_en": [
+          "Bronchial artery embolization for massive hemoptysis",
+          "Repeat BAE for recurrent bleeding"
+        ]
+      },
+      {
+        "id": "narrow-band-imaging",
+        "label_en": "Narrow-band imaging",
+        "description_en": "Narrow-band optical imaging used during bronchoscopy to enhance mucosal and vascular patterns.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use when narrow-band imaging is employed to examine airway mucosa or vasculature.",
+        "exclusion_boundary_en": "Exclude white-light bronchoscopy, autofluorescence imaging, and confocal endomicroscopy.",
+        "examples_en": ["NBI detection of airway dysplasia", "NBI vascular-pattern assessment"]
+      },
+      {
+        "id": "autofluorescence-bronchoscopy",
+        "label_en": "Autofluorescence bronchoscopy",
+        "description_en": "Autofluorescence imaging used during bronchoscopy to identify abnormal airway mucosa.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use when autofluorescence imaging is employed to detect or characterize airway mucosal abnormalities.",
+        "exclusion_boundary_en": "Exclude narrow-band imaging and white-light bronchoscopy alone.",
+        "examples_en": [
+          "Autofluorescence detection of preinvasive lesions",
+          "AFB surveillance of central airways"
+        ]
+      },
+      {
+        "id": "confocal-laser-endomicroscopy",
+        "label_en": "Confocal laser endomicroscopy",
+        "description_en": "Probe-based or needle-based confocal laser endomicroscopy used for microscopic in-vivo imaging.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for probe-based or needle-based confocal microscopic imaging during pulmonary or pleural procedures.",
+        "exclusion_boundary_en": "Exclude optical coherence tomography and other optical imaging without confocal microscopy.",
+        "examples_en": [
+          "Needle-based CLE during EBUS sampling",
+          "Probe-based CLE of a peripheral lesion"
+        ]
+      },
+      {
+        "id": "topical-hemostatic-agent",
+        "label_en": "Topical hemostatic agent",
+        "description_en": "Topically delivered airway hemostatic material or drug used to control endobronchial bleeding.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for a named topical material or medication applied endobronchially to control bleeding.",
+        "exclusion_boundary_en": "Exclude laser, electrocautery, APC, balloon tamponade, and systemic hemostatic therapy.",
+        "examples_en": ["Topical thrombin for airway bleeding", "Endobronchial hemostatic powder"]
+      },
+      {
+        "id": "transbronchial-thermal-ablation",
+        "label_en": "Transbronchial thermal ablation",
+        "description_en": "Thermal tumor ablation delivered through a bronchoscopic or transbronchial access path.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for microwave, radiofrequency, or comparable thermal ablation delivered through a bronchoscopic access path.",
+        "exclusion_boundary_en": "Exclude bronchial thermoplasty, nonthermal pulsed-field ablation, and percutaneous or surgical ablation.",
+        "examples_en": [
+          "Bronchoscopic microwave ablation",
+          "Transbronchial radiofrequency ablation"
+        ]
+      },
+      {
+        "id": "surgical-vats",
+        "label_en": "Surgical VATS",
+        "description_en": "Video-assisted thoracic surgery used as an adjacent surgical procedure, comparator, or procedural analogue.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for video-assisted thoracic surgery when represented as an adjacent procedure, comparator, or analogue.",
+        "exclusion_boundary_en": "Exclude medical thoracoscopy and bronchoscopic procedures.",
+        "examples_en": ["VATS wedge resection", "VATS pleural biopsy"]
+      }
+    ],
+    "clinical_purposes": [
+      {
+        "id": "diagnosis",
+        "label_en": "Diagnosis",
+        "description_en": "Establishing, confirming, or refining a diagnosis.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "staging",
+        "label_en": "Staging",
+        "description_en": "Determining disease extent or stage.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "treatment",
+        "label_en": "Treatment",
+        "description_en": "Delivering or evaluating a therapeutic intervention.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "palliation",
+        "label_en": "Palliation",
+        "description_en": "Relieving symptoms or improving comfort without curative intent.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "surveillance",
+        "label_en": "Surveillance",
+        "description_en": "Monitoring for recurrence, progression, complications, or interval change.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "localization",
+        "label_en": "Localization",
+        "description_en": "Locating or marking a target to guide another diagnostic or therapeutic procedure.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "training",
+        "label_en": "Training",
+        "description_en": "Teaching, simulation, competency assessment, or procedural education.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "safety-complication-prevention",
+        "label_en": "Safety and complication prevention",
+        "description_en": "Preventing, detecting, or managing procedural adverse events.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "multiple-general-overview",
+        "label_en": "Multiple or general overview",
+        "description_en": "Addressing multiple clinical purposes or providing a broad procedural overview.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "not-assessable-from-available-metadata",
+        "label_en": "Not assessable from available metadata",
+        "description_en": "The clinical purpose cannot be determined from the available metadata.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "cost-effectiveness-health-services",
+        "label_en": "Cost-effectiveness and health services",
+        "description_en": "Evaluating costs, value, utilization, access, care pathways, or service delivery.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use when costs, value, utilization, access, care pathways, or service delivery are primary objectives.",
+        "exclusion_boundary_en": "Exclude clinical outcome studies that do not evaluate a health-services or economic objective.",
+        "examples_en": ["Cost-effectiveness analysis", "Care-pathway utilization study"]
+      },
+      {
+        "id": "specimen-adequacy",
+        "label_en": "Specimen adequacy",
+        "description_en": "Evaluating whether a specimen is sufficient for cytology, histology, biomarker, or molecular testing.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use when adequacy for diagnosis, histology, cytology, biomarkers, or molecular testing is a primary objective.",
+        "exclusion_boundary_en": "Exclude diagnostic-yield reporting that does not assess specimen sufficiency or processing.",
+        "examples_en": ["Adequacy for next-generation sequencing", "ROSE-guided specimen adequacy"]
+      },
+      {
+        "id": "workflow-operations-quality",
+        "label_en": "Workflow, operations, and quality",
+        "description_en": "Evaluating procedural workflow, service operations, quality improvement, or program performance.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use when workflow, operational performance, quality improvement, or program delivery is a primary objective.",
+        "exclusion_boundary_en": "Exclude training-only work and general overviews without a defined operational or quality aim.",
+        "examples_en": [
+          "Procedure-suite workflow improvement",
+          "Quality metrics for an interventional pulmonology program"
+        ]
+      }
+    ],
+    "disease_tags": [
+      {
+        "id": "lung-cancer",
+        "label_en": "Lung cancer",
+        "description_en": "Primary lung carcinoma and its intrathoracic evaluation or treatment.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "mesothelioma",
+        "label_en": "Mesothelioma",
+        "description_en": "Malignant pleural mesothelioma.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "emphysema",
+        "label_en": "Emphysema",
+        "description_en": "Pulmonary emphysema, including patients evaluated for lung-volume reduction.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "interstitial-lung-disease",
+        "label_en": "Interstitial lung disease",
+        "description_en": "Diffuse parenchymal or interstitial lung disease.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "immune-inflammatory-disease",
+        "label_en": "Immune or inflammatory disease",
+        "description_en": "Pulmonary or airway disease driven primarily by immune or inflammatory processes.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "infection",
+        "label_en": "Infection",
+        "description_en": "Pulmonary, pleural, or airway infection.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "transplant",
+        "label_en": "Transplant",
+        "description_en": "Lung-transplant recipients, graft airways, or transplant-related complications.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "benign-airway-stenosis",
+        "label_en": "Benign airway stenosis",
+        "description_en": "Fixed nonmalignant tracheal or bronchial narrowing.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "pleural-disease",
+        "label_en": "Pleural disease",
+        "description_en": "Non-mesothelioma pleural effusion, pneumothorax, pleuritis, or other pleural disorder.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "lymphoma-hematologic-malignancy",
+        "label_en": "Lymphoma or hematologic malignancy",
+        "description_en": "Lymphoid, leukemic, plasma-cell, or other hematologic malignancy involving thoracic structures.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for lymphoma, leukemia, plasma-cell, or other hematologic malignancy involving thoracic structures.",
+        "exclusion_boundary_en": "Exclude primary lung carcinoma and extrathoracic solid-tumor metastases.",
+        "examples_en": ["Mediastinal lymphoma", "Thoracic involvement by leukemia"]
+      },
+      {
+        "id": "metastatic-extrathoracic-malignancy",
+        "label_en": "Metastatic extrathoracic malignancy",
+        "description_en": "Thoracic, airway, lung, or pleural involvement by a primary malignancy arising outside the thorax.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use when a solid malignancy arising outside the thorax metastasizes to lung, airway, lymph node, or pleura.",
+        "exclusion_boundary_en": "Exclude primary lung cancer and hematologic malignancy.",
+        "examples_en": [
+          "Endobronchial renal-cell metastasis",
+          "Pleural metastasis from breast cancer"
+        ]
+      },
+      {
+        "id": "tracheobronchomalacia-edac",
+        "label_en": "Tracheobronchomalacia or EDAC",
+        "description_en": "Dynamic expiratory collapse caused by airway-wall weakness or excessive invagination of the posterior membrane.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for dynamic expiratory central-airway collapse due to malacia or excessive posterior-membrane invagination.",
+        "exclusion_boundary_en": "Exclude fixed benign airway stenosis and transient collapse without a TBM or EDAC diagnosis.",
+        "examples_en": ["Tracheobronchomalacia", "Excessive dynamic airway collapse"]
+      },
+      {
+        "id": "asthma",
+        "label_en": "Asthma",
+        "description_en": "Asthma, including severe asthma evaluated for bronchial thermoplasty.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for studies whose clinical population or disease focus is asthma.",
+        "exclusion_boundary_en": "Exclude other obstructive airway diseases without asthma.",
+        "examples_en": [
+          "Severe asthma treated with bronchial thermoplasty",
+          "Bronchoscopic assessment in asthma"
+        ]
+      },
+      {
+        "id": "foreign-body-aspiration",
+        "label_en": "Foreign-body aspiration",
+        "description_en": "Aspiration or retention of a foreign object in the tracheobronchial tree.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for aspiration or retention of a foreign object in the airway.",
+        "exclusion_boundary_en": "Do not use solely because a removal device is discussed without foreign-body disease or presentation.",
+        "examples_en": ["Pediatric foreign-body aspiration", "Retained airway object"]
+      },
+      {
+        "id": "hemoptysis",
+        "label_en": "Hemoptysis",
+        "description_en": "Coughing or expectoration of blood arising from the lower respiratory tract.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use when lower-respiratory bleeding or hemoptysis is a clinical problem or diagnosis.",
+        "exclusion_boundary_en": "Do not use solely for procedural bleeding prophylaxis or a hemostatic technology without hemoptysis.",
+        "examples_en": ["Massive hemoptysis", "Recurrent hemoptysis"]
+      },
+      {
+        "id": "bronchiectasis",
+        "label_en": "Bronchiectasis",
+        "description_en": "Chronic abnormal bronchial dilation and its complications.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for studies whose clinical population or disease focus is bronchiectasis.",
+        "exclusion_boundary_en": "Exclude isolated airway dilation not diagnosed as bronchiectasis.",
+        "examples_en": ["Bronchiectasis-related hemoptysis", "BAL in bronchiectasis"]
+      },
+      {
+        "id": "pulmonary-alveolar-proteinosis",
+        "label_en": "Pulmonary alveolar proteinosis",
+        "description_en": "Alveolar accumulation of surfactant material characteristic of pulmonary alveolar proteinosis.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for autoimmune, hereditary, secondary, or other pulmonary alveolar proteinosis.",
+        "exclusion_boundary_en": "Exclude other alveolar-filling diseases.",
+        "examples_en": ["Autoimmune pulmonary alveolar proteinosis", "Whole-lung lavage for PAP"]
+      },
+      {
+        "id": "airway-amyloidosis",
+        "label_en": "Airway amyloidosis",
+        "description_en": "Localized or systemic amyloid deposition affecting the tracheobronchial tree.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use when amyloid deposition affects the trachea or bronchi.",
+        "exclusion_boundary_en": "Exclude amyloidosis without airway involvement.",
+        "examples_en": ["Tracheobronchial amyloidosis", "Endobronchial amyloid deposition"]
+      },
+      {
+        "id": "congenital-airway-disorder",
+        "label_en": "Congenital airway disorder",
+        "description_en": "A structural or developmental airway abnormality present from birth.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for congenital structural or developmental abnormalities of the trachea or bronchi.",
+        "exclusion_boundary_en": "Exclude acquired stenosis, malacia without congenital attribution, and congenital parenchymal disease without airway involvement.",
+        "examples_en": ["Congenital tracheal stenosis", "Tracheal bronchus"]
+      }
+    ],
+    "study_design": [
+      {
+        "id": "randomized-trial",
+        "label_en": "Randomized trial",
+        "description_en": "A prospective experiment assigning participants to interventions by random allocation.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "prospective-cohort",
+        "label_en": "Prospective cohort",
+        "description_en": "An observational cohort defined and followed forward from enrollment.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "retrospective-cohort",
+        "label_en": "Retrospective cohort",
+        "description_en": "An observational cohort assembled from prior records or events and analyzed by exposure or intervention.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "diagnostic-accuracy",
+        "label_en": "Diagnostic accuracy",
+        "description_en": "A study estimating test performance against a reference standard.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "systematic-review",
+        "label_en": "Systematic review",
+        "description_en": "A structured evidence synthesis using an explicit search and selection method without a primary pooled meta-analysis designation.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "meta-analysis",
+        "label_en": "Meta-analysis",
+        "description_en": "A quantitative synthesis combining results from multiple studies.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "guideline",
+        "label_en": "Guideline",
+        "description_en": "Evidence-informed recommendations for clinical practice.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "consensus",
+        "label_en": "Consensus",
+        "description_en": "Expert consensus, statement, or position document not classified as a formal guideline.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "case-series",
+        "label_en": "Case series",
+        "description_en": "A descriptive report of multiple patients without a comparison group.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "case-report",
+        "label_en": "Case report",
+        "description_en": "A descriptive report of one patient or clinical episode.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "technical-note",
+        "label_en": "Technical note",
+        "description_en": "A report primarily describing a procedural technique, device use, or technical modification in clinical practice.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "editorial",
+        "label_en": "Editorial",
+        "description_en": "An opinion, commentary, or editorial without original study methods.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "review-article",
+        "label_en": "Review article",
+        "description_en": "A narrative or nonsystematic synthesis of prior literature.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "not-assessable-from-available-metadata",
+        "label_en": "Not assessable from available metadata",
+        "description_en": "The study design cannot be determined from the available metadata.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "cross-sectional-survey",
+        "label_en": "Cross-sectional survey",
+        "description_en": "A quantitative survey or cross-sectional measurement of a defined population at one period.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for quantitative survey or cross-sectional data collected at one period without longitudinal follow-up.",
+        "exclusion_boundary_en": "Exclude interview-based thematic research and cohorts defined by follow-up over time.",
+        "examples_en": ["Clinician practice survey", "Cross-sectional prevalence questionnaire"]
+      },
+      {
+        "id": "economic-evaluation",
+        "label_en": "Economic evaluation",
+        "description_en": "A formal comparison of costs, consequences, or value across care strategies.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for cost-effectiveness, cost-utility, cost-benefit, budget-impact, or decision-analytic economic comparisons.",
+        "exclusion_boundary_en": "Exclude general health-services observations that report resource use without a formal economic evaluation.",
+        "examples_en": ["Cost-effectiveness model", "Cost-minimization analysis"]
+      },
+      {
+        "id": "animal-preclinical",
+        "label_en": "Animal preclinical study",
+        "description_en": "An in-vivo experiment conducted in nonhuman animals before or outside clinical evaluation.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for in-vivo experiments in nonhuman animals.",
+        "exclusion_boundary_en": "Exclude isolated tissue, ex-vivo organs, phantoms, and other bench or in-vitro testing.",
+        "examples_en": ["Porcine airway experiment", "Canine preclinical device study"]
+      },
+      {
+        "id": "bench-in-vitro",
+        "label_en": "Bench or in-vitro study",
+        "description_en": "A laboratory, phantom, cadaveric, ex-vivo, or in-vitro technical experiment without living human participants.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for laboratory, phantom, cadaveric, ex-vivo, or in-vitro experiments without living human participants.",
+        "exclusion_boundary_en": "Exclude in-vivo animal studies and clinical technical notes describing patient care.",
+        "examples_en": ["Airway phantom navigation study", "In-vitro device comparison"]
+      },
+      {
+        "id": "qualitative-study",
+        "label_en": "Qualitative study",
+        "description_en": "Research using interviews, focus groups, observation, or qualitative text analysis to develop themes or explanations.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use for research based primarily on interviews, focus groups, observation, or qualitative coding and thematic analysis.",
+        "exclusion_boundary_en": "Exclude structured quantitative questionnaires analyzed as cross-sectional surveys.",
+        "examples_en": ["Thematic interview study", "Focus groups on procedural experience"]
+      },
+      {
+        "id": "case-control",
+        "label_en": "Case-control study",
+        "description_en": "An observational comparison selecting participants by outcome or case status and examining prior exposures or characteristics.",
+        "introduced_in": "2.0.0",
+        "inclusion_boundary_en": "Use when cases and controls are selected by outcome or case status and prior exposures or characteristics are compared.",
+        "exclusion_boundary_en": "Exclude retrospective cohorts selected by exposure or intervention and followed to outcomes.",
+        "examples_en": [
+          "Cases with a complication compared with matched controls",
+          "Diagnostic cases versus disease-free controls"
+        ]
+      }
+    ],
+    "publication_status": [
+      {
+        "id": "full-article",
+        "label_en": "Full article",
+        "description_en": "A complete journal article rather than an abstract-only record.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "conference-abstract",
+        "label_en": "Conference abstract",
+        "description_en": "An abstract or proceedings record without a complete journal article.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "letter",
+        "label_en": "Letter",
+        "description_en": "A letter or correspondence item.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "editorial",
+        "label_en": "Editorial",
+        "description_en": "An editorial or commentary publication.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "correction",
+        "label_en": "Correction",
+        "description_en": "A correction, erratum, or corrigendum.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "retraction",
+        "label_en": "Retraction",
+        "description_en": "A retraction notice or retracted-publication record.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "protocol",
+        "label_en": "Protocol",
+        "description_en": "A published study or trial protocol without final results.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "interactive-clinical-case",
+        "label_en": "Interactive clinical case",
+        "description_en": "An interactive, image-based, quiz-style, or educational clinical case publication.",
+        "introduced_in": "1.1.0"
+      },
+      {
+        "id": "not-assessable-from-available-metadata",
+        "label_en": "Not assessable from available metadata",
+        "description_en": "The publication status cannot be determined from the available metadata.",
+        "introduced_in": "1.1.0"
+      }
+    ]
+  },
+  "optional_tag_statuses": [
+    {
+      "id": "tagged",
+      "label_en": "Tagged",
+      "description_en": "One or more controlled terms have been assigned.",
+      "compatibility_only": false
+    },
+    {
+      "id": "not_applicable",
+      "label_en": "Not applicable",
+      "description_en": "No controlled term applies after the field has been assessed.",
+      "compatibility_only": false
+    },
+    {
+      "id": "not_assessable",
+      "label_en": "Not assessable",
+      "description_en": "Available evidence is insufficient to determine whether a controlled term applies.",
+      "compatibility_only": false
+    },
+    {
+      "id": "legacy_unspecified",
+      "label_en": "Legacy unspecified",
+      "description_en": "A compatibility-only state for an empty v1 field whose completion meaning was not recorded.",
+      "compatibility_only": true
+    }
+  ]
+}
