@@ -421,6 +421,7 @@
   padding: 0.6rem;
   border: 1px solid #cfdedb;
   border-radius: 0.65rem;
+  color: #234a4f;
   background: #fff;
 }
 
@@ -467,6 +468,47 @@
   color: #4f6d70;
   font-size: 0.64rem;
   line-height: 1.4;
+}
+
+/*
+ * The run control as a strip beside the section rail.
+ *
+ * Stacked in the "Your turn" pane it measured 154px of a 228px pane at 1280x720 — two thirds of
+ * the pane spent before the current task began, and it disappeared whenever that pane scrolled or
+ * was tabbed away. On one row beside the rail it costs no extra height at all. Nothing is removed:
+ * the clock, both buttons, and the stepping hint all stay, and pause keeps its single
+ * implementation and its `aria-pressed` state.
+ */
+[data-mv-run-control='strip'] .runControl {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+  align-content: center;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  height: 100%;
+  padding: 0.4rem 0.5rem;
+}
+
+[data-mv-run-control='strip'] .runControl > div:first-child {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+[data-mv-run-control='strip'] .runButtons {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+[data-mv-run-control='strip'] .runButtons button {
+  min-height: 2.2rem;
+  padding: 0.25rem 0.4rem;
+  font-size: 0.64rem;
+}
+
+[data-mv-run-control='strip'] .runHint {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  font-size: 0.58rem;
+  line-height: 1.35;
 }
 
 .overviewStep {

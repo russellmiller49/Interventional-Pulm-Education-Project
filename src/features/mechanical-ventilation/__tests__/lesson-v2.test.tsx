@@ -95,7 +95,14 @@ describe('focused mechanical ventilation lesson', () => {
 
     expect(screen.getByRole('heading', { name: 'Causal debrief' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Load the transfer patient' }))
-    expect(screen.getByText(/Transfer patient · MV-14/)).toBeInTheDocument()
+    /*
+     * Which patient is loaded is still stated, in the persistent clinical context strip rather
+     * than in a card inside the workspace. The card repeated the strip's patient description and
+     * immediate goal and cost the standard-laptop workspace 98px, so the case identifier moved up
+     * beside the rest of the patient context instead.
+     */
+    expect(screen.getByRole('heading', { name: 'Transfer clinical context' })).toBeInTheDocument()
+    expect(screen.getByText(/^MV-14 · /)).toBeInTheDocument()
 
     const beforeTransfer = JSON.parse(
       window.localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY) ?? '{}',
