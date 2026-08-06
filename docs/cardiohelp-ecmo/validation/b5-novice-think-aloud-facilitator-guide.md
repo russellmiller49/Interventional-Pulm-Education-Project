@@ -87,6 +87,18 @@ minutes including debrief.
 - Recording: audio or screen capture only with explicit consent. If consent is declined, take
   written notes — the session still runs.
 
+### If the participant works by keyboard
+
+The Clinical context row across the top holds more than fits at every one of these window sizes, so
+part of it sits off the right-hand edge. It is a focusable scrolling region: **Tab to the Clinical
+context strip and use the left and right arrow keys to review the information outside the visible
+area, or Home and End for the first and last items.**
+
+Say this only if the participant is working by keyboard and only as a mechanical fact about the
+window, in the same register as "you can scroll this page". It names no pane, no control and no
+finding, so it is not coaching — but do not volunteer it as a hint when someone is stuck on a task.
+If a participant never discovers the strip scrolls, record that: it is a discoverability finding.
+
 ## 4. Standardized introduction
 
 Read this close to verbatim, so every participant starts from the same frame:
