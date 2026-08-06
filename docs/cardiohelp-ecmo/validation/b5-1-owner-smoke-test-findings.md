@@ -19,12 +19,12 @@ learner has actually used the slice. Human novice validation is still pending.
 
 ## Summary
 
-| #   | Observation                                                          | Severity | Status                  |
-| --- | -------------------------------------------------------------------- | -------- | ----------------------- |
-| 1   | A task-only simulation update was presented as a console interaction | High     | Corrected               |
-| 2   | Drainage chatter described but not visible; wrong default view       | High     | Corrected               |
-| 3   | Bedside 3D console resting on the wrong face; sweep label on it      | High     | Corrected (2nd attempt) |
-| 4   | Teaching pane rendered white text on a near-white surface            | High     | Corrected               |
+| #   | Observation                                                          | Severity | Status                                        |
+| --- | -------------------------------------------------------------------- | -------- | --------------------------------------------- |
+| 1   | A task-only simulation update was presented as a console interaction | High     | Corrected                                     |
+| 2   | Drainage chatter described but not visible; wrong default view       | High     | Corrected                                     |
+| 3   | Bedside 3D console resting on the wrong face; sweep label on it      | High     | Corrected (2nd attempt) · **owner-confirmed** |
+| 4   | Teaching pane rendered white text on a near-white surface            | High     | Corrected                                     |
 
 Finding 4 arrived after the first three were pushed and is corrected on the same branch.
 
@@ -386,9 +386,15 @@ and the `SWEEP` pill inside its body.
 
 ### Status
 
-Corrected on the second attempt, and confirmed in a rendered scene rather than by measurement. The
+**Corrected, and confirmed by the owner** on 2026-08-06 against the rendered scene: _"The console is
+fixed correctly."_
+
+Confirmed in a render rather than by measurement, which is the whole lesson of this finding. The
 first attempt is left in the git history rather than tidied away: it is the clearest record this
 package has of a measurement that looked authoritative and was not.
+
+The other three corrections are verified by test and by rendered review, but have not been
+separately confirmed by the owner.
 
 ### Noted, not corrected
 
