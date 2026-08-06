@@ -275,7 +275,8 @@ versions changes nothing in the model at all, yet the printed peak moved 44 → 
 block credited the tube. Measured with **no action performed**, the printed peak on those patients
 wanders 43.8 → 43.2 across the same interval — under one cmH₂O, but across a rounding boundary. The
 rule is now one printed unit rather than a change of printed value; no clinical threshold was
-introduced.
+introduced. Four of the eight non-matching rows therefore read `small-drift` rather than `held` —
+visible, and still carrying no valence, no branch correction, and no credit.
 
 The third correction is the settle term above: with the buffer un-refreshed, even the _matching_
 treatments read as `rose` or `held` at the observation point.
@@ -382,7 +383,7 @@ round, so run it directly:
 npx esbuild scripts/critical-care/render-mv-practice-coaching.mts --bundle --platform=node --format=cjs --log-level=error --loader:.module.css=local-css --outfile=node_modules/.cache/mv-console/practice-coaching.cjs && node node_modules/.cache/mv-console/practice-coaching.cjs
 ```
 
-**Result: 16/16 blocks — zero horizontal overflow, zero elements crossing the pane edge, zero nested
+**Result: 56/56 blocks — zero horizontal overflow, zero elements crossing the pane edge, zero nested
 scrollers, 10.4px smallest text, no internal identifiers, 394px block width.** The frame reproduces
 the 52px of shell chrome the app measures between the 448px drawer and the 411px block, so the
 harness is the slightly harder case. Content heights 674–877px, inside a pane that already carries
@@ -405,7 +406,7 @@ verdict is worded about the readings rather than about the patient or the action
 ```
 npm run type-check                                 clean
 npm run lint                                       0 errors, 0 MV findings (19 pre-existing warnings elsewhere)
-npx jest src/features/mechanical-ventilation       22 suites / 548 tests
+npx jest src/features/mechanical-ventilation       22 suites / 553 tests
 npx jest src/features/critical-care                23 suites / 194 tests
 npx jest src/app                                   28 suites / 244 tests
 npm run test:a11y                                  11 passed
@@ -414,7 +415,7 @@ npx playwright test e2e/mechanical-ventilation-learn-layout.spec.ts   19 passed
 npm run dump:mv-waveforms                          identical to origin/main
 npm run render:mv-console                          4 consoles
 npm run render:mv-teaching                         10 panels
-render-mv-practice-coaching.mts                    48/48 blocks clean (12 runs × 4 widths) at the four widths
+render-mv-practice-coaching.mts                    56/56 blocks clean (14 runs × 4 widths) at the four widths
 ```
 
 **No engine change**, proven by construction rather than by eye: the waveform dump's bundle has 31

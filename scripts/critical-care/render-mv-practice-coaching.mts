@@ -7,10 +7,11 @@
  * MV-08's leak version or MV-13's tube version through the interface means finishing the case
  * several times over. This renders each of them directly from the engine.
  *
- * Twelve runs: the four response shapes, every MV-13 branch with the treatment that reaches it and
- * one that does not, decompression followed by definitive drainage as a real sequence, and the
- * neuromuscular-blockade copy. Each action is watched to its own observation point, so the renders
- * follow the authored latencies rather than a number picked here.
+ * Fourteen runs: the four response shapes, every MV-13 branch with the treatment that reaches it and
+ * one that does not, decompression followed by definitive drainage as a real sequence, the
+ * neuromuscular-blockade copy, and both directions of a rounding-boundary drift. Each action is
+ * watched to its own observation point, so the renders follow the authored latencies rather than a
+ * number picked here.
  *
  * Every block is framed at the geometry the browser reported for the task drawer at that viewport —
  * 448px wide at all four, and the pane height the shell actually gave it:
@@ -49,6 +50,7 @@ import moduleStyles from '../../src/features/mechanical-ventilation/components/m
 import { mechanicalVentilationCaseById } from '../../src/features/mechanical-ventilation/content/runtimeCases.ts'
 import {
   capturePostActionBaseline,
+  coachingReadingSnapshot,
   postActionObservation,
   ventilationPostActionCoaching,
   type PostActionCoaching,
@@ -79,6 +81,12 @@ interface Run {
   readonly branch: string
   readonly actions: readonly string[]
   readonly settleSeconds: number
+  /**
+   * Pin the peak pressure to an exact pair, so the two rounding-boundary cases render the raw numbers
+   * they are about — 43.8 → 43.2 and 43.2 → 43.8 — rather than whatever the patient happened to drift
+   * to. Everything else about those runs is the real engine.
+   */
+  readonly pinPeak?: readonly [number, number]
 }
 
 const RUNS: readonly Run[] = [
@@ -171,6 +179,24 @@ const RUNS: readonly Run[] = [
     settleSeconds: 40,
   },
   {
+    title: 'Rounding boundary, downward — visible, and not a response',
+    note: 'A raw 43.8 → 43.2 on MV-13\'s tube version, where suction reaches nothing. Under one cmH₂O, but across the printed boundary: the row shows 44 → 43 and says "small drift", and the block credits nothing.',
+    caseId: 'MV-13',
+    branch: 'hme-or-ett',
+    actions: ['suction-airway'],
+    settleSeconds: 0,
+    pinPeak: [43.8, 43.2],
+  },
+  {
+    title: 'Rounding boundary, upward — the same rule the other way',
+    note: 'A raw 43.2 → 43.8. The row shows 43 → 44 and says "small drift"; it is not read as the pressure having risen against the action either.',
+    caseId: 'MV-13',
+    branch: 'hme-or-ett',
+    actions: ['suction-airway'],
+    settleSeconds: 0,
+    pinPeak: [43.2, 43.8],
+  },
+  {
     title: 'Neuromuscular blockade — the plateau wording, and the indication boundary',
     note: 'The reassessment names the condition under which the split can be repeated, and says plainly that blockade is not a way of obtaining one.',
     caseId: 'MV-03',
@@ -234,6 +260,14 @@ function coachingFor(run: Run): PostActionCoaching {
     throw new Error(
       `${run.caseId}: the observation interval has not completed (${observation.secondsRemaining.toFixed(1)}s remaining)`,
     )
+  }
+  if (run.pinPeak) {
+    const [rawBefore, rawAfter] = run.pinPeak
+    state = { ...state, measurements: { ...state.measurements, peakPressureCmH2O: rawAfter } }
+    baseline = {
+      ...baseline,
+      readings: { ...coachingReadingSnapshot(state), 'peak-pressure': rawBefore },
+    }
   }
   const coaching = ventilationPostActionCoaching(state, definition, baseline)
   if (!coaching) throw new Error(`${run.caseId}: no coaching once the interval completed`)
