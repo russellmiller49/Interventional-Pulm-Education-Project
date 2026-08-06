@@ -418,6 +418,15 @@ describe('MCS M5 — every lifecycle event is emitted once', () => {
     await waitFor(() => expect(storedCompletedCaseIds()).toContain(scenario.id))
     const writes = progressWriteCount()
 
+    /*
+     * A learner can still act after the debrief opens, and each action produces a new state the
+     * persistence effect sees. Reassessing keeps the same scenario, score and error count, so the
+     * result has not changed and must not be written again.
+     */
+    reassessCase()
+    advanceSimulation(1)
+    expect(progressWriteCount()).toBe(writes)
+
     advanceSimulation(5_000)
     fireEvent.click(
       screen
