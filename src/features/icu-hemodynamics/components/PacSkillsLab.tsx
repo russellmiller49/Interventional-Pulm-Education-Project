@@ -9,14 +9,15 @@ import {
   type PointerEvent,
 } from 'react'
 
+import { requireCardiacOutputParameter } from '../content/cardiacOutputSourceBoundaries'
 import {
   thermodilutionAcceptedAverage,
   type HemodynamicAction,
   type HemodynamicSimulationState,
   type ThermodilutionTechnique,
-  type ThermodilutionTrial,
 } from '../engine'
 import { PressureSystemTeachingVisual } from './PressureSystemTeachingVisual'
+import { ThermodilutionSeriesReadout, ThermodilutionTrialCard } from './ThermodilutionTrialReview'
 import { TroubleshootingPanel } from './TroubleshootingPanel'
 import styles from './icu-hemodynamics.module.css'
 
@@ -27,18 +28,18 @@ interface PacSkillsLabProps {
   pressureChallengeMode?: 'selectable' | 'current-state'
 }
 
-function curvePoints(trial: ThermodilutionTrial): string {
-  if (trial.curve.length === 0) return ''
-  const values = trial.curve.map((point) => point.temperatureChangeC)
-  const minimum = Math.min(...values, -0.01)
-  return trial.curve
-    .map((point) => {
-      const x = (point.timeSeconds / 8) * 500
-      const y = 18 + (Math.abs(point.temperatureChangeC) / Math.abs(minimum)) * 72
-      return `${x.toFixed(1)},${y.toFixed(1)}`
-    })
-    .join(' ')
-}
+/**
+ * H4 §5. The injectate constants belong to a device and a protocol, not to a general rule, so the
+ * qualifier travels with them onto the panel rather than being written a second time here.
+ */
+const INJECTATE_VOLUME_QUALIFIER =
+  requireCardiacOutputParameter('injectate-volume').learnerFacingQualifier
+const DURATION_WINDOW_QUALIFIER = requireCardiacOutputParameter(
+  'injection-duration-window',
+).learnerFacingQualifier
+const RESPIRATORY_PHASE_QUALIFIER = requireCardiacOutputParameter(
+  'respiratory-phase-requirement',
+).learnerFacingQualifier
 
 export function PacSkillsLab({
   state,
@@ -56,7 +57,6 @@ export function PacSkillsLab({
     useState<ThermodilutionTechnique['respiratoryPhase']>('end-expiration')
   const injectionStart = useRef<number | null>(null)
   const ignoreClick = useRef(false)
-  const latestTrial = state.thermodilutionTrials.at(-1)
   const average = thermodilutionAcceptedAverage(state.thermodilutionTrials)
 
   function generate(injectionDurationSeconds = durationSeconds) {
@@ -327,87 +327,45 @@ export function PacSkillsLab({
             </button>
             <p className={styles.configurationNote}>
               Configured computation constant: {configuration.injectateVolumeMl} mL at{' '}
-              {configuration.injectateTemperatureC} °C.
+              {configuration.injectateTemperatureC} °C. {INJECTATE_VOLUME_QUALIFIER}{' '}
+              {DURATION_WINDOW_QUALIFIER} {RESPIRATORY_PHASE_QUALIFIER}
             </p>
 
-            <div className={styles.thermoCurve}>
-              <svg
-                viewBox="0 0 500 110"
-                role="img"
-                aria-label={
-                  latestTrial
-                    ? `Thermodilution trial ${latestTrial.sequence}, ${latestTrial.quality}, estimated cardiac output ${latestTrial.estimatedCardiacOutputLMin} liters per minute.`
-                    : 'No thermodilution curve generated yet.'
-                }
-              >
-                <path d="M0 18 H500 M0 54 H500 M0 90 H500" stroke="rgba(255,255,255,.1)" />
-                {latestTrial && (
-                  <polyline
-                    points={curvePoints(latestTrial)}
-                    fill="none"
-                    stroke="#72d7c8"
-                    strokeWidth="2.5"
-                  />
-                )}
-              </svg>
-              {latestTrial ? (
-                <div>
-                  <strong>{latestTrial.estimatedCardiacOutputLMin.toFixed(1)} L/min</strong>
-                  <span data-quality={latestTrial.quality}>{latestTrial.quality}</span>
-                </div>
+            <div className={styles.trialStack} aria-label="Thermodilution trials">
+              {state.thermodilutionTrials.length === 0 ? (
+                <p className={styles.thermoTrialWithheld}>
+                  No acquisition yet. Say what an acceptable curve should look like for this patient
+                  before you generate one.
+                </p>
               ) : (
-                <p>Generate a trial to display the temperature-time curve.</p>
-              )}
-            </div>
-
-            <div className={styles.trialList} aria-label="Thermodilution trials">
-              {state.thermodilutionTrials.map((trial) => (
-                <div key={trial.id}>
-                  <span>#{trial.sequence}</span>
-                  <strong>{trial.estimatedCardiacOutputLMin.toFixed(1)}</strong>
-                  <small>{trial.quality}</small>
-                  <button
-                    type="button"
-                    aria-pressed={trial.accepted === true}
-                    onClick={() =>
+                state.thermodilutionTrials.map((trial) => (
+                  <ThermodilutionTrialCard
+                    key={trial.id}
+                    trial={trial}
+                    onReview={() =>
+                      dispatch({ type: 'REVIEW_THERMODILUTION_CURVE', trialId: trial.id })
+                    }
+                    onAccept={() =>
                       dispatch({
                         type: 'SET_THERMODILUTION_ACCEPTED',
                         trialId: trial.id,
                         accepted: true,
                       })
                     }
-                  >
-                    Accept
-                  </button>
-                  <button
-                    type="button"
-                    aria-pressed={trial.accepted === false}
-                    onClick={() =>
+                    onExclude={(exclusionReasonId) =>
                       dispatch({
                         type: 'SET_THERMODILUTION_ACCEPTED',
                         trialId: trial.id,
                         accepted: false,
+                        exclusionReasonId,
                       })
                     }
-                  >
-                    Reject
-                  </button>
-                </div>
-              ))}
+                  />
+                ))
+              )}
             </div>
-            <div className={styles.averageReadout}>
-              <span>Accepted valid average</span>
-              <strong>
-                {average === null ? 'Need ≥3 valid trials' : `${average.toFixed(1)} L/min`}
-              </strong>
-            </div>
-            {latestTrial && latestTrial.alerts.length > 0 && (
-              <ul className={styles.curveAlerts}>
-                {latestTrial.alerts.map((alert) => (
-                  <li key={alert}>{alert}</li>
-                ))}
-              </ul>
-            )}
+
+            <ThermodilutionSeriesReadout trials={state.thermodilutionTrials} />
           </article>
         ) : null}
       </div>
