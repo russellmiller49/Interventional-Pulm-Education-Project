@@ -174,6 +174,12 @@ function correctedSimulation(state: HemodynamicSimulationState): HemodynamicSimu
     })
     const trial = corrected.thermodilutionTrials.at(-1)
     if (trial) {
+      // H4 §7. Acceptance now follows a review of the raw curve, so the authored corrected state
+      // performs both steps rather than reaching an accepted series the learner could not reach.
+      corrected = icuHemodynamicsReducer(corrected, {
+        type: 'REVIEW_THERMODILUTION_CURVE',
+        trialId: trial.id,
+      })
       corrected = icuHemodynamicsReducer(corrected, {
         type: 'SET_THERMODILUTION_ACCEPTED',
         trialId: trial.id,

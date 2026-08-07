@@ -1,4 +1,6 @@
 export * from './calculations'
+export * from './cardiacOutputSection'
+export * from './fick'
 export * from './monitorDisplay'
 export * from './progress'
 export * from './reducer'
