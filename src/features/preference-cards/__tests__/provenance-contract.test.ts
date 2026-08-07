@@ -495,6 +495,31 @@ describe('the canonical string and timestamp contracts are one contract', () => 
       "has_function_privilege('ip_preference_card_rebuild_writer', p.oid, 'EXECUTE')) <> 1",
     )
   })
+
+  it('keeps the writer unreachable by the migration role, which is the checkable half', () => {
+    // The rollback rehearsal moved this from "the role has no members" to "the role has exactly the
+    // one membership PostgreSQL forces, and it confers nothing". `pg_has_role(..., 'MEMBER')` is
+    // true for the creator on PostgreSQL 16+ and always will be; SET and USAGE are what decide
+    // whether the trusted insert context is reachable, and both must be false.
+    expect(verifierSql).toContain(
+      "pg_has_role(current_user, 'ip_preference_card_rebuild_writer'::name, 'SET')",
+    )
+    expect(verifierSql).toContain(
+      "pg_has_role(current_user, 'ip_preference_card_rebuild_writer'::name, 'USAGE')",
+    )
+    // The temporary SET-capable grant is the migration's own and is given back; the automatic
+    // ADMIN-only one is not the migration's to remove.
+    expect(migrationSql).toContain('grant ip_preference_card_rebuild_writer to current_user')
+    expect(migrationSql).toContain('revoke ip_preference_card_rebuild_writer from current_user')
+    // Behavioural, with the exact SQLSTATE rather than only the condition name.
+    expect(verifierSql).toContain('set local role ip_preference_card_rebuild_writer')
+    expect(verifierSql).toContain("<> '42501'")
+    // And the API roles stay non-members by any path, which no part of this change relaxes.
+    expect(verifierSql).toContain("pg_has_role(api_role::name, writer, 'MEMBER')")
+    expect(migrationSql).toMatch(
+      /revoke all on function public\.ip_create_rebuilt_preference_card\([^)]*\) from public, anon, authenticated/,
+    )
+  })
 })
 
 describe('the verifier can actually run', () => {

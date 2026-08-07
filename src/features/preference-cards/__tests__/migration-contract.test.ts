@@ -348,12 +348,17 @@ describe('preference-card rebuild provenance migration', () => {
     expect(rebuildMigrationSql).not.toMatch(/share_token/)
   })
 
-  it('gives the writer role membership back after the ownership transfer', () => {
-    // MEDIUM 1: the grant existed for one statement — `alter function ... owner to` requires the
-    // caller to be able to `set role` to the new owner — and used to be left behind. A later
-    // session as the migration role could then `set role ip_preference_card_rebuild_writer` and
-    // satisfy both the writer-only insert guard and the writer's own RLS policy with a direct
-    // insert, bypassing every source recheck the RPC performs.
+  it('keeps the temporary SET-capable grant, and gives it back after the ownership transfer', () => {
+    // MEDIUM 1: the grant exists for one statement — `alter function ... owner to` requires the
+    // caller to be able to `set role` to the new owner, and a plain `grant <role> to <role>` is what
+    // carries SET — and it used to be left behind. A later session as the migration role could then
+    // `set role ip_preference_card_rebuild_writer` and satisfy both the writer-only insert guard and
+    // the writer's own RLS policy with a direct insert, bypassing every source recheck the RPC
+    // performs.
+    //
+    // Both halves stay pinned. The grant is not optional — without it the ownership transfer fails
+    // and nothing installs — and the revoke is the only one of the two memberships the migration can
+    // actually remove, so dropping either would change what the steady state means.
     const grant = rebuildMigrationSql.indexOf(
       'grant ip_preference_card_rebuild_writer to current_user',
     )
@@ -374,6 +379,27 @@ describe('preference-card rebuild provenance migration', () => {
     expect(
       rebuildMigrationSql.match(/revoke ip_preference_card_rebuild_writer from current_user/g),
     ).toHaveLength(1)
+  })
+
+  it('documents the unrevocable PostgreSQL creator membership instead of claiming none', () => {
+    // Established by a rollback rehearsal against the project, not by reading: the migration
+    // executed in full and the verifier's then-current "no members at all" assertion failed with
+    // `postgres` still listed. PostgreSQL 16+ automatically grants a newly created role to a
+    // non-superuser `createrole` creator, issued by the bootstrap superuser and carrying
+    // `admin_option`, and a role cannot revoke a grant it did not issue.
+    expect(rebuildMigration).toContain('bootstrap superuser')
+    expect(rebuildMigration).toContain('admin_option')
+    expect(rebuildMigration).toContain('createrole_self_grant')
+    // The steady state, said as what it is rather than as what would be tidier.
+    expect(rebuildMigration).toContain('`set_option = false`')
+    expect(rebuildMigration).toContain('`inherit_option = false`')
+    expect(rebuildMigration).toContain('42501')
+    // ...and the claim it used to make in its place, which was false on this platform.
+    expect(rebuildMigration).not.toContain('a residual membership is the difference')
+    // The administrative boundary stated rather than implied away: `postgres` owns the protected
+    // objects and holds ADMIN, so it can always grant itself more. That is not a defect this
+    // migration can close, and pretending otherwise is what the previous comment did.
+    expect(rebuildMigration).toContain('defends itself from its own owner')
   })
 
   it('grants the writer schema create for exactly the ownership transfer, then revokes it', () => {
@@ -580,6 +606,62 @@ describe('preference-card rebuild provenance migration', () => {
     ).toEqual([...REBUILD_PROVENANCE_V1_KEYS].sort())
   })
 
+  it('pins the PostgreSQL 17 creator membership exactly, rather than requiring none', () => {
+    // What the rollback rehearsal established. In its previous "no members at all" form this
+    // assertion could not pass on managed Supabase: PostgreSQL 16+ grants a new role to its
+    // non-superuser `createrole` creator automatically, by the bootstrap superuser, with
+    // `admin_option`, and the creator cannot revoke it. The checkable properties are the shape of
+    // that one row and the absence of anything else.
+    expect(rebuildVerifier).toContain(
+      'the writer role must carry exactly one membership row, the unavoidable creator grant',
+    )
+    expect(rebuildVerifierSql).toContain(
+      'select count(*) into writer_member_count from pg_auth_members where roleid = writer',
+    )
+    // ADMIN true, SET false, INHERIT false — the three that decide whether anything can become it.
+    expect(rebuildVerifier).toContain(
+      "the writer role''s one membership is not the automatic ADMIN grant",
+    )
+    expect(rebuildVerifier).toContain('the writer role still has a SET-capable member')
+    expect(rebuildVerifier).toContain('the writer role still has an INHERIT-capable member')
+    expect(rebuildVerifierSql).toContain('where roleid = writer and (set_option or inherit_option)')
+    // The member is the migration role, and the grantor is somebody that member cannot act as —
+    // which is what makes the row unavoidable rather than a leftover of the migration's own grant.
+    expect(rebuildVerifier).toContain(
+      "the writer role''s one member is %, expected the migration role %",
+    )
+    expect(rebuildVerifierSql).toContain('writer_grantor_name = writer_member_name')
+    expect(rebuildVerifierSql).toContain('writer_grantor = 10::oid')
+    expect(rebuildVerifierSql).toContain('where oid = writer_grantor and rolsuper')
+    // MEMBER stays true and is deliberately never asserted false; SET and USAGE are the questions
+    // that decide anything.
+    expect(rebuildVerifierSql).toContain(
+      "pg_has_role(current_user, 'ip_preference_card_rebuild_writer'::name, 'SET')",
+    )
+    expect(rebuildVerifierSql).toContain(
+      "pg_has_role(current_user, 'ip_preference_card_rebuild_writer'::name, 'USAGE')",
+    )
+    expect(rebuildVerifierSql).not.toMatch(/pg_has_role\(\s*current_user[^)]*'MEMBER'/)
+    // No API role, by any path, at the start of the run and again at the end.
+    expect(rebuildVerifierSql).toContain("pg_has_role(api_role::name, writer, 'MEMBER')")
+    expect(rebuildVerifier).toContain('% is a member of the writer role')
+    expect(rebuildVerifier).toContain('% became a member of the writer role during the run')
+    // Behavioural denial with the exact code, and a `current_user` check afterwards so no assertion
+    // can pass from inside a role transition that outlived its block.
+    expect(rebuildVerifier).toContain('assuming the writer role failed with % rather than 42501')
+    expect(rebuildVerifier).toContain(
+      'the role-transition check left current_user as %, expected %',
+    )
+    expect(rebuildVerifier).toContain(
+      'the end-of-run role-transition check left current_user as %, expected %',
+    )
+    // And the two requirements it must no longer make, checked over statements so the file's own
+    // account of why they were wrong does not satisfy the search.
+    expect(rebuildVerifierSql).not.toContain('the writer role still has members')
+    expect(rebuildVerifierSql).not.toContain('a member of the writer role remains at the end')
+    expect(rebuildVerifierSql).not.toMatch(/no members at all/i)
+  })
+
   it('ships a verifier that proves authenticity, not only immutability', () => {
     // The blocker, as a behavioural check, for every role that could reach the table.
     expect(rebuildVerifier).toContain('an authenticated user forged rebuild_provenance at INSERT')
@@ -597,9 +679,13 @@ describe('preference-card rebuild provenance migration', () => {
     expect(rebuildVerifier).toContain('rolbypassrls')
     expect(rebuildVerifier).toContain('the writer role retained CREATE on schema public')
     expect(rebuildVerifier).toContain('the writer role is a member of another role')
-    expect(rebuildVerifier).toContain('the writer role still has members')
+    expect(rebuildVerifier).toContain(
+      'the writer role must carry exactly one membership row, the unavoidable creator grant',
+    )
     expect(rebuildVerifier).toContain('the migration role can still assume the writer role')
-    expect(rebuildVerifier).toContain('a member of the writer role remains at the end of the run')
+    expect(rebuildVerifier).toContain(
+      'a SET-capable or INHERIT-capable member of the writer role remains at the end of the run',
+    )
     // The private surface, asserted in the run rather than only read out of the migration.
     expect(rebuildVerifier).toContain(
       'the writer role cannot use schema private, so it cannot call its own validator',

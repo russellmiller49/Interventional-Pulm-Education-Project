@@ -539,18 +539,33 @@ owner** to hold `create` on the function's schema. The managed migration role is
 grants schema `create`, transfers ownership, revokes `create`, sets up the function ACL, and finally
 **revokes the membership**.
 
-The membership revoke is not tidiness. Left behind, a later session as the managed migration role
-could `set role ip_preference_card_rebuild_writer` and then satisfy both the writer-only insert guard
-and the writer's own RLS policy with a direct `insert`, bypassing every source recheck the RPC
-performs. The database owner is a trusted actor, but "this role exists only to own one function" has
-to be _true_ rather than nearly true. Ownership survives the revoke: ownership is recorded on the
+The membership revoke is not tidiness. Left behind, that grant carries `SET`, so a later session as
+the managed migration role could `set role ip_preference_card_rebuild_writer` and then satisfy both
+the writer-only insert guard and the writer's own RLS policy with a direct `insert`, bypassing every
+source recheck the RPC performs. Ownership survives the revoke: ownership is recorded on the
 function, membership is only what was needed to assign it, and `security definer` execution runs as
 the owner regardless of who is a member of what.
 
+**One membership always remains, and cannot be revoked.** On PostgreSQL 16 and later, a non-superuser
+`CREATEROLE` role that runs `create role` is automatically granted the new role _by the bootstrap
+superuser_, with `admin_option`; a role cannot revoke a grant it did not issue. The managed migration
+role is exactly that — `CREATEROLE`, not `rolsuper` — so `postgres` acquires a membership row the
+moment `create role ip_preference_card_rebuild_writer` runs, and the closing revoke removes only the
+migration's own grant. A rollback rehearsal against the Endoreels project established this rather
+than inferring it: the migration executed in full, and an earlier verifier that required the role to
+have no members failed in Part 1 with `postgres` still listed.
+
+What that row is, precisely: `admin_option = true`, `set_option = false`, `inherit_option = false`.
+`createrole_self_grant` is unset on this project, which keeps SET and INHERIT off it; nothing can
+keep ADMIN off it. So `pg_has_role(current_user, 'ip_preference_card_rebuild_writer', 'MEMBER')` is
+true and always will be, while `'SET'` and `'USAGE'` are both false and
+`set role ip_preference_card_rebuild_writer` fails with `42501`. The steady state is a role nobody
+can become and whose privileges nobody inherits — not a role with no members.
+
 Retained schema `usage` is a different thing and is correct: PostgreSQL requires `usage` to reach
 objects in a schema, and this non-schema-owning function owner needs it for the schema-qualified
-tables it reads. The least-privilege condition is _`usage` only, no `create`, no membership, no
-unrelated ownership_. The recheck and the insert are **one statement**, which removes the
+tables it reads. The least-privilege condition is _`usage` only, no `create`, no SET-capable or
+INHERIT-capable membership, no unrelated ownership_. The recheck and the insert are **one statement**, which removes the
 application-level gap between "the source was verified" and "the row was written". It is not a lock:
 the residual same-statement window, and why the state it can leave is one the design already allows,
 is in [Source deletion is allowed, and leaves a tombstone](#source-deletion-is-allowed-and-leaves-a-tombstone).
@@ -569,6 +584,15 @@ owner as a parameter, so whoever holds that key can create a provenance-bearing 
 never asked for one. The function narrows what the key can do — always a draft, never a share token,
 and the provenance document must describe the same source the parameters are re-checked against —
 but it does not remove the key as the boundary, and this document does not pretend otherwise.
+
+Neither does it cover the database's own administrative owner, and this is worth stating plainly
+rather than leaving to be inferred from the membership discussion above. `postgres` owns the table,
+both guards, the validator and the writer function, and PostgreSQL leaves it holding `ADMIN` on the
+writer role whatever the migration does. It can therefore grant itself a fresh membership
+`with set true` and then `set role` into the trusted insert context, or alter the protected objects
+outright. No migration can close that, because the operator who would do it is the one who applies
+migrations. What this design protects is the application and API paths, and accidental direct DML —
+not the database from a deliberate act by its own owner.
 
 What the three layers _do_ establish is that no API role can forge provenance: not a signed-in user
 through PostgREST, not `service_role` through the table, and not anybody through a later update.
@@ -628,8 +652,11 @@ rollback rehearsal is not optional and comes first:
 wraps itself in `begin`/`rollback`, and proves the boundary _behaviourally_ rather than structurally.
 Its positive case is built from the **complete** twenty-key version-1 document — an earlier version
 built eight of them and called it complete, blessing a card the application's own read schema
-rejects — and it requires the writer role to have **no members at all**, where an earlier version
-required the migration executor to remain one.
+rejects — and it pins the membership model **exactly**: one creator grant, `admin_option` true,
+`set_option` and `inherit_option` false, granted by a role its own member cannot act as, and no other
+member of the writer role by any path. One earlier version required the migration executor to remain
+a member without asking what kind; the next required no members at all, which the rehearsal proved is
+a state managed Supabase cannot be in.
 It is a role matrix with exact SQLSTATEs and no `when others` anywhere: `authenticated` through
 PostgREST with a JWT subject, `service_role` with its `bypassrls`, and the table-owning migration
 role are each required to fail at the guard with `23001` — not "`23001` or `42501`", because
@@ -645,7 +672,8 @@ writer role: the same row that Part 4 refused as `service_role` and as the table
 and the only thing that differs is which role the guard sees. Every role-specific block asserts its
 own `current_user` first; every refusal is bracketed by card _and_ revision counts; and the three
 write-once directions run twice, once as the table owner and once as `service_role`. It also asserts the role holds no
-`bypassrls`, no superuser or `createrole` attribute, no residual schema `create`, no membership, no
+`bypassrls`, no superuser or `createrole` attribute, no residual schema `create`, no SET-capable or
+INHERIT-capable membership, no
 ownership beyond its one function and no direct grant on any other table; the function ACL is read by
 grantee through `aclexplode` rather than by substring, so `PUBLIC` and any extra grantee are rejected
 and a null ACL — PostgreSQL's way of spelling "PUBLIC may execute" — cannot pass.
@@ -664,15 +692,20 @@ table-owner blocks additionally assert they are running as the table's owner, an
 anywhere in the script is bracketed by card _and_ revision counts.
 
 Note what the repository can and cannot establish about this file. The contract tests read the SQL;
-they do not execute it, and nothing in this branch has been run against a database. Applying the
-migration to an isolated database whose migration role matches managed Supabase — `CREATEROLE`,
-non-superuser, database owner — running the whole verifier as one script, and then deliberately
-breaking the insert guard, the RPC source binding and the ACL in three separate scratch runs to prove
-it fails each one, is rehearsal work and has not been done.
+they do not execute it. What _has_ been executed is one rollback rehearsal against the Endoreels
+project — PostgreSQL 17.6, migration role `postgres`, `CREATEROLE` and not `rolsuper`, database owner
+— with the migration and the verifier sent as a single `begin` / `rollback` transaction. The
+migration executed in full. The verifier stopped in Part 1 on the creator-membership assertion this
+section now describes, which is the defect corrected here. Nothing was applied: the transaction
+rolled back and the post-state matched the pre-state object for object and digest for digest.
+Everything after Part 1 — the role matrix, the malformed-document matrix, the write-once directions,
+the cleanup comparison — has not yet been observed to pass, and deliberately breaking the insert
+guard, the RPC source binding and the ACL in separate scratch runs to prove the verifier fails each
+one is still outstanding.
 
 ## What the repository can and cannot establish about the database half
 
-Ten suites, 320 tests, cover the planner, the answer contracts, the server path, the canonical slot
+The suites in this feature cover the planner, the answer contracts, the server path, the canonical slot
 expansion and its independent oracles, the world-drift matrix, the migration and provenance
 contracts, and the route and card-page rendering. None of them is database-role proof.
 
@@ -684,11 +717,12 @@ contracts, and the route and card-page rendering. None of them is database-role 
 - `card-rebuild-drift.test.ts` proves the trusted writer is called **zero** times for every drift
   source and every final-projection axis, which is a property of the application, not of the schema.
 
-**The migration has never been applied, and no rehearsal has been run on the corrected migration.**
-Applying it to an isolated database whose migration role matches managed Supabase — `CREATEROLE`,
-non-superuser, database owner — running the verifier as one script, and then deliberately breaking
-the insert guard, the document binding, the writer membership revoke and one SQLSTATE in separate
-scratch runs to prove the verifier fails each one, is the outstanding work.
+**The migration has never been applied.** One rollback rehearsal has been run against managed
+Supabase: it established that the migration executes there in full, and it found the
+creator-membership defect corrected here. It did not reach Parts 2 through 7. Re-running the whole
+verifier through to `ALL CHECKS PASSED`, and then deliberately breaking the insert guard, the
+document binding, the writer membership revoke and one SQLSTATE in separate scratch runs to prove the
+verifier fails each one, is the outstanding work.
 
 ## Commands
 

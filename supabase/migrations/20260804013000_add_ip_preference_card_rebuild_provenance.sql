@@ -74,10 +74,38 @@ comment on column public.ip_user_preference_cards.rebuild_provenance is
 -- needs below and nothing more. Its only purpose is to own one function, which is what makes
 -- "written by the reviewed rebuild" a checkable fact rather than "written by somebody with a key".
 --
--- Granted to the migration role so the function's ownership can be assigned; that is a prerequisite
--- of `alter function ... owner to`. The grant is **temporary** and is revoked at the end of this
+-- Two memberships exist once this file has run, and only one of them is the migration's doing.
+--
+-- The explicit `grant` below is the migration's. It is what makes `alter function ... owner to`
+-- possible, because PostgreSQL requires the caller to be able to `set role` to the new owner and a
+-- plain `grant <role> to <role>` carries SET. It is **temporary** and is revoked at the end of this
 -- file: left in place it would let a later session as the migration role `set role` to the writer
 -- and insert a provenance-bearing row directly, without the RPC's source rechecks.
+--
+-- The other is PostgreSQL's own and cannot be revoked. On PostgreSQL 16 and later a non-superuser
+-- `createrole` role that runs `create role` is automatically granted the new role **by the bootstrap
+-- superuser**, with `admin_option`. The managed migration role is exactly that — `createrole`, not
+-- `rolsuper` — so `postgres` acquires a membership row the instant the statement below runs, issued
+-- by a grantor it cannot act as and therefore cannot revoke or modify. The closing
+-- `revoke ... from current_user` removes the migration's own SET-carrying grant and leaves that one
+-- standing. This is not a deduction: a rollback rehearsal against the project ran this migration in
+-- full and the verifier's then-current "no members at all" assertion failed with `postgres` still
+-- listed.
+--
+-- What survives, exactly: one row with `admin_option = true`, `set_option = false`,
+-- `inherit_option = false`. `createrole_self_grant` is unset on this project, which is what keeps
+-- SET and INHERIT off it; it does not and cannot remove the ADMIN grant itself. ADMIN alone confers
+-- none of the writer's privileges — it cannot read or insert as the writer, it inherits nothing, and
+-- `set role ip_preference_card_rebuild_writer` fails with `42501`. The steady state is a role that
+-- nobody can become and whose one SET-capable grant has been given back.
+--
+-- What this is not is a claim that the database defends itself from its own owner. `postgres` holds
+-- ADMIN on this role and already owns the table, both guards and the validator: it can grant itself
+-- a fresh membership `with set true`, or simply alter the objects. That is said out loud here for
+-- the same reason the service-key boundary is said out loud at the top of this file. What the three
+-- layers establish is that no *API* role can forge provenance and that no ordinary path — a
+-- signed-in user through PostgREST, the service key through the table, a later update by anybody —
+-- writes this column. Deliberate action by the administrative owner is outside that claim.
 
 create role ip_preference_card_rebuild_writer nologin;
 
@@ -638,12 +666,20 @@ grant execute on function public.ip_create_rebuilt_preference_card(
 -- The membership granted at the top existed for one statement — `alter function ... owner to`
 -- requires the caller to be able to `set role` to the new owner — and it is given back here.
 --
--- Leaving it behind would have quietly kept the boundary open at the level the whole design is
--- about: a later session as the managed migration role could `set role
--- ip_preference_card_rebuild_writer` and then satisfy both the writer-only insert guard and the
--- writer's own RLS policy with a direct `insert`, bypassing every source recheck the RPC performs.
--- The database owner is a trusted actor, but "this role exists only to own one function" has to be
--- true rather than nearly true, and a residual membership is the difference.
+-- This revoke removes the migration's own grant, which is the one that carried SET. It does not, and
+-- cannot, remove the membership PostgreSQL created on its own behalf when the role was created: that
+-- grant was issued by the bootstrap superuser, which the migration role cannot act as. The note
+-- above `create role` says what is left and why it is not a way in. So the honest statement of the
+-- steady state is not "no member of the writer role exists" but "the only membership left is
+-- ADMIN-only, and the SET-capable one is gone".
+--
+-- That distinction is the whole value of this statement. Left behind, the SET-carrying grant would
+-- have kept the boundary open at exactly the level the design is about: a later session as the
+-- managed migration role could `set role ip_preference_card_rebuild_writer` and then satisfy both
+-- the writer-only insert guard and the writer's own RLS policy with a direct `insert`, bypassing
+-- every source recheck the RPC performs. With it revoked, `set role` fails with `42501`, no
+-- privilege of the writer's is inherited, and the residual ADMIN membership confers nothing by
+-- itself — it only means the owner could deliberately grant itself more, which it could do anyway.
 --
 -- Ownership survives the revoke. Ownership is recorded on the function; membership is only what was
 -- needed to *assign* it, and `security definer` execution runs as the owner regardless of who is

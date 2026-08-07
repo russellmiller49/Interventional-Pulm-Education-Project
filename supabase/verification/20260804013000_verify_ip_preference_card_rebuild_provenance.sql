@@ -14,14 +14,23 @@
 -- "complete" positive fixture carried eight of the twenty version-1 keys — a document the
 -- application's own read schema rejects — so it blessed a card that would come back as `null` on
 -- every subsequent read. It also *required* the migration executor to remain a member of the writer
--- role, blessing the residue that lets a later session `set role` into the trusted insert context
--- and bypass the RPC entirely.
+-- role without asking what kind of member, blessing a SET-capable residue that lets a later session
+-- `set role` into the trusted insert context and bypass the RPC entirely.
+--
+-- The fourth swung the other way and required the writer role to have no members at all. A rollback
+-- rehearsal against the project proved that unreachable: the migration executed in full and this
+-- file stopped in Part 1 with `postgres` still listed. PostgreSQL 16 and later automatically grant a
+-- newly created role to a non-superuser `createrole` creator, issued by the bootstrap superuser and
+-- carrying `admin_option` — a row the migration cannot revoke because it cannot act as the grantor.
+-- Zero members is not a state this platform can be in, so requiring it made the verifier unrunnable
+-- rather than strict.
 --
 -- This version builds its positive case from the complete version-1 document — the same twenty keys
 -- `storedRebuildProvenanceSchema` reads and `provenance-contract.test.ts` pins the three
 -- descriptions of — mutates exactly one fact per negative case, takes card *and* revision counts
 -- immediately around every refusal, asserts the role context inside every role-specific block, and
--- requires the writer role to have no members at all.
+-- pins the membership model exactly: one creator grant with ADMIN true, SET false and INHERIT
+-- false, granted by somebody its own member cannot act as, and no other member by any path.
 --
 -- WHAT IT ESTABLISHES
 --   Authenticity, not merely immutability. `rebuild_provenance` is evidence that a reviewed rebuild
@@ -30,6 +39,14 @@
 --   direct superuser-adjacent insert, and not a later update by anybody. And that when the one
 --   function does write it, the document it stores describes the revision it was checked against
 --   rather than an arbitrary object the caller supplied alongside a real tuple.
+--
+-- WHAT IT DOES NOT ESTABLISH
+--   That the database is safe from its own administrative owner. `postgres` owns the table, both
+--   guards, the validator and the writer function, and PostgreSQL leaves it holding ADMIN on the
+--   writer role whatever this migration does — so it can grant itself a SET-capable membership and
+--   then `set role`, or simply alter the objects. Every assertion below is about the state the
+--   migration leaves and the paths the application and the API roles can take. A determined operator
+--   with the migration role is outside the claim, and is named here rather than implied away.
 --
 -- HOW TO RUN
 --   Paste the whole file into the Supabase SQL editor and execute it as one script. Everything runs
@@ -82,6 +99,14 @@ declare
   acl_row record;
   grantee_count integer;
   member_names text;
+  writer_member_count integer;
+  writer_member_name text;
+  writer_grantor_name text;
+  writer_grantor oid;
+  writer_admin boolean;
+  writer_inherit boolean;
+  writer_set boolean;
+  set_role_state text;
   table_name text;
   validator_signature text;
   api_role text;
@@ -151,31 +176,129 @@ begin
     raise exception 'the writer role cannot use schema public, so it cannot reach its own function';
   end if;
 
-  -- It is a member of nothing, and — the part an earlier version of this file got backwards —
-  -- *nothing is a member of it*. The migration needs membership for one statement, because
-  -- `alter function ... owner to` requires the caller to be able to `set role` to the new owner, and
-  -- it gives that membership back. Left behind, a later session as the migration role could
-  -- `set role ip_preference_card_rebuild_writer` and then satisfy both the writer-only insert guard
-  -- and the writer's own RLS policy with a direct insert, bypassing every source recheck the RPC
-  -- performs. The previous version of this check *required* that residue to be present.
+  -- --- Membership, as PostgreSQL 17 actually leaves it -------------------------------------------
+  --
+  -- The writer role is a member of nothing. That direction is unchanged, and it is checked first
+  -- because it is the one a migration fully controls.
+  --
+  -- The other direction is *not* "nothing is a member of it". An earlier version of this file
+  -- asserted exactly that and a rollback rehearsal proved it unreachable: the migration executed in
+  -- full and this block stopped with `postgres` still listed. On PostgreSQL 16 and later a
+  -- non-superuser `createrole` role that runs `create role` is automatically granted the new role by
+  -- the **bootstrap superuser**, with `admin_option`, and a role cannot revoke a grant it did not
+  -- issue. The managed migration role is `createrole` and not `rolsuper`, so that row exists here by
+  -- construction and no migration can remove it. `createrole_self_grant` is unset on this project,
+  -- which is what keeps SET and INHERIT off it — it does not remove the ADMIN grant itself.
+  --
+  -- What is checkable is that row's exact shape and the absence of anything else. The grant the
+  -- migration issued for `alter function ... owner to` is the one that carried SET; that one *is*
+  -- revocable, and its absence is what this block is really establishing.
   if exists (select 1 from pg_auth_members where member = writer) then
     raise exception 'the writer role is a member of another role';
   end if;
-  select string_agg(r.rolname, ', ' order by r.rolname) into member_names
-    from pg_auth_members m join pg_roles r on r.oid = m.member
-   where m.roleid = writer;
-  if member_names is not null then
-    raise exception 'the writer role still has members: %', member_names;
+
+  select count(*) into writer_member_count from pg_auth_members where roleid = writer;
+  if writer_member_count <> 1 then
+    select coalesce(string_agg(
+             r.rolname || ' (admin=' || m.admin_option || ' set=' || m.set_option
+               || ' inherit=' || m.inherit_option || ')', ', ' order by r.rolname), '<none>')
+      into member_names
+      from pg_auth_members m join pg_roles r on r.oid = m.member
+     where m.roleid = writer;
+    -- Zero is as wrong as two. Zero would mean this platform does not behave the way the migration
+    -- documents, and every assertion below it would be describing a state nothing ever reached.
+    raise exception
+      'the writer role must carry exactly one membership row, the unavoidable creator grant; found % (%)',
+      writer_member_count, member_names;
   end if;
 
-  -- And the same fact behaviourally rather than only in the catalog.
+  select r.rolname, g.rolname, m.grantor, m.admin_option, m.inherit_option, m.set_option
+    into writer_member_name, writer_grantor_name, writer_grantor,
+         writer_admin, writer_inherit, writer_set
+    from pg_auth_members m
+    join pg_roles r on r.oid = m.member
+    join pg_roles g on g.oid = m.grantor
+   where m.roleid = writer;
+
+  if writer_member_name <> session_user then
+    raise exception 'the writer role''s one member is %, expected the migration role %',
+      writer_member_name, session_user;
+  end if;
+  if not writer_admin then
+    raise exception 'the writer role''s one membership is not the automatic ADMIN grant';
+  end if;
+  -- The two capabilities that would actually hand the writer over.
+  if writer_set then
+    raise exception 'the writer role still has a SET-capable member: % can become the writer',
+      writer_member_name;
+  end if;
+  if writer_inherit then
+    raise exception 'the writer role still has an INHERIT-capable member: % holds its privileges',
+      writer_member_name;
+  end if;
+  -- Said again over the whole table rather than only over the single row read above, so a second row
+  -- that somehow got past the count cannot carry either capability unnoticed.
+  if exists (
+    select 1 from pg_auth_members where roleid = writer and (set_option or inherit_option)
+  ) then
+    raise exception 'a SET-capable or INHERIT-capable membership of the writer role remains';
+  end if;
+
+  -- Granted by somebody its member cannot act as, which is what makes it unavoidable rather than
+  -- left behind. A row the migration role granted itself would be revocable, so finding one here
+  -- would mean the closing `revoke` never ran.
+  if writer_grantor_name = writer_member_name then
+    raise exception
+      'the writer role''s membership was granted by its own member (%), so it is the revocable grant rather than the creator grant',
+      writer_grantor_name;
+  end if;
+  -- The bootstrap superuser is OID 10 by definition. The `rolsuper` alternative keeps this honest on
+  -- an instance provisioned differently, rather than pinning a number this file cannot itself verify.
+  if not (writer_grantor = 10::oid
+          or exists (select 1 from pg_roles where oid = writer_grantor and rolsuper)) then
+    raise exception
+      'the writer role''s membership was granted by %, which is neither the bootstrap superuser nor a superuser',
+      writer_grantor_name;
+  end if;
+
+  -- The capability questions asked of the migration role directly. MEMBER is deliberately *not*
+  -- asserted false: the automatic ADMIN grant makes it true, and requiring otherwise is precisely
+  -- the mistake the rehearsal caught. SET and USAGE are the two that would matter.
+  if pg_has_role(current_user, 'ip_preference_card_rebuild_writer'::name, 'SET') then
+    raise exception 'the migration role can SET ROLE to the writer';
+  end if;
+  if pg_has_role(current_user, 'ip_preference_card_rebuild_writer'::name, 'USAGE') then
+    raise exception 'the migration role inherits the writer''s privileges';
+  end if;
+
+  -- No API role holds membership of any kind, by any path. This is the assertion that stays
+  -- absolute, and nothing above weakens it.
+  for api_role in select unnest(array['anon', 'authenticated', 'service_role']) loop
+    if pg_has_role(api_role::name, writer, 'MEMBER') then
+      raise exception '% is a member of the writer role', api_role;
+    end if;
+  end loop;
+
+  -- And the same fact behaviourally rather than only in the catalog, with the exact code. The
+  -- `insufficient_privilege` condition *is* 42501; naming the number as well is what lets the
+  -- contract tests pin it and a reader see which failure is being required.
   begin
     set local role ip_preference_card_rebuild_writer;
     reset role;
     raise exception 'the migration role can still assume the writer role';
   exception
-    when insufficient_privilege then null;
+    when insufficient_privilege then
+      get stacked diagnostics set_role_state = returned_sqlstate;
+      if set_role_state <> '42501' then
+        raise exception 'assuming the writer role failed with % rather than 42501', set_role_state;
+      end if;
   end;
+  -- ...and we are still who we were. A role transition that outlived the block above would make
+  -- every assertion after it a statement about the wrong role.
+  if current_user <> session_user then
+    raise exception 'the role-transition check left current_user as %, expected %',
+      current_user, session_user;
+  end if;
 
   -- It owns exactly one function and nothing else at all.
   if (select count(*) from pg_proc where proowner = writer) <> 1 then
@@ -1476,6 +1599,9 @@ $$;
 do $$
 declare
   baseline record;
+  writer_member_count integer;
+  set_role_state text;
+  api_role text;
 begin
   delete from public.ip_user_preference_cards where procedure_code = 'VERIFY_ONLY';
 
@@ -1501,12 +1627,34 @@ begin
     raise exception 'revision content digest changed';
   end if;
 
+  -- The membership model, re-checked rather than assumed to have survived seven parts. The
+  -- unavoidable creator grant is still expected here — requiring zero members is the mistake Part 1
+  -- used to make — but nothing may have gained SET or INHERIT along the way.
+  select count(*) into writer_member_count
+    from pg_auth_members m join pg_roles r on r.oid = m.roleid
+   where r.rolname = 'ip_preference_card_rebuild_writer';
+  if writer_member_count <> 1 then
+    raise exception
+      'the writer role carries % membership rows at the end of the run, expected only the creator grant',
+      writer_member_count;
+  end if;
   if exists (
     select 1 from pg_auth_members m join pg_roles r on r.oid = m.roleid
      where r.rolname = 'ip_preference_card_rebuild_writer'
+       and (m.set_option or m.inherit_option)
   ) then
-    raise exception 'a member of the writer role remains at the end of the run';
+    raise exception
+      'a SET-capable or INHERIT-capable member of the writer role remains at the end of the run';
   end if;
+  if pg_has_role(current_user, 'ip_preference_card_rebuild_writer'::name, 'SET')
+     or pg_has_role(current_user, 'ip_preference_card_rebuild_writer'::name, 'USAGE') then
+    raise exception 'the migration role gained SET or USAGE on the writer role during the run';
+  end if;
+  for api_role in select unnest(array['anon', 'authenticated', 'service_role']) loop
+    if pg_has_role(api_role::name, 'ip_preference_card_rebuild_writer'::name, 'MEMBER') then
+      raise exception '% became a member of the writer role during the run', api_role;
+    end if;
+  end loop;
 
   -- And nothing this script did widened the boundary it spent seven parts describing. Re-checked at
   -- the end rather than only at the start: `set local role`, a policy, or a grant issued midway
@@ -1516,8 +1664,18 @@ begin
     reset role;
     raise exception 'the migration role can assume the writer role at the end of the run';
   exception
-    when insufficient_privilege then null;
+    when insufficient_privilege then
+      get stacked diagnostics set_role_state = returned_sqlstate;
+      if set_role_state <> '42501' then
+        raise exception
+          'assuming the writer role at the end of the run failed with % rather than 42501',
+          set_role_state;
+      end if;
   end;
+  if current_user <> session_user then
+    raise exception 'the end-of-run role-transition check left current_user as %, expected %',
+      current_user, session_user;
+  end if;
   if has_schema_privilege('ip_preference_card_rebuild_writer', 'public', 'CREATE')
      or has_schema_privilege('ip_preference_card_rebuild_writer', 'private', 'CREATE') then
     raise exception 'the writer role holds CREATE on a schema at the end of the run';
