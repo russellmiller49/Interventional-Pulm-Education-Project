@@ -10,6 +10,7 @@ import type { McsAnatomyTargetId, McsMonitorTargetId, McsSectionLearningContract
 import type { McsSimulationState } from '../engine'
 import { McsAnatomy3D } from './McsAnatomy3D'
 import { McsMonitor } from './McsMonitor'
+import { mcsDeviceFlowText } from './teaching/selectors'
 import styles from './mechanical-circulatory-support.module.css'
 
 /**
@@ -61,8 +62,12 @@ export function McsLearnPrimaryPane({
         <div>
           <dt>Right now</dt>
           <dd>
-            Native {state.metrics.nativeFlowLMin.toFixed(1)} · displayed device{' '}
-            {state.metrics.deviceFlowLMin.toFixed(1)} · effective systemic{' '}
+            {/*
+             * The device slot comes from the flow account rather than from the raw metric, so this
+             * strip cannot read `0.0` on a mechanism the account beneath it calls "none reported".
+             */}
+            Native {state.metrics.nativeFlowLMin.toFixed(1)} L/min · displayed device{' '}
+            {mcsDeviceFlowText(state)} · effective systemic{' '}
             {state.metrics.effectiveSystemicFlowLMin.toFixed(1)} L/min · mean pressure{' '}
             {state.metrics.mapMmHg} mm Hg
           </dd>
