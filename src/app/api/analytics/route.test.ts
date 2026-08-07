@@ -169,7 +169,6 @@ describe('site analytics API Baxter CRRT privacy boundary', () => {
         deviceTrack: 'impella',
         station: 'IMP-01',
         completion: 'in-progress',
-        scoreBand: '60-79',
       },
       {
         section: 'practice',
@@ -236,7 +235,6 @@ describe('site analytics API Baxter CRRT privacy boundary', () => {
         deviceTrack: 'impella',
         station: 'IMP-01',
         completion: 'in-progress',
-        scoreBand: '60-79',
       },
       {
         section: 'practice',
@@ -534,6 +532,201 @@ describe('site analytics API Baxter CRRT privacy boundary', () => {
   })
 })
 
+/**
+ * The MCS workbench sends one aggregate module event per state change, and the accepted privacy
+ * contract for that event is exactly three nested fields:
+ *
+ *   - the device track,
+ *   - the station,
+ *   - a coarse completion state.
+ *
+ * No physiology, no detailed action history, no free text, and no performance band.
+ *
+ * The fixtures below are the payload asserted by the landed M5 workbench analytics test —
+ * `src/features/mechanical-circulatory-support/__tests__/m5-persistence-analytics.test.tsx`,
+ * "sends only the device track, the station, and a coarse completion state" — so this suite fails
+ * whenever the server contract drifts away from the shape the client actually sends.
+ */
+describe('site analytics API mechanical circulatory support aggregate contract', () => {
+  const supabaseServerMock = supabaseServer as jest.Mock
+
+  beforeEach(() => {
+    supabaseServerMock.mockReset()
+  })
+
+  it.each([
+    ['learn', 'iabp', 'IAB-01', 12],
+    ['practice', 'impella', 'IMP-01', 34],
+    ['assess', 'lvad', 'CAP-LVAD-01', 88],
+  ])(
+    'accepts an in-progress %s event carrying only the three contract fields',
+    async (section, deviceTrack, station, percentComplete) => {
+      const database = authenticatedAnalyticsDatabase()
+      supabaseServerMock.mockResolvedValue(database.client)
+
+      const response = await POST(
+        mcsAnalyticsRequest(
+          { deviceTrack, station, completion: 'in-progress' },
+          { section, percentComplete, routePath: `/en/mechanical-circulatory-support/${section}` },
+        ),
+      )
+
+      expect(response.status).toBe(200)
+      expect(database.insert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          module_id: 'mechanical-circulatory-support',
+          event_type: 'module_interaction',
+          event_payload: expect.objectContaining({
+            deviceTrack,
+            station,
+            completion: 'in-progress',
+          }),
+        }),
+      )
+    },
+  )
+
+  it('accepts the completed event the workbench sends as a section completion', async () => {
+    const database = authenticatedLifecycleDatabase()
+    supabaseServerMock.mockResolvedValue(database.client)
+
+    const response = await POST(
+      mcsAnalyticsRequest(mcsCompletedAggregateEvent(), {
+        eventType: 'section_completed',
+        percentComplete: 40,
+      }),
+    )
+
+    expect(response.status).toBe(200)
+    expect(database.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_type: 'section_completed',
+        event_payload: expect.objectContaining(mcsCompletedAggregateEvent()),
+      }),
+    )
+  })
+
+  it('stores the validated contract as exactly the three nested fields', async () => {
+    const database = authenticatedAnalyticsDatabase()
+    supabaseServerMock.mockResolvedValue(database.client)
+
+    const response = await POST(mcsAnalyticsRequest(mcsInProgressAggregateEvent()))
+
+    expect(response.status).toBe(200)
+    const stored = database.insert.mock.calls.at(-1)?.[0] as {
+      event_payload: Record<string, unknown>
+    }
+    // The shared writer stamps the top-level analytics context — percentComplete and section —
+    // onto every stored envelope, for every module. Everything else in that envelope is the
+    // validated nested payload, and it is exactly the three contract fields.
+    const { percentComplete, section, ...nested } = stored.event_payload
+    expect(nested).toEqual(mcsInProgressAggregateEvent())
+    // percentComplete stays a top-level analytics field: the strict nested schema rejects it
+    // outright (see the privacy table below), so validation never folds it into the contract.
+    expect(percentComplete).toBe(34)
+    expect(section).toBe('practice')
+  })
+
+  it.each([
+    ['a performance band', { scoreBand: '80-100' }],
+    ['a raw score', { score: 92 }],
+    ['a mastery flag', { mastery: true }],
+    ['a mean arterial pressure', { mapMmHg: 62 }],
+    ['a wedge pressure', { pcwpMmHg: 24 }],
+    ['a pulmonary artery pulsatility index', { papi: 0.9 }],
+    ['a cardiac power output', { cardiacPowerOutputW: 0.51 }],
+    ['a mixed venous saturation', { svo2Percent: 48 }],
+    ['waveform data', { waveform: [12, 14, 11] }],
+    ['a trend array', { trends: [34, 36, 39] }],
+    ['an action history', { actionHistory: ['increased p-level', 'gave volume'] }],
+    ['prediction text', { prediction: 'right ventricular failure' }],
+    ['free text', { note: 'patient-specific free text' }],
+    ['an unknown device track', { deviceTrack: 'ecmo' }],
+    ['an invalid station identifier', { station: 'IMP 01 free text' }],
+    ['an unknown completion state', { completion: 'partial' }],
+    ['a nested percent complete', { percentComplete: 34 }],
+    ['any other unknown key', { replayState: { actions: [] } }],
+  ])(
+    'rejects an MCS aggregate payload containing %s before authentication or storage',
+    async (_, extra) => {
+      const response = await POST(
+        mcsAnalyticsRequest({ ...mcsInProgressAggregateEvent(), ...extra }),
+      )
+
+      expect(response.status).toBe(400)
+      await expect(response.json()).resolves.toEqual({
+        error: 'Invalid focused critical-care analytics payload.',
+      })
+      expect(supabaseServerMock).not.toHaveBeenCalled()
+    },
+  )
+
+  it.each([
+    [
+      'a completed state on an interaction event',
+      mcsCompletedAggregateEvent(),
+      { eventType: 'module_interaction' },
+    ],
+    [
+      'an in-progress state on a section completion',
+      mcsInProgressAggregateEvent(),
+      { eventType: 'section_completed' },
+    ],
+    ['no percent complete', mcsInProgressAggregateEvent(), { percentComplete: undefined }],
+    ['an unsupported section', mcsInProgressAggregateEvent(), { section: 'debrief' }],
+    [
+      'a route outside the MCS module',
+      mcsInProgressAggregateEvent(),
+      { routePath: '/en/cardiohelp-ecmo/learn' },
+    ],
+    ['generic session duration', mcsInProgressAggregateEvent(), { durationSeconds: 60 }],
+    [
+      'a generic session identifier',
+      mcsInProgressAggregateEvent(),
+      { sessionId: '3cf4a73a-d143-4ed4-874a-e494e5d2e729' },
+    ],
+  ])('rejects an MCS aggregate event with %s', async (_, body, overrides) => {
+    const response = await POST(mcsAnalyticsRequest(body, overrides))
+
+    expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({
+      error: 'Invalid focused critical-care analytics payload.',
+    })
+    expect(supabaseServerMock).not.toHaveBeenCalled()
+  })
+})
+
+/** The exact nested payload the landed M5 workbench emits while a station is in progress. */
+function mcsInProgressAggregateEvent() {
+  return {
+    deviceTrack: 'impella',
+    station: 'IMP-01',
+    completion: 'in-progress',
+  }
+}
+
+/** The same three-field contract once the station is complete. */
+function mcsCompletedAggregateEvent() {
+  return {
+    deviceTrack: 'impella',
+    station: 'IMP-01',
+    completion: 'complete',
+  }
+}
+
+function mcsAnalyticsRequest(
+  eventPayload: Record<string, unknown> | undefined,
+  overrides: Record<string, unknown> = {},
+) {
+  return analyticsRequest('mechanical-circulatory-support', eventPayload, {
+    eventType: 'module_interaction',
+    percentComplete: 34,
+    routePath: '/en/mechanical-circulatory-support/practice',
+    section: 'practice',
+    ...overrides,
+  })
+}
+
 function validCrrtCaseCompletion() {
   return {
     interaction: 'case_completed',
@@ -627,6 +820,9 @@ function authenticatedLifecycleDatabase() {
       },
       from,
     },
+    from,
+    insert,
+    progressUpsert,
     sessionUpsert,
   }
 }
