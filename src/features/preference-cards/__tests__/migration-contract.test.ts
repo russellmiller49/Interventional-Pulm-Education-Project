@@ -701,6 +701,76 @@ describe('preference-card rebuild provenance migration', () => {
     expect(rebuildVerifierSql).not.toMatch(/'search_path='/)
   })
 
+  it('never lets a query alias collide with a declared PL/pgSQL variable', () => {
+    // The defect the third rollback rehearsal found, and the one source review is structurally
+    // blind to. `private.ip_validate_preference_card_rebuild_provenance_v1` declares `value jsonb`
+    // and carried two loops of the form `select value from jsonb_array_elements(...) as t(value)`.
+    // Under PL/pgSQL's default `variable_conflict = error` that unqualified `value` is ambiguous —
+    // SQLSTATE 42702 — because it names both the declared variable and the query's own column.
+    //
+    // PL/pgSQL compiles a statement the first time it *executes*, not at `create function`. So the
+    // migration applied cleanly, verifier Parts 1 through 4 passed, and the failure appeared only
+    // when Part 5 first validated a document's `decisions` array. Every valid version-1 document
+    // carries that array, so this was on the path of every real reviewed rebuild.
+    //
+    // Asserted over statements, never prose, so the comment that explains the defect cannot satisfy
+    // the check.
+    expect(rebuildMigrationSql).not.toMatch(/select\s+value\s+from\s+jsonb_array_elements/)
+    expect(rebuildMigrationSql).not.toContain('as t(value)')
+    // Both loops, by the alias they now use. The rehearsal only ever reached the first; the nested
+    // reason-code loop carried the identical collision and would have raised on the very next run.
+    expect(rebuildMigrationSql).toContain(
+      "select elem from jsonb_array_elements(document -> 'decisions') as t(elem)",
+    )
+    expect(rebuildMigrationSql).toContain(
+      "select elem from jsonb_array_elements(decision -> 'reasonCodes') as t(elem)",
+    )
+    // Exactly two array-element loops in the file, and both use the safe alias — so a third added
+    // later cannot quietly reintroduce the old form.
+    expect(rebuildMigrationSql.match(/jsonb_array_elements\([^)]*\)/g)).toHaveLength(2)
+    expect(
+      rebuildMigrationSql.match(/jsonb_array_elements\([^)]*\)\s+as\s+t\(elem\)/g),
+    ).toHaveLength(2)
+    // `value` remains declared and remains genuinely used, which is why renaming *it* was the wrong
+    // fix: it carries `document -> key` through the nullability and hash loops.
+    expect(rebuildMigrationSql).toContain('value jsonb;')
+    expect(rebuildMigrationSql).toContain('value := document -> key;')
+    // And the collision is resolved by naming, not by a global identifier-resolution override that
+    // would silently change how every other statement in the function resolves names.
+    expect(rebuildMigration).not.toMatch(/#\s*variable_conflict/)
+    expect(rebuildVerifier).not.toMatch(/#\s*variable_conflict/)
+  })
+
+  it('spells the success phrase exactly once, and only as the executable notice', () => {
+    // A failed rehearsal was briefly read as a passing one. `psql --echo-errors` prints the source
+    // of the DO block that failed, so a *comment* carrying the success phrase landed in the log and
+    // `grep -F "ALL CHECKS PASSED" "$LOG"` found it — while the server notice had never run.
+    //
+    // Two defences. This test is the first: the phrase appears exactly once across the pending SQL,
+    // as the statement, so an echoed comment cannot carry it. The anchored log check documented in
+    // the verifier is the second, and does not depend on this discipline holding forever.
+    const PHRASE = 'ALL CHECKS PASSED'
+    const occurrences = (text: string) => text.split(PHRASE).length - 1
+
+    expect(occurrences(rebuildMigration)).toBe(0)
+    expect(occurrences(rebuildVerifier)).toBe(1)
+    // The one occurrence is executable, not prose.
+    expect(rebuildVerifierSql).toContain(`raise notice '${PHRASE}';`)
+    expect(occurrences(rebuildVerifierSql)).toBe(1)
+    // ...and no comment anywhere in the file carries it.
+    const commentsOnly = rebuildVerifier
+      .split('\n')
+      .filter((line) => line.trimStart().startsWith('--'))
+      .join('\n')
+    expect(occurrences(commentsOnly)).toBe(0)
+
+    // The operational rule travels with the file, including why the obvious grep is unsafe and why
+    // the anchor must tolerate the SQLSTATE that `\set VERBOSITY verbose` interleaves — an anchor
+    // without it matches default verbosity only and would call a passing run a failure.
+    expect(rebuildVerifier).toContain("grep -Ec '^psql:.*: NOTICE: +([0-9A-Z]{5}: )?<PHRASE>$'")
+    expect(rebuildVerifier).toContain('Not an unanchored `grep -F`')
+  })
+
   it('ships a verifier that proves authenticity, not only immutability', () => {
     // The blocker, as a behavioural check, for every role that could reach the table.
     expect(rebuildVerifier).toContain('an authenticated user forged rebuild_provenance at INSERT')

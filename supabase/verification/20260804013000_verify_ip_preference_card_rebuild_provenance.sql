@@ -8,9 +8,9 @@
 -- `exception when others`, so *any* error counted as the expected one. The second fixed both and
 -- then could not run: its Part 5 provenance object omitted `sourceSnapshotHash`, so the very first
 -- writer call raised `invalid_parameter_value` where the handler expected `no_data_found`, and the
--- transaction aborted before the positive case, the write-once matrix, or ALL CHECKS PASSED.
+-- transaction aborted before the positive case, the write-once matrix, or the final success notice.
 --
--- The third ran, and could still print ALL CHECKS PASSED while the contract was false. Its
+-- The third ran, and could still reach the final success notice while the contract was false. Its
 -- "complete" positive fixture carried eight of the twenty version-1 keys — a document the
 -- application's own read schema rejects — so it blessed a card that would come back as `null` on
 -- every subsequent read. It also *required* the migration executor to remain a member of the writer
@@ -49,11 +49,45 @@
 --   with the migration role is outside the claim, and is named here rather than implied away.
 --
 -- HOW TO RUN
---   Paste the whole file into the Supabase SQL editor and execute it as one script. Everything runs
---   inside one transaction that ends in `rollback`, and the row counts and content digests taken at
---   the start are re-compared at the end, so "this left the data alone" is checked rather than
---   claimed. A failed assertion raises and aborts; the final ALL CHECKS PASSED notice is the pass
---   condition.
+--   The gated path is `psql -f` with `ON_ERROR_STOP=1`, against a freshly exported copy of this file
+--   and the migration — a scratch directory left over from an earlier run holds the *earlier*
+--   artifacts, and re-running those reproduces a failure that has already been fixed. Pasting the
+--   whole file into the Supabase SQL editor is the manual fallback, where the operator reads the
+--   notices directly and the log check below does not apply.
+--
+--   Either way everything runs inside one transaction that ends in `rollback`, and the row counts
+--   and content digests taken at the start are re-compared at the end, so "this left the data alone"
+--   is checked rather than claimed. A failed assertion raises and aborts; the final success notice
+--   is the pass condition.
+--
+-- HOW TO TELL IT PASSED, WITHOUT FOOLING YOURSELF
+--   Below, <PHRASE> stands for the exact success literal — the one in the `raise notice` at the very
+--   end of this file, which is deliberately the *only* place in this file it appears. Writing it out
+--   again here would be the same mistake this section exists to describe.
+--
+--   Two conditions, both required:
+--
+--     1. psql exits 0 (run it with ON_ERROR_STOP).
+--     2. Exactly one *server* notice matches, anchored to psql's notice prefix:
+--
+--          NOTICE_COUNT=$(grep -Ec '^psql:.*: NOTICE: +([0-9A-Z]{5}: )?<PHRASE>$' "$LOG" || true)
+--          test "$NOTICE_COUNT" -eq 1
+--
+--   The `|| true` is not decoration: `grep -c` exits 1 when it counts zero, so under `set -e` the
+--   assignment itself aborts the script before `test` runs, and a genuine zero-notice failure
+--   surfaces as an opaque abort instead of the explicit one it should be.
+--
+--   Not an unanchored `grep -F` for the phrase. That is how a failed run was briefly read as a
+--   passing one: `--echo-errors` prints the source of the DO block that failed, so a *comment*
+--   carrying the phrase landed in the log and the unanchored search found it while the server notice
+--   had never run. Every comment here has since been reworded, but the anchor is what makes the check
+--   independent of that discipline holding forever.
+--
+--   The optional `([0-9A-Z]{5}: )?` group is the SQLSTATE psql interleaves under `\set VERBOSITY
+--   verbose`, which is what the preserved rehearsal log actually contains — a real notice line reads
+--   `psql:combined.sql:NNNN: NOTICE:  00000: <PHRASE>`. An anchor without that group matches default
+--   verbosity only, and would report a genuinely passing run as a failure. See reviewed-rebuild.md
+--   for the runnable form.
 --
 -- HOW IT FAILS
 --   Every negative case names the exact SQLSTATE it expects — `23001` (`restrict_violation`) for
@@ -1112,7 +1146,8 @@ begin
         -- "any other operator" class that the JSON arrow belongs to, so without these parentheses
         -- the index and the key name bind to each other instead — integer minus text — and the
         -- statement raises 42883 before anything is validated. No handler caught it, so the script
-        -- aborted here, before the positive writer call, Part 6, cleanup and ALL CHECKS PASSED.
+        -- aborted here, before the positive writer call, Part 6, cleanup and the final success
+        -- notice.
         provenance || jsonb_build_object('decisions',
           jsonb_build_array((decisions_fixture -> 0) - omitted_key)));
       raise exception 'the writer accepted a decision with no %', omitted_key;

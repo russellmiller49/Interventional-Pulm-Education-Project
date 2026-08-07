@@ -684,7 +684,7 @@ and a null ACL — PostgreSQL's way of spelling "PUBLIC may execute" — cannot 
 An earlier version of this verifier could not run at all: its Part 5 provenance object omitted
 `sourceSnapshotHash`, so the first writer call raised `invalid_parameter_value` where the handler
 expected `no_data_found`, and the transaction aborted before the positive case, the write-once matrix
-or `ALL CHECKS PASSED`. That is why the fixture completeness is now pinned by
+or the final success notice. That is why the fixture completeness is now pinned by
 `migration-contract.test.ts` as well.
 
 The malformed-document matrix is per key, not per key _class_: every one of the twenty required keys
@@ -695,12 +695,23 @@ table-owner blocks additionally assert they are running as the table's owner, an
 anywhere in the script is bracketed by card _and_ revision counts.
 
 Note what the repository can and cannot establish about this file. The contract tests read the SQL;
-they do not execute it. What _has_ been executed is two rollback rehearsals against the Endoreels
+they do not execute it. What _has_ been executed is three rollback rehearsals against the Endoreels
 project — PostgreSQL 17.6, migration role `postgres`, `CREATEROLE` and not `rolsuper`, database owner
 — each sending the migration and the verifier as a single `begin` / `rollback` transaction. **The
-migration executed completely both times. The verifier has never passed, and Parts 2 through 7 have
-never been reached.** Both rehearsals rolled back with nothing persisted: no database object and no
-row survived either one.
+migration executed completely all three times. The verifier has never passed, and Parts 5 through 7
+have never completed.** Every rehearsal rolled back with nothing persisted: no object, role, policy,
+trigger, function, row, migration-history entry or PostgREST schema reload survived any of them.
+
+The third ran the artifacts of feature commit `61c6adb5`, byte-identical, through `psql` with
+`ON_ERROR_STOP`:
+
+| Artifact  | SHA-256                                                            |
+| --------- | ------------------------------------------------------------------ |
+| Migration | `2aff94da18cbc98c6088bb3d8d71c4d6653feb8980ad6fdc1f1eef04d0410fd2` |
+| Verifier  | `9d8011ebdc683ef2bb189b5472a1a69d68bb42d7fbee0ab6f375ab6b2f4c01ee` |
+| Combined  | `481a966646e4a4950079bbfc332394cdbbf6c357094087b06b13845f4eb1ae8c` |
+
+132,889 bytes, 2,418 lines, explicit outer `begin` and final `rollback`, psql exit status **3**.
 
 The first stopped in Part 1 on the creator-membership assertion described above. The second, run
 through `psql` from a verified disk file, stopped in Part 1 on a different false assertion —
@@ -719,9 +730,103 @@ it is, against `array['search_path=""']`, which settles in one expression that t
 holds exactly the intended setting, uses the representation PostgreSQL really writes, and carries no
 second function-local GUC.
 
-A third rollback rehearsal is required, and neither of the first two says anything about what Parts 2
-through 7 will do. Deliberately breaking the insert guard, the RPC source binding and the ACL in
-separate scratch runs to prove the verifier fails each one is still outstanding on top of that.
+The third got further than either: Parts 1, 2, 3 and 4 all passed, and it stopped inside Part 5 on
+the first case that exercised the decision-array validation. This one was **not** a verifier defect —
+it was in the migration, on the path of every real reviewed rebuild:
+
+```
+SQLSTATE 42702
+column reference "value" is ambiguous
+DETAIL:  It could refer to either a PL/pgSQL variable or a table column.
+QUERY:   select value from jsonb_array_elements(document -> 'decisions') as t(value)
+CONTEXT: PL/pgSQL function private.ip_validate_preference_card_rebuild_provenance_v1(jsonb)
+         line 186 at FOR over SELECT rows
+```
+
+The validator declares `value jsonb` and uses it to carry `document -> key` through the nullability
+and hash loops, so an unqualified `value` in a query whose own alias is also `value` names two things.
+PL/pgSQL's default `variable_conflict = error` refuses to guess. The fix renames the _query alias_ to
+`elem` in both array loops; the variable keeps its name, and no `#variable_conflict` override was
+introduced — an override would silently change how every other statement in the function resolves
+names, which is a much larger change than the defect.
+
+Two properties of this failure are worth keeping. First, **PL/pgSQL compiles a statement the first
+time it executes**, not at `create function` — which is exactly why the migration applied cleanly and
+four verifier parts passed before anything went wrong, and why no amount of source review would have
+found it. Second, the rehearsal aborted at the first of the two loops, so the nested reason-code loop
+carried the identical collision and had never been reached; it was fixed in the same pass rather than
+left to fail the next run.
+
+A fourth rollback rehearsal is required. Parts 5 through 7 have still never completed, so the
+malformed-document matrix, the positive reviewed-rebuild writer path, the write-once directions and
+the cleanup comparison remain unobserved. Deliberately breaking the insert guard, the RPC source
+binding and the ACL in separate scratch runs to prove the verifier fails each one is outstanding on
+top of that.
+
+### Reading the rehearsal log without fooling yourself
+
+The third rehearsal was briefly read as a pass. The check was:
+
+```bash
+grep -F "ALL CHECKS PASSED" "$LOG"
+```
+
+and it matched — on an echoed SQL **comment**. `psql --echo-errors` prints the source of the DO block
+that failed, so a comment carrying the phrase reached the log while the server notice never ran.
+
+Every comment in the verifier has since been reworded, so the phrase now appears exactly once in the
+SQL, as the `raise notice` statement, and a contract test keeps it that way. But the durable fix is
+the check itself. A rehearsal passes only when **both** hold:
+
+The whole gate, end to end. Nothing here lives outside the repository except the scratch directory,
+and every rehearsal starts by re-exporting into it — a scratch directory left from an earlier run
+holds the _earlier_ artifacts, and re-running a stale `combined.sql` reproduces a failure that has
+already been fixed and reads as a regression.
+
+```bash
+REF=claude/preference-cards-rebuild            # or the exact commit under test
+GATE=/tmp/ip-card-rebuild-gate
+MIG=supabase/migrations/20260804013000_add_ip_preference_card_rebuild_provenance.sql
+VER=supabase/verification/20260804013000_verify_ip_preference_card_rebuild_provenance.sql
+
+mkdir -p "$GATE"
+git show "$REF:$MIG" > "$GATE/migration.sql"
+git show "$REF:$VER" > "$GATE/verify.sql"
+shasum -a 256 "$GATE/migration.sql" "$GATE/verify.sql"   # must equal the repo copies
+
+# One transaction: the migration, then the verifier's body with its own begin/rollback removed.
+# Only those two lines start at column 1 — every PL/pgSQL `begin` inside a DO block is indented —
+# so the two deletions cannot touch anything else.
+{
+  printf 'BEGIN;\n\n'
+  cat "$GATE/migration.sql"
+  printf '\n'
+  sed -e '/^begin;$/d' -e '/^rollback;$/d' "$GATE/verify.sql"
+  printf '\nROLLBACK;\n'
+} > "$GATE/combined.sql"
+grep -cE '^(BEGIN|COMMIT|ROLLBACK);' "$GATE/combined.sql"   # expect 2: the outer pair, no COMMIT
+
+LOG="$GATE/psql-rehearsal-$(date +%Y%m%d-%H%M%S).log"
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --echo-errors \
+  -c '\set VERBOSITY verbose' -f "$GATE/combined.sql" 2>&1 | tee "$LOG"
+PSQL_STATUS=${PIPESTATUS[0]}
+
+# A rehearsal passes only when BOTH hold.
+# `|| true` matters: grep -c exits 1 when it counts zero, so under `set -e` the assignment itself
+# would abort before `test` ever ran, turning an explicit failure into an opaque one.
+NOTICE_COUNT=$(grep -Ec '^psql:.*: NOTICE: +([0-9A-Z]{5}: )?ALL CHECKS PASSED$' "$LOG" || true)
+test "$PSQL_STATUS" -eq 0 && test "$NOTICE_COUNT" -eq 1
+```
+
+`--echo-errors` is what makes the anchor necessary — it prints the source of the failing block, which
+is how a comment reached the log in the first place. `\set VERBOSITY verbose` is why the SQLSTATE
+group in the pattern is not optional decoration.
+
+The `([0-9A-Z]{5}: )?` group is not optional decoration: under `\set VERBOSITY verbose` psql
+interleaves the SQLSTATE, and the preserved log shows real notices as
+`psql:combined.sql:NNNN: NOTICE:  00000: <message>`. An anchor without that group matches default
+verbosity only and would report a genuinely passing run as a failure — the same class of error as the
+grep it replaces, in the opposite direction.
 
 ## What the repository can and cannot establish about the database half
 
@@ -737,15 +842,17 @@ contracts, and the route and card-page rendering. None of them is database-role 
 - `card-rebuild-drift.test.ts` proves the trusted writer is called **zero** times for every drift
   source and every final-projection axis, which is a property of the application, not of the schema.
 
-**The migration has never been applied, and the verifier has never passed.** Two rollback rehearsals
-have been run against managed Supabase. Both established that the migration executes there in full;
-both stopped in Part 1, the first on the creator-membership assertion and the second on the
-`proconfig` catalog-representation assertion, and both rolled back with nothing persisted. Neither
-reached Parts 2 through 7, so the role matrix, the malformed-document matrix, the write-once
-directions and the cleanup comparison remain unobserved. Re-running the whole verifier through to
-`ALL CHECKS PASSED`, and then deliberately breaking the insert guard, the document binding, the
-writer membership revoke and one SQLSTATE in separate scratch runs to prove the verifier fails each
-one, is the outstanding work.
+**The migration has never been applied, and the verifier has never passed.** Three rollback rehearsals
+have been run against managed Supabase. All three established that the migration executes there in
+full, and all three rolled back with nothing persisted. The first stopped in Part 1 on the
+creator-membership assertion; the second in Part 1 on the `proconfig` catalog-representation
+assertion; the third in Part 5, on a PL/pgSQL name collision inside the migration's own decision-array
+validation — the first of the three that was a defect in the migration rather than in the verifier.
+Parts 5 through 7 have never completed, so the malformed-document matrix, the positive writer path,
+the write-once directions and the cleanup comparison remain unobserved. Re-running the whole verifier
+through to its final success notice, and then deliberately breaking the insert guard, the document
+binding, the writer membership revoke and one SQLSTATE in separate scratch runs to prove the verifier
+fails each one, is the outstanding work.
 
 ## Commands
 

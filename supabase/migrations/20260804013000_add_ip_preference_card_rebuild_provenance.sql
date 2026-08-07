@@ -431,7 +431,21 @@ begin
     raise exception 'the provenance document has a decisions value that is not a bounded array'
       using errcode = 'invalid_parameter_value';
   end if;
-  for decision in select value from jsonb_array_elements(document -> 'decisions') as t(value) loop
+  -- `elem`, not `value`, and the same in the nested reason-code loop below.
+  --
+  -- `value` is a declared PL/pgSQL variable in this function (it carries `document -> key` through
+  -- the nullability and hash loops above), so an unqualified `value` in a query that also exposes a
+  -- column of that name is ambiguous. PL/pgSQL's default `variable_conflict = error` raises `42702`
+  -- rather than guessing, which is the right default and is not being overridden here — the alias is
+  -- simply renamed to something no variable claims.
+  --
+  -- This survived every source review and the whole migration because PL/pgSQL compiles a statement
+  -- the first time it executes, not at `create function`. The first rollback rehearsal to get this
+  -- far executed the migration completely, passed Parts 1 through 4, and only then raised
+  -- `column reference "value" is ambiguous` when Part 5 first validated a document's `decisions`
+  -- array. Every valid version-1 document carries that array, so this was on the path of every real
+  -- reviewed rebuild, not just the verifier's.
+  for decision in select elem from jsonb_array_elements(document -> 'decisions') as t(elem) loop
     if jsonb_typeof(decision) <> 'object' then
       raise exception 'a provenance decision entry is not an object'
         using errcode = 'invalid_parameter_value';
@@ -474,8 +488,11 @@ begin
       raise exception 'a provenance decision entry has an empty, padded, non-ASCII or overlong field'
         using errcode = 'invalid_parameter_value';
     end if;
+    -- The second instance of the same collision, and the reason this fix is two lines rather than
+    -- one: the rehearsal aborted at the loop above, so this one had never been reached and would
+    -- have raised the identical `42702` on the very next run.
     for reason in
-      select value from jsonb_array_elements(decision -> 'reasonCodes') as t(value)
+      select elem from jsonb_array_elements(decision -> 'reasonCodes') as t(elem)
     loop
       if jsonb_typeof(reason) <> 'string'
          or (reason #>> '{}') !~ '^[!-~]([ -~]*[!-~])?$'
