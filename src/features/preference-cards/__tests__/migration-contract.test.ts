@@ -676,6 +676,43 @@ describe('preference-card rebuild provenance migration', () => {
       "the writer refused a document naming the revision''s real hashes",
     )
     expect(rebuildVerifier).toContain('a refused writer call created a card after all')
+    // The canonical-string and timestamp matrices, executed against the real RPC rather than only
+    // described by a source-text rule. A rejection matrix alone cannot tell a validator that
+    // refuses the right things from one that refuses everything, so each boundary has both sides.
+    for (const label of [
+      'a tab-padded text field',
+      'a newline-padded text field',
+      'a nonbreaking-space-padded text field',
+      'a text field of astral characters at the character bound',
+      'a text field one character over the maximum',
+      'a padded sha-256 digest',
+      'a createdAt on an invalid leap day',
+      'a createdAt on February 30',
+      'a createdAt with a numeric offset instead of Z',
+      'a createdAt with no milliseconds',
+      'a createdAt with microsecond precision',
+      'a createdAt naming a real instant in a lowercase spelling',
+      'a createdAt in year zero',
+      'a decision with an acknowledgement one character over the maximum',
+    ]) {
+      expect(rebuildVerifier).toContain(label)
+    }
+    for (const label of [
+      'text at exactly the 120-character maximum',
+      'a real leap day',
+      'the first year of the domain',
+      'the last year of the domain',
+      'a decision whose acknowledgement is explicitly null',
+      'an acknowledgement at exactly the 40-character maximum',
+    ]) {
+      expect(rebuildVerifier).toContain(label)
+    }
+    expect(rebuildVerifier).toContain('the writer refused %')
+    expect(rebuildVerifier).toContain('did not create exactly one card')
+    expect(rebuildVerifier).toContain('stored a different document than it was given')
+    // The two refusals that captured a fresh card baseline and then never read it.
+    expect(rebuildVerifier).toContain('the refused authenticated update still wrote rows')
+    expect(rebuildVerifier).toContain('the refused service_role update still wrote rows')
     // And the stored row read back as the exact document, not as a count plus four names.
     expect(rebuildVerifier).toContain('the stored provenance key set is not the version-1 key set')
     expect(rebuildVerifier).toContain(

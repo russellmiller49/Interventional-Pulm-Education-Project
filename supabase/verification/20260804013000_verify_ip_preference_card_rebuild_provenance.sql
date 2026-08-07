@@ -464,8 +464,11 @@ begin
      is not null then
     raise exception 'the refused authenticated update still set provenance';
   end if;
-  if (select count(*) from public.ip_user_preference_card_revisions) <> revisions_before then
-    raise exception 'the refused authenticated update still appended a revision';
+  -- Both counts, not one. `cards_before` was captured immediately above and then never read, so a
+  -- refused update that had somehow inserted a row would have gone unnoticed here.
+  if (select count(*) from public.ip_user_preference_cards) <> cards_before
+     or (select count(*) from public.ip_user_preference_card_revisions) <> revisions_before then
+    raise exception 'the refused authenticated update still wrote rows';
   end if;
 
   -- (e) And it cannot reach the trusted writer function at all: EXECUTE is not granted to it.
@@ -554,8 +557,9 @@ begin
      is not null then
     raise exception 'the refused service_role update still set provenance';
   end if;
-  if (select count(*) from public.ip_user_preference_card_revisions) <> revisions_before then
-    raise exception 'the refused service_role update still appended a revision';
+  if (select count(*) from public.ip_user_preference_cards) <> cards_before
+     or (select count(*) from public.ip_user_preference_card_revisions) <> revisions_before then
+    raise exception 'the refused service_role update still wrote rows';
   end if;
 
   reset role;
@@ -631,6 +635,7 @@ declare
   hashed_revision uuid;
   hashed_created uuid;
   hashed_provenance jsonb;
+  accepted_id uuid;
   v1_keys text[] := array[
     'version', 'sourceCardId', 'sourceRevisionId', 'sourceOwnerId', 'sourceRevisionNumber',
     'sourceReleaseBundleId', 'sourceReleaseDefinitionHash', 'sourceSnapshotHash',
@@ -842,6 +847,11 @@ begin
        provenance || jsonb_build_object('decisions', jsonb_build_array(jsonb_build_object(
          'key', 'x', 'kind', 'requirement', 'state', 'carried_unchanged',
          'reasonCodes', jsonb_build_array(), 'invented', true))), '22023'),
+      ('a decision with an acknowledgement one character over the maximum',
+       owner_id, source_id, source_revision, source_hash, release_id,
+       provenance || jsonb_build_object('decisions', jsonb_build_array(jsonb_build_object(
+         'key', 'x', 'kind', 'requirement', 'state', 'carried_unchanged',
+         'reasonCodes', jsonb_build_array(), 'acknowledgement', repeat('a', 41)))), '22023'),
       ('a decision entry with an empty acknowledgement',
        owner_id, source_id, source_revision, source_hash, release_id,
        provenance || jsonb_build_object('decisions', jsonb_build_array(jsonb_build_object(
@@ -1026,6 +1036,81 @@ begin
     end if;
   end loop;
 
+  -- --- The canonical-string and timestamp matrices, executed rather than described ----------------
+  --
+  -- These are the cases the shared TypeScript fixture table exercises through Zod. Running them here
+  -- too is the point: the contract tests compare *source text* on the SQL side, and a generic rule
+  -- appearing in the validator is not proof that a specific document is refused by a server. Each
+  -- one differs from the complete fixture in exactly one field.
+  --
+  -- `targetCatalogReleaseId` is the field under test for text, because it is bounded at 120 and is
+  -- not re-derived from the source row — so a rejection here is the validator's doing and nothing
+  -- else's.
+  for case_row in
+    select * from (values
+      -- Canonical text: the whitespace kinds `btrim` would have let through, and the bound.
+      ('a tab-padded text field',
+       provenance || jsonb_build_object('targetCatalogReleaseId', e'\tcatalog-verify-v2\t')),
+      ('a newline-padded text field',
+       provenance || jsonb_build_object('targetCatalogReleaseId', e'\ncatalog-verify-v2\n')),
+      ('a carriage-return-padded text field',
+       provenance || jsonb_build_object('targetCatalogReleaseId', e'\rcatalog-verify-v2')),
+      ('a nonbreaking-space-padded text field',
+       provenance || jsonb_build_object('targetCatalogReleaseId', e'\u00a0catalog-verify-v2\u00a0')),
+      ('a text field of astral characters at the character bound',
+       -- 61 characters, 122 UTF-16 code units: inside a 120-*character* bound and outside a
+       -- 120-*code-unit* one. Version 1 has neither, because the alphabet excludes it outright.
+       provenance || jsonb_build_object('targetCatalogReleaseId', repeat(e'\U0001F600', 61))),
+      ('a text field carrying one non-ASCII letter',
+       provenance || jsonb_build_object('targetCatalogReleaseId', 'catalogué')),
+      ('a text field carrying a control character',
+       provenance || jsonb_build_object('targetCatalogReleaseId', e'catalog\u0007verify')),
+      ('a text field one character over the maximum',
+       provenance || jsonb_build_object('targetCatalogReleaseId', repeat('x', 121))),
+      -- A padded digest: `sha256Schema` used to trim and normalise this; neither side does now.
+      ('a padded sha-256 digest',
+       provenance || jsonb_build_object('allowedFinalStateHash', ' ' || repeat('6', 64) || ' ')),
+      ('an uppercase sha-256 digest',
+       provenance || jsonb_build_object('allowedFinalStateHash', upper(repeat('a', 64)))),
+      -- Timestamps: every spelling and every impossible date.
+      ('a createdAt on an invalid leap day',
+       provenance || jsonb_build_object('createdAt', '2026-02-29T00:00:00.000Z')),
+      ('a createdAt on February 30',
+       provenance || jsonb_build_object('createdAt', '2026-02-30T00:00:00.000Z')),
+      ('a createdAt on April 31',
+       provenance || jsonb_build_object('createdAt', '2026-04-31T00:00:00.000Z')),
+      ('a createdAt with a numeric offset instead of Z',
+       provenance || jsonb_build_object('createdAt', '2026-02-01T01:00:00.000+01:00')),
+      ('a createdAt with no milliseconds',
+       provenance || jsonb_build_object('createdAt', '2026-02-01T00:00:00Z')),
+      ('a createdAt with microsecond precision',
+       provenance || jsonb_build_object('createdAt', '2026-02-01T00:00:00.000000Z')),
+      ('a createdAt naming a real instant in a lowercase spelling',
+       provenance || jsonb_build_object('createdAt', '2026-02-01t00:00:00.000z')),
+      ('a createdAt naming a real instant with a space separator',
+       provenance || jsonb_build_object('createdAt', '2026-02-01 00:00:00.000Z')),
+      -- Year zero: JavaScript has one and PostgreSQL does not. Both sides now refuse it.
+      ('a createdAt in year zero',
+       provenance || jsonb_build_object('createdAt', '0000-02-29T00:00:00.000Z'))
+    ) as t(label, p_document)
+  loop
+    cards_at := (select count(*) from public.ip_user_preference_cards);
+    revisions_at := (select count(*) from public.ip_user_preference_card_revisions);
+    begin
+      perform public.ip_create_rebuilt_preference_card(
+        owner_id, source_id, source_revision, source_hash, release_id,
+        'verify rejected', null::text, 'VERIFY_ONLY', 'verify-only',
+        '{}'::jsonb, snapshot, repeat('f', 64), 'verify', 'verify', case_row.p_document);
+      raise exception 'the writer accepted %', case_row.label;
+    exception
+      when invalid_parameter_value then null;
+    end;
+    if (select count(*) from public.ip_user_preference_cards) <> cards_at
+       or (select count(*) from public.ip_user_preference_card_revisions) <> revisions_at then
+      raise exception 'the refused case "%" still wrote rows', case_row.label;
+    end if;
+  end loop;
+
   -- Nothing above created anything: every refusal was checked in place, and no rejected title exists.
   if exists (select 1 from public.ip_user_preference_cards where title = 'verify rejected') then
     raise exception 'a refused writer call created a card after all';
@@ -1040,6 +1125,56 @@ begin
     'verify rebuilt', null::text, 'VERIFY_ONLY', 'verify-only',
     '{}'::jsonb, snapshot, repeat('f', 64), 'verify', 'verify', provenance);
   if created is null then raise exception 'the writer did not create a card'; end if;
+
+  -- --- The acceptance half of the same two matrices ----------------------------------------------
+  --
+  -- A rejection matrix alone cannot tell a validator that refuses the right things from one that
+  -- refuses everything. Each of these differs from the complete fixture in exactly one field, sits
+  -- on the accepting side of a boundary whose other side is refused above, and creates a real card
+  -- through the real RPC. All of them carry `VERIFY_ONLY`, so Part 7 removes them and the closing
+  -- digest comparison proves it.
+  for case_row in
+    select * from (values
+      -- Exactly the maximum canonical text, against the 121-character rejection above.
+      ('text at exactly the 120-character maximum',
+       provenance || jsonb_build_object('targetCatalogReleaseId', repeat('x', 120))),
+      -- A leap day that exists, against the 2026 one that does not.
+      ('a real leap day', provenance || jsonb_build_object('createdAt', '2028-02-29T00:00:00.000Z')),
+      -- Both ends of the stated 0001-9999 year domain, against year zero.
+      ('the first year of the domain',
+       provenance || jsonb_build_object('createdAt', '0001-01-01T00:00:00.000Z')),
+      ('the last year of the domain',
+       provenance || jsonb_build_object('createdAt', '9999-12-31T23:59:59.999Z')),
+      -- A decision that records no answer, which is what a quiet decision looks like in provenance.
+      -- Null appears in several rejected documents above, always for some *other* reason, so none
+      -- of them can show that an explicitly null acknowledgement is accepted.
+      ('a decision whose acknowledgement is explicitly null',
+       provenance || jsonb_build_object('decisions', jsonb_build_array(
+         (decisions_fixture -> 0) || jsonb_build_object('acknowledgement', null::text)))),
+      -- And the longest acknowledgement the bound allows, against the 41-character rejection.
+      ('an acknowledgement at exactly the 40-character maximum',
+       provenance || jsonb_build_object('decisions', jsonb_build_array(
+         (decisions_fixture -> 0) || jsonb_build_object('acknowledgement', repeat('a', 40)))))
+    ) as t(label, p_document)
+  loop
+    cards_at := (select count(*) from public.ip_user_preference_cards);
+    accepted_id := public.ip_create_rebuilt_preference_card(
+      owner_id, source_id, source_revision, source_hash, release_id,
+      'verify accepted', null::text, 'VERIFY_ONLY', 'verify-only',
+      '{}'::jsonb, snapshot, repeat('f', 64), 'verify', 'verify', case_row.p_document);
+    if accepted_id is null then
+      raise exception 'the writer refused %', case_row.label;
+    end if;
+    if (select count(*) from public.ip_user_preference_cards) <> cards_at + 1 then
+      raise exception 'accepting "%" did not create exactly one card', case_row.label;
+    end if;
+    -- Stored unchanged: the validator returns void and rewrites nothing, so what was accepted is
+    -- what is readable.
+    if (select rebuild_provenance from public.ip_user_preference_cards where id = accepted_id)
+       is distinct from case_row.p_document then
+      raise exception 'accepting "%" stored a different document than it was given', case_row.label;
+    end if;
+  end loop;
 
   reset role;
 
@@ -1183,7 +1318,7 @@ begin
     raise exception 'the source revisions changed during the rebuild';
   end if;
 
-  raise notice 'Part 5 passed: every refusal exact and zero-write, then one complete draft.';
+  raise notice 'Part 5 passed: every refusal exact and zero-write, and every boundary accepted too.';
 end;
 $$;
 

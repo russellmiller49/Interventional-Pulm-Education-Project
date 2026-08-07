@@ -464,6 +464,29 @@ describe('the canonical string and timestamp contracts are one contract', () => 
     expect(migrationSql).toContain('YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
   })
 
+  it('states one year domain, 0001 through 9999, on both sides', () => {
+    // JavaScript's proleptic Gregorian calendar has a year zero and PostgreSQL's does not, so
+    // `0000-02-29T00:00:00.000Z` round-tripped through `toISOString()` and was refused by the cast.
+    // SQL being stricter meant nothing unreadable could be stored — and the two sides still
+    // described different sets, which is the property being claimed.
+    expect(new Date('0000-02-29T00:00:00.000Z').toISOString()).toBe('0000-02-29T00:00:00.000Z')
+    expect(
+      storedRebuildProvenanceSchema.safeParse({
+        ...validProvenanceV1Document(),
+        createdAt: '0000-02-29T00:00:00.000Z',
+      }).success,
+    ).toBe(false)
+    for (const edge of ['0001-01-01T00:00:00.000Z', '9999-12-31T23:59:59.999Z']) {
+      expect(
+        storedRebuildProvenanceSchema.safeParse({
+          ...validProvenanceV1Document(),
+          createdAt: edge,
+        }).success,
+      ).toBe(true)
+    }
+    expect(migrationSql).toContain("left(document ->> 'createdAt', 4) = '0000'")
+  })
+
   it('grants the writer exactly one private function', () => {
     // The canonical-text predicate is inlined rather than factored into a second private helper.
     expect(migrationSql).not.toContain('ip_is_canonical_text')

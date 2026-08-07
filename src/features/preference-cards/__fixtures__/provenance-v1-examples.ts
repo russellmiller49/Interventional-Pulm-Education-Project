@@ -281,6 +281,11 @@ export const PROVENANCE_V1_EXAMPLES: ProvenanceExample[] = [
       ['microsecond precision', '2026-02-01T00:00:00.000000Z'],
       ['a lowercase separator', '2026-02-01t00:00:00.000z'],
       ['a space separator', '2026-02-01 00:00:00.000Z'],
+      // JavaScript's proleptic Gregorian calendar has a year zero; PostgreSQL's does not, so this
+      // round-tripped through `toISOString()` and was refused by `::timestamptz`. SQL being the
+      // stricter side meant nothing unreadable could be stored — and the two sides still described
+      // different sets, which is the property being claimed. The domain is 0001-9999 on both.
+      ['year zero', '0000-02-29T00:00:00.000Z'],
     ] as const
   ).map(([what, value]) => ({
     label: `a createdAt with ${what}`,
@@ -290,14 +295,20 @@ export const PROVENANCE_V1_EXAMPLES: ProvenanceExample[] = [
       document.createdAt = value
     }),
   })),
-  {
-    label: 'a createdAt naming a real leap day in canonical form',
-    category: 'valid',
+  ...(
+    [
+      ['a real leap day', '2028-02-29T00:00:00.000Z'],
+      ['the first year of the domain', '0001-01-01T00:00:00.000Z'],
+      ['the last year of the domain', '9999-12-31T23:59:59.999Z'],
+    ] as const
+  ).map(([what, value]) => ({
+    label: `a createdAt naming ${what} in canonical form`,
+    category: 'valid' as const,
     valid: true,
     document: withDocument((document) => {
-      document.createdAt = '2028-02-29T00:00:00.000Z'
+      document.createdAt = value
     }),
-  },
+  })),
   {
     label: 'a decision key version 1 does not define',
     category: 'unknown_nested_key',

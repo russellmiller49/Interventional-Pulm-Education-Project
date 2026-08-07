@@ -69,7 +69,16 @@ const canonicalUuid = z.string().regex(CANONICAL_UUID)
  * one instant has one representation and a stored value and a read value are the same bytes.
  * `new Date().toISOString()` — which is what the writer emits — is already exactly this form.
  */
-const CANONICAL_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+/**
+ * Years `0001` through `9999`, stated rather than inherited.
+ *
+ * JavaScript's proleptic Gregorian calendar has a year zero and PostgreSQL does not: `0000-02-29`
+ * round-trips through `toISOString()` and is rejected by `::timestamptz`. SQL being the stricter
+ * side meant no unreadable document could be stored, so this was never a hole — but the two
+ * implementations did not describe the same set, and "the same set" is the property being claimed.
+ * The four-digit shape already caps the domain at 9999; the negative lookahead removes year zero.
+ */
+const CANONICAL_TIMESTAMP = /^(?!0000)\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 
 const canonicalTimestamp = z
   .string()

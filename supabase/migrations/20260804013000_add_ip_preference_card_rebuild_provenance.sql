@@ -371,9 +371,16 @@ begin
   -- rolls it into March. The round trip is what pins the spelling, so one instant has exactly one
   -- representation and the stored bytes are the read bytes. `new Date().toISOString()`, which is
   -- what the writer emits, is already this form.
+  --
+  -- The year domain is 0001-9999 on both sides, said out loud here rather than left to the cast.
+  -- JavaScript's calendar has a year zero and PostgreSQL's does not, so `0000-02-29` round-tripped
+  -- through `toISOString()` while `::timestamptz` refused it. SQL being stricter meant nothing
+  -- unreadable could be stored, but the two sides then described different sets — and one set is
+  -- the property being claimed.
   if jsonb_typeof(document -> 'createdAt') <> 'string'
      or (document ->> 'createdAt')
         !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.][0-9]{3}Z$'
+     or left(document ->> 'createdAt', 4) = '0000'
   then
     raise exception 'the provenance document has a createdAt that is not canonical UTC millisecond form'
       using errcode = 'invalid_parameter_value';

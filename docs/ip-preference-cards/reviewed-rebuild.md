@@ -422,6 +422,12 @@ reproduce it exactly. A date the calendar does not have re-serializes differentl
 second or microsecond precision, and a lowercase or space-separated spelling.
 `new Date().toISOString()`, which is what the writer emits, is already exactly this form.
 
+The year domain is **stated** rather than inherited: `0001` through `9999` on both sides. JavaScript's
+proleptic Gregorian calendar has a year zero and PostgreSQL's does not, so `0000-02-29T00:00:00.000Z`
+round-tripped through `toISOString()` and was refused by `::timestamptz`. SQL being the stricter side
+meant no unreadable document could ever have been stored — but the two implementations then described
+different sets, and one set is the property being claimed.
+
 #### `sourceOwnerId`
 
 New in this document, and the reason it exists is that the migration's own comment claimed the owner
