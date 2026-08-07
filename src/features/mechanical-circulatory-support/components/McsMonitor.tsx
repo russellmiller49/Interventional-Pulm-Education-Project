@@ -8,6 +8,7 @@ import {
   type McsMonitorTargetId,
 } from '../content'
 import type { McsSimulationState, McsWaveformSample } from '../engine'
+import { mcsDeviceFlowLine, mcsLiveValueKindLabels } from './teaching/selectors'
 import styles from './mechanical-circulatory-support.module.css'
 
 type WaveformField = 'ecgMv' | 'arterialMmHg' | 'papMmHg' | 'cvpMmHg'
@@ -248,6 +249,11 @@ export function McsMonitor({
 }) {
   const metrics = state.metrics
   const activeAlarms = state.alarms.filter((alarm) => alarm.active)
+  /*
+   * The same flow account the teaching panels and the two context summaries read, so the four
+   * surfaces cannot disagree about what the device is reporting.
+   */
+  const deviceFlowLine = mcsDeviceFlowLine(state)
   const highlighted = highlightTarget ? mcsMonitorTargets[highlightTarget] : undefined
   const impellaMode =
     state.device.kind === 'impella'
@@ -359,10 +365,29 @@ export function McsMonitor({
               </div>
             </>
           ) : (
-            <div data-color="device" {...target('monitor:flow-account', highlightTarget)}>
+            /*
+             * One tile, two readings, decided by the flow account rather than here.
+             *
+             * A durable pump reports a flow its controller computes, so the tile carries the number
+             * and says it is an estimate. Counterpulsation has no pump pathway at all: the engine
+             * still holds a zero for the arithmetic, but rendering that zero under a DEVICE FLOW
+             * heading claims a channel that reports nothing — on the same screen as a flow account
+             * reading "none reported", and beside a context bar that had already been corrected.
+             */
+            <div
+              data-color="device"
+              data-device-flow-reported={deviceFlowLine.value === null ? 'false' : 'true'}
+              {...target('monitor:flow-account', highlightTarget)}
+            >
               <span>DEVICE FLOW</span>
-              <strong>{metric(metrics.deviceFlowLMin, 1)}</strong>
-              <small>L/min</small>
+              <strong>
+                {deviceFlowLine.value === null ? 'NONE REPORTED' : metric(deviceFlowLine.value, 1)}
+              </strong>
+              <small>
+                {deviceFlowLine.value === null
+                  ? 'no direct pump-flow channel on this mechanism'
+                  : `L/min · ${mcsLiveValueKindLabels[deviceFlowLine.kind]}`}
+              </small>
             </div>
           )}
           <div data-color="effective" {...target('monitor:flow-account', highlightTarget)}>
