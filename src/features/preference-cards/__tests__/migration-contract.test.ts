@@ -662,6 +662,45 @@ describe('preference-card rebuild provenance migration', () => {
     expect(rebuildVerifierSql).not.toMatch(/no members at all/i)
   })
 
+  it("compares proconfig against PostgreSQL's stored spelling of an empty search path", () => {
+    // Two spellings of one thing, which are not the same string.
+    //
+    // The migration declares `set search_path = ''`. That is the SQL, and it is correct — nothing
+    // here asks it to change. But `pg_proc.proconfig` does not store that text. It stores an array
+    // of `name=value` strings whose value went through the same quoting rules a `SET` would use, and
+    // an empty string has to be written as a quoted empty literal or it would read as "no value at
+    // all" and round-trip back to the default. PostgreSQL therefore stores `search_path=""`, and
+    // `search_path=` is a string no server ever produces.
+    //
+    // The first psql rollback rehearsal stopped in Part 1 on a correctly configured function:
+    //
+    //   P0001  the writer function must pin an empty search_path, found search_path=""
+    //
+    // A read-only query at the same time found all twelve already-deployed functions that pin an
+    // empty path storing `search_path=""`, and none storing `search_path=`. The already-applied
+    // revision verifier documents this same trap at its own private-function check; this file had
+    // regressed to the version that one was written to replace, which is why the regression is
+    // pinned here rather than left to the next rehearsal to rediscover.
+    expect(rebuildMigrationSql).toContain("set search_path = ''")
+    expect(rebuildVerifierSql).toContain(
+      'if function_config is distinct from array[\'search_path=""\']::text[] then',
+    )
+    // Compared as the `text[]` it actually is, rather than flattened to a string first. That is what
+    // makes all four questions one question: `proconfig` is not null, it holds exactly one setting,
+    // that setting is the representation PostgreSQL really writes, and no second function-local GUC
+    // rides along — which a flattened comparison could not distinguish from a longer first one.
+    expect(rebuildVerifierSql).toContain('into owner_name, is_definer, function_config')
+    expect(rebuildVerifierSql).not.toMatch(/array_to_string\(p\.proconfig/)
+    // The failure still reports what was actually found, including the null case.
+    expect(rebuildVerifierSql).toContain(
+      "coalesce(array_to_string(function_config, ','), '<unset>')",
+    )
+    // The exact regression, checked over statements so the file's own account of why the old
+    // spelling was wrong does not satisfy the search. `'search_path='` as a complete SQL literal
+    // appears nowhere; `'search_path=""'` is not an instance of it.
+    expect(rebuildVerifierSql).not.toMatch(/'search_path='/)
+  })
+
   it('ships a verifier that proves authenticity, not only immutability', () => {
     // The blocker, as a behavioural check, for every role that could reach the table.
     expect(rebuildVerifier).toContain('an authenticated user forged rebuild_provenance at INSERT')

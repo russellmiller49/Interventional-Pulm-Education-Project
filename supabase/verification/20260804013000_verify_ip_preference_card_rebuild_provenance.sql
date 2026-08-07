@@ -94,7 +94,7 @@ declare
   definition text;
   owner_name text;
   is_definer boolean;
-  config text;
+  function_config text[];
   writer oid;
   acl_row record;
   grantee_count integer;
@@ -343,8 +343,8 @@ begin
 
   -- --- The writer function --------------------------------------------------------------------
 
-  select r.rolname, p.prosecdef, coalesce(array_to_string(p.proconfig, ','), '<unset>')
-    into owner_name, is_definer, config
+  select r.rolname, p.prosecdef, p.proconfig
+    into owner_name, is_definer, function_config
     from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
     join pg_roles r on r.oid = p.proowner
@@ -355,8 +355,30 @@ begin
     raise exception 'the writer function is owned by %, expected the dedicated role', owner_name;
   end if;
   if not is_definer then raise exception 'the writer function must be security definer'; end if;
-  if config <> 'search_path=' then
-    raise exception 'the writer function must pin an empty search_path, found %', config;
+  -- The two spellings of the same thing, which are not the same string.
+  --
+  -- The migration declares `set search_path = ''`, which is correct and is what the SQL has to say.
+  -- `pg_proc.proconfig` does not store that text. It stores an array of `name=value` strings whose
+  -- value went through the same quoting rules a `SET` would use, and an empty string has to be
+  -- written as a quoted empty literal or it would read as "no value at all" and round-trip back to
+  -- the default. PostgreSQL therefore stores this as **`search_path=""`**, and nothing is ever equal
+  -- to `search_path=`.
+  --
+  -- An earlier version of this check compared a comma-flattened `proconfig` against `search_path=`.
+  -- That is a string no server produces, so the assertion could only ever fail — and it did, in the
+  -- first psql rollback rehearsal, stopping Part 1 on a correctly configured function with
+  -- `found search_path=""`. A read-only query at the same time found all twelve already-deployed
+  -- functions that pin an empty path storing `search_path=""` and none storing `search_path=`. The
+  -- already-applied revision verifier documents the same trap at its own private-function check;
+  -- this file had regressed to the version that one was written to replace.
+  --
+  -- Compared as the `text[]` it actually is, rather than flattened first. That settles all four
+  -- questions at once: `proconfig` is not null, it holds exactly one setting, that setting is the
+  -- representation PostgreSQL really writes, and no other function-local GUC rides along. Flattening
+  -- to a string would make a second GUC indistinguishable from a longer first one.
+  if function_config is distinct from array['search_path=""']::text[] then
+    raise exception 'the writer function must pin an empty search_path, found %',
+      coalesce(array_to_string(function_config, ','), '<unset>');
   end if;
 
   -- The ACL, by grantee rather than by substring. `like '%anon=X%'` rejected two names and let a

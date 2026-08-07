@@ -655,8 +655,11 @@ built eight of them and called it complete, blessing a card the application's ow
 rejects — and it pins the membership model **exactly**: one creator grant, `admin_option` true,
 `set_option` and `inherit_option` false, granted by a role its own member cannot act as, and no other
 member of the writer role by any path. One earlier version required the migration executor to remain
-a member without asking what kind; the next required no members at all, which the rehearsal proved is
-a state managed Supabase cannot be in.
+a member without asking what kind; the next required no members at all, which the first rehearsal
+proved is a state managed Supabase cannot be in. It also reads the writer function's `proconfig` as a
+`text[]` and requires exactly `array['search_path=""']` — the representation PostgreSQL actually
+stores for `set search_path = ''` — after the second rehearsal stopped on a comparison against
+`search_path=`, a string no server produces.
 It is a role matrix with exact SQLSTATEs and no `when others` anywhere: `authenticated` through
 PostgREST with a JWT subject, `service_role` with its `bypassrls`, and the table-owning migration
 role are each required to fail at the guard with `23001` — not "`23001` or `42501`", because
@@ -692,16 +695,33 @@ table-owner blocks additionally assert they are running as the table's owner, an
 anywhere in the script is bracketed by card _and_ revision counts.
 
 Note what the repository can and cannot establish about this file. The contract tests read the SQL;
-they do not execute it. What _has_ been executed is one rollback rehearsal against the Endoreels
+they do not execute it. What _has_ been executed is two rollback rehearsals against the Endoreels
 project — PostgreSQL 17.6, migration role `postgres`, `CREATEROLE` and not `rolsuper`, database owner
-— with the migration and the verifier sent as a single `begin` / `rollback` transaction. The
-migration executed in full. The verifier stopped in Part 1 on the creator-membership assertion this
-section now describes, which is the defect corrected here. Nothing was applied: the transaction
-rolled back and the post-state matched the pre-state object for object and digest for digest.
-Everything after Part 1 — the role matrix, the malformed-document matrix, the write-once directions,
-the cleanup comparison — has not yet been observed to pass, and deliberately breaking the insert
-guard, the RPC source binding and the ACL in separate scratch runs to prove the verifier fails each
-one is still outstanding.
+— each sending the migration and the verifier as a single `begin` / `rollback` transaction. **The
+migration executed completely both times. The verifier has never passed, and Parts 2 through 7 have
+never been reached.** Both rehearsals rolled back with nothing persisted: no database object and no
+row survived either one.
+
+The first stopped in Part 1 on the creator-membership assertion described above. The second, run
+through `psql` from a verified disk file, stopped in Part 1 on a different false assertion —
+`P0001: the writer function must pin an empty search_path, found search_path=""` — against a function
+that was configured correctly.
+
+That second failure is a catalog-representation error, not a schema one, and the distinction is the
+point. The migration's `set search_path = ''` is right and did not change. What `pg_proc.proconfig`
+_stores_ is not that text: it holds `name=value` strings quoted the way a `SET` would quote them, so
+an empty value is written as a quoted empty literal — **`search_path=""`** — or it would read as no
+value at all and revert to the default. The verifier had been comparing a comma-flattened `proconfig`
+against `search_path=`, which is a string no server produces, so the check could only ever fail. A
+read-only query at the same moment found all twelve already-deployed functions that pin an empty path
+storing `search_path=""` and none storing `search_path=`. It now compares `proconfig` as the `text[]`
+it is, against `array['search_path=""']`, which settles in one expression that the value is not null,
+holds exactly the intended setting, uses the representation PostgreSQL really writes, and carries no
+second function-local GUC.
+
+A third rollback rehearsal is required, and neither of the first two says anything about what Parts 2
+through 7 will do. Deliberately breaking the insert guard, the RPC source binding and the ACL in
+separate scratch runs to prove the verifier fails each one is still outstanding on top of that.
 
 ## What the repository can and cannot establish about the database half
 
@@ -717,12 +737,15 @@ contracts, and the route and card-page rendering. None of them is database-role 
 - `card-rebuild-drift.test.ts` proves the trusted writer is called **zero** times for every drift
   source and every final-projection axis, which is a property of the application, not of the schema.
 
-**The migration has never been applied.** One rollback rehearsal has been run against managed
-Supabase: it established that the migration executes there in full, and it found the
-creator-membership defect corrected here. It did not reach Parts 2 through 7. Re-running the whole
-verifier through to `ALL CHECKS PASSED`, and then deliberately breaking the insert guard, the
-document binding, the writer membership revoke and one SQLSTATE in separate scratch runs to prove the
-verifier fails each one, is the outstanding work.
+**The migration has never been applied, and the verifier has never passed.** Two rollback rehearsals
+have been run against managed Supabase. Both established that the migration executes there in full;
+both stopped in Part 1, the first on the creator-membership assertion and the second on the
+`proconfig` catalog-representation assertion, and both rolled back with nothing persisted. Neither
+reached Parts 2 through 7, so the role matrix, the malformed-document matrix, the write-once
+directions and the cleanup comparison remain unobserved. Re-running the whole verifier through to
+`ALL CHECKS PASSED`, and then deliberately breaking the insert guard, the document binding, the
+writer membership revoke and one SQLSTATE in separate scratch runs to prove the verifier fails each
+one, is the outstanding work.
 
 ## Commands
 

@@ -33,8 +33,10 @@ import {
  * The fake tables mirror the migration clause for clause — row-level security, the append-a-revision
  * trigger, the strictly advancing content version, and now the write-once provenance column — so a
  * test here proves the *rules*, not that Postgres runs them. Postgres running them is what
- * `supabase/verification/20260804013000_verify_ip_preference_card_rebuild_provenance.sql` is for,
- * and that file has not been run yet because the migration has not been applied.
+ * `supabase/verification/20260804013000_verify_ip_preference_card_rebuild_provenance.sql` is for.
+ * That file has been run twice as a rollback rehearsal — the migration executed in full both times —
+ * but it has never passed: both runs stopped inside Part 1, so nothing below Part 1 has been
+ * observed against a real server.
  *
  * The release data is mocked, and it has to be: production has exactly one release per procedure
  * and every card is already pinned to it, so no real card can cross from one release to another.
