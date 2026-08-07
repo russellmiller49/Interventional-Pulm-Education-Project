@@ -172,7 +172,7 @@ const thermodilution: CardiacOutputMethod = {
   family: 'indicator-dilution',
   vo2Provenance: null,
   measurand:
-    'Blood flow through the right heart per minute, in liters per minute, averaged over the seconds the indicator takes to pass the thermistor.',
+    'Blood flow through the right heart per minute, in liters per minute, averaged over the seconds the indicator takes to travel past the thermistor.',
   directlyObserved:
     'A cooler-than-blood injectate entering near the right atrium, and a temperature change arriving downstream at the pulmonary-artery thermistor a few seconds later.',
   rawDataRepresentation:
@@ -341,7 +341,7 @@ const thermodilution: CardiacOutputMethod = {
       whatToLookFor:
         'The trace returns toward baseline and stays there rather than showing a second, later excursion.',
       whenItIsNotMet:
-        'A second excursion means indicator reached the thermistor by more than one route or more than once, and the simple area no longer describes a single pass.',
+        'A second excursion means indicator reached the thermistor by more than one path or more than once, and the simple area no longer describes one passage of the indicator.',
     },
     {
       id: 'delivery-consistency',
@@ -401,7 +401,7 @@ const thermodilution: CardiacOutputMethod = {
       id: 'respiratory-phase-inconsistency',
       label: 'Respiratory-phase inconsistency',
       mechanism:
-        'Boluses were delivered at different points in the respiratory cycle, across which intrathoracic pressure and flow change.',
+        'Boluses were delivered at different moments in the respiratory cycle, across which intrathoracic pressure and flow change.',
       effectOnResult: 'Between-trial spread that looks physiologic and is procedural.',
       visibleInAcquisition: true,
     },
@@ -429,7 +429,7 @@ const thermodilution: CardiacOutputMethod = {
       mechanism:
         'Regurgitant flow carries indicator back and forth across the valve, so some of it reaches the thermistor late or more than once.',
       effectOnResult:
-        'A broadened curve with a secondary disturbance and greater uncertainty. This module does not assert a direction of bias.',
+        'A broadened curve whose end point often falls outside the recording, so where the integration stops becomes a judgement. This module does not assert a direction of bias.',
       visibleInAcquisition: true,
     },
     {
@@ -445,7 +445,7 @@ const thermodilution: CardiacOutputMethod = {
       id: 'indicator-loss-or-recirculation',
       label: 'Indicator loss or recirculation',
       mechanism:
-        'Indicator is lost before the thermistor, or returns to it after passing once, so a single-pass curve no longer describes a single pass.',
+        'Indicator is lost before the thermistor, or returns to it after travelling past once, so the curve no longer describes one passage of the indicator.',
       effectOnResult:
         'A distorted curve boundary and a derived flow that cannot be read off the simple area.',
       visibleInAcquisition: true,
@@ -533,7 +533,7 @@ const fickShared = {
       whatToLookFor:
         'Milliliters of oxygen per minute divided by milliliters of oxygen per deciliter, with deciliters converted to liters, gives liters per minute.',
       whenItIsNotMet:
-        'A number appears with the right label and the wrong magnitude, and nothing on the display says so.',
+        'A number appears with a plausible label and an implausible magnitude, and nothing on the display says so.',
     },
     {
       id: 'content-difference-usable',
@@ -635,7 +635,7 @@ function fickInputs(
       status: 'entered',
       unit: null,
       whatItIs:
-        'Where the venous specimen was drawn. Only a pulmonary-artery specimen has passed the point where all venous return has combined.',
+        'Where the venous specimen was drawn. Only a pulmonary-artery specimen is drawn beyond where all venous return has combined.',
       howItGoesWrong:
         'A specimen from upstream of that point describes a region rather than the whole, and the number it produces is not the quantity the equation is written for.',
     },
@@ -920,7 +920,7 @@ const fickAssumedVo2: CardiacOutputMethod = {
       mechanism:
         'The result is quoted as Fick, or as direct Fick, without naming the substitution behind it.',
       effectOnResult:
-        'A downstream reader treats an assumption as an observation, and there is nothing left in the record to correct that.',
+        'A downstream reader treats an assumption as an observation, and nothing is left in the record that would put it right.',
       visibleInAcquisition: false,
     },
   ],

@@ -291,12 +291,12 @@ export const cardiacOutputComparisonScenarios: readonly CardiacOutputComparisonS
             sequence: 1,
             technique: standardTechnique,
             acquisitionNote:
-              'Standard delivery. The trace broadens and shows a second excursion after it had settled.',
+              'Standard delivery. The trace broadens and does not return toward baseline inside the recorded window.',
           },
           {
             sequence: 2,
             technique: standardTechnique,
-            acquisitionNote: 'Same delivery, same broadened shape, same late disturbance.',
+            acquisitionNote: 'Same delivery, same broadened shape, same unfinished decay.',
           },
           {
             sequence: 3,
@@ -306,7 +306,7 @@ export const cardiacOutputComparisonScenarios: readonly CardiacOutputComparisonS
           },
         ],
         acquisitionNarrative:
-          'Two acquisitions under one technique and one that was not. All of them were made while the vasopressor dose was moving, and the regurgitant flow carries indicator back and forth across the valve.',
+          'Two acquisitions under one technique and one that was not. All of them were made while the vasopressor dose was moving, and the regurgitant flow carries indicator back and forth across the valve, so none of the traces finishes inside the recording.',
       },
       fick: {
         methodId: 'fick-direct',
@@ -331,7 +331,7 @@ export const cardiacOutputComparisonScenarios: readonly CardiacOutputComparisonS
           label:
             'Withhold both results, say why each is unusable, and repeat once the infusion is steady and a pulmonary-artery specimen is available.',
           verdict: 'defensible',
-          why: 'The Fick inputs describe a moving state and a specimen from the wrong compartment. The thermodilution series has a secondary disturbance on every curve and one trial that was not part of the series technique. Neither has a usable result to report.',
+          why: 'The Fick inputs describe a moving state and a specimen from a compartment the equation is not written for. Every thermodilution curve runs past the end of its recording, and one trial was not acquired with the series technique. Neither has a usable result to report.',
         },
         {
           id: 'average-the-two',
@@ -361,8 +361,8 @@ export const cardiacOutputComparisonScenarios: readonly CardiacOutputComparisonS
       whatToRepeatOrCorrect: [
         'Wait for the vasopressor dose to hold still long enough for one state to be described.',
         'Draw the venous specimen from the pulmonary-artery port, and pair it in time with the arterial one.',
-        'Reacquire the thermodilution series under one technique, and read every curve for the late disturbance.',
-        'If the disturbance persists under clean technique, say so in the record rather than adjusting the number.',
+        'Reacquire the thermodilution series under one technique, and read every curve for whether it finishes inside the recording.',
+        'If the curves still do not finish under clean technique, say so in the record rather than adjusting the number.',
       ],
       whyNotAverage: AVERAGING_WHY,
       reportedResult:
@@ -401,7 +401,10 @@ export const cardiacOutputComparisonScenarios: readonly CardiacOutputComparisonS
       },
       fick: {
         methodId: 'fick-direct',
-        vo2MlMin: 198,
+        // Chosen so both acquisitions produce a result and the two land far enough apart to change
+        // a downstream resistance calculation. A gap inside rounding would make this scenario read
+        // as agreement with noise, which is the opposite of what it is for.
+        vo2MlMin: 172,
         hemoglobinGDl: 13.6,
         arterialSaturationFraction: 0.94,
         mixedVenousSaturationFraction: 0.66,
@@ -454,7 +457,7 @@ export const cardiacOutputComparisonScenarios: readonly CardiacOutputComparisonS
       ],
       whyNotAverage: AVERAGING_WHY,
       reportedResult:
-        'Both results are reported with their methods named, and the disagreement is recorded rather than resolved. One method is carried forward for the trend.',
+        'Bolus thermodilution and direct Fick are both reported, each with its method named, and the disagreement is recorded rather than resolved. One method is carried forward for the trend.',
       evidenceIds: ['pac-derived-part-2-2021', 'esc-ers-ph-2022', 'icu-hemodynamics-model-v1'],
     },
   ])

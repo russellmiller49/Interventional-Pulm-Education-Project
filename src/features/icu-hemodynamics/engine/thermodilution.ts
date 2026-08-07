@@ -59,7 +59,15 @@ export interface ThermodilutionCurveFeatures {
 }
 
 const ONSET_FRACTION = 0.05
-const SECONDARY_FRACTION = 0.12
+/**
+ * How far the trace has to climb back above its own running minimum to count as a second excursion.
+ *
+ * Set well above the model's tail noise, which reaches roughly a hundredth of the peak excursion.
+ * The rebound also has to happen once the trace is genuinely on its way down, or the first samples
+ * after the peak would register their own jitter as a disturbance.
+ */
+const SECONDARY_REBOUND_FRACTION = 0.08
+const SECONDARY_DECAYED_FRACTION = 0.5
 
 /**
  * The named parts of the curve, derived from the trace rather than authored beside it.
@@ -115,19 +123,21 @@ export function thermodilutionCurveFeatures(
   }
 
   /**
-   * A secondary excursion is a rise back above a floor after the trace has already settled toward
-   * it. Reading it off the trace rather than off the modifier that produced it means an authored
-   * teaching state and a generated one are described the same way.
+   * A secondary excursion is a rise back above the running minimum once the trace is already well
+   * down from its peak. Reading it off the trace rather than off the modifier that produced it means
+   * an authored teaching state and a generated one are described the same way — and it means the
+   * detector reports honestly when a modeled disturbance is a broadened tail rather than a second
+   * excursion, which is what this model's regurgitation actually produces.
    */
   let secondaryDisturbanceTimeSeconds: number | null = null
-  if (decayToTenthSeconds !== null) {
-    let settled = false
-    for (const point of points) {
-      if (point.timeSeconds < decayToTenthSeconds) continue
-      const excursion = Math.abs(point.temperatureChangeC - baselineC)
-      if (!settled && excursion <= peakExcursion * 0.06) settled = true
-      if (settled && excursion >= peakExcursion * SECONDARY_FRACTION) {
-        secondaryDisturbanceTimeSeconds = point.timeSeconds
+  if (peakExcursion > 0) {
+    let runningMinimum = Number.POSITIVE_INFINITY
+    for (let index = peakIndex; index < points.length; index += 1) {
+      const excursion = Math.abs(points[index].temperatureChangeC - baselineC)
+      if (excursion < runningMinimum) runningMinimum = excursion
+      if (runningMinimum > peakExcursion * SECONDARY_DECAYED_FRACTION) continue
+      if (excursion - runningMinimum >= peakExcursion * SECONDARY_REBOUND_FRACTION) {
+        secondaryDisturbanceTimeSeconds = points[index].timeSeconds
         break
       }
     }
@@ -250,8 +260,20 @@ export const thermodilutionExclusionReasons: readonly ThermodilutionExclusionRea
       id: 'secondary-curve-disturbance',
       label: 'A secondary disturbance follows the main curve',
       whatItMeans:
-        'Indicator reached the thermistor more than once or by more than one route, so the simple area no longer describes a single pass.',
+        'Indicator reached the thermistor more than once or by more than one route, so the simple area no longer describes one passage of the indicator.',
       appliesTo: (trial) => thermodilutionCurveFeatures(trial).secondaryDisturbance,
+    },
+    {
+      /**
+       * H4 §7. This is the reason the model's broadened curves actually satisfy. Regurgitant flow
+       * and low output both widen the curve rather than adding a visible second excursion, and what
+       * a learner can read off the trace is that its end point is not in the recording.
+       */
+      id: 'curve-does-not-settle',
+      label: 'The trace does not return toward baseline inside the recording',
+      whatItMeans:
+        'The end of the curve is outside the recorded window, so where the integration stops is a judgement rather than an observation, and the area carries that uncertainty.',
+      appliesTo: (trial) => thermodilutionCurveFeatures(trial).decayToTenthSeconds === null,
     },
     {
       id: 'baseline-not-stable',

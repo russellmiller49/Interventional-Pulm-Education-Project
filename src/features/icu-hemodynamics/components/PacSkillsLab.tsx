@@ -241,8 +241,8 @@ export function PacSkillsLab({
               <div>
                 <h3>Thermodilution series</h3>
                 <p>
-                  Standardize injectate and timing. Reject technically poor curves; average at least
-                  three valid accepted trials.
+                  Standardize the injectate and the timing, read each raw curve before its value,
+                  and leave a trial out only for a technical reason that curve shows.
                 </p>
               </div>
             </div>

@@ -2572,9 +2572,15 @@
   color: #65797c;
 }
 
+/*
+ * Five fixed 130px tracks needed 650px, and the guided workspace gives this pane about 230px. The
+ * setup grid overflowed its card, the card overflowed the lab, and the lab overflowed the pane. The
+ * `min(100%, …)` floor lets a track shrink below its preferred width rather than forcing a second
+ * scroll direction.
+ */
 .injectionSetup {
   display: grid;
-  grid-template-columns: repeat(5, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr));
   gap: 0.7rem;
 }
 
@@ -6115,6 +6121,7 @@
 }
 
 .curveFeatureList {
+  container-type: inline-size;
   display: grid;
   gap: 0.3rem;
   margin: 0;
@@ -6122,20 +6129,38 @@
   line-height: 1.45;
 }
 
+/*
+ * Stacked rather than two-column. A 12rem label track plus a value did not fit the ~200px this list
+ * gets inside the guided workspace's controls pane, and a `1fr` value track still overflows once
+ * its content is wider than the track it was squeezed into. Stacking fits every pane width, and a
+ * definition list reads the same either way.
+ */
 .curveFeatureList > div {
   display: grid;
-  grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
-  gap: 0.5rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.15rem;
 }
 
 .curveFeatureList dt {
+  min-width: 0;
   color: #17595c;
   font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .curveFeatureList dd {
+  min-width: 0;
   margin: 0;
   color: #4c656a;
+  overflow-wrap: anywhere;
+}
+
+/* Two columns return once the pane is wide enough to give the label a real track. */
+@container (min-width: 30rem) {
+  .curveFeatureList > div {
+    grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+    gap: 0.5rem;
+  }
 }
 
 .thermoTrialQuality {
@@ -6298,28 +6323,60 @@
   line-height: 1.45;
 }
 
+/*
+ * The label and its provenance chip share a line; the description takes the next one.
+ *
+ * A three-column row needed roughly 300px of minimum track width, which the narrower guided pane
+ * does not have — it gave the panel its own horizontal scrollbar inside an already-scrolling pane.
+ * Stacking is the layout that fits every pane width without a second scroll direction.
+ */
 .methodProvenanceTable > div {
   display: grid;
-  grid-template-columns: minmax(0, 13rem) minmax(5rem, 7rem) minmax(0, 1fr);
-  gap: 0.5rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'label chip'
+    'detail detail';
+  gap: 0.25rem 0.5rem;
   padding: 0.4rem 0.45rem;
   border: 1px solid #dbe8e5;
   border-radius: 0.5rem;
   background: #fff;
 }
 
+.methodProvenanceTable > div > dt {
+  grid-area: label;
+}
+
+.methodProvenanceTable > div > dd:first-of-type {
+  grid-area: chip;
+}
+
+.methodProvenanceTable > div > dd:last-of-type {
+  grid-area: detail;
+}
+
 .methodProvenanceTable dt {
+  min-width: 0;
   color: #17595c;
   font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .methodProvenanceTable dd {
+  min-width: 0;
   margin: 0;
   color: #4c656a;
+  overflow-wrap: anywhere;
 }
 
+/*
+ * The chip used to refuse to wrap, which made its own width a floor for the row. The guided
+ * workspace's controls pane can be as narrow as ~145px of content, and a label beside an unwrappable
+ * chip overflowed there. It is short enough that wrapping almost never happens in practice.
+ */
 .provenanceChip {
   align-self: start;
+  max-width: 100%;
   padding: 0.1rem 0.4rem;
   border: 1px solid #9fc2bd;
   border-radius: 999px;
@@ -6329,7 +6386,7 @@
   font-weight: 850;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .provenanceChip[data-status='assumed'] {
@@ -6435,13 +6492,22 @@
 
 .fickWorkbench,
 .disagreementLab {
+  container-type: inline-size;
   display: grid;
   gap: 0.75rem;
   min-width: 0;
-  padding: 0.8rem;
-  overflow-x: auto;
+  padding: 0.5rem;
   color: #16343b;
   background: #edf4f2;
+}
+
+/* Roomier once the pane is wide enough to afford it. */
+@container (min-width: 26rem) {
+  .fickWorkbench,
+  .disagreementLab {
+    gap: 0.75rem;
+    padding: 0.8rem;
+  }
 }
 
 .fickWorkbench h2,
@@ -6459,8 +6525,16 @@
   font-size: 0.82rem;
 }
 
-.fickWorkbench p,
-.disagreementLab p {
+/*
+ * Scoped to plain body paragraphs. A bare descendant selector here also repainted the dark result
+ * blocks and the callouts nested inside these panels, which dropped the caption under a Fick result
+ * to a 2.45:1 mid-grey on navy.
+ */
+.fickWorkbench > p,
+.disagreementLab > p,
+.fickCard > p,
+.disagreementCard > p,
+.disagreementCard section > p {
   margin: 0;
   color: #4c656a;
   font-size: 0.7rem;
@@ -6472,10 +6546,18 @@
   display: grid;
   gap: 0.55rem;
   min-width: 0;
-  padding: 0.75rem;
+  padding: 0.45rem;
   border: 1px solid #c7d9d6;
   border-radius: 0.8rem;
   background: #fbfdfc;
+  overflow-wrap: anywhere;
+}
+
+@container (min-width: 26rem) {
+  .fickCard,
+  .disagreementCard {
+    padding: 0.75rem;
+  }
 }
 
 .fickOutcome {
