@@ -12,6 +12,18 @@ import type {
 export interface LiteratureGoldExportReview {
   id: string | null
   revision: number | null
+  revisionKind?: 'standard' | 'import' | 'compensation' | null
+  lifecycleState?: 'effective' | 'withdrawn' | null
+  supersedesReviewId?: string | null
+  compensatesReviewId?: string | null
+  effectiveSourceReviewId?: string | null
+  operationActionId?: string | null
+  technologyTagStatus?: 'tagged' | 'not_applicable' | 'not_assessable' | null
+  diseaseTagStatus?: 'tagged' | 'not_applicable' | 'not_assessable' | null
+  taxonomyVersion?: string | null
+  labelSchemaVersion?: string | null
+  enrichmentSchemaVersion?: string | null
+  enrichmentProvenance?: string | null
   relevanceLabel: string | null
   metadataSufficiency: string | null
   reviewerConfidence: string | null
@@ -46,12 +58,14 @@ export interface LiteratureGoldExportRecord {
   displayOrder: number
   reviewStatus: string
   reviewSource: 'completed' | 'draft' | 'empty'
+  /** Latest immutable node; differs from review.id only for a withdrawn chain. */
+  chainHeadReviewId?: string | null
   review: LiteratureGoldExportReview | null
   reviewHistory?: LiteratureGoldExportReview[]
 }
 
 export interface LiteratureGoldExport {
-  exportVersion: '1.0.0'
+  exportVersion: '1.0.0' | '1.1.0'
   exportedAt: string
   batch: {
     id: string
@@ -102,6 +116,12 @@ export function literatureGoldExportSamplingContext(
     : { sampleStratum: null, samplingReason: null }
 }
 
+export function resolveEffectiveLiteratureGoldExportReview(
+  chainHead: LiteratureGoldExportReview | null,
+) {
+  return chainHead?.lifecycleState === 'withdrawn' ? null : chainHead
+}
+
 export const LITERATURE_GOLD_CSV_COLUMNS = [
   'batch_id',
   'batch_name',
@@ -127,8 +147,10 @@ export const LITERATURE_GOLD_CSV_COLUMNS = [
   'reviewer_confidence',
   'topic_ids_json',
   'technology_tags_json',
+  'technology_tag_status',
   'clinical_purposes_json',
   'disease_tags_json',
+  'disease_tag_status',
   'study_design',
   'publication_status',
   'categorization_from_full_text',
@@ -138,7 +160,20 @@ export const LITERATURE_GOLD_CSV_COLUMNS = [
   'is_blinded',
   'reviewer_email',
   'completed_at',
+  'taxonomy_version',
+  'label_schema_version',
+  'enrichment_schema_version',
+  'enrichment_provenance',
 ] as const
+
+const LITERATURE_GOLD_CSV_ADDITIVE_V1_1_COLUMNS = new Set<string>([
+  'technology_tag_status',
+  'disease_tag_status',
+  'taxonomy_version',
+  'label_schema_version',
+  'enrichment_schema_version',
+  'enrichment_provenance',
+])
 
 function csvCell(value: unknown) {
   const raw = value === null || value === undefined ? '' : String(value)
@@ -175,8 +210,10 @@ export function serializeLiteratureGoldSetCsv(exported: LiteratureGoldExport) {
       reviewer_confidence: review?.reviewerConfidence,
       topic_ids_json: JSON.stringify(review?.topicIds ?? []),
       technology_tags_json: JSON.stringify(review?.technologyTags ?? []),
+      technology_tag_status: review?.technologyTagStatus,
       clinical_purposes_json: JSON.stringify(review?.clinicalPurposes ?? []),
       disease_tags_json: JSON.stringify(review?.diseaseTags ?? []),
+      disease_tag_status: review?.diseaseTagStatus,
       study_design: review?.studyDesign,
       publication_status: review?.publicationStatus,
       categorization_from_full_text: review?.categorizationFromFullText ?? false,
@@ -186,6 +223,10 @@ export function serializeLiteratureGoldSetCsv(exported: LiteratureGoldExport) {
       is_blinded: review?.isBlinded,
       reviewer_email: review?.reviewerEmail,
       completed_at: review?.completedAt,
+      taxonomy_version: review?.taxonomyVersion,
+      label_schema_version: review?.labelSchemaVersion,
+      enrichment_schema_version: review?.enrichmentSchemaVersion,
+      enrichment_provenance: review?.enrichmentProvenance,
     }
     lines.push(LITERATURE_GOLD_CSV_COLUMNS.map((column) => csvCell(values[column])).join(','))
   }
@@ -355,7 +396,9 @@ export function parseLiteratureGoldSetCsv(input: string): LiteratureGoldCsvRow[]
   }
 
   const expectedColumns = new Set<string>(LITERATURE_GOLD_CSV_COLUMNS)
-  const missingColumns = LITERATURE_GOLD_CSV_COLUMNS.filter((column) => !headers.includes(column))
+  const missingColumns = LITERATURE_GOLD_CSV_COLUMNS.filter(
+    (column) => !LITERATURE_GOLD_CSV_ADDITIVE_V1_1_COLUMNS.has(column) && !headers.includes(column),
+  )
   const unexpectedColumns = headers.filter((header) => !expectedColumns.has(header))
   if (missingColumns.length > 0) {
     throw new Error(`CSV is missing required column(s): ${missingColumns.join(', ')}.`)
@@ -452,12 +495,26 @@ export function parseLiteratureGoldSetCsv(input: string): LiteratureGoldCsvRow[]
           recordNumber,
           'technology_tags_json',
         ),
+        technologyTagStatus: csvEnum(
+          field('technology_tag_status'),
+          ['tagged', 'not_applicable', 'not_assessable'] as const,
+          recordNumber,
+          'technology_tag_status',
+          true,
+        ),
         clinicalPurposes: csvStringArray(
           field('clinical_purposes_json'),
           recordNumber,
           'clinical_purposes_json',
         ),
         diseaseTags: csvStringArray(field('disease_tags_json'), recordNumber, 'disease_tags_json'),
+        diseaseTagStatus: csvEnum(
+          field('disease_tag_status'),
+          ['tagged', 'not_applicable', 'not_assessable'] as const,
+          recordNumber,
+          'disease_tag_status',
+          true,
+        ),
         studyDesign: nullableText('study_design'),
         publicationStatus: nullableText('publication_status'),
         categorizationFromFullText: csvBoolean(
@@ -475,6 +532,10 @@ export function parseLiteratureGoldSetCsv(input: string): LiteratureGoldCsvRow[]
         isBlinded: csvBoolean(field('is_blinded'), recordNumber, 'is_blinded', true),
         reviewerEmail: nullableText('reviewer_email'),
         completedAt: nullableText('completed_at'),
+        taxonomyVersion: nullableText('taxonomy_version'),
+        labelSchemaVersion: nullableText('label_schema_version'),
+        enrichmentSchemaVersion: nullableText('enrichment_schema_version'),
+        enrichmentProvenance: nullableText('enrichment_provenance'),
       },
     }
   })

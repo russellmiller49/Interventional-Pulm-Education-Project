@@ -918,9 +918,19 @@ export function GoldSetReviewWorkspace({
                   <li key={entry.id} className="rounded-xl border border-border/70 p-3">
                     <div className="flex items-center justify-between gap-2">
                       <strong>Revision {entry.revision}</strong>
-                      <Badge variant={entry.isBlinded ? 'info' : 'outline'}>
-                        {entry.isBlinded ? 'blinded' : 'unblinded'}
-                      </Badge>
+                      <span className="flex items-center gap-2">
+                        {entry.revisionKind !== 'standard' ||
+                        entry.lifecycleState === 'withdrawn' ? (
+                          <Badge variant="outline">
+                            {entry.lifecycleState === 'withdrawn'
+                              ? 'withdrawn'
+                              : entry.revisionKind}
+                          </Badge>
+                        ) : null}
+                        <Badge variant={entry.isBlinded ? 'info' : 'outline'}>
+                          {entry.isBlinded ? 'blinded' : 'unblinded'}
+                        </Badge>
+                      </span>
                     </div>
                     <p className="mt-2">
                       {(entry.relevanceLabel ?? 'unknown').replaceAll('_', ' ')}

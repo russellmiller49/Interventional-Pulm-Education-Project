@@ -20,6 +20,7 @@ const MIGRATIONS = [
   '20260728171212_add_immune_inflammatory_disease_tag.sql',
   '20260728174726_add_safety_complication_prevention_clinical_purpose.sql',
   '20260730194025_add_literature_gold_test_unlock.sql',
+  '20260808035633_add_literature_gold_import_compensation_contract.sql',
 ] as const
 const EXCLUDED_SERVICES = [
   'realtime',

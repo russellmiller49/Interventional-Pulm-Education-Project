@@ -16,6 +16,9 @@ export type LiteratureGoldSetStratum = (typeof literatureGoldSetStrata)[number]
 export type LiteratureGoldSetDatasetSplit = (typeof literatureGoldSetDatasetSplits)[number]
 export type LiteratureGoldSetReviewStatus = (typeof literatureGoldSetReviewStatuses)[number]
 export type LiteratureGoldSetItemAction = (typeof literatureGoldSetItemActions)[number]
+export type LiteratureGoldReviewRevisionKind = 'standard' | 'import' | 'compensation'
+export type LiteratureGoldReviewLifecycleState = 'effective' | 'withdrawn'
+export type LiteratureGoldEnrichmentTagStatus = 'tagged' | 'not_applicable' | 'not_assessable'
 export type LiteratureGoldSetRelevanceLabel = (typeof literatureGoldSetRelevanceLabels)[number]
 export type LiteratureGoldSetMetadataSufficiency =
   (typeof literatureGoldSetMetadataSufficiencyLabels)[number]
@@ -185,6 +188,18 @@ export interface LiteratureGoldSetBatchSummary {
 export interface LiteratureGoldReviewRecord extends LiteratureGoldReviewPayload {
   id: string
   revision: number
+  revisionKind: LiteratureGoldReviewRevisionKind
+  lifecycleState: LiteratureGoldReviewLifecycleState
+  supersedesReviewId: string | null
+  compensatesReviewId: string | null
+  effectiveSourceReviewId: string | null
+  operationActionId: string | null
+  technologyTagStatus: LiteratureGoldEnrichmentTagStatus | null
+  diseaseTagStatus: LiteratureGoldEnrichmentTagStatus | null
+  taxonomyVersion: string | null
+  labelSchemaVersion: string | null
+  enrichmentSchemaVersion: string | null
+  enrichmentProvenance: string | null
   reviewerEmail: string | null
   isBlinded: boolean
   completedAt: string
@@ -233,6 +248,9 @@ export interface LiteratureGoldReviewItem {
   reviewStatus: LiteratureGoldSetReviewStatus
   article: LiteratureGoldReviewArticle
   draft: LiteratureGoldReviewPayload | null
+  /** Latest immutable revision node, including a withdrawn compensation head. */
+  chainHeadReviewId: string | null
+  /** Effective physician decision; null when the latest chain head is withdrawn. */
   currentReview: LiteratureGoldReviewRecord | null
   reviewHistory: LiteratureGoldReviewRecord[]
   supplementalMetadataRevealed: boolean

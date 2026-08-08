@@ -162,7 +162,143 @@ function fixture(): LiteratureGoldExport {
   return exported
 }
 
+function lifecycleFixture(): LiteratureGoldExport {
+  const exported = fixture()
+  exported.exportVersion = '1.1.0'
+  for (const exportedRecord of exported.records) {
+    const history = exportedRecord.reviewHistory ?? []
+    history.forEach((review, index) => {
+      review.revisionKind = 'standard'
+      review.lifecycleState = 'effective'
+      review.supersedesReviewId = index === 0 ? null : (history[index - 1]?.id ?? null)
+      review.compensatesReviewId = null
+      review.effectiveSourceReviewId = null
+      review.operationActionId = null
+      review.technologyTagStatus = null
+      review.diseaseTagStatus = null
+      review.taxonomyVersion = null
+      review.labelSchemaVersion = null
+      review.enrichmentSchemaVersion = null
+      review.enrichmentProvenance = null
+    })
+    if (!exportedRecord.review) throw new Error('Test fixture requires a current review.')
+    const current = history.at(-1)
+    if (!current) throw new Error('Test fixture requires immutable history.')
+    Object.assign(exportedRecord.review, {
+      revisionKind: current.revisionKind,
+      lifecycleState: current.lifecycleState,
+      supersedesReviewId: current.supersedesReviewId,
+      compensatesReviewId: current.compensatesReviewId,
+      effectiveSourceReviewId: current.effectiveSourceReviewId,
+      operationActionId: current.operationActionId,
+      technologyTagStatus: current.technologyTagStatus,
+      diseaseTagStatus: current.diseaseTagStatus,
+      taxonomyVersion: current.taxonomyVersion,
+      labelSchemaVersion: current.labelSchemaVersion,
+      enrichmentSchemaVersion: current.enrichmentSchemaVersion,
+      enrichmentProvenance: current.enrichmentProvenance,
+    })
+    exportedRecord.chainHeadReviewId = current.id
+  }
+  return exported
+}
+
 describe('gold-set pilot analysis', () => {
+  it('accepts lifecycle-aware 1.1 history while preserving the linear chain head', () => {
+    const exported = lifecycleFixture()
+    const parsed = parseLiteratureGoldReviewImportCsv(serializeLiteratureGoldSetCsv(exported), {
+      completedOnly: true,
+    })
+
+    expect(analyzeLiteratureGoldPilot(parsed.rows, exported).totals.records).toBe(4)
+
+    exported.records[0]!.chainHeadReviewId = '00000000-0000-4000-8000-000000000099'
+    expect(() => analyzeLiteratureGoldPilot(parsed.rows, exported)).toThrow(
+      'current review must match the latest immutable chain head',
+    )
+  })
+
+  it('compares additive V1.1 enrichment metadata when the current-state CSV supplies it', () => {
+    const exported = lifecycleFixture()
+    const target = exported.records[0]!
+    const current = target.review!
+    const latest = target.reviewHistory!.at(-1)!
+    for (const review of [current, latest]) {
+      review.technologyTagStatus = 'tagged'
+      review.diseaseTagStatus = 'not_applicable'
+      review.taxonomyVersion = '2.0.0'
+      review.labelSchemaVersion = '2.0.0'
+      review.enrichmentSchemaVersion = '2.0.0'
+      review.enrichmentProvenance = 'synthetic-test'
+    }
+    const parsed = parseLiteratureGoldReviewImportCsv(serializeLiteratureGoldSetCsv(exported), {
+      completedOnly: true,
+    })
+    expect(analyzeLiteratureGoldPilot(parsed.rows, exported).totals.records).toBe(4)
+
+    current.taxonomyVersion = '2.0.1'
+    latest.taxonomyVersion = '2.0.1'
+    expect(() => analyzeLiteratureGoldPilot(parsed.rows, exported)).toThrow(
+      'current review does not match the current-state CSV',
+    )
+  })
+
+  it('rejects a contiguous but forked 1.1 predecessor chain', () => {
+    const exported = lifecycleFixture()
+    const parsed = parseLiteratureGoldReviewImportCsv(serializeLiteratureGoldSetCsv(exported), {
+      completedOnly: true,
+    })
+    const revision = exported.records[3]!.reviewHistory![1]!
+    revision.supersedesReviewId = null
+
+    expect(() => analyzeLiteratureGoldPilot(parsed.rows, exported)).toThrow(
+      'must supersede the previous immutable revision',
+    )
+  })
+
+  it('requires a compensation restore to identify and exactly copy the prior effective source', () => {
+    const exported = lifecycleFixture()
+    const target = exported.records[0]!
+    const base = target.reviewHistory![0]!
+    const imported = {
+      ...base,
+      id: '21000000-0000-4000-8000-000000000001',
+      revision: 2,
+      revisionKind: 'import' as const,
+      lifecycleState: 'effective' as const,
+      supersedesReviewId: base.id,
+      compensatesReviewId: null,
+      effectiveSourceReviewId: null,
+      operationActionId: '41000000-0000-4000-8000-000000000001',
+      notes: 'Imported enrichment payload.',
+    }
+    const compensation = {
+      ...base,
+      id: '22000000-0000-4000-8000-000000000001',
+      revision: 3,
+      revisionKind: 'compensation' as const,
+      lifecycleState: 'effective' as const,
+      supersedesReviewId: imported.id,
+      compensatesReviewId: imported.id,
+      effectiveSourceReviewId: base.id,
+      operationActionId: '42000000-0000-4000-8000-000000000001',
+    }
+    target.reviewHistory = [base, imported, compensation]
+    target.review = { ...compensation }
+    target.chainHeadReviewId = compensation.id
+    const parsed = parseLiteratureGoldReviewImportCsv(serializeLiteratureGoldSetCsv(exported), {
+      completedOnly: true,
+    })
+
+    expect(analyzeLiteratureGoldPilot(parsed.rows, exported).totals.records).toBe(4)
+
+    compensation.notes = 'Tampered compensation payload.'
+    target.review.notes = compensation.notes
+    expect(() => analyzeLiteratureGoldPilot(parsed.rows, exported)).toThrow(
+      'invalid target, effective source, or copied payload',
+    )
+  })
+
   it('re-bands completed pilot decisions and identifies regression candidates', () => {
     const exported = fixture()
     const parsed = parseLiteratureGoldReviewImportCsv(serializeLiteratureGoldSetCsv(exported), {
