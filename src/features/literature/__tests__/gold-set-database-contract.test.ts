@@ -239,6 +239,9 @@ describe('gold-set database contract', () => {
         `grant insert, update, delete on table public.${table} to service_role`,
       )
     }
+    expect(normalizedSql).toContain(
+      'revoke truncate, references, trigger on table public.literature_gold_set_reviews, public.literature_gold_set_events from service_role',
+    )
   })
 
   it('retires the non-atomic multi-request legacy commit path', () => {

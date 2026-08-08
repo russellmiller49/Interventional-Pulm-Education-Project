@@ -310,6 +310,9 @@ latest physical chain node. They must never hide the imported revision by pointi
 An exact idempotent replay of a completed compensation is a no-op that returns the terminal receipt.
 An item action classified `compensate_noop` creates no review, pointer change, or item-level event.
 It must still be checksum-bound in the action inventory and counted exactly.
+A fresh compensation operation ID targeting an import that already has a started or completed
+compensation is not a replay: it is rejected with stable SQLSTATE `P7625` before a second compensation
+head can be created.
 
 ### Compensation atomicity
 
@@ -480,6 +483,10 @@ The operation ID and plan/authorization hashes form the idempotency identity.
 - A completed or failed operation cannot return to `started`.
 - Compensation is rejected if the imported head is no longer current, even if its content happens to
   match.
+- A compensation request must name the exact sealed import operation, plan, receipt, artifact, and
+  batch. An unrelated import cannot be substituted because its state hashes happen to match.
+- Recovery authorization binds the exact target operation, plan hash, and idempotency key. It cannot
+  reconcile one import or compensation through another operation identity.
 
 If a connection is lost before commit confirmation, the caller must not retry automatically, create a
 second operation, rewind pointers, or compensate. It first performs read-only reconciliation:
@@ -603,7 +610,8 @@ Import readiness is false unless all of these are true:
 - coordinator, relevance, taxonomy, draft, collision, and protected-divergence conflicts are zero;
 - import authorization is valid for the exact operation and local target;
 - held-out access is zero and the test split remains locked;
-- the isolated ten-scenario rehearsal passes;
+- the isolated twenty-scenario rehearsal passes with exactly one direct database-evidence record for
+  every required scenario;
 - no prior operation with the same ID has a conflicting identity;
 - no ambiguous or nonterminal operation blocks the scope.
 
@@ -615,30 +623,90 @@ pre-import state, and the isolated compensation rehearsal passes.
 Migration readiness, import readiness, compensation readiness, and held-out-test readiness are
 separate statuses. Passing one never implies another.
 
-## Isolated ten-scenario rehearsal
+## Isolated twenty-scenario rehearsal
 
-The migration and RPCs must be rehearsed against a disposable database populated only with synthetic
-development identities. No scenario may use the real local database or held-out identities.
+The migration and RPCs must be rehearsed against a disposable Supabase PostgreSQL database populated
+only with synthetic development identities. The committed runner accepts only an output directory; it
+does not accept a database URL, host, port, or remote target. No scenario may use the real local
+database, real PMIDs, finalized review data, or held-out identities.
 
-|   # | Scenario                                | Required assertions                                                                                                                                                                                                           |
-| --: | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-|   1 | Mixed import success                    | Initial, revision, and noop actions have exact counts; reviews/events/actions are correct; chains are linear; every pointer is head; both post hashes match.                                                                  |
-|   2 | Scope and authorization refusal         | Remote target, test split, invalid authorization, or plan-hash mismatch is rejected before an operation or item mutation is accepted.                                                                                         |
-|   3 | Injected mid-import failure             | Inner subtransaction rolls back all reviews/pointers/item events; one failed operation audit survives; effective hash is unchanged; failure physical hash matches.                                                            |
-|   4 | Import idempotency and collision        | Exact completed/failed replay produces no writes and returns the terminal receipt; same operation ID with changed input fails closed.                                                                                         |
-|   5 | Prior-review compensation               | Restore head supersedes and compensates imported head, pointer remains latest, source payload is exact, effective hash returns to pre-import, physical hash does not.                                                         |
-|   6 | Initial-review void                     | Withdrawn void head supersedes imported initial head, pointer remains latest, effective source is null, prior no-review state/hash is restored.                                                                               |
-|   7 | Mixed compensation success              | Restore, void, and noop actions commit atomically with exact events/counts and no old-row updates or deletes.                                                                                                                 |
-|   8 | Injected mid-compensation failure       | All compensation review/pointer/item events roll back; compensation failure audit survives; imported effective state remains unchanged.                                                                                       |
-|   9 | Stale-head and chain corruption refusal | Intervening revision, rewound pointer, broken predecessor, wrong revision, draft, or state-hash drift blocks compensation before item mutation.                                                                               |
-|  10 | Ambiguous client outcome and recovery   | Lost commit acknowledgement causes no blind retry; read-only operation lookup distinguishes completed, failed, absent, and nonterminal states; recovery requires its own authorization and creates no duplicate review/event. |
+The stable scenario matrix is:
 
-The versioned verification SQL contains the synthetic plan/authorization fixtures and asserts the
-before/after physical and effective hashes, operation/action/event counts, chain and pointer results,
-and transaction outcome inside the disposable database. The runner records checksums for the complete
-migration input set and verification script. Effective projections and deterministic IDs are stable
-across fresh runs; timestamp-bearing physical hashes are recomputed and verified against each run's
-actual audit state rather than falsely claimed to be identical across different clocks.
+| ID                                                 | Scenario                             | Required direct runtime evidence                                                                                                                                                                      |
+| -------------------------------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `S01_initial_import_success`                       | Initial-review import                | Actual import RPC appends revision 1, advances the physical head, resolves the new effective review, and emits the exact events.                                                                      |
+| `S02_revision_import_success`                      | Existing-review revision import      | Actual import RPC appends `max(revision)+1`, supersedes the prior physical head, and preserves a linear history.                                                                                      |
+| `S03_exact_mixed_package`                          | Exact mixed package                  | One import RPC processes exactly 621 initial actions, three revisions, and six no-ops: 630 actions, 624 review inserts, exact events/pointers/revisions/hashes, followed by an exact no-write replay. |
+| `S04_import_failure_before_commit`                 | Import failure before commit         | An injected action failure rolls back review, pointer, and item-success events while preserving only the sealed failed-attempt audit.                                                                 |
+| `S05_ambiguous_outcome`                            | Ambiguous client/process outcome     | A real database operation reaches a terminal state while the client-side result is treated as unknown; no blind retry is authorized.                                                                  |
+| `S06_read_only_reconciliation`                     | Reconciliation after ambiguity       | The read-only reconciliation RPC distinguishes completed, failed, absent, and started operations without creating a review, event, or operation.                                                      |
+| `S07_restore_compensation`                         | Restore prior review                 | A restore head supersedes the imported head, points to the prior effective source, restores the effective hash, and changes the physical hash.                                                        |
+| `S08_void_compensation`                            | Void first review                    | A withdrawn head supersedes the imported first review, stays current, and yields no effective completed review.                                                                                       |
+| `S09_compensation_failure_before_commit`           | Compensation failure before commit   | An injected failure rolls back compensation reviews, pointers, and success events while preserving the sealed failed-attempt audit.                                                                   |
+| `S10_compensation_idempotent_replay`               | Successful compensation replay       | The identical request returns the existing completed operation/receipt with no additional head, review, event, pointer, or hash change.                                                               |
+| `S11_standard_review_after_restore`                | Ordinary review after restore        | The standard review function appends after the restore physical head, becomes the effective/current review, preserves history, and does not fabricate blinding state.                                 |
+| `S12_standard_review_after_void`                   | Ordinary review after void           | The standard function appends after the withdrawn head at `max(revision)+1`; first-decision blinding is not recreated.                                                                                |
+| `S13_stale_before_state_rejected`                  | Stale before-state                   | Changed head, draft, membership, or physical/effective state is rejected before item mutation with a controlled result.                                                                               |
+| `S14_stale_authorization_rejected`                 | Stale authorization                  | Wrong checksum, plan binding, state binding, or timestamp shape is rejected before an operation is accepted.                                                                                          |
+| `S15_wrong_import_operation_id_rejected`           | Wrong target import identity         | A compensation request cannot substitute an unrelated import operation even when other state values resemble the target.                                                                              |
+| `S16_wrong_compensation_operation_id_rejected`     | Wrong compensation/recovery identity | A compensation or reconciliation operation cannot be resolved through another operation identity.                                                                                                     |
+| `S17_second_compensation_rejected`                 | Fresh second compensation            | A newly identified compensation targeting an already compensated import is rejected with SQLSTATE `P7625`; only an exact replay of the original operation is idempotent.                              |
+| `S18_held_out_item_rejected`                       | Held-out scope refusal               | Test-split or unlocked-test scope is rejected without selecting, printing, or recording a held-out identity.                                                                                          |
+| `S19_pointer_rewind_and_history_mutation_rejected` | Rewind and immutable-history attacks | Direct pointer rewind, chain branch, and historical review update/delete attempts fail with controlled errors and leave the chain unchanged.                                                          |
+| `S20_legacy_pointer_rewind_plan_rejected`          | Retired rollback plan                | A pointer-rewind-shaped legacy plan is submitted to the database contract and rejected before journal or item mutation.                                                                               |
+
+The exact mixed-package fixture is generated inside the disposable database from deterministic,
+synthetic development-only rows. Its counts are derived again from persisted operation, action,
+review, pointer, and event state; a TypeScript planning simulation cannot satisfy this gate.
+
+### Evidence artifacts
+
+Run:
+
+```text
+npm run literature:rehearse-gold-import-compensation -- --output <new-empty-directory>
+```
+
+The runner creates these files:
+
+- `scenario-evidence.json` (`pr84-scenario-evidence/v1`): canonical ordered evidence for exactly the
+  20 IDs above, including invoked database functions, pre/post counts and chain state, expected and
+  actual results, assertion outcomes, SQLSTATE/result, and mutation count;
+- `lint-introspection.json` (`pr84-lint-introspection/v1`): normalized Supabase lint and database
+  security/constraint/trigger introspection;
+- `rehearsal-manifest.json` (`pr84-rehearsal-manifest/v1`): canonical identities for the exact
+  migration inputs, verifier, runner evidence, lint/introspection, and scenario counts; and
+- `execution-receipt.json` (`pr84-execution-receipt/v1`): noncanonical execution time, local disposable
+  container/port, raw runtime hashes, and output path.
+
+The first three artifacts are byte-identical for identical committed inputs. Runtime physical hashes
+contain audit timestamps and are validated as 64-character SHA-256 values plus required equality or
+difference relationships before being normalized out of canonical evidence. UUIDs generated by the
+ordinary review RPC are likewise replaced by first-seen equality tokens. The raw physical hashes and
+runtime UUIDs remain in the noncanonical receipt. Effective hashes and deterministic clinical
+projections remain exact in the canonical evidence. Any missing, duplicate, failed, or reordered
+scenario; failed assertion; changed mixed-package count; lint error; unexpected lint warning; unsafe
+grant/search path; missing RLS; missing trigger/constraint; or artifact validation error makes the
+runner exit nonzero.
+
+The runner uses the fixed disposable Supabase PostgreSQL image, applies the exact historical migration
+chain and this forward migration, executes the versioned SQL verifier, runs Supabase database lint,
+and records runtime introspection for RLS, function security mode/search paths, execute/table grants,
+immutability protections, constraints, triggers, and event vocabulary. The known three lint warning
+groups are allowlisted by exact function/message identity and remain warnings only; a changed warning
+set fails closed. The ambiguous-outcome scenario commits its synthetic operation before a new
+transaction performs reconciliation. Before any container starts, the runner removes inherited
+database and Docker target variables and verifies that Docker resolves to a local Unix-domain socket
+or Windows named pipe.
+
+The disposable grant audit also guards an environment-specific Supabase default: tables created by
+`supabase_admin` can begin with `service_role` privileges beyond a later four-verb data grant. This
+forward migration explicitly removes `TRUNCATE`, `REFERENCES`, and `TRIGGER` from immutable review and
+event tables. In particular, `TRUNCATE` must not bypass their append-only row triggers.
+
+Committed rehearsal evidence is the result of this command and its checksum-bound artifacts. Manual
+source review, standalone lint, TypeScript simulations, and ad hoc disposable checks may supplement
+that evidence but cannot mark a scenario passed or replace an artifact entry.
 
 ## Operational sequence and mandatory stop
 
@@ -651,8 +719,10 @@ actual audit state rather than falsely claimed to be identical across different 
    literature database.
 4. Apply the canonical historical literature migrations and the new migration only to that disposable
    environment.
-5. Run the ten scenarios and capture non-sensitive synthetic receipts and hash evidence.
-6. Run static migration checks, focused tests, literature tests, type checking, linting, formatting,
+5. Run all twenty direct database scenarios twice in fresh disposable environments and require
+   byte-identical canonical evidence and manifests.
+6. Run the integrated Supabase lint/security introspection, static migration checks, focused tests,
+   literature tests, type checking, linting, formatting,
    and repository checks that do not connect to the real database.
 7. Commit, push, and open a draft pull request with the migration still unapplied to the real database.
 8. **Stop. Do not apply the migration to the real local database. Do not regenerate or execute the

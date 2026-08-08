@@ -552,8 +552,53 @@ describe('gold review import/compensation contract', () => {
     expect(reviewed.items[id(10, 1)].reviews.at(-1)).toMatchObject({
       revision: 3,
       supersedesReviewId: id(91, 1),
+      revisionKind: 'standard',
+      lifecycleState: 'effective',
+      payload: { isBlinded: true },
     })
     expect(reviewed.items[id(10, 1)].currentReviewId).toBe(id(120, 1))
+    expect(assertLinearRevisionChains(reviewed)).toBe(true)
+  })
+
+  it('replays successful compensation without writes and appends an unblinded ordinary review after restore', () => {
+    let state = seedState(1)
+    state = appendOrdinaryReviewRehearsal(state, {
+      itemId: id(10, 1),
+      reviewId: id(20, 1),
+      payload: { ...payload('prior'), isBlinded: false },
+    })
+    const imported = buildImport(state, new Map([[id(10, 1), payload('imported')]]))
+    const committed = executeImportRehearsal(state, imported.plan, imported.authorization).state
+    const compensation = buildCompensation(committed, imported.plan)
+    const compensated = executeCompensationRehearsal(
+      committed,
+      compensation.plan,
+      compensation.authorization,
+    )
+    const physicalAfterCompensation = rehearsalPhysicalStateHash(compensated.state)
+    const replay = executeCompensationRehearsal(
+      compensated.state,
+      compensation.plan,
+      compensation.authorization,
+    )
+    expect(replay.response).toBe('idempotent_replay')
+    expect(rehearsalPhysicalStateHash(replay.state)).toBe(physicalAfterCompensation)
+    expect(replay.state.items[id(10, 1)].reviews).toHaveLength(3)
+
+    const reviewed = appendOrdinaryReviewRehearsal(replay.state, {
+      itemId: id(10, 1),
+      reviewId: id(120, 2),
+      payload: { ...payload('ordinary after restore'), isBlinded: false },
+    })
+    expect(reviewed.items[id(10, 1)].reviews.at(-1)).toMatchObject({
+      revision: 4,
+      supersedesReviewId: id(91, 1),
+      revisionKind: 'standard',
+      lifecycleState: 'effective',
+      payload: { isBlinded: false },
+    })
+    expect(reviewed.items[id(10, 1)].currentReviewId).toBe(id(120, 2))
+    expect(assertLinearRevisionChains(reviewed)).toBe(true)
   })
 
   it('uses the restored source identity while a second import appends from the compensation head', () => {

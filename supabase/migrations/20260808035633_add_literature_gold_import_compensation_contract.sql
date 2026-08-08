@@ -409,6 +409,17 @@ revoke all on table public.literature_gold_review_operation_actions
 grant select on table public.literature_gold_review_operations to service_role;
 grant select on table public.literature_gold_review_operation_actions to service_role;
 
+-- Supabase's service_role default privileges include TRUNCATE, REFERENCES,
+-- and TRIGGER on tables created by supabase_admin.  The original gold-set
+-- migration granted only SELECT/INSERT/UPDATE/DELETE but did not first remove
+-- those defaults.  TRUNCATE bypasses the append-only row triggers, so remove
+-- all three unintended schema-level privileges from immutable review/audit
+-- history while preserving the four explicitly supported data privileges.
+revoke truncate, references, trigger
+  on table public.literature_gold_set_reviews,
+    public.literature_gold_set_events
+  from service_role;
+
 create policy literature_gold_review_operations_service_policy
   on public.literature_gold_review_operations
   for all

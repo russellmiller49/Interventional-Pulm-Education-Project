@@ -71,6 +71,7 @@
     "literature:import-gold-reviews": "node scripts/require-primary-checkout.mjs -- tsx scripts/literature/import-gold-reviews.ts",
     "literature:analyze-pending-gold-import-compensation": "tsx scripts/literature/analyze-pending-gold-import-compensation.ts",
     "literature:rehearse-gold-import-compensation": "tsx scripts/literature/rehearse-gold-import-compensation-db.ts",
+    "literature:test-gold-import-compensation-rehearsal": "jest --runInBand scripts/literature/gold-import-compensation-rehearsal-evidence.test.ts",
     "literature:gold-import-compensation": "node scripts/require-primary-checkout.mjs -- tsx scripts/literature/gold-import-compensation-cli.ts",
     "literature:gold-import-compensation:validate-import": "tsx scripts/literature/gold-import-compensation-cli.ts validate-import",
     "literature:gold-import-compensation:validate-compensation": "tsx scripts/literature/gold-import-compensation-cli.ts validate-compensation",
