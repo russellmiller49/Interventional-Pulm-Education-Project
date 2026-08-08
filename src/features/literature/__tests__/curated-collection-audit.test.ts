@@ -221,6 +221,7 @@ function databaseSnapshot(): CuratedCollectionDatabaseSnapshot {
         id: 'pilot-review-2',
         itemId: 'pilot-item',
         revision: 2,
+        lifecycleState: 'effective',
         relevanceLabel: 'exclude',
         reviewerConfidence: 'high',
         isBlinded: false,
@@ -230,6 +231,7 @@ function databaseSnapshot(): CuratedCollectionDatabaseSnapshot {
         id: 'pilot-review-1',
         itemId: 'pilot-item',
         revision: 1,
+        lifecycleState: 'effective',
         relevanceLabel: 'include_core',
         reviewerConfidence: 'moderate',
         isBlinded: true,
@@ -287,6 +289,38 @@ describe('curated collection input validation', () => {
 })
 
 describe('curated collection audit report', () => {
+  it('keeps a withdrawn chain head authoritative without exposing it as an effective decision', () => {
+    const snapshot = databaseSnapshot()
+    const item = snapshot.batchItems.find((candidate) => candidate.id === 'pilot-item')!
+    const head = snapshot.reviews.find((review) => review.id === 'pilot-review-2')!
+    item.reviewStatus = 'pending'
+    head.lifecycleState = 'withdrawn'
+
+    const report = buildCuratedCollectionAuditReport(validatedInputs(), snapshot, localDatabase)
+    const membership = report.pmids.find((record) => record.pmid === '2')!.batchMemberships[0]
+
+    expect(membership).toMatchObject({
+      reviewStatus: 'pending',
+      revisionCount: 2,
+      currentPhysicianDecision: null,
+    })
+  })
+
+  it('preserves the effective head while an ordinary revision draft is in progress', () => {
+    const snapshot = databaseSnapshot()
+    const item = snapshot.batchItems.find((candidate) => candidate.id === 'pilot-item')!
+    item.reviewStatus = 'in_progress'
+
+    const report = buildCuratedCollectionAuditReport(validatedInputs(), snapshot, localDatabase)
+    const membership = report.pmids.find((record) => record.pmid === '2')!.batchMemberships[0]
+
+    expect(membership).toMatchObject({
+      reviewStatus: 'in_progress',
+      revisionCount: 2,
+      currentPhysicianDecision: { revision: 2, relevanceLabel: 'exclude' },
+    })
+  })
+
   it('reports required overlap fields, current decisions, revision counts, and conflicts', () => {
     const report = buildCuratedCollectionAuditReport(
       validatedInputs(),
@@ -383,6 +417,7 @@ describe('curated collection audit report', () => {
       id: 'locked-secret-review',
       itemId: 'locked-item',
       revision: 1,
+      lifecycleState: 'effective',
       relevanceLabel: 'include_core',
       reviewerConfidence: 'high',
       isBlinded: true,

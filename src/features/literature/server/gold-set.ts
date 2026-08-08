@@ -11,7 +11,10 @@ import type {
   LiteratureGoldExport,
   LiteratureGoldExportReview,
 } from '@/features/literature/gold-set/export'
-import { literatureGoldExportSamplingContext } from '@/features/literature/gold-set/export'
+import {
+  literatureGoldExportSamplingContext,
+  resolveEffectiveLiteratureGoldExportReview,
+} from '@/features/literature/gold-set/export'
 
 import { createLiteratureAdmin } from './database-client'
 import type { LiteratureServerResult } from './types'
@@ -46,6 +49,12 @@ function textArray(value: unknown) {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === 'string')
     : []
+}
+
+function enrichmentTagStatus(value: unknown) {
+  return value === 'tagged' || value === 'not_applicable' || value === 'not_assessable'
+    ? value
+    : null
 }
 
 function reviewPayload(value: unknown): LiteratureGoldReviewPayload | null {
@@ -96,10 +105,27 @@ function reviewRecord(value: unknown): LiteratureGoldReviewRecord | null {
   const completedAt = text(row.completedAt)
   const revision = Number(row.revision)
   if (!id || !completedAt || !Number.isInteger(revision) || revision < 1) return null
+  const revisionKind =
+    row.revisionKind === 'import' || row.revisionKind === 'compensation'
+      ? row.revisionKind
+      : 'standard'
+  const lifecycleState = row.lifecycleState === 'withdrawn' ? 'withdrawn' : 'effective'
   return {
     ...payload,
     id,
     revision,
+    revisionKind,
+    lifecycleState,
+    supersedesReviewId: text(row.supersedesReviewId),
+    compensatesReviewId: text(row.compensatesReviewId),
+    effectiveSourceReviewId: text(row.effectiveSourceReviewId),
+    operationActionId: text(row.operationActionId),
+    technologyTagStatus: enrichmentTagStatus(row.technologyTagStatus),
+    diseaseTagStatus: enrichmentTagStatus(row.diseaseTagStatus),
+    taxonomyVersion: text(row.taxonomyVersion),
+    labelSchemaVersion: text(row.labelSchemaVersion),
+    enrichmentSchemaVersion: text(row.enrichmentSchemaVersion),
+    enrichmentProvenance: text(row.enrichmentProvenance),
     reviewerEmail: text(row.reviewerEmail),
     isBlinded: row.isBlinded === true,
     completedAt,
@@ -132,7 +158,8 @@ function normalizeGoldReviewItem(value: unknown): LiteratureGoldReviewItem | nul
         .map(reviewRecord)
         .filter((review): review is LiteratureGoldReviewRecord => Boolean(review))
     : []
-  const currentReview = reviewRecord(row.currentReview)
+  const pointerReview = reviewRecord(row.currentReview)
+  const currentReview = pointerReview?.lifecycleState === 'withdrawn' ? null : pointerReview
   const id = text(row.id)
   const batchId = text(row.batchId)
   const batchName = text(row.batchName)
@@ -172,6 +199,14 @@ function normalizeGoldReviewItem(value: unknown): LiteratureGoldReviewItem | nul
         : {}),
     },
     draft: reviewPayload(row.draft),
+    chainHeadReviewId:
+      text(row.chainHeadReviewId) ??
+      pointerReview?.id ??
+      history.reduce<LiteratureGoldReviewRecord | null>(
+        (latest, review) => (!latest || review.revision > latest.revision ? review : latest),
+        null,
+      )?.id ??
+      null,
     currentReview,
     reviewHistory: history,
     supplementalMetadataRevealed: row.supplementalMetadataRevealed === true,
@@ -402,6 +437,22 @@ function exportReview(
   return {
     id: draft ? null : text(row.id),
     revision: draft ? null : Number(row.revision) || null,
+    revisionKind: draft
+      ? null
+      : row.revision_kind === 'import' || row.revision_kind === 'compensation'
+        ? row.revision_kind
+        : 'standard',
+    lifecycleState: draft ? null : row.lifecycle_state === 'withdrawn' ? 'withdrawn' : 'effective',
+    supersedesReviewId: draft ? null : text(row.supersedes_review_id),
+    compensatesReviewId: draft ? null : text(row.compensates_review_id),
+    effectiveSourceReviewId: draft ? null : text(row.effective_source_review_id),
+    operationActionId: draft ? null : text(row.operation_action_id),
+    technologyTagStatus: draft ? null : enrichmentTagStatus(row.technology_tag_status),
+    diseaseTagStatus: draft ? null : enrichmentTagStatus(row.disease_tag_status),
+    taxonomyVersion: draft ? null : text(row.taxonomy_version),
+    labelSchemaVersion: draft ? null : text(row.label_schema_version),
+    enrichmentSchemaVersion: draft ? null : text(row.enrichment_schema_version),
+    enrichmentProvenance: draft ? null : text(row.enrichment_provenance),
     relevanceLabel: text(row.relevance_label),
     metadataSufficiency: text(row.metadata_sufficiency),
     reviewerConfidence: text(row.reviewer_confidence),
@@ -540,7 +591,7 @@ export async function exportLiteratureGoldSet(
   const batch = batchData as Record<string, unknown>
   return {
     data: {
-      exportVersion: '1.0.0',
+      exportVersion: '1.1.0',
       exportedAt: new Date().toISOString(),
       batch: {
         id: String(batch.id),
@@ -561,7 +612,8 @@ export async function exportLiteratureGoldSet(
         const itemId = String(item.id)
         const pmid = String(item.pmid)
         const article = articleByPmid.get(pmid) ?? {}
-        const current = reviewById.get(String(item.current_review_id))
+        const chainHead = reviewById.get(String(item.current_review_id))
+        const current = resolveEffectiveLiteratureGoldExportReview(exportReview(chainHead, false))
         const draft = draftByItem.get(itemId)
         const samplingContext = literatureGoldExportSamplingContext(
           Boolean(current),
@@ -588,7 +640,8 @@ export async function exportLiteratureGoldSet(
             : draft
               ? ('draft' as const)
               : ('empty' as const),
-          review: current ? exportReview(current, false) : exportReview(draft, true),
+          review: current ?? exportReview(draft, true),
+          chainHeadReviewId: text(item.current_review_id),
           ...(includeHistory ? { reviewHistory: historyByItem.get(itemId) ?? [] } : {}),
         }
       }),
