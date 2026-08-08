@@ -96,19 +96,68 @@ export const REQUIRED_CONSTRAINTS = [
   'literature_gold_review_operations_status_check',
   'literature_gold_review_operations_target_check',
   'literature_gold_review_operations_terminal_check',
+  'literature_gold_set_batches_frozen_state_check',
+  'literature_gold_set_batches_kind_check',
+  'literature_gold_set_batches_name_check',
+  'literature_gold_set_batches_name_key',
+  'literature_gold_set_batches_pkey',
+  'literature_gold_set_batches_report_check',
+  'literature_gold_set_batches_requested_size_check',
+  'literature_gold_set_batches_sampling_seed_check',
+  'literature_gold_set_batches_status_check',
+  'literature_gold_set_batches_test_percent_check',
+  'literature_gold_set_batches_test_unlock_check',
+  'literature_gold_set_events_after_check',
+  'literature_gold_set_events_batch_id_fkey',
+  'literature_gold_set_events_before_check',
+  'literature_gold_set_events_item_id_fkey',
   'literature_gold_set_events_operation_action_fk',
   'literature_gold_set_events_operation_fk',
   'literature_gold_set_events_operation_shape_check',
+  'literature_gold_set_events_pkey',
   'literature_gold_set_events_type_check',
+  'literature_gold_set_items_batch_id_display_order_key',
+  'literature_gold_set_items_batch_id_fkey',
+  'literature_gold_set_items_batch_id_pmid_key',
+  'literature_gold_set_items_completion_check',
+  'literature_gold_set_items_current_review_fk',
+  'literature_gold_set_items_dataset_split_check',
+  'literature_gold_set_items_display_order_check',
+  'literature_gold_set_items_pkey',
+  'literature_gold_set_items_pmid_fkey',
+  'literature_gold_set_items_review_status_check',
+  'literature_gold_set_items_sampling_metadata_check',
+  'literature_gold_set_items_sampling_reason_check',
+  'literature_gold_set_items_stratum_check',
+  'literature_gold_set_review_drafts_confidence_check',
+  'literature_gold_set_review_drafts_item_id_fkey',
+  'literature_gold_set_review_drafts_metadata_check',
+  'literature_gold_set_review_drafts_notes_check',
+  'literature_gold_set_review_drafts_pkey',
+  'literature_gold_set_review_drafts_relevance_check',
+  'literature_gold_set_review_drafts_seconds_check',
   'literature_gold_set_reviews_compensates_fk',
+  'literature_gold_set_reviews_confidence_check',
   'literature_gold_set_reviews_effective_source_fk',
   'literature_gold_set_reviews_enrichment_status_check',
   'literature_gold_set_reviews_enrichment_versions_check',
+  'literature_gold_set_reviews_full_text_categorization_check',
+  'literature_gold_set_reviews_id_item_id_key',
+  'literature_gold_set_reviews_included_labels_check',
+  'literature_gold_set_reviews_item_id_fkey',
+  'literature_gold_set_reviews_item_id_revision_key',
   'literature_gold_set_reviews_lifecycle_state_check',
+  'literature_gold_set_reviews_metadata_check',
+  'literature_gold_set_reviews_notes_check',
   'literature_gold_set_reviews_operation_action_fk',
+  'literature_gold_set_reviews_pkey',
+  'literature_gold_set_reviews_relevance_check',
+  'literature_gold_set_reviews_revision_check',
   'literature_gold_set_reviews_revision_contract_check',
   'literature_gold_set_reviews_revision_kind_check',
+  'literature_gold_set_reviews_seconds_check',
   'literature_gold_set_reviews_supersedes_fk',
+  'literature_gold_set_reviews_time_check',
 ] as const
 
 export const REQUIRED_UNIQUE_INDEXES = [
@@ -124,15 +173,42 @@ export const REQUIRED_JOURNAL_POLICIES = [
 ] as const
 
 export const REQUIRED_TRIGGERS = [
+  'audit_literature_gold_test_unlock_transition',
   'check_literature_gold_chain_head_after_item',
   'check_literature_gold_chain_head_after_review',
   'guard_literature_gold_review_chain_insert',
   'guard_literature_gold_review_operation_actions',
   'guard_literature_gold_review_operations',
+  'guard_literature_gold_test_unlock_transition',
   'prevent_literature_gold_set_events_mutation',
   'prevent_literature_gold_set_reviews_mutation',
+  'protect_frozen_literature_gold_set_batches',
+  'protect_frozen_literature_gold_set_items',
+  'protect_frozen_literature_gold_set_review_drafts',
+  'protect_frozen_literature_gold_set_reviews',
+  'protect_literature_gold_set_composition',
+  'protect_locked_literature_gold_test_drafts',
+  'protect_locked_literature_gold_test_items',
+  'protect_locked_literature_gold_test_reviews',
+  'set_literature_gold_set_batches_updated_at',
+  'set_literature_gold_set_items_updated_at',
+  'set_literature_gold_set_review_drafts_updated_at',
+  'validate_literature_gold_batch_created_event',
   'validate_literature_gold_operation_event',
 ] as const
+
+export const REQUIRED_UNIQUE_INDEX_TABLES = {
+  literature_gold_review_operations_one_live_compensation_idx: 'literature_gold_review_operations',
+  literature_gold_set_events_operation_sequence_idx: 'literature_gold_set_events',
+  literature_gold_set_reviews_one_child_idx: 'literature_gold_set_reviews',
+  literature_gold_set_reviews_one_operation_action_idx: 'literature_gold_set_reviews',
+} as const satisfies Readonly<Record<(typeof REQUIRED_UNIQUE_INDEXES)[number], string>>
+
+export const REQUIRED_JOURNAL_POLICY_TABLES = {
+  literature_gold_review_operation_actions_service_policy:
+    'literature_gold_review_operation_actions',
+  literature_gold_review_operations_service_policy: 'literature_gold_review_operations',
+} as const satisfies Readonly<Record<(typeof REQUIRED_JOURNAL_POLICIES)[number], string>>
 
 export const REQUIRED_EVENT_TYPES = [
   'automated_signals_revealed',
@@ -919,7 +995,15 @@ export function validateSecurityIntrospection(value: unknown) {
     const tableName = requireNonemptyString(row.tableName, `journalPrivileges[${index}].tableName`)
     const role = requireNonemptyString(row.role, `journalPrivileges[${index}].role`)
     const expectedSelect = role === 'service_role'
-    for (const privilege of ['select', 'insert', 'update', 'delete', 'truncate'] as const) {
+    for (const privilege of [
+      'select',
+      'insert',
+      'update',
+      'delete',
+      'truncate',
+      'references',
+      'trigger',
+    ] as const) {
       const expected = privilege === 'select' ? expectedSelect : false
       if (row[privilege] !== expected) {
         throw new Error(
@@ -935,6 +1019,8 @@ export function validateSecurityIntrospection(value: unknown) {
       update: false,
       delete: false,
       truncate: false,
+      references: false,
+      trigger: false,
     }
   })
   requireExactNames(
@@ -974,10 +1060,7 @@ export function validateSecurityIntrospection(value: unknown) {
         requireNonemptyString(entry, `constraints[${index}]`),
       )
     : []
-  for (const constraint of REQUIRED_CONSTRAINTS) {
-    if (!constraints.includes(constraint))
-      throw new Error(`Required constraint is missing: ${constraint}.`)
-  }
+  requireExactNames(constraints, REQUIRED_CONSTRAINTS, 'protected constraint set')
   if (!Array.isArray(report.constraintDefinitions)) {
     throw new Error('security introspection.constraintDefinitions must be an array.')
   }
@@ -992,11 +1075,18 @@ export function validateSecurityIntrospection(value: unknown) {
       ),
     }
   })
+  requireExactNames(
+    constraintDefinitions.map(({ name }) => name),
+    REQUIRED_CONSTRAINTS,
+    'protected constraint definition set',
+  )
   for (const constraint of REQUIRED_CONSTRAINTS) {
-    const definition = constraintDefinitions.find(({ name }) => name === constraint)?.definition
-    if (!definition) throw new Error(`Required constraint definition is missing: ${constraint}.`)
+    const catalogEntry = constraintDefinitions.find(({ name }) => name === constraint)
+    if (!catalogEntry) {
+      throw new Error(`Required constraint definition is missing: ${constraint}.`)
+    }
     for (const fragment of REQUIRED_CONSTRAINT_DEFINITION_FRAGMENTS[constraint] ?? []) {
-      if (!definition.includes(fragment)) {
+      if (!catalogEntry.definition.includes(fragment)) {
         throw new Error(
           `Constraint ${constraint} is missing required definition fragment: ${fragment}.`,
         )
@@ -1037,6 +1127,14 @@ export function validateSecurityIntrospection(value: unknown) {
     REQUIRED_UNIQUE_INDEXES,
     'required unique index set',
   )
+  for (const indexName of REQUIRED_UNIQUE_INDEXES) {
+    const catalogEntry = uniqueIndexes.find(({ name }) => name === indexName)
+    if (catalogEntry?.tableName !== REQUIRED_UNIQUE_INDEX_TABLES[indexName]) {
+      throw new Error(
+        `Unique index ${indexName} is bound to ${catalogEntry?.tableName ?? 'no table'}; expected ${REQUIRED_UNIQUE_INDEX_TABLES[indexName]}.`,
+      )
+    }
+  }
 
   if (!Array.isArray(report.journalPolicies)) {
     throw new Error('security introspection.journalPolicies must be an array.')
@@ -1069,6 +1167,14 @@ export function validateSecurityIntrospection(value: unknown) {
     REQUIRED_JOURNAL_POLICIES,
     'journal RLS policy set',
   )
+  for (const policyName of REQUIRED_JOURNAL_POLICIES) {
+    const catalogEntry = journalPolicies.find(({ name }) => name === policyName)
+    if (catalogEntry?.tableName !== REQUIRED_JOURNAL_POLICY_TABLES[policyName]) {
+      throw new Error(
+        `Journal RLS policy ${policyName} is bound to ${catalogEntry?.tableName ?? 'no table'}; expected ${REQUIRED_JOURNAL_POLICY_TABLES[policyName]}.`,
+      )
+    }
+  }
   const triggers = Array.isArray(report.triggers)
     ? report.triggers.map((rowValue, index) => {
         const row = requireRecord(rowValue, `triggers[${index}]`)
@@ -1085,10 +1191,11 @@ export function validateSecurityIntrospection(value: unknown) {
         }
       })
     : []
-  for (const trigger of REQUIRED_TRIGGERS) {
-    if (!triggers.some(({ name }) => name === trigger))
-      throw new Error(`Required trigger is missing: ${trigger}.`)
-  }
+  requireExactNames(
+    triggers.map(({ name }) => name),
+    REQUIRED_TRIGGERS,
+    'protected trigger set',
+  )
   const eventTypes = Array.isArray(report.supportedEventTypes)
     ? report.supportedEventTypes.map((entry, index) =>
         requireNonemptyString(entry, `supportedEventTypes[${index}]`),

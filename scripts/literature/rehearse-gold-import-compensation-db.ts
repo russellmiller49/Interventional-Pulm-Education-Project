@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { basename, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import {
   assertLocalDockerEndpoint,
@@ -251,7 +252,7 @@ async function runSupabaseLint(hostPort: string) {
   }
 }
 
-const SECURITY_INTROSPECTION_SQL = String.raw`
+export const SECURITY_INTROSPECTION_SQL = String.raw`
 with
 required_rls(table_name) as (
   values
@@ -513,7 +514,25 @@ journal_privileges as (
       journal_roles.role_name,
       pg_catalog.format('public.%I', journal_tables.table_name),
       'TRUNCATE'
-    ) end as can_truncate
+    ) end as can_truncate,
+    case when journal_roles.role_name = 'public' then exists (
+      select 1 from pg_catalog.aclexplode(coalesce(
+        class.relacl, pg_catalog.acldefault('r', class.relowner)
+      )) as acl where acl.grantee = 0 and acl.privilege_type = 'REFERENCES'
+    ) else pg_catalog.has_table_privilege(
+      journal_roles.role_name,
+      pg_catalog.format('public.%I', journal_tables.table_name),
+      'REFERENCES'
+    ) end as can_references,
+    case when journal_roles.role_name = 'public' then exists (
+      select 1 from pg_catalog.aclexplode(coalesce(
+        class.relacl, pg_catalog.acldefault('r', class.relowner)
+      )) as acl where acl.grantee = 0 and acl.privilege_type = 'TRIGGER'
+    ) else pg_catalog.has_table_privilege(
+      journal_roles.role_name,
+      pg_catalog.format('public.%I', journal_tables.table_name),
+      'TRIGGER'
+    ) end as can_trigger
   from journal_tables
   cross join journal_roles
   join pg_catalog.pg_class as class on class.relname = journal_tables.table_name
@@ -551,11 +570,33 @@ constraints as (
   join pg_catalog.pg_namespace as namespace on namespace.oid = class.relnamespace
   where namespace.nspname = 'public'
     and class.relname in (
+      'literature_gold_set_batches',
+      'literature_gold_set_items',
+      'literature_gold_set_review_drafts',
       'literature_gold_set_reviews',
       'literature_gold_set_events',
       'literature_gold_review_operations',
       'literature_gold_review_operation_actions'
     )
+),
+expected_indexes(index_name, table_name, is_unique) as (
+  values
+    ('literature_gold_review_operation_actions_item_idx', 'literature_gold_review_operation_actions', false),
+    ('literature_gold_review_operation_actions_source_idx', 'literature_gold_review_operation_actions', false),
+    ('literature_gold_review_operations_batch_started_idx', 'literature_gold_review_operations', false),
+    ('literature_gold_review_operations_one_live_compensation_idx', 'literature_gold_review_operations', true),
+    ('literature_gold_set_events_batch_created_idx', 'literature_gold_set_events', false),
+    ('literature_gold_set_events_item_created_idx', 'literature_gold_set_events', false),
+    ('literature_gold_set_events_one_test_unlock_idx', 'literature_gold_set_events', true),
+    ('literature_gold_set_events_operation_action_idx', 'literature_gold_set_events', false),
+    ('literature_gold_set_events_operation_sequence_idx', 'literature_gold_set_events', true),
+    ('literature_gold_set_items_batch_status_order_idx', 'literature_gold_set_items', false),
+    ('literature_gold_set_items_pmid_idx', 'literature_gold_set_items', false),
+    ('literature_gold_set_items_split_idx', 'literature_gold_set_items', false),
+    ('literature_gold_set_items_unresolved_idx', 'literature_gold_set_items', false),
+    ('literature_gold_set_reviews_item_completed_idx', 'literature_gold_set_reviews', false),
+    ('literature_gold_set_reviews_one_child_idx', 'literature_gold_set_reviews', true),
+    ('literature_gold_set_reviews_one_operation_action_idx', 'literature_gold_set_reviews', true)
 ),
 required_unique_indexes(index_name) as (
   values
@@ -564,19 +605,67 @@ required_unique_indexes(index_name) as (
     ('literature_gold_set_reviews_one_child_idx'),
     ('literature_gold_set_reviews_one_operation_action_idx')
 ),
-unique_indexes as (
-  select required.index_name,
+catalog_indexes as (
+  select index_class.relname as index_name,
     class.relname as table_name,
     index.indisunique as is_unique,
     index.indisvalid as is_valid,
     pg_catalog.pg_get_expr(index.indpred, index.indrelid) as predicate,
     pg_catalog.pg_get_indexdef(index.indexrelid) as definition
+  from pg_catalog.pg_index as index
+  join pg_catalog.pg_class as index_class on index_class.oid = index.indexrelid
+  join pg_catalog.pg_class as class on class.oid = index.indrelid
+  join pg_catalog.pg_namespace as namespace on namespace.oid = class.relnamespace
+  where namespace.nspname = 'public'
+    and class.relname in (
+      'literature_gold_set_batches',
+      'literature_gold_set_events',
+      'literature_gold_set_items',
+      'literature_gold_set_review_drafts',
+      'literature_gold_set_reviews',
+      'literature_gold_review_operations',
+      'literature_gold_review_operation_actions'
+    )
+    and not exists (
+      select 1
+      from pg_catalog.pg_constraint as constraint_index
+      where constraint_index.conindid = index.indexrelid
+    )
+),
+index_catalog_drift as (
+  select catalog.*
+  from catalog_indexes as catalog
+  left join expected_indexes as expected
+    on expected.index_name = catalog.index_name
+   and expected.table_name = catalog.table_name
+   and expected.is_unique = catalog.is_unique
+  where expected.index_name is null or catalog.is_valid is not true
+
+  union all
+
+  select
+    '__missing_expected_index__:' || expected.index_name as index_name,
+    expected.table_name,
+    expected.is_unique,
+    false as is_valid,
+    null::text as predicate,
+    'MISSING EXPECTED INDEX ' || expected.index_name as definition
+  from expected_indexes as expected
+  left join catalog_indexes as catalog
+    on catalog.index_name = expected.index_name
+   and catalog.table_name = expected.table_name
+   and catalog.is_unique = expected.is_unique
+   and catalog.is_valid is true
+  where catalog.index_name is null
+),
+unique_indexes as (
+  select catalog.*
   from required_unique_indexes as required
-  left join pg_catalog.pg_class as index_class on index_class.relname = required.index_name
-  left join pg_catalog.pg_index as index on index.indexrelid = index_class.oid
-  left join pg_catalog.pg_class as class on class.oid = index.indrelid
-  left join pg_catalog.pg_namespace as namespace
-    on namespace.oid = class.relnamespace and namespace.nspname = 'public'
+  join catalog_indexes as catalog on catalog.index_name = required.index_name
+
+  union all
+
+  select drift.* from index_catalog_drift as drift
 ),
 journal_policies as (
   select policy.policyname as name,
@@ -587,9 +676,14 @@ journal_policies as (
     policy.with_check
   from pg_catalog.pg_policies as policy
   where policy.schemaname = 'public'
-    and policy.policyname in (
-      'literature_gold_review_operation_actions_service_policy',
-      'literature_gold_review_operations_service_policy'
+    and policy.tablename in (
+      'literature_gold_review_operation_actions',
+      'literature_gold_review_operations',
+      'literature_gold_set_batches',
+      'literature_gold_set_events',
+      'literature_gold_set_items',
+      'literature_gold_set_review_drafts',
+      'literature_gold_set_reviews'
     )
 ),
 triggers as (
@@ -603,7 +697,9 @@ triggers as (
   where namespace.nspname = 'public'
     and trg.tgisinternal is false
     and class.relname in (
+      'literature_gold_set_batches',
       'literature_gold_set_items',
+      'literature_gold_set_review_drafts',
       'literature_gold_set_reviews',
       'literature_gold_set_events',
       'literature_gold_review_operations',
@@ -706,7 +802,9 @@ select pg_catalog.jsonb_build_object(
       'insert', can_insert,
       'update', can_update,
       'delete', can_delete,
-      'truncate', can_truncate
+      'truncate', can_truncate,
+      'references', can_references,
+      'trigger', can_trigger
     ) order by table_name, role_name) from journal_privileges
   ),
   'schemaCreatePrivileges', (
@@ -960,7 +1058,9 @@ async function main() {
   }
 }
 
-void main().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : String(error))
-  process.exitCode = 1
-})
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  void main().catch((error: unknown) => {
+    console.error(error instanceof Error ? error.message : String(error))
+    process.exitCode = 1
+  })
+}

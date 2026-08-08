@@ -22,6 +22,7 @@ import {
   REQUIRED_SCENARIO_IDS,
   REQUIRED_TRANSITION_FUNCTIONS,
   REQUIRED_TRIGGERS,
+  REQUIRED_UNIQUE_INDEX_TABLES,
   REQUIRED_UNIQUE_INDEXES,
   SCENARIO_EVIDENCE_MARKER,
   SCENARIO_EVIDENCE_SCHEMA_VERSION,
@@ -33,6 +34,7 @@ import {
   type ScenarioEvidenceRecord,
   type ScenarioStateEvidence,
 } from './gold-import-compensation-rehearsal-evidence'
+import { SECURITY_INTROSPECTION_SQL } from './rehearse-gold-import-compensation-db'
 
 function digest(value: string) {
   return createHash('sha256').update(value).digest('hex')
@@ -297,6 +299,8 @@ function validIntrospection() {
         update: false,
         delete: false,
         truncate: false,
+        references: false,
+        trigger: false,
       })),
     ),
     schemaCreatePrivileges: REQUIRED_SAFE_SEARCH_PATH_SCHEMAS.flatMap((schemaName) =>
@@ -315,7 +319,7 @@ function validIntrospection() {
     })),
     uniqueIndexes: REQUIRED_UNIQUE_INDEXES.map((name) => ({
       name,
-      tableName: 'synthetic_contract_table',
+      tableName: REQUIRED_UNIQUE_INDEX_TABLES[name],
       unique: true,
       valid: true,
       predicate:
@@ -678,6 +682,18 @@ describe('gold import-compensation rehearsal evidence', () => {
       'Unexpected journal privilege',
     )
 
+    const journalReferences = validIntrospection()
+    journalReferences.journalPrivileges[0].references = true
+    expect(() => validateSecurityIntrospection(journalReferences)).toThrow(
+      'Unexpected journal privilege',
+    )
+
+    const journalTrigger = validIntrospection()
+    journalTrigger.journalPrivileges[0].trigger = true
+    expect(() => validateSecurityIntrospection(journalTrigger)).toThrow(
+      'Unexpected journal privilege',
+    )
+
     const missingJournalSelect = validIntrospection()
     const serviceJournal = missingJournalSelect.journalPrivileges.find(
       ({ role }) => role === 'service_role',
@@ -705,7 +721,7 @@ describe('gold import-compensation rehearsal evidence', () => {
     const missingConstraint = validIntrospection()
     missingConstraint.constraints.pop()
     expect(() => validateSecurityIntrospection(missingConstraint)).toThrow(
-      'Required constraint is missing',
+      'protected constraint set changed',
     )
 
     const weakenedConstraint = validIntrospection()
@@ -727,7 +743,7 @@ describe('gold import-compensation rehearsal evidence', () => {
     const missingTrigger = validIntrospection()
     missingTrigger.triggers.pop()
     expect(() => validateSecurityIntrospection(missingTrigger)).toThrow(
-      'Required trigger is missing',
+      'protected trigger set changed',
     )
 
     const replicaOnlyTrigger = validIntrospection()
@@ -750,6 +766,109 @@ describe('gold import-compensation rehearsal evidence', () => {
     expect(() => validateSecurityIntrospection(eventDrift)).toThrow(
       'supported event type set changed',
     )
+  })
+
+  it('fails closed on unexpected protected catalog entries', () => {
+    const extraConstraint = validIntrospection()
+    const constraints: string[] = extraConstraint.constraints
+    const constraintDefinitions: Array<{
+      name: string
+      tableName: string
+      definition: string
+    }> = extraConstraint.constraintDefinitions
+    constraints.push('unexpected_protected_constraint')
+    constraintDefinitions.push({
+      name: 'unexpected_protected_constraint',
+      tableName: 'literature_gold_set_reviews',
+      definition: 'CHECK (true)',
+    })
+    expect(() => validateSecurityIntrospection(extraConstraint)).toThrow(
+      'protected constraint set changed',
+    )
+
+    const extraIndex = validIntrospection()
+    const uniqueIndexes: Array<{
+      name: string
+      tableName: string
+      unique: boolean
+      valid: boolean
+      predicate: string
+      definition: string
+    }> = extraIndex.uniqueIndexes
+    uniqueIndexes.push({
+      name: 'unexpected_protected_index',
+      tableName: 'literature_gold_set_reviews',
+      unique: true,
+      valid: true,
+      predicate: 'id IS NOT NULL',
+      definition: 'CREATE UNIQUE INDEX unexpected_protected_index ON public.x (id)',
+    })
+    expect(() => validateSecurityIntrospection(extraIndex)).toThrow(
+      'required unique index set changed',
+    )
+
+    const extraPolicy = validIntrospection()
+    const journalPolicies: Array<{
+      name: string
+      tableName: string
+      command: string
+      roles: string[]
+      using: string
+      withCheck: string
+    }> = extraPolicy.journalPolicies
+    journalPolicies.push({
+      name: 'unexpected_journal_policy',
+      tableName: 'literature_gold_review_operations',
+      command: 'ALL',
+      roles: ['service_role'],
+      using: "dataset_split = 'development'",
+      withCheck: "dataset_split = 'development'",
+    })
+    expect(() => validateSecurityIntrospection(extraPolicy)).toThrow(
+      'journal RLS policy set changed',
+    )
+
+    const extraEnabledTrigger = validIntrospection()
+    const triggers: Array<{
+      name: string
+      tableName: string
+      enableMode: string
+      enabled: boolean
+    }> = extraEnabledTrigger.triggers
+    triggers.push({
+      name: 'unexpected_enabled_trigger',
+      tableName: 'literature_gold_set_reviews',
+      enableMode: 'O',
+      enabled: true,
+    })
+    expect(() => validateSecurityIntrospection(extraEnabledTrigger)).toThrow(
+      'protected trigger set changed',
+    )
+  })
+
+  it('collects complete protected catalogs before applying exact allowlists', () => {
+    const sqlSection = (start: string, end: string) => {
+      const startIndex = SECURITY_INTROSPECTION_SQL.indexOf(start)
+      const endIndex = SECURITY_INTROSPECTION_SQL.indexOf(end, startIndex + start.length)
+      expect(startIndex).toBeGreaterThanOrEqual(0)
+      expect(endIndex).toBeGreaterThan(startIndex)
+      return SECURITY_INTROSPECTION_SQL.slice(startIndex, endIndex)
+    }
+
+    const constraintCatalog = sqlSection('constraints as (', 'expected_indexes(')
+    const indexCatalog = sqlSection('expected_indexes(', 'journal_policies as (')
+    const policyCatalog = sqlSection('journal_policies as (', 'triggers as (')
+    const triggerCatalog = sqlSection('triggers as (', 'event_types as (')
+
+    for (const tableName of REQUIRED_RLS_TABLES) {
+      expect(constraintCatalog).toContain(`'${tableName}'`)
+      expect(indexCatalog).toContain(`'${tableName}'`)
+      expect(policyCatalog).toContain(`'${tableName}'`)
+      expect(triggerCatalog).toContain(`'${tableName}'`)
+    }
+    expect(indexCatalog).toContain('index_catalog_drift as (')
+    expect(indexCatalog).toContain("'__missing_expected_index__:'")
+    expect(policyCatalog).not.toContain('policy.policyname in')
   })
 
   it('commits lint and introspection to a fixed-image, auto-port, targetless runner', async () => {
