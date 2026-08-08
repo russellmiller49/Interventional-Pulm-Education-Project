@@ -61,6 +61,54 @@ function renderAuthConfigurationError() {
   })
 }
 
+function renderInvalidMainSiteAuthCallback() {
+  return new NextResponse('Authentication callback link is invalid or incomplete.', {
+    status: 400,
+    headers: callbackPageHeaders,
+  })
+}
+
+type MainSiteAuthHandoff =
+  | {
+      kind: 'pkce'
+      code: string
+    }
+  | {
+      kind: 'recovery'
+      tokenHash: string
+    }
+  | {
+      kind: 'invalid'
+    }
+
+function resolveMainSiteAuthHandoff(searchParams: URLSearchParams): MainSiteAuthHandoff {
+  const codes = searchParams.getAll('code')
+  const tokenHashes = searchParams.getAll('token_hash')
+  const types = searchParams.getAll('type')
+
+  if (codes.length === 1 && codes[0] && tokenHashes.length === 0) {
+    return {
+      kind: 'pkce',
+      code: codes[0],
+    }
+  }
+
+  if (
+    codes.length === 0 &&
+    tokenHashes.length === 1 &&
+    tokenHashes[0] &&
+    types.length === 1 &&
+    types[0] === 'recovery'
+  ) {
+    return {
+      kind: 'recovery',
+      tokenHash: tokenHashes[0],
+    }
+  }
+
+  return { kind: 'invalid' }
+}
+
 function renderSharedAuthCallbackPage() {
   const targetsJson = JSON.stringify(SHARED_AUTH_CALLBACK_TARGETS)
 
@@ -229,10 +277,15 @@ function renderSharedAuthCallbackPage() {
 
 export async function GET(request: NextRequest) {
   const url = new URL(request.url)
-  const code = url.searchParams.get('code')
 
-  if (!code || url.searchParams.has('app')) {
+  if (url.searchParams.has('app')) {
     return renderSharedAuthCallbackPage()
+  }
+
+  const handoff = resolveMainSiteAuthHandoff(url.searchParams)
+
+  if (handoff.kind === 'invalid') {
+    return renderInvalidMainSiteAuthCallback()
   }
 
   const callbackOrigin = resolveCallbackOrigin(url)
@@ -268,18 +321,26 @@ export async function GET(request: NextRequest) {
     },
   )
 
-  if (code) {
-    try {
-      const { error } = await supabase.auth.exchangeCodeForSession(code)
+  try {
+    const { error } =
+      handoff.kind === 'pkce'
+        ? await supabase.auth.exchangeCodeForSession(handoff.code)
+        : await supabase.auth.verifyOtp({
+            token_hash: handoff.tokenHash,
+            type: 'recovery',
+          })
 
-      if (error) {
-        throw error
-      }
-    } catch (error) {
-      console.error('Supabase session exchange failed', error)
-      redirectTarget.searchParams.set('authError', 'session-exchange-failed')
-      response.headers.set('Location', redirectTarget.toString())
+    if (error) {
+      throw error
     }
+  } catch {
+    console.error(
+      handoff.kind === 'pkce'
+        ? 'Supabase session exchange failed'
+        : 'Supabase recovery token verification failed',
+    )
+    redirectTarget.searchParams.set('authError', 'session-exchange-failed')
+    response.headers.set('Location', redirectTarget.toString())
   }
 
   response.headers.set('X-Robots-Tag', 'noindex, nofollow')
