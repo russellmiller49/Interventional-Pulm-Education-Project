@@ -1,0 +1,1471 @@
+{
+  "report_version": "2.0.0",
+  "taxonomy_version": "2.0.0",
+  "label_schema_version": "2.0.0",
+  "source_artifacts": [
+    {
+      "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+      "location": "External QA workbook; Vocabulary Gaps and Row Findings sheets",
+      "sha256": "898159d8c7adf1e0296927d41c42fb8398de40d31823b9584866fb0addceba8d"
+    },
+    {
+      "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+      "location": "External QA workbook; Vocabulary_Gaps and Findings sheets",
+      "sha256": "6f88c2705fb92f84fb43a24d09c9579995ae1fa92f58be0a4cb721feabb43f74"
+    },
+    {
+      "artifact": "gold-set-v1_external_QA_findings_v2_status.csv",
+      "location": "External QA findings status CSV",
+      "sha256": "1c7992f29bb7c03afc370f3cb0e7a978a237dc9cbb964966e0dcec0cd07b6edd"
+    },
+    {
+      "artifact": "taxonomy-v2-implementation-request.txt",
+      "location": "Task attachment; required taxonomy-v2 scope and minimum concepts",
+      "sha256": "4fabecd9c15d7e62aad9340547d134908166b78b84835d86a3e519e258e172cf"
+    }
+  ],
+  "proposals": [
+    {
+      "proposal_id": "technology_tags:thoracentesis",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A15:E15",
+          "source_term": "thoracentesis-chest-tube"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Vocabulary Gaps!A2:D2",
+          "source_term": "thoracentesis / chest drain"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "thoracentesis",
+      "label": "Thoracentesis",
+      "count": 35,
+      "example_pmids": ["29169646", "10767236", "11029373", "12576360", "25378543", "33109208"],
+      "example_master_row_ids": ["114", "142", "201", "256", "370", "406"],
+      "exact_equivalents": [],
+      "near_equivalents": ["topic_ids:pleural-interventions.thoracentesis"],
+      "decision": "adopt",
+      "rationale": "Adopt separately because single-session pleural aspiration is clinically distinct from a drain left in place.",
+      "replacement_ids": [],
+      "definition": "Percutaneous aspiration or drainage of pleural fluid with a needle or temporary catheter.",
+      "inclusion_boundary": "Use for needle or temporary-catheter aspiration of pleural fluid.",
+      "exclusion_boundary": "Exclude an indwelling drain left for ongoing evacuation; use chest-tube or indwelling-pleural-catheter as appropriate.",
+      "examples": ["Diagnostic thoracentesis", "Therapeutic large-volume thoracentesis"]
+    },
+    {
+      "proposal_id": "technology_tags:chest-tube",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A15:E15",
+          "source_term": "thoracentesis-chest-tube"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Vocabulary Gaps!A2:D2",
+          "source_term": "thoracentesis / chest drain"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "chest-tube",
+      "label": "Chest tube",
+      "count": 35,
+      "example_pmids": ["11157579", "28203426", "10894100"],
+      "example_master_row_ids": ["312", "313", "362"],
+      "exact_equivalents": [],
+      "near_equivalents": ["topic_ids:pleural-interventions.chest-tubes"],
+      "decision": "adopt",
+      "rationale": "Adopt separately because ongoing tube drainage is not equivalent to thoracentesis or a tunneled indwelling catheter.",
+      "replacement_ids": [],
+      "definition": "Tube thoracostomy or small-bore pleural catheter drainage left in place for ongoing evacuation.",
+      "inclusion_boundary": "Use for tube thoracostomy or small-bore pleural drainage maintained after insertion.",
+      "exclusion_boundary": "Exclude single-session pleural aspiration and tunneled long-term catheters.",
+      "examples": ["Pigtail catheter drainage", "Chest tube for pneumothorax"]
+    },
+    {
+      "proposal_id": "technology_tags:pleurodesis",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A16:E16",
+          "source_term": "pleurodesis-agent"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Vocabulary Gaps!A5:D5",
+          "source_term": "talc pleurodesis"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "pleurodesis",
+      "label": "Pleurodesis",
+      "count": 12,
+      "example_pmids": ["22513274"],
+      "example_master_row_ids": ["316"],
+      "exact_equivalents": [],
+      "near_equivalents": ["topic_ids:pleural-interventions.pleurodesis"],
+      "decision": "adopt",
+      "rationale": "Adopt a procedure-level term that covers talc and other pleurodesis methods without encoding a specific agent.",
+      "replacement_ids": [],
+      "definition": "Chemical or mechanical pleural symphysis intended to prevent recurrent pleural fluid or air.",
+      "inclusion_boundary": "Use for chemical or mechanical attempts to create pleural symphysis.",
+      "exclusion_boundary": "Exclude drainage alone and indwelling pleural catheter placement without pleurodesis.",
+      "examples": ["Talc poudrage", "Talc slurry pleurodesis"]
+    },
+    {
+      "proposal_id": "technology_tags:bronchoalveolar-lavage",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Vocabulary Gaps!A4:D4",
+          "source_term": "bronchoalveolar lavage (diagnostic)"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "bronchoalveolar-lavage",
+      "label": "Bronchoalveolar lavage",
+      "count": 17,
+      "example_pmids": ["38977374"],
+      "example_master_row_ids": ["476"],
+      "exact_equivalents": [],
+      "near_equivalents": ["topic_ids:basic-bronchoscopy"],
+      "decision": "adopt",
+      "rationale": "Adopt because BAL is a recurrent sampling technique and should not be inferred from generic flexible bronchoscopy.",
+      "replacement_ids": [],
+      "definition": "Bronchoalveolar lavage performed through a bronchoscope for diagnostic sampling or therapeutic clearance.",
+      "inclusion_boundary": "Use when bronchoalveolar lavage is a named diagnostic sampling or therapeutic technique.",
+      "exclusion_boundary": "Exclude generic bronchoscopy, bronchial washing, and whole-lung lavage.",
+      "examples": ["BAL for microbiologic diagnosis", "BAL cellular differential"]
+    },
+    {
+      "proposal_id": "technology_tags:conventional-tbna",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A21:E21",
+          "source_term": "conventional-tbna"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Vocabulary Gaps!A16:D16",
+          "source_term": "conventional TBNA (Wang needle)"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "conventional-tbna",
+      "label": "Conventional TBNA",
+      "count": 2,
+      "example_pmids": ["23207458", "27747023"],
+      "example_master_row_ids": ["122", "180", "447", "477", "525"],
+      "exact_equivalents": [],
+      "near_equivalents": ["technology_tags:convex-ebus"],
+      "decision": "adopt",
+      "rationale": "Adopt because landmark-guided TBNA is not automatically convex EBUS-TBNA.",
+      "replacement_ids": [],
+      "definition": "Non-ultrasound-guided transbronchial needle aspiration using anatomic landmarks.",
+      "inclusion_boundary": "Use for landmark-guided TBNA performed without real-time convex EBUS guidance.",
+      "exclusion_boundary": "Exclude convex EBUS-TBNA and EUS-B-FNA.",
+      "examples": ["Wang needle TBNA", "Conventional subcarinal TBNA"]
+    },
+    {
+      "proposal_id": "technology_tags:rapid-on-site-evaluation",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A17:E17",
+          "source_term": "rapid-on-site-evaluation"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Vocabulary Gaps!A9:D9",
+          "source_term": "ROSE (rapid on-site evaluation)"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "rapid-on-site-evaluation",
+      "label": "Rapid on-site evaluation",
+      "count": 12,
+      "example_pmids": ["21717590", "27747023"],
+      "example_master_row_ids": ["102", "447"],
+      "exact_equivalents": [],
+      "near_equivalents": [],
+      "decision": "adopt",
+      "rationale": "Adopt as a specimen-assessment workflow rather than treating ROSE as a biopsy needle or imaging technology.",
+      "replacement_ids": [],
+      "definition": "Immediate on-site cytologic assessment of procedural specimens to evaluate adequacy or guide further sampling.",
+      "inclusion_boundary": "Use when immediate cytology review is used to assess specimen adequacy or guide additional sampling.",
+      "exclusion_boundary": "Exclude routine final cytopathology and biopsy-device descriptions without on-site assessment.",
+      "examples": ["ROSE during EBUS-TBNA", "On-site smear adequacy assessment"]
+    },
+    {
+      "proposal_id": "technology_tags:endobronchial-coils",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A20:E20",
+          "source_term": "endobronchial-coils"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Vocabulary Gaps!A14:D14",
+          "source_term": "endobronchial coils (LVRC)"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "endobronchial-coils",
+      "label": "Endobronchial coils",
+      "count": 2,
+      "example_pmids": ["24429129"],
+      "example_master_row_ids": ["308"],
+      "exact_equivalents": [],
+      "near_equivalents": ["technology_tags:endobronchial-valve"],
+      "decision": "adopt",
+      "rationale": "Adopt because coil implantation is a distinct bronchoscopic lung-volume-reduction technology.",
+      "replacement_ids": [],
+      "definition": "Endobronchial coil implantation for bronchoscopic lung-volume reduction.",
+      "inclusion_boundary": "Use for implanted bronchoscopic coils intended for lung-volume reduction.",
+      "exclusion_boundary": "Exclude endobronchial valves, vapor ablation, and surgical lung-volume reduction.",
+      "examples": ["Lung-volume reduction coil treatment", "REVOLENS coil intervention"]
+    },
+    {
+      "proposal_id": "technology_tags:balloon-bronchoplasty",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A23:E23",
+          "source_term": "balloon-dilation"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Vocabulary Gaps!A15:D15",
+          "source_term": "balloon bronchoplasty / dilation"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "balloon-bronchoplasty",
+      "label": "Balloon bronchoplasty",
+      "count": 1,
+      "example_pmids": ["25191414", "23168469"],
+      "example_master_row_ids": ["606", "78"],
+      "exact_equivalents": [],
+      "near_equivalents": ["technology_tags:airway-stent"],
+      "decision": "adopt",
+      "rationale": "Adopt because dilation is a distinct airway intervention and does not imply stent placement.",
+      "replacement_ids": [],
+      "definition": "Balloon dilation of a tracheal or bronchial narrowing.",
+      "inclusion_boundary": "Use for balloon dilation of tracheal or bronchial stenosis.",
+      "exclusion_boundary": "Exclude airway stenting unless a stent is separately placed or studied.",
+      "examples": [
+        "Balloon dilation of post-intubation stenosis",
+        "Bronchoplasty for anastomotic stenosis"
+      ]
+    },
+    {
+      "proposal_id": "technology_tags:mediastinal-cryobiopsy",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A26:E26",
+          "source_term": "split transbronchial-cryobiopsy"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Findings!A126:J126",
+          "source_term": "EBUS-guided mediastinal cryobiopsy"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "mediastinal-cryobiopsy",
+      "label": "Mediastinal cryobiopsy",
+      "count": 1,
+      "example_pmids": ["42342291"],
+      "example_master_row_ids": ["589"],
+      "exact_equivalents": [],
+      "near_equivalents": ["technology_tags:transbronchial-cryobiopsy"],
+      "decision": "adopt",
+      "rationale": "Adopt separately because EBUS-guided mediastinal cryobiopsy is not transbronchial lung cryobiopsy.",
+      "replacement_ids": [],
+      "definition": "Cryoprobe tissue acquisition from mediastinal or hilar lymph nodes or masses, typically through an EBUS-guided tract.",
+      "inclusion_boundary": "Use for cryobiopsy of a mediastinal or hilar node or mass through an airway or EBUS-created tract.",
+      "exclusion_boundary": "Exclude transbronchial lung or peripheral-lesion cryobiopsy.",
+      "examples": [
+        "EBUS-guided transbronchial mediastinal cryobiopsy",
+        "Cryobiopsy of a mediastinal lymph node"
+      ]
+    },
+    {
+      "proposal_id": "technology_tags:foreign-body-removal",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A19:E19",
+          "source_term": "foreign-body-removal"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "foreign-body-removal",
+      "label": "Foreign-body removal",
+      "count": 4,
+      "example_pmids": ["16933314"],
+      "example_master_row_ids": ["56", "169", "410", "433", "520"],
+      "exact_equivalents": [],
+      "near_equivalents": [],
+      "decision": "adopt",
+      "rationale": "Adopt as a treatment technology distinct from the foreign-body-aspiration disease tag.",
+      "replacement_ids": [],
+      "definition": "Bronchoscopic extraction of an aspirated or retained airway foreign body.",
+      "inclusion_boundary": "Use for bronchoscopic extraction of an aspirated or retained airway object.",
+      "exclusion_boundary": "Exclude the disease or presentation alone when no removal procedure is described.",
+      "examples": [
+        "Rigid bronchoscopic foreign-body extraction",
+        "Flexible bronchoscopic removal with forceps"
+      ]
+    },
+    {
+      "proposal_id": "technology_tags:bronchial-artery-embolization",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A22:E22",
+          "source_term": "bronchial-artery-embolization"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "bronchial-artery-embolization",
+      "label": "Bronchial artery embolization",
+      "count": 2,
+      "example_pmids": [],
+      "example_master_row_ids": ["387"],
+      "exact_equivalents": [],
+      "near_equivalents": ["technology_tags:topical-hemostatic-agent"],
+      "decision": "adopt",
+      "rationale": "Adopt because endovascular embolization is distinct from bronchoscopic hemostatic treatment.",
+      "replacement_ids": [],
+      "definition": "Endovascular embolization of bronchial or systemic arteries to control hemoptysis.",
+      "inclusion_boundary": "Use for endovascular bronchial or systemic arterial embolization undertaken for hemoptysis.",
+      "exclusion_boundary": "Exclude bronchoscopic topical or ablative hemostasis.",
+      "examples": [
+        "Bronchial artery embolization for massive hemoptysis",
+        "Repeat BAE for recurrent bleeding"
+      ]
+    },
+    {
+      "proposal_id": "technology_tags:narrow-band-imaging",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A18:E18",
+          "source_term": "narrow-band-imaging"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Vocabulary Gaps!A12:D12",
+          "source_term": "autofluorescence / narrow-band imaging"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "narrow-band-imaging",
+      "label": "Narrow-band imaging",
+      "count": 5,
+      "example_pmids": [],
+      "example_master_row_ids": ["192", "250", "358", "373", "538"],
+      "exact_equivalents": [],
+      "near_equivalents": ["technology_tags:autofluorescence-bronchoscopy"],
+      "decision": "adopt",
+      "rationale": "Adopt separately because NBI uses filtered illumination and is not interchangeable with autofluorescence imaging.",
+      "replacement_ids": [],
+      "definition": "Narrow-band optical imaging used during bronchoscopy to enhance mucosal and vascular patterns.",
+      "inclusion_boundary": "Use when narrow-band imaging is employed to examine airway mucosa or vasculature.",
+      "exclusion_boundary": "Exclude white-light bronchoscopy, autofluorescence imaging, and confocal endomicroscopy.",
+      "examples": ["NBI detection of airway dysplasia", "NBI vascular-pattern assessment"]
+    },
+    {
+      "proposal_id": "technology_tags:autofluorescence-bronchoscopy",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Vocabulary Gaps!A12:D12",
+          "source_term": "autofluorescence / narrow-band imaging"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "autofluorescence-bronchoscopy",
+      "label": "Autofluorescence bronchoscopy",
+      "count": 5,
+      "example_pmids": [],
+      "example_master_row_ids": ["192", "250", "358", "373", "538"],
+      "exact_equivalents": [],
+      "near_equivalents": ["technology_tags:narrow-band-imaging"],
+      "decision": "adopt",
+      "rationale": "Adopt separately because autofluorescence is a stable optical-imaging class distinct from NBI.",
+      "replacement_ids": [],
+      "definition": "Autofluorescence imaging used during bronchoscopy to identify abnormal airway mucosa.",
+      "inclusion_boundary": "Use when autofluorescence imaging is employed to detect or characterize airway mucosal abnormalities.",
+      "exclusion_boundary": "Exclude narrow-band imaging and white-light bronchoscopy alone.",
+      "examples": [
+        "Autofluorescence detection of preinvasive lesions",
+        "AFB surveillance of central airways"
+      ]
+    },
+    {
+      "proposal_id": "technology_tags:confocal-laser-endomicroscopy",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A24:E24",
+          "source_term": "confocal-laser-endomicroscopy"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Vocabulary Gaps!A10:D10",
+          "source_term": "confocal endomicroscopy / OCT"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "confocal-laser-endomicroscopy",
+      "label": "Confocal laser endomicroscopy",
+      "count": 1,
+      "example_pmids": ["42342291"],
+      "example_master_row_ids": ["589"],
+      "exact_equivalents": [],
+      "near_equivalents": [],
+      "decision": "adopt",
+      "rationale": "Adopt the supported confocal modality while keeping optical coherence tomography separate and deferred.",
+      "replacement_ids": [],
+      "definition": "Probe-based or needle-based confocal laser endomicroscopy used for microscopic in-vivo imaging.",
+      "inclusion_boundary": "Use for probe-based or needle-based confocal microscopic imaging during pulmonary or pleural procedures.",
+      "exclusion_boundary": "Exclude optical coherence tomography and other optical imaging without confocal microscopy.",
+      "examples": [
+        "Needle-based CLE during EBUS sampling",
+        "Probe-based CLE of a peripheral lesion"
+      ]
+    },
+    {
+      "proposal_id": "technology_tags:topical-hemostatic-agent",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Findings!A63:J63",
+          "source_term": "topical-haemostatic-agent"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "topical-hemostatic-agent",
+      "label": "Topical hemostatic agent",
+      "count": 1,
+      "example_pmids": ["19251406"],
+      "example_master_row_ids": ["241"],
+      "exact_equivalents": [],
+      "near_equivalents": ["technology_tags:laser", "technology_tags:electrocautery"],
+      "decision": "adopt",
+      "rationale": "Adopt because topical airway hemostasis is not automatically laser, electrocautery, or APC.",
+      "replacement_ids": [],
+      "definition": "Topically delivered airway hemostatic material or drug used to control endobronchial bleeding.",
+      "inclusion_boundary": "Use for a named topical material or medication applied endobronchially to control bleeding.",
+      "exclusion_boundary": "Exclude laser, electrocautery, APC, balloon tamponade, and systemic hemostatic therapy.",
+      "examples": ["Topical thrombin for airway bleeding", "Endobronchial hemostatic powder"]
+    },
+    {
+      "proposal_id": "technology_tags:transbronchial-thermal-ablation",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A25:E25",
+          "source_term": "transbronchial-thermal-ablation"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "transbronchial-thermal-ablation",
+      "label": "Transbronchial thermal ablation",
+      "count": 1,
+      "example_pmids": [],
+      "example_master_row_ids": ["263"],
+      "exact_equivalents": [],
+      "near_equivalents": ["technology_tags:bronchial-thermoplasty"],
+      "decision": "adopt",
+      "rationale": "Adopt for bronchoscopic tumor-directed thermal ablation, distinct from bronchial thermoplasty.",
+      "replacement_ids": [],
+      "definition": "Thermal tumor ablation delivered through a bronchoscopic or transbronchial access path.",
+      "inclusion_boundary": "Use for microwave, radiofrequency, or comparable thermal ablation delivered through a bronchoscopic access path.",
+      "exclusion_boundary": "Exclude bronchial thermoplasty, nonthermal pulsed-field ablation, and percutaneous or surgical ablation.",
+      "examples": ["Bronchoscopic microwave ablation", "Transbronchial radiofrequency ablation"]
+    },
+    {
+      "proposal_id": "technology_tags:surgical-vats",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Findings!A125:J125",
+          "source_term": "surgical VATS"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "surgical-vats",
+      "label": "Surgical VATS",
+      "count": 1,
+      "example_pmids": ["22513274"],
+      "example_master_row_ids": ["316"],
+      "exact_equivalents": [],
+      "near_equivalents": ["technology_tags:medical-thoracoscopy"],
+      "decision": "adopt",
+      "rationale": "Adopt to prevent surgical VATS from being conflated with physician-performed medical thoracoscopy.",
+      "replacement_ids": [],
+      "definition": "Video-assisted thoracic surgery used as an adjacent surgical procedure, comparator, or procedural analogue.",
+      "inclusion_boundary": "Use for video-assisted thoracic surgery when represented as an adjacent procedure, comparator, or analogue.",
+      "exclusion_boundary": "Exclude medical thoracoscopy and bronchoscopic procedures.",
+      "examples": ["VATS wedge resection", "VATS pleural biopsy"]
+    },
+    {
+      "proposal_id": "technology_tags:thoracentesis-chest-tube",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A15:E15",
+          "source_term": "thoracentesis-chest-tube"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Vocabulary Gaps!A2:D2",
+          "source_term": "thoracentesis / chest drain"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "thoracentesis-chest-tube",
+      "label": "Thoracentesis / chest tube",
+      "count": 35,
+      "example_pmids": ["29169646", "11157579"],
+      "example_master_row_ids": ["114", "312"],
+      "exact_equivalents": [],
+      "near_equivalents": [
+        "topic_ids:pleural-interventions.thoracentesis",
+        "topic_ids:pleural-interventions.chest-tubes"
+      ],
+      "decision": "merge_with_another_proposal",
+      "rationale": "The source proposal conflates two procedures; preserve both canonical terms and require row-level evidence to select one or both.",
+      "replacement_ids": ["thoracentesis", "chest-tube"],
+      "definition": "A combined source proposal covering both single-session pleural aspiration and ongoing tube drainage.",
+      "inclusion_boundary": "Use only as a migration-source label for rows mentioning thoracentesis or chest-tube drainage.",
+      "exclusion_boundary": "Do not emit this combined value in v2 artifacts.",
+      "examples": ["Thoracentesis", "Pigtail chest-tube drainage"]
+    },
+    {
+      "proposal_id": "technology_tags:pleurodesis-agent",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A16:E16",
+          "source_term": "pleurodesis-agent"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Vocabulary Gaps!A5:D5",
+          "source_term": "talc pleurodesis"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "pleurodesis-agent",
+      "label": "Pleurodesis agent",
+      "count": 12,
+      "example_pmids": ["22513274"],
+      "example_master_row_ids": ["316"],
+      "exact_equivalents": ["technology_tags:pleurodesis"],
+      "near_equivalents": [],
+      "decision": "map_to_existing",
+      "rationale": "The canonical v2 procedure term is agent-neutral and covers talc or another chemical or mechanical pleurodesis method.",
+      "replacement_ids": ["pleurodesis"],
+      "definition": "A source label for an agent or method used to create pleural symphysis.",
+      "inclusion_boundary": "Map when the source denotes pleurodesis rather than drainage alone.",
+      "exclusion_boundary": "Do not infer a specific agent when the evidence states only pleurodesis.",
+      "examples": ["Talc poudrage", "Chemical pleurodesis"]
+    },
+    {
+      "proposal_id": "technology_tags:balloon-dilation",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A23:E23",
+          "source_term": "balloon-dilation"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Vocabulary Gaps!A15:D15",
+          "source_term": "balloon bronchoplasty / dilation"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "balloon-dilation",
+      "label": "Balloon dilation",
+      "count": 1,
+      "example_pmids": ["25191414"],
+      "example_master_row_ids": ["606"],
+      "exact_equivalents": ["technology_tags:balloon-bronchoplasty"],
+      "near_equivalents": [],
+      "decision": "map_to_existing",
+      "rationale": "Balloon bronchoplasty is the canonical airway-specific label for this exact procedural concept.",
+      "replacement_ids": ["balloon-bronchoplasty"],
+      "definition": "Balloon dilation of a tracheal or bronchial narrowing.",
+      "inclusion_boundary": "Map when the source describes airway balloon dilation or bronchoplasty.",
+      "exclusion_boundary": "Exclude vascular, esophageal, or other non-airway balloon dilation.",
+      "examples": ["Balloon dilation of tracheal stenosis"]
+    },
+    {
+      "proposal_id": "technology_tags:split-transbronchial-cryobiopsy",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A26:E26",
+          "source_term": "split transbronchial-cryobiopsy"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Findings!A126:J126",
+          "source_term": "EBUS-guided mediastinal cryobiopsy"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "split-transbronchial-cryobiopsy",
+      "label": "Split transbronchial cryobiopsy",
+      "count": 1,
+      "example_pmids": ["42342291"],
+      "example_master_row_ids": ["589"],
+      "exact_equivalents": [],
+      "near_equivalents": [
+        "technology_tags:transbronchial-cryobiopsy",
+        "technology_tags:mediastinal-cryobiopsy"
+      ],
+      "decision": "merge_with_another_proposal",
+      "rationale": "This is a schema-change proposal, not an emittable tag; retain lung cryobiopsy and add mediastinal cryobiopsy as distinct canonicals.",
+      "replacement_ids": ["transbronchial-cryobiopsy", "mediastinal-cryobiopsy"],
+      "definition": "A source proposal to disambiguate lung or peripheral cryobiopsy from mediastinal nodal cryobiopsy.",
+      "inclusion_boundary": "Use only to plan migration of rows carrying the former broad cryobiopsy tag.",
+      "exclusion_boundary": "Do not emit this planning label in v2 artifacts or select a replacement without row evidence.",
+      "examples": ["TBLC versus EBUS-TBMC"]
+    },
+    {
+      "proposal_id": "technology_tags:optical-coherence-tomography",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Vocabulary Gaps!A10:D10",
+          "source_term": "confocal endomicroscopy / OCT"
+        }
+      ],
+      "field": "technology_tags",
+      "proposed_id": "optical-coherence-tomography",
+      "label": "Optical coherence tomography",
+      "count": 5,
+      "example_pmids": [],
+      "example_master_row_ids": [],
+      "exact_equivalents": [],
+      "near_equivalents": ["technology_tags:confocal-laser-endomicroscopy"],
+      "decision": "defer",
+      "rationale": "The located QA evidence combines OCT with confocal endomicroscopy and does not supply enough independently adjudicated OCT use to establish a stable v2 term.",
+      "replacement_ids": [],
+      "definition": "Optical cross-sectional tissue imaging based on low-coherence interferometry.",
+      "inclusion_boundary": "Would include bronchoscopic OCT used to characterize airway or pulmonary tissue.",
+      "exclusion_boundary": "Would exclude confocal laser endomicroscopy and generic CT imaging.",
+      "examples": ["Endobronchial optical coherence tomography"]
+    },
+    {
+      "proposal_id": "clinical_purposes:cost-effectiveness-health-services",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A5:E5",
+          "source_term": "cost-effectiveness-health-services"
+        }
+      ],
+      "field": "clinical_purposes",
+      "proposed_id": "cost-effectiveness-health-services",
+      "label": "Cost-effectiveness and health services",
+      "count": 6,
+      "example_pmids": [],
+      "example_master_row_ids": ["187", "285", "333", "623"],
+      "exact_equivalents": [],
+      "near_equivalents": ["clinical_purposes:multiple-general-overview"],
+      "decision": "adopt",
+      "rationale": "Adopt because economic and care-pathway objectives are recurrent and should not be hidden under a general overview.",
+      "replacement_ids": [],
+      "definition": "Evaluating costs, value, utilization, access, care pathways, or service delivery.",
+      "inclusion_boundary": "Use when costs, value, utilization, access, care pathways, or service delivery are primary objectives.",
+      "exclusion_boundary": "Exclude clinical outcome studies that do not evaluate a health-services or economic objective.",
+      "examples": ["Cost-effectiveness analysis", "Care-pathway utilization study"]
+    },
+    {
+      "proposal_id": "clinical_purposes:specimen-adequacy",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Findings!A56:J57",
+          "source_term": "specimen quality and confocal-assisted sampling"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Findings!A16:J16",
+          "source_term": "rapid on-site evaluation"
+        }
+      ],
+      "field": "clinical_purposes",
+      "proposed_id": "specimen-adequacy",
+      "label": "Specimen adequacy",
+      "count": 2,
+      "example_pmids": ["31593653", "42342291", "21717590"],
+      "example_master_row_ids": ["588", "589", "102"],
+      "exact_equivalents": [],
+      "near_equivalents": [],
+      "decision": "adopt",
+      "rationale": "Adopt because specimen sufficiency is a distinct objective spanning cytology, histology, and molecular testing.",
+      "replacement_ids": [],
+      "definition": "Evaluating whether a specimen is sufficient for cytology, histology, biomarker, or molecular testing.",
+      "inclusion_boundary": "Use when adequacy for diagnosis, histology, cytology, biomarkers, or molecular testing is a primary objective.",
+      "exclusion_boundary": "Exclude diagnostic-yield reporting that does not assess specimen sufficiency or processing.",
+      "examples": ["Adequacy for next-generation sequencing", "ROSE-guided specimen adequacy"]
+    },
+    {
+      "proposal_id": "clinical_purposes:workflow-operations-quality",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Findings!A23:J23",
+          "source_term": "performance monitoring of an EBUS service"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "QA_Summary!A24:D26",
+          "source_term": "tag coverage and schema limitations"
+        }
+      ],
+      "field": "clinical_purposes",
+      "proposed_id": "workflow-operations-quality",
+      "label": "Workflow, operations, and quality",
+      "count": 2,
+      "example_pmids": ["34172527"],
+      "example_master_row_ids": ["209", "129"],
+      "exact_equivalents": [],
+      "near_equivalents": [
+        "clinical_purposes:training",
+        "clinical_purposes:multiple-general-overview"
+      ],
+      "decision": "adopt",
+      "rationale": "Adopt because operational and quality objectives recur independently of training or broad clinical overview.",
+      "replacement_ids": [],
+      "definition": "Evaluating procedural workflow, service operations, quality improvement, or program performance.",
+      "inclusion_boundary": "Use when workflow, operational performance, quality improvement, or program delivery is a primary objective.",
+      "exclusion_boundary": "Exclude training-only work and general overviews without a defined operational or quality aim.",
+      "examples": [
+        "Procedure-suite workflow improvement",
+        "Quality metrics for an interventional pulmonology program"
+      ]
+    },
+    {
+      "proposal_id": "disease_tags:lymphoma-hematologic-malignancy",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A6:E6",
+          "source_term": "lymphoma-haematologic"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Vocabulary Gaps!A6:D6",
+          "source_term": "lymphoma"
+        }
+      ],
+      "field": "disease_tags",
+      "proposed_id": "lymphoma-hematologic-malignancy",
+      "label": "Lymphoma or hematologic malignancy",
+      "count": 13,
+      "example_pmids": ["25321448", "24047336"],
+      "example_master_row_ids": ["242", "470", "617"],
+      "exact_equivalents": [],
+      "near_equivalents": ["disease_tags:lung-cancer"],
+      "decision": "adopt",
+      "rationale": "Adopt because hematologic malignancies are not primary lung cancer and recur in mediastinal diagnostic studies.",
+      "replacement_ids": [],
+      "definition": "Lymphoid, leukemic, plasma-cell, or other hematologic malignancy involving thoracic structures.",
+      "inclusion_boundary": "Use for lymphoma, leukemia, plasma-cell, or other hematologic malignancy involving thoracic structures.",
+      "exclusion_boundary": "Exclude primary lung carcinoma and extrathoracic solid-tumor metastases.",
+      "examples": ["Mediastinal lymphoma", "Thoracic involvement by leukemia"]
+    },
+    {
+      "proposal_id": "disease_tags:metastatic-extrathoracic-malignancy",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A7:E7",
+          "source_term": "metastatic-extrathoracic"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Findings!A65:J65",
+          "source_term": "endobronchial metastases from solid tumours"
+        }
+      ],
+      "field": "disease_tags",
+      "proposed_id": "metastatic-extrathoracic-malignancy",
+      "label": "Metastatic extrathoracic malignancy",
+      "count": 5,
+      "example_pmids": ["11305261"],
+      "example_master_row_ids": ["456"],
+      "exact_equivalents": [],
+      "near_equivalents": ["disease_tags:lung-cancer"],
+      "decision": "adopt",
+      "rationale": "Adopt to distinguish an extrathoracic primary with thoracic metastasis from primary lung carcinoma.",
+      "replacement_ids": [],
+      "definition": "Thoracic, airway, lung, or pleural involvement by a primary malignancy arising outside the thorax.",
+      "inclusion_boundary": "Use when a solid malignancy arising outside the thorax metastasizes to lung, airway, lymph node, or pleura.",
+      "exclusion_boundary": "Exclude primary lung cancer and hematologic malignancy.",
+      "examples": ["Endobronchial renal-cell metastasis", "Pleural metastasis from breast cancer"]
+    },
+    {
+      "proposal_id": "disease_tags:tracheobronchomalacia-edac",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A8:E8",
+          "source_term": "tracheobronchomalacia"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Vocabulary Gaps!A11:D11",
+          "source_term": "tracheobronchomalacia / EDAC"
+        }
+      ],
+      "field": "disease_tags",
+      "proposed_id": "tracheobronchomalacia-edac",
+      "label": "Tracheobronchomalacia or EDAC",
+      "count": 3,
+      "example_pmids": ["42076889"],
+      "example_master_row_ids": ["625"],
+      "exact_equivalents": [],
+      "near_equivalents": ["disease_tags:benign-airway-stenosis"],
+      "decision": "adopt",
+      "rationale": "Adopt because dynamic expiratory collapse is not fixed benign airway stenosis.",
+      "replacement_ids": [],
+      "definition": "Dynamic expiratory collapse caused by airway-wall weakness or excessive invagination of the posterior membrane.",
+      "inclusion_boundary": "Use for dynamic expiratory central-airway collapse due to malacia or excessive posterior-membrane invagination.",
+      "exclusion_boundary": "Exclude fixed benign airway stenosis and transient collapse without a TBM or EDAC diagnosis.",
+      "examples": ["Tracheobronchomalacia", "Excessive dynamic airway collapse"]
+    },
+    {
+      "proposal_id": "disease_tags:asthma",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Vocabulary Gaps!A7:D7",
+          "source_term": "asthma"
+        }
+      ],
+      "field": "disease_tags",
+      "proposed_id": "asthma",
+      "label": "Asthma",
+      "count": 8,
+      "example_pmids": [],
+      "example_master_row_ids": [],
+      "exact_equivalents": [],
+      "near_equivalents": ["technology_tags:bronchial-thermoplasty"],
+      "decision": "adopt",
+      "rationale": "Adopt the disease independently from its bronchial-thermoplasty treatment technology.",
+      "replacement_ids": [],
+      "definition": "Asthma, including severe asthma evaluated for bronchial thermoplasty.",
+      "inclusion_boundary": "Use for studies whose clinical population or disease focus is asthma.",
+      "exclusion_boundary": "Exclude other obstructive airway diseases without asthma.",
+      "examples": [
+        "Severe asthma treated with bronchial thermoplasty",
+        "Bronchoscopic assessment in asthma"
+      ]
+    },
+    {
+      "proposal_id": "disease_tags:foreign-body-aspiration",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Vocabulary Gaps!A8:D8",
+          "source_term": "foreign body aspiration"
+        }
+      ],
+      "field": "disease_tags",
+      "proposed_id": "foreign-body-aspiration",
+      "label": "Foreign-body aspiration",
+      "count": 7,
+      "example_pmids": ["16933314"],
+      "example_master_row_ids": ["520"],
+      "exact_equivalents": [],
+      "near_equivalents": ["technology_tags:foreign-body-removal"],
+      "decision": "adopt",
+      "rationale": "Adopt the clinical condition independently from the removal procedure.",
+      "replacement_ids": [],
+      "definition": "Aspiration or retention of a foreign object in the tracheobronchial tree.",
+      "inclusion_boundary": "Use for aspiration or retention of a foreign object in the airway.",
+      "exclusion_boundary": "Do not use solely because a removal device is discussed without foreign-body disease or presentation.",
+      "examples": ["Pediatric foreign-body aspiration", "Retained airway object"]
+    },
+    {
+      "proposal_id": "disease_tags:hemoptysis",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Vocabulary Gaps!A3:D3",
+          "source_term": "haemoptysis (as a diagnosis)"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Findings!A63:J63",
+          "source_term": "pulmonary hemorrhage"
+        }
+      ],
+      "field": "disease_tags",
+      "proposed_id": "hemoptysis",
+      "label": "Hemoptysis",
+      "count": 17,
+      "example_pmids": ["19251406"],
+      "example_master_row_ids": ["241"],
+      "exact_equivalents": [],
+      "near_equivalents": [
+        "technology_tags:topical-hemostatic-agent",
+        "technology_tags:bronchial-artery-embolization"
+      ],
+      "decision": "adopt",
+      "rationale": "Adopt the clinical bleeding problem independently from bronchoscopic or endovascular hemostatic treatment.",
+      "replacement_ids": [],
+      "definition": "Coughing or expectoration of blood arising from the lower respiratory tract.",
+      "inclusion_boundary": "Use when lower-respiratory bleeding or hemoptysis is a clinical problem or diagnosis.",
+      "exclusion_boundary": "Do not use solely for procedural bleeding prophylaxis or a hemostatic technology without hemoptysis.",
+      "examples": ["Massive hemoptysis", "Recurrent hemoptysis"]
+    },
+    {
+      "proposal_id": "disease_tags:bronchiectasis",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Vocabulary Gaps!A13:D13",
+          "source_term": "bronchiectasis"
+        }
+      ],
+      "field": "disease_tags",
+      "proposed_id": "bronchiectasis",
+      "label": "Bronchiectasis",
+      "count": 4,
+      "example_pmids": [],
+      "example_master_row_ids": [],
+      "exact_equivalents": [],
+      "near_equivalents": [],
+      "decision": "adopt",
+      "rationale": "Adopt because bronchiectasis recurs as a disease context and has no exact v1 equivalent.",
+      "replacement_ids": [],
+      "definition": "Chronic abnormal bronchial dilation and its complications.",
+      "inclusion_boundary": "Use for studies whose clinical population or disease focus is bronchiectasis.",
+      "exclusion_boundary": "Exclude isolated airway dilation not diagnosed as bronchiectasis.",
+      "examples": ["Bronchiectasis-related hemoptysis", "BAL in bronchiectasis"]
+    },
+    {
+      "proposal_id": "disease_tags:pulmonary-alveolar-proteinosis",
+      "sources": [
+        {
+          "artifact": "taxonomy-v2-implementation-request.txt",
+          "location": "E. Required disease-tag expansion",
+          "source_term": "pulmonary-alveolar-proteinosis"
+        }
+      ],
+      "field": "disease_tags",
+      "proposed_id": "pulmonary-alveolar-proteinosis",
+      "label": "Pulmonary alveolar proteinosis",
+      "count": 0,
+      "example_pmids": [],
+      "example_master_row_ids": [],
+      "exact_equivalents": [],
+      "near_equivalents": ["technology_tags:whole-lung-lavage"],
+      "decision": "adopt",
+      "rationale": "Adopt the disease separately from the existing whole-lung-lavage treatment tag; the located QA tables did not provide an independent keyword count.",
+      "replacement_ids": [],
+      "definition": "Alveolar accumulation of surfactant material characteristic of pulmonary alveolar proteinosis.",
+      "inclusion_boundary": "Use for autoimmune, hereditary, secondary, or other pulmonary alveolar proteinosis.",
+      "exclusion_boundary": "Exclude other alveolar-filling diseases.",
+      "examples": ["Autoimmune pulmonary alveolar proteinosis", "Whole-lung lavage for PAP"]
+    },
+    {
+      "proposal_id": "disease_tags:airway-amyloidosis",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Row Findings!A6:L6",
+          "source_term": "localized tracheal amyloidosis"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Row Findings!A23:L23",
+          "source_term": "localized tracheal amyloidosis"
+        }
+      ],
+      "field": "disease_tags",
+      "proposed_id": "airway-amyloidosis",
+      "label": "Airway amyloidosis",
+      "count": 1,
+      "example_pmids": ["29758211"],
+      "example_master_row_ids": ["366"],
+      "exact_equivalents": [],
+      "near_equivalents": ["disease_tags:immune-inflammatory-disease"],
+      "decision": "adopt",
+      "rationale": "Adopt because localized airway amyloid is a specific recurrent airway disorder rather than a generic immune-inflammatory label.",
+      "replacement_ids": [],
+      "definition": "Localized or systemic amyloid deposition affecting the tracheobronchial tree.",
+      "inclusion_boundary": "Use when amyloid deposition affects the trachea or bronchi.",
+      "exclusion_boundary": "Exclude amyloidosis without airway involvement.",
+      "examples": ["Tracheobronchial amyloidosis", "Endobronchial amyloid deposition"]
+    },
+    {
+      "proposal_id": "disease_tags:congenital-airway-disorder",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Row Findings!A43:L43",
+          "source_term": "pulmonary artery sling with congenital airway symptoms"
+        },
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_1.xlsx",
+          "location": "Row Findings!A34:L34",
+          "source_term": "subglottic stenosis in infants and children"
+        },
+        {
+          "artifact": "taxonomy-v2-implementation-request.txt",
+          "location": "E. Required disease-tag expansion",
+          "source_term": "congenital-airway-disorder"
+        }
+      ],
+      "field": "disease_tags",
+      "proposed_id": "congenital-airway-disorder",
+      "label": "Congenital airway disorder",
+      "count": 2,
+      "example_pmids": ["36879724", "21140109"],
+      "example_master_row_ids": ["4", "75"],
+      "exact_equivalents": [],
+      "near_equivalents": ["disease_tags:benign-airway-stenosis"],
+      "decision": "adopt",
+      "rationale": "Adopt for congenital structural airway disorders that should not be collapsed into acquired fixed stenosis.",
+      "replacement_ids": [],
+      "definition": "A structural or developmental airway abnormality present from birth.",
+      "inclusion_boundary": "Use for congenital structural or developmental abnormalities of the trachea or bronchi.",
+      "exclusion_boundary": "Exclude acquired stenosis, malacia without congenital attribution, and congenital parenchymal disease without airway involvement.",
+      "examples": ["Congenital tracheal stenosis", "Tracheal bronchus"]
+    },
+    {
+      "proposal_id": "study_design:cross-sectional-survey",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A9:E9",
+          "source_term": "cross-sectional-survey"
+        }
+      ],
+      "field": "study_design",
+      "proposed_id": "cross-sectional-survey",
+      "label": "Cross-sectional survey",
+      "count": 15,
+      "example_pmids": [],
+      "example_master_row_ids": ["197", "242", "257", "282", "328"],
+      "exact_equivalents": [],
+      "near_equivalents": ["study_design:not-assessable-from-available-metadata"],
+      "decision": "adopt",
+      "rationale": "Adopt to distinguish quantitative survey or point-in-time measurement from qualitative research.",
+      "replacement_ids": [],
+      "definition": "A quantitative survey or cross-sectional measurement of a defined population at one period.",
+      "inclusion_boundary": "Use for quantitative survey or cross-sectional data collected at one period without longitudinal follow-up.",
+      "exclusion_boundary": "Exclude interview-based thematic research and cohorts defined by follow-up over time.",
+      "examples": ["Clinician practice survey", "Cross-sectional prevalence questionnaire"]
+    },
+    {
+      "proposal_id": "study_design:economic-evaluation",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A10:E10",
+          "source_term": "economic-evaluation"
+        }
+      ],
+      "field": "study_design",
+      "proposed_id": "economic-evaluation",
+      "label": "Economic evaluation",
+      "count": 7,
+      "example_pmids": [],
+      "example_master_row_ids": ["187", "285", "333", "623"],
+      "exact_equivalents": [],
+      "near_equivalents": ["study_design:not-assessable-from-available-metadata"],
+      "decision": "adopt",
+      "rationale": "Adopt for formal economic comparisons rather than general health-services observation.",
+      "replacement_ids": [],
+      "definition": "A formal comparison of costs, consequences, or value across care strategies.",
+      "inclusion_boundary": "Use for cost-effectiveness, cost-utility, cost-benefit, budget-impact, or decision-analytic economic comparisons.",
+      "exclusion_boundary": "Exclude general health-services observations that report resource use without a formal economic evaluation.",
+      "examples": ["Cost-effectiveness model", "Cost-minimization analysis"]
+    },
+    {
+      "proposal_id": "study_design:bench-in-vitro",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A11:E11",
+          "source_term": "bench-in-vitro"
+        }
+      ],
+      "field": "study_design",
+      "proposed_id": "bench-in-vitro",
+      "label": "Bench or in-vitro study",
+      "count": 5,
+      "example_pmids": [],
+      "example_master_row_ids": ["491"],
+      "exact_equivalents": [],
+      "near_equivalents": ["study_design:not-assessable-from-available-metadata"],
+      "decision": "adopt",
+      "rationale": "Adopt for bench, phantom, cadaveric, ex-vivo, and in-vitro work distinct from clinical technical notes.",
+      "replacement_ids": [],
+      "definition": "A laboratory, phantom, cadaveric, ex-vivo, or in-vitro technical experiment without living human participants.",
+      "inclusion_boundary": "Use for laboratory, phantom, cadaveric, ex-vivo, or in-vitro experiments without living human participants.",
+      "exclusion_boundary": "Exclude in-vivo animal studies and clinical technical notes describing patient care.",
+      "examples": ["Airway phantom navigation study", "In-vitro device comparison"]
+    },
+    {
+      "proposal_id": "study_design:animal-preclinical",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A12:E12",
+          "source_term": "animal-preclinical"
+        }
+      ],
+      "field": "study_design",
+      "proposed_id": "animal-preclinical",
+      "label": "Animal preclinical study",
+      "count": 4,
+      "example_pmids": [],
+      "example_master_row_ids": ["51", "116", "186", "280", "500"],
+      "exact_equivalents": [],
+      "near_equivalents": ["study_design:not-assessable-from-available-metadata"],
+      "decision": "adopt",
+      "rationale": "Adopt for in-vivo nonhuman animal work distinct from bench or in-vitro testing.",
+      "replacement_ids": [],
+      "definition": "An in-vivo experiment conducted in nonhuman animals before or outside clinical evaluation.",
+      "inclusion_boundary": "Use for in-vivo experiments in nonhuman animals.",
+      "exclusion_boundary": "Exclude isolated tissue, ex-vivo organs, phantoms, and other bench or in-vitro testing.",
+      "examples": ["Porcine airway experiment", "Canine preclinical device study"]
+    },
+    {
+      "proposal_id": "study_design:qualitative-study",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A13:E13",
+          "source_term": "qualitative-study"
+        }
+      ],
+      "field": "study_design",
+      "proposed_id": "qualitative-study",
+      "label": "Qualitative study",
+      "count": 1,
+      "example_pmids": [],
+      "example_master_row_ids": ["347"],
+      "exact_equivalents": [],
+      "near_equivalents": ["study_design:not-assessable-from-available-metadata"],
+      "decision": "adopt",
+      "rationale": "Adopt for thematic interview, focus-group, observation, or qualitative text analysis.",
+      "replacement_ids": [],
+      "definition": "Research using interviews, focus groups, observation, or qualitative text analysis to develop themes or explanations.",
+      "inclusion_boundary": "Use for research based primarily on interviews, focus groups, observation, or qualitative coding and thematic analysis.",
+      "exclusion_boundary": "Exclude structured quantitative questionnaires analyzed as cross-sectional surveys.",
+      "examples": ["Thematic interview study", "Focus groups on procedural experience"]
+    },
+    {
+      "proposal_id": "study_design:case-control",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A14:E14",
+          "source_term": "case-control"
+        }
+      ],
+      "field": "study_design",
+      "proposed_id": "case-control",
+      "label": "Case-control study",
+      "count": 1,
+      "example_pmids": [],
+      "example_master_row_ids": ["302"],
+      "exact_equivalents": [],
+      "near_equivalents": ["study_design:not-assessable-from-available-metadata"],
+      "decision": "adopt",
+      "rationale": "Adopt for outcome-selected cases and controls, distinct from exposure-selected retrospective cohorts.",
+      "replacement_ids": [],
+      "definition": "An observational comparison selecting participants by outcome or case status and examining prior exposures or characteristics.",
+      "inclusion_boundary": "Use when cases and controls are selected by outcome or case status and prior exposures or characteristics are compared.",
+      "exclusion_boundary": "Exclude retrospective cohorts selected by exposure or intervention and followed to outcomes.",
+      "examples": [
+        "Cases with a complication compared with matched controls",
+        "Diagnostic cases versus disease-free controls"
+      ]
+    },
+    {
+      "proposal_id": "topic_ids:adjacent-procedural-scope-boundary",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Findings!A10:J11",
+          "source_term": "surgical LVRS scope errors"
+        },
+        {
+          "artifact": "taxonomy-v2-implementation-request.txt",
+          "location": "G. Broad-topic scope gaps",
+          "source_term": "adjacent-procedural-scope-boundary"
+        }
+      ],
+      "field": "topic_ids",
+      "proposed_id": "adjacent-procedural-scope-boundary",
+      "label": "Adjacent procedural scope boundary",
+      "count": 2,
+      "example_pmids": ["41229759", "18453348"],
+      "example_master_row_ids": ["260", "329"],
+      "exact_equivalents": [],
+      "near_equivalents": ["topic_ids:adjacent-surgical-procedural-analogue"],
+      "decision": "defer",
+      "rationale": "The candidate is too broad and boundary-oriented to be a stable content topic; the narrower surgical/procedural analogue topic covers the evidenced cases.",
+      "replacement_ids": [],
+      "definition": "A proposed catch-all topic for adjacent procedures that inform interventional pulmonology.",
+      "inclusion_boundary": "Would include adjacent non-IP procedures with a direct comparator or translational relationship.",
+      "exclusion_boundary": "Would exclude merely off-topic procedures and established narrower v2 topics.",
+      "examples": ["Surgical comparator to a bronchoscopic procedure"]
+    },
+    {
+      "proposal_id": "topic_ids:adjacent-surgical-procedural-analogue",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Findings!A10:J11",
+          "source_term": "surgical LVRS scope errors"
+        },
+        {
+          "artifact": "taxonomy-v2-implementation-request.txt",
+          "location": "G. Broad-topic scope gaps",
+          "source_term": "adjacent-surgical-procedural-analogue"
+        }
+      ],
+      "field": "topic_ids",
+      "proposed_id": "adjacent-surgical-procedural-analogue",
+      "label": "Adjacent surgical and procedural analogues",
+      "count": 2,
+      "example_pmids": ["41229759", "18453348"],
+      "example_master_row_ids": ["260", "329"],
+      "exact_equivalents": [],
+      "near_equivalents": ["topic_ids:bronchoscopic-lung-volume-reduction"],
+      "decision": "adopt",
+      "rationale": "Adopt as the defensible path for surgical comparators and analogues without mislabeling them as bronchoscopic procedures.",
+      "replacement_ids": [],
+      "definition": "Surgical or nonbronchoscopic procedures used as comparators, alternatives, or technical analogues for interventional pulmonology without being bronchoscopic interventions themselves.",
+      "inclusion_boundary": "Use for surgical or nonbronchoscopic procedures when they are relevant as comparators, alternatives, or technical analogues to interventional pulmonology.",
+      "exclusion_boundary": "Exclude articles whose primary intervention is bronchoscopic; classify those under the corresponding bronchoscopic topic instead.",
+      "examples": [
+        "Surgical lung-volume reduction compared with bronchoscopic lung-volume reduction",
+        "VATS localization or resection used as an adjacent procedural comparator"
+      ]
+    },
+    {
+      "proposal_id": "topic_ids:specimen-adequacy-molecular-pathology",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Findings!A56:J57",
+          "source_term": "specimen quality and molecular adequacy"
+        },
+        {
+          "artifact": "taxonomy-v2-implementation-request.txt",
+          "location": "G. Broad-topic scope gaps",
+          "source_term": "specimen-adequacy-molecular-pathology"
+        }
+      ],
+      "field": "topic_ids",
+      "proposed_id": "specimen-adequacy-molecular-pathology",
+      "label": "Specimen adequacy and molecular pathology",
+      "count": 2,
+      "example_pmids": ["31593653", "42342291"],
+      "example_master_row_ids": ["588", "589"],
+      "exact_equivalents": [],
+      "near_equivalents": [
+        "topic_ids:ebus-mediastinal-staging",
+        "topic_ids:peripheral-biopsy-localization"
+      ],
+      "decision": "adopt",
+      "rationale": "Adopt because specimen adequacy and downstream molecular pathology recur across procedure families.",
+      "replacement_ids": [],
+      "definition": "Cytology, histopathology, biomarker, and molecular-testing adequacy of specimens obtained during pulmonary or pleural procedures.",
+      "inclusion_boundary": "Use when specimen sufficiency, processing, cytology or histopathology yield, biomarkers, or molecular testing is a primary focus.",
+      "exclusion_boundary": "Exclude studies reporting only diagnostic yield without evaluating specimen quality, processing, or downstream pathology testing.",
+      "examples": [
+        "Adequacy of EBUS-TBNA specimens for molecular profiling",
+        "Cytology workflow and biomarker sufficiency after bronchoscopic biopsy"
+      ]
+    },
+    {
+      "proposal_id": "topic_ids:upper-airway-anesthesia-boundary",
+      "sources": [
+        {
+          "artifact": "taxonomy-v2-implementation-request.txt",
+          "location": "G. Broad-topic scope gaps",
+          "source_term": "upper-airway-anesthesia-boundary"
+        }
+      ],
+      "field": "topic_ids",
+      "proposed_id": "upper-airway-anesthesia-boundary",
+      "label": "Upper-airway and anesthesia boundary",
+      "count": 0,
+      "example_pmids": [],
+      "example_master_row_ids": [],
+      "exact_equivalents": ["topic_ids:safety-anesthesia-complications"],
+      "near_equivalents": [],
+      "decision": "map_to_existing",
+      "rationale": "The current safety, anesthesia, and complications root already provides the stable boundary; no independently recurrent narrower category was established.",
+      "replacement_ids": ["safety-anesthesia-complications"],
+      "definition": "A proposed boundary category for anesthesia and upper-airway considerations adjacent to bronchoscopy.",
+      "inclusion_boundary": "Map anesthesia, ventilation, and procedural-safety content to the existing safety topic when in IP scope.",
+      "exclusion_boundary": "Exclude unrelated upper-airway disease or anesthesia outside the procedural scope.",
+      "examples": ["Anesthesia management during bronchoscopy"]
+    },
+    {
+      "proposal_id": "topic_ids:health-services-economics",
+      "sources": [
+        {
+          "artifact": "gold-set-v1_enrichment_QA_review_2.xlsx",
+          "location": "Vocabulary_Gaps!A5:E5",
+          "source_term": "cost-effectiveness-health-services"
+        },
+        {
+          "artifact": "taxonomy-v2-implementation-request.txt",
+          "location": "G. Broad-topic scope gaps",
+          "source_term": "health-services-economics"
+        }
+      ],
+      "field": "topic_ids",
+      "proposed_id": "health-services-economics",
+      "label": "Health services and economics",
+      "count": 6,
+      "example_pmids": [],
+      "example_master_row_ids": ["187", "285", "333", "623"],
+      "exact_equivalents": [],
+      "near_equivalents": ["topic_ids:education-simulation-quality"],
+      "decision": "adopt",
+      "rationale": "Adopt because economics, access, utilization, workflow, and program delivery form a recurrent scope distinct from education.",
+      "replacement_ids": [],
+      "definition": "Care delivery, workflow, operations, quality, utilization, access, costs, and economic evaluation related to interventional pulmonary services.",
+      "inclusion_boundary": "Use for interventional pulmonary care delivery, operations, access, utilization, quality, program outcomes, costs, or formal economic evaluation.",
+      "exclusion_boundary": "Exclude purely clinical efficacy or safety studies without a health-services, operational, quality, or economic objective.",
+      "examples": [
+        "Cost-effectiveness of a diagnostic pathway",
+        "Operational outcomes after establishing an interventional pulmonology service"
+      ]
+    }
+  ],
+  "migration_mappings": [
+    {
+      "field": "technology_tags",
+      "source_id": "thoracentesis-chest-tube",
+      "replacement_ids": ["thoracentesis", "chest-tube"],
+      "mapping_type": "split",
+      "automatic": false,
+      "rationale": "The source value combines two distinct procedures; row-level evidence must determine one or both replacements."
+    },
+    {
+      "field": "technology_tags",
+      "source_id": "pleurodesis-agent",
+      "replacement_ids": ["pleurodesis"],
+      "mapping_type": "alias",
+      "automatic": false,
+      "rationale": "Agent-specific wording maps to the agent-neutral canonical procedure without changing row meaning."
+    },
+    {
+      "field": "technology_tags",
+      "source_id": "balloon-dilation",
+      "replacement_ids": ["balloon-bronchoplasty"],
+      "mapping_type": "alias",
+      "automatic": false,
+      "rationale": "Within the airway technology field, balloon dilation is an exact alias for balloon bronchoplasty."
+    },
+    {
+      "field": "technology_tags",
+      "source_id": "split-transbronchial-cryobiopsy",
+      "replacement_ids": ["transbronchial-cryobiopsy", "mediastinal-cryobiopsy"],
+      "mapping_type": "split",
+      "automatic": false,
+      "rationale": "Existing rows require source review to distinguish lung or peripheral cryobiopsy from mediastinal nodal cryobiopsy."
+    },
+    {
+      "field": "technology_tags",
+      "source_id": "optical-coherence-tomography",
+      "replacement_ids": [],
+      "mapping_type": "deferred",
+      "automatic": false,
+      "rationale": "OCT remains deferred and has no supported canonical replacement."
+    },
+    {
+      "field": "technology_tags",
+      "source_id": "autofluorescence-narrow-band-imaging",
+      "replacement_ids": ["autofluorescence-bronchoscopy", "narrow-band-imaging"],
+      "mapping_type": "split",
+      "automatic": false,
+      "rationale": "The QA source combines two optical modalities; row evidence must select one or both."
+    },
+    {
+      "field": "technology_tags",
+      "source_id": "confocal-endomicroscopy-oct",
+      "replacement_ids": ["confocal-laser-endomicroscopy"],
+      "mapping_type": "split",
+      "automatic": false,
+      "rationale": "Only confocal endomicroscopy is adopted; rows require review because OCT remains deferred."
+    },
+    {
+      "field": "disease_tags",
+      "source_id": "lymphoma-haematologic",
+      "replacement_ids": ["lymphoma-hematologic-malignancy"],
+      "mapping_type": "alias",
+      "automatic": false,
+      "rationale": "Normalize British spelling and make the broader hematologic-malignancy scope explicit."
+    },
+    {
+      "field": "disease_tags",
+      "source_id": "metastatic-extrathoracic",
+      "replacement_ids": ["metastatic-extrathoracic-malignancy"],
+      "mapping_type": "alias",
+      "automatic": false,
+      "rationale": "The expanded canonical ID preserves the same extrathoracic metastatic-malignancy concept."
+    },
+    {
+      "field": "disease_tags",
+      "source_id": "tracheobronchomalacia",
+      "replacement_ids": ["tracheobronchomalacia-edac"],
+      "mapping_type": "alias",
+      "automatic": false,
+      "rationale": "The v2 canonical groups the closely related dynamic central-airway-collapse terms TBM and EDAC."
+    },
+    {
+      "field": "disease_tags",
+      "source_id": "haemoptysis",
+      "replacement_ids": ["hemoptysis"],
+      "mapping_type": "alias",
+      "automatic": false,
+      "rationale": "Normalize British spelling without changing meaning."
+    },
+    {
+      "field": "topic_ids",
+      "source_id": "adjacent-procedural-scope-boundary",
+      "replacement_ids": [],
+      "mapping_type": "deferred",
+      "automatic": false,
+      "rationale": "The broad candidate is deferred; only independently reviewed surgical-analogue rows may use the narrower adopted topic."
+    },
+    {
+      "field": "topic_ids",
+      "source_id": "upper-airway-anesthesia-boundary",
+      "replacement_ids": ["safety-anesthesia-complications"],
+      "mapping_type": "alias",
+      "automatic": false,
+      "rationale": "The existing root already covers in-scope anesthesia and procedural-safety material."
+    }
+  ]
+}

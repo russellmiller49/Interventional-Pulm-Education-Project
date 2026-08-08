@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Section 4 — Triggering and cycling.
+ * Section 5 — Triggering and cycling.
  *
  * The lesson's demand is "separate inspiratory trigger from expiratory cycling", so the figure is
  * two timelines drawn against each other: what the patient did (from the effort trace) and what the

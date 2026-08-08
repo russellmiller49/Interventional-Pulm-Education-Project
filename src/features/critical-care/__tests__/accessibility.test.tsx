@@ -5,7 +5,14 @@ import { axe } from 'jest-axe'
 
 import { CrrtPressureLocalizationLab } from '@/features/baxter-crrt/components/CrrtPressureLocalizationLab'
 import { CircuitAndMonitors } from '@/features/cardiohelp-ecmo/components/CircuitAndMonitors'
-import { createInitialSimulationState as createInitialEcmoState } from '@/features/cardiohelp-ecmo/engine'
+import { EcmoLearnWorkspace } from '@/features/cardiohelp-ecmo/components/EcmoLearnWorkspace'
+import { resolveGuidedLesson } from '@/features/cardiohelp-ecmo/components/LearnLessonPlayer'
+import { EcmoDrillTeachingPanel } from '@/features/cardiohelp-ecmo/components/teaching/EcmoDrillTeachingPanel'
+import { ecmoDrillTeachingPanelScenarioIds } from '@/features/cardiohelp-ecmo/components/teaching/EcmoDrillTeachingPanel'
+import {
+  createInitialSimulationState as createInitialEcmoState,
+  ecmoSimulationReducer,
+} from '@/features/cardiohelp-ecmo/engine'
 import { McsMonitor } from '@/features/mechanical-circulatory-support/components/McsMonitor'
 import { createInitialMcsState } from '@/features/mechanical-circulatory-support/engine'
 import { CriticalCareConceptDetail } from '../components/CriticalCareConceptDetail'
@@ -228,5 +235,57 @@ describe('critical-care accessibility surfaces', () => {
       '3 4',
     )
     expect(await axe(mcs.container)).toHaveNoViolations()
+  })
+
+  /*
+   * The B3/B4 vertical slice.
+   *
+   * The drill panels are the new rendered content, and the workspace is the new chrome around it.
+   * The workspace is mounted with a plain stand-in for the simulator rather than the real console:
+   * the console and the circuit view already have their own axe coverage above, and pulling the 3D
+   * circuit into this suite would test WebGL fallbacks rather than the pane structure.
+   */
+  it.each(ecmoDrillTeachingPanelScenarioIds)(
+    'keeps the %s drill teaching panel free of automated violations, before and after commitment',
+    async (scenarioId) => {
+      let state = createInitialEcmoState(scenarioId, 'guided')
+      for (let tick = 0; tick < 8; tick += 1) {
+        state = ecmoSimulationReducer(state, { type: 'STEP' })
+      }
+      const before = render(<EcmoDrillTeachingPanel state={state} />)
+      expect(await axe(before.container)).toHaveNoViolations()
+      before.unmount()
+
+      const committed = ecmoSimulationReducer(state, {
+        type: 'COMMIT_PREDICTION',
+        goalId: 'safe-startup',
+        control: 'inspect-circuit',
+        direction: 'inspect',
+      })
+      const after = render(<EcmoDrillTeachingPanel state={committed} />)
+      expect(await axe(after.container)).toHaveNoViolations()
+    },
+  )
+
+  it('labels every pane of the ECMO Learn workspace and keeps its chrome accessible', async () => {
+    const state = createInitialEcmoState('preload-drainage-collapse', 'guided')
+    const view = render(
+      <EcmoLearnWorkspace
+        state={state}
+        lesson={resolveGuidedLesson('preload-drainage-collapse')}
+        dispatch={jest.fn()}
+        simulator={<div>Live simulator stand-in</div>}
+        onSelectLesson={jest.fn()}
+        onCompleteLesson={jest.fn()}
+        onTryPractice={jest.fn()}
+        onTargetChange={jest.fn()}
+        onControlHelpChange={jest.fn()}
+      />,
+    )
+
+    for (const label of ['Live simulator', 'Teaching', 'Current task']) {
+      expect(screen.getByRole('region', { name: `${label} panel` })).toBeInTheDocument()
+    }
+    expect(await axe(view.container)).toHaveNoViolations()
   })
 })

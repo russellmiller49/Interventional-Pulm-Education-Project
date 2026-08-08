@@ -79,6 +79,48 @@ export const equipmentSetRefSchema = z.object({
 })
 
 /**
+ * Two stored sets may not claim one id.
+ *
+ * A set is addressed by id everywhere it is used — `set:<id>` is the hospital-item id a requirement
+ * selects, and every lookup is a `.find()`. Two records sharing an id therefore make "the set this
+ * requirement chose" a question with two answers, and `.find()` silently returns whichever was
+ * written first. The rebuild planner validated that one and offered the set as carried, while the
+ * save path iterated *both* and failed on the second's missing member — after the whole review had
+ * been answered, as a generic `not_resolvable`.
+ *
+ * Rejected rather than deduplicated. Which of two conflicting records the physician meant is not a
+ * thing this code can know, and a card that cannot be read unambiguously must not be re-resolved
+ * into a new one. Such a card stays viewable and printable from its snapshot; it is the *rebuild*
+ * and the *edit* that are refused.
+ */
+function requireUniqueEquipmentSetIds(
+  sets: { id: string }[],
+  ctx: z.RefinementCtx,
+  path: (string | number)[] = ['equipmentSets'],
+) {
+  const seen = new Set<string>()
+  for (const [index, set] of sets.entries()) {
+    if (!seen.has(set.id)) {
+      seen.add(set.id)
+      continue
+    }
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [...path, index, 'id'],
+      message: `Two equipment sets share the id ${set.id}; a set id addresses exactly one set.`,
+    })
+  }
+}
+
+/**
+ * A stored equipment set, as identifiers. Exported because the rebuild planner carries whole sets
+ * forward and has to name the shape it is writing rather than inferring it from a `.map()`.
+ */
+export type EquipmentSetRef = z.infer<typeof equipmentSetRefSchema>
+export type CatalogPickRef = z.infer<typeof catalogPickRefSchema>
+export type CustomItemRef = z.infer<typeof customItemSchema>
+
+/**
  * Free-text lines carry no catalog identity to rebuild, so unlike every other pick their
  * content is stored verbatim — bounded, trimmed, and always presented as unverified.
  */
@@ -115,13 +157,16 @@ export const customItemSchema = z.object({
  * - **4 — reviewed family identity.** Product-line selections name a reviewed family version, the
  *   catalog release its membership is true of, and that membership's hash.
  *
- * **No version is ever upgraded in place.** Version 2 is not converted to version 3 on save,
+ * **No version is ever upgraded in place.** Version 2 is not converted to version 3 or 4 on save,
  * on read, or anywhere else. Stamping the current release onto one would move a saved card to a
  * release its author never selected, silently — nothing on the card would say the pin was the
- * system's choice rather than the physician's. Moving a version-2 card forward is reserved for
- * an explicit "rebuild as a new version-3 card" workflow that produces a *new* card and leaves
- * the original intact. That workflow does not exist yet, and its absence is why version 2 is
- * view-only rather than quietly re-saved.
+ * system's choice rather than the physician's. Moving a card forward goes through the reviewed
+ * rebuild instead, which produces a *new* version-4 card from one exact immutable revision and
+ * leaves the original untouched — see `server/rebuild-card.ts` and
+ * `docs/ip-preference-cards/reviewed-rebuild.md`. That workflow deliberately refuses a version-2
+ * source, because a version-2 input records no release and rebuilding it would mean choosing which
+ * rules it was built against; version 2 stays view-only, and now says where the boundary is rather
+ * than only that there is one.
  *
  * Absent is normalized to 2: the only writer that ever omitted it is the composition work
  * that introduced module selections, so an input that satisfies this schema without naming
@@ -246,7 +291,9 @@ export function carriesUnreconcilableFamilyIdentity(inputs: {
   return (inputs.familyPicks ?? []).length > 0
 }
 
-export const builderInputsSchema = builderInputsObject.superRefine(requireVersionPinAgreement)
+export const builderInputsSchema = builderInputsObject
+  .superRefine(requireVersionPinAgreement)
+  .superRefine((inputs, ctx) => requireUniqueEquipmentSetIds(inputs.equipmentSets, ctx))
 
 export type BuilderInputs = z.infer<typeof builderInputsSchema>
 
@@ -264,11 +311,44 @@ export const saveCardRequestSchema = builderInputsObject
   .extend({
     /** Absent for a new card; present when overwriting one the caller owns. */
     cardId: z.string().uuid().optional(),
+    /**
+     * The card's content version as the editor loaded it — its `updated_at` at that moment.
+     *
+     * The optimistic-concurrency token. The update statement matches on it as well as on the id,
+     * so a save built against a state someone has since replaced matches no row and is refused
+     * rather than silently overwriting the newer one. It is deliberately not part of
+     * `builderInputsObject`: it describes *this request*, not the card, and is never persisted.
+     *
+     * `updated_at` moves only when revision-bearing content changes — a share toggle leaves it
+     * alone — so holding an editor open while a colleague shares the card does not invalidate it.
+     */
+    expectedUpdatedAt: z.string().datetime({ offset: true }).optional(),
     title: z.string().trim().min(1).max(160),
     physicianName: z.string().trim().max(160).nullable().optional(),
     status: z.enum(['draft', 'final']).default('draft'),
   })
+  .superRefine((value, ctx) => {
+    // The token and the id imply each other. A create has nothing to be stale against; an
+    // overwrite without one would be the unguarded update this exists to remove, and accepting it
+    // silently is how a concurrency check quietly stops applying to the one caller that forgot.
+    if (value.cardId && !value.expectedUpdatedAt) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['expectedUpdatedAt'],
+        message:
+          'Overwriting a saved card must state the content version it was edited from, so a newer save cannot be replaced by an older one.',
+      })
+    }
+    if (!value.cardId && value.expectedUpdatedAt) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['expectedUpdatedAt'],
+        message: 'A new preference card has no previous content version to expect.',
+      })
+    }
+  })
   .superRefine(requireVersionPinAgreement)
+  .superRefine((value, ctx) => requireUniqueEquipmentSetIds(value.equipmentSets, ctx))
   .superRefine((value, ctx) => {
     // Nothing may be *written* at a superseded version, which is what makes version 2
     // view-only rather than merely discouraged. Enforced in the schema rather than at the

@@ -123,6 +123,26 @@ export function BloodFlowVsSweepPanel({ state }: { readonly state: EcmoSimulatio
           dose-response. Each comparison restores the reference circuit first, so the second result
           is never the sum of two changes.
         </ModelBoundary>
+
+        <ModelBoundary>
+          <span data-local-model-boundary="sweep-linearity">
+            PaCO₂ responds to sweep as a straight line in this simulation, by construction. There is
+            no plateau and no diminishing return, because none is modeled. Real CO₂ removal shows
+            diminishing returns and becomes limited by blood flow through the membrane, membrane
+            performance, and the remaining gas-side gradient — so read the direction here, not the
+            slope.
+          </span>
+        </ModelBoundary>
+
+        <ModelBoundary>
+          <span data-local-model-boundary="demand-and-native-lung-fixed">
+            Two of the terms in that sentence never move in this simulation. The patient&rsquo;s
+            oxygen consumption is an authored constant, and the native lung&rsquo;s contribution is
+            fixed, so nothing here can show you a patient whose demand rose or whose own lungs
+            recovered. Both are among the commonest reasons a real ECMO patient&rsquo;s numbers
+            change without anyone touching the circuit.
+          </span>
+        </ModelBoundary>
       </section>
 
       <GuidedValue

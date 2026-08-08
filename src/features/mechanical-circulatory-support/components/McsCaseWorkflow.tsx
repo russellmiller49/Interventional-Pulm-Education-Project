@@ -7,6 +7,13 @@ import type { McsAction, McsSimulationState } from '../engine'
 import { isMcsActionIdPermitted } from '../engine'
 import styles from './mechanical-circulatory-support.module.css'
 
+const deviceLabels: Readonly<Record<McsSimulationState['deviceKind'], string>> = {
+  iabp: 'Counterpulsation — a balloon in the descending thoracic aorta, moving no blood of its own',
+  impella:
+    'Microaxial pump — left ventricle to aorta, and where fitted vena cava to pulmonary artery',
+  lvad: 'Durable continuous flow — left ventricular apex to ascending aorta',
+}
+
 const phases = ['inspect', 'predict', 'adjust', 'observe', 'reassess', 'debrief'] as const
 const phaseTargetIds: Readonly<Record<(typeof phases)[number], string>> = {
   inspect: 'mcs-case-inspect',
@@ -36,12 +43,13 @@ export function McsCaseWorkflow({
   if (!scenario) {
     return (
       <section className={styles.workflowCard} aria-label="Mechanism Studio instructions">
-        <span className={styles.kicker}>OPEN LAB</span>
+        <span className={styles.kicker}>OPEN WORKSPACE · NOT A PATIENT CASE</span>
         <h2>Mechanism Studio</h2>
         <p>
-          Start with one device and baseline physiology, change one setting or loading condition,
-          and compare native flow, device flow, effective flow, ventricular loading, pressure, and
-          alarms.
+          This is a free workspace, not a patient case: there is no presentation, no
+          permitted-action list, and no debrief. Start with one device and baseline physiology,
+          change one setting or loading condition, and compare native flow, device flow, effective
+          flow, ventricular loading, pressure, and alarms.
         </p>
         <ol className={styles.studioPrompts}>
           <li>
@@ -79,7 +87,37 @@ export function McsCaseWorkflow({
           <RotateCcw aria-hidden="true" /> Reset
         </button>
       </header>
-      <p className={styles.casePresentation}>{scenario.presentation}</p>
+      {/*
+       * What makes this a case rather than a workspace, stated where the learner arrives. Every
+       * field is read from the case definition, so the block cannot describe a case the runtime
+       * does not have.
+       */}
+      <dl className={styles.caseIdentity} data-case-identity>
+        <div>
+          <dt>Patient problem</dt>
+          <dd>{scenario.presentation}</dd>
+        </div>
+        <div>
+          <dt>Support pathway</dt>
+          <dd>{deviceLabels[scenario.device]}</dd>
+        </div>
+        <div>
+          <dt>Your role</dt>
+          <dd>
+            {state.section === 'assess'
+              ? 'Work it independently. Routine teaching is held back until the debrief; safety interruptions still appear immediately.'
+              : 'Work it with coaching available. The response and the debrief explain what happened as you go.'}
+          </dd>
+        </div>
+        <div>
+          <dt>Immediate goal</dt>
+          <dd>{scenario.learningObjectives[0]}</dd>
+        </div>
+        <div>
+          <dt>What makes this one different</dt>
+          <dd>{scenario.shortTitle}</dd>
+        </div>
+      </dl>
       <ol className={styles.phaseRail} aria-label="Case reasoning sequence">
         {phases.map((phase, index) => (
           <li

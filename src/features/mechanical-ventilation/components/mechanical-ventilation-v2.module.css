@@ -11,6 +11,241 @@
   scrollbar-gutter: stable;
 }
 
+/* ------------------------------------------------------------------------------------------------
+ * Learn viewport — the standard-laptop workspace
+ *
+ * The Learn viewport used to be a single scroll container holding a `min-h-[40rem]` workspace plus
+ * a pathway rail, a patient card, and a measurement row. Measured at 1280x720 the shell handed it
+ * 377px and it carried 948px of content, so a learner reached the current task by scrolling the
+ * ventilator off the top — five levels of nested scrolling deep.
+ *
+ * Now the viewport itself never scrolls: the rail takes its own row and the workspace takes the
+ * rest, which gives `ResizableTeachingWorkspace` the definite height its `height: 100%` needs. Each
+ * pane then scrolls on its own, so the live evidence and the current decision stay side by side.
+ * ---------------------------------------------------------------------------------------------- */
+.learnViewport {
+  display: grid;
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.5rem;
+  overflow: hidden;
+  padding: 0.5rem;
+  background: hsl(var(--background));
+}
+
+/*
+ * One persistent strip: section rail on the left, run control on the right. Pause is chrome, not
+ * pane content, so no pane scroll and no pane tab can take it away while the clock keeps running.
+ */
+.learnRail {
+  display: grid;
+  min-width: 0;
+  /*
+   * Wide enough that "Pause + step one breath" wraps to two lines rather than three — the strip's
+   * height is set by whichever of the rail and the run control is taller, so a narrower column
+   * here buys rail width by making the whole strip 20px taller. Narrow enough that the rail still
+   * shows most of the ten section chips.
+   */
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 21rem);
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.railRunControl {
+  display: grid;
+  min-width: 0;
+}
+
+/*
+ * The strip stays on one line down to 900px. Stacking it at 1024x768 cost 82px of an already
+ * short workspace and left the ventilator pane 143px tall — under the height a trace needs to be
+ * read. Below 900px there is no longer room for the rail and the run control side by side, and the
+ * page is scrolling anyway.
+ */
+@media (max-width: 899px) {
+  .learnRail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.workspaceFrame {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.75rem;
+}
+
+/*
+ * The causal debrief, re-themed for the light teaching pane.
+ *
+ * `DebriefPanel` paints its cards with `--lm-v2-panel-muted` and leaves the heading colour to
+ * inheritance. Those tokens are set by the shared shell, which for this module is dark, while the
+ * teaching pane inherits the workspace's own dark ink on a light surface — so moving the debrief
+ * into the pane rendered its four card headings and the reasoning-review value at roughly 1.1:1
+ * against their own background. Restating the tokens locally is the component's own theming hook;
+ * no shared file changes, and the panel keeps its structure and copy.
+ */
+.debriefPane {
+  --lm-v2-surface: #f4f9f7;
+  --lm-v2-panel: #ffffff;
+  --lm-v2-panel-muted: #f1f7f5;
+  --lm-v2-border: #cfdedb;
+  --lm-v2-text: #15323a;
+  --lm-v2-muted: #47646a;
+  --lm-v2-accent: #14706e;
+  --lm-v2-accent-contrast: #f3fffd;
+  color: #15323a;
+}
+
+/*
+ * The debrief's own card grid is two columns until a viewport media query says otherwise, which is
+ * the wrong question inside a pane: at 1024 it laid two ~115px columns inside a 278px pane and
+ * broke sentences to three words a line. One column, always, because this pane is never as wide as
+ * the display.
+ */
+.debriefPane section > div {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/*
+ * The Help answer, in the pane the learner is working in. Deliberately a tight block rather than a
+ * card: it appears between the task and the controls, so every pixel it takes is a pixel the
+ * control the learner is about to press moves down.
+ */
+.learnHint {
+  margin: 0;
+  border-left: 3px solid hsl(var(--primary));
+  border-radius: 0.35rem;
+  padding: 0.35rem 0.5rem;
+  color: hsl(var(--foreground));
+  background: hsl(var(--muted));
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+/*
+ * On a standard laptop the task card spends its padding on the pane it is trying to fit inside, so
+ * it tightens. Nothing is dropped: the phase label, the objective, the required action, the hint,
+ * and the controls all still render, at the same font sizes.
+ */
+[data-mv-density='laptop'] .taskSection {
+  gap: 0.35rem;
+  padding: 0.5rem;
+}
+
+[data-mv-density='laptop'] .learnHint {
+  padding: 0.3rem 0.45rem;
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+.learnHint strong {
+  margin-right: 0.35rem;
+  color: hsl(var(--primary));
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Live measurements sit under the console, in the pane whose signals they read. Sized from the
+   pane rather than the display, so the tiles stay legible when the pane is narrow. */
+.paneMeasurements {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+  gap: 0.4rem;
+}
+
+/*
+ * Laptop density — a measured state, not a media query.
+ *
+ * `useVentilationWorkspaceDensity` sets `data-mv-density` from the viewport's own measured box,
+ * because the height that matters is what the shared shell has left after its header, context
+ * strip, and bottom bar. A width media query cannot see that: 1440x900 and 1280x720 differ by
+ * 180px of workspace, and 1024x768 has more room than 1280x720 despite being the smaller display.
+ *
+ * The section rail keeps every section, its number, and its short title; only the repeated full
+ * title collapses, and it stays in each button's `aria-label`, so nothing leaves the accessible
+ * name. The shared rail clips rather than scrolls when it loses height, so the floor drops only as
+ * far as one 2.75rem button plus its own padding.
+ */
+/*
+ * At laptop density the viewport gives up its side gutter as well as tightening vertically.
+ *
+ * The gutter is not decoration here, it is arithmetic: `ResizableTeachingWorkspace` collapses to
+ * one tabbed pane when its usable width drops under 960px, and at 1024px a 0.375rem gutter left
+ * 962px — a two-pixel margin, so the same display produced three panes or one depending on
+ * whether a scrollbar happened to be present. Dropping the side gutter leaves 974px, which keeps
+ * 1024x768 on the three-pane side deliberately rather than by luck. The frame keeps its own border
+ * and the workspace its own 0.75rem padding, so nothing runs into the edge of the screen.
+ */
+.learnViewport[data-mv-density='laptop'] {
+  gap: 0.375rem;
+  padding: 0.375rem 0;
+}
+
+.learnViewport[data-mv-density='laptop'] nav[aria-label='Ventilation learning pathway sections'] {
+  min-height: 3.9rem;
+  /* The heading column shrinks to its own content instead of holding a fixed 10.5rem. */
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+/*
+ * The rail's own heading stacked three lines in a fixed 10.5rem column and set the whole row to
+ * 81px. At laptop density it drops the static "Jump ahead or revisit any section" affordance line
+ * and lets its column shrink to the label it still shows. That is a description, not a label:
+ * every section button keeps its number, its short title, and a full-title `aria-label`, and every
+ * one of them stays enabled — the rail still gates nothing.
+ *
+ * The uppercase "VENTILATION LEARNING PATHWAY" eyebrow goes with it: it repeats the nav's own
+ * accessible name and the breadcrumb above, and wrapped to two lines in the narrowed column.
+ * "Section 10 of 10" stays, so the learner still sees where they are.
+ *
+ * Laying the heading out on one line instead was tried and rejected: it kept every word but grew
+ * the column to 537px, which pushed half the section chips out of the strip.
+ */
+.learnViewport[data-mv-density='laptop']
+  nav[aria-label='Ventilation learning pathway sections']
+  > div:first-child
+  > small,
+.learnViewport[data-mv-density='laptop']
+  nav[aria-label='Ventilation learning pathway sections']
+  > div:first-child
+  > span {
+  display: none;
+}
+
+.learnViewport[data-mv-density='laptop']
+  nav[aria-label='Ventilation learning pathway sections']
+  ol
+  button
+  small {
+  display: none;
+}
+
+/*
+ * The same release point the shared shell uses (`learning-module-v2.module.css`): once the shell
+ * stops being a fixed-height workbench, the viewport has to let the page scroll rather than clip.
+ */
+@media (max-width: 1023px), (max-height: 699px) {
+  .learnViewport {
+    height: auto;
+    min-height: 100%;
+    grid-template-rows: auto auto;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
+  .workspaceFrame {
+    height: auto;
+    min-height: 26rem;
+  }
+}
+
 .patientSurface,
 .consoleSurface,
 .workflowSurface {

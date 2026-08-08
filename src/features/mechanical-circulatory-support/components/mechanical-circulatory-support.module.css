@@ -3016,3 +3016,1450 @@
     white-space: normal;
   }
 }
+
+/* ── M0/M1 common cardiovascular model and standardized pathway cards ─────────────
+   Rendered before any device-specific control: on the two foundation sections inside
+   the workbench, and on the module front door before the product tracks. */
+
+.commonModel {
+  display: grid;
+  gap: 1.6rem;
+  padding: 1.4rem clamp(0.9rem, 2vw, 1.6rem);
+  margin: 1.2rem 0;
+  border: 1px solid var(--line);
+  border-radius: 1.1rem;
+  background: linear-gradient(180deg, #ffffff, var(--paper));
+}
+.commonModelIntro h2 {
+  margin: 0.5rem 0 0;
+  color: var(--navy);
+  font-size: clamp(1.3rem, 2.4vw, 2rem);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.commonModelIntro p {
+  max-width: 76ch;
+  margin: 0.7rem 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+.commonModelHeading h3 {
+  margin: 0.4rem 0 0;
+  color: var(--navy);
+  font-size: 1.05rem;
+  letter-spacing: -0.015em;
+}
+.commonModelHeading p {
+  max-width: 72ch;
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+.commonModelGrid {
+  display: grid;
+  gap: 1.2rem;
+}
+@media (min-width: 1100px) {
+  .commonModelGrid {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.modelQuestions ol {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0;
+  margin: 0.9rem 0 0;
+  list-style: none;
+}
+.modelQuestions li {
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: #fff;
+}
+.modelQuestions h4 {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  margin: 0;
+  color: var(--navy);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+.modelQuestions h4 span {
+  color: var(--teal);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+.modelQuestions li > p {
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+.modelQuestions li ul {
+  display: grid;
+  gap: 0.2rem;
+  padding-left: 1.05rem;
+  margin: 0.5rem 0 0;
+  color: var(--ink);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.causalLadder ol,
+.flowAccount ol {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0;
+  margin: 0.9rem 0 0;
+  list-style: none;
+}
+.causalLadder li {
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--line);
+  border-left: 0.28rem solid var(--teal);
+  border-radius: 0.7rem;
+  background: #fff;
+}
+.causalLevelHead {
+  display: flex;
+  gap: 0.55rem;
+  align-items: baseline;
+}
+.causalLevelHead span {
+  color: var(--teal);
+  font-size: 0.72rem;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+.causalLevelHead strong {
+  color: var(--navy);
+  font-size: 0.95rem;
+}
+.causalLevelQuestion {
+  margin: 0.35rem 0 0;
+  color: var(--ink);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+.causalLevelLive {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.45rem 0.55rem;
+  margin: 0.5rem 0 0;
+  border-radius: 0.5rem;
+  background: var(--teal-soft);
+  font-size: 0.79rem;
+  line-height: 1.5;
+}
+.causalLevelLive small {
+  color: var(--teal);
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.causalLadder dl {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.55rem 0 0;
+}
+.causalLadder dt {
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.causalLadder dd {
+  margin: 0.12rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+.causalLadder dl div[data-emphasis='true'] dd {
+  color: #7a3d20;
+}
+
+.flowAccount li {
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  background: #fff;
+}
+.flowAccountHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
+.flowAccountHead strong {
+  color: var(--navy);
+  font-size: 0.92rem;
+}
+.valueTypeChip {
+  padding: 0.12rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.valueTypeChip[data-value-type='estimated'],
+.valueTypeChip[data-value-type='inferred'] {
+  border-color: var(--amber);
+  color: #7a5410;
+  background: var(--amber-soft);
+}
+.valueTypeChip[data-value-type='measured'] {
+  border-color: var(--teal);
+  color: #0d5f5b;
+  background: var(--teal-soft);
+}
+.flowAccountLive {
+  margin: 0.45rem 0 0;
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.5rem;
+  background: var(--teal-soft);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+}
+.flowAccount li > p {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+.flowAccountValueType,
+.flowAccountMisleads {
+  color: var(--muted);
+}
+.flowAccountMisleads small,
+.termQuestion small,
+.termMisleads small,
+.pathwayCardAdditivity small,
+.pathwayCardComparison small,
+.distinctionConfusion small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.additivityWarning {
+  display: flex;
+  gap: 0.7rem;
+  padding: 0.85rem 0.95rem;
+  margin: 0.9rem 0 0;
+  border: 1px solid var(--amber);
+  border-radius: 0.8rem;
+  background: var(--amber-soft);
+}
+.additivityWarning svg {
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  color: #9a6a12;
+}
+.additivityWarning strong {
+  color: #6d4a09;
+  font-size: 0.9rem;
+}
+.additivityWarning p {
+  margin: 0.35rem 0 0;
+  color: #6d4a09;
+  font-size: 0.81rem;
+  line-height: 1.6;
+}
+.additivityWarning ul {
+  display: grid;
+  gap: 0.3rem;
+  padding-left: 1.05rem;
+  margin: 0.55rem 0 0;
+  color: #6d4a09;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.firstUseTerms dl {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0.9rem 0 0;
+}
+@media (min-width: 900px) {
+  .firstUseTerms dl {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.firstUseTerms dl > div {
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  background: #fff;
+}
+.firstUseTerms dt {
+  color: var(--navy);
+  font-size: 0.88rem;
+  font-weight: 850;
+}
+.firstUseTerms dd {
+  margin: 0.35rem 0 0;
+}
+.firstUseTerms dd p {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+.firstUseTerms dd p:last-child {
+  margin-bottom: 0;
+}
+.termQuestion,
+.termMisleads {
+  color: var(--muted);
+}
+
+.completionBoundary {
+  padding: 0.85rem 1rem;
+  border-left: 0.28rem solid var(--navy-2);
+  border-radius: 0.4rem;
+  background: #eef4f4;
+}
+.completionBoundary strong {
+  color: var(--navy);
+  font-size: 0.9rem;
+}
+.completionBoundary p {
+  max-width: 82ch;
+  margin: 0.35rem 0 0;
+  color: var(--ink);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.pathwayCards {
+  display: grid;
+  gap: 1.2rem;
+  margin: 1.6rem 0;
+}
+.pathwayCards h2 {
+  margin: 0.4rem 0 0;
+  color: var(--navy);
+  font-size: clamp(1.25rem, 2.2vw, 1.85rem);
+  letter-spacing: -0.03em;
+}
+.pathwayCardGrid {
+  display: grid;
+  gap: 1rem;
+}
+@media (min-width: 1200px) {
+  .pathwayCardGrid {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+.pathwayCard {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem 1.05rem;
+  border: 1px solid var(--line);
+  border-radius: 0.95rem;
+  background: #fff;
+}
+.pathwayCard[data-availability='comparison-only'] {
+  background: var(--paper);
+}
+.pathwayCard h3 {
+  margin: 0.35rem 0 0;
+  color: var(--navy);
+  font-size: 1rem;
+  line-height: 1.3;
+}
+.pathwayCardRole {
+  padding: 0.12rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.64rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.pathwayCardRole[data-support-role='durable'] {
+  border-color: var(--navy-2);
+  color: #fff;
+  background: var(--navy-2);
+}
+.pathwayCardRole[data-support-role='temporary'] {
+  color: var(--teal);
+}
+.pathwayCardComparison {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+.pathwayCardFields {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+}
+.pathwayCardFields > div {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--line);
+}
+.pathwayCardFields dt {
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.pathwayCardFields dd {
+  margin: 0.25rem 0 0;
+  font-size: 0.81rem;
+  line-height: 1.55;
+}
+.pathwayCardFields dd p {
+  margin: 0.35rem 0 0;
+}
+.pathwayCardConstraints {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0;
+  margin: 0.15rem 0 0;
+  list-style: none;
+}
+.pathwayCardConstraints li {
+  padding-left: 0.6rem;
+  border-left: 2px solid var(--line);
+  font-size: 0.79rem;
+  line-height: 1.5;
+}
+.pathwayCardConstraints small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.63rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.pathwayCardFlag {
+  display: inline-block;
+  margin-right: 0.45rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.pathwayCardFlag[data-gas-exchange='yes'] {
+  color: #0d5f5b;
+  background: var(--teal-soft);
+}
+.pathwayCardFlag[data-gas-exchange='no'] {
+  color: var(--muted);
+  background: #eef2f1;
+}
+.pathwayCardAdditivity {
+  color: #7a3d20;
+}
+.pathwayCardProduct {
+  padding: 0.7rem 0.8rem;
+  border: 1px dashed var(--line);
+  border-radius: 0.7rem;
+  background: var(--paper);
+}
+.pathwayCardProduct h4 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.pathwayCardProduct ul {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  list-style: none;
+}
+.pathwayCardProduct li {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+.pathwayCardProduct li strong {
+  color: var(--navy);
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+}
+.pathwayCardProduct li span {
+  color: var(--teal);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+.pathwayCardProduct li small {
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+.pathwayCardNotATarget {
+  margin: 0.55rem 0 0;
+  color: #6d4a09;
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+.pathwayCardEvidence {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.requiredDistinctions ol {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0;
+  margin: 0.9rem 0 0;
+  list-style: none;
+}
+.requiredDistinctions li {
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--line);
+  border-left: 0.28rem solid var(--navy-2);
+  border-radius: 0.7rem;
+  background: #fff;
+}
+.distinctionClaim {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+.distinctionConfusion {
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.startHere {
+  display: grid;
+  gap: 0.9rem;
+  justify-items: start;
+  padding: 1.1rem clamp(0.9rem, 2vw, 1.5rem);
+  margin: 1.4rem 0 0;
+  border: 1px solid var(--teal);
+  border-radius: 1rem;
+  background: var(--teal-soft);
+}
+.startHere h2 {
+  margin: 0.4rem 0 0;
+  color: var(--navy);
+  font-size: clamp(1.2rem, 2.2vw, 1.75rem);
+  letter-spacing: -0.03em;
+}
+.startHere p {
+  max-width: 78ch;
+  margin: 0.6rem 0 0;
+  color: var(--ink);
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+.startHere a {
+  display: inline-flex;
+  gap: 0.45rem;
+  align-items: center;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-decoration: none;
+  background: var(--teal);
+}
+.startHere a svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* ── Learn: three-pane workbench ──────────────────────────────────────────────
+ *
+ * The shared teaching workspace owns pane widths, the separators and the compact fallback, so what
+ * is here is only the shell it needs a height from, and the styling of the three panes' contents.
+ */
+/*
+ * The shell fills the activity viewport rather than guessing at the chrome above it. Sizing it from
+ * `100vh` looked right at one window height and pushed the panes past the fold at every other, which
+ * left the workspace scrolling inside a viewport that was also scrolling — the nested-scroll trap.
+ */
+.learnWorkspaceShell {
+  height: 100%;
+  /*
+   * The floor is deliberately low. Above it the shell simply fills the activity viewport; below it
+   * — a 720-pixel-tall laptop, where the module chrome already takes 338 of them — a taller floor
+   * would push Continue past the fold for the sake of panes nobody asked to be that tall.
+   */
+  min-height: 24rem;
+  max-height: 60rem;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: #eaf1ef;
+}
+
+.learnPrimaryPane,
+.learnTeachingPane,
+.learnActionPane {
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
+  padding: 0.75rem;
+  color: var(--ink);
+}
+
+.learnPaneHeader {
+  display: grid;
+  gap: 0.25rem;
+}
+.learnPaneHeader h2 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 1.02rem;
+  line-height: 1.35;
+}
+
+.learnContextStrip {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.65rem 0.8rem;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: #fff;
+}
+.learnContextStrip > div {
+  display: grid;
+  gap: 0.1rem;
+}
+.learnContextStrip dt {
+  color: var(--muted);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.learnContextStrip dd {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.whyThisView {
+  padding: 0.55rem 0.75rem;
+  margin: 0;
+  border: 1px dashed #7fbdb4;
+  border-radius: 0.7rem;
+  background: #eff9f6;
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+/* The highlight note is text, so the emphasis is never carried by colour alone. */
+.surfaceHighlightNote {
+  padding: 0.5rem 0.75rem;
+  margin: 0;
+  color: #04302c;
+  background: #b9ece1;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.pathwaySummary {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem 0.9rem;
+  border-top: 1px solid #244650;
+  color: #d9eeea;
+  background: #0b2833;
+}
+.pathwaySummary > header {
+  display: grid;
+  gap: 0.15rem;
+}
+.pathwaySummary > header strong {
+  font-size: 0.74rem;
+}
+.pathwaySummary ul {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.pathwaySummary li {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #23505c;
+  border-radius: 0.6rem;
+  background: #0e3441;
+}
+.pathwaySummary li[data-running='false'] {
+  opacity: 0.72;
+}
+.pathwaySummary li > strong {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: #8fe6d6;
+  font-size: 0.72rem;
+}
+.pathwaySummary dl {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+}
+.pathwaySummary dt {
+  color: #7fa3a8;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.pathwaySummary dd {
+  margin: 0;
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+.pathwayDirectionNote {
+  margin: 0;
+  color: #a8c4c6;
+  font-size: 0.66rem;
+  line-height: 1.45;
+}
+
+/* Highlighting is an outline plus a text note, never colour on its own. */
+.monitorCard [data-monitor-highlighted='true'],
+.anatomyCard [data-anatomy-highlighted='true'] {
+  outline: 3px solid #34c9b8;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px rgba(52, 201, 184, 0.16);
+}
+.learnActionPane [data-mcs-control-highlighted='true'] {
+  outline: 3px solid #0f7f76;
+  outline-offset: 3px;
+  border-radius: 0.55rem;
+}
+
+.teachingBlock {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: #fff;
+}
+.teachingBlock h3 {
+  margin: 0;
+  color: var(--navy-2);
+  font-size: 0.74rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.teachingBlock p {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+.teachingAside {
+  padding: 0.5rem 0.65rem;
+  border-left: 3px solid #7fbdb4;
+  background: #f2faf8;
+  font-size: 0.73rem;
+  line-height: 1.5;
+}
+.teachingWarning {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #e3c07f;
+  border-radius: 0.6rem;
+  background: #fdf6e7;
+  font-size: 0.73rem;
+  line-height: 1.5;
+}
+.teachingWarning svg {
+  width: 1rem;
+  height: 1rem;
+  color: #96700f;
+}
+
+.liveFlowLines {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+}
+.liveFlowLines > div {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.5rem;
+  background: #f3f8f7;
+}
+.liveFlowLines dt {
+  color: var(--muted);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.liveFlowLines dd {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.ladderList {
+  display: grid;
+  gap: 0.4rem;
+  padding-left: 1.1rem;
+  margin: 0;
+}
+.ladderList li {
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+.ladderList strong {
+  display: block;
+  color: var(--navy-2);
+}
+
+.foundationMaterial {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.learnPhaseRail {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.25rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.learnPhaseRail li {
+  display: grid;
+  gap: 0.1rem;
+  justify-items: center;
+  padding: 0.35rem 0.15rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: #fff;
+  text-align: center;
+}
+.learnPhaseRail li[data-worked-through='true'] {
+  border-color: #8ccbc1;
+  background: #eaf8f4;
+}
+.learnPhaseRail li[data-current='true'] {
+  border-color: #0f7f76;
+  background: #0f7f76;
+}
+.learnPhaseRail li[data-current='true'] span,
+.learnPhaseRail li[data-current='true'] small {
+  color: #f2fffd;
+}
+.learnPhaseRail span {
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 900;
+}
+.learnPhaseRail small {
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-weight: 700;
+}
+
+.learnInstruction {
+  padding: 0.7rem 0.85rem;
+  border: 1px solid #0f7f76;
+  border-radius: 0.8rem;
+  background: #f0fbf8;
+}
+.learnInstruction strong {
+  color: var(--navy);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.learnResponse {
+  display: grid;
+  gap: 0.6rem;
+}
+.learnResponse fieldset {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: #fff;
+}
+.learnResponse legend {
+  padding: 0 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+.learnResponse label {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem;
+  align-items: start;
+  padding: 0.45rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+.learnResponse label:hover {
+  border-color: #b7d6d1;
+  background: #f4faf9;
+}
+.learnResponse > button,
+.learnResponse .transferAction button {
+  min-height: 2.6rem;
+  padding: 0.6rem 0.9rem;
+  border: 0;
+  border-radius: 0.6rem;
+  color: #fff;
+  background: var(--navy-2);
+  cursor: pointer;
+  font-weight: 800;
+}
+.learnResponse > button:disabled,
+.learnResponse .transferAction button:disabled {
+  color: #6d8085;
+  background: #dbe6e5;
+  cursor: not-allowed;
+}
+
+.learnFeedback {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  background: #f7fbfa;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.learnFeedback[data-right='true'] {
+  border-color: #79c4a7;
+  background: #eef9f3;
+}
+.learnFeedback[data-right='false'] {
+  border-color: #dfa79f;
+  background: #fdf3f1;
+}
+.learnFeedback p {
+  margin: 0;
+}
+
+.learnNoAction {
+  padding: 0.65rem 0.8rem;
+  margin: 0;
+  border: 1px dashed #9ab3b7;
+  border-radius: 0.7rem;
+  background: #f5f8f8;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.learnAside {
+  margin: 0;
+  font-size: 0.73rem;
+  line-height: 1.5;
+}
+
+.learnResponseStatus {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.71rem;
+  line-height: 1.45;
+}
+
+.learnControlsHost > summary {
+  min-height: 2.4rem;
+  padding: 0.5rem 0.3rem;
+  cursor: pointer;
+  font-size: 0.73rem;
+  font-weight: 750;
+}
+.learnControlsHost .controlsCard {
+  box-shadow: none;
+}
+
+.guidedActionButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.guidedActionButtons button {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  min-height: 2.4rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid #0f7f76;
+  border-radius: 0.55rem;
+  color: #0b4b47;
+  background: #eaf8f5;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.guidedActionButtons button svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+.guidedActionButtons button:disabled {
+  border-color: #9dbfba;
+  color: #4c6a6d;
+  cursor: default;
+}
+
+.beforeAfterTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.71rem;
+}
+.beforeAfterTable th,
+.beforeAfterTable td {
+  padding: 0.35rem 0.4rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.beforeAfterTable thead th {
+  color: var(--muted);
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.beforeAfterTable tbody th small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-weight: 600;
+}
+
+.learnExplainList {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+}
+.learnExplainList > div {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.55rem;
+  background: #f5f9f8;
+}
+.learnExplainList > div[data-emphasis='true'] {
+  border-left: 3px solid #d38f4c;
+  background: #fdf6ec;
+}
+.learnExplainList dt {
+  color: var(--muted);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.learnExplainList dd {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.learnAlarmList {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #e0b1a8;
+  border-radius: 0.6rem;
+  background: #fdf3f1;
+}
+.learnAlarmList svg {
+  width: 1rem;
+  height: 1rem;
+  color: #a2463a;
+}
+.learnAlarmList ul {
+  display: grid;
+  gap: 0.3rem;
+  padding-left: 1rem;
+  margin: 0;
+  font-size: 0.71rem;
+  line-height: 1.45;
+}
+
+.learnPaneActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.learnPaneActions button {
+  min-height: 2.6rem;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--navy-2);
+  border-radius: 0.6rem;
+  color: var(--navy-2);
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+.learnPaneActions button[data-learn-continue] {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  border-color: var(--navy-2);
+  color: #fff;
+  background: var(--navy-2);
+}
+.learnPaneActions button svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+.learnPaneActions button:disabled {
+  border-color: #c3d3d3;
+  color: #7c8f92;
+  background: #eef2f2;
+  cursor: not-allowed;
+}
+
+.learnHelp {
+  padding: 0.55rem 0.7rem;
+  margin: 0;
+  border-left: 3px solid #d3a94c;
+  background: #fdf8ea;
+  font-size: 0.73rem;
+  line-height: 1.5;
+}
+
+.learnSectionNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--line);
+}
+.learnSectionNav > span {
+  color: var(--muted);
+  font-size: 0.63rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.learnSectionNav button {
+  min-height: 2.4rem;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  color: var(--navy-2);
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+/* The 3D viewport is sized for a full-width rail; inside a resizable pane it needs to be shorter
+ * so the pathway summary beneath it is reachable without a long scroll. */
+.learnPrimaryPane .anatomyViewport {
+  height: 420px;
+}
+
+@media (max-width: 840px) {
+  .learnWorkspaceShell {
+    height: auto;
+    overflow: visible;
+  }
+  .learnPhaseRail {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learnPhaseRail li,
+  .guidedActionButtons button,
+  .learnPaneActions button {
+    transition: none;
+  }
+}
+
+/* ── Route and case orientation ─────────────────────────────────────────────── */
+.routeOrientation {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 1.1rem;
+  background: #fff;
+}
+.routeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.85rem;
+}
+.routeGrid article {
+  display: grid;
+  gap: 0.45rem;
+  align-content: start;
+  padding: 0.95rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: #f5faf8;
+}
+.routeGrid article > span {
+  color: var(--teal, #14847f);
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.routeGrid article > strong {
+  color: var(--navy);
+  font-size: 0.95rem;
+}
+.routeGrid article p {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+.routeGrid article ul {
+  display: grid;
+  gap: 0.3rem;
+  padding-left: 1rem;
+  margin: 0;
+  font-size: 0.73rem;
+  line-height: 1.45;
+}
+.routeGrid article > small {
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  color: #0b4b47;
+  background: #ccece5;
+  font-size: 0.63rem;
+  font-weight: 800;
+  justify-self: start;
+}
+
+.caseIdentity {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.8rem 0.95rem;
+  margin: 0.6rem 0 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: #f6faf9;
+}
+.caseIdentity > div {
+  display: grid;
+  gap: 0.12rem;
+}
+.caseIdentity dt {
+  color: var(--muted);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.caseIdentity dd {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.foundationDisclosure > summary {
+  min-height: 2.6rem;
+  padding: 0.55rem 0.3rem;
+  color: var(--navy-2);
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+/*
+ * Nothing inside a pane may be wider than the pane.
+ *
+ * A grid column sized `auto` takes the width of its widest descendant, and both the common model
+ * and the pathway cards switch to two columns on a *viewport* media query — which is the wrong
+ * question inside a 420-pixel pane. Without these the whole teaching pane grew to the width of the
+ * card grid and every paragraph in it was clipped at the pane edge.
+ */
+.learnPrimaryPane,
+.learnTeachingPane,
+.learnActionPane,
+.teachingBlock,
+.learnResponse,
+.learnContextStrip,
+.liveFlowLines,
+.learnExplainList,
+.teachingPanelHost,
+.foundationMaterial {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.foundationMaterial .commonModelGrid,
+.foundationMaterial .pathwayCardGrid,
+.foundationMaterial .commonModel,
+.foundationMaterial .pathwayCards,
+/*
+ * The card itself, not only the grid it sits in. Constraining the grid gave each card a 304-pixel
+ * box, but the card is a grid too, and its own column was still sized by its widest field — so the
+ * card's contents ran about 30 px past the right edge of the pane and the whole teaching pane
+ * scrolled sideways on the mechanisms section. Found by measuring the pane during the M4 render
+ * review; the same one-line answer as the rule above, one level further in.
+ */
+.foundationMaterial .pathwayCard {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/*
+ * And the grid *items*, not only the tracks.
+ *
+ * Constraining a track to `minmax(0, 1fr)` still leaves each item at `min-width: auto`, so the
+ * shared evidence renderers inside the pathway cards — which are laid out with their own utility
+ * classes and know nothing about this pane — sat 5 px past the pane edge and scrolled the whole
+ * teaching column sideways. Same answer as the panel host uses, applied to the material this
+ * disclosure carries.
+ */
+.foundationMaterial :global(section),
+.foundationMaterial :global(article),
+.foundationMaterial :global(div),
+.foundationMaterial :global(ul),
+.foundationMaterial :global(ol),
+.foundationMaterial :global(dl),
+.foundationMaterial :global(table) {
+  min-width: 0;
+}
+
+.learnPrimaryPane img,
+.learnTeachingPane img,
+.learnActionPane img,
+.learnPrimaryPane svg,
+.learnTeachingPane svg {
+  max-width: 100%;
+}
+
+/* Wide authored content keeps its own scroll rather than pushing the pane sideways. */
+.learnActionPane .beforeAfterTable {
+  display: block;
+  overflow-x: auto;
+}
+
+/*
+ * The live teaching panel's host.
+ *
+ * The panel is built from utility classes so that the offline review harness can render it without
+ * a bundler, which means the pane has to supply the two things that are a property of *this* pane
+ * rather than of the panel: a text size that matches the prose around it, and a hard refusal to let
+ * any figure inside it set the pane's width. `min-width: 0` on the host and on every descendant grid
+ * is the load-bearing half — a grid item defaults to `min-width: auto`, so one wide comparison table
+ * would otherwise widen the whole workspace column instead of scrolling inside its own wrapper.
+ */
+.teachingPanelHost {
+  min-width: 0;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+.teachingPanelHost :global(section),
+.teachingPanelHost :global(div),
+.teachingPanelHost :global(ol),
+.teachingPanelHost :global(ul),
+.teachingPanelHost :global(dl) {
+  min-width: 0;
+}
+.teachingPanelHost :global(h4) {
+  margin: 0;
+  color: var(--navy-2);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.teachingPanelHost :global(h5) {
+  margin: 0;
+  color: var(--navy-2);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.teachingPanelHost :global(p),
+.teachingPanelHost :global(li),
+.teachingPanelHost :global(dd),
+.teachingPanelHost :global(dt),
+.teachingPanelHost :global(td),
+.teachingPanelHost :global(th) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.teachingPanelHost :global(svg) {
+  max-width: 100%;
+  height: auto;
+}
+.teachingPanelHost :global(table) {
+  border-collapse: collapse;
+}
+/*
+ * The shared evidence renderers lay their positions out on a *viewport* media query, which is the
+ * wrong question inside a 304-pixel pane: at a desktop width it splits a held disagreement into two
+ * 145-pixel columns that nothing fits in. The panels themselves use a container-fitting grid; this
+ * is the one place the shared markup has to be overridden, and it is done by widening the selector
+ * rather than by touching the shared component.
+ */
+.teachingPanelHost :global(.md\:grid-cols-2),
+.teachingPanelHost :global(.sm\:grid-cols-2) {
+  grid-template-columns: minmax(0, 1fr);
+}
+.teachingPanelHost :global(.overflow-x-auto) {
+  overflow-x: auto;
+}
+/* A figure that genuinely cannot fit scrolls inside its own wrapper, never sideways in the pane. */
+.teachingPanelHost :global([data-mechanism-comparison]),
+.teachingPanelHost :global([data-low-flow-differential]),
+.teachingPanelHost :global([data-alarm-localization]),
+.teachingPanelHost :global([data-common-model-answers]) {
+  min-width: 30rem;
+}
+
+/*
+ * Help and Continue stay on screen.
+ *
+ * Sections with longer response options pushed Continue past the bottom of the action pane, so the
+ * learner had to discover that the pane scrolled before they could move on. Pinning the row to the
+ * bottom of the pane keeps the one control that advances the section always visible, whatever is
+ * above it.
+ */
+.learnPaneActions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: 0.5rem 0;
+  margin-top: 0.2rem;
+  border-top: 1px solid var(--line);
+  background: linear-gradient(to bottom, rgba(234, 241, 239, 0.86), #eaf1ef 38%);
+  backdrop-filter: blur(2px);
+}

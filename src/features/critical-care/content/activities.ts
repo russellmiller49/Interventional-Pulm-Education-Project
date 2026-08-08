@@ -229,27 +229,30 @@ const hemodynamicsEvidence = [
 ] as const
 
 const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
-  {
-    sourceId: 'catheter-advancement',
-    difficulty: 'foundation',
-    curriculumStage: 'foundation',
-    stageOrder: 1,
-    title: 'Advance the PAC by waveform',
-    competencyIds: ['signal-validation', 'critical-care-safety'],
-    pathwayIds: ['shock-and-perfusion'],
-    prerequisiteActivityIds: [],
-    evidenceIds: [...hemodynamicsEvidence, 'monitor-workflow-supplied'],
-    estimatedMinutes: 15,
-  },
+  // H0/H1: signal validity now opens the hemodynamics runway. `stageOrder` is the authored ordinal
+  // within (module, stage) and `validateCriticalCareLearningPathways` requires the pathway to visit
+  // a stage in that order, so the ordinals and the prerequisite chain move with the pathway rather
+  // than contradicting it. Ids, routes, storage keys, and progress payloads are untouched.
+  //
+  // H1.1: seed position is itself curriculum. `getCriticalCareRecommendations` breaks ties on
+  // catalog index, and the shared Critical Care hub asks it for one start with no module or
+  // pathway preference — so whichever hemodynamics Learn seed is written first is what the hub
+  // calls "Start here". H0/H1 moved the ordinals and the pathway but left `catheter-advancement`
+  // sitting at index 0, and the hub went on recommending catheter manipulation as a novice's first
+  // activity while the module's own runway opened on the pressure system. This array is therefore
+  // kept in the pathway's order (`content/learningPathways`, icu-hemodynamics), not in
+  // (stage, stageOrder) order: the pathway deliberately interleaves stages — a mechanism station
+  // teaches the normal reference before the second foundation station advances a catheter against
+  // it. `hub-pathway-start-alignment.test.ts` pins the two together so neither can drift alone.
   {
     sourceId: 'pressure-system',
     difficulty: 'foundation',
     curriculumStage: 'foundation',
-    stageOrder: 2,
+    stageOrder: 1,
     title: 'Level, zero, and dynamic response',
     competencyIds: ['signal-validation', 'critical-care-safety'],
     pathwayIds: ['shock-and-perfusion'],
-    prerequisiteActivityIds: ['hemodynamics:learn:catheter-advancement'],
+    prerequisiteActivityIds: [],
     evidenceIds: [
       ...hemodynamicsEvidence,
       'monitor-workflow-supplied',
@@ -269,6 +272,18 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
     estimatedMinutes: 18,
   },
   {
+    sourceId: 'catheter-advancement',
+    difficulty: 'foundation',
+    curriculumStage: 'foundation',
+    stageOrder: 2,
+    title: 'Advance the PAC by waveform',
+    competencyIds: ['signal-validation', 'critical-care-safety'],
+    pathwayIds: ['shock-and-perfusion'],
+    prerequisiteActivityIds: ['hemodynamics:learn:waveform-interpretation'],
+    evidenceIds: [...hemodynamicsEvidence, 'monitor-workflow-supplied'],
+    estimatedMinutes: 15,
+  },
+  {
     sourceId: 'pawp-capture',
     difficulty: 'intermediate',
     curriculumStage: 'mechanism',
@@ -276,7 +291,7 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
     title: 'Brief end-expiratory PAWP capture',
     competencyIds: ['signal-validation', 'critical-care-safety'],
     pathwayIds: ['shock-and-perfusion'],
-    prerequisiteActivityIds: ['hemodynamics:learn:waveform-interpretation'],
+    prerequisiteActivityIds: ['hemodynamics:learn:catheter-advancement'],
     evidenceIds: [...hemodynamicsEvidence, 'monitor-workflow-supplied'],
     estimatedMinutes: 15,
   },
@@ -1134,6 +1149,17 @@ const ecmoAssessSeeds: readonly ActivitySeed[] = [
  * Ordered per WP10 §5.2. Circuit anatomy moves ahead of transport and prescription because both
  * of those assume the blood path: a learner should be shown where the filter is before being
  * asked to reason about diffusion versus convection across it.
+ *
+ * C2 §4 — pressure localization now precedes citrate, so `crrt-alarms-troubleshooting` and
+ * `crrt-anticoagulation` swap both their array position and their `application` ordinal. Neither
+ * could stay: `validateCriticalCareLearningPathways` requires the pathway to visit a stage in
+ * ascending `stageOrder` (the catalog throws at import otherwise), and
+ * `getCriticalCareRecommendations` breaks ties on catalog index, so the seed array is what the
+ * shared hub actually reads. This array therefore stays in the pathway's order, exactly as the
+ * hemodynamics seeds do. Only these two CRRT entries move; ids, routes, query keys, storage,
+ * progress payloads, scoring, prerequisites, content version, and publication status are
+ * untouched, and no other module's entries are reordered.
+ * `src/features/baxter-crrt/__tests__/pathwaySequencing.test.ts` pins the reason.
  */
 const crrtLessonSeeds: readonly ActivitySeed[] = (
   [
@@ -1174,18 +1200,18 @@ const crrtLessonSeeds: readonly ActivitySeed[] = (
       15,
     ],
     [
-      'crrt-anticoagulation',
-      'Anticoagulation and citrate safety',
-      ['crrt-safety'],
+      'crrt-alarms-troubleshooting',
+      'Alarms and cause-first troubleshooting',
+      ['crrt-device-management', 'crrt-safety'],
       'application',
       1,
       'intermediate',
       12,
     ],
     [
-      'crrt-alarms-troubleshooting',
-      'Alarms and cause-first troubleshooting',
-      ['crrt-device-management', 'crrt-safety'],
+      'crrt-anticoagulation',
+      'Anticoagulation and citrate safety',
+      ['crrt-safety'],
       'application',
       2,
       'intermediate',
@@ -1235,8 +1261,8 @@ const crrtLessonSeeds: readonly ActivitySeed[] = (
             'crrt:learn:crrt-circuit-pressures',
             'crrt:learn:crrt-solute-transport',
             'crrt:learn:crrt-prescription-dosing',
-            'crrt:learn:crrt-anticoagulation',
             'crrt:learn:crrt-alarms-troubleshooting',
+            'crrt:learn:crrt-anticoagulation',
             'crrt:learn:crrt-fluid-liberation',
           ],
         }

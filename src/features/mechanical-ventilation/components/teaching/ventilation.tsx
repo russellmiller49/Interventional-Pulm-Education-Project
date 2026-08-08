@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Section 7 — Ventilation: measured response over time.
+ * Section 8 — Ventilation: measured response over time.
  *
  * The lesson's discipline is "observe delivery before interpreting delayed gas exchange". So the
  * figure is one time axis with two tiers on it: the delivery signals, which move on the next

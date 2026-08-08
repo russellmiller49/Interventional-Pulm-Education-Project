@@ -1,7 +1,15 @@
 import type { Route } from 'next'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
-import { Copy, Link2, Link2Off, PencilLine, Trash2 } from 'lucide-react'
+import {
+  Copy,
+  GitBranchPlus,
+  GitCompareArrows,
+  Link2,
+  Link2Off,
+  PencilLine,
+  Trash2,
+} from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -19,6 +27,16 @@ interface CardRowActionsProps {
   card: UserCardSummary
   /** `page` shows the rename form expanded; `row` keeps the dashboard list compact. */
   layout: 'page' | 'row'
+  /**
+   * The card's current revision, when one is known.
+   *
+   * The rebuild control needs a revision to cite, and the current one is the only revision this
+   * component can name without loading the whole history. It lives here rather than on the
+   * reconciliation page — which lists every revision and would be the natural home — because that
+   * page is read-only by construction and a test asserts it renders no control that could change
+   * anything. Growing a rebuild button there would quietly retire the guarantee.
+   */
+  currentRevisionId?: string | null
 }
 
 /**
@@ -27,10 +45,19 @@ interface CardRowActionsProps {
  * Plain server-action forms rather than a client component: each action is a single
  * round-trip with nothing to keep in sync, and the controls keep working without JavaScript.
  */
-export async function CardRowActions({ locale, card, layout }: CardRowActionsProps) {
+export async function CardRowActions({
+  locale,
+  card,
+  layout,
+  currentRevisionId,
+}: CardRowActionsProps) {
   const t = await getTranslations('preferenceCards')
   const shareHref = `/${locale}/preference-cards/shared/${card.shareToken}` as Route
   const editHref = `/${locale}/preference-cards/${card.id}/edit` as Route
+  const reconcileHref = `/${locale}/preference-cards/${card.id}/reconcile` as Route
+  const rebuildHref = currentRevisionId
+    ? (`/${locale}/preference-cards/${card.id}/rebuild?revision=${currentRevisionId}` as Route)
+    : null
 
   return (
     <div className="no-print rounded-2xl border border-border bg-card p-4">
@@ -38,6 +65,11 @@ export async function CardRowActions({ locale, card, layout }: CardRowActionsPro
         <form action={renameCardAction} className="flex flex-wrap items-end gap-3">
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="cardId" value={card.id} />
+          {/*
+            The content version this form was rendered against. A rename submitted from a stale
+            page is refused rather than applied on top of whatever replaced it.
+          */}
+          <input type="hidden" name="expectedUpdatedAt" value={card.updatedAt} />
           <label className="min-w-56 flex-1 text-xs font-semibold text-foreground">
             {t('cardTitleLabel')}
             <input
@@ -82,6 +114,36 @@ export async function CardRowActions({ locale, card, layout }: CardRowActionsPro
           <p className="max-w-xl text-xs leading-5 text-muted-foreground">
             {t('edit.notEditableExplanation')}
           </p>
+        ) : null}
+
+        {/*
+          Offered on every card, including one the builder will not reopen. Reviewing what has
+          moved underneath a card is not editing it, and a card whose selections cannot be
+          re-resolved still has a pinned release that compares against the current one perfectly
+          well — withholding the control would hide the answer that exists behind the one that
+          does not.
+        */}
+        <Button asChild size="sm" variant="outline">
+          <Link href={reconcileHref}>
+            <GitCompareArrows aria-hidden="true" className="h-3.5 w-3.5" />
+            {t('reconcile.action')}
+          </Link>
+        </Button>
+
+        {/*
+          Rebuild is not edit and not duplicate, and sits beside both so the difference is visible:
+          edit rewrites this card on its own release, duplicate copies its stored snapshot verbatim,
+          and rebuild reviews this exact saved state against the release the procedure points at
+          today and produces a separate new draft. Offered only when a revision is known, because a
+          rebuild cites a revision rather than a card.
+        */}
+        {rebuildHref ? (
+          <Button asChild size="sm" variant="outline">
+            <Link href={rebuildHref}>
+              <GitBranchPlus aria-hidden="true" className="h-3.5 w-3.5" />
+              {t('rebuild.action')}
+            </Link>
+          </Button>
         ) : null}
 
         <form action={duplicateCardAction}>

@@ -133,7 +133,7 @@ describe('CARDIOHELP ECMO scenario and evidence registries', () => {
     }
   })
 
-  it('keeps unsafe shortcuts out of Learn and orders bubble correction before reset', () => {
+  it('keeps unsafe shortcuts out of Learn and orders bubble correction before resumption', () => {
     const actions = cardiohelpLearnLessons.flatMap((lesson) =>
       lesson.steps.flatMap((item) => item.actions),
     )
@@ -154,8 +154,15 @@ describe('CARDIOHELP ECMO scenario and evidence registries', () => {
       (action) => action.type === 'CORRECT_FAULT' && action.fault === 'arterial-bubble',
     )
     expect(correctionIndex).toBeGreaterThanOrEqual(0)
-    expect(bubbleActions.findIndex((action) => action.type === 'RESET_BUBBLE')).toBeGreaterThan(
-      correctionIndex,
-    )
+    expect(
+      bubbleActions.findIndex((action) => action.type === 'RESUME_SUPPORT_AFTER_BUBBLE'),
+    ).toBeGreaterThan(correctionIndex)
+    // And no clamp choreography is taught for coming back: the order of clamps, pump and reset at
+    // the bedside belongs to the manufacturer instructions and local protocol, not to this module.
+    expect(
+      bubbleActions
+        .slice(correctionIndex + 1)
+        .filter((action) => action.type === 'TOGGLE_CIRCUIT_CLAMP'),
+    ).toEqual([])
   })
 })

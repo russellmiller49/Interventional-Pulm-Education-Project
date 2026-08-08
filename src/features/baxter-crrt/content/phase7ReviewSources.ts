@@ -327,7 +327,7 @@ const candidateToolCalibrationSources = [
   {
     id: 'SYNTH-LAB-PRESCRIPTION-001',
     claim:
-      'Every initial editable entry and arithmetic example in the Full Prescription Workbench is synthetic teaching calibration.',
+      'Every initial editable entry, staged goal option, and arithmetic example in the staged prescription builder is synthetic teaching calibration.',
     value:
       'Not a prescription default, target, device limit, delivered-clearance estimate, or patient recommendation.',
     sourceTitle: 'Baxter CRRT v1 instructional-tool synthetic calibration record',
@@ -335,7 +335,7 @@ const candidateToolCalibrationSources = [
     documentVersion: 'v1 SME-review build',
     pageOrSection: 'LAB-PRESCRIPTION reviewer prototype',
     implementationLocation:
-      'prescriptionWorkbenchModel.ts and components/CrrtPrescriptionWorkbench.tsx',
+      'prescriptionWorkbenchModel.ts, stagedPrescriptionModel.ts, and components/CrrtStagedPrescriptionBuilder.tsx',
     reviewer: null,
     reviewStatus: PENDING,
   },
@@ -350,7 +350,35 @@ const candidateToolCalibrationSources = [
     documentVersion: 'v1 SME-review build',
     pageOrSection: 'LAB-PREPOST-DILUTION reviewer prototype',
     implementationLocation:
-      'prescriptionWorkbenchModel.ts and components/CrrtPrescriptionWorkbench.tsx',
+      'prescriptionWorkbenchModel.ts and components/CrrtStagedPrescriptionBuilder.tsx',
+    reviewer: null,
+    reviewStatus: PENDING,
+  },
+  /**
+   * C3 — the citrate differential's own boundary record.
+   *
+   * The three clinical-context records the citrate view already cites (`TEXT-CRRT-NEYRA-2026`,
+   * `REVIEW-CKRT-CORE-2025`, `GUID-RRT-ICU-2026`) carry framing, mechanism-concept, and
+   * prescribed-versus-delivered claims; none of them carries a recorded claim about citrate
+   * accumulation or citrate-related alkalosis as named entities. This record states that the
+   * four-way comparison is an authored structure built on the module's own circuit topology and
+   * sampling-domain distinction, and that the physiologic mechanism behind two of its four
+   * categories is held as an open boundary rather than asserted. See
+   * `content/citrateDifferential.ts`, where the same limit is enforced per field.
+   */
+  {
+    id: 'SYNTH-LAB-CITRATE-001',
+    claim:
+      'The citrate first-use terms and the four-way citrate comparison are authored teaching structures. Their statements about where citrate enters, which sample describes which compartment, and where calcium replacement runs are read off this module’s own circuit schematic; their categories are separated by circuit-versus-systemic sampling domain and by the question each one asks, not by a registered physiologic account of citrate metabolism.',
+    value:
+      'Not a dose, ratio, target, titration schedule, sampling frequency, alarm limit, diagnostic rule, or local management protocol. This record supports circuit topology and the authored teaching structure only. It supports no claim about what citrate binds, what becomes of it, or how it crosses a membrane; where a statement depends on that, it is rendered as a source gap and is not treated as supported.',
+    sourceTitle: 'Baxter CRRT v1 instructional-tool synthetic calibration record',
+    sourceType: 'synthetic-calibration' as const,
+    documentVersion: 'v1 SME-review build',
+    pageOrSection:
+      'Citrate first-use terms, mechanism walk, and four-way comparison · awaiting SME source expansion for citrate pharmacology',
+    implementationLocation:
+      'content/circuitModel.ts, content/citrateDifferential.ts, and components/CrrtCitrateDifferential.tsx',
     reviewer: null,
     reviewStatus: PENDING,
   },

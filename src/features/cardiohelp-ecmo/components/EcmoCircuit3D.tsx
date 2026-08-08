@@ -18,6 +18,7 @@ import {
   PATIENT_ASSET,
   SENSOR_ASSET,
 } from './ecmo-circuit/constants'
+import { drainageChatterActive } from './ecmo-circuit/chatter'
 import { BedsideScene } from './ecmo-circuit/BedsideScene'
 import { WebGLContextGuard } from './ecmo-circuit/WebGLContextGuard'
 import styles from './cardiohelp-ecmo.module.css'
@@ -148,6 +149,7 @@ export function EcmoCircuit3D({
   const flowState =
     closedClampCount > 0 ? 'ISOLATED' : state.device.pumpRunning ? 'FLOWING' : 'PUMP STOPPED'
   const isVa = state.supportMode === 'va'
+  const drainageChattering = drainageChatterActive(state)
 
   useEffect(() => {
     const node = viewportRef.current
@@ -221,6 +223,7 @@ export function EcmoCircuit3D({
         <div className={styles.circuit3dHud}>
           <span data-state={flowState}>{flowState}</span>
           <span data-mode={state.supportMode}>{state.supportMode.toUpperCase()}</span>
+          {drainageChattering ? <span data-state="CHATTER">DRAINAGE CHATTER</span> : null}
           <strong>{state.circuit.bloodFlow.toFixed(2)} L/min</strong>
           <small>Drag to orbit · scroll to zoom · select a clamp or use the controls below</small>
         </div>
@@ -271,6 +274,32 @@ export function EcmoCircuit3D({
             guidedHelp={guidedControlId === 'cardiohelp-clamp-return'}
             onToggle={() => dispatch({ type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return' })}
           />
+          {/*
+            Resumption after an air event, as one bounded act.
+            Deliberately not the console reset and deliberately not a clamp: this module does not
+            teach where clamp opening, pump restart and console reset fall relative to one another,
+            because that choreography is device- and program-specific. The button says what it
+            stands for, and the helper text says it is a simulation abstraction.
+          */}
+          <button
+            type="button"
+            id="cardiohelp-resume-support"
+            className={styles.clampControl}
+            data-guided-help={guidedControlId === 'cardiohelp-resume-support'}
+            disabled={!clampControlsEnabled || !state.circuit.bubbleResetRequired}
+            onClick={() => dispatch({ type: 'RESUME_SUPPORT_AFTER_BUBBLE' })}
+          >
+            <span aria-hidden="true" className={styles.clampControlIcon}>
+              ▶
+            </span>
+            <span>
+              <strong>Resume support per current IFU and approved local protocol</strong>
+              <small>
+                A bounded simulation abstraction. It stands in for the device- and program-specific
+                resumption sequence and does not reproduce or teach that sequence.
+              </small>
+            </span>
+          </button>
         </div>
         <div
           className={styles.clampStatus}

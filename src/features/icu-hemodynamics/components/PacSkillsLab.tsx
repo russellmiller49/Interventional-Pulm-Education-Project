@@ -150,10 +150,13 @@ export function PacSkillsLab({
         {focus !== 'thermodilution' ? (
           <article className={`${styles.skillCard} ${styles.pressureSystemCard}`}>
             <div className={styles.cardHeading}>
-              <span>{focus === 'pressure-system' ? '02' : '01'}</span>
+              <span>01</span>
               <div>
                 <h3>Pressure system</h3>
-                <p>Level, zero, select scale, and check dynamic response before interpretation.</p>
+                <p>
+                  Level, zero, read the displayed scale and channel, and classify the dynamic
+                  response before interpretation.
+                </p>
               </div>
             </div>
             <label className={styles.rangeControl}>

@@ -971,7 +971,13 @@
 .pacActionDock,
 .skillsLab,
 .caseWorkflow,
-.sourcesPanel {
+.sourcesPanel,
+.validityPanel,
+.validityChallengePanel,
+.advancePanel,
+.pawpPanel,
+.paneLockedNotice,
+.normalReference {
   --ink: #15323a;
   --muted: #62767b;
   --line: #d9e4e3;
@@ -4869,4 +4875,1271 @@
   border-radius: 0.5rem;
   background: #fff8ea;
   color: #6b4409;
+}
+
+/*
+ * H0/H1 teaching panes: the pressure-system validity sequence and the normal waveform reference.
+ *
+ * Both sit in the middle pane of the guided workspace, whose chrome is dark. They therefore follow
+ * the same rule as every other pane surface in this module — a light card that declares its own ink
+ * colors — rather than the app's semantic tokens, which resolve to near-black text and disappear
+ * against the dark workspace.
+ */
+.validityPanel,
+.normalReference {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 690px;
+  padding: 1rem;
+  overflow: auto;
+}
+
+.validityPanel h2,
+.normalReference h2 {
+  margin: 0.2rem 0 0;
+  color: var(--navy);
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
+.validityPanel h3,
+.normalReference h3 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 0.9rem;
+}
+
+.paneEyebrow {
+  color: var(--teal);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.paneIntro {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.validitySteps {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.validityStep {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.65rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--paper);
+}
+
+.validityStepHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.validityStepOrdinal {
+  display: grid;
+  place-items: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 0.45rem;
+  background: var(--teal-soft);
+  color: var(--teal);
+  font-size: 0.7rem;
+  font-weight: 850;
+}
+
+.validityStatus {
+  padding: 0.14rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.56rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.validityStatus[data-status='done'] {
+  background: #dff2e6;
+  color: #1f6b43;
+}
+
+.validityStatus[data-status='outstanding'] {
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
+.validityStatus[data-status='judge'] {
+  background: #e8eeed;
+  color: var(--muted);
+}
+
+.validityQuestion {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.79rem;
+  font-style: italic;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.validityFacets {
+  display: grid;
+  gap: 0.22rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.73rem;
+  line-height: 1.5;
+}
+
+.validityFacets dt {
+  display: inline;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.validityFacets dd {
+  display: inline;
+  margin: 0;
+}
+
+.validityCommitment {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid #9fcfc4;
+  border-radius: 0.8rem;
+  background: var(--teal-soft);
+}
+
+.validityCommitment fieldset {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.validityCommitment legend {
+  padding: 0;
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.validityChoice {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  background: #fff;
+  color: var(--ink);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.paneButton {
+  min-height: 2.75rem;
+  padding: 0.6rem 0.9rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: var(--teal);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.paneButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.referenceTabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.3rem;
+}
+
+.referenceTab {
+  min-height: 2.75rem;
+  padding: 0.45rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  background: #fff;
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.referenceTab[aria-selected='true'] {
+  border-color: var(--teal);
+  background: var(--teal-soft);
+  color: var(--teal);
+}
+
+.referenceFacets {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.referenceFacets dt {
+  color: var(--teal);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.referenceFacets dd {
+  margin: 0.12rem 0 0;
+  color: var(--ink);
+}
+
+.referenceFacets div[data-unsafe='true'] dt {
+  color: var(--red);
+}
+
+.paneCaveat {
+  margin: 0;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.6rem;
+  background: var(--paper);
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+/* ---------------------------------------------------------------------------
+   H2 — canonical normal waveform reference and its display-problem cards
+
+   Both surfaces live in the middle and right panes of the dark guided workspace, so they follow the
+   same rule as every other pane here: a light card that declares its own ink colours. The app's
+   semantic tokens resolve to near-black text and vanish against the dark chrome, which is the exact
+   failure the H0/H1 browser review found.
+   --------------------------------------------------------------------------- */
+
+.validityChallengePanel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 690px;
+  padding: 1rem;
+  overflow: auto;
+}
+
+.validityChallengePanel h3 {
+  margin: 0.2rem 0 0;
+  color: var(--navy);
+  font-size: 1.02rem;
+  letter-spacing: -0.01em;
+}
+
+/* Synchronized figures: anatomy above, trace below, one column so nothing is clipped when the
+   pane is dragged narrow. */
+.referenceSynchronizedFigures {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.referenceAnatomyFigure {
+  margin: 0;
+  padding: 0.6rem;
+  border: 1px solid #cfe0dc;
+  border-radius: 0.7rem;
+  background: #fff;
+}
+
+.referenceAnatomyFigure svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 10rem;
+}
+
+.referenceAnatomyFigure figcaption {
+  display: grid;
+  gap: 0.15rem;
+  margin-top: 0.35rem;
+}
+
+.referenceAnatomyFigure figcaption strong {
+  color: var(--navy);
+  font-size: 0.78rem;
+}
+
+.referenceAnatomyFigure figcaption span {
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.referenceAnatomyVessel {
+  fill: #eef5f4;
+  stroke: #a8c6c1;
+  stroke-width: 1.2;
+}
+
+.referenceAnatomyChamber {
+  fill: #e2eef1;
+  stroke: #8fb2bb;
+  stroke-width: 1.3;
+}
+
+.referenceAnatomyValve line {
+  stroke: #7b6135;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.referenceAnatomyValve text {
+  fill: #7b6135;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+}
+
+.referenceAnatomyRoute {
+  fill: none;
+  stroke: #147d7b;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+}
+
+.referenceAnatomyTip {
+  fill: #0d5e5c;
+  stroke: #fff;
+  stroke-width: 1.6;
+}
+
+.referenceAnatomyBalloon {
+  fill: #f3d9a4;
+  stroke: #b9781d;
+  stroke-width: 1.6;
+}
+
+.referenceAnatomyLabel text {
+  fill: #4d6a71;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+/* ECG landmarks, respiration lane, and the reading marker on the shared figure. */
+.atlasEcgLandmark line {
+  stroke: #9db9b4;
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+
+.atlasEcgLandmark text {
+  fill: #4b8f6b;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+}
+
+.atlasRespirationTrace {
+  fill: none;
+  stroke: #6b7fa8;
+  stroke-width: 1.6;
+}
+
+.atlasReadMarker line {
+  stroke: #b64152;
+  stroke-width: 1.5;
+  stroke-dasharray: 5 3;
+}
+
+.atlasReadMarker text {
+  fill: #8f2f3d;
+  font-size: 10px;
+  font-weight: 850;
+}
+
+/* Scale control: the only way the axis changes, and it says so. */
+.referenceScaleControl {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--paper);
+}
+
+.referenceScaleControl legend {
+  padding: 0 0.2rem;
+  color: var(--teal);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.referenceScaleControl label {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.1rem 0.5rem;
+  align-items: baseline;
+  min-height: 2.5rem;
+  padding: 0.3rem 0.35rem;
+  color: var(--ink);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.referenceScaleControl label small {
+  grid-column: 2;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.referenceScaleNotice {
+  margin: 0;
+  padding: 0.45rem 0.6rem;
+  border-left: 3px solid var(--teal);
+  border-radius: 0.4rem;
+  background: var(--teal-soft);
+  color: #0f5a58;
+  font-size: 0.71rem;
+  line-height: 1.5;
+}
+
+.referenceScaleNotice[data-changed='true'] {
+  border-left-color: var(--amber);
+  background: var(--amber-soft);
+  color: #7a4d09;
+  font-weight: 750;
+}
+
+.referencePanel {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.referencePanel:focus-visible {
+  outline: 3px solid #63c9c0;
+  outline-offset: 3px;
+}
+
+.referenceStateLine {
+  margin: 0;
+  color: var(--navy);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.referenceTab {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem;
+  align-items: center;
+  justify-items: center;
+}
+
+.referenceTab > span:first-child {
+  display: grid;
+  place-items: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 0.35rem;
+  background: var(--paper);
+  color: var(--muted);
+  font-size: 0.6rem;
+  font-weight: 850;
+}
+
+.referenceTab[aria-selected='true'] > span:first-child {
+  background: #fff;
+  color: var(--teal);
+}
+
+.referenceDistortions {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid #e3d3b4;
+  border-radius: 0.75rem;
+  background: var(--amber-soft);
+}
+
+.referenceDistortions h4 {
+  margin: 0;
+  color: #7a4d09;
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.referenceDistortions ul {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.referenceDistortions li {
+  display: grid;
+  gap: 0.1rem;
+  color: var(--ink);
+  font-size: 0.73rem;
+  line-height: 1.5;
+}
+
+.referenceDistortions li strong {
+  color: #7a4d09;
+}
+
+.referenceDistortions li em {
+  color: var(--muted);
+  font-style: normal;
+  font-weight: 800;
+}
+
+.referenceTextEquivalent {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  background: var(--paper);
+}
+
+.referenceTextEquivalent summary {
+  color: var(--teal);
+  font-size: 0.71rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.referenceTextEquivalent p {
+  margin: 0.4rem 0 0;
+  color: var(--ink);
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+/* Display-problem cards. */
+.validityChallengeCount {
+  margin: 0.3rem 0 0;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+.validityChallengeNav {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.validityChallengeNav button {
+  display: grid;
+  grid-template-columns: 1.3rem 1fr auto;
+  gap: 0.45rem;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  background: #fff;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+  text-align: left;
+  cursor: pointer;
+}
+
+.validityChallengeNav button[aria-current='true'] {
+  border-color: var(--teal);
+  background: var(--teal-soft);
+  color: var(--teal);
+}
+
+.validityChallengeNav button > span:first-child {
+  display: grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 0.35rem;
+  background: var(--paper);
+  font-size: 0.6rem;
+  font-weight: 850;
+}
+
+.validityChallengeNav button em {
+  color: #1f6b43;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.validityChallengeCard {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  background: var(--paper);
+}
+
+.validityChallengeChannel {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: 0.71rem;
+}
+
+.validityChallengeChannel strong {
+  color: var(--navy);
+}
+
+.validityChallengeReadout {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  border-left: 3px solid var(--red);
+  border-radius: 0.45rem;
+  background: #fdeef0;
+}
+
+.validityChallengeReadout > span {
+  color: #8f2f3d;
+  font-size: 0.6rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.validityChallengeReadout > strong {
+  color: #7d2634;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.validityChallengeChoices {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.validityChallengeChoices legend {
+  padding: 0;
+  color: var(--ink);
+  font-size: 0.77rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.validityChallengeChoices label {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  background: #fff;
+  color: var(--ink);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.validityChallengeReveal {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.validityChallengeReveal dl {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.73rem;
+  line-height: 1.5;
+}
+
+.validityChallengeReveal dt {
+  color: var(--teal);
+  font-size: 0.61rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.validityChallengeReveal dd {
+  margin: 0.12rem 0 0;
+  color: var(--ink);
+}
+
+.validityChallengeReveal details {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.55rem;
+  background: #fff;
+}
+
+.validityChallengeReveal summary {
+  color: var(--teal);
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.validityChallengeReveal details p {
+  margin: 0.35rem 0 0;
+  color: var(--ink);
+  font-size: 0.71rem;
+  line-height: 1.55;
+}
+/* ---------------------------------------------------------------------------
+   H3 — advancement reasoning chain and the PAWP safety sequence
+
+   Same rule as every other pane in the dark guided workspace: a light card that declares its own
+   ink. Status is always carried by a word as well as a colour, because a learner who cannot
+   distinguish the two states by reading is a learner who cannot use the panel at all.
+   --------------------------------------------------------------------------- */
+
+.advancePanel,
+.pawpPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 690px;
+  padding: 1rem;
+  overflow: auto;
+}
+
+.advancePanel h3,
+.pawpPanel h2 {
+  margin: 0.2rem 0 0;
+  color: var(--navy);
+  font-size: 1.02rem;
+  letter-spacing: -0.01em;
+}
+
+.paneLockedNotice {
+  display: grid;
+  place-items: center;
+  min-height: 690px;
+  padding: 1rem;
+}
+
+.paneLockedNotice p {
+  max-width: 22rem;
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid #e3d3b4;
+  border-radius: 0.8rem;
+  background: var(--amber-soft);
+  color: #7a4d09;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.advanceCount,
+.pawpStepQuestion {
+  margin: 0.3rem 0 0;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+.advanceNav {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.advanceNav button {
+  display: grid;
+  grid-template-columns: 1.3rem 1fr auto;
+  gap: 0.45rem;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  background: #fff;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+  text-align: left;
+  cursor: pointer;
+}
+
+.advanceNav button[aria-current='true'] {
+  border-color: var(--teal);
+  background: var(--teal-soft);
+  color: var(--teal);
+}
+
+.advanceNav button > span:first-child {
+  display: grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 0.35rem;
+  background: var(--paper);
+  font-size: 0.6rem;
+  font-weight: 850;
+}
+
+.advanceNav button em {
+  color: #1f6b43;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.advanceChain {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.advanceSteps,
+.pawpSteps {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.advanceStep,
+.pawpStep {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line);
+  border-radius: 0.7rem;
+  background: var(--paper);
+}
+
+.advanceStep[data-concerning] {
+  border-left-color: var(--red);
+  background: #fdeef0;
+}
+
+.advanceStepHead,
+.pawpStepHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.advanceStepHead h4,
+.pawpStepHead h3 {
+  flex: 1 1 8rem;
+  margin: 0;
+  color: var(--navy);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.advanceStepOrdinal {
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 0.4rem;
+  background: var(--teal-soft);
+  color: var(--teal);
+  font-size: 0.66rem;
+  font-weight: 850;
+}
+
+.advanceStepStatus {
+  padding: 0.14rem 0.45rem;
+  border-radius: 999px;
+  background: #dff2e6;
+  color: #1f6b43;
+  font-size: 0.56rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.advanceStepStatus[data-concerning] {
+  background: #fadfe3;
+  color: #8f2f3d;
+}
+
+.advanceStep p,
+.pawpStep p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.74rem;
+  line-height: 1.55;
+}
+
+.advanceStopReasons {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0.15rem 0 0;
+  padding: 0 0 0 1rem;
+  color: #8f2f3d;
+  font-size: 0.73rem;
+  font-weight: 750;
+  line-height: 1.5;
+}
+
+.advanceOverridePoint {
+  padding: 0.45rem 0.6rem;
+  border-left: 3px solid var(--amber);
+  border-radius: 0.4rem;
+  background: var(--amber-soft);
+  color: #7a4d09;
+  font-size: 0.73rem;
+  line-height: 1.55;
+}
+
+.advanceCommitmentVerdict {
+  margin: 0.15rem 0 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.advanceCommit,
+.pawpChoices {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.7rem;
+  border: 1px solid #9fcfc4;
+  border-radius: 0.8rem;
+  background: var(--teal-soft);
+}
+
+.advanceCommit legend,
+.pawpChoices legend {
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  padding: 0;
+  color: var(--ink);
+  font-size: 0.77rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.advanceCommit label,
+.pawpChoices label {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  background: #fff;
+  color: var(--ink);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.advanceCommit label strong {
+  display: block;
+  color: var(--teal);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.advanceReveal {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.advancePrebriefEcho,
+.advanceBoundary {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--paper);
+}
+
+.advancePrebriefEcho h4,
+.advanceBoundary h4 {
+  margin: 0;
+  color: var(--teal);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.advanceBoundary {
+  border-color: #e3d3b4;
+  background: var(--amber-soft);
+}
+
+.advanceBoundary h4 {
+  color: #7a4d09;
+}
+
+.advancePrebriefEcho p,
+.advanceBoundary p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.73rem;
+  line-height: 1.55;
+}
+
+/* PAWP sequence. */
+.pawpBalloonState {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border-left: 3px solid var(--teal);
+  border-radius: 0.5rem;
+  background: var(--teal-soft);
+}
+
+.pawpBalloonState[data-inflated='true'] {
+  border-left-color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.pawpBalloonState > span {
+  color: var(--muted);
+  font-size: 0.6rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.pawpBalloonState > strong {
+  color: var(--navy);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.pawpStep dl {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.pawpStep dt {
+  display: inline;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.pawpStep dd {
+  display: inline;
+  margin: 0;
+}
+
+.pawpSubsection {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  background: var(--paper);
+}
+
+.pawpSubsection h4 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.pawpTeachingState {
+  margin: 0;
+  padding: 0.45rem 0.6rem;
+  border-left: 3px solid var(--muted);
+  border-radius: 0.4rem;
+  background: #fff;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.pawpOutcomeList {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pawpOutcomeList > li {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  background: #fff;
+}
+
+.pawpOutcomeList > li p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.73rem;
+  line-height: 1.55;
+}
+
+.pawpOutcomeList > li em {
+  color: var(--teal);
+  font-style: normal;
+  font-weight: 800;
+}
+
+.pawpOutcomeHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.pawpOutcomeHead strong {
+  color: var(--navy);
+  font-size: 0.78rem;
+}
+
+.pawpOutcomeHead span {
+  padding: 0.14rem 0.45rem;
+  border-radius: 999px;
+  background: #e8eeed;
+  color: var(--muted);
+  font-size: 0.56rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pawpOutcomeList > li[data-interpretable='false'] .pawpOutcomeHead span,
+.pawpOutcomeList > li[data-continuation='withheld'] .pawpOutcomeHead span {
+  background: #fadfe3;
+  color: #8f2f3d;
+}
+
+.pawpRecoveryVerdict {
+  margin: 0;
+  padding: 0.5rem 0.6rem;
+  border-left: 3px solid #1f6b43;
+  border-radius: 0.45rem;
+  background: #eef7f1;
+  color: var(--ink);
+  font-size: 0.73rem;
+  line-height: 1.55;
+}
+
+.pawpRecoveryVerdict[data-withheld='true'] {
+  border-left-color: var(--red);
+  background: #fdeef0;
+}
+
+.pawpRecoveryStatus {
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.55rem;
+  background: var(--paper);
+  color: var(--navy);
+  font-size: 0.73rem;
+  font-weight: 750;
+  line-height: 1.5;
+}
+
+/*
+ * Two pane surfaces stacked in one workspace column.
+ *
+ * Each pane surface sets its own 690px minimum so that it fills the column when it is alone. Stacked
+ * they would produce a column twice the height of the workspace before either had any content, so
+ * the minimum is released here and the column's own scrolling takes over.
+ */
+.paneStack {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.paneStack > * {
+  min-height: 0;
+}
+/*
+ * Keyboard focus on the H2/H3 pane surfaces.
+ *
+ * The module's focus ring is declared under `.labShell`, which these panes are not inside — they
+ * mount into the guided workspace. Without this they fall back to the user agent's own thin ring on
+ * a white card, which is the weakest place it appears. The existing workspace controls
+ * (`.pacPathwayNav button`, `.pacResizeHandle`) already declare their own for the same reason.
+ */
+.normalReference button:focus-visible,
+.normalReference input:focus-visible,
+.normalReference summary:focus-visible,
+.validityChallengePanel button:focus-visible,
+.validityChallengePanel input:focus-visible,
+.validityChallengePanel summary:focus-visible,
+.advancePanel button:focus-visible,
+.advancePanel input:focus-visible,
+.pawpPanel button:focus-visible,
+.pawpPanel input:focus-visible {
+  outline: 3px solid #0f766e;
+  outline-offset: 2px;
+  border-radius: 0.4rem;
+}
+
+/*
+ * The rhythm the reference assumes, stated before the first tracing.
+ *
+ * Deliberately not a footnote: every entry below times its waves against a P wave, and a learner who
+ * misses that will read a missing a wave in atrial fibrillation as an invalid tracing.
+ */
+.referenceRhythmNote {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid #cfe0dc;
+  border-left: 3px solid var(--teal);
+  border-radius: 0.7rem;
+  background: var(--teal-soft);
+}
+
+.referenceRhythmNote strong {
+  color: #0f5a58;
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
+.referenceRhythmNote p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.72rem;
+  line-height: 1.55;
 }

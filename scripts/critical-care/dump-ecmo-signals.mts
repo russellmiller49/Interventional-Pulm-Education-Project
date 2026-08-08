@@ -19,6 +19,7 @@ import {
   createInitialSimulationState,
   createReferenceSimulationState,
   ecmoSimulationReducer,
+  resolveDrainageLimitation,
 } from '../../src/features/cardiohelp-ecmo/engine/index.ts'
 import type {
   EcmoSimulationState,
@@ -362,6 +363,96 @@ function checkReferenceProfiles(): void {
  * saturation must not. If those columns ever move together again, the module is teaching the
  * opposite of what it says.
  */
+/**
+ * Drainage-limited flow against pump speed, for every fault in the collapse guard family.
+ *
+ * The mirror image of the recirculation sweep above, and it exists for the mirror-image defect.
+ * There the module's claim is that displayed flow rises while effective flow falls; here the claim
+ * is that past the drainage a case can supply, nothing the learner can do to the speed buys flow,
+ * oxygenation or relief from the suction — and the guard fires exactly where the model stops
+ * delivering. The two together are what keep a harmful action from being modelled as a rewarded one.
+ */
+function checkDrainageCapacityResponse(): void {
+  const cases: readonly string[] = [
+    'preload-drainage-collapse',
+    'va-preload-drainage-collapse',
+    'clinical-vv-occult-hemorrhage',
+    'clinical-vv-tension-pneumothorax',
+    'va-clinical-tamponade',
+  ]
+
+  for (const scenarioId of cases) {
+    const opening = createInitialSimulationState(scenarioId)
+    const capacity = resolveDrainageLimitation(opening, opening.device.rpmSetpoint)
+    if (!capacity) {
+      flags.push({ scenarioId, reason: 'no drainage limitation resolved for a collapse-family case' })
+      continue
+    }
+
+    console.log(
+      `\n\nDrainage capacity versus pump speed — ${scenarioId} (capacity ${capacity.capacityLpm.toFixed(2)} L/min, opened at ${opening.device.rpmSetpoint} rpm)\n`,
+    )
+    console.log('    rpm  demand    flow    pVen  chatter    SpO2  past-capacity  guard')
+
+    /*
+     * Only samples that are both past the capacity are comparable.
+     *
+     * Flow legitimately climbs while demand is still inside what the drainage can supply, and peaks
+     * at the capacity itself — that is the shape being modelled. The claim is about what happens
+     * *past* it, so the first sample over the line has nothing above it to be compared with.
+     */
+    let previousPast = false
+    let previousFlow = Number.POSITIVE_INFINITY
+    let previousPVen = Number.POSITIVE_INFINITY
+    let previousSpo2 = Number.POSITIVE_INFINITY
+    for (const rpm of [2000, 2400, 2800, 3200, 3600, 4000, 4400, 4800]) {
+      const frames = advance(
+        run(createInitialSimulationState(scenarioId), [{ type: 'SET_RPM', rpm }]),
+        STEPS,
+      )
+      const state = frames.at(-1)!
+      const c = state.circuit
+      const limitation = resolveDrainageLimitation(state, state.device.rpmSetpoint)
+      const past = limitation?.limited ?? false
+      const guard = state.scenario.criticalErrors.includes('rpm-during-collapse') ? 'yes' : '—'
+      console.log(
+        [
+          String(state.device.rpmSetpoint).padStart(7),
+          n(limitation?.demandedLpm ?? 0, 2),
+          n(c.bloodFlow, 2),
+          n(c.pVen, 0),
+          `  ${c.drainageChatter ? 'yes' : '— '}`.padStart(8),
+          n(state.patient.spo2, 2),
+          `  ${past ? 'yes' : '— '}`.padStart(14),
+          `  ${guard}`,
+        ].join(' '),
+      )
+
+      if (past && previousPast) {
+        if (c.bloodFlow > previousFlow + 0.005) {
+          flags.push({
+            scenarioId,
+            reason: `flow rose at ${rpm} rpm past the drainage capacity — speed must not buy flow here`,
+          })
+        }
+        if (state.patient.spo2 > previousSpo2 + 0.005) {
+          flags.push({
+            scenarioId,
+            reason: `modeled oxygenation improved at ${rpm} rpm past the drainage capacity`,
+          })
+        }
+        if (c.pVen > previousPVen + 0.5) {
+          flags.push({ scenarioId, reason: `suction relaxed while escalating at ${rpm} rpm` })
+        }
+      }
+      previousPast = past
+      previousFlow = c.bloodFlow
+      previousPVen = c.pVen
+      previousSpo2 = state.patient.spo2
+    }
+  }
+}
+
 function checkRecirculationSpeedResponse(): void {
   const scenarioId = 'vv-recirculation'
   const definition = cardiohelpScenarios.find((scenario) => scenario.id === scenarioId)
@@ -427,6 +518,7 @@ function checkRecirculationSpeedResponse(): void {
 }
 
 if (!ONLY) checkRecirculationSpeedResponse()
+if (!ONLY) checkDrainageCapacityResponse()
 
 console.log(`\n${flags.length} flag(s)`)
 for (const flag of flags) {

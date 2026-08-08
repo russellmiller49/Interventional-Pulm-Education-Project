@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Section 5 — Dyssynchrony: mechanism before label.
+ * Section 6 — Dyssynchrony: mechanism before label.
  *
  * Deliberately not a pattern-naming panel. The lesson's whole claim is that naming the picture is
  * the last step, so the panel asks the learner to commit to a *domain* — drive, load, timing,
@@ -10,6 +10,7 @@
  */
 import { useMemo, useState } from 'react'
 
+import { plateauReadingValidity } from '../../content/plateauValidity'
 import type { VentilationSimulationState } from '../../engine'
 import { ModelBoundary, TextEquivalent, latestBreath, round, styles, tracePath } from './shared'
 
@@ -56,13 +57,20 @@ interface DomainEvidence {
   readonly signal: string
   readonly observed: string
   /** Whether the live state currently *supports* looking here — never a diagnosis. */
-  readonly bearing: 'supports' | 'neutral' | 'unmeasured'
+  readonly bearing: 'supports' | 'neutral' | 'unmeasured' | 'invalidates'
 }
 
 const bearingLabels: Readonly<Record<DomainEvidence['bearing'], string>> = {
   supports: 'Points here',
   neutral: 'Not discriminating',
   unmeasured: 'Not measured',
+  /*
+   * A measurement that was taken but cannot bear the inference. Distinct from 'unmeasured', which
+   * invites the learner to go and measure it — repeating a hold on a patient who is still pulling
+   * produces the same uninterpretable number again. The integration panel already made this
+   * distinction; the load domain here did not, and it is the domain that reads the plateau.
+   */
+  invalidates: 'Measured, but cannot be read as mechanics',
 }
 
 export function VentilationDyssynchronyDomains({
@@ -77,6 +85,7 @@ export function VentilationDyssynchronyDomains({
   const peakEffort = breath.reduce((lowest, sample) => Math.min(lowest, sample.pmusCmH2O), 0)
   const effortPresent = peakEffort < -1.5
   const plateauMeasured = measurements.plateauPressureCmH2O > 0
+  const plateauInterpretable = plateauReadingValidity(state).interpretable
   const gap = Math.max(0, measurements.peakPressureCmH2O - measurements.plateauPressureCmH2O)
   const plateauAboveBaseline = Math.max(
     0,
@@ -120,17 +129,31 @@ export function VentilationDyssynchronyDomains({
       return [
         {
           signal: 'Peak-to-plateau difference',
-          observed: plateauMeasured
-            ? `${round(gap, 1)} cmH₂O`
-            : 'No plateau measured — perform an inspiratory hold',
-          bearing: !plateauMeasured ? 'unmeasured' : gap > 6 ? 'supports' : 'neutral',
+          observed: !plateauMeasured
+            ? 'No plateau measured — perform an inspiratory hold'
+            : plateauInterpretable
+              ? `${round(gap, 1)} cmH₂O`
+              : 'The plateau is depressed by the patient’s own effort, so this difference is not purely resistive',
+          bearing: !plateauMeasured
+            ? 'unmeasured'
+            : !plateauInterpretable
+              ? 'invalidates'
+              : gap > 6
+                ? 'supports'
+                : 'neutral',
         },
         {
           signal: 'Plateau above baseline',
-          observed: plateauMeasured
-            ? `${round(plateauAboveBaseline, 1)} cmH₂O`
-            : 'No plateau measured — perform an inspiratory hold',
-          bearing: !plateauMeasured ? 'unmeasured' : 'neutral',
+          observed: !plateauMeasured
+            ? 'No plateau measured — perform an inspiratory hold'
+            : plateauInterpretable
+              ? `${round(plateauAboveBaseline, 1)} cmH₂O`
+              : 'Not the distending pressure of the respiratory system while the patient is pulling',
+          bearing: !plateauMeasured
+            ? 'unmeasured'
+            : !plateauInterpretable
+              ? 'invalidates'
+              : 'neutral',
         },
         {
           signal: 'Expiratory flow at the next breath',

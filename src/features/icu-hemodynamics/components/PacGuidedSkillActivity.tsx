@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { criticalCareActivityById } from '@/features/critical-care/content/activities'
 import { criticalCareReferences } from '@/features/critical-care/content/references'
 import { ActivityShell } from '@/features/learning-module/components/ActivityShell'
+import { AnswerVerdict } from '@/features/learning-module/components/AnswerVerdict'
 import { DebriefPanel } from '@/features/learning-module/components/DebriefPanel'
 import { EvidenceDrawer } from '@/features/learning-module/components/EvidenceDrawer'
 import { PatientContextBar } from '@/features/learning-module/components/PatientContextBar'
@@ -44,10 +45,17 @@ import {
 } from '../engine'
 import { BedsideMonitor } from './BedsideMonitor'
 import { FormulaDrawer } from './FormulaDrawer'
+import { NormalWaveformReference } from './NormalWaveformReference'
+import { NormalWaveformValidityChallenges } from './NormalWaveformValidityChallenges'
 import { PacActionDock } from './PacActionDock'
+import { PacAdvancementReasoningPanel } from './PacAdvancementReasoningPanel'
+import { PawpSafetySequencePanel, PA_RETURN_CHECK } from './PawpSafetySequencePanel'
 import { PacAdvancementOrientation } from './PacAdvancementOrientation'
+import { PacAdvancementPrebrief } from './PacAdvancementPrebrief'
 import { PacLearningPathwayViewport } from './PacLearningPathwayNav'
 import { PacSectionCompletionActions } from './PacSectionCompletionActions'
+import { PacSectionReadinessCard } from './PacSectionReadiness'
+import { PressureSystemValidityPanel } from './PressureSystemValidityPanel'
 import {
   CardiacOutputTeachingPanel,
   DerivedHemodynamicsTeachingPanel,
@@ -55,6 +63,7 @@ import {
 import { PacSkillsLab } from './PacSkillsLab'
 import { PhysiologyPanel } from './PhysiologyPanel'
 import { ResizablePacWorkspace } from './ResizablePacWorkspace'
+import styles from './icu-hemodynamics.module.css'
 import { WaveformAtlasPanel } from './WaveformAtlasPanel'
 import { WaveformRecognitionDrill } from './WaveformRecognitionDrill'
 
@@ -86,35 +95,46 @@ const likelyFrameByPlausibility: Readonly<Record<ClinicalLearningChoice['plausib
       'The selected interpretation could lead to action before the signal or catheter state is safe to use.',
   }
 
+/**
+ * The shared verdict, wearing this activity's two extra sentences.
+ *
+ * What lived here before was a third implementation of the same idea: it named the plausibility,
+ * gave the choice's reasoning and the item's distinguishing cue, and added a frame and a next move.
+ * The first three are what the shared `AnswerVerdict` already does — and does with an announcement
+ * and a comparison against the answers not taken, neither of which a plain `aside` could offer. The
+ * last two are this activity's own and are passed through as the branch explanation.
+ *
+ * Timing is unchanged: this renders in Act, where committing already put the learner, and it
+ * advances nothing.
+ */
 function ChoiceReasoningFeedback({
-  choice,
-  explanation,
+  item,
+  choiceId,
 }: {
-  readonly choice: ClinicalLearningChoice
-  readonly explanation: string
+  readonly item: ClinicalLearningItem
+  readonly choiceId: string
 }) {
+  const choice = item.choices.find((candidate) => candidate.id === choiceId)
+  if (!choice) return null
   return (
-    <aside className="grid gap-2 rounded-xl border border-sky-500/30 bg-sky-500/10 p-3 text-xs leading-5">
-      <p className="font-bold text-foreground">{plausibilityLabels[choice.plausibility]}</p>
-      <dl className="grid gap-2">
-        <div>
-          <dt className="font-semibold">Why this reasoning lands here</dt>
-          <dd>{choice.rationale}</dd>
-        </div>
-        <div>
-          <dt className="font-semibold">A reasonable frame</dt>
-          <dd>{likelyFrameByPlausibility[choice.plausibility]}</dd>
-        </div>
-        <div>
-          <dt className="font-semibold">The distinguishing cue</dt>
-          <dd>{explanation}</dd>
-        </div>
-        <div>
-          <dt className="font-semibold">Next move</dt>
-          <dd>Use the visual workspace to test that interpretation against the live signal.</dd>
-        </div>
-      </dl>
-    </aside>
+    <AnswerVerdict
+      item={item}
+      choiceId={choiceId}
+      timing="immediate-after-commit"
+      theme="dark"
+      branchExplanation={
+        <dl className="grid gap-2">
+          <div>
+            <dt className="font-semibold">A reasonable frame</dt>
+            <dd>{likelyFrameByPlausibility[choice.plausibility]}</dd>
+          </div>
+          <div>
+            <dt className="font-semibold">Next move</dt>
+            <dd>Use the visual workspace to test that interpretation against the live signal.</dd>
+          </div>
+        </dl>
+      }
+    />
   )
 }
 
@@ -323,6 +343,20 @@ function transferSkillState(skillId: PacGuidedSkillId): HemodynamicSimulationSta
   return createInitialHemodynamicState(baseCase, 'learn', 616)
 }
 
+/**
+ * Whether the station's hands-on objective has been met.
+ *
+ * Exported so a suite can exercise the predicate against a constructed state. Rendering a whole
+ * guided workspace and driving a simulated catheter through jsdom to reach one of these states is
+ * possible and tells you almost nothing about which condition failed.
+ */
+export function pacGuidedObjectiveComplete(
+  skillId: PacGuidedSkillId,
+  state: HemodynamicSimulationState,
+): boolean {
+  return objectiveComplete(skillId, state)
+}
+
 function objectiveComplete(skillId: PacGuidedSkillId, state: HemodynamicSimulationState): boolean {
   if (skillId === 'pressure-system') {
     return (
@@ -346,10 +380,19 @@ function objectiveComplete(skillId: PacGuidedSkillId, state: HemodynamicSimulati
     return state.signalValidationChecks.includes('waveform-recognition')
   }
   if (skillId === 'pawp-capture') {
+    /**
+     * H3 §7. The first three conditions used to be the whole objective, and all three are set by the
+     * simulator's own prolonged-inflation recovery — so the one failure this station exists to catch
+     * completed it. Two conditions close that: the recovery path is excluded explicitly, and the
+     * return of the pulmonary-artery waveform has to have been assessed by the learner rather than
+     * announced by the simulation.
+     */
     return (
       state.catheter.storedWedgeMmHg !== null &&
       !state.catheter.balloonInflated &&
-      state.catheter.position === 'pa'
+      state.catheter.position === 'pa' &&
+      !state.catheter.forcedSafetyRecovery &&
+      state.signalValidationChecks.includes(PA_RETURN_CHECK)
     )
   }
   if (skillId === 'thermodilution-series') {
@@ -360,12 +403,16 @@ function objectiveComplete(skillId: PacGuidedSkillId, state: HemodynamicSimulati
 
 function SkillSurface({
   skillId,
+  phase,
   state,
   dispatch,
+  advancementUnlocked,
 }: {
   readonly skillId: PacGuidedSkillId
+  readonly phase: CriticalCareActivityPhase
   readonly state: HemodynamicSimulationState
   readonly dispatch: (action: HemodynamicAction) => void
+  readonly advancementUnlocked: boolean
 }) {
   if (skillId === 'pressure-system') {
     return (
@@ -378,10 +425,44 @@ function SkillSurface({
     )
   }
   if (skillId === 'catheter-advancement') {
-    return <PacActionDock state={state} dispatch={dispatch} focus="advancement" />
+    // The manipulation controls stay out of reach until the prebrief is acknowledged, from
+    // wherever the learner arrives — including a direct jump to a later phase from the phase
+    // navigation. The prebrief itself lives in the task panel; duplicating it here would give the
+    // learner two copies of the same acknowledgement.
+    if (!advancementUnlocked) {
+      return (
+        <div className="grid h-full place-items-center overflow-auto p-4">
+          <p className="max-w-sm rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-center text-sm leading-6">
+            The simulated advancement controls open once you have read the safety prebrief in the
+            current-task panel.
+          </p>
+        </div>
+      )
+    }
+    // H3 §6. From the hands-on phase onward the reasoning chain sits above the live controls, so the
+    // decision is made in the same pane the movement happens in. It stays out of the earlier phases
+    // because the ordered orientation there is already asking the learner for a commitment, and two
+    // sets of choices on screen at once is two questions competing for one answer.
+    if (phase === 'recognize' || phase === 'predict') {
+      return <PacActionDock state={state} dispatch={dispatch} focus="advancement" />
+    }
+    return (
+      <div className={styles.paneStack}>
+        <PacAdvancementReasoningPanel />
+        <PacActionDock state={state} dispatch={dispatch} focus="advancement" />
+      </div>
+    )
   }
   if (skillId === 'waveform-interpretation') {
-    return <WaveformAtlasPanel initialEntryId="ra-tamponade" heading="Full waveform atlas" />
+    // H2 §5: while the canonical reference is on screen in the middle pane, this pane carries the
+    // interaction that keeps the reference honest — the same four normal tracings shown through a
+    // display fault, each requiring a commitment before its reasoning appears. The full atlas
+    // returns for the later phases.
+    //
+    // H0/H1 §4: the atlas still opens on the normal right atrium rather than on an abnormality. A
+    // novice needs the reference before the deviation from it.
+    if (phase === 'recognize') return <NormalWaveformValidityChallenges />
+    return <WaveformAtlasPanel initialEntryId="ra-normal" heading="Full waveform atlas" />
   }
   if (skillId === 'pawp-capture') {
     return <PacActionDock state={state} dispatch={dispatch} focus="wedge" />
@@ -415,6 +496,12 @@ export function PacGuidedSkillActivity({
   const [transferChoiceId, setTransferChoiceId] = useState<string | null>(null)
   const [hintVisible, setHintVisible] = useState(false)
   const [completed, setCompleted] = useState(false)
+  /**
+   * H0/H1 §5. Advancement is the one section where the learner manipulates a simulated catheter, so
+   * the safety prebrief precedes its controls. This sequences the section; it does not gate it —
+   * every pathway station stays reachable by URL and every phase button stays enabled.
+   */
+  const [prebriefAcknowledged, setPrebriefAcknowledged] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const attempt = useRef(1)
   const recordedSafetyEvents = useRef(new Set<string>())
@@ -662,6 +749,7 @@ export function PacGuidedSkillActivity({
   const advancementOrientationPosition =
     pacAdvancementOrientationSteps.find((step) => step.position === state.catheter.position)
       ?.position ?? 'introducer'
+  const advancementUnlocked = skillId !== 'catheter-advancement' || prebriefAcknowledged
   const taskControls = completed ? (
     <PacSectionCompletionActions
       sectionTitle={spec.title}
@@ -671,16 +759,31 @@ export function PacGuidedSkillActivity({
       onContinue={continueToNextSection}
     />
   ) : phase === 'recognize' ? (
-    <button
-      type="button"
-      className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
-      onClick={() => {
-        setState(predictionSkillState(skillId))
-        advance('predict')
-      }}
-    >
-      Orient to this skill station
-    </button>
+    <div className="grid gap-3">
+      <PacSectionReadinessCard sectionId={skillId} />
+      {skillId === 'catheter-advancement' ? (
+        <PacAdvancementPrebrief
+          acknowledged={prebriefAcknowledged}
+          onAcknowledge={() => setPrebriefAcknowledged(true)}
+        />
+      ) : null}
+      <button
+        type="button"
+        disabled={skillId === 'catheter-advancement' && !prebriefAcknowledged}
+        className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+        onClick={() => {
+          setState(predictionSkillState(skillId))
+          advance('predict')
+        }}
+      >
+        Orient to this skill station
+      </button>
+    </div>
+  ) : phase === 'predict' && skillId === 'catheter-advancement' && !advancementUnlocked ? (
+    <PacAdvancementPrebrief
+      acknowledged={false}
+      onAcknowledge={() => setPrebriefAcknowledged(true)}
+    />
   ) : phase === 'predict' && skillId === 'catheter-advancement' ? (
     <PacAdvancementOrientation
       currentPosition={advancementOrientationPosition}
@@ -727,8 +830,8 @@ export function PacGuidedSkillActivity({
     <div className="grid gap-3">
       {predictionFeedbackChoice ? (
         <ChoiceReasoningFeedback
-          choice={predictionFeedbackChoice}
-          explanation={learningItems.prediction.explanation}
+          item={learningItems.prediction}
+          choiceId={predictionFeedbackChoice.id}
         />
       ) : null}
       <button
@@ -784,8 +887,8 @@ export function PacGuidedSkillActivity({
       </fieldset>
       {transferFeedbackChoice ? (
         <ChoiceReasoningFeedback
-          choice={transferFeedbackChoice}
-          explanation={learningItems.transfer.explanation}
+          item={learningItems.transfer}
+          choiceId={transferFeedbackChoice.id}
         />
       ) : null}
       <p className="rounded-xl bg-muted p-3 text-xs leading-5">
@@ -804,8 +907,26 @@ export function PacGuidedSkillActivity({
   )
 
   const learningPane =
-    skillId === 'waveform-interpretation' ? (
-      <WaveformRecognitionDrill dispatch={dispatch} />
+    skillId === 'pressure-system' ? (
+      <PressureSystemValidityPanel state={state} commitment={learningItems.validityCommitment} />
+    ) : skillId === 'waveform-interpretation' ? (
+      // The normal reference is established first; the recognition drill follows it.
+      phase === 'recognize' ? (
+        <NormalWaveformReference />
+      ) : (
+        <WaveformRecognitionDrill dispatch={dispatch} />
+      )
+    ) : skillId === 'pawp-capture' ? (
+      // H3 §7. The live inflate/cursor/store/deflate controls stay in the controls pane; the
+      // judgements — plausibility, and whether the PA waveform actually came back — live here.
+      <PawpSafetySequencePanel
+        state={state}
+        onRecoveryConfirmed={() => {
+          if (!state.signalValidationChecks.includes(PA_RETURN_CHECK)) {
+            dispatch({ type: 'VALIDATE_SIGNAL', check: PA_RETURN_CHECK })
+          }
+        }}
+      />
     ) : skillId === 'thermodilution-series' ? (
       <CardiacOutputTeachingPanel />
     ) : skillId === 'derived-hemodynamics' ? (
@@ -843,8 +964,10 @@ export function PacGuidedSkillActivity({
           <SkillSurface
             key={`${skillId}-${phase}`}
             skillId={skillId}
+            phase={phase}
             state={state}
             dispatch={dispatch}
+            advancementUnlocked={advancementUnlocked}
           />
         }
       />

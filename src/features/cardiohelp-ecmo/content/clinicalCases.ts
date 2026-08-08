@@ -1112,35 +1112,22 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           patch: { circuit: { arterialBubbleDetected: false, bubbleResetRequired: false } },
         }),
         intervention({
-          id: 'air-unclamp-drainage',
-          label: 'Open the drainage limb',
+          id: 'air-resume-support',
+          label: 'Resume support per current IFU and approved local protocol',
           category: 'circuit',
-          description: 'Re-establish venous drainage first.',
-          effect: 'supportive',
-          response: 'Drainage is restored; the return limb remains isolated.',
+          description:
+            'With the source corrected and the circuit confirmed clear, resume support according to the current manufacturer instructions for use (IFU) and your unit’s approved ECMO air-emergency protocol. This bounded simulation action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
+          effect: 'definitive',
+          response:
+            'Support resumes as one step; the patient is never left on both open limbs of a stopped circuit.',
           prerequisites: ['air-deair'],
           simulatorAction: {
-            control: 'unclamp-drainage',
+            control: 'resume-after-bubble',
             visibility: 'prompted',
-            instruction: 'On the bedside circuit, open the drainage-limb clamp.',
+            instruction:
+              'On the bedside circuit, resume support per the current IFU and approved local protocol.',
             target: 'circuit',
-            controlId: 'cardiohelp-clamp-drainage',
-          },
-        }),
-        intervention({
-          id: 'air-unclamp-return',
-          label: 'Open the return limb and resume support',
-          category: 'circuit',
-          description: 'Complete the flow path with a confirmed-clear circuit.',
-          effect: 'definitive',
-          response: 'Both clamps are open with a clear circuit; forward flow re-establishes.',
-          prerequisites: ['air-unclamp-drainage'],
-          simulatorAction: {
-            control: 'unclamp-return',
-            visibility: 'prompted',
-            instruction: 'On the bedside circuit, open the return-limb clamp.',
-            target: 'circuit',
-            controlId: 'cardiohelp-clamp-return',
+            controlId: 'cardiohelp-resume-support',
           },
         }),
         intervention({
@@ -1157,11 +1144,10 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'air-clamp-return',
         'air-clamp-drainage',
         'air-deair',
-        'air-unclamp-drainage',
-        'air-unclamp-return',
+        'air-resume-support',
       ],
       completionResponse:
-        'The circuit is isolated, de-aired, and resumed in order; forward flow and oxygenation recover.',
+        'The circuit is isolated, de-aired, and support is resumed per the current IFU and approved local protocol; forward flow and oxygenation recover.',
       deteriorationResponse:
         'While air remains in an open circuit, the patient is at embolic risk and support stays interrupted.',
     },
@@ -1181,7 +1167,8 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
     },
     assessmentPolicy: { minimumObservationSeconds: 3 },
     debrief: {
-      diagnosis: 'Circuit air embolism managed by isolate, de-air, and ordered resumption',
+      diagnosis:
+        'Circuit air embolism managed by isolation, de-airing, and protocol-governed resumption',
       causalChain: [
         'Air entrainment triggers the bubble intervention and an automatic pump stop.',
         'The pump stop does not isolate the patient; the near-patient clamps do.',
@@ -1190,10 +1177,10 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Clamp the return limb, then the drainage limb, near the patient and support the patient conventionally.',
         'Correct the air source and confirm the circuit is clear.',
-        'Open the drainage limb, then the return limb, let flow re-establish, and reassess.',
+        'Resume support per the current IFU and approved local protocol, then reassess. This module teaches the precondition, not the resumption choreography.',
       ],
       safetyNotes: [
-        'Clamp/unclamp order follows local protocol; this module teaches one bounded sequence for consistency.',
+        'Isolation is taught explicitly. The clamp, pump, and device-reset choreography for resumption is governed by the current manufacturer IFU and your unit’s approved ECMO air-emergency protocol; this simulation does not teach that choreography.',
         'This is recognition-and-sequence training, not a substitute for supervised circuit-emergency competency.',
       ],
     },
@@ -1888,7 +1875,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
     supportMode: 'va',
     title: 'VA circuit air with emergency arterial isolation',
     summary:
-      'Air is entrained into the VA circuit; the bubble intervention stops the pump while the arterial return threatens direct embolism. Isolate, de-air, and resume in order.',
+      'Air is entrained into the VA circuit; the bubble intervention stops the pump while the arterial return threatens direct embolism. Isolate, de-air, then resume per protocol.',
     clinicalPhase: 'maintenance',
     clinicalCase: {
       kind: 'complication',
@@ -1970,35 +1957,22 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           patch: { circuit: { arterialBubbleDetected: false, bubbleResetRequired: false } },
         }),
         intervention({
-          id: 'va-air-unclamp-drainage',
-          label: 'Open the drainage limb',
+          id: 'va-air-resume-support',
+          label: 'Resume support per current IFU and approved local protocol',
           category: 'circuit',
-          description: 'Re-establish venous drainage first.',
-          effect: 'supportive',
-          response: 'Drainage is restored; the arterial limb remains isolated.',
+          description:
+            'With the source corrected and the circuit confirmed clear, resume venoarterial support according to the current manufacturer instructions for use (IFU) and your unit’s approved ECMO air-emergency protocol. This bounded simulation action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
+          effect: 'definitive',
+          response:
+            'Support resumes as one step; the patient is never left on both open limbs of a stopped circuit.',
           prerequisites: ['va-air-deair'],
           simulatorAction: {
-            control: 'unclamp-drainage',
+            control: 'resume-after-bubble',
             visibility: 'prompted',
-            instruction: 'On the bedside circuit, open the drainage-limb clamp.',
+            instruction:
+              'On the bedside circuit, resume support per the current IFU and approved local protocol.',
             target: 'circuit',
-            controlId: 'cardiohelp-clamp-drainage',
-          },
-        }),
-        intervention({
-          id: 'va-air-unclamp-return',
-          label: 'Open the arterial return limb and resume support',
-          category: 'circuit',
-          description: 'Complete the flow path with a confirmed-clear circuit.',
-          effect: 'definitive',
-          response: 'Both clamps are open with a clear circuit; VA support re-establishes.',
-          prerequisites: ['va-air-unclamp-drainage'],
-          simulatorAction: {
-            control: 'unclamp-return',
-            visibility: 'prompted',
-            instruction: 'On the bedside circuit, open the return-limb clamp.',
-            target: 'circuit',
-            controlId: 'cardiohelp-clamp-return',
+            controlId: 'cardiohelp-resume-support',
           },
         }),
         intervention({
@@ -2016,11 +1990,10 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'va-air-clamp-return',
         'va-air-clamp-drainage',
         'va-air-deair',
-        'va-air-unclamp-drainage',
-        'va-air-unclamp-return',
+        'va-air-resume-support',
       ],
       completionResponse:
-        'The circuit is isolated, de-aired, and resumed in order; VA support, MAP, and perfusion recover.',
+        'The circuit is isolated, de-aired, and support is resumed per the current IFU and approved local protocol; VA support, MAP, and perfusion recover.',
       deteriorationResponse:
         'While air remains in an open circuit, the patient faces arterial embolism and absent circulatory support.',
     },
@@ -2047,7 +2020,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
     assessmentPolicy: { minimumObservationSeconds: 3 },
     debrief: {
       diagnosis:
-        'VA circuit air embolism managed by arterial isolation, de-airing, and ordered resumption',
+        'VA circuit air embolism managed by arterial isolation, de-airing, and protocol-governed resumption',
       causalChain: [
         'A loosened drainage connector entrains air and triggers the bubble intervention with a pump stop.',
         'On VA support, circuit air in the return limb threatens the arterial circulation directly.',
@@ -2056,10 +2029,10 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Clamp the arterial return limb, then the drainage limb, near the patient; support the patient conventionally.',
         'Secure the connector, correct the air source, and confirm the circuit is clear.',
-        'Open the drainage limb, then the return limb, re-establish VA support, and reassess perfusion and right-arm oxygenation.',
+        'Resume venoarterial support per the current IFU and approved local protocol, then reassess perfusion. Where clamp opening, pump restart and console reset fall relative to one another is set by those documents, not by this module.',
       ],
       safetyNotes: [
-        'Clamp/unclamp order follows local protocol; this module teaches one bounded sequence for consistency.',
+        'Isolation is taught explicitly. The clamp, pump, and device-reset choreography for resumption is governed by the current manufacturer IFU and your unit’s approved ECMO air-emergency protocol; this simulation does not teach that choreography.',
         'This is recognition-and-sequence training, not a substitute for supervised circuit-emergency competency.',
       ],
     },

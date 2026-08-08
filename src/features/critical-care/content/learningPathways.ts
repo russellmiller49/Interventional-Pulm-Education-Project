@@ -16,37 +16,38 @@ import { criticalCareModuleCatalog, type CriticalCareCatalogModuleId } from './m
 export const criticalCareLearningPathways: readonly LearningPathway[] = Object.freeze([
   {
     moduleId: 'icu-hemodynamics',
-    arcSentence: 'Advance, validate, interpret, measure, and integrate',
+    arcSentence:
+      'Trust the signal, read the waveform, advance the catheter, measure, and integrate',
     sections: [
+      {
+        id: 'pressure-system',
+        shortTitle: 'Trust the signal',
+        title: 'Level, zero, and dynamic response',
+        minutes: 12,
+        description:
+          'Start here: can I trust this pressure signal? Level and zero the system, then classify its fast-flush response before any number is read.',
+        stage: 'foundation',
+        activityId: 'hemodynamics:learn:pressure-system',
+      },
+      {
+        id: 'waveform-interpretation',
+        shortTitle: 'Read the waveform',
+        title: 'Interpret normal and abnormal waveforms',
+        minutes: 18,
+        description:
+          'Build the normal RA, RV, PA, and wedge reference first, then read the wave components that carry a diagnosis.',
+        stage: 'mechanism',
+        activityId: 'hemodynamics:learn:waveform-interpretation',
+      },
       {
         id: 'catheter-advancement',
         shortTitle: 'Advance',
         title: 'Advance the PAC by waveform',
         minutes: 15,
         description:
-          'Start at the introducer, then confirm the RA, RV, and PA transitions from pressure morphology.',
+          'With a trusted signal and a normal reference in hand, work from the introducer and confirm each RA, RV, and PA transition from morphology.',
         stage: 'foundation',
         activityId: 'hemodynamics:learn:catheter-advancement',
-      },
-      {
-        id: 'pressure-system',
-        shortTitle: 'Validate setup',
-        title: 'Level, zero, and dynamic response',
-        minutes: 12,
-        description:
-          'Establish a valid pressure-measurement system and classify its fast-flush response.',
-        stage: 'foundation',
-        activityId: 'hemodynamics:learn:pressure-system',
-      },
-      {
-        id: 'waveform-interpretation',
-        shortTitle: 'Interpret',
-        title: 'Interpret normal and abnormal waveforms',
-        minutes: 18,
-        description:
-          'Identify chambers by morphology and read the wave components that carry a diagnosis.',
-        stage: 'mechanism',
-        activityId: 'hemodynamics:learn:waveform-interpretation',
       },
       {
         id: 'pawp-capture',
@@ -54,7 +55,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         title: 'Brief end-expiratory PAWP capture',
         minutes: 15,
         description:
-          'Capture, store, and promptly deflate while confirming safe return of the PA waveform.',
+          'From the confirmed PA position, capture and store at end expiration, then deflate promptly and confirm the PA waveform returns.',
         stage: 'mechanism',
         activityId: 'hemodynamics:learn:pawp-capture',
       },
@@ -84,7 +85,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         title: 'PAC signal-validation capstone',
         minutes: 20,
         description:
-          'Integrate setup, catheter position, curve quality, derived values, and reassessment.',
+          'Run the whole validity screen at once on a discordant case: setup, catheter position, curve quality, derived values, and reassessment.',
         stage: 'integration',
         activityId: 'hemodynamics:learn:pac-signal-validation',
       },
@@ -92,16 +93,29 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
   },
   {
     moduleId: 'baxter-crrt',
+    /**
+     * C2 §4 — the recommended novice progression: treatment trajectory, the universal circuit,
+     * transport, prescription construction, prescribed versus delivered dose, pressure
+     * localization, citrate, fluid management, integration. Eight sections carry those nine
+     * steps because prescription construction and prescribed-versus-delivered are two halves of
+     * one section (`crrt-prescription-dosing`), which is why the staged builder inside it has a
+     * construction stage and a predicted-consequences stage.
+     *
+     * The only order change is that localization now precedes citrate: a learner who cannot yet
+     * name a place on the circuit has no way to read a citrate finding as belonging to the
+     * circuit rather than the patient. Every section id, activity id, route, and storage key is
+     * unchanged, and nothing here gates.
+     */
     arcSentence:
-      'Set the goal, trace the circuit, prescribe the dose, keep it running, and localize the problem',
+      'Set the trajectory, trace one circuit, build the prescription, localize the pressure, and hold citrate and fluid together',
     sections: [
       {
         id: 'crrt-indications-modality',
-        shortTitle: 'Set the goal',
+        shortTitle: 'Set the trajectory',
         title: 'CRRT indications and modality selection',
         minutes: 12,
         description:
-          'Name the solute, acid–base, and volume problem to solve before any modality label is chosen.',
+          'Start here. Name the solute, acid–base, and volume problem the therapy is meant to work on, and the trajectory it is meant to follow, before any modality label is chosen.',
         stage: 'orientation',
         activityId: 'crrt:learn:crrt-indications-modality',
       },
@@ -111,7 +125,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         title: 'Circuit anatomy and pressure localization',
         minutes: 14,
         description:
-          'Follow the blood path from access to return, and read each pressure as a location rather than a value.',
+          'Trace the one circuit every later section reuses — access lumen, pump, filter, return lumen, and the separate fluid side — and learn where each pressure is measured on it.',
         stage: 'foundation',
         activityId: 'crrt:learn:crrt-circuit-pressures',
       },
@@ -121,7 +135,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         title: 'Solute and water transport',
         minutes: 12,
         description:
-          'Separate diffusion, convection, ultrafiltration, and adsorption across the filter you just traced.',
+          'Separate diffusion, convection, ultrafiltration, and adsorption across the membrane you just traced.',
         stage: 'foundation',
         activityId: 'crrt:learn:crrt-solute-transport',
       },
@@ -131,29 +145,29 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         title: 'Prescription and delivered dose',
         minutes: 15,
         description:
-          'Turn the goal into explicit flows, then reconcile the prescription against therapy actually delivered.',
+          'Build a prescription in three steps — the job it has to do, the flows that do it, and what those flows predict — then separate prescribed intensity from therapy actually delivered.',
         stage: 'mechanism',
         activityId: 'crrt:learn:crrt-prescription-dosing',
       },
       {
-        id: 'crrt-anticoagulation',
-        shortTitle: 'Anticoagulate',
-        title: 'Anticoagulation and citrate safety',
-        minutes: 12,
-        description:
-          'Hold circuit patency and patient bleeding risk together as one monitored problem.',
-        stage: 'application',
-        activityId: 'crrt:learn:crrt-anticoagulation',
-      },
-      {
         id: 'crrt-alarms-troubleshooting',
-        shortTitle: 'Answer alarms',
+        shortTitle: 'Localize',
         title: 'Alarms and cause-first troubleshooting',
         minutes: 12,
         description:
-          'Preserve the safe state, identify what the device detected, and verify the cause before resuming.',
+          'Turn a changed pressure pattern into a place on the circuit you can walk to and inspect, and preserve the safe state before anything resumes.',
         stage: 'application',
         activityId: 'crrt:learn:crrt-alarms-troubleshooting',
+      },
+      {
+        id: 'crrt-anticoagulation',
+        shortTitle: 'Citrate',
+        title: 'Anticoagulation and citrate safety',
+        minutes: 12,
+        description:
+          'Follow citrate into the circuit and calcium back to the patient, and keep a circuit sample and a systemic sample answering the two different questions they answer.',
+        stage: 'application',
+        activityId: 'crrt:learn:crrt-anticoagulation',
       },
       {
         id: 'crrt-fluid-liberation',
@@ -167,11 +181,11 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'crrt-pressure-profile-integration',
-        shortTitle: 'Localize',
+        shortTitle: 'Integrate',
         title: 'Read the pressure profile: where in the circuit is the problem?',
         minutes: 18,
         description:
-          'Combine circuit anatomy, the prescription, anticoagulation, and the fluid ledger to localize one deteriorating run.',
+          'Put every earlier reading on one deteriorating run: circuit anatomy, the prescription, citrate, and the fluid ledger, read together to localize the problem.',
         stage: 'integration',
         activityId: 'crrt:learn:crrt-pressure-profile-integration',
       },
@@ -503,23 +517,24 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         activityId: 'ecmo:learn:blood-flow-versus-sweep',
       },
       {
+        id: 'vv-normal-state',
+        shortTitle: 'Normal VV',
+        title: 'The normal VV patient–circuit state',
+        minutes: 12,
+        description:
+          'A short statement of how the circuit sits relative to the patient, then the stable run every later section is read against.',
+        stage: 'foundation',
+        activityId: 'ecmo:learn:vv-normal-state',
+      },
+      {
         id: 'vv-series-physiology',
         shortTitle: 'Series & recirculation',
         title: 'VV series physiology, effective flow, and recirculation',
         minutes: 14,
         description:
-          'The circuit sits in series with the patient, and part of what it pumps can be blood it just returned.',
+          'Now that the stable state is known: the circuit sits in series with the patient, and part of what it pumps can be blood it just returned.',
         stage: 'mechanism',
         activityId: 'ecmo:learn:vv-series-physiology',
-      },
-      {
-        id: 'vv-normal-state',
-        shortTitle: 'Normal VV',
-        title: 'The normal VV patient–circuit state',
-        minutes: 12,
-        description: 'The stable run every later failure section is read against.',
-        stage: 'foundation',
-        activityId: 'ecmo:learn:vv-normal-state',
       },
       {
         id: 'startup-sensor-orientation',
@@ -600,7 +615,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         shortTitle: 'Air',
         title: 'Arterial bubble intervention and cause-before-reset',
         minutes: 12,
-        description: 'Isolate, correct the source, then reset — in that order.',
+        description:
+          'Isolate, correct the source, then resume per the current IFU and approved local protocol.',
         stage: 'application',
         activityId: 'ecmo:learn:arterial-bubble-stop',
       },
@@ -673,24 +689,24 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         activityId: 'ecmo:learn:blood-flow-versus-sweep',
       },
       {
-        id: 'va-parallel-physiology',
-        shortTitle: 'Parallel & loading',
-        title: 'VA parallel circulation, LV loading, and differential oxygenation',
-        minutes: 14,
-        description:
-          'The circuit runs in parallel with the heart, and the two circulations compete for the same aorta.',
-        stage: 'mechanism',
-        activityId: 'ecmo:learn:va-parallel-physiology',
-      },
-      {
         id: 'va-normal-state',
         shortTitle: 'Normal VA',
         title: 'The normal VA patient–circuit state',
         minutes: 12,
         description:
-          'The stable run, including the signals that exist only because the circulations are in parallel.',
+          'A short statement of how the circuit sits relative to the patient, then the stable run, including the signals that exist only because the circulations are in parallel.',
         stage: 'foundation',
         activityId: 'ecmo:learn:va-normal-state',
+      },
+      {
+        id: 'va-parallel-physiology',
+        shortTitle: 'Parallel & loading',
+        title: 'VA parallel circulation, LV loading, and differential oxygenation',
+        minutes: 14,
+        description:
+          'Now that the stable state is known: the circuit runs in parallel with the heart, and the two circulations compete for the same aorta.',
+        stage: 'mechanism',
+        activityId: 'ecmo:learn:va-parallel-physiology',
       },
       {
         id: 'va-startup-sensor-orientation',
@@ -771,7 +787,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         shortTitle: 'Air',
         title: 'VA arterial-return bubble and cause-before-reset',
         minutes: 12,
-        description: 'Isolate, correct the source, then reset — in that order.',
+        description:
+          'Isolate, correct the source, then resume per the current IFU and approved local protocol.',
         stage: 'application',
         activityId: 'ecmo:learn:va-arterial-bubble-stop',
       },

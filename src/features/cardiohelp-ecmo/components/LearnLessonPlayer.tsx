@@ -4,14 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeft,
   ArrowRight,
-  BookOpenCheck,
   Check,
-  CheckCircle2,
   CircleHelp,
   CircleDot,
+  Clock,
   GraduationCap,
   ListChecks,
   LocateFixed,
+  Play,
   RotateCcw,
   SlidersHorizontal,
   Target,
@@ -19,9 +19,11 @@ import {
 
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 import type { CriticalCareActivityPhase } from '@/features/learning-module/activity'
+import { AnswerVerdict } from '@/features/learning-module/components/AnswerVerdict'
 import { PathwayNav, nextPathwaySection } from '@/features/learning-module/curriculum'
 
 import { cardiohelpLearnLessons, cardiohelpLearnLessonByScenarioId } from '../content/learnLessons'
+import { ecmoLearnPredictionFor } from '../content/learnPredictionItems'
 import {
   cardiohelpCurriculum,
   curriculumUnitById,
@@ -32,6 +34,7 @@ import {
 import { isEcmoFoundationSectionId } from '../content/foundationLessons'
 import { clinicalPracticeScenarioById } from '../content/clinicalCases'
 import type {
+  CircuitViewPreference,
   ConsoleScreen,
   EcmoSimulationState,
   GuidedControlId,
@@ -40,7 +43,7 @@ import type {
   GuidedWalkthroughStep,
   SimulationAction,
 } from '../engine'
-import { formatChannelGroup, formatChannelReadout } from './channelReadout'
+import type { LearnStepStatus } from './LearnStepTeaching'
 import styles from './cardiohelp-ecmo.module.css'
 
 interface LearnLessonPlayerProps {
@@ -50,10 +53,41 @@ interface LearnLessonPlayerProps {
   onSelectLesson: (scenarioId: string) => void
   onCompleteLesson: (scenarioId: string) => void
   onTryPractice: (scenarioId: string) => void
-  onTargetChange: (target: GuidedTarget) => void
+  /**
+   * The panel this step is performed on, or `null` for a task-pane step.
+   *
+   * `null` is a real answer, not an absence: a step that only advances the model has no control on
+   * the simulator to focus, and highlighting a panel anyway sends the learner hunting.
+   */
+  onTargetChange: (target: GuidedTarget | null) => void
   onControlHelpChange: (controlId: GuidedControlId | null) => void
+  /**
+   * The circuit surface this step should be read on, published on step entry.
+   *
+   * Carries the step id so the consumer can tell "the learner arrived at a step that prefers the
+   * map" from "the learner is still on that step and has chosen a different tab".
+   */
+  onCircuitViewPreferenceChange?: (
+    preference: { view: CircuitViewPreference; stepId: string } | null,
+  ) => void
   onPhaseChange?: (phase: CriticalCareActivityPhase) => void
   onActiveStepChange?: (step: GuidedWalkthroughStep) => void
+  /**
+   * Published for the teaching pane, which renders this step's explanation beside the live circuit.
+   *
+   * The step and whether it has been performed are the only things the teaching surface needs, and
+   * they stay owned here: the pane split moved where the explanation is rendered, not who decides
+   * which step is active.
+   */
+  onStepStatusChange?: (status: LearnStepStatus) => void
+  /**
+   * Called with the control a help request is about to focus, before the focus is scheduled.
+   *
+   * The workspace uses it to bring the pane holding that control back on screen first. A control
+   * inside a pane the learner has switched away from is `display: none`, and neither `focus()` nor
+   * `scrollIntoView()` does anything to a box that is not laid out.
+   */
+  onBeforeRevealTarget?: (controlId: GuidedControlId) => void
 }
 
 const targetLabels: Record<GuidedTarget, string> = {
@@ -139,6 +173,13 @@ function guidedActionSatisfied(action: SimulationAction, state: EcmoSimulationSt
       return (
         !state.circuit.bubbleResetRequired &&
         state.scenario.correctedFaults.includes('arterial-bubble')
+      )
+    case 'RESUME_SUPPORT_AFTER_BUBBLE':
+      return (
+        !state.circuit.bubbleResetRequired &&
+        !state.circuit.drainageClampClosed &&
+        !state.circuit.returnClampClosed &&
+        state.device.pumpRunning
       )
     case 'PERFORM_CHECK':
       return (
@@ -258,6 +299,13 @@ function resolveGuidedSimulatorTask(
         instruction: 'On the separate gas panel, select Restore verified gas source.',
         satisfied,
       }
+    case 'RESUME_SUPPORT_AFTER_BUBBLE':
+      return {
+        controlId: 'cardiohelp-resume-support',
+        instruction:
+          'On the bedside circuit, resume support per the current IFU and approved local protocol.',
+        satisfied,
+      }
     case 'RESET_BUBBLE':
       return state.device.screen === 'interventions'
         ? {
@@ -300,23 +348,45 @@ export function LearnLessonPlayer({
   onTryPractice,
   onTargetChange,
   onControlHelpChange,
+  onCircuitViewPreferenceChange,
   onPhaseChange,
   onActiveStepChange,
+  onStepStatusChange,
+  onBeforeRevealTarget,
 }: LearnLessonPlayerProps) {
   const [activeStepIndex, setActiveStepIndex] = useState(0)
   const [completedStepIds, setCompletedStepIds] = useState<Set<string>>(() => new Set())
   const [lessonFinished, setLessonFinished] = useState(false)
   const [helpRequestCount, setHelpRequestCount] = useState(0)
+  // Kept per step rather than per lesson so stepping back to a committed prediction still shows the
+  // learner what they answered beside the verdict on it.
+  const [predictionChoiceByStepId, setPredictionChoiceByStepId] = useState<
+    Readonly<Record<string, string>>
+  >({})
   const activePanelRef = useRef<HTMLDivElement>(null)
   const activeStep = lesson.steps[activeStepIndex] ?? lesson.steps[0]
   const stepPerformed = completedStepIds.has(activeStep.id)
-  const simulatorTask = resolveGuidedSimulatorTask(activeStep, state)
+  const prediction = activeStep.predictionScenarioId
+    ? ecmoLearnPredictionFor(activeStep.predictionScenarioId)
+    : undefined
+  const selectedPredictionChoiceId = predictionChoiceByStepId[activeStep.id] ?? null
+  /*
+   * A task-pane step is completed in this pane, so it publishes no focus target and offers no
+   * help-finding control. Both of those describe a control on the simulator, and this step has
+   * none: `STEP` advances the model. Authored, not inferred from the action list — `startup-respond`
+   * carries one action and is a genuine console task, `startup-settle-circuit` carries two and is
+   * not, and no rule over action types separates them.
+   */
+  const taskPaneOnly = activeStep.interaction === 'task-pane'
+  const simulatorTask = taskPaneOnly ? null : resolveGuidedSimulatorTask(activeStep, state)
   const simulatorTaskSatisfied = simulatorTask?.satisfied ?? false
   const helpControlId = simulatorTask?.controlId ?? panelControlIds[activeStep.target]
-  const helpRequested = helpRequestCount > 0
+  const helpRequested = helpRequestCount > 0 && !taskPaneOnly
   const trackPathway = criticalCareLearningPathway('cardiohelp-ecmo', state.supportMode)
 
-  // Physiology sections are prose on their own route; drill sections stay inside this player.
+  // Foundation sections open the interactive three-pane workspace on their own route; drill
+  // sections stay inside this player. They were prose when this navigation was written, and the
+  // static view that rendered them has since been removed entirely.
   const onSelectSection = (sectionId: string) => {
     if (isEcmoFoundationSectionId(sectionId)) {
       window.location.assign(
@@ -349,28 +419,23 @@ export function LearnLessonPlayer({
     : null
   const pairedCaseId = pairedCaseIdsForLesson(lesson.scenarioId)[0]
   const pairedCase = pairedCaseId ? clinicalPracticeScenarioById.get(pairedCaseId) : undefined
-  const simulatorSnapshot = useMemo(
-    () => ({
-      time: state.simulationTime,
-      flow: state.circuit.bloodFlow.toFixed(2),
-      // Formatted from the engine readouts, so a stopped circuit's intercepts never appear here as
-      // though the console had measured them.
-      pVen: formatChannelReadout('pVen', state.circuit.readouts.pVen, 'mmHg'),
-      pIntPArt: formatChannelGroup([state.circuit.readouts.pInt, state.circuit.readouts.pArt], ''),
-      sweep: state.gas.sweepLpm.toFixed(1),
-      spo2: state.patient.spo2.toFixed(1),
-      paCO2: state.patient.paCO2.toFixed(1),
-      rightRadialSpo2: state.patient.rightRadialSpo2.toFixed(1),
-      femoralArterialSpo2: state.patient.femoralArterialSpo2.toFixed(1),
-    }),
-    [state],
-  )
 
   useEffect(() => {
-    onTargetChange(activeStep.target)
+    onTargetChange(taskPaneOnly ? null : activeStep.target)
     onControlHelpChange(null)
     window.requestAnimationFrame(() => activePanelRef.current?.focus({ preventScroll: true }))
-  }, [activeStep.id, activeStep.target, onControlHelpChange, onTargetChange])
+  }, [activeStep.id, activeStep.target, onControlHelpChange, onTargetChange, taskPaneOnly])
+
+  // Published on step entry only. Re-publishing while the learner is on the step would drag them
+  // back off a tab they chose themselves; the step id is what makes "entered" observable.
+  useEffect(() => {
+    if (!onCircuitViewPreferenceChange) return
+    onCircuitViewPreferenceChange(
+      activeStep.preferredCircuitView
+        ? { view: activeStep.preferredCircuitView, stepId: activeStep.id }
+        : null,
+    )
+  }, [activeStep.id, activeStep.preferredCircuitView, onCircuitViewPreferenceChange])
 
   useEffect(() => {
     onPhaseChange?.(semanticPhaseForGuidedStep(activeStep.phase, lessonFinished))
@@ -379,6 +444,23 @@ export function LearnLessonPlayer({
   useEffect(() => {
     onActiveStepChange?.(activeStep)
   }, [activeStep, onActiveStepChange])
+
+  useEffect(() => {
+    onStepStatusChange?.({
+      step: activeStep,
+      stepIndex: activeStepIndex,
+      stepCount: lesson.steps.length,
+      performed: stepPerformed,
+      lessonFinished,
+    })
+  }, [
+    activeStep,
+    activeStepIndex,
+    lesson.steps.length,
+    lessonFinished,
+    onStepStatusChange,
+    stepPerformed,
+  ])
 
   useEffect(
     () => () => {
@@ -415,6 +497,9 @@ export function LearnLessonPlayer({
   useEffect(() => {
     if (!helpRequested) return
     onControlHelpChange(helpControlId)
+    // Before the frame, not inside it: the pane holding this control may be switched away, and the
+    // reveal has to be laid out before anything can focus or scroll it.
+    onBeforeRevealTarget?.(helpControlId)
     const frame = window.requestAnimationFrame(() => {
       const control = document.getElementById(helpControlId)
       if (!control) return
@@ -426,10 +511,30 @@ export function LearnLessonPlayer({
       })
     })
     return () => window.cancelAnimationFrame(frame)
-  }, [helpControlId, helpRequestCount, helpRequested, onControlHelpChange])
+  }, [helpControlId, helpRequestCount, helpRequested, onBeforeRevealTarget, onControlHelpChange])
 
   function performStep() {
     for (const action of activeStep.actions) dispatch(action)
+    completeActiveStep()
+  }
+
+  /**
+   * The learner's own selection becomes the committed prediction.
+   *
+   * This is the whole point of the step: the payload is read off the choice that was picked, so a
+   * learner who holds the wrong model commits the wrong triple and the existing engine scoring —
+   * untouched here — sees what they actually decided rather than what the scenario expected.
+   */
+  function commitPrediction() {
+    if (!prediction || !selectedPredictionChoiceId || stepPerformed) return
+    const commitment = prediction.commitments[selectedPredictionChoiceId]
+    if (!commitment) return
+    dispatch({
+      type: 'COMMIT_PREDICTION',
+      goalId: commitment.goalId,
+      control: commitment.control,
+      direction: commitment.direction,
+    })
     completeActiveStep()
   }
 
@@ -458,12 +563,21 @@ export function LearnLessonPlayer({
     setCompletedStepIds(new Set())
     setLessonFinished(false)
     setHelpRequestCount(0)
+    setPredictionChoiceByStepId({})
     onControlHelpChange(null)
     onSelectLesson(lesson.scenarioId)
   }
 
+  /*
+   * The player's root is a labelled region, not a complementary landmark.
+   *
+   * It was an `<aside>` while it was a column beside the simulator. Inside the workspace it is one
+   * of three panes, each already a labelled region, and a complementary landmark nested inside
+   * another landmark is both an axe violation and a wrong description: this is the surface the
+   * learner acts through, not material supplementary to something else.
+   */
   return (
-    <aside
+    <section
       className={styles.learningColumn}
       aria-label={`Guided CARDIOHELP ${state.supportMode.toUpperCase()} lesson player`}
     >
@@ -542,7 +656,15 @@ export function LearnLessonPlayer({
                   <span>{complete ? <Check aria-hidden="true" /> : index + 1}</span>
                   <span>
                     <strong>{phaseLabels[item.phase]}</strong>
-                    <small>{item.title}</small>
+                    {/*
+                      A step the learner has not reached shows its phase and its number, never its
+                      title. Several lessons name the fitting action in the title of the step that
+                      follows the prediction — "Reduce pump demand first", "Correct the recirculation
+                      cause" — and the stepper sits directly above the choices, so painting those
+                      titles answered the question the learner was being asked. Disabling the button
+                      never hid the text.
+                    */}
+                    <small>{available ? item.title : `Step ${index + 1}`}</small>
                   </span>
                 </button>
               </li>
@@ -562,62 +684,77 @@ export function LearnLessonPlayer({
         >
           <div className={styles.guidedStepMeta}>
             <span>{phaseLabels[activeStep.phase]} focus</span>
-            <span>
-              <CircleDot aria-hidden="true" /> Focus: {targetLabels[activeStep.target]}
-            </span>
+            {taskPaneOnly ? (
+              <span data-interaction="task-pane">
+                <Clock aria-hidden="true" /> Simulation update — no console action
+              </span>
+            ) : (
+              <span>
+                <CircleDot aria-hidden="true" /> Focus: {targetLabels[activeStep.target]}
+              </span>
+            )}
           </div>
           <h3 id="guided-step-heading">{activeStep.title}</h3>
           <p>{activeStep.instruction}</p>
         </div>
 
-        <div className={styles.guidedWhy}>
-          <BookOpenCheck aria-hidden="true" />
-          <div>
-            <strong>Why this step matters</strong>
-            <p>{activeStep.rationale}</p>
+        {/*
+          The step's rationale, the live snapshot, and the completed-step response used to sit here.
+          B3 moved them to `LearnStepTeaching` in the workspace's teaching pane: what a learner reads
+          and what a learner operates no longer share one scroll region.
+        */}
+
+        {prediction ? (
+          /*
+           * The prediction step is answered, not performed. The options are the only thing shown
+           * before commitment — every rationale, the comparison between them and the explanation
+           * live in the verdict below, which does not exist until a choice has been committed.
+           */
+          <div className={styles.guidedPrediction}>
+            <fieldset disabled={stepPerformed}>
+              <legend>{prediction.item.stem}</legend>
+              {prediction.item.choices.map((choice) => (
+                <label key={choice.id} data-selected={selectedPredictionChoiceId === choice.id}>
+                  <input
+                    type="radio"
+                    name={`ecmo-prediction-${activeStep.id}`}
+                    value={choice.id}
+                    checked={selectedPredictionChoiceId === choice.id}
+                    onChange={() =>
+                      setPredictionChoiceByStepId((current) => ({
+                        ...current,
+                        [activeStep.id]: choice.id,
+                      }))
+                    }
+                  />
+                  <span>{choice.label}</span>
+                </label>
+              ))}
+            </fieldset>
+            {stepPerformed && selectedPredictionChoiceId ? (
+              <AnswerVerdict
+                item={prediction.item}
+                choiceId={selectedPredictionChoiceId}
+                timing="immediate-after-commit"
+                theme="dark"
+                onContinue={
+                  activeStepIndex < lesson.steps.length - 1
+                    ? () => goToStep(activeStepIndex + 1)
+                    : undefined
+                }
+              />
+            ) : (
+              <button
+                type="button"
+                className={styles.guidedPerformAction}
+                disabled={!selectedPredictionChoiceId}
+                onClick={commitPrediction}
+              >
+                <SlidersHorizontal aria-hidden="true" /> {activeStep.actionLabel}
+              </button>
+            )}
           </div>
-        </div>
-
-        <div className={styles.guidedSnapshot} aria-label="Current simulated values">
-          <span>
-            <small>Clock</small>
-            <strong>{simulatorSnapshot.time}s</strong>
-          </span>
-          <span>
-            <small>Flow</small>
-            <strong>{simulatorSnapshot.flow} L/min</strong>
-          </span>
-          <span data-readout-status={simulatorSnapshot.pVen.status}>
-            <small>pVen</small>
-            <strong aria-hidden="true">{simulatorSnapshot.pVen.valueText}</strong>
-            <span className="sr-only">{simulatorSnapshot.pVen.screenReaderText}</span>
-          </span>
-          <span>
-            <small>pInt / pArt</small>
-            <strong>{simulatorSnapshot.pIntPArt.text}</strong>
-          </span>
-          <span>
-            <small>Sweep</small>
-            <strong>{simulatorSnapshot.sweep} L/min</strong>
-          </span>
-          {state.supportMode === 'va' ? (
-            <span>
-              <small>Right arm / femoral SpO₂</small>
-              <strong>
-                {simulatorSnapshot.rightRadialSpo2}% / {simulatorSnapshot.femoralArterialSpo2}%
-              </strong>
-            </span>
-          ) : (
-            <span>
-              <small>SpO₂ / PaCO₂</small>
-              <strong>
-                {simulatorSnapshot.spo2}% / {simulatorSnapshot.paCO2}
-              </strong>
-            </span>
-          )}
-        </div>
-
-        {!stepPerformed && simulatorTask ? (
+        ) : !stepPerformed && simulatorTask ? (
           <div className={styles.guidedSimulatorTask} role="status" aria-live="polite">
             <LocateFixed aria-hidden="true" />
             <div>
@@ -638,36 +775,39 @@ export function LearnLessonPlayer({
             </button>
           </div>
         ) : !stepPerformed ? (
-          <div className={styles.guidedManualActions}>
-            <button type="button" className={styles.guidedPerformAction} onClick={performStep}>
-              <SlidersHorizontal aria-hidden="true" /> {activeStep.actionLabel}
-            </button>
+          <div
+            className={styles.guidedManualActions}
+            data-interaction={taskPaneOnly ? 'task-pane' : undefined}
+          >
             <button
               type="button"
-              className={styles.guidedHelpAction}
-              onClick={() => setHelpRequestCount((count) => count + 1)}
+              className={styles.guidedPerformAction}
+              data-interaction={taskPaneOnly ? 'task-pane' : undefined}
+              onClick={performStep}
             >
-              <CircleHelp aria-hidden="true" />
-              {helpRequested ? 'Highlight it again' : 'I need help finding it'}
-            </button>
-          </div>
-        ) : (
-          <div className={styles.guidedExpectedResponse} role="status">
-            <CheckCircle2 aria-hidden="true" />
-            <div>
-              <strong>Step complete—now verify what changed</strong>
-              {activeStep.expectedResponse.length ? (
-                <ul>
-                  {activeStep.expectedResponse.map((response) => (
-                    <li key={response}>{response}</li>
-                  ))}
-                </ul>
+              {taskPaneOnly ? (
+                <Play aria-hidden="true" />
               ) : (
-                <p>No control change was required for this observation step.</p>
-              )}
-            </div>
+                <SlidersHorizontal aria-hidden="true" />
+              )}{' '}
+              {activeStep.actionLabel}
+            </button>
+            {/*
+              No help control on a task-pane step. "I need help finding it" can only point at a
+              panel, and there is nothing on that panel to find.
+            */}
+            {taskPaneOnly ? null : (
+              <button
+                type="button"
+                className={styles.guidedHelpAction}
+                onClick={() => setHelpRequestCount((count) => count + 1)}
+              >
+                <CircleHelp aria-hidden="true" />
+                {helpRequested ? 'Highlight it again' : 'I need help finding it'}
+              </button>
+            )}
           </div>
-        )}
+        ) : null}
 
         <div className={styles.guidedStepActions}>
           <button
@@ -721,6 +861,6 @@ export function LearnLessonPlayer({
           </div>
         </section>
       ) : null}
-    </aside>
+    </section>
   )
 }

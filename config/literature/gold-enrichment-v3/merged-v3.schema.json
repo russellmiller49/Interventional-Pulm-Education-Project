@@ -1,0 +1,1630 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://interventionalpulm.com/schemas/literature/gold-enrichment-v3/merged-v3.schema.json",
+  "title": "Gold-set V3 merged development enrichment row",
+  "description": "A uniform, non-import-ready parsed CSV row for the deterministic 630-row V3 candidate. Schema 3.0.2 preserves explicit raw model-output fields and quarantines coordinator-conflicted candidate fields without automatic correction. CSV cells are strings. The merge validator additionally enforces canonical order, exact membership and counts, protected physician-field hashing, packet coverage, full-text registry state, overlay completeness, duplicate-free lists, and zero held-out access.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-csv-columns": [
+    "workflow_id",
+    "workflow_schema_version",
+    "merged_schema_version",
+    "prompt_template_version",
+    "result_schema_version",
+    "taxonomy_version",
+    "label_schema_version",
+    "enrichment_schema_version",
+    "source_sha256",
+    "source_receipt_sha256",
+    "physician_field_sha256",
+    "result_packet_id",
+    "result_packet_family",
+    "raw_result_filename",
+    "raw_result_sha256",
+    "source_projection_sha256",
+    "source_row_sha256",
+    "batch_id",
+    "batch_name",
+    "dataset_split",
+    "gold_set_item_id",
+    "display_order",
+    "master_row_id",
+    "screening_batch",
+    "source_row_id",
+    "pmid",
+    "title",
+    "abstract",
+    "journal",
+    "publication_year",
+    "physician_final_label",
+    "physician_final_confidence",
+    "physician_accept_or_modify",
+    "physician_notes",
+    "physician_reviewed",
+    "decision_provenance",
+    "is_blinded",
+    "relevance_review_complete",
+    "metadata_sufficiency",
+    "model_topic_ids",
+    "model_technology_tags",
+    "model_technology_tag_status",
+    "model_clinical_purposes",
+    "model_disease_tags",
+    "model_disease_tag_status",
+    "model_study_design",
+    "model_publication_status",
+    "topic_ids",
+    "technology_tags",
+    "technology_tag_status",
+    "clinical_purposes",
+    "disease_tags",
+    "disease_tag_status",
+    "study_design",
+    "publication_status",
+    "categorization_from_full_text",
+    "full_text_used",
+    "full_text_filename",
+    "full_text_sha256",
+    "enrichment_confidence",
+    "assessment_confidence",
+    "model_requests_physician_enrichment_review",
+    "raw_row_validation_status",
+    "coordinator_schema_version",
+    "coordinator_policy_status",
+    "coordinator_conflict_count",
+    "coordinator_conflict_fields",
+    "coordinator_conflict_rule_ids",
+    "coordinator_conflict_diagnostics",
+    "coordinator_candidate_status",
+    "coordinator_requires_physician_enrichment_review",
+    "coordinator_review_reasons",
+    "evidence_1_field",
+    "evidence_1_excerpt",
+    "evidence_1_location",
+    "evidence_2_field",
+    "evidence_2_excerpt",
+    "evidence_2_location",
+    "enrichment_rationale",
+    "processing_status",
+    "processing_error",
+    "external_qa_review_flag",
+    "taxonomy_v2_upgrade_review_flag",
+    "relevance_concern_review_flag",
+    "physician_enrichment_reviewed",
+    "physician_enrichment_accept_or_modify",
+    "physician_enrichment_notes",
+    "enrichment_provenance",
+    "protocol_acceptance_authorized",
+    "import_ready",
+    "database_mutation_plan"
+  ],
+  "required": [
+    "workflow_id",
+    "workflow_schema_version",
+    "merged_schema_version",
+    "prompt_template_version",
+    "result_schema_version",
+    "taxonomy_version",
+    "label_schema_version",
+    "enrichment_schema_version",
+    "source_sha256",
+    "source_receipt_sha256",
+    "physician_field_sha256",
+    "result_packet_id",
+    "result_packet_family",
+    "raw_result_filename",
+    "raw_result_sha256",
+    "source_projection_sha256",
+    "source_row_sha256",
+    "batch_id",
+    "batch_name",
+    "dataset_split",
+    "gold_set_item_id",
+    "display_order",
+    "master_row_id",
+    "screening_batch",
+    "source_row_id",
+    "pmid",
+    "title",
+    "abstract",
+    "journal",
+    "publication_year",
+    "physician_final_label",
+    "physician_final_confidence",
+    "physician_accept_or_modify",
+    "physician_notes",
+    "physician_reviewed",
+    "decision_provenance",
+    "is_blinded",
+    "relevance_review_complete",
+    "metadata_sufficiency",
+    "model_topic_ids",
+    "model_technology_tags",
+    "model_technology_tag_status",
+    "model_clinical_purposes",
+    "model_disease_tags",
+    "model_disease_tag_status",
+    "model_study_design",
+    "model_publication_status",
+    "topic_ids",
+    "technology_tags",
+    "technology_tag_status",
+    "clinical_purposes",
+    "disease_tags",
+    "disease_tag_status",
+    "study_design",
+    "publication_status",
+    "categorization_from_full_text",
+    "full_text_used",
+    "full_text_filename",
+    "full_text_sha256",
+    "enrichment_confidence",
+    "assessment_confidence",
+    "model_requests_physician_enrichment_review",
+    "raw_row_validation_status",
+    "coordinator_schema_version",
+    "coordinator_policy_status",
+    "coordinator_conflict_count",
+    "coordinator_conflict_fields",
+    "coordinator_conflict_rule_ids",
+    "coordinator_conflict_diagnostics",
+    "coordinator_candidate_status",
+    "coordinator_requires_physician_enrichment_review",
+    "coordinator_review_reasons",
+    "evidence_1_field",
+    "evidence_1_excerpt",
+    "evidence_1_location",
+    "evidence_2_field",
+    "evidence_2_excerpt",
+    "evidence_2_location",
+    "enrichment_rationale",
+    "processing_status",
+    "processing_error",
+    "external_qa_review_flag",
+    "taxonomy_v2_upgrade_review_flag",
+    "relevance_concern_review_flag",
+    "physician_enrichment_reviewed",
+    "physician_enrichment_accept_or_modify",
+    "physician_enrichment_notes",
+    "enrichment_provenance",
+    "protocol_acceptance_authorized",
+    "import_ready",
+    "database_mutation_plan"
+  ],
+  "properties": {
+    "workflow_id": {
+      "const": "gold-set-v1-enrichment-v3"
+    },
+    "workflow_schema_version": {
+      "const": "3.0.0"
+    },
+    "merged_schema_version": {
+      "const": "3.0.2"
+    },
+    "prompt_template_version": {
+      "const": "3.0.1"
+    },
+    "result_schema_version": {
+      "const": "3.0.1"
+    },
+    "taxonomy_version": {
+      "const": "2.0.0"
+    },
+    "label_schema_version": {
+      "const": "2.0.0"
+    },
+    "enrichment_schema_version": {
+      "const": "2.0.0"
+    },
+    "source_sha256": {
+      "const": "d2942507531a4ba55a5a4195a6919c959eff77cd3473a83eeae16074861b1e64"
+    },
+    "source_receipt_sha256": {
+      "const": "38a0316ab5a3161bdf502a8e0c8b9c69753386862c858336f4d3e912a6ad21ef"
+    },
+    "physician_field_sha256": {
+      "const": "90b4b198da5803158685a9dd89d3f59578b91bad9bbd14e1cc55ebf5fdc9a01e"
+    },
+    "result_packet_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "result_packet_family": {
+      "enum": ["included_metadata_only", "included_full_text", "excluded_metadata_sufficiency"]
+    },
+    "raw_result_filename": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240,
+      "pattern": "^[^/\\\\]+\\.result\\.csv$"
+    },
+    "raw_result_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "source_projection_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "source_row_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "batch_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "batch_name": {
+      "const": "gold-set-v1"
+    },
+    "dataset_split": {
+      "const": "development"
+    },
+    "gold_set_item_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "display_order": {
+      "$ref": "#/$defs/positiveDecimal"
+    },
+    "master_row_id": {
+      "$ref": "#/$defs/positiveDecimal"
+    },
+    "screening_batch": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "source_row_id": {
+      "$ref": "#/$defs/positiveDecimal"
+    },
+    "pmid": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]{0,11}$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 10000
+    },
+    "abstract": {
+      "type": "string",
+      "maxLength": 200000
+    },
+    "journal": {
+      "type": "string",
+      "maxLength": 5000
+    },
+    "publication_year": {
+      "type": "string",
+      "pattern": "^(?:|[0-9]{4})$"
+    },
+    "physician_final_label": {
+      "enum": ["include_core", "include_adjacent", "exclude"]
+    },
+    "physician_final_confidence": {
+      "$ref": "#/$defs/confidence"
+    },
+    "physician_accept_or_modify": {
+      "enum": ["accept", "modify"]
+    },
+    "physician_notes": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "physician_reviewed": {
+      "const": "True"
+    },
+    "decision_provenance": {
+      "const": "human_ai_assisted"
+    },
+    "is_blinded": {
+      "const": "False"
+    },
+    "relevance_review_complete": {
+      "const": "True"
+    },
+    "metadata_sufficiency": {
+      "$ref": "#/$defs/metadataSufficiency"
+    },
+    "model_topic_ids": {
+      "$ref": "#/$defs/topicListOrBlank",
+      "description": "Untouched raw model topic_ids copied from the structurally valid packet result."
+    },
+    "model_technology_tags": {
+      "$ref": "#/$defs/technologyListOrBlank",
+      "description": "Untouched raw model technology_tags."
+    },
+    "model_technology_tag_status": {
+      "$ref": "#/$defs/tagStatusOrBlank"
+    },
+    "model_clinical_purposes": {
+      "$ref": "#/$defs/clinicalPurposeListOrBlank",
+      "description": "Untouched raw model clinical_purposes."
+    },
+    "model_disease_tags": {
+      "$ref": "#/$defs/diseaseListOrBlank",
+      "description": "Untouched raw model disease_tags."
+    },
+    "model_disease_tag_status": {
+      "$ref": "#/$defs/tagStatusOrBlank"
+    },
+    "model_study_design": {
+      "$ref": "#/$defs/studyDesignOrBlank",
+      "description": "Untouched raw model study_design."
+    },
+    "model_publication_status": {
+      "$ref": "#/$defs/publicationStatusOrBlank",
+      "description": "Untouched raw model publication_status."
+    },
+    "topic_ids": {
+      "$ref": "#/$defs/topicListOrBlank",
+      "description": "Coordinator candidate topic_ids. Blank when topic_ids has an unresolved coordinator conflict."
+    },
+    "technology_tags": {
+      "$ref": "#/$defs/technologyListOrBlank"
+    },
+    "technology_tag_status": {
+      "$ref": "#/$defs/tagStatusOrBlank"
+    },
+    "clinical_purposes": {
+      "$ref": "#/$defs/clinicalPurposeListOrBlank"
+    },
+    "disease_tags": {
+      "$ref": "#/$defs/diseaseListOrBlank"
+    },
+    "disease_tag_status": {
+      "$ref": "#/$defs/tagStatusOrBlank"
+    },
+    "study_design": {
+      "$ref": "#/$defs/studyDesignOrBlank"
+    },
+    "publication_status": {
+      "$ref": "#/$defs/publicationStatusOrBlank"
+    },
+    "categorization_from_full_text": {
+      "$ref": "#/$defs/csvBoolean"
+    },
+    "full_text_used": {
+      "$ref": "#/$defs/csvBoolean"
+    },
+    "full_text_filename": {
+      "$ref": "#/$defs/filenameOrBlank"
+    },
+    "full_text_sha256": {
+      "$ref": "#/$defs/sha256OrBlank"
+    },
+    "enrichment_confidence": {
+      "$ref": "#/$defs/confidenceOrBlank"
+    },
+    "assessment_confidence": {
+      "$ref": "#/$defs/confidenceOrBlank"
+    },
+    "model_requests_physician_enrichment_review": {
+      "$ref": "#/$defs/csvBoolean",
+      "description": "Immutable raw model self-assessment copied from the validated packet result."
+    },
+    "raw_row_validation_status": {
+      "const": "valid",
+      "description": "Stage-1 raw structural-validation status. Only valid rows may enter this merged artifact."
+    },
+    "coordinator_schema_version": {
+      "const": "3.0.1"
+    },
+    "coordinator_policy_status": {
+      "enum": ["clear", "conflict", "warning"]
+    },
+    "coordinator_conflict_count": {
+      "type": "string",
+      "pattern": "^(?:0|[1-9][0-9]*)$"
+    },
+    "coordinator_conflict_fields": {
+      "type": "string",
+      "maxLength": 1000,
+      "pattern": "^(?:|[a-z0-9_]+(?:\\|[a-z0-9_]+)*)$"
+    },
+    "coordinator_conflict_rule_ids": {
+      "type": "string",
+      "maxLength": 4000,
+      "pattern": "^(?:|[a-z0-9]+(?:-[a-z0-9]+)*(?:\\|[a-z0-9]+(?:-[a-z0-9]+)*)*)$"
+    },
+    "coordinator_conflict_diagnostics": {
+      "type": "string",
+      "maxLength": 12000
+    },
+    "coordinator_candidate_status": {
+      "enum": ["candidate", "unresolved_coordinator_conflict", "excluded_assessment"]
+    },
+    "coordinator_requires_physician_enrichment_review": {
+      "$ref": "#/$defs/csvBoolean",
+      "description": "Final local coordinator review eligibility computed after result validation and coordinator-only overlays."
+    },
+    "coordinator_review_reasons": {
+      "type": "string",
+      "maxLength": 4000,
+      "pattern": "^(?:|[a-z0-9_]+(?:\\|[a-z0-9_]+)*)$",
+      "description": "Deterministic pipe-delimited coordinator reasons created only after result validation and merge."
+    },
+    "evidence_1_field": {
+      "$ref": "#/$defs/evidenceFieldOrBlank"
+    },
+    "evidence_1_excerpt": {
+      "type": "string",
+      "maxLength": 1200
+    },
+    "evidence_1_location": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "evidence_2_field": {
+      "$ref": "#/$defs/evidenceFieldOrBlank"
+    },
+    "evidence_2_excerpt": {
+      "type": "string",
+      "maxLength": 1200
+    },
+    "evidence_2_location": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "enrichment_rationale": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "processing_status": {
+      "const": "valid"
+    },
+    "processing_error": {
+      "const": ""
+    },
+    "external_qa_review_flag": {
+      "$ref": "#/$defs/csvBoolean"
+    },
+    "taxonomy_v2_upgrade_review_flag": {
+      "$ref": "#/$defs/csvBoolean"
+    },
+    "relevance_concern_review_flag": {
+      "$ref": "#/$defs/csvBoolean"
+    },
+    "physician_enrichment_reviewed": {
+      "$ref": "#/$defs/csvBoolean"
+    },
+    "physician_enrichment_accept_or_modify": {
+      "enum": ["", "accept", "modify", "adjudicate"]
+    },
+    "physician_enrichment_notes": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "enrichment_provenance": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/enrichmentProvenance"
+        },
+        {
+          "not": {
+            "const": "legacy_v1_enrichment"
+          }
+        }
+      ],
+      "description": "The legacy value is cataloged for comparison reports but is forbidden in an independently generated V3 candidate."
+    },
+    "protocol_acceptance_authorized": {
+      "$ref": "#/$defs/csvBoolean"
+    },
+    "import_ready": {
+      "const": "false"
+    },
+    "database_mutation_plan": {
+      "const": ""
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "result_packet_family": {
+            "enum": ["included_metadata_only", "included_full_text"]
+          }
+        },
+        "required": ["result_packet_family"]
+      },
+      "then": {
+        "properties": {
+          "physician_final_label": {
+            "enum": ["include_core", "include_adjacent"]
+          },
+          "model_topic_ids": {
+            "$ref": "#/$defs/topicList"
+          },
+          "model_clinical_purposes": {
+            "$ref": "#/$defs/clinicalPurposeList"
+          },
+          "model_study_design": {
+            "$ref": "#/$defs/studyDesign"
+          },
+          "model_publication_status": {
+            "$ref": "#/$defs/publicationStatus"
+          },
+          "model_technology_tag_status": {
+            "$ref": "#/$defs/tagStatus"
+          },
+          "model_disease_tag_status": {
+            "$ref": "#/$defs/tagStatus"
+          },
+          "enrichment_confidence": {
+            "$ref": "#/$defs/confidence"
+          },
+          "assessment_confidence": {
+            "const": ""
+          },
+          "evidence_1_excerpt": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence_1_location": {
+            "type": "string",
+            "minLength": 1
+          },
+          "enrichment_rationale": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "result_packet_family": {
+            "const": "included_metadata_only"
+          }
+        },
+        "required": ["result_packet_family"]
+      },
+      "then": {
+        "properties": {
+          "categorization_from_full_text": {
+            "const": "false"
+          },
+          "full_text_used": {
+            "const": "false"
+          },
+          "full_text_filename": {
+            "const": ""
+          },
+          "full_text_sha256": {
+            "const": ""
+          },
+          "evidence_1_field": {
+            "$ref": "#/$defs/metadataEvidenceField"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "result_packet_family": {
+            "const": "included_full_text"
+          }
+        },
+        "required": ["result_packet_family"]
+      },
+      "then": {
+        "properties": {
+          "categorization_from_full_text": {
+            "const": "true"
+          },
+          "full_text_used": {
+            "const": "true"
+          },
+          "full_text_filename": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "pattern": "^[^/\\\\]+$"
+          },
+          "full_text_sha256": {
+            "$ref": "#/$defs/sha256"
+          },
+          "coordinator_requires_physician_enrichment_review": {
+            "const": "true"
+          },
+          "evidence_1_field": {
+            "const": "full_text"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "result_packet_family": {
+            "const": "excluded_metadata_sufficiency"
+          }
+        },
+        "required": ["result_packet_family"]
+      },
+      "then": {
+        "properties": {
+          "physician_final_label": {
+            "const": "exclude"
+          },
+          "model_topic_ids": {
+            "const": ""
+          },
+          "model_technology_tags": {
+            "const": ""
+          },
+          "model_technology_tag_status": {
+            "const": ""
+          },
+          "model_clinical_purposes": {
+            "const": ""
+          },
+          "model_disease_tags": {
+            "const": ""
+          },
+          "model_disease_tag_status": {
+            "const": ""
+          },
+          "model_study_design": {
+            "const": ""
+          },
+          "model_publication_status": {
+            "const": ""
+          },
+          "topic_ids": {
+            "const": ""
+          },
+          "technology_tags": {
+            "const": ""
+          },
+          "technology_tag_status": {
+            "const": ""
+          },
+          "clinical_purposes": {
+            "const": ""
+          },
+          "disease_tags": {
+            "const": ""
+          },
+          "disease_tag_status": {
+            "const": ""
+          },
+          "study_design": {
+            "const": ""
+          },
+          "publication_status": {
+            "const": ""
+          },
+          "categorization_from_full_text": {
+            "const": "false"
+          },
+          "full_text_used": {
+            "const": "false"
+          },
+          "full_text_filename": {
+            "const": ""
+          },
+          "full_text_sha256": {
+            "const": ""
+          },
+          "enrichment_confidence": {
+            "const": ""
+          },
+          "assessment_confidence": {
+            "$ref": "#/$defs/confidence"
+          },
+          "coordinator_candidate_status": {
+            "const": "excluded_assessment"
+          },
+          "evidence_1_field": {
+            "$ref": "#/$defs/metadataEvidenceField"
+          },
+          "evidence_1_excerpt": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence_1_location": {
+            "const": ""
+          },
+          "evidence_2_field": {
+            "const": ""
+          },
+          "evidence_2_excerpt": {
+            "const": ""
+          },
+          "evidence_2_location": {
+            "const": ""
+          },
+          "enrichment_rationale": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "result_packet_family": {
+            "enum": ["included_metadata_only", "included_full_text"]
+          },
+          "technology_tags": {
+            "const": ""
+          }
+        },
+        "required": ["result_packet_family", "technology_tags"]
+      },
+      "then": {
+        "properties": {
+          "technology_tag_status": {
+            "enum": ["not_applicable", "not_assessable"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "result_packet_family": {
+            "enum": ["included_metadata_only", "included_full_text"]
+          },
+          "technology_tags": {
+            "pattern": ".+"
+          }
+        },
+        "required": ["result_packet_family", "technology_tags"]
+      },
+      "then": {
+        "properties": {
+          "technology_tag_status": {
+            "const": "tagged"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "result_packet_family": {
+            "enum": ["included_metadata_only", "included_full_text"]
+          },
+          "disease_tags": {
+            "const": ""
+          }
+        },
+        "required": ["result_packet_family", "disease_tags"]
+      },
+      "then": {
+        "properties": {
+          "disease_tag_status": {
+            "enum": ["not_applicable", "not_assessable"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "result_packet_family": {
+            "enum": ["included_metadata_only", "included_full_text"]
+          },
+          "disease_tags": {
+            "pattern": ".+"
+          }
+        },
+        "required": ["result_packet_family", "disease_tags"]
+      },
+      "then": {
+        "properties": {
+          "disease_tag_status": {
+            "const": "tagged"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "evidence_2_field": {
+            "const": ""
+          }
+        },
+        "required": ["evidence_2_field"]
+      },
+      "then": {
+        "properties": {
+          "evidence_2_excerpt": {
+            "const": ""
+          },
+          "evidence_2_location": {
+            "const": ""
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "evidence_2_excerpt": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence_2_location": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "anyOf": [
+          {
+            "properties": {
+              "physician_final_label": {
+                "const": "include_adjacent"
+              }
+            },
+            "required": ["physician_final_label"]
+          },
+          {
+            "properties": {
+              "enrichment_confidence": {
+                "enum": ["moderate", "low"]
+              }
+            },
+            "required": ["enrichment_confidence"]
+          },
+          {
+            "properties": {
+              "assessment_confidence": {
+                "enum": ["moderate", "low"]
+              }
+            },
+            "required": ["assessment_confidence"]
+          },
+          {
+            "properties": {
+              "metadata_sufficiency": {
+                "enum": ["limited_abstract", "no_abstract", "conflicting_metadata"]
+              }
+            },
+            "required": ["metadata_sufficiency"]
+          },
+          {
+            "properties": {
+              "technology_tag_status": {
+                "const": "not_assessable"
+              }
+            },
+            "required": ["technology_tag_status"]
+          },
+          {
+            "properties": {
+              "disease_tag_status": {
+                "const": "not_assessable"
+              }
+            },
+            "required": ["disease_tag_status"]
+          },
+          {
+            "properties": {
+              "study_design": {
+                "const": "not-assessable-from-available-metadata"
+              }
+            },
+            "required": ["study_design"]
+          },
+          {
+            "properties": {
+              "publication_status": {
+                "const": "not-assessable-from-available-metadata"
+              }
+            },
+            "required": ["publication_status"]
+          },
+          {
+            "properties": {
+              "result_packet_family": {
+                "const": "included_full_text"
+              }
+            },
+            "required": ["result_packet_family"]
+          },
+          {
+            "properties": {
+              "external_qa_review_flag": {
+                "const": "true"
+              }
+            },
+            "required": ["external_qa_review_flag"]
+          },
+          {
+            "properties": {
+              "taxonomy_v2_upgrade_review_flag": {
+                "const": "true"
+              }
+            },
+            "required": ["taxonomy_v2_upgrade_review_flag"]
+          },
+          {
+            "properties": {
+              "relevance_concern_review_flag": {
+                "const": "true"
+              }
+            },
+            "required": ["relevance_concern_review_flag"]
+          }
+        ]
+      },
+      "then": {
+        "properties": {
+          "coordinator_requires_physician_enrichment_review": {
+            "const": "true"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "coordinator_policy_status": {
+            "const": "conflict"
+          }
+        },
+        "required": ["coordinator_policy_status"]
+      },
+      "then": {
+        "properties": {
+          "coordinator_conflict_count": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
+          },
+          "coordinator_conflict_fields": {
+            "type": "string",
+            "minLength": 1
+          },
+          "coordinator_conflict_rule_ids": {
+            "type": "string",
+            "minLength": 1
+          },
+          "coordinator_conflict_diagnostics": {
+            "type": "string",
+            "minLength": 1
+          },
+          "coordinator_candidate_status": {
+            "const": "unresolved_coordinator_conflict"
+          },
+          "coordinator_requires_physician_enrichment_review": {
+            "const": "true"
+          },
+          "topic_ids": {
+            "const": ""
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "coordinator_conflict_count": {
+            "const": "0"
+          },
+          "coordinator_conflict_fields": {
+            "const": ""
+          },
+          "coordinator_conflict_rule_ids": {
+            "const": ""
+          },
+          "coordinator_conflict_diagnostics": {
+            "const": ""
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "result_packet_family": {
+            "enum": ["included_metadata_only", "included_full_text"]
+          },
+          "coordinator_policy_status": {
+            "enum": ["clear", "warning"]
+          }
+        },
+        "required": ["result_packet_family", "coordinator_policy_status"]
+      },
+      "then": {
+        "properties": {
+          "topic_ids": {
+            "$ref": "#/$defs/topicList"
+          },
+          "coordinator_candidate_status": {
+            "const": "candidate"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "model_requests_physician_enrichment_review": {
+            "const": "true"
+          }
+        },
+        "required": ["model_requests_physician_enrichment_review"]
+      },
+      "then": {
+        "properties": {
+          "coordinator_requires_physician_enrichment_review": {
+            "const": "true"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "coordinator_requires_physician_enrichment_review": {
+            "const": "true"
+          }
+        },
+        "required": ["coordinator_requires_physician_enrichment_review"]
+      },
+      "then": {
+        "properties": {
+          "coordinator_review_reasons": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "coordinator_review_reasons": {
+            "const": ""
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "physician_enrichment_reviewed": {
+            "const": "false"
+          }
+        },
+        "required": ["physician_enrichment_reviewed"]
+      },
+      "then": {
+        "properties": {
+          "physician_enrichment_accept_or_modify": {
+            "const": ""
+          },
+          "physician_enrichment_notes": {
+            "const": ""
+          },
+          "enrichment_provenance": {
+            "enum": [
+              "ai_generated_enrichment_qc_accepted",
+              "full_text_ai_enrichment_pending_physician",
+              "unresolved_enrichment"
+            ]
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "physician_enrichment_accept_or_modify": {
+            "enum": ["accept", "modify"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "physician_enrichment_accept_or_modify": {
+            "const": "accept"
+          }
+        },
+        "required": ["physician_enrichment_accept_or_modify"]
+      },
+      "then": {
+        "properties": {
+          "physician_enrichment_reviewed": {
+            "const": "true"
+          },
+          "enrichment_provenance": {
+            "const": "physician_confirmed_ai_enrichment"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "physician_enrichment_accept_or_modify": {
+            "const": "modify"
+          }
+        },
+        "required": ["physician_enrichment_accept_or_modify"]
+      },
+      "then": {
+        "properties": {
+          "physician_enrichment_reviewed": {
+            "const": "true"
+          },
+          "enrichment_provenance": {
+            "const": "physician_modified_ai_enrichment"
+          },
+          "physician_enrichment_notes": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "enrichment_provenance": {
+            "const": "physician_confirmed_ai_enrichment"
+          }
+        },
+        "required": ["enrichment_provenance"]
+      },
+      "then": {
+        "properties": {
+          "physician_enrichment_reviewed": {
+            "const": "true"
+          },
+          "physician_enrichment_accept_or_modify": {
+            "const": "accept"
+          },
+          "protocol_acceptance_authorized": {
+            "const": "false"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "enrichment_provenance": {
+            "const": "physician_modified_ai_enrichment"
+          }
+        },
+        "required": ["enrichment_provenance"]
+      },
+      "then": {
+        "properties": {
+          "physician_enrichment_reviewed": {
+            "const": "true"
+          },
+          "physician_enrichment_accept_or_modify": {
+            "const": "modify"
+          },
+          "physician_enrichment_notes": {
+            "type": "string",
+            "minLength": 1
+          },
+          "protocol_acceptance_authorized": {
+            "const": "false"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "enrichment_provenance": {
+            "const": "ai_generated_enrichment_qc_accepted"
+          }
+        },
+        "required": ["enrichment_provenance"]
+      },
+      "then": {
+        "properties": {
+          "physician_enrichment_reviewed": {
+            "const": "false"
+          },
+          "coordinator_requires_physician_enrichment_review": {
+            "const": "false"
+          },
+          "protocol_acceptance_authorized": {
+            "const": "true"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "protocol_acceptance_authorized": {
+            "const": "true"
+          }
+        },
+        "required": ["protocol_acceptance_authorized"]
+      },
+      "then": {
+        "properties": {
+          "enrichment_provenance": {
+            "const": "ai_generated_enrichment_qc_accepted"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "coordinator_requires_physician_enrichment_review": {
+            "const": "true"
+          },
+          "physician_enrichment_reviewed": {
+            "const": "false"
+          }
+        },
+        "required": [
+          "coordinator_requires_physician_enrichment_review",
+          "physician_enrichment_reviewed"
+        ]
+      },
+      "then": {
+        "properties": {
+          "enrichment_provenance": {
+            "enum": ["full_text_ai_enrichment_pending_physician", "unresolved_enrichment"]
+          },
+          "protocol_acceptance_authorized": {
+            "const": "false"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "result_packet_family": {
+            "const": "included_full_text"
+          },
+          "physician_enrichment_reviewed": {
+            "const": "false"
+          }
+        },
+        "required": ["result_packet_family", "physician_enrichment_reviewed"]
+      },
+      "then": {
+        "properties": {
+          "enrichment_provenance": {
+            "const": "full_text_ai_enrichment_pending_physician"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "enrichment_provenance": {
+            "const": "unresolved_enrichment"
+          }
+        },
+        "required": ["enrichment_provenance"]
+      },
+      "then": {
+        "properties": {
+          "physician_enrichment_reviewed": {
+            "const": "false"
+          },
+          "protocol_acceptance_authorized": {
+            "const": "false"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "positiveDecimal": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]*$"
+    },
+    "csvBoolean": {
+      "enum": ["true", "false"]
+    },
+    "confidence": {
+      "enum": ["high", "moderate", "low"]
+    },
+    "confidenceOrBlank": {
+      "enum": ["", "high", "moderate", "low"]
+    },
+    "metadataSufficiency": {
+      "enum": ["adequate_abstract", "limited_abstract", "no_abstract", "conflicting_metadata"]
+    },
+    "tagStatus": {
+      "enum": ["tagged", "not_applicable", "not_assessable"]
+    },
+    "tagStatusOrBlank": {
+      "enum": ["", "tagged", "not_applicable", "not_assessable"]
+    },
+    "evidenceField": {
+      "enum": [
+        "full_text",
+        "title",
+        "abstract",
+        "mesh_terms",
+        "author_keywords",
+        "publication_types"
+      ]
+    },
+    "evidenceFieldOrBlank": {
+      "enum": [
+        "",
+        "full_text",
+        "title",
+        "abstract",
+        "mesh_terms",
+        "author_keywords",
+        "publication_types"
+      ]
+    },
+    "topicList": {
+      "type": "string",
+      "pattern": "^(?:basic-bronchoscopy|ebus-mediastinal-staging|peripheral-navigation|peripheral-biopsy-localization|central-airway-obstruction|airway-stents-stenosis|pleural-interventions|bronchoscopic-lung-volume-reduction|persistent-air-leak-fistula|transbronchial-cryobiopsy|hemoptysis-airway-bleeding|tracheostomy-airway-access|bronchoscopic-tumor-ablation|other-advanced-bronchoscopy|safety-anesthesia-complications|education-simulation-quality|ai-imaging-technology|adjacent-surgical-procedural-analogue|specimen-adequacy-molecular-pathology|health-services-economics)(?:\\|(?:basic-bronchoscopy|ebus-mediastinal-staging|peripheral-navigation|peripheral-biopsy-localization|central-airway-obstruction|airway-stents-stenosis|pleural-interventions|bronchoscopic-lung-volume-reduction|persistent-air-leak-fistula|transbronchial-cryobiopsy|hemoptysis-airway-bleeding|tracheostomy-airway-access|bronchoscopic-tumor-ablation|other-advanced-bronchoscopy|safety-anesthesia-complications|education-simulation-quality|ai-imaging-technology|adjacent-surgical-procedural-analogue|specimen-adequacy-molecular-pathology|health-services-economics))*$",
+      "x-csv-list-delimiter": "|",
+      "x-controlled-values": [
+        "basic-bronchoscopy",
+        "ebus-mediastinal-staging",
+        "peripheral-navigation",
+        "peripheral-biopsy-localization",
+        "central-airway-obstruction",
+        "airway-stents-stenosis",
+        "pleural-interventions",
+        "bronchoscopic-lung-volume-reduction",
+        "persistent-air-leak-fistula",
+        "transbronchial-cryobiopsy",
+        "hemoptysis-airway-bleeding",
+        "tracheostomy-airway-access",
+        "bronchoscopic-tumor-ablation",
+        "other-advanced-bronchoscopy",
+        "safety-anesthesia-complications",
+        "education-simulation-quality",
+        "ai-imaging-technology",
+        "adjacent-surgical-procedural-analogue",
+        "specimen-adequacy-molecular-pathology",
+        "health-services-economics"
+      ]
+    },
+    "topicListOrBlank": {
+      "anyOf": [
+        {
+          "const": ""
+        },
+        {
+          "$ref": "#/$defs/topicList"
+        }
+      ]
+    },
+    "technologyList": {
+      "type": "string",
+      "pattern": "^(?:convex-ebus|eus-b|radial-ebus|robotic-bronchoscopy|electromagnetic-navigation|cone-beam-ct|augmented-fluoroscopy|virtual-bronchoscopy|transbronchial-cryobiopsy|endobronchial-valve|airway-stent|rigid-bronchoscopy|electrocautery|argon-plasma-coagulation|laser|cryotherapy|photodynamic-therapy|brachytherapy|indwelling-pleural-catheter|medical-thoracoscopy|bronchial-thermoplasty|whole-lung-lavage|percutaneous-tracheostomy|thoracentesis|chest-tube|pleurodesis|bronchoalveolar-lavage|conventional-tbna|rapid-on-site-evaluation|endobronchial-coils|balloon-bronchoplasty|mediastinal-cryobiopsy|foreign-body-removal|bronchial-artery-embolization|narrow-band-imaging|autofluorescence-bronchoscopy|confocal-laser-endomicroscopy|topical-hemostatic-agent|transbronchial-thermal-ablation|surgical-vats)(?:\\|(?:convex-ebus|eus-b|radial-ebus|robotic-bronchoscopy|electromagnetic-navigation|cone-beam-ct|augmented-fluoroscopy|virtual-bronchoscopy|transbronchial-cryobiopsy|endobronchial-valve|airway-stent|rigid-bronchoscopy|electrocautery|argon-plasma-coagulation|laser|cryotherapy|photodynamic-therapy|brachytherapy|indwelling-pleural-catheter|medical-thoracoscopy|bronchial-thermoplasty|whole-lung-lavage|percutaneous-tracheostomy|thoracentesis|chest-tube|pleurodesis|bronchoalveolar-lavage|conventional-tbna|rapid-on-site-evaluation|endobronchial-coils|balloon-bronchoplasty|mediastinal-cryobiopsy|foreign-body-removal|bronchial-artery-embolization|narrow-band-imaging|autofluorescence-bronchoscopy|confocal-laser-endomicroscopy|topical-hemostatic-agent|transbronchial-thermal-ablation|surgical-vats))*$",
+      "x-csv-list-delimiter": "|",
+      "x-controlled-values": [
+        "convex-ebus",
+        "eus-b",
+        "radial-ebus",
+        "robotic-bronchoscopy",
+        "electromagnetic-navigation",
+        "cone-beam-ct",
+        "augmented-fluoroscopy",
+        "virtual-bronchoscopy",
+        "transbronchial-cryobiopsy",
+        "endobronchial-valve",
+        "airway-stent",
+        "rigid-bronchoscopy",
+        "electrocautery",
+        "argon-plasma-coagulation",
+        "laser",
+        "cryotherapy",
+        "photodynamic-therapy",
+        "brachytherapy",
+        "indwelling-pleural-catheter",
+        "medical-thoracoscopy",
+        "bronchial-thermoplasty",
+        "whole-lung-lavage",
+        "percutaneous-tracheostomy",
+        "thoracentesis",
+        "chest-tube",
+        "pleurodesis",
+        "bronchoalveolar-lavage",
+        "conventional-tbna",
+        "rapid-on-site-evaluation",
+        "endobronchial-coils",
+        "balloon-bronchoplasty",
+        "mediastinal-cryobiopsy",
+        "foreign-body-removal",
+        "bronchial-artery-embolization",
+        "narrow-band-imaging",
+        "autofluorescence-bronchoscopy",
+        "confocal-laser-endomicroscopy",
+        "topical-hemostatic-agent",
+        "transbronchial-thermal-ablation",
+        "surgical-vats"
+      ]
+    },
+    "technologyListOrBlank": {
+      "anyOf": [
+        {
+          "const": ""
+        },
+        {
+          "$ref": "#/$defs/technologyList"
+        }
+      ]
+    },
+    "clinicalPurposeList": {
+      "type": "string",
+      "pattern": "^(?:diagnosis|staging|treatment|palliation|surveillance|localization|training|safety-complication-prevention|multiple-general-overview|not-assessable-from-available-metadata|cost-effectiveness-health-services|specimen-adequacy|workflow-operations-quality)(?:\\|(?:diagnosis|staging|treatment|palliation|surveillance|localization|training|safety-complication-prevention|multiple-general-overview|not-assessable-from-available-metadata|cost-effectiveness-health-services|specimen-adequacy|workflow-operations-quality))*$",
+      "x-csv-list-delimiter": "|",
+      "x-controlled-values": [
+        "diagnosis",
+        "staging",
+        "treatment",
+        "palliation",
+        "surveillance",
+        "localization",
+        "training",
+        "safety-complication-prevention",
+        "multiple-general-overview",
+        "not-assessable-from-available-metadata",
+        "cost-effectiveness-health-services",
+        "specimen-adequacy",
+        "workflow-operations-quality"
+      ]
+    },
+    "clinicalPurposeListOrBlank": {
+      "anyOf": [
+        {
+          "const": ""
+        },
+        {
+          "$ref": "#/$defs/clinicalPurposeList"
+        }
+      ]
+    },
+    "diseaseList": {
+      "type": "string",
+      "pattern": "^(?:lung-cancer|mesothelioma|emphysema|interstitial-lung-disease|immune-inflammatory-disease|infection|transplant|benign-airway-stenosis|pleural-disease|lymphoma-hematologic-malignancy|metastatic-extrathoracic-malignancy|tracheobronchomalacia-edac|asthma|foreign-body-aspiration|hemoptysis|bronchiectasis|pulmonary-alveolar-proteinosis|airway-amyloidosis|congenital-airway-disorder)(?:\\|(?:lung-cancer|mesothelioma|emphysema|interstitial-lung-disease|immune-inflammatory-disease|infection|transplant|benign-airway-stenosis|pleural-disease|lymphoma-hematologic-malignancy|metastatic-extrathoracic-malignancy|tracheobronchomalacia-edac|asthma|foreign-body-aspiration|hemoptysis|bronchiectasis|pulmonary-alveolar-proteinosis|airway-amyloidosis|congenital-airway-disorder))*$",
+      "x-csv-list-delimiter": "|",
+      "x-controlled-values": [
+        "lung-cancer",
+        "mesothelioma",
+        "emphysema",
+        "interstitial-lung-disease",
+        "immune-inflammatory-disease",
+        "infection",
+        "transplant",
+        "benign-airway-stenosis",
+        "pleural-disease",
+        "lymphoma-hematologic-malignancy",
+        "metastatic-extrathoracic-malignancy",
+        "tracheobronchomalacia-edac",
+        "asthma",
+        "foreign-body-aspiration",
+        "hemoptysis",
+        "bronchiectasis",
+        "pulmonary-alveolar-proteinosis",
+        "airway-amyloidosis",
+        "congenital-airway-disorder"
+      ]
+    },
+    "diseaseListOrBlank": {
+      "anyOf": [
+        {
+          "const": ""
+        },
+        {
+          "$ref": "#/$defs/diseaseList"
+        }
+      ]
+    },
+    "studyDesign": {
+      "enum": [
+        "randomized-trial",
+        "prospective-cohort",
+        "retrospective-cohort",
+        "diagnostic-accuracy",
+        "systematic-review",
+        "meta-analysis",
+        "guideline",
+        "consensus",
+        "case-series",
+        "case-report",
+        "technical-note",
+        "editorial",
+        "review-article",
+        "not-assessable-from-available-metadata",
+        "cross-sectional-survey",
+        "economic-evaluation",
+        "animal-preclinical",
+        "bench-in-vitro",
+        "qualitative-study",
+        "case-control"
+      ]
+    },
+    "studyDesignOrBlank": {
+      "anyOf": [
+        {
+          "const": ""
+        },
+        {
+          "$ref": "#/$defs/studyDesign"
+        }
+      ]
+    },
+    "publicationStatus": {
+      "enum": [
+        "full-article",
+        "conference-abstract",
+        "letter",
+        "editorial",
+        "correction",
+        "retraction",
+        "protocol",
+        "interactive-clinical-case",
+        "not-assessable-from-available-metadata"
+      ]
+    },
+    "publicationStatusOrBlank": {
+      "anyOf": [
+        {
+          "const": ""
+        },
+        {
+          "$ref": "#/$defs/publicationStatus"
+        }
+      ]
+    },
+    "sha256OrBlank": {
+      "anyOf": [
+        {
+          "const": ""
+        },
+        {
+          "$ref": "#/$defs/sha256"
+        }
+      ]
+    },
+    "filenameOrBlank": {
+      "anyOf": [
+        {
+          "const": ""
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "pattern": "^[^/\\\\]+$"
+        }
+      ]
+    },
+    "metadataEvidenceField": {
+      "enum": ["title", "abstract", "mesh_terms", "author_keywords", "publication_types"]
+    },
+    "metadataEvidenceFieldOrBlank": {
+      "enum": ["", "title", "abstract", "mesh_terms", "author_keywords", "publication_types"]
+    },
+    "enrichmentProvenance": {
+      "enum": [
+        "physician_confirmed_ai_enrichment",
+        "physician_modified_ai_enrichment",
+        "ai_generated_enrichment_qc_accepted",
+        "legacy_v1_enrichment",
+        "full_text_ai_enrichment_pending_physician",
+        "unresolved_enrichment"
+      ]
+    }
+  }
+}

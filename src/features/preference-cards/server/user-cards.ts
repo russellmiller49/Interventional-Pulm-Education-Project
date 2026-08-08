@@ -1,10 +1,12 @@
-import { z } from 'zod'
-
 import { supabaseServer } from '@/lib/supabase/server'
 
-import { verifySnapshotIntegrity } from '../domain/card-hashes'
 import { resolveCard } from '../domain/resolve-card'
 import type { ResolvedCard } from '../domain/types'
+import {
+  storedRebuildProvenanceSchema,
+  type StoredRebuildProvenance,
+} from '../schemas/card-rebuild'
+import { parsePersistedSnapshot } from '../schemas/persisted-snapshot'
 import {
   builderInputsSchema,
   carriesUnreconcilableFamilyIdentity,
@@ -61,56 +63,52 @@ export interface UserCardRecord extends UserCardSummary {
    * reopening it in the builder is unavailable, which is better than reopening it wrong.
    */
   builderInputs: BuilderInputs | null
+  /**
+   * How this card came to exist — three states, never two.
+   *
+   * A failed parse used to collapse to `null`, which is the *same* value an ordinary card carries.
+   * A row whose database column holds a non-null provenance object would then have been presented
+   * as a card that was never rebuilt: the strongest claim in the schema, silently downgraded to no
+   * claim at all by a validation failure. Evidence that cannot be read is not the absence of
+   * evidence, and the two must not share a representation.
+   */
+  rebuildProvenance: CardRebuildProvenanceState
 }
+
+/**
+ * `none` — the column is null and this card was not rebuilt.
+ * `valid` — a complete version-1 document.
+ * `invalid` — the column is non-null and does not satisfy the version-1 schema. The card is shown
+ *   with an integrity notice rather than as an ordinary card, and never with a decoded claim.
+ */
+export type CardRebuildProvenanceState =
+  | { state: 'none' }
+  | { state: 'valid'; provenance: StoredRebuildProvenance }
+  | { state: 'invalid'; issues: string[] }
+
+/**
+ * Why a write against an existing card did not happen.
+ *
+ * `stale_edit` and `not_found` are deliberately different answers to what is, at the database, the
+ * same event: a conditional update that matched no row. Distinguishing them is worth a second
+ * query because the remedies are opposite — reload and reapply your change, versus the card is
+ * gone. Getting there without disclosing anything is the constraint: the follow-up existence check
+ * is owner-scoped through the same RLS the update ran under, so a card belonging to somebody else
+ * is indistinguishable from one that never existed, exactly as it is everywhere else here.
+ */
+export type UserCardWriteErrorCode = 'stale_edit' | 'not_found'
 
 export interface UserCardResult<T> {
   ok: boolean
   data?: T
   error?: string
+  code?: UserCardWriteErrorCode
 }
 
-/**
- * The stored snapshot, re-validated on the way out. `passthrough` keeps fields the schema
- * does not enumerate; the hash check below is what actually guarantees the payload is the
- * one that was written.
- */
-const persistedSnapshotSchema = z
-  .object({
-    recipeVersionId: z.string().min(1),
-    recipeName: z.string().min(1),
-    recipeVersion: z.string().min(1),
-    sourceProcedureCode: z.string().min(1),
-    selectedModifiers: z.array(z.string()),
-    /**
-     * Absent on snapshots written before composition. Those cards stay viewable and
-     * printable from what they recorded; only the builder needs the manifest.
-     */
-    includedModules: z.array(z.unknown()).optional(),
-    items: z.array(z.unknown()),
-    suppressedItems: z.array(z.unknown()),
-    warnings: z.array(z.unknown()),
-    readinessState: z.enum(['blocked', 'complete_with_warnings', 'complete']),
-    governanceState: z.enum(['draft', 'in_review', 'approved', 'retired']),
-    ruleTrace: z.array(z.unknown()),
-    engineVersion: z.string().min(1),
-    catalogImportId: z.string().min(1),
-    snapshotHash: z.string().regex(/^[a-f0-9]{64}$/),
-    /**
-     * Absent on snapshots written before the hashes were split. Those rows stay viewable and
-     * printable and keep verifying against the storage identity they were written with; nothing is
-     * rewritten on read. Present, they are checked — see `parseSnapshot`.
-     */
-    snapshotIntegrityHash: z
-      .string()
-      .regex(/^[a-f0-9]{64}$/)
-      .optional(),
-    resolvedContentHash: z
-      .string()
-      .regex(/^[a-f0-9]{64}$/)
-      .optional(),
-    generatedAt: z.string().datetime(),
-  })
-  .passthrough()
+const STALE_EDIT_MESSAGE =
+  'This card was saved from somewhere else after you opened it. Reload to see the current version, then reapply your change — nothing you are looking at has been overwritten.'
+
+const CARD_GONE_MESSAGE = 'That preference card no longer exists.'
 
 interface CardRow {
   id: string
@@ -124,6 +122,7 @@ interface CardRow {
   snapshot_hash: string
   share_enabled: boolean
   share_token: string
+  rebuild_provenance: unknown
   created_at: string
   updated_at: string
 }
@@ -132,6 +131,9 @@ interface CardRow {
 // something the dashboard has to know before it offers the control.
 const SUMMARY_COLUMNS =
   'id, title, physician_name, procedure_code, scenario_id, status, snapshot_hash, share_enabled, share_token, created_at, updated_at, card_snapshot, builder_inputs'
+
+/** The card page needs one column the dashboard listing does not: how the card came to exist. */
+const RECORD_COLUMNS = `${SUMMARY_COLUMNS}, rebuild_provenance`
 
 function toSummary(
   row: CardRow,
@@ -172,24 +174,6 @@ function inputsCanBackAnEdit(builderInputs: unknown): boolean {
 }
 
 /**
- * A stored snapshot is only usable if it still verifies.
- *
- * Two checks, because rows exist in two shapes and neither may be rewritten on read. Every row
- * carries the storage identity hash the `snapshot_hash` column holds, and that is compared as it
- * always was. Rows written from the split onward *also* carry an integrity hash over the complete
- * snapshot — including `generatedAt` and the warning acknowledgements, the fields the storage hash
- * deliberately excludes — and where one is present it is recomputed and must match. Its absence on
- * an older row is not a failure: an unverifiable-by-that-means row is not a tampered row, and
- * treating it as one would make every pre-existing card unopenable.
- */
-function parseSnapshot(snapshot: unknown, expectedHash: string): ResolvedCard | null {
-  const parsed = persistedSnapshotSchema.safeParse(snapshot)
-  if (!parsed.success || parsed.data.snapshotHash !== expectedHash) return null
-  if (verifySnapshotIntegrity(snapshot) === false) return null
-  return parsed.data as unknown as ResolvedCard
-}
-
-/**
  * Re-resolve a card from its builder inputs, rebuilding every product from the catalog.
  *
  * The client's own resolution is never trusted: this is what gets stored. `generatedAt` is
@@ -213,6 +197,42 @@ export function resolveForSave(
     rebuilt.resolveContext,
   )
   return { ok: true, card, rebuilt }
+}
+
+/**
+ * Apply a patch to a card only if it is still at the content version the caller edited from.
+ *
+ * One statement does the deciding. The predicate is `id = ? and updated_at = ?`, both inside the
+ * same `update`, so there is no interval between checking and writing for a concurrent save to
+ * land in. `updated_at` moves only when revision-bearing content changes — the card table's own
+ * content-timestamp trigger sees to that — so this token tracks what the card *says* rather than
+ * when its row was last touched, and an unrelated share toggle does not invalidate an open editor.
+ *
+ * A miss then needs a name. The update alone cannot tell "somebody saved first" from "the card is
+ * gone" from "it was never yours", because all three match zero rows. The follow-up select runs
+ * under the same row-level security, so it separates the first from the other two and cannot
+ * separate the other two from each other — which is the point. A foreign card id and an unknown
+ * card id give the identical answer, here as everywhere else in this module.
+ */
+async function updateCardAtContentVersion(
+  supabase: Awaited<ReturnType<typeof supabaseServer>>,
+  cardId: string,
+  expectedUpdatedAt: string,
+  patch: Record<string, unknown>,
+): Promise<UserCardResult<string>> {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .update(patch)
+    .eq('id', cardId)
+    .eq('updated_at', expectedUpdatedAt)
+    .select('id')
+    .maybeSingle()
+  if (error) return { ok: false, error: error.message }
+  if (data) return { ok: true, data: data.id as string }
+
+  const { data: existing } = await supabase.from(TABLE).select('id').eq('id', cardId).maybeSingle()
+  if (existing) return { ok: false, code: 'stale_edit', error: STALE_EDIT_MESSAGE }
+  return { ok: false, code: 'not_found', error: CARD_GONE_MESSAGE }
 }
 
 export async function saveUserCard(request: SaveCardRequest): Promise<UserCardResult<string>> {
@@ -260,15 +280,19 @@ export async function saveUserCard(request: SaveCardRequest): Promise<UserCardRe
     // absent from the patch: a share link handed to a colleague must keep working across
     // an edit, and must not start working because of one. RLS scopes the update to the
     // caller's own rows, so a foreign id matches nothing.
-    const { data, error } = await supabase
-      .from(TABLE)
-      .update(payload)
-      .eq('id', request.cardId)
-      .select('id')
-      .maybeSingle()
-    if (error) return { ok: false, error: error.message }
-    if (!data) return { ok: false, error: 'That preference card no longer exists.' }
-    return { ok: true, data: data.id }
+    //
+    // `expectedUpdatedAt` is in the same `where` clause as the id, and that is the whole
+    // mechanism: the database decides, in one statement, whether this save is being applied to
+    // the state it was built from. Reading the row and comparing before updating would leave a
+    // window between the two in which the answer stops being true.
+    return await updateCardAtContentVersion(
+      supabase,
+      request.cardId,
+      // Non-null by schema: `saveCardRequestSchema` requires the token whenever `cardId` is
+      // present, so an unguarded overwrite cannot be constructed.
+      request.expectedUpdatedAt as string,
+      payload,
+    )
   }
 
   const { data, error } = await supabase
@@ -296,7 +320,7 @@ export async function listUserCards(limit = 25): Promise<UserCardSummary[]> {
   if (error || !data) return []
 
   return (data as unknown as CardRow[]).map((row) => {
-    const card = parseSnapshot(row.card_snapshot, row.snapshot_hash)
+    const card = parsePersistedSnapshot(row.card_snapshot, row.snapshot_hash)
     // A row whose snapshot no longer verifies still lists, so it can be opened or deleted;
     // the readiness badge just cannot claim anything about it.
     // Editable needs both halves: reopening also loads the card, and a snapshot that no
@@ -314,15 +338,18 @@ export async function loadUserCard(cardId: string): Promise<UserCardRecord | nul
   const supabase = await supabaseServer()
   const { data, error } = await supabase
     .from(TABLE)
-    .select(SUMMARY_COLUMNS)
+    .select(RECORD_COLUMNS)
     .eq('id', cardId)
     .maybeSingle()
   if (error || !data) return null
 
   const row = data as unknown as CardRow
-  const card = parseSnapshot(row.card_snapshot, row.snapshot_hash)
+  const card = parsePersistedSnapshot(row.card_snapshot, row.snapshot_hash)
   if (!card) return null
   const inputs = builderInputsSchema.safeParse(row.builder_inputs)
+  // Validated rather than cast. The column is authentic — unwritable by any API role and write-once
+  // — which is not the same as well-typed.
+  const provenance = readRebuildProvenance(row.rebuild_provenance)
 
   return {
     // `editable` is the narrower question: a version-2 card's inputs parse and are still
@@ -331,6 +358,20 @@ export async function loadUserCard(cardId: string): Promise<UserCardRecord | nul
     ...toSummary(row, card.readinessState, inputsCanBackAnEdit(row.builder_inputs)),
     card,
     builderInputs: inputs.success ? inputs.data : null,
+    rebuildProvenance: provenance,
+  }
+}
+
+function readRebuildProvenance(value: unknown): CardRebuildProvenanceState {
+  if (value == null) return { state: 'none' }
+  const parsed = storedRebuildProvenanceSchema.safeParse(value)
+  if (parsed.success) return { state: 'valid', provenance: parsed.data }
+  return {
+    state: 'invalid',
+    issues: parsed.error.issues
+      .map((issue) => `${issue.path.join('.') || '<root>'}: ${issue.code}`)
+      .sort()
+      .slice(0, 20),
   }
 }
 
@@ -412,7 +453,7 @@ export async function loadSharedCard(token: string): Promise<{
     snapshot_hash: string
     updated_at: string
   }
-  const card = parseSnapshot(row.card_snapshot, row.snapshot_hash)
+  const card = parsePersistedSnapshot(row.card_snapshot, row.snapshot_hash)
   if (!card) return null
   return {
     title: row.title,
@@ -422,9 +463,18 @@ export async function loadSharedCard(token: string): Promise<{
   }
 }
 
+/**
+ * Rename a card, at a stated content version.
+ *
+ * A rename is revision-bearing — the title and the physician are printed and are covered by
+ * `printDocumentHash` — so it takes exactly the same concurrency protection a save does. Two
+ * writers renaming from the same starting state is the ordinary case for a shared clinical card,
+ * and letting the second win by default would silently discard the first.
+ */
 export async function renameUserCard(
   cardId: string,
   title: string,
+  expectedUpdatedAt: string,
   physicianName?: string | null,
 ): Promise<UserCardResult<null>> {
   const supabase = await supabaseServer()
@@ -434,14 +484,8 @@ export async function renameUserCard(
   if (physicianName !== undefined) {
     patch.physician_name = physicianName?.trim() ? physicianName.trim() : null
   }
-  const { data, error } = await supabase
-    .from(TABLE)
-    .update(patch)
-    .eq('id', cardId)
-    .select('id')
-    .maybeSingle()
-  if (error) return { ok: false, error: error.message }
-  if (!data) return { ok: false, error: 'That preference card no longer exists.' }
+  const result = await updateCardAtContentVersion(supabase, cardId, expectedUpdatedAt, patch)
+  if (!result.ok) return { ok: false, error: result.error, code: result.code }
   return { ok: true, data: null }
 }
 
@@ -469,7 +513,7 @@ export async function duplicateUserCard(
     )
     .eq('id', cardId)
     .maybeSingle()
-  if (error || !data) return { ok: false, error: 'That preference card no longer exists.' }
+  if (error || !data) return { ok: false, error: CARD_GONE_MESSAGE }
 
   // A copy starts fresh: its own share token (the default) and sharing switched off, so
   // duplicating never hands out access the original had.
@@ -495,6 +539,6 @@ export async function setShareEnabled(
     .select('share_token')
     .maybeSingle()
   if (error) return { ok: false, error: error.message }
-  if (!data) return { ok: false, error: 'That preference card no longer exists.' }
+  if (!data) return { ok: false, error: CARD_GONE_MESSAGE }
   return { ok: true, data: data.share_token as string }
 }

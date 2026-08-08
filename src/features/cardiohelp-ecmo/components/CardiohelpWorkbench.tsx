@@ -50,6 +50,7 @@ import {
   setLastVisited,
   withMastery,
   writeProgress,
+  type CircuitViewPreference,
   type EcmoSimulationState,
   type GuidedControlId,
   type GuidedTarget,
@@ -61,7 +62,9 @@ import {
 import { CardiohelpConsole } from './CardiohelpConsole'
 import { formatChannelGroup } from './channelReadout'
 import { CircuitAndMonitors } from './CircuitAndMonitors'
-import { LearnLessonPlayer, resolveGuidedLesson } from './LearnLessonPlayer'
+import { EcmoLearnWorkspace } from './EcmoLearnWorkspace'
+import { FitWidthSurface } from './FitWidthSurface'
+import { resolveGuidedLesson } from './LearnLessonPlayer'
 import {
   PracticeCasePlayer,
   resolveScenarioDefinition,
@@ -106,6 +109,10 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
     section === 'learn' ? 'circuit' : null,
   )
   const [guidedControlId, setGuidedControlId] = useState<GuidedControlId | null>(null)
+  const [circuitViewPreference, setCircuitViewPreference] = useState<{
+    readonly view: CircuitViewPreference
+    readonly stepId: string
+  } | null>(null)
   const [activeLearnStep, setActiveLearnStep] = useState<GuidedWalkthroughStep>(
     () => resolveGuidedLesson(orderedLessonScenarioIds('vv')[0]).steps[0],
   )
@@ -156,9 +163,15 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
   })
   const catalogActivity = criticalCareActivityById.get(lifecycleActivityId)
 
-  const handleGuidedTargetChange = useCallback((target: GuidedTarget) => {
+  const handleGuidedTargetChange = useCallback((target: GuidedTarget | null) => {
     setGuidedTarget(target)
   }, [])
+  const handleCircuitViewPreferenceChange = useCallback(
+    (preference: { view: CircuitViewPreference; stepId: string } | null) => {
+      setCircuitViewPreference(preference)
+    },
+    [],
+  )
   const handleGuidedControlHelpChange = useCallback((controlId: GuidedControlId | null) => {
     setGuidedControlId(controlId)
   }, [])
@@ -733,6 +746,66 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
     setHelpVisible(true)
   }
 
+  /*
+   * The one live simulator, built once.
+   *
+   * Learn hands this node to the three-pane workspace and Practice/Assess render it beside the case
+   * player. Constructing a second copy for the workspace would put a second set of guided control
+   * ids in the document, and both the guided help targeting and the practice hint focus resolve
+   * controls by id — so `document.getElementById` would start returning whichever came first.
+   */
+  const consoleNode = (
+    <CardiohelpConsole
+      state={state}
+      dispatch={dispatch}
+      controlsEnabled
+      guidedTarget={activeGuidedTarget}
+      guidedControlId={activeGuidedControlId}
+      initiationTargets={
+        section !== 'learn' ? (scenario.clinicalCase?.initiationTargets ?? null) : null
+      }
+    />
+  )
+
+  const simulatorColumn = (
+    <div className={styles.simulatorColumn}>
+      {/*
+        Learn puts the console in a workspace pane, and the console's device grid cannot lay out
+        narrower than about 840px of `min-content`. The widest validated viewport gives that pane
+        roughly 650px, so before this the right-hand column of the facsimile — the physical control
+        panel, the power indicators, and the "simulated values" badge that says the numbers are not a
+        device reading — was cut off by 200px or more with `overflow-x: hidden` and no way to reach
+        it. Scaling is what the foundation route already does, and for the same reason.
+
+        Only the console is scaled. The circuit view, gas panel, patient monitor and trend panel have
+        `min-content` widths of 159–366px, so they lay out in any of these panes; shrinking their
+        prose to fit a constraint they do not have would cost readability for nothing.
+
+        Practice and Assess render this column beside the case player in a different arrangement and
+        are deliberately left exactly as they were.
+      */}
+      {section === 'learn' ? (
+        <FitWidthSurface label="CARDIOHELP console, scaled to fit the width of this panel">
+          {consoleNode}
+        </FitWidthSurface>
+      ) : (
+        consoleNode
+      )}
+      <CircuitAndMonitors
+        state={state}
+        dispatch={dispatch}
+        controlsEnabled
+        guidedTarget={activeGuidedTarget}
+        guidedControlId={activeGuidedControlId}
+        circuitViewPreference={section === 'learn' ? circuitViewPreference : null}
+        initiationTargets={
+          section !== 'learn' ? (scenario.clinicalCase?.initiationTargets ?? null) : null
+        }
+        onSaveForLater={() => router.push(cardiohelpEcmoNavBase)}
+      />
+    </div>
+  )
+
   return (
     <CardiohelpModuleFrame
       locale={locale}
@@ -883,13 +956,13 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
               aria-label={`CARDIOHELP ${section} workbench`}
               data-hydrated={hydrated}
             >
-              <div className={styles.workbench}>
+              <div className={styles.workbench} data-learn-workspace={section === 'learn'}>
                 {section === 'learn' ? (
-                  <LearnLessonPlayer
-                    key={learnLesson.id}
+                  <EcmoLearnWorkspace
                     state={state}
                     lesson={learnLesson}
                     dispatch={dispatch}
+                    simulator={simulatorColumn}
                     onSelectLesson={loadLearnScenario}
                     onCompleteLesson={completeLearnLesson}
                     onTryPractice={(scenarioId) =>
@@ -900,51 +973,28 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
                     }
                     onTargetChange={handleGuidedTargetChange}
                     onControlHelpChange={handleGuidedControlHelpChange}
+                    onCircuitViewPreferenceChange={handleCircuitViewPreferenceChange}
                     onPhaseChange={setSemanticPhase}
                     onActiveStepChange={handleActiveLearnStepChange}
                   />
                 ) : (
-                  <PracticeCasePlayer
-                    state={state}
-                    scenario={scenario}
-                    progress={progress}
-                    outcome={outcome}
-                    dispatch={dispatch}
-                    onLoadScenario={loadPracticeScenario}
-                    onReveal={revealDebrief}
-                    section={section === 'assess' ? 'assess' : 'practice'}
-                    phaseRequest={phaseRequest}
-                    onPhaseChange={setSemanticPhase}
-                    onActiveStageChange={handleActivePracticeStageChange}
-                  />
+                  <>
+                    <PracticeCasePlayer
+                      state={state}
+                      scenario={scenario}
+                      progress={progress}
+                      outcome={outcome}
+                      dispatch={dispatch}
+                      onLoadScenario={loadPracticeScenario}
+                      onReveal={revealDebrief}
+                      section={section === 'assess' ? 'assess' : 'practice'}
+                      phaseRequest={phaseRequest}
+                      onPhaseChange={setSemanticPhase}
+                      onActiveStageChange={handleActivePracticeStageChange}
+                    />
+                    {simulatorColumn}
+                  </>
                 )}
-                <div className={styles.simulatorColumn}>
-                  <CardiohelpConsole
-                    state={state}
-                    dispatch={dispatch}
-                    controlsEnabled
-                    guidedTarget={activeGuidedTarget}
-                    guidedControlId={activeGuidedControlId}
-                    initiationTargets={
-                      section !== 'learn'
-                        ? (scenario.clinicalCase?.initiationTargets ?? null)
-                        : null
-                    }
-                  />
-                  <CircuitAndMonitors
-                    state={state}
-                    dispatch={dispatch}
-                    controlsEnabled
-                    guidedTarget={activeGuidedTarget}
-                    guidedControlId={activeGuidedControlId}
-                    initiationTargets={
-                      section !== 'learn'
-                        ? (scenario.clinicalCase?.initiationTargets ?? null)
-                        : null
-                    }
-                    onSaveForLater={() => router.push(cardiohelpEcmoNavBase)}
-                  />
-                </div>
               </div>
               {section !== 'learn' && state.scenario.phase === 'complete' ? (
                 <DebriefPanel

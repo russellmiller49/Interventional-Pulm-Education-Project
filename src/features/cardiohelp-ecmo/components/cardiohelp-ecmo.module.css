@@ -497,6 +497,76 @@
   align-items: start;
 }
 
+/*
+ * The guided drill Learn route holds one child — the three-pane workspace — which sizes itself and
+ * scrolls internally. Stretching it rather than aligning it to the start is what lets it use the
+ * height it asked for.
+ */
+.workbench[data-learn-workspace='true'] {
+  align-items: stretch;
+  min-height: 0;
+  /*
+   * A definite height, so the workspace inside can fill the activity viewport instead of guessing
+   * how much chrome sits above it.
+   *
+   * `.activityViewport` is `height: 100%; overflow: auto`, so it is already a definite box. The two
+   * boxes between it and the workspace were auto-height, which meant a percentage height on the
+   * workspace resolved to nothing and the workspace had to estimate the chrome instead. Its estimate
+   * was low, so the frame came out taller than the space it had and the activity viewport scrolled —
+   * a fourth scroller wrapping three panes that already scroll themselves.
+   *
+   * Scoped to the guided drill Learn route on both selectors. Practice and Assess put a case player
+   * and the simulator in this same grid and are deliberately left auto-height.
+   */
+  height: 100%;
+}
+
+.experiencePanel:has([data-ecmo-learn-workspace]) {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+}
+
+/*
+ * The teaching half of a guided drill step, in the workspace's teaching pane.
+ *
+ * The blocks inside are the same ones that used to sit in the lesson player's step card, so they
+ * keep its classes and its palette. What changes is the width they lay out in: a pane, not a
+ * full-bleed column. The snapshot's three fixed columns and its single-line clipping were sized for
+ * the latter, and a clipped readout reason is precisely the honesty this module spent A1 buying.
+ */
+.learnStepTeaching {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.learnStepTeaching .guidedSnapshot,
+.learnStepTeaching .guidedWhy,
+.learnStepTeaching .guidedExpectedResponse {
+  margin-top: 0;
+}
+
+.learnStepTeaching .guidedSnapshot {
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+}
+
+.learnStepTeaching .guidedSnapshot small,
+.learnStepTeaching .guidedSnapshot strong {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.learnStepTeaching .guidedSnapshot small {
+  font-size: 0.68rem;
+}
+
+.learnStepTeaching .guidedSnapshot strong {
+  font-size: 0.82rem;
+}
+
 .learningColumn,
 .simulatorColumn,
 .monitoringWorkspace {
@@ -1246,6 +1316,74 @@
 .guidedManualActions {
   display: grid;
   gap: 0.45rem;
+}
+
+/*
+ * The Learn prediction: an answerable question rather than a single button that submitted the
+ * scenario's own expectation. The options carry the learner's whole decision, so they are given the
+ * same target size and focus treatment as the simulator controls.
+ */
+.guidedPrediction {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.85rem;
+}
+
+.guidedPrediction fieldset {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.8rem;
+  border: 1px solid rgba(113, 225, 229, 0.34);
+  border-radius: 12px;
+  background: rgba(31, 104, 112, 0.14);
+}
+
+.guidedPrediction legend {
+  padding: 0 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.guidedPrediction label {
+  display: grid;
+  grid-template-columns: 1.1rem minmax(0, 1fr);
+  gap: 0.6rem;
+  align-items: start;
+  min-height: 44px;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid rgba(113, 225, 229, 0.22);
+  border-radius: 10px;
+  background: rgba(8, 32, 37, 0.55);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  cursor: pointer;
+}
+
+.guidedPrediction label[data-selected='true'] {
+  border-color: var(--cyan-bright);
+  background: rgba(31, 104, 112, 0.38);
+}
+
+.guidedPrediction fieldset:disabled label {
+  cursor: default;
+}
+
+.guidedPrediction input {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.2rem;
+  accent-color: var(--cyan-bright);
+}
+
+.guidedPrediction input:focus-visible {
+  outline: 2px solid var(--cyan-bright);
+  outline-offset: 2px;
+}
+
+.guidedPrediction .guidedPerformAction {
+  margin-top: 0;
 }
 
 .guidedHelpAction {
@@ -2868,6 +3006,35 @@
   background: var(--amber);
 }
 
+/* Dashed edge as well as amber: the chip has to read as "chattering" without colour vision. */
+.circuit3dHud span[data-state='CHATTER'] {
+  color: #271805;
+  border: 2px dashed #7a4d05;
+  background: var(--amber);
+}
+
+/*
+ * Sits below the circuit tabs, outside both tabpanels and outside the launch gate. Visible and
+ * spoken, so the chatter reaches a screen reader whichever view is selected, a browser without
+ * WebGL, and a viewport too small for the bedside scene to load at all.
+ */
+.circuitSceneStatus {
+  margin: 0.85rem 0 0;
+  padding: 0.6rem 0.75rem;
+  color: #ffe6b8;
+  border: 1px solid rgba(247, 198, 107, 0.55);
+  border-left: 4px solid var(--amber);
+  border-radius: 10px;
+  background: rgba(52, 34, 6, 0.5);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.circuitSceneStatus strong {
+  color: #ffd489;
+  letter-spacing: 0.03em;
+}
+
 .circuit3dHud strong {
   margin-top: 0.18rem;
   color: #e9ffff;
@@ -3293,6 +3460,30 @@
   transform-origin: center;
 }
 
+/*
+ * The chattering limb also changes shape, not only position. Reduced motion switches the animation
+ * off (see the block near the end of this file), and the diagram is read by people who cannot tell
+ * two teals apart — so a broken outline carries the state when neither motion nor colour can.
+ */
+.chatteringTube .drainageLimb {
+  stroke-dasharray: 9 5;
+  stroke-linecap: butt;
+}
+
+.limbStatusBadge rect {
+  fill: rgba(10, 27, 32, 0.94);
+  stroke: #f7c66b;
+  stroke-width: 2;
+  stroke-dasharray: 7 4;
+}
+
+.limbStatusBadge text {
+  fill: #f7c66b;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+}
+
 .circuitSvg .limbLabel,
 .circuitSvg .returnLimbLabel {
   font-size: 9px;
@@ -3695,6 +3886,13 @@
 .rangeControl small {
   color: var(--muted);
   font-size: 0.72rem;
+}
+
+/* A model boundary stated beside the control it constrains, rather than in distant documentation. */
+.controlBoundary {
+  border-left: 2px dashed var(--muted);
+  padding-left: 0.55rem;
+  line-height: 1.45;
 }
 
 .sourceState {

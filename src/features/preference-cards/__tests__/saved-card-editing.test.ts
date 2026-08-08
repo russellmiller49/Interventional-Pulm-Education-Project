@@ -1,3 +1,4 @@
+import { FakePreferenceCardTables } from '../__fixtures__/fake-preference-card-tables'
 import {
   buildDemoContext,
   defaultBuildInput,
@@ -53,128 +54,36 @@ const FLUOROSCOPY = 'module-procedural-fluoroscopy-v1-0'
 const OWNER = 'user-owner'
 const OTHER_USER = 'user-other'
 
-interface FakeRow {
-  id: string
-  user_id: string
-  title: string
-  physician_name: string | null
-  procedure_code: string
-  scenario_id: string
-  status: 'draft' | 'final'
-  builder_inputs: unknown
-  card_snapshot: unknown
-  snapshot_hash: string
-  engine_version: string
-  catalog_import_id: string
-  share_enabled: boolean
-  share_token: string
-  created_at: string
-  updated_at: string
-}
+const tables = new FakePreferenceCardTables()
 
-let rows: FakeRow[] = []
-let currentUserId: string | null = OWNER
-let nextId = 1
-let clock = 0
-
-/** UUID-shaped, because `cardId` is validated as one before it reaches the server. */
-function fakeCardId(sequence: number): string {
-  return `00000000-0000-4000-8000-${String(sequence).padStart(12, '0')}`
-}
-
-function nowIso(): string {
-  clock += 1
-  return `2026-07-30T12:00:${String(clock).padStart(2, '0')}.000Z`
-}
-
-/** A chainable stand-in for the postgrest builder, scoped to the signed-in user. */
-function fakeTable() {
-  let filterId: string | null = null
-  let operation: 'select' | 'insert' | 'update' | 'delete' = 'select'
-  let payload: Record<string, unknown> = {}
-
-  const visible = () => rows.filter((row) => row.user_id === currentUserId)
-
-  const builder = {
-    select() {
-      return builder
-    },
-    order() {
-      return builder
-    },
-    limit() {
-      const data = [...visible()].sort((left, right) =>
-        right.updated_at.localeCompare(left.updated_at),
-      )
-      return Promise.resolve({ data, error: null })
-    },
-    insert(next: Record<string, unknown>) {
-      operation = 'insert'
-      payload = next
-      return builder
-    },
-    update(next: Record<string, unknown>) {
-      operation = 'update'
-      payload = next
-      return builder
-    },
-    delete() {
-      operation = 'delete'
-      return builder
-    },
-    eq(_column: string, value: string) {
-      filterId = value
-      if (operation === 'delete') {
-        rows = rows.filter((row) => !(row.id === filterId && row.user_id === currentUserId))
-        return Promise.resolve({ data: null, error: null })
-      }
-      return builder
-    },
-    maybeSingle() {
-      if (operation === 'insert') {
-        const created = nowIso()
-        // Column defaults last, exactly as the table applies them: the insert payload has
-        // no business naming an id, a share token, or a timestamp, and does not.
-        const row: FakeRow = {
-          ...(payload as unknown as FakeRow),
-          id: fakeCardId(nextId++),
-          share_enabled: (payload.share_enabled as boolean | undefined) ?? false,
-          share_token: `token-${nextId}`,
-          created_at: created,
-          updated_at: created,
-        }
-        rows.push(row)
-        return Promise.resolve({ data: row, error: null })
-      }
-      if (operation === 'update') {
-        const index = rows.findIndex((row) => row.id === filterId && row.user_id === currentUserId)
-        if (index < 0) return Promise.resolve({ data: null, error: null })
-        // The table's own trigger bumps `updated_at` on every update.
-        rows[index] = { ...rows[index], ...payload, updated_at: nowIso() } as FakeRow
-        return Promise.resolve({ data: rows[index], error: null })
-      }
-      const found = visible().find((row) => row.id === filterId) ?? null
-      return Promise.resolve({ data: found, error: null })
-    },
-  }
-  return builder
-}
-
+/**
+ * The shared table fake, rather than an inline one.
+ *
+ * The inline version this replaces recorded only the *last* `.eq()` filter, so it could not
+ * express a multi-column predicate at all — and the conditional update that gives a save its
+ * stale-edit protection is exactly that. A fake that cannot represent the mechanism cannot test
+ * it, and would have reported every guarded save as a miss.
+ *
+ * `FakePreferenceCardTables` also models the revision trigger and the content-versioned
+ * `updated_at`, so there is now one model of these two tables instead of two that could disagree.
+ */
 beforeEach(() => {
-  rows = []
-  currentUserId = OWNER
-  nextId = 1
-  clock = 0
-  supabaseServer.mockResolvedValue({
-    auth: {
-      getUser: async () => ({
-        data: { user: currentUserId ? { id: currentUserId } : null },
-      }),
-    },
-    from: () => fakeTable(),
-    rpc: async () => ({ data: [], error: null }),
-  })
+  tables.reset(OWNER)
+  supabaseServer.mockResolvedValue(tables.client())
 })
+
+/**
+ * The content version a card is currently at.
+ *
+ * Every overwrite now has to state the version it was built from, so the tests state it the same
+ * way the editor does: by reading what is stored right now. A test that wants to *be* stale passes
+ * an older value deliberately.
+ */
+function currentVersion(cardId: string): string {
+  const row = tables.cards.find((candidate) => candidate.id === cardId)
+  expect(row).toBeDefined()
+  return row!.updated_at
+}
 
 /** Every modifier code the merged definition set actually contains, offered or not. */
 function buildDemoContextModifierCodes(): string[] {
@@ -353,7 +262,7 @@ describe('saving an edited card', () => {
     const cardId = await saveFixture()
     const shared = await setShareEnabled(cardId, true)
     expect(shared.ok).toBe(true)
-    const before = rows.find((row) => row.id === cardId)!
+    const before = tables.cards.find((row) => row.id === cardId)!
     const beforeToken = before.share_token
     const beforeCreatedAt = before.created_at
     const beforeUpdatedAt = before.updated_at
@@ -363,6 +272,7 @@ describe('saving an edited card', () => {
     const edited = saveCardRequestSchema.parse({
       ...editable.builderInputs,
       cardId,
+      expectedUpdatedAt: currentVersion(cardId),
       title: 'Dr Miller EBUS with ROSE (revised)',
       physicianName: 'R. Miller',
       status: editable.record.status,
@@ -375,9 +285,9 @@ describe('saving an edited card', () => {
 
     const result = await saveUserCard(edited)
     expect(result).toEqual({ ok: true, data: cardId })
-    expect(rows).toHaveLength(1)
+    expect(tables.cards).toHaveLength(1)
 
-    const after = rows.find((row) => row.id === cardId)!
+    const after = tables.cards.find((row) => row.id === cardId)!
     expect(after.share_enabled).toBe(true)
     expect(after.share_token).toBe(beforeToken)
     expect(after.user_id).toBe(OWNER)
@@ -395,7 +305,7 @@ describe('saving an edited card', () => {
 
   it('does not churn the snapshot hash for a metadata-only edit', async () => {
     const cardId = await saveFixture()
-    const before = rows.find((row) => row.id === cardId)!.snapshot_hash
+    const before = tables.cards.find((row) => row.id === cardId)!.snapshot_hash
 
     const editable = await loadEditableUserCard(cardId)
     if (!editable.ok) throw new Error('expected an editable card')
@@ -403,20 +313,21 @@ describe('saving an edited card', () => {
       saveCardRequestSchema.parse({
         ...editable.builderInputs,
         cardId,
+        expectedUpdatedAt: currentVersion(cardId),
         title: 'Renamed in the builder',
         physicianName: 'R. Miller',
         status: editable.record.status,
       }),
     )
 
-    const after = rows.find((row) => row.id === cardId)!
+    const after = tables.cards.find((row) => row.id === cardId)!
     expect(after.snapshot_hash).toBe(before)
     expect(after.title).toBe('Renamed in the builder')
   })
 
   it('stores builder inputs at the current schema version', async () => {
     const cardId = await saveFixture()
-    const stored = rows.find((row) => row.id === cardId)!.builder_inputs as {
+    const stored = tables.cards.find((row) => row.id === cardId)!.builder_inputs as {
       schemaVersion: number
     }
     expect(stored.schemaVersion).toBe(BUILDER_INPUTS_SCHEMA_VERSION)
@@ -440,7 +351,7 @@ describe('exact version pinning', () => {
 
   it('reports a recipe version its pinned release does not publish', async () => {
     const cardId = await saveFixture()
-    const row = rows.find((card) => card.id === cardId)!
+    const row = tables.cards.find((card) => card.id === cardId)!
     const inputs = builderInputsSchema.parse(row.builder_inputs)
     row.builder_inputs = {
       ...inputs,
@@ -462,7 +373,7 @@ describe('exact version pinning', () => {
 
   it('refuses to reopen a version-2 card, and leaves it fully usable as a document', async () => {
     const cardId = await saveFixture()
-    const row = rows.find((card) => card.id === cardId)!
+    const row = tables.cards.find((card) => card.id === cardId)!
     const inputs = builderInputsSchema.parse(row.builder_inputs)
     // A card written before release bundles pins its recipe and modules exactly and nothing
     // underneath them. Reopening it would re-resolve it against today's modifier set, rescue
@@ -502,7 +413,7 @@ describe('exact version pinning', () => {
 
   it('reports a pinned module version the composition does not offer', async () => {
     const cardId = await saveFixture()
-    const row = rows.find((card) => card.id === cardId)!
+    const row = tables.cards.find((card) => card.id === cardId)!
     const inputs = builderInputsSchema.parse(row.builder_inputs)
     row.builder_inputs = {
       ...inputs,
@@ -526,6 +437,7 @@ describe('exact version pinning', () => {
     const tampered = saveCardRequestSchema.parse({
       ...editable.builderInputs,
       cardId,
+      expectedUpdatedAt: currentVersion(cardId),
       title: editable.record.title,
       status: editable.record.status,
       input: {
@@ -541,7 +453,7 @@ describe('exact version pinning', () => {
     expect(result.ok).toBe(false)
     expect(result.error).toMatch(/is not part of this procedure composition/)
     // Nothing was written.
-    expect(rows.find((row) => row.id === cardId)!.title).toBe('Dr Miller EBUS with ROSE')
+    expect(tables.cards.find((row) => row.id === cardId)!.title).toBe('Dr Miller EBUS with ROSE')
   })
 
   it('includes a required module even when the request omits it', async () => {
@@ -552,6 +464,7 @@ describe('exact version pinning', () => {
     const stripped = saveCardRequestSchema.parse({
       ...editable.builderInputs,
       cardId,
+      expectedUpdatedAt: currentVersion(cardId),
       title: editable.record.title,
       status: editable.record.status,
       input: { ...editable.builderInputs.input, selectedModuleVersionIds: [] },
@@ -572,9 +485,9 @@ describe('authorization', () => {
   it('hides another user’s card behind the same answer an unknown id gets', async () => {
     const cardId = await saveFixture()
 
-    currentUserId = OTHER_USER
+    tables.currentUserId = OTHER_USER
     expect(await loadEditableUserCard(cardId)).toEqual({ ok: false, code: 'not_found' })
-    expect(await loadEditableUserCard(fakeCardId(999))).toEqual({
+    expect(await loadEditableUserCard(tables.cardId(999))).toEqual({
       ok: false,
       code: 'not_found',
     })
@@ -586,29 +499,30 @@ describe('authorization', () => {
     const cardId = await saveFixture()
     const editable = await loadEditableUserCard(cardId)
     if (!editable.ok) throw new Error('expected an editable card')
-    const before = rows.find((row) => row.id === cardId)!.title
+    const before = tables.cards.find((row) => row.id === cardId)!.title
 
-    currentUserId = OTHER_USER
+    tables.currentUserId = OTHER_USER
     const result = await saveUserCard(
       saveCardRequestSchema.parse({
         ...editable.builderInputs,
         cardId,
+        expectedUpdatedAt: currentVersion(cardId),
         title: 'Taken over',
         status: 'draft',
       }),
     )
 
     expect(result.ok).toBe(false)
-    expect(rows).toHaveLength(1)
-    expect(rows[0].title).toBe(before)
-    expect(rows[0].user_id).toBe(OWNER)
+    expect(tables.cards).toHaveLength(1)
+    expect(tables.cards[0].title).toBe(before)
+    expect(tables.cards[0].user_id).toBe(OWNER)
   })
 
   it('requires a signed-in account to save at all', async () => {
-    currentUserId = null
+    tables.currentUserId = null
     const result = await saveUserCard(ebusEditFixture())
     expect(result).toEqual({ ok: false, error: 'Sign in to save a preference card.' })
-    expect(rows).toHaveLength(0)
+    expect(tables.cards).toHaveLength(0)
   })
 })
 
@@ -616,7 +530,7 @@ describe('legacy cards', () => {
   /** A card written before module selection existed: no `selectedModuleVersionIds`. */
   async function seedLegacyCard(): Promise<string> {
     const cardId = await saveFixture()
-    const row = rows.find((card) => card.id === cardId)!
+    const row = tables.cards.find((card) => card.id === cardId)!
     const inputs = builderInputsSchema.parse(row.builder_inputs)
     const legacyInput: Record<string, unknown> = { ...inputs.input }
     delete legacyInput.selectedModuleVersionIds
@@ -633,7 +547,7 @@ describe('legacy cards', () => {
 
   it('still loads, still verifies, and is not offered for editing', async () => {
     const cardId = await seedLegacyCard()
-    const before = { ...rows.find((row) => row.id === cardId)! }
+    const before = { ...tables.cards.find((row) => row.id === cardId)! }
 
     const record = await loadUserCard(cardId)
     expect(record).not.toBeNull()
@@ -651,7 +565,7 @@ describe('legacy cards', () => {
 
   it('does not offer Edit on a card whose snapshot no longer verifies', async () => {
     const cardId = await saveFixture()
-    const row = rows.find((card) => card.id === cardId)!
+    const row = tables.cards.find((card) => card.id === cardId)!
     row.snapshot_hash = 'f'.repeat(64)
 
     // The card cannot be opened at all, so the dashboard must not link to its editor.
@@ -664,35 +578,39 @@ describe('legacy cards', () => {
 
   it('is not converted, recomputed, or rewritten by being viewed', async () => {
     const cardId = await seedLegacyCard()
-    const before = JSON.stringify(rows.find((row) => row.id === cardId))
+    const before = JSON.stringify(tables.cards.find((row) => row.id === cardId))
 
     await loadUserCard(cardId)
     await loadEditableUserCard(cardId)
     await listUserCards()
 
-    expect(JSON.stringify(rows.find((row) => row.id === cardId))).toBe(before)
+    expect(JSON.stringify(tables.cards.find((row) => row.id === cardId))).toBe(before)
   })
 
   it('keeps rename, duplicate, sharing, and delete working', async () => {
     const cardId = await seedLegacyCard()
-    const hash = rows.find((row) => row.id === cardId)!.snapshot_hash
+    const hash = tables.cards.find((row) => row.id === cardId)!.snapshot_hash
 
-    expect(await renameUserCard(cardId, 'Renamed legacy card')).toEqual({ ok: true, data: null })
-    expect(rows.find((row) => row.id === cardId)!.snapshot_hash).toBe(hash)
+    const legacyVersion = tables.cards.find((row) => row.id === cardId)!.updated_at
+    expect(await renameUserCard(cardId, 'Renamed legacy card', legacyVersion)).toEqual({
+      ok: true,
+      data: null,
+    })
+    expect(tables.cards.find((row) => row.id === cardId)!.snapshot_hash).toBe(hash)
 
     const copy = await duplicateUserCard(cardId, 'Copy of legacy card')
     expect(copy.ok).toBe(true)
-    const copied = rows.find((row) => row.id === copy.data)!
+    const copied = tables.cards.find((row) => row.id === copy.data)!
     // A copy of a legacy card is still legacy: duplicating does not make it editable.
     expect(copied.share_enabled).toBe(false)
     const copiedRecord = await loadUserCard(copy.data!)
     expect(copiedRecord!.editable).toBe(false)
 
     expect((await setShareEnabled(cardId, true)).ok).toBe(true)
-    expect(rows.find((row) => row.id === cardId)!.share_enabled).toBe(true)
+    expect(tables.cards.find((row) => row.id === cardId)!.share_enabled).toBe(true)
 
     expect(await deleteUserCard(cardId)).toEqual({ ok: true, data: null })
-    expect(rows.some((row) => row.id === cardId)).toBe(false)
+    expect(tables.cards.some((row) => row.id === cardId)).toBe(false)
   })
 })
 
@@ -838,6 +756,30 @@ describe('equipment sets on a reopened card', () => {
       editable.record.card.items.find((item) => item.roleCode === pick.roleCode)
         ?.selectedHospitalItemId,
     ).toBe(equipmentSetItemId('set-ebus-tray'))
+  })
+
+  it('refuses two sets claiming one id, on both the save and the read path', () => {
+    // A set is addressed by id everywhere it is used, and every lookup is a `.find()`. Two records
+    // sharing an id therefore make "the set this requirement chose" a question with two answers,
+    // and `.find()` silently returns whichever was written first — so a second record with a
+    // missing member passed validation and failed at save, after the review.
+    const fixture = ebusEditFixture()
+    const duplicated = {
+      ...fixture,
+      equipmentSets: [
+        fixture.equipmentSets[0],
+        { ...fixture.equipmentSets[0], name: 'The same tray, said twice', members: [] },
+      ],
+    }
+
+    const saveParsed = saveCardRequestSchema.safeParse(duplicated)
+    expect(saveParsed.success).toBe(false)
+    if (!saveParsed.success) {
+      expect(saveParsed.error.issues[0]?.message).toMatch(/share the id set-ebus-tray/)
+    }
+    // And on the read path, so a card that reached storage before this rule cannot be re-resolved
+    // into a new one either. It stays viewable and printable from its own snapshot.
+    expect(builderInputsSchema.safeParse(duplicated).success).toBe(false)
   })
 })
 

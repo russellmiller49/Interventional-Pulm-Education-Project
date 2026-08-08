@@ -1,0 +1,315 @@
+/*
+ * Layout and theme for the guided drill Learn workspace.
+ *
+ * Three things live here that `ResizableTeachingWorkspace` deliberately does not own:
+ *
+ * 1. The workspace paints a light `#eaf1ef` surface and sets a dark ink on it, which is right for
+ *    the foundation lesson route and wrong for this one. The drill workbench is a dark device
+ *    surface: the console, the circuit view and the lesson player are all styled from
+ *    `cardiohelp-ecmo.module.css` with the module's own palette, and a light pane background behind
+ *    them would put dark cards on a pale sheet. Section B re-declares the Tailwind semantic tokens
+ *    dark for the subtree, the mirror image of what the foundation workspace does light.
+ *
+ * 2. The shared component knows two layouts, three panes and one pane. This route needs a third:
+ *    at ordinary laptop widths the live simulator has to stay on screen while Teaching and Current
+ *    task share the remaining column, because a compact view that hides the console is exactly the
+ *    barrier this package was asked to remove. Section C is that layout, built on the
+ *    `data-mobile-visible` and `data-scroll-pane` markers the shared component publishes.
+ *
+ * 3. A definite height for the panes to scroll inside. The workspace asks for `height: 100%`, and
+ *    the activity viewport above it is not a definite-height ancestor at every breakpoint, so the
+ *    frame sizes itself from the viewport instead of inheriting nothing.
+ */
+
+/* ------------------------------------------------------------------ *
+ * A. Bounded frame
+ * ------------------------------------------------------------------ */
+
+/*
+ * The frame fills the activity viewport rather than estimating what is above it.
+ *
+ * This used to be `min(58rem, max(30rem, 100dvh - 16rem))`. Every term in that was a guess, and the
+ * guess was wrong in the same direction at every validated viewport: the patient-context bar wraps
+ * to a different height per scenario, so 16rem of chrome was an underestimate, and the 30rem floor
+ * alone was taller than the 479px the activity viewport actually had at 1024 × 768. The frame came
+ * out taller than its container and the activity viewport scrolled — a fourth scroller wrapping
+ * three panes that already scroll independently, which is exactly the arrangement this workspace
+ * exists to remove.
+ *
+ * `.workbench[data-learn-workspace='true']` and the `:has()` rule beside it in
+ * `cardiohelp-ecmo.module.css` make the chain from the activity viewport down definite, so `100%`
+ * resolves. The max-height is kept: on a very tall screen a 58rem workspace is already more reading
+ * height than a pane wants.
+ */
+.workspaceFrame {
+  --ecmo-learn-max-height: 58rem;
+
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  min-height: 0;
+  height: 100%;
+  max-height: var(--ecmo-learn-max-height);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+}
+
+/*
+ * At 840px and below the shared workspace stops being a grid of panes and stacks them, dropping its
+ * own `height: 100%` and capping each pane at 38rem. A definite-height frame would clip that stack,
+ * so the frame stops constraining anything and the activity viewport scrolls instead — the correct
+ * behaviour for a stacked single-column reading order.
+ */
+@media (max-width: 840px) {
+  .workspaceFrame {
+    height: auto;
+    overflow: visible;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * B. Device palette for the workspace subtree
+ * ------------------------------------------------------------------ */
+
+/*
+ * Tailwind is configured as `hsl(var(--token))`, so these are bare HSL triples rather than colours.
+ * The teaching panels are built from those utilities; the console, the circuit view and the lesson
+ * player read the module's own `--ink`/`--line`/`--panel` variables and are untouched by this block.
+ */
+.deviceWorkspace {
+  --background: 194 44% 8%;
+  --foreground: 180 33% 94%;
+  --card: 191 41% 12%;
+  --card-foreground: 180 33% 94%;
+  --popover: 191 41% 12%;
+  --popover-foreground: 180 33% 94%;
+  --muted: 192 36% 16%;
+  --muted-foreground: 190 14% 74%;
+  --primary: 183 58% 67%;
+  --primary-foreground: 194 60% 8%;
+  --secondary: 192 36% 20%;
+  --secondary-foreground: 180 33% 94%;
+  --accent: 34 100% 69%;
+  --accent-foreground: 194 60% 8%;
+  --destructive: 356 100% 71%;
+  --destructive-foreground: 194 60% 8%;
+  --border: 187 25% 38%;
+  --input: 187 25% 38%;
+  --ring: 183 58% 67%;
+}
+
+/*
+ * Doubled class for specificity, and every declaration that contradicts the shared shell has to
+ * live here.
+ *
+ * `.workspace` in `teaching-workspace.module.css` paints a light surface — `background: #eaf1ef`,
+ * `color-scheme: light`, a dark ink — and `.deviceWorkspace` inverts all three. Both are
+ * single-class selectors in different stylesheets, so with equal specificity the winner is decided
+ * by stylesheet order, which is a build and route-chunking detail rather than anything this file
+ * controls.
+ *
+ * `color` was already doubled for exactly that reason. `background` and `color-scheme` were not,
+ * and when the shared sheet won the tie the result was the module's near-white text on the shell's
+ * light surface: the "Why this step matters" wash going cream, and the drill panel's sections —
+ * which carry no background of their own — going white under white type. Reported from an owner
+ * smoke test on 2026-08-06 as unreadable.
+ */
+.deviceWorkspace.deviceWorkspace {
+  color: var(--ink, #eaf4f4);
+  color-scheme: dark;
+  background: #061519;
+}
+
+/* Essential explanation is never dimmed, and reading copy is not set at label sizes. */
+.readingPane {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.readingPane :global(.text-sm) {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.readingPane :global(.text-xs) {
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.readingPane :global(.text-xs.uppercase) {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  letter-spacing: 0.08em;
+}
+
+.readingPane p,
+.readingPane li,
+.readingPane dd,
+.readingPane dt,
+.readingPane td,
+.readingPane th,
+.readingPane strong,
+.readingPane em {
+  opacity: 1;
+}
+
+/* A wide table scrolls inside its own scroller and never widens the pane. */
+.readingPane :global(.overflow-x-auto) {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.simulatorPane,
+.taskPane {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+/*
+ * The lesson player is an `<aside class="learningColumn">` that carries its own grid and, below
+ * 1280px, a two-column arrangement meant for the old full-width stack. Inside a pane it is one
+ * column, always.
+ */
+.taskPane > :global(*) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* ------------------------------------------------------------------ *
+ * C. Laptop layout: simulator plus one context pane
+ * ------------------------------------------------------------------ */
+
+/*
+ * Two columns rather than three, with Teaching and Current task in the same cell and one of them
+ * hidden. They stay mounted — `display: none`, never unmounted — so the step, the committed answer,
+ * the verdict and the simulator all survive a context switch untouched, and the scroll offsets are
+ * written back by the workspace when a pane returns.
+ */
+.laptopWorkspace.laptopWorkspace {
+  grid-template-columns:
+    minmax(0, var(--tw-primary-width, 52%))
+    0.75rem
+    minmax(0, 1fr);
+}
+
+/* The second separator has nothing left to move: both panes it divided share one column. */
+.laptopWorkspace [data-teaching-resize-handle] ~ [data-teaching-resize-handle] {
+  display: none;
+}
+
+.laptopWorkspace [data-scroll-pane='secondary'],
+.laptopWorkspace [data-scroll-pane='tertiary'] {
+  grid-row: 1;
+  grid-column: 3;
+}
+
+.workspaceFrame[data-workspace-context='tertiary'] .laptopWorkspace [data-scroll-pane='secondary'] {
+  display: none;
+}
+
+.workspaceFrame[data-workspace-context='secondary'] .laptopWorkspace [data-scroll-pane='tertiary'] {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ *
+ * D. Compact layout
+ * ------------------------------------------------------------------ */
+
+/*
+ * The shared component applies `hidden` to the panes it was not given as `activePane` once its own
+ * measurement agrees this is compact. These rules make this module's measurement authoritative, so
+ * the tab row above can never be showing while three panes are still laid out behind it.
+ */
+.compactWorkspace.compactWorkspace {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.compactWorkspace [data-mobile-visible='false'] {
+  display: none;
+}
+
+.compactWorkspace [data-teaching-resize-handle] {
+  display: none;
+}
+
+.compactWorkspace [data-mobile-visible='true'] {
+  grid-column: 1;
+}
+
+/* ------------------------------------------------------------------ *
+ * E. Independent pane scrolling
+ * ------------------------------------------------------------------ */
+
+/*
+ * The shared pane already declares all of this. It is restated on the scrolling element — which the
+ * workspace stamps with `data-scroll-pane` — so that the guarantee the acceptance test measures
+ * belongs to this workspace rather than to a shared file this module cannot pin.
+ */
+.deviceWorkspace [data-scroll-pane] {
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+/* ------------------------------------------------------------------ *
+ * F. Pane tabs
+ * ------------------------------------------------------------------ */
+
+.paneTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  padding: 0.6rem 0.75rem 0;
+}
+
+.paneTabsLabel {
+  flex-basis: 100%;
+  color: var(--muted, #9fb4b7);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.paneTabs button {
+  min-height: 2.75rem;
+  padding: 0.45rem 0.9rem;
+  color: #e6f4f5;
+  border: 1px solid rgba(163, 206, 209, 0.42);
+  border-radius: 0.7rem;
+  background: rgba(16, 46, 52, 0.72);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.paneTabs button[aria-selected='true'] {
+  color: #04211f;
+  border-color: #71e1e5;
+  background: #71e1e5;
+}
+
+.paneTabs button:focus-visible {
+  outline: 3px solid #71e1e5;
+  outline-offset: 2px;
+}
+
+/*
+ * Nothing here animates, and nothing here may start to. Switching context moves a pane in and out
+ * of the layout, so a transition on it would animate the surface a learner just asked to read.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .paneTabs button,
+  .deviceWorkspace [data-scroll-pane] {
+    scroll-behavior: auto;
+    transition: none;
+  }
+}

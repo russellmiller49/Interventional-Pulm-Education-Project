@@ -214,7 +214,12 @@ describe('ICU Hemodynamics Lab learner interface', () => {
 
     const deflated = icuHemodynamicsReducer(stored, { type: 'DEFLATE_WEDGE' })
     rerender(<PacActionDock state={deflated} dispatch={dispatch} />)
-    expect(wedgeStatus()).toHaveTextContent(/Balloon deflated and PA waveform restored/i)
+    // H3 §7. The dock used to announce that the PA waveform had been restored, which answered the
+    // question the sequence ends on before the learner could ask it. It now says the balloon is
+    // down and hands the observation back.
+    expect(wedgeStatus()).toHaveTextContent(/PAWP stored and balloon deflated/i)
+    expect(wedgeStatus()).toHaveTextContent(/Confirm the return of the PA waveform yourself/i)
+    expect(wedgeStatus()).not.toHaveTextContent(/PA waveform restored/i)
   })
 
   it('requires an explicit derived-value review action rather than awarding credit for disclosure', () => {

@@ -13,6 +13,7 @@ import {
   hasFault,
   injectFault,
   MAX_HISTORY_ENTRIES,
+  resolveDrainageLimitation,
 } from './simulation'
 import type {
   EcmoSimulationState,
@@ -187,6 +188,9 @@ function findMatchingSimulatorIntervention(
       if (!requirement || appliedIds.has(intervention.id)) return false
       if (requirement.control === 'restore-gas') return action.type === 'RESTORE_GAS_SOURCE'
       if (requirement.control === 'restore-power') return action.type === 'RESTORE_AC_POWER'
+      if (requirement.control === 'resume-after-bubble') {
+        return action.type === 'RESUME_SUPPORT_AFTER_BUBBLE'
+      }
       if (requirement.control in clampSimulatorControls) {
         if (action.type !== 'TOGGLE_CIRCUIT_CLAMP') return false
         const spec = clampSimulatorControls[requirement.control as ClampSimulatorControl]
@@ -214,6 +218,21 @@ function findMatchingSimulatorIntervention(
         requirement.tolerance ?? 0,
       )
     }) ?? null
+  )
+}
+
+/**
+ * Whether the air has actually been dealt with, by either of the two paths that deal with it.
+ *
+ * The drill corrects the source explicitly, which records the fault as corrected and clears the
+ * detector while deliberately leaving the console latch set. The clinical case de-airs, which
+ * clears the detector and the latch through an intervention patch without recording a corrected
+ * fault. Neither is the other, so both are named rather than one being inferred from the other.
+ */
+function airIsCorrectedAndClear(state: EcmoSimulationState): boolean {
+  if (state.circuit.arterialBubbleDetected) return false
+  return (
+    state.scenario.correctedFaults.includes('arterial-bubble') || !state.circuit.bubbleResetRequired
   )
 }
 
@@ -546,11 +565,17 @@ export function ecmoSimulationReducer(
         },
       }
       const raisingSpeed = action.rpm > state.device.rpmSetpoint
+      /*
+       * Charged against the model's own drainage capacity, not against the direction alone.
+       *
+       * The guard used to fire on any increase while a drainage-limited fault was active, which
+       * penalised a learner who had backed the pump well off and was bringing it back toward the
+       * speed the circuit can actually support — an action the model itself treats as helpful. It
+       * now fires when the new speed asks for more than the drainage can give, which is precisely
+       * where the model stops delivering it, so the score and the display finally agree.
+       */
       if (
-        (hasFault(state, 'preload-limited') ||
-          hasFault(state, 'hemorrhagic-hypovolemia') ||
-          hasFault(state, 'tension-pneumothorax') ||
-          hasFault(state, 'tamponade')) &&
+        resolveDrainageLimitation({ ...state, device: next.device }, action.rpm)?.limited &&
         raisingSpeed
       ) {
         next = addCriticalError(next, 'rpm-during-collapse', 50)
@@ -830,6 +855,65 @@ export function ecmoSimulationReducer(
       }
       return appendHistory(next, 'action', 'Bubble intervention reset after cause correction')
     }
+    /**
+     * Resume support after an air event, in one transition.
+     *
+     * The old lesson walked the learner out through open-drainage, open-return, reset — which put
+     * the patient back on both limbs of a stopped centrifugal circuit before anything was turning.
+     * Where clamp opening, pump restart and console reset fall relative to one another during
+     * resumption is device- and program-specific, so this module stopped teaching an order. What it
+     * teaches instead is the precondition: the source is corrected and the circuit is clear. This
+     * bounded action stands in for the device- and program-specific resumption sequence; it does not
+     * reproduce or teach that sequence, and completing it is not evidence that any real protocol was
+     * followed.
+     */
+    case 'RESUME_SUPPORT_AFTER_BUBBLE': {
+      if (!airIsCorrectedAndClear(state)) {
+        return appendHistory(
+          addCriticalError(state, 'premature-bubble-reset', 50),
+          'action',
+          'Resume rejected: correct the air source and clear the circuit first',
+        )
+      }
+      const resumed = deriveSimulation({
+        ...state,
+        device: { ...state.device, pumpRunning: true },
+        circuit: {
+          ...state.circuit,
+          arterialBubbleDetected: false,
+          bubbleResetRequired: false,
+          drainageClampClosed: false,
+          returnClampClosed: false,
+        },
+      })
+      /*
+       * The clinical intervention resolves before the fault is retired, not after.
+       *
+       * In a clinical case this action is the last required intervention, and resolving it is what
+       * records the corrective fault and the credit for it. `correctFault` returns early on a fault
+       * that is no longer active, so retiring the fault first would silently cost the learner the
+       * cause credit they had just earned.
+       */
+      const definition = getDefinition(state)
+      const simulatorIntervention = findMatchingSimulatorIntervention(state, definition, action)
+      const resolved = simulatorIntervention
+        ? applyClinicalInterventionAndResolve(resumed, definition, simulatorIntervention.id).state
+        : resumed
+      const next = {
+        ...resolved,
+        scenario: {
+          ...resolved.scenario,
+          activeFaults: resolved.scenario.activeFaults.filter(
+            (fault) => fault !== 'arterial-bubble',
+          ),
+        },
+      }
+      return appendHistory(
+        next,
+        'action',
+        "Completed the simulation's protocol-governed resumption abstraction",
+      )
+    }
     case 'TOGGLE_CIRCUIT_CLAMP': {
       const clampKey = action.limb === 'drainage' ? 'drainageClampClosed' : 'returnClampClosed'
       const closing = action.closed ?? !state.circuit[clampKey]
@@ -838,6 +922,40 @@ export function ecmoSimulationReducer(
       const circuit = {
         ...state.circuit,
         [clampKey]: closing,
+      }
+      /*
+       * The one state resumption may never render.
+       *
+       * Opening the last closed limb while the bubble latch still holds the pump would put the
+       * patient back on both limbs of a circuit that is not moving blood — and a centrifugal head
+       * is non-occlusive, so nothing holds a column in place.
+       *
+       * What happens, precisely: the transition is always refused, so the state is never reached.
+       * It is additionally charged while air remains outstanding, because reaching for a clamp then
+       * is the same unsafe act whether or not the model lets it land. Once the source is corrected
+       * there is nothing unsafe about wanting to resume, so the learner is redirected to the bounded
+       * resumption action with no further safety penalty.
+       *
+       * Scoped to the latch on purpose. Both limbs open with a stopped pump is the ordinary pre-use
+       * state of every circuit in this module, and making it globally illegal would break startup.
+       */
+      if (
+        !closing &&
+        !circuit.drainageClampClosed &&
+        !circuit.returnClampClosed &&
+        state.circuit.bubbleResetRequired &&
+        !state.device.pumpRunning
+      ) {
+        // Charged only while the air is still outstanding; after correction the refusal is a
+        // redirection rather than a penalty. See the note above the guard for the full rule.
+        const held = airIsCorrectedAndClear(state)
+          ? state
+          : addCriticalError(state, 'unsafe-unclamp-before-deair', 50)
+        return appendHistory(
+          held,
+          'action',
+          'Clamp held: resume support per the current IFU and approved local protocol rather than opening the last limb onto a stopped pump',
+        )
       }
       const canResumeAfterOpening =
         !closing &&

@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type Dispatch } from 'react'
 
+import { PLATEAU_SPLIT_WITHHELD_LABEL, plateauReadingValidity } from '../content/plateauValidity'
 import type { VentilationAction, VentilationSimulationState } from '../engine'
 import { VentilationDyssynchronyDomains } from './teaching/dyssynchrony'
 import { VentilationModeVariables } from './teaching/modes'
@@ -35,7 +36,7 @@ import { VentilationWaveformAnatomy } from './teaching/waveform-anatomy'
  */
 
 /* ------------------------------------------------------------------------------------------------
- * Section 1 — Mechanics: what peak pressure is made of
+ * Section 2 — Mechanics: what peak pressure is made of
  * ---------------------------------------------------------------------------------------------- */
 
 type PressureComponent = 'baseline' | 'elastic' | 'resistive'
@@ -69,8 +70,16 @@ export function VentilationPressureDecomposition({
   const totalBaseline = setPeep + intrinsic
   const peak = measurements.peakPressureCmH2O
   const plateau = measurements.plateauPressureCmH2O
+  /*
+   * The split is a claim about the respiratory system, and it is only that claim when the plateau
+   * it is built on reports the respiratory system. While the patient is pulling it does not, so the
+   * two upper bands are drawn as one unattributed band instead — see content/plateauValidity.ts.
+   */
+  const validity = plateauReadingValidity(state)
+  const separable = validity.interpretable
   const elastic = Math.max(0, plateau - totalBaseline)
   const resistive = Math.max(0, peak - plateau)
+  const unattributed = Math.max(0, peak - totalBaseline)
   const scaleMax = Math.max(peak, totalBaseline + elastic + resistive, 1)
 
   const height = 150
@@ -80,16 +89,15 @@ export function VentilationPressureDecomposition({
   const baselineHeight = totalBaseline * pxPerUnit
   const elasticHeight = elastic * pxPerUnit
   const resistiveHeight = resistive * pxPerUnit
+  const unattributedHeight = unattributed * pxPerUnit
   const baseY = height - 14
 
   const dim = (component: PressureComponent) =>
     focused && focused !== component ? styles.segmentMuted : undefined
 
-  const summary = `Peak airway pressure ${round(peak, 1)} centimeters of water decomposes into a baseline of ${round(totalBaseline, 1)} — set PEEP ${round(setPeep, 1)} plus ${round(intrinsic, 1)} of trapped pressure — an elastic component of ${round(elastic, 1)} measured as plateau minus baseline, and a resistive component of ${round(resistive, 1)} measured as peak minus plateau. ${
-    measurements.plateauIsInterpretable
-      ? 'There is no appreciable patient effort, so this split reports respiratory-system mechanics.'
-      : `The patient is making ${round(measurements.endInspiratoryEffortCmH2O, 1)} centimeters of water of inspiratory effort at end-inspiration, so the plateau is lower than the same lung would show relaxed and this split does not report mechanics alone.`
-  }`
+  const summary = separable
+    ? `Peak airway pressure ${round(peak, 1)} centimeters of water decomposes into a baseline of ${round(totalBaseline, 1)} — set PEEP ${round(setPeep, 1)} plus ${round(intrinsic, 1)} of trapped pressure — an elastic component of ${round(elastic, 1)} measured as plateau minus baseline, and a resistive component of ${round(resistive, 1)} measured as peak minus plateau. There is no appreciable patient effort, so this split reports respiratory-system mechanics.`
+    : `Peak airway pressure ${round(peak, 1)} centimeters of water sits above a baseline of ${round(totalBaseline, 1)} — set PEEP ${round(setPeep, 1)} plus ${round(intrinsic, 1)} of trapped pressure — leaving ${round(unattributed, 1)} that is not separated into elastic and resistive components here. The patient is breathing against this measurement, reaching ${round(validity.recentEffortCmH2O, 1)} centimeters of water of inspiratory effort across the recent trace, so a plateau here reports alveolar pressure minus that effort and the split is withheld rather than drawn.`
 
   return (
     <section className={styles.panel} aria-labelledby="mv-mechanics-teaching">
@@ -120,20 +128,32 @@ export function VentilationPressureDecomposition({
             width={barWidth}
             height={Math.max(1, baselineHeight)}
           />
-          <rect
-            className={[styles.segmentElastic, dim('elastic')].filter(Boolean).join(' ')}
-            x={barLeft}
-            y={baseY - baselineHeight - elasticHeight}
-            width={barWidth}
-            height={Math.max(1, elasticHeight)}
-          />
-          <rect
-            className={[styles.segmentResistive, dim('resistive')].filter(Boolean).join(' ')}
-            x={barLeft}
-            y={baseY - baselineHeight - elasticHeight - resistiveHeight}
-            width={barWidth}
-            height={Math.max(1, resistiveHeight)}
-          />
+          {separable ? (
+            <>
+              <rect
+                className={[styles.segmentElastic, dim('elastic')].filter(Boolean).join(' ')}
+                x={barLeft}
+                y={baseY - baselineHeight - elasticHeight}
+                width={barWidth}
+                height={Math.max(1, elasticHeight)}
+              />
+              <rect
+                className={[styles.segmentResistive, dim('resistive')].filter(Boolean).join(' ')}
+                x={barLeft}
+                y={baseY - baselineHeight - elasticHeight - resistiveHeight}
+                width={barWidth}
+                height={Math.max(1, resistiveHeight)}
+              />
+            </>
+          ) : (
+            <rect
+              className={styles.segmentUnattributed}
+              x={barLeft}
+              y={baseY - baselineHeight - unattributedHeight}
+              width={barWidth}
+              height={Math.max(1, unattributedHeight)}
+            />
+          )}
 
           {/*
            * Component magnitude sits inside its own band; the cumulative console pressure sits
@@ -147,63 +167,91 @@ export function VentilationPressureDecomposition({
             {round(totalBaseline, 1)} cmH₂O
           </text>
 
-          <text
-            className={styles.segmentLabel}
-            x="4"
-            y={baseY - baselineHeight - elasticHeight / 2 - 4}
-          >
-            Elastic
-          </text>
-          <text
-            className={styles.segmentBandValue}
-            x="4"
-            y={baseY - baselineHeight - elasticHeight / 2 + 7}
-          >
-            +{round(elastic, 1)} cmH₂O
-          </text>
+          {separable ? (
+            <>
+              <text
+                className={styles.segmentLabel}
+                x="4"
+                y={baseY - baselineHeight - elasticHeight / 2 - 4}
+              >
+                Elastic
+              </text>
+              <text
+                className={styles.segmentBandValue}
+                x="4"
+                y={baseY - baselineHeight - elasticHeight / 2 + 7}
+              >
+                +{round(elastic, 1)} cmH₂O
+              </text>
 
-          <text
-            className={styles.segmentLabel}
-            x="4"
-            y={baseY - baselineHeight - elasticHeight - resistiveHeight / 2 - 4}
-          >
-            Resistive
-          </text>
-          <text
-            className={styles.segmentBandValue}
-            x="4"
-            y={baseY - baselineHeight - elasticHeight - resistiveHeight / 2 + 7}
-          >
-            +{round(resistive, 1)} cmH₂O
-          </text>
+              <text
+                className={styles.segmentLabel}
+                x="4"
+                y={baseY - baselineHeight - elasticHeight - resistiveHeight / 2 - 4}
+              >
+                Resistive
+              </text>
+              <text
+                className={styles.segmentBandValue}
+                x="4"
+                y={baseY - baselineHeight - elasticHeight - resistiveHeight / 2 + 7}
+              >
+                +{round(resistive, 1)} cmH₂O
+              </text>
+
+              {/* The plateau boundary is only a boundary between two things when it means what it says. */}
+              <path
+                className={styles.boundaryTick}
+                d={`M${barLeft + barWidth} ${baseY - baselineHeight - elasticHeight} h10`}
+              />
+              <text
+                className={styles.segmentValue}
+                x={barLeft + barWidth + 13}
+                y={baseY - baselineHeight - elasticHeight + 4}
+              >
+                Pplat {round(plateau, 1)}
+              </text>
+            </>
+          ) : (
+            <>
+              <text
+                className={styles.segmentLabel}
+                x="4"
+                y={baseY - baselineHeight - unattributedHeight / 2 - 4}
+              >
+                Above baseline
+              </text>
+              <text
+                className={styles.segmentBandValue}
+                x="4"
+                y={baseY - baselineHeight - unattributedHeight / 2 + 7}
+              >
+                +{round(unattributed, 1)} cmH₂O
+              </text>
+            </>
+          )}
 
           <path
             className={styles.boundaryTick}
-            d={`M${barLeft + barWidth} ${baseY - baselineHeight - elasticHeight} h10`}
+            d={`M${barLeft + barWidth} ${baseY - baselineHeight - (separable ? elasticHeight + resistiveHeight : unattributedHeight)} h10`}
           />
           <text
             className={styles.segmentValue}
             x={barLeft + barWidth + 13}
-            y={baseY - baselineHeight - elasticHeight + 4}
-          >
-            Pplat {round(plateau, 1)}
-          </text>
-          <path
-            className={styles.boundaryTick}
-            d={`M${barLeft + barWidth} ${baseY - baselineHeight - elasticHeight - resistiveHeight} h10`}
-          />
-          <text
-            className={styles.segmentValue}
-            x={barLeft + barWidth + 13}
-            y={baseY - baselineHeight - elasticHeight - resistiveHeight + 4}
+            y={
+              baseY -
+              baselineHeight -
+              (separable ? elasticHeight + resistiveHeight : unattributedHeight) +
+              4
+            }
           >
             Ppeak {round(peak, 1)}
           </text>
         </svg>
         <figcaption>
-          Each band is labelled with its own magnitude. The values on the right are the cumulative
-          pressures a console reports at those boundaries — plateau at the top of the elastic band,
-          peak at the top of the resistive band.
+          {separable
+            ? 'Each band is labelled with its own magnitude. The values on the right are the cumulative pressures a console reports at those boundaries — plateau at the top of the elastic band, peak at the top of the resistive band.'
+            : 'The pressure above baseline is drawn as one band because it cannot be divided here. Dividing it needs a plateau taken while the respiratory muscles are quiet, and this patient’s are not.'}
         </figcaption>
       </figure>
 
@@ -224,6 +272,13 @@ export function VentilationPressureDecomposition({
         <div className={styles.stepDetail}>
           <span>{componentCopy[focused].label} component</span>
           <p>{componentCopy[focused].body}</p>
+          {!separable && focused !== 'baseline' ? (
+            <p>
+              This component is described here, but it is not being measured on this patient right
+              now: separating it from the other one needs a plateau taken while the respiratory
+              muscles are quiet.
+            </p>
+          ) : null}
         </div>
       ) : (
         <div className={styles.equation}>
@@ -234,16 +289,33 @@ export function VentilationPressureDecomposition({
       )}
 
       <dl className={styles.readouts} aria-label="Live derived mechanics">
-        <div>
+        {/*
+         * Peak minus plateau is the resistive component only when the plateau is the elastic
+         * pressure. While the patient is pulling it is neither, so the readout is withheld rather
+         * than printed beside a note saying not to believe it.
+         */}
+        <div data-state={separable ? undefined : 'unavailable'}>
           <dt>Peak − plateau</dt>
           <dd>
-            {round(resistive, 1)} <small>cmH₂O</small>
+            {separable ? (
+              <>
+                {round(resistive, 1)} <small>cmH₂O</small>
+              </>
+            ) : (
+              <>
+                — <small>{PLATEAU_SPLIT_WITHHELD_LABEL}</small>
+              </>
+            )}
           </dd>
         </div>
-        <div data-state={measurements.staticComplianceMlCmH2O > 0 ? undefined : 'unavailable'}>
+        <div
+          data-state={
+            separable && measurements.staticComplianceMlCmH2O > 0 ? undefined : 'unavailable'
+          }
+        >
           <dt>Static compliance</dt>
           <dd>
-            {measurements.staticComplianceMlCmH2O > 0
+            {separable && measurements.staticComplianceMlCmH2O > 0
               ? round(measurements.staticComplianceMlCmH2O, 1)
               : '—'}{' '}
             <small>mL/cmH₂O</small>
@@ -277,28 +349,40 @@ export function VentilationPressureDecomposition({
  * says out loud which case it is in right now rather than leaving the learner to notice.
  */
 function PlateauValidity({ state }: { readonly state: VentilationSimulationState }) {
-  const { measurements } = state
-  const relaxed = measurements.plateauIsInterpretable
-  const effort = measurements.endInspiratoryEffortCmH2O
-  const displayed = measurements.plateauPressureCmH2O
-  const underlying = measurements.relaxedPlateauPressureCmH2O
+  /*
+   * Reads the same rule as the figure above it. Asking the engine's instantaneous flag instead
+   * would let this note say "measurement conditions met" during the quiet part of an occlusion on a
+   * patient who is not passive at all — the effort re-fires under the closed valves — while the
+   * figure beside it withheld the split. One rule, one verdict.
+   */
+  const validity = plateauReadingValidity(state)
+  const relaxed = validity.interpretable
+  const effort = validity.recentEffortCmH2O
+  const displayed = validity.displayedPlateauCmH2O
+  const underlying = validity.relaxedPlateauCmH2O
 
   return (
     <div className={styles.validity} data-valid={relaxed} role="note">
       <span>{relaxed ? 'Measurement conditions met' : 'Plateau not interpretable'}</span>
       {relaxed ? (
         <p>
-          No appreciable inspiratory effort at end-inspiration, so an occlusion here reports the
-          elastic pressure of the respiratory system and the split above means what it says.
+          No appreciable inspiratory effort across the recent trace, so an occlusion here reports
+          the elastic pressure of the respiratory system and the split above means what it says.
         </p>
       ) : (
         <>
           <p>
-            The patient is pulling {round(effort, 1)} cmH₂O at end-inspiration. An occlusion now
-            reports alveolar pressure <em>minus</em> that effort — {round(displayed, 1)} rather than
-            the {round(underlying, 1)} the same lung would show relaxed. The number is not the
-            elastic pressure of the respiratory system, and the peak-to-plateau difference is not
-            purely resistive.
+            The patient is pulling — reaching {round(effort, 1)} cmH₂O against this measurement. An
+            occlusion now reports alveolar pressure <em>minus</em> that effort —{' '}
+            {round(displayed, 1)} rather than the {round(underlying, 1)} the same lung would show
+            relaxed. The number is not the elastic pressure of the respiratory system, and the
+            peak-to-plateau difference is not purely resistive.
+          </p>
+          <p>
+            <strong>Watch it move:</strong> hold the occlusion and the value climbs while the
+            muscles are momentarily quiet, then drops again the instant the next effort arrives. A
+            plateau that swings like that within a single maneuver is reporting the patient, not the
+            lung — which is why one reading that happens to look right is not enough.
           </p>
           <p>
             <strong>Why it matters:</strong> effort makes a plateau read <em>low</em>, so a stiff
@@ -320,7 +404,7 @@ function PlateauValidity({ state }: { readonly state: VentilationSimulationState
 }
 
 /* ------------------------------------------------------------------------------------------------
- * Section 2 — Waveforms: a repeatable reading sequence
+ * Section 3 — Waveforms: a repeatable reading sequence
  * ---------------------------------------------------------------------------------------------- */
 
 type ReadingStepId = 'pressure' | 'inspiratory-flow' | 'expiratory-flow' | 'volume' | 'effort'
@@ -472,7 +556,7 @@ export function VentilationWaveformReadingSequence({
 }
 
 /* ------------------------------------------------------------------------------------------------
- * Section 9 — High peak pressure: four mechanisms behind one alarm
+ * Section 10 — High peak pressure: four mechanisms behind one alarm
  * ---------------------------------------------------------------------------------------------- */
 
 type MechanismId = 'resistance' | 'compliance' | 'auto-peep' | 'effort'

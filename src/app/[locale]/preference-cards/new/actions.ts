@@ -3,12 +3,20 @@
 import { revalidatePath } from 'next/cache'
 
 import { saveCardRequestSchema } from '@/features/preference-cards/schemas/saved-card'
-import { saveUserCard } from '@/features/preference-cards/server/user-cards'
+import {
+  saveUserCard,
+  type UserCardWriteErrorCode,
+} from '@/features/preference-cards/server/user-cards'
 
 export interface SaveCardActionResult {
   ok: boolean
   cardId?: string
   error?: string
+  /**
+   * Passed through so the wizard can distinguish a stale edit from a genuine failure. The two
+   * need different sentences: one asks the physician to reload and reapply, the other does not.
+   */
+  code?: UserCardWriteErrorCode
 }
 
 /**
@@ -29,7 +37,11 @@ export async function saveUserCardAction(request: unknown): Promise<SaveCardActi
 
   const result = await saveUserCard(parsed.data)
   if (!result.ok || !result.data) {
-    return { ok: false, error: result.error ?? 'The preference card could not be saved.' }
+    return {
+      ok: false,
+      error: result.error ?? 'The preference card could not be saved.',
+      code: result.code,
+    }
   }
   return { ok: true, cardId: result.data }
 }

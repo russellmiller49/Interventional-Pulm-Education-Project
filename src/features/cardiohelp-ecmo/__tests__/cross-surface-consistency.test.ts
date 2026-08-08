@@ -91,11 +91,10 @@ const claims: readonly CrossSurfaceCausalClaim<EcmoSimulationState>[] = [
     },
     loadLearnState: () => settle(createInitialSimulationState('preload-drainage-collapse')),
     performOnLearnSurface: (state) => settle(run(state, [{ type: 'SET_RPM', rpm: 5000 }])),
-    // Stated rather than silently tolerated: the drainage-collapse model does still let speed buy
-    // flow, and the harm it teaches is carried by the alarm, the guard and the pressure signature
-    // instead. Removing this exception is tracked work, not a licence to leave the surfaces apart.
-    authoredContextDifference:
-      'Drainage collapse is modeled as a flow multiplier rather than as a re-drained share, so effective flow still tracks speed here. The harm is carried by the pVen signature, the drainage-collapse alarm and the rpm-during-collapse guard rather than by the oxygenation response.',
+    // The exception this claim used to carry is gone. Drainage collapse was modelled as a flow
+    // multiplier, so effective flow still rose with speed and the harm had to be carried by the
+    // alarm, the guard and the pressure signature alone. It is now modelled as a capacity the pump
+    // can exceed, so the observable itself moves the honest way and no exception is needed.
   },
 ]
 

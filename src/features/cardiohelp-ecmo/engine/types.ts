@@ -365,6 +365,7 @@ export interface ClinicalInterventionDefinition {
       | 'clamp-return'
       | 'unclamp-drainage'
       | 'unclamp-return'
+      | 'resume-after-bubble'
     targetValue?: number
     tolerance?: number
     comparison?: 'within' | 'at-least' | 'at-most'
@@ -502,6 +503,14 @@ export interface ScenarioRuntime {
    * case, captured once at load and never moved by a learner turning the rotary control.
    */
   baselineRpmSetpoint: number
+  /**
+   * The drainage capacity this case authored, captured at load beside the opening speed.
+   *
+   * `null` means the case authored none, in which case the active drainage-limited fault's own
+   * default applies. Like `baselineRpmSetpoint` it is a property of the authored case and no
+   * learner action moves it.
+   */
+  drainageCapacityLpm: number | null
   phase: 'predict' | 'act' | 'reassess' | 'debrief' | 'complete'
   activeFaults: readonly FaultId[]
   correctedFaults: readonly FaultId[]
@@ -620,6 +629,18 @@ export interface ScenarioDefinition {
   clinicalCase?: ClinicalCaseDefinition
   hiddenUntilAssessment?: boolean
   initialState: ScenarioInitialState
+  /**
+   * How much venous drainage this case can actually supply, in L/min.
+   *
+   * The drainage-limited faults model a circuit asking for more than the patient can give it, and
+   * the quantity that decides "more than" belongs to the case rather than to the engine — a
+   * hypovolaemic patient, a malpositioned cannula and a tamponade do not run out of drainage at the
+   * same flow. Omitted, the fault's own authored default applies.
+   *
+   * Evidence boundary: bounded-educational-model. A teaching quantity, not a measurable one, and
+   * not a clinical threshold of any kind.
+   */
+  drainageCapacityLpm?: number
   timedFaults: readonly TimedFault[]
   allowedActions: readonly SimulationAction['type'][]
   objectives: readonly ScenarioObjective[]
@@ -698,6 +719,18 @@ export type SimulationAction =
   | { type: 'RESET_TIMER'; timerIndex: number }
   | { type: 'ACK_ALARM'; alarmId?: string }
   | { type: 'RESET_BUBBLE' }
+  /**
+   * Resume support after an air event, as one bounded transition.
+   *
+   * Deliberately not a clamp action and not the console reset. Past isolation, source correction
+   * and de-airing, this module does not teach where clamp opening, pump restart and console reset
+   * fall relative to one another: that choreography is device- and program-specific, and the order
+   * this module used to teach walked the learner through both limbs open on a stopped centrifugal
+   * pump. This bounded action stands in for the device- and program-specific resumption sequence;
+   * it does not reproduce or teach that sequence. It moves the circuit from corrected-and-isolated
+   * to safely running in one step, so that intermediate state is never rendered.
+   */
+  | { type: 'RESUME_SUPPORT_AFTER_BUBBLE' }
   | { type: 'TOGGLE_CIRCUIT_CLAMP'; limb: 'drainage' | 'return'; closed?: boolean }
   | { type: 'CORRECT_FAULT'; fault: FaultId }
   | { type: 'PERFORM_CHECK'; checkId: string }
@@ -744,6 +777,7 @@ export type GuidedControlId =
   | 'cardiohelp-restore-gas-source'
   | 'cardiohelp-reset-bubble'
   | 'cardiohelp-restore-ac-power'
+  | 'cardiohelp-resume-support'
   | 'cardiohelp-clamp-drainage'
   | 'cardiohelp-clamp-return'
 
@@ -755,6 +789,24 @@ export type GuidedStepPhase =
   | 'reassess'
   | 'transfer'
 
+/**
+ * Where the learner's hands go for a step.
+ *
+ * `simulator` — the step is completed by operating a control that exists on the simulated device,
+ * circuit, gas panel, monitor or trend surface. The player focuses that panel and can highlight the
+ * control on request.
+ *
+ * `task-pane` — the step is completed in the lesson pane itself, because what it does is a
+ * statement about the *model* rather than about the device: advancing the simulation, loading a
+ * scenario, finishing a walkthrough. Nothing on the simulator can satisfy it, so publishing a focus
+ * target or offering to point at a control tells the learner to look for something that is not
+ * there.
+ */
+export type GuidedStepInteraction = 'simulator' | 'task-pane'
+
+/** The circuit surface a guided step reads its evidence from, when it has a preference. */
+export type CircuitViewPreference = 'bedside' | 'diagnostic'
+
 export interface GuidedWalkthroughStep {
   id: string
   phase: GuidedStepPhase
@@ -765,6 +817,31 @@ export interface GuidedWalkthroughStep {
   actionLabel: string
   actions: readonly SimulationAction[]
   expectedResponse: readonly string[]
+  /**
+   * Defaults to `simulator`. Authored rather than inferred from the action list: two steps can
+   * carry the same `STEP` action and still differ in whether the learner is meant to touch the
+   * device, and only the author knows which.
+   */
+  interaction?: GuidedStepInteraction
+  /**
+   * The circuit view this step is read on, applied when the step is entered.
+   *
+   * A pressure-localization step is answered by comparing pVen, pInt, pArt and Δp, which the
+   * pressure-zone map lays out side by side and the bedside 3D scene does not. Authored per step so
+   * the circuit component never has to know a scenario id. Omitted means "leave the learner's
+   * current view alone".
+   */
+  preferredCircuitView?: CircuitViewPreference
+  /**
+   * Marks this step as one the learner answers rather than performs, and names the scenario whose
+   * authored prediction supplies the options.
+   *
+   * The step carries no `actions` of its own: the `COMMIT_PREDICTION` payload comes from whichever
+   * authored choice the learner selects. A prepopulated action here would be the defect this field
+   * replaces — a single button that submitted the scenario's own expectation whatever the learner
+   * believed.
+   */
+  predictionScenarioId?: string
   /** A distinct authored scenario loaded when this transfer step becomes active. */
   transferScenarioId?: string
   /** Stable identifier used to audit that this is a real transfer variant. */

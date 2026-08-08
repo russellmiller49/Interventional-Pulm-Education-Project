@@ -266,8 +266,10 @@ existed — the same `:has()`-adjacent theming trap noted in §1.3 item 8. All f
 `var(--screen-panel)` / `var(--screen-line)` from the device palette.
 
 **How it was verified.** Suite results are in §2. Layouts were checked visually with an offline
-esbuild + `renderToStaticMarkup` harness — the module routes sit behind login, so the running app
-cannot be screenshotted without credentials. The recipe is in §4.
+esbuild + `renderToStaticMarkup` harness, which renders one panel at a time without booting the
+app. The recipe is in §4. (Corrected: this section originally said the module routes sit behind
+login. They do not — the critical-care routes are public-unlisted in `src/lib/site-auth/access.ts`,
+reachable without an account, so the running app can also be screenshotted directly.)
 
 **Left undone, deliberately.** The PB980 settings order is unsourced. Control _units_ other than
 pressure are still shared (the C6 prints `ml` and `b/min` where the simulator prints `mL` and
@@ -1246,8 +1248,10 @@ gates this reaching fellows.
 
 **The two harnesses**
 
-Both routes are behind login, so neither the app nor `curl` can check this work. Use these instead —
-they are committed, and rebuilding them from scratch has already cost three sessions.
+Both routes are public-unlisted rather than behind login (`src/lib/site-auth/access.ts`), so the app
+and `curl` can reach them without an account. Use these anyway for the numbers and the four-device
+sweep, which no single route renders — they are committed, and rebuilding them from scratch has
+already cost three sessions.
 
 ```bash
 npm run dump:mv-waveforms                  # the numbers: all 15 cases, or one in full
