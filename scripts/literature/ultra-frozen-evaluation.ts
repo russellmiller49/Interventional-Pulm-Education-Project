@@ -77,9 +77,46 @@ interface LegacyManifestRecord {
 }
 
 interface FrozenTruthReview {
+  [key: string]: unknown
   id?: unknown
   revision?: unknown
   relevanceLabel?: unknown
+  revisionKind?: unknown
+  lifecycleState?: unknown
+  supersedesReviewId?: unknown
+  compensatesReviewId?: unknown
+  effectiveSourceReviewId?: unknown
+  operationActionId?: unknown
+}
+
+const COMPENSATION_PAYLOAD_FIELDS = [
+  'relevanceLabel',
+  'metadataSufficiency',
+  'reviewerConfidence',
+  'topicIds',
+  'technologyTags',
+  'technologyTagStatus',
+  'clinicalPurposes',
+  'diseaseTags',
+  'diseaseTagStatus',
+  'studyDesign',
+  'publicationStatus',
+  'categorizationFromFullText',
+  'notes',
+  'usedSupplementalMetadata',
+  'reviewSeconds',
+  'taxonomyVersion',
+  'labelSchemaVersion',
+  'enrichmentSchemaVersion',
+  'enrichmentProvenance',
+  'reviewerEmail',
+  'isBlinded',
+] as const
+
+function comparableCompensationPayload(review: FrozenTruthReview) {
+  return JSON.stringify(
+    Object.fromEntries(COMPENSATION_PAYLOAD_FIELDS.map((field) => [field, review[field]])),
+  )
 }
 
 interface FrozenTruthRecord {
@@ -89,6 +126,7 @@ interface FrozenTruthRecord {
   reviewSource?: unknown
   review?: unknown
   reviewHistory?: unknown
+  chainHeadReviewId?: unknown
 }
 
 interface FrozenTruthExportRecord {
@@ -375,9 +413,9 @@ async function readPhaseAggregate(options: {
 
 function parseTruthExport(value: unknown, options: { batchName: string; frozenAt: string }) {
   const exported = expectedObject(value, 'truth export') as unknown as FrozenTruthExportRecord
-  if (exported.exportVersion !== '1.0.0') {
+  if (exported.exportVersion !== '1.0.0' && exported.exportVersion !== '1.1.0') {
     throw new Error(
-      `Expected truth exportVersion 1.0.0, received ${String(exported.exportVersion)}.`,
+      `Expected truth exportVersion 1.0.0 or 1.1.0, received ${String(exported.exportVersion)}.`,
     )
   }
   const exportedAt = expectedString(exported.exportedAt, 'truth export.exportedAt')
@@ -419,6 +457,14 @@ function parseTruthExport(value: unknown, options: { batchName: string; frozenAt
       `truth PMID ${pmid} current review`,
     ) as FrozenTruthReview
     const reviewId = expectedString(review.id, `truth PMID ${pmid} current review ID`)
+    if (exported.exportVersion === '1.1.0') {
+      if (record.chainHeadReviewId !== reviewId) {
+        throw new Error(`Truth PMID ${pmid} current review is not the immutable chain head.`)
+      }
+      if (review.lifecycleState !== 'effective') {
+        throw new Error(`Truth PMID ${pmid} current review is not effective.`)
+      }
+    }
     if (!labels.has(String(review.relevanceLabel))) {
       throw new Error(
         `Truth PMID ${pmid} has invalid relevance label ${String(review.relevanceLabel)}.`,
@@ -453,6 +499,62 @@ function parseTruthExport(value: unknown, options: { batchName: string; frozenAt
     }
     if (review.revision !== Math.max(...revisions)) {
       throw new Error(`Truth PMID ${pmid} current review is not the latest revision.`)
+    }
+    if (exported.exportVersion === '1.1.0') {
+      const orderedHistory = [...history].sort(
+        (left, right) => Number(left.revision) - Number(right.revision),
+      )
+      orderedHistory.forEach((historyReview, historyIndex) => {
+        const prior = historyIndex === 0 ? null : orderedHistory[historyIndex - 1]
+        if (historyReview.revision !== historyIndex + 1) {
+          throw new Error(`Truth PMID ${pmid} reviewHistory is not revision-contiguous.`)
+        }
+        if (historyReview.supersedesReviewId !== (prior?.id ?? null)) {
+          throw new Error(`Truth PMID ${pmid} reviewHistory contains a predecessor fork.`)
+        }
+        if (historyReview.revisionKind === 'compensation') {
+          const imported = prior
+          const preImportHead = historyIndex >= 2 ? orderedHistory[historyIndex - 2] : null
+          const expectedSourceId =
+            preImportHead?.lifecycleState === 'effective'
+              ? preImportHead.revisionKind === 'compensation'
+                ? preImportHead.effectiveSourceReviewId
+                : preImportHead.id
+              : null
+          const effectiveSource =
+            typeof expectedSourceId === 'string'
+              ? orderedHistory
+                  .slice(0, historyIndex - 1)
+                  .find((entry) => entry.id === expectedSourceId)
+              : null
+          const expectedLifecycle = effectiveSource ? 'effective' : 'withdrawn'
+          const payloadSource = effectiveSource ?? imported
+          if (
+            historyReview.operationActionId == null ||
+            imported?.revisionKind !== 'import' ||
+            historyReview.compensatesReviewId !== imported.id ||
+            historyReview.lifecycleState !== expectedLifecycle ||
+            historyReview.effectiveSourceReviewId !== (effectiveSource?.id ?? null) ||
+            !payloadSource ||
+            comparableCompensationPayload(historyReview) !==
+              comparableCompensationPayload(payloadSource)
+          ) {
+            throw new Error(
+              `Truth PMID ${pmid} compensation source or copied payload is not chain-consistent.`,
+            )
+          }
+        } else if (
+          !['standard', 'import'].includes(String(historyReview.revisionKind)) ||
+          historyReview.lifecycleState !== 'effective' ||
+          historyReview.compensatesReviewId !== null ||
+          historyReview.effectiveSourceReviewId !== null ||
+          (historyReview.revisionKind === 'standard' && historyReview.operationActionId !== null) ||
+          (historyReview.revisionKind === 'import' &&
+            typeof historyReview.operationActionId !== 'string')
+        ) {
+          throw new Error(`Truth PMID ${pmid} review lifecycle metadata is invalid.`)
+        }
+      })
     }
     if (record.abstract !== null && typeof record.abstract !== 'string') {
       throw new Error(`Truth PMID ${pmid} abstract must be a string or null.`)

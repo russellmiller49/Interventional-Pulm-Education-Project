@@ -144,6 +144,7 @@ interface ReviewRow {
   id: string
   item_id: string
   revision: number
+  lifecycle_state?: 'effective' | 'withdrawn'
   relevance_label: CuratedCollectionPhysicianLabel
   reviewer_confidence: string
   is_blinded: boolean
@@ -503,22 +504,35 @@ async function fetchAccessibleReviews(
   client: ReturnType<typeof createLiteratureReadClient>,
   accessibleItemIds: readonly string[],
 ) {
-  const rows = await collectPaged<ReviewRow, string[]>(
-    'Curated accessible review page',
-    chunks(accessibleItemIds),
-    (itemIdChunk, start, end) =>
-      client
-        .from('literature_gold_set_reviews')
-        .select('id,item_id,revision,relevance_label,reviewer_confidence,is_blinded,completed_at')
-        .in('item_id', itemIdChunk)
-        .order('item_id', { ascending: true })
-        .order('revision', { ascending: true })
-        .range(start, end),
-  )
+  const fetch = (columns: string) =>
+    collectPaged<ReviewRow, string[]>(
+      'Curated accessible review page',
+      chunks(accessibleItemIds),
+      (itemIdChunk, start, end) =>
+        client
+          .from('literature_gold_set_reviews')
+          .select(columns)
+          .in('item_id', itemIdChunk)
+          .order('item_id', { ascending: true })
+          .order('revision', { ascending: true })
+          .range(start, end) as unknown as PromiseLike<DatabaseResult<ReviewRow[]>>,
+    )
+  let rows: ReviewRow[]
+  try {
+    rows = await fetch(
+      'id,item_id,revision,lifecycle_state,relevance_label,reviewer_confidence,is_blinded,completed_at',
+    )
+  } catch (error) {
+    if (!String(error).includes('lifecycle_state')) throw error
+    rows = await fetch(
+      'id,item_id,revision,relevance_label,reviewer_confidence,is_blinded,completed_at',
+    )
+  }
   return rows.map<CuratedCollectionReviewSnapshot>((row) => ({
     id: row.id,
     itemId: row.item_id,
     revision: row.revision,
+    lifecycleState: row.lifecycle_state ?? 'effective',
     relevanceLabel: row.relevance_label,
     reviewerConfidence: row.reviewer_confidence,
     isBlinded: row.is_blinded,

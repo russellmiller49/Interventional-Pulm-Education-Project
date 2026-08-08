@@ -18,7 +18,7 @@ describe('ForgotPasswordForm', () => {
     mockResetPasswordForEmail.mockResolvedValue({ error: null })
   })
 
-  it('sends recovery links through the PKCE callback before the password form', async () => {
+  it('requests recovery with the main-site callback before the password form', async () => {
     const user = userEvent.setup()
 
     render(<ForgotPasswordForm />)

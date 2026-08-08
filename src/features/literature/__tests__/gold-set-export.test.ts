@@ -3,12 +3,45 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   literatureGoldExportSamplingContext,
   parseLiteratureGoldSetCsv,
+  resolveEffectiveLiteratureGoldExportReview,
   serializeLiteratureGoldSetCsv,
   type LiteratureGoldExport,
 } from '@/features/literature/gold-set/export'
 import { exportLiteratureGoldSet } from '@/features/literature/server/gold-set'
 
 describe('gold-set CSV backup', () => {
+  it('keeps a withdrawn chain head in history without treating it as an effective review', () => {
+    const withdrawnHead = {
+      id: 'review-2',
+      revision: 2,
+      revisionKind: 'compensation' as const,
+      lifecycleState: 'withdrawn' as const,
+      supersedesReviewId: 'review-1',
+      compensatesReviewId: 'review-1',
+      effectiveSourceReviewId: null,
+      operationActionId: 'action-1',
+      relevanceLabel: 'include_core',
+      metadataSufficiency: 'adequate_abstract',
+      reviewerConfidence: 'high',
+      topicIds: [],
+      technologyTags: [],
+      clinicalPurposes: [],
+      diseaseTags: [],
+      studyDesign: null,
+      publicationStatus: null,
+      categorizationFromFullText: false,
+      notes: '',
+      usedSupplementalMetadata: false,
+      reviewSeconds: 0,
+      isBlinded: false,
+      reviewerEmail: null,
+      completedAt: '2026-08-08T00:00:00.000Z',
+    }
+
+    expect(resolveEffectiveLiteratureGoldExportReview(withdrawnHead)).toBeNull()
+    expect(withdrawnHead.id).toBe('review-2')
+  })
+
   it('round-trips notes containing commas, quotes, and newlines', () => {
     const fixture: LiteratureGoldExport = {
       exportVersion: '1.0.0',
@@ -78,6 +111,86 @@ describe('gold-set CSV backup', () => {
     expect(rows[0].review.notes).toBe('=HYPERLINK("https://example.invalid"), comma, and\nnew line')
     expect(rows[0].review.relevanceLabel).toBe('include_core')
     expect(rows[0].review.categorizationFromFullText).toBe(true)
+  })
+
+  it('round-trips additive V3 enrichment status, version, and provenance columns', () => {
+    const fixture: LiteratureGoldExport = {
+      exportVersion: '1.1.0',
+      exportedAt: '2026-08-08T00:00:00.000Z',
+      batch: {
+        id: 'batch-id',
+        name: 'gold-v1',
+        kind: 'gold_standard',
+        status: 'active',
+        taxonomyVersion: '2.0.0',
+        labelSchemaVersion: '2.0.0',
+        relevanceDefinitionVersion: '1.0.0',
+        samplingAlgorithmVersion: '1.0.0',
+        samplingSeed: 1,
+        requestedSize: 1,
+        frozenAt: null,
+      },
+      split: 'development',
+      includesHistory: false,
+      records: [
+        {
+          itemId: 'item-id',
+          pmid: '123',
+          title: 'A title',
+          abstract: null,
+          authors: [],
+          journalTitle: null,
+          journalAbbreviation: null,
+          publicationYear: 2026,
+          publicationTypes: [],
+          sampleStratum: 'strong_likely_ip',
+          samplingReason: 'test',
+          datasetSplit: 'development',
+          displayOrder: 1,
+          reviewStatus: 'completed',
+          reviewSource: 'completed',
+          chainHeadReviewId: 'review-id',
+          review: {
+            id: 'review-id',
+            revision: 1,
+            revisionKind: 'import',
+            lifecycleState: 'effective',
+            relevanceLabel: 'include_core',
+            metadataSufficiency: 'adequate_abstract',
+            reviewerConfidence: 'high',
+            topicIds: ['basic-bronchoscopy'],
+            technologyTags: ['convex-ebus'],
+            technologyTagStatus: 'tagged',
+            clinicalPurposes: ['diagnosis'],
+            diseaseTags: [],
+            diseaseTagStatus: 'not_applicable',
+            studyDesign: 'diagnostic-accuracy',
+            publicationStatus: 'full-article',
+            categorizationFromFullText: false,
+            notes: '',
+            usedSupplementalMetadata: false,
+            reviewSeconds: 1,
+            taxonomyVersion: '2.0.0',
+            labelSchemaVersion: '2.0.0',
+            enrichmentSchemaVersion: '2.0.0',
+            enrichmentProvenance: 'physician_confirmed_ai_enrichment',
+            isBlinded: true,
+            reviewerEmail: 'reviewer@example.invalid',
+            completedAt: '2026-08-08T00:00:00.000Z',
+          },
+        },
+      ],
+    }
+
+    const [row] = parseLiteratureGoldSetCsv(serializeLiteratureGoldSetCsv(fixture))
+    expect(row.review).toMatchObject({
+      technologyTagStatus: 'tagged',
+      diseaseTagStatus: 'not_applicable',
+      taxonomyVersion: '2.0.0',
+      labelSchemaVersion: '2.0.0',
+      enrichmentSchemaVersion: '2.0.0',
+      enrichmentProvenance: 'physician_confirmed_ai_enrichment',
+    })
   })
 
   it('redacts sampling signals until the first completed decision', () => {

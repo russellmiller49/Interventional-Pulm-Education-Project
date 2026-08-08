@@ -9,7 +9,11 @@ import {
 } from './constants'
 import { classifyLiteratureGoldDeterministicBand } from './sampling'
 import type { LiteratureGoldDeterministicBand, LiteratureGoldSetRelevanceLabel } from './types'
-import type { LiteratureGoldCsvRow, LiteratureGoldExportReview } from './export'
+import type {
+  LiteratureGoldCsvRow,
+  LiteratureGoldExport,
+  LiteratureGoldExportReview,
+} from './export'
 
 type CountMap = Record<string, number>
 
@@ -158,6 +162,10 @@ const FULL_HISTORY_RECORD_FIELDS = [
   'review',
   'reviewHistory',
 ] as const
+const FULL_HISTORY_RECORD_FIELDS_V1_1 = [
+  ...FULL_HISTORY_RECORD_FIELDS,
+  'chainHeadReviewId',
+] as const
 const FULL_HISTORY_REVIEW_FIELDS = [
   'id',
   'revision',
@@ -177,6 +185,21 @@ const FULL_HISTORY_REVIEW_FIELDS = [
   'isBlinded',
   'reviewerEmail',
   'completedAt',
+] as const
+const FULL_HISTORY_REVIEW_FIELDS_V1_1 = [
+  ...FULL_HISTORY_REVIEW_FIELDS,
+  'revisionKind',
+  'lifecycleState',
+  'supersedesReviewId',
+  'compensatesReviewId',
+  'effectiveSourceReviewId',
+  'operationActionId',
+  'technologyTagStatus',
+  'diseaseTagStatus',
+  'taxonomyVersion',
+  'labelSchemaVersion',
+  'enrichmentSchemaVersion',
+  'enrichmentProvenance',
 ] as const
 
 function expectedObject(value: unknown, field: string): Record<string, unknown> {
@@ -242,9 +265,17 @@ function expectedArray(value: unknown, field: string) {
   return value
 }
 
-function parseCompletedHistoryReview(value: unknown, field: string): LiteratureGoldExportReview {
+function parseCompletedHistoryReview(
+  value: unknown,
+  field: string,
+  exportVersion: LiteratureGoldExport['exportVersion'],
+): LiteratureGoldExportReview {
   const review = expectedObject(value, field)
-  assertExactFields(review, FULL_HISTORY_REVIEW_FIELDS, field)
+  assertExactFields(
+    review,
+    exportVersion === '1.1.0' ? FULL_HISTORY_REVIEW_FIELDS_V1_1 : FULL_HISTORY_REVIEW_FIELDS,
+    field,
+  )
   const id = expectedString(review.id, `${field}.id`)
   if (!UUID_PATTERN.test(id)) throw new Error(`${field}.id must be a UUID.`)
   if (!Number.isInteger(review.revision) || Number(review.revision) < 1) {
@@ -257,6 +288,91 @@ function parseCompletedHistoryReview(value: unknown, field: string): LiteratureG
     throw new Error(`${field}.reviewerEmail must be a string or null.`)
   }
   const completedAt = expectedIsoTimestamp(review.completedAt, `${field}.completedAt`)
+  let lifecycle: Partial<
+    Pick<
+      LiteratureGoldExportReview,
+      | 'revisionKind'
+      | 'lifecycleState'
+      | 'supersedesReviewId'
+      | 'compensatesReviewId'
+      | 'effectiveSourceReviewId'
+      | 'operationActionId'
+      | 'technologyTagStatus'
+      | 'diseaseTagStatus'
+      | 'taxonomyVersion'
+      | 'labelSchemaVersion'
+      | 'enrichmentSchemaVersion'
+      | 'enrichmentProvenance'
+    >
+  > = {}
+  if (exportVersion === '1.1.0') {
+    const revisionKind = expectedString(review.revisionKind, `${field}.revisionKind`)
+    if (!['standard', 'import', 'compensation'].includes(revisionKind)) {
+      throw new Error(`${field}.revisionKind is invalid.`)
+    }
+    const lifecycleState = expectedString(review.lifecycleState, `${field}.lifecycleState`)
+    if (!['effective', 'withdrawn'].includes(lifecycleState)) {
+      throw new Error(`${field}.lifecycleState is invalid.`)
+    }
+    lifecycle = {
+      revisionKind: revisionKind as NonNullable<LiteratureGoldExportReview['revisionKind']>,
+      lifecycleState: lifecycleState as NonNullable<LiteratureGoldExportReview['lifecycleState']>,
+      supersedesReviewId: expectedNullableString(
+        review.supersedesReviewId,
+        `${field}.supersedesReviewId`,
+      ),
+      compensatesReviewId: expectedNullableString(
+        review.compensatesReviewId,
+        `${field}.compensatesReviewId`,
+      ),
+      effectiveSourceReviewId: expectedNullableString(
+        review.effectiveSourceReviewId,
+        `${field}.effectiveSourceReviewId`,
+      ),
+      operationActionId: expectedNullableString(
+        review.operationActionId,
+        `${field}.operationActionId`,
+      ),
+      technologyTagStatus: expectedNullableString(
+        review.technologyTagStatus,
+        `${field}.technologyTagStatus`,
+      ) as LiteratureGoldExportReview['technologyTagStatus'],
+      diseaseTagStatus: expectedNullableString(
+        review.diseaseTagStatus,
+        `${field}.diseaseTagStatus`,
+      ) as LiteratureGoldExportReview['diseaseTagStatus'],
+      taxonomyVersion: expectedNullableString(review.taxonomyVersion, `${field}.taxonomyVersion`),
+      labelSchemaVersion: expectedNullableString(
+        review.labelSchemaVersion,
+        `${field}.labelSchemaVersion`,
+      ),
+      enrichmentSchemaVersion: expectedNullableString(
+        review.enrichmentSchemaVersion,
+        `${field}.enrichmentSchemaVersion`,
+      ),
+      enrichmentProvenance: expectedNullableString(
+        review.enrichmentProvenance,
+        `${field}.enrichmentProvenance`,
+      ),
+    }
+    if (
+      lifecycle.technologyTagStatus !== null &&
+      !['tagged', 'not_applicable', 'not_assessable'].includes(lifecycle.technologyTagStatus ?? '')
+    ) {
+      throw new Error(`${field}.technologyTagStatus is invalid.`)
+    }
+    if (
+      lifecycle.diseaseTagStatus !== null &&
+      !['tagged', 'not_applicable', 'not_assessable'].includes(lifecycle.diseaseTagStatus ?? '')
+    ) {
+      throw new Error(`${field}.diseaseTagStatus is invalid.`)
+    }
+  }
+  for (const [name, value] of Object.entries(lifecycle)) {
+    if (name.endsWith('Id') && value !== null && !UUID_PATTERN.test(value)) {
+      throw new Error(`${field}.${name} must be a UUID or null.`)
+    }
+  }
   const payload = literatureGoldCompleteReviewSchema.safeParse(review)
   if (!payload.success) {
     const issue = payload.error.issues[0]
@@ -270,6 +386,7 @@ function parseCompletedHistoryReview(value: unknown, field: string): LiteratureG
     isBlinded: review.isBlinded,
     reviewerEmail: review.reviewerEmail as string | null,
     completedAt,
+    ...lifecycle,
   }
 }
 
@@ -293,6 +410,68 @@ function comparableReview(review: LiteratureGoldExportReview) {
     isBlinded: review.isBlinded,
     reviewerEmail: review.reviewerEmail,
     completedAt: review.completedAt,
+    revisionKind: review.revisionKind,
+    lifecycleState: review.lifecycleState,
+    supersedesReviewId: review.supersedesReviewId,
+    compensatesReviewId: review.compensatesReviewId,
+    effectiveSourceReviewId: review.effectiveSourceReviewId,
+    operationActionId: review.operationActionId,
+    technologyTagStatus: review.technologyTagStatus,
+    diseaseTagStatus: review.diseaseTagStatus,
+    taxonomyVersion: review.taxonomyVersion,
+    labelSchemaVersion: review.labelSchemaVersion,
+    enrichmentSchemaVersion: review.enrichmentSchemaVersion,
+    enrichmentProvenance: review.enrichmentProvenance,
+  })
+}
+
+function comparableEffectiveReview(
+  review: LiteratureGoldExportReview,
+  includeEnrichmentMetadata: boolean,
+) {
+  const comparable = JSON.parse(comparableReview(review)) as Record<string, unknown>
+  delete comparable.revisionKind
+  delete comparable.lifecycleState
+  delete comparable.supersedesReviewId
+  delete comparable.compensatesReviewId
+  delete comparable.effectiveSourceReviewId
+  delete comparable.operationActionId
+  // Historical CSVs predate the additive V1.1 enrichment columns. New exports
+  // carry them, so compare them whenever the CSV supplies that projection.
+  if (!includeEnrichmentMetadata) {
+    delete comparable.technologyTagStatus
+    delete comparable.diseaseTagStatus
+    delete comparable.taxonomyVersion
+    delete comparable.labelSchemaVersion
+    delete comparable.enrichmentSchemaVersion
+    delete comparable.enrichmentProvenance
+  }
+  return JSON.stringify(comparable)
+}
+
+function comparableCompensationPayload(review: LiteratureGoldExportReview) {
+  return JSON.stringify({
+    relevanceLabel: review.relevanceLabel,
+    metadataSufficiency: review.metadataSufficiency,
+    reviewerConfidence: review.reviewerConfidence,
+    topicIds: review.topicIds,
+    technologyTags: review.technologyTags,
+    technologyTagStatus: review.technologyTagStatus,
+    clinicalPurposes: review.clinicalPurposes,
+    diseaseTags: review.diseaseTags,
+    diseaseTagStatus: review.diseaseTagStatus,
+    studyDesign: review.studyDesign,
+    publicationStatus: review.publicationStatus,
+    categorizationFromFullText: review.categorizationFromFullText,
+    notes: review.notes,
+    usedSupplementalMetadata: review.usedSupplementalMetadata,
+    reviewSeconds: review.reviewSeconds,
+    taxonomyVersion: review.taxonomyVersion,
+    labelSchemaVersion: review.labelSchemaVersion,
+    enrichmentSchemaVersion: review.enrichmentSchemaVersion,
+    enrichmentProvenance: review.enrichmentProvenance,
+    reviewerEmail: review.reviewerEmail,
+    isBlinded: review.isBlinded,
   })
 }
 
@@ -302,9 +481,9 @@ function validatePilotReviewHistory(
 ): LiteratureGoldPilotReviewHistory {
   const exported = expectedObject(value, 'Full-history export')
   assertExactFields(exported, FULL_HISTORY_EXPORT_FIELDS, 'Full-history export')
-  if (exported.exportVersion !== '1.0.0') {
+  if (exported.exportVersion !== '1.0.0' && exported.exportVersion !== '1.1.0') {
     throw new Error(
-      `Full-history export must use exportVersion 1.0.0; received ${String(exported.exportVersion)}.`,
+      `Full-history export must use exportVersion 1.0.0 or 1.1.0; received ${String(exported.exportVersion)}.`,
     )
   }
   if (exported.split !== 'all') throw new Error('Full-history export must use split=all.')
@@ -312,6 +491,7 @@ function validatePilotReviewHistory(
     throw new Error('Full-history export must include immutable review history.')
   }
   const exportedAt = expectedIsoTimestamp(exported.exportedAt, 'Full-history export.exportedAt')
+  const exportVersion = exported.exportVersion
   const batch = expectedObject(exported.batch, 'Full-history export.batch')
   assertExactFields(batch, FULL_HISTORY_BATCH_FIELDS, 'Full-history export.batch')
   const batchId = expectedString(batch.id, 'Full-history export.batch.id')
@@ -384,7 +564,11 @@ function validatePilotReviewHistory(
   records.forEach((rawRecord, recordIndex) => {
     const field = `Full-history export.records[${recordIndex}]`
     const record = expectedObject(rawRecord, field)
-    assertExactFields(record, FULL_HISTORY_RECORD_FIELDS, field)
+    assertExactFields(
+      record,
+      exportVersion === '1.1.0' ? FULL_HISTORY_RECORD_FIELDS_V1_1 : FULL_HISTORY_RECORD_FIELDS,
+      field,
+    )
     const itemId = expectedString(record.itemId, `${field}.itemId`)
     const pmid = expectedString(record.pmid, `${field}.pmid`)
     if (!UUID_PATTERN.test(itemId)) throw new Error(`${field}.itemId must be a UUID.`)
@@ -432,6 +616,7 @@ function validatePilotReviewHistory(
     const currentReview = parseCompletedHistoryReview(
       record.review,
       `Full-history PMID ${pmid} current review`,
+      exportVersion,
     )
     const history = expectedArray(
       record.reviewHistory,
@@ -440,6 +625,7 @@ function validatePilotReviewHistory(
       parseCompletedHistoryReview(
         review,
         `Full-history PMID ${pmid} reviewHistory[${reviewIndex}]`,
+        exportVersion,
       ),
     )
     if (history.length === 0) {
@@ -452,6 +638,66 @@ function validatePilotReviewHistory(
       if (review.revision !== reviewIndex + 1) {
         throw new Error(`Full-history PMID ${pmid} must contain contiguous revisions from 1.`)
       }
+      if (exportVersion === '1.1.0') {
+        const prior = reviewIndex === 0 ? null : orderedHistory[reviewIndex - 1]
+        if (review.supersedesReviewId !== (prior?.id ?? null)) {
+          throw new Error(
+            `Full-history PMID ${pmid} revision ${review.revision} must supersede the previous immutable revision.`,
+          )
+        }
+        if (review.revisionKind === 'standard') {
+          if (
+            review.lifecycleState !== 'effective' ||
+            review.compensatesReviewId !== null ||
+            review.effectiveSourceReviewId !== null ||
+            review.operationActionId !== null
+          ) {
+            throw new Error(
+              `Full-history PMID ${pmid} standard revision ${review.revision} has invalid lifecycle metadata.`,
+            )
+          }
+        } else if (review.revisionKind === 'import') {
+          if (
+            review.lifecycleState !== 'effective' ||
+            review.compensatesReviewId !== null ||
+            review.effectiveSourceReviewId !== null ||
+            review.operationActionId === null
+          ) {
+            throw new Error(
+              `Full-history PMID ${pmid} import revision ${review.revision} has invalid lifecycle metadata.`,
+            )
+          }
+        } else {
+          const imported = prior
+          const preImportHead = reviewIndex >= 2 ? orderedHistory[reviewIndex - 2] : null
+          const effectiveSourceId =
+            preImportHead?.lifecycleState === 'effective'
+              ? preImportHead.revisionKind === 'compensation'
+                ? preImportHead.effectiveSourceReviewId
+                : preImportHead.id
+              : null
+          const effectiveSource = effectiveSourceId
+            ? orderedHistory
+                .slice(0, reviewIndex - 1)
+                .find((entry) => entry.id === effectiveSourceId)
+            : null
+          const expectedLifecycle = effectiveSource ? 'effective' : 'withdrawn'
+          const payloadSource = effectiveSource ?? imported
+          if (
+            review.operationActionId === null ||
+            imported?.revisionKind !== 'import' ||
+            review.compensatesReviewId !== imported.id ||
+            review.lifecycleState !== expectedLifecycle ||
+            review.effectiveSourceReviewId !== (effectiveSource?.id ?? null) ||
+            !payloadSource ||
+            comparableCompensationPayload(review) !== comparableCompensationPayload(payloadSource)
+          ) {
+            throw new Error(
+              `Full-history PMID ${pmid} compensation revision ${review.revision} has invalid target, effective source, or copied payload.`,
+            )
+          }
+        }
+      }
     })
     const historyIds = orderedHistory.map((review) => review.id)
     if (new Set(historyIds).size !== historyIds.length) {
@@ -463,7 +709,23 @@ function validatePilotReviewHistory(
         `Full-history PMID ${pmid} current review does not match its latest immutable revision.`,
       )
     }
-    if (comparableReview(currentRow.review) !== comparableReview(currentReview)) {
+    if (exportVersion === '1.1.0' && record.chainHeadReviewId !== currentReview.id) {
+      throw new Error(
+        `Full-history PMID ${pmid} current review must match the latest immutable chain head.`,
+      )
+    }
+    const csvHasEnrichmentMetadata = [
+      currentRow.review.technologyTagStatus,
+      currentRow.review.diseaseTagStatus,
+      currentRow.review.taxonomyVersion,
+      currentRow.review.labelSchemaVersion,
+      currentRow.review.enrichmentSchemaVersion,
+      currentRow.review.enrichmentProvenance,
+    ].some((value) => value !== null && value !== undefined)
+    if (
+      comparableEffectiveReview(currentRow.review, csvHasEnrichmentMetadata) !==
+      comparableEffectiveReview(currentReview, csvHasEnrichmentMetadata)
+    ) {
       throw new Error(
         `Full-history PMID ${pmid} current review does not match the current-state CSV.`,
       )
