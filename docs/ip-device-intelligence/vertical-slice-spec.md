@@ -54,8 +54,9 @@ All reads flow through the existing in-memory catalog singleton
 `data/ip-preference-cards/generated/`) and the existing demo build context
 (`src/features/preference-cards/data/demo-context.server.ts`). Access tiers follow the existing
 model in `src/lib/site-auth/access.ts` and `src/proxy.ts` (public-unlisted for atlas surfaces,
-sign-in for institutional overlays, `site_admin` untouched), per recommendation R5 — pending the
-owner's decision in [decision-log.md](./decision-log.md).
+sign-in for institutional overlays, `site_admin` untouched), per decisions D-03 and D-07 as
+modified (recorded 2026-08-08 in [decision-log.md](./decision-log.md)): every new route stays
+public-unlisted and noindex throughout Phase D1.
 
 ## 2. Screen 1 — Device page
 
@@ -368,7 +369,8 @@ evaluation. None of them introduce a second resolution implementation.
   than the draft watermark — but any procedure-derived content embedded on a device page
   (section 2.4) shows the procedure's draft status inline.
 - Draft procedure content is not public: workspace, capability view, and outputs sit behind the
-  authenticated / public-unlisted tier per R5, pending the owner's decision.
+  authenticated / public-unlisted tier (decided 2026-08-08 — D-03 as modified keeps every D1
+  route public-unlisted and noindex, and D-07 keeps draft clinical-use content non-public).
 
 ### 6.3 Which evidence states may appear where
 

@@ -18,8 +18,8 @@ kinds of claims:
 
 Pillar assignments follow the recommendations in [product-vision.md](./product-vision.md)
 (Pillar A — Device and Clinical Use Atlas; Pillar B — Procedure Intelligence Workspace;
-Pillar C — Institutional Capability & Gap Analyzer, deferred) and are **proposals pending the
-owner's decision**, not settled fact. Data-readiness statements are expanded in
+Pillar C — Institutional Capability & Gap Analyzer, deferred); the pillar and audience
+assignments were **accepted by the owner on 2026-08-08** (decisions D-01, D-02, D-09). Data-readiness statements are expanded in
 [data-readiness-report.md](./data-readiness-report.md); the relationship vocabulary referenced
 below is defined in [relationship-taxonomy.md](./relationship-taxonomy.md); the surface each
 persona would touch is laid out in [information-architecture.md](./information-architecture.md).
@@ -476,7 +476,7 @@ draft-gated). The ordering is a proposal; reranking is a one-line decision for
 
 ## 6. What the recommended pillars serve first
 
-Subject to the owner's decisions in [decision-log.md](./decision-log.md):
+Under the decisions recorded 2026-08-08 in [decision-log.md](./decision-log.md):
 
 - **Pillar A (proposed primary — Device and Clinical Use Atlas)** serves J-01, J-02, and J-07
   first, and the evidence-display half of J-10. Its first-class personas are the supply-chain

@@ -55,7 +55,7 @@ quantified readiness audit in [data-readiness-report.md](./data-readiness-report
 
 The phase charter names ten candidate products. They are not ten products to build;
 they collapse onto three pillars plus a set of outputs, with the remainder deferred.
-This mapping is a proposal pending the physician owner's decision.
+This mapping was accepted by the physician owner on 2026-08-08 (decisions D-01 and D-09).
 
 | #   | Candidate product                       | Maps to                                       | One-line rationale                                                                                                                                                                                                 |
 | --- | --------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

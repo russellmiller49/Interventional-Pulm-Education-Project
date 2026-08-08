@@ -81,7 +81,7 @@ flowchart TD
 
 ## 3. Entity inventory
 
-Each entity below uses the same nine-aspect table. "Governance states" quotes exact enum values from the repository. "Expose publicly?" is this audit's assessment for the owner's decision, not a decided policy.
+Each entity below uses the same nine-aspect table. "Governance states" quotes exact enum values from the repository. "Expose publicly?" is this audit's per-entity assessment; the governing policy was decided 2026-08-08 (D-03 and D-07 as modified: nothing new is indexable during Phase D1, and the later initial public cohort is `verified_source` + `prototype_visible` only).
 
 ### 3.1 Manufacturer
 

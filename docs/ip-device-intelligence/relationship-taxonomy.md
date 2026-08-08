@@ -340,8 +340,9 @@ repository evidence or states plainly that the concept does not exist and must n
 
 ## 3. Proposed relationship model (diagram)
 
-Dashed nodes and edges denote structures that **do not exist today** and are proposals pending the
-physician owner's decision. Solid paths exist in the repository now.
+Dashed nodes and edges denote structures that **do not exist today**; per decision D-06
+(2026-08-08) they may be added later only as separately named, separately reviewed structures,
+each requiring its own future owner decision. Solid paths exist in the repository now.
 
 ```mermaid
 flowchart LR
@@ -484,6 +485,7 @@ operational framing only, §2.5/§2.6) structure:
 2. **No LLM-created equivalence or substitution claims, ever.** Deterministic tooling may surface
    candidates for _human_ review (as the proposals pipeline already does, with its disclaimer);
    no model output may create, imply, or rank equivalence or substitutability.
-3. Where this document proposes anything — names, badges, visibility tiers, the separation of
-   §2.2 from §2.3 — it is a proposal pending the physician owner's decision, to be recorded in
-   [decision-log.md](./decision-log.md).
+3. The governing rules in this document — keeping `productFamily` as-is (D-06), the public
+   cohort and its D1 gating (D-03 and D-07 as modified), and the operational-output walls
+   (D-08) — were decided 2026-08-08 and recorded in [decision-log.md](./decision-log.md).
+   Naming and badge copy remain proposals for Phase D1 design review.

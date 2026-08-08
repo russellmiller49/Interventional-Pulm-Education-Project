@@ -438,8 +438,8 @@ GUDID × lifecycle × slottingScope × regulatory) is populated and never collap
 constraints on a public atlas are visibility (30–53% of each pool is `hidden`, so an R5-style
 public view over verified_source + prototype_visible facts starts smaller than the full pool)
 and metadata depth (GUDID confirmation 26–53%; dimension gaps 15–79%). These are enrichment
-tasks, not structural blockers. This supports recommendation R1's readiness claim — as a
-proposal pending the owner's decision.
+tasks, not structural blockers. This supports recommendation R1's readiness claim — accepted
+2026-08-08 as decision D-01.
 
 **Workspace-readiness (pillar B — Procedure Intelligence Workspace): structurally complete,
 governance-gated.** The procedure spine an intelligence workspace needs is fully authored:
@@ -549,8 +549,8 @@ pillar C is proposed as deferred, pending the decisions in
 
 - [data-readiness-audit.json](./data-readiness-audit.json) — the deterministic artifact this
   report interprets (regenerate with `npm run ip-intel:audit`).
-- [decision-log.md](./decision-log.md) — where the physician owner's decisions on the pending
-  recommendations are recorded.
+- [decision-log.md](./decision-log.md) — where the physician owner's decisions D-01–D-10
+  (recorded 2026-08-08) live.
 - [relationship-taxonomy.md](./relationship-taxonomy.md) — the eight relationship concepts the
   single `productFamily` term must not be asked to carry.
 - [vertical-slice-spec.md](./vertical-slice-spec.md) — the proposed Phase D1 read-only slice
