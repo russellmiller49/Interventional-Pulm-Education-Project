@@ -1,6 +1,6 @@
 # Relationship taxonomy: eight concepts the word "family" must stop carrying
 
-Phase D0 discovery document (2026-08-08) — describes current repository state and proposals; no production feature exists; all recommendations await physician-owner decisions recorded in [decision-log.md](./decision-log.md).
+Phase D0 discovery document (2026-08-08) — describes current repository state and proposals. Physician-owner decisions D-01–D-10 were recorded 2026-08-08 in [decision-log.md](./decision-log.md) (D-03 and D-07 accepted with modification, D-10 with bounded scope); no production feature exists yet.
 
 This document defines the eight distinct product-relationship types the Device and Procedure
 Intelligence Platform would need, shows why the single `productFamily` concept cannot carry all of
@@ -81,7 +81,7 @@ workflow statement about _when_ a choice is made, orthogonal to _which products 
 grouping with known defects (1.2), a reviewed selection group for card persistence (1.3), and a
 deferred-choice clinical workflow (1.4) — and adjacent needs (equivalence, procurement
 substitution, local formulary, education, compatibility) have no term at all. The taxonomy below
-separates them. Per brief recommendation R7 (pending owner decision), `productFamily` keeps its
+separates them. Per brief recommendation R7 (accepted 2026-08-08 as decision D-06), `productFamily` keeps its
 real meaning — the reviewed at-procedure selection group — and everything else gets its own named
 structure.
 
@@ -176,8 +176,8 @@ repository evidence or states plainly that the concept does not exist and must n
 - **May it drive substitutions:** no. It drives deferred size choice within one line, not
   replacement of one product by another.
 - **Difference from the current reviewed product-family model:** none — this _is_ the current
-  model's real meaning, which brief recommendation R7 (pending owner decision) proposes to keep
-  as-is under a clarified name.
+  model's real meaning, which brief recommendation R7 (accepted 2026-08-08 as decision D-06)
+  keeps as-is under a clarified name.
 - **Exists today?** Yes — `family-pick.ts`, `size-at-procedure.ts`, the
   `ReviewedProductFamilyPin` verification path in `product-family.ts`, and the 18 draft versions.
 
@@ -392,22 +392,23 @@ substitution except a future approved clinical equivalence group — which does 
 ## 4. Evidence-and-safety display model
 
 The brief (§6) fixes nine evidence states, strongest to weakest. The table below proposes a badge
-or label for each (proposals pending owner decision), where it may be shown, and what it may
+or label for each (badge copy remains a proposal; the visibility and drive columns reflect the
+decisions recorded 2026-08-08), where it may be shown, and what it may
 drive. Badge copy must always carry the axis it came from — verification grade, visibility,
 distribution, lifecycle, slotting scope, and regulatory status are six independent axes in the
 catalog and are never collapsed into one indicator.
 
-| #   | Evidence state                                                                                          | Proposed badge / label                      | Visibility                                               | May drive a card / readiness result?                                                                                                                |
-| --- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Verified product fact (GUDID/UDI-backed, `verified_source`)                                             | `Verified — <source type>` with citation    | Public candidate (only when also `prototype_visible`)    | Yes, via authored selectable options                                                                                                                |
-| 2   | Manufacturer-sourced fact (document-backed, `candidate`)                                                | `Candidate — manufacturer document`         | Authenticated; public only with citation and grade shown | Display and selection with badge (existing `unverified_product` info-message pattern: usable and badged, not withheld); never presented as verified |
-| 3   | Reviewed clinical-use relationship (authored options; 28 externally clinician-reviewed; installed-base) | `Reviewed option` / `Installed-base option` | Authenticated procedure contexts                         | Yes — this is the wall: authored selectable options and (once approved) family versions                                                             |
-| 4   | Proposed / unreviewed (813 proposals)                                                                   | `Unreviewed proposal — not selectable`      | Never public; admin/review surfaces only                 | Never                                                                                                                                               |
-| 5   | Institution mapping (local formulary, when it exists)                                                   | `Local — <institution>`                     | Authenticated, institution-scoped                        | Locally, under local governance                                                                                                                     |
-| 6   | Clinician preference (personal, e.g. equipment sets)                                                    | `Personal`                                  | Owner only                                               | Only as the owner's own selection                                                                                                                   |
-| 7   | Inferred grouping (discovery `familyKey`)                                                               | `Grouped by name — not reviewed`            | Browse only                                              | Never; unpersistable by construction                                                                                                                |
-| 8   | Historical / retired (release-pinned)                                                                   | `Historical — release <id>`                 | Authenticated reconstruction contexts                    | Only reconstruction of already-pinned cards (retired resolves; draft never does)                                                                    |
-| 9   | Unavailable / incomplete                                                                                | `Unknown`                                   | Anywhere the fact would appear                           | Resolves as `unknown` — never a silent pass, never implied clearance                                                                                |
+| #   | Evidence state                                                                                          | Proposed badge / label                      | Visibility                                                                                                    | May drive a card / readiness result?                                                                                                                |
+| --- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Verified product fact (GUDID/UDI-backed, `verified_source`)                                             | `Verified — <source type>` with citation    | Public candidate (only when also `prototype_visible`)                                                         | Yes, via authored selectable options                                                                                                                |
+| 2   | Manufacturer-sourced fact (document-backed, `candidate`)                                                | `Candidate — manufacturer document`         | Authenticated/unlisted — per D-07 as modified (2026-08-08), not public until a separate public-content review | Display and selection with badge (existing `unverified_product` info-message pattern: usable and badged, not withheld); never presented as verified |
+| 3   | Reviewed clinical-use relationship (authored options; 28 externally clinician-reviewed; installed-base) | `Reviewed option` / `Installed-base option` | Authenticated procedure contexts                                                                              | Yes — this is the wall: authored selectable options and (once approved) family versions                                                             |
+| 4   | Proposed / unreviewed (813 proposals)                                                                   | `Unreviewed proposal — not selectable`      | Never public; admin/review surfaces only                                                                      | Never                                                                                                                                               |
+| 5   | Institution mapping (local formulary, when it exists)                                                   | `Local — <institution>`                     | Authenticated, institution-scoped                                                                             | Locally, under local governance                                                                                                                     |
+| 6   | Clinician preference (personal, e.g. equipment sets)                                                    | `Personal`                                  | Owner only                                                                                                    | Only as the owner's own selection                                                                                                                   |
+| 7   | Inferred grouping (discovery `familyKey`)                                                               | `Grouped by name — not reviewed`            | Browse only                                                                                                   | Never; unpersistable by construction                                                                                                                |
+| 8   | Historical / retired (release-pinned)                                                                   | `Historical — release <id>`                 | Authenticated reconstruction contexts                                                                         | Only reconstruction of already-pinned cards (retired resolves; draft never does)                                                                    |
+| 9   | Unavailable / incomplete                                                                                | `Unknown`                                   | Anywhere the fact would appear                                                                                | Resolves as `unknown` — never a silent pass, never implied clearance                                                                                |
 
 Absence of a reviewed regulatory decision displays as **unknown**, never as implied clearance.
 
@@ -425,7 +426,16 @@ Absence of a reviewed regulatory decision displays as **unknown**, never as impl
   (`src/app/[locale]/preference-cards/emerging/page.tsx`) and hard-refused at save time
   (`product_not_slottable`, enforced in `src/features/preference-cards/server/catalog.ts`).
 
-### 4.2 Public vs. authenticated (proposal, per brief R5 — pending owner decision)
+### 4.2 Public vs. authenticated (decided 2026-08-08 — D-03 and D-07 as modified)
+
+Per D-03 as modified, the split below is the **target** architecture: during Phase D1 every new
+device-intelligence route remains public-unlisted and noindex, and public indexing requires a
+separate owner launch decision after the vertical slice, an evidence-filtering audit, and a
+usability review. Per D-07 as modified, the initial public-indexable cohort — when authorized —
+is exactly `verification_grade = verified_source` AND `visibility_state = prototype_visible`;
+candidate-grade facts stay authenticated/unlisted until a separate public-content review; the
+emerging cohort keeps its separately labeled investigational context; proposals and draft
+clinical-use relationships are never public.
 
 - **May be publicly visible:** device/role facts restricted to `verified_source` +
   `prototype_visible` with citations; the role taxonomy; the emerging view's labeled
@@ -439,7 +449,7 @@ Absence of a reviewed regulatory decision displays as **unknown**, never as impl
   (`data/ip-preference-cards/reviewed/**` contents are internal governance records), verification
   backlog, governance QA.
 
-### 4.3 What may drive operational outputs (brief R8 — pending owner decision)
+### 4.3 What may drive operational outputs (decided 2026-08-08 — D-08 accepted)
 
 Only the existing walls: **authored selectable options, APPROVED reviewed family versions,
 canonical role codes, and release-pinned definitions** may drive a card or a readiness result.

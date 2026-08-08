@@ -1,8 +1,9 @@
 # Data-readiness report — EBUS_TBNA, THERAPEUTIC_BRONCH, CHEST_TUBE
 
-Phase D0 discovery document (2026-08-08) — describes current repository state and proposals; no
-production feature exists; all recommendations await physician-owner decisions recorded in
-[decision-log.md](./decision-log.md).
+Phase D0 discovery document (2026-08-08) — describes current repository state and proposals.
+Physician-owner decisions D-01–D-10 were recorded 2026-08-08 in
+[decision-log.md](./decision-log.md) (D-03 and D-07 accepted with modification, D-10 with
+bounded scope); no production feature exists yet.
 
 This report is the data-readiness analysis for the Device and Procedure Intelligence Platform
 discovery. It interprets the deterministic audit artifact

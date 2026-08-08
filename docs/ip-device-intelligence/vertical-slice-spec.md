@@ -1,6 +1,6 @@
 # Read-only vertical-slice specification (Phase D1 proposal)
 
-Phase D0 discovery document (2026-08-08) — describes current repository state and proposals; no production feature exists; all recommendations await physician-owner decisions recorded in [decision-log.md](./decision-log.md).
+Phase D0 discovery document (2026-08-08) — describes current repository state and proposals. Physician-owner decisions D-01–D-10 were recorded 2026-08-08 in [decision-log.md](./decision-log.md) (D-03 and D-07 accepted with modification, D-10 with bounded scope); no production feature exists yet.
 
 This document specifies the Phase D1 vertical slice proposed as recommendation R10 in
 [product-vision.md](./product-vision.md): a **read-only** device page, procedure workspace,
@@ -15,6 +15,15 @@ the Phase D0 audit artifact `docs/ip-device-intelligence/data-readiness-audit.js
 `scripts/ip-device-intelligence/audit-data-readiness.ts`; provenance: workbook sha `fb25b24e…`,
 catalog release `8ece7648…`) and narrated in
 [data-readiness-report.md](./data-readiness-report.md).
+
+**Decision status (2026-08-08).** The owner accepted this slice as Phase D1 with bounded scope
+(decision D-10): device index/detail presentation, clinical-role links, procedure workspaces for
+the three exemplar procedures, an explicitly labeled demo-only capability panel, and read-only
+output previews or links. Phase D1 must add no persistence, no migration, no catalog or
+governance change, no public indexing (per D-03 as modified, every new route stays
+public-unlisted and noindex during D1), no clinical equivalence or substitution claim, and no
+second resolution engine. The constraints in §6 are binding; wherever this specification
+describes more than the bounded list, the D-10 scope controls.
 
 ## 1. Slice overview
 
@@ -364,21 +373,23 @@ evaluation. None of them introduce a second resolution implementation.
 ### 6.3 Which evidence states may appear where
 
 Evidence-state vocabulary is defined in [relationship-taxonomy.md](./relationship-taxonomy.md)
-(evidence display model). Applied to this slice:
+(evidence display model). Applied to this slice — noting that per D-03 as modified every Phase
+D1 route is public-unlisted and noindex, so the device-page column means "reachable by direct
+link," not "indexable"; indexability notes refer to the later D-07 cohort:
 
-| Evidence state                                          | Device page (public)   | Workspace / capability (auth) | May drive outputs?            |
-| ------------------------------------------------------- | ---------------------- | ----------------------------- | ----------------------------- |
-| 1 Verified product fact (GUDID/UDI, verified_source)    | Yes, with citation     | Yes                           | Yes                           |
-| 2 Manufacturer-sourced fact (candidate)                 | Yes, badged            | Yes, badged                   | Only as "with limitations"    |
-| 3 Reviewed clinical-use relationship (authored options) | Yes (role/slot facts)  | Yes                           | Yes                           |
-| 4 Proposed / unreviewed (813 proposals)                 | **Never public**       | Badged, never selectable      | **Never**                     |
-| 5 Institution mapping                                   | Never public           | Authenticated only            | Yes, labeled local            |
-| 6 Clinician preference (personal cards)                 | Never                  | Owner only (existing RLS)     | Existing card engine only     |
-| 7 Inferred grouping (discovery familyKey)               | Display-only, labeled  | Display-only, labeled         | **Never**                     |
-| 8 Historical / retired (release-pinned)                 | Where already surfaced | Via existing card views       | Existing reconstruction only  |
-| 9 Unavailable / incomplete                              | Honest "unknown"       | Honest "unknown"              | Renders as gap, never guessed |
+| Evidence state                                          | Device page (public)                                       | Workspace / capability (auth) | May drive outputs?            |
+| ------------------------------------------------------- | ---------------------------------------------------------- | ----------------------------- | ----------------------------- |
+| 1 Verified product fact (GUDID/UDI, verified_source)    | Yes, with citation                                         | Yes                           | Yes                           |
+| 2 Manufacturer-sourced fact (candidate)                 | Yes, badged — never in the indexable cohort (D-07)         | Yes, badged                   | Only as "with limitations"    |
+| 3 Reviewed clinical-use relationship (authored options) | Yes (role/slot facts) — never indexable while draft (D-07) | Yes                           | Yes                           |
+| 4 Proposed / unreviewed (813 proposals)                 | **Never public**                                           | Badged, never selectable      | **Never**                     |
+| 5 Institution mapping                                   | Never public                                               | Authenticated only            | Yes, labeled local            |
+| 6 Clinician preference (personal cards)                 | Never                                                      | Owner only (existing RLS)     | Existing card engine only     |
+| 7 Inferred grouping (discovery familyKey)               | Display-only, labeled                                      | Display-only, labeled         | **Never**                     |
+| 8 Historical / retired (release-pinned)                 | Where already surfaced                                     | Via existing card views       | Existing reconstruction only  |
+| 9 Unavailable / incomplete                              | Honest "unknown"                                           | Honest "unknown"              | Renders as gap, never guessed |
 
-This restates recommendation R8's walls: only authored selectable options, APPROVED reviewed
+This restates decision D-08's walls (R8, accepted 2026-08-08): only authored selectable options, APPROVED reviewed
 family versions, canonical role codes, and release-pinned definitions drive an operational
 result; everything else may be shown, badged, in the appropriate tier — and never drives a
 card, checklist, or readiness verdict.

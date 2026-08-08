@@ -1,10 +1,10 @@
 # Phase D0 Decision Log — Device and Procedure Intelligence Platform
 
-Phase D0 discovery document (2026-08-08) — describes current repository state and proposals; no production feature exists; all recommendations await physician-owner decisions recorded in decision-log.md.
+Phase D0 discovery document (2026-08-08) — describes current repository state and proposals. **Physician-owner decisions D-01–D-10 were recorded 2026-08-08** (D-03 and D-07 accepted with modification, D-10 accepted with bounded scope); no production feature exists yet.
 
 This is the decision packet for the physician owner. It has two parts:
 
-- **Part 1 — Decisions REQUIRED from the owner.** Ten charter decisions that gate Phase D1. Each is presented with context, options, the discovery team's recommendation, and consequences. Every one carries the status `DECISION: PENDING PHYSICIAN OWNER`. Nothing in Part 1 has been decided.
+- **Part 1 — Decisions REQUIRED from the owner.** Ten charter decisions that gate Phase D1. Each is presented with context, options, the discovery team's recommendation, and consequences, followed by the owner's recorded decision of 2026-08-08.
 - **Part 2 — Decisions MADE within Phase D0.** Small, reversible, process-level choices made to execute the discovery itself. They are logged for transparency and imply no owner approval of anything in Part 1.
 
 Sibling documents argue each decision in depth: [product-vision.md](./product-vision.md), [user-jobs-and-personas.md](./user-jobs-and-personas.md), [data-relationship-audit.md](./data-relationship-audit.md), [relationship-taxonomy.md](./relationship-taxonomy.md), [information-architecture.md](./information-architecture.md), [vertical-slice-spec.md](./vertical-slice-spec.md), [data-readiness-report.md](./data-readiness-report.md).
@@ -28,7 +28,7 @@ flowchart TD
 
 ## Part 1 — Decisions REQUIRED from the physician owner (phase gate)
 
-Phase D1 does not start until each decision below is recorded (accept, modify, or reject the recommendation). Recommendations come from the Phase D0 shared brief (R1–R10) and are proposals, not facts.
+All ten decisions below were recorded by the physician owner on **2026-08-08**. Recommendations came from the Phase D0 shared brief (R1–R10); the recorded decision under each item is now the governing statement, and where it modifies the recommendation, the modification controls.
 
 ### D-01. Primary product pillar
 
@@ -52,7 +52,7 @@ Phase D1 does not start until each decision below is recorded (accept, modify, o
 
 **Argued in:** [product-vision.md](./product-vision.md).
 
-**DECISION: PENDING PHYSICIAN OWNER**
+**DECISION (2026-08-08): ACCEPTED — Option 1.** The Device and Clinical Use Atlas is the primary product pillar; the Procedure Intelligence Workspace is secondary. Institutional capability and gap analysis is deferred until real institutional data and an institution model exist.
 
 ---
 
@@ -78,7 +78,7 @@ Phase D1 does not start until each decision below is recorded (accept, modify, o
 
 **Argued in:** [user-jobs-and-personas.md](./user-jobs-and-personas.md).
 
-**DECISION: PENDING PHYSICIAN OWNER**
+**DECISION (2026-08-08): ACCEPTED — Option 1.** The primary audience is the procedure team preparing and learning: bronchoscopy nurses, procedure technicians, pulmonary/IP fellows, and respiratory therapists. The interventional pulmonologist remains the clinical owner, reviewer, and governance authority.
 
 ---
 
@@ -102,7 +102,7 @@ Phase D1 does not start until each decision below is recorded (accept, modify, o
 
 **Argued in:** [information-architecture.md](./information-architecture.md).
 
-**DECISION: PENDING PHYSICIAN OWNER**
+**DECISION (2026-08-08): ACCEPTED WITH MODIFICATION.** The target architecture is a public atlas, authenticated procedure workspace, and admin-only governance tooling. During Phase D1, however, all new device-intelligence routes remain public-unlisted and noindex. Public indexing requires a separate owner launch decision after the vertical slice, an evidence-filtering audit, and a usability review.
 
 ---
 
@@ -126,7 +126,7 @@ Phase D1 does not start until each decision below is recorded (accept, modify, o
 
 **Argued in:** [information-architecture.md](./information-architecture.md).
 
-**DECISION: PENDING PHYSICIAN OWNER**
+**DECISION (2026-08-08): ACCEPTED — Option 1.** Create a new top-level device-intelligence route area and cross-link it with the preserved `/preference-cards/*` routes. Existing preference-card routes are not replaced, redirected, or removed during Phase D1.
 
 ---
 
@@ -156,7 +156,7 @@ Phase D1 does not start until each decision below is recorded (accept, modify, o
 
 **Argued in:** [vertical-slice-spec.md](./vertical-slice-spec.md).
 
-**DECISION: PENDING PHYSICIAN OWNER**
+**DECISION (2026-08-08): ACCEPTED — Option 1.** The Phase D1 exemplar procedures are `EBUS_TBNA`, `THERAPEUTIC_BRONCH`, and `CHEST_TUBE`.
 
 ---
 
@@ -180,7 +180,7 @@ Phase D1 does not start until each decision below is recorded (accept, modify, o
 
 **Argued in:** [relationship-taxonomy.md](./relationship-taxonomy.md).
 
-**DECISION: PENDING PHYSICIAN OWNER**
+**DECISION (2026-08-08): ACCEPTED — Option 1.** The current reviewed productFamily model remains unchanged as the at-procedure selection group. It is not broadened to imply manufacturer identity, clinical equivalence, substitution, or formulary policy. New relationship types may be added later only as separately named and separately reviewed structures.
 
 ---
 
@@ -204,7 +204,7 @@ Phase D1 does not start until each decision below is recorded (accept, modify, o
 
 **Argued in:** [data-readiness-report.md](./data-readiness-report.md).
 
-**DECISION: PENDING PHYSICIAN OWNER**
+**DECISION (2026-08-08): ACCEPTED WITH MODIFICATION — narrowed initial public cohort.** When public indexing is later authorized (see D-03), the initial public-indexable atlas cohort must satisfy `verification_grade = verified_source` AND `visibility_state = prototype_visible`. Candidate-grade manufacturer-sourced facts remain authenticated/unlisted until a separate public-content review. The existing emerging-device cohort may retain its separately labeled investigational context. Proposals and draft clinical-use relationships are never public.
 
 ---
 
@@ -228,7 +228,7 @@ Phase D1 does not start until each decision below is recorded (accept, modify, o
 
 **Argued in:** [data-relationship-audit.md](./data-relationship-audit.md).
 
-**DECISION: PENDING PHYSICIAN OWNER**
+**DECISION (2026-08-08): ACCEPTED — Option 1.** Operational outputs may be driven only by the existing governed walls: authored selectable options, approved reviewed family versions, canonical role codes, and release-pinned definitions. Proposals, candidate products, draft families, discovery groupings, and inferred relationships may be displayed only in properly labeled contexts and may not drive cards, checklists, or readiness results.
 
 ---
 
@@ -252,7 +252,7 @@ Phase D1 does not start until each decision below is recorded (accept, modify, o
 
 **Argued in:** [product-vision.md](./product-vision.md).
 
-**DECISION: PENDING PHYSICIAN OWNER**
+**DECISION (2026-08-08): ACCEPTED — Option 1.** Deferred: institutional capability as a real product; formulary and procurement intelligence; shortage and substitution navigation; the device change-impact dashboard; a standalone Training and Setup Academy; a rebuilt governance workbench. Training views may be incorporated into the procedure workspace, and existing governance surfaces evolve rather than being replaced.
 
 ---
 
@@ -278,7 +278,7 @@ Phase D1 does not start until each decision below is recorded (accept, modify, o
 
 **Argued in:** [vertical-slice-spec.md](./vertical-slice-spec.md).
 
-**DECISION: PENDING PHYSICIAN OWNER**
+**DECISION (2026-08-08): ACCEPTED WITH BOUNDED PHASE D1 SCOPE.** Build a read-only vertical slice containing: device index/detail presentation; clinical-role links; procedure workspaces for the three exemplar procedures; an explicitly labeled demo-only capability panel; and read-only output previews or links. Phase D1 must add no persistence, no migration, no catalog or governance change, no public indexing, no clinical equivalence or substitution claim, and no second resolution engine.
 
 ---
 
@@ -318,4 +318,4 @@ The repository inventory (domain resolution, taxonomy/families, server + Supabas
 
 ## What happens next
 
-The physician owner records a decision (accept / modify / reject, with notes) on each of D-01 through D-10 in this file. Any modification that changes scope should be reflected back into the sibling document that argues that decision. Phase D1 begins only when all ten status lines have been updated from `DECISION: PENDING PHYSICIAN OWNER` to a recorded decision.
+All ten decisions were recorded by the physician owner on 2026-08-08: D-01, D-02, D-04, D-05, D-06, D-08, and D-09 accepted as recommended; D-03 and D-07 accepted with modification; D-10 accepted with bounded scope. The modifications are reflected in the sibling documents that argue those decisions ([information-architecture.md](./information-architecture.md), [relationship-taxonomy.md](./relationship-taxonomy.md), [vertical-slice-spec.md](./vertical-slice-spec.md)). Phase D1 is now authorized under the bounded scope recorded in D-10 and the D1-time constraints of D-03 (all new routes public-unlisted and noindex; public indexing needs a separate launch decision).

@@ -1,6 +1,6 @@
 # Device and Procedure Intelligence Platform — product vision
 
-Phase D0 discovery document (2026-08-08) — describes current repository state and proposals; no production feature exists; all recommendations await physician-owner decisions recorded in [decision-log.md](./decision-log.md).
+Phase D0 discovery document (2026-08-08) — describes current repository state and proposals. Physician-owner decisions D-01–D-10 were recorded 2026-08-08 in [decision-log.md](./decision-log.md) (D-03 and D-07 accepted with modification, D-10 with bounded scope); no production feature exists yet.
 
 ## 1. Strategic premise
 
@@ -26,7 +26,7 @@ Three commitments frame everything below:
 1. **Preference cards remain the last-mile output.** Nothing proposed here replaces or
    reorganizes the card builder; the proposal is to surface the graph that already feeds
    it. The `/preference-cards/*` routes, the builder, and the admin QA surface are
-   preserved as-is (brief recommendation R6, pending owner decision).
+   preserved as-is (brief recommendation R6; accepted 2026-08-08 as decision D-04).
 2. **Do not weaken existing foundations.** The release backbone (append-only
    publication baseline over 54 published entries, guarded by
    `scripts/ip-preference-cards/check-publication-baseline.ts`), the six independent
@@ -39,8 +39,8 @@ Three commitments frame everything below:
    definitions may drive an operational result (a card, a readiness verdict). Proposals,
    candidate-grade products, and draft families may be shown — badged, in authenticated
    contexts — but never drive a result. No product is ever claimed clinically
-   equivalent or substitutable for another (brief recommendation R8, pending owner
-   decision).
+   equivalent or substitutable for another (brief recommendation R8; accepted
+   2026-08-08 as decision D-08).
 
 Companion documents: personas in [user-jobs-and-personas.md](./user-jobs-and-personas.md),
 the entity/relationship audit in [data-relationship-audit.md](./data-relationship-audit.md),
@@ -260,9 +260,11 @@ scope for D0 and blocked regardless of engineering effort.
 demo stand-ins reflect an actual room; until then, cards correctly resolve against the
 demo profile and say so.
 
-## 4. Recommendation (pending physician-owner decision)
+## 4. Recommendation (accepted 2026-08-08 as decisions D-01 and D-09)
 
-Proposed, per the shared brief (R1–R3): **Pillar A primary, Pillar B secondary, Pillar
+Proposed per the shared brief (R1–R3) and accepted by the physician owner on
+2026-08-08 — with the D-03 modification that every new route stays public-unlisted
+and noindex during Phase D1: **Pillar A primary, Pillar B secondary, Pillar
 C deferred, preference cards remain an output.** The argument is value + readiness +
 risk together — explicitly not ease of implementation alone:
 

@@ -1,6 +1,6 @@
 # Information architecture — Device and Procedure Intelligence Platform
 
-Phase D0 discovery document (2026-08-08) — describes current repository state and proposals; no production feature exists; all recommendations await physician-owner decisions recorded in decision-log.md.
+Phase D0 discovery document (2026-08-08) — describes current repository state and proposals. Physician-owner decisions D-01–D-10 were recorded 2026-08-08 in [decision-log.md](./decision-log.md) (D-03 and D-07 accepted with modification, D-10 with bounded scope); no production feature exists yet.
 
 This document audits the route and access surface that exists today, evaluates the five
 information-architecture options from the discovery charter, and details the recommended
@@ -223,13 +223,19 @@ existing pages.
 
 ---
 
-## 3. Recommended direction (brief R6 — pending owner decision)
+## 3. Recommended direction (brief R6 — accepted 2026-08-08 as decision D-04)
 
 **Option 2 combined with Option 5's preservation rule:** add a broader top-level
 device-intelligence area, cross-linked with the **preserved** `/preference-cards/*` routes
 (builder and admin unchanged). Preference cards remain a last-mile output of the procedure
-workspace (R3), not the IA's organizing principle. This is a recommendation pending the
-physician owner's decision; **no routes are created in Phase D0**.
+workspace (R3), not the IA's organizing principle. The physician owner accepted this direction
+on 2026-08-08 (D-04), with two governing constraints from the same decision round: per D-03 as
+modified, **every new device-intelligence route remains public-unlisted and noindex during
+Phase D1** — public indexing requires a separate owner launch decision after the vertical
+slice, an evidence-filtering audit, and a usability review — and per D-04, existing
+preference-card routes are **not replaced, redirected, or removed during Phase D1**. The
+"public-indexable" tier labels in the route map below therefore describe the target end-state,
+not Phase D1. **No routes are created in Phase D0**.
 
 ### 3.1 Indicative route map — _indicative, not final paths_
 
@@ -260,14 +266,14 @@ builder's picker links out to device pages for evidence.
 
 ### 4.1 Duplication analysis vs existing routes
 
-| Existing route                                                      | Proposed counterpart               | Overlap and proposed handling                                                                                                                                                                                                                                                   |
-| ------------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/preference-cards/catalog/product/[productId]`                     | `/devices/[productId]`             | Same `getProductDetail` data. Two options: (a) one canonical device page with the old path redirecting, or (b) keep the old page as a builder-context view. Recommendation: single canonical page + redirect, so the verified fact surface exists exactly once. Owner decision. |
-| `/preference-cards/catalog/uses` and `uses/[roleCode]`              | `/clinical-roles/[roleCode]`       | Same `getUseDetail` / `getUseIndex`. The `canonicalRoleCode()` legacy-code redirect must carry over to the new path — role-code canonicalization is load-bearing (8 permanent role aliases). Same canonical-page-plus-redirect recommendation.                                  |
-| `/preference-cards/emerging`                                        | `/devices/emerging` _(indicative)_ | Same `getEmergingDevices` cohort and labeling. This is the one existing page R5 already designates as public-suitable.                                                                                                                                                          |
-| `/preference-cards/catalog`                                         | `/devices`                         | Same search/facet machinery; the atlas index would default to the verified_source + prototype_visible subset, while the builder-context catalog keeps its current tier filters.                                                                                                 |
-| `/preference-cards/sets`                                            | _(none in atlas)_                  | Equipment sets are personal, browser-localStorage data — they belong with the builder / future institutional layer, not the public atlas. Stays under the preserved routes.                                                                                                     |
-| Builder + card lifecycle (`/new`, `/[cardId]/*`, `/shared/[token]`) | _(none)_                           | Preserved unchanged per R6; cards remain the last-mile output.                                                                                                                                                                                                                  |
+| Existing route                                                      | Proposed counterpart               | Overlap and proposed handling                                                                                                                                                                                                                                                                         |
+| ------------------------------------------------------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/preference-cards/catalog/product/[productId]`                     | `/devices/[productId]`             | Same `getProductDetail` data. Two options: (a) one canonical device page with the old path redirecting, or (b) keep the old page as a builder-context view. Per D-04 (2026-08-08), no redirect during Phase D1 — both paths stay live; single-canonical-page consolidation is a later owner decision. |
+| `/preference-cards/catalog/uses` and `uses/[roleCode]`              | `/clinical-roles/[roleCode]`       | Same `getUseDetail` / `getUseIndex`. The `canonicalRoleCode()` legacy-code redirect must carry over to the new path — role-code canonicalization is load-bearing (8 permanent role aliases). Likewise no redirect during Phase D1 per D-04; consolidation deferred.                                   |
+| `/preference-cards/emerging`                                        | `/devices/emerging` _(indicative)_ | Same `getEmergingDevices` cohort and labeling. This is the one existing page R5 already designates as public-suitable.                                                                                                                                                                                |
+| `/preference-cards/catalog`                                         | `/devices`                         | Same search/facet machinery; the atlas index would default to the verified_source + prototype_visible subset, while the builder-context catalog keeps its current tier filters.                                                                                                                       |
+| `/preference-cards/sets`                                            | _(none in atlas)_                  | Equipment sets are personal, browser-localStorage data — they belong with the builder / future institutional layer, not the public atlas. Stays under the preserved routes.                                                                                                                           |
+| Builder + card lifecycle (`/new`, `/[cardId]/*`, `/shared/[token]`) | _(none)_                           | Preserved unchanged per R6; cards remain the last-mile output.                                                                                                                                                                                                                                        |
 
 ### 4.2 SEO implications — the atlas would be the FIRST indexable surface
 
@@ -282,11 +288,13 @@ noarchive` header. Making the atlas indexable requires, at minimum:
 3. Canonical URLs and `hreflang` handling across en / es / zh-CN (the proxy's cookie-based
    locale redirect interacts with crawlers; locale-less URLs currently redirect).
 4. Sitemap generation for ~1,532 product pages and 135 role pages — bounded to the
-   verified_source + prototype_visible subset per R5 (753 prototype_visible; 1,331
-   verified_source; the intersection is the candidate public set and must be computed, not
-   assumed).
-5. An editorial gate: indexable pages must render only evidence states 1–2 (and labeled state 3)
-   from the display model in the brief — never the 813 proposals, never draft procedure content.
+   verified_source + prototype_visible subset per D-07 as modified (753 prototype_visible;
+   1,331 verified_source; the intersection is the initial public-indexable cohort and must be
+   computed, not assumed).
+5. An editorial gate, tightened by D-07 as modified (2026-08-08): indexable pages must render
+   only evidence state 1 — `verified_source` facts on `prototype_visible` products — plus the
+   separately labeled emerging cohort. Candidate-grade (state 2) facts stay non-public until a
+   separate public-content review; proposals and draft clinical-use content are never public.
 6. Stable URLs: `PRD-` ids and canonical role codes are already permanent identifiers, which is
    what makes indexability feasible at all.
 

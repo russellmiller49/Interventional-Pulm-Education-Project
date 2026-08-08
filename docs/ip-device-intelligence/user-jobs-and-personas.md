@@ -1,6 +1,6 @@
 # User jobs and personas — Device and Procedure Intelligence Platform
 
-Phase D0 discovery document (2026-08-08) — describes current repository state and proposals; no production feature exists; all recommendations await physician-owner decisions recorded in decision-log.md.
+Phase D0 discovery document (2026-08-08) — describes current repository state and proposals. Physician-owner decisions D-01–D-10 were recorded 2026-08-08 in [decision-log.md](./decision-log.md) (D-03 and D-07 accepted with modification, D-10 with bounded scope); no production feature exists yet.
 
 ## 1. How to read this document
 
@@ -155,7 +155,9 @@ clinically draft.
 
 **Who they are.** The person who turns a plan into a prepared room: pulls supplies, opens
 sterile items, stages backups, and absorbs the cost when the card is wrong. Recommendation R4
-names nurses among the primary users of the procedure workspace — pending owner decision.
+names nurses among the primary users of the procedure workspace — confirmed 2026-08-08 by
+decision D-02, which records the primary audience as bronchoscopy nurses, procedure
+technicians, pulmonary/IP fellows, and respiratory therapists.
 
 **Highest-value questions.**
 
