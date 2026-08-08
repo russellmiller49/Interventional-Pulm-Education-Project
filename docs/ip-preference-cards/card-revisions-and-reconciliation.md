@@ -334,6 +334,14 @@ decisions, no new card from an old one, no automatic migration, no in-place rele
 version-2 editing, no legacy-family guessing, no new clinical content, no new family membership,
 no fuzzy matching, no matching by role code alone, no automatic waiver transfer.
 
+Phase 4B.2 has since built the carry-forward half — see
+[`reviewed-rebuild.md`](./reviewed-rebuild.md). The fence above is still an accurate account of this
+phase and of this page: the reconciliation route remains read-only, offers no control that could
+change a card, and is still asserted to render no form and no button. What changed is that a
+separate route now cites a revision and produces a **new** card from it. The items that stay true
+everywhere are the ones about guessing: no fuzzy matching, no matching by role code alone, and no
+automatic waiver transfer are constraints on the rebuild too.
+
 Reconciliation reads and reports. The saved card, its snapshot, and every revision are unchanged
 by it — asserted as a fact about the code (`tables.writes` records every mutating statement and is
 checked to be empty) rather than as an intention in a comment.
@@ -371,9 +379,10 @@ environment ever passed through, and makes the record of what was verified untru
 `migration-contract.test.ts` pins its SHA-256 so a later edit fails a test rather than diverging
 silently.
 
-### Pending: the foreign-key indexes
+### Applied: the foreign-key indexes
 
-Applying it moved the Supabase performance advisor from **147 findings (51 WARN / 96 INFO)** to
+Applying the revision schema moved the Supabase performance advisor from **147 findings (51 WARN /
+96 INFO)** to
 **149 (51 WARN / 98 INFO)**. Both additions are the same finding twice: the revision table's two
 foreign keys have no covering index, because Postgres indexes the _referenced_ side of a foreign
 key automatically and never the referencing side.
@@ -399,8 +408,13 @@ rather than trusting its name. It also asserts neither index is unique or partia
 valid ready B-trees, that the three original indexes and both foreign keys survive, and that the
 table carries exactly five indexes and no sixth.
 
-**This migration has not been applied.** The PR stays draft until it has been, and until the
-advisor delta returns to the 147 / 51 / 96 baseline.
+**This migration has since been applied**, to the Endoreels project through the Supabase MCP
+migration action from the primary checkout, and Supabase assigned it the remote version
+**`20260804015322_index_ip_preference_card_revision_foreign_keys`**. The local filename keeps its own
+earlier timestamp; the two differ, which is expected here for the same reason it is expected of the
+revision migration above.
+
+Both migrations in this phase are therefore deployed, and neither file is editable from here.
 
 ## Commands
 
@@ -411,3 +425,10 @@ npx jest src/features/preference-cards 'src/app/.*preference-cards' --runInBand
 ```bash
 npm run ip-cards:release:check-base
 ```
+
+## What sits on top of this
+
+[`reviewed-rebuild.md`](./reviewed-rebuild.md) — Phase 4B.2. Revisions exist so that something can
+cite one; the rebuild is that something. It binds to an exact revision id, reuses both comparisons
+described above verbatim rather than deriving its own, and creates a separate new card once every
+changed decision has been answered.
