@@ -4,10 +4,13 @@ import {
   resolveDemoScenario,
 } from '@/features/preference-cards/data/demo-context.server'
 import { resolveCard } from '@/features/preference-cards/domain/resolve-card'
+import { getCatalogStore } from '@/features/preference-cards/server/catalog'
 import { intentionallyFailingApcRule } from '@/features/preference-cards/__fixtures__/test-compatibility-rules'
 import {
+  CANONICAL_PROCEDURAL_PHASE_ORDER,
   getCoverageLadderForProcedure,
   getProcedureWorkspace,
+  getRoleSlotUsage,
 } from '@/features/device-intelligence/server/procedures.server'
 
 /**
@@ -207,5 +210,132 @@ describe('CHEST_TUBE mechanisms', () => {
     for (const modifier of workspace.modifiers) {
       expect(modifier.effects.rescueModulesAdded).toEqual([])
     }
+    // Owner-review F-11: the no-rescue statement now names what rescue authoring exists at
+    // all, so the absence reads as an authoring gap, not reassurance.
+    expect(workspace.authoredRescueModuleNames.length).toBeGreaterThan(0)
+  })
+})
+
+describe('owner-review regressions (2026-08-09 findings)', () => {
+  const EXEMPLARS = ['EBUS_TBNA', 'THERAPEUTIC_BRONCH', 'CHEST_TUBE'] as const
+
+  it('F-01: separates acting from inert modifiers and carries each release state', () => {
+    // Counts computed by the owner from the pinned modifier definitions; a data regeneration
+    // that changes them must be a conscious re-pin.
+    const counts = Object.fromEntries(
+      EXEMPLARS.map((code) => {
+        const workspace = getProcedureWorkspace(code)!
+        return [
+          code,
+          {
+            total: workspace.modifiers.length,
+            inert: workspace.modifiers.filter((modifier) => !modifier.hasStructuralEffect).length,
+          },
+        ]
+      }),
+    )
+    expect(counts).toEqual({
+      EBUS_TBNA: { total: 13, inert: 10 },
+      THERAPEUTIC_BRONCH: { total: 26, inert: 17 },
+      CHEST_TUBE: { total: 11, inert: 7 },
+    })
+
+    const therapeutic = getProcedureWorkspace('THERAPEUTIC_BRONCH')!
+    const laser = therapeutic.modifiers.find((modifier) => modifier.code === 'LASER')!
+    expect(laser.hasStructuralEffect).toBe(false)
+    expect(laser.releaseState).toBe('phase_1_1')
+    const apc = therapeutic.modifiers.find((modifier) => modifier.code === 'APC')!
+    expect(apc.hasStructuralEffect).toBe(true)
+    for (const code of EXEMPLARS) {
+      for (const modifier of getProcedureWorkspace(code)!.modifiers) {
+        expect(['mvp', 'phase_1_1', 'phase_2']).toContain(modifier.releaseState)
+        // hasStructuralEffect is exactly "some effect list is non-empty".
+        const effectCount =
+          modifier.effects.addedRequirements.length +
+          modifier.effects.removedRequirements.length +
+          modifier.effects.requirednessChanges.length +
+          modifier.effects.roleReplacements.length +
+          modifier.effects.rescueModulesAdded.length +
+          modifier.effects.requiredCapabilities.length
+        expect(modifier.hasStructuralEffect).toBe(effectCount > 0)
+      }
+    }
+  })
+
+  it('F-03: the workspace phase view follows the canonical clinical sequence', () => {
+    for (const code of EXEMPLARS) {
+      const workspace = getProcedureWorkspace(code)!
+      const ranks = workspace.proceduralPhaseOrder.map((phase) =>
+        CANONICAL_PROCEDURAL_PHASE_ORDER.indexOf(phase),
+      )
+      expect(ranks).not.toContain(-1)
+      expect(ranks).toEqual([...ranks].sort((left, right) => left - right))
+    }
+    // The specific inversions the owner reported: airway access rendered after therapeutic
+    // intervention, and pre-induction rendered last on EBUS.
+    const therapeuticOrder = getProcedureWorkspace('THERAPEUTIC_BRONCH')!.proceduralPhaseOrder
+    expect(therapeuticOrder.indexOf('airway_access')).toBeLessThan(
+      therapeuticOrder.indexOf('therapeutic'),
+    )
+    const ebusOrder = getProcedureWorkspace('EBUS_TBNA')!.proceduralPhaseOrder
+    expect(ebusOrder.indexOf('pre_induction_or_sedation')).toBeLessThan(
+      ebusOrder.indexOf('diagnostic'),
+    )
+  })
+
+  it('F-07: the authored laser-pathway note stays true release-wide — no LASER* role is selectable in ANY procedure slot', () => {
+    // The rendered sentence says "in this release", so the pin must span every procedure's
+    // slots (laser roles also appear on RIGID_BRONCH and BRONCH_ABLATION), not just the
+    // THERAPEUTIC_BRONCH ladder — the adversarial pass caught the narrower pin as a hole.
+    const store = getCatalogStore()
+    const laserRoles = [...store.roleByCode.keys()].filter((role) => role.startsWith('LASER'))
+    expect(laserRoles).toEqual(
+      expect.arrayContaining([
+        'LASER_CONSOLE',
+        'LASER_FIBER',
+        'LASER_SAFETY_EQUIPMENT',
+        'LASER_RESISTANT_ETT',
+      ]),
+    )
+    for (const role of laserRoles) {
+      for (const slot of getRoleSlotUsage(role)) {
+        expect({ role, slotId: slot.slotId, optionStatus: slot.optionStatus }).not.toEqual({
+          role,
+          slotId: slot.slotId,
+          optionStatus: 'selectable_authored',
+        })
+      }
+    }
+    // And the exemplar page's own ladder agrees.
+    const ladder = getCoverageLadderForProcedure('THERAPEUTIC_BRONCH')
+    const pageLaserRoles = [...ladder.byRoleCode.keys()].filter((role) => role.startsWith('LASER'))
+    expect(pageLaserRoles.length).toBeGreaterThan(0)
+    for (const role of pageLaserRoles) {
+      expect(ladder.byRoleCode.get(role)!.coverage).not.toBe('selectable_authored')
+    }
+  })
+
+  it('F-06: the divergent-pathway caption stays true — IPC roles selectable, several chest-tube pathway roles not', () => {
+    // Pins the two coverage claims of `longTermDrainageNote` exactly: every Long-term
+    // drainage requirement carries authored selectable options, while several (>= 2)
+    // requirements of the chest-tube pathway itself do not.
+    const workspace = getProcedureWorkspace('CHEST_TUBE')!
+    const longTerm = workspace.requirements.filter(
+      (requirement) => requirement.section === 'Long-term drainage',
+    )
+    expect(longTerm.length).toBeGreaterThan(0)
+    for (const requirement of longTerm) {
+      expect({ role: requirement.roleCode, coverage: requirement.coverage?.coverage }).toEqual({
+        role: requirement.roleCode,
+        coverage: 'selectable_authored',
+      })
+    }
+    const nonSelectableCore = workspace.requirements.filter(
+      (requirement) =>
+        requirement.section !== 'Long-term drainage' &&
+        requirement.coverage !== null &&
+        requirement.coverage.coverage !== 'selectable_authored',
+    )
+    expect(nonSelectableCore.length).toBeGreaterThanOrEqual(2)
   })
 })

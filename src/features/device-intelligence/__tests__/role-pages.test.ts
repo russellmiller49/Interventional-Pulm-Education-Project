@@ -3,6 +3,7 @@ import {
   canonicalRoleCode,
   isDeprecatedRoleCode,
 } from '@/features/preference-cards/domain/role-taxonomy'
+import { getCatalogStore } from '@/features/preference-cards/server/catalog'
 import { getAtlasUseDetail } from '@/features/device-intelligence/server/atlas.server'
 import { getRoleSlotUsage } from '@/features/device-intelligence/server/procedures.server'
 
@@ -54,5 +55,26 @@ describe('D1 clinical-role pages', () => {
     expect(ebusSlot).toBeDefined()
     expect(ebusSlot!.optionStatus).toBe('selectable_authored')
     expect(ebusSlot!.requiredness).toBe('required')
+  })
+
+  it('F-22: the availability fact derives correctly for the owner-named worst case', () => {
+    // LASER_CONSOLE lists real, named, verified-source consoles; the hoisted availability
+    // line must say plainly that none is selectable anywhere in this release.
+    const usage = getRoleSlotUsage('LASER_CONSOLE')
+    expect(usage.length).toBeGreaterThan(0)
+    expect(usage.every((slot) => slot.optionStatus !== 'selectable_authored')).toBe(true)
+    // And the positive branch: EBUS_SCOPE has at least one procedure with a selectable option.
+    expect(
+      getRoleSlotUsage('EBUS_SCOPE').some((slot) => slot.optionStatus === 'selectable_authored'),
+    ).toBe(true)
+  })
+
+  it('F-24: the footer framing "as nearly every role in this atlas is" stays true', () => {
+    // The role-page IFU statement was demoted from a per-role amber banner to ambient footer
+    // copy BECAUSE the flag is near-universal; this pins that justification.
+    const roles = [...getCatalogStore().roleByCode.values()]
+    const flagged = roles.filter((role) => role.requires_current_ifu === true).length
+    expect(roles.length).toBeGreaterThan(0)
+    expect(flagged / roles.length).toBeGreaterThan(0.9)
   })
 })

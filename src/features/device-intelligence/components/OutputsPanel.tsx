@@ -51,6 +51,41 @@ export async function OutputsPanel({
   const phaseLabel = (phase: string) =>
     tWorkspace(`proceduralPhases.${phase}` as 'proceduralPhases.unassigned')
 
+  // Owner-review F-02: kit-suppressed requirements render as their own group in the room
+  // and nursing previews — computed by the resolver, shown with its own suppression reason,
+  // never silently dropped.
+  const suppressedGroup =
+    outputs.suppressedItems.length > 0 ? (
+      <Card className="border-dashed">
+        <CardContent className="p-5">
+          <h3 className="text-base font-bold">{t('suppressed.heading')}</h3>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">{t('suppressed.note')}</p>
+          <ul className="mt-2 space-y-1.5">
+            {outputs.suppressedItems.map((item) => (
+              <li key={item.itemId} className="text-sm">
+                <span className="font-medium">{item.label}</span>{' '}
+                <span className="font-mono text-xs text-muted-foreground">{item.roleCode}</span>
+                {item.reason ? (
+                  <p className="text-xs italic text-muted-foreground">“{item.reason}”</p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+    ) : null
+
+  // Owner-review F-30: with no responsible role authored anywhere, this preview cannot
+  // group by role — say so instead of presenting the phase partition as a distinct view.
+  const allNursingUnassigned =
+    outputs.nursing.length === 1 && outputs.nursing[0].responsibleRole === 'unassigned'
+
+  const trainingLines = outputs.training.flatMap((group) => group.lines)
+  // Owner-review F-24: when the IFU flag is universal across this preview it is stated once,
+  // not repeated per line; per-line advisories remain for the discriminating case.
+  const ifuUniversal =
+    trainingLines.length > 0 && trainingLines.every((line) => line.requiresCurrentIfu)
+
   return (
     <section aria-label={t('heading')} className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -121,26 +156,24 @@ export async function OutputsPanel({
               </CardContent>
             </Card>
           ))}
+          {suppressedGroup}
         </div>
       ) : null}
 
       {tab === 'nursing' ? (
         <div className="space-y-3">
-          {outputs.nursing.map((group) => (
-            <Card key={group.responsibleRole}>
-              <CardContent className="p-5">
-                <h3 className="text-base font-bold">
-                  {group.responsibleRole === 'unassigned'
-                    ? t('nursing.unassignedRole')
-                    : group.responsibleRole}
-                </h3>
-                {group.phases.map((phase) => (
-                  <div key={phase.key} className="mt-2">
-                    <h4 className="text-sm font-semibold text-muted-foreground">
-                      {phaseLabel(phase.key)}
-                    </h4>
-                    <ul className="mt-1 space-y-1">
-                      {phase.lines.map((line) => (
+          {allNursingUnassigned ? (
+            <>
+              <p className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm leading-6 text-muted-foreground">
+                {t('nursing.allUnassignedNote')}
+              </p>
+              <Card>
+                <CardContent className="p-5">
+                  <h3 className="text-base font-bold">{t('nursing.unassignedRole')}</h3>
+                  <ul className="mt-2 space-y-1">
+                    {outputs.nursing[0].phases
+                      .flatMap((phase) => phase.lines)
+                      .map((line) => (
                         <li key={line.itemId} className="flex flex-wrap items-center gap-2 text-sm">
                           <span className="font-medium">{line.label}</span>
                           <span className="text-xs text-muted-foreground">
@@ -153,18 +186,60 @@ export async function OutputsPanel({
                           ) : null}
                         </li>
                       ))}
-                    </ul>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            outputs.nursing.map((group) => (
+              <Card key={group.responsibleRole}>
+                <CardContent className="p-5">
+                  <h3 className="text-base font-bold">
+                    {group.responsibleRole === 'unassigned'
+                      ? t('nursing.unassignedRole')
+                      : group.responsibleRole}
+                  </h3>
+                  {group.phases.map((phase) => (
+                    <div key={phase.key} className="mt-2">
+                      <h4 className="text-sm font-semibold text-muted-foreground">
+                        {phaseLabel(phase.key)}
+                      </h4>
+                      <ul className="mt-1 space-y-1">
+                        {phase.lines.map((line) => (
+                          <li
+                            key={line.itemId}
+                            className="flex flex-wrap items-center gap-2 text-sm"
+                          >
+                            <span className="font-medium">{line.label}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {line.openHoldStatus}
+                            </span>
+                            {line.selectedDescription ? (
+                              <span className="text-xs text-muted-foreground">
+                                — {line.selectedDescription}
+                              </span>
+                            ) : null}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            ))
+          )}
+          {suppressedGroup}
         </div>
       ) : null}
 
       {tab === 'training' ? (
         <div className="space-y-3">
           <p className="text-xs text-muted-foreground">{t('training.authoredOnlyNote')}</p>
+          {ifuUniversal ? (
+            <p className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm leading-6 text-muted-foreground">
+              {t('training.currentIfuUniversalNote')}
+            </p>
+          ) : null}
           {outputs.training.map((group) => (
             <Card key={group.key}>
               <CardContent className="p-5">
@@ -189,7 +264,7 @@ export async function OutputsPanel({
                           {t('training.dependencyRule')}: “{line.dependencyRule}”
                         </p>
                       ) : null}
-                      {line.requiresCurrentIfu ? (
+                      {line.requiresCurrentIfu && !ifuUniversal ? (
                         <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
                           {t('training.currentIfuAdvisory')}
                         </p>

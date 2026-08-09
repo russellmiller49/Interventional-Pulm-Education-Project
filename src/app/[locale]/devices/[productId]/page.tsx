@@ -85,6 +85,13 @@ export default async function DeviceDetailPage({ params }: PageProps) {
     { label: t('fields.sizeDisplay'), value: product.size_display },
   ]
 
+  const hasValue = (row: { value: string | number | null }) =>
+    row.value !== null && row.value !== undefined && String(row.value).trim() !== ''
+  const presentIdentifiers = identifiers.filter(hasValue)
+  const missingIdentifiers = identifiers.filter((row) => !hasValue(row))
+  const presentSpecs = specs.filter(hasValue)
+  const missingSpecs = specs.filter((row) => !hasValue(row))
+
   return (
     <div className="container space-y-8 py-8 md:py-10">
       <Button asChild variant="ghost" size="sm" className="-ml-2">
@@ -123,17 +130,36 @@ export default async function DeviceDetailPage({ params }: PageProps) {
               </Badge>
             ))}
         </div>
+        {detail.primaryRole ? (
+          // Owner-review F-17: the functional orientation — what this device is FOR — leads
+          // the page, before any identifier or dimension.
+          <p className="text-base leading-7">
+            <Link
+              href={
+                `/${locale}/clinical-roles/${encodeURIComponent(detail.primaryRole.roleCode)}` as Route
+              }
+              className="font-semibold underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {detail.primaryRole.roleName}
+            </Link>
+            {detail.primaryRole.description ? (
+              <span className="text-muted-foreground"> — {detail.primaryRole.description}</span>
+            ) : null}
+          </p>
+        ) : null}
         {product.description && product.description !== product.product_name ? (
           <p className="text-base leading-7 text-muted-foreground">{product.description}</p>
         ) : null}
       </header>
 
+      {/* Owner-review F-16: present facts render as rows; absent fields collapse into one
+          honest sentence per card that still names every unrecorded field. */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardContent className="p-5">
             <h2 className="text-lg font-bold tracking-tight">{t('identifiersHeading')}</h2>
             <dl className="mt-3">
-              {identifiers.map((row) => (
+              {presentIdentifiers.map((row) => (
                 <FactRow
                   key={row.label}
                   term={row.label}
@@ -143,13 +169,20 @@ export default async function DeviceDetailPage({ params }: PageProps) {
                 />
               ))}
             </dl>
+            {missingIdentifiers.length > 0 ? (
+              <p className="mt-3 text-sm italic text-muted-foreground">
+                {t('notRecordedFields', {
+                  fields: missingIdentifiers.map((row) => row.label).join(', '),
+                })}
+              </p>
+            ) : null}
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-5">
             <h2 className="text-lg font-bold tracking-tight">{t('specsHeading')}</h2>
             <dl className="mt-3">
-              {specs.map((row) => (
+              {presentSpecs.map((row) => (
                 <FactRow
                   key={row.label}
                   term={row.label}
@@ -158,6 +191,13 @@ export default async function DeviceDetailPage({ params }: PageProps) {
                 />
               ))}
             </dl>
+            {missingSpecs.length > 0 ? (
+              <p className="mt-3 text-sm italic text-muted-foreground">
+                {t('notRecordedFields', {
+                  fields: missingSpecs.map((row) => row.label).join(', '),
+                })}
+              </p>
+            ) : null}
             <p className="mt-3 text-xs text-muted-foreground">{t('specsMissingNote')}</p>
           </CardContent>
         </Card>
@@ -373,6 +413,25 @@ export default async function DeviceDetailPage({ params }: PageProps) {
             {t('otherManufacturersHeading')}
           </h2>
           <p className="text-sm text-muted-foreground">{t('roleDiscoveryCaption')}</p>
+          {/* Owner-review F-18: the honest selection rule and denominators, so a tidy card
+              grid cannot be read as "the alternatives". */}
+          <p className="text-sm text-muted-foreground">
+            {t('otherManufacturersSelectionNote', {
+              shown: detail.otherManufacturers.length,
+              manufacturerCount: detail.otherManufacturersTotalManufacturers,
+              productCount: detail.otherManufacturersTotalProducts,
+            })}{' '}
+            {detail.primaryRole ? (
+              <Link
+                href={
+                  `/${locale}/clinical-roles/${encodeURIComponent(detail.primaryRole.roleCode)}` as Route
+                }
+                className="font-medium underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {t('otherManufacturersViewRole')}
+              </Link>
+            ) : null}
+          </p>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {detail.otherManufacturers.map((item) => (
               <Link

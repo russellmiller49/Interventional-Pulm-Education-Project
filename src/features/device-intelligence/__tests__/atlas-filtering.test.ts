@@ -89,6 +89,25 @@ describe('D1 atlas cohort filtering', () => {
     }
   })
 
+  it('orients every device page by a primary clinical role with honest discovery counts (F-17/F-18)', () => {
+    const atlas = getAtlasCatalogStore()
+    for (const product of atlas.products) {
+      const detail = getAtlasProductDetail(product.product_id)!
+      // Every cohort product carries at least one role mapping, so the header can always
+      // answer "what is this device for".
+      expect(detail.primaryRole).not.toBeNull()
+      expect(detail.primaryRole!.roleName.length).toBeGreaterThan(0)
+      // The capped discovery list never exceeds its stated denominators.
+      expect(detail.otherManufacturers.length).toBeLessThanOrEqual(6)
+      expect(detail.otherManufacturers.length).toBeLessThanOrEqual(
+        detail.otherManufacturersTotalManufacturers,
+      )
+      expect(detail.otherManufacturersTotalProducts).toBeGreaterThanOrEqual(
+        detail.otherManufacturersTotalManufacturers,
+      )
+    }
+  })
+
   it('exposes no proposal rows through any atlas surface', () => {
     // The atlas store is built without the proposals artifact entirely; assert the module
     // graph of the atlas server layer never imports it.

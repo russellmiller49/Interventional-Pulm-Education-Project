@@ -56,6 +56,13 @@ export interface AtlasProductDetail extends ProductDetail {
   typedRuleConditions: TypedRuleCondition[]
   /** Verbatim procedure status strings for the procedures this product's slots belong to. */
   procedureStatusByCode: Record<string, string>
+  /**
+   * The product's primary clinical role with its authored description (owner-review F-17):
+   * the functional answer to "what is this device for", shown in the page header. Resolved
+   * from `getProductDetail`'s own `primaryRoleCode` — the identical role its discovery
+   * list is drawn from, never a second selection rule.
+   */
+  primaryRole: { roleCode: string; roleName: string; description: string | null } | null
 }
 
 /**
@@ -93,12 +100,24 @@ export function getAtlasProductDetail(productId: string): AtlasProductDetail | n
     if (procedure?.status) procedureStatusByCode[slot.procedureCode] = procedure.status
   }
 
+  const primaryRoleLink = detail.primaryRoleCode
+    ? (detail.roles.find((role) => role.roleCode === detail.primaryRoleCode) ?? null)
+    : null
+  const primaryRole = primaryRoleLink
+    ? {
+        roleCode: primaryRoleLink.roleCode,
+        roleName: primaryRoleLink.roleName,
+        description: store.roleByCode.get(primaryRoleLink.roleCode)?.description ?? null,
+      }
+    : null
+
   return {
     ...detail,
     sameManufacturerLine,
     rawCompatibilityStatements: getRawStatementsForProduct(productId),
     typedRuleConditions: getTypedRuleConditionsForRoles(detail.roles.map((role) => role.roleCode)),
     procedureStatusByCode,
+    primaryRole,
   }
 }
 

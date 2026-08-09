@@ -40,6 +40,14 @@ const OPTION_STATUS_EVIDENCE = {
   no_authored_option: 'unknown',
 } as const
 
+/**
+ * Owner-review F-21: most `selection_guidance` entries are short filter instructions, not
+ * teaching prose. Below this length the text renders inline as "Selection criteria"; at or
+ * above it, as the blockquoted "Authored selection guidance". A crude but workable
+ * discriminator until the governed role table splits the field (deferred to data review).
+ */
+const GUIDANCE_PROSE_MIN_LENGTH = 200
+
 export default async function ClinicalRolePage({ params }: PageProps) {
   const { locale, roleCode } = await params
   setRequestLocale(locale)
@@ -59,6 +67,17 @@ export default async function ClinicalRolePage({ params }: PageProps) {
   if (!use) notFound()
   const { detail } = use
   const slotUsage = getRoleSlotUsage(detail.role.role_code)
+
+  // Owner-review F-22: the availability fact, hoisted above the product listing and derived
+  // from the same rung classifier the workspace uses.
+  const proceduresWithSelectableOption = new Set(
+    slotUsage
+      .filter((usage) => usage.optionStatus === 'selectable_authored')
+      .map((usage) => usage.procedureCode),
+  ).size
+
+  const guidance = detail.role.selection_guidance
+  const guidanceIsProse = (guidance?.length ?? 0) >= GUIDANCE_PROSE_MIN_LENGTH
 
   const optionStatusLabels: Record<string, string> = {
     selectable_authored: tCommon('badges.authoredSelectable'),
@@ -89,29 +108,42 @@ export default async function ClinicalRolePage({ params }: PageProps) {
         {detail.role.description ? (
           <p className="text-base leading-7 text-muted-foreground">{detail.role.description}</p>
         ) : null}
+        {/* Owner-review F-22: the availability fact reads before any product listing, so
+            named products cannot be mistaken for selectable options. */}
+        <p className="text-sm font-medium">
+          {proceduresWithSelectableOption > 0
+            ? t('availabilitySome', { count: proceduresWithSelectableOption })
+            : t('availabilityNone')}
+        </p>
         <p className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm leading-6 text-muted-foreground">
           {t('membershipNote')}
         </p>
       </header>
 
-      {detail.role.selection_guidance ? (
-        <section className="space-y-2" aria-label={t('guidanceHeading')}>
-          <h2 className="text-2xl font-semibold tracking-tight">{t('guidanceHeading')}</h2>
-          <Card>
-            <CardContent className="p-5">
-              <blockquote className="border-l-2 border-primary pl-4 text-sm leading-6">
-                “{detail.role.selection_guidance}”
-              </blockquote>
-              <p className="mt-2 text-xs text-muted-foreground">{t('guidanceVerbatim')}</p>
-            </CardContent>
-          </Card>
-        </section>
-      ) : null}
-
-      {detail.role.requires_current_ifu ? (
-        <p className="rounded-xl border border-amber-500/50 bg-amber-500/10 px-4 py-3 text-sm leading-6">
-          {t('currentIfuAdvisory')}
-        </p>
+      {guidance ? (
+        guidanceIsProse ? (
+          <section className="space-y-2" aria-label={t('guidanceHeading')}>
+            <h2 className="text-2xl font-semibold tracking-tight">{t('guidanceHeading')}</h2>
+            <Card>
+              <CardContent className="p-5">
+                <blockquote className="border-l-2 border-primary pl-4 text-sm leading-6">
+                  “{guidance}”
+                </blockquote>
+                <p className="mt-2 text-xs text-muted-foreground">{t('guidanceVerbatim')}</p>
+              </CardContent>
+            </Card>
+          </section>
+        ) : (
+          // Owner-review F-21: short filter-style text is a selection criterion, not
+          // teaching prose — same verbatim quoting, lighter frame.
+          <section className="space-y-1" aria-label={t('criteriaHeading')}>
+            <h2 className="text-2xl font-semibold tracking-tight">{t('criteriaHeading')}</h2>
+            <p className="text-sm leading-6">
+              “{guidance}”{' '}
+              <span className="text-xs text-muted-foreground">{t('guidanceVerbatim')}</span>
+            </p>
+          </section>
+        )
       ) : null}
 
       <section
@@ -122,17 +154,28 @@ export default async function ClinicalRolePage({ params }: PageProps) {
           {t('productsHeading', { count: detail.totalProducts })}
         </h2>
         <p className="text-sm text-muted-foreground">{t('cohortNote')}</p>
+        {/* Owner-review F-23: a single-vendor listing drops the redundant per-group heading
+            and says so plainly instead, naming the one manufacturer. */}
+        {detail.manufacturerGroups.length === 1 ? (
+          <p className="text-sm font-medium">
+            {t('singleManufacturerNote', {
+              manufacturer: detail.manufacturerGroups[0].manufacturerDisplay,
+            })}
+          </p>
+        ) : null}
         {detail.manufacturerGroups.length > 0 ? (
           <div className="space-y-4">
             {detail.manufacturerGroups.map((group) => (
               <Card key={group.manufacturerGroupId}>
                 <CardContent className="p-5">
-                  <h3 className="text-base font-bold">
-                    {group.manufacturerDisplay}{' '}
-                    <span className="text-sm font-normal text-muted-foreground">
-                      {t('manufacturerProducts', { count: group.items.length })}
-                    </span>
-                  </h3>
+                  {detail.manufacturerGroups.length > 1 ? (
+                    <h3 className="text-base font-bold">
+                      {group.manufacturerDisplay}{' '}
+                      <span className="text-sm font-normal text-muted-foreground">
+                        {t('manufacturerProducts', { count: group.items.length })}
+                      </span>
+                    </h3>
+                  ) : null}
                   <ul className="mt-2 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
                     {group.items.map((item) => (
                       <li key={item.productId}>
@@ -168,7 +211,13 @@ export default async function ClinicalRolePage({ params }: PageProps) {
         <h2 className="text-2xl font-semibold tracking-tight">{t('proceduresHeading')}</h2>
         <p className="text-sm text-muted-foreground">{t('proceduresNote')}</p>
         {slotUsage.length > 0 ? (
-          <div className="overflow-x-auto rounded-2xl border border-border">
+          <div
+            // Keyboard-scrollable region (WCAG 2.1.1, owner-review F-32).
+            tabIndex={0}
+            role="region"
+            aria-label={t('tableRegionLabel')}
+            className="overflow-x-auto rounded-2xl border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
             <table className="w-full min-w-[720px] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/40 text-left">
@@ -261,6 +310,9 @@ export default async function ClinicalRolePage({ params }: PageProps) {
       </section>
 
       <p className="border-t border-border/70 pt-6 text-xs leading-5 text-muted-foreground">
+        {/* Owner-review F-24: the IFU statement is a near-universal property of the atlas
+            (134 of 135 roles), so it reads once here instead of as a per-role banner. */}
+        {detail.role.requires_current_ifu ? <>{t('currentIfuFooter')} </> : null}
         {tCommon('unlistedNote')} {tCommon('noEquivalenceNote')}
       </p>
     </div>

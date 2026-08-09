@@ -16,6 +16,7 @@ import { getCurrentReleaseBundle } from '@/features/preference-cards/data/releas
 import { expandEffectiveSlots } from '@/features/preference-cards/domain/effective-slots'
 import { defaultSelectedModuleVersionIds } from '@/features/preference-cards/domain/expand-recipe-composition'
 import { getCatalogStore } from '@/features/preference-cards/server/catalog'
+import { proceduralPhases } from '@/features/preference-cards/domain/types'
 import type {
   ModifierDefinition,
   RecipeSlot,
@@ -61,6 +62,24 @@ import {
  * coverage ladder recomputed from the same generated rows the D0 audit reads. There is no
  * second expansion or resolution engine and nothing is persisted.
  */
+
+/**
+ * The canonical procedural-phase sequence (owner-review F-03). Grouping "by procedural
+ * phase" must follow the declared clinical chronology, never the first-appearance order of
+ * requirements in the authored template — which reflects catalog accretion, not sequence.
+ * The chronology is the governed domain tuple itself (`unassigned` last), so a future
+ * release that adds a phase cannot drift from this ordering.
+ */
+export const CANONICAL_PROCEDURAL_PHASE_ORDER: readonly string[] = proceduralPhases
+
+/** Order distinct phase values canonically; any unknown value sorts after known ones. */
+export function sortPhasesCanonically(phases: string[]): string[] {
+  const rank = (phase: string) => {
+    const index = CANONICAL_PROCEDURAL_PHASE_ORDER.indexOf(phase)
+    return index === -1 ? CANONICAL_PROCEDURAL_PHASE_ORDER.length : index
+  }
+  return [...phases].sort((left, right) => rank(left) - rank(right))
+}
 
 interface ProposalRow {
   slot_id: string
@@ -295,6 +314,14 @@ export interface ModifierEffectSummary {
   name: string
   groupCode: string
   description: string
+  /** Verbatim release gate from the pinned modifier definition (mvp / phase_1_1 / phase_2). */
+  releaseState: string
+  /**
+   * False when every effect list below is empty: selecting the modifier changes nothing
+   * structurally in this release. Owner-review finding F-01 requires such modifiers to be
+   * labeled informational, never presented as acting options.
+   */
+  hasStructuralEffect: boolean
   preview: string[]
   conflictsWith: string[]
   /** Derived through `expandEffectiveSlots` — the canonical expansion, not a re-implementation. */
@@ -347,6 +374,12 @@ export interface ProcedureWorkspace {
   /** True only for CHEST_TUBE today: no allowed modifier reaches any rescue module. */
   noRescueModuleReachable: boolean
   rescueSectionSlotCount: number
+  /**
+   * Every rescue module the pinned release defines system-wide (owner-review F-11): when no
+   * module is reachable, the page states what rescue authoring exists at all, so absence
+   * reads as an authoring gap rather than a clinical judgment.
+   */
+  authoredRescueModuleNames: string[]
   typedRuleConditions: TypedRuleCondition[]
   rawCompatibilityStatements: RawCompatibilityStatement[]
   proposalTotal: number
@@ -529,15 +562,26 @@ export function getProcedureWorkspace(procedureCode: string): ProcedureWorkspace
     },
     context,
   )
-  const modifiers: ModifierEffectSummary[] = context.modifiers.map((modifier) => ({
-    code: modifier.code,
-    name: modifier.name,
-    groupCode: modifier.groupCode,
-    description: modifier.description,
-    preview: [...modifier.preview],
-    conflictsWith: [...modifier.conflictsWith],
-    effects: modifierEffects(modifier, context, baselineExpansion),
-  }))
+  const modifiers: ModifierEffectSummary[] = context.modifiers.map((modifier) => {
+    const effects = modifierEffects(modifier, context, baselineExpansion)
+    return {
+      code: modifier.code,
+      name: modifier.name,
+      groupCode: modifier.groupCode,
+      description: modifier.description,
+      releaseState: modifier.releaseState,
+      hasStructuralEffect:
+        effects.addedRequirements.length > 0 ||
+        effects.removedRequirements.length > 0 ||
+        effects.requirednessChanges.length > 0 ||
+        effects.roleReplacements.length > 0 ||
+        effects.rescueModulesAdded.length > 0 ||
+        effects.requiredCapabilities.length > 0,
+      preview: [...modifier.preview],
+      conflictsWith: [...modifier.conflictsWith],
+      effects,
+    }
+  })
 
   const rescueReachability = new Map<string, string[]>()
   for (const modifier of modifiers) {
@@ -588,8 +632,8 @@ export function getProcedureWorkspace(procedureCode: string): ProcedureWorkspace
     clinicalOwner: scenario.owner,
     requirements,
     setupZoneOrder: orderedDistinct(requirements.map((requirement) => requirement.setupZone)),
-    proceduralPhaseOrder: orderedDistinct(
-      requirements.map((requirement) => requirement.proceduralPhase),
+    proceduralPhaseOrder: sortPhasesCanonically(
+      orderedDistinct(requirements.map((requirement) => requirement.proceduralPhase)),
     ),
     sectionOrder: orderedDistinct(
       requirements
@@ -602,6 +646,7 @@ export function getProcedureWorkspace(procedureCode: string): ProcedureWorkspace
     rescueModules,
     noRescueModuleReachable: rescueModules.length === 0,
     rescueSectionSlotCount,
+    authoredRescueModuleNames: context.rescueModules.map((rescueModule) => rescueModule.name),
     typedRuleConditions: getTypedRuleConditionsForRoles([...roleCodes]),
     rawCompatibilityStatements: getRawStatementsForRoles([...roleCodes]),
     proposalTotal: requirements.reduce(
@@ -636,6 +681,8 @@ export interface ProcedureReadinessView {
   demoLocationCapabilities: string[]
   /** Derived from the pinned modifier set, same as the workspace — never hardcoded per code. */
   noRescueModuleReachable: boolean
+  /** Same F-11 statement the workspace carries: what rescue authoring exists at all. */
+  authoredRescueModuleNames: string[]
 }
 
 /**
@@ -679,6 +726,7 @@ export function getProcedureReadinessView(procedureCode: string): ProcedureReadi
     noRescueModuleReachable: !context.modifiers.some((modifier) =>
       modifier.actions.some((action) => action.actionType === 'add_rescue_module'),
     ),
+    authoredRescueModuleNames: context.rescueModules.map((rescueModule) => rescueModule.name),
   }
 }
 

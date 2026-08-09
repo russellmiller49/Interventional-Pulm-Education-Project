@@ -19,6 +19,14 @@ import { LinkTabs } from './LinkTabs'
 
 export type RequirementView = 'zones' | 'phases'
 
+/**
+ * The one template section that describes a divergent long-term pathway rather than the
+ * procedure itself (owner-review F-06): rendered as a separated, collapsed subsection so
+ * indwelling-catheter equipment does not read as core chest-tube setup. Display-only; the
+ * template membership is a governed-data question deferred to owner data review.
+ */
+export const DIVERGENT_PATHWAY_SECTION = 'Long-term drainage'
+
 const COVERAGE_EVIDENCE = {
   selectable_authored: 'authored_selectable',
   non_selectable_authored_only: 'authored_non_selectable',
@@ -90,44 +98,66 @@ export async function RequirementBrowser({
 
       {groups
         .filter((group) => group.requirements.length > 0)
-        .map((group) => (
-          <div key={group.key} className="space-y-2">
-            <h3 className="text-lg font-bold tracking-tight">{group.label}</h3>
-            <ul className="grid gap-3 xl:grid-cols-2">
-              {group.requirements.map((requirement) => (
-                <RequirementCard
-                  key={requirement.id}
-                  locale={locale}
-                  requirement={requirement}
-                  coverageLabels={coverageLabels}
-                  labels={{
-                    order: t('requirement.order'),
-                    section: t('requirement.section'),
-                    role: t('requirement.role'),
-                    dependencyRule: t('requirement.dependencyRule'),
-                    selectionMode: t('requirement.selectionMode'),
-                    openHold: t('requirement.openHold'),
-                    zone: t('requirement.zone'),
-                    phase: t('requirement.phase'),
-                    allowCustom: t('requirement.allowCustom'),
-                    demoStandIn: tCommon('badges.demoStandIn'),
-                    proposals: t('requirement.proposals'),
-                    proposalsDisclaimer: t('requirement.proposalsDisclaimer'),
-                    authoredOptions: t('requirement.authoredOptions'),
-                    noAuthoredOptions: t('requirement.noAuthoredOptions'),
-                    notInAtlas: t('requirement.notInAtlas'),
-                    selectable: tCommon('badges.authoredSelectable'),
-                    nonSelectable: tCommon('badges.authoredNonSelectable'),
-                    zoneLabel: t(`setupZones.${requirement.setupZone}` as 'setupZones.unassigned'),
-                    phaseLabel: t(
-                      `proceduralPhases.${requirement.proceduralPhase}` as 'proceduralPhases.unassigned',
-                    ),
-                  }}
-                />
-              ))}
-            </ul>
-          </div>
-        ))}
+        .map((group) => {
+          const coreRequirements = group.requirements.filter(
+            (requirement) => requirement.section !== DIVERGENT_PATHWAY_SECTION,
+          )
+          const divergentRequirements = group.requirements.filter(
+            (requirement) => requirement.section === DIVERGENT_PATHWAY_SECTION,
+          )
+          const renderCard = (requirement: WorkspaceRequirement) => (
+            <RequirementCard
+              key={requirement.id}
+              locale={locale}
+              requirement={requirement}
+              coverageLabels={coverageLabels}
+              labels={{
+                order: t('requirement.order'),
+                section: t('requirement.section'),
+                role: t('requirement.role'),
+                dependencyRule: t('requirement.dependencyRule'),
+                selectionMode: t('requirement.selectionMode'),
+                openHold: t('requirement.openHold'),
+                zone: t('requirement.zone'),
+                phase: t('requirement.phase'),
+                allowCustom: t('requirement.allowCustom'),
+                demoStandIn: tCommon('badges.demoStandIn'),
+                proposals: t('requirement.proposals'),
+                proposalsDisclaimer: t('requirement.proposalsDisclaimer'),
+                authoredOptions: t('requirement.authoredOptions'),
+                noAuthoredOptions: t('requirement.noAuthoredOptions'),
+                notInAtlas: t('requirement.notInAtlas'),
+                selectable: tCommon('badges.authoredSelectable'),
+                nonSelectable: tCommon('badges.authoredNonSelectable'),
+                zoneLabel: t(`setupZones.${requirement.setupZone}` as 'setupZones.unassigned'),
+                phaseLabel: t(
+                  `proceduralPhases.${requirement.proceduralPhase}` as 'proceduralPhases.unassigned',
+                ),
+              }}
+            />
+          )
+          return (
+            <div key={group.key} className="space-y-2">
+              <h3 className="text-lg font-bold tracking-tight">{group.label}</h3>
+              {coreRequirements.length > 0 ? (
+                <ul className="grid gap-3 xl:grid-cols-2">{coreRequirements.map(renderCard)}</ul>
+              ) : null}
+              {divergentRequirements.length > 0 ? (
+                <details className="rounded-2xl border border-border/70 bg-muted/20 p-3">
+                  <summary className="cursor-pointer text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    {t('divergentPathwayGroup', { count: divergentRequirements.length })}
+                  </summary>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                    {t('divergentPathwayCaption')}
+                  </p>
+                  <ul className="mt-3 grid gap-3 xl:grid-cols-2">
+                    {divergentRequirements.map(renderCard)}
+                  </ul>
+                </details>
+              ) : null}
+            </div>
+          )
+        })}
     </section>
   )
 }

@@ -174,7 +174,14 @@ export default async function ProcedureReadinessPage({ params }: PageProps) {
           </div>
         ) : null}
 
-        <div className="overflow-x-auto rounded-2xl border border-border">
+        <div
+          // Keyboard users must be able to scroll this region to reach every column
+          // (WCAG 2.1.1, owner-review F-32).
+          tabIndex={0}
+          role="region"
+          aria-label={t('tableRegionLabel')}
+          className="overflow-x-auto rounded-2xl border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
           <table className="w-full min-w-[860px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/40 text-left">
@@ -218,7 +225,20 @@ export default async function ProcedureReadinessPage({ params }: PageProps) {
                       )}
                     >
                       {stateLabel(requirement.state)}
+                      {requirement.resolverAdvisories.length > 0
+                        ? ` — ${t('seeAdvisorySuffix')}`
+                        : null}
                     </span>
+                    {/* The advisory renders in the SAME cell as the state chip (F-26), so a
+                        screenshot of the chip cannot omit its qualification. */}
+                    {requirement.resolverAdvisories.map((advisory, index) => (
+                      <p
+                        key={`${advisory.code}-${index}`}
+                        className="mt-1 text-xs italic text-muted-foreground"
+                      >
+                        {t('evidence.resolverAdvisory')}: “{advisory.message}”
+                      </p>
+                    ))}
                     {requirement.diagnostics.length > 0 ? (
                       <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
                         {requirement.diagnostics.map((diagnostic, index) => (
@@ -268,11 +288,6 @@ export default async function ProcedureReadinessPage({ params }: PageProps) {
                         {t('evidence.coverage')}: {requirement.evidence.coverage}
                       </p>
                     ) : null}
-                    {requirement.resolverAdvisories.map((advisory, index) => (
-                      <p key={`${advisory.code}-${index}`} className="italic">
-                        {t('evidence.resolverAdvisory')}: “{advisory.message}”
-                      </p>
-                    ))}
                   </td>
                 </tr>
               ))}
@@ -297,7 +312,10 @@ export default async function ProcedureReadinessPage({ params }: PageProps) {
 
         {view.noRescueModuleReachable ? (
           <p className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm leading-6">
-            {t('noRescueDefinedFact')}
+            {t('noRescueDefinedFact')}{' '}
+            {tCommon('rescueAuthoringGapNote', {
+              modules: view.authoredRescueModuleNames.join(', '),
+            })}
           </p>
         ) : null}
       </section>

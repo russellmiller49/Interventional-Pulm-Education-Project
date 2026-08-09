@@ -25,10 +25,18 @@ export function AtlasResultsTable({
     evidence: string
     notRecorded: string
     verifiedSource: string
+    /** Accessible name for the scrollable region wrapping the table. */
+    region: string
   }
 }) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-border">
+    <div
+      // Keyboard-scrollable region (WCAG 2.1.1, owner-review F-32).
+      tabIndex={0}
+      role="region"
+      aria-label={labels.region}
+      className="overflow-x-auto rounded-2xl border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
       <table className="w-full min-w-[760px] border-collapse text-sm">
         <thead>
           <tr className="border-b border-border bg-muted/40 text-left">

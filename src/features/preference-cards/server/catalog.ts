@@ -818,6 +818,11 @@ export interface ProductDetail {
   slots: ProductSlotDetail[]
   sources: ProductSourceDetail[]
   otherManufacturers: CatalogListItem[]
+  /** Denominators behind the capped one-per-manufacturer list, for honest captions. */
+  otherManufacturersTotalProducts: number
+  otherManufacturersTotalManufacturers: number
+  /** The role the discovery list is drawn from: Primary fit preferred, else first mapping. */
+  primaryRoleCode: string | null
 }
 
 export function getProductDetail(
@@ -876,17 +881,37 @@ export function getProductDetail(
     },
   )
 
-  // Cross-manufacturer discovery: same primary use, different vendor.
+  // Cross-manufacturer discovery: same primary use, different vendor. One representative
+  // per manufacturer (Primary-fit mappings preferred, otherwise catalog order), capped at 6
+  // manufacturers in first-seen order — a discovery pointer, never a matched set. The full
+  // per-manufacturer counts are returned so captions can state the denominators.
   const primaryRole = roleLinks.find((link) => link.role_fit === 'Primary') ?? roleLinks[0]
   const otherManufacturers: CatalogListItem[] = []
+  let otherManufacturersTotalProducts = 0
+  let otherManufacturersTotalManufacturers = 0
   if (primaryRole) {
-    const seenGroups = new Set<string>([product.manufacturerGroupId])
+    const candidatesByGroup = new Map<string, CatalogProduct[]>()
     for (const candidateId of store.productIdsByRole.get(primaryRole.role_code) ?? []) {
-      if (otherManufacturers.length >= 6) break
       const candidate = store.productById.get(candidateId)
-      if (!candidate || seenGroups.has(candidate.manufacturerGroupId)) continue
-      seenGroups.add(candidate.manufacturerGroupId)
-      otherManufacturers.push(toListItem(candidate))
+      if (!candidate || candidate.manufacturerGroupId === product.manufacturerGroupId) continue
+      const group = candidatesByGroup.get(candidate.manufacturerGroupId)
+      if (group) group.push(candidate)
+      else candidatesByGroup.set(candidate.manufacturerGroupId, [candidate])
+      otherManufacturersTotalProducts += 1
+    }
+    otherManufacturersTotalManufacturers = candidatesByGroup.size
+    const primaryFitProductIds = new Set(
+      (store.productIdsByRole.get(primaryRole.role_code) ?? []).filter((candidateId) =>
+        (store.rolesByProduct.get(candidateId) ?? []).some(
+          (link) => link.role_code === primaryRole.role_code && link.role_fit === 'Primary',
+        ),
+      ),
+    )
+    for (const group of candidatesByGroup.values()) {
+      if (otherManufacturers.length >= 6) break
+      const representative =
+        group.find((candidate) => primaryFitProductIds.has(candidate.product_id)) ?? group[0]
+      otherManufacturers.push(toListItem(representative))
     }
   }
 
@@ -897,6 +922,9 @@ export function getProductDetail(
     slots,
     sources,
     otherManufacturers,
+    otherManufacturersTotalProducts,
+    otherManufacturersTotalManufacturers,
+    primaryRoleCode: primaryRole?.role_code ?? null,
   }
 }
 

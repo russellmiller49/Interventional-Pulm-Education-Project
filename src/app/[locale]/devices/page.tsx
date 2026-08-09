@@ -123,6 +123,7 @@ export default async function DevicesIndexPage({ params, searchParams }: PagePro
                 evidence: t('table.evidence'),
                 notRecorded: tCommon('notRecorded'),
                 verifiedSource: tCommon('badges.verifiedSource'),
+                region: t('resultsRegionLabel'),
               }}
             />
           ) : (

@@ -14,6 +14,7 @@ import type { ReadinessProjection } from '@/features/device-intelligence/domain/
 import {
   buildReadinessProjection,
   getCoverageLadderForProcedure,
+  sortPhasesCanonically,
   type RealFormularySummary,
 } from './procedures.server'
 
@@ -65,9 +66,9 @@ export interface ProcedureOutputPreviews {
   }
   /** Output 2 — resolved requirements by setup zone, in setup sequence. */
   roomSetup: GroupedOutput[]
-  /** Output 3 — resolved requirements by responsible role, then procedural phase. */
+  /** Output 3 — resolved requirements by responsible role, then canonical procedural phase. */
   nursing: { responsibleRole: string; phases: GroupedOutput[] }[]
-  /** Output 5 — requirements in procedural-phase order quoting authored texts only. */
+  /** Output 5 — requirements grouped in the CANONICAL procedural-phase sequence (F-03). */
   training: GroupedOutput[]
   /** Output 4 — structural demo/readiness gap preview (not a procurement report). */
   gaps: {
@@ -79,7 +80,18 @@ export interface ProcedureOutputPreviews {
     dimensionGapCount: number
     formularySummary: RealFormularySummary
   }
-  suppressedItems: { itemId: string; label: string; roleCode: string; rationale: string | null }[]
+  /**
+   * Requirements the resolver suppressed because a selected kit's bill of materials already
+   * includes them (owner-review F-02). `reason` quotes the resolver's own suppression trace,
+   * which names the kit — rendered, never silently dropped.
+   */
+  suppressedItems: {
+    itemId: string
+    label: string
+    roleCode: string
+    rationale: string | null
+    reason: string | null
+  }[]
 }
 
 const DIMENSION_FIELDS = [
@@ -163,10 +175,18 @@ export function getProcedureOutputPreviews(
     }))
   }
 
+  // Phase-keyed groups follow the canonical clinical sequence (F-03), never the template's
+  // first-appearance order.
+  const groupByPhaseCanonically = (values: OutputLine[]): GroupedOutput[] => {
+    const groups = groupBy(values, (line) => line.proceduralPhase)
+    const orderedKeys = sortPhasesCanonically(groups.map((group) => group.key))
+    return orderedKeys.map((key) => groups.find((group) => group.key === key)!)
+  }
+
   const nursingGroups = groupBy(lines, (line) => line.responsibleRole ?? 'unassigned').map(
     (group) => ({
       responsibleRole: group.key,
-      phases: groupBy(group.lines, (line) => line.proceduralPhase),
+      phases: groupByPhaseCanonically(group.lines),
     }),
   )
 
@@ -206,7 +226,7 @@ export function getProcedureOutputPreviews(
     },
     roomSetup: groupBy(lines, (line) => line.setupZone),
     nursing: nursingGroups,
-    training: groupBy(lines, (line) => line.proceduralPhase),
+    training: groupByPhaseCanonically(lines),
     gaps: {
       projection,
       proposalsOnlyRoles: ladder.roles
@@ -233,6 +253,8 @@ export function getProcedureOutputPreviews(
       label: item.label,
       roleCode: item.roleCode,
       rationale: item.rationale,
+      // The resolver's own suppression sentence, which names the satisfying kit.
+      reason: item.whyIncluded.find((entry) => entry.startsWith('Suppressed because')) ?? null,
     })),
   }
 }
