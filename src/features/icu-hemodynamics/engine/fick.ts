@@ -79,9 +79,16 @@ export interface FickInputSet {
   readonly steadyState: boolean
   /** Whether the specimens and the oxygen-uptake figure describe one measurement episode. */
   readonly samplesPairedInTime: boolean
+  /**
+   * Any intracardiac shunt withholds this calculation outright.
+   *
+   * There used to be a companion `shuntSamplingAddressed` flag, and setting it produced an ordinary
+   * result. Nothing in this input set could support that: it carries one arterial content and one
+   * pulmonary-artery mixed-venous content, which is a single systemic difference. Describing
+   * pulmonary and systemic flow separately needs compartmental oximetry and a Qp/Qs account that
+   * this model does not have, so a boolean could only ever have waved the problem through.
+   */
   readonly intracardiacShuntPresent: boolean
-  /** Whether a shunt, if present, was handled with separate pulmonary and systemic sampling. */
-  readonly shuntSamplingAddressed: boolean
 }
 
 export interface FickTraceRow {
@@ -245,9 +252,9 @@ export function fickCardiacOutput(inputs: FickInputSet): FickResult {
       'The specimens and the oxygen-uptake figure do not belong to one measurement episode, so their difference describes no single circulatory state.',
     )
   }
-  if (inputs.intracardiacShuntPresent && !inputs.shuntSamplingAddressed) {
+  if (inputs.intracardiacShuntPresent) {
     withheldReasons.push(
-      'An intracardiac shunt is present and has not been addressed with separate pulmonary and systemic sampling. Across a shunt, one oxygen-content difference describes neither circulation.',
+      'An intracardiac shunt is present. This simple one-difference Fick calculation cannot represent separate pulmonary and systemic flow. A dedicated compartmental oximetry and Qp/Qs calculation is outside this model.',
     )
   }
 

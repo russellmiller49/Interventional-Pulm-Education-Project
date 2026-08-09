@@ -415,8 +415,11 @@ export function generateThermodilutionCurve(
     alerts.push('Thermistor or injectate port position is not appropriate for this measurement.')
   }
   if ((modifiers.tricuspidRegurgitationSeverity ?? 0) > 0.45) {
+    // Describes what this model's trace actually does. It broadens and its decay may run past the
+    // end of the recording; it does not add a visible second excursion, and saying so would send a
+    // learner looking for a feature the curve does not have.
     alerts.push(
-      'Significant tricuspid regurgitation broadens recirculation and increases uncertainty.',
+      'Significant tricuspid regurgitation broadens the curve, and its decay may not return toward baseline inside the recorded window.',
     )
   }
   if ((modifiers.shuntFraction ?? 0) > 0.25)

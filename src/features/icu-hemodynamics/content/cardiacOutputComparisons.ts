@@ -139,7 +139,6 @@ export const cardiacOutputComparisonScenarios: readonly CardiacOutputComparisonS
         steadyState: true,
         samplesPairedInTime: true,
         intracardiacShuntPresent: false,
-        shuntSamplingAddressed: false,
       },
       fickAcquisitionNarrative:
         'Oxygen uptake was measured by expired-gas analysis over the same interval the specimens were drawn in. The venous specimen came from the pulmonary artery, and the arterial specimen was drawn within a minute of it.',
@@ -229,7 +228,6 @@ export const cardiacOutputComparisonScenarios: readonly CardiacOutputComparisonS
         steadyState: true,
         samplesPairedInTime: true,
         intracardiacShuntPresent: false,
-        shuntSamplingAddressed: false,
       },
       fickAcquisitionNarrative:
         'Both specimens were drawn together and the venous one came from the pulmonary artery, so the denominator is sound. The numerator was never measured on this patient — a substituted oxygen-uptake figure was used, and this patient is febrile, shivering, and agitated.',
@@ -321,7 +319,6 @@ export const cardiacOutputComparisonScenarios: readonly CardiacOutputComparisonS
         steadyState: false,
         samplesPairedInTime: true,
         intracardiacShuntPresent: false,
-        shuntSamplingAddressed: false,
       },
       fickAcquisitionNarrative:
         'Oxygen uptake was measured, but the venous specimen came from the superior vena cava rather than the pulmonary artery, and the vasopressor dose changed twice while the inputs were being collected.',
@@ -415,7 +412,6 @@ export const cardiacOutputComparisonScenarios: readonly CardiacOutputComparisonS
         steadyState: true,
         samplesPairedInTime: true,
         intracardiacShuntPresent: false,
-        shuntSamplingAddressed: false,
       },
       fickAcquisitionNarrative:
         'Oxygen uptake was measured over the interval the specimens describe, both specimens were drawn from the sites the equation is written for, and the dissolved-oxygen term is applied to both contents.',

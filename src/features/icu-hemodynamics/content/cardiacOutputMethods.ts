@@ -470,7 +470,7 @@ const thermodilution: CardiacOutputMethod = {
     'The catheter position that the method assumes has not been confirmed from the waveform.',
     'Fewer technically usable trials are available than this series is configured to summarize.',
     'The only way to reach agreement would be to exclude a trial with no technical reason for excluding it.',
-    'An intracardiac shunt is present and has not been accounted for, so a single dilution result does not answer the question being asked.',
+    'An intracardiac shunt is present, so a single dilution result does not answer the question being asked, and nothing in this model separates pulmonary from systemic flow.',
   ],
   alternateMethodRole:
     'A Fick calculation answers the same question through a different measurement system, so it can be used to interrogate a thermodilution result rather than to overrule it.',
@@ -544,12 +544,12 @@ const fickShared = {
         'A difference at or below zero cannot be divided into, and a very small difference makes the result extremely sensitive to error in any input.',
     },
     {
-      id: 'no-unaddressed-shunt',
-      label: 'No unaddressed intracardiac shunt',
+      id: 'no-intracardiac-shunt',
+      label: 'No intracardiac shunt',
       whatToLookFor:
-        'Either no shunt, or a sampling scheme built for one — pulmonary and systemic flow described separately rather than by a single content difference.',
+        'That the flow being asked about is one circulation. With a shunt, pulmonary and systemic flow are two different quantities and one content difference cannot describe both.',
       whenItIsNotMet:
-        'Across a shunt the simple form describes neither circulation. This module withholds it rather than labeling it approximate.',
+        'The simple form used here describes neither circulation, so it is withheld rather than labeled approximate. Describing the two separately needs compartmental oximetry and a Qp/Qs calculation, which this model does not carry.',
     },
   ] as const,
   repeatabilityChecks: [
@@ -782,12 +782,12 @@ const fickSharedFailureModes: readonly CardiacOutputFailureMode[] = [
     visibleInAcquisition: true,
   },
   {
-    id: 'unaddressed-shunt-fick',
-    label: 'Intracardiac shunt not accounted for',
+    id: 'intracardiac-shunt-fick',
+    label: 'Intracardiac shunt',
     mechanism:
-      'With a shunt, pulmonary and systemic flow differ, and one content difference cannot describe both.',
+      'With a shunt, pulmonary and systemic flow differ, and the one arterial and one pulmonary-artery specimen this calculation uses give a single systemic difference.',
     effectOnResult:
-      'The simple form answers neither question. Separate pulmonary and systemic sampling is a different calculation, not a correction factor.',
+      'The simple form answers neither question, so it is withheld. Compartmental oximetry with a separate pulmonary and systemic flow account is a different calculation, not a correction factor, and it is outside this model.',
     visibleInAcquisition: false,
   },
   {
@@ -845,7 +845,7 @@ const fickDirect: CardiacOutputMethod = {
     'The oxygen-content difference is at or below zero, so the simple form cannot be used.',
     'The venous specimen did not come from the pulmonary artery.',
     'The patient was not in a steady state, or the inputs do not belong to one measurement episode.',
-    'An intracardiac shunt is present and has not been addressed with separate pulmonary and systemic sampling.',
+    'An intracardiac shunt is present. This simple one-difference calculation cannot represent separate pulmonary and systemic flow, and the compartmental Qp/Qs calculation that could is outside this model.',
   ],
   alternateMethodRole: fickShared.alternateMethodRole,
   interpretationBoundary:
@@ -934,7 +934,7 @@ const fickAssumedVo2: CardiacOutputMethod = {
     'The oxygen-content difference is at or below zero, so the simple form cannot be used.',
     'The venous specimen did not come from the pulmonary artery.',
     'The patient was not in a steady state, or the inputs do not belong to one measurement episode.',
-    'An intracardiac shunt is present and has not been addressed with separate pulmonary and systemic sampling.',
+    'An intracardiac shunt is present. This simple one-difference calculation cannot represent separate pulmonary and systemic flow, and the compartmental Qp/Qs calculation that could is outside this model.',
     'The result would be reported without naming the substituted oxygen uptake.',
   ],
   alternateMethodRole: fickShared.alternateMethodRole,

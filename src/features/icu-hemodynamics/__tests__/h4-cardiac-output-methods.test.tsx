@@ -155,7 +155,6 @@ const MEASURED_FICK: FickInputSet = {
   steadyState: true,
   samplesPairedInTime: true,
   intracardiacShuntPresent: false,
-  shuntSamplingAddressed: false,
 }
 
 /** Every learner-visible string this package authored. */
@@ -549,6 +548,119 @@ describe('H4 thermodilution acquisition, quality, and repeatability', () => {
     expect(trMode?.effectOnResult).toMatch(/does not assert a direction/i)
     expect(trMode?.effectOnResult).toMatch(/outside the recording/i)
   })
+
+  /**
+   * The copy contract for tricuspid regurgitation.
+   *
+   * Every learner-facing sentence about what this model's regurgitant curve *shows* has to agree
+   * with the derived curve features. The open-question record used to say "a broadened curve with a
+   * secondary disturbance" while the trace has none, and that sentence is rendered on the method
+   * panel and beside the both-limited comparison — so a learner was sent looking for a feature that
+   * is not there.
+   */
+  describe('tricuspid-regurgitation copy agrees with the modeled curve', () => {
+    const REGURGITANT = generateThermodilutionCurve({
+      trueCardiacOutputLMin: 3.4,
+      technique: STANDARD_TECHNIQUE,
+      configuration: CONFIGURATION,
+      modifiers: { catheterPosition: 'pa', tricuspidRegurgitationSeverity: 0.72 },
+      seed: 4303,
+      sequence: 1,
+    })
+
+    it('produces a broadened, unsettled curve with no secondary excursion', () => {
+      const features = thermodilutionCurveFeatures(REGURGITANT)
+      expect(features.secondaryDisturbance).toBe(false)
+      expect(features.secondaryDisturbanceTimeSeconds).toBeNull()
+      expect(features.decayToTenthSeconds).toBeNull()
+      // The text equivalent reports the absence rather than staying silent about it.
+      expect(thermodilutionCurveTextEquivalent(REGURGITANT)).toMatch(
+        /No secondary disturbance appears after the trace settles/i,
+      )
+      expect(thermodilutionCurveTextEquivalent(REGURGITANT)).toMatch(
+        /does not return to within a tenth of its peak excursion/i,
+      )
+    })
+
+    it('describes it in the open question as broadened and unsettled', () => {
+      const question = cardiacOutputOpenMethodQuestions.find(
+        (candidate) => candidate.id === 'tricuspid-regurgitation-direction',
+      )
+      expect(question).toBeDefined()
+      expect(question!.whatThisModuleDoes).toMatch(/broadened curve/i)
+      expect(question!.whatThisModuleDoes).toMatch(
+        /may not return toward baseline inside the recorded window/i,
+      )
+      expect(question!.whatThisModuleDoes).toMatch(/states no direction of bias/i)
+    })
+
+    it('never says a modeled regurgitant curve shows a secondary disturbance', () => {
+      const trSpecificCopy = [
+        cardiacOutputOpenMethodQuestions.find(
+          (candidate) => candidate.id === 'tricuspid-regurgitation-direction',
+        )!.whatThisModuleDoes,
+        ...(() => {
+          const mode = requireCardiacOutputMethod('thermodilution').failureModes.find(
+            (candidate) => candidate.id === 'tricuspid-regurgitation',
+          )!
+          return [mode.label, mode.effectOnResult]
+        })(),
+        // Whatever the model actually raises as an alert on a regurgitant acquisition.
+        ...REGURGITANT.alerts.filter((alert) => /regurgitation/i.test(alert)),
+      ]
+      expect(trSpecificCopy.length).toBeGreaterThan(3)
+      for (const sentence of trSpecificCopy) {
+        expect(sentence).not.toMatch(/secondary disturbance/i)
+        expect(sentence).not.toMatch(/second excursion/i)
+        expect(sentence).not.toMatch(/recirculation disturbance/i)
+      }
+      // The alert the learner reads describes the broadening this model produces.
+      expect(REGURGITANT.alerts.join(' ')).toMatch(
+        /broadens the curve.*may not return toward baseline/i,
+      )
+    })
+
+    it('renders the corrected open-question copy on the method panel', () => {
+      render(<CardiacOutputMethodModel />)
+      const question = cardiacOutputOpenMethodQuestions.find(
+        (candidate) => candidate.id === 'tricuspid-regurgitation-direction',
+      )!
+      const card = screen.getByText(question.question).closest('p') as HTMLElement
+      expect(card).toHaveTextContent(/may not return toward baseline inside the recorded window/i)
+      expect(card).not.toHaveTextContent(/secondary disturbance/i)
+    })
+
+    it('keeps the generic secondary-disturbance category available for a curve that shows one', () => {
+      // The concept is not TR-specific and must survive: a trace that genuinely rebounds after
+      // decaying is still excludable under it.
+      const rebounding: ThermodilutionTrial = {
+        ...REGURGITANT,
+        reviewed: true,
+        curve: [
+          ...Array.from({ length: 5 }, (_, index) => ({
+            timeSeconds: index * 0.05,
+            temperatureChangeC: 0,
+          })),
+          { timeSeconds: 0.3, temperatureChangeC: -1 },
+          { timeSeconds: 0.6, temperatureChangeC: -0.5 },
+          { timeSeconds: 0.9, temperatureChangeC: -0.05 },
+          { timeSeconds: 1.2, temperatureChangeC: -0.4 },
+          { timeSeconds: 1.5, temperatureChangeC: -0.05 },
+        ],
+      }
+      const features = thermodilutionCurveFeatures(rebounding)
+      expect(features.secondaryDisturbance).toBe(true)
+      expect(thermodilutionExclusionReasonsFor(rebounding).map((reason) => reason.id)).toContain(
+        'secondary-curve-disturbance',
+      )
+      expect(canExcludeThermodilutionTrial(rebounding, 'secondary-curve-disturbance')).toBe(true)
+
+      // And the generic quality check and repeat rule keep the concept in the method record.
+      const method = requireCardiacOutputMethod('thermodilution')
+      expect(method.qualityChecks.map((check) => check.id)).toContain('secondary-disturbance')
+      expect(method.repeatWhen.join(' ')).toMatch(/second excursion/i)
+    })
+  })
 })
 
 describe('H4 Fick input tracing', () => {
@@ -692,21 +804,84 @@ describe('H4 Fick input tracing', () => {
     expect(central.withheldReasons.join(' ')).toMatch(/not a true mixed-venous specimen/i)
   })
 
-  it('does not treat the simple form as valid across an unaddressed shunt', () => {
-    const shunted = fickCardiacOutput({
-      ...MEASURED_FICK,
-      intracardiacShuntPresent: true,
-      shuntSamplingAddressed: false,
-    })
-    expect(shunted.status).toBe('withheld')
-    expect(shunted.withheldReasons.join(' ')).toMatch(/intracardiac shunt/i)
+  /**
+   * The simple form fails closed for any shunt, and nothing in the input set can talk it round.
+   *
+   * A `shuntSamplingAddressed` flag used to sit beside `intracardiacShuntPresent`, and setting it
+   * produced an ordinary result — from one arterial content and one pulmonary-artery content, which
+   * is a single systemic difference. The flag was removed rather than defaulted, so there is no
+   * boolean left that could wave an under-specified shunt calculation through.
+   */
+  it('withholds the simple one-difference calculation for any intracardiac shunt', () => {
+    for (const methodId of ['fick-direct', 'fick-assumed-vo2'] as const) {
+      const shunted = fickCardiacOutput({
+        ...MEASURED_FICK,
+        methodId,
+        intracardiacShuntPresent: true,
+      })
+      expect(shunted.status).toBe('withheld')
+      expect(shunted.cardiacOutputLMin).toBeNull()
 
-    const addressed = fickCardiacOutput({
+      // The reason names the boundary: what is missing is the compartmental Qp/Qs model, not a
+      // sampling step this implementation could have taken.
+      const reason = shunted.withheldReasons.join(' ')
+      expect(reason).toMatch(/intracardiac shunt is present/i)
+      expect(reason).toMatch(/simple one-difference Fick calculation/i)
+      expect(reason).toMatch(/separate pulmonary and systemic flow/i)
+      expect(reason).toMatch(/Qp\/Qs/)
+      expect(reason).toMatch(/outside this model/i)
+      expect(fickResultTextEquivalent(shunted)).toMatch(/Qp\/Qs/)
+    }
+  })
+
+  it('has no boolean that lets an under-specified shunt calculation produce a result', () => {
+    // Every extra key the input set could carry is enumerated here, so a re-added bypass flag has
+    // to be added to this list before it can pass — and adding it fails the assertion below.
+    const withEveryOtherInputMadeIdeal = {
       ...MEASURED_FICK,
       intracardiacShuntPresent: true,
+      steadyState: true,
+      samplesPairedInTime: true,
+      venousSampleSite: 'pulmonary-artery' as const,
+      includeDissolvedOxygen: true,
+      arterialPo2MmHg: 92,
+      venousPo2MmHg: 40,
+    }
+    expect(fickCardiacOutput(withEveryOtherInputMadeIdeal).status).toBe('withheld')
+
+    // A stray property cannot switch the behavior either: nothing outside the declared input set is
+    // consulted.
+    const withStrayFlag = {
+      ...withEveryOtherInputMadeIdeal,
       shuntSamplingAddressed: true,
-    })
-    expect(addressed.status).toBe('calculated')
+    } as unknown as FickInputSet
+    expect(fickCardiacOutput(withStrayFlag).status).toBe('withheld')
+
+    expect(Object.keys(MEASURED_FICK)).not.toContain('shuntSamplingAddressed')
+  })
+
+  it('leaves non-shunt direct Fick behaviour unchanged', () => {
+    const clean = fickCardiacOutput(MEASURED_FICK)
+    expect(clean.status).toBe('calculated')
+    expect(clean.cardiacOutputLMin).toBeCloseTo(5.08, 2)
+    expect(clean.withheldReasons).toEqual([])
+    expect(clean.trace.map((row) => row.id)).toContain('content-difference')
+  })
+
+  it('does not imply that a Fick approach is unusable in every shunt, only this calculation', () => {
+    const boundary = [
+      ...requireCardiacOutputMethod('fick-direct').withholdWhen,
+      ...requireCardiacOutputMethod('fick-assumed-vo2').withholdWhen,
+      fickCardiacOutput({ ...MEASURED_FICK, intracardiacShuntPresent: true }).withheldReasons.join(
+        ' ',
+      ),
+    ].join(' ')
+    // The claim is about this implementation and the model's scope.
+    expect(boundary).toMatch(/this simple one-difference calculation|simple one-difference Fick/i)
+    expect(boundary).toMatch(/outside this model/i)
+    // Not a claim that the Fick principle itself fails in shunts.
+    expect(boundary).not.toMatch(/fick (?:is|becomes) (?:invalid|unusable|impossible)/i)
+    expect(boundary).not.toMatch(/never use fick/i)
   })
 
   it('applies the dissolved-oxygen term to both contents or to neither', () => {

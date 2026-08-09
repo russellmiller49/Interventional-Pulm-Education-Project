@@ -341,8 +341,14 @@ export const cardiacOutputOpenMethodQuestions: readonly CardiacOutputOpenQuestio
         'With significant tricuspid regurgitation, does thermodilution read systematically high or systematically low?',
       whyItIsOpen:
         'No registered record in this module carries a claim about the direction of that effect, and a direction is commonly asserted both ways.',
+      /**
+       * This sentence used to say "a broadened curve with a secondary disturbance", which the model
+       * does not produce: at the modeled severity the trace broadens and its decay runs past the end
+       * of the recording, and the derived curve features report no secondary excursion. A learner
+       * was being told to look for something that is not on the trace.
+       */
       whatThisModuleDoes:
-        'Represents regurgitation as a broadened curve with a secondary disturbance and greater uncertainty, and states no direction of bias. The learner is asked to notice the curve, not to apply a correction.',
+        'This model represents significant tricuspid regurgitation as a broadened curve whose decay may not return toward baseline inside the recorded window. It states no direction of bias. The learner is asked to notice what the trace does and does not settle to, not to apply a correction.',
       claimTopic: 'method-performance-in-tricuspid-regurgitation',
     },
     {

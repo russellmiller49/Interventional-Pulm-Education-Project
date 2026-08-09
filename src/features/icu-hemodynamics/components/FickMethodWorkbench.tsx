@@ -48,7 +48,6 @@ const baseInputs: FickInputSet = {
   steadyState: true,
   samplesPairedInTime: true,
   intracardiacShuntPresent: false,
-  shuntSamplingAddressed: false,
 }
 
 export const FICK_EPISODES: readonly FickEpisode[] = [
@@ -92,11 +91,11 @@ export const FICK_EPISODES: readonly FickEpisode[] = [
     },
   },
   {
-    id: 'unaddressed-shunt',
-    label: 'An intracardiac shunt, not accounted for',
+    id: 'intracardiac-shunt',
+    label: 'An intracardiac shunt',
     whatHappened:
-      'A known left-to-right shunt, sampled as though there were none: one arterial specimen, one pulmonary-artery specimen, one content difference.',
-    inputs: { ...baseInputs, intracardiacShuntPresent: true, shuntSamplingAddressed: false },
+      'A known left-to-right shunt. The inputs are the ones this calculation takes: one arterial specimen, one pulmonary-artery specimen, one content difference — which is a single systemic difference, and pulmonary and systemic flow are now two different quantities.',
+    inputs: { ...baseInputs, intracardiacShuntPresent: true },
   },
 ]
 
