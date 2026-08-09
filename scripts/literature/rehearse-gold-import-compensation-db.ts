@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { basename, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import {
   assertLocalDockerEndpoint,
@@ -11,15 +12,21 @@ import {
   extractSqlScenarioEvidence,
   LINT_INTROSPECTION_SCHEMA_VERSION,
   parseRehearsalCliArguments,
+  POST_MIGRATION_SCHEMA_SECURITY_IDENTITY_SHA256,
   REHEARSAL_MANIFEST_SCHEMA_VERSION,
+  SCHEMA_SECURITY_COLUMN_PRIVILEGES,
+  SCHEMA_SECURITY_COLUMN_ROLES,
+  SCHEMA_SECURITY_FUNCTION_NAMES,
   sanitizeRehearsalChildEnvironment,
+  schemaSecurityDefinitionIdentitySha256 as computeSchemaSecurityDefinitionIdentitySha256,
   validateSecurityIntrospection,
   validateSqlScenarioEvidence,
   validateSupabaseLint,
 } from './gold-import-compensation-rehearsal-evidence'
 
 const ROOT = process.cwd()
-const POSTGRES_IMAGE = 'public.ecr.aws/supabase/postgres:17.6.1.104'
+const POSTGRES_IMAGE =
+  'public.ecr.aws/supabase/postgres:17.6.1.104@sha256:5deba92e50cd17bfacf8603834d317cdf3bfc1c016ec8293991997fa3b55fa3d'
 const MIGRATIONS = [
   '20260727032621_add_literature_explorer.sql',
   '20260727164510_add_literature_gold_set.sql',
@@ -35,6 +42,12 @@ const CONTRACT_MIGRATION = MIGRATIONS.at(-1) as (typeof MIGRATIONS)[number]
 const VERIFICATION = '20260808035633_verify_literature_gold_import_compensation_contract.sql'
 const RUNNER = 'scripts/literature/rehearse-gold-import-compensation-db.ts'
 const EVIDENCE_HELPER = 'scripts/literature/gold-import-compensation-rehearsal-evidence.ts'
+const SCHEMA_SECURITY_COLUMN_ROLE_VALUES_SQL = SCHEMA_SECURITY_COLUMN_ROLES.map(
+  (role) => `('${role}')`,
+).join(', ')
+const SCHEMA_SECURITY_COLUMN_PRIVILEGE_VALUES_SQL = SCHEMA_SECURITY_COLUMN_PRIVILEGES.map(
+  (privilege) => `('${privilege}')`,
+).join(', ')
 const CONTAINER = `ip-gold-compensation-${process.pid}-${randomBytes(4).toString('hex')}`
 const DATABASE = 'gold_compensation_rehearsal'
 const DATABASE_USER = 'supabase_admin'
@@ -251,9 +264,9 @@ async function runSupabaseLint(hostPort: string) {
   }
 }
 
-const SECURITY_INTROSPECTION_SQL = String.raw`
+export const SECURITY_INTROSPECTION_SQL = String.raw`
 with
-required_rls(table_name) as (
+contract_tables(table_name) as (
   values
     ('literature_gold_review_operation_actions'),
     ('literature_gold_review_operations'),
@@ -263,9 +276,13 @@ required_rls(table_name) as (
     ('literature_gold_set_review_drafts'),
     ('literature_gold_set_reviews')
 ),
+required_rls(table_name) as (
+  select table_name from contract_tables
+),
 rls as (
   select required.table_name,
-    coalesce(class.relrowsecurity, false) as rls_enabled
+    coalesce(class.relrowsecurity, false) as rls_enabled,
+    coalesce(class.relforcerowsecurity, false) as rls_forced
   from required_rls as required
   left join pg_catalog.pg_class as class
     on class.relname = required.table_name
@@ -278,9 +295,14 @@ required_functions(name) as (
     ('compensate_literature_gold_import_v1'),
     ('reconcile_literature_gold_review_operation_v1')
 ),
+contract_functions(name) as (
+  values ${SCHEMA_SECURITY_FUNCTION_NAMES.map((name) => `('${name}')`).join(',\n    ')}
+),
 functions as (
   select required.name,
     pg_catalog.pg_get_function_identity_arguments(proc.oid) as identity_arguments,
+    pg_catalog.pg_get_function_result(proc.oid) as result_type,
+    proc.provolatile as volatility,
     owner.rolname as owner,
     proc.prosecdef as security_definer,
     coalesce((
@@ -289,6 +311,7 @@ functions as (
       where configured.setting like 'search_path=%'
       limit 1
     ), '') as search_path,
+    pg_catalog.pg_get_functiondef(proc.oid) as definition,
     exists (
       select 1
       from pg_catalog.aclexplode(coalesce(
@@ -301,10 +324,54 @@ functions as (
     pg_catalog.has_function_privilege('authenticated', proc.oid, 'EXECUTE') as authenticated_execute,
     pg_catalog.has_function_privilege('service_role', proc.oid, 'EXECUTE') as service_role_execute
   from required_functions as required
-  left join pg_catalog.pg_proc as proc on proc.proname = required.name
-  left join pg_catalog.pg_namespace as namespace
-    on namespace.oid = proc.pronamespace and namespace.nspname = 'public'
+  join pg_catalog.pg_namespace as namespace on namespace.nspname = 'public'
+  join pg_catalog.pg_proc as proc
+    on proc.proname = required.name and proc.pronamespace = namespace.oid
   left join pg_catalog.pg_roles as owner on owner.oid = proc.proowner
+),
+schema_tables as (
+  select class.relname as table_name,
+    class.relkind as relation_kind,
+    class.relrowsecurity as rls_enabled,
+    class.relforcerowsecurity as force_rls,
+    owner.rolname as owner
+  from contract_tables as requested
+  join pg_catalog.pg_namespace as namespace on namespace.nspname = 'public'
+  join pg_catalog.pg_class as class
+    on class.relname = requested.table_name and class.relnamespace = namespace.oid
+  join pg_catalog.pg_roles as owner on owner.oid = class.relowner
+),
+schema_columns as (
+  select columns.table_name,
+    columns.ordinal_position,
+    columns.column_name,
+    columns.data_type,
+    columns.udt_name,
+    columns.is_nullable,
+    columns.column_default
+  from information_schema.columns as columns
+  where columns.table_schema = 'public'
+    and columns.table_name in (select table_name from contract_tables)
+),
+schema_functions as (
+  select proc.proname as name,
+    pg_catalog.pg_get_function_identity_arguments(proc.oid) as identity_arguments,
+    pg_catalog.pg_get_function_result(proc.oid) as result_type,
+    proc.provolatile as volatility,
+    proc.prosecdef as security_definer,
+    owner.rolname as owner,
+    coalesce((
+      select pg_catalog.regexp_replace(configured.setting, '^search_path=', '')
+      from unnest(coalesce(proc.proconfig, array[]::text[])) as configured(setting)
+      where configured.setting like 'search_path=%'
+      limit 1
+    ), '') as search_path,
+    pg_catalog.pg_get_functiondef(proc.oid) as definition
+  from contract_functions as requested
+  join pg_catalog.pg_proc as proc on proc.proname = requested.name
+  join pg_catalog.pg_namespace as namespace
+    on namespace.oid = proc.pronamespace and namespace.nspname = 'public'
+  join pg_catalog.pg_roles as owner on owner.oid = proc.proowner
 ),
 review_table as (
   select class.*
@@ -513,7 +580,25 @@ journal_privileges as (
       journal_roles.role_name,
       pg_catalog.format('public.%I', journal_tables.table_name),
       'TRUNCATE'
-    ) end as can_truncate
+    ) end as can_truncate,
+    case when journal_roles.role_name = 'public' then exists (
+      select 1 from pg_catalog.aclexplode(coalesce(
+        class.relacl, pg_catalog.acldefault('r', class.relowner)
+      )) as acl where acl.grantee = 0 and acl.privilege_type = 'REFERENCES'
+    ) else pg_catalog.has_table_privilege(
+      journal_roles.role_name,
+      pg_catalog.format('public.%I', journal_tables.table_name),
+      'REFERENCES'
+    ) end as can_references,
+    case when journal_roles.role_name = 'public' then exists (
+      select 1 from pg_catalog.aclexplode(coalesce(
+        class.relacl, pg_catalog.acldefault('r', class.relowner)
+      )) as acl where acl.grantee = 0 and acl.privilege_type = 'TRIGGER'
+    ) else pg_catalog.has_table_privilege(
+      journal_roles.role_name,
+      pg_catalog.format('public.%I', journal_tables.table_name),
+      'TRIGGER'
+    ) end as can_trigger
   from journal_tables
   cross join journal_roles
   join pg_catalog.pg_class as class on class.relname = journal_tables.table_name
@@ -542,20 +627,184 @@ schema_create_privileges as (
   join pg_catalog.pg_namespace as namespace on namespace.nspname = required_schemas.schema_name
   join pg_catalog.pg_roles as owner on owner.oid = namespace.nspowner
 ),
+catalog_roles(role_name) as (
+  values ('public'), ('anon'), ('authenticated'), ('service_role')
+),
+catalog_privileges(privilege_name) as (
+  values ('SELECT'), ('INSERT'), ('UPDATE'), ('DELETE'), ('TRUNCATE'), ('REFERENCES'), ('TRIGGER')
+),
+table_privileges as (
+  select requested.table_name,
+    catalog_roles.role_name,
+    catalog_privileges.privilege_name,
+    case
+      when catalog_roles.role_name = 'public' then exists (
+        select 1 from pg_catalog.aclexplode(coalesce(
+          class.relacl, pg_catalog.acldefault('r', class.relowner)
+        )) as acl
+        where acl.grantee = 0 and acl.privilege_type = catalog_privileges.privilege_name
+      )
+      else coalesce(pg_catalog.has_table_privilege(
+        catalog_roles.role_name, class.oid, catalog_privileges.privilege_name
+      ), false)
+    end as granted
+  from contract_tables as requested
+  cross join catalog_roles
+  cross join catalog_privileges
+  join pg_catalog.pg_namespace as namespace on namespace.nspname = 'public'
+  join pg_catalog.pg_class as class
+    on class.relname = requested.table_name and class.relnamespace = namespace.oid
+),
+table_acl_entries as (
+  select 'public'::text as schema_name,
+    class.relname as object_name,
+    coalesce(grantee.rolname, 'PUBLIC') as grantee,
+    grantor.rolname as grantor,
+    acl.privilege_type,
+    acl.is_grantable
+  from pg_catalog.pg_class as class
+  join pg_catalog.pg_namespace as namespace
+    on namespace.oid = class.relnamespace and namespace.nspname = 'public'
+  cross join lateral pg_catalog.aclexplode(coalesce(
+    class.relacl, pg_catalog.acldefault('r', class.relowner)
+  )) as acl
+  left join pg_catalog.pg_roles as grantee on grantee.oid = acl.grantee
+  join pg_catalog.pg_roles as grantor on grantor.oid = acl.grantor
+  where class.relname in (select table_name from contract_tables)
+),
+column_acl_entries as (
+  select 'public'::text as schema_name,
+    class.relname as table_name,
+    attribute.attname as column_name,
+    coalesce(grantee.rolname, 'PUBLIC') as grantee,
+    grantor.rolname as grantor,
+    acl.privilege_type,
+    acl.is_grantable
+  from pg_catalog.pg_attribute as attribute
+  join pg_catalog.pg_class as class on class.oid = attribute.attrelid
+  join pg_catalog.pg_namespace as namespace
+    on namespace.oid = class.relnamespace and namespace.nspname = 'public'
+  cross join lateral pg_catalog.aclexplode(
+    case when cardinality(attribute.attacl) > 0 then attribute.attacl
+      else null::pg_catalog.aclitem[] end
+  ) as acl
+  left join pg_catalog.pg_roles as grantee on grantee.oid = acl.grantee
+  join pg_catalog.pg_roles as grantor on grantor.oid = acl.grantor
+  where attribute.attnum > 0 and not attribute.attisdropped
+    and class.relname in (select table_name from contract_tables)
+),
+column_roles(role_name) as (values ${SCHEMA_SECURITY_COLUMN_ROLE_VALUES_SQL}),
+column_privilege_names(privilege_name) as (
+  values ${SCHEMA_SECURITY_COLUMN_PRIVILEGE_VALUES_SQL}
+),
+column_privileges as (
+  select class.relname as table_name,
+    attribute.attname as column_name,
+    column_roles.role_name,
+    column_privilege_names.privilege_name,
+    case
+      when column_roles.role_name = 'public' then
+        exists (
+          select 1 from pg_catalog.aclexplode(coalesce(
+            class.relacl, pg_catalog.acldefault('r', class.relowner)
+          )) as table_acl
+          where table_acl.grantee = 0
+            and table_acl.privilege_type = column_privilege_names.privilege_name
+        ) or exists (
+          select 1 from pg_catalog.aclexplode(
+            case when cardinality(attribute.attacl) > 0 then attribute.attacl
+              else null::pg_catalog.aclitem[] end
+          ) as column_acl
+          where column_acl.grantee = 0
+            and column_acl.privilege_type = column_privilege_names.privilege_name
+        )
+      else coalesce(pg_catalog.has_column_privilege(
+        column_roles.role_name,
+        class.oid,
+        attribute.attnum,
+        column_privilege_names.privilege_name
+      ), false)
+    end as granted
+  from pg_catalog.pg_attribute as attribute
+  join pg_catalog.pg_class as class on class.oid = attribute.attrelid
+  join pg_catalog.pg_namespace as namespace
+    on namespace.oid = class.relnamespace and namespace.nspname = 'public'
+  cross join column_roles
+  cross join column_privilege_names
+  where attribute.attnum > 0 and not attribute.attisdropped
+    and class.relname in (select table_name from contract_tables)
+),
+function_acl_entries as (
+  select 'public'::text as schema_name,
+    proc.proname as object_name,
+    pg_catalog.pg_get_function_identity_arguments(proc.oid) as identity_arguments,
+    coalesce(grantee.rolname, 'PUBLIC') as grantee,
+    grantor.rolname as grantor,
+    acl.privilege_type,
+    acl.is_grantable
+  from pg_catalog.pg_proc as proc
+  join pg_catalog.pg_namespace as namespace
+    on namespace.oid = proc.pronamespace and namespace.nspname = 'public'
+  cross join lateral pg_catalog.aclexplode(coalesce(
+    proc.proacl, pg_catalog.acldefault('f', proc.proowner)
+  )) as acl
+  left join pg_catalog.pg_roles as grantee on grantee.oid = acl.grantee
+  join pg_catalog.pg_roles as grantor on grantor.oid = acl.grantor
+  where proc.proname in (select name from contract_functions)
+),
+schema_acl_entries as (
+  select namespace.nspname as schema_name,
+    namespace.nspname as object_name,
+    coalesce(grantee.rolname, 'PUBLIC') as grantee,
+    grantor.rolname as grantor,
+    acl.privilege_type,
+    acl.is_grantable
+  from pg_catalog.pg_namespace as namespace
+  cross join lateral pg_catalog.aclexplode(coalesce(
+    namespace.nspacl, pg_catalog.acldefault('n', namespace.nspowner)
+  )) as acl
+  left join pg_catalog.pg_roles as grantee on grantee.oid = acl.grantee
+  join pg_catalog.pg_roles as grantor on grantor.oid = acl.grantor
+  where namespace.nspname in (select schema_name from required_schemas)
+),
 constraints as (
   select con.conname as name,
     class.relname as table_name,
-    pg_catalog.pg_get_constraintdef(con.oid) as definition
+    pg_catalog.pg_get_constraintdef(con.oid) as definition,
+    con.convalidated as validated
   from pg_catalog.pg_constraint as con
   join pg_catalog.pg_class as class on class.oid = con.conrelid
   join pg_catalog.pg_namespace as namespace on namespace.oid = class.relnamespace
   where namespace.nspname = 'public'
+    and con.contype <> 't'
     and class.relname in (
+      'literature_gold_set_batches',
+      'literature_gold_set_items',
+      'literature_gold_set_review_drafts',
       'literature_gold_set_reviews',
       'literature_gold_set_events',
       'literature_gold_review_operations',
       'literature_gold_review_operation_actions'
     )
+),
+expected_indexes(index_name, table_name, is_unique) as (
+  values
+    ('literature_gold_review_operation_actions_item_idx', 'literature_gold_review_operation_actions', false),
+    ('literature_gold_review_operation_actions_source_idx', 'literature_gold_review_operation_actions', false),
+    ('literature_gold_review_operations_batch_started_idx', 'literature_gold_review_operations', false),
+    ('literature_gold_review_operations_one_live_compensation_idx', 'literature_gold_review_operations', true),
+    ('literature_gold_set_events_batch_created_idx', 'literature_gold_set_events', false),
+    ('literature_gold_set_events_item_created_idx', 'literature_gold_set_events', false),
+    ('literature_gold_set_events_one_test_unlock_idx', 'literature_gold_set_events', true),
+    ('literature_gold_set_events_operation_action_idx', 'literature_gold_set_events', false),
+    ('literature_gold_set_events_operation_sequence_idx', 'literature_gold_set_events', true),
+    ('literature_gold_set_items_batch_status_order_idx', 'literature_gold_set_items', false),
+    ('literature_gold_set_items_pmid_idx', 'literature_gold_set_items', false),
+    ('literature_gold_set_items_split_idx', 'literature_gold_set_items', false),
+    ('literature_gold_set_items_unresolved_idx', 'literature_gold_set_items', false),
+    ('literature_gold_set_reviews_item_completed_idx', 'literature_gold_set_reviews', false),
+    ('literature_gold_set_reviews_one_child_idx', 'literature_gold_set_reviews', true),
+    ('literature_gold_set_reviews_one_operation_action_idx', 'literature_gold_set_reviews', true)
 ),
 required_unique_indexes(index_name) as (
   values
@@ -564,46 +813,125 @@ required_unique_indexes(index_name) as (
     ('literature_gold_set_reviews_one_child_idx'),
     ('literature_gold_set_reviews_one_operation_action_idx')
 ),
-unique_indexes as (
-  select required.index_name,
+catalog_indexes as (
+  select index_class.relname as index_name,
     class.relname as table_name,
+    index_owner.rolname as owner,
     index.indisunique as is_unique,
     index.indisvalid as is_valid,
+    exists (
+      select 1
+      from pg_catalog.pg_constraint as constraint_index
+      where constraint_index.conindid = index.indexrelid
+    ) as constraint_backed,
     pg_catalog.pg_get_expr(index.indpred, index.indrelid) as predicate,
     pg_catalog.pg_get_indexdef(index.indexrelid) as definition
+  from pg_catalog.pg_index as index
+  join pg_catalog.pg_class as index_class on index_class.oid = index.indexrelid
+  join pg_catalog.pg_class as class on class.oid = index.indrelid
+  join pg_catalog.pg_namespace as namespace on namespace.oid = class.relnamespace
+  join pg_catalog.pg_roles as index_owner on index_owner.oid = index_class.relowner
+  where namespace.nspname = 'public'
+    and class.relname in (
+      'literature_gold_set_batches',
+      'literature_gold_set_events',
+      'literature_gold_set_items',
+      'literature_gold_set_review_drafts',
+      'literature_gold_set_reviews',
+      'literature_gold_review_operations',
+      'literature_gold_review_operation_actions'
+    )
+),
+nonconstraint_indexes as (
+  select * from catalog_indexes where constraint_backed is false
+),
+index_catalog_drift as (
+  select catalog.*
+  from nonconstraint_indexes as catalog
+  left join expected_indexes as expected
+    on expected.index_name = catalog.index_name
+   and expected.table_name = catalog.table_name
+   and expected.is_unique = catalog.is_unique
+  where expected.index_name is null or catalog.is_valid is not true
+
+  union all
+
+  select
+    '__missing_expected_index__:' || expected.index_name as index_name,
+    expected.table_name,
+    null::text as owner,
+    expected.is_unique,
+    false as is_valid,
+    false as constraint_backed,
+    null::text as predicate,
+    'MISSING EXPECTED INDEX ' || expected.index_name as definition
+  from expected_indexes as expected
+  left join nonconstraint_indexes as catalog
+    on catalog.index_name = expected.index_name
+   and catalog.table_name = expected.table_name
+   and catalog.is_unique = expected.is_unique
+   and catalog.is_valid is true
+  where catalog.index_name is null
+),
+unique_indexes as (
+  select catalog.*
   from required_unique_indexes as required
-  left join pg_catalog.pg_class as index_class on index_class.relname = required.index_name
-  left join pg_catalog.pg_index as index on index.indexrelid = index_class.oid
-  left join pg_catalog.pg_class as class on class.oid = index.indrelid
-  left join pg_catalog.pg_namespace as namespace
+  join nonconstraint_indexes as catalog on catalog.index_name = required.index_name
+
+  union all
+
+  select drift.* from index_catalog_drift as drift
+),
+schema_policies as (
+  select policy.polname as name,
+    class.relname as table_name,
+    case policy.polcmd
+      when 'r' then 'SELECT'
+      when 'a' then 'INSERT'
+      when 'w' then 'UPDATE'
+      when 'd' then 'DELETE'
+      else 'ALL'
+    end as command,
+    case when policy.polpermissive then 'PERMISSIVE' else 'RESTRICTIVE' end as permissive,
+    array(
+      select case when role_oid = 0 then 'public' else role_record.rolname end
+      from unnest(policy.polroles) as role_oid
+      left join pg_catalog.pg_roles as role_record on role_record.oid = role_oid
+      order by case when role_oid = 0 then 'public' else role_record.rolname end
+    ) as roles,
+    pg_catalog.pg_get_expr(policy.polqual, policy.polrelid) as using_expression,
+    pg_catalog.pg_get_expr(policy.polwithcheck, policy.polrelid) as with_check_expression
+  from pg_catalog.pg_policy as policy
+  join pg_catalog.pg_class as class on class.oid = policy.polrelid
+  join pg_catalog.pg_namespace as namespace
     on namespace.oid = class.relnamespace and namespace.nspname = 'public'
+  where class.relname in (select table_name from contract_tables)
 ),
 journal_policies as (
-  select policy.policyname as name,
-    policy.tablename as table_name,
-    policy.cmd,
-    policy.roles,
-    policy.qual,
-    policy.with_check
-  from pg_catalog.pg_policies as policy
-  where policy.schemaname = 'public'
-    and policy.policyname in (
-      'literature_gold_review_operation_actions_service_policy',
-      'literature_gold_review_operations_service_policy'
-    )
+  select name,
+    table_name,
+    command as cmd,
+    permissive,
+    roles,
+    using_expression as qual,
+    with_check_expression as with_check
+  from schema_policies
 ),
 triggers as (
   select trg.tgname as name,
     class.relname as table_name,
     trg.tgenabled as enable_mode,
-    trg.tgenabled in ('O', 'A') as enabled
+    trg.tgenabled in ('O', 'A') as enabled,
+    pg_catalog.pg_get_triggerdef(trg.oid) as definition
   from pg_catalog.pg_trigger as trg
   join pg_catalog.pg_class as class on class.oid = trg.tgrelid
   join pg_catalog.pg_namespace as namespace on namespace.oid = class.relnamespace
   where namespace.nspname = 'public'
     and trg.tgisinternal is false
     and class.relname in (
+      'literature_gold_set_batches',
       'literature_gold_set_items',
+      'literature_gold_set_review_drafts',
       'literature_gold_set_reviews',
       'literature_gold_set_events',
       'literature_gold_review_operations',
@@ -624,21 +952,25 @@ select pg_catalog.jsonb_build_object(
   'rls', (
     select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
       'tableName', table_name,
-      'rlsEnabled', rls_enabled
+      'rlsEnabled', rls_enabled,
+      'rlsForced', rls_forced
     ) order by table_name) from rls
   ),
   'functions', (
     select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
       'name', name,
       'identityArguments', identity_arguments,
+      'resultType', result_type,
+      'volatility', volatility,
       'owner', owner,
       'securityDefiner', security_definer,
       'searchPath', search_path,
+      'definition', definition,
       'publicExecute', public_execute,
       'anonExecute', anon_execute,
       'authenticatedExecute', authenticated_execute,
       'serviceRoleExecute', service_role_execute
-    ) order by name) from functions
+    ) order by name, identity_arguments) from functions
   ),
   'reviewPrivileges', (
     select pg_catalog.jsonb_build_object(
@@ -706,7 +1038,9 @@ select pg_catalog.jsonb_build_object(
       'insert', can_insert,
       'update', can_update,
       'delete', can_delete,
-      'truncate', can_truncate
+      'truncate', can_truncate,
+      'references', can_references,
+      'trigger', can_trigger
     ) order by table_name, role_name) from journal_privileges
   ),
   'schemaCreatePrivileges', (
@@ -718,14 +1052,15 @@ select pg_catalog.jsonb_build_object(
     ) order by schema_name, role_name) from schema_create_privileges
   ),
   'constraints', (
-    select pg_catalog.jsonb_agg(name order by name) from constraints
+    select pg_catalog.jsonb_agg(name order by name, table_name) from constraints
   ),
   'constraintDefinitions', (
     select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
       'name', name,
       'tableName', table_name,
-      'definition', definition
-    ) order by name) from constraints
+      'definition', definition,
+      'validated', validated
+    ) order by table_name, name) from constraints
   ),
   'uniqueIndexes', (
     select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
@@ -733,33 +1068,219 @@ select pg_catalog.jsonb_build_object(
       'tableName', table_name,
       'unique', is_unique,
       'valid', is_valid,
+      'constraintBacked', constraint_backed,
       'predicate', predicate,
       'definition', definition
-    ) order by index_name) from unique_indexes
+    ) order by table_name, index_name) from unique_indexes
   ),
   'journalPolicies', (
     select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
       'name', name,
       'tableName', table_name,
       'command', cmd,
+      'permissive', permissive,
       'roles', roles,
       'using', qual,
       'withCheck', with_check
-    ) order by name) from journal_policies
+    ) order by table_name, name) from journal_policies
   ),
   'triggers', (
     select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
       'name', name,
       'tableName', table_name,
       'enableMode', enable_mode,
-      'enabled', enabled
-    ) order by name) from triggers
+      'enabled', enabled,
+      'definition', definition
+    ) order by table_name, name) from triggers
   ),
   'supportedEventTypes', (
     select pg_catalog.jsonb_agg(event_type order by event_type) from event_types
+  ),
+  'catalog', pg_catalog.jsonb_build_object(
+    'tables', coalesce((
+      select pg_catalog.jsonb_agg(pg_catalog.to_jsonb(row)
+        order by row.table_name) from schema_tables as row
+    ), '[]'::jsonb),
+    'columns', coalesce((
+      select pg_catalog.jsonb_agg(pg_catalog.to_jsonb(row)
+        order by row.table_name, row.ordinal_position, row.column_name)
+      from schema_columns as row
+    ), '[]'::jsonb),
+    'columnPrivileges', coalesce((
+      select pg_catalog.jsonb_agg(pg_catalog.to_jsonb(row)
+        order by row.table_name, row.column_name, row.role_name, row.privilege_name)
+      from column_privileges as row
+    ), '[]'::jsonb),
+    'functions', coalesce((
+      select pg_catalog.jsonb_agg(pg_catalog.to_jsonb(row)
+        order by row.name, row.identity_arguments) from schema_functions as row
+    ), '[]'::jsonb),
+    'constraints', coalesce((
+      select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
+        'name', row.name,
+        'table_name', row.table_name,
+        'definition', row.definition,
+        'validated', row.validated
+      ) order by row.table_name, row.name) from constraints as row
+    ), '[]'::jsonb),
+    'indexes', coalesce((
+      select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
+        'name', row.index_name,
+        'table_name', row.table_name,
+        'owner', row.owner,
+        'is_unique', row.is_unique,
+        'is_valid', row.is_valid,
+        'constraint_backed', row.constraint_backed,
+        'predicate', row.predicate,
+        'definition', row.definition
+      ) order by row.table_name, row.index_name) from catalog_indexes as row
+    ), '[]'::jsonb),
+    'triggers', coalesce((
+      select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
+        'name', row.name,
+        'table_name', row.table_name,
+        'enable_mode', row.enable_mode,
+        'enabled', row.enabled,
+        'definition', row.definition
+      ) order by row.table_name, row.name) from triggers as row
+    ), '[]'::jsonb),
+    'policies', coalesce((
+      select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
+        'name', row.name,
+        'table_name', row.table_name,
+        'command', row.command,
+        'permissive', row.permissive,
+        'roles', row.roles,
+        'using_expression', row.using_expression,
+        'with_check_expression', row.with_check_expression
+      ) order by row.table_name, row.name) from schema_policies as row
+    ), '[]'::jsonb),
+    'tablePrivileges', coalesce((
+      select pg_catalog.jsonb_agg(pg_catalog.to_jsonb(row)
+        order by row.table_name, row.role_name, row.privilege_name)
+      from table_privileges as row
+    ), '[]'::jsonb),
+    'schemaCreatePrivileges', coalesce((
+      select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
+        'schema_name', row.schema_name,
+        'owner', row.owner,
+        'role_name', row.role_name,
+        'granted', row.can_create
+      ) order by row.schema_name, row.role_name) from schema_create_privileges as row
+    ), '[]'::jsonb),
+    'tableAclEntries', coalesce((
+      select pg_catalog.jsonb_agg(pg_catalog.to_jsonb(row)
+        order by row.schema_name, row.object_name, row.grantee,
+          row.privilege_type, row.grantor, row.is_grantable)
+      from table_acl_entries as row
+    ), '[]'::jsonb),
+    'columnAclEntries', coalesce((
+      select pg_catalog.jsonb_agg(pg_catalog.to_jsonb(row)
+        order by row.schema_name, row.table_name, row.column_name, row.grantee,
+          row.privilege_type, row.grantor, row.is_grantable)
+      from column_acl_entries as row
+    ), '[]'::jsonb),
+    'functionAclEntries', coalesce((
+      select pg_catalog.jsonb_agg(pg_catalog.to_jsonb(row)
+        order by row.schema_name, row.object_name, row.identity_arguments,
+          row.grantee, row.privilege_type, row.grantor, row.is_grantable)
+      from function_acl_entries as row
+    ), '[]'::jsonb),
+    'schemaAclEntries', coalesce((
+      select pg_catalog.jsonb_agg(pg_catalog.to_jsonb(row)
+        order by row.schema_name, row.object_name, row.grantee,
+          row.privilege_type, row.grantor, row.is_grantable)
+      from schema_acl_entries as row
+    ), '[]'::jsonb),
+    'supportedEventTypes', coalesce((
+      select pg_catalog.jsonb_agg(event_type order by event_type) from event_types
+    ), '[]'::jsonb)
   )
 );
 `
+
+export const SCHEMA_DEFINITION_MUTATION_PROBES = [
+  {
+    name: 'weakened_same_name_trigger_predicate',
+    sql: String.raw`
+drop trigger guard_literature_gold_review_chain_insert
+  on public.literature_gold_set_reviews;
+create trigger guard_literature_gold_review_chain_insert
+  before insert on public.literature_gold_set_reviews
+  for each row when (new.revision > 1)
+  execute function public.guard_literature_gold_review_chain_insert();`,
+  },
+  {
+    name: 'changed_same_name_foreign_key_action',
+    sql: String.raw`
+alter table public.literature_gold_review_operation_actions
+  drop constraint literature_gold_review_operation_actions_item_id_fkey;
+alter table public.literature_gold_review_operation_actions
+  add constraint literature_gold_review_operation_actions_item_id_fkey
+  foreign key (item_id) references public.literature_gold_set_items(id) on delete cascade;`,
+  },
+  {
+    name: 'broadened_same_name_journal_policy',
+    sql: String.raw`
+drop policy literature_gold_review_operations_service_policy
+  on public.literature_gold_review_operations;
+create policy literature_gold_review_operations_service_policy
+  on public.literature_gold_review_operations
+  as permissive for all to service_role using (true) with check (true);`,
+  },
+  {
+    name: 'wrong_same_name_unique_index_definition',
+    sql: String.raw`
+drop index public.literature_gold_review_operations_one_live_compensation_idx;
+create unique index literature_gold_review_operations_one_live_compensation_idx
+  on public.literature_gold_review_operations(target_import_operation_id)
+  where operation_kind = 'compensation';`,
+  },
+  {
+    name: 'forced_rls_state_changed',
+    sql: String.raw`
+alter table public.literature_gold_set_reviews force row level security;`,
+  },
+  {
+    name: 'column_grant_broadened',
+    sql: String.raw`
+grant update (operation_action_id)
+  on public.literature_gold_set_reviews to anon;`,
+  },
+] as const
+
+async function runSchemaDefinitionMutationProbes(expectedIdentitySha256: string) {
+  const evidence: Array<{
+    identityChanged: true
+    mutation: string
+    pinnedIdentityRejected: true
+  }> = []
+  for (const probe of SCHEMA_DEFINITION_MUTATION_PROBES) {
+    const mutatedIntrospection = await queryJson(
+      `begin;\n${probe.sql}\n${SECURITY_INTROSPECTION_SQL}\nrollback;`,
+    )
+    const mutatedIdentitySha256 =
+      computeSchemaSecurityDefinitionIdentitySha256(mutatedIntrospection)
+    if (mutatedIdentitySha256 === expectedIdentitySha256) {
+      throw new Error(
+        `Schema/security identity did not change for prohibited mutation probe ${probe.name}.`,
+      )
+    }
+    let rejected = false
+    try {
+      validateSecurityIntrospection(mutatedIntrospection, {
+        expectedSchemaSecurityIdentitySha256: expectedIdentitySha256,
+      })
+    } catch {
+      rejected = true
+    }
+    if (!rejected) {
+      throw new Error(`Schema/security identity accepted prohibited mutation probe ${probe.name}.`)
+    }
+    evidence.push({ identityChanged: true, mutation: probe.name, pinnedIdentityRejected: true })
+  }
+  return evidence
+}
 
 function printHelp() {
   console.log(`Usage:
@@ -850,7 +1371,18 @@ async function main() {
 
     const lintExecution = await runSupabaseLint(hostPort)
     const lint = validateSupabaseLint(lintExecution.raw)
-    const security = validateSecurityIntrospection(await queryJson(SECURITY_INTROSPECTION_SQL))
+    const rawSecurityIntrospection = await queryJson(SECURITY_INTROSPECTION_SQL)
+    const security = validateSecurityIntrospection(rawSecurityIntrospection, {
+      expectedSchemaSecurityIdentitySha256: POST_MIGRATION_SCHEMA_SECURITY_IDENTITY_SHA256,
+    })
+    const schemaDefinitionMutationProbes = await runSchemaDefinitionMutationProbes(
+      POST_MIGRATION_SCHEMA_SECURITY_IDENTITY_SHA256,
+    )
+    const schemaSecurityDefinitionIdentityBytes = canonicalJson(
+      security.schemaSecurityDefinitionIdentity,
+    )
+    const schemaSecurityDefinitionIdentitySha256 = security.schemaSecurityIdentitySha256
+    const schemaSecurityDefinitionIdentityFileSha256 = sha256(schemaSecurityDefinitionIdentityBytes)
     const lintIntrospection = {
       schemaVersion: LINT_INTROSPECTION_SCHEMA_VERSION,
       database: {
@@ -862,6 +1394,7 @@ async function main() {
       },
       lint,
       security,
+      schemaDefinitionMutationProbes,
       allChecksPassed: true,
     }
     const lintIntrospectionBytes = canonicalJson(lintIntrospection)
@@ -886,6 +1419,11 @@ async function main() {
         lintIntrospection: {
           path: 'lint-introspection.json',
           sha256: lintIntrospectionSha256,
+        },
+        schemaSecurityDefinitionIdentity: {
+          path: 'schema-security-definition-identity.json',
+          semanticSha256: schemaSecurityDefinitionIdentitySha256,
+          sha256: schemaSecurityDefinitionIdentityFileSha256,
         },
       },
       scenarioSummary: {
@@ -913,6 +1451,7 @@ async function main() {
         rawIssueCount: lint.rawIssueCount,
       },
       securityIntrospectionPassed: security.passed,
+      schemaSecurityDefinitionIdentitySha256,
       allChecksPassed: true,
     }
     const manifestBytes = canonicalJson(manifest)
@@ -922,6 +1461,10 @@ async function main() {
     await writeExclusive(
       resolve(options.outputDirectory, 'lint-introspection.json'),
       lintIntrospectionBytes,
+    )
+    await writeExclusive(
+      resolve(options.outputDirectory, 'schema-security-definition-identity.json'),
+      schemaSecurityDefinitionIdentityBytes,
     )
     await writeExclusive(resolve(options.outputDirectory, 'rehearsal-manifest.json'), manifestBytes)
     await writeExclusive(
@@ -946,7 +1489,9 @@ async function main() {
           scenarioEvidence: scenarioSha256,
           lintIntrospection: lintIntrospectionSha256,
           rehearsalManifest: manifestSha256,
+          schemaSecurityDefinitionIdentity: schemaSecurityDefinitionIdentityFileSha256,
         },
+        schemaSecurityDefinitionIdentitySha256,
         passed: true,
       }),
     )
@@ -960,7 +1505,9 @@ async function main() {
   }
 }
 
-void main().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : String(error))
-  process.exitCode = 1
-})
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  void main().catch((error: unknown) => {
+    console.error(error instanceof Error ? error.message : String(error))
+    process.exitCode = 1
+  })
+}

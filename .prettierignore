@@ -3,12 +3,13 @@ node_modules
 out
 dist
 build
+# Preserve the fixed-image runner's checksum-bound canonical JSON bytes.
+scripts/literature/fixtures/post-migration-schema-security-definition-identity.json
 *.log
 .env*
 .DS_Store
 public/socal-ebus-course/app
 public/bronch-navigation-trainer/app
-
 
 
 
