@@ -1184,6 +1184,40 @@ describe('gold import-compensation migration operations', () => {
     })
   })
 
+  it('canonicalizes planning clinical arrays without mutating the database snapshot', () => {
+    const snapshot = preMigrationSnapshot()
+    const developmentRow = snapshot.developmentItems[0] as Record<string, unknown>
+    const review = (developmentRow.reviews as Array<Record<string, unknown>>)[0]
+    const sourceArrays = {
+      topic_ids: ['peripheral-navigation', 'basic-bronchoscopy'],
+      technology_tags: ['robotic-bronchoscopy', 'electromagnetic-navigation'],
+      clinical_purposes: ['staging', 'diagnosis'],
+      disease_tags: ['mesothelioma', 'lung-cancer'],
+    }
+    Object.assign(review, sourceArrays)
+
+    const planningState = buildDevelopmentPlanningState(snapshot)
+
+    expect(planningState.rows[0].currentEffectiveReview).toMatchObject({
+      topicIds: ['basic-bronchoscopy', 'peripheral-navigation'],
+      technologyTags: ['electromagnetic-navigation', 'robotic-bronchoscopy'],
+      clinicalPurposes: ['diagnosis', 'staging'],
+      diseaseTags: ['lung-cancer', 'mesothelioma'],
+    })
+    expect(review).toMatchObject(sourceArrays)
+
+    const reordered = JSON.parse(JSON.stringify(snapshot)) as RawDatabaseSnapshot
+    const reorderedRow = reordered.developmentItems[0] as Record<string, unknown>
+    const reorderedReview = (reorderedRow.reviews as Array<Record<string, unknown>>)[0]
+    for (const field of Object.keys(sourceArrays)) {
+      reorderedReview[field] = [...(reorderedReview[field] as string[])].reverse()
+    }
+    expect(canonicalJson(buildDevelopmentPlanningState(reordered))).toBe(
+      canonicalJson(planningState),
+    )
+    expect(developmentPlanningStateSha256(reordered)).toBe(developmentPlanningStateSha256(snapshot))
+  })
+
   it('emits a full-row development database seed and rejects cross-split rows', () => {
     const seed = buildDevelopmentDatabaseSeed(preMigrationSnapshot())
     expect(seed).toMatchObject({
