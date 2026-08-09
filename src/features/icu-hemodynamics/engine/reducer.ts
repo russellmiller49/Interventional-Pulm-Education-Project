@@ -6,7 +6,14 @@ import {
   createInitialHemodynamicState,
   deriveHemodynamicMeasurements,
 } from './simulation'
-import { generateThermodilutionCurve, thermodilutionAcceptedAverage } from './thermodilution'
+import {
+  canExcludeThermodilutionTrial,
+  generateThermodilutionCurve,
+  thermodilutionAcceptedAverage,
+  thermodilutionExclusionReasonById,
+  thermodilutionExclusionReasonsFor,
+  THERMODILUTION_SERIES_TRIAL_COUNT,
+} from './thermodilution'
 import { DYNAMIC_RESPONSE_REFERENCE, FAST_FLUSH_LIVE_DURATION_SECONDS } from './waveformArtifacts'
 import { HEMODYNAMIC_CLINICAL_THRESHOLDS } from '../content/clinicalThresholds'
 import type {
@@ -481,22 +488,70 @@ export function icuHemodynamicsReducer(
         thermodilutionTrials: [...state.thermodilutionTrials, trial],
         responseMessage:
           trial.quality === 'valid'
-            ? 'Curve generated without an automatic quality alert. Review it before acceptance.'
-            : `Curve quality: ${trial.quality}. ${trial.alerts[0] ?? 'Review technique.'}`,
+            ? 'Curve generated without an automatic quality alert. Inspect the raw trace before deciding anything about it.'
+            : `Curve quality alert: ${trial.alerts[0] ?? 'review the technique.'} Inspect the raw trace before deciding anything about it.`,
+      }
+    }
+    /**
+     * H4 §7. Reviewing the raw curve is its own event, and it has to happen before acceptance. The
+     * separation is the point: a learner who has seen only the derived number has not reviewed the
+     * measurement, and the state has to be able to tell the difference.
+     */
+    case 'REVIEW_THERMODILUTION_CURVE': {
+      const target = state.thermodilutionTrials.find((trial) => trial.id === action.trialId)
+      if (!target) return state
+      if (target.reviewed) return state
+      return {
+        ...state,
+        thermodilutionTrials: state.thermodilutionTrials.map((trial) =>
+          trial.id === action.trialId ? { ...trial, reviewed: true } : trial,
+        ),
+        responseMessage: `Trial ${target.sequence} curve reviewed. Decide whether the acquisition was technically usable before looking at how it compares with the others.`,
       }
     }
     case 'SET_THERMODILUTION_ACCEPTED': {
+      const target = state.thermodilutionTrials.find((trial) => trial.id === action.trialId)
+      if (!target) return state
+
+      if (action.accepted && !target.reviewed) {
+        return {
+          ...state,
+          responseMessage: `Review the trial ${target.sequence} curve before accepting it. A number on the display is not a reviewed measurement.`,
+        }
+      }
+      if (!action.accepted && !canExcludeThermodilutionTrial(target, action.exclusionReasonId)) {
+        const available = thermodilutionExclusionReasonsFor(target)
+        return {
+          ...state,
+          responseMessage:
+            available.length === 0
+              ? `Trial ${target.sequence} shows no technical reason for exclusion. Disagreeing with the other trials is not one — leave it in the series and account for the spread.`
+              : `Excluding trial ${target.sequence} requires naming a technical reason this curve actually shows: ${available.map((reason) => reason.label.toLowerCase()).join('; ')}.`,
+        }
+      }
+
       const thermodilutionTrials = state.thermodilutionTrials.map((trial) =>
-        trial.id === action.trialId ? { ...trial, accepted: action.accepted } : trial,
+        trial.id === action.trialId
+          ? {
+              ...trial,
+              accepted: action.accepted,
+              exclusionReasonId: action.accepted ? null : (action.exclusionReasonId ?? null),
+            }
+          : trial,
       )
       const average = thermodilutionAcceptedAverage(thermodilutionTrials)
+      const excludedFor =
+        !action.accepted && action.exclusionReasonId
+          ? thermodilutionExclusionReasonById.get(action.exclusionReasonId)
+          : undefined
       return withValidatedProcedureMilestones({
         ...state,
         thermodilutionTrials,
-        responseMessage:
-          average === null
-            ? 'Continue until at least three technically valid accepted trials are available.'
-            : `Accepted thermodilution average: ${average.toFixed(1)} L/min.`,
+        responseMessage: excludedFor
+          ? `Trial ${target.sequence} excluded: ${excludedFor.label.toLowerCase()}.`
+          : average === null
+            ? `Continue until ${THERMODILUTION_SERIES_TRIAL_COUNT} reviewed, technically usable trials are available.`
+            : `Accepted thermodilution series: ${average.toFixed(1)} L/min by bolus thermodilution.`,
       })
     }
     case 'APPLY_INTERVENTION': {

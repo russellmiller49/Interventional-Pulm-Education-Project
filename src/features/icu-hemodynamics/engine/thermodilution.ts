@@ -12,14 +12,380 @@ function seededRandom(seed: number): () => number {
   }
 }
 
+/**
+ * H4 §7. The series summarizes three trials, and that number is this module's own configuration
+ * rather than a clinical acceptance criterion — see `minimum-accepted-trials` in
+ * `cardiacOutputSourceBoundaries.ts`, which is where the qualifier a learner reads comes from.
+ */
+export const THERMODILUTION_SERIES_TRIAL_COUNT = 3
+
+/**
+ * A trial belongs in the accepted series only if all three hold.
+ *
+ * The reviewed condition is the H4 addition. Before it, `accepted === true` could be set on a trial
+ * whose curve had never been looked at, which made "the monitor produced a number" and "a
+ * measurement was accepted" the same event — exactly the conflation this section exists to break.
+ */
+export function thermodilutionTrialCountsTowardSeries(trial: ThermodilutionTrial): boolean {
+  return trial.accepted === true && trial.quality === 'valid' && trial.reviewed === true
+}
+
 export function thermodilutionAcceptedAverage(
   trials: readonly ThermodilutionTrial[],
 ): number | null {
-  const accepted = trials.filter((trial) => trial.accepted === true && trial.quality === 'valid')
-  if (accepted.length < 3) return null
+  const accepted = trials.filter(thermodilutionTrialCountsTowardSeries)
+  if (accepted.length < THERMODILUTION_SERIES_TRIAL_COUNT) return null
   const mean =
     accepted.reduce((total, trial) => total + trial.estimatedCardiacOutputLMin, 0) / accepted.length
   return roundTo(mean, 1)
+}
+
+/* ------------------------------------------------------------------ *
+ * Raw curve features — the object the result is derived from
+ * ------------------------------------------------------------------ */
+
+export interface ThermodilutionCurveFeatures {
+  /** Mean temperature change over the settled trace before onset. */
+  readonly baselineC: number
+  readonly onsetSeconds: number | null
+  readonly peakChangeC: number
+  readonly peakTimeSeconds: number
+  /** How long the trace takes to fall back to a tenth of its peak excursion. */
+  readonly decayToTenthSeconds: number | null
+  readonly secondaryDisturbance: boolean
+  readonly secondaryDisturbanceTimeSeconds: number | null
+  /** The engine quantity the derived flow is read off. */
+  readonly curveArea: number
+}
+
+const ONSET_FRACTION = 0.05
+/**
+ * How far the trace has to climb back above its own running minimum to count as a second excursion.
+ *
+ * Set well above the model's tail noise, which reaches roughly a hundredth of the peak excursion.
+ * The rebound also has to happen once the trace is genuinely on its way down, or the first samples
+ * after the peak would register their own jitter as a disturbance.
+ */
+const SECONDARY_REBOUND_FRACTION = 0.08
+const SECONDARY_DECAYED_FRACTION = 0.5
+
+/**
+ * The named parts of the curve, derived from the trace rather than authored beside it.
+ *
+ * A learner is asked to read baseline, onset, peak, decay, and any secondary disturbance off the
+ * figure before the derived number is shown, so those five have to be quantities the figure and its
+ * text equivalent both come from — not labels drawn on top of a picture.
+ */
+export function thermodilutionCurveFeatures(
+  trial: ThermodilutionTrial,
+): ThermodilutionCurveFeatures {
+  const points = trial.curve
+  if (points.length === 0) {
+    return {
+      baselineC: 0,
+      onsetSeconds: null,
+      peakChangeC: 0,
+      peakTimeSeconds: 0,
+      decayToTenthSeconds: null,
+      secondaryDisturbance: false,
+      secondaryDisturbanceTimeSeconds: null,
+      curveArea: trial.curveArea,
+    }
+  }
+
+  const preOnset = points.filter((point) => point.timeSeconds <= 0.2)
+  const baselineC =
+    preOnset.length > 0
+      ? preOnset.reduce((total, point) => total + point.temperatureChangeC, 0) / preOnset.length
+      : 0
+
+  let peakIndex = 0
+  for (let index = 1; index < points.length; index += 1) {
+    if (
+      Math.abs(points[index].temperatureChangeC - baselineC) >
+      Math.abs(points[peakIndex].temperatureChangeC - baselineC)
+    ) {
+      peakIndex = index
+    }
+  }
+  const peakExcursion = Math.abs(points[peakIndex].temperatureChangeC - baselineC)
+
+  const onsetPoint = points.find(
+    (point) => Math.abs(point.temperatureChangeC - baselineC) >= peakExcursion * ONSET_FRACTION,
+  )
+
+  let decayToTenthSeconds: number | null = null
+  for (let index = peakIndex; index < points.length; index += 1) {
+    if (Math.abs(points[index].temperatureChangeC - baselineC) <= peakExcursion * 0.1) {
+      decayToTenthSeconds = points[index].timeSeconds
+      break
+    }
+  }
+
+  /**
+   * A secondary excursion is a rise back above the running minimum once the trace is already well
+   * down from its peak. Reading it off the trace rather than off the modifier that produced it means
+   * an authored teaching state and a generated one are described the same way — and it means the
+   * detector reports honestly when a modeled disturbance is a broadened tail rather than a second
+   * excursion, which is what this model's regurgitation actually produces.
+   */
+  let secondaryDisturbanceTimeSeconds: number | null = null
+  if (peakExcursion > 0) {
+    let runningMinimum = Number.POSITIVE_INFINITY
+    for (let index = peakIndex; index < points.length; index += 1) {
+      const excursion = Math.abs(points[index].temperatureChangeC - baselineC)
+      if (excursion < runningMinimum) runningMinimum = excursion
+      if (runningMinimum > peakExcursion * SECONDARY_DECAYED_FRACTION) continue
+      if (excursion - runningMinimum >= peakExcursion * SECONDARY_REBOUND_FRACTION) {
+        secondaryDisturbanceTimeSeconds = points[index].timeSeconds
+        break
+      }
+    }
+  }
+
+  return {
+    baselineC: roundTo(baselineC, 4),
+    onsetSeconds: onsetPoint ? onsetPoint.timeSeconds : null,
+    peakChangeC: roundTo(points[peakIndex].temperatureChangeC - baselineC, 4),
+    peakTimeSeconds: points[peakIndex].timeSeconds,
+    decayToTenthSeconds,
+    secondaryDisturbance: secondaryDisturbanceTimeSeconds !== null,
+    secondaryDisturbanceTimeSeconds,
+    curveArea: trial.curveArea,
+  }
+}
+
+export const thermodilutionQualityLabels: Readonly<Record<ThermodilutionTrial['quality'], string>> =
+  Object.freeze({
+    valid: 'No automatic quality alert',
+    questionable: 'Quality alert raised',
+    invalid: 'Not technically usable',
+  })
+
+/**
+ * The curve, in words, before the number is mentioned.
+ *
+ * Deliberately ends with the acceptance state and never leads with the derived flow: a learner who
+ * reads the alternative text should meet the raw data in the same order as one who reads the figure.
+ */
+export function thermodilutionCurveTextEquivalent(trial: ThermodilutionTrial): string {
+  const features = thermodilutionCurveFeatures(trial)
+  const parts = [
+    `Trial ${trial.sequence}, temperature change against time.`,
+    `Baseline sits at ${features.baselineC.toFixed(3)} degrees Celsius from the settled trace.`,
+    features.onsetSeconds === null
+      ? 'No onset is identifiable on this trace.'
+      : `The change begins ${features.onsetSeconds.toFixed(2)} seconds after the injection.`,
+    `The peak excursion is ${Math.abs(features.peakChangeC).toFixed(3)} degrees Celsius below baseline at ${features.peakTimeSeconds.toFixed(2)} seconds.`,
+    features.decayToTenthSeconds === null
+      ? 'The trace does not return to within a tenth of its peak excursion inside the recorded window.'
+      : `It decays back to within a tenth of that excursion by ${features.decayToTenthSeconds.toFixed(2)} seconds.`,
+    features.secondaryDisturbance
+      ? `A secondary disturbance appears at ${(features.secondaryDisturbanceTimeSeconds ?? 0).toFixed(2)} seconds, after the trace had settled.`
+      : 'No secondary disturbance appears after the trace settles.',
+    `The area the calculation integrates is ${features.curveArea.toFixed(3)} in the model's units.`,
+    `Quality: ${thermodilutionQualityLabels[trial.quality].toLowerCase()}.`,
+    trial.alerts.length > 0 ? `Alerts: ${trial.alerts.join(' ')}` : '',
+    trial.reviewed ? 'This curve has been reviewed.' : 'This curve has not been reviewed yet.',
+    trial.accepted === true
+      ? 'State: accepted trial.'
+      : trial.accepted === false
+        ? `State: excluded trial. ${
+            trial.exclusionReasonId
+              ? (thermodilutionExclusionReasonById.get(trial.exclusionReasonId)?.label ??
+                'Reason not recognized.')
+              : 'No technical reason recorded.'
+          }`
+        : 'State: not yet accepted or excluded.',
+  ]
+  return parts.filter((part) => part.length > 0).join(' ')
+}
+
+/* ------------------------------------------------------------------ *
+ * Exclusion reasons — a trial may only be dropped for something it shows
+ * ------------------------------------------------------------------ */
+
+export interface ThermodilutionExclusionReason {
+  readonly id: string
+  readonly label: string
+  readonly whatItMeans: string
+  /** Whether this specific trial actually exhibits the problem. */
+  readonly appliesTo: (trial: ThermodilutionTrial) => boolean
+}
+
+/**
+ * Why a trial may be left out of the series.
+ *
+ * Every reason is a predicate over the trial itself, so "this one disagrees with the others" is not
+ * expressible: there is no reason here that a concordant, technically clean trial satisfies. That is
+ * the whole design. Selection by convenience is the failure mode this section is built against, and
+ * a free-text reason field would have let it straight back in.
+ */
+export const thermodilutionExclusionReasons: readonly ThermodilutionExclusionReason[] =
+  Object.freeze([
+    {
+      id: 'delivery-did-not-match-entered-values',
+      label: 'The delivery did not match the entered values',
+      whatItMeans:
+        'The volume or temperature actually delivered differed from the computation constant, so the calculation described an injection that did not happen.',
+      appliesTo: (trial) =>
+        trial.alerts.some((alert) => /volume differs|temperature differs/i.test(alert)),
+    },
+    {
+      id: 'inadequate-or-variable-indicator-delivery',
+      label: 'The bolus was prolonged, abrupt, or not continuous',
+      whatItMeans:
+        'The indicator went in over a different time course than the rest of the series, spreading or compressing the curve independently of the patient.',
+      appliesTo: (trial) =>
+        trial.alerts.some((alert) => /too slow|abrupt|not smooth/i.test(alert)) ||
+        trial.technique.injectionDurationSeconds > 4 ||
+        trial.technique.injectionDurationSeconds < 0.6 ||
+        trial.technique.smoothness < 0.7,
+    },
+    {
+      id: 'respiratory-phase-inconsistent',
+      label: 'The respiratory timing was not the series timing',
+      whatItMeans:
+        'The bolus was delivered at a different point in the respiratory cycle than the other trials, so its spread belongs to the operator rather than the patient.',
+      appliesTo: (trial) => trial.technique.respiratoryPhase === 'variable',
+    },
+    {
+      id: 'catheter-position-not-confirmed',
+      label: 'The injectate port or thermistor was not in the assumed compartment',
+      whatItMeans:
+        'The method assumes indicator enters near the right atrium and is detected in the pulmonary artery. This trial was acquired without that.',
+      appliesTo: (trial) => trial.alerts.some((alert) => /position/i.test(alert)),
+    },
+    {
+      id: 'secondary-curve-disturbance',
+      label: 'A secondary disturbance follows the main curve',
+      whatItMeans:
+        'Indicator reached the thermistor more than once or by more than one route, so the simple area no longer describes one passage of the indicator.',
+      appliesTo: (trial) => thermodilutionCurveFeatures(trial).secondaryDisturbance,
+    },
+    {
+      /**
+       * H4 §7. This is the reason the model's broadened curves actually satisfy. Regurgitant flow
+       * and low output both widen the curve rather than adding a visible second excursion, and what
+       * a learner can read off the trace is that its end point is not in the recording.
+       */
+      id: 'curve-does-not-settle',
+      label: 'The trace does not return toward baseline inside the recording',
+      whatItMeans:
+        'The end of the curve is outside the recorded window, so where the integration stops is a judgement rather than an observation, and the area carries that uncertainty.',
+      appliesTo: (trial) => thermodilutionCurveFeatures(trial).decayToTenthSeconds === null,
+    },
+    {
+      id: 'baseline-not-stable',
+      label: 'The baseline was not stable before the injection',
+      whatItMeans:
+        'Blood temperature was already moving, so the curve has no unambiguous level to be measured from.',
+      appliesTo: (trial) => {
+        const preOnset = trial.curve.filter((point) => point.timeSeconds <= 0.2)
+        if (preOnset.length < 2) return false
+        const values = preOnset.map((point) => point.temperatureChangeC)
+        const peak = Math.abs(thermodilutionCurveFeatures(trial).peakChangeC)
+        if (peak <= 0) return false
+        return (Math.max(...values) - Math.min(...values)) / peak > 0.08
+      },
+    },
+  ])
+
+export const thermodilutionExclusionReasonById: ReadonlyMap<string, ThermodilutionExclusionReason> =
+  new Map(thermodilutionExclusionReasons.map((reason) => [reason.id, reason]))
+
+/** The reasons this trial actually shows. Empty means there is no defensible basis for exclusion. */
+export function thermodilutionExclusionReasonsFor(
+  trial: ThermodilutionTrial,
+): readonly ThermodilutionExclusionReason[] {
+  return thermodilutionExclusionReasons.filter((reason) => reason.appliesTo(trial))
+}
+
+export function canExcludeThermodilutionTrial(
+  trial: ThermodilutionTrial,
+  reasonId: string | undefined,
+): boolean {
+  if (!reasonId) return false
+  const reason = thermodilutionExclusionReasonById.get(reasonId)
+  if (!reason) return false
+  return reason.appliesTo(trial)
+}
+
+/* ------------------------------------------------------------------ *
+ * The accepted series
+ * ------------------------------------------------------------------ */
+
+export interface ThermodilutionSeriesSummary {
+  readonly acceptedTrialIds: readonly string[]
+  readonly excludedTrialIds: readonly string[]
+  readonly unreviewedTrialIds: readonly string[]
+  readonly averageLMin: number | null
+  readonly lowestLMin: number | null
+  readonly highestLMin: number | null
+  readonly spreadLMin: number | null
+  /** Spread relative to the mean, as a fraction. Rendered by the surface, never authored as prose. */
+  readonly relativeSpread: number | null
+  /** True when every accepted trial used the same entered values and respiratory timing. */
+  readonly techniqueConsistent: boolean
+  /** What is still missing before the series can be summarized. */
+  readonly blockedReasons: readonly string[]
+}
+
+/**
+ * Everything the series readout needs, derived once.
+ *
+ * `relativeSpread` is returned as a number and is never compared against a threshold here: this
+ * module has no source-supported numeric agreement criterion (see `numeric-repeatability-criterion`
+ * in `cardiacOutputSourceBoundaries.ts`), so the spread is shown and described rather than judged.
+ */
+export function thermodilutionSeriesSummary(
+  trials: readonly ThermodilutionTrial[],
+): ThermodilutionSeriesSummary {
+  const accepted = trials.filter(thermodilutionTrialCountsTowardSeries)
+  const excluded = trials.filter((trial) => trial.accepted === false)
+  const unreviewed = trials.filter((trial) => !trial.reviewed)
+  const values = accepted.map((trial) => trial.estimatedCardiacOutputLMin)
+  const average = thermodilutionAcceptedAverage(trials)
+
+  const blockedReasons: string[] = []
+  if (accepted.length < THERMODILUTION_SERIES_TRIAL_COUNT) {
+    blockedReasons.push(
+      `This series summarizes ${THERMODILUTION_SERIES_TRIAL_COUNT} reviewed, technically usable trials; ${accepted.length} are available.`,
+    )
+  }
+  if (unreviewed.length > 0) {
+    blockedReasons.push(
+      `${unreviewed.length} curve${unreviewed.length === 1 ? ' has' : 's have'} not been reviewed yet.`,
+    )
+  }
+
+  const first = accepted[0]
+  const techniqueConsistent =
+    accepted.length === 0 ||
+    accepted.every(
+      (trial) =>
+        trial.technique.injectateVolumeMl === first.technique.injectateVolumeMl &&
+        trial.technique.injectateTemperatureC === first.technique.injectateTemperatureC &&
+        trial.technique.respiratoryPhase === first.technique.respiratoryPhase,
+    )
+
+  const lowest = values.length > 0 ? Math.min(...values) : null
+  const highest = values.length > 0 ? Math.max(...values) : null
+  const spread = lowest !== null && highest !== null ? roundTo(highest - lowest, 2) : null
+
+  return {
+    acceptedTrialIds: accepted.map((trial) => trial.id),
+    excludedTrialIds: excluded.map((trial) => trial.id),
+    unreviewedTrialIds: unreviewed.map((trial) => trial.id),
+    averageLMin: average,
+    lowestLMin: lowest,
+    highestLMin: highest,
+    spreadLMin: spread,
+    relativeSpread:
+      average !== null && spread !== null && average > 0 ? roundTo(spread / average, 4) : null,
+    techniqueConsistent,
+    blockedReasons,
+  }
 }
 
 export function generateThermodilutionCurve(
@@ -49,8 +415,11 @@ export function generateThermodilutionCurve(
     alerts.push('Thermistor or injectate port position is not appropriate for this measurement.')
   }
   if ((modifiers.tricuspidRegurgitationSeverity ?? 0) > 0.45) {
+    // Describes what this model's trace actually does. It broadens and its decay may run past the
+    // end of the recording; it does not add a visible second excursion, and saying so would send a
+    // learner looking for a feature the curve does not have.
     alerts.push(
-      'Significant tricuspid regurgitation broadens recirculation and increases uncertainty.',
+      'Significant tricuspid regurgitation broadens the curve, and its decay may not return toward baseline inside the recorded window.',
     )
   }
   if ((modifiers.shuntFraction ?? 0) > 0.25)
@@ -137,5 +506,7 @@ export function generateThermodilutionCurve(
     quality,
     alerts,
     accepted: null,
+    reviewed: false,
+    exclusionReasonId: null,
   }
 }
