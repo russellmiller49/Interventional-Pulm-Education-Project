@@ -48,3 +48,50 @@ See [d1-review/browser-walkthrough.md](./d1-review/browser-walkthrough.md) for t
 ## 5. Adversarial review
 
 Performed as a self-review pass plus an independent read-only agent pass over the full diff, focused on: candidate/hidden exposure, indexing/navigation exposure, equivalence wording, duplicated resolver logic, hardcoded procedure data, demo-as-real presentation, proposals-in-readiness, write paths, auth gaps, stale UI counts. Findings and dispositions are recorded in the PR description; every confirmed blocker/high finding was fixed before the PR was opened.
+
+## 6. Owner-review correction pass (2026-08-09)
+
+Applied on the same branch in response to
+[d1-review/owner-review-findings.md](./d1-review/owner-review-findings.md); dispositions in
+[d1-review/owner-review-dispositions.md](./d1-review/owner-review-dispositions.md). All gates
+re-run after the corrections:
+
+| Gate                                  | Result                                                                                                                      |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `npm run ip-intel:audit`              | Byte-identical `data-readiness-audit.json` (`git diff` empty)                                                               |
+| `npm run ip-cards:release:check-base` | `54 published entries in the base; 54 unchanged, 0 advanced, 0 new`                                                         |
+| `npm run ip-cards:validate-data`      | Clean; workbook sha `fb25b24e…` unchanged                                                                                   |
+| `npm run build:content`               | Clean (24 documents)                                                                                                        |
+| `npm run type-check`                  | Zero errors                                                                                                                 |
+| `npm run lint`                        | Zero errors; 18 pre-existing warnings, all in files this branch does not touch; changed files lint clean under a scoped run |
+| Prettier                              | All changed files pass `--check`                                                                                            |
+| Focused D1 jest                       | 9 suites / 90 tests (14 new owner-review regression tests), all passing                                                     |
+| Affected scope jest                   | `preference-cards` + `lib` + `i18n`: 91 suites / 1,418 tests, all passing                                                   |
+| Full `npx jest`                       | 515 suites passed / 6,493 tests passed (2 suites, 3 tests pre-existing skips)                                               |
+| `npm run build`                       | Succeeds; `devices/`, `clinical-roles/`, `procedures/` present in `.next/server/app/[locale]/`; standalone prepared         |
+
+Browser regression walkthrough (dev server, 1600×900): THERAPEUTIC_BRONCH workspace (laser
+note; 9-of-26 acting summary; 17 inert modifiers badged behind the disclosure; releaseState
+beside every code; canonical phase order Pre-room → Pre-induction/sedation → Airway access →
+Therapeutic → Specimen handling → Post-procedure; promoted rescue disclaimer), CHEST_TUBE
+workspace + room/nursing/training previews (kit-suppressed group with the resolver's reason;
+divergent-pathway subsection and imbalance note; honest nursing panel; per-line IFU advisories
+only in the discriminating case), EBUS_TBNA workspace (canonical phases) and readiness page
+("Demo: Ready — see advisory" chips with the advisory quoted in the same cell; focusable named
+scroll region), CHEST_TUBE readiness ("Demo: Not ready" headline; rescue-authoring-gap
+sentence), LASER_CONSOLE and EBUS_NEEDLE_FNA role pages (availability line above products;
+guidance-vs-criteria split; amber IFU banner replaced by the footer statement; ingestion
+caption), AIRWAY_STENT_SILICONE_STRAIGHT (single-manufacturer note), device index and
+ViziShot EBUS-TBNA needle detail (primary role + description under the H1; per-card
+"Not recorded in reviewed sources:" collapse with zero residual placeholder rows; discovery
+denominators and role-page link). `X-Robots-Tag: noindex, nofollow, noarchive` confirmed on
+live responses. Console errors were exclusively the pre-existing dev-only `/api/analytics`
+500s (known limitation #8).
+
+Before commit, an independent four-lens adversarial agent review ran over the uncommitted
+diff (constraint compliance, correctness, findings coverage, clinical copy), with each
+candidate finding adversarially re-verified; the two confirmed findings (truth-pin scope of
+the laser-pathway note; unpinned coverage claims in the long-term-drainage note) plus five
+lower-severity confirmations were fixed in the same pass — details in
+[d1-review/owner-review-dispositions.md](./d1-review/owner-review-dispositions.md) §5 — and
+every gate above was re-run afterwards.

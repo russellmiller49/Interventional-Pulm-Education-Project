@@ -61,4 +61,9 @@ Compare view; institutional capability as a real product; formulary/procurement 
 
 ## 6. Owner-review steps
 
-[d1-review/owner-review-checklist.md](./d1-review/owner-review-checklist.md).
+[d1-review/owner-review-checklist.md](./d1-review/owner-review-checklist.md). The owner's
+walkthrough findings are in
+[d1-review/owner-review-findings.md](./d1-review/owner-review-findings.md); every finding's
+classification, fix, regression test, or deferral is recorded in
+[d1-review/owner-review-dispositions.md](./d1-review/owner-review-dispositions.md), including
+the governed-data review queue that this branch deliberately does not touch.
