@@ -2,7 +2,12 @@
 
 import { createHash } from 'node:crypto'
 
-import { validateGoldImportSourceArtifact } from '@/features/literature/gold-set/import-artifact-validation'
+import {
+  deriveFinalizedArtifactBooleanNormalization,
+  deriveFinalizedArtifactListNormalization,
+  validateGoldImportSourceArtifact,
+  type ValidateGoldImportArtifactInput,
+} from '@/features/literature/gold-set/import-artifact-validation'
 import {
   GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION,
   bindImportPlan,
@@ -14,6 +19,7 @@ import {
 
 const HEADERS = [
   'gold_set_item_id',
+  'master_row_id',
   'pmid',
   'dataset_split',
   'physician_final_label',
@@ -44,6 +50,16 @@ const BATCH_ID = '30000000-0000-4000-8000-000000000001'
 const ITEM_1 = '10000000-0000-4000-8000-000000000001'
 const ITEM_2 = '10000000-0000-4000-8000-000000000002'
 const NOW = '2026-08-08T12:00:00.000Z'
+const EXACT_NOTE_DISPOSITION = {
+  action: 'preserve_current_authorized_physician_rationale',
+  pmids: ['36879724', '39281191'],
+  ruleVersion: 'gold-import-existing-note-disposition/amended-two-row-preserve-current-v1',
+  sourceArtifactNotesApplied: false,
+  status: 'already_authorized',
+} as const
+
+const BOOLEAN_COLUMNS = ['categorization_from_full_text', 'full_text_used', 'is_blinded'] as const
+const LIST_COLUMNS = ['topic_ids', 'technology_tags', 'clinical_purposes', 'disease_tags'] as const
 
 function sha256(text: string) {
   return createHash('sha256').update(text, 'utf8').digest('hex')
@@ -105,6 +121,7 @@ const NOOP_REVIEW = review('Existing effective decision.', {
 const ROWS: CsvRow[] = [
   {
     gold_set_item_id: ITEM_1,
+    master_row_id: '1',
     pmid: '12345678',
     dataset_split: 'development',
     physician_final_label: INSERT_REVIEW.relevanceLabel,
@@ -120,7 +137,7 @@ const ROWS: CsvRow[] = [
     publication_status: INSERT_REVIEW.publicationStatus ?? '',
     categorization_from_full_text: String(INSERT_REVIEW.categorizationFromFullText),
     physician_notes: INSERT_REVIEW.notes,
-    full_text_used: String(INSERT_REVIEW.usedSupplementalMetadata),
+    full_text_used: 'false',
     is_blinded: String(INSERT_REVIEW.isBlinded),
     taxonomy_version: INSERT_REVIEW.taxonomyVersion,
     label_schema_version: INSERT_REVIEW.labelSchemaVersion,
@@ -129,6 +146,7 @@ const ROWS: CsvRow[] = [
   },
   {
     gold_set_item_id: ITEM_2,
+    master_row_id: '2',
     pmid: '87654321',
     dataset_split: 'development',
     physician_final_label: NOOP_REVIEW.relevanceLabel,
@@ -144,7 +162,7 @@ const ROWS: CsvRow[] = [
     publication_status: NOOP_REVIEW.publicationStatus ?? '',
     categorization_from_full_text: String(NOOP_REVIEW.categorizationFromFullText),
     physician_notes: NOOP_REVIEW.notes,
-    full_text_used: String(NOOP_REVIEW.usedSupplementalMetadata),
+    full_text_used: 'false',
     is_blinded: String(NOOP_REVIEW.isBlinded),
     taxonomy_version: NOOP_REVIEW.taxonomyVersion,
     label_schema_version: NOOP_REVIEW.labelSchemaVersion,
@@ -153,7 +171,11 @@ const ROWS: CsvRow[] = [
   },
 ]
 
-function planFor(csvText: string) {
+function planFor(
+  csvText: string,
+  insertReview: GoldReviewPayload = INSERT_REVIEW,
+  sourceRows: readonly CsvRow[] = ROWS,
+) {
   const existingReviewId = '20000000-0000-4000-8000-000000000002'
   const candidateReview = goldReviewClinicalProjectionSchema.parse({
     relevanceLabel: NOOP_REVIEW.relevanceLabel,
@@ -181,8 +203,8 @@ function planFor(csvText: string) {
     {
       actionId: '40000000-0000-4000-8000-000000000001',
       sequence: 1,
-      itemId: ITEM_1,
-      pmid: ROWS[0].pmid,
+      itemId: sourceRows[0].gold_set_item_id,
+      pmid: sourceRows[0].pmid,
       datasetSplit: 'development',
       expectedCurrentReviewId: null,
       expectedEffectiveReviewId: null,
@@ -199,16 +221,16 @@ function planFor(csvText: string) {
       importedReviewId: '50000000-0000-4000-8000-000000000001',
       expectedHeadReviewIdAfter: '50000000-0000-4000-8000-000000000001',
       expectedEffectiveReviewIdAfter: '50000000-0000-4000-8000-000000000001',
-      review: INSERT_REVIEW,
-      reviewSha256: sha256Canonical(INSERT_REVIEW),
+      review: insertReview,
+      reviewSha256: sha256Canonical(insertReview),
       compensationAction: 'compensate_void',
       expectedEventSequence: ['review_imported'],
     },
     {
       actionId: '40000000-0000-4000-8000-000000000002',
       sequence: 2,
-      itemId: ITEM_2,
-      pmid: ROWS[1].pmid,
+      itemId: sourceRows[1].gold_set_item_id,
+      pmid: sourceRows[1].pmid,
       datasetSplit: 'development',
       expectedCurrentReviewId: existingReviewId,
       expectedEffectiveReviewId: existingReviewId,
@@ -265,6 +287,49 @@ function planFor(csvText: string) {
 
 function cloneRows() {
   return ROWS.map((row) => ({ ...row }))
+}
+
+function compatibilityFor(
+  rows: readonly CsvRow[],
+  csvText: string,
+): NonNullable<ValidateGoldImportArtifactInput['compatibility']> {
+  const sourceArtifactSha256 = sha256(csvText)
+  const booleanNormalizationLedger = rows.flatMap((row) =>
+    BOOLEAN_COLUMNS.map((column) =>
+      deriveFinalizedArtifactBooleanNormalization({
+        column,
+        sourceArtifactSha256,
+        sourceIdentity: {
+          datasetSplit: 'development',
+          itemId: row.gold_set_item_id,
+          masterRowId: row.master_row_id,
+          pmid: row.pmid,
+        },
+        value: row[column],
+      }),
+    ),
+  )
+  const listNormalizationLedger = rows.flatMap((row) =>
+    LIST_COLUMNS.flatMap((column) => {
+      const { normalization } = deriveFinalizedArtifactListNormalization({
+        column,
+        sourceArtifactSha256,
+        sourceIdentity: {
+          datasetSplit: 'development',
+          itemId: row.gold_set_item_id,
+          masterRowId: row.master_row_id,
+          pmid: row.pmid,
+        },
+        value: row[column],
+      })
+      return normalization ? [normalization] : []
+    }),
+  )
+  return {
+    booleanNormalizationLedger,
+    listNormalizationLedger,
+    noteDisposition: EXACT_NOTE_DISPOSITION,
+  }
 }
 
 describe('finalized V3 source artifact validation', () => {
@@ -372,7 +437,188 @@ describe('finalized V3 source artifact validation', () => {
   })
 
   it.each([
-    ['non-lowercase boolean', 'is_blinded', 'True', 'must be lowercase true or false'],
+    ['categorization_from_full_text', 'false'],
+    ['full_text_used', 'false'],
+    ['is_blinded', 'true'],
+  ] as const)(
+    'accepts the canonical boolean lexeme %s=%s without compatibility',
+    (column, value) => {
+      const rows = cloneRows()
+      rows[0][column] = value
+      const csvText = csv(rows)
+      expect(() =>
+        validateGoldImportSourceArtifact({ csvText, plan: planFor(csvText) }),
+      ).not.toThrow()
+    },
+  )
+
+  it.each([
+    ['categorization_from_full_text', 'False'],
+    ['full_text_used', 'False'],
+    ['is_blinded', 'True'],
+  ] as const)(
+    'requires an exact boolean normalization ledger for legacy lexeme %s=%s',
+    (column, value) => {
+      const rows = cloneRows()
+      rows[0][column] = value
+      const csvText = csv(rows)
+      const plan = planFor(csvText)
+
+      expect(() => validateGoldImportSourceArtifact({ csvText, plan })).toThrow(
+        'requires an exact checksum-bound V3 normalization ledger',
+      )
+      expect(() =>
+        validateGoldImportSourceArtifact({
+          compatibility: compatibilityFor(rows, csvText),
+          csvText,
+          plan,
+        }),
+      ).not.toThrow()
+    },
+  )
+
+  it('rejects missing or tampered boolean normalization ledger entries', () => {
+    const rows = cloneRows()
+    rows[0].is_blinded = 'True'
+    const csvText = csv(rows)
+    const plan = planFor(csvText)
+    const compatibility = compatibilityFor(rows, csvText)
+    const [firstBooleanEntry, ...remainingBooleanEntries] = compatibility.booleanNormalizationLedger
+
+    expect(firstBooleanEntry).toBeDefined()
+    expect(() =>
+      validateGoldImportSourceArtifact({
+        compatibility: {
+          ...compatibility,
+          booleanNormalizationLedger: remainingBooleanEntries,
+        },
+        csvText,
+        plan,
+      }),
+    ).toThrow('boolean normalization ledger does not exactly match')
+    expect(() =>
+      validateGoldImportSourceArtifact({
+        compatibility: {
+          ...compatibility,
+          booleanNormalizationLedger: [
+            {
+              ...firstBooleanEntry!,
+              sourceArtifactSha256: '0'.repeat(64),
+            },
+            ...remainingBooleanEntries,
+          ],
+        },
+        csvText,
+        plan,
+      }),
+    ).toThrow('boolean normalization ledger does not exactly match')
+  })
+
+  it('normalizes source list order only with exact V3 ledger coverage', () => {
+    const rows = cloneRows()
+    rows[0].topic_ids = 'peripheral-navigation|basic-bronchoscopy'
+    const csvText = csv(rows)
+    const normalizedReview = review(INSERT_REVIEW.notes, {
+      topicIds: ['basic-bronchoscopy', 'peripheral-navigation'],
+    })
+    const plan = planFor(csvText, normalizedReview)
+    const compatibility = compatibilityFor(rows, csvText)
+    const [normalization] = compatibility.listNormalizationLedger
+    if (!normalization) throw new Error('Expected an unsorted fixture normalization.')
+
+    expect(() => validateGoldImportSourceArtifact({ csvText, plan })).toThrow(
+      'requires an exact checksum-bound V3 normalization ledger',
+    )
+    expect(() =>
+      validateGoldImportSourceArtifact({
+        compatibility,
+        csvText,
+        plan,
+      }),
+    ).not.toThrow()
+    expect(() =>
+      validateGoldImportSourceArtifact({
+        compatibility: { ...compatibility, listNormalizationLedger: [] },
+        csvText,
+        plan,
+      }),
+    ).toThrow('list normalization ledger does not exactly match')
+    expect(() =>
+      validateGoldImportSourceArtifact({
+        compatibility: {
+          ...compatibility,
+          listNormalizationLedger: [
+            {
+              ...normalization,
+              sourceArtifactSha256: '0'.repeat(64),
+            },
+          ],
+        },
+        csvText,
+        plan,
+      }),
+    ).toThrow('list normalization ledger does not exactly match')
+  })
+
+  it.each(['technology_tag_status', 'disease_tag_status'] as const)(
+    'rejects a blank %s without status substitution',
+    (column) => {
+      const rows = cloneRows()
+      rows[0][column] = ''
+      const csvText = csv(rows)
+
+      expect(() => validateGoldImportSourceArtifact({ csvText, plan: planFor(csvText) })).toThrow(
+        `column ${column}: is blank and is not representable by the import v1 contract`,
+      )
+    },
+  )
+
+  it('rejects full_text_used=true as unmapped source provenance even with exact evidence', () => {
+    const rows = cloneRows()
+    rows[0].full_text_used = 'true'
+    const csvText = csv(rows)
+    const plan = planFor(csvText)
+
+    expect(() =>
+      validateGoldImportSourceArtifact({
+        compatibility: compatibilityFor(rows, csvText),
+        csvText,
+        plan,
+      }),
+    ).toThrow('records source provenance that has no exact import v1 persistence mapping')
+  })
+
+  it('applies only the exact amended two-row preserve-current note disposition', () => {
+    const rows = cloneRows()
+    rows[1].master_row_id = '4'
+    rows[1].pmid = '36879724'
+    rows[1].physician_notes = 'Source artifact note that must not replace the current rationale.'
+    const csvText = csv(rows)
+    const plan = planFor(csvText, INSERT_REVIEW, rows)
+    const compatibility = compatibilityFor(rows, csvText)
+
+    expect(() => validateGoldImportSourceArtifact({ csvText, plan })).toThrow(
+      'column physician_notes: does not match',
+    )
+    expect(() => validateGoldImportSourceArtifact({ compatibility, csvText, plan })).not.toThrow()
+
+    const wrongNoteDisposition = {
+      ...compatibility.noteDisposition,
+      pmids: ['39281191', '36879724'],
+    } as unknown as typeof compatibility.noteDisposition
+    expect(() =>
+      validateGoldImportSourceArtifact({
+        compatibility: { ...compatibility, noteDisposition: wrongNoteDisposition },
+        csvText,
+        plan,
+      }),
+    ).toThrow('not the exact amended two-row rule')
+  })
+
+  it.each([
+    ...['TRUE', 'FALSE', '0', '1', 'yes', 'no', ''].map(
+      (value) => ['unsupported boolean', 'is_blinded', value, 'must use exactly'] as const,
+    ),
     [
       'non-canonical pipe array',
       'topic_ids',

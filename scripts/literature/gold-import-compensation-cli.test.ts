@@ -17,6 +17,7 @@ import {
   type GoldReviewPayload,
   type ImportReceipt,
 } from '../../src/features/literature/gold-set/import-compensation'
+import { parseFinalizedGoldImportArtifact } from './gold-import-compensation-compatibility'
 import {
   runGoldImportCompensationCli,
   type GoldImportCompensationDatabaseClient,
@@ -61,6 +62,10 @@ function bindReceipt<T extends { response: string }>(content: T) {
   return { ...content, binding: { contentSha256: sha256Canonical(identity) } }
 }
 
+function jsonClone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T
+}
+
 async function fixture() {
   const root = await mkdtemp(join(tmpdir(), 'gold-import-compensation-cli-'))
   const noopReview: GoldReviewPayload = {
@@ -94,6 +99,7 @@ async function fixture() {
     [
       [
         'gold_set_item_id',
+        'master_row_id',
         'pmid',
         'dataset_split',
         'physician_final_label',
@@ -118,6 +124,7 @@ async function fixture() {
       ].join(','),
       [
         IDS.item,
+        '1',
         '12345678',
         'development',
         noopReview.relevanceLabel,
@@ -143,8 +150,18 @@ async function fixture() {
     ].join('\r\n') + '\r\n',
     'utf8',
   )
-  const sourceAuthorizationSetBytes = Buffer.from('signed source authorization set\n', 'utf8')
   const sourceArtifactSha256 = sha256(artifactBytes)
+  const sourceAuthorizationSetBytes = Buffer.from(
+    `${JSON.stringify({
+      amendedTwoRowAuthorizationSha256: sha256('amended authorization'),
+      finalArtifactSha256: sourceArtifactSha256,
+      kind: 'gold_import_source_authorization_set',
+      signedProtocolAuthorizationSha256: sha256('protocol authorization'),
+      sourceDecisionsChanged: false,
+      version: 1,
+    })}\n`,
+    'utf8',
+  )
   const physical = sha256('physical-before')
   const effective = sha256('effective-before-and-after')
   const importPlan = bindImportPlan({
@@ -365,6 +382,104 @@ async function fixture() {
   }
 }
 
+async function v3CompatibilityFixture() {
+  const value = await fixture()
+  const artifactBytes = await readFile(value.paths.artifact)
+  const parsedArtifact = parseFinalizedGoldImportArtifact(artifactBytes, {
+    expectedArtifactSha256: value.importPlan.sourceArtifactSha256,
+  })
+  const sourceAuthorizationSet = {
+    amendedTwoRowAuthorizationSha256: sha256('v3-amended-authorization'),
+    compatibility: {
+      actionCounts: {
+        ...value.importPlan.counts,
+        incompatible: 0,
+        unresolved: 0,
+      },
+      bindings: {
+        contract: {
+          environmentInvariantIdentitySha256: sha256('v3-invariant'),
+          environmentProfileIdentitySha256: sha256('v3-profile'),
+        },
+        currentDatabase: {
+          batchId: value.importPlan.batchId,
+          developmentMembershipSha256: value.importPlan.scope.developmentMembershipSha256,
+          developmentPlanningStateSha256: sha256('v3-planning-state'),
+          effectiveStateSha256: value.importPlan.expectedEffectiveStateSha256,
+          physicalStateSha256: value.importPlan.expectedPhysicalStateSha256,
+        },
+        existingHeadCohortSha256: sha256('v3-existing-head-cohort'),
+        finalV3ArtifactSha256: value.importPlan.sourceArtifactSha256,
+        migration: {
+          id: EXECUTION_CONTEXT.migrationId,
+          sha256: sha256('v3-migration'),
+        },
+      },
+      booleanNormalizationLedger: parsedArtifact.booleanNormalizations,
+      booleanNormalizationLedgerSha256: sha256Canonical(parsedArtifact.booleanNormalizations),
+      listNormalizationLedger: parsedArtifact.listNormalizations,
+      listNormalizationLedgerSha256: sha256Canonical(parsedArtifact.listNormalizations),
+      noteDisposition: {
+        action: 'preserve_current_authorized_physician_rationale',
+        pmids: ['36879724', '39281191'],
+        ruleVersion: 'gold-import-existing-note-disposition/amended-two-row-preserve-current-v1',
+        sourceArtifactNotesApplied: false,
+        status: 'already_authorized',
+      },
+      resolutionSchemaVersion: 'gold-import-compensation-compatibility/1.0.0',
+      scope: {
+        datasetSplit: 'development',
+        heldOutIdentitiesAccessed: false,
+        remoteWritesAllowed: false,
+        targetDatabase: 'local',
+      },
+    },
+    finalArtifactSha256: value.importPlan.sourceArtifactSha256,
+    kind: 'gold_import_source_authorization_set',
+    signedProtocolAuthorizationSha256: sha256('v3-protocol-authorization'),
+    sourceDecisionsChanged: false,
+    version: 3,
+  }
+  const writeBundle = async (
+    nextSourceAuthorizationSet: unknown,
+    nextArtifactBytes: Buffer = artifactBytes,
+  ) => {
+    const sourceAuthorizationSetBytes = Buffer.from(
+      `${JSON.stringify(nextSourceAuthorizationSet)}\n`,
+      'utf8',
+    )
+    const { binding: planBinding, ...planContent } = value.importPlan
+    void planBinding
+    const importPlan = bindImportPlan({
+      ...planContent,
+      sourceArtifactSha256: sha256(nextArtifactBytes),
+      sourceAuthorizationSetSha256: sha256(sourceAuthorizationSetBytes),
+    })
+    const { binding: authorizationBinding, ...authorizationContent } = value.importAuthorization
+    void authorizationBinding
+    const importAuthorization = bindImportAuthorization({
+      ...authorizationContent,
+      batchId: importPlan.batchId,
+      expectedEffectiveStateSha256: importPlan.expectedEffectiveStateSha256,
+      expectedPhysicalStateSha256: importPlan.expectedPhysicalStateSha256,
+      expectedPostEffectiveStateSha256: importPlan.expectedPostEffectiveStateSha256,
+      idempotencyKey: importPlan.binding.idempotencyKey,
+      operationId: importPlan.operationId,
+      planSha256: importPlan.binding.contentSha256,
+      sourceArtifactSha256: importPlan.sourceArtifactSha256,
+    })
+    await Promise.all([
+      writeFile(value.paths.artifact, nextArtifactBytes),
+      writeFile(value.paths.importAuthorization, JSON.stringify(importAuthorization)),
+      writeFile(value.paths.importPlan, JSON.stringify(importPlan)),
+      writeFile(value.paths.sourceAuthorizationSet, sourceAuthorizationSetBytes),
+    ])
+    return { importAuthorization, importPlan, sourceAuthorizationSetBytes }
+  }
+  const bundle = await writeBundle(sourceAuthorizationSet)
+  return { ...value, ...bundle, artifactBytes, sourceAuthorizationSet, writeBundle }
+}
+
 function dependencies(rpc: jest.Mock) {
   const createClient = jest.fn(() => ({ rpc }) satisfies GoldImportCompensationDatabaseClient)
   return {
@@ -539,6 +654,140 @@ describe('gold import-compensation CLI', () => {
     expect(createClient).not.toHaveBeenCalled()
   })
 
+  it('binds V3 ledgers, state, provenance, and retired V2 status paths before client creation', async () => {
+    const value = await v3CompatibilityFixture()
+    const createClient = jest.fn(() => {
+      throw new Error('V3 file validation must finish before client construction')
+    })
+    const validateArguments = [
+      'validate-import',
+      '--plan',
+      value.paths.importPlan,
+      '--authorization',
+      value.paths.importAuthorization,
+      '--artifact',
+      value.paths.artifact,
+      '--source-authorization-set',
+      value.paths.sourceAuthorizationSet,
+    ]
+    const executeArguments = [
+      'execute-import',
+      ...validateArguments.slice(1),
+      '--receipt',
+      join(value.root, 'must-not-be-created.json'),
+      '--actor-email',
+      'executor@example.test',
+      '--target',
+      'local',
+    ]
+    const runtimeDependencies = {
+      createClient,
+      env: LOCAL_ENV,
+      log: jest.fn(),
+      primaryCheckout: async () => true,
+      repositoryCommitSha: async () => EXECUTION_CONTEXT.repositoryCommitSha,
+    }
+
+    await expect(
+      runGoldImportCompensationCli(validateArguments, value.root, runtimeDependencies),
+    ).resolves.toMatchObject({ command: 'validate-import', valid: true })
+    expect(createClient).not.toHaveBeenCalled()
+
+    const retiredV2 = { ...jsonClone(value.sourceAuthorizationSet), version: 2 }
+    await value.writeBundle(retiredV2)
+    await expect(
+      runGoldImportCompensationCli(executeArguments, value.root, runtimeDependencies),
+    ).rejects.toThrow('V2 physician status supplements are retired')
+    expect(createClient).not.toHaveBeenCalled()
+
+    const countMismatch = jsonClone(value.sourceAuthorizationSet)
+    countMismatch.compatibility.actionCounts.initial = 1
+    countMismatch.compatibility.actionCounts.inserts = 1
+    countMismatch.compatibility.actionCounts.noops = 0
+    countMismatch.compatibility.actionCounts.revisions = 0
+    await value.writeBundle(countMismatch)
+    await expect(
+      runGoldImportCompensationCli(executeArguments, value.root, runtimeDependencies),
+    ).rejects.toThrow('action counts do not match the import plan')
+    expect(createClient).not.toHaveBeenCalled()
+
+    const ledgerMismatch = jsonClone(value.sourceAuthorizationSet)
+    const firstLedgerEntry = ledgerMismatch.compatibility.booleanNormalizationLedger[0]
+    if (!firstLedgerEntry || firstLedgerEntry.originalLexeme !== 'false') {
+      throw new Error('Expected canonical false as the first V3 fixture normalization.')
+    }
+    firstLedgerEntry.originalLexeme = 'False'
+    firstLedgerEntry.sourceForm = 'legacy_title_case'
+    ledgerMismatch.compatibility.booleanNormalizationLedgerSha256 = sha256Canonical(
+      ledgerMismatch.compatibility.booleanNormalizationLedger,
+    )
+    await value.writeBundle(ledgerMismatch)
+    await expect(
+      runGoldImportCompensationCli(executeArguments, value.root, runtimeDependencies),
+    ).rejects.toThrow('does not exactly match the finalized artifact')
+    expect(createClient).not.toHaveBeenCalled()
+
+    const listLedgerMismatch = jsonClone(value.sourceAuthorizationSet)
+    const sourceRow = parseFinalizedGoldImportArtifact(value.artifactBytes).rows[0]
+    if (!sourceRow) throw new Error('Expected a V3 source row.')
+    listLedgerMismatch.compatibility.listNormalizationLedger = [
+      {
+        canonicalValues: ['basic-bronchoscopy', 'peripheral-navigation'],
+        classification: 'deterministic_lexical_normalization',
+        column: 'topic_ids',
+        normalizationRuleVersion: 'finalized-v3-ordered-set-list-to-ascending/1.0.0',
+        originalLexeme: 'peripheral-navigation|basic-bronchoscopy',
+        originalValues: ['peripheral-navigation', 'basic-bronchoscopy'],
+        sourceArtifactSha256: listLedgerMismatch.finalArtifactSha256,
+        sourceIdentity: sourceRow.identity,
+      },
+    ]
+    listLedgerMismatch.compatibility.listNormalizationLedgerSha256 = sha256Canonical(
+      listLedgerMismatch.compatibility.listNormalizationLedger,
+    )
+    await value.writeBundle(listLedgerMismatch)
+    await expect(
+      runGoldImportCompensationCli(executeArguments, value.root, runtimeDependencies),
+    ).rejects.toThrow('list normalization ledger does not exactly match the finalized artifact')
+    expect(createClient).not.toHaveBeenCalled()
+
+    const staleState = jsonClone(value.sourceAuthorizationSet)
+    staleState.compatibility.bindings.currentDatabase.effectiveStateSha256 = sha256(
+      'stale-v3-effective-state',
+    )
+    await value.writeBundle(staleState)
+    await expect(
+      runGoldImportCompensationCli(executeArguments, value.root, runtimeDependencies),
+    ).rejects.toThrow('stale relative to the import plan current-state bindings')
+    expect(createClient).not.toHaveBeenCalled()
+
+    const tamperedArtifact = Buffer.from(
+      value.artifactBytes
+        .toString('utf8')
+        .replace(
+          'Exact finalized physician decision.,false,true,',
+          'Exact finalized physician decision.,true,true,',
+        ),
+      'utf8',
+    )
+    expect(tamperedArtifact).not.toEqual(value.artifactBytes)
+    const parsedTamperedArtifact = parseFinalizedGoldImportArtifact(tamperedArtifact)
+    const fullTextMappingDefect = jsonClone(value.sourceAuthorizationSet)
+    fullTextMappingDefect.finalArtifactSha256 = parsedTamperedArtifact.artifactSha256
+    fullTextMappingDefect.compatibility.bindings.finalV3ArtifactSha256 =
+      parsedTamperedArtifact.artifactSha256
+    fullTextMappingDefect.compatibility.booleanNormalizationLedger =
+      parsedTamperedArtifact.booleanNormalizations
+    fullTextMappingDefect.compatibility.booleanNormalizationLedgerSha256 = sha256Canonical(
+      parsedTamperedArtifact.booleanNormalizations,
+    )
+    await value.writeBundle(fullTextMappingDefect, tamperedArtifact)
+    await expect(
+      runGoldImportCompensationCli(executeArguments, value.root, runtimeDependencies),
+    ).rejects.toThrow('full_text_used')
+    expect(createClient).not.toHaveBeenCalled()
+  })
+
   it('rejects checksum-consistent clinical artifact drift before constructing a database client', async () => {
     const value = await fixture()
     const original = await readFile(value.paths.artifact, 'utf8')
@@ -546,8 +795,17 @@ describe('gold import-compensation CLI', () => {
       'Exact finalized physician decision.',
       'Checksum-consistent but unauthorized decision drift.',
     )
+    const sourceAuthorization = JSON.parse(
+      await readFile(value.paths.sourceAuthorizationSet, 'utf8'),
+    ) as Record<string, unknown>
+    sourceAuthorization.finalArtifactSha256 = sha256(tampered)
+    const sourceAuthorizationBytes = `${JSON.stringify(sourceAuthorization)}\n`
     const { binding: previousPlanBinding, ...planContent } = value.importPlan
-    const plan = bindImportPlan({ ...planContent, sourceArtifactSha256: sha256(tampered) })
+    const plan = bindImportPlan({
+      ...planContent,
+      sourceArtifactSha256: sha256(tampered),
+      sourceAuthorizationSetSha256: sha256(sourceAuthorizationBytes),
+    })
     expect(plan.binding.contentSha256).not.toBe(previousPlanBinding.contentSha256)
     const { binding: previousAuthorizationBinding, ...authorizationContent } =
       value.importAuthorization
@@ -567,6 +825,7 @@ describe('gold import-compensation CLI', () => {
       writeFile(value.paths.artifact, tampered),
       writeFile(value.paths.importPlan, JSON.stringify(plan)),
       writeFile(value.paths.importAuthorization, JSON.stringify(authorization)),
+      writeFile(value.paths.sourceAuthorizationSet, sourceAuthorizationBytes),
     ])
     const createClient = jest.fn()
 

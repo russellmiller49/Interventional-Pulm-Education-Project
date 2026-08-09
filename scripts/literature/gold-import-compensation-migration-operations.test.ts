@@ -42,6 +42,7 @@ import {
   resolveLocalDockerTarget,
   resolveEffectiveReview,
   sanitizeOperationalEnvironment,
+  sealCanonicalArtifacts,
   SERIALIZED_AGGREGATE_ORDERING_CONTRACTS,
   sha256,
   sha256ContractCanonical,
@@ -592,7 +593,90 @@ async function writeFixtureBackup() {
   return { backup, baseline, outputDirectory }
 }
 
+async function writeLegacyV1PlanningFixtureBackup(
+  mutatePlanningState?: (planningState: Record<string, unknown>) => void,
+) {
+  const snapshot = preMigrationSnapshot()
+  const sourceArrays = {
+    topic_ids: ['peripheral-navigation', 'basic-bronchoscopy'],
+    technology_tags: ['robotic-bronchoscopy', 'electromagnetic-navigation'],
+    clinical_purposes: ['staging', 'diagnosis'],
+    disease_tags: ['mesothelioma', 'lung-cancer'],
+  }
+  const developmentRow = snapshot.developmentItems[0] as Record<string, unknown>
+  const developmentReview = (developmentRow.reviews as Array<Record<string, unknown>>)[0]
+  const seedReview = (snapshot.developmentSeed.reviews as Array<Record<string, unknown>>)[0]
+  for (const [field, values] of Object.entries(sourceArrays)) {
+    developmentReview[field] = [...values]
+    seedReview[field] = [...values]
+  }
+  const baseline = derivePreMigrationBaselineIdentity(snapshot)
+  const backup = buildPreMigrationBackup({
+    baseline,
+    repository: { head: 'a'.repeat(40), originMain: 'a'.repeat(40) },
+    snapshot,
+  })
+  const files = new Map(backup.artifacts.files)
+  const canonicalPlanningState = JSON.parse(
+    files.get('development-planning-state.json') as string,
+  ) as Record<string, unknown>
+  const legacyPlanningState = JSON.parse(canonicalJson(canonicalPlanningState)) as Record<
+    string,
+    unknown
+  >
+  const planningRows = legacyPlanningState.rows as Array<Record<string, unknown>>
+  const legacyReview = planningRows[0].currentEffectiveReview as Record<string, unknown>
+  legacyReview.topicIds = [...sourceArrays.topic_ids]
+  legacyReview.technologyTags = [...sourceArrays.technology_tags]
+  legacyReview.clinicalPurposes = [...sourceArrays.clinical_purposes]
+  legacyReview.diseaseTags = [...sourceArrays.disease_tags]
+  mutatePlanningState?.(legacyPlanningState)
+  files.set('development-planning-state.json', canonicalJson(legacyPlanningState))
+  const artifacts = sealCanonicalArtifacts(files)
+  const parent = await mkdtemp(join(tmpdir(), 'gold-migration-legacy-backup-'))
+  const outputDirectory = join(parent, 'backup')
+  await writeCanonicalPackage({
+    artifacts,
+    executionReceipt: buildBackupExecutionReceipt({
+      canonicalReceipt: backup.canonicalReceipt,
+      container: DEFAULT_LOCAL_DATABASE_CONTAINER,
+      executedAt: '2026-08-08T12:00:00.000Z',
+      manifestSha256: artifacts.manifestSha256,
+      outputDirectory,
+      repositoryRoot: '/repo',
+    }),
+    outputDirectory,
+    outputRoot: parent,
+  })
+  return {
+    artifacts,
+    baseline,
+    canonicalPlanningState,
+    legacyPlanningState,
+    outputDirectory,
+  }
+}
+
 describe('gold import-compensation migration operations', () => {
+  it('seals caller-supplied canonical artifacts with a sorted complete manifest', () => {
+    const artifacts = sealCanonicalArtifacts(
+      new Map([
+        ['zeta.json', canonicalJson({ value: 2 })],
+        ['alpha.json', canonicalJson({ value: 1 })],
+      ]),
+    )
+    expect([...artifacts.files.keys()]).toEqual(['alpha.json', 'zeta.json'])
+    expect(artifacts.manifest).toBe(
+      `${sha256(canonicalJson({ value: 1 }))}  alpha.json\n${sha256(
+        canonicalJson({ value: 2 }),
+      )}  zeta.json\n`,
+    )
+    expect(artifacts.manifestSha256).toBe(sha256(artifacts.manifest))
+    expect(() =>
+      sealCanonicalArtifacts(new Map([['checksum-manifest.sha256', 'reserved\n']])),
+    ).toThrow('unsafe or reserved')
+  })
+
   it('documents and requires the trusted pre-migration backup manifest argument', async () => {
     await expect(runAuditGoldImportCompensationMigration(['--help'])).resolves.toMatchObject({
       help: expect.stringContaining('--pre-migration-backup-manifest-sha256'),
@@ -968,6 +1052,42 @@ describe('gold import-compensation migration operations', () => {
     ).rejects.toThrow(/exact expected filename set/iu)
   })
 
+  it('accepts the exact sealed V1 raw-order planning projection and exposes canonical state', async () => {
+    const fixture = await writeLegacyV1PlanningFixtureBackup()
+    const planningPath = join(fixture.outputDirectory, 'development-planning-state.json')
+    const manifestPath = join(fixture.outputDirectory, 'checksum-manifest.sha256')
+    const sourcePlanningBytes = await readFile(planningPath, 'utf8')
+    const sourceManifestBytes = await readFile(manifestPath, 'utf8')
+
+    const loaded = await loadAndVerifyBackupFixtureForTest(
+      fixture.outputDirectory,
+      fixture.artifacts.manifestSha256,
+      fixture.baseline,
+    )
+
+    expect(JSON.parse(sourcePlanningBytes)).toEqual(fixture.legacyPlanningState)
+    expect(fixture.legacyPlanningState).not.toEqual(fixture.canonicalPlanningState)
+    expect(loaded.planningState).toEqual(fixture.canonicalPlanningState)
+    expect(await readFile(planningPath, 'utf8')).toBe(sourcePlanningBytes)
+    expect(await readFile(manifestPath, 'utf8')).toBe(sourceManifestBytes)
+  })
+
+  it('rejects a manifest-authenticated V1 planning artifact that is neither exact representation', async () => {
+    const fixture = await writeLegacyV1PlanningFixtureBackup((planningState) => {
+      const planningRows = planningState.rows as Array<Record<string, unknown>>
+      const review = planningRows[0].currentEffectiveReview as Record<string, unknown>
+      review.notes = 'Arbitrary planning-only tamper.'
+    })
+
+    await expect(
+      loadAndVerifyBackupFixtureForTest(
+        fixture.outputDirectory,
+        fixture.artifacts.manifestSha256,
+        fixture.baseline,
+      ),
+    ).rejects.toThrow(/Development planning state failed canonical cross-check/iu)
+  })
+
   it('recomputes backup hashes and rejects internally inconsistent canonical artifacts', async () => {
     const { baseline, outputDirectory } = await writeFixtureBackup()
     const statePath = join(outputDirectory, 'state-audits.json')
@@ -1162,6 +1282,40 @@ describe('gold import-compensation migration operations', () => {
         }),
       ],
     })
+  })
+
+  it('canonicalizes planning clinical arrays without mutating the database snapshot', () => {
+    const snapshot = preMigrationSnapshot()
+    const developmentRow = snapshot.developmentItems[0] as Record<string, unknown>
+    const review = (developmentRow.reviews as Array<Record<string, unknown>>)[0]
+    const sourceArrays = {
+      topic_ids: ['peripheral-navigation', 'basic-bronchoscopy'],
+      technology_tags: ['robotic-bronchoscopy', 'electromagnetic-navigation'],
+      clinical_purposes: ['staging', 'diagnosis'],
+      disease_tags: ['mesothelioma', 'lung-cancer'],
+    }
+    Object.assign(review, sourceArrays)
+
+    const planningState = buildDevelopmentPlanningState(snapshot)
+
+    expect(planningState.rows[0].currentEffectiveReview).toMatchObject({
+      topicIds: ['basic-bronchoscopy', 'peripheral-navigation'],
+      technologyTags: ['electromagnetic-navigation', 'robotic-bronchoscopy'],
+      clinicalPurposes: ['diagnosis', 'staging'],
+      diseaseTags: ['lung-cancer', 'mesothelioma'],
+    })
+    expect(review).toMatchObject(sourceArrays)
+
+    const reordered = JSON.parse(JSON.stringify(snapshot)) as RawDatabaseSnapshot
+    const reorderedRow = reordered.developmentItems[0] as Record<string, unknown>
+    const reorderedReview = (reorderedRow.reviews as Array<Record<string, unknown>>)[0]
+    for (const field of Object.keys(sourceArrays)) {
+      reorderedReview[field] = [...(reorderedReview[field] as string[])].reverse()
+    }
+    expect(canonicalJson(buildDevelopmentPlanningState(reordered))).toBe(
+      canonicalJson(planningState),
+    )
+    expect(developmentPlanningStateSha256(reordered)).toBe(developmentPlanningStateSha256(snapshot))
   })
 
   it('emits a full-row development database seed and rejects cross-split rows', () => {
