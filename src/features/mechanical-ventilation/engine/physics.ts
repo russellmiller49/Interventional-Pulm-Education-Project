@@ -631,6 +631,35 @@ function branchCorrected(
   return true
 }
 
+/**
+ * Whether a treatment reaches the narrowing *this* version of the patient actually has.
+ *
+ * The high-resistance case declares three mutually exclusive causes — material in the lumen, the
+ * apparatus, or the airway walls — and `branchCorrected` has always required the matching treatment
+ * before the case will resolve. The mechanics did not agree with that. A bronchodilator relaxed
+ * airway muscle by 60 % on the version whose tube is obstructed; suction shaved 14 % off a patient
+ * with nothing to suction; and taking out the filter capped resistance at 12 on a bronchospastic
+ * patient whose filter was never the problem. The pressure therefore fell for a reason the model had
+ * invented, and any surface that infers a mechanism from the response — the Practice coaching does
+ * exactly that — credited the wrong one.
+ *
+ * The intended responses are unchanged; only their reach is. Outside this phenotype nothing changes:
+ * those cases do not declare a competing cause, and their partial effects are ordinary pharmacology
+ * rather than a claim about which branch is running. MV-05, MV-06 and MV-10 keep the 0.62 and 0.86
+ * multipliers exactly as they were, and `remove-hme`/`reposition-ett` exist only on MV-13.
+ */
+function treatmentReachesNarrowing(
+  definition: VentilationCaseDefinition,
+  branch: string,
+  effectId: InterventionEffectId,
+): boolean {
+  if (definition.phenotype !== 'high-resistance') return true
+  if (branch === 'secretions') return effectId === 'suction-airway'
+  if (branch === 'hme-or-ett') return effectId === 'remove-hme' || effectId === 'reposition-ett'
+  if (branch === 'bronchospasm') return effectId === 'bronchodilator'
+  return true
+}
+
 export function deriveEffectivePatient(
   state: VentilationSimulationState,
   definition: VentilationCaseDefinition,
@@ -666,16 +695,30 @@ export function deriveEffectivePatient(
   }
 
   if (effects.has('bronchodilator')) {
-    patient.mechanics.resistanceCmH2OPerLps *=
-      definition.phenotype === 'high-resistance' ? 0.4 : 0.62
+    if (treatmentReachesNarrowing(definition, state.branch, 'bronchodilator')) {
+      patient.mechanics.resistanceCmH2OPerLps *=
+        definition.phenotype === 'high-resistance' ? 0.4 : 0.62
+    }
     patient.airway.bronchospasm = false
   }
   if (effects.has('suction-airway')) {
-    patient.mechanics.resistanceCmH2OPerLps *= state.branch === 'secretions' ? 0.4 : 0.86
+    if (treatmentReachesNarrowing(definition, state.branch, 'suction-airway')) {
+      patient.mechanics.resistanceCmH2OPerLps *= state.branch === 'secretions' ? 0.4 : 0.86
+    }
     patient.airway.secretions = false
   }
   if (effects.has('remove-hme') || effects.has('reposition-ett')) {
-    patient.mechanics.resistanceCmH2OPerLps = Math.min(patient.mechanics.resistanceCmH2OPerLps, 12)
+    const reachesApparatus =
+      (effects.has('remove-hme') &&
+        treatmentReachesNarrowing(definition, state.branch, 'remove-hme')) ||
+      (effects.has('reposition-ett') &&
+        treatmentReachesNarrowing(definition, state.branch, 'reposition-ett'))
+    if (reachesApparatus) {
+      patient.mechanics.resistanceCmH2OPerLps = Math.min(
+        patient.mechanics.resistanceCmH2OPerLps,
+        12,
+      )
+    }
     patient.airway.hmeObstructed = false
     patient.airway.ettObstructed = false
   }

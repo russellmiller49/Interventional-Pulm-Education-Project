@@ -1069,6 +1069,15 @@ export default function MechanicalVentilationCaseActivityV2(
                 onShowActionFeedbackChange={
                   mode === 'challenge' ? setShowChallengeFeedback : undefined
                 }
+                /*
+                 * Practice only. The Assess section is the same component with the same case and the
+                 * same engine, and it stays exactly as it was: no in-case coaching, whatever the
+                 * learner does. The engine also has to be running the independent Practice workflow
+                 * — a guided run has already shown its own mechanism, so there is nothing being
+                 * withheld for coaching to release — and `ventilationPostActionCoaching` checks that
+                 * for itself rather than trusting this flag.
+                 */
+                coachingEnabled={section === 'practice'}
               />
             )}
           </div>

@@ -111,12 +111,14 @@ const ventilationEventPayloadSchema = z.union([
   ventilationCaseStatePayloadSchema,
 ])
 
+// The MCS workbench sends the device track, the station, and a coarse completion state, and
+// nothing else. The schema stays strict so a performance band, a score, physiology, a detailed
+// action history, or free text is rejected rather than stored.
 const mcsEventPayloadSchema = z
   .object({
     deviceTrack: z.enum(['iabp', 'impella', 'lvad']),
     station: boundedIdentifierSchema,
     completion: z.enum(['complete', 'in-progress']),
-    scoreBand: z.enum(['not-scored', 'below-60', '60-79', '80-100']),
   })
   .strict()
 

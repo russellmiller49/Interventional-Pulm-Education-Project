@@ -2167,6 +2167,218 @@
   background: #f2f5fa;
 }
 
+/* ------------------------------------------------------------------------------------------------
+ * Post-action coaching
+ *
+ * Lives at the end of the "Intervene, then watch the response" section, in the task pane, which is
+ * already its own scroll container (`.workflowSurface`). So this block costs the live evidence no
+ * height at any viewport and creates no document-level scroll: it lengthens a pane that scrolls
+ * independently of the ventilator and the patient beside it.
+ *
+ * Nothing here is sized from the display. The readings wrap on their own content, so the block is
+ * legible in the ~300px pane a 1024x768 workspace gives it and does not stretch into a single line
+ * of eight columns at 1600.
+ *
+ * Every label, unit, and direction word in it sits at `0.65rem` — the same baseline
+ * `--wave-annotation-size` and `.waveformLabel strong` already use, and the floor the D2 render
+ * review settled on when the paused-trace chips measured under 10px. A first pass at 0.6/0.62rem
+ * measured 9.6px in the browser and was raised rather than argued for.
+ * ---------------------------------------------------------------------------------------------- */
+.coachingPending {
+  padding: 0.6rem 0.75rem;
+  margin-top: 0.8rem;
+  border-left: 3px solid var(--teal);
+  border-radius: 0.4rem;
+  color: var(--teal-dark);
+  background: var(--surface-soft);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.coachingPanel {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.8rem;
+  margin-top: 0.8rem;
+  border: 1px solid #a9cfcc;
+  border-radius: 0.65rem;
+  color: var(--ink);
+  background: var(--surface-raised);
+}
+
+.coachingHeading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.coachingHeading svg {
+  flex: 0 0 auto;
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--teal);
+}
+
+.coachingHeading > div {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.coachingHeading span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.coachingHeading h4 {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.coachingVerdict {
+  flex: 0 0 auto;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid currentcolor;
+  border-radius: 999px;
+  font-size: 0.65rem !important;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.coachingVerdict[data-verdict='improved'] {
+  color: var(--green);
+  background: var(--green-soft);
+}
+
+.coachingVerdict[data-verdict='worsened'] {
+  color: var(--red);
+  background: var(--red-soft);
+}
+
+.coachingVerdict[data-verdict='mixed'] {
+  color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.coachingVerdict[data-verdict='unchanged'] {
+  color: var(--muted);
+  background: var(--surface-soft);
+}
+
+.coachingReadings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.coachingReadings > div {
+  min-width: 0;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.45rem;
+  background: var(--surface);
+}
+
+.coachingReadings dt {
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.coachingReadings dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: baseline;
+  margin: 0.15rem 0 0;
+}
+
+.coachingValues {
+  color: var(--ink);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.coachingValues strong {
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.coachingValues em {
+  color: var(--muted);
+  font-style: normal;
+}
+
+.coachingReadings small {
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.coachingReadings > div[data-direction='fell'] small {
+  color: var(--teal-dark);
+}
+
+.coachingReadings > div[data-direction='rose'] small {
+  color: var(--amber);
+}
+
+/*
+ * A drift is a visible change that is not a response, and it has to look like neither of the other
+ * two: it keeps the muted ink of "unchanged" so it cannot be mistaken for a direction, and its own
+ * note is italic so it cannot be mistaken for one either.
+ */
+.coachingReadings > div[data-direction='small-drift'] small em {
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.coachingClaims {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.coachingClaims p {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.coachingClaims strong {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  margin-bottom: 0.1rem;
+  color: var(--teal-dark);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.coachingClaims strong svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.coachingClaims p[data-stabilization-required='true'] strong {
+  color: var(--red);
+}
+
 .guidedPrediction {
   display: grid;
   gap: 0.45rem;
@@ -3702,6 +3914,18 @@ line.waveformAnnotation {
   line.waveformAnnotation {
     stroke: CanvasText;
     opacity: 1;
+  }
+
+  /*
+   * The coaching block separates its verdict from its readings with tinted backgrounds, which the UA
+   * also drops. Restated as borders it keeps, in the same block rather than a second one — the
+   * annotation contract greps for the first `forced-colors` rule in this file.
+   */
+  .coachingPanel,
+  .coachingPending,
+  .coachingReadings > div,
+  .coachingVerdict {
+    border: 1px solid CanvasText;
   }
 }
 
