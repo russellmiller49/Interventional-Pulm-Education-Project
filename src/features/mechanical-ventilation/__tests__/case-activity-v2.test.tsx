@@ -51,12 +51,14 @@ jest.mock('../components/CaseWorkflow', () => ({
   CaseWorkflow: ({
     dispatch,
     onResult,
+    coachingEnabled,
   }: {
     dispatch: (action: VentilationAction) => void
     onResult: (outcome: CaseOutcome) => void
     mode?: CriticalCareActivityMode
+    coachingEnabled?: boolean
   }) => (
-    <div data-testid="mock-workflow">
+    <div data-testid="mock-workflow" data-coaching-enabled={String(Boolean(coachingEnabled))}>
       <button type="button" onClick={() => dispatch({ type: 'STEP_BREATH' })}>
         Observe mock breath
       </button>
@@ -236,6 +238,36 @@ describe('mechanical ventilation V2 case activity', () => {
       ([event]) => (event as { eventPayload?: { interaction?: string } }).eventPayload?.interaction,
     )
     expect(interactions).not.toContain('critical_care_goal_met')
+  })
+
+  it('enables post-action coaching in Practice and withholds it from Assess', async () => {
+    const { unmount } = render(
+      <MechanicalVentilationCaseActivityV2
+        caseId="MV-01"
+        deviceId="hamilton-c6"
+        mode="practice"
+        section="practice"
+      />,
+    )
+    expect(await screen.findByTestId('mock-workflow')).toHaveAttribute(
+      'data-coaching-enabled',
+      'true',
+    )
+    unmount()
+
+    render(
+      <MechanicalVentilationCaseActivityV2
+        caseId="MV-01"
+        deviceId="hamilton-c6"
+        mode="challenge"
+        section="assess"
+        seedToken="assessment-coaching-boundary"
+      />,
+    )
+    expect(await screen.findByTestId('mock-workflow')).toHaveAttribute(
+      'data-coaching-enabled',
+      'false',
+    )
   })
 
   it('keeps challenge identity, patient context, and sources visible', async () => {

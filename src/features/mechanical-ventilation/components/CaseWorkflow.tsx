@@ -22,6 +22,13 @@ import {
 
 import { branchResolution } from '../content/caseFindings'
 import {
+  capturePostActionBaseline,
+  postActionObservation,
+  ventilationPostActionCoaching,
+  type PostActionBaseline,
+  type PostActionCoaching,
+} from '../content/postActionCoaching'
+import {
   selectCaseOutcome,
   type CaseOutcome,
   type InterventionCategory,
@@ -29,6 +36,7 @@ import {
   type VentilationCaseDefinition,
   type VentilationSimulationState,
 } from '../engine'
+import { PostActionCoachingPanel } from './PostActionCoachingPanel'
 import styles from './mechanical-ventilation.module.css'
 
 const categoryLabels: Record<InterventionCategory, string> = {
@@ -167,6 +175,16 @@ function VentilationCaseCalibration({
   )
 }
 
+/**
+ * One action's coaching lifecycle: the action it belongs to, the readings taken when it was
+ * performed, and the finished block once the observation interval has closed.
+ */
+interface CoachingTrack {
+  readonly recordId: string | null
+  readonly baseline: PostActionBaseline | null
+  readonly coaching: PostActionCoaching | null
+}
+
 function workflowStepState(
   state: VentilationSimulationState,
   step: number,
@@ -191,6 +209,7 @@ export function CaseWorkflow({
   onResult,
   showActionFeedback = true,
   onShowActionFeedbackChange,
+  coachingEnabled = false,
 }: {
   state: VentilationSimulationState
   definition: VentilationCaseDefinition
@@ -200,6 +219,11 @@ export function CaseWorkflow({
   maskedAssessment?: boolean
   showActionFeedback?: boolean
   onShowActionFeedbackChange?: (show: boolean) => void
+  /**
+   * Post-action coaching, which the Practice section turns on and the Assess section does not.
+   * Off by default so a caller that has not thought about it does not get it by accident.
+   */
+  coachingEnabled?: boolean
 }) {
   const [mechanismId, setMechanismId] = useState('')
   const [priorityId, setPriorityId] = useState('')
@@ -229,6 +253,62 @@ export function CaseWorkflow({
     recordedResultKey.current = resultKey
     onResult(outcome)
   }, [onResult, outcome, state.caseId, state.experience, state.phase, state.seed])
+
+  /*
+   * The "before" for post-action coaching.
+   *
+   * Held here rather than in the simulation state because it is a record of what the learner could
+   * see at the moment they acted, not a property of the patient — putting it in the reducer would
+   * change the replay payload and the stored session for a display concern.
+   *
+   * Adjusted during render rather than from an effect, and keyed on the record identity, so it costs
+   * one extra render per *action* rather than one per tick, and so the waiting notice is on screen in
+   * the same commit the action is recorded in.
+   *
+   * `seenRecordId` is seeded with whatever was already recorded at mount, which is how a resumed
+   * session is handled: its last action has no "before" measured on this device, so it is left
+   * uncoached and the next action is coached normally. Found by resuming in the browser — the block
+   * appeared reporting that nothing had moved for an action whose response had happened before the
+   * reload.
+   */
+  const latestRecord = state.interventions.at(-1) ?? null
+  const latestRecordId = latestRecord?.id ?? null
+  const [coachingTrack, setCoachingTrack] = useState<CoachingTrack>(() => ({
+    recordId: state.interventions.at(-1)?.id ?? null,
+    baseline: null,
+    coaching: null,
+  }))
+
+  if (latestRecordId !== coachingTrack.recordId) {
+    setCoachingTrack({
+      recordId: latestRecordId,
+      baseline: latestRecord ? capturePostActionBaseline(state, definition, latestRecord) : null,
+      coaching: null,
+    })
+  } else if (coachingEnabled && coachingTrack.coaching === null && coachingTrack.baseline) {
+    /*
+     * Latched at the moment the interval closes, and not recomputed afterwards.
+     *
+     * The block is a report of what happened over the interval the learner watched. Re-deriving it
+     * live would make it a second monitor: the parent ticks ten times a second, so the readings and
+     * the verdict rewrote themselves underneath the learner — measured on MV-13, the block released
+     * saying peak pressure fell and, seconds later, was saying something else, while `role="status"`
+     * re-announced each version.
+     */
+    const settled = ventilationPostActionCoaching(state, definition, coachingTrack.baseline)
+    if (settled) setCoachingTrack({ ...coachingTrack, coaching: settled })
+  }
+
+  const coaching = coachingEnabled ? coachingTrack.coaching : null
+  const coachingPending = Boolean(
+    coachingEnabled &&
+    coaching === null &&
+    coachingTrack.baseline &&
+    state.experience === 'practice' &&
+    state.prediction.committed &&
+    latestRecord?.id === coachingTrack.baseline.recordId &&
+    !postActionObservation(state, coachingTrack.baseline).complete,
+  )
 
   const performedIds = new Set(state.interventions.map((record) => record.interventionId))
   const predictionReady = Boolean(mechanismId && priorityId && responseId)
@@ -503,6 +583,18 @@ export function CaseWorkflow({
             </div>
           </div>
         ) : null}
+        {/*
+         * Last in the section, deliberately. The safety interruption above is immediate and must not
+         * move down the screen when a block that arrives later appears underneath it; the response
+         * callout above is the evidence this block is about, so the two read together.
+         */}
+        {coachingPending ? (
+          <p className={styles.coachingPending} role="status" data-mv-coaching-pending>
+            The response to this action is still developing. Read the patient and the traces while
+            it does.
+          </p>
+        ) : null}
+        {coaching ? <PostActionCoachingPanel coaching={coaching} /> : null}
       </section>
 
       <section id="mv-case-observe" className={styles.workflowSection} tabIndex={-1}>
