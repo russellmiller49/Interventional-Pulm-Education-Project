@@ -5,12 +5,18 @@ import { join } from 'node:path'
 import { useReducer, type AnchorHTMLAttributes, type ReactNode } from 'react'
 
 import { CrrtCasePlayer } from '../components/CrrtCasePlayer'
+import { CrrtLivePressureDevice } from '../components/CrrtLivePressureDevice'
 import { BaxterCrrtModuleNav } from '../components/BaxterCrrtModuleNav'
 import { CrrtCitrateDifferential } from '../components/CrrtCitrateDifferential'
 import { CrrtPilotCircuit } from '../components/CrrtPilotCircuit'
 import { CrrtStagedPrescriptionBuilder } from '../components/CrrtStagedPrescriptionBuilder'
 import { getBaxterCrrtCase } from '../content'
-import { crrtCircuitOverlays } from '../content/circuitModel'
+import { crrtCircuitOverlays, crrtPressureSignalIds } from '../content/circuitModel'
+import {
+  createInitialPrismaxPilotInterfaceState,
+  selectPrismaxPilotCaseOperationsDisplay,
+} from '../engine/deviceAdapters/prismax'
+import { crrtLivePressureReviewStates } from '../engine/testSupport/livePressureStates'
 import { crrtCitrateDifferentialCategories } from '../content/citrateDifferential'
 import { createCrrtLearningSession, crrtLearningSessionReducer } from '../engine'
 
@@ -144,6 +150,54 @@ describe('Baxter CRRT accessibility contract', () => {
       view.unmount()
     },
   )
+
+  it.each(
+    crrtLivePressureReviewStates().flatMap((review) =>
+      crrtPressureSignalIds.map((signalId) => [review.id, signalId] as const),
+    ),
+  )(
+    'renders the live pressure profile for %s with %s selected without an accessibility violation',
+    async (reviewId, signalId) => {
+      const state = crrtLivePressureReviewStates().find((entry) => entry.id === reviewId)!.state
+      const view = render(
+        <CrrtLivePressureDevice
+          operations={selectPrismaxPilotCaseOperationsDisplay(
+            createInitialPrismaxPilotInterfaceState(),
+            state,
+          )}
+          selectedSignalId={signalId}
+          onSelectSignal={() => {}}
+        />,
+      )
+
+      expect(await axe(view.container)).toHaveNoViolations()
+      view.unmount()
+    },
+  )
+
+  it('namespaces every generated live-pressure id so two mounted profiles cannot collide', () => {
+    const operations = selectPrismaxPilotCaseOperationsDisplay(
+      createInitialPrismaxPilotInterfaceState(),
+      crrtLivePressureReviewStates()[0].state,
+    )
+    const view = render(
+      <>
+        <CrrtLivePressureDevice
+          operations={operations}
+          selectedSignalId="access"
+          onSelectSignal={() => {}}
+        />
+        <CrrtLivePressureDevice
+          operations={operations}
+          selectedSignalId="tmp"
+          onSelectSignal={() => {}}
+        />
+      </>,
+    )
+    const ids = [...view.container.querySelectorAll('[id]')].map((node) => node.id)
+    expect(new Set(ids).size).toBe(ids.length)
+    view.unmount()
+  })
 
   it('namespaces every generated circuit id so two mounted circuits cannot collide', () => {
     const view = render(

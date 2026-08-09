@@ -1,5 +1,18 @@
+/**
+ * The static hardware illustration.
+ *
+ * This is no longer the module's device representation. Pressure teaching lives
+ * on the live profile, which reads the running model; this drawing is kept only
+ * for the one thing a functional schematic cannot give — where things physically
+ * sit on a machine. It is frozen artwork: nothing on it moves, and none of its
+ * regions carries a value.
+ *
+ * Hardware names stay at the broad orientation level DEV-PM-014 supports. They
+ * do not encode operating instructions, and no region here explains what a
+ * pressure means; that belongs to the live profile and the universal circuit,
+ * where it is said once.
+ */
 export type PrismaxSimulatorHotspotId =
-  | 'touchscreen'
   | 'solution-pumps'
   | 'syringe-pump'
   | 'safety-monitoring'
@@ -26,25 +39,27 @@ export const prismaxSimulatorArtwork = Object.freeze({
 })
 
 /**
+ * The sentence that has to survive every later edit: this picture is not wired
+ * to anything.
+ */
+export const prismaxStaticReferenceNotice = Object.freeze({
+  title: 'Static device reference',
+  summary: 'Where things sit on the machine — a fixed drawing, not a live display.',
+  unsynchronisedNotice:
+    'This drawing is not connected to the simulation. Nothing on it updates, no region shows a value, and its appearance does not change when the model does. For current pressures, read the live pressure profile above.',
+  fidelityBoundary:
+    'It shows roughly where hardware sits, nothing more. Screen layout, menus, button behaviour, alarm appearance, and every operating sequence belong to the manufacturer’s instructions and your local training.',
+  sourceRecordIds: Object.freeze(['DEV-PM-014'] as const),
+})
+
+/**
  * Coordinates target the original simulator artwork rather than a copied
- * product photograph. Hardware names stay at the broad orientation level
- * supported by DEV-PM-014; they do not encode operating instructions.
+ * product photograph.
  */
 export const prismaxSimulatorHotspots: readonly PrismaxSimulatorHotspot[] = Object.freeze([
   Object.freeze({
-    id: 'touchscreen',
-    ordinal: 1,
-    label: 'Touchscreen and workflow display',
-    shortLabel: 'Touchscreen',
-    description:
-      'The interactive screen below presents the manufacturer-manual setup sequence and the simulated Operations display.',
-    xPercent: 50,
-    yPercent: 14,
-    sourceRecordIds: Object.freeze(['DEV-PM-014'] as const),
-  }),
-  Object.freeze({
     id: 'solution-pumps',
-    ordinal: 2,
+    ordinal: 1,
     label: 'Solution pump deck',
     shortLabel: 'Fluid pumps',
     description:
@@ -55,7 +70,7 @@ export const prismaxSimulatorHotspots: readonly PrismaxSimulatorHotspot[] = Obje
   }),
   Object.freeze({
     id: 'syringe-pump',
-    ordinal: 3,
+    ordinal: 2,
     label: 'Syringe-pump position',
     shortLabel: 'Syringe position',
     description:
@@ -66,18 +81,18 @@ export const prismaxSimulatorHotspots: readonly PrismaxSimulatorHotspot[] = Obje
   }),
   Object.freeze({
     id: 'safety-monitoring',
-    ordinal: 4,
+    ordinal: 3,
     label: 'Pressure and safety-monitoring area',
     shortLabel: 'Sensors and clamp',
     description:
-      'This area represents pressure connections, air monitoring, and the return-line clamp without reproducing device thresholds or troubleshooting instructions.',
+      'Where the pressure connections, air monitoring, and return-line clamp physically sit. What each pressure means, and which are measured at a site rather than calculated from other sites, is on the live pressure profile — it is not repeated here. No device threshold or troubleshooting instruction is reproduced.',
     xPercent: 69,
     yPercent: 43,
     sourceRecordIds: Object.freeze(['DEV-PM-014'] as const),
   }),
   Object.freeze({
     id: 'fluid-management',
-    ordinal: 5,
+    ordinal: 4,
     label: 'Fluid scales and bag positions',
     shortLabel: 'Scales and bags',
     description:
