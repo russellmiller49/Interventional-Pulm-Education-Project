@@ -155,9 +155,18 @@ says that a series acquired the same slightly imperfect way every time agrees wi
 shifted together. `repeatable-but-biased-series` is a named failure mode on the method record.
 
 **What the model can actually show.** Significant tricuspid regurgitation in this engine broadens the
-curve past the end of its recording; it does **not** produce a visible second excursion. The
-teaching copy and the exclusion reason both say that, and no direction of bias is asserted. The
-`secondary-curve-disturbance` detector remains as the honest definition of a second excursion.
+curve so its decay may not return toward baseline inside the recorded window; it does **not** produce
+a visible second excursion. Three learner-facing surfaces say so and none contradicts it: the
+open-question record, the thermodilution failure mode, and the alert the generator raises. No
+direction of bias is asserted anywhere.
+
+The generic `secondary-curve-disturbance` category is unchanged — it is a real curve-quality problem,
+and a test builds a trace that genuinely rebounds after decaying to prove the exclusion reason still
+fires for one. What was removed is the claim that the _modeled regurgitant_ curve shows it.
+
+A copy contract enforces this: no tricuspid-regurgitation-specific sentence may contain "secondary
+disturbance", "second excursion", or "recirculation disturbance", and the rendered open-question card
+must describe a broadened, unsettled curve.
 
 ## Fick
 
@@ -168,8 +177,18 @@ with its reasons.
 
 **Withheld when** a required input is missing or out of range; the content difference is at or below
 zero; the venous specimen did not come from the pulmonary artery; the patient was not in a steady
-state; the inputs do not belong to one measurement episode; or a shunt is present and was not
-handled with separate pulmonary and systemic sampling.
+state; the inputs do not belong to one measurement episode; or an intracardiac shunt is present.
+
+**The shunt boundary fails closed.** Any `intracardiacShuntPresent` withholds, with no way round it.
+A companion `shuntSamplingAddressed` flag used to sit beside it, and setting it produced an ordinary
+result — from one arterial content and one pulmonary-artery content, which is a single systemic
+difference. The flag has been **removed**, not defaulted, so no boolean can wave an under-specified
+shunt calculation through. Its only non-`false` use anywhere was the test that had to change.
+
+The withholding names the boundary precisely: _this simple one-difference Fick calculation cannot
+represent separate pulmonary and systemic flow, and a dedicated compartmental oximetry and Qp/Qs
+calculation is outside this model._ That is narrower than "Fick does not work in shunts", and a test
+asserts the copy does not drift into the wider claim.
 
 A central venous specimen is **not** treated as interchangeable with a true mixed-venous one — the
 registry carries no claim supporting that substitution in this context, so the calculation is
@@ -231,6 +250,14 @@ Nine defects were introduced one at a time and reverted. All nine fail loudly.
 | 7. Broken unit conversion                       | H4 unit-reconciliation check                                            |
 | 8. Repeatability described as proof of accuracy | H4 repeatability check                                                  |
 | 9. Method name removed from a result            | H4 method-attachment check                                              |
+
+A later correction pass added three more, run the same way:
+
+| Defect                                                            | Caught by                                                         |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------- |
+| A. Stale tricuspid-regurgitation "secondary disturbance" sentence | three checks in the TR copy contract, including the rendered card |
+| B. Stale tricuspid-regurgitation generator alert                  | the TR copy contract's no-secondary-disturbance check             |
+| C. Shunt bypass boolean re-added                                  | the no-boolean-bypass check                                       |
 
 ## Status
 
