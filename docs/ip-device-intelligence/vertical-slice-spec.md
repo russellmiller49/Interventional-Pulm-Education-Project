@@ -451,3 +451,25 @@ The slice is acceptable when all of the following hold:
 
 The decision to proceed with this slice, its route names, and its tier assignments belong to
 the physician owner and are tracked in [decision-log.md](./decision-log.md).
+
+---
+
+## 9. Phase D1 implementation status (added 2026-08-08; later addition — sections 1–8 are the Phase D0 specification and are unchanged)
+
+The slice specified above was implemented on branch `claude/device-intelligence-vertical-slice`
+under the D-10 bounded scope. Implementation record: [d1-implementation.md](./d1-implementation.md);
+validation results: [d1-validation.md](./d1-validation.md); review packet:
+[d1-review/](./d1-review/).
+
+Route names finalized as the indicative set: `/[locale]/devices`,
+`/[locale]/devices/[productId]`, `/[locale]/clinical-roles/[roleCode]`, `/[locale]/procedures`,
+`/[locale]/procedures/[procedureCode]`, `/[locale]/procedures/[procedureCode]/readiness` — all
+public-unlisted and noindex per D-03 as modified. `/compare` and `/institution/capabilities`
+were not built. The capability view of §4 shipped as the demo-only readiness view with the
+eight deterministic states; three states (5, 6, 8) are demonstrable only through test fixtures
+against today's data, exactly as §4 anticipates for state 8. One §2.5 note gained precision in
+implementation: the deliberately-blocking APC platform/probe mismatch lives in the test-fixture
+rule set (moved out of the production seed in v0.2), so the workspace shows the incompatible
+demo fixtures and the pinned conditions, and the blocking failure itself is proven by the
+documented fixture-injection pattern through the existing resolver (see
+[d1-review/known-limitations.md](./d1-review/known-limitations.md) item 1).

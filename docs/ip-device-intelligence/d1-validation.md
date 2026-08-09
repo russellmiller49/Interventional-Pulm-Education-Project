@@ -1,0 +1,50 @@
+# Phase D1 validation — gates, tests, and verification results
+
+Phase D1 implementation document (2026-08-08), recording the validation of the vertical slice on branch `claude/device-intelligence-vertical-slice` (base `origin/main` @ `da4420f9`). Companion: [d1-implementation.md](./d1-implementation.md), [d1-review/](./d1-review/).
+
+## 1. Data and publication gates (run at baseline AND after implementation)
+
+| Gate                                  | Result                                                                                                                                             |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run ip-intel:audit`              | Byte-identical `data-readiness-audit.json` (`git diff` empty) both times                                                                           |
+| `npm run ip-cards:release:check-base` | `54 published entries in the base; 54 unchanged, 0 advanced, 0 new` both times                                                                     |
+| `npm run ip-cards:validate-data`      | Clean; workbook sha `fb25b24e…` unchanged                                                                                                          |
+| `npm run build:content`               | Clean                                                                                                                                              |
+| `npm run type-check`                  | Zero errors                                                                                                                                        |
+| `npm run build`                       | Succeeds; `.next/server/app/[locale]/` contains `devices/`, `clinical-roles/`, `procedures/`                                                       |
+| `npm run lint`                        | Zero errors. 19 pre-existing warnings, all in files this branch does not touch; every changed file lints clean (verified with a scoped eslint run) |
+| Prettier                              | All changed files pass `--check`                                                                                                                   |
+
+No database operation of any kind was performed; no migration was added; no release pointer or definition moved; no catalog/seed/reviewed/generated file changed.
+
+## 2. Jest
+
+- New: `src/features/device-intelligence/__tests__/` — 9 suites / 76 tests, all passing: route-access, atlas-filtering, procedure-registry, mechanisms, readiness, outputs, role-pages, messages, accessibility (jest-axe).
+- Affected existing scope (`src/features/preference-cards`, `src/lib`, `src/i18n`): 91 suites / 1,418 tests, all passing — including the publication-baseline, release-bundle-integrity, and golden-scenario suites, which pin that the preserved engines behave byte-identically.
+- Full run (`npx jest`): exit 0 (completed during the session; re-run after the final edits before commit).
+
+Deterministic assertions worth naming:
+
+- The coverage ladder computed by `domain/coverage-ladder.ts` equals `data-readiness-audit.json` per role for all three exemplars (derived, not copied).
+- Workspace slot totals/requiredness (15 = 7-4-4, 29 = 3-21-5, 13 = 3-7-3) equal the audit.
+- Raw compatibility statements per workspace equal the audit's `resolvedRulesTouchingProcedure.ruleIds` (13 / 12 / 7).
+- Atlas store holds exactly 753 products, every one `verified_source` + `prototype_visible`; every excluded product returns null on direct lookup.
+- EBUS rescue reachability; THERAPEUTIC APC blocking failure via the documented fixture-injection through `resolveCard`; laser/imaging roles proposals-only/unmapped; CHEST_TUBE role replacement, mutual exclusion (`blocked`), kit BOM suppression, no-rescue fact.
+- All eight readiness states, including the three fixture-only states; candidate/unknown/demo evidence never yields plain `ready`; proposals never satisfy coverage; every diagnostic carries a source identifier.
+- Output projections (room/nursing/training/gap) share one resolved item set and are content-identical across repeated computation.
+- Message parity and ICU formatting across en/es/zh-CN; copy-safety allowlist for equivalence/substitution wording; the two mandatory related-product headings verbatim; both watermark texts verbatim.
+
+## 3. Browser verification
+
+See [d1-review/browser-walkthrough.md](./d1-review/browser-walkthrough.md) for the full manifest. Summary: all six routes walked at 1600×900 with the three workspaces and three readiness pages; density spot-checks at 1440×900, 1280×720, and 1024×768; zero horizontal page overflow at any viewport (asserted via `scrollWidth`); `X-Robots-Tag: noindex, nofollow, noarchive` confirmed on live responses; hidden-product and non-exemplar 404s confirmed; legacy role alias 307 confirmed; es locale and the preserved-page cross-links confirmed. One defect found live (bare parameterized aria-label) was fixed and regression-guarded.
+
+## 4. Indexing/navigation surface audit
+
+- `src/app/sitemap.ts` is an explicit allowlist; no D1 route appears in it.
+- `src/app/robots.txt` is unchanged; noindex is carried per page and per response header, the same posture as every existing public-unlisted module.
+- Site search (`src/lib/site-search.ts`) filters through `isVisibleModulePath`, which returns false for all D1 paths.
+- No navigation component references the new paths.
+
+## 5. Adversarial review
+
+Performed as a self-review pass plus an independent read-only agent pass over the full diff, focused on: candidate/hidden exposure, indexing/navigation exposure, equivalence wording, duplicated resolver logic, hardcoded procedure data, demo-as-real presentation, proposals-in-readiness, write paths, auth gaps, stale UI counts. Findings and dispositions are recorded in the PR description; every confirmed blocker/high finding was fixed before the PR was opened.
