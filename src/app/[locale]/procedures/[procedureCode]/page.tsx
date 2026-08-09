@@ -233,10 +233,12 @@ export default async function ProcedureWorkspacePage({ params, searchParams }: P
         <p className="text-xs leading-5 text-muted-foreground">
           {t('proposalsTotal', { count: workspace.proposalTotal })} {t('proposalsNeverSelectable')}
         </p>
-        {workspace.procedureCode === 'THERAPEUTIC_BRONCH' ? (
-          // Owner-review F-07: an authored statement, deliberately independent of the ladder
-          // badges. Its release-wide truth is pinned by the mechanisms.test.ts assertion
-          // covering every LASER* role across ALL procedure slots, not just this page's.
+        {workspace.laserPathwayDisclosureRequired ? (
+          // Owner-review F-07, derived per C-07: renders exactly when this workspace carries
+          // LASER* governed requirements and none has an authored selectable option — never
+          // from a hardcoded procedure code. Its release-wide truth is pinned by the
+          // mechanisms.test.ts assertion covering every LASER* role across ALL procedure
+          // slots, not just this page's.
           <p className="rounded-xl border border-amber-500/50 bg-amber-500/10 px-4 py-3 text-sm leading-6">
             {t('laserPathwayNote')}
           </p>
@@ -368,7 +370,11 @@ export default async function ProcedureWorkspacePage({ params, searchParams }: P
                       <EvidenceBadge state="unknown">{tCommon('badges.unknown')}</EvidenceBadge>
                     )}
                   </div>
-                  {statement.ruleText ? (
+                  {statement.withheld ? (
+                    <p className="mt-1 text-xs italic text-muted-foreground">
+                      {tCommon('compatibilityWithheldNote')}
+                    </p>
+                  ) : statement.ruleText ? (
                     <p className="mt-1 text-muted-foreground">“{statement.ruleText}”</p>
                   ) : null}
                 </li>

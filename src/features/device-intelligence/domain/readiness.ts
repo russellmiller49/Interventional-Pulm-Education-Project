@@ -12,7 +12,9 @@
  *
  * Safety rules enforced here and pinned by tests:
  * - candidate- or unknown-grade evidence never produces plain `ready`;
- * - a demo stand-in mapping always forces a limitation;
+ * - a demo stand-in mapping always forces a limitation — and for a REQUIRED role whose
+ *   coverage rung is structurally uncovered (proposals-only or wholly unauthored), no
+ *   stand-in or hospital-item mapping can lift the requirement above `not_ready`;
  * - proposals are not coverage and cannot influence any state;
  * - a missing attribute (compatibility `unknown`) is a limitation, never a silent pass;
  * - every diagnostic carries the identifier of the row or rule that produced it.
@@ -75,8 +77,12 @@ export interface FormularyAssertionInput {
   hospitalCarries: boolean
   preferred: boolean
   productVisibilityState: string | null
-  /** Whether this product is an authored SELECTABLE option on any slot of this procedure. */
-  authoredSelectableForProcedure: boolean
+  /**
+   * The role codes parsed from THIS formulary row. Eligibility is judged against the slots
+   * these codes name, never against a procedure-wide product set: a product selectable for
+   * an unrelated slot cannot satisfy a row that maps it to a different role.
+   */
+  roleCodes: string[]
 }
 
 export interface ReadinessProjectionInput {
@@ -90,6 +96,12 @@ export interface ReadinessProjectionInput {
   authoredSelectablePairs: ReadonlySet<string>
   /** Role codes covered only by demo stand-ins (seed/demo-stand-ins.json). */
   demoStandInRoleCodes: ReadonlySet<string>
+  /**
+   * Authored SELECTABLE option product ids per requirement role of THIS procedure — the
+   * role-scoped eligibility surface the formulary check reads. Roles outside the procedure
+   * are simply absent, so a row's stray role codes can never widen eligibility.
+   */
+  authoredSelectableProductIdsByRole: ReadonlyMap<string, ReadonlySet<string>>
   formularyAssertions: FormularyAssertionInput[]
 }
 
@@ -179,15 +191,25 @@ export function projectDemoReadiness(input: ReadinessProjectionInput): Readiness
 
     const hasSelection = item.selectedHospitalItemId !== null
 
+    // A required role whose ladder rung is structurally uncovered: proposals-only, or the
+    // two wholly unauthored rungs. Proposals are not coverage (decision D-08), and a demo
+    // stand-in or hospital-item mapping is an institutional overlay, not authored coverage —
+    // so this gap forces `not_ready` below regardless of any selection (Codex C-01).
+    const requiredStructuralGap =
+      item.effectiveRequiredness === 'required' &&
+      coverage !== null &&
+      NO_COVERAGE_RUNGS.has(coverage.coverage)
+
     // State 4 — a required requirement whose role has no authored selectable option anywhere
     // (proposals-only and wholly unmapped rungs). Structural, independent of any institution.
     // A required requirement OUTSIDE the template ladder (added by a modifier or a rescue
     // module) that resolves nothing is diagnosed the same way rather than failing silently:
     // no coverage rung exists for it and no authored option can.
     if (
-      item.effectiveRequiredness === 'required' &&
-      ((coverage !== null && NO_COVERAGE_RUNGS.has(coverage.coverage)) ||
-        (coverage === null && item.selectedHospitalItemId === null))
+      requiredStructuralGap ||
+      (item.effectiveRequiredness === 'required' &&
+        coverage === null &&
+        item.selectedHospitalItemId === null)
     ) {
       diagnostics.push({
         code: 'missing_required_product_role',
@@ -226,7 +248,13 @@ export function projectDemoReadiness(input: ReadinessProjectionInput): Readiness
     }
 
     let state: RequirementReadinessState
-    if (!hasSelection) {
+    if (requiredStructuralGap) {
+      // Codex C-01: a required requirement with structural no-coverage is `not_ready` even
+      // when a demo stand-in or hospital-item mapping selected something — the mapping stays
+      // disclosed in `evidence` and its resolver advisories keep rendering, but it cannot
+      // convert an unauthored role into any form of readiness.
+      state = 'not_ready'
+    } else if (!hasSelection) {
       // No institutional mapping at all. For a required requirement that is state 3; for
       // contingency/optional it degrades the card per spec §4 rule 2's final clause.
       state = item.effectiveRequiredness === 'required' ? 'not_ready' : 'ready_with_limitations'
@@ -296,17 +324,21 @@ export function projectDemoReadiness(input: ReadinessProjectionInput): Readiness
   // State 8 — an institutional assertion that disagrees with authored eligibility. The real
   // formulary carries zero assertions today, so in production data this never fires; the
   // rule is exercised by fixtures in tests, exactly as the D0 specification records.
+  // Eligibility is role/slot-scoped (Codex C-04): a carried or preferred row is eligible only
+  // when its product is an authored SELECTABLE option for a slot of a role the row itself
+  // names. A product selectable for an unrelated slot never satisfies a different role's row,
+  // and hidden-product rows stay mismatches regardless of eligibility (fail closed).
   for (const assertion of input.formularyAssertions) {
     if (!assertion.hospitalCarries && !assertion.preferred) continue
-    if (
-      !assertion.authoredSelectableForProcedure ||
-      assertion.productVisibilityState === 'hidden'
-    ) {
+    const eligibleForNamedRole = assertion.roleCodes.some((roleCode) =>
+      input.authoredSelectableProductIdsByRole.get(roleCode)?.has(assertion.productId),
+    )
+    if (!eligibleForNamedRole || assertion.productVisibilityState === 'hidden') {
       cardDiagnostics.push({
         code: 'inventory_formulary_mismatch',
         sourceKind: 'formulary_row',
         sourceId: assertion.formularyId,
-        detail: `product ${assertion.productId} carried=${assertion.hospitalCarries} preferred=${assertion.preferred} authoredSelectable=${assertion.authoredSelectableForProcedure} visibility=${assertion.productVisibilityState ?? 'unknown'}`,
+        detail: `product ${assertion.productId} carried=${assertion.hospitalCarries} preferred=${assertion.preferred} roleCodes=${assertion.roleCodes.join('/') || 'none'} eligibleForNamedRole=${eligibleForNamedRole} visibility=${assertion.productVisibilityState ?? 'unknown'}`,
       })
     }
   }

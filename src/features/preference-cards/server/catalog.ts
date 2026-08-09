@@ -825,9 +825,30 @@ export interface ProductDetail {
   primaryRoleCode: string | null
 }
 
+export interface ProductDetailOptions {
+  /**
+   * How the one representative per manufacturer is picked for the cross-manufacturer
+   * discovery list:
+   *
+   * - `'catalog_order'` (default) — the preserved pre-D1 behavior: the first candidate in
+   *   catalog order per manufacturer group. Every existing caller (the preference-card
+   *   product pages, catalog QA) keeps this without opting into anything.
+   * - `'primary_fit'` — owner-review F-18: prefer a candidate with a Primary-fit mapping
+   *   for the discovery role, else fall back to catalog order. Only the D1 atlas opts in
+   *   (Codex C-06 re-scoped F-18 to the atlas so the preserved pages keep their legacy
+   *   representative ids).
+   *
+   * The manufacturer set, first-seen order, six-manufacturer cap, and the returned
+   * denominators are identical in both modes; only the representative id within a group
+   * differs.
+   */
+  representativeSelection?: 'catalog_order' | 'primary_fit'
+}
+
 export function getProductDetail(
   productId: string,
   store: CatalogStore = getCatalogStore(),
+  options: ProductDetailOptions = {},
 ): ProductDetail | null {
   const product = store.productById.get(productId)
   if (!product) return null
@@ -882,9 +903,11 @@ export function getProductDetail(
   )
 
   // Cross-manufacturer discovery: same primary use, different vendor. One representative
-  // per manufacturer (Primary-fit mappings preferred, otherwise catalog order), capped at 6
-  // manufacturers in first-seen order — a discovery pointer, never a matched set. The full
-  // per-manufacturer counts are returned so captions can state the denominators.
+  // per manufacturer, capped at 6 manufacturers in first-seen catalog order — a discovery
+  // pointer, never a matched set. The full per-manufacturer counts are returned so captions
+  // can state the denominators. The representative id within a group follows
+  // `options.representativeSelection`: catalog order (the preserved legacy default — a
+  // group's first candidate) or the F-18 Primary-fit preference the D1 atlas opts into.
   const primaryRole = roleLinks.find((link) => link.role_fit === 'Primary') ?? roleLinks[0]
   const otherManufacturers: CatalogListItem[] = []
   let otherManufacturersTotalProducts = 0
@@ -900,17 +923,21 @@ export function getProductDetail(
       otherManufacturersTotalProducts += 1
     }
     otherManufacturersTotalManufacturers = candidatesByGroup.size
-    const primaryFitProductIds = new Set(
-      (store.productIdsByRole.get(primaryRole.role_code) ?? []).filter((candidateId) =>
-        (store.rolesByProduct.get(candidateId) ?? []).some(
-          (link) => link.role_code === primaryRole.role_code && link.role_fit === 'Primary',
-        ),
-      ),
-    )
+    const primaryFitProductIds =
+      options.representativeSelection === 'primary_fit'
+        ? new Set(
+            (store.productIdsByRole.get(primaryRole.role_code) ?? []).filter((candidateId) =>
+              (store.rolesByProduct.get(candidateId) ?? []).some(
+                (link) => link.role_code === primaryRole.role_code && link.role_fit === 'Primary',
+              ),
+            ),
+          )
+        : null
     for (const group of candidatesByGroup.values()) {
       if (otherManufacturers.length >= 6) break
-      const representative =
-        group.find((candidate) => primaryFitProductIds.has(candidate.product_id)) ?? group[0]
+      const representative = primaryFitProductIds
+        ? (group.find((candidate) => primaryFitProductIds.has(candidate.product_id)) ?? group[0])
+        : group[0]
       otherManufacturers.push(toListItem(representative))
     }
   }

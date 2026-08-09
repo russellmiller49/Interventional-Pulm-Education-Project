@@ -126,7 +126,10 @@ export async function RequirementBrowser({
                 proposalsDisclaimer: t('requirement.proposalsDisclaimer'),
                 authoredOptions: t('requirement.authoredOptions'),
                 noAuthoredOptions: t('requirement.noAuthoredOptions'),
-                notInAtlas: t('requirement.notInAtlas'),
+                optionsWithheld: t('requirement.optionsWithheld', {
+                  count: requirement.withheldAuthoredOptionCount,
+                  selectable: requirement.withheldSelectableOptionCount,
+                }),
                 selectable: tCommon('badges.authoredSelectable'),
                 nonSelectable: tCommon('badges.authoredNonSelectable'),
                 zoneLabel: t(`setupZones.${requirement.setupZone}` as 'setupZones.unassigned'),
@@ -186,7 +189,7 @@ function RequirementCard({
     proposalsDisclaimer: string
     authoredOptions: string
     noAuthoredOptions: string
-    notInAtlas: string
+    optionsWithheld: string
     selectable: string
     nonSelectable: string
     zoneLabel: string
@@ -276,40 +279,36 @@ function RequirementCard({
         ) : null}
       </div>
 
-      {requirement.authoredOptions.length > 0 ? (
+      {requirement.authoredOptions.length > 0 || requirement.withheldAuthoredOptionCount > 0 ? (
         <div className="mt-3 border-t border-border/60 pt-2">
           <p className="text-xs font-semibold text-muted-foreground">{labels.authoredOptions}</p>
-          <ul className="mt-1 space-y-1">
-            {requirement.authoredOptions.map((option) => (
-              <li key={option.productId} className="flex flex-wrap items-center gap-1.5 text-xs">
-                {option.atlasVisible ? (
+          {/* Every entry here is inside the D1 atlas cohort by construction (C-02): the
+              server view model never carries a non-cohort identity, so every option links. */}
+          {requirement.authoredOptions.length > 0 ? (
+            <ul className="mt-1 space-y-1">
+              {requirement.authoredOptions.map((option) => (
+                <li key={option.productId} className="flex flex-wrap items-center gap-1.5 text-xs">
                   <Link
                     href={`/${locale}/devices/${option.productId}` as Route}
                     className="font-medium underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {option.productName}
                   </Link>
-                ) : (
-                  <span className="font-medium" title={labels.notInAtlas}>
-                    {option.productName}
-                  </span>
-                )}
-                {option.manufacturerDisplay ? (
-                  <span className="text-muted-foreground">· {option.manufacturerDisplay}</span>
-                ) : null}
-                <EvidenceBadge
-                  state={option.selectable ? 'authored_selectable' : 'authored_non_selectable'}
-                >
-                  {option.selectable ? labels.selectable : labels.nonSelectable}
-                </EvidenceBadge>
-                {!option.atlasVisible ? (
-                  <span className="text-[10px] italic text-muted-foreground">
-                    {labels.notInAtlas}
-                  </span>
-                ) : null}
-              </li>
-            ))}
-          </ul>
+                  {option.manufacturerDisplay ? (
+                    <span className="text-muted-foreground">· {option.manufacturerDisplay}</span>
+                  ) : null}
+                  <EvidenceBadge
+                    state={option.selectable ? 'authored_selectable' : 'authored_non_selectable'}
+                  >
+                    {option.selectable ? labels.selectable : labels.nonSelectable}
+                  </EvidenceBadge>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {requirement.withheldAuthoredOptionCount > 0 ? (
+            <p className="mt-1 text-xs italic text-muted-foreground">{labels.optionsWithheld}</p>
+          ) : null}
         </div>
       ) : (
         <p className="mt-3 border-t border-border/60 pt-2 text-xs italic text-muted-foreground">

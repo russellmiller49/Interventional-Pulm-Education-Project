@@ -1,6 +1,6 @@
 # Phase D1 review packet — route inventory
 
-Phase D1 implementation document (2026-08-08). Companion files: [browser-walkthrough.md](./browser-walkthrough.md), [known-limitations.md](./known-limitations.md), [owner-review-checklist.md](./owner-review-checklist.md).
+Phase D1 implementation document (2026-08-08). Companion files: [browser-walkthrough.md](./browser-walkthrough.md) (HISTORICAL pre-owner-correction evidence — see its banner), [known-limitations.md](./known-limitations.md), [owner-review-checklist.md](./owner-review-checklist.md), [codex-correction-pass.md](./codex-correction-pass.md).
 
 ## New routes (6 pages, 0 API routes, 0 server actions)
 

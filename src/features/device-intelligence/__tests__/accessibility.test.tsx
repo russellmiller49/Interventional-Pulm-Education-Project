@@ -48,12 +48,15 @@ describe('D1 accessibility and required warnings', () => {
   }, 120_000)
 
   it('workspace page: no-rescue fact and BOM-managed securement render for CHEST_TUBE', async () => {
-    const { getByText, getAllByText } = await renderPage(
+    const { getByText, getAllByText, queryByText } = await renderPage(
       ProcedureWorkspacePage({
         params: Promise.resolve({ locale: 'en', procedureCode: 'CHEST_TUBE' }),
         searchParams: Promise.resolve({ view: 'phases' }),
       }),
     )
+    // C-07 absence pin: a workspace without the governed laser condition renders no laser
+    // disclosure — the note is derived, not procedure-coded.
+    expect(queryByText(/laser pathway is not modelled here/i)).toBeNull()
     getByText(/No rescue module is defined or reachable for this procedure/)
     // F-11: the same sentence now names the only rescue authoring that exists.
     getByText(/absence here is an authoring gap/)
@@ -81,13 +84,18 @@ describe('D1 accessibility and required warnings', () => {
   }, 120_000)
 
   it('workspace page: THERAPEUTIC_BRONCH carries the authored laser-pathway note (F-07)', async () => {
-    const { getByText } = await renderPage(
+    const { getByText, getAllByText, queryByText } = await renderPage(
       ProcedureWorkspacePage({
         params: Promise.resolve({ locale: 'en', procedureCode: 'THERAPEUTIC_BRONCH' }),
         searchParams: Promise.resolve({}),
       }),
     )
     getByText(/The laser pathway is not modelled here and must not be planned from this page/)
+    // C-02 rendered-page pins: the hidden retrieval-net identity is absent, while the slot
+    // discloses its withheld authored options honestly.
+    expect(queryByText(/Micro Retrieval Net/)).toBeNull()
+    expect(queryByText(/PRD-F43B951B75/)).toBeNull()
+    expect(getAllByText(/withheld from this public view/).length).toBeGreaterThan(0)
   }, 120_000)
 
   it('readiness page: both watermarks, real-formulary honesty, state legend, evidence links', async () => {
@@ -120,6 +128,9 @@ describe('D1 accessibility and required warnings', () => {
     // advisory; the chip itself must say so.
     expect(getAllByText(/Demo: Ready — see advisory/).length).toBeGreaterThan(0)
     expect(getAllByText(/requires current local verification/).length).toBeGreaterThan(0)
+    // C-01 rendered pin: the required GENERIC_SUCTION structural gap turns the whole EBUS
+    // headline red — a demo stand-in selection no longer reads as a limitation.
+    expect(getAllByText(/Demo: Not ready/).length).toBeGreaterThan(0)
   }, 120_000)
 
   it('role page: verbatim guidance quoting and discovery-fact caption', async () => {
@@ -129,6 +140,24 @@ describe('D1 accessibility and required warnings', () => {
       }),
     )
     getByText(/Role membership is a discovery fact/)
+    // C-05: the generic-guidance qualifier is global — it renders on a role whose guidance
+    // has nothing to do with formularies too.
+    getByText(/does not establish that any hospital carries/)
     expect(await axe(container)).toHaveNoViolations()
+  }, 120_000)
+
+  it('role page: formulary-flavored governed guidance carries the non-institutional qualifier (C-05)', async () => {
+    const { getByText } = await renderPage(
+      ClinicalRolePage({
+        params: Promise.resolve({ locale: 'en', roleCode: 'GENERIC_DRAINAGE_UNIT' }),
+      }),
+    )
+    // The governed string renders verbatim…
+    getByText(/“Hospital formulary item\.”/)
+    // …with the global qualifier adjacent: generic authored content, no real institution.
+    getByText(/template language only/)
+    getByText(
+      /does not establish that any hospital carries, stocks, prefers, approves, or uses any product/,
+    )
   }, 120_000)
 })

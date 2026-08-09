@@ -8250,6 +8250,7 @@
       "notRecorded": "not recorded",
       "unlistedNote": "Phase D1 preview — this page is public-unlisted and excluded from search indexing. Reference information only; it is not clinical advice and no product recommendation is made.",
       "noEquivalenceNote": "Shared clinical-role membership and manufacturer product-line groupings are catalog-discovery facts. They are never clinical equivalence, procurement substitution, or formulary claims.",
+      "compatibilityWithheldNote": "This compatibility statement is withheld from the public atlas because it references a product outside the Phase D1 atlas cohort. Products outside the cohort are not identified on this surface.",
       "draftTitle": "DRAFT PROTOTYPE — NOT APPROVED FOR CLINICAL USE",
       "draftDisclaimer": "This procedure content is a governance-draft prototype rendered from release-pinned data. It has not completed clinician review.",
       "badges": {
@@ -8276,7 +8277,7 @@
       "intro": "A read-only reference of interventional pulmonology devices, restricted to catalog products whose specifications trace to a verified source and which are cleared for prototype display. Every fact carries its citation.",
       "cohortBadge": "{count} verified products",
       "cohortRule": "Cohort rule: verification_grade = verified_source AND visibility_state = prototype_visible.",
-      "exclusionNote": "Candidate-grade and hidden catalog products are not shown here. They remain reviewable on the existing authenticated catalog surfaces.",
+      "exclusionNote": "Candidate-grade and hidden catalog products are not shown here. They remain reviewable on the existing public-unlisted (direct-link) catalog surfaces.",
       "form": {
         "search": "Search",
         "searchPlaceholder": "Name, manufacturer, or catalog number…",
@@ -8361,8 +8362,9 @@
       "membershipNote": "Products listed under this role share a catalog-discovery mapping. Role membership is a discovery fact — it is not clinical equivalence, interchangeability, or a substitution recommendation.",
       "guidanceHeading": "Authored selection guidance",
       "guidanceVerbatim": "Quoted verbatim from the governed role table; never paraphrased.",
+      "guidanceGenericNote": "Authored selection guidance is generic educational content from the governed role table. Wording that mentions a formulary or hospital stocking is template language only — it does not establish that any hospital carries, stocks, prefers, approves, or uses any product.",
       "productsHeading": "Atlas products mapped to this role ({count, plural, one {# product} other {# products}})",
-      "cohortNote": "Only the Phase D1 atlas cohort is listed here (verified source, prototype-visible). Additional mapped products may exist on authenticated surfaces. Counts reflect catalog-ingestion coverage, not market availability.",
+      "cohortNote": "Only the Phase D1 atlas cohort is listed here (verified source, prototype-visible). Additional mapped products may exist on the existing public-unlisted (direct-link) catalog surfaces. Counts reflect catalog-ingestion coverage, not market availability.",
       "manufacturerProducts": "{count, plural, one {# product} other {# products}}",
       "noCohortProducts": "No products in the D1 atlas cohort are mapped to this role.",
       "proceduresHeading": "Procedures and slots using this role",
@@ -8452,7 +8454,7 @@
         "proposalsDisclaimer": "Unreviewed machine-derived suggestions. Never selectable; never satisfy coverage or readiness.",
         "authoredOptions": "Authored options",
         "noAuthoredOptions": "No authored options exist for this requirement.",
-        "notInAtlas": "not in the D1 atlas cohort"
+        "optionsWithheld": "{count, plural, one {# authored option} other {# authored options}} ({selectable} selectable) withheld from this public view — products outside the Phase D1 atlas cohort are not identified here."
       },
       "setupZones": {
         "room_capital_equipment": "Room / capital equipment",

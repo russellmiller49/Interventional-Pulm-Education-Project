@@ -44,11 +44,12 @@ import {
   type FormularyAssertionInput,
   type ReadinessProjection,
 } from '@/features/device-intelligence/domain/readiness'
+import { requiresLaserPathwayDisclosure } from '@/features/device-intelligence/domain/laser-pathway'
 import { getAtlasCatalogStore } from './atlas-store.server'
 import {
   getRawStatementsForRoles,
   getTypedRuleConditionsForRoles,
-  type RawCompatibilityStatement,
+  type AtlasCompatibilityStatement,
   type TypedRuleCondition,
 } from './compatibility.server'
 
@@ -269,6 +270,14 @@ export function getExemplarProcedureIndex(): ExemplarProcedureIndexEntry[] {
   })
 }
 
+/**
+ * An authored option the PUBLIC workspace may identify. Only products inside the D1 atlas
+ * cohort get one of these (Codex C-02): the cohort wall is applied here, at the server
+ * view-model boundary, so a candidate-grade or hidden product's id, name, manufacturer, and
+ * catalog number never enter the workspace view model, the RSC payload, or any rendered
+ * attribute. Non-cohort authored options surface only as the aggregate withheld counts on
+ * the requirement.
+ */
 export interface WorkspaceOptionLink {
   productId: string
   productName: string
@@ -276,8 +285,6 @@ export interface WorkspaceOptionLink {
   catalogNumber: string | null
   selectable: boolean
   eligibilityStatus: string | null
-  /** Present only when the product is inside the D1 atlas cohort — the only linkable set. */
-  atlasVisible: boolean
 }
 
 export interface WorkspaceRequirement {
@@ -302,7 +309,15 @@ export interface WorkspaceRequirement {
   responsibleRole: string | null
   sterileStatus: string | null
   coverage: RoleCoverageRow | null
+  /** Cohort-identifiable authored options only — see `WorkspaceOptionLink`. */
   authoredOptions: WorkspaceOptionLink[]
+  /**
+   * Authored options that exist for this slot but whose identities are withheld from this
+   * public cohort view (C-02). The counts keep the structural truth honest — the slot is
+   * never presented as having no authored options when identities are merely withheld.
+   */
+  withheldAuthoredOptionCount: number
+  withheldSelectableOptionCount: number
   /** Unreviewed proposal count for this slot. Display-only; never selectable. */
   proposalCount: number
   requiresCurrentIfu: boolean
@@ -381,9 +396,16 @@ export interface ProcedureWorkspace {
    */
   authoredRescueModuleNames: string[]
   typedRuleConditions: TypedRuleCondition[]
-  rawCompatibilityStatements: RawCompatibilityStatement[]
+  rawCompatibilityStatements: AtlasCompatibilityStatement[]
   proposalTotal: number
   formularySummary: RealFormularySummary
+  /**
+   * Owner-review F-07 derived per Codex C-07: true when the composed workspace carries at
+   * least one `LASER*` governed requirement and none of them has an authored SELECTABLE
+   * option in the pinned release. The page renders the laser-pathway disclosure from this
+   * fact — never from a hardcoded procedure code.
+   */
+  laserPathwayDisclosureRequired: boolean
 }
 
 export interface RealFormularySummary {
@@ -393,14 +415,18 @@ export interface RealFormularySummary {
   rowsWithAnyLocalField: number
 }
 
+/** The one parse of a formulary row's role codes — shared by row filtering and readiness. */
+function parseFormularyRoleCodes(row: FormularyRow): string[] {
+  return (row.role_codes ?? '')
+    .split(/[;,]/)
+    .map((code) => code.trim())
+    .filter(Boolean)
+}
+
 function formularyRowsForRoles(roleCodes: ReadonlySet<string>): FormularyRow[] {
-  return formularyRows.filter((row) => {
-    const codes = (row.role_codes ?? '')
-      .split(/[;,]/)
-      .map((code) => code.trim())
-      .filter(Boolean)
-    return codes.some((code) => roleCodes.has(code))
-  })
+  return formularyRows.filter((row) =>
+    parseFormularyRoleCodes(row).some((code) => roleCodes.has(code)),
+  )
 }
 
 function realFormularySummary(roleCodes: ReadonlySet<string>): RealFormularySummary {
@@ -505,16 +531,19 @@ export function getProcedureWorkspace(procedureCode: string): ProcedureWorkspace
       .map((slot) => [slot.slot_id, slot]),
   )
 
-  const toOptionLink = (option: SlotProductOptionRecord): WorkspaceOptionLink => {
-    const product = store.productById.get(option.product_id)
+  // The C-02 cohort wall: identities come from the ATLAS store only. A non-cohort option
+  // row never yields an option link — its product id is not read at all on this path — so
+  // no hidden identity can ride into the view model inside a nominally redacted object.
+  const toCohortOptionLink = (option: SlotProductOptionRecord): WorkspaceOptionLink | null => {
+    const product = atlasStore.productById.get(option.product_id)
+    if (!product) return null
     return {
-      productId: option.product_id,
-      productName: product?.product_name ?? option.product_id,
-      manufacturerDisplay: product?.manufacturerDisplay ?? null,
-      catalogNumber: product?.catalog_number ?? null,
+      productId: product.product_id,
+      productName: product.product_name,
+      manufacturerDisplay: product.manufacturerDisplay,
+      catalogNumber: product.catalog_number,
       selectable: option.selectable === true,
       eligibilityStatus: option.eligibility_status,
-      atlasVisible: atlasStore.productById.has(option.product_id),
     }
   }
 
@@ -522,6 +551,12 @@ export function getProcedureWorkspace(procedureCode: string): ProcedureWorkspace
     const record = slot.sourceSlotId ? slotRecordById.get(slot.sourceSlotId) : undefined
     const role = store.roleByCode.get(slot.roleCode)
     const options = slot.sourceSlotId ? (optionsBySlot.get(slot.sourceSlotId) ?? []) : []
+    const cohortOptions = options
+      .map(toCohortOptionLink)
+      .filter((link): link is WorkspaceOptionLink => link !== null)
+    const withheldOptions = options.filter(
+      (option) => !atlasStore.productById.has(option.product_id),
+    )
     return {
       id: slot.id,
       sourceSlotId: slot.sourceSlotId,
@@ -542,13 +577,14 @@ export function getProcedureWorkspace(procedureCode: string): ProcedureWorkspace
       responsibleRole: slot.responsibleRole,
       sterileStatus: slot.sterileStatus,
       coverage: ladder.byRoleCode.get(slot.roleCode) ?? null,
-      authoredOptions: options
-        .map(toOptionLink)
-        .sort(
-          (left, right) =>
-            Number(right.selectable) - Number(left.selectable) ||
-            left.productName.localeCompare(right.productName),
-        ),
+      authoredOptions: cohortOptions.sort(
+        (left, right) =>
+          Number(right.selectable) - Number(left.selectable) ||
+          left.productName.localeCompare(right.productName),
+      ),
+      withheldAuthoredOptionCount: withheldOptions.length,
+      withheldSelectableOptionCount: withheldOptions.filter((option) => option.selectable === true)
+        .length,
       proposalCount: slot.sourceSlotId ? (proposalCountBySlot.get(slot.sourceSlotId) ?? 0) : 0,
       requiresCurrentIfu: role?.requires_current_ifu === true,
       selectionGuidance: role?.selection_guidance ?? null,
@@ -618,6 +654,19 @@ export function getProcedureWorkspace(procedureCode: string): ProcedureWorkspace
     (slot) => slot.section === 'Rescue',
   ).length
 
+  // C-07: derived from the RAW authored option rows (pre-cohort-withholding), because the
+  // disclosure is a statement about what the release authors, not about what this public
+  // view may identify.
+  const laserPathwayDisclosureRequired = requiresLaserPathwayDisclosure(
+    composedSlots.map((slot: RecipeSlot) => ({
+      roleCode: slot.roleCode,
+      hasAuthoredSelectableOption: (slot.sourceSlotId
+        ? (optionsBySlot.get(slot.sourceSlotId) ?? [])
+        : []
+      ).some((option) => option.selectable === true),
+    })),
+  )
+
   return {
     procedureCode,
     procedureName: procedure.procedure_name,
@@ -654,6 +703,7 @@ export function getProcedureWorkspace(procedureCode: string): ProcedureWorkspace
       0,
     ),
     formularySummary: realFormularySummary(roleCodes),
+    laserPathwayDisclosureRequired,
   }
 }
 
@@ -745,22 +795,21 @@ export function buildReadinessProjection(
       .filter((option) => option.selectable === true)
       .map((option) => `${option.slot_id}|${option.product_id}`),
   )
-  const roleCodes = new Set(
-    procedureSlots
-      .filter((slot) => slot.procedure_code === procedureCode)
-      .map((slot) => slot.role_code),
-  )
-  const authoredSelectableProductIds = new Set(
-    slotProductOptions
-      .filter(
-        (option) =>
-          option.selectable === true &&
-          procedureSlots.some(
-            (slot) => slot.slot_id === option.slot_id && slot.procedure_code === procedureCode,
-          ),
-      )
-      .map((option) => option.product_id),
-  )
+  const procedureOwnSlots = procedureSlots.filter((slot) => slot.procedure_code === procedureCode)
+  const roleCodes = new Set(procedureOwnSlots.map((slot) => slot.role_code))
+  // C-04: the role-scoped eligibility surface. For each requirement role of THIS procedure,
+  // the product ids that are authored SELECTABLE options on that role's own slots — so a
+  // formulary row is judged against the slots its role codes actually name, and a product
+  // selectable for an unrelated slot can never satisfy a different role's row.
+  const authoredSelectableProductIdsByRole = new Map<string, Set<string>>()
+  for (const slot of procedureOwnSlots) {
+    for (const option of slotProductOptions) {
+      if (option.slot_id !== slot.slot_id || option.selectable !== true) continue
+      const ids = authoredSelectableProductIdsByRole.get(slot.role_code)
+      if (ids) ids.add(option.product_id)
+      else authoredSelectableProductIdsByRole.set(slot.role_code, new Set([option.product_id]))
+    }
+  }
   const formularyAssertions: FormularyAssertionInput[] = formularyRowsForRoles(roleCodes).map(
     (row) => ({
       formularyId: row.formulary_id,
@@ -768,7 +817,7 @@ export function buildReadinessProjection(
       hospitalCarries: row.hospital_carries,
       preferred: row.preferred,
       productVisibilityState: store.productById.get(row.product_id)?.visibility_state ?? null,
-      authoredSelectableForProcedure: authoredSelectableProductIds.has(row.product_id),
+      roleCodes: parseFormularyRoleCodes(row),
     }),
   )
 
@@ -795,6 +844,7 @@ export function buildReadinessProjection(
     productGradeById,
     authoredSelectablePairs,
     demoStandInRoleCodes,
+    authoredSelectableProductIdsByRole,
     formularyAssertions,
   })
 }

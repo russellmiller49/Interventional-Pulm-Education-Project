@@ -6,6 +6,7 @@ import {
 import { resolveCard } from '@/features/preference-cards/domain/resolve-card'
 import { getCatalogStore } from '@/features/preference-cards/server/catalog'
 import { intentionallyFailingApcRule } from '@/features/preference-cards/__fixtures__/test-compatibility-rules'
+import { requiresLaserPathwayDisclosure } from '@/features/device-intelligence/domain/laser-pathway'
 import {
   CANONICAL_PROCEDURAL_PHASE_ORDER,
   getCoverageLadderForProcedure,
@@ -313,6 +314,46 @@ describe('owner-review regressions (2026-08-09 findings)', () => {
     for (const role of pageLaserRoles) {
       expect(ladder.byRoleCode.get(role)!.coverage).not.toBe('selectable_authored')
     }
+  })
+
+  it('C-07: the laser disclosure is a derived workspace fact, pinned present AND absent', () => {
+    // Presence: THERAPEUTIC_BRONCH composes LASER* requirements and none has an authored
+    // selectable option, so the derived flag is on — with no procedure-code gate anywhere.
+    expect(getProcedureWorkspace('THERAPEUTIC_BRONCH')!.laserPathwayDisclosureRequired).toBe(true)
+    // Absence: workspaces without the governed laser condition never raise it.
+    expect(getProcedureWorkspace('EBUS_TBNA')!.laserPathwayDisclosureRequired).toBe(false)
+    expect(getProcedureWorkspace('CHEST_TUBE')!.laserPathwayDisclosureRequired).toBe(false)
+  })
+
+  it('C-07: the pure derivation rule — present + none selectable, and nothing else', () => {
+    // No laser requirements → no disclosure.
+    expect(
+      requiresLaserPathwayDisclosure([
+        { roleCode: 'EBUS_SCOPE', hasAuthoredSelectableOption: true },
+      ]),
+    ).toBe(false)
+    expect(requiresLaserPathwayDisclosure([])).toBe(false)
+    // Laser requirements, none selectable → disclosure.
+    expect(
+      requiresLaserPathwayDisclosure([
+        { roleCode: 'LASER_CONSOLE', hasAuthoredSelectableOption: false },
+        { roleCode: 'LASER_FIBER', hasAuthoredSelectableOption: false },
+        { roleCode: 'EBUS_SCOPE', hasAuthoredSelectableOption: true },
+      ]),
+    ).toBe(true)
+    // Any laser requirement with an authored selectable option retires the disclosure.
+    expect(
+      requiresLaserPathwayDisclosure([
+        { roleCode: 'LASER_CONSOLE', hasAuthoredSelectableOption: false },
+        { roleCode: 'LASER_FIBER', hasAuthoredSelectableOption: true },
+      ]),
+    ).toBe(false)
+    // PHOTODYNAMIC_LASER deliberately does not match the LASER* scope (same as F-07's pin).
+    expect(
+      requiresLaserPathwayDisclosure([
+        { roleCode: 'PHOTODYNAMIC_LASER', hasAuthoredSelectableOption: false },
+      ]),
+    ).toBe(false)
   })
 
   it('F-06: the divergent-pathway caption stays true — IPC roles selectable, several chest-tube pathway roles not', () => {

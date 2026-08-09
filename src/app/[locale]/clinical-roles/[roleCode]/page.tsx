@@ -130,6 +130,10 @@ export default async function ClinicalRolePage({ params }: PageProps) {
                   “{guidance}”
                 </blockquote>
                 <p className="mt-2 text-xs text-muted-foreground">{t('guidanceVerbatim')}</p>
+                {/* Codex C-05: a global qualifier on EVERY role page, adjacent to the
+                    governed text it qualifies — some authored guidance uses formulary-like
+                    phrasing, and no role page may imply a real institution behind it. */}
+                <p className="mt-1 text-xs text-muted-foreground">{t('guidanceGenericNote')}</p>
               </CardContent>
             </Card>
           </section>
@@ -142,6 +146,8 @@ export default async function ClinicalRolePage({ params }: PageProps) {
               “{guidance}”{' '}
               <span className="text-xs text-muted-foreground">{t('guidanceVerbatim')}</span>
             </p>
+            {/* Codex C-05: same global qualifier, same adjacency, for the short branch. */}
+            <p className="text-xs text-muted-foreground">{t('guidanceGenericNote')}</p>
           </section>
         )
       ) : null}

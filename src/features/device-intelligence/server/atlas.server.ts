@@ -18,7 +18,8 @@ import { getAtlasCatalogStore } from './atlas-store.server'
 import {
   getRawStatementsForProduct,
   getTypedRuleConditionsForRoles,
-  type RawCompatibilityStatement,
+  textReferencesNonCohortIdentity,
+  type AtlasCompatibilityStatement,
   type TypedRuleCondition,
 } from './compatibility.server'
 
@@ -52,8 +53,15 @@ export interface AtlasProductDetail extends ProductDetail {
     sizeDisplay: string | null
     catalogNumber: string | null
   }[]
-  rawCompatibilityStatements: RawCompatibilityStatement[]
+  rawCompatibilityStatements: AtlasCompatibilityStatement[]
   typedRuleConditions: TypedRuleCondition[]
+  /**
+   * True when the product record's own free-text compatibility note was withheld from this
+   * public view because it exactly names a product outside the D1 cohort (Codex C-03). The
+   * page renders a generic explanation instead; `product.compatibility_text` is nulled in
+   * the returned copy so the identity cannot ride along in the serialized view model.
+   */
+  compatibilityTextWithheld: boolean
   /** Verbatim procedure status strings for the procedures this product's slots belong to. */
   procedureStatusByCode: Record<string, string>
   /**
@@ -67,12 +75,16 @@ export interface AtlasProductDetail extends ProductDetail {
 
 /**
  * The atlas device detail. Returns null — and the route 404s — for any product outside the
- * D1 cohort, because the cohort store simply does not contain it. Existing authenticated
- * and admin surfaces keep rendering those products through the full store, unchanged.
+ * D1 cohort, because the cohort store simply does not contain it. Existing direct-link
+ * (public-unlisted) and admin surfaces keep rendering those products through the full
+ * store, unchanged.
  */
 export function getAtlasProductDetail(productId: string): AtlasProductDetail | null {
   const store = getAtlasCatalogStore()
-  const detail = getProductDetail(productId, store)
+  // The atlas is the one caller that opts into Primary-fit representative selection
+  // (owner-review F-18 as re-scoped by Codex C-06); every other caller keeps the legacy
+  // catalog-order default.
+  const detail = getProductDetail(productId, store, { representativeSelection: 'primary_fit' })
   if (!detail) return null
 
   const sameManufacturerLine = (store.products ?? [])
@@ -111,11 +123,23 @@ export function getAtlasProductDetail(productId: string): AtlasProductDetail | n
       }
     : null
 
+  // C-03: the record's own free-text compatibility note is governed data quoted raw, so it
+  // passes the same exact-identifier wall as the raw statements. When it names a non-cohort
+  // product (e.g. this GuideSheath kit's "not compatible with BF-MP190F"), the public view
+  // model carries a nulled copy plus the withheld flag — never the identifying text.
+  const compatibilityTextWithheld = textReferencesNonCohortIdentity(
+    detail.product.compatibility_text,
+  )
+
   return {
     ...detail,
+    product: compatibilityTextWithheld
+      ? { ...detail.product, compatibility_text: null }
+      : detail.product,
     sameManufacturerLine,
     rawCompatibilityStatements: getRawStatementsForProduct(productId),
     typedRuleConditions: getTypedRuleConditionsForRoles(detail.roles.map((role) => role.roleCode)),
+    compatibilityTextWithheld,
     procedureStatusByCode,
     primaryRole,
   }

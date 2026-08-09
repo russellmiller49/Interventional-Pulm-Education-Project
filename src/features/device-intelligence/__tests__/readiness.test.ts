@@ -28,6 +28,7 @@ function minimalInput(overrides: Partial<ReadinessProjectionInput> = {}): Readin
     productGradeById: new Map(),
     authoredSelectablePairs: new Set(),
     demoStandInRoleCodes: new Set(),
+    authoredSelectableProductIdsByRole: new Map(),
     formularyAssertions: [],
     ...overrides,
   }
@@ -141,6 +142,71 @@ describe('demo readiness projection — the eight states', () => {
     // 40 unreviewed proposals changed nothing: coverage is still missing.
   })
 
+  it('C-01: a demo stand-in selection cannot lift a required proposals-only role above not_ready', () => {
+    // The Codex C-01 defect: `hasSelection` used to convert this exact shape into
+    // ready_with_limitations. Every structural no-coverage rung must behave the same way.
+    for (const coverage of [
+      'proposals_only',
+      'no_option_no_proposal_role_mapped',
+      'no_option_no_proposal_unmapped',
+    ] as const) {
+      const projection = projectDemoReadiness(
+        minimalInput({
+          items: [baseItem],
+          ladderByRole: new Map([
+            [
+              'TEST_ROLE',
+              {
+                roleCode: 'TEST_ROLE',
+                slotCount: 1,
+                coverage,
+                demoStandIn: true,
+                proposalCount: coverage === 'proposals_only' ? 1 : 0,
+              },
+            ],
+          ]),
+          demoStandInRoleCodes: new Set(['TEST_ROLE']),
+        }),
+      )
+      const requirement = projection.requirements[0]
+      expect({ coverage, state: requirement.state }).toEqual({ coverage, state: 'not_ready' })
+      expect(projection.headline).toBe('not_ready')
+      // The diagnostic stays visible…
+      expect(
+        requirement.diagnostics.some(
+          (diagnostic) => diagnostic.code === 'missing_required_product_role',
+        ),
+      ).toBe(true)
+      // …and the demo mapping is disclosed, never silently dropped.
+      expect(requirement.evidence.selectedHospitalItemId).toBe('item-1')
+      expect(requirement.evidence.demoStandIn).toBe(true)
+    }
+  })
+
+  it('C-01: the same shape on a contingency requirement still degrades rather than blocks', () => {
+    // The precise required-structural-gap rule: requiredness is part of the condition, so a
+    // conditional requirement with a proposals-only rung keeps its limitation semantics.
+    const projection = projectDemoReadiness(
+      minimalInput({
+        items: [{ ...baseItem, effectiveRequiredness: 'conditional' }],
+        ladderByRole: new Map([
+          [
+            'TEST_ROLE',
+            {
+              roleCode: 'TEST_ROLE',
+              slotCount: 1,
+              coverage: 'proposals_only',
+              demoStandIn: true,
+              proposalCount: 1,
+            },
+          ],
+        ]),
+        demoStandInRoleCodes: new Set(['TEST_ROLE']),
+      }),
+    )
+    expect(projection.requirements[0].state).toBe('ready_with_limitations')
+  })
+
   it('state 5: a missing room capability is diagnosed from the domain message with its capability id', () => {
     // Copied demo context with the capability removed — the documented fixture pattern; the
     // real demo location declares rigid_bronchoscopy/jet_ventilation/fluoroscopy, so the
@@ -205,7 +271,7 @@ describe('demo readiness projection — the eight states', () => {
             hospitalCarries: true,
             preferred: false,
             productVisibilityState: 'prototype_visible',
-            authoredSelectableForProcedure: false,
+            roleCodes: ['TEST_ROLE'],
           },
         ],
       }),
@@ -217,6 +283,82 @@ describe('demo readiness projection — the eight states', () => {
     expect(diagnostic!.sourceKind).toBe('formulary_row')
     expect(diagnostic!.sourceId).toBe('FORM-FIXTURE01')
     expect(projection.headline).toBe('not_ready')
+  })
+
+  it('C-04: formulary eligibility is judged against the row’s own role, never procedure-wide', () => {
+    // PRD-TEST000001 is an authored selectable option for ROLE_A only. A carried row that
+    // maps it to ROLE_B (also a procedure role) must mismatch; the same row mapped to
+    // ROLE_A must not. There is no procedure-wide boolean left to bypass this comparison —
+    // the projection input carries only the per-role eligibility surface.
+    const authoredSelectableProductIdsByRole = new Map([
+      ['ROLE_A', new Set(['PRD-TEST000001'])],
+      // ROLE_B exists in the procedure but authors no selectable option for this product.
+      ['ROLE_B', new Set(['PRD-OTHER00001'])],
+    ])
+    const mismatched = projectDemoReadiness(
+      minimalInput({
+        authoredSelectableProductIdsByRole,
+        formularyAssertions: [
+          {
+            formularyId: 'FORM-ROLE-B',
+            productId: 'PRD-TEST000001',
+            hospitalCarries: true,
+            preferred: false,
+            productVisibilityState: 'prototype_visible',
+            roleCodes: ['ROLE_B'],
+          },
+        ],
+      }),
+    )
+    expect(
+      mismatched.cardDiagnostics.filter(
+        (diagnostic) => diagnostic.code === 'inventory_formulary_mismatch',
+      ),
+    ).toHaveLength(1)
+    expect(mismatched.cardDiagnostics[0].sourceId).toBe('FORM-ROLE-B')
+
+    const matched = projectDemoReadiness(
+      minimalInput({
+        authoredSelectableProductIdsByRole,
+        formularyAssertions: [
+          {
+            formularyId: 'FORM-ROLE-A',
+            productId: 'PRD-TEST000001',
+            hospitalCarries: true,
+            preferred: false,
+            productVisibilityState: 'prototype_visible',
+            roleCodes: ['ROLE_A'],
+          },
+        ],
+      }),
+    )
+    expect(
+      matched.cardDiagnostics.some(
+        (diagnostic) => diagnostic.code === 'inventory_formulary_mismatch',
+      ),
+    ).toBe(false)
+
+    // A hidden product stays a mismatch even when its role mapping matches (fail closed).
+    const hidden = projectDemoReadiness(
+      minimalInput({
+        authoredSelectableProductIdsByRole,
+        formularyAssertions: [
+          {
+            formularyId: 'FORM-HIDDEN',
+            productId: 'PRD-TEST000001',
+            hospitalCarries: true,
+            preferred: true,
+            productVisibilityState: 'hidden',
+            roleCodes: ['ROLE_A'],
+          },
+        ],
+      }),
+    )
+    expect(
+      hidden.cardDiagnostics.some(
+        (diagnostic) => diagnostic.code === 'inventory_formulary_mismatch',
+      ),
+    ).toBe(true)
   })
 
   it('a compatibility rule that evaluates unknown is a limitation, never a silent pass', () => {
@@ -262,10 +404,32 @@ describe('the live demo readiness views', () => {
     ).toBe(true)
   })
 
-  it('EBUS and THERAPEUTIC resolve with limitations — demo stand-ins never read as plain ready', () => {
+  it('EBUS and THERAPEUTIC are not_ready — the required GENERIC_SUCTION structural gap (C-01)', () => {
+    // GENERIC_SUCTION is required in both procedures, its coverage rung is proposals_only,
+    // and the demo context maps a stand-in to it. Before the C-01 correction that stand-in
+    // selection read as ready_with_limitations; the headline was amber. Both are now red.
     for (const code of ['EBUS_TBNA', 'THERAPEUTIC_BRONCH']) {
       const view = getProcedureReadinessView(code)!
-      expect(view.projection.headline).toBe('ready_with_limitations')
+      expect({ code, headline: view.projection.headline }).toEqual({
+        code,
+        headline: 'not_ready',
+      })
+      const suction = view.projection.requirements.find(
+        (requirement) => requirement.roleCode === 'GENERIC_SUCTION',
+      )!
+      expect(suction.state).toBe('not_ready')
+      expect(suction.effectiveRequiredness).toBe('required')
+      expect(suction.evidence.coverage).toBe('proposals_only')
+      // The diagnostic stays visible…
+      expect(
+        suction.diagnostics.some(
+          (diagnostic) => diagnostic.code === 'missing_required_product_role',
+        ),
+      ).toBe(true)
+      // …and the demo stand-in mapping is disclosed rather than silently dropped.
+      expect(suction.evidence.demoStandIn).toBe(true)
+      expect(suction.evidence.selectedHospitalItemId).not.toBeNull()
+      // Demo stand-ins elsewhere still never read as plain ready.
       for (const requirement of view.projection.requirements) {
         if (requirement.evidence.demoStandIn && requirement.evidence.selectedHospitalItemId) {
           expect(requirement.state).not.toBe('ready')

@@ -1,5 +1,36 @@
 # Phase D1 review packet — browser walkthrough, viewports, console report
 
+> **HISTORICAL EVIDENCE — pre-owner-correction (captured 2026-08-08).** This walkthrough
+> records what the slice rendered BEFORE the physician-owner corrections (F-01..F-32, commit
+> `900a3e1a`) and before the post-Codex correction pass (C-01..C-08). It is preserved as an
+> audit trail, not as a description of current behavior. Observations superseded since
+> capture include, at minimum:
+>
+> - rows 11–12: the EBUS_TBNA and THERAPEUTIC_BRONCH readiness headlines were
+>   "Ready-with-limitations"; after Codex C-01 the required GENERIC_SUCTION structural gap
+>   makes both **Demo: Not ready**;
+> - row 10 and rows 11–12 state labels: all readiness labels now carry the `Demo:` prefix,
+>   and an advised Ready chip reads "Demo: Ready — see advisory" (F-26/F-27);
+> - row 4 (role page): the per-role amber IFU banner is gone — the IFU statement is ambient
+>   footer text (F-24); short guidance renders under "Selection criteria" (F-21); the
+>   availability line sits under the H1 (F-22); and every role page now carries the C-05
+>   generic-guidance qualifier;
+> - row 3 (device detail): absent fields collapse into "Not recorded in reviewed sources"
+>   (F-16); the primary clinical role renders under the H1 (F-17);
+> - row 9: the modifier list is split into acting vs inert with per-card `releaseState`
+>   (F-01); row 7 phase grouping follows the canonical clinical order (F-03); row 8 predates
+>   the kit-suppression disclosure (F-02);
+> - row 13: universal IFU flags state once at the top of the Training preview (F-24), and
+>   the Nursing tab renders an explanatory panel over a flat list (F-30);
+> - workspace option lists now withhold non-cohort product identities behind aggregate
+>   counts (C-02), and compatibility output withholds statements naming non-cohort
+>   identifiers (C-03).
+>
+> Current behavior is recorded in [../d1-validation.md](../d1-validation.md), the owner
+> records ([owner-review-findings.md](./owner-review-findings.md),
+> [owner-review-dispositions.md](./owner-review-dispositions.md)), and the Codex correction
+> record ([codex-correction-pass.md](./codex-correction-pass.md)).
+
 Phase D1 implementation document (2026-08-08). Performed against the dev server (`npm run dev:claude`, port 3120) with a real Chromium pane; screenshots were reviewed live during the session and are not committed, following this repository's markdown-only documentation convention.
 
 ## Screenshot manifest (what was captured and confirmed)

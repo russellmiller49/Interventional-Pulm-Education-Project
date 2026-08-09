@@ -2,7 +2,11 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { catalogSearchSchema } from '@/features/preference-cards/schemas/catalog-search'
-import { getCatalogStore, searchCatalog } from '@/features/preference-cards/server/catalog'
+import {
+  getCatalogStore,
+  getProductDetail,
+  searchCatalog,
+} from '@/features/preference-cards/server/catalog'
 import { isAtlasCohortProduct } from '@/features/device-intelligence/domain/atlas-cohort'
 import { getAtlasCatalogStore } from '@/features/device-intelligence/server/atlas-store.server'
 import {
@@ -108,6 +112,36 @@ describe('D1 atlas cohort filtering', () => {
     }
   })
 
+  it('is the ONLY path that opts into Primary-fit representatives (C-06)', () => {
+    // The atlas call site passes { representativeSelection: 'primary_fit' }; every atlas
+    // detail must therefore match that mode evaluated over the cohort store, id for id.
+    const atlas = getAtlasCatalogStore()
+    for (const product of atlas.products) {
+      const detail = getAtlasProductDetail(product.product_id)!
+      const primaryFit = getProductDetail(product.product_id, atlas, {
+        representativeSelection: 'primary_fit',
+      })!
+      expect(detail.otherManufacturers.map((entry) => entry.productId)).toEqual(
+        primaryFit.otherManufacturers.map((entry) => entry.productId),
+      )
+    }
+    // And the opt-in is a real behavior, not a no-op: over the FULL store (the preserved
+    // preference-card surface), the two modes disagree for at least one product — the very
+    // divergence C-06 confines to the atlas.
+    const full = getCatalogStore()
+    const divergent = full.products.filter((product) => {
+      const legacy = getProductDetail(product.product_id, full)!
+      const primaryFit = getProductDetail(product.product_id, full, {
+        representativeSelection: 'primary_fit',
+      })!
+      return (
+        legacy.otherManufacturers.map((entry) => entry.productId).join('|') !==
+        primaryFit.otherManufacturers.map((entry) => entry.productId).join('|')
+      )
+    })
+    expect(divergent.length).toBeGreaterThan(0)
+  })
+
   it('exposes no proposal rows through any atlas surface', () => {
     // The atlas store is built without the proposals artifact entirely; assert the module
     // graph of the atlas server layer never imports it.
@@ -119,11 +153,24 @@ describe('D1 atlas cohort filtering', () => {
   })
 
   it('withholds raw compatibility statements whose counterpart resolves outside the cohort', () => {
-    // Adversarial finding 7: the guard exists so this stays true when data regenerates.
+    // Adversarial finding 7, extended by Codex C-03: non-cohort references — resolved OR
+    // textual — surface only as withheld entries whose shape carries no identifying text.
     const atlas = getAtlasCatalogStore()
     for (const product of atlas.products) {
       const detail = getAtlasProductDetail(product.product_id)
       for (const statement of detail?.rawCompatibilityStatements ?? []) {
+        if (statement.withheld) {
+          // Fail-closed shape: provenance only, no participant or rule text of any kind.
+          expect(Object.keys(statement).sort()).toEqual([
+            'ruleId',
+            'sourceId',
+            'verificationGrade',
+            'verificationStatus',
+            'withheld',
+            'withheldReason',
+          ])
+          continue
+        }
         for (const resolvedId of [statement.resolvedSourceId, statement.resolvedTargetId]) {
           if (resolvedId !== null && resolvedId.startsWith('PRD-')) {
             expect({

@@ -6,8 +6,9 @@
  *
  * Candidate-grade and hidden products are not filtered out cosmetically — they are absent
  * from the atlas store entirely (see `server/atlas-store.server.ts`), so no atlas query,
- * facet, related-product list, or direct product URL can reach them. Authenticated and
- * admin legacy surfaces are unchanged and may still show them.
+ * facet, related-product list, or direct product URL can reach them. The preserved
+ * direct-link (public-unlisted) catalog and admin legacy surfaces are unchanged and may
+ * still show them.
  */
 
 export interface AtlasCohortInput {

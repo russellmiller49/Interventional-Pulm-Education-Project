@@ -23,13 +23,14 @@ domain/atlas-cohort.ts     the D-07 cohort predicate + product-id guard (pure)
 domain/exemplars.ts        the D-05 exemplar codes (pure)
 domain/coverage-ladder.ts  the D0 audit's role-coverage ladder, recomputed from data (pure)
 domain/readiness.ts        the eight-state demo readiness projection (pure)
+domain/laser-pathway.ts    the derived laser-disclosure rule (pure; Codex C-07)
 server/atlas-store.server.ts   cohort-scoped CatalogStore via the EXISTING buildCatalogStore
 server/atlas.server.ts         atlas queries = existing catalog.ts functions + cohort store
 server/compatibility.server.ts raw statements (audit matching rule) + typed rules as conditions
 server/procedures.server.ts    workspace/index/readiness view-models over the existing engine
 server/outputs.server.ts       outputs 2–5 as projections of ONE resolved demo card
 components/                    evidence badges, watermarks, link-tabs, browser, outputs panel
-__tests__/                     9 suites / 76 tests
+__tests__/                     11 suites / 106 tests (post-Codex-correction count)
 ```
 
 **Exact data sources.** Everything reads the statically imported generated JSON already consumed by the preference-card server layer (`data/ip-preference-cards/generated/**`), the reviewed overlay, the seed (`operational.ts` modifiers/rescue/typed rules, `demo-stand-ins.json`), and the release pointers — through the existing modules: `catalog.ts`/`catalog-store.ts`, `demo-context.server.ts` (`buildDemoContext`, `getComposedRecipeSlots`, `resolveDemoScenario`), `release-bundles.server.ts` (`getCurrentReleaseBundle`), `effective-slots.ts` (`expandEffectiveSlots`), `expand-recipe-composition.ts`, and `role-taxonomy.ts`.
@@ -46,10 +47,11 @@ Access wiring: `/devices`, `/clinical-roles`, `/procedures` joined `PUBLIC_UNLIS
 ## 3. Evidence and safety presentation
 
 - Reusable `EvidenceBadge` renders ten distinct states (verified-source fact, candidate fact, unknown, authored selectable, authored non-selectable, unreviewed proposal, demo stand-in, draft procedure, unresolved statement, historical context) as text-carrying badges; independent axes are never collapsed, and the existing `VerificationBadge` continues to carry the six catalog axes on device pages.
-- The atlas excludes candidate and hidden products at store construction, so no query, facet, related list, or direct URL can reach them; authenticated/admin surfaces are untouched.
+- The atlas excludes candidate and hidden products at store construction, so no query, facet, related list, or direct URL can reach them; the preserved direct-link (public-unlisted) catalog and admin surfaces are untouched.
+- The public procedure workspace applies the same cohort wall at the server view-model boundary (Codex C-02): non-cohort authored options surface only as aggregate withheld counts, never as identities; and raw compatibility output withholds any statement whose exact identifiers name a non-cohort product (Codex C-03).
 - Proposals surface only as counts with the disclaimer, never as options, coverage, or readiness.
 - Related-product lists carry the two mandatory headings verbatim and discovery captions; a copy-safety test allowlists the only keys permitted to mention equivalence/substitution (the disclaimers that deny them) and requires the negation.
-- The readiness projection enforces: candidate/unknown grades never produce plain `ready`; demo stand-ins always force a limitation; proposals never count as coverage; a missing attribute resolves `unknown`; every diagnostic carries its source identifier (slot id, rule id, hospital item id, capability, formulary row).
+- The readiness projection enforces: candidate/unknown grades never produce plain `ready`; demo stand-ins always force a limitation — and a REQUIRED role whose coverage rung is structurally uncovered (proposals-only or wholly unauthored) is `not_ready` regardless of any stand-in or hospital-item selection (Codex C-01); proposals never count as coverage; a missing attribute resolves `unknown`; every diagnostic carries its source identifier (slot id, rule id, hospital item id, capability, formulary row) — formulary eligibility judged against the row's own role/slot, never procedure-wide (Codex C-04).
 
 ## 4. Demo-only limitations and honest gaps
 

@@ -284,6 +284,17 @@ export default async function DeviceDetailPage({ params }: PageProps) {
               </p>
             </CardContent>
           </Card>
+        ) : detail.compatibilityTextWithheld ? (
+          // C-03: the record carries a free-text compatibility note, but it names a product
+          // outside the D1 cohort, so the server view model withheld it. Say so honestly
+          // rather than pretending no note exists.
+          <Card className="border-border/70">
+            <CardContent className="p-5">
+              <p className="text-sm italic leading-6 text-muted-foreground">
+                {tCommon('compatibilityWithheldNote')}
+              </p>
+            </CardContent>
+          </Card>
         ) : null}
         {detail.typedRuleConditions.length > 0 ? (
           <ul className="space-y-2">
@@ -309,7 +320,7 @@ export default async function DeviceDetailPage({ params }: PageProps) {
               <li key={statement.ruleId} className="rounded-xl border border-border/70 p-3 text-sm">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-mono text-xs text-muted-foreground">{statement.ruleId}</p>
-                  {statement.unresolved ? (
+                  {!statement.withheld && statement.unresolved ? (
                     <EvidenceBadge state="unresolved_statement">
                       {tCommon('badges.unresolvedStatement')}
                     </EvidenceBadge>
@@ -326,12 +337,24 @@ export default async function DeviceDetailPage({ params }: PageProps) {
                     <EvidenceBadge state="unknown">{tCommon('badges.unknown')}</EvidenceBadge>
                   )}
                 </div>
-                <p className="mt-1">
-                  {statement.sourceText} — {statement.relationship ?? ''} — {statement.targetText}
-                </p>
-                {statement.ruleText ? (
-                  <p className="mt-1 text-muted-foreground">“{statement.ruleText}”</p>
-                ) : null}
+                {statement.withheld ? (
+                  // C-03: one referenced product is outside the public atlas cohort, so the
+                  // statement text is withheld; provenance stays because it cannot identify
+                  // the hidden product.
+                  <p className="mt-1 text-xs italic text-muted-foreground">
+                    {tCommon('compatibilityWithheldNote')}
+                  </p>
+                ) : (
+                  <>
+                    <p className="mt-1">
+                      {statement.sourceText} — {statement.relationship ?? ''} —{' '}
+                      {statement.targetText}
+                    </p>
+                    {statement.ruleText ? (
+                      <p className="mt-1 text-muted-foreground">“{statement.ruleText}”</p>
+                    ) : null}
+                  </>
+                )}
                 <p className="mt-1 text-xs text-muted-foreground">
                   {t('rawStatementSource')}{' '}
                   <span className="font-mono">{statement.sourceId ?? tCommon('notRecorded')}</span>
@@ -341,6 +364,7 @@ export default async function DeviceDetailPage({ params }: PageProps) {
           </ul>
         ) : null}
         {!product.compatibility_text &&
+        !detail.compatibilityTextWithheld &&
         detail.typedRuleConditions.length === 0 &&
         detail.rawCompatibilityStatements.length === 0 ? (
           <p className="text-sm italic text-muted-foreground">{t('noCompatibilityData')}</p>
