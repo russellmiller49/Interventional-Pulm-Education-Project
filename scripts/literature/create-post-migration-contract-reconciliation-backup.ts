@@ -24,10 +24,64 @@ export const POST_MIGRATION_RECONCILIATION_BACKUP_SCHEMA_VERSION =
   'post-migration-contract-reconciliation-backup/1.0.0' as const
 export const POST_MIGRATION_RECONCILIATION_BACKUP_EXECUTION_SCHEMA_VERSION =
   'post-migration-contract-reconciliation-backup-execution/1.0.0' as const
+export const POST_MIGRATION_RECONCILIATION_TEST_BUILD_REPORT_SCHEMA_VERSION =
+  'post-migration-contract-reconciliation-test-build-report/1.0.0' as const
+export const POST_MIGRATION_RECONCILIATION_MERGE_READINESS_REPORT_SCHEMA_VERSION =
+  'post-migration-contract-reconciliation-merge-readiness-report/1.0.0' as const
+export const POST_MIGRATION_RECONCILIATION_BLOCKED_TERMINAL_STATE =
+  'CONTRACT STILL BLOCKED — UNRESOLVED DIFFERENCE' as const
 
 const SHA256_PATTERN = /^[a-f0-9]{64}$/u
 const SAFE_COMPONENT_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]*$/u
 const BACKUP_DIRECTORY_PREFIX = 'post-migration-contract-reconciliation-v1-' as const
+const CONTRACT_DIAGNOSTIC_EXECUTION_SCHEMA_VERSION =
+  'gold-import-compensation-contract-diagnostic-execution/1.0.0' as const
+const COMPATIBILITY_AUDIT_EXECUTION_SCHEMA_VERSION =
+  'gold-import-existing-head-compatibility-audit-execution/1.0.0' as const
+const LOCAL_DATABASE_CONTAINER = 'supabase_db_ip-literature-local' as const
+const EXECUTION_COMPATIBILITY_BLOCKER_CODES = [
+  'excluded_status_null_not_representable_by_import_contract_v1',
+  'source_is_blinded_conflicts_with_local_automated_signals_reveal_state_v1',
+  'source_supplemental_metadata_use_conflicts_with_local_reveal_state_v1',
+] as const
+const REQUIRED_TERMINAL_BLOCKERS = [
+  ...EXECUTION_COMPATIBILITY_BLOCKER_CODES,
+  'incompatible_existing_head_fields',
+] as const
+const TERMINAL_ACTION_COUNTS = {
+  incompatible: 630,
+  initial: 0,
+  inserts: 0,
+  noops: 0,
+  revisions: 0,
+  total: 630,
+  unresolved: 0,
+} as const
+const TERMINAL_EXECUTION_COUNTS = {
+  excluded_status_null_not_representable_by_import_contract_v1: 272,
+  source_is_blinded_conflicts_with_local_automated_signals_reveal_state_v1: 630,
+  source_supplemental_metadata_use_conflicts_with_local_reveal_state_v1: 50,
+} as const
+const REQUESTED_RECONCILIATION_NAME_DISCREPANCY = {
+  aliasCreated: false,
+  canonicalName: 'reconcile_literature_gold_review_operation_v1',
+  classification: 'audit_expectation_defect',
+  requestedName: 'reconcile_literature_gold_import_v1',
+} as const
+const REQUIRED_TEST_BUILD_CHECKS = [
+  'completeRepositorySuite',
+  'eslint',
+  'focusedPostMigrationReconciliationTests',
+  'gitDiffCheck',
+  'importCompensationTests',
+  'literatureTests',
+  'migrationDatabaseContractTests',
+  'operationalToolTests',
+  'prettier',
+  'productionBuild',
+  'registryScopeCheck',
+  'typeScript',
+] as const
 
 const HELP = `
 Create the checksum-verified additive delivery backup for the post-migration reconciliation PR.
@@ -43,7 +97,9 @@ Usage:
     --output <post-migration-contract-reconciliation-v1-CURRENT_HEAD>
 
 The command is file-only, requires a clean reviewed feature worktree, preserves every source byte,
-and creates a new private directory with a sorted checksum manifest. It never contacts a database.
+and creates a new private directory with a sorted checksum manifest. Validation and merge-readiness
+reports must bind the same HEAD and audit manifests while recording terminal state
+${POST_MIGRATION_RECONCILIATION_BLOCKED_TERMINAL_STATE}. It never contacts a database.
 `.trim()
 
 export interface PostMigrationReconciliationBackupDependencies {
@@ -124,6 +180,128 @@ function parseCanonicalManifest(text: string): ReadonlyMap<string, string> {
   }
   if (entries.size === 0) throw new Error('Source checksum manifest is empty.')
   return entries
+}
+
+function assertTerminalSupplement(value: unknown, label: string): void {
+  const supplement = exactRecordKeys(
+    value,
+    ['acceptedContentSha256', 'required', 'supplied', 'templateContentSha256'],
+    `${label} supplement`,
+  )
+  if (
+    supplement.required !== false ||
+    supplement.supplied !== false ||
+    supplement.acceptedContentSha256 !== null ||
+    supplement.templateContentSha256 !== null
+  ) {
+    throw new Error(`${label} contradicts the terminal-4 no-supplement contract.`)
+  }
+}
+
+function assertTerminalUnresolved(value: unknown, label: string): void {
+  const unresolved = exactRecordKeys(value, ['count', 'pmids'], `${label} unresolved`)
+  if (unresolved.count !== 0 || !Array.isArray(unresolved.pmids) || unresolved.pmids.length !== 0) {
+    throw new Error(`${label} contradicts the terminal-4 zero-unresolved contract.`)
+  }
+}
+
+function assertTerminalActionCounts(value: unknown, label: string): void {
+  const counts = exactRecordKeys(
+    value,
+    ['incompatible', 'initial', 'inserts', 'noops', 'revisions', 'total', 'unresolved'],
+    `${label} actionCounts`,
+  )
+  if (canonicalJson(counts) !== canonicalJson(TERMINAL_ACTION_COUNTS)) {
+    throw new Error(`${label} does not contain the exact terminal-4 action counts.`)
+  }
+}
+
+function assertExecutionIdentityList(
+  value: unknown,
+  expectedCount: number,
+  label: string,
+): ReadonlySet<string> {
+  if (!Array.isArray(value) || value.length !== expectedCount) {
+    throw new Error(`${label} does not contain the exact expected identity count.`)
+  }
+  const itemIds = new Set<string>()
+  value.forEach((rawIdentity, index) => {
+    const identity = exactRecordKeys(
+      rawIdentity,
+      ['datasetSplit', 'itemId', 'masterRowId', 'pmid'],
+      `${label} identity ${index + 1}`,
+    )
+    if (
+      identity.datasetSplit !== 'development' ||
+      typeof identity.itemId !== 'string' ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u.test(
+        identity.itemId,
+      ) ||
+      typeof identity.masterRowId !== 'string' ||
+      !/^[1-9][0-9]*$/u.test(identity.masterRowId) ||
+      typeof identity.pmid !== 'string' ||
+      !/^[0-9]{1,12}$/u.test(identity.pmid) ||
+      itemIds.has(identity.itemId)
+    ) {
+      throw new Error(`${label} contains a malformed or duplicate development identity.`)
+    }
+    itemIds.add(identity.itemId)
+  })
+  return itemIds
+}
+
+function assertTerminalExecutionCompatibility(value: unknown, label: string): void {
+  const execution = exactRecordKeys(
+    value,
+    ['blockedRowCount', 'countsByCode', 'executableRowCount', 'identitiesByCode', 'totalRowCount'],
+    `${label} executionCompatibility`,
+  )
+  const counts = exactRecordKeys(
+    execution.countsByCode,
+    EXECUTION_COMPATIBILITY_BLOCKER_CODES,
+    `${label} executionCompatibility countsByCode`,
+  )
+  const identities = exactRecordKeys(
+    execution.identitiesByCode,
+    EXECUTION_COMPATIBILITY_BLOCKER_CODES,
+    `${label} executionCompatibility identitiesByCode`,
+  )
+  if (
+    execution.totalRowCount !== 630 ||
+    execution.blockedRowCount !== 630 ||
+    execution.executableRowCount !== 0 ||
+    canonicalJson(counts) !== canonicalJson(TERMINAL_EXECUTION_COUNTS)
+  ) {
+    throw new Error(`${label} does not contain the exact terminal-4 execution counts.`)
+  }
+  const blindedIdentities = assertExecutionIdentityList(
+    identities.source_is_blinded_conflicts_with_local_automated_signals_reveal_state_v1,
+    TERMINAL_EXECUTION_COUNTS.source_is_blinded_conflicts_with_local_automated_signals_reveal_state_v1,
+    `${label} blinding blockers`,
+  )
+  const excludedIdentities = assertExecutionIdentityList(
+    identities.excluded_status_null_not_representable_by_import_contract_v1,
+    TERMINAL_EXECUTION_COUNTS.excluded_status_null_not_representable_by_import_contract_v1,
+    `${label} excluded-status blockers`,
+  )
+  const supplementalIdentities = assertExecutionIdentityList(
+    identities.source_supplemental_metadata_use_conflicts_with_local_reveal_state_v1,
+    TERMINAL_EXECUTION_COUNTS.source_supplemental_metadata_use_conflicts_with_local_reveal_state_v1,
+    `${label} supplemental-metadata blockers`,
+  )
+  if (
+    [...excludedIdentities].some((itemId) => !blindedIdentities.has(itemId)) ||
+    [...supplementalIdentities].some((itemId) => !blindedIdentities.has(itemId))
+  ) {
+    throw new Error(`${label} execution blocker identity sets are internally inconsistent.`)
+  }
+}
+
+function assertTerminalCompatibilityDetails(record: Record<string, unknown>, label: string): void {
+  assertTerminalSupplement(record.supplement, label)
+  assertTerminalUnresolved(record.unresolved, label)
+  assertTerminalActionCounts(record.actionCounts, label)
+  assertTerminalExecutionCompatibility(record.executionCompatibility, label)
 }
 
 export async function preserveAuditDirectory(input: {
@@ -221,24 +399,51 @@ export async function preserveAuditDirectory(input: {
       'contract-diagnostic execution receipt',
     )
     const auditFile = sourceFiles.find(({ name }) => name === 'migration-audit.json')
+    const bracketFile = sourceFiles.find(({ name }) => name === 'read-only-state-bracket.json')
     let audit: unknown
+    let bracket: unknown
     try {
       audit = JSON.parse(auditFile?.text ?? '') as unknown
+      bracket = JSON.parse(bracketFile?.text ?? '') as unknown
     } catch {
-      throw new Error('contract-diagnostic migration audit must be valid JSON.')
+      throw new Error('contract-diagnostic migration audit and state bracket must be valid JSON.')
     }
-    const auditDatabase =
+    const auditRecord =
       audit && typeof audit === 'object' && !Array.isArray(audit)
-        ? (audit as Record<string, unknown>).database
+        ? (audit as Record<string, unknown>)
+        : null
+    const auditDatabase = auditRecord?.database
+    const auditMigration = auditRecord?.migration
+    const bracketRecord =
+      bracket && typeof bracket === 'object' && !Array.isArray(bracket)
+        ? (bracket as Record<string, unknown>)
         : null
     if (
       !auditFile ||
+      !bracketFile ||
       canonicalJson(audit) !== auditFile.text ||
+      canonicalJson(bracket) !== bracketFile.text ||
+      auditRecord?.status !== 'ready' ||
+      auditRecord.readinessStatus !== 'ready' ||
+      auditRecord.result !== 'audit_ready_contract_compatibility_audit_required' ||
       !auditDatabase ||
       typeof auditDatabase !== 'object' ||
       Array.isArray(auditDatabase) ||
       (auditDatabase as Record<string, unknown>).repositoryCommitSha !==
         input.expectedRepositoryCommitSha ||
+      !auditMigration ||
+      typeof auditMigration !== 'object' ||
+      Array.isArray(auditMigration) ||
+      (auditMigration as Record<string, unknown>).ledgerOccurrences !== 1 ||
+      !bracketRecord ||
+      bracketRecord.preMigrationBackupManifestSha256 !==
+        receiptRecord.preMigrationBackupManifestSha256 ||
+      bracketRecord.snapshotsMatch !== true ||
+      bracketRecord.contractStateHashesMatch !== true ||
+      receiptRecord.schemaVersion !== CONTRACT_DIAGNOSTIC_EXECUTION_SCHEMA_VERSION ||
+      receiptRecord.databaseContainer !== LOCAL_DATABASE_CONTAINER ||
+      canonicalJson(receiptRecord.requestedNameDiscrepancies) !==
+        canonicalJson([REQUESTED_RECONCILIATION_NAME_DISCREPANCY]) ||
       receiptRecord.mode !== 'read_only_diagnostic' ||
       receiptRecord.databaseMutationCount !== 0 ||
       receiptRecord.heldOutIdentitiesAccessed !== false ||
@@ -277,16 +482,38 @@ export async function preserveAuditDirectory(input: {
     const compatibilityFile = sourceFiles.find(
       ({ name }) => name === 'existing-head-compatibility-audit.json',
     )
+    const readinessFile = sourceFiles.find(({ name }) => name === 'package-readiness.json')
     let compatibility: unknown
+    let readiness: unknown
     try {
       compatibility = JSON.parse(compatibilityFile?.text ?? '') as unknown
+      readiness = JSON.parse(readinessFile?.text ?? '') as unknown
     } catch {
-      throw new Error('compatibility-audit canonical report must be valid JSON.')
+      throw new Error('compatibility-audit canonical report and readiness must be valid JSON.')
     }
     const compatibilityRecord =
       compatibility && typeof compatibility === 'object' && !Array.isArray(compatibility)
         ? (compatibility as Record<string, unknown>)
         : null
+    const readinessRecord =
+      readiness && typeof readiness === 'object' && !Array.isArray(readiness)
+        ? (readiness as Record<string, unknown>)
+        : null
+    if (!compatibilityRecord || !readinessRecord) {
+      throw new Error('compatibility-audit canonical report and readiness must be JSON objects.')
+    }
+    assertTerminalCompatibilityDetails(compatibilityRecord, 'compatibility-audit report')
+    assertTerminalCompatibilityDetails(readinessRecord, 'compatibility-audit readiness')
+    for (const field of ['actionCounts', 'executionCompatibility', 'supplement', 'unresolved']) {
+      if (canonicalJson(compatibilityRecord[field]) !== canonicalJson(readinessRecord[field])) {
+        throw new Error(`compatibility-audit report/readiness ${field} values disagree.`)
+      }
+    }
+    if (canonicalJson(readinessRecord.blockers) !== canonicalJson(REQUIRED_TERMINAL_BLOCKERS)) {
+      throw new Error(
+        'compatibility-audit readiness does not contain the exact four terminal-4 blockers.',
+      )
+    }
     const sourceBindings = compatibilityRecord?.sourceBindings
     const canonicalSafety = compatibilityRecord?.safety
     const receiptSources = receiptRecord.sources
@@ -319,8 +546,17 @@ export async function preserveAuditDirectory(input: {
     )
     if (
       !compatibilityFile ||
+      !readinessFile ||
       canonicalJson(compatibility) !== compatibilityFile.text ||
+      canonicalJson(readiness) !== readinessFile.text ||
       compatibilityRecord?.contractAuditReady !== true ||
+      compatibilityRecord.status !== 'blocked' ||
+      compatibilityRecord.terminalState !== POST_MIGRATION_RECONCILIATION_BLOCKED_TERMINAL_STATE ||
+      compatibilityRecord.packageGenerationAllowed !== false ||
+      !readinessRecord ||
+      readinessRecord.readiness !== 'blocked' ||
+      readinessRecord.terminalState !== POST_MIGRATION_RECONCILIATION_BLOCKED_TERMINAL_STATE ||
+      readinessRecord.packageGenerationAllowed !== false ||
       !sourceBindings ||
       typeof sourceBindings !== 'object' ||
       Array.isArray(sourceBindings) ||
@@ -335,12 +571,19 @@ export async function preserveAuditDirectory(input: {
       (canonicalSafety as Record<string, unknown>).importExecuted !== false ||
       (canonicalSafety as Record<string, unknown>).compensationExecuted !== false ||
       (canonicalSafety as Record<string, unknown>).remoteDatabaseAccessed !== false ||
+      receiptRecord.schemaVersion !== COMPATIBILITY_AUDIT_EXECUTION_SCHEMA_VERSION ||
+      receiptRecord.kind !== 'existing_head_compatibility_file_only_audit' ||
       receiptRecord.mode !== 'file_only_read_only' ||
+      receiptRecord.canonicalArtifactCount !== manifestEntries.size ||
+      receiptRecord.terminalState !== POST_MIGRATION_RECONCILIATION_BLOCKED_TERMINAL_STATE ||
+      receiptRecord.packageReady !== false ||
       !receiptSources ||
       typeof receiptSources !== 'object' ||
       Array.isArray(receiptSources) ||
       (receiptSources as Record<string, unknown>).postMigrationAuditManifestSha256 !==
         upstreamManifest ||
+      (receiptSources as Record<string, unknown>).compatibilitySupplementFileSha256 !== null ||
+      (receiptSources as Record<string, unknown>).compatibilitySupplementContentSha256 !== null ||
       !receiptSafety ||
       typeof receiptSafety !== 'object' ||
       Array.isArray(receiptSafety) ||
@@ -368,6 +611,7 @@ export async function canonicalReport(
   path: string,
   label: string,
 ): Promise<{
+  parsed: unknown
   sha256: string
   text: string
 }> {
@@ -384,7 +628,166 @@ export async function canonicalReport(
   if (canonical !== bytes.toString('utf8')) {
     throw new Error(`${label} must already use the canonical JSON byte representation.`)
   }
-  return { sha256: sha256(bytes), text: canonical }
+  return { parsed, sha256: sha256(bytes), text: canonical }
+}
+
+interface FinalReportBindings {
+  compatibilityAuditManifestSha256: string
+  contractDiagnosticManifestSha256: string
+  repositoryCommitSha: string
+}
+
+function assertZeroMutationSafety(value: unknown, label: string): void {
+  const safety = exactRecordKeys(
+    value,
+    [
+      'compensationExecuted',
+      'databaseMutationCount',
+      'heldOutIdentitiesAccessed',
+      'importExecuted',
+      'remoteDatabaseAccessed',
+    ],
+    label,
+  )
+  if (
+    safety.compensationExecuted !== false ||
+    safety.databaseMutationCount !== 0 ||
+    safety.heldOutIdentitiesAccessed !== false ||
+    safety.importExecuted !== false ||
+    safety.remoteDatabaseAccessed !== false
+  ) {
+    throw new Error(`${label} does not attest the exact zero-mutation safety state.`)
+  }
+}
+
+function assertFinalReportBindings(
+  value: unknown,
+  expected: FinalReportBindings,
+  label: string,
+): void {
+  const bindings = exactRecordKeys(
+    value,
+    ['compatibilityAuditManifestSha256', 'contractDiagnosticManifestSha256', 'repositoryCommitSha'],
+    `${label} bindings`,
+  )
+  if (
+    bindings.repositoryCommitSha !== expected.repositoryCommitSha ||
+    bindings.contractDiagnosticManifestSha256 !== expected.contractDiagnosticManifestSha256 ||
+    bindings.compatibilityAuditManifestSha256 !== expected.compatibilityAuditManifestSha256
+  ) {
+    throw new Error(`${label} does not bind the exact HEAD and reviewed audit manifests.`)
+  }
+}
+
+export async function strictTestBuildReport(
+  path: string,
+  expected: FinalReportBindings,
+): Promise<{ sha256: string; text: string }> {
+  const report = await canonicalReport(path, 'test/build report')
+  const record = exactRecordKeys(
+    report.parsed,
+    ['bindings', 'checks', 'safety', 'schemaVersion', 'status', 'terminalState'],
+    'test/build report',
+  )
+  if (
+    record.schemaVersion !== POST_MIGRATION_RECONCILIATION_TEST_BUILD_REPORT_SCHEMA_VERSION ||
+    record.status !== 'passed' ||
+    record.terminalState !== POST_MIGRATION_RECONCILIATION_BLOCKED_TERMINAL_STATE
+  ) {
+    throw new Error('Test/build report does not attest a passing terminal-4 validation run.')
+  }
+  assertFinalReportBindings(record.bindings, expected, 'Test/build report')
+  if (!Array.isArray(record.checks) || record.checks.length !== REQUIRED_TEST_BUILD_CHECKS.length) {
+    throw new Error('Test/build report must contain the exact ordered validation check set.')
+  }
+  record.checks.forEach((rawCheck, index) => {
+    const check = exactRecordKeys(
+      rawCheck,
+      ['command', 'exitCode', 'id', 'result'],
+      `test/build report check ${index + 1}`,
+    )
+    if (
+      check.id !== REQUIRED_TEST_BUILD_CHECKS[index] ||
+      typeof check.command !== 'string' ||
+      check.command.trim() !== check.command ||
+      check.command.length === 0 ||
+      check.command.includes('\n') ||
+      check.exitCode !== 0 ||
+      check.result !== 'passed'
+    ) {
+      throw new Error(
+        `Test/build report check ${index + 1} must preserve its exact command and passing result.`,
+      )
+    }
+  })
+  assertZeroMutationSafety(record.safety, 'test/build report safety')
+  return { sha256: report.sha256, text: report.text }
+}
+
+export async function strictMergeReadinessReport(
+  path: string,
+  expected: FinalReportBindings,
+): Promise<{ sha256: string; text: string }> {
+  const report = await canonicalReport(path, 'merge-readiness report')
+  const record = exactRecordKeys(
+    report.parsed,
+    [
+      'bindings',
+      'blockers',
+      'codeReview',
+      'importExecution',
+      'safety',
+      'schemaVersion',
+      'terminalState',
+    ],
+    'merge-readiness report',
+  )
+  const codeReview = exactRecordKeys(
+    record.codeReview,
+    [
+      'mergeAuthorized',
+      'originMainIsAncestor',
+      'pullRequestDraft',
+      'readiness',
+      'trackedWorktreeClean',
+    ],
+    'merge-readiness report codeReview',
+  )
+  const importExecution = exactRecordKeys(
+    record.importExecution,
+    [
+      'compensationExecuted',
+      'importExecuted',
+      'packageGenerated',
+      'packageGenerationAllowed',
+      'readiness',
+    ],
+    'merge-readiness report importExecution',
+  )
+  if (
+    record.schemaVersion !== POST_MIGRATION_RECONCILIATION_MERGE_READINESS_REPORT_SCHEMA_VERSION ||
+    record.terminalState !== POST_MIGRATION_RECONCILIATION_BLOCKED_TERMINAL_STATE ||
+    codeReview.readiness !== 'ready_for_draft_review' ||
+    codeReview.pullRequestDraft !== true ||
+    codeReview.trackedWorktreeClean !== true ||
+    codeReview.originMainIsAncestor !== true ||
+    codeReview.mergeAuthorized !== false ||
+    importExecution.readiness !== 'blocked_unresolved_contract' ||
+    importExecution.packageGenerationAllowed !== false ||
+    importExecution.packageGenerated !== false ||
+    importExecution.importExecuted !== false ||
+    importExecution.compensationExecuted !== false
+  ) {
+    throw new Error(
+      'Merge-readiness report must separate ready draft code review from blocked import execution.',
+    )
+  }
+  if (canonicalJson(record.blockers) !== canonicalJson(REQUIRED_TERMINAL_BLOCKERS)) {
+    throw new Error('Merge-readiness report does not contain the exact terminal-4 blockers.')
+  }
+  assertFinalReportBindings(record.bindings, expected, 'Merge-readiness report')
+  assertZeroMutationSafety(record.safety, 'merge-readiness report safety')
+  return { sha256: report.sha256, text: report.text }
 }
 
 export async function preserveChangedTrackedFiles(input: {
@@ -484,6 +887,21 @@ export async function runCreatePostMigrationContractReconciliationBackup(
   if (repository.branch !== POST_MIGRATION_RECONCILIATION_BRANCH) {
     throw new Error('Backup branch does not match the reconciliation branch.')
   }
+  const contractDiagnosticManifestSha256 = requiredArgument(
+    arguments_,
+    'contract-diagnostic-manifest-sha256',
+  )
+  const compatibilityAuditManifestSha256 = requiredArgument(
+    arguments_,
+    'compatibility-audit-manifest-sha256',
+  )
+  assertSha256(contractDiagnosticManifestSha256, 'contract-diagnostic manifest SHA-256')
+  assertSha256(compatibilityAuditManifestSha256, 'compatibility-audit manifest SHA-256')
+  const finalReportBindings: FinalReportBindings = {
+    compatibilityAuditManifestSha256,
+    contractDiagnosticManifestSha256,
+    repositoryCommitSha: repository.head,
+  }
   const rawBackupRoot = requiredArgument(arguments_, 'backup-root')
   const rawOutput = requiredArgument(arguments_, 'output')
   const outputDirectory = await assertExclusiveOutputPath({
@@ -499,17 +917,14 @@ export async function runCreatePostMigrationContractReconciliationBackup(
     await Promise.all([
       preserveAuditDirectory({
         directory: requiredArgument(arguments_, 'contract-diagnostic'),
-        expectedManifestSha256: requiredArgument(arguments_, 'contract-diagnostic-manifest-sha256'),
+        expectedManifestSha256: contractDiagnosticManifestSha256,
         expectedRepositoryCommitSha: repository.head,
         prefix: 'contract-diagnostic',
       }),
       preserveAuditDirectory({
         directory: requiredArgument(arguments_, 'compatibility-audit'),
-        expectedManifestSha256: requiredArgument(arguments_, 'compatibility-audit-manifest-sha256'),
-        expectedPostMigrationAuditManifestSha256: requiredArgument(
-          arguments_,
-          'contract-diagnostic-manifest-sha256',
-        ),
+        expectedManifestSha256: compatibilityAuditManifestSha256,
+        expectedPostMigrationAuditManifestSha256: contractDiagnosticManifestSha256,
         expectedRepositoryCommitSha: repository.head,
         prefix: 'compatibility-audit',
       }),
@@ -519,10 +934,10 @@ export async function runCreatePostMigrationContractReconciliationBackup(
         originMain: repository.originMain,
         runCommand,
       }),
-      canonicalReport(requiredArgument(arguments_, 'test-build-report'), 'test/build report'),
-      canonicalReport(
+      strictTestBuildReport(requiredArgument(arguments_, 'test-build-report'), finalReportBindings),
+      strictMergeReadinessReport(
         requiredArgument(arguments_, 'merge-readiness-report'),
-        'merge-readiness report',
+        finalReportBindings,
       ),
     ])
   const repositoryAfterRead = await inspectReadOnlyReconciliationRepositoryState(cwd, runCommand)
@@ -563,7 +978,10 @@ export async function runCreatePostMigrationContractReconciliationBackup(
       })),
       mergeReadinessSourceSha256: mergeReadiness.sha256,
       testBuildSourceSha256: validation.sha256,
+      contractDiagnosticManifestSha256,
+      compatibilityAuditManifestSha256,
     },
+    terminalState: POST_MIGRATION_RECONCILIATION_BLOCKED_TERMINAL_STATE,
     safety: {
       additiveBackup: true,
       databaseAccessed: false,

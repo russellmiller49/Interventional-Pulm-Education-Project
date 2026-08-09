@@ -7,11 +7,9 @@ import { sha256Canonical } from '../../src/features/literature/gold-set/import-c
 import {
   BOOLEAN_NORMALIZATION_REPORT_SCHEMA_VERSION,
   COMPATIBILITY_AUDIT_EXECUTION_SCHEMA_VERSION,
-  COMPATIBILITY_AUDIT_READY_SUPPLEMENT_NOT_REQUIRED,
-  COMPATIBILITY_AUDIT_READY_SUPPLEMENT_REQUIRED,
+  COMPATIBILITY_AUDIT_STILL_BLOCKED,
   COMPATIBILITY_PACKAGE_READINESS_SCHEMA_VERSION,
   EXISTING_HEAD_COMPATIBILITY_AUDIT_SCHEMA_VERSION,
-  EXPECTED_UNRESOLVED_COMPATIBILITY_PMIDS,
   LIST_NORMALIZATION_REPORT_SCHEMA_VERSION,
   buildExistingHeadCompatibilityAudit,
   runAuditGoldExistingHeadCompatibility,
@@ -22,14 +20,10 @@ import type {
 } from './generate-gold-import-compensation-package-v1'
 import {
   FINALIZED_GOLD_IMPORT_ARTIFACT_COLUMNS,
-  GOLD_IMPORT_COMPATIBILITY_SUPPLEMENT_SCHEMA_VERSION,
   GOLD_IMPORT_COMPENSATION_MIGRATION_ID,
   GOLD_IMPORT_EXISTING_HEAD_IDENTITIES,
   GOLD_IMPORT_PHYSICIAN_DECISION_IDENTITIES,
-  bindCompletedCompatibilitySupplement,
-  type BoundCompatibilitySupplementTemplate,
   type CompatibilityDevelopmentPlanningState,
-  type CompatibilitySupplementCompletedContent,
 } from './gold-import-compensation-compatibility'
 
 const FIXED_TIME = '2026-08-08T00:00:00.000Z'
@@ -39,6 +33,7 @@ const DECISION_KEYS = new Set(
     ({ masterRowId, pmid }) => `${masterRowId}:${pmid}`,
   ),
 )
+const CONSERVATIVE_NOTES_MISMATCH_PMIDS = new Set(['36879724', '39281191'])
 
 afterEach(async () => {
   await Promise.all(
@@ -65,6 +60,7 @@ function csvCell(value: string): string {
 type ArtifactValues = Record<(typeof FINALIZED_GOLD_IMPORT_ARTIFACT_COLUMNS)[number], string>
 
 function artifactValues(input: {
+  fullTextUsed?: boolean
   included: boolean
   itemId: string
   masterRowId: string
@@ -74,16 +70,15 @@ function artifactValues(input: {
     | 'physician_modified_ai_enrichment'
     | 'ai_generated_enrichment_qc_accepted'
 }): ArtifactValues {
-  const decisionRequired = DECISION_KEYS.has(`${input.masterRowId}:${input.pmid}`)
   return {
     categorization_from_full_text: 'false',
     clinical_purposes: input.included ? 'diagnosis' : '',
     dataset_split: 'development',
-    disease_tag_status: input.included ? 'tagged' : decisionRequired ? '' : 'not_applicable',
+    disease_tag_status: input.included ? 'tagged' : '',
     disease_tags: input.included ? 'lung-cancer' : '',
     enrichment_provenance: input.provenance,
     enrichment_schema_version: '3.0.2',
-    full_text_used: 'false',
+    full_text_used: input.fullTextUsed ? 'true' : 'false',
     gold_set_item_id: input.itemId,
     is_blinded: 'False',
     label_schema_version: '3.0.0',
@@ -96,7 +91,7 @@ function artifactValues(input: {
     publication_status: input.included ? 'full-article' : '',
     study_design: input.included ? 'retrospective-cohort' : '',
     taxonomy_version: '2.0.0',
-    technology_tag_status: input.included ? 'tagged' : decisionRequired ? '' : 'not_applicable',
+    technology_tag_status: input.included ? 'tagged' : '',
     technology_tags: input.included ? 'convex-ebus' : '',
     topic_ids: input.included ? 'basic-bronchoscopy' : '',
   }
@@ -182,9 +177,14 @@ function buildFixture(options: { withUnsortedLists?: boolean } = {}): {
       values.disease_tags = 'mesothelioma|lung-cancer'
       unsortedListRowAdded = true
     }
+    const currentEffectiveReview = historicalReview(values)
+    currentEffectiveReview.isBlinded = true
+    if (CONSERVATIVE_NOTES_MISMATCH_PMIDS.has(identity.pmid)) {
+      currentEffectiveReview.notes = `Current authorized rationale for PMID ${identity.pmid}.`
+    }
     artifactRows.push(values)
     planningRows.push({
-      currentEffectiveReview: historicalReview(values),
+      currentEffectiveReview,
       currentReviewId: reviewId,
       currentRevision: 1,
       datasetSplit: 'development',
@@ -192,7 +192,7 @@ function buildFixture(options: { withUnsortedLists?: boolean } = {}): {
       effectiveReviewId: reviewId,
       itemId,
       itemState: {
-        automatedSignalsRevealedAt: FIXED_TIME,
+        automatedSignalsRevealedAt: null,
         completedAt: FIXED_TIME,
         reviewStatus: 'completed',
         startedAt: FIXED_TIME,
@@ -202,6 +202,38 @@ function buildFixture(options: { withUnsortedLists?: boolean } = {}): {
       sequence: index + 1,
     })
   })
+  for (let index = 0; index < 621; index += 1) {
+    const sequence = GOLD_IMPORT_EXISTING_HEAD_IDENTITIES.length + index + 1
+    const included = index >= 268
+    const itemId = fixtureUuid(0x11000000, sequence)
+    const values = artifactValues({
+      fullTextUsed: included && index < 318,
+      included,
+      itemId,
+      masterRowId: String(sequence),
+      pmid: String(60_000_000 + sequence),
+      provenance: 'physician_confirmed_ai_enrichment',
+    })
+    artifactRows.push(values)
+    planningRows.push({
+      currentEffectiveReview: null,
+      currentReviewId: null,
+      currentRevision: null,
+      datasetSplit: 'development',
+      displayOrder: sequence - 1,
+      effectiveReviewId: null,
+      itemId,
+      itemState: {
+        automatedSignalsRevealedAt: null,
+        completedAt: null,
+        reviewStatus: 'pending',
+        startedAt: null,
+        supplementalMetadataRevealedAt: null,
+      },
+      pmid: values.pmid,
+      sequence,
+    })
+  }
   const planningState: CompatibilityDevelopmentPlanningState = {
     datasetSplit: 'development',
     rows: planningRows,
@@ -256,67 +288,6 @@ function jsonFile<T>(
   return JSON.parse(bytes.toString('utf8')) as T
 }
 
-function completedContent(
-  template: BoundCompatibilitySupplementTemplate,
-): CompatibilitySupplementCompletedContent {
-  return {
-    allowedMutableFields: ['technologyTagStatus', 'diseaseTagStatus'],
-    authorization: {
-      authorizationId: fixtureUuid(0x44000000, 1),
-      authorizationKind: 'physician_compatibility_decision',
-      authorizationNote: 'Physician reviewed the two optional statuses on all four rows.',
-      authorized: true,
-      authorizedAt: '2026-08-09T12:00:00.000Z',
-      authorizedBy: 'reviewing-physician@example.test',
-      authorizedRole: 'physician',
-    },
-    bindings: template.bindings,
-    documentState: 'completed',
-    kind: 'physician_compatibility_supplement',
-    resolutionClasses: [
-      'deterministic_lexical_normalization',
-      'deterministic_schema_compatibility_mapping',
-      'physician_authorized_compatibility_decision',
-    ],
-    rows: template.rows.map((row, index) => ({
-      categorizationFromFullText: false,
-      clinicalPurposes: [],
-      completionStatus: 'completed',
-      diseaseTags: [],
-      diseaseTagStatus: {
-        ...row.diseaseTagStatus,
-        physicianFinalValue: index % 2 === 0 ? 'not_applicable' : 'not_assessable',
-      },
-      enrichmentProvenance: row.enrichmentProvenance,
-      itemId: row.itemId,
-      masterRowId: row.masterRowId,
-      physicianRationale: `Reviewed available evidence for PMID ${row.pmid}.`,
-      pmid: row.pmid,
-      publicationStatus: null,
-      relevanceLabel: 'exclude',
-      reviewed: true,
-      reviewerConfidence: row.reviewerConfidence,
-      studyDesign: null,
-      technologyTags: [],
-      technologyTagStatus: {
-        ...row.technologyTagStatus,
-        physicianFinalValue: index % 2 === 0 ? 'not_assessable' : 'not_applicable',
-      },
-      topicIds: [],
-    })),
-    schemaVersion: GOLD_IMPORT_COMPATIBILITY_SUPPLEMENT_SCHEMA_VERSION,
-    scope: template.scope,
-    sourceTemplateSha256: template.binding.contentSha256,
-  }
-}
-
-function completedSupplementBytes(template: BoundCompatibilitySupplementTemplate): Buffer {
-  return Buffer.from(
-    `${JSON.stringify(bindCompletedCompatibilitySupplement(completedContent(template)), null, 2)}\n`,
-    'utf8',
-  )
-}
-
 async function safeTemporaryDirectory(prefix: string): Promise<string> {
   const directory = await mkdtemp(join(await realpath(tmpdir()), prefix))
   temporaryDirectories.push(directory)
@@ -343,7 +314,7 @@ async function writeDummyAuditBundle(directory: string): Promise<{
 }
 
 describe('sealed existing-head compatibility artifacts', () => {
-  test('blocks package readiness and reports exactly the four unresolved PMIDs', () => {
+  test('remains contract-blocked with exact dynamic execution blocker ledgers', () => {
     const fixture = buildFixture()
     const before = Buffer.from(fixture.artifactBytes)
     const generated = buildExistingHeadCompatibilityAudit({
@@ -353,16 +324,26 @@ describe('sealed existing-head compatibility artifacts', () => {
     })
     expect(fixture.artifactBytes).toEqual(before)
     expect(generated.packageReady).toBe(false)
-    expect(generated.terminalState).toBe(COMPATIBILITY_AUDIT_READY_SUPPLEMENT_REQUIRED)
-    expect(generated.unresolvedPmids).toEqual(EXPECTED_UNRESOLVED_COMPATIBILITY_PMIDS)
+    expect(generated.terminalState).toBe(COMPATIBILITY_AUDIT_STILL_BLOCKED)
+    expect(generated.unresolvedPmids).toEqual([])
     expect([...generated.canonicalFiles.keys()]).toEqual([
       'boolean-normalization-report.json',
-      'compatibility-supplement-template.json',
       'existing-head-compatibility-audit.json',
       'list-normalization-report.json',
       'package-readiness.json',
     ])
     const audit = jsonFile<{
+      actionCounts: Record<string, number>
+      executionCompatibility: {
+        blockedRowCount: number
+        countsByCode: Record<string, number>
+        executableRowCount: number
+        totalRowCount: number
+      }
+      existingHeads: Array<{
+        fields: Array<{ classification: string; field: string }>
+        identity: { pmid: string }
+      }>
       packageGenerationAllowed: boolean
       schemaVersion: string
       unresolved: { count: number; pmids: string[] }
@@ -371,9 +352,31 @@ describe('sealed existing-head compatibility artifacts', () => {
       expect.objectContaining({
         packageGenerationAllowed: false,
         schemaVersion: EXISTING_HEAD_COMPATIBILITY_AUDIT_SCHEMA_VERSION,
-        unresolved: {
-          count: 4,
-          pmids: EXPECTED_UNRESOLVED_COMPATIBILITY_PMIDS,
+        unresolved: { count: 0, pmids: [] },
+        actionCounts: {
+          incompatible: 630,
+          initial: 0,
+          inserts: 0,
+          noops: 0,
+          revisions: 0,
+          total: 630,
+          unresolved: 0,
+        },
+        executionCompatibility: expect.objectContaining({
+          blockedRowCount: 630,
+          countsByCode: {
+            excluded_status_null_not_representable_by_import_contract_v1: 272,
+            source_is_blinded_conflicts_with_local_automated_signals_reveal_state_v1: 630,
+            source_supplemental_metadata_use_conflicts_with_local_reveal_state_v1: 50,
+          },
+          executableRowCount: 0,
+          totalRowCount: 630,
+        }),
+        supplement: {
+          acceptedContentSha256: null,
+          required: false,
+          supplied: false,
+          templateContentSha256: null,
         },
       }),
     )
@@ -386,20 +389,28 @@ describe('sealed existing-head compatibility artifacts', () => {
     expect(readiness).toEqual(
       expect.objectContaining({
         blockers: [
-          'physician_compatibility_supplement_required',
-          'unresolved_physician_compatibility_decisions',
+          'excluded_status_null_not_representable_by_import_contract_v1',
+          'source_is_blinded_conflicts_with_local_automated_signals_reveal_state_v1',
+          'source_supplemental_metadata_use_conflicts_with_local_reveal_state_v1',
+          'incompatible_existing_head_fields',
         ],
         packageGenerationAllowed: false,
         schemaVersion: COMPATIBILITY_PACKAGE_READINESS_SCHEMA_VERSION,
-        unresolved: {
-          count: 4,
-          pmids: EXPECTED_UNRESOLVED_COMPATIBILITY_PMIDS,
-        },
+        unresolved: { count: 0, pmids: [] },
       }),
     )
+    expect(
+      audit.existingHeads
+        .filter((row) =>
+          row.fields.some(
+            (field) => field.field === 'notes' && field.classification === 'incompatible',
+          ),
+        )
+        .map((row) => row.identity.pmid),
+    ).toEqual(['36879724', '39281191'])
   })
 
-  test('seals all boolean normalizations and an unselected exact supplement template', () => {
+  test('seals all normalizations and records physician supplement as not applicable', () => {
     const fixture = buildFixture()
     const generated = buildExistingHeadCompatibilityAudit({
       artifactBytes: fixture.artifactBytes,
@@ -420,7 +431,7 @@ describe('sealed existing-head compatibility artifacts', () => {
     expect(report).toEqual(
       expect.objectContaining({
         existingHeadLegacyFalseCount: 9,
-        normalizationCount: 27,
+        normalizationCount: 1890,
         schemaVersion: BOOLEAN_NORMALIZATION_REPORT_SCHEMA_VERSION,
         sourceArtifactBytesPreserved: true,
       }),
@@ -450,18 +461,17 @@ describe('sealed existing-head compatibility artifacts', () => {
         sourceArtifactBytesPreserved: true,
       }),
     )
-    const template = jsonFile<BoundCompatibilitySupplementTemplate>(
-      generated,
-      'compatibility-supplement-template.json',
-    )
-    expect(template.authorization).toBeNull()
-    expect(template.rows).toHaveLength(4)
-    expect(template.rows.map(({ pmid }) => pmid)).toEqual(EXPECTED_UNRESOLVED_COMPATIBILITY_PMIDS)
-    template.rows.forEach((row) => {
-      expect(row.technologyTagStatus.physicianFinalValue).toBeNull()
-      expect(row.diseaseTagStatus.physicianFinalValue).toBeNull()
-      expect(row.physicianRationale).toBe('')
-      expect(row.reviewed).toBe(false)
+    expect(generated.canonicalFiles.has('compatibility-supplement-template.json')).toBe(false)
+    expect(
+      jsonFile<{ supplement: Record<string, unknown> }>(
+        generated,
+        'existing-head-compatibility-audit.json',
+      ).supplement,
+    ).toEqual({
+      acceptedContentSha256: null,
+      required: false,
+      supplied: false,
+      templateContentSha256: null,
     })
   })
 
@@ -505,41 +515,16 @@ describe('sealed existing-head compatibility artifacts', () => {
     expect(readiness.listNormalizationLedgerSha256).toBe(report.normalizationLedgerSha256)
   })
 
-  test('accepts the authorized supplement, clears blockers, and seals the accepted content', () => {
+  test('rejects any compatibility supplement and cannot clear execution blockers', () => {
     const fixture = buildFixture()
-    const pending = buildExistingHeadCompatibilityAudit({
-      artifactBytes: fixture.artifactBytes,
-      auditPackage: fixture.auditPackage,
-      expectedArtifactSha256: sha256(fixture.artifactBytes),
-    })
-    const template = jsonFile<BoundCompatibilitySupplementTemplate>(
-      pending,
-      'compatibility-supplement-template.json',
-    )
-    const supplementBytes = completedSupplementBytes(template)
-    const ready = buildExistingHeadCompatibilityAudit({
-      artifactBytes: fixture.artifactBytes,
-      auditPackage: fixture.auditPackage,
-      compatibilitySupplementBytes: supplementBytes,
-      expectedArtifactSha256: sha256(fixture.artifactBytes),
-    })
-    expect(ready.packageReady).toBe(true)
-    expect(ready.terminalState).toBe(COMPATIBILITY_AUDIT_READY_SUPPLEMENT_NOT_REQUIRED)
-    expect(ready.unresolvedPmids).toEqual([])
-    expect(ready.canonicalFiles.has('accepted-compatibility-supplement.json')).toBe(true)
-    expect(ready.sourceSupplementSha256).toBe(sha256(supplementBytes))
-    const readiness = jsonFile<{
-      blockers: string[]
-      packageGenerationAllowed: boolean
-      unresolved: { count: number; pmids: string[] }
-    }>(ready, 'package-readiness.json')
-    expect(readiness).toEqual(
-      expect.objectContaining({
-        blockers: [],
-        packageGenerationAllowed: true,
-        unresolved: { count: 0, pmids: [] },
+    expect(() =>
+      buildExistingHeadCompatibilityAudit({
+        artifactBytes: fixture.artifactBytes,
+        auditPackage: fixture.auditPackage,
+        compatibilitySupplementBytes: Buffer.from('{}\n', 'utf8'),
+        expectedArtifactSha256: sha256(fixture.artifactBytes),
       }),
-    )
+    ).toThrow('not applicable')
   })
 
   test('produces a strictly sorted manifest that authenticates every canonical file', () => {
@@ -561,7 +546,7 @@ describe('sealed existing-head compatibility artifacts', () => {
     })
   })
 
-  test('rejects a legacy audit, wrong artifact hash, and stale supplement', () => {
+  test('rejects a legacy audit, wrong artifact hash, and any supplement', () => {
     const fixture = buildFixture()
     expect(() =>
       buildExistingHeadCompatibilityAudit({
@@ -584,35 +569,14 @@ describe('sealed existing-head compatibility artifacts', () => {
       }),
     ).toThrow('approved raw SHA-256')
 
-    const pending = buildExistingHeadCompatibilityAudit({
-      artifactBytes: fixture.artifactBytes,
-      auditPackage: fixture.auditPackage,
-      expectedArtifactSha256: sha256(fixture.artifactBytes),
-    })
-    const supplementBytes = completedSupplementBytes(
-      jsonFile<BoundCompatibilitySupplementTemplate>(
-        pending,
-        'compatibility-supplement-template.json',
-      ),
-    )
-    const staleAuditPackage = {
-      ...fixture.auditPackage,
-      audit: {
-        ...fixture.auditPackage.audit,
-        database: {
-          ...fixture.auditPackage.audit.database,
-          currentPhysicalStateSha256: '1'.repeat(64),
-        },
-      } as VerifiedPostMigrationAuditPackage['audit'],
-    }
     expect(() =>
       buildExistingHeadCompatibilityAudit({
         artifactBytes: fixture.artifactBytes,
-        auditPackage: staleAuditPackage,
-        compatibilitySupplementBytes: supplementBytes,
+        auditPackage: fixture.auditPackage,
+        compatibilitySupplementBytes: Buffer.from('{}\n', 'utf8'),
         expectedArtifactSha256: sha256(fixture.artifactBytes),
       }),
-    ).toThrow('stale')
+    ).toThrow('not applicable')
   })
 })
 
@@ -669,14 +633,13 @@ describe('file-only compatibility audit CLI', () => {
     if ('help' in result) throw new Error('Unexpected help result.')
     expect(verifyReadyAuditPackage).toHaveBeenCalledTimes(1)
     expect(result.packageReady).toBe(false)
-    expect(result.terminalState).toBe(COMPATIBILITY_AUDIT_READY_SUPPLEMENT_REQUIRED)
-    expect(result.unresolvedPmids).toEqual(EXPECTED_UNRESOLVED_COMPATIBILITY_PMIDS)
+    expect(result.terminalState).toBe(COMPATIBILITY_AUDIT_STILL_BLOCKED)
+    expect(result.unresolvedPmids).toEqual([])
     expect(await readFile(artifactPath)).toEqual(before)
     expect(await readdir(outputDirectory)).toEqual(
       expect.arrayContaining([
         'boolean-normalization-report.json',
         'checksum-manifest.sha256',
-        'compatibility-supplement-template.json',
         'execution-receipt.json',
         'existing-head-compatibility-audit.json',
         'list-normalization-report.json',

@@ -7,11 +7,87 @@ import { join } from 'node:path'
 
 import { canonicalJson, sha256 } from './gold-import-compensation-migration-operations'
 import {
+  POST_MIGRATION_RECONCILIATION_BLOCKED_TERMINAL_STATE,
+  POST_MIGRATION_RECONCILIATION_MERGE_READINESS_REPORT_SCHEMA_VERSION,
+  POST_MIGRATION_RECONCILIATION_TEST_BUILD_REPORT_SCHEMA_VERSION,
   canonicalReport,
   preserveAuditDirectory,
   preserveChangedTrackedFiles,
   runCreatePostMigrationContractReconciliationBackup,
+  strictMergeReadinessReport,
+  strictTestBuildReport,
 } from './create-post-migration-contract-reconciliation-backup'
+
+const EXECUTION_BLOCKER_CODES = [
+  'excluded_status_null_not_representable_by_import_contract_v1',
+  'source_is_blinded_conflicts_with_local_automated_signals_reveal_state_v1',
+  'source_supplemental_metadata_use_conflicts_with_local_reveal_state_v1',
+] as const
+const TERMINAL_BLOCKERS = [...EXECUTION_BLOCKER_CODES, 'incompatible_existing_head_fields'] as const
+
+const TEST_BUILD_CHECK_IDS = [
+  'completeRepositorySuite',
+  'eslint',
+  'focusedPostMigrationReconciliationTests',
+  'gitDiffCheck',
+  'importCompensationTests',
+  'literatureTests',
+  'migrationDatabaseContractTests',
+  'operationalToolTests',
+  'prettier',
+  'productionBuild',
+  'registryScopeCheck',
+  'typeScript',
+] as const
+
+function compatibilityIdentity(index: number) {
+  return {
+    datasetSplit: 'development',
+    itemId: `00000000-0000-4000-8000-${index.toString(16).padStart(12, '0')}`,
+    masterRowId: String(index + 1),
+    pmid: String(10_000_000 + index),
+  }
+}
+
+function terminalCompatibilityDetails() {
+  const allIdentities = Array.from({ length: 630 }, (_, index) => compatibilityIdentity(index))
+  return {
+    actionCounts: {
+      incompatible: 630,
+      initial: 0,
+      inserts: 0,
+      noops: 0,
+      revisions: 0,
+      total: 630,
+      unresolved: 0,
+    },
+    executionCompatibility: {
+      blockedRowCount: 630,
+      countsByCode: {
+        excluded_status_null_not_representable_by_import_contract_v1: 272,
+        source_is_blinded_conflicts_with_local_automated_signals_reveal_state_v1: 630,
+        source_supplemental_metadata_use_conflicts_with_local_reveal_state_v1: 50,
+      },
+      executableRowCount: 0,
+      identitiesByCode: {
+        excluded_status_null_not_representable_by_import_contract_v1: allIdentities.slice(0, 272),
+        source_is_blinded_conflicts_with_local_automated_signals_reveal_state_v1: allIdentities,
+        source_supplemental_metadata_use_conflicts_with_local_reveal_state_v1: allIdentities.slice(
+          0,
+          50,
+        ),
+      },
+      totalRowCount: 630,
+    },
+    supplement: {
+      acceptedContentSha256: null,
+      required: false,
+      supplied: false,
+      templateContentSha256: null,
+    },
+    unresolved: { count: 0, pmids: [] },
+  }
+}
 
 async function temporaryDirectory(): Promise<string> {
   const root = await realpath(tmpdir())
@@ -19,32 +95,85 @@ async function temporaryDirectory(): Promise<string> {
 }
 
 async function writeAuditDirectory(input: {
+  contradictoryCompatibility?: boolean
   extra?: boolean
   kind?: 'compatibility' | 'diagnostic'
+  omitIncompatibleReadinessBlocker?: boolean
+  packageReady?: boolean
   staleReceipt?: boolean
+  terminalState?: string
   upstreamManifestSha256?: string
 }) {
   const directory = await temporaryDirectory()
   const kind = input.kind ?? 'diagnostic'
   const upstreamManifestSha256 = input.upstreamManifestSha256 ?? 'd'.repeat(64)
-  const artifactName =
-    kind === 'diagnostic' ? 'migration-audit.json' : 'existing-head-compatibility-audit.json'
-  const artifact =
+  const terminalState = input.terminalState ?? POST_MIGRATION_RECONCILIATION_BLOCKED_TERMINAL_STATE
+  const packageReady = input.packageReady ?? false
+  const compatibilityDetails = terminalCompatibilityDetails()
+  const readinessDetails = terminalCompatibilityDetails()
+  if (input.contradictoryCompatibility) {
+    compatibilityDetails.actionCounts.incompatible = 629
+    readinessDetails.actionCounts.incompatible = 629
+  }
+  const artifacts =
     kind === 'diagnostic'
-      ? canonicalJson({ database: { repositoryCommitSha: 'a'.repeat(40) }, ready: true })
-      : canonicalJson({
-          contractAuditReady: true,
-          safety: {
-            compensationExecuted: false,
-            databaseMutationCount: 0,
-            databaseQueriesExecuted: 0,
-            heldOutIdentitiesAccessed: false,
-            importExecuted: false,
-            remoteDatabaseAccessed: false,
-          },
-          sourceBindings: { postMigrationAuditManifestSha256: upstreamManifestSha256 },
-        })
-  const manifest = `${sha256(artifact)}  ${artifactName}\n`
+      ? new Map([
+          [
+            'migration-audit.json',
+            canonicalJson({
+              database: { repositoryCommitSha: 'a'.repeat(40) },
+              migration: { ledgerOccurrences: 1 },
+              readinessStatus: 'ready',
+              result: 'audit_ready_contract_compatibility_audit_required',
+              status: 'ready',
+            }),
+          ],
+          [
+            'read-only-state-bracket.json',
+            canonicalJson({
+              contractStateHashesMatch: true,
+              preMigrationBackupManifestSha256: 'f'.repeat(64),
+              snapshotsMatch: true,
+            }),
+          ],
+        ])
+      : new Map([
+          [
+            'existing-head-compatibility-audit.json',
+            canonicalJson({
+              ...compatibilityDetails,
+              contractAuditReady: true,
+              packageGenerationAllowed: packageReady,
+              safety: {
+                compensationExecuted: false,
+                databaseMutationCount: 0,
+                databaseQueriesExecuted: 0,
+                heldOutIdentitiesAccessed: false,
+                importExecuted: false,
+                remoteDatabaseAccessed: false,
+              },
+              sourceBindings: { postMigrationAuditManifestSha256: upstreamManifestSha256 },
+              status: packageReady ? 'ready' : 'blocked',
+              terminalState,
+            }),
+          ],
+          [
+            'package-readiness.json',
+            canonicalJson({
+              ...readinessDetails,
+              blockers: input.omitIncompatibleReadinessBlocker
+                ? EXECUTION_BLOCKER_CODES
+                : TERMINAL_BLOCKERS,
+              packageGenerationAllowed: packageReady,
+              readiness: packageReady ? 'ready' : 'blocked',
+              terminalState,
+            }),
+          ],
+        ])
+  const manifest = [...artifacts]
+    .sort(([left], [right]) => left.localeCompare(right, 'en'))
+    .map(([name, contents]) => `${sha256(contents)}  ${name}\n`)
+    .join('')
   const manifestSha256 = sha256(manifest)
   const zeroSafety = {
     compensationExecuted: false,
@@ -71,17 +200,24 @@ async function writeAuditDirectory(input: {
           remoteDatabaseAccessed: false,
           repositoryCommitSha: 'a'.repeat(40),
           repositoryRoot: '/fixture/repository',
-          requestedNameDiscrepancies: [],
+          requestedNameDiscrepancies: [
+            {
+              aliasCreated: false,
+              canonicalName: 'reconcile_literature_gold_review_operation_v1',
+              classification: 'audit_expectation_defect',
+              requestedName: 'reconcile_literature_gold_import_v1',
+            },
+          ],
           schemaVersion: 'gold-import-compensation-contract-diagnostic-execution/1.0.0',
         }
       : {
-          canonicalArtifactCount: 1,
+          canonicalArtifactCount: artifacts.size,
           canonicalManifestSha256: input.staleReceipt ? '0'.repeat(64) : manifestSha256,
           executedAt: '2026-08-09T15:00:00.000Z',
           kind: 'existing_head_compatibility_file_only_audit',
           mode: 'file_only_read_only',
           outputDirectory: directory,
-          packageReady: false,
+          packageReady,
           repositoryCommitSha: 'a'.repeat(40),
           safety: {
             ...zeroSafety,
@@ -97,10 +233,10 @@ async function writeAuditDirectory(input: {
             finalV3ArtifactSha256: '1'.repeat(64),
             postMigrationAuditManifestSha256: upstreamManifestSha256,
           },
-          terminalState: 'AUDIT READY — PHYSICIAN COMPATIBILITY SUPPLEMENT REQUIRED',
+          terminalState,
         }
   await Promise.all([
-    writeFile(join(directory, artifactName), artifact),
+    ...[...artifacts].map(([name, contents]) => writeFile(join(directory, name), contents)),
     writeFile(join(directory, 'checksum-manifest.sha256'), manifest),
     writeFile(join(directory, 'execution-receipt.json'), canonicalJson(receipt)),
     ...(input.extra ? [writeFile(join(directory, 'unmanifested.json'), canonicalJson({}))] : []),
@@ -165,6 +301,68 @@ function repositoryRunner(input: {
   }
 }
 
+function reportBindings(input: {
+  compatibilityAuditManifestSha256: string
+  contractDiagnosticManifestSha256: string
+  repositoryCommitSha?: string
+}) {
+  return {
+    compatibilityAuditManifestSha256: input.compatibilityAuditManifestSha256,
+    contractDiagnosticManifestSha256: input.contractDiagnosticManifestSha256,
+    repositoryCommitSha: input.repositoryCommitSha ?? 'a'.repeat(40),
+  }
+}
+
+function zeroMutationSafety() {
+  return {
+    compensationExecuted: false,
+    databaseMutationCount: 0,
+    heldOutIdentitiesAccessed: false,
+    importExecuted: false,
+    remoteDatabaseAccessed: false,
+  }
+}
+
+function testBuildReport(bindings: ReturnType<typeof reportBindings>) {
+  return {
+    bindings,
+    checks: TEST_BUILD_CHECK_IDS.map((id) => ({
+      command: `validation-command-for-${id}`,
+      exitCode: 0,
+      id,
+      result: 'passed',
+    })),
+    safety: zeroMutationSafety(),
+    schemaVersion: POST_MIGRATION_RECONCILIATION_TEST_BUILD_REPORT_SCHEMA_VERSION,
+    status: 'passed',
+    terminalState: POST_MIGRATION_RECONCILIATION_BLOCKED_TERMINAL_STATE,
+  }
+}
+
+function mergeReadinessReport(bindings: ReturnType<typeof reportBindings>) {
+  return {
+    bindings,
+    blockers: TERMINAL_BLOCKERS,
+    codeReview: {
+      mergeAuthorized: false,
+      originMainIsAncestor: true,
+      pullRequestDraft: true,
+      readiness: 'ready_for_draft_review',
+      trackedWorktreeClean: true,
+    },
+    importExecution: {
+      compensationExecuted: false,
+      importExecuted: false,
+      packageGenerated: false,
+      packageGenerationAllowed: false,
+      readiness: 'blocked_unresolved_contract',
+    },
+    safety: zeroMutationSafety(),
+    schemaVersion: POST_MIGRATION_RECONCILIATION_MERGE_READINESS_REPORT_SCHEMA_VERSION,
+    terminalState: POST_MIGRATION_RECONCILIATION_BLOCKED_TERMINAL_STATE,
+  }
+}
+
 async function backupFixture() {
   const cwd = await temporaryDirectory()
   const backupRoot = join(cwd, 'backups')
@@ -176,11 +374,15 @@ async function backupFixture() {
     kind: 'compatibility',
     upstreamManifestSha256: diagnostic.manifestSha256,
   })
-  const testBuildReport = join(cwd, 'test-build.json')
-  const mergeReadinessReport = join(cwd, 'merge-readiness.json')
+  const testBuildReportPath = join(cwd, 'test-build.json')
+  const mergeReadinessReportPath = join(cwd, 'merge-readiness.json')
+  const bindings = reportBindings({
+    compatibilityAuditManifestSha256: compatibility.manifestSha256,
+    contractDiagnosticManifestSha256: diagnostic.manifestSha256,
+  })
   await Promise.all([
-    writeFile(testBuildReport, canonicalJson({ passed: true })),
-    writeFile(mergeReadinessReport, canonicalJson({ draft: true })),
+    writeFile(testBuildReportPath, canonicalJson(testBuildReport(bindings))),
+    writeFile(mergeReadinessReportPath, canonicalJson(mergeReadinessReport(bindings))),
   ])
   const output = join(backupRoot, `post-migration-contract-reconciliation-v1-${'a'.repeat(40)}`)
   const argv = [
@@ -193,15 +395,25 @@ async function backupFixture() {
     '--compatibility-audit-manifest-sha256',
     compatibility.manifestSha256,
     '--test-build-report',
-    testBuildReport,
+    testBuildReportPath,
     '--merge-readiness-report',
-    mergeReadinessReport,
+    mergeReadinessReportPath,
     '--backup-root',
     backupRoot,
     '--output',
     output,
   ]
-  return { argv, backupRoot, cwd, output, trackedBytes }
+  return {
+    argv,
+    backupRoot,
+    compatibility,
+    cwd,
+    diagnostic,
+    mergeReadinessReportPath,
+    output,
+    testBuildReportPath,
+    trackedBytes,
+  }
 }
 
 describe('post-migration contract reconciliation backup CLI', () => {
@@ -232,7 +444,7 @@ describe('post-migration contract reconciliation backup CLI', () => {
         expectedRepositoryCommitSha: 'a'.repeat(40),
         prefix: 'contract-diagnostic',
       }),
-    ).resolves.toHaveLength(3)
+    ).resolves.toHaveLength(4)
 
     const extra = await writeAuditDirectory({ extra: true })
     await expect(
@@ -268,6 +480,116 @@ describe('post-migration contract reconciliation backup CLI', () => {
         prefix: 'compatibility-audit',
       }),
     ).rejects.toThrow(/exact diagnostic manifest/u)
+
+    const wrongTerminal = await writeAuditDirectory({
+      kind: 'compatibility',
+      terminalState: 'AUDIT READY — PHYSICIAN COMPATIBILITY SUPPLEMENT REQUIRED',
+    })
+    await expect(
+      preserveAuditDirectory({
+        directory: wrongTerminal.directory,
+        expectedManifestSha256: wrongTerminal.manifestSha256,
+        expectedPostMigrationAuditManifestSha256: 'd'.repeat(64),
+        expectedRepositoryCommitSha: 'a'.repeat(40),
+        prefix: 'compatibility-audit',
+      }),
+    ).rejects.toThrow(/zero-mutation safety contract/u)
+
+    const contradictory = await writeAuditDirectory({
+      contradictoryCompatibility: true,
+      kind: 'compatibility',
+    })
+    await expect(
+      preserveAuditDirectory({
+        directory: contradictory.directory,
+        expectedManifestSha256: contradictory.manifestSha256,
+        expectedPostMigrationAuditManifestSha256: 'd'.repeat(64),
+        expectedRepositoryCommitSha: 'a'.repeat(40),
+        prefix: 'compatibility-audit',
+      }),
+    ).rejects.toThrow(/exact terminal-4 action counts/u)
+
+    const missingFourthReadinessBlocker = await writeAuditDirectory({
+      kind: 'compatibility',
+      omitIncompatibleReadinessBlocker: true,
+    })
+    await expect(
+      preserveAuditDirectory({
+        directory: missingFourthReadinessBlocker.directory,
+        expectedManifestSha256: missingFourthReadinessBlocker.manifestSha256,
+        expectedPostMigrationAuditManifestSha256: 'd'.repeat(64),
+        expectedRepositoryCommitSha: 'a'.repeat(40),
+        prefix: 'compatibility-audit',
+      }),
+    ).rejects.toThrow(/exact four terminal-4 blockers/u)
+  })
+
+  test('strictly binds passing validation and split code/import readiness reports', async () => {
+    const directory = await temporaryDirectory()
+    const bindings = reportBindings({
+      compatibilityAuditManifestSha256: 'c'.repeat(64),
+      contractDiagnosticManifestSha256: 'd'.repeat(64),
+    })
+    const testBuildPath = join(directory, 'test-build.json')
+    const mergeReadinessPath = join(directory, 'merge-readiness.json')
+    await Promise.all([
+      writeFile(testBuildPath, canonicalJson(testBuildReport(bindings))),
+      writeFile(mergeReadinessPath, canonicalJson(mergeReadinessReport(bindings))),
+    ])
+    await expect(strictTestBuildReport(testBuildPath, bindings)).resolves.toMatchObject({
+      sha256: expect.stringMatching(/^[a-f0-9]{64}$/u),
+    })
+    await expect(strictMergeReadinessReport(mergeReadinessPath, bindings)).resolves.toMatchObject({
+      sha256: expect.stringMatching(/^[a-f0-9]{64}$/u),
+    })
+
+    const failedTestBuild = testBuildReport(bindings)
+    failedTestBuild.checks[0] = { ...failedTestBuild.checks[0], exitCode: 1, result: 'failed' }
+    await writeFile(testBuildPath, canonicalJson(failedTestBuild))
+    await expect(strictTestBuildReport(testBuildPath, bindings)).rejects.toThrow(
+      /exact command and passing result/u,
+    )
+
+    const unsafeMergeReadiness = mergeReadinessReport(bindings)
+    unsafeMergeReadiness.importExecution.packageGenerationAllowed = true
+    await writeFile(mergeReadinessPath, canonicalJson(unsafeMergeReadiness))
+    await expect(strictMergeReadinessReport(mergeReadinessPath, bindings)).rejects.toThrow(
+      /ready draft code review from blocked import execution/u,
+    )
+
+    const missingFourthMergeBlocker = {
+      ...mergeReadinessReport(bindings),
+      blockers: EXECUTION_BLOCKER_CODES,
+    }
+    await writeFile(mergeReadinessPath, canonicalJson(missingFourthMergeBlocker))
+    await expect(strictMergeReadinessReport(mergeReadinessPath, bindings)).rejects.toThrow(
+      /exact terminal-4 blockers/u,
+    )
+  })
+
+  test('rejects final reports rebound to another HEAD or reviewed manifest', async () => {
+    const directory = await temporaryDirectory()
+    const expected = reportBindings({
+      compatibilityAuditManifestSha256: 'c'.repeat(64),
+      contractDiagnosticManifestSha256: 'd'.repeat(64),
+    })
+    const rebound = reportBindings({
+      compatibilityAuditManifestSha256: 'e'.repeat(64),
+      contractDiagnosticManifestSha256: 'd'.repeat(64),
+      repositoryCommitSha: 'b'.repeat(40),
+    })
+    const testBuildPath = join(directory, 'test-build.json')
+    const mergeReadinessPath = join(directory, 'merge-readiness.json')
+    await Promise.all([
+      writeFile(testBuildPath, canonicalJson(testBuildReport(rebound))),
+      writeFile(mergeReadinessPath, canonicalJson(mergeReadinessReport(rebound))),
+    ])
+    await expect(strictTestBuildReport(testBuildPath, expected)).rejects.toThrow(
+      /exact HEAD and reviewed audit manifests/u,
+    )
+    await expect(strictMergeReadinessReport(mergeReadinessPath, expected)).rejects.toThrow(
+      /exact HEAD and reviewed audit manifests/u,
+    )
   })
 
   test('rejects report reserialization and working-tree bytes that do not equal HEAD', async () => {

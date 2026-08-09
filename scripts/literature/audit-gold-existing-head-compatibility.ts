@@ -2,7 +2,6 @@ import { createHash } from 'node:crypto'
 import { lstat, readFile, realpath } from 'node:fs/promises'
 import { basename, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { TextDecoder } from 'node:util'
 
 import { canonicalJson } from '../../src/features/literature/gold-set/import-compensation'
 import {
@@ -14,8 +13,6 @@ import {
   GOLD_IMPORT_BOOLEAN_NORMALIZATION_RULE_VERSION,
   GOLD_IMPORT_COMPENSATION_MIGRATION_ID,
   GOLD_IMPORT_LIST_NORMALIZATION_RULE_VERSION,
-  GOLD_IMPORT_PHYSICIAN_DECISION_IDENTITIES,
-  boundCompatibilitySupplementCompletedSchema,
   resolveGoldImportCompensationCompatibility,
   type GoldImportCompensationCompatibilityResolution,
 } from './gold-import-compensation-compatibility'
@@ -49,9 +46,7 @@ export const COMPATIBILITY_AUDIT_READY_SUPPLEMENT_NOT_REQUIRED =
 export const COMPATIBILITY_AUDIT_STILL_BLOCKED =
   'CONTRACT STILL BLOCKED — UNRESOLVED DIFFERENCE' as const
 
-export const EXPECTED_UNRESOLVED_COMPATIBILITY_PMIDS = Object.freeze(
-  GOLD_IMPORT_PHYSICIAN_DECISION_IDENTITIES.map(({ pmid }) => pmid),
-)
+export const EXPECTED_UNRESOLVED_COMPATIBILITY_PMIDS = Object.freeze([] as string[])
 
 const SHA256_PATTERN = /^[a-f0-9]{64}$/u
 const RECONCILED_AUDIT_SCHEMA_VERSION =
@@ -87,6 +82,8 @@ Audit the exact nine existing development heads against the unchanged finalized 
 
 This command is file-only. It verifies the complete reconciled post-migration audit bundle before
 opening the finalized artifact, never contacts a database, and never executes import or compensation.
+Formal finalized V3 excluded-status nulls are not physician decisions, so this audit does not accept
+or emit a compatibility supplement.
 
 Usage:
   tsx scripts/literature/audit-gold-existing-head-compatibility.ts \\
@@ -94,7 +91,6 @@ Usage:
     --audit-manifest-sha256 <reviewed-canonical-manifest-sha256> \\
     --development-state <reconciled-audit-directory/development-planning-state.json> \\
     --artifact <gold-set-v1-enrichment-v3-final-development-630.csv> \\
-    [--compatibility-supplement <completed-physician-supplement.json>] \\
     --output-root <approved-local-output-root> --output <new-audit-directory>
 `.trim()
 
@@ -105,16 +101,6 @@ function sha256Bytes(value: Uint8Array | string): string {
 function canonicalPretty(value: unknown): Buffer {
   const normalized = JSON.parse(canonicalJson(value)) as unknown
   return Buffer.from(`${JSON.stringify(normalized, null, 2)}\n`, 'utf8')
-}
-
-function parseJsonBytes(bytes: Buffer, label: string): unknown {
-  try {
-    return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)) as unknown
-  } catch (error) {
-    throw new Error(
-      `${label} is not valid UTF-8 JSON: ${error instanceof Error ? error.message : String(error)}`,
-    )
-  }
 }
 
 function canonicalFileMap(records: Readonly<Record<string, unknown>>): Map<string, Buffer> {
@@ -169,26 +155,25 @@ function unresolvedCompatibilityPmids(
     .map((row) => row.identity.pmid)
 }
 
-function assertExpectedPendingDecisionCohort(
+function assertNoPhysicianCompatibilitySupplement(
   resolution: GoldImportCompensationCompatibilityResolution,
   supplementSupplied: boolean,
   unresolvedPmids: readonly string[],
 ): void {
-  if (!resolution.supplementRequired || resolution.supplementTemplate === null) {
-    throw new Error('The exact nine-head workflow no longer requires its four-row supplement.')
-  }
-  const templatePmids = resolution.supplementTemplate.rows.map(({ pmid }) => pmid)
-  if (canonicalJson(templatePmids) !== canonicalJson(EXPECTED_UNRESOLVED_COMPATIBILITY_PMIDS)) {
-    throw new Error('Compatibility supplement template does not contain the exact four PMIDs.')
+  if (supplementSupplied) {
+    throw new Error(
+      'A physician compatibility supplement is not applicable to the authoritative finalized V3 excluded-row shape.',
+    )
   }
   if (
-    !supplementSupplied &&
-    canonicalJson(unresolvedPmids) !== canonicalJson(EXPECTED_UNRESOLVED_COMPATIBILITY_PMIDS)
+    resolution.supplementRequired ||
+    resolution.supplementTemplate !== null ||
+    resolution.acceptedSupplementSha256 !== null ||
+    unresolvedPmids.length !== 0
   ) {
-    throw new Error('Missing supplement must leave exactly the four approved PMIDs unresolved.')
-  }
-  if (supplementSupplied && unresolvedPmids.length !== 0) {
-    throw new Error('An accepted completed supplement left physician decisions unresolved.')
+    throw new Error(
+      'Authoritative finalized V3 excluded-status nulls must not become physician supplement decisions.',
+    )
   }
 }
 
@@ -198,12 +183,17 @@ function compatibilityReadinessReport(input: {
   supplementSupplied: boolean
   unresolvedPmids: readonly string[]
 }) {
-  const blockers: string[] = []
-  if (!input.supplementSupplied) blockers.push('physician_compatibility_supplement_required')
+  const blockers = Object.entries(input.resolution.executionCompatibility.countsByCode)
+    .filter(([, count]) => count > 0)
+    .map(([code]) => code)
   if (input.resolution.actionCounts.unresolved > 0) {
     blockers.push('unresolved_physician_compatibility_decisions')
   }
-  if (input.resolution.actionCounts.incompatible > 0) {
+  if (
+    input.resolution.existingHeads.some((row) =>
+      row.fields.some((field) => field.classification === 'incompatible'),
+    )
+  ) {
     blockers.push('incompatible_existing_head_fields')
   }
   if (!input.resolution.readyForPackage && blockers.length === 0) {
@@ -212,12 +202,7 @@ function compatibilityReadinessReport(input: {
   const terminalState =
     blockers.length === 0
       ? COMPATIBILITY_AUDIT_READY_SUPPLEMENT_NOT_REQUIRED
-      : !input.supplementSupplied &&
-          input.resolution.actionCounts.incompatible === 0 &&
-          canonicalJson(input.unresolvedPmids) ===
-            canonicalJson(EXPECTED_UNRESOLVED_COMPATIBILITY_PMIDS)
-        ? COMPATIBILITY_AUDIT_READY_SUPPLEMENT_REQUIRED
-        : COMPATIBILITY_AUDIT_STILL_BLOCKED
+      : COMPATIBILITY_AUDIT_STILL_BLOCKED
   return {
     schemaVersion: COMPATIBILITY_PACKAGE_READINESS_SCHEMA_VERSION,
     readiness: blockers.length === 0 ? ('ready' as const) : ('blocked' as const),
@@ -225,6 +210,7 @@ function compatibilityReadinessReport(input: {
     terminalState,
     blockers,
     actionCounts: input.resolution.actionCounts,
+    executionCompatibility: input.resolution.executionCompatibility,
     listNormalizationLedgerSha256: input.listNormalizationLedgerSha256,
     supplement: {
       required: input.resolution.supplementRequired,
@@ -262,9 +248,11 @@ export function buildExistingHeadCompatibilityAudit(input: {
   if (originalArtifactSha256 !== input.expectedArtifactSha256) {
     throw new Error('Finalized V3 artifact does not match its approved raw SHA-256.')
   }
-  const supplementInput = input.compatibilitySupplementBytes
-    ? parseJsonBytes(input.compatibilitySupplementBytes, 'Compatibility supplement')
-    : undefined
+  if (input.compatibilitySupplementBytes !== undefined) {
+    throw new Error(
+      'A physician compatibility supplement is not applicable to the authoritative finalized V3 excluded-row shape and cannot change readiness.',
+    )
+  }
   const audit = input.auditPackage.audit
   if (audit.migration.id !== GOLD_IMPORT_COMPENSATION_MIGRATION_ID) {
     throw new Error('Reconciled audit is bound to an unexpected migration identity.')
@@ -288,7 +276,6 @@ export function buildExistingHeadCompatibilityAudit(input: {
         sha256: audit.migration.sha256,
       },
     },
-    compatibilitySupplement: supplementInput,
     developmentPlanningState: input.auditPackage.developmentPlanningState,
     finalizedArtifact: input.artifactBytes,
   })
@@ -297,7 +284,7 @@ export function buildExistingHeadCompatibilityAudit(input: {
   }
   const supplementSupplied = input.compatibilitySupplementBytes !== undefined
   const unresolvedPmids = unresolvedCompatibilityPmids(resolution)
-  assertExpectedPendingDecisionCohort(resolution, supplementSupplied, unresolvedPmids)
+  assertNoPhysicianCompatibilitySupplement(resolution, supplementSupplied, unresolvedPmids)
   const existingHeadBooleanNormalizations = resolution.artifact.booleanNormalizations.filter(
     (entry) =>
       entry.column === 'is_blinded' &&
@@ -352,10 +339,19 @@ export function buildExistingHeadCompatibilityAudit(input: {
     packageGenerationAllowed: readiness.packageGenerationAllowed,
     sourceBindings,
     actionCounts: resolution.actionCounts,
+    executionCompatibility: resolution.executionCompatibility,
     existingHeadCount: resolution.existingHeads.length,
     existingHeads: resolution.existingHeads,
     planningDispositions: resolution.planningRows.map(
-      ({ identity, proposedAction, reason, resolutionStatus, sequence }) => ({
+      ({
+        executionBlockerCodes,
+        identity,
+        proposedAction,
+        reason,
+        resolutionStatus,
+        sequence,
+      }) => ({
+        executionBlockerCodes,
         identity,
         proposedAction,
         reason,
@@ -414,21 +410,11 @@ export function buildExistingHeadCompatibilityAudit(input: {
     normalizationLedgerSha256: listNormalizationLedgerSha256,
     normalizations: resolution.artifact.listNormalizations,
   }
-  if (!resolution.supplementTemplate) {
-    throw new Error('Compatibility resolver did not produce the required supplement template.')
-  }
   const canonicalRecords: Record<string, unknown> = {
     'boolean-normalization-report.json': booleanNormalizationReport,
-    'compatibility-supplement-template.json': resolution.supplementTemplate,
     'existing-head-compatibility-audit.json': existingHeadAudit,
     'list-normalization-report.json': listNormalizationReport,
     'package-readiness.json': readiness,
-  }
-  let sourceSupplementSha256: string | null = null
-  if (input.compatibilitySupplementBytes) {
-    const acceptedSupplement = boundCompatibilitySupplementCompletedSchema.parse(supplementInput)
-    canonicalRecords['accepted-compatibility-supplement.json'] = acceptedSupplement
-    sourceSupplementSha256 = sha256Bytes(input.compatibilitySupplementBytes)
   }
   const sealed = sealCanonicalFiles(canonicalFileMap(canonicalRecords))
   return {
@@ -438,7 +424,7 @@ export function buildExistingHeadCompatibilityAudit(input: {
     packageReady: readiness.packageGenerationAllowed,
     resolution,
     sourceAuditManifestSha256: input.auditPackage.manifestSha256,
-    sourceSupplementSha256,
+    sourceSupplementSha256: null,
     terminalState: readiness.terminalState,
     unresolvedPmids,
   }

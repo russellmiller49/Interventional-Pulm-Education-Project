@@ -64,17 +64,46 @@ attributes, role memberships, ACL matrix, and effective privileges and fails
 closed for any other state. The full environment inventory is retained as
 evidence but is no longer misused as a cross-environment readiness hash.
 
-The current database has nine existing heads. Five are deterministically
-compatible additive revisions. Four excluded rows have blank technology- and
-disease-tag statuses that cannot be inferred under taxonomy v2; they remain
-unclassified until a physician completes the four-row checksum-bound
-supplement. All nine legacy `False` lexemes normalize deterministically to
-false without changing the finalized artifact. Ordered V3 pipe lists are also
-normalized to the import contract's ascending set order only through an exact
+The signed V3 provenance authorizes the finalized enrichment deltas, including
+additive differences from the nine existing heads, but source authorization
+does not override execution compatibility. The real read-only audit validates
+all 630 rows before assigning actions and finds zero executable rows:
+
+- `source_is_blinded_conflicts_with_local_automated_signals_reveal_state_v1`
+  affects all 630 rows: every source `is_blinded` value is semantically false,
+  while every local `automatedSignalsRevealedAt` value is null;
+- `excluded_status_null_not_representable_by_import_contract_v1` affects all
+  272 formal V3 excluded rows: their blank technology- and disease-tag
+  statuses are authoritative and outside enrichment scope, while import
+  contract v1 requires non-null status enums; and
+- `source_supplemental_metadata_use_conflicts_with_local_reveal_state_v1`
+  affects 50 rows: `full_text_used=true` conflicts with null local
+  `supplementalMetadataRevealedAt` state.
+
+Those three checksum-bound ledgers are execution blockers. They are distinct
+from the existing-head field audit, which conservatively reports incompatible
+`notes` for PMIDs `36879724` and `39281191`. The finalized source notes differ
+from each current authorized rationale, and the signed V3 provenance plus
+amended two-row authorization do not provide an exact replace-source-notes or
+preserve-current-rationale mapping. The notes therefore remain an unresolved
+source-authorization mapping and produce the fourth readiness blocker,
+`incompatible_existing_head_fields`. They are classified as incompatible, not
+as pending physician-supplement decisions.
+
+The exact boolean-normalization ledger preserves each source lexeme and
+semantic value; it cannot change false to true. Ordered V3 pipe lists are
+normalized to the import contract's ascending set order only through the exact
 source-artifact-bound ledger; V1 authorization and incomplete or substituted
-ledgers fail closed. Until the supplement is completed, the required terminal state is
-`AUDIT READY — PHYSICIAN COMPATIBILITY SUPPLEMENT REQUIRED`, and no executable
-package may be generated.
+ledgers fail closed. Neither form of normalization repairs a lifecycle-state
+mismatch.
+
+The 272 excluded-row blanks are not physician ambiguity. A compatibility
+supplement or template would invent out-of-scope enrichment values and is
+neither required nor safe; supplying one must not change readiness. No action
+plan or package is generated. The exact terminal state is
+`CONTRACT STILL BLOCKED — UNRESOLVED DIFFERENCE`. This source/local contract
+finding is independent of the safe owner/ACL profile conclusion and does not
+propose or authorize a forward migration.
 
 ## Operational sequence
 
@@ -253,7 +282,7 @@ full-inventory identity as evidence. The requested
 `audit_expectation_defect`; the command queries only
 `reconcile_literature_gold_review_operation_v1` and never creates an alias.
 
-### 4b. Audit the nine existing heads
+### 4b. Audit the finalized source against current planning state
 
 This command is file-only and authenticates the full reconciled audit bundle
 before opening the unchanged CSV:
@@ -265,47 +294,43 @@ npm run literature:audit-gold-existing-head-compatibility -- \
   --development-state <RECONCILED_AUDIT_DIRECTORY>/development-planning-state.json \
   --artifact <FINAL_V3_CSV> \
   --output-root <EXISTING_APPROVED_AUDIT_ROOT> \
-  --output <NEW_NINE_HEAD_COMPATIBILITY_AUDIT_DIRECTORY>
+  --output <NEW_SOURCE_COMPATIBILITY_AUDIT_DIRECTORY>
 ```
 
-Without a supplement, require exactly five proposed additive revisions, four
-unresolved physician-decision rows, all nine legacy `False` lexemes normalized
-to false, and terminal state
-`AUDIT READY — PHYSICIAN COMPATIBILITY SUPPLEMENT REQUIRED`. Preserve
-`boolean-normalization-report.json`, `list-normalization-report.json`, and
-`compatibility-supplement-template.json`. The list report digest must match the
-audit source binding and readiness artifact; the supplement template must
-contain no selected answer. Do not run package generation in that state.
+Require all 630 rows to be execution-blocked and zero to be executable. Require
+exact blocker counts of 630 source/local blinding mismatches, 272 excluded-row
+status mismatches, and 50 supplemental-metadata reveal mismatches. The audit
+must also report incompatible `notes` for exactly PMIDs `36879724` and
+`39281191` and the fourth readiness blocker
+`incompatible_existing_head_fields`. The first three blockers are the counted
+execution-compatibility ledgers; the fourth is the conservative
+source-authorization mapping failure from the existing-head field audit. The
+audit must report zero unresolved physician decisions,
+`supplement.required=false`, no supplement template, no
+initial/revision/no-op action, and terminal state
+`CONTRACT STILL BLOCKED — UNRESOLVED DIFFERENCE`.
 
-### 5. Generate the package
+Preserve `boolean-normalization-report.json` and
+`list-normalization-report.json`; the list report digest must match the audit
+source binding and readiness artifact. The source rows and finalized artifact
+must remain byte-identical. Do not supply a compatibility supplement and do
+not run package generation.
 
-Package generation is read-only and contacts no database. It gates the audit
-before opening the source artifacts:
+### 5. Package generation remains blocked
 
-```bash
-npm run literature:generate-gold-import-compensation-package -- \
-  --audit <POST_AUDIT_DIRECTORY>/migration-audit.json \
-  --audit-manifest-sha256 <REVIEWED_POST_AUDIT_MANIFEST_SHA256> \
-  --development-state <POST_AUDIT_DIRECTORY>/development-planning-state.json \
-  --artifact <FINAL_V3_CSV> \
-  --compatibility-supplement <COMPLETED_CHECKSUM_BOUND_PHYSICIAN_SUPPLEMENT> \
-  --protocol-authorization <SIGNED_PROTOCOL_AUTHORIZATION> \
-  --amended-authorization <AMENDED_TWO_ROW_AUTHORIZATION> \
-  --migration supabase/migrations/20260808035633_add_literature_gold_import_compensation_contract.sql \
-  --output-root <EXISTING_APPROVED_PACKAGE_ROOT> \
-  --output <NEW_PACKAGE_DIRECTORY>
-```
+Do not invoke the package generator for the current audit. Its readiness gate
+must reject the 630 execution-blocked rows before opening a mutation path or
+writing package output. A physician supplement cannot satisfy that gate and
+must itself be rejected. This runbook does not authorize a source rewrite,
+local-state rewrite, or forward migration. Any later package procedure
+requires separately reviewed evidence that every source row satisfies the
+execution contract; counts must then be derived from that evidence rather than
+compared with the historical `621/3/6` distribution.
 
-At present, the required safe result is rejection because the physician
-supplement is absent. A later completed supplement must pass its physician
-authorization, template ancestry, source/cohort/database/invariant/profile
-hashes, exact four-row/two-field scope, and canonical checksum before the
-generator writes any output. Counts are then derived from the 630 resolved
-rows; do not compare them to the historical `621/3/6` distribution.
-
-The generated package embeds the exact seven reconciled audit artifacts and
+If a later, separately authorized compatibility result passes that gate, its
+generated package must embed the exact seven reconciled audit artifacts and
 the original audit manifest, including the contract diagnostics,
-reconciliation, and read-only bracket. Its descriptor binds the reviewed
+reconciliation, and read-only bracket. Its descriptor must bind the reviewed
 audit-manifest SHA, the normalized schema/security identity SHA, the
 pre-migration backup manifest SHA, and both pre-migration and post-migration
 state identities. A recomputed outer package manifest cannot legitimize

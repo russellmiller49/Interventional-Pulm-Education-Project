@@ -831,10 +831,6 @@ export function bindCompletedCompatibilitySupplement(
   return boundCompatibilitySupplementCompletedSchema.parse(bindSupplementContent(content))
 }
 
-function decisionIdentityKey(identity: { masterRowId: string; pmid: string }): string {
-  return `${identity.masterRowId}:${identity.pmid}`
-}
-
 function compareMasterRows(left: { masterRowId: string }, right: { masterRowId: string }): number {
   const leftId = BigInt(left.masterRowId)
   const rightId = BigInt(right.masterRowId)
@@ -982,9 +978,31 @@ export type CompatibilityFieldClassification =
   | 'identical'
   | 'deterministic_lexical_normalization'
   | 'deterministic_schema_compatibility_mapping'
+  | 'finalized_v3_authorized_enrichment_change'
+  | 'finalized_v3_out_of_scope_null'
+  | 'execution_contract_mismatch'
   | 'physician_authorized_compatibility_decision'
   | 'physician_decision_required'
   | 'incompatible'
+
+export const GOLD_IMPORT_EXECUTION_COMPATIBILITY_BLOCKER_CODES = [
+  'excluded_status_null_not_representable_by_import_contract_v1',
+  'source_is_blinded_conflicts_with_local_automated_signals_reveal_state_v1',
+  'source_supplemental_metadata_use_conflicts_with_local_reveal_state_v1',
+] as const
+
+export type CompatibilityExecutionBlockerCode =
+  (typeof GOLD_IMPORT_EXECUTION_COMPATIBILITY_BLOCKER_CODES)[number]
+
+export interface CompatibilityExecutionValidation {
+  blockedRowCount: number
+  countsByCode: Readonly<Record<CompatibilityExecutionBlockerCode, number>>
+  executableRowCount: number
+  identitiesByCode: Readonly<
+    Record<CompatibilityExecutionBlockerCode, readonly GoldImportCompatibilitySourceIdentity[]>
+  >
+  totalRowCount: number
+}
 
 export interface ExistingHeadFieldClassification {
   classification: CompatibilityFieldClassification
@@ -1008,6 +1026,7 @@ export interface ExistingHeadCompatibilityRow {
 }
 
 export interface CompatibilityPlanningResolutionRow {
+  executionBlockerCodes: readonly CompatibilityExecutionBlockerCode[]
   identity: GoldImportCompatibilitySourceIdentity
   proposedAction: 'import_initial' | 'import_revision' | 'import_noop' | null
   reason: string
@@ -1061,6 +1080,7 @@ export interface GoldImportCompensationCompatibilityResolution {
   artifact: ParsedFinalizedGoldImportArtifact
   existingHeadCohortSha256: string
   existingHeads: readonly ExistingHeadCompatibilityRow[]
+  executionCompatibility: CompatibilityExecutionValidation
   planningRows: readonly CompatibilityPlanningResolutionRow[]
   readyForPackage: boolean
   schemaVersion: typeof GOLD_IMPORT_COMPATIBILITY_SCHEMA_VERSION
@@ -1138,22 +1158,12 @@ export function existingHeadCohortSha256(
   })
 }
 
-type SupplementDecisionMap = ReadonlyMap<
-  string,
-  {
-    diseaseTagStatus: z.infer<typeof optionalTagStatusSchema>
-    technologyTagStatus: z.infer<typeof optionalTagStatusSchema>
-  }
->
-
 function resolvedTargetReview(
   record: FinalizedGoldImportArtifactRecord,
   current: CompatibilityHistoricalReview | null,
-  decisions: SupplementDecisionMap,
 ): GoldReviewPayload | null {
-  const decision = decisions.get(decisionIdentityKey(record.identity))
-  const technologyTagStatus = record.projection.technologyTagStatus ?? decision?.technologyTagStatus
-  const diseaseTagStatus = record.projection.diseaseTagStatus ?? decision?.diseaseTagStatus
+  const technologyTagStatus = record.projection.technologyTagStatus
+  const diseaseTagStatus = record.projection.diseaseTagStatus
   if (!technologyTagStatus || !diseaseTagStatus) return null
   const operational = current
     ? {
@@ -1229,26 +1239,40 @@ const LIST_FIELDS = new Map<CompatibilityProjectionField, z.infer<typeof listCol
   ['clinicalPurposes', 'clinical_purposes'],
   ['diseaseTags', 'disease_tags'],
 ])
+const FINALIZED_V3_ENRICHMENT_FIELDS = new Set<CompatibilityProjectionField>([
+  'categorizationFromFullText',
+  'clinicalPurposes',
+  'diseaseTagStatus',
+  'diseaseTags',
+  'enrichmentProvenance',
+  'enrichmentSchemaVersion',
+  'labelSchemaVersion',
+  'metadataSufficiency',
+  'publicationStatus',
+  'studyDesign',
+  'taxonomyVersion',
+  'technologyTagStatus',
+  'technologyTags',
+  'topicIds',
+  'usedSupplementalMetadata',
+])
 
 function fieldClassifications(
   record: FinalizedGoldImportArtifactRecord,
   currentReview: CompatibilityHistoricalReview,
   targetReview: GoldReviewPayload | null,
-  decisions: SupplementDecisionMap,
 ): ExistingHeadFieldClassification[] {
   const current = historicalProjection(currentReview) as Record<
     CompatibilityProjectionField,
     unknown
   >
-  const decision = decisions.get(decisionIdentityKey(record.identity))
   const partialTarget: Record<CompatibilityProjectionField, unknown> = {
     ...record.projection,
     clinicalPurposes: [...record.projection.clinicalPurposes].sort(),
-    diseaseTagStatus: record.projection.diseaseTagStatus ?? decision?.diseaseTagStatus ?? null,
+    diseaseTagStatus: record.projection.diseaseTagStatus,
     diseaseTags: [...record.projection.diseaseTags].sort(),
     reviewSeconds: currentReview.reviewSeconds,
-    technologyTagStatus:
-      record.projection.technologyTagStatus ?? decision?.technologyTagStatus ?? null,
+    technologyTagStatus: record.projection.technologyTagStatus,
     technologyTags: [...record.projection.technologyTags].sort(),
     topicIds: [...record.projection.topicIds].sort(),
   }
@@ -1263,22 +1287,12 @@ function fieldClassifications(
       (field === 'technologyTagStatus' && record.raw.technology_tag_status === '') ||
       (field === 'diseaseTagStatus' && record.raw.disease_tag_status === '')
     if (rawStatusBlank) {
-      if (resolvedValue === null) {
-        return {
-          classification: 'physician_decision_required' as const,
-          currentValue,
-          field,
-          reason:
-            'The finalized excluded-row status is blank and both allowed empty-tag statuses remain semantically valid.',
-          resolvedValue,
-          sourceValue,
-        }
-      }
       return {
-        classification: 'physician_authorized_compatibility_decision' as const,
+        classification: 'finalized_v3_out_of_scope_null' as const,
         currentValue,
         field,
-        reason: 'A checksum-bound physician supplement supplies this otherwise ambiguous status.',
+        reason:
+          'The finalized V3 excluded-row contract intentionally leaves this included-record-only status blank; no physician decision or compatibility mapping is authorized.',
         resolvedValue,
         sourceValue,
       }
@@ -1289,6 +1303,28 @@ function fieldClassifications(
         (entry) => entry.column === booleanColumn,
       )
       if (canonicalJson(currentValue) !== canonicalJson(resolvedValue)) {
+        if (field === 'isBlinded') {
+          return {
+            classification: 'execution_contract_mismatch' as const,
+            currentValue,
+            field,
+            reason:
+              'The finalized V3 review lifecycle value conflicts with the import contract projection derived from local reveal state.',
+            resolvedValue,
+            sourceValue,
+          }
+        }
+        if (FINALIZED_V3_ENRICHMENT_FIELDS.has(field)) {
+          return {
+            classification: 'finalized_v3_authorized_enrichment_change' as const,
+            currentValue,
+            field,
+            reason:
+              'The pinned finalized V3 enrichment projection authorizes this source-field change; execution compatibility is evaluated independently.',
+            resolvedValue,
+            sourceValue,
+          }
+        }
         return {
           classification: 'incompatible' as const,
           currentValue,
@@ -1313,6 +1349,17 @@ function fieldClassifications(
     if (listColumn) {
       const normalization = record.listNormalizations.find((entry) => entry.column === listColumn)
       if (canonicalJson(currentValue) !== canonicalJson(resolvedValue)) {
+        if (FINALIZED_V3_ENRICHMENT_FIELDS.has(field)) {
+          return {
+            classification: 'finalized_v3_authorized_enrichment_change' as const,
+            currentValue,
+            field,
+            reason:
+              'The pinned finalized V3 enrichment projection authorizes this set-valued source-field change; execution compatibility is evaluated independently.',
+            resolvedValue,
+            sourceValue,
+          }
+        }
         return {
           classification: 'incompatible' as const,
           currentValue,
@@ -1355,6 +1402,17 @@ function fieldClassifications(
         sourceValue,
       }
     }
+    if (FINALIZED_V3_ENRICHMENT_FIELDS.has(field)) {
+      return {
+        classification: 'finalized_v3_authorized_enrichment_change' as const,
+        currentValue,
+        field,
+        reason:
+          'The pinned finalized V3 enrichment projection authorizes this source-field change; execution compatibility is evaluated independently.',
+        resolvedValue,
+        sourceValue,
+      }
+    }
     return {
       classification: 'incompatible' as const,
       currentValue,
@@ -1364,123 +1422,6 @@ function fieldClassifications(
       sourceValue,
     }
   })
-}
-
-function expectedDecisionRows(
-  existingRows: readonly CompatibilityPlanningStateRow[],
-  recordsByItem: ReadonlyMap<string, FinalizedGoldImportArtifactRecord>,
-) {
-  const byIdentity = new Map(
-    existingRows.map((row) => {
-      const record = recordsByItem.get(row.itemId)
-      if (!record) throw new Error('Decision row is absent from the finalized artifact.')
-      return [decisionIdentityKey(record.identity), { record, row }] as const
-    }),
-  )
-  return GOLD_IMPORT_PHYSICIAN_DECISION_IDENTITIES.map((identity) => {
-    const matched = byIdentity.get(decisionIdentityKey(identity))
-    if (!matched || matched.row.currentEffectiveReview === null) {
-      throw new Error('The exact physician-decision cohort is absent from current planning state.')
-    }
-    const { record, row } = matched
-    const current = row.currentEffectiveReview
-    if (!current) {
-      throw new Error('The physician-decision row lost its current effective review.')
-    }
-    if (
-      record.projection.relevanceLabel !== 'exclude' ||
-      record.projection.topicIds.length !== 0 ||
-      record.projection.technologyTags.length !== 0 ||
-      record.projection.clinicalPurposes.length !== 0 ||
-      record.projection.diseaseTags.length !== 0 ||
-      record.projection.studyDesign !== null ||
-      record.projection.publicationStatus !== null ||
-      record.projection.categorizationFromFullText ||
-      record.raw.technology_tag_status !== '' ||
-      record.raw.disease_tag_status !== '' ||
-      current.technologyTagStatus !== null ||
-      current.diseaseTagStatus !== null
-    ) {
-      throw new Error(
-        `Physician-decision row ${identity.masterRowId}:${identity.pmid} no longer has the fixed excluded-row contract shape.`,
-      )
-    }
-    return compatibilitySupplementTemplateRowSchema.parse({
-      categorizationFromFullText: false,
-      clinicalPurposes: [],
-      completionStatus: 'pending',
-      diseaseTags: [],
-      diseaseTagStatus: {
-        allowedValues: ['not_applicable', 'not_assessable'],
-        currentValue: null,
-        physicianFinalValue: null,
-        proposedValue: null,
-        sourceValue: '',
-      },
-      enrichmentProvenance: record.projection.enrichmentProvenance,
-      itemId: record.identity.itemId,
-      masterRowId: record.identity.masterRowId,
-      physicianRationale: '',
-      pmid: record.identity.pmid,
-      publicationStatus: null,
-      relevanceLabel: 'exclude',
-      reviewed: false,
-      reviewerConfidence: record.projection.reviewerConfidence,
-      studyDesign: null,
-      technologyTags: [],
-      technologyTagStatus: {
-        allowedValues: ['not_applicable', 'not_assessable'],
-        currentValue: null,
-        physicianFinalValue: null,
-        proposedValue: null,
-        sourceValue: '',
-      },
-      topicIds: [],
-    })
-  })
-}
-
-function buildSupplementTemplate(
-  bindingContext: CompatibilityAuditBindingContext,
-  existingHeadCohortDigest: string,
-  rows: ReturnType<typeof expectedDecisionRows>,
-): BoundCompatibilitySupplementTemplate {
-  const content = compatibilitySupplementTemplateContentSchema.parse({
-    allowedMutableFields: GOLD_IMPORT_COMPATIBILITY_MUTABLE_FIELDS,
-    authorization: null,
-    bindings: {
-      ...bindingContext,
-      existingHeadCohortSha256: existingHeadCohortDigest,
-    },
-    documentState: 'template',
-    kind: 'physician_compatibility_supplement',
-    resolutionClasses: GOLD_IMPORT_COMPATIBILITY_RESOLUTION_CLASSES,
-    rows,
-    schemaVersion: GOLD_IMPORT_COMPATIBILITY_SUPPLEMENT_SCHEMA_VERSION,
-    scope: {
-      datasetSplit: 'development',
-      heldOutIdentitiesAccessed: false,
-      purpose: 'import_contract_compatibility_only',
-      remoteWritesAllowed: false,
-      targetDatabase: 'local',
-    },
-  })
-  return boundCompatibilitySupplementTemplateSchema.parse(bindSupplementContent(content))
-}
-
-function decisionMapFromSupplement(
-  supplement: BoundCompatibilitySupplementCompleted | null,
-): SupplementDecisionMap {
-  if (!supplement) return new Map()
-  return new Map(
-    supplement.rows.map((row) => [
-      decisionIdentityKey(row),
-      {
-        diseaseTagStatus: row.diseaseTagStatus.physicianFinalValue,
-        technologyTagStatus: row.technologyTagStatus.physicianFinalValue,
-      },
-    ]),
-  )
 }
 
 function validatePlanningStateCoverage(
@@ -1526,9 +1467,69 @@ function validatePlanningStateCoverage(
   return recordsByItem
 }
 
+function deriveExecutionCompatibility(
+  state: CompatibilityDevelopmentPlanningState,
+  recordsByItem: ReadonlyMap<string, FinalizedGoldImportArtifactRecord>,
+): {
+  blockerCodesByItem: ReadonlyMap<string, readonly CompatibilityExecutionBlockerCode[]>
+  validation: CompatibilityExecutionValidation
+} {
+  const identitiesByCode = Object.fromEntries(
+    GOLD_IMPORT_EXECUTION_COMPATIBILITY_BLOCKER_CODES.map((code) => [
+      code,
+      [] as GoldImportCompatibilitySourceIdentity[],
+    ]),
+  ) as Record<CompatibilityExecutionBlockerCode, GoldImportCompatibilitySourceIdentity[]>
+  const blockerCodesByItem = new Map<string, readonly CompatibilityExecutionBlockerCode[]>()
+  const blockedItemIds = new Set<string>()
+
+  state.rows.forEach((row) => {
+    const record = recordsByItem.get(row.itemId)
+    if (!record) throw new Error('Execution validation row is absent from finalized artifact.')
+    const codes: CompatibilityExecutionBlockerCode[] = []
+    if (
+      record.projection.relevanceLabel === 'exclude' &&
+      (record.projection.technologyTagStatus === null ||
+        record.projection.diseaseTagStatus === null)
+    ) {
+      codes.push('excluded_status_null_not_representable_by_import_contract_v1')
+    }
+    const requiredIsBlinded = row.itemState.automatedSignalsRevealedAt === null
+    if (record.projection.isBlinded !== requiredIsBlinded) {
+      codes.push('source_is_blinded_conflicts_with_local_automated_signals_reveal_state_v1')
+    }
+    const requiredSupplementalMetadataUse = row.itemState.supplementalMetadataRevealedAt !== null
+    if (record.projection.usedSupplementalMetadata !== requiredSupplementalMetadataUse) {
+      codes.push('source_supplemental_metadata_use_conflicts_with_local_reveal_state_v1')
+    }
+    codes.forEach((code) => identitiesByCode[code].push(record.identity))
+    if (codes.length > 0) blockedItemIds.add(row.itemId)
+    blockerCodesByItem.set(row.itemId, codes)
+  })
+
+  const countsByCode = Object.fromEntries(
+    GOLD_IMPORT_EXECUTION_COMPATIBILITY_BLOCKER_CODES.map((code) => [
+      code,
+      identitiesByCode[code].length,
+    ]),
+  ) as Record<CompatibilityExecutionBlockerCode, number>
+  return {
+    blockerCodesByItem,
+    validation: {
+      blockedRowCount: blockedItemIds.size,
+      countsByCode,
+      executableRowCount: state.rows.length - blockedItemIds.size,
+      identitiesByCode,
+      totalRowCount: state.rows.length,
+    },
+  }
+}
+
 /**
- * Resolve the unchanged artifact against current development state. Unresolved physician fields
- * always produce a null action and therefore cannot be consumed by the package generator.
+ * Resolve the unchanged artifact against current development state. Every row is checked against
+ * the import contract's pre-state invariants before any action is assigned. A formal V3 excluded
+ * status null is source-authoritative, not a physician ambiguity, and cannot be filled by a
+ * compatibility supplement.
  */
 export function resolveGoldImportCompensationCompatibility(input: {
   bindingContext: CompatibilityAuditBindingContext
@@ -1545,6 +1546,12 @@ export function resolveGoldImportCompensationCompatibility(input: {
     expectedArtifactSha256: bindingContext.finalV3ArtifactSha256,
   })
   const recordsByItem = validatePlanningStateCoverage(state, artifact)
+  if (input.compatibilitySupplement !== undefined) {
+    throw new Error(
+      'A physician compatibility supplement is not applicable to authoritative finalized V3 excluded-status nulls or lifecycle-state mismatches.',
+    )
+  }
+  const executionCompatibility = deriveExecutionCompatibility(state, recordsByItem)
   const existingRows = state.rows.filter((row) => row.currentReviewId !== null)
   const existingIdentities = existingRows.map((row) => {
     const record = recordsByItem.get(row.itemId)
@@ -1564,13 +1571,6 @@ export function resolveGoldImportCompensationCompatibility(input: {
     }
   })
   const cohortDigest = existingHeadCohortSha256(existingRows, recordsByItem)
-  const decisionRows = expectedDecisionRows(existingRows, recordsByItem)
-  const supplementTemplate = buildSupplementTemplate(bindingContext, cohortDigest, decisionRows)
-  const completedSupplement =
-    input.compatibilitySupplement === undefined
-      ? null
-      : validateCompletedCompatibilitySupplement(input.compatibilitySupplement, supplementTemplate)
-  const decisions = decisionMapFromSupplement(completedSupplement)
   const existingHeadAuditByItem = new Map<string, ExistingHeadCompatibilityRow>()
   existingRows.forEach((row) => {
     const record = recordsByItem.get(row.itemId)
@@ -1583,16 +1583,24 @@ export function resolveGoldImportCompensationCompatibility(input: {
     ) {
       throw new Error('Existing-head audit row is incomplete.')
     }
-    const targetReview = resolvedTargetReview(record, row.currentEffectiveReview, decisions)
-    const fields = fieldClassifications(record, row.currentEffectiveReview, targetReview, decisions)
+    const targetReview = resolvedTargetReview(record, row.currentEffectiveReview)
+    const fields = fieldClassifications(record, row.currentEffectiveReview, targetReview)
+    const executionBlockerCodes = executionCompatibility.blockerCodesByItem.get(row.itemId) ?? []
     const hasPending = fields.some(
       (field) => field.classification === 'physician_decision_required',
     )
-    const hasIncompatible = fields.some((field) => field.classification === 'incompatible')
+    const hasIncompatible = fields.some(
+      (field) =>
+        field.classification === 'incompatible' ||
+        field.classification === 'execution_contract_mismatch',
+    )
     let resolutionStatus: ExistingHeadCompatibilityRow['resolutionStatus'] = 'resolved'
     let proposedAction: ExistingHeadCompatibilityRow['proposedAction'] = null
     let reason = 'All fields are classified and compatible.'
-    if (hasPending) {
+    if (executionBlockerCodes.length > 0) {
+      resolutionStatus = 'incompatible'
+      reason = `Execution compatibility pre-validation blocked this row: ${executionBlockerCodes.join(', ')}.`
+    } else if (hasPending) {
       resolutionStatus = 'pending_physician_decision'
       reason = 'Action is deferred until every ambiguous optional-tag status is authorized.'
     } else if (hasIncompatible || targetReview === null) {
@@ -1621,8 +1629,10 @@ export function resolveGoldImportCompensationCompatibility(input: {
     const record = recordsByItem.get(row.itemId)
     if (!record) throw new Error('Planning row is absent from finalized artifact.')
     const existing = existingHeadAuditByItem.get(row.itemId)
+    const executionBlockerCodes = executionCompatibility.blockerCodesByItem.get(row.itemId) ?? []
     if (existing) {
       return {
+        executionBlockerCodes,
         identity: record.identity,
         proposedAction: existing.proposedAction,
         reason: existing.reason,
@@ -1631,12 +1641,24 @@ export function resolveGoldImportCompensationCompatibility(input: {
         targetReview:
           existing.proposedAction === null
             ? null
-            : resolvedTargetReview(record, row.currentEffectiveReview, decisions),
+            : resolvedTargetReview(record, row.currentEffectiveReview),
       }
     }
-    const targetReview = resolvedTargetReview(record, null, decisions)
+    if (executionBlockerCodes.length > 0) {
+      return {
+        executionBlockerCodes,
+        identity: record.identity,
+        proposedAction: null,
+        reason: `Execution compatibility pre-validation blocked this row: ${executionBlockerCodes.join(', ')}.`,
+        resolutionStatus: 'incompatible',
+        sequence: row.sequence,
+        targetReview: null,
+      }
+    }
+    const targetReview = resolvedTargetReview(record, null)
     if (targetReview === null) {
       return {
+        executionBlockerCodes,
         identity: record.identity,
         proposedAction: null,
         reason: 'An initial import row contains an unresolved contract field.',
@@ -1646,6 +1668,7 @@ export function resolveGoldImportCompensationCompatibility(input: {
       }
     }
     return {
+      executionBlockerCodes,
       identity: record.identity,
       proposedAction: 'import_initial',
       reason: 'No current review exists and every target field is classified.',
@@ -1656,18 +1679,19 @@ export function resolveGoldImportCompensationCompatibility(input: {
   })
   const actionCounts = deriveCompatibilityActionCounts(planningRows)
   return {
-    acceptedSupplementSha256: completedSupplement?.binding.contentSha256 ?? null,
+    acceptedSupplementSha256: null,
     actionCounts,
     artifact,
     existingHeadCohortSha256: cohortDigest,
     existingHeads: [...existingHeadAuditByItem.values()].sort((left, right) =>
       compareMasterRows(left.identity, right.identity),
     ),
+    executionCompatibility: executionCompatibility.validation,
     planningRows,
     readyForPackage: actionCounts.unresolved === 0 && actionCounts.incompatible === 0,
     schemaVersion: GOLD_IMPORT_COMPATIBILITY_SCHEMA_VERSION,
-    supplementRequired: decisionRows.length > 0,
-    supplementTemplate,
+    supplementRequired: false,
+    supplementTemplate: null,
   }
 }
 

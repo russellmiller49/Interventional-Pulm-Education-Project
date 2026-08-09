@@ -197,20 +197,40 @@ V1 authorization for any reordered cell fails closed. The generator, runtime exe
 disposable rehearsal independently rederive the exact ledger and compare the normalized projection
 to the signed action plan before any database client or mutation path is available.
 
-The current database has nine existing effective heads. A field-by-field audit classifies all
-values before proposing an action. Five heads can become additive revisions through deterministic
-lexical normalization and new-schema field mapping. Four excluded rows have blank technology- and
-disease-tag statuses. Taxonomy v2 permits both `not_applicable` and `not_assessable` in different
-clinical circumstances and forbids inferring either from a legacy blank, so those eight values need
-a physician-authored compatibility supplement.
+Source authorization and execution compatibility are independent gates. The signed V3 provenance
+authorizes its finalized enrichment deltas, including additive differences from the nine existing
+effective heads, but it cannot override an import RPC pre-state invariant or authorize a different
+source value. Every one of the 630 source rows must pass the execution contract before any action is
+proposed or package readiness is considered.
 
-The supplement is development-only, import-contract-only, and may change only
-`technologyTagStatus` and `diseaseTagStatus` for the four fixed identities. It binds the unchanged
-final artifact, exact nine-head cohort, migration, current physical/effective/planning/membership
-state, invariant identity, and deployment-profile identity. It contains no preselected answer and
-is invalid without completed row attestations, rationale, physician authorization, and a canonical
-checksum. Package generation derives counts from resolved rows and remains blocked while any field
-is unresolved; the historical `621/3/6` distribution is not a production assertion.
+The real read-only audit found three source/local execution-contract mismatches:
+
+- all 630 source rows have semantic `is_blinded=false`, while all 630 local planning rows have
+  `automatedSignalsRevealedAt=null`; contract v1 requires those states to agree, so changing the
+  source value to true would be an unauthorized semantic rewrite rather than normalization;
+- all 272 formal V3 excluded rows have authoritative blank technology- and disease-tag statuses;
+  those fields are outside enrichment scope for excluded rows, while contract v1 requires non-null
+  status enums for an import revision; and
+- 50 source rows have `full_text_used=true` (`usedSupplementalMetadata=true`), while their local
+  `supplementalMetadataRevealedAt` state is null; contract v1 requires the source use flag to agree
+  with that reveal state.
+
+Those three cohorts are execution-compatibility ledgers. Separately, the field-by-field
+existing-head audit conservatively classifies `notes` as incompatible for PMIDs `36879724` and
+`39281191`. Their finalized source notes differ from the current authorized rationale, and the
+signed V3 provenance plus amended two-row authorization do not provide an exact mapping that says
+whether to replace those notes or preserve the current rationale. This unresolved source-authorization
+mapping produces the independent readiness blocker `incompatible_existing_head_fields`; it is not
+an execution-ledger count or a pending physician-supplement decision.
+
+The 272 excluded-row blanks are not unresolved physician decisions. A compatibility supplement or
+template would invent enrichment values outside the finalized V3 scope and therefore is neither
+required nor safe. No supplement can repair the lifecycle-state mismatches, and supplying one must
+not change readiness. The source values remain verbatim, no executable action is emitted for any of
+the 630 rows, and no package is generated. The exact terminal state is
+`CONTRACT STILL BLOCKED — UNRESOLVED DIFFERENCE`. This finding does not alter the safe-profile
+owner/ACL conclusion above and does not propose or authorize a forward migration. The historical
+`621/3/6` distribution remains evidence only, not a production assertion.
 
 ## Schema additions
 

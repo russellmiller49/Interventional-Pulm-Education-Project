@@ -1131,6 +1131,16 @@ function usesProductionSourceIdentityPolicy(policy: PackageSourceIdentityPolicy)
   )
 }
 
+function compatibilityExecutionBlockerSummary(
+  resolution: GoldImportCompensationCompatibilityResolution,
+): string {
+  const counts = Object.entries(resolution.executionCompatibility.countsByCode)
+    .filter(([, count]) => count > 0)
+    .map(([code, count]) => `${code}=${count}`)
+    .join(', ')
+  return `${resolution.executionCompatibility.blockedRowCount} of ${resolution.executionCompatibility.totalRowCount} rows are blocked${counts.length > 0 ? ` (${counts})` : ''}`
+}
+
 function packagePlanningRowsFromCompatibility(
   planningStateInput: unknown,
   resolution: GoldImportCompensationCompatibilityResolution,
@@ -1138,7 +1148,7 @@ function packagePlanningRowsFromCompatibility(
   const state = developmentPlanningStateSchema.parse(planningStateInput)
   if (!resolution.readyForPackage || resolution.actionCounts.unresolved !== 0) {
     throw new Error(
-      'Package generation blocked: physician compatibility supplement is required and unresolved.',
+      `Package generation blocked: finalized source is not executable under the current import contract; ${compatibilityExecutionBlockerSummary(resolution)}.`,
     )
   }
   const resolutionsByItem = new Map(
@@ -1659,7 +1669,7 @@ export function generateGoldImportCompensationPackage(
     })
     if (!compatibilityResolution.readyForPackage) {
       throw new Error(
-        `Package generation blocked: physician compatibility supplement required; template ${compatibilityResolution.supplementTemplate?.binding.contentSha256 ?? '<missing>'}.`,
+        `Package generation blocked: finalized source is not executable under the current import contract; ${compatibilityExecutionBlockerSummary(compatibilityResolution)}.`,
       )
     }
   }
