@@ -593,6 +593,70 @@ async function writeFixtureBackup() {
   return { backup, baseline, outputDirectory }
 }
 
+async function writeLegacyV1PlanningFixtureBackup(
+  mutatePlanningState?: (planningState: Record<string, unknown>) => void,
+) {
+  const snapshot = preMigrationSnapshot()
+  const sourceArrays = {
+    topic_ids: ['peripheral-navigation', 'basic-bronchoscopy'],
+    technology_tags: ['robotic-bronchoscopy', 'electromagnetic-navigation'],
+    clinical_purposes: ['staging', 'diagnosis'],
+    disease_tags: ['mesothelioma', 'lung-cancer'],
+  }
+  const developmentRow = snapshot.developmentItems[0] as Record<string, unknown>
+  const developmentReview = (developmentRow.reviews as Array<Record<string, unknown>>)[0]
+  const seedReview = (snapshot.developmentSeed.reviews as Array<Record<string, unknown>>)[0]
+  for (const [field, values] of Object.entries(sourceArrays)) {
+    developmentReview[field] = [...values]
+    seedReview[field] = [...values]
+  }
+  const baseline = derivePreMigrationBaselineIdentity(snapshot)
+  const backup = buildPreMigrationBackup({
+    baseline,
+    repository: { head: 'a'.repeat(40), originMain: 'a'.repeat(40) },
+    snapshot,
+  })
+  const files = new Map(backup.artifacts.files)
+  const canonicalPlanningState = JSON.parse(
+    files.get('development-planning-state.json') as string,
+  ) as Record<string, unknown>
+  const legacyPlanningState = JSON.parse(canonicalJson(canonicalPlanningState)) as Record<
+    string,
+    unknown
+  >
+  const planningRows = legacyPlanningState.rows as Array<Record<string, unknown>>
+  const legacyReview = planningRows[0].currentEffectiveReview as Record<string, unknown>
+  legacyReview.topicIds = [...sourceArrays.topic_ids]
+  legacyReview.technologyTags = [...sourceArrays.technology_tags]
+  legacyReview.clinicalPurposes = [...sourceArrays.clinical_purposes]
+  legacyReview.diseaseTags = [...sourceArrays.disease_tags]
+  mutatePlanningState?.(legacyPlanningState)
+  files.set('development-planning-state.json', canonicalJson(legacyPlanningState))
+  const artifacts = sealCanonicalArtifacts(files)
+  const parent = await mkdtemp(join(tmpdir(), 'gold-migration-legacy-backup-'))
+  const outputDirectory = join(parent, 'backup')
+  await writeCanonicalPackage({
+    artifacts,
+    executionReceipt: buildBackupExecutionReceipt({
+      canonicalReceipt: backup.canonicalReceipt,
+      container: DEFAULT_LOCAL_DATABASE_CONTAINER,
+      executedAt: '2026-08-08T12:00:00.000Z',
+      manifestSha256: artifacts.manifestSha256,
+      outputDirectory,
+      repositoryRoot: '/repo',
+    }),
+    outputDirectory,
+    outputRoot: parent,
+  })
+  return {
+    artifacts,
+    baseline,
+    canonicalPlanningState,
+    legacyPlanningState,
+    outputDirectory,
+  }
+}
+
 describe('gold import-compensation migration operations', () => {
   it('seals caller-supplied canonical artifacts with a sorted complete manifest', () => {
     const artifacts = sealCanonicalArtifacts(
@@ -986,6 +1050,42 @@ describe('gold import-compensation migration operations', () => {
     await expect(
       loadAndVerifyBackupFixtureForTest(outputDirectory, backup.artifacts.manifestSha256, baseline),
     ).rejects.toThrow(/exact expected filename set/iu)
+  })
+
+  it('accepts the exact sealed V1 raw-order planning projection and exposes canonical state', async () => {
+    const fixture = await writeLegacyV1PlanningFixtureBackup()
+    const planningPath = join(fixture.outputDirectory, 'development-planning-state.json')
+    const manifestPath = join(fixture.outputDirectory, 'checksum-manifest.sha256')
+    const sourcePlanningBytes = await readFile(planningPath, 'utf8')
+    const sourceManifestBytes = await readFile(manifestPath, 'utf8')
+
+    const loaded = await loadAndVerifyBackupFixtureForTest(
+      fixture.outputDirectory,
+      fixture.artifacts.manifestSha256,
+      fixture.baseline,
+    )
+
+    expect(JSON.parse(sourcePlanningBytes)).toEqual(fixture.legacyPlanningState)
+    expect(fixture.legacyPlanningState).not.toEqual(fixture.canonicalPlanningState)
+    expect(loaded.planningState).toEqual(fixture.canonicalPlanningState)
+    expect(await readFile(planningPath, 'utf8')).toBe(sourcePlanningBytes)
+    expect(await readFile(manifestPath, 'utf8')).toBe(sourceManifestBytes)
+  })
+
+  it('rejects a manifest-authenticated V1 planning artifact that is neither exact representation', async () => {
+    const fixture = await writeLegacyV1PlanningFixtureBackup((planningState) => {
+      const planningRows = planningState.rows as Array<Record<string, unknown>>
+      const review = planningRows[0].currentEffectiveReview as Record<string, unknown>
+      review.notes = 'Arbitrary planning-only tamper.'
+    })
+
+    await expect(
+      loadAndVerifyBackupFixtureForTest(
+        fixture.outputDirectory,
+        fixture.artifacts.manifestSha256,
+        fixture.baseline,
+      ),
+    ).rejects.toThrow(/Development planning state failed canonical cross-check/iu)
   })
 
   it('recomputes backup hashes and rejects internally inconsistent canonical artifacts', async () => {
