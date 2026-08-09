@@ -28,16 +28,17 @@ The operational sequence in this document stops before any real database migrati
 
 ## Version and vocabulary
 
-| Contract               | Identity                                   |
-| ---------------------- | ------------------------------------------ |
-| Contract version       | `1.0.0`                                    |
-| Contract ID            | `gold-review-import-compensation/1.0.0`    |
-| Import RPC             | `apply_literature_gold_import_v1`          |
-| Compensation RPC       | `compensate_literature_gold_import_v1`     |
-| Physical/audit hash    | `literature_gold_physical_state_hash_v1`   |
-| Effective-review hash  | `literature_gold_effective_state_hash_v1`  |
-| Operation table        | `literature_gold_review_operations`        |
-| Operation-action table | `literature_gold_review_operation_actions` |
+| Contract               | Identity                                        |
+| ---------------------- | ----------------------------------------------- |
+| Contract version       | `1.0.0`                                         |
+| Contract ID            | `gold-review-import-compensation/1.0.0`         |
+| Import RPC             | `apply_literature_gold_import_v1`               |
+| Compensation RPC       | `compensate_literature_gold_import_v1`          |
+| Reconciliation RPC     | `reconcile_literature_gold_review_operation_v1` |
+| Physical/audit hash    | `literature_gold_physical_state_hash_v1`        |
+| Effective-review hash  | `literature_gold_effective_state_hash_v1`       |
+| Operation table        | `literature_gold_review_operations`             |
+| Operation-action table | `literature_gold_review_operation_actions`      |
 
 In this contract:
 
@@ -53,6 +54,11 @@ In this contract:
 
 “Rollback” is reserved for transaction rollback before commit. After commit, the only supported
 reversal is compensation.
+
+The name `reconcile_literature_gold_import_v1` appeared in a post-migration audit request but is not
+part of the migration or executable contract. The canonical RPC is
+`reconcile_literature_gold_review_operation_v1`. Diagnostics record the requested spelling as an
+`audit_expectation_defect`; they do not query, create, or silently accept an alias.
 
 ## Precise defect in the historical rollback plan
 
@@ -145,6 +151,57 @@ database attestation. It performs no import or real-database mutation. A read-on
 for every row as 621 initial imports that would require void heads, three revisions that would require
 prior-review restore heads, and six no-ops. Readiness remains `import = false` and `rollback = false`,
 with `mutationPlan = null`; this analysis performed zero database, held-out, or remote access.
+
+## Post-migration contract reconciliation
+
+The once-applied real-local migration was executed by the local `postgres` migration owner, while
+the fixed disposable rehearsal applied it as `supabase_admin`. PostgreSQL represents owner ACLs
+differently in those environments. Readiness therefore uses three separate identities:
+
+1. the **environment-invariant contract identity** binds normalized RPC definitions, signatures,
+   search paths, security modes, dependencies, lifecycle objects, append-only protections, RLS,
+   event vocabulary, and the required/prohibited effective privilege matrix;
+2. the **deployment-profile identity** binds the exact target, owner, owner attributes and role
+   memberships, normalized ACL/grantor representation, and effective privileges; and
+3. the **full-environment inventory identity** preserves every normalized catalog record as audit
+   evidence but does not decide readiness by itself.
+
+`local_supabase_postgres_owner_v1` is permitted only for `target=local`, owner `postgres`, and the
+exact checksum-pinned local role inventory. `supabase_admin_owner_v1` remains the disposable
+expectation. Any arbitrary owner, changed membership, PUBLIC execution, anon/authenticated
+execution, broadened service-role privilege, changed body/signature/search path, or undeclared role
+difference fails closed.
+
+The historical disposable inventory contains 763 semantic records. Under the exact local profile,
+24 owner function-ACL records and 56 owner table-ACL records collapse into the owner representation,
+producing the observed 683 records. The reconciliation must still classify all 763 expected records
+and compare every actual record; the arithmetic alone is never accepted as proof. When the
+invariant and selected profile are exact, this owner/ACL representation does not require a forward
+migration. The original owner-specific full-inventory hash remains evidence rather than a readiness
+pin.
+
+## Finalized-artifact compatibility
+
+Finalized boolean fields accept only `true`, `false`, `True`, and `False`. All four forms are parsed
+semantically and package/database values are canonical booleans. A normalization ledger preserves
+the original lexeme, semantic value, row identity, source-artifact SHA-256, and rule version. This is
+lexical normalization, not a physician change. Other spellings, numeric values, blanks, and
+arbitrary casing are rejected, and the finalized CSV remains byte-identical.
+
+The current database has nine existing effective heads. A field-by-field audit classifies all
+values before proposing an action. Five heads can become additive revisions through deterministic
+lexical normalization and new-schema field mapping. Four excluded rows have blank technology- and
+disease-tag statuses. Taxonomy v2 permits both `not_applicable` and `not_assessable` in different
+clinical circumstances and forbids inferring either from a legacy blank, so those eight values need
+a physician-authored compatibility supplement.
+
+The supplement is development-only, import-contract-only, and may change only
+`technologyTagStatus` and `diseaseTagStatus` for the four fixed identities. It binds the unchanged
+final artifact, exact nine-head cohort, migration, current physical/effective/planning/membership
+state, invariant identity, and deployment-profile identity. It contains no preselected answer and
+is invalid without completed row attestations, rationale, physician authorization, and a canonical
+checksum. Package generation derives counts from resolved rows and remains blocked while any field
+is unresolved; the historical `621/3/6` distribution is not a production assertion.
 
 ## Schema additions
 

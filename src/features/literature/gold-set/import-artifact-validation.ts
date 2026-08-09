@@ -12,6 +12,7 @@ import {
 
 const REQUIRED_COLUMNS = [
   'gold_set_item_id',
+  'master_row_id',
   'pmid',
   'dataset_split',
   'physician_final_label',
@@ -62,7 +63,17 @@ const PROJECTION_COLUMNS = {
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu
 const PMID_PATTERN = /^[0-9]{1,12}$/u
+const MASTER_ROW_ID_PATTERN = /^[1-9][0-9]*$/u
 const TAG_STATUSES = new Set(['tagged', 'not_applicable', 'not_assessable'])
+
+export const FINALIZED_ARTIFACT_BOOLEAN_LEXEMES = ['true', 'false', 'True', 'False'] as const
+
+export function parseFinalizedArtifactBooleanValue(value: string): boolean {
+  if (!(FINALIZED_ARTIFACT_BOOLEAN_LEXEMES as readonly string[]).includes(value)) {
+    throw new Error('must use exactly true, false, True, or False.')
+  }
+  return value === 'true' || value === 'True'
+}
 
 interface FinalizedReviewProjection {
   relevanceLabel: GoldReviewPayload['relevanceLabel']
@@ -99,6 +110,14 @@ export interface GoldImportArtifactValidationSummary {
 }
 
 export interface ValidateGoldImportArtifactInput {
+  compatibility?: {
+    optionalTagStatusResolutions: readonly {
+      diseaseTagStatus: 'not_applicable' | 'not_assessable'
+      itemId: string
+      pmid: string
+      technologyTagStatus: 'not_applicable' | 'not_assessable'
+    }[]
+  }
   csvText: string
   plan: ImportPlan
 }
@@ -131,10 +150,11 @@ function nullableToken(record: ArtifactRecord, recordNumber: number, column: Req
 
 function strictBoolean(record: ArtifactRecord, recordNumber: number, column: RequiredColumn) {
   const value = record[column]
-  if (value !== 'true' && value !== 'false') {
-    return recordError(recordNumber, column, 'must be lowercase true or false.')
+  try {
+    return parseFinalizedArtifactBooleanValue(value)
+  } catch (error) {
+    return recordError(recordNumber, column, error instanceof Error ? error.message : String(error))
   }
-  return value === 'true'
 }
 
 function strictPipeList(record: ArtifactRecord, recordNumber: number, column: RequiredColumn) {
@@ -163,9 +183,31 @@ function strictPipeList(record: ArtifactRecord, recordNumber: number, column: Re
 function finalizedProjection(
   record: ArtifactRecord,
   recordNumber: number,
+  compatibilityResolution?: {
+    diseaseTagStatus: 'not_applicable' | 'not_assessable'
+    technologyTagStatus: 'not_applicable' | 'not_assessable'
+  },
 ): FinalizedReviewProjection {
-  const technologyTagStatus = strictToken(record, recordNumber, 'technology_tag_status')
-  const diseaseTagStatus = strictToken(record, recordNumber, 'disease_tag_status')
+  const technologyTagStatus =
+    record.technology_tag_status || compatibilityResolution?.technologyTagStatus
+  const diseaseTagStatus = record.disease_tag_status || compatibilityResolution?.diseaseTagStatus
+  if (!technologyTagStatus || !diseaseTagStatus) {
+    return recordError(
+      recordNumber,
+      !technologyTagStatus ? 'technology_tag_status' : 'disease_tag_status',
+      'is blank and requires a checksum-bound physician compatibility decision.',
+    )
+  }
+  if (
+    compatibilityResolution &&
+    (record.technology_tag_status !== '' || record.disease_tag_status !== '')
+  ) {
+    return recordError(
+      recordNumber,
+      'technology_tag_status',
+      'has an unauthorized compatibility resolution for nonblank source statuses.',
+    )
+  }
   if (!TAG_STATUSES.has(technologyTagStatus)) {
     return recordError(recordNumber, 'technology_tag_status', 'is not a supported tag status.')
   }
@@ -326,12 +368,16 @@ export function validateGoldImportSourceArtifact(
 
   const records = parseArtifactRecords(csvText)
   const itemIds = records.map((record) => record.gold_set_item_id)
+  const masterRowIds = records.map((record) => record.master_row_id)
   const pmids = records.map((record) => record.pmid)
   if (new Set(itemIds).size !== itemIds.length) {
     throw new Error('Finalized V3 CSV contains duplicate gold-set item rows.')
   }
   if (new Set(pmids).size !== pmids.length) {
     throw new Error('Finalized V3 CSV contains duplicate PMID rows.')
+  }
+  if (new Set(masterRowIds).size !== masterRowIds.length) {
+    throw new Error('Finalized V3 CSV contains duplicate master-row identities.')
   }
   records.forEach((record, index) => {
     if (!UUID_PATTERN.test(record.gold_set_item_id)) {
@@ -340,7 +386,23 @@ export function validateGoldImportSourceArtifact(
     if (!PMID_PATTERN.test(record.pmid)) {
       return recordError(index + 2, 'pmid', 'must contain 1-12 decimal digits.')
     }
+    if (!MASTER_ROW_ID_PATTERN.test(record.master_row_id)) {
+      return recordError(index + 2, 'master_row_id', 'must be a positive decimal integer.')
+    }
   })
+
+  const compatibilityResolutions = new Map(
+    (input.compatibility?.optionalTagStatusResolutions ?? []).map((resolution) => [
+      resolution.itemId,
+      resolution,
+    ]),
+  )
+  if (
+    compatibilityResolutions.size !==
+    (input.compatibility?.optionalTagStatusResolutions.length ?? 0)
+  ) {
+    throw new Error('Compatibility status resolutions contain duplicate item identities.')
+  }
 
   const planItemIds = plan.actions.map((action) => action.itemId)
   const planPmids = plan.actions.map((action) => action.pmid)
@@ -363,10 +425,22 @@ export function validateGoldImportSourceArtifact(
       throw new Error('Finalized V3 CSV identity coverage does not match the import plan.')
     }
     assertProjectionMatches(
-      finalizedProjection(matched.record, matched.recordNumber),
+      finalizedProjection(
+        matched.record,
+        matched.recordNumber,
+        compatibilityResolutions.get(action.itemId),
+      ),
       actionProjection(action),
       matched.recordNumber,
     )
+  }
+  for (const resolution of compatibilityResolutions.values()) {
+    const record = recordsByItemId.get(resolution.itemId)?.record
+    if (!record || record.pmid !== resolution.pmid) {
+      throw new Error(
+        'Compatibility status resolution identity is absent from the source artifact.',
+      )
+    }
   }
 
   const insertActionCount = plan.actions.filter((action) => action.action !== 'import_noop').length

@@ -14,6 +14,7 @@ import {
 
 const HEADERS = [
   'gold_set_item_id',
+  'master_row_id',
   'pmid',
   'dataset_split',
   'physician_final_label',
@@ -105,6 +106,7 @@ const NOOP_REVIEW = review('Existing effective decision.', {
 const ROWS: CsvRow[] = [
   {
     gold_set_item_id: ITEM_1,
+    master_row_id: '1',
     pmid: '12345678',
     dataset_split: 'development',
     physician_final_label: INSERT_REVIEW.relevanceLabel,
@@ -129,6 +131,7 @@ const ROWS: CsvRow[] = [
   },
   {
     gold_set_item_id: ITEM_2,
+    master_row_id: '2',
     pmid: '87654321',
     dataset_split: 'development',
     physician_final_label: NOOP_REVIEW.relevanceLabel,
@@ -372,7 +375,23 @@ describe('finalized V3 source artifact validation', () => {
   })
 
   it.each([
-    ['non-lowercase boolean', 'is_blinded', 'True', 'must be lowercase true or false'],
+    ['is_blinded', 'true'],
+    ['is_blinded', 'True'],
+    ['full_text_used', 'false'],
+    ['full_text_used', 'False'],
+  ] as const)('accepts the exact compatibility boolean lexeme %s=%s', (column, value) => {
+    const rows = cloneRows()
+    rows[0][column] = value
+    const csvText = csv(rows)
+    expect(() =>
+      validateGoldImportSourceArtifact({ csvText, plan: planFor(csvText) }),
+    ).not.toThrow()
+  })
+
+  it.each([
+    ...['TRUE', 'FALSE', '0', '1', 'yes', 'no', ''].map(
+      (value) => ['unsupported boolean', 'is_blinded', value, 'must use exactly'] as const,
+    ),
     [
       'non-canonical pipe array',
       'topic_ids',

@@ -42,6 +42,7 @@ import {
   resolveLocalDockerTarget,
   resolveEffectiveReview,
   sanitizeOperationalEnvironment,
+  sealCanonicalArtifacts,
   SERIALIZED_AGGREGATE_ORDERING_CONTRACTS,
   sha256,
   sha256ContractCanonical,
@@ -593,6 +594,25 @@ async function writeFixtureBackup() {
 }
 
 describe('gold import-compensation migration operations', () => {
+  it('seals caller-supplied canonical artifacts with a sorted complete manifest', () => {
+    const artifacts = sealCanonicalArtifacts(
+      new Map([
+        ['zeta.json', canonicalJson({ value: 2 })],
+        ['alpha.json', canonicalJson({ value: 1 })],
+      ]),
+    )
+    expect([...artifacts.files.keys()]).toEqual(['alpha.json', 'zeta.json'])
+    expect(artifacts.manifest).toBe(
+      `${sha256(canonicalJson({ value: 1 }))}  alpha.json\n${sha256(
+        canonicalJson({ value: 2 }),
+      )}  zeta.json\n`,
+    )
+    expect(artifacts.manifestSha256).toBe(sha256(artifacts.manifest))
+    expect(() =>
+      sealCanonicalArtifacts(new Map([['checksum-manifest.sha256', 'reserved\n']])),
+    ).toThrow('unsafe or reserved')
+  })
+
   it('documents and requires the trusted pre-migration backup manifest argument', async () => {
     await expect(runAuditGoldImportCompensationMigration(['--help'])).resolves.toMatchObject({
       help: expect.stringContaining('--pre-migration-backup-manifest-sha256'),

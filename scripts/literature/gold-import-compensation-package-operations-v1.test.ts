@@ -16,8 +16,6 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import {
-  EXACT_COMPENSATION_COUNTS,
-  EXACT_IMPORT_COUNTS,
   MIGRATION_ID,
   MIGRATION_SHA256,
   developmentPlanningStateSha256,
@@ -56,6 +54,7 @@ import {
   type ExactPackageRehearsalReport,
   type ExecuteFreshDisposableInput,
 } from './rehearse-exact-gold-import-compensation-package-v1'
+
 import { canonicalJson } from '../../src/features/literature/gold-set/import-compensation'
 import {
   assertSerializedAggregateOrdering,
@@ -71,6 +70,22 @@ import {
   type ExclusiveOutputDirectoryIdentity,
 } from './lib/exclusive-output'
 
+// Historical package-shape fixture. Production gates derive these counts from
+// the bound row actions and do not require this legacy distribution.
+const EXACT_IMPORT_COUNTS = {
+  initial: 621,
+  inserts: 624,
+  noops: 6,
+  revisions: 3,
+  total: 630,
+} as const
+const EXACT_COMPENSATION_COUNTS = {
+  noops: 6,
+  restored: 3,
+  total: 630,
+  voided: 621,
+} as const
+
 jest.setTimeout(30_000)
 
 const FIXED_TIME = '2026-08-08T00:00:00.000Z'
@@ -85,6 +100,7 @@ const PINNED_SCHEMA_SECURITY_DEFINITION_IDENTITY = JSON.parse(
 ) as Record<string, unknown>
 const CSV_HEADER = [
   'gold_set_item_id',
+  'master_row_id',
   'pmid',
   'dataset_split',
   'physician_final_label',
@@ -204,6 +220,7 @@ function historicalReview(notes: string) {
 function artifactRow(itemId: string, pmid: string, notes: string): string {
   return [
     itemId,
+    String(Number(pmid) - 10_000_000),
     pmid,
     'development',
     'exclude',
@@ -704,15 +721,18 @@ describe('gold import/compensation package operations v1', () => {
     }
   })
 
-  test('treats null legacy enrichment on an apparent no-op as a real state-shape mismatch', () => {
+  test('derives an additive revision when nullable legacy enrichment differs', () => {
     const legacyState = structuredClone(fixture.planningState)
     const legacyReview = legacyState.rows[624].currentEffectiveReview as Record<string, unknown>
     legacyReview.enrichmentProvenance = null
     legacyReview.enrichmentSchemaVersion = null
 
-    expect(() => derivePackagePlanningRows(legacyState, fixture.sources.finalArtifact)).toThrow(
-      /real_state_shape_mismatch/u,
-    )
+    const planningRows = derivePackagePlanningRows(legacyState, fixture.sources.finalArtifact)
+    expect(planningRows[624]).toMatchObject({
+      action: 'import_revision',
+      expectedCurrentReviewId: legacyState.rows[624].currentReviewId,
+      expectedSupersedesReviewId: legacyState.rows[624].currentReviewId,
+    })
   })
 
   test('gates an actual audit-shaped not_yet_migrated report before reading sources', async () => {
@@ -734,6 +754,16 @@ describe('gold import/compensation package operations v1', () => {
 
     await expect(runPackageGeneratorCli(['--audit', auditPath])).rejects.toThrow(
       'Package generation blocked: not_yet_migrated; source artifacts were not inspected.',
+    )
+  })
+
+  test('gates a legacy ready audit before opening production source paths', async () => {
+    const root = await safeTemporaryDirectory('package-legacy-ready-audit-')
+    const auditPath = join(root, 'migration-audit.json')
+    await writeFile(auditPath, canonicalPrettyBytes(fixture.audit))
+
+    await expect(runPackageGeneratorCli(['--audit', auditPath])).rejects.toThrow(
+      'production sources require the reconciled post-migration audit; source artifacts were not inspected',
     )
   })
 

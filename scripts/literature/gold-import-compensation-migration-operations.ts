@@ -2300,6 +2300,21 @@ function sealArtifacts(filesInput: ReadonlyMap<string, string>): CanonicalArtifa
   return { files, manifest, manifestSha256: sha256(manifest) }
 }
 
+/** Seal already-canonical UTF-8 artifacts into the shared sorted checksum-manifest format. */
+export function sealCanonicalArtifacts(
+  filesInput: ReadonlyMap<string, string>,
+): CanonicalArtifacts {
+  for (const [name, bytes] of filesInput) {
+    if (!name || name.includes('/') || name.includes('\\') || name === 'checksum-manifest.sha256') {
+      throw new Error(`Canonical artifact name is unsafe or reserved: ${name || '<empty>'}.`)
+    }
+    if (!bytes.endsWith('\n') || bytes.endsWith('\n\n')) {
+      throw new Error(`Canonical artifact ${name} must have exactly one final newline.`)
+    }
+  }
+  return sealArtifacts(filesInput)
+}
+
 function migrationLedgerArtifact(snapshot: RawDatabaseSnapshot) {
   return {
     expectedMigrationId: IMPORT_COMPENSATION_MIGRATION_ID,
@@ -3190,6 +3205,20 @@ function toSecurityIntrospection(schema: Record<string, unknown>) {
       supportedEventTypes: schema.supportedEventTypes,
     },
   }
+}
+
+/**
+ * Build the complete schema/security definition inventory from a read-only
+ * snapshot without applying the legacy owner-specific readiness validator.
+ * Post-migration reconciliation uses this to classify an exact inventory
+ * before selecting a fail-closed deployment profile.
+ */
+export function buildSchemaSecurityDefinitionIdentityFromSnapshot(
+  snapshot: RawDatabaseSnapshot,
+): SchemaSecurityDefinitionIdentity {
+  return buildSchemaSecurityDefinitionIdentity(
+    toSecurityIntrospection(requireRecord(snapshot.schema, 'snapshot.schema')),
+  )
 }
 
 function pointerMutationCount(

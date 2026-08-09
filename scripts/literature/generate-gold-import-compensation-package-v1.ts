@@ -5,7 +5,10 @@ import { fileURLToPath } from 'node:url'
 
 import { z } from 'zod'
 
-import { validateGoldImportSourceArtifact } from '../../src/features/literature/gold-set/import-artifact-validation'
+import {
+  parseFinalizedArtifactBooleanValue,
+  validateGoldImportSourceArtifact,
+} from '../../src/features/literature/gold-set/import-artifact-validation'
 import { parseCsvRows } from '../../src/features/literature/gold-set/export'
 import {
   GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION,
@@ -33,6 +36,12 @@ import {
   POST_MIGRATION_SCHEMA_SECURITY_IDENTITY_SHA256,
   schemaSecurityDefinitionIdentitySha256,
 } from './gold-import-compensation-rehearsal-evidence'
+import {
+  resolveGoldImportCompensationCompatibility,
+  validateGoldImportSourceAuthorizationSet,
+  type GoldImportCompensationCompatibilityResolution,
+} from './gold-import-compensation-compatibility'
+import { validateReadyLocalPostMigrationContractReconciliation } from './gold-import-compensation-reconciled-audit'
 
 export const PACKAGE_GENERATOR_SCHEMA_VERSION =
   'gold-import-compensation-package-generator/v1' as const
@@ -49,20 +58,20 @@ export const SIGNED_PROTOCOL_AUTHORIZATION_SHA256 =
 export const AMENDED_TWO_ROW_AUTHORIZATION_SHA256 =
   'b95fc9785ee355b810981c051db62307e868110e06ffb1a83c09c8eff52bf89a' as const
 
-export const EXACT_IMPORT_COUNTS = {
-  initial: 621,
-  inserts: 624,
-  noops: 6,
-  revisions: 3,
-  total: 630,
-} as const
+export interface ImportActionCounts {
+  initial: number
+  inserts: number
+  noops: number
+  revisions: number
+  total: number
+}
 
-export const EXACT_COMPENSATION_COUNTS = {
-  noops: 6,
-  restored: 3,
-  total: 630,
-  voided: 621,
-} as const
+export interface CompensationActionCounts {
+  noops: number
+  restored: number
+  total: number
+  voided: number
+}
 
 const SHA256_PATTERN = /^[a-f0-9]{64}$/u
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u
@@ -73,12 +82,21 @@ const uuidSchema = z.string().regex(UUID_PATTERN)
 const pmidSchema = z.string().regex(PMID_PATTERN)
 const timestampSchema = z.string().datetime({ offset: true })
 const PACKAGE_REVIEW_TIMESTAMP = '2026-08-08T00:00:00.000Z'
-const READY_AUDIT_CANONICAL_FILES = [
+const LEGACY_READY_AUDIT_CANONICAL_FILES = [
   'development-planning-state.json',
   'migration-audit.json',
   'migration-audit.md',
   'schema-security-definition-identity.json',
 ] as const
+const RECONCILED_AUDIT_EVIDENCE_FILES = [
+  'contract-diagnostics.json',
+  'contract-reconciliation.json',
+  'read-only-state-bracket.json',
+] as const
+const RECONCILED_READY_AUDIT_CANONICAL_FILES = [
+  ...LEGACY_READY_AUDIT_CANONICAL_FILES,
+  ...RECONCILED_AUDIT_EVIDENCE_FILES,
+].sort((left, right) => left.localeCompare(right, 'en'))
 
 const preImportItemStateSchema = z
   .object({
@@ -190,6 +208,7 @@ const developmentPlanningStateSchema = z
 
 const FINALIZED_ARTIFACT_COLUMNS = [
   'gold_set_item_id',
+  'master_row_id',
   'pmid',
   'dataset_split',
   'physician_final_label',
@@ -279,7 +298,7 @@ const auditChecksSchema = z
   })
   .strict()
 
-export const packageGenerationAuditSchema = z
+const legacyPackageGenerationAuditSchema = z
   .object({
     checks: auditChecksSchema,
     comparisons: auditComparisonsSchema,
@@ -290,6 +309,125 @@ export const packageGenerationAuditSchema = z
     status: z.enum(['ready', 'blocked', 'not_yet_migrated']),
   })
   .strict()
+
+const reconciliationIdentityBindingSchema = z
+  .object({
+    identity: z.unknown(),
+    sha256: sha256Schema,
+  })
+  .strict()
+
+const reconciliationIdentitySetSchema = z
+  .object({
+    contractInvariant: reconciliationIdentityBindingSchema,
+    deploymentProfile: reconciliationIdentityBindingSchema,
+    fullEnvironmentInventory: reconciliationIdentityBindingSchema,
+  })
+  .strict()
+
+const readyContractReconciliationSchema = z
+  .object({
+    classificationCounts: z.record(z.string(), z.number().int().nonnegative()),
+    completeness: z
+      .object({
+        actualRecordCount: z.number().int().positive(),
+        actualRecordsAccountedFor: z.number().int().positive(),
+        complete: z.literal(true),
+        expectedRecordCount: z.number().int().positive(),
+        expectedRecordsAccountedFor: z.number().int().positive(),
+      })
+      .strict(),
+    deploymentProfile: z
+      .object({
+        actualIdentity: reconciliationIdentityBindingSchema,
+        expectedIdentity: reconciliationIdentityBindingSchema,
+        passed: z.literal(true),
+        violations: z.tuple([]),
+      })
+      .strict(),
+    fullEnvironmentInventoryMatches: z.boolean(),
+    identities: z
+      .object({
+        actual: reconciliationIdentitySetSchema,
+        expected: reconciliationIdentitySetSchema,
+      })
+      .strict(),
+    invariantIdentityMatches: z.literal(true),
+    ownerRepresentation: z
+      .object({
+        actualRecordCount: z.literal(683),
+        collapsedByObjectType: z.record(z.string(), z.number().int().nonnegative()),
+        collapsedExpectedRecordCount: z.literal(80),
+        expectedRecordCount: z.literal(763),
+        explanation: z.string().min(1),
+        isExact763To683OwnerRepresentation: z.literal(true),
+        projectedExpectedRecordCount: z.literal(683),
+        projectionExactlyMatchesActual: z.literal(true),
+        recordCountDelta: z.literal(80),
+      })
+      .strict(),
+    readinessBlockers: z.tuple([]),
+    ready: z.literal(true),
+    profileDiffs: z.array(z.unknown()).nonempty(),
+    recordDiffs: z.array(z.unknown()).length(763),
+    requestedNameDiscrepancies: z.tuple([
+      z
+        .object({
+          aliasCreated: z.literal(false),
+          canonicalName: z.literal('reconcile_literature_gold_review_operation_v1'),
+          classification: z.literal('audit_expectation_defect'),
+          requestedName: z.literal('reconcile_literature_gold_import_v1'),
+        })
+        .strict(),
+    ]),
+    rpcDiffs: z.array(z.unknown()).length(3),
+    schemaVersion: z.literal('gold-import-compensation-contract-reconciliation/1.0.0'),
+  })
+  .strict()
+
+const reconciledAuditDatabaseSchema = auditDatabaseSchema
+  .extend({
+    contractInvariantIdentitySha256: sha256Schema,
+    deploymentProfileId: z.literal('local_supabase_postgres_owner_v1'),
+    environmentProfileIdentitySha256: sha256Schema,
+    fullEnvironmentInventoryIdentitySha256: sha256Schema,
+  })
+  .strict()
+
+const reconciledAuditChecksSchema = auditChecksSchema
+  .extend({
+    contractReconciliation: readyContractReconciliationSchema,
+    forwardMigrationRequired: z.literal(false),
+    legacyOwnerSpecificFailures: z.tuple([
+      z.literal(
+        'apply_literature_gold_import_v1 has unexpected owner postgres; expected supabase_admin.',
+      ),
+      z.literal('RPC execution contract mismatch for apply_literature_gold_import_v1.'),
+      z.literal('RPC execution contract mismatch for compensate_literature_gold_import_v1.'),
+      z.literal(
+        'RPC execution contract mismatch for reconcile_literature_gold_review_operation_v1.',
+      ),
+    ]),
+  })
+  .strict()
+
+const reconciledPackageGenerationAuditSchema = z
+  .object({
+    checks: reconciledAuditChecksSchema,
+    comparisons: auditComparisonsSchema,
+    database: reconciledAuditDatabaseSchema,
+    migration: auditMigrationSchema,
+    readinessStatus: z.literal('ready'),
+    result: z.literal('audit_ready_contract_compatibility_audit_required'),
+    schemaVersion: z.literal('gold-import-compensation-reconciled-migration-audit/1.0.0'),
+    status: z.literal('ready'),
+  })
+  .strict()
+
+export const packageGenerationAuditSchema = z.union([
+  legacyPackageGenerationAuditSchema,
+  reconciledPackageGenerationAuditSchema,
+])
 export type PackageGenerationAudit = z.infer<typeof packageGenerationAuditSchema>
 
 export interface VerifiedPostMigrationAuditPackage {
@@ -301,8 +439,21 @@ export interface VerifiedPostMigrationAuditPackage {
   manifestBytes: Buffer
   manifestSha256: string
   markdownBytes: Buffer
+  reconciledEvidence: VerifiedReconciledAuditEvidence | null
   schemaSecurityDefinitionIdentity: Record<string, unknown>
   schemaSecurityDefinitionIdentityBytes: Buffer
+}
+
+export interface ReconciledAuditEvidenceBytes {
+  contractDiagnosticsBytes: Buffer
+  contractReconciliationBytes: Buffer
+  readOnlyStateBracketBytes: Buffer
+}
+
+export interface VerifiedReconciledAuditEvidence extends ReconciledAuditEvidenceBytes {
+  contractDiagnostics: Record<string, unknown>
+  contractReconciliation: Record<string, unknown>
+  readOnlyStateBracket: Record<string, unknown>
 }
 
 export interface PackageSourceIdentityPolicy {
@@ -330,6 +481,7 @@ export interface PackageSourceBytes {
 
 export interface GeneratePackageInput {
   auditPackage: VerifiedPostMigrationAuditPackage
+  compatibilitySupplement?: unknown
   identityPolicy?: PackageSourceIdentityPolicy
   sources: PackageSourceBytes
 }
@@ -346,7 +498,7 @@ interface CompensationPlanTemplate {
   batchId: string
   binding: { contentSha256: string }
   contractVersion: typeof GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION
-  counts: typeof EXACT_COMPENSATION_COUNTS
+  counts: CompensationActionCounts
   executionContext: ImportPlan['executionContext']
   expectedEffectiveStateSha256: string
   expectedPhysicalState: {
@@ -405,7 +557,10 @@ export function developmentPlanningStateSha256(value: unknown): string {
   return sha256Canonical(value)
 }
 
-function parseReadyAuditManifest(bytes: Buffer): ReadonlyMap<string, string> {
+function parseReadyAuditManifest(
+  bytes: Buffer,
+  expectedFiles: readonly string[],
+): ReadonlyMap<string, string> {
   const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes)
   if (!text.endsWith('\n') || text.endsWith('\n\n')) {
     throw new Error('Post-migration audit manifest must have exactly one final newline.')
@@ -422,10 +577,7 @@ function parseReadyAuditManifest(bytes: Buffer): ReadonlyMap<string, string> {
     entries.set(name, checksum)
     previous = name
   }
-  if (
-    entries.size !== READY_AUDIT_CANONICAL_FILES.length ||
-    READY_AUDIT_CANONICAL_FILES.some((name) => !entries.has(name))
-  ) {
+  if (entries.size !== expectedFiles.length || expectedFiles.some((name) => !entries.has(name))) {
     throw new Error('Ready post-migration audit manifest does not bind the exact file inventory.')
   }
   return entries
@@ -446,6 +598,128 @@ function parseCanonicalAuditJson(bytes: Buffer, label: string): unknown {
   return value
 }
 
+const reconciledContractStateHashesSchema = z
+  .object({
+    developmentMembershipSha256: sha256Schema,
+    effectiveStateSha256: sha256Schema,
+    physicalStateSha256: sha256Schema,
+    readOnlyTransaction: z.literal(true),
+  })
+  .strict()
+
+const reconciledReadOnlyStateBracketSchema = z
+  .object({
+    contractStateHashesAfter: reconciledContractStateHashesSchema,
+    contractStateHashesBefore: reconciledContractStateHashesSchema,
+    contractStateHashesMatch: z.literal(true),
+    preMigrationBackupManifestSha256: sha256Schema,
+    safety: z
+      .object({
+        compensationExecuted: z.literal(false),
+        databaseMutationCount: z.literal(0),
+        heldOutIdentitiesAccessed: z.literal(false),
+        importExecuted: z.literal(false),
+        readOnlyDiagnostics: z.literal(true),
+        remoteDatabaseAccessed: z.literal(false),
+      })
+      .strict(),
+    schemaVersion: z.literal('gold-import-compensation-contract-diagnostic-orchestration/1.0.0'),
+    snapshotAfterSha256: sha256Schema,
+    snapshotBeforeSha256: sha256Schema,
+    snapshotsMatch: z.literal(true),
+  })
+  .strict()
+
+function verifyReconciledAuditEvidence(
+  audit: Extract<
+    PackageGenerationAudit,
+    { schemaVersion: 'gold-import-compensation-reconciled-migration-audit/1.0.0' }
+  >,
+  bytes: ReconciledAuditEvidenceBytes,
+): VerifiedReconciledAuditEvidence {
+  const contractDiagnostics = z
+    .object({
+      canonicalRpcNames: z.tuple([
+        z.literal('apply_literature_gold_import_v1'),
+        z.literal('compensate_literature_gold_import_v1'),
+        z.literal('reconcile_literature_gold_review_operation_v1'),
+      ]),
+      functions: z.array(z.unknown()).length(3),
+      normalizationRule: z.literal('postgres-function-definition-conservative-whitespace/v1'),
+      readOnlyTransaction: z.literal(true),
+      requestedNameDiscrepancies: z.tuple([
+        z
+          .object({
+            aliasCreated: z.literal(false),
+            canonicalName: z.literal('reconcile_literature_gold_review_operation_v1'),
+            classification: z.literal('audit_expectation_defect'),
+            requestedName: z.literal('reconcile_literature_gold_import_v1'),
+          })
+          .strict(),
+      ]),
+      roles: z.array(z.unknown()).nonempty(),
+      schemaVersion: z.literal('gold-import-compensation-contract-diagnostics/1.0.0'),
+      target: z
+        .object({
+          container: z.literal('supabase_db_ip-literature-local'),
+          database: z.literal('postgres'),
+          local: z.literal(true),
+          port: z.literal('55322'),
+          projectId: z.literal('ip-literature-local'),
+        })
+        .strict(),
+      transactionIsolation: z.literal('repeatable read'),
+    })
+    .strict()
+    .parse(parseCanonicalAuditJson(bytes.contractDiagnosticsBytes, 'contract-diagnostics.json'))
+  const contractReconciliation = validateReadyLocalPostMigrationContractReconciliation(
+    parseCanonicalAuditJson(bytes.contractReconciliationBytes, 'contract-reconciliation.json'),
+  )
+  const readOnlyStateBracket = reconciledReadOnlyStateBracketSchema.parse(
+    parseCanonicalAuditJson(bytes.readOnlyStateBracketBytes, 'read-only-state-bracket.json'),
+  )
+  const { requestedNameDiscrepancies, ...auditReconciliation } = audit.checks.contractReconciliation
+  if (
+    canonicalJson(contractReconciliation) !== canonicalJson(auditReconciliation) ||
+    canonicalJson(contractDiagnostics.requestedNameDiscrepancies) !==
+      canonicalJson(requestedNameDiscrepancies) ||
+    canonicalJson(contractDiagnostics.functions) !==
+      canonicalJson(
+        contractReconciliation.identities.actual.fullEnvironmentInventory.identity.rpcs,
+      ) ||
+    canonicalJson(contractDiagnostics.roles) !==
+      canonicalJson(
+        contractReconciliation.identities.actual.fullEnvironmentInventory.identity.deploymentProfile
+          .roleInventory,
+      )
+  ) {
+    throw new Error(
+      'Reconciled diagnostic evidence does not match the migration-audit reconciliation binding.',
+    )
+  }
+  const before = readOnlyStateBracket.contractStateHashesBefore
+  const after = readOnlyStateBracket.contractStateHashesAfter
+  if (
+    canonicalJson(before) !== canonicalJson(after) ||
+    readOnlyStateBracket.snapshotBeforeSha256 !== readOnlyStateBracket.snapshotAfterSha256 ||
+    readOnlyStateBracket.preMigrationBackupManifestSha256 !==
+      audit.database.preMigrationBackupManifestSha256 ||
+    after.developmentMembershipSha256 !== audit.database.developmentMembershipSha256 ||
+    after.effectiveStateSha256 !== audit.database.currentEffectiveStateSha256 ||
+    after.physicalStateSha256 !== audit.database.currentPhysicalStateSha256
+  ) {
+    throw new Error(
+      'Reconciled read-only state bracket does not match the ready migration audit state.',
+    )
+  }
+  return {
+    ...bytes,
+    contractDiagnostics,
+    contractReconciliation: contractReconciliation as unknown as Record<string, unknown>,
+    readOnlyStateBracket,
+  }
+}
+
 /**
  * Verify the complete canonical output of the read-only post-migration audit
  * against an independently reviewed manifest digest. This is the only ready
@@ -456,6 +730,7 @@ export function verifyReadyPostMigrationAuditPackage(input: {
   developmentPlanningStateBytes: Buffer
   manifestBytes: Buffer
   markdownBytes: Buffer
+  reconciledEvidence?: ReconciledAuditEvidenceBytes
   schemaSecurityDefinitionIdentityBytes: Buffer
   expectedSchemaSecurityIdentitySha256ForTest?: string
   trustedManifestSha256: string
@@ -465,18 +740,6 @@ export function verifyReadyPostMigrationAuditPackage(input: {
   }
   if (sha256Bytes(input.manifestBytes) !== input.trustedManifestSha256) {
     throw new Error('Post-migration audit manifest does not match the reviewed SHA-256.')
-  }
-  const entries = parseReadyAuditManifest(input.manifestBytes)
-  const fileBytes = new Map<string, Buffer>([
-    ['development-planning-state.json', input.developmentPlanningStateBytes],
-    ['migration-audit.json', input.auditBytes],
-    ['migration-audit.md', input.markdownBytes],
-    ['schema-security-definition-identity.json', input.schemaSecurityDefinitionIdentityBytes],
-  ])
-  for (const [name, expected] of entries) {
-    if (sha256Bytes(fileBytes.get(name) as Buffer) !== expected) {
-      throw new Error(`Post-migration audit checksum mismatch for ${name}.`)
-    }
   }
   const expectedSchemaSecurityIdentitySha256 =
     input.expectedSchemaSecurityIdentitySha256ForTest ??
@@ -494,6 +757,42 @@ export function verifyReadyPostMigrationAuditPackage(input: {
     parseCanonicalAuditJson(input.auditBytes, 'migration-audit.json'),
     expectedSchemaSecurityIdentitySha256,
   )
+  const isReconciled =
+    audit.schemaVersion === 'gold-import-compensation-reconciled-migration-audit/1.0.0'
+  if (isReconciled !== (input.reconciledEvidence !== undefined)) {
+    throw new Error(
+      isReconciled
+        ? 'Reconciled post-migration audit is missing its exact diagnostic evidence files.'
+        : 'Legacy post-migration audit must not supply reconciled diagnostic evidence files.',
+    )
+  }
+  const entries = parseReadyAuditManifest(
+    input.manifestBytes,
+    isReconciled ? RECONCILED_READY_AUDIT_CANONICAL_FILES : LEGACY_READY_AUDIT_CANONICAL_FILES,
+  )
+  const fileBytes = new Map<string, Buffer>([
+    ['development-planning-state.json', input.developmentPlanningStateBytes],
+    ['migration-audit.json', input.auditBytes],
+    ['migration-audit.md', input.markdownBytes],
+    ['schema-security-definition-identity.json', input.schemaSecurityDefinitionIdentityBytes],
+  ])
+  if (input.reconciledEvidence) {
+    fileBytes.set('contract-diagnostics.json', input.reconciledEvidence.contractDiagnosticsBytes)
+    fileBytes.set(
+      'contract-reconciliation.json',
+      input.reconciledEvidence.contractReconciliationBytes,
+    )
+    fileBytes.set(
+      'read-only-state-bracket.json',
+      input.reconciledEvidence.readOnlyStateBracketBytes,
+    )
+  }
+  for (const [name, expected] of entries) {
+    const bytes = fileBytes.get(name)
+    if (!bytes || sha256Bytes(bytes) !== expected) {
+      throw new Error(`Post-migration audit checksum mismatch for ${name}.`)
+    }
+  }
   const developmentPlanningState = developmentPlanningStateSchema.parse(
     parseCanonicalAuditJson(input.developmentPlanningStateBytes, 'development-planning-state.json'),
   )
@@ -511,13 +810,16 @@ export function verifyReadyPostMigrationAuditPackage(input: {
         'schema-security-definition-identity.json',
       ),
     )
+  const actualSchemaSecurityIdentitySha256 = schemaSecurityDefinitionIdentitySha256(
+    schemaSecurityDefinitionIdentity,
+  )
   if (
     canonicalPretty(schemaSecurityDefinitionIdentity).equals(
       canonicalPretty(audit.checks.schemaSecurityDefinitionIdentity),
     ) === false ||
-    schemaSecurityDefinitionIdentitySha256(schemaSecurityDefinitionIdentity) !==
-      audit.database.schemaSecurityIdentitySha256 ||
-    audit.database.schemaSecurityIdentitySha256 !== expectedSchemaSecurityIdentitySha256
+    actualSchemaSecurityIdentitySha256 !== audit.database.schemaSecurityIdentitySha256 ||
+    (audit.schemaVersion === 'gold-import-compensation-migration-audit/1.0.0' &&
+      audit.database.schemaSecurityIdentitySha256 !== expectedSchemaSecurityIdentitySha256)
   ) {
     throw new Error(
       'Post-migration schema/security definition identity does not match the ready audit binding.',
@@ -533,15 +835,26 @@ export function verifyReadyPostMigrationAuditPackage(input: {
   if (!markdown || !markdown.endsWith('\n') || markdown.endsWith('\n\n')) {
     throw new Error('Post-migration audit Markdown must have exactly one final newline.')
   }
+  const reconciledEvidence =
+    audit.schemaVersion === 'gold-import-compensation-reconciled-migration-audit/1.0.0'
+      ? verifyReconciledAuditEvidence(
+          audit,
+          input.reconciledEvidence as ReconciledAuditEvidenceBytes,
+        )
+      : null
   return {
     audit,
     auditBytes: input.auditBytes,
     developmentPlanningState,
     developmentPlanningStateBytes: input.developmentPlanningStateBytes,
-    expectedSchemaSecurityIdentitySha256,
+    expectedSchemaSecurityIdentitySha256:
+      audit.schemaVersion === 'gold-import-compensation-migration-audit/1.0.0'
+        ? expectedSchemaSecurityIdentitySha256
+        : actualSchemaSecurityIdentitySha256,
     manifestBytes: input.manifestBytes,
     manifestSha256: input.trustedManifestSha256,
     markdownBytes: input.markdownBytes,
+    reconciledEvidence,
     schemaSecurityDefinitionIdentity,
     schemaSecurityDefinitionIdentityBytes: input.schemaSecurityDefinitionIdentityBytes,
   }
@@ -559,10 +872,13 @@ function comparePmids(
 }
 
 function strictArtifactBoolean(value: string, column: string): boolean {
-  if (value !== 'true' && value !== 'false') {
-    throw new Error(`Finalized V3 artifact column ${column} must be lowercase true or false.`)
+  try {
+    return parseFinalizedArtifactBooleanValue(value)
+  } catch {
+    throw new Error(
+      `Finalized V3 artifact column ${column} must use exactly true, false, True, or False.`,
+    )
   }
-  return value === 'true'
 }
 
 function artifactList(value: string): string[] {
@@ -686,7 +1002,7 @@ function historicalClinicalProjection(
   }
 }
 
-/** Derive the executable 621/3/6 actions from read-only DB state and the finalized CSV. */
+/** Derive actions from the current read-only database state and finalized artifact. */
 export function derivePackagePlanningRows(
   input: unknown,
   finalizedArtifact: Buffer,
@@ -695,11 +1011,13 @@ export function derivePackagePlanningRows(
   const records = parseFinalizedArtifactRecords(finalizedArtifact)
   const recordsByItem = new Map(records.map((record) => [record.gold_set_item_id, record]))
   if (
-    state.rows.length !== EXACT_IMPORT_COUNTS.total ||
-    records.length !== EXACT_IMPORT_COUNTS.total ||
+    state.rows.length === 0 ||
+    state.rows.length !== records.length ||
     recordsByItem.size !== records.length
   ) {
-    throw new Error('Development planning state and finalized V3 artifact must cover 630 items.')
+    throw new Error(
+      'Development planning state and finalized V3 artifact must have identical nonempty membership.',
+    )
   }
   const rows = state.rows.map((current, index): PackagePlanningRow => {
     if (current.sequence !== index + 1) {
@@ -762,11 +1080,11 @@ export function derivePackagePlanningRows(
       expectedSupersedesReviewId: current.currentReviewId,
     })
   })
-  assertExactPlanningRows(rows)
+  deriveImportActionCounts(rows)
   return rows
 }
 
-function assertExactPlanningRows(rows: readonly PackagePlanningRow[]): void {
+export function deriveImportActionCounts(rows: readonly PackagePlanningRow[]): ImportActionCounts {
   const counts = {
     initial: rows.filter((row) => row.action === 'import_initial').length,
     inserts: rows.filter((row) => row.action !== 'import_noop').length,
@@ -774,10 +1092,8 @@ function assertExactPlanningRows(rows: readonly PackagePlanningRow[]): void {
     revisions: rows.filter((row) => row.action === 'import_revision').length,
     total: rows.length,
   }
-  if (canonicalJson(counts) !== canonicalJson(EXACT_IMPORT_COUNTS)) {
-    throw new Error(
-      `real_state_shape_mismatch: exact V3 package requires ${canonicalJson(EXACT_IMPORT_COUNTS)}; current database state plus finalized artifact derive ${canonicalJson(counts)}. No executable package was generated.`,
-    )
+  if (counts.total === 0 || counts.initial + counts.revisions + counts.noops !== counts.total) {
+    throw new Error('Planning rows do not form a complete dynamic action partition.')
   }
   const itemIds = rows.map((row) => row.itemId)
   const pmids = rows.map((row) => row.pmid)
@@ -800,6 +1116,95 @@ function assertExactPlanningRows(rows: readonly PackagePlanningRow[]): void {
         throw new Error('An identical-content no-op must preserve one completed effective head.')
       }
     }
+  })
+  return counts
+}
+
+function usesProductionSourceIdentityPolicy(policy: PackageSourceIdentityPolicy): boolean {
+  return (
+    policy.amendedAuthorizationSha256 === PRODUCTION_SOURCE_IDENTITIES.amendedAuthorizationSha256 &&
+    policy.finalArtifactSha256 === PRODUCTION_SOURCE_IDENTITIES.finalArtifactSha256 &&
+    policy.migrationId === PRODUCTION_SOURCE_IDENTITIES.migrationId &&
+    policy.migrationSha256 === PRODUCTION_SOURCE_IDENTITIES.migrationSha256 &&
+    policy.protocolAuthorizationSha256 === PRODUCTION_SOURCE_IDENTITIES.protocolAuthorizationSha256
+  )
+}
+
+function packagePlanningRowsFromCompatibility(
+  planningStateInput: unknown,
+  resolution: GoldImportCompensationCompatibilityResolution,
+): PackagePlanningRow[] {
+  const state = developmentPlanningStateSchema.parse(planningStateInput)
+  if (!resolution.readyForPackage || resolution.actionCounts.unresolved !== 0) {
+    throw new Error(
+      'Package generation blocked: physician compatibility supplement is required and unresolved.',
+    )
+  }
+  const resolutionsByItem = new Map(
+    resolution.planningRows.map((row) => [row.identity.itemId, row]),
+  )
+  if (resolutionsByItem.size !== state.rows.length) {
+    throw new Error('Compatibility resolution does not cover every development planning row.')
+  }
+  return state.rows.map((current): PackagePlanningRow => {
+    const resolved = resolutionsByItem.get(current.itemId)
+    if (
+      !resolved ||
+      resolved.identity.pmid !== current.pmid ||
+      resolved.sequence !== current.sequence ||
+      resolved.proposedAction === null ||
+      resolved.targetReview === null ||
+      resolved.resolutionStatus !== 'resolved'
+    ) {
+      throw new Error('Compatibility resolution contains an unresolved or mismatched row.')
+    }
+    const common = {
+      expectedCurrentReviewId: current.currentReviewId,
+      expectedEffectiveReviewId: current.effectiveReviewId,
+      itemId: current.itemId,
+      pmid: current.pmid,
+      preImportItemState: current.itemState,
+      sequence: current.sequence,
+      targetReview: resolved.targetReview,
+    }
+    if (resolved.proposedAction === 'import_initial') {
+      if (
+        current.currentReviewId !== null ||
+        current.effectiveReviewId !== null ||
+        current.currentRevision !== null ||
+        current.currentEffectiveReview !== null
+      ) {
+        throw new Error('Compatibility initial action contradicts existing review state.')
+      }
+      return initialPlanningRowSchema.parse({
+        ...common,
+        action: 'import_initial',
+        expectedRevision: 1,
+        expectedSupersedesReviewId: null,
+      })
+    }
+    if (
+      current.currentReviewId === null ||
+      current.effectiveReviewId === null ||
+      current.currentRevision === null ||
+      current.currentEffectiveReview === null
+    ) {
+      throw new Error('Compatibility existing-head action is missing current review state.')
+    }
+    if (resolved.proposedAction === 'import_noop') {
+      return noopPlanningRowSchema.parse({
+        ...common,
+        action: 'import_noop',
+        expectedRevision: null,
+        expectedSupersedesReviewId: null,
+      })
+    }
+    return revisionPlanningRowSchema.parse({
+      ...common,
+      action: 'import_revision',
+      expectedRevision: current.currentRevision + 1,
+      expectedSupersedesReviewId: current.currentReviewId,
+    })
   })
 }
 
@@ -849,14 +1254,42 @@ export function assertPackageAuditReady(
   if (database.developmentPlanningStateSha256 === null) {
     throw new Error('Package generation blocked: audited development planning state is not bound.')
   }
-  if (
-    audit.checks.schemaSecurityDefinitionIdentity === null ||
-    audit.checks.expectedSchemaSecurityIdentitySha256 !== database.schemaSecurityIdentitySha256 ||
-    database.schemaSecurityIdentitySha256 !== expectedSchemaSecurityIdentitySha256
-  ) {
+  if (audit.checks.schemaSecurityDefinitionIdentity === null) {
     throw new Error(
       'Package generation blocked: exact post-migration schema/security definition identity is not bound.',
     )
+  }
+  if (audit.schemaVersion === 'gold-import-compensation-migration-audit/1.0.0') {
+    if (
+      audit.checks.expectedSchemaSecurityIdentitySha256 !== database.schemaSecurityIdentitySha256 ||
+      database.schemaSecurityIdentitySha256 !== expectedSchemaSecurityIdentitySha256
+    ) {
+      throw new Error(
+        'Package generation blocked: legacy exact schema/security definition identity is not bound.',
+      )
+    }
+  } else {
+    const reconciliation = audit.checks.contractReconciliation
+    if (
+      audit.checks.forwardMigrationRequired ||
+      audit.checks.expectedSchemaSecurityIdentitySha256 !== database.schemaSecurityIdentitySha256 ||
+      reconciliation.identities.actual.contractInvariant.sha256 !==
+        audit.database.contractInvariantIdentitySha256 ||
+      reconciliation.identities.expected.contractInvariant.sha256 !==
+        audit.database.contractInvariantIdentitySha256 ||
+      reconciliation.identities.actual.deploymentProfile.sha256 !==
+        audit.database.environmentProfileIdentitySha256 ||
+      reconciliation.identities.actual.fullEnvironmentInventory.sha256 !==
+        audit.database.fullEnvironmentInventoryIdentitySha256 ||
+      reconciliation.deploymentProfile.actualIdentity.sha256 !==
+        audit.database.environmentProfileIdentitySha256 ||
+      reconciliation.deploymentProfile.expectedIdentity.sha256 !==
+        audit.database.environmentProfileIdentitySha256
+    ) {
+      throw new Error(
+        'Package generation blocked: reconciled invariant/profile/full identities are inconsistent.',
+      )
+    }
   }
   if (
     audit.checks.failures.length > 0 ||
@@ -1062,14 +1495,20 @@ function buildCompensationTemplate(
     total: actions.length,
     voided: actions.filter((action) => action.action === 'compensate_void').length,
   }
-  if (canonicalJson(counts) !== canonicalJson(EXACT_COMPENSATION_COUNTS)) {
-    throw new Error('Compensation mapping is not exactly 621 void + 3 restore + 6 no-action.')
+  if (
+    counts.total === 0 ||
+    counts.noops + counts.restored + counts.voided !== counts.total ||
+    counts.total !== importPlan.actions.length
+  ) {
+    throw new Error(
+      'Compensation actions do not form a complete dynamic mapping of the import plan.',
+    )
   }
   const content = {
     actions,
     batchId: audit.database.batchId,
     contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION,
-    counts: EXACT_COMPENSATION_COUNTS,
+    counts,
     executionContext: importPlan.executionContext,
     expectedEffectiveStateSha256: importPlan.expectedPostEffectiveStateSha256,
     expectedPhysicalState: {
@@ -1137,12 +1576,22 @@ export function generateGoldImportCompensationPackage(
     developmentPlanningStateBytes: input.auditPackage.developmentPlanningStateBytes,
     manifestBytes: input.auditPackage.manifestBytes,
     markdownBytes: input.auditPackage.markdownBytes,
+    reconciledEvidence: input.auditPackage.reconciledEvidence
+      ? {
+          contractDiagnosticsBytes: input.auditPackage.reconciledEvidence.contractDiagnosticsBytes,
+          contractReconciliationBytes:
+            input.auditPackage.reconciledEvidence.contractReconciliationBytes,
+          readOnlyStateBracketBytes:
+            input.auditPackage.reconciledEvidence.readOnlyStateBracketBytes,
+        }
+      : undefined,
     schemaSecurityDefinitionIdentityBytes: input.auditPackage.schemaSecurityDefinitionIdentityBytes,
     expectedSchemaSecurityIdentitySha256ForTest:
-      input.auditPackage.expectedSchemaSecurityIdentitySha256 ===
-      POST_MIGRATION_SCHEMA_SECURITY_IDENTITY_SHA256
-        ? undefined
-        : input.auditPackage.expectedSchemaSecurityIdentitySha256,
+      input.auditPackage.audit.schemaVersion === 'gold-import-compensation-migration-audit/1.0.0' &&
+      input.auditPackage.expectedSchemaSecurityIdentitySha256 !==
+        POST_MIGRATION_SCHEMA_SECURITY_IDENTITY_SHA256
+        ? input.auditPackage.expectedSchemaSecurityIdentitySha256
+        : undefined,
     trustedManifestSha256: input.auditPackage.manifestSha256,
   })
   const audit = auditPackage.audit
@@ -1157,7 +1606,7 @@ export function generateGoldImportCompensationPackage(
   assertSha256(
     sourceIdentities.finalArtifactSha256,
     policy.finalArtifactSha256,
-    'Finalized 630-row V3 artifact',
+    'Finalized V3 development artifact',
   )
   assertSha256(
     sourceIdentities.protocolAuthorizationSha256,
@@ -1171,16 +1620,6 @@ export function generateGoldImportCompensationPackage(
   )
   assertSha256(sourceIdentities.migrationSha256, policy.migrationSha256, 'Exact merged migration')
 
-  const authorizationSet = {
-    amendedTwoRowAuthorizationSha256: sourceIdentities.amendedAuthorizationSha256,
-    finalArtifactSha256: sourceIdentities.finalArtifactSha256,
-    kind: 'gold_import_source_authorization_set',
-    signedProtocolAuthorizationSha256: sourceIdentities.protocolAuthorizationSha256,
-    sourceDecisionsChanged: false,
-    version: 1,
-  }
-  const authorizationSetBytes = canonicalPretty(authorizationSet)
-  const sourceAuthorizationSetSha256 = sha256Bytes(authorizationSetBytes)
   const planningRowsContainer = auditPackage.developmentPlanningState
   if (
     developmentPlanningStateSha256(planningRowsContainer) !==
@@ -1190,8 +1629,109 @@ export function generateGoldImportCompensationPackage(
       'Package generation blocked: development planning state does not match the ready audit.',
     )
   }
-  const rows = derivePackagePlanningRows(planningRowsContainer, input.sources.finalArtifact)
-  assertExactPlanningRows(rows)
+  let compatibilityResolution: GoldImportCompensationCompatibilityResolution | null = null
+  if (usesProductionSourceIdentityPolicy(policy)) {
+    if (audit.schemaVersion !== 'gold-import-compensation-reconciled-migration-audit/1.0.0') {
+      throw new Error(
+        'Package generation blocked: production sources require the reconciled post-migration audit.',
+      )
+    }
+    compatibilityResolution = resolveGoldImportCompensationCompatibility({
+      bindingContext: {
+        contract: {
+          environmentInvariantIdentitySha256: audit.database.contractInvariantIdentitySha256,
+          environmentProfileIdentitySha256: audit.database.environmentProfileIdentitySha256,
+        },
+        currentDatabase: {
+          batchId: audit.database.batchId,
+          developmentMembershipSha256: audit.database.developmentMembershipSha256,
+          developmentPlanningStateSha256: audit.database.developmentPlanningStateSha256,
+          effectiveStateSha256: audit.database.currentEffectiveStateSha256,
+          physicalStateSha256: audit.database.currentPhysicalStateSha256,
+        },
+        finalV3ArtifactSha256: sourceIdentities.finalArtifactSha256,
+        migration: { id: MIGRATION_ID, sha256: sourceIdentities.migrationSha256 },
+      },
+      compatibilitySupplement: input.compatibilitySupplement,
+      developmentPlanningState: planningRowsContainer,
+      finalizedArtifact: input.sources.finalArtifact,
+    })
+    if (!compatibilityResolution.readyForPackage) {
+      throw new Error(
+        `Package generation blocked: physician compatibility supplement required; template ${compatibilityResolution.supplementTemplate?.binding.contentSha256 ?? '<missing>'}.`,
+      )
+    }
+  }
+  const rows = compatibilityResolution
+    ? packagePlanningRowsFromCompatibility(planningRowsContainer, compatibilityResolution)
+    : derivePackagePlanningRows(planningRowsContainer, input.sources.finalArtifact)
+  const importCounts = deriveImportActionCounts(rows)
+  const optionalTagStatusResolutions = compatibilityResolution
+    ? compatibilityResolution.artifact.rows
+        .filter(
+          (record) =>
+            record.projection.technologyTagStatus === null ||
+            record.projection.diseaseTagStatus === null,
+        )
+        .map((record) => {
+          const target = compatibilityResolution?.planningRows.find(
+            (row) => row.identity.itemId === record.identity.itemId,
+          )?.targetReview
+          if (
+            !target ||
+            (target.technologyTagStatus !== 'not_applicable' &&
+              target.technologyTagStatus !== 'not_assessable') ||
+            (target.diseaseTagStatus !== 'not_applicable' &&
+              target.diseaseTagStatus !== 'not_assessable')
+          ) {
+            throw new Error('Completed compatibility resolution has no exact optional statuses.')
+          }
+          return {
+            diseaseTagStatus: target.diseaseTagStatus,
+            itemId: record.identity.itemId,
+            pmid: record.identity.pmid,
+            technologyTagStatus: target.technologyTagStatus,
+          }
+        })
+    : []
+  const compatibilityAuthorization = compatibilityResolution
+    ? {
+        acceptedSupplementSha256: compatibilityResolution.acceptedSupplementSha256,
+        actionCounts: compatibilityResolution.actionCounts,
+        booleanNormalizationLedger: compatibilityResolution.artifact.booleanNormalizations,
+        booleanNormalizationLedgerSha256: sha256Canonical(
+          compatibilityResolution.artifact.booleanNormalizations,
+        ),
+        existingHeadCohortSha256: compatibilityResolution.existingHeadCohortSha256,
+        optionalTagStatusResolutions,
+        resolutionSchemaVersion: compatibilityResolution.schemaVersion,
+        supplement: input.compatibilitySupplement,
+      }
+    : null
+  const authorizationSet = compatibilityAuthorization
+    ? {
+        amendedTwoRowAuthorizationSha256: sourceIdentities.amendedAuthorizationSha256,
+        compatibility: compatibilityAuthorization,
+        finalArtifactSha256: sourceIdentities.finalArtifactSha256,
+        kind: 'gold_import_source_authorization_set',
+        signedProtocolAuthorizationSha256: sourceIdentities.protocolAuthorizationSha256,
+        sourceDecisionsChanged: false,
+        version: 2,
+      }
+    : {
+        amendedTwoRowAuthorizationSha256: sourceIdentities.amendedAuthorizationSha256,
+        finalArtifactSha256: sourceIdentities.finalArtifactSha256,
+        kind: 'gold_import_source_authorization_set',
+        signedProtocolAuthorizationSha256: sourceIdentities.protocolAuthorizationSha256,
+        sourceDecisionsChanged: false,
+        version: 1,
+      }
+  const validatedAuthorizationSet = validateGoldImportSourceAuthorizationSet(
+    authorizationSet,
+    sourceIdentities.finalArtifactSha256,
+  )
+  const authorizationSetBytes = canonicalPretty(validatedAuthorizationSet)
+  const sourceAuthorizationSetSha256 = sha256Bytes(authorizationSetBytes)
   const operationId = deterministicPackageUuid(
     PACKAGE_VERSION,
     audit.database.batchId,
@@ -1205,7 +1745,7 @@ export function generateGoldImportCompensationPackage(
     actions,
     batchId: audit.database.batchId,
     contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION,
-    counts: EXACT_IMPORT_COUNTS,
+    counts: importCounts,
     executionContext: executionContext(audit),
     expectedEffectiveStateSha256: audit.database.currentEffectiveStateSha256,
     expectedPhysicalStateSha256: audit.database.currentPhysicalStateSha256,
@@ -1221,6 +1761,7 @@ export function generateGoldImportCompensationPackage(
     sourceAuthorizationSetSha256,
   })
   validateGoldImportSourceArtifact({
+    compatibility: compatibilityResolution ? { optionalTagStatusResolutions } : undefined,
     csvText: new TextDecoder('utf-8', { fatal: true }).decode(input.sources.finalArtifact),
     plan: importPlan,
   })
@@ -1297,7 +1838,7 @@ export function generateGoldImportCompensationPackage(
     schemaVersion: 'gold-import-compensation-state-hash-proof/v1',
   }
   const compensationReadiness = {
-    actionCounts: EXACT_COMPENSATION_COUNTS,
+    actionCounts: compensation.counts,
     appendOnly: true,
     currentPointerAlwaysLatestPhysicalHead: true,
     importExecuted: false,
@@ -1368,17 +1909,29 @@ export function generateGoldImportCompensationPackage(
       stateFresh: audit.database.stateFresh,
     },
     compensation: {
-      counts: EXACT_COMPENSATION_COUNTS,
+      counts: compensation.counts,
       operationId: compensation.operationId,
       planTemplateSha256: compensation.binding.contentSha256,
       readyToExecute: false,
     },
+    ...(compatibilityResolution
+      ? {
+          compatibility: {
+            acceptedSupplementSha256: compatibilityResolution.acceptedSupplementSha256,
+            actionCounts: compatibilityResolution.actionCounts,
+            booleanNormalizationLedgerSha256:
+              compatibilityAuthorization?.booleanNormalizationLedgerSha256,
+            existingHeadCohortSha256: compatibilityResolution.existingHeadCohortSha256,
+            sourceAuthorizationSetVersion: 2,
+          },
+        }
+      : {}),
     contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION,
     databaseAccess: 'none_package_uses_read_only_post_migration_audit',
     databaseMutation: false,
     heldOutIdentitiesAccessed: false,
     import: {
-      counts: EXACT_IMPORT_COUNTS,
+      counts: importCounts,
       idempotencyKey: importPlan.binding.idempotencyKey,
       operationId: importPlan.operationId,
       planSha256: importPlan.binding.contentSha256,
@@ -1403,7 +1956,7 @@ export function generateGoldImportCompensationPackage(
   files.set(
     'import-journal-template.json',
     canonicalPretty({
-      actionCount: EXACT_IMPORT_COUNTS.total,
+      actionCount: importCounts.total,
       idempotencyKey: importPlan.binding.idempotencyKey,
       operationId: importPlan.operationId,
       outcome: null,
@@ -1436,6 +1989,20 @@ export function generateGoldImportCompensationPackage(
     'post-migration-schema-security-definition-identity.json',
     auditPackage.schemaSecurityDefinitionIdentityBytes,
   )
+  if (auditPackage.reconciledEvidence) {
+    files.set(
+      'post-migration-contract-diagnostics.json',
+      auditPackage.reconciledEvidence.contractDiagnosticsBytes,
+    )
+    files.set(
+      'post-migration-contract-reconciliation.json',
+      auditPackage.reconciledEvidence.contractReconciliationBytes,
+    )
+    files.set(
+      'post-migration-read-only-state-bracket.json',
+      auditPackage.reconciledEvidence.readOnlyStateBracketBytes,
+    )
+  }
   files.set(
     'proposed-compensation-command.txt',
     Buffer.from(
@@ -1556,6 +2123,7 @@ Usage:
     --audit-manifest-sha256 <reviewed-canonical-manifest-sha256> \\
     --development-state <development-planning-state.json> \\
     --artifact <gold-set-v1-enrichment-v3-final-development-630.csv> \\
+    [--compatibility-supplement <completed-physician-compatibility-supplement.json>] \\
     --protocol-authorization <protocol-authorization-signed.json> \\
     --amended-authorization <amended-authorization.json> \\
     --migration <20260808035633_add_literature_gold_import_compensation_contract.sql> \\
@@ -1572,6 +2140,7 @@ export async function runPackageGeneratorCli(argv: readonly string[]): Promise<{
     'artifact',
     'audit',
     'audit-manifest-sha256',
+    'compatibility-supplement',
     'development-state',
     'help',
     'migration',
@@ -1598,7 +2167,12 @@ export async function runPackageGeneratorCli(argv: readonly string[]): Promise<{
   if (!auditStat.isFile() || auditStat.isSymbolicLink()) {
     throw new Error('--audit must be a regular non-symlink file.')
   }
-  assertPackageAuditReady(await readJson(auditPath))
+  const initialAudit = assertPackageAuditReady(await readJson(auditPath))
+  if (initialAudit.schemaVersion !== 'gold-import-compensation-reconciled-migration-audit/1.0.0') {
+    throw new Error(
+      'Package generation blocked: production sources require the reconciled post-migration audit; source artifacts were not inspected.',
+    )
+  }
   // The stable readiness gate above intentionally runs before any other input
   // is required or opened. A ready report must then be authenticated by the
   // complete canonical audit package and its separately reviewed manifest SHA.
@@ -1618,32 +2192,51 @@ export async function runPackageGeneratorCli(argv: readonly string[]): Promise<{
     manifestBytes,
     markdownBytes,
     schemaSecurityDefinitionIdentityBytes,
+    contractDiagnosticsBytes,
+    contractReconciliationBytes,
+    readOnlyStateBracketBytes,
   ] = await Promise.all([
     readConfinedAuditArtifact(auditDirectory, 'migration-audit.json'),
     readConfinedAuditArtifact(auditDirectory, 'development-planning-state.json'),
     readConfinedAuditArtifact(auditDirectory, 'checksum-manifest.sha256'),
     readConfinedAuditArtifact(auditDirectory, 'migration-audit.md'),
     readConfinedAuditArtifact(auditDirectory, 'schema-security-definition-identity.json'),
+    readConfinedAuditArtifact(auditDirectory, 'contract-diagnostics.json'),
+    readConfinedAuditArtifact(auditDirectory, 'contract-reconciliation.json'),
+    readConfinedAuditArtifact(auditDirectory, 'read-only-state-bracket.json'),
   ])
   const auditPackage = verifyReadyPostMigrationAuditPackage({
     auditBytes,
     developmentPlanningStateBytes,
     manifestBytes,
     markdownBytes,
+    reconciledEvidence: {
+      contractDiagnosticsBytes,
+      contractReconciliationBytes,
+      readOnlyStateBracketBytes,
+    },
     schemaSecurityDefinitionIdentityBytes,
     trustedManifestSha256: requiredArgument(arguments_, 'audit-manifest-sha256'),
   })
   // Source paths are resolved and opened only after both audit gates pass.
-  const [finalArtifact, protocolAuthorization, amendedAuthorization, migration] = await Promise.all(
-    [
-      readFile(resolve(requiredArgument(arguments_, 'artifact'))),
-      readFile(resolve(requiredArgument(arguments_, 'protocol-authorization'))),
-      readFile(resolve(requiredArgument(arguments_, 'amended-authorization'))),
-      readFile(resolve(requiredArgument(arguments_, 'migration'))),
-    ],
-  )
+  const [
+    finalArtifact,
+    protocolAuthorization,
+    amendedAuthorization,
+    migration,
+    compatibilitySupplement,
+  ] = await Promise.all([
+    readFile(resolve(requiredArgument(arguments_, 'artifact'))),
+    readFile(resolve(requiredArgument(arguments_, 'protocol-authorization'))),
+    readFile(resolve(requiredArgument(arguments_, 'amended-authorization'))),
+    readFile(resolve(requiredArgument(arguments_, 'migration'))),
+    stringArgument(arguments_, 'compatibility-supplement')
+      ? readJson(resolve(requiredArgument(arguments_, 'compatibility-supplement')))
+      : Promise.resolve(undefined),
+  ])
   const generated = generateGoldImportCompensationPackage({
     auditPackage,
+    compatibilitySupplement,
     sources: { amendedAuthorization, finalArtifact, migration, protocolAuthorization },
   })
   const rawOutputRoot = requiredArgument(arguments_, 'output-root')
