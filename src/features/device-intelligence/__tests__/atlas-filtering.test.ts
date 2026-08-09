@@ -99,6 +99,29 @@ describe('D1 atlas cohort filtering', () => {
     }
   })
 
+  it('withholds raw compatibility statements whose counterpart resolves outside the cohort', () => {
+    // Adversarial finding 7: the guard exists so this stays true when data regenerates.
+    const atlas = getAtlasCatalogStore()
+    for (const product of atlas.products) {
+      const detail = getAtlasProductDetail(product.product_id)
+      for (const statement of detail?.rawCompatibilityStatements ?? []) {
+        for (const resolvedId of [statement.resolvedSourceId, statement.resolvedTargetId]) {
+          if (resolvedId !== null && resolvedId.startsWith('PRD-')) {
+            expect({
+              product: product.product_id,
+              resolvedId,
+              inCohort: atlas.productById.has(resolvedId),
+            }).toEqual({
+              product: product.product_id,
+              resolvedId,
+              inCohort: true,
+            })
+          }
+        }
+      }
+    }
+  })
+
   it('leaves the full catalog store untouched for the preserved surfaces', () => {
     const full = getCatalogStore()
     expect(full.products.length).toBe(1532)

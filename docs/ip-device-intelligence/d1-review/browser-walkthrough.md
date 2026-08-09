@@ -14,7 +14,7 @@ Phase D1 implementation document (2026-08-08). Performed against the dev server 
 | 6   | `/en/procedures/EBUS_TBNA`                                     | 1600×900              | Overview + release bundle, no-clinical-owner statement, ladder tiles 11/0/2/0/2, 15 requirement cards, zone/phase link tabs with `aria-current`                                                                                                                                                                                                                                      |
 | 7   | `/en/procedures/EBUS_TBNA?view=phases&output=gaps`             | 1600×900              | Phase grouping; gap preview: proposals-only (FLUOROSCOPY_C_ARM, GENERIC_SUCTION), unmapped (GENERIC_SPECIMEN, RADIATION_PROTECTION), stand-ins, dimension gaps, "0 carried, 0 preferred" formulary line, no-procurement note                                                                                                                                                         |
 | 8   | `/en/procedures/CHEST_TUBE?output=room`                        | 1600×900              | No-rescue fact sentence; mutual-exclusion lines on both technique modifiers; DIGITAL_DRAINAGE role replacement (GENERIC_DRAINAGE_UNIT → DIGITAL_DRAINAGE_SYSTEM); room-setup zones with demo stand-in badges                                                                                                                                                                         |
-| 9   | `/en/procedures/THERAPEUTIC_BRONCH`                            | 1600×900              | 29 requirements, 26 modifiers, HIGH_BLEED_RISK → MAJOR_AIRWAY_BLEEDING reachability, RULE-BALLOON-WORKING-CHANNEL rendered as a blocking _condition_, 7 cited raw statements (audit-matched), 17 proposal badges                                                                                                                                                                     |
+| 9   | `/en/procedures/THERAPEUTIC_BRONCH`                            | 1600×900              | 29 requirements, 26 modifiers, HIGH*BLEED_RISK → MAJOR_AIRWAY_BLEEDING reachability, RULE-BALLOON-WORKING-CHANNEL rendered as a blocking \_condition*, 7 cited raw statements (audit-matched), 17 proposal badges                                                                                                                                                                    |
 | 10  | `/en/procedures/CHEST_TUBE/readiness`                          | 1600×900 and 1024×768 | Both watermarks (DEMO DATA — NOT AN ACTUAL INSTITUTION; DRAFT PROTOTYPE with verbatim status), real-formulary panel (107 rows / 0 carried / 0 preferred → "Not ready — no institutional data recorded."), Not ready headline, state tiles 1/9/1, DRESSING_SECUREMENT row with `missing_required_product_role [procedure_slot: SLOT-4BE1D79D6C]`, 8-item state legend, no-rescue fact |
 | 11  | `/en/procedures/EBUS_TBNA/readiness`                           | 1600×900              | Ready-with-limitations headline, tiles 4/15/0, 7 demo stand-in badges                                                                                                                                                                                                                                                                                                                |
 | 12  | `/en/procedures/THERAPEUTIC_BRONCH/readiness`                  | 1600×900              | Ready-with-limitations headline, tiles 3/54/0, card diagnostic `available_but_unverified [compatibility_rule: RULE-BALLOON-WORKING-CHANNEL]`                                                                                                                                                                                                                                         |
@@ -32,6 +32,17 @@ Phase D1 implementation document (2026-08-08). Performed against the dev server 
 | 1440×900 | EBUS workspace                                                                     | none                |
 | 1280×720 | EBUS workspace                                                                     | none                |
 | 1024×768 | EBUS workspace, CHEST_TUBE readiness, es workspace, preserved product page         | none                |
+
+## Post-adversarial-review re-verification
+
+After the adversarial-review fixes landed (resolver advisories on the readiness evidence
+column, other-warnings disclosure, DEMO watermark on the workspace output previews,
+data-derived no-rescue fact, conditional formulary headline), two live spot-checks confirmed
+the changed views: `/en/procedures/EBUS_TBNA/readiness` renders 11 resolver advisories
+(e.g. "Demo BF-UC190F linear EBUS bronchoscope is prototype-visible and requires current
+local verification." beside its `Ready` row), and `/en/procedures/CHEST_TUBE?output=room`
+carries the DEMO DATA — NOT AN ACTUAL INSTITUTION watermark inside the outputs panel. No
+horizontal overflow in either view.
 
 ## Console-error report
 

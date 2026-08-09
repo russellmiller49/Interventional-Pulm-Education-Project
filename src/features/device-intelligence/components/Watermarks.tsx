@@ -16,7 +16,8 @@ export function DraftWatermark({
   disclaimer: string
 }) {
   return (
-    <aside
+    <div
+      role="note"
       aria-label={title}
       className="relative overflow-hidden rounded-2xl border-2 border-amber-500/70 bg-[linear-gradient(135deg,rgba(245,158,11,0.14),rgba(239,68,68,0.08))] px-5 py-4 shadow-sm print:border-black"
     >
@@ -36,14 +37,15 @@ export function DraftWatermark({
           </p>
         </div>
       </div>
-    </aside>
+    </div>
   )
 }
 
 /** DEMO DATA — NOT AN ACTUAL INSTITUTION. Required on every readiness/capability render. */
 export function DemoWatermark({ title, disclaimer }: { title: string; disclaimer: string }) {
   return (
-    <aside
+    <div
+      role="note"
       aria-label={title}
       className="relative overflow-hidden rounded-2xl border-2 border-violet-500/70 bg-violet-500/10 px-5 py-4 shadow-sm print:border-black"
     >
@@ -62,6 +64,6 @@ export function DemoWatermark({ title, disclaimer }: { title: string; disclaimer
           </p>
         </div>
       </div>
-    </aside>
+    </div>
   )
 }

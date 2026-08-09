@@ -5,6 +5,7 @@ import compatibilityRawJson from '../../../../data/ip-preference-cards/generated
 import { typedCompatibilityRules } from '@/features/preference-cards/seed/operational'
 import { getCatalogStore } from '@/features/preference-cards/server/catalog'
 import type { TypedCompatibilityRule } from '@/features/preference-cards/domain/types'
+import { getAtlasCatalogStore } from './atlas-store.server'
 
 /**
  * Compatibility evidence for display. Two independent kinds, never merged:
@@ -67,13 +68,24 @@ function toStatement(row: RawRow): RawCompatibilityStatement {
   }
 }
 
-/** Raw statements whose resolved source or target is this product. */
+/**
+ * Raw statements whose resolved source or target is this product — for the ATLAS device page,
+ * so the OTHER side is additionally guarded: a row whose counterpart resolves to a product
+ * outside the D1 cohort is withheld rather than printing a hidden/candidate product's name on
+ * a public-cohort surface. Zero rows are affected by this guard today (verified across all
+ * 187 rows); it exists so the surface stays safe by construction when the data regenerates.
+ */
 export function getRawStatementsForProduct(productId: string): RawCompatibilityStatement[] {
+  const atlas = getAtlasCatalogStore()
+  const counterpartAllowed = (type: string | null, id: string | null) =>
+    type !== 'product' || id === null || id === productId || atlas.productById.has(id)
   return rawRows
     .filter(
       (row) =>
-        (row.resolved_source_type === 'product' && row.resolved_source_id === productId) ||
-        (row.resolved_target_type === 'product' && row.resolved_target_id === productId),
+        ((row.resolved_source_type === 'product' && row.resolved_source_id === productId) ||
+          (row.resolved_target_type === 'product' && row.resolved_target_id === productId)) &&
+        counterpartAllowed(row.resolved_source_type, row.resolved_source_id) &&
+        counterpartAllowed(row.resolved_target_type, row.resolved_target_id),
     )
     .map(toStatement)
 }

@@ -89,7 +89,11 @@ export default async function ProcedureReadinessPage({ params }: PageProps) {
         <h2 className="text-2xl font-semibold tracking-tight">{t('realFormularyHeading')}</h2>
         <Card className="border-rose-500/40">
           <CardContent className="p-5">
-            <p className="text-sm font-semibold">{t('realFormularyHeadline')}</p>
+            <p className="text-sm font-semibold">
+              {view.formularySummary.carriedRows === 0 && view.formularySummary.preferredRows === 0
+                ? t('realFormularyHeadline')
+                : t('realFormularyHeadlineNonEmpty')}
+            </p>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
               {t('realFormularyBody', {
                 rows: view.formularySummary.rowsIntersectingProcedureRoles,
@@ -97,6 +101,13 @@ export default async function ProcedureReadinessPage({ params }: PageProps) {
                 preferred: view.formularySummary.preferredRows,
               })}
             </p>
+            {view.formularySummary.rowsWithAnyLocalField > 0 ? (
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t('realFormularyLocalFields', {
+                  count: view.formularySummary.rowsWithAnyLocalField,
+                })}
+              </p>
+            ) : null}
             <p className="mt-1 text-xs text-muted-foreground">{t('realFormularyNote')}</p>
           </CardContent>
         </Card>
@@ -257,6 +268,11 @@ export default async function ProcedureReadinessPage({ params }: PageProps) {
                         {t('evidence.coverage')}: {requirement.evidence.coverage}
                       </p>
                     ) : null}
+                    {requirement.resolverAdvisories.map((advisory, index) => (
+                      <p key={`${advisory.code}-${index}`} className="italic">
+                        {t('evidence.resolverAdvisory')}: “{advisory.message}”
+                      </p>
+                    ))}
                   </td>
                 </tr>
               ))}
@@ -264,7 +280,22 @@ export default async function ProcedureReadinessPage({ params }: PageProps) {
           </table>
         </div>
 
-        {view.procedureCode === 'CHEST_TUBE' ? (
+        {view.projection.otherWarnings.length > 0 ? (
+          <details className="rounded-xl border border-border/70 p-3">
+            <summary className="cursor-pointer text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              {t('otherWarnings', { count: view.projection.otherWarnings.length })}
+            </summary>
+            <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+              {view.projection.otherWarnings.map((warning, index) => (
+                <li key={`${warning.code}-${index}`}>
+                  <span className="font-mono text-xs">{warning.code}</span> — {warning.message}
+                </li>
+              ))}
+            </ul>
+          </details>
+        ) : null}
+
+        {view.noRescueModuleReachable ? (
           <p className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm leading-6">
             {t('noRescueDefinedFact')}
           </p>

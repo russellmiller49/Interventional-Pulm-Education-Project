@@ -48,11 +48,13 @@ export const nonPublicModules: NonPublicModule[] = [
       'Read-only device and clinical-use atlas over the verified, prototype-visible catalog cohort. Public-unlisted and noindex throughout Phase D1.',
   },
   {
-    path: '/clinical-roles',
+    // A representative role page: the area has no index route in Phase D1 (only
+    // /clinical-roles/[roleCode] exists), and the admin index links entry paths directly.
+    path: '/clinical-roles/EBUS_SCOPE',
     title: 'Clinical Roles (D1 vertical slice)',
     group: 'IP tooling',
     summary:
-      'Read-only clinical-role pages: authored selection guidance, atlas-cohort products by manufacturer, and the procedures that request each role.',
+      'Read-only clinical-role pages: authored selection guidance, atlas-cohort products by manufacturer, and the procedures that request each role. Linked here via a representative role; the area is addressed per role code.',
   },
   {
     path: '/procedures',

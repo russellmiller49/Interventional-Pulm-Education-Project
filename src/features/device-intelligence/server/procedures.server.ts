@@ -33,6 +33,7 @@ import {
   type D1ExemplarProcedureCode,
 } from '@/features/device-intelligence/domain/exemplars'
 import {
+  classifyAuthoredCoverage,
   computeCoverageLadder,
   type CoverageLadderResult,
   type RoleCoverageRow,
@@ -141,11 +142,19 @@ export function getRoleSlotUsage(roleCode: string): RoleSlotUsage[] {
     .map((slot) => {
       const options = optionsBySlot.get(slot.slot_id) ?? []
       const proposalCount = proposalCountBySlot.get(slot.slot_id) ?? 0
-      let optionStatus: RoleSlotUsage['optionStatus']
-      if (options.some((option) => option.selectable)) optionStatus = 'selectable_authored'
-      else if (options.length > 0) optionStatus = 'non_selectable_authored_only'
-      else if (proposalCount > 0) optionStatus = 'proposals_only'
-      else optionStatus = 'no_authored_option'
+      // The one shared rung classifier — the same definition the coverage ladder uses, so
+      // this column can never disagree with the workspace about the same slot. The two
+      // "no option, no proposal" rungs collapse into one display status here.
+      const rung = classifyAuthoredCoverage({
+        hasSelectableOption: options.some((option) => option.selectable === true),
+        optionCount: options.length,
+        proposalCount,
+        roleMappedElsewhere: store.productIdsByRole.has(roleCode),
+      })
+      const optionStatus: RoleSlotUsage['optionStatus'] =
+        rung === 'no_option_no_proposal_role_mapped' || rung === 'no_option_no_proposal_unmapped'
+          ? 'no_authored_option'
+          : rung
       const procedure = store.procedureByCode.get(slot.procedure_code)
       return {
         slotId: slot.slot_id,
@@ -250,7 +259,6 @@ export interface WorkspaceOptionLink {
   eligibilityStatus: string | null
   /** Present only when the product is inside the D1 atlas cohort — the only linkable set. */
   atlasVisible: boolean
-  verificationGrade: string | null
 }
 
 export interface WorkspaceRequirement {
@@ -385,9 +393,11 @@ function realFormularySummary(roleCodes: ReadonlySet<string>): RealFormularySumm
 function modifierEffects(
   modifier: ModifierDefinition,
   context: ReturnType<typeof buildDemoContext>,
+  // The modifier-free expansion is identical for every modifier of one workspace render, so
+  // the caller computes it once and threads it through.
+  baseline: ReturnType<typeof expandEffectiveSlots>,
 ): ModifierEffectSummary['effects'] {
   const selectedModuleVersionIds = defaultSelectedModuleVersionIds(context.recipe)
-  const baseline = expandEffectiveSlots({ selectedModuleVersionIds, modifierCodes: [] }, context)
   const withModifier = expandEffectiveSlots(
     { selectedModuleVersionIds, modifierCodes: [modifier.code] },
     context,
@@ -472,7 +482,6 @@ export function getProcedureWorkspace(procedureCode: string): ProcedureWorkspace
       selectable: option.selectable === true,
       eligibilityStatus: option.eligibility_status,
       atlasVisible: atlasStore.productById.has(option.product_id),
-      verificationGrade: product?.verification_grade ?? null,
     }
   }
 
@@ -513,6 +522,13 @@ export function getProcedureWorkspace(procedureCode: string): ProcedureWorkspace
     }
   })
 
+  const baselineExpansion = expandEffectiveSlots(
+    {
+      selectedModuleVersionIds: defaultSelectedModuleVersionIds(context.recipe),
+      modifierCodes: [],
+    },
+    context,
+  )
   const modifiers: ModifierEffectSummary[] = context.modifiers.map((modifier) => ({
     code: modifier.code,
     name: modifier.name,
@@ -520,7 +536,7 @@ export function getProcedureWorkspace(procedureCode: string): ProcedureWorkspace
     description: modifier.description,
     preview: [...modifier.preview],
     conflictsWith: [...modifier.conflictsWith],
-    effects: modifierEffects(modifier, context),
+    effects: modifierEffects(modifier, context, baselineExpansion),
   }))
 
   const rescueReachability = new Map<string, string[]>()
@@ -618,6 +634,8 @@ export interface ProcedureReadinessView {
   formularySummary: RealFormularySummary
   demoContextName: { organization: string; site: string; location: string }
   demoLocationCapabilities: string[]
+  /** Derived from the pinned modifier set, same as the workspace — never hardcoded per code. */
+  noRescueModuleReachable: boolean
 }
 
 /**
@@ -657,6 +675,10 @@ export function getProcedureReadinessView(procedureCode: string): ProcedureReadi
       location: resolved.locationName,
     },
     demoLocationCapabilities: [...context.locationCapabilities],
+    // Same derivation the workspace uses: does ANY pinned modifier append a rescue module?
+    noRescueModuleReachable: !context.modifiers.some((modifier) =>
+      modifier.actions.some((action) => action.actionType === 'add_rescue_module'),
+    ),
   }
 }
 

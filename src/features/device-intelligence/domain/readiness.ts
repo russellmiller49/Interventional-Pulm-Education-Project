@@ -101,6 +101,12 @@ export interface RequirementReadiness {
   effectiveRequiredness: string
   state: RequirementReadinessState
   diagnostics: ReadinessDiagnostic[]
+  /**
+   * The resolver's own messages about this requirement's selected mapping (for example
+   * "…is prototype-visible and requires current local verification"), quoted verbatim.
+   * Never dropped: a `ready` state under spec rule 1 still shows these.
+   */
+  resolverAdvisories: ReadinessWarningInput[]
   /** Why the state is what it is, as data — the view renders it, tests pin it. */
   evidence: {
     selectedHospitalItemId: string | null
@@ -120,6 +126,11 @@ export interface ReadinessProjection {
   cardDiagnostics: ReadinessDiagnostic[]
   /** Blocking rule messages carried through verbatim — a blocked card is never `ready`. */
   blockingWarnings: ReadinessWarningInput[]
+  /**
+   * Every resolver message that did not become a diagnostic, a blocking entry, or a
+   * per-requirement advisory. Rendered as-is so no resolver output is silently dropped.
+   */
+  otherWarnings: ReadinessWarningInput[]
 }
 
 const NO_COVERAGE_RUNGS: ReadonlySet<RoleCoverageRow['coverage']> = new Set([
@@ -143,6 +154,7 @@ function weakest(states: RequirementReadinessState[]): RequirementReadinessState
 }
 
 export function projectDemoReadiness(input: ReadinessProjectionInput): ReadinessProjection {
+  const consumedWarnings = new Set<ReadinessWarningInput>()
   const requirements: RequirementReadiness[] = input.items.map((item) => {
     const diagnostics: ReadinessDiagnostic[] = []
     const coverage = input.ladderByRole.get(item.roleCode) ?? null
@@ -156,22 +168,36 @@ export function projectDemoReadiness(input: ReadinessProjectionInput): Readiness
       input.authoredSelectablePairs.has(`${item.sourceSlotId}|${item.selectedCatalogProductId}`),
     )
 
+    // The resolver's own messages about this requirement's selected mapping — matched by the
+    // hospital-item id the resolver stamps as sourceId (e.g. "…is prototype-visible and
+    // requires current local verification"). Quoted verbatim beside the state, never dropped.
+    const resolverAdvisories = input.warnings.filter(
+      (warning) =>
+        item.selectedHospitalItemId !== null && warning.sourceId === item.selectedHospitalItemId,
+    )
+    for (const advisory of resolverAdvisories) consumedWarnings.add(advisory)
+
+    const hasSelection = item.selectedHospitalItemId !== null
+
     // State 4 — a required requirement whose role has no authored selectable option anywhere
     // (proposals-only and wholly unmapped rungs). Structural, independent of any institution.
+    // A required requirement OUTSIDE the template ladder (added by a modifier or a rescue
+    // module) that resolves nothing is diagnosed the same way rather than failing silently:
+    // no coverage rung exists for it and no authored option can.
     if (
       item.effectiveRequiredness === 'required' &&
-      coverage &&
-      NO_COVERAGE_RUNGS.has(coverage.coverage)
+      ((coverage !== null && NO_COVERAGE_RUNGS.has(coverage.coverage)) ||
+        (coverage === null && item.selectedHospitalItemId === null))
     ) {
       diagnostics.push({
         code: 'missing_required_product_role',
         sourceKind: 'procedure_slot',
         sourceId: item.sourceSlotId ?? item.id,
-        detail: `role ${item.roleCode} coverage=${coverage.coverage}`,
+        detail: coverage
+          ? `role ${item.roleCode} coverage=${coverage.coverage}`
+          : `role ${item.roleCode} is a modifier- or rescue-added requirement outside the template ladder, and nothing resolved for it`,
       })
     }
-
-    const hasSelection = item.selectedHospitalItemId !== null
 
     // State 7 — coverage exists but only via unverified evidence: a demo-only/unverified
     // mapping, or a candidate/unknown-grade product. Never a silent pass.
@@ -223,6 +249,7 @@ export function projectDemoReadiness(input: ReadinessProjectionInput): Readiness
       effectiveRequiredness: item.effectiveRequiredness,
       state,
       diagnostics,
+      resolverAdvisories,
       evidence: {
         selectedHospitalItemId: item.selectedHospitalItemId,
         selectedCatalogProductId: item.selectedCatalogProductId,
@@ -284,7 +311,26 @@ export function projectDemoReadiness(input: ReadinessProjectionInput): Readiness
     }
   }
 
-  const blockingWarnings = input.warnings.filter((warning) => warning.severity === 'blocking')
+  const diagnosedCodes = new Set([
+    'room_capability_missing',
+    'rescue_module_missing',
+    'compatibility_unknown',
+    'compatibility_failed',
+  ])
+  // Blocking messages already represented as card diagnostics (capability/rescue) are not
+  // listed twice; everything else blocking (mutual exclusion, blocking compatibility) is.
+  const blockingWarnings = input.warnings.filter(
+    (warning) =>
+      warning.severity === 'blocking' &&
+      warning.code !== 'room_capability_missing' &&
+      warning.code !== 'rescue_module_missing',
+  )
+  for (const warning of blockingWarnings) consumedWarnings.add(warning)
+  // Nothing the resolver said is dropped: whatever became neither a diagnostic, nor a
+  // blocking entry, nor a per-requirement advisory is carried through verbatim.
+  const otherWarnings = input.warnings.filter(
+    (warning) => !consumedWarnings.has(warning) && !diagnosedCodes.has(warning.code),
+  )
 
   const headlineInputs: RequirementReadinessState[] = [
     ...requirements.map((requirement) => requirement.state),
@@ -301,7 +347,9 @@ export function projectDemoReadiness(input: ReadinessProjectionInput): Readiness
       .filter((diagnostic) => diagnostic.sourceKind === 'compatibility_rule')
       .map(() => 'ready_with_limitations' as const),
     // A blocking resolver message (mutual exclusion, blocking compatibility) blocks readiness.
-    ...blockingWarnings.map(() => 'not_ready' as const),
+    ...input.warnings
+      .filter((warning) => warning.severity === 'blocking')
+      .map(() => 'not_ready' as const),
   ]
 
   return {
@@ -309,5 +357,6 @@ export function projectDemoReadiness(input: ReadinessProjectionInput): Readiness
     requirements,
     cardDiagnostics,
     blockingWarnings,
+    otherWarnings,
   }
 }

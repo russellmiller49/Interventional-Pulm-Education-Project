@@ -8,6 +8,7 @@ import type { ProcedureOutputPreviews } from '@/features/device-intelligence/ser
 import type { RealFormularySummary } from '@/features/device-intelligence/server/procedures.server'
 import { EvidenceBadge } from './EvidenceBadge'
 import { LinkTabs } from './LinkTabs'
+import { DemoWatermark } from './Watermarks'
 
 /**
  * Read-only output previews (spec §5, outputs 2–5) plus the link into the EXISTING
@@ -35,6 +36,7 @@ export async function OutputsPanel({
   const t = await getTranslations('deviceIntelligence.outputs')
   const tWorkspace = await getTranslations('deviceIntelligence.workspace')
   const tCommon = await getTranslations('deviceIntelligence.common')
+  const tReadiness = await getTranslations('deviceIntelligence.readiness')
 
   const basePath = `/${locale}/procedures/${procedureCode}`
   const tabs: { key: OutputTab; label: string }[] = [
@@ -66,6 +68,8 @@ export async function OutputsPanel({
         />
       </div>
       <p className="text-xs leading-5 text-muted-foreground">{t('readOnlyNote')}</p>
+
+      <DemoWatermark title={tReadiness('demoTitle')} disclaimer={t('demoDisclaimer')} />
 
       {tab === 'card' ? (
         <Card>

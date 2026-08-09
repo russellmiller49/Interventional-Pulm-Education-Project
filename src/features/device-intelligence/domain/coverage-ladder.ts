@@ -68,6 +68,24 @@ export interface CoverageLadderResult {
   summary: CoverageLadderSummary
 }
 
+/**
+ * The single rung classifier, shared by the role-level ladder below and the per-slot status
+ * on the clinical-role page — one definition of "selectable → authored-only → proposals-only
+ * → nothing", so two surfaces can never disagree about the same rows.
+ */
+export function classifyAuthoredCoverage(params: {
+  hasSelectableOption: boolean
+  optionCount: number
+  proposalCount: number
+  roleMappedElsewhere: boolean
+}): RoleCoverageState {
+  if (params.hasSelectableOption) return 'selectable_authored'
+  if (params.optionCount > 0) return 'non_selectable_authored_only'
+  if (params.proposalCount > 0) return 'proposals_only'
+  if (params.roleMappedElsewhere) return 'no_option_no_proposal_role_mapped'
+  return 'no_option_no_proposal_unmapped'
+}
+
 export function computeCoverageLadder(input: CoverageLadderInput): CoverageLadderResult {
   const optionsBySlot = new Map<string, CoverageOptionRow[]>()
   for (const option of input.slotProductOptions) {
@@ -87,18 +105,12 @@ export function computeCoverageLadder(input: CoverageLadderInput): CoverageLadde
     const roleSlots = input.slots.filter((slot) => slot.role_code === roleCode)
     const options = roleSlots.flatMap((slot) => optionsBySlot.get(slot.slot_id) ?? [])
     const proposals = roleSlots.flatMap((slot) => proposalsBySlot.get(slot.slot_id) ?? [])
-    let coverage: RoleCoverageState
-    if (options.some((option) => option.selectable)) {
-      coverage = 'selectable_authored'
-    } else if (options.length > 0) {
-      coverage = 'non_selectable_authored_only'
-    } else if (proposals.length > 0) {
-      coverage = 'proposals_only'
-    } else if (input.mappedRoleCodes.has(roleCode)) {
-      coverage = 'no_option_no_proposal_role_mapped'
-    } else {
-      coverage = 'no_option_no_proposal_unmapped'
-    }
+    const coverage = classifyAuthoredCoverage({
+      hasSelectableOption: options.some((option) => option.selectable === true),
+      optionCount: options.length,
+      proposalCount: proposals.length,
+      roleMappedElsewhere: input.mappedRoleCodes.has(roleCode),
+    })
     return {
       roleCode,
       slotCount: roleSlots.length,

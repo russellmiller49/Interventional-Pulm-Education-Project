@@ -82,7 +82,15 @@ export function AtlasResultsTable({
                 )}
               </td>
               <td className="px-3 py-2">
-                <EvidenceBadge state="verified_source_fact">{labels.verifiedSource}</EvidenceBadge>
+                {item.verificationTier === 'verified' ? (
+                  <EvidenceBadge state="verified_source_fact">
+                    {labels.verifiedSource}
+                  </EvidenceBadge>
+                ) : (
+                  // Unreachable through the cohort store; derived from the row rather than
+                  // asserted, so a non-cohort item could never wear a false badge.
+                  <EvidenceBadge state="unknown">{item.verificationTier}</EvidenceBadge>
+                )}
               </td>
             </tr>
           ))}

@@ -8526,22 +8526,26 @@
         "verificationState": "Mapping verification state",
         "noMapping": "No institutional mapping in the demo context.",
         "product": "Catalog product",
-        "coverage": "Role coverage rung"
+        "coverage": "Role coverage rung",
+        "resolverAdvisory": "Resolver advisory"
       },
       "noRescueDefinedFact": "No rescue module is defined for this procedure. This is reported as a fact of the release-pinned composition, not as a missing-rescue-pathway state.",
       "legendHeading": "State definitions",
       "legend": {
-        "ready": "Every check passes on verified evidence: an authored selectable option on a verified-source product covers the requirement and no limitation applies.",
+        "ready": "The demo mapping is an authored selectable option on a verified-source product and no limitation applies (spec §4 rule 1). Any resolver advisory about the mapping — for example a pending current-local-verification check — is quoted verbatim in the evidence column.",
         "ready_with_limitations": "Coverage exists but at least one limitation applies — a demo stand-in, candidate-grade evidence, an unresolved conditional requirement, or a compatibility check that evaluated unknown.",
         "not_ready": "At least one required requirement has no institutional mapping at all.",
         "missing_required_product_role": "A required requirement whose role has no authored selectable option anywhere in the catalog (proposals-only or wholly unmapped) — a structural gap independent of any institution.",
         "missing_room_capability": "A room capability named by the composition or a selected modifier is absent from the location context — the same check that produces the resolver’s blocking message.",
         "missing_rescue_pathway": "A reachable rescue module has a requirement with no coverage, or the module itself fails to resolve.",
         "available_but_unverified": "Coverage exists only through unverified evidence: a demo-only or unverified mapping, a candidate/unknown-grade product, or a compatibility rule that could not be evaluated. Never a silent pass.",
-        "inventory_formulary_mismatch": "An institutional assertion disagrees with authored eligibility — for example a carried product that is not an authored selectable option. With zero carried rows today this state is demonstrable only with test fixtures."
+        "inventory_formulary_mismatch": "An institutional assertion disagrees with authored eligibility — for example a carried product that is not an authored selectable option. It cannot fire from a scaffold that carries no assertions."
       },
       "legendSafetyNote": "Safety rules: candidate or unknown evidence never produces plain Ready; demo stand-ins always force a limitation; unreviewed proposals never count as coverage; a missing attribute resolves to unknown rather than passing.",
-      "noProcurementNote": "This is a demo/readiness gap preview over fictional data. It is not a procurement report, a shortage analysis, or a substitution recommendation for any hospital."
+      "noProcurementNote": "This is a demo/readiness gap preview over fictional data. It is not a procurement report, a shortage analysis, or a substitution recommendation for any hospital.",
+      "otherWarnings": "{count, plural, one {# other resolver message, quoted verbatim} other {# other resolver messages, quoted verbatim}}",
+      "realFormularyHeadlineNonEmpty": "Formulary staging rows carry institutional assertions. Phase D1 shows them as data only; institutional readiness remains unevaluated.",
+      "realFormularyLocalFields": "{count, plural, one {# row carries} other {# rows carry}} a populated local field, shown for honesty about what the scaffold holds."
     },
     "outputs": {
       "heading": "Read-only output previews",
@@ -8583,7 +8587,8 @@
         "formularyHeading": "Institutional inventory",
         "formularyBody": "No institutional inventory is recorded: {rows} staging rows intersect this procedure, {carried} carried, {preferred} preferred.",
         "none": "None"
-      }
+      },
+      "demoDisclaimer": "These previews resolve the fictional \"Demo IP Program\" context. They describe no real room, no real inventory, and no real institution, and they make no procurement recommendation."
     }
   }
 }

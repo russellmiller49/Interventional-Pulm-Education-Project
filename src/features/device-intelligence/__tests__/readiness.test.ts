@@ -1,6 +1,7 @@
 import {
   buildDemoContext,
   defaultBuildInput,
+  resolveDemoScenario,
 } from '@/features/preference-cards/data/demo-context.server'
 import { resolveCard } from '@/features/preference-cards/domain/resolve-card'
 import {
@@ -307,5 +308,95 @@ describe('the live demo readiness views', () => {
     const first = getProcedureReadinessView('CHEST_TUBE')!
     const second = getProcedureReadinessView('CHEST_TUBE')!
     expect(JSON.stringify(first)).toEqual(JSON.stringify(second))
+  })
+
+  it('never drops a resolver message: every warning is an advisory, diagnostic, blocking entry, or listed verbatim', () => {
+    // Adversarial-review blocker: a `ready` row backed by a prototype-visible mapping must
+    // still show the resolver's own "requires current local verification" advisory.
+    const view = getProcedureReadinessView('EBUS_TBNA')!
+    const ebusScope = view.projection.requirements.find(
+      (requirement) => requirement.roleCode === 'EBUS_SCOPE',
+    )!
+    expect(ebusScope.state).toBe('ready')
+    expect(
+      ebusScope.resolverAdvisories.some((advisory) =>
+        advisory.message.includes('requires current local verification'),
+      ),
+    ).toBe(true)
+
+    // Full accounting against the resolver's actual output: every warning the resolved card
+    // carries must surface somewhere in the projection — as a per-requirement advisory, a
+    // card diagnostic (matched by rule/capability sourceId), a blocking entry, or verbatim
+    // in otherWarnings. Nothing may vanish.
+    for (const code of ['EBUS_TBNA', 'THERAPEUTIC_BRONCH', 'CHEST_TUBE'] as const) {
+      const projection = getProcedureReadinessView(code)!.projection
+      const surfacedMessages = new Set(
+        [
+          ...projection.requirements.flatMap((requirement) => requirement.resolverAdvisories),
+          ...projection.blockingWarnings,
+          ...projection.otherWarnings,
+        ].map((warning) => `${warning.code}|${warning.message}`),
+      )
+      const diagnosedSourceIds = new Set(
+        projection.cardDiagnostics.map((diagnostic) => diagnostic.sourceId),
+      )
+      const resolved = resolveDemoScenario(getProcedureReadinessView(code)!.scenarioId)
+      for (const warning of resolved.warnings) {
+        const accounted =
+          surfacedMessages.has(`${warning.code}|${warning.message}`) ||
+          (warning.sourceId !== null && diagnosedSourceIds.has(warning.sourceId))
+        expect({ code, warning: warning.code, message: warning.message, accounted }).toEqual({
+          code,
+          warning: warning.code,
+          message: warning.message,
+          accounted: true,
+        })
+      }
+    }
+  })
+
+  it('diagnoses a rescue requirement stripped of its demo coverage — the live per-item path', () => {
+    // Pins the includedBy contract the per-item state-6 branch matches on: if the
+    // rescue-module provenance wording ever changes, this fails loudly instead of the
+    // branch silently disabling.
+    const scenarioId = 'ebus-rose-molecular'
+    const context = buildDemoContext(scenarioId)
+    const strippedContext = {
+      ...context,
+      hospitalItems: context.hospitalItems.filter(
+        (item) => item.roleCode !== 'AIRWAY_TAMPONADE_BALLOON_CAPABILITY',
+      ),
+      hospitalRoleOptions: context.hospitalRoleOptions.filter(
+        (option) => !option.id.includes('demo-role-option'),
+      ),
+    }
+    // Keep the role options consistent with the filtered items.
+    strippedContext.hospitalRoleOptions = context.hospitalRoleOptions.filter((option) =>
+      strippedContext.hospitalItems.some((item) => item.id === option.hospitalItemId),
+    )
+    const resolved = resolveCard(
+      defaultBuildInput(scenarioId, {
+        modifierCodes: ['ROSE', 'SPEC_MOLECULAR', 'HIGH_BLEED_RISK'],
+      }),
+      strippedContext,
+    )
+    const projection = buildReadinessProjection('EBUS_TBNA', resolved)
+    const rescueRequirement = projection.requirements.find(
+      (requirement) => requirement.roleCode === 'AIRWAY_TAMPONADE_BALLOON_CAPABILITY',
+    )!
+    expect(rescueRequirement.evidence.selectedHospitalItemId).toBeNull()
+    expect(
+      rescueRequirement.diagnostics.some(
+        (diagnostic) => diagnostic.code === 'missing_rescue_pathway',
+      ),
+    ).toBe(true)
+    // And as a modifier-added required-path guard (adversarial finding 3): a rescue/modifier
+    // requirement outside the template ladder that resolves nothing is also diagnosed as a
+    // missing required product role rather than failing without explanation.
+    expect(
+      rescueRequirement.diagnostics.some(
+        (diagnostic) => diagnostic.code === 'missing_required_product_role',
+      ),
+    ).toBe(rescueRequirement.effectiveRequiredness === 'required')
   })
 })
