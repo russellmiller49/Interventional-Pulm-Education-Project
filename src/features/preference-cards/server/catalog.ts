@@ -123,7 +123,11 @@ function getDistributionMap() {
 }
 
 let cachedStore: CatalogStore | null = null
-let cachedFuse: Fuse<CatalogProduct> | null = null
+// Keyed by store rather than a single slot: every query function accepts a store parameter
+// (fixtures, and the device-intelligence atlas view over the same generated data), and a
+// process-wide singleton index would silently answer one store's search with another store's
+// products.
+const fuseByStore = new WeakMap<CatalogStore, Fuse<CatalogProduct>>()
 
 export function getCatalogStore(): CatalogStore {
   if (!cachedStore) {
@@ -148,24 +152,25 @@ export function getCatalogStore(): CatalogStore {
 }
 
 function getFuse(store: CatalogStore): Fuse<CatalogProduct> {
-  if (!cachedFuse) {
-    cachedFuse = new Fuse(store.products, {
-      keys: [
-        { name: 'product_name', weight: 0.35 },
-        { name: 'brand_family', weight: 0.2 },
-        { name: 'manufacturerDisplay', weight: 0.15 },
-        { name: 'catalog_number', weight: 0.1 },
-        { name: 'description', weight: 0.1 },
-        { name: 'subcategory', weight: 0.05 },
-        { name: 'primary_category', weight: 0.05 },
-      ],
-      threshold: 0.35,
-      ignoreLocation: true,
-      minMatchCharLength: 2,
-      includeScore: true,
-    })
-  }
-  return cachedFuse
+  const cached = fuseByStore.get(store)
+  if (cached) return cached
+  const fuse = new Fuse(store.products, {
+    keys: [
+      { name: 'product_name', weight: 0.35 },
+      { name: 'brand_family', weight: 0.2 },
+      { name: 'manufacturerDisplay', weight: 0.15 },
+      { name: 'catalog_number', weight: 0.1 },
+      { name: 'description', weight: 0.1 },
+      { name: 'subcategory', weight: 0.05 },
+      { name: 'primary_category', weight: 0.05 },
+    ],
+    threshold: 0.35,
+    ignoreLocation: true,
+    minMatchCharLength: 2,
+    includeScore: true,
+  })
+  fuseByStore.set(store, fuse)
+  return fuse
 }
 
 /** Spec fields worth comparing, in the order they should appear as columns. */
