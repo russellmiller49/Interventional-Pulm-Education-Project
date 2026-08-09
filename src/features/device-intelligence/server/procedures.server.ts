@@ -1,0 +1,730 @@
+import 'server-only'
+
+import procedureSlotsJson from '../../../../data/ip-preference-cards/generated/procedure-slots.json'
+import slotProductOptionsJson from '../../../../data/ip-preference-cards/generated/slot-product-options.json'
+import slotOptionProposalsJson from '../../../../data/ip-preference-cards/generated/slot-product-option-proposals.json'
+import demoStandInsJson from '../../../../data/ip-preference-cards/seed/demo-stand-ins.json'
+import hospitalFormularyJson from '../../../../data/ip-preference-cards/generated/hospital-formulary-staging.json'
+
+import {
+  buildDemoContext,
+  getComposedRecipeSlots,
+  getScenarioDefinitions,
+  resolveDemoScenario,
+} from '@/features/preference-cards/data/demo-context.server'
+import { getCurrentReleaseBundle } from '@/features/preference-cards/data/release-bundles.server'
+import { expandEffectiveSlots } from '@/features/preference-cards/domain/effective-slots'
+import { defaultSelectedModuleVersionIds } from '@/features/preference-cards/domain/expand-recipe-composition'
+import { getCatalogStore } from '@/features/preference-cards/server/catalog'
+import type {
+  ModifierDefinition,
+  RecipeSlot,
+  ResolvedCard,
+  ScenarioDefinition,
+} from '@/features/preference-cards/domain/types'
+import type {
+  ProcedureSlotRecord,
+  SlotProductOptionRecord,
+} from '@/features/preference-cards/server/catalog-store'
+
+import {
+  D1_EXEMPLAR_PROCEDURE_CODES,
+  isExemplarProcedureCode,
+  type D1ExemplarProcedureCode,
+} from '@/features/device-intelligence/domain/exemplars'
+import {
+  computeCoverageLadder,
+  type CoverageLadderResult,
+  type RoleCoverageRow,
+} from '@/features/device-intelligence/domain/coverage-ladder'
+import {
+  projectDemoReadiness,
+  type FormularyAssertionInput,
+  type ReadinessProjection,
+} from '@/features/device-intelligence/domain/readiness'
+import { getAtlasCatalogStore } from './atlas-store.server'
+import {
+  getRawStatementsForRoles,
+  getTypedRuleConditionsForRoles,
+  type RawCompatibilityStatement,
+  type TypedRuleCondition,
+} from './compatibility.server'
+
+/**
+ * Procedure-workspace view models for the three Phase D1 exemplar procedures
+ * (decision D-05: EBUS_TBNA, THERAPEUTIC_BRONCH, CHEST_TUBE — and only these).
+ *
+ * Everything here is a projection of the existing governed graph: `procedures.json` rows,
+ * the release-pinned compositions expanded by `expandEffectiveSlots`/`getComposedRecipeSlots`,
+ * the pinned modifier/rescue/compatibility sets from the demo build context, and the
+ * coverage ladder recomputed from the same generated rows the D0 audit reads. There is no
+ * second expansion or resolution engine and nothing is persisted.
+ */
+
+interface ProposalRow {
+  slot_id: string
+  procedure_code: string
+}
+
+interface DemoStandInRow {
+  role_code: string
+}
+
+interface FormularyRow {
+  formulary_id: string
+  product_id: string
+  role_codes: string | null
+  hospital_carries: boolean
+  preferred: boolean
+  local_item_number: string | null
+  local_description: string | null
+  local_uom: string | null
+  storage_location: string | null
+  par_level: string | number | null
+  last_reviewed: string | null
+  local_notes: string | null
+}
+
+const procedureSlots = procedureSlotsJson as unknown as ProcedureSlotRecord[]
+const slotProductOptions = slotProductOptionsJson as unknown as SlotProductOptionRecord[]
+const slotOptionProposals = (slotOptionProposalsJson as unknown as { proposals: ProposalRow[] })
+  .proposals
+const demoStandIns = demoStandInsJson as unknown as DemoStandInRow[]
+const formularyRows = hospitalFormularyJson as unknown as FormularyRow[]
+
+const demoStandInRoleCodes: ReadonlySet<string> = new Set(demoStandIns.map((row) => row.role_code))
+
+const optionsBySlot = (() => {
+  const index = new Map<string, SlotProductOptionRecord[]>()
+  for (const option of slotProductOptions) {
+    const rows = index.get(option.slot_id)
+    if (rows) rows.push(option)
+    else index.set(option.slot_id, [option])
+  }
+  return index
+})()
+
+const proposalCountBySlot = (() => {
+  const index = new Map<string, number>()
+  for (const proposal of slotOptionProposals) {
+    index.set(proposal.slot_id, (index.get(proposal.slot_id) ?? 0) + 1)
+  }
+  return index
+})()
+
+export interface RoleSlotUsage {
+  slotId: string
+  procedureCode: string
+  procedureName: string
+  /** Verbatim `procedures.json` status string. */
+  procedureStatus: string | null
+  slotLabel: string
+  requiredness: string
+  /** Authored-option status of this slot: the same rungs the coverage ladder uses. */
+  optionStatus:
+    | 'selectable_authored'
+    | 'non_selectable_authored_only'
+    | 'proposals_only'
+    | 'no_authored_option'
+  proposalCount: number
+}
+
+/**
+ * Every procedure slot that requests a role, with its authored-option status — for the role
+ * page's "authored selectable vs non-selectable vs proposals-only" column. Proposals appear
+ * only as counts; they are unreviewed and never selectable.
+ */
+export function getRoleSlotUsage(roleCode: string): RoleSlotUsage[] {
+  const store = getCatalogStore()
+  return procedureSlots
+    .filter((slot) => slot.role_code === roleCode)
+    .map((slot) => {
+      const options = optionsBySlot.get(slot.slot_id) ?? []
+      const proposalCount = proposalCountBySlot.get(slot.slot_id) ?? 0
+      let optionStatus: RoleSlotUsage['optionStatus']
+      if (options.some((option) => option.selectable)) optionStatus = 'selectable_authored'
+      else if (options.length > 0) optionStatus = 'non_selectable_authored_only'
+      else if (proposalCount > 0) optionStatus = 'proposals_only'
+      else optionStatus = 'no_authored_option'
+      const procedure = store.procedureByCode.get(slot.procedure_code)
+      return {
+        slotId: slot.slot_id,
+        procedureCode: slot.procedure_code,
+        procedureName: procedure?.procedure_name ?? slot.procedure_code,
+        procedureStatus: procedure?.status ?? null,
+        slotLabel: slot.slot_label,
+        requiredness: slot.requiredness,
+        optionStatus,
+        proposalCount,
+      }
+    })
+    .sort(
+      (left, right) =>
+        left.procedureName.localeCompare(right.procedureName) ||
+        left.slotLabel.localeCompare(right.slotLabel),
+    )
+}
+
+/** The one scenario a Phase D1 procedure publishes. Asserted unique at first use. */
+function scenarioForProcedure(procedureCode: D1ExemplarProcedureCode): ScenarioDefinition {
+  const matches = getScenarioDefinitions().filter(
+    (scenario) => scenario.sourceProcedureCode === procedureCode,
+  )
+  if (matches.length !== 1) {
+    throw new Error(
+      `Expected exactly one scenario for ${procedureCode}, found ${matches.length}. The D1 workspace addresses a procedure through its single published scenario.`,
+    )
+  }
+  return matches[0]
+}
+
+export function getCoverageLadderForProcedure(
+  procedureCode: D1ExemplarProcedureCode,
+): CoverageLadderResult {
+  const store = getCatalogStore()
+  const mappedRoleCodes = new Set(store.productIdsByRole.keys())
+  return computeCoverageLadder({
+    slots: procedureSlots.filter((slot) => slot.procedure_code === procedureCode),
+    slotProductOptions,
+    slotOptionProposals,
+    mappedRoleCodes,
+    demoStandInRoleCodes,
+  })
+}
+
+export interface ExemplarProcedureIndexEntry {
+  procedureCode: D1ExemplarProcedureCode
+  procedureName: string
+  /** Verbatim `procedures.json` status string — never paraphrased. */
+  status: string
+  templateVersion: string | null
+  scenarioId: string
+  releaseBundleId: string | null
+  releaseDefinitionHash: string | null
+  slotCount: number
+  requiredness: { required: number; contingency: number; optional: number }
+  ladderSummary: CoverageLadderResult['summary']
+  clinicalOwner: string | null
+  governanceState: string
+}
+
+export function getExemplarProcedureIndex(): ExemplarProcedureIndexEntry[] {
+  const store = getCatalogStore()
+  return D1_EXEMPLAR_PROCEDURE_CODES.map((procedureCode) => {
+    const procedure = store.procedureByCode.get(procedureCode)
+    if (!procedure) {
+      throw new Error(`Exemplar procedure ${procedureCode} is missing from procedures.json.`)
+    }
+    const scenario = scenarioForProcedure(procedureCode)
+    const bundle = getCurrentReleaseBundle(procedureCode)
+    const slots = procedureSlots.filter((slot) => slot.procedure_code === procedureCode)
+    const countRequiredness = (value: string) =>
+      slots.filter((slot) => slot.requiredness === value).length
+    return {
+      procedureCode,
+      procedureName: procedure.procedure_name,
+      status: procedure.status ?? 'unknown',
+      templateVersion: procedure.template_version,
+      scenarioId: scenario.id,
+      releaseBundleId: bundle?.id ?? null,
+      releaseDefinitionHash: bundle?.definitionHash ?? null,
+      slotCount: slots.length,
+      requiredness: {
+        required: countRequiredness('required'),
+        contingency: countRequiredness('conditional'),
+        optional: countRequiredness('optional'),
+      },
+      ladderSummary: getCoverageLadderForProcedure(procedureCode).summary,
+      clinicalOwner: scenario.owner,
+      governanceState: scenario.governanceState,
+    }
+  })
+}
+
+export interface WorkspaceOptionLink {
+  productId: string
+  productName: string
+  manufacturerDisplay: string | null
+  catalogNumber: string | null
+  selectable: boolean
+  eligibilityStatus: string | null
+  /** Present only when the product is inside the D1 atlas cohort — the only linkable set. */
+  atlasVisible: boolean
+  verificationGrade: string | null
+}
+
+export interface WorkspaceRequirement {
+  /** Composed requirement id (equals the imported SLOT-… id for template slots). */
+  id: string
+  sourceSlotId: string | null
+  requirementKey: string
+  authoredOrder: number
+  section: string | null
+  roleCode: string
+  roleName: string
+  label: string
+  /** Authored clinician text, quoted verbatim. */
+  genericRequirement: string
+  requiredness: string
+  dependencyRule: string | null
+  selectionMode: string
+  allowCustom: boolean
+  openHoldStatus: string
+  setupZone: string
+  proceduralPhase: string
+  responsibleRole: string | null
+  sterileStatus: string | null
+  coverage: RoleCoverageRow | null
+  authoredOptions: WorkspaceOptionLink[]
+  /** Unreviewed proposal count for this slot. Display-only; never selectable. */
+  proposalCount: number
+  requiresCurrentIfu: boolean
+  selectionGuidance: string | null
+}
+
+export interface ModifierEffectSummary {
+  code: string
+  name: string
+  groupCode: string
+  description: string
+  preview: string[]
+  conflictsWith: string[]
+  /** Derived through `expandEffectiveSlots` — the canonical expansion, not a re-implementation. */
+  effects: {
+    addedRequirements: { id: string; label: string; roleCode: string; requiredness: string }[]
+    removedRequirements: { id: string; label: string; roleCode: string }[]
+    requirednessChanges: { id: string; label: string; from: string; to: string }[]
+    roleReplacements: { id: string; label: string; fromRole: string; toRole: string }[]
+    rescueModulesAdded: string[]
+    requiredCapabilities: string[]
+  }
+}
+
+export interface RescueModuleView {
+  code: string
+  name: string
+  description: string
+  reachableViaModifierCodes: string[]
+  slots: {
+    id: string
+    label: string
+    roleCode: string
+    roleName: string
+    genericRequirement: string
+    requiredness: string
+    openHoldStatus: string
+  }[]
+}
+
+export interface ProcedureWorkspace {
+  procedureCode: D1ExemplarProcedureCode
+  procedureName: string
+  status: string
+  templateVersion: string | null
+  scenarioId: string
+  scenarioTitle: string
+  releaseBundleId: string | null
+  releaseDefinitionHash: string | null
+  catalogReleaseId: string | null
+  governanceState: string
+  clinicalOwner: string | null
+  requirements: WorkspaceRequirement[]
+  setupZoneOrder: string[]
+  proceduralPhaseOrder: string[]
+  sectionOrder: string[]
+  ladder: CoverageLadderResult
+  modifiers: ModifierEffectSummary[]
+  defaultModifierCodes: string[]
+  rescueModules: RescueModuleView[]
+  /** True only for CHEST_TUBE today: no allowed modifier reaches any rescue module. */
+  noRescueModuleReachable: boolean
+  rescueSectionSlotCount: number
+  typedRuleConditions: TypedRuleCondition[]
+  rawCompatibilityStatements: RawCompatibilityStatement[]
+  proposalTotal: number
+  formularySummary: RealFormularySummary
+}
+
+export interface RealFormularySummary {
+  rowsIntersectingProcedureRoles: number
+  carriedRows: number
+  preferredRows: number
+  rowsWithAnyLocalField: number
+}
+
+function formularyRowsForRoles(roleCodes: ReadonlySet<string>): FormularyRow[] {
+  return formularyRows.filter((row) => {
+    const codes = (row.role_codes ?? '')
+      .split(/[;,]/)
+      .map((code) => code.trim())
+      .filter(Boolean)
+    return codes.some((code) => roleCodes.has(code))
+  })
+}
+
+function realFormularySummary(roleCodes: ReadonlySet<string>): RealFormularySummary {
+  const rows = formularyRowsForRoles(roleCodes)
+  const hasLocalField = (row: FormularyRow) =>
+    Boolean(
+      row.local_item_number ??
+      row.local_description ??
+      row.local_uom ??
+      row.storage_location ??
+      row.par_level ??
+      row.last_reviewed ??
+      row.local_notes,
+    )
+  return {
+    rowsIntersectingProcedureRoles: rows.length,
+    carriedRows: rows.filter((row) => row.hospital_carries).length,
+    preferredRows: rows.filter((row) => row.preferred).length,
+    rowsWithAnyLocalField: rows.filter(hasLocalField).length,
+  }
+}
+
+function modifierEffects(
+  modifier: ModifierDefinition,
+  context: ReturnType<typeof buildDemoContext>,
+): ModifierEffectSummary['effects'] {
+  const selectedModuleVersionIds = defaultSelectedModuleVersionIds(context.recipe)
+  const baseline = expandEffectiveSlots({ selectedModuleVersionIds, modifierCodes: [] }, context)
+  const withModifier = expandEffectiveSlots(
+    { selectedModuleVersionIds, modifierCodes: [modifier.code] },
+    context,
+  )
+
+  const baselineById = new Map(baseline.slots.map((slot) => [slot.id, slot]))
+  const withById = new Map(withModifier.slots.map((slot) => [slot.id, slot]))
+
+  const addedRequirements = withModifier.slots
+    .filter((slot) => !baselineById.has(slot.id))
+    .map((slot) => ({
+      id: slot.id,
+      label: slot.label,
+      roleCode: slot.roleCode,
+      requiredness: slot.requiredness,
+    }))
+  const removedRequirements = baseline.slots
+    .filter((slot) => !withById.has(slot.id))
+    .map((slot) => ({ id: slot.id, label: slot.label, roleCode: slot.roleCode }))
+  const requirednessChanges: ModifierEffectSummary['effects']['requirednessChanges'] = []
+  const roleReplacements: ModifierEffectSummary['effects']['roleReplacements'] = []
+  for (const slot of withModifier.slots) {
+    const before = baselineById.get(slot.id)
+    if (!before) continue
+    if (before.requiredness !== slot.requiredness) {
+      requirednessChanges.push({
+        id: slot.id,
+        label: slot.label,
+        from: before.requiredness,
+        to: slot.requiredness,
+      })
+    }
+    if (before.roleCode !== slot.roleCode) {
+      roleReplacements.push({
+        id: slot.id,
+        label: slot.label,
+        fromRole: before.roleCode,
+        toRole: slot.roleCode,
+      })
+    }
+  }
+
+  const requiredCapabilities = modifier.actions
+    .filter((action) => action.actionType === 'require_room_capability')
+    .map((action) => String(action.payload.capability ?? ''))
+    .filter(Boolean)
+
+  return {
+    addedRequirements,
+    removedRequirements,
+    requirednessChanges,
+    roleReplacements,
+    rescueModulesAdded: [...withModifier.rescueModuleCodes],
+    requiredCapabilities,
+  }
+}
+
+export function getProcedureWorkspace(procedureCode: string): ProcedureWorkspace | null {
+  if (!isExemplarProcedureCode(procedureCode)) return null
+  const store = getCatalogStore()
+  const atlasStore = getAtlasCatalogStore()
+  const procedure = store.procedureByCode.get(procedureCode)
+  if (!procedure) return null
+  const scenario = scenarioForProcedure(procedureCode)
+  const bundle = getCurrentReleaseBundle(procedureCode)
+  const context = buildDemoContext(scenario.id)
+  const composedSlots = getComposedRecipeSlots(scenario.id)
+  const ladder = getCoverageLadderForProcedure(procedureCode)
+  const slotRecordById = new Map(
+    procedureSlots
+      .filter((slot) => slot.procedure_code === procedureCode)
+      .map((slot) => [slot.slot_id, slot]),
+  )
+
+  const toOptionLink = (option: SlotProductOptionRecord): WorkspaceOptionLink => {
+    const product = store.productById.get(option.product_id)
+    return {
+      productId: option.product_id,
+      productName: product?.product_name ?? option.product_id,
+      manufacturerDisplay: product?.manufacturerDisplay ?? null,
+      catalogNumber: product?.catalog_number ?? null,
+      selectable: option.selectable === true,
+      eligibilityStatus: option.eligibility_status,
+      atlasVisible: atlasStore.productById.has(option.product_id),
+      verificationGrade: product?.verification_grade ?? null,
+    }
+  }
+
+  const requirements: WorkspaceRequirement[] = composedSlots.map((slot: RecipeSlot) => {
+    const record = slot.sourceSlotId ? slotRecordById.get(slot.sourceSlotId) : undefined
+    const role = store.roleByCode.get(slot.roleCode)
+    const options = slot.sourceSlotId ? (optionsBySlot.get(slot.sourceSlotId) ?? []) : []
+    return {
+      id: slot.id,
+      sourceSlotId: slot.sourceSlotId,
+      requirementKey: slot.requirementKey,
+      authoredOrder: slot.setupSequence,
+      section: record?.section ?? null,
+      roleCode: slot.roleCode,
+      roleName: role?.role_name ?? slot.roleCode,
+      label: slot.label,
+      genericRequirement: slot.genericRequirement,
+      requiredness: slot.requiredness,
+      dependencyRule: slot.dependencyRule,
+      selectionMode: slot.selectionMode,
+      allowCustom: slot.allowCustom,
+      openHoldStatus: slot.openHoldStatus,
+      setupZone: slot.setupZone,
+      proceduralPhase: slot.proceduralPhase,
+      responsibleRole: slot.responsibleRole,
+      sterileStatus: slot.sterileStatus,
+      coverage: ladder.byRoleCode.get(slot.roleCode) ?? null,
+      authoredOptions: options
+        .map(toOptionLink)
+        .sort(
+          (left, right) =>
+            Number(right.selectable) - Number(left.selectable) ||
+            left.productName.localeCompare(right.productName),
+        ),
+      proposalCount: slot.sourceSlotId ? (proposalCountBySlot.get(slot.sourceSlotId) ?? 0) : 0,
+      requiresCurrentIfu: role?.requires_current_ifu === true,
+      selectionGuidance: role?.selection_guidance ?? null,
+    }
+  })
+
+  const modifiers: ModifierEffectSummary[] = context.modifiers.map((modifier) => ({
+    code: modifier.code,
+    name: modifier.name,
+    groupCode: modifier.groupCode,
+    description: modifier.description,
+    preview: [...modifier.preview],
+    conflictsWith: [...modifier.conflictsWith],
+    effects: modifierEffects(modifier, context),
+  }))
+
+  const rescueReachability = new Map<string, string[]>()
+  for (const modifier of modifiers) {
+    for (const code of modifier.effects.rescueModulesAdded) {
+      const existing = rescueReachability.get(code)
+      if (existing) existing.push(modifier.code)
+      else rescueReachability.set(code, [modifier.code])
+    }
+  }
+
+  const rescueModules: RescueModuleView[] = [...rescueReachability.entries()].map(
+    ([code, viaModifiers]) => {
+      const rescueModule = context.rescueModules.find((candidate) => candidate.code === code)
+      return {
+        code,
+        name: rescueModule?.name ?? code,
+        description: rescueModule?.description ?? '',
+        reachableViaModifierCodes: viaModifiers.sort(),
+        slots: (rescueModule?.slots ?? []).map((slot) => ({
+          id: slot.id,
+          label: slot.label,
+          roleCode: slot.roleCode,
+          roleName: store.roleByCode.get(slot.roleCode)?.role_name ?? slot.roleCode,
+          genericRequirement: slot.genericRequirement,
+          requiredness: slot.requiredness,
+          openHoldStatus: slot.openHoldStatus,
+        })),
+      }
+    },
+  )
+
+  const roleCodes = new Set(requirements.map((requirement) => requirement.roleCode))
+  const rescueSectionSlotCount = [...slotRecordById.values()].filter(
+    (slot) => slot.section === 'Rescue',
+  ).length
+
+  return {
+    procedureCode,
+    procedureName: procedure.procedure_name,
+    status: procedure.status ?? 'unknown',
+    templateVersion: procedure.template_version,
+    scenarioId: scenario.id,
+    scenarioTitle: scenario.title,
+    releaseBundleId: bundle?.id ?? null,
+    releaseDefinitionHash: bundle?.definitionHash ?? null,
+    catalogReleaseId: bundle?.catalogImportId ?? null,
+    governanceState: scenario.governanceState,
+    clinicalOwner: scenario.owner,
+    requirements,
+    setupZoneOrder: orderedDistinct(requirements.map((requirement) => requirement.setupZone)),
+    proceduralPhaseOrder: orderedDistinct(
+      requirements.map((requirement) => requirement.proceduralPhase),
+    ),
+    sectionOrder: orderedDistinct(
+      requirements
+        .map((requirement) => requirement.section)
+        .filter((section): section is string => section !== null),
+    ),
+    ladder,
+    modifiers,
+    defaultModifierCodes: [...scenario.defaultModifierCodes],
+    rescueModules,
+    noRescueModuleReachable: rescueModules.length === 0,
+    rescueSectionSlotCount,
+    typedRuleConditions: getTypedRuleConditionsForRoles([...roleCodes]),
+    rawCompatibilityStatements: getRawStatementsForRoles([...roleCodes]),
+    proposalTotal: requirements.reduce(
+      (total, requirement) => total + requirement.proposalCount,
+      0,
+    ),
+    formularySummary: realFormularySummary(roleCodes),
+  }
+}
+
+function orderedDistinct(values: string[]): string[] {
+  const seen = new Set<string>()
+  const ordered: string[] = []
+  for (const value of values) {
+    if (seen.has(value)) continue
+    seen.add(value)
+    ordered.push(value)
+  }
+  return ordered
+}
+
+export interface ProcedureReadinessView {
+  procedureCode: D1ExemplarProcedureCode
+  procedureName: string
+  status: string
+  scenarioId: string
+  scenarioTitle: string
+  modifierCodes: string[]
+  projection: ReadinessProjection
+  formularySummary: RealFormularySummary
+  demoContextName: { organization: string; site: string; location: string }
+  demoLocationCapabilities: string[]
+}
+
+/**
+ * The demo-only readiness view: resolve the scenario through the EXISTING resolver with its
+ * default modifiers over the EXISTING fictional demo context, then run the pure eight-state
+ * projection over the result. Recomputed per request; nothing persisted.
+ */
+export function getProcedureReadinessView(procedureCode: string): ProcedureReadinessView | null {
+  if (!isExemplarProcedureCode(procedureCode)) return null
+  const store = getCatalogStore()
+  const procedure = store.procedureByCode.get(procedureCode)
+  if (!procedure) return null
+  const scenario = scenarioForProcedure(procedureCode)
+  const context = buildDemoContext(scenario.id)
+  const resolved = resolveDemoScenario(scenario.id)
+  const ladder = getCoverageLadderForProcedure(procedureCode)
+  const roleCodes = new Set(
+    procedureSlots
+      .filter((slot) => slot.procedure_code === procedureCode)
+      .map((slot) => slot.role_code),
+  )
+
+  const projection = buildReadinessProjection(procedureCode, resolved, ladder)
+
+  return {
+    procedureCode,
+    procedureName: procedure.procedure_name,
+    status: procedure.status ?? 'unknown',
+    scenarioId: scenario.id,
+    scenarioTitle: scenario.title,
+    modifierCodes: [...resolved.selectedModifiers],
+    projection,
+    formularySummary: realFormularySummary(roleCodes),
+    demoContextName: {
+      organization: resolved.organizationName,
+      site: resolved.siteName,
+      location: resolved.locationName,
+    },
+    demoLocationCapabilities: [...context.locationCapabilities],
+  }
+}
+
+/** Shared projection assembly, also used by the gap output and by tests. */
+export function buildReadinessProjection(
+  procedureCode: D1ExemplarProcedureCode,
+  resolved: ResolvedCard,
+  ladder: CoverageLadderResult = getCoverageLadderForProcedure(procedureCode),
+): ReadinessProjection {
+  const store = getCatalogStore()
+  const productGradeById = new Map(
+    store.products.map((product) => [product.product_id, product.verification_grade ?? 'unknown']),
+  )
+  const authoredSelectablePairs = new Set(
+    slotProductOptions
+      .filter((option) => option.selectable === true)
+      .map((option) => `${option.slot_id}|${option.product_id}`),
+  )
+  const roleCodes = new Set(
+    procedureSlots
+      .filter((slot) => slot.procedure_code === procedureCode)
+      .map((slot) => slot.role_code),
+  )
+  const authoredSelectableProductIds = new Set(
+    slotProductOptions
+      .filter(
+        (option) =>
+          option.selectable === true &&
+          procedureSlots.some(
+            (slot) => slot.slot_id === option.slot_id && slot.procedure_code === procedureCode,
+          ),
+      )
+      .map((option) => option.product_id),
+  )
+  const formularyAssertions: FormularyAssertionInput[] = formularyRowsForRoles(roleCodes).map(
+    (row) => ({
+      formularyId: row.formulary_id,
+      productId: row.product_id,
+      hospitalCarries: row.hospital_carries,
+      preferred: row.preferred,
+      productVisibilityState: store.productById.get(row.product_id)?.visibility_state ?? null,
+      authoredSelectableForProcedure: authoredSelectableProductIds.has(row.product_id),
+    }),
+  )
+
+  return projectDemoReadiness({
+    items: resolved.items.map((item) => ({
+      id: item.id,
+      sourceSlotId: item.sourceSlotId,
+      roleCode: item.roleCode,
+      label: item.label,
+      effectiveRequiredness: item.effectiveRequiredness,
+      includedBy: item.whyIncluded.join(' '),
+      selectedHospitalItemId: item.selectedHospitalItemId,
+      selectedCatalogProductId: item.selectedCatalogProductId,
+      verificationState: item.verificationState,
+      compatibilityState: item.compatibilityState,
+    })),
+    warnings: resolved.warnings.map((warning) => ({
+      severity: warning.severity,
+      code: warning.code,
+      message: warning.message,
+      sourceId: warning.sourceId,
+    })),
+    ladderByRole: ladder.byRoleCode,
+    productGradeById,
+    authoredSelectablePairs,
+    demoStandInRoleCodes,
+    formularyAssertions,
+  })
+}
