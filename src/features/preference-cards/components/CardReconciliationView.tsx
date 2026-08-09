@@ -19,6 +19,13 @@ import type { ReconciledItemChange } from '../domain/card-reconciliation'
  * stops, and the closing notice says so in words rather than leaving the reader to infer it
  * from the lack of a button.
  *
+ * A rebuild now exists — `CardRebuildReview`, reached from the card's own page — and this component
+ * still offers no way into it. That is not an oversight left over from before. Reviewing what moved
+ * and deciding to act on it are different decisions taken at different times, and a route that is
+ * read-only *by construction* is worth more than one that is read-only by habit: `page.test.tsx`
+ * asserts this page renders no form, no button, and exactly one link, and a rebuild control here
+ * would retire that guarantee to save one click.
+ *
  * The two sections are presented as separate answers to separate questions, and either can be
  * unavailable while the other is fine — a card whose selections cannot be re-resolved still has
  * a release that compares perfectly well.
@@ -26,6 +33,14 @@ import type { ReconciledItemChange } from '../domain/card-reconciliation'
 
 interface CardReconciliationViewProps {
   reconciliation: CardReconciliation
+  /**
+   * Whether to print the "this page cannot rebuild the card" closing note.
+   *
+   * True on the read-only reconciliation route, which is what the sentence is about. False when
+   * this view is embedded in the rebuild review, where it appeared directly above the rebuild form
+   * and told the reader the page could not do the thing the next control does.
+   */
+  showNoRebuildNotice?: boolean
 }
 
 function Section({
@@ -285,7 +300,10 @@ function ReleaseSection({ result }: { result: ReleaseReconciliationResult }) {
   )
 }
 
-export function CardReconciliationView({ reconciliation }: CardReconciliationViewProps) {
+export function CardReconciliationView({
+  reconciliation,
+  showNoRebuildNotice = true,
+}: CardReconciliationViewProps) {
   const t = useTranslations('preferenceCards')
   const { source } = reconciliation
 
@@ -332,9 +350,11 @@ export function CardReconciliationView({ reconciliation }: CardReconciliationVie
       <OperationalSection result={reconciliation.operational} />
       <ReleaseSection result={reconciliation.release} />
 
-      <p className="rounded-2xl border border-border bg-muted/40 p-4 text-sm leading-6 text-muted-foreground">
-        {t('reconcile.noRebuildNotice')}
-      </p>
+      {showNoRebuildNotice ? (
+        <p className="rounded-2xl border border-border bg-muted/40 p-4 text-sm leading-6 text-muted-foreground">
+          {t('reconcile.noRebuildNotice')}
+        </p>
+      ) : null}
     </div>
   )
 }

@@ -380,6 +380,33 @@
   opacity: 0.24;
 }
 
+/*
+ * External emphasis from the live pressure profile. Nothing here moves a node:
+ * the highlight is a stroke and a halo drawn at the node's own frozen
+ * coordinates, so the picture a learner memorised does not shift when they
+ * select a different pressure. The label goes bold too, so the mark is not
+ * carried by colour alone.
+ */
+.node[data-highlighted='true'] .pressureTap,
+.node[data-highlighted='true'] circle,
+.node[data-highlighted='true'] rect,
+.node[data-highlighted='true'] ellipse {
+  stroke: #ffffff;
+  stroke-width: 4;
+  paint-order: stroke;
+}
+
+.node[data-highlighted='true'] .componentLabel {
+  fill: #ffffff !important;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.node[data-highlighted='true'] {
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.55));
+}
+
 .componentLabel {
   font-size: 12px;
   font-weight: 900;

@@ -28,6 +28,7 @@ clinical, editorial, accessibility, and privacy review.
 - [Curriculum](./curriculum.md)
 - [Evidence and provenance](./evidence.md)
 - [Engine and runtime](./engine.md)
+- [The live pressure profile](./live-pressure-profile.md)
 - [Risk register](./risk.md)
 - [Validation record](./validation.md)
 - [Accessibility requirements](./accessibility.md)

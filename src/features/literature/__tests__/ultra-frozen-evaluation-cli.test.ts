@@ -254,6 +254,78 @@ describe('frozen Ultra evaluation CLI helpers', () => {
     })
   })
 
+  it('validates a V1.1 compensation source and its exact copied truth payload', async () => {
+    const setup = await fixture()
+    const truth = setup.values.truth as {
+      exportVersion: string
+      records: Array<Record<string, unknown>>
+    }
+    truth.exportVersion = '1.1.0'
+    for (const [index, record] of truth.records.entries()) {
+      const base: Record<string, unknown> = {
+        ...(record.review as Record<string, unknown>),
+        revisionKind: 'standard',
+        lifecycleState: 'effective',
+        supersedesReviewId: null,
+        compensatesReviewId: null,
+        effectiveSourceReviewId: null,
+        operationActionId: null,
+      }
+      if (index === 0) {
+        const imported = {
+          ...base,
+          id: 'review-1-import',
+          revision: 2,
+          revisionKind: 'import',
+          supersedesReviewId: base['id'],
+          operationActionId: 'import-action-1',
+          relevanceLabel: 'include_adjacent',
+        }
+        const compensation = {
+          ...base,
+          id: 'review-1-compensation',
+          revision: 3,
+          revisionKind: 'compensation',
+          supersedesReviewId: imported.id,
+          compensatesReviewId: imported.id,
+          effectiveSourceReviewId: base['id'],
+          operationActionId: 'compensation-action-1',
+        }
+        record.reviewHistory = [base, imported, compensation]
+        record.review = { ...compensation }
+        record.chainHeadReviewId = compensation.id
+      } else {
+        record.reviewHistory = [base]
+        record.review = { ...base }
+        record.chainHeadReviewId = base['id']
+      }
+    }
+    let truthContent = JSON.stringify(truth)
+    await writeFile(setup.paths.truth, truthContent)
+    const options = {
+      ...setup.options,
+      evaluationId: 'pilot-a-v11-compensation-test',
+      truthSha256: sha256(truthContent),
+    }
+    await expect(runUltraFrozenEvaluation(options)).resolves.toMatchObject({
+      report: { performance: { metrics: { articleCount: 2 } } },
+    })
+
+    const first = truth.records[0]!
+    const history = first.reviewHistory as Array<Record<string, unknown>>
+    history[2]!.relevanceLabel = 'exclude'
+    ;(first.review as Record<string, unknown>).relevanceLabel = 'exclude'
+    truthContent = JSON.stringify(truth)
+    await writeFile(setup.paths.truth, truthContent)
+    await expect(
+      runUltraFrozenEvaluation({
+        ...options,
+        evaluationId: 'pilot-a-v11-compensation-tamper-test',
+        truthSha256: sha256(truthContent),
+      }),
+    ).rejects.toThrow('compensation source or copied payload is not chain-consistent')
+  })
+
   it('derives the complete no-abstract subset from frozen truth without selection audits', async () => {
     const setup = await fixture()
     const evaluated = await runUltraFrozenEvaluation({

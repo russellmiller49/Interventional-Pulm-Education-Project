@@ -757,6 +757,30 @@ describe('equipment sets on a reopened card', () => {
         ?.selectedHospitalItemId,
     ).toBe(equipmentSetItemId('set-ebus-tray'))
   })
+
+  it('refuses two sets claiming one id, on both the save and the read path', () => {
+    // A set is addressed by id everywhere it is used, and every lookup is a `.find()`. Two records
+    // sharing an id therefore make "the set this requirement chose" a question with two answers,
+    // and `.find()` silently returns whichever was written first — so a second record with a
+    // missing member passed validation and failed at save, after the review.
+    const fixture = ebusEditFixture()
+    const duplicated = {
+      ...fixture,
+      equipmentSets: [
+        fixture.equipmentSets[0],
+        { ...fixture.equipmentSets[0], name: 'The same tray, said twice', members: [] },
+      ],
+    }
+
+    const saveParsed = saveCardRequestSchema.safeParse(duplicated)
+    expect(saveParsed.success).toBe(false)
+    if (!saveParsed.success) {
+      expect(saveParsed.error.issues[0]?.message).toMatch(/share the id set-ebus-tray/)
+    }
+    // And on the read path, so a card that reached storage before this rule cannot be re-resolved
+    // into a new one either. It stays viewable and printable from its own snapshot.
+    expect(builderInputsSchema.safeParse(duplicated).success).toBe(false)
+  })
 })
 
 describe('modifier authorization', () => {

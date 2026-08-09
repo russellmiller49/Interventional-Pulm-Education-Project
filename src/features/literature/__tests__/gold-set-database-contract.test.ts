@@ -29,7 +29,12 @@ const testUnlockMigrationPath = join(
   process.cwd(),
   'supabase/migrations/20260730194025_add_literature_gold_test_unlock.sql',
 )
+const importCompensationMigrationPath = join(
+  process.cwd(),
+  'supabase/migrations/20260808035633_add_literature_gold_import_compensation_contract.sql',
+)
 const localSupabaseScriptPath = join(process.cwd(), 'scripts/literature/local-supabase.ts')
+const legacyImportScriptPath = join(process.cwd(), 'scripts/literature/import-gold-reviews.ts')
 
 describe('gold-set database contract', () => {
   const sql = readFileSync(migrationPath, 'utf8')
@@ -39,7 +44,9 @@ describe('gold-set database contract', () => {
   const immuneInflammatorySql = readFileSync(immuneInflammatoryMigrationPath, 'utf8')
   const safetyPreventionSql = readFileSync(safetyPreventionMigrationPath, 'utf8')
   const testUnlockSql = readFileSync(testUnlockMigrationPath, 'utf8')
+  const importCompensationSql = readFileSync(importCompensationMigrationPath, 'utf8')
   const localSupabaseScript = readFileSync(localSupabaseScriptPath, 'utf8')
+  const legacyImportScript = readFileSync(legacyImportScriptPath, 'utf8')
   const tables = [
     'literature_gold_set_batches',
     'literature_gold_set_items',
@@ -143,5 +150,103 @@ describe('gold-set database contract', () => {
 
   it('installs the test-lock contract in the isolated literature stack', () => {
     expect(localSupabaseScript).toContain("'20260730194025_add_literature_gold_test_unlock.sql'")
+  })
+
+  it('adds lifecycle-aware, append-only import and compensation revisions', () => {
+    expect(importCompensationSql).toContain("revision_kind text not null default 'standard'")
+    expect(importCompensationSql).toContain("lifecycle_state text not null default 'effective'")
+    expect(importCompensationSql).toContain('compensates_review_id uuid')
+    expect(importCompensationSql).toContain('effective_source_review_id uuid')
+    expect(importCompensationSql).toContain('literature_gold_set_reviews_one_child_idx')
+    expect(importCompensationSql).toContain('current_review_id')
+    expect(importCompensationSql).toContain('chainHeadReviewId')
+    expect(importCompensationSql).not.toMatch(/update\s+public\.literature_gold_set_reviews\b/iu)
+    expect(importCompensationSql).not.toMatch(
+      /delete\s+from\s+public\.literature_gold_set_reviews\b/iu,
+    )
+  })
+
+  it('defines atomic operations, separate hashes, and explicit event types', () => {
+    expect(importCompensationSql).toContain('create table public.literature_gold_review_operations')
+    expect(importCompensationSql).toContain(
+      'create table public.literature_gold_review_operation_actions',
+    )
+    expect(importCompensationSql).toContain('apply_literature_gold_import_v1')
+    expect(importCompensationSql).toContain('compensate_literature_gold_import_v1')
+    expect(importCompensationSql).toContain('literature_gold_physical_state_hash_v1')
+    expect(importCompensationSql).toContain('literature_gold_effective_state_hash_v1')
+    expect(importCompensationSql).toContain('literature_gold_development_membership_hash_v1')
+    for (const eventType of [
+      'import_started',
+      'review_imported',
+      'import_completed',
+      'import_failed',
+      'import_compensation_started',
+      'review_compensated',
+      'review_voided',
+      'import_compensation_completed',
+      'import_compensation_failed',
+    ]) {
+      expect(importCompensationSql).toContain(`'${eventType}'`)
+    }
+    expect(importCompensationSql).toMatch(/exception\s+when\s+others\s+then/iu)
+    expect(importCompensationSql).toContain('get stacked diagnostics')
+    expect(importCompensationSql).toContain('caught_sqlstate = returned_sqlstate')
+    expect(importCompensationSql).toContain('failed import changed effective state after rollback')
+    expect(importCompensationSql).toContain(
+      'failed compensation changed effective state after rollback',
+    )
+  })
+
+  it('keeps operation state service-only and installs the contract in the isolated stack', () => {
+    const normalizedSql = importCompensationSql.replace(/\s+/gu, ' ')
+    for (const table of [
+      'literature_gold_review_operations',
+      'literature_gold_review_operation_actions',
+    ]) {
+      expect(importCompensationSql).toContain(
+        `alter table public.${table} enable row level security`,
+      )
+      expect(normalizedSql).toContain(
+        `revoke all on table public.${table} from public, anon, authenticated`,
+      )
+    }
+    expect(importCompensationSql).toContain('from public, anon, authenticated')
+    expect(importCompensationSql).toContain('to service_role')
+    expect(localSupabaseScript).toContain(
+      "'20260808035633_add_literature_gold_import_compensation_contract.sql'",
+    )
+  })
+
+  it('hardens privileged execution, lock scope, and canonical digest parity', () => {
+    const normalizedSql = importCompensationSql.replace(/\s+/gu, ' ')
+    expect(importCompensationSql).toContain('order by member.key collate "C"')
+    expect(importCompensationSql).toContain('literature_gold_review_clinical_projection_v1')
+    expect(importCompensationSql).toContain("'candidateReview', 'candidateReviewSha256'")
+    expect(importCompensationSql).toContain('pg_advisory_xact_lock')
+    expect(importCompensationSql).toContain('order by item.display_order, item.id')
+    expect(importCompensationSql).toContain('test_unlocked_at is not null')
+    expect(importCompensationSql).toContain(
+      'the batch has a started operation that requires explicit recovery',
+    )
+    expect(importCompensationSql.match(/security definer/gu)?.length).toBeGreaterThanOrEqual(3)
+    for (const table of [
+      'literature_gold_review_operations',
+      'literature_gold_review_operation_actions',
+    ]) {
+      expect(normalizedSql).toContain(`grant select on table public.${table} to service_role`)
+      expect(normalizedSql).not.toContain(
+        `grant insert, update, delete on table public.${table} to service_role`,
+      )
+    }
+    expect(normalizedSql).toContain(
+      'revoke truncate, references, trigger on table public.literature_gold_set_reviews, public.literature_gold_set_events from service_role',
+    )
+  })
+
+  it('retires the non-atomic multi-request legacy commit path', () => {
+    expect(legacyImportScript).toContain('legacy multi-request import commit path is retired')
+    expect(legacyImportScript).not.toContain('Promise.all')
+    expect(legacyImportScript).not.toContain("client.rpc('save_literature_gold_review_v1'")
   })
 })

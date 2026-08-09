@@ -47,11 +47,10 @@ import {
   type BaxterCrrtProgressStation,
   type BaxterCrrtProgressV3,
 } from '../engine/progress'
-import type { CrrtFlowRates } from '../engine/types'
 import { BaxterCrrtLearnLanding } from './BaxterCrrtLearnLanding'
 import { BaxterCrrtModuleFrame } from './BaxterCrrtModuleFrame'
 import { CrrtCitrateDifferential } from './CrrtCitrateDifferential'
-import { CrrtPilotCircuit } from './CrrtPilotCircuit'
+import { CrrtLivePressureStation } from './CrrtLivePressureStation'
 import { CrrtStagedPrescriptionBuilder } from './CrrtStagedPrescriptionBuilder'
 import { CrrtPressureLocalizationLab } from './CrrtPressureLocalizationLab'
 import styles from './baxter-crrt.module.css'
@@ -91,86 +90,6 @@ function stationForLesson(lessonId: BaxterCrrtLearnLessonId): BaxterCrrtProgress
 
 function sectionIndex(lessonId: BaxterCrrtLearnLessonId): number {
   return crrtLearningPathway.sections.findIndex((section) => section.id === lessonId)
-}
-
-/**
- * The flows this figure is drawn at. They match the scalar readouts above so the
- * conservation ledger is computed from the same case the learner is looking at,
- * rather than from a second set of numbers that could drift.
- */
-const circuitFigureFlows: CrrtFlowRates = {
-  bloodFlowMlMin: 100,
-  dialysateFlowMlHour: 1_000,
-  pbpFlowMlHour: 0,
-  preReplacementFlowMlHour: 0,
-  postReplacementFlowMlHour: 0,
-  patientFluidRemovalMlHour: 100,
-  syringeFlowMlHour: 0,
-  makeupFlowMlHour: 0,
-}
-
-function CircuitTeachingFigure() {
-  return (
-    <div className={styles.learnFigure}>
-      <CrrtPilotCircuit
-        running={true}
-        setReady={true}
-        fluidsReady={true}
-        bloodFlowMlMin={circuitFigureFlows.bloodFlowMlMin}
-        dialysateFlowMlHour={circuitFigureFlows.dialysateFlowMlHour}
-        patientFluidRemovalMlHour={circuitFigureFlows.patientFluidRemovalMlHour}
-        flows={circuitFigureFlows}
-        initialOverlayId="cvvhd"
-        pressure={{
-          access: -72,
-          filter: 146,
-          return: 64,
-          effluent: 28,
-          TMP: 77,
-          filterDrop: 82,
-        }}
-      />
-      <p>
-        Teaching figure: trace access → pump → filter → return, then switch views to follow
-        dialysate, replacement, citrate, and effluent on the same unchanged circuit. Values are
-        simulated examples.
-      </p>
-    </div>
-  )
-}
-
-function ReadOnlyConsoleFigure() {
-  return (
-    <div
-      className={styles.consoleFigure}
-      role="img"
-      aria-label="Read-only PrisMax Operations screen teaching mockup"
-    >
-      <div>
-        <span>PrisMax · Operations</span>
-        <strong>CVVHD</strong>
-      </div>
-      <dl>
-        <div>
-          <dt>Access</dt>
-          <dd>−72 mmHg</dd>
-        </div>
-        <div>
-          <dt>Filter</dt>
-          <dd>146 mmHg</dd>
-        </div>
-        <div>
-          <dt>Return</dt>
-          <dd>64 mmHg</dd>
-        </div>
-        <div>
-          <dt>TMP</dt>
-          <dd>77 mmHg</dd>
-        </div>
-      </dl>
-      <small>Read-only teaching mockup · not a device screen or operating instruction</small>
-    </div>
-  )
 }
 
 function ClinicalApplicationCheck({
@@ -663,19 +582,17 @@ function BaxterCrrtLearnWorkbench({
                 {selectedLesson.id === 'crrt-circuit-pressures' ? (
                   <>
                     <section
-                      className={styles.teachingFigures}
-                      aria-label="Circuit and console teaching figures"
+                      className={styles.embeddedLab}
+                      aria-labelledby="crrt-live-pressure-heading"
                     >
-                      <div>
-                        <Layers3 aria-hidden="true" />
-                        <h3>Circuit anchor figure</h3>
-                        <CircuitTeachingFigure />
-                      </div>
-                      <div>
+                      <div className={styles.embeddedLabHeading}>
                         <Gauge aria-hidden="true" />
-                        <h3>Read the pressure pattern</h3>
-                        <ReadOnlyConsoleFigure />
+                        <div>
+                          <span>Read the pressure pattern</span>
+                          <h3 id="crrt-live-pressure-heading">Live pressure profile</h3>
+                        </div>
                       </div>
+                      <CrrtLivePressureStation />
                     </section>
                     <section className={styles.embeddedLab} aria-labelledby="pressure-lab-heading">
                       <div className={styles.embeddedLabHeading}>

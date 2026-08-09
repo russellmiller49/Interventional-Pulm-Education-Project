@@ -19,11 +19,13 @@ import {
   crrtCitrateCalciumTerms,
   crrtCitrateOverlayHeldOpenStatements,
   crrtOverlayFluidDestinations,
+  crrtPressureSignalDetail,
   crrtPressureSignalDetails,
   type CrrtCircuitNodeId,
   type CrrtCircuitOverlayId,
   type CrrtCircuitPathId,
   type CrrtCircuitPathKind,
+  type CrrtPressureSignalId,
 } from '../content/circuitModel'
 import type { CrrtFlowRates } from '../engine/types'
 import styles from './crrt-pilot-circuit.module.css'
@@ -52,6 +54,19 @@ export interface CrrtPilotCircuitProps {
   flows?: CrrtFlowRates | null
   /** Overlay shown first. Defaults to the blood path. */
   initialOverlayId?: CrrtCircuitOverlayId
+  /**
+   * Emphasis driven from outside — the live pressure profile passes the channel
+   * a learner has selected so the circuit shows where it is read.
+   *
+   * Presentational only. This adds no control, no accessible name, and no
+   * second population of selectable pressure widgets: the pressure-localization
+   * lab already owns controls named after these six signals, and a second set
+   * in the same lesson tree would make either one ambiguous.
+   *
+   * A direct site highlights its own node. A calculated relationship has no
+   * node of its own, so it highlights the sites it is computed from.
+   */
+  highlightedSignalId?: CrrtPressureSignalId | null
 }
 
 /** Maps a pressure signal onto the prop that carries its value. */
@@ -202,7 +217,15 @@ function accessibleSignal(value: number | null, unit: string): string {
  * Schematic
  * ------------------------------------------------------------------ */
 
-function NodeGlyph({ id, active }: { id: CrrtCircuitNodeId; active: boolean }) {
+function NodeGlyph({
+  id,
+  active,
+  highlighted = false,
+}: {
+  id: CrrtCircuitNodeId
+  active: boolean
+  highlighted?: boolean
+}) {
   const node = crrtCircuitNode(id)
   const { x, y } = node.at
   const { dx, dy, anchor } = node.labelOffset
@@ -376,6 +399,7 @@ function NodeGlyph({ id, active }: { id: CrrtCircuitNodeId; active: boolean }) {
       transform={`translate(${x} ${y})`}
       data-node={id}
       data-active={active}
+      data-highlighted={highlighted}
       className={styles.node}
     >
       {body()}
@@ -401,6 +425,7 @@ export function CrrtPilotCircuit({
   pressure,
   flows = null,
   initialOverlayId = 'blood-path',
+  highlightedSignalId = null,
 }: CrrtPilotCircuitProps) {
   const idPrefix = `crrt-pilot-${useId().replaceAll(':', '')}`
   const titleId = `${idPrefix}-title`
@@ -420,11 +445,29 @@ export function CrrtPilotCircuit({
   const ledger = useMemo(() => calculateCrrtMachineFluidLedger(ledgerFlows), [ledgerFlows])
   const conservation = useMemo(() => checkCrrtFluidConservation(ledger), [ledger])
 
+  // A relationship has no node, so it lights the sites it is built from.
+  const highlightedDetail = highlightedSignalId
+    ? crrtPressureSignalDetail(highlightedSignalId)
+    : null
+  const highlightedNodeIds = useMemo(() => {
+    if (!highlightedDetail) return new Set<CrrtCircuitNodeId>()
+    return new Set<CrrtCircuitNodeId>(
+      highlightedDetail.nodeId ? [highlightedDetail.nodeId] : highlightedDetail.derivedFromNodeIds,
+    )
+  }, [highlightedDetail])
+
+  const selectedPressureSummary = highlightedDetail
+    ? highlightedDetail.kind === 'directly-modelled-site'
+      ? `Selected pressure: ${highlightedDetail.label}, a directly modelled site, marked on this circuit at ${crrtCircuitNode(highlightedDetail.nodeId!).label}.`
+      : `Selected pressure: ${highlightedDetail.label}, a calculated relationship with no site of its own. The sites it is computed from are marked: ${highlightedDetail.derivedFromNodeIds.map((id) => crrtCircuitNode(id).label).join(', ')}.`
+    : 'No pressure is currently selected.'
+
   const circuitStateSummary = [
     `Circuit state: ${running ? 'running' : 'stopped'}.`,
     `Training set ${setReady ? 'ready' : 'not ready'}; fluids ${fluidsReady ? 'ready' : 'not ready'}.`,
     `Blood flow ${accessibleSignal(bloodFlowMlMin, 'milliliters per minute')}; dialysate flow ${accessibleSignal(dialysateFlowMlHour, 'milliliters per hour')}; patient fluid removal ${accessibleSignal(patientFluidRemovalMlHour, 'milliliters per hour')}.`,
     `Pressure state: access ${accessibleSignal(pressure.access, 'millimeters of mercury')}; filter ${accessibleSignal(pressure.filter, 'millimeters of mercury')}; return ${accessibleSignal(pressure.return, 'millimeters of mercury')}; effluent ${accessibleSignal(pressure.effluent, 'millimeters of mercury')}; transmembrane pressure ${accessibleSignal(pressure.TMP, 'millimeters of mercury')}; filter pressure drop ${accessibleSignal(pressure.filterDrop, 'millimeters of mercury')}.`,
+    selectedPressureSummary,
   ].join(' ')
 
   function panDiagram(event: KeyboardEvent<HTMLDivElement>) {
@@ -596,7 +639,14 @@ export function CrrtPilotCircuit({
               if (samplingDomainNodeIds.includes(nodeId) && !overlay.showsSamplingDomains) {
                 return null
               }
-              return <NodeGlyph key={nodeId} id={nodeId} active={nodeIsActive(nodeId)} />
+              return (
+                <NodeGlyph
+                  key={nodeId}
+                  id={nodeId}
+                  active={nodeIsActive(nodeId)}
+                  highlighted={highlightedNodeIds.has(nodeId)}
+                />
+              )
             })}
           </g>
 

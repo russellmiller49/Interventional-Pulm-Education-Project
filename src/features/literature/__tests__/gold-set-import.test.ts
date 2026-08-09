@@ -52,7 +52,7 @@ function completedRecord(index: number): LiteratureGoldExportRecord {
 
 function goldExport(count = 1): LiteratureGoldExport {
   return {
-    exportVersion: '1.0.0',
+    exportVersion: '1.1.0',
     exportedAt: '2026-07-27T12:00:00.000Z',
     batch: {
       id: '30000000-0000-4000-8000-000000000001',
@@ -125,7 +125,7 @@ function emptyCsv(input: string, recordIndex = 0) {
 }
 
 describe('gold-set CSV import contract', () => {
-  it('freezes the complete 35-column CSV v1 contract', () => {
+  it('freezes the complete 41-column CSV v1.1 contract', () => {
     expect(LITERATURE_GOLD_CSV_COLUMNS).toEqual([
       'batch_id',
       'batch_name',
@@ -151,8 +151,10 @@ describe('gold-set CSV import contract', () => {
       'reviewer_confidence',
       'topic_ids_json',
       'technology_tags_json',
+      'technology_tag_status',
       'clinical_purposes_json',
       'disease_tags_json',
+      'disease_tag_status',
       'study_design',
       'publication_status',
       'categorization_from_full_text',
@@ -162,7 +164,38 @@ describe('gold-set CSV import contract', () => {
       'is_blinded',
       'reviewer_email',
       'completed_at',
+      'taxonomy_version',
+      'label_schema_version',
+      'enrichment_schema_version',
+      'enrichment_provenance',
     ])
+  })
+
+  it('accepts the legacy 35-column CSV v1 contract without additive enrichment columns', () => {
+    const rows = parseCsvRows(serializeLiteratureGoldSetCsv(goldExport()))
+    const header = rows[0]
+    const additiveColumns = new Set([
+      'technology_tag_status',
+      'disease_tag_status',
+      'taxonomy_version',
+      'label_schema_version',
+      'enrichment_schema_version',
+      'enrichment_provenance',
+    ])
+    const legacyRows = rows.map((row) =>
+      row.filter((_cell, index) => !additiveColumns.has(header[index])),
+    )
+
+    expect(legacyRows[0]).toHaveLength(35)
+    const parsed = parseLiteratureGoldReviewImportCsv(encodeCsvRows(legacyRows))
+    expect(parsed.rows[0].review).toMatchObject({
+      technologyTagStatus: null,
+      diseaseTagStatus: null,
+      taxonomyVersion: null,
+      labelSchemaVersion: null,
+      enrichmentSchemaVersion: null,
+      enrichmentProvenance: null,
+    })
   })
 
   it('accepts a typed 100-row completed pilot and exposes analysis metadata', () => {
@@ -223,7 +256,7 @@ describe('gold-set CSV import contract', () => {
     const rows = parseCsvRows(serializeLiteratureGoldSetCsv(goldExport()))
     mutate(rows[1])
     expect(() => parseLiteratureGoldReviewImportCsv(encodeCsvRows(rows))).toThrow(
-      /CSV record 2 has \d+ columns; expected 35/u,
+      /CSV record 2 has \d+ columns; expected 41/u,
     )
   })
 

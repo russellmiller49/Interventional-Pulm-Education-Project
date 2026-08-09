@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "literature-path-scoped-merge-equivalence-input/1.0.0",
+  "featureHead": "21fc97ce66b724040d261f7404bec5658b8caaa2",
+  "mergeCommit": "858018c247c5fef177bd57b7bef686db2918333e",
+  "mergedMain": "858018c247c5fef177bd57b7bef686db2918333e",
+  "acceptedUnrelatedMerges": [
+    {
+      "identity": "PR #85",
+      "mergeCommit": "7f8bc8c8d00f238c0fa42aadcf7768aba27b688f"
+    }
+  ],
+  "protectedPaths": [
+    "docs/ip-literature/gold-import-compensation-contract.md",
+    "package.json",
+    "scripts/literature/analyze-pending-gold-import-compensation.ts",
+    "scripts/literature/audit-curated-collection.ts",
+    "scripts/literature/gold-import-compensation-cli.test.ts",
+    "scripts/literature/gold-import-compensation-cli.ts",
+    "scripts/literature/gold-import-compensation-rehearsal-evidence.test.ts",
+    "scripts/literature/gold-import-compensation-rehearsal-evidence.ts",
+    "scripts/literature/import-gold-reviews.ts",
+    "scripts/literature/local-supabase.ts",
+    "scripts/literature/rehearse-gold-import-compensation-db.ts",
+    "scripts/literature/ultra-frozen-evaluation.ts",
+    "src/features/literature/__tests__/curated-collection-audit.test.ts",
+    "src/features/literature/__tests__/gold-set-analysis.test.ts",
+    "src/features/literature/__tests__/gold-set-database-contract.test.ts",
+    "src/features/literature/__tests__/gold-set-export.test.ts",
+    "src/features/literature/__tests__/gold-set-import-artifact-validation.test.ts",
+    "src/features/literature/__tests__/gold-set-import-compensation.test.ts",
+    "src/features/literature/__tests__/gold-set-import.test.ts",
+    "src/features/literature/__tests__/gold-set-legacy-import-analysis.test.ts",
+    "src/features/literature/__tests__/gold-set-review-workspace.test.tsx",
+    "src/features/literature/__tests__/ultra-frozen-evaluation-cli.test.ts",
+    "src/features/literature/components/GoldSetReviewWorkspace.tsx",
+    "src/features/literature/curated-collection/audit.ts",
+    "src/features/literature/gold-set/analysis.ts",
+    "src/features/literature/gold-set/export.ts",
+    "src/features/literature/gold-set/import-artifact-validation.ts",
+    "src/features/literature/gold-set/import-compensation.ts",
+    "src/features/literature/gold-set/import.ts",
+    "src/features/literature/gold-set/legacy-import-analysis.ts",
+    "src/features/literature/gold-set/types.ts",
+    "src/features/literature/server/gold-set.ts",
+    "supabase/migrations/20260808035633_add_literature_gold_import_compensation_contract.sql",
+    "supabase/verification/20260808035633_verify_literature_gold_import_compensation_contract.sql"
+  ],
+  "expected": {
+    "result": "accepted_unrelated_mainline_delta",
+    "protectedPathCount": 34,
+    "protectedPathInventorySha256": "b656238460c10c3a104b14805753a47af29138dfc6973a57db4bc6a908b849d3",
+    "additionalPathCount": 4,
+    "additionalPaths": [
+      "docs/auth-password-recovery.md",
+      "src/app/auth/callback/route.test.ts",
+      "src/app/auth/callback/route.ts",
+      "src/components/auth/ForgotPasswordForm.test.tsx"
+    ],
+    "overlapPathCount": 0,
+    "additionalPathInventorySha256": "b153f26b576306a6b02eb81233193a4fe3a622c9737dba592f33eccaac3ff488"
+  }
+}

@@ -12,7 +12,7 @@ import {
   type ReleaseResolutionErrorCode,
 } from '../domain/release-bundle'
 import type { ResolvedCard } from '../domain/types'
-import { isReleasePinned } from '../schemas/saved-card'
+import { isReleasePinned, type BuilderInputs } from '../schemas/saved-card'
 import { loadCurrentCardRevision } from './card-revisions'
 import type { RehydratedBuilderErrorCode } from './rebuild-builder-context'
 import { loadUserCard, resolveForSave, type UserCardRecord } from './user-cards'
@@ -133,7 +133,13 @@ export type CardReconciliationResult =
   | { ok: false; code: 'not_found' }
 
 /**
- * Re-resolve the card's own inputs against current operational data, and diff.
+ * Re-resolve stored inputs against current operational data, and diff against the state they were
+ * stored with.
+ *
+ * Takes the inputs and the snapshot rather than a card record, because the same two questions are
+ * asked of two different things: of the card as it stands today, and of one immutable revision a
+ * rebuild is citing. One implementation, so the review a physician reads before rebuilding is the
+ * same comparison the reconciliation page shows them.
  *
  * `resolveForSave` is the reconstruction path the builder and the save path both use, and using
  * it here is the point rather than a convenience: this review is only worth reading if it
@@ -145,8 +151,8 @@ export type CardReconciliationResult =
  * semantic projection either way, so this changes no result; it means the reconstructed card
  * differs from the stored one only where something real differs.
  */
-function reconcileOperational(
-  record: UserCardRecord,
+export function reconcileOperational(
+  record: { builderInputs: BuilderInputs | null },
   storedCard: ResolvedCard,
 ): OperationalReconciliationResult {
   if (!record.builderInputs) {
@@ -174,8 +180,8 @@ function reconcileOperational(
  * "Current" is the explicit pointer and nothing else. No version sorting, no newest
  * `publishedAt`, no last entry in the file.
  */
-function reconcileRelease(
-  record: UserCardRecord,
+export function reconcileRelease(
+  record: { builderInputs: BuilderInputs | null },
   storedCard: ResolvedCard,
 ): ReleaseReconciliationResult {
   const inputs = record.builderInputs

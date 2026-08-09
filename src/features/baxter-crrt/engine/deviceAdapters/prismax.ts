@@ -1,4 +1,17 @@
+import {
+  calculateCrrtMachineFluidLedger,
+  CRRT_MAKEUP_ATTRIBUTION_CONFLICT,
+} from '../../circuitFluidLedger'
+import {
+  crrtCircuitNode,
+  crrtPressureSignalDetails,
+  type CrrtCircuitNodeId,
+  type CrrtPressureSignalDetail,
+  type CrrtPressureSignalId,
+  type CrrtPressureSignalKind,
+} from '../../content/circuitModel'
 import { prismaxDeviceProfile } from '../../content/deviceProfiles'
+import { CRRT_TREND_INTERVAL_SECONDS } from '../simulation'
 import { prismaxCalculationAdapter } from './calculations'
 import type {
   CrrtDeviceAdapter,
@@ -13,8 +26,10 @@ import {
   type CrrtDeviceState,
   type CrrtFlowRates,
   type CrrtModality,
+  type CrrtPressureState,
   type CrrtSimulationState,
   type PrescriptionState,
+  type TrendSample,
 } from '../types'
 
 export const PRISMAX_SETUP_SOURCE_ID = 'DEV-PM-005' as const
@@ -244,6 +259,120 @@ export interface PrismaxPilotInterfaceViewModel {
   readonly samePatientAvailable: false
 }
 
+/**
+ * Why a value is or is not a live model output. There is no per-site sensor
+ * fault in this engine: `derivePressures` writes all six pressures together, so
+ * "unavailable" is always a whole-model statement, never one bad transducer.
+ */
+export type CrrtPressureAvailability = 'live-model-value' | 'no-pressure-model' | 'no-case-attached'
+
+/**
+ * Whether the engine actually recorded this quantity over time. `TrendSample`
+ * carries access, filter, return, and TMP — it does not carry effluent pressure
+ * or filter pressure drop. Those two are current values only, and saying so is
+ * the honest answer rather than rebuilding a series the engine never observed.
+ */
+export type CrrtPressureHistoryAvailability = 'sampled' | 'not-recorded'
+
+export interface CrrtDevicePressureSample {
+  readonly timeSeconds: number
+  readonly valueMmHg: number | null
+}
+
+export interface CrrtDevicePressureValueDomain {
+  readonly minMmHg: number
+  readonly maxMmHg: number
+}
+
+/**
+ * One pressure channel, fully described. Everything a surface needs to render
+ * the value, say what kind of quantity it is, point at the circuit, and state
+ * what is missing — with no arithmetic left for the component to do.
+ */
+export interface CrrtDevicePressureSignalView {
+  readonly id: CrrtPressureSignalId
+  readonly label: string
+  readonly kind: CrrtPressureSignalKind
+  readonly valueMmHg: number | null
+  readonly unit: 'mmHg'
+  readonly availability: CrrtPressureAvailability
+  readonly unavailableReason: string | null
+  /** The circuit node this value is read at. Null for calculated relationships. */
+  readonly nodeId: CrrtCircuitNodeId | null
+  /** Nodes a calculated relationship is computed from. Empty for modelled sites. */
+  readonly derivedFromNodeIds: readonly CrrtCircuitNodeId[]
+  readonly derivedFromSignalIds: readonly CrrtPressureSignalId[]
+  /** Node labels, so a component never has to resolve circuit geometry itself. */
+  readonly contributingSiteLabels: readonly string[]
+  readonly history: readonly CrrtDevicePressureSample[]
+  readonly historyAvailability: CrrtPressureHistoryAvailability
+  readonly historyUnavailableReason: string | null
+  /** Supplied so a component plots geometry rather than deciding a scale. */
+  readonly historyValueDomainMmHg: CrrtDevicePressureValueDomain | null
+  readonly sourceIds: readonly string[]
+}
+
+/**
+ * Enough current context to read the pressure profile. Deliberately not a
+ * console: no menu state, no alarm limits, no operating sequence.
+ */
+export interface CrrtDeviceTreatmentContextView {
+  readonly deliveryState: CrrtDeviceState['deliveryState']
+  readonly treatmentState: PrismaxPilotInterfaceState['treatmentState']
+  readonly bloodPumpRunning: boolean
+  readonly modality: CrrtModality | null
+  readonly bloodFlowMlMin: number | null
+  readonly dialysateFlowMlHour: number | null
+  readonly preReplacementFlowMlHour: number | null
+  readonly postReplacementFlowMlHour: number | null
+  readonly patientFluidRemovalMlHour: number | null
+  /**
+   * Mirrors the engine's own gate: blood flow reaches the pressure model only
+   * while the pump is running and both lumens are connected. Without this a
+   * surface cannot tell a stopped circuit from a running one, because the
+   * engine keeps publishing plausible zero-flow numbers either way.
+   */
+  readonly bloodFlowContributesToPressures: boolean
+  readonly accessConnected: boolean
+  readonly returnConnected: boolean
+  readonly simulationTimeSeconds: number
+  readonly cumulativeDowntimeSeconds: number
+  readonly historyIntervalSeconds: number
+  readonly historyTimeDomainSeconds: Readonly<{ startSeconds: number; endSeconds: number }> | null
+}
+
+/**
+ * Whether the cumulative fluid quantities can be stated at all.
+ *
+ * `unresolved-makeup-attribution` is not a caveat attached to a number. It
+ * means both cumulative values are withheld, because the registered sources
+ * disagree about where the makeup volume belongs and one of the two
+ * expressions leaves it inside the patient-removal term.
+ */
+export type CrrtCumulativeFluidResolution =
+  | 'available'
+  | 'no-case-attached'
+  | 'unresolved-makeup-attribution'
+
+export interface CrrtDeviceCumulativeFluidView {
+  readonly resolution: CrrtCumulativeFluidResolution
+  readonly cumulativeMachinePatientFluidRemovalMl: number | null
+  readonly cumulativeWholePatientBalanceMl: number | null
+  /** Learner-facing reason. Null only when the values are stated. */
+  readonly withheldReason: string | null
+  /** The makeup rate in force now, when a case is attached. */
+  readonly currentMakeupFlowMlHour: number | null
+  /**
+   * Makeup volume the charting window is known to contain, read off the
+   * makeup bag's own cumulative pump volume. Zero is a proof of absence only
+   * because a nonzero makeup rate cannot deliver anything without exactly one
+   * connected makeup bag — the coupled-delivery check drives the whole
+   * circuit's delivery fraction to zero instead.
+   */
+  readonly makeupDeliveredMlInWindow: number
+  readonly sourceIds: readonly string[]
+}
+
 export interface PrismaxPilotOperationsDisplay {
   readonly treatmentState: PrismaxPilotInterfaceState['treatmentState']
   readonly modality: CrrtModality | null
@@ -251,8 +380,11 @@ export interface PrismaxPilotOperationsDisplay {
   readonly effluentPumpTargetMlHour: number | null
   readonly effluentDoseMlKgHour: number | null
   readonly deliveredDoseMlKgHour: number | null
+  /** Withheld (null) whenever `cumulativeFluid.resolution` is not `available`. */
   readonly cumulativeMachinePatientFluidRemovalMl: number | null
   readonly cumulativeWholePatientBalanceMl: number | null
+  /** Why the two fields above are stated or withheld. */
+  readonly cumulativeFluid: CrrtDeviceCumulativeFluidView
   readonly activeAlarmCodes: readonly string[]
   readonly pressures: Readonly<{
     accessPressureMmHg: number | null
@@ -262,6 +394,9 @@ export interface PrismaxPilotOperationsDisplay {
     transmembranePressureMmHg: number | null
     filterPressureDropMmHg: number | null
   }>
+  /** The six channels above, described. Same numbers, never recomputed. */
+  readonly pressureSignals: readonly CrrtDevicePressureSignalView[]
+  readonly treatmentContext: CrrtDeviceTreatmentContextView
 }
 
 const blankPrescriptionDraft = (): PrismaxPrescriptionDraft => ({
@@ -463,6 +598,238 @@ const nullPressures: PrismaxPilotOperationsDisplay['pressures'] = Object.freeze(
   filterPressureDropMmHg: null,
 })
 
+/* ------------------------------------------------------------------ *
+ * Pressure-profile projection
+ *
+ * Every number below is read straight off engine state. Nothing here
+ * recalculates a pressure: TMP and filter pressure drop are already
+ * display-corrected on `circuit.pressures`, and recomputing either one would
+ * drop or double-apply the device display offset.
+ * ------------------------------------------------------------------ */
+
+/** Which engine pressure field carries each signal. */
+const pressureFieldBySignalId: Readonly<Record<CrrtPressureSignalId, keyof CrrtPressureState>> =
+  Object.freeze({
+    access: 'accessPressureMmHg',
+    filter: 'filterPressureMmHg',
+    return: 'returnPressureMmHg',
+    effluent: 'effluentPressureMmHg',
+    tmp: 'prismaxTransmembranePressureMmHg',
+    'filter-drop': 'prismaxFilterPressureDropMmHg',
+  })
+
+/**
+ * Which recorded sample field carries each signal. `TrendSample` records four
+ * of the six. Effluent pressure and filter pressure drop are deliberately null
+ * here: the engine never wrote them to the trend record, and reconstructing
+ * them would present derived points as observations.
+ */
+const trendFieldBySignalId: Readonly<Record<CrrtPressureSignalId, keyof TrendSample | null>> =
+  Object.freeze({
+    access: 'accessPressureMmHg',
+    filter: 'filterPressureMmHg',
+    return: 'returnPressureMmHg',
+    effluent: null,
+    tmp: 'transmembranePressureMmHg',
+    'filter-drop': null,
+  })
+
+const NO_HISTORY_REASON =
+  'Not kept over time by this model. The recorded history covers access, filter, return, and TMP; this channel is a current value only.'
+
+const NO_PRESSURE_MODEL_REASON =
+  'This case has no pressure model loaded, so no site is being modelled. Every pressure reads as unavailable together — this is not a single failed sensor, and it is not a reading of zero.'
+
+const NO_CASE_REASON =
+  'No case is attached, so the model is not producing pressures. This is not a reading of zero.'
+
+/** Signal that owns each circuit node, so a relationship can name its sources. */
+const signalIdByNodeId: ReadonlyMap<CrrtCircuitNodeId, CrrtPressureSignalId> = new Map(
+  crrtPressureSignalDetails
+    .filter(
+      (detail): detail is CrrtPressureSignalDetail & { nodeId: CrrtCircuitNodeId } =>
+        detail.nodeId !== null,
+    )
+    .map((detail) => [detail.nodeId, detail.id]),
+)
+
+function valueDomain(values: readonly number[]): CrrtDevicePressureValueDomain | null {
+  if (values.length === 0) return null
+  return Object.freeze({ minMmHg: Math.min(...values), maxMmHg: Math.max(...values) })
+}
+
+function pressureSignalView(
+  detail: CrrtPressureSignalDetail,
+  valueMmHg: number | null,
+  availability: CrrtPressureAvailability,
+  trends: readonly TrendSample[],
+): CrrtDevicePressureSignalView {
+  const trendField = trendFieldBySignalId[detail.id]
+  const history =
+    trendField === null
+      ? []
+      : trends.map((sample) =>
+          Object.freeze({
+            timeSeconds: sample.timeSeconds,
+            valueMmHg: sample[trendField] as number | null,
+          }),
+        )
+  const observed = history
+    .map((sample) => sample.valueMmHg)
+    .filter((value): value is number => value !== null)
+
+  return Object.freeze({
+    id: detail.id,
+    label: detail.label,
+    kind: detail.kind,
+    valueMmHg,
+    unit: 'mmHg' as const,
+    availability,
+    unavailableReason:
+      availability === 'live-model-value'
+        ? null
+        : availability === 'no-case-attached'
+          ? NO_CASE_REASON
+          : NO_PRESSURE_MODEL_REASON,
+    nodeId: detail.nodeId,
+    derivedFromNodeIds: detail.derivedFromNodeIds,
+    derivedFromSignalIds: Object.freeze(
+      detail.derivedFromNodeIds
+        .map((nodeId) => signalIdByNodeId.get(nodeId))
+        .filter((id): id is CrrtPressureSignalId => id !== undefined),
+    ),
+    contributingSiteLabels: Object.freeze(
+      detail.derivedFromNodeIds.map((nodeId) => crrtCircuitNode(nodeId).label),
+    ),
+    history: Object.freeze(history),
+    historyAvailability: trendField === null ? ('not-recorded' as const) : ('sampled' as const),
+    historyUnavailableReason: trendField === null ? NO_HISTORY_REASON : null,
+    historyValueDomainMmHg: valueDomain(observed),
+    sourceIds: detail.sourceIds,
+  })
+}
+
+function pressureSignalViews(
+  pressures: CrrtPressureState | null,
+  trends: readonly TrendSample[],
+): readonly CrrtDevicePressureSignalView[] {
+  return Object.freeze(
+    crrtPressureSignalDetails.map((detail) => {
+      const value = pressures ? pressures[pressureFieldBySignalId[detail.id]] : null
+      const availability: CrrtPressureAvailability =
+        pressures === null
+          ? 'no-case-attached'
+          : value === null
+            ? 'no-pressure-model'
+            : 'live-model-value'
+      return pressureSignalView(
+        detail,
+        typeof value === 'number' ? value : null,
+        availability,
+        trends,
+      )
+    }),
+  )
+}
+
+/* ------------------------------------------------------------------ *
+ * Cumulative fluid projection
+ *
+ * The two cumulative operations values are accumulated by the engine from the
+ * entered patient-fluid-removal setting, and the whole-patient balance
+ * subtracts that same term. When the makeup attribution is unresolved, the
+ * C0/C1 ledger withholds the machine patient-fluid-removal term outright — so
+ * publishing a cumulative figure built on it would republish a withheld
+ * quantity, and would do it by substituting the entered setting for the result
+ * the sources decline to state.
+ *
+ * This gate is deliberately narrow: it decides only whether the two existing
+ * numbers may be stated. It computes no fluid quantity of its own.
+ * ------------------------------------------------------------------ */
+
+/** Matches the ledger's own tolerance. */
+const MAKEUP_EPSILON_ML = 1e-6
+
+const NO_CASE_CUMULATIVE_REASON =
+  'No case is attached, so no fluid has been carried and there is nothing to total.'
+
+const CUMULATIVE_SOURCE_IDS: readonly string[] = Object.freeze([
+  CRRT_MAKEUP_ATTRIBUTION_CONFLICT.id,
+  ...CRRT_MAKEUP_ATTRIBUTION_CONFLICT.sourceRecordIds,
+])
+
+/**
+ * Makeup volume the charting window is known to contain.
+ *
+ * Read off the makeup bag rather than the makeup rate, because these are
+ * cumulative values: a rate that has since returned to zero says nothing about
+ * what the window already holds.
+ */
+function makeupDeliveredMlInWindow(state: CrrtSimulationState): number {
+  return state.circuit.bags
+    .filter((bag) => bag.flowTerm === 'makeup')
+    .reduce((total, bag) => total + bag.cumulativePumpVolumeMl, 0)
+}
+
+function cumulativeFluidView(state: CrrtSimulationState | null): CrrtDeviceCumulativeFluidView {
+  // An unconfigured prescription is the same situation as no state at all: the
+  // engine's structural zeros are not a total of anything.
+  if (state && state.prescription.status !== 'configured') return cumulativeFluidView(null)
+  if (!state) {
+    return Object.freeze({
+      resolution: 'no-case-attached' as const,
+      cumulativeMachinePatientFluidRemovalMl: null,
+      cumulativeWholePatientBalanceMl: null,
+      withheldReason: NO_CASE_CUMULATIVE_REASON,
+      currentMakeupFlowMlHour: null,
+      makeupDeliveredMlInWindow: 0,
+      sourceIds: CUMULATIVE_SOURCE_IDS,
+    })
+  }
+
+  // The existing C0/C1 contract decides the current-rate question; this adds
+  // only the window question, which the ledger cannot see because it is
+  // defined over rates.
+  const ledger = calculateCrrtMachineFluidLedger(state.circuit.flows)
+  const deliveredMl = makeupDeliveredMlInWindow(state)
+  const windowHoldsMakeup = deliveredMl > MAKEUP_EPSILON_ML
+  const unresolved = ledger.resolution !== 'resolved' || windowHoldsMakeup
+
+  if (unresolved) {
+    return Object.freeze({
+      resolution: 'unresolved-makeup-attribution' as const,
+      cumulativeMachinePatientFluidRemovalMl: null,
+      cumulativeWholePatientBalanceMl: null,
+      withheldReason: windowHoldsMakeup
+        ? `This run has already carried ${Math.round(deliveredMl)} mL of makeup fluid. The effluent expression counts that volume and the patient-fluid-removed expression does not, and no registered source says which side of the membrane it belongs to. Returning the makeup setting to zero does not settle what the totals already contain, so no volume is attributed to patient loss or to whole-patient balance.`
+        : ledger.unresolvedReason,
+      currentMakeupFlowMlHour: state.circuit.flows.makeupFlowMlHour,
+      makeupDeliveredMlInWindow: deliveredMl,
+      sourceIds: CUMULATIVE_SOURCE_IDS,
+    })
+  }
+
+  return Object.freeze({
+    resolution: 'available' as const,
+    cumulativeMachinePatientFluidRemovalMl:
+      state.deliveredTherapy.cumulativeMachinePatientFluidRemovalMl,
+    cumulativeWholePatientBalanceMl: state.deliveredTherapy.cumulativeWholePatientBalanceMl,
+    withheldReason: null,
+    currentMakeupFlowMlHour: state.circuit.flows.makeupFlowMlHour,
+    makeupDeliveredMlInWindow: deliveredMl,
+    sourceIds: CUMULATIVE_SOURCE_IDS,
+  })
+}
+
+function historyTimeDomain(
+  trends: readonly TrendSample[],
+): CrrtDeviceTreatmentContextView['historyTimeDomainSeconds'] {
+  const first = trends.at(0)
+  const last = trends.at(-1)
+  if (!first || !last || first.timeSeconds === last.timeSeconds) return null
+  return Object.freeze({ startSeconds: first.timeSeconds, endSeconds: last.timeSeconds })
+}
+
 export function selectPrismaxPilotOperationsDisplay(
   state: PrismaxPilotInterfaceState,
 ): PrismaxPilotOperationsDisplay {
@@ -478,8 +845,28 @@ export function selectPrismaxPilotOperationsDisplay(
     deliveredDoseMlKgHour: null,
     cumulativeMachinePatientFluidRemovalMl: null,
     cumulativeWholePatientBalanceMl: null,
+    cumulativeFluid: cumulativeFluidView(null),
     activeAlarmCodes: Object.freeze([]),
     pressures: nullPressures,
+    pressureSignals: pressureSignalViews(null, []),
+    treatmentContext: Object.freeze({
+      deliveryState: state.treatmentState === 'running' ? ('running' as const) : ('idle' as const),
+      treatmentState: state.treatmentState,
+      bloodPumpRunning: false,
+      modality: prescription?.modality ?? null,
+      bloodFlowMlMin: prescription?.flows.bloodFlowMlMin ?? null,
+      dialysateFlowMlHour: prescription?.flows.dialysateFlowMlHour ?? null,
+      preReplacementFlowMlHour: prescription?.flows.preReplacementFlowMlHour ?? null,
+      postReplacementFlowMlHour: prescription?.flows.postReplacementFlowMlHour ?? null,
+      patientFluidRemovalMlHour: prescription?.flows.patientFluidRemovalMlHour ?? null,
+      bloodFlowContributesToPressures: false,
+      accessConnected: false,
+      returnConnected: false,
+      simulationTimeSeconds: 0,
+      cumulativeDowntimeSeconds: 0,
+      historyIntervalSeconds: CRRT_TREND_INTERVAL_SECONDS,
+      historyTimeDomainSeconds: null,
+    }),
   })
 }
 
@@ -490,6 +877,16 @@ export function selectPrismaxPilotCaseOperationsDisplay(
 ): PrismaxPilotOperationsDisplay {
   const prescription = simulation.prescription
   const pressure = simulation.circuit.pressures
+  const access = simulation.access
+  const accessConnected = access.status === 'configured' && access.accessConnected
+  const returnConnected = access.status === 'configured' && access.returnConnected
+  const flows = simulation.circuit.flows
+  // With no prescription there is no setting, and the engine's structural zero
+  // is not one. Reporting 0 mL/min would read as "the pump is set to zero"
+  // rather than "nothing has been set".
+  const configured = prescription.status === 'configured'
+  const setting = (value: number) => (configured ? value : null)
+  const cumulativeFluid = cumulativeFluidView(simulation)
   return Object.freeze({
     treatmentState: interfaceState.treatmentState,
     modality: prescription.status === 'configured' ? prescription.modality : null,
@@ -497,9 +894,12 @@ export function selectPrismaxPilotCaseOperationsDisplay(
     effluentPumpTargetMlHour: simulation.deliveredTherapy.prescribedEffluentRateMlHour,
     effluentDoseMlKgHour: simulation.deliveredTherapy.prescribedEffluentDoseMlKgHour,
     deliveredDoseMlKgHour: simulation.deliveredTherapy.deliveredDoseMlKgHour,
-    cumulativeMachinePatientFluidRemovalMl:
-      simulation.deliveredTherapy.cumulativeMachinePatientFluidRemovalMl,
-    cumulativeWholePatientBalanceMl: simulation.deliveredTherapy.cumulativeWholePatientBalanceMl,
+    // Fail closed: both come from the projection, never straight off
+    // deliveredTherapy, so an unresolved makeup attribution cannot leak a
+    // cumulative volume through this surface.
+    cumulativeMachinePatientFluidRemovalMl: cumulativeFluid.cumulativeMachinePatientFluidRemovalMl,
+    cumulativeWholePatientBalanceMl: cumulativeFluid.cumulativeWholePatientBalanceMl,
+    cumulativeFluid,
     activeAlarmCodes: Object.freeze(
       simulation.alarms.filter((alarm) => alarm.active).map((alarm) => alarm.code),
     ),
@@ -510,6 +910,28 @@ export function selectPrismaxPilotCaseOperationsDisplay(
       effluentPressureMmHg: pressure.effluentPressureMmHg,
       transmembranePressureMmHg: pressure.prismaxTransmembranePressureMmHg,
       filterPressureDropMmHg: pressure.prismaxFilterPressureDropMmHg,
+    }),
+    pressureSignals: pressureSignalViews(pressure, simulation.trends),
+    treatmentContext: Object.freeze({
+      deliveryState: simulation.device.deliveryState,
+      treatmentState: interfaceState.treatmentState,
+      bloodPumpRunning: simulation.device.bloodPumpRunning,
+      modality: configured ? prescription.modality : null,
+      bloodFlowMlMin: setting(flows.bloodFlowMlMin),
+      dialysateFlowMlHour: setting(flows.dialysateFlowMlHour),
+      preReplacementFlowMlHour: setting(flows.preReplacementFlowMlHour),
+      postReplacementFlowMlHour: setting(flows.postReplacementFlowMlHour),
+      patientFluidRemovalMlHour: setting(flows.patientFluidRemovalMlHour),
+      // The engine's own gate, mirrored rather than re-derived: simulation.ts
+      // feeds blood flow into the pressure model only under these three.
+      bloodFlowContributesToPressures:
+        simulation.device.bloodPumpRunning && accessConnected && returnConnected,
+      accessConnected,
+      returnConnected,
+      simulationTimeSeconds: simulation.simulationTimeSeconds,
+      cumulativeDowntimeSeconds: simulation.deliveredTherapy.cumulativeDowntimeSeconds,
+      historyIntervalSeconds: CRRT_TREND_INTERVAL_SECONDS,
+      historyTimeDomainSeconds: historyTimeDomain(simulation.trends),
     }),
   })
 }
