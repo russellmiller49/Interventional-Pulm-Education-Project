@@ -41,6 +41,27 @@ export const nonPublicModules: NonPublicModule[] = [
       'Build a per-procedure equipment card from a 1,400-product catalog, then print it spatially or chronologically. Browsing and building work without an account; saving a card needs one.',
   },
   {
+    path: '/devices',
+    title: 'Device Atlas (D1 vertical slice)',
+    group: 'IP tooling',
+    summary:
+      'Read-only device and clinical-use atlas over the verified, prototype-visible catalog cohort. Public-unlisted and noindex throughout Phase D1.',
+  },
+  {
+    path: '/clinical-roles',
+    title: 'Clinical Roles (D1 vertical slice)',
+    group: 'IP tooling',
+    summary:
+      'Read-only clinical-role pages: authored selection guidance, atlas-cohort products by manufacturer, and the procedures that request each role.',
+  },
+  {
+    path: '/procedures',
+    title: 'Procedure Workspaces (D1 vertical slice)',
+    group: 'IP tooling',
+    summary:
+      'Read-only procedure workspaces for the three Phase D1 exemplar procedures, with a demo-data-only readiness view. Draft-watermarked; no writes.',
+  },
+  {
     path: '/literature',
     title: 'IP Literature Explorer',
     group: 'IP tooling',

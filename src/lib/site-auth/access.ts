@@ -24,7 +24,12 @@ const PUBLIC_EXACT_PATHS = new Set([
 const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
   '/baxter-crrt',
   '/cardiohelp-ecmo',
+  // Phase D1 device-intelligence routes (decision D-03 as modified, 2026-08-08): every new
+  // route stays public-unlisted and noindex throughout D1. Public indexing is a separate
+  // owner launch decision and would need a new tier class, not membership here.
+  '/clinical-roles',
   '/critical-care',
+  '/devices',
   '/icu-hemodynamics',
   '/mechanical-circulatory-support',
   '/mechanical-ventilation',
@@ -34,6 +39,7 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
   // noindex/noarchive instead of being search-indexable.
   '/pleural-procedures/pleural-ultrasound-simulator',
   '/preference-cards',
+  '/procedures',
   '/socrates-demo',
 ])
 
@@ -42,13 +48,17 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
 const PUBLIC_UNLISTED_PATH_PREFIXES = [
   '/baxter-crrt',
   '/cardiohelp-ecmo',
+  // Phase D1 device-intelligence subroutes share the parents' unlisted/noindex treatment.
+  '/clinical-roles',
   '/critical-care',
+  '/devices',
   '/icu-hemodynamics',
   '/mechanical-circulatory-support',
   '/mechanical-ventilation',
   // Beta testers reach the card builder and catalog by direct link without an account.
   // Saving a card still needs one — cards are per-user rows under row-level security.
   '/preference-cards',
+  '/procedures',
 ] as const
 
 function isPublicUnlistedMatch(normalizedPathname: string) {
@@ -374,6 +384,20 @@ export function resolveSiteModuleId(pathname: string) {
 
   if (first === 'preference-cards') {
     return 'preference-cards'
+  }
+
+  // Phase D1 device-intelligence areas carry their own analytics identities so atlas,
+  // role, and procedure traffic is separable from the preserved preference-card module.
+  if (first === 'devices') {
+    return 'device-intelligence:devices'
+  }
+
+  if (first === 'clinical-roles') {
+    return 'device-intelligence:clinical-roles'
+  }
+
+  if (first === 'procedures') {
+    return 'device-intelligence:procedures'
   }
 
   if (first === 'literature') {
