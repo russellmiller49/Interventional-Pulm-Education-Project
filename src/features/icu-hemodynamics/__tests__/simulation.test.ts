@@ -465,13 +465,19 @@ describe('thermodilution generator', () => {
         sequence,
       }),
       accepted: true as const,
+      // H4 §7 added the third condition: a trial that was never reviewed is not a reviewed
+      // measurement, whatever its accepted flag says.
+      reviewed: true,
     }))
     expect(
       thermodilutionAcceptedAverage([...valid.slice(0, 2), { ...valid[2], accepted: false }]),
     ).toBeNull()
     expect(thermodilutionAcceptedAverage(valid)).not.toBeNull()
-    expect(thermodilutionAcceptedAverage([...valid, { ...bad, accepted: true }])).toBe(
-      thermodilutionAcceptedAverage(valid),
-    )
+    expect(
+      thermodilutionAcceptedAverage([...valid, { ...bad, accepted: true, reviewed: true }]),
+    ).toBe(thermodilutionAcceptedAverage(valid))
+    expect(
+      thermodilutionAcceptedAverage([...valid.slice(0, 2), { ...valid[2], reviewed: false }]),
+    ).toBeNull()
   })
 })

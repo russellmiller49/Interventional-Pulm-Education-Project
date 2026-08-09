@@ -83,7 +83,11 @@ describe('PAC signal-validation vertical slice', () => {
 
     for (let trial = 0; trial < 3; trial += 1) {
       fireEvent.click(screen.getByRole('button', { name: /Hold to inject/i }))
-      const acceptButtons = screen.getAllByRole('button', { name: 'Accept' })
+      // H4 §7. The capstone's own step reads "generate, inspect, and accept", and inspecting is now
+      // an action the state records rather than something the learner is trusted to have done.
+      const reviewButtons = screen.getAllByRole('button', { name: 'Review this curve' })
+      fireEvent.click(reviewButtons[reviewButtons.length - 1])
+      const acceptButtons = screen.getAllByRole('button', { name: 'Accept into the series' })
       fireEvent.click(acceptButtons[acceptButtons.length - 1])
     }
     const observe = screen.getByRole('button', { name: 'Observe the corrected signal' })
@@ -423,7 +427,7 @@ describe('PAC signal-validation vertical slice', () => {
     expect(screen.getByText('Recognize').closest('li')).toHaveAttribute('aria-current', 'step')
   })
 
-  it('teaches thermodilution versus Fick before the cardiac-output simulator', async () => {
+  it('opens the cardiac-output station on the method model and the Fick episodes', async () => {
     render(<PacGuidedSkillActivity skillId="thermodilution-series" />)
 
     expect(
@@ -431,12 +435,17 @@ describe('PAC signal-validation vertical slice', () => {
         name: 'Cardiac output: measure flow, then judge the method',
       }),
     ).toBeInTheDocument()
-    expect(screen.getByText(/CO = V̇O₂ ÷/)).toBeInTheDocument()
+    // H4 §6/§8. The three methods are three selectable records, and Recognize opens on Fick so the
+    // measured-versus-substituted distinction is made before any syringe is touched.
+    expect(screen.getByRole('tab', { name: 'Bolus thermodilution' })).toBeInTheDocument()
     expect(
-      screen.getByText(/Indirect.*estimated Fick substitutes predicted oxygen consumption/i),
+      screen.getByRole('tab', { name: 'Direct Fick with measured oxygen uptake' }),
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('heading', { name: 'Thermodilution measurement lab' }),
+      screen.getByRole('tab', { name: 'Fick with an assumed oxygen uptake' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Fick: trace every input before you use the number' }),
     ).toBeInTheDocument()
     expect(screen.getAllByRole('separator')).toHaveLength(2)
   })

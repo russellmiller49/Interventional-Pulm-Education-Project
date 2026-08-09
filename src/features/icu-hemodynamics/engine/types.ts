@@ -151,6 +151,17 @@ export interface ThermodilutionTrial {
   quality: 'valid' | 'questionable' | 'invalid'
   alerts: readonly string[]
   accepted: boolean | null
+  /**
+   * H4 §7. Whether the raw temperature-time curve was inspected before the trial was accepted or
+   * excluded. A trial that has never been reviewed cannot enter the accepted series, which is what
+   * stops "a number appeared" from being the same thing as "a measurement was made".
+   */
+  reviewed: boolean
+  /**
+   * The technical reason a trial was excluded, from `thermodilutionExclusionReasons`. Exclusion
+   * without one is refused: dropping the trial that disagrees is not a reason.
+   */
+  exclusionReasonId: string | null
 }
 
 export interface ThermodilutionConfiguration {
@@ -302,7 +313,14 @@ export type HemodynamicAction =
   | { type: 'STORE_WEDGE' }
   | { type: 'DEFLATE_WEDGE' }
   | { type: 'GENERATE_THERMODILUTION_TRIAL'; technique: ThermodilutionTechnique }
-  | { type: 'SET_THERMODILUTION_ACCEPTED'; trialId: string; accepted: boolean }
+  | { type: 'REVIEW_THERMODILUTION_CURVE'; trialId: string }
+  | {
+      type: 'SET_THERMODILUTION_ACCEPTED'
+      trialId: string
+      accepted: boolean
+      /** Required when excluding a trial; ignored when accepting one. */
+      exclusionReasonId?: string
+    }
   | { type: 'APPLY_INTERVENTION'; intervention: HemodynamicInterventionDefinition }
   | { type: 'REASSESS' }
   | { type: 'COMPLETE_CASE' }

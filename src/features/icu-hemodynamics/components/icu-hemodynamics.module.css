@@ -2572,9 +2572,15 @@
   color: #65797c;
 }
 
+/*
+ * Five fixed 130px tracks needed 650px, and the guided workspace gives this pane about 230px. The
+ * setup grid overflowed its card, the card overflowed the lab, and the lab overflowed the pane. The
+ * `min(100%, …)` floor lets a track shrink below its preferred width rather than forcing a second
+ * scroll direction.
+ */
 .injectionSetup {
   display: grid;
-  grid-template-columns: repeat(5, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr));
   gap: 0.7rem;
 }
 
@@ -2603,99 +2609,6 @@
 }
 .configurationNote {
   margin: 0.65rem 0;
-}
-
-.thermoCurve {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 140px;
-  align-items: center;
-  overflow: hidden;
-  border: 1px solid #28454e;
-  border-radius: 0.75rem;
-  color: #e6f3f0;
-  background: #07171d;
-}
-
-.thermoCurve svg {
-  width: 100%;
-  min-height: 150px;
-}
-
-.thermoCurve > div {
-  display: grid;
-  gap: 0.35rem;
-  padding: 1rem;
-  text-align: center;
-  border-left: 1px solid #29454d;
-}
-
-.thermoCurve strong {
-  color: #72d7c8;
-  font-size: 1.25rem;
-}
-.thermoCurve span {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-}
-.thermoCurve span[data-quality='invalid'] {
-  color: #ff7488;
-}
-.thermoCurve span[data-quality='questionable'] {
-  color: #ffd166;
-}
-.thermoCurve p {
-  padding: 1rem;
-  color: #82979c;
-  font-size: 0.75rem;
-}
-
-.trialList {
-  display: grid;
-  gap: 0.35rem;
-  margin-top: 0.75rem;
-}
-
-.trialList > div {
-  display: grid;
-  grid-template-columns: 2rem 3.5rem 1fr auto auto;
-  gap: 0.45rem;
-  align-items: center;
-  padding: 0.45rem;
-  border: 1px solid #dce6e3;
-  border-radius: 0.55rem;
-  font-size: 0.7rem;
-}
-
-.trialList small {
-  color: var(--muted);
-  text-transform: uppercase;
-}
-.trialList button {
-  padding: 0.35rem 0.55rem;
-  border: 1px solid #bfd2ce;
-  border-radius: 0.4rem;
-  color: #496568;
-  background: #fff;
-  cursor: pointer;
-  font-size: 0.65rem;
-}
-
-.trialList button[aria-pressed='true'] {
-  border-color: var(--teal);
-  color: #fff;
-  background: var(--teal);
-}
-
-.averageReadout {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem;
-  margin-top: 0.75rem;
-  border-radius: 0.6rem;
-  color: #dceae7;
-  background: var(--navy);
-  font-size: 0.75rem;
 }
 
 .curveAlerts {
@@ -3812,18 +3725,14 @@
   .interventionGrid {
     grid-template-columns: 1fr;
   }
-  .thermoCurve {
+  /* H4: the trial cards stack their own contents, so only the wide two-column readouts collapse. */
+  .curveFeatureList > div,
+  .methodProvenanceTable > div {
     grid-template-columns: 1fr;
   }
-  .thermoCurve > div {
-    border-top: 1px solid #29454d;
-    border-left: 0;
-  }
-  .trialList > div {
-    grid-template-columns: 1.5rem 3rem 1fr;
-  }
-  .trialList button {
-    grid-row: 2;
+  .amplificationGrid,
+  .scenarioSideBySide {
+    grid-template-columns: 1fr;
   }
   .debriefPanel {
     grid-template-columns: 1fr;
@@ -6142,4 +6051,588 @@
   color: var(--ink);
   font-size: 0.72rem;
   line-height: 1.55;
+}
+
+/* ------------------------------------------------------------------ *
+ * H4 — cardiac-output methods, trial review, and method disagreement
+ * ------------------------------------------------------------------ */
+
+.trialStack {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+}
+
+.thermoTrialCard {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid #dce6e3;
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.thermoTrialCard > header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.thermoTrialCard h4 {
+  margin: 0;
+  color: #123b43;
+  font-size: 0.82rem;
+}
+
+.thermoTrialCard > header p {
+  margin: 0;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid #bfd2ce;
+  border-radius: 999px;
+  color: #40595d;
+  background: #f2f8f6;
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.thermoTrialCard > header p[data-trial-state='true'] {
+  border-color: #2a8b84;
+  color: #0d4f4c;
+  background: #dcf1ec;
+}
+
+.thermoTrialCard > header p[data-trial-state='false'] {
+  border-color: #c8899a;
+  color: #7c2a3d;
+  background: #fceef1;
+}
+
+.thermoTrialCurve {
+  width: 100%;
+  min-height: 130px;
+  border: 1px solid #28454e;
+  border-radius: 0.6rem;
+  background: #07171d;
+}
+
+.curveFeatureList {
+  container-type: inline-size;
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+/*
+ * Stacked rather than two-column. A 12rem label track plus a value did not fit the ~200px this list
+ * gets inside the guided workspace's controls pane, and a `1fr` value track still overflows once
+ * its content is wider than the track it was squeezed into. Stacking fits every pane width, and a
+ * definition list reads the same either way.
+ */
+.curveFeatureList > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.15rem;
+}
+
+.curveFeatureList dt {
+  min-width: 0;
+  color: #17595c;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.curveFeatureList dd {
+  min-width: 0;
+  margin: 0;
+  color: #4c656a;
+  overflow-wrap: anywhere;
+}
+
+/* Two columns return once the pane is wide enough to give the label a real track. */
+@container (min-width: 30rem) {
+  .curveFeatureList > div {
+    grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+}
+
+.thermoTrialQuality {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+  color: #40595d;
+  font-size: 0.7rem;
+}
+
+.thermoTrialQuality > span {
+  color: #197671;
+  font-size: 0.6rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.thermoTrialResult {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.6rem;
+  color: #dceae7;
+  background: var(--navy);
+}
+
+.thermoTrialResult > span {
+  font-size: 0.6rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.thermoTrialResult strong {
+  color: #72d7c8;
+  font-size: 1.1rem;
+}
+
+.thermoTrialResult small {
+  font-size: 0.66rem;
+}
+
+.thermoTrialWithheld {
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border-left: 3px solid #c58b2c;
+  border-radius: 0 0.55rem 0.55rem 0;
+  color: #6d5420;
+  background: #fff6df;
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.thermoTrialActions,
+.thermoExcludeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.thermoTrialActions button,
+.thermoExcludeRow button {
+  min-height: 2.5rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid #bfd2ce;
+  border-radius: 0.5rem;
+  color: #23575a;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.thermoTrialActions button[aria-pressed='true'],
+.thermoExcludeRow button[aria-pressed='true'] {
+  border-color: var(--teal);
+  color: #fff;
+  background: var(--teal);
+}
+
+.thermoTrialActions button:disabled,
+.thermoExcludeRow button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.thermoExcludeRow label {
+  display: grid;
+  flex: 1 1 15rem;
+  gap: 0.25rem;
+  min-width: 0;
+  color: #40595d;
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.thermoExcludeRow select {
+  min-height: 2.5rem;
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #bfd2ce;
+  border-radius: 0.5rem;
+  color: var(--ink);
+  background: #fff;
+  font-size: 0.7rem;
+}
+
+.thermoNoReasonNote {
+  margin: 0;
+  color: #6d5420;
+  font-size: 0.67rem;
+  line-height: 1.45;
+}
+
+.thermoExcludedNote {
+  margin: 0;
+  color: #7c2a3d;
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.thermoSeriesReadout {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+  padding: 0.75rem;
+  border: 1px solid #c7d9d6;
+  border-radius: 0.75rem;
+  background: #f3f9f7;
+}
+
+.thermoSeriesReadout h4 {
+  margin: 0;
+  color: #123b43;
+  font-size: 0.82rem;
+}
+
+.thermoSeriesReadout p {
+  margin: 0;
+  color: #4c656a;
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.thermoSeriesReadout strong {
+  color: #0d4f4c;
+  font-size: 1.05rem;
+}
+
+/* Method model, Fick trace, and disagreement lab ------------------- */
+
+.methodProvenanceTable {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0.6rem 0 0;
+  font-size: 0.67rem;
+  line-height: 1.45;
+}
+
+/*
+ * The label and its provenance chip share a line; the description takes the next one.
+ *
+ * A three-column row needed roughly 300px of minimum track width, which the narrower guided pane
+ * does not have — it gave the panel its own horizontal scrollbar inside an already-scrolling pane.
+ * Stacking is the layout that fits every pane width without a second scroll direction.
+ */
+.methodProvenanceTable > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'label chip'
+    'detail detail';
+  gap: 0.25rem 0.5rem;
+  padding: 0.4rem 0.45rem;
+  border: 1px solid #dbe8e5;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.methodProvenanceTable > div > dt {
+  grid-area: label;
+}
+
+.methodProvenanceTable > div > dd:first-of-type {
+  grid-area: chip;
+}
+
+.methodProvenanceTable > div > dd:last-of-type {
+  grid-area: detail;
+}
+
+.methodProvenanceTable dt {
+  min-width: 0;
+  color: #17595c;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.methodProvenanceTable dd {
+  min-width: 0;
+  margin: 0;
+  color: #4c656a;
+  overflow-wrap: anywhere;
+}
+
+/*
+ * The chip used to refuse to wrap, which made its own width a floor for the row. The guided
+ * workspace's controls pane can be as narrow as ~145px of content, and a label beside an unwrappable
+ * chip overflowed there. It is short enough that wrapping almost never happens in practice.
+ */
+.provenanceChip {
+  align-self: start;
+  max-width: 100%;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid #9fc2bd;
+  border-radius: 999px;
+  color: #17595c;
+  background: #e6f3f0;
+  font-size: 0.6rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.provenanceChip[data-status='assumed'] {
+  border-color: #d9ab5e;
+  color: #6d5420;
+  background: #fff2d8;
+}
+
+.provenanceChip[data-status='calculated'] {
+  border-color: #a8b6cf;
+  color: #37456a;
+  background: #eaeffa;
+}
+
+.methodTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.6rem 0 0;
+}
+
+.methodTabs button {
+  min-height: 2.5rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid #bfd2ce;
+  border-radius: 999px;
+  color: #23575a;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.68rem;
+  font-weight: 750;
+}
+
+.methodTabs button[aria-selected='true'] {
+  border-color: var(--teal);
+  color: #fff;
+  background: var(--teal);
+}
+
+.methodCommitment {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.7rem;
+  border: 1px solid #c7d9d6;
+  border-radius: 0.75rem;
+  background: #fbfdfc;
+}
+
+.methodCommitment legend {
+  color: #123b43;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.methodCommitment label {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  min-height: 2.75rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid #dbe8e5;
+  border-radius: 0.6rem;
+  color: #40595d;
+  background: #fff;
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.methodCommitment button {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid #3c8f88;
+  border-radius: 0.6rem;
+  color: #effffb;
+  background: linear-gradient(135deg, #167b77, #0d5f62);
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.methodCommitment button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.methodVerdict {
+  margin: 0;
+  padding: 0.6rem 0.7rem;
+  border-left: 3px solid var(--teal);
+  border-radius: 0 0.55rem 0.55rem 0;
+  color: #1c4f52;
+  background: var(--teal-soft);
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+.methodVerdict[data-verdict='not-defensible'],
+.methodVerdict[data-verdict='averages-unlike-methods'] {
+  border-left-color: #c05070;
+  color: #6f2739;
+  background: #fceef1;
+}
+
+.fickWorkbench,
+.disagreementLab {
+  container-type: inline-size;
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.5rem;
+  color: #16343b;
+  background: #edf4f2;
+}
+
+/* Roomier once the pane is wide enough to afford it. */
+@container (min-width: 26rem) {
+  .fickWorkbench,
+  .disagreementLab {
+    gap: 0.75rem;
+    padding: 0.8rem;
+  }
+}
+
+.fickWorkbench h2,
+.disagreementLab h2 {
+  margin: 0;
+  color: #0b3942;
+  font-size: 1.02rem;
+  line-height: 1.2;
+}
+
+.fickWorkbench h3,
+.disagreementLab h3 {
+  margin: 0;
+  color: #123b43;
+  font-size: 0.82rem;
+}
+
+/*
+ * Scoped to plain body paragraphs. A bare descendant selector here also repainted the dark result
+ * blocks and the callouts nested inside these panels, which dropped the caption under a Fick result
+ * to a 2.45:1 mid-grey on navy.
+ */
+.fickWorkbench > p,
+.disagreementLab > p,
+.fickCard > p,
+.disagreementCard > p,
+.disagreementCard section > p {
+  margin: 0;
+  color: #4c656a;
+  font-size: 0.7rem;
+  line-height: 1.55;
+}
+
+.fickCard,
+.disagreementCard {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.45rem;
+  border: 1px solid #c7d9d6;
+  border-radius: 0.8rem;
+  background: #fbfdfc;
+  overflow-wrap: anywhere;
+}
+
+@container (min-width: 26rem) {
+  .fickCard,
+  .disagreementCard {
+    padding: 0.75rem;
+  }
+}
+
+.fickOutcome {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 0.6rem;
+  color: #dceae7;
+  background: var(--navy);
+}
+
+.fickOutcome strong {
+  color: #72d7c8;
+  font-size: 1.05rem;
+}
+
+.fickOutcome[data-status='withheld'] {
+  color: #ffe3e8;
+  background: #5a2233;
+}
+
+.fickOutcome[data-status='withheld'] strong {
+  color: #ffc2cd;
+  font-size: 0.85rem;
+}
+
+.fickUnitAccount {
+  display: grid;
+  gap: 0.3rem;
+  padding-left: 1.1rem;
+  margin: 0;
+  color: #4c656a;
+  font-size: 0.67rem;
+  line-height: 1.5;
+}
+
+.amplificationGrid {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+}
+
+.amplificationGrid article {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.6rem;
+  border: 1px solid #dbe8e5;
+  border-radius: 0.6rem;
+  background: #fff;
+}
+
+.amplificationGrid strong {
+  color: #0d4f4c;
+  font-size: 0.95rem;
+}
+
+.openQuestionCard {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.6rem 0.7rem;
+  border-left: 3px solid #c58b2c;
+  border-radius: 0 0.55rem 0.55rem 0;
+  color: #6d5420;
+  background: #fff6df;
+  font-size: 0.67rem;
+  line-height: 1.5;
+}
+
+.openQuestionCard strong {
+  color: #5a4416;
+}
+
+.scenarioSideBySide {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
 }
