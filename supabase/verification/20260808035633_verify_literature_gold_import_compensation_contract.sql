@@ -933,7 +933,10 @@ do $$
 declare
   bad_defaults text;
 begin
-  select string_agg(column_name || '=' || coalesce(column_default, '<null>'), ', ')
+  select string_agg(
+    column_name || '=' || coalesce(column_default, '<null>'),
+    ', ' order by column_name
+  )
   into bad_defaults
   from information_schema.columns
   where table_schema = 'public'
@@ -1533,7 +1536,7 @@ begin
           '2033-01-01T00:01:00Z'::timestamptz + fixture * interval '1 second'
         )
       )
-    )
+    ) order by fixture
   )
   into overrides
   from generate_series(1, 624) as fixture;
