@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { resolve } from 'node:path'
 
 import { assertKnownArguments, hasFlag, parseCliArguments, stringArgument } from './lib/cli'
@@ -7,6 +8,30 @@ export const SCENARIO_EVIDENCE_SCHEMA_VERSION = 'pr84-scenario-evidence/v1'
 export const LINT_INTROSPECTION_SCHEMA_VERSION = 'pr84-lint-introspection/v1'
 export const REHEARSAL_MANIFEST_SCHEMA_VERSION = 'pr84-rehearsal-manifest/v1'
 export const EXECUTION_RECEIPT_SCHEMA_VERSION = 'pr84-execution-receipt/v1'
+export const SCHEMA_SECURITY_DEFINITION_IDENTITY_SCHEMA_VERSION =
+  'gold-import-compensation-schema-security-definition-identity/1.0.0'
+
+/** Fixed-image PostgreSQL 17 semantic identity; regenerated only through the disposable harness. */
+export const POST_MIGRATION_SCHEMA_SECURITY_IDENTITY_SHA256 =
+  'b5c6a6050b2c17c60c28fa400c6957103277e51e8b54425c290f43c92a447471'
+
+export interface SchemaSecurityDefinitionRecord {
+  definitionSha256: string
+  normalizedDefinition: string
+  objectIdentity: string
+  objectName: string
+  objectType: string
+  owner: string | null
+  parentObjectName: string | null
+  relevantRoles: string[]
+  schemaName: string
+  state: Record<string, unknown>
+}
+
+export interface SchemaSecurityDefinitionIdentity {
+  records: SchemaSecurityDefinitionRecord[]
+  schemaVersion: typeof SCHEMA_SECURITY_DEFINITION_IDENTITY_SCHEMA_VERSION
+}
 
 export const REQUIRED_SCENARIO_IDS = [
   'S01_initial_import_success',
@@ -55,12 +80,57 @@ export const REQUIRED_TRANSITION_FUNCTIONS = [
   'reconcile_literature_gold_review_operation_v1',
 ] as const
 
+/**
+ * Exact public-function catalog touched by the compensation migration, including the three legacy
+ * functions whose definitions/ACLs it patches dynamically. Snapshot and disposable rehearsal SQL
+ * must both derive their function and function-ACL scopes from this list.
+ */
+export const SCHEMA_SECURITY_FUNCTION_NAMES = [
+  'apply_literature_gold_import_v1',
+  'assert_literature_gold_jsonb_object_v1',
+  'assert_literature_gold_jsonb_scalar_v1',
+  'assert_literature_gold_review_chain_head_v1',
+  'check_literature_gold_review_chain_head',
+  'compensate_literature_gold_import_v1',
+  'get_literature_gold_review_item_v1',
+  'guard_literature_gold_review_action_mutation',
+  'guard_literature_gold_review_chain_insert',
+  'guard_literature_gold_review_operation_mutation',
+  'literature_gold_canonical_json_v1',
+  'literature_gold_development_membership_hash_v1',
+  'literature_gold_effective_state_hash_v1',
+  'literature_gold_is_timestamptz_v1',
+  'literature_gold_jsonb_sha256_v1',
+  'literature_gold_physical_state_hash_v1',
+  'literature_gold_review_clinical_projection_v1',
+  'literature_gold_review_operation_receipt_v1',
+  'literature_gold_review_operation_result_v1',
+  'reconcile_literature_gold_review_operation_v1',
+  'save_literature_gold_review_v1',
+  'update_literature_gold_item_v1',
+  'validate_literature_gold_import_review_payload_v1',
+  'validate_literature_gold_operation_event',
+] as const
+
 export const REQUIRED_JOURNAL_TABLES = [
   'literature_gold_review_operation_actions',
   'literature_gold_review_operations',
 ] as const
 
 export const REQUIRED_JOURNAL_ROLES = ['public', 'anon', 'authenticated', 'service_role'] as const
+
+export const SCHEMA_SECURITY_COLUMN_ROLES = [
+  'public',
+  'anon',
+  'authenticated',
+  'service_role',
+] as const
+export const SCHEMA_SECURITY_COLUMN_PRIVILEGES = [
+  'SELECT',
+  'INSERT',
+  'UPDATE',
+  'REFERENCES',
+] as const
 
 export const REQUIRED_SAFE_SEARCH_PATH_SCHEMAS = ['public', 'extensions'] as const
 export const REQUIRED_ORDINARY_ROLES = ['public', 'anon', 'authenticated'] as const
@@ -423,9 +493,34 @@ function compareCodeUnits(left: string, right: string) {
   return left < right ? -1 : left > right ? 1 : 0
 }
 
+/** Canonical D/E catalog tuple ordering shared by builders and persisted-artifact validation. */
+export function compareSchemaSecurityDefinitionRecords(
+  left: SchemaSecurityDefinitionRecord,
+  right: SchemaSecurityDefinitionRecord,
+): number {
+  return (
+    compareCodeUnits(left.schemaName, right.schemaName) ||
+    compareCodeUnits(left.objectType, right.objectType) ||
+    compareCodeUnits(left.objectName, right.objectName) ||
+    compareCodeUnits(left.objectIdentity, right.objectIdentity)
+  )
+}
+
 function requireRecord(value: unknown, label: string): Record<string, unknown> {
   if (!isRecord(value)) throw new Error(`${label} must be a JSON object.`)
   return value
+}
+
+function requireExactObjectKeys(
+  value: Record<string, unknown>,
+  expected: readonly string[],
+  label: string,
+): void {
+  const actualKeys = Object.keys(value).sort(compareCodeUnits)
+  const expectedKeys = [...expected].sort(compareCodeUnits)
+  if (JSON.stringify(actualKeys) !== JSON.stringify(expectedKeys)) {
+    throw new Error(`${label} has unexpected or missing keys.`)
+  }
 }
 
 function requireNonemptyString(value: unknown, label: string): string {
@@ -796,6 +891,760 @@ export function canonicalJson(value: unknown): string {
   return `${JSON.stringify(sortCanonical(value), null, 2)}\n`
 }
 
+function sha256(value: string): string {
+  return createHash('sha256').update(value).digest('hex')
+}
+
+/**
+ * Normalize catalog SQL without changing quoted identifiers, literals, or dollar-quoted function
+ * bodies. This deliberately normalizes less rather than risk erasing a semantic distinction.
+ */
+export function normalizePostgresDefinition(definition: string): string {
+  const output: string[] = []
+  let index = 0
+  let pendingWhitespace = false
+  const appendWhitespace = () => {
+    if (pendingWhitespace && output.length > 0 && output.at(-1) !== ' ') output.push(' ')
+    pendingWhitespace = false
+  }
+  while (index < definition.length) {
+    const character = definition[index]
+    if (/\s/u.test(character)) {
+      pendingWhitespace = true
+      index += 1
+      continue
+    }
+    appendWhitespace()
+    if (character === "'" || character === '"') {
+      const quote = character
+      let end = index + 1
+      while (end < definition.length) {
+        if (definition[end] === quote && definition[end + 1] === quote) {
+          end += 2
+          continue
+        }
+        if (definition[end] === quote) {
+          end += 1
+          break
+        }
+        end += 1
+      }
+      output.push(definition.slice(index, end))
+      index = end
+      continue
+    }
+    if (character === '$') {
+      const delimiter = definition.slice(index).match(/^\$[A-Za-z_][A-Za-z0-9_]*\$|^\$\$/u)?.[0]
+      if (delimiter) {
+        const closing = definition.indexOf(delimiter, index + delimiter.length)
+        const end = closing < 0 ? definition.length : closing + delimiter.length
+        output.push(definition.slice(index, end))
+        index = end
+        continue
+      }
+    }
+    output.push(character)
+    index += 1
+  }
+  return output.join('').trim()
+}
+
+function catalogField(
+  row: Record<string, unknown>,
+  snakeCase: string,
+  camelCase = snakeCase.replaceAll(/_([a-z])/gu, (_match, letter: string) => letter.toUpperCase()),
+) {
+  return row[snakeCase] ?? row[camelCase]
+}
+
+function optionalCatalogString(value: unknown, label: string): string | null {
+  if (value === null || value === undefined) return null
+  return requireNonemptyString(value, label)
+}
+
+function requireCatalogText(value: unknown, label: string): string {
+  if (typeof value !== 'string') throw new Error(`${label} must be a string.`)
+  return value
+}
+
+function optionalCatalogText(value: unknown, label: string): string | null {
+  if (value === null || value === undefined) return null
+  return requireCatalogText(value, label)
+}
+
+function requireCatalogBoolean(value: unknown, label: string): boolean {
+  if (typeof value !== 'boolean') throw new Error(`${label} must be boolean.`)
+  return value
+}
+
+function requireCatalogArray(value: unknown, label: string): Record<string, unknown>[] {
+  if (!Array.isArray(value)) throw new Error(`${label} must be an array.`)
+  return value.map((entry, index) => requireRecord(entry, `${label}[${index}]`))
+}
+
+function sortedCatalogStrings(value: unknown, label: string): string[] {
+  if (!Array.isArray(value)) throw new Error(`${label} must be an array.`)
+  const strings = value.map((entry, index) => requireNonemptyString(entry, `${label}[${index}]`))
+  if (new Set(strings).size !== strings.length) throw new Error(`${label} contains duplicates.`)
+  return strings.sort(compareCodeUnits)
+}
+
+/**
+ * Build the exact, deterministic catalog identity shared by audit, package, and rehearsal. Input is
+ * the `catalog` object returned by operational/fixed-image introspection, or a wrapper containing it.
+ */
+export function buildSchemaSecurityDefinitionIdentity(
+  value: unknown,
+): SchemaSecurityDefinitionIdentity {
+  const wrapper = requireRecord(value, 'schema/security introspection')
+  const catalog = requireRecord(wrapper.catalog ?? wrapper, 'schema/security catalog')
+  const records: SchemaSecurityDefinitionRecord[] = []
+  const tableOwners = new Map<string, string>()
+  const functionOwners = new Map<string, string>()
+  const schemaOwners = new Map<string, string>()
+  const functionAclEntries = requireCatalogArray(
+    catalog.functionAclEntries,
+    'catalog.functionAclEntries',
+  )
+  const columnAclEntries = requireCatalogArray(catalog.columnAclEntries, 'catalog.columnAclEntries')
+  const columnPrivileges = requireCatalogArray(catalog.columnPrivileges, 'catalog.columnPrivileges')
+  const knownColumns = new Set<string>()
+  const inheritedTableOwner = (tableName: string, label: string) => {
+    const owner = tableOwners.get(tableName)
+    if (!owner) throw new Error(`${label} references unknown table owner for ${tableName}.`)
+    return owner
+  }
+  const effectiveColumnPrivilegeState = (tableName: string, columnName: string, label: string) => {
+    const matching = columnPrivileges
+      .filter(
+        (row) =>
+          catalogField(row, 'table_name') === tableName &&
+          catalogField(row, 'column_name') === columnName,
+      )
+      .map((row, index) => ({
+        roleName: requireNonemptyString(
+          catalogField(row, 'role_name'),
+          `${label}.columnPrivileges[${index}].role_name`,
+        ),
+        privilegeName: requireNonemptyString(
+          catalogField(row, 'privilege_name'),
+          `${label}.columnPrivileges[${index}].privilege_name`,
+        ),
+        granted: requireCatalogBoolean(row.granted, `${label}.columnPrivileges[${index}].granted`),
+      }))
+    const expectedKeys = SCHEMA_SECURITY_COLUMN_ROLES.flatMap((roleName) =>
+      SCHEMA_SECURITY_COLUMN_PRIVILEGES.map((privilegeName) => `${roleName}:${privilegeName}`),
+    ).sort(compareCodeUnits)
+    const actualKeys = matching
+      .map(({ roleName, privilegeName }) => `${roleName}:${privilegeName}`)
+      .sort(compareCodeUnits)
+    if (JSON.stringify(actualKeys) !== JSON.stringify(expectedKeys)) {
+      throw new Error(`${label} must contain the exact protected role/column-privilege matrix.`)
+    }
+    return matching.sort((left, right) =>
+      compareCodeUnits(
+        `${left.roleName}:${left.privilegeName}`,
+        `${right.roleName}:${right.privilegeName}`,
+      ),
+    )
+  }
+  const add = (input: {
+    definition: string
+    objectIdentity: string
+    objectName: string
+    objectType: string
+    owner?: string | null
+    parentObjectName?: string | null
+    relevantRoles?: string[]
+    schemaName?: string
+    state: Record<string, unknown>
+  }) => {
+    const normalizedDefinition = normalizePostgresDefinition(input.definition)
+    if (!normalizedDefinition) throw new Error(`${input.objectIdentity} has an empty definition.`)
+    const relevantRoles = [...new Set(input.relevantRoles ?? [])].sort(compareCodeUnits)
+    records.push({
+      schemaName: input.schemaName ?? 'public',
+      objectType: input.objectType,
+      objectName: input.objectName,
+      objectIdentity: input.objectIdentity,
+      owner: input.owner ?? null,
+      parentObjectName: input.parentObjectName ?? null,
+      relevantRoles,
+      normalizedDefinition,
+      definitionSha256: sha256(normalizedDefinition),
+      state: sortCanonical(input.state) as Record<string, unknown>,
+    })
+  }
+
+  for (const [index, row] of requireCatalogArray(catalog.tables, 'catalog.tables').entries()) {
+    const tableName = requireNonemptyString(
+      catalogField(row, 'table_name'),
+      `catalog.tables[${index}].table_name`,
+    )
+    const owner = requireNonemptyString(row.owner, `catalog.tables[${index}].owner`)
+    const relationKind = requireNonemptyString(
+      catalogField(row, 'relation_kind'),
+      `catalog.tables[${index}].relation_kind`,
+    )
+    const rlsEnabled = requireCatalogBoolean(
+      catalogField(row, 'rls_enabled'),
+      `catalog.tables[${index}].rls_enabled`,
+    )
+    const forceRls = requireCatalogBoolean(
+      catalogField(row, 'force_rls'),
+      `catalog.tables[${index}].force_rls`,
+    )
+    tableOwners.set(tableName, owner)
+    add({
+      objectType: 'table',
+      objectName: tableName,
+      objectIdentity: `public.table.${tableName}`,
+      owner,
+      definition: `relation_kind=${relationKind};owner=${owner};rls_enabled=${String(rlsEnabled)};force_rls=${String(forceRls)}`,
+      state: { forceRls, owner, relationKind, rlsEnabled },
+    })
+  }
+
+  for (const [index, row] of requireCatalogArray(catalog.columns, 'catalog.columns').entries()) {
+    const tableName = requireNonemptyString(
+      catalogField(row, 'table_name'),
+      `catalog.columns[${index}].table_name`,
+    )
+    const columnName = requireNonemptyString(
+      catalogField(row, 'column_name'),
+      `catalog.columns[${index}].column_name`,
+    )
+    const ordinalPosition = requireNonnegativeInteger(
+      catalogField(row, 'ordinal_position'),
+      `catalog.columns[${index}].ordinal_position`,
+    )
+    const dataType = requireNonemptyString(
+      catalogField(row, 'data_type'),
+      `catalog.columns[${index}].data_type`,
+    )
+    const udtName = requireNonemptyString(
+      catalogField(row, 'udt_name'),
+      `catalog.columns[${index}].udt_name`,
+    )
+    const isNullable = requireNonemptyString(
+      catalogField(row, 'is_nullable'),
+      `catalog.columns[${index}].is_nullable`,
+    )
+    const columnDefault = optionalCatalogString(
+      catalogField(row, 'column_default'),
+      `catalog.columns[${index}].column_default`,
+    )
+    const normalizedDefault = columnDefault ? normalizePostgresDefinition(columnDefault) : null
+    const effectivePrivileges = effectiveColumnPrivilegeState(
+      tableName,
+      columnName,
+      `catalog.columns[${index}]`,
+    )
+    knownColumns.add(`${tableName}\0${columnName}`)
+    const state = {
+      dataType,
+      udtName,
+      isNullable,
+      ordinalPosition,
+      columnDefault: normalizedDefault,
+      effectivePrivileges,
+    }
+    add({
+      objectType: 'column',
+      objectName: columnName,
+      objectIdentity: `public.table.${tableName}.column.${columnName}`,
+      parentObjectName: tableName,
+      owner: inheritedTableOwner(tableName, `catalog.columns[${index}]`),
+      relevantRoles: [...SCHEMA_SECURITY_COLUMN_ROLES],
+      definition: JSON.stringify(sortCanonical(state)),
+      state,
+    })
+  }
+
+  for (const [index, row] of columnPrivileges.entries()) {
+    const tableName = requireNonemptyString(
+      catalogField(row, 'table_name'),
+      `catalog.columnPrivileges[${index}].table_name`,
+    )
+    const columnName = requireNonemptyString(
+      catalogField(row, 'column_name'),
+      `catalog.columnPrivileges[${index}].column_name`,
+    )
+    if (!knownColumns.has(`${tableName}\0${columnName}`)) {
+      throw new Error(
+        `catalog.columnPrivileges[${index}] references unknown protected column ${tableName}.${columnName}.`,
+      )
+    }
+  }
+
+  for (const [index, row] of requireCatalogArray(
+    catalog.functions,
+    'catalog.functions',
+  ).entries()) {
+    const name = requireNonemptyString(row.name, `catalog.functions[${index}].name`)
+    const identityArguments = requireCatalogText(
+      catalogField(row, 'identity_arguments'),
+      `catalog.functions[${index}].identity_arguments`,
+    )
+    const definition = requireNonemptyString(
+      row.definition,
+      `catalog.functions[${index}].definition`,
+    )
+    const owner = requireNonemptyString(row.owner, `catalog.functions[${index}].owner`)
+    const relevantRoles = functionAclEntries
+      .filter(
+        (acl) =>
+          catalogField(acl, 'object_name') === name &&
+          catalogField(acl, 'identity_arguments') === identityArguments,
+      )
+      .map((acl, aclIndex) =>
+        requireNonemptyString(acl.grantee, `catalog.functionAclEntries[${aclIndex}].grantee`),
+      )
+    const state = {
+      identityArguments,
+      resultType: requireNonemptyString(
+        catalogField(row, 'result_type'),
+        `catalog.functions[${index}].result_type`,
+      ),
+      volatility: requireNonemptyString(row.volatility, `catalog.functions[${index}].volatility`),
+      securityDefiner: requireCatalogBoolean(
+        catalogField(row, 'security_definer'),
+        `catalog.functions[${index}].security_definer`,
+      ),
+      owner,
+      searchPath: optionalCatalogText(
+        catalogField(row, 'search_path'),
+        `catalog.functions[${index}].search_path`,
+      ),
+    }
+    add({
+      objectType: 'function',
+      objectName: name,
+      objectIdentity: `public.function.${name}(${identityArguments})`,
+      owner,
+      relevantRoles,
+      definition,
+      state,
+    })
+    functionOwners.set(`${name}(${identityArguments})`, owner)
+  }
+
+  for (const [index, row] of requireCatalogArray(
+    catalog.constraints,
+    'catalog.constraints',
+  ).entries()) {
+    const name = requireNonemptyString(row.name, `catalog.constraints[${index}].name`)
+    const tableName = requireNonemptyString(
+      catalogField(row, 'table_name'),
+      `catalog.constraints[${index}].table_name`,
+    )
+    add({
+      objectType: 'constraint',
+      objectName: name,
+      objectIdentity: `public.table.${tableName}.constraint.${name}`,
+      parentObjectName: tableName,
+      owner: inheritedTableOwner(tableName, `catalog.constraints[${index}]`),
+      definition: requireNonemptyString(row.definition, `catalog.constraints[${index}].definition`),
+      state: {
+        validated: requireCatalogBoolean(row.validated, `catalog.constraints[${index}].validated`),
+      },
+    })
+  }
+
+  for (const [index, row] of requireCatalogArray(catalog.indexes, 'catalog.indexes').entries()) {
+    const name = requireNonemptyString(row.name, `catalog.indexes[${index}].name`)
+    const tableName = requireNonemptyString(
+      catalogField(row, 'table_name'),
+      `catalog.indexes[${index}].table_name`,
+    )
+    const predicate = optionalCatalogString(row.predicate, `catalog.indexes[${index}].predicate`)
+    const owner = requireNonemptyString(row.owner, `catalog.indexes[${index}].owner`)
+    add({
+      objectType: 'index',
+      objectName: name,
+      objectIdentity: `public.table.${tableName}.index.${name}`,
+      parentObjectName: tableName,
+      owner,
+      definition: requireNonemptyString(row.definition, `catalog.indexes[${index}].definition`),
+      state: {
+        constraintBacked: requireCatalogBoolean(
+          catalogField(row, 'constraint_backed'),
+          `catalog.indexes[${index}].constraint_backed`,
+        ),
+        predicate: predicate ? normalizePostgresDefinition(predicate) : null,
+        unique: requireCatalogBoolean(
+          catalogField(row, 'is_unique'),
+          `catalog.indexes[${index}].is_unique`,
+        ),
+        valid: requireCatalogBoolean(
+          catalogField(row, 'is_valid'),
+          `catalog.indexes[${index}].is_valid`,
+        ),
+      },
+    })
+  }
+
+  for (const [index, row] of requireCatalogArray(catalog.triggers, 'catalog.triggers').entries()) {
+    const name = requireNonemptyString(row.name, `catalog.triggers[${index}].name`)
+    const tableName = requireNonemptyString(
+      catalogField(row, 'table_name'),
+      `catalog.triggers[${index}].table_name`,
+    )
+    add({
+      objectType: 'trigger',
+      objectName: name,
+      objectIdentity: `public.table.${tableName}.trigger.${name}`,
+      parentObjectName: tableName,
+      owner: inheritedTableOwner(tableName, `catalog.triggers[${index}]`),
+      definition: requireNonemptyString(row.definition, `catalog.triggers[${index}].definition`),
+      state: {
+        enableMode: requireNonemptyString(
+          catalogField(row, 'enable_mode'),
+          `catalog.triggers[${index}].enable_mode`,
+        ),
+        enabled: requireCatalogBoolean(row.enabled, `catalog.triggers[${index}].enabled`),
+      },
+    })
+  }
+
+  for (const [index, row] of requireCatalogArray(catalog.policies, 'catalog.policies').entries()) {
+    const name = requireNonemptyString(row.name, `catalog.policies[${index}].name`)
+    const tableName = requireNonemptyString(
+      catalogField(row, 'table_name'),
+      `catalog.policies[${index}].table_name`,
+    )
+    const roles = sortedCatalogStrings(row.roles, `catalog.policies[${index}].roles`)
+    const command = requireNonemptyString(row.command, `catalog.policies[${index}].command`)
+    const permissive = requireNonemptyString(
+      row.permissive,
+      `catalog.policies[${index}].permissive`,
+    )
+    const usingExpression = optionalCatalogString(
+      catalogField(row, 'using_expression'),
+      `catalog.policies[${index}].using_expression`,
+    )
+    const withCheckExpression = optionalCatalogString(
+      catalogField(row, 'with_check_expression'),
+      `catalog.policies[${index}].with_check_expression`,
+    )
+    const state = {
+      command,
+      permissive,
+      roles,
+      usingExpression: usingExpression ? normalizePostgresDefinition(usingExpression) : null,
+      withCheckExpression: withCheckExpression
+        ? normalizePostgresDefinition(withCheckExpression)
+        : null,
+    }
+    add({
+      objectType: 'policy',
+      objectName: name,
+      objectIdentity: `public.table.${tableName}.policy.${name}`,
+      parentObjectName: tableName,
+      owner: inheritedTableOwner(tableName, `catalog.policies[${index}]`),
+      relevantRoles: roles,
+      definition: JSON.stringify(sortCanonical(state)),
+      state,
+    })
+  }
+
+  for (const [index, row] of requireCatalogArray(
+    catalog.tablePrivileges,
+    'catalog.tablePrivileges',
+  ).entries()) {
+    const tableName = requireNonemptyString(
+      catalogField(row, 'table_name'),
+      `catalog.tablePrivileges[${index}].table_name`,
+    )
+    const roleName = requireNonemptyString(
+      catalogField(row, 'role_name'),
+      `catalog.tablePrivileges[${index}].role_name`,
+    )
+    const privilegeName = requireNonemptyString(
+      catalogField(row, 'privilege_name'),
+      `catalog.tablePrivileges[${index}].privilege_name`,
+    )
+    const granted = requireCatalogBoolean(row.granted, `catalog.tablePrivileges[${index}].granted`)
+    add({
+      objectType: 'effective_table_privilege',
+      objectName: `${roleName}:${privilegeName}`,
+      objectIdentity: `public.table.${tableName}.effective_privilege.${roleName}.${privilegeName}`,
+      parentObjectName: tableName,
+      owner: inheritedTableOwner(tableName, `catalog.tablePrivileges[${index}]`),
+      relevantRoles: [roleName],
+      definition: `role=${roleName};privilege=${privilegeName};granted=${String(granted)}`,
+      state: { granted, privilegeName, roleName },
+    })
+  }
+
+  for (const [index, row] of requireCatalogArray(
+    catalog.schemaCreatePrivileges,
+    'catalog.schemaCreatePrivileges',
+  ).entries()) {
+    const schemaName = requireNonemptyString(
+      catalogField(row, 'schema_name'),
+      `catalog.schemaCreatePrivileges[${index}].schema_name`,
+    )
+    const roleName = requireNonemptyString(
+      catalogField(row, 'role_name'),
+      `catalog.schemaCreatePrivileges[${index}].role_name`,
+    )
+    const owner = requireNonemptyString(row.owner, `catalog.schemaCreatePrivileges[${index}].owner`)
+    const granted = requireCatalogBoolean(
+      row.granted,
+      `catalog.schemaCreatePrivileges[${index}].granted`,
+    )
+    schemaOwners.set(schemaName, owner)
+    add({
+      schemaName,
+      objectType: 'effective_schema_create_privilege',
+      objectName: roleName,
+      objectIdentity: `${schemaName}.effective_create_privilege.${roleName}`,
+      owner,
+      relevantRoles: [roleName],
+      definition: `owner=${owner};role=${roleName};create=${String(granted)}`,
+      state: { granted, owner, roleName },
+    })
+  }
+
+  for (const [catalogKey, objectType] of [
+    ['tableAclEntries', 'table_acl'],
+    ['functionAclEntries', 'function_acl'],
+    ['schemaAclEntries', 'schema_acl'],
+  ] as const) {
+    for (const [index, row] of requireCatalogArray(
+      catalog[catalogKey],
+      `catalog.${catalogKey}`,
+    ).entries()) {
+      const schemaName = requireNonemptyString(
+        catalogField(row, 'schema_name'),
+        `catalog.${catalogKey}[${index}].schema_name`,
+      )
+      const objectName = requireNonemptyString(
+        catalogField(row, 'object_name'),
+        `catalog.${catalogKey}[${index}].object_name`,
+      )
+      const objectArguments = optionalCatalogText(
+        catalogField(row, 'identity_arguments'),
+        `catalog.${catalogKey}[${index}].identity_arguments`,
+      )
+      const grantee = requireNonemptyString(row.grantee, `catalog.${catalogKey}[${index}].grantee`)
+      const grantor = requireNonemptyString(row.grantor, `catalog.${catalogKey}[${index}].grantor`)
+      const privilegeType = requireNonemptyString(
+        catalogField(row, 'privilege_type'),
+        `catalog.${catalogKey}[${index}].privilege_type`,
+      )
+      const isGrantable = requireCatalogBoolean(
+        catalogField(row, 'is_grantable'),
+        `catalog.${catalogKey}[${index}].is_grantable`,
+      )
+      const qualifiedObject =
+        objectArguments === null ? objectName : `${objectName}(${objectArguments})`
+      const identity = `${schemaName}.${objectType}.${qualifiedObject}.${grantee}.${privilegeType}.${grantor}`
+      const owner =
+        objectType === 'table_acl'
+          ? inheritedTableOwner(objectName, `catalog.${catalogKey}[${index}]`)
+          : objectType === 'function_acl'
+            ? functionOwners.get(`${objectName}(${objectArguments ?? ''})`)
+            : schemaOwners.get(schemaName)
+      if (!owner) throw new Error(`catalog.${catalogKey}[${index}] has no bound object owner.`)
+      add({
+        schemaName,
+        objectType,
+        objectName,
+        objectIdentity: identity,
+        owner,
+        relevantRoles: [grantee, grantor],
+        definition: `object=${qualifiedObject};grantee=${grantee};grantor=${grantor};privilege=${privilegeType};grantable=${String(isGrantable)}`,
+        state: { grantee, grantor, identityArguments: objectArguments, isGrantable, privilegeType },
+      })
+    }
+  }
+
+  for (const [index, row] of columnAclEntries.entries()) {
+    const schemaName = requireNonemptyString(
+      catalogField(row, 'schema_name'),
+      `catalog.columnAclEntries[${index}].schema_name`,
+    )
+    const tableName = requireNonemptyString(
+      catalogField(row, 'table_name'),
+      `catalog.columnAclEntries[${index}].table_name`,
+    )
+    const columnName = requireNonemptyString(
+      catalogField(row, 'column_name'),
+      `catalog.columnAclEntries[${index}].column_name`,
+    )
+    if (schemaName !== 'public' || !knownColumns.has(`${tableName}\0${columnName}`)) {
+      throw new Error(
+        `catalog.columnAclEntries[${index}] references unknown protected column ${schemaName}.${tableName}.${columnName}.`,
+      )
+    }
+    const grantee = requireNonemptyString(row.grantee, `catalog.columnAclEntries[${index}].grantee`)
+    const grantor = requireNonemptyString(row.grantor, `catalog.columnAclEntries[${index}].grantor`)
+    const privilegeType = requireNonemptyString(
+      catalogField(row, 'privilege_type'),
+      `catalog.columnAclEntries[${index}].privilege_type`,
+    )
+    if (
+      !SCHEMA_SECURITY_COLUMN_PRIVILEGES.includes(
+        privilegeType as (typeof SCHEMA_SECURITY_COLUMN_PRIVILEGES)[number],
+      )
+    ) {
+      throw new Error(
+        `catalog.columnAclEntries[${index}] has unsupported privilege ${privilegeType}.`,
+      )
+    }
+    const isGrantable = requireCatalogBoolean(
+      catalogField(row, 'is_grantable'),
+      `catalog.columnAclEntries[${index}].is_grantable`,
+    )
+    add({
+      schemaName,
+      objectType: 'column_acl',
+      objectName: columnName,
+      objectIdentity: `${schemaName}.table.${tableName}.column.${columnName}.acl.${grantee}.${privilegeType}.${grantor}`,
+      owner: inheritedTableOwner(tableName, `catalog.columnAclEntries[${index}]`),
+      parentObjectName: tableName,
+      relevantRoles: [grantee, grantor],
+      definition: `table=${tableName};column=${columnName};grantee=${grantee};grantor=${grantor};privilege=${privilegeType};grantable=${String(isGrantable)}`,
+      state: { grantee, grantor, isGrantable, privilegeType, tableName },
+    })
+  }
+
+  const eventTypes = sortedCatalogStrings(
+    catalog.supportedEventTypes,
+    'catalog.supportedEventTypes',
+  )
+  add({
+    objectType: 'event_vocabulary',
+    objectName: 'literature_gold_set_events.event_type',
+    objectIdentity: 'public.table.literature_gold_set_events.event_vocabulary',
+    parentObjectName: 'literature_gold_set_events',
+    owner: inheritedTableOwner('literature_gold_set_events', 'catalog.supportedEventTypes'),
+    definition: JSON.stringify(eventTypes),
+    state: { eventTypes },
+  })
+
+  records.sort(compareSchemaSecurityDefinitionRecords)
+  const seenObjectIdentities = new Set<string>()
+  const duplicate = records.find((record) => {
+    if (seenObjectIdentities.has(record.objectIdentity)) return true
+    seenObjectIdentities.add(record.objectIdentity)
+    return false
+  })
+  if (duplicate)
+    throw new Error(`Duplicate schema/security object identity: ${duplicate.objectIdentity}.`)
+  return { schemaVersion: SCHEMA_SECURITY_DEFINITION_IDENTITY_SCHEMA_VERSION, records }
+}
+
+/** Validate and canonically sort a persisted schema/security-definition identity artifact. */
+export function validateSchemaSecurityDefinitionIdentity(
+  value: unknown,
+  options: { expectedSchemaSecurityIdentitySha256?: string } = {},
+): SchemaSecurityDefinitionIdentity {
+  const identity = requireRecord(value, 'schema/security definition identity')
+  requireExactObjectKeys(
+    identity,
+    ['schemaVersion', 'records'],
+    'schema/security definition identity',
+  )
+  if (identity.schemaVersion !== SCHEMA_SECURITY_DEFINITION_IDENTITY_SCHEMA_VERSION) {
+    throw new Error(
+      `Unexpected schema/security definition identity schemaVersion: ${String(identity.schemaVersion)}.`,
+    )
+  }
+  if (!Array.isArray(identity.records) || identity.records.length === 0) {
+    throw new Error('schema/security definition identity.records must be a nonempty array.')
+  }
+  const records = identity.records.map((value_, index): SchemaSecurityDefinitionRecord => {
+    const label = `schema/security definition identity.records[${index}]`
+    const record = requireRecord(value_, label)
+    requireExactObjectKeys(
+      record,
+      [
+        'schemaName',
+        'objectType',
+        'objectName',
+        'objectIdentity',
+        'owner',
+        'parentObjectName',
+        'relevantRoles',
+        'normalizedDefinition',
+        'definitionSha256',
+        'state',
+      ],
+      label,
+    )
+    const normalizedDefinition = requireNonemptyString(
+      record.normalizedDefinition,
+      `${label}.normalizedDefinition`,
+    )
+    if (normalizePostgresDefinition(normalizedDefinition) !== normalizedDefinition) {
+      throw new Error(`${label}.normalizedDefinition is not canonical.`)
+    }
+    const definitionSha256 = requireSha256(record.definitionSha256, `${label}.definitionSha256`)
+    if (definitionSha256 !== sha256(normalizedDefinition)) {
+      throw new Error(`${label}.definitionSha256 does not match normalizedDefinition.`)
+    }
+    const parentObjectName =
+      record.parentObjectName === null
+        ? null
+        : requireNonemptyString(record.parentObjectName, `${label}.parentObjectName`)
+    const owner =
+      record.owner === null ? null : requireNonemptyString(record.owner, `${label}.owner`)
+    const relevantRoles = sortedCatalogStrings(record.relevantRoles, `${label}.relevantRoles`)
+    const state = sortCanonical(requireRecord(record.state, `${label}.state`))
+    return {
+      schemaName: requireNonemptyString(record.schemaName, `${label}.schemaName`),
+      objectType: requireNonemptyString(record.objectType, `${label}.objectType`),
+      objectName: requireNonemptyString(record.objectName, `${label}.objectName`),
+      objectIdentity: requireNonemptyString(record.objectIdentity, `${label}.objectIdentity`),
+      owner,
+      parentObjectName,
+      relevantRoles,
+      normalizedDefinition,
+      definitionSha256,
+      state: state as Record<string, unknown>,
+    }
+  })
+  records.sort(compareSchemaSecurityDefinitionRecords)
+  const seenObjectIdentities = new Set<string>()
+  const duplicate = records.find((record) => {
+    if (seenObjectIdentities.has(record.objectIdentity)) return true
+    seenObjectIdentities.add(record.objectIdentity)
+    return false
+  })
+  if (duplicate) {
+    throw new Error(`Duplicate schema/security object identity: ${duplicate.objectIdentity}.`)
+  }
+  const validated: SchemaSecurityDefinitionIdentity = {
+    schemaVersion: SCHEMA_SECURITY_DEFINITION_IDENTITY_SCHEMA_VERSION,
+    records,
+  }
+  if (options.expectedSchemaSecurityIdentitySha256 !== undefined) {
+    const expected = requireSha256(
+      options.expectedSchemaSecurityIdentitySha256,
+      'expected schema/security identity',
+    )
+    const actual = sha256(JSON.stringify(sortCanonical(validated)))
+    if (actual !== expected) {
+      throw new Error(
+        `Schema/security definition identity mismatch: expected ${expected}, received ${actual}.`,
+      )
+    }
+  }
+  return validated
+}
+
+/** SHA-256 of minified recursively sorted-key JSON with record order normalized semantically. */
+export function schemaSecurityDefinitionIdentitySha256(value: unknown): string {
+  const identity =
+    isRecord(value) && value.schemaVersion === SCHEMA_SECURITY_DEFINITION_IDENTITY_SCHEMA_VERSION
+      ? validateSchemaSecurityDefinitionIdentity(value)
+      : buildSchemaSecurityDefinitionIdentity(value)
+  return sha256(JSON.stringify(sortCanonical(identity)))
+}
+
 export function validateSupabaseLint(value: unknown) {
   if (!Array.isArray(value)) throw new Error('Supabase db lint output must be a JSON array.')
   const warningMap = new Map<string, LintWarning>()
@@ -854,14 +1703,18 @@ function requireExactNames(actual: string[], expected: readonly string[], label:
   }
 }
 
-export function validateSecurityIntrospection(value: unknown) {
+export function validateSecurityIntrospection(
+  value: unknown,
+  options: { expectedSchemaSecurityIdentitySha256?: string } = {},
+) {
   const report = requireRecord(value, 'security introspection')
   if (!Array.isArray(report.rls)) throw new Error('security introspection.rls must be an array.')
   const rls = report.rls.map((rowValue, index) => {
     const row = requireRecord(rowValue, `rls[${index}]`)
     const tableName = requireNonemptyString(row.tableName, `rls[${index}].tableName`)
     if (row.rlsEnabled !== true) throw new Error(`RLS is not enabled on public.${tableName}.`)
-    return { tableName, rlsEnabled: true }
+    const rlsForced = requireCatalogBoolean(row.rlsForced, `rls[${index}].rlsForced`)
+    return { tableName, rlsEnabled: true, rlsForced }
   })
   requireExactNames(
     rls.map(({ tableName }) => tableName),
@@ -881,6 +1734,9 @@ export function validateSecurityIntrospection(value: unknown) {
     )
     const owner = requireNonemptyString(row.owner, `functions[${index}].owner`)
     const searchPath = requireNonemptyString(row.searchPath, `functions[${index}].searchPath`)
+    const resultType = requireNonemptyString(row.resultType, `functions[${index}].resultType`)
+    const volatility = requireNonemptyString(row.volatility, `functions[${index}].volatility`)
+    const definition = requireNonemptyString(row.definition, `functions[${index}].definition`)
     if (row.securityDefiner !== true) throw new Error(`${name} is not SECURITY DEFINER.`)
     if (owner !== 'supabase_admin') {
       throw new Error(`${name} has unexpected owner ${owner}; expected supabase_admin.`)
@@ -903,6 +1759,9 @@ export function validateSecurityIntrospection(value: unknown) {
       owner,
       securityDefiner: true,
       searchPath,
+      resultType,
+      volatility,
+      definition,
       publicExecute: false,
       anonExecute: false,
       authenticatedExecute: false,
@@ -1066,6 +1925,9 @@ export function validateSecurityIntrospection(value: unknown) {
   }
   const constraintDefinitions = report.constraintDefinitions.map((rowValue, index) => {
     const row = requireRecord(rowValue, `constraintDefinitions[${index}]`)
+    if (row.validated !== true) {
+      throw new Error(`Constraint ${String(row.name)} is not validated.`)
+    }
     return {
       name: requireNonemptyString(row.name, `constraintDefinitions[${index}].name`),
       tableName: requireNonemptyString(row.tableName, `constraintDefinitions[${index}].tableName`),
@@ -1073,6 +1935,7 @@ export function validateSecurityIntrospection(value: unknown) {
         row.definition,
         `constraintDefinitions[${index}].definition`,
       ),
+      validated: true,
     }
   })
   requireExactNames(
@@ -1120,6 +1983,7 @@ export function validateSecurityIntrospection(value: unknown) {
       predicate:
         row.predicate === null ? null : requireNonemptyString(row.predicate, `${name}.predicate`),
       definition,
+      constraintBacked: row.constraintBacked === true,
     }
   })
   requireExactNames(
@@ -1144,9 +2008,13 @@ export function validateSecurityIntrospection(value: unknown) {
     const name = requireNonemptyString(row.name, `journalPolicies[${index}].name`)
     const tableName = requireNonemptyString(row.tableName, `journalPolicies[${index}].tableName`)
     const command = requireNonemptyString(row.command, `journalPolicies[${index}].command`)
+    const permissive = requireNonemptyString(row.permissive, `journalPolicies[${index}].permissive`)
     const using = requireNonemptyString(row.using, `journalPolicies[${index}].using`)
     const withCheck = requireNonemptyString(row.withCheck, `journalPolicies[${index}].withCheck`)
     if (command !== 'ALL') throw new Error(`Journal RLS policy ${name} is not FOR ALL.`)
+    if (permissive !== 'PERMISSIVE') {
+      throw new Error(`Journal RLS policy ${name} is not PERMISSIVE.`)
+    }
     if (!Array.isArray(row.roles) || row.roles.length !== 1 || row.roles[0] !== 'service_role') {
       throw new Error(`Journal RLS policy ${name} has unexpected roles.`)
     }
@@ -1160,7 +2028,7 @@ export function validateSecurityIntrospection(value: unknown) {
     ) {
       throw new Error(`Journal action RLS policy ${name} does not bind operation ownership.`)
     }
-    return { name, tableName, command, roles: ['service_role'], using, withCheck }
+    return { name, tableName, command, permissive, roles: ['service_role'], using, withCheck }
   })
   requireExactNames(
     journalPolicies.map(({ name }) => name),
@@ -1188,6 +2056,7 @@ export function validateSecurityIntrospection(value: unknown) {
           tableName: requireNonemptyString(row.tableName, `triggers[${index}].tableName`),
           enableMode,
           enabled: true,
+          definition: requireNonemptyString(row.definition, `triggers[${index}].definition`),
         }
       })
     : []
@@ -1202,6 +2071,22 @@ export function validateSecurityIntrospection(value: unknown) {
       )
     : []
   requireExactNames(eventTypes, REQUIRED_EVENT_TYPES, 'supported event type set')
+
+  const schemaSecurityDefinitionIdentity = buildSchemaSecurityDefinitionIdentity(report)
+  const schemaSecurityIdentitySha256 = schemaSecurityDefinitionIdentitySha256(
+    schemaSecurityDefinitionIdentity,
+  )
+  if (options.expectedSchemaSecurityIdentitySha256 !== undefined) {
+    const expected = requireSha256(
+      options.expectedSchemaSecurityIdentitySha256,
+      'expected schema/security identity',
+    )
+    if (schemaSecurityIdentitySha256 !== expected) {
+      throw new Error(
+        `Schema/security definition identity mismatch: expected ${expected}, received ${schemaSecurityIdentitySha256}.`,
+      )
+    }
+  }
 
   return {
     rls: [...rls].sort((left, right) => compareCodeUnits(left.tableName, right.tableName)),
@@ -1226,6 +2111,8 @@ export function validateSecurityIntrospection(value: unknown) {
     ),
     triggers: [...triggers].sort((left, right) => compareCodeUnits(left.name, right.name)),
     supportedEventTypes: [...eventTypes].sort(),
+    schemaSecurityDefinitionIdentity,
+    schemaSecurityIdentitySha256,
     assertions: [
       { name: 'all required public tables have RLS enabled', passed: true },
       {

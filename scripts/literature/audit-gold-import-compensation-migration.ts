@@ -30,7 +30,7 @@ Usage:
     --pre-migration-backup <directory> \\
     --pre-migration-backup-manifest-sha256 <trusted-sha256> \\
     --output <fresh-directory> \\
-    [--backup-root <existing-directory>] [--batch-name gold-set-v1] [--dry-run]
+    --backup-root <existing-directory> [--batch-name gold-set-v1] [--dry-run]
 
 Before the migration is present the deterministic report status is not_yet_migrated and no
 development planning artifact is emitted. The command never creates fixture reviews and never
@@ -79,6 +79,7 @@ export async function runAuditGoldImportCompensationMigration(
   if (!outputArgument) throw new Error('--output <fresh-directory> is required.')
   const backupDirectory = resolve(cwd, backupArgument)
   const backupRoot = stringArgument(arguments_, 'backup-root')
+  if (!backupRoot) throw new Error('--backup-root <existing-directory> is required.')
   const batchName = stringArgument(arguments_, 'batch-name', DEFAULT_BATCH_NAME)
   const container = stringArgument(
     arguments_,
@@ -146,6 +147,7 @@ export async function runAuditGoldImportCompensationMigration(
   await writeCanonicalPackage({
     artifacts,
     outputDirectory,
+    outputRoot: resolve(cwd, backupRoot),
     executionReceipt: {
       schemaVersion: 'gold-import-compensation-audit-execution/1.0.0',
       executedAt: now().toISOString(),

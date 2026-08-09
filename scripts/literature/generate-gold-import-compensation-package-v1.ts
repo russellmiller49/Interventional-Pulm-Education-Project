@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
-import { lstat, mkdir, open, readFile, realpath, type FileHandle } from 'node:fs/promises'
-import { basename, dirname, isAbsolute, relative, resolve } from 'node:path'
+import { lstat, readFile, realpath } from 'node:fs/promises'
+import { basename, dirname, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { z } from 'zod'
@@ -23,6 +23,16 @@ import {
   type ImportPlan,
 } from '../../src/features/literature/gold-set/import-compensation'
 import { assertKnownArguments, parseCliArguments, stringArgument } from './lib/cli'
+import {
+  assertSafeOutputPathArgument,
+  assertExclusiveOutputDirectoryIdentity,
+  createExclusiveOutputDirectory,
+  writeExclusiveOutputFiles,
+} from './lib/exclusive-output'
+import {
+  POST_MIGRATION_SCHEMA_SECURITY_IDENTITY_SHA256,
+  schemaSecurityDefinitionIdentitySha256,
+} from './gold-import-compensation-rehearsal-evidence'
 
 export const PACKAGE_GENERATOR_SCHEMA_VERSION =
   'gold-import-compensation-package-generator/v1' as const
@@ -67,6 +77,7 @@ const READY_AUDIT_CANONICAL_FILES = [
   'development-planning-state.json',
   'migration-audit.json',
   'migration-audit.md',
+  'schema-security-definition-identity.json',
 ] as const
 
 const preImportItemStateSchema = z
@@ -261,7 +272,9 @@ const auditChecksSchema = z
     databaseMutationCount: z.literal(0),
     failures: z.array(z.string()),
     importExecuted: z.literal(false),
+    expectedSchemaSecurityIdentitySha256: sha256Schema.nullable(),
     lint: z.unknown(),
+    schemaSecurityDefinitionIdentity: z.unknown().nullable(),
     security: z.unknown(),
   })
   .strict()
@@ -284,9 +297,12 @@ export interface VerifiedPostMigrationAuditPackage {
   auditBytes: Buffer
   developmentPlanningState: z.infer<typeof developmentPlanningStateSchema>
   developmentPlanningStateBytes: Buffer
+  expectedSchemaSecurityIdentitySha256: string
   manifestBytes: Buffer
   manifestSha256: string
   markdownBytes: Buffer
+  schemaSecurityDefinitionIdentity: Record<string, unknown>
+  schemaSecurityDefinitionIdentityBytes: Buffer
 }
 
 export interface PackageSourceIdentityPolicy {
@@ -440,6 +456,8 @@ export function verifyReadyPostMigrationAuditPackage(input: {
   developmentPlanningStateBytes: Buffer
   manifestBytes: Buffer
   markdownBytes: Buffer
+  schemaSecurityDefinitionIdentityBytes: Buffer
+  expectedSchemaSecurityIdentitySha256ForTest?: string
   trustedManifestSha256: string
 }): VerifiedPostMigrationAuditPackage {
   if (!SHA256_PATTERN.test(input.trustedManifestSha256)) {
@@ -453,18 +471,58 @@ export function verifyReadyPostMigrationAuditPackage(input: {
     ['development-planning-state.json', input.developmentPlanningStateBytes],
     ['migration-audit.json', input.auditBytes],
     ['migration-audit.md', input.markdownBytes],
+    ['schema-security-definition-identity.json', input.schemaSecurityDefinitionIdentityBytes],
   ])
   for (const [name, expected] of entries) {
     if (sha256Bytes(fileBytes.get(name) as Buffer) !== expected) {
       throw new Error(`Post-migration audit checksum mismatch for ${name}.`)
     }
   }
+  const expectedSchemaSecurityIdentitySha256 =
+    input.expectedSchemaSecurityIdentitySha256ForTest ??
+    POST_MIGRATION_SCHEMA_SECURITY_IDENTITY_SHA256
+  if (
+    input.expectedSchemaSecurityIdentitySha256ForTest !== undefined &&
+    process.env.NODE_ENV !== 'test'
+  ) {
+    throw new Error('Schema/security identity override is restricted to tests.')
+  }
+  if (!SHA256_PATTERN.test(expectedSchemaSecurityIdentitySha256)) {
+    throw new Error('Expected schema/security identity SHA-256 is invalid.')
+  }
   const audit = assertPackageAuditReady(
     parseCanonicalAuditJson(input.auditBytes, 'migration-audit.json'),
+    expectedSchemaSecurityIdentitySha256,
   )
   const developmentPlanningState = developmentPlanningStateSchema.parse(
     parseCanonicalAuditJson(input.developmentPlanningStateBytes, 'development-planning-state.json'),
   )
+  const schemaSecurityDefinitionIdentity = z
+    .object({
+      records: z.array(z.unknown()).nonempty(),
+      schemaVersion: z.literal(
+        'gold-import-compensation-schema-security-definition-identity/1.0.0',
+      ),
+    })
+    .passthrough()
+    .parse(
+      parseCanonicalAuditJson(
+        input.schemaSecurityDefinitionIdentityBytes,
+        'schema-security-definition-identity.json',
+      ),
+    )
+  if (
+    canonicalPretty(schemaSecurityDefinitionIdentity).equals(
+      canonicalPretty(audit.checks.schemaSecurityDefinitionIdentity),
+    ) === false ||
+    schemaSecurityDefinitionIdentitySha256(schemaSecurityDefinitionIdentity) !==
+      audit.database.schemaSecurityIdentitySha256 ||
+    audit.database.schemaSecurityIdentitySha256 !== expectedSchemaSecurityIdentitySha256
+  ) {
+    throw new Error(
+      'Post-migration schema/security definition identity does not match the ready audit binding.',
+    )
+  }
   if (
     developmentPlanningStateSha256(developmentPlanningState) !==
     audit.database.developmentPlanningStateSha256
@@ -480,9 +538,12 @@ export function verifyReadyPostMigrationAuditPackage(input: {
     auditBytes: input.auditBytes,
     developmentPlanningState,
     developmentPlanningStateBytes: input.developmentPlanningStateBytes,
+    expectedSchemaSecurityIdentitySha256,
     manifestBytes: input.manifestBytes,
     manifestSha256: input.trustedManifestSha256,
     markdownBytes: input.markdownBytes,
+    schemaSecurityDefinitionIdentity,
+    schemaSecurityDefinitionIdentityBytes: input.schemaSecurityDefinitionIdentityBytes,
   }
 }
 
@@ -747,7 +808,10 @@ function assertExactPlanningRows(rows: readonly PackagePlanningRow[]): void {
  * invokes it immediately after parsing --audit so pre-migration runs stop with
  * a stable not_yet_migrated result and cannot generate an executable package.
  */
-export function assertPackageAuditReady(input: unknown): PackageGenerationAudit {
+export function assertPackageAuditReady(
+  input: unknown,
+  expectedSchemaSecurityIdentitySha256 = POST_MIGRATION_SCHEMA_SECURITY_IDENTITY_SHA256,
+): PackageGenerationAudit {
   const audit = packageGenerationAuditSchema.parse(input)
   if (
     audit.status === 'not_yet_migrated' ||
@@ -784,6 +848,15 @@ export function assertPackageAuditReady(input: unknown): PackageGenerationAudit 
   }
   if (database.developmentPlanningStateSha256 === null) {
     throw new Error('Package generation blocked: audited development planning state is not bound.')
+  }
+  if (
+    audit.checks.schemaSecurityDefinitionIdentity === null ||
+    audit.checks.expectedSchemaSecurityIdentitySha256 !== database.schemaSecurityIdentitySha256 ||
+    database.schemaSecurityIdentitySha256 !== expectedSchemaSecurityIdentitySha256
+  ) {
+    throw new Error(
+      'Package generation blocked: exact post-migration schema/security definition identity is not bound.',
+    )
   }
   if (
     audit.checks.failures.length > 0 ||
@@ -1064,6 +1137,12 @@ export function generateGoldImportCompensationPackage(
     developmentPlanningStateBytes: input.auditPackage.developmentPlanningStateBytes,
     manifestBytes: input.auditPackage.manifestBytes,
     markdownBytes: input.auditPackage.markdownBytes,
+    schemaSecurityDefinitionIdentityBytes: input.auditPackage.schemaSecurityDefinitionIdentityBytes,
+    expectedSchemaSecurityIdentitySha256ForTest:
+      input.auditPackage.expectedSchemaSecurityIdentitySha256 ===
+      POST_MIGRATION_SCHEMA_SECURITY_IDENTITY_SHA256
+        ? undefined
+        : input.auditPackage.expectedSchemaSecurityIdentitySha256,
     trustedManifestSha256: input.auditPackage.manifestSha256,
   })
   const audit = auditPackage.audit
@@ -1228,6 +1307,7 @@ export function generateGoldImportCompensationPackage(
     readyToExecute: false,
     reason:
       'A committed import receipt, fresh database-observed physical state, finalized compensation plan, and separate compensation authorization do not yet exist.',
+    schemaSecurityIdentitySha256: audit.database.schemaSecurityIdentitySha256,
     sourceMappingComplete: true,
   }
   const reconciliation = {
@@ -1281,6 +1361,9 @@ export function generateGoldImportCompensationPackage(
       markdownSha256: sha256Bytes(auditPackage.markdownBytes),
       preMigrationBackupManifestSha256: audit.database.preMigrationBackupManifestSha256,
       preMigrationPhysicalStateSha256: audit.comparisons.preexistingPhysicalStateBeforeSha256,
+      schemaSecurityDefinitionIdentityFileSha256: sha256Bytes(
+        auditPackage.schemaSecurityDefinitionIdentityBytes,
+      ),
       schemaSecurityIdentitySha256: audit.database.schemaSecurityIdentitySha256,
       stateFresh: audit.database.stateFresh,
     },
@@ -1350,6 +1433,10 @@ export function generateGoldImportCompensationPackage(
     auditPackage.developmentPlanningStateBytes,
   )
   files.set(
+    'post-migration-schema-security-definition-identity.json',
+    auditPackage.schemaSecurityDefinitionIdentityBytes,
+  )
+  files.set(
     'proposed-compensation-command.txt',
     Buffer.from(
       'npm run literature:gold-import-compensation -- execute-compensation --plan <FINALIZED_COMPENSATION_PLAN> --authorization <SEPARATELY_SIGNED_COMPENSATION_AUTHORIZATION> --artifact <FINAL_V3_ARTIFACT> --receipt <EXCLUSIVE_RECEIPT_PATH> --target local\n',
@@ -1403,45 +1490,21 @@ async function assertNoSymlinkAncestors(path: string): Promise<void> {
   }
 }
 
-function assertConfined(outputDirectory: string, outputRoot: string): void {
-  const path = resolve(outputDirectory)
-  const root = resolve(outputRoot)
-  const child = relative(root, path)
-  if (!child || child.startsWith('..') || isAbsolute(child)) {
-    throw new Error('Output directory must be a new child of the approved explicit output root.')
-  }
-}
-
-async function exclusiveWrite(path: string, bytes: Buffer): Promise<void> {
-  let handle: FileHandle | undefined
-  try {
-    handle = await open(path, 'wx', 0o600)
-    await handle.writeFile(bytes)
-    await handle.sync()
-  } finally {
-    await handle?.close()
-  }
-}
-
 export async function writeGeneratedPackageExclusive(input: {
+  beforeAnchoredWriteForTest?: (outputDirectory: string) => Promise<void> | void
   outputDirectory: string
   outputRoot: string
   package: GeneratedPackage
 }): Promise<void> {
-  assertConfined(input.outputDirectory, input.outputRoot)
-  await assertNoSymlinkAncestors(input.outputRoot)
-  await assertNoSymlinkAncestors(input.outputDirectory)
-  const root = await realpath(input.outputRoot)
-  assertConfined(input.outputDirectory, root)
-  await mkdir(input.outputDirectory, { recursive: false, mode: 0o700 })
-  for (const [name, bytes] of [...input.package.files.entries()].sort(([left], [right]) =>
-    left.localeCompare(right, 'en'),
-  )) {
-    if (name.includes('/') || name === '.' || name === '..') {
-      throw new Error(`Unsafe package artifact name: ${name}.`)
-    }
-    await exclusiveWrite(resolve(input.outputDirectory, name), bytes)
-  }
+  const output = await createExclusiveOutputDirectory(input)
+  await input.beforeAnchoredWriteForTest?.(output.outputDirectory)
+  writeExclusiveOutputFiles(
+    output,
+    [...input.package.files.entries()]
+      .sort(([left], [right]) => left.localeCompare(right, 'en'))
+      .map(([name, bytes]) => ({ bytes, name })),
+  )
+  await assertExclusiveOutputDirectoryIdentity(output)
 }
 
 async function readJson(path: string): Promise<unknown> {
@@ -1520,6 +1583,14 @@ export async function runPackageGeneratorCli(argv: readonly string[]): Promise<{
     console.log(HELP)
     return { manifestSha256: '', outputDirectory: '' }
   }
+  const suppliedOutputRoot = stringArgument(arguments_, 'output-root')
+  const suppliedOutputDirectory = stringArgument(arguments_, 'output')
+  if (suppliedOutputRoot !== undefined) {
+    assertSafeOutputPathArgument(suppliedOutputRoot, '--output-root')
+  }
+  if (suppliedOutputDirectory !== undefined) {
+    assertSafeOutputPathArgument(suppliedOutputDirectory, '--output')
+  }
 
   const auditPath = resolve(requiredArgument(arguments_, 'audit'))
   await assertNoSymlinkAncestors(auditPath)
@@ -1541,18 +1612,25 @@ export async function runPackageGeneratorCli(argv: readonly string[]): Promise<{
       '--development-state must be the canonical planning artifact beside migration-audit.json.',
     )
   }
-  const [auditBytes, developmentPlanningStateBytes, manifestBytes, markdownBytes] =
-    await Promise.all([
-      readConfinedAuditArtifact(auditDirectory, 'migration-audit.json'),
-      readConfinedAuditArtifact(auditDirectory, 'development-planning-state.json'),
-      readConfinedAuditArtifact(auditDirectory, 'checksum-manifest.sha256'),
-      readConfinedAuditArtifact(auditDirectory, 'migration-audit.md'),
-    ])
+  const [
+    auditBytes,
+    developmentPlanningStateBytes,
+    manifestBytes,
+    markdownBytes,
+    schemaSecurityDefinitionIdentityBytes,
+  ] = await Promise.all([
+    readConfinedAuditArtifact(auditDirectory, 'migration-audit.json'),
+    readConfinedAuditArtifact(auditDirectory, 'development-planning-state.json'),
+    readConfinedAuditArtifact(auditDirectory, 'checksum-manifest.sha256'),
+    readConfinedAuditArtifact(auditDirectory, 'migration-audit.md'),
+    readConfinedAuditArtifact(auditDirectory, 'schema-security-definition-identity.json'),
+  ])
   const auditPackage = verifyReadyPostMigrationAuditPackage({
     auditBytes,
     developmentPlanningStateBytes,
     manifestBytes,
     markdownBytes,
+    schemaSecurityDefinitionIdentityBytes,
     trustedManifestSha256: requiredArgument(arguments_, 'audit-manifest-sha256'),
   })
   // Source paths are resolved and opened only after both audit gates pass.
@@ -1568,8 +1646,10 @@ export async function runPackageGeneratorCli(argv: readonly string[]): Promise<{
     auditPackage,
     sources: { amendedAuthorization, finalArtifact, migration, protocolAuthorization },
   })
-  const outputRoot = resolve(requiredArgument(arguments_, 'output-root'))
-  const outputDirectory = resolve(requiredArgument(arguments_, 'output'))
+  const rawOutputRoot = requiredArgument(arguments_, 'output-root')
+  const rawOutputDirectory = requiredArgument(arguments_, 'output')
+  const outputRoot = resolve(rawOutputRoot)
+  const outputDirectory = resolve(rawOutputDirectory)
   await writeGeneratedPackageExclusive({ outputDirectory, outputRoot, package: generated })
   return { manifestSha256: generated.manifestSha256, outputDirectory }
 }

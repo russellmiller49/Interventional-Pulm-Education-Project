@@ -16,6 +16,8 @@ were not run while this tooling was implemented.
 | Signed 305-row protocol authorization | `784d13736ff0fbf69bd8ad55c8bf55b293c4cc2051b980a3488a980f120c5dd3`                                                    |
 | Amended two-row authorization         | `b95fc9785ee355b810981c051db62307e868110e06ffb1a83c09c8eff52bf89a`                                                    |
 | Disposable PostgreSQL image           | `public.ecr.aws/supabase/postgres:17.6.1.104@sha256:5deba92e50cd17bfacf8603834d317cdf3bfc1c016ec8293991997fa3b55fa3d` |
+| Schema/security semantic identity     | `b5c6a6050b2c17c60c28fa400c6957103277e51e8b54425c290f43c92a447471`                                                    |
+| Canonical identity artifact SHA-256   | `8f709d225f3087c77445b1453cffee994b9c8a8cfdbc004a798efbfff96ee20e`                                                    |
 
 Use Codex Full Access for commands that inspect Git, Docker, or the local
 Supabase stack. Real-local operations run only in the primary checkout on a
@@ -28,9 +30,15 @@ remote credential. The package and rehearsal CLIs deliberately accept no
 database URL. The rehearsal also refuses caller-authored seed SQL,
 attestations, and evidence.
 
-Canonical output directories must be absent before each command. Put them
-under the command's approved backup/output root, never behind a symlink. A
-collision is a stop condition; do not merge, replace, or reuse prior output.
+Every command requires an explicit approved output root and a new child output
+directory. The root must already exist as a real, non-symlink directory. The
+tool resolves the root, rejects escapes and `..` traversal, inspects every
+existing ancestor below it, and refuses symlinks, non-directory ancestors, and
+an existing output collision. It creates the child directory exclusively with
+mode `0700` and files exclusively with mode `0600`, then verifies the created
+directory remains confined to the approved root. Never merge, replace, or
+reuse prior output, and never put temporary or final artifacts outside the
+approved root.
 
 ## Current fail-closed compatibility finding
 
@@ -58,23 +66,49 @@ this operational tooling change.
 
 ## Operational sequence
 
-### 1. Verify the path-scoped merge
+### 1. Verify the historical merge and subsequent mainline separately
 
-This step is database-free and may run from a review worktree. Use either the
-accepted config file or the explicit form:
+This step is database-free and may run from a review worktree. One strict CLI
+accepts either mode from a checksum-reviewed config; it does not infer a mode
+or fall back to an output-only path.
+
+First preserve the historical PR #84/PR #85 proof unchanged:
 
 ```bash
 npm run literature:verify-gold-import-compensation-merge -- \
-  --feature-head 21fc97ce66b724040d261f7404bec5658b8caaa2 \
-  --merge-commit 858018c247c5fef177bd57b7bef686db2918333e \
-  --merged-main <CURRENT_MERGED_MAIN_SHA> \
-  --protected-path-inventory <PR84_PROTECTED_PATHS> \
-  --accepted-unrelated-merge 'PR-85=<PR85_MERGE_SHA>' \
-  --output <NEW_MERGE_RECEIPT_DIRECTORY>
+  --config <HISTORICAL_MERGE_EQUIVALENCE_CONFIG> \
+  --output-root <EXISTING_APPROVED_MERGE_RECEIPT_ROOT> \
+  --output <NEW_HISTORICAL_RECEIPT_DIRECTORY>
 ```
 
 Require `accepted_unrelated_mainline_delta`, 34 protected paths, four accepted
-nonoverlapping PR #85 paths, and zero overlap. Verify the emitted manifest.
+nonoverlapping PR #85 paths, zero overlap, merged-main identity
+`858018c247c5fef177bd57b7bef686db2918333e`, and the preserved historical
+receipt SHA-256
+`4772d0a7da8e4f0c4ecd359d26fb114181a1f8cf0e1a95f542b848b8ccfed962`.
+Do not reinterpret later mainline changes as part of this receipt.
+
+Then produce a separate receipt for later accepted mainline changes:
+
+```bash
+npm run literature:verify-gold-import-compensation-merge -- \
+  --config <SUBSEQUENT_MAINLINE_COMPATIBILITY_CONFIG> \
+  --output-root <EXISTING_APPROVED_MERGE_RECEIPT_ROOT> \
+  --output <NEW_CURRENT_MAIN_COMPATIBILITY_DIRECTORY>
+```
+
+Require `accepted_structured_unrelated_mainline_delta`. Ordinary protected
+files must retain byte, Git mode, and object-type identity. Structured
+comparison is permitted only for explicitly declared files and named
+comparators. The sole authorized structured overlap is `package.json` from PR
+#86 merge `da4420f9053a4fe681ab05b078fd5952611eb41e`: it may add exactly JSON
+Pointer `/scripts/ip-intel:audit` with value
+`tsx scripts/ip-device-intelligence/audit-data-readiness.ts`. The receipt must
+also prove every import-compensation script pointer/value is preserved and
+enumerate the complete semantic diff. A broad `package.json` exemption is
+forbidden because it could conceal dependency, metadata, engine, or unrelated
+script substitutions. Malformed or duplicate-key JSON, a deletion, a changed
+authorized value, or any undeclared semantic path is a hard failure.
 
 ### 2. Prepare the pre-migration backup
 
@@ -98,6 +132,17 @@ noncanonical.
 
 Verify `checksum-manifest.sha256` before doing anything else. Preserve both the
 directory and the manifest SHA-256. Do not edit or reserialize a backup file.
+
+Every list serialized into canonical backup, audit, state, planning, package,
+or rehearsal evidence has an aggregate-level ordering contract. Items order by
+display order then immutable item ID; review histories by item/display order,
+revision, then review ID; events and operation journals by creation timestamp
+then immutable ID; operation actions by operation ID, action sequence, then
+action ID. Schema objects order by schema, object type, name, identity
+arguments or ordinal; policy roles, ACL members, and privileges are normalized
+and sorted. `DISTINCT` or an ordered subquery never substitutes for `ORDER BY`
+inside the serialized aggregate. A new unordered JSON, array, object, or string
+aggregate is a release-blocking test failure.
 
 ### 3. Apply the migration only after separate approval
 
@@ -133,11 +178,34 @@ privileges, and the exact lint allowlist.
 
 The ready audit is one indivisible canonical package:
 `migration-audit.json`, `migration-audit.md`,
-`development-planning-state.json`, and `checksum-manifest.sha256`. Review and
-preserve the manifest SHA-256 separately. Do not copy the planning state out of
-that directory or reserialize any JSON; the package generator requires the
-three canonical files to be regular, non-symlink sibling files and verifies
-their raw bytes against the reviewed manifest.
+`development-planning-state.json`,
+`schema-security-definition-identity.json`, and
+`checksum-manifest.sha256`. The schema/security artifact contains normalized,
+exact definitions and state for constraints, triggers, indexes, RLS and
+journal policies, RPCs/functions, grants/ACLs, and event vocabulary. Definitions
+come from PostgreSQL catalog functions such as `pg_get_constraintdef`,
+`pg_get_triggerdef`, `pg_get_indexdef`, `pg_get_functiondef`, and
+`pg_get_expr`; the identity also binds `FORCE ROW LEVEL SECURITY`, explicit
+protected-column ACL state from `pg_attribute.attacl`, and effective privilege
+state. Only irrelevant formatting is normalized. A same-name object
+with different columns, actions, predicates, timing, roles, expressions,
+security mode, search path, or grants changes the identity and blocks
+readiness.
+
+The fixed-image contract verifier also runs six rollback-only definition and
+security-state mutation probes after the clean identity is observed: a weakened
+same-name trigger, a changed same-name foreign-key action, a broadened same-name
+journal policy, a wrong same-name unique-index definition,
+`FORCE ROW LEVEL SECURITY` being enabled, and a broadened column-level grant.
+Each probe must change the
+semantic identity and be rejected by the reviewed identity pin; the transaction
+is then rolled back.
+
+Review and preserve the manifest SHA-256 separately. Do not copy the planning
+or schema-definition state out of that directory or reserialize any JSON; the
+package generator requires all four canonical files to be regular,
+non-symlink sibling files, verifies their raw bytes against the reviewed
+manifest, and recomputes the semantic schema/security identity.
 
 ### 5. Generate the package
 
@@ -164,10 +232,12 @@ inserts, compensation 621/3/6, append-only heads, no pointer rewind, and source
 hashes before proceeding.
 
 The generated package embeds the exact canonical audit JSON, Markdown,
-planning-state JSON, and original audit manifest. Its descriptor binds the
-reviewed audit-manifest SHA, each embedded file SHA, the pre-migration backup
-manifest SHA, and both pre-migration and post-migration state identities. A
-recomputed outer package manifest cannot legitimize replaced audit evidence.
+planning-state JSON, schema/security-definition identity JSON, and original
+audit manifest. Its descriptor binds the reviewed audit-manifest SHA, each
+embedded file SHA, the normalized schema/security identity SHA, the
+pre-migration backup manifest SHA, and both pre-migration and post-migration
+state identities. A recomputed outer package manifest cannot legitimize
+replaced audit evidence or a semantically substituted database object.
 
 `row-level-action-plan.json` repeats the import operation ID and import
 idempotency key beside every row solely to make the binding reviewable. The
@@ -246,20 +316,45 @@ immutable-image Docker container:
 13. proves a second compensation is rejected, effective state is restored,
     physical state remains distinct, and every current pointer is the latest
     physical head;
-14. runs the full schema/security introspection: exact RPC overloads,
+14. runs the full schema/security introspection and recomputes the exact
+    schema/security-definition identity bound by the audit and package: exact RPC overloads,
     signatures, JSONB return types, volatility, ownership, SECURITY DEFINER
     search paths and grants; seven RLS tables; the exact 22 protected-table
     triggers, including all eight contract-specific triggers;
     exact constraints, indexes and journal policies; schema CREATE privileges;
     review/event/journal ACLs including REFERENCES and TRIGGER; exact event
     vocabulary; and pinned Supabase lint;
-15. writes deterministic normalized scenario evidence, a physical-hash
+15. builds deterministic normalized scenario evidence, a physical-hash
     relationship proof, full normalized lint/security evidence, a stable
-    package report, a sorted checksum manifest, and a noncanonical execution
-    receipt; and
-16. force-removes the random container name in a `finally` cleanup path. The
-    cleanup attempt is armed immediately before `docker run`, so it still runs
-    if Docker creates the container but its run response is lost or malformed.
+    package report, and a sorted checksum manifest in memory; and
+16. force-removes the random container name exactly once, then independently
+    proves absence by the exact random name and, when Docker returned it, the
+    owned container ID. Cleanup is armed immediately before `docker run`, so it
+    still runs if Docker creates the container but its response is lost or
+    malformed. Only after removal and both applicable absence checks succeed
+    may the command publish canonical artifacts and mark the noncanonical
+    execution receipt approved.
+
+A `docker rm --force` failure, an absence-query failure, or a still-present
+name/ID makes the command exit nonzero. The receipt records the cleanup attempt
+and outcome, both applicable probes, and `executionApproval: not_approved`; it
+preserves the primary verifier error and the cleanup error together and never
+labels a canonical manifest successful. Promise rejections and malformed/lost Docker
+responses use this same handled cleanup path. Graceful `SIGINT` and `SIGTERM`
+record the signal as the primary failure and resolve a signal-notification race
+around every active command wait, so even a child command whose promise never
+settles cannot hold the JavaScript control path. The first signal immediately
+starts one memoized cancellation-then-cleanup sequence. Production cancellation
+sends `SIGTERM`, waits at most one second, escalates to `SIGKILL`, and waits at
+most one further second before recording cancellation failure and continuing
+to the same exactly-once removal and name/ID absence proof. Cancellation,
+primary execution, and cleanup errors are preserved together; the command
+writes a non-approved failure receipt and exits nonzero. A repeated signal
+cannot start a second cancellation or cleanup. The executor cannot handle an
+uncatchable process-level `SIGKILL`, host crash, or abrupt runtime death in
+JavaScript. After one of those external interruptions, treat the run as failed
+and use the random owned name/label on the pinned local Docker endpoint to
+verify and remove any residue before another run.
 
 The execution receipt alone contains volatile timestamps, container identity,
 database fingerprint, raw physical hashes, raw RPC receipts, lint diagnostics,

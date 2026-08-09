@@ -1,13 +1,25 @@
 import { spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { chmod, lstat, mkdir, readFile, readdir, realpath, writeFile } from 'node:fs/promises'
+import { lstat, readFile, readdir, realpath } from 'node:fs/promises'
 import { relative, resolve, sep } from 'node:path'
 
 import {
+  POST_MIGRATION_SCHEMA_SECURITY_IDENTITY_SHA256,
   REQUIRED_UNIQUE_INDEXES,
+  SCHEMA_SECURITY_COLUMN_PRIVILEGES,
+  SCHEMA_SECURITY_COLUMN_ROLES,
+  SCHEMA_SECURITY_FUNCTION_NAMES,
+  buildSchemaSecurityDefinitionIdentity,
+  schemaSecurityDefinitionIdentitySha256,
   validateSecurityIntrospection,
   validateSupabaseLint,
+  type SchemaSecurityDefinitionIdentity,
 } from './gold-import-compensation-rehearsal-evidence'
+import {
+  assertExclusiveOutputDirectoryIdentity,
+  createExclusiveOutputDirectory,
+  writeExclusiveOutputFiles,
+} from './lib/exclusive-output'
 
 export const IMPORT_COMPENSATION_MIGRATION_ID =
   '20260808035633_add_literature_gold_import_compensation_contract'
@@ -24,6 +36,83 @@ export const PRE_MIGRATION_SCHEMA_INVENTORY_SHA256 =
   'd75d9b579d0e0e1ce338e6972ec2c74d97da157c122174693705a0ef2c34d857'
 export const PRE_MIGRATION_LEDGER_ARTIFACT_SHA256 =
   'e7a6ef124bb6804bcfa8eb95f409ce56deb4763f1893395cf99a2924d2774180'
+
+const SCHEMA_SECURITY_FUNCTION_VALUES_SQL = SCHEMA_SECURITY_FUNCTION_NAMES.map(
+  (name) => `(${sqlLiteral(name)})`,
+).join(',\n      ')
+const SCHEMA_SECURITY_COLUMN_ROLE_VALUES_SQL = SCHEMA_SECURITY_COLUMN_ROLES.map(
+  (role) => `(${sqlLiteral(role)})`,
+).join(', ')
+const SCHEMA_SECURITY_COLUMN_PRIVILEGE_VALUES_SQL = SCHEMA_SECURITY_COLUMN_PRIVILEGES.map(
+  (privilege) => `(${sqlLiteral(privilege)})`,
+).join(', ')
+
+/**
+ * Canonical serialized-array ordering contracts. Every matching SQL aggregate is also enforced by
+ * assertSerializedAggregateOrdering; these names document the semantic keys used by consumers.
+ */
+export const SERIALIZED_AGGREGATE_ORDERING_CONTRACTS = {
+  batchRows: ['batch_id ASC'],
+  developmentArticles: ['display_order ASC NULLS LAST', 'item_id ASC', 'pmid ASC'],
+  developmentDrafts: ['display_order ASC NULLS LAST', 'item_id ASC'],
+  developmentEvents: ['created_at ASC NULLS LAST', 'event_id ASC'],
+  developmentItems: ['display_order ASC NULLS LAST', 'item_id ASC'],
+  developmentReviews: [
+    'display_order ASC NULLS LAST',
+    'item_id ASC',
+    'revision ASC NULLS LAST',
+    'review_id ASC',
+  ],
+  itemEvents: ['created_at ASC NULLS LAST', 'event_id ASC'],
+  itemReviews: ['revision ASC NULLS LAST', 'review_id ASC'],
+  migrationLedger: ['version ASC', 'name ASC'],
+  schemaAclEntries: [
+    'schema_name ASC',
+    'object_name ASC',
+    'grantee ASC',
+    'privilege_type ASC',
+    'grantor ASC',
+  ],
+  schemaColumns: ['table_name ASC', 'ordinal_position ASC', 'column_name ASC'],
+  schemaColumnAclEntries: [
+    'schema_name ASC',
+    'table_name ASC',
+    'column_name ASC',
+    'grantee ASC',
+    'privilege_type ASC',
+    'grantor ASC',
+  ],
+  schemaColumnPrivileges: [
+    'table_name ASC',
+    'column_name ASC',
+    'role_name ASC',
+    'privilege_name ASC',
+  ],
+  schemaConstraints: ['table_name ASC', 'name ASC'],
+  schemaCreatePrivileges: ['schema_name ASC', 'role_name ASC'],
+  schemaEventVocabulary: ['event_type ASC'],
+  schemaFunctionAclEntries: [
+    'schema_name ASC',
+    'object_name ASC',
+    'identity_arguments ASC',
+    'grantee ASC',
+    'privilege_type ASC',
+    'grantor ASC',
+  ],
+  schemaFunctions: ['name ASC', 'identity_arguments ASC'],
+  schemaIndexes: ['table_name ASC', 'name ASC'],
+  schemaPolicies: ['table_name ASC', 'name ASC'],
+  schemaPrivileges: ['table_name ASC', 'role_name ASC', 'privilege_name ASC'],
+  schemaTableAclEntries: [
+    'schema_name ASC',
+    'object_name ASC',
+    'grantee ASC',
+    'privilege_type ASC',
+    'grantor ASC',
+  ],
+  schemaTables: ['table_name ASC'],
+  schemaTriggers: ['table_name ASC', 'name ASC'],
+} as const
 
 export const AUTHORITATIVE_SOURCE_IDENTITIES = {
   finalV3DevelopmentArtifactSha256:
@@ -248,6 +337,7 @@ export interface PreMigrationBackupResult {
 export interface AuditResult {
   report: Record<string, unknown>
   markdown: string
+  schemaSecurityDefinitionIdentity: SchemaSecurityDefinitionIdentity | null
   schemaSecurityIdentitySha256: string
 }
 
@@ -565,31 +655,28 @@ async function pathExists(path: string) {
     })
 }
 
+function containsParentTraversal(path: string): boolean {
+  return path.split(/[\\/]+/u).includes('..')
+}
+
 export async function assertExclusiveOutputPath(input: {
-  backupRoot?: string
+  backupRoot: string
   cwd: string
   output: string
 }): Promise<string> {
+  if (containsParentTraversal(input.backupRoot) || containsParentTraversal(input.output)) {
+    throw new Error('Output paths must not contain parent-directory traversal.')
+  }
   const output = resolve(input.cwd, input.output)
   if (await pathExists(output)) throw new Error('Output collision: the output path already exists.')
 
-  const localData = resolve(input.cwd, 'local-data')
-  const roots = [localData]
-  if (input.backupRoot) {
-    const requestedRoot = resolve(input.cwd, input.backupRoot)
-    const rootStat = await lstat(requestedRoot)
-    if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) {
-      throw new Error('Explicit backup root must be an existing non-symlink directory.')
-    }
-    roots.push(requestedRoot)
-  }
-  const approvedRoot = roots.find((root) => isWithin(root, output))
-  if (!approvedRoot) {
-    throw new Error('Output path is outside local-data and the explicit backup root.')
-  }
+  const approvedRoot = resolve(input.cwd, input.backupRoot)
   const rootStat = await lstat(approvedRoot)
-  if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) {
-    throw new Error('Approved output root must be an existing non-symlink directory.')
+  if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) {
+    throw new Error('Explicit backup root must be an existing non-symlink directory.')
+  }
+  if (!isWithin(approvedRoot, output)) {
+    throw new Error('Output path is outside the explicit backup root.')
   }
   const resolvedRoot = await realpath(approvedRoot)
   let current = approvedRoot
@@ -626,10 +713,14 @@ selected_batch as (
 contract_tables(table_name) as (
   values ${tableValues}
 ),
+schema_security_functions(name) as (
+  values ${SCHEMA_SECURITY_FUNCTION_VALUES_SQL}
+),
 schema_tables as (
   select requested.table_name,
     class.relkind as relation_kind,
     class.relrowsecurity as rls_enabled,
+    class.relforcerowsecurity as force_rls,
     owner.rolname as owner,
     class.relacl::text as acl
   from contract_tables as requested
@@ -669,13 +760,54 @@ schema_functions as (
   join pg_catalog.pg_namespace as namespace
     on namespace.oid = proc.pronamespace and namespace.nspname = 'public'
   join pg_catalog.pg_roles as owner on owner.oid = proc.proowner
-  where proc.proname like 'literature_gold_%'
-     or proc.proname in (
-       'apply_literature_gold_import_v1',
-       'compensate_literature_gold_import_v1',
-       'reconcile_literature_gold_review_operation_v1',
-       'save_literature_gold_review_v1'
-     )
+  join schema_security_functions as requested on requested.name = proc.proname
+),
+table_acl_entries as (
+  select 'public'::text as schema_name, class.relname as object_name,
+    coalesce(grantee.rolname, 'PUBLIC') as grantee, grantor.rolname as grantor,
+    acl.privilege_type, acl.is_grantable
+  from pg_catalog.pg_class as class
+  join pg_catalog.pg_namespace as namespace
+    on namespace.oid = class.relnamespace and namespace.nspname = 'public'
+  cross join lateral pg_catalog.aclexplode(coalesce(
+    class.relacl, pg_catalog.acldefault('r', class.relowner)
+  )) as acl
+  left join pg_catalog.pg_roles as grantee on grantee.oid = acl.grantee
+  join pg_catalog.pg_roles as grantor on grantor.oid = acl.grantor
+  where class.relname in (select table_name from contract_tables)
+),
+column_acl_entries as (
+  select 'public'::text as schema_name, class.relname as table_name,
+    attribute.attname as column_name,
+    coalesce(grantee.rolname, 'PUBLIC') as grantee, grantor.rolname as grantor,
+    acl.privilege_type, acl.is_grantable
+  from pg_catalog.pg_attribute as attribute
+  join pg_catalog.pg_class as class on class.oid = attribute.attrelid
+  join pg_catalog.pg_namespace as namespace
+    on namespace.oid = class.relnamespace and namespace.nspname = 'public'
+  cross join lateral pg_catalog.aclexplode(
+    case when cardinality(attribute.attacl) > 0 then attribute.attacl
+      else null::pg_catalog.aclitem[] end
+  ) as acl
+  left join pg_catalog.pg_roles as grantee on grantee.oid = acl.grantee
+  join pg_catalog.pg_roles as grantor on grantor.oid = acl.grantor
+  where attribute.attnum > 0 and not attribute.attisdropped
+    and class.relname in (select table_name from contract_tables)
+),
+function_acl_entries as (
+  select 'public'::text as schema_name, proc.proname as object_name,
+    pg_catalog.pg_get_function_identity_arguments(proc.oid) as identity_arguments,
+    coalesce(grantee.rolname, 'PUBLIC') as grantee, grantor.rolname as grantor,
+    acl.privilege_type, acl.is_grantable
+  from pg_catalog.pg_proc as proc
+  join pg_catalog.pg_namespace as namespace
+    on namespace.oid = proc.pronamespace and namespace.nspname = 'public'
+  cross join lateral pg_catalog.aclexplode(coalesce(
+    proc.proacl, pg_catalog.acldefault('f', proc.proowner)
+  )) as acl
+  left join pg_catalog.pg_roles as grantee on grantee.oid = acl.grantee
+  join pg_catalog.pg_roles as grantor on grantor.oid = acl.grantor
+  join schema_security_functions as requested on requested.name = proc.proname
 ),
 schema_constraints as (
   select class.relname as table_name, constraint_record.conname as name,
@@ -685,10 +817,12 @@ schema_constraints as (
   join pg_catalog.pg_class as class on class.oid = constraint_record.conrelid
   join pg_catalog.pg_namespace as namespace
     on namespace.oid = class.relnamespace and namespace.nspname = 'public'
-  where class.relname in (select table_name from contract_tables)
+  where constraint_record.contype <> 't'
+    and class.relname in (select table_name from contract_tables)
 ),
 schema_indexes as (
   select table_class.relname as table_name, index_class.relname as name,
+    index_owner.rolname as owner,
     index_record.indisunique as is_unique, index_record.indisvalid as is_valid,
     exists (
       select 1 from pg_catalog.pg_constraint as constraint_index
@@ -698,6 +832,7 @@ schema_indexes as (
     pg_catalog.pg_get_indexdef(index_record.indexrelid) as definition
   from pg_catalog.pg_index as index_record
   join pg_catalog.pg_class as index_class on index_class.oid = index_record.indexrelid
+  join pg_catalog.pg_roles as index_owner on index_owner.oid = index_class.relowner
   join pg_catalog.pg_class as table_class on table_class.oid = index_record.indrelid
   join pg_catalog.pg_namespace as namespace
     on namespace.oid = table_class.relnamespace and namespace.nspname = 'public'
@@ -717,7 +852,9 @@ schema_triggers as (
 ),
 schema_policies as (
   select policy.tablename as table_name, policy.policyname as name,
-    policy.cmd as command, policy.roles, policy.qual as using_expression,
+    policy.cmd as command, policy.permissive,
+    array(select role::text from unnest(policy.roles) role order by role::text) as roles,
+    policy.qual as using_expression,
     policy.with_check as with_check_expression
   from pg_catalog.pg_policies as policy
   where policy.schemaname = 'public'
@@ -746,6 +883,43 @@ table_privileges as (
   left join pg_catalog.pg_class as class
     on class.relname = requested.table_name and class.relnamespace = namespace.oid
 ),
+column_roles(role_name) as (values ${SCHEMA_SECURITY_COLUMN_ROLE_VALUES_SQL}),
+column_privilege_names(privilege_name) as (
+  values ${SCHEMA_SECURITY_COLUMN_PRIVILEGE_VALUES_SQL}
+),
+column_privileges as (
+  select class.relname as table_name, attribute.attname as column_name,
+    column_roles.role_name, column_privilege_names.privilege_name,
+    case
+      when column_roles.role_name = 'public' then
+        exists (
+          select 1 from pg_catalog.aclexplode(coalesce(
+            class.relacl, pg_catalog.acldefault('r', class.relowner)
+          )) as table_acl
+          where table_acl.grantee = 0
+            and table_acl.privilege_type = column_privilege_names.privilege_name
+        ) or exists (
+          select 1 from pg_catalog.aclexplode(
+            case when cardinality(attribute.attacl) > 0 then attribute.attacl
+              else null::pg_catalog.aclitem[] end
+          ) as column_acl
+          where column_acl.grantee = 0
+            and column_acl.privilege_type = column_privilege_names.privilege_name
+        )
+      else coalesce(pg_catalog.has_column_privilege(
+        column_roles.role_name, class.oid, attribute.attnum,
+        column_privilege_names.privilege_name
+      ), false)
+    end as granted
+  from pg_catalog.pg_attribute as attribute
+  join pg_catalog.pg_class as class on class.oid = attribute.attrelid
+  join pg_catalog.pg_namespace as namespace
+    on namespace.oid = class.relnamespace and namespace.nspname = 'public'
+  cross join column_roles
+  cross join column_privilege_names
+  where attribute.attnum > 0 and not attribute.attisdropped
+    and class.relname in (select table_name from contract_tables)
+),
 required_schemas(schema_name) as (values ('public'), ('extensions')),
 schema_roles(role_name) as (values ('public'), ('anon'), ('authenticated')),
 schema_create_privileges as (
@@ -761,6 +935,18 @@ schema_create_privileges as (
   join pg_catalog.pg_namespace namespace on namespace.nspname = required.schema_name
   join pg_catalog.pg_roles owner on owner.oid = namespace.nspowner
 ),
+schema_acl_entries as (
+  select namespace.nspname as schema_name, namespace.nspname as object_name,
+    coalesce(grantee.rolname, 'PUBLIC') as grantee, grantor.rolname as grantor,
+    acl.privilege_type, acl.is_grantable
+  from pg_catalog.pg_namespace namespace
+  cross join lateral pg_catalog.aclexplode(coalesce(
+    namespace.nspacl, pg_catalog.acldefault('n', namespace.nspowner)
+  )) as acl
+  left join pg_catalog.pg_roles as grantee on grantee.oid = acl.grantee
+  join pg_catalog.pg_roles as grantor on grantor.oid = acl.grantor
+  where namespace.nspname in (select schema_name from required_schemas)
+),
 event_types as (
   select distinct extracted.value[1] as event_type
   from pg_catalog.pg_constraint constraint_record
@@ -773,39 +959,37 @@ event_types as (
 development_items as (
   select jsonb_build_object(
     'item', to_jsonb(item),
-    'reviews', coalesce((select jsonb_agg(to_jsonb(review) order by review.revision, review.id)
+    'reviews', coalesce((select jsonb_agg(to_jsonb(review)
+      order by review.revision asc nulls last, review.id asc)
       from public.literature_gold_set_reviews review where review.item_id = item.id), '[]'::jsonb),
-    'events', coalesce((select jsonb_agg(to_jsonb(event) order by event.created_at, event.id)
+    'events', coalesce((select jsonb_agg(to_jsonb(event)
+      order by event.created_at asc nulls last, event.id asc)
       from public.literature_gold_set_events event where event.item_id = item.id), '[]'::jsonb)
-  ) as value
+  ) as value, item.display_order, item.id as item_id
   from selected_batch batch
   join public.literature_gold_set_items item on item.batch_id = batch.id
   where item.dataset_split = 'development'
-  order by item.display_order, item.id
 ),
 development_articles as (
-  select to_jsonb(article) as value
+  select to_jsonb(article) as value, item.display_order, item.id as item_id, item.pmid
   from selected_batch batch
   join public.literature_gold_set_items item
     on item.batch_id = batch.id and item.dataset_split = 'development'
   join public.literature_articles article on article.pmid = item.pmid
-  order by item.display_order, item.id
 ),
 development_drafts as (
-  select to_jsonb(draft) as value
+  select to_jsonb(draft) as value, item.display_order, item.id as item_id
   from selected_batch batch
   join public.literature_gold_set_items item
     on item.batch_id = batch.id and item.dataset_split = 'development'
   join public.literature_gold_set_review_drafts draft on draft.item_id = item.id
-  order by item.display_order, item.id
 ),
 development_events as (
-  select to_jsonb(event) as value
+  select to_jsonb(event) as value, event.created_at, event.id as event_id
   from selected_batch batch
   join public.literature_gold_set_events event on event.batch_id = batch.id
   left join public.literature_gold_set_items item on item.id = event.item_id
   where event.item_id is null or item.dataset_split = 'development'
-  order by event.created_at, event.id
 ),
 test_aggregate as (
   select jsonb_build_object(
@@ -840,41 +1024,77 @@ select ${sqlLiteral(SNAPSHOT_MARKER)} || jsonb_build_object(
     select jsonb_agg(jsonb_build_object(
       'version', to_jsonb(migration) ->> 'version',
       'name', to_jsonb(migration) ->> 'name'
-    ) order by to_jsonb(migration) ->> 'version')
+    ) order by to_jsonb(migration) ->> 'version', to_jsonb(migration) ->> 'name')
     from supabase_migrations.schema_migrations migration
   ), '[]'::jsonb),
   'scope', jsonb_build_object(
     'datasetSplit', 'development',
     'batch', (select to_jsonb(batch) from selected_batch batch)
   ),
-  'developmentItems', coalesce((select jsonb_agg(value) from development_items), '[]'::jsonb),
+  'developmentItems', coalesce((select jsonb_agg(value
+    order by display_order asc nulls last, item_id asc) from development_items), '[]'::jsonb),
   'developmentSeed', jsonb_build_object(
-    'literatureArticles', coalesce((select jsonb_agg(value) from development_articles), '[]'::jsonb),
-    'batches', coalesce((select jsonb_agg(to_jsonb(batch)) from selected_batch batch), '[]'::jsonb),
-    'items', coalesce((select jsonb_agg(to_jsonb(item) order by item.display_order, item.id)
+    'literatureArticles', coalesce((select jsonb_agg(value
+      order by display_order asc nulls last, item_id asc, pmid asc)
+      from development_articles), '[]'::jsonb),
+    'batches', coalesce((select jsonb_agg(to_jsonb(batch) order by batch.id asc)
+      from selected_batch batch), '[]'::jsonb),
+    'items', coalesce((select jsonb_agg(to_jsonb(item)
+      order by item.display_order asc nulls last, item.id asc)
       from selected_batch batch join public.literature_gold_set_items item on item.batch_id = batch.id
       where item.dataset_split = 'development'), '[]'::jsonb),
-    'reviews', coalesce((select jsonb_agg(to_jsonb(review) order by item.display_order, review.revision, review.id)
+    'reviews', coalesce((select jsonb_agg(to_jsonb(review)
+      order by item.display_order asc nulls last, item.id asc,
+        review.revision asc nulls last, review.id asc)
       from selected_batch batch
       join public.literature_gold_set_items item
         on item.batch_id = batch.id and item.dataset_split = 'development'
       join public.literature_gold_set_reviews review on review.item_id = item.id), '[]'::jsonb),
-    'drafts', coalesce((select jsonb_agg(value) from development_drafts), '[]'::jsonb),
-    'events', coalesce((select jsonb_agg(value) from development_events), '[]'::jsonb)
+    'drafts', coalesce((select jsonb_agg(value
+      order by display_order asc nulls last, item_id asc) from development_drafts), '[]'::jsonb),
+    'events', coalesce((select jsonb_agg(value
+      order by created_at asc nulls last, event_id asc) from development_events), '[]'::jsonb)
   ),
   'testAggregate', coalesce((select value from test_aggregate), '{}'::jsonb),
   'schema', jsonb_build_object(
-    'tables', coalesce((select jsonb_agg(to_jsonb(row) order by row.table_name) from schema_tables row), '[]'::jsonb),
-    'columns', coalesce((select jsonb_agg(to_jsonb(row) order by row.table_name, row.ordinal_position) from schema_columns row), '[]'::jsonb),
-    'functions', coalesce((select jsonb_agg(to_jsonb(row) order by row.name, row.identity_arguments) from schema_functions row), '[]'::jsonb),
-    'constraints', coalesce((select jsonb_agg(to_jsonb(row) order by row.name) from schema_constraints row), '[]'::jsonb),
-    'indexes', coalesce((select jsonb_agg(to_jsonb(row) order by row.name) from schema_indexes row), '[]'::jsonb),
-    'triggers', coalesce((select jsonb_agg(to_jsonb(row) order by row.name) from schema_triggers row), '[]'::jsonb),
-    'policies', coalesce((select jsonb_agg(to_jsonb(row) order by row.name) from schema_policies row), '[]'::jsonb),
+    'tables', coalesce((select jsonb_agg(to_jsonb(row) order by row.table_name asc)
+      from schema_tables row), '[]'::jsonb),
+    'columns', coalesce((select jsonb_agg(to_jsonb(row)
+      order by row.table_name asc, row.ordinal_position asc nulls last, row.column_name asc)
+      from schema_columns row), '[]'::jsonb),
+    'columnPrivileges', coalesce((select jsonb_agg(to_jsonb(row)
+      order by row.table_name asc, row.column_name asc,
+        row.role_name asc, row.privilege_name asc)
+      from column_privileges row), '[]'::jsonb),
+    'functions', coalesce((select jsonb_agg(to_jsonb(row)
+      order by row.name asc, row.identity_arguments asc)
+      from schema_functions row), '[]'::jsonb),
+    'constraints', coalesce((select jsonb_agg(to_jsonb(row)
+      order by row.table_name asc, row.name asc) from schema_constraints row), '[]'::jsonb),
+    'indexes', coalesce((select jsonb_agg(to_jsonb(row)
+      order by row.table_name asc, row.name asc) from schema_indexes row), '[]'::jsonb),
+    'triggers', coalesce((select jsonb_agg(to_jsonb(row)
+      order by row.table_name asc, row.name asc) from schema_triggers row), '[]'::jsonb),
+    'policies', coalesce((select jsonb_agg(to_jsonb(row)
+      order by row.table_name asc, row.name asc) from schema_policies row), '[]'::jsonb),
     'tablePrivileges', coalesce((select jsonb_agg(to_jsonb(row)
       order by row.table_name, row.role_name, row.privilege_name) from table_privileges row), '[]'::jsonb),
     'schemaCreatePrivileges', coalesce((select jsonb_agg(to_jsonb(row)
       order by row.schema_name, row.role_name) from schema_create_privileges row), '[]'::jsonb),
+    'tableAclEntries', coalesce((select jsonb_agg(to_jsonb(row)
+      order by row.schema_name asc, row.object_name asc, row.grantee asc,
+        row.privilege_type asc, row.grantor asc) from table_acl_entries row), '[]'::jsonb),
+    'columnAclEntries', coalesce((select jsonb_agg(to_jsonb(row)
+      order by row.schema_name asc, row.table_name asc, row.column_name asc,
+        row.grantee asc, row.privilege_type asc, row.grantor asc, row.is_grantable asc)
+      from column_acl_entries row), '[]'::jsonb),
+    'functionAclEntries', coalesce((select jsonb_agg(to_jsonb(row)
+      order by row.schema_name asc, row.object_name asc, row.identity_arguments asc,
+        row.grantee asc, row.privilege_type asc, row.grantor asc)
+      from function_acl_entries row), '[]'::jsonb),
+    'schemaAclEntries', coalesce((select jsonb_agg(to_jsonb(row)
+      order by row.schema_name asc, row.object_name asc, row.grantee asc,
+        row.privilege_type asc, row.grantor asc) from schema_acl_entries row), '[]'::jsonb),
     'supportedEventTypes', coalesce((select jsonb_agg(event_type order by event_type) from event_types), '[]'::jsonb)
   )
 )::text;
@@ -889,7 +1109,117 @@ function stripSqlCommentsAndLiterals(sql: string) {
     .replaceAll(/'(?:''|[^'])*'/gu, "''")
 }
 
+const SERIALIZED_AGGREGATE_PATTERN =
+  /\b(json_agg|jsonb_agg|array_agg|string_agg|json_object_agg|jsonb_object_agg)\s*\(/giu
+
+/** Preserve SQL structure while hiding quoted/comment content from static ordering inspection. */
+function maskSqlQuotedContent(sql: string): string {
+  const output = [...sql]
+  let index = 0
+  const blank = (start: number, end: number) => {
+    for (let offset = start; offset < end; offset += 1) {
+      if (output[offset] !== '\n' && output[offset] !== '\r') output[offset] = ' '
+    }
+  }
+  while (index < sql.length) {
+    if (sql.startsWith('--', index)) {
+      const end = sql.indexOf('\n', index + 2)
+      const stop = end < 0 ? sql.length : end
+      blank(index, stop)
+      index = stop
+      continue
+    }
+    if (sql.startsWith('/*', index)) {
+      const end = sql.indexOf('*/', index + 2)
+      const stop = end < 0 ? sql.length : end + 2
+      blank(index, stop)
+      index = stop
+      continue
+    }
+    const character = sql[index]
+    if (character === "'" || character === '"') {
+      const quote = character
+      let end = index + 1
+      while (end < sql.length) {
+        if (sql[end] === quote && sql[end + 1] === quote) {
+          end += 2
+          continue
+        }
+        if (sql[end] === quote) {
+          end += 1
+          break
+        }
+        end += 1
+      }
+      blank(index, end)
+      index = end
+      continue
+    }
+    if (character === '$') {
+      const delimiter = sql.slice(index).match(/^\$[A-Za-z_][A-Za-z0-9_]*\$|^\$\$/u)?.[0]
+      if (delimiter) {
+        // Dollar quotes delimit executable SQL/PLpgSQL function bodies in migrations. Hide only
+        // the delimiter itself so aggregate queries inside those bodies remain release-gated.
+        blank(index, index + delimiter.length)
+        index += delimiter.length
+        continue
+      }
+    }
+    index += 1
+  }
+  return output.join('')
+}
+
+function aggregateHasTopLevelOrderBy(maskedSql: string, openParenthesis: number): boolean {
+  let depth = 0
+  let index = openParenthesis + 1
+  const tokens: string[] = []
+  while (index < maskedSql.length) {
+    const character = maskedSql[index]
+    if (character === '(') {
+      depth += 1
+      index += 1
+      continue
+    }
+    if (character === ')') {
+      if (depth === 0) break
+      depth -= 1
+      index += 1
+      continue
+    }
+    if (depth === 0 && /[A-Za-z_]/u.test(character)) {
+      let end = index + 1
+      while (end < maskedSql.length && /[A-Za-z0-9_$]/u.test(maskedSql[end])) end += 1
+      tokens.push(maskedSql.slice(index, end).toLowerCase())
+      index = end
+      continue
+    }
+    index += 1
+  }
+  return tokens.some((token, tokenIndex) => token === 'order' && tokens[tokenIndex + 1] === 'by')
+}
+
+/**
+ * Fail closed when a serialized aggregate relies on input, CTE, subquery, index, or plan order.
+ * ORDER BY must occur at aggregate-argument depth, not merely in a source subquery.
+ */
+export function assertSerializedAggregateOrdering(sql: string): void {
+  const maskedSql = maskSqlQuotedContent(sql)
+  for (const match of maskedSql.matchAll(SERIALIZED_AGGREGATE_PATTERN)) {
+    const openParenthesis = (match.index ?? 0) + match[0].lastIndexOf('(')
+    if (!aggregateHasTopLevelOrderBy(maskedSql, openParenthesis)) {
+      throw new Error(`${match[1]} serialized aggregate lacks aggregate-level ORDER BY.`)
+    }
+  }
+  if (/\brow_to_json\s*\(\s*\(\s*select\b/iu.test(maskedSql)) {
+    throw new Error(
+      'row_to_json over a row-producing subquery requires an explicit reviewed order.',
+    )
+  }
+}
+
 export function assertReadOnlySnapshotSql(sql: string): void {
+  assertSerializedAggregateOrdering(sql)
   const inspected = stripSqlCommentsAndLiterals(sql)
   if (!/\bbegin\b[^;]*\bread only\b/iu.test(inspected)) {
     throw new Error('Snapshot SQL must open an explicit read-only transaction.')
@@ -1134,7 +1464,8 @@ export function resolveEffectiveReview(
   const reviews = [...reviewsInput].sort(
     (left, right) =>
       requireInteger(left.revision, 'review.revision') -
-      requireInteger(right.revision, 'review.revision'),
+        requireInteger(right.revision, 'review.revision') ||
+      compareCodeUnits(requireString(left.id, 'review.id'), requireString(right.id, 'review.id')),
   )
   const head = reviews.at(-1)
   if (!head) return null
@@ -1151,15 +1482,40 @@ export function resolveEffectiveReview(
 
 function projectDevelopmentState(snapshot: RawDatabaseSnapshot) {
   const rows = mapObjectArray(snapshot.developmentItems, 'developmentItems')
-  return rows.map((row, index) => {
-    const item = requireRecord(row.item, `developmentItems[${index}].item`)
-    if (item.dataset_split !== 'development') {
-      throw new Error('Held-out membership entered a development review-history row.')
-    }
-    const reviews = mapObjectArray(row.reviews, `developmentItems[${index}].reviews`)
-    const events = mapObjectArray(row.events, `developmentItems[${index}].events`)
-    return { item, reviews, events }
-  })
+  return rows
+    .map((row, index) => {
+      const item = requireRecord(row.item, `developmentItems[${index}].item`)
+      if (item.dataset_split !== 'development') {
+        throw new Error('Held-out membership entered a development review-history row.')
+      }
+      const reviews = mapObjectArray(row.reviews, `developmentItems[${index}].reviews`).sort(
+        (left, right) =>
+          requireInteger(left.revision, 'review.revision') -
+            requireInteger(right.revision, 'review.revision') ||
+          compareCodeUnits(
+            requireString(left.id, 'review.id'),
+            requireString(right.id, 'review.id'),
+          ),
+      )
+      const events = mapObjectArray(row.events, `developmentItems[${index}].events`).sort(
+        (left, right) =>
+          compareCodeUnits(
+            String(left.created_at ?? '\uffff'),
+            String(right.created_at ?? '\uffff'),
+          ) ||
+          compareCodeUnits(requireString(left.id, 'event.id'), requireString(right.id, 'event.id')),
+      )
+      return { item, reviews, events }
+    })
+    .sort(
+      (left, right) =>
+        requireInteger(left.item.display_order, 'item.display_order') -
+          requireInteger(right.item.display_order, 'item.display_order') ||
+        compareCodeUnits(
+          requireString(left.item.id, 'item.id'),
+          requireString(right.item.id, 'item.id'),
+        ),
+    )
 }
 
 export function buildDevelopmentPlanningState(snapshot: RawDatabaseSnapshot) {
@@ -1170,7 +1526,11 @@ export function buildDevelopmentPlanningState(snapshot: RawDatabaseSnapshot) {
       const ordered = [...reviews].sort(
         (left, right) =>
           requireInteger(left.revision, 'review.revision') -
-          requireInteger(right.revision, 'review.revision'),
+            requireInteger(right.revision, 'review.revision') ||
+          compareCodeUnits(
+            requireString(left.id, 'review.id'),
+            requireString(right.id, 'review.id'),
+          ),
       )
       const head = ordered.at(-1) ?? null
       const effective = resolveEffectiveReview(ordered)
@@ -1318,7 +1678,8 @@ function buildRevisionChainAudit(developmentState: ReturnType<typeof projectDeve
     const ordered = [...reviews].sort(
       (left, right) =>
         requireInteger(left.revision, 'review.revision') -
-        requireInteger(right.revision, 'review.revision'),
+          requireInteger(right.revision, 'review.revision') ||
+        compareCodeUnits(requireString(left.id, 'review.id'), requireString(right.id, 'review.id')),
     )
     ordered.forEach((review, index) => {
       const expectedRevision = index + 1
@@ -1353,21 +1714,212 @@ function buildRevisionChainAudit(developmentState: ReturnType<typeof projectDeve
 
 function schemaInventory(snapshot: RawDatabaseSnapshot) {
   const rawSchema = requireRecord(snapshot.schema, 'snapshot.schema')
-  const functions = mapObjectArray(rawSchema.functions, 'snapshot.schema.functions').map(
-    (functionRecord) => {
+  const inventorySchema = { ...rawSchema }
+  // Exact ACL rows feed the post-migration definition identity without perturbing the separately
+  // pinned legacy pre-migration schema-inventory contract.
+  delete inventorySchema.tableAclEntries
+  delete inventorySchema.columnAclEntries
+  delete inventorySchema.columnPrivileges
+  delete inventorySchema.functionAclEntries
+  delete inventorySchema.schemaAclEntries
+  const contractMigrationApplied = snapshot.migrationLedger.some((entry) => {
+    const row = requireRecord(entry, 'snapshot.migrationLedger entry')
+    return (
+      row.version === '20260808035633' &&
+      row.name === 'add_literature_gold_import_compensation_contract'
+    )
+  })
+  const functions = mapObjectArray(rawSchema.functions, 'snapshot.schema.functions')
+    // The successful real pre-migration baseline predates the expanded exact post-contract scope.
+    // Preserve that legacy receipt identity while the raw snapshot still captures all 24 names for
+    // post-migration definition/ACL validation.
+    .filter(
+      (functionRecord) =>
+        contractMigrationApplied ||
+        String(functionRecord.name ?? '').startsWith('literature_gold_') ||
+        [
+          'apply_literature_gold_import_v1',
+          'compensate_literature_gold_import_v1',
+          'reconcile_literature_gold_review_operation_v1',
+          'save_literature_gold_review_v1',
+        ].includes(String(functionRecord.name ?? '')),
+    )
+    .map((functionRecord): Record<string, unknown> => {
       const definition = requireString(functionRecord.definition, 'function.definition')
       return { ...functionRecord, definitionSha256: sha256(definition) }
-    },
-  )
-  const indexes = mapObjectArray(rawSchema.indexes, 'snapshot.schema.indexes').map(
-    (indexRecord) => {
+    })
+    .sort(
+      (left, right) =>
+        compareCodeUnits(String(left.name ?? ''), String(right.name ?? '')) ||
+        compareCodeUnits(
+          String(left.identity_arguments ?? ''),
+          String(right.identity_arguments ?? ''),
+        ),
+    )
+  const indexes = mapObjectArray(rawSchema.indexes, 'snapshot.schema.indexes')
+    .map((indexRecord) => {
       const inventoryIndex = { ...indexRecord }
       // Query-only catalog classification must not perturb the pinned canonical schema identity.
       delete inventoryIndex.constraint_backed
+      delete inventoryIndex.owner
       return inventoryIndex
-    },
+    })
+    .sort(
+      (left, right) =>
+        compareCodeUnits(String(left.name ?? ''), String(right.name ?? '')) ||
+        compareCodeUnits(String(left.table_name ?? ''), String(right.table_name ?? '')),
+    )
+  const sortRecords = (value: unknown, label: string, keys: readonly string[]) =>
+    mapObjectArray(value, label).sort((left, right) => {
+      for (const key of keys) {
+        const leftValue = left[key]
+        const rightValue = right[key]
+        const result =
+          typeof leftValue === 'number' && typeof rightValue === 'number'
+            ? leftValue - rightValue
+            : compareCodeUnits(String(leftValue ?? ''), String(rightValue ?? ''))
+        if (result !== 0) return result
+      }
+      return 0
+    })
+  return {
+    ...inventorySchema,
+    tables: sortRecords(rawSchema.tables, 'snapshot.schema.tables', ['table_name']).map((table) => {
+      const legacyTable = { ...table }
+      delete legacyTable.force_rls
+      return legacyTable
+    }),
+    columns: sortRecords(rawSchema.columns, 'snapshot.schema.columns', [
+      'table_name',
+      'ordinal_position',
+      'column_name',
+    ]),
+    functions,
+    constraints: sortRecords(rawSchema.constraints, 'snapshot.schema.constraints', [
+      'name',
+      'table_name',
+    ]),
+    indexes,
+    triggers: sortRecords(rawSchema.triggers, 'snapshot.schema.triggers', ['name', 'table_name']),
+    policies: sortRecords(rawSchema.policies, 'snapshot.schema.policies', [
+      'name',
+      'table_name',
+    ]).map((policy) => ({
+      ...policy,
+      roles: Array.isArray(policy.roles)
+        ? [...policy.roles].map(String).sort(compareCodeUnits)
+        : policy.roles,
+    })),
+    tablePrivileges: sortRecords(rawSchema.tablePrivileges, 'snapshot.schema.tablePrivileges', [
+      'table_name',
+      'role_name',
+      'privilege_name',
+    ]),
+    schemaCreatePrivileges: sortRecords(
+      rawSchema.schemaCreatePrivileges,
+      'snapshot.schema.schemaCreatePrivileges',
+      ['schema_name', 'role_name'],
+    ),
+    supportedEventTypes: requireArray(
+      rawSchema.supportedEventTypes,
+      'snapshot.schema.supportedEventTypes',
+    )
+      .map(String)
+      .sort(compareCodeUnits),
+  } as Record<string, unknown>
+}
+
+/**
+ * These query-only fields are intentionally omitted from the historical pre-migration inventory
+ * hash. Bind them before accepting that legacy identity: the pre-contract database had no forced
+ * RLS or explicit column ACLs, so every effective column grant must exactly inherit its table grant.
+ */
+function assertPreMigrationQueryOnlySecurityState(snapshot: RawDatabaseSnapshot): void {
+  const schema = requireRecord(snapshot.schema, 'snapshot.schema')
+  const tables = mapObjectArray(schema.tables, 'snapshot.schema.tables')
+  for (const [index, table] of tables.entries()) {
+    if (table.relation_kind === null || table.relation_kind === undefined) continue
+    if (table.force_rls !== false) {
+      throw new Error(
+        `Pre-migration security drift: snapshot.schema.tables[${index}] must have force_rls=false.`,
+      )
+    }
+  }
+
+  const columnAclEntries = mapObjectArray(
+    schema.columnAclEntries,
+    'snapshot.schema.columnAclEntries',
   )
-  return { ...rawSchema, functions, indexes } as Record<string, unknown>
+  if (columnAclEntries.length !== 0) {
+    throw new Error('Pre-migration security drift: explicit protected-column ACLs are forbidden.')
+  }
+
+  const columns = mapObjectArray(schema.columns, 'snapshot.schema.columns')
+  const columnPrivileges = mapObjectArray(
+    schema.columnPrivileges,
+    'snapshot.schema.columnPrivileges',
+  )
+  const tablePrivileges = mapObjectArray(schema.tablePrivileges, 'snapshot.schema.tablePrivileges')
+  const expectedKeys = new Set(
+    columns.flatMap((column) => {
+      const tableName = requireString(column.table_name, 'pre-migration column table_name')
+      const columnName = requireString(column.column_name, 'pre-migration column column_name')
+      return SCHEMA_SECURITY_COLUMN_ROLES.flatMap((roleName) =>
+        SCHEMA_SECURITY_COLUMN_PRIVILEGES.map(
+          (privilegeName) => `${tableName}\0${columnName}\0${roleName}\0${privilegeName}`,
+        ),
+      )
+    }),
+  )
+  const observedKeys = new Set<string>()
+  for (const [index, row] of columnPrivileges.entries()) {
+    const tableName = requireString(
+      row.table_name,
+      `snapshot.schema.columnPrivileges[${index}].table_name`,
+    )
+    const columnName = requireString(
+      row.column_name,
+      `snapshot.schema.columnPrivileges[${index}].column_name`,
+    )
+    const roleName = requireString(
+      row.role_name,
+      `snapshot.schema.columnPrivileges[${index}].role_name`,
+    )
+    const privilegeName = requireString(
+      row.privilege_name,
+      `snapshot.schema.columnPrivileges[${index}].privilege_name`,
+    )
+    const key = `${tableName}\0${columnName}\0${roleName}\0${privilegeName}`
+    if (!expectedKeys.has(key) || observedKeys.has(key)) {
+      throw new Error(
+        'Pre-migration security drift: effective protected-column privilege matrix changed.',
+      )
+    }
+    observedKeys.add(key)
+    const granted = requireBoolean(
+      row.granted,
+      `snapshot.schema.columnPrivileges[${index}].granted`,
+    )
+    const inherited = tablePrivileges.filter(
+      (entry) =>
+        entry.table_name === tableName &&
+        entry.role_name === roleName &&
+        entry.privilege_name === privilegeName,
+    )
+    if (
+      inherited.length !== 1 ||
+      requireBoolean(inherited[0]?.granted, 'pre-migration inherited table privilege') !== granted
+    ) {
+      throw new Error(
+        'Pre-migration security drift: effective column privilege does not match table ACL state.',
+      )
+    }
+  }
+  if (observedKeys.size !== expectedKeys.size) {
+    throw new Error(
+      'Pre-migration security drift: effective protected-column privilege matrix is incomplete.',
+    )
+  }
 }
 
 export function assertAggregateOnlyTestState(value: unknown): void {
@@ -1602,8 +2154,15 @@ function validateBatchLevelSeedEvent(
 export function buildDevelopmentDatabaseSeed(snapshot: RawDatabaseSnapshot) {
   const raw = requireRecord(snapshot.developmentSeed, 'snapshot.developmentSeed')
   const articles = mapObjectArray(raw.literatureArticles, 'developmentSeed.literatureArticles')
-  const batches = mapObjectArray(raw.batches, 'developmentSeed.batches')
-  const items = mapObjectArray(raw.items, 'developmentSeed.items')
+  const batches = mapObjectArray(raw.batches, 'developmentSeed.batches').sort((left, right) =>
+    compareCodeUnits(requireString(left.id, 'batch.id'), requireString(right.id, 'batch.id')),
+  )
+  const items = mapObjectArray(raw.items, 'developmentSeed.items').sort(
+    (left, right) =>
+      requireInteger(left.display_order, 'item.display_order') -
+        requireInteger(right.display_order, 'item.display_order') ||
+      compareCodeUnits(requireString(left.id, 'item.id'), requireString(right.id, 'item.id')),
+  )
   const reviews = mapObjectArray(raw.reviews, 'developmentSeed.reviews')
   const drafts = mapObjectArray(raw.drafts, 'developmentSeed.drafts')
   const events = mapObjectArray(raw.events, 'developmentSeed.events')
@@ -1659,18 +2218,70 @@ export function buildDevelopmentDatabaseSeed(snapshot: RawDatabaseSnapshot) {
     throw new Error('Development seed must contain exactly one approved batch-level event.')
   }
   validateBatchLevelSeedEvent(batchEvents[0], batch)
+  const itemSortKey = new Map(
+    items.map((item) => [
+      requireString(item.id, 'development seed item id'),
+      {
+        displayOrder: requireInteger(item.display_order, 'development seed display_order'),
+        itemId: requireString(item.id, 'development seed item id'),
+      },
+    ]),
+  )
+  const compareByItem = (left: Record<string, unknown>, right: Record<string, unknown>) => {
+    const leftKey = itemSortKey.get(requireString(left.item_id, 'development row item_id'))
+    const rightKey = itemSortKey.get(requireString(right.item_id, 'development row item_id'))
+    if (!leftKey || !rightKey) throw new Error('Development seed row has an unknown item.')
+    return (
+      leftKey.displayOrder - rightKey.displayOrder ||
+      compareCodeUnits(leftKey.itemId, rightKey.itemId)
+    )
+  }
+  const sortedArticles = [...articles].sort((left, right) => {
+    const leftItem = items.find((item) => item.pmid === left.pmid)
+    const rightItem = items.find((item) => item.pmid === right.pmid)
+    if (!leftItem || !rightItem) throw new Error('Development article is missing its item.')
+    return (
+      requireInteger(leftItem.display_order, 'article item display_order') -
+        requireInteger(rightItem.display_order, 'article item display_order') ||
+      compareCodeUnits(
+        requireString(leftItem.id, 'article item id'),
+        requireString(rightItem.id, 'article item id'),
+      ) ||
+      compareCodeUnits(
+        requireString(left.pmid, 'article PMID'),
+        requireString(right.pmid, 'article PMID'),
+      )
+    )
+  })
+  const sortedReviews = [...reviews].sort(
+    (left, right) =>
+      compareByItem(left, right) ||
+      requireInteger(left.revision, 'review.revision') -
+        requireInteger(right.revision, 'review.revision') ||
+      compareCodeUnits(requireString(left.id, 'review.id'), requireString(right.id, 'review.id')),
+  )
+  const sortedDrafts = [...drafts].sort(
+    (left, right) =>
+      compareByItem(left, right) ||
+      compareCodeUnits(String(left.id ?? left.item_id), String(right.id ?? right.item_id)),
+  )
+  const sortedEvents = [...events].sort(
+    (left, right) =>
+      compareCodeUnits(String(left.created_at ?? '\uffff'), String(right.created_at ?? '\uffff')) ||
+      compareCodeUnits(requireString(left.id, 'event.id'), requireString(right.id, 'event.id')),
+  )
   return {
     schemaVersion: 'gold-import-compensation-development-seed/v1',
     datasetSplit: 'development',
     heldOutIdentitiesIncluded: false,
     batchId,
     tables: {
-      literature_articles: articles,
+      literature_articles: sortedArticles,
       literature_gold_set_batches: batches,
       literature_gold_set_items: items,
-      literature_gold_set_reviews: reviews,
-      literature_gold_set_review_drafts: drafts,
-      literature_gold_set_events: events,
+      literature_gold_set_reviews: sortedReviews,
+      literature_gold_set_review_drafts: sortedDrafts,
+      literature_gold_set_events: sortedEvents,
     },
   }
 }
@@ -1693,7 +2304,14 @@ function migrationLedgerArtifact(snapshot: RawDatabaseSnapshot) {
   return {
     expectedMigrationId: IMPORT_COMPENSATION_MIGRATION_ID,
     expectedMigrationSha256: IMPORT_COMPENSATION_MIGRATION_SHA256,
-    entries: snapshot.migrationLedger,
+    entries: [...snapshot.migrationLedger].sort((left, right) => {
+      const leftRecord = requireRecord(left, 'migration ledger entry')
+      const rightRecord = requireRecord(right, 'migration ledger entry')
+      return (
+        compareCodeUnits(String(leftRecord.version ?? ''), String(rightRecord.version ?? '')) ||
+        compareCodeUnits(String(leftRecord.name ?? ''), String(rightRecord.name ?? ''))
+      )
+    }),
   }
 }
 
@@ -1735,6 +2353,7 @@ export function buildPreMigrationBackup(input: {
   const revisionAudit = buildRevisionChainAudit(developmentState)
   if (revisionAudit.failureCount > 0)
     throw new Error('Unexpected pre-migration revision-chain drift.')
+  assertPreMigrationQueryOnlySecurityState(input.snapshot)
   const inventory = schemaInventory(input.snapshot)
   const ledgerArtifact = migrationLedgerArtifact(input.snapshot)
   const actualBaseline = derivePreMigrationBaselineIdentity(input.snapshot)
@@ -1880,6 +2499,18 @@ export function buildAuditArtifacts(input: {
     ['migration-audit.json', canonicalJson(input.audit.report)],
     ['migration-audit.md', input.audit.markdown],
   ])
+  if (input.audit.schemaSecurityDefinitionIdentity) {
+    const actualIdentitySha256 = schemaSecurityDefinitionIdentitySha256(
+      input.audit.schemaSecurityDefinitionIdentity,
+    )
+    if (actualIdentitySha256 !== input.audit.schemaSecurityIdentitySha256) {
+      throw new Error('Audit schema/security definition identity binding is inconsistent.')
+    }
+    files.set(
+      'schema-security-definition-identity.json',
+      canonicalJson(input.audit.schemaSecurityDefinitionIdentity),
+    )
+  }
   if (input.audit.report.status === 'ready') {
     const actualPlanningSha256 = developmentPlanningStateSha256(input.snapshot)
     if (reportedPlanningSha256 !== actualPlanningSha256) {
@@ -1950,23 +2581,27 @@ export async function writeCanonicalPackage(input: {
   artifacts: CanonicalArtifacts
   executionReceipt: Record<string, unknown>
   outputDirectory: string
+  outputRoot: string
 }): Promise<void> {
-  await mkdir(input.outputDirectory, { mode: 0o700 })
-  await chmod(input.outputDirectory, 0o700)
-  const writePrivateFile = async (name: string, bytes: string) => {
-    const path = resolve(input.outputDirectory, name)
-    await writeFile(path, bytes, {
-      encoding: 'utf8',
-      flag: 'wx',
-      mode: 0o600,
-    })
-    await chmod(path, 0o600)
-  }
-  for (const [name, bytes] of input.artifacts.files) {
-    await writePrivateFile(name, bytes)
-  }
-  await writePrivateFile('checksum-manifest.sha256', input.artifacts.manifest)
-  await writePrivateFile('execution-receipt.json', canonicalJson(input.executionReceipt))
+  const identity = await createExclusiveOutputDirectory({
+    outputDirectory: input.outputDirectory,
+    outputRoot: input.outputRoot,
+  })
+  writeExclusiveOutputFiles(identity, [
+    ...[...input.artifacts.files].map(([name, bytes]) => ({
+      name,
+      bytes: Buffer.from(bytes, 'utf8'),
+    })),
+    {
+      name: 'checksum-manifest.sha256',
+      bytes: Buffer.from(input.artifacts.manifest, 'utf8'),
+    },
+    {
+      name: 'execution-receipt.json',
+      bytes: Buffer.from(canonicalJson(input.executionReceipt), 'utf8'),
+    },
+  ])
+  await assertExclusiveOutputDirectoryIdentity(identity)
 }
 
 function assertCanonicalEqual(actual: unknown, expected: unknown, label: string) {
@@ -2414,6 +3049,7 @@ function protectedIndexSecuritySurvey(
     tableName: entry.table_name,
     unique: entry.is_unique,
     valid: entry.is_valid,
+    constraintBacked: false,
     predicate: entry.predicate,
     definition: entry.definition,
   }))
@@ -2469,15 +3105,19 @@ function toSecurityIntrospection(schema: Record<string, unknown>) {
     rls: tables.map((table) => ({
       tableName: table.table_name,
       rlsEnabled: table.rls_enabled,
+      rlsForced: table.force_rls,
     })),
     functions: functions
       .filter((entry) => Object.hasOwn(REQUIRED_TRANSITION_SIGNATURES, String(entry.name)))
       .map((entry) => ({
         name: entry.name,
         identityArguments: entry.identity_arguments,
+        resultType: entry.result_type,
+        volatility: entry.volatility,
         owner: entry.owner,
         securityDefiner: entry.security_definer,
         searchPath: entry.search_path,
+        definition: entry.definition,
         publicExecute: entry.public_execute,
         anonExecute: entry.anon_execute,
         authenticatedExecute: entry.authenticated_execute,
@@ -2512,12 +3152,14 @@ function toSecurityIntrospection(schema: Record<string, unknown>) {
       name: entry.name,
       tableName: entry.table_name,
       definition: entry.definition,
+      validated: entry.validated,
     })),
     uniqueIndexes: protectedIndexSecuritySurvey(indexes, constraints),
     journalPolicies: policies.map((entry) => ({
       name: entry.name,
       tableName: entry.table_name,
       command: entry.command,
+      permissive: entry.permissive,
       roles: entry.roles,
       using: entry.using_expression,
       withCheck: entry.with_check_expression,
@@ -2527,8 +3169,26 @@ function toSecurityIntrospection(schema: Record<string, unknown>) {
       tableName: entry.table_name,
       enableMode: entry.enable_mode,
       enabled: entry.enabled,
+      definition: entry.definition,
     })),
     supportedEventTypes: schema.supportedEventTypes,
+    catalog: {
+      tables,
+      columns: mapObjectArray(schema.columns, 'schema.columns'),
+      columnPrivileges: mapObjectArray(schema.columnPrivileges, 'schema.columnPrivileges'),
+      functions,
+      constraints,
+      indexes,
+      triggers,
+      policies,
+      tablePrivileges,
+      schemaCreatePrivileges,
+      tableAclEntries: mapObjectArray(schema.tableAclEntries, 'schema.tableAclEntries'),
+      columnAclEntries: mapObjectArray(schema.columnAclEntries, 'schema.columnAclEntries'),
+      functionAclEntries: mapObjectArray(schema.functionAclEntries, 'schema.functionAclEntries'),
+      schemaAclEntries: mapObjectArray(schema.schemaAclEntries, 'schema.schemaAclEntries'),
+      supportedEventTypes: schema.supportedEventTypes,
+    },
   }
 }
 
@@ -2594,6 +3254,7 @@ function auditMarkdown(report: Record<string, unknown>) {
 export function auditPostMigration(input: {
   contractStateHashes?: ContractStateHashes
   contractStateHashesBefore?: ContractStateHashes
+  testOnlyExpectedSchemaSecurityIdentitySha256?: string
   lint?: unknown
   preMigration: {
     batchAndTestLock: Record<string, unknown>
@@ -2607,6 +3268,17 @@ export function auditPostMigration(input: {
   repositoryCommitSha: string
   snapshot: RawDatabaseSnapshot
 }): AuditResult {
+  if (
+    input.testOnlyExpectedSchemaSecurityIdentitySha256 !== undefined &&
+    process.env.NODE_ENV !== 'test'
+  ) {
+    throw new Error(
+      'The schema/security identity override is test-only; production audits use the code-pinned identity.',
+    )
+  }
+  const expectedSchemaSecurityIdentitySha256 =
+    input.testOnlyExpectedSchemaSecurityIdentitySha256 ??
+    POST_MIGRATION_SCHEMA_SECURITY_IDENTITY_SHA256
   assertAggregateOnlyTestState(input.snapshot.testAggregate)
   const postItems = projectDevelopmentState(input.snapshot)
   const projectedPostEffectiveSha256 = sha256ContractCanonical(effectiveStateProjection(postItems))
@@ -2650,6 +3322,9 @@ export function auditPostMigration(input: {
   const failures: string[] = []
   let security: unknown = null
   let lint: unknown = null
+  let schemaSecurityDefinitionIdentity: SchemaSecurityDefinitionIdentity | null = null
+  let postSchemaSecurityIdentitySha256: string | null = null
+  let preMigrationQueryOnlySecurityStateSafe = true
 
   const preReceiptHashes = requireRecord(
     input.preMigration.receipt.hashes,
@@ -2672,9 +3347,16 @@ export function auditPostMigration(input: {
     canonicalJson(preLedgerEntries) === canonicalJson(postPriorLedgerEntries)
 
   if (!migrationApplied) {
+    try {
+      assertPreMigrationQueryOnlySecurityState(input.snapshot)
+    } catch (error) {
+      preMigrationQueryOnlySecurityStateSafe = false
+      failures.push(error instanceof Error ? error.message : String(error))
+    }
     if (
       migrationLedgerState.versionOccurrences > 0 ||
       partialSchema ||
+      !preMigrationQueryOnlySecurityStateSafe ||
       currentSchemaSecurityIdentitySha256 !== preSchemaSecurityIdentitySha256 ||
       !priorLedgerRowsUnchanged
     ) {
@@ -2694,9 +3376,17 @@ export function auditPostMigration(input: {
       failures.push('Checksum-bound pre-migration backup manifest identity is required.')
     }
     try {
-      security = validateSecurityIntrospection(
-        toSecurityIntrospection(requireRecord(input.snapshot.schema, 'snapshot.schema')),
+      const securityIntrospection = toSecurityIntrospection(
+        requireRecord(input.snapshot.schema, 'snapshot.schema'),
       )
+      schemaSecurityDefinitionIdentity =
+        buildSchemaSecurityDefinitionIdentity(securityIntrospection)
+      postSchemaSecurityIdentitySha256 = schemaSecurityDefinitionIdentitySha256(
+        schemaSecurityDefinitionIdentity,
+      )
+      security = validateSecurityIntrospection(securityIntrospection, {
+        expectedSchemaSecurityIdentitySha256,
+      })
     } catch (error) {
       failures.push(error instanceof Error ? error.message : String(error))
     }
@@ -2842,7 +3532,10 @@ export function auditPostMigration(input: {
     if (failures.length > 0) status = 'blocked'
   }
 
-  const schemaSecurityIdentitySha256 = currentSchemaSecurityIdentitySha256
+  const schemaSecurityIdentitySha256 =
+    migrationApplied && postSchemaSecurityIdentitySha256
+      ? postSchemaSecurityIdentitySha256
+      : currentSchemaSecurityIdentitySha256
   const scope = requireRecord(input.snapshot.scope, 'snapshot.scope')
   const batch = requireRecord(scope.batch, 'snapshot.scope.batch')
   const currentEffectiveStateSha256 =
@@ -2879,7 +3572,8 @@ export function auditPostMigration(input: {
         input.contractStateHashesBefore.physicalStateSha256 ===
           input.contractStateHashes.physicalStateSha256
       : currentSchemaSecurityIdentitySha256 === preSchemaSecurityIdentitySha256 &&
-        priorLedgerRowsUnchanged,
+        priorLedgerRowsUnchanged &&
+        preMigrationQueryOnlySecurityStateSafe,
     targetDatabase: 'local',
     testSplitLocked: requireBoolean(input.snapshot.testAggregate.locked, 'testAggregate.locked'),
   }
@@ -2905,7 +3599,8 @@ export function auditPostMigration(input: {
       preSchemaSecurityIdentitySha256,
       postSchemaSecurityIdentitySha256: schemaSecurityIdentitySha256,
       schemaChangedAsExpected:
-        migrationApplied && preSchemaSecurityIdentitySha256 !== schemaSecurityIdentitySha256,
+        migrationApplied &&
+        postSchemaSecurityIdentitySha256 === expectedSchemaSecurityIdentitySha256,
       reviewMutationCount: reviewChanges,
       pointerMutationCount: pointerChanges,
       priorMigrationLedgerRowsUnchanged: priorLedgerRowsUnchanged,
@@ -2914,6 +3609,10 @@ export function auditPostMigration(input: {
     checks: {
       failures,
       security,
+      schemaSecurityDefinitionIdentity,
+      expectedSchemaSecurityIdentitySha256: migrationApplied
+        ? expectedSchemaSecurityIdentitySha256
+        : null,
       lint,
       behavioralProbe: 'none_on_real_batch_static_contract_and_snapshot_only',
       importExecuted: false,
@@ -2921,7 +3620,12 @@ export function auditPostMigration(input: {
       databaseMutationCount: 0,
     },
   }
-  return { report, markdown: auditMarkdown(report), schemaSecurityIdentitySha256 }
+  return {
+    report,
+    markdown: auditMarkdown(report),
+    schemaSecurityDefinitionIdentity,
+    schemaSecurityIdentitySha256,
+  }
 }
 
 export async function runLocalSupabaseLint(input: {

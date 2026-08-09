@@ -1,7 +1,17 @@
 /** @jest-environment node */
 
 import { createHash } from 'node:crypto'
-import { mkdir, mkdtemp, realpath, writeFile } from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
+import {
+  lstat,
+  mkdir,
+  mkdtemp,
+  readFile,
+  realpath,
+  rename,
+  symlink,
+  writeFile,
+} from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -15,6 +25,7 @@ import {
   generateGoldImportCompensationPackage,
   runPackageGeneratorCli,
   verifyReadyPostMigrationAuditPackage,
+  writeGeneratedPackageExclusive,
   type GeneratedPackage,
   type PackageSourceBytes,
   type PackageSourceIdentityPolicy,
@@ -22,15 +33,22 @@ import {
 import {
   DISPOSABLE_POSTGRES_IMAGE,
   assertDisposableRehearsalTarget,
+  assertDisposableContainerCleanupSucceeded,
   assertExactPackageSourceBytes,
   buildDeterministicExactPackageRehearsalArtifacts,
   executeFreshDisposableRuntime,
+  exactBatchSnapshotSql,
+  EXACT_RPC_METADATA_SQL,
+  cleanupDisposableContainer,
+  injectCompletedDisposableExecutionForTest,
   renderDevelopmentDatabaseSeedSql,
   runExactPackageRehearsalCli,
   validateExactRpcContractMetadata,
   verifyDevelopmentDatabaseBackupFixtureForTest,
   verifyExactGeneratedPackage,
   verifyLoadedPreMigrationBackupForPackage,
+  writeRehearsalReportExclusive,
+  type CommandResult,
   type DisposableRuntime,
   type DevelopmentDatabaseSeed,
   type ExactPackageRehearsalEvidence,
@@ -39,11 +57,32 @@ import {
   type ExecuteFreshDisposableInput,
 } from './rehearse-exact-gold-import-compensation-package-v1'
 import { canonicalJson } from '../../src/features/literature/gold-set/import-compensation'
-import type { LoadedPreMigrationBackup } from './gold-import-compensation-migration-operations'
+import {
+  assertSerializedAggregateOrdering,
+  type LoadedPreMigrationBackup,
+} from './gold-import-compensation-migration-operations'
+import { schemaSecurityDefinitionIdentitySha256 } from './gold-import-compensation-rehearsal-evidence'
+import {
+  SCHEMA_DEFINITION_MUTATION_PROBES,
+  SECURITY_INTROSPECTION_SQL,
+} from './rehearse-gold-import-compensation-db'
+import {
+  createExclusiveOutputDirectory,
+  type ExclusiveOutputDirectoryIdentity,
+} from './lib/exclusive-output'
 
 jest.setTimeout(30_000)
 
 const FIXED_TIME = '2026-08-08T00:00:00.000Z'
+const PINNED_SCHEMA_SECURITY_DEFINITION_IDENTITY = JSON.parse(
+  readFileSync(
+    join(
+      process.cwd(),
+      'scripts/literature/fixtures/post-migration-schema-security-definition-identity.json',
+    ),
+    'utf8',
+  ),
+) as Record<string, unknown>
 const CSV_HEADER = [
   'gold_set_item_id',
   'pmid',
@@ -78,14 +117,22 @@ function canonicalPrettyBytes(value: unknown): Buffer {
 }
 
 function buildVerifiedAuditPackage(audit: unknown, planningState: unknown) {
+  const auditRecord = audit as {
+    checks: { schemaSecurityDefinitionIdentity: Record<string, unknown> }
+    database: { schemaSecurityIdentitySha256: string }
+  }
   const auditBytes = canonicalPrettyBytes(audit)
   const developmentPlanningStateBytes = canonicalPrettyBytes(planningState)
   const markdownBytes = Buffer.from('# Fixture post-migration audit\n', 'utf8')
+  const schemaSecurityDefinitionIdentityBytes = canonicalPrettyBytes(
+    auditRecord.checks.schemaSecurityDefinitionIdentity,
+  )
   const manifestBytes = Buffer.from(
     `${[
       ['development-planning-state.json', developmentPlanningStateBytes],
       ['migration-audit.json', auditBytes],
       ['migration-audit.md', markdownBytes],
+      ['schema-security-definition-identity.json', schemaSecurityDefinitionIdentityBytes],
     ]
       .map(([name, bytes]) => `${sha256(bytes as Buffer)}  ${name as string}`)
       .join('\n')}\n`,
@@ -96,12 +143,26 @@ function buildVerifiedAuditPackage(audit: unknown, planningState: unknown) {
     developmentPlanningStateBytes,
     manifestBytes,
     markdownBytes,
+    schemaSecurityDefinitionIdentityBytes,
     trustedManifestSha256: sha256(manifestBytes),
   })
 }
 
 async function safeTemporaryDirectory(prefix: string): Promise<string> {
   return mkdtemp(join(await realpath(tmpdir()), prefix))
+}
+
+async function createTestOutput(prefix: string): Promise<{
+  outputDirectory: string
+  outputIdentity: ExclusiveOutputDirectoryIdentity
+  outputRoot: string
+}> {
+  const parent = await safeTemporaryDirectory(prefix)
+  const outputRoot = join(parent, 'approved-root')
+  const outputDirectory = join(outputRoot, 'output')
+  await mkdir(outputRoot, { mode: 0o700 })
+  const outputIdentity = await createExclusiveOutputDirectory({ outputDirectory, outputRoot })
+  return { outputDirectory, outputIdentity, outputRoot }
 }
 
 function fixtureUuid(namespace: number, value: number): string {
@@ -276,15 +337,22 @@ function buildFixture() {
   }
   const currentEffectiveStateSha256 = sha256('fixture pre-import effective state')
   const currentPhysicalStateSha256 = sha256('fixture pre-import physical state')
-  const schemaSecurityIdentitySha256 = sha256('fixture schema security identity')
+  const schemaSecurityDefinitionIdentity = structuredClone(
+    PINNED_SCHEMA_SECURITY_DEFINITION_IDENTITY,
+  )
+  const schemaSecurityIdentitySha256 = schemaSecurityDefinitionIdentitySha256(
+    schemaSecurityDefinitionIdentity,
+  )
   const audit = {
     checks: {
       behavioralProbe: 'none_on_real_batch_static_contract_and_snapshot_only',
       compensationExecuted: false,
       databaseMutationCount: 0,
+      expectedSchemaSecurityIdentitySha256: schemaSecurityIdentitySha256,
       failures: [],
       importExecuted: false,
       lint: { errorCount: 0 },
+      schemaSecurityDefinitionIdentity,
       security: { passed: true },
     },
     comparisons: {
@@ -379,6 +447,64 @@ function rebindPackageManifest(files: Map<string, Buffer>): void {
   files.set('checksum-manifest.sha256', manifest)
 }
 
+function remanifestWithAlternateSchemaSecurityIdentity(
+  generated: GeneratedPackage,
+): Map<string, Buffer> {
+  const files = new Map(generated.files)
+  const identity = JSON.parse(
+    (files.get('post-migration-schema-security-definition-identity.json') as Buffer).toString(
+      'utf8',
+    ),
+  ) as { records: Array<Record<string, unknown>> }
+  const firstRecord = identity.records[0]
+  if (!firstRecord) throw new Error('Pinned schema/security fixture unexpectedly has no records.')
+  const weakenedDefinition = `${String(firstRecord.normalizedDefinition)};fixture-weakened=true`
+  firstRecord.normalizedDefinition = weakenedDefinition
+  firstRecord.definitionSha256 = sha256(weakenedDefinition)
+  const identitySha256 = schemaSecurityDefinitionIdentitySha256(identity)
+  const identityBytes = canonicalPrettyBytes(identity)
+  files.set('post-migration-schema-security-definition-identity.json', identityBytes)
+
+  const audit = JSON.parse((files.get('post-migration-audit.json') as Buffer).toString('utf8')) as {
+    checks: Record<string, unknown>
+    comparisons: Record<string, unknown>
+    database: Record<string, unknown>
+  }
+  audit.checks.schemaSecurityDefinitionIdentity = identity
+  audit.checks.expectedSchemaSecurityIdentitySha256 = identitySha256
+  audit.comparisons.postSchemaSecurityIdentitySha256 = identitySha256
+  audit.database.schemaSecurityIdentitySha256 = identitySha256
+  const auditBytes = canonicalPrettyBytes(audit)
+  files.set('post-migration-audit.json', auditBytes)
+
+  const auditManifestBytes = Buffer.from(
+    `${[
+      [
+        'development-planning-state.json',
+        files.get('post-migration-development-planning-state.json') as Buffer,
+      ],
+      ['migration-audit.json', auditBytes],
+      ['migration-audit.md', files.get('post-migration-audit.md') as Buffer],
+      ['schema-security-definition-identity.json', identityBytes],
+    ]
+      .map(([name, bytes]) => `${sha256(bytes as Buffer)}  ${name as string}`)
+      .join('\n')}\n`,
+    'utf8',
+  )
+  files.set('post-migration-audit-manifest.sha256', auditManifestBytes)
+
+  const descriptor = JSON.parse(
+    (files.get('package-descriptor.json') as Buffer).toString('utf8'),
+  ) as { audit: Record<string, unknown> }
+  descriptor.audit.canonicalManifestSha256 = sha256(auditManifestBytes)
+  descriptor.audit.contentSha256 = sha256(auditBytes)
+  descriptor.audit.schemaSecurityDefinitionIdentityFileSha256 = sha256(identityBytes)
+  descriptor.audit.schemaSecurityIdentitySha256 = identitySha256
+  files.set('package-descriptor.json', canonicalPrettyBytes(descriptor))
+  rebindPackageManifest(files)
+  return files
+}
+
 function passingReport(generated: GeneratedPackage, fixture: Fixture): ExactPackageRehearsalReport {
   return {
     compensationCounts: EXACT_COMPENSATION_COUNTS,
@@ -395,6 +521,7 @@ function passingReport(generated: GeneratedPackage, fixture: Fixture): ExactPack
     realLocalDatabaseTouched: false,
     remoteDatabaseTouched: false,
     result: 'passed',
+    schemaSecurityDefinitionIdentitySha256: fixture.audit.database.schemaSecurityIdentitySha256,
     schemaVersion: 'gold-import-compensation-exact-package-rehearsal/v1',
     targetDatabase: {
       image: DISPOSABLE_POSTGRES_IMAGE,
@@ -610,6 +737,150 @@ describe('gold import/compensation package operations v1', () => {
     )
   })
 
+  test('anchors directory creation before mkdir and rejects raw traversal before CLI reads', async () => {
+    const parent = await safeTemporaryDirectory('exclusive-output-parent-race-')
+    const outputRoot = join(parent, 'approved-root')
+    const outputParent = join(outputRoot, 'nested')
+    const outputDirectory = join(outputParent, 'output')
+    const outside = join(parent, 'outside')
+    const displacedParent = join(outside, 'displaced-parent')
+    await mkdir(outputRoot, { mode: 0o700 })
+    await mkdir(outputParent, { mode: 0o700 })
+    await mkdir(outside, { mode: 0o700 })
+    const workingDirectory = process.cwd()
+
+    await expect(
+      createExclusiveOutputDirectory({
+        beforeAnchoredCreateForTest: async () => {
+          await rename(outputParent, displacedParent)
+          await symlink(outside, outputParent, 'dir')
+        },
+        outputDirectory,
+        outputRoot,
+      }),
+    ).rejects.toThrow(/parent identity changed/iu)
+    expect(process.cwd()).toBe(workingDirectory)
+    await expect(readFile(join(outside, 'output'))).rejects.toMatchObject({ code: 'ENOENT' })
+    await expect(readFile(join(displacedParent, 'output'))).rejects.toMatchObject({
+      code: 'ENOENT',
+    })
+
+    const rawTraversal = `${outputRoot}/nested/../escaped`
+    await expect(
+      createExclusiveOutputDirectory({ outputDirectory: rawTraversal, outputRoot }),
+    ).rejects.toThrow(/normalized|traversal/iu)
+    const executeFreshDisposableDatabase = jest.fn(async () => passingReport(generated, fixture))
+    await expect(
+      runExactPackageRehearsalCli(['--output-root', outputRoot, '--output', rawTraversal], {
+        executeFreshDisposableDatabase,
+        identityPolicy: fixture.identityPolicy,
+        loadPreMigrationBackup: jest.fn(async () => fixture.loadedBackup),
+      }),
+    ).rejects.toThrow(/normalized|traversal/iu)
+    expect(executeFreshDisposableDatabase).not.toHaveBeenCalled()
+    await expect(
+      runPackageGeneratorCli([
+        '--audit',
+        join(parent, 'must-not-be-read.json'),
+        '--output-root',
+        outputRoot,
+        '--output',
+        rawTraversal,
+      ]),
+    ).rejects.toThrow(/normalized|traversal/iu)
+  })
+
+  test('publishes package and report files with exact private modes and unique inode identities', async () => {
+    const packageParent = await safeTemporaryDirectory('exclusive-package-modes-')
+    const packageRoot = join(packageParent, 'approved-root')
+    const packageDirectory = join(packageRoot, 'package')
+    await mkdir(packageRoot, { mode: 0o700 })
+    await writeGeneratedPackageExclusive({
+      outputDirectory: packageDirectory,
+      outputRoot: packageRoot,
+      package: generated,
+    })
+    const packageDirectoryStat = await lstat(packageDirectory, { bigint: true })
+    expect(packageDirectoryStat.mode & 0o777n).toBe(0o700n)
+    const packageFileIdentities = new Set<string>()
+    for (const name of generated.files.keys()) {
+      const stat = await lstat(join(packageDirectory, name), { bigint: true })
+      expect(stat.mode & 0o777n).toBe(0o600n)
+      expect(stat.nlink).toBe(1n)
+      packageFileIdentities.add(`${stat.dev}:${stat.ino}`)
+    }
+    expect(packageFileIdentities.size).toBe(generated.files.size)
+
+    const reportParent = await safeTemporaryDirectory('exclusive-report-modes-')
+    const reportRoot = join(reportParent, 'approved-root')
+    const reportDirectory = join(reportRoot, 'report')
+    await mkdir(reportRoot, { mode: 0o700 })
+    await writeRehearsalReportExclusive({
+      outputDirectory: reportDirectory,
+      outputRoot: reportRoot,
+      report: passingReport(generated, fixture),
+    })
+    expect((await lstat(reportDirectory, { bigint: true })).mode & 0o777n).toBe(0o700n)
+    const reportFileIdentities = new Set<string>()
+    for (const name of ['exact-package-rehearsal-report.json', 'canonical-manifest.sha256']) {
+      const stat = await lstat(join(reportDirectory, name), { bigint: true })
+      expect(stat.mode & 0o777n).toBe(0o600n)
+      expect(stat.nlink).toBe(1n)
+      reportFileIdentities.add(`${stat.dev}:${stat.ino}`)
+    }
+    expect(reportFileIdentities.size).toBe(2)
+  })
+
+  test('refuses same-inode output relocation through an outside symlink before writing bytes', async () => {
+    const exerciseRace = async (
+      prefix: string,
+      expectedFilenames: readonly string[],
+      publish: (input: {
+        beforeAnchoredWriteForTest: (createdOutput: string) => Promise<void>
+        outputDirectory: string
+        outputRoot: string
+      }) => Promise<void>,
+    ) => {
+      const parent = await safeTemporaryDirectory(prefix)
+      const outputRoot = join(parent, 'approved-root')
+      const outside = join(parent, 'outside')
+      const outputDirectory = join(outputRoot, 'output')
+      const displaced = join(outside, 'displaced-output')
+      await mkdir(outputRoot, { mode: 0o700 })
+      await mkdir(outside, { mode: 0o700 })
+      const workingDirectory = process.cwd()
+      await expect(
+        publish({
+          beforeAnchoredWriteForTest: async (createdOutput) => {
+            await rename(createdOutput, displaced)
+            await symlink(displaced, createdOutput, 'dir')
+          },
+          outputDirectory,
+          outputRoot,
+        }),
+      ).rejects.toThrow(/identity changed/iu)
+      expect(process.cwd()).toBe(workingDirectory)
+      for (const name of expectedFilenames) {
+        await expect(readFile(join(displaced, name))).rejects.toMatchObject({ code: 'ENOENT' })
+      }
+    }
+
+    await exerciseRace(
+      'exclusive-package-write-race-',
+      [...generated.files.keys()],
+      async (input) => writeGeneratedPackageExclusive({ ...input, package: generated }),
+    )
+    await exerciseRace(
+      'exclusive-report-write-race-',
+      ['exact-package-rehearsal-report.json', 'canonical-manifest.sha256'],
+      async (input) =>
+        writeRehearsalReportExclusive({
+          ...input,
+          report: passingReport(generated, fixture),
+        }),
+    )
+  })
+
   test('accepts only the exact ready auditor schema and reviewed canonical audit manifest', () => {
     expect(fixture.auditPackage.audit.comparisons.priorMigrationLedgerRowsUnchanged).toBe(true)
     expect(fixture.auditPackage.manifestSha256).toMatch(/^[a-f0-9]{64}$/u)
@@ -619,6 +890,8 @@ describe('gold import/compensation package operations v1', () => {
         developmentPlanningStateBytes: fixture.auditPackage.developmentPlanningStateBytes,
         manifestBytes: fixture.auditPackage.manifestBytes,
         markdownBytes: fixture.auditPackage.markdownBytes,
+        schemaSecurityDefinitionIdentityBytes:
+          fixture.auditPackage.schemaSecurityDefinitionIdentityBytes,
         trustedManifestSha256: sha256('unreviewed replacement manifest'),
       }),
     ).toThrow(/reviewed SHA-256/u)
@@ -674,6 +947,7 @@ describe('gold import/compensation package operations v1', () => {
         prohibitedPrivilegesAbsent: true,
         publicExecuteAbsent: true,
         requiredRlsEnabled: true,
+        schemaSecurityDefinitionIdentitySha256: fixture.audit.database.schemaSecurityIdentitySha256,
         securityDefinerSearchPathsSafe: true,
         serviceRoleGuardedBoundaryOnly: true,
       },
@@ -703,6 +977,107 @@ describe('gold import/compensation package operations v1', () => {
       expect(second.canonicalArtifacts.get(name)?.equals(bytes)).toBe(true)
       expect(bytes.toString('utf8')).not.toContain('database-fingerprint-')
     }
+  })
+
+  test('keeps every owned serialized SQL aggregate explicitly and stably ordered', async () => {
+    const sourceFiles = [
+      'scripts/literature/generate-gold-import-compensation-package-v1.ts',
+      'scripts/literature/rehearse-exact-gold-import-compensation-package-v1.ts',
+      'scripts/literature/rehearse-gold-import-compensation-db.ts',
+    ]
+    const aggregateStart =
+      /\b(?:json_agg|jsonb_agg|array_agg|string_agg|json_object_agg|jsonb_object_agg)\s*\(/giu
+    for (const sourceFile of sourceFiles) {
+      const source = await readFile(join(process.cwd(), sourceFile), 'utf8')
+      const starts = [...source.matchAll(aggregateStart)]
+      for (const start of starts) {
+        const open = (start.index ?? 0) + start[0].lastIndexOf('(')
+        let depth = 0
+        let close = -1
+        for (let index = open; index < source.length; index += 1) {
+          if (source[index] === '(') depth += 1
+          if (source[index] === ')') depth -= 1
+          if (depth === 0) {
+            close = index
+            break
+          }
+        }
+        expect({ aggregate: start[0], close, sourceFile }).toEqual(
+          expect.objectContaining({ close: expect.any(Number) }),
+        )
+        const aggregate = source.slice(open + 1, close)
+        expect({ aggregate: start[0], sourceFile, sql: aggregate }).toEqual(
+          expect.objectContaining({ sql: expect.stringMatching(/\border\s+by\b/iu) }),
+        )
+      }
+    }
+
+    const exactSource = await readFile(
+      join(
+        process.cwd(),
+        'scripts/literature/rehearse-exact-gold-import-compensation-package-v1.ts',
+      ),
+      'utf8',
+    )
+    expect(exactSource).toMatch(
+      /select distinct on \(review\.item_id\)[\s\S]*?order by review\.item_id, review\.revision desc, review\.id/iu,
+    )
+    expect(exactSource).toMatch(/PRODUCTION_CHILD_TERM_GRACE_MS = 1_000/iu)
+    expect(exactSource).toMatch(/PRODUCTION_CHILD_KILL_GRACE_MS = 1_000/iu)
+    expect(exactSource).toMatch(
+      /child\.kill\('SIGTERM'\)[\s\S]*?waitForProductionChildExit[\s\S]*?child\.kill\('SIGKILL'\)/iu,
+    )
+    expect(exactSource).toMatch(
+      /Promise\.race\(\[[\s\S]*?runtime\.command[\s\S]*?signalNotification\.then/iu,
+    )
+    expect(SECURITY_INTROSPECTION_SQL).toMatch(/'catalog', pg_catalog\.jsonb_build_object/iu)
+    expect(() => assertSerializedAggregateOrdering(EXACT_RPC_METADATA_SQL)).not.toThrow()
+    const exactSnapshotSql = exactBatchSnapshotSql(fixtureUuid(0x10000000, 1))
+    expect(() => assertSerializedAggregateOrdering(exactSnapshotSql)).not.toThrow()
+    expect(exactSnapshotSql).toMatch(
+      /order by item\.display_order nulls last, item\.id,[\s\S]*?review\.revision nulls last, review\.id/iu,
+    )
+    expect(exactSnapshotSql).toMatch(/order by operation\.started_at,\s*operation\.id/iu)
+    expect(SECURITY_INTROSPECTION_SQL).toMatch(
+      /constraints as \([\s\S]*?from pg_catalog\.pg_constraint as con[\s\S]*?con\.contype <> 't'/iu,
+    )
+    for (const field of [
+      'tables',
+      'columns',
+      'functions',
+      'constraints',
+      'indexes',
+      'triggers',
+      'policies',
+      'rls',
+      'tablePrivileges',
+      'schemaCreatePrivileges',
+      'columnPrivileges',
+      'tableAclEntries',
+      'columnAclEntries',
+      'functionAclEntries',
+      'schemaAclEntries',
+      'supportedEventTypes',
+    ]) {
+      expect(SECURITY_INTROSPECTION_SQL).toContain(`'${field}'`)
+    }
+    expect(SCHEMA_DEFINITION_MUTATION_PROBES.map(({ name }) => name)).toEqual([
+      'weakened_same_name_trigger_predicate',
+      'changed_same_name_foreign_key_action',
+      'broadened_same_name_journal_policy',
+      'wrong_same_name_unique_index_definition',
+      'forced_rls_state_changed',
+      'column_grant_broadened',
+    ])
+    for (const probe of SCHEMA_DEFINITION_MUTATION_PROBES.slice(0, 4)) {
+      expect(probe.sql).toMatch(/(?:drop|alter)[\s\S]*(?:create|add constraint)/iu)
+    }
+    expect(SCHEMA_DEFINITION_MUTATION_PROBES[4].sql).toMatch(
+      /alter table[\s\S]*force row level security/iu,
+    )
+    expect(SCHEMA_DEFINITION_MUTATION_PROBES[5].sql).toMatch(
+      /grant update \(operation_action_id\)[\s\S]*to anon/iu,
+    )
   })
 
   test('requires one exact owner/signature/result/volatility contract for every transition RPC', () => {
@@ -793,6 +1168,17 @@ describe('gold import/compensation package operations v1', () => {
       verifyExactGeneratedPackage(semanticallyTamperedPackage, fixture.identityPolicy),
     ).toThrow(/semantic binding mismatch/u)
 
+    const readinessIdentityTamper = new Map(generated.files)
+    const readiness = JSON.parse(
+      (readinessIdentityTamper.get('compensation-readiness.json') as Buffer).toString('utf8'),
+    ) as Record<string, unknown>
+    readiness.schemaSecurityIdentitySha256 = sha256('substituted readiness schema identity')
+    readinessIdentityTamper.set('compensation-readiness.json', canonicalPrettyBytes(readiness))
+    rebindPackageManifest(readinessIdentityTamper)
+    expect(() =>
+      verifyExactGeneratedPackage(readinessIdentityTamper, fixture.identityPolicy),
+    ).toThrow(/semantic binding mismatch.*compensation-readiness/iu)
+
     const replacedAuditEvidence = new Map(generated.files)
     replacedAuditEvidence.set(
       'post-migration-audit.md',
@@ -802,6 +1188,12 @@ describe('gold import/compensation package operations v1', () => {
     expect(() =>
       verifyExactGeneratedPackage(replacedAuditEvidence, fixture.identityPolicy),
     ).toThrow(/audit checksum mismatch/u)
+
+    const remanifestedSchemaIdentityTamper =
+      remanifestWithAlternateSchemaSecurityIdentity(generated)
+    expect(() =>
+      verifyExactGeneratedPackage(remanifestedSchemaIdentityTamper, fixture.identityPolicy),
+    ).toThrow(/schema\/security definition identity|ready audit binding/iu)
 
     const reconstructedCompensationTamper = new Map(generated.files)
     const compensationTemplate = JSON.parse(
@@ -913,6 +1305,31 @@ describe('gold import/compensation package operations v1', () => {
     )
   })
 
+  test('NODE_ENV=test cannot make the operational CLI self-pin a remanifested schema identity', async () => {
+    const root = await safeTemporaryDirectory('exact-package-cli-schema-self-pin-')
+    const files = remanifestWithAlternateSchemaSecurityIdentity(generated)
+    const paths = await writeCliFixture(root, { ...generated, files }, fixture)
+    const executeFreshDisposableDatabase = jest.fn(async () => passingReport(generated, fixture))
+    const loadPreMigrationBackup = jest.fn(async () => fixture.loadedBackup)
+    const mutableEnvironment = process.env as Record<string, string | undefined>
+    const previousNodeEnvironment = mutableEnvironment.NODE_ENV
+    mutableEnvironment.NODE_ENV = 'test'
+    try {
+      await expect(
+        runExactPackageRehearsalCli(cliArguments(paths, root, join(root, 'evidence')), {
+          executeFreshDisposableDatabase,
+          identityPolicy: fixture.identityPolicy,
+          loadPreMigrationBackup,
+        }),
+      ).rejects.toThrow(/schema\/security definition identity.*not bound/iu)
+    } finally {
+      if (previousNodeEnvironment === undefined) delete mutableEnvironment.NODE_ENV
+      else mutableEnvironment.NODE_ENV = previousNodeEnvironment
+    }
+    expect(loadPreMigrationBackup).not.toHaveBeenCalled()
+    expect(executeFreshDisposableDatabase).not.toHaveBeenCalled()
+  })
+
   test('command-level rehearsal never executes for a caller-supplied database URL', async () => {
     const executeFreshDisposableDatabase = jest.fn(async () => passingReport(generated, fixture))
     await expect(
@@ -985,12 +1402,16 @@ describe('gold import/compensation package operations v1', () => {
       package: package_,
       trustedManifestSha256: fixture.backup.manifestSha256,
     })
-    const input: ExecuteFreshDisposableInput = {
-      files: generated.files,
-      identityPolicy: fixture.identityPolicy,
-      outputDirectory: '/unused/rehearsal-output',
-      preMigrationBackup,
-      sources: fixture.sources,
+    const input = async (prefix: string): Promise<ExecuteFreshDisposableInput> => {
+      const output = await createTestOutput(prefix)
+      return {
+        files: generated.files,
+        identityPolicy: fixture.identityPolicy,
+        outputDirectory: output.outputDirectory,
+        outputIdentity: output.outputIdentity,
+        preMigrationBackup,
+        sources: fixture.sources,
+      }
     }
 
     const hostOverrideCalls: string[][] = []
@@ -1002,9 +1423,9 @@ describe('gold import/compensation package operations v1', () => {
       environment: { DOCKER_HOST: 'tcp://remote.example:2376' },
       now: () => FIXED_TIME,
     }
-    await expect(executeFreshDisposableRuntime(input, remoteHostRuntime)).rejects.toThrow(
-      /local Docker socket/u,
-    )
+    await expect(
+      executeFreshDisposableRuntime(await input('exact-remote-host-'), remoteHostRuntime),
+    ).rejects.toThrow(/local Docker socket/u)
     expect(hostOverrideCalls).toEqual([])
 
     const remoteContextCalls: Array<{ arguments: string[]; options?: unknown }> = []
@@ -1022,9 +1443,9 @@ describe('gold import/compensation package operations v1', () => {
       environment: {},
       now: () => FIXED_TIME,
     }
-    await expect(executeFreshDisposableRuntime(input, remoteContextRuntime)).rejects.toThrow(
-      /local Docker socket/u,
-    )
+    await expect(
+      executeFreshDisposableRuntime(await input('exact-remote-context-'), remoteContextRuntime),
+    ).rejects.toThrow(/local Docker socket/u)
     expect(
       remoteContextCalls.some(({ arguments: [operation] }) =>
         ['run', 'exec', 'rm'].includes(operation ?? ''),
@@ -1033,6 +1454,8 @@ describe('gold import/compensation package operations v1', () => {
 
     const localCalls: Array<{ arguments: string[]; options?: { env?: Record<string, string> } }> =
       []
+    const localOutput = await createTestOutput('exact-lost-run-response-')
+    const localOutputDirectory = localOutput.outputDirectory
     const localRuntime: DisposableRuntime = {
       command: async (_command, arguments_, options) => {
         localCalls.push({ arguments: arguments_, options })
@@ -1044,16 +1467,28 @@ describe('gold import/compensation package operations v1', () => {
         }
         if (arguments_[0] === 'run') throw new Error('lost docker run response')
         if (arguments_[0] === 'rm') return { stderr: '', stdout: '' }
+        if (arguments_[0] === 'container') return { stderr: '', stdout: '' }
         throw new Error(`unexpected Docker operation ${arguments_[0] ?? '(none)'}`)
       },
       environment: {},
       now: () => FIXED_TIME,
     }
-    await expect(executeFreshDisposableRuntime(input, localRuntime)).rejects.toThrow(
-      /lost docker run response/u,
-    )
+    await expect(
+      executeFreshDisposableRuntime(
+        {
+          ...(await input('exact-unused-lost-run-')),
+          outputDirectory: localOutputDirectory,
+          outputIdentity: localOutput.outputIdentity,
+        },
+        localRuntime,
+      ),
+    ).rejects.toThrow(/lost docker run response/u)
     const runCall = localCalls.find(({ arguments: [operation] }) => operation === 'run')
-    const cleanupCall = localCalls.find(({ arguments: [operation] }) => operation === 'rm')
+    const cleanupCalls = localCalls.filter(({ arguments: [operation] }) => operation === 'rm')
+    const cleanupCall = cleanupCalls[0]
+    const absenceCalls = localCalls.filter(
+      ({ arguments: [operation] }) => operation === 'container',
+    )
     expect(runCall?.arguments).toContain(DISPOSABLE_POSTGRES_IMAGE)
     expect(runCall?.arguments).toContain('--label')
     expect(cleanupCall?.arguments.slice(0, 2)).toEqual(['rm', '--force'])
@@ -1061,7 +1496,699 @@ describe('gold import/compensation package operations v1', () => {
       runCall?.arguments[runCall.arguments.indexOf('--name') + 1],
     )
     expect(cleanupCall?.options?.env).toEqual({ DOCKER_HOST: 'unix:///var/run/docker.sock' })
+    expect(cleanupCalls).toHaveLength(1)
+    expect(absenceCalls).toHaveLength(1)
     expect(localCalls.some(({ arguments: [operation] }) => operation === 'exec')).toBe(false)
+    const receipt = JSON.parse(
+      await readFile(join(localOutputDirectory, 'execution-receipt.json'), 'utf8'),
+    ) as Record<string, unknown>
+    expect(receipt).toMatchObject({
+      canonicalArtifacts: {
+        approved: false,
+        invalidatedByCleanupFailure: false,
+        published: false,
+      },
+      cleanup: {
+        absenceChecks: [
+          {
+            identifier: expect.stringMatching(/^ip-gold-exact-/u),
+            kind: 'exact_name',
+            present: false,
+          },
+        ],
+        absenceVerification: 'verified_absent',
+        attempted: true,
+        outcome: 'removed_and_verified_absent',
+        removalCommandSucceeded: true,
+      },
+      executionApproval: 'not_approved',
+      passed: false,
+      primaryError: 'lost docker run response',
+      result: 'failed',
+    })
+    await expect(
+      readFile(join(localOutputDirectory, 'canonical-manifest.sha256')),
+    ).rejects.toMatchObject({ code: 'ENOENT' })
+  })
+
+  test('cleanup requires a successful rm and an independent absent-container result', async () => {
+    const containerName = 'ip-gold-exact-cleanup-test'
+    const successfulCalls: string[][] = []
+    const successful = await cleanupDisposableContainer({
+      armed: true,
+      containerId: 'a'.repeat(64),
+      containerName,
+      dockerCommand: async (arguments_) => {
+        successfulCalls.push(arguments_)
+        return { stderr: '', stdout: '' }
+      },
+    })
+    expect(successful).toMatchObject({
+      absenceVerification: 'verified_absent',
+      attempted: true,
+      outcome: 'removed_and_verified_absent',
+      removalCommandSucceeded: true,
+    })
+    expect(() => assertDisposableContainerCleanupSucceeded(successful)).not.toThrow()
+    expect(successfulCalls.filter(([operation]) => operation === 'rm')).toHaveLength(1)
+    expect(successfulCalls.filter(([operation]) => operation === 'container')).toHaveLength(2)
+    expect(successful.absenceChecks).toEqual([
+      { identifier: containerName, kind: 'exact_name', present: false },
+      { identifier: 'a'.repeat(64), kind: 'container_id', present: false },
+    ])
+
+    const removalFailed = await cleanupDisposableContainer({
+      armed: true,
+      containerId: 'b'.repeat(64),
+      containerName,
+      dockerCommand: async (arguments_) => {
+        if (arguments_[0] === 'rm') throw new Error('docker rm nonzero')
+        return { stderr: '', stdout: '' }
+      },
+    })
+    expect(removalFailed).toMatchObject({
+      absenceVerification: 'verified_absent',
+      outcome: 'failed',
+      removalCommandSucceeded: false,
+    })
+    expect(() => assertDisposableContainerCleanupSucceeded(removalFailed)).toThrow(
+      /remove: docker rm nonzero/u,
+    )
+
+    const stillPresent = await cleanupDisposableContainer({
+      armed: true,
+      containerId: 'c'.repeat(64),
+      containerName,
+      dockerCommand: async (arguments_) => ({
+        stderr: '',
+        stdout: arguments_[0] === 'container' ? `${'c'.repeat(64)}\n` : '',
+      }),
+    })
+    expect(stillPresent).toMatchObject({
+      absenceVerification: 'container_still_present',
+      outcome: 'failed',
+      removalCommandSucceeded: true,
+    })
+    expect(() => assertDisposableContainerCleanupSucceeded(stillPresent)).toThrow(
+      /(?:exact_name|container_id).*remains present/u,
+    )
+
+    const absenceCheckFailed = await cleanupDisposableContainer({
+      armed: true,
+      containerId: 'e'.repeat(64),
+      containerName,
+      dockerCommand: async (arguments_) => {
+        if (arguments_[0] === 'container') throw new Error('post-rm existence check failed')
+        return { stderr: '', stdout: '' }
+      },
+    })
+    expect(absenceCheckFailed).toMatchObject({
+      absenceVerification: 'failed',
+      outcome: 'failed',
+      removalCommandSucceeded: true,
+    })
+    expect(() => assertDisposableContainerCleanupSucceeded(absenceCheckFailed)).toThrow(
+      /verify_absent: exact_name .*post-rm existence check failed/u,
+    )
+  })
+
+  test('preserves a primary verifier error together with cleanup failure and refuses approval', async () => {
+    const package_ = verifyExactGeneratedPackage(generated.files, fixture.identityPolicy)
+    const preMigrationBackup = verifyLoadedPreMigrationBackupForPackage({
+      loaded: fixture.loadedBackup,
+      package: package_,
+      trustedManifestSha256: fixture.backup.manifestSha256,
+    })
+    const { outputDirectory, outputIdentity } = await createTestOutput(
+      'exact-primary-cleanup-failure-',
+    )
+    const calls: string[][] = []
+    const containerId = 'd'.repeat(64)
+    let containerName = ''
+    let runLabel = ''
+    const runtime: DisposableRuntime = {
+      command: async (_command, arguments_) => {
+        calls.push(arguments_)
+        if (arguments_[0] === 'context' && arguments_[1] === 'show') {
+          return { stderr: '', stdout: 'default\n' }
+        }
+        if (arguments_[0] === 'context' && arguments_[1] === 'inspect') {
+          return { stderr: '', stdout: '"unix:///var/run/docker.sock"\n' }
+        }
+        if (arguments_[0] === 'run') {
+          containerName = arguments_[arguments_.indexOf('--name') + 1] ?? ''
+          runLabel = arguments_[arguments_.indexOf('--label') + 1] ?? ''
+          return { stderr: '', stdout: `${containerId}\n` }
+        }
+        if (arguments_[0] === 'inspect') {
+          const separator = runLabel.indexOf('=')
+          return {
+            stderr: '',
+            stdout: `${JSON.stringify({
+              Config: { Labels: { [runLabel.slice(0, separator)]: runLabel.slice(separator + 1) } },
+              Id: containerId,
+              Name: `/${containerName}`,
+              NetworkSettings: {
+                Ports: { '5432/tcp': [{ HostIp: '127.0.0.1', HostPort: '55444' }] },
+              },
+            })}\n`,
+          }
+        }
+        if (arguments_[0] === 'rm') throw new Error('cleanup rm failed')
+        if (arguments_[0] === 'container') return { stderr: '', stdout: `${containerId}\n` }
+        throw new Error(`unexpected operation ${arguments_[0] ?? '(none)'}`)
+      },
+      environment: {},
+      now: () => FIXED_TIME,
+      onContainerOwnedForTest: async () => {
+        throw new Error('primary verifier failure')
+      },
+    }
+    const execution = executeFreshDisposableRuntime(
+      {
+        files: generated.files,
+        identityPolicy: fixture.identityPolicy,
+        outputDirectory,
+        outputIdentity,
+        preMigrationBackup,
+        sources: fixture.sources,
+      },
+      runtime,
+    )
+    await expect(execution).rejects.toThrow(/primary verifier failure.*cleanup.*failed/iu)
+    expect(calls.filter(([operation]) => operation === 'rm')).toHaveLength(1)
+    expect(calls.filter(([operation]) => operation === 'container')).toHaveLength(2)
+    const receipt = JSON.parse(
+      await readFile(join(outputDirectory, 'execution-receipt.json'), 'utf8'),
+    ) as Record<string, unknown>
+    expect(receipt).toMatchObject({
+      canonicalArtifacts: {
+        approved: false,
+        invalidatedByCleanupFailure: true,
+        published: false,
+      },
+      cleanup: {
+        absenceChecks: [
+          { identifier: containerName, kind: 'exact_name', present: true },
+          { identifier: containerId, kind: 'container_id', present: true },
+        ],
+        absenceVerification: 'container_still_present',
+        attempted: true,
+        outcome: 'failed',
+        removalCommandSucceeded: false,
+      },
+      cleanupError: expect.stringContaining('cleanup rm failed'),
+      executionApproval: 'not_approved',
+      passed: false,
+      primaryError: 'primary verifier failure',
+      result: 'failed',
+    })
+    await expect(
+      readFile(join(outputDirectory, 'canonical-manifest.sha256')),
+    ).rejects.toMatchObject({ code: 'ENOENT' })
+  })
+
+  test('cleanup-only failure invalidates a would-be successful full-runtime result', async () => {
+    const package_ = verifyExactGeneratedPackage(generated.files, fixture.identityPolicy)
+    const preMigrationBackup = verifyLoadedPreMigrationBackupForPackage({
+      loaded: fixture.loadedBackup,
+      package: package_,
+      trustedManifestSha256: fixture.backup.manifestSha256,
+    })
+    const { outputDirectory, outputIdentity } = await createTestOutput(
+      'exact-cleanup-only-failure-',
+    )
+    const calls: string[][] = []
+    const containerId = 'f'.repeat(64)
+    let containerName = ''
+    let runLabel = ''
+    const runtime = injectCompletedDisposableExecutionForTest(
+      {
+        command: async (_command, arguments_) => {
+          calls.push(arguments_)
+          if (arguments_[0] === 'context' && arguments_[1] === 'show') {
+            return { stderr: '', stdout: 'default\n' }
+          }
+          if (arguments_[0] === 'context' && arguments_[1] === 'inspect') {
+            return { stderr: '', stdout: '"unix:///var/run/docker.sock"\n' }
+          }
+          if (arguments_[0] === 'run') {
+            containerName = arguments_[arguments_.indexOf('--name') + 1] ?? ''
+            runLabel = arguments_[arguments_.indexOf('--label') + 1] ?? ''
+            return { stderr: '', stdout: `${containerId}\n` }
+          }
+          if (arguments_[0] === 'inspect') {
+            const separator = runLabel.indexOf('=')
+            return {
+              stderr: '',
+              stdout: `${JSON.stringify({
+                Config: {
+                  Labels: { [runLabel.slice(0, separator)]: runLabel.slice(separator + 1) },
+                },
+                Id: containerId,
+                Name: `/${containerName}`,
+                NetworkSettings: {
+                  Ports: { '5432/tcp': [{ HostIp: '127.0.0.1', HostPort: '55446' }] },
+                },
+              })}\n`,
+            }
+          }
+          if (arguments_[0] === 'rm') throw new Error('cleanup-only rm failure')
+          if (arguments_[0] === 'container') return { stderr: '', stdout: '' }
+          throw new Error(`unexpected operation ${arguments_[0] ?? '(none)'}`)
+        },
+        environment: {},
+        now: () => FIXED_TIME,
+      },
+      {
+        canonicalArtifacts: new Map([
+          ['would-be-success.json', Buffer.from('{"passed":true}\n', 'utf8')],
+        ]),
+        manifestBytes: Buffer.from(`${sha256('would-be-success')}  would-be-success.json\n`),
+        rawReceipt: {},
+        report: passingReport(generated, fixture),
+      },
+    )
+
+    await expect(
+      executeFreshDisposableRuntime(
+        {
+          files: generated.files,
+          identityPolicy: fixture.identityPolicy,
+          outputDirectory,
+          outputIdentity,
+          preMigrationBackup,
+          sources: fixture.sources,
+        },
+        runtime,
+      ),
+    ).rejects.toThrow(/cleanup-only rm failure/u)
+
+    expect(calls.filter(([operation]) => operation === 'exec')).toHaveLength(0)
+    expect(calls.filter(([operation]) => operation === 'rm')).toHaveLength(1)
+    expect(calls.filter(([operation]) => operation === 'container')).toHaveLength(2)
+    const receipt = JSON.parse(
+      await readFile(join(outputDirectory, 'execution-receipt.json'), 'utf8'),
+    ) as Record<string, unknown>
+    expect(receipt).toMatchObject({
+      canonicalArtifacts: {
+        approved: false,
+        invalidatedByCleanupFailure: true,
+        published: false,
+      },
+      cleanup: {
+        absenceVerification: 'verified_absent',
+        attempted: true,
+        errors: [{ message: 'cleanup-only rm failure', stage: 'remove' }],
+        outcome: 'failed',
+        removalCommandSucceeded: false,
+      },
+      cleanupError: expect.stringContaining('cleanup-only rm failure'),
+      executionApproval: 'not_approved',
+      passed: false,
+      primaryError: null,
+      result: 'failed',
+    })
+    await expect(
+      readFile(join(outputDirectory, 'canonical-manifest.sha256')),
+    ).rejects.toMatchObject({ code: 'ENOENT' })
+    await expect(readFile(join(outputDirectory, 'would-be-success.json'))).rejects.toMatchObject({
+      code: 'ENOENT',
+    })
+  })
+
+  test('a signal during a never-settling cleanup command cancels it and reuses cleanup exactly once', async () => {
+    const package_ = verifyExactGeneratedPackage(generated.files, fixture.identityPolicy)
+    const preMigrationBackup = verifyLoadedPreMigrationBackupForPackage({
+      loaded: fixture.loadedBackup,
+      package: package_,
+      trustedManifestSha256: fixture.backup.manifestSha256,
+    })
+    const { outputDirectory, outputIdentity } = await createTestOutput(
+      'exact-signal-during-cleanup-',
+    )
+    const calls: string[][] = []
+    const containerId = '9'.repeat(64)
+    let containerName = ''
+    let runLabel = ''
+    let rejectCleanupCommand: (error: Error) => void = () => {
+      throw new Error('cleanup command rejection was not installed')
+    }
+    let signalHandler: (signal: 'SIGINT' | 'SIGTERM') => void = () => {
+      throw new Error('signal handler was not installed')
+    }
+    const cancelActiveCommand = jest.fn(async () => {
+      rejectCleanupCommand(new Error('never-settling cleanup command cancelled'))
+    })
+    const unregisterSignalHandler = jest.fn()
+    const runtime = injectCompletedDisposableExecutionForTest(
+      {
+        cancelActiveCommand,
+        command: async (_command, arguments_) => {
+          calls.push(arguments_)
+          if (arguments_[0] === 'context' && arguments_[1] === 'show') {
+            return { stderr: '', stdout: 'default\n' }
+          }
+          if (arguments_[0] === 'context' && arguments_[1] === 'inspect') {
+            return { stderr: '', stdout: '"unix:///var/run/docker.sock"\n' }
+          }
+          if (arguments_[0] === 'run') {
+            containerName = arguments_[arguments_.indexOf('--name') + 1] ?? ''
+            runLabel = arguments_[arguments_.indexOf('--label') + 1] ?? ''
+            return { stderr: '', stdout: `${containerId}\n` }
+          }
+          if (arguments_[0] === 'inspect') {
+            const separator = runLabel.indexOf('=')
+            return {
+              stderr: '',
+              stdout: `${JSON.stringify({
+                Config: {
+                  Labels: { [runLabel.slice(0, separator)]: runLabel.slice(separator + 1) },
+                },
+                Id: containerId,
+                Name: `/${containerName}`,
+                NetworkSettings: {
+                  Ports: { '5432/tcp': [{ HostIp: '127.0.0.1', HostPort: '55447' }] },
+                },
+              })}\n`,
+            }
+          }
+          if (arguments_[0] === 'rm') {
+            return new Promise<CommandResult>((_resolve, reject) => {
+              rejectCleanupCommand = reject
+              queueMicrotask(() => {
+                signalHandler('SIGINT')
+                signalHandler('SIGINT')
+              })
+            })
+          }
+          if (arguments_[0] === 'container') return { stderr: '', stdout: '' }
+          throw new Error(`unexpected operation ${arguments_[0] ?? '(none)'}`)
+        },
+        environment: {},
+        now: () => FIXED_TIME,
+        registerSignalHandler: (handler) => {
+          signalHandler = handler
+          return unregisterSignalHandler
+        },
+      },
+      {
+        canonicalArtifacts: new Map([
+          ['would-be-signal-success.json', Buffer.from('{"passed":true}\n', 'utf8')],
+        ]),
+        manifestBytes: Buffer.from(
+          `${sha256('would-be-signal-success')}  would-be-signal-success.json\n`,
+        ),
+        rawReceipt: {},
+        report: passingReport(generated, fixture),
+      },
+    )
+
+    const execution = executeFreshDisposableRuntime(
+      {
+        files: generated.files,
+        identityPolicy: fixture.identityPolicy,
+        outputDirectory,
+        outputIdentity,
+        preMigrationBackup,
+        sources: fixture.sources,
+      },
+      runtime,
+    )
+    const boundedExecution = Promise.race([
+      execution,
+      new Promise<never>((_resolve, reject) =>
+        setTimeout(() => reject(new Error('signal failed to escape cleanup command')), 1_000),
+      ),
+    ])
+    await expect(boundedExecution).rejects.toThrow(/interrupted by SIGINT.*cleanup/iu)
+
+    expect(cancelActiveCommand).toHaveBeenCalledTimes(1)
+    expect(cancelActiveCommand).toHaveBeenCalledWith('SIGINT')
+    expect(calls.filter(([operation]) => operation === 'rm')).toHaveLength(1)
+    expect(calls.filter(([operation]) => operation === 'container')).toHaveLength(2)
+    expect(unregisterSignalHandler).toHaveBeenCalledTimes(1)
+    const receipt = JSON.parse(
+      await readFile(join(outputDirectory, 'execution-receipt.json'), 'utf8'),
+    ) as Record<string, unknown>
+    expect(receipt).toMatchObject({
+      canonicalArtifacts: {
+        approved: false,
+        invalidatedByCleanupFailure: true,
+        published: false,
+      },
+      cleanup: {
+        attempted: true,
+        errors: [{ message: 'never-settling cleanup command cancelled', stage: 'remove' }],
+        outcome: 'failed',
+        removalCommandSucceeded: false,
+      },
+      executionApproval: 'not_approved',
+      passed: false,
+      signal: { activeCommandCancellationError: null, received: 'SIGINT' },
+    })
+    await expect(
+      readFile(join(outputDirectory, 'canonical-manifest.sha256')),
+    ).rejects.toMatchObject({ code: 'ENOENT' })
+  })
+
+  test.each(['SIGINT', 'SIGTERM'] as const)(
+    'gracefully handles %s with active-command cancellation and exactly-once cleanup',
+    async (signal) => {
+      const package_ = verifyExactGeneratedPackage(generated.files, fixture.identityPolicy)
+      const preMigrationBackup = verifyLoadedPreMigrationBackupForPackage({
+        loaded: fixture.loadedBackup,
+        package: package_,
+        trustedManifestSha256: fixture.backup.manifestSha256,
+      })
+      const { outputDirectory, outputIdentity } = await createTestOutput(
+        `exact-${signal.toLowerCase()}-cleanup-`,
+      )
+      const calls: string[][] = []
+      const containerId = signal === 'SIGINT' ? '1'.repeat(64) : '2'.repeat(64)
+      let containerName = ''
+      let runLabel = ''
+      let signalHandler: (received: 'SIGINT' | 'SIGTERM') => void = () => {
+        throw new Error('signal handler was not registered')
+      }
+      const cancelActiveCommand = jest.fn()
+      const unregisterSignalHandler = jest.fn()
+      const runtime: DisposableRuntime = {
+        cancelActiveCommand,
+        command: async (_command, arguments_) => {
+          calls.push(arguments_)
+          if (arguments_[0] === 'context' && arguments_[1] === 'show') {
+            return { stderr: '', stdout: 'default\n' }
+          }
+          if (arguments_[0] === 'context' && arguments_[1] === 'inspect') {
+            return { stderr: '', stdout: '"unix:///var/run/docker.sock"\n' }
+          }
+          if (arguments_[0] === 'run') {
+            containerName = arguments_[arguments_.indexOf('--name') + 1] ?? ''
+            runLabel = arguments_[arguments_.indexOf('--label') + 1] ?? ''
+            return { stderr: '', stdout: `${containerId}\n` }
+          }
+          if (arguments_[0] === 'inspect') {
+            const separator = runLabel.indexOf('=')
+            return {
+              stderr: '',
+              stdout: `${JSON.stringify({
+                Config: {
+                  Labels: { [runLabel.slice(0, separator)]: runLabel.slice(separator + 1) },
+                },
+                Id: containerId,
+                Name: `/${containerName}`,
+                NetworkSettings: {
+                  Ports: { '5432/tcp': [{ HostIp: '127.0.0.1', HostPort: '55445' }] },
+                },
+              })}\n`,
+            }
+          }
+          if (arguments_[0] === 'rm' || arguments_[0] === 'container') {
+            return { stderr: '', stdout: '' }
+          }
+          throw new Error(`signal path reached unexpected operation ${arguments_[0] ?? '(none)'}`)
+        },
+        environment: {},
+        now: () => FIXED_TIME,
+        onContainerOwnedForTest: async () => {
+          signalHandler(signal)
+          signalHandler(signal)
+        },
+        registerSignalHandler: (handler) => {
+          signalHandler = handler
+          return unregisterSignalHandler
+        },
+      }
+
+      await expect(
+        executeFreshDisposableRuntime(
+          {
+            files: generated.files,
+            identityPolicy: fixture.identityPolicy,
+            outputDirectory,
+            outputIdentity,
+            preMigrationBackup,
+            sources: fixture.sources,
+          },
+          runtime,
+        ),
+      ).rejects.toThrow(new RegExp(`interrupted by ${signal}`, 'iu'))
+      expect(cancelActiveCommand).toHaveBeenCalledTimes(1)
+      expect(cancelActiveCommand).toHaveBeenCalledWith(signal)
+      expect(unregisterSignalHandler).toHaveBeenCalledTimes(1)
+      expect(calls.filter(([operation]) => operation === 'rm')).toHaveLength(1)
+      expect(calls.filter(([operation]) => operation === 'container')).toHaveLength(2)
+      expect(calls.some(([operation]) => operation === 'exec')).toBe(false)
+      const receipt = JSON.parse(
+        await readFile(join(outputDirectory, 'execution-receipt.json'), 'utf8'),
+      ) as Record<string, unknown>
+      expect(receipt).toMatchObject({
+        canonicalArtifacts: { approved: false, published: false },
+        cleanup: {
+          absenceVerification: 'verified_absent',
+          attempted: true,
+          outcome: 'removed_and_verified_absent',
+          removalCommandSucceeded: true,
+        },
+        executionApproval: 'not_approved',
+        passed: false,
+        primaryError: expect.stringContaining(`interrupted by ${signal}`),
+        result: 'failed',
+        signal: { activeCommandCancellationError: null, received: signal },
+      })
+      await expect(
+        readFile(join(outputDirectory, 'canonical-manifest.sha256')),
+      ).rejects.toMatchObject({ code: 'ENOENT' })
+    },
+  )
+
+  test('a signal escapes a never-settling in-flight command and runs cleanup exactly once', async () => {
+    const package_ = verifyExactGeneratedPackage(generated.files, fixture.identityPolicy)
+    const preMigrationBackup = verifyLoadedPreMigrationBackupForPackage({
+      loaded: fixture.loadedBackup,
+      package: package_,
+      trustedManifestSha256: fixture.backup.manifestSha256,
+    })
+    const { outputDirectory, outputIdentity } = await createTestOutput(
+      'exact-never-settling-signal-',
+    )
+    const calls: string[][] = []
+    const containerId = '3'.repeat(64)
+    let containerName = ''
+    let runLabel = ''
+    let signalHandler: (signal: 'SIGINT' | 'SIGTERM') => void = () => {
+      throw new Error('signal handler was not registered')
+    }
+    const cancelActiveCommand = jest.fn(async () => {
+      throw new Error('bounded active-command cancellation failed')
+    })
+    const unregisterSignalHandler = jest.fn()
+    const runtime: DisposableRuntime = {
+      cancelActiveCommand,
+      command: (_command, arguments_) => {
+        calls.push(arguments_)
+        if (arguments_[0] === 'context' && arguments_[1] === 'show') {
+          return Promise.resolve({ stderr: '', stdout: 'default\n' })
+        }
+        if (arguments_[0] === 'context' && arguments_[1] === 'inspect') {
+          return Promise.resolve({ stderr: '', stdout: '"unix:///var/run/docker.sock"\n' })
+        }
+        if (arguments_[0] === 'run') {
+          containerName = arguments_[arguments_.indexOf('--name') + 1] ?? ''
+          runLabel = arguments_[arguments_.indexOf('--label') + 1] ?? ''
+          return Promise.resolve({ stderr: '', stdout: `${containerId}\n` })
+        }
+        if (arguments_[0] === 'inspect') {
+          const separator = runLabel.indexOf('=')
+          return Promise.resolve({
+            stderr: '',
+            stdout: `${JSON.stringify({
+              Config: {
+                Labels: { [runLabel.slice(0, separator)]: runLabel.slice(separator + 1) },
+              },
+              Id: containerId,
+              Name: `/${containerName}`,
+              NetworkSettings: {
+                Ports: { '5432/tcp': [{ HostIp: '127.0.0.1', HostPort: '55446' }] },
+              },
+            })}\n`,
+          })
+        }
+        if (arguments_[0] === 'exec') {
+          signalHandler('SIGTERM')
+          signalHandler('SIGTERM')
+          return new Promise<CommandResult>(() => undefined)
+        }
+        if (arguments_[0] === 'rm' || arguments_[0] === 'container') {
+          return Promise.resolve({ stderr: '', stdout: '' })
+        }
+        return Promise.reject(
+          new Error(`never-settling signal path reached ${arguments_[0] ?? '(none)'}`),
+        )
+      },
+      environment: {},
+      now: () => FIXED_TIME,
+      registerSignalHandler: (handler) => {
+        signalHandler = handler
+        return unregisterSignalHandler
+      },
+    }
+
+    const execution = executeFreshDisposableRuntime(
+      {
+        files: generated.files,
+        identityPolicy: fixture.identityPolicy,
+        outputDirectory,
+        outputIdentity,
+        preMigrationBackup,
+        sources: fixture.sources,
+      },
+      runtime,
+    )
+    let timeout: ReturnType<typeof setTimeout> | undefined
+    const boundedExecution = Promise.race([
+      execution,
+      new Promise<never>((_resolve, reject) => {
+        timeout = setTimeout(
+          () => reject(new Error('signal failed to escape the never-settling command')),
+          1_000,
+        )
+      }),
+    ])
+    try {
+      await expect(boundedExecution).rejects.toThrow(/interrupted by SIGTERM/iu)
+    } finally {
+      clearTimeout(timeout)
+    }
+    expect(cancelActiveCommand).toHaveBeenCalledTimes(1)
+    expect(cancelActiveCommand).toHaveBeenCalledWith('SIGTERM')
+    expect(unregisterSignalHandler).toHaveBeenCalledTimes(1)
+    expect(calls.filter(([operation]) => operation === 'exec')).toHaveLength(1)
+    expect(calls.filter(([operation]) => operation === 'rm')).toHaveLength(1)
+    expect(calls.filter(([operation]) => operation === 'container')).toHaveLength(2)
+    const receipt = JSON.parse(
+      await readFile(join(outputDirectory, 'execution-receipt.json'), 'utf8'),
+    ) as Record<string, unknown>
+    expect(receipt).toMatchObject({
+      canonicalArtifacts: { approved: false, published: false },
+      cleanup: {
+        absenceVerification: 'verified_absent',
+        attempted: true,
+        outcome: 'removed_and_verified_absent',
+      },
+      executionApproval: 'not_approved',
+      passed: false,
+      primaryError: expect.stringContaining('interrupted by SIGTERM'),
+      result: 'failed',
+      signal: {
+        activeCommandCancellationError: 'bounded active-command cancellation failed',
+        received: 'SIGTERM',
+      },
+    })
+    await expect(
+      readFile(join(outputDirectory, 'canonical-manifest.sha256')),
+    ).rejects.toMatchObject({ code: 'ENOENT' })
   })
 
   test('command-level rehearsal never executes when the output directory already exists', async () => {

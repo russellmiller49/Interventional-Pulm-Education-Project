@@ -7,10 +7,14 @@ import { resolve } from 'node:path'
 import {
   assertLocalDockerEndpoint,
   buildCanonicalScenarioEvidence,
+  buildSchemaSecurityDefinitionIdentity,
   canonicalJson,
+  compareSchemaSecurityDefinitionRecords,
   EXACT_MIXED_PACKAGE_COUNTS,
   extractSqlScenarioEvidence,
   parseRehearsalCliArguments,
+  normalizePostgresDefinition,
+  POST_MIGRATION_SCHEMA_SECURITY_IDENTITY_SHA256,
   REQUIRED_CONSTRAINTS,
   REQUIRED_EVENT_TYPES,
   REQUIRED_JOURNAL_ROLES,
@@ -26,18 +30,50 @@ import {
   REQUIRED_UNIQUE_INDEXES,
   SCENARIO_EVIDENCE_MARKER,
   SCENARIO_EVIDENCE_SCHEMA_VERSION,
+  SCHEMA_SECURITY_COLUMN_PRIVILEGES,
+  SCHEMA_SECURITY_COLUMN_ROLES,
+  schemaSecurityDefinitionIdentitySha256,
   sanitizeRehearsalChildEnvironment,
   validateSecurityIntrospection,
+  validateSchemaSecurityDefinitionIdentity,
   validateSqlScenarioEvidence,
   validateSupabaseLint,
   type RawSqlScenarioEvidence,
   type ScenarioEvidenceRecord,
   type ScenarioStateEvidence,
 } from './gold-import-compensation-rehearsal-evidence'
-import { SECURITY_INTROSPECTION_SQL } from './rehearse-gold-import-compensation-db'
+import { assertSerializedAggregateOrdering } from './gold-import-compensation-migration-operations'
+import {
+  SCHEMA_DEFINITION_MUTATION_PROBES,
+  SECURITY_INTROSPECTION_SQL,
+} from './rehearse-gold-import-compensation-db'
 
 function digest(value: string) {
   return createHash('sha256').update(value).digest('hex')
+}
+
+function minifiedCanonicalJson(value: unknown) {
+  return JSON.stringify(JSON.parse(canonicalJson(value)) as unknown)
+}
+
+function deterministicallyShuffle<T>(values: T[], seed = 0x5eed): T[] {
+  let state = seed >>> 0
+  for (let index = values.length - 1; index > 0; index -= 1) {
+    state = (state * 1_664_525 + 1_013_904_223) >>> 0
+    const target = state % (index + 1)
+    ;[values[index], values[target]] = [values[target] as T, values[index] as T]
+  }
+  return values
+}
+
+const FIXED_IMAGE_SCHEMA_IDENTITY_PATH = resolve(
+  process.cwd(),
+  'scripts/literature/fixtures/post-migration-schema-security-definition-identity.json',
+)
+
+async function loadFixedImageSchemaIdentity() {
+  const bytes = await readFile(FIXED_IMAGE_SCHEMA_IDENTITY_PATH, 'utf8')
+  return { bytes, value: JSON.parse(bytes) as unknown }
 }
 
 function uuid(value: string) {
@@ -223,14 +259,40 @@ function validIntrospection() {
     'import_compensation_completed',
     'import_compensation_failed',
   ].join(' ')
-  return {
-    rls: REQUIRED_RLS_TABLES.map((tableName) => ({ tableName, rlsEnabled: true })),
+  const tablePrivileges = REQUIRED_RLS_TABLES.flatMap((tableName) =>
+    REQUIRED_JOURNAL_ROLES.flatMap((role) =>
+      ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'TRUNCATE', 'REFERENCES', 'TRIGGER'].map(
+        (privilegeName) => ({
+          table_name: tableName,
+          role_name: role,
+          privilege_name: privilegeName,
+          granted:
+            role === 'service_role' &&
+            ((['literature_gold_set_reviews', 'literature_gold_set_events'].includes(tableName) &&
+              ['SELECT', 'INSERT', 'UPDATE', 'DELETE'].includes(privilegeName)) ||
+              (REQUIRED_JOURNAL_TABLES.includes(
+                tableName as (typeof REQUIRED_JOURNAL_TABLES)[number],
+              ) &&
+                privilegeName === 'SELECT')),
+        }),
+      ),
+    ),
+  )
+  const report = {
+    rls: REQUIRED_RLS_TABLES.map((tableName) => ({
+      tableName,
+      rlsEnabled: true,
+      rlsForced: false,
+    })),
     functions: REQUIRED_TRANSITION_FUNCTIONS.map((name) => ({
       name,
       identityArguments: 'p_operation_id uuid',
       owner: 'supabase_admin',
       securityDefiner: true,
       searchPath: 'pg_catalog, public, extensions',
+      resultType: 'jsonb',
+      volatility: name.startsWith('reconcile') ? 's' : 'v',
+      definition: `CREATE FUNCTION ${name}(p_operation_id uuid) RETURNS jsonb SECURITY DEFINER SET search_path = pg_catalog, public, extensions`,
       publicExecute: false,
       anonExecute: false,
       authenticatedExecute: false,
@@ -314,14 +376,16 @@ function validIntrospection() {
     constraints: [...REQUIRED_CONSTRAINTS],
     constraintDefinitions: REQUIRED_CONSTRAINTS.map((name) => ({
       name,
-      tableName: 'synthetic_contract_table',
+      tableName: 'literature_gold_set_reviews',
       definition: completeConstraintDefinition,
+      validated: true,
     })),
     uniqueIndexes: REQUIRED_UNIQUE_INDEXES.map((name) => ({
       name,
       tableName: REQUIRED_UNIQUE_INDEX_TABLES[name],
       unique: true,
       valid: true,
+      constraintBacked: false,
       predicate:
         'operation_id IS NOT NULL supersedes_review_id IS NOT NULL operation_action_id IS NOT NULL',
       definition: [
@@ -344,6 +408,7 @@ function validIntrospection() {
         ? 'literature_gold_review_operation_actions'
         : 'literature_gold_review_operations',
       command: 'ALL',
+      permissive: 'PERMISSIVE',
       roles: ['service_role'],
       using: name.includes('actions')
         ? 'EXISTS public.literature_gold_review_operations development'
@@ -357,8 +422,121 @@ function validIntrospection() {
       tableName: 'literature_gold_set_reviews',
       enableMode: 'O',
       enabled: true,
+      definition: `CREATE TRIGGER ${name} BEFORE INSERT ON public.literature_gold_set_reviews FOR EACH ROW EXECUTE FUNCTION ${name}()`,
     })),
     supportedEventTypes: [...REQUIRED_EVENT_TYPES],
+  }
+  return {
+    ...report,
+    catalog: {
+      tables: REQUIRED_RLS_TABLES.map((table_name) => ({
+        table_name,
+        relation_kind: 'r',
+        rls_enabled: true,
+        force_rls: false,
+        owner: 'supabase_admin',
+      })),
+      columns: [],
+      columnPrivileges: [],
+      functions: report.functions.map((entry) => ({
+        name: entry.name,
+        identity_arguments: entry.identityArguments,
+        result_type: entry.resultType,
+        volatility: entry.volatility,
+        security_definer: entry.securityDefiner,
+        owner: entry.owner,
+        search_path: entry.searchPath,
+        definition: entry.definition,
+      })),
+      constraints: report.constraintDefinitions.map((entry) => ({
+        name: entry.name,
+        table_name: entry.tableName,
+        definition: entry.definition,
+        validated: entry.validated,
+      })),
+      indexes: report.uniqueIndexes.map((entry) => ({
+        name: entry.name,
+        table_name: entry.tableName,
+        owner: 'supabase_admin',
+        is_unique: entry.unique,
+        is_valid: entry.valid,
+        constraint_backed: entry.constraintBacked,
+        predicate: entry.predicate,
+        definition: entry.definition,
+      })),
+      triggers: report.triggers.map((entry) => ({
+        name: entry.name,
+        table_name: entry.tableName,
+        enable_mode: entry.enableMode,
+        enabled: entry.enabled,
+        definition: entry.definition,
+      })),
+      policies: report.journalPolicies.map((entry) => ({
+        name: entry.name,
+        table_name: entry.tableName,
+        command: entry.command,
+        permissive: entry.permissive,
+        roles: entry.roles,
+        using_expression: entry.using,
+        with_check_expression: entry.withCheck,
+      })),
+      tablePrivileges,
+      schemaCreatePrivileges: report.schemaCreatePrivileges.map((entry) => ({
+        schema_name: entry.schemaName,
+        role_name: entry.role,
+        owner: entry.owner,
+        granted: entry.create,
+      })),
+      tableAclEntries: [],
+      columnAclEntries: [],
+      functionAclEntries: [],
+      schemaAclEntries: [],
+      supportedEventTypes: [...REQUIRED_EVENT_TYPES],
+    },
+  }
+}
+
+function addSyntheticProtectedColumn(
+  source: ReturnType<typeof validIntrospection>,
+  options: { explicitGrant?: boolean; granted?: boolean } = {},
+) {
+  const catalog = source.catalog as unknown as {
+    columnAclEntries: Array<Record<string, unknown>>
+    columnPrivileges: Array<Record<string, unknown>>
+    columns: Array<Record<string, unknown>>
+  }
+  const tableName = 'literature_gold_set_reviews'
+  const columnName = 'synthetic_protected_column'
+  catalog.columns.push({
+    table_name: tableName,
+    ordinal_position: 99,
+    column_name: columnName,
+    data_type: 'text',
+    udt_name: 'text',
+    is_nullable: 'YES',
+    column_default: null,
+  })
+  catalog.columnPrivileges.push(
+    ...SCHEMA_SECURITY_COLUMN_ROLES.flatMap((role_name) =>
+      SCHEMA_SECURITY_COLUMN_PRIVILEGES.map((privilege_name) => ({
+        table_name: tableName,
+        column_name: columnName,
+        role_name,
+        privilege_name,
+        granted: options.granted === true && role_name === 'anon' && privilege_name === 'UPDATE',
+      })),
+    ),
+  )
+  if (options.explicitGrant) {
+    catalog.columnAclEntries.push({
+      schema_name: 'public',
+      table_name: tableName,
+      column_name: columnName,
+      grantee: 'anon',
+      grantor: 'supabase_admin',
+      privilege_type: 'UPDATE',
+      is_grantable: false,
+    })
   }
 }
 
@@ -649,6 +827,347 @@ describe('gold import-compensation rehearsal evidence', () => {
     expect(() => validateSupabaseLint(error)).toThrow('Supabase db lint error')
   })
 
+  it('builds an owner/role-explicit identity independent of catalog insertion order', () => {
+    const source = validIntrospection()
+    const identity = buildSchemaSecurityDefinitionIdentity(source)
+    const expectedSha256 = schemaSecurityDefinitionIdentitySha256(identity)
+    expect(identity.records.every((record) => record.owner !== null)).toBe(true)
+    expect(
+      identity.records.find((record) => record.objectType === 'policy')?.relevantRoles,
+    ).toEqual(['service_role'])
+
+    const shuffled = JSON.parse(JSON.stringify(source)) as ReturnType<typeof validIntrospection>
+    for (const value of Object.values(shuffled.catalog)) {
+      if (Array.isArray(value)) value.reverse()
+    }
+    for (const policy of shuffled.catalog.policies) policy.roles.reverse()
+    expect(schemaSecurityDefinitionIdentitySha256(shuffled)).toBe(expectedSha256)
+
+    const reorderedIdentity = JSON.parse(JSON.stringify(identity)) as typeof identity
+    deterministicallyShuffle(reorderedIdentity.records)
+    for (const record of reorderedIdentity.records) record.relevantRoles.reverse()
+    expect(schemaSecurityDefinitionIdentitySha256(reorderedIdentity)).toBe(expectedSha256)
+    const normalizedRecords = validateSchemaSecurityDefinitionIdentity(reorderedIdentity).records
+    expect(normalizedRecords).toEqual(identity.records)
+    expect(
+      normalizedRecords.every(
+        (record, index) =>
+          index === 0 ||
+          compareSchemaSecurityDefinitionRecords(
+            normalizedRecords[index - 1] as typeof record,
+            record,
+          ) <= 0,
+      ),
+    ).toBe(true)
+    expect(
+      normalizedRecords.map(({ schemaName, objectType, objectName, objectIdentity }) => [
+        schemaName,
+        objectType,
+        objectName,
+        objectIdentity,
+      ]),
+    ).toEqual(
+      [...normalizedRecords]
+        .sort(compareSchemaSecurityDefinitionRecords)
+        .map(({ schemaName, objectType, objectName, objectIdentity }) => [
+          schemaName,
+          objectType,
+          objectName,
+          objectIdentity,
+        ]),
+    )
+
+    const tamperedIdentity = JSON.parse(JSON.stringify(identity)) as typeof identity
+    tamperedIdentity.records[0].normalizedDefinition += ' substituted'
+    expect(() => validateSchemaSecurityDefinitionIdentity(tamperedIdentity)).toThrow(
+      /definitionSha256/iu,
+    )
+  })
+
+  it('normalizes only unquoted formatting and supports zero-argument catalog functions', () => {
+    expect(normalizePostgresDefinition('CHECK   ( value =  1 )')).toBe('CHECK ( value = 1 )')
+    expect(normalizePostgresDefinition("CHECK (value = 'a  b')")).toContain("'a  b'")
+
+    const source = validIntrospection()
+    source.catalog.functions[0].identity_arguments = ''
+    source.catalog.functions[0].search_path = ''
+    expect(() => buildSchemaSecurityDefinitionIdentity(source)).not.toThrow()
+  })
+
+  it('binds forced-RLS state and the exact effective/explicit protected-column ACL state', () => {
+    const baseline = validIntrospection()
+    addSyntheticProtectedColumn(baseline)
+    const baselineSha256 = schemaSecurityDefinitionIdentitySha256(baseline)
+    const columnRecord = buildSchemaSecurityDefinitionIdentity(baseline).records.find((record) =>
+      record.objectIdentity.endsWith('.column.synthetic_protected_column'),
+    )
+    expect(columnRecord?.relevantRoles).toEqual([...SCHEMA_SECURITY_COLUMN_ROLES].sort())
+    expect(columnRecord?.state.effectivePrivileges).toHaveLength(
+      SCHEMA_SECURITY_COLUMN_ROLES.length * SCHEMA_SECURITY_COLUMN_PRIVILEGES.length,
+    )
+
+    const forced = JSON.parse(JSON.stringify(baseline)) as ReturnType<typeof validIntrospection>
+    const forcedTable = forced.catalog.tables.find(
+      (table) => table.table_name === 'literature_gold_set_reviews',
+    )
+    const forcedRls = forced.rls.find((table) => table.tableName === 'literature_gold_set_reviews')
+    if (forcedTable) forcedTable.force_rls = true
+    if (forcedRls) forcedRls.rlsForced = true
+    expect(() =>
+      validateSecurityIntrospection(forced, {
+        expectedSchemaSecurityIdentitySha256: baselineSha256,
+      }),
+    ).toThrow(/definition identity mismatch/iu)
+
+    const granted = validIntrospection()
+    addSyntheticProtectedColumn(granted, { explicitGrant: true, granted: true })
+    const grantedIdentity = buildSchemaSecurityDefinitionIdentity(granted)
+    expect(
+      grantedIdentity.records.some(
+        (record) =>
+          record.objectType === 'column_acl' &&
+          record.objectName === 'synthetic_protected_column' &&
+          record.relevantRoles.includes('anon'),
+      ),
+    ).toBe(true)
+    expect(schemaSecurityDefinitionIdentitySha256(granted)).not.toBe(baselineSha256)
+
+    const grantedSha256 = schemaSecurityDefinitionIdentitySha256(granted)
+    const revoked = JSON.parse(JSON.stringify(granted)) as ReturnType<typeof validIntrospection>
+    const revokedCatalog = revoked.catalog as unknown as {
+      columnAclEntries: Array<Record<string, unknown>>
+      columnPrivileges: Array<Record<string, unknown>>
+    }
+    revokedCatalog.columnAclEntries = []
+    const revokedGrant = revokedCatalog.columnPrivileges.find(
+      (entry) => entry.role_name === 'anon' && entry.privilege_name === 'UPDATE',
+    )
+    if (revokedGrant) revokedGrant.granted = false
+    expect(() =>
+      validateSecurityIntrospection(revoked, {
+        expectedSchemaSecurityIdentitySha256: grantedSha256,
+      }),
+    ).toThrow(/definition identity mismatch/iu)
+
+    const incomplete = validIntrospection()
+    addSyntheticProtectedColumn(incomplete)
+    ;(incomplete.catalog as unknown as { columnPrivileges: unknown[] }).columnPrivileges.pop()
+    expect(() => buildSchemaSecurityDefinitionIdentity(incomplete)).toThrow(
+      /exact protected role\/column-privilege matrix/iu,
+    )
+  })
+
+  it('pins the exact canonical fixed-image schema/security identity fixture', async () => {
+    const { bytes, value } = await loadFixedImageSchemaIdentity()
+    const validated = validateSchemaSecurityDefinitionIdentity(value, {
+      expectedSchemaSecurityIdentitySha256: POST_MIGRATION_SCHEMA_SECURITY_IDENTITY_SHA256,
+    })
+    expect(validated.records).toHaveLength(763)
+    expect(schemaSecurityDefinitionIdentitySha256(value)).toBe(
+      POST_MIGRATION_SCHEMA_SECURITY_IDENTITY_SHA256,
+    )
+    expect(digest(bytes)).toBe('8f709d225f3087c77445b1453cffee994b9c8a8cfdbc004a798efbfff96ee20e')
+    expect(digest(canonicalJson(value))).toBe(digest(bytes))
+
+    const tableRecords = validated.records.filter((record) => record.objectType === 'table')
+    const columnRecords = validated.records.filter((record) => record.objectType === 'column')
+    const columnAclRecords = validated.records.filter(
+      (record) => record.objectType === 'column_acl',
+    )
+    expect(tableRecords).toHaveLength(7)
+    expect(tableRecords.every((record) => record.state.forceRls === false)).toBe(true)
+    expect(columnRecords).toHaveLength(146)
+    const expectedColumnPrivilegeKeys = SCHEMA_SECURITY_COLUMN_ROLES.flatMap((roleName) =>
+      SCHEMA_SECURITY_COLUMN_PRIVILEGES.map((privilegeName) => `${roleName}:${privilegeName}`),
+    ).sort()
+    expect(
+      columnRecords.every((record) => {
+        if (!Array.isArray(record.state.effectivePrivileges)) return false
+        const privileges = record.state.effectivePrivileges as Array<Record<string, unknown>>
+        return (
+          privileges.every((privilege) => typeof privilege.granted === 'boolean') &&
+          JSON.stringify(
+            privileges
+              .map((privilege) => `${privilege.roleName}:${privilege.privilegeName}`)
+              .sort(),
+          ) === JSON.stringify(expectedColumnPrivilegeKeys)
+        )
+      }),
+    ).toBe(true)
+    expect(columnAclRecords).toHaveLength(0)
+    expect(
+      validated.records.every(
+        (record, index) =>
+          index === 0 ||
+          compareSchemaSecurityDefinitionRecords(
+            validated.records[index - 1] as typeof record,
+            record,
+          ) <= 0,
+      ),
+    ).toBe(true)
+  })
+
+  it.each([
+    {
+      label: 'FORCE ROW LEVEL SECURITY',
+      mutate(identity: Awaited<ReturnType<typeof loadFixedImageSchemaIdentity>>['value']) {
+        const validated = validateSchemaSecurityDefinitionIdentity(identity)
+        const record = validated.records.find(
+          (candidate) =>
+            candidate.objectType === 'table' &&
+            candidate.objectName === 'literature_gold_set_reviews',
+        )
+        if (!record) throw new Error('Fixed-image fixture lacks the review table record.')
+        record.state = { ...record.state, forceRls: true }
+        record.normalizedDefinition = record.normalizedDefinition.replace(
+          'force_rls=false',
+          'force_rls=true',
+        )
+        record.definitionSha256 = digest(record.normalizedDefinition)
+        return validated
+      },
+    },
+    {
+      label: 'column GRANT',
+      mutate(identity: Awaited<ReturnType<typeof loadFixedImageSchemaIdentity>>['value']) {
+        const validated = validateSchemaSecurityDefinitionIdentity(identity)
+        const record = validated.records.find(
+          (candidate) =>
+            candidate.objectIdentity ===
+            'public.table.literature_gold_set_reviews.column.operation_action_id',
+        )
+        if (!record)
+          throw new Error('Fixed-image fixture lacks the review operation-action column.')
+        const effectivePrivileges = record.state.effectivePrivileges as Array<
+          Record<string, unknown>
+        >
+        const privilege = effectivePrivileges.find(
+          (entry) => entry.roleName === 'anon' && entry.privilegeName === 'UPDATE',
+        )
+        if (!privilege || privilege.granted !== false) {
+          throw new Error('Fixed-image fixture lacks the expected revoked anon column privilege.')
+        }
+        privilege.granted = true
+        record.normalizedDefinition = minifiedCanonicalJson(record.state)
+        record.definitionSha256 = digest(record.normalizedDefinition)
+        return validated
+      },
+    },
+    {
+      label: 'column REVOKE',
+      mutate(identity: Awaited<ReturnType<typeof loadFixedImageSchemaIdentity>>['value']) {
+        const validated = validateSchemaSecurityDefinitionIdentity(identity)
+        const record = validated.records.find(
+          (candidate) =>
+            candidate.objectIdentity ===
+            'public.table.literature_gold_set_reviews.column.operation_action_id',
+        )
+        if (!record)
+          throw new Error('Fixed-image fixture lacks the review operation-action column.')
+        const effectivePrivileges = record.state.effectivePrivileges as Array<
+          Record<string, unknown>
+        >
+        const privilege = effectivePrivileges.find(
+          (entry) => entry.roleName === 'service_role' && entry.privilegeName === 'UPDATE',
+        )
+        if (!privilege || privilege.granted !== true) {
+          throw new Error('Fixed-image fixture lacks the expected service-role column privilege.')
+        }
+        privilege.granted = false
+        record.normalizedDefinition = minifiedCanonicalJson(record.state)
+        record.definitionSha256 = digest(record.normalizedDefinition)
+        return validated
+      },
+    },
+  ])('rejects fixture-bound $label substitution', async ({ mutate }) => {
+    const { value } = await loadFixedImageSchemaIdentity()
+    const mutated = mutate(JSON.parse(JSON.stringify(value)) as unknown)
+    expect(() => validateSchemaSecurityDefinitionIdentity(mutated)).not.toThrow()
+    expect(schemaSecurityDefinitionIdentitySha256(mutated)).not.toBe(
+      POST_MIGRATION_SCHEMA_SECURITY_IDENTITY_SHA256,
+    )
+    expect(() =>
+      validateSchemaSecurityDefinitionIdentity(mutated, {
+        expectedSchemaSecurityIdentitySha256: POST_MIGRATION_SCHEMA_SECURITY_IDENTITY_SHA256,
+      }),
+    ).toThrow(/definition identity mismatch/iu)
+  })
+
+  it.each([
+    [
+      'weakened trigger predicate',
+      'prevent_literature_gold_set_events_mutation',
+      (definition: string) => definition.replace('BEFORE DELETE OR UPDATE', 'BEFORE DELETE'),
+    ],
+    [
+      'changed constraint action',
+      'literature_gold_review_operations_batch_id_fkey',
+      (definition: string) => definition.replace('ON DELETE RESTRICT', 'ON DELETE CASCADE'),
+    ],
+    [
+      'wrong index definition',
+      'literature_gold_set_items_split_idx',
+      (definition: string) => definition.replace('display_order)', 'review_status)'),
+    ],
+    [
+      'broader journal policy role',
+      'literature_gold_review_operation_actions_service_policy',
+      (definition: string) =>
+        definition.replace('"roles":["service_role"]', '"roles":["authenticated","service_role"]'),
+    ],
+  ] as const)(
+    'rejects the fixed-image fixture after a same-name %s substitution',
+    async (_label, objectName, mutateDefinition) => {
+      const { value } = await loadFixedImageSchemaIdentity()
+      const identity = validateSchemaSecurityDefinitionIdentity(value)
+      const record = identity.records.find((candidate) => candidate.objectName === objectName)
+      if (!record) throw new Error(`Fixed-image fixture lacks ${objectName}.`)
+      const mutatedDefinition = mutateDefinition(record.normalizedDefinition)
+      expect(mutatedDefinition).not.toBe(record.normalizedDefinition)
+      record.normalizedDefinition = mutatedDefinition
+      record.definitionSha256 = digest(mutatedDefinition)
+      if (record.objectType === 'policy') {
+        record.relevantRoles = ['authenticated', 'service_role']
+        record.state = {
+          ...record.state,
+          roles: ['authenticated', 'service_role'],
+        }
+      }
+      expect(() => validateSchemaSecurityDefinitionIdentity(identity)).not.toThrow()
+      expect(schemaSecurityDefinitionIdentitySha256(identity)).not.toBe(
+        POST_MIGRATION_SCHEMA_SECURITY_IDENTITY_SHA256,
+      )
+      expect(() =>
+        validateSchemaSecurityDefinitionIdentity(identity, {
+          expectedSchemaSecurityIdentitySha256: POST_MIGRATION_SCHEMA_SECURITY_IDENTITY_SHA256,
+        }),
+      ).toThrow(/definition identity mismatch/iu)
+    },
+  )
+
+  it.each([
+    ['constraint', 'definition', 'CHECK (substituted_column IS NOT NULL)'],
+    ['trigger', 'definition', 'CREATE TRIGGER substituted_timing AFTER UPDATE ON public.x'],
+    ['policy', 'using_expression', 'true'],
+    ['index', 'definition', 'CREATE UNIQUE INDEX same_name ON public.x (wrong_column)'],
+  ] as const)('rejects a same-name %s semantic substitution', (objectType, field, replacement) => {
+    const source = validIntrospection()
+    const expectedSha256 = schemaSecurityDefinitionIdentitySha256(source)
+    const catalogKey = {
+      constraint: 'constraints',
+      trigger: 'triggers',
+      policy: 'policies',
+      index: 'indexes',
+    }[objectType] as 'constraints' | 'triggers' | 'policies' | 'indexes'
+    const rows = source.catalog[catalogKey] as Array<Record<string, unknown>>
+    rows[0][field] = replacement
+    expect(() =>
+      validateSecurityIntrospection(source, {
+        expectedSchemaSecurityIdentitySha256: expectedSha256,
+      }),
+    ).toThrow(/definition identity mismatch/iu)
+  })
+
   it('fails unsafe RLS, grants, search paths, constraints, triggers, and event vocabularies', () => {
     expect(validateSecurityIntrospection(validIntrospection())).toMatchObject({ passed: true })
 
@@ -812,6 +1331,7 @@ describe('gold import-compensation rehearsal evidence', () => {
       name: string
       tableName: string
       command: string
+      permissive: string
       roles: string[]
       using: string
       withCheck: string
@@ -820,6 +1340,7 @@ describe('gold import-compensation rehearsal evidence', () => {
       name: 'unexpected_journal_policy',
       tableName: 'literature_gold_review_operations',
       command: 'ALL',
+      permissive: 'PERMISSIVE',
       roles: ['service_role'],
       using: "dataset_split = 'development'",
       withCheck: "dataset_split = 'development'",
@@ -834,12 +1355,15 @@ describe('gold import-compensation rehearsal evidence', () => {
       tableName: string
       enableMode: string
       enabled: boolean
+      definition: string
     }> = extraEnabledTrigger.triggers
     triggers.push({
       name: 'unexpected_enabled_trigger',
       tableName: 'literature_gold_set_reviews',
       enableMode: 'O',
       enabled: true,
+      definition:
+        'CREATE TRIGGER unexpected_enabled_trigger BEFORE INSERT ON public.literature_gold_set_reviews FOR EACH ROW EXECUTE FUNCTION unexpected_enabled_trigger()',
     })
     expect(() => validateSecurityIntrospection(extraEnabledTrigger)).toThrow(
       'protected trigger set changed',
@@ -847,6 +1371,7 @@ describe('gold import-compensation rehearsal evidence', () => {
   })
 
   it('collects complete protected catalogs before applying exact allowlists', () => {
+    expect(() => assertSerializedAggregateOrdering(SECURITY_INTROSPECTION_SQL)).not.toThrow()
     const sqlSection = (start: string, end: string) => {
       const startIndex = SECURITY_INTROSPECTION_SQL.indexOf(start)
       const endIndex = SECURITY_INTROSPECTION_SQL.indexOf(end, startIndex + start.length)
@@ -856,19 +1381,48 @@ describe('gold import-compensation rehearsal evidence', () => {
     }
 
     const constraintCatalog = sqlSection('constraints as (', 'expected_indexes(')
-    const indexCatalog = sqlSection('expected_indexes(', 'journal_policies as (')
-    const policyCatalog = sqlSection('journal_policies as (', 'triggers as (')
+    const indexCatalog = sqlSection('expected_indexes(', 'schema_policies as (')
+    const policyCatalog = sqlSection('schema_policies as (', 'journal_policies as (')
     const triggerCatalog = sqlSection('triggers as (', 'event_types as (')
 
     for (const tableName of REQUIRED_RLS_TABLES) {
       expect(constraintCatalog).toContain(`'${tableName}'`)
       expect(indexCatalog).toContain(`'${tableName}'`)
-      expect(policyCatalog).toContain(`'${tableName}'`)
       expect(triggerCatalog).toContain(`'${tableName}'`)
     }
+    expect(policyCatalog).toContain('class.relname in (select table_name from contract_tables)')
     expect(indexCatalog).toContain('index_catalog_drift as (')
     expect(indexCatalog).toContain("'__missing_expected_index__:'")
+    expect(indexCatalog).toContain('index_owner.rolname as owner')
     expect(policyCatalog).not.toContain('policy.policyname in')
+    expect(SECURITY_INTROSPECTION_SQL).toContain('class.relforcerowsecurity as force_rls')
+    expect(SECURITY_INTROSPECTION_SQL).toContain("'rlsForced', rls_forced")
+    expect(SECURITY_INTROSPECTION_SQL).toContain('attribute.attacl')
+    expect(SECURITY_INTROSPECTION_SQL).toContain('pg_catalog.has_column_privilege(')
+    expect(SECURITY_INTROSPECTION_SQL).not.toMatch(
+      /aclexplode\s*\(\s*coalesce\s*\(\s*attribute\.attacl\s*,\s*array\[\]/iu,
+    )
+    expect(
+      SECURITY_INTROSPECTION_SQL.match(
+        /case when cardinality\(attribute\.attacl\) > 0 then attribute\.attacl\s+else null::pg_catalog\.aclitem\[\] end/giu,
+      ),
+    ).toHaveLength(2)
+    expect(SECURITY_INTROSPECTION_SQL).toContain("'columnPrivileges'")
+    expect(SECURITY_INTROSPECTION_SQL).toContain("'columnAclEntries'")
+    for (const role of SCHEMA_SECURITY_COLUMN_ROLES) {
+      expect(SECURITY_INTROSPECTION_SQL).toContain(`('${role}')`)
+    }
+    for (const privilege of SCHEMA_SECURITY_COLUMN_PRIVILEGES) {
+      expect(SECURITY_INTROSPECTION_SQL).toContain(`('${privilege}')`)
+    }
+    expect(SCHEMA_DEFINITION_MUTATION_PROBES.map(({ name }) => name)).toEqual([
+      'weakened_same_name_trigger_predicate',
+      'changed_same_name_foreign_key_action',
+      'broadened_same_name_journal_policy',
+      'wrong_same_name_unique_index_definition',
+      'forced_rls_state_changed',
+      'column_grant_broadened',
+    ])
   })
 
   it('commits lint and introspection to a fixed-image, auto-port, targetless runner', async () => {
@@ -880,6 +1434,7 @@ describe('gold import-compensation rehearsal evidence', () => {
     expect(runner).toContain("'127.0.0.1::5432'")
     expect(runner).toContain('runSupabaseLint(hostPort)')
     expect(runner).toContain('SECURITY_INTROSPECTION_SQL')
+    expect(runner).toContain('SCHEMA_SECURITY_FUNCTION_NAMES')
     expect(runner).toContain('inspectLocalDockerRuntime()')
     expect(runner).toContain('execution-receipt.json')
     expect(runner).not.toContain('process.env.DATABASE_URL')

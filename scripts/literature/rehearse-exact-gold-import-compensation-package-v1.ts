@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
-import { lstat, mkdir, open, readFile, readdir, realpath, type FileHandle } from 'node:fs/promises'
-import { dirname, isAbsolute, relative, resolve } from 'node:path'
+import { lstat, readFile, readdir } from 'node:fs/promises'
+import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { z } from 'zod'
@@ -54,6 +54,13 @@ import {
   validateSupabaseLint,
 } from './gold-import-compensation-rehearsal-evidence'
 import { assertKnownArguments, parseCliArguments, stringArgument } from './lib/cli'
+import {
+  assertExclusiveOutputDirectoryIdentity,
+  assertSafeOutputPathArgument,
+  createExclusiveOutputDirectory,
+  writeExclusiveOutputFiles,
+  type ExclusiveOutputDirectoryIdentity,
+} from './lib/exclusive-output'
 import { SECURITY_INTROSPECTION_SQL } from './rehearse-gold-import-compensation-db'
 
 export const EXACT_PACKAGE_REHEARSAL_SCHEMA_VERSION =
@@ -106,6 +113,7 @@ const REQUIRED_PACKAGE_FILES = [
   'post-migration-audit.json',
   'post-migration-audit.md',
   'post-migration-development-planning-state.json',
+  'post-migration-schema-security-definition-identity.json',
   'proposed-compensation-command.txt',
   'proposed-import-command.txt',
   'row-level-action-plan.json',
@@ -133,6 +141,7 @@ const packageDescriptorSchema = z
         markdownSha256: sha256Schema,
         preMigrationBackupManifestSha256: sha256Schema,
         preMigrationPhysicalStateSha256: sha256Schema,
+        schemaSecurityDefinitionIdentityFileSha256: sha256Schema,
         schemaSecurityIdentitySha256: sha256Schema,
         stateFresh: z.literal(true),
       })
@@ -323,6 +332,7 @@ const exactEvidenceSecuritySchema = z
     prohibitedPrivilegesAbsent: z.literal(true),
     publicExecuteAbsent: z.literal(true),
     requiredRlsEnabled: z.literal(true),
+    schemaSecurityDefinitionIdentitySha256: sha256Schema,
     securityDefinerSearchPathsSafe: z.literal(true),
     serviceRoleGuardedBoundaryOnly: z.literal(true),
   })
@@ -414,6 +424,7 @@ export interface ExactPackageRehearsalReport {
   realLocalDatabaseTouched: false
   remoteDatabaseTouched: false
   result: 'passed'
+  schemaSecurityDefinitionIdentitySha256: string
   schemaVersion: typeof EXACT_PACKAGE_REHEARSAL_SCHEMA_VERSION
   targetDatabase: {
     image: typeof POSTGRES_IMAGE
@@ -1249,11 +1260,15 @@ function assertAllPackageArtifactsSemanticallyBound(input: {
   ) as Buffer
   const auditManifestBytes = files.get('post-migration-audit-manifest.sha256') as Buffer
   const auditMarkdownBytes = files.get('post-migration-audit.md') as Buffer
+  const schemaSecurityDefinitionIdentityBytes = files.get(
+    'post-migration-schema-security-definition-identity.json',
+  ) as Buffer
   const verifiedAudit = verifyReadyPostMigrationAuditPackage({
     auditBytes,
     developmentPlanningStateBytes,
     manifestBytes: auditManifestBytes,
     markdownBytes: auditMarkdownBytes,
+    schemaSecurityDefinitionIdentityBytes,
     trustedManifestSha256: descriptor.audit.canonicalManifestSha256,
   })
   const audit = verifiedAudit.audit
@@ -1262,6 +1277,8 @@ function assertAllPackageArtifactsSemanticallyBound(input: {
     sha256Bytes(developmentPlanningStateBytes) !==
       descriptor.audit.developmentPlanningStateFileSha256 ||
     sha256Bytes(auditMarkdownBytes) !== descriptor.audit.markdownSha256 ||
+    sha256Bytes(schemaSecurityDefinitionIdentityBytes) !==
+      descriptor.audit.schemaSecurityDefinitionIdentityFileSha256 ||
     audit.database.developmentPlanningStateSha256 !==
       descriptor.audit.developmentPlanningStateSha256 ||
     audit.database.preMigrationBackupManifestSha256 !==
@@ -1422,6 +1439,7 @@ function assertAllPackageArtifactsSemanticallyBound(input: {
     readyToExecute: false,
     reason:
       'A committed import receipt, fresh database-observed physical state, finalized compensation plan, and separate compensation authorization do not yet exist.',
+    schemaSecurityIdentitySha256: descriptor.audit.schemaSecurityIdentitySha256,
     sourceMappingComplete: true,
   })
   assertJsonArtifactEquals(files, 'ambiguous-outcome-reconciliation.json', {
@@ -1613,6 +1631,8 @@ export function validateExactPackageRehearsalEvidence(
     evidence.packageManifestSha256 !== package_.manifestSha256 ||
     evidence.targetDatabaseFingerprintSha256 !== attestation.databaseFingerprintSha256 ||
     evidence.migration.sha256 !== package_.descriptor.migration.sha256 ||
+    evidence.security.schemaSecurityDefinitionIdentitySha256 !==
+      package_.descriptor.audit.schemaSecurityIdentitySha256 ||
     !same(evidence.importCounts, EXACT_IMPORT_COUNTS) ||
     !same(evidence.compensationCounts, EXACT_COMPENSATION_COUNTS)
   ) {
@@ -1670,6 +1690,7 @@ export async function runExactPackageDisposableRehearsal(input: {
     realLocalDatabaseTouched: false,
     remoteDatabaseTouched: false,
     result: 'passed',
+    schemaSecurityDefinitionIdentitySha256: package_.descriptor.audit.schemaSecurityIdentitySha256,
     schemaVersion: EXACT_PACKAGE_REHEARSAL_SCHEMA_VERSION,
     targetDatabase: {
       image: POSTGRES_IMAGE,
@@ -1690,6 +1711,7 @@ export interface DisposableCommandOptions {
 }
 
 export interface DisposableRuntime {
+  cancelActiveCommand?(signal: 'SIGINT' | 'SIGTERM'): Promise<void> | void
   command(
     commandName: string,
     arguments_: string[],
@@ -1697,17 +1719,67 @@ export interface DisposableRuntime {
   ): Promise<CommandResult>
   environment?: Readonly<Record<string, string | undefined>>
   now(): string
+  onContainerOwnedForTest?(): Promise<void>
+  registerSignalHandler?(handler: (signal: 'SIGINT' | 'SIGTERM') => void): () => void
+}
+
+export interface DisposableCompletedExecutionForTest {
+  canonicalArtifacts: ReadonlyMap<string, Buffer>
+  manifestBytes: Buffer
+  rawReceipt: Record<string, unknown>
+  report: ExactPackageRehearsalReport
+}
+
+const COMPLETED_EXECUTION_FOR_TEST = Symbol('completed-disposable-execution-for-test')
+
+type DisposableRuntimeWithTestCompletion = DisposableRuntime & {
+  [COMPLETED_EXECUTION_FOR_TEST]?: () => Promise<DisposableCompletedExecutionForTest>
+}
+
+export function injectCompletedDisposableExecutionForTest(
+  runtime: DisposableRuntime,
+  completedExecution: DisposableCompletedExecutionForTest,
+): DisposableRuntime {
+  if (process.env.NODE_ENV !== 'test') {
+    throw new Error('Completed disposable execution injection is test-only.')
+  }
+  Object.defineProperty(runtime, COMPLETED_EXECUTION_FOR_TEST, {
+    configurable: false,
+    enumerable: false,
+    value: async () => completedExecution,
+    writable: false,
+  })
+  return runtime
+}
+
+export interface DisposableContainerCleanupOutcome {
+  absenceVerification: 'not_attempted' | 'verified_absent' | 'container_still_present' | 'failed'
+  absenceChecks: Array<{
+    identifier: string
+    kind: 'container_id' | 'exact_name'
+    present: boolean | null
+  }>
+  attempted: boolean
+  containerId: string | null
+  containerName: string
+  errors: Array<{
+    message: string
+    stage: 'remove' | 'verify_absent'
+  }>
+  outcome: 'not_required' | 'removed_and_verified_absent' | 'failed'
+  removalCommandSucceeded: boolean | null
 }
 
 export interface ExecuteFreshDisposableInput {
   files: ReadonlyMap<string, Buffer>
   identityPolicy?: PackageSourceIdentityPolicy
   outputDirectory: string
+  outputIdentity: ExclusiveOutputDirectoryIdentity
   preMigrationBackup: VerifiedDevelopmentDatabaseBackup
   sources: PackageSourceBytes
 }
 
-const EXACT_RPC_METADATA_SQL = String.raw`
+export const EXACT_RPC_METADATA_SQL = String.raw`
 select pg_catalog.jsonb_build_object(
   'functions', coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
     'name', proc.proname,
@@ -1861,6 +1933,7 @@ function buildExactEvidenceSecuritySummary(
     requiredRlsEnabled:
       introspection.rls.length === 7 &&
       introspection.rls.every(({ rlsEnabled }) => rlsEnabled === true),
+    schemaSecurityDefinitionIdentitySha256: introspection.schemaSecurityIdentitySha256,
     securityDefinerSearchPathsSafe: introspection.functions.every(
       (entry) =>
         entry.securityDefiner === true &&
@@ -1875,6 +1948,71 @@ function buildExactEvidenceSecuritySummary(
   })
 }
 
+const ACTIVE_PRODUCTION_CHILDREN = new Set<ReturnType<typeof spawn>>()
+const PRODUCTION_CHILD_TERM_GRACE_MS = 1_000
+const PRODUCTION_CHILD_KILL_GRACE_MS = 1_000
+
+function productionChildExited(child: ReturnType<typeof spawn>): boolean {
+  return child.exitCode !== null || child.signalCode !== null
+}
+
+function waitForProductionChildExit(
+  child: ReturnType<typeof spawn>,
+  timeoutMilliseconds: number,
+): Promise<boolean> {
+  if (productionChildExited(child)) return Promise.resolve(true)
+  return new Promise((resolvePromise) => {
+    let settled = false
+    const finish = (exited: boolean) => {
+      if (settled) return
+      settled = true
+      clearTimeout(timeout)
+      child.off('close', onExit)
+      child.off('error', onExit)
+      resolvePromise(exited)
+    }
+    const onExit = () => finish(true)
+    const timeout = setTimeout(() => finish(productionChildExited(child)), timeoutMilliseconds)
+    child.once('close', onExit)
+    child.once('error', onExit)
+  })
+}
+
+async function terminateProductionChildBounded(child: ReturnType<typeof spawn>): Promise<void> {
+  if (productionChildExited(child)) return
+  const signalErrors: unknown[] = []
+  try {
+    if (!child.kill('SIGTERM') && !productionChildExited(child)) {
+      signalErrors.push(new Error('Active child process refused SIGTERM delivery.'))
+    }
+  } catch (error) {
+    signalErrors.push(error)
+  }
+  if (await waitForProductionChildExit(child, PRODUCTION_CHILD_TERM_GRACE_MS)) return
+  try {
+    if (!child.kill('SIGKILL') && !productionChildExited(child)) {
+      signalErrors.push(new Error('Active child process refused SIGKILL delivery.'))
+    }
+  } catch (error) {
+    signalErrors.push(error)
+  }
+  if (await waitForProductionChildExit(child, PRODUCTION_CHILD_KILL_GRACE_MS)) return
+  child.stdin?.destroy()
+  child.stdout?.destroy()
+  child.stderr?.destroy()
+  child.unref()
+  ACTIVE_PRODUCTION_CHILDREN.delete(child)
+  throw new AggregateError(
+    [
+      ...signalErrors,
+      new Error(
+        `Active child process ${child.pid ?? '(unknown pid)'} did not exit after bounded SIGTERM/SIGKILL escalation.`,
+      ),
+    ],
+    'Active child process resisted bounded termination and was detached from the runner.',
+  )
+}
+
 function productionCommand(
   commandName: string,
   arguments_: string[],
@@ -1886,6 +2024,7 @@ function productionCommand(
       env: sanitizeRehearsalChildEnvironment(process.env, options.env ?? {}),
       stdio: ['pipe', 'pipe', 'pipe'],
     })
+    ACTIVE_PRODUCTION_CHILDREN.add(child)
     let stdout = ''
     let stderr = ''
     child.stdout.setEncoding('utf8')
@@ -1896,8 +2035,12 @@ function productionCommand(
     child.stderr.on('data', (chunk: string) => {
       stderr += chunk
     })
-    child.on('error', rejectPromise)
+    child.on('error', (error) => {
+      ACTIVE_PRODUCTION_CHILDREN.delete(child)
+      rejectPromise(error)
+    })
     child.on('close', (code) => {
+      ACTIVE_PRODUCTION_CHILDREN.delete(child)
       if (code === 0) {
         resolvePromise({ stderr, stdout })
         return
@@ -1920,9 +2063,164 @@ function productionCommand(
 }
 
 const PRODUCTION_RUNTIME: DisposableRuntime = {
+  cancelActiveCommand: async () => {
+    const results = await Promise.allSettled(
+      [...ACTIVE_PRODUCTION_CHILDREN].map(terminateProductionChildBounded),
+    )
+    const failures = results.flatMap((result) =>
+      result.status === 'rejected' ? [result.reason] : [],
+    )
+    if (failures.length > 0) {
+      throw new AggregateError(failures, 'One or more active child commands resisted termination.')
+    }
+  },
   command: productionCommand,
   environment: process.env,
   now: () => new Date().toISOString(),
+  registerSignalHandler: (handler) => {
+    const onSigint = () => handler('SIGINT')
+    const onSigterm = () => handler('SIGTERM')
+    process.on('SIGINT', onSigint)
+    process.on('SIGTERM', onSigterm)
+    return () => {
+      process.off('SIGINT', onSigint)
+      process.off('SIGTERM', onSigterm)
+    }
+  },
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
+function cleanupOutcomeError(outcome: DisposableContainerCleanupOutcome): Error | null {
+  if (outcome.outcome !== 'failed') return null
+  return new Error(
+    `Disposable-container cleanup failed: ${outcome.errors
+      .map(({ stage, message }) => `${stage}: ${message}`)
+      .join('; ')}.`,
+  )
+}
+
+export function assertDisposableContainerCleanupSucceeded(
+  outcome: DisposableContainerCleanupOutcome,
+): void {
+  const error = cleanupOutcomeError(outcome)
+  if (error) throw error
+}
+
+function combinedExecutionError(primaryError: unknown, cleanupError: Error | null): Error | null {
+  const errors = [primaryError, cleanupError].filter(
+    (error) => error !== null && error !== undefined,
+  )
+  if (errors.length === 0) return null
+  if (errors.length === 1) {
+    const [error] = errors
+    return error instanceof Error ? error : new Error(String(error))
+  }
+  return new AggregateError(
+    errors,
+    `Exact-package rehearsal failed; primary error: ${errorMessage(primaryError)}; cleanup error: ${cleanupError?.message ?? '(none)'}`,
+  )
+}
+
+export async function cleanupDisposableContainer(input: {
+  armed: boolean
+  containerId: string
+  containerName: string
+  dockerCommand(arguments_: string[]): Promise<CommandResult>
+}): Promise<DisposableContainerCleanupOutcome> {
+  const outcome: DisposableContainerCleanupOutcome = {
+    absenceVerification: 'not_attempted',
+    absenceChecks: [],
+    attempted: input.armed,
+    containerId: input.containerId || null,
+    containerName: input.containerName,
+    errors: [],
+    outcome: input.armed ? 'failed' : 'not_required',
+    removalCommandSucceeded: null,
+  }
+  if (!input.armed) return outcome
+
+  try {
+    await input.dockerCommand(['rm', '--force', input.containerName])
+    outcome.removalCommandSucceeded = true
+  } catch (error) {
+    outcome.removalCommandSucceeded = false
+    outcome.errors.push({ message: errorMessage(error), stage: 'remove' })
+  }
+
+  const absenceTargets = [
+    {
+      filter: `name=^/${input.containerName}$`,
+      identifier: input.containerName,
+      kind: 'exact_name' as const,
+    },
+    ...(input.containerId
+      ? [
+          {
+            filter: `id=${input.containerId}`,
+            identifier: input.containerId,
+            kind: 'container_id' as const,
+          },
+        ]
+      : []),
+  ]
+  for (const target of absenceTargets) {
+    try {
+      const remaining = (
+        await input.dockerCommand([
+          'container',
+          'ls',
+          '--all',
+          '--quiet',
+          '--no-trunc',
+          '--filter',
+          target.filter,
+        ])
+      ).stdout
+        .split(/\r?\n/u)
+        .map((line) => line.trim())
+        .filter(Boolean)
+      const present = remaining.length > 0
+      outcome.absenceChecks.push({
+        identifier: target.identifier,
+        kind: target.kind,
+        present,
+      })
+      if (present) {
+        outcome.errors.push({
+          message: `${target.kind} ${target.identifier} remains present after removal: ${remaining.join(', ')}`,
+          stage: 'verify_absent',
+        })
+      }
+    } catch (error) {
+      outcome.absenceChecks.push({
+        identifier: target.identifier,
+        kind: target.kind,
+        present: null,
+      })
+      outcome.errors.push({
+        message: `${target.kind} ${target.identifier}: ${errorMessage(error)}`,
+        stage: 'verify_absent',
+      })
+    }
+  }
+
+  outcome.absenceVerification = outcome.absenceChecks.some(({ present }) => present === null)
+    ? 'failed'
+    : outcome.absenceChecks.some(({ present }) => present === true)
+      ? 'container_still_present'
+      : 'verified_absent'
+
+  if (
+    outcome.removalCommandSucceeded === true &&
+    outcome.absenceVerification === 'verified_absent' &&
+    outcome.errors.length === 0
+  ) {
+    outcome.outcome = 'removed_and_verified_absent'
+  }
+  return outcome
 }
 
 function sqlLiteral(value: string): string {
@@ -1971,16 +2269,18 @@ end;
 $expected_rejection$;`
 }
 
-function exactBatchSnapshotSql(batchId: string): string {
+export function exactBatchSnapshotSql(batchId: string): string {
   const escapedBatchId = sqlLiteral(batchId)
   return `select pg_catalog.jsonb_build_object(
     'batch', (select to_jsonb(batch) from public.literature_gold_set_batches batch
       where batch.id = ${escapedBatchId}::uuid),
-    'items', coalesce((select jsonb_agg(to_jsonb(item) order by item.display_order, item.id)
+    'items', coalesce((select jsonb_agg(to_jsonb(item)
+        order by item.display_order nulls last, item.id)
       from public.literature_gold_set_items item
       where item.batch_id = ${escapedBatchId}::uuid), '[]'::jsonb),
-    'reviews', coalesce((select jsonb_agg(to_jsonb(review) order by item.display_order,
-        review.revision, review.id)
+    'reviews', coalesce((select jsonb_agg(to_jsonb(review)
+        order by item.display_order nulls last, item.id,
+          review.revision nulls last, review.id)
       from public.literature_gold_set_reviews review
       join public.literature_gold_set_items item on item.id = review.item_id
       where item.batch_id = ${escapedBatchId}::uuid), '[]'::jsonb),
@@ -1991,7 +2291,7 @@ function exactBatchSnapshotSql(batchId: string): string {
     'events', coalesce((select jsonb_agg(to_jsonb(event) order by event.created_at, event.id)
       from public.literature_gold_set_events event
       where event.batch_id = ${escapedBatchId}::uuid), '[]'::jsonb),
-    'operations', coalesce((select jsonb_agg(to_jsonb(operation) order by operation.created_at,
+    'operations', coalesce((select jsonb_agg(to_jsonb(operation) order by operation.started_at,
         operation.id)
       from public.literature_gold_review_operations operation
       where operation.batch_id = ${escapedBatchId}::uuid), '[]'::jsonb),
@@ -2056,6 +2356,10 @@ export async function executeFreshDisposableRuntime(
   input: ExecuteFreshDisposableInput,
   runtime: DisposableRuntime,
 ): Promise<ExactPackageRehearsalReport> {
+  if (resolve(input.outputDirectory) !== input.outputIdentity.outputDirectory) {
+    throw new Error('Disposable rehearsal output identity does not match its output directory.')
+  }
+  await assertExclusiveOutputDirectoryIdentity(input.outputIdentity)
   const package_ = verifyExactGeneratedPackage(
     input.files,
     input.identityPolicy ?? PRODUCTION_SOURCE_IDENTITIES,
@@ -2095,11 +2399,88 @@ export async function executeFreshDisposableRuntime(
   let hostPort = ''
   let runtimeContainerId = ''
   let containerCreationAttempted = false
+  let cleanupPromise: Promise<DisposableContainerCleanupOutcome> | undefined
+  let receivedSignal: 'SIGINT' | 'SIGTERM' | null = null
+  let signalCancellationError: unknown = null
+  let signalWorkflowPromise: Promise<DisposableContainerCleanupOutcome> | undefined
+  let notifySignal: (signal: 'SIGINT' | 'SIGTERM') => void = () => undefined
+  const signalNotification = new Promise<'SIGINT' | 'SIGTERM'>((resolvePromise) => {
+    notifySignal = resolvePromise
+  })
+  let primaryError: unknown = null
+  let completedExecution: DisposableCompletedExecutionForTest | undefined
 
+  const interruptionError = (cause?: unknown): Error => {
+    const signalError = new Error(
+      `Disposable exact-package rehearsal interrupted by ${receivedSignal ?? 'a process signal'}.`,
+    )
+    const errors = [signalError, signalCancellationError, cause].filter(
+      (error) => error !== null && error !== undefined,
+    )
+    return errors.length === 1
+      ? signalError
+      : new AggregateError(
+          errors,
+          `Disposable exact-package rehearsal interrupted by ${receivedSignal}; active command termination or execution also failed: ${cause ? errorMessage(cause) : '(none)'}.`,
+        )
+  }
+  const assertNotInterrupted = () => {
+    if (receivedSignal) throw interruptionError()
+  }
+  const runCommand = async (
+    commandName: string,
+    arguments_: string[],
+    options?: DisposableCommandOptions,
+  ) => {
+    assertNotInterrupted()
+    const result = await Promise.race([
+      runtime.command(commandName, arguments_, options),
+      signalNotification.then((signal) => {
+        throw new Error(`Active command wait interrupted by ${signal}.`)
+      }),
+    ])
+    assertNotInterrupted()
+    return result
+  }
   const dockerArguments = (arguments_: string[]) =>
+    runCommand('docker', arguments_, {
+      env: dockerEndpoint ? { DOCKER_HOST: dockerEndpoint } : {},
+    })
+  const cleanupDockerArguments = (arguments_: string[]) =>
     runtime.command('docker', arguments_, {
       env: dockerEndpoint ? { DOCKER_HOST: dockerEndpoint } : {},
     })
+  const cleanupOnce = () => {
+    cleanupPromise ??= cleanupDisposableContainer({
+      armed: containerCreationAttempted,
+      containerId: runtimeContainerId,
+      containerName: container,
+      dockerCommand: cleanupDockerArguments,
+    })
+    return cleanupPromise
+  }
+  const beginSignalWorkflow = () => {
+    signalWorkflowPromise ??= (async () => {
+      try {
+        await runtime.cancelActiveCommand?.(receivedSignal ?? 'SIGTERM')
+      } catch (error) {
+        signalCancellationError = error
+      }
+      return cleanupOnce()
+    })()
+    // The main control path awaits this same memoized promise. Attaching a
+    // handler immediately also prevents a transient unhandled rejection if a
+    // cleanup implementation unexpectedly rejects before the command race wins.
+    void signalWorkflowPromise.catch(() => undefined)
+    return signalWorkflowPromise
+  }
+  let unregisterSignalHandler =
+    runtime.registerSignalHandler?.((signal) => {
+      if (receivedSignal) return
+      receivedSignal = signal
+      beginSignalWorkflow()
+      notifySignal(signal)
+    }) ?? (() => undefined)
   const psql = async (sql: string, json = false) => {
     const arguments_ = [
       'exec',
@@ -2119,7 +2500,7 @@ export async function executeFreshDisposableRuntime(
       database,
     ]
     if (json) arguments_.push('--tuples-only', '--no-align', '--quiet')
-    return runtime.command('docker', arguments_, {
+    return runCommand('docker', arguments_, {
       env: { DOCKER_HOST: dockerEndpoint },
       stdin: sql,
     })
@@ -2136,7 +2517,7 @@ export async function executeFreshDisposableRuntime(
     }
   }
 
-  try {
+  executionAttempt: try {
     const runtimeEnvironment = runtime.environment ?? {}
     const dockerHostOverride = runtimeEnvironment.DOCKER_HOST?.trim() ?? ''
     const dockerContextOverride = runtimeEnvironment.DOCKER_CONTEXT?.trim() ?? ''
@@ -2149,12 +2530,12 @@ export async function executeFreshDisposableRuntime(
     } else {
       const context =
         dockerContextOverride ||
-        (await runtime.command('docker', ['context', 'show'], { env: {} })).stdout.trim()
+        (await runCommand('docker', ['context', 'show'], { env: {} })).stdout.trim()
       if (!DOCKER_CONTEXT_PATTERN.test(context)) {
         throw new Error('Docker context guard rejected an invalid context name.')
       }
       const inspectedEndpoint = (
-        await runtime.command(
+        await runCommand(
           'docker',
           ['context', 'inspect', context, '--format', '{{json .Endpoints.docker.Host}}'],
           { env: {} },
@@ -2229,6 +2610,14 @@ export async function executeFreshDisposableRuntime(
         'Docker container identity, run nonce, or assigned loopback port is not owned by this rehearsal.',
       )
     }
+    await runtime.onContainerOwnedForTest?.()
+    const injectedCompletedExecution = await (runtime as DisposableRuntimeWithTestCompletion)[
+      COMPLETED_EXECUTION_FOR_TEST
+    ]?.()
+    if (injectedCompletedExecution) {
+      completedExecution = injectedCompletedExecution
+      break executionAttempt
+    }
 
     let ready = false
     let lastReadyError = ''
@@ -2240,6 +2629,7 @@ export async function executeFreshDisposableRuntime(
           break
         }
       } catch (error) {
+        if (receivedSignal) throw interruptionError(error)
         lastReadyError = error instanceof Error ? error.message : String(error)
       }
       await new Promise<void>((resolvePromise) => setTimeout(resolvePromise, 250))
@@ -2645,7 +3035,7 @@ rollback;`,
           from public.literature_gold_set_reviews review
           join public.literature_gold_set_items item on item.id = review.item_id
           where item.batch_id = ${escapedBatchId}::uuid and item.dataset_split = 'development'
-          order by review.item_id, review.revision desc
+          order by review.item_id, review.revision desc, review.id
         ) select pg_catalog.jsonb_build_object(
           'effective', public.literature_gold_effective_state_hash_v1(
             ${escapedBatchId}::uuid, 'development'
@@ -2670,10 +3060,14 @@ rollback;`,
 
     const securityIntrospection = validateSecurityIntrospection(
       await queryJson(SECURITY_INTROSPECTION_SQL),
+      {
+        expectedSchemaSecurityIdentitySha256:
+          package_.descriptor.audit.schemaSecurityIdentitySha256,
+      },
     )
     const rpcContract = validateExactRpcContractMetadata(await queryJson(EXACT_RPC_METADATA_SQL))
     const databaseUrl = `postgresql://${databaseUser}:${password}@127.0.0.1:${hostPort}/${database}`
-    const lintResult = await runtime.command(
+    const lintResult = await runCommand(
       'npx',
       [
         '--no-install',
@@ -2798,59 +3192,153 @@ rollback;`,
       rpcContract,
       securityIntrospection,
     })
-    const { canonicalArtifacts, manifestBytes } = deterministicArtifacts
-    for (const [name, bytes] of canonicalArtifacts) {
-      await exclusiveWrite(resolve(input.outputDirectory, name), bytes)
+    completedExecution = {
+      canonicalArtifacts: deterministicArtifacts.canonicalArtifacts,
+      manifestBytes: deterministicArtifacts.manifestBytes,
+      rawReceipt: {
+        compensationReceipt,
+        disposableRuntime: {
+          automaticallyAssignedPort: hostPort,
+          containerId: runtimeContainerId,
+          containerName: container,
+          dockerEndpoint,
+          host: '127.0.0.1',
+          image: POSTGRES_IMAGE,
+          runNonceSha256: sha256Bytes(runNonce),
+        },
+        exactReplayImportReceipt: replayedImport,
+        migrationLedger,
+        outputDirectory: input.outputDirectory,
+        packageManifestSha256: package_.manifestSha256,
+        preMigrationBackupManifestSha256: input.preMigrationBackup.manifestSha256,
+        rawContractScenarioEvidence: contractScenarios,
+        rawDatabaseFingerprintSha256: databaseFingerprintSha256,
+        rawExactPackageEvidence: evidence,
+        rawLint: {
+          diagnostics: lintResult.stderr.trim(),
+          result: lint,
+        },
+        rawRpcContract: rpcContract,
+        rawSecurityIntrospection: securityIntrospection,
+        reconciledImportReceipt: reconciledImport,
+        recoveryAuthorization,
+      },
+      report,
     }
-    await exclusiveWrite(resolve(input.outputDirectory, 'canonical-manifest.sha256'), manifestBytes)
-    await exclusiveWrite(
-      resolve(input.outputDirectory, 'execution-receipt.json'),
-      Buffer.from(
-        `${JSON.stringify(
-          {
-            completedAt: runtime.now(),
-            disposableRuntime: {
-              automaticallyAssignedPort: hostPort,
-              containerId: runtimeContainerId,
-              containerName: container,
-              dockerEndpoint,
-              host: '127.0.0.1',
-              image: POSTGRES_IMAGE,
-              runNonceSha256: sha256Bytes(runNonce),
-            },
-            preMigrationBackupManifestSha256: input.preMigrationBackup.manifestSha256,
-            rawDatabaseFingerprintSha256: databaseFingerprintSha256,
-            rawContractScenarioEvidence: contractScenarios,
-            rawExactPackageEvidence: evidence,
-            rawLint: {
-              diagnostics: lintResult.stderr.trim(),
-              result: lint,
-            },
-            rawSecurityIntrospection: securityIntrospection,
-            rawRpcContract: rpcContract,
-            recoveryAuthorization,
-            reconciledImportReceipt: reconciledImport,
-            exactReplayImportReceipt: replayedImport,
-            compensationReceipt,
-            migrationLedger,
-            outputDirectory: input.outputDirectory,
-            packageManifestSha256: package_.manifestSha256,
-            passed: true,
-            schemaVersion: 'gold-import-compensation-exact-package-execution-receipt/v1',
-            startedAt,
-          },
-          null,
-          2,
-        )}\n`,
-        'utf8',
-      ),
-    )
-    return report
-  } finally {
-    if (containerCreationAttempted) {
-      await dockerArguments(['rm', '--force', container]).catch(() => undefined)
-    }
+  } catch (error) {
+    primaryError = error
   }
+
+  const cleanup = await (signalWorkflowPromise ?? cleanupOnce())
+  if (receivedSignal) primaryError = interruptionError(primaryError)
+  try {
+    unregisterSignalHandler()
+  } catch (error) {
+    primaryError =
+      primaryError === null
+        ? error
+        : new AggregateError(
+            [primaryError, error],
+            `Exact-package rehearsal could not unregister its graceful-signal handlers: ${errorMessage(error)}.`,
+          )
+  } finally {
+    unregisterSignalHandler = () => undefined
+  }
+  const cleanupError = cleanupOutcomeError(cleanup)
+  if (primaryError === null && completedExecution === undefined) {
+    primaryError = new Error('Disposable rehearsal ended without a result or a primary error.')
+  }
+  const executionError = combinedExecutionError(primaryError, cleanupError)
+  const completedAt = runtime.now()
+  const receiptBase = {
+    cleanup,
+    completedAt,
+    disposableRuntime: completedExecution?.rawReceipt.disposableRuntime ?? {
+      containerId: runtimeContainerId || null,
+      containerName: container,
+      dockerEndpoint: dockerEndpoint || null,
+      image: POSTGRES_IMAGE,
+      runNonceSha256: sha256Bytes(runNonce),
+    },
+    outputDirectory: input.outputDirectory,
+    packageManifestSha256: package_.manifestSha256,
+    preMigrationBackupManifestSha256: input.preMigrationBackup.manifestSha256,
+    signal: {
+      activeCommandCancellationError:
+        signalCancellationError === null ? null : errorMessage(signalCancellationError),
+      received: receivedSignal,
+    },
+    schemaVersion: 'gold-import-compensation-exact-package-execution-receipt/v1',
+    startedAt,
+  }
+
+  if (executionError) {
+    const failureReceipt = {
+      ...receiptBase,
+      canonicalArtifacts: {
+        approved: false,
+        invalidatedByCleanupFailure: cleanupError !== null,
+        published: false,
+      },
+      cleanupError: cleanupError?.message ?? null,
+      executionApproval: 'not_approved',
+      passed: false,
+      primaryError: primaryError === null ? null : errorMessage(primaryError),
+      result: 'failed',
+    }
+    let receiptWriteError: unknown = null
+    try {
+      writeExclusiveOutputFiles(input.outputIdentity, [
+        {
+          bytes: Buffer.from(`${JSON.stringify(failureReceipt, null, 2)}\n`, 'utf8'),
+          name: 'execution-receipt.json',
+        },
+      ])
+      await assertExclusiveOutputDirectoryIdentity(input.outputIdentity)
+    } catch (error) {
+      receiptWriteError = error
+    }
+    if (receiptWriteError !== null) {
+      throw new AggregateError(
+        [executionError, receiptWriteError],
+        `Exact-package rehearsal failed and its failure receipt could not be written; execution error: ${executionError.message}; receipt error: ${errorMessage(receiptWriteError)}`,
+      )
+    }
+    throw executionError
+  }
+
+  const approvedExecution = completedExecution as NonNullable<typeof completedExecution>
+  const approvedReceiptBytes = Buffer.from(
+    `${JSON.stringify(
+      {
+        ...receiptBase,
+        ...approvedExecution.rawReceipt,
+        canonicalArtifacts: {
+          approved: true,
+          invalidatedByCleanupFailure: false,
+          published: true,
+        },
+        cleanup,
+        cleanupError: null,
+        completedAt,
+        executionApproval: 'approved',
+        passed: true,
+        primaryError: null,
+        result: 'passed',
+        startedAt,
+      },
+      null,
+      2,
+    )}\n`,
+    'utf8',
+  )
+  writeExclusiveOutputFiles(input.outputIdentity, [
+    ...[...approvedExecution.canonicalArtifacts].map(([name, bytes]) => ({ bytes, name })),
+    { bytes: approvedExecution.manifestBytes, name: 'canonical-manifest.sha256' },
+    { bytes: approvedReceiptBytes, name: 'execution-receipt.json' },
+  ])
+  await assertExclusiveOutputDirectoryIdentity(input.outputIdentity)
+  return approvedExecution.report
 }
 
 export async function executeExactPackageAgainstFreshDisposableDatabase(
@@ -2878,13 +3366,6 @@ async function assertNoSymlinkAncestors(path: string): Promise<void> {
   }
 }
 
-function assertConfined(outputDirectory: string, outputRoot: string): void {
-  const child = relative(resolve(outputRoot), resolve(outputDirectory))
-  if (!child || child.startsWith('..') || isAbsolute(child)) {
-    throw new Error('Rehearsal output must be a new child of the approved output root.')
-  }
-}
-
 export async function readExactPackageDirectory(
   packageDirectory: string,
 ): Promise<Map<string, Buffer>> {
@@ -2900,28 +3381,14 @@ export async function readExactPackageDirectory(
   return files
 }
 
-async function exclusiveWrite(path: string, bytes: Buffer): Promise<void> {
-  let handle: FileHandle | undefined
-  try {
-    handle = await open(path, 'wx', 0o600)
-    await handle.writeFile(bytes)
-    await handle.sync()
-  } finally {
-    await handle?.close()
-  }
-}
-
 export async function writeRehearsalReportExclusive(input: {
+  beforeAnchoredWriteForTest?: (outputDirectory: string) => Promise<void> | void
   outputDirectory: string
   outputRoot: string
   report: ExactPackageRehearsalReport
 }): Promise<void> {
-  assertConfined(input.outputDirectory, input.outputRoot)
-  await assertNoSymlinkAncestors(input.outputRoot)
-  await assertNoSymlinkAncestors(input.outputDirectory)
-  const root = await realpath(input.outputRoot)
-  assertConfined(input.outputDirectory, root)
-  await mkdir(input.outputDirectory, { recursive: false, mode: 0o700 })
+  const output = await createExclusiveOutputDirectory(input)
+  await input.beforeAnchoredWriteForTest?.(output.outputDirectory)
   const reportBytes = Buffer.from(
     `${JSON.stringify(JSON.parse(canonicalJson(input.report)), null, 2)}\n`,
     'utf8',
@@ -2930,11 +3397,11 @@ export async function writeRehearsalReportExclusive(input: {
     `${sha256Bytes(reportBytes)}  exact-package-rehearsal-report.json\n`,
     'utf8',
   )
-  await exclusiveWrite(
-    resolve(input.outputDirectory, 'exact-package-rehearsal-report.json'),
-    reportBytes,
-  )
-  await exclusiveWrite(resolve(input.outputDirectory, 'canonical-manifest.sha256'), manifestBytes)
+  writeExclusiveOutputFiles(output, [
+    { bytes: reportBytes, name: 'exact-package-rehearsal-report.json' },
+    { bytes: manifestBytes, name: 'canonical-manifest.sha256' },
+  ])
+  await assertExclusiveOutputDirectoryIdentity(output)
 }
 
 function requiredArgument(arguments_: ReturnType<typeof parseCliArguments>, name: string): string {
@@ -2951,8 +3418,12 @@ loopback port. It applies and records the eight historical migrations, restores
 the checksum-bound development backup, applies and records the exact contract
 migration, runs contract scenarios and the exact import/reconcile/replay/
 compensation sequence, runs lint/security checks, writes evidence, and destroys
-the container. Caller-authored SQL, database URLs, attestations, and evidence
-are not accepted.
+the container. Canonical success evidence is published only after cleanup and an
+independent exact-name and, when known, container-ID absence check both succeed;
+cleanup failure exits nonzero. Graceful SIGINT/SIGTERM terminates the active
+child, performs the same exactly-once cleanup, writes a non-approved receipt,
+and exits nonzero. SIGKILL and host/runtime death require manual residue checks.
+Caller-authored SQL, database URLs, attestations, and evidence are not accepted.
 
 Usage:
   npm run literature:rehearse-exact-gold-import-compensation-package -- \\
@@ -2985,13 +3456,8 @@ const PRODUCTION_CLI_DEPENDENCIES: ExactPackageRehearsalCliDependencies = {
 async function createEmptyRehearsalOutputDirectory(input: {
   outputDirectory: string
   outputRoot: string
-}): Promise<void> {
-  assertConfined(input.outputDirectory, input.outputRoot)
-  await assertNoSymlinkAncestors(input.outputRoot)
-  await assertNoSymlinkAncestors(input.outputDirectory)
-  const root = await realpath(input.outputRoot)
-  assertConfined(input.outputDirectory, root)
-  await mkdir(input.outputDirectory, { recursive: false, mode: 0o700 })
+}): Promise<ExclusiveOutputDirectoryIdentity> {
+  return createExclusiveOutputDirectory(input)
 }
 
 export async function runExactPackageRehearsalCli(
@@ -3018,6 +3484,12 @@ export async function runExactPackageRehearsalCli(
     console.log(HELP)
     return { outputDirectory: '', packageManifestSha256: '' }
   }
+  const rawOutputRoot = requiredArgument(arguments_, 'output-root')
+  const rawOutputDirectory = requiredArgument(arguments_, 'output')
+  assertSafeOutputPathArgument(rawOutputRoot, '--output-root')
+  assertSafeOutputPathArgument(rawOutputDirectory, '--output')
+  const outputRoot = resolve(rawOutputRoot)
+  const outputDirectory = resolve(rawOutputDirectory)
   const packageDirectory = resolve(requiredArgument(arguments_, 'package'))
   const files = await readExactPackageDirectory(packageDirectory)
   const package_ = verifyExactGeneratedPackage(
@@ -3051,12 +3523,11 @@ export async function runExactPackageRehearsalCli(
     package: package_,
     trustedManifestSha256: trustedBackupManifestSha256,
   })
-  const outputRoot = resolve(requiredArgument(arguments_, 'output-root'))
-  const outputDirectory = resolve(requiredArgument(arguments_, 'output'))
-  await createEmptyRehearsalOutputDirectory({ outputDirectory, outputRoot })
+  const outputIdentity = await createEmptyRehearsalOutputDirectory({ outputDirectory, outputRoot })
   const report = await dependencies.executeFreshDisposableDatabase({
     files,
     outputDirectory,
+    outputIdentity,
     preMigrationBackup,
     sources,
     identityPolicy: dependencies.identityPolicy,

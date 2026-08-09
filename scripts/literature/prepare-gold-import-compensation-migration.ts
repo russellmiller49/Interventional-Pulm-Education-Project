@@ -24,7 +24,7 @@ Prepare a checksum-bound, development-only backup of the real local gold-set dat
 
 Usage:
   npm run literature:prepare-gold-import-compensation-migration -- \\
-    --output <fresh-directory> [--backup-root <existing-directory>] \\
+    --output <fresh-directory> --backup-root <existing-directory> \\
     [--batch-name gold-set-v1] [--dry-run]
 
 The command is always database-read-only and defaults to dry-run semantics. It must run from a
@@ -65,6 +65,7 @@ export async function runPrepareGoldImportCompensationMigration(
   const outputArgument = stringArgument(arguments_, 'output')
   if (!outputArgument) throw new Error('--output <fresh-directory> is required.')
   const backupRoot = stringArgument(arguments_, 'backup-root')
+  if (!backupRoot) throw new Error('--backup-root <existing-directory> is required.')
   const batchName = stringArgument(arguments_, 'batch-name', DEFAULT_BATCH_NAME)
   const container = stringArgument(
     arguments_,
@@ -99,6 +100,7 @@ export async function runPrepareGoldImportCompensationMigration(
   await writeCanonicalPackage({
     artifacts: backup.artifacts,
     outputDirectory,
+    outputRoot: resolve(cwd, backupRoot),
     executionReceipt: buildBackupExecutionReceipt({
       canonicalReceipt: backup.canonicalReceipt,
       container,

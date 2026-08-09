@@ -7,7 +7,11 @@ import {
   REQUIRED_EVENT_TYPES,
   REQUIRED_JOURNAL_POLICIES,
   REQUIRED_RLS_TABLES,
+  SCHEMA_SECURITY_COLUMN_PRIVILEGES,
+  SCHEMA_SECURITY_COLUMN_ROLES,
+  SCHEMA_SECURITY_FUNCTION_NAMES,
   REQUIRED_TRIGGERS,
+  schemaSecurityDefinitionIdentitySha256,
 } from './gold-import-compensation-rehearsal-evidence'
 import {
   assertAggregateOnlyTestState,
@@ -16,6 +20,7 @@ import {
   assertLocalDatabaseContainer,
   assertReadOnlySnapshotSql,
   assertRepositoryGuard,
+  assertSerializedAggregateOrdering,
   auditPostMigration,
   buildAuditArtifacts,
   buildBackupExecutionReceipt,
@@ -37,6 +42,7 @@ import {
   resolveLocalDockerTarget,
   resolveEffectiveReview,
   sanitizeOperationalEnvironment,
+  SERIALIZED_AGGREGATE_ORDERING_CONTRACTS,
   sha256,
   sha256ContractCanonical,
   type CommandRunner,
@@ -44,6 +50,7 @@ import {
   writeCanonicalPackage,
 } from './gold-import-compensation-migration-operations'
 import { runAuditGoldImportCompensationMigration } from './audit-gold-import-compensation-migration'
+import { runPrepareGoldImportCompensationMigration } from './prepare-gold-import-compensation-migration'
 
 const IDS = {
   batch: '00000000-0000-4000-8000-000000000001',
@@ -246,10 +253,12 @@ function preMigrationSnapshot(): RawDatabaseSnapshot {
         table_name,
         relation_kind: 'r',
         rls_enabled: true,
+        force_rls: false,
         owner: 'supabase_admin',
         acl: null,
       })),
       columns: [],
+      columnPrivileges: [],
       functions: [],
       constraints: [],
       indexes: [],
@@ -257,6 +266,7 @@ function preMigrationSnapshot(): RawDatabaseSnapshot {
       policies: [],
       tablePrivileges: [],
       schemaCreatePrivileges: [],
+      columnAclEntries: [],
       supportedEventTypes: REQUIRED_EVENT_TYPES.filter(
         (event) =>
           !event.startsWith('import') &&
@@ -307,9 +317,36 @@ function postMigrationSchema() {
     table_name,
     relation_kind: 'r',
     rls_enabled: true,
+    force_rls: false,
     owner: 'supabase_admin',
     acl: null,
   }))
+  const columns = [
+    'revision_kind',
+    'lifecycle_state',
+    'operation_action_id',
+    'compensates_review_id',
+    'effective_source_review_id',
+  ].map((column_name, ordinal_position) => ({
+    table_name: 'literature_gold_set_reviews',
+    column_name,
+    ordinal_position: ordinal_position + 1,
+    data_type: column_name.endsWith('_id') ? 'uuid' : 'text',
+    udt_name: column_name.endsWith('_id') ? 'uuid' : 'text',
+    is_nullable: 'YES',
+    column_default: null,
+  }))
+  const columnPrivileges = columns.flatMap(({ table_name, column_name }) =>
+    SCHEMA_SECURITY_COLUMN_ROLES.flatMap((role_name) =>
+      SCHEMA_SECURITY_COLUMN_PRIVILEGES.map((privilege_name) => ({
+        table_name,
+        column_name,
+        role_name,
+        privilege_name,
+        granted: false,
+      })),
+    ),
+  )
   const tablePrivileges = REQUIRED_RLS_TABLES.flatMap((table_name) =>
     roles.flatMap((role_name) =>
       privileges.map((privilege_name) => {
@@ -350,17 +387,8 @@ function postMigrationSchema() {
   })
   return {
     tables,
-    columns: [
-      'revision_kind',
-      'lifecycle_state',
-      'operation_action_id',
-      'compensates_review_id',
-      'effective_source_review_id',
-    ].map((column_name, ordinal_position) => ({
-      table_name: 'literature_gold_set_reviews',
-      column_name,
-      ordinal_position,
-    })),
+    columns,
+    columnPrivileges,
     functions: [
       transition(
         'apply_literature_gold_import_v1',
@@ -400,6 +428,7 @@ function postMigrationSchema() {
     indexes: EXPECTED_PROTECTED_NON_CONSTRAINT_INDEXES.map(({ name, tableName, unique }) => ({
       name,
       table_name: tableName,
+      owner: 'supabase_admin',
       is_unique: unique,
       is_valid: true,
       constraint_backed: false,
@@ -427,6 +456,7 @@ function postMigrationSchema() {
         ? 'literature_gold_review_operation_actions'
         : 'literature_gold_review_operations',
       command: 'ALL',
+      permissive: 'PERMISSIVE',
       roles: ['service_role'],
       using_expression: name.includes('actions')
         ? "dataset_split = 'development' AND literature_gold_review_operations.id IS NOT NULL"
@@ -444,6 +474,10 @@ function postMigrationSchema() {
         granted: false,
       })),
     ),
+    tableAclEntries: [],
+    columnAclEntries: [],
+    functionAclEntries: [],
+    schemaAclEntries: [],
     supportedEventTypes: [...REQUIRED_EVENT_TYPES],
   }
 }
@@ -528,6 +562,9 @@ function auditMigratedSnapshot(snapshot: RawDatabaseSnapshot) {
   return auditPostMigration({
     contractStateHashes,
     contractStateHashesBefore: contractStateHashes,
+    testOnlyExpectedSchemaSecurityIdentitySha256: schemaSecurityDefinitionIdentitySha256({
+      catalog: postMigrationSnapshot().schema,
+    }),
     lint: validLint(),
     preMigration: input,
     repositoryCommitSha: 'a'.repeat(40),
@@ -550,6 +587,7 @@ async function writeFixtureBackup() {
       repositoryRoot: '/repo',
     }),
     outputDirectory,
+    outputRoot: parent,
   })
   return { backup, baseline, outputDirectory }
 }
@@ -567,6 +605,28 @@ describe('gold import-compensation migration operations', () => {
         '/tmp/audit',
       ]),
     ).rejects.toThrow(/pre-migration-backup-manifest-sha256/iu)
+  })
+
+  it('requires an explicit approved backup root for both read-only operational CLIs', async () => {
+    await expect(runPrepareGoldImportCompensationMigration(['--help'])).resolves.toMatchObject({
+      help: expect.stringContaining('--backup-root <existing-directory>'),
+    })
+    await expect(runAuditGoldImportCompensationMigration(['--help'])).resolves.toMatchObject({
+      help: expect.stringContaining('--backup-root <existing-directory>'),
+    })
+    await expect(
+      runPrepareGoldImportCompensationMigration(['--output', '/tmp/backup']),
+    ).rejects.toThrow(/--backup-root/iu)
+    await expect(
+      runAuditGoldImportCompensationMigration([
+        '--pre-migration-backup',
+        '/tmp/backup',
+        '--pre-migration-backup-manifest-sha256',
+        'a'.repeat(64),
+        '--output',
+        '/tmp/audit',
+      ]),
+    ).rejects.toThrow(/--backup-root/iu)
   })
 
   it.each([
@@ -667,32 +727,203 @@ describe('gold import-compensation migration operations', () => {
     expect(hashesSql).toContain('literature_gold_physical_state_hash_v1')
   })
 
+  it('requires aggregate-level ordering for every serialized SQL aggregate contract', () => {
+    const sql = buildReadOnlySnapshotSql('gold-set-v1')
+    expect(() => assertSerializedAggregateOrdering(sql)).not.toThrow()
+    expect(Object.keys(SERIALIZED_AGGREGATE_ORDERING_CONTRACTS)).toEqual(
+      expect.arrayContaining([
+        'developmentItems',
+        'developmentArticles',
+        'developmentDrafts',
+        'developmentEvents',
+        'itemReviews',
+        'itemEvents',
+        'schemaFunctions',
+        'schemaPrivileges',
+      ]),
+    )
+    for (const aggregate of [
+      'json_agg',
+      'jsonb_agg',
+      'array_agg',
+      'string_agg',
+      'json_object_agg',
+      'jsonb_object_agg',
+    ]) {
+      expect(() =>
+        assertSerializedAggregateOrdering(
+          `select ${aggregate}(value) from (select value from source order by id) ordered_source`,
+        ),
+      ).toThrow(/aggregate-level ORDER BY/iu)
+    }
+    expect(() =>
+      assertSerializedAggregateOrdering('select jsonb_agg(value order by id asc) from source'),
+    ).not.toThrow()
+    expect(() =>
+      assertSerializedAggregateOrdering(
+        'create function f() returns jsonb language sql as $$ select jsonb_agg(value) from source $$',
+      ),
+    ).toThrow(/aggregate-level ORDER BY/iu)
+  })
+
+  it('keeps the contract migration and disposable verification SQL aggregate-ordered', async () => {
+    for (const path of [
+      'supabase/migrations/20260808035633_add_literature_gold_import_compensation_contract.sql',
+      'supabase/verification/20260808035633_verify_literature_gold_import_compensation_contract.sql',
+    ]) {
+      const sql = await readFile(join(process.cwd(), path), 'utf8')
+      expect(() => assertSerializedAggregateOrdering(sql)).not.toThrow()
+    }
+  })
+
+  it('pins the exact migration-touched function and function-ACL catalog scope', () => {
+    const sql = buildReadOnlySnapshotSql('gold-set-v1')
+    expect(sql).not.toMatch(/proc\.proname\s+like/iu)
+    expect(SCHEMA_SECURITY_FUNCTION_NAMES).toHaveLength(24)
+    for (const functionName of SCHEMA_SECURITY_FUNCTION_NAMES) {
+      expect(sql).toContain(`('${functionName}')`)
+    }
+    expect(sql).toContain(
+      'join schema_security_functions as requested on requested.name = proc.proname',
+    )
+  })
+
+  it('keeps constraint-trigger catalog rows exclusively in the trigger survey', () => {
+    const sql = buildReadOnlySnapshotSql('gold-set-v1')
+    expect(sql).toContain("where constraint_record.contype <> 't'")
+    expect(sql).toContain('from pg_catalog.pg_trigger as trigger_record')
+  })
+
+  it('uses a NULL-safe one-dimensional column ACL input for every aclexplode survey', () => {
+    const sql = buildReadOnlySnapshotSql('gold-set-v1')
+    expect(sql).not.toMatch(/aclexplode\s*\(\s*coalesce\s*\(\s*attribute\.attacl\s*,\s*array\[\]/iu)
+    expect(
+      sql.match(
+        /case when cardinality\(attribute\.attacl\) > 0 then attribute\.attacl\s+else null::pg_catalog\.aclitem\[\] end/giu,
+      ),
+    ).toHaveLength(2)
+  })
+
+  it('canonicalizes randomized source-row order before hashing backup and planning artifacts', () => {
+    const ordered = preMigrationSnapshot()
+    const secondReview = {
+      ...baseReview(),
+      id: IDS.restore,
+      revision: 2,
+      supersedes_review_id: IDS.review,
+      created_at: '2026-08-01T00:01:00.000Z',
+      completed_at: '2026-08-01T00:01:00.000Z',
+    }
+    const developmentRow = ordered.developmentItems[0] as {
+      item: Record<string, unknown>
+      reviews: Array<Record<string, unknown>>
+    }
+    developmentRow.item.current_review_id = IDS.restore
+    developmentRow.reviews.push(secondReview)
+    const seed = ordered.developmentSeed
+    ;(seed.items as Array<Record<string, unknown>>)[0].current_review_id = IDS.restore
+    ;(seed.reviews as Array<Record<string, unknown>>).push(secondReview)
+
+    const baseline = derivePreMigrationBaselineIdentity(ordered)
+    const build = (snapshot: RawDatabaseSnapshot) =>
+      buildPreMigrationBackup({
+        baseline,
+        repository: { head: 'a'.repeat(40), originMain: 'a'.repeat(40) },
+        snapshot,
+      })
+    const first = build(ordered)
+    const shuffle = (values: unknown[], seed: number) => {
+      let state = seed >>> 0
+      for (let index = values.length - 1; index > 0; index -= 1) {
+        state = (state * 1_664_525 + 1_013_904_223) >>> 0
+        const target = state % (index + 1)
+        ;[values[index], values[target]] = [values[target], values[index]]
+      }
+    }
+    for (const seedValue of [1, 7, 19, 41, 73, 101, 211, 997]) {
+      const shuffled = JSON.parse(JSON.stringify(ordered)) as RawDatabaseSnapshot
+      shuffle(shuffled.developmentItems, seedValue)
+      for (const row of shuffled.developmentItems as Array<Record<string, unknown>>) {
+        shuffle(row.reviews as unknown[], seedValue + 1)
+        shuffle(row.events as unknown[], seedValue + 2)
+      }
+      for (const [offset, key] of [
+        'literatureArticles',
+        'batches',
+        'items',
+        'reviews',
+        'drafts',
+        'events',
+      ].entries()) {
+        shuffle(shuffled.developmentSeed[key] as unknown[], seedValue + offset + 3)
+      }
+      shuffle(shuffled.migrationLedger, seedValue + 11)
+      for (const [offset, value] of Object.values(shuffled.schema).entries()) {
+        if (Array.isArray(value)) shuffle(value, seedValue + offset + 13)
+      }
+
+      const candidate = build(shuffled)
+      expect(candidate.artifacts.manifest).toBe(first.artifacts.manifest)
+      expect(candidate.artifacts.manifestSha256).toBe(first.artifacts.manifestSha256)
+      expect([...candidate.artifacts.files.entries()]).toEqual([...first.artifacts.files.entries()])
+      expect(canonicalJson(buildDevelopmentPlanningState(shuffled))).toBe(
+        canonicalJson(buildDevelopmentPlanningState(ordered)),
+      )
+      expect(developmentPlanningStateSha256(shuffled)).toBe(developmentPlanningStateSha256(ordered))
+    }
+  })
+
   it('rejects output collisions, traversal outside approved roots, and symlink traversal', async () => {
     const root = await mkdtemp(join(tmpdir(), 'gold-migration-output-'))
     const localData = join(root, 'local-data')
     await mkdir(localData)
     const collision = join(localData, 'collision')
     await mkdir(collision)
-    await expect(assertExclusiveOutputPath({ cwd: root, output: collision })).rejects.toThrow(
-      /collision/iu,
-    )
     await expect(
-      assertExclusiveOutputPath({ cwd: root, output: join(root, 'elsewhere', 'output') }),
+      assertExclusiveOutputPath({ backupRoot: localData, cwd: root, output: collision }),
+    ).rejects.toThrow(/collision/iu)
+    await expect(
+      assertExclusiveOutputPath({
+        backupRoot: localData,
+        cwd: root,
+        output: join(root, 'elsewhere', 'output'),
+      }),
     ).rejects.toThrow(/outside/iu)
     const outside = join(root, 'outside')
     await mkdir(outside)
     const link = join(localData, 'link')
     await symlink(outside, link)
     await expect(
-      assertExclusiveOutputPath({ cwd: root, output: join(link, 'output') }),
+      assertExclusiveOutputPath({ backupRoot: localData, cwd: root, output: join(link, 'output') }),
     ).rejects.toThrow(/outside|symlink/iu)
     const inside = join(localData, 'inside')
     await mkdir(inside)
     const insideLink = join(localData, 'inside-link')
     await symlink(inside, insideLink)
     await expect(
-      assertExclusiveOutputPath({ cwd: root, output: join(insideLink, 'output') }),
+      assertExclusiveOutputPath({
+        backupRoot: localData,
+        cwd: root,
+        output: join(insideLink, 'output'),
+      }),
     ).rejects.toThrow(/symlink/iu)
+
+    const separatelyApprovedRoot = join(root, 'approved')
+    await mkdir(separatelyApprovedRoot)
+    await expect(
+      assertExclusiveOutputPath({
+        backupRoot: separatelyApprovedRoot,
+        cwd: root,
+        output: join(localData, 'must-not-fall-back'),
+      }),
+    ).rejects.toThrow(/outside the explicit backup root/iu)
+    await expect(
+      assertExclusiveOutputPath({
+        backupRoot: separatelyApprovedRoot,
+        cwd: root,
+        output: `${separatelyApprovedRoot}/child/../traversal`,
+      }),
+    ).rejects.toThrow(/parent-directory traversal/iu)
   })
 
   it('creates deterministic canonical backup artifacts scoped to development only', () => {
@@ -793,7 +1024,7 @@ describe('gold import-compensation migration operations', () => {
         repository: { head: 'a'.repeat(40), originMain: 'a'.repeat(40) },
         snapshot: schemaDrift,
       }),
-    ).toThrow(/schema.*baseline drift/iu)
+    ).toThrow(/(?:schema.*baseline drift|pre-migration security drift)/iu)
 
     const ledgerDrift = preMigrationSnapshot()
     ledgerDrift.migrationLedger.push({ version: '20260807000000', name: 'unexpected_migration' })
@@ -805,6 +1036,76 @@ describe('gold import-compensation migration operations', () => {
       }),
     ).toThrow(/ledger.*baseline drift/iu)
   })
+
+  it('preserves the pinned legacy inventory while refusing query-only pre-security drift', () => {
+    const snapshot = preMigrationSnapshot()
+    const baseline = derivePreMigrationBaselineIdentity(snapshot)
+    const legacyShape = JSON.parse(JSON.stringify(snapshot)) as RawDatabaseSnapshot
+    const legacySchema = legacyShape.schema as Record<string, unknown>
+    delete legacySchema.columnAclEntries
+    delete legacySchema.columnPrivileges
+    for (const table of legacySchema.tables as Array<Record<string, unknown>>) {
+      delete table.force_rls
+    }
+    expect(derivePreMigrationBaselineIdentity(legacyShape)).toEqual(baseline)
+    expect(() =>
+      buildPreMigrationBackup({
+        baseline,
+        repository: { head: 'a'.repeat(40), originMain: 'a'.repeat(40) },
+        snapshot,
+      }),
+    ).not.toThrow()
+    expect(() =>
+      buildPreMigrationBackup({
+        baseline,
+        repository: { head: 'a'.repeat(40), originMain: 'a'.repeat(40) },
+        snapshot: legacyShape,
+      }),
+    ).toThrow(/pre-migration security drift/iu)
+  })
+
+  it.each(['forced RLS', 'column grant'])(
+    'refuses query-only pre-migration %s in backup and audit',
+    (mutation) => {
+      const { input, baseline } = preMigrationInput()
+      const snapshot = preMigrationSnapshot()
+      const schema = snapshot.schema as {
+        columnAclEntries: Array<Record<string, unknown>>
+        tables: Array<Record<string, unknown>>
+      }
+      if (mutation === 'forced RLS') {
+        const reviews = schema.tables.find(
+          (table) => table.table_name === 'literature_gold_set_reviews',
+        )
+        if (reviews) reviews.force_rls = true
+      } else {
+        schema.columnAclEntries.push({
+          schema_name: 'public',
+          table_name: 'literature_gold_set_reviews',
+          column_name: 'id',
+          grantee: 'anon',
+          grantor: 'supabase_admin',
+          privilege_type: 'UPDATE',
+          is_grantable: false,
+        })
+      }
+      expect(() =>
+        buildPreMigrationBackup({
+          baseline,
+          repository: { head: 'a'.repeat(40), originMain: 'a'.repeat(40) },
+          snapshot,
+        }),
+      ).toThrow(/pre-migration security drift/iu)
+
+      const audit = auditPostMigration({
+        preMigration: input,
+        repositoryCommitSha: 'a'.repeat(40),
+        snapshot,
+      })
+      expect(audit.report.status).toBe('blocked')
+      expect(canonicalJson(audit.report)).toMatch(/pre-migration security drift/iu)
+    },
+  )
 
   it('rejects any identity-shaped held-out aggregate field', () => {
     expect(() =>
@@ -1029,6 +1330,24 @@ describe('gold import-compensation migration operations', () => {
     ).toThrow(/non-ready audit/iu)
   })
 
+  it('does not allow a production audit caller to self-authorize schema drift', () => {
+    const originalNodeEnvironment = process.env.NODE_ENV
+    Reflect.set(process.env, 'NODE_ENV', 'production')
+    try {
+      const { input } = preMigrationInput()
+      expect(() =>
+        auditPostMigration({
+          preMigration: input,
+          repositoryCommitSha: 'a'.repeat(40),
+          snapshot: preMigrationSnapshot(),
+          testOnlyExpectedSchemaSecurityIdentitySha256: 'f'.repeat(64),
+        }),
+      ).toThrow(/test-only/iu)
+    } finally {
+      Reflect.set(process.env, 'NODE_ENV', originalNodeEnvironment)
+    }
+  })
+
   it('blocks an expected migration version recorded under the wrong name', () => {
     const { input } = preMigrationInput()
     const snapshot = postMigrationSnapshot()
@@ -1045,15 +1364,7 @@ describe('gold import-compensation migration operations', () => {
   })
 
   it('passes migrated schema, RLS, ACL, state-preservation, and exact lint checks', () => {
-    const { contractStateHashes, input } = preMigrationInput()
-    const audit = auditPostMigration({
-      contractStateHashes,
-      contractStateHashesBefore: contractStateHashes,
-      lint: validLint(),
-      preMigration: input,
-      repositoryCommitSha: 'a'.repeat(40),
-      snapshot: postMigrationSnapshot(),
-    })
+    const audit = auditMigratedSnapshot(postMigrationSnapshot())
     expect(audit.report).toMatchObject({
       status: 'ready',
       readinessStatus: 'ready',
@@ -1083,6 +1394,7 @@ describe('gold import-compensation migration operations', () => {
       name: 'unexpected_protected_policy',
       table_name: 'literature_gold_set_items',
       command: 'ALL',
+      permissive: 'PERMISSIVE',
       roles: ['service_role'],
       using_expression: "dataset_split = 'development'",
       with_check_expression: "dataset_split = 'development'",
@@ -1099,6 +1411,7 @@ describe('gold import-compensation migration operations', () => {
     schema.indexes.push({
       name: 'unexpected_protected_index',
       table_name: 'literature_gold_set_items',
+      owner: 'supabase_admin',
       is_unique: true,
       is_valid: true,
       constraint_backed: false,
@@ -1145,6 +1458,9 @@ describe('gold import-compensation migration operations', () => {
     const audit = auditPostMigration({
       contractStateHashes,
       contractStateHashesBefore: contractStateHashes,
+      testOnlyExpectedSchemaSecurityIdentitySha256: schemaSecurityDefinitionIdentitySha256({
+        catalog: postMigrationSnapshot().schema,
+      }),
       lint: validLint(),
       preMigration: input,
       repositoryCommitSha: 'a'.repeat(40),
@@ -1196,6 +1512,9 @@ describe('gold import-compensation migration operations', () => {
     const audit = auditPostMigration({
       contractStateHashes,
       contractStateHashesBefore: contractStateHashes,
+      testOnlyExpectedSchemaSecurityIdentitySha256: schemaSecurityDefinitionIdentitySha256({
+        catalog: postMigrationSnapshot().schema,
+      }),
       lint: validLint(),
       preMigration: input,
       repositoryCommitSha: 'a'.repeat(40),
@@ -1215,6 +1534,9 @@ describe('gold import-compensation migration operations', () => {
         ...contractStateHashes,
         physicalStateSha256: 'e'.repeat(64),
       },
+      testOnlyExpectedSchemaSecurityIdentitySha256: schemaSecurityDefinitionIdentitySha256({
+        catalog: postMigrationSnapshot().schema,
+      }),
       lint: validLint(),
       preMigration: input,
       repositoryCommitSha: 'a'.repeat(40),
@@ -1257,6 +1579,9 @@ describe('gold import-compensation migration operations', () => {
     const audit = auditPostMigration({
       contractStateHashes,
       contractStateHashesBefore: contractStateHashes,
+      testOnlyExpectedSchemaSecurityIdentitySha256: schemaSecurityDefinitionIdentitySha256({
+        catalog: postMigrationSnapshot().schema,
+      }),
       lint: validLint(),
       preMigration: input,
       repositoryCommitSha: 'a'.repeat(40),
@@ -1267,4 +1592,33 @@ describe('gold import-compensation migration operations', () => {
     expect(canonicalJson(audit.report)).toMatch(/Prohibited journal privilege/iu)
     expect(canonicalJson(audit.report)).toMatch(/RPC execution contract mismatch/iu)
   })
+
+  it.each(['forced RLS', 'effective column grant'])(
+    'blocks post-migration %s through the exact schema/security identity',
+    (mutation) => {
+      const snapshot = postMigrationSnapshot()
+      const schema = snapshot.schema as {
+        columnPrivileges: Array<Record<string, unknown>>
+        tables: Array<Record<string, unknown>>
+      }
+      if (mutation === 'forced RLS') {
+        const reviews = schema.tables.find(
+          (table) => table.table_name === 'literature_gold_set_reviews',
+        )
+        if (reviews) reviews.force_rls = true
+      } else {
+        const grant = schema.columnPrivileges.find(
+          (entry) =>
+            entry.table_name === 'literature_gold_set_reviews' &&
+            entry.column_name === 'operation_action_id' &&
+            entry.role_name === 'anon' &&
+            entry.privilege_name === 'UPDATE',
+        )
+        if (grant) grant.granted = true
+      }
+      const audit = auditMigratedSnapshot(snapshot)
+      expect(audit.report.status).toBe('blocked')
+      expect(canonicalJson(audit.report)).toMatch(/definition identity mismatch/iu)
+    },
+  )
 })
