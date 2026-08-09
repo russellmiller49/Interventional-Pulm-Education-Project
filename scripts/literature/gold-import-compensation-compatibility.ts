@@ -4,7 +4,12 @@ import { TextDecoder } from 'node:util'
 import { z } from 'zod'
 
 import { parseCsvRows } from '../../src/features/literature/gold-set/export'
-import { parseFinalizedArtifactBooleanValue } from '../../src/features/literature/gold-set/import-artifact-validation'
+import {
+  FINALIZED_ARTIFACT_LIST_COLUMNS,
+  FINALIZED_ARTIFACT_LIST_NORMALIZATION_RULE_VERSION,
+  deriveFinalizedArtifactListNormalization,
+  parseFinalizedArtifactBooleanValue,
+} from '../../src/features/literature/gold-set/import-artifact-validation'
 import {
   canonicalJson,
   goldReviewClinicalProjection,
@@ -19,6 +24,8 @@ export const GOLD_IMPORT_COMPATIBILITY_SCHEMA_VERSION =
   'gold-import-compensation-compatibility/1.0.0' as const
 export const GOLD_IMPORT_BOOLEAN_NORMALIZATION_RULE_VERSION =
   'finalized-v3-exact-boolean-lexeme/1.0.0' as const
+export const GOLD_IMPORT_LIST_NORMALIZATION_RULE_VERSION =
+  FINALIZED_ARTIFACT_LIST_NORMALIZATION_RULE_VERSION
 export const GOLD_IMPORT_EXISTING_HEAD_COHORT_SCHEMA_VERSION =
   'gold-import-compensation-existing-head-cohort/1.0.0' as const
 export const GOLD_IMPORT_COMPATIBILITY_SUPPLEMENT_SCHEMA_VERSION =
@@ -112,6 +119,64 @@ export const finalizedArtifactBooleanNormalizationSchema = z
 
 export type FinalizedArtifactBooleanNormalization = z.infer<
   typeof finalizedArtifactBooleanNormalizationSchema
+>
+
+const listColumnSchema = z.enum(FINALIZED_ARTIFACT_LIST_COLUMNS)
+
+const artifactListValuesSchema = () =>
+  z
+    .array(
+      z
+        .string()
+        .min(1)
+        .max(160)
+        .refine((value) => value.trim() === value, 'List values cannot contain surrounding space.'),
+    )
+    .nonempty()
+    .refine((values) => new Set(values).size === values.length, 'List values must be unique.')
+
+export const finalizedArtifactListNormalizationSchema = z
+  .object({
+    canonicalValues: artifactListValuesSchema().refine(
+      (values) => values.every((value, index) => index === 0 || values[index - 1] <= value),
+      'Canonical list values must use ascending order.',
+    ),
+    classification: z.literal('deterministic_lexical_normalization'),
+    column: listColumnSchema,
+    normalizationRuleVersion: z.literal(GOLD_IMPORT_LIST_NORMALIZATION_RULE_VERSION),
+    originalLexeme: z.string().min(1),
+    originalValues: artifactListValuesSchema(),
+    sourceArtifactSha256: sha256Schema,
+    sourceIdentity: sourceIdentitySchema,
+  })
+  .strict()
+  .superRefine((entry, context) => {
+    const expectedCanonicalValues = [...entry.originalValues].sort()
+    if (entry.originalLexeme !== entry.originalValues.join('|')) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'List normalization lexeme does not match its original values.',
+        path: ['originalLexeme'],
+      })
+    }
+    if (canonicalJson(entry.canonicalValues) !== canonicalJson(expectedCanonicalValues)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'List normalization does not contain the exact ascending set projection.',
+        path: ['canonicalValues'],
+      })
+    }
+    if (canonicalJson(entry.originalValues) === canonicalJson(entry.canonicalValues)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'List normalization ledger entries must describe an actual reorder.',
+        path: ['originalValues'],
+      })
+    }
+  })
+
+export type FinalizedArtifactListNormalization = z.infer<
+  typeof finalizedArtifactListNormalizationSchema
 >
 
 /**
@@ -213,6 +278,7 @@ export interface FinalizedGoldImportArtifactRecord {
   booleanNormalizations: readonly FinalizedArtifactBooleanNormalization[]
   csvRecordNumber: number
   identity: GoldImportCompatibilitySourceIdentity
+  listNormalizations: readonly FinalizedArtifactListNormalization[]
   physicianReviewCohort: z.infer<typeof physicianReviewCohortSchema>
   projection: FinalizedGoldImportArtifactProjection
   raw: Readonly<FinalizedGoldImportRawRecord>
@@ -222,6 +288,7 @@ export interface ParsedFinalizedGoldImportArtifact {
   artifactSha256: string
   booleanNormalizations: readonly FinalizedArtifactBooleanNormalization[]
   header: readonly string[]
+  listNormalizations: readonly FinalizedArtifactListNormalization[]
   rows: readonly FinalizedGoldImportArtifactRecord[]
 }
 
@@ -279,18 +346,32 @@ function sha256Bytes(input: Uint8Array): string {
   return createHash('sha256').update(input).digest('hex')
 }
 
-function requireArtifactList(value: string, recordNumber: number, column: string): string[] {
-  if (value === '') return []
-  const entries = value.split('|')
-  if (
-    entries.some((entry) => entry === '' || entry.trim() !== entry) ||
-    new Set(entries).size !== entries.length
-  ) {
+function requireArtifactList(input: {
+  column: z.input<typeof listColumnSchema>
+  recordNumber: number
+  sourceArtifactSha256: string
+  sourceIdentity: GoldImportCompatibilitySourceIdentity
+  value: string
+}): { normalization: FinalizedArtifactListNormalization | null; values: string[] } {
+  let derived: ReturnType<typeof deriveFinalizedArtifactListNormalization>
+  try {
+    derived = deriveFinalizedArtifactListNormalization({
+      column: input.column,
+      sourceArtifactSha256: input.sourceArtifactSha256,
+      sourceIdentity: input.sourceIdentity,
+      value: input.value,
+    })
+  } catch {
     throw new Error(
-      `Finalized V3 artifact CSV record ${recordNumber}, column ${column}, has a noncanonical list.`,
+      `Finalized V3 artifact CSV record ${input.recordNumber}, column ${input.column}, has a noncanonical list.`,
     )
   }
-  return entries
+  return {
+    normalization: derived.normalization
+      ? finalizedArtifactListNormalizationSchema.parse(derived.normalization)
+      : null,
+    values: derived.canonicalValues,
+  }
 }
 
 function requireNonblankArtifactValue(value: string, recordNumber: number, column: string): string {
@@ -342,6 +423,7 @@ export function parseFinalizedGoldImportArtifact(
   const masterRowIds = new Set<string>()
   const pmids = new Set<string>()
   const normalizations: FinalizedArtifactBooleanNormalization[] = []
+  const listNormalizations: FinalizedArtifactListNormalization[] = []
   const rows = parsed.slice(1).map((values, index): FinalizedGoldImportArtifactRecord => {
     const csvRecordNumber = index + 2
     if (values.length !== header.length) {
@@ -398,15 +480,43 @@ export function parseFinalizedGoldImportArtifact(
         'enrichment_provenance',
       ),
     )
+    const topicIds = requireArtifactList({
+      column: 'topic_ids',
+      recordNumber: csvRecordNumber,
+      sourceArtifactSha256: artifactSha256,
+      sourceIdentity: identity,
+      value: raw.topic_ids,
+    })
+    const technologyTags = requireArtifactList({
+      column: 'technology_tags',
+      recordNumber: csvRecordNumber,
+      sourceArtifactSha256: artifactSha256,
+      sourceIdentity: identity,
+      value: raw.technology_tags,
+    })
+    const clinicalPurposes = requireArtifactList({
+      column: 'clinical_purposes',
+      recordNumber: csvRecordNumber,
+      sourceArtifactSha256: artifactSha256,
+      sourceIdentity: identity,
+      value: raw.clinical_purposes,
+    })
+    const diseaseTags = requireArtifactList({
+      column: 'disease_tags',
+      recordNumber: csvRecordNumber,
+      sourceArtifactSha256: artifactSha256,
+      sourceIdentity: identity,
+      value: raw.disease_tags,
+    })
+    const rowListNormalizations = [topicIds, technologyTags, clinicalPurposes, diseaseTags].flatMap(
+      ({ normalization }) => (normalization ? [normalization] : []),
+    )
+    listNormalizations.push(...rowListNormalizations)
     const projection: FinalizedGoldImportArtifactProjection = {
       categorizationFromFullText: rowNormalizations[0].semanticValue,
-      clinicalPurposes: requireArtifactList(
-        raw.clinical_purposes,
-        csvRecordNumber,
-        'clinical_purposes',
-      ),
+      clinicalPurposes: clinicalPurposes.values,
       diseaseTagStatus,
-      diseaseTags: requireArtifactList(raw.disease_tags, csvRecordNumber, 'disease_tags'),
+      diseaseTags: diseaseTags.values,
       enrichmentProvenance,
       enrichmentSchemaVersion: requireNonblankArtifactValue(
         raw.enrichment_schema_version,
@@ -443,8 +553,8 @@ export function parseFinalizedGoldImportArtifact(
         'taxonomy_version',
       ),
       technologyTagStatus,
-      technologyTags: requireArtifactList(raw.technology_tags, csvRecordNumber, 'technology_tags'),
-      topicIds: requireArtifactList(raw.topic_ids, csvRecordNumber, 'topic_ids'),
+      technologyTags: technologyTags.values,
+      topicIds: topicIds.values,
       usedSupplementalMetadata: rowNormalizations[1].semanticValue,
     }
     validateArtifactProjectionExceptOptionalStatuses(projection)
@@ -452,13 +562,14 @@ export function parseFinalizedGoldImportArtifact(
       booleanNormalizations: rowNormalizations,
       csvRecordNumber,
       identity,
+      listNormalizations: rowListNormalizations,
       physicianReviewCohort: provenanceCohort(enrichmentProvenance),
       projection,
       raw,
     }
   })
   if (rows.length === 0) throw new Error('Finalized V3 artifact contains no development rows.')
-  return { artifactSha256, booleanNormalizations: normalizations, header, rows }
+  return { artifactSha256, booleanNormalizations: normalizations, header, listNormalizations, rows }
 }
 
 const preImportItemStateSchema = z
@@ -1112,6 +1223,12 @@ const BOOLEAN_FIELDS = new Map<CompatibilityProjectionField, z.infer<typeof bool
   ['usedSupplementalMetadata', 'full_text_used'],
   ['isBlinded', 'is_blinded'],
 ])
+const LIST_FIELDS = new Map<CompatibilityProjectionField, z.infer<typeof listColumnSchema>>([
+  ['topicIds', 'topic_ids'],
+  ['technologyTags', 'technology_tags'],
+  ['clinicalPurposes', 'clinical_purposes'],
+  ['diseaseTags', 'disease_tags'],
+])
 
 function fieldClassifications(
   record: FinalizedGoldImportArtifactRecord,
@@ -1187,6 +1304,31 @@ function fieldClassifications(
           currentValue,
           field,
           reason: `The exact ${String(normalization.originalLexeme)} lexeme normalizes without changing its semantic value.`,
+          resolvedValue,
+          sourceValue,
+        }
+      }
+    }
+    const listColumn = LIST_FIELDS.get(field)
+    if (listColumn) {
+      const normalization = record.listNormalizations.find((entry) => entry.column === listColumn)
+      if (canonicalJson(currentValue) !== canonicalJson(resolvedValue)) {
+        return {
+          classification: 'incompatible' as const,
+          currentValue,
+          field,
+          reason: 'List-order normalization cannot authorize a semantic set change.',
+          resolvedValue,
+          sourceValue,
+        }
+      }
+      if (normalization) {
+        return {
+          classification: 'deterministic_lexical_normalization' as const,
+          currentValue,
+          field,
+          reason:
+            'The ordered unique source list normalizes to ascending import-contract set order without changing its values.',
           resolvedValue,
           sourceValue,
         }
@@ -1562,6 +1704,8 @@ export const goldImportSourceAuthorizationSetV2Schema = z
         booleanNormalizationLedger: z.array(finalizedArtifactBooleanNormalizationSchema).nonempty(),
         booleanNormalizationLedgerSha256: sha256Schema,
         existingHeadCohortSha256: sha256Schema,
+        listNormalizationLedger: z.array(finalizedArtifactListNormalizationSchema),
+        listNormalizationLedgerSha256: sha256Schema,
         optionalTagStatusResolutions: z.array(authorizedOptionalStatusResolutionSchema).length(4),
         resolutionSchemaVersion: z.literal(GOLD_IMPORT_COMPATIBILITY_SCHEMA_VERSION),
         supplement: boundCompatibilitySupplementCompletedSchema,
@@ -1590,6 +1734,8 @@ export function validateGoldImportSourceAuthorizationSetV2(
     compatibility.acceptedSupplementSha256 !== compatibility.supplement.binding.contentSha256 ||
     compatibility.booleanNormalizationLedgerSha256 !==
       sha256Canonical(compatibility.booleanNormalizationLedger) ||
+    compatibility.listNormalizationLedgerSha256 !==
+      sha256Canonical(compatibility.listNormalizationLedger) ||
     compatibility.supplement.bindings.finalV3ArtifactSha256 !==
       authorizationSet.finalArtifactSha256 ||
     compatibility.supplement.bindings.existingHeadCohortSha256 !==
@@ -1607,14 +1753,25 @@ export function validateGoldImportSourceAuthorizationSetV2(
   ) {
     throw new Error('Source authorization compatibility action counts are inconsistent.')
   }
-  const ledgerKeys = new Set<string>()
+  const booleanLedgerKeys = new Set<string>()
   for (const entry of compatibility.booleanNormalizationLedger) {
     if (entry.sourceArtifactSha256 !== authorizationSet.finalArtifactSha256) {
       throw new Error('Boolean normalization ledger is bound to a different source artifact.')
     }
     const key = `${entry.sourceIdentity.itemId}:${entry.column}`
-    if (ledgerKeys.has(key)) throw new Error('Boolean normalization ledger contains a duplicate.')
-    ledgerKeys.add(key)
+    if (booleanLedgerKeys.has(key)) {
+      throw new Error('Boolean normalization ledger contains a duplicate.')
+    }
+    booleanLedgerKeys.add(key)
+  }
+  const listLedgerKeys = new Set<string>()
+  for (const entry of compatibility.listNormalizationLedger) {
+    if (entry.sourceArtifactSha256 !== authorizationSet.finalArtifactSha256) {
+      throw new Error('List normalization ledger is bound to a different source artifact.')
+    }
+    const key = `${entry.sourceIdentity.itemId}:${entry.column}`
+    if (listLedgerKeys.has(key)) throw new Error('List normalization ledger contains a duplicate.')
+    listLedgerKeys.add(key)
   }
   if (
     !exactIdentitySet(
@@ -1689,7 +1846,17 @@ export function validateGoldImportSourceAuthorizationSetForImport(input: {
     input.sourceAuthorizationSet,
     input.plan.sourceArtifactSha256,
   )
-  if (authorizationSet.version === 1) return authorizationSet
+  const artifact = parseFinalizedGoldImportArtifact(input.finalizedArtifact, {
+    expectedArtifactSha256: input.plan.sourceArtifactSha256,
+  })
+  if (authorizationSet.version === 1) {
+    if (artifact.listNormalizations.length > 0) {
+      throw new Error(
+        'Source authorization V1 cannot authorize finalized-artifact list reordering.',
+      )
+    }
+    return authorizationSet
+  }
 
   const compatibility = authorizationSet.compatibility
   const expectedActionCounts = {
@@ -1712,15 +1879,20 @@ export function validateGoldImportSourceAuthorizationSetForImport(input: {
     )
   }
 
-  const artifact = parseFinalizedGoldImportArtifact(input.finalizedArtifact, {
-    expectedArtifactSha256: input.plan.sourceArtifactSha256,
-  })
   if (
     canonicalJson(compatibility.booleanNormalizationLedger) !==
     canonicalJson(artifact.booleanNormalizations)
   ) {
     throw new Error(
       'Source authorization boolean normalization ledger does not exactly match the finalized artifact.',
+    )
+  }
+  if (
+    canonicalJson(compatibility.listNormalizationLedger) !==
+    canonicalJson(artifact.listNormalizations)
+  ) {
+    throw new Error(
+      'Source authorization list normalization ledger does not exactly match the finalized artifact.',
     )
   }
 

@@ -75,6 +75,89 @@ export function parseFinalizedArtifactBooleanValue(value: string): boolean {
   return value === 'true' || value === 'True'
 }
 
+export interface ParsedFinalizedArtifactPipeList {
+  canonicalValues: string[]
+  originalValues: string[]
+  reordered: boolean
+}
+
+export const FINALIZED_ARTIFACT_LIST_NORMALIZATION_RULE_VERSION =
+  'finalized-v3-ordered-set-list-to-ascending/1.0.0' as const
+export const FINALIZED_ARTIFACT_LIST_COLUMNS = [
+  'topic_ids',
+  'technology_tags',
+  'clinical_purposes',
+  'disease_tags',
+] as const
+export type FinalizedArtifactListColumn = (typeof FINALIZED_ARTIFACT_LIST_COLUMNS)[number]
+
+export interface FinalizedArtifactListNormalizationEvidence {
+  canonicalValues: string[]
+  classification: 'deterministic_lexical_normalization'
+  column: FinalizedArtifactListColumn
+  normalizationRuleVersion: typeof FINALIZED_ARTIFACT_LIST_NORMALIZATION_RULE_VERSION
+  originalLexeme: string
+  originalValues: string[]
+  sourceArtifactSha256: string
+  sourceIdentity: {
+    datasetSplit: 'development'
+    itemId: string
+    masterRowId: string
+    pmid: string
+  }
+}
+
+/**
+ * Validate the finalized V3 ordered pipe-list syntax and derive its import-contract set order.
+ * The source list is never rewritten; callers retain it separately for checksum-bound evidence.
+ */
+export function parseFinalizedArtifactPipeList(value: string): ParsedFinalizedArtifactPipeList {
+  if (!value) return { canonicalValues: [], originalValues: [], reordered: false }
+  const originalValues = value.split('|')
+  if (originalValues.some((item) => !item)) {
+    throw new Error('contains a blank list item.')
+  }
+  if (originalValues.some((item) => item.trim() !== item)) {
+    throw new Error('must use canonical pipe-delimited values without surrounding spaces.')
+  }
+  if (new Set(originalValues).size !== originalValues.length) {
+    throw new Error('contains a duplicate value.')
+  }
+  const canonicalValues = [...originalValues].sort()
+  return {
+    canonicalValues,
+    originalValues,
+    reordered: originalValues.some((value_, index) => value_ !== canonicalValues[index]),
+  }
+}
+
+export function deriveFinalizedArtifactListNormalization(input: {
+  column: FinalizedArtifactListColumn
+  sourceArtifactSha256: string
+  sourceIdentity: FinalizedArtifactListNormalizationEvidence['sourceIdentity']
+  value: string
+}): {
+  canonicalValues: string[]
+  normalization: FinalizedArtifactListNormalizationEvidence | null
+} {
+  const parsed = parseFinalizedArtifactPipeList(input.value)
+  return {
+    canonicalValues: parsed.canonicalValues,
+    normalization: parsed.reordered
+      ? {
+          canonicalValues: parsed.canonicalValues,
+          classification: 'deterministic_lexical_normalization',
+          column: input.column,
+          normalizationRuleVersion: FINALIZED_ARTIFACT_LIST_NORMALIZATION_RULE_VERSION,
+          originalLexeme: input.value,
+          originalValues: parsed.originalValues,
+          sourceArtifactSha256: input.sourceArtifactSha256,
+          sourceIdentity: input.sourceIdentity,
+        }
+      : null,
+  }
+}
+
 interface FinalizedReviewProjection {
   relevanceLabel: GoldReviewPayload['relevanceLabel']
   reviewerConfidence: GoldReviewPayload['reviewerConfidence']
@@ -111,6 +194,7 @@ export interface GoldImportArtifactValidationSummary {
 
 export interface ValidateGoldImportArtifactInput {
   compatibility?: {
+    listNormalizationLedger: readonly FinalizedArtifactListNormalizationEvidence[]
     optionalTagStatusResolutions: readonly {
       diseaseTagStatus: 'not_applicable' | 'not_assessable'
       itemId: string
@@ -158,26 +242,11 @@ function strictBoolean(record: ArtifactRecord, recordNumber: number, column: Req
 }
 
 function strictPipeList(record: ArtifactRecord, recordNumber: number, column: RequiredColumn) {
-  const value = record[column]
-  if (!value) return []
-  const values = value.split('|')
-  if (values.some((item) => !item)) {
-    return recordError(recordNumber, column, 'contains a blank list item.')
+  try {
+    return parseFinalizedArtifactPipeList(record[column]).canonicalValues
+  } catch (error) {
+    return recordError(recordNumber, column, error instanceof Error ? error.message : String(error))
   }
-  if (values.some((item) => item.trim() !== item)) {
-    return recordError(
-      recordNumber,
-      column,
-      'must use canonical pipe-delimited values without surrounding spaces.',
-    )
-  }
-  if (new Set(values).size !== values.length) {
-    return recordError(recordNumber, column, 'contains a duplicate value.')
-  }
-  if (values.some((item, index) => index > 0 && values[index - 1] > item)) {
-    return recordError(recordNumber, column, 'must use canonical ascending order.')
-  }
-  return values
 }
 
 function finalizedProjection(
@@ -347,6 +416,38 @@ function parseArtifactRecords(csvText: string): ArtifactRecord[] {
   return records
 }
 
+function deriveArtifactListNormalizationLedger(
+  records: readonly ArtifactRecord[],
+  sourceArtifactSha256: string,
+): FinalizedArtifactListNormalizationEvidence[] {
+  return records.flatMap((record, index) => {
+    const recordNumber = index + 2
+    const sourceIdentity = {
+      datasetSplit: 'development' as const,
+      itemId: record.gold_set_item_id,
+      masterRowId: record.master_row_id,
+      pmid: record.pmid,
+    }
+    return FINALIZED_ARTIFACT_LIST_COLUMNS.flatMap((column) => {
+      try {
+        const { normalization } = deriveFinalizedArtifactListNormalization({
+          column,
+          sourceArtifactSha256,
+          sourceIdentity,
+          value: record[column],
+        })
+        return normalization ? [normalization] : []
+      } catch (error) {
+        return recordError(
+          recordNumber,
+          column,
+          error instanceof Error ? error.message : String(error),
+        )
+      }
+    })
+  })
+}
+
 export function validateGoldImportSourceArtifact(
   input: ValidateGoldImportArtifactInput,
 ): GoldImportArtifactValidationSummary {
@@ -390,6 +491,22 @@ export function validateGoldImportSourceArtifact(
       return recordError(index + 2, 'master_row_id', 'must be a positive decimal integer.')
     }
   })
+
+  const listNormalizationLedger = deriveArtifactListNormalizationLedger(records, sha256)
+  if (!input.compatibility && listNormalizationLedger.length > 0) {
+    throw new Error(
+      'Finalized V3 CSV list reordering requires an exact checksum-bound V2 normalization ledger.',
+    )
+  }
+  if (
+    input.compatibility &&
+    canonicalJson(input.compatibility.listNormalizationLedger) !==
+      canonicalJson(listNormalizationLedger)
+  ) {
+    throw new Error(
+      'Compatibility list normalization ledger does not exactly match the finalized V3 CSV.',
+    )
+  }
 
   const compatibilityResolutions = new Map(
     (input.compatibility?.optionalTagStatusResolutions ?? []).map((resolution) => [

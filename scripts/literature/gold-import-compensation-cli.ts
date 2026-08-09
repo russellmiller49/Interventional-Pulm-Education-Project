@@ -341,6 +341,8 @@ async function loadImportBundle(
     compatibility:
       parsedSourceAuthorization.version === 2
         ? {
+            listNormalizationLedger:
+              parsedSourceAuthorization.compatibility.listNormalizationLedger,
             optionalTagStatusResolutions:
               parsedSourceAuthorization.compatibility.optionalTagStatusResolutions,
           }

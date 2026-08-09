@@ -55,7 +55,11 @@ import {
   type ExecuteFreshDisposableInput,
 } from './rehearse-exact-gold-import-compensation-package-v1'
 
-import { canonicalJson } from '../../src/features/literature/gold-set/import-compensation'
+import {
+  bindImportPlan,
+  canonicalJson,
+  sha256Canonical,
+} from '../../src/features/literature/gold-set/import-compensation'
 import {
   assertSerializedAggregateOrdering,
   type LoadedPreMigrationBackup,
@@ -217,23 +221,23 @@ function historicalReview(notes: string) {
   }
 }
 
-function artifactRow(itemId: string, pmid: string, notes: string): string {
+function artifactRow(itemId: string, pmid: string, notes: string, included = false): string {
   return [
     itemId,
     String(Number(pmid) - 10_000_000),
     pmid,
     'development',
-    'exclude',
+    included ? 'include_core' : 'exclude',
     'high',
     'adequate_abstract',
-    '',
-    '',
-    'not_applicable',
-    '',
-    '',
-    'not_applicable',
-    '',
-    '',
+    included ? 'basic-bronchoscopy' : '',
+    included ? 'convex-ebus' : '',
+    included ? 'tagged' : 'not_applicable',
+    included ? 'diagnosis' : '',
+    included ? 'lung-cancer' : '',
+    included ? 'tagged' : 'not_applicable',
+    included ? 'retrospective-cohort' : '',
+    included ? 'full-article' : '',
     'false',
     notes,
     'false',
@@ -303,7 +307,7 @@ function buildFixture() {
       sequence > EXACT_IMPORT_COUNTS.initial &&
       sequence <= EXACT_IMPORT_COUNTS.initial + EXACT_IMPORT_COUNTS.revisions
     const reviewId = isInitial ? null : fixtureUuid(0x20000000, sequence)
-    csvRows.push(artifactRow(itemId, pmid, finalizedNotes))
+    csvRows.push(artifactRow(itemId, pmid, finalizedNotes, sequence === 1))
     planningRows.push({
       currentEffectiveReview: isInitial
         ? null
@@ -1164,6 +1168,29 @@ describe('gold import/compensation package operations v1', () => {
         finalArtifact: Buffer.concat([fixture.sources.finalArtifact, Buffer.from('stale', 'utf8')]),
       }),
     ).toThrow(/stale|missing|replaced/u)
+
+    const { binding, ...planContent } = verified.importPlan
+    void binding
+    const actions = structuredClone(planContent.actions)
+    const insert = actions.find((action) => action.action !== 'import_noop')
+    if (!insert) {
+      throw new Error('Expected an insert action in the generated fixture.')
+    }
+    insert.review = {
+      ...insert.review,
+      topicIds: ['peripheral-navigation'],
+    }
+    insert.reviewSha256 = sha256Canonical(insert.review)
+    const coherentlyReboundPlan = bindImportPlan({
+      ...planContent,
+      actions,
+    })
+    expect(() =>
+      assertExactPackageSourceBytes(
+        { ...verified, importPlan: coherentlyReboundPlan },
+        fixture.sources,
+      ),
+    ).toThrow(/column topic_ids: does not match the checksum-bound import plan action/u)
 
     expect(() =>
       verifyDevelopmentDatabaseBackupFixtureForTest(

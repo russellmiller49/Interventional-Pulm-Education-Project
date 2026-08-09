@@ -188,6 +188,15 @@ the original lexeme, semantic value, row identity, source-artifact SHA-256, and 
 lexical normalization, not a physician change. Other spellings, numeric values, blanks, and
 arbitrary casing are rejected, and the finalized CSV remains byte-identical.
 
+The V3 artifact also preserves taxonomy/workflow order for the four ordered, unique pipe-list
+columns, while the import contract represents those values as ascending sets. Each source cell that
+requires reordering has a separate checksum-bound ledger entry containing its original pipe lexeme
+and ordered values, canonical ascending values, row identity, source-artifact SHA-256, column, and
+fixed rule version. Whitespace repair, deduplication, additions, removals, an incomplete ledger, or a
+V1 authorization for any reordered cell fails closed. The generator, runtime executor, and
+disposable rehearsal independently rederive the exact ledger and compare the normalized projection
+to the signed action plan before any database client or mutation path is available.
+
 The current database has nine existing effective heads. A field-by-field audit classifies all
 values before proposing an action. Five heads can become additive revisions through deterministic
 lexical normalization and new-schema field mapping. Four excluded rows have blank technology- and

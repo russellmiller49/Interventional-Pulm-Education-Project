@@ -2,9 +2,12 @@ import { spawn } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
 import { lstat, readFile, readdir } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
+import { TextDecoder } from 'node:util'
 import { fileURLToPath } from 'node:url'
 
 import { z } from 'zod'
+
+import { validateGoldImportSourceArtifact } from '../../src/features/literature/gold-set/import-artifact-validation'
 
 import {
   GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION,
@@ -186,6 +189,7 @@ const packageDescriptorSchema = z
           .strict(),
         booleanNormalizationLedgerSha256: sha256Schema,
         existingHeadCohortSha256: sha256Schema,
+        listNormalizationLedgerSha256: sha256Schema,
         sourceAuthorizationSetVersion: z.literal(2),
       })
       .strict()
@@ -1079,10 +1083,23 @@ export function assertExactPackageSourceBytes(
   if (!sourceAuthorizationBytes) {
     throw new Error('Exact package is missing its source authorization set.')
   }
-  validateGoldImportSourceAuthorizationSetForImport({
+  const sourceAuthorizationSet = validateGoldImportSourceAuthorizationSetForImport({
     finalizedArtifact: sources.finalArtifact,
     plan: package_.importPlan,
     sourceAuthorizationSet: parseJson(sourceAuthorizationBytes, 'source-authorization-set.json'),
+  })
+  const csvText = new TextDecoder('utf-8', { fatal: true }).decode(sources.finalArtifact)
+  validateGoldImportSourceArtifact({
+    compatibility:
+      sourceAuthorizationSet.version === 2
+        ? {
+            listNormalizationLedger: sourceAuthorizationSet.compatibility.listNormalizationLedger,
+            optionalTagStatusResolutions:
+              sourceAuthorizationSet.compatibility.optionalTagStatusResolutions,
+          }
+        : undefined,
+    csvText,
+    plan: package_.importPlan,
   })
 }
 
@@ -1381,6 +1398,8 @@ function assertAllPackageArtifactsSemanticallyBound(input: {
           descriptor.compatibility.booleanNormalizationLedgerSha256 ||
         sourceAuthorizationSet.compatibility.existingHeadCohortSha256 !==
           descriptor.compatibility.existingHeadCohortSha256 ||
+        sourceAuthorizationSet.compatibility.listNormalizationLedgerSha256 !==
+          descriptor.compatibility.listNormalizationLedgerSha256 ||
         sourceAuthorizationSet.compatibility.actionCounts.initial !== importPlan.counts.initial ||
         sourceAuthorizationSet.compatibility.actionCounts.inserts !== importPlan.counts.inserts ||
         sourceAuthorizationSet.compatibility.actionCounts.noops !== importPlan.counts.noops ||

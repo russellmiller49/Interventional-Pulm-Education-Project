@@ -13,6 +13,7 @@ import {
 import {
   GOLD_IMPORT_BOOLEAN_NORMALIZATION_RULE_VERSION,
   GOLD_IMPORT_COMPENSATION_MIGRATION_ID,
+  GOLD_IMPORT_LIST_NORMALIZATION_RULE_VERSION,
   GOLD_IMPORT_PHYSICIAN_DECISION_IDENTITIES,
   boundCompatibilitySupplementCompletedSchema,
   resolveGoldImportCompensationCompatibility,
@@ -35,6 +36,8 @@ export const EXISTING_HEAD_COMPATIBILITY_AUDIT_SCHEMA_VERSION =
   'gold-import-existing-head-compatibility-audit/1.0.0' as const
 export const BOOLEAN_NORMALIZATION_REPORT_SCHEMA_VERSION =
   'gold-import-boolean-normalization-report/1.0.0' as const
+export const LIST_NORMALIZATION_REPORT_SCHEMA_VERSION =
+  'gold-import-list-normalization-report/1.0.0' as const
 export const COMPATIBILITY_PACKAGE_READINESS_SCHEMA_VERSION =
   'gold-import-compatibility-package-readiness/1.0.0' as const
 export const COMPATIBILITY_AUDIT_EXECUTION_SCHEMA_VERSION =
@@ -190,6 +193,7 @@ function assertExpectedPendingDecisionCohort(
 }
 
 function compatibilityReadinessReport(input: {
+  listNormalizationLedgerSha256: string
   resolution: GoldImportCompensationCompatibilityResolution
   supplementSupplied: boolean
   unresolvedPmids: readonly string[]
@@ -221,6 +225,7 @@ function compatibilityReadinessReport(input: {
     terminalState,
     blockers,
     actionCounts: input.resolution.actionCounts,
+    listNormalizationLedgerSha256: input.listNormalizationLedgerSha256,
     supplement: {
       required: input.resolution.supplementRequired,
       supplied: input.supplementSupplied,
@@ -309,7 +314,11 @@ export function buildExistingHeadCompatibilityAudit(input: {
   ) {
     throw new Error('The exact nine legacy False values did not normalize deterministically.')
   }
+  const listNormalizationLedgerSha256 = sha256Bytes(
+    canonicalJson(resolution.artifact.listNormalizations),
+  )
   const readiness = compatibilityReadinessReport({
+    listNormalizationLedgerSha256,
     resolution,
     supplementSupplied,
     unresolvedPmids,
@@ -321,6 +330,7 @@ export function buildExistingHeadCompatibilityAudit(input: {
     postMigrationAuditManifestSha256: input.auditPackage.manifestSha256,
     finalV3ArtifactSha256: originalArtifactSha256,
     existingHeadCohortSha256: resolution.existingHeadCohortSha256,
+    listNormalizationLedgerSha256,
     migration: audit.migration,
     currentDatabase: {
       batchId: audit.database.batchId,
@@ -388,6 +398,22 @@ export function buildExistingHeadCompatibilityAudit(input: {
     existingHeadLegacyFalseNormalizations: existingHeadBooleanNormalizations,
     normalizations: resolution.artifact.booleanNormalizations,
   }
+  const listNormalizationReport = {
+    schemaVersion: LIST_NORMALIZATION_REPORT_SCHEMA_VERSION,
+    normalizationRuleVersion: GOLD_IMPORT_LIST_NORMALIZATION_RULE_VERSION,
+    sourceArtifactSha256: originalArtifactSha256,
+    sourceArtifactBytesPreserved: true,
+    artifactRowCount: resolution.artifact.rows.length,
+    normalizationCount: resolution.artifact.listNormalizations.length,
+    normalizationCountsByColumn: Object.fromEntries(
+      ['topic_ids', 'technology_tags', 'clinical_purposes', 'disease_tags'].map((column) => [
+        column,
+        resolution.artifact.listNormalizations.filter((entry) => entry.column === column).length,
+      ]),
+    ),
+    normalizationLedgerSha256: listNormalizationLedgerSha256,
+    normalizations: resolution.artifact.listNormalizations,
+  }
   if (!resolution.supplementTemplate) {
     throw new Error('Compatibility resolver did not produce the required supplement template.')
   }
@@ -395,6 +421,7 @@ export function buildExistingHeadCompatibilityAudit(input: {
     'boolean-normalization-report.json': booleanNormalizationReport,
     'compatibility-supplement-template.json': resolution.supplementTemplate,
     'existing-head-compatibility-audit.json': existingHeadAudit,
+    'list-normalization-report.json': listNormalizationReport,
     'package-readiness.json': readiness,
   }
   let sourceSupplementSha256: string | null = null

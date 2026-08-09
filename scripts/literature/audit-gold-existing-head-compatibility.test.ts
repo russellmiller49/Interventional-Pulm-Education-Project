@@ -12,6 +12,7 @@ import {
   COMPATIBILITY_PACKAGE_READINESS_SCHEMA_VERSION,
   EXISTING_HEAD_COMPATIBILITY_AUDIT_SCHEMA_VERSION,
   EXPECTED_UNRESOLVED_COMPATIBILITY_PMIDS,
+  LIST_NORMALIZATION_REPORT_SCHEMA_VERSION,
   buildExistingHeadCompatibilityAudit,
   runAuditGoldExistingHeadCompatibility,
 } from './audit-gold-existing-head-compatibility'
@@ -105,13 +106,14 @@ function historicalReview(
   values: ArtifactValues,
 ): NonNullable<CompatibilityDevelopmentPlanningState['rows'][number]['currentEffectiveReview']> {
   const included = values.physician_final_label !== 'exclude'
+  const canonicalList = (value: string): string[] => (value ? value.split('|').sort() : [])
   return {
     categorizationFromFullText: false,
-    clinicalPurposes: included ? ['diagnosis'] : [],
+    clinicalPurposes: canonicalList(values.clinical_purposes),
     completedAt: FIXED_TIME,
     createdAt: FIXED_TIME,
     diseaseTagStatus: null,
-    diseaseTags: included ? ['lung-cancer'] : [],
+    diseaseTags: canonicalList(values.disease_tags),
     enrichmentProvenance: null,
     enrichmentSchemaVersion: null,
     isBlinded: false,
@@ -128,8 +130,8 @@ function historicalReview(
     studyDesign: included ? 'retrospective-cohort' : null,
     taxonomyVersion: null,
     technologyTagStatus: null,
-    technologyTags: included ? ['convex-ebus'] : [],
-    topicIds: included ? ['basic-bronchoscopy'] : [],
+    technologyTags: canonicalList(values.technology_tags),
+    topicIds: canonicalList(values.topic_ids),
     usedSupplementalMetadata: false,
   }
 }
@@ -146,13 +148,14 @@ function serializeArtifact(rows: readonly ArtifactValues[]): Buffer {
   )
 }
 
-function buildFixture(): {
+function buildFixture(options: { withUnsortedLists?: boolean } = {}): {
   artifactBytes: Buffer
   auditPackage: VerifiedPostMigrationAuditPackage
   planningState: CompatibilityDevelopmentPlanningState
 } {
   const artifactRows: ArtifactValues[] = []
   const planningRows: CompatibilityDevelopmentPlanningState['rows'] = []
+  let unsortedListRowAdded = false
   GOLD_IMPORT_EXISTING_HEAD_IDENTITIES.forEach((identity, index) => {
     const itemId = fixtureUuid(0x11000000, index + 1)
     const reviewId = fixtureUuid(0x22000000, index + 1)
@@ -168,6 +171,17 @@ function buildFixture(): {
             ? 'physician_modified_ai_enrichment'
             : 'ai_generated_enrichment_qc_accepted',
     })
+    if (
+      options.withUnsortedLists &&
+      values.physician_final_label !== 'exclude' &&
+      !unsortedListRowAdded
+    ) {
+      values.topic_ids = 'peripheral-navigation|basic-bronchoscopy'
+      values.technology_tags = 'robotic-bronchoscopy|convex-ebus'
+      values.clinical_purposes = 'staging|diagnosis'
+      values.disease_tags = 'mesothelioma|lung-cancer'
+      unsortedListRowAdded = true
+    }
     artifactRows.push(values)
     planningRows.push({
       currentEffectiveReview: historicalReview(values),
@@ -345,6 +359,7 @@ describe('sealed existing-head compatibility artifacts', () => {
       'boolean-normalization-report.json',
       'compatibility-supplement-template.json',
       'existing-head-compatibility-audit.json',
+      'list-normalization-report.json',
       'package-readiness.json',
     ])
     const audit = jsonFile<{
@@ -420,6 +435,21 @@ describe('sealed existing-head compatibility artifacts', () => {
         }),
       )
     })
+    expect(
+      jsonFile<{
+        normalizationCount: number
+        normalizationLedgerSha256: string
+        schemaVersion: string
+        sourceArtifactBytesPreserved: boolean
+      }>(generated, 'list-normalization-report.json'),
+    ).toEqual(
+      expect.objectContaining({
+        normalizationCount: 0,
+        normalizationLedgerSha256: sha256Canonical([]),
+        schemaVersion: LIST_NORMALIZATION_REPORT_SCHEMA_VERSION,
+        sourceArtifactBytesPreserved: true,
+      }),
+    )
     const template = jsonFile<BoundCompatibilitySupplementTemplate>(
       generated,
       'compatibility-supplement-template.json',
@@ -433,6 +463,46 @@ describe('sealed existing-head compatibility artifacts', () => {
       expect(row.physicianRationale).toBe('')
       expect(row.reviewed).toBe(false)
     })
+  })
+
+  test('cross-binds a nonempty per-column list normalization ledger across audit reports', () => {
+    const fixture = buildFixture({ withUnsortedLists: true })
+    const generated = buildExistingHeadCompatibilityAudit({
+      artifactBytes: fixture.artifactBytes,
+      auditPackage: fixture.auditPackage,
+      expectedArtifactSha256: sha256(fixture.artifactBytes),
+    })
+    const report = jsonFile<{
+      normalizationCount: number
+      normalizationCountsByColumn: Record<string, number>
+      normalizationLedgerSha256: string
+      normalizations: Array<{ column: string }>
+    }>(generated, 'list-normalization-report.json')
+    expect(report.normalizationCount).toBe(4)
+    expect(report.normalizationCountsByColumn).toEqual({
+      clinical_purposes: 1,
+      disease_tags: 1,
+      technology_tags: 1,
+      topic_ids: 1,
+    })
+    expect(report.normalizations.map(({ column }) => column)).toEqual([
+      'topic_ids',
+      'technology_tags',
+      'clinical_purposes',
+      'disease_tags',
+    ])
+    expect(report.normalizationLedgerSha256).toBe(sha256Canonical(report.normalizations))
+    const audit = jsonFile<{
+      sourceBindings: { listNormalizationLedgerSha256: string }
+    }>(generated, 'existing-head-compatibility-audit.json')
+    const readiness = jsonFile<{ listNormalizationLedgerSha256: string }>(
+      generated,
+      'package-readiness.json',
+    )
+    expect(audit.sourceBindings.listNormalizationLedgerSha256).toBe(
+      report.normalizationLedgerSha256,
+    )
+    expect(readiness.listNormalizationLedgerSha256).toBe(report.normalizationLedgerSha256)
   })
 
   test('accepts the authorized supplement, clears blockers, and seals the accepted content', () => {
@@ -609,6 +679,7 @@ describe('file-only compatibility audit CLI', () => {
         'compatibility-supplement-template.json',
         'execution-receipt.json',
         'existing-head-compatibility-audit.json',
+        'list-normalization-report.json',
         'package-readiness.json',
       ]),
     )

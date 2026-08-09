@@ -571,6 +571,8 @@ async function v2CompatibilityFixture() {
       booleanNormalizationLedger: parsedArtifact.booleanNormalizations,
       booleanNormalizationLedgerSha256: sha256Canonical(parsedArtifact.booleanNormalizations),
       existingHeadCohortSha256: supplement.bindings.existingHeadCohortSha256,
+      listNormalizationLedger: parsedArtifact.listNormalizations,
+      listNormalizationLedgerSha256: sha256Canonical(parsedArtifact.listNormalizations),
       optionalTagStatusResolutions: decisions.map((decision) => ({
         diseaseTagStatus: decision.diseaseTagStatus,
         itemId: decision.itemId,
@@ -924,6 +926,35 @@ describe('gold import-compensation CLI', () => {
     await expect(
       runGoldImportCompensationCli(executionArguments, value.root, runtimeDependencies),
     ).rejects.toThrow('does not exactly match the finalized artifact')
+    expect(createClient).not.toHaveBeenCalled()
+
+    const listLedgerMismatch = jsonClone(value.sourceAuthorizationSet)
+    const sourceRow = listLedgerMismatch.compatibility.supplement.rows[0]
+    if (!sourceRow) throw new Error('Expected a V2 compatibility source row.')
+    listLedgerMismatch.compatibility.listNormalizationLedger = [
+      {
+        canonicalValues: ['basic-bronchoscopy', 'peripheral-navigation'],
+        classification: 'deterministic_lexical_normalization',
+        column: 'topic_ids',
+        normalizationRuleVersion: 'finalized-v3-ordered-set-list-to-ascending/1.0.0',
+        originalLexeme: 'peripheral-navigation|basic-bronchoscopy',
+        originalValues: ['peripheral-navigation', 'basic-bronchoscopy'],
+        sourceArtifactSha256: listLedgerMismatch.finalArtifactSha256,
+        sourceIdentity: {
+          datasetSplit: 'development',
+          itemId: sourceRow.itemId,
+          masterRowId: sourceRow.masterRowId,
+          pmid: sourceRow.pmid,
+        },
+      },
+    ]
+    listLedgerMismatch.compatibility.listNormalizationLedgerSha256 = sha256Canonical(
+      listLedgerMismatch.compatibility.listNormalizationLedger,
+    )
+    await value.writeBundle(listLedgerMismatch)
+    await expect(
+      runGoldImportCompensationCli(executionArguments, value.root, runtimeDependencies),
+    ).rejects.toThrow('list normalization ledger does not exactly match the finalized artifact')
     expect(createClient).not.toHaveBeenCalled()
 
     const staleState = jsonClone(value.sourceAuthorizationSet)

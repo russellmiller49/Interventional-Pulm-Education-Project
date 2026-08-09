@@ -7,6 +7,7 @@ import {
   GOLD_IMPORT_COMPATIBILITY_SUPPLEMENT_SCHEMA_VERSION,
   GOLD_IMPORT_COMPENSATION_MIGRATION_ID,
   GOLD_IMPORT_EXISTING_HEAD_IDENTITIES,
+  GOLD_IMPORT_LIST_NORMALIZATION_RULE_VERSION,
   GOLD_IMPORT_PHYSICIAN_DECISION_IDENTITIES,
   bindCompletedCompatibilitySupplement,
   deriveCompatibilityActionCounts,
@@ -100,13 +101,14 @@ function historicalReview(
   values: ArtifactValues,
 ): NonNullable<CompatibilityDevelopmentPlanningState['rows'][number]['currentEffectiveReview']> {
   const included = values.physician_final_label !== 'exclude'
+  const sortedList = (value: string) => (value ? value.split('|').sort() : [])
   return {
     categorizationFromFullText: false,
-    clinicalPurposes: included ? ['diagnosis'] : [],
+    clinicalPurposes: sortedList(values.clinical_purposes),
     completedAt: FIXED_TIME,
     createdAt: FIXED_TIME,
     diseaseTagStatus: null,
-    diseaseTags: included ? ['lung-cancer'] : [],
+    diseaseTags: sortedList(values.disease_tags),
     enrichmentProvenance: null,
     enrichmentSchemaVersion: null,
     isBlinded: false,
@@ -123,8 +125,8 @@ function historicalReview(
     studyDesign: included ? 'retrospective-cohort' : null,
     taxonomyVersion: null,
     technologyTagStatus: null,
-    technologyTags: included ? ['convex-ebus'] : [],
-    topicIds: included ? ['basic-bronchoscopy'] : [],
+    technologyTags: sortedList(values.technology_tags),
+    topicIds: sortedList(values.topic_ids),
     usedSupplementalMetadata: false,
   }
 }
@@ -151,7 +153,10 @@ function serializeArtifact(rows: readonly ArtifactValues[]): Buffer {
   )
 }
 
-function buildFixture(initialCount = 0): {
+function buildFixture(
+  initialCount = 0,
+  withUnsortedLists = false,
+): {
   artifactBytes: Buffer
   bindingContext: CompatibilityAuditBindingContext
   planningState: CompatibilityDevelopmentPlanningState
@@ -173,6 +178,12 @@ function buildFixture(initialCount = 0): {
             ? 'physician_modified_ai_enrichment'
             : 'ai_generated_enrichment_qc_accepted',
     })
+    if (withUnsortedLists && index === 0) {
+      values.topic_ids = 'peripheral-navigation|basic-bronchoscopy'
+      values.technology_tags = 'robotic-bronchoscopy|electromagnetic-navigation'
+      values.clinical_purposes = 'staging|diagnosis'
+      values.disease_tags = 'mesothelioma|lung-cancer'
+    }
     artifactRows.push(values)
     planningRows.push({
       currentEffectiveReview: historicalReview(values),
@@ -401,6 +412,58 @@ describe('finalized artifact boolean compatibility', () => {
           }),
         ),
       ),
+    )
+  })
+
+  test('normalizes ordered unique set lists without changing source bytes and records each reorder', () => {
+    const fixture = buildFixture(0, true)
+    const before = Buffer.from(fixture.artifactBytes)
+    const parsed = parseFinalizedGoldImportArtifact(fixture.artifactBytes, {
+      expectedArtifactSha256: fixture.bindingContext.finalV3ArtifactSha256,
+    })
+
+    expect(fixture.artifactBytes).toEqual(before)
+    expect(parsed.rows[0]?.projection).toMatchObject({
+      clinicalPurposes: ['diagnosis', 'staging'],
+      diseaseTags: ['lung-cancer', 'mesothelioma'],
+      technologyTags: ['electromagnetic-navigation', 'robotic-bronchoscopy'],
+      topicIds: ['basic-bronchoscopy', 'peripheral-navigation'],
+    })
+    expect(parsed.listNormalizations).toHaveLength(4)
+    expect(parsed.listNormalizations.map(({ column }) => column)).toEqual([
+      'topic_ids',
+      'technology_tags',
+      'clinical_purposes',
+      'disease_tags',
+    ])
+    parsed.listNormalizations.forEach((entry) => {
+      expect(entry).toEqual(
+        expect.objectContaining({
+          classification: 'deterministic_lexical_normalization',
+          normalizationRuleVersion: GOLD_IMPORT_LIST_NORMALIZATION_RULE_VERSION,
+          sourceArtifactSha256: sha256(before),
+          sourceIdentity: expect.objectContaining({ masterRowId: '1', pmid: '30416813' }),
+        }),
+      )
+      expect(entry.originalLexeme).toBe(entry.originalValues.join('|'))
+      expect(entry.canonicalValues).toEqual([...entry.originalValues].sort())
+    })
+  })
+
+  test.each([
+    'basic-bronchoscopy|basic-bronchoscopy',
+    'basic-bronchoscopy |peripheral-navigation',
+    'basic-bronchoscopy||peripheral-navigation',
+  ])('rejects invalid list syntax %p instead of normalizing it', (topicIds) => {
+    const row = artifactValues({
+      included: true,
+      itemId: fixtureUuid(0x11000000, 99),
+      masterRowId: '99',
+      pmid: '49999999',
+    })
+    row.topic_ids = topicIds
+    expect(() => parseFinalizedGoldImportArtifact(serializeArtifact([row]))).toThrow(
+      'has a noncanonical list',
     )
   })
 })
@@ -847,7 +910,7 @@ describe('compatibility supplement validation', () => {
 
 describe('compatibility source authorization binding', () => {
   function authorizationFixture() {
-    const fixture = buildFixture(2)
+    const fixture = buildFixture(2, true)
     const preliminary = resolveGoldImportCompensationCompatibility({
       bindingContext: fixture.bindingContext,
       developmentPlanningState: fixture.planningState,
@@ -894,6 +957,8 @@ describe('compatibility source authorization binding', () => {
           resolution.artifact.booleanNormalizations,
         ),
         existingHeadCohortSha256: resolution.existingHeadCohortSha256,
+        listNormalizationLedger: resolution.artifact.listNormalizations,
+        listNormalizationLedgerSha256: sha256Canonical(resolution.artifact.listNormalizations),
         optionalTagStatusResolutions,
         resolutionSchemaVersion: resolution.schemaVersion,
         supplement,
@@ -962,6 +1027,48 @@ describe('compatibility source authorization binding', () => {
         },
       }).compatibility.optionalTagStatusResolutions,
     ).toHaveLength(4)
+  })
+
+  test('rejects V1 authorization when the raw artifact requires list normalization', () => {
+    const { artifactBytes, authorizationSet, plan } = authorizationFixture()
+    const v1AuthorizationSet = {
+      amendedTwoRowAuthorizationSha256: authorizationSet.amendedTwoRowAuthorizationSha256,
+      finalArtifactSha256: authorizationSet.finalArtifactSha256,
+      kind: authorizationSet.kind,
+      signedProtocolAuthorizationSha256: authorizationSet.signedProtocolAuthorizationSha256,
+      sourceDecisionsChanged: false as const,
+      version: 1 as const,
+    }
+
+    expect(() =>
+      validateGoldImportSourceAuthorizationSetForImport({
+        finalizedArtifact: artifactBytes,
+        plan,
+        sourceAuthorizationSet: v1AuthorizationSet,
+      }),
+    ).toThrow('V1 cannot authorize finalized-artifact list reordering')
+  })
+
+  test('rejects a self-hashed list ledger with missing raw-artifact coverage', () => {
+    const { artifactBytes, authorizationSet, plan } = authorizationFixture()
+    expect(authorizationSet.compatibility.listNormalizationLedger).toHaveLength(4)
+    const listNormalizationLedger = authorizationSet.compatibility.listNormalizationLedger.slice(1)
+    const mismatched = {
+      ...authorizationSet,
+      compatibility: {
+        ...authorizationSet.compatibility,
+        listNormalizationLedger,
+        listNormalizationLedgerSha256: sha256Canonical(listNormalizationLedger),
+      },
+    }
+    expect(validateGoldImportSourceAuthorizationSetV2(mismatched).version).toBe(2)
+    expect(() =>
+      validateGoldImportSourceAuthorizationSetForImport({
+        finalizedArtifact: artifactBytes,
+        plan,
+        sourceAuthorizationSet: mismatched,
+      }),
+    ).toThrow('list normalization ledger does not exactly match the finalized artifact')
   })
 
   test('rejects checksum-consistent count and physician-decision substitution', () => {

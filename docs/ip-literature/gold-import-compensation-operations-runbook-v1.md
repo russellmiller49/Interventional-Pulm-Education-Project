@@ -69,8 +69,10 @@ compatible additive revisions. Four excluded rows have blank technology- and
 disease-tag statuses that cannot be inferred under taxonomy v2; they remain
 unclassified until a physician completes the four-row checksum-bound
 supplement. All nine legacy `False` lexemes normalize deterministically to
-false without changing the finalized artifact. Until the supplement is
-completed, the required terminal state is
+false without changing the finalized artifact. Ordered V3 pipe lists are also
+normalized to the import contract's ascending set order only through an exact
+source-artifact-bound ledger; V1 authorization and incomplete or substituted
+ledgers fail closed. Until the supplement is completed, the required terminal state is
 `AUDIT READY — PHYSICIAN COMPATIBILITY SUPPLEMENT REQUIRED`, and no executable
 package may be generated.
 
@@ -270,8 +272,10 @@ Without a supplement, require exactly five proposed additive revisions, four
 unresolved physician-decision rows, all nine legacy `False` lexemes normalized
 to false, and terminal state
 `AUDIT READY — PHYSICIAN COMPATIBILITY SUPPLEMENT REQUIRED`. Preserve
-`compatibility-supplement-template.json`; it must contain no selected answer.
-Do not run package generation in that state.
+`boolean-normalization-report.json`, `list-normalization-report.json`, and
+`compatibility-supplement-template.json`. The list report digest must match the
+audit source binding and readiness artifact; the supplement template must
+contain no selected answer. Do not run package generation in that state.
 
 ### 5. Generate the package
 

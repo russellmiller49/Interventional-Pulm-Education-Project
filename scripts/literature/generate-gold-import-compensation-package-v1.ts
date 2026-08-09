@@ -7,6 +7,7 @@ import { z } from 'zod'
 
 import {
   parseFinalizedArtifactBooleanValue,
+  parseFinalizedArtifactPipeList,
   validateGoldImportSourceArtifact,
 } from '../../src/features/literature/gold-set/import-artifact-validation'
 import { parseCsvRows } from '../../src/features/literature/gold-set/export'
@@ -882,15 +883,15 @@ function strictArtifactBoolean(value: string, column: string): boolean {
 }
 
 function artifactList(value: string): string[] {
-  if (!value) return []
-  const values = value.split('|')
-  if (
-    values.some((entry) => !entry || entry.trim() !== entry) ||
-    new Set(values).size !== values.length
-  ) {
+  try {
+    const parsed = parseFinalizedArtifactPipeList(value)
+    if (parsed.reordered) {
+      throw new Error('checksum-bound V2 list normalization is required')
+    }
+    return parsed.canonicalValues
+  } catch {
     throw new Error('Finalized V3 artifact contains a noncanonical pipe-delimited list.')
   }
-  return values
 }
 
 function parseFinalizedArtifactRecords(bytes: Buffer): FinalizedArtifactRecord[] {
@@ -1703,6 +1704,10 @@ export function generateGoldImportCompensationPackage(
           compatibilityResolution.artifact.booleanNormalizations,
         ),
         existingHeadCohortSha256: compatibilityResolution.existingHeadCohortSha256,
+        listNormalizationLedger: compatibilityResolution.artifact.listNormalizations,
+        listNormalizationLedgerSha256: sha256Canonical(
+          compatibilityResolution.artifact.listNormalizations,
+        ),
         optionalTagStatusResolutions,
         resolutionSchemaVersion: compatibilityResolution.schemaVersion,
         supplement: input.compatibilitySupplement,
@@ -1761,7 +1766,12 @@ export function generateGoldImportCompensationPackage(
     sourceAuthorizationSetSha256,
   })
   validateGoldImportSourceArtifact({
-    compatibility: compatibilityResolution ? { optionalTagStatusResolutions } : undefined,
+    compatibility: compatibilityResolution
+      ? {
+          listNormalizationLedger: compatibilityResolution.artifact.listNormalizations,
+          optionalTagStatusResolutions,
+        }
+      : undefined,
     csvText: new TextDecoder('utf-8', { fatal: true }).decode(input.sources.finalArtifact),
     plan: importPlan,
   })
@@ -1922,6 +1932,8 @@ export function generateGoldImportCompensationPackage(
             booleanNormalizationLedgerSha256:
               compatibilityAuthorization?.booleanNormalizationLedgerSha256,
             existingHeadCohortSha256: compatibilityResolution.existingHeadCohortSha256,
+            listNormalizationLedgerSha256:
+              compatibilityAuthorization?.listNormalizationLedgerSha256,
             sourceAuthorizationSetVersion: 2,
           },
         }

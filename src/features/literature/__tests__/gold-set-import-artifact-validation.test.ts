@@ -2,7 +2,10 @@
 
 import { createHash } from 'node:crypto'
 
-import { validateGoldImportSourceArtifact } from '@/features/literature/gold-set/import-artifact-validation'
+import {
+  deriveFinalizedArtifactListNormalization,
+  validateGoldImportSourceArtifact,
+} from '@/features/literature/gold-set/import-artifact-validation'
 import {
   GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION,
   bindImportPlan,
@@ -156,7 +159,7 @@ const ROWS: CsvRow[] = [
   },
 ]
 
-function planFor(csvText: string) {
+function planFor(csvText: string, insertReview: GoldReviewPayload = INSERT_REVIEW) {
   const existingReviewId = '20000000-0000-4000-8000-000000000002'
   const candidateReview = goldReviewClinicalProjectionSchema.parse({
     relevanceLabel: NOOP_REVIEW.relevanceLabel,
@@ -202,8 +205,8 @@ function planFor(csvText: string) {
       importedReviewId: '50000000-0000-4000-8000-000000000001',
       expectedHeadReviewIdAfter: '50000000-0000-4000-8000-000000000001',
       expectedEffectiveReviewIdAfter: '50000000-0000-4000-8000-000000000001',
-      review: INSERT_REVIEW,
-      reviewSha256: sha256Canonical(INSERT_REVIEW),
+      review: insertReview,
+      reviewSha256: sha256Canonical(insertReview),
       compensationAction: 'compensate_void',
       expectedEventSequence: ['review_imported'],
     },
@@ -386,6 +389,49 @@ describe('finalized V3 source artifact validation', () => {
     expect(() =>
       validateGoldImportSourceArtifact({ csvText, plan: planFor(csvText) }),
     ).not.toThrow()
+  })
+
+  it('normalizes source list order only with exact V2 ledger coverage', () => {
+    const rows = cloneRows()
+    rows[0].topic_ids = 'peripheral-navigation|basic-bronchoscopy'
+    const csvText = csv(rows)
+    const normalizedReview = review(INSERT_REVIEW.notes, {
+      topicIds: ['basic-bronchoscopy', 'peripheral-navigation'],
+    })
+    const plan = planFor(csvText, normalizedReview)
+    const { normalization } = deriveFinalizedArtifactListNormalization({
+      column: 'topic_ids',
+      sourceArtifactSha256: sha256(csvText),
+      sourceIdentity: {
+        datasetSplit: 'development',
+        itemId: rows[0].gold_set_item_id,
+        masterRowId: rows[0].master_row_id,
+        pmid: rows[0].pmid,
+      },
+      value: rows[0].topic_ids,
+    })
+    if (!normalization) throw new Error('Expected an unsorted fixture normalization.')
+
+    expect(() => validateGoldImportSourceArtifact({ csvText, plan })).toThrow(
+      'requires an exact checksum-bound V2 normalization ledger',
+    )
+    expect(() =>
+      validateGoldImportSourceArtifact({
+        compatibility: {
+          listNormalizationLedger: [normalization],
+          optionalTagStatusResolutions: [],
+        },
+        csvText,
+        plan,
+      }),
+    ).not.toThrow()
+    expect(() =>
+      validateGoldImportSourceArtifact({
+        compatibility: { listNormalizationLedger: [], optionalTagStatusResolutions: [] },
+        csvText,
+        plan,
+      }),
+    ).toThrow('does not exactly match the finalized V3 CSV')
   })
 
   it.each([
