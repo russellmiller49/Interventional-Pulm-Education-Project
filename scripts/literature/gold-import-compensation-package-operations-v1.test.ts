@@ -725,6 +725,27 @@ describe('gold import/compensation package operations v1', () => {
     }
   })
 
+  test('restricts generator and rehearsal identity-policy overrides to tests', () => {
+    const mutableEnvironment = process.env as Record<string, string | undefined>
+    const previousNodeEnv = mutableEnvironment.NODE_ENV
+    mutableEnvironment.NODE_ENV = 'production'
+    try {
+      expect(() =>
+        generateGoldImportCompensationPackage({
+          auditPackage: fixture.auditPackage,
+          identityPolicy: fixture.identityPolicy,
+          sources: fixture.sources,
+        }),
+      ).toThrow('Non-production source identity policies are restricted to tests')
+      expect(() => verifyExactGeneratedPackage(generated.files, fixture.identityPolicy)).toThrow(
+        'Non-production rehearsal identity policies are restricted to tests',
+      )
+    } finally {
+      if (previousNodeEnv === undefined) delete mutableEnvironment.NODE_ENV
+      else mutableEnvironment.NODE_ENV = previousNodeEnv
+    }
+  })
+
   test('derives an additive revision when nullable legacy enrichment differs', () => {
     const legacyState = structuredClone(fixture.planningState)
     const legacyReview = legacyState.rows[624].currentEffectiveReview as Record<string, unknown>
@@ -737,6 +758,43 @@ describe('gold import/compensation package operations v1', () => {
       expectedCurrentReviewId: legacyState.rows[624].currentReviewId,
       expectedSupersedesReviewId: legacyState.rows[624].currentReviewId,
     })
+  })
+
+  test('keeps full-text provenance, supplemental reveal state, and review blinding distinct', () => {
+    const revealedState = structuredClone(fixture.planningState)
+    const revealedItemState = revealedState.rows[0]?.itemState as Record<string, unknown>
+    revealedItemState.supplementalMetadataRevealedAt = FIXED_TIME
+    const revealedRows = derivePackagePlanningRows(revealedState, fixture.sources.finalArtifact)
+    expect(revealedRows[0]?.targetReview.usedSupplementalMetadata).toBe(true)
+
+    const mutateColumn = (column: (typeof CSV_HEADER)[number], value: string) => {
+      const lines = fixture.sources.finalArtifact.toString('utf8').trimEnd().split('\n')
+      const cells = lines[1]?.split(',')
+      if (!cells) throw new Error('Fixture source row is missing.')
+      cells[CSV_HEADER.indexOf(column)] = value
+      lines[1] = cells.join(',')
+      return Buffer.from(`${lines.join('\n')}\n`, 'utf8')
+    }
+
+    const fullTextProvenance = mutateColumn('full_text_used', 'true')
+    expect(() => derivePackagePlanningRows(fixture.planningState, fullTextProvenance)).toThrow(
+      'full_text_used provenance has no exact import v1 persistence mapping',
+    )
+
+    const sourceUnblinded = mutateColumn('is_blinded', 'false')
+    const unblindedRows = derivePackagePlanningRows(fixture.planningState, sourceUnblinded)
+    expect(unblindedRows[0]?.targetReview.isBlinded).toBe(false)
+    const unblindedSources = { ...fixture.sources, finalArtifact: sourceUnblinded }
+    expect(() =>
+      generateGoldImportCompensationPackage({
+        auditPackage: fixture.auditPackage,
+        identityPolicy: {
+          ...fixture.identityPolicy,
+          finalArtifactSha256: sha256(sourceUnblinded),
+        },
+        sources: unblindedSources,
+      }),
+    ).toThrow()
   })
 
   test('gates an actual audit-shaped not_yet_migrated report before reading sources', async () => {
@@ -1168,6 +1226,31 @@ describe('gold import/compensation package operations v1', () => {
         finalArtifact: Buffer.concat([fixture.sources.finalArtifact, Buffer.from('stale', 'utf8')]),
       }),
     ).toThrow(/stale|missing|replaced/u)
+
+    const retiredAuthorizationFiles = new Map(verified.files)
+    const retiredAuthorization = jsonPackageFile<Record<string, unknown>>(
+      generated,
+      'source-authorization-set.json',
+    )
+    retiredAuthorization.version = 2
+    const retiredAuthorizationBytes = canonicalPrettyBytes(retiredAuthorization)
+    retiredAuthorizationFiles.set('source-authorization-set.json', retiredAuthorizationBytes)
+    const { binding: retiredPlanBinding, ...retiredPlanContent } = verified.importPlan
+    void retiredPlanBinding
+    const retiredAuthorizationPlan = bindImportPlan({
+      ...retiredPlanContent,
+      sourceAuthorizationSetSha256: sha256(retiredAuthorizationBytes),
+    })
+    expect(() =>
+      assertExactPackageSourceBytes(
+        {
+          ...verified,
+          files: retiredAuthorizationFiles,
+          importPlan: retiredAuthorizationPlan,
+        },
+        fixture.sources,
+      ),
+    ).toThrow('V2 physician status supplements are retired')
 
     const { binding, ...planContent } = verified.importPlan
     void binding

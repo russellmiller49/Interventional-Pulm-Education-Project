@@ -28,11 +28,11 @@ export const GOLD_IMPORT_LIST_NORMALIZATION_RULE_VERSION =
   FINALIZED_ARTIFACT_LIST_NORMALIZATION_RULE_VERSION
 export const GOLD_IMPORT_EXISTING_HEAD_COHORT_SCHEMA_VERSION =
   'gold-import-compensation-existing-head-cohort/1.0.0' as const
-export const GOLD_IMPORT_COMPATIBILITY_SUPPLEMENT_SCHEMA_VERSION =
-  'gold-import-compensation-compatibility-supplement/1.0.0' as const
 export const GOLD_IMPORT_COMPENSATION_MIGRATION_ID =
   '20260808035633_add_literature_gold_import_compensation_contract' as const
 export const GOLD_IMPORT_INITIAL_REVIEW_TIMESTAMP = '2026-08-08T00:00:00.000Z' as const
+export const GOLD_IMPORT_EXISTING_NOTE_DISPOSITION_RULE_VERSION =
+  'gold-import-existing-note-disposition/amended-two-row-preserve-current-v1' as const
 
 export const GOLD_IMPORT_EXISTING_HEAD_IDENTITIES = Object.freeze([
   { masterRowId: '1', pmid: '30416813' },
@@ -46,23 +46,10 @@ export const GOLD_IMPORT_EXISTING_HEAD_IDENTITIES = Object.freeze([
   { masterRowId: '9', pmid: '39281191' },
 ] as const)
 
-export const GOLD_IMPORT_PHYSICIAN_DECISION_IDENTITIES = Object.freeze([
-  { masterRowId: '2', pmid: '32250874' },
-  { masterRowId: '3', pmid: '16002921' },
-  { masterRowId: '7', pmid: '15133344' },
-  { masterRowId: '8', pmid: '28610675' },
+export const GOLD_IMPORT_PRESERVE_CURRENT_NOTE_IDENTITIES = Object.freeze([
+  { masterRowId: '4', pmid: '36879724' },
+  { masterRowId: '9', pmid: '39281191' },
 ] as const)
-
-export const GOLD_IMPORT_COMPATIBILITY_MUTABLE_FIELDS = [
-  'technologyTagStatus',
-  'diseaseTagStatus',
-] as const
-
-export const GOLD_IMPORT_COMPATIBILITY_RESOLUTION_CLASSES = [
-  'deterministic_lexical_normalization',
-  'deterministic_schema_compatibility_mapping',
-  'physician_authorized_compatibility_decision',
-] as const
 
 const SHA256_PATTERN = /^[a-f0-9]{64}$/u
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u
@@ -259,6 +246,7 @@ export interface FinalizedGoldImportArtifactProjection {
   diseaseTags: string[]
   enrichmentProvenance: z.infer<typeof enrichmentProvenanceSchema>
   enrichmentSchemaVersion: string
+  fullTextUsed: boolean
   isBlinded: boolean
   labelSchemaVersion: string
   metadataSufficiency: string
@@ -271,7 +259,6 @@ export interface FinalizedGoldImportArtifactProjection {
   technologyTagStatus: z.infer<typeof optionalTagStatusSchema> | null
   technologyTags: string[]
   topicIds: string[]
-  usedSupplementalMetadata: boolean
 }
 
 export interface FinalizedGoldImportArtifactRecord {
@@ -300,10 +287,12 @@ const artifactProjectionWithoutOptionalStatusesSchema = goldReviewClinicalProjec
 function validateArtifactProjectionExceptOptionalStatuses(
   projection: FinalizedGoldImportArtifactProjection,
 ): void {
-  const { diseaseTagStatus, technologyTagStatus, ...withoutStatuses } = projection
+  const { diseaseTagStatus, fullTextUsed, technologyTagStatus, ...withoutStatuses } = projection
+  void fullTextUsed
   artifactProjectionWithoutOptionalStatusesSchema.parse({
     ...withoutStatuses,
     reviewSeconds: 0,
+    usedSupplementalMetadata: false,
   })
   for (const [values, status, field] of [
     [projection.technologyTags, technologyTagStatus, 'technology_tag_status'],
@@ -523,6 +512,7 @@ export function parseFinalizedGoldImportArtifact(
         csvRecordNumber,
         'enrichment_schema_version',
       ),
+      fullTextUsed: rowNormalizations[1].semanticValue,
       isBlinded: rowNormalizations[2].semanticValue,
       labelSchemaVersion: requireNonblankArtifactValue(
         raw.label_schema_version,
@@ -555,7 +545,6 @@ export function parseFinalizedGoldImportArtifact(
       technologyTagStatus,
       technologyTags: technologyTags.values,
       topicIds: topicIds.values,
-      usedSupplementalMetadata: rowNormalizations[1].semanticValue,
     }
     validateArtifactProjectionExceptOptionalStatuses(projection)
     return {
@@ -667,170 +656,6 @@ export type CompatibilityAuditBindingContext = z.infer<
   typeof compatibilityAuditBindingContextSchema
 >
 
-const supplementBindingsSchema = compatibilityAuditBindingContextSchema
-  .extend({ existingHeadCohortSha256: sha256Schema })
-  .strict()
-
-const supplementScopeSchema = z
-  .object({
-    datasetSplit: z.literal('development'),
-    heldOutIdentitiesAccessed: z.literal(false),
-    purpose: z.literal('import_contract_compatibility_only'),
-    remoteWritesAllowed: z.literal(false),
-    targetDatabase: z.literal('local'),
-  })
-  .strict()
-
-const supplementDecisionFieldTemplateSchema = z
-  .object({
-    allowedValues: z.tuple([z.literal('not_applicable'), z.literal('not_assessable')]),
-    currentValue: z.null(),
-    physicianFinalValue: z.null(),
-    proposedValue: z.null(),
-    sourceValue: z.literal(''),
-  })
-  .strict()
-
-const supplementDecisionFieldCompletedSchema = supplementDecisionFieldTemplateSchema
-  .omit({ physicianFinalValue: true })
-  .extend({ physicianFinalValue: z.enum(['not_applicable', 'not_assessable']) })
-  .strict()
-
-const supplementFixedFields = {
-  categorizationFromFullText: z.literal(false),
-  clinicalPurposes: z.tuple([]),
-  diseaseTags: z.tuple([]),
-  enrichmentProvenance: enrichmentProvenanceSchema,
-  itemId: uuidSchema,
-  masterRowId: positiveDecimalSchema,
-  pmid: pmidSchema,
-  publicationStatus: z.null(),
-  relevanceLabel: z.literal('exclude'),
-  reviewerConfidence: z.enum(['high', 'moderate', 'low']),
-  studyDesign: z.null(),
-  technologyTags: z.tuple([]),
-  topicIds: z.tuple([]),
-}
-
-export const compatibilitySupplementTemplateRowSchema = z
-  .object({
-    ...supplementFixedFields,
-    completionStatus: z.literal('pending'),
-    diseaseTagStatus: supplementDecisionFieldTemplateSchema,
-    physicianRationale: z.literal(''),
-    reviewed: z.literal(false),
-    technologyTagStatus: supplementDecisionFieldTemplateSchema,
-  })
-  .strict()
-
-export const compatibilitySupplementCompletedRowSchema = z
-  .object({
-    ...supplementFixedFields,
-    completionStatus: z.literal('completed'),
-    diseaseTagStatus: supplementDecisionFieldCompletedSchema,
-    physicianRationale: z.string().trim().min(1).max(2000),
-    reviewed: z.literal(true),
-    technologyTagStatus: supplementDecisionFieldCompletedSchema,
-  })
-  .strict()
-
-const supplementAuthorizationSchema = z
-  .object({
-    authorizationId: uuidSchema,
-    authorizationKind: z.literal('physician_compatibility_decision'),
-    authorizationNote: z.string().trim().min(5).max(2000),
-    authorized: z.literal(true),
-    authorizedAt: timestampSchema,
-    authorizedBy: z.string().trim().min(1).max(320),
-    authorizedRole: z.literal('physician'),
-  })
-  .strict()
-
-const supplementCommon = {
-  allowedMutableFields: z.tuple([z.literal('technologyTagStatus'), z.literal('diseaseTagStatus')]),
-  bindings: supplementBindingsSchema,
-  kind: z.literal('physician_compatibility_supplement'),
-  resolutionClasses: z.tuple([
-    z.literal('deterministic_lexical_normalization'),
-    z.literal('deterministic_schema_compatibility_mapping'),
-    z.literal('physician_authorized_compatibility_decision'),
-  ]),
-  schemaVersion: z.literal(GOLD_IMPORT_COMPATIBILITY_SUPPLEMENT_SCHEMA_VERSION),
-  scope: supplementScopeSchema,
-}
-
-const compatibilitySupplementTemplateContentSchema = z
-  .object({
-    ...supplementCommon,
-    authorization: z.null(),
-    documentState: z.literal('template'),
-    rows: z.array(compatibilitySupplementTemplateRowSchema).length(4),
-  })
-  .strict()
-
-export const compatibilitySupplementCompletedContentSchema = z
-  .object({
-    ...supplementCommon,
-    authorization: supplementAuthorizationSchema,
-    documentState: z.literal('completed'),
-    rows: z.array(compatibilitySupplementCompletedRowSchema).length(4),
-    sourceTemplateSha256: sha256Schema,
-  })
-  .strict()
-
-const supplementBindingSchema = z
-  .object({
-    canonicalization: z.literal('recursive_sorted_key_json_v1'),
-    contentSha256: sha256Schema,
-  })
-  .strict()
-
-export const boundCompatibilitySupplementTemplateSchema =
-  compatibilitySupplementTemplateContentSchema.extend({ binding: supplementBindingSchema }).strict()
-
-export const boundCompatibilitySupplementCompletedSchema =
-  compatibilitySupplementCompletedContentSchema
-    .extend({ binding: supplementBindingSchema })
-    .strict()
-
-export type BoundCompatibilitySupplementTemplate = z.infer<
-  typeof boundCompatibilitySupplementTemplateSchema
->
-export type BoundCompatibilitySupplementCompleted = z.infer<
-  typeof boundCompatibilitySupplementCompletedSchema
->
-export type CompatibilitySupplementCompletedContent = z.infer<
-  typeof compatibilitySupplementCompletedContentSchema
->
-
-function bindSupplementContent<T extends Record<string, unknown>>(content: T) {
-  return {
-    ...content,
-    binding: {
-      canonicalization: 'recursive_sorted_key_json_v1' as const,
-      contentSha256: sha256Canonical(content),
-    },
-  }
-}
-
-function verifySupplementBinding(value: {
-  binding: { contentSha256: string }
-  [key: string]: unknown
-}): void {
-  const { binding, ...content } = value
-  if (binding.contentSha256 !== sha256Canonical(content)) {
-    throw new Error('Compatibility supplement canonical checksum does not match its content.')
-  }
-}
-
-/** Strictly parse and checksum-bind a completed physician supplement. */
-export function bindCompletedCompatibilitySupplement(
-  input: unknown,
-): BoundCompatibilitySupplementCompleted {
-  const content = compatibilitySupplementCompletedContentSchema.parse(input)
-  return boundCompatibilitySupplementCompletedSchema.parse(bindSupplementContent(content))
-}
-
 function compareMasterRows(left: { masterRowId: string }, right: { masterRowId: string }): number {
   const leftId = BigInt(left.masterRowId)
   const rightId = BigInt(right.masterRowId)
@@ -846,108 +671,6 @@ function exactIdentitySet(
   const identityProjection = (rows: readonly { masterRowId: string; pmid: string }[]) =>
     rows.map(({ masterRowId, pmid }) => ({ masterRowId, pmid })).sort(compareMasterRows)
   return canonicalJson(identityProjection(actual)) === canonicalJson(identityProjection(expected))
-}
-
-function immutableSupplementRow(row: {
-  categorizationFromFullText: false
-  clinicalPurposes: readonly []
-  diseaseTags: readonly []
-  enrichmentProvenance: string
-  itemId: string
-  masterRowId: string
-  pmid: string
-  publicationStatus: null
-  relevanceLabel: 'exclude'
-  reviewerConfidence: string
-  studyDesign: null
-  technologyTags: readonly []
-  topicIds: readonly []
-}) {
-  return {
-    categorizationFromFullText: row.categorizationFromFullText,
-    clinicalPurposes: row.clinicalPurposes,
-    diseaseTags: row.diseaseTags,
-    enrichmentProvenance: row.enrichmentProvenance,
-    itemId: row.itemId,
-    masterRowId: row.masterRowId,
-    pmid: row.pmid,
-    publicationStatus: row.publicationStatus,
-    relevanceLabel: row.relevanceLabel,
-    reviewerConfidence: row.reviewerConfidence,
-    studyDesign: row.studyDesign,
-    technologyTags: row.technologyTags,
-    topicIds: row.topicIds,
-  }
-}
-
-/**
- * Verify checksum, freshness, immutable physician fields, exact row membership, and template
- * ancestry. A self-consistent but stale/rebound supplement is rejected against the template.
- */
-export function validateCompletedCompatibilitySupplement(
-  input: unknown,
-  expectedTemplateInput: unknown,
-): BoundCompatibilitySupplementCompleted {
-  const template = boundCompatibilitySupplementTemplateSchema.parse(expectedTemplateInput)
-  verifySupplementBinding(template)
-  const completed = boundCompatibilitySupplementCompletedSchema.parse(input)
-  verifySupplementBinding(completed)
-  if (completed.sourceTemplateSha256 !== template.binding.contentSha256) {
-    throw new Error('Compatibility supplement is stale or does not descend from this template.')
-  }
-  for (const key of [
-    'allowedMutableFields',
-    'bindings',
-    'kind',
-    'resolutionClasses',
-    'schemaVersion',
-    'scope',
-  ] as const) {
-    if (canonicalJson(completed[key]) !== canonicalJson(template[key])) {
-      throw new Error(`Compatibility supplement ${key} does not match the current template.`)
-    }
-  }
-  if (
-    !exactIdentitySet(completed.rows, GOLD_IMPORT_PHYSICIAN_DECISION_IDENTITIES) ||
-    !exactIdentitySet(template.rows, GOLD_IMPORT_PHYSICIAN_DECISION_IDENTITIES)
-  ) {
-    throw new Error('Compatibility supplement must contain the exact four decision rows.')
-  }
-  template.rows.forEach((templateRow, index) => {
-    const completedRow = completed.rows[index]
-    if (
-      !completedRow ||
-      canonicalJson(immutableSupplementRow(completedRow)) !==
-        canonicalJson(immutableSupplementRow(templateRow)) ||
-      canonicalJson({
-        allowedValues: completedRow.technologyTagStatus.allowedValues,
-        currentValue: completedRow.technologyTagStatus.currentValue,
-        proposedValue: completedRow.technologyTagStatus.proposedValue,
-        sourceValue: completedRow.technologyTagStatus.sourceValue,
-      }) !==
-        canonicalJson({
-          allowedValues: templateRow.technologyTagStatus.allowedValues,
-          currentValue: templateRow.technologyTagStatus.currentValue,
-          proposedValue: templateRow.technologyTagStatus.proposedValue,
-          sourceValue: templateRow.technologyTagStatus.sourceValue,
-        }) ||
-      canonicalJson({
-        allowedValues: completedRow.diseaseTagStatus.allowedValues,
-        currentValue: completedRow.diseaseTagStatus.currentValue,
-        proposedValue: completedRow.diseaseTagStatus.proposedValue,
-        sourceValue: completedRow.diseaseTagStatus.sourceValue,
-      }) !==
-        canonicalJson({
-          allowedValues: templateRow.diseaseTagStatus.allowedValues,
-          currentValue: templateRow.diseaseTagStatus.currentValue,
-          proposedValue: templateRow.diseaseTagStatus.proposedValue,
-          sourceValue: templateRow.diseaseTagStatus.sourceValue,
-        })
-    ) {
-      throw new Error('Compatibility supplement changed a fixed physician or source field.')
-    }
-  })
-  return completed
 }
 
 export const COMPATIBILITY_PROJECTION_FIELDS = [
@@ -978,17 +701,16 @@ export type CompatibilityFieldClassification =
   | 'identical'
   | 'deterministic_lexical_normalization'
   | 'deterministic_schema_compatibility_mapping'
+  | 'existing_physician_note_preserved_by_amended_authorization'
   | 'finalized_v3_authorized_enrichment_change'
   | 'finalized_v3_out_of_scope_null'
   | 'execution_contract_mismatch'
-  | 'physician_authorized_compatibility_decision'
-  | 'physician_decision_required'
   | 'incompatible'
 
 export const GOLD_IMPORT_EXECUTION_COMPATIBILITY_BLOCKER_CODES = [
   'excluded_status_null_not_representable_by_import_contract_v1',
-  'source_is_blinded_conflicts_with_local_automated_signals_reveal_state_v1',
-  'source_supplemental_metadata_use_conflicts_with_local_reveal_state_v1',
+  'source_review_blinding_provenance_has_no_exact_import_v1_mapping',
+  'source_full_text_provenance_has_no_exact_import_v1_mapping',
 ] as const
 
 export type CompatibilityExecutionBlockerCode =
@@ -1022,7 +744,7 @@ export interface ExistingHeadCompatibilityRow {
   physicianReviewCohort: z.infer<typeof physicianReviewCohortSchema>
   proposedAction: 'import_revision' | 'import_noop' | null
   reason: string
-  resolutionStatus: 'resolved' | 'pending_physician_decision' | 'incompatible'
+  resolutionStatus: 'resolved' | 'incompatible'
 }
 
 export interface CompatibilityPlanningResolutionRow {
@@ -1030,7 +752,7 @@ export interface CompatibilityPlanningResolutionRow {
   identity: GoldImportCompatibilitySourceIdentity
   proposedAction: 'import_initial' | 'import_revision' | 'import_noop' | null
   reason: string
-  resolutionStatus: 'resolved' | 'pending_physician_decision' | 'incompatible'
+  resolutionStatus: 'resolved' | 'incompatible'
   sequence: number
   targetReview: GoldReviewPayload | null
 }
@@ -1070,22 +792,34 @@ export function deriveCompatibilityActionCounts(
     noops,
     revisions,
     total: rows.length,
-    unresolved: rows.filter((row) => row.resolutionStatus === 'pending_physician_decision').length,
+    unresolved: 0,
   }
 }
 
+export const goldImportExistingNoteDispositionSchema = z
+  .object({
+    action: z.literal('preserve_current_authorized_physician_rationale'),
+    pmids: z.tuple([z.literal('36879724'), z.literal('39281191')]),
+    ruleVersion: z.literal(GOLD_IMPORT_EXISTING_NOTE_DISPOSITION_RULE_VERSION),
+    sourceArtifactNotesApplied: z.literal(false),
+    status: z.literal('already_authorized'),
+  })
+  .strict()
+
+export type GoldImportExistingNoteDisposition = z.infer<
+  typeof goldImportExistingNoteDispositionSchema
+>
+
 export interface GoldImportCompensationCompatibilityResolution {
-  acceptedSupplementSha256: string | null
   actionCounts: CompatibilityActionCounts
   artifact: ParsedFinalizedGoldImportArtifact
   existingHeadCohortSha256: string
   existingHeads: readonly ExistingHeadCompatibilityRow[]
   executionCompatibility: CompatibilityExecutionValidation
+  noteDisposition: GoldImportExistingNoteDisposition
   planningRows: readonly CompatibilityPlanningResolutionRow[]
   readyForPackage: boolean
   schemaVersion: typeof GOLD_IMPORT_COMPATIBILITY_SCHEMA_VERSION
-  supplementRequired: boolean
-  supplementTemplate: BoundCompatibilitySupplementTemplate | null
 }
 
 function historicalProjection(review: CompatibilityHistoricalReview) {
@@ -1161,6 +895,7 @@ export function existingHeadCohortSha256(
 function resolvedTargetReview(
   record: FinalizedGoldImportArtifactRecord,
   current: CompatibilityHistoricalReview | null,
+  itemState: CompatibilityPlanningStateRow['itemState'],
 ): GoldReviewPayload | null {
   const technologyTagStatus = record.projection.technologyTagStatus
   const diseaseTagStatus = record.projection.diseaseTagStatus
@@ -1182,12 +917,44 @@ function resolvedTargetReview(
         reviewSeconds: 0,
         startedAt: GOLD_IMPORT_INITIAL_REVIEW_TIMESTAMP,
       }
+  const { fullTextUsed, ...sourceProjection } = record.projection
+  void fullTextUsed
   return goldReviewPayloadSchema.parse({
-    ...record.projection,
+    ...sourceProjection,
     ...operational,
     diseaseTagStatus,
+    notes: resolveFinalizedArtifactNoteForImport({
+      currentNote: current?.notes ?? null,
+      identity: record.identity,
+      sourceNote: record.projection.notes,
+    }),
     technologyTagStatus,
+    usedSupplementalMetadata: itemState.supplementalMetadataRevealedAt !== null,
   })
+}
+
+function isPreserveCurrentNoteIdentity(identity: { masterRowId: string; pmid: string }): boolean {
+  return GOLD_IMPORT_PRESERVE_CURRENT_NOTE_IDENTITIES.some(
+    (expected) => expected.masterRowId === identity.masterRowId && expected.pmid === identity.pmid,
+  )
+}
+
+/**
+ * Apply the exact amended two-row note disposition without treating finalized V3 prose as an
+ * executable replacement for an already-authored physician rationale.
+ */
+export function resolveFinalizedArtifactNoteForImport(input: {
+  currentNote: string | null
+  identity: { masterRowId: string; pmid: string }
+  sourceNote: string
+}): string {
+  if (!isPreserveCurrentNoteIdentity(input.identity)) return input.sourceNote
+  if (input.currentNote === null) {
+    throw new Error(
+      `NOTE DISPOSITION ALREADY AUTHORIZED identity ${input.identity.masterRowId}:${input.identity.pmid} is missing its current physician note.`,
+    )
+  }
+  return input.currentNote
 }
 
 function sourceValueForField(
@@ -1214,7 +981,7 @@ function sourceValueForField(
     technologyTagStatus: 'technology_tag_status',
     technologyTags: 'technology_tags',
     topicIds: 'topic_ids',
-    usedSupplementalMetadata: 'full_text_used',
+    usedSupplementalMetadata: null,
   }
   const column = map[field]
   return column === null ? null : record.raw[column]
@@ -1230,7 +997,6 @@ const NEW_CONTRACT_FIELDS = new Set<CompatibilityProjectionField>([
 ])
 const BOOLEAN_FIELDS = new Map<CompatibilityProjectionField, z.infer<typeof booleanColumnSchema>>([
   ['categorizationFromFullText', 'categorization_from_full_text'],
-  ['usedSupplementalMetadata', 'full_text_used'],
   ['isBlinded', 'is_blinded'],
 ])
 const LIST_FIELDS = new Map<CompatibilityProjectionField, z.infer<typeof listColumnSchema>>([
@@ -1254,27 +1020,35 @@ const FINALIZED_V3_ENRICHMENT_FIELDS = new Set<CompatibilityProjectionField>([
   'technologyTagStatus',
   'technologyTags',
   'topicIds',
-  'usedSupplementalMetadata',
 ])
 
 function fieldClassifications(
   record: FinalizedGoldImportArtifactRecord,
   currentReview: CompatibilityHistoricalReview,
   targetReview: GoldReviewPayload | null,
+  itemState: CompatibilityPlanningStateRow['itemState'],
 ): ExistingHeadFieldClassification[] {
   const current = historicalProjection(currentReview) as Record<
     CompatibilityProjectionField,
     unknown
   >
+  const { fullTextUsed, ...sourceProjection } = record.projection
+  void fullTextUsed
   const partialTarget: Record<CompatibilityProjectionField, unknown> = {
-    ...record.projection,
+    ...sourceProjection,
     clinicalPurposes: [...record.projection.clinicalPurposes].sort(),
     diseaseTagStatus: record.projection.diseaseTagStatus,
     diseaseTags: [...record.projection.diseaseTags].sort(),
     reviewSeconds: currentReview.reviewSeconds,
+    notes: resolveFinalizedArtifactNoteForImport({
+      currentNote: currentReview.notes,
+      identity: record.identity,
+      sourceNote: record.projection.notes,
+    }),
     technologyTagStatus: record.projection.technologyTagStatus,
     technologyTags: [...record.projection.technologyTags].sort(),
     topicIds: [...record.projection.topicIds].sort(),
+    usedSupplementalMetadata: itemState.supplementalMetadataRevealedAt !== null,
   }
   const resolvedTarget = targetReview
     ? (goldReviewClinicalProjection(targetReview) as Record<CompatibilityProjectionField, unknown>)
@@ -1292,8 +1066,23 @@ function fieldClassifications(
         currentValue,
         field,
         reason:
-          'The finalized V3 excluded-row contract intentionally leaves this included-record-only status blank; no physician decision or compatibility mapping is authorized.',
+          'The finalized V3 excluded-or-uncertain out-of-scope contract intentionally leaves this included-record-only status blank; no physician decision or compatibility mapping is authorized.',
         resolvedValue,
+        sourceValue,
+      }
+    }
+    if (
+      field === 'notes' &&
+      isPreserveCurrentNoteIdentity(record.identity) &&
+      canonicalJson(currentValue) !== canonicalJson(sourceValue)
+    ) {
+      return {
+        classification: 'existing_physician_note_preserved_by_amended_authorization' as const,
+        currentValue,
+        field,
+        reason:
+          'NOTE DISPOSITION ALREADY AUTHORIZED: the exact amended two-row authorization preserves the current physician rationale instead of applying finalized V3 prose.',
+        resolvedValue: currentValue,
         sourceValue,
       }
     }
@@ -1309,7 +1098,7 @@ function fieldClassifications(
             currentValue,
             field,
             reason:
-              'The finalized V3 review lifecycle value conflicts with the import contract projection derived from local reveal state.',
+              'Finalized V3 review-level blinding provenance and local item-level reveal history are distinct facts; import v1 has no exact persistence mapping for both.',
             resolvedValue,
             sourceValue,
           }
@@ -1488,7 +1277,7 @@ function deriveExecutionCompatibility(
     if (!record) throw new Error('Execution validation row is absent from finalized artifact.')
     const codes: CompatibilityExecutionBlockerCode[] = []
     if (
-      record.projection.relevanceLabel === 'exclude' &&
+      !['include_core', 'include_adjacent'].includes(record.projection.relevanceLabel) &&
       (record.projection.technologyTagStatus === null ||
         record.projection.diseaseTagStatus === null)
     ) {
@@ -1496,11 +1285,10 @@ function deriveExecutionCompatibility(
     }
     const requiredIsBlinded = row.itemState.automatedSignalsRevealedAt === null
     if (record.projection.isBlinded !== requiredIsBlinded) {
-      codes.push('source_is_blinded_conflicts_with_local_automated_signals_reveal_state_v1')
+      codes.push('source_review_blinding_provenance_has_no_exact_import_v1_mapping')
     }
-    const requiredSupplementalMetadataUse = row.itemState.supplementalMetadataRevealedAt !== null
-    if (record.projection.usedSupplementalMetadata !== requiredSupplementalMetadataUse) {
-      codes.push('source_supplemental_metadata_use_conflicts_with_local_reveal_state_v1')
+    if (record.projection.fullTextUsed) {
+      codes.push('source_full_text_provenance_has_no_exact_import_v1_mapping')
     }
     codes.forEach((code) => identitiesByCode[code].push(record.identity))
     if (codes.length > 0) blockedItemIds.add(row.itemId)
@@ -1533,7 +1321,6 @@ function deriveExecutionCompatibility(
  */
 export function resolveGoldImportCompensationCompatibility(input: {
   bindingContext: CompatibilityAuditBindingContext
-  compatibilitySupplement?: unknown
   developmentPlanningState: unknown
   finalizedArtifact: Uint8Array | string
 }): GoldImportCompensationCompatibilityResolution {
@@ -1546,11 +1333,6 @@ export function resolveGoldImportCompensationCompatibility(input: {
     expectedArtifactSha256: bindingContext.finalV3ArtifactSha256,
   })
   const recordsByItem = validatePlanningStateCoverage(state, artifact)
-  if (input.compatibilitySupplement !== undefined) {
-    throw new Error(
-      'A physician compatibility supplement is not applicable to authoritative finalized V3 excluded-status nulls or lifecycle-state mismatches.',
-    )
-  }
   const executionCompatibility = deriveExecutionCompatibility(state, recordsByItem)
   const existingRows = state.rows.filter((row) => row.currentReviewId !== null)
   const existingIdentities = existingRows.map((row) => {
@@ -1583,12 +1365,14 @@ export function resolveGoldImportCompensationCompatibility(input: {
     ) {
       throw new Error('Existing-head audit row is incomplete.')
     }
-    const targetReview = resolvedTargetReview(record, row.currentEffectiveReview)
-    const fields = fieldClassifications(record, row.currentEffectiveReview, targetReview)
-    const executionBlockerCodes = executionCompatibility.blockerCodesByItem.get(row.itemId) ?? []
-    const hasPending = fields.some(
-      (field) => field.classification === 'physician_decision_required',
+    const targetReview = resolvedTargetReview(record, row.currentEffectiveReview, row.itemState)
+    const fields = fieldClassifications(
+      record,
+      row.currentEffectiveReview,
+      targetReview,
+      row.itemState,
     )
+    const executionBlockerCodes = executionCompatibility.blockerCodesByItem.get(row.itemId) ?? []
     const hasIncompatible = fields.some(
       (field) =>
         field.classification === 'incompatible' ||
@@ -1600,9 +1384,6 @@ export function resolveGoldImportCompensationCompatibility(input: {
     if (executionBlockerCodes.length > 0) {
       resolutionStatus = 'incompatible'
       reason = `Execution compatibility pre-validation blocked this row: ${executionBlockerCodes.join(', ')}.`
-    } else if (hasPending) {
-      resolutionStatus = 'pending_physician_decision'
-      reason = 'Action is deferred until every ambiguous optional-tag status is authorized.'
     } else if (hasIncompatible || targetReview === null) {
       resolutionStatus = 'incompatible'
       reason = 'At least one finalized value would change an existing physician or clinical value.'
@@ -1641,7 +1422,7 @@ export function resolveGoldImportCompensationCompatibility(input: {
         targetReview:
           existing.proposedAction === null
             ? null
-            : resolvedTargetReview(record, row.currentEffectiveReview),
+            : resolvedTargetReview(record, row.currentEffectiveReview, row.itemState),
       }
     }
     if (executionBlockerCodes.length > 0) {
@@ -1655,7 +1436,7 @@ export function resolveGoldImportCompensationCompatibility(input: {
         targetReview: null,
       }
     }
-    const targetReview = resolvedTargetReview(record, null)
+    const targetReview = resolvedTargetReview(record, null, row.itemState)
     if (targetReview === null) {
       return {
         executionBlockerCodes,
@@ -1679,7 +1460,6 @@ export function resolveGoldImportCompensationCompatibility(input: {
   })
   const actionCounts = deriveCompatibilityActionCounts(planningRows)
   return {
-    acceptedSupplementSha256: null,
     actionCounts,
     artifact,
     existingHeadCohortSha256: cohortDigest,
@@ -1687,22 +1467,18 @@ export function resolveGoldImportCompensationCompatibility(input: {
       compareMasterRows(left.identity, right.identity),
     ),
     executionCompatibility: executionCompatibility.validation,
+    noteDisposition: {
+      action: 'preserve_current_authorized_physician_rationale',
+      pmids: ['36879724', '39281191'],
+      ruleVersion: GOLD_IMPORT_EXISTING_NOTE_DISPOSITION_RULE_VERSION,
+      sourceArtifactNotesApplied: false,
+      status: 'already_authorized',
+    },
     planningRows,
     readyForPackage: actionCounts.unresolved === 0 && actionCounts.incompatible === 0,
     schemaVersion: GOLD_IMPORT_COMPATIBILITY_SCHEMA_VERSION,
-    supplementRequired: false,
-    supplementTemplate: null,
   }
 }
-
-const authorizedOptionalStatusResolutionSchema = z
-  .object({
-    diseaseTagStatus: z.enum(['not_applicable', 'not_assessable']),
-    itemId: uuidSchema,
-    pmid: pmidSchema,
-    technologyTagStatus: z.enum(['not_applicable', 'not_assessable']),
-  })
-  .strict()
 
 export const goldImportSourceAuthorizationSetV1Schema = z
   .object({
@@ -1715,55 +1491,62 @@ export const goldImportSourceAuthorizationSetV1Schema = z
   })
   .strict()
 
-export const goldImportSourceAuthorizationSetV2Schema = z
+const goldImportSourceAuthorizationScopeSchema = z
+  .object({
+    datasetSplit: z.literal('development'),
+    heldOutIdentitiesAccessed: z.literal(false),
+    remoteWritesAllowed: z.literal(false),
+    targetDatabase: z.literal('local'),
+  })
+  .strict()
+
+const goldImportSourceAuthorizationBindingsSchema = compatibilityAuditBindingContextSchema
+  .extend({ existingHeadCohortSha256: sha256Schema })
+  .strict()
+
+export const goldImportSourceAuthorizationSetV3Schema = z
   .object({
     amendedTwoRowAuthorizationSha256: sha256Schema,
     compatibility: z
       .object({
-        acceptedSupplementSha256: sha256Schema,
         actionCounts: compatibilityActionCountsSchema.extend({
           incompatible: z.literal(0),
           unresolved: z.literal(0),
         }),
+        bindings: goldImportSourceAuthorizationBindingsSchema,
         booleanNormalizationLedger: z.array(finalizedArtifactBooleanNormalizationSchema).nonempty(),
         booleanNormalizationLedgerSha256: sha256Schema,
-        existingHeadCohortSha256: sha256Schema,
         listNormalizationLedger: z.array(finalizedArtifactListNormalizationSchema),
         listNormalizationLedgerSha256: sha256Schema,
-        optionalTagStatusResolutions: z.array(authorizedOptionalStatusResolutionSchema).length(4),
+        noteDisposition: goldImportExistingNoteDispositionSchema,
         resolutionSchemaVersion: z.literal(GOLD_IMPORT_COMPATIBILITY_SCHEMA_VERSION),
-        supplement: boundCompatibilitySupplementCompletedSchema,
+        scope: goldImportSourceAuthorizationScopeSchema,
       })
       .strict(),
     finalArtifactSha256: sha256Schema,
     kind: z.literal('gold_import_source_authorization_set'),
     signedProtocolAuthorizationSha256: sha256Schema,
     sourceDecisionsChanged: z.literal(false),
-    version: z.literal(2),
+    version: z.literal(3),
   })
   .strict()
 
-export type GoldImportSourceAuthorizationSetV2 = z.infer<
-  typeof goldImportSourceAuthorizationSetV2Schema
+export type GoldImportSourceAuthorizationSetV3 = z.infer<
+  typeof goldImportSourceAuthorizationSetV3Schema
 >
 
-/** Validate the semantic content of the checksum-bound authorization set before any RPC client exists. */
-export function validateGoldImportSourceAuthorizationSetV2(
+/** Validate the supplement-free, checksum-bound authorization set before any RPC client exists. */
+export function validateGoldImportSourceAuthorizationSetV3(
   input: unknown,
-): GoldImportSourceAuthorizationSetV2 {
-  const authorizationSet = goldImportSourceAuthorizationSetV2Schema.parse(input)
+): GoldImportSourceAuthorizationSetV3 {
+  const authorizationSet = goldImportSourceAuthorizationSetV3Schema.parse(input)
   const compatibility = authorizationSet.compatibility
-  verifySupplementBinding(compatibility.supplement)
   if (
-    compatibility.acceptedSupplementSha256 !== compatibility.supplement.binding.contentSha256 ||
     compatibility.booleanNormalizationLedgerSha256 !==
       sha256Canonical(compatibility.booleanNormalizationLedger) ||
     compatibility.listNormalizationLedgerSha256 !==
       sha256Canonical(compatibility.listNormalizationLedger) ||
-    compatibility.supplement.bindings.finalV3ArtifactSha256 !==
-      authorizationSet.finalArtifactSha256 ||
-    compatibility.supplement.bindings.existingHeadCohortSha256 !==
-      compatibility.existingHeadCohortSha256
+    compatibility.bindings.finalV3ArtifactSha256 !== authorizationSet.finalArtifactSha256
   ) {
     throw new Error('Source authorization compatibility checksum bindings are inconsistent.')
   }
@@ -1797,48 +1580,29 @@ export function validateGoldImportSourceAuthorizationSetV2(
     if (listLedgerKeys.has(key)) throw new Error('List normalization ledger contains a duplicate.')
     listLedgerKeys.add(key)
   }
-  if (
-    !exactIdentitySet(
-      compatibility.optionalTagStatusResolutions.map(({ pmid }) => ({
-        masterRowId:
-          compatibility.supplement.rows.find((row) => row.pmid === pmid)?.masterRowId ?? '',
-        pmid,
-      })),
-      GOLD_IMPORT_PHYSICIAN_DECISION_IDENTITIES,
-    )
-  ) {
-    throw new Error('Source authorization set does not contain the exact four decision rows.')
-  }
-  const supplementRowsByPmid = new Map(compatibility.supplement.rows.map((row) => [row.pmid, row]))
-  for (const resolution of compatibility.optionalTagStatusResolutions) {
-    const supplementRow = supplementRowsByPmid.get(resolution.pmid)
-    if (
-      !supplementRow ||
-      supplementRow.itemId !== resolution.itemId ||
-      supplementRow.technologyTagStatus.physicianFinalValue !== resolution.technologyTagStatus ||
-      supplementRow.diseaseTagStatus.physicianFinalValue !== resolution.diseaseTagStatus
-    ) {
-      throw new Error('Authorized optional-tag status differs from the physician supplement.')
-    }
-  }
   return authorizationSet
 }
 
 export type GoldImportSourceAuthorizationSet =
   | z.infer<typeof goldImportSourceAuthorizationSetV1Schema>
-  | GoldImportSourceAuthorizationSetV2
+  | GoldImportSourceAuthorizationSetV3
 
 export function validateGoldImportSourceAuthorizationSet(
   input: unknown,
   expectedArtifactSha256: string,
 ): GoldImportSourceAuthorizationSet {
   const container = z
-    .object({ version: z.union([z.literal(1), z.literal(2)]) })
+    .object({ version: z.union([z.literal(1), z.literal(2), z.literal(3)]) })
     .passthrough()
     .parse(input)
+  if (container.version === 2) {
+    throw new Error(
+      'Source authorization V2 physician status supplements are retired and cannot authorize import.',
+    )
+  }
   const authorizationSet =
-    container.version === 2
-      ? validateGoldImportSourceAuthorizationSetV2(input)
+    container.version === 3
+      ? validateGoldImportSourceAuthorizationSetV3(input)
       : goldImportSourceAuthorizationSetV1Schema.parse(input)
   if (authorizationSet.finalArtifactSha256 !== sha256Schema.parse(expectedArtifactSha256)) {
     throw new Error('Source authorization set is bound to a different finalized artifact.')
@@ -1858,7 +1622,8 @@ type GoldImportRuntimePlanBinding = Pick<
 >
 
 /**
- * Revalidate every V2 compatibility claim against the parsed import plan and unchanged artifact.
+ * Revalidate every V3 normalization and state-binding claim against the parsed import plan and
+ * unchanged artifact.
  * This is the final file-only trust boundary before the executor may construct a database client.
  */
 export function validateGoldImportSourceAuthorizationSetForImport(input: {
@@ -1874,9 +1639,12 @@ export function validateGoldImportSourceAuthorizationSetForImport(input: {
     expectedArtifactSha256: input.plan.sourceArtifactSha256,
   })
   if (authorizationSet.version === 1) {
-    if (artifact.listNormalizations.length > 0) {
+    if (
+      artifact.listNormalizations.length > 0 ||
+      artifact.booleanNormalizations.some((entry) => entry.sourceForm === 'legacy_title_case')
+    ) {
       throw new Error(
-        'Source authorization V1 cannot authorize finalized-artifact list reordering.',
+        'Source authorization V1 cannot authorize finalized-artifact lexical normalization.',
       )
     }
     return authorizationSet
@@ -1920,37 +1688,36 @@ export function validateGoldImportSourceAuthorizationSetForImport(input: {
     )
   }
 
-  const supplement = compatibility.supplement
   const expectedCurrentDatabaseBinding = {
     batchId: input.plan.batchId,
     developmentMembershipSha256: input.plan.scope.developmentMembershipSha256,
     effectiveStateSha256: input.plan.expectedEffectiveStateSha256,
     physicalStateSha256: input.plan.expectedPhysicalStateSha256,
   }
-  const supplementCurrentDatabaseBinding = {
-    batchId: supplement.bindings.currentDatabase.batchId,
-    developmentMembershipSha256: supplement.bindings.currentDatabase.developmentMembershipSha256,
-    effectiveStateSha256: supplement.bindings.currentDatabase.effectiveStateSha256,
-    physicalStateSha256: supplement.bindings.currentDatabase.physicalStateSha256,
+  const authorizedCurrentDatabaseBinding = {
+    batchId: compatibility.bindings.currentDatabase.batchId,
+    developmentMembershipSha256: compatibility.bindings.currentDatabase.developmentMembershipSha256,
+    effectiveStateSha256: compatibility.bindings.currentDatabase.effectiveStateSha256,
+    physicalStateSha256: compatibility.bindings.currentDatabase.physicalStateSha256,
   }
   if (
-    canonicalJson(supplementCurrentDatabaseBinding) !==
+    canonicalJson(authorizedCurrentDatabaseBinding) !==
     canonicalJson(expectedCurrentDatabaseBinding)
   ) {
     throw new Error(
-      'Source authorization compatibility supplement is stale relative to the import plan current-state bindings.',
+      'Source authorization compatibility state is stale relative to the import plan current-state bindings.',
     )
   }
   if (
-    supplement.bindings.finalV3ArtifactSha256 !== artifact.artifactSha256 ||
-    supplement.bindings.migration.id !== input.plan.executionContext.migrationId ||
-    supplement.scope.datasetSplit !== input.plan.scope.datasetSplit ||
-    supplement.scope.heldOutIdentitiesAccessed !== input.plan.scope.heldOutIdentitiesAccessed ||
-    supplement.scope.remoteWritesAllowed !== input.plan.executionContext.remoteWritesAllowed ||
-    supplement.scope.targetDatabase !== input.plan.executionContext.targetDatabase
+    compatibility.bindings.finalV3ArtifactSha256 !== artifact.artifactSha256 ||
+    compatibility.bindings.migration.id !== input.plan.executionContext.migrationId ||
+    compatibility.scope.datasetSplit !== input.plan.scope.datasetSplit ||
+    compatibility.scope.heldOutIdentitiesAccessed !== input.plan.scope.heldOutIdentitiesAccessed ||
+    compatibility.scope.remoteWritesAllowed !== input.plan.executionContext.remoteWritesAllowed ||
+    compatibility.scope.targetDatabase !== input.plan.executionContext.targetDatabase
   ) {
     throw new Error(
-      'Source authorization compatibility supplement scope does not match the import plan and artifact.',
+      'Source authorization compatibility scope does not match the import plan and artifact.',
     )
   }
   return authorizationSet

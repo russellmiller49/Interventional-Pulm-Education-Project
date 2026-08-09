@@ -175,7 +175,6 @@ const packageDescriptorSchema = z
       .strict(),
     compatibility: z
       .object({
-        acceptedSupplementSha256: sha256Schema,
         actionCounts: z
           .object({
             incompatible: z.literal(0),
@@ -187,10 +186,12 @@ const packageDescriptorSchema = z
             unresolved: z.literal(0),
           })
           .strict(),
+        authorizationBindingsSha256: sha256Schema,
         booleanNormalizationLedgerSha256: sha256Schema,
         existingHeadCohortSha256: sha256Schema,
         listNormalizationLedgerSha256: sha256Schema,
-        sourceAuthorizationSetVersion: z.literal(2),
+        noteDispositionSha256: sha256Schema,
+        sourceAuthorizationSetVersion: z.literal(3),
       })
       .strict()
       .optional(),
@@ -1091,11 +1092,12 @@ export function assertExactPackageSourceBytes(
   const csvText = new TextDecoder('utf-8', { fatal: true }).decode(sources.finalArtifact)
   validateGoldImportSourceArtifact({
     compatibility:
-      sourceAuthorizationSet.version === 2
+      sourceAuthorizationSet.version === 3
         ? {
+            booleanNormalizationLedger:
+              sourceAuthorizationSet.compatibility.booleanNormalizationLedger,
             listNormalizationLedger: sourceAuthorizationSet.compatibility.listNormalizationLedger,
-            optionalTagStatusResolutions:
-              sourceAuthorizationSet.compatibility.optionalTagStatusResolutions,
+            noteDisposition: sourceAuthorizationSet.compatibility.noteDisposition,
           }
         : undefined,
     csvText,
@@ -1384,6 +1386,38 @@ function assertAllPackageArtifactsSemanticallyBound(input: {
     parseJson(sourceAuthorizationBytes, 'source-authorization-set.json'),
     descriptor.sources.finalArtifactSha256,
   )
+  if (sourceAuthorizationSet.version === 3) {
+    if (audit.schemaVersion !== 'gold-import-compensation-reconciled-migration-audit/1.0.0') {
+      throw new Error('V3 source authorization requires the reconciled post-migration audit.')
+    }
+    const bindings = sourceAuthorizationSet.compatibility.bindings
+    const scope = sourceAuthorizationSet.compatibility.scope
+    if (
+      bindings.contract.environmentInvariantIdentitySha256 !==
+        audit.database.contractInvariantIdentitySha256 ||
+      bindings.contract.environmentProfileIdentitySha256 !==
+        audit.database.environmentProfileIdentitySha256 ||
+      bindings.currentDatabase.batchId !== audit.database.batchId ||
+      bindings.currentDatabase.developmentMembershipSha256 !==
+        audit.database.developmentMembershipSha256 ||
+      bindings.currentDatabase.developmentPlanningStateSha256 !==
+        audit.database.developmentPlanningStateSha256 ||
+      bindings.currentDatabase.effectiveStateSha256 !==
+        audit.database.currentEffectiveStateSha256 ||
+      bindings.currentDatabase.physicalStateSha256 !== audit.database.currentPhysicalStateSha256 ||
+      bindings.finalV3ArtifactSha256 !== descriptor.sources.finalArtifactSha256 ||
+      bindings.migration.id !== descriptor.migration.id ||
+      bindings.migration.sha256 !== descriptor.migration.sha256 ||
+      scope.datasetSplit !== importPlan.scope.datasetSplit ||
+      scope.heldOutIdentitiesAccessed !== importPlan.scope.heldOutIdentitiesAccessed ||
+      scope.remoteWritesAllowed !== importPlan.executionContext.remoteWritesAllowed ||
+      scope.targetDatabase !== importPlan.executionContext.targetDatabase
+    ) {
+      throw new Error(
+        'Source authorization bindings are stale relative to the embedded audit, plan, artifact, or migration.',
+      )
+    }
+  }
   if (
     sourceAuthorizationSet.amendedTwoRowAuthorizationSha256 !==
       descriptor.sources.amendedAuthorizationSha256 ||
@@ -1391,15 +1425,17 @@ function assertAllPackageArtifactsSemanticallyBound(input: {
       descriptor.sources.protocolAuthorizationSha256 ||
     (descriptor.compatibility === undefined && sourceAuthorizationSet.version !== 1) ||
     (descriptor.compatibility !== undefined &&
-      (sourceAuthorizationSet.version !== 2 ||
-        sourceAuthorizationSet.compatibility.acceptedSupplementSha256 !==
-          descriptor.compatibility.acceptedSupplementSha256 ||
+      (sourceAuthorizationSet.version !== 3 ||
+        sha256Canonical(sourceAuthorizationSet.compatibility.bindings) !==
+          descriptor.compatibility.authorizationBindingsSha256 ||
         sourceAuthorizationSet.compatibility.booleanNormalizationLedgerSha256 !==
           descriptor.compatibility.booleanNormalizationLedgerSha256 ||
-        sourceAuthorizationSet.compatibility.existingHeadCohortSha256 !==
+        sourceAuthorizationSet.compatibility.bindings.existingHeadCohortSha256 !==
           descriptor.compatibility.existingHeadCohortSha256 ||
         sourceAuthorizationSet.compatibility.listNormalizationLedgerSha256 !==
           descriptor.compatibility.listNormalizationLedgerSha256 ||
+        sha256Canonical(sourceAuthorizationSet.compatibility.noteDisposition) !==
+          descriptor.compatibility.noteDispositionSha256 ||
         sourceAuthorizationSet.compatibility.actionCounts.initial !== importPlan.counts.initial ||
         sourceAuthorizationSet.compatibility.actionCounts.inserts !== importPlan.counts.inserts ||
         sourceAuthorizationSet.compatibility.actionCounts.noops !== importPlan.counts.noops ||
@@ -1578,6 +1614,9 @@ export function verifyExactGeneratedPackage(
   files: ReadonlyMap<string, Buffer>,
   identityPolicy: PackageSourceIdentityPolicy = PRODUCTION_SOURCE_IDENTITIES,
 ): VerifiedExactPackage {
+  if (!same(identityPolicy, PRODUCTION_SOURCE_IDENTITIES) && process.env.NODE_ENV !== 'test') {
+    throw new Error('Non-production rehearsal identity policies are restricted to tests.')
+  }
   for (const required of BASE_REQUIRED_PACKAGE_FILES) {
     if (!files.has(required)) throw new Error(`Exact package is missing ${required}.`)
   }

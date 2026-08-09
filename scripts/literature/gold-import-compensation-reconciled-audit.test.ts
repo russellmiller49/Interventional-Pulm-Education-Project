@@ -15,6 +15,7 @@ import {
   trustedLocalDeploymentProfileEvidence,
 } from './gold-import-compensation-contract-expectations'
 import {
+  OWNER_ACL_AUDIT_READY_TERMINAL_STATE,
   projectRpcMetadataForDeploymentProfile,
   projectSchemaSecurityIdentityForDeploymentProfile,
   reconcileGoldImportCompensationContract,
@@ -26,7 +27,6 @@ import {
   IMPORT_COMPENSATION_MIGRATION_ID,
   IMPORT_COMPENSATION_MIGRATION_SHA256,
   buildAuditArtifacts,
-  buildDevelopmentPlanningState,
   canonicalJson,
   sealCanonicalArtifacts,
   type AuditResult,
@@ -370,10 +370,46 @@ describe('reconciled gold import-compensation audit', () => {
       status: 'ready',
     })
     expect(evidence.profileDiffs).toEqual(prepared.reconciliation.profileDiffs)
+    expect(evidence.classificationPartitions).toEqual(
+      prepared.reconciliation.classificationPartitions,
+    )
+    expect(evidence.schemaSecurityRecordClassificationCounts).toEqual(
+      prepared.reconciliation.classificationPartitions.schemaSecurityRecords.classificationCounts,
+    )
+    expect(evidence.rpcClassificationCounts).toEqual(
+      prepared.reconciliation.classificationPartitions.rpcs.classificationCounts,
+    )
+    expect(evidence.deploymentProfileClassificationCounts).toEqual(
+      prepared.reconciliation.classificationPartitions.deploymentProfile.classificationCounts,
+    )
+    expect(evidence.combinedClassificationCounts).toEqual(
+      prepared.reconciliation.classificationPartitions.combined.classificationCounts,
+    )
+    expect(evidence.ownerAclTerminalState).toBe(OWNER_ACL_AUDIT_READY_TERMINAL_STATE)
     expect(evidence.requestedNameDiscrepancies).toEqual([REQUESTED_RECONCILIATION_NAME_DISCREPANCY])
     expect(evidence).not.toBe(prepared.reconciliation)
     expect(checks.legacyOwnerSpecificFailures).toEqual(EXACT_SUPERSEDED_LEGACY_FAILURES)
+    expect(checks.ownerAclTerminalState).toBe(OWNER_ACL_AUDIT_READY_TERMINAL_STATE)
     expect(checks.failures).toEqual([])
+    expect(result.markdown).toContain('- Owner/ACL forward migration required: `false`')
+    expect(result.markdown).toContain(
+      `- Owner/ACL terminal: \`${OWNER_ACL_AUDIT_READY_TERMINAL_STATE}\``,
+    )
+    expect(result.markdown).toContain(
+      '- Scope: this owner/ACL reconciliation is separate from the overall import-contract forward-repair decision and does not declare that overall repair unnecessary.',
+    )
+    expect(result.markdown).toContain(
+      '- Schema/security records (total `763`): `identical=20`, `environment_representation_only=219`, `explicitly_supported_local_profile=523`, `missing_expected_object=0`, `unexpected_object=0`, `semantic_contract_difference=0`, `security_contract_difference=0`, `audit_expectation_defect=1`',
+    )
+    expect(result.markdown).toContain(
+      '- RPCs (total `3`): `identical=0`, `environment_representation_only=0`, `explicitly_supported_local_profile=3`, `missing_expected_object=0`, `unexpected_object=0`, `semantic_contract_difference=0`, `security_contract_difference=0`, `audit_expectation_defect=0`',
+    )
+    expect(result.markdown).toContain(
+      '- Deployment profile (total `6`): `identical=6`, `environment_representation_only=0`, `explicitly_supported_local_profile=0`, `missing_expected_object=0`, `unexpected_object=0`, `semantic_contract_difference=0`, `security_contract_difference=0`, `audit_expectation_defect=0`',
+    )
+    expect(result.markdown).toContain(
+      '- Combined (total `772`): `identical=26`, `environment_representation_only=219`, `explicitly_supported_local_profile=526`, `missing_expected_object=0`, `unexpected_object=0`, `semantic_contract_difference=0`, `security_contract_difference=0`, `audit_expectation_defect=1`',
+    )
   })
 
   it('rebuilds serialized reconciliation evidence instead of trusting declared hashes', () => {
@@ -386,6 +422,12 @@ describe('reconciled gold import-compensation audit', () => {
     forged.identities.actual.contractInvariant.sha256 = '0'.repeat(64)
     expect(() => validateReadyLocalPostMigrationContractReconciliation(forged)).toThrow(
       /exact ready local|checksum binding|independently rebuilt reconciliation/u,
+    )
+
+    const forgedArithmetic = structuredClone(prepared.reconciliation)
+    forgedArithmetic.classificationPartitions.combined.total -= 1
+    expect(() => validateReadyLocalPostMigrationContractReconciliation(forgedArithmetic)).toThrow(
+      /partition 763 schema records|independently rebuilt reconciliation/u,
     )
   })
 

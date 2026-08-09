@@ -75,6 +75,7 @@
     "literature:audit-gold-import-compensation-migration": "tsx scripts/literature/audit-gold-import-compensation-migration.ts",
     "literature:diagnose-gold-import-compensation-contract": "tsx scripts/literature/diagnose-gold-import-compensation-contract.ts",
     "literature:audit-gold-existing-head-compatibility": "tsx scripts/literature/audit-gold-existing-head-compatibility.ts",
+    "literature:audit-gold-import-pr-diff-stat": "tsx scripts/literature/audit-gold-import-pr-diff-stat-reconciliation.ts",
     "literature:backup-post-migration-contract-reconciliation": "tsx scripts/literature/create-post-migration-contract-reconciliation-backup.ts",
     "literature:generate-gold-import-compensation-package": "tsx scripts/literature/generate-gold-import-compensation-package-v1.ts",
     "literature:rehearse-exact-gold-import-compensation-package": "tsx scripts/literature/rehearse-exact-gold-import-compensation-package-v1.ts",

@@ -37,9 +37,12 @@ import {
   POST_MIGRATION_SCHEMA_SECURITY_IDENTITY_SHA256,
   schemaSecurityDefinitionIdentitySha256,
 } from './gold-import-compensation-rehearsal-evidence'
+import { OWNER_ACL_AUDIT_READY_TERMINAL_STATE } from './gold-import-compensation-contract-reconciliation'
 import {
   resolveGoldImportCompensationCompatibility,
+  resolveFinalizedArtifactNoteForImport,
   validateGoldImportSourceAuthorizationSet,
+  type CompatibilityAuditBindingContext,
   type GoldImportCompensationCompatibilityResolution,
 } from './gold-import-compensation-compatibility'
 import { validateReadyLocalPostMigrationContractReconciliation } from './gold-import-compensation-reconciled-audit'
@@ -326,9 +329,42 @@ const reconciliationIdentitySetSchema = z
   })
   .strict()
 
+const reconciliationClassificationCountsSchema = z
+  .object({
+    audit_expectation_defect: z.number().int().nonnegative(),
+    environment_representation_only: z.number().int().nonnegative(),
+    explicitly_supported_local_profile: z.number().int().nonnegative(),
+    identical: z.number().int().nonnegative(),
+    missing_expected_object: z.number().int().nonnegative(),
+    security_contract_difference: z.number().int().nonnegative(),
+    semantic_contract_difference: z.number().int().nonnegative(),
+    unexpected_object: z.number().int().nonnegative(),
+  })
+  .strict()
+
+function reconciliationClassificationPartitionSchema<const Total extends number>(total: Total) {
+  return z
+    .object({
+      classificationCounts: reconciliationClassificationCountsSchema,
+      total: z.literal(total),
+    })
+    .strict()
+}
+
+const reconciliationClassificationPartitionsSchema = z
+  .object({
+    combined: reconciliationClassificationPartitionSchema(772),
+    deploymentProfile: reconciliationClassificationPartitionSchema(6),
+    rpcs: reconciliationClassificationPartitionSchema(3),
+    schemaSecurityRecords: reconciliationClassificationPartitionSchema(763),
+  })
+  .strict()
+
 const readyContractReconciliationSchema = z
   .object({
-    classificationCounts: z.record(z.string(), z.number().int().nonnegative()),
+    classificationCounts: reconciliationClassificationCountsSchema,
+    classificationPartitions: reconciliationClassificationPartitionsSchema,
+    combinedClassificationCounts: reconciliationClassificationCountsSchema,
     completeness: z
       .object({
         actualRecordCount: z.number().int().positive(),
@@ -346,6 +382,7 @@ const readyContractReconciliationSchema = z
         violations: z.tuple([]),
       })
       .strict(),
+    deploymentProfileClassificationCounts: reconciliationClassificationCountsSchema,
     fullEnvironmentInventoryMatches: z.boolean(),
     identities: z
       .object({
@@ -354,6 +391,7 @@ const readyContractReconciliationSchema = z
       })
       .strict(),
     invariantIdentityMatches: z.literal(true),
+    ownerAclTerminalState: z.literal(OWNER_ACL_AUDIT_READY_TERMINAL_STATE),
     ownerRepresentation: z
       .object({
         actualRecordCount: z.literal(683),
@@ -369,8 +407,9 @@ const readyContractReconciliationSchema = z
       .strict(),
     readinessBlockers: z.tuple([]),
     ready: z.literal(true),
-    profileDiffs: z.array(z.unknown()).nonempty(),
+    profileDiffs: z.array(z.unknown()).length(6),
     recordDiffs: z.array(z.unknown()).length(763),
+    rpcClassificationCounts: reconciliationClassificationCountsSchema,
     requestedNameDiscrepancies: z.tuple([
       z
         .object({
@@ -382,6 +421,7 @@ const readyContractReconciliationSchema = z
         .strict(),
     ]),
     rpcDiffs: z.array(z.unknown()).length(3),
+    schemaSecurityRecordClassificationCounts: reconciliationClassificationCountsSchema,
     schemaVersion: z.literal('gold-import-compensation-contract-reconciliation/1.0.0'),
   })
   .strict()
@@ -409,6 +449,7 @@ const reconciledAuditChecksSchema = auditChecksSchema
         'RPC execution contract mismatch for reconcile_literature_gold_review_operation_v1.',
       ),
     ]),
+    ownerAclTerminalState: z.literal(OWNER_ACL_AUDIT_READY_TERMINAL_STATE),
   })
   .strict()
 
@@ -482,7 +523,6 @@ export interface PackageSourceBytes {
 
 export interface GeneratePackageInput {
   auditPackage: VerifiedPostMigrationAuditPackage
-  compatibilitySupplement?: unknown
   identityPolicy?: PackageSourceIdentityPolicy
   sources: PackageSourceBytes
 }
@@ -886,7 +926,7 @@ function artifactList(value: string): string[] {
   try {
     const parsed = parseFinalizedArtifactPipeList(value)
     if (parsed.reordered) {
-      throw new Error('checksum-bound V2 list normalization is required')
+      throw new Error('checksum-bound V3 list normalization is required')
     }
     return parsed.canonicalValues
   } catch {
@@ -926,6 +966,7 @@ function parseFinalizedArtifactRecords(bytes: Buffer): FinalizedArtifactRecord[]
 function targetReviewFromArtifact(
   record: FinalizedArtifactRecord,
   current: z.infer<typeof historicalEffectiveReviewSchema> | null,
+  itemState: z.infer<typeof preImportItemStateSchema>,
 ): z.infer<typeof goldReviewPayloadSchema> {
   if (!record.technology_tag_status || !record.disease_tag_status) {
     throw new Error(
@@ -949,6 +990,12 @@ function targetReviewFromArtifact(
         reviewSeconds: 0,
         startedAt: PACKAGE_REVIEW_TIMESTAMP,
       }
+  const fullTextUsed = strictArtifactBoolean(record.full_text_used, 'full_text_used')
+  if (fullTextUsed) {
+    throw new Error(
+      'real_contract_incompatibility: finalized V3 full_text_used provenance has no exact import v1 persistence mapping; no executable package was generated.',
+    )
+  }
   return goldReviewPayloadSchema.parse({
     ...operational,
     categorizationFromFullText: strictArtifactBoolean(
@@ -963,7 +1010,11 @@ function targetReviewFromArtifact(
     isBlinded: strictArtifactBoolean(record.is_blinded, 'is_blinded'),
     labelSchemaVersion: record.label_schema_version,
     metadataSufficiency: record.metadata_sufficiency,
-    notes: record.physician_notes,
+    notes: resolveFinalizedArtifactNoteForImport({
+      currentNote: current?.notes ?? null,
+      identity: { masterRowId: record.master_row_id, pmid: record.pmid },
+      sourceNote: record.physician_notes,
+    }),
     publicationStatus: record.publication_status || null,
     relevanceLabel: record.physician_final_label,
     reviewerConfidence: record.physician_final_confidence,
@@ -972,7 +1023,7 @@ function targetReviewFromArtifact(
     technologyTagStatus: record.technology_tag_status,
     technologyTags: artifactList(record.technology_tags),
     topicIds: artifactList(record.topic_ids),
-    usedSupplementalMetadata: strictArtifactBoolean(record.full_text_used, 'full_text_used'),
+    usedSupplementalMetadata: itemState.supplementalMetadataRevealedAt !== null,
   })
 }
 
@@ -1030,7 +1081,11 @@ export function derivePackagePlanningRows(
         'Development planning state identities do not match the finalized V3 artifact.',
       )
     }
-    const targetReview = targetReviewFromArtifact(record, current.currentEffectiveReview)
+    const targetReview = targetReviewFromArtifact(
+      record,
+      current.currentEffectiveReview,
+      current.itemState,
+    )
     const common = {
       datasetSplit: 'development' as const,
       expectedCurrentReviewId: current.currentReviewId,
@@ -1607,6 +1662,13 @@ export function generateGoldImportCompensationPackage(
   })
   const audit = auditPackage.audit
   const policy = input.identityPolicy ?? PRODUCTION_SOURCE_IDENTITIES
+  if (
+    input.identityPolicy !== undefined &&
+    !usesProductionSourceIdentityPolicy(input.identityPolicy) &&
+    process.env.NODE_ENV !== 'test'
+  ) {
+    throw new Error('Non-production source identity policies are restricted to tests.')
+  }
   if (policy.migrationId !== MIGRATION_ID) throw new Error('Unsupported migration identity policy.')
   const sourceIdentities = {
     amendedAuthorizationSha256: sha256Bytes(input.sources.amendedAuthorization),
@@ -1640,6 +1702,7 @@ export function generateGoldImportCompensationPackage(
       'Package generation blocked: development planning state does not match the ready audit.',
     )
   }
+  let compatibilityBindingContext: CompatibilityAuditBindingContext | null = null
   let compatibilityResolution: GoldImportCompensationCompatibilityResolution | null = null
   if (usesProductionSourceIdentityPolicy(policy)) {
     if (audit.schemaVersion !== 'gold-import-compensation-reconciled-migration-audit/1.0.0') {
@@ -1647,23 +1710,23 @@ export function generateGoldImportCompensationPackage(
         'Package generation blocked: production sources require the reconciled post-migration audit.',
       )
     }
-    compatibilityResolution = resolveGoldImportCompensationCompatibility({
-      bindingContext: {
-        contract: {
-          environmentInvariantIdentitySha256: audit.database.contractInvariantIdentitySha256,
-          environmentProfileIdentitySha256: audit.database.environmentProfileIdentitySha256,
-        },
-        currentDatabase: {
-          batchId: audit.database.batchId,
-          developmentMembershipSha256: audit.database.developmentMembershipSha256,
-          developmentPlanningStateSha256: audit.database.developmentPlanningStateSha256,
-          effectiveStateSha256: audit.database.currentEffectiveStateSha256,
-          physicalStateSha256: audit.database.currentPhysicalStateSha256,
-        },
-        finalV3ArtifactSha256: sourceIdentities.finalArtifactSha256,
-        migration: { id: MIGRATION_ID, sha256: sourceIdentities.migrationSha256 },
+    compatibilityBindingContext = {
+      contract: {
+        environmentInvariantIdentitySha256: audit.database.contractInvariantIdentitySha256,
+        environmentProfileIdentitySha256: audit.database.environmentProfileIdentitySha256,
       },
-      compatibilitySupplement: input.compatibilitySupplement,
+      currentDatabase: {
+        batchId: audit.database.batchId,
+        developmentMembershipSha256: audit.database.developmentMembershipSha256,
+        developmentPlanningStateSha256: audit.database.developmentPlanningStateSha256,
+        effectiveStateSha256: audit.database.currentEffectiveStateSha256,
+        physicalStateSha256: audit.database.currentPhysicalStateSha256,
+      },
+      finalV3ArtifactSha256: sourceIdentities.finalArtifactSha256,
+      migration: { id: MIGRATION_ID, sha256: sourceIdentities.migrationSha256 },
+    }
+    compatibilityResolution = resolveGoldImportCompensationCompatibility({
+      bindingContext: compatibilityBindingContext,
       developmentPlanningState: planningRowsContainer,
       finalizedArtifact: input.sources.finalArtifact,
     })
@@ -1677,50 +1740,32 @@ export function generateGoldImportCompensationPackage(
     ? packagePlanningRowsFromCompatibility(planningRowsContainer, compatibilityResolution)
     : derivePackagePlanningRows(planningRowsContainer, input.sources.finalArtifact)
   const importCounts = deriveImportActionCounts(rows)
-  const optionalTagStatusResolutions = compatibilityResolution
-    ? compatibilityResolution.artifact.rows
-        .filter(
-          (record) =>
-            record.projection.technologyTagStatus === null ||
-            record.projection.diseaseTagStatus === null,
-        )
-        .map((record) => {
-          const target = compatibilityResolution?.planningRows.find(
-            (row) => row.identity.itemId === record.identity.itemId,
-          )?.targetReview
-          if (
-            !target ||
-            (target.technologyTagStatus !== 'not_applicable' &&
-              target.technologyTagStatus !== 'not_assessable') ||
-            (target.diseaseTagStatus !== 'not_applicable' &&
-              target.diseaseTagStatus !== 'not_assessable')
-          ) {
-            throw new Error('Completed compatibility resolution has no exact optional statuses.')
-          }
-          return {
-            diseaseTagStatus: target.diseaseTagStatus,
-            itemId: record.identity.itemId,
-            pmid: record.identity.pmid,
-            technologyTagStatus: target.technologyTagStatus,
-          }
-        })
-    : []
+  if (compatibilityResolution && !compatibilityBindingContext) {
+    throw new Error('Package compatibility resolution is missing its exact audit binding context.')
+  }
   const compatibilityAuthorization = compatibilityResolution
     ? {
-        acceptedSupplementSha256: compatibilityResolution.acceptedSupplementSha256,
         actionCounts: compatibilityResolution.actionCounts,
+        bindings: {
+          ...compatibilityBindingContext!,
+          existingHeadCohortSha256: compatibilityResolution.existingHeadCohortSha256,
+        },
         booleanNormalizationLedger: compatibilityResolution.artifact.booleanNormalizations,
         booleanNormalizationLedgerSha256: sha256Canonical(
           compatibilityResolution.artifact.booleanNormalizations,
         ),
-        existingHeadCohortSha256: compatibilityResolution.existingHeadCohortSha256,
         listNormalizationLedger: compatibilityResolution.artifact.listNormalizations,
         listNormalizationLedgerSha256: sha256Canonical(
           compatibilityResolution.artifact.listNormalizations,
         ),
-        optionalTagStatusResolutions,
+        noteDisposition: compatibilityResolution.noteDisposition,
         resolutionSchemaVersion: compatibilityResolution.schemaVersion,
-        supplement: input.compatibilitySupplement,
+        scope: {
+          datasetSplit: 'development' as const,
+          heldOutIdentitiesAccessed: false as const,
+          remoteWritesAllowed: false as const,
+          targetDatabase: 'local' as const,
+        },
       }
     : null
   const authorizationSet = compatibilityAuthorization
@@ -1731,7 +1776,7 @@ export function generateGoldImportCompensationPackage(
         kind: 'gold_import_source_authorization_set',
         signedProtocolAuthorizationSha256: sourceIdentities.protocolAuthorizationSha256,
         sourceDecisionsChanged: false,
-        version: 2,
+        version: 3,
       }
     : {
         amendedTwoRowAuthorizationSha256: sourceIdentities.amendedAuthorizationSha256,
@@ -1778,8 +1823,9 @@ export function generateGoldImportCompensationPackage(
   validateGoldImportSourceArtifact({
     compatibility: compatibilityResolution
       ? {
+          booleanNormalizationLedger: compatibilityResolution.artifact.booleanNormalizations,
           listNormalizationLedger: compatibilityResolution.artifact.listNormalizations,
-          optionalTagStatusResolutions,
+          noteDisposition: compatibilityResolution.noteDisposition,
         }
       : undefined,
     csvText: new TextDecoder('utf-8', { fatal: true }).decode(input.sources.finalArtifact),
@@ -1937,14 +1983,17 @@ export function generateGoldImportCompensationPackage(
     ...(compatibilityResolution
       ? {
           compatibility: {
-            acceptedSupplementSha256: compatibilityResolution.acceptedSupplementSha256,
             actionCounts: compatibilityResolution.actionCounts,
+            authorizationBindingsSha256: compatibilityAuthorization
+              ? sha256Canonical(compatibilityAuthorization.bindings)
+              : null,
             booleanNormalizationLedgerSha256:
               compatibilityAuthorization?.booleanNormalizationLedgerSha256,
             existingHeadCohortSha256: compatibilityResolution.existingHeadCohortSha256,
             listNormalizationLedgerSha256:
               compatibilityAuthorization?.listNormalizationLedgerSha256,
-            sourceAuthorizationSetVersion: 2,
+            noteDispositionSha256: sha256Canonical(compatibilityResolution.noteDisposition),
+            sourceAuthorizationSetVersion: 3,
           },
         }
       : {}),
@@ -2145,7 +2194,6 @@ Usage:
     --audit-manifest-sha256 <reviewed-canonical-manifest-sha256> \\
     --development-state <development-planning-state.json> \\
     --artifact <gold-set-v1-enrichment-v3-final-development-630.csv> \\
-    [--compatibility-supplement <completed-physician-compatibility-supplement.json>] \\
     --protocol-authorization <protocol-authorization-signed.json> \\
     --amended-authorization <amended-authorization.json> \\
     --migration <20260808035633_add_literature_gold_import_compensation_contract.sql> \\
@@ -2162,7 +2210,6 @@ export async function runPackageGeneratorCli(argv: readonly string[]): Promise<{
     'artifact',
     'audit',
     'audit-manifest-sha256',
-    'compatibility-supplement',
     'development-state',
     'help',
     'migration',
@@ -2241,24 +2288,16 @@ export async function runPackageGeneratorCli(argv: readonly string[]): Promise<{
     trustedManifestSha256: requiredArgument(arguments_, 'audit-manifest-sha256'),
   })
   // Source paths are resolved and opened only after both audit gates pass.
-  const [
-    finalArtifact,
-    protocolAuthorization,
-    amendedAuthorization,
-    migration,
-    compatibilitySupplement,
-  ] = await Promise.all([
-    readFile(resolve(requiredArgument(arguments_, 'artifact'))),
-    readFile(resolve(requiredArgument(arguments_, 'protocol-authorization'))),
-    readFile(resolve(requiredArgument(arguments_, 'amended-authorization'))),
-    readFile(resolve(requiredArgument(arguments_, 'migration'))),
-    stringArgument(arguments_, 'compatibility-supplement')
-      ? readJson(resolve(requiredArgument(arguments_, 'compatibility-supplement')))
-      : Promise.resolve(undefined),
-  ])
+  const [finalArtifact, protocolAuthorization, amendedAuthorization, migration] = await Promise.all(
+    [
+      readFile(resolve(requiredArgument(arguments_, 'artifact'))),
+      readFile(resolve(requiredArgument(arguments_, 'protocol-authorization'))),
+      readFile(resolve(requiredArgument(arguments_, 'amended-authorization'))),
+      readFile(resolve(requiredArgument(arguments_, 'migration'))),
+    ],
+  )
   const generated = generateGoldImportCompensationPackage({
     auditPackage,
-    compatibilitySupplement,
     sources: { amendedAuthorization, finalArtifact, migration, protocolAuthorization },
   })
   const rawOutputRoot = requiredArgument(arguments_, 'output-root')

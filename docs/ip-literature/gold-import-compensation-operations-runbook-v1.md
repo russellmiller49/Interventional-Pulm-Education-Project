@@ -64,31 +64,51 @@ attributes, role memberships, ACL matrix, and effective privileges and fails
 closed for any other state. The full environment inventory is retained as
 evidence but is no longer misused as a cross-environment readiness hash.
 
+Require the reconciliation JSON to expose separate
+`schemaSecurityRecordClassificationCounts`, `rpcClassificationCounts`,
+`deploymentProfileClassificationCounts`, and `combinedClassificationCounts` partitions. For the
+accepted local evidence these cover exactly 763 schema/security diffs, three RPC diffs, six
+deployment-profile diffs, and 772 combined classifications. Validate each partition against its own
+diff-array length and prove the combined counts are the element-wise sum; never describe the 772
+combined entries as 763 records.
+
+The exact owner/ACL subterminal is:
+
+`OWNER/ACL AUDIT READY — NO OWNER/ACL FORWARD MIGRATION REQUIRED`
+
 The signed V3 provenance authorizes the finalized enrichment deltas, including
 additive differences from the nine existing heads, but source authorization
 does not override execution compatibility. The real read-only audit validates
 all 630 rows before assigning actions and finds zero executable rows:
 
-- `source_is_blinded_conflicts_with_local_automated_signals_reveal_state_v1`
+- `source_review_blinding_provenance_has_no_exact_import_v1_mapping`
   affects all 630 rows: every source `is_blinded` value is semantically false,
-  while every local `automatedSignalsRevealedAt` value is null;
+  while every local `automatedSignalsRevealedAt` value is null. The source
+  review provenance and local UI reveal event are distinct facts that contract
+  v1 incorrectly equates;
 - `excluded_status_null_not_representable_by_import_contract_v1` affects all
   272 formal V3 excluded rows: their blank technology- and disease-tag
   statuses are authoritative and outside enrichment scope, while import
   contract v1 requires non-null status enums; and
-- `source_supplemental_metadata_use_conflicts_with_local_reveal_state_v1`
-  affects 50 rows: `full_text_used=true` conflicts with null local
-  `supplementalMetadataRevealedAt` state.
+- `source_full_text_provenance_has_no_exact_import_v1_mapping` affects 50
+  rows. This code names a missing exact persistence mapping:
+  source `full_text_used=true` records complete-PDF enrichment evidence, not
+  supplemental PubMed metadata use. Contract v1 lacks the correct persistence
+  target, aliases the value to `usedSupplementalMetadata`, and then conflicts
+  with null local `supplementalMetadataRevealedAt` state.
 
-Those three checksum-bound ledgers are execution blockers. They are distinct
-from the existing-head field audit, which conservatively reports incompatible
-`notes` for PMIDs `36879724` and `39281191`. The finalized source notes differ
-from each current authorized rationale, and the signed V3 provenance plus
-amended two-row authorization do not provide an exact replace-source-notes or
-preserve-current-rationale mapping. The notes therefore remain an unresolved
-source-authorization mapping and produce the fourth readiness blocker,
-`incompatible_existing_head_fields`. They are classified as incompatible, not
-as pending physician-supplement decisions.
+Those three checksum-bound ledgers are the only execution blockers. The
+apparent `notes` differences for PMIDs `36879724` and `39281191` are governed
+by the exact amended authorization, which requires the supplied rationale
+instead of the earlier finalized V3 `physician_notes`. The authorization's
+field mapping writes that rationale to persisted review `notes`, and its
+authoritative additive correction leaves review-row mappings unchanged. An
+exact current-rationale match is classified
+`requires_existing_authorization_interpretation`, produces no
+`incompatible_existing_head_fields` blocker, and has the exact subterminal
+`NOTE DISPOSITION ALREADY AUTHORIZED`. A mismatch against that checksum-bound
+target must fail closed; it must not be silently overwritten or turned into a
+supplement.
 
 The exact boolean-normalization ledger preserves each source lexeme and
 semantic value; it cannot change false to true. Ordered V3 pipe lists are
@@ -101,9 +121,12 @@ The 272 excluded-row blanks are not physician ambiguity. A compatibility
 supplement or template would invent out-of-scope enrichment values and is
 neither required nor safe; supplying one must not change readiness. No action
 plan or package is generated. The exact terminal state is
-`CONTRACT STILL BLOCKED — UNRESOLVED DIFFERENCE`. This source/local contract
-finding is independent of the safe owner/ACL profile conclusion and does not
-propose or authorize a forward migration.
+`FORWARD IMPORT-CONTRACT REPAIR REQUIRED — NOTE DISPOSITION ALREADY AUTHORIZED`. This source/local
+contract finding is independent of the safe owner/ACL profile conclusion. The exact 13-field
+source-of-truth definitions are in
+[`gold-import-field-lineage-v1.md`](./gold-import-field-lineage-v1.md), and a
+future non-authorizing design boundary is in
+[`gold-import-contract-v2-forward-repair-spec.md`](./gold-import-contract-v2-forward-repair-spec.md).
 
 ## Operational sequence
 
@@ -293,22 +316,26 @@ npm run literature:audit-gold-existing-head-compatibility -- \
   --audit-manifest-sha256 <REVIEWED_RECONCILED_AUDIT_MANIFEST_SHA256> \
   --development-state <RECONCILED_AUDIT_DIRECTORY>/development-planning-state.json \
   --artifact <FINAL_V3_CSV> \
+  --amended-authorization <AMENDED_AUTHORIZATION_JSON> \
+  --authorization-mapping <AUTHORIZATION_FIELD_MAPPING_JSON> \
+  --authorization-manifest <AUTHORIZATION_ARTIFACT_MANIFEST> \
+  --authorization-mapping-correction <AUTHORITATIVE_MAPPING_CORRECTION_JSON> \
+  --authorization-mapping-correction-manifest <MAPPING_CORRECTION_MANIFEST> \
   --output-root <EXISTING_APPROVED_AUDIT_ROOT> \
   --output <NEW_SOURCE_COMPATIBILITY_AUDIT_DIRECTORY>
 ```
 
 Require all 630 rows to be execution-blocked and zero to be executable. Require
 exact blocker counts of 630 source/local blinding mismatches, 272 excluded-row
-status mismatches, and 50 supplemental-metadata reveal mismatches. The audit
-must also report incompatible `notes` for exactly PMIDs `36879724` and
-`39281191` and the fourth readiness blocker
-`incompatible_existing_head_fields`. The first three blockers are the counted
-execution-compatibility ledgers; the fourth is the conservative
-source-authorization mapping failure from the existing-head field audit. The
-audit must report zero unresolved physician decisions,
-`supplement.required=false`, no supplement template, no
-initial/revision/no-op action, and terminal state
-`CONTRACT STILL BLOCKED — UNRESOLVED DIFFERENCE`.
+status mismatches, and 50 full-text-persistence/supplemental-reveal mapping
+mismatches. These are the three counted execution-compatibility ledgers. For
+PMIDs `36879724` and `39281191`, require exact authentication of the amended
+authorization and its mapping, exact comparison with the authorized rationale,
+classification `requires_existing_authorization_interpretation`, and note
+subterminal `NOTE DISPOSITION ALREADY AUTHORIZED`. The audit must report no
+`incompatible_existing_head_fields` blocker, zero unresolved physician decisions,
+no supplement or optional-status-resolution field, no initial/revision/no-op action, and terminal state
+`FORWARD IMPORT-CONTRACT REPAIR REQUIRED — NOTE DISPOSITION ALREADY AUTHORIZED`.
 
 Preserve `boolean-normalization-report.json` and
 `list-normalization-report.json`; the list report digest must match the audit
@@ -322,10 +349,11 @@ Do not invoke the package generator for the current audit. Its readiness gate
 must reject the 630 execution-blocked rows before opening a mutation path or
 writing package output. A physician supplement cannot satisfy that gate and
 must itself be rejected. This runbook does not authorize a source rewrite,
-local-state rewrite, or forward migration. Any later package procedure
-requires separately reviewed evidence that every source row satisfies the
-execution contract; counts must then be derived from that evidence rather than
-compared with the historical `621/3/6` distribution.
+local-state rewrite, or application of a forward migration. The semantic
+forward-repair specification is design evidence only. Any later package
+procedure requires separately reviewed evidence that every source row satisfies
+the execution contract; counts must then be derived from that evidence rather
+than compared with the historical `621/3/6` distribution.
 
 If a later, separately authorized compatibility result passes that gate, its
 generated package must embed the exact seven reconciled audit artifacts and

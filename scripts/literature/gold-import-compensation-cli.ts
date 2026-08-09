@@ -339,12 +339,13 @@ async function loadImportBundle(
   }
   validateGoldImportSourceArtifact({
     compatibility:
-      parsedSourceAuthorization.version === 2
+      parsedSourceAuthorization.version === 3
         ? {
+            booleanNormalizationLedger:
+              parsedSourceAuthorization.compatibility.booleanNormalizationLedger,
             listNormalizationLedger:
               parsedSourceAuthorization.compatibility.listNormalizationLedger,
-            optionalTagStatusResolutions:
-              parsedSourceAuthorization.compatibility.optionalTagStatusResolutions,
+            noteDisposition: parsedSourceAuthorization.compatibility.noteDisposition,
           }
         : undefined,
     csvText,

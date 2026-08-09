@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
 import {
+  OWNER_ACL_AUDIT_READY_TERMINAL_STATE,
   projectRpcMetadataForDeploymentProfile,
   projectSchemaSecurityIdentityForDeploymentProfile,
   reconcileGoldImportCompensationContract,
@@ -345,6 +346,7 @@ describe('gold import-compensation contract reconciliation', () => {
     const result = reconcileGoldImportCompensationContract(await localInput())
 
     expect(result.ready).toBe(true)
+    expect(result.ownerAclTerminalState).toBe(OWNER_ACL_AUDIT_READY_TERMINAL_STATE)
     expect(result.invariantIdentityMatches).toBe(true)
     expect(result.deploymentProfile.passed).toBe(true)
     expect(result.fullEnvironmentInventoryMatches).toBe(false)
@@ -366,12 +368,78 @@ describe('gold import-compensation contract reconciliation', () => {
       projectionExactlyMatchesActual: true,
       isExact763To683OwnerRepresentation: true,
     })
-    expect(result.classificationCounts.missing_expected_object).toBe(0)
-    expect(result.classificationCounts.unexpected_object).toBe(0)
-    expect(result.classificationCounts.semantic_contract_difference).toBe(0)
-    expect(result.classificationCounts.security_contract_difference).toBe(0)
-    expect(result.classificationCounts.environment_representation_only).toBeGreaterThan(0)
-    expect(result.classificationCounts.explicitly_supported_local_profile).toBeGreaterThan(0)
+    expect(result.classificationPartitions).toEqual({
+      combined: {
+        classificationCounts: {
+          audit_expectation_defect: 0,
+          environment_representation_only: 219,
+          explicitly_supported_local_profile: 527,
+          identical: 26,
+          missing_expected_object: 0,
+          security_contract_difference: 0,
+          semantic_contract_difference: 0,
+          unexpected_object: 0,
+        },
+        total: 772,
+      },
+      deploymentProfile: {
+        classificationCounts: {
+          audit_expectation_defect: 0,
+          environment_representation_only: 0,
+          explicitly_supported_local_profile: 0,
+          identical: 6,
+          missing_expected_object: 0,
+          security_contract_difference: 0,
+          semantic_contract_difference: 0,
+          unexpected_object: 0,
+        },
+        total: 6,
+      },
+      rpcs: {
+        classificationCounts: {
+          audit_expectation_defect: 0,
+          environment_representation_only: 0,
+          explicitly_supported_local_profile: 3,
+          identical: 0,
+          missing_expected_object: 0,
+          security_contract_difference: 0,
+          semantic_contract_difference: 0,
+          unexpected_object: 0,
+        },
+        total: 3,
+      },
+      schemaSecurityRecords: {
+        classificationCounts: {
+          audit_expectation_defect: 0,
+          environment_representation_only: 219,
+          explicitly_supported_local_profile: 524,
+          identical: 20,
+          missing_expected_object: 0,
+          security_contract_difference: 0,
+          semantic_contract_difference: 0,
+          unexpected_object: 0,
+        },
+        total: 763,
+      },
+    })
+    expect(result.classificationCounts).toEqual(
+      result.classificationPartitions.combined.classificationCounts,
+    )
+    expect(result.schemaSecurityRecordClassificationCounts).toEqual(
+      result.classificationPartitions.schemaSecurityRecords.classificationCounts,
+    )
+    expect(result.rpcClassificationCounts).toEqual(
+      result.classificationPartitions.rpcs.classificationCounts,
+    )
+    expect(result.deploymentProfileClassificationCounts).toEqual(
+      result.classificationPartitions.deploymentProfile.classificationCounts,
+    )
+    expect(result.combinedClassificationCounts).toEqual(
+      result.classificationPartitions.combined.classificationCounts,
+    )
+    expect(Object.values(result.classificationCounts).reduce((sum, count) => sum + count, 0)).toBe(
+      763 + 3 + 6,
+    )
     expect(result.identities.expected.contractInvariant.sha256).toBe(
       result.identities.actual.contractInvariant.sha256,
     )

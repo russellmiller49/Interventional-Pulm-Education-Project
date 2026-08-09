@@ -17,13 +17,7 @@ import {
   type GoldReviewPayload,
   type ImportReceipt,
 } from '../../src/features/literature/gold-set/import-compensation'
-import {
-  FINALIZED_GOLD_IMPORT_ARTIFACT_COLUMNS,
-  GOLD_IMPORT_COMPATIBILITY_SUPPLEMENT_SCHEMA_VERSION,
-  GOLD_IMPORT_PHYSICIAN_DECISION_IDENTITIES,
-  bindCompletedCompatibilitySupplement,
-  parseFinalizedGoldImportArtifact,
-} from './gold-import-compensation-compatibility'
+import { parseFinalizedGoldImportArtifact } from './gold-import-compensation-compatibility'
 import {
   runGoldImportCompensationCli,
   type GoldImportCompensationDatabaseClient,
@@ -66,12 +60,6 @@ function sha256(value: string | Buffer): string {
 function bindReceipt<T extends { response: string }>(content: T) {
   const identity = Object.fromEntries(Object.entries(content).filter(([key]) => key !== 'response'))
   return { ...content, binding: { contentSha256: sha256Canonical(identity) } }
-}
-
-function fixtureUuid(namespace: number, value: number): string {
-  return `${namespace.toString(16).padStart(8, '0')}-0000-4000-8000-${value
-    .toString(16)
-    .padStart(12, '0')}`
 }
 
 function jsonClone<T>(value: T): T {
@@ -394,299 +382,102 @@ async function fixture() {
   }
 }
 
-async function v2CompatibilityFixture() {
-  const root = await mkdtemp(join(tmpdir(), 'gold-import-compensation-cli-v2-'))
-  const batchId = fixtureUuid(0x51000000, 1)
-  const operationId = fixtureUuid(0x52000000, 1)
-  const physicalStateSha256 = sha256('v2-physical-state')
-  const effectiveStateSha256 = sha256('v2-effective-state')
-  const developmentMembershipSha256 = sha256('v2-development-membership')
-  const decisions = GOLD_IMPORT_PHYSICIAN_DECISION_IDENTITIES.map((identity, index) => ({
-    ...identity,
-    diseaseTagStatus: index % 2 === 0 ? ('not_applicable' as const) : ('not_assessable' as const),
-    itemId: fixtureUuid(0x53000000, index + 1),
-    technologyTagStatus:
-      index % 2 === 0 ? ('not_assessable' as const) : ('not_applicable' as const),
-  }))
-  type ArtifactRow = Record<(typeof FINALIZED_GOLD_IMPORT_ARTIFACT_COLUMNS)[number], string>
-  const artifactRows: ArtifactRow[] = decisions.map((decision) => ({
-    categorization_from_full_text: 'false',
-    clinical_purposes: '',
-    dataset_split: 'development',
-    disease_tag_status: '',
-    disease_tags: '',
-    enrichment_provenance: 'physician_confirmed_ai_enrichment',
-    enrichment_schema_version: '3.0.2',
-    full_text_used: 'false',
-    gold_set_item_id: decision.itemId,
-    is_blinded: 'False',
-    label_schema_version: '3.0.0',
-    master_row_id: decision.masterRowId,
-    metadata_sufficiency: 'adequate_abstract',
-    physician_final_confidence: 'high',
-    physician_final_label: 'exclude',
-    physician_notes: `Final excluded decision ${decision.masterRowId}`,
-    pmid: decision.pmid,
-    publication_status: '',
-    study_design: '',
-    taxonomy_version: '2.0.0',
-    technology_tag_status: '',
-    technology_tags: '',
-    topic_ids: '',
-  }))
-  const artifactBytes = Buffer.from(
-    `${[
-      FINALIZED_GOLD_IMPORT_ARTIFACT_COLUMNS.join(','),
-      ...artifactRows.map((row) =>
-        FINALIZED_GOLD_IMPORT_ARTIFACT_COLUMNS.map((column) => row[column]).join(','),
-      ),
-    ].join('\n')}\n`,
-    'utf8',
-  )
-  const sourceArtifactSha256 = sha256(artifactBytes)
+async function v3CompatibilityFixture() {
+  const value = await fixture()
+  const artifactBytes = await readFile(value.paths.artifact)
   const parsedArtifact = parseFinalizedGoldImportArtifact(artifactBytes, {
-    expectedArtifactSha256: sourceArtifactSha256,
-  })
-  const reviews = decisions.map(
-    (decision): GoldReviewPayload => ({
-      categorizationFromFullText: false,
-      clinicalPurposes: [],
-      completedAt: FIXED_TIME,
-      createdAt: FIXED_TIME,
-      diseaseTagStatus: decision.diseaseTagStatus,
-      diseaseTags: [],
-      enrichmentProvenance: 'physician_confirmed_ai_enrichment',
-      enrichmentSchemaVersion: '3.0.2',
-      isBlinded: false,
-      labelSchemaVersion: '3.0.0',
-      metadataSufficiency: 'adequate_abstract',
-      notes: `Final excluded decision ${decision.masterRowId}`,
-      publicationStatus: null,
-      relevanceLabel: 'exclude',
-      reviewerConfidence: 'high',
-      reviewerEmail: null,
-      reviewerUserId: null,
-      reviewSeconds: 0,
-      startedAt: FIXED_TIME,
-      studyDesign: null,
-      taxonomyVersion: '2.0.0',
-      technologyTagStatus: decision.technologyTagStatus,
-      technologyTags: [],
-      topicIds: [],
-      usedSupplementalMetadata: false,
-    }),
-  )
-  const supplement = bindCompletedCompatibilitySupplement({
-    allowedMutableFields: ['technologyTagStatus', 'diseaseTagStatus'],
-    authorization: {
-      authorizationId: fixtureUuid(0x54000000, 1),
-      authorizationKind: 'physician_compatibility_decision',
-      authorizationNote: 'Physician authorized the exact four runtime compatibility rows.',
-      authorized: true,
-      authorizedAt: FIXED_TIME,
-      authorizedBy: 'physician@example.test',
-      authorizedRole: 'physician',
-    },
-    bindings: {
-      contract: {
-        environmentInvariantIdentitySha256: sha256('v2-invariant'),
-        environmentProfileIdentitySha256: sha256('v2-profile'),
-      },
-      currentDatabase: {
-        batchId,
-        developmentMembershipSha256,
-        developmentPlanningStateSha256: sha256('v2-planning-state'),
-        effectiveStateSha256,
-        physicalStateSha256,
-      },
-      existingHeadCohortSha256: sha256('v2-existing-head-cohort'),
-      finalV3ArtifactSha256: sourceArtifactSha256,
-      migration: {
-        id: EXECUTION_CONTEXT.migrationId,
-        sha256: sha256('v2-migration'),
-      },
-    },
-    documentState: 'completed',
-    kind: 'physician_compatibility_supplement',
-    resolutionClasses: [
-      'deterministic_lexical_normalization',
-      'deterministic_schema_compatibility_mapping',
-      'physician_authorized_compatibility_decision',
-    ],
-    rows: decisions.map((decision) => ({
-      categorizationFromFullText: false,
-      clinicalPurposes: [],
-      completionStatus: 'completed',
-      diseaseTags: [],
-      diseaseTagStatus: {
-        allowedValues: ['not_applicable', 'not_assessable'],
-        currentValue: null,
-        physicianFinalValue: decision.diseaseTagStatus,
-        proposedValue: null,
-        sourceValue: '',
-      },
-      enrichmentProvenance: 'physician_confirmed_ai_enrichment',
-      itemId: decision.itemId,
-      masterRowId: decision.masterRowId,
-      physicianRationale: `Reviewed optional taxonomy statuses for PMID ${decision.pmid}.`,
-      pmid: decision.pmid,
-      publicationStatus: null,
-      relevanceLabel: 'exclude',
-      reviewed: true,
-      reviewerConfidence: 'high',
-      studyDesign: null,
-      technologyTags: [],
-      technologyTagStatus: {
-        allowedValues: ['not_applicable', 'not_assessable'],
-        currentValue: null,
-        physicianFinalValue: decision.technologyTagStatus,
-        proposedValue: null,
-        sourceValue: '',
-      },
-      topicIds: [],
-    })),
-    schemaVersion: GOLD_IMPORT_COMPATIBILITY_SUPPLEMENT_SCHEMA_VERSION,
-    scope: {
-      datasetSplit: 'development',
-      heldOutIdentitiesAccessed: false,
-      purpose: 'import_contract_compatibility_only',
-      remoteWritesAllowed: false,
-      targetDatabase: 'local',
-    },
-    sourceTemplateSha256: sha256('v2-source-template'),
+    expectedArtifactSha256: value.importPlan.sourceArtifactSha256,
   })
   const sourceAuthorizationSet = {
-    amendedTwoRowAuthorizationSha256: sha256('v2-amended-authorization'),
+    amendedTwoRowAuthorizationSha256: sha256('v3-amended-authorization'),
     compatibility: {
-      acceptedSupplementSha256: supplement.binding.contentSha256,
       actionCounts: {
+        ...value.importPlan.counts,
         incompatible: 0,
-        initial: 0,
-        inserts: decisions.length,
-        noops: 0,
-        revisions: decisions.length,
-        total: decisions.length,
         unresolved: 0,
+      },
+      bindings: {
+        contract: {
+          environmentInvariantIdentitySha256: sha256('v3-invariant'),
+          environmentProfileIdentitySha256: sha256('v3-profile'),
+        },
+        currentDatabase: {
+          batchId: value.importPlan.batchId,
+          developmentMembershipSha256: value.importPlan.scope.developmentMembershipSha256,
+          developmentPlanningStateSha256: sha256('v3-planning-state'),
+          effectiveStateSha256: value.importPlan.expectedEffectiveStateSha256,
+          physicalStateSha256: value.importPlan.expectedPhysicalStateSha256,
+        },
+        existingHeadCohortSha256: sha256('v3-existing-head-cohort'),
+        finalV3ArtifactSha256: value.importPlan.sourceArtifactSha256,
+        migration: {
+          id: EXECUTION_CONTEXT.migrationId,
+          sha256: sha256('v3-migration'),
+        },
       },
       booleanNormalizationLedger: parsedArtifact.booleanNormalizations,
       booleanNormalizationLedgerSha256: sha256Canonical(parsedArtifact.booleanNormalizations),
-      existingHeadCohortSha256: supplement.bindings.existingHeadCohortSha256,
       listNormalizationLedger: parsedArtifact.listNormalizations,
       listNormalizationLedgerSha256: sha256Canonical(parsedArtifact.listNormalizations),
-      optionalTagStatusResolutions: decisions.map((decision) => ({
-        diseaseTagStatus: decision.diseaseTagStatus,
-        itemId: decision.itemId,
-        pmid: decision.pmid,
-        technologyTagStatus: decision.technologyTagStatus,
-      })),
-      resolutionSchemaVersion: 'gold-import-compensation-compatibility/1.0.0',
-      supplement,
-    },
-    finalArtifactSha256: sourceArtifactSha256,
-    kind: 'gold_import_source_authorization_set',
-    signedProtocolAuthorizationSha256: sha256('v2-protocol-authorization'),
-    sourceDecisionsChanged: false,
-    version: 2,
-  }
-  const actions = decisions.map((decision, index) => {
-    const importedReviewId = fixtureUuid(0x55000000, index + 1)
-    const currentReviewId = fixtureUuid(0x58000000, index + 1)
-    const review = reviews[index]
-    if (!review) throw new Error('Missing V2 fixture target review.')
-    return {
-      action: 'import_revision' as const,
-      actionId: fixtureUuid(0x56000000, index + 1),
-      compensationAction: 'compensate_restore' as const,
-      datasetSplit: 'development' as const,
-      expectedCurrentReviewId: currentReviewId,
-      expectedEffectiveReviewId: currentReviewId,
-      expectedEffectiveReviewIdAfter: importedReviewId,
-      expectedEventSequence: ['review_imported'] as ['review_imported'],
-      expectedHeadReviewIdAfter: importedReviewId,
-      expectedRevision: 2,
-      expectedSupersedesReviewId: currentReviewId,
-      importedReviewId,
-      itemId: decision.itemId,
-      pmid: decision.pmid,
-      preImportItemState: {
-        automatedSignalsRevealedAt: FIXED_TIME,
-        completedAt: FIXED_TIME,
-        reviewStatus: 'completed' as const,
-        startedAt: FIXED_TIME,
-        supplementalMetadataRevealedAt: null,
+      noteDisposition: {
+        action: 'preserve_current_authorized_physician_rationale',
+        pmids: ['36879724', '39281191'],
+        ruleVersion: 'gold-import-existing-note-disposition/amended-two-row-preserve-current-v1',
+        sourceArtifactNotesApplied: false,
+        status: 'already_authorized',
       },
-      review,
-      reviewSha256: sha256Canonical(review),
-      sequence: index + 1,
-    }
-  })
-  const paths = {
-    artifact: join(root, 'artifact.csv'),
-    importAuthorization: join(root, 'import-authorization.json'),
-    importPlan: join(root, 'import-plan.json'),
-    sourceAuthorizationSet: join(root, 'source-authorization-set.json'),
+      resolutionSchemaVersion: 'gold-import-compensation-compatibility/1.0.0',
+      scope: {
+        datasetSplit: 'development',
+        heldOutIdentitiesAccessed: false,
+        remoteWritesAllowed: false,
+        targetDatabase: 'local',
+      },
+    },
+    finalArtifactSha256: value.importPlan.sourceArtifactSha256,
+    kind: 'gold_import_source_authorization_set',
+    signedProtocolAuthorizationSha256: sha256('v3-protocol-authorization'),
+    sourceDecisionsChanged: false,
+    version: 3,
   }
-  const writeBundle = async (nextSourceAuthorizationSet: unknown) => {
+  const writeBundle = async (
+    nextSourceAuthorizationSet: unknown,
+    nextArtifactBytes: Buffer = artifactBytes,
+  ) => {
     const sourceAuthorizationSetBytes = Buffer.from(
       `${JSON.stringify(nextSourceAuthorizationSet)}\n`,
       'utf8',
     )
+    const { binding: planBinding, ...planContent } = value.importPlan
+    void planBinding
     const importPlan = bindImportPlan({
-      actions,
-      batchId,
-      contractVersion: 'gold-review-import-compensation/1.0.0',
-      counts: {
-        initial: 0,
-        inserts: decisions.length,
-        noops: 0,
-        revisions: decisions.length,
-        total: decisions.length,
-      },
-      executionContext: EXECUTION_CONTEXT,
-      expectedEffectiveStateSha256: effectiveStateSha256,
-      expectedPhysicalStateSha256: physicalStateSha256,
-      expectedPostEffectiveStateSha256: sha256('v2-post-effective-state'),
-      kind: 'import',
-      operationId,
-      scope: {
-        datasetSplit: 'development',
-        developmentMembershipSha256,
-        heldOutIdentitiesAccessed: false,
-      },
-      sourceArtifactSha256,
+      ...planContent,
+      sourceArtifactSha256: sha256(nextArtifactBytes),
       sourceAuthorizationSetSha256: sha256(sourceAuthorizationSetBytes),
     })
+    const { binding: authorizationBinding, ...authorizationContent } = value.importAuthorization
+    void authorizationBinding
     const importAuthorization = bindImportAuthorization({
-      authorizationId: fixtureUuid(0x57000000, 1),
-      authorizationNote: 'Exact V2 runtime trust-boundary authorization.',
-      authorized: true,
-      authorizedAt: FIXED_TIME,
-      authorizedBy: 'import-authorizer@example.test',
-      batchId,
-      contractVersion: 'gold-review-import-compensation/1.0.0',
+      ...authorizationContent,
+      batchId: importPlan.batchId,
       expectedEffectiveStateSha256: importPlan.expectedEffectiveStateSha256,
       expectedPhysicalStateSha256: importPlan.expectedPhysicalStateSha256,
       expectedPostEffectiveStateSha256: importPlan.expectedPostEffectiveStateSha256,
       idempotencyKey: importPlan.binding.idempotencyKey,
-      kind: 'import_authorization',
-      migrationId: EXECUTION_CONTEXT.migrationId,
-      operationId,
+      operationId: importPlan.operationId,
       planSha256: importPlan.binding.contentSha256,
-      remoteWritesAllowed: false,
-      repositoryCommitSha: EXECUTION_CONTEXT.repositoryCommitSha,
-      sourceArtifactSha256,
-      targetDatabase: 'local',
+      sourceArtifactSha256: importPlan.sourceArtifactSha256,
     })
     await Promise.all([
-      writeFile(paths.artifact, artifactBytes),
-      writeFile(paths.importAuthorization, JSON.stringify(importAuthorization)),
-      writeFile(paths.importPlan, JSON.stringify(importPlan)),
-      writeFile(paths.sourceAuthorizationSet, sourceAuthorizationSetBytes),
+      writeFile(value.paths.artifact, nextArtifactBytes),
+      writeFile(value.paths.importAuthorization, JSON.stringify(importAuthorization)),
+      writeFile(value.paths.importPlan, JSON.stringify(importPlan)),
+      writeFile(value.paths.sourceAuthorizationSet, sourceAuthorizationSetBytes),
     ])
     return { importAuthorization, importPlan, sourceAuthorizationSetBytes }
   }
   const bundle = await writeBundle(sourceAuthorizationSet)
-  return { ...bundle, paths, root, sourceAuthorizationSet, writeBundle }
+  return { ...value, ...bundle, artifactBytes, sourceAuthorizationSet, writeBundle }
 }
 
 function dependencies(rpc: jest.Mock) {
@@ -863,12 +654,12 @@ describe('gold import-compensation CLI', () => {
     expect(createClient).not.toHaveBeenCalled()
   })
 
-  it('binds V2 counts, raw normalization ledger, and current state before client creation', async () => {
-    const value = await v2CompatibilityFixture()
+  it('binds V3 ledgers, state, provenance, and retired V2 status paths before client creation', async () => {
+    const value = await v3CompatibilityFixture()
     const createClient = jest.fn(() => {
-      throw new Error('V2 file validation must finish before client construction')
+      throw new Error('V3 file validation must finish before client construction')
     })
-    const arguments_ = [
+    const validateArguments = [
       'validate-import',
       '--plan',
       value.paths.importPlan,
@@ -879,9 +670,9 @@ describe('gold import-compensation CLI', () => {
       '--source-authorization-set',
       value.paths.sourceAuthorizationSet,
     ]
-    const executionArguments = [
+    const executeArguments = [
       'execute-import',
-      ...arguments_.slice(1),
+      ...validateArguments.slice(1),
       '--receipt',
       join(value.root, 'must-not-be-created.json'),
       '--actor-email',
@@ -898,24 +689,32 @@ describe('gold import-compensation CLI', () => {
     }
 
     await expect(
-      runGoldImportCompensationCli(arguments_, value.root, runtimeDependencies),
+      runGoldImportCompensationCli(validateArguments, value.root, runtimeDependencies),
     ).resolves.toMatchObject({ command: 'validate-import', valid: true })
     expect(createClient).not.toHaveBeenCalled()
 
+    const retiredV2 = { ...jsonClone(value.sourceAuthorizationSet), version: 2 }
+    await value.writeBundle(retiredV2)
+    await expect(
+      runGoldImportCompensationCli(executeArguments, value.root, runtimeDependencies),
+    ).rejects.toThrow('V2 physician status supplements are retired')
+    expect(createClient).not.toHaveBeenCalled()
+
     const countMismatch = jsonClone(value.sourceAuthorizationSet)
-    countMismatch.compatibility.actionCounts.inserts -= 1
-    countMismatch.compatibility.actionCounts.noops += 1
-    countMismatch.compatibility.actionCounts.revisions -= 1
+    countMismatch.compatibility.actionCounts.initial = 1
+    countMismatch.compatibility.actionCounts.inserts = 1
+    countMismatch.compatibility.actionCounts.noops = 0
+    countMismatch.compatibility.actionCounts.revisions = 0
     await value.writeBundle(countMismatch)
     await expect(
-      runGoldImportCompensationCli(executionArguments, value.root, runtimeDependencies),
+      runGoldImportCompensationCli(executeArguments, value.root, runtimeDependencies),
     ).rejects.toThrow('action counts do not match the import plan')
     expect(createClient).not.toHaveBeenCalled()
 
     const ledgerMismatch = jsonClone(value.sourceAuthorizationSet)
     const firstLedgerEntry = ledgerMismatch.compatibility.booleanNormalizationLedger[0]
     if (!firstLedgerEntry || firstLedgerEntry.originalLexeme !== 'false') {
-      throw new Error('Expected canonical false as the first V2 fixture normalization.')
+      throw new Error('Expected canonical false as the first V3 fixture normalization.')
     }
     firstLedgerEntry.originalLexeme = 'False'
     firstLedgerEntry.sourceForm = 'legacy_title_case'
@@ -924,13 +723,13 @@ describe('gold import-compensation CLI', () => {
     )
     await value.writeBundle(ledgerMismatch)
     await expect(
-      runGoldImportCompensationCli(executionArguments, value.root, runtimeDependencies),
+      runGoldImportCompensationCli(executeArguments, value.root, runtimeDependencies),
     ).rejects.toThrow('does not exactly match the finalized artifact')
     expect(createClient).not.toHaveBeenCalled()
 
     const listLedgerMismatch = jsonClone(value.sourceAuthorizationSet)
-    const sourceRow = listLedgerMismatch.compatibility.supplement.rows[0]
-    if (!sourceRow) throw new Error('Expected a V2 compatibility source row.')
+    const sourceRow = parseFinalizedGoldImportArtifact(value.artifactBytes).rows[0]
+    if (!sourceRow) throw new Error('Expected a V3 source row.')
     listLedgerMismatch.compatibility.listNormalizationLedger = [
       {
         canonicalValues: ['basic-bronchoscopy', 'peripheral-navigation'],
@@ -940,12 +739,7 @@ describe('gold import-compensation CLI', () => {
         originalLexeme: 'peripheral-navigation|basic-bronchoscopy',
         originalValues: ['peripheral-navigation', 'basic-bronchoscopy'],
         sourceArtifactSha256: listLedgerMismatch.finalArtifactSha256,
-        sourceIdentity: {
-          datasetSplit: 'development',
-          itemId: sourceRow.itemId,
-          masterRowId: sourceRow.masterRowId,
-          pmid: sourceRow.pmid,
-        },
+        sourceIdentity: sourceRow.identity,
       },
     ]
     listLedgerMismatch.compatibility.listNormalizationLedgerSha256 = sha256Canonical(
@@ -953,28 +747,44 @@ describe('gold import-compensation CLI', () => {
     )
     await value.writeBundle(listLedgerMismatch)
     await expect(
-      runGoldImportCompensationCli(executionArguments, value.root, runtimeDependencies),
+      runGoldImportCompensationCli(executeArguments, value.root, runtimeDependencies),
     ).rejects.toThrow('list normalization ledger does not exactly match the finalized artifact')
     expect(createClient).not.toHaveBeenCalled()
 
     const staleState = jsonClone(value.sourceAuthorizationSet)
-    staleState.compatibility.supplement.bindings.currentDatabase.effectiveStateSha256 = sha256(
-      'stale-v2-effective-state',
-    )
-    const { binding: originalSupplementBinding, ...staleSupplementContent } =
-      staleState.compatibility.supplement
-    const originalSupplementSha256 = originalSupplementBinding.contentSha256
-    staleState.compatibility.supplement.binding.contentSha256 =
-      sha256Canonical(staleSupplementContent)
-    staleState.compatibility.acceptedSupplementSha256 =
-      staleState.compatibility.supplement.binding.contentSha256
-    expect(staleState.compatibility.supplement.binding.contentSha256).not.toBe(
-      originalSupplementSha256,
+    staleState.compatibility.bindings.currentDatabase.effectiveStateSha256 = sha256(
+      'stale-v3-effective-state',
     )
     await value.writeBundle(staleState)
     await expect(
-      runGoldImportCompensationCli(executionArguments, value.root, runtimeDependencies),
+      runGoldImportCompensationCli(executeArguments, value.root, runtimeDependencies),
     ).rejects.toThrow('stale relative to the import plan current-state bindings')
+    expect(createClient).not.toHaveBeenCalled()
+
+    const tamperedArtifact = Buffer.from(
+      value.artifactBytes
+        .toString('utf8')
+        .replace(
+          'Exact finalized physician decision.,false,true,',
+          'Exact finalized physician decision.,true,true,',
+        ),
+      'utf8',
+    )
+    expect(tamperedArtifact).not.toEqual(value.artifactBytes)
+    const parsedTamperedArtifact = parseFinalizedGoldImportArtifact(tamperedArtifact)
+    const fullTextMappingDefect = jsonClone(value.sourceAuthorizationSet)
+    fullTextMappingDefect.finalArtifactSha256 = parsedTamperedArtifact.artifactSha256
+    fullTextMappingDefect.compatibility.bindings.finalV3ArtifactSha256 =
+      parsedTamperedArtifact.artifactSha256
+    fullTextMappingDefect.compatibility.booleanNormalizationLedger =
+      parsedTamperedArtifact.booleanNormalizations
+    fullTextMappingDefect.compatibility.booleanNormalizationLedgerSha256 = sha256Canonical(
+      parsedTamperedArtifact.booleanNormalizations,
+    )
+    await value.writeBundle(fullTextMappingDefect, tamperedArtifact)
+    await expect(
+      runGoldImportCompensationCli(executeArguments, value.root, runtimeDependencies),
+    ).rejects.toThrow('full_text_used')
     expect(createClient).not.toHaveBeenCalled()
   })
 

@@ -28,23 +28,32 @@ import {
   inspectReadOnlyReconciliationRepositoryState,
 } from './gold-import-compensation-read-only-guard'
 import { type CommandRunner } from './gold-import-compensation-migration-operations'
+import {
+  buildGoldImportFieldLineageReport,
+  buildGoldImportForwardRepairRequirements,
+  goldImportFieldLineageSha256,
+  goldImportForwardRepairRequirementsSha256,
+  renderGoldImportFieldLineageMarkdown,
+} from './gold-import-contract-field-lineage'
+import {
+  buildGoldImportNoteDispositionAudit,
+  goldImportNoteDispositionAuditSha256,
+} from './gold-import-note-disposition'
 
 export const EXISTING_HEAD_COMPATIBILITY_AUDIT_SCHEMA_VERSION =
-  'gold-import-existing-head-compatibility-audit/1.0.0' as const
+  'gold-import-existing-head-compatibility-audit/2.0.0' as const
 export const BOOLEAN_NORMALIZATION_REPORT_SCHEMA_VERSION =
   'gold-import-boolean-normalization-report/1.0.0' as const
 export const LIST_NORMALIZATION_REPORT_SCHEMA_VERSION =
   'gold-import-list-normalization-report/1.0.0' as const
 export const COMPATIBILITY_PACKAGE_READINESS_SCHEMA_VERSION =
-  'gold-import-compatibility-package-readiness/1.0.0' as const
+  'gold-import-compatibility-package-readiness/2.0.0' as const
 export const COMPATIBILITY_AUDIT_EXECUTION_SCHEMA_VERSION =
-  'gold-import-existing-head-compatibility-audit-execution/1.0.0' as const
-export const COMPATIBILITY_AUDIT_READY_SUPPLEMENT_REQUIRED =
-  'AUDIT READY — PHYSICIAN COMPATIBILITY SUPPLEMENT REQUIRED' as const
-export const COMPATIBILITY_AUDIT_READY_SUPPLEMENT_NOT_REQUIRED =
-  'AUDIT READY — COMPATIBILITY SUPPLEMENT NOT REQUIRED' as const
-export const COMPATIBILITY_AUDIT_STILL_BLOCKED =
-  'CONTRACT STILL BLOCKED — UNRESOLVED DIFFERENCE' as const
+  'gold-import-existing-head-compatibility-audit-execution/2.0.0' as const
+export const OWNER_ACL_AUDIT_READY =
+  'OWNER/ACL AUDIT READY — NO OWNER/ACL FORWARD MIGRATION REQUIRED' as const
+export const FORWARD_IMPORT_CONTRACT_REPAIR_REQUIRED_NOTE_AUTHORIZED =
+  'FORWARD IMPORT-CONTRACT REPAIR REQUIRED — NOTE DISPOSITION ALREADY AUTHORIZED' as const
 
 export const EXPECTED_UNRESOLVED_COMPATIBILITY_PMIDS = Object.freeze([] as string[])
 
@@ -59,16 +68,13 @@ export interface GeneratedExistingHeadCompatibilityAudit {
   packageReady: boolean
   resolution: GoldImportCompensationCompatibilityResolution
   sourceAuditManifestSha256: string
-  sourceSupplementSha256: string | null
-  terminalState:
-    | typeof COMPATIBILITY_AUDIT_READY_SUPPLEMENT_REQUIRED
-    | typeof COMPATIBILITY_AUDIT_READY_SUPPLEMENT_NOT_REQUIRED
-    | typeof COMPATIBILITY_AUDIT_STILL_BLOCKED
+  terminalState: typeof FORWARD_IMPORT_CONTRACT_REPAIR_REQUIRED_NOTE_AUTHORIZED
   unresolvedPmids: readonly string[]
 }
 
 export interface ExistingHeadCompatibilityAuditDependencies {
   assertRepositoryState?: typeof assertReadOnlyReconciliationRepositoryGuard
+  buildNoteDispositionAudit?: typeof buildGoldImportNoteDispositionAudit
   cwd?: string
   expectedArtifactSha256ForTest?: string
   inspectRepositoryState?: typeof inspectReadOnlyReconciliationRepositoryState
@@ -91,6 +97,11 @@ Usage:
     --audit-manifest-sha256 <reviewed-canonical-manifest-sha256> \\
     --development-state <reconciled-audit-directory/development-planning-state.json> \\
     --artifact <gold-set-v1-enrichment-v3-final-development-630.csv> \\
+    --amended-authorization <amended-authorization.json> \\
+    --authorization-mapping <artifact-to-database-field-mapping.json> \\
+    --authorization-manifest <authorization-artifact-manifest.sha256> \\
+    --authorization-mapping-correction <artifact-to-database-field-mapping-authoritative-v2.json> \\
+    --authorization-mapping-correction-manifest <authorization-mapping-supplement-manifest.sha256> \\
     --output-root <approved-local-output-root> --output <new-audit-directory>
 `.trim()
 
@@ -147,80 +158,66 @@ function assertReconciledAudit(
   }
 }
 
-function unresolvedCompatibilityPmids(
-  resolution: GoldImportCompensationCompatibilityResolution,
-): string[] {
-  return resolution.existingHeads
-    .filter((row) => row.resolutionStatus === 'pending_physician_decision')
-    .map((row) => row.identity.pmid)
-}
-
-function assertNoPhysicianCompatibilitySupplement(
-  resolution: GoldImportCompensationCompatibilityResolution,
-  supplementSupplied: boolean,
-  unresolvedPmids: readonly string[],
-): void {
-  if (supplementSupplied) {
-    throw new Error(
-      'A physician compatibility supplement is not applicable to the authoritative finalized V3 excluded-row shape.',
-    )
-  }
-  if (
-    resolution.supplementRequired ||
-    resolution.supplementTemplate !== null ||
-    resolution.acceptedSupplementSha256 !== null ||
-    unresolvedPmids.length !== 0
-  ) {
-    throw new Error(
-      'Authoritative finalized V3 excluded-status nulls must not become physician supplement decisions.',
-    )
-  }
-}
-
 function compatibilityReadinessReport(input: {
+  fieldLineageSha256: string
+  forwardRepairRequirementsSha256: string
   listNormalizationLedgerSha256: string
+  noteDispositionAuditSha256: string
   resolution: GoldImportCompensationCompatibilityResolution
-  supplementSupplied: boolean
-  unresolvedPmids: readonly string[]
 }) {
-  const blockers = Object.entries(input.resolution.executionCompatibility.countsByCode)
+  const executionCompatibility = input.resolution.executionCompatibility
+  const actionCounts = input.resolution.actionCounts
+  const expectedCountsByCode = {
+    excluded_status_null_not_representable_by_import_contract_v1: 272,
+    source_review_blinding_provenance_has_no_exact_import_v1_mapping: 630,
+    source_full_text_provenance_has_no_exact_import_v1_mapping: 50,
+  } as const
+  const exactExecutionCompatibility =
+    executionCompatibility.totalRowCount === 630 &&
+    executionCompatibility.blockedRowCount === 630 &&
+    executionCompatibility.executableRowCount === 0 &&
+    Object.keys(executionCompatibility.countsByCode).length ===
+      Object.keys(expectedCountsByCode).length &&
+    Object.entries(expectedCountsByCode).every(
+      ([code, expectedCount]) =>
+        executionCompatibility.countsByCode[code as keyof typeof expectedCountsByCode] ===
+        expectedCount,
+    )
+  const exactActionCounts =
+    actionCounts.total === 630 &&
+    actionCounts.incompatible === 630 &&
+    actionCounts.initial === 0 &&
+    actionCounts.revisions === 0 &&
+    actionCounts.noops === 0 &&
+    actionCounts.inserts === 0 &&
+    actionCounts.unresolved === 0
+  const blockers = Object.entries(executionCompatibility.countsByCode)
     .filter(([, count]) => count > 0)
     .map(([code]) => code)
-  if (input.resolution.actionCounts.unresolved > 0) {
-    blockers.push('unresolved_physician_compatibility_decisions')
-  }
-  if (
-    input.resolution.existingHeads.some((row) =>
-      row.fields.some((field) => field.classification === 'incompatible'),
+  if (input.resolution.readyForPackage || !exactExecutionCompatibility || !exactActionCounts) {
+    throw new Error(
+      'Import-contract-v1 diagnosis does not match the authenticated production result: expected exactly 630 total and blocked rows, zero executable rows, blocker counts 272/630/50, and 630 incompatible actions with every executable and unresolved action count zero.',
     )
-  ) {
-    blockers.push('incompatible_existing_head_fields')
   }
-  if (!input.resolution.readyForPackage && blockers.length === 0) {
-    blockers.push('compatibility_resolution_not_ready')
-  }
-  const terminalState =
-    blockers.length === 0
-      ? COMPATIBILITY_AUDIT_READY_SUPPLEMENT_NOT_REQUIRED
-      : COMPATIBILITY_AUDIT_STILL_BLOCKED
   return {
     schemaVersion: COMPATIBILITY_PACKAGE_READINESS_SCHEMA_VERSION,
-    readiness: blockers.length === 0 ? ('ready' as const) : ('blocked' as const),
-    packageGenerationAllowed: blockers.length === 0,
-    terminalState,
+    readiness: 'forward_import_contract_repair_required' as const,
+    packageGenerationAllowed: false,
+    terminalState: FORWARD_IMPORT_CONTRACT_REPAIR_REQUIRED_NOTE_AUTHORIZED,
+    ownerAclTerminalState: OWNER_ACL_AUDIT_READY,
     blockers,
     actionCounts: input.resolution.actionCounts,
     executionCompatibility: input.resolution.executionCompatibility,
+    fieldLineageSha256: input.fieldLineageSha256,
+    forwardRepairRequirementsSha256: input.forwardRepairRequirementsSha256,
     listNormalizationLedgerSha256: input.listNormalizationLedgerSha256,
-    supplement: {
-      required: input.resolution.supplementRequired,
-      supplied: input.supplementSupplied,
-      acceptedContentSha256: input.resolution.acceptedSupplementSha256,
-      templateContentSha256: input.resolution.supplementTemplate?.binding.contentSha256 ?? null,
+    noteDisposition: {
+      status: 'already_authorized' as const,
+      auditSha256: input.noteDispositionAuditSha256,
     },
     unresolved: {
-      count: input.unresolvedPmids.length,
-      pmids: input.unresolvedPmids,
+      count: 0,
+      pmids: [] as string[],
     },
     safety: {
       databaseMutationCount: 0,
@@ -235,10 +232,15 @@ function compatibilityReadinessReport(input: {
 
 /** Build deterministic, sealed reports from already verified local files; performs no I/O. */
 export function buildExistingHeadCompatibilityAudit(input: {
+  amendedAuthorizationBytes: Buffer
   artifactBytes: Buffer
   auditPackage: VerifiedPostMigrationAuditPackage
-  compatibilitySupplementBytes?: Buffer
+  authorizationManifestBytes: Buffer
+  authorizationMappingBytes: Buffer
+  authorizationMappingCorrectionBytes: Buffer
+  authorizationMappingCorrectionManifestBytes: Buffer
   expectedArtifactSha256: string
+  noteDispositionBuilderForTest?: typeof buildGoldImportNoteDispositionAudit
 }): GeneratedExistingHeadCompatibilityAudit {
   assertReconciledAudit(input.auditPackage)
   if (!SHA256_PATTERN.test(input.expectedArtifactSha256)) {
@@ -248,10 +250,8 @@ export function buildExistingHeadCompatibilityAudit(input: {
   if (originalArtifactSha256 !== input.expectedArtifactSha256) {
     throw new Error('Finalized V3 artifact does not match its approved raw SHA-256.')
   }
-  if (input.compatibilitySupplementBytes !== undefined) {
-    throw new Error(
-      'A physician compatibility supplement is not applicable to the authoritative finalized V3 excluded-row shape and cannot change readiness.',
-    )
+  if (input.noteDispositionBuilderForTest && process.env.NODE_ENV !== 'test') {
+    throw new Error('Note-disposition builder override is restricted to tests.')
   }
   const audit = input.auditPackage.audit
   if (audit.migration.id !== GOLD_IMPORT_COMPENSATION_MIGRATION_ID) {
@@ -282,9 +282,7 @@ export function buildExistingHeadCompatibilityAudit(input: {
   if (sha256Bytes(input.artifactBytes) !== originalArtifactSha256) {
     throw new Error('Compatibility resolution modified the finalized source artifact bytes.')
   }
-  const supplementSupplied = input.compatibilitySupplementBytes !== undefined
-  const unresolvedPmids = unresolvedCompatibilityPmids(resolution)
-  assertNoPhysicianCompatibilitySupplement(resolution, supplementSupplied, unresolvedPmids)
+  const unresolvedPmids: string[] = []
   const existingHeadBooleanNormalizations = resolution.artifact.booleanNormalizations.filter(
     (entry) =>
       entry.column === 'is_blinded' &&
@@ -304,11 +302,57 @@ export function buildExistingHeadCompatibilityAudit(input: {
   const listNormalizationLedgerSha256 = sha256Bytes(
     canonicalJson(resolution.artifact.listNormalizations),
   )
+  const noteRows = resolution.existingHeads
+    .filter((row) => row.identity.pmid === '36879724' || row.identity.pmid === '39281191')
+    .map((row) => {
+      const artifactRow = resolution.artifact.rows.find(
+        (candidate) => candidate.identity.itemId === row.identity.itemId,
+      )
+      const notesField = row.fields.find((field) => field.field === 'notes')
+      if (!artifactRow || !notesField || typeof notesField.currentValue !== 'string') {
+        throw new Error('Exact two-row note evidence is missing from compatibility inputs.')
+      }
+      return {
+        currentNote: notesField.currentValue,
+        currentReviewId: row.currentReviewId,
+        currentRevision: row.currentRevision,
+        finalizedV3Note: artifactRow.raw.physician_notes,
+        itemId: row.identity.itemId,
+        masterRowId: row.identity.masterRowId,
+        pmid: row.identity.pmid,
+      }
+    })
+  const buildNoteDisposition =
+    input.noteDispositionBuilderForTest ?? buildGoldImportNoteDispositionAudit
+  const noteDispositionAudit = buildNoteDisposition({
+    amendedAuthorizationBytes: input.amendedAuthorizationBytes,
+    authorizationManifestBytes: input.authorizationManifestBytes,
+    authorizationMappingBytes: input.authorizationMappingBytes,
+    authorizationMappingCorrectionBytes: input.authorizationMappingCorrectionBytes,
+    authorizationMappingCorrectionManifestBytes: input.authorizationMappingCorrectionManifestBytes,
+    currentEffectiveStateSha256: audit.database.currentEffectiveStateSha256,
+    currentPhysicalStateSha256: audit.database.currentPhysicalStateSha256,
+    currentPointersAreLatestHeads: audit.database.currentPointersAreLatestHeads,
+    developmentPlanningStateSha256: audit.database.developmentPlanningStateSha256 as string,
+    finalV3ArtifactSha256: originalArtifactSha256,
+    revisionChainsLinear: audit.database.revisionChainsLinear,
+    rows: noteRows,
+  })
+  const noteDispositionAuditSha256 = goldImportNoteDispositionAuditSha256(noteDispositionAudit)
+  const fieldLineage = buildGoldImportFieldLineageReport()
+  const fieldLineageSha256 = goldImportFieldLineageSha256(fieldLineage)
+  const forwardRepairRequirements = buildGoldImportForwardRepairRequirements({
+    noteDisposition: noteDispositionAudit.status,
+    noteDispositionEvidenceSha256: noteDispositionAuditSha256,
+  })
+  const forwardRepairRequirementsSha256 =
+    goldImportForwardRepairRequirementsSha256(forwardRepairRequirements)
   const readiness = compatibilityReadinessReport({
+    fieldLineageSha256,
+    forwardRepairRequirementsSha256,
     listNormalizationLedgerSha256,
+    noteDispositionAuditSha256,
     resolution,
-    supplementSupplied,
-    unresolvedPmids,
   })
   if (readiness.packageGenerationAllowed !== resolution.readyForPackage) {
     throw new Error('Compatibility readiness report disagrees with the pure resolver.')
@@ -317,7 +361,17 @@ export function buildExistingHeadCompatibilityAudit(input: {
     postMigrationAuditManifestSha256: input.auditPackage.manifestSha256,
     finalV3ArtifactSha256: originalArtifactSha256,
     existingHeadCohortSha256: resolution.existingHeadCohortSha256,
+    amendedAuthorizationSha256: noteDispositionAudit.sourceBindings.amendedAuthorizationSha256,
+    authorizationMappingSha256: noteDispositionAudit.sourceBindings.authorizationMappingSha256,
+    authorizationManifestSha256: noteDispositionAudit.sourceBindings.authorizationManifestSha256,
+    authorizationMappingCorrectionSha256:
+      noteDispositionAudit.sourceBindings.authorizationMappingCorrectionSha256,
+    authorizationMappingCorrectionManifestSha256:
+      noteDispositionAudit.sourceBindings.authorizationMappingCorrectionManifestSha256,
+    fieldLineageSha256,
+    forwardRepairRequirementsSha256,
     listNormalizationLedgerSha256,
+    noteDispositionAuditSha256,
     migration: audit.migration,
     currentDatabase: {
       batchId: audit.database.batchId,
@@ -336,6 +390,7 @@ export function buildExistingHeadCompatibilityAudit(input: {
     status: readiness.readiness,
     contractAuditReady: true,
     terminalState: readiness.terminalState,
+    ownerAclTerminalState: readiness.ownerAclTerminalState,
     packageGenerationAllowed: readiness.packageGenerationAllowed,
     sourceBindings,
     actionCounts: resolution.actionCounts,
@@ -363,11 +418,10 @@ export function buildExistingHeadCompatibilityAudit(input: {
       count: unresolvedPmids.length,
       pmids: unresolvedPmids,
     },
-    supplement: {
-      required: resolution.supplementRequired,
-      supplied: supplementSupplied,
-      acceptedContentSha256: resolution.acceptedSupplementSha256,
-      templateContentSha256: resolution.supplementTemplate?.binding.contentSha256 ?? null,
+    noteDisposition: {
+      status: noteDispositionAudit.status,
+      disposition: noteDispositionAudit.disposition,
+      auditSha256: noteDispositionAuditSha256,
     },
     safety: {
       sourceArtifactBytesPreserved: true,
@@ -413,10 +467,18 @@ export function buildExistingHeadCompatibilityAudit(input: {
   const canonicalRecords: Record<string, unknown> = {
     'boolean-normalization-report.json': booleanNormalizationReport,
     'existing-head-compatibility-audit.json': existingHeadAudit,
+    'field-lineage.json': fieldLineage,
+    'forward-import-contract-repair-requirements.json': forwardRepairRequirements,
     'list-normalization-report.json': listNormalizationReport,
+    'note-disposition-audit.json': noteDispositionAudit,
     'package-readiness.json': readiness,
   }
-  const sealed = sealCanonicalFiles(canonicalFileMap(canonicalRecords))
+  const canonicalFiles = canonicalFileMap(canonicalRecords)
+  canonicalFiles.set(
+    'field-lineage.md',
+    Buffer.from(renderGoldImportFieldLineageMarkdown(fieldLineage)),
+  )
+  const sealed = sealCanonicalFiles(canonicalFiles)
   return {
     canonicalFiles: sealed.files,
     canonicalManifest: sealed.manifest,
@@ -424,15 +486,19 @@ export function buildExistingHeadCompatibilityAudit(input: {
     packageReady: readiness.packageGenerationAllowed,
     resolution,
     sourceAuditManifestSha256: input.auditPackage.manifestSha256,
-    sourceSupplementSha256: null,
     terminalState: readiness.terminalState,
     unresolvedPmids,
   }
 }
 
 export async function writeExistingHeadCompatibilityAuditExclusive(input: {
+  amendedAuthorizationPath: string
   artifactPath: string
   auditPath: string
+  authorizationManifestPath: string
+  authorizationMappingPath: string
+  authorizationMappingCorrectionManifestPath: string
+  authorizationMappingCorrectionPath: string
   executedAt: string
   generated: GeneratedExistingHeadCompatibilityAudit
   outputDirectory: string
@@ -457,10 +523,13 @@ export async function writeExistingHeadCompatibilityAuditExclusive(input: {
     sources: {
       auditPath: input.auditPath,
       artifactPath: input.artifactPath,
+      amendedAuthorizationPath: input.amendedAuthorizationPath,
+      authorizationManifestPath: input.authorizationManifestPath,
+      authorizationMappingPath: input.authorizationMappingPath,
+      authorizationMappingCorrectionManifestPath: input.authorizationMappingCorrectionManifestPath,
+      authorizationMappingCorrectionPath: input.authorizationMappingCorrectionPath,
       postMigrationAuditManifestSha256: input.generated.sourceAuditManifestSha256,
       finalV3ArtifactSha256: input.generated.resolution.artifact.artifactSha256,
-      compatibilitySupplementFileSha256: input.generated.sourceSupplementSha256,
-      compatibilitySupplementContentSha256: input.generated.resolution.acceptedSupplementSha256,
     },
     safety: {
       sourceArtifactBytesPreserved: true,
@@ -576,11 +645,15 @@ export async function runAuditGoldExistingHeadCompatibility(
 > {
   const arguments_ = parseCliArguments([...argv])
   assertKnownArguments(arguments_, [
+    'amended-authorization',
     'artifact',
     'audit',
     'audit-manifest-sha256',
+    'authorization-manifest',
+    'authorization-mapping',
+    'authorization-mapping-correction',
+    'authorization-mapping-correction-manifest',
     'commit',
-    'compatibility-supplement',
     'development-state',
     'help',
     'output',
@@ -595,7 +668,9 @@ export async function runAuditGoldExistingHeadCompatibility(
   assertSafeOutputPathArgument(rawOutputRoot, '--output-root')
   assertSafeOutputPathArgument(rawOutputDirectory, '--output')
   if (
-    (dependencies.inspectRepositoryState || dependencies.assertRepositoryState) &&
+    (dependencies.inspectRepositoryState ||
+      dependencies.assertRepositoryState ||
+      dependencies.buildNoteDispositionAudit) &&
     process.env.NODE_ENV !== 'test'
   ) {
     throw new Error('Repository-guard overrides are restricted to tests.')
@@ -627,25 +702,60 @@ export async function runAuditGoldExistingHeadCompatibility(
   }
   // The finalized source is intentionally not opened until the reconciled bundle is authenticated.
   const artifactPath = resolve(requiredArgument(arguments_, 'artifact'))
-  const artifactBytes = await readRegularNonSymlinkFile(artifactPath, 'Finalized V3 artifact')
-  const supplementPath = stringArgument(arguments_, 'compatibility-supplement')
-  const compatibilitySupplementBytes = supplementPath
-    ? await readRegularNonSymlinkFile(resolve(supplementPath), 'Completed compatibility supplement')
-    : undefined
+  const amendedAuthorizationPath = resolve(requiredArgument(arguments_, 'amended-authorization'))
+  const authorizationManifestPath = resolve(requiredArgument(arguments_, 'authorization-manifest'))
+  const authorizationMappingPath = resolve(requiredArgument(arguments_, 'authorization-mapping'))
+  const authorizationMappingCorrectionPath = resolve(
+    requiredArgument(arguments_, 'authorization-mapping-correction'),
+  )
+  const authorizationMappingCorrectionManifestPath = resolve(
+    requiredArgument(arguments_, 'authorization-mapping-correction-manifest'),
+  )
+  const [
+    artifactBytes,
+    amendedAuthorizationBytes,
+    authorizationManifestBytes,
+    authorizationMappingBytes,
+    authorizationMappingCorrectionBytes,
+    authorizationMappingCorrectionManifestBytes,
+  ] = await Promise.all([
+    readRegularNonSymlinkFile(artifactPath, 'Finalized V3 artifact'),
+    readRegularNonSymlinkFile(amendedAuthorizationPath, 'Amended authorization'),
+    readRegularNonSymlinkFile(authorizationManifestPath, 'Authorization artifact manifest'),
+    readRegularNonSymlinkFile(authorizationMappingPath, 'Authorization field mapping'),
+    readRegularNonSymlinkFile(
+      authorizationMappingCorrectionPath,
+      'Authoritative authorization field-mapping correction',
+    ),
+    readRegularNonSymlinkFile(
+      authorizationMappingCorrectionManifestPath,
+      'Authorization field-mapping correction manifest',
+    ),
+  ])
   if (dependencies.expectedArtifactSha256ForTest && process.env.NODE_ENV !== 'test') {
     throw new Error('Finalized artifact identity override is restricted to tests.')
   }
   const generated = buildExistingHeadCompatibilityAudit({
+    amendedAuthorizationBytes,
     artifactBytes,
     auditPackage,
-    compatibilitySupplementBytes,
+    authorizationManifestBytes,
+    authorizationMappingBytes,
+    authorizationMappingCorrectionBytes,
+    authorizationMappingCorrectionManifestBytes,
     expectedArtifactSha256: dependencies.expectedArtifactSha256ForTest ?? FINAL_V3_ARTIFACT_SHA256,
+    noteDispositionBuilderForTest: dependencies.buildNoteDispositionAudit,
   })
   const outputRoot = resolve(rawOutputRoot)
   const outputDirectory = resolve(rawOutputDirectory)
   await writeExistingHeadCompatibilityAuditExclusive({
+    amendedAuthorizationPath,
     artifactPath,
     auditPath,
+    authorizationManifestPath,
+    authorizationMappingPath,
+    authorizationMappingCorrectionManifestPath,
+    authorizationMappingCorrectionPath,
     executedAt: (dependencies.now ?? (() => new Date()))().toISOString(),
     generated,
     outputDirectory,

@@ -4,35 +4,24 @@ import { sha256Canonical } from '../../src/features/literature/gold-set/import-c
 import {
   FINALIZED_GOLD_IMPORT_ARTIFACT_COLUMNS,
   GOLD_IMPORT_BOOLEAN_NORMALIZATION_RULE_VERSION,
-  GOLD_IMPORT_COMPATIBILITY_SUPPLEMENT_SCHEMA_VERSION,
   GOLD_IMPORT_COMPENSATION_MIGRATION_ID,
   GOLD_IMPORT_EXISTING_HEAD_IDENTITIES,
+  GOLD_IMPORT_EXISTING_NOTE_DISPOSITION_RULE_VERSION,
   GOLD_IMPORT_EXECUTION_COMPATIBILITY_BLOCKER_CODES,
   GOLD_IMPORT_LIST_NORMALIZATION_RULE_VERSION,
-  GOLD_IMPORT_PHYSICIAN_DECISION_IDENTITIES,
-  bindCompletedCompatibilitySupplement,
-  boundCompatibilitySupplementTemplateSchema,
   deriveCompatibilityActionCounts,
   parseFinalizedArtifactBooleanLexeme,
   parseFinalizedGoldImportArtifact,
   resolveGoldImportCompensationCompatibility,
-  validateCompletedCompatibilitySupplement,
   validateGoldImportSourceAuthorizationSetForImport,
-  validateGoldImportSourceAuthorizationSetV2,
-  type BoundCompatibilitySupplementCompleted,
-  type BoundCompatibilitySupplementTemplate,
+  validateGoldImportSourceAuthorizationSetV3,
   type CompatibilityAuditBindingContext,
   type CompatibilityDevelopmentPlanningState,
   type CompatibilityPlanningResolutionRow,
-  type CompatibilitySupplementCompletedContent,
 } from './gold-import-compensation-compatibility'
 
 const FIXED_TIME = '2026-08-08T00:00:00.000Z'
-const DECISION_KEYS = new Set(
-  GOLD_IMPORT_PHYSICIAN_DECISION_IDENTITIES.map(
-    (identity) => `${identity.masterRowId}:${identity.pmid}`,
-  ),
-)
+const EXISTING_OUT_OF_SCOPE_PMIDS = new Set(['32250874', '16002921', '15133344', '28610675'])
 const CONSERVATIVE_NOTES_MISMATCH_PMIDS = new Set(['36879724', '39281191'])
 
 function sha256(value: Uint8Array | string): string {
@@ -159,6 +148,7 @@ function serializeArtifact(rows: readonly ArtifactValues[]): Buffer {
 function buildFixture(
   initialCount = 0,
   withUnsortedLists = false,
+  includeAllExisting = false,
 ): {
   artifactBytes: Buffer
   bindingContext: CompatibilityAuditBindingContext
@@ -170,7 +160,7 @@ function buildFixture(
     const itemId = fixtureUuid(0x11000000, index + 1)
     const currentReviewId = fixtureUuid(0x22000000, index + 1)
     const values = artifactValues({
-      included: !DECISION_KEYS.has(`${identity.masterRowId}:${identity.pmid}`),
+      included: includeAllExisting || !EXISTING_OUT_OF_SCOPE_PMIDS.has(identity.pmid),
       itemId,
       masterRowId: identity.masterRowId,
       pmid: identity.pmid,
@@ -263,7 +253,7 @@ function buildRealLikeBlockedFixture(): {
     const itemId = fixtureUuid(0x61000000, index + 1)
     const currentReviewId = fixtureUuid(0x62000000, index + 1)
     const values = artifactValues({
-      included: !DECISION_KEYS.has(`${identity.masterRowId}:${identity.pmid}`),
+      included: !EXISTING_OUT_OF_SCOPE_PMIDS.has(identity.pmid),
       itemId,
       masterRowId: identity.masterRowId,
       pmid: identity.pmid,
@@ -351,143 +341,6 @@ function buildRealLikeBlockedFixture(): {
     },
   }
   return { artifactBytes, bindingContext, planningState }
-}
-
-function legacySupplementTemplate(
-  fixture: ReturnType<typeof buildFixture>,
-): BoundCompatibilitySupplementTemplate {
-  const resolution = resolveGoldImportCompensationCompatibility({
-    bindingContext: fixture.bindingContext,
-    developmentPlanningState: fixture.planningState,
-    finalizedArtifact: fixture.artifactBytes,
-  })
-  const parsed = parseFinalizedGoldImportArtifact(fixture.artifactBytes, {
-    expectedArtifactSha256: fixture.bindingContext.finalV3ArtifactSha256,
-  })
-  const byIdentity = new Map(
-    parsed.rows.map((row) => [`${row.identity.masterRowId}:${row.identity.pmid}`, row]),
-  )
-  const content = {
-    allowedMutableFields: ['technologyTagStatus', 'diseaseTagStatus'] as const,
-    authorization: null,
-    bindings: {
-      ...fixture.bindingContext,
-      existingHeadCohortSha256: resolution.existingHeadCohortSha256,
-    },
-    documentState: 'template' as const,
-    kind: 'physician_compatibility_supplement' as const,
-    resolutionClasses: [
-      'deterministic_lexical_normalization',
-      'deterministic_schema_compatibility_mapping',
-      'physician_authorized_compatibility_decision',
-    ] as const,
-    rows: GOLD_IMPORT_PHYSICIAN_DECISION_IDENTITIES.map((identity) => {
-      const record = byIdentity.get(`${identity.masterRowId}:${identity.pmid}`)
-      if (!record) throw new Error('Legacy supplement fixture identity is missing.')
-      const emptyDecision = {
-        allowedValues: ['not_applicable', 'not_assessable'] as const,
-        currentValue: null,
-        physicianFinalValue: null,
-        proposedValue: null,
-        sourceValue: '' as const,
-      }
-      return {
-        categorizationFromFullText: false as const,
-        clinicalPurposes: [] as const,
-        completionStatus: 'pending' as const,
-        diseaseTags: [] as const,
-        diseaseTagStatus: emptyDecision,
-        enrichmentProvenance: record.projection.enrichmentProvenance,
-        itemId: record.identity.itemId,
-        masterRowId: record.identity.masterRowId,
-        physicianRationale: '' as const,
-        pmid: record.identity.pmid,
-        publicationStatus: null,
-        relevanceLabel: 'exclude' as const,
-        reviewed: false as const,
-        reviewerConfidence: record.projection.reviewerConfidence,
-        studyDesign: null,
-        technologyTags: [] as const,
-        technologyTagStatus: emptyDecision,
-        topicIds: [] as const,
-      }
-    }),
-    schemaVersion: GOLD_IMPORT_COMPATIBILITY_SUPPLEMENT_SCHEMA_VERSION,
-    scope: {
-      datasetSplit: 'development' as const,
-      heldOutIdentitiesAccessed: false as const,
-      purpose: 'import_contract_compatibility_only' as const,
-      remoteWritesAllowed: false as const,
-      targetDatabase: 'local' as const,
-    },
-  }
-  return boundCompatibilitySupplementTemplateSchema.parse({
-    ...content,
-    binding: {
-      canonicalization: 'recursive_sorted_key_json_v1',
-      contentSha256: sha256Canonical(content),
-    },
-  })
-}
-
-function completedContent(
-  template: BoundCompatibilitySupplementTemplate,
-): CompatibilitySupplementCompletedContent {
-  return {
-    allowedMutableFields: ['technologyTagStatus', 'diseaseTagStatus'],
-    authorization: {
-      authorizationId: fixtureUuid(0x44000000, 1),
-      authorizationKind: 'physician_compatibility_decision',
-      authorizationNote: 'Physician reviewed both optional status fields for all four rows.',
-      authorized: true,
-      authorizedAt: '2026-08-09T12:00:00.000Z',
-      authorizedBy: 'reviewing-physician@example.test',
-      authorizedRole: 'physician',
-    },
-    bindings: template.bindings,
-    documentState: 'completed',
-    kind: 'physician_compatibility_supplement',
-    resolutionClasses: [
-      'deterministic_lexical_normalization',
-      'deterministic_schema_compatibility_mapping',
-      'physician_authorized_compatibility_decision',
-    ],
-    rows: template.rows.map((row, index) => ({
-      categorizationFromFullText: row.categorizationFromFullText,
-      clinicalPurposes: [],
-      completionStatus: 'completed',
-      diseaseTags: [],
-      diseaseTagStatus: {
-        ...row.diseaseTagStatus,
-        physicianFinalValue: index % 2 === 0 ? 'not_applicable' : 'not_assessable',
-      },
-      enrichmentProvenance: row.enrichmentProvenance,
-      itemId: row.itemId,
-      masterRowId: row.masterRowId,
-      physicianRationale: `Reviewed excluded-row taxonomy evidence for PMID ${row.pmid}.`,
-      pmid: row.pmid,
-      publicationStatus: null,
-      relevanceLabel: 'exclude',
-      reviewed: true,
-      reviewerConfidence: row.reviewerConfidence,
-      studyDesign: null,
-      technologyTags: [],
-      technologyTagStatus: {
-        ...row.technologyTagStatus,
-        physicianFinalValue: index % 2 === 0 ? 'not_assessable' : 'not_applicable',
-      },
-      topicIds: [],
-    })),
-    schemaVersion: GOLD_IMPORT_COMPATIBILITY_SUPPLEMENT_SCHEMA_VERSION,
-    scope: template.scope,
-    sourceTemplateSha256: template.binding.contentSha256,
-  }
-}
-
-function completedSupplement(
-  template: BoundCompatibilitySupplementTemplate,
-): BoundCompatibilitySupplementCompleted {
-  return bindCompletedCompatibilitySupplement(completedContent(template))
 }
 
 describe('finalized artifact boolean compatibility', () => {
@@ -658,9 +511,6 @@ describe('nine-head compatibility resolution', () => {
       finalizedArtifact: fixture.artifactBytes,
     })
     expect(result.readyForPackage).toBe(false)
-    expect(result.supplementRequired).toBe(false)
-    expect(result.supplementTemplate).toBeNull()
-    expect(result.acceptedSupplementSha256).toBeNull()
     expect(result.existingHeads).toHaveLength(9)
     expect(result.actionCounts).toEqual({
       incompatible: 630,
@@ -676,8 +526,8 @@ describe('nine-head compatibility resolution', () => {
         blockedRowCount: 630,
         countsByCode: {
           excluded_status_null_not_representable_by_import_contract_v1: 272,
-          source_is_blinded_conflicts_with_local_automated_signals_reveal_state_v1: 630,
-          source_supplemental_metadata_use_conflicts_with_local_reveal_state_v1: 50,
+          source_full_text_provenance_has_no_exact_import_v1_mapping: 50,
+          source_review_blinding_provenance_has_no_exact_import_v1_mapping: 630,
         },
         executableRowCount: 0,
         totalRowCount: 630,
@@ -711,9 +561,6 @@ describe('nine-head compatibility resolution', () => {
           sourceValue: 'False',
         }),
       )
-      expect(
-        row.fields.filter((field) => field.classification === 'physician_decision_required'),
-      ).toEqual([])
     })
     expect(
       result.existingHeads.flatMap((row) =>
@@ -724,11 +571,20 @@ describe('nine-head compatibility resolution', () => {
       result.existingHeads
         .filter((row) =>
           row.fields.some(
-            (field) => field.field === 'notes' && field.classification === 'incompatible',
+            (field) =>
+              field.field === 'notes' &&
+              field.classification === 'existing_physician_note_preserved_by_amended_authorization',
           ),
         )
         .map((row) => row.identity.pmid),
     ).toEqual(['36879724', '39281191'])
+    expect(result.noteDisposition).toEqual({
+      action: 'preserve_current_authorized_physician_rationale',
+      pmids: ['36879724', '39281191'],
+      ruleVersion: GOLD_IMPORT_EXISTING_NOTE_DISPOSITION_RULE_VERSION,
+      sourceArtifactNotesApplied: false,
+      status: 'already_authorized',
+    })
   })
 
   test('does not turn authoritative excluded V3 nulls into physician decisions', () => {
@@ -738,32 +594,48 @@ describe('nine-head compatibility resolution', () => {
       developmentPlanningState: fixture.planningState,
       finalizedArtifact: fixture.artifactBytes,
     })
-    expect(result).toEqual(
-      expect.objectContaining({
-        acceptedSupplementSha256: null,
-        readyForPackage: false,
-        supplementRequired: false,
-        supplementTemplate: null,
-      }),
-    )
+    expect(result.readyForPackage).toBe(false)
     expect(result.actionCounts.unresolved).toBe(0)
-    expect(
-      result.existingHeads.flatMap((row) =>
-        row.fields.filter((field) => field.classification === 'physician_decision_required'),
-      ),
-    ).toEqual([])
+    expect(result.existingHeads.flatMap((row) => row.fields)).not.toContainEqual(
+      expect.objectContaining({ classification: 'physician_decision_required' }),
+    )
   })
 
-  test('rejects a supplied compatibility supplement and cannot flip readiness', () => {
+  test('treats an empty uncertain row as the same authoritative-null contract mismatch', () => {
     const fixture = buildFixture()
-    expect(() =>
-      resolveGoldImportCompensationCompatibility({
-        bindingContext: fixture.bindingContext,
-        compatibilitySupplement: {},
-        developmentPlanningState: fixture.planningState,
-        finalizedArtifact: fixture.artifactBytes,
-      }),
-    ).toThrow('not applicable')
+    const lines = fixture.artifactBytes.toString('utf8').trimEnd().split('\n')
+    const header = lines[0]?.split(',') ?? []
+    const pmidIndex = header.indexOf('pmid')
+    const labelIndex = header.indexOf('physician_final_label')
+    const uncertainLineIndex = lines.findIndex(
+      (line, index) => index > 0 && line.split(',')[pmidIndex] === '32250874',
+    )
+    const uncertainCells = lines[uncertainLineIndex]?.split(',')
+    if (!uncertainCells) throw new Error('Uncertain fixture source row is missing.')
+    uncertainCells[labelIndex] = 'uncertain'
+    lines[uncertainLineIndex] = uncertainCells.join(',')
+    const artifactBytes = Buffer.from(`${lines.join('\n')}\n`, 'utf8')
+    const planningState = clonePlanningState(fixture.planningState)
+    const planningRow = planningState.rows.find((row) => row.pmid === '32250874')
+    if (!planningRow?.currentEffectiveReview) throw new Error('Uncertain fixture head is missing.')
+    planningRow.currentEffectiveReview.relevanceLabel = 'uncertain'
+    const result = resolveGoldImportCompensationCompatibility({
+      bindingContext: {
+        ...fixture.bindingContext,
+        currentDatabase: {
+          ...fixture.bindingContext.currentDatabase,
+          developmentPlanningStateSha256: sha256Canonical(planningState),
+        },
+        finalV3ArtifactSha256: sha256(artifactBytes),
+      },
+      developmentPlanningState: planningState,
+      finalizedArtifact: artifactBytes,
+    })
+    const resolvedRow = result.planningRows.find((row) => row.identity.pmid === '32250874')
+    expect(resolvedRow?.executionBlockerCodes).toContain(
+      'excluded_status_null_not_representable_by_import_contract_v1',
+    )
+    expect(resolvedRow?.proposedAction).toBeNull()
   })
 
   test('classifies semantic physician-field drift as incompatible only after all fields are read', () => {
@@ -797,7 +669,7 @@ describe('nine-head compatibility resolution', () => {
     expect(result.actionCounts.incompatible).toBe(5)
   })
 
-  test('separates pinned V3 enrichment changes from conservative physician-note drift', () => {
+  test('separates pinned V3 enrichment changes from a non-amended physician-note drift', () => {
     const fixture = buildFixture()
     const changedState = clonePlanningState(fixture.planningState)
     const first = changedState.rows[0]
@@ -843,7 +715,7 @@ describe('nine-head compatibility resolution', () => {
       ['import_initial', 'resolved'],
       ['import_revision', 'resolved'],
       ['import_noop', 'resolved'],
-      [null, 'pending_physician_decision'],
+      [null, 'incompatible'],
       [null, 'incompatible'],
     ].map(
       ([proposedAction, resolutionStatus], index) =>
@@ -863,330 +735,130 @@ describe('nine-head compatibility resolution', () => {
         }) as CompatibilityPlanningResolutionRow,
     )
     expect(deriveCompatibilityActionCounts(rows)).toEqual({
-      incompatible: 1,
+      incompatible: 2,
       initial: 2,
       inserts: 3,
       noops: 1,
       revisions: 1,
       total: 6,
-      unresolved: 1,
+      unresolved: 0,
     })
   })
 })
 
-describe('strict legacy compatibility supplement schema validation', () => {
-  function supplementFixture() {
-    const fixture = buildFixture()
-    const template = legacySupplementTemplate(fixture)
-    return {
-      ...fixture,
-      content: completedContent(template),
-      supplement: completedSupplement(template),
-      template,
-    }
-  }
-
-  test('requires physician authorization and completed row attestations', () => {
-    const fixture = supplementFixture()
-    expect(() =>
-      bindCompletedCompatibilitySupplement({ ...fixture.content, authorization: null }),
-    ).toThrow()
-    expect(() =>
-      bindCompletedCompatibilitySupplement({
-        ...fixture.content,
-        rows: fixture.content.rows.map((row, index) =>
-          index === 0 ? { ...row, reviewed: false } : row,
-        ),
-      }),
-    ).toThrow()
-    expect(() =>
-      bindCompletedCompatibilitySupplement({
-        ...fixture.content,
-        rows: fixture.content.rows.map((row, index) =>
-          index === 0 ? { ...row, physicianRationale: '' } : row,
-        ),
-      }),
-    ).toThrow()
-  })
-
-  test('rejects preselection, disallowed statuses, and changes to protected fields', () => {
-    const fixture = supplementFixture()
-    expect(() =>
-      bindCompletedCompatibilitySupplement({
-        ...fixture.content,
-        rows: fixture.content.rows.map((row, index) =>
-          index === 0
-            ? {
-                ...row,
-                technologyTagStatus: {
-                  ...row.technologyTagStatus,
-                  proposedValue: 'not_applicable',
-                },
-              }
-            : row,
-        ),
-      }),
-    ).toThrow()
-    expect(() =>
-      bindCompletedCompatibilitySupplement({
-        ...fixture.content,
-        rows: fixture.content.rows.map((row, index) =>
-          index === 0
-            ? {
-                ...row,
-                technologyTagStatus: {
-                  ...row.technologyTagStatus,
-                  physicianFinalValue: 'tagged',
-                },
-              }
-            : row,
-        ),
-      }),
-    ).toThrow()
-    expect(() =>
-      bindCompletedCompatibilitySupplement({
-        ...fixture.content,
-        rows: fixture.content.rows.map((row, index) =>
-          index === 0 ? { ...row, relevanceLabel: 'include_core' } : row,
-        ),
-      }),
-    ).toThrow()
-    expect(() =>
-      bindCompletedCompatibilitySupplement({
-        ...fixture.content,
-        rows: fixture.content.rows.map((row, index) =>
-          index === 0 ? { ...row, technologyTags: ['convex-ebus'] } : row,
-        ),
-      }),
-    ).toThrow()
-  })
-
-  test('rejects unknown fields at every strict boundary', () => {
-    const fixture = supplementFixture()
-    expect(() =>
-      bindCompletedCompatibilitySupplement({ ...fixture.content, unexpected: true }),
-    ).toThrow()
-    expect(() =>
-      bindCompletedCompatibilitySupplement({
-        ...fixture.content,
-        rows: fixture.content.rows.map((row, index) =>
-          index === 0 ? { ...row, unexpected: true } : row,
-        ),
-      }),
-    ).toThrow()
-    expect(() =>
-      validateCompletedCompatibilitySupplement(
-        {
-          ...fixture.supplement,
-          authorization: { ...fixture.supplement.authorization, unexpected: true },
-        },
-        fixture.template,
-      ),
-    ).toThrow()
-  })
-
-  test('rejects a checksum-valid change to fixed confidence', () => {
-    const fixture = supplementFixture()
-    const changed = bindCompletedCompatibilitySupplement({
-      ...fixture.content,
-      rows: fixture.content.rows.map((row, index) =>
-        index === 0 ? { ...row, reviewerConfidence: 'moderate' } : row,
-      ),
-    })
-    expect(() => validateCompletedCompatibilitySupplement(changed, fixture.template)).toThrow(
-      'changed a fixed physician or source field',
-    )
-  })
-
-  test('rejects missing, duplicate, or substituted decision identities', () => {
-    const fixture = supplementFixture()
-    const duplicate = bindCompletedCompatibilitySupplement({
-      ...fixture.content,
-      rows: [fixture.content.rows[0], fixture.content.rows[0], ...fixture.content.rows.slice(2)],
-    })
-    expect(() => validateCompletedCompatibilitySupplement(duplicate, fixture.template)).toThrow(
-      'exact four decision rows',
-    )
-  })
-
-  test('rejects stale standalone supplement bindings and active resolver use', () => {
-    const fixture = supplementFixture()
-    const rebound = bindCompletedCompatibilitySupplement({
-      ...fixture.content,
-      bindings: {
-        ...fixture.content.bindings,
-        currentDatabase: {
-          ...fixture.content.bindings.currentDatabase,
-          physicalStateSha256: '1'.repeat(64),
-        },
-      },
-    })
-    expect(() => validateCompletedCompatibilitySupplement(rebound, fixture.template)).toThrow()
-    expect(() =>
-      resolveGoldImportCompensationCompatibility({
-        bindingContext: fixture.bindingContext,
-        compatibilitySupplement: fixture.supplement,
-        developmentPlanningState: fixture.planningState,
-        finalizedArtifact: fixture.artifactBytes,
-      }),
-    ).toThrow('not applicable')
-  })
-
-  test('rejects artifact and planning-state checksum mismatch before resolution', () => {
-    const fixture = supplementFixture()
-    const changedArtifact = Buffer.from(fixture.artifactBytes)
-    changedArtifact[changedArtifact.length - 1] = 0x20
-    expect(() =>
-      resolveGoldImportCompensationCompatibility({
-        bindingContext: fixture.bindingContext,
-        developmentPlanningState: fixture.planningState,
-        finalizedArtifact: changedArtifact,
-      }),
-    ).toThrow('SHA-256')
-    expect(() =>
-      resolveGoldImportCompensationCompatibility({
-        bindingContext: {
-          ...fixture.bindingContext,
-          currentDatabase: {
-            ...fixture.bindingContext.currentDatabase,
-            developmentPlanningStateSha256: '0'.repeat(64),
-          },
-        },
-        developmentPlanningState: fixture.planningState,
-        finalizedArtifact: fixture.artifactBytes,
-      }),
-    ).toThrow('planning state is stale')
-  })
-
-  test('rejects a template in place of a completed authorized supplement', () => {
-    const fixture = supplementFixture()
-    expect(() =>
-      resolveGoldImportCompensationCompatibility({
-        bindingContext: fixture.bindingContext,
-        compatibilitySupplement: fixture.template,
-        developmentPlanningState: fixture.planningState,
-        finalizedArtifact: fixture.artifactBytes,
-      }),
-    ).toThrow()
-  })
-})
-
-describe('compatibility source authorization binding', () => {
+describe('supplement-free source authorization binding', () => {
   function authorizationFixture() {
-    const fixture = buildFixture(2, true)
+    const fixture = buildFixture(2, true, true)
     const resolution = resolveGoldImportCompensationCompatibility({
       bindingContext: fixture.bindingContext,
       developmentPlanningState: fixture.planningState,
       finalizedArtifact: fixture.artifactBytes,
     })
-    const supplement = completedSupplement(legacySupplementTemplate(fixture))
-    const optionalTagStatusResolutions = supplement.rows.map((row) => {
-      const technologyTagStatus = row.technologyTagStatus.physicianFinalValue
-      const diseaseTagStatus = row.diseaseTagStatus.physicianFinalValue
-      if (!technologyTagStatus || !diseaseTagStatus) {
-        throw new Error('Expected exact completed optional statuses.')
-      }
-      return {
-        diseaseTagStatus,
-        itemId: row.itemId,
-        pmid: row.pmid,
-        technologyTagStatus,
-      }
-    })
-    const legacyActionCounts = {
-      incompatible: 0 as const,
-      initial: 2,
-      inserts: 11,
-      noops: 0,
-      revisions: 9,
-      total: 11,
-      unresolved: 0 as const,
-    }
+    expect(resolution.readyForPackage).toBe(true)
     const authorizationSet = {
       amendedTwoRowAuthorizationSha256: '1'.repeat(64),
       compatibility: {
-        acceptedSupplementSha256: supplement.binding.contentSha256,
-        actionCounts: legacyActionCounts,
+        actionCounts: resolution.actionCounts,
+        bindings: {
+          ...fixture.bindingContext,
+          existingHeadCohortSha256: resolution.existingHeadCohortSha256,
+        },
         booleanNormalizationLedger: resolution.artifact.booleanNormalizations,
         booleanNormalizationLedgerSha256: sha256Canonical(
           resolution.artifact.booleanNormalizations,
         ),
-        existingHeadCohortSha256: resolution.existingHeadCohortSha256,
         listNormalizationLedger: resolution.artifact.listNormalizations,
         listNormalizationLedgerSha256: sha256Canonical(resolution.artifact.listNormalizations),
-        optionalTagStatusResolutions,
+        noteDisposition: resolution.noteDisposition,
         resolutionSchemaVersion: resolution.schemaVersion,
-        supplement,
-      },
-      finalArtifactSha256: fixture.bindingContext.finalV3ArtifactSha256,
-      kind: 'gold_import_source_authorization_set',
-      signedProtocolAuthorizationSha256: '2'.repeat(64),
-      sourceDecisionsChanged: false,
-      version: 2,
-    } as const
-    return {
-      authorizationSet,
-      artifactBytes: fixture.artifactBytes,
-      plan: {
-        batchId: fixture.bindingContext.currentDatabase.batchId,
-        counts: {
-          initial: legacyActionCounts.initial,
-          inserts: legacyActionCounts.inserts,
-          noops: legacyActionCounts.noops,
-          revisions: legacyActionCounts.revisions,
-          total: legacyActionCounts.total,
-        },
-        executionContext: {
-          compensationRpc: 'compensate_literature_gold_import_v1' as const,
-          developmentMembershipHash: 'literature_gold_development_membership_hash_v1' as const,
-          effectiveStateHash: 'literature_gold_effective_state_hash_v1' as const,
-          importRpc: 'apply_literature_gold_import_v1' as const,
-          migrationId: GOLD_IMPORT_COMPENSATION_MIGRATION_ID,
-          physicalStateHash: 'literature_gold_physical_state_hash_v1' as const,
-          reconciliationRpc: 'reconcile_literature_gold_review_operation_v1' as const,
-          remoteWritesAllowed: false as const,
-          repositoryCommitSha: 'a'.repeat(40),
-          targetDatabase: 'local' as const,
-        },
-        expectedEffectiveStateSha256: fixture.bindingContext.currentDatabase.effectiveStateSha256,
-        expectedPhysicalStateSha256: fixture.bindingContext.currentDatabase.physicalStateSha256,
         scope: {
           datasetSplit: 'development' as const,
-          developmentMembershipSha256:
-            fixture.bindingContext.currentDatabase.developmentMembershipSha256,
           heldOutIdentitiesAccessed: false as const,
+          remoteWritesAllowed: false as const,
+          targetDatabase: 'local' as const,
         },
-        sourceArtifactSha256: fixture.bindingContext.finalV3ArtifactSha256,
       },
+      finalArtifactSha256: fixture.bindingContext.finalV3ArtifactSha256,
+      kind: 'gold_import_source_authorization_set' as const,
+      signedProtocolAuthorizationSha256: '2'.repeat(64),
+      sourceDecisionsChanged: false as const,
+      version: 3 as const,
     }
+    const plan = {
+      batchId: fixture.bindingContext.currentDatabase.batchId,
+      counts: {
+        initial: resolution.actionCounts.initial,
+        inserts: resolution.actionCounts.inserts,
+        noops: resolution.actionCounts.noops,
+        revisions: resolution.actionCounts.revisions,
+        total: resolution.actionCounts.total,
+      },
+      executionContext: {
+        compensationRpc: 'compensate_literature_gold_import_v1' as const,
+        developmentMembershipHash: 'literature_gold_development_membership_hash_v1' as const,
+        effectiveStateHash: 'literature_gold_effective_state_hash_v1' as const,
+        importRpc: 'apply_literature_gold_import_v1' as const,
+        migrationId: GOLD_IMPORT_COMPENSATION_MIGRATION_ID,
+        physicalStateHash: 'literature_gold_physical_state_hash_v1' as const,
+        reconciliationRpc: 'reconcile_literature_gold_review_operation_v1' as const,
+        remoteWritesAllowed: false as const,
+        repositoryCommitSha: 'a'.repeat(40),
+        targetDatabase: 'local' as const,
+      },
+      expectedEffectiveStateSha256: fixture.bindingContext.currentDatabase.effectiveStateSha256,
+      expectedPhysicalStateSha256: fixture.bindingContext.currentDatabase.physicalStateSha256,
+      scope: {
+        datasetSplit: 'development' as const,
+        developmentMembershipSha256:
+          fixture.bindingContext.currentDatabase.developmentMembershipSha256,
+        heldOutIdentitiesAccessed: false as const,
+      },
+      sourceArtifactSha256: fixture.bindingContext.finalV3ArtifactSha256,
+    }
+    return { artifactBytes: fixture.artifactBytes, authorizationSet, plan }
   }
 
-  test('accepts the exact supplement, ledger, cohort, dynamic counts, and four decisions', () => {
+  test('accepts exact dynamic counts, bindings, normalization ledgers, and note disposition', () => {
     const { artifactBytes, authorizationSet, plan } = authorizationFixture()
-    expect(validateGoldImportSourceAuthorizationSetV2(authorizationSet).version).toBe(2)
+    expect(validateGoldImportSourceAuthorizationSetV3(authorizationSet).version).toBe(3)
     expect(
       validateGoldImportSourceAuthorizationSetForImport({
         finalizedArtifact: artifactBytes,
         plan,
         sourceAuthorizationSet: authorizationSet,
       }).version,
-    ).toBe(2)
-    expect(
-      validateGoldImportSourceAuthorizationSetV2({
+    ).toBe(3)
+  })
+
+  test('rejects retired V2 physician-status authorization and any V3 supplement fields', () => {
+    const { artifactBytes, authorizationSet, plan } = authorizationFixture()
+    expect(() =>
+      validateGoldImportSourceAuthorizationSetForImport({
+        finalizedArtifact: artifactBytes,
+        plan,
+        sourceAuthorizationSet: { ...authorizationSet, version: 2 },
+      }),
+    ).toThrow('V2 physician status supplements are retired')
+    expect(() =>
+      validateGoldImportSourceAuthorizationSetV3({
+        ...authorizationSet,
+        compatibility: { ...authorizationSet.compatibility, supplement: {} },
+      }),
+    ).toThrow()
+    expect(() =>
+      validateGoldImportSourceAuthorizationSetV3({
         ...authorizationSet,
         compatibility: {
           ...authorizationSet.compatibility,
-          optionalTagStatusResolutions: [
-            ...authorizationSet.compatibility.optionalTagStatusResolutions,
-          ].reverse(),
+          optionalTagStatusResolutions: [],
         },
-      }).compatibility.optionalTagStatusResolutions,
-    ).toHaveLength(4)
+      }),
+    ).toThrow()
   })
 
-  test('rejects V1 authorization when the raw artifact requires list normalization', () => {
+  test('rejects V1 whenever raw source lexemes require normalization', () => {
     const { artifactBytes, authorizationSet, plan } = authorizationFixture()
-    const v1AuthorizationSet = {
+    const v1 = {
       amendedTwoRowAuthorizationSha256: authorizationSet.amendedTwoRowAuthorizationSha256,
       finalArtifactSha256: authorizationSet.finalArtifactSha256,
       kind: authorizationSet.kind,
@@ -1194,21 +866,19 @@ describe('compatibility source authorization binding', () => {
       sourceDecisionsChanged: false as const,
       version: 1 as const,
     }
-
     expect(() =>
       validateGoldImportSourceAuthorizationSetForImport({
         finalizedArtifact: artifactBytes,
         plan,
-        sourceAuthorizationSet: v1AuthorizationSet,
+        sourceAuthorizationSet: v1,
       }),
-    ).toThrow('V1 cannot authorize finalized-artifact list reordering')
+    ).toThrow('V1 cannot authorize finalized-artifact lexical normalization')
   })
 
-  test('rejects a self-hashed list ledger with missing raw-artifact coverage', () => {
+  test('rejects self-hashed missing or changed raw normalization coverage', () => {
     const { artifactBytes, authorizationSet, plan } = authorizationFixture()
-    expect(authorizationSet.compatibility.listNormalizationLedger).toHaveLength(4)
     const listNormalizationLedger = authorizationSet.compatibility.listNormalizationLedger.slice(1)
-    const mismatched = {
+    const missingListEntry = {
       ...authorizationSet,
       compatibility: {
         ...authorizationSet.compatibility,
@@ -1216,20 +886,45 @@ describe('compatibility source authorization binding', () => {
         listNormalizationLedgerSha256: sha256Canonical(listNormalizationLedger),
       },
     }
-    expect(validateGoldImportSourceAuthorizationSetV2(mismatched).version).toBe(2)
+    expect(validateGoldImportSourceAuthorizationSetV3(missingListEntry).version).toBe(3)
     expect(() =>
       validateGoldImportSourceAuthorizationSetForImport({
         finalizedArtifact: artifactBytes,
         plan,
-        sourceAuthorizationSet: mismatched,
+        sourceAuthorizationSet: missingListEntry,
       }),
     ).toThrow('list normalization ledger does not exactly match the finalized artifact')
+
+    const [first, ...remaining] = jsonClone(
+      authorizationSet.compatibility.booleanNormalizationLedger,
+    )
+    if (!first || first.originalLexeme !== 'false') throw new Error('Fixture ledger changed.')
+    const booleanNormalizationLedger = [
+      { ...first, originalLexeme: 'False' as const, sourceForm: 'legacy_title_case' as const },
+      ...remaining,
+    ]
+    const changedBooleanEntry = {
+      ...authorizationSet,
+      compatibility: {
+        ...authorizationSet.compatibility,
+        booleanNormalizationLedger,
+        booleanNormalizationLedgerSha256: sha256Canonical(booleanNormalizationLedger),
+      },
+    }
+    expect(validateGoldImportSourceAuthorizationSetV3(changedBooleanEntry).version).toBe(3)
+    expect(() =>
+      validateGoldImportSourceAuthorizationSetForImport({
+        finalizedArtifact: artifactBytes,
+        plan,
+        sourceAuthorizationSet: changedBooleanEntry,
+      }),
+    ).toThrow('boolean normalization ledger does not exactly match the finalized artifact')
   })
 
-  test('rejects checksum-consistent count and physician-decision substitution', () => {
-    const { authorizationSet } = authorizationFixture()
+  test('rejects count, state-binding, and note-rule drift before import', () => {
+    const { artifactBytes, authorizationSet, plan } = authorizationFixture()
     expect(() =>
-      validateGoldImportSourceAuthorizationSetV2({
+      validateGoldImportSourceAuthorizationSetV3({
         ...authorizationSet,
         compatibility: {
           ...authorizationSet.compatibility,
@@ -1238,108 +933,20 @@ describe('compatibility source authorization binding', () => {
       }),
     ).toThrow('action counts are inconsistent')
 
-    const first = authorizationSet.compatibility.optionalTagStatusResolutions[0]
-    expect(first).toBeDefined()
-    expect(() =>
-      validateGoldImportSourceAuthorizationSetV2({
-        ...authorizationSet,
-        compatibility: {
-          ...authorizationSet.compatibility,
-          optionalTagStatusResolutions:
-            authorizationSet.compatibility.optionalTagStatusResolutions.map((row, index) =>
-              index === 0
-                ? {
-                    ...row,
-                    technologyTagStatus:
-                      first?.technologyTagStatus === 'not_applicable'
-                        ? 'not_assessable'
-                        : 'not_applicable',
-                  }
-                : row,
-            ),
-        },
-      }),
-    ).toThrow('differs from the physician supplement')
-  })
-
-  test('rejects internally consistent action counts that differ from the parsed import plan', () => {
-    const { artifactBytes, authorizationSet, plan } = authorizationFixture()
-    const mismatched = {
-      ...authorizationSet,
-      compatibility: {
-        ...authorizationSet.compatibility,
-        actionCounts: {
-          ...authorizationSet.compatibility.actionCounts,
-          inserts: authorizationSet.compatibility.actionCounts.inserts - 1,
-          noops: authorizationSet.compatibility.actionCounts.noops + 1,
-          revisions: authorizationSet.compatibility.actionCounts.revisions - 1,
-        },
-      },
-    }
-    expect(validateGoldImportSourceAuthorizationSetV2(mismatched).version).toBe(2)
-    expect(() =>
-      validateGoldImportSourceAuthorizationSetForImport({
-        finalizedArtifact: artifactBytes,
-        plan,
-        sourceAuthorizationSet: mismatched,
-      }),
-    ).toThrow('action counts do not match the import plan')
-  })
-
-  test('rejects a self-hashed normalization ledger that differs from the raw artifact', () => {
-    const { artifactBytes, authorizationSet, plan } = authorizationFixture()
-    const [first, ...remainingLedger] = jsonClone(
-      authorizationSet.compatibility.booleanNormalizationLedger,
-    )
-    if (!first || first.originalLexeme !== 'false') {
-      throw new Error('Expected the fixture ledger to begin with canonical false.')
-    }
-    const ledger = [
-      { ...first, originalLexeme: 'False' as const, sourceForm: 'legacy_title_case' as const },
-      ...remainingLedger,
-    ]
-    const mismatched = {
-      ...authorizationSet,
-      compatibility: {
-        ...authorizationSet.compatibility,
-        booleanNormalizationLedger: ledger,
-        booleanNormalizationLedgerSha256: sha256Canonical(ledger),
-      },
-    }
-    expect(validateGoldImportSourceAuthorizationSetV2(mismatched).version).toBe(2)
-    expect(() =>
-      validateGoldImportSourceAuthorizationSetForImport({
-        finalizedArtifact: artifactBytes,
-        plan,
-        sourceAuthorizationSet: mismatched,
-      }),
-    ).toThrow('does not exactly match the finalized artifact')
-  })
-
-  test('rejects a self-bound supplement whose current database state differs from the plan', () => {
-    const { artifactBytes, authorizationSet, plan } = authorizationFixture()
-    const { binding: originalBinding, ...supplementContent } =
-      authorizationSet.compatibility.supplement
-    const staleSupplement = bindCompletedCompatibilitySupplement({
-      ...supplementContent,
-      bindings: {
-        ...supplementContent.bindings,
-        currentDatabase: {
-          ...supplementContent.bindings.currentDatabase,
-          physicalStateSha256: '9'.repeat(64),
-        },
-      },
-    })
     const stale = {
       ...authorizationSet,
       compatibility: {
         ...authorizationSet.compatibility,
-        acceptedSupplementSha256: staleSupplement.binding.contentSha256,
-        supplement: staleSupplement,
+        bindings: {
+          ...authorizationSet.compatibility.bindings,
+          currentDatabase: {
+            ...authorizationSet.compatibility.bindings.currentDatabase,
+            physicalStateSha256: '9'.repeat(64),
+          },
+        },
       },
     }
-    expect(staleSupplement.binding.contentSha256).not.toBe(originalBinding.contentSha256)
-    expect(validateGoldImportSourceAuthorizationSetV2(stale).version).toBe(2)
+    expect(validateGoldImportSourceAuthorizationSetV3(stale).version).toBe(3)
     expect(() =>
       validateGoldImportSourceAuthorizationSetForImport({
         finalizedArtifact: artifactBytes,
@@ -1347,5 +954,18 @@ describe('compatibility source authorization binding', () => {
         sourceAuthorizationSet: stale,
       }),
     ).toThrow('stale relative to the import plan current-state bindings')
+
+    expect(() =>
+      validateGoldImportSourceAuthorizationSetV3({
+        ...authorizationSet,
+        compatibility: {
+          ...authorizationSet.compatibility,
+          noteDisposition: {
+            ...authorizationSet.compatibility.noteDisposition,
+            sourceArtifactNotesApplied: true,
+          },
+        },
+      }),
+    ).toThrow()
   })
 })

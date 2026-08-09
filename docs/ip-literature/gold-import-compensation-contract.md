@@ -180,6 +180,17 @@ invariant and selected profile are exact, this owner/ACL representation does not
 migration. The original owner-specific full-inventory hash remains evidence rather than a readiness
 pin.
 
+Classification accounting is split by evidence surface. The observed ready local result contains
+exactly 763 entries in `schemaSecurityRecordClassificationCounts`, three in
+`rpcClassificationCounts`, and six in `deploymentProfileClassificationCounts`.
+`combinedClassificationCounts` therefore covers 772 classifications. Each partition must sum to
+its own diff-array length, and the combined partition must equal the element-wise sum of all three;
+the 772 combined classifications must never be described as 763 schema/security records.
+
+The exact owner/ACL subterminal is:
+
+`OWNER/ACL AUDIT READY — NO OWNER/ACL FORWARD MIGRATION REQUIRED`
+
 ## Finalized-artifact compatibility
 
 Finalized boolean fields accept only `true`, `false`, `True`, and `False`. All four forms are parsed
@@ -203,34 +214,51 @@ effective heads, but it cannot override an import RPC pre-state invariant or aut
 source value. Every one of the 630 source rows must pass the execution contract before any action is
 proposed or package readiness is considered.
 
+The normative source-of-truth distinctions for the exact 13 affected fields are recorded in
+[`gold-import-field-lineage-v1.md`](./gold-import-field-lineage-v1.md). Review provenance,
+complete-PDF evidence, local UI reveal events, import enrichment state, and physician rationale are
+independent concepts even when a contract-v1 equality currently couples them.
+
 The real read-only audit found three source/local execution-contract mismatches:
 
 - all 630 source rows have semantic `is_blinded=false`, while all 630 local planning rows have
-  `automatedSignalsRevealedAt=null`; contract v1 requires those states to agree, so changing the
-  source value to true would be an unauthorized semantic rewrite rather than normalization;
+  `automatedSignalsRevealedAt=null`; review blinding provenance and the local automated-signal UI
+  reveal event are distinct concepts, but contract v1 incorrectly requires them to agree, so
+  changing the source value or fabricating a reveal timestamp would be unauthorized;
 - all 272 formal V3 excluded rows have authoritative blank technology- and disease-tag statuses;
   those fields are outside enrichment scope for excluded rows, while contract v1 requires non-null
   status enums for an import revision; and
-- 50 source rows have `full_text_used=true` (`usedSupplementalMetadata=true`), while their local
-  `supplementalMetadataRevealedAt` state is null; contract v1 requires the source use flag to agree
-  with that reveal state.
+- 50 source rows have `full_text_used=true`, meaning a checksum-matched complete PDF was used for V3
+  enrichment. Contract v1 has no target for that evidence fact and incorrectly maps it to
+  `usedSupplementalMetadata=true`, which then conflicts with null local
+  `supplementalMetadataRevealedAt` state. Full-text evidence is distinct from the UI action that
+  reveals MeSH terms and author keywords.
 
-Those three cohorts are execution-compatibility ledgers. Separately, the field-by-field
-existing-head audit conservatively classifies `notes` as incompatible for PMIDs `36879724` and
-`39281191`. Their finalized source notes differ from the current authorized rationale, and the
-signed V3 provenance plus amended two-row authorization do not provide an exact mapping that says
-whether to replace those notes or preserve the current rationale. This unresolved source-authorization
-mapping produces the independent readiness blocker `incompatible_existing_head_fields`; it is not
-an execution-ledger count or a pending physician-supplement decision.
+Those three cohorts are execution-compatibility ledgers. The two apparent existing-head note
+differences are already resolved by the checksum-bound amended authorization. Its exact text says
+that values come from finalized V3 except for the supplied physician rationale, and its explicit
+field mapping writes that rationale to `literature_gold_set_reviews.notes`. The authoritative
+mapping correction leaves review-row mappings unchanged. The controlling identities are amended
+authorization SHA-256 `b95fc9785ee355b810981c051db62307e868110e06ffb1a83c09c8eff52bf89a`,
+mapping SHA-256 `169808d89f094798ec1c55682dce047f4cb51de26cb1117639fc81f190250191`,
+and mapping-correction SHA-256
+`9f0bba6172ea1af4a6d4844365bb5aa8c63308bee67ab9df5c03d1937e8d429d`.
+PMIDs `36879724` and `39281191` must therefore preserve their exact authorized current rationale;
+they must not be overwritten with the earlier finalized source note. Their mapping classification
+is `requires_existing_authorization_interpretation`, their exact note subterminal is
+`NOTE DISPOSITION ALREADY AUTHORIZED`, and they produce no
+`incompatible_existing_head_fields` blocker or new physician decision.
 
 The 272 excluded-row blanks are not unresolved physician decisions. A compatibility supplement or
 template would invent enrichment values outside the finalized V3 scope and therefore is neither
 required nor safe. No supplement can repair the lifecycle-state mismatches, and supplying one must
 not change readiness. The source values remain verbatim, no executable action is emitted for any of
 the 630 rows, and no package is generated. The exact terminal state is
-`CONTRACT STILL BLOCKED — UNRESOLVED DIFFERENCE`. This finding does not alter the safe-profile
-owner/ACL conclusion above and does not propose or authorize a forward migration. The historical
-`621/3/6` distribution remains evidence only, not a production assertion.
+`FORWARD IMPORT-CONTRACT REPAIR REQUIRED — NOTE DISPOSITION ALREADY AUTHORIZED`. This finding does
+not alter the safe-profile owner/ACL conclusion above. A future semantic repair is specified, but
+not implemented or authorized, in
+[`gold-import-contract-v2-forward-repair-spec.md`](./gold-import-contract-v2-forward-repair-spec.md).
+The historical `621/3/6` distribution remains evidence only, not a production assertion.
 
 ## Schema additions
 

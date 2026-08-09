@@ -9,7 +9,9 @@ import {
   type RawDatabaseSnapshot,
 } from './gold-import-compensation-migration-operations'
 import {
+  CONTRACT_RECONCILIATION_CLASSIFICATIONS,
   GOLD_IMPORT_COMPENSATION_RECONCILIATION_SCHEMA_VERSION,
+  OWNER_ACL_AUDIT_READY_TERMINAL_STATE,
   reconcileGoldImportCompensationContract,
   reconciliationIdentitySha256,
   type GoldImportCompensationContractReconciliation,
@@ -182,12 +184,69 @@ function assertRequestedNameDiscrepancies(
   }
 }
 
+function assertClassificationPartitionArithmetic(
+  reconciliation: GoldImportCompensationContractReconciliation,
+): void {
+  const partitions = reconciliation.classificationPartitions
+  if (
+    !partitions ||
+    partitions.schemaSecurityRecords?.total !== 763 ||
+    partitions.rpcs?.total !== 3 ||
+    partitions.deploymentProfile?.total !== 6 ||
+    partitions.combined?.total !== 772
+  ) {
+    throw new Error(
+      'Contract reconciliation must partition 763 schema records, 3 RPCs, and 6 deployment-profile comparisons into 772 combined classifications.',
+    )
+  }
+  for (const [name, partition] of Object.entries(partitions)) {
+    const counts = partition.classificationCounts
+    if (
+      !counts ||
+      CONTRACT_RECONCILIATION_CLASSIFICATIONS.some(
+        (classification) =>
+          !Number.isSafeInteger(counts[classification]) || counts[classification] < 0,
+      ) ||
+      Object.keys(counts).length !== CONTRACT_RECONCILIATION_CLASSIFICATIONS.length ||
+      Object.values(counts).reduce<number>((sum, count) => sum + Number(count), 0) !==
+        partition.total
+    ) {
+      throw new Error(`Contract reconciliation ${name} classification arithmetic is inconsistent.`)
+    }
+  }
+  for (const classification of CONTRACT_RECONCILIATION_CLASSIFICATIONS) {
+    if (
+      partitions.combined.classificationCounts[classification] !==
+      partitions.schemaSecurityRecords.classificationCounts[classification] +
+        partitions.rpcs.classificationCounts[classification] +
+        partitions.deploymentProfile.classificationCounts[classification]
+    ) {
+      throw new Error('Contract reconciliation combined classifications do not equal its surfaces.')
+    }
+  }
+  if (
+    canonicalJson(partitions.combined.classificationCounts) !==
+      canonicalJson(reconciliation.classificationCounts) ||
+    canonicalJson(partitions.schemaSecurityRecords.classificationCounts) !==
+      canonicalJson(reconciliation.schemaSecurityRecordClassificationCounts) ||
+    canonicalJson(partitions.rpcs.classificationCounts) !==
+      canonicalJson(reconciliation.rpcClassificationCounts) ||
+    canonicalJson(partitions.deploymentProfile.classificationCounts) !==
+      canonicalJson(reconciliation.deploymentProfileClassificationCounts) ||
+    canonicalJson(partitions.combined.classificationCounts) !==
+      canonicalJson(reconciliation.combinedClassificationCounts)
+  ) {
+    throw new Error('Contract reconciliation surface and combined classification counts disagree.')
+  }
+}
+
 function assertReadyReconciliation(
   reconciliation: GoldImportCompensationContractReconciliation,
 ): void {
   if (
     reconciliation.schemaVersion !== GOLD_IMPORT_COMPENSATION_RECONCILIATION_SCHEMA_VERSION ||
     !reconciliation.ready ||
+    reconciliation.ownerAclTerminalState !== OWNER_ACL_AUDIT_READY_TERMINAL_STATE ||
     reconciliation.readinessBlockers.length !== 0 ||
     !reconciliation.invariantIdentityMatches ||
     !reconciliation.deploymentProfile.passed ||
@@ -216,7 +275,7 @@ function assertReadyReconciliation(
     throw new Error('Contract reconciliation is not the exact ready local postgres-owner profile.')
   }
   if (
-    reconciliation.profileDiffs.length === 0 ||
+    reconciliation.profileDiffs.length !== 6 ||
     reconciliation.profileDiffs.some(
       (difference) =>
         difference.classification !== 'identical' ||
@@ -226,8 +285,17 @@ function assertReadyReconciliation(
   ) {
     throw new Error('Contract reconciliation profile evidence is incomplete or non-identical.')
   }
+  assertClassificationPartitionArithmetic(reconciliation)
   assertIdentityBindings(reconciliation)
   assertPinnedLocalRoleInventories(reconciliation)
+}
+
+function markdownClassificationCounts(
+  counts: GoldImportCompensationContractReconciliation['classificationCounts'],
+): string {
+  return CONTRACT_RECONCILIATION_CLASSIFICATIONS.map(
+    (classification) => `\`${classification}=${counts[classification]}\``,
+  ).join(', ')
 }
 
 /**
@@ -333,6 +401,7 @@ export function buildReconciledPostMigrationAudit(
   }
   checks.contractReconciliation = contractReconciliation
   checks.forwardMigrationRequired = false
+  checks.ownerAclTerminalState = OWNER_ACL_AUDIT_READY_TERMINAL_STATE
 
   const report = {
     ...legacyReport,
@@ -344,10 +413,13 @@ export function buildReconciledPostMigrationAudit(
     comparisons,
     checks,
   }
+  const classificationPartitions = input.reconciliation.classificationPartitions
   const markdown = `# Reconciled gold import-compensation migration audit
 
 - Status: \`ready\`
-- Forward repair migration required: \`false\`
+- Owner/ACL forward migration required: \`false\`
+- Owner/ACL terminal: \`${OWNER_ACL_AUDIT_READY_TERMINAL_STATE}\`
+- Scope: this owner/ACL reconciliation is separate from the overall import-contract forward-repair decision and does not declare that overall repair unnecessary.
 - Deployment profile: \`local_supabase_postgres_owner_v1\`
 - Environment-invariant identity: \`${actualIdentities.contractInvariant.sha256}\`
 - Deployment-profile identity: \`${actualIdentities.deploymentProfile.sha256}\`
@@ -358,6 +430,13 @@ export function buildReconciledPostMigrationAudit(
 - Held-out identities accessed: \`false\`
 - Import executed: \`false\`
 - Compensation executed: \`false\`
+
+## Classification partitions
+
+- Schema/security records (total \`${classificationPartitions.schemaSecurityRecords.total}\`): ${markdownClassificationCounts(classificationPartitions.schemaSecurityRecords.classificationCounts)}
+- RPCs (total \`${classificationPartitions.rpcs.total}\`): ${markdownClassificationCounts(classificationPartitions.rpcs.classificationCounts)}
+- Deployment profile (total \`${classificationPartitions.deploymentProfile.total}\`): ${markdownClassificationCounts(classificationPartitions.deploymentProfile.classificationCounts)}
+- Combined (total \`${classificationPartitions.combined.total}\`): ${markdownClassificationCounts(classificationPartitions.combined.classificationCounts)}
 `
   // Build once here so callers cannot accidentally publish a different planning projection.
   canonicalJson(buildDevelopmentPlanningState(input.snapshot))

@@ -15,6 +15,8 @@ export const GOLD_IMPORT_COMPENSATION_PROFILE_IDENTITY_SCHEMA_VERSION =
   'gold-import-compensation-deployment-profile-identity/1.0.0' as const
 export const GOLD_IMPORT_COMPENSATION_FULL_INVENTORY_IDENTITY_SCHEMA_VERSION =
   'gold-import-compensation-full-environment-inventory-identity/1.0.0' as const
+export const OWNER_ACL_AUDIT_READY_TERMINAL_STATE =
+  'OWNER/ACL AUDIT READY — NO OWNER/ACL FORWARD MIGRATION REQUIRED' as const
 
 export const CONTRACT_RECONCILIATION_CLASSIFICATIONS = [
   'identical',
@@ -29,6 +31,18 @@ export const CONTRACT_RECONCILIATION_CLASSIFICATIONS = [
 
 export type ContractReconciliationClassification =
   (typeof CONTRACT_RECONCILIATION_CLASSIFICATIONS)[number]
+
+export interface ContractReconciliationClassificationPartition {
+  classificationCounts: Readonly<Record<ContractReconciliationClassification, number>>
+  total: number
+}
+
+export interface ContractReconciliationClassificationPartitions {
+  combined: ContractReconciliationClassificationPartition
+  deploymentProfile: ContractReconciliationClassificationPartition
+  rpcs: ContractReconciliationClassificationPartition
+  schemaSecurityRecords: ContractReconciliationClassificationPartition
+}
 
 export const REQUIRED_RECONCILIATION_RPCS = [
   'apply_literature_gold_import_v1',
@@ -323,6 +337,7 @@ export interface GoldImportCompensationContractReconciliationInput {
 export interface GoldImportCompensationContractReconciliation {
   schemaVersion: typeof GOLD_IMPORT_COMPENSATION_RECONCILIATION_SCHEMA_VERSION
   ready: boolean
+  ownerAclTerminalState: typeof OWNER_ACL_AUDIT_READY_TERMINAL_STATE | null
   readinessBlockers: readonly string[]
   identities: ReconciliationIdentitySet
   invariantIdentityMatches: boolean
@@ -331,7 +346,16 @@ export interface GoldImportCompensationContractReconciliation {
   recordDiffs: readonly SchemaSecurityRecordDiff[]
   rpcDiffs: readonly RpcMetadataDiff[]
   profileDiffs: readonly DeploymentProfileEvidenceDiff[]
+  schemaSecurityRecordClassificationCounts: Readonly<
+    Record<ContractReconciliationClassification, number>
+  >
+  rpcClassificationCounts: Readonly<Record<ContractReconciliationClassification, number>>
+  deploymentProfileClassificationCounts: Readonly<
+    Record<ContractReconciliationClassification, number>
+  >
+  combinedClassificationCounts: Readonly<Record<ContractReconciliationClassification, number>>
   classificationCounts: Readonly<Record<ContractReconciliationClassification, number>>
+  classificationPartitions: ContractReconciliationClassificationPartitions
   completeness: {
     expectedRecordCount: number
     actualRecordCount: number
@@ -1500,17 +1524,30 @@ function ownerRepresentationExplanation(
 }
 
 function classificationCounts(
-  recordDifferences: readonly SchemaSecurityRecordDiff[],
-  rpcDifferences: readonly RpcMetadataDiff[],
-  profileDifferences: readonly DeploymentProfileEvidenceDiff[],
+  differences: readonly {
+    classification: ContractReconciliationClassification
+  }[],
 ): Record<ContractReconciliationClassification, number> {
   const counts = Object.fromEntries(
     CONTRACT_RECONCILIATION_CLASSIFICATIONS.map((classification) => [classification, 0]),
   ) as Record<ContractReconciliationClassification, number>
-  for (const difference of [...recordDifferences, ...rpcDifferences, ...profileDifferences]) {
+  for (const difference of differences) {
     counts[difference.classification] += 1
   }
   return counts
+}
+
+function classificationPartition(
+  differences: readonly {
+    classification: ContractReconciliationClassification
+  }[],
+): ContractReconciliationClassificationPartition {
+  const counts = classificationCounts(differences)
+  const total = Object.values(counts).reduce((sum, count) => sum + count, 0)
+  if (total !== differences.length) {
+    throw new Error('Contract reconciliation classification partition arithmetic is inconsistent.')
+  }
+  return { classificationCounts: counts, total }
 }
 
 export function reconcileGoldImportCompensationContract(
@@ -1573,11 +1610,17 @@ export function reconcileGoldImportCompensationContract(
     profileId: expectedProfile.profileId,
   })
   const profileDifferences = deploymentProfileEvidenceDiffs(expectedProfile, actualProfile)
-  const counts = classificationCounts(
-    recordDifferenceResult.diffs,
-    rpcDifferences,
-    profileDifferences,
-  )
+  const classificationPartitions = {
+    schemaSecurityRecords: classificationPartition(recordDifferenceResult.diffs),
+    rpcs: classificationPartition(rpcDifferences),
+    deploymentProfile: classificationPartition(profileDifferences),
+    combined: classificationPartition([
+      ...recordDifferenceResult.diffs,
+      ...rpcDifferences,
+      ...profileDifferences,
+    ]),
+  }
+  const counts = classificationPartitions.combined.classificationCounts
   const invariantIdentityMatches = expectedInvariant.sha256 === actualInvariant.sha256
   const fullEnvironmentInventoryMatches =
     expectedFullInventory.sha256 === actualFullInventory.sha256
@@ -1608,9 +1651,11 @@ export function reconcileGoldImportCompensationContract(
       expectedRecordsAccountedFor === expectedIdentity.records.length &&
       recordDifferenceResult.actualAccounted.size === actualIdentity.records.length,
   }
+  const ready = readinessBlockers.length === 0 && completeness.complete
   return {
     schemaVersion: GOLD_IMPORT_COMPENSATION_RECONCILIATION_SCHEMA_VERSION,
-    ready: readinessBlockers.length === 0 && completeness.complete,
+    ready,
+    ownerAclTerminalState: ready ? OWNER_ACL_AUDIT_READY_TERMINAL_STATE : null,
     readinessBlockers: [...new Set(readinessBlockers)].sort(compareCodeUnits),
     identities: {
       expected: {
@@ -1630,7 +1675,14 @@ export function reconcileGoldImportCompensationContract(
     recordDiffs: recordDifferenceResult.diffs,
     rpcDiffs: rpcDifferences,
     profileDiffs: profileDifferences,
+    schemaSecurityRecordClassificationCounts:
+      classificationPartitions.schemaSecurityRecords.classificationCounts,
+    rpcClassificationCounts: classificationPartitions.rpcs.classificationCounts,
+    deploymentProfileClassificationCounts:
+      classificationPartitions.deploymentProfile.classificationCounts,
+    combinedClassificationCounts: classificationPartitions.combined.classificationCounts,
     classificationCounts: counts,
+    classificationPartitions,
     completeness,
     ownerRepresentation: ownerRepresentationExplanation(
       expectedIdentity,
