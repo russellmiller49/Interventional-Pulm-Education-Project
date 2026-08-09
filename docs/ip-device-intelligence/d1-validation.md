@@ -95,3 +95,41 @@ the laser-pathway note; unpinned coverage claims in the long-term-drainage note)
 lower-severity confirmations were fixed in the same pass — details in
 [d1-review/owner-review-dispositions.md](./d1-review/owner-review-dispositions.md) §5 — and
 every gate above was re-run afterwards.
+
+## 7. Final main-integration gates (2026-08-09)
+
+`origin/main` @ `978279f2` (literature gold-import-compensation operations work — 21 files,
+all under `scripts/literature/`, `docs/ip-literature/`, `supabase/verification/`, plus
+npm-script additions in `package.json` and one `.prettierignore` entry) was merged into the
+branch by `git merge --no-edit origin/main`: zero changed-file overlap with the D1 diff and
+zero conflicts. Every gate was re-run on the integrated head:
+
+| Gate                                  | Result on the integrated head                                                                                              |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Focused D1 jest                       | 9 suites / 90 tests, all passing                                                                                           |
+| Affected scope jest                   | `preference-cards` + `lib` + `i18n`: 91 suites / 1,418 tests, all passing                                                  |
+| Full `npx jest`                       | 518 suites passed / 6,621 tests passed (2 suites, 3 tests pre-existing skips; 0 failures) — main added 3 literature suites |
+| `npm run type-check`                  | Zero errors                                                                                                                |
+| `npm run lint`                        | Zero errors; 18 pre-existing warnings, all in files this branch does not touch                                             |
+| Prettier                              | Every PR-changed file passes `--check`                                                                                     |
+| `npm run ip-intel:audit`              | Byte-identical `data-readiness-audit.json` (`git diff` empty)                                                              |
+| `npm run ip-cards:release:check-base` | `54 published entries in the base; 54 unchanged, 0 advanced, 0 new` — merge base is current `origin/main` @ `978279f2`     |
+| `npm run ip-cards:validate-data`      | Clean; workbook sha `fb25b24e…` unchanged                                                                                  |
+| `npm run build:content`               | Clean (24 documents); working tree clean afterwards                                                                        |
+| `npm run build`                       | Succeeds; `devices/`, `clinical-roles/`, `procedures/` present in `.next/server/app/[locale]/`                             |
+
+Post-integration browser smoke test (dev server, narrow by design — the full owner
+walkthrough was not repeated): device index → Ambu aScope 5 Broncho 2.7/1.2 detail →
+FLEX_SCOPE_SINGLE_USE role page, procedure index, all three workspaces (canonical phase
+order verified on the phase view; laser-pathway note; 9-of-26 acting summary with the
+17-modifier inert disclosure; divergent-pathway subsection; no-rescue authoring-gap
+sentence; bleeding-module scope note), all three readiness routes ("Demo:"-qualified chips;
+"Demo: Ready — see advisory" with the advisory quoted in-cell; named focusable scroll
+regions; DEMO watermarks), and the CHEST_TUBE room output preview (kit-suppressed group
+quoting the resolver's reason). Zero horizontal overflow at 1440×900 and 1280×720
+(`scrollWidth` ≤ viewport on every page checked). `X-Robots-Tag: noindex, nofollow,
+noarchive` on every response including 404s; hidden-product (`PRD-00C13A59AA`) and
+non-exemplar (`RIGID_BRONCH`, incl. its readiness route) requests 404. Console errors were
+exclusively the known dev-only `/api/analytics` failures (known limitation #8; they present
+as 401 when the dev server has Supabase env but no signed-in browser session, 500 without
+env — same endpoint, no page impact).

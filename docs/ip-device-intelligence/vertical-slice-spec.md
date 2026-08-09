@@ -345,8 +345,9 @@ evaluation. None of them introduce a second resolution implementation.
 
 - **Read-only.** No new persistence of any kind: no new tables, no new Supabase rows, no new
   localStorage keys, no server-side caches beyond the existing in-process catalog singleton.
-- **No database migrations.** The existing unapplied rebuild-provenance migration situation is
-  untouched.
+- **No database migrations.** D1 performs no database operation and does not alter the
+  already-applied preference-card migrations (including the applied rebuild-provenance
+  migration).
 - **No substitution engine and no equivalence claims.** Clinical equivalence groups,
   procurement substitute groups, and local formulary groups do not exist in this repository and
   the slice must not simulate them (concepts 4–6 in
