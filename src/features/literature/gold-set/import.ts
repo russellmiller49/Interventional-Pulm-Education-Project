@@ -92,8 +92,10 @@ function assertEmptyReview(row: LiteratureGoldCsvRow, index: number) {
     review.reviewerConfidence !== null ||
     review.topicIds.length > 0 ||
     review.technologyTags.length > 0 ||
+    review.technologyTagStatus !== null ||
     review.clinicalPurposes.length > 0 ||
     review.diseaseTags.length > 0 ||
+    review.diseaseTagStatus !== null ||
     review.studyDesign !== null ||
     review.publicationStatus !== null ||
     review.categorizationFromFullText ||
@@ -102,7 +104,11 @@ function assertEmptyReview(row: LiteratureGoldCsvRow, index: number) {
     review.reviewSeconds !== 0 ||
     review.isBlinded !== null ||
     review.reviewerEmail !== null ||
-    review.completedAt !== null
+    review.completedAt !== null ||
+    review.taxonomyVersion !== null ||
+    review.labelSchemaVersion !== null ||
+    review.enrichmentSchemaVersion !== null ||
+    review.enrichmentProvenance !== null
   if (containsReviewData) {
     rowError(row, index, 'review_source=empty cannot contain review or review-provenance data.')
   }

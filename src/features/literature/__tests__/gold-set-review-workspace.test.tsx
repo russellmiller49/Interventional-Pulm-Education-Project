@@ -31,6 +31,7 @@ const item: LiteratureGoldReviewItem = {
     publicationTypes: ['Journal Article'],
   },
   draft: null,
+  chainHeadReviewId: null,
   currentReview: null,
   reviewHistory: [],
   supplementalMetadataRevealed: false,

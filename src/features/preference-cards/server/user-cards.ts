@@ -2,6 +2,10 @@ import { supabaseServer } from '@/lib/supabase/server'
 
 import { resolveCard } from '../domain/resolve-card'
 import type { ResolvedCard } from '../domain/types'
+import {
+  storedRebuildProvenanceSchema,
+  type StoredRebuildProvenance,
+} from '../schemas/card-rebuild'
 import { parsePersistedSnapshot } from '../schemas/persisted-snapshot'
 import {
   builderInputsSchema,
@@ -59,7 +63,28 @@ export interface UserCardRecord extends UserCardSummary {
    * reopening it in the builder is unavailable, which is better than reopening it wrong.
    */
   builderInputs: BuilderInputs | null
+  /**
+   * How this card came to exist — three states, never two.
+   *
+   * A failed parse used to collapse to `null`, which is the *same* value an ordinary card carries.
+   * A row whose database column holds a non-null provenance object would then have been presented
+   * as a card that was never rebuilt: the strongest claim in the schema, silently downgraded to no
+   * claim at all by a validation failure. Evidence that cannot be read is not the absence of
+   * evidence, and the two must not share a representation.
+   */
+  rebuildProvenance: CardRebuildProvenanceState
 }
+
+/**
+ * `none` — the column is null and this card was not rebuilt.
+ * `valid` — a complete version-1 document.
+ * `invalid` — the column is non-null and does not satisfy the version-1 schema. The card is shown
+ *   with an integrity notice rather than as an ordinary card, and never with a decoded claim.
+ */
+export type CardRebuildProvenanceState =
+  | { state: 'none' }
+  | { state: 'valid'; provenance: StoredRebuildProvenance }
+  | { state: 'invalid'; issues: string[] }
 
 /**
  * Why a write against an existing card did not happen.
@@ -97,6 +122,7 @@ interface CardRow {
   snapshot_hash: string
   share_enabled: boolean
   share_token: string
+  rebuild_provenance: unknown
   created_at: string
   updated_at: string
 }
@@ -105,6 +131,9 @@ interface CardRow {
 // something the dashboard has to know before it offers the control.
 const SUMMARY_COLUMNS =
   'id, title, physician_name, procedure_code, scenario_id, status, snapshot_hash, share_enabled, share_token, created_at, updated_at, card_snapshot, builder_inputs'
+
+/** The card page needs one column the dashboard listing does not: how the card came to exist. */
+const RECORD_COLUMNS = `${SUMMARY_COLUMNS}, rebuild_provenance`
 
 function toSummary(
   row: CardRow,
@@ -309,7 +338,7 @@ export async function loadUserCard(cardId: string): Promise<UserCardRecord | nul
   const supabase = await supabaseServer()
   const { data, error } = await supabase
     .from(TABLE)
-    .select(SUMMARY_COLUMNS)
+    .select(RECORD_COLUMNS)
     .eq('id', cardId)
     .maybeSingle()
   if (error || !data) return null
@@ -318,6 +347,9 @@ export async function loadUserCard(cardId: string): Promise<UserCardRecord | nul
   const card = parsePersistedSnapshot(row.card_snapshot, row.snapshot_hash)
   if (!card) return null
   const inputs = builderInputsSchema.safeParse(row.builder_inputs)
+  // Validated rather than cast. The column is authentic — unwritable by any API role and write-once
+  // — which is not the same as well-typed.
+  const provenance = readRebuildProvenance(row.rebuild_provenance)
 
   return {
     // `editable` is the narrower question: a version-2 card's inputs parse and are still
@@ -326,6 +358,20 @@ export async function loadUserCard(cardId: string): Promise<UserCardRecord | nul
     ...toSummary(row, card.readinessState, inputsCanBackAnEdit(row.builder_inputs)),
     card,
     builderInputs: inputs.success ? inputs.data : null,
+    rebuildProvenance: provenance,
+  }
+}
+
+function readRebuildProvenance(value: unknown): CardRebuildProvenanceState {
+  if (value == null) return { state: 'none' }
+  const parsed = storedRebuildProvenanceSchema.safeParse(value)
+  if (parsed.success) return { state: 'valid', provenance: parsed.data }
+  return {
+    state: 'invalid',
+    issues: parsed.error.issues
+      .map((issue) => `${issue.path.join('.') || '<root>'}: ${issue.code}`)
+      .sort()
+      .slice(0, 20),
   }
 }
 

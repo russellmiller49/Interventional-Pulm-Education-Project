@@ -69,6 +69,17 @@
     "literature:export-gold-set": "tsx scripts/literature/export-gold-set.ts",
     "literature:analyze-gold-set": "tsx scripts/literature/analyze-gold-set.ts",
     "literature:import-gold-reviews": "node scripts/require-primary-checkout.mjs -- tsx scripts/literature/import-gold-reviews.ts",
+    "literature:analyze-pending-gold-import-compensation": "tsx scripts/literature/analyze-pending-gold-import-compensation.ts",
+    "literature:verify-gold-import-compensation-merge": "tsx scripts/literature/verify-gold-import-compensation-merge.ts",
+    "literature:prepare-gold-import-compensation-migration": "tsx scripts/literature/prepare-gold-import-compensation-migration.ts",
+    "literature:audit-gold-import-compensation-migration": "tsx scripts/literature/audit-gold-import-compensation-migration.ts",
+    "literature:generate-gold-import-compensation-package": "tsx scripts/literature/generate-gold-import-compensation-package-v1.ts",
+    "literature:rehearse-exact-gold-import-compensation-package": "tsx scripts/literature/rehearse-exact-gold-import-compensation-package-v1.ts",
+    "literature:rehearse-gold-import-compensation": "tsx scripts/literature/rehearse-gold-import-compensation-db.ts",
+    "literature:test-gold-import-compensation-rehearsal": "jest --runInBand scripts/literature/gold-import-compensation-rehearsal-evidence.test.ts",
+    "literature:gold-import-compensation": "node scripts/require-primary-checkout.mjs -- tsx scripts/literature/gold-import-compensation-cli.ts",
+    "literature:gold-import-compensation:validate-import": "tsx scripts/literature/gold-import-compensation-cli.ts validate-import",
+    "literature:gold-import-compensation:validate-compensation": "tsx scripts/literature/gold-import-compensation-cli.ts validate-compensation",
     "literature:ultra-screen": "tsx scripts/literature/ultra-screening.ts",
     "literature:ultra-attempt": "tsx scripts/literature/ultra-attempt-runtime.ts",
     "literature:ultra-evaluate-frozen": "tsx scripts/literature/ultra-frozen-evaluation.ts",
@@ -96,7 +107,8 @@
     "ip-cards:release:check-base": "tsx scripts/ip-preference-cards/check-publication-baseline.ts",
     "ip-cards:gudid": "tsx scripts/ip-preference-cards/build-gudid-index.ts",
     "ip-cards:additions": "tsx scripts/ip-preference-cards/build-catalog-additions.ts",
-    "ip-cards:gudid-confirm": "tsx scripts/ip-preference-cards/gudid-confirm.ts"
+    "ip-cards:gudid-confirm": "tsx scripts/ip-preference-cards/gudid-confirm.ts",
+    "ip-intel:audit": "tsx scripts/ip-device-intelligence/audit-data-readiness.ts"
   },
   "engines": {
     "node": ">=20.19.0"

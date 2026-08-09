@@ -1,20 +1,54 @@
 'use client'
 
-import { useId, useMemo } from 'react'
+import { useId } from 'react'
 
-import { ecgShapeMv } from '../engine/waveformMorphology'
+import { CARDIAC_PHASE, ecgShapeMv } from '../engine/waveformMorphology'
+import { applyPressureArtifact } from '../engine/waveformArtifacts'
 import { waveformValueAt, type WaveformAtlasEntry } from '../content/waveformAtlas'
 import styles from './icu-hemodynamics.module.css'
 
 const VIEW_WIDTH = 660
 const VIEW_HEIGHT = 232
+const VIEW_HEIGHT_WITH_RESPIRATION = 274
 const PLOT_LEFT = 54
 const PLOT_RIGHT = 646
 const ECG_TOP = 10
 const ECG_BOTTOM = 46
 const TRACE_TOP = 66
 const TRACE_BOTTOM = 192
+const RESPIRATION_TOP = 224
+const RESPIRATION_BOTTOM = 258
 const SAMPLES_PER_BEAT = 260
+/** One drawn beat is one second, so artifact transforms that take a time get a deterministic one. */
+const BEAT_SECONDS = 1
+
+/**
+ * A display fault applied to an otherwise correct trace.
+ *
+ * Every field describes the *display*, not the patient. The artifact transforms are the ones the
+ * live monitor already uses, so a distortion taught in a figure and the same distortion selected at
+ * the bedside monitor deform the trace identically — there is no second waveform implementation
+ * here.
+ */
+export interface WaveformFigureFault {
+  readonly levelOffsetMmHg?: number
+  readonly scaleMaxMmHg?: number
+  readonly artifact?: 'overdamped' | 'underdamped' | 'catheter-whip'
+  readonly dampingRatio?: number
+  readonly naturalFrequencyHz?: number
+}
+
+export interface WaveformFigureRespiration {
+  /** Peak-to-trough swing added to the drawn trace. Qualitative — see the reference content. */
+  readonly swingMmHg: number
+  readonly cyclesPerStrip: number
+  /** Fraction of the strip where the slow envelope reaches its trough. */
+  readonly endExpirationPhase: number
+  readonly modeLabel: string
+  /** Where the reading marker sits. Defaults to the end-expiratory trough. */
+  readonly readAtStripFraction?: number
+  readonly readMarkerLabel?: string
+}
 
 interface WaveformAtlasFigureProps {
   readonly entry: WaveformAtlasEntry
@@ -23,6 +57,22 @@ interface WaveformAtlasFigureProps {
   readonly showEcg?: boolean
   readonly annotated?: boolean
   readonly compact?: boolean
+  /**
+   * Axis maximum, overriding the entry's own.
+   *
+   * The atlas gives each entry the scale that suits it alone. A surface that steps through several
+   * entries has to pin one instead, or the learner reads a change of axis as a change of pressure.
+   */
+  readonly scaleMaxMmHg?: number
+  /** Channel heading shown above the figure, when it is not simply the entry's label. */
+  readonly channelLabel?: string
+  /** Draws P, QRS, and T markers on the ECG lane. */
+  readonly ecgLandmarks?: boolean
+  /** Draws a respiratory envelope onto the trace, plus a respiration lane and a reading marker. */
+  readonly respiration?: WaveformFigureRespiration
+  readonly fault?: WaveformFigureFault
+  /** Replaces the generated image description, for a caller that authors its own. */
+  readonly figureDescription?: string
 }
 
 function pressureToY(value: number, scaleMaxMmHg: number): number {
@@ -35,13 +85,45 @@ function phaseToX(phase: number, beat: number, beats: number): number {
   return PLOT_LEFT + progress * (PLOT_RIGHT - PLOT_LEFT)
 }
 
+function stripFractionToX(fraction: number): number {
+  return PLOT_LEFT + Math.max(0, Math.min(1, fraction)) * (PLOT_RIGHT - PLOT_LEFT)
+}
+
 /** Evenly spaced pressure ticks that stay readable at any scale. */
 function pressureTicks(scaleMaxMmHg: number): number[] {
-  const step = scaleMaxMmHg <= 20 ? 5 : scaleMaxMmHg <= 45 ? 10 : 20
+  const step = scaleMaxMmHg <= 20 ? 5 : scaleMaxMmHg <= 45 ? 10 : scaleMaxMmHg <= 90 ? 20 : 40
   const ticks: number[] = []
   for (let value = 0; value <= scaleMaxMmHg; value += step) ticks.push(value)
   return ticks
 }
+
+/**
+ * The trace's own mean and pulse pressure, sampled from the spec.
+ *
+ * The artifact transforms need both: damping and resonance act on the pulsatile component around
+ * the mean, which is exactly why they leave a mean relatively preserved while ruining a systolic
+ * value. Sampling keeps this true for every trace kind without special-casing any of them.
+ */
+function traceEnvelope(entry: WaveformAtlasEntry): { mean: number; pulsePressureMmHg: number } {
+  let minimum = Number.POSITIVE_INFINITY
+  let maximum = Number.NEGATIVE_INFINITY
+  for (let step = 0; step < SAMPLES_PER_BEAT; step += 1) {
+    const value = waveformValueAt(entry.trace, step / SAMPLES_PER_BEAT)
+    minimum = Math.min(minimum, value)
+    maximum = Math.max(maximum, value)
+  }
+  return { mean: (minimum + maximum) / 2, pulsePressureMmHg: Math.max(1, maximum - minimum) }
+}
+
+const ECG_LANDMARKS: readonly {
+  readonly id: string
+  readonly label: string
+  readonly phase: number
+}[] = [
+  { id: 'p', label: 'P', phase: CARDIAC_PHASE.pWave },
+  { id: 'qrs', label: 'QRS', phase: CARDIAC_PHASE.rWave },
+  { id: 't', label: 'T', phase: CARDIAC_PHASE.tWavePeak },
+]
 
 export function WaveformAtlasFigure({
   entry,
@@ -49,23 +131,66 @@ export function WaveformAtlasFigure({
   showEcg = true,
   annotated = true,
   compact = false,
+  scaleMaxMmHg,
+  channelLabel,
+  ecgLandmarks = false,
+  respiration,
+  fault,
+  figureDescription,
 }: WaveformAtlasFigureProps) {
   const gradientId = useId()
+  const scaleMax = fault?.scaleMaxMmHg ?? scaleMaxMmHg ?? entry.scaleMaxMmHg
+  const viewHeight = respiration ? VIEW_HEIGHT_WITH_RESPIRATION : VIEW_HEIGHT
+  const envelope = traceEnvelope(entry)
 
-  const tracePath = useMemo(() => {
+  /**
+   * Sampling and path building are plain functions rather than memoized ones.
+   *
+   * The compiler cannot preserve a `useMemo` that returns a closure, and hand-memoizing these
+   * around object props that callers build inline would never hit anyway. Leaving them plain lets
+   * the compiler memoize the component as a whole.
+   */
+  function respiratoryOffsetAt(progress: number): number {
+    if (!respiration) return 0
+    const { swingMmHg, cyclesPerStrip, endExpirationPhase } = respiration
+    return (
+      (swingMmHg / 2) * -Math.cos(2 * Math.PI * cyclesPerStrip * (progress - endExpirationPhase))
+    )
+  }
+
+  function sampleAt(progress: number, phase: number): number {
+    const base = waveformValueAt(entry.trace, phase) + respiratoryOffsetAt(progress)
+    const distorted = fault?.artifact
+      ? applyPressureArtifact({
+          value: base,
+          mean: envelope.mean + respiratoryOffsetAt(progress),
+          state: {
+            artifact: fault.artifact,
+            dampingRatio: fault.dampingRatio ?? 0.65,
+            naturalFrequencyHz: fault.naturalFrequencyHz ?? 12,
+          },
+          timeSeconds: progress * beats * BEAT_SECONDS,
+          cardiacPhase: phase,
+          pulsePressureMmHg: envelope.pulsePressureMmHg,
+        })
+      : base
+    return distorted + (fault?.levelOffsetMmHg ?? 0)
+  }
+
+  const tracePath = (() => {
     const steps = Math.round(SAMPLES_PER_BEAT * beats)
     const commands: string[] = []
     for (let step = 0; step <= steps; step += 1) {
       const progress = step / steps
       const phase = (progress * beats) % 1
       const x = PLOT_LEFT + progress * (PLOT_RIGHT - PLOT_LEFT)
-      const y = pressureToY(waveformValueAt(entry.trace, phase), entry.scaleMaxMmHg)
+      const y = pressureToY(sampleAt(progress, phase), scaleMax)
       commands.push(`${step === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`)
     }
     return commands.join(' ')
-  }, [beats, entry.scaleMaxMmHg, entry.trace])
+  })()
 
-  const ecgPath = useMemo(() => {
+  const ecgPath = (() => {
     if (!showEcg) return ''
     const steps = Math.round(SAMPLES_PER_BEAT * beats)
     const commands: string[] = []
@@ -78,21 +203,40 @@ export function WaveformAtlasFigure({
       commands.push(`${step === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`)
     }
     return commands.join(' ')
-  }, [beats, showEcg])
+  })()
 
-  const ticks = pressureTicks(entry.scaleMaxMmHg)
+  const respirationPath = (() => {
+    if (!respiration) return ''
+    const commands: string[] = []
+    const steps = 220
+    const midpoint = (RESPIRATION_TOP + RESPIRATION_BOTTOM) / 2
+    const amplitude = (RESPIRATION_BOTTOM - RESPIRATION_TOP) / 2 - 2
+    for (let step = 0; step <= steps; step += 1) {
+      const progress = step / steps
+      const x = PLOT_LEFT + progress * (PLOT_RIGHT - PLOT_LEFT)
+      const offset =
+        -Math.cos(
+          2 * Math.PI * respiration.cyclesPerStrip * (progress - respiration.endExpirationPhase),
+        ) * amplitude
+      commands.push(`${step === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${(midpoint - offset).toFixed(1)}`)
+    }
+    return commands.join(' ')
+  })()
+
+  const ticks = pressureTicks(scaleMax)
 
   // Annotations are drawn on the middle beat so their leader lines are never clipped.
   const annotationBeat = Math.max(0, Math.floor(beats / 2) - (beats % 2 === 0 ? 1 : 0))
-  const placedAnnotations = useMemo(() => {
+  const placedAnnotations = (() => {
     if (!annotated) return []
     const placed = entry.annotations
       .map((annotation) => {
-        const value = waveformValueAt(entry.trace, annotation.phase)
+        const x = phaseToX(annotation.phase, annotationBeat, beats)
+        const progress = (x - PLOT_LEFT) / (PLOT_RIGHT - PLOT_LEFT)
         return {
           annotation,
-          x: phaseToX(annotation.phase, annotationBeat, beats),
-          y: pressureToY(value, entry.scaleMaxMmHg),
+          x,
+          y: pressureToY(sampleAt(progress, annotation.phase), scaleMax),
           labelY: 0,
         }
       })
@@ -112,24 +256,40 @@ export function WaveformAtlasFigure({
       item.labelY = Math.max(14, Math.min(VIEW_HEIGHT - 8, item.y + base + row * step))
     }
     return placed
-  }, [annotated, annotationBeat, beats, entry.annotations, entry.scaleMaxMmHg, entry.trace])
+  })()
 
-  const description = `${entry.label}. ${entry.summary} ${entry.annotations
-    .map((annotation) => `${annotation.label}: ${annotation.description}`)
-    .join(' ')}`
+  const readingFraction = respiration
+    ? (respiration.readAtStripFraction ?? respiration.endExpirationPhase)
+    : null
+  const readingX = readingFraction === null ? null : stripFractionToX(readingFraction)
+  const readingLabel =
+    respiration?.readMarkerLabel ??
+    (readingFraction !== null && readingFraction === respiration?.endExpirationPhase
+      ? 'end expiration'
+      : 'reading point')
+
+  const description =
+    figureDescription ??
+    `${channelLabel ? `Channel labelled ${channelLabel}. ` : ''}${entry.label}. ${entry.summary} Drawn against a 0 to ${scaleMax} mmHg axis.${
+      respiration
+        ? ` One respiratory cycle is drawn beneath the trace under ${respiration.modeLabel}, with a marker at ${readingLabel}.`
+        : ''
+    } ${entry.annotations
+      .map((annotation) => `${annotation.label}: ${annotation.description}`)
+      .join(' ')}`
 
   return (
     <figure className={styles.atlasFigure} data-compact={compact || undefined}>
       <figcaption>
         <div>
-          <strong>{entry.label}</strong>
+          <strong>{channelLabel ?? entry.label}</strong>
           {entry.normalRange ? <span>{entry.normalRange}</span> : null}
         </div>
         {entry.insertionDepth ? <small>{entry.insertionDepth}</small> : null}
       </figcaption>
 
       <svg
-        viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
+        viewBox={`0 0 ${VIEW_WIDTH} ${viewHeight}`}
         role="img"
         aria-label={description}
         preserveAspectRatio="xMidYMid meet"
@@ -142,7 +302,7 @@ export function WaveformAtlasFigure({
         </defs>
 
         {ticks.map((tick) => {
-          const y = pressureToY(tick, entry.scaleMaxMmHg)
+          const y = pressureToY(tick, scaleMax)
           return (
             <g key={tick}>
               <line className={styles.atlasGridline} x1={PLOT_LEFT} x2={PLOT_RIGHT} y1={y} y2={y} />
@@ -162,6 +322,19 @@ export function WaveformAtlasFigure({
             <text className={styles.atlasLaneLabel} x={PLOT_LEFT - 10} y={ECG_BOTTOM - 8}>
               ECG
             </text>
+            {ecgLandmarks
+              ? ECG_LANDMARKS.map((landmark) => {
+                  const x = phaseToX(landmark.phase, annotationBeat, beats)
+                  return (
+                    <g key={landmark.id} className={styles.atlasEcgLandmark}>
+                      <line x1={x} x2={x} y1={ECG_TOP - 2} y2={TRACE_BOTTOM} />
+                      <text x={x} y={ECG_TOP - 4} textAnchor="middle">
+                        {landmark.label}
+                      </text>
+                    </g>
+                  )
+                })
+              : null}
           </>
         ) : null}
 
@@ -181,6 +354,25 @@ export function WaveformAtlasFigure({
             </text>
           </g>
         ))}
+
+        {respiration && readingX !== null ? (
+          <>
+            <path className={styles.atlasRespirationTrace} d={respirationPath} />
+            <text
+              className={styles.atlasLaneLabel}
+              x={PLOT_LEFT - 10}
+              y={(RESPIRATION_TOP + RESPIRATION_BOTTOM) / 2 + 4}
+            >
+              RESP
+            </text>
+            <g className={styles.atlasReadMarker}>
+              <line x1={readingX} x2={readingX} y1={TRACE_TOP - 4} y2={RESPIRATION_BOTTOM} />
+              <text x={readingX} y={RESPIRATION_BOTTOM + 12} textAnchor="middle">
+                {readingLabel}
+              </text>
+            </g>
+          </>
+        ) : null}
       </svg>
 
       {annotated && entry.annotations.length > 0 ? (

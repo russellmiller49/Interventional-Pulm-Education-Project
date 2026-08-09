@@ -1,7 +1,15 @@
 import type { Route } from 'next'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
-import { Copy, GitCompareArrows, Link2, Link2Off, PencilLine, Trash2 } from 'lucide-react'
+import {
+  Copy,
+  GitBranchPlus,
+  GitCompareArrows,
+  Link2,
+  Link2Off,
+  PencilLine,
+  Trash2,
+} from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -19,6 +27,16 @@ interface CardRowActionsProps {
   card: UserCardSummary
   /** `page` shows the rename form expanded; `row` keeps the dashboard list compact. */
   layout: 'page' | 'row'
+  /**
+   * The card's current revision, when one is known.
+   *
+   * The rebuild control needs a revision to cite, and the current one is the only revision this
+   * component can name without loading the whole history. It lives here rather than on the
+   * reconciliation page — which lists every revision and would be the natural home — because that
+   * page is read-only by construction and a test asserts it renders no control that could change
+   * anything. Growing a rebuild button there would quietly retire the guarantee.
+   */
+  currentRevisionId?: string | null
 }
 
 /**
@@ -27,11 +45,19 @@ interface CardRowActionsProps {
  * Plain server-action forms rather than a client component: each action is a single
  * round-trip with nothing to keep in sync, and the controls keep working without JavaScript.
  */
-export async function CardRowActions({ locale, card, layout }: CardRowActionsProps) {
+export async function CardRowActions({
+  locale,
+  card,
+  layout,
+  currentRevisionId,
+}: CardRowActionsProps) {
   const t = await getTranslations('preferenceCards')
   const shareHref = `/${locale}/preference-cards/shared/${card.shareToken}` as Route
   const editHref = `/${locale}/preference-cards/${card.id}/edit` as Route
   const reconcileHref = `/${locale}/preference-cards/${card.id}/reconcile` as Route
+  const rebuildHref = currentRevisionId
+    ? (`/${locale}/preference-cards/${card.id}/rebuild?revision=${currentRevisionId}` as Route)
+    : null
 
   return (
     <div className="no-print rounded-2xl border border-border bg-card p-4">
@@ -103,6 +129,22 @@ export async function CardRowActions({ locale, card, layout }: CardRowActionsPro
             {t('reconcile.action')}
           </Link>
         </Button>
+
+        {/*
+          Rebuild is not edit and not duplicate, and sits beside both so the difference is visible:
+          edit rewrites this card on its own release, duplicate copies its stored snapshot verbatim,
+          and rebuild reviews this exact saved state against the release the procedure points at
+          today and produces a separate new draft. Offered only when a revision is known, because a
+          rebuild cites a revision rather than a card.
+        */}
+        {rebuildHref ? (
+          <Button asChild size="sm" variant="outline">
+            <Link href={rebuildHref}>
+              <GitBranchPlus aria-hidden="true" className="h-3.5 w-3.5" />
+              {t('rebuild.action')}
+            </Link>
+          </Button>
+        ) : null}
 
         <form action={duplicateCardAction}>
           <input type="hidden" name="locale" value={locale} />

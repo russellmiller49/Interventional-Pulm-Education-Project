@@ -8,8 +8,12 @@ import type { PreferenceCardRevisionSummary } from '../server/card-revisions'
  * Every state a card has been saved in.
  *
  * Read-only, and there is nothing to click: a revision is evidence, not a thing to restore.
- * Restoring one would be writing a new card state from an old one, which is the rebuild this
- * phase deliberately does not implement.
+ *
+ * A reviewed rebuild does now write a new card from a cited revision — but that is not restoring
+ * one, and the distinction is the reason there is still no control here. Restoring would put an old
+ * state back on the same card, silently, against definitions nobody re-read; the rebuild produces a
+ * *separate* card on an explicitly named release and requires every changed decision to be answered
+ * first. It is reached from the card's own page, which keeps this list what it is: a record.
  *
  * The content hash is shown beside each row because it is what makes the list readable — two
  * adjacent revisions with the same `resolvedContentHash` differ only in title, physician, or

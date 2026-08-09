@@ -116,6 +116,7 @@ export interface CuratedCollectionReviewSnapshot {
   id: string
   itemId: string
   revision: number
+  lifecycleState: 'effective' | 'withdrawn'
   relevanceLabel: CuratedCollectionPhysicianLabel
   reviewerConfidence: string
   isBlinded: boolean
@@ -542,15 +543,19 @@ function buildMembershipAudit(
   if (item.currentReviewId === null && orderedReviews.length > 0) {
     throw new Error(`Item ${item.id} has completed reviews but no authoritative current review.`)
   }
-  const current = item.currentReviewId
+  const head = item.currentReviewId
     ? orderedReviews.find((review) => review.id === item.currentReviewId)
     : undefined
-  if (item.currentReviewId && !current) {
+  if (item.currentReviewId && !head) {
     throw new Error(`The authoritative review for item ${item.id} was not loaded.`)
   }
-  if (current && current.revision !== orderedReviews.at(-1)?.revision) {
+  if (head && head.revision !== orderedReviews.at(-1)?.revision) {
     throw new Error(`The authoritative review for item ${item.id} is not the latest revision.`)
   }
+  if (head?.lifecycleState === 'withdrawn' && item.reviewStatus === 'completed') {
+    throw new Error(`Withdrawn item ${item.id} cannot retain completed review status.`)
+  }
+  const current = head?.lifecycleState === 'effective' ? head : undefined
 
   return {
     batchId: batch.id,

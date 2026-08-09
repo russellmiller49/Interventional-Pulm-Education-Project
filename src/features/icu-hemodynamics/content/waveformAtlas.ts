@@ -176,7 +176,7 @@ const WEDGE_ANNOTATIONS: readonly WaveformAnnotation[] = [
     phase: CARDIAC_PHASE.wedgeAWave,
     placement: 'above',
     description:
-      'Left atrial contraction, transmitted backward through the pulmonary bed. It follows the P wave by about 240 ms rather than 80 ms, so it appears to follow the QRS complex. Its peak is the best single estimate of left ventricular end-diastolic pressure.',
+      'Left atrial contraction, transmitted backward through the pulmonary bed. It follows the P wave by about 240 ms rather than 80 ms, so it appears to follow the QRS complex. End-diastolic pressure is read just before the c wave; because the c wave usually does not survive transmission through the pulmonary bed, in sinus rhythm average the peak and the trough of this a wave instead. That end-diastolic value is not the displayed mean.',
   },
   {
     id: 'x',
@@ -192,7 +192,7 @@ const WEDGE_ANNOTATIONS: readonly WaveformAnnotation[] = [
     phase: CARDIAC_PHASE.wedgeVWave,
     placement: 'above',
     description:
-      'Passive pulmonary venous filling of the left atrium. On a wedge tracing the v wave normally exceeds the a wave — the reverse of the right atrium — and peaks after the T wave has already been inscribed.',
+      'Passive pulmonary venous filling of the left atrium. On a wedge tracing the v wave is typically larger than the a wave — the reverse of the right atrium — and peaks after the T wave has already been inscribed. In atrial fibrillation there is no a wave to compare it with, and the v wave stands alone.',
   },
   {
     id: 'y',
@@ -244,7 +244,7 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
     insertionDepth: '30–40 cm from the right internal jugular vein',
     scaleMaxMmHg: 40,
     summary:
-      'The systolic pressure jumps. The identifying feature is not the peak but the diastole: it starts low and slopes upward as the ventricle fills.',
+      'The systolic pressure jumps. The peak alone does not identify the chamber: diastole starts low and may climb gradually as the ventricle fills, and there is no diastolic step-up, no runoff, and no notch.',
     trace: {
       kind: 'ventricular',
       systolicMmHg: 25,
@@ -280,7 +280,7 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
         phase: 0.75,
         placement: 'below',
         description:
-          'The diastolic phase begins at a low pressure and gradually increases as the ventricle fills. This up-sloping contour is the single most reliable way to tell an RV tracing from a PA tracing.',
+          'The diastolic phase begins at a low pressure and may increase gradually as the ventricle fills. Read it together with the rest of the transition — a pulmonary-artery tracing adds a diastolic step-up, a downward runoff, and a dicrotic notch at a similar systolic pressure — rather than relying on this contour alone, which can be subtle.',
       },
       {
         id: 'rvedp',
@@ -383,12 +383,12 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
     recognitionCues: [
       'Amplitude collapses back to a venous, atrial-looking tracing.',
       'No c wave — it does not survive transmission through the pulmonary bed.',
-      'The v wave normally EXCEEDS the a wave, the reverse of the right atrium.',
-      'Every wave arrives late relative to the ECG; the a wave follows the QRS rather than the P wave.',
+      'The v wave is typically LARGER than the a wave, the reverse of the right atrium — a typical normal feature rather than a validity requirement.',
+      'Every wave arrives late relative to the ECG; in sinus rhythm the a wave follows the QRS rather than the P wave. In atrial fibrillation there is no a wave, and the remaining landmarks carry the timing.',
       'Mean wedge pressure sits 0–5 mmHg below pulmonary artery diastolic pressure.',
     ],
     pitfall:
-      'Confirm a true wedge before believing it: well-defined a and v waves, a wedged-tip saturation within about 5% of the simultaneous systemic arterial saturation (usually at least 95% when the patient is not hypoxemic), and an abrupt return to pulmonary-artery pressure and morphology when the balloon is deflated. In hypoxemia, use paired samples rather than an absolute saturation threshold; low arterial saturation makes oximetry less discriminating.',
+      'Confirm a true wedge before believing it: interpretable atrial wave components — a and v waves in sinus rhythm, the v wave alone in atrial fibrillation — a wedged-tip saturation within about 5% of the simultaneous systemic arterial saturation (usually at least 95% when the patient is not hypoxemic), and an abrupt return to pulmonary-artery pressure and morphology when the balloon is deflated. In hypoxemia, use paired samples rather than an absolute saturation threshold; low arterial saturation makes oximetry less discriminating.',
     sourceIds: ['clinical-hemodynamics-waveforms', 'pac-review-2014'],
   },
   {
@@ -711,9 +711,9 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
       },
     ],
     recognitionCues: [
-      'No identifiable a or v waves — the defining feature.',
+      'Atrial wave components cannot be made out — the defining feature.',
       'The trace wavers and drifts upward over seconds rather than settling on a stable mean.',
-      'The pressure is often higher than the pulmonary artery diastolic pressure, which is physiologically impossible for a true wedge.',
+      'The pressure often sits above the pulmonary artery diastolic pressure. That relationship is a warning to reconcile the two readings; on its own it does not establish over-wedging, and a large v wave can raise a genuine occlusion mean without the end-diastolic value moving with it.',
     ],
     pitfall:
       'This is a potentially fatal warning sign. Pulmonary-artery rupture associated with a balloon-tipped catheter has a reported mortality range of roughly 30–70%. Deflate immediately, stop manipulating or flushing the catheter, and reassess/reposition only under appropriate supervision.',

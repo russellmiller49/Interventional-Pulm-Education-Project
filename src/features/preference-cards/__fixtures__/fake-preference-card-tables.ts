@@ -16,6 +16,8 @@
  * checked as a fact about the code rather than as an intention in a comment.
  */
 
+import { storedRebuildProvenanceSchema } from '../schemas/card-rebuild'
+
 export interface FakeCardRow {
   id: string
   user_id: string
@@ -31,6 +33,14 @@ export interface FakeCardRow {
   catalog_import_id: string
   share_enabled: boolean
   share_token: string
+  /**
+   * Set once, when a rebuilt card is created, and never again — the write-once trigger from
+   * `20260804013000_add_ip_preference_card_rebuild_provenance.sql`, modelled below.
+   *
+   * Deliberately absent from `REVISION_CONTENT_COLUMNS`: it can never change, so it can never be
+   * the reason `updated_at` advances or a revision is appended.
+   */
+  rebuild_provenance: unknown
   created_at: string
   updated_at: string
 }
@@ -104,6 +114,17 @@ export class FakePreferenceCardTables {
   revisions: FakeRevisionRow[] = []
   currentUserId: string | null = null
   writes: FakeWrite[] = []
+  /**
+   * Which database role the next table statement runs as.
+   *
+   * `20260804013000_add_ip_preference_card_rebuild_provenance.sql` makes provenance authenticity a
+   * role question rather than a shape question: the `authenticated` insert policy forbids a non-null
+   * `rebuild_provenance`, and a `before insert` trigger forbids it for every role except the one
+   * dedicated writer — which is what stops `service_role`, whose `bypassrls` makes policies
+   * irrelevant to it. Modelling the role here is the only way a test can tell those three cases
+   * apart, and the earlier fake could not, which is why it accepted a forged insert.
+   */
+  role: 'authenticated' | 'service_role' | 'ip_preference_card_rebuild_writer' = 'authenticated'
 
   private nextCardSequence = 1
   private nextRevisionSequence = 1
@@ -114,6 +135,7 @@ export class FakePreferenceCardTables {
     this.revisions = []
     this.writes = []
     this.currentUserId = userId
+    this.role = 'authenticated'
     this.nextCardSequence = 1
     this.nextRevisionSequence = 1
     this.clock = 0
@@ -194,6 +216,14 @@ export class FakePreferenceCardTables {
     const filters: Array<[string, unknown]> = []
     let orderColumn: string | null = null
     let orderAscending = true
+    /** The requested column list, or null for "everything" when `select()` was called bare. */
+    let projection: string[] | null = null
+
+    const project = (row: object): Record<string, unknown> => {
+      if (!projection) return row as Record<string, unknown>
+      const source = row as Record<string, unknown>
+      return Object.fromEntries(projection.map((column) => [column, source[column]]))
+    }
 
     const matches = (row: Record<string, unknown>) =>
       filters.every(([column, value]) => row[column] === value)
@@ -219,7 +249,13 @@ export class FakePreferenceCardTables {
     }
 
     const builder = {
-      select: () => {
+      select: (columns?: string) => {
+        // PostgREST returns the columns it was asked for and no others. Honouring that matters
+        // beyond tidiness: `duplicateUserCard` copies a card by selecting a named column list and
+        // re-inserting the result, so a fake that returned whole rows would copy columns the real
+        // query never sees — and would have quietly duplicated a rebuilt card's provenance onto a
+        // copy that was never rebuilt.
+        projection = columns ? columns.split(',').map((column) => column.trim()) : null
         return builder
       },
       order: (column: string, options?: { ascending?: boolean }) => {
@@ -228,7 +264,7 @@ export class FakePreferenceCardTables {
         return builder
       },
       limit: (count: number) => {
-        return Promise.resolve({ data: collection().slice(0, count), error: null })
+        return Promise.resolve({ data: collection().slice(0, count).map(project), error: null })
       },
       insert: (next: Record<string, unknown>) => {
         operation = 'insert'
@@ -267,6 +303,17 @@ export class FakePreferenceCardTables {
           if (name !== 'ip_user_preference_cards') {
             throw new Error(`Nothing may insert into ${name} directly; the trigger appends there.`)
           }
+          // `ip_user_preference_cards_insert_own` (RLS, `authenticated`) and
+          // `private.ip_reject_untrusted_preference_card_rebuild_provenance` (trigger, every role).
+          if (
+            payload.rebuild_provenance !== undefined &&
+            payload.rebuild_provenance !== null &&
+            this.role !== 'ip_preference_card_rebuild_writer'
+          ) {
+            throw new Error(
+              'rebuild_provenance may only be written by public.ip_create_rebuilt_preference_card',
+            )
+          }
           const created = this.now()
           // Column defaults last, exactly as the table applies them: the insert payload has
           // no business naming an id, a share token, or a timestamp, and does not.
@@ -275,12 +322,13 @@ export class FakePreferenceCardTables {
             id: this.cardId(this.nextCardSequence++),
             share_enabled: (payload.share_enabled as boolean | undefined) ?? false,
             share_token: `token-${this.nextCardSequence}`,
+            rebuild_provenance: payload.rebuild_provenance ?? null,
             created_at: created,
             updated_at: created,
           }
           this.cards.push(row)
           this.appendRevision(row, null)
-          return Promise.resolve({ data: row, error: null })
+          return Promise.resolve({ data: project(row), error: null })
         }
 
         if (operation === 'update') {
@@ -292,6 +340,18 @@ export class FakePreferenceCardTables {
           )
           if (index < 0) return Promise.resolve({ data: null, error: null })
           const previous = this.cards[index]
+          // `private.ip_reject_preference_card_rebuild_provenance_rewrite`. Modelled rather than
+          // stubbed, because "a rebuilt card's provenance cannot be edited afterwards" is a claim
+          // the suite makes and a test against a stub would be testing the stub.
+          if (
+            Object.prototype.hasOwnProperty.call(payload, 'rebuild_provenance') &&
+            JSON.stringify(payload.rebuild_provenance ?? null) !==
+              JSON.stringify(previous.rebuild_provenance ?? null)
+          ) {
+            throw new Error(
+              'ip_user_preference_cards.rebuild_provenance is write-once and cannot be changed after the card is created',
+            )
+          }
           // `ip_set_preference_card_content_updated_at`: the timestamp is a content version, so a
           // share-only update leaves it exactly where it was. That is what keeps a share toggle
           // from invalidating an open edit session, and it is modelled here rather than assumed
@@ -303,13 +363,121 @@ export class FakePreferenceCardTables {
           } as FakeCardRow
           this.cards[index] = updated
           this.appendRevision(updated, previous)
-          return Promise.resolve({ data: updated, error: null })
+          return Promise.resolve({ data: project(updated), error: null })
         }
 
-        return Promise.resolve({ data: collection()[0] ?? null, error: null })
+        const first = collection()[0]
+        return Promise.resolve({ data: first ? project(first) : null, error: null })
       },
     }
     return builder
+  }
+
+  /**
+   * `public.ip_create_rebuilt_preference_card`, modelled.
+   *
+   * The load-bearing part is the recheck: the migration performs it *in the same statement* as the
+   * insert, so a source deleted between review and submission produces no card rather than a row
+   * citing a revision that is gone. Here the same predicate runs immediately before the insert and
+   * the write is refused when it does not match.
+   */
+  createRebuiltCard(write: {
+    ownerId: string
+    sourceCardId: string
+    sourceRevisionId: string
+    sourceSnapshotHash: string
+    sourceReleaseBundleId: string | null
+    /** Bound to the revision row, not merely to the arguments — see the migration. */
+    title: string
+    physicianName: string | null
+    procedureCode: string
+    scenarioId: string
+    builderInputs: unknown
+    cardSnapshot: unknown
+    snapshotHash: string
+    engineVersion: string
+    catalogImportId: string
+    rebuildProvenance: unknown
+  }):
+    | {
+        ok: true
+        cardId: string
+      }
+    | { ok: false; code: 'source_moved' | 'provenance_mismatch' | 'provenance_malformed' } {
+    // The document has to describe the source the arguments are checked against, and it has to be
+    // the *complete* version-1 shape — the same one `storedRebuildProvenanceSchema` reads back and
+    // the SQL validator enforces. `provenance-contract.test.ts` proves those three descriptions
+    // agree, which is what makes checking the schema here a faithful model of the database rather
+    // than a second opinion about it.
+    const parsed = storedRebuildProvenanceSchema.safeParse(write.rebuildProvenance)
+    if (!parsed.success) return { ok: false, code: 'provenance_malformed' }
+    const document = parsed.data
+
+    const claims: Array<[unknown, unknown]> = [
+      [document.sourceCardId, write.sourceCardId],
+      [document.sourceRevisionId, write.sourceRevisionId],
+      [document.sourceOwnerId, write.ownerId],
+      [document.sourceSnapshotHash, write.sourceSnapshotHash],
+      [document.sourceReleaseBundleId, write.sourceReleaseBundleId],
+    ]
+    if (claims.some(([claimed, argument]) => (claimed ?? null) !== (argument ?? null))) {
+      return { ok: false, code: 'provenance_mismatch' }
+    }
+
+    const revision = this.revisions.find(
+      (row) =>
+        row.id === write.sourceRevisionId &&
+        row.card_id === write.sourceCardId &&
+        row.user_id === write.ownerId &&
+        // The document's own owner claim, bound to both source rows.
+        row.user_id === document.sourceOwnerId &&
+        row.snapshot_hash === write.sourceSnapshotHash &&
+        (row.release_bundle_id ?? null) === (write.sourceReleaseBundleId ?? null) &&
+        // The remaining columns the revision knows, bound to the stored document.
+        row.revision_number === document.sourceRevisionNumber &&
+        (row.snapshot_integrity_hash ?? null) === document.sourceSnapshotIntegrityHash &&
+        (row.resolved_content_hash ?? null) === document.sourceResolvedContentHash,
+    )
+    const source = revision
+      ? this.cards.find(
+          (row) =>
+            row.id === revision.card_id &&
+            row.user_id === revision.user_id &&
+            row.user_id === document.sourceOwnerId,
+        )
+      : undefined
+    if (!revision || !source) return { ok: false, code: 'source_moved' }
+
+    const previousRole = this.role
+    this.role = 'ip_preference_card_rebuild_writer'
+    try {
+      this.writes.push({ table: 'ip_user_preference_cards', operation: 'insert' })
+      const created = this.now()
+      const row: FakeCardRow = {
+        id: this.cardId(this.nextCardSequence++),
+        user_id: write.ownerId,
+        title: write.title,
+        physician_name: write.physicianName,
+        procedure_code: write.procedureCode,
+        scenario_id: write.scenarioId,
+        status: 'draft',
+        builder_inputs: write.builderInputs,
+        card_snapshot: write.cardSnapshot,
+        snapshot_hash: write.snapshotHash,
+        engine_version: write.engineVersion,
+        catalog_import_id: write.catalogImportId,
+        share_enabled: false,
+        share_token: `token-${this.nextCardSequence}`,
+        rebuild_provenance: write.rebuildProvenance,
+        created_at: created,
+        updated_at: created,
+      }
+      this.cards.push(row)
+      this.appendRevision(row, null)
+      return { ok: true, cardId: row.id }
+    } finally {
+      this.role = previousRole
+    }
   }
 
   /** The object `supabaseServer()` resolves to in these tests. */
