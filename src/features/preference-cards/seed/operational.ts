@@ -761,11 +761,16 @@ const apcSlots = [
     'APC_APPLICATOR_RIGID',
     'Rigid APC applicator',
     'Applicator compatible with the selected platform and rigid system.',
-    'required',
+    // Owner-review finding F-09 (2026-08-09): a rigid applicator is equipment for the rigid
+    // system, not for APC itself — required on every APC case made a flexible-only case
+    // demand hardware it cannot use. Conditional on the same dependency model the governed
+    // data already uses for this role on RIGID_BRONCH ("Rigid APC planned").
+    'conditional',
     'mayo_stand',
     'therapeutic',
     'hold_unopened',
     323,
+    'Rigid system in use',
   ),
   addedSlot(
     'OPS-APC-GAS',

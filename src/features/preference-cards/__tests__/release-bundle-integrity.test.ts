@@ -123,8 +123,15 @@ describe('tampering with the committed release set', () => {
     const result = resolvePinnedRelease(
       tampered.id,
       new Map([[tampered.id, tampered]]),
+      // Sources resolve through the candidate's own set pins, exactly as the runtime
+      // loadSources does — so the only mismatch left to detect is the tampered module pin.
       (candidate) =>
-        getReleaseDefinitionSources(candidate.recipeVersionId, RUNTIME_RESOLVER_CONTRACT),
+        getReleaseDefinitionSources(candidate.recipeVersionId, RUNTIME_RESOLVER_CONTRACT, {
+          modifierSetHash: candidate.modifierSetPin.definitionHash,
+          rescueModuleSetHash: candidate.rescueModuleSetPin.definitionHash,
+          compatibilityRuleSetHash: candidate.compatibilityRuleSetPin.definitionHash,
+          roleTaxonomyHash: candidate.roleTaxonomyPin.definitionHash,
+        }),
     )
     expect(result.ok).toBe(false)
     if (result.ok) return
@@ -221,7 +228,12 @@ describe('the resolver contract and the build that implements it', () => {
       sourcesByBundleId: new Map(
         bundles.map((bundle) => [
           bundle.id,
-          getReleaseDefinitionSources(bundle.recipeVersionId, RUNTIME_RESOLVER_CONTRACT),
+          getReleaseDefinitionSources(bundle.recipeVersionId, RUNTIME_RESOLVER_CONTRACT, {
+            modifierSetHash: bundle.modifierSetPin.definitionHash,
+            rescueModuleSetHash: bundle.rescueModuleSetPin.definitionHash,
+            compatibilityRuleSetHash: bundle.compatibilityRuleSetPin.definitionHash,
+            roleTaxonomyHash: bundle.roleTaxonomyPin.definitionHash,
+          }),
         ]),
       ),
     })

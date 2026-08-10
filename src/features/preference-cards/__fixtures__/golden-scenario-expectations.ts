@@ -95,8 +95,13 @@ export const goldenScenarioExpectations = {
     readinessState: 'complete_with_warnings',
     itemCount: 58,
     suppressedItemCount: 0,
-    snapshotHash: '1735412591ca5d068c782e23bf00de4fc468abdbcc95a955568fc79f2c75c5a2',
-    resolvedContentHash: '2a16bb12a2124a9d68b2c912528c8ab31c916f1f996c59867bd19928f7effcd6',
+    // Re-pinned for F-09 (2026-08-09): OPS-APC-RIGID became conditional on "Rigid system in
+    // use" instead of required. A field-level diff of this scenario resolved under
+    // release-therapeutic-bronch-v1-1 vs v1-2 showed exactly one changed item — that slot's
+    // requiredness/effectiveRequiredness/dependencyRule/conditionalState — with item count,
+    // warning count, suppression, and readiness unchanged.
+    snapshotHash: 'e97e5f71d30fc77b4b0e1ed8f3265d5bc89e1c28ff2d1fa9848055048618e067',
+    resolvedContentHash: '313b9176bd32eceaef9bbf23376325b353421219ceab470fb56a127104c94c16',
   },
   chestTubeSmallBoreDigital: {
     scenarioId: 'chest-tube',

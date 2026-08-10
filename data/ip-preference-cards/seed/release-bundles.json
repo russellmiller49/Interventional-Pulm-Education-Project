@@ -12,9 +12,9 @@
     "MED_THORACOSCOPY": "release-med-thoracoscopy-v1-1",
     "PERC_TRACH": "release-perc-trach-v1-0",
     "PHOTODYNAMIC_THERAPY": "release-photodynamic-therapy-v1-0",
-    "RIGID_BRONCH": "release-rigid-bronch-v1-0",
+    "RIGID_BRONCH": "release-rigid-bronch-v1-1",
     "TB_RULEOUT": "release-tb-ruleout-v1-0",
-    "THERAPEUTIC_BRONCH": "release-therapeutic-bronch-v1-1",
+    "THERAPEUTIC_BRONCH": "release-therapeutic-bronch-v1-2",
     "THORACENTESIS": "release-thoracentesis-v1-1",
     "WLL": "release-wll-v1-0"
   },
@@ -363,6 +363,36 @@
       "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
       "resolverContractVersion": "ip-cards-resolver-contract/1",
       "resolverImplementationHash": "ad1228ffee9f3b18dad43ce840dc867b31846f5cf46d2c0c6ee14e655b5ef08c"
+    },
+    {
+      "id": "release-rigid-bronch-v1-1",
+      "sourceProcedureCode": "RIGID_BRONCH",
+      "scenarioId": "rigid-bronch",
+      "recipeVersionId": "recipe-rigid-bronch-v0-1",
+      "releaseState": "published",
+      "publishedAt": "2026-08-09T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": "release-rigid-bronch-v1-0",
+      "releaseNotes": "Owner-review data correction F-09 (2026-08-09). The rigid APC applicator the APC modifier adds (OPS-APC-RIGID) becomes conditional on \"Rigid system in use\" instead of universally required, matching the dependency model the governed data already uses for this role on the rigid-specific module (\"Rigid APC planned\"). Only the modifier-set pin moves; the composition, module versions, rescue modules, compatibility rules, and role taxonomy are unchanged.",
+      "definitionHash": "eee55a3ef86ee5a272e3f13637ef2622302b8f08b8c653d6b6e6d1547fb1590c",
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "72ea5fc70fc3a2425ba9e2676d86e42564d505117fa81e888c7b75a5c95df181"
+    },
+    {
+      "id": "release-therapeutic-bronch-v1-2",
+      "sourceProcedureCode": "THERAPEUTIC_BRONCH",
+      "scenarioId": "central-airway-obstruction",
+      "recipeVersionId": "recipe-therapeutic-bronch-v0-2",
+      "releaseState": "published",
+      "publishedAt": "2026-08-09T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": "release-therapeutic-bronch-v1-1",
+      "releaseNotes": "Owner-review data correction F-09 (2026-08-09). The rigid APC applicator the APC modifier adds (OPS-APC-RIGID) becomes conditional on \"Rigid system in use\" instead of universally required, so a flexible-only APC case no longer demands a rigid applicator. Only the modifier-set pin moves; the composition, module versions, rescue modules, compatibility rules, and role taxonomy are unchanged.",
+      "definitionHash": "759912d06739ec21e5355154074c3e7c5a7a9a1bfd7cc503a5376489ec769b49",
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "72ea5fc70fc3a2425ba9e2676d86e42564d505117fa81e888c7b75a5c95df181"
     }
   ]
 }

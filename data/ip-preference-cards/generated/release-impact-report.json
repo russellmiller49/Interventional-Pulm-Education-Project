@@ -3552,6 +3552,23 @@
     "resolverContractChanged": false
   },
   {
+    "previousReleaseBundleId": "release-rigid-bronch-v1-0",
+    "nextReleaseBundleId": "release-rigid-bronch-v1-1",
+    "sourceProcedureCode": "RIGID_BRONCH",
+    "identical": false,
+    "pinChanges": [
+      {
+        "pin": "definition-set-modifiers",
+        "kind": "changed",
+        "previousHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165",
+        "nextHash": "a9758b0b0ace11f1fd65c2695b55acf1f512c23c560cb1dfa54514e782f9c3bf"
+      }
+    ],
+    "requirementChanges": [],
+    "catalogImportChanged": false,
+    "resolverContractChanged": false
+  },
+  {
     "previousReleaseBundleId": null,
     "nextReleaseBundleId": "release-tb-ruleout-v1-0",
     "sourceProcedureCode": "TB_RULEOUT",
@@ -3968,6 +3985,23 @@
         "changedFields": []
       }
     ],
+    "catalogImportChanged": false,
+    "resolverContractChanged": false
+  },
+  {
+    "previousReleaseBundleId": "release-therapeutic-bronch-v1-1",
+    "nextReleaseBundleId": "release-therapeutic-bronch-v1-2",
+    "sourceProcedureCode": "THERAPEUTIC_BRONCH",
+    "identical": false,
+    "pinChanges": [
+      {
+        "pin": "definition-set-modifiers",
+        "kind": "changed",
+        "previousHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165",
+        "nextHash": "a9758b0b0ace11f1fd65c2695b55acf1f512c23c560cb1dfa54514e782f9c3bf"
+      }
+    ],
+    "requirementChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
