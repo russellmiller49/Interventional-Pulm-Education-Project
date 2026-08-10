@@ -69,8 +69,14 @@ This command:
 
 - prepares `local-data/literature/supabase-local`;
 - starts a stack named `ip-literature-local`;
-- applies the literature schema and gold-set schema; and
+- applies the ordinary literature schema through the currently authorized boundary; and
 - writes dedicated `LITERATURE_SUPABASE_*` values to the ignored `.env.local`.
+
+Protected pending migrations are excluded from ordinary first-start and migration-up. In
+particular, merging contract V2 does not arm this command: while V2 ledger occurrence is zero,
+ordinary start leaves it pending and says so. V2 requires the separate protected operator workflow
+in
+[`gold-import-contract-v2-protected-application-runbook.md`](./ip-literature/gold-import-contract-v2-protected-application-runbook.md).
 
 The main site's Supabase URL, authentication, and other modules are unchanged. Server-side
 literature queries use the dedicated local values when present and retain the existing main
@@ -78,11 +84,11 @@ database only as a backwards-compatible fallback.
 
 Useful lifecycle commands:
 
-| Command                           | Effect                                                      |
-| --------------------------------- | ----------------------------------------------------------- |
-| `npm run literature:local:status` | Show the safe local API and Studio URLs                     |
-| `npm run literature:local:reset`  | Recreate only the local literature database from migrations |
-| `npm run literature:local:stop`   | Stop this stack while preserving its local database volume  |
+| Command                           | Effect                                                              |
+| --------------------------------- | ------------------------------------------------------------------- |
+| `npm run literature:local:status` | Observe safe local URLs and protected ledger state; change nothing  |
+| `npm run literature:local:reset`  | Reset only through the ordinary boundary; refuse after protected V2 |
+| `npm run literature:local:stop`   | Stop this stack without preparing migrations; preserve its volume   |
 
 Restart `npm run dev` after the first start so Next.js reloads `.env.local`.
 

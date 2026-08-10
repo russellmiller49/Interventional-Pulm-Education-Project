@@ -1,6 +1,7 @@
 import { execFile } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 
 import { GOLD_REVIEW_IMPORT_COMPENSATION_MIGRATION_ID_V2 } from '../../src/features/literature/gold-set/import-compensation-v2'
@@ -8,6 +9,7 @@ import {
   assertExclusiveOutputPath,
   assertLocalDatabaseHealthy,
   assertReadOnlySnapshotSql,
+  buildDevelopmentDatabaseSeed,
   canonicalJson,
   collectReadOnlyContractStateHashes,
   collectReadOnlyDatabaseSnapshot,
@@ -24,6 +26,12 @@ import {
 } from './gold-import-compensation-migration-operations'
 import { GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2 } from './gold-import-note-disposition-gate-v2'
 import { assertKnownArguments, parseCliArguments, stringArgument } from './lib/cli'
+import {
+  PROTECTED_GOLD_IMPORT_CONTRACT_V2,
+  buildDefaultLocalStartPlan,
+  classifyProtectedV2Ledger,
+  type ProtectedMigrationLedgerEntry,
+} from './protected-gold-import-contract-v2'
 
 export const GOLD_IMPORT_V2_PREAPPLICATION_REPORT_SCHEMA_VERSION =
   'gold-import-contract-v2-preapplication-report/1.0.0' as const
@@ -36,8 +44,6 @@ const execFileAsync = promisify(execFile)
 const V2_MIGRATION_FILE = `${GOLD_REVIEW_IMPORT_COMPENSATION_MIGRATION_ID_V2}.sql`
 const V1_MIGRATION_VERSION = '20260808035633'
 const V1_MIGRATION_NAME = 'add_literature_gold_import_compensation_contract'
-const V2_MIGRATION_VERSION = '20260809231651'
-const V2_MIGRATION_NAME = 'add_literature_gold_import_compensation_contract_v2'
 const BATCH_NAME = 'gold-set-v1'
 const MARKER = 'GOLD_IMPORT_V2_PREAPPLICATION_COUNTS:'
 
@@ -159,7 +165,12 @@ async function inspectRepository(cwd: string) {
     git(cwd, ['merge-base', 'HEAD', 'origin/main']),
     git(cwd, ['status', '--porcelain=v1', '--untracked-files=all']),
   ])
-  if (branch !== GOLD_IMPORT_V2_TASK_BRANCH) throw new Error('Unexpected task branch.')
+  if (branch !== GOLD_IMPORT_V2_TASK_BRANCH && branch !== 'main') {
+    throw new Error('Pre-application reporting requires the task branch or primary main.')
+  }
+  if (branch === 'main' && head !== originMain) {
+    throw new Error('Primary-main pre-application reporting requires HEAD exactly at origin/main.')
+  }
   if (mergeBase !== originMain) throw new Error('origin/main is not an ancestor of task HEAD.')
   if (status !== '') throw new Error('Pre-application reporting requires a clean worktree.')
   return { branch, head, originMain }
@@ -260,6 +271,9 @@ export async function runGoldImportV2PreapplicationDiagnostic(argv: string[]) {
   if (sha256(v1Bytes) !== IMPORT_COMPENSATION_MIGRATION_SHA256) {
     throw new Error('Historical V1 migration byte identity drifted.')
   }
+  if (sha256(v2Bytes) !== PROTECTED_GOLD_IMPORT_CONTRACT_V2.sha256) {
+    throw new Error('Protected V2 migration byte identity drifted.')
+  }
   const dockerTarget = await resolveLocalDockerTarget()
   await assertLocalDatabaseHealthy(
     DEFAULT_LOCAL_DATABASE_CONTAINER,
@@ -282,12 +296,21 @@ export async function runGoldImportV2PreapplicationDiagnostic(argv: string[]) {
   const planningAfter = developmentPlanningStateSha256(snapshotAfter)
   const mutations = mutationCounts(snapshotBefore, snapshotAfter)
   const v1Occurrence = migrationOccurrences(snapshotAfter, V1_MIGRATION_VERSION, V1_MIGRATION_NAME)
-  const v2Occurrence = migrationOccurrences(snapshotAfter, V2_MIGRATION_VERSION, V2_MIGRATION_NAME)
+  const protectedLedgerEntries = snapshotAfter.migrationLedger.map((entry, index) => {
+    const row = record(entry, `migrationLedger[${index}]`)
+    return { name: String(row.name ?? ''), version: String(row.version ?? '') }
+  }) satisfies ProtectedMigrationLedgerEntry[]
+  const protectedLedgerState = classifyProtectedV2Ledger(protectedLedgerEntries)
+  const v1RelevantEntries = protectedLedgerEntries.filter(
+    ({ name, version }) => name === V1_MIGRATION_NAME || version === V1_MIGRATION_VERSION,
+  )
+  const v2Occurrence = protectedLedgerState.relevantEntries.length
   const batch = record(record(snapshotAfter.scope, 'scope').batch, 'scope.batch')
   const expected = GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2
   if (
     v1Occurrence !== 1 ||
-    v2Occurrence !== 0 ||
+    v1RelevantEntries.length !== 1 ||
+    protectedLedgerState.kind !== 'v2_absent' ||
     stateHashesBefore.developmentMembershipSha256 !== expected.developmentMembershipSha256 ||
     stateHashesAfter.developmentMembershipSha256 !== expected.developmentMembershipSha256 ||
     stateHashesBefore.effectiveStateSha256 !== expected.effectiveStateSha256 ||
@@ -305,6 +328,31 @@ export async function runGoldImportV2PreapplicationDiagnostic(argv: string[]) {
   ) {
     throw new Error('Real-local state drifted or contains a forbidden operation; report aborted.')
   }
+  const developmentSeed = buildDevelopmentDatabaseSeed(snapshotAfter)
+  const migrationLedgerBackup = {
+    schemaVersion: 'literature-gold-protected-v2-ledger-backup/1.0.0',
+    entries: snapshotAfter.migrationLedger,
+    protectedV2: {
+      classification: protectedLedgerState.kind,
+      expected: PROTECTED_GOLD_IMPORT_CONTRACT_V2,
+      occurrence: v2Occurrence,
+    },
+  }
+  const stateHashBackup = {
+    schemaVersion: 'literature-gold-protected-v2-state-backup/1.0.0',
+    batchId: String(batch.id ?? ''),
+    batchName: BATCH_NAME,
+    datasetSplit: 'development',
+    developmentMembershipSha256: stateHashesAfter.developmentMembershipSha256,
+    developmentPlanningStateSha256: planningAfter,
+    effectiveStateSha256: stateHashesAfter.effectiveStateSha256,
+    physicalStateSha256: stateHashesAfter.physicalStateSha256,
+  }
+  const backupFiles = {
+    'development-database-seed.json': canonicalJson(developmentSeed),
+    'protected-migration-ledger.json': canonicalJson(migrationLedgerBackup),
+    'state-hashes.json': canonicalJson(stateHashBackup),
+  } as const
   const report = {
     schemaVersion: GOLD_IMPORT_V2_PREAPPLICATION_REPORT_SCHEMA_VERSION,
     status: 'implementation_ready_real_local_migration_required',
@@ -320,7 +368,7 @@ export async function runGoldImportV2PreapplicationDiagnostic(argv: string[]) {
         appliedToRealLocal: false,
         id: GOLD_REVIEW_IMPORT_COMPENSATION_MIGRATION_ID_V2,
         occurrence: v2Occurrence,
-        sha256: sha256(v2Bytes),
+        sha256: PROTECTED_GOLD_IMPORT_CONTRACT_V2.sha256,
       },
     },
     database: {
@@ -345,6 +393,14 @@ export async function runGoldImportV2PreapplicationDiagnostic(argv: string[]) {
       realLocalMigrationApplicationSeparatelyAuthorized: false,
       realLocalPackageExecutionAuthorized: false,
       requiredNextStep: 'separately_authorized_real_local_v2_migration_application',
+    },
+    ordinaryLocalStartPlan: buildDefaultLocalStartPlan(protectedLedgerEntries),
+    backup: {
+      completeDevelopmentSnapshot: true,
+      heldOutIdentitiesIncluded: false,
+      files: Object.fromEntries(
+        Object.entries(backupFiles).map(([name, bytes]) => [name, sha256(bytes)]),
+      ),
     },
     safety: {
       compensationExecuted: false,
@@ -373,6 +429,9 @@ export async function runGoldImportV2PreapplicationDiagnostic(argv: string[]) {
 - Compensations: \`${operationCountsAfter.compensationCount}\`
 - Held-out identities accessed: \`false\`
 - Remote database accessed: \`false\`
+- Ordinary local-start protected state: \`v2_absent_unarmed\`
+- Protected V2 visible to first-start initialization: \`false\`
+- Protected V2 visible to ordinary migration-up: \`false\`
 
 The V2 migration remains unapplied to the real local database. Package execution therefore remains
 blocked until a separately authorized migration-application session completes and re-audits it.
@@ -381,6 +440,7 @@ blocked until a separately authorized migration-application session completes an
     new Map([
       ['pre-application-report.json', canonicalJson(report)],
       ['pre-application-report.md', markdown],
+      ...Object.entries(backupFiles),
     ]),
   )
   const executionReceipt = {
@@ -402,7 +462,7 @@ blocked until a separately authorized migration-application session completes an
   return { outputDirectory, manifestSha256: artifacts.manifestSha256, report }
 }
 
-if (process.env.NODE_ENV !== 'test') {
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   void runGoldImportV2PreapplicationDiagnostic(process.argv.slice(2))
     .then((result) => {
       if ('help' in result) console.log(result.help)

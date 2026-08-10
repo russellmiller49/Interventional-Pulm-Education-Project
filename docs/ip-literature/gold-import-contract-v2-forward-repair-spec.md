@@ -23,6 +23,11 @@ A future forward-only contract v2 repair must preserve the exact meanings in
 `20260808035633_add_literature_gold_import_compensation_contract.sql`, and this specification does
 not authorize creating or applying the future migration.
 
+The implementation now exists in draft PR #90, but its real-local application remains separately
+unauthorized. Merging that implementation does not arm ordinary local startup. The exact protected
+state model and later operator path are defined in
+[`gold-import-contract-v2-protected-application-runbook.md`](./gold-import-contract-v2-protected-application-runbook.md).
+
 ## Bound findings
 
 | Cohort            | Authoritative fact                                                            | Contract-v1 defect                                                                                                                |
@@ -214,6 +219,10 @@ If a future reviewed implementation uses a new migration, it must be forward-onl
   environment;
 - prove identical effective clinical state before and after the schema repair; and
 - remain unapplied to the real local database until separately authorized.
+
+Routine `literature:local:prepare`, `start`, `status`, `stop`, and `reset` are not that separate
+authorization. While the V2 ledger occurrence is zero, ordinary first-start and migration-up must
+not see V2. Application requires the dry-run-first, backup-bound protected operator workflow.
 
 No owner or ACL repair is required by the current evidence. The safe-profile conclusion remains
 independent and unchanged.

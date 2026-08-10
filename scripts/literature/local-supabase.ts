@@ -1,17 +1,30 @@
 import { spawn } from 'node:child_process'
-import { access, copyFile, mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
+import {
+  access,
+  copyFile,
+  lstat,
+  mkdir,
+  readFile,
+  readdir,
+  unlink,
+  writeFile,
+} from 'node:fs/promises'
 import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const ROOT = process.cwd()
-const WORKDIR = resolve(ROOT, 'local-data/literature/supabase-local')
-const GENERATED_SUPABASE_DIRECTORY = resolve(WORKDIR, 'supabase')
-const GENERATED_MIGRATIONS_DIRECTORY = resolve(GENERATED_SUPABASE_DIRECTORY, 'migrations')
-const SOURCE_CONFIG = resolve(ROOT, 'supabase/config.toml')
-const ENV_FILE = resolve(ROOT, '.env.local')
-const LOCAL_PROJECT_ID = 'ip-literature-local'
-const MANAGED_ENV_START = '# BEGIN managed local Literature Supabase'
-const MANAGED_ENV_END = '# END managed local Literature Supabase'
-const MIGRATIONS = [
+import {
+  PROTECTED_GOLD_IMPORT_CONTRACT_V1,
+  PROTECTED_GOLD_IMPORT_CONTRACT_V2,
+  classifyProtectedV2State,
+  collectProtectedV2LedgerEntries,
+  defaultLocalLifecycleState,
+  type ProtectedMigrationLedgerEntry,
+  type ProtectedV2AuthorizationContext,
+  type ProtectedV2OperatorAuthorization,
+} from './protected-gold-import-contract-v2'
+
+export const ORDINARY_LITERATURE_MIGRATIONS = [
   '20260727032621_add_literature_explorer.sql',
   '20260727164510_add_literature_gold_set.sql',
   '20260727190000_add_literature_gold_review_categories.sql',
@@ -20,9 +33,15 @@ const MIGRATIONS = [
   '20260728171212_add_immune_inflammatory_disease_tag.sql',
   '20260728174726_add_safety_complication_prevention_clinical_purpose.sql',
   '20260730194025_add_literature_gold_test_unlock.sql',
-  '20260808035633_add_literature_gold_import_compensation_contract.sql',
-  '20260809231651_add_literature_gold_import_compensation_contract_v2.sql',
+  PROTECTED_GOLD_IMPORT_CONTRACT_V1.filename,
 ] as const
+
+export const PROTECTED_FORWARD_LITERATURE_MIGRATIONS = [PROTECTED_GOLD_IMPORT_CONTRACT_V2] as const
+
+const ROOT = process.cwd()
+const LOCAL_PROJECT_ID = 'ip-literature-local'
+const MANAGED_ENV_START = '# BEGIN managed local Literature Supabase'
+const MANAGED_ENV_END = '# END managed local Literature Supabase'
 const EXCLUDED_SERVICES = [
   'realtime',
   'storage-api',
@@ -34,7 +53,48 @@ const EXCLUDED_SERVICES = [
   'supavisor',
 ]
 
-type LocalCommand = 'prepare' | 'start' | 'status' | 'reset' | 'stop'
+export type LocalCommand = 'prepare' | 'start' | 'status' | 'reset' | 'stop'
+
+export interface LocalSupabasePaths {
+  environmentFile: string
+  generatedMigrationsDirectory: string
+  generatedSupabaseDirectory: string
+  root: string
+  sourceConfig: string
+  sourceMigrationsDirectory: string
+  workdir: string
+}
+
+export interface LocalSupabaseCommandResult {
+  stderr: string
+  stdout: string
+}
+
+export interface LocalSupabaseDependencies {
+  inspectProtectedLedger: () => Promise<ProtectedMigrationLedgerEntry[]>
+  log: (message: string) => void
+  paths: LocalSupabasePaths
+  runSupabase: (arguments_: string[]) => Promise<LocalSupabaseCommandResult>
+}
+
+export interface PreparedMigrationInventory {
+  protectedMigrationIncluded: boolean
+  removedPreviouslyStagedProtectedMigration: boolean
+}
+
+export function defaultLocalSupabasePaths(root = ROOT): LocalSupabasePaths {
+  const workdir = resolve(root, 'local-data/literature/supabase-local')
+  const generatedSupabaseDirectory = resolve(workdir, 'supabase')
+  return {
+    environmentFile: resolve(root, '.env.local'),
+    generatedMigrationsDirectory: resolve(generatedSupabaseDirectory, 'migrations'),
+    generatedSupabaseDirectory,
+    root,
+    sourceConfig: resolve(root, 'supabase/config.toml'),
+    sourceMigrationsDirectory: resolve(root, 'supabase/migrations'),
+    workdir,
+  }
+}
 
 function usage() {
   return `
@@ -47,16 +107,15 @@ Usage:
   npm run literature:local:reset
   npm run literature:local:stop
 
-The generated stack lives under local-data/literature/supabase-local and includes only the
-canonical literature migrations. Starting or resetting it updates the dedicated
-LITERATURE_SUPABASE_* entries in .env.local without changing the site's main Supabase settings.
+The generated stack lives under local-data/literature/supabase-local. Ordinary lifecycle commands
+keep protected pending migrations unarmed. In particular, contract V2 migration
+${PROTECTED_GOLD_IMPORT_CONTRACT_V2.id} remains pending while its ledger occurrence is zero; only
+the separately authorized protected-V2 operator command may apply it.
 `.trim()
 }
 
-async function ensureSupabaseBinary() {
-  const binary = resolve(ROOT, 'node_modules/.bin/supabase')
-  await access(binary)
-  return binary
+function sha256(bytes: Buffer | string) {
+  return createHash('sha256').update(bytes).digest('hex')
 }
 
 function redactCliOutput(output: string) {
@@ -68,72 +127,188 @@ function redactCliOutput(output: string) {
     )
 }
 
-async function runSupabase(arguments_: string[]) {
-  const binary = await ensureSupabaseBinary()
-  return new Promise<{ stderr: string; stdout: string }>((resolvePromise, rejectPromise) => {
-    const child = spawn(binary, ['--workdir', WORKDIR, ...arguments_], {
-      cwd: ROOT,
-      env: process.env,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    })
-    let stdout = ''
-    let stderr = ''
-    child.stdout.setEncoding('utf8')
-    child.stderr.setEncoding('utf8')
-    child.stdout.on('data', (chunk: string) => {
-      stdout += chunk
-    })
-    child.stderr.on('data', (chunk: string) => {
-      stderr += chunk
-    })
-    child.on('error', rejectPromise)
-    child.on('close', (code) => {
-      if (code === 0) {
-        resolvePromise({ stdout, stderr })
-        return
-      }
-      const detail = redactCliOutput(`${stdout}\n${stderr}`).trim()
-      rejectPromise(
-        new Error(
-          `Supabase CLI exited with code ${code ?? 'unknown'}${detail ? `:\n${detail}` : '.'}`,
-        ),
-      )
-    })
-  })
+async function ensureSupabaseBinary(paths: LocalSupabasePaths) {
+  const binary = resolve(paths.root, 'node_modules/.bin/supabase')
+  await access(binary)
+  return binary
 }
 
-async function prepareWorkdir() {
-  await mkdir(GENERATED_MIGRATIONS_DIRECTORY, { recursive: true })
+export function createSupabaseRunner(paths: LocalSupabasePaths) {
+  return async (arguments_: string[]): Promise<LocalSupabaseCommandResult> => {
+    const binary = await ensureSupabaseBinary(paths)
+    return new Promise((resolvePromise, rejectPromise) => {
+      const child = spawn(binary, ['--workdir', paths.workdir, ...arguments_], {
+        cwd: paths.root,
+        env: process.env,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      })
+      let stdout = ''
+      let stderr = ''
+      child.stdout.setEncoding('utf8')
+      child.stderr.setEncoding('utf8')
+      child.stdout.on('data', (chunk: string) => {
+        stdout += chunk
+      })
+      child.stderr.on('data', (chunk: string) => {
+        stderr += chunk
+      })
+      child.on('error', rejectPromise)
+      child.on('close', (code) => {
+        if (code === 0) {
+          resolvePromise({ stdout, stderr })
+          return
+        }
+        const detail = redactCliOutput(`${stdout}\n${stderr}`).trim()
+        rejectPromise(
+          new Error(
+            `Supabase CLI exited with code ${code ?? 'unknown'}${detail ? `:\n${detail}` : '.'}`,
+          ),
+        )
+      })
+    })
+  }
+}
 
-  const generatedMigrations = (await readdir(GENERATED_MIGRATIONS_DIRECTORY)).filter((name) =>
-    name.endsWith('.sql'),
-  )
-  const unexpectedMigrations = generatedMigrations.filter(
-    (name) => !MIGRATIONS.includes(name as (typeof MIGRATIONS)[number]),
-  )
-  if (unexpectedMigrations.length > 0) {
+async function assertRegularFile(path: string, label: string) {
+  const stat = await lstat(path)
+  if (!stat.isFile() || stat.isSymbolicLink()) throw new Error(`${label} must be a regular file.`)
+}
+
+async function assertProtectedSourceIdentities(paths: LocalSupabasePaths) {
+  for (const migration of [PROTECTED_GOLD_IMPORT_CONTRACT_V1, PROTECTED_GOLD_IMPORT_CONTRACT_V2]) {
+    const path = resolve(paths.sourceMigrationsDirectory, migration.filename)
+    await assertRegularFile(path, `Source migration ${migration.filename}`)
+    const actual = sha256(await readFile(path))
+    if (actual !== migration.sha256) {
+      throw new Error(
+        `Source migration checksum mismatch for ${migration.filename}: expected ${migration.sha256}, received ${actual}.`,
+      )
+    }
+  }
+}
+
+async function inspectGeneratedSqlFiles(paths: LocalSupabasePaths, createIfMissing: boolean) {
+  if (createIfMissing) await mkdir(paths.generatedMigrationsDirectory, { recursive: true })
+  const names = (
+    await readdir(paths.generatedMigrationsDirectory).catch((error: NodeJS.ErrnoException) => {
+      if (!createIfMissing && error.code === 'ENOENT') return []
+      throw error
+    })
+  ).filter((name) => name.endsWith('.sql'))
+  const allowed = new Set([
+    ...ORDINARY_LITERATURE_MIGRATIONS,
+    ...PROTECTED_FORWARD_LITERATURE_MIGRATIONS.map(({ filename }) => filename),
+  ])
+  const unexpected = names.filter((name) => !allowed.has(name as never))
+  if (unexpected.length > 0) {
     throw new Error(
-      `Refusing to replace a generated migration directory containing unmanaged files: ${unexpectedMigrations.join(
-        ', ',
-      )}`,
+      `Refusing a generated migration directory containing unmanaged or unexpected protected files: ${unexpected.join(', ')}.`,
     )
   }
+  const protectedPath = resolve(
+    paths.generatedMigrationsDirectory,
+    PROTECTED_GOLD_IMPORT_CONTRACT_V2.filename,
+  )
+  const protectedPresent = names.includes(PROTECTED_GOLD_IMPORT_CONTRACT_V2.filename)
+  if (protectedPresent) {
+    await assertRegularFile(protectedPath, 'Generated protected V2 migration')
+    const actual = sha256(await readFile(protectedPath))
+    if (actual !== PROTECTED_GOLD_IMPORT_CONTRACT_V2.sha256) {
+      throw new Error(
+        `Generated protected V2 checksum mismatch: expected ${PROTECTED_GOLD_IMPORT_CONTRACT_V2.sha256}, received ${actual}.`,
+      )
+    }
+  }
+  return { names, protectedPath, protectedPresent }
+}
 
-  const sourceConfig = await readFile(SOURCE_CONFIG, 'utf8')
+export async function inspectGeneratedProtectedMigration(paths: LocalSupabasePaths) {
+  await assertProtectedSourceIdentities(paths)
+  const inventory = await inspectGeneratedSqlFiles(paths, false)
+  return { present: inventory.protectedPresent, sha256: PROTECTED_GOLD_IMPORT_CONTRACT_V2.sha256 }
+}
+
+async function prepareGeneratedLiteratureMigrationsInternal(input: {
+  includeAppliedProtectedV2: boolean
+  paths: LocalSupabasePaths
+}): Promise<PreparedMigrationInventory> {
+  const { paths } = input
+  await assertProtectedSourceIdentities(paths)
+  const inventory = await inspectGeneratedSqlFiles(paths, true)
+  let removedPreviouslyStagedProtectedMigration = false
+  if (inventory.protectedPresent && !input.includeAppliedProtectedV2) {
+    await unlink(inventory.protectedPath)
+    removedPreviouslyStagedProtectedMigration = true
+  }
+
+  const sourceConfig = await readFile(paths.sourceConfig, 'utf8')
   const generatedConfig = sourceConfig.replace(
     /^project_id\s*=\s*"[^"]+"/mu,
     `project_id = "${LOCAL_PROJECT_ID}"`,
   )
-  await writeFile(resolve(GENERATED_SUPABASE_DIRECTORY, 'config.toml'), generatedConfig, 'utf8')
+  await writeFile(resolve(paths.generatedSupabaseDirectory, 'config.toml'), generatedConfig, 'utf8')
 
-  for (const migration of MIGRATIONS) {
+  for (const migration of ORDINARY_LITERATURE_MIGRATIONS) {
     await copyFile(
-      resolve(ROOT, 'supabase/migrations', migration),
-      resolve(GENERATED_MIGRATIONS_DIRECTORY, migration),
+      resolve(paths.sourceMigrationsDirectory, migration),
+      resolve(paths.generatedMigrationsDirectory, migration),
     )
   }
+  if (input.includeAppliedProtectedV2) {
+    await copyFile(
+      resolve(paths.sourceMigrationsDirectory, PROTECTED_GOLD_IMPORT_CONTRACT_V2.filename),
+      inventory.protectedPath,
+    )
+    const copiedSha256 = sha256(await readFile(inventory.protectedPath))
+    if (copiedSha256 !== PROTECTED_GOLD_IMPORT_CONTRACT_V2.sha256) {
+      throw new Error('Generated protected V2 copy changed during staging; refusing to continue.')
+    }
+  }
+  return {
+    protectedMigrationIncluded: input.includeAppliedProtectedV2,
+    removedPreviouslyStagedProtectedMigration,
+  }
+}
 
-  console.log(`Prepared isolated literature migrations in ${WORKDIR}`)
+export async function prepareGeneratedLiteratureMigrations(paths: LocalSupabasePaths) {
+  return prepareGeneratedLiteratureMigrationsInternal({
+    includeAppliedProtectedV2: false,
+    paths,
+  })
+}
+
+export async function restoreAppliedProtectedV2Migration(input: {
+  ledgerEntries: readonly ProtectedMigrationLedgerEntry[]
+  paths: LocalSupabasePaths
+}) {
+  const state = classifyProtectedV2State({ ledgerEntries: input.ledgerEntries })
+  if (state.kind !== 'v2_applied_exactly_once') {
+    throw new Error('Protected V2 generated restoration requires its exact applied ledger state.')
+  }
+  return prepareGeneratedLiteratureMigrationsInternal({
+    includeAppliedProtectedV2: true,
+    paths: input.paths,
+  })
+}
+
+export async function stageAuthorizedProtectedV2Migration(input: {
+  authorization: ProtectedV2OperatorAuthorization
+  authorizationContext: ProtectedV2AuthorizationContext
+  ledgerEntries: readonly ProtectedMigrationLedgerEntry[]
+  paths: LocalSupabasePaths
+}) {
+  const state = classifyProtectedV2State({
+    authorization: input.authorization,
+    authorizationContext: input.authorizationContext,
+    ledgerEntries: input.ledgerEntries,
+  })
+  if (state.kind !== 'v2_absent_explicitly_armed') {
+    throw new Error('Protected V2 staging requires an exact current operator authorization.')
+  }
+  return prepareGeneratedLiteratureMigrationsInternal({
+    includeAppliedProtectedV2: true,
+    paths: input.paths,
+  })
 }
 
 function parseEnvironmentOutput(output: string) {
@@ -147,8 +322,8 @@ function parseEnvironmentOutput(output: string) {
   return values
 }
 
-async function localStatus() {
-  const { stdout } = await runSupabase(['status', '--output', 'env'])
+async function localStatus(dependencies: LocalSupabaseDependencies) {
+  const { stdout } = await dependencies.runSupabase(['status', '--output', 'env'])
   const values = parseEnvironmentOutput(stdout)
   const apiUrl = values.get('API_URL')
   const anonKey = values.get('ANON_KEY') ?? values.get('PUBLISHABLE_KEY')
@@ -164,8 +339,11 @@ async function localStatus() {
   }
 }
 
-async function updateEnvironmentFile(status: Awaited<ReturnType<typeof localStatus>>) {
-  const existing = await readFile(ENV_FILE, 'utf8').catch(() => '')
+async function updateEnvironmentFile(
+  paths: LocalSupabasePaths,
+  status: Awaited<ReturnType<typeof localStatus>>,
+) {
+  const existing = await readFile(paths.environmentFile, 'utf8').catch(() => '')
   const managedBlock = [
     MANAGED_ENV_START,
     '# Written by npm run literature:local:start. Local machine only; never commit this file.',
@@ -184,15 +362,115 @@ async function updateEnvironmentFile(status: Awaited<ReturnType<typeof localStat
   const updated = managedPattern.test(existing)
     ? existing.replace(managedPattern, managedBlock)
     : `${existing.trimEnd()}${existing.trim() ? '\n\n' : ''}${managedBlock}\n`
-  await writeFile(ENV_FILE, updated, 'utf8')
+  await writeFile(paths.environmentFile, updated, 'utf8')
 }
 
-async function reportStatus() {
-  const status = await localStatus()
-  console.log('Local Literature Supabase is running.')
-  console.log(`API: ${status.apiUrl}`)
-  console.log(`Studio: ${status.studioUrl}`)
+async function reportStatus(dependencies: LocalSupabaseDependencies) {
+  const status = await localStatus(dependencies)
+  dependencies.log('Local Literature Supabase is running.')
+  dependencies.log(`API: ${status.apiUrl}`)
+  dependencies.log(`Studio: ${status.studioUrl}`)
   return status
+}
+
+function assertUsableState(entries: readonly ProtectedMigrationLedgerEntry[]) {
+  const state = defaultLocalLifecycleState(entries)
+  if (state.kind === 'v2_drifted_or_ambiguous') throw new Error(state.ledger.reason)
+  return state
+}
+
+function pendingMessage() {
+  return `Protected contract V2 remains pending and unarmed (${PROTECTED_GOLD_IMPORT_CONTRACT_V2.id}); routine local lifecycle commands cannot apply it.`
+}
+
+export async function runLocalSupabaseCommand(
+  command: LocalCommand,
+  dependencies: LocalSupabaseDependencies,
+) {
+  const { log, paths, runSupabase } = dependencies
+  if (command === 'prepare') {
+    const prepared = await prepareGeneratedLiteratureMigrations(paths)
+    log(`Prepared ordinary isolated literature migrations in ${paths.workdir}.`)
+    if (prepared.removedPreviouslyStagedProtectedMigration) {
+      log(
+        'Removed the exact previously staged protected V2 generated copy; source bytes were untouched.',
+      )
+    }
+    log(pendingMessage())
+    return { prepared, protectedState: 'v2_absent_unarmed' as const }
+  }
+  if (command === 'stop') {
+    await runSupabase(['stop'])
+    log('Stopped the isolated local Literature Supabase stack; its data was preserved.')
+    log('Stop did not prepare or change the generated migration inventory.')
+    return { protectedState: 'not_inspected' as const }
+  }
+  if (command === 'status') {
+    const status = await reportStatus(dependencies)
+    const state = assertUsableState(await dependencies.inspectProtectedLedger())
+    await inspectGeneratedProtectedMigration(paths)
+    log(
+      state.kind === 'v2_applied_exactly_once'
+        ? 'Protected contract V2 is recorded exactly once; status made no file or database changes.'
+        : `${pendingMessage()} Status made no file or database changes.`,
+    )
+    return { protectedState: state.kind, status }
+  }
+  if (command === 'reset') {
+    const state = assertUsableState(await dependencies.inspectProtectedLedger())
+    if (state.kind === 'v2_applied_exactly_once') {
+      throw new Error(
+        'Routine reset is blocked after protected V2 application; use a separately reviewed protected reset workflow so the applied boundary cannot be silently downgraded or replayed.',
+      )
+    }
+    const prepared = await prepareGeneratedLiteratureMigrations(paths)
+    await runSupabase(['db', 'reset', '--local', '--no-seed', '--yes'])
+    const status = await reportStatus(dependencies)
+    await updateEnvironmentFile(paths, status)
+    log('Reset the isolated literature database only through the ordinary V1 boundary.')
+    log(pendingMessage())
+    return { prepared, protectedState: state.kind, status }
+  }
+
+  // First-start initialization receives only the ordinary inventory. This ordering is deliberate:
+  // a new container cannot see protected V2 before a ledger state exists to authenticate it.
+  const initialPreparation = await prepareGeneratedLiteratureMigrations(paths)
+  await runSupabase(['start', '--exclude', EXCLUDED_SERVICES.join(',')])
+  const ledgerEntries = await dependencies.inspectProtectedLedger()
+  const state = assertUsableState(ledgerEntries)
+  if (state.kind === 'v2_applied_exactly_once') {
+    await restoreAppliedProtectedV2Migration({ ledgerEntries, paths })
+    log('Restored the exact protected V2 generated copy to match its already-applied ledger row.')
+  } else {
+    const inventory = await inspectGeneratedProtectedMigration(paths)
+    if (inventory.present) {
+      throw new Error('Unarmed ordinary start unexpectedly exposed protected V2 to migration-up.')
+    }
+  }
+  await runSupabase(['migration', 'up', '--local'])
+  const status = await reportStatus(dependencies)
+  await updateEnvironmentFile(paths, status)
+  log('Updated the dedicated LITERATURE_SUPABASE_* values in .env.local.')
+  log('Restart the Next.js development server if it was already running.')
+  if (state.kind === 'v2_applied_exactly_once') {
+    log(
+      'Protected contract V2 was already applied exactly once; ordinary start did not reapply it.',
+    )
+  } else {
+    log(pendingMessage())
+  }
+  return { initialPreparation, protectedState: state.kind, status }
+}
+
+export function createDefaultLocalSupabaseDependencies(
+  paths = defaultLocalSupabasePaths(),
+): LocalSupabaseDependencies {
+  return {
+    inspectProtectedLedger: () => collectProtectedV2LedgerEntries(),
+    log: console.log,
+    paths,
+    runSupabase: createSupabaseRunner(paths),
+  }
 }
 
 async function main() {
@@ -204,41 +482,15 @@ async function main() {
   if (!['prepare', 'start', 'status', 'reset', 'stop'].includes(rawCommand)) {
     throw new Error(`Unknown local Supabase command: ${rawCommand}\n\n${usage()}`)
   }
-  const command = rawCommand as LocalCommand
-
-  if (command === 'prepare') {
-    await prepareWorkdir()
-    return
-  }
-  if (command === 'stop') {
-    await prepareWorkdir()
-    await runSupabase(['stop'])
-    console.log('Stopped the isolated local Literature Supabase stack; its data was preserved.')
-    return
-  }
-
-  await prepareWorkdir()
-  if (command === 'start') {
-    await runSupabase(['start', '--exclude', EXCLUDED_SERVICES.join(',')])
-    await runSupabase(['migration', 'up', '--local'])
-    const status = await reportStatus()
-    await updateEnvironmentFile(status)
-    console.log('Updated the dedicated LITERATURE_SUPABASE_* values in .env.local.')
-    console.log('Restart the Next.js development server if it was already running.')
-    return
-  }
-  if (command === 'reset') {
-    await runSupabase(['db', 'reset', '--local', '--no-seed', '--yes'])
-    const status = await reportStatus()
-    await updateEnvironmentFile(status)
-    console.log('Reset the isolated literature database and refreshed .env.local.')
-    return
-  }
-
-  await reportStatus()
+  await runLocalSupabaseCommand(
+    rawCommand as LocalCommand,
+    createDefaultLocalSupabaseDependencies(),
+  )
 }
 
-void main().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : String(error))
-  process.exitCode = 1
-})
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  void main().catch((error: unknown) => {
+    console.error(error instanceof Error ? error.message : String(error))
+    process.exitCode = 1
+  })
+}

@@ -210,11 +210,13 @@ aggregate is a release-blocking test failure.
 
 ### 3. Apply the migration only after separate approval
 
-This step is deliberately deferred. When separately approved, run from the
-clean primary checkout. `npm run literature:local:start` uses the
-project-pinned Supabase CLI and the isolated local workdir; after start it runs
-`supabase migration up --local`. Do not use `db push`, do not link a project,
-and do not use a remote target.
+This historical V1 step was separately approved and completed exactly once. It
+must not be replayed. Ordinary `npm run literature:local:start` now uses the
+project-pinned Supabase CLI only through the currently authorized boundary and
+excludes any absent protected forward migration. It is not authorization for
+contract V2. Do not use `db push`, do not link a project, and do not use a
+remote target. The V2 procedure is exclusively the dry-run-first workflow in
+[`gold-import-contract-v2-protected-application-runbook.md`](./gold-import-contract-v2-protected-application-runbook.md).
 
 If the command response is lost or ambiguous, do not run it again. Treat the
 outcome as unknown and run the read-only audit in step 4 against the preserved
