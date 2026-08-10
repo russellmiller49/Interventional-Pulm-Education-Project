@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { VerificationBadge } from '@/features/preference-cards/components/VerificationBadge'
 import { getProductDetail } from '@/features/preference-cards/server/catalog'
+import { deviceIntelligenceEnabled } from '@/features/device-intelligence/feature'
+import { getAtlasProductDetail } from '@/features/device-intelligence/server/atlas.server'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,10 +50,15 @@ export default async function CatalogProductPage({ params }: PageProps) {
   const { locale, productId } = await params
   setRequestLocale(locale)
   const t = await getTranslations('preferenceCards.catalog')
+  const tCrossLinks = await getTranslations('deviceIntelligence.common.crossLinks')
 
   if (!PRODUCT_ID_PATTERN.test(productId)) notFound()
   const detail = getProductDetail(productId)
   if (!detail) notFound()
+
+  // Cross-link to the D1 atlas only when the feature is on AND the product is inside the
+  // D1-visible cohort; nothing else about this preserved page changes.
+  const atlasVisible = deviceIntelligenceEnabled() && getAtlasProductDetail(productId) !== null
 
   const { product } = detail
   const verificationLabels = {
@@ -101,12 +108,21 @@ export default async function CatalogProductPage({ params }: PageProps) {
 
   return (
     <div className="container space-y-8 py-8 md:py-12">
-      <Button asChild variant="ghost" size="sm" className="-ml-2">
-        <Link href={`/${locale}/preference-cards/catalog` as Route}>
-          <ChevronLeft aria-hidden="true" className="h-4 w-4" />
-          {t('product.back')}
-        </Link>
-      </Button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Button asChild variant="ghost" size="sm" className="-ml-2">
+          <Link href={`/${locale}/preference-cards/catalog` as Route}>
+            <ChevronLeft aria-hidden="true" className="h-4 w-4" />
+            {t('product.back')}
+          </Link>
+        </Button>
+        {atlasVisible ? (
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/${locale}/devices/${product.product_id}` as Route}>
+              {tCrossLinks('atlasDevicePage')}
+            </Link>
+          </Button>
+        ) : null}
+      </div>
 
       <header className="max-w-4xl space-y-3">
         <p className="text-sm font-semibold text-primary">{product.manufacturerDisplay}</p>

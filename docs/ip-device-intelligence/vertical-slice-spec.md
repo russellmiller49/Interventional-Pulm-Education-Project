@@ -104,6 +104,11 @@ projection of `getProductDetail(productId)` in
 - **Rendering**: one row per role with `role_fit` (e.g. `Primary`) and a link to the role detail
   view (`getUseDetail`). `requires_current_ifu` renders as the existing advisory flag, and
   `selection_guidance` is quoted as authored text, never paraphrased.
+  _Built-behavior note (2026-08-09, superseding this paragraph's advisory-flag description):_
+  after owner-review F-24 the IFU statement renders once as ambient footer text on role pages
+  (it is near-universal), not as a per-row advisory flag; and after Codex C-05 every role page
+  carries a global qualifier that authored guidance is generic content, not an institutional
+  formulary claim.
 
 ### 2.4 Relevant procedures
 
@@ -180,6 +185,10 @@ projection of `getProductDetail(productId)` in
   `local_notes`: "Do not procure; historical traceability only."). The device page therefore
   renders "No institutional data recorded" for signed-in users, with the one local-notes row as
   the only populated example. This section never renders for anonymous users.
+  _Built-behavior note (2026-08-09, superseding the signed-in/anonymous distinction above):_
+  D1 shipped no sign-in tier — every D1 route is public-unlisted (direct-link, noindex), the
+  device page carries no institutional-availability section at all, and the real-formulary
+  honesty panel renders on the readiness page for every direct-link visitor.
 
 ## 3. Screen 2 — Procedure workspace
 
@@ -310,6 +319,14 @@ States 4–8 also render as per-requirement diagnostic badges under whichever he
 applies. Every state cell links to the evidence that produced it (slot row, formulary row,
 rule id, modifier code).
 
+_Built-behavior notes (2026-08-09):_ the UI labels carry the `Demo:` prefix ("Demo: Ready" /
+"Demo: Ready with limitations" / "Demo: Not ready", owner-review F-27) — state semantics are
+those above, with two Codex corrections: a REQUIRED requirement whose role sits on a
+structural no-coverage rung (state 4's condition) is always state 3 for that requirement,
+regardless of any demo stand-in or hospital-item mapping (C-01); and state 8's
+authored-selectable-option eligibility is judged against the formulary row's OWN role codes
+and their slots, never against a procedure-wide product set (C-04).
+
 ## 5. Generated outputs
 
 All five outputs are projections of already-resolved card/requirement data. They are read-only,
@@ -325,6 +342,10 @@ recomputed per request, carry the draft watermark, and persist **nothing**.
 3. **Nursing / technician checklist.** The same resolved items grouped by `responsibleRole`,
    then by `proceduralPhase`, with `openHoldStatus` rendered as the action column
    (open now / have in room / hold unopened / emergency pull / do not substitute).
+   _Built-behavior note (2026-08-09, superseding the grouping description):_ every
+   `responsibleRole` is unauthored (null) in the pinned release, so the built Nursing tab
+   renders an explanatory panel over a single flat list (owner-review F-30) rather than
+   presenting an empty grouping as a distinct view.
 4. **Procurement-gap report.** A projection of the capability view's states 3, 4, 7, and 8 plus
    the audit's needs-review counts: roles with no carried formulary item, proposals-only roles,
    unmapped roles, candidate-grade-only coverage, and spec-dimension gaps (89 / 20 / 58). With
@@ -345,8 +366,9 @@ evaluation. None of them introduce a second resolution implementation.
 
 - **Read-only.** No new persistence of any kind: no new tables, no new Supabase rows, no new
   localStorage keys, no server-side caches beyond the existing in-process catalog singleton.
-- **No database migrations.** The existing unapplied rebuild-provenance migration situation is
-  untouched.
+- **No database migrations.** D1 performs no database operation and does not alter the
+  already-applied preference-card migrations (including the applied rebuild-provenance
+  migration).
 - **No substitution engine and no equivalence claims.** Clinical equivalence groups,
   procurement substitute groups, and local formulary groups do not exist in this repository and
   the slice must not simulate them (concepts 4–6 in
@@ -451,3 +473,25 @@ The slice is acceptable when all of the following hold:
 
 The decision to proceed with this slice, its route names, and its tier assignments belong to
 the physician owner and are tracked in [decision-log.md](./decision-log.md).
+
+---
+
+## 9. Phase D1 implementation status (added 2026-08-08; later addition — sections 1–8 are the Phase D0 specification and are unchanged)
+
+The slice specified above was implemented on branch `claude/device-intelligence-vertical-slice`
+under the D-10 bounded scope. Implementation record: [d1-implementation.md](./d1-implementation.md);
+validation results: [d1-validation.md](./d1-validation.md); review packet:
+[d1-review/](./d1-review/).
+
+Route names finalized as the indicative set: `/[locale]/devices`,
+`/[locale]/devices/[productId]`, `/[locale]/clinical-roles/[roleCode]`, `/[locale]/procedures`,
+`/[locale]/procedures/[procedureCode]`, `/[locale]/procedures/[procedureCode]/readiness` — all
+public-unlisted and noindex per D-03 as modified. `/compare` and `/institution/capabilities`
+were not built. The capability view of §4 shipped as the demo-only readiness view with the
+eight deterministic states; three states (5, 6, 8) are demonstrable only through test fixtures
+against today's data, exactly as §4 anticipates for state 8. One §2.5 note gained precision in
+implementation: the deliberately-blocking APC platform/probe mismatch lives in the test-fixture
+rule set (moved out of the production seed in v0.2), so the workspace shows the incompatible
+demo fixtures and the pinned conditions, and the blocking failure itself is proven by the
+documented fixture-injection pattern through the existing resolver (see
+[d1-review/known-limitations.md](./d1-review/known-limitations.md) item 1).

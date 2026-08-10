@@ -123,7 +123,11 @@ function getDistributionMap() {
 }
 
 let cachedStore: CatalogStore | null = null
-let cachedFuse: Fuse<CatalogProduct> | null = null
+// Keyed by store rather than a single slot: every query function accepts a store parameter
+// (fixtures, and the device-intelligence atlas view over the same generated data), and a
+// process-wide singleton index would silently answer one store's search with another store's
+// products.
+const fuseByStore = new WeakMap<CatalogStore, Fuse<CatalogProduct>>()
 
 export function getCatalogStore(): CatalogStore {
   if (!cachedStore) {
@@ -148,24 +152,25 @@ export function getCatalogStore(): CatalogStore {
 }
 
 function getFuse(store: CatalogStore): Fuse<CatalogProduct> {
-  if (!cachedFuse) {
-    cachedFuse = new Fuse(store.products, {
-      keys: [
-        { name: 'product_name', weight: 0.35 },
-        { name: 'brand_family', weight: 0.2 },
-        { name: 'manufacturerDisplay', weight: 0.15 },
-        { name: 'catalog_number', weight: 0.1 },
-        { name: 'description', weight: 0.1 },
-        { name: 'subcategory', weight: 0.05 },
-        { name: 'primary_category', weight: 0.05 },
-      ],
-      threshold: 0.35,
-      ignoreLocation: true,
-      minMatchCharLength: 2,
-      includeScore: true,
-    })
-  }
-  return cachedFuse
+  const cached = fuseByStore.get(store)
+  if (cached) return cached
+  const fuse = new Fuse(store.products, {
+    keys: [
+      { name: 'product_name', weight: 0.35 },
+      { name: 'brand_family', weight: 0.2 },
+      { name: 'manufacturerDisplay', weight: 0.15 },
+      { name: 'catalog_number', weight: 0.1 },
+      { name: 'description', weight: 0.1 },
+      { name: 'subcategory', weight: 0.05 },
+      { name: 'primary_category', weight: 0.05 },
+    ],
+    threshold: 0.35,
+    ignoreLocation: true,
+    minMatchCharLength: 2,
+    includeScore: true,
+  })
+  fuseByStore.set(store, fuse)
+  return fuse
 }
 
 /** Spec fields worth comparing, in the order they should appear as columns. */
@@ -813,11 +818,37 @@ export interface ProductDetail {
   slots: ProductSlotDetail[]
   sources: ProductSourceDetail[]
   otherManufacturers: CatalogListItem[]
+  /** Denominators behind the capped one-per-manufacturer list, for honest captions. */
+  otherManufacturersTotalProducts: number
+  otherManufacturersTotalManufacturers: number
+  /** The role the discovery list is drawn from: Primary fit preferred, else first mapping. */
+  primaryRoleCode: string | null
+}
+
+export interface ProductDetailOptions {
+  /**
+   * How the one representative per manufacturer is picked for the cross-manufacturer
+   * discovery list:
+   *
+   * - `'catalog_order'` (default) — the preserved pre-D1 behavior: the first candidate in
+   *   catalog order per manufacturer group. Every existing caller (the preference-card
+   *   product pages, catalog QA) keeps this without opting into anything.
+   * - `'primary_fit'` — owner-review F-18: prefer a candidate with a Primary-fit mapping
+   *   for the discovery role, else fall back to catalog order. Only the D1 atlas opts in
+   *   (Codex C-06 re-scoped F-18 to the atlas so the preserved pages keep their legacy
+   *   representative ids).
+   *
+   * The manufacturer set, first-seen order, six-manufacturer cap, and the returned
+   * denominators are identical in both modes; only the representative id within a group
+   * differs.
+   */
+  representativeSelection?: 'catalog_order' | 'primary_fit'
 }
 
 export function getProductDetail(
   productId: string,
   store: CatalogStore = getCatalogStore(),
+  options: ProductDetailOptions = {},
 ): ProductDetail | null {
   const product = store.productById.get(productId)
   if (!product) return null
@@ -871,17 +902,43 @@ export function getProductDetail(
     },
   )
 
-  // Cross-manufacturer discovery: same primary use, different vendor.
+  // Cross-manufacturer discovery: same primary use, different vendor. One representative
+  // per manufacturer, capped at 6 manufacturers in first-seen catalog order — a discovery
+  // pointer, never a matched set. The full per-manufacturer counts are returned so captions
+  // can state the denominators. The representative id within a group follows
+  // `options.representativeSelection`: catalog order (the preserved legacy default — a
+  // group's first candidate) or the F-18 Primary-fit preference the D1 atlas opts into.
   const primaryRole = roleLinks.find((link) => link.role_fit === 'Primary') ?? roleLinks[0]
   const otherManufacturers: CatalogListItem[] = []
+  let otherManufacturersTotalProducts = 0
+  let otherManufacturersTotalManufacturers = 0
   if (primaryRole) {
-    const seenGroups = new Set<string>([product.manufacturerGroupId])
+    const candidatesByGroup = new Map<string, CatalogProduct[]>()
     for (const candidateId of store.productIdsByRole.get(primaryRole.role_code) ?? []) {
-      if (otherManufacturers.length >= 6) break
       const candidate = store.productById.get(candidateId)
-      if (!candidate || seenGroups.has(candidate.manufacturerGroupId)) continue
-      seenGroups.add(candidate.manufacturerGroupId)
-      otherManufacturers.push(toListItem(candidate))
+      if (!candidate || candidate.manufacturerGroupId === product.manufacturerGroupId) continue
+      const group = candidatesByGroup.get(candidate.manufacturerGroupId)
+      if (group) group.push(candidate)
+      else candidatesByGroup.set(candidate.manufacturerGroupId, [candidate])
+      otherManufacturersTotalProducts += 1
+    }
+    otherManufacturersTotalManufacturers = candidatesByGroup.size
+    const primaryFitProductIds =
+      options.representativeSelection === 'primary_fit'
+        ? new Set(
+            (store.productIdsByRole.get(primaryRole.role_code) ?? []).filter((candidateId) =>
+              (store.rolesByProduct.get(candidateId) ?? []).some(
+                (link) => link.role_code === primaryRole.role_code && link.role_fit === 'Primary',
+              ),
+            ),
+          )
+        : null
+    for (const group of candidatesByGroup.values()) {
+      if (otherManufacturers.length >= 6) break
+      const representative = primaryFitProductIds
+        ? (group.find((candidate) => primaryFitProductIds.has(candidate.product_id)) ?? group[0])
+        : group[0]
+      otherManufacturers.push(toListItem(representative))
     }
   }
 
@@ -892,6 +949,9 @@ export function getProductDetail(
     slots,
     sources,
     otherManufacturers,
+    otherManufacturersTotalProducts,
+    otherManufacturersTotalManufacturers,
+    primaryRoleCode: primaryRole?.role_code ?? null,
   }
 }
 

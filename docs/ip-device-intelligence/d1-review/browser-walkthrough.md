@@ -1,0 +1,82 @@
+# Phase D1 review packet — browser walkthrough, viewports, console report
+
+> **HISTORICAL EVIDENCE — pre-owner-correction (captured 2026-08-08).** This walkthrough
+> records what the slice rendered BEFORE the physician-owner corrections (F-01..F-32, commit
+> `900a3e1a`) and before the post-Codex correction pass (C-01..C-08). It is preserved as an
+> audit trail, not as a description of current behavior. Observations superseded since
+> capture include, at minimum:
+>
+> - rows 11–12: the EBUS_TBNA and THERAPEUTIC_BRONCH readiness headlines were
+>   "Ready-with-limitations"; after Codex C-01 the required GENERIC_SUCTION structural gap
+>   makes both **Demo: Not ready**;
+> - row 10 and rows 11–12 state labels: all readiness labels now carry the `Demo:` prefix,
+>   and an advised Ready chip reads "Demo: Ready — see advisory" (F-26/F-27);
+> - row 4 (role page): the per-role amber IFU banner is gone — the IFU statement is ambient
+>   footer text (F-24); short guidance renders under "Selection criteria" (F-21); the
+>   availability line sits under the H1 (F-22); and every role page now carries the C-05
+>   generic-guidance qualifier;
+> - row 3 (device detail): absent fields collapse into "Not recorded in reviewed sources"
+>   (F-16); the primary clinical role renders under the H1 (F-17);
+> - row 9: the modifier list is split into acting vs inert with per-card `releaseState`
+>   (F-01); row 7 phase grouping follows the canonical clinical order (F-03); row 8 predates
+>   the kit-suppression disclosure (F-02);
+> - row 13: universal IFU flags state once at the top of the Training preview (F-24), and
+>   the Nursing tab renders an explanatory panel over a flat list (F-30);
+> - workspace option lists now withhold non-cohort product identities behind aggregate
+>   counts (C-02), and compatibility output withholds statements naming non-cohort
+>   identifiers (C-03).
+>
+> Current behavior is recorded in [../d1-validation.md](../d1-validation.md), the owner
+> records ([owner-review-findings.md](./owner-review-findings.md),
+> [owner-review-dispositions.md](./owner-review-dispositions.md)), and the Codex correction
+> record ([codex-correction-pass.md](./codex-correction-pass.md)).
+
+Phase D1 implementation document (2026-08-08). Performed against the dev server (`npm run dev:claude`, port 3120) with a real Chromium pane; screenshots were reviewed live during the session and are not committed, following this repository's markdown-only documentation convention.
+
+## Screenshot manifest (what was captured and confirmed)
+
+| #   | Page                                                           | Viewport              | Confirmed on screen                                                                                                                                                                                                                                                                                                                                                                  |
+| --- | -------------------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | `/en/devices`                                                  | 1600×900              | Title, cohort badge "753 verified products", cohort rule, exclusion note, labeled search/filter form, results table with `not recorded` italics for missing values, Verified source badges, mono catalog numbers                                                                                                                                                                     |
+| 2   | `/en/devices?q=aScope+5`                                       | 1600×900              | URL-param search: 82 results, aScope 5 family ranked first                                                                                                                                                                                                                                                                                                                           |
+| 3   | `/en/devices/PRD-F60C3305B4`                                   | 1600×900              | All 8 sections (identifiers, dimensions, clinical roles, authored procedure use, compatibility, sources, "Same manufacturer product line", "Other manufacturers with products mapped to this clinical role"); verbatim per-procedure draft statuses inline; discovery captions                                                                                                       |
+| 4   | `/en/clinical-roles/EBUS_SCOPE`                                | 1600×900              | Role code/name/category, discovery-fact membership note, authored selection guidance quoted verbatim, current-IFU advisory, 4 cohort products grouped by manufacturer, slot-usage table (authored selectable + 2 unreviewed proposals)                                                                                                                                               |
+| 5   | `/en/procedures`                                               | 1600×900              | Three exemplar cards with verbatim statuses, template 0.3, release bundle ids, slot counts 15/29/13, requiredness 7-4-4 / 3-21-5 / 3-7-3, per-procedure coverage ladders, draft watermark, exemplar-set note                                                                                                                                                                         |
+| 6   | `/en/procedures/EBUS_TBNA`                                     | 1600×900              | Overview + release bundle, no-clinical-owner statement, ladder tiles 11/0/2/0/2, 15 requirement cards, zone/phase link tabs with `aria-current`                                                                                                                                                                                                                                      |
+| 7   | `/en/procedures/EBUS_TBNA?view=phases&output=gaps`             | 1600×900              | Phase grouping; gap preview: proposals-only (FLUOROSCOPY_C_ARM, GENERIC_SUCTION), unmapped (GENERIC_SPECIMEN, RADIATION_PROTECTION), stand-ins, dimension gaps, "0 carried, 0 preferred" formulary line, no-procurement note                                                                                                                                                         |
+| 8   | `/en/procedures/CHEST_TUBE?output=room`                        | 1600×900              | No-rescue fact sentence; mutual-exclusion lines on both technique modifiers; DIGITAL_DRAINAGE role replacement (GENERIC_DRAINAGE_UNIT → DIGITAL_DRAINAGE_SYSTEM); room-setup zones with demo stand-in badges                                                                                                                                                                         |
+| 9   | `/en/procedures/THERAPEUTIC_BRONCH`                            | 1600×900              | 29 requirements, 26 modifiers, `HIGH_BLEED_RISK` → `MAJOR_AIRWAY_BLEEDING` reachability, RULE-BALLOON-WORKING-CHANNEL rendered as a blocking condition (not an evaluation), 7 cited raw statements (audit-matched), 17 proposal badges                                                                                                                                               |
+| 10  | `/en/procedures/CHEST_TUBE/readiness`                          | 1600×900 and 1024×768 | Both watermarks (DEMO DATA — NOT AN ACTUAL INSTITUTION; DRAFT PROTOTYPE with verbatim status), real-formulary panel (107 rows / 0 carried / 0 preferred → "Not ready — no institutional data recorded."), Not ready headline, state tiles 1/9/1, DRESSING_SECUREMENT row with `missing_required_product_role [procedure_slot: SLOT-4BE1D79D6C]`, 8-item state legend, no-rescue fact |
+| 11  | `/en/procedures/EBUS_TBNA/readiness`                           | 1600×900              | Ready-with-limitations headline, tiles 4/15/0, 7 demo stand-in badges                                                                                                                                                                                                                                                                                                                |
+| 12  | `/en/procedures/THERAPEUTIC_BRONCH/readiness`                  | 1600×900              | Ready-with-limitations headline, tiles 3/54/0, card diagnostic `available_but_unverified [compatibility_rule: RULE-BALLOON-WORKING-CHANNEL]`                                                                                                                                                                                                                                         |
+| 13  | `/en/procedures/EBUS_TBNA?output=training` / `?output=nursing` | 1600×900              | Training: 34 verbatim quote blocks, 15 IFU advisories, authored-only note. Nursing: honest "No responsible role recorded" group with phase subgroups                                                                                                                                                                                                                                 |
+| 14  | `/es/procedures/CHEST_TUBE`                                    | 1024×768              | `lang="es"`, locale-prefixed builder link `/es/preference-cards/new?scenario=chest-tube`                                                                                                                                                                                                                                                                                             |
+| 15  | `/en/preference-cards/catalog/product/PRD-F60C3305B4`          | 1024×768              | Preserved page unchanged, plus the additive "View in Device Atlas (D1 preview)" cross-link                                                                                                                                                                                                                                                                                           |
+
+## Viewport results
+
+`document.documentElement.scrollWidth > window.innerWidth` was asserted false (no horizontal page overflow) at every checked viewport; wide tables scroll inside their own `overflow-x-auto` containers.
+
+| Viewport | Pages checked                                                                      | Horizontal overflow |
+| -------- | ---------------------------------------------------------------------------------- | ------------------- |
+| 1600×900 | devices index, device detail, role, all 3 workspaces, all 3 readiness, output tabs | none                |
+| 1440×900 | EBUS workspace                                                                     | none                |
+| 1280×720 | EBUS workspace                                                                     | none                |
+| 1024×768 | EBUS workspace, CHEST_TUBE readiness, es workspace, preserved product page         | none                |
+
+## Post-adversarial-review re-verification
+
+After the adversarial-review fixes landed (resolver advisories on the readiness evidence
+column, other-warnings disclosure, DEMO watermark on the workspace output previews,
+data-derived no-rescue fact, conditional formulary headline), two live spot-checks confirmed
+the changed views: `/en/procedures/EBUS_TBNA/readiness` renders 11 resolver advisories
+(e.g. "Demo BF-UC190F linear EBUS bronchoscope is prototype-visible and requires current
+local verification." beside its `Ready` row), and `/en/procedures/CHEST_TUBE?output=room`
+carries the DEMO DATA — NOT AN ACTUAL INSTITUTION watermark inside the outputs panel. No
+horizontal overflow in either view.
+
+## Console-error report
+
+- **One D1 defect found and fixed during the walkthrough**: `FORMATTING_ERROR: The intl string context variable "count" was not provided` — the role page used the parameterized `productsHeading` message as a bare `aria-label`. Fixed at the call site; a call-site regression test (`messages.test.ts` — "never renders a parameterized message without its arguments") now guards the whole namespace.
+- **Pre-existing, environment-only**: repeated `POST /api/analytics → 500` and proxy `createServerClient` errors because this worktree has no Supabase environment variables. These fire on every page of the site in this environment (including the preserved preference-card pages), originate outside the D1 code, and do not occur in configured deployments. No D1 route performs any Supabase call.
+- No hydration warnings and no other client errors on the D1 routes after the fix.
