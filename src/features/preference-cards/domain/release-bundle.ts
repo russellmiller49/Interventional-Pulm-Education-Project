@@ -1088,8 +1088,13 @@ function modifierActionEffectSummary(action: ModifierAction): Record<string, unk
     case 'raise_blocking_error':
       return { ...base, payload: { ...payload } }
     default: {
+      // Compile-time exhaustive via the never-binding, and fail-loud at runtime (P91-C5):
+      // an action type this summary does not know must abort the diff — returning anything
+      // here would let the release generator write a malformed impact report.
       const exhaustiveCheck: never = action.actionType
-      return exhaustiveCheck
+      throw new Error(
+        `Unknown modifier action type "${String(exhaustiveCheck)}" in action "${action.id}" while building release-impact evidence for modifier "${action.modifierCode}".`,
+      )
     }
   }
 }

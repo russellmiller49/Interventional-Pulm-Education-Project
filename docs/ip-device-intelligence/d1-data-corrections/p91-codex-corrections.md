@@ -6,11 +6,17 @@ This pass corrects exactly those three. It reopens nothing else: F-06, F-10, the
 packets (F-21/F-30/F-33), the F-09 blocker, and every other verified part of PR #91 are
 untouched except where a regression now protects them.
 
+The targeted Codex verification of this pass (range `8880d453…`) closed P91-C1, P91-C2, and
+P91-C3 and surfaced two residual MEDIUM findings — P91-C4 and P91-C5 — corrected in the
+[final residual section](#final-residual-corrections-p91-c4-p91-c5) below.
+
 | #      | Severity | Finding                                                                                                                                                                                                                                                                                                                                                                                                                                            | Disposition |
 | ------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
 | P91-C1 | HIGH     | F-04 remained wrong in **current custom cards**: server-side save resolution through `release-custom-composition-v1-1` with the EBUS-specific and therapeutic-specific modules selected still placed all six owner-named sampling instruments at specimen_station / specimen_handling. The v1-1 release notes carried this as an accepted limitation; the correction pass rejects that framing — custom-card creation is a real authoring surface. | **FIXED**   |
 | P91-C2 | HIGH     | The F-05 section-level `Drainage` re-phase over-reached on MED_THORACOSCOPY: two **insertable devices** that share the section — `SLOT-57CA4B1298` ("Post-procedure chest tube") and `SLOT-9A1C0491F9` (IPC insertion kit, "IPC placement planned") — moved to pre_induction_or_sedation alongside the actual drainage-preparation hardware.                                                                                                       | **FIXED**   |
 | P91-C3 | MEDIUM   | The canonical release-impact report (`generated/release-impact-report.json`) omitted all six F-04 semantic changes: `diffReleaseBundles` indexed **raw module slots** and never applied composition actions, so an action-borne change was invisible at exactly the boundary the release review reads.                                                                                                                                             | **FIXED**   |
+| P91-C4 | MEDIUM   | Custom-composition payload validation was incomplete: the loader validated payload **values** for only four of the seven action types, and the evaluator cast unvalidated strings — `{ actionType: "set_open_hold_status", payload: { value: "definitely_not_a_status" } }` loaded and propagated the invalid value onto expanded slots.                                                                                                           | **FIXED**   |
+| P91-C5 | MEDIUM   | `modifierActionEffectSummary`'s exhaustiveness was compile-time only: at runtime, an unknown modifier action type **returned** the unknown string instead of throwing, so a poisoned definition set produced malformed release-impact data rather than failing the generator.                                                                                                                                                                      | **FIXED**   |
 
 ## P91-C1 — the custom composition gains a governed action channel
 
@@ -37,7 +43,11 @@ The one generic extension the evaluator needed is `ProcedureCompositionAction.op
 Load-time validation in `demo-context.server.ts` refuses to start when the seed and
 `scenario-ids.ts` disagree on the recipe identity, when an action fails the composition-action
 schema, or when a target resolves to anything other than **exactly one** requirement across
-the offered module set.
+the offered module set. _[Corrected by P91-C4: as first shipped, the load-time payload-value
+checks covered only `set_setup_zone`, `set_procedural_phase`, `set_requiredness`, and
+`set_quantity` — narrower than the loader's own "including its payload values" claim. Every
+action type's payload is now validated by one canonical dispatch; see the final residual
+section.]_
 
 **Content.** Sixteen per-slot actions, each `optionalTarget: true`, targeting the stable
 imported slot ids:
@@ -143,6 +153,98 @@ gates rather than diffed — so the layer is fixture-proven now and becomes live
 releases pin per-bundle definition sets: PR #92's retention mechanism. After PR #92 is
 restacked, its per-bundle set resolution feeds this same diff and F-09's forward releases
 report the OPS-APC-RIGID change natively. PR #92 itself was not modified.
+
+## Final residual corrections (P91-C4, P91-C5)
+
+The targeted Codex verification that closed P91-C1/C2/C3 surfaced two residual MEDIUM
+findings in the validation infrastructure itself. This bounded pass corrects exactly those
+two: validation/runtime contracts and regressions only — **no clinical action, placement,
+membership, release id, release hash, pointer, ledger entry, or previously published
+definition changed**. The one generated-artifact delta is `generated/resolver-release.json`,
+whose per-file source digests and roll-up moved because two resolver source files
+(`expand-recipe-composition.ts`, `effective-slots.ts`) were edited — provenance by
+construction, explicitly not a support boundary, exactly as on every prior source edit.
+
+### P91-C4 — exhaustive composition-action payload validation
+
+**Codex reproduction.** `{ actionType: "set_open_hold_status", payload: { value:
+"definitely_not_a_status" } }` loaded through the custom-composition loader and propagated:
+the loader's payload-value switch covered only four of the seven action types
+(`set_setup_zone`, `set_procedural_phase`, `set_requiredness`, `set_quantity`), and the
+evaluator's `set_open_hold_status` case cast an unvalidated string to `OpenHoldStatus`
+while `append_note` accepted any truthy string and `remove_slot` payloads were ignored
+entirely. Empty payload values were silently skipped rather than refused.
+
+**Corrected contract.** One canonical, strict payload schema per action type
+(`domain/schemas.ts`), and one exported dispatch —
+`parseProcedureCompositionActionPayload` — used by **every** boundary an action crosses:
+
+- the governed custom-composition seed loader (`demo-context.server.ts`);
+- the composition generator reading the governed procedure seed
+  (`build-recipe-compositions.ts`);
+- the evaluator itself (`expandRecipeComposition`), which now parses **before** target
+  matching and applies only validated values — no casts, no truthy-string reads, no silent
+  skip of an empty value — so generated and ledger-retained recipes that never pass a seed
+  loader are enforced at execution.
+
+The payload contracts: `remove_slot` — exactly `{}` (an authored payload is a typo, refused
+rather than ignored); `set_requiredness` — the five requiredness values plus an optional
+non-empty-or-null `dependencyRule`; `set_quantity` — `{ expression }` as a literal quantity
+expression; `set_setup_zone` / `set_procedural_phase` / `set_open_hold_status` — `{ value }`
+over the canonical zone/phase/status vocabularies; `append_note` — `{ note }` non-empty and
+non-whitespace-only, applied verbatim (never trimmed). Every payload schema rejects unknown
+keys. The enumerations now derive from single exported constants
+(`requirednessValues`, `openHoldStatuses`, `procedureCompositionActionTypes`,
+`modifierActionTypes` in `domain/types.ts`), so no schema maintains a second hand-written
+copy of a vocabulary. The action object itself deliberately stays non-strict at the top
+level: the governed seeds' authoring-rationale `reason` field is read by the loaders and
+dropped from what the runtime keeps, exactly as before. An action type outside the union
+throws a descriptive error naming the type, the action id, and the operation — at the
+schema boundary, the dispatch, and the evaluator's own switch default (which previously
+satisfied the compiler with a `never` binding and then **returned** the unknown value at
+runtime).
+
+**Regression suite.** `composition-action-payload-validation.test.ts` (114 tests):
+a fail-closed matrix enumerating every `ProcedureCompositionActionType` — every canonical
+value accepted, invented values / malformed shapes / stray keys / empty-and-whitespace
+notes / payloads on `remove_slot` rejected — proven at the dispatch, at the evaluator with
+in-memory objects that bypass every loader (including an invalid payload on an
+optional-target action whose target is absent), and at the real module-load boundary via a
+doctored copy of `seed/custom-composition.json` (the Codex reproduction string verbatim, an
+unknown action type, an empty note, a `remove_slot` payload — each refuses to load). The
+optional-target semantics the custom correction rides on are re-pinned: a **valid**
+inapplicable action is still silently skipped.
+
+### P91-C5 — unknown modifier action types fail loudly at runtime
+
+**Codex reproduction.** `modifierActionEffectSummary`'s `default` branch bound the action
+type to `never` for the compiler and then returned it at runtime, so a fixture carrying
+`actionType: "future_unknown_action"` flowed a malformed row into release-impact data
+instead of failing. The effective-slot modifier engine (`applyModifierAction`) had the same
+compile-time-only default, which silently resolved a card as though the unknown action had
+never been authored.
+
+**Corrected contract.** Both runtime defaults now throw descriptively —
+`Unknown modifier action type "future_unknown_action" in action "<id>" while building
+release-impact evidence for modifier "<code>".` (release impact) and
+`… while applying modifier "<code>" to the effective requirement set.` (card resolution).
+`diffReleaseBundles` therefore aborts rather than returning any `modifierEffectChanges`
+row, and the release generator — which computes every impact report inside
+`buildReleaseBundles` before `main()` writes a single file — exits nonzero with nothing
+written. At the source boundary, the generated `modifier-definitions.json` merge in
+`demo-context.server.ts` now refuses to load any generated modifier action whose type is
+outside the canonical `modifierActionTypes` (the generated modifiers are informational
+today — zero actions — but they arrive by cast, and the acting modifiers in
+`seed/operational.ts` are compile-time-typed TypeScript).
+
+**Regression suite.** The synthetic F-09 fixture still reports `required` / no dependency →
+`conditional` / "Rigid system in use" for valid actions; swapping the action type for
+`future_unknown_action` (a runtime cast — the TypeScript union is not weakened) makes
+`diffReleaseBundles` throw with the exact message above; a fourteen-action fixture proves
+every current `ModifierActionType` routes through the summary and none reaches the default;
+`buildReleaseBundles` fed a poisoned loader for the med-thoracoscopy supersession fails the
+whole build on the same message; and the effective-slot oracle pins the card-resolution
+throw. Every committed release-impact artifact is byte-identical for valid source data.
 
 ## Superseded statements
 

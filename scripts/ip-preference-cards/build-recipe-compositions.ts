@@ -6,6 +6,7 @@ import {
   type ProcedureSlotRow,
   type SectionMapping,
 } from '../../src/features/preference-cards/domain/procedure-slot-row'
+import { parseProcedureCompositionActionPayload } from '../../src/features/preference-cards/domain/schemas'
 import type {
   ProcedureCompositionAction,
   RecipeModuleReference,
@@ -500,6 +501,13 @@ export function buildRecipeCompositions(input: {
         if (!action.reason) fail(`Composition action ${action.id} has no reason.`)
         if (seenActionIds.has(action.id)) fail(`Composition action id ${action.id} is reused.`)
         seenActionIds.add(action.id)
+        // The same canonical payload dispatch the runtime loader and the evaluator use
+        // (P91-C4): the seed is JSON, so an invalid payload value or an unknown action type
+        // must fail the build here rather than load into the generated artifact and fail on
+        // someone's card.
+        parseProcedureCompositionActionPayload(action, {
+          operation: `building the ${composition.procedureCode} composition from the governed seed`,
+        })
       }
       // Where this procedure wants each requirement, taken from the reviewed template it
       // was imported from. A row absorbed into a shared requirement contributes its own

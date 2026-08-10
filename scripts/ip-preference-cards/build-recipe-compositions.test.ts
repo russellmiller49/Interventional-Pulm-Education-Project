@@ -75,6 +75,28 @@ describe('recipe composition build', () => {
     expect(() => buildRecipeCompositions(input)).toThrow(/unknown definition slot/)
   })
 
+  it('rejects a composition action whose payload value is invalid (P91-C4)', () => {
+    // The governed seed is JSON: an invented payload value must fail the build through the
+    // same canonical dispatch the runtime loader and the evaluator use, not load into the
+    // generated artifact and surface later on someone's card.
+    const input = baseInput()
+    const compositionFile = input.compositionFile as unknown as {
+      compositions: {
+        procedureCode: string
+        compositionActions: { actionType: string; payload: Record<string, unknown> }[]
+      }[]
+    }
+    const withActions = compositionFile.compositions.find(
+      (composition) => composition.compositionActions.length > 0,
+    )!
+    const action = withActions.compositionActions.find(
+      (candidate) => candidate.actionType === 'set_setup_zone',
+    )!
+    action.payload = { value: 'definitely_not_a_zone' }
+
+    expect(() => buildRecipeCompositions(input)).toThrow(/Invalid set_setup_zone payload/)
+  })
+
   it('rejects two requirements claiming the same imported slot', () => {
     const input = baseInput()
     const moduleMap = input.moduleMap as unknown as {

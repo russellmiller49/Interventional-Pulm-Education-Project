@@ -23,7 +23,10 @@ import {
 import { expandRecipeComposition } from '../domain/expand-recipe-composition'
 import { diffReleaseBundles } from '../domain/release-bundle'
 import { parsePersistedSnapshot } from '../schemas/persisted-snapshot'
+import { modifierActionTypes } from '../domain/types'
 import type {
+  ModifierAction,
+  ModifierDefinition,
   RecipeModuleVersion,
   RecipeSlot,
   RecipeVersion,
@@ -827,6 +830,82 @@ describe('P91-C3 — authored modifier-effect changes are reported, not just a s
     // revises the set — the PR #92 F-09 shape the fixture above mirrors.
     for (const report of getReleaseImpactReports()) {
       expect(report.modifierEffectChanges).toEqual([])
+    }
+  })
+})
+
+describe('P91-C5 — an unknown modifier action type fails release impact loudly, never partially', () => {
+  /** The fixture side with the revision modifier's actions swapped for `actions`. */
+  function withRevisionModifierActions(
+    side: ReturnType<typeof createModifierRevisionFixture>['next'],
+    actions: ModifierAction[],
+  ) {
+    return {
+      bundle: side.bundle,
+      sources: {
+        ...side.sources,
+        modifiers: side.sources.modifiers.map(
+          (definition): ModifierDefinition =>
+            definition.code === MODIFIER_REVISION_MODIFIER_CODE
+              ? { ...definition, actions }
+              : definition,
+        ),
+      },
+    }
+  }
+
+  it('diffReleaseBundles throws and names the action, its modifier, and the operation', () => {
+    // The compile-time never-check used to *return* the unknown string at runtime, so a
+    // set carrying an action type the summary does not know produced malformed
+    // release-impact data instead of failing. Cast in, exactly as untrusted data would
+    // arrive — the TypeScript union is not weakened.
+    const fixture = createModifierRevisionFixture()
+    const revisionModifier = fixture.next.sources.modifiers.find(
+      (definition) => definition.code === MODIFIER_REVISION_MODIFIER_CODE,
+    ) as ModifierDefinition
+    const poisoned = withRevisionModifierActions(
+      fixture.next,
+      revisionModifier.actions.map((action) => ({
+        ...action,
+        actionType: 'future_unknown_action' as ModifierAction['actionType'],
+      })),
+    )
+    // A throw is also the proof that no modifierEffectChanges rows are returned: the report
+    // is never constructed.
+    expect(() => diffReleaseBundles(fixture.previous, poisoned)).toThrow(
+      `Unknown modifier action type "future_unknown_action" in action "${MODIFIER_REVISION_ACTION_ID}" ` +
+        `while building release-impact evidence for modifier "${MODIFIER_REVISION_MODIFIER_CODE}".`,
+    )
+  })
+
+  it('every current ModifierActionType routes through the effect summary — none reaches the default', () => {
+    // Fourteen actions, one per authored type, changed only in `sequence` between the two
+    // sides: the diff must summarize every one of them on both sides and report fourteen
+    // changed rows. A type falling into the fail-loud default would abort the diff instead.
+    const fixture = createModifierRevisionFixture()
+    const actionsAt = (sequenceBase: number): ModifierAction[] =>
+      modifierActionTypes.map((actionType, index) => ({
+        id: `coverage-${actionType}`,
+        modifierCode: MODIFIER_REVISION_MODIFIER_CODE,
+        sequence: sequenceBase + index,
+        actionType,
+        targetSlotId: 'SLOT-COVERAGE',
+        payload: {},
+      }))
+    const report = diffReleaseBundles(
+      withRevisionModifierActions(fixture.previous, actionsAt(100)),
+      withRevisionModifierActions(fixture.next, actionsAt(200)),
+    )
+    const coverageRows = report.modifierEffectChanges.filter(
+      (change) => change.actionId?.startsWith('coverage-') ?? false,
+    )
+    expect(coverageRows).toHaveLength(modifierActionTypes.length)
+    expect(new Set(coverageRows.map((change) => change.actionType))).toEqual(
+      new Set(modifierActionTypes),
+    )
+    for (const row of coverageRows) {
+      expect(row.kind).toBe('changed')
+      expect(row.changedFields).toContain('sequence')
     }
   })
 })

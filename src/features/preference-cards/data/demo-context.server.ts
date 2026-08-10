@@ -17,11 +17,8 @@ import {
   expandDefaultRecipeComposition,
 } from '../domain/expand-recipe-composition'
 import {
+  parseProcedureCompositionActionPayload,
   procedureCompositionActionSchema,
-  quantityExpressionSchema,
-  setProceduralPhasePayloadSchema,
-  setRequirednessPayloadSchema,
-  setSetupZonePayloadSchema,
 } from '../domain/schemas'
 import { selectionsFromResolvedCard } from '../domain/hospital-selection'
 import { retainedRecipeById, type CompositionLedger } from '../domain/composition-ledger'
@@ -40,6 +37,7 @@ import {
   CUSTOM_COMPOSITION_SCENARIO_ID,
 } from './scenario-ids'
 import { resolveCard } from '../domain/resolve-card'
+import { modifierActionTypes } from '../domain/types'
 import type {
   BuildCardInput,
   BuildContext,
@@ -205,6 +203,19 @@ const scenarioDefinitions = generatedScenariosJson as unknown as ScenarioDefinit
 const scenarioById = new Map(scenarioDefinitions.map((scenario) => [scenario.id, scenario]))
 
 const generatedModifierDefinitions = generatedModifiersJson as unknown as ModifierDefinition[]
+// The generated modifiers are informational today (zero actions), but they arrive by cast,
+// not by parse — so if a workbook regeneration ever authors one, an action type the
+// modifier engine and the release-impact summary do not know must refuse to load here
+// rather than reach their runtime switches (P91-C5).
+for (const modifier of generatedModifierDefinitions) {
+  for (const action of modifier.actions ?? []) {
+    if (!(modifierActionTypes as readonly string[]).includes(action.actionType)) {
+      throw new Error(
+        `Generated modifier ${modifier.code} action "${action.id}" carries unknown action type "${action.actionType}" (modifier-definitions.json). Known types: ${modifierActionTypes.join(', ')}.`,
+      )
+    }
+  }
+}
 const handTunedModifierCodes = new Set(operationalModifiers.map((modifier) => modifier.code))
 const allModifierDefinitions: ModifierDefinition[] = [
   ...operationalModifiers,
@@ -353,8 +364,10 @@ const customCompositionScenario: ScenarioDefinition = {
  * - the seed and `scenario-ids.ts` must agree on the recipe version identity, or a saved
  *   card's pin and the composition it resolves through would describe different things;
  * - every action must satisfy the composition-action schema, **including its payload
- *   values** — a misspelled zone or phase must refuse to load rather than surface as a raw
- *   parse error on someone's card;
+ *   values for every action type** (`parseProcedureCompositionActionPayload`, the same
+ *   dispatch the evaluator runs) — a misspelled zone, phase, requiredness, open/hold
+ *   status, an empty note, a malformed quantity, a stray payload key, or a payload on
+ *   `remove_slot` must refuse to load rather than surface later on someone's card;
  * - every action's target must resolve to **exactly one** requirement across the offered
  *   module set — zero would be a dead action nothing can ever apply, and two would be the
  *   ambiguity `recipe_composition_action_ambiguous` exists to block, found at authoring
@@ -407,25 +420,13 @@ const customCompositionActions: ProcedureCompositionAction[] = (() => {
     }
     seenTargetActionTypes.add(targetActionType)
 
-    // The payload values, not just the shape: these are the same parses the evaluator runs
-    // at card time, moved to load so a bad value is an authoring failure instead of a raw
-    // resolution error.
-    switch (parsed.actionType) {
-      case 'set_setup_zone':
-        setSetupZonePayloadSchema.parse(parsed.payload)
-        break
-      case 'set_procedural_phase':
-        setProceduralPhasePayloadSchema.parse(parsed.payload)
-        break
-      case 'set_requiredness':
-        setRequirednessPayloadSchema.parse(parsed.payload)
-        break
-      case 'set_quantity':
-        quantityExpressionSchema.parse(parsed.payload.expression)
-        break
-      default:
-        break
-    }
+    // The payload values, not just the shape — for **every** action type, not a subset
+    // (P91-C4): this is the same canonical dispatch the evaluator runs at card time, moved
+    // to load so a bad value is an authoring failure instead of a raw resolution error. An
+    // action type it does not know throws rather than passing through unvalidated.
+    parseProcedureCompositionActionPayload(parsed, {
+      operation: `validating seed/custom-composition.json for ${CUSTOM_COMPOSITION_RECIPE_ID}`,
+    })
 
     const matchedRequirementKeys = new Set<string>()
     for (const moduleVersion of recipeModules) {
