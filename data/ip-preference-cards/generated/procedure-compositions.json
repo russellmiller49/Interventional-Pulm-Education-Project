@@ -506,12 +506,12 @@
     ]
   },
   {
-    "recipeVersionId": "recipe-med-thoracoscopy-v0-2",
+    "recipeVersionId": "recipe-med-thoracoscopy-v0-3",
     "scenarioId": "med-thoracoscopy",
     "procedureCode": "MED_THORACOSCOPY",
     "version": "1.0",
     "recipeName": "Medical thoracoscopy / pleuroscopy",
-    "recipeVersion": "0.2",
+    "recipeVersion": "0.3",
     "sourceTemplateVersion": "0.3",
     "governanceState": "draft",
     "clinicalOwner": null,
@@ -561,7 +561,44 @@
         "sequence": 20
       }
     ],
-    "compositionActions": []
+    "compositionActions": [
+      {
+        "id": "med-thoracoscopy-chest-tube-zone",
+        "sequence": 10,
+        "actionType": "set_setup_zone",
+        "targetSlotId": "SLOT-57CA4B1298",
+        "payload": {
+          "value": "sterile_field"
+        }
+      },
+      {
+        "id": "med-thoracoscopy-chest-tube-phase",
+        "sequence": 11,
+        "actionType": "set_procedural_phase",
+        "targetSlotId": "SLOT-57CA4B1298",
+        "payload": {
+          "value": "therapeutic"
+        }
+      },
+      {
+        "id": "med-thoracoscopy-ipc-kit-zone",
+        "sequence": 12,
+        "actionType": "set_setup_zone",
+        "targetSlotId": "SLOT-9A1C0491F9",
+        "payload": {
+          "value": "sterile_field"
+        }
+      },
+      {
+        "id": "med-thoracoscopy-ipc-kit-phase",
+        "sequence": 13,
+        "actionType": "set_procedural_phase",
+        "targetSlotId": "SLOT-9A1C0491F9",
+        "payload": {
+          "value": "therapeutic"
+        }
+      }
+    ]
   },
   {
     "recipeVersionId": "recipe-perc-trach-v0-1",

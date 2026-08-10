@@ -106,6 +106,9 @@ export const procedureCompositionActionSchema = z.object({
   targetRequirementKey: z.string().min(1).optional(),
   targetSlotId: z.string().min(1).optional(),
   targetRoleCode: z.string().min(1).optional(),
+  // See `ProcedureCompositionAction.optionalTarget`: matching nothing is expected for a
+  // composition whose modules are chosen per card, and matching two requirements blocks.
+  optionalTarget: z.boolean().optional(),
   payload: z.record(z.string(), z.unknown()),
 })
 

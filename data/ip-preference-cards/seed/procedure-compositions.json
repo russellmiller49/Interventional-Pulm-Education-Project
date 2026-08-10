@@ -333,8 +333,8 @@
     },
     {
       "procedureCode": "MED_THORACOSCOPY",
-      "recipeVersionId": "recipe-med-thoracoscopy-v0-2",
-      "recipeVersion": "0.2",
+      "recipeVersionId": "recipe-med-thoracoscopy-v0-3",
+      "recipeVersion": "0.3",
       "version": "1.0",
       "moduleReferences": [
         {
@@ -350,7 +350,40 @@
           "sequence": 20
         }
       ],
-      "compositionActions": []
+      "compositionActions": [
+        {
+          "id": "med-thoracoscopy-chest-tube-zone",
+          "sequence": 10,
+          "actionType": "set_setup_zone",
+          "targetSlotId": "SLOT-57CA4B1298",
+          "payload": { "value": "sterile_field" },
+          "reason": "Codex correction P91-C2 (2026-08-10): the post-thoracoscopy chest tube is an insertable device placed through the sterile field, not drainage-preparation hardware, so the section-level F-05 re-phase over-reached when it moved this row with its Drainage section. Placement matches the governed home-procedure precedent CHEST_TUBE SLOT-708736B8C2 (CHEST_TUBE_SMALL_BORE, section Tube -> sterile_field)."
+        },
+        {
+          "id": "med-thoracoscopy-chest-tube-phase",
+          "sequence": 11,
+          "actionType": "set_procedural_phase",
+          "targetSlotId": "SLOT-57CA4B1298",
+          "payload": { "value": "therapeutic" },
+          "reason": "Codex correction P91-C2 (2026-08-10): the chest tube is placed during the procedure, matching the governed home-procedure precedent CHEST_TUBE SLOT-708736B8C2 (section Tube -> therapeutic); it is not primed pre-induction with the drainage unit."
+        },
+        {
+          "id": "med-thoracoscopy-ipc-kit-zone",
+          "sequence": 12,
+          "actionType": "set_setup_zone",
+          "targetSlotId": "SLOT-9A1C0491F9",
+          "payload": { "value": "sterile_field" },
+          "reason": "Codex correction P91-C2 (2026-08-10): the IPC insertion kit is an insertable device placed through the sterile field when 'IPC placement planned', not drainage-preparation hardware, so the section-level F-05 re-phase over-reached when it moved this row with its Drainage section. Placement matches the governed home-procedure precedent IPC_PLACEMENT SLOT-1BCF3D0702 (IPC_INSERTION_KIT, section Catheter system -> sterile_field)."
+        },
+        {
+          "id": "med-thoracoscopy-ipc-kit-phase",
+          "sequence": 13,
+          "actionType": "set_procedural_phase",
+          "targetSlotId": "SLOT-9A1C0491F9",
+          "payload": { "value": "therapeutic" },
+          "reason": "Codex correction P91-C2 (2026-08-10): the IPC is inserted during the procedure, matching the governed home-procedure precedent IPC_PLACEMENT SLOT-1BCF3D0702 (section Catheter system -> therapeutic); it is not primed pre-induction with the drainage unit."
+        }
+      ]
     },
     {
       "procedureCode": "BRONCH_ABLATION",

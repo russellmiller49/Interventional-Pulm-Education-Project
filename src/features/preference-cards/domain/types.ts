@@ -173,6 +173,22 @@ export interface ProcedureCompositionAction {
   targetRequirementKey?: string
   targetSlotId?: string
   targetRoleCode?: string
+  /**
+   * The action applies only when its target requirement is present in the composed
+   * selection; matching nothing is expected rather than an authoring error.
+   *
+   * Absent (the default), an unmatched action raises `recipe_composition_action_unmatched`,
+   * which is right for a procedure whose modules are fixed: the target is always composed, so
+   * a miss means the authoring is wrong. It is wrong for a composition whose modules are
+   * *chosen per card* — the custom module composition — where a selection that omits the
+   * target's module is an ordinary card, not a defect, and warning on every such card would
+   * teach readers to ignore the warning that matters.
+   *
+   * An optional-target action is authored as a statement about exactly one requirement, so
+   * matching *more than one* is treated as the identity assumption breaking and blocks
+   * (`recipe_composition_action_ambiguous`) instead of silently modifying both.
+   */
+  optionalTarget?: boolean
   payload: Record<string, unknown>
 }
 

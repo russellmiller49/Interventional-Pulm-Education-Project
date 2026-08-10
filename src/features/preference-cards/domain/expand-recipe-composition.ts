@@ -417,11 +417,33 @@ export function expandRecipeComposition(input: ExpandRecipeCompositionInput): Ex
   for (const action of actions) {
     const affected = matchingSlots(slots, action)
     if (affected.length === 0) {
+      // An optional-target action whose requirement is not in the selected composition is
+      // simply not applicable to this card. It leaves no message and no trace on purpose:
+      // the trace is hashed, and stamping the absent target's identity into every card that
+      // did not select its module would move those cards' identity for a line they never had.
+      if (action.optionalTarget) continue
       emitMessage(emitter, {
         id: `composition-action-unmatched-${action.id}`,
         severity: 'warning',
         code: 'recipe_composition_action_unmatched',
         message: `Composition action ${action.id} on ${recipe.name} matched no requirement.`,
+        sourceType: 'recipe',
+        sourceId: recipe.id,
+      })
+      continue
+    }
+    if (action.optionalTarget && affected.length > 1) {
+      // An optional-target action is authored against exactly one requirement. Two matches
+      // mean the slot-identity assumption broke — silently modifying both would apply a
+      // reviewed per-requirement statement to a requirement nobody reviewed it for.
+      emitMessage(emitter, {
+        id: `composition-action-ambiguous-${action.id}`,
+        severity: 'blocking',
+        code: 'recipe_composition_action_ambiguous',
+        message: `Composition action ${action.id} on ${recipe.name} matched ${affected.length} requirements (${affected
+          .map((slot) => slot.requirementKey)
+          .sort()
+          .join(', ')}); an optional-target action must identify exactly one.`,
         sourceType: 'recipe',
         sourceId: recipe.id,
       })
