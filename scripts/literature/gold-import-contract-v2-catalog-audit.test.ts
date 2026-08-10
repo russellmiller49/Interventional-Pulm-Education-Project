@@ -202,6 +202,36 @@ describe('protected V2 complete production catalog audit', () => {
     ).not.toThrow()
   })
 
+  it('models the PostgreSQL SQL-language dependency omission exactly', () => {
+    const details = completeDetails()
+    const sqlFunction = details.functions[0]!
+    sqlFunction.language = 'sql'
+    sqlFunction.definition = `create function public.${sqlFunction.function_name}() returns void language sql as 'select'`
+    details.functionDependencies = details.functionDependencies.filter(
+      (dependency) =>
+        !(
+          dependency.function_name === sqlFunction.function_name &&
+          dependency.identity_arguments === sqlFunction.identity_arguments &&
+          dependency.referenced_class === 'pg_language'
+        ),
+    )
+
+    expect(() =>
+      validateProtectedV2CompleteCatalogDetails(details, 'disposable_clone'),
+    ).not.toThrow()
+
+    details.functionDependencies.push({
+      dependency_type: 'n',
+      function_name: sqlFunction.function_name,
+      identity_arguments: sqlFunction.identity_arguments,
+      referenced_class: 'pg_language',
+      referenced_identity: 'language sql',
+    })
+    expect(() => validateProtectedV2CompleteCatalogDetails(details, 'disposable_clone')).toThrow(
+      'Protected V2 function dependency inventory is not the exact declared set.',
+    )
+  })
+
   it.each(DETAIL_DRIFT_CASES)('rejects %s drift before identity issuance', (_label, mutate) => {
     expect(() =>
       validateProtectedV2CompleteCatalogDetails(drift(mutate), 'disposable_clone'),

@@ -655,25 +655,38 @@ export function validateProtectedV2CompleteCatalogDetails(
     )
     dependencyIdentities.set(key, values)
   }
-  const dependenciesExact = [...functionsByIdentity].every(([key, function_]) => {
-    const expected = [
-      canonicalJson({
-        dependencyType: 'n',
-        referencedClass: 'pg_language',
-        referencedIdentity: `language ${String(function_.language)}`,
-      }),
-      canonicalJson({
-        dependencyType: 'n',
-        referencedClass: 'pg_namespace',
-        referencedIdentity: 'schema public',
-      }),
-    ].sort(compareCodeUnits)
+  const expectedDependenciesByIdentity = new Map(
+    [...functionsByIdentity].map(([key, function_]) => {
+      const expected = [
+        ...(function_.language === 'sql'
+          ? []
+          : [
+              canonicalJson({
+                dependencyType: 'n',
+                referencedClass: 'pg_language',
+                referencedIdentity: `language ${String(function_.language)}`,
+              }),
+            ]),
+        canonicalJson({
+          dependencyType: 'n',
+          referencedClass: 'pg_namespace',
+          referencedIdentity: 'schema public',
+        }),
+      ].sort(compareCodeUnits)
+      return [key, expected] as const
+    }),
+  )
+  const dependenciesExact = [...expectedDependenciesByIdentity].every(([key, expected]) => {
     return (
       canonicalJson((dependencyIdentities.get(key) ?? []).sort(compareCodeUnits)) ===
       canonicalJson(expected)
     )
   })
-  if (!dependenciesExact || dependencies.length !== functions.length * 2) {
+  const expectedDependencyCount = [...expectedDependenciesByIdentity.values()].reduce(
+    (count, expected) => count + expected.length,
+    0,
+  )
+  if (!dependenciesExact || dependencies.length !== expectedDependencyCount) {
     throw new Error('Protected V2 function dependency inventory is not the exact declared set.')
   }
   return details
