@@ -1788,10 +1788,6 @@ function validateSemanticEvidenceDocuments(input: {
       validatedSourceAuthorizations[0].v2PreImportState.effectiveStateSha256 ||
     exactPlan.expectedPhysicalStateSha256 !==
       validatedSourceAuthorizations[0].v2PreImportState.physicalStateSha256 ||
-    validatedSourceAuthorizations[0].v2PreImportState.effectiveStateSha256 !==
-      validatedSourceAuthorizations[0].currentDatabase.effectiveStateSha256 ||
-    validatedSourceAuthorizations[0].v2PreImportState.physicalStateSha256 !==
-      validatedSourceAuthorizations[0].currentDatabase.physicalStateSha256 ||
     !exactJson(exactPlan.counts, validatedSourceAuthorizations[0].actionCounts) ||
     canonicalCompensationReceipt.planSha256 !== exactCompensationPlan.binding.contentSha256 ||
     canonicalCompensationReceipt.operationId !== exactCompensationPlan.operationId ||

@@ -289,6 +289,21 @@ describe('gold import contract V2 forward-repair backup', () => {
     expect(Object.isFrozen(verified.sourceAuthorizationSet)).toBe(true)
   })
 
+  it('binds the plan to the post-migration V2 state without conflating it with the V1 snapshot', () => {
+    const verified = verifyGoldImportCompensationPackageV2IntrinsicFiles(exactPackageFiles(fixture))
+
+    expect(verified.importPlan.expectedEffectiveStateSha256).toBe(
+      verified.sourceAuthorizationSet.v2PreImportState.effectiveStateSha256,
+    )
+    expect(verified.importPlan.expectedPhysicalStateSha256).toBe(
+      verified.sourceAuthorizationSet.v2PreImportState.physicalStateSha256,
+    )
+    expect(verified.sourceAuthorizationSet.v2PreImportState).not.toEqual({
+      effectiveStateSha256: verified.sourceAuthorizationSet.currentDatabase.effectiveStateSha256,
+      physicalStateSha256: verified.sourceAuthorizationSet.currentDatabase.physicalStateSha256,
+    })
+  })
+
   it('rejects a repaired source/plan/descriptor migration envelope against the committed catalog', () => {
     const files = exactPackageFiles(fixture)
     const source = JSON.parse(files.get('source-authorization-set-v4.json')!.toString('utf8')) as {

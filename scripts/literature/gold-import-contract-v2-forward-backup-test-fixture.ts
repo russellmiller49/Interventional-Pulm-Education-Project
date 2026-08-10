@@ -109,6 +109,10 @@ const TIME = '2026-08-10T12:00:00.000Z'
 const SHA_AFTER_IMPORT = 'a'.repeat(64)
 const SHA_AFTER_IMPORT_PHYSICAL = 'b'.repeat(64)
 const SHA_AFTER_COMPENSATION_PHYSICAL = 'c'.repeat(64)
+const V2_PRE_IMPORT_EFFECTIVE_STATE_SHA256 =
+  'f79b825c70f0032642cd877ffa06238b6965dec479c6855105e45ee64bd01f4c'
+const V2_PRE_IMPORT_PHYSICAL_STATE_SHA256 =
+  'afce1a294fd5343a9127d86f6d210baabe8888ee9dc77b3ee3fcb3559d6741dd'
 const EXACT_NOTE_DISPOSITION_AUDIT = {
   authorizationTemplateRequired: false,
   disposition: 'preserve_current_database_note',
@@ -278,8 +282,8 @@ function exactReadyAudit(repositoryHead: string) {
     target: 'disposable_clone' as const,
     testSplitLocked: true,
     v2PreImportState: {
-      effectiveStateSha256: GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.effectiveStateSha256,
-      physicalStateSha256: GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.physicalStateSha256,
+      effectiveStateSha256: V2_PRE_IMPORT_EFFECTIVE_STATE_SHA256,
+      physicalStateSha256: V2_PRE_IMPORT_PHYSICAL_STATE_SHA256,
     },
   }
 }
@@ -352,8 +356,8 @@ function buildSourceAuthorizationAndPlan(repositoryHead: string) {
     expectedCatalog,
     migrationSha256: expectedCatalog.migration.sha256,
     orderedSetNormalizationLedger: [],
-    v2PreImportEffectiveStateSha256: GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.effectiveStateSha256,
-    v2PreImportPhysicalStateSha256: GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.physicalStateSha256,
+    v2PreImportEffectiveStateSha256: V2_PRE_IMPORT_EFFECTIVE_STATE_SHA256,
+    v2PreImportPhysicalStateSha256: V2_PRE_IMPORT_PHYSICAL_STATE_SHA256,
   })
   const sourceBytes = canonicalGoldImportSourceAuthorizationSetV4Bytes(sourceAuthorization)
   const sourceSha256 = sha256Bytes(sourceBytes)
@@ -424,8 +428,8 @@ function buildSourceAuthorizationAndPlan(repositoryHead: string) {
       repositoryCommitSha: repositoryHead,
       targetDatabase: 'local',
     },
-    expectedEffectiveStateSha256: GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.effectiveStateSha256,
-    expectedPhysicalStateSha256: GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.physicalStateSha256,
+    expectedEffectiveStateSha256: V2_PRE_IMPORT_EFFECTIVE_STATE_SHA256,
+    expectedPhysicalStateSha256: V2_PRE_IMPORT_PHYSICAL_STATE_SHA256,
     expectedPostEffectiveStateSha256: SHA_AFTER_IMPORT,
     kind: 'import',
     noteDispositionAuditSha256: GOLD_IMPORT_NOTE_DISPOSITION_AUDIT_SHA256_V2,

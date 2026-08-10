@@ -1263,10 +1263,6 @@ export function verifyGoldImportCompensationPackageV2IntrinsicFiles(
     plan.expectedEffectiveStateSha256 !==
       sourceAuthorization.v2PreImportState.effectiveStateSha256 ||
     plan.expectedPhysicalStateSha256 !== sourceAuthorization.v2PreImportState.physicalStateSha256 ||
-    sourceAuthorization.v2PreImportState.effectiveStateSha256 !==
-      sourceAuthorization.currentDatabase.effectiveStateSha256 ||
-    sourceAuthorization.v2PreImportState.physicalStateSha256 !==
-      sourceAuthorization.currentDatabase.physicalStateSha256 ||
     canonicalJson(plan.counts) !== canonicalJson(sourceAuthorization.actionCounts) ||
     plan.noteDispositionAuditSha256 !== sourceAuthorization.noteDispositionAuditSha256 ||
     plan.booleanNormalizationLedgerSha256 !==
