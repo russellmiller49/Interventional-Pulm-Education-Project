@@ -259,6 +259,9 @@ describe('protected V2 complete production catalog audit', () => {
     ]) {
       expect(PROTECTED_V2_COMPLETE_CATALOG_DETAIL_SQL).toContain(token)
     }
+    expect(PROTECTED_V2_COMPLETE_CATALOG_DETAIL_SQL).toContain(
+      "'tables', coalesce((select pg_catalog.jsonb_agg(pg_catalog.to_jsonb(row) - 'oid'",
+    )
     expect(v2SecurityIntrospectionSql()).toContain("'tablePrivileges'")
   })
 

@@ -398,7 +398,7 @@ select pg_catalog.jsonb_build_object(
   'isolation', current_setting('transaction_isolation'),
   'currentUser', current_user,
   'serverVersionNum', current_setting('server_version_num'),
-  'tables', coalesce((select pg_catalog.jsonb_agg(pg_catalog.to_jsonb(row)
+  'tables', coalesce((select pg_catalog.jsonb_agg(pg_catalog.to_jsonb(row) - 'oid'
     order by row.table_name collate "C") from scoped_tables as row), '[]'::jsonb),
   'columns', coalesce((select pg_catalog.jsonb_agg(pg_catalog.to_jsonb(row)
     order by row.table_name collate "C", row.ordinal_position) from columns as row), '[]'::jsonb),
