@@ -112,7 +112,8 @@
     "ip-cards:gudid": "tsx scripts/ip-preference-cards/build-gudid-index.ts",
     "ip-cards:additions": "tsx scripts/ip-preference-cards/build-catalog-additions.ts",
     "ip-cards:gudid-confirm": "tsx scripts/ip-preference-cards/gudid-confirm.ts",
-    "ip-intel:audit": "tsx scripts/ip-device-intelligence/audit-data-readiness.ts"
+    "ip-intel:audit": "tsx scripts/ip-device-intelligence/audit-data-readiness.ts",
+    "ip-intel:verify-beta": "tsx scripts/ip-device-intelligence/verify-unlisted-beta.ts"
   },
   "engines": {
     "node": ">=20.19.0"

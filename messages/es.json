@@ -8484,6 +8484,7 @@
       "modifierConflicts": "Mutually exclusive with: {codes}",
       "effects": {
         "adds": "Adds {count, plural, one {# requirement} other {# requirements}}",
+        "addedConditional": "{label} (condicional — {rule})",
         "removes": "Removes {count, plural, one {# requirement} other {# requirements}}",
         "requiredness": "{label}: requiredness {from} → {to}",
         "roleReplacement": "{label}: role {from} → {to}",

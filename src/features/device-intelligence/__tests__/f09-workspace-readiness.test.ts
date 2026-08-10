@@ -27,6 +27,9 @@ describe('F-09 on the THERAPEUTIC_BRONCH workspace', () => {
     expect(rigidApplicator).toBeDefined()
     expect(rigidApplicator.roleCode).toBe('APC_APPLICATOR_RIGID')
     expect(rigidApplicator.requiredness).toBe('conditional')
+    expect(rigidApplicator.dependencyRule).toBe('Rigid system in use')
+    // Any other conditional addition would carry its own rule the same way — the field is
+    // generic view-model data, not APC-specific copy.
     // The other APC additions keep their authored requiredness — the correction moved one
     // slot, and the card shows exactly that.
     for (const requirement of added.filter((candidate) => candidate.id !== 'OPS-APC-RIGID')) {

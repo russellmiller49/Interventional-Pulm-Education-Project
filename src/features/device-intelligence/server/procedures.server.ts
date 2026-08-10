@@ -341,7 +341,14 @@ export interface ModifierEffectSummary {
   conflictsWith: string[]
   /** Derived through `expandEffectiveSlots` — the canonical expansion, not a re-implementation. */
   effects: {
-    addedRequirements: { id: string; label: string; roleCode: string; requiredness: string }[]
+    addedRequirements: {
+      id: string
+      label: string
+      roleCode: string
+      requiredness: string
+      /** The authored dependency prose for a conditional requirement, null otherwise. */
+      dependencyRule: string | null
+    }[]
     removedRequirements: { id: string; label: string; roleCode: string }[]
     requirednessChanges: { id: string; label: string; from: string; to: string }[]
     roleReplacements: { id: string; label: string; fromRole: string; toRole: string }[]
@@ -472,6 +479,7 @@ function modifierEffects(
       label: slot.label,
       roleCode: slot.roleCode,
       requiredness: slot.requiredness,
+      dependencyRule: slot.dependencyRule,
     }))
   const removedRequirements = baseline.slots
     .filter((slot) => !withById.has(slot.id))
