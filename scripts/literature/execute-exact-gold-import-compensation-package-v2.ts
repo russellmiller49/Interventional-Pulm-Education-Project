@@ -41,6 +41,7 @@ import {
   buildContractInvariantIdentity,
   buildDeploymentProfileIdentity,
   type EnrichedRpcMetadata,
+  type RpcAclEntry,
 } from './gold-import-compensation-contract-reconciliation'
 import {
   buildContractDiagnosticsSql,
@@ -141,6 +142,21 @@ function functionRecord(identity: SchemaSecurityDefinitionIdentity, name: string
   return matches[0]!
 }
 
+export function renderOwnerFirstFunctionRawAclV2(
+  owner: string,
+  grants: readonly RpcAclEntry[],
+): string {
+  const ordered = [...grants].sort((left, right) => {
+    const leftOwnerRank = left.grantee === owner ? 0 : 1
+    const rightOwnerRank = right.grantee === owner ? 0 : 1
+    if (leftOwnerRank !== rightOwnerRank) return leftOwnerRank - rightOwnerRank
+    const leftIdentity = canonicalJson(left)
+    const rightIdentity = canonicalJson(right)
+    return leftIdentity < rightIdentity ? -1 : leftIdentity > rightIdentity ? 1 : 0
+  })
+  return `{${ordered.map(({ grantee, grantor }) => `${grantee}=X/${grantor}`).join(',')}}`
+}
+
 function enrichedV2TransitionMetadata(
   identity: SchemaSecurityDefinitionIdentity,
 ): EnrichedRpcMetadata[] {
@@ -171,7 +187,7 @@ function enrichedV2TransitionMetadata(
       grants.some(({ grantee, privilegeType }) => grantee === role && privilegeType === 'EXECUTE')
     const volatility = string(state.volatility, `${name} volatility`)
     const normalizedDefinition = function_.normalizedDefinition
-    const rawAcl = `{${grants.map(({ grantee, grantor }) => `${grantee}=X/${grantor}`).join(',')}}`
+    const rawAcl = renderOwnerFirstFunctionRawAclV2(owner, grants)
     return {
       argumentsWithDefaults: identityArguments,
       configuration: [`search_path=${searchPath}`],

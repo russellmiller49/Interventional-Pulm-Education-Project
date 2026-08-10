@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises'
 import {
   assertExactGeneratedPackageReferenceV2,
   assertMigrationEquivalentPostV2SeedIdentity,
+  renderOwnerFirstFunctionRawAclV2,
 } from './execute-exact-gold-import-compensation-package-v2'
 import {
   GOLD_IMPORT_PRE_V1_BACKUP_PHYSICAL_STATE_SHA256_V2,
@@ -49,6 +50,30 @@ function result(path: 'fresh' | 'upgrade'): V2DisposablePathResult {
 }
 
 describe('exact V2 package rehearsal entrypoint', () => {
+  test('renders normalized V2 ACL records in exact owner-first catalog order', () => {
+    const grant = (grantee: string, grantor: string) => ({
+      grantee,
+      grantor,
+      isGrantable: false,
+      privilegeType: 'EXECUTE',
+    })
+    expect(
+      renderOwnerFirstFunctionRawAclV2('supabase_admin', [
+        grant('postgres', 'supabase_admin'),
+        grant('service_role', 'supabase_admin'),
+        grant('supabase_admin', 'supabase_admin'),
+      ]),
+    ).toBe(
+      '{supabase_admin=X/supabase_admin,postgres=X/supabase_admin,service_role=X/supabase_admin}',
+    )
+    expect(
+      renderOwnerFirstFunctionRawAclV2('postgres', [
+        grant('service_role', 'postgres'),
+        grant('postgres', 'postgres'),
+      ]),
+    ).toBe('{postgres=X/postgres,service_role=X/postgres}')
+  })
+
   test('authenticates the pre-V1 backup physical projection before applying V1', () => {
     const accepted = {
       batchId: 'fff41ba3-811d-4d28-ba73-9302db3a942a',
