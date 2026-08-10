@@ -20,6 +20,7 @@ import {
   type ProtectedV2SealedIntentPackage,
 } from './apply-protected-gold-import-contract-v2'
 import { GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2 } from './gold-import-note-disposition-gate-v2'
+import { reconciliationIdentitySha256 } from './gold-import-compensation-contract-reconciliation'
 import {
   DEFAULT_LOCAL_DATABASE_CONTAINER,
   LOCAL_DATABASE_PORT,
@@ -199,7 +200,7 @@ function postApplicationAudit(after = database(true), repositoryCommitSha = HEAD
     componentIdentities,
     environmentInvariantIdentitySha256: PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256,
     fullEnvironmentInventoryIdentitySha256: '8'.repeat(64),
-    fullEnvironmentInventoryRecordCount: 823,
+    fullEnvironmentInventoryRecordCount: 730,
     localPostgresOwnerProfileIdentitySha256: '9'.repeat(64),
     schemaVersion: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_SCHEMA_VERSION,
     verifierExecuted: false as const,
@@ -209,7 +210,7 @@ function postApplicationAudit(after = database(true), repositoryCommitSha = HEAD
     auditedAt: NOW.toISOString(),
     catalogAudit: {
       ...catalogAuditContent,
-      fullAuditIdentitySha256: sha256(canonicalJson(catalogAuditContent)),
+      fullAuditIdentitySha256: reconciliationIdentitySha256(catalogAuditContent),
     },
     databaseEvidenceSha256: sha256(canonicalJson(after)),
     migration: PROTECTED_GOLD_IMPORT_CONTRACT_V2,

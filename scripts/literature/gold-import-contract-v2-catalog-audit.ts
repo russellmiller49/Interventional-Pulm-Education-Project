@@ -91,7 +91,10 @@ const EXPECTED_RECORD_COUNTS = {
   tables: 7,
   triggers: 24,
 } as const
-const EXPECTED_FULL_ENVIRONMENT_INVENTORY_RECORD_COUNT = 823 as const
+export const PROTECTED_V2_EXPECTED_FULL_ENVIRONMENT_INVENTORY_RECORD_COUNTS = {
+  local_supabase_postgres_owner_v1: 730,
+  supabase_admin_owner_v1: 823,
+} as const
 const REQUIRED_GENERATED_COLUMN = 'literature_gold_set_reviews.operation_contract_version' as const
 const REQUIRED_GENERATED_DISCRIMINATOR_SEMANTICS =
   "case when revision_kind = 'standard' then null when operation_contract_version_code = 1 then 'gold-review-import-compensation/1.0.0' when operation_contract_version_code = 2 then 'gold-review-import-compensation/2.0.0' else null end" as const
@@ -486,8 +489,9 @@ export function validateProtectedV2CompleteCatalogAuditIdentity(
       PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL_IDENTITY_SHA256 ||
     identity.environmentInvariantIdentitySha256 !==
       PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256 ||
-    identity.fullEnvironmentInventoryRecordCount !==
-      EXPECTED_FULL_ENVIRONMENT_INVENTORY_RECORD_COUNT ||
+    !Object.values(PROTECTED_V2_EXPECTED_FULL_ENVIRONMENT_INVENTORY_RECORD_COUNTS).includes(
+      identity.fullEnvironmentInventoryRecordCount as 730 | 823,
+    ) ||
     identity.verifierExecuted !== false ||
     reconciliationIdentitySha256(content) !== fullAuditIdentitySha256
   ) {
@@ -503,7 +507,8 @@ const AUDIT_MODEL_CONTENT = {
   contractDiagnosticsSqlSha256: sha256(buildContractDiagnosticsSql()),
   detailSqlSha256: sha256(PROTECTED_V2_COMPLETE_CATALOG_DETAIL_SQL),
   expectedInvariantIdentitySha256: PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256,
-  expectedFullEnvironmentInventoryRecordCount: EXPECTED_FULL_ENVIRONMENT_INVENTORY_RECORD_COUNT,
+  expectedFullEnvironmentInventoryRecordCounts:
+    PROTECTED_V2_EXPECTED_FULL_ENVIRONMENT_INVENTORY_RECORD_COUNTS,
   expectedRecordCounts: EXPECTED_RECORD_COUNTS,
   functionNames: PROTECTED_V2_COMPLETE_CATALOG_FUNCTION_NAMES,
   localProfileId: 'local_supabase_postgres_owner_v1',
@@ -745,6 +750,16 @@ export function buildProtectedV2CompleteCatalogAuditIdentity(input: {
     rpcMetadata,
     deploymentProfileEvidence,
   )
+  const fullEnvironmentInventoryRecordCount = schemaIdentity.records.length
+  const expectedFullEnvironmentInventoryRecordCount =
+    PROTECTED_V2_EXPECTED_FULL_ENVIRONMENT_INVENTORY_RECORD_COUNTS[
+      deploymentProfileEvidence.profileId
+    ]
+  if (fullEnvironmentInventoryRecordCount !== expectedFullEnvironmentInventoryRecordCount) {
+    throw new Error(
+      `Protected V2 ${deploymentProfileEvidence.profileId} full inventory count drifted: ${fullEnvironmentInventoryRecordCount}.`,
+    )
+  }
   const componentInputs: Record<ProtectedV2AuditComponentName, unknown> = {
     columns: {
       details: details.columns,
@@ -790,7 +805,7 @@ export function buildProtectedV2CompleteCatalogAuditIdentity(input: {
     componentIdentities,
     environmentInvariantIdentitySha256,
     fullEnvironmentInventoryIdentitySha256: reconciliationIdentitySha256(fullInventory),
-    fullEnvironmentInventoryRecordCount: schemaIdentity.records.length,
+    fullEnvironmentInventoryRecordCount,
     localPostgresOwnerProfileIdentitySha256: reconciliationIdentitySha256(profileIdentity),
     schemaVersion: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_SCHEMA_VERSION,
     verifierExecuted: false as const,

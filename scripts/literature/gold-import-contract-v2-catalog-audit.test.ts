@@ -1,10 +1,17 @@
 /** @jest-environment node */
 
 import {
+  PROTECTED_V2_AUDIT_COMPONENT_NAMES,
   PROTECTED_V2_CATALOG_TABLES,
+  PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD,
+  PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL,
+  PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL_IDENTITY_SHA256,
+  PROTECTED_V2_COMPLETE_CATALOG_AUDIT_SCHEMA_VERSION,
   PROTECTED_V2_COMPLETE_CATALOG_DETAIL_SQL,
   PROTECTED_V2_COMPLETE_CATALOG_FUNCTION_NAMES,
+  PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256,
   validateProtectedV2CompleteCatalogDetails,
+  validateProtectedV2CompleteCatalogAuditIdentity,
   v2SecurityIntrospectionSql,
 } from './gold-import-contract-v2-catalog-audit'
 import { CONTRACT_DIAGNOSTICS_MARKER } from './gold-import-compensation-contract-diagnostics'
@@ -196,6 +203,38 @@ const DETAIL_DRIFT_CASES: Array<[string, (value: CompleteCatalogFixture) => void
 ]
 
 describe('protected V2 complete production catalog audit', () => {
+  it('accepts only the exact supported full-inventory counts', () => {
+    const identity = (fullEnvironmentInventoryRecordCount: number) => {
+      const content = {
+        auditMethod: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD,
+        auditModel: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL,
+        auditModelIdentitySha256: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL_IDENTITY_SHA256,
+        componentIdentities: Object.fromEntries(
+          PROTECTED_V2_AUDIT_COMPONENT_NAMES.map((name, index) => [
+            name,
+            String(index + 1).repeat(64),
+          ]),
+        ),
+        environmentInvariantIdentitySha256: PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256,
+        fullEnvironmentInventoryIdentitySha256: '8'.repeat(64),
+        fullEnvironmentInventoryRecordCount,
+        localPostgresOwnerProfileIdentitySha256: '9'.repeat(64),
+        schemaVersion: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_SCHEMA_VERSION,
+        verifierExecuted: false as const,
+      }
+      return {
+        ...content,
+        fullAuditIdentitySha256: reconciliationIdentitySha256(content),
+      }
+    }
+
+    expect(() => validateProtectedV2CompleteCatalogAuditIdentity(identity(730))).not.toThrow()
+    expect(() => validateProtectedV2CompleteCatalogAuditIdentity(identity(823))).not.toThrow()
+    expect(() => validateProtectedV2CompleteCatalogAuditIdentity(identity(729))).toThrow(
+      'Protected V2 complete catalog audit identity is inconsistent or drifted.',
+    )
+  })
+
   it('accepts the exact complete-detail shape for the disposable owner profile', () => {
     expect(() =>
       validateProtectedV2CompleteCatalogDetails(completeDetails(), 'disposable_clone'),
