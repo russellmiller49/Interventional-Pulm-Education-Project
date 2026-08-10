@@ -10,6 +10,10 @@ import { canonicalJson } from '../../src/features/literature/gold-set/import-com
 import { GOLD_REVIEW_IMPORT_COMPENSATION_V2_FUNCTION_IDENTITIES } from '../../src/features/literature/gold-set/import-compensation-v2'
 
 import {
+  developmentPlanningStateSha256,
+  type RawDatabaseSnapshot,
+} from './gold-import-compensation-migration-operations'
+import {
   assertLocalDockerEndpoint,
   buildCanonicalScenarioEvidence,
   extractSqlScenarioEvidence,
@@ -376,19 +380,7 @@ with selected_items as (
     coalesce((select jsonb_agg(jsonb_build_object(
       'itemId', item.id,
       'supplementalMetadataRevealedAt', item.supplemental_metadata_revealed_at
-    ) order by item.display_order, item.id) from selected_items item), '[]'::jsonb) as supplemental_reveals,
-    coalesce((select jsonb_agg(jsonb_build_object(
-      'itemId', item.id,
-      'pmid', item.pmid,
-      'reviewStatus', item.review_status,
-      'currentReviewId', item.current_review_id,
-      'review', case when review.id is null then null
-        else to_jsonb(review) - 'full_text_used' - 'operation_contract_version'
-          - 'operation_contract_version_code' end
-    ) order by item.display_order, item.id)
-      from selected_items item
-      left join selected_reviews review on review.id = item.current_review_id), '[]'::jsonb)
-      as planning_state
+    ) order by item.display_order, item.id) from selected_items item), '[]'::jsonb) as supplemental_reveals
 )
 select pg_catalog.jsonb_build_object(
   'actionCount', (select count(*)::integer from selected_actions),
@@ -412,7 +404,6 @@ select pg_catalog.jsonb_build_object(
   'operationRowsSha256', public.literature_gold_jsonb_sha256_v1(projections.operation_rows),
   'physicalStateSha256V1', public.literature_gold_physical_state_hash_v1(
     ${escapedBatchId}::uuid, 'development'),
-  'planningStateSha256', public.literature_gold_jsonb_sha256_v1(projections.planning_state),
   'pointerStateSha256', public.literature_gold_jsonb_sha256_v1(projections.pointers),
   'reviewCount', (select count(*)::integer from selected_reviews),
   'reviewRowsSha256', public.literature_gold_jsonb_sha256_v1(projections.review_rows),
@@ -420,6 +411,79 @@ select pg_catalog.jsonb_build_object(
     projections.supplemental_reveals)
 )
 from projections;`
+}
+
+export function v2DevelopmentPlanningSnapshotSql(batchId: string): string {
+  if (!UUID_PATTERN.test(batchId)) {
+    throw new Error('Invalid development batch ID for planning snapshot.')
+  }
+  const escapedBatchId = sqlLiteral(batchId)
+  return String.raw`
+with selected_items as (
+  select item.*
+  from public.literature_gold_set_items item
+  where item.batch_id = ${escapedBatchId}::uuid
+    and item.dataset_split = 'development'
+)
+select pg_catalog.jsonb_build_object(
+  'developmentItems', coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
+    'item', to_jsonb(item),
+    'reviews', coalesce((
+      select pg_catalog.jsonb_agg(to_jsonb(review) order by review.revision, review.id)
+      from public.literature_gold_set_reviews review
+      where review.item_id = item.id
+    ), '[]'::jsonb),
+    'events', coalesce((
+      select pg_catalog.jsonb_agg(to_jsonb(event) order by event.created_at, event.id)
+      from public.literature_gold_set_events event
+      where event.item_id = item.id
+    ), '[]'::jsonb)
+  ) order by item.display_order, item.id), '[]'::jsonb)
+)
+from selected_items item;`
+}
+
+const planningSnapshotSchema = z
+  .object({
+    developmentItems: z.array(
+      z
+        .object({
+          events: z.array(z.record(z.string(), z.unknown())),
+          item: z.record(z.string(), z.unknown()),
+          reviews: z.array(z.record(z.string(), z.unknown())),
+        })
+        .strict(),
+    ),
+  })
+  .strict()
+
+async function collectV2SchemaOnlySnapshot(
+  queryJson: (sql: string) => Promise<unknown>,
+  batchId: string,
+  label: string,
+): Promise<V2SchemaOnlySnapshot> {
+  const base = z
+    .record(z.string(), z.unknown())
+    .parse(await queryJson(v2SchemaOnlySnapshotSql(batchId)))
+  const planning = planningSnapshotSchema.parse(
+    await queryJson(v2DevelopmentPlanningSnapshotSql(batchId)),
+  )
+  const planningSnapshot: RawDatabaseSnapshot = {
+    database: {},
+    developmentItems: planning.developmentItems,
+    developmentSeed: {},
+    migrationLedger: [],
+    schema: {},
+    scope: {},
+    testAggregate: {},
+  }
+  return validateV2SchemaOnlySnapshot(
+    {
+      ...base,
+      planningStateSha256: developmentPlanningStateSha256(planningSnapshot),
+    },
+    label,
+  )
 }
 
 export const V2_RPC_METADATA_SQL = String.raw`
@@ -1051,9 +1115,17 @@ create table if not exists supabase_migrations.schema_migrations (
       }
       await psql(preV1SeedSql)
       await applyFixedMigration(V1_MIGRATION_FILENAME)
-      const before = await queryJson(v2SchemaOnlySnapshotSql(seed.batchId))
+      const before = await collectV2SchemaOnlySnapshot(
+        queryJson,
+        seed.batchId,
+        'upgrade pre-V2 seed snapshot',
+      )
       await applyFixedMigration(V2_MIGRATION_FILENAME)
-      const after = await queryJson(v2SchemaOnlySnapshotSql(seed.batchId))
+      const after = await collectV2SchemaOnlySnapshot(
+        queryJson,
+        seed.batchId,
+        'upgrade post-V2 seed snapshot',
+      )
       const proof = assertV2SchemaOnlyUpgradePreserved({ after, before })
       schemaOnlyUpgrade = { after: proof.after, before: proof.before }
       postV2SeedSnapshot = proof.after
@@ -1069,8 +1141,9 @@ create table if not exists supabase_migrations.schema_migrations (
         throw new Error('Fresh path lost its empty full-schema then projected-seed boundary.')
       }
       await psql(postV2SeedSql)
-      postV2SeedSnapshot = validateV2SchemaOnlySnapshot(
-        await queryJson(v2SchemaOnlySnapshotSql(seed.batchId)),
+      postV2SeedSnapshot = await collectV2SchemaOnlySnapshot(
+        queryJson,
+        seed.batchId,
         'fresh post-V2 projected seed snapshot',
       )
     }

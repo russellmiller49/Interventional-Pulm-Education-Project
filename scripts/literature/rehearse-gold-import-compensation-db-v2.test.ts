@@ -23,6 +23,7 @@ import {
   postgresOwnerProjectionSql,
   renderPostV2CompatibleDevelopmentSeedSqlV2,
   resolveV2LocalDockerEndpoint,
+  v2DevelopmentPlanningSnapshotSql,
   v2SchemaOnlySnapshotSql,
   validateV2SemanticFunctionMetadata,
   type V2DisposablePathResult,
@@ -235,7 +236,6 @@ describe('V2 disposable database rehearsal runner', () => {
       'effectiveStateSha256V1',
       'physicalStateSha256V1',
       'membershipSha256',
-      'planningStateSha256',
       'reviewRowsSha256',
       'pointerStateSha256',
       'automatedRevealStateSha256',
@@ -249,6 +249,17 @@ describe('V2 disposable database rehearsal runner', () => {
     expect(sql).toContain("dataset_split = 'development'")
     expect(sql).not.toContain("dataset_split = 'test'")
     expect(() => v2SchemaOnlySnapshotSql('not-a-uuid')).toThrow('Invalid development batch ID')
+
+    const planningSql = v2DevelopmentPlanningSnapshotSql('00000000-0000-4000-8000-000000000001')
+    expect(planningSql).toContain("'developmentItems'")
+    expect(planningSql).toContain('order by item.display_order, item.id')
+    expect(planningSql).toContain('order by review.revision, review.id')
+    expect(planningSql).toContain('order by event.created_at, event.id')
+    expect(planningSql).toContain("dataset_split = 'development'")
+    expect(planningSql).not.toContain("dataset_split = 'test'")
+    expect(() => v2DevelopmentPlanningSnapshotSql('not-a-uuid')).toThrow(
+      'Invalid development batch ID',
+    )
   })
 
   test('introspects the exact V1/V2 transition ACLs and all V2 semantic functions', () => {
