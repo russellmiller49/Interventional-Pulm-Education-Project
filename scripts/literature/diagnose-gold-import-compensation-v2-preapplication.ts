@@ -9,7 +9,6 @@ import {
   assertExclusiveOutputPath,
   assertLocalDatabaseHealthy,
   assertReadOnlySnapshotSql,
-  buildDevelopmentDatabaseSeed,
   canonicalJson,
   collectReadOnlyContractStateHashes,
   collectReadOnlyDatabaseSnapshot,
@@ -150,6 +149,44 @@ function migrationOccurrences(snapshot: RawDatabaseSnapshot, version: string, na
     const row = record(entry, `migrationLedger[${index}]`)
     return row.version === version && row.name === name
   }).length
+}
+
+export function buildGoldImportV2PreapplicationDevelopmentBackup(
+  snapshot: RawDatabaseSnapshot,
+  batchId: string,
+) {
+  const seed = record(snapshot.developmentSeed, 'snapshot.developmentSeed')
+  const expectedKeys = ['batches', 'drafts', 'events', 'items', 'literatureArticles', 'reviews']
+  const actualKeys = Object.keys(seed).sort()
+  if (canonicalJson(actualKeys) !== canonicalJson(expectedKeys)) {
+    throw new Error('Development backup snapshot inventory is incomplete or unexpected.')
+  }
+  const table = (key: string) => {
+    const value = seed[key]
+    if (!Array.isArray(value)) throw new Error(`Development backup ${key} must be an array.`)
+    return value
+  }
+  const batches = table('batches')
+  if (
+    batches.length !== 1 ||
+    String(record(batches[0], 'development backup batch').id ?? '') !== batchId
+  ) {
+    throw new Error('Development backup does not contain the exact selected batch.')
+  }
+  return {
+    schemaVersion: 'literature-gold-protected-v2-preapplication-development-backup/1.0.0',
+    batchId,
+    datasetSplit: 'development',
+    heldOutIdentitiesIncluded: false,
+    tables: {
+      literature_articles: table('literatureArticles'),
+      literature_gold_set_batches: batches,
+      literature_gold_set_events: table('events'),
+      literature_gold_set_items: table('items'),
+      literature_gold_set_review_drafts: table('drafts'),
+      literature_gold_set_reviews: table('reviews'),
+    },
+  }
 }
 
 async function git(cwd: string, arguments_: string[]) {
@@ -328,7 +365,10 @@ export async function runGoldImportV2PreapplicationDiagnostic(argv: string[]) {
   ) {
     throw new Error('Real-local state drifted or contains a forbidden operation; report aborted.')
   }
-  const developmentSeed = buildDevelopmentDatabaseSeed(snapshotAfter)
+  const developmentSeed = buildGoldImportV2PreapplicationDevelopmentBackup(
+    snapshotAfter,
+    String(batch.id ?? ''),
+  )
   const migrationLedgerBackup = {
     schemaVersion: 'literature-gold-protected-v2-ledger-backup/1.0.0',
     entries: snapshotAfter.migrationLedger,
