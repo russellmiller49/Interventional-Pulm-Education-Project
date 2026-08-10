@@ -1053,6 +1053,22 @@ function runtimeModuleName(moduleName: string): string {
   return moduleName.replace(/^node:/u, '')
 }
 
+const REVIEWED_PROCESS_PROPERTIES = new Set([
+  'argv',
+  'chdir',
+  'cwd',
+  'env',
+  'exit',
+  'exitCode',
+  'kill',
+  'off',
+  'on',
+  'pid',
+  'platform',
+  'stderr',
+  'stdout',
+])
+
 function staticMemberName(expression: ts.Expression): string | null {
   if (ts.isPropertyAccessExpression(expression)) return expression.name.text
   if (
@@ -1070,16 +1086,52 @@ function memberOwner(expression: ts.Expression): ts.Expression | null {
     : null
 }
 
+function isTransparentRuntimeExpressionWrapper(
+  node: ts.Node,
+): node is
+  | ts.ParenthesizedExpression
+  | ts.AsExpression
+  | ts.TypeAssertion
+  | ts.NonNullExpression
+  | ts.SatisfiesExpression {
+  return (
+    ts.isParenthesizedExpression(node) ||
+    ts.isAsExpression(node) ||
+    ts.isTypeAssertionExpression(node) ||
+    ts.isNonNullExpression(node) ||
+    ts.isSatisfiesExpression(node)
+  )
+}
+
+function unwrapRuntimeExpression(expression: ts.Expression): ts.Expression {
+  let current = expression
+  while (isTransparentRuntimeExpressionWrapper(current)) current = current.expression
+  return current
+}
+
+function outerRuntimeExpression(expression: ts.Expression): ts.Expression {
+  let current = expression
+  while (
+    isTransparentRuntimeExpressionWrapper(current.parent) &&
+    current.parent.expression === current
+  ) {
+    current = current.parent
+  }
+  return current
+}
+
 function namespaceMember(
   expression: ts.Expression,
   namespaces: ReadonlySet<string>,
 ): string | null {
   const method = staticMemberName(expression)
-  const owner = memberOwner(expression)
-  if (!method || !owner) return null
+  const rawOwner = memberOwner(expression)
+  if (!method || !rawOwner) return null
+  const owner = unwrapRuntimeExpression(rawOwner)
   if (ts.isIdentifier(owner) && namespaces.has(owner.text)) return method
   const ownerName = staticMemberName(owner)
-  const ownerBase = memberOwner(owner)
+  const rawOwnerBase = memberOwner(owner)
+  const ownerBase = rawOwnerBase ? unwrapRuntimeExpression(rawOwnerBase) : null
   if (
     ownerName === 'promises' &&
     ownerBase &&
@@ -1109,6 +1161,8 @@ function collectSourceBindings(sourceFile: ts.SourceFile): SourceBindings {
     pathNamespaces: new Set(),
     promisify: new Set(),
   }
+  const createRequireFactories = new Set<string>()
+  const createdRequireFunctions = new Set<string>()
   const bindNamespace = (moduleName: string, local: string): void => {
     const normalized = runtimeModuleName(moduleName)
     if (normalized === 'fs' || normalized === 'fs/promises') {
@@ -1148,6 +1202,17 @@ function collectSourceBindings(sourceFile: ts.SourceFile): SourceBindings {
     if (ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)) {
       const moduleName = statement.moduleSpecifier.text
       const importClause = statement.importClause
+      if (
+        runtimeModuleName(moduleName) === 'process' &&
+        importClause &&
+        !importClause.isTypeOnly &&
+        (importClause.name ||
+          (importClause.namedBindings &&
+            (ts.isNamespaceImport(importClause.namedBindings) ||
+              importClause.namedBindings.elements.some((element) => !element.isTypeOnly))))
+      ) {
+        throw new Error(`Unsupported node:process binding in ${sourceFile.fileName}.`)
+      }
       if (!importClause || importClause.isTypeOnly) continue
       if (importClause.name) bindNamespace(moduleName, importClause.name.text)
       const namedBindings = importClause.namedBindings
@@ -1156,7 +1221,11 @@ function collectSourceBindings(sourceFile: ts.SourceFile): SourceBindings {
       } else if (namedBindings && ts.isNamedImports(namedBindings)) {
         for (const element of namedBindings.elements) {
           if (!element.isTypeOnly) {
-            bindNamed(moduleName, (element.propertyName ?? element.name).text, element.name.text)
+            const imported = (element.propertyName ?? element.name).text
+            if (runtimeModuleName(moduleName) === 'module' && imported === 'createRequire') {
+              createRequireFactories.add(element.name.text)
+            }
+            bindNamed(moduleName, imported, element.name.text)
           }
         }
       }
@@ -1166,25 +1235,68 @@ function collectSourceBindings(sourceFile: ts.SourceFile): SourceBindings {
       statement.moduleReference.expression &&
       ts.isStringLiteralLike(statement.moduleReference.expression)
     ) {
+      if (runtimeModuleName(statement.moduleReference.expression.text) === 'process') {
+        throw new Error(`Unsupported node:process binding in ${sourceFile.fileName}.`)
+      }
       bindNamespace(statement.moduleReference.expression.text, statement.name.text)
+    } else if (
+      ts.isExportDeclaration(statement) &&
+      statement.moduleSpecifier &&
+      ts.isStringLiteralLike(statement.moduleSpecifier)
+    ) {
+      const normalized = runtimeModuleName(statement.moduleSpecifier.text)
+      const hasRuntimeExport =
+        !statement.isTypeOnly &&
+        (!statement.exportClause ||
+          ts.isNamespaceExport(statement.exportClause) ||
+          statement.exportClause.elements.some((element) => !element.isTypeOnly))
+      if (
+        hasRuntimeExport &&
+        (normalized === 'fs' ||
+          normalized === 'fs/promises' ||
+          normalized === 'child_process' ||
+          normalized === 'process')
+      ) {
+        throw new Error(`Unsupported runtime namespace export in ${sourceFile.fileName}.`)
+      }
     }
   }
 
+  const collectCreatedRequireFunctions = (node: ts.Node): void => {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
+      const initializer = unwrapRuntimeExpression(node.initializer)
+      if (
+        ts.isCallExpression(initializer) &&
+        ts.isIdentifier(initializer.expression) &&
+        createRequireFactories.has(initializer.expression.text) &&
+        initializer.arguments.length === 1 &&
+        isImportMetaUrl(initializer.arguments[0]!)
+      ) {
+        createdRequireFunctions.add(node.name.text)
+      }
+    }
+    ts.forEachChild(node, collectCreatedRequireFunctions)
+  }
+  if (createRequireFactories.size > 0) collectCreatedRequireFunctions(sourceFile)
+
   const requireModule = (expression: ts.Expression): string | null => {
+    const unwrapped = unwrapRuntimeExpression(expression)
     if (
-      ts.isCallExpression(expression) &&
-      ts.isIdentifier(expression.expression) &&
-      expression.expression.text === 'require' &&
-      expression.arguments.length === 1 &&
-      ts.isStringLiteralLike(expression.arguments[0]!)
+      ts.isCallExpression(unwrapped) &&
+      ts.isIdentifier(unwrapped.expression) &&
+      (unwrapped.expression.text === 'require' ||
+        createdRequireFunctions.has(unwrapped.expression.text)) &&
+      unwrapped.arguments.length === 1 &&
+      ts.isStringLiteralLike(unwrapped.arguments[0]!)
     ) {
-      return expression.arguments[0]!.text
+      return unwrapped.arguments[0]!.text
     }
     return null
   }
   const bindCommonJs = (node: ts.Node): void => {
     if (ts.isVariableDeclaration(node) && node.initializer) {
-      const directModule = requireModule(node.initializer)
+      const initializer = unwrapRuntimeExpression(node.initializer)
+      const directModule = requireModule(initializer)
       if (directModule) {
         if (ts.isIdentifier(node.name)) bindNamespace(directModule, node.name.text)
         if (ts.isObjectBindingPattern(node.name)) {
@@ -1202,8 +1314,8 @@ function collectSourceBindings(sourceFile: ts.SourceFile): SourceBindings {
           }
         }
       } else if (ts.isIdentifier(node.name)) {
-        const owner = memberOwner(node.initializer)
-        const member = staticMemberName(node.initializer)
+        const owner = memberOwner(initializer)
+        const member = staticMemberName(initializer)
         const ownerModule = owner ? requireModule(owner) : null
         if (ownerModule && member) {
           if (runtimeModuleName(ownerModule) === 'fs' && member === 'promises') {
@@ -1214,9 +1326,89 @@ function collectSourceBindings(sourceFile: ts.SourceFile): SourceBindings {
         }
       }
     }
+    validateRuntimeNamespaceAcquisition(node)
     ts.forEachChild(node, bindCommonJs)
   }
   bindCommonJs(sourceFile)
+
+  function validateRuntimeNamespaceAcquisition(node: ts.Node): void {
+    if (ts.isIdentifier(node)) {
+      const isValueReference =
+        !isTypeOnlyRuntimeReference(node) &&
+        !isRuntimeBindingDeclarationName(node) &&
+        !isNonValuePropertyName(node)
+      if (isValueReference && (node.text === 'globalThis' || node.text === 'global')) {
+        throw new Error(`Unsupported global runtime-loader root in ${sourceFile.fileName}.`)
+      }
+      if (isValueReference && node.text === 'process') {
+        const parent = node.parent
+        const isReviewedProcessProperty =
+          ts.isPropertyAccessExpression(parent) &&
+          parent.expression === node &&
+          REVIEWED_PROCESS_PROPERTIES.has(parent.name.text)
+        if (!isReviewedProcessProperty) {
+          throw new Error(`Unsupported process runtime-loader root in ${sourceFile.fileName}.`)
+        }
+      }
+    }
+    if (ts.isCallExpression(node)) {
+      if (
+        node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+        node.arguments.length === 1 &&
+        ts.isStringLiteralLike(node.arguments[0]!)
+      ) {
+        const normalized = runtimeModuleName(node.arguments[0]!.text)
+        if (
+          normalized === 'fs' ||
+          normalized === 'fs/promises' ||
+          normalized === 'child_process' ||
+          normalized === 'process'
+        ) {
+          throw new Error(`Unsupported dynamic runtime namespace import in ${sourceFile.fileName}.`)
+        }
+      }
+      const moduleName = requireModule(node)
+      const normalized = moduleName ? runtimeModuleName(moduleName) : null
+      const invocation = unwrapRuntimeExpression(node)
+      if (
+        normalized === 'module' &&
+        ts.isCallExpression(invocation) &&
+        ts.isIdentifier(invocation.expression) &&
+        createdRequireFunctions.has(invocation.expression.text)
+      ) {
+        throw new Error(
+          `Unsupported created-require runtime module namespace in ${sourceFile.fileName}.`,
+        )
+      }
+      if (normalized === 'process') {
+        throw new Error(
+          `Unsupported runtime process namespace acquisition in ${sourceFile.fileName}.`,
+        )
+      }
+      if (normalized === 'fs' || normalized === 'fs/promises' || normalized === 'child_process') {
+        const expression = outerRuntimeExpression(node)
+        const parent = expression.parent
+        const isDirectBinding =
+          ts.isVariableDeclaration(parent) &&
+          parent.initializer === expression &&
+          (ts.isIdentifier(parent.name) || ts.isObjectBindingPattern(parent.name))
+        const member =
+          (ts.isPropertyAccessExpression(parent) || ts.isElementAccessExpression(parent)) &&
+          parent.expression === expression &&
+          staticMemberName(parent) !== null
+            ? outerRuntimeExpression(parent)
+            : null
+        const isDirectApiAlias =
+          member !== null &&
+          ts.isVariableDeclaration(member.parent) &&
+          member.parent.initializer === member &&
+          ts.isIdentifier(member.parent.name)
+        if (!isDirectBinding && !isDirectApiAlias) {
+          throw new Error(`Unsupported runtime namespace acquisition in ${sourceFile.fileName}.`)
+        }
+      }
+    }
+  }
 
   let changed = true
   while (changed) {
@@ -1232,24 +1424,25 @@ function collectSourceBindings(sourceFile: ts.SourceFile): SourceBindings {
     }
     const visit = (node: ts.Node): void => {
       if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
-        if (ts.isIdentifier(node.initializer)) {
-          const api = bindings.apiByIdentifier.get(node.initializer.text)
+        const initializer = unwrapRuntimeExpression(node.initializer)
+        if (ts.isIdentifier(initializer)) {
+          const api = bindings.apiByIdentifier.get(initializer.text)
           if (api) setApi(node.name.text, api)
           for (const namespace of [
             bindings.filesystemNamespace,
             bindings.childProcessNamespace,
             bindings.pathNamespaces,
           ]) {
-            if (namespace.has(node.initializer.text) && !namespace.has(node.name.text)) {
+            if (namespace.has(initializer.text) && !namespace.has(node.name.text)) {
               namespace.add(node.name.text)
               changed = true
             }
           }
         } else {
-          const directApi = apiForCall(node.initializer, bindings)
+          const directApi = apiForCall(initializer, bindings)
           if (directApi) setApi(node.name.text, directApi)
-          const owner = memberOwner(node.initializer)
-          const member = staticMemberName(node.initializer)
+          const owner = memberOwner(initializer)
+          const member = staticMemberName(initializer)
           if (
             member === 'promises' &&
             owner &&
@@ -1261,20 +1454,15 @@ function collectSourceBindings(sourceFile: ts.SourceFile): SourceBindings {
             changed = true
           }
           if (
-            ts.isCallExpression(node.initializer) &&
-            ts.isPropertyAccessExpression(node.initializer.expression) &&
-            node.initializer.expression.name.text === 'bind'
+            ts.isCallExpression(initializer) &&
+            ts.isIdentifier(initializer.expression) &&
+            bindings.promisify.has(initializer.expression.text) &&
+            initializer.arguments.length === 1
           ) {
-            const boundApi = apiForCall(node.initializer.expression.expression, bindings)
-            if (boundApi) setApi(node.name.text, boundApi)
-          }
-          if (
-            ts.isCallExpression(node.initializer) &&
-            ts.isIdentifier(node.initializer.expression) &&
-            bindings.promisify.has(node.initializer.expression.text) &&
-            node.initializer.arguments.length === 1
-          ) {
-            const promisedApi = apiForCall(node.initializer.arguments[0]!, bindings)
+            const promisedApi = apiForCall(
+              unwrapRuntimeExpression(initializer.arguments[0]!),
+              bindings,
+            )
             if (promisedApi?.startsWith('child_process.')) setApi(node.name.text, promisedApi)
           }
         }
@@ -1283,55 +1471,24 @@ function collectSourceBindings(sourceFile: ts.SourceFile): SourceBindings {
     }
     visit(sourceFile)
   }
-  const validateAliases = (node: ts.Node): void => {
-    if (
-      ts.isVariableDeclaration(node) &&
-      node.initializer &&
-      expressionContainsRuntimeNamespace(node.initializer, bindings)
-    ) {
-      const initializer = node.initializer
-      const directApi = apiForCall(initializer, bindings)
-      const isNamespaceAlias =
-        ts.isIdentifier(initializer) &&
-        (bindings.filesystemNamespace.has(initializer.text) ||
-          bindings.childProcessNamespace.has(initializer.text))
-      const isApiCall = ts.isCallExpression(initializer)
-        ? apiForCall(initializer.expression, bindings) !== null
-        : false
-      const isBoundApi =
-        ts.isCallExpression(initializer) &&
-        ts.isPropertyAccessExpression(initializer.expression) &&
-        initializer.expression.name.text === 'bind' &&
-        apiForCall(initializer.expression.expression, bindings) !== null
-      const isPromisifiedApi =
-        ts.isCallExpression(initializer) &&
-        ts.isIdentifier(initializer.expression) &&
-        bindings.promisify.has(initializer.expression.text) &&
-        initializer.arguments.length === 1 &&
-        apiForCall(initializer.arguments[0]!, bindings)?.startsWith('child_process.')
-      if (!directApi && !isNamespaceAlias && !isApiCall && !isBoundApi && !isPromisifiedApi) {
-        throw new Error(`Unsupported runtime namespace alias in ${sourceFile.fileName}.`)
-      }
-    }
-    ts.forEachChild(node, validateAliases)
-  }
-  validateAliases(sourceFile)
+  validateRuntimeBindingUses(sourceFile, bindings)
   return bindings
 }
 
 function apiForCall(expression: ts.Expression, bindings: SourceBindings): string | null {
+  const unwrapped = unwrapRuntimeExpression(expression)
   if (
-    ts.isPropertyAccessExpression(expression) &&
-    ts.isIdentifier(expression.expression) &&
-    expression.expression.text === 'process' &&
-    expression.name.text === 'chdir'
+    ts.isPropertyAccessExpression(unwrapped) &&
+    ts.isIdentifier(unwrapped.expression) &&
+    unwrapped.expression.text === 'process' &&
+    unwrapped.name.text === 'chdir'
   ) {
     return 'process.chdir'
   }
-  if (ts.isIdentifier(expression)) return bindings.apiByIdentifier.get(expression.text) ?? null
-  const filesystemMethod = namespaceMember(expression, bindings.filesystemNamespace)
+  if (ts.isIdentifier(unwrapped)) return bindings.apiByIdentifier.get(unwrapped.text) ?? null
+  const filesystemMethod = namespaceMember(unwrapped, bindings.filesystemNamespace)
   if (filesystemMethod) return filesystemApi(filesystemMethod)
-  const childProcessMethod = namespaceMember(expression, bindings.childProcessNamespace)
+  const childProcessMethod = namespaceMember(unwrapped, bindings.childProcessNamespace)
   if (childProcessMethod) {
     return PROCESS_APIS.has(childProcessMethod)
       ? `child_process.${childProcessMethod}`
@@ -1357,6 +1514,193 @@ function expressionContainsRuntimeNamespace(
   }
   visit(expression)
   return found
+}
+
+function isTypeOnlyRuntimeReference(node: ts.Identifier): boolean {
+  let current: ts.Node | undefined = node.parent
+  while (current && !ts.isStatement(current) && !ts.isSourceFile(current)) {
+    if (ts.isTypeNode(current)) return true
+    current = current.parent
+  }
+  return false
+}
+
+function isRuntimeBindingDeclarationName(node: ts.Identifier): boolean {
+  const parent = node.parent
+  return (
+    (ts.isImportClause(parent) && parent.name === node) ||
+    (ts.isNamespaceImport(parent) && parent.name === node) ||
+    (ts.isImportSpecifier(parent) && parent.name === node) ||
+    (ts.isImportEqualsDeclaration(parent) && parent.name === node) ||
+    (ts.isVariableDeclaration(parent) && parent.name === node) ||
+    (ts.isBindingElement(parent) && parent.name === node) ||
+    (ts.isParameter(parent) && parent.name === node) ||
+    ((ts.isFunctionDeclaration(parent) ||
+      ts.isFunctionExpression(parent) ||
+      ts.isClassDeclaration(parent) ||
+      ts.isClassExpression(parent)) &&
+      parent.name === node)
+  )
+}
+
+function isNonValuePropertyName(node: ts.Identifier): boolean {
+  const parent = node.parent
+  return (
+    (ts.isPropertyAccessExpression(parent) && parent.name === node) ||
+    (ts.isPropertyAssignment(parent) && parent.name === node) ||
+    (ts.isBindingElement(parent) && parent.propertyName === node) ||
+    (ts.isPropertyDeclaration(parent) && parent.name === node) ||
+    (ts.isMethodDeclaration(parent) && parent.name === node)
+  )
+}
+
+function isExactPromisifiedChildProcessAlias(
+  expression: ts.Expression,
+  bindings: SourceBindings,
+): boolean {
+  const argument = outerRuntimeExpression(expression)
+  const call = argument.parent
+  if (
+    !ts.isCallExpression(call) ||
+    call.arguments.length !== 1 ||
+    call.arguments[0] !== argument ||
+    !ts.isIdentifier(call.expression) ||
+    !bindings.promisify.has(call.expression.text)
+  ) {
+    return false
+  }
+  const initializer = outerRuntimeExpression(call)
+  const declaration = initializer.parent
+  if (
+    !ts.isVariableDeclaration(declaration) ||
+    declaration.initializer !== initializer ||
+    !ts.isIdentifier(declaration.name)
+  ) {
+    return false
+  }
+  const api = apiForCall(unwrapRuntimeExpression(argument), bindings)
+  return (
+    api?.startsWith('child_process.') === true &&
+    bindings.apiByIdentifier.get(declaration.name.text) === api
+  )
+}
+
+function isExplicitBoundApiUse(node: ts.Identifier, bindings: SourceBindings): boolean {
+  const parent = node.parent
+  if (
+    bindings.apiByIdentifier.get(node.text) === 'ignored.fs.constants' &&
+    (ts.isPropertyAccessExpression(parent) || ts.isElementAccessExpression(parent)) &&
+    parent.expression === node &&
+    staticMemberName(parent) !== null
+  ) {
+    return true
+  }
+  const expression = outerRuntimeExpression(node)
+  if (ts.isCallExpression(expression.parent) && expression.parent.expression === expression) {
+    return true
+  }
+  if (
+    ts.isVariableDeclaration(expression.parent) &&
+    expression.parent.initializer === expression &&
+    ts.isIdentifier(expression.parent.name) &&
+    bindings.apiByIdentifier.has(expression.parent.name.text)
+  ) {
+    return true
+  }
+  return isExactPromisifiedChildProcessAlias(node, bindings)
+}
+
+function isExplicitNamespaceUse(node: ts.Identifier, bindings: SourceBindings): boolean {
+  const directExpression = outerRuntimeExpression(node)
+  const directParent = directExpression.parent
+  if (
+    ts.isVariableDeclaration(directParent) &&
+    directParent.initializer === directExpression &&
+    ts.isIdentifier(directParent.name) &&
+    (bindings.filesystemNamespace.has(directParent.name.text) ||
+      bindings.childProcessNamespace.has(directParent.name.text))
+  ) {
+    return true
+  }
+  let current: ts.Expression = directExpression
+  while (true) {
+    current = outerRuntimeExpression(current)
+    const member = current.parent
+    if (
+      (!ts.isPropertyAccessExpression(member) && !ts.isElementAccessExpression(member)) ||
+      member.expression !== current
+    ) {
+      break
+    }
+    current = member
+    const api = apiForCall(current, bindings)
+    if (!api || api === 'ignored.fs.promises') continue
+    if (api.startsWith('unsupported.')) {
+      const expression = outerRuntimeExpression(current)
+      return ts.isCallExpression(expression.parent) && expression.parent.expression === expression
+    }
+    if (
+      api.startsWith('child_process.') &&
+      isExactPromisifiedChildProcessAlias(current, bindings)
+    ) {
+      return true
+    }
+    if (api === 'ignored.fs.constants') {
+      const constantExpression = outerRuntimeExpression(current)
+      const constantMember = constantExpression.parent
+      return (
+        (ts.isPropertyAccessExpression(constantMember) ||
+          ts.isElementAccessExpression(constantMember)) &&
+        constantMember.expression === constantExpression &&
+        staticMemberName(constantMember) !== null
+      )
+    }
+    const expression = outerRuntimeExpression(current)
+    const parent = expression.parent
+    if (ts.isCallExpression(parent) && parent.expression === expression) return true
+    if (
+      ts.isVariableDeclaration(parent) &&
+      parent.initializer === expression &&
+      ts.isIdentifier(parent.name) &&
+      bindings.apiByIdentifier.has(parent.name.text)
+    ) {
+      return true
+    }
+    return false
+  }
+  current = outerRuntimeExpression(current)
+  return (
+    apiForCall(current, bindings) === 'ignored.fs.promises' &&
+    ts.isVariableDeclaration(current.parent) &&
+    current.parent.initializer === current &&
+    ts.isIdentifier(current.parent.name) &&
+    bindings.filesystemNamespace.has(current.parent.name.text)
+  )
+}
+
+function validateRuntimeBindingUses(sourceFile: ts.SourceFile, bindings: SourceBindings): void {
+  const visit = (node: ts.Node): void => {
+    if (ts.isIdentifier(node)) {
+      const isNamespace =
+        bindings.filesystemNamespace.has(node.text) || bindings.childProcessNamespace.has(node.text)
+      const isApi = bindings.apiByIdentifier.has(node.text)
+      if (
+        (isNamespace || isApi) &&
+        !isTypeOnlyRuntimeReference(node) &&
+        !isRuntimeBindingDeclarationName(node) &&
+        !isNonValuePropertyName(node) &&
+        !(isNamespace
+          ? isExplicitNamespaceUse(node, bindings)
+          : isExplicitBoundApiUse(node, bindings))
+      ) {
+        throw new Error(
+          `Unsupported protected runtime binding escape in ${sourceFile.fileName}: ${node.text}`,
+        )
+      }
+    }
+    ts.forEachChild(node, visit)
+  }
+  visit(sourceFile)
 }
 
 function isProcessCwd(node: ts.Expression): boolean {

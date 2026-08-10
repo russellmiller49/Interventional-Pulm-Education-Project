@@ -259,13 +259,238 @@ describe('protected V2 TypeScript compiler module resolution', () => {
       "import { createRequire } from 'node:module'; const localRequire = createRequire(import.meta.url); const load = localRequire; load('./dependency')\n",
       'Unsupported module-loader reference',
     ],
+    [
+      "import { createRequire } from 'node:module'; const { resolve: load } = createRequire(import.meta.url); load('./dependency')\n",
+      'Unsupported createRequire use',
+    ],
     ["module.require('./dependency')\n", 'Unsupported module-loader syntax'],
     ['eval("require(\'./dependency\')")\n', 'Unsupported executable module-loader syntax'],
+    [
+      `const evaluate = eval; void evaluate("require('./dependency')")`,
+      'Unsupported executable module-loader reference',
+    ],
+    [
+      `const Constructor = Function; void new Constructor("return require('./dependency')")`,
+      'Unsupported executable module-loader reference',
+    ],
+    [
+      `const Constructor = (() => {}).constructor; void Constructor("return process.getBuiltinModule('module')")()`,
+      'Unsupported executable constructor reference',
+    ],
+    [
+      `const Constructor = ({}).constructor.constructor; void Constructor("return process.getBuiltinModule('module')")()`,
+      'Unsupported executable constructor reference',
+    ],
+    [
+      `const Constructor = (() => {})['constructor']; void Constructor("return process.getBuiltinModule('module')")()`,
+      'Unsupported executable constructor reference',
+    ],
+    [
+      `const key = 'constructor'; const Constructor = (() => {})[key]; void Constructor("return process.getBuiltinModule('module')")()`,
+      'Unsupported executable constructor reference',
+    ],
+    [
+      `const suffix = 'structor'; const key = \`con\${suffix}\`; const Constructor = (() => {})[key]; void Constructor("return process.getBuiltinModule('module')")()`,
+      'Unsupported executable constructor reference',
+    ],
+    [
+      `const { constructor: Constructor } = (() => {}); void Constructor("return process.getBuiltinModule('module')")()`,
+      'Unsupported executable constructor reference',
+    ],
+    [
+      `const key = 'con' + 'structor'; const { [key]: Constructor } = (() => {}); void Constructor("return process.getBuiltinModule('module')")()`,
+      'Unsupported executable constructor reference',
+    ],
+    [
+      `let Constructor; ({ constructor: Constructor } = (() => {})); void Constructor("return process.getBuiltinModule('module')")()`,
+      'Unsupported executable constructor reference',
+    ],
+    [
+      `let Constructor; ({ holder: { constructor: Constructor } } = { holder: () => {} }); void Constructor("return process.getBuiltinModule('module')")()`,
+      'Unsupported executable constructor reference',
+    ],
+    [
+      `let Constructor; ({ holder: [{ constructor: Constructor }] } = { holder: [() => {}] }); void Constructor("return process.getBuiltinModule('module')")()`,
+      'Unsupported executable constructor reference',
+    ],
+    [
+      `let Constructor; const key = 'con' + 'structor'; ({ holder: { [key]: Constructor } } = { holder: () => {} }); void Constructor("return process.getBuiltinModule('module')")()`,
+      'Unsupported executable constructor reference',
+    ],
+    [
+      `const Constructor = Reflect.get(() => {}, 'constructor'); void Constructor("return process.getBuiltinModule('module')")()`,
+      'Unsupported reflective constructor reference',
+    ],
+    [
+      `const key = 'con' + 'structor'; const get = Reflect.get; const Constructor = get(() => {}, key); void Constructor("return process.getBuiltinModule('module')")()`,
+      'Unsupported reflective constructor reference',
+    ],
   ])('fails closed for unsupported module-loader syntax', async (source, message) => {
     const test = await fixture(source)
     await test.writeTracked('src/dependency.ts', 'export const dependency = true\n')
     expect(() => buildProtectedV2ModuleResolutionAudit(test.input)).toThrow(message)
   })
+
+  it('allows constructor as an inert object property name', async () => {
+    const test = await fixture(
+      "const metadata = { constructor: 'descriptor', nested: { ['constructor']: 'computed' } }; let holder; ({ holder = { constructor: 'default' } } = {}); class Example { constructor() {} }; void metadata; void holder; void Example\n",
+    )
+    expect(buildProtectedV2ModuleResolutionAudit(test.input).records).toEqual([])
+  })
+
+  it.each([
+    [
+      'assembled createRequire member',
+      "import * as moduleApi from 'node:module'; const property = `create${'Require'}`; const localRequire = moduleApi[property](import.meta.url); void localRequire('./dependency')",
+    ],
+    [
+      'bracket-literal createRequire member',
+      "import * as moduleApi from 'node:module'; const localRequire = moduleApi['createRequire'](import.meta.url); void localRequire('./dependency')",
+    ],
+    [
+      'namespace alias',
+      "import * as moduleApi from 'node:module'; const escaped = moduleApi; void escaped",
+    ],
+    [
+      'namespace call argument',
+      "import * as moduleApi from 'node:module'; function consume(value: unknown) { void value }; consume(moduleApi)",
+    ],
+    [
+      'returned namespace',
+      "import * as moduleApi from 'node:module'; function expose() { return moduleApi }; void expose",
+    ],
+    [
+      'namespace in object and array values',
+      "import * as moduleApi from 'node:module'; const wrapped = { moduleApi, values: [moduleApi] }; void wrapped",
+    ],
+    [
+      'default module binding',
+      "import moduleApi from 'node:module'; const property = 'createRequire'; void moduleApi[property]",
+    ],
+    [
+      'named-default module binding',
+      "import { default as moduleApi } from 'node:module'; const property = `create${'Require'}`; const localRequire = moduleApi[property](import.meta.url); void localRequire('./dependency')",
+    ],
+    [
+      'named Module binding',
+      "import { Module as moduleApi } from 'node:module'; const property = `create${'Require'}`; const localRequire = moduleApi[property](import.meta.url); void localRequire('./dependency')",
+    ],
+    [
+      'register binding',
+      "import { register as loadHook } from 'node:module'; void loadHook('./dependency')",
+    ],
+    [
+      'registerHooks binding',
+      "import { registerHooks as loadHooks } from 'node:module'; void loadHooks({ resolve() { return { shortCircuit: true, url: './dependency' } } })",
+    ],
+    [
+      'import-equals module binding',
+      "import moduleApi = require('node:module'); function expose() { return moduleApi }; void expose",
+    ],
+    [
+      'CommonJS module binding',
+      "const moduleApi = require('node:module'); function expose() { return moduleApi }; void expose",
+    ],
+    [
+      'parenthesized CommonJS module binding',
+      "const moduleApi = (require('node:module') as typeof import('node:module')); const property = `create${'Require'}`; void moduleApi[property]",
+    ],
+    [
+      'inline CommonJS module namespace',
+      "const property = `create${'Require'}`; void require('node:module')[property](import.meta.url)",
+    ],
+    [
+      'assembled global CommonJS module member',
+      "const property = `re${'quire'}`; const localRequire = module[property]; void localRequire('./dependency')",
+    ],
+    [
+      'bracket-literal global CommonJS module alias',
+      "const localRequire = module['require']; void localRequire('./dependency')",
+    ],
+    [
+      'globalThis module namespace',
+      "const property = 'create' + 'Require'; const localRequire = globalThis.module[property](import.meta.url); void localRequire('./dependency')",
+    ],
+    [
+      'global module namespace',
+      "const property = 'create' + 'Require'; const localRequire = global.module[property](import.meta.url); void localRequire('./dependency')",
+    ],
+    [
+      'bracket globalThis module namespace',
+      "const property = 'create' + 'Require'; const localRequire = globalThis['module'][property](import.meta.url); void localRequire('./dependency')",
+    ],
+    [
+      'aliased global root with assembled properties',
+      "const root = globalThis; const moduleName = 'mod' + 'ule'; const property = 'create' + 'Require'; const localRequire = root[moduleName][property](import.meta.url); void localRequire('./dependency')",
+    ],
+    [
+      'process getBuiltinModule',
+      "const property = 'create' + 'Require'; const localRequire = process.getBuiltinModule('module')[property](import.meta.url); void localRequire('./dependency')",
+    ],
+    [
+      'computed process getBuiltinModule alias',
+      "const property = 'getBuiltin' + 'Module'; const getBuiltin = process[property]; const moduleApi = getBuiltin('module'); const localRequire = moduleApi['createRequire'](import.meta.url); void localRequire('./dependency')",
+    ],
+    [
+      'globalThis process getBuiltinModule',
+      "const moduleApi = globalThis.process.getBuiltinModule('module'); const localRequire = moduleApi.createRequire(import.meta.url); void localRequire('./dependency')",
+    ],
+    [
+      'assembled process mainModule require',
+      "const property = 're' + 'quire'; const localRequire = process.mainModule[property]; void localRequire('./dependency')",
+    ],
+    [
+      'bracket process mainModule require',
+      "const property = 're' + 'quire'; const localRequire = process['mainModule'][property]; void localRequire('./dependency')",
+    ],
+    [
+      'imported process namespace',
+      "import processApi from 'node:process'; const moduleApi = processApi.getBuiltinModule('module'); void moduleApi",
+    ],
+    [
+      'created-require process namespace',
+      "import { createRequire } from 'node:module'; const localRequire = createRequire(import.meta.url); const processApi = localRequire('node:process'); void processApi",
+    ],
+    [
+      'created-require node:module namespace',
+      "import { createRequire } from 'node:module'; const localRequire = createRequire(import.meta.url); const moduleApi = localRequire('node:module'); const property = 'create' + 'Require'; const nestedRequire = moduleApi[property](import.meta.url); void nestedRequire('./dependency')",
+    ],
+    [
+      'created-require bare module namespace',
+      "import { createRequire } from 'node:module'; const localRequire = createRequire(import.meta.url); const moduleApi = localRequire('module'); const property = 'create' + 'Require'; const nestedRequire = moduleApi[property](import.meta.url); void nestedRequire('./dependency')",
+    ],
+    [
+      'dynamic module namespace import',
+      "async function load() { const moduleApi = await import('node:module'); return moduleApi }; void load",
+    ],
+    ['module namespace export', "export * from 'node:module'"],
+  ])('rejects module namespace escape through %s', async (_label, source) => {
+    const test = await fixture(source)
+    await test.writeTracked('src/dependency.ts', 'export const dependency = true\n')
+    expect(() => buildProtectedV2ModuleResolutionAudit(test.input)).toThrow(
+      /Unsupported (?:.*module namespace|.*module-loader|CommonJS module reference|node:module named binding|.*node:process)/u,
+    )
+  })
+
+  it.each(['default', 'Module'])(
+    'rejects cross-file %s module namespace re-exports',
+    async (name) => {
+      const test = await fixture(`
+      import { moduleApi } from './bridge'
+      const property = \`create\${'Require'}\`
+      const localRequire = moduleApi[property](import.meta.url)
+      void localRequire('./dependency')
+    `)
+      await test.writeTracked(
+        'src/bridge.ts',
+        `export { ${name} as moduleApi } from 'node:module'\n`,
+      )
+      await test.writeTracked('src/dependency.ts', 'export const dependency = true\n')
+      expect(() => buildProtectedV2ModuleResolutionAudit(test.input)).toThrow(
+        'Unsupported module namespace export',
+      )
+    },
+  )
 
   it('rejects unresolved and untracked repository-local modules', async () => {
     const unresolved = await fixture("import './missing'\n")

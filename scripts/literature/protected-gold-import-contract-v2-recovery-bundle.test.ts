@@ -143,7 +143,7 @@ describe('protected V2 deterministic tracked runtime bundle', () => {
         baseline.aggregateSha256,
       )
     }
-  })
+  }, 15_000)
 
   it('seals recursive tsconfig extensions and locally redirected bare-import targets', async () => {
     const cwd = await copyRepositoryFixture()

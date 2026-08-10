@@ -317,24 +317,272 @@ function literalModuleSpecifier(node: ts.Expression | undefined, label: string):
   return node.text
 }
 
+function isNodeModuleSpecifier(value: string): boolean {
+  return value === 'module' || value === 'node:module'
+}
+
+function isNodeProcessSpecifier(value: string): boolean {
+  return value === 'process' || value === 'node:process'
+}
+
+const REVIEWED_PROCESS_PROPERTIES = new Set([
+  'argv',
+  'chdir',
+  'cwd',
+  'env',
+  'exit',
+  'exitCode',
+  'kill',
+  'off',
+  'on',
+  'pid',
+  'platform',
+  'stderr',
+  'stdout',
+])
+
+function isTransparentExpressionWrapper(
+  node: ts.Node,
+): node is
+  | ts.ParenthesizedExpression
+  | ts.AsExpression
+  | ts.TypeAssertion
+  | ts.NonNullExpression
+  | ts.SatisfiesExpression {
+  return (
+    ts.isParenthesizedExpression(node) ||
+    ts.isAsExpression(node) ||
+    ts.isTypeAssertionExpression(node) ||
+    ts.isNonNullExpression(node) ||
+    ts.isSatisfiesExpression(node)
+  )
+}
+
+function outerTransparentExpression(expression: ts.Expression): ts.Expression {
+  let current = expression
+  while (isTransparentExpressionWrapper(current.parent) && current.parent.expression === current) {
+    current = current.parent
+  }
+  return current
+}
+
+function innerTransparentExpression(expression: ts.Expression): ts.Expression {
+  let current = expression
+  while (isTransparentExpressionWrapper(current)) current = current.expression
+  return current
+}
+
+type StaticStringBindings = ReadonlyMap<string, readonly ts.Expression[]>
+
+function collectConstStringBindings(sourceFile: ts.SourceFile): StaticStringBindings {
+  const bindings = new Map<string, ts.Expression[]>()
+  const visit = (node: ts.Node): void => {
+    if (
+      ts.isVariableDeclaration(node) &&
+      ts.isIdentifier(node.name) &&
+      node.initializer &&
+      ts.isVariableDeclarationList(node.parent) &&
+      (node.parent.flags & ts.NodeFlags.Const) !== 0
+    ) {
+      const initializers = bindings.get(node.name.text) ?? []
+      initializers.push(node.initializer)
+      bindings.set(node.name.text, initializers)
+    }
+    ts.forEachChild(node, visit)
+  }
+  visit(sourceFile)
+  return bindings
+}
+
+function staticallyKnownShortStrings(
+  expression: ts.Expression,
+  bindings: StaticStringBindings,
+  resolving = new Set<string>(),
+): Set<string> {
+  const node = innerTransparentExpression(expression)
+  if (ts.isStringLiteralLike(node)) return new Set([node.text])
+  if (ts.isIdentifier(node)) {
+    if (resolving.has(node.text)) return new Set()
+    const initializers = bindings.get(node.text)
+    if (!initializers) return new Set()
+    const nextResolving = new Set(resolving).add(node.text)
+    return new Set(
+      initializers.flatMap((initializer) => [
+        ...staticallyKnownShortStrings(initializer, bindings, nextResolving),
+      ]),
+    )
+  }
+  if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken) {
+    const values = new Set<string>()
+    for (const left of staticallyKnownShortStrings(node.left, bindings, resolving)) {
+      for (const right of staticallyKnownShortStrings(node.right, bindings, resolving)) {
+        const value = `${left}${right}`
+        if (value.length <= 'constructor'.length) values.add(value)
+      }
+    }
+    return values
+  }
+  if (ts.isTemplateExpression(node)) {
+    let values = new Set([node.head.text])
+    for (const span of node.templateSpans) {
+      const next = new Set<string>()
+      for (const prefix of values) {
+        for (const substitution of staticallyKnownShortStrings(
+          span.expression,
+          bindings,
+          resolving,
+        )) {
+          const value = `${prefix}${substitution}${span.literal.text}`
+          if (value.length <= 'constructor'.length) next.add(value)
+        }
+      }
+      values = next
+    }
+    return values
+  }
+  return new Set()
+}
+
+function isStaticConstructorPropertyName(
+  name: ts.PropertyName,
+  bindings: StaticStringBindings,
+): boolean {
+  if (ts.isComputedPropertyName(name)) {
+    return staticallyKnownShortStrings(name.expression, bindings).has('constructor')
+  }
+  return (ts.isIdentifier(name) || ts.isStringLiteralLike(name)) && name.text === 'constructor'
+}
+
+function isDestructuringAssignmentProperty(node: ts.ObjectLiteralElementLike): boolean {
+  if (!ts.isObjectLiteralExpression(node.parent)) return false
+  let current: ts.Expression = node.parent
+  for (;;) {
+    current = outerTransparentExpression(current)
+    const parent = current.parent
+    if (ts.isBinaryExpression(parent)) {
+      return parent.left === current && parent.operatorToken.kind === ts.SyntaxKind.EqualsToken
+    }
+    if (
+      ts.isPropertyAssignment(parent) &&
+      parent.initializer === current &&
+      ts.isObjectLiteralExpression(parent.parent)
+    ) {
+      current = parent.parent
+      continue
+    }
+    if (ts.isArrayLiteralExpression(parent) && parent.elements.includes(current)) {
+      current = parent
+      continue
+    }
+    return false
+  }
+}
+
+function isNodeModuleRequireCall(node: ts.CallExpression): boolean {
+  return (
+    ts.isIdentifier(node.expression) &&
+    node.expression.text === 'require' &&
+    node.arguments.length === 1 &&
+    ts.isStringLiteralLike(node.arguments[0]!) &&
+    isNodeModuleSpecifier(node.arguments[0]!.text)
+  )
+}
+
 function collectCreateRequireBindings(sourceFile: ts.SourceFile): {
   factories: Set<string>
+  moduleNamespaces: Set<string>
   requireFunctions: Set<string>
 } {
   const factories = new Set<string>()
+  const moduleNamespaces = new Set<string>()
   for (const statement of sourceFile.statements) {
-    if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier))
-      continue
-    if (!['module', 'node:module'].includes(statement.moduleSpecifier.text)) continue
-    const bindings = statement.importClause?.namedBindings
-    if (!bindings || !ts.isNamedImports(bindings)) continue
-    for (const element of bindings.elements) {
-      if ((element.propertyName ?? element.name).text === 'createRequire')
-        factories.add(element.name.text)
+    if (
+      ts.isImportDeclaration(statement) &&
+      ts.isStringLiteral(statement.moduleSpecifier) &&
+      isNodeProcessSpecifier(statement.moduleSpecifier.text)
+    ) {
+      const importClause = statement.importClause
+      const hasRuntimeBinding =
+        importClause !== undefined &&
+        !importClause.isTypeOnly &&
+        (importClause.name !== undefined ||
+          (importClause.namedBindings !== undefined &&
+            (ts.isNamespaceImport(importClause.namedBindings) ||
+              importClause.namedBindings.elements.some((element) => !element.isTypeOnly))))
+      if (hasRuntimeBinding) {
+        throw new Error(`Unsupported node:process binding in ${sourceFile.fileName}.`)
+      }
+    }
+    if (
+      ts.isImportEqualsDeclaration(statement) &&
+      !statement.isTypeOnly &&
+      ts.isExternalModuleReference(statement.moduleReference) &&
+      statement.moduleReference.expression &&
+      ts.isStringLiteralLike(statement.moduleReference.expression) &&
+      isNodeProcessSpecifier(statement.moduleReference.expression.text)
+    ) {
+      throw new Error(`Unsupported node:process binding in ${sourceFile.fileName}.`)
+    }
+    if (
+      ts.isImportDeclaration(statement) &&
+      ts.isStringLiteral(statement.moduleSpecifier) &&
+      isNodeModuleSpecifier(statement.moduleSpecifier.text)
+    ) {
+      const importClause = statement.importClause
+      if (!importClause || importClause.isTypeOnly) continue
+      if (importClause.name) moduleNamespaces.add(importClause.name.text)
+      const bindings = importClause.namedBindings
+      if (bindings && ts.isNamespaceImport(bindings)) {
+        moduleNamespaces.add(bindings.name.text)
+      } else if (bindings && ts.isNamedImports(bindings)) {
+        for (const element of bindings.elements) {
+          if (element.isTypeOnly) continue
+          const imported = (element.propertyName ?? element.name).text
+          if (imported === 'createRequire') {
+            factories.add(element.name.text)
+          } else if (imported !== 'builtinModules') {
+            throw new Error(
+              `Unsupported node:module named binding in ${sourceFile.fileName}: ${imported}`,
+            )
+          }
+        }
+      }
+    } else if (
+      ts.isImportEqualsDeclaration(statement) &&
+      !statement.isTypeOnly &&
+      ts.isExternalModuleReference(statement.moduleReference) &&
+      statement.moduleReference.expression &&
+      ts.isStringLiteralLike(statement.moduleReference.expression) &&
+      isNodeModuleSpecifier(statement.moduleReference.expression.text)
+    ) {
+      moduleNamespaces.add(statement.name.text)
     }
   }
+
   const requireFunctions = new Set<string>()
   const visit = (node: ts.Node): void => {
+    if (
+      ts.isCallExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === 'require' &&
+      node.arguments.length === 1 &&
+      ts.isStringLiteralLike(node.arguments[0]!) &&
+      isNodeProcessSpecifier(node.arguments[0]!.text)
+    ) {
+      throw new Error(`Unsupported CommonJS node:process binding in ${sourceFile.fileName}.`)
+    }
+    if (ts.isCallExpression(node) && isNodeModuleRequireCall(node)) {
+      const expression = outerTransparentExpression(node)
+      const declaration = expression.parent
+      if (
+        !ts.isVariableDeclaration(declaration) ||
+        declaration.initializer !== expression ||
+        !ts.isIdentifier(declaration.name)
+      ) {
+        throw new Error(`Unsupported CommonJS module namespace binding in ${sourceFile.fileName}.`)
+      }
+      moduleNamespaces.add(declaration.name.text)
+    }
     if (
       ts.isVariableDeclaration(node) &&
       ts.isIdentifier(node.name) &&
@@ -356,20 +604,120 @@ function collectCreateRequireBindings(sourceFile: ts.SourceFile): {
     ts.forEachChild(node, visit)
   }
   visit(sourceFile)
-  return { factories, requireFunctions }
+  return { factories, moduleNamespaces, requireFunctions }
+}
+
+function isTypeOnlyModuleReference(node: ts.Identifier): boolean {
+  let current: ts.Node | undefined = node.parent
+  while (current && !ts.isStatement(current) && !ts.isSourceFile(current)) {
+    if (ts.isTypeNode(current)) return true
+    current = current.parent
+  }
+  return false
+}
+
+function isModuleNamespaceDeclarationName(node: ts.Identifier): boolean {
+  const parent = node.parent
+  return (
+    (ts.isImportClause(parent) && parent.name === node) ||
+    (ts.isNamespaceImport(parent) && parent.name === node) ||
+    (ts.isImportSpecifier(parent) && parent.name === node) ||
+    (ts.isImportEqualsDeclaration(parent) && parent.name === node) ||
+    (ts.isVariableDeclaration(parent) && parent.name === node) ||
+    (ts.isBindingElement(parent) && parent.name === node) ||
+    (ts.isParameter(parent) && parent.name === node) ||
+    ((ts.isFunctionDeclaration(parent) ||
+      ts.isFunctionExpression(parent) ||
+      ts.isClassDeclaration(parent) ||
+      ts.isClassExpression(parent)) &&
+      parent.name === node)
+  )
+}
+
+function isNonValueModuleIdentifier(node: ts.Identifier): boolean {
+  const parent = node.parent
+  return (
+    (ts.isPropertyAccessExpression(parent) && parent.name === node) ||
+    (ts.isPropertyAssignment(parent) && parent.name === node) ||
+    (ts.isBindingElement(parent) && parent.propertyName === node) ||
+    (ts.isImportSpecifier(parent) && (parent.name === node || parent.propertyName === node)) ||
+    (ts.isExportSpecifier(parent) && (parent.name === node || parent.propertyName === node)) ||
+    (ts.isPropertyDeclaration(parent) && parent.name === node) ||
+    (ts.isMethodDeclaration(parent) && parent.name === node)
+  )
+}
+
+function assertNoModuleNamespaceEscapes(
+  sourceFile: ts.SourceFile,
+  moduleNamespaces: ReadonlySet<string>,
+): void {
+  const visit = (node: ts.Node): void => {
+    if (
+      ts.isIdentifier(node) &&
+      moduleNamespaces.has(node.text) &&
+      !isTypeOnlyModuleReference(node) &&
+      !isModuleNamespaceDeclarationName(node)
+    ) {
+      throw new Error(`Unsupported module namespace reference in ${sourceFile.fileName}.`)
+    }
+    ts.forEachChild(node, visit)
+  }
+  visit(sourceFile)
 }
 
 function collectModuleReferences(sourceFile: ts.SourceFile): ModuleReference[] {
   const references: ModuleReference[] = []
-  const { factories, requireFunctions } = collectCreateRequireBindings(sourceFile)
+  const { factories, moduleNamespaces, requireFunctions } = collectCreateRequireBindings(sourceFile)
+  const staticStringBindings = collectConstStringBindings(sourceFile)
   const add = (syntax: ProtectedV2ModuleSyntax, specifier: string, node: ts.Node): void => {
     references.push({ sourceOffset: node.getStart(sourceFile), specifier, syntax })
   }
   const visit = (node: ts.Node): void => {
+    if (
+      (ts.isPropertyAccessExpression(node) && node.name.text === 'constructor') ||
+      (ts.isElementAccessExpression(node) &&
+        staticallyKnownShortStrings(node.argumentExpression, staticStringBindings).has(
+          'constructor',
+        )) ||
+      (ts.isBindingElement(node) &&
+        ts.isObjectBindingPattern(node.parent) &&
+        ((node.propertyName &&
+          isStaticConstructorPropertyName(node.propertyName, staticStringBindings)) ||
+          (!node.propertyName &&
+            ts.isIdentifier(node.name) &&
+            node.name.text === 'constructor'))) ||
+      ((ts.isPropertyAssignment(node) || ts.isShorthandPropertyAssignment(node)) &&
+        isDestructuringAssignmentProperty(node) &&
+        isStaticConstructorPropertyName(node.name, staticStringBindings))
+    ) {
+      throw new Error(`Unsupported executable constructor reference in ${sourceFile.fileName}.`)
+    }
     if (ts.isImportDeclaration(node)) {
       add('import', literalModuleSpecifier(node.moduleSpecifier, 'Protected import'), node)
     } else if (ts.isExportDeclaration(node) && node.moduleSpecifier) {
-      add('export', literalModuleSpecifier(node.moduleSpecifier, 'Protected export'), node)
+      const specifier = literalModuleSpecifier(node.moduleSpecifier, 'Protected export')
+      const hasRuntimeExport =
+        !node.isTypeOnly &&
+        (!node.exportClause ||
+          ts.isNamespaceExport(node.exportClause) ||
+          node.exportClause.elements.some((element) => !element.isTypeOnly))
+      if (isNodeProcessSpecifier(specifier) && hasRuntimeExport) {
+        throw new Error(`Unsupported node:process export in ${sourceFile.fileName}.`)
+      }
+      if (
+        isNodeModuleSpecifier(specifier) &&
+        !node.isTypeOnly &&
+        (!node.exportClause ||
+          ts.isNamespaceExport(node.exportClause) ||
+          node.exportClause.elements.some(
+            (element) =>
+              !element.isTypeOnly &&
+              (element.propertyName ?? element.name).text !== 'builtinModules',
+          ))
+      ) {
+        throw new Error(`Unsupported module namespace export in ${sourceFile.fileName}.`)
+      }
+      add('export', specifier, node)
     } else if (
       ts.isImportEqualsDeclaration(node) &&
       ts.isExternalModuleReference(node.moduleReference)
@@ -398,15 +746,20 @@ function collectModuleReferences(sourceFile: ts.SourceFile): ModuleReference[] {
             `Protected dynamic import in ${sourceFile.fileName} must have one argument.`,
           )
         }
-        add(
-          'dynamic_import',
-          literalModuleSpecifier(node.arguments[0], 'Protected dynamic import'),
-          node,
-        )
+        const specifier = literalModuleSpecifier(node.arguments[0], 'Protected dynamic import')
+        if (isNodeModuleSpecifier(specifier) || isNodeProcessSpecifier(specifier)) {
+          throw new Error(`Unsupported dynamic module namespace import in ${sourceFile.fileName}.`)
+        }
+        add('dynamic_import', specifier, node)
       } else if (ts.isIdentifier(node.expression) && factories.has(node.expression.text)) {
         // The initializer was validated in the first pass. Any other call is unsupported.
         const parent = node.parent
-        if (!ts.isVariableDeclaration(parent) || parent.initializer !== node) {
+        if (
+          !ts.isVariableDeclaration(parent) ||
+          parent.initializer !== node ||
+          !ts.isIdentifier(parent.name) ||
+          !requireFunctions.has(parent.name.text)
+        ) {
           throw new Error(`Unsupported createRequire use in ${sourceFile.fileName}.`)
         }
       } else if (
@@ -416,9 +769,18 @@ function collectModuleReferences(sourceFile: ts.SourceFile): ModuleReference[] {
         if (node.arguments.length !== 1) {
           throw new Error(`Protected require in ${sourceFile.fileName} must have one argument.`)
         }
+        const specifier = literalModuleSpecifier(node.arguments[0], 'Protected require')
+        if (isNodeProcessSpecifier(specifier)) {
+          throw new Error(`Unsupported runtime node:process require in ${sourceFile.fileName}.`)
+        }
+        if (requireFunctions.has(node.expression.text) && isNodeModuleSpecifier(specifier)) {
+          throw new Error(
+            `Unsupported created-require node:module namespace in ${sourceFile.fileName}.`,
+          )
+        }
         add(
           requireFunctions.has(node.expression.text) ? 'create_require' : 'require',
-          literalModuleSpecifier(node.arguments[0], 'Protected require'),
+          specifier,
           node,
         )
       } else if (
@@ -457,9 +819,37 @@ function collectModuleReferences(sourceFile: ts.SourceFile): ModuleReference[] {
     ts.forEachChild(node, visit)
   }
   visit(sourceFile)
+  assertNoModuleNamespaceEscapes(sourceFile, moduleNamespaces)
 
   const assertLoaderIdentifiers = (node: ts.Node): void => {
     if (ts.isIdentifier(node)) {
+      const isValueReference =
+        !isTypeOnlyModuleReference(node) &&
+        !isModuleNamespaceDeclarationName(node) &&
+        !isNonValueModuleIdentifier(node)
+      if (isValueReference && (node.text === 'globalThis' || node.text === 'global')) {
+        throw new Error(`Unsupported global module-loader root in ${sourceFile.fileName}.`)
+      }
+      if (isValueReference && (node.text === 'eval' || node.text === 'Function')) {
+        throw new Error(`Unsupported executable module-loader reference in ${sourceFile.fileName}.`)
+      }
+      if (isValueReference && node.text === 'Reflect') {
+        throw new Error(`Unsupported reflective constructor reference in ${sourceFile.fileName}.`)
+      }
+      if (isValueReference && node.text === 'process') {
+        const parent = node.parent
+        const isReviewedProcessProperty =
+          ts.isPropertyAccessExpression(parent) &&
+          parent.expression === node &&
+          REVIEWED_PROCESS_PROPERTIES.has(parent.name.text)
+        if (!isReviewedProcessProperty) {
+          throw new Error(`Unsupported process module-loader root in ${sourceFile.fileName}.`)
+        }
+      }
+      const isCommonJsModule = node.text === 'module' && isValueReference
+      if (isCommonJsModule) {
+        throw new Error(`Unsupported CommonJS module reference in ${sourceFile.fileName}.`)
+      }
       const isDirectRequire = node.text === 'require'
       const isFactory = factories.has(node.text)
       const isCreatedRequire = requireFunctions.has(node.text)

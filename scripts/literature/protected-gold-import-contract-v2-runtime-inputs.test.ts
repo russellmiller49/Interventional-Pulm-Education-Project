@@ -200,10 +200,207 @@ describe('protected V2 non-module runtime-input declarations', () => {
     expect(result.repositoryInputs).toEqual(['data.json', 'src/worker.ts'])
   })
 
+  it('allows only analyzer-understood namespace and API aliases', async () => {
+    const test = await fixture(`
+      import * as fs from 'node:fs'
+      import * as childProcess from 'node:child_process'
+      const fsAlias = fs
+      const readAlias = fsAlias.readFileSync
+      const wrappedReadAlias = (fsAlias.readFileSync)
+      const promisesAlias = (fsAlias.promises)
+      const childProcessAlias = childProcess
+      const spawnAlias = childProcessAlias.spawn
+      void fsAlias.readFileSync('data.json')
+      void readAlias('data.json')
+      void wrappedReadAlias('data.json')
+      void promisesAlias.readFile('data.json')
+      void spawnAlias('node', ['src/worker.ts'])
+    `)
+    await test.writeTracked('data.json', '{}\n')
+    await test.writeTracked('src/worker.ts', 'export {}\n')
+    const result = audit(test)
+    expect(result.callSites.filter(({ api }) => api.startsWith('fs.'))).toHaveLength(4)
+    expect(result.repositoryInputs).toEqual(['data.json', 'src/worker.ts'])
+  })
+
+  it('tracks transparent CommonJS, promisified child-process, and created-require aliases', async () => {
+    const test = await fixture(`
+      import { execFile } from 'node:child_process'
+      import { createRequire } from 'node:module'
+      import { promisify } from 'node:util'
+      const fs = (require('node:fs') as typeof import('node:fs'))
+      const read = (require('node:fs').readFileSync)
+      const { existsSync } = (require('node:fs'))
+      const execFileAsync = (promisify((execFile)))
+      const localRequire = createRequire(import.meta.url)
+      const createdFs = localRequire('node:fs')
+      void fs.readFileSync('data.json')
+      void read('data.json')
+      void existsSync('data.json')
+      void createdFs.readFileSync('data.json')
+      void execFileAsync('node', ['src/worker.ts'])
+    `)
+    await test.writeTracked('data.json', '{}\n')
+    await test.writeTracked('src/worker.ts', 'export {}\n')
+    const result = audit(test)
+    expect(result.callSites.filter(({ api }) => api.startsWith('fs.'))).toHaveLength(4)
+    expect(result.repositoryInputs).toEqual(['data.json', 'src/worker.ts'])
+  })
+
+  it.each([
+    [
+      'filesystem namespace as a call argument',
+      `
+        import * as fs from 'node:fs'
+        function consumeFilesystem(namespace: typeof fs): void {
+          void namespace.readFileSync('outside-protected-boundary.json', 'utf8')
+        }
+        consumeFilesystem(fs)
+      `,
+    ],
+    [
+      'runtime API as a call argument',
+      `import { readFileSync } from 'node:fs'; function consume(value: unknown) { void value }; consume(readFileSync)`,
+    ],
+    [
+      'filesystem namespace as a new argument',
+      `import * as fs from 'node:fs'; class Holder { constructor(value: unknown) { void value } }; new Holder(fs)`,
+    ],
+    [
+      'destructured namespace member',
+      `import * as fs from 'node:fs'; const { readFileSync } = fs; void readFileSync`,
+    ],
+    [
+      'namespace in an object',
+      `import * as fs from 'node:fs'; const wrapped = { fs }; void wrapped`,
+    ],
+    [
+      'API in an array',
+      `import { readFileSync } from 'node:fs'; const wrapped = [readFileSync]; void wrapped`,
+    ],
+    [
+      'returned namespace',
+      `import * as fs from 'node:fs'; function expose() { return fs }; void expose`,
+    ],
+    [
+      'returned API',
+      `import { readFileSync } from 'node:fs'; const expose = () => readFileSync; void expose`,
+    ],
+    [
+      'assigned namespace',
+      `import * as fs from 'node:fs'; let escaped: unknown; escaped = fs; void escaped`,
+    ],
+    [
+      'assigned API',
+      `import { readFileSync } from 'node:fs'; let escaped: unknown; escaped = readFileSync; void escaped`,
+    ],
+    [
+      'default-parameter namespace capture',
+      `import * as fs from 'node:fs'; function consume(namespace = fs) { void namespace }; void consume`,
+    ],
+    [
+      'callback API capture',
+      `import { readFileSync } from 'node:fs'; function register(callback: () => unknown) { void callback }; register(() => readFileSync)`,
+    ],
+    [
+      'child-process namespace as a call argument',
+      `import * as childProcess from 'node:child_process'; function consume(value: unknown) { void value }; consume(childProcess)`,
+    ],
+    [
+      'partially bound runtime API',
+      `import { readFileSync } from 'node:fs'; const read = readFileSync.bind(undefined, 'outside-protected-boundary.json'); void read()`,
+    ],
+    [
+      'immediately invoked promisified API',
+      `import { exec } from 'node:child_process'; import { promisify } from 'node:util'; void promisify(exec)('cat /etc/passwd')`,
+    ],
+    [
+      'returned promisified API',
+      `import { exec } from 'node:child_process'; import { promisify } from 'node:util'; function expose() { return promisify(exec) }; void expose`,
+    ],
+    [
+      'passed promisified API',
+      `import { exec } from 'node:child_process'; import { promisify } from 'node:util'; function consume(value: unknown) { void value }; consume(promisify(exec))`,
+    ],
+    [
+      'assigned promisified API',
+      `import { exec } from 'node:child_process'; import { promisify } from 'node:util'; const holder: { run?: unknown } = {}; holder.run = promisify(exec)`,
+    ],
+    [
+      'multi-argument promisify call',
+      `import { exec, spawn } from 'node:child_process'; import { promisify } from 'node:util'; const run = promisify(exec, spawn); void run`,
+    ],
+  ])('rejects a bound runtime escape through %s', async (_label, source) => {
+    const test = await fixture(source)
+    expect(() => audit(test)).toThrow('Unsupported protected runtime binding escape')
+  })
+
+  it.each([
+    ['inline CommonJS filesystem call', `void require('node:fs').readFileSync('/etc/passwd')`],
+    [
+      'inline CommonJS child-process call',
+      `void require('node:child_process').execSync('cat /etc/passwd')`,
+    ],
+    [
+      'inline created-require child-process call',
+      `import { createRequire } from 'node:module'; const localRequire = createRequire(import.meta.url); void localRequire('node:child_process').execSync('cat /etc/passwd')`,
+    ],
+    ['dynamic filesystem import', `async function load() { return import('node:fs') }; void load`],
+    ['direct filesystem re-export', `export { readFileSync as read } from 'node:fs'`],
+    ['filesystem namespace re-export', `export * as fs from 'node:fs'`],
+  ])('rejects unsupported runtime namespace acquisition through %s', async (_label, source) => {
+    const test = await fixture(source)
+    expect(() => audit(test)).toThrow(/Unsupported .*runtime namespace/u)
+  })
+
+  it.each([
+    [
+      'process getBuiltinModule filesystem acquisition',
+      `void process.getBuiltinModule('fs').readFileSync('/etc/passwd')`,
+    ],
+    [
+      'computed process getBuiltinModule alias',
+      `const property = 'getBuiltin' + 'Module'; const getBuiltin = process[property]; const fs = getBuiltin('fs'); void fs.readFileSync('/etc/passwd')`,
+    ],
+    [
+      'globalThis process getBuiltinModule',
+      `const fs = globalThis.process.getBuiltinModule('fs'); void fs.readFileSync('/etc/passwd')`,
+    ],
+    [
+      'assembled process mainModule require',
+      `const property = 're' + 'quire'; const localRequire = process.mainModule[property]; void localRequire('./dependency')`,
+    ],
+    [
+      'bracket process mainModule require',
+      `const property = 're' + 'quire'; const localRequire = process['mainModule'][property]; void localRequire('./dependency')`,
+    ],
+    [
+      'imported process namespace',
+      `import processApi from 'node:process'; const fs = processApi.getBuiltinModule('fs'); void fs.readFileSync('/etc/passwd')`,
+    ],
+    [
+      'created-require process namespace',
+      `import { createRequire } from 'node:module'; const localRequire = createRequire(import.meta.url); const processApi = localRequire('node:process'); void processApi`,
+    ],
+    [
+      'created-require node:module namespace',
+      `import { createRequire } from 'node:module'; const localRequire = createRequire(import.meta.url); const moduleApi = localRequire('node:module'); const property = 'create' + 'Require'; const nestedRequire = moduleApi[property](import.meta.url); void nestedRequire('./dependency')`,
+    ],
+    [
+      'created-require bare module namespace',
+      `import { createRequire } from 'node:module'; const localRequire = createRequire(import.meta.url); const moduleApi = localRequire('module'); const property = 'create' + 'Require'; const nestedRequire = moduleApi[property](import.meta.url); void nestedRequire('./dependency')`,
+    ],
+  ])('rejects runtime loader acquisition through %s', async (_label, source) => {
+    const test = await fixture(source)
+    expect(() => audit(test)).toThrow(
+      /Unsupported (?:.*runtime-loader|.*process namespace|.*runtime module namespace|node:process)/u,
+    )
+  })
+
   it.each([
     [
       `import * as fs from 'node:fs'; const method = 'readFileSync'; const read = fs[method]; void read('data.json')`,
-      'Unsupported runtime namespace alias',
+      'Unsupported protected runtime binding escape',
     ],
     [
       `import * as fs from 'node:fs'; void fs.someFutureReader('data.json')`,
