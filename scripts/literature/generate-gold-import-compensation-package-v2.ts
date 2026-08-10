@@ -331,11 +331,12 @@ export function validateAndSnapshotDevelopmentPlanningStateV2(input: unknown): R
   authenticatedSource: z.input<typeof developmentPlanningStateV2Schema>
   projection: DevelopmentPlanningStateV2
 }> {
-  const projection = developmentPlanningStateV2Schema.parse(input)
+  const authenticatedSource = canonicalFrozenClone(input) as z.input<
+    typeof developmentPlanningStateV2Schema
+  >
+  const projection = developmentPlanningStateV2Schema.parse(authenticatedSource)
   return Object.freeze({
-    authenticatedSource: canonicalFrozenClone(input) as z.input<
-      typeof developmentPlanningStateV2Schema
-    >,
+    authenticatedSource,
     projection: deepFreezeCanonicalValue(projection),
   })
 }
@@ -783,12 +784,12 @@ export function generateGoldImportCompensationPackageV2(
   input: GenerateGoldImportCompensationPackageV2Input,
 ): GeneratedGoldImportCompensationPackageV2 {
   const audit = validateReadyGoldImportCompensationV2Audit(input.audit)
-  const rawPlanningStateSha256 = sha256Canonical(input.developmentPlanningState)
+  const { authenticatedSource: authenticatedDevelopmentPlanningState, projection: planningState } =
+    validateAndSnapshotDevelopmentPlanningStateV2(input.developmentPlanningState)
+  const rawPlanningStateSha256 = sha256Canonical(authenticatedDevelopmentPlanningState)
   if (rawPlanningStateSha256 !== audit.database.developmentPlanningStateSha256) {
     throw new Error('V2 planning-state identity does not match the authenticated audit.')
   }
-  const { authenticatedSource: authenticatedDevelopmentPlanningState, projection: planningState } =
-    validateAndSnapshotDevelopmentPlanningStateV2(input.developmentPlanningState)
   const sourceIdentities = {
     amendedTwoRowAuthorizationSha256: sha256Bytes(input.sources.amendedAuthorizationBytes),
     finalArtifactSha256: sha256Bytes(input.sources.finalArtifactBytes),
