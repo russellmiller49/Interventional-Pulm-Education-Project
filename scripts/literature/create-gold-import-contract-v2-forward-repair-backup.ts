@@ -818,6 +818,8 @@ function validateRealLocalCaptureEvidence(input: {
     const readOnlyBracket = isRecord(reportDatabase.readOnlyBracket)
       ? reportDatabase.readOnlyBracket
       : {}
+    const readOnlyBracketBefore = isRecord(readOnlyBracket.before) ? readOnlyBracket.before : {}
+    const readOnlyBracketAfter = isRecord(readOnlyBracket.after) ? readOnlyBracket.after : {}
     const operations = isRecord(reportDatabase.operations) ? reportDatabase.operations : {}
     const mutations = isRecord(reportDatabase.mutations) ? reportDatabase.mutations : {}
     const safety = isRecord(report.safety) ? report.safety : {}
@@ -923,6 +925,16 @@ function validateRealLocalCaptureEvidence(input: {
       readOnlyBracket,
       ['after', 'before', 'matches'],
       'Real-local report read-only bracket',
+    )
+    assertExactKeys(
+      readOnlyBracketBefore,
+      [...Object.keys(REAL_LOCAL_IDENTITIES), 'readOnlyTransaction'],
+      'Real-local report read-only bracket before',
+    )
+    assertExactKeys(
+      readOnlyBracketAfter,
+      [...Object.keys(REAL_LOCAL_IDENTITIES), 'readOnlyTransaction'],
+      'Real-local report read-only bracket after',
     )
     assertExactKeys(
       operations,
@@ -1089,8 +1101,14 @@ blocked until a separately authorized migration-application session completes an
       receipt.database.physicalStateSha256 !== REAL_LOCAL_IDENTITIES.physicalStateSha256 ||
       !exactJson(current, REAL_LOCAL_IDENTITIES) ||
       readOnlyBracket.matches !== true ||
-      !exactJson(readOnlyBracket.before, REAL_LOCAL_IDENTITIES) ||
-      !exactJson(readOnlyBracket.after, REAL_LOCAL_IDENTITIES) ||
+      !exactJson(readOnlyBracketBefore, {
+        ...REAL_LOCAL_IDENTITIES,
+        readOnlyTransaction: true,
+      }) ||
+      !exactJson(readOnlyBracketAfter, {
+        ...REAL_LOCAL_IDENTITIES,
+        readOnlyTransaction: true,
+      }) ||
       state.datasetSplit !== 'development' ||
       state.batchId !== receipt.database.batchId ||
       state.batchName !== 'gold-set-v1' ||

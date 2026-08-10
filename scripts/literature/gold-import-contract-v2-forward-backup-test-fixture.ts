@@ -600,8 +600,14 @@ function buildRealLocalFixture(input: {
         readOnlyTransaction: true,
       },
       readOnlyBracket: {
-        after: GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2,
-        before: GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2,
+        after: {
+          ...GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2,
+          readOnlyTransaction: true,
+        },
+        before: {
+          ...GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2,
+          readOnlyTransaction: true,
+        },
         matches: true,
       },
     },

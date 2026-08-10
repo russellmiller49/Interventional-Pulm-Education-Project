@@ -233,6 +233,28 @@ describe('gold import contract V2 forward-repair backup', () => {
   })
 
   it('accepts one complete production-shaped Phase-10 evidence set', () => {
+    const realLocalReports = [...fixture.files.get('real-local-read-only-report')!]
+      .filter(([path]) => path.endsWith('/pre-application-report.json'))
+      .map(
+        ([, bytes]) =>
+          JSON.parse(bytes.toString('utf8')) as {
+            database: {
+              readOnlyBracket: {
+                after: { readOnlyTransaction: boolean }
+                before: { readOnlyTransaction: boolean }
+              }
+            }
+          },
+      )
+    expect(realLocalReports).toHaveLength(2)
+    expect(
+      realLocalReports.every(
+        ({ database }) =>
+          database.readOnlyBracket.before.readOnlyTransaction === true &&
+          database.readOnlyBracket.after.readOnlyTransaction === true,
+      ),
+    ).toBe(true)
+
     const validation = validateFixture(fixture)
 
     expect(validation).toMatchObject({
