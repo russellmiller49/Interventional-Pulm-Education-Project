@@ -7673,6 +7673,8 @@
       "releaseInitial": "Initial release — nothing to compare against.",
       "modulePins": "modules:",
       "requirementChanges": "requirement change(s)",
+      "modifierEffectChanges": "authored modifier-effect change(s)",
+      "modifierEffectNote": "Changes to the authored effect of selecting the named modifier. They apply only when a card selects it; this is not a statement that any scenario does.",
       "procedureColumn": "Procedure"
     },
     "catalog": {

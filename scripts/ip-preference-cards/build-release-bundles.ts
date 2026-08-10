@@ -626,13 +626,20 @@ async function main() {
   )
   for (const report of supersessions) {
     console.log(
-      `  ${report.nextReleaseBundleId}: ${report.pinChanges.length} pin change(s), ${report.requirementChanges.length} requirement change(s) against ${report.previousReleaseBundleId ?? 'no predecessor'}`,
+      `  ${report.nextReleaseBundleId}: ${report.pinChanges.length} pin change(s), ${report.requirementChanges.length} requirement change(s), ${report.modifierEffectChanges.length} authored modifier-effect change(s) against ${report.previousReleaseBundleId ?? 'no predecessor'}`,
     )
     for (const requirement of report.requirementChanges) {
       console.log(
         `    ${requirement.kind.padEnd(8)} ${requirement.requirementKey}${
           requirement.changedFields.length > 0 ? ` (${requirement.changedFields.join(', ')})` : ''
         }`,
+      )
+    }
+    for (const effect of report.modifierEffectChanges) {
+      console.log(
+        `    modifier ${effect.modifierCode} ${effect.kind} ${effect.actionId ?? '(modifier-level)'}${
+          effect.requirementKey ? ` → ${effect.requirementKey}` : ''
+        }${effect.changedFields.length > 0 ? ` (${effect.changedFields.join(', ')})` : ''}`,
       )
     }
   }

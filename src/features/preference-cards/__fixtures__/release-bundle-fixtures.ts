@@ -312,6 +312,133 @@ export interface FixtureReleaseWorld {
 }
 
 /**
+ * A release supersession whose ONLY difference is the modifier definition set.
+ *
+ * This is the shape the F-09 correction takes (PR #92): the recipe and module pins are
+ * byte-identical, the modifier-set pin moves, and the semantic change lives inside an
+ * `add_slot` payload — a modifier-added requirement going from `required` with no dependency
+ * rule to `conditional` with one. Before the modifier-effect layer existed, the impact
+ * report for exactly this change was "one set pin moved, zero requirement changes", which
+ * reads as reviewable and is not. The fixture is deliberately synthetic — a fixture
+ * procedure, a fixture modifier — so no invented clinical statement lands in the repository.
+ */
+export const MODIFIER_REVISION_OLD_RELEASE_ID = 'release-fixture-modifier-revision-v1-0'
+export const MODIFIER_REVISION_NEW_RELEASE_ID = 'release-fixture-modifier-revision-v1-1'
+export const MODIFIER_REVISION_MODIFIER_CODE = 'FIXTURE_RIGID_TOOL'
+export const MODIFIER_REVISION_ACTION_ID = 'fixture-rigid-tool-add-applicator'
+export const MODIFIER_REVISION_REQUIREMENT_KEY = 'OPS-FIXTURE-RIGID-APPLICATOR'
+export const MODIFIER_REVISION_DEPENDENCY_RULE = 'Rigid system in use'
+
+function modifierRevisionModifier(revision: 'old' | 'new'): ModifierDefinition {
+  return {
+    code: MODIFIER_REVISION_MODIFIER_CODE,
+    name: 'Fixture rigid tool',
+    groupCode: 'imaging_navigation',
+    description: 'Synthetic.',
+    releaseState: 'mvp',
+    active: true,
+    appliesTo: FIXTURE_PROCEDURE_CODE,
+    preview: ['Adds a synthetic applicator.'],
+    conflictsWith: [],
+    actions: [
+      {
+        id: MODIFIER_REVISION_ACTION_ID,
+        modifierCode: MODIFIER_REVISION_MODIFIER_CODE,
+        sequence: 10,
+        actionType: 'add_slot',
+        payload: {
+          slot: slot({
+            id: MODIFIER_REVISION_REQUIREMENT_KEY,
+            requirementKey: MODIFIER_REVISION_REQUIREMENT_KEY,
+            sourceSlotId: null,
+            label: 'Fixture rigid applicator',
+            // The revision under test: the added requirement was authored `required` with no
+            // dependency rule, and the corrected set authors it `conditional` on the rule.
+            requiredness: revision === 'old' ? 'required' : 'conditional',
+            dependencyRule: revision === 'old' ? null : MODIFIER_REVISION_DEPENDENCY_RULE,
+            setupSequence: 100_323,
+            includedBy: 'Operational fixture seed',
+          }),
+        },
+      },
+    ],
+  }
+}
+
+export interface ModifierRevisionFixture {
+  previous: { bundle: PreferenceCardReleaseBundle; sources: ReleaseDefinitionSources }
+  next: { bundle: PreferenceCardReleaseBundle; sources: ReleaseDefinitionSources }
+}
+
+/**
+ * Two frozen releases over one recipe, one module set, and two modifier sets.
+ *
+ * The recipe must offer the modifier (`allowedModifierCodes`) for the change to be in scope
+ * — the modifier-effect diff deliberately ignores modifiers no card of the procedure may
+ * select.
+ */
+export function createModifierRevisionFixture(): ModifierRevisionFixture {
+  const pristine = createFixtureDefinitionStore()
+  const recipe = pristine.recipes.get(FIXTURE_RECIPE_V1_1) as RecipeVersion
+  const offered: RecipeVersion = {
+    ...recipe,
+    allowedModifierCodes: [...recipe.allowedModifierCodes, MODIFIER_REVISION_MODIFIER_CODE],
+  }
+  const sourcesFor = (revision: 'old' | 'new'): ReleaseDefinitionSources => ({
+    recipe: offered,
+    modules: [pristine.modules.get(FIXTURE_MODULE_V1_1) as RecipeModuleVersion],
+    modifiers: [fixtureModifier, modifierRevisionModifier(revision)],
+    rescueModules: pristine.rescueModules,
+    compatibilityRules: pristine.compatibilityRules,
+    roleTaxonomy: pristine.roleTaxonomy,
+    catalogImportId: pristine.catalogImportId,
+    resolverContractVersion: pristine.resolverContractVersion,
+    resolverImplementationHash: pristine.resolverImplementationHash,
+  })
+
+  const authoredFor = (
+    id: string,
+    supersedes: string | null,
+    publishedAt: string,
+  ): ReleaseBundleAuthoredFields => ({
+    id,
+    sourceProcedureCode: FIXTURE_PROCEDURE_CODE,
+    scenarioId: FIXTURE_SCENARIO_ID,
+    releaseState: 'published',
+    publishedAt,
+    retiredAt: null,
+    supersedesReleaseBundleId: supersedes,
+    releaseNotes: 'Synthetic modifier-set revision.',
+    publishedCatalogImportId: pristine.catalogImportId,
+    publishedResolverContractVersion: pristine.resolverContractVersion,
+    publishedResolverImplementationHash: pristine.resolverImplementationHash,
+  })
+
+  const previousSources = sourcesFor('old')
+  const nextSources = sourcesFor('new')
+  return {
+    previous: {
+      bundle: computeReleaseBundle(
+        authoredFor(MODIFIER_REVISION_OLD_RELEASE_ID, null, '2026-04-01T00:00:00.000Z'),
+        previousSources,
+      ),
+      sources: previousSources,
+    },
+    next: {
+      bundle: computeReleaseBundle(
+        authoredFor(
+          MODIFIER_REVISION_NEW_RELEASE_ID,
+          MODIFIER_REVISION_OLD_RELEASE_ID,
+          '2026-05-01T00:00:00.000Z',
+        ),
+        nextSources,
+      ),
+      sources: nextSources,
+    },
+  }
+}
+
+/**
  * The three releases, computed and frozen exactly as publication would have frozen them.
  *
  * Hashes are computed from the pristine store and then held, so a test that mutates the store

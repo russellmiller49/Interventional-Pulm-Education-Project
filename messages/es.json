@@ -7673,6 +7673,8 @@
       "releaseInitial": "Versión inicial: no hay nada con que compararla.",
       "modulePins": "módulos:",
       "requirementChanges": "cambio(s) de requisito",
+      "modifierEffectChanges": "cambio(s) en el efecto creado del modificador",
+      "modifierEffectNote": "Cambios en el efecto creado de seleccionar el modificador indicado. Solo se aplican cuando una tarjeta lo selecciona; esto no afirma que ningún escenario lo seleccione.",
       "procedureColumn": "Procedimiento"
     },
     "catalog": {
