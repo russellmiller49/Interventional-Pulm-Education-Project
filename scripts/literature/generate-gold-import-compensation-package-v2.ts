@@ -819,7 +819,7 @@ export function generateGoldImportCompensationPackageV2(
 
   const recordsByItem = new Map(artifact.rows.map((record) => [record.identity.itemId, record]))
   const legacyPlanningState = compatibilityDevelopmentPlanningStateSchema.parse(
-    input.developmentPlanningState,
+    authenticatedDevelopmentPlanningState,
   )
   const existingHeadRows = legacyPlanningState.rows.filter((row) => row.currentReviewId !== null)
   if (existingHeadRows.length !== 9) {

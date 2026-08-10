@@ -237,14 +237,25 @@ describe('V2 authenticated planning-state evidence', () => {
     raw.rows[0]!.sequence = 2
     expect(validated.authenticatedSource.rows[0]?.sequence).toBe(1)
 
-    const generatorSource = readFileSync(
+    const generatorFileSource = readFileSync(
       resolve('scripts/literature/generate-gold-import-compensation-package-v2.ts'),
       'utf8',
+    )
+    const generatorSource = generatorFileSource.slice(
+      generatorFileSource.indexOf('export function generateGoldImportCompensationPackageV2'),
+      generatorFileSource.indexOf('const REQUIRED_PACKAGE_FILES_V2'),
     )
     expect(generatorSource).toContain(
       'developmentPlanningState: authenticatedDevelopmentPlanningState,',
     )
+    expect(generatorSource).toContain(
+      'compatibilityDevelopmentPlanningStateSchema.parse(\n    authenticatedDevelopmentPlanningState,',
+    )
     expect(generatorSource).not.toContain('developmentPlanningState: planningState,')
+    expect(generatorSource).not.toContain(
+      'compatibilityDevelopmentPlanningStateSchema.parse(\n    input.developmentPlanningState,',
+    )
+    expect(generatorSource.match(/input\.developmentPlanningState/gu)).toHaveLength(1)
   })
 })
 
