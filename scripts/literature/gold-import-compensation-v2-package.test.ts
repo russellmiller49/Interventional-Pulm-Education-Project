@@ -245,6 +245,12 @@ describe('V2 authenticated planning-state evidence', () => {
       generatorFileSource.indexOf('export function generateGoldImportCompensationPackageV2'),
       generatorFileSource.indexOf('const REQUIRED_PACKAGE_FILES_V2'),
     )
+    const verifierSource = generatorFileSource.slice(
+      generatorFileSource.indexOf('export function verifyGeneratedGoldImportCompensationPackageV2'),
+      generatorFileSource.indexOf(
+        'export async function runGenerateGoldImportCompensationPackageV2',
+      ),
+    )
     expect(generatorSource).toContain(
       'developmentPlanningState: authenticatedDevelopmentPlanningState,',
     )
@@ -256,6 +262,10 @@ describe('V2 authenticated planning-state evidence', () => {
       'compatibilityDevelopmentPlanningStateSchema.parse(\n    input.developmentPlanningState,',
     )
     expect(generatorSource.match(/input\.developmentPlanningState/gu)).toHaveLength(1)
+    expect(verifierSource.match(/input\.developmentPlanningState/gu)).toHaveLength(1)
+    expect(verifierSource).toContain(
+      'developmentPlanningState: authenticatedDevelopmentPlanningState,',
+    )
   })
 })
 

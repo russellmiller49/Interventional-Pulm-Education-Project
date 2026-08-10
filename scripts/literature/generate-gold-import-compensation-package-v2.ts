@@ -1565,10 +1565,12 @@ export function verifyGeneratedGoldImportCompensationPackageV2(
   input: GeneratedGoldImportCompensationPackageV2,
 ): GeneratedGoldImportCompensationPackageV2 {
   const intrinsic = verifyGoldImportCompensationPackageV2IntrinsicFiles(input.files)
+  const { authenticatedSource: authenticatedDevelopmentPlanningState } =
+    validateAndSnapshotDevelopmentPlanningStateV2(input.developmentPlanningState)
   const expectedVerifiedBindings = {
     completeCatalogAuditIdentitySha256:
       intrinsic.sourceAuthorizationSet.completeCatalogAudit.fullAuditIdentitySha256,
-    developmentPlanningStateSha256: sha256Canonical(input.developmentPlanningState),
+    developmentPlanningStateSha256: sha256Canonical(authenticatedDevelopmentPlanningState),
     expectedCatalogBindingSha256: intrinsic.sourceAuthorizationSet.expectedCatalog.bindingSha256,
     migrationSha256: intrinsic.sourceAuthorizationSet.migration.sha256,
     sourceArtifactSha256: intrinsic.sourceAuthorizationSet.finalArtifactSha256,
@@ -1595,7 +1597,7 @@ export function verifyGeneratedGoldImportCompensationPackageV2(
   }
   return Object.freeze({
     compensationTemplate: intrinsic.compensationTemplate,
-    developmentPlanningState: canonicalFrozenClone(input.developmentPlanningState),
+    developmentPlanningState: authenticatedDevelopmentPlanningState,
     files: intrinsic.files,
     importPlan: intrinsic.importPlan,
     manifestSha256: intrinsic.manifestSha256,
