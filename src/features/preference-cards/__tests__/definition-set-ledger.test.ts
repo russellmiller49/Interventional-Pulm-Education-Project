@@ -250,6 +250,18 @@ describe('validateDefinitionSetLedger', () => {
     )
   })
 
+  it('rejects an unknown format version rather than reinterpreting the content', () => {
+    const ledger = { ...ledgerWithV1(), formatVersion: '2.0' }
+    const messages = validateDefinitionSetLedger({
+      ledger,
+      pinnedSetHashes: pinsForV1,
+      live: setsV2,
+    })
+    expect(messages.map((message) => message.code)).toContain(
+      'definition_set_ledger_unknown_format',
+    )
+  })
+
   it('rejects an unknown set kind rather than skipping it', () => {
     const ledger = ledgerWithV1()
     ledger.entries.push({
@@ -487,5 +499,20 @@ describe('publication-baseline protection for the definition-set ledger', () => 
     const comparison = compare(ledgerWithV1(), head)
     expect(comparison.violations).toEqual([])
     expect(comparison.added).toHaveLength(1)
+  })
+
+  it('rejects rewriting a retained entry’s recorded first publisher', () => {
+    // Provenance is append-only history too: the field rides in the baseline entry's
+    // lifecycle with no mutable-field rule declared, so any later change is a rewrite.
+    const head = ledgerWithV1()
+    head.entries = head.entries.map((entry) =>
+      entry.definitionSetId === MODIFIER_SET_DEFINITION_ID
+        ? { ...entry, firstPublishedByReleaseBundleId: 'release-fixture-v9-9' }
+        : entry,
+    )
+    const comparison = compare(ledgerWithV1(), head)
+    expect(comparison.violations.map((violation) => violation.code)).toEqual([
+      'publication_lifecycle_field_rewritten',
+    ])
   })
 })

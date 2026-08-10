@@ -38,6 +38,13 @@
       "runtimeArgs": ["next", "dev", "--port", "3010", "--webpack"],
       "port": 3010,
       "autoPort": false
+    },
+    {
+      "name": "claude-b-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "--port", "3121", "--webpack"],
+      "port": 3121,
+      "autoPort": false
     }
   ]
 }

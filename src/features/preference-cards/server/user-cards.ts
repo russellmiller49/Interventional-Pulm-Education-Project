@@ -1,5 +1,6 @@
 import { supabaseServer } from '@/lib/supabase/server'
 
+import { getCurrentReleaseBundleForScenario } from '../data/release-bundles.server'
 import { resolveCard } from '../domain/resolve-card'
 import type { ResolvedCard } from '../domain/types'
 import {
@@ -241,6 +242,26 @@ export async function saveUserCard(request: SaveCardRequest): Promise<UserCardRe
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return { ok: false, error: 'Sign in to save a preference card.' }
+
+  // A NEW card originates only on the release the pointer currently names. The id arrives
+  // from the client, and `buildReleaseContext` deliberately resolves retired and superseded
+  // releases — a card already pinned to one must keep reopening — so currency is this path's
+  // check, not the resolver's. Before definition-set retention the gap was latent: a
+  // superseded release only resolved while its set pins still equaled the live sets. Now a
+  // superseded release resolves its retained sets by design, which would let a crafted
+  // create request originate a card on clinical semantics a published correction replaced.
+  // Editing an existing card keeps the card's own pin, checked one level down.
+  if (!request.cardId) {
+    const currentRelease = getCurrentReleaseBundleForScenario(request.scenarioId)
+    if (!currentRelease || currentRelease.id !== request.releaseBundleId) {
+      return {
+        ok: false,
+        error: currentRelease
+          ? `A new card is built on the current release for its procedure (${currentRelease.id}), not on ${request.releaseBundleId ?? 'an unpinned request'}. Reload the builder and try again.`
+          : `No current release is published for "${request.scenarioId}", so a new card cannot be created for it.`,
+      }
+    }
+  }
 
   const generatedAt = new Date().toISOString()
   const resolved = resolveForSave(request, generatedAt)

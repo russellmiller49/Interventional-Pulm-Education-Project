@@ -112,6 +112,50 @@ describe('release bundle build', () => {
     expect(result.messages.map((message) => message.code)).toContain('release_pointer_retired')
   })
 
+  it('resolves a draft through the live sets even when stale pins were recorded for its id', () => {
+    // The two-pass freeze writes drafts into the generated file, so a draft's id can carry
+    // recorded pins from before a live-set edit. Those pins must not be honoured: a draft's
+    // whole point is to publish the CURRENT content, and resolving it through stale retained
+    // sets would silently freeze the pre-edit semantics under a release note describing the
+    // edit. Fixture: a new draft whose recorded pins name the superseded modifier set.
+    const input = baseInput()
+    const releases = seedReleases(input)
+    const template = releases.find(
+      (release) => release.id === 'release-therapeutic-bronch-v1-2',
+    ) as SeedRelease & Record<string, unknown>
+    releases.push({
+      ...template,
+      id: 'release-therapeutic-bronch-v9-9',
+      releaseState: 'draft',
+      supersedesReleaseBundleId: 'release-therapeutic-bronch-v1-2',
+      definitionHash: undefined,
+      publishedAt: null,
+      catalogImportId: undefined,
+      resolverContractVersion: undefined,
+      resolverImplementationHash: undefined,
+    } as SeedRelease)
+
+    const staleBundle = (
+      generatedReleasesJson as { bundles: PreferenceCardReleaseBundle[] }
+    ).bundles.find(
+      (bundle) => bundle.id === 'release-therapeutic-bronch-v1-1',
+    ) as PreferenceCardReleaseBundle
+    const withStaleDraftPins = new Map(recordedSetPinsByReleaseId)
+    withStaleDraftPins.set('release-therapeutic-bronch-v9-9', setPinsOfBundle(staleBundle))
+
+    const result = buildReleaseBundles({ ...input, recordedSetPinsByReleaseId: withStaleDraftPins })
+    const draft = result.bundles.find(
+      (bundle) => bundle.id === 'release-therapeutic-bronch-v9-9',
+    ) as PreferenceCardReleaseBundle
+    const current = result.bundles.find(
+      (bundle) => bundle.id === 'release-therapeutic-bronch-v1-2',
+    ) as PreferenceCardReleaseBundle
+    // The draft pins what is live NOW — the same set the current published release pins —
+    // not the stale set its recorded pins named.
+    expect(draft.modifierSetPin.definitionHash).toBe(current.modifierSetPin.definitionHash)
+    expect(draft.modifierSetPin.definitionHash).not.toBe(staleBundle.modifierSetPin.definitionHash)
+  })
+
   it('keeps every retained release addressed by a unique id', () => {
     const ids = generatedReleasesJson.bundles.map((bundle) => bundle.id)
     expect(ids).toEqual([...new Set(ids)])

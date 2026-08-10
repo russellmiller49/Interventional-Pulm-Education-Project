@@ -138,6 +138,9 @@ export type DefinitionSetLedgerValidationCode =
   | 'definition_set_ledger_duplicate_entry'
   | 'definition_set_ledger_unknown_set'
   | 'definition_set_ledger_entry_missing'
+  | 'definition_set_ledger_unknown_format'
+
+export const DEFINITION_SET_LEDGER_FORMAT_VERSION = '1.0'
 
 export interface DefinitionSetLedgerValidationMessage {
   code: DefinitionSetLedgerValidationCode
@@ -167,6 +170,17 @@ export function validateDefinitionSetLedger(input: {
 }): DefinitionSetLedgerValidationMessage[] {
   const messages: DefinitionSetLedgerValidationMessage[] = []
   const byKey = new Map<string, DefinitionSetLedgerEntry>()
+
+  // The version field is a real gate, not decoration: content written under a future format
+  // must be rejected rather than silently reinterpreted under this one's semantics.
+  if (input.ledger.formatVersion !== DEFINITION_SET_LEDGER_FORMAT_VERSION) {
+    messages.push({
+      code: 'definition_set_ledger_unknown_format',
+      definitionSetId: '(ledger)',
+      definitionHash: null,
+      message: `The definition-set ledger declares format "${input.ledger.formatVersion}"; this code understands "${DEFINITION_SET_LEDGER_FORMAT_VERSION}". Reading it anyway could reinterpret retained content under the wrong semantics.`,
+    })
+  }
 
   for (const entry of input.ledger.entries) {
     if (!isKnownDefinitionSetId(entry.definitionSetId)) {
@@ -285,9 +299,15 @@ export function createDefinitionSetResolver(
   live: LiveDefinitionSets,
   ledger: DefinitionSetLedger,
 ): DefinitionSetResolver {
-  const retainedByKey = new Map<string, DefinitionSetLedgerEntry>(
-    ledger.entries.map((entry) => [`${entry.definitionSetId}@${entry.definitionHash}`, entry]),
-  )
+  // First entry wins on a duplicate key, matching the validator's indexing exactly — the
+  // validator examines the entry the resolver would serve, never a different one. (Duplicate
+  // keys are a hard validation failure anyway; this only keeps the two readers aligned while
+  // the failure is being reported.)
+  const retainedByKey = new Map<string, DefinitionSetLedgerEntry>()
+  for (const entry of ledger.entries) {
+    const key = `${entry.definitionSetId}@${entry.definitionHash}`
+    if (!retainedByKey.has(key)) retainedByKey.set(key, entry)
+  }
   const liveHashBySetId = new Map<string, string>(
     liveDefinitionSetContents(live).map((content) => [
       content.definitionSetId,

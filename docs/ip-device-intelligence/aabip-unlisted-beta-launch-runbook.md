@@ -95,12 +95,19 @@ the harness reads served bytes, not rendered pixels.
 ## 7. Rollback
 
 Unset `NEXT_PUBLIC_ENABLE_DEVICE_INTELLIGENCE` (or set it to anything other than `true`)
-and redeploy/restart. Re-run the §4 mode-off pass to confirm every route is a 404 again.
-No data changes, so there is nothing else to roll back.
+and redeploy. On platforms that inline `NEXT_PUBLIC_` variables at build time (Railway
+rebuilds on an environment change), rollback requires that **rebuild** — a bare restart of a
+build made with the flag set would leave the routes serving. Re-run the §4 mode-off pass to
+confirm every route is a 404 again; it fails loudly if the rollback did not take. No data
+changes, so there is nothing else to roll back.
 
 ## 8. Evidence to retain from the launch smoke test
 
-Keep, alongside the launch decision record:
+Keep, alongside the launch decision record — as an **internal** record: the harness stdout
+names non-cohort product ids as negative controls, and while those ids are already present
+in the repository's committed catalog data, the project's own bar keeps candidate/hidden
+identity off served pages, so the evidence should not be pasted into public PR or issue
+text either:
 
 1. The full stdout of the §4 mode-off pass (pre-enable), with its timestamp and target host.
 2. The full stdout of the §6 mode-on pass (post-enable), same.

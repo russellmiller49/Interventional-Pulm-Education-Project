@@ -124,26 +124,38 @@ test proves a second run is byte-identical.
 `withPublishedDefinitionSets` returns an existing entry untouched even when the live set now
 says something different — it can never be the thing that rewrites history. New (id, hash)
 pairs are appended; entries are sorted by (id, hash) so regeneration is order-stable.
-Deletion or mutation of a retained entry is rejected twice: by
-`validateDefinitionSetLedger` in the same tree (hash integrity), and by
-`check-publication-baseline` against the protected base (a mutated entry changes its
-content-addressed key, which reads as a removal — `publication_entry_removed` — and the
-recorded hash comparison also fires `publication_definition_mutated`).
+Deletion or mutation of a retained entry is rejected twice, by two different guards
+covering the two ways the tampering can be written: `check-publication-baseline` catches a
+changed **hash** — the content-addressed key changes with it, which reads as removing a
+published entry (`publication_entry_removed`) — while a content edit that leaves the
+recorded hash field intact is invisible to the baseline (it never re-hashes content) and is
+caught instead by `validateDefinitionSetLedger`'s re-hash, in the build gate and the
+committed-data suite (`definition_set_ledger_entry_mutated`). The recorded first publisher
+is protected as an undeclared lifecycle field: any later change to it is
+`publication_lifecycle_field_rewritten`.
 
 ### 3.4 Failure modes (all fail closed)
 
-| Condition                                                               | Where it fails                                           | Code                                                           |
-| ----------------------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------- |
-| Entry content no longer matches its recorded hash                       | build + integrity suite                                  | `definition_set_ledger_entry_mutated`                          |
-| Two entries claim one (id, hash) key                                    | build + integrity suite                                  | `definition_set_ledger_duplicate_entry`                        |
-| Entry carries an unknown set id                                         | build + integrity suite                                  | `definition_set_ledger_unknown_set`                            |
-| A published pin present in neither the matching live set nor the ledger | build + integrity suite + runtime resolution             | `definition_set_ledger_entry_missing` / `release_pin_missing`  |
-| Retained taxonomy contradicted by the live table (§3.6)                 | runtime resolution                                       | `release_pin_missing` (typed, card goes view-only)             |
-| Tampered ledger content reaching runtime                                | `pinDiff` re-hashes the resolved content against the pin | `release_definition_mutated`                                   |
-| Retained entry removed/mutated relative to the protected base           | `check-publication-baseline`                             | `publication_entry_removed` / `publication_definition_mutated` |
+| Condition                                                                     | Where it fails                                           | Code                                                          |
+| ----------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------- |
+| Entry content no longer matches its recorded hash                             | build + integrity suite                                  | `definition_set_ledger_entry_mutated`                         |
+| Two entries claim one (id, hash) key                                          | build + integrity suite                                  | `definition_set_ledger_duplicate_entry`                       |
+| Entry carries an unknown set id                                               | build + integrity suite                                  | `definition_set_ledger_unknown_set`                           |
+| A published pin present in neither the matching live set nor the ledger       | build + integrity suite + runtime resolution             | `definition_set_ledger_entry_missing` / `release_pin_missing` |
+| Retained taxonomy contradicted by the live table (§3.6)                       | runtime resolution                                       | `release_pin_missing` (typed, card goes view-only)            |
+| Tampered ledger content reaching runtime                                      | `pinDiff` re-hashes the resolved content against the pin | `release_definition_mutated`                                  |
+| Retained entry removed, or its hash rewritten, relative to the protected base | `check-publication-baseline`                             | `publication_entry_removed`                                   |
+| Retained entry's content edited with its recorded hash left intact            | build gate + committed-data suite (re-hash)              | `definition_set_ledger_entry_mutated`                         |
 
 There is no fallback from a missing pinned set to the current live set, and no "latest"
 selection anywhere.
+
+One diagnosability note, accepted deliberately: a §3.6 taxonomy contradiction surfaces
+through the same null as an unresolvable pin, so the typed failure an operator sees is
+`release_pin_missing` — the message will point at a missing ledger entry when the actual
+cause is a retargeted or removed alias in the live table. Fail-closed behaviour is correct
+either way; a distinct code would only improve the error's aim, and is recorded as accepted
+debt rather than silently improved here.
 
 ### 3.5 Historical/runtime parity
 
@@ -272,7 +284,20 @@ unchanged, zero lifecycle advances, everything new reported as additions (the tw
 the five ledger entries, and the seven D1.1 releases still in their pre-publication window).
 The superseded releases stay `published`; retiring them is a separate owner decision.
 
-### 5.6 Generated artifacts
+### 5.6 Owner observation (data/UX, no action taken)
+
+On a RIGID_BRONCH card with the APC modifier selected, the resolved card carries two
+conditional rows for the same role: the composed `SLOT-18617846CD` ("Rigid or malleable APC
+applicator", dependency "Rigid APC planned") and the modifier-added `OPS-APC-RIGID` ("Rigid
+APC applicator", dependency "Rigid system in use"). The duplication is pre-existing
+(requirement keys keep operationally authored lines distinct by design, and before F-09 the
+modifier row was hard-required — strictly worse); what is new is that both rows now ask a
+question, and on a rigid case "Rigid system in use" is definitionally true while "Rigid APC
+planned" is the discriminating one. Whether the APC modifier's row should be suppressed or
+re-phrased on rigid procedures is clinical authoring — recorded here for the owner rather
+than decided in code.
+
+### 5.7 Generated artifacts
 
 Every generated file this branch touches, with its generator and content identity
 (sha256 of the file bytes):

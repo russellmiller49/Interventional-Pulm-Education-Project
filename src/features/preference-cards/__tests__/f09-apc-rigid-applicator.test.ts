@@ -292,11 +292,18 @@ describe('the modifier-set delta is exactly the owner-authorized correction', ()
           expect(stableStringify(newAction)).toBe(stableStringify(oldAction))
           continue
         }
+        // Everything about the changed action EXCEPT the slot payload must be identical —
+        // an action-type or sibling-payload change must not hide behind the slot exemption.
+        expect(
+          stableStringify({ ...newAction, payload: { ...newAction.payload, slot: null } }),
+        ).toBe(stableStringify({ ...oldAction, payload: { ...oldAction.payload, slot: null } }))
         expect(oldSlot.requiredness).toBe('required')
         expect(newSlot!.requiredness).toBe('conditional')
         expect(oldSlot.dependencyRule).toBeNull()
         expect(newSlot!.dependencyRule).toBe('Rigid system in use')
-        for (const key of Object.keys(oldSlot)) {
+        // The union of keys on both sides, so a field present only on the new slot cannot
+        // escape the comparison.
+        for (const key of new Set([...Object.keys(oldSlot), ...Object.keys(newSlot!)])) {
           if (key === 'requiredness' || key === 'dependencyRule') continue
           expect(stableStringify(newSlot![key])).toBe(stableStringify(oldSlot[key]))
         }
@@ -314,12 +321,33 @@ describe('the modifier-set delta is exactly the owner-authorized correction', ()
 })
 
 describe('unpinned surfaces stay coherent with what a new card would pin', () => {
+  it('hands every scenario the same definition sets through the demo context and the current release', () => {
+    // The strong form of the invariant: not a sampled resolution but the context material
+    // itself. The D1 workspace renders every allowed modifier's expansion, the rescue list,
+    // and the compatibility conditions from the live demo context while displaying the
+    // pointer bundle's id — so the live context's three whole-set projections must be
+    // byte-equal to the pinned release context's for every procedure, whichever generation
+    // of the modifier set its pointer release pins. A future correction to an
+    // allowed-but-not-default modifier fails here even though no default resolution
+    // exercises it.
+    for (const scenario of getScenarioDefinitions()) {
+      const current = getCurrentReleaseBundle(scenario.sourceProcedureCode)
+      if (!current) continue
+      const release = buildReleaseContext(current.id)
+      if (!release.ok) throw new Error(`current release ${current.id} must build`)
+      const demo = buildDemoContext(scenario.id)
+      expect(stableStringify(demo.modifiers)).toBe(stableStringify(release.context.modifiers))
+      expect(stableStringify(demo.rescueModules)).toBe(
+        stableStringify(release.context.rescueModules),
+      )
+      expect(stableStringify(demo.compatibilityRules)).toBe(
+        stableStringify(release.context.compatibilityRules),
+      )
+    }
+  })
+
   it('resolves every scenario identically through the demo context and the current release', () => {
-    // The D1 workspace, the dashboard, and the new-card preview resolve through the live demo
-    // context; a saved card resolves through the pointed-at release. With mixed current set
-    // pins this invariant is what keeps the two stories the same: a procedure left on the old
-    // modifier set must be unaffected by the correction (APC is outside its allowed
-    // modifiers), and an advanced procedure's current release must equal the live sets.
+    // The resolution-level corollary, kept as an end-to-end check over the same pair.
     for (const scenario of getScenarioDefinitions()) {
       const current = getCurrentReleaseBundle(scenario.sourceProcedureCode)
       if (!current) continue

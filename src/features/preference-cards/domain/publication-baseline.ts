@@ -172,8 +172,12 @@ export function buildPublicationBaselineSnapshot(
 
   // Retained whole definition sets are content-addressed, so the id carries the hash: a
   // "consistent rewrite" — new content with a matching new hash — changes the id itself,
-  // which this comparison reads as removing a published entry. The hash is still recorded
-  // separately so an id kept intact with edited content also fires the mutation code.
+  // which this comparison reads as removing a published entry. The complementary case — the
+  // stored content edited while the recorded hash field is left intact — is deliberately NOT
+  // this check's job: the baseline never re-hashes content, and that tampering is caught by
+  // `validateDefinitionSetLedger`'s re-hash (in the build gate and the committed-data suite).
+  // The provenance field rides in `lifecycle` with no mutable-field rule declared for it, so
+  // any later change to it is `publication_lifecycle_field_rewritten`.
   for (const entry of artifacts.definitionSetLedger?.entries ?? []) {
     entries.push({
       kind: 'definition-set',
@@ -182,7 +186,7 @@ export function buildPublicationBaselineSnapshot(
       lineage: entry.definitionSetId,
       semanticVersion: null,
       dependencies: [],
-      lifecycle: {},
+      lifecycle: { firstPublishedByReleaseBundleId: entry.firstPublishedByReleaseBundleId },
     })
   }
 

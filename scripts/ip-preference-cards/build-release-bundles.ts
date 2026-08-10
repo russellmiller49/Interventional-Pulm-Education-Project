@@ -207,8 +207,15 @@ export function buildReleaseBundles(input: {
     }
 
     // A frozen release resolves through the whole-set pins it recorded when generated; a
-    // draft resolves the live sets, because a draft's pins are still being computed.
-    const sources = loadSources(release.recipeVersionId, recordedSetPins.get(release.id))
+    // draft resolves the live sets, because a draft's pins are still being computed. The
+    // gate on `frozen` is load-bearing: a draft's id can already appear in the previously
+    // generated file (the two-pass freeze writes drafts too), and resolving it through those
+    // recorded pins would silently freeze the pre-edit content — the exact substitution this
+    // ledger exists to prevent, pointed the other way.
+    const sources = loadSources(
+      release.recipeVersionId,
+      frozen ? recordedSetPins.get(release.id) : undefined,
+    )
     if (!sources) {
       fail(
         `Release ${release.id} pins definitions the generated data no longer supplies — the recipe version ${release.recipeVersionId} is not retained, or a pinned definition set is in neither the live sources nor the definition-set ledger. A retained release must stay reconstructable.`,
@@ -274,12 +281,22 @@ async function readJson<T>(directory: string, filename: string): Promise<T> {
   return JSON.parse(await readFile(path.join(directory, filename), 'utf8')) as T
 }
 
-/** The ledger starts empty on the first run; after that it is only ever added to. */
+/**
+ * The ledger starts empty on the first run; after that it is only ever added to.
+ *
+ * Only a genuinely missing file takes the fallback. A file that exists but does not parse is
+ * corruption, and degrading it to the default would convert "your retained history is
+ * damaged" into a cascade of misleading downstream retention errors (or, for the recorded
+ * set pins, into frozen releases quietly re-resolving live sets).
+ */
 async function readJsonOrDefault<T>(directory: string, filename: string, fallback: T): Promise<T> {
   try {
     return await readJson<T>(directory, filename)
-  } catch {
-    return fallback
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return fallback
+    throw new Error(
+      `${path.join(directory, filename)} exists but could not be read as JSON: ${error instanceof Error ? error.message : String(error)}`,
+    )
   }
 }
 

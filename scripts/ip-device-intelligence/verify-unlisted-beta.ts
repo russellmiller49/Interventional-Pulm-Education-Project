@@ -61,7 +61,13 @@ export function parseOptions(argv: string[]): Options {
     } else if (argument === '--start') {
       options.start = true
     } else if (argument.startsWith('--port=')) {
-      options.port = Number(argument.slice('--port='.length))
+      const port = Number(argument.slice('--port='.length))
+      if (!Number.isInteger(port) || port < 1 || port > 65535) {
+        throw new Error(
+          `--port must be an integer between 1 and 65535, got "${argument.slice('--port='.length)}".`,
+        )
+      }
+      options.port = port
     } else {
       throw new Error(
         `Unknown argument "${argument}". Use --mode=off|on with --base-url=… or --start [--port=…].`,
@@ -116,9 +122,13 @@ export function deriveProductFixtures(repoRoot: string): {
 }
 
 export function deriveAliasFixture(): { deprecated: string; canonical: string } {
-  const [deprecated, canonical] = Object.entries(ROLE_CODE_ALIASES).sort(([a], [b]) =>
-    a.localeCompare(b),
-  )[0]
+  const entries = Object.entries(ROLE_CODE_ALIASES).sort(([a], [b]) => a.localeCompare(b))
+  if (entries.length === 0) {
+    throw new Error(
+      'The role alias table is empty — the alias-redirect check has no fixture to derive.',
+    )
+  }
+  const [deprecated, canonical] = entries[0]
   return { deprecated, canonical }
 }
 
@@ -273,21 +283,34 @@ async function runOnChecks(baseUrl: string, repoRoot: string): Promise<CheckResu
     `status ${aliasResponse.status}, location ${aliasLocation || 'absent'}`,
   )
 
-  // Absent from navigation and the sitemap. The home page is the navigation surface; the
-  // sitemap route either does not exist or must not name the D1 paths.
-  const home = await fetchPath(baseUrl, '/en')
+  // The canonical clinical-role page carries the same served-page contract as every other
+  // D1 surface; the alias check above only proved the redirect.
+  await expectStatus(results, baseUrl, `/en/clinical-roles/${alias.canonical}`, 200, {
+    requireRobotsHeader: true,
+    requireRobotsMeta: true,
+  })
+
+  // Absent from navigation and the sitemap. Both checks assert the status they read from,
+  // so an unexpected redirect or error page cannot make the negative content check pass on
+  // an empty body. The navigation surface for an unauthenticated visitor is whatever /en
+  // resolves to after redirects.
+  const homeResponse = await fetch(`${baseUrl}/en`, { redirect: 'follow' })
+  const homeBody = await homeResponse.text()
   check(
     results,
-    'home navigation does not link the D1 routes',
-    !/href="\/(en\/)?(devices|procedures|clinical-roles)/.test(home.body),
-    'checked /en HTML for /devices, /procedures, /clinical-roles links',
+    'home navigation resolves and does not link the D1 routes',
+    homeResponse.status === 200 &&
+      !/href="[^"]*\/(devices|procedures|clinical-roles)(["\/?#])/.test(homeBody),
+    `final status ${homeResponse.status}; checked hrefs for /devices, /procedures, /clinical-roles in any form`,
   )
   const sitemap = await fetchPath(baseUrl, '/sitemap.xml')
   check(
     results,
-    'sitemap does not name the D1 routes',
-    sitemap.response.status === 404 ||
-      (!sitemap.body.includes('/devices') && !sitemap.body.includes('/procedures')),
+    'sitemap serves and does not name the D1 routes',
+    sitemap.response.status === 200 &&
+      !sitemap.body.includes('/devices') &&
+      !sitemap.body.includes('/procedures') &&
+      !sitemap.body.includes('/clinical-roles'),
     `sitemap status ${sitemap.response.status}`,
   )
 
@@ -346,14 +369,29 @@ async function runOnChecks(baseUrl: string, repoRoot: string): Promise<CheckResu
 }
 
 async function startLocalServer(mode: 'off' | 'on', port: number): Promise<ChildProcess> {
+  // The port must be free, or the readiness poll below could attach to a leftover server
+  // from an earlier run and certify a stale build in the wrong environment.
+  try {
+    await fetch(`http://localhost:${port}/`, { redirect: 'manual' })
+    throw new Error(
+      `Something is already answering on port ${port}. Stop it, or verify it directly with --base-url — --start refuses to adopt a server it did not launch.`,
+    )
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('already answering')) throw error
+    // Connection refused is the healthy case: nothing is on the port.
+  }
   const env: Record<string, string | undefined> = { ...process.env, PORT: String(port) }
   // The flag is set only in this child's environment, and only for --mode=on. Nothing is
   // persisted anywhere.
   if (mode === 'on') env.NEXT_PUBLIC_ENABLE_DEVICE_INTELLIGENCE = 'true'
   else delete env.NEXT_PUBLIC_ENABLE_DEVICE_INTELLIGENCE
+  // Detached, so the WHOLE process group can be signalled: npx interposes itself between us
+  // and the actual next-server, and signalling only the direct child leaves the grandchild
+  // running with the flag set.
   const child = spawn('npx', ['next', 'start', '-p', String(port)], {
     env: env as NodeJS.ProcessEnv,
     stdio: 'ignore',
+    detached: true,
   })
   const deadline = Date.now() + 60_000
   for (;;) {
@@ -404,10 +442,23 @@ async function main() {
       process.exitCode = 1
     }
   } finally {
-    if (child) {
-      child.kill('SIGTERM')
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      if (!child.killed) child.kill('SIGKILL')
+    if (child?.pid) {
+      // Negative pid signals the detached process group — npx and the next-server under it.
+      // `child.killed` only records that a signal was SENT, so escalation is gated on the
+      // exit code still being unset after the grace period.
+      try {
+        process.kill(-child.pid, 'SIGTERM')
+      } catch {
+        child.kill('SIGTERM')
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+      if (child.exitCode === null && child.signalCode === null) {
+        try {
+          process.kill(-child.pid, 'SIGKILL')
+        } catch {
+          child.kill('SIGKILL')
+        }
+      }
     }
   }
 }
