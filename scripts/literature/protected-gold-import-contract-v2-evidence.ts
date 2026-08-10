@@ -4,9 +4,17 @@ import {
   PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD,
   PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL_IDENTITY_SHA256,
   PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256,
-  validateProtectedV2CompleteCatalogAuditIdentity,
+  validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile,
   type ProtectedV2CompleteCatalogAuditIdentity,
 } from './gold-import-contract-v2-catalog-audit'
+import {
+  assertProtectedV2ExpectedCatalogArtifactSealed,
+  parseProtectedV2RuntimeBundleBinding,
+  validateProtectedV2ExpectedCatalogBinding,
+  validateProtectedV2RuntimeBundleBinding,
+  type ProtectedV2ExpectedCatalogBinding,
+  type ProtectedV2RuntimeBundleBinding,
+} from './protected-gold-import-contract-v2-bindings'
 import {
   PROTECTED_GOLD_IMPORT_CONTRACT_V1,
   PROTECTED_GOLD_IMPORT_CONTRACT_V2,
@@ -91,6 +99,7 @@ export interface ProtectedV2RepositoryEvidence {
   branch: 'main'
   head: string
   operatorBundle: ProtectedV2OperatorBundle
+  operatorBundleBinding: ProtectedV2RuntimeBundleBinding
   originMain: string
   statusCleanIncludingUntracked: true
 }
@@ -126,12 +135,14 @@ export interface ProtectedV2BackupInstanceProjection {
   }
   executedAt: string
   executionNonce: string
+  expectedCatalog: ProtectedV2ExpectedCatalogBinding
   migrationLedger: {
     sha256: string
     v1: typeof PROTECTED_GOLD_IMPORT_CONTRACT_V1 & { occurrence: 1 }
     v2: typeof PROTECTED_GOLD_IMPORT_CONTRACT_V2 & { occurrence: 0 }
   }
   outputDirectory: string
+  operatorBundleBinding: ProtectedV2RuntimeBundleBinding
   repositoryCommitSha: string
   safety: {
     databaseMutationCount: 0
@@ -146,8 +157,9 @@ export interface ProtectedV2BackupExecutionReceipt extends ProtectedV2BackupInst
   contentSha256: string
 }
 
-export function buildProtectedV2BackupExecutionReceipt(
+function buildProtectedV2BackupExecutionReceiptContent(
   input: ProtectedV2BackupInstanceProjection,
+  operatorBundle?: ProtectedV2OperatorBundle,
 ): ProtectedV2BackupExecutionReceipt {
   if (
     input.schemaVersion !== PROTECTED_V2_BACKUP_RECEIPT_SCHEMA_VERSION ||
@@ -156,6 +168,22 @@ export function buildProtectedV2BackupExecutionReceipt(
     input.migrationLedger.v2.occurrence !== 0
   ) {
     throw new Error('Protected V2 backup instance projection is malformed.')
+  }
+  validateProtectedV2ExpectedCatalogBinding(
+    input.expectedCatalog,
+    'local_supabase_postgres_owner_v1',
+    'local',
+  )
+  if (operatorBundle) {
+    validateProtectedV2RuntimeBundleBinding(input.operatorBundleBinding, operatorBundle)
+    assertProtectedV2ExpectedCatalogArtifactSealed({
+      binding: input.expectedCatalog,
+      bundle: operatorBundle,
+      profileId: 'local_supabase_postgres_owner_v1',
+      target: 'local',
+    })
+  } else {
+    parseProtectedV2RuntimeBundleBinding(input.operatorBundleBinding)
   }
   if (
     canonicalJson({
@@ -209,6 +237,13 @@ export function buildProtectedV2BackupExecutionReceipt(
   return { ...content, contentSha256: sha256(canonicalJson(content)) }
 }
 
+export function buildProtectedV2BackupExecutionReceipt(
+  input: ProtectedV2BackupInstanceProjection,
+  authorization: { operatorBundle: ProtectedV2OperatorBundle },
+): ProtectedV2BackupExecutionReceipt {
+  return buildProtectedV2BackupExecutionReceiptContent(input, authorization.operatorBundle)
+}
+
 export function parseProtectedV2BackupExecutionReceipt(
   bytes: string,
 ): ProtectedV2BackupExecutionReceipt {
@@ -223,7 +258,9 @@ export function parseProtectedV2BackupExecutionReceipt(
       'database',
       'executedAt',
       'executionNonce',
+      'expectedCatalog',
       'migrationLedger',
+      'operatorBundleBinding',
       'outputDirectory',
       'repositoryCommitSha',
       'safety',
@@ -265,7 +302,7 @@ export function parseProtectedV2BackupExecutionReceipt(
     'backup receipt safety',
   )
   const { backupInstanceId, contentSha256, ...projection } = parsed
-  const rebuilt = buildProtectedV2BackupExecutionReceipt(
+  const rebuilt = buildProtectedV2BackupExecutionReceiptContent(
     projection as unknown as ProtectedV2BackupInstanceProjection,
   )
   if (
@@ -347,9 +384,11 @@ export interface ProtectedV2ApplicationIntent {
   before: ProtectedV2DatabaseEvidence
   confirmation: typeof PROTECTED_V2_CONFIRMATION
   createdAt: string
+  expectedCatalog: ProtectedV2ExpectedCatalogBinding
   migration: typeof PROTECTED_GOLD_IMPORT_CONTRACT_V2
   operator: string
   operatorBundle: ProtectedV2OperatorBundle
+  operatorBundleBinding: ProtectedV2RuntimeBundleBinding
   outputDirectory: string
   repository: ProtectedV2RepositoryEvidence
   separateCaptureAttestation: typeof PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION
@@ -380,9 +419,11 @@ export function buildProtectedV2ApplicationIntent(input: {
     before: input.before,
     confirmation: PROTECTED_V2_CONFIRMATION,
     createdAt: input.authorization.requestedAt,
+    expectedCatalog: input.authorization.context.expectedPostApplicationAudit.expectedCatalog,
     migration: PROTECTED_GOLD_IMPORT_CONTRACT_V2,
     operator: input.authorization.operator,
     operatorBundle: input.repository.operatorBundle,
+    operatorBundleBinding: input.repository.operatorBundleBinding,
     outputDirectory: input.outputDirectory,
     repository: input.repository,
     separateCaptureAttestation: PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION,
@@ -412,9 +453,11 @@ export function parseProtectedV2ApplicationIntent(bytes: string): ProtectedV2App
       'before',
       'confirmation',
       'createdAt',
+      'expectedCatalog',
       'migration',
       'operator',
       'operatorBundle',
+      'operatorBundleBinding',
       'outputDirectory',
       'repository',
       'separateCaptureAttestation',
@@ -454,6 +497,36 @@ export function parseProtectedV2ApplicationIntent(bytes: string): ProtectedV2App
   ) {
     throw new Error('Protected V2 application intent is malformed or overbroad.')
   }
+  const expectedCatalog = validateProtectedV2ExpectedCatalogBinding(
+    parsed.expectedCatalog,
+    'local_supabase_postgres_owner_v1',
+    'local',
+  )
+  validateProtectedV2RuntimeBundleBinding(
+    parsed.operatorBundleBinding,
+    parsed.operatorBundle as ProtectedV2OperatorBundle,
+  )
+  assertProtectedV2ExpectedCatalogArtifactSealed({
+    binding: expectedCatalog,
+    bundle: parsed.operatorBundle as ProtectedV2OperatorBundle,
+    profileId: 'local_supabase_postgres_owner_v1',
+    target: 'local',
+  })
+  const authorization = record(parsed.authorization, 'application intent authorization')
+  const context = record(authorization.context, 'application intent authorization context')
+  const expectedPostApplicationAudit = record(
+    context.expectedPostApplicationAudit,
+    'application intent expected post-application audit',
+  )
+  const repository = record(parsed.repository, 'application intent repository')
+  if (
+    canonicalJson(expectedPostApplicationAudit.expectedCatalog) !==
+      canonicalJson(expectedCatalog) ||
+    canonicalJson(repository.operatorBundle) !== canonicalJson(parsed.operatorBundle) ||
+    canonicalJson(repository.operatorBundleBinding) !== canonicalJson(parsed.operatorBundleBinding)
+  ) {
+    throw new Error('Protected V2 application intent catalog or bundle bindings disagree.')
+  }
   requiredTimestamp(parsed.createdAt, 'application intent createdAt')
   requiredSha256(parsed.authorizationSha256, 'application intent authorizationSha256')
   return parsed as unknown as ProtectedV2ApplicationIntent
@@ -465,6 +538,7 @@ export interface ProtectedV2PostApplicationAudit {
   auditedAt: string
   catalogAudit: ProtectedV2CompleteCatalogAuditIdentity
   databaseEvidenceSha256: string
+  expectedCatalog: ProtectedV2ExpectedCatalogBinding
   migration: typeof PROTECTED_GOLD_IMPORT_CONTRACT_V2
   readOnly: true
   repeatableRead: true
@@ -479,7 +553,16 @@ export function buildProtectedV2PostApplicationAudit(
 ): ProtectedV2PostApplicationAudit {
   const content = {
     ...input,
-    catalogAudit: validateProtectedV2CompleteCatalogAuditIdentity(input.catalogAudit),
+    catalogAudit: validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile(
+      input.catalogAudit,
+      'local_supabase_postgres_owner_v1',
+      'local',
+    ),
+    expectedCatalog: validateProtectedV2ExpectedCatalogBinding(
+      input.expectedCatalog,
+      'local_supabase_postgres_owner_v1',
+      'local',
+    ),
     schemaVersion: PROTECTED_V2_POST_APPLICATION_AUDIT_SCHEMA_VERSION,
   }
   for (const [label, value] of Object.entries({
@@ -501,6 +584,16 @@ export function buildProtectedV2PostApplicationAudit(
       PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL_IDENTITY_SHA256 ||
     content.catalogAudit.environmentInvariantIdentitySha256 !==
       PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256 ||
+    content.catalogAudit.fullAuditIdentitySha256 !==
+      content.expectedCatalog.fullAuditIdentitySha256 ||
+    content.catalogAudit.fullEnvironmentInventoryIdentitySha256 !==
+      content.expectedCatalog.fullEnvironmentInventoryIdentitySha256 ||
+    content.catalogAudit.fullEnvironmentInventoryRecordCount !==
+      content.expectedCatalog.fullEnvironmentInventoryRecordCount ||
+    content.catalogAudit.localPostgresOwnerProfileIdentitySha256 !==
+      content.expectedCatalog.expectedDeploymentProfileIdentitySha256 ||
+    canonicalJson(content.catalogAudit.componentIdentities) !==
+      canonicalJson(content.expectedCatalog.componentIdentities) ||
     !COMMIT_PATTERN.test(content.repositoryCommitSha) ||
     canonicalJson(content.migration) !== canonicalJson(PROTECTED_GOLD_IMPORT_CONTRACT_V2) ||
     canonicalJson(content.verifier) !== canonicalJson(PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER)
@@ -522,6 +615,7 @@ export function parseProtectedV2PostApplicationAudit(
       'auditedAt',
       'catalogAudit',
       'databaseEvidenceSha256',
+      'expectedCatalog',
       'migration',
       'readOnly',
       'repeatableRead',
@@ -557,6 +651,7 @@ export interface ProtectedV2ApplicationResult {
   backupInstances: readonly [ProtectedV2BackupBinding, ProtectedV2BackupBinding]
   backupTrustModel: typeof PROTECTED_V2_BACKUP_TRUST_MODEL
   before: ProtectedV2DatabaseEvidence
+  expectedCatalog: ProtectedV2ExpectedCatalogBinding
   intentCommitIsAncestor: true
   intentRepositoryHead: string
   migration: typeof PROTECTED_GOLD_IMPORT_CONTRACT_V2
@@ -566,6 +661,7 @@ export interface ProtectedV2ApplicationResult {
   operatorAuthorizationSha256: string
   originalIntentSha256: string
   operatorBundleSha256: string
+  operatorBundleBinding: ProtectedV2RuntimeBundleBinding
   operatorBundleUnchanged: true
   postApplicationAudit: ProtectedV2PostApplicationAudit
   receiptReconciled: boolean
@@ -599,6 +695,21 @@ export function buildProtectedV2ApplicationResult(input: {
   reconciliationReason: string | null
   repository: ProtectedV2RepositoryEvidence
 }): ProtectedV2ApplicationResult {
+  const expectedCatalog = validateProtectedV2ExpectedCatalogBinding(
+    input.postApplicationAudit.expectedCatalog,
+    'local_supabase_postgres_owner_v1',
+    'local',
+  )
+  const operatorBundleBinding = validateProtectedV2RuntimeBundleBinding(
+    input.repository.operatorBundleBinding,
+    input.repository.operatorBundle,
+  )
+  assertProtectedV2ExpectedCatalogArtifactSealed({
+    binding: expectedCatalog,
+    bundle: input.repository.operatorBundle,
+    profileId: 'local_supabase_postgres_owner_v1',
+    target: 'local',
+  })
   if (
     input.receiptReconciled !== (input.migrationApplicationCallCount === 0) ||
     (input.receiptReconciled && !input.reconciliationReason?.trim()) ||
@@ -629,7 +740,8 @@ export function buildProtectedV2ApplicationResult(input: {
     input.intentCommitIsAncestor !== true ||
     !COMMIT_PATTERN.test(input.intentRepositoryHead) ||
     input.repository.head !== input.repository.originMain ||
-    input.operatorBundleSha256 !== input.repository.operatorBundle.aggregateSha256
+    input.operatorBundleSha256 !== input.repository.operatorBundle.aggregateSha256 ||
+    operatorBundleBinding.aggregateSha256 !== input.operatorBundleSha256
   ) {
     throw new Error('Protected V2 finalization database transition is not schema-only exact-once.')
   }
@@ -641,6 +753,7 @@ export function buildProtectedV2ApplicationResult(input: {
     backupInstances: input.backupInstances,
     backupTrustModel: PROTECTED_V2_BACKUP_TRUST_MODEL,
     before: input.before,
+    expectedCatalog,
     intentCommitIsAncestor: true,
     intentRepositoryHead: input.intentRepositoryHead,
     migration: PROTECTED_GOLD_IMPORT_CONTRACT_V2,
@@ -650,6 +763,7 @@ export function buildProtectedV2ApplicationResult(input: {
     operatorAuthorizationSha256: input.operatorAuthorizationSha256,
     originalIntentSha256: input.originalIntentSha256,
     operatorBundleSha256: input.operatorBundleSha256,
+    operatorBundleBinding,
     operatorBundleUnchanged: true,
     postApplicationAudit: input.postApplicationAudit,
     receiptReconciled: input.receiptReconciled,
@@ -678,6 +792,7 @@ export function parseProtectedV2ApplicationResult(bytes: string): ProtectedV2App
       'backupInstances',
       'backupTrustModel',
       'before',
+      'expectedCatalog',
       'intentCommitIsAncestor',
       'intentRepositoryHead',
       'migration',
@@ -687,6 +802,7 @@ export function parseProtectedV2ApplicationResult(bytes: string): ProtectedV2App
       'operatorAuthorizationSha256',
       'originalIntentSha256',
       'operatorBundleSha256',
+      'operatorBundleBinding',
       'operatorBundleUnchanged',
       'postApplicationAudit',
       'receiptReconciled',
@@ -734,6 +850,7 @@ export interface ProtectedV2ApplicationExecutionReceipt {
   compensationAuthorized: false
   contentSha256: string
   executedAt: string
+  expectedCatalog: ProtectedV2ExpectedCatalogBinding
   heldOutIdentitiesAccessed: false
   importAuthorized: false
   intentCommitIsAncestor: true
@@ -745,6 +862,7 @@ export interface ProtectedV2ApplicationExecutionReceipt {
   migrationSha256: typeof PROTECTED_GOLD_IMPORT_CONTRACT_V2.sha256
   operatorAuthorizationSha256: string
   operatorBundleSha256: string
+  operatorBundleBinding: ProtectedV2RuntimeBundleBinding
   operatorBundleUnchanged: true
   originalIntentSha256: string
   outputDirectory: string
@@ -763,10 +881,27 @@ export interface ProtectedV2ApplicationExecutionReceipt {
   verifierSourceSha256: typeof PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER.sha256
 }
 
-export function buildProtectedV2ApplicationExecutionReceipt(
+function buildProtectedV2ApplicationExecutionReceiptContent(
   input: Omit<ProtectedV2ApplicationExecutionReceipt, 'contentSha256' | 'schemaVersion'>,
+  operatorBundle?: ProtectedV2OperatorBundle,
 ): ProtectedV2ApplicationExecutionReceipt {
   const content = { ...input, schemaVersion: PROTECTED_V2_APPLICATION_EXECUTION_SCHEMA_VERSION }
+  const expectedCatalog = validateProtectedV2ExpectedCatalogBinding(
+    content.expectedCatalog,
+    'local_supabase_postgres_owner_v1',
+    'local',
+  )
+  const operatorBundleBinding = operatorBundle
+    ? validateProtectedV2RuntimeBundleBinding(content.operatorBundleBinding, operatorBundle)
+    : parseProtectedV2RuntimeBundleBinding(content.operatorBundleBinding)
+  if (operatorBundle) {
+    assertProtectedV2ExpectedCatalogArtifactSealed({
+      binding: expectedCatalog,
+      bundle: operatorBundle,
+      profileId: 'local_supabase_postgres_owner_v1',
+      target: 'local',
+    })
+  }
   for (const [label, value] of Object.entries({
     canonicalManifestSha256: content.canonicalManifestSha256,
     operatorAuthorizationSha256: content.operatorAuthorizationSha256,
@@ -787,6 +922,10 @@ export function buildProtectedV2ApplicationExecutionReceipt(
     content.verifierSourceSha256 !== PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER.sha256 ||
     content.intentCommitIsAncestor !== true ||
     content.operatorBundleUnchanged !== true ||
+    operatorBundleBinding.aggregateSha256 !== content.operatorBundleSha256 ||
+    content.postApplicationCatalogAuditIdentitySha256 !== expectedCatalog.fullAuditIdentitySha256 ||
+    canonicalJson(content.postApplicationComponentIdentities) !==
+      canonicalJson(expectedCatalog.componentIdentities) ||
     !COMMIT_PATTERN.test(content.intentRepositoryHead) ||
     !COMMIT_PATTERN.test(content.recoveryRepositoryHead) ||
     content.recoveryRepositoryHead !== content.repositoryCommitSha ||
@@ -817,6 +956,13 @@ export function buildProtectedV2ApplicationExecutionReceipt(
   return { ...content, contentSha256: sha256(canonicalJson(content)) }
 }
 
+export function buildProtectedV2ApplicationExecutionReceipt(
+  input: Omit<ProtectedV2ApplicationExecutionReceipt, 'contentSha256' | 'schemaVersion'>,
+  authorization: { operatorBundle: ProtectedV2OperatorBundle },
+): ProtectedV2ApplicationExecutionReceipt {
+  return buildProtectedV2ApplicationExecutionReceiptContent(input, authorization.operatorBundle)
+}
+
 export function parseProtectedV2ApplicationExecutionReceipt(
   bytes: string,
 ): ProtectedV2ApplicationExecutionReceipt {
@@ -831,6 +977,7 @@ export function parseProtectedV2ApplicationExecutionReceipt(
       'compensationAuthorized',
       'contentSha256',
       'executedAt',
+      'expectedCatalog',
       'heldOutIdentitiesAccessed',
       'importAuthorized',
       'intentCommitIsAncestor',
@@ -842,6 +989,7 @@ export function parseProtectedV2ApplicationExecutionReceipt(
       'migrationSha256',
       'operatorAuthorizationSha256',
       'operatorBundleSha256',
+      'operatorBundleBinding',
       'operatorBundleUnchanged',
       'originalIntentSha256',
       'outputDirectory',
@@ -865,7 +1013,7 @@ export function parseProtectedV2ApplicationExecutionReceipt(
   const input = { ...parsed }
   delete input.contentSha256
   delete input.schemaVersion
-  const rebuilt = buildProtectedV2ApplicationExecutionReceipt(
+  const rebuilt = buildProtectedV2ApplicationExecutionReceiptContent(
     input as unknown as Omit<
       ProtectedV2ApplicationExecutionReceipt,
       'contentSha256' | 'schemaVersion'

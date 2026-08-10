@@ -167,10 +167,13 @@ the requested local-only output directory and writes an immutable, checksum-seal
 intent. That intent preserves the exact authorization, both redundant captures, trust model and
 attestation, complete pre-state, migration-only capability, and a deterministic transitive
 protected-operator bundle. The bundle records the intent repository HEAD, ordered relative file
-inventory, each file SHA-256, and aggregate SHA-256, including package runtime files, guards,
-operator/audit modules and their relative imports, the V2 migration, and verifier. It also records
-explicit `importAuthorized=false` and `compensationAuthorized=false`. If intent sealing fails,
-neither staging nor migration application is attempted.
+inventory, each Git mode and file SHA-256, protected-directory inventory, explicit and final roots,
+module-resolution audit, runtime-input declaration/audit, and aggregate SHA-256. It is a conservative
+Git-tracked superset: `tsconfig.json`, Supabase configuration, package metadata and lockfile, guards,
+operator/audit modules, migrations, verifier, and every declared runtime input are sealed.
+Unsupported dynamic runtime dependencies fail closed. The intent also records explicit
+`importAuthorized=false` and `compensationAuthorized=false`. If intent sealing fails, neither
+staging nor migration application is attempted.
 
 Only after sealing does the command stage the exact protected file in the ignored generated
 workdir and invoke the project-pinned `supabase migration up --local` once. It then proves V1 stayed
@@ -183,7 +186,16 @@ functions, signatures/bodies/configuration/ACLs, and exact `pg_depend` dependenc
 component identities, the environment-invariant identity, local postgres-owner profile identity,
 full inventory identity, and one canonical full identity. The verifier source remains SHA-pinned but
 is not executed against real local; receipts say `verifierExecuted=false` and
-`auditMethod=complete_read_only_catalog_identity`. Finally the operator atomically adds a
+`auditMethod=complete_read_only_catalog_identity`.
+
+Those observed audit hashes are descriptive evidence, not an authorization source. Readiness is
+authorized only by the statically selected committed expected artifact for the exact target/profile,
+including its artifact file/content hashes, seven component hashes, deployment-profile identity,
+normalized full-inventory identity and count, full-audit identity, audit model, migration, and
+verifier. Equal counts and arbitrary self-consistent hashes are insufficient; profile cross-use and
+target-derived expectations fail. Proposed expected artifacts may be generated only by the fresh
+disposable maintainer workflow, which accepts no target database and cannot let the target establish
+its own expected state. Finally the operator atomically adds a
 `finalized/` subpackage and never deletes or rewrites the original intent.
 
 ### 4. Resolve an ambiguous or lost acknowledgement without replay
@@ -212,8 +224,10 @@ the immutable intent and its original bindings, never stages a migration, never 
 up`, and never infers that an absent migration should be applied. Same-HEAD recovery is accepted.
 A later clean primary `main` is also accepted only when current `HEAD == origin/main`, the intent
 commit is an ancestor, and the complete protected-operator bundle is byte-identical. Unrelated code
-or documentation descendants may therefore recover; divergent history, unreachable intent,
-protected dependency, package-lock/runtime, migration, or verifier drift fails closed. The result
+or documentation descendants may therefore recover only when they do not change the conservative
+bundle. Divergent history, unreachable intent, expected-artifact, `tsconfig.json`, Supabase config,
+source, package/lockfile, migration, verifier, module-resolution, runtime-input, or other protected
+bundle drift fails closed. The result
 records `intentRepositoryHead`, `recoveryRepositoryHead`, `intentCommitIsAncestor=true`, and
 `operatorBundleUnchanged=true`. A reconciled receipt records
 `receiptReconciled=true`, `migrationReexecuted=false`, and
@@ -227,3 +241,14 @@ import still requires its own exact source/package/state authorization and human
 compensation requires the committed import receipt, fresh observed state, a finalized compensation
 plan, and a new compensation-specific authorization. Never treat this runbook, its dry-run, its
 migration authorization, or its receipt as authorization for either operation.
+
+## Final V2 delivery backup
+
+The additive Phase-10 backup command is
+`literature:backup-gold-import-contract-v2-forward-repair`. Its version-2 manifest binds both exact
+profile artifacts and the current detailed runtime-bundle identity, copies every changed tracked
+file and the exact evidence-name inventory, rejects symlinks/overlap/transient probe output, parses
+copied JSON semantically, verifies the canonical package manifest, and independently rechecks every
+copied byte before self-hashing its receipt. The older
+`literature:backup-post-migration-contract-reconciliation` command is a V1-only, old-branch blocked
+reconciliation archive; it is not Phase-10 V2 delivery evidence.

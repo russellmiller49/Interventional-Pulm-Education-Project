@@ -15,13 +15,16 @@ import {
 import { ProtectedV2CatalogExpectationMismatchError } from './gold-import-contract-v2-catalog-expectations'
 import { reconciliationIdentitySha256 } from './gold-import-compensation-contract-reconciliation'
 import {
-  executeV2DisposablePath,
-  type ExecuteV2DisposablePathInput,
+  executeV2DisposableCatalogProbePath,
+  type ExecuteV2DisposableCatalogProbeInput,
 } from './rehearse-gold-import-compensation-db-v2'
 import type { DevelopmentDatabaseSeed } from './rehearse-exact-gold-import-compensation-package-v1'
+import {
+  PROTECTED_V2_CATALOG_DRIFT_MATRIX_SCHEMA_VERSION,
+  PROTECTED_V2_CATALOG_DRIFT_PROBE_IDS,
+} from './protected-gold-import-contract-v2-catalog-drift-identities'
 
-export const PROTECTED_V2_CATALOG_DRIFT_MATRIX_SCHEMA_VERSION =
-  'literature-gold-protected-v2-catalog-drift-matrix/1.1.0' as const
+export { PROTECTED_V2_CATALOG_DRIFT_MATRIX_SCHEMA_VERSION }
 
 export interface ProtectedV2CatalogDriftProbe {
   category:
@@ -300,6 +303,13 @@ export const PROTECTED_V2_CATALOG_DRIFT_PROBES: readonly ProtectedV2CatalogDrift
   },
 ] as const
 
+if (
+  canonicalJson(PROTECTED_V2_CATALOG_DRIFT_PROBES.map(({ id }) => id)) !==
+  canonicalJson(PROTECTED_V2_CATALOG_DRIFT_PROBE_IDS)
+) {
+  throw new Error('Protected V2 live catalog drift probes differ from their sealed identity tuple.')
+}
+
 export interface ProtectedV2CatalogDriftMatrixEvidence {
   auditMethod: typeof PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD
   exactReadyDisposable: ProtectedV2CompleteCatalogAuditIdentity
@@ -325,8 +335,8 @@ export interface ProtectedV2CatalogDriftMatrixEvidence {
 }
 
 type DisposablePathRunner = (
-  input: ExecuteV2DisposablePathInput,
-) => ReturnType<typeof executeV2DisposablePath>
+  input: ExecuteV2DisposableCatalogProbeInput,
+) => ReturnType<typeof executeV2DisposableCatalogProbePath>
 
 function sqlValues(values: readonly string[]): string {
   return values.map((value) => `('${value.replaceAll("'", "''")}')`).join(', ')
@@ -433,7 +443,7 @@ export async function runProtectedV2DisposableCatalogDriftMatrix(input: {
   runDisposablePath?: DisposablePathRunner
   seed: DevelopmentDatabaseSeed
 }): Promise<ProtectedV2CatalogDriftMatrixEvidence> {
-  const runDisposablePath = input.runDisposablePath ?? executeV2DisposablePath
+  const runDisposablePath = input.runDisposablePath ?? executeV2DisposableCatalogProbePath
   const baselineExecutor = createExactPackageDatabaseExecutorV2(input.package)
   const probeEvidence: ProtectedV2CatalogDriftMatrixEvidence['probes'] = []
 

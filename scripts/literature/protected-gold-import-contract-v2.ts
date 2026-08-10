@@ -20,6 +20,13 @@ import {
   validateProtectedV2OperatorBundle,
   type ProtectedV2OperatorBundle,
 } from './protected-gold-import-contract-v2-recovery-bundle'
+import {
+  assertProtectedV2ExpectedCatalogArtifactSealed,
+  validateProtectedV2ExpectedCatalogBinding,
+  validateProtectedV2RuntimeBundleBinding,
+  type ProtectedV2ExpectedCatalogBinding,
+  type ProtectedV2RuntimeBundleBinding,
+} from './protected-gold-import-contract-v2-bindings'
 
 export const PROTECTED_GOLD_IMPORT_CONTRACT_V2 = {
   filename: '20260809231651_add_literature_gold_import_compensation_contract_v2.sql',
@@ -125,6 +132,7 @@ export interface ProtectedV2AuthorizationContext {
     auditModel: typeof PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL
     auditModelIdentitySha256: string
     environmentInvariantIdentitySha256: typeof PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256
+    expectedCatalog: ProtectedV2ExpectedCatalogBinding
     verifier: typeof PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER
     verifierExecuted: false
   }
@@ -132,6 +140,7 @@ export interface ProtectedV2AuthorizationContext {
     branch: 'main'
     head: string
     operatorBundle: ProtectedV2OperatorBundle
+    operatorBundleBinding: ProtectedV2RuntimeBundleBinding
     originMain: string
     statusCleanIncludingUntracked: true
   }
@@ -285,7 +294,22 @@ function assertAuthorizationContext(context: ProtectedV2AuthorizationContext) {
   ) {
     throw new Error('Protected V2 authorization expected complete catalog-audit model drifted.')
   }
+  validateProtectedV2ExpectedCatalogBinding(
+    context.expectedPostApplicationAudit.expectedCatalog,
+    'local_supabase_postgres_owner_v1',
+    'local',
+  )
   validateProtectedV2OperatorBundle(context.repository.operatorBundle)
+  validateProtectedV2RuntimeBundleBinding(
+    context.repository.operatorBundleBinding,
+    context.repository.operatorBundle,
+  )
+  assertProtectedV2ExpectedCatalogArtifactSealed({
+    binding: context.expectedPostApplicationAudit.expectedCatalog,
+    bundle: context.repository.operatorBundle,
+    profileId: 'local_supabase_postgres_owner_v1',
+    target: 'local',
+  })
   if (
     context.repository.branch !== 'main' ||
     context.repository.head !== context.repository.originMain ||

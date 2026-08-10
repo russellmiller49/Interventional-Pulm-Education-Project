@@ -12,8 +12,25 @@ import {
   PROTECTED_GOLD_IMPORT_CONTRACT_V2,
 } from './protected-gold-import-contract-v2'
 import type { RawDatabaseSnapshot } from './gold-import-compensation-migration-operations'
+import {
+  buildProtectedV2OperatorBundle,
+  type ProtectedV2OperatorBundle,
+} from './protected-gold-import-contract-v2-recovery-bundle'
+import {
+  buildProtectedV2ExpectedCatalogBinding,
+  buildProtectedV2RuntimeBundleBinding,
+  type ProtectedV2RuntimeBundleBinding,
+} from './protected-gold-import-contract-v2-bindings'
+
+let operatorBundleBinding: ProtectedV2RuntimeBundleBinding
+let operatorBundle: ProtectedV2OperatorBundle
 
 describe('gold import contract V2 real-local pre-application diagnostic', () => {
+  beforeAll(async () => {
+    operatorBundle = await buildProtectedV2OperatorBundle({ cwd: process.cwd() })
+    operatorBundleBinding = buildProtectedV2RuntimeBundleBinding(operatorBundle)
+  })
+
   it('pins the task branch and report schema', () => {
     expect(GOLD_IMPORT_V2_TASK_BRANCH).toBe(
       'codex/ip-literature-import-contract-v2-forward-repair-v1',
@@ -40,12 +57,17 @@ describe('gold import contract V2 real-local pre-application diagnostic', () => 
       },
       executedAt: '2026-08-09T20:00:00.000Z',
       executionNonce: '6'.repeat(64),
+      expectedCatalog: buildProtectedV2ExpectedCatalogBinding(
+        'local_supabase_postgres_owner_v1',
+        'local',
+      ),
       migrationLedger: {
         sha256: '7'.repeat(64),
         v1: { ...PROTECTED_GOLD_IMPORT_CONTRACT_V1, occurrence: 1 as const },
         v2: { ...PROTECTED_GOLD_IMPORT_CONTRACT_V2, occurrence: 0 as const },
       },
       outputDirectory: '/backup-root/one',
+      operatorBundleBinding,
       repositoryCommitSha: '8'.repeat(40),
       safety: {
         databaseMutationCount: 0 as const,
@@ -54,12 +76,15 @@ describe('gold import contract V2 real-local pre-application diagnostic', () => 
       },
       schemaVersion: GOLD_IMPORT_V2_PREAPPLICATION_RECEIPT_SCHEMA_VERSION,
     }
-    const first = buildProtectedV2BackupExecutionReceipt(base)
-    const second = buildProtectedV2BackupExecutionReceipt({
-      ...base,
-      executionNonce: '9'.repeat(64),
-      outputDirectory: '/backup-root/two',
-    })
+    const first = buildProtectedV2BackupExecutionReceipt(base, { operatorBundle })
+    const second = buildProtectedV2BackupExecutionReceipt(
+      {
+        ...base,
+        executionNonce: '9'.repeat(64),
+        outputDirectory: '/backup-root/two',
+      },
+      { operatorBundle },
+    )
     expect(first.backupInstanceId).toMatch(/^[a-f0-9]{64}$/u)
     expect(first.contentSha256).toMatch(/^[a-f0-9]{64}$/u)
     expect(first.backupInstanceId).not.toBe(second.backupInstanceId)

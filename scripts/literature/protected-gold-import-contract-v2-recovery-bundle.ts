@@ -37,22 +37,18 @@ export const PROTECTED_V2_OPERATOR_BUNDLE_ROOTS = PROTECTED_V2_EXPLICIT_RUNTIME_
 export const PROTECTED_V2_OPERATOR_BUNDLE_DIRECTORIES = PROTECTED_V2_PROTECTED_DIRECTORIES
 
 export interface ProtectedV2OperatorBundleFile {
-  gitMode?: '100644' | '100755'
+  gitMode: '100644' | '100755'
   path: string
   sha256: string
 }
 
-/**
- * Optional additions preserve source compatibility for shared fixtures during
- * the specialist phase. Validation requires every V2 field at runtime.
- */
 export interface ProtectedV2OperatorBundle {
   aggregateSha256: string
   files: ProtectedV2OperatorBundleFile[]
-  moduleResolutionAudit?: ProtectedV2ModuleResolutionAudit
-  protectedDirectories?: string[]
+  moduleResolutionAudit: ProtectedV2ModuleResolutionAudit
+  protectedDirectories: string[]
   roots: readonly string[]
-  runtimeInputAudit?: ProtectedV2RuntimeInputAudit
+  runtimeInputAudit: ProtectedV2RuntimeInputAudit
   schemaVersion: typeof PROTECTED_V2_OPERATOR_BUNDLE_SCHEMA_VERSION
 }
 

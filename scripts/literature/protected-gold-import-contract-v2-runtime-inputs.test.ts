@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os'
 import { dirname, resolve } from 'node:path'
 
 import {
+  PROTECTED_V2_RUNTIME_CALL_SITE_DECLARATIONS,
   buildProtectedV2RuntimeInputAudit,
   discoverProtectedV2RuntimeCallSites,
   type ProtectedV2PackageScriptDeclaration,
@@ -23,6 +24,54 @@ describe('protected V2 non-module runtime-input declarations', () => {
 
   afterEach(async () => {
     await Promise.all(cleanup.splice(0).map((directory) => rm(directory, { recursive: true })))
+  })
+
+  it('pins the five file-only forward-backup semantic evidence call sites', () => {
+    const fingerprints = new Set([
+      '72f1da6ed0d0c9baf72a08046dc862b07ba5766a452e38ad9c18b5992700f6e5',
+      'feef94a5ae4700a87c23f2a544389632b8e0cf6eb9d39b7364ac4ba14cf852ae',
+      'd0074148acb59e5314eb1911f5f083d721f6ed4066d3def7aba5be1a336cc44d',
+      '5ce51debfac8d02d25367d0f54db31c1ac25c9384528ec4a1a27ab7cf5aadbf7',
+      'f76c9604ed837b26a375b737ddefe6817ab0693febf13526f76c0184e290aade',
+    ])
+    const declarations = PROTECTED_V2_RUNTIME_CALL_SITE_DECLARATIONS.filter(({ fingerprint }) =>
+      fingerprints.has(fingerprint),
+    )
+    expect(declarations).toHaveLength(fingerprints.size)
+    expect(declarations).toEqual(
+      expect.arrayContaining(
+        [...fingerprints].map((fingerprint) =>
+          expect.objectContaining({
+            disposition: 'operator_evidence',
+            executables: [],
+            fingerprint,
+            packages: [],
+            repositoryInputs: [],
+            sourcePath:
+              'scripts/literature/create-gold-import-contract-v2-forward-repair-backup.ts',
+          }),
+        ),
+      ),
+    )
+  })
+
+  it('pins the file-only package verifier reads reached by forward-backup validation', () => {
+    expect(PROTECTED_V2_RUNTIME_CALL_SITE_DECLARATIONS).toEqual(
+      expect.arrayContaining(
+        [
+          ['fs.lstat', 'adebd41b2218dd68c7a11e7d72be73805b305c839c1902d83162cabf40a36f6b'],
+          ['fs.readFile', '67db3219501da47e1e7c76779376de5ecce17f105babcda4e49b998c4ccee15d'],
+        ].map(([api, fingerprint]) => ({
+          api,
+          disposition: 'operator_evidence',
+          executables: [],
+          fingerprint,
+          packages: [],
+          repositoryInputs: [],
+          sourcePath: 'scripts/literature/generate-gold-import-compensation-package-v2.ts',
+        })),
+      ),
+    )
   })
 
   async function fixture(source: string): Promise<RuntimeFixture> {

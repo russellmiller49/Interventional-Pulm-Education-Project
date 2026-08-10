@@ -32,8 +32,10 @@ import {
   assertV2SchemaOnlyUpgradePreserved,
   buildCanonicalV2RehearsalArtifacts,
   extractV2VerifierEvidence,
+  validateV2CanonicalAuthorizationBindings,
   validateV2SchemaOnlySnapshot,
   validateV2RpcMetadata,
+  type V2CanonicalAuthorizationBindings,
   type V2MigrationPath,
   type V2SchemaOnlySnapshot,
 } from './gold-import-compensation-rehearsal-evidence-v2'
@@ -132,18 +134,49 @@ export interface V2ExactPackageDatabaseExecutor {
 }
 
 export interface ExecuteV2DisposablePathInput {
+  evidenceBindings: V2CanonicalAuthorizationBindings
   exactPackageExecutor: V2ExactPackageDatabaseExecutor
   migrationPath: V2MigrationPath
   seed: DevelopmentDatabaseSeed
 }
 
-export interface V2DisposablePathResult {
-  canonicalArtifacts: ReadonlyMap<string, Buffer>
+export type ExecuteV2DisposableCatalogProbeInput = Omit<
+  ExecuteV2DisposablePathInput,
+  'evidenceBindings'
+>
+
+type ExecuteV2DisposablePathRuntimeInput = ExecuteV2DisposableCatalogProbeInput & {
+  evidenceBindings?: V2CanonicalAuthorizationBindings
+  evidenceMode: 'canonical_delivery' | 'catalog_drift_probe' | 'catalog_expectation_proposal'
+}
+
+interface V2DisposablePathResultBase {
   cleanup: DisposableContainerCleanupOutcome
   migrationPath: V2MigrationPath
   migrationSha256: string
   rawReceipt: Record<string, unknown>
 }
+
+export interface V2DisposablePathResult extends V2DisposablePathResultBase {
+  canonicalArtifacts: ReadonlyMap<string, Buffer>
+  evidenceAuthority: 'canonical_delivery_evidence'
+}
+
+export interface V2DisposableCatalogProbeResult extends V2DisposablePathResultBase {
+  evidenceAuthority: 'transient_catalog_probe_not_delivery_evidence'
+}
+
+export interface V2DisposableCatalogExpectationProposalResult {
+  cleanup: DisposableContainerCleanupOutcome
+  migrationPath: V2MigrationPath
+  migrationSha256: string
+  status: 'transient_catalog_expectation_proposal_not_delivery_evidence'
+}
+
+type V2DisposablePathRuntimeResult = V2DisposablePathResult | V2DisposableCatalogProbeResult
+type V2DisposablePathRuntimeResultWithoutCleanup =
+  | Omit<V2DisposablePathResult, 'cleanup'>
+  | Omit<V2DisposableCatalogProbeResult, 'cleanup'>
 
 export interface V2DeterminismResult {
   canonicalArtifacts: ReadonlyMap<string, Buffer>
@@ -939,9 +972,15 @@ export async function resolveV2LocalDockerEndpoint(
 }
 
 async function executeV2DisposablePathWithRuntime(
-  input: ExecuteV2DisposablePathInput,
+  input: ExecuteV2DisposablePathRuntimeInput,
   runtime: DisposableRuntime,
-): Promise<V2DisposablePathResult> {
+): Promise<V2DisposablePathRuntimeResult> {
+  if (
+    (input.evidenceMode === 'canonical_delivery') !== Boolean(input.evidenceBindings) ||
+    (input.evidenceMode !== 'canonical_delivery' && input.evidenceBindings)
+  ) {
+    throw new Error('V2 disposable evidence mode and exact A/B bindings disagree.')
+  }
   const seed = developmentDatabaseSeedSchema.parse(input.seed)
   const pathPlan = buildV2MigrationPathPlan(input.migrationPath)
   const preV1SeedSql = renderDevelopmentDatabaseSeedSql(seed)
@@ -961,7 +1000,7 @@ async function executeV2DisposablePathWithRuntime(
   let hostPort = ''
   let creationAttempted = false
   let primaryError: unknown
-  let result: Omit<V2DisposablePathResult, 'cleanup'> | undefined
+  let result: V2DisposablePathRuntimeResultWithoutCleanup | undefined
 
   const docker = (arguments_: string[], options: DisposableCommandOptions = {}) =>
     runtime.command('docker', arguments_, {
@@ -1221,7 +1260,7 @@ create table if not exists supabase_migrations.schema_migrations (
       queryJson,
       schemaOnlyUpgrade,
     })
-    const canonicalArtifacts = buildCanonicalV2RehearsalArtifacts({
+    const canonicalArtifactInput = {
       migrationPath: input.migrationPath,
       migrationSha256,
       operationScenarios: packageEvidence.operationScenarios,
@@ -1248,12 +1287,24 @@ create table if not exists supabase_migrations.schema_migrations (
         v1: v1Evidence,
         v2: v2Evidence,
       },
-    })
-    result = {
-      canonicalArtifacts,
+    }
+    const resultBase = {
       migrationPath: input.migrationPath,
       migrationSha256,
       rawReceipt: {
+        authorizationBindings: input.evidenceBindings
+          ? {
+              authority: 'exact_committed_disposable_catalog_and_protected_runtime_bundle',
+              completeCatalogAudit: input.evidenceBindings.completeCatalogAudit,
+              expectedCatalog: input.evidenceBindings.expectedCatalog,
+              operatorBundleBinding: input.evidenceBindings.operatorBundleBinding,
+            }
+          : {
+              authority: 'transient_catalog_probe_not_delivery_evidence',
+              completeCatalogAudit: null,
+              expectedCatalog: null,
+              operatorBundleBinding: null,
+            },
         completedAt: runtime.now(),
         databaseMutationOutsideDisposableTarget: false,
         disposableRuntime: {
@@ -1274,6 +1325,19 @@ create table if not exists supabase_migrations.schema_migrations (
         startedAt,
       },
     }
+    result = input.evidenceBindings
+      ? {
+          ...resultBase,
+          canonicalArtifacts: buildCanonicalV2RehearsalArtifacts({
+            ...canonicalArtifactInput,
+            authorizationBindings: input.evidenceBindings,
+          }),
+          evidenceAuthority: 'canonical_delivery_evidence',
+        }
+      : {
+          ...resultBase,
+          evidenceAuthority: 'transient_catalog_probe_not_delivery_evidence',
+        }
   } catch (error) {
     primaryError = error
   }
@@ -1296,23 +1360,69 @@ create table if not exists supabase_migrations.schema_migrations (
       : new AggregateError(errors, 'V2 disposable rehearsal and cleanup did not both pass.')
   }
   if (!result) throw new Error('V2 disposable rehearsal produced no result.')
-  return { ...result, cleanup }
+  return result.evidenceAuthority === 'canonical_delivery_evidence'
+    ? { ...result, cleanup }
+    : { ...result, cleanup }
 }
 
 export async function executeV2DisposablePath(
   input: ExecuteV2DisposablePathInput,
 ): Promise<V2DisposablePathResult> {
-  return executeV2DisposablePathWithRuntime(input, PRODUCTION_RUNTIME)
+  validateV2CanonicalAuthorizationBindings(input.evidenceBindings)
+  const result = await executeV2DisposablePathWithRuntime(
+    { ...input, evidenceMode: 'canonical_delivery' },
+    PRODUCTION_RUNTIME,
+  )
+  if (result.evidenceAuthority !== 'canonical_delivery_evidence') {
+    throw new Error('V2 production rehearsal returned non-delivery evidence.')
+  }
+  return result
+}
+
+/** Production-only transient path for the catalog drift matrix; never delivery evidence. */
+export async function executeV2DisposableCatalogProbePath(
+  input: ExecuteV2DisposableCatalogProbeInput,
+): Promise<V2DisposableCatalogProbeResult> {
+  const result = await executeV2DisposablePathWithRuntime(
+    { ...input, evidenceMode: 'catalog_drift_probe' },
+    PRODUCTION_RUNTIME,
+  )
+  if (result.evidenceAuthority !== 'transient_catalog_probe_not_delivery_evidence') {
+    throw new Error('V2 catalog probe unexpectedly produced delivery evidence.')
+  }
+  return result
+}
+
+/** Maintainer-only disposable expectation proposal capture; never delivery evidence. */
+export async function executeV2DisposableCatalogExpectationProposalPath(
+  input: ExecuteV2DisposableCatalogProbeInput,
+): Promise<V2DisposableCatalogExpectationProposalResult> {
+  const result = await executeV2DisposablePathWithRuntime(
+    { ...input, evidenceMode: 'catalog_expectation_proposal' },
+    PRODUCTION_RUNTIME,
+  )
+  return {
+    cleanup: result.cleanup,
+    migrationPath: result.migrationPath,
+    migrationSha256: result.migrationSha256,
+    status: 'transient_catalog_expectation_proposal_not_delivery_evidence',
+  }
 }
 
 export async function executeV2DisposablePathForTest(
-  input: ExecuteV2DisposablePathInput,
+  input: Omit<ExecuteV2DisposablePathRuntimeInput, 'evidenceMode'> & {
+    evidenceMode?: ExecuteV2DisposablePathRuntimeInput['evidenceMode']
+  },
   runtime: DisposableRuntime,
-): Promise<V2DisposablePathResult> {
+): Promise<V2DisposablePathRuntimeResult> {
   if (process.env.NODE_ENV !== 'test') {
     throw new Error('V2 disposable runtime injection is restricted to tests.')
   }
-  return executeV2DisposablePathWithRuntime(input, runtime)
+  if (input.evidenceBindings) validateV2CanonicalAuthorizationBindings(input.evidenceBindings)
+  return executeV2DisposablePathWithRuntime(
+    { ...input, evidenceMode: input.evidenceMode ?? 'catalog_drift_probe' },
+    runtime,
+  )
 }
 
 export async function executeV2DisposablePathTwice(

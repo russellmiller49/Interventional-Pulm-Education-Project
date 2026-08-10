@@ -20,7 +20,12 @@ import {
 import {
   V2_MIGRATION_REQUIRED_BEFORE_SOURCE_OR_CLIENT,
   prepareGoldImportCompensationV2Runtime,
+  validateReadyGoldImportCompensationV2Audit,
 } from './audit-gold-import-compensation-v2'
+import {
+  buildContractInvariantIdentity,
+  buildDeploymentProfileIdentity,
+} from './gold-import-compensation-contract-reconciliation'
 import {
   buildExpectedPostImportEffectiveStateProjectionV2,
   deriveExpectedPostImportEffectiveStateSha256V2,
@@ -41,6 +46,15 @@ import {
   type NoteDispositionEvidenceBytesV2,
   type NoteDispositionEvidenceIdentitiesV2,
 } from './gold-import-note-disposition-gate-v2'
+import {
+  committedProtectedV2CatalogExpectedArtifactForValidatedProfile,
+  decodeProtectedV2CatalogExpectedInventories,
+  expectedObservedAuditIdentityFromArtifact,
+  type ProtectedV2ExpectedCatalogProfileId,
+  type ProtectedV2ExpectedCatalogTarget,
+} from './gold-import-contract-v2-catalog-expectations'
+import { buildProtectedV2ExpectedCatalogBinding } from './protected-gold-import-contract-v2-bindings'
+import { validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile } from './gold-import-contract-v2-catalog-audit'
 
 const SHA_A = 'a'.repeat(64)
 const SHA_B = 'b'.repeat(64)
@@ -49,6 +63,21 @@ const ITEM_ID = '20000000-0000-4000-8000-000000000001'
 const ACTION_ID = '30000000-0000-4000-8000-000000000001'
 const REVIEW_ID = '40000000-0000-4000-8000-000000000001'
 const TIME = '2026-08-08T00:00:00.000Z'
+const LOCAL_EXPECTED_CATALOG = buildProtectedV2ExpectedCatalogBinding(
+  'local_supabase_postgres_owner_v1',
+  'local',
+)
+const LOCAL_COMPLETE_CATALOG_AUDIT =
+  validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile(
+    expectedObservedAuditIdentityFromArtifact(
+      committedProtectedV2CatalogExpectedArtifactForValidatedProfile(
+        'local_supabase_postgres_owner_v1',
+        'local',
+      ),
+    ),
+    'local_supabase_postgres_owner_v1',
+    'local',
+  )
 
 function includedReview() {
   return {
@@ -416,7 +445,117 @@ function readyAudit() {
   }
 }
 
+function exactReadyAudit(
+  profileId: ProtectedV2ExpectedCatalogProfileId,
+  target: ProtectedV2ExpectedCatalogTarget,
+) {
+  const artifact = committedProtectedV2CatalogExpectedArtifactForValidatedProfile(profileId, target)
+  const inventories = decodeProtectedV2CatalogExpectedInventories(artifact)
+  const fullEnvironmentInventory = inventories.fullEnvironmentInventory as {
+    deploymentProfile: Parameters<typeof buildDeploymentProfileIdentity>[2]
+    rpcs: Parameters<typeof buildContractInvariantIdentity>[1]
+    schemaSecurityDefinitionIdentity: Parameters<typeof buildContractInvariantIdentity>[0]
+  }
+  const environmentInvariantIdentity = buildContractInvariantIdentity(
+    fullEnvironmentInventory.schemaSecurityDefinitionIdentity,
+    fullEnvironmentInventory.rpcs,
+  )
+  const environmentProfileIdentity = buildDeploymentProfileIdentity(
+    fullEnvironmentInventory.schemaSecurityDefinitionIdentity,
+    fullEnvironmentInventory.rpcs,
+    fullEnvironmentInventory.deploymentProfile,
+  )
+  const completeCatalogAudit = validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile(
+    expectedObservedAuditIdentityFromArtifact(artifact),
+    profileId,
+    target,
+  )
+  return {
+    completeCatalogAudit,
+    contractAudit: {
+      appendOnlyProtectionsReady: true,
+      deploymentProfileEvidence: fullEnvironmentInventory.deploymentProfile,
+      environmentInvariantIdentity,
+      environmentInvariantIdentitySha256: sha256Canonical(environmentInvariantIdentity),
+      environmentProfileIdentity,
+      environmentProfileIdentitySha256: sha256Canonical(environmentProfileIdentity),
+      ownerAclReady: true,
+      rpcMetadata: fullEnvironmentInventory.rpcs,
+      rpcBoundaryReady: true,
+      safeSearchPathsReady: true,
+      schemaSecurityDefinitionIdentity: fullEnvironmentInventory.schemaSecurityDefinitionIdentity,
+    },
+    contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2,
+    database: { batchId: BATCH_ID, ...GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2 },
+    exactExistingHeadCohort: {
+      cohortSha256: GOLD_IMPORT_EXISTING_HEAD_COHORT_SHA256_V4,
+      headCount: 9,
+    },
+    expectedCatalog: buildProtectedV2ExpectedCatalogBinding(profileId, target),
+    expectedPostImportEffectiveStateSha256: SHA_B,
+    migration: {
+      id: GOLD_REVIEW_IMPORT_COMPENSATION_MIGRATION_ID_V2,
+      sha256: artifact.migration.sha256,
+      v1Occurrence: 1,
+      v2Occurrence: 1,
+    },
+    repositoryCommitSha: '1'.repeat(40),
+    safety: {
+      heldOutIdentitiesAccessed: false,
+      readOnly: true,
+      remoteAccess: false,
+      remoteWritesAllowed: false,
+      repeatableRead: true,
+    },
+    schemaVersion: 'gold-import-compensation-v2-package-audit/1.0.0' as const,
+    stateIntegrity: {
+      currentPointersAreLatestHeads: true,
+      revisionChainsLinear: true,
+    },
+    stateMutationEvidence: {
+      effectiveStateChanged: false,
+      itemRevealTimestampMutationCount: 0,
+      pointerMutationCount: 0,
+      reviewRowMutationCount: 0,
+    },
+    target: target === 'local' ? ('local' as const) : ('disposable_clone' as const),
+    testSplitLocked: true,
+    v2PreImportState: { effectiveStateSha256: SHA_A, physicalStateSha256: SHA_B },
+  }
+}
+
 describe('migration-first and source-authorization-before-client ordering', () => {
+  it.each([
+    ['local_supabase_postgres_owner_v1', 'local'],
+    ['supabase_admin_owner_v1', 'disposable'],
+  ] as const)('validates the complete exact %s ready audit', (profileId, target) => {
+    const audit = exactReadyAudit(profileId, target)
+    expect(validateReadyGoldImportCompensationV2Audit(audit)).toMatchObject({
+      completeCatalogAudit: audit.completeCatalogAudit,
+      expectedCatalog: audit.expectedCatalog,
+      target: target === 'local' ? 'local' : 'disposable_clone',
+    })
+  })
+
+  it('rejects cross-profile expected-state use at the production ready-audit gate', () => {
+    const local = exactReadyAudit('local_supabase_postgres_owner_v1', 'local')
+    const disposable = exactReadyAudit('supabase_admin_owner_v1', 'disposable')
+    expect(() =>
+      validateReadyGoldImportCompensationV2Audit({
+        ...local,
+        completeCatalogAudit: disposable.completeCatalogAudit,
+        expectedCatalog: disposable.expectedCatalog,
+      }),
+    ).toThrow('does not match exact local_supabase_postgres_owner_v1/local contract')
+    expect(() =>
+      validateReadyGoldImportCompensationV2Audit({
+        ...disposable,
+        completeCatalogAudit: local.completeCatalogAudit,
+        expectedCatalog: local.expectedCatalog,
+      }),
+    ).toThrow('does not match exact supabase_admin_owner_v1/disposable contract')
+  })
+
   it('does not read sources or create a client when V2 is absent', async () => {
     const calls = { client: 0, source: 0, validation: 0 }
     await expect(
@@ -506,6 +645,7 @@ describe('source authorization V4', () => {
   function authorizationSet() {
     return buildGoldImportSourceAuthorizationSetV4({
       actionCounts: { initial: 1, inserts: 1, noops: 0, revisions: 0, total: 1 },
+      auditTarget: 'local',
       batchId: BATCH_ID,
       booleanNormalizationLedger: [
         {
@@ -525,9 +665,12 @@ describe('source authorization V4', () => {
           },
         },
       ],
-      environmentInvariantIdentitySha256: SHA_A,
-      environmentProfileIdentitySha256: SHA_B,
+      completeCatalogAudit: LOCAL_COMPLETE_CATALOG_AUDIT,
+      environmentInvariantIdentitySha256: LOCAL_EXPECTED_CATALOG.environmentInvariantIdentitySha256,
+      environmentProfileIdentitySha256:
+        LOCAL_EXPECTED_CATALOG.expectedDeploymentProfileIdentitySha256,
       existingHeadCohortSha256: GOLD_IMPORT_EXISTING_HEAD_COHORT_SHA256_V4,
+      expectedCatalog: LOCAL_EXPECTED_CATALOG,
       migrationSha256: 'c'.repeat(64),
       orderedSetNormalizationLedger: [],
       v2PreImportEffectiveStateSha256: 'd'.repeat(64),
@@ -556,11 +699,16 @@ describe('source authorization V4', () => {
     expect(() =>
       buildGoldImportSourceAuthorizationSetV4({
         actionCounts: authorization.actionCounts,
+        auditTarget: 'local',
         batchId: BATCH_ID,
         booleanNormalizationLedger: authorization.booleanNormalizationLedger,
-        environmentInvariantIdentitySha256: SHA_A,
-        environmentProfileIdentitySha256: SHA_B,
+        completeCatalogAudit: LOCAL_COMPLETE_CATALOG_AUDIT,
+        environmentInvariantIdentitySha256:
+          LOCAL_EXPECTED_CATALOG.environmentInvariantIdentitySha256,
+        environmentProfileIdentitySha256:
+          LOCAL_EXPECTED_CATALOG.expectedDeploymentProfileIdentitySha256,
         existingHeadCohortSha256: SHA_A,
+        expectedCatalog: LOCAL_EXPECTED_CATALOG,
         migrationSha256: 'c'.repeat(64),
         orderedSetNormalizationLedger: [],
         v2PreImportEffectiveStateSha256: 'd'.repeat(64),

@@ -39,6 +39,14 @@ import {
   GOLD_IMPORT_AUTHORIZATION_MAPPING_CORRECTION_SHA256,
   GOLD_IMPORT_AUTHORIZATION_MAPPING_SHA256,
 } from './gold-import-note-disposition'
+import {
+  validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile,
+  type ProtectedV2CompleteCatalogAuditIdentity,
+} from './gold-import-contract-v2-catalog-audit'
+import {
+  validateProtectedV2ExpectedCatalogBinding,
+  type ProtectedV2ExpectedCatalogBinding,
+} from './protected-gold-import-contract-v2-bindings'
 
 export const GOLD_IMPORT_SOURCE_AUTHORIZATION_SET_VERSION_V4 = 4 as const
 export const GOLD_IMPORT_SOURCE_AUTHORIZATION_SET_SCHEMA_VERSION_V4 =
@@ -72,6 +80,7 @@ const actionCountsSchema = z
 export const goldImportSourceAuthorizationSetV4Schema = z
   .object({
     actionCounts: actionCountsSchema,
+    auditTarget: z.enum(['disposable_clone', 'local']),
     amendedTwoRowAuthorizationSha256: z.literal(
       GOLD_IMPORT_AMENDED_TWO_ROW_AUTHORIZATION_SHA256_V4,
     ),
@@ -85,6 +94,7 @@ export const goldImportSourceAuthorizationSetV4Schema = z
         profileReady: z.literal(true),
       })
       .strict(),
+    completeCatalogAudit: z.unknown(),
     contractVersion: z.literal(GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2),
     currentDatabase: z
       .object({
@@ -107,6 +117,7 @@ export const goldImportSourceAuthorizationSetV4Schema = z
         headCount: z.literal(9),
       })
       .strict(),
+    expectedCatalog: z.unknown(),
     fieldLineageSha256: z.literal(GOLD_IMPORT_FIELD_LINEAGE_SHA256_V4),
     finalArtifactSha256: z.literal(GOLD_IMPORT_FINAL_V3_ARTIFACT_SHA256_V4),
     forwardRepairRequirementsSha256: z.literal(GOLD_IMPORT_FORWARD_REPAIR_REQUIREMENTS_SHA256_V4),
@@ -159,17 +170,27 @@ export const goldImportSourceAuthorizationSetV4Schema = z
   })
   .strict()
 
-export type GoldImportSourceAuthorizationSetV4 = z.infer<
+type ParsedGoldImportSourceAuthorizationSetV4 = z.infer<
   typeof goldImportSourceAuthorizationSetV4Schema
 >
+export type GoldImportSourceAuthorizationSetV4 = Omit<
+  ParsedGoldImportSourceAuthorizationSetV4,
+  'completeCatalogAudit' | 'expectedCatalog'
+> & {
+  completeCatalogAudit: ProtectedV2CompleteCatalogAuditIdentity
+  expectedCatalog: ProtectedV2ExpectedCatalogBinding
+}
 
 export interface BuildGoldImportSourceAuthorizationSetV4Input {
   actionCounts: z.input<typeof actionCountsSchema>
+  auditTarget: 'disposable_clone' | 'local'
   batchId: string
   booleanNormalizationLedger: z.input<typeof finalizedArtifactBooleanNormalizationSchema>[]
+  completeCatalogAudit: ProtectedV2CompleteCatalogAuditIdentity
   environmentInvariantIdentitySha256: string
   environmentProfileIdentitySha256: string
   existingHeadCohortSha256: string
+  expectedCatalog: ProtectedV2ExpectedCatalogBinding
   migrationSha256: string
   orderedSetNormalizationLedger: z.input<typeof finalizedArtifactListNormalizationSchema>[]
   v2PreImportEffectiveStateSha256: string
@@ -207,6 +228,20 @@ export function buildGoldImportSourceAuthorizationSetV4(
   if (input.existingHeadCohortSha256 !== GOLD_IMPORT_EXISTING_HEAD_COHORT_SHA256_V4) {
     throw new Error('V4 source authorization exact nine-head cohort identity drifted.')
   }
+  const expectedContext =
+    input.auditTarget === 'disposable_clone'
+      ? ({ profileId: 'supabase_admin_owner_v1', target: 'disposable' } as const)
+      : ({ profileId: 'local_supabase_postgres_owner_v1', target: 'local' } as const)
+  const expectedCatalog = validateProtectedV2ExpectedCatalogBinding(
+    input.expectedCatalog,
+    expectedContext.profileId,
+    expectedContext.target,
+  )
+  const completeCatalogAudit = validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile(
+    input.completeCatalogAudit,
+    expectedContext.profileId,
+    expectedContext.target,
+  )
   const booleanNormalizationLedger = input.booleanNormalizationLedger.map((entry) =>
     finalizedArtifactBooleanNormalizationSchema.parse(entry),
   )
@@ -215,6 +250,7 @@ export function buildGoldImportSourceAuthorizationSetV4(
   )
   return validateGoldImportSourceAuthorizationSetV4({
     actionCounts: input.actionCounts,
+    auditTarget: input.auditTarget,
     amendedTwoRowAuthorizationSha256: GOLD_IMPORT_AMENDED_TWO_ROW_AUTHORIZATION_SHA256_V4,
     booleanNormalizationLedger,
     booleanNormalizationLedgerSha256: sha256Canonical(booleanNormalizationLedger),
@@ -224,6 +260,7 @@ export function buildGoldImportSourceAuthorizationSetV4(
       invariantReady: true,
       profileReady: true,
     },
+    completeCatalogAudit,
     contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2,
     currentDatabase: {
       batchId: input.batchId,
@@ -233,6 +270,7 @@ export function buildGoldImportSourceAuthorizationSetV4(
       cohortSha256: input.existingHeadCohortSha256,
       headCount: 9,
     },
+    expectedCatalog,
     fieldLineageSha256: GOLD_IMPORT_FIELD_LINEAGE_SHA256_V4,
     finalArtifactSha256: GOLD_IMPORT_FINAL_V3_ARTIFACT_SHA256_V4,
     forwardRepairRequirementsSha256: GOLD_IMPORT_FORWARD_REPAIR_REQUIREMENTS_SHA256_V4,
@@ -273,14 +311,42 @@ export function buildGoldImportSourceAuthorizationSetV4(
 export function validateGoldImportSourceAuthorizationSetV4(
   input: unknown,
 ): GoldImportSourceAuthorizationSetV4 {
-  const authorization = goldImportSourceAuthorizationSetV4Schema.parse(input)
+  const parsed = goldImportSourceAuthorizationSetV4Schema.parse(input)
+  const expectedContext =
+    parsed.auditTarget === 'disposable_clone'
+      ? ({ profileId: 'supabase_admin_owner_v1', target: 'disposable' } as const)
+      : ({ profileId: 'local_supabase_postgres_owner_v1', target: 'local' } as const)
+  const expectedCatalog = validateProtectedV2ExpectedCatalogBinding(
+    parsed.expectedCatalog,
+    expectedContext.profileId,
+    expectedContext.target,
+  )
+  const completeCatalogAudit = validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile(
+    parsed.completeCatalogAudit,
+    expectedContext.profileId,
+    expectedContext.target,
+  )
+  const authorization: GoldImportSourceAuthorizationSetV4 = {
+    ...parsed,
+    completeCatalogAudit,
+    expectedCatalog,
+  }
   assertCanonicalIdentityDocuments()
   assertActionCounts(authorization.actionCounts)
   if (
     authorization.booleanNormalizationLedgerSha256 !==
       sha256Canonical(authorization.booleanNormalizationLedger) ||
     authorization.orderedSetNormalizationLedgerSha256 !==
-      sha256Canonical(authorization.orderedSetNormalizationLedger)
+      sha256Canonical(authorization.orderedSetNormalizationLedger) ||
+    authorization.contractAudit.environmentInvariantIdentitySha256 !==
+      expectedCatalog.environmentInvariantIdentitySha256 ||
+    authorization.contractAudit.environmentProfileIdentitySha256 !==
+      expectedCatalog.expectedDeploymentProfileIdentitySha256 ||
+    completeCatalogAudit.fullAuditIdentitySha256 !== expectedCatalog.fullAuditIdentitySha256 ||
+    completeCatalogAudit.fullEnvironmentInventoryIdentitySha256 !==
+      expectedCatalog.fullEnvironmentInventoryIdentitySha256 ||
+    canonicalJson(completeCatalogAudit.componentIdentities) !==
+      canonicalJson(expectedCatalog.componentIdentities)
   ) {
     throw new Error('V4 source authorization normalization-ledger checksum mismatch.')
   }
@@ -340,10 +406,13 @@ function sha256Bytes(value: Uint8Array | string): string {
 
 export interface ValidateGoldImportSourceAuthorizationSetV4ForImportInput {
   amendedAuthorization: Uint8Array
+  auditTarget: 'disposable_clone' | 'local'
+  completeCatalogAudit: ProtectedV2CompleteCatalogAuditIdentity
   currentState: NoteDispositionCurrentStateV2
   developmentPlanningState: unknown
   environmentInvariantIdentitySha256: string
   environmentProfileIdentitySha256: string
+  expectedCatalog: ProtectedV2ExpectedCatalogBinding
   finalizedArtifact: Uint8Array
   independentlyDerivedPlan: unknown
   migration: Uint8Array
@@ -384,6 +453,20 @@ export function validateGoldImportSourceAuthorizationSetV4ForImport(
 ): { authorization: GoldImportSourceAuthorizationSetV4; plan: ImportPlanV2 } {
   const authorization = parseCanonicalGoldImportSourceAuthorizationSetV4Bytes(
     input.sourceAuthorizationSet,
+  )
+  const expectedContext =
+    input.auditTarget === 'disposable_clone'
+      ? ({ profileId: 'supabase_admin_owner_v1', target: 'disposable' } as const)
+      : ({ profileId: 'local_supabase_postgres_owner_v1', target: 'local' } as const)
+  const expectedCatalog = validateProtectedV2ExpectedCatalogBinding(
+    input.expectedCatalog,
+    expectedContext.profileId,
+    expectedContext.target,
+  )
+  const completeCatalogAudit = validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile(
+    input.completeCatalogAudit,
+    expectedContext.profileId,
+    expectedContext.target,
   )
   const plan = assertExactIndependentlyDerivedImportPlanV4({
     independentlyDerivedPlan: input.independentlyDerivedPlan,
@@ -426,6 +509,9 @@ export function validateGoldImportSourceAuthorizationSetV4ForImport(
       authorization.signedProtocolAuthorizationSha256 ||
     sha256Bytes(input.amendedAuthorization) !== authorization.amendedTwoRowAuthorizationSha256 ||
     sha256Bytes(input.migration) !== authorization.migration.sha256 ||
+    authorization.auditTarget !== input.auditTarget ||
+    canonicalJson(authorization.expectedCatalog) !== canonicalJson(expectedCatalog) ||
+    canonicalJson(authorization.completeCatalogAudit) !== canonicalJson(completeCatalogAudit) ||
     canonicalJson(artifact.booleanNormalizations) !==
       canonicalJson(authorization.booleanNormalizationLedger) ||
     canonicalJson(artifact.listNormalizations) !==

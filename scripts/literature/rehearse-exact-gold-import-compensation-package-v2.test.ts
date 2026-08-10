@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
 
 import {
   assertExactGeneratedPackageReferenceV2,
@@ -19,7 +20,20 @@ import {
 } from './rehearse-exact-gold-import-compensation-package-v2'
 import { GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2 } from './gold-import-note-disposition-gate-v2'
 import type { V2DisposablePathResult } from './rehearse-gold-import-compensation-db-v2'
+import type { V2CanonicalAuthorizationBindings } from './gold-import-compensation-rehearsal-evidence-v2'
 import type { DisposableContainerCleanupOutcome } from './rehearse-exact-gold-import-compensation-package-v1'
+import { buildProtectedV2OperatorBundle } from './protected-gold-import-contract-v2-recovery-bundle'
+import {
+  buildProtectedV2ExpectedCatalogBinding,
+  buildProtectedV2RuntimeBundleBinding,
+} from './protected-gold-import-contract-v2-bindings'
+import {
+  committedProtectedV2CatalogExpectedArtifactForValidatedProfile,
+  expectedObservedAuditIdentityFromArtifact,
+} from './gold-import-contract-v2-catalog-expectations'
+import { validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile } from './gold-import-contract-v2-catalog-audit'
+
+let AUTHORIZATION_BINDINGS: V2CanonicalAuthorizationBindings
 
 function cleanup(): DisposableContainerCleanupOutcome {
   return {
@@ -45,6 +59,7 @@ function result(path: 'fresh' | 'upgrade'): V2DisposablePathResult {
       ['v2-rehearsal-evidence.json', evidence],
     ]),
     cleanup: cleanup(),
+    evidenceAuthority: 'canonical_delivery_evidence',
     migrationPath: path,
     migrationSha256: 'b'.repeat(64),
     rawReceipt: {},
@@ -52,11 +67,66 @@ function result(path: 'fresh' | 'upgrade'): V2DisposablePathResult {
 }
 
 describe('exact V2 package rehearsal entrypoint', () => {
+  beforeAll(async () => {
+    const operatorBundle = await buildProtectedV2OperatorBundle({ cwd: process.cwd() })
+    AUTHORIZATION_BINDINGS = {
+      completeCatalogAudit: validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile(
+        expectedObservedAuditIdentityFromArtifact(
+          committedProtectedV2CatalogExpectedArtifactForValidatedProfile(
+            'supabase_admin_owner_v1',
+            'disposable',
+          ),
+        ),
+        'supabase_admin_owner_v1',
+        'disposable',
+      ),
+      expectedCatalog: buildProtectedV2ExpectedCatalogBinding(
+        'supabase_admin_owner_v1',
+        'disposable',
+      ),
+      operatorBundle,
+      operatorBundleBinding: buildProtectedV2RuntimeBundleBinding(operatorBundle),
+    }
+  })
+
   test('correlates controlled-fault post-state to the captured receipt operation', () => {
     const operationId = '00000000-0000-4000-8000-000000000001'
     const sql = v2StateSql('00000000-0000-4000-8000-000000000002', operationId)
     expect(sql).toContain("where receipt.value ->> 'operationId' = $v2_exact_")
     expect(sql).toContain(operationId)
+  })
+
+  test('keeps callback, reference, and direct-executor package aliases outside private authority', async () => {
+    const source = await readFile(
+      resolve(
+        process.cwd(),
+        'scripts/literature/execute-exact-gold-import-compensation-package-v2.ts',
+      ),
+      'utf8',
+    )
+    const bootstrapStart = source.indexOf(
+      'export function createBootstrappedExactPackageDatabaseExecutorV2',
+    )
+    const directStart = source.indexOf('export function createExactPackageDatabaseExecutorV2')
+    const bootstrap = source.slice(bootstrapStart, directStart)
+    const direct = source.slice(directStart)
+
+    expect(bootstrap).toContain(
+      'const privatePackage = verifyGeneratedGoldImportCompensationPackageV2(generated.package)',
+    )
+    expect(bootstrap).toContain(
+      'package: verifyGeneratedGoldImportCompensationPackageV2(privatePackage)',
+    )
+    expect(bootstrap).toContain(
+      'return verifyGeneratedGoldImportCompensationPackageV2(referencePackage)',
+    )
+    expect(direct).toContain(
+      'const privatePackage = verifyGeneratedGoldImportCompensationPackageV2(package_)',
+    )
+    expect(direct).toContain('const plan = privatePackage.importPlan')
+    expect(direct).not.toContain('const plan = package_.importPlan')
+    expect(direct).toContain('bindDisposableCompensation(privatePackage, imported)')
+    expect(direct).toContain('verifyCompensationPayloadCopies(context, privatePackage)')
   })
 
   test('observes the controlled-fault journal in a command after the volatile RPC', () => {
@@ -174,6 +244,7 @@ describe('exact V2 package rehearsal entrypoint', () => {
           return result(migrationPath)
         },
       },
+      evidenceBindings: AUTHORIZATION_BINDINGS,
       exactPackageExecutor: { execute: async () => ({}) as never },
       seed: {} as never,
     })

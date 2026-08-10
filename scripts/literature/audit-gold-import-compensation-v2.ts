@@ -27,6 +27,14 @@ import { validateSchemaSecurityDefinitionIdentity } from './gold-import-compensa
 import { assertKnownArguments, parseCliArguments, stringArgument } from './lib/cli'
 import { GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2 } from './gold-import-note-disposition-gate-v2'
 import { GOLD_IMPORT_EXISTING_HEAD_COHORT_SHA256_V4 } from './gold-import-source-authorization-v4'
+import {
+  validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile,
+  type ProtectedV2CompleteCatalogAuditIdentity,
+} from './gold-import-contract-v2-catalog-audit'
+import {
+  validateProtectedV2ExpectedCatalogBinding,
+  type ProtectedV2ExpectedCatalogBinding,
+} from './protected-gold-import-contract-v2-bindings'
 
 export const GOLD_IMPORT_COMPENSATION_V2_AUDIT_SCHEMA_VERSION =
   'gold-import-compensation-v2-package-audit/1.0.0' as const
@@ -82,6 +90,7 @@ export type GoldImportCompensationV2MigrationProbe = z.infer<
 
 export const goldImportCompensationV2ReadyAuditSchema = goldImportCompensationV2MigrationProbeSchema
   .extend({
+    completeCatalogAudit: z.unknown(),
     contractAudit: z
       .object({
         appendOnlyProtectionsReady: z.literal(true),
@@ -104,6 +113,7 @@ export const goldImportCompensationV2ReadyAuditSchema = goldImportCompensationV2
       })
       .strict(),
     expectedPostImportEffectiveStateSha256: sha256Schema,
+    expectedCatalog: z.unknown(),
     repositoryCommitSha: z.string().regex(/^[a-f0-9]{40}$/u),
     stateMutationEvidence: z
       .object({
@@ -126,9 +136,16 @@ export const goldImportCompensationV2ReadyAuditSchema = goldImportCompensationV2
   })
   .strict()
 
-export type GoldImportCompensationV2ReadyAudit = z.infer<
+type ParsedGoldImportCompensationV2ReadyAudit = z.infer<
   typeof goldImportCompensationV2ReadyAuditSchema
 >
+export type GoldImportCompensationV2ReadyAudit = Omit<
+  ParsedGoldImportCompensationV2ReadyAudit,
+  'completeCatalogAudit' | 'expectedCatalog'
+> & {
+  completeCatalogAudit: ProtectedV2CompleteCatalogAuditIdentity
+  expectedCatalog: ProtectedV2ExpectedCatalogBinding
+}
 
 const REQUIRED_TRANSITION_RPC_ARGUMENTS_V2 = Object.freeze({
   apply_literature_gold_import_v1:
@@ -382,6 +399,20 @@ export function validateReadyGoldImportCompensationV2Audit(
 ): GoldImportCompensationV2ReadyAudit {
   assertGoldImportCompensationV2MigrationPresent(input)
   const audit = goldImportCompensationV2ReadyAuditSchema.parse(input)
+  const expectedContext =
+    audit.target === 'disposable_clone'
+      ? ({ profileId: 'supabase_admin_owner_v1', target: 'disposable' } as const)
+      : ({ profileId: 'local_supabase_postgres_owner_v1', target: 'local' } as const)
+  const expectedCatalog = validateProtectedV2ExpectedCatalogBinding(
+    audit.expectedCatalog,
+    expectedContext.profileId,
+    expectedContext.target,
+  )
+  const completeCatalogAudit = validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile(
+    audit.completeCatalogAudit,
+    expectedContext.profileId,
+    expectedContext.target,
+  )
   const schemaIdentity = validateSchemaSecurityDefinitionIdentity(
     audit.contractAudit.schemaSecurityDefinitionIdentity,
   )
@@ -408,11 +439,24 @@ export function validateReadyGoldImportCompensationV2Audit(
     audit.contractAudit.environmentInvariantIdentitySha256 !==
       sha256Canonical(audit.contractAudit.environmentInvariantIdentity) ||
     audit.contractAudit.environmentProfileIdentitySha256 !==
-      sha256Canonical(audit.contractAudit.environmentProfileIdentity)
+      sha256Canonical(audit.contractAudit.environmentProfileIdentity) ||
+    audit.contractAudit.environmentInvariantIdentitySha256 !==
+      expectedCatalog.environmentInvariantIdentitySha256 ||
+    audit.contractAudit.environmentProfileIdentitySha256 !==
+      expectedCatalog.expectedDeploymentProfileIdentitySha256 ||
+    completeCatalogAudit.fullAuditIdentitySha256 !== expectedCatalog.fullAuditIdentitySha256 ||
+    completeCatalogAudit.fullEnvironmentInventoryIdentitySha256 !==
+      expectedCatalog.fullEnvironmentInventoryIdentitySha256 ||
+    completeCatalogAudit.fullEnvironmentInventoryRecordCount !==
+      expectedCatalog.fullEnvironmentInventoryRecordCount ||
+    completeCatalogAudit.localPostgresOwnerProfileIdentitySha256 !==
+      expectedCatalog.expectedDeploymentProfileIdentitySha256 ||
+    canonicalJson(completeCatalogAudit.componentIdentities) !==
+      canonicalJson(expectedCatalog.componentIdentities)
   ) {
     throw new Error('V2 invariant/profile identities do not match their schema-audit artifacts.')
   }
-  return audit
+  return { ...audit, completeCatalogAudit, expectedCatalog }
 }
 
 export interface V2MigrationFirstRuntimeDependencies<TSources, TValidated, TClient> {

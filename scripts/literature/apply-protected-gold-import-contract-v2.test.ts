@@ -29,13 +29,16 @@ import {
   type CommandRunner,
 } from './gold-import-compensation-migration-operations'
 import {
-  PROTECTED_V2_AUDIT_COMPONENT_NAMES,
   PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD,
   PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL,
   PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL_IDENTITY_SHA256,
-  PROTECTED_V2_COMPLETE_CATALOG_AUDIT_SCHEMA_VERSION,
   PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256,
+  validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile,
 } from './gold-import-contract-v2-catalog-audit'
+import {
+  committedProtectedV2CatalogExpectedArtifactForValidatedProfile,
+  expectedObservedAuditIdentityFromArtifact,
+} from './gold-import-contract-v2-catalog-expectations'
 import {
   PROTECTED_V2_APPLICATION_INTENT_SCHEMA_VERSION,
   PROTECTED_V2_BACKUP_DUPLICATE_MARKER_DIRECTORY,
@@ -64,7 +67,15 @@ import {
   type ProtectedV2AuthorizationContext,
   type ProtectedV2BackupBinding,
 } from './protected-gold-import-contract-v2'
-import { PROTECTED_V2_OPERATOR_BUNDLE_SCHEMA_VERSION } from './protected-gold-import-contract-v2-recovery-bundle'
+import {
+  buildProtectedV2OperatorBundle,
+  type ValidatedProtectedV2OperatorBundle,
+} from './protected-gold-import-contract-v2-recovery-bundle'
+import {
+  buildProtectedV2ExpectedCatalogBinding,
+  buildProtectedV2RuntimeBundleBinding,
+  parseProtectedV2RuntimeBundleBinding,
+} from './protected-gold-import-contract-v2-bindings'
 
 const HEAD = '1111111111111111111111111111111111111111'
 const NOW = new Date('2026-08-09T20:00:00.000Z')
@@ -73,49 +84,48 @@ const ROW_IDENTITIES = {
   revealStateSha256: '5'.repeat(64),
   reviewStateSha256: '6'.repeat(64),
 }
+let BASELINE_OPERATOR_BUNDLE: ValidatedProtectedV2OperatorBundle
+
+const LOCAL_EXPECTED_CATALOG = buildProtectedV2ExpectedCatalogBinding(
+  'local_supabase_postgres_owner_v1',
+  'local',
+)
+const LOCAL_EXPECTED_AUDIT = validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile(
+  expectedObservedAuditIdentityFromArtifact(
+    committedProtectedV2CatalogExpectedArtifactForValidatedProfile(
+      'local_supabase_postgres_owner_v1',
+      'local',
+    ),
+  ),
+  'local_supabase_postgres_owner_v1',
+  'local',
+)
 
 function sha256(value: string) {
   return createHash('sha256').update(value).digest('hex')
 }
 
 function repository(head = HEAD): ProtectedV2RepositoryEvidence {
-  const operatorBundleContent: Omit<
-    ProtectedV2RepositoryEvidence['operatorBundle'],
-    'aggregateSha256'
-  > = {
-    files: [
-      { path: 'package-lock.json', sha256: 'a'.repeat(64) },
-      {
-        path: 'scripts/literature/apply-protected-gold-import-contract-v2.ts',
-        sha256: 'b'.repeat(64),
-      },
-      {
-        path: 'supabase/migrations/20260809231651_add_literature_gold_import_compensation_contract_v2.sql',
-        sha256: PROTECTED_GOLD_IMPORT_CONTRACT_V2.sha256,
-      },
-      {
-        path: 'supabase/verification/20260809231651_verify_literature_gold_import_compensation_contract_v2.sql',
-        sha256: PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER.sha256,
-      },
-    ],
-    roots: [
-      'package-lock.json',
-      'scripts/literature/apply-protected-gold-import-contract-v2.ts',
-      'supabase/migrations/20260809231651_add_literature_gold_import_compensation_contract_v2.sql',
-      'supabase/verification/20260809231651_verify_literature_gold_import_compensation_contract_v2.sql',
-    ],
-    schemaVersion: PROTECTED_V2_OPERATOR_BUNDLE_SCHEMA_VERSION,
-  }
+  const operatorBundle = JSON.parse(
+    JSON.stringify(BASELINE_OPERATOR_BUNDLE),
+  ) as ValidatedProtectedV2OperatorBundle
   return {
     branch: 'main',
     head,
-    operatorBundle: {
-      ...operatorBundleContent,
-      aggregateSha256: sha256(canonicalJson(operatorBundleContent)),
-    },
+    operatorBundle,
+    operatorBundleBinding: buildProtectedV2RuntimeBundleBinding(operatorBundle),
     originMain: head,
     statusCleanIncludingUntracked: true,
   }
+}
+
+function rehashOperatorBundle(repositoryEvidence: ProtectedV2RepositoryEvidence): void {
+  const { aggregateSha256: _aggregateSha256, ...content } = repositoryEvidence.operatorBundle
+  void _aggregateSha256
+  repositoryEvidence.operatorBundle.aggregateSha256 = sha256(canonicalJson(content))
+  repositoryEvidence.operatorBundleBinding = buildProtectedV2RuntimeBundleBinding(
+    repositoryEvidence.operatorBundle,
+  )
 }
 
 function database(applied = false): ProtectedV2DatabaseEvidence {
@@ -176,6 +186,7 @@ function context(): ProtectedV2AuthorizationContext {
       auditModel: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL,
       auditModelIdentitySha256: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL_IDENTITY_SHA256,
       environmentInvariantIdentitySha256: PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256,
+      expectedCatalog: LOCAL_EXPECTED_CATALOG,
       verifier: PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER,
       verifierExecuted: false,
     },
@@ -187,33 +198,13 @@ function context(): ProtectedV2AuthorizationContext {
 }
 
 function postApplicationAudit(after = database(true), repositoryCommitSha = HEAD) {
-  const componentIdentities = Object.fromEntries(
-    PROTECTED_V2_AUDIT_COMPONENT_NAMES.map((name, index) => [
-      name,
-      (index + 1).toString(16).repeat(64),
-    ]),
-  ) as Record<(typeof PROTECTED_V2_AUDIT_COMPONENT_NAMES)[number], string>
-  const catalogAuditContent = {
-    auditMethod: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD,
-    auditModel: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL,
-    auditModelIdentitySha256: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL_IDENTITY_SHA256,
-    componentIdentities,
-    environmentInvariantIdentitySha256: PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256,
-    fullEnvironmentInventoryIdentitySha256: '8'.repeat(64),
-    fullEnvironmentInventoryRecordCount: 730,
-    localPostgresOwnerProfileIdentitySha256: '9'.repeat(64),
-    schemaVersion: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_SCHEMA_VERSION,
-    verifierExecuted: false as const,
-  }
   return buildProtectedV2PostApplicationAudit({
     auditMethod: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD,
     auditedAt: NOW.toISOString(),
-    catalogAudit: {
-      ...catalogAuditContent,
-      fullAuditIdentitySha256: reconciliationIdentitySha256(catalogAuditContent),
-    },
+    catalogAudit: LOCAL_EXPECTED_AUDIT,
     databaseEvidenceSha256: sha256(canonicalJson(after)),
     migration: PROTECTED_GOLD_IMPORT_CONTRACT_V2,
+    expectedCatalog: LOCAL_EXPECTED_CATALOG,
     readOnly: true,
     repeatableRead: true,
     repositoryCommitSha,
@@ -295,44 +286,49 @@ function operatorDependencies(state: Scenario): ProtectedV2OperatorDependencies 
         repository: input.repository,
       })
       const resultBytes = canonicalJson(result)
-      const executionReceipt = buildProtectedV2ApplicationExecutionReceipt({
-        auditMethod: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD,
-        backupCaptureIds: input.intentPackage.intent.backupInstances.map(
-          ({ backupInstanceId }) => backupInstanceId,
-        ) as [string, string],
-        backupTrustModel: PROTECTED_V2_BACKUP_TRUST_MODEL,
-        canonicalManifestSha256: 'a'.repeat(64),
-        compensationAuthorized: false,
-        executedAt: NOW.toISOString(),
-        heldOutIdentitiesAccessed: false,
-        importAuthorized: false,
-        intentCommitIsAncestor: input.intentCommitIsAncestor,
-        intentRepositoryHead: input.intentPackage.intent.repository.head,
-        migrationApplied: true,
-        migrationApplicationCallCount: input.migrationApplicationCallCount,
-        migrationId: PROTECTED_GOLD_IMPORT_CONTRACT_V2.id,
-        migrationReexecuted: false,
-        migrationSha256: PROTECTED_GOLD_IMPORT_CONTRACT_V2.sha256,
-        operatorAuthorizationSha256: input.intentPackage.intent.authorizationSha256,
-        operatorBundleSha256: input.intentPackage.intent.operatorBundle.aggregateSha256,
-        operatorBundleUnchanged: true,
-        originalIntentSha256: input.intentPackage.intentSha256,
-        outputDirectory: input.intentPackage.outputDirectory,
-        postApplicationAuditSha256: input.postApplicationAudit.auditIdentitySha256,
-        postApplicationCatalogAuditIdentitySha256:
-          input.postApplicationAudit.catalogAudit.fullAuditIdentitySha256,
-        postApplicationComponentIdentities:
-          input.postApplicationAudit.catalogAudit.componentIdentities,
-        receiptReconciled: input.receiptReconciled,
-        reconciliationReason: input.reconciliationReason,
-        remoteDatabaseAccessed: false,
-        recoveryRepositoryHead: input.repository.head,
-        repositoryCommitSha: input.repository.head,
-        resultSha256: sha256(resultBytes),
-        separateCaptureAttestation: PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION,
-        verifierExecuted: false,
-        verifierSourceSha256: PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER.sha256,
-      })
+      const executionReceipt = buildProtectedV2ApplicationExecutionReceipt(
+        {
+          auditMethod: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD,
+          backupCaptureIds: input.intentPackage.intent.backupInstances.map(
+            ({ backupInstanceId }) => backupInstanceId,
+          ) as [string, string],
+          backupTrustModel: PROTECTED_V2_BACKUP_TRUST_MODEL,
+          canonicalManifestSha256: 'a'.repeat(64),
+          compensationAuthorized: false,
+          executedAt: NOW.toISOString(),
+          expectedCatalog: input.postApplicationAudit.expectedCatalog,
+          heldOutIdentitiesAccessed: false,
+          importAuthorized: false,
+          intentCommitIsAncestor: input.intentCommitIsAncestor,
+          intentRepositoryHead: input.intentPackage.intent.repository.head,
+          migrationApplied: true,
+          migrationApplicationCallCount: input.migrationApplicationCallCount,
+          migrationId: PROTECTED_GOLD_IMPORT_CONTRACT_V2.id,
+          migrationReexecuted: false,
+          migrationSha256: PROTECTED_GOLD_IMPORT_CONTRACT_V2.sha256,
+          operatorAuthorizationSha256: input.intentPackage.intent.authorizationSha256,
+          operatorBundleSha256: input.intentPackage.intent.operatorBundle.aggregateSha256,
+          operatorBundleBinding: input.repository.operatorBundleBinding,
+          operatorBundleUnchanged: true,
+          originalIntentSha256: input.intentPackage.intentSha256,
+          outputDirectory: input.intentPackage.outputDirectory,
+          postApplicationAuditSha256: input.postApplicationAudit.auditIdentitySha256,
+          postApplicationCatalogAuditIdentitySha256:
+            input.postApplicationAudit.catalogAudit.fullAuditIdentitySha256,
+          postApplicationComponentIdentities:
+            input.postApplicationAudit.catalogAudit.componentIdentities,
+          receiptReconciled: input.receiptReconciled,
+          reconciliationReason: input.reconciliationReason,
+          remoteDatabaseAccessed: false,
+          recoveryRepositoryHead: input.repository.head,
+          repositoryCommitSha: input.repository.head,
+          resultSha256: sha256(resultBytes),
+          separateCaptureAttestation: PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION,
+          verifierExecuted: false,
+          verifierSourceSha256: PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER.sha256,
+        },
+        { operatorBundle: input.repository.operatorBundle },
+      )
       state.completed = { executionReceipt, result }
       return {
         manifestSha256: executionReceipt.canonicalManifestSha256,
@@ -433,6 +429,8 @@ async function createBackupFixture(input: { name: string; nonceCharacter: string
       canonicalJson({
         schemaVersion: 'gold-import-contract-v2-preapplication-report/1.0.0',
         repository: repository(),
+        expectedCatalog: LOCAL_EXPECTED_CATALOG,
+        operatorBundleBinding: repository().operatorBundleBinding,
         migration: {
           v1: { occurrence: 1, sha256: PROTECTED_GOLD_IMPORT_CONTRACT_V1.sha256 },
           v2: { occurrence: 0, sha256: PROTECTED_GOLD_IMPORT_CONTRACT_V2.sha256 },
@@ -466,30 +464,35 @@ async function createBackupFixture(input: { name: string; nonceCharacter: string
   ])
   const backupRoot = await realpath(input.root)
   const outputDirectory = await realpath(directory)
-  const receipt = buildProtectedV2BackupExecutionReceipt({
-    backupRoot,
-    canonicalManifestSha256: sha256(manifest),
-    database: {
-      batchId: database().batchId,
-      datasetSplit: 'development',
-      ...GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2,
+  const receipt = buildProtectedV2BackupExecutionReceipt(
+    {
+      backupRoot,
+      canonicalManifestSha256: sha256(manifest),
+      database: {
+        batchId: database().batchId,
+        datasetSplit: 'development',
+        ...GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2,
+      },
+      executedAt: NOW.toISOString(),
+      executionNonce: input.nonceCharacter.repeat(64),
+      expectedCatalog: LOCAL_EXPECTED_CATALOG,
+      migrationLedger: {
+        sha256: sha256(ledgerBytes),
+        v1: { ...PROTECTED_GOLD_IMPORT_CONTRACT_V1, occurrence: 1 },
+        v2: { ...PROTECTED_GOLD_IMPORT_CONTRACT_V2, occurrence: 0 },
+      },
+      outputDirectory,
+      operatorBundleBinding: repository().operatorBundleBinding,
+      repositoryCommitSha: HEAD,
+      safety: {
+        databaseMutationCount: 0,
+        heldOutIdentitiesAccessed: false,
+        remoteDatabaseAccessed: false,
+      },
+      schemaVersion: PROTECTED_V2_BACKUP_RECEIPT_SCHEMA_VERSION,
     },
-    executedAt: NOW.toISOString(),
-    executionNonce: input.nonceCharacter.repeat(64),
-    migrationLedger: {
-      sha256: sha256(ledgerBytes),
-      v1: { ...PROTECTED_GOLD_IMPORT_CONTRACT_V1, occurrence: 1 },
-      v2: { ...PROTECTED_GOLD_IMPORT_CONTRACT_V2, occurrence: 0 },
-    },
-    outputDirectory,
-    repositoryCommitSha: HEAD,
-    safety: {
-      databaseMutationCount: 0,
-      heldOutIdentitiesAccessed: false,
-      remoteDatabaseAccessed: false,
-    },
-    schemaVersion: PROTECTED_V2_BACKUP_RECEIPT_SCHEMA_VERSION,
-  })
+    { operatorBundle: repository().operatorBundle },
+  )
   const receiptBytes = canonicalJson(receipt)
   await writeFile(resolve(directory, 'execution-receipt.json'), receiptBytes, 'utf8')
   const markerDirectory = resolve(backupRoot, PROTECTED_V2_BACKUP_DUPLICATE_MARKER_DIRECTORY)
@@ -505,6 +508,10 @@ async function createBackupFixture(input: { name: string; nonceCharacter: string
 
 describe('protected V2 migration operator recovery boundary', () => {
   const cleanupDirectories: string[] = []
+
+  beforeAll(async () => {
+    BASELINE_OPERATOR_BUNDLE = await buildProtectedV2OperatorBundle({ cwd: process.cwd() })
+  })
 
   afterEach(async () => {
     await Promise.all(
@@ -610,6 +617,26 @@ describe('protected V2 migration operator recovery boundary', () => {
         '--reconcile-applied-receipt',
       ]),
     ).toThrow('forbids --commit, --confirmation, --backup, and --separate-capture-attestation')
+  })
+
+  it('freezes exact bindings and rejects a self-rehashed unsafe runtime root', () => {
+    const expectedCatalog = buildProtectedV2ExpectedCatalogBinding(
+      'local_supabase_postgres_owner_v1',
+      'local',
+    )
+    const runtimeBinding = buildProtectedV2RuntimeBundleBinding(BASELINE_OPERATOR_BUNDLE)
+    expect(Object.isFrozen(expectedCatalog)).toBe(true)
+    expect(Object.isFrozen(expectedCatalog.componentIdentities)).toBe(true)
+    expect(Object.isFrozen(runtimeBinding)).toBe(true)
+    expect(Object.isFrozen(runtimeBinding.finalRoots)).toBe(true)
+    expect(() => runtimeBinding.finalRoots.push('escape')).toThrow()
+
+    const unsafe = JSON.parse(JSON.stringify(runtimeBinding)) as typeof runtimeBinding
+    unsafe.finalRoots = ['../../escape']
+    const { bindingSha256: _bindingSha256, ...content } = unsafe
+    void _bindingSha256
+    unsafe.bindingSha256 = sha256(canonicalJson(content))
+    expect(() => parseProtectedV2RuntimeBundleBinding(unsafe)).toThrow()
   })
 
   it('performs no intent, staging, migration, audit, or receipt write in dry-run mode', async () => {
@@ -749,39 +776,37 @@ describe('protected V2 migration operator recovery boundary', () => {
     })
   })
 
-  it.each([
-    ['unrelated code descendant', '2'.repeat(40)],
-    ['unrelated documentation descendant', '3'.repeat(40)],
-  ])(
-    'recovers from a clean current-main %s with an unchanged operator bundle',
-    async (_label, descendant) => {
-      const state = scenario('lost_ack')
-      let currentRepository = repository()
-      const dependencies = operatorDependencies(state)
-      dependencies.inspectRepository = async () => currentRepository
-      dependencies.isRepositoryCommitAncestor = async (ancestor, current) =>
-        ancestor === HEAD && current === descendant
-      await expect(runProtectedV2Operator(commitArguments(), dependencies)).rejects.toThrow(
-        'acknowledgement lost',
-      )
-      currentRepository = repository(descendant)
-      state.fail = undefined
-      await expect(
-        runProtectedV2Operator(reconciliationArguments(), dependencies),
-      ).resolves.toMatchObject({ mode: 'reconciled_applied_receipt' })
-      expect(state.completed?.result).toMatchObject({
-        intentCommitIsAncestor: true,
-        intentRepositoryHead: HEAD,
-        operatorBundleUnchanged: true,
-        recoveryRepositoryHead: descendant,
-      })
-      expect(state.counters.apply).toBe(1)
-    },
-  )
+  it('recovers from a clean current-main documentation-only descendant with an unchanged operator bundle', async () => {
+    const descendant = '3'.repeat(40)
+    const state = scenario('lost_ack')
+    let currentRepository = repository()
+    const dependencies = operatorDependencies(state)
+    dependencies.inspectRepository = async () => currentRepository
+    dependencies.isRepositoryCommitAncestor = async (ancestor, current) =>
+      ancestor === HEAD && current === descendant
+    await expect(runProtectedV2Operator(commitArguments(), dependencies)).rejects.toThrow(
+      'acknowledgement lost',
+    )
+    currentRepository = repository(descendant)
+    state.fail = undefined
+    await expect(
+      runProtectedV2Operator(reconciliationArguments(), dependencies),
+    ).resolves.toMatchObject({ mode: 'reconciled_applied_receipt' })
+    expect(state.completed?.result).toMatchObject({
+      intentCommitIsAncestor: true,
+      intentRepositoryHead: HEAD,
+      operatorBundleUnchanged: true,
+      recoveryRepositoryHead: descendant,
+    })
+    expect(state.counters.apply).toBe(1)
+  })
 
   it.each([
     'scripts/literature/apply-protected-gold-import-contract-v2.ts',
     'package-lock.json',
+    'tsconfig.json',
+    'supabase/config.toml',
+    'scripts/literature/contracts/protected-v2-complete-catalog/local_supabase_postgres_owner_v1.json',
     'supabase/migrations/20260809231651_add_literature_gold_import_compensation_contract_v2.sql',
     'supabase/verification/20260809231651_verify_literature_gold_import_compensation_contract_v2.sql',
   ])('rejects descendant reconciliation after protected bundle drift in %s', async (path) => {
@@ -796,17 +821,10 @@ describe('protected V2 migration operator recovery boundary', () => {
     const file = drifted.operatorBundle.files.find((entry) => entry.path === path)
     if (!file) throw new Error(`Test fixture omitted protected path ${path}.`)
     file.sha256 = '0'.repeat(64)
-    const driftedBundleContent = {
-      files: drifted.operatorBundle.files,
-      roots: drifted.operatorBundle.roots,
-      schemaVersion: drifted.operatorBundle.schemaVersion,
-    }
-    drifted.operatorBundle.aggregateSha256 = sha256(canonicalJson(driftedBundleContent))
+    rehashOperatorBundle(drifted)
     currentRepository = drifted
     state.fail = undefined
-    await expect(runProtectedV2Operator(reconciliationArguments(), dependencies)).rejects.toThrow(
-      'operator-bundle or dependency-inventory drift',
-    )
+    await expect(runProtectedV2Operator(reconciliationArguments(), dependencies)).rejects.toThrow()
     expect(state.counters.apply).toBe(1)
     expect(state.counters.finalize).toBe(0)
   })
@@ -911,6 +929,50 @@ describe('protected V2 migration operator recovery boundary', () => {
       expect(() => validateProtectedV2Authorization(authorization, current)).toThrow('stale')
     },
   )
+
+  it('rejects cross-profile expected-catalog authorization in a known local context', () => {
+    const crossProfile = context()
+    crossProfile.expectedPostApplicationAudit.expectedCatalog =
+      buildProtectedV2ExpectedCatalogBinding('supabase_admin_owner_v1', 'disposable')
+    expect(() =>
+      buildProtectedV2Authorization({
+        confirmation: PROTECTED_V2_CONFIRMATION,
+        context: crossProfile,
+        operator: 'operator',
+        requestedAt: NOW.toISOString(),
+      }),
+    ).toThrow('exact local_supabase_postgres_owner_v1/local contract')
+  })
+
+  it('rejects an arbitrary self-consistent catalog audit in the known local context', () => {
+    const { fullAuditIdentitySha256: _fullAuditIdentitySha256, ...arbitraryContent } = JSON.parse(
+      JSON.stringify(LOCAL_EXPECTED_AUDIT),
+    ) as typeof LOCAL_EXPECTED_AUDIT
+    void _fullAuditIdentitySha256
+    const componentName = Object.keys(
+      arbitraryContent.componentIdentities,
+    )[0] as keyof typeof arbitraryContent.componentIdentities
+    arbitraryContent.componentIdentities[componentName] = 'f'.repeat(64)
+    const arbitraryAudit = {
+      ...arbitraryContent,
+      fullAuditIdentitySha256: reconciliationIdentitySha256(arbitraryContent),
+    }
+    expect(() =>
+      buildProtectedV2PostApplicationAudit({
+        auditMethod: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD,
+        auditedAt: NOW.toISOString(),
+        catalogAudit: arbitraryAudit,
+        databaseEvidenceSha256: 'a'.repeat(64),
+        expectedCatalog: LOCAL_EXPECTED_CATALOG,
+        migration: PROTECTED_GOLD_IMPORT_CONTRACT_V2,
+        readOnly: true,
+        repeatableRead: true,
+        repositoryCommitSha: HEAD,
+        verifier: PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER,
+        verifierExecuted: false,
+      }),
+    ).toThrow('does not match expected local_supabase_postgres_owner_v1/local context')
+  })
 
   it('pins migration-only scope and separately executed redundant capture instances', () => {
     const authorization = buildProtectedV2Authorization({
@@ -1112,10 +1174,13 @@ describe('protected V2 migration operator recovery boundary', () => {
     const projection = { ...original } as Record<string, unknown>
     delete projection.backupInstanceId
     delete projection.contentSha256
-    const recomputed = buildProtectedV2BackupExecutionReceipt({
-      ...(projection as unknown as Parameters<typeof buildProtectedV2BackupExecutionReceipt>[0]),
-      outputDirectory: await realpath(copied),
-    })
+    const recomputed = buildProtectedV2BackupExecutionReceipt(
+      {
+        ...(projection as unknown as Parameters<typeof buildProtectedV2BackupExecutionReceipt>[0]),
+        outputDirectory: await realpath(copied),
+      },
+      { operatorBundle: repository().operatorBundle },
+    )
     const recomputedBytes = canonicalJson(recomputed)
     await writeFile(resolve(copied, 'execution-receipt.json'), recomputedBytes, 'utf8')
     const markerDirectory = resolve(

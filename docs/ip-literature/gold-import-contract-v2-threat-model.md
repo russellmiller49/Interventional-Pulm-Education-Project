@@ -40,7 +40,7 @@ Out of scope:
 Ordinary lifecycle commands expose only migrations through V1 while V2 is absent. The protected
 operator re-reads a clean primary `main`, the exact local database, and two separately executed
 read-only captures; validates a checksum-bound migration-only authorization; exclusively seals an
-immutable intent and transitive operator-bundle identity; stages V2; invokes local migration-up once;
+immutable intent and conservative tracked operator-bundle identity; stages V2; invokes local migration-up once;
 proves a schema-only exact-once transition; executes one complete REPEATABLE READ READ ONLY catalog
 audit; and atomically adds a finalized receipt. Reconciliation starts from the sealed intent and an
 already-applied exact ledger, never stages or invokes migration-up.
@@ -92,25 +92,25 @@ and markers do not change that capability.
 - `literature:diagnose-gold-import-compensation-v2-preapplication`;
 - `literature:apply-protected-gold-import-contract-v2` dry-run, commit, and reconciliation modes;
 - ignored generated Supabase migrations and local capture/receipt paths;
-- git branch/HEAD/origin state and the protected relative-import closure;
+- git branch/HEAD/origin state, exact committed expectations, and the protected tracked superset;
 - the dedicated local Docker/PostgreSQL catalog and migration ledger.
 
 ## Abuse paths and controls
 
-| ID  | Abuse or failure path                                                               | Impact                                                 | Control and disposition                                                                                                                                                                  |
-| --- | ----------------------------------------------------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| T1  | Ordinary start/reset sees absent V2                                                 | Unauthorized schema application                        | V2 is excluded from ordinary inventory; ledger ambiguity and staged-byte drift fail closed.                                                                                              |
-| T2  | Wrong, remote, or linked database target                                            | Mutation outside the dedicated local database          | Exact project/container/port checks; no URL or remote target input; remote and held-out access recorded false.                                                                           |
-| T3  | Stale, partial, duplicate, aliased, or accidentally copied capture                  | Inadequate recovery evidence                           | Two distinct realpaths, IDs, nonces, receipts, timestamps, manifests, ledgers, state and repository bindings, local duplicate markers, freshness limit, and exact attestation.           |
-| T4  | Malicious same-user operator recomputes both captures and markers                   | Fabricated local evidence                              | Explicitly possible and out of scope. Mitigation would require another principal/service; none is claimed or added.                                                                      |
-| T5  | Mutation occurs before recoverable intent                                           | Applied migration with no authoritative recovery input | Exclusive immutable intent is fully sealed before staging or migration-up.                                                                                                               |
-| T6  | Lost acknowledgement leads to retry                                                 | Duplicate or ambiguous migration execution             | Commit is never retried. Reconciliation requires exact applied-once ledger, makes zero migration calls, and records `migrationReexecuted=false`.                                         |
-| T7  | `main` advances after intent                                                        | Recovery blocked or unsafe new code used               | Intent commit must be an ancestor of clean current `main == origin/main`; exact transitive operator bundle must be unchanged. Unrelated descendants pass; protected/runtime drift fails. |
-| T8  | Column, constraint, index, trigger, RLS/policy, ACL, function, or dependency drifts | Weakened database contract accepted                    | One production complete-catalog audit binds exact invariant/profile/full and component identities; independent disposable drift cases must all reject.                                   |
-| T9  | Receipt implies the write-capable verifier ran real-locally                         | Misstated assurance or unintended writes               | Verifier source SHA is pinned, but the receipt records `verifierExecuted=false` and `auditMethod=complete_read_only_catalog_identity`.                                                   |
-| T10 | Migration receipt is reused to import or compensate                                 | Unauthorized clinical/data mutation                    | Capability is migration-only; intent/result explicitly bind `importAuthorized=false` and `compensationAuthorized=false`; later gates ignore receipt possession as authorization.         |
-| T11 | Schema transition changes review, pointer, reveal, or effective state               | Clinical/source integrity loss                         | Exact before/after hashes and zero operation/action/import/compensation counts are required; any change blocks finalization.                                                             |
-| T12 | Source, signed authorization, note, or status is fabricated                         | Provenance and medical-review integrity loss           | Protected application reads no finalized source/package authorization and grants no data-operation capability; existing source/note/package contracts remain separate and exact.         |
+| ID  | Abuse or failure path                                                          | Impact                                                 | Control and disposition                                                                                                                                                                                                                                                                              |
+| --- | ------------------------------------------------------------------------------ | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| T1  | Ordinary start/reset sees absent V2                                            | Unauthorized schema application                        | V2 is excluded from ordinary inventory; ledger ambiguity and staged-byte drift fail closed.                                                                                                                                                                                                          |
+| T2  | Wrong, remote, or linked database target                                       | Mutation outside the dedicated local database          | Exact project/container/port checks; no URL or remote target input; remote and held-out access recorded false.                                                                                                                                                                                       |
+| T3  | Stale, partial, duplicate, aliased, or accidentally copied capture             | Inadequate recovery evidence                           | Two distinct realpaths, IDs, nonces, receipts, timestamps, manifests, ledgers, state and repository bindings, local duplicate markers, freshness limit, and exact attestation.                                                                                                                       |
+| T4  | Malicious same-user operator recomputes both captures and markers              | Fabricated local evidence                              | Explicitly possible and out of scope. Mitigation would require another principal/service; none is claimed or added.                                                                                                                                                                                  |
+| T5  | Mutation occurs before recoverable intent                                      | Applied migration with no authoritative recovery input | Exclusive immutable intent is fully sealed before staging or migration-up.                                                                                                                                                                                                                           |
+| T6  | Lost acknowledgement leads to retry                                            | Duplicate or ambiguous migration execution             | Commit is never retried. Reconciliation requires exact applied-once ledger, makes zero migration calls, and records `migrationReexecuted=false`.                                                                                                                                                     |
+| T7  | `main` advances after intent                                                   | Recovery blocked or unsafe new code used               | Intent commit must be an ancestor of clean current `main == origin/main`; exact expected artifacts and the conservative Git-tracked bundle (config, package, sources, migration, verifier, module/runtime audits) must be unchanged. Documentation-only descendants can pass; protected drift fails. |
+| T8  | Count-preserving catalog drift or a self-generated/profile-crossed expectation | Weakened database contract accepted                    | Observed hashes are descriptive. Only the exact committed profile artifact authorizes readiness; seven components, deployment/full-inventory/full-audit/model identities are context-bound, and the disposable drift matrix must reject every exact ordered probe.                                   |
+| T9  | Receipt implies the write-capable verifier ran real-locally                    | Misstated assurance or unintended writes               | Verifier source SHA is pinned, but the receipt records `verifierExecuted=false` and `auditMethod=complete_read_only_catalog_identity`.                                                                                                                                                               |
+| T10 | Migration receipt is reused to import or compensate                            | Unauthorized clinical/data mutation                    | Capability is migration-only; intent/result explicitly bind `importAuthorized=false` and `compensationAuthorized=false`; later gates ignore receipt possession as authorization.                                                                                                                     |
+| T11 | Schema transition changes review, pointer, reveal, or effective state          | Clinical/source integrity loss                         | Exact before/after hashes and zero operation/action/import/compensation counts are required; any change blocks finalization.                                                                                                                                                                         |
+| T12 | Source, signed authorization, note, or status is fabricated                    | Provenance and medical-review integrity loss           | Protected application reads no finalized source/package authorization and grants no data-operation capability; existing source/note/package contracts remain separate and exact.                                                                                                                     |
 
 ## Mitigation map
 
@@ -118,7 +118,7 @@ and markers do not change that capability.
 - Fixed local target and environment scrubbing: T2, T12.
 - Redundant capture integrity and exact attestation: T3; explicitly not T4.
 - Intent-before-mutation and atomic finalization: T5, T6.
-- Commit ancestry plus transitive operator-bundle identity: T7.
+- Commit ancestry plus exact expectation and conservative bundle identity: T7.
 - Complete catalog identity and disposable drift matrix: T8, T9.
 - Migration-only capability and state brackets: T10–T12.
 
@@ -139,8 +139,9 @@ and markers do not change that capability.
 - Catastrophic interruption after database commit but before intent durability is addressed by the
   intent-before-mutation order; storage failure that violates filesystem durability remains a host
   risk.
-- Future protected imports added outside the deterministic relative-import closure could weaken
-  recovery; closure inventory drift and tests are intended to expose that change during review.
+- Future protected dependencies must be captured by module resolution or an explicit runtime-input
+  declaration. Unsupported dynamic acquisition fails closed; it cannot silently fall outside the
+  conservative tracked bundle.
 
 ## Assumptions and review triggers
 

@@ -67,6 +67,13 @@ import {
   buildProtectedV2OperatorBundle,
 } from './protected-gold-import-contract-v2-recovery-bundle'
 import {
+  assertProtectedV2ExpectedCatalogArtifactSealed,
+  buildProtectedV2ExpectedCatalogBinding,
+  buildProtectedV2RuntimeBundleBinding,
+  validateProtectedV2ExpectedCatalogBinding,
+  validateProtectedV2RuntimeBundleBinding,
+} from './protected-gold-import-contract-v2-bindings'
+import {
   PROTECTED_V2_AUDIT_COMPONENT_NAMES,
   PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD,
   PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL,
@@ -411,6 +418,15 @@ function assertRedundantBackupCaptureBindings(
   }
 }
 
+function stableProtectedV2PostApplicationAudit(
+  audit: ProtectedV2PostApplicationAudit,
+): Omit<ProtectedV2PostApplicationAudit, 'auditIdentitySha256' | 'auditedAt'> {
+  const { auditIdentitySha256: _auditIdentitySha256, auditedAt: _auditedAt, ...stable } = audit
+  void _auditIdentitySha256
+  void _auditedAt
+  return stable
+}
+
 function authorizationContext(input: {
   backups: readonly [ProtectedV2BackupBinding, ProtectedV2BackupBinding]
   database: ProtectedV2DatabaseEvidence
@@ -437,6 +453,10 @@ function authorizationContext(input: {
       auditModel: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL,
       auditModelIdentitySha256: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL_IDENTITY_SHA256,
       environmentInvariantIdentitySha256: PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256,
+      expectedCatalog: buildProtectedV2ExpectedCatalogBinding(
+        'local_supabase_postgres_owner_v1',
+        'local',
+      ),
       verifier: PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER,
       verifierExecuted: false,
     },
@@ -444,6 +464,25 @@ function authorizationContext(input: {
     separateCaptureAttestation: PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION,
     safety: { heldOutIdentitiesAccessed: false, remoteDatabaseAccessed: false },
   }
+}
+
+function assertProtectedV2RepositoryEvidenceBindings(
+  repository: ProtectedV2RepositoryEvidence,
+): void {
+  validateProtectedV2RuntimeBundleBinding(
+    repository.operatorBundleBinding,
+    repository.operatorBundle,
+  )
+  const expectedCatalog = buildProtectedV2ExpectedCatalogBinding(
+    'local_supabase_postgres_owner_v1',
+    'local',
+  )
+  assertProtectedV2ExpectedCatalogArtifactSealed({
+    binding: expectedCatalog,
+    bundle: repository.operatorBundle,
+    profileId: 'local_supabase_postgres_owner_v1',
+    target: 'local',
+  })
 }
 
 export async function verifyProtectedV2PreapplicationBackup(input: {
@@ -494,6 +533,21 @@ export async function verifyProtectedV2PreapplicationBackup(input: {
   const executionBytes = await readFile(resolve(directory, 'execution-receipt.json'), 'utf8')
   const execution = parseProtectedV2BackupExecutionReceipt(executionBytes)
   const executionReceiptSha256 = sha256(executionBytes)
+  validateProtectedV2ExpectedCatalogBinding(
+    execution.expectedCatalog,
+    'local_supabase_postgres_owner_v1',
+    'local',
+  )
+  validateProtectedV2RuntimeBundleBinding(
+    execution.operatorBundleBinding,
+    input.repository.operatorBundle,
+  )
+  assertProtectedV2ExpectedCatalogArtifactSealed({
+    binding: execution.expectedCatalog,
+    bundle: input.repository.operatorBundle,
+    profileId: 'local_supabase_postgres_owner_v1',
+    target: 'local',
+  })
   const backupRootStat = await lstat(execution.backupRoot)
   if (!backupRootStat.isDirectory() || backupRootStat.isSymbolicLink()) {
     throw new Error('Protected V2 backup receipt binds an unsafe backup root.')
@@ -536,6 +590,15 @@ export async function verifyProtectedV2PreapplicationBackup(input: {
   const safety = record(report.safety, 'report.safety')
   const ordinaryPlan = record(report.ordinaryLocalStartPlan, 'report.ordinaryLocalStartPlan')
   const reportRepository = record(report.repository, 'report.repository')
+  const reportExpectedCatalog = validateProtectedV2ExpectedCatalogBinding(
+    report.expectedCatalog,
+    'local_supabase_postgres_owner_v1',
+    'local',
+  )
+  const reportOperatorBundleBinding = validateProtectedV2RuntimeBundleBinding(
+    report.operatorBundleBinding,
+    input.repository.operatorBundle,
+  )
   const executedAt = execution.executedAt
   const executedAtMilliseconds = Date.parse(executedAt)
   const age = input.now.getTime() - executedAtMilliseconds
@@ -554,6 +617,10 @@ export async function verifyProtectedV2PreapplicationBackup(input: {
   if (
     report.schemaVersion !== GOLD_IMPORT_V2_PREAPPLICATION_REPORT_SCHEMA_VERSION ||
     reportRepository.head !== input.repository.head ||
+    canonicalJson(reportExpectedCatalog) !== canonicalJson(execution.expectedCatalog) ||
+    canonicalJson(reportOperatorBundleBinding) !== canonicalJson(execution.operatorBundleBinding) ||
+    canonicalJson(reportOperatorBundleBinding) !==
+      canonicalJson(input.repository.operatorBundleBinding) ||
     v1.occurrence !== 1 ||
     v1.sha256 !== PROTECTED_GOLD_IMPORT_CONTRACT_V1.sha256 ||
     v2.occurrence !== 0 ||
@@ -633,6 +700,7 @@ export async function runProtectedV2Operator(
 ) {
   if (arguments_.mode === 'reconcile_applied_receipt') {
     const repository = await dependencies.inspectRepository()
+    assertProtectedV2RepositoryEvidenceBindings(repository)
     const intentPackage = await dependencies.loadIntentPackage(arguments_.output)
     const { intent } = intentPackage
     const intentCommitIsAncestor = await dependencies.isRepositoryCommitAncestor(
@@ -690,11 +758,15 @@ export async function runProtectedV2Operator(
         intentPackage.completed.result.intentRepositoryHead !== intent.repository.head ||
         intentPackage.completed.result.operatorBundleSha256 !==
           repository.operatorBundle.aggregateSha256 ||
-        intentPackage.completed.result.postApplicationAudit.catalogAudit.fullAuditIdentitySha256 !==
-          postApplicationAudit.catalogAudit.fullAuditIdentitySha256 ||
+        canonicalJson(intentPackage.completed.result.operatorBundleBinding) !==
+          canonicalJson(repository.operatorBundleBinding) ||
+        canonicalJson(intentPackage.completed.result.expectedCatalog) !==
+          canonicalJson(postApplicationAudit.expectedCatalog) ||
         canonicalJson(
-          intentPackage.completed.result.postApplicationAudit.catalogAudit.componentIdentities,
-        ) !== canonicalJson(postApplicationAudit.catalogAudit.componentIdentities)
+          stableProtectedV2PostApplicationAudit(
+            intentPackage.completed.result.postApplicationAudit,
+          ),
+        ) !== canonicalJson(stableProtectedV2PostApplicationAudit(postApplicationAudit))
       ) {
         throw new Error('Completed protected V2 receipt no longer matches current applied state.')
       }
@@ -732,6 +804,7 @@ export async function runProtectedV2Operator(
   }
 
   const repository = await dependencies.inspectRepository()
+  assertProtectedV2RepositoryEvidenceBindings(repository)
   const before = await dependencies.inspectDatabase('v2_absent')
   assertDatabaseBoundary(before, 'v2_absent')
   const now = dependencies.now()
@@ -763,6 +836,7 @@ export async function runProtectedV2Operator(
   // Re-read every authorization input immediately before the first mutation. Any repository,
   // database, or backup drift invalidates the in-memory, checksum-bound authorization.
   const currentRepository = await dependencies.inspectRepository()
+  assertProtectedV2RepositoryEvidenceBindings(currentRepository)
   const currentDatabase = await dependencies.inspectDatabase('v2_absent')
   assertDatabaseBoundary(currentDatabase, 'v2_absent')
   const currentNow = dependencies.now()
@@ -850,10 +924,23 @@ export async function inspectProtectedV2OperatorRepository(input: {
   if ((await gitStatusIncludingUntracked(input.cwd, runCommand)) !== '') {
     throw new Error('Protected V2 operator requires clean tracked and untracked primary main.')
   }
+  const operatorBundle = await buildProtectedV2OperatorBundle({ cwd: input.cwd })
+  const operatorBundleBinding = buildProtectedV2RuntimeBundleBinding(operatorBundle)
+  const expectedCatalog = buildProtectedV2ExpectedCatalogBinding(
+    'local_supabase_postgres_owner_v1',
+    'local',
+  )
+  assertProtectedV2ExpectedCatalogArtifactSealed({
+    binding: expectedCatalog,
+    bundle: operatorBundle,
+    profileId: 'local_supabase_postgres_owner_v1',
+    target: 'local',
+  })
   return {
     branch: 'main',
     head: guard.head,
-    operatorBundle: await buildProtectedV2OperatorBundle({ cwd: input.cwd }),
+    operatorBundle,
+    operatorBundleBinding,
     originMain: guard.originMain,
     statusCleanIncludingUntracked: true,
   }
@@ -1163,9 +1250,19 @@ export async function sealProtectedV2ApplicationIntent(input: {
 - Backup instance two: \`${intent.backupInstances[1].backupInstanceId}\`
 - Intent repository commit: \`${intent.repository.head}\`
 - Protected operator bundle SHA-256: \`${intent.operatorBundle.aggregateSha256}\`
+- Protected operator bundle binding SHA-256: \`${intent.operatorBundleBinding.bindingSha256}\`
+- Protected operator tracked-file count: \`${intent.operatorBundleBinding.trackedFileCount}\`
+- Protected operator tracked-file inventory SHA-256: \`${intent.operatorBundleBinding.trackedFileInventorySha256}\`
+- Protected operator module-resolution audit SHA-256: \`${intent.operatorBundleBinding.moduleResolutionAuditSha256}\`
+- Protected operator runtime-input declaration SHA-256: \`${intent.operatorBundleBinding.runtimeInputDeclarationSha256}\`
+- Protected operator runtime-input audit SHA-256: \`${intent.operatorBundleBinding.runtimeInputAuditSha256}\`
 - Expected post-application audit method: \`${intent.authorization.context.expectedPostApplicationAudit.auditMethod}\`
 - Expected audit-model SHA-256: \`${intent.authorization.context.expectedPostApplicationAudit.auditModelIdentitySha256}\`
 - Expected environment-invariant SHA-256: \`${intent.authorization.context.expectedPostApplicationAudit.environmentInvariantIdentitySha256}\`
+- Expected catalog profile: \`${intent.expectedCatalog.profileId}/${intent.expectedCatalog.target}\`
+- Expected catalog artifact file SHA-256: \`${intent.expectedCatalog.artifact.fileSha256}\`
+- Expected catalog artifact content SHA-256: \`${intent.expectedCatalog.artifact.contentSha256}\`
+- Expected catalog full-audit SHA-256: \`${intent.expectedCatalog.fullAuditIdentitySha256}\`
 - Verifier source SHA-256: \`${intent.authorization.context.expectedPostApplicationAudit.verifier.sha256}\`
 - Verifier will be executed real-locally: \`false\`
 - Migration applied: \`false\`
@@ -1313,7 +1410,9 @@ export async function loadProtectedV2ApplicationIntentPackage(input: {
     canonicalJson(result.before) !== canonicalJson(intent.before) ||
     canonicalJson(result.backupInstances) !== canonicalJson(intent.backupInstances) ||
     result.intentRepositoryHead !== intent.repository.head ||
+    canonicalJson(result.expectedCatalog) !== canonicalJson(intent.expectedCatalog) ||
     result.operatorBundleSha256 !== intent.operatorBundle.aggregateSha256 ||
+    canonicalJson(result.operatorBundleBinding) !== canonicalJson(intent.operatorBundleBinding) ||
     result.recoveryRepositoryHead !== result.repository.head ||
     executionReceipt.canonicalManifestSha256 !== sha256(finalManifest) ||
     executionReceipt.resultSha256 !== sha256(resultBytes) ||
@@ -1325,7 +1424,10 @@ export async function loadProtectedV2ApplicationIntentPackage(input: {
     executionReceipt.intentRepositoryHead !== intent.repository.head ||
     executionReceipt.intentCommitIsAncestor !== true ||
     executionReceipt.operatorBundleSha256 !== intent.operatorBundle.aggregateSha256 ||
+    canonicalJson(executionReceipt.operatorBundleBinding) !==
+      canonicalJson(intent.operatorBundleBinding) ||
     executionReceipt.operatorBundleUnchanged !== true ||
+    canonicalJson(executionReceipt.expectedCatalog) !== canonicalJson(intent.expectedCatalog) ||
     executionReceipt.recoveryRepositoryHead !== result.repository.head ||
     executionReceipt.repositoryCommitSha !== result.repository.head ||
     canonicalJson(executionReceipt.backupCaptureIds) !==
@@ -1406,6 +1508,11 @@ export async function finalizeProtectedV2ApplicationReceipt(input: {
 - Intent commit is an ancestor: \`true\`
 - Recovery operator bundle unchanged: \`true\`
 - Protected operator bundle SHA-256: \`${loaded.intent.operatorBundle.aggregateSha256}\`
+- Protected operator bundle binding SHA-256: \`${loaded.intent.operatorBundleBinding.bindingSha256}\`
+- Protected operator tracked-file inventory SHA-256: \`${loaded.intent.operatorBundleBinding.trackedFileInventorySha256}\`
+- Protected operator module-resolution audit SHA-256: \`${loaded.intent.operatorBundleBinding.moduleResolutionAuditSha256}\`
+- Protected operator runtime-input declaration SHA-256: \`${loaded.intent.operatorBundleBinding.runtimeInputDeclarationSha256}\`
+- Protected operator runtime-input audit SHA-256: \`${loaded.intent.operatorBundleBinding.runtimeInputAuditSha256}\`
 - Backup trust model: \`${PROTECTED_V2_BACKUP_TRUST_MODEL}\`
 - Separate-capture attestation: \`${PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION}\`
 - Redundant capture one: \`${loaded.intent.backupInstances[0].backupInstanceId}\`
@@ -1418,6 +1525,9 @@ export async function finalizeProtectedV2ApplicationReceipt(input: {
 - Post-application audit method: \`${input.postApplicationAudit.auditMethod}\`
 - Post-application audit: \`${input.postApplicationAudit.auditIdentitySha256}\`
 - Complete catalog audit: \`${input.postApplicationAudit.catalogAudit.fullAuditIdentitySha256}\`
+- Expected catalog profile: \`${input.postApplicationAudit.expectedCatalog.profileId}/${input.postApplicationAudit.expectedCatalog.target}\`
+- Expected catalog artifact content SHA-256: \`${input.postApplicationAudit.expectedCatalog.artifact.contentSha256}\`
+- Expected catalog artifact file SHA-256: \`${input.postApplicationAudit.expectedCatalog.artifact.fileSha256}\`
 ${auditComponentMarkdown}
 - Verifier source SHA-256: \`${input.postApplicationAudit.verifier.sha256}\`
 - Verifier executed: \`false\`
@@ -1430,43 +1540,49 @@ ${auditComponentMarkdown}
       ['application-result.md', markdown],
     ]),
   )
-  const executionReceipt = buildProtectedV2ApplicationExecutionReceipt({
-    auditMethod: input.postApplicationAudit.auditMethod,
-    backupCaptureIds: loaded.intent.backupInstances.map(
-      ({ backupInstanceId }) => backupInstanceId,
-    ) as [string, string],
-    backupTrustModel: PROTECTED_V2_BACKUP_TRUST_MODEL,
-    canonicalManifestSha256: sha256(manifest),
-    compensationAuthorized: false,
-    executedAt: input.now.toISOString(),
-    heldOutIdentitiesAccessed: false,
-    importAuthorized: false,
-    intentCommitIsAncestor: input.intentCommitIsAncestor,
-    intentRepositoryHead: loaded.intent.repository.head,
-    migrationApplied: true,
-    migrationApplicationCallCount: input.migrationApplicationCallCount,
-    migrationId: PROTECTED_GOLD_IMPORT_CONTRACT_V2.id,
-    migrationReexecuted: false,
-    migrationSha256: PROTECTED_GOLD_IMPORT_CONTRACT_V2.sha256,
-    operatorAuthorizationSha256: loaded.intent.authorizationSha256,
-    operatorBundleSha256: loaded.intent.operatorBundle.aggregateSha256,
-    operatorBundleUnchanged: true,
-    originalIntentSha256: loaded.intentSha256,
-    outputDirectory,
-    postApplicationAuditSha256: input.postApplicationAudit.auditIdentitySha256,
-    postApplicationCatalogAuditIdentitySha256:
-      input.postApplicationAudit.catalogAudit.fullAuditIdentitySha256,
-    postApplicationComponentIdentities: input.postApplicationAudit.catalogAudit.componentIdentities,
-    receiptReconciled: input.receiptReconciled,
-    reconciliationReason: input.reconciliationReason,
-    remoteDatabaseAccessed: false,
-    recoveryRepositoryHead: input.repository.head,
-    repositoryCommitSha: input.repository.head,
-    resultSha256: sha256(resultBytes),
-    separateCaptureAttestation: PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION,
-    verifierExecuted: false,
-    verifierSourceSha256: PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER.sha256,
-  })
+  const executionReceipt = buildProtectedV2ApplicationExecutionReceipt(
+    {
+      auditMethod: input.postApplicationAudit.auditMethod,
+      backupCaptureIds: loaded.intent.backupInstances.map(
+        ({ backupInstanceId }) => backupInstanceId,
+      ) as [string, string],
+      backupTrustModel: PROTECTED_V2_BACKUP_TRUST_MODEL,
+      canonicalManifestSha256: sha256(manifest),
+      compensationAuthorized: false,
+      executedAt: input.now.toISOString(),
+      expectedCatalog: input.postApplicationAudit.expectedCatalog,
+      heldOutIdentitiesAccessed: false,
+      importAuthorized: false,
+      intentCommitIsAncestor: input.intentCommitIsAncestor,
+      intentRepositoryHead: loaded.intent.repository.head,
+      migrationApplied: true,
+      migrationApplicationCallCount: input.migrationApplicationCallCount,
+      migrationId: PROTECTED_GOLD_IMPORT_CONTRACT_V2.id,
+      migrationReexecuted: false,
+      migrationSha256: PROTECTED_GOLD_IMPORT_CONTRACT_V2.sha256,
+      operatorAuthorizationSha256: loaded.intent.authorizationSha256,
+      operatorBundleSha256: loaded.intent.operatorBundle.aggregateSha256,
+      operatorBundleBinding: loaded.intent.operatorBundleBinding,
+      operatorBundleUnchanged: true,
+      originalIntentSha256: loaded.intentSha256,
+      outputDirectory,
+      postApplicationAuditSha256: input.postApplicationAudit.auditIdentitySha256,
+      postApplicationCatalogAuditIdentitySha256:
+        input.postApplicationAudit.catalogAudit.fullAuditIdentitySha256,
+      postApplicationComponentIdentities:
+        input.postApplicationAudit.catalogAudit.componentIdentities,
+      receiptReconciled: input.receiptReconciled,
+      reconciliationReason: input.reconciliationReason,
+      remoteDatabaseAccessed: false,
+      recoveryRepositoryHead: input.repository.head,
+      repositoryCommitSha: input.repository.head,
+      resultSha256: sha256(resultBytes),
+      separateCaptureAttestation: PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION,
+      verifierExecuted: false,
+      verifierSourceSha256: PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER.sha256,
+    },
+    { operatorBundle: input.repository.operatorBundle },
+  )
   const temporaryDirectory = resolve(
     outputRoot,
     `.protected-v2-finalization-${randomBytes(16).toString('hex')}`,
@@ -1578,6 +1694,10 @@ export async function collectProtectedV2PostApplicationAudit(input: {
     auditedAt: input.now.toISOString(),
     catalogAudit,
     databaseEvidenceSha256: sha256(canonicalJson(input.after)),
+    expectedCatalog: buildProtectedV2ExpectedCatalogBinding(
+      'local_supabase_postgres_owner_v1',
+      'local',
+    ),
     migration: PROTECTED_GOLD_IMPORT_CONTRACT_V2,
     readOnly: true,
     repeatableRead: true,

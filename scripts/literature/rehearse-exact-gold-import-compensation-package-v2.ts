@@ -14,10 +14,21 @@ import {
   GOLD_REVIEW_IMPORT_COMPENSATION_MIGRATION_ID_V2,
 } from '../../src/features/literature/gold-set/import-compensation-v2'
 import {
+  validateReadyGoldImportCompensationV2Audit,
+  type GoldImportCompensationV2ReadyAudit,
+} from './audit-gold-import-compensation-v2'
+import {
   type V2ExactPackageBootstrapSources,
   createBootstrappedExactPackageDatabaseExecutorV2,
 } from './execute-exact-gold-import-compensation-package-v2'
-import type { ProtectedV2CompleteCatalogAuditIdentity } from './gold-import-contract-v2-catalog-audit'
+import {
+  validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile,
+  type ProtectedV2CompleteCatalogAuditIdentity,
+} from './gold-import-contract-v2-catalog-audit'
+import {
+  committedProtectedV2CatalogExpectedArtifactForValidatedProfile,
+  expectedObservedAuditIdentityFromArtifact,
+} from './gold-import-contract-v2-catalog-expectations'
 import type { GeneratedGoldImportCompensationPackageV2 } from './generate-gold-import-compensation-package-v2'
 import {
   loadAndVerifyBackup,
@@ -43,6 +54,19 @@ import {
   type ProtectedV2CatalogDriftMatrixEvidence,
 } from './rehearse-gold-import-contract-v2-catalog-drift-matrix'
 import { developmentDatabaseSeedSchema } from './rehearse-exact-gold-import-compensation-package-v1'
+import {
+  buildProtectedV2OperatorBundle,
+  type ProtectedV2OperatorBundle,
+} from './protected-gold-import-contract-v2-recovery-bundle'
+import {
+  assertProtectedV2ExpectedCatalogArtifactSealed,
+  buildProtectedV2ExpectedCatalogBinding,
+  buildProtectedV2RuntimeBundleBinding,
+  validateProtectedV2RuntimeBundleBinding,
+  type ProtectedV2ExpectedCatalogBinding,
+  type ProtectedV2RuntimeBundleBinding,
+} from './protected-gold-import-contract-v2-bindings'
+import type { V2CanonicalAuthorizationBindings } from './gold-import-compensation-rehearsal-evidence-v2'
 
 const execFileAsync = promisify(execFile)
 const REPOSITORY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
@@ -56,9 +80,11 @@ export const GOLD_IMPORT_PRE_V1_BACKUP_PHYSICAL_STATE_SHA256_V2 =
 const CANONICAL_OUTPUT_NAMES = [
   'disposable-v2-catalog-drift-matrix.json',
   'disposable-v2-complete-catalog-audit.json',
+  'disposable-v2-exact-catalog-binding.json',
   'disposable-v2-ready-audit.json',
   'exact-package-rehearsal-report-v2.json',
   'fresh-v2-rehearsal-evidence.json',
+  'protected-v2-runtime-bundle-binding.json',
   'upgrade-v2-rehearsal-evidence.json',
 ] as const
 
@@ -294,12 +320,14 @@ const PRODUCTION_COMPLETE_REHEARSAL_DEPENDENCIES: CompleteV2RehearsalDependencie
 /** Bootstrap in upgrade run one, then require a second upgrade and two fresh runs. */
 export async function executeCompleteV2Rehearsal(input: {
   dependencies?: CompleteV2RehearsalDependencies
+  evidenceBindings: V2CanonicalAuthorizationBindings
   exactPackageExecutor: V2ExactPackageDatabaseExecutor
   seed: ReturnType<typeof developmentDatabaseSeedSchema.parse>
 }): Promise<CompleteV2RehearsalResults> {
   const dependencies = input.dependencies ?? PRODUCTION_COMPLETE_REHEARSAL_DEPENDENCIES
   const run = (migrationPath: 'fresh' | 'upgrade') =>
     dependencies.executePath({
+      evidenceBindings: input.evidenceBindings,
       exactPackageExecutor: input.exactPackageExecutor,
       migrationPath,
       seed: input.seed,
@@ -327,7 +355,10 @@ export async function executeCompleteV2Rehearsal(input: {
   }
 }
 
-function canonicalPathEvidence(result: V2DisposablePathResult): Buffer {
+function canonicalPathEvidence(
+  result: V2DisposablePathResult,
+  expectedBindings: V2CanonicalAuthorizationBindings,
+): Buffer {
   const expectedNames = ['canonical-manifest.sha256', 'v2-rehearsal-evidence.json']
   const actualNames = [...result.canonicalArtifacts.keys()].sort((left, right) =>
     left.localeCompare(right, 'en'),
@@ -339,6 +370,26 @@ function canonicalPathEvidence(result: V2DisposablePathResult): Buffer {
   const manifest = result.canonicalArtifacts.get('canonical-manifest.sha256')!
   if (!manifest.equals(Buffer.from(`${sha256(evidence)}  v2-rehearsal-evidence.json\n`))) {
     throw new Error(`${result.migrationPath} canonical artifact manifest is stale.`)
+  }
+  const parsedEvidence = record(
+    parseJson(evidence, `${result.migrationPath} rehearsal evidence`),
+    `${result.migrationPath} rehearsal evidence`,
+  )
+  const authorizationBindings = record(
+    parsedEvidence.authorizationBindings,
+    `${result.migrationPath} rehearsal authorization bindings`,
+  )
+  if (
+    authorizationBindings.authority !==
+      'exact_committed_disposable_catalog_and_protected_runtime_bundle' ||
+    canonicalJson(authorizationBindings.completeCatalogAudit) !==
+      canonicalJson(expectedBindings.completeCatalogAudit) ||
+    canonicalJson(authorizationBindings.expectedCatalog) !==
+      canonicalJson(expectedBindings.expectedCatalog) ||
+    canonicalJson(authorizationBindings.operatorBundleBinding) !==
+      canonicalJson(expectedBindings.operatorBundleBinding)
+  ) {
+    throw new Error(`${result.migrationPath} canonical evidence lacks its exact A/B bindings.`)
   }
   return evidence
 }
@@ -358,16 +409,46 @@ function canonicalManifest(files: ReadonlyMap<string, Buffer>): Buffer {
 }
 
 function buildCanonicalOutputs(input: {
-  audit: unknown
+  audit: GoldImportCompensationV2ReadyAudit
   backupManifestSha256: string
   completeCatalogAudit: ProtectedV2CompleteCatalogAuditIdentity
   driftMatrix: ProtectedV2CatalogDriftMatrixEvidence
+  expectedCatalog: ProtectedV2ExpectedCatalogBinding
+  operatorBundle: ProtectedV2OperatorBundle
+  operatorBundleBinding: ProtectedV2RuntimeBundleBinding
   package: GeneratedGoldImportCompensationPackageV2
   results: CompleteV2RehearsalResults
 }) {
-  const freshEvidence = canonicalPathEvidence(input.results.fresh[0])
-  const upgradeEvidence = canonicalPathEvidence(input.results.upgrade[0])
-  const auditBytes = prettyCanonical(input.audit)
+  const audit = validateReadyGoldImportCompensationV2Audit(input.audit)
+  const operatorBundleBinding = validateProtectedV2RuntimeBundleBinding(
+    input.operatorBundleBinding,
+    input.operatorBundle,
+  )
+  const evidenceBindings = {
+    completeCatalogAudit: input.completeCatalogAudit,
+    expectedCatalog: input.expectedCatalog,
+    operatorBundle: input.operatorBundle,
+    operatorBundleBinding,
+  }
+  const freshEvidence = canonicalPathEvidence(input.results.fresh[0], evidenceBindings)
+  const upgradeEvidence = canonicalPathEvidence(input.results.upgrade[0], evidenceBindings)
+  if (
+    canonicalJson(audit.completeCatalogAudit) !== canonicalJson(input.completeCatalogAudit) ||
+    canonicalJson(audit.expectedCatalog) !== canonicalJson(input.expectedCatalog) ||
+    canonicalJson(input.package.sourceAuthorizationSet.completeCatalogAudit) !==
+      canonicalJson(input.completeCatalogAudit) ||
+    canonicalJson(input.package.sourceAuthorizationSet.expectedCatalog) !==
+      canonicalJson(input.expectedCatalog) ||
+    input.package.verifiedBindings.completeCatalogAuditIdentitySha256 !==
+      input.completeCatalogAudit.fullAuditIdentitySha256 ||
+    input.package.verifiedBindings.expectedCatalogBindingSha256 !==
+      input.expectedCatalog.bindingSha256
+  ) {
+    throw new Error(
+      'Ready audit, package, source authorization, and exact catalog bindings differ.',
+    )
+  }
+  const auditBytes = prettyCanonical(audit)
   const completeCatalogAuditBytes = prettyCanonical(input.completeCatalogAudit)
   const driftMatrixBytes = prettyCanonical(input.driftMatrix)
   const report = {
@@ -385,6 +466,7 @@ function buildCanonicalOutputs(input: {
       sha256: sha256(auditBytes),
       source: 'first_v1_seeded_upgrade_disposable_context',
     },
+    expectedCatalog: input.expectedCatalog,
     catalogDriftMatrix: {
       localOwnerProjectionIdentitySha256:
         input.driftMatrix.localOwnerProjection.fullAuditIdentitySha256,
@@ -408,7 +490,11 @@ function buildCanonicalOutputs(input: {
       manifestSha256: input.package.manifestSha256,
       sourceArtifactSha256: input.package.verifiedBindings.sourceArtifactSha256,
       sourceAuthorizationSetSha256: input.package.verifiedBindings.sourceAuthorizationSetSha256,
+      completeCatalogAuditIdentitySha256:
+        input.package.verifiedBindings.completeCatalogAuditIdentitySha256,
+      expectedCatalogBindingSha256: input.package.verifiedBindings.expectedCatalogBindingSha256,
     },
+    protectedRuntimeBundle: operatorBundleBinding,
     repository: {
       branch: V2_REHEARSAL_TASK_BRANCH,
       cleanTrackedAndUntrackedWorktree: true,
@@ -449,9 +535,11 @@ function buildCanonicalOutputs(input: {
   const files = new Map<string, Buffer>([
     ['disposable-v2-catalog-drift-matrix.json', driftMatrixBytes],
     ['disposable-v2-complete-catalog-audit.json', completeCatalogAuditBytes],
+    ['disposable-v2-exact-catalog-binding.json', prettyCanonical(input.expectedCatalog)],
     ['disposable-v2-ready-audit.json', auditBytes],
     ['exact-package-rehearsal-report-v2.json', prettyCanonical(report)],
     ['fresh-v2-rehearsal-evidence.json', freshEvidence],
+    ['protected-v2-runtime-bundle-binding.json', prettyCanonical(operatorBundleBinding)],
     ['upgrade-v2-rehearsal-evidence.json', upgradeEvidence],
   ])
   if (
@@ -464,6 +552,7 @@ function buildCanonicalOutputs(input: {
 }
 
 export interface ExactV2PackageRehearsalCliDependencies {
+  buildOperatorBundle?(): Promise<ProtectedV2OperatorBundle>
   completeRehearsal?: CompleteV2RehearsalDependencies
   loadPreMigrationBackup(
     directory: string,
@@ -473,6 +562,7 @@ export interface ExactV2PackageRehearsalCliDependencies {
 }
 
 const PRODUCTION_CLI_DEPENDENCIES: ExactV2PackageRehearsalCliDependencies = {
+  buildOperatorBundle: () => buildProtectedV2OperatorBundle({ cwd: REPOSITORY_ROOT }),
   loadPreMigrationBackup: loadAndVerifyBackup,
   readRepositoryHead: authenticateV2RehearsalRepositoryHead,
 }
@@ -522,6 +612,31 @@ export async function runExactPackageRehearsalV2Cli(
   )
   const seed = authenticatedSeedFromBackup(backup, trustedBackupManifestSha256)
   const commitSha = await dependencies.readRepositoryHead()
+  const operatorBundle = await (
+    dependencies.buildOperatorBundle ?? PRODUCTION_CLI_DEPENDENCIES.buildOperatorBundle!
+  )()
+  const operatorBundleBinding = buildProtectedV2RuntimeBundleBinding(operatorBundle)
+  const expectedCatalog = buildProtectedV2ExpectedCatalogBinding(
+    'supabase_admin_owner_v1',
+    'disposable',
+  )
+  assertProtectedV2ExpectedCatalogArtifactSealed({
+    binding: expectedCatalog,
+    bundle: operatorBundle,
+    profileId: 'supabase_admin_owner_v1',
+    target: 'disposable',
+  })
+  const expectedCompleteCatalogAudit =
+    validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile(
+      expectedObservedAuditIdentityFromArtifact(
+        committedProtectedV2CatalogExpectedArtifactForValidatedProfile(
+          'supabase_admin_owner_v1',
+          'disposable',
+        ),
+      ),
+      'supabase_admin_owner_v1',
+      'disposable',
+    )
   const sourcePaths = {
     amendedAuthorization: resolve(requiredArgument(arguments_, 'amended-authorization')),
     amendedAuthorizationExactText: resolve(
@@ -603,6 +718,12 @@ export async function runExactPackageRehearsalV2Cli(
   const results = await executeCompleteV2Rehearsal({
     dependencies: dependencies.completeRehearsal,
     exactPackageExecutor: controller.executor,
+    evidenceBindings: {
+      completeCatalogAudit: expectedCompleteCatalogAudit,
+      expectedCatalog,
+      operatorBundle,
+      operatorBundleBinding,
+    },
     seed,
   })
   if (controller.generatedPackageCount() !== 4 || sourceReadCount !== 4) {
@@ -612,6 +733,9 @@ export async function runExactPackageRehearsalV2Cli(
   const package_ = controller.referencePackage()
   const audit = controller.referenceAudit()
   const completeCatalogAudit = controller.referenceCompleteCatalogAudit()
+  if (canonicalJson(completeCatalogAudit) !== canonicalJson(expectedCompleteCatalogAudit)) {
+    throw new Error('Observed disposable catalog audit differs from its committed expectation.')
+  }
   const driftMatrix = await runProtectedV2DisposableCatalogDriftMatrix({
     package: package_,
     seed,
@@ -621,6 +745,9 @@ export async function runExactPackageRehearsalV2Cli(
     backupManifestSha256: trustedBackupManifestSha256,
     completeCatalogAudit,
     driftMatrix,
+    expectedCatalog,
+    operatorBundle,
+    operatorBundleBinding,
     package: package_,
     results,
   })
@@ -631,6 +758,11 @@ export async function runExactPackageRehearsalV2Cli(
     rawReceipt: result.rawReceipt,
   })
   const rawReceipt = prettyCanonical({
+    authorizationBindings: {
+      completeCatalogAudit,
+      expectedCatalog,
+      operatorBundleBinding,
+    },
     bootstrapUpgradeRunIndex: 1,
     canonicalManifestExcludedVolatileReceipt: true,
     fresh: results.fresh.map(executionPathReceipt),

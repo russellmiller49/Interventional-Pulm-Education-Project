@@ -1,13 +1,38 @@
 import { createHash } from 'node:crypto'
 
 import {
+  GOLD_REVIEW_IMPORT_COMPENSATION_V2_FUNCTION_IDENTITIES,
   parseCompensationReceiptV2,
   parseImportReceiptV2,
   type CompensationReceiptV2,
   type ImportReceiptV2,
 } from '../../src/features/literature/gold-set/import-compensation-v2'
 
-import { canonicalJson } from './gold-import-compensation-rehearsal-evidence'
+import {
+  EXACT_MIXED_PACKAGE_COUNTS,
+  REQUIRED_SCENARIO_IDS,
+  SCENARIO_EVIDENCE_SCHEMA_VERSION,
+  buildCanonicalScenarioEvidence,
+  canonicalJson,
+  validateSqlScenarioEvidence,
+} from './gold-import-compensation-rehearsal-evidence'
+import {
+  validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile,
+  type ProtectedV2CompleteCatalogAuditIdentity,
+} from './gold-import-contract-v2-catalog-audit'
+import {
+  assertProtectedV2ExpectedCatalogArtifactSealed,
+  validateAndFreezeProtectedV2OperatorBundle,
+  validateProtectedV2ExpectedCatalogBinding,
+  validateProtectedV2RuntimeBundleBinding,
+  type ProtectedV2ExpectedCatalogBinding,
+  type ProtectedV2RuntimeBundleBinding,
+} from './protected-gold-import-contract-v2-bindings'
+import type { ProtectedV2OperatorBundle } from './protected-gold-import-contract-v2-recovery-bundle'
+import {
+  V2_CANONICAL_SEMANTIC_FUNCTION_CONTRACTS,
+  V2_CANONICAL_SEMANTIC_FUNCTION_RAW_DEFINITION_SHA256,
+} from './gold-import-compensation-v2-semantic-function-identities'
 
 export const GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2 =
   'gold-review-import-compensation/2.0.0' as const
@@ -23,7 +48,7 @@ export const V2_REHEARSAL_EVIDENCE_MARKER = 'V2_REHEARSAL_EVIDENCE_JSON:' as con
 export const V2_REHEARSAL_SCHEMA_VERSION =
   'gold-import-compensation-disposable-rehearsal/2.0.0' as const
 export const V2_CANONICAL_EVIDENCE_SCHEMA_VERSION =
-  'gold-import-compensation-disposable-rehearsal-canonical/2.0.0' as const
+  'gold-import-compensation-disposable-rehearsal-canonical/2.1.0' as const
 export const NOTE_DISPOSITION_AUDIT_SHA256 =
   '89477e3f9f673e4a9d7cad20395ad7f2b6b00c05a993c50969527f985061a915' as const
 
@@ -1039,14 +1064,736 @@ export function sha256CanonicalV2(value: unknown): string {
   return createHash('sha256').update(canonicalJson(value)).digest('hex')
 }
 
-export function buildCanonicalV2RehearsalArtifacts(input: {
+export interface V2CanonicalAuthorizationBindings {
+  completeCatalogAudit: ProtectedV2CompleteCatalogAuditIdentity
+  expectedCatalog: ProtectedV2ExpectedCatalogBinding
+  operatorBundle: ProtectedV2OperatorBundle
+  operatorBundleBinding: ProtectedV2RuntimeBundleBinding
+}
+
+export function validateV2CanonicalAuthorizationBindings(
+  input: V2CanonicalAuthorizationBindings,
+): V2CanonicalAuthorizationBindings {
+  if (!input || typeof input !== 'object') {
+    throw new Error('V2 canonical delivery evidence requires exact A/B authorization bindings.')
+  }
+  const completeCatalogAudit = validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile(
+    input.completeCatalogAudit,
+    'supabase_admin_owner_v1',
+    'disposable',
+  )
+  const expectedCatalog = validateProtectedV2ExpectedCatalogBinding(
+    input.expectedCatalog,
+    'supabase_admin_owner_v1',
+    'disposable',
+  )
+  const operatorBundle = validateAndFreezeProtectedV2OperatorBundle(input.operatorBundle)
+  const operatorBundleBinding = validateProtectedV2RuntimeBundleBinding(
+    input.operatorBundleBinding,
+    operatorBundle,
+  )
+  assertProtectedV2ExpectedCatalogArtifactSealed({
+    binding: expectedCatalog,
+    bundle: operatorBundle,
+    profileId: 'supabase_admin_owner_v1',
+    target: 'disposable',
+  })
+  if (
+    completeCatalogAudit.fullAuditIdentitySha256 !== expectedCatalog.fullAuditIdentitySha256 ||
+    completeCatalogAudit.environmentInvariantIdentitySha256 !==
+      expectedCatalog.environmentInvariantIdentitySha256 ||
+    completeCatalogAudit.localPostgresOwnerProfileIdentitySha256 !==
+      expectedCatalog.expectedDeploymentProfileIdentitySha256 ||
+    completeCatalogAudit.fullEnvironmentInventoryIdentitySha256 !==
+      expectedCatalog.fullEnvironmentInventoryIdentitySha256 ||
+    completeCatalogAudit.fullEnvironmentInventoryRecordCount !==
+      expectedCatalog.fullEnvironmentInventoryRecordCount ||
+    canonicalJson(completeCatalogAudit.componentIdentities) !==
+      canonicalJson(expectedCatalog.componentIdentities)
+  ) {
+    throw new Error('V2 canonical rehearsal catalog audit and expected-state binding differ.')
+  }
+  return {
+    completeCatalogAudit,
+    expectedCatalog,
+    operatorBundle,
+    operatorBundleBinding,
+  }
+}
+
+export interface V2CanonicalRehearsalEvidenceValidationContext extends V2CanonicalAuthorizationBindings {
+  migrationSha256: string
+  v1MigrationSha256: string
+  v1VerifierSha256: string
+}
+
+export interface ValidatedV2CanonicalRehearsalEvidence {
+  actionCounts: V2DynamicActionCounts
+  authorizationBindings: {
+    authority: 'exact_committed_disposable_catalog_and_protected_runtime_bundle'
+    completeCatalogAudit: ProtectedV2CompleteCatalogAuditIdentity
+    expectedCatalog: ProtectedV2ExpectedCatalogBinding
+    operatorBundleBinding: ProtectedV2RuntimeBundleBinding
+  }
+  contractVersion: typeof GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2
+  migration: {
+    id: typeof GOLD_IMPORT_COMPENSATION_MIGRATION_V2
+    path: V2MigrationPath
+    sha256: string
+  }
+  operationScenarios: ValidatedV2OperationScenarios
+  productionCohort: {
+    amendedNoteCount: 2
+    falseFullTextCount: 580
+    falseIsBlindedCount: 630
+    noteDispositionAuditSha256: typeof NOTE_DISPOSITION_AUDIT_SHA256
+    nullDiseaseStatusCount: 272
+    nullTechnologyStatusCount: 272
+    rowsSha256: string
+    trueFullTextCount: 50
+  }
+  schemaOnlyUpgrade: V2SchemaOnlyUpgradeProof | null
+  schemaVersion: typeof V2_CANONICAL_EVIDENCE_SCHEMA_VERSION
+  verifierEvidence: Record<string, unknown>
+}
+
+function validateCanonicalActionCounts(value: unknown): V2DynamicActionCounts {
+  const counts = record(value, 'canonical rehearsal actionCounts')
+  exactKeys(
+    counts,
+    ['initial', 'inserts', 'noops', 'revisions', 'total'],
+    'canonical rehearsal actionCounts',
+  )
+  const parsed = {
+    initial: integer(counts.initial, 'canonical rehearsal actionCounts.initial'),
+    inserts: integer(counts.inserts, 'canonical rehearsal actionCounts.inserts'),
+    noops: integer(counts.noops, 'canonical rehearsal actionCounts.noops'),
+    revisions: integer(counts.revisions, 'canonical rehearsal actionCounts.revisions'),
+    total: integer(counts.total, 'canonical rehearsal actionCounts.total'),
+  }
+  if (
+    parsed.total !== 630 ||
+    parsed.initial + parsed.revisions + parsed.noops !== parsed.total ||
+    parsed.inserts !== parsed.initial + parsed.revisions
+  ) {
+    throw new Error('Canonical rehearsal action counts do not cover the exact production cohort.')
+  }
+  return parsed
+}
+
+function validateCanonicalProductionCohort(value: unknown) {
+  const cohort = record(value, 'canonical rehearsal productionCohort')
+  exactKeys(
+    cohort,
+    [
+      'amendedNoteCount',
+      'falseFullTextCount',
+      'falseIsBlindedCount',
+      'noteDispositionAuditSha256',
+      'nullDiseaseStatusCount',
+      'nullTechnologyStatusCount',
+      'rowsSha256',
+      'trueFullTextCount',
+    ],
+    'canonical rehearsal productionCohort',
+  )
+  if (
+    cohort.amendedNoteCount !== 2 ||
+    cohort.falseFullTextCount !== 580 ||
+    cohort.falseIsBlindedCount !== 630 ||
+    cohort.noteDispositionAuditSha256 !== NOTE_DISPOSITION_AUDIT_SHA256 ||
+    cohort.nullDiseaseStatusCount !== 272 ||
+    cohort.nullTechnologyStatusCount !== 272 ||
+    cohort.trueFullTextCount !== 50
+  ) {
+    throw new Error('Canonical rehearsal production-cohort projection drifted.')
+  }
+  return {
+    amendedNoteCount: 2 as const,
+    falseFullTextCount: 580 as const,
+    falseIsBlindedCount: 630 as const,
+    noteDispositionAuditSha256: NOTE_DISPOSITION_AUDIT_SHA256,
+    nullDiseaseStatusCount: 272 as const,
+    nullTechnologyStatusCount: 272 as const,
+    rowsSha256: sha256(cohort.rowsSha256, 'canonical rehearsal productionCohort.rowsSha256'),
+    trueFullTextCount: 50 as const,
+  }
+}
+
+function validateCanonicalSemanticFunctionMetadata(
+  value: unknown,
+  owner: 'postgres' | 'supabase_admin',
+) {
+  const metadata = record(value, `canonical verifier ${owner} semantic metadata`)
+  exactKeys(metadata, ['functions'], `canonical verifier ${owner} semantic metadata`)
+  const functions = array(
+    metadata.functions,
+    `canonical verifier ${owner} semantic metadata.functions`,
+  ).map((entry, index) => {
+    const function_ = record(
+      entry,
+      `canonical verifier ${owner} semantic metadata.functions[${index}]`,
+    )
+    exactKeys(
+      function_,
+      [
+        'anonExecute',
+        'authenticatedExecute',
+        'identityArguments',
+        'name',
+        'owner',
+        'publicExecute',
+        'rawDefinitionSha256',
+        'resultType',
+        'searchPath',
+        'securityDefiner',
+        'serviceRoleExecute',
+        'volatility',
+      ],
+      `canonical verifier ${owner} semantic metadata.functions[${index}]`,
+    )
+    const name = string(function_.name, 'canonical verifier semantic function name')
+    const identity =
+      GOLD_REVIEW_IMPORT_COMPENSATION_V2_FUNCTION_IDENTITIES[
+        name as keyof typeof GOLD_REVIEW_IMPORT_COMPENSATION_V2_FUNCTION_IDENTITIES
+      ]
+    const contract =
+      V2_CANONICAL_SEMANTIC_FUNCTION_CONTRACTS[
+        name as keyof typeof V2_CANONICAL_SEMANTIC_FUNCTION_CONTRACTS
+      ]
+    const rawDefinitionSha256 =
+      V2_CANONICAL_SEMANTIC_FUNCTION_RAW_DEFINITION_SHA256[
+        name as keyof typeof V2_CANONICAL_SEMANTIC_FUNCTION_RAW_DEFINITION_SHA256
+      ]
+    if (
+      !identity ||
+      !contract ||
+      !rawDefinitionSha256 ||
+      function_.identityArguments !== identity.identityArguments ||
+      function_.owner !== owner ||
+      function_.anonExecute !== false ||
+      function_.authenticatedExecute !== false ||
+      function_.publicExecute !== false ||
+      function_.securityDefiner !== contract.securityDefiner ||
+      function_.serviceRoleExecute !== contract.serviceRoleExecute ||
+      function_.searchPath !== contract.searchPath ||
+      function_.resultType !== contract.resultType ||
+      function_.volatility !== contract.volatility ||
+      function_.rawDefinitionSha256 !== rawDefinitionSha256
+    ) {
+      throw new Error(`Canonical verifier metadata is unsafe for V2 function ${name}.`)
+    }
+    return {
+      anonExecute: false,
+      authenticatedExecute: false,
+      identityArguments: identity.identityArguments,
+      name,
+      owner,
+      publicExecute: false,
+      rawDefinitionSha256,
+      resultType: contract.resultType,
+      searchPath: contract.searchPath,
+      securityDefiner: contract.securityDefiner,
+      serviceRoleExecute: contract.serviceRoleExecute,
+      volatility: contract.volatility,
+    }
+  })
+  const names = functions.map(({ name }) => name).sort((left, right) => left.localeCompare(right))
+  if (canonicalJson(names) !== canonicalJson([...REQUIRED_V2_SEMANTIC_FUNCTIONS].sort())) {
+    throw new Error('Canonical verifier semantic function inventory drifted.')
+  }
+  return { functions: functions.sort((left, right) => left.name.localeCompare(right.name)) }
+}
+
+function validateCanonicalV1VerifierEvidence(
+  value: unknown,
+  context: V2CanonicalRehearsalEvidenceValidationContext,
+) {
+  const evidence = record(value, 'canonical verifier V1 evidence')
+  exactKeys(
+    evidence,
+    [
+      'allScenariosPassed',
+      'migrationSha256',
+      'mixedPackageCounts',
+      'normalization',
+      'scenarios',
+      'schemaVersion',
+      'verifierSha256',
+    ],
+    'canonical verifier V1 evidence',
+  )
+  if (
+    evidence.schemaVersion !== SCENARIO_EVIDENCE_SCHEMA_VERSION ||
+    evidence.allScenariosPassed !== true ||
+    evidence.migrationSha256 !== context.v1MigrationSha256 ||
+    evidence.verifierSha256 !== context.v1VerifierSha256 ||
+    canonicalJson(evidence.mixedPackageCounts) !== canonicalJson(EXACT_MIXED_PACKAGE_COUNTS)
+  ) {
+    throw new Error('Canonical verifier V1 identity or production counts drifted.')
+  }
+  const normalization = record(evidence.normalization, 'canonical verifier V1 normalization')
+  exactKeys(
+    normalization,
+    ['physicalStateHashes', 'runtimeUuids'],
+    'canonical verifier V1 normalization',
+  )
+  if (
+    normalization.physicalStateHashes !==
+      'Equality-preserving deterministic tokens; raw runtime hashes are retained only in execution-receipt.json.' ||
+    normalization.runtimeUuids !==
+      'First-seen equality-preserving deterministic tokens; raw runtime UUIDs are retained only in execution-receipt.json.'
+  ) {
+    throw new Error('Canonical verifier V1 normalization descriptor drifted.')
+  }
+  const rehydrateNormalizedRuntimeValue = (value: unknown): unknown => {
+    if (typeof value === 'string') {
+      const physical = /^physical-state-equality-token-(\d{3})$/u.exec(value)
+      if (physical) return createHash('sha256').update(value).digest('hex')
+      if (value.startsWith('physical-state-equality-token-')) {
+        throw new Error('Canonical verifier V1 physical-state token drifted.')
+      }
+      const runtimeUuid = /^uuid-equality-token-(\d{3})$/u.exec(value)
+      if (runtimeUuid) {
+        return `00000000-0000-4000-8000-${runtimeUuid[1]!.padStart(12, '0')}`
+      }
+      if (value.startsWith('uuid-equality-token-')) {
+        throw new Error('Canonical verifier V1 runtime UUID token drifted.')
+      }
+      return value
+    }
+    if (Array.isArray(value)) return value.map(rehydrateNormalizedRuntimeValue)
+    if (isRecord(value)) {
+      return Object.fromEntries(
+        Object.entries(value).map(([key, child]) => [key, rehydrateNormalizedRuntimeValue(child)]),
+      )
+    }
+    return value
+  }
+  const rehydratedCore = rehydrateNormalizedRuntimeValue({
+    allScenariosPassed: evidence.allScenariosPassed,
+    mixedPackageCounts: evidence.mixedPackageCounts,
+    scenarios: evidence.scenarios,
+    schemaVersion: evidence.schemaVersion,
+  })
+  validateSqlScenarioEvidence(rehydratedCore)
+  const rebuiltCanonical = buildCanonicalScenarioEvidence(
+    rehydratedCore as Parameters<typeof buildCanonicalScenarioEvidence>[0],
+    context.v1MigrationSha256,
+    context.v1VerifierSha256,
+  )
+  if (canonicalJson(rebuiltCanonical) !== canonicalJson(evidence)) {
+    throw new Error('Canonical verifier V1 normalized runtime tokens are noncanonical.')
+  }
+  const scenarios = array(evidence.scenarios, 'canonical verifier V1 scenarios')
+  const scenarioIds = scenarios.map((entry, index) => {
+    const scenario = record(entry, `canonical verifier V1 scenarios[${index}]`)
+    if (
+      scenario.status !== 'passed' ||
+      scenario.databaseContractInvoked !== true ||
+      !Array.isArray(scenario.assertions) ||
+      scenario.assertions.some((assertion) => !isRecord(assertion) || assertion.passed !== true)
+    ) {
+      throw new Error('Canonical verifier V1 scenario evidence is incomplete.')
+    }
+    return string(scenario.scenarioId, 'canonical verifier V1 scenarioId')
+  })
+  if (
+    scenarios.length !== REQUIRED_SCENARIO_IDS.length ||
+    new Set(scenarioIds).size !== scenarioIds.length ||
+    canonicalJson([...scenarioIds].sort()) !== canonicalJson([...REQUIRED_SCENARIO_IDS].sort())
+  ) {
+    throw new Error('Canonical verifier V1 scenario inventory drifted.')
+  }
+  return JSON.parse(canonicalJson(evidence)) as Record<string, unknown>
+}
+
+function validateCanonicalV2SqlVerifierEvidence(value: unknown) {
+  const evidence = record(value, 'canonical verifier V2 SQL evidence')
+  exactKeys(
+    evidence,
+    [
+      'allChecksPassed',
+      'contractVersion',
+      'fixtureScope',
+      'migrationId',
+      'productionCohortCountsVerifiedElsewhere',
+      'scenarios',
+      'schemaVersion',
+    ],
+    'canonical verifier V2 SQL evidence',
+  )
+  const scenarios = record(evidence.scenarios, 'canonical verifier V2 SQL scenarios')
+  exactKeys(
+    scenarios,
+    ['atomicity', 'authorization_type_guards', 'determinism', 'import_compensation'],
+    'canonical verifier V2 SQL scenarios',
+  )
+  const atomicity = record(scenarios.atomicity, 'canonical verifier V2 atomicity')
+  const authorization = record(
+    scenarios.authorization_type_guards,
+    'canonical verifier V2 authorization guards',
+  )
+  const determinism = record(scenarios.determinism, 'canonical verifier V2 determinism')
+  const importCompensation = record(
+    scenarios.import_compensation,
+    'canonical verifier V2 import/compensation',
+  )
+  exactKeys(
+    atomicity,
+    [
+      'failedJournalSealed',
+      'pointerMutationCount',
+      'revealTimestampMutationCount',
+      'reviewMutationCount',
+    ],
+    'canonical verifier V2 atomicity',
+  )
+  exactKeys(
+    authorization,
+    [
+      'operationAuthorizationNumericAuthorizationNoteRejected',
+      'operationAuthorizationNumericAuthorizedAtRejected',
+      'recoveryAuthorizationNumericAuthorizationNoteRejected',
+      'recoveryAuthorizationNumericAuthorizedAtRejected',
+    ],
+    'canonical verifier V2 authorization guards',
+  )
+  exactKeys(
+    determinism,
+    [
+      'completeReceiptsIdentical',
+      'compensationReceiptSha256',
+      'effectiveStateHashesIdentical',
+      'importReceiptSha256',
+      'physicalStateHashesIdentical',
+      'savepointIsolatedSeededExecutionsCompared',
+      'timelineAnchor',
+    ],
+    'canonical verifier V2 determinism',
+  )
+  exactKeys(
+    importCompensation,
+    [
+      'compensationCommitted',
+      'effectiveStateRestored',
+      'exactPayloadCopy',
+      'fullTextUsed',
+      'idempotentReplay',
+      'importCommitted',
+      'isBlinded',
+      'readOnlyReconcile',
+      'revealTimestampsSynthesized',
+    ],
+    'canonical verifier V2 import/compensation',
+  )
+  if (
+    evidence.schemaVersion !== 'gold-import-compensation-v2-verifier/1.0.0' ||
+    evidence.contractVersion !== GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2 ||
+    evidence.migrationId !== GOLD_IMPORT_COMPENSATION_MIGRATION_V2 ||
+    evidence.fixtureScope !== 'synthetic_small_fixture' ||
+    evidence.productionCohortCountsVerifiedElsewhere !== true ||
+    evidence.allChecksPassed !== true ||
+    atomicity.failedJournalSealed !== true ||
+    atomicity.reviewMutationCount !== 0 ||
+    atomicity.pointerMutationCount !== 0 ||
+    atomicity.revealTimestampMutationCount !== 0 ||
+    Object.values(authorization).some((entry) => entry !== true) ||
+    determinism.savepointIsolatedSeededExecutionsCompared !== 2 ||
+    determinism.completeReceiptsIdentical !== true ||
+    determinism.physicalStateHashesIdentical !== true ||
+    determinism.effectiveStateHashesIdentical !== true ||
+    determinism.timelineAnchor !== 'authorization.authorizedAt' ||
+    !SHA256_PATTERN.test(String(determinism.importReceiptSha256)) ||
+    !SHA256_PATTERN.test(String(determinism.compensationReceiptSha256)) ||
+    importCompensation.importCommitted !== true ||
+    importCompensation.compensationCommitted !== true ||
+    importCompensation.effectiveStateRestored !== true ||
+    importCompensation.exactPayloadCopy !== true ||
+    importCompensation.idempotentReplay !== true ||
+    importCompensation.readOnlyReconcile !== true ||
+    importCompensation.fullTextUsed !== true ||
+    importCompensation.isBlinded !== false ||
+    importCompensation.revealTimestampsSynthesized !== false
+  ) {
+    throw new Error('Canonical verifier V2 SQL evidence is incomplete or unsafe.')
+  }
+  return JSON.parse(canonicalJson(evidence)) as Record<string, unknown>
+}
+
+function validateCanonicalVerifierEvidence(
+  value: unknown,
+  migrationPath: V2MigrationPath,
+  schemaOnlyUpgrade: V2SchemaOnlyUpgradeProof | null,
+  context: V2CanonicalRehearsalEvidenceValidationContext,
+) {
+  const evidence = record(value, 'canonical verifier evidence')
+  exactKeys(
+    evidence,
+    ['ownerProfiles', 'postV2SeedProjection', 'v1', 'v2'],
+    'canonical verifier evidence',
+  )
+  const projection = record(evidence.postV2SeedProjection, 'canonical post-V2 seed projection')
+  exactKeys(
+    projection,
+    ['migrationEquivalentToUpgrade', 'seedMode', 'snapshot'],
+    'canonical post-V2 seed projection',
+  )
+  const expectedSeedMode =
+    migrationPath === 'fresh' ? 'migration_equivalent_post_v2_projection' : 'exact_pre_v1'
+  const snapshot = validateV2SchemaOnlySnapshot(
+    projection.snapshot,
+    'canonical post-V2 seed projection snapshot',
+  )
+  if (
+    projection.migrationEquivalentToUpgrade !== true ||
+    projection.seedMode !== expectedSeedMode ||
+    (schemaOnlyUpgrade && canonicalJson(snapshot) !== canonicalJson(schemaOnlyUpgrade.after))
+  ) {
+    throw new Error('Canonical post-V2 seed projection is not migration-equivalent.')
+  }
+  const profiles = record(evidence.ownerProfiles, 'canonical verifier owner profiles')
+  exactKeys(
+    profiles,
+    [
+      'disposableSupabaseAdmin',
+      'supportedLocalPostgresProjection',
+      'transactionalProjectionRollbackRestored',
+    ],
+    'canonical verifier owner profiles',
+  )
+  if (profiles.transactionalProjectionRollbackRestored !== true) {
+    throw new Error('Canonical verifier owner projection was not rolled back.')
+  }
+  const validateOwner = (value: unknown, owner: 'postgres' | 'supabase_admin') => {
+    const profile = record(value, `canonical verifier ${owner} profile`)
+    exactKeys(profile, ['rpcMetadata', 'semanticFunctions'], `canonical verifier ${owner} profile`)
+    return {
+      rpcMetadata: validateV2RpcMetadata(
+        { functions: array(profile.rpcMetadata, `canonical verifier ${owner} RPC metadata`) },
+        owner,
+      ),
+      semanticFunctions: validateCanonicalSemanticFunctionMetadata(
+        profile.semanticFunctions,
+        owner,
+      ),
+    }
+  }
+  const disposableSupabaseAdmin = validateOwner(profiles.disposableSupabaseAdmin, 'supabase_admin')
+  const supportedLocalPostgresProjection = validateOwner(
+    profiles.supportedLocalPostgresProjection,
+    'postgres',
+  )
+  const ownerNeutral = (profile: typeof disposableSupabaseAdmin) => ({
+    rpcMetadata: profile.rpcMetadata.map((entry) =>
+      Object.fromEntries(Object.entries(entry).filter(([key]) => key !== 'owner')),
+    ),
+    semanticFunctions: {
+      functions: profile.semanticFunctions.functions.map((entry) =>
+        Object.fromEntries(Object.entries(entry).filter(([key]) => key !== 'owner')),
+      ),
+    },
+  })
+  const disposableOwnerNeutral = ownerNeutral(disposableSupabaseAdmin)
+  const localOwnerNeutral = ownerNeutral(supportedLocalPostgresProjection)
+  if (canonicalJson(disposableOwnerNeutral) !== canonicalJson(localOwnerNeutral)) {
+    throw new Error('Canonical verifier owner projections do not describe the same contracts.')
+  }
+  return {
+    ownerProfiles: {
+      disposableSupabaseAdmin,
+      supportedLocalPostgresProjection,
+      transactionalProjectionRollbackRestored: true,
+    },
+    postV2SeedProjection: {
+      migrationEquivalentToUpgrade: true,
+      seedMode: expectedSeedMode,
+      snapshot,
+    },
+    v1: validateCanonicalV1VerifierEvidence(evidence.v1, context),
+    v2: validateCanonicalV2SqlVerifierEvidence(evidence.v2),
+  }
+}
+
+function deepFreezeCanonical<T>(value: T): Readonly<T> {
+  if (!value || typeof value !== 'object' || Object.isFrozen(value)) return value
+  Object.freeze(value)
+  for (const child of Object.values(value)) deepFreezeCanonical(child)
+  return value
+}
+
+export function validateCanonicalV2RehearsalEvidence(
+  value: unknown,
+  context: V2CanonicalRehearsalEvidenceValidationContext,
+): Readonly<ValidatedV2CanonicalRehearsalEvidence> {
+  const evidence = record(value, 'canonical V2 rehearsal evidence')
+  exactKeys(
+    evidence,
+    [
+      'actionCounts',
+      'authorizationBindings',
+      'contractVersion',
+      'migration',
+      'operationScenarios',
+      'productionCohort',
+      'schemaOnlyUpgrade',
+      'schemaVersion',
+      'verifierEvidence',
+    ],
+    'canonical V2 rehearsal evidence',
+  )
+  if (
+    evidence.schemaVersion !== V2_CANONICAL_EVIDENCE_SCHEMA_VERSION ||
+    evidence.contractVersion !== GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2
+  ) {
+    throw new Error('Canonical V2 rehearsal schema or contract version drifted.')
+  }
+  const expectedBindings = validateV2CanonicalAuthorizationBindings(context)
+  const rawBindings = record(evidence.authorizationBindings, 'canonical authorizationBindings')
+  exactKeys(
+    rawBindings,
+    ['authority', 'completeCatalogAudit', 'expectedCatalog', 'operatorBundleBinding'],
+    'canonical authorizationBindings',
+  )
+  if (rawBindings.authority !== 'exact_committed_disposable_catalog_and_protected_runtime_bundle') {
+    throw new Error('Canonical V2 rehearsal evidence has no delivery authority.')
+  }
+  const bindings = {
+    completeCatalogAudit: validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile(
+      rawBindings.completeCatalogAudit,
+      'supabase_admin_owner_v1',
+      'disposable',
+    ),
+    expectedCatalog: validateProtectedV2ExpectedCatalogBinding(
+      rawBindings.expectedCatalog,
+      'supabase_admin_owner_v1',
+      'disposable',
+    ),
+    operatorBundleBinding: validateProtectedV2RuntimeBundleBinding(
+      rawBindings.operatorBundleBinding,
+      expectedBindings.operatorBundle,
+    ),
+  }
+  assertProtectedV2ExpectedCatalogArtifactSealed({
+    binding: bindings.expectedCatalog,
+    bundle: expectedBindings.operatorBundle,
+    profileId: 'supabase_admin_owner_v1',
+    target: 'disposable',
+  })
+  if (
+    canonicalJson(bindings.completeCatalogAudit) !==
+      canonicalJson(expectedBindings.completeCatalogAudit) ||
+    canonicalJson(bindings.expectedCatalog) !== canonicalJson(expectedBindings.expectedCatalog) ||
+    canonicalJson(bindings.operatorBundleBinding) !==
+      canonicalJson(expectedBindings.operatorBundleBinding)
+  ) {
+    throw new Error('Canonical V2 rehearsal evidence differs from exact A/B authorization.')
+  }
+  const migration = record(evidence.migration, 'canonical V2 rehearsal migration')
+  exactKeys(migration, ['id', 'path', 'sha256'], 'canonical V2 rehearsal migration')
+  if (
+    migration.id !== GOLD_IMPORT_COMPENSATION_MIGRATION_V2 ||
+    !['fresh', 'upgrade'].includes(String(migration.path)) ||
+    migration.sha256 !== context.migrationSha256
+  ) {
+    throw new Error('Canonical V2 rehearsal migration identity drifted.')
+  }
+  const migrationPath = migration.path as V2MigrationPath
+  const actionCounts = validateCanonicalActionCounts(evidence.actionCounts)
+  const operationScenarios = validateV2OperationScenarios(evidence.operationScenarios)
+  if (
+    canonicalJson(actionCounts) !==
+      canonicalJson(operationScenarios.receiptsAndState.receipts.importApplied.actionCounts) ||
+    operationScenarios.compensation.actionMappingCount !== actionCounts.total
+  ) {
+    throw new Error('Canonical V2 rehearsal scenario counts differ from the cohort partition.')
+  }
+  const schemaOnlyUpgrade =
+    migrationPath === 'upgrade'
+      ? (() => {
+          const bracket = record(evidence.schemaOnlyUpgrade, 'canonical schema-only upgrade')
+          exactKeys(
+            bracket,
+            ['after', 'before', 'v1PhysicalStateHashChanged', 'v1PhysicalStateHashRule'],
+            'canonical schema-only upgrade',
+          )
+          return assertV2SchemaOnlyUpgradePreserved({
+            after: bracket.after,
+            before: bracket.before,
+          })
+        })()
+      : evidence.schemaOnlyUpgrade === null
+        ? null
+        : (() => {
+            throw new Error(
+              'Fresh canonical V2 rehearsal evidence cannot contain an upgrade bracket.',
+            )
+          })()
+  const normalized: ValidatedV2CanonicalRehearsalEvidence = {
+    actionCounts,
+    authorizationBindings: {
+      authority: 'exact_committed_disposable_catalog_and_protected_runtime_bundle',
+      completeCatalogAudit: bindings.completeCatalogAudit,
+      expectedCatalog: bindings.expectedCatalog,
+      operatorBundleBinding: bindings.operatorBundleBinding,
+    },
+    contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2,
+    migration: {
+      id: GOLD_IMPORT_COMPENSATION_MIGRATION_V2,
+      path: migrationPath,
+      sha256: context.migrationSha256,
+    },
+    operationScenarios,
+    productionCohort: validateCanonicalProductionCohort(evidence.productionCohort),
+    schemaOnlyUpgrade,
+    schemaVersion: V2_CANONICAL_EVIDENCE_SCHEMA_VERSION,
+    verifierEvidence: validateCanonicalVerifierEvidence(
+      evidence.verifierEvidence,
+      migrationPath,
+      schemaOnlyUpgrade,
+      context,
+    ),
+  }
+  if (canonicalJson(normalized) !== canonicalJson(evidence)) {
+    const firstDifference = (left: unknown, right: unknown, path = '$'): string => {
+      if (canonicalJson(left) === canonicalJson(right)) return path
+      if (Array.isArray(left) && Array.isArray(right)) {
+        const index = left.findIndex(
+          (entry, candidate) => canonicalJson(entry) !== canonicalJson(right[candidate]),
+        )
+        return index < 0
+          ? `${path}.length`
+          : firstDifference(left[index], right[index], `${path}[${index}]`)
+      }
+      if (isRecord(left) && isRecord(right)) {
+        const key = [...new Set([...Object.keys(left), ...Object.keys(right)])]
+          .sort()
+          .find((candidate) => canonicalJson(left[candidate]) !== canonicalJson(right[candidate]))
+        return key === undefined ? path : firstDifference(left[key], right[key], `${path}.${key}`)
+      }
+      return path
+    }
+    throw new Error(
+      `Canonical V2 rehearsal evidence does not match its production rebuild at ${firstDifference(normalized, evidence)}.`,
+    )
+  }
+  return deepFreezeCanonical(normalized)
+}
+
+interface V2CanonicalRehearsalArtifactInput {
   migrationPath: V2MigrationPath
   migrationSha256: string
   operationScenarios: unknown
   productionCohort: unknown
   schemaOnlyUpgrade: { after: unknown; before: unknown } | null
   verifierEvidence: unknown
-}): ReadonlyMap<string, Buffer> {
+}
+
+export function buildCanonicalV2RehearsalArtifacts(
+  input: V2CanonicalRehearsalArtifactInput & {
+    authorizationBindings: V2CanonicalAuthorizationBindings
+  },
+): ReadonlyMap<string, Buffer> {
   const cohort = validateV2ProductionCohort(input.productionCohort)
   const scenarios = validateV2OperationScenarios(input.operationScenarios)
   if (
@@ -1067,8 +1814,18 @@ export function buildCanonicalV2RehearsalArtifacts(input: {
           },
         )
       : null
+  const validatedAuthorizationBindings = validateV2CanonicalAuthorizationBindings(
+    input.authorizationBindings,
+  )
+  const authorizationBindings = {
+    authority: 'exact_committed_disposable_catalog_and_protected_runtime_bundle' as const,
+    completeCatalogAudit: validatedAuthorizationBindings.completeCatalogAudit,
+    expectedCatalog: validatedAuthorizationBindings.expectedCatalog,
+    operatorBundleBinding: validatedAuthorizationBindings.operatorBundleBinding,
+  }
   const normalized = {
     actionCounts: cohort.actionCounts,
+    authorizationBindings,
     contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2,
     migration: {
       id: GOLD_IMPORT_COMPENSATION_MIGRATION_V2,

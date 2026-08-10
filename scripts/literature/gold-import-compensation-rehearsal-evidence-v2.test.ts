@@ -4,19 +4,36 @@ import {
   NOTE_DISPOSITION_AUDIT_SHA256,
   REQUIRED_TRANSITION_RPCS_V1,
   REQUIRED_TRANSITION_RPCS_V2,
+  V2_CANONICAL_EVIDENCE_SCHEMA_VERSION,
   V2_REHEARSAL_EVIDENCE_MARKER,
   assertV2SchemaOnlyUpgradePreserved,
   buildCanonicalV2RehearsalArtifacts,
   deriveV2DynamicActionCounts,
   extractV2VerifierEvidence,
+  sha256CanonicalV2,
+  validateV2CanonicalAuthorizationBindings,
+  validateCanonicalV2RehearsalEvidence,
   validateV2OperationScenarios,
   validateV2ProductionCohort,
   validateV2RpcMetadata,
   type V2CohortRowEvidence,
+  type V2CanonicalAuthorizationBindings,
 } from './gold-import-compensation-rehearsal-evidence-v2'
 import { sha256Canonical } from '../../src/features/literature/gold-set/import-compensation-v2'
+import { buildProtectedV2OperatorBundle } from './protected-gold-import-contract-v2-recovery-bundle'
+import {
+  buildProtectedV2ExpectedCatalogBinding,
+  buildProtectedV2RuntimeBundleBinding,
+} from './protected-gold-import-contract-v2-bindings'
+import {
+  committedProtectedV2CatalogExpectedArtifactForValidatedProfile,
+  expectedObservedAuditIdentityFromArtifact,
+} from './gold-import-contract-v2-catalog-expectations'
+import { validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile } from './gold-import-contract-v2-catalog-audit'
+import { buildForwardBackupSemanticFixture } from './gold-import-contract-v2-forward-backup-test-fixture'
 
 const hash = (value: number) => value.toString(16).padStart(64, '0').slice(-64)
+let AUTHORIZATION_BINDINGS: V2CanonicalAuthorizationBindings
 
 function cohortRows(): V2CohortRowEvidence[] {
   return Array.from({ length: 630 }, (_, index) => {
@@ -252,6 +269,28 @@ function rpcMetadata(owner: 'postgres' | 'supabase_admin') {
 }
 
 describe('V2 gold import-compensation rehearsal evidence', () => {
+  beforeAll(async () => {
+    const operatorBundle = await buildProtectedV2OperatorBundle({ cwd: process.cwd() })
+    AUTHORIZATION_BINDINGS = {
+      completeCatalogAudit: validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile(
+        expectedObservedAuditIdentityFromArtifact(
+          committedProtectedV2CatalogExpectedArtifactForValidatedProfile(
+            'supabase_admin_owner_v1',
+            'disposable',
+          ),
+        ),
+        'supabase_admin_owner_v1',
+        'disposable',
+      ),
+      expectedCatalog: buildProtectedV2ExpectedCatalogBinding(
+        'supabase_admin_owner_v1',
+        'disposable',
+      ),
+      operatorBundle,
+      operatorBundleBinding: buildProtectedV2RuntimeBundleBinding(operatorBundle),
+    }
+  })
+
   test('pins the explicit forward-only V2 boundary and migration identity', () => {
     expect(GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2).toBe(
       'gold-review-import-compensation/2.0.0',
@@ -260,6 +299,34 @@ describe('V2 gold import-compensation rehearsal evidence', () => {
       '20260809231651_add_literature_gold_import_compensation_contract_v2',
     )
     expect(GOLD_IMPORT_COMPENSATION_MIGRATION_V2).not.toContain('20260809231312')
+  })
+
+  test('cross-seals the exact admin artifact file inside a frozen operator bundle', () => {
+    const validated = validateV2CanonicalAuthorizationBindings(AUTHORIZATION_BINDINGS)
+    expect(Object.isFrozen(validated.operatorBundle)).toBe(true)
+    expect(Object.isFrozen(validated.operatorBundle.files)).toBe(true)
+    expect(Object.isFrozen(validated.expectedCatalog.componentIdentities)).toBe(true)
+
+    const operatorBundle = JSON.parse(
+      JSON.stringify(AUTHORIZATION_BINDINGS.operatorBundle),
+    ) as typeof AUTHORIZATION_BINDINGS.operatorBundle
+    const artifact = operatorBundle.files.find(
+      ({ path }) => path === AUTHORIZATION_BINDINGS.expectedCatalog.artifact.path,
+    )
+    if (!artifact) throw new Error('Test fixture omitted the admin expected-catalog artifact.')
+    artifact.sha256 = '0'.repeat(64)
+    const { aggregateSha256: _previousAggregateSha256, ...bundleContent } = operatorBundle
+    void _previousAggregateSha256
+    operatorBundle.aggregateSha256 = sha256CanonicalV2(bundleContent)
+    const operatorBundleBinding = buildProtectedV2RuntimeBundleBinding(operatorBundle)
+
+    expect(() =>
+      validateV2CanonicalAuthorizationBindings({
+        ...AUTHORIZATION_BINDINGS,
+        operatorBundle,
+        operatorBundleBinding,
+      }),
+    ).toThrow('expected catalog artifact is not exact inside the sealed bundle')
   })
 
   test('proves an upgrade changes no V1 state, rows, pointers, or reveal timestamps', () => {
@@ -298,6 +365,52 @@ describe('V2 gold import-compensation rehearsal evidence', () => {
       expect(() => validateV2RpcMetadata(unsafe, owner)).toThrow('Unsafe or changed')
     },
   )
+
+  test('round-trips canonical V1 tokens and RPC arrays while rejecting ordinal and wrapper drift', async () => {
+    type CanonicalFixtureEvidence = {
+      migration: { sha256: string }
+      verifierEvidence: {
+        ownerProfiles: {
+          disposableSupabaseAdmin: { rpcMetadata: unknown }
+        }
+        v1: {
+          migrationSha256: string
+          scenarios: Array<{ preState: { physicalStateHash: string } }>
+          verifierSha256: string
+        }
+      }
+    }
+    const fixture = await buildForwardBackupSemanticFixture()
+    const bytes = fixture.files
+      .get('package-rehearsal-evidence')!
+      .get('fresh-v2-rehearsal-evidence.json')!
+    const evidence = JSON.parse(bytes.toString('utf8')) as CanonicalFixtureEvidence
+    const context = {
+      ...AUTHORIZATION_BINDINGS,
+      migrationSha256: evidence.migration.sha256,
+      v1MigrationSha256: evidence.verifierEvidence.v1.migrationSha256,
+      v1VerifierSha256: evidence.verifierEvidence.v1.verifierSha256,
+    }
+    expect(validateCanonicalV2RehearsalEvidence(evidence, context)).toMatchObject({
+      migration: { path: 'fresh' },
+    })
+
+    const tokenDrift = JSON.parse(bytes.toString('utf8')) as CanonicalFixtureEvidence
+    tokenDrift.verifierEvidence.v1.scenarios[0].preState.physicalStateHash =
+      'physical-state-equality-token-999'
+    expect(() => validateCanonicalV2RehearsalEvidence(tokenDrift, context)).toThrow(
+      'normalized runtime tokens are noncanonical',
+    )
+
+    const wrapperDrift = JSON.parse(bytes.toString('utf8')) as CanonicalFixtureEvidence
+    const rpcRows = wrapperDrift.verifierEvidence.ownerProfiles.disposableSupabaseAdmin.rpcMetadata
+    wrapperDrift.verifierEvidence.ownerProfiles.disposableSupabaseAdmin.rpcMetadata = {
+      functions: rpcRows,
+    }
+    expect(() => validateCanonicalV2RehearsalEvidence(wrapperDrift, context)).toThrow(
+      'RPC metadata must be an array',
+    )
+  })
 
   test('derives the action partition and verifies every production V2 semantic cohort', () => {
     const validated = validateV2ProductionCohort(productionCohort())
@@ -396,6 +509,7 @@ describe('V2 gold import-compensation rehearsal evidence', () => {
     ).toThrow('exactly one')
 
     const input = {
+      authorizationBindings: AUTHORIZATION_BINDINGS,
       migrationPath: 'fresh' as const,
       migrationSha256: hash(999),
       operationScenarios: operationScenarios(),
@@ -404,6 +518,36 @@ describe('V2 gold import-compensation rehearsal evidence', () => {
       verifierEvidence: { passed: true },
     }
     const first = buildCanonicalV2RehearsalArtifacts(input)
+    const parsedFirst = JSON.parse(first.get('v2-rehearsal-evidence.json')!.toString('utf8'))
+    expect(() =>
+      validateCanonicalV2RehearsalEvidence(parsedFirst, {
+        ...AUTHORIZATION_BINDINGS,
+        migrationSha256: input.migrationSha256,
+        v1MigrationSha256: hash(997),
+        v1VerifierSha256: hash(998),
+      }),
+    ).toThrow('canonical verifier evidence')
+    expect(() =>
+      validateCanonicalV2RehearsalEvidence(
+        {
+          authorizationBindings: parsedFirst.authorizationBindings,
+          migration: parsedFirst.migration,
+          schemaVersion: V2_CANONICAL_EVIDENCE_SCHEMA_VERSION,
+        },
+        {
+          ...AUTHORIZATION_BINDINGS,
+          migrationSha256: input.migrationSha256,
+          v1MigrationSha256: hash(997),
+          v1VerifierSha256: hash(998),
+        },
+      ),
+    ).toThrow('unexpected or missing keys')
+    expect(() =>
+      buildCanonicalV2RehearsalArtifacts({
+        ...input,
+        authorizationBindings: undefined as never,
+      }),
+    ).toThrow('requires exact A/B authorization bindings')
     const second = buildCanonicalV2RehearsalArtifacts({
       ...input,
       productionCohort: productionCohort([...cohortRows()].reverse()),

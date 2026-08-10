@@ -39,6 +39,12 @@ import {
   classifyProtectedV2Ledger,
   type ProtectedMigrationLedgerEntry,
 } from './protected-gold-import-contract-v2'
+import {
+  assertProtectedV2ExpectedCatalogArtifactSealed,
+  buildProtectedV2ExpectedCatalogBinding,
+  buildProtectedV2RuntimeBundleBinding,
+} from './protected-gold-import-contract-v2-bindings'
+import { buildProtectedV2OperatorBundle } from './protected-gold-import-contract-v2-recovery-bundle'
 
 export const GOLD_IMPORT_V2_PREAPPLICATION_REPORT_SCHEMA_VERSION =
   'gold-import-contract-v2-preapplication-report/1.0.0' as const
@@ -71,6 +77,7 @@ interface OperationCounts {
   actionCount: number
   compensationCount: number
   importCount: number
+  operationCount: number
   readOnlyTransaction: true
 }
 
@@ -257,7 +264,8 @@ async function collectOperationCounts(
     parsed.readOnlyTransaction !== true ||
     !Number.isInteger(parsed.importCount) ||
     !Number.isInteger(parsed.compensationCount) ||
-    !Number.isInteger(parsed.actionCount)
+    !Number.isInteger(parsed.actionCount) ||
+    !Number.isInteger(parsed.operationCount)
   ) {
     throw new Error('Read-only operation counts were malformed.')
   }
@@ -270,6 +278,7 @@ begin transaction isolation level repeatable read read only;
 set local statement_timeout = '120s';
 select '${MARKER}' || jsonb_build_object(
   'readOnlyTransaction', current_setting('transaction_read_only')::boolean,
+  'operationCount', count(*),
   'importCount', count(*) filter (where operation_kind = 'import'),
   'compensationCount', count(*) filter (where operation_kind = 'compensation'),
   'actionCount', (
@@ -305,6 +314,18 @@ export async function runGoldImportV2PreapplicationDiagnostic(argv: string[]) {
   if (!outputArgument || !backupRoot) throw new Error(HELP)
   const cwd = process.cwd()
   const repository = await inspectRepository(cwd)
+  const operatorBundle = await buildProtectedV2OperatorBundle({ cwd })
+  const operatorBundleBinding = buildProtectedV2RuntimeBundleBinding(operatorBundle)
+  const expectedCatalog = buildProtectedV2ExpectedCatalogBinding(
+    'local_supabase_postgres_owner_v1',
+    'local',
+  )
+  assertProtectedV2ExpectedCatalogArtifactSealed({
+    binding: expectedCatalog,
+    bundle: operatorBundle,
+    profileId: 'local_supabase_postgres_owner_v1',
+    target: 'local',
+  })
   const outputDirectory = await assertExclusiveOutputPath({
     backupRoot,
     cwd,
@@ -407,6 +428,8 @@ export async function runGoldImportV2PreapplicationDiagnostic(argv: string[]) {
     schemaVersion: GOLD_IMPORT_V2_PREAPPLICATION_REPORT_SCHEMA_VERSION,
     status: 'implementation_ready_real_local_migration_required',
     repository,
+    expectedCatalog,
+    operatorBundleBinding,
     migration: {
       v1: {
         byteIdentical: true,
@@ -475,6 +498,8 @@ export async function runGoldImportV2PreapplicationDiagnostic(argv: string[]) {
 - Review-row mutations: \`${mutations.reviewRowMutationCount}\`
 - Pointer mutations: \`${mutations.pointerMutationCount}\`
 - Reveal-timestamp mutations: \`${mutations.revealTimestampMutationCount}\`
+- Operations: \`${operationCountsAfter.operationCount}\`
+- Actions: \`${operationCountsAfter.actionCount}\`
 - Imports: \`${operationCountsAfter.importCount}\`
 - Compensations: \`${operationCountsAfter.compensationCount}\`
 - Held-out identities accessed: \`false\`
@@ -482,6 +507,11 @@ export async function runGoldImportV2PreapplicationDiagnostic(argv: string[]) {
 - Ordinary local-start protected state: \`v2_absent_unarmed\`
 - Protected V2 visible to first-start initialization: \`false\`
 - Protected V2 visible to ordinary migration-up: \`false\`
+- Expected catalog profile: \`${expectedCatalog.profileId}/${expectedCatalog.target}\`
+- Expected catalog artifact content SHA-256: \`${expectedCatalog.artifact.contentSha256}\`
+- Expected catalog artifact file SHA-256: \`${expectedCatalog.artifact.fileSha256}\`
+- Protected runtime bundle SHA-256: \`${operatorBundleBinding.aggregateSha256}\`
+- Protected tracked-file inventory SHA-256: \`${operatorBundleBinding.trackedFileInventorySha256}\`
 
 The V2 migration remains unapplied to the real local database. Package execution therefore remains
 blocked until a separately authorized migration-application session completes and re-audits it.
@@ -494,33 +524,38 @@ blocked until a separately authorized migration-application session completes an
     ]),
   )
   const executedAt = new Date().toISOString()
-  const executionReceipt = buildProtectedV2BackupExecutionReceipt({
-    schemaVersion: GOLD_IMPORT_V2_PREAPPLICATION_RECEIPT_SCHEMA_VERSION,
-    backupRoot: backupRootRealpath,
-    canonicalManifestSha256: artifacts.manifestSha256,
-    database: {
-      batchId: String(batch.id ?? ''),
-      datasetSplit: 'development',
-      developmentMembershipSha256: stateHashesAfter.developmentMembershipSha256,
-      developmentPlanningStateSha256: planningAfter,
-      effectiveStateSha256: stateHashesAfter.effectiveStateSha256,
-      physicalStateSha256: stateHashesAfter.physicalStateSha256,
+  const executionReceipt = buildProtectedV2BackupExecutionReceipt(
+    {
+      schemaVersion: GOLD_IMPORT_V2_PREAPPLICATION_RECEIPT_SCHEMA_VERSION,
+      backupRoot: backupRootRealpath,
+      canonicalManifestSha256: artifacts.manifestSha256,
+      database: {
+        batchId: String(batch.id ?? ''),
+        datasetSplit: 'development',
+        developmentMembershipSha256: stateHashesAfter.developmentMembershipSha256,
+        developmentPlanningStateSha256: planningAfter,
+        effectiveStateSha256: stateHashesAfter.effectiveStateSha256,
+        physicalStateSha256: stateHashesAfter.physicalStateSha256,
+      },
+      executedAt,
+      executionNonce: randomBytes(32).toString('hex'),
+      expectedCatalog,
+      migrationLedger: {
+        sha256: sha256(backupFiles['protected-migration-ledger.json']),
+        v1: { ...PROTECTED_GOLD_IMPORT_CONTRACT_V1, occurrence: 1 },
+        v2: { ...PROTECTED_GOLD_IMPORT_CONTRACT_V2, occurrence: 0 },
+      },
+      outputDirectory,
+      operatorBundleBinding,
+      repositoryCommitSha: repository.head,
+      safety: {
+        databaseMutationCount: 0,
+        heldOutIdentitiesAccessed: false,
+        remoteDatabaseAccessed: false,
+      },
     },
-    executedAt,
-    executionNonce: randomBytes(32).toString('hex'),
-    migrationLedger: {
-      sha256: sha256(backupFiles['protected-migration-ledger.json']),
-      v1: { ...PROTECTED_GOLD_IMPORT_CONTRACT_V1, occurrence: 1 },
-      v2: { ...PROTECTED_GOLD_IMPORT_CONTRACT_V2, occurrence: 0 },
-    },
-    outputDirectory,
-    repositoryCommitSha: repository.head,
-    safety: {
-      databaseMutationCount: 0,
-      heldOutIdentitiesAccessed: false,
-      remoteDatabaseAccessed: false,
-    },
-  })
+    { operatorBundle },
+  )
   await writeCanonicalPackage({
     artifacts,
     executionReceipt: { ...executionReceipt },

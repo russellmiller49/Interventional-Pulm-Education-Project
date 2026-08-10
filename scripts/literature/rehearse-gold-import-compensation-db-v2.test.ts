@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 
 import {
@@ -23,11 +24,16 @@ import {
   postgresOwnerProjectionSql,
   renderPostV2CompatibleDevelopmentSeedSqlV2,
   resolveV2LocalDockerEndpoint,
+  executeV2DisposablePath,
   v2DevelopmentPlanningSnapshotSql,
   v2SchemaOnlySnapshotSql,
   validateV2SemanticFunctionMetadata,
   type V2DisposablePathResult,
 } from './rehearse-gold-import-compensation-db-v2'
+import {
+  V2_CANONICAL_SEMANTIC_FUNCTION_CONTRACTS,
+  V2_CANONICAL_SEMANTIC_FUNCTION_RAW_DEFINITION_SHA256,
+} from './gold-import-compensation-v2-semantic-function-identities'
 import type { DisposableRuntime } from './rehearse-exact-gold-import-compensation-package-v1'
 
 const MIGRATION_V1 = '20260808035633_add_literature_gold_import_compensation_contract.sql'
@@ -56,11 +62,54 @@ function pathResult(bytes = Buffer.from('{"passed":true}\n')): V2DisposablePathR
       ['evidence.json', bytes],
     ]),
     cleanup: cleanup(),
+    evidenceAuthority: 'canonical_delivery_evidence',
     migrationPath: 'fresh',
     migrationSha256: 'b'.repeat(64),
     rawReceipt: {},
   }
 }
+
+describe('V2 rehearsal delivery/probe API separation', () => {
+  it('rejects an unbound production execution before any Docker runtime is reached', async () => {
+    await expect(
+      executeV2DisposablePath({
+        exactPackageExecutor: { execute: async () => ({}) as never },
+        migrationPath: 'fresh',
+        seed: {} as DevelopmentDatabaseSeed,
+      } as never),
+    ).rejects.toThrow('requires exact A/B authorization bindings')
+  })
+
+  it('limits the transient catalog-probe API to its definition and drift-matrix caller', () => {
+    const symbol = ['executeV2Disposable', 'CatalogProbePath'].join('')
+    const paths = execFileSync('git', ['grep', '-l', symbol, '--', 'scripts/literature/*.ts'], {
+      encoding: 'utf8',
+    })
+      .trim()
+      .split('\n')
+      .filter((path) => path && !path.endsWith('.test.ts'))
+      .sort()
+    expect(paths).toEqual([
+      'scripts/literature/rehearse-gold-import-compensation-db-v2.ts',
+      'scripts/literature/rehearse-gold-import-contract-v2-catalog-drift-matrix.ts',
+    ])
+  })
+
+  it('limits the expectation-proposal API to its definition and maintainer generator caller', () => {
+    const symbol = ['executeV2Disposable', 'CatalogExpectationProposalPath'].join('')
+    const paths = execFileSync('git', ['grep', '-l', symbol, '--', 'scripts/literature/*.ts'], {
+      encoding: 'utf8',
+    })
+      .trim()
+      .split('\n')
+      .filter((path) => path && !path.endsWith('.test.ts'))
+      .sort()
+    expect(paths).toEqual([
+      'scripts/literature/generate-gold-import-contract-v2-catalog-expectations.ts',
+      'scripts/literature/rehearse-gold-import-compensation-db-v2.ts',
+    ])
+  })
+})
 
 interface SemanticMetadataFixtureFunction {
   anonExecute: boolean
@@ -316,6 +365,18 @@ describe('V2 disposable database rehearsal runner', () => {
     },
   )
 
+  test('keeps canonical backup verifier identities equal to the disposable runner identities', () => {
+    expect(V2_CANONICAL_SEMANTIC_FUNCTION_RAW_DEFINITION_SHA256).toEqual(
+      V2_SEMANTIC_FUNCTION_RAW_DEFINITION_SHA256,
+    )
+    for (const name of REQUIRED_V2_SEMANTIC_FUNCTIONS) {
+      const { identityArguments: _identityArguments, ...runnerContract } =
+        V2_SEMANTIC_FUNCTION_CONTRACTS[name]
+      void _identityArguments
+      expect(V2_CANONICAL_SEMANTIC_FUNCTION_CONTRACTS[name]).toEqual(runnerContract)
+    }
+  })
+
   test('authenticates the supported postgres owner profile inside a rolled-back catalog projection', () => {
     const sql = postgresOwnerProjectionSql(V2_RPC_METADATA_SQL)
     expect(sql).toMatch(/^begin;/u)
@@ -366,7 +427,7 @@ describe('V2 disposable database rehearsal runner', () => {
 
   test('keeps the canonical evidence version explicitly V2', () => {
     expect(V2_CANONICAL_EVIDENCE_SCHEMA_VERSION).toBe(
-      'gold-import-compensation-disposable-rehearsal-canonical/2.0.0',
+      'gold-import-compensation-disposable-rehearsal-canonical/2.1.0',
     )
   })
 })

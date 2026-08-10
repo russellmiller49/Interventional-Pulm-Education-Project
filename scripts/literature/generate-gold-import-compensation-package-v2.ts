@@ -56,6 +56,14 @@ import {
   type GoldImportNoteDispositionAuditGateV2,
   type NoteDispositionEvidenceBytesV2,
 } from './gold-import-note-disposition-gate-v2'
+import {
+  validateProtectedV2ExpectedCatalogBinding,
+  type ProtectedV2ExpectedCatalogBinding,
+} from './protected-gold-import-contract-v2-bindings'
+import {
+  validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile,
+  type ProtectedV2CompleteCatalogAuditIdentity,
+} from './gold-import-contract-v2-catalog-audit'
 
 export const GOLD_IMPORT_COMPENSATION_PACKAGE_GENERATOR_SCHEMA_VERSION_V2 =
   'gold-import-compensation-package-generator/2.0.0' as const
@@ -234,6 +242,8 @@ export const packageDescriptorV2Schema = z
       })
       .strict(),
     artifacts: z.record(z.string().min(1), sha256Schema),
+    auditTarget: z.enum(['disposable_clone', 'local']),
+    completeCatalogAuditIdentitySha256: sha256Schema,
     contractVersion: z.literal(GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2),
     databaseAccess: z.literal('none_file_only_authenticated_audit'),
     heldOutIdentitiesAccessed: z.literal(false),
@@ -246,6 +256,9 @@ export const packageDescriptorV2Schema = z
         sha256: sha256Schema,
       })
       .strict(),
+    expectedCatalogArtifactContentSha256: sha256Schema,
+    expectedCatalogArtifactFileSha256: sha256Schema,
+    expectedCatalogBindingSha256: sha256Schema,
     noteDispositionAuditSha256: z.literal(GOLD_IMPORT_NOTE_DISPOSITION_AUDIT_SHA256_V2),
     packageVersion: z.literal(GOLD_IMPORT_COMPENSATION_PACKAGE_VERSION_V2),
     remoteAccess: z.literal(false),
@@ -279,15 +292,86 @@ export interface GeneratedGoldImportCompensationPackageV2 {
   sourceArtifactBytes: Buffer
   sourceAuthorizationSet: GoldImportSourceAuthorizationSetV4
   verifiedBindings: {
+    completeCatalogAuditIdentitySha256: string
     developmentPlanningStateSha256: string
+    expectedCatalogBindingSha256: string
     migrationSha256: string
     sourceArtifactSha256: string
     sourceAuthorizationSetSha256: string
   }
 }
 
+interface ExactCatalogBindingArtifactV2 {
+  auditTarget: 'disposable_clone' | 'local'
+  authorization: 'exact_committed_expected_state'
+  completeCatalogAudit: ProtectedV2CompleteCatalogAuditIdentity
+  expectedCatalog: ProtectedV2ExpectedCatalogBinding
+  schemaVersion: 'gold-import-compensation-v2-exact-catalog-binding/1.0.0'
+}
+
 function sha256Bytes(value: Uint8Array | string): string {
   return createHash('sha256').update(value).digest('hex')
+}
+
+function deepFreezeCanonicalValue<T>(value: T): T {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    for (const child of Object.values(value as Record<string, unknown>)) {
+      deepFreezeCanonicalValue(child)
+    }
+    Object.freeze(value)
+  }
+  return value
+}
+
+function canonicalFrozenClone<T>(value: T): T {
+  return deepFreezeCanonicalValue(JSON.parse(canonicalJson(value)) as T)
+}
+
+class DetachedReadonlyBufferMap implements ReadonlyMap<string, Buffer> {
+  readonly #snapshot: Map<string, Buffer>
+
+  constructor(input: ReadonlyMap<string, Buffer>) {
+    this.#snapshot = new Map([...input].map(([name, bytes]) => [name, Buffer.from(bytes)]))
+    Object.freeze(this)
+  }
+
+  get size(): number {
+    return this.#snapshot.size
+  }
+
+  get(key: string): Buffer | undefined {
+    const value = this.#snapshot.get(key)
+    return value ? Buffer.from(value) : undefined
+  }
+
+  has(key: string): boolean {
+    return this.#snapshot.has(key)
+  }
+
+  *entries(): MapIterator<[string, Buffer]> {
+    for (const [name, bytes] of this.#snapshot) yield [name, Buffer.from(bytes)]
+  }
+
+  *keys(): MapIterator<string> {
+    yield* this.#snapshot.keys()
+  }
+
+  *values(): MapIterator<Buffer> {
+    for (const bytes of this.#snapshot.values()) yield Buffer.from(bytes)
+  }
+
+  forEach(
+    callback: (value: Buffer, key: string, map: ReadonlyMap<string, Buffer>) => void,
+    thisArg?: unknown,
+  ): void {
+    for (const [name, bytes] of this.#snapshot) {
+      callback.call(thisArg, Buffer.from(bytes), name, this)
+    }
+  }
+
+  [Symbol.iterator](): MapIterator<[string, Buffer]> {
+    return this.entries()
+  }
 }
 
 function canonicalPretty(value: unknown): Buffer {
@@ -566,7 +650,7 @@ function buildImportActionsV2(
   })
 }
 
-function buildCompensationTemplateV2(importPlan: ImportPlanV2): CompensationPlanTemplateV2 {
+export function buildCompensationTemplateV2(importPlan: ImportPlanV2): CompensationPlanTemplateV2 {
   const operationId = deterministicPackageUuidV2(
     importPlan.operationId,
     importPlan.binding.contentSha256,
@@ -778,11 +862,14 @@ export function generateGoldImportCompensationPackageV2(
   }
   const sourceAuthorizationSet = buildGoldImportSourceAuthorizationSetV4({
     actionCounts: counts,
+    auditTarget: audit.target,
     batchId: audit.database.batchId,
     booleanNormalizationLedger: [...artifact.booleanNormalizations],
+    completeCatalogAudit: audit.completeCatalogAudit,
     environmentInvariantIdentitySha256: audit.contractAudit.environmentInvariantIdentitySha256,
     environmentProfileIdentitySha256: audit.contractAudit.environmentProfileIdentitySha256,
     existingHeadCohortSha256: cohortSha256,
+    expectedCatalog: audit.expectedCatalog,
     migrationSha256: sourceIdentities.migrationSha256,
     orderedSetNormalizationLedger: [...artifact.listNormalizations],
     v2PreImportEffectiveStateSha256: audit.v2PreImportState.effectiveStateSha256,
@@ -907,6 +994,16 @@ export function generateGoldImportCompensationPackageV2(
   )
   files.set('append-only-compensation-plan-template-v2.json', canonicalPretty(compensationTemplate))
   files.set(
+    'exact-catalog-binding-v2.json',
+    canonicalPretty({
+      auditTarget: audit.target,
+      authorization: 'exact_committed_expected_state',
+      completeCatalogAudit: audit.completeCatalogAudit,
+      expectedCatalog: audit.expectedCatalog,
+      schemaVersion: 'gold-import-compensation-v2-exact-catalog-binding/1.0.0',
+    }),
+  )
+  files.set(
     'boolean-normalization-ledger-v2.json',
     canonicalPretty({
       artifactSha256: artifact.artifactSha256,
@@ -997,12 +1094,17 @@ export function generateGoldImportCompensationPackageV2(
   const packageDescriptor = packageDescriptorV2Schema.parse({
     actionCounts: counts,
     artifacts: artifactChecksums,
+    auditTarget: audit.target,
+    completeCatalogAuditIdentitySha256: audit.completeCatalogAudit.fullAuditIdentitySha256,
     contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2,
     databaseAccess: 'none_file_only_authenticated_audit',
     heldOutIdentitiesAccessed: false,
     importOperationId: importPlan.operationId,
     importPlanSha256: importPlan.binding.contentSha256,
     kind: 'gold_import_compensation_package',
+    expectedCatalogArtifactContentSha256: audit.expectedCatalog.artifact.contentSha256,
+    expectedCatalogArtifactFileSha256: audit.expectedCatalog.artifact.fileSha256,
+    expectedCatalogBindingSha256: audit.expectedCatalog.bindingSha256,
     migration: { id: audit.migration.id, sha256: audit.migration.sha256 },
     noteDispositionAuditSha256: GOLD_IMPORT_NOTE_DISPOSITION_AUDIT_SHA256_V2,
     packageVersion: GOLD_IMPORT_COMPENSATION_PACKAGE_VERSION_V2,
@@ -1024,7 +1126,9 @@ export function generateGoldImportCompensationPackageV2(
     sourceArtifactBytes: Buffer.from(input.sources.finalArtifactBytes),
     sourceAuthorizationSet,
     verifiedBindings: {
+      completeCatalogAuditIdentitySha256: audit.completeCatalogAudit.fullAuditIdentitySha256,
       developmentPlanningStateSha256: rawPlanningStateSha256,
+      expectedCatalogBindingSha256: audit.expectedCatalog.bindingSha256,
       migrationSha256: sourceIdentities.migrationSha256,
       sourceArtifactSha256: artifact.artifactSha256,
       sourceAuthorizationSetSha256,
@@ -1037,6 +1141,7 @@ const REQUIRED_PACKAGE_FILES_V2 = [
   'append-only-compensation-plan-template-v2.json',
   'boolean-normalization-ledger-v2.json',
   'checksum-manifest-v2.sha256',
+  'exact-catalog-binding-v2.json',
   'immutable-atomic-import-plan-v2.json',
   'journal-template-v2.json',
   'note-disposition-proof-v2.json',
@@ -1050,17 +1155,27 @@ const REQUIRED_PACKAGE_FILES_V2 = [
   'unsigned-import-operation-authorization-template-v2.json',
 ] as const
 
-export function verifyGeneratedGoldImportCompensationPackageV2(
-  input: GeneratedGoldImportCompensationPackageV2,
-): GeneratedGoldImportCompensationPackageV2 {
-  const actualFiles = [...input.files.keys()].sort((left, right) => left.localeCompare(right, 'en'))
+export interface VerifiedGoldImportCompensationPackageV2IntrinsicFiles {
+  compensationTemplate: CompensationPlanTemplateV2
+  files: ReadonlyMap<string, Buffer>
+  importPlan: ImportPlanV2
+  manifestSha256: string
+  packageDescriptor: PackageDescriptorV2
+  sourceAuthorizationSet: GoldImportSourceAuthorizationSetV4
+}
+
+export function verifyGoldImportCompensationPackageV2IntrinsicFiles(
+  inputFiles: ReadonlyMap<string, Buffer>,
+): VerifiedGoldImportCompensationPackageV2IntrinsicFiles {
+  const files = new DetachedReadonlyBufferMap(inputFiles)
+  const actualFiles = [...files.keys()].sort((left, right) => left.localeCompare(right, 'en'))
   const expectedFiles = [...REQUIRED_PACKAGE_FILES_V2].sort((left, right) =>
     left.localeCompare(right, 'en'),
   )
   if (canonicalJson(actualFiles) !== canonicalJson(expectedFiles)) {
     throw new Error('V2 generated package has a missing or unexpected artifact.')
   }
-  for (const [name, bytes] of input.files) {
+  for (const [name, bytes] of files) {
     if (!name.endsWith('.json')) continue
     let parsed: unknown
     try {
@@ -1072,33 +1187,87 @@ export function verifyGeneratedGoldImportCompensationPackageV2(
       throw new Error(`V2 package JSON artifact is not canonical: ${name}.`)
     }
   }
-  const planBytes = input.files.get('immutable-atomic-import-plan-v2.json')!
+  const planBytes = files.get('immutable-atomic-import-plan-v2.json')!
   const plan = parseImportPlanV2(JSON.parse(planBytes.toString('utf8')) as unknown)
-  const sourceAuthorizationBytes = input.files.get('source-authorization-set-v4.json')!
+  const sourceAuthorizationBytes = files.get('source-authorization-set-v4.json')!
   const sourceAuthorization =
     parseCanonicalGoldImportSourceAuthorizationSetV4Bytes(sourceAuthorizationBytes)
+  const rawExactCatalogBinding = z
+    .object({
+      auditTarget: z.enum(['disposable_clone', 'local']),
+      authorization: z.literal('exact_committed_expected_state'),
+      completeCatalogAudit: z.unknown(),
+      expectedCatalog: z.unknown(),
+      schemaVersion: z.literal('gold-import-compensation-v2-exact-catalog-binding/1.0.0'),
+    })
+    .strict()
+    .parse(JSON.parse(files.get('exact-catalog-binding-v2.json')!.toString('utf8')) as unknown)
+  const exactCatalogContext =
+    rawExactCatalogBinding.auditTarget === 'disposable_clone'
+      ? ({ profileId: 'supabase_admin_owner_v1', target: 'disposable' } as const)
+      : ({ profileId: 'local_supabase_postgres_owner_v1', target: 'local' } as const)
+  const exactCatalogBinding: ExactCatalogBindingArtifactV2 = {
+    ...rawExactCatalogBinding,
+    completeCatalogAudit: validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile(
+      rawExactCatalogBinding.completeCatalogAudit,
+      exactCatalogContext.profileId,
+      exactCatalogContext.target,
+    ),
+    expectedCatalog: validateProtectedV2ExpectedCatalogBinding(
+      rawExactCatalogBinding.expectedCatalog,
+      exactCatalogContext.profileId,
+      exactCatalogContext.target,
+    ),
+  }
   const packageDescriptor = packageDescriptorV2Schema.parse(
-    JSON.parse(input.files.get('package-descriptor-v2.json')!.toString('utf8')) as unknown,
+    JSON.parse(files.get('package-descriptor-v2.json')!.toString('utf8')) as unknown,
   )
   const unsignedAuthorization = unsignedImportAuthorizationTemplateV2Schema.parse(
     JSON.parse(
-      input.files.get('unsigned-import-operation-authorization-template-v2.json')!.toString('utf8'),
+      files.get('unsigned-import-operation-authorization-template-v2.json')!.toString('utf8'),
     ) as unknown,
   )
   const unsignedCompensationAuthorization = unsignedCompensationAuthorizationTemplateV2Schema.parse(
     JSON.parse(
-      input.files
-        .get('unsigned-compensation-operation-authorization-template-v2.json')!
-        .toString('utf8'),
+      files.get('unsigned-compensation-operation-authorization-template-v2.json')!.toString('utf8'),
     ) as unknown,
   )
   const compensationTemplate = compensationPlanTemplateV2Schema.parse(
     JSON.parse(
-      input.files.get('append-only-compensation-plan-template-v2.json')!.toString('utf8'),
+      files.get('append-only-compensation-plan-template-v2.json')!.toString('utf8'),
     ) as unknown,
   )
   if (
+    canonicalJson(exactCatalogBinding.completeCatalogAudit) !==
+      canonicalJson(sourceAuthorization.completeCatalogAudit) ||
+    canonicalJson(exactCatalogBinding.expectedCatalog) !==
+      canonicalJson(sourceAuthorization.expectedCatalog) ||
+    exactCatalogBinding.auditTarget !== sourceAuthorization.auditTarget ||
+    sourceAuthorization.migration.id !== exactCatalogBinding.expectedCatalog.migration.id ||
+    sourceAuthorization.migration.sha256 !== exactCatalogBinding.expectedCatalog.migration.sha256 ||
+    packageDescriptor.migration.id !== exactCatalogBinding.expectedCatalog.migration.id ||
+    packageDescriptor.migration.sha256 !== exactCatalogBinding.expectedCatalog.migration.sha256
+  ) {
+    throw new Error(
+      'V2 package exact catalog artifact, source authorization, descriptor, or returned bindings differ.',
+    )
+  }
+  if (
     plan.sourceAuthorizationSetSha256 !== sha256Bytes(sourceAuthorizationBytes) ||
+    plan.sourceArtifactSha256 !== sourceAuthorization.finalArtifactSha256 ||
+    plan.batchId !== sourceAuthorization.currentDatabase.batchId ||
+    plan.scope.datasetSplit !== 'development' ||
+    plan.scope.heldOutIdentitiesAccessed !== false ||
+    plan.scope.developmentMembershipSha256 !==
+      sourceAuthorization.currentDatabase.developmentMembershipSha256 ||
+    plan.expectedEffectiveStateSha256 !==
+      sourceAuthorization.v2PreImportState.effectiveStateSha256 ||
+    plan.expectedPhysicalStateSha256 !== sourceAuthorization.v2PreImportState.physicalStateSha256 ||
+    sourceAuthorization.v2PreImportState.effectiveStateSha256 !==
+      sourceAuthorization.currentDatabase.effectiveStateSha256 ||
+    sourceAuthorization.v2PreImportState.physicalStateSha256 !==
+      sourceAuthorization.currentDatabase.physicalStateSha256 ||
+    canonicalJson(plan.counts) !== canonicalJson(sourceAuthorization.actionCounts) ||
     plan.noteDispositionAuditSha256 !== sourceAuthorization.noteDispositionAuditSha256 ||
     plan.booleanNormalizationLedgerSha256 !==
       sourceAuthorization.booleanNormalizationLedgerSha256 ||
@@ -1108,7 +1277,7 @@ export function verifyGeneratedGoldImportCompensationPackageV2(
     throw new Error('V2 package plan and source authorization evidence bindings differ.')
   }
   const expectedDescriptorArtifacts = Object.fromEntries(
-    [...input.files.entries()]
+    [...files.entries()]
       .filter(
         ([name]) => name !== 'checksum-manifest-v2.sha256' && name !== 'package-descriptor-v2.json',
       )
@@ -1120,9 +1289,17 @@ export function verifyGeneratedGoldImportCompensationPackageV2(
     canonicalJson(packageDescriptor.actionCounts) !== canonicalJson(plan.counts) ||
     packageDescriptor.importOperationId !== plan.operationId ||
     packageDescriptor.importPlanSha256 !== plan.binding.contentSha256 ||
-    packageDescriptor.migration.sha256 !== input.verifiedBindings.migrationSha256 ||
+    packageDescriptor.auditTarget !== exactCatalogBinding.auditTarget ||
+    packageDescriptor.completeCatalogAuditIdentitySha256 !==
+      exactCatalogBinding.completeCatalogAudit.fullAuditIdentitySha256 ||
+    packageDescriptor.expectedCatalogArtifactContentSha256 !==
+      exactCatalogBinding.expectedCatalog.artifact.contentSha256 ||
+    packageDescriptor.expectedCatalogArtifactFileSha256 !==
+      exactCatalogBinding.expectedCatalog.artifact.fileSha256 ||
+    packageDescriptor.expectedCatalogBindingSha256 !==
+      exactCatalogBinding.expectedCatalog.bindingSha256 ||
     packageDescriptor.sourceAuthorizationSetSha256 !== sha256Bytes(sourceAuthorizationBytes) ||
-    canonicalJson(packageDescriptor) !== canonicalJson(input.packageDescriptor)
+    packageDescriptor.migration.sha256 !== sourceAuthorization.migration.sha256
   ) {
     throw new Error('V2 package descriptor is stale or does not cover every canonical artifact.')
   }
@@ -1187,22 +1364,22 @@ export function verifyGeneratedGoldImportCompensationPackageV2(
       schemaVersion: z.literal('gold-import-note-disposition-proof/2.0.0'),
     })
     .strict()
-    .parse(
-      JSON.parse(input.files.get('note-disposition-proof-v2.json')!.toString('utf8')) as unknown,
-    )
+    .parse(JSON.parse(files.get('note-disposition-proof-v2.json')!.toString('utf8')) as unknown)
   if (sha256Canonical(noteProof.audit) !== noteProof.auditSha256) {
     throw new Error('V2 note-disposition proof does not carry the exact accepted audit.')
   }
-  for (const [name, expectedLedger, expectedSha256] of [
+  for (const [name, expectedLedger, expectedSha256, expectedSchemaVersion] of [
     [
       'boolean-normalization-ledger-v2.json',
       sourceAuthorization.booleanNormalizationLedger,
       sourceAuthorization.booleanNormalizationLedgerSha256,
+      'gold-import-boolean-normalization-ledger/2.0.0',
     ],
     [
       'ordered-set-normalization-ledger-v2.json',
       sourceAuthorization.orderedSetNormalizationLedger,
       sourceAuthorization.orderedSetNormalizationLedgerSha256,
+      'gold-import-ordered-set-normalization-ledger/2.0.0',
     ],
   ] as const) {
     const artifact = z
@@ -1210,10 +1387,10 @@ export function verifyGeneratedGoldImportCompensationPackageV2(
         artifactSha256: z.literal(sourceAuthorization.finalArtifactSha256),
         ledger: z.unknown(),
         ledgerSha256: z.literal(expectedSha256),
-        schemaVersion: z.string().min(1),
+        schemaVersion: z.literal(expectedSchemaVersion),
       })
       .strict()
-      .parse(JSON.parse(input.files.get(name)!.toString('utf8')) as unknown)
+      .parse(JSON.parse(files.get(name)!.toString('utf8')) as unknown)
     if (
       canonicalJson(artifact.ledger) !== canonicalJson(expectedLedger) ||
       sha256Canonical(artifact.ledger) !== expectedSha256
@@ -1221,22 +1398,201 @@ export function verifyGeneratedGoldImportCompensationPackageV2(
       throw new Error(`V2 normalization artifact is stale: ${name}.`)
     }
   }
-  const filesWithoutManifest = new Map(input.files)
+  const expectedUnsignedImportAuthorization = unsignedImportAuthorizationTemplateV2Schema.parse({
+    authorizationId: null,
+    authorizationNote: null,
+    authorized: false,
+    authorizedAt: null,
+    authorizedBy: null,
+    batchId: plan.batchId,
+    binding: null,
+    booleanNormalizationLedgerSha256: plan.booleanNormalizationLedgerSha256,
+    contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2,
+    expectedEffectiveStateSha256: plan.expectedEffectiveStateSha256,
+    expectedPhysicalStateSha256: plan.expectedPhysicalStateSha256,
+    expectedPostEffectiveStateSha256: plan.expectedPostEffectiveStateSha256,
+    idempotencyKey: plan.binding.idempotencyKey,
+    kind: 'unsigned_import_authorization_template',
+    migrationId: GOLD_REVIEW_IMPORT_COMPENSATION_MIGRATION_ID_V2,
+    noteDispositionAuditSha256: plan.noteDispositionAuditSha256,
+    notExecutable: true,
+    operationId: plan.operationId,
+    orderedSetNormalizationLedgerSha256: plan.orderedSetNormalizationLedgerSha256,
+    planSha256: plan.binding.contentSha256,
+    readiness: 'separate_operator_authorization_required',
+    remoteWritesAllowed: false,
+    repositoryCommitSha: plan.executionContext.repositoryCommitSha,
+    sourceArtifactSha256: plan.sourceArtifactSha256,
+    sourceAuthorizationSetSha256: plan.sourceAuthorizationSetSha256,
+    targetDatabase: 'local',
+  })
+  const expectedUnsignedCompensationAuthorization =
+    unsignedCompensationAuthorizationTemplateV2Schema.parse({
+      authorizationId: null,
+      authorizationNote: null,
+      authorized: false,
+      authorizedAt: null,
+      authorizedBy: null,
+      batchId: compensationTemplate.batchId,
+      binding: null,
+      booleanNormalizationLedgerSha256: plan.booleanNormalizationLedgerSha256,
+      contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2,
+      expectedEffectiveStateSha256: compensationTemplate.expectedEffectiveStateSha256,
+      expectedPhysicalStateSha256: null,
+      expectedPostEffectiveStateSha256: compensationTemplate.expectedPostEffectiveStateSha256,
+      idempotencyKey: null,
+      importReceiptSha256: null,
+      kind: 'unsigned_compensation_authorization_template',
+      migrationId: GOLD_REVIEW_IMPORT_COMPENSATION_MIGRATION_ID_V2,
+      noteDispositionAuditSha256: plan.noteDispositionAuditSha256,
+      notExecutable: true,
+      operationId: compensationTemplate.operationId,
+      orderedSetNormalizationLedgerSha256: plan.orderedSetNormalizationLedgerSha256,
+      planSha256: null,
+      readiness: 'committed_import_receipt_and_separate_authorization_required',
+      remoteWritesAllowed: false,
+      repositoryCommitSha: plan.executionContext.repositoryCommitSha,
+      sourceArtifactSha256: plan.sourceArtifactSha256,
+      sourceAuthorizationSetSha256: plan.sourceAuthorizationSetSha256,
+      targetDatabase: 'local',
+      targetImportOperationId: plan.operationId,
+    })
+  const deterministicFiles = new Map<string, Buffer>([
+    [
+      'ambiguous-outcome-reconciliation-v2.json',
+      canonicalPretty({
+        automaticRetryAllowed: false,
+        contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2,
+        importOperationId: plan.operationId,
+        importPlanSha256: plan.binding.contentSha256,
+        kind: 'ambiguous_outcome_reconciliation',
+        reconciliationRpc: GOLD_REVIEW_IMPORT_V2_RPC_NAMES.reconciliation,
+        recoveryMutationsAllowed: false,
+      }),
+    ],
+    [
+      'append-only-compensation-plan-template-v2.json',
+      canonicalPretty(buildCompensationTemplateV2(plan)),
+    ],
+    [
+      'journal-template-v2.json',
+      canonicalPretty({
+        contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2,
+        importActionCount: plan.counts.total,
+        importOperationId: plan.operationId,
+        notExecuted: true,
+        outcome: null,
+        receipt: null,
+      }),
+    ],
+    [
+      'proposed-commands-v2.txt',
+      Buffer.from(
+        'Generate only after the V2 migration audit is ready. Execute only with a separately completed operator authorization; never retry an ambiguous operation.\n',
+        'utf8',
+      ),
+    ],
+    [
+      'receipt-template-v2.json',
+      canonicalPretty({
+        contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2,
+        evidence: {
+          booleanNormalizationLedgerSha256: plan.booleanNormalizationLedgerSha256,
+          noteDispositionAuditSha256: plan.noteDispositionAuditSha256,
+          orderedSetNormalizationLedgerSha256: plan.orderedSetNormalizationLedgerSha256,
+          sourceAuthorizationSetSha256: plan.sourceAuthorizationSetSha256,
+        },
+        migrationId: GOLD_REVIEW_IMPORT_COMPENSATION_MIGRATION_ID_V2,
+        notExecuted: true,
+        operationId: plan.operationId,
+        physicalHashes: 'database_observed_at_execution',
+      }),
+    ],
+    [
+      'state-hash-proof-v2.json',
+      canonicalPretty({
+        compensationRestoresPreImportEffectiveState: true,
+        physicalHistoryAppendOnly: true,
+        postCompensationEffectiveStateSha256: plan.expectedEffectiveStateSha256,
+        postImportEffectiveStateSha256: plan.expectedPostEffectiveStateSha256,
+        preImportEffectiveStateSha256: plan.expectedEffectiveStateSha256,
+        preImportPhysicalStateSha256: plan.expectedPhysicalStateSha256,
+        schemaVersion: 'gold-import-compensation-state-hash-proof/2.0.0',
+      }),
+    ],
+    [
+      'unsigned-compensation-operation-authorization-template-v2.json',
+      canonicalPretty(expectedUnsignedCompensationAuthorization),
+    ],
+    [
+      'unsigned-import-operation-authorization-template-v2.json',
+      canonicalPretty(expectedUnsignedImportAuthorization),
+    ],
+  ])
+  for (const [name, expectedBytes] of deterministicFiles) {
+    if (!files.get(name)?.equals(expectedBytes)) {
+      throw new Error(`V2 deterministic package artifact is stale or unsafe: ${name}.`)
+    }
+  }
+  const filesWithoutManifest = new Map(files)
   const manifest = filesWithoutManifest.get('checksum-manifest-v2.sha256')!
   filesWithoutManifest.delete('checksum-manifest-v2.sha256')
   if (!manifest.equals(buildManifest(filesWithoutManifest))) {
     throw new Error('V2 package checksum manifest is noncanonical or stale.')
   }
-  if (sha256Bytes(manifest) !== input.manifestSha256) {
-    throw new Error('V2 package manifest identity differs from its returned receipt.')
-  }
   return {
-    ...input,
-    compensationTemplate,
-    importPlan: plan,
-    packageDescriptor,
-    sourceAuthorizationSet: sourceAuthorization,
+    compensationTemplate: canonicalFrozenClone(compensationTemplate),
+    files,
+    importPlan: canonicalFrozenClone(plan),
+    manifestSha256: sha256Bytes(manifest),
+    packageDescriptor: canonicalFrozenClone(packageDescriptor),
+    sourceAuthorizationSet: canonicalFrozenClone(sourceAuthorization),
   }
+}
+
+export function verifyGeneratedGoldImportCompensationPackageV2(
+  input: GeneratedGoldImportCompensationPackageV2,
+): GeneratedGoldImportCompensationPackageV2 {
+  const intrinsic = verifyGoldImportCompensationPackageV2IntrinsicFiles(input.files)
+  const expectedVerifiedBindings = {
+    completeCatalogAuditIdentitySha256:
+      intrinsic.sourceAuthorizationSet.completeCatalogAudit.fullAuditIdentitySha256,
+    developmentPlanningStateSha256: sha256Canonical(input.developmentPlanningState),
+    expectedCatalogBindingSha256: intrinsic.sourceAuthorizationSet.expectedCatalog.bindingSha256,
+    migrationSha256: intrinsic.sourceAuthorizationSet.migration.sha256,
+    sourceArtifactSha256: intrinsic.sourceAuthorizationSet.finalArtifactSha256,
+    sourceAuthorizationSetSha256: sha256Bytes(input.files.get('source-authorization-set-v4.json')!),
+  }
+  if (
+    intrinsic.manifestSha256 !== input.manifestSha256 ||
+    canonicalJson(intrinsic.compensationTemplate) !== canonicalJson(input.compensationTemplate) ||
+    canonicalJson(intrinsic.importPlan) !== canonicalJson(input.importPlan) ||
+    canonicalJson(intrinsic.packageDescriptor) !== canonicalJson(input.packageDescriptor) ||
+    canonicalJson(intrinsic.sourceAuthorizationSet) !==
+      canonicalJson(input.sourceAuthorizationSet) ||
+    canonicalJson(expectedVerifiedBindings) !== canonicalJson(input.verifiedBindings) ||
+    sha256Bytes(input.sourceArtifactBytes) !==
+      intrinsic.sourceAuthorizationSet.finalArtifactSha256 ||
+    intrinsic.importPlan.sourceArtifactSha256 !==
+      intrinsic.sourceAuthorizationSet.finalArtifactSha256 ||
+    intrinsic.importPlan.sourceAuthorizationSetSha256 !==
+      expectedVerifiedBindings.sourceAuthorizationSetSha256 ||
+    expectedVerifiedBindings.developmentPlanningStateSha256 !==
+      intrinsic.sourceAuthorizationSet.currentDatabase.developmentPlanningStateSha256
+  ) {
+    throw new Error('V2 generated package return values differ from its intrinsic file evidence.')
+  }
+  return Object.freeze({
+    compensationTemplate: intrinsic.compensationTemplate,
+    developmentPlanningState: canonicalFrozenClone(input.developmentPlanningState),
+    files: intrinsic.files,
+    importPlan: intrinsic.importPlan,
+    manifestSha256: intrinsic.manifestSha256,
+    packageDescriptor: intrinsic.packageDescriptor,
+    sourceArtifactBytes: Buffer.from(input.sourceArtifactBytes),
+    sourceAuthorizationSet: intrinsic.sourceAuthorizationSet,
+    verifiedBindings: canonicalFrozenClone(expectedVerifiedBindings),
+  })
 }
 
 async function readRegularNonSymlinkFile(path: string, label: string): Promise<Buffer> {

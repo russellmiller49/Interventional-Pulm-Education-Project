@@ -20,7 +20,7 @@ import {
   generateProtectedV2CatalogExpectationProposals,
 } from './generate-gold-import-contract-v2-catalog-expectations'
 import { PROTECTED_V2_LOCAL_OWNER_PROJECTION_SQL } from './rehearse-gold-import-contract-v2-catalog-drift-matrix'
-import type { ExecuteV2DisposablePathInput } from './rehearse-gold-import-compensation-db-v2'
+import type { ExecuteV2DisposableCatalogProbeInput } from './rehearse-gold-import-compensation-db-v2'
 
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T
@@ -84,7 +84,7 @@ function fakeContext() {
 }
 
 function rethrowingRunner(context = fakeContext()) {
-  return async (input: ExecuteV2DisposablePathInput): Promise<never> => {
+  return async (input: ExecuteV2DisposableCatalogProbeInput): Promise<never> => {
     try {
       await input.exactPackageExecutor.execute(context as never)
     } catch (error) {
@@ -110,7 +110,7 @@ describe('protected V2 catalog expectation proposal generator', () => {
     ).resolves.toEqual(OBSERVATIONS.supabase_admin_owner_v1)
 
     const forgedSentinel = Object.freeze({})
-    const forgedRunner = async (input: ExecuteV2DisposablePathInput): Promise<never> => {
+    const forgedRunner = async (input: ExecuteV2DisposableCatalogProbeInput): Promise<never> => {
       try {
         await input.exactPackageExecutor.execute(fakeContext() as never)
       } catch {
@@ -128,7 +128,9 @@ describe('protected V2 catalog expectation proposal generator', () => {
   })
 
   it('rejects cleanup AggregateError wrapping the private sentinel', async () => {
-    const cleanupFailureRunner = async (input: ExecuteV2DisposablePathInput): Promise<never> => {
+    const cleanupFailureRunner = async (
+      input: ExecuteV2DisposableCatalogProbeInput,
+    ): Promise<never> => {
       try {
         await input.exactPackageExecutor.execute(fakeContext() as never)
       } catch (error) {
@@ -148,7 +150,7 @@ describe('protected V2 catalog expectation proposal generator', () => {
   it('applies local owner projection only inside the exact fresh disposable callback', async () => {
     const context = fakeContext()
     let enteredCallback = false
-    const runner = async (input: ExecuteV2DisposablePathInput): Promise<never> => {
+    const runner = async (input: ExecuteV2DisposableCatalogProbeInput): Promise<never> => {
       expect(context.psql).not.toHaveBeenCalled()
       enteredCallback = true
       try {

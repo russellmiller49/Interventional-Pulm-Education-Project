@@ -236,16 +236,28 @@ expressions, identity behavior, and collation), constraints, indexes, the full t
 RLS/FORCE RLS and policies, raw/effective table privileges, functions/RPCs and ACLs, fixed
 configuration, bodies, and exact `pg_depend` dependencies. It emits seven component identities,
 the environment-invariant V2 identity, selected owner-profile identity, full inventory identity,
-and canonical full audit identity. The intent binds the audit model and invariant expectation; the
-result and execution receipt bind the observed full and component identities. The verifier source
-SHA remains pinned, but the real-local receipt truthfully records `verifierExecuted=false`.
+and canonical full audit identity. Observed hashes are descriptive only. Authorization comes from
+the exact committed expected artifact selected for the known profile/target, with its artifact
+file/content identities, seven components, deployment profile, normalized full inventory, full
+audit, audit model, migration, and verifier bound through readiness, package, intent, result,
+receipt, backup, and rehearsal. Count preservation, generic either-profile compatibility,
+self-consistent rehashing, profile cross-use, and target-derived expectations are insufficient. The
+verifier source SHA remains pinned, but the real-local receipt truthfully records
+`verifierExecuted=false`.
 
-The sealed intent also contains a deterministic relative-import-closure identity for the complete
-protected operator runtime, package and lockfile, primary-checkout guard, migration, verifier, and
-all pinned-identity sources. Normal commit mode still requires clean primary `main` at exact
-`origin/main`. Lost-ack reconciliation may use a later clean current `main` only when the intent
-commit is an ancestor and this operator bundle is exactly unchanged; it never stages or reapplies
-the migration and records zero migration calls.
+The sealed intent also contains the conservative Git-tracked protected bundle: protected
+directories, explicit and final roots, every tracked file and mode, `tsconfig.json`, Supabase config,
+package/lock metadata, primary-checkout guard, migrations, verifier, module-resolution audit, and
+runtime-input declaration/audit. Unsupported dynamic dependencies fail closed. Normal commit mode
+still requires clean primary `main` at exact `origin/main`. Lost-ack reconciliation may use a later
+clean current `main` only when the intent commit is an ancestor and the exact expected artifacts and
+whole bundle are unchanged; it never stages or reapplies the migration and records zero migration
+calls.
+
+Expected-artifact proposals are available only through the fresh disposable maintainer generator.
+The generator accepts no caller database, endpoint, SQL, remote, or held-out input; performs two
+runs per supported profile; and cannot overwrite committed artifacts. A target therefore cannot
+establish the expected state used to authorize itself.
 
 Backup evidence follows trusted-local-operator redundant-capture model
 `trusted-local-operator-redundant-captures/1.0.0`. Two separately executed read-only captures and
@@ -255,10 +267,21 @@ The authorized operator is assumed to control the filesystem and Docker/database
 unkeyed local receipts and duplicate markers are not cryptographic proof against that operator. A
 separate principal or service would be required for malicious-operator resistance and is not
 claimed here. Migration application still authorizes neither import nor compensation.
+Package generation is likewise file-only evidence and does not authorize execution. Compensation
+remains separately authorized after a committed import receipt and fresh state observation.
+
+Final delivery uses only the additive V2 forward-repair backup. Its manifest embeds both exact
+catalog bindings and the detailed runtime-bundle binding; its fixed evidence groups preserve the
+catalog proposal/comparison, exact drift matrix, bundle/module/runtime audits, recovery/trust tests,
+canonical package/rehearsal artifacts, two real-local captures, validation/build evidence, critic,
+merge readiness, and final PR body. It re-parses copied bytes, verifies the exact package manifest,
+rejects transient probe/proposal authority, and self-hashes its receipt. The historical
+post-migration-reconciliation backup remains a branch-pinned V1 archive and is not V2 delivery
+evidence.
 
 ## Verification obligations
 
-Focused tests for a future implementation must prove at least:
+Focused implementation validation must prove at least:
 
 - all 630 source `False` lexemes remain semantic false review provenance without item timestamp
   synthesis;
@@ -277,8 +300,9 @@ Focused tests for a future implementation must prove at least:
 
 ## Current terminal
 
-This specification records a safe forward repair but does not implement or authorize it. Under the
-currently applied contract v1, every row remains non-executable, no action partition is valid, and no
-package exists or may be generated. The exact overall terminal remains:
+The forward repair is implemented, but implementation is not execution authority. The pinned real
+local database remains V1-only with V2 absent and unarmed until a separately authorized protected
+migration session. No import or compensation is authorized by this specification, a generated
+package, rehearsal evidence, or a migration receipt. The operational terminal is:
 
-`FORWARD IMPORT-CONTRACT REPAIR REQUIRED — NOTE DISPOSITION ALREADY AUTHORIZED`
+`IMPLEMENTATION READY — REAL-LOCAL V2 MIGRATION SEPARATELY REQUIRED`

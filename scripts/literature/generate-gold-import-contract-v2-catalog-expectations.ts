@@ -23,8 +23,8 @@ import {
   withTrustedLocalRoleInventoryProjection,
 } from './rehearse-gold-import-contract-v2-catalog-drift-matrix'
 import {
-  executeV2DisposablePath,
-  type ExecuteV2DisposablePathInput,
+  executeV2DisposableCatalogExpectationProposalPath,
+  type ExecuteV2DisposableCatalogProbeInput,
 } from './rehearse-gold-import-compensation-db-v2'
 import {
   DEVELOPMENT_DATABASE_SEED_SCHEMA_VERSION,
@@ -237,8 +237,8 @@ async function verifyPinnedRuntimeBytes(
 }
 
 type DisposablePathRunner = (
-  input: ExecuteV2DisposablePathInput,
-) => ReturnType<typeof executeV2DisposablePath>
+  input: ExecuteV2DisposableCatalogProbeInput,
+) => ReturnType<typeof executeV2DisposableCatalogExpectationProposalPath>
 type ProposalCollector = typeof collectProtectedV2CompleteCatalogExpectationProposalObservation
 
 async function captureFreshDisposableProfileWithRunner(
@@ -288,7 +288,7 @@ async function captureFreshDisposableProfile(
 ): Promise<ProtectedV2CompleteCatalogObservation> {
   return captureFreshDisposableProfileWithRunner(
     profileId,
-    executeV2DisposablePath,
+    executeV2DisposableCatalogExpectationProposalPath,
     collectProtectedV2CompleteCatalogExpectationProposalObservation,
   )
 }

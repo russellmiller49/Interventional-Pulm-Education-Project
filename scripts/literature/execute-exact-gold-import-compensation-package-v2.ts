@@ -53,6 +53,7 @@ import {
   type ProtectedV2CompleteCatalogAuditIdentity,
   v2SecurityIntrospectionSql,
 } from './gold-import-contract-v2-catalog-audit'
+import { buildProtectedV2ExpectedCatalogBinding } from './protected-gold-import-contract-v2-bindings'
 export { renderOwnerFirstFunctionRawAclV2 } from './gold-import-contract-v2-catalog-audit'
 import {
   validateReadyGoldImportCompensationV2Audit,
@@ -69,6 +70,20 @@ const SHA256_PATTERN = /^[a-f0-9]{64}$/u
 
 function sha256(value: string | Uint8Array): string {
   return createHash('sha256').update(value).digest('hex')
+}
+
+function deepFreezeCanonicalValue<T>(value: T): T {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    for (const child of Object.values(value as Record<string, unknown>)) {
+      deepFreezeCanonicalValue(child)
+    }
+    Object.freeze(value)
+  }
+  return value
+}
+
+function canonicalDetachedClone<T>(value: T): T {
+  return deepFreezeCanonicalValue(JSON.parse(canonicalJson(value)) as T)
 }
 
 function sqlLiteral(value: string): string {
@@ -340,6 +355,7 @@ async function buildDisposableReadyAuditAndPackage(input: {
   }
 
   const audit = validateReadyGoldImportCompensationV2Audit({
+    completeCatalogAudit,
     contractAudit: {
       appendOnlyProtectionsReady,
       deploymentProfileEvidence,
@@ -367,6 +383,10 @@ async function buildDisposableReadyAuditAndPackage(input: {
       headCount: 9,
     },
     expectedPostImportEffectiveStateSha256,
+    expectedCatalog: buildProtectedV2ExpectedCatalogBinding(
+      'supabase_admin_owner_v1',
+      'disposable',
+    ),
     migration: {
       id: '20260809231651_add_literature_gold_import_compensation_contract_v2',
       sha256: context.migrationSha256,
@@ -417,10 +437,13 @@ async function buildDisposableReadyAuditAndPackage(input: {
   }
   validateGoldImportSourceAuthorizationSetV4ForImport({
     amendedAuthorization: sources.sources.amendedAuthorizationBytes,
+    auditTarget: audit.target,
+    completeCatalogAudit: audit.completeCatalogAudit,
     currentState: noteCurrentState,
     developmentPlanningState: sources.developmentPlanningState,
     environmentInvariantIdentitySha256: audit.contractAudit.environmentInvariantIdentitySha256,
     environmentProfileIdentitySha256: audit.contractAudit.environmentProfileIdentitySha256,
+    expectedCatalog: audit.expectedCatalog,
     finalizedArtifact: sources.sources.finalArtifactBytes,
     independentlyDerivedPlan: independentlyDerivedPackage.importPlan,
     migration: sources.sources.migrationBytes,
@@ -468,10 +491,10 @@ export function createBootstrappedExactPackageDatabaseExecutorV2(input: {
           throw new Error('The exact V2 package must bootstrap from the V1-seeded upgrade path.')
         }
         assertAcceptedUpgradeBoundary(context)
-        const postV2SeedIdentity = {
+        const postV2SeedIdentity = canonicalDetachedClone({
           clinicalAndSchemaSnapshot: context.postV2SeedSnapshot,
           v2StateAndIntegrity: state,
-        }
+        })
         if (referencePostV2SeedIdentity) {
           assertMigrationEquivalentPostV2SeedIdentity(
             referencePostV2SeedIdentity,
@@ -482,46 +505,49 @@ export function createBootstrappedExactPackageDatabaseExecutorV2(input: {
         // This callback is intentionally after the V2 occurrence/state probe.
         const sources = await input.readSources()
         const generated = await buildDisposableReadyAuditAndPackage({ context, sources, state })
-        if (referenceAudit && canonicalJson(referenceAudit) !== canonicalJson(generated.audit)) {
+        const privateAudit = canonicalDetachedClone(generated.audit)
+        const privateCompleteCatalogAudit = canonicalDetachedClone(generated.completeCatalogAudit)
+        const privatePackage = verifyGeneratedGoldImportCompensationPackageV2(generated.package)
+        if (referenceAudit && canonicalJson(referenceAudit) !== canonicalJson(privateAudit)) {
           throw new Error('Repeated disposable paths produced different V2 ready audits.')
         }
         if (
           referenceCompleteCatalogAudit &&
           canonicalJson(referenceCompleteCatalogAudit) !==
-            canonicalJson(generated.completeCatalogAudit)
+            canonicalJson(privateCompleteCatalogAudit)
         ) {
           throw new Error('Repeated disposable paths produced different complete catalog audits.')
         }
         if (referencePackage) {
-          assertExactGeneratedPackageReferenceV2(referencePackage, generated.package)
+          assertExactGeneratedPackageReferenceV2(referencePackage, privatePackage)
         }
-        referenceAudit ??= generated.audit
-        referenceCompleteCatalogAudit ??= generated.completeCatalogAudit
-        referencePackage ??= generated.package
+        referenceAudit ??= privateAudit
+        referenceCompleteCatalogAudit ??= privateCompleteCatalogAudit
+        referencePackage ??= privatePackage
         generatedPackageCount += 1
         await input.onGenerated?.({
-          audit: generated.audit,
-          completeCatalogAudit: generated.completeCatalogAudit,
-          package: generated.package,
+          audit: canonicalDetachedClone(privateAudit),
+          completeCatalogAudit: canonicalDetachedClone(privateCompleteCatalogAudit),
+          package: verifyGeneratedGoldImportCompensationPackageV2(privatePackage),
           path: context.migrationPath,
         })
-        return createExactPackageDatabaseExecutorV2(generated.package).execute(context)
+        return createExactPackageDatabaseExecutorV2(privatePackage).execute(context)
       },
     },
     generatedPackageCount: () => generatedPackageCount,
     referenceAudit: () => {
       if (!referenceAudit) throw new Error('The V2 ready audit has not been bootstrapped.')
-      return referenceAudit
+      return canonicalDetachedClone(referenceAudit)
     },
     referenceCompleteCatalogAudit: () => {
       if (!referenceCompleteCatalogAudit) {
         throw new Error('The V2 complete catalog audit has not been bootstrapped.')
       }
-      return referenceCompleteCatalogAudit
+      return canonicalDetachedClone(referenceCompleteCatalogAudit)
     },
     referencePackage: () => {
       if (!referencePackage) throw new Error('The exact V2 package has not been bootstrapped.')
-      return referencePackage
+      return verifyGeneratedGoldImportCompensationPackageV2(referencePackage)
     },
   }
 }
@@ -1086,12 +1112,13 @@ async function verifyCompensationPayloadCopies(
 export function createExactPackageDatabaseExecutorV2(
   package_: GeneratedGoldImportCompensationPackageV2,
 ): V2ExactPackageDatabaseExecutor {
+  const privatePackage = verifyGeneratedGoldImportCompensationPackageV2(package_)
   return {
     async execute(context): Promise<V2ExactPackageDatabaseEvidence> {
-      const plan = package_.importPlan
+      const plan = privatePackage.importPlan
       if (
         context.batchId !== plan.batchId ||
-        context.migrationSha256 !== package_.verifiedBindings.migrationSha256
+        context.migrationSha256 !== privatePackage.verifiedBindings.migrationSha256
       ) {
         throw new Error('Exact V2 package does not match the seeded disposable target.')
       }
@@ -1181,7 +1208,7 @@ export function createExactPackageDatabaseExecutorV2(
 
       const productionCohort = await buildProductionCohortEvidence(context, plan)
       const { authorization: compensationAuthorization, plan: compensationPlan } =
-        bindDisposableCompensation(package_, imported)
+        bindDisposableCompensation(privatePackage, imported)
       const compensation = parseCompensationReceiptV2(
         await context.queryJson(
           `set role service_role; select ${compensationRpcCall(
@@ -1202,7 +1229,7 @@ export function createExactPackageDatabaseExecutorV2(
       const postCompensationReplay = stateSchema.parse(
         await context.queryJson(v2StateSql(plan.batchId)),
       )
-      const payloadCopies = await verifyCompensationPayloadCopies(context, package_)
+      const payloadCopies = await verifyCompensationPayloadCopies(context, privatePackage)
       if (
         compensation.outcome !== 'committed' ||
         compensationReplay.response !== 'idempotent_replay' ||

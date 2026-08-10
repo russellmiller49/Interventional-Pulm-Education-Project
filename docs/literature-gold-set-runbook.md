@@ -84,8 +84,15 @@ the exact operator attestation are accidental-safety controls, not cryptographic
 the filesystem/Docker-owning operator. It seals the protected operator dependency bundle before
 mutation, runs a complete read-only post-application catalog audit, records that the pinned verifier
 was not executed real-locally, and permits lost-ack recovery from a later clean main descendant only
-when the intent commit remains an ancestor and the bundle is unchanged. Recovery never reapplies
-V2. Neither migration application nor its receipt authorizes a later import or compensation.
+when the intent commit remains an ancestor, exact committed profile artifact is preserved, and the
+conservative Git-tracked bundle is unchanged. That bundle includes protected directories,
+`tsconfig.json`, Supabase config, package metadata/lockfile, sources, migrations, verifier,
+module-resolution evidence, and declared runtime inputs; unsupported dynamic inputs fail closed.
+Observed catalog hashes are descriptive, while the committed exact profile artifact authorizes
+readiness. Equal counts, target-generated expectations, self-consistent rehashing, and profile
+cross-use do not. Recovery never reapplies V2. Neither migration application nor its receipt
+authorizes a later import or compensation; package generation does not authorize execution, and
+compensation remains separately authorized.
 
 The main site's Supabase URL, authentication, and other modules are unchanged. Server-side
 literature queries use the dedicated local values when present and retain the existing main
