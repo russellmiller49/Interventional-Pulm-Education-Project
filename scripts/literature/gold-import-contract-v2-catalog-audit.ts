@@ -25,13 +25,24 @@ import {
 } from './gold-import-compensation-rehearsal-evidence'
 import { SECURITY_INTROSPECTION_SQL } from './rehearse-gold-import-compensation-db'
 import { assertDerivedV2ReadinessPolicy } from './audit-gold-import-compensation-v2'
+import {
+  PROTECTED_V2_CATALOG_EXPECTATION_SCHEMA_VERSION,
+  PROTECTED_V2_CATALOG_NORMALIZED_INVENTORY_SCHEMA_VERSION,
+  PROTECTED_V2_EXPECTED_CATALOG_AUTHORIZATION_BINDINGS,
+  assertProtectedV2CatalogObservationMatchesExpectedArtifact,
+  committedProtectedV2CatalogExpectedArtifactForValidatedProfile,
+  committedProtectedV2CatalogExpectedArtifacts,
+  expectedObservedAuditIdentityFromArtifact,
+  type ProtectedV2CatalogNormalizedInventories,
+  type ProtectedV2CatalogObservationForExpectation,
+} from './gold-import-contract-v2-catalog-expectations'
 
 export const PROTECTED_V2_COMPLETE_CATALOG_AUDIT_SCHEMA_VERSION =
   'literature-gold-protected-v2-complete-catalog-audit/1.0.0' as const
 export const PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD =
   'complete_read_only_catalog_identity' as const
 export const PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL =
-  'literature-gold-contract-v2-complete-catalog/1.0.0' as const
+  'literature-gold-contract-v2-complete-catalog/1.1.0' as const
 export const PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256 =
   '086e88fb63626c83fc64eca2e999558b188de7a79a1174a481693788318402c3' as const
 
@@ -438,7 +449,7 @@ export interface ProtectedV2CompleteCatalogAuditIdentity {
   verifierExecuted: false
 }
 
-export function validateProtectedV2CompleteCatalogAuditIdentity(
+function validateProtectedV2DescriptiveCatalogAuditIdentity(
   input: unknown,
 ): ProtectedV2CompleteCatalogAuditIdentity {
   const identity = record(input, 'Protected V2 complete catalog audit identity')
@@ -487,17 +498,67 @@ export function validateProtectedV2CompleteCatalogAuditIdentity(
     identity.auditModel !== PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL ||
     identity.auditModelIdentitySha256 !==
       PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL_IDENTITY_SHA256 ||
-    identity.environmentInvariantIdentitySha256 !==
-      PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256 ||
-    !Object.values(PROTECTED_V2_EXPECTED_FULL_ENVIRONMENT_INVENTORY_RECORD_COUNTS).includes(
-      identity.fullEnvironmentInventoryRecordCount as 730 | 823,
-    ) ||
+    !Number.isSafeInteger(identity.fullEnvironmentInventoryRecordCount) ||
+    (identity.fullEnvironmentInventoryRecordCount as number) < 0 ||
     identity.verifierExecuted !== false ||
     reconciliationIdentitySha256(content) !== fullAuditIdentitySha256
   ) {
     throw new Error('Protected V2 complete catalog audit identity is inconsistent or drifted.')
   }
   return identity as unknown as ProtectedV2CompleteCatalogAuditIdentity
+}
+
+function assertProtectedV2PinnedInvariant(identity: ProtectedV2CompleteCatalogAuditIdentity): void {
+  if (
+    identity.environmentInvariantIdentitySha256 !== PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256
+  ) {
+    throw new Error('Protected V2 complete catalog audit invariant identity drifted.')
+  }
+}
+
+/**
+ * Validate a serialized observed audit against the immutable committed profile contracts. This
+ * compatibility API has no caller-supplied profile or artifact: an exact match must exist in one
+ * and only one of the two statically imported expectations.
+ */
+export function validateProtectedV2CompleteCatalogAuditIdentity(
+  input: unknown,
+): ProtectedV2CompleteCatalogAuditIdentity {
+  const identity = validateProtectedV2DescriptiveCatalogAuditIdentity(input)
+  assertProtectedV2PinnedInvariant(identity)
+  const exactMatches = committedProtectedV2CatalogExpectedArtifacts().filter(
+    (artifact) =>
+      canonicalJson(expectedObservedAuditIdentityFromArtifact(artifact)) ===
+      canonicalJson(identity),
+  )
+  if (exactMatches.length !== 1) {
+    throw new Error(
+      'Protected V2 complete catalog audit does not match exactly one committed profile expectation.',
+    )
+  }
+  return identity
+}
+
+/**
+ * Context-bound serialized validator for readiness callers that already know their target. Unlike
+ * the compatibility validator above, it cannot accept the other exact profile.
+ */
+export function validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile(
+  input: unknown,
+  profileId: 'local_supabase_postgres_owner_v1' | 'supabase_admin_owner_v1',
+  target: 'local' | 'disposable',
+): ProtectedV2CompleteCatalogAuditIdentity {
+  const identity = validateProtectedV2DescriptiveCatalogAuditIdentity(input)
+  assertProtectedV2PinnedInvariant(identity)
+  const artifact = committedProtectedV2CatalogExpectedArtifactForValidatedProfile(profileId, target)
+  if (
+    canonicalJson(expectedObservedAuditIdentityFromArtifact(artifact)) !== canonicalJson(identity)
+  ) {
+    throw new Error(
+      `Protected V2 complete catalog audit does not match expected ${profileId}/${target} context.`,
+    )
+  }
+  return identity
 }
 
 const AUDIT_MODEL_CONTENT = {
@@ -509,6 +570,10 @@ const AUDIT_MODEL_CONTENT = {
   expectedInvariantIdentitySha256: PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256,
   expectedFullEnvironmentInventoryRecordCounts:
     PROTECTED_V2_EXPECTED_FULL_ENVIRONMENT_INVENTORY_RECORD_COUNTS,
+  expectedArtifactSchemaVersion: PROTECTED_V2_CATALOG_EXPECTATION_SCHEMA_VERSION,
+  expectedCatalogAuthorizationBindings: PROTECTED_V2_EXPECTED_CATALOG_AUTHORIZATION_BINDINGS,
+  expectedNormalizedInventorySchemaVersion:
+    PROTECTED_V2_CATALOG_NORMALIZED_INVENTORY_SCHEMA_VERSION,
   expectedRecordCounts: EXPECTED_RECORD_COUNTS,
   functionNames: PROTECTED_V2_COMPLETE_CATALOG_FUNCTION_NAMES,
   localProfileId: 'local_supabase_postgres_owner_v1',
@@ -529,14 +594,51 @@ function recordsOfTypes(
   return identity.records.filter(({ objectType }) => types.has(objectType))
 }
 
-export function validateProtectedV2CompleteCatalogDetails(
-  detailsInput: unknown,
-  profile: 'local' | 'disposable_clone',
-): Record<string, unknown> {
+function parseProtectedV2CompleteCatalogDetails(detailsInput: unknown): Record<string, unknown> {
   const details = record(detailsInput, 'Protected V2 complete catalog details')
   if (details.readOnly !== true || details.isolation !== 'repeatable read') {
     throw new Error('Protected V2 complete catalog details escaped REPEATABLE READ READ ONLY.')
   }
+  const tables = array(details.tables, 'catalog details.tables')
+  const columns = array(details.columns, 'catalog details.columns')
+  const constraints = array(details.constraints, 'catalog details.constraints')
+  const indexes = array(details.indexes, 'catalog details.indexes')
+  const triggers = array(details.triggers, 'catalog details.triggers')
+  const policies = array(details.policies, 'catalog details.policies')
+  const functions = array(details.functions, 'catalog details.functions')
+  const dependencies = array(details.functionDependencies, 'catalog details.functionDependencies')
+  const tablePrivileges = array(details.tablePrivileges, 'catalog details.tablePrivileges')
+  return {
+    ...details,
+    columns,
+    constraints,
+    functionDependencies: dependencies,
+    functions,
+    indexes,
+    policies,
+    tablePrivileges,
+    tables,
+    triggers,
+  }
+}
+
+function parseProtectedV2CatalogAuditProfile(value: unknown): 'local' | 'disposable_clone' {
+  switch (value) {
+    case 'local':
+      return 'local'
+    case 'disposable_clone':
+      return 'disposable_clone'
+    default:
+      throw new Error('Protected V2 catalog audit profile is unsupported; no fallback exists.')
+  }
+}
+
+export function validateProtectedV2CompleteCatalogDetails(
+  detailsInput: unknown,
+  profile: 'local' | 'disposable_clone',
+): Record<string, unknown> {
+  const validatedProfile = parseProtectedV2CatalogAuditProfile(profile)
+  const details = parseProtectedV2CompleteCatalogDetails(detailsInput)
   const tables = array(details.tables, 'catalog details.tables')
   const columns = array(details.columns, 'catalog details.columns')
   const constraints = array(details.constraints, 'catalog details.constraints')
@@ -558,7 +660,7 @@ export function validateProtectedV2CompleteCatalogDetails(
   ) {
     throw new Error('Protected V2 complete catalog inventory count drifted.')
   }
-  const expectedOwner = profile === 'local' ? 'postgres' : 'supabase_admin'
+  const expectedOwner = validatedProfile === 'local' ? 'postgres' : 'supabase_admin'
   if (
     tables.some(
       (table) =>
@@ -696,7 +798,7 @@ export function validateProtectedV2CompleteCatalogDetails(
   return details
 }
 
-export function buildProtectedV2CompleteCatalogAuditIdentity(input: {
+interface ProtectedV2CompleteCatalogAuditBuildInput {
   details: unknown
   diagnostics: {
     functions: EnrichedRpcMetadata[]
@@ -704,8 +806,18 @@ export function buildProtectedV2CompleteCatalogAuditIdentity(input: {
   }
   profile: 'local' | 'disposable_clone'
   securityIntrospection: unknown
-}): ProtectedV2CompleteCatalogAuditIdentity {
-  const details = validateProtectedV2CompleteCatalogDetails(input.details, input.profile)
+}
+
+export interface ProtectedV2CompleteCatalogObservation extends ProtectedV2CatalogObservationForExpectation {
+  identity: ProtectedV2CompleteCatalogAuditIdentity
+  normalizedInventories: ProtectedV2CatalogNormalizedInventories
+}
+
+function buildProtectedV2CompleteCatalogObservation(
+  input: ProtectedV2CompleteCatalogAuditBuildInput,
+): ProtectedV2CompleteCatalogObservation {
+  const profile = parseProtectedV2CatalogAuditProfile(input.profile)
+  const details = parseProtectedV2CompleteCatalogDetails(input.details)
   const schemaIdentity = buildSchemaSecurityDefinitionIdentity(input.securityIntrospection)
   const rpcMetadata = [
     ...input.diagnostics.functions,
@@ -714,11 +826,15 @@ export function buildProtectedV2CompleteCatalogAuditIdentity(input: {
     // the functions/RPCs/dependencies component below.
     ...enrichedV2TransitionMetadata(schemaIdentity),
   ]
+  const profileId =
+    profile === 'local'
+      ? ('local_supabase_postgres_owner_v1' as const)
+      : ('supabase_admin_owner_v1' as const)
+  const target = profile === 'local' ? ('local' as const) : ('disposable' as const)
   const deploymentProfileEvidence: DeploymentProfileEvidence = {
-    profileId:
-      input.profile === 'local' ? 'local_supabase_postgres_owner_v1' : 'supabase_admin_owner_v1',
+    profileId,
     roleInventory: input.diagnostics.roles,
-    target: input.profile === 'local' ? 'local' : 'disposable',
+    target,
   }
   const supportedProfile = SUPPORTED_DEPLOYMENT_PROFILES[deploymentProfileEvidence.profileId]
   if (
@@ -727,19 +843,8 @@ export function buildProtectedV2CompleteCatalogAuditIdentity(input: {
   ) {
     throw new Error('Protected V2 complete catalog audit deployment-role inventory drifted.')
   }
-  assertDerivedV2ReadinessPolicy({
-    auditTarget: input.profile,
-    deploymentProfileEvidence,
-    rpcMetadata,
-    schemaSecurityDefinitionIdentity: schemaIdentity,
-  })
   const invariantIdentity = buildContractInvariantIdentity(schemaIdentity, rpcMetadata)
   const environmentInvariantIdentitySha256 = reconciliationIdentitySha256(invariantIdentity)
-  if (environmentInvariantIdentitySha256 !== PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256) {
-    throw new Error(
-      `Protected V2 environment-invariant catalog identity drifted: ${environmentInvariantIdentitySha256}.`,
-    )
-  }
   const profileIdentity = buildDeploymentProfileIdentity(
     schemaIdentity,
     rpcMetadata,
@@ -751,15 +856,6 @@ export function buildProtectedV2CompleteCatalogAuditIdentity(input: {
     deploymentProfileEvidence,
   )
   const fullEnvironmentInventoryRecordCount = schemaIdentity.records.length
-  const expectedFullEnvironmentInventoryRecordCount =
-    PROTECTED_V2_EXPECTED_FULL_ENVIRONMENT_INVENTORY_RECORD_COUNTS[
-      deploymentProfileEvidence.profileId
-    ]
-  if (fullEnvironmentInventoryRecordCount !== expectedFullEnvironmentInventoryRecordCount) {
-    throw new Error(
-      `Protected V2 ${deploymentProfileEvidence.profileId} full inventory count drifted: ${fullEnvironmentInventoryRecordCount}.`,
-    )
-  }
   const componentInputs: Record<ProtectedV2AuditComponentName, unknown> = {
     columns: {
       details: details.columns,
@@ -810,15 +906,129 @@ export function buildProtectedV2CompleteCatalogAuditIdentity(input: {
     schemaVersion: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_SCHEMA_VERSION,
     verifierExecuted: false as const,
   }
-  return validateProtectedV2CompleteCatalogAuditIdentity({
+  const identity = validateProtectedV2DescriptiveCatalogAuditIdentity({
     ...identityContent,
     fullAuditIdentitySha256: reconciliationIdentitySha256(identityContent),
   })
+  return {
+    identity,
+    normalizedInventories: {
+      componentInputs,
+      deploymentProfileIdentity: profileIdentity,
+      fullEnvironmentInventory: fullInventory,
+      profileId,
+      schemaVersion: PROTECTED_V2_CATALOG_NORMALIZED_INVENTORY_SCHEMA_VERSION,
+      target,
+    },
+    profileId,
+    target,
+  }
+}
+
+function assertProtectedV2CatalogObservationIsSemanticallyReady(
+  input: ProtectedV2CompleteCatalogAuditBuildInput,
+  observation: ProtectedV2CompleteCatalogObservation,
+): void {
+  const profile = parseProtectedV2CatalogAuditProfile(input.profile)
+  validateProtectedV2CompleteCatalogDetails(input.details, profile)
+  const fullInventory = observation.normalizedInventories.fullEnvironmentInventory as ReturnType<
+    typeof buildFullEnvironmentInventoryIdentity
+  >
+  assertDerivedV2ReadinessPolicy({
+    auditTarget: profile,
+    deploymentProfileEvidence: fullInventory.deploymentProfile,
+    rpcMetadata: [...fullInventory.rpcs],
+    schemaSecurityDefinitionIdentity: fullInventory.schemaSecurityDefinitionIdentity,
+  })
+  if (
+    observation.identity.environmentInvariantIdentitySha256 !==
+    PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256
+  ) {
+    throw new Error(
+      `Protected V2 environment-invariant catalog identity drifted: ${observation.identity.environmentInvariantIdentitySha256}.`,
+    )
+  }
+  const expectedCount =
+    PROTECTED_V2_EXPECTED_FULL_ENVIRONMENT_INVENTORY_RECORD_COUNTS[observation.profileId]
+  if (observation.identity.fullEnvironmentInventoryRecordCount !== expectedCount) {
+    throw new Error(
+      `Protected V2 ${observation.profileId} full inventory count drifted: ${observation.identity.fullEnvironmentInventoryRecordCount}.`,
+    )
+  }
+}
+
+export function authorizeProtectedV2CompleteCatalogObservation(
+  input: ProtectedV2CompleteCatalogAuditBuildInput,
+  observation: ProtectedV2CompleteCatalogObservation,
+): ProtectedV2CompleteCatalogAuditIdentity {
+  // The profile/target pair above came from the fixed caller target plus exact observed role
+  // inventory. Only then may runtime choose one statically imported immutable expectation.
+  const expectedArtifact = committedProtectedV2CatalogExpectedArtifactForValidatedProfile(
+    observation.profileId,
+    observation.target,
+  )
+  assertProtectedV2CatalogObservationMatchesExpectedArtifact(observation, expectedArtifact)
+  assertProtectedV2CatalogObservationIsSemanticallyReady(input, observation)
+  return validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile(
+    observation.identity,
+    observation.profileId,
+    observation.target,
+  )
+}
+
+/**
+ * Maintainer proposal primitive. It validates an exact ready profile but deliberately does not
+ * authorize readiness; only the isolated disposable generator may call it.
+ */
+export function buildProtectedV2CompleteCatalogExpectationProposalObservation(
+  input: ProtectedV2CompleteCatalogAuditBuildInput,
+): ProtectedV2CompleteCatalogObservation {
+  const observation = buildProtectedV2CompleteCatalogObservation(input)
+  assertProtectedV2CatalogObservationIsSemanticallyReady(input, observation)
+  return observation
+}
+
+export function buildProtectedV2CompleteCatalogAuditIdentity(
+  input: ProtectedV2CompleteCatalogAuditBuildInput,
+): ProtectedV2CompleteCatalogAuditIdentity {
+  const observation = buildProtectedV2CompleteCatalogObservation(input)
+  return authorizeProtectedV2CompleteCatalogObservation(input, observation)
 }
 
 export interface ProtectedV2CatalogAuditQueryContext {
   psql(sql: string): Promise<{ stdout: string }>
   queryJson(sql: string): Promise<unknown>
+}
+
+async function collectProtectedV2CompleteCatalogInputs(input: {
+  context: ProtectedV2CatalogAuditQueryContext
+  profile: 'local' | 'disposable_clone'
+}): Promise<ProtectedV2CompleteCatalogAuditBuildInput> {
+  const [diagnosticsResult, securityIntrospection, details] = await Promise.all([
+    input.context.psql(buildContractDiagnosticsSql()),
+    input.context.queryJson(
+      `begin transaction isolation level repeatable read read only;\nset local statement_timeout = '120s';\n${v2SecurityIntrospectionSql()}\nrollback;`,
+    ),
+    input.context.queryJson(
+      `begin transaction isolation level repeatable read read only;\nset local statement_timeout = '120s';\n${PROTECTED_V2_COMPLETE_CATALOG_DETAIL_SQL}\nrollback;`,
+    ),
+  ])
+  return {
+    details,
+    diagnostics: parseContractDiagnosticsOutput(diagnosticsResult.stdout),
+    profile: input.profile,
+    securityIntrospection,
+  }
+}
+
+/** Fresh-disposable proposal collector. This function never selects or writes an expectation. */
+export async function collectProtectedV2CompleteCatalogExpectationProposalObservation(input: {
+  context: ProtectedV2CatalogAuditQueryContext
+  profile: 'local' | 'disposable_clone'
+}): Promise<ProtectedV2CompleteCatalogObservation> {
+  return buildProtectedV2CompleteCatalogExpectationProposalObservation(
+    await collectProtectedV2CompleteCatalogInputs(input),
+  )
 }
 
 /**
@@ -830,22 +1040,9 @@ export async function collectProtectedV2CompleteCatalogAudit(input: {
   context: ProtectedV2CatalogAuditQueryContext
   profile: 'local' | 'disposable_clone'
 }): Promise<ProtectedV2CompleteCatalogAuditIdentity> {
-  const [diagnosticsResult, securityIntrospection, details] = await Promise.all([
-    input.context.psql(buildContractDiagnosticsSql()),
-    input.context.queryJson(
-      `begin transaction isolation level repeatable read read only;\nset local statement_timeout = '120s';\n${v2SecurityIntrospectionSql()}\nrollback;`,
-    ),
-    input.context.queryJson(
-      `begin transaction isolation level repeatable read read only;\nset local statement_timeout = '120s';\n${PROTECTED_V2_COMPLETE_CATALOG_DETAIL_SQL}\nrollback;`,
-    ),
-  ])
-  const diagnostics = parseContractDiagnosticsOutput(diagnosticsResult.stdout)
-  return buildProtectedV2CompleteCatalogAuditIdentity({
-    details,
-    diagnostics,
-    profile: input.profile,
-    securityIntrospection,
-  })
+  return buildProtectedV2CompleteCatalogAuditIdentity(
+    await collectProtectedV2CompleteCatalogInputs(input),
+  )
 }
 
 // Keeps the exact expected V2 function bodies in this audit module's sealed import closure.

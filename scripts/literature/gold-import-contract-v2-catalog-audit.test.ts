@@ -10,15 +10,25 @@ import {
   PROTECTED_V2_COMPLETE_CATALOG_DETAIL_SQL,
   PROTECTED_V2_COMPLETE_CATALOG_FUNCTION_NAMES,
   PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256,
+  authorizeProtectedV2CompleteCatalogObservation,
   validateProtectedV2CompleteCatalogDetails,
   validateProtectedV2CompleteCatalogAuditIdentity,
+  validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile,
   v2SecurityIntrospectionSql,
+  type ProtectedV2CompleteCatalogAuditIdentity,
+  type ProtectedV2CompleteCatalogObservation,
 } from './gold-import-contract-v2-catalog-audit'
 import { CONTRACT_DIAGNOSTICS_MARKER } from './gold-import-compensation-contract-diagnostics'
 import {
   TRUSTED_SUPABASE_DEPLOYMENT_ROLE_INVENTORY_SHA256,
   reconciliationIdentitySha256,
 } from './gold-import-compensation-contract-reconciliation'
+import {
+  ProtectedV2CatalogExpectationMismatchError,
+  committedProtectedV2CatalogExpectedArtifacts,
+  decodeProtectedV2CatalogExpectedInventories,
+  expectedObservedAuditIdentityFromArtifact,
+} from './gold-import-contract-v2-catalog-expectations'
 import {
   PROTECTED_V2_CATALOG_DRIFT_PROBES,
   withTrustedLocalRoleInventoryProjection,
@@ -203,8 +213,10 @@ const DETAIL_DRIFT_CASES: Array<[string, (value: CompleteCatalogFixture) => void
 ]
 
 describe('protected V2 complete production catalog audit', () => {
-  it('accepts only the exact supported full-inventory counts', () => {
-    const identity = (fullEnvironmentInventoryRecordCount: number) => {
+  it('accepts exact committed identities and rejects arbitrary self-consistent hashes', () => {
+    const identity = (
+      fullEnvironmentInventoryRecordCount: number,
+    ): ProtectedV2CompleteCatalogAuditIdentity => {
       const content = {
         auditMethod: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD,
         auditModel: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL,
@@ -214,7 +226,7 @@ describe('protected V2 complete production catalog audit', () => {
             name,
             String(index + 1).repeat(64),
           ]),
-        ),
+        ) as ProtectedV2CompleteCatalogAuditIdentity['componentIdentities'],
         environmentInvariantIdentitySha256: PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256,
         fullEnvironmentInventoryIdentitySha256: '8'.repeat(64),
         fullEnvironmentInventoryRecordCount,
@@ -228,17 +240,99 @@ describe('protected V2 complete production catalog audit', () => {
       }
     }
 
-    expect(() => validateProtectedV2CompleteCatalogAuditIdentity(identity(730))).not.toThrow()
-    expect(() => validateProtectedV2CompleteCatalogAuditIdentity(identity(823))).not.toThrow()
-    expect(() => validateProtectedV2CompleteCatalogAuditIdentity(identity(729))).toThrow(
-      'Protected V2 complete catalog audit identity is inconsistent or drifted.',
+    for (const artifact of committedProtectedV2CatalogExpectedArtifacts()) {
+      expect(() =>
+        validateProtectedV2CompleteCatalogAuditIdentity(
+          expectedObservedAuditIdentityFromArtifact(artifact),
+        ),
+      ).not.toThrow()
+    }
+    for (const count of [729, 730, 823]) {
+      expect(() => validateProtectedV2CompleteCatalogAuditIdentity(identity(count))).toThrow(
+        'does not match exactly one committed profile expectation',
+      )
+    }
+
+    const wrongInvariant: ProtectedV2CompleteCatalogAuditIdentity = identity(823)
+    wrongInvariant.environmentInvariantIdentitySha256 = 'f'.repeat(64)
+    const wrongInvariantContent = { ...wrongInvariant }
+    delete (wrongInvariantContent as { fullAuditIdentitySha256?: string }).fullAuditIdentitySha256
+    wrongInvariant.fullAuditIdentitySha256 = reconciliationIdentitySha256(wrongInvariantContent)
+    expect(() => validateProtectedV2CompleteCatalogAuditIdentity(wrongInvariant)).toThrow(
+      'invariant identity drifted',
     )
+  })
+
+  it('binds serialized readiness validation to the caller target/profile context', () => {
+    const [localArtifact, disposableArtifact] = committedProtectedV2CatalogExpectedArtifacts()
+    const localIdentity = expectedObservedAuditIdentityFromArtifact(localArtifact!)
+    const disposableIdentity = expectedObservedAuditIdentityFromArtifact(disposableArtifact!)
+    expect(() =>
+      validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile(
+        localIdentity,
+        'local_supabase_postgres_owner_v1',
+        'local',
+      ),
+    ).not.toThrow()
+    expect(() =>
+      validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile(
+        disposableIdentity,
+        'local_supabase_postgres_owner_v1',
+        'local',
+      ),
+    ).toThrow('does not match expected local_supabase_postgres_owner_v1/local context')
+  })
+
+  it('emits the actual changed record before coarse semantic readiness guards', () => {
+    const artifact = committedProtectedV2CatalogExpectedArtifacts().find(
+      ({ profileId }) => profileId === 'supabase_admin_owner_v1',
+    )!
+    const observation: ProtectedV2CompleteCatalogObservation = {
+      identity: expectedObservedAuditIdentityFromArtifact(
+        artifact,
+      ) as ProtectedV2CompleteCatalogObservation['identity'],
+      normalizedInventories: decodeProtectedV2CatalogExpectedInventories(artifact),
+      profileId: artifact.profileId,
+      target: artifact.target,
+    }
+    const tables = (
+      observation.normalizedInventories.componentInputs.rlsPolicies as {
+        details: { tables: Array<{ owner: string; table_name: string }> }
+      }
+    ).details.tables
+    const changed = tables[0]!
+    changed.owner = 'postgres'
+
+    try {
+      authorizeProtectedV2CompleteCatalogObservation({} as never, observation)
+      throw new Error('Expected production exact-catalog authorization to reject owner drift.')
+    } catch (error) {
+      expect(error).toBeInstanceOf(ProtectedV2CatalogExpectationMismatchError)
+      const mismatch = error as ProtectedV2CatalogExpectationMismatchError
+      expect(mismatch.message).toContain(`details.tables:${changed.table_name}`)
+      expect(mismatch.comparison.differences).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            component: 'rlsPolicies',
+            firstDifferingField: '$.owner',
+            kind: 'changed_record',
+            recordKey: `details.tables:${changed.table_name}`,
+          }),
+        ]),
+      )
+    }
   })
 
   it('accepts the exact complete-detail shape for the disposable owner profile', () => {
     expect(() =>
       validateProtectedV2CompleteCatalogDetails(completeDetails(), 'disposable_clone'),
     ).not.toThrow()
+  })
+
+  it('rejects an unknown runtime profile without a disposable fallback', () => {
+    expect(() =>
+      validateProtectedV2CompleteCatalogDetails(completeDetails(), 'unknown-profile' as never),
+    ).toThrow('no fallback exists')
   })
 
   it('models the PostgreSQL SQL-language dependency omission exactly', () => {
@@ -307,37 +401,59 @@ describe('protected V2 complete production catalog audit', () => {
   it('defines the exhaustive disposable matrix consumed by the production collector', () => {
     const ids = PROTECTED_V2_CATALOG_DRIFT_PROBES.map(({ id }) => id)
     expect(new Set(ids).size).toBe(ids.length)
-    expect(ids).toEqual(
-      expect.arrayContaining([
-        'disable_row_level_security',
-        'change_force_row_level_security_state',
-        'alter_policy_role',
-        'alter_policy_using_expression',
-        'alter_policy_with_check_expression',
-        'drop_required_policy',
-        'grant_service_role_forbidden_update',
-        'grant_service_role_forbidden_insert',
-        'grant_public_forbidden_insert',
-        'change_column_default',
-        'change_column_nullability',
-        'remove_generated_expression',
-        'drop_required_check_constraint',
-        'replace_check_constraint_with_weaker_definition',
-        'introduce_unvalidated_constraint_state',
-        'drop_required_foreign_key',
-        'drop_required_unique_index',
-        'change_required_partial_unique_index',
-        'mark_required_index_invalid',
-        'disable_required_trigger',
-        'redirect_required_trigger_function',
-        'change_function_body',
-        'change_function_volatility',
-        'change_function_search_path',
-        'change_function_owner',
-        'broaden_function_execute_acl',
-        'add_undeclared_function_overload',
-        'change_function_dependency',
-      ]),
+    expect(ids).toEqual([
+      'arbitrary_component_hash_with_recomputed_full_audit',
+      'arbitrary_profile_identity_with_recomputed_full_audit',
+      'arbitrary_full_inventory_identity_with_recomputed_full_audit',
+      'local_expectation_profile_on_disposable_observation',
+      'disposable_expectation_profile_on_local_observation',
+      'change_single_table_owner_preserving_count',
+      'change_multiple_table_owners_preserving_count',
+      'disable_row_level_security',
+      'change_force_row_level_security_state',
+      'alter_policy_role',
+      'alter_policy_using_expression',
+      'alter_policy_with_check_expression',
+      'same_name_policy_definition_replacement',
+      'drop_required_policy',
+      'grant_service_role_forbidden_update',
+      'grant_service_role_forbidden_insert',
+      'grant_public_forbidden_insert',
+      'grant_anon_forbidden_insert',
+      'grant_authenticated_forbidden_insert',
+      'change_acl_grantor_preserving_count',
+      'replace_privilege_preserving_acl_count',
+      'substitute_acl_record_preserving_count',
+      'change_column_default',
+      'change_column_nullability',
+      'remove_generated_expression',
+      'drop_required_check_constraint',
+      'replace_check_constraint_with_weaker_definition',
+      'introduce_unvalidated_constraint_state',
+      'drop_required_foreign_key',
+      'drop_required_unique_index',
+      'change_required_partial_unique_index',
+      'equal_count_index_object_substitution',
+      'mark_required_index_invalid',
+      'disable_required_trigger',
+      'redirect_required_trigger_function',
+      'change_function_body',
+      'change_function_volatility',
+      'change_function_search_path',
+      'change_function_owner',
+      'broaden_function_execute_acl',
+      'add_undeclared_function_overload',
+      'change_function_dependency',
+    ])
+    expect(ids).toHaveLength(42)
+    const grantorProbe = PROTECTED_V2_CATALOG_DRIFT_PROBES.find(
+      ({ id }) => id === 'change_acl_grantor_preserving_count',
+    )!
+    expect(grantorProbe.sql).toContain(
+      'grant select on table public.literature_gold_review_operations to postgres with grant option',
+    )
+    expect(grantorProbe.sql!.indexOf('with grant option')).toBeLessThan(
+      grantorProbe.sql!.indexOf('set role postgres'),
     )
   })
 

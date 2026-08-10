@@ -7,10 +7,13 @@ import {
   PROTECTED_V2_CATALOG_TABLES,
   PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD,
   PROTECTED_V2_COMPLETE_CATALOG_FUNCTION_NAMES,
+  validateProtectedV2CompleteCatalogAuditIdentity,
   collectProtectedV2CompleteCatalogAudit,
   type ProtectedV2CatalogAuditQueryContext,
   type ProtectedV2CompleteCatalogAuditIdentity,
 } from './gold-import-contract-v2-catalog-audit'
+import { ProtectedV2CatalogExpectationMismatchError } from './gold-import-contract-v2-catalog-expectations'
+import { reconciliationIdentitySha256 } from './gold-import-compensation-contract-reconciliation'
 import {
   executeV2DisposablePath,
   type ExecuteV2DisposablePathInput,
@@ -18,7 +21,7 @@ import {
 import type { DevelopmentDatabaseSeed } from './rehearse-exact-gold-import-compensation-package-v1'
 
 export const PROTECTED_V2_CATALOG_DRIFT_MATRIX_SCHEMA_VERSION =
-  'literature-gold-protected-v2-catalog-drift-matrix/1.0.0' as const
+  'literature-gold-protected-v2-catalog-drift-matrix/1.1.0' as const
 
 export interface ProtectedV2CatalogDriftProbe {
   category:
@@ -26,14 +29,52 @@ export interface ProtectedV2CatalogDriftProbe {
     | 'constraint'
     | 'function'
     | 'index'
+    | 'identity'
+    | 'owner'
     | 'rls_policy'
     | 'table_privilege'
     | 'trigger'
   id: string
-  sql: string
+  sql: string | null
 }
 
 export const PROTECTED_V2_CATALOG_DRIFT_PROBES: readonly ProtectedV2CatalogDriftProbe[] = [
+  {
+    category: 'identity',
+    id: 'arbitrary_component_hash_with_recomputed_full_audit',
+    sql: null,
+  },
+  {
+    category: 'identity',
+    id: 'arbitrary_profile_identity_with_recomputed_full_audit',
+    sql: null,
+  },
+  {
+    category: 'identity',
+    id: 'arbitrary_full_inventory_identity_with_recomputed_full_audit',
+    sql: null,
+  },
+  {
+    category: 'identity',
+    id: 'local_expectation_profile_on_disposable_observation',
+    sql: null,
+  },
+  {
+    category: 'identity',
+    id: 'disposable_expectation_profile_on_local_observation',
+    sql: null,
+  },
+  {
+    category: 'owner',
+    id: 'change_single_table_owner_preserving_count',
+    sql: 'alter table public.literature_gold_review_operations owner to postgres;',
+  },
+  {
+    category: 'owner',
+    id: 'change_multiple_table_owners_preserving_count',
+    sql: `alter table public.literature_gold_review_operations owner to postgres;
+      alter table public.literature_gold_review_operation_actions owner to postgres;`,
+  },
   {
     category: 'rls_policy',
     id: 'disable_row_level_security',
@@ -67,6 +108,13 @@ export const PROTECTED_V2_CATALOG_DRIFT_PROBES: readonly ProtectedV2CatalogDrift
   },
   {
     category: 'rls_policy',
+    id: 'same_name_policy_definition_replacement',
+    sql: `alter policy literature_gold_review_operations_service_policy
+      on public.literature_gold_review_operations
+      using (operation_kind = 'import');`,
+  },
+  {
+    category: 'rls_policy',
     id: 'drop_required_policy',
     sql: `drop policy literature_gold_review_operations_service_policy
       on public.literature_gold_review_operations;`,
@@ -95,6 +143,27 @@ export const PROTECTED_V2_CATALOG_DRIFT_PROBES: readonly ProtectedV2CatalogDrift
     category: 'table_privilege',
     id: 'grant_authenticated_forbidden_insert',
     sql: 'grant insert on table public.literature_gold_review_operations to authenticated;',
+  },
+  {
+    category: 'table_privilege',
+    id: 'change_acl_grantor_preserving_count',
+    sql: `grant select on table public.literature_gold_review_operations to postgres with grant option;
+      revoke select on table public.literature_gold_review_operations from service_role;
+      set role postgres;
+      grant select on table public.literature_gold_review_operations to service_role;
+      reset role;`,
+  },
+  {
+    category: 'table_privilege',
+    id: 'replace_privilege_preserving_acl_count',
+    sql: `revoke select on table public.literature_gold_review_operations from service_role;
+      grant insert on table public.literature_gold_review_operations to service_role;`,
+  },
+  {
+    category: 'table_privilege',
+    id: 'substitute_acl_record_preserving_count',
+    sql: `revoke select on table public.literature_gold_review_operations from service_role;
+      grant select on table public.literature_gold_review_operations to authenticated;`,
   },
   {
     category: 'column',
@@ -151,6 +220,14 @@ export const PROTECTED_V2_CATALOG_DRIFT_PROBES: readonly ProtectedV2CatalogDrift
       create unique index literature_gold_review_operations_one_live_compensation_idx
       on public.literature_gold_review_operations (target_import_operation_id)
       where operation_kind = 'compensation';`,
+  },
+  {
+    category: 'index',
+    id: 'equal_count_index_object_substitution',
+    sql: `drop index public.literature_gold_review_operations_one_live_compensation_idx;
+      create unique index protected_v2_equal_count_substitute_idx
+      on public.literature_gold_review_operations (target_import_operation_id)
+      where operation_kind = 'compensation' and status in ('started', 'applying');`,
   },
   {
     category: 'index',
@@ -225,13 +302,23 @@ export const PROTECTED_V2_CATALOG_DRIFT_PROBES: readonly ProtectedV2CatalogDrift
 
 export interface ProtectedV2CatalogDriftMatrixEvidence {
   auditMethod: typeof PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD
+  exactReadyDisposable: ProtectedV2CompleteCatalogAuditIdentity
   exactReadyDisposablePassed: true
   localOwnerProjection: ProtectedV2CompleteCatalogAuditIdentity
+  probeCount: number
   probes: Array<{
     auditRejected: true
     category: ProtectedV2CatalogDriftProbe['category']
     cleanupVerified: true
+    differences: Array<{
+      component: string
+      firstDifferingField: string | null
+      kind: string
+      recordKey: string
+      source: string
+    }>
     id: string
+    recordDiagnosticFound: boolean
     rejectionMessage: string
   }>
   schemaVersion: typeof PROTECTED_V2_CATALOG_DRIFT_MATRIX_SCHEMA_VERSION
@@ -243,6 +330,49 @@ type DisposablePathRunner = (
 
 function sqlValues(values: readonly string[]): string {
   return values.map((value) => `('${value.replaceAll("'", "''")}')`).join(', ')
+}
+
+function rehashedCatalogIdentity(
+  identity: ProtectedV2CompleteCatalogAuditIdentity,
+  mutate: (value: ProtectedV2CompleteCatalogAuditIdentity) => void,
+): ProtectedV2CompleteCatalogAuditIdentity {
+  const value = JSON.parse(canonicalJson(identity)) as ProtectedV2CompleteCatalogAuditIdentity
+  mutate(value)
+  const content = { ...value }
+  delete (content as { fullAuditIdentitySha256?: string }).fullAuditIdentitySha256
+  value.fullAuditIdentitySha256 = reconciliationIdentitySha256(content)
+  return value
+}
+
+function rejectionDiagnostics(error: unknown): {
+  differences: ProtectedV2CatalogDriftMatrixEvidence['probes'][number]['differences']
+  recordDiagnosticFound: boolean
+  rejectionMessage: string
+} {
+  if (error instanceof ProtectedV2CatalogExpectationMismatchError) {
+    const differences = error.comparison.differences.map(
+      ({ component, firstDifferingField, kind, recordKey, source }) => ({
+        component,
+        firstDifferingField,
+        kind,
+        recordKey,
+        source,
+      }),
+    )
+    const record = differences.find(({ component }) => component !== 'auditIdentity')
+    return {
+      differences,
+      recordDiagnosticFound: Boolean(record),
+      rejectionMessage: record
+        ? `Protected V2 exact catalog record mismatch: ${record.component}/${record.source}/${record.recordKey} ${record.kind}${record.firstDifferingField ? ` at ${record.firstDifferingField}` : ''}.`
+        : error.message,
+    }
+  }
+  return {
+    differences: [],
+    recordDiagnosticFound: false,
+    rejectionMessage: error instanceof Error ? error.message : String(error),
+  }
 }
 
 export const PROTECTED_V2_LOCAL_OWNER_PROJECTION_SQL = `do $protected_v2_owner_projection$
@@ -307,42 +437,25 @@ export async function runProtectedV2DisposableCatalogDriftMatrix(input: {
   const baselineExecutor = createExactPackageDatabaseExecutorV2(input.package)
   const probeEvidence: ProtectedV2CatalogDriftMatrixEvidence['probes'] = []
 
-  for (const probe of PROTECTED_V2_CATALOG_DRIFT_PROBES) {
-    let rejectionMessage = ''
-    const result = await runDisposablePath({
-      exactPackageExecutor: {
-        async execute(context) {
-          const evidence = await baselineExecutor.execute(context)
-          await context.psql(probe.sql)
-          try {
-            await collectProtectedV2CompleteCatalogAudit({
-              context,
-              profile: 'disposable_clone',
-            })
-          } catch (error) {
-            rejectionMessage = error instanceof Error ? error.message : String(error)
-          }
-          if (!rejectionMessage) {
-            throw new Error(`Production complete catalog audit accepted drift probe ${probe.id}.`)
-          }
-          return evidence
-        },
+  let exactReadyDisposable: ProtectedV2CompleteCatalogAuditIdentity | undefined
+  const exactReadyResult = await runDisposablePath({
+    exactPackageExecutor: {
+      async execute(context) {
+        const evidence = await baselineExecutor.execute(context)
+        exactReadyDisposable = await collectProtectedV2CompleteCatalogAudit({
+          context,
+          profile: 'disposable_clone',
+        })
+        return evidence
       },
-      migrationPath: 'fresh',
-      seed: input.seed,
-    })
-    if (result.cleanup.outcome !== 'removed_and_verified_absent' || !rejectionMessage) {
-      throw new Error(
-        `Disposable catalog drift probe ${probe.id} did not fail closed and clean up.`,
-      )
-    }
-    probeEvidence.push({
-      auditRejected: true,
-      category: probe.category,
-      cleanupVerified: true,
-      id: probe.id,
-      rejectionMessage,
-    })
+    },
+    migrationPath: 'fresh',
+    seed: input.seed,
+  })
+  if (!exactReadyDisposable || exactReadyResult.cleanup.outcome !== 'removed_and_verified_absent') {
+    throw new Error(
+      'Exact ready disposable catalog did not pass production collection and cleanup.',
+    )
   }
 
   let localOwnerProjection: ProtectedV2CompleteCatalogAuditIdentity | undefined
@@ -367,6 +480,103 @@ export async function runProtectedV2DisposableCatalogDriftMatrix(input: {
   ) {
     throw new Error('Supported local postgres-owner catalog projection did not pass and clean up.')
   }
+
+  const rejectedIdentityProbe = (
+    probe: ProtectedV2CatalogDriftProbe,
+  ): ReturnType<typeof rejectionDiagnostics> => {
+    let candidate: ProtectedV2CompleteCatalogAuditIdentity
+    switch (probe.id) {
+      case 'arbitrary_component_hash_with_recomputed_full_audit':
+        candidate = rehashedCatalogIdentity(exactReadyDisposable!, (identity) => {
+          identity.componentIdentities.columns = '0'.repeat(64)
+        })
+        break
+      case 'arbitrary_profile_identity_with_recomputed_full_audit':
+        candidate = rehashedCatalogIdentity(exactReadyDisposable!, (identity) => {
+          identity.localPostgresOwnerProfileIdentitySha256 = '1'.repeat(64)
+        })
+        break
+      case 'arbitrary_full_inventory_identity_with_recomputed_full_audit':
+        candidate = rehashedCatalogIdentity(exactReadyDisposable!, (identity) => {
+          identity.fullEnvironmentInventoryIdentitySha256 = '2'.repeat(64)
+        })
+        break
+      case 'local_expectation_profile_on_disposable_observation':
+        candidate = rehashedCatalogIdentity(exactReadyDisposable!, (identity) => {
+          identity.localPostgresOwnerProfileIdentitySha256 =
+            localOwnerProjection!.localPostgresOwnerProfileIdentitySha256
+        })
+        break
+      case 'disposable_expectation_profile_on_local_observation':
+        candidate = rehashedCatalogIdentity(localOwnerProjection!, (identity) => {
+          identity.localPostgresOwnerProfileIdentitySha256 =
+            exactReadyDisposable!.localPostgresOwnerProfileIdentitySha256
+        })
+        break
+      default:
+        throw new Error(`Unknown protected V2 identity drift probe ${probe.id}.`)
+    }
+    try {
+      validateProtectedV2CompleteCatalogAuditIdentity(candidate)
+    } catch (error) {
+      return rejectionDiagnostics(error)
+    }
+    throw new Error(`Production complete catalog validator accepted identity probe ${probe.id}.`)
+  }
+
+  for (const probe of PROTECTED_V2_CATALOG_DRIFT_PROBES) {
+    if (probe.sql === null) {
+      const rejection = rejectedIdentityProbe(probe)
+      probeEvidence.push({
+        auditRejected: true,
+        category: probe.category,
+        cleanupVerified: true,
+        differences: rejection.differences,
+        id: probe.id,
+        recordDiagnosticFound: rejection.recordDiagnosticFound,
+        rejectionMessage: rejection.rejectionMessage,
+      })
+      continue
+    }
+
+    let rejection: ReturnType<typeof rejectionDiagnostics> | undefined
+    const result = await runDisposablePath({
+      exactPackageExecutor: {
+        async execute(context) {
+          const evidence = await baselineExecutor.execute(context)
+          await context.psql(probe.sql!)
+          try {
+            await collectProtectedV2CompleteCatalogAudit({
+              context,
+              profile: 'disposable_clone',
+            })
+          } catch (error) {
+            rejection = rejectionDiagnostics(error)
+          }
+          if (!rejection) {
+            throw new Error(`Production complete catalog audit accepted drift probe ${probe.id}.`)
+          }
+          return evidence
+        },
+      },
+      migrationPath: 'fresh',
+      seed: input.seed,
+    })
+    if (result.cleanup.outcome !== 'removed_and_verified_absent' || !rejection) {
+      throw new Error(
+        `Disposable catalog drift probe ${probe.id} did not fail closed and clean up.`,
+      )
+    }
+    probeEvidence.push({
+      auditRejected: true,
+      category: probe.category,
+      cleanupVerified: true,
+      differences: rejection.differences,
+      id: probe.id,
+      recordDiagnosticFound: rejection.recordDiagnosticFound,
+      rejectionMessage: rejection.rejectionMessage,
+    })
+  }
   if (
     canonicalJson(probeEvidence.map(({ id }) => id)) !==
     canonicalJson(PROTECTED_V2_CATALOG_DRIFT_PROBES.map(({ id }) => id))
@@ -375,8 +585,10 @@ export async function runProtectedV2DisposableCatalogDriftMatrix(input: {
   }
   return {
     auditMethod: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD,
+    exactReadyDisposable,
     exactReadyDisposablePassed: true,
     localOwnerProjection,
+    probeCount: probeEvidence.length,
     probes: probeEvidence,
     schemaVersion: PROTECTED_V2_CATALOG_DRIFT_MATRIX_SCHEMA_VERSION,
   }
