@@ -41,6 +41,20 @@ release-ebus-tbna-v1-0
    release that supersedes another, the requirement-level diff — _`AIRWAY_RETRIEVAL_FORCEPS`
    changed (`requiredness`)_, not merely _a hash moved_. The full report lands in
    `generated/release-impact-report.json` and renders on `/admin/preference-cards/recipes`.
+   Since the 2026-08-10 P91-C3 correction the requirement layer diffs the **final effective
+   recipes** — the exact old and new pinned recipes and modules expanded through the
+   canonical action evaluator, every referenced module selected — so a per-slot composition
+   action is a first-class requirement change rather than an invisible recipe-pin move, and
+   a third layer (`modifierEffectChanges`, `sourceKind: "modifier"`) reports changes to the
+   **authored effect of selecting a modifier** the procedure offers (field-level
+   before/after for `add_slot` payloads and the targeted action types, plus first-class
+   rows for a modifier entering or leaving the offer), explicitly without implying any
+   scenario selects it. Today every release resolves the same four definition sets, so the
+   modifier layer is empty on real data and a set edit is refused outright by the
+   immutability gates; the layer is proven on a synthetic fixture and becomes live the
+   moment releases pin **per-bundle** definition sets (the retention mechanism PR #92
+   introduces) — at which point a set revision reports its requirement-level effect rather
+   than only a moved hash.
 3. **Publish.** Copy the reported hash into the seed entry, set `releaseState: "published"`,
    `publishedAt`, `catalogImportId`, and `resolverContractVersion`. Publication **is** freezing
    the hash.

@@ -219,6 +219,26 @@ Each action targets `targetRequirementKey`, `targetSlotId` (expanded id, importe
 alias), or `targetRoleCode`, and is applied in `(sequence, id)` order. Every action carries
 a `reason` in the seed file.
 
+An action may additionally declare `optionalTarget: true`: it applies only when its target
+requirement is present in the selected composition, matching nothing is expected rather than
+a `recipe_composition_action_unmatched` warning, and matching more than one requirement
+blocks (`recipe_composition_action_ambiguous`) instead of silently modifying both. A
+procedure whose modules are fixed never needs it — the build fails on a dead action — but
+the **custom module composition** is exactly the case it exists for: its modules are chosen
+per card, so an action whose target's module was not selected is an ordinary card, not an
+authoring error.
+
+### The custom composition's authored actions
+
+The custom composition's module list stays derived from the current module set, but since
+the 2026-08-10 P91-C1/P91-C2 corrections its **actions** are governed seed content:
+`data/ip-preference-cards/seed/custom-composition.json` authors the recipe version identity
+(`recipe-custom-composition-v1-2`, agreeing with `scenario-ids.ts` — the server refuses to
+start when they diverge) and per-slot actions with reasons, every one `optionalTarget: true`
+and validated at load to resolve to exactly one requirement across the offered module set.
+They are applied by the same `expandRecipeComposition` evaluator as every procedure recipe —
+there is no second action engine and no custom-card-only transformation language.
+
 ## Governance
 
 The composed output never reads stronger than its weakest component:

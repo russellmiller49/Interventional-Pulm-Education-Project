@@ -79,3 +79,27 @@ verbatim in the new `generated/composition-ledger.json` (16 entries at introduct
 publication), and the historical-reconstruction regressions prove the old expansions still
 produce their original semantics (15/29/13 slots, needles at the specimen station, IPC lines
 present, drainage post-procedure, two-requirement flex core, nineteen v1-0 custom modules).
+
+## P91 Codex correction pass (2026-08-10)
+
+Base for this pass: PR #91 head `e833b97f`. Full record:
+[p91-codex-corrections.md](./p91-codex-corrections.md).
+
+| Requirement (composed expansions of the current releases)                     | before (e833b97f)                           | after                                          | finding |
+| ----------------------------------------------------------------------------- | ------------------------------------------- | ---------------------------------------------- | ------- |
+| The six F-04 instruments on a **current custom card** selecting their modules | specimen_station / specimen_handling        | back_table / diagnostic                        | P91-C1  |
+| MED_THORACOSCOPY chest tube `SLOT-57CA4B1298` (procedure + custom)            | equipment_tower / pre_induction_or_sedation | sterile_field / therapeutic                    | P91-C2  |
+| MED_THORACOSCOPY IPC kit `SLOT-9A1C0491F9` (procedure + custom)               | equipment_tower / pre_induction_or_sedation | sterile_field / therapeutic                    | P91-C2  |
+| MED_THORACOSCOPY drainage unit `SLOT-AA3C2EAA6D`                              | equipment_tower / pre_induction_or_sedation | unchanged (intended F-05 move stands)          | P91-C2  |
+| Canonical impact report, EBUS/THERAPEUTIC v1-0→v1-1 rows                      | six F-04 slot ids absent                    | all six `changed (setupZone, proceduralPhase)` | P91-C3  |
+
+| Recipes and releases    | before                                         | after (pointer)                                        |
+| ----------------------- | ---------------------------------------------- | ------------------------------------------------------ |
+| MED_THORACOSCOPY        | recipe v0-2 / release v1-1 `b53baacd1dafa2f0…` | recipe **v0-3** / release **v1-2 `4386eb65a183cf06…`** |
+| CUSTOM_COMPOSITION      | recipe v1-1 / release v1-1 `65be5c3697fc3970…` | recipe **v1-2** / release **v1-2 `3d9139efcd2c7ca4…`** |
+| the other 14 procedures | unchanged                                      | unchanged, pointers unchanged                          |
+
+Composition ledger 23 → 25 entries (`recipe-med-thoracoscopy-v0-3`,
+`recipe-custom-composition-v1-2` appended; nothing rewritten). Module ledger unchanged (the
+P91-C2 correction is recipe-authored; MED_THORACOSCOPY_SPECIFIC stays v1.1). D0 audit
+byte-identical (`bba2b940…`) — composition actions are not audit inputs.

@@ -4,6 +4,16 @@ Produced by `npm run ip-cards:releases` (`generated/release-impact-report.json`)
 the requirement level before any hash was frozen or any pointer moved. Every row below was
 matched one-to-one against an owner finding; nothing unexplained appeared.
 
+> **Corrected by the P91 Codex pass (2026-08-10)** — see
+> [p91-codex-corrections.md](./p91-codex-corrections.md). The impact generator now diffs the
+> **final effective recipes** (composition actions applied through the canonical evaluator),
+> so the EBUS/THERAPEUTIC_BRONCH rows below additionally carry the six F-04 per-requirement
+> zone/phase changes the original artifact omitted, and two further supersessions exist:
+> `release-med-thoracoscopy-v1-2` (P91-C2, two insertable-device per-slot overrides) and
+> `release-custom-composition-v1-2` (P91-C1/C2, sixteen authored custom-composition
+> actions). The "(F-04 via recipe pin, see below)" cells and the "Known reporting gap"
+> section are retained below as the superseded historical record.
+
 | Procedure          | old release            | new release            | old pins → new pins                                          | requirements added                                                  | removed                                                                   | requiredness changed | zone changed                     | phase changed                                                                                                                                         | pointer advanced | historical retained |
 | ------------------ | ---------------------- | ---------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------- | -------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------- |
 | EBUS_TBNA          | release-ebus-tbna-v1-0 | release-ebus-tbna-v1-1 | recipe v0-1→v0-2, flex-core v1-0→v1-1                        | FLEX_BRONCH_BITE_BLOCK, FLEX_BRONCH_AIRWAY_ADAPTER (F-10)           | —                                                                         | —                    | (F-04 via recipe pin, see below) | (F-04 via recipe pin)                                                                                                                                 | yes              | yes                 |
@@ -19,6 +29,15 @@ Set pins (`definition-set-modifiers`, `-rescue-modules`, `-compatibility-rules`,
 other correction touches `operational.ts` or the role taxonomy.
 
 ## Known reporting gap: F-04 is inside the recipe pin, not the requirement diff
+
+> **SUPERSEDED (2026-08-10, P91-C3).** This gap is closed: `diffReleaseBundles` expands the
+> exact old and new pinned recipes/modules through `expandRecipeComposition` and diffs the
+> effective requirement definitions, so the canonical generated report now names all six
+> F-04 slots with `changed (setupZone, proceduralPhase)`. The report also gained a generic
+> authored **modifier-effect** layer (`modifierEffectChanges`) — fixture-proven now, and
+> live once releases pin per-bundle definition sets (PR #92's retention mechanism), so its
+> F-09 review reports the requirement-level effect rather than only a set-pin hash. The
+> paragraph below is the superseded historical record.
 
 `diffReleaseBundles` indexes requirements from module and recipe _slots_; it does not apply
 composition actions. F-04 is authored as per-slot `set_setup_zone` / `set_procedural_phase`
@@ -48,6 +67,16 @@ appear in the impact report natively.
   lifecycle decision the owner can take at any time.
 
 ## Owner follow-ups surfaced by adversarial review (2026-08-09)
+
+> **BOTH SUPERSEDED (2026-08-10).** Codex independently reproduced both items as findings
+> P91-C1 and P91-C2 and this correction pass closed them —
+> [p91-codex-corrections.md](./p91-codex-corrections.md). Item 1: the custom composition now
+> carries an authored action channel (`seed/custom-composition.json`,
+> `release-custom-composition-v1-2`) and current custom cards resolve the six instruments at
+> back_table / diagnostic. Item 2: the two MED_THORACOSCOPY insertable rows carry per-slot
+> overrides to sterile_field / therapeutic per their governed home-procedure precedents
+> (`release-med-thoracoscopy-v1-2`). The original statements are retained below as the
+> historical record.
 
 Two ripple effects of the applied corrections were confirmed by the pre-commit adversarial
 review and are surfaced here as explicit owner items rather than silently authored around:
