@@ -25,6 +25,7 @@ import {
   type ImportPlan,
   type ImportReceipt,
 } from '../../src/features/literature/gold-set/import-compensation'
+import { validateGoldImportSourceAuthorizationSetForImport } from './gold-import-compensation-compatibility'
 import {
   assertKnownArguments,
   hasFlag,
@@ -317,13 +318,39 @@ async function loadImportBundle(
     plan.sourceAuthorizationSetSha256,
     'Source authorization set',
   )
+  let sourceAuthorizationInput: unknown
+  try {
+    sourceAuthorizationInput = JSON.parse(sourceAuthorizationSetBytes.toString('utf8')) as unknown
+  } catch (error) {
+    throw new Error(
+      `Source authorization set must be strict JSON: ${error instanceof Error ? error.message : String(error)}.`,
+    )
+  }
+  const parsedSourceAuthorization = validateGoldImportSourceAuthorizationSetForImport({
+    finalizedArtifact: artifactBytes,
+    plan,
+    sourceAuthorizationSet: sourceAuthorizationInput,
+  })
   let csvText: string
   try {
     csvText = new TextDecoder('utf-8', { fatal: true }).decode(artifactBytes)
   } catch {
     throw new Error('Source artifact must be valid UTF-8 CSV.')
   }
-  validateGoldImportSourceArtifact({ csvText, plan })
+  validateGoldImportSourceArtifact({
+    compatibility:
+      parsedSourceAuthorization.version === 3
+        ? {
+            booleanNormalizationLedger:
+              parsedSourceAuthorization.compatibility.booleanNormalizationLedger,
+            listNormalizationLedger:
+              parsedSourceAuthorization.compatibility.listNormalizationLedger,
+            noteDisposition: parsedSourceAuthorization.compatibility.noteDisposition,
+          }
+        : undefined,
+    csvText,
+    plan,
+  })
   return {
     plan,
     authorization,

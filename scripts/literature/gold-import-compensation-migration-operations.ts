@@ -1433,11 +1433,11 @@ function reviewPayloadProjection(review: Record<string, unknown>) {
     relevanceLabel: review.relevance_label ?? null,
     metadataSufficiency: review.metadata_sufficiency ?? null,
     reviewerConfidence: review.reviewer_confidence ?? null,
-    topicIds: review.topic_ids ?? [],
-    technologyTags: review.technology_tags ?? [],
+    topicIds: sortedStringArray(review.topic_ids),
+    technologyTags: sortedStringArray(review.technology_tags),
     technologyTagStatus: review.technology_tag_status ?? null,
-    clinicalPurposes: review.clinical_purposes ?? [],
-    diseaseTags: review.disease_tags ?? [],
+    clinicalPurposes: sortedStringArray(review.clinical_purposes),
+    diseaseTags: sortedStringArray(review.disease_tags),
     diseaseTagStatus: review.disease_tag_status ?? null,
     studyDesign: review.study_design ?? null,
     publicationStatus: review.publication_status ?? null,
@@ -1455,6 +1455,17 @@ function reviewPayloadProjection(review: Record<string, unknown>) {
     startedAt: review.started_at ?? null,
     completedAt: review.completed_at ?? null,
     createdAt: review.created_at ?? null,
+  }
+}
+
+/** Exact projection emitted by the already-sealed V1 backup before clinical arrays were canonical. */
+function legacyV1ReviewPayloadProjection(review: Record<string, unknown>) {
+  return {
+    ...reviewPayloadProjection(review),
+    topicIds: review.topic_ids ?? [],
+    technologyTags: review.technology_tags ?? [],
+    clinicalPurposes: review.clinical_purposes ?? [],
+    diseaseTags: review.disease_tags ?? [],
   }
 }
 
@@ -1518,7 +1529,10 @@ function projectDevelopmentState(snapshot: RawDatabaseSnapshot) {
     )
 }
 
-export function buildDevelopmentPlanningState(snapshot: RawDatabaseSnapshot) {
+function buildDevelopmentPlanningStateWithProjection<T extends Record<string, unknown>>(
+  snapshot: RawDatabaseSnapshot,
+  projectReview: (review: Record<string, unknown>) => T,
+) {
   return {
     schemaVersion: 'gold-import-compensation-development-planning-state/1.0.0',
     datasetSplit: 'development',
@@ -1550,10 +1564,18 @@ export function buildDevelopmentPlanningState(snapshot: RawDatabaseSnapshot) {
           supplementalMetadataRevealedAt: item.supplemental_metadata_revealed_at ?? null,
           automatedSignalsRevealedAt: item.automated_signals_revealed_at ?? null,
         },
-        currentEffectiveReview: effective ? reviewPayloadProjection(effective) : null,
+        currentEffectiveReview: effective ? projectReview(effective) : null,
       }
     }),
   }
+}
+
+export function buildDevelopmentPlanningState(snapshot: RawDatabaseSnapshot) {
+  return buildDevelopmentPlanningStateWithProjection(snapshot, reviewPayloadProjection)
+}
+
+function buildLegacyV1DevelopmentPlanningState(snapshot: RawDatabaseSnapshot) {
+  return buildDevelopmentPlanningStateWithProjection(snapshot, legacyV1ReviewPayloadProjection)
 }
 
 /** Snapshot-side convenience; artifact consumers hash parsed planning JSON directly. */
@@ -2300,6 +2322,21 @@ function sealArtifacts(filesInput: ReadonlyMap<string, string>): CanonicalArtifa
   return { files, manifest, manifestSha256: sha256(manifest) }
 }
 
+/** Seal already-canonical UTF-8 artifacts into the shared sorted checksum-manifest format. */
+export function sealCanonicalArtifacts(
+  filesInput: ReadonlyMap<string, string>,
+): CanonicalArtifacts {
+  for (const [name, bytes] of filesInput) {
+    if (!name || name.includes('/') || name.includes('\\') || name === 'checksum-manifest.sha256') {
+      throw new Error(`Canonical artifact name is unsafe or reserved: ${name || '<empty>'}.`)
+    }
+    if (!bytes.endsWith('\n') || bytes.endsWith('\n\n')) {
+      throw new Error(`Canonical artifact ${name} must have exactly one final newline.`)
+    }
+  }
+  return sealArtifacts(filesInput)
+}
+
 function migrationLedgerArtifact(snapshot: RawDatabaseSnapshot) {
   return {
     expectedMigrationId: IMPORT_COMPENSATION_MIGRATION_ID,
@@ -2629,6 +2666,30 @@ function sortedRecordsById(records: readonly Record<string, unknown>[]) {
   )
 }
 
+/**
+ * Authenticate either V1 representation, but expose only the current canonical projection.
+ * The caller has already verified that both input artifacts are present in the trusted manifest.
+ */
+function validateBackupDevelopmentPlanningState(input: {
+  backupSchemaVersion: unknown
+  developmentRows: readonly Record<string, unknown>[]
+  planningState: Record<string, unknown>
+}) {
+  const snapshot = { developmentItems: input.developmentRows } as RawDatabaseSnapshot
+  const canonicalPlanningState = buildDevelopmentPlanningState(snapshot)
+  const actualCanonicalJson = canonicalJson(input.planningState)
+  if (actualCanonicalJson === canonicalJson(canonicalPlanningState)) {
+    return canonicalPlanningState
+  }
+  if (
+    input.backupSchemaVersion === BACKUP_SCHEMA_VERSION &&
+    actualCanonicalJson === canonicalJson(buildLegacyV1DevelopmentPlanningState(snapshot))
+  ) {
+    return canonicalPlanningState
+  }
+  throw new Error('Development planning state failed canonical cross-check.')
+}
+
 function validateLoadedBackup(input: {
   baseline: PreMigrationBaselineIdentity
   executionReceipt: Record<string, unknown>
@@ -2695,11 +2756,11 @@ function validateLoadedBackup(input: {
     },
     'State audits',
   )
-  assertCanonicalEqual(
+  const canonicalPlanningState = validateBackupDevelopmentPlanningState({
+    backupSchemaVersion: receipt.schemaVersion,
+    developmentRows,
     planningState,
-    buildDevelopmentPlanningState({ developmentItems: developmentRows } as RawDatabaseSnapshot),
-    'Development planning state',
-  )
+  })
 
   const seedTables = requireRecord(developmentSeed.tables, 'development seed tables')
   const seedSnapshot = {
@@ -2877,7 +2938,7 @@ function validateLoadedBackup(input: {
     developmentState,
     manifestSha256: input.manifestSha256,
     migrationLedger,
-    planningState,
+    planningState: canonicalPlanningState,
     receipt,
     schemaInventory: schema,
     stateAudits,
@@ -3190,6 +3251,20 @@ function toSecurityIntrospection(schema: Record<string, unknown>) {
       supportedEventTypes: schema.supportedEventTypes,
     },
   }
+}
+
+/**
+ * Build the complete schema/security definition inventory from a read-only
+ * snapshot without applying the legacy owner-specific readiness validator.
+ * Post-migration reconciliation uses this to classify an exact inventory
+ * before selecting a fail-closed deployment profile.
+ */
+export function buildSchemaSecurityDefinitionIdentityFromSnapshot(
+  snapshot: RawDatabaseSnapshot,
+): SchemaSecurityDefinitionIdentity {
+  return buildSchemaSecurityDefinitionIdentity(
+    toSecurityIntrospection(requireRecord(snapshot.schema, 'snapshot.schema')),
+  )
 }
 
 function pointerMutationCount(

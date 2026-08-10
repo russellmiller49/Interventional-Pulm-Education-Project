@@ -40,10 +40,14 @@ import {
   createInitialHemodynamicState,
   icuHemodynamicsReducer,
   thermodilutionAcceptedAverage,
+  thermodilutionSectionCompletion,
   type HemodynamicAction,
   type HemodynamicSimulationState,
 } from '../engine'
 import { BedsideMonitor } from './BedsideMonitor'
+import { CardiacOutputDisagreementLab } from './CardiacOutputDisagreementLab'
+import { CardiacOutputMethodModel } from './CardiacOutputMethodModel'
+import { FickMethodWorkbench } from './FickMethodWorkbench'
 import { FormulaDrawer } from './FormulaDrawer'
 import { NormalWaveformReference } from './NormalWaveformReference'
 import { NormalWaveformValidityChallenges } from './NormalWaveformValidityChallenges'
@@ -56,10 +60,7 @@ import { PacLearningPathwayViewport } from './PacLearningPathwayNav'
 import { PacSectionCompletionActions } from './PacSectionCompletionActions'
 import { PacSectionReadinessCard } from './PacSectionReadiness'
 import { PressureSystemValidityPanel } from './PressureSystemValidityPanel'
-import {
-  CardiacOutputTeachingPanel,
-  DerivedHemodynamicsTeachingPanel,
-} from './PacMeasurementTeaching'
+import { DerivedHemodynamicsTeachingPanel } from './PacMeasurementTeaching'
 import { PacSkillsLab } from './PacSkillsLab'
 import { PhysiologyPanel } from './PhysiologyPanel'
 import { ResizablePacWorkspace } from './ResizablePacWorkspace'
@@ -190,16 +191,17 @@ const skillSpecs: Readonly<Record<PacGuidedSkillId, PacGuidedSkillSpec>> = {
   'thermodilution-series': {
     title: 'Cardiac output: thermodilution and Fick',
     objective:
-      'Compare thermodilution with direct and indirect Fick, then create a valid thermodilution series.',
+      'Trace a cardiac-output number back through its acquisition, its inputs, and its assumptions before using it.',
     requiredAction:
-      'Review the method comparison, standardize technique, inspect each curve, and reject poor trials.',
+      'Read each raw curve before its value, decide acceptance on the acquisition, and separate a measured oxygen uptake from a substituted one.',
     explanation: [
-      'Thermodilution derives flow from a downstream temperature–time curve; direct Fick derives flow from measured oxygen consumption and the arterial–mixed-venous oxygen-content difference.',
-      'Indirect Fick estimates rather than measures oxygen consumption and should not be mislabeled as direct Fick.',
-      'A technically poor curve should be rejected rather than averaged into false precision. At least three acceptable thermodilution measurements form the modeled average.',
+      'Thermodilution derives flow from a temperature-time curve; a Fick calculation derives it from an oxygen balance. Neither measures flow directly.',
+      'Direct Fick means the oxygen uptake was measured on this patient. A substituted figure makes the result an estimate that moves in proportion to the assumption, and it must not be called direct Fick.',
+      'A curve is judged on its own acquisition, not on whether its value agrees with the others. A trial can only be excluded for a technical reason the curve actually shows.',
+      'Repeatability describes the spread of a series. It does not describe where the series sits: the same slightly imperfect technique every time agrees with itself and is shifted together.',
     ],
     transfer:
-      'When methods disagree, audit each method’s inputs and assumptions instead of averaging unlike estimates together.',
+      'When the two methods disagree, read both acquisitions and say which result can be defended — which may be neither. Do not average two measurement systems into one number.',
   },
   'derived-hemodynamics': {
     title: 'Derived hemodynamics and validity',
@@ -292,7 +294,18 @@ function predictionSkillState(skillId: PacGuidedSkillId): HemodynamicSimulationS
   return state
 }
 
-function transferSkillState(skillId: PacGuidedSkillId): HemodynamicSimulationState {
+function transferSkillState(
+  skillId: PacGuidedSkillId,
+  current: HemodynamicSimulationState,
+): HemodynamicSimulationState {
+  /**
+   * H4 §9/§10. Every other station's transfer is a new authored patient state that the learner
+   * works through again. This one is not: its transfer is a paired-method comparison over authored
+   * episodes that carry their own acquisitions, and the thing the learner brings to it is the
+   * series they just built. Resetting here would delete that series and leave the transfer asking
+   * about a measurement that no longer exists.
+   */
+  if (skillId === 'thermodilution-series') return current
   if (skillId === 'pressure-system') {
     let state = createInitialHemodynamicState(baseCase, 'learn', 611)
     state = icuHemodynamicsReducer(state, { type: 'SET_TRANSDUCER_LEVEL', levelCm: -6 })
@@ -316,13 +329,6 @@ function transferSkillState(skillId: PacGuidedSkillId): HemodynamicSimulationSta
       },
     }
     return icuHemodynamicsReducer(createInitialHemodynamicState(ventilatedVariant, 'learn', 613), {
-      type: 'SET_CATHETER_POSITION',
-      position: 'pa',
-    })
-  }
-  if (skillId === 'thermodilution-series') {
-    const lowFlowCase = hemodynamicCaseById.get('HD-03') ?? baseCase
-    return icuHemodynamicsReducer(createInitialHemodynamicState(lowFlowCase, 'learn', 614), {
       type: 'SET_CATHETER_POSITION',
       position: 'pa',
     })
@@ -396,6 +402,16 @@ function objectiveComplete(skillId: PacGuidedSkillId, state: HemodynamicSimulati
     )
   }
   if (skillId === 'thermodilution-series') {
+    /**
+     * The hands-on half of the station: a series built from reviewed, technically usable trials.
+     * `thermodilutionAcceptedAverage` refuses an unreviewed or invalid trial, so this cannot be
+     * satisfied by generating three curves and pressing accept without reading any of them.
+     *
+     * The station's *completion* is a wider contract — see `thermodilutionSectionCompletion` — which
+     * also requires the two Fick methods to have been separated and a method disagreement to have
+     * been resolved without averaging. This predicate stays the gate for moving on from the
+     * acquisition work.
+     */
     return thermodilutionAcceptedAverage(state.thermodilutionTrials) !== null
   }
   return state.signalValidationChecks.includes('derived-reviewed')
@@ -407,12 +423,14 @@ function SkillSurface({
   state,
   dispatch,
   advancementUnlocked,
+  onDisagreementResolved,
 }: {
   readonly skillId: PacGuidedSkillId
   readonly phase: CriticalCareActivityPhase
   readonly state: HemodynamicSimulationState
   readonly dispatch: (action: HemodynamicAction) => void
   readonly advancementUnlocked: boolean
+  readonly onDisagreementResolved?: () => void
 }) {
   if (skillId === 'pressure-system') {
     return (
@@ -468,6 +486,16 @@ function SkillSurface({
     return <PacActionDock state={state} dispatch={dispatch} focus="wedge" />
   }
   if (skillId === 'thermodilution-series') {
+    /**
+     * H4 §10. Recognize opens on the Fick episodes, because the distinction a learner has to be
+     * able to make before touching a syringe is between a measured input and a substituted one.
+     * The hands-on acquisition loop then runs through Predict, Act, and Observe, and Transfer
+     * becomes the paired-method comparison.
+     */
+    if (phase === 'recognize') return <FickMethodWorkbench />
+    if (phase === 'transfer') {
+      return <CardiacOutputDisagreementLab onDisagreementResolved={onDisagreementResolved} />
+    }
     return <PacSkillsLab state={state} dispatch={dispatch} focus="thermodilution" />
   }
   return <FormulaDrawer state={state} dispatch={dispatch} />
@@ -502,6 +530,14 @@ export function PacGuidedSkillActivity({
    * every pathway station stays reachable by URL and every phase button stays enabled.
    */
   const [prebriefAcknowledged, setPrebriefAcknowledged] = useState(false)
+  /**
+   * H4 §11. The two commitments that make this a cardiac-output section rather than a
+   * thermodilution-only one. They are held here rather than on the simulation state because the
+   * simulation is swapped out between phases on most stations, and a learner who separated the two
+   * Fick methods in Recognize has not un-separated them by walking into Act.
+   */
+  const [methodProvenanceResolved, setMethodProvenanceResolved] = useState(false)
+  const [disagreementResolved, setDisagreementResolved] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const attempt = useRef(1)
   const recordedSafetyEvents = useRef(new Set<string>())
@@ -650,7 +686,7 @@ export function PacGuidedSkillActivity({
     } else if (movingForward && next === 'act') {
       setState(actionSkillState(skillId))
     } else if (movingForward && next === 'transfer') {
-      setState(transferSkillState(skillId))
+      setState((current) => transferSkillState(skillId, current))
       setTransferChoiceId(null)
     }
     setPhase(next)
@@ -666,6 +702,8 @@ export function PacGuidedSkillActivity({
     setPhase('recognize')
     setPredictionChoiceId(null)
     setTransferChoiceId(null)
+    setMethodProvenanceResolved(false)
+    setDisagreementResolved(false)
     setCompleted(false)
     setMessage('Activity reset to its authored setup.')
   }
@@ -713,7 +751,7 @@ export function PacGuidedSkillActivity({
   }
 
   function enterTransfer() {
-    setState(transferSkillState(skillId))
+    setState((current) => transferSkillState(skillId, current))
     setTransferChoiceId(null)
     setMessage(null)
     advance('transfer')
@@ -724,6 +762,16 @@ export function PacGuidedSkillActivity({
       setMessage(
         'Complete the authored transfer interaction and choose an interpretation before finishing.',
       )
+      return
+    }
+    /**
+     * H4 §11. Cardiac output is the one station where finishing the hands-on objective is not
+     * enough. A learner who built a series but never separated a measured oxygen uptake from a
+     * substituted one, or never resolved a disagreement without averaging it away, has done part of
+     * this section.
+     */
+    if (skillId === 'thermodilution-series' && !sectionCompletion.complete) {
+      setMessage(sectionCompletion.outstanding.join(' '))
       return
     }
     setCompleted(true)
@@ -737,6 +785,11 @@ export function PacGuidedSkillActivity({
   }
 
   const isObjectiveComplete = objectiveComplete(skillId, state)
+  const sectionCompletion = thermodilutionSectionCompletion({
+    trials: state.thermodilutionTrials,
+    methodProvenanceResolved,
+    disagreementResolvedWithoutAveraging: disagreementResolved,
+  })
   const predictionCorrect =
     predictionChoiceId !== null &&
     learningItems.prediction.correctChoiceIds.includes(predictionChoiceId)
@@ -895,9 +948,21 @@ export function PacGuidedSkillActivity({
         Complete the new interaction in the visual workspace; selecting an answer alone does not
         complete the activity.
       </p>
+      {skillId === 'thermodilution-series' && sectionCompletion.outstanding.length > 0 ? (
+        <ul className="grid gap-1 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs leading-5">
+          {sectionCompletion.outstanding.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      ) : null}
       <button
         type="button"
-        disabled={completed || transferChoiceId === null || !isObjectiveComplete}
+        disabled={
+          completed ||
+          transferChoiceId === null ||
+          !isObjectiveComplete ||
+          (skillId === 'thermodilution-series' && !sectionCompletion.complete)
+        }
         className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
         onClick={completeTransfer}
       >
@@ -928,7 +993,13 @@ export function PacGuidedSkillActivity({
         }}
       />
     ) : skillId === 'thermodilution-series' ? (
-      <CardiacOutputTeachingPanel />
+      // H4 §6. The canonical method records stay on screen through every phase: the acquisition
+      // work in the controls pane is meant to be done next to the description of what the method
+      // is estimating, not after reading it once and moving on.
+      <CardiacOutputMethodModel
+        provenanceResolved={methodProvenanceResolved}
+        onProvenanceResolved={() => setMethodProvenanceResolved(true)}
+      />
     ) : skillId === 'derived-hemodynamics' ? (
       <DerivedHemodynamicsTeachingPanel />
     ) : (
@@ -968,6 +1039,7 @@ export function PacGuidedSkillActivity({
             state={state}
             dispatch={dispatch}
             advancementUnlocked={advancementUnlocked}
+            onDisagreementResolved={() => setDisagreementResolved(true)}
           />
         }
       />
@@ -1046,14 +1118,16 @@ export function PacGuidedSkillActivity({
                 value:
                   thermodilutionAcceptedAverage(state.thermodilutionTrials) === null
                     ? 'Not established'
-                    : `${thermodilutionAcceptedAverage(state.thermodilutionTrials)?.toFixed(1)} L/min`,
+                    : `${thermodilutionAcceptedAverage(state.thermodilutionTrials)?.toFixed(1)} L/min by thermodilution`,
               },
               {
                 label: 'Variant',
                 value:
-                  phase === 'transfer'
-                    ? 'New authored waveform or patient state'
-                    : 'Primary skill state',
+                  phase !== 'transfer'
+                    ? 'Primary skill state'
+                    : skillId === 'thermodilution-series'
+                      ? 'Paired-method comparison episodes'
+                      : 'New authored waveform or patient state',
               },
               { label: 'Model time', value: `${state.timeSeconds.toFixed(1)} s` },
             ]}

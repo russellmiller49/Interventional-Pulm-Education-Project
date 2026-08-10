@@ -2,8 +2,9 @@
 
 This runbook prepares and verifies the `gold-review-import-compensation/1.0.0`
 workflow. It is not authorization to apply a migration, execute the pending
-import, or execute compensation. The real migration, import, and compensation
-were not run while this tooling was implemented.
+import, or execute compensation. The contract migration was applied exactly
+once in a separately authorized operation; it must not be rerun. The import and
+compensation remain unexecuted.
 
 ## Fixed identities and safety boundary
 
@@ -16,14 +17,20 @@ were not run while this tooling was implemented.
 | Signed 305-row protocol authorization | `784d13736ff0fbf69bd8ad55c8bf55b293c4cc2051b980a3488a980f120c5dd3`                                                    |
 | Amended two-row authorization         | `b95fc9785ee355b810981c051db62307e868110e06ffb1a83c09c8eff52bf89a`                                                    |
 | Disposable PostgreSQL image           | `public.ecr.aws/supabase/postgres:17.6.1.104@sha256:5deba92e50cd17bfacf8603834d317cdf3bfc1c016ec8293991997fa3b55fa3d` |
-| Schema/security semantic identity     | `b5c6a6050b2c17c60c28fa400c6957103277e51e8b54425c290f43c92a447471`                                                    |
+| Disposable full-inventory identity    | `b5c6a6050b2c17c60c28fa400c6957103277e51e8b54425c290f43c92a447471`                                                    |
 | Canonical identity artifact SHA-256   | `8f709d225f3087c77445b1453cffee994b9c8a8cfdbc004a798efbfff96ee20e`                                                    |
 
 Use Codex Full Access for commands that inspect Git, Docker, or the local
-Supabase stack. Real-local operations run only in the primary checkout on a
-clean `main` exactly equal to `origin/main`. This implementation worktree may
-run read-only unit checks and the self-contained disposable rehearsal; it must
-not run the primary-only local Supabase mutation commands.
+Supabase stack. Migration, import, compensation, backup, upload, and other
+shared-state operations run only in the primary checkout on clean `main`
+exactly equal to `origin/main`. The two post-migration reconciliation audits
+and their file-only additive delivery backup are deliberately narrower
+exceptions: they require the exact
+reviewed feature-worktree branch and clean tracked state, require `origin/main`
+to be an ancestor, pin the local container/port/project, and never authorize a
+mutation command. Only the two audits may read the pinned local database, and
+only through their asserted read-only transactions; the delivery backup never
+contacts a database.
 
 Every target is local. Never pass a remote URL, linked-project identity, or
 remote credential. The package and rehearsal CLIs deliberately accept no
@@ -42,27 +49,84 @@ approved root.
 
 ## Current fail-closed compatibility finding
 
-The expected historical package shape is 621 initial actions, three additive
-revisions, six identical-content no-ops, 624 inserts, and 630 total actions.
-Compensation would map that exact shape to 621 voids, three restores, and six
-no-actions.
+The historical package shape was 621 initial actions, three revisions, and six
+no-ops. It remains historical evidence only. Production code derives the
+action partition from current state and contains no `621/3/6` readiness pin.
 
-The generator does not trust those historical classifications. It derives each
-action from `development-planning-state.json` plus the finalized CSV and
-compares every contract clinical/enrichment field. The current real database
-has nine existing review heads, while the migration adds six enrichment fields
-as nullable without backfilling them. The finalized CSV supplies values for
-those fields (and also contains blank status values that strict contract
-validation may reject). The observed real state therefore cannot truthfully
-produce the historical six no-ops under contract 1.0.0; the derivation is
-expected to report `real_state_shape_mismatch` (621 initial, nine revisions,
-zero no-ops) or `real_contract_incompatibility` and create no executable
-package.
+The real local catalog uses owner `postgres`; the disposable rehearsal uses
+`supabase_admin`. The complete 763-versus-683 diff is explained by the exact
+local owner/ACL representation (24 function-owner ACL records plus 56
+table-owner ACL records), while invariant definitions, search paths, security
+modes, effective execution boundaries, append-only protections, and prohibited
+privileges remain exact. Readiness requires
+`local_supabase_postgres_owner_v1`; the profile binds the exact owner
+attributes, role memberships, ACL matrix, and effective privileges and fails
+closed for any other state. The full environment inventory is retained as
+evidence but is no longer misused as a cross-environment readiness hash.
 
-Do not bypass this result with hand-authored or preclassified planning rows.
-Stop and obtain an explicit reviewed decision about the core contract,
-migration/backfill, or authoritative artifact. Editing any of those is outside
-this operational tooling change.
+Require the reconciliation JSON to expose separate
+`schemaSecurityRecordClassificationCounts`, `rpcClassificationCounts`,
+`deploymentProfileClassificationCounts`, and `combinedClassificationCounts` partitions. For the
+accepted local evidence these cover exactly 763 schema/security diffs, three RPC diffs, six
+deployment-profile diffs, and 772 combined classifications. Validate each partition against its own
+diff-array length and prove the combined counts are the element-wise sum; never describe the 772
+combined entries as 763 records.
+
+The exact owner/ACL subterminal is:
+
+`OWNER/ACL AUDIT READY — NO OWNER/ACL FORWARD MIGRATION REQUIRED`
+
+The signed V3 provenance authorizes the finalized enrichment deltas, including
+additive differences from the nine existing heads, but source authorization
+does not override execution compatibility. The real read-only audit validates
+all 630 rows before assigning actions and finds zero executable rows:
+
+- `source_review_blinding_provenance_has_no_exact_import_v1_mapping`
+  affects all 630 rows: every source `is_blinded` value is semantically false,
+  while every local `automatedSignalsRevealedAt` value is null. The source
+  review provenance and local UI reveal event are distinct facts that contract
+  v1 incorrectly equates;
+- `excluded_status_null_not_representable_by_import_contract_v1` affects all
+  272 formal V3 excluded rows: their blank technology- and disease-tag
+  statuses are authoritative and outside enrichment scope, while import
+  contract v1 requires non-null status enums; and
+- `source_full_text_provenance_has_no_exact_import_v1_mapping` affects 50
+  rows. This code names a missing exact persistence mapping:
+  source `full_text_used=true` records complete-PDF enrichment evidence, not
+  supplemental PubMed metadata use. Contract v1 lacks the correct persistence
+  target, aliases the value to `usedSupplementalMetadata`, and then conflicts
+  with null local `supplementalMetadataRevealedAt` state.
+
+Those three checksum-bound ledgers are the only execution blockers. The
+apparent `notes` differences for PMIDs `36879724` and `39281191` are governed
+by the exact amended authorization, which requires the supplied rationale
+instead of the earlier finalized V3 `physician_notes`. The authorization's
+field mapping writes that rationale to persisted review `notes`, and its
+authoritative additive correction leaves review-row mappings unchanged. An
+exact current-rationale match is classified
+`requires_existing_authorization_interpretation`, produces no
+`incompatible_existing_head_fields` blocker, and has the exact subterminal
+`NOTE DISPOSITION ALREADY AUTHORIZED`. A mismatch against that checksum-bound
+target must fail closed; it must not be silently overwritten or turned into a
+supplement.
+
+The exact boolean-normalization ledger preserves each source lexeme and
+semantic value; it cannot change false to true. Ordered V3 pipe lists are
+normalized to the import contract's ascending set order only through the exact
+source-artifact-bound ledger; V1 authorization and incomplete or substituted
+ledgers fail closed. Neither form of normalization repairs a lifecycle-state
+mismatch.
+
+The 272 excluded-row blanks are not physician ambiguity. A compatibility
+supplement or template would invent out-of-scope enrichment values and is
+neither required nor safe; supplying one must not change readiness. No action
+plan or package is generated. The exact terminal state is
+`FORWARD IMPORT-CONTRACT REPAIR REQUIRED — NOTE DISPOSITION ALREADY AUTHORIZED`. This source/local
+contract finding is independent of the safe owner/ACL profile conclusion. The exact 13-field
+source-of-truth definitions are in
+[`gold-import-field-lineage-v1.md`](./gold-import-field-lineage-v1.md), and a
+future non-authorizing design boundary is in
+[`gold-import-contract-v2-forward-repair-spec.md`](./gold-import-contract-v2-forward-repair-spec.md).
 
 ## Operational sequence
 
@@ -170,11 +234,15 @@ npm run literature:audit-gold-import-compensation-migration -- \
 ```
 
 Before migration, `not_yet_migrated` is the only expected result and no
-planning state is emitted. After migration, require `ready`, one exact ledger
-entry, unchanged prior reviews/pointers/effective state, fresh hashes, exact
-RPC signatures, enabled RLS and append-only triggers, safe security-definer
-search paths, no PUBLIC execute, intended service-role boundary, no prohibited
-privileges, and the exact lint allowlist.
+planning state is emitted. On the current once-migrated local database, this
+legacy full-inventory audit is expected to be `blocked` only by the exact four
+superseded owner-specific checks. Any other failure is a stop condition. The
+reconciliation command below must then prove one exact ledger entry, unchanged
+prior reviews/pointers/effective state, fresh hashes, exact RPC signatures and
+bodies, enabled RLS and append-only triggers, safe security-definer search
+paths, no PUBLIC execute, intended service-role boundary, no prohibited
+privileges, the selected local deployment profile, and the exact lint
+allowlist.
 
 The ready audit is one indivisible canonical package:
 `migration-audit.json`, `migration-audit.md`,
@@ -203,38 +271,95 @@ is then rolled back.
 
 Review and preserve the manifest SHA-256 separately. Do not copy the planning
 or schema-definition state out of that directory or reserialize any JSON; the
-package generator requires all four canonical files to be regular,
+legacy package generator requires all four canonical files to be regular,
 non-symlink sibling files, verifies their raw bytes against the reviewed
 manifest, and recomputes the semantic schema/security identity.
 
-### 5. Generate the package
+### 4a. Reconcile the real-local contract representation
 
-Package generation is read-only and contacts no database. It gates the audit
-before opening the source artifacts:
+From the exact clean reconciliation feature worktree, run:
 
 ```bash
-npm run literature:generate-gold-import-compensation-package -- \
-  --audit <POST_AUDIT_DIRECTORY>/migration-audit.json \
-  --audit-manifest-sha256 <REVIEWED_POST_AUDIT_MANIFEST_SHA256> \
-  --development-state <POST_AUDIT_DIRECTORY>/development-planning-state.json \
-  --artifact <FINAL_V3_CSV> \
-  --protocol-authorization <SIGNED_PROTOCOL_AUTHORIZATION> \
-  --amended-authorization <AMENDED_TWO_ROW_AUTHORIZATION> \
-  --migration supabase/migrations/20260808035633_add_literature_gold_import_compensation_contract.sql \
-  --output-root <EXISTING_APPROVED_PACKAGE_ROOT> \
-  --output <NEW_PACKAGE_DIRECTORY>
+npm run literature:diagnose-gold-import-compensation-contract -- \
+  --dry-run \
+  --pre-migration-backup <PRE_MIGRATION_BACKUP_DIRECTORY> \
+  --pre-migration-backup-manifest-sha256 <REVIEWED_PRE_MIGRATION_MANIFEST_SHA256> \
+  --backup-root <EXISTING_APPROVED_AUDIT_ROOT> \
+  --output <NEW_RECONCILED_POST_MIGRATION_AUDIT_DIRECTORY>
 ```
 
-At present, expect the compatibility failure documented above. That failure is
-the safe result. If a later reviewed change makes the real derivation exactly
-621/3/6, verify every package manifest entry and confirm 630 actions, 624
-inserts, compensation 621/3/6, append-only heads, no pointer rewind, and source
-hashes before proceeding.
+The feature-worktree guard does not authorize migration or application
+commands. The diagnostic uses read-only repeatable-read catalog/state
+transactions, brackets the full snapshot and membership/effective/physical
+hashes, reruns lint, and fails on any drift. It emits the canonical reconciled
+audit plus `contract-diagnostics.json`, `contract-reconciliation.json`, and
+`read-only-state-bracket.json`. The reconciled manifest binds exactly those
+three files plus the four legacy audit artifacts; every reconciled downstream
+consumer requires, authenticates, and preserves that exact seven-file set.
 
-The generated package embeds the exact canonical audit JSON, Markdown,
-planning-state JSON, schema/security-definition identity JSON, and original
-audit manifest. Its descriptor binds the reviewed audit-manifest SHA, each
-embedded file SHA, the normalized schema/security identity SHA, the
+Require all 763 expected records and all 683 actual records to be accounted
+for, the exact 24 function-ACL plus 56 table-ACL collapse, an exact invariant
+identity, and exact `local_supabase_postgres_owner_v1` profile. Preserve the
+full-inventory identity as evidence. The requested
+`reconcile_literature_gold_import_v1` spelling must appear only as
+`audit_expectation_defect`; the command queries only
+`reconcile_literature_gold_review_operation_v1` and never creates an alias.
+
+### 4b. Audit the finalized source against current planning state
+
+This command is file-only and authenticates the full reconciled audit bundle
+before opening the unchanged CSV:
+
+```bash
+npm run literature:audit-gold-existing-head-compatibility -- \
+  --audit <RECONCILED_AUDIT_DIRECTORY>/migration-audit.json \
+  --audit-manifest-sha256 <REVIEWED_RECONCILED_AUDIT_MANIFEST_SHA256> \
+  --development-state <RECONCILED_AUDIT_DIRECTORY>/development-planning-state.json \
+  --artifact <FINAL_V3_CSV> \
+  --amended-authorization <AMENDED_AUTHORIZATION_JSON> \
+  --authorization-mapping <AUTHORIZATION_FIELD_MAPPING_JSON> \
+  --authorization-manifest <AUTHORIZATION_ARTIFACT_MANIFEST> \
+  --authorization-mapping-correction <AUTHORITATIVE_MAPPING_CORRECTION_JSON> \
+  --authorization-mapping-correction-manifest <MAPPING_CORRECTION_MANIFEST> \
+  --output-root <EXISTING_APPROVED_AUDIT_ROOT> \
+  --output <NEW_SOURCE_COMPATIBILITY_AUDIT_DIRECTORY>
+```
+
+Require all 630 rows to be execution-blocked and zero to be executable. Require
+exact blocker counts of 630 source/local blinding mismatches, 272 excluded-row
+status mismatches, and 50 full-text-persistence/supplemental-reveal mapping
+mismatches. These are the three counted execution-compatibility ledgers. For
+PMIDs `36879724` and `39281191`, require exact authentication of the amended
+authorization and its mapping, exact comparison with the authorized rationale,
+classification `requires_existing_authorization_interpretation`, and note
+subterminal `NOTE DISPOSITION ALREADY AUTHORIZED`. The audit must report no
+`incompatible_existing_head_fields` blocker, zero unresolved physician decisions,
+no supplement or optional-status-resolution field, no initial/revision/no-op action, and terminal state
+`FORWARD IMPORT-CONTRACT REPAIR REQUIRED — NOTE DISPOSITION ALREADY AUTHORIZED`.
+
+Preserve `boolean-normalization-report.json` and
+`list-normalization-report.json`; the list report digest must match the audit
+source binding and readiness artifact. The source rows and finalized artifact
+must remain byte-identical. Do not supply a compatibility supplement and do
+not run package generation.
+
+### 5. Package generation remains blocked
+
+Do not invoke the package generator for the current audit. Its readiness gate
+must reject the 630 execution-blocked rows before opening a mutation path or
+writing package output. A physician supplement cannot satisfy that gate and
+must itself be rejected. This runbook does not authorize a source rewrite,
+local-state rewrite, or application of a forward migration. The semantic
+forward-repair specification is design evidence only. Any later package
+procedure requires separately reviewed evidence that every source row satisfies
+the execution contract; counts must then be derived from that evidence rather
+than compared with the historical `621/3/6` distribution.
+
+If a later, separately authorized compatibility result passes that gate, its
+generated package must embed the exact seven reconciled audit artifacts and
+the original audit manifest, including the contract diagnostics,
+reconciliation, and read-only bracket. Its descriptor must bind the reviewed
+audit-manifest SHA, the normalized schema/security identity SHA, the
 pre-migration backup manifest SHA, and both pre-migration and post-migration
 state identities. A recomputed outer package manifest cannot legitimize
 replaced audit evidence or a semantically substituted database object.

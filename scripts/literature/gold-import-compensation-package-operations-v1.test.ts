@@ -16,8 +16,6 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import {
-  EXACT_COMPENSATION_COUNTS,
-  EXACT_IMPORT_COUNTS,
   MIGRATION_ID,
   MIGRATION_SHA256,
   developmentPlanningStateSha256,
@@ -56,7 +54,12 @@ import {
   type ExactPackageRehearsalReport,
   type ExecuteFreshDisposableInput,
 } from './rehearse-exact-gold-import-compensation-package-v1'
-import { canonicalJson } from '../../src/features/literature/gold-set/import-compensation'
+
+import {
+  bindImportPlan,
+  canonicalJson,
+  sha256Canonical,
+} from '../../src/features/literature/gold-set/import-compensation'
 import {
   assertSerializedAggregateOrdering,
   type LoadedPreMigrationBackup,
@@ -70,6 +73,22 @@ import {
   createExclusiveOutputDirectory,
   type ExclusiveOutputDirectoryIdentity,
 } from './lib/exclusive-output'
+
+// Historical package-shape fixture. Production gates derive these counts from
+// the bound row actions and do not require this legacy distribution.
+const EXACT_IMPORT_COUNTS = {
+  initial: 621,
+  inserts: 624,
+  noops: 6,
+  revisions: 3,
+  total: 630,
+} as const
+const EXACT_COMPENSATION_COUNTS = {
+  noops: 6,
+  restored: 3,
+  total: 630,
+  voided: 621,
+} as const
 
 jest.setTimeout(30_000)
 
@@ -85,6 +104,7 @@ const PINNED_SCHEMA_SECURITY_DEFINITION_IDENTITY = JSON.parse(
 ) as Record<string, unknown>
 const CSV_HEADER = [
   'gold_set_item_id',
+  'master_row_id',
   'pmid',
   'dataset_split',
   'physician_final_label',
@@ -201,22 +221,23 @@ function historicalReview(notes: string) {
   }
 }
 
-function artifactRow(itemId: string, pmid: string, notes: string): string {
+function artifactRow(itemId: string, pmid: string, notes: string, included = false): string {
   return [
     itemId,
+    String(Number(pmid) - 10_000_000),
     pmid,
     'development',
-    'exclude',
+    included ? 'include_core' : 'exclude',
     'high',
     'adequate_abstract',
-    '',
-    '',
-    'not_applicable',
-    '',
-    '',
-    'not_applicable',
-    '',
-    '',
+    included ? 'basic-bronchoscopy' : '',
+    included ? 'convex-ebus' : '',
+    included ? 'tagged' : 'not_applicable',
+    included ? 'diagnosis' : '',
+    included ? 'lung-cancer' : '',
+    included ? 'tagged' : 'not_applicable',
+    included ? 'retrospective-cohort' : '',
+    included ? 'full-article' : '',
     'false',
     notes,
     'false',
@@ -286,7 +307,7 @@ function buildFixture() {
       sequence > EXACT_IMPORT_COUNTS.initial &&
       sequence <= EXACT_IMPORT_COUNTS.initial + EXACT_IMPORT_COUNTS.revisions
     const reviewId = isInitial ? null : fixtureUuid(0x20000000, sequence)
-    csvRows.push(artifactRow(itemId, pmid, finalizedNotes))
+    csvRows.push(artifactRow(itemId, pmid, finalizedNotes, sequence === 1))
     planningRows.push({
       currentEffectiveReview: isInitial
         ? null
@@ -704,15 +725,76 @@ describe('gold import/compensation package operations v1', () => {
     }
   })
 
-  test('treats null legacy enrichment on an apparent no-op as a real state-shape mismatch', () => {
+  test('restricts generator and rehearsal identity-policy overrides to tests', () => {
+    const mutableEnvironment = process.env as Record<string, string | undefined>
+    const previousNodeEnv = mutableEnvironment.NODE_ENV
+    mutableEnvironment.NODE_ENV = 'production'
+    try {
+      expect(() =>
+        generateGoldImportCompensationPackage({
+          auditPackage: fixture.auditPackage,
+          identityPolicy: fixture.identityPolicy,
+          sources: fixture.sources,
+        }),
+      ).toThrow('Non-production source identity policies are restricted to tests')
+      expect(() => verifyExactGeneratedPackage(generated.files, fixture.identityPolicy)).toThrow(
+        'Non-production rehearsal identity policies are restricted to tests',
+      )
+    } finally {
+      if (previousNodeEnv === undefined) delete mutableEnvironment.NODE_ENV
+      else mutableEnvironment.NODE_ENV = previousNodeEnv
+    }
+  })
+
+  test('derives an additive revision when nullable legacy enrichment differs', () => {
     const legacyState = structuredClone(fixture.planningState)
     const legacyReview = legacyState.rows[624].currentEffectiveReview as Record<string, unknown>
     legacyReview.enrichmentProvenance = null
     legacyReview.enrichmentSchemaVersion = null
 
-    expect(() => derivePackagePlanningRows(legacyState, fixture.sources.finalArtifact)).toThrow(
-      /real_state_shape_mismatch/u,
+    const planningRows = derivePackagePlanningRows(legacyState, fixture.sources.finalArtifact)
+    expect(planningRows[624]).toMatchObject({
+      action: 'import_revision',
+      expectedCurrentReviewId: legacyState.rows[624].currentReviewId,
+      expectedSupersedesReviewId: legacyState.rows[624].currentReviewId,
+    })
+  })
+
+  test('keeps full-text provenance, supplemental reveal state, and review blinding distinct', () => {
+    const revealedState = structuredClone(fixture.planningState)
+    const revealedItemState = revealedState.rows[0]?.itemState as Record<string, unknown>
+    revealedItemState.supplementalMetadataRevealedAt = FIXED_TIME
+    const revealedRows = derivePackagePlanningRows(revealedState, fixture.sources.finalArtifact)
+    expect(revealedRows[0]?.targetReview.usedSupplementalMetadata).toBe(true)
+
+    const mutateColumn = (column: (typeof CSV_HEADER)[number], value: string) => {
+      const lines = fixture.sources.finalArtifact.toString('utf8').trimEnd().split('\n')
+      const cells = lines[1]?.split(',')
+      if (!cells) throw new Error('Fixture source row is missing.')
+      cells[CSV_HEADER.indexOf(column)] = value
+      lines[1] = cells.join(',')
+      return Buffer.from(`${lines.join('\n')}\n`, 'utf8')
+    }
+
+    const fullTextProvenance = mutateColumn('full_text_used', 'true')
+    expect(() => derivePackagePlanningRows(fixture.planningState, fullTextProvenance)).toThrow(
+      'full_text_used provenance has no exact import v1 persistence mapping',
     )
+
+    const sourceUnblinded = mutateColumn('is_blinded', 'false')
+    const unblindedRows = derivePackagePlanningRows(fixture.planningState, sourceUnblinded)
+    expect(unblindedRows[0]?.targetReview.isBlinded).toBe(false)
+    const unblindedSources = { ...fixture.sources, finalArtifact: sourceUnblinded }
+    expect(() =>
+      generateGoldImportCompensationPackage({
+        auditPackage: fixture.auditPackage,
+        identityPolicy: {
+          ...fixture.identityPolicy,
+          finalArtifactSha256: sha256(sourceUnblinded),
+        },
+        sources: unblindedSources,
+      }),
+    ).toThrow()
   })
 
   test('gates an actual audit-shaped not_yet_migrated report before reading sources', async () => {
@@ -734,6 +816,16 @@ describe('gold import/compensation package operations v1', () => {
 
     await expect(runPackageGeneratorCli(['--audit', auditPath])).rejects.toThrow(
       'Package generation blocked: not_yet_migrated; source artifacts were not inspected.',
+    )
+  })
+
+  test('gates a legacy ready audit before opening production source paths', async () => {
+    const root = await safeTemporaryDirectory('package-legacy-ready-audit-')
+    const auditPath = join(root, 'migration-audit.json')
+    await writeFile(auditPath, canonicalPrettyBytes(fixture.audit))
+
+    await expect(runPackageGeneratorCli(['--audit', auditPath])).rejects.toThrow(
+      'production sources require the reconciled post-migration audit; source artifacts were not inspected',
     )
   })
 
@@ -1134,6 +1226,54 @@ describe('gold import/compensation package operations v1', () => {
         finalArtifact: Buffer.concat([fixture.sources.finalArtifact, Buffer.from('stale', 'utf8')]),
       }),
     ).toThrow(/stale|missing|replaced/u)
+
+    const retiredAuthorizationFiles = new Map(verified.files)
+    const retiredAuthorization = jsonPackageFile<Record<string, unknown>>(
+      generated,
+      'source-authorization-set.json',
+    )
+    retiredAuthorization.version = 2
+    const retiredAuthorizationBytes = canonicalPrettyBytes(retiredAuthorization)
+    retiredAuthorizationFiles.set('source-authorization-set.json', retiredAuthorizationBytes)
+    const { binding: retiredPlanBinding, ...retiredPlanContent } = verified.importPlan
+    void retiredPlanBinding
+    const retiredAuthorizationPlan = bindImportPlan({
+      ...retiredPlanContent,
+      sourceAuthorizationSetSha256: sha256(retiredAuthorizationBytes),
+    })
+    expect(() =>
+      assertExactPackageSourceBytes(
+        {
+          ...verified,
+          files: retiredAuthorizationFiles,
+          importPlan: retiredAuthorizationPlan,
+        },
+        fixture.sources,
+      ),
+    ).toThrow('V2 physician status supplements are retired')
+
+    const { binding, ...planContent } = verified.importPlan
+    void binding
+    const actions = structuredClone(planContent.actions)
+    const insert = actions.find((action) => action.action !== 'import_noop')
+    if (!insert) {
+      throw new Error('Expected an insert action in the generated fixture.')
+    }
+    insert.review = {
+      ...insert.review,
+      topicIds: ['peripheral-navigation'],
+    }
+    insert.reviewSha256 = sha256Canonical(insert.review)
+    const coherentlyReboundPlan = bindImportPlan({
+      ...planContent,
+      actions,
+    })
+    expect(() =>
+      assertExactPackageSourceBytes(
+        { ...verified, importPlan: coherentlyReboundPlan },
+        fixture.sources,
+      ),
+    ).toThrow(/column topic_ids: does not match the checksum-bound import plan action/u)
 
     expect(() =>
       verifyDevelopmentDatabaseBackupFixtureForTest(

@@ -28,16 +28,17 @@ The operational sequence in this document stops before any real database migrati
 
 ## Version and vocabulary
 
-| Contract               | Identity                                   |
-| ---------------------- | ------------------------------------------ |
-| Contract version       | `1.0.0`                                    |
-| Contract ID            | `gold-review-import-compensation/1.0.0`    |
-| Import RPC             | `apply_literature_gold_import_v1`          |
-| Compensation RPC       | `compensate_literature_gold_import_v1`     |
-| Physical/audit hash    | `literature_gold_physical_state_hash_v1`   |
-| Effective-review hash  | `literature_gold_effective_state_hash_v1`  |
-| Operation table        | `literature_gold_review_operations`        |
-| Operation-action table | `literature_gold_review_operation_actions` |
+| Contract               | Identity                                        |
+| ---------------------- | ----------------------------------------------- |
+| Contract version       | `1.0.0`                                         |
+| Contract ID            | `gold-review-import-compensation/1.0.0`         |
+| Import RPC             | `apply_literature_gold_import_v1`               |
+| Compensation RPC       | `compensate_literature_gold_import_v1`          |
+| Reconciliation RPC     | `reconcile_literature_gold_review_operation_v1` |
+| Physical/audit hash    | `literature_gold_physical_state_hash_v1`        |
+| Effective-review hash  | `literature_gold_effective_state_hash_v1`       |
+| Operation table        | `literature_gold_review_operations`             |
+| Operation-action table | `literature_gold_review_operation_actions`      |
 
 In this contract:
 
@@ -53,6 +54,11 @@ In this contract:
 
 “Rollback” is reserved for transaction rollback before commit. After commit, the only supported
 reversal is compensation.
+
+The name `reconcile_literature_gold_import_v1` appeared in a post-migration audit request but is not
+part of the migration or executable contract. The canonical RPC is
+`reconcile_literature_gold_review_operation_v1`. Diagnostics record the requested spelling as an
+`audit_expectation_defect`; they do not query, create, or silently accept an alias.
 
 ## Precise defect in the historical rollback plan
 
@@ -145,6 +151,114 @@ database attestation. It performs no import or real-database mutation. A read-on
 for every row as 621 initial imports that would require void heads, three revisions that would require
 prior-review restore heads, and six no-ops. Readiness remains `import = false` and `rollback = false`,
 with `mutationPlan = null`; this analysis performed zero database, held-out, or remote access.
+
+## Post-migration contract reconciliation
+
+The once-applied real-local migration was executed by the local `postgres` migration owner, while
+the fixed disposable rehearsal applied it as `supabase_admin`. PostgreSQL represents owner ACLs
+differently in those environments. Readiness therefore uses three separate identities:
+
+1. the **environment-invariant contract identity** binds normalized RPC definitions, signatures,
+   search paths, security modes, dependencies, lifecycle objects, append-only protections, RLS,
+   event vocabulary, and the required/prohibited effective privilege matrix;
+2. the **deployment-profile identity** binds the exact target, owner, owner attributes and role
+   memberships, normalized ACL/grantor representation, and effective privileges; and
+3. the **full-environment inventory identity** preserves every normalized catalog record as audit
+   evidence but does not decide readiness by itself.
+
+`local_supabase_postgres_owner_v1` is permitted only for `target=local`, owner `postgres`, and the
+exact checksum-pinned local role inventory. `supabase_admin_owner_v1` remains the disposable
+expectation. Any arbitrary owner, changed membership, PUBLIC execution, anon/authenticated
+execution, broadened service-role privilege, changed body/signature/search path, or undeclared role
+difference fails closed.
+
+The historical disposable inventory contains 763 semantic records. Under the exact local profile,
+24 owner function-ACL records and 56 owner table-ACL records collapse into the owner representation,
+producing the observed 683 records. The reconciliation must still classify all 763 expected records
+and compare every actual record; the arithmetic alone is never accepted as proof. When the
+invariant and selected profile are exact, this owner/ACL representation does not require a forward
+migration. The original owner-specific full-inventory hash remains evidence rather than a readiness
+pin.
+
+Classification accounting is split by evidence surface. The observed ready local result contains
+exactly 763 entries in `schemaSecurityRecordClassificationCounts`, three in
+`rpcClassificationCounts`, and six in `deploymentProfileClassificationCounts`.
+`combinedClassificationCounts` therefore covers 772 classifications. Each partition must sum to
+its own diff-array length, and the combined partition must equal the element-wise sum of all three;
+the 772 combined classifications must never be described as 763 schema/security records.
+
+The exact owner/ACL subterminal is:
+
+`OWNER/ACL AUDIT READY — NO OWNER/ACL FORWARD MIGRATION REQUIRED`
+
+## Finalized-artifact compatibility
+
+Finalized boolean fields accept only `true`, `false`, `True`, and `False`. All four forms are parsed
+semantically and package/database values are canonical booleans. A normalization ledger preserves
+the original lexeme, semantic value, row identity, source-artifact SHA-256, and rule version. This is
+lexical normalization, not a physician change. Other spellings, numeric values, blanks, and
+arbitrary casing are rejected, and the finalized CSV remains byte-identical.
+
+The V3 artifact also preserves taxonomy/workflow order for the four ordered, unique pipe-list
+columns, while the import contract represents those values as ascending sets. Each source cell that
+requires reordering has a separate checksum-bound ledger entry containing its original pipe lexeme
+and ordered values, canonical ascending values, row identity, source-artifact SHA-256, column, and
+fixed rule version. Whitespace repair, deduplication, additions, removals, an incomplete ledger, or a
+V1 authorization for any reordered cell fails closed. The generator, runtime executor, and
+disposable rehearsal independently rederive the exact ledger and compare the normalized projection
+to the signed action plan before any database client or mutation path is available.
+
+Source authorization and execution compatibility are independent gates. The signed V3 provenance
+authorizes its finalized enrichment deltas, including additive differences from the nine existing
+effective heads, but it cannot override an import RPC pre-state invariant or authorize a different
+source value. Every one of the 630 source rows must pass the execution contract before any action is
+proposed or package readiness is considered.
+
+The normative source-of-truth distinctions for the exact 13 affected fields are recorded in
+[`gold-import-field-lineage-v1.md`](./gold-import-field-lineage-v1.md). Review provenance,
+complete-PDF evidence, local UI reveal events, import enrichment state, and physician rationale are
+independent concepts even when a contract-v1 equality currently couples them.
+
+The real read-only audit found three source/local execution-contract mismatches:
+
+- all 630 source rows have semantic `is_blinded=false`, while all 630 local planning rows have
+  `automatedSignalsRevealedAt=null`; review blinding provenance and the local automated-signal UI
+  reveal event are distinct concepts, but contract v1 incorrectly requires them to agree, so
+  changing the source value or fabricating a reveal timestamp would be unauthorized;
+- all 272 formal V3 excluded rows have authoritative blank technology- and disease-tag statuses;
+  those fields are outside enrichment scope for excluded rows, while contract v1 requires non-null
+  status enums for an import revision; and
+- 50 source rows have `full_text_used=true`, meaning a checksum-matched complete PDF was used for V3
+  enrichment. Contract v1 has no target for that evidence fact and incorrectly maps it to
+  `usedSupplementalMetadata=true`, which then conflicts with null local
+  `supplementalMetadataRevealedAt` state. Full-text evidence is distinct from the UI action that
+  reveals MeSH terms and author keywords.
+
+Those three cohorts are execution-compatibility ledgers. The two apparent existing-head note
+differences are already resolved by the checksum-bound amended authorization. Its exact text says
+that values come from finalized V3 except for the supplied physician rationale, and its explicit
+field mapping writes that rationale to `literature_gold_set_reviews.notes`. The authoritative
+mapping correction leaves review-row mappings unchanged. The controlling identities are amended
+authorization SHA-256 `b95fc9785ee355b810981c051db62307e868110e06ffb1a83c09c8eff52bf89a`,
+mapping SHA-256 `169808d89f094798ec1c55682dce047f4cb51de26cb1117639fc81f190250191`,
+and mapping-correction SHA-256
+`9f0bba6172ea1af4a6d4844365bb5aa8c63308bee67ab9df5c03d1937e8d429d`.
+PMIDs `36879724` and `39281191` must therefore preserve their exact authorized current rationale;
+they must not be overwritten with the earlier finalized source note. Their mapping classification
+is `requires_existing_authorization_interpretation`, their exact note subterminal is
+`NOTE DISPOSITION ALREADY AUTHORIZED`, and they produce no
+`incompatible_existing_head_fields` blocker or new physician decision.
+
+The 272 excluded-row blanks are not unresolved physician decisions. A compatibility supplement or
+template would invent enrichment values outside the finalized V3 scope and therefore is neither
+required nor safe. No supplement can repair the lifecycle-state mismatches, and supplying one must
+not change readiness. The source values remain verbatim, no executable action is emitted for any of
+the 630 rows, and no package is generated. The exact terminal state is
+`FORWARD IMPORT-CONTRACT REPAIR REQUIRED — NOTE DISPOSITION ALREADY AUTHORIZED`. This finding does
+not alter the safe-profile owner/ACL conclusion above. A future semantic repair is specified, but
+not implemented or authorized, in
+[`gold-import-contract-v2-forward-repair-spec.md`](./gold-import-contract-v2-forward-repair-spec.md).
+The historical `621/3/6` distribution remains evidence only, not a production assertion.
 
 ## Schema additions
 

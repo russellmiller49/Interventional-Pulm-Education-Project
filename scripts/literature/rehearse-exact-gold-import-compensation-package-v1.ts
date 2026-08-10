@@ -2,9 +2,12 @@ import { spawn } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
 import { lstat, readFile, readdir } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
+import { TextDecoder } from 'node:util'
 import { fileURLToPath } from 'node:url'
 
 import { z } from 'zod'
+
+import { validateGoldImportSourceArtifact } from '../../src/features/literature/gold-set/import-artifact-validation'
 
 import {
   GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION,
@@ -25,8 +28,6 @@ import {
 } from '../../src/features/literature/gold-set/import-compensation'
 import {
   AMENDED_TWO_ROW_AUTHORIZATION_SHA256,
-  EXACT_COMPENSATION_COUNTS,
-  EXACT_IMPORT_COUNTS,
   FINAL_V3_ARTIFACT_SHA256,
   MIGRATION_ID,
   MIGRATION_SHA256,
@@ -37,6 +38,8 @@ import {
   deterministicPackageUuid,
   developmentPlanningStateSha256,
   verifyReadyPostMigrationAuditPackage,
+  type CompensationActionCounts,
+  type ImportActionCounts,
   type PackageSourceBytes,
   type PackageSourceIdentityPolicy,
 } from './generate-gold-import-compensation-package-v1'
@@ -44,6 +47,10 @@ import {
   loadAndVerifyBackup,
   type LoadedPreMigrationBackup,
 } from './gold-import-compensation-migration-operations'
+import {
+  validateGoldImportSourceAuthorizationSet,
+  validateGoldImportSourceAuthorizationSetForImport,
+} from './gold-import-compensation-compatibility'
 import {
   assertLocalDockerEndpoint,
   buildCanonicalScenarioEvidence,
@@ -98,7 +105,7 @@ const REHEARSAL_RUN_NONCE_LABEL = 'org.interventionalpulm.gold-rehearsal-run-non
 const sha256Schema = z.string().regex(SHA256_PATTERN)
 const uuidSchema = z.string().regex(UUID_PATTERN)
 
-const REQUIRED_PACKAGE_FILES = [
+const BASE_REQUIRED_PACKAGE_FILES = [
   'append-only-compensation-plan-template.json',
   'ambiguous-outcome-reconciliation.json',
   'checksum-manifest.sha256',
@@ -119,6 +126,11 @@ const REQUIRED_PACKAGE_FILES = [
   'row-level-action-plan.json',
   'source-authorization-set.json',
   'state-hash-proof.json',
+] as const
+const RECONCILED_AUDIT_PACKAGE_FILES = [
+  'post-migration-contract-diagnostics.json',
+  'post-migration-contract-reconciliation.json',
+  'post-migration-read-only-state-bracket.json',
 ] as const
 
 const sourceIdentitiesSchema = z
@@ -161,6 +173,28 @@ const packageDescriptorSchema = z
         readyToExecute: z.literal(false),
       })
       .strict(),
+    compatibility: z
+      .object({
+        actionCounts: z
+          .object({
+            incompatible: z.literal(0),
+            initial: z.number().int().nonnegative(),
+            inserts: z.number().int().nonnegative(),
+            noops: z.number().int().nonnegative(),
+            revisions: z.number().int().nonnegative(),
+            total: z.number().int().positive(),
+            unresolved: z.literal(0),
+          })
+          .strict(),
+        authorizationBindingsSha256: sha256Schema,
+        booleanNormalizationLedgerSha256: sha256Schema,
+        existingHeadCohortSha256: sha256Schema,
+        listNormalizationLedgerSha256: sha256Schema,
+        noteDispositionSha256: sha256Schema,
+        sourceAuthorizationSetVersion: z.literal(3),
+      })
+      .strict()
+      .optional(),
     contractVersion: z.literal(GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION),
     databaseAccess: z.literal('none_package_uses_read_only_post_migration_audit'),
     databaseMutation: z.literal(false),
@@ -415,8 +449,8 @@ export interface ExactPackageRehearsalReport {
   deterministicArtifacts: true
   evidenceSha256: string
   heldOutIdentitiesAccessed: false
-  importCounts: typeof EXACT_IMPORT_COUNTS
-  compensationCounts: typeof EXACT_COMPENSATION_COUNTS
+  importCounts: ImportActionCounts
+  compensationCounts: CompensationActionCounts
   migrationId: typeof MIGRATION_ID
   migrationSha256: string
   packageManifestSha256: string
@@ -824,9 +858,9 @@ function assertDevelopmentSeedScope(seed: DevelopmentDatabaseSeed): void {
   if (
     batches.length !== 1 ||
     requiredSeedString(batches[0], 'id') !== seed.batchId ||
-    items.length !== EXACT_IMPORT_COUNTS.total
+    items.length === 0
   ) {
-    throw new Error('Development backup must contain one batch and exactly 630 items.')
+    throw new Error('Development backup must contain one batch and a nonempty item set.')
   }
   assertSafeBatchPayload(batches[0])
   const itemIds = new Set<string>()
@@ -1046,12 +1080,32 @@ export function assertExactPackageSourceBytes(
       'Rehearsal source artifact or authorization bytes are missing, stale, or replaced.',
     )
   }
+  const sourceAuthorizationBytes = package_.files.get('source-authorization-set.json')
+  if (!sourceAuthorizationBytes) {
+    throw new Error('Exact package is missing its source authorization set.')
+  }
+  const sourceAuthorizationSet = validateGoldImportSourceAuthorizationSetForImport({
+    finalizedArtifact: sources.finalArtifact,
+    plan: package_.importPlan,
+    sourceAuthorizationSet: parseJson(sourceAuthorizationBytes, 'source-authorization-set.json'),
+  })
+  const csvText = new TextDecoder('utf-8', { fatal: true }).decode(sources.finalArtifact)
+  validateGoldImportSourceArtifact({
+    compatibility:
+      sourceAuthorizationSet.version === 3
+        ? {
+            booleanNormalizationLedger:
+              sourceAuthorizationSet.compatibility.booleanNormalizationLedger,
+            listNormalizationLedger: sourceAuthorizationSet.compatibility.listNormalizationLedger,
+            noteDisposition: sourceAuthorizationSet.compatibility.noteDisposition,
+          }
+        : undefined,
+    csvText,
+    plan: package_.importPlan,
+  })
 }
 
-function assertExactImportCounts(plan: ImportPlan): void {
-  if (!same(plan.counts, EXACT_IMPORT_COUNTS)) {
-    throw new Error('Disposable rehearsal requires the exact 621/3/6 import package.')
-  }
+function assertExactImportCounts(plan: ImportPlan): ImportActionCounts {
   const computed = {
     initial: plan.actions.filter((action) => action.action === 'import_initial').length,
     inserts: plan.actions.filter((action) => action.action !== 'import_noop').length,
@@ -1059,23 +1113,34 @@ function assertExactImportCounts(plan: ImportPlan): void {
     revisions: plan.actions.filter((action) => action.action === 'import_revision').length,
     total: plan.actions.length,
   }
-  if (!same(computed, EXACT_IMPORT_COUNTS)) {
-    throw new Error('Import plan counts do not match its exact row actions.')
+  if (
+    computed.total === 0 ||
+    computed.initial + computed.revisions + computed.noops !== computed.total ||
+    !same(computed, plan.counts)
+  ) {
+    throw new Error('Import plan counts do not match its complete row-action partition.')
   }
+  return computed
 }
 
 function assertCompensationMapping(
   importActions: readonly ImportAction[],
   compensationActions: readonly CompensationAction[],
-): void {
+): CompensationActionCounts {
   const counts = {
     noops: compensationActions.filter((action) => action.action === 'compensate_noop').length,
     restored: compensationActions.filter((action) => action.action === 'compensate_restore').length,
     total: compensationActions.length,
     voided: compensationActions.filter((action) => action.action === 'compensate_void').length,
   }
-  if (!same(counts, EXACT_COMPENSATION_COUNTS)) {
-    throw new Error('Disposable rehearsal requires exactly 621 void + 3 restore + 6 no-action.')
+  const expectedCounts = {
+    noops: importActions.filter((action) => action.action === 'import_noop').length,
+    restored: importActions.filter((action) => action.action === 'import_revision').length,
+    total: importActions.length,
+    voided: importActions.filter((action) => action.action === 'import_initial').length,
+  }
+  if (counts.total === 0 || !same(counts, expectedCounts)) {
+    throw new Error('Compensation counts do not exactly map the dynamic import action classes.')
   }
   const compensationBySource = new Map(
     compensationActions.map((action) => [action.sourceActionId, action]),
@@ -1112,6 +1177,7 @@ function assertCompensationMapping(
       throw new Error('Old pointer-rewind compensation package rejected.')
     }
   }
+  return counts
 }
 
 function reconstructExpectedCompensationTemplate(
@@ -1190,11 +1256,12 @@ function reconstructExpectedCompensationTemplate(
       importedReviewId: source.importedReviewId,
     })
   })
+  const counts = assertCompensationMapping(importPlan.actions, actions)
   const content = {
     actions,
     batchId: importPlan.batchId,
     contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION,
-    counts: EXACT_COMPENSATION_COUNTS,
+    counts,
     executionContext: importPlan.executionContext,
     expectedEffectiveStateSha256: importPlan.expectedPostEffectiveStateSha256,
     expectedPhysicalState: {
@@ -1263,11 +1330,25 @@ function assertAllPackageArtifactsSemanticallyBound(input: {
   const schemaSecurityDefinitionIdentityBytes = files.get(
     'post-migration-schema-security-definition-identity.json',
   ) as Buffer
+  const contractDiagnosticsBytes = files.get('post-migration-contract-diagnostics.json')
+  const contractReconciliationBytes = files.get('post-migration-contract-reconciliation.json')
+  const readOnlyStateBracketBytes = files.get('post-migration-read-only-state-bracket.json')
+  const hasReconciledEvidence =
+    contractDiagnosticsBytes !== undefined &&
+    contractReconciliationBytes !== undefined &&
+    readOnlyStateBracketBytes !== undefined
   const verifiedAudit = verifyReadyPostMigrationAuditPackage({
     auditBytes,
     developmentPlanningStateBytes,
     manifestBytes: auditManifestBytes,
     markdownBytes: auditMarkdownBytes,
+    reconciledEvidence: hasReconciledEvidence
+      ? {
+          contractDiagnosticsBytes,
+          contractReconciliationBytes,
+          readOnlyStateBracketBytes,
+        }
+      : undefined,
     schemaSecurityDefinitionIdentityBytes,
     trustedManifestSha256: descriptor.audit.canonicalManifestSha256,
   })
@@ -1294,14 +1375,6 @@ function assertAllPackageArtifactsSemanticallyBound(input: {
   ) {
     throw new Error('Embedded post-migration audit package is not cross-bound to the import plan.')
   }
-  const sourceAuthorizationSet = {
-    amendedTwoRowAuthorizationSha256: descriptor.sources.amendedAuthorizationSha256,
-    finalArtifactSha256: descriptor.sources.finalArtifactSha256,
-    kind: 'gold_import_source_authorization_set',
-    signedProtocolAuthorizationSha256: descriptor.sources.protocolAuthorizationSha256,
-    sourceDecisionsChanged: false,
-    version: 1,
-  }
   const sourceAuthorizationBytes = files.get('source-authorization-set.json')
   if (
     !sourceAuthorizationBytes ||
@@ -1309,7 +1382,73 @@ function assertAllPackageArtifactsSemanticallyBound(input: {
   ) {
     throw new Error('Source authorization set bytes are not bound to the immutable import plan.')
   }
-  assertJsonArtifactEquals(files, 'source-authorization-set.json', sourceAuthorizationSet)
+  const sourceAuthorizationSet = validateGoldImportSourceAuthorizationSet(
+    parseJson(sourceAuthorizationBytes, 'source-authorization-set.json'),
+    descriptor.sources.finalArtifactSha256,
+  )
+  if (sourceAuthorizationSet.version === 3) {
+    if (audit.schemaVersion !== 'gold-import-compensation-reconciled-migration-audit/1.0.0') {
+      throw new Error('V3 source authorization requires the reconciled post-migration audit.')
+    }
+    const bindings = sourceAuthorizationSet.compatibility.bindings
+    const scope = sourceAuthorizationSet.compatibility.scope
+    if (
+      bindings.contract.environmentInvariantIdentitySha256 !==
+        audit.database.contractInvariantIdentitySha256 ||
+      bindings.contract.environmentProfileIdentitySha256 !==
+        audit.database.environmentProfileIdentitySha256 ||
+      bindings.currentDatabase.batchId !== audit.database.batchId ||
+      bindings.currentDatabase.developmentMembershipSha256 !==
+        audit.database.developmentMembershipSha256 ||
+      bindings.currentDatabase.developmentPlanningStateSha256 !==
+        audit.database.developmentPlanningStateSha256 ||
+      bindings.currentDatabase.effectiveStateSha256 !==
+        audit.database.currentEffectiveStateSha256 ||
+      bindings.currentDatabase.physicalStateSha256 !== audit.database.currentPhysicalStateSha256 ||
+      bindings.finalV3ArtifactSha256 !== descriptor.sources.finalArtifactSha256 ||
+      bindings.migration.id !== descriptor.migration.id ||
+      bindings.migration.sha256 !== descriptor.migration.sha256 ||
+      scope.datasetSplit !== importPlan.scope.datasetSplit ||
+      scope.heldOutIdentitiesAccessed !== importPlan.scope.heldOutIdentitiesAccessed ||
+      scope.remoteWritesAllowed !== importPlan.executionContext.remoteWritesAllowed ||
+      scope.targetDatabase !== importPlan.executionContext.targetDatabase
+    ) {
+      throw new Error(
+        'Source authorization bindings are stale relative to the embedded audit, plan, artifact, or migration.',
+      )
+    }
+  }
+  if (
+    sourceAuthorizationSet.amendedTwoRowAuthorizationSha256 !==
+      descriptor.sources.amendedAuthorizationSha256 ||
+    sourceAuthorizationSet.signedProtocolAuthorizationSha256 !==
+      descriptor.sources.protocolAuthorizationSha256 ||
+    (descriptor.compatibility === undefined && sourceAuthorizationSet.version !== 1) ||
+    (descriptor.compatibility !== undefined &&
+      (sourceAuthorizationSet.version !== 3 ||
+        sha256Canonical(sourceAuthorizationSet.compatibility.bindings) !==
+          descriptor.compatibility.authorizationBindingsSha256 ||
+        sourceAuthorizationSet.compatibility.booleanNormalizationLedgerSha256 !==
+          descriptor.compatibility.booleanNormalizationLedgerSha256 ||
+        sourceAuthorizationSet.compatibility.bindings.existingHeadCohortSha256 !==
+          descriptor.compatibility.existingHeadCohortSha256 ||
+        sourceAuthorizationSet.compatibility.listNormalizationLedgerSha256 !==
+          descriptor.compatibility.listNormalizationLedgerSha256 ||
+        sha256Canonical(sourceAuthorizationSet.compatibility.noteDisposition) !==
+          descriptor.compatibility.noteDispositionSha256 ||
+        sourceAuthorizationSet.compatibility.actionCounts.initial !== importPlan.counts.initial ||
+        sourceAuthorizationSet.compatibility.actionCounts.inserts !== importPlan.counts.inserts ||
+        sourceAuthorizationSet.compatibility.actionCounts.noops !== importPlan.counts.noops ||
+        sourceAuthorizationSet.compatibility.actionCounts.revisions !==
+          importPlan.counts.revisions ||
+        sourceAuthorizationSet.compatibility.actionCounts.total !== importPlan.counts.total ||
+        !same(
+          sourceAuthorizationSet.compatibility.actionCounts,
+          descriptor.compatibility.actionCounts,
+        )))
+  ) {
+    throw new Error('Source authorization set is not semantically bound to package compatibility.')
+  }
   const rowBindings = importPlan.actions.map((importAction, index) => {
     const compensationAction = compensation.actions[index]
     if (!compensationAction || compensationAction.sourceActionId !== importAction.actionId) {
@@ -1389,7 +1528,7 @@ function assertAllPackageArtifactsSemanticallyBound(input: {
     targetImportOperationId: importPlan.operationId,
   })
   assertJsonArtifactEquals(files, 'import-journal-template.json', {
-    actionCount: EXACT_IMPORT_COUNTS.total,
+    actionCount: importPlan.counts.total,
     idempotencyKey: importPlan.binding.idempotencyKey,
     operationId: importPlan.operationId,
     outcome: null,
@@ -1429,7 +1568,7 @@ function assertAllPackageArtifactsSemanticallyBound(input: {
     schemaVersion: 'gold-import-compensation-state-hash-proof/v1',
   })
   assertJsonArtifactEquals(files, 'compensation-readiness.json', {
-    actionCounts: EXACT_COMPENSATION_COUNTS,
+    actionCounts: compensation.counts,
     appendOnly: true,
     currentPointerAlwaysLatestPhysicalHead: true,
     importExecuted: false,
@@ -1475,10 +1614,25 @@ export function verifyExactGeneratedPackage(
   files: ReadonlyMap<string, Buffer>,
   identityPolicy: PackageSourceIdentityPolicy = PRODUCTION_SOURCE_IDENTITIES,
 ): VerifiedExactPackage {
-  for (const required of REQUIRED_PACKAGE_FILES) {
+  if (!same(identityPolicy, PRODUCTION_SOURCE_IDENTITIES) && process.env.NODE_ENV !== 'test') {
+    throw new Error('Non-production rehearsal identity policies are restricted to tests.')
+  }
+  for (const required of BASE_REQUIRED_PACKAGE_FILES) {
     if (!files.has(required)) throw new Error(`Exact package is missing ${required}.`)
   }
-  if (files.size !== REQUIRED_PACKAGE_FILES.length) {
+  const auditEnvelope = parseJson(
+    files.get('post-migration-audit.json') as Buffer,
+    'post-migration-audit.json',
+  ) as Record<string, unknown>
+  const reconciledAudit =
+    auditEnvelope.schemaVersion === 'gold-import-compensation-reconciled-migration-audit/1.0.0'
+  const requiredFiles = reconciledAudit
+    ? [...BASE_REQUIRED_PACKAGE_FILES, ...RECONCILED_AUDIT_PACKAGE_FILES]
+    : [...BASE_REQUIRED_PACKAGE_FILES]
+  for (const required of requiredFiles) {
+    if (!files.has(required)) throw new Error(`Exact package is missing ${required}.`)
+  }
+  if (files.size !== requiredFiles.length) {
     throw new Error('Exact package contains unmanifested or unexpected artifacts.')
   }
   const manifestBytes = files.get('checksum-manifest.sha256') as Buffer
@@ -1496,12 +1650,8 @@ export function verifyExactGeneratedPackage(
     parseJson(files.get('package-descriptor.json') as Buffer, 'package-descriptor.json'),
   )
   assertSourceIdentities(descriptor.sources, identityPolicy)
-  if (
-    descriptor.migration.sha256 !== identityPolicy.migrationSha256 ||
-    !same(descriptor.import.counts, EXACT_IMPORT_COUNTS) ||
-    !same(descriptor.compensation.counts, EXACT_COMPENSATION_COUNTS)
-  ) {
-    throw new Error('Package descriptor is stale or has the wrong exact action counts.')
+  if (descriptor.migration.sha256 !== identityPolicy.migrationSha256) {
+    throw new Error('Package descriptor has a stale migration identity.')
   }
   const importPlan = parseImportPlan(
     parseJson(
@@ -1509,8 +1659,9 @@ export function verifyExactGeneratedPackage(
       'immutable-atomic-import-plan.json',
     ),
   )
-  assertExactImportCounts(importPlan)
+  const importCounts = assertExactImportCounts(importPlan)
   if (
+    !same(descriptor.import.counts, importCounts) ||
     importPlan.binding.contentSha256 !== descriptor.import.planSha256 ||
     importPlan.binding.idempotencyKey !== descriptor.import.idempotencyKey ||
     importPlan.operationId !== descriptor.import.operationId ||
@@ -1528,6 +1679,7 @@ export function verifyExactGeneratedPackage(
   const reconstructedCompensation = reconstructExpectedCompensationTemplate(importPlan)
   const { binding, ...compensationContent } = compensation
   if (
+    !same(descriptor.compensation.counts, compensation.counts) ||
     !same(compensation, reconstructedCompensation) ||
     binding.contentSha256 !== sha256Canonical(compensationContent) ||
     binding.contentSha256 !== descriptor.compensation.planTemplateSha256 ||
@@ -1633,8 +1785,8 @@ export function validateExactPackageRehearsalEvidence(
     evidence.migration.sha256 !== package_.descriptor.migration.sha256 ||
     evidence.security.schemaSecurityDefinitionIdentitySha256 !==
       package_.descriptor.audit.schemaSecurityIdentitySha256 ||
-    !same(evidence.importCounts, EXACT_IMPORT_COUNTS) ||
-    !same(evidence.compensationCounts, EXACT_COMPENSATION_COUNTS)
+    !same(evidence.importCounts, package_.descriptor.import.counts) ||
+    !same(evidence.compensationCounts, package_.descriptor.compensation.counts)
   ) {
     throw new Error('Disposable scenario evidence is not bound to the exact generated package.')
   }
@@ -1676,13 +1828,13 @@ export async function runExactPackageDisposableRehearsal(input: {
   const evidence = validateExactPackageRehearsalEvidence(rawEvidence, package_, attestation)
   const canonicalEvidence = normalizeExactPackageRehearsalEvidence(evidence)
   return {
-    compensationCounts: EXACT_COMPENSATION_COUNTS,
+    compensationCounts: package_.descriptor.compensation.counts,
     contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION,
     databaseMutationOutsideDisposableTarget: false,
     deterministicArtifacts: true,
     evidenceSha256: sha256Canonical(canonicalEvidence),
     heldOutIdentitiesAccessed: false,
-    importCounts: EXACT_IMPORT_COUNTS,
+    importCounts: package_.descriptor.import.counts,
     migrationId: MIGRATION_ID,
     migrationSha256: package_.descriptor.migration.sha256,
     packageManifestSha256: package_.manifestSha256,
@@ -2716,7 +2868,7 @@ values (${sqlLiteral(match[1])}, ${sqlLiteral(match[2])}, array[]::text[]);\ncom
         group by batch.id;`),
       )
     if (
-      seededState.developmentCount !== EXACT_IMPORT_COUNTS.total ||
+      seededState.developmentCount !== package_.importPlan.counts.total ||
       seededState.testCount !== 0 ||
       seededState.testUnlocked ||
       seededState.membership !== package_.importPlan.scope.developmentMembershipSha256 ||
@@ -2808,7 +2960,7 @@ rollback;`,
         ) from public.literature_gold_review_operations operation
         where operation.id = ${sqlLiteral(package_.importPlan.operationId)}::uuid;`),
       )
-    if (observedImport.actionCount !== EXACT_IMPORT_COUNTS.total) {
+    if (observedImport.actionCount !== package_.importPlan.counts.total) {
       throw new Error('Lost-ack observation did not find the exact completed import journal.')
     }
     const recoveryAuthorization = bindRecoveryAuthorization({
@@ -2844,8 +2996,8 @@ rollback;`,
     if (
       reconciledImport.outcome !== 'committed' ||
       reconciledImport.response !== 'idempotent_replay' ||
-      reconciledImport.counts.applied !== EXACT_IMPORT_COUNTS.inserts ||
-      reconciledImport.counts.noops !== EXACT_IMPORT_COUNTS.noops ||
+      reconciledImport.counts.applied !== package_.importPlan.counts.inserts ||
+      reconciledImport.counts.noops !== package_.importPlan.counts.noops ||
       reconciledImport.afterPhysicalStateSha256 !== observedImport.physical ||
       reconciledImport.afterEffectiveStateSha256 !== observedImport.effective ||
       !same(stateBeforeLostAckReconciliation, stateAfterLostAckReconciliation)
@@ -2907,7 +3059,7 @@ rollback;`,
       actions: package_.compensationActions,
       batchId: package_.importPlan.batchId,
       contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION,
-      counts: EXACT_COMPENSATION_COUNTS,
+      counts: package_.descriptor.compensation.counts,
       executionContext: package_.importPlan.executionContext,
       expectedEffectiveStateSha256: reconciledImport.afterEffectiveStateSha256,
       expectedPhysicalStateSha256: reconciledImport.afterPhysicalStateSha256,
@@ -2952,8 +3104,9 @@ rollback;`,
     if (
       compensationReceipt.outcome !== 'committed' ||
       compensationReceipt.counts.applied !==
-        EXACT_COMPENSATION_COUNTS.restored + EXACT_COMPENSATION_COUNTS.voided ||
-      compensationReceipt.counts.noops !== EXACT_COMPENSATION_COUNTS.noops
+        package_.descriptor.compensation.counts.restored +
+          package_.descriptor.compensation.counts.voided ||
+      compensationReceipt.counts.noops !== package_.descriptor.compensation.counts.noops
     ) {
       throw new Error('Exact append-only compensation count verification failed.')
     }
@@ -2965,7 +3118,7 @@ rollback;`,
       actions: package_.compensationActions,
       batchId: package_.importPlan.batchId,
       contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION,
-      counts: EXACT_COMPENSATION_COUNTS,
+      counts: package_.descriptor.compensation.counts,
       executionContext: package_.importPlan.executionContext,
       expectedEffectiveStateSha256: compensationReceipt.afterEffectiveStateSha256,
       expectedPhysicalStateSha256: compensationReceipt.afterPhysicalStateSha256,
@@ -3102,14 +3255,14 @@ rollback;`,
       `${POSTGRES_IMAGE}\0${systemIdentifier.systemIdentifier}`,
     )
     const evidence = exactPackageRehearsalEvidenceSchema.parse({
-      compensationCounts: EXACT_COMPENSATION_COUNTS,
+      compensationCounts: package_.descriptor.compensation.counts,
       deterministicArtifacts: false,
       effectiveState: {
         postCompensationSha256: postCompensation.effective,
         postImportSha256: replayedImport.afterEffectiveStateSha256,
         preImportSha256: replayedImport.beforeEffectiveStateSha256,
       },
-      importCounts: EXACT_IMPORT_COUNTS,
+      importCounts: package_.descriptor.import.counts,
       migration: package_.descriptor.migration,
       packageManifestSha256: package_.manifestSha256,
       physicalState: {
