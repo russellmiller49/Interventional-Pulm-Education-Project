@@ -6,12 +6,15 @@ import {
   assertMigrationEquivalentPostV2SeedIdentity,
 } from './execute-exact-gold-import-compensation-package-v2'
 import {
+  GOLD_IMPORT_PRE_V1_BACKUP_PHYSICAL_STATE_SHA256_V2,
   V2_REHEARSAL_TASK_BRANCH,
   authenticateV2RehearsalRepositoryHead,
+  assertAuthenticatedPreV1BackupIdentityV2,
   assertV2RehearsalRepositoryUnchanged,
   executeCompleteV2Rehearsal,
   runExactPackageRehearsalV2Cli,
 } from './rehearse-exact-gold-import-compensation-package-v2'
+import { GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2 } from './gold-import-note-disposition-gate-v2'
 import type { V2DisposablePathResult } from './rehearse-gold-import-compensation-db-v2'
 import type { DisposableContainerCleanupOutcome } from './rehearse-exact-gold-import-compensation-package-v1'
 
@@ -46,6 +49,25 @@ function result(path: 'fresh' | 'upgrade'): V2DisposablePathResult {
 }
 
 describe('exact V2 package rehearsal entrypoint', () => {
+  test('authenticates the pre-V1 backup physical projection before applying V1', () => {
+    const accepted = {
+      batchId: 'fff41ba3-811d-4d28-ba73-9302db3a942a',
+      developmentMembershipSha256:
+        GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.developmentMembershipSha256,
+      effectiveStateSha256: GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.effectiveStateSha256,
+      physicalStateSha256: GOLD_IMPORT_PRE_V1_BACKUP_PHYSICAL_STATE_SHA256_V2,
+      planningStateSha256: GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.developmentPlanningStateSha256,
+      seedBatchId: 'fff41ba3-811d-4d28-ba73-9302db3a942a',
+    }
+    expect(() => assertAuthenticatedPreV1BackupIdentityV2(accepted)).not.toThrow()
+    expect(() =>
+      assertAuthenticatedPreV1BackupIdentityV2({
+        ...accepted,
+        physicalStateSha256: GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.physicalStateSha256,
+      }),
+    ).toThrow('accepted pre-V1')
+  })
+
   test('authenticates exact branch, clean tracked/untracked state, and origin/main ancestry', async () => {
     const repositoryGit = (overrides?: {
       branch?: string

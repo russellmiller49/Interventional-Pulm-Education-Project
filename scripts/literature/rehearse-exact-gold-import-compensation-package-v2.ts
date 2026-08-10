@@ -46,6 +46,8 @@ const SHA256_PATTERN = /^[a-f0-9]{64}$/u
 const PACKAGE_OUTPUT_DIRECTORY = 'exact-package-v2'
 export const V2_REHEARSAL_TASK_BRANCH =
   'codex/ip-literature-import-contract-v2-forward-repair-v1' as const
+export const GOLD_IMPORT_PRE_V1_BACKUP_PHYSICAL_STATE_SHA256_V2 =
+  'b509e876f48112957eda42e8ec04e92a10bc40c3217b0011d1c0d708d519ce4f' as const
 const CANONICAL_OUTPUT_NAMES = [
   'disposable-v2-ready-audit.json',
   'exact-package-rehearsal-report-v2.json',
@@ -217,6 +219,29 @@ export async function assertV2RehearsalRepositoryUnchanged(
   }
 }
 
+export function assertAuthenticatedPreV1BackupIdentityV2(input: {
+  batchId: unknown
+  developmentMembershipSha256: unknown
+  effectiveStateSha256: unknown
+  physicalStateSha256: unknown
+  planningStateSha256: unknown
+  seedBatchId: unknown
+}): void {
+  if (
+    input.effectiveStateSha256 !== GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.effectiveStateSha256 ||
+    input.physicalStateSha256 !== GOLD_IMPORT_PRE_V1_BACKUP_PHYSICAL_STATE_SHA256_V2 ||
+    input.developmentMembershipSha256 !==
+      GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.developmentMembershipSha256 ||
+    input.planningStateSha256 !==
+      GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.developmentPlanningStateSha256 ||
+    input.batchId !== input.seedBatchId
+  ) {
+    throw new Error(
+      'Checksum-bound backup is not the accepted pre-V1 effective/physical/membership/planning state.',
+    )
+  }
+}
+
 function authenticatedSeedFromBackup(
   backup: LoadedPreMigrationBackup,
   trustedManifestSha256: string,
@@ -234,21 +259,14 @@ function authenticatedSeedFromBackup(
     receipt.databaseIdentity,
     'pre-migration backup database identity',
   )
-  if (
-    stateAudits.effectiveStateSha256 !==
-      GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.effectiveStateSha256 ||
-    stateAudits.physicalStateSha256 !==
-      GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.physicalStateSha256 ||
-    databaseIdentity.developmentMembershipSha256 !==
-      GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.developmentMembershipSha256 ||
-    sha256Canonical(backup.planningState) !==
-      GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.developmentPlanningStateSha256 ||
-    databaseIdentity.batchId !== seed.batchId
-  ) {
-    throw new Error(
-      'Checksum-bound backup is not the accepted V1 effective/physical/membership/planning state.',
-    )
-  }
+  assertAuthenticatedPreV1BackupIdentityV2({
+    batchId: databaseIdentity.batchId,
+    developmentMembershipSha256: databaseIdentity.developmentMembershipSha256,
+    effectiveStateSha256: stateAudits.effectiveStateSha256,
+    physicalStateSha256: stateAudits.physicalStateSha256,
+    planningStateSha256: sha256Canonical(backup.planningState),
+    seedBatchId: seed.batchId,
+  })
   return seed
 }
 
