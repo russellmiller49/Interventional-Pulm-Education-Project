@@ -1,4 +1,5 @@
 import type { CompositionLedger } from './composition-ledger'
+import type { DefinitionSetLedger } from './definition-set-ledger'
 import type { HistoricalCatalogReleaseFile } from './historical-catalog'
 import type { ModuleLedger } from './module-ledger'
 import type { ProductFamilyLedger } from './product-family'
@@ -44,6 +45,7 @@ export type PublicationEntryKind =
   | 'recipe-version'
   | 'catalog-release'
   | 'product-family-version'
+  | 'definition-set'
 
 /**
  * One immutable published definition, projected to exactly what may not change.
@@ -89,6 +91,7 @@ export interface PublicationArtifacts {
   } | null
   moduleLedger: ModuleLedger | null
   compositionLedger: CompositionLedger | null
+  definitionSetLedger: DefinitionSetLedger | null
   catalogReleases: HistoricalCatalogReleaseFile | null
   productFamilies: ProductFamilyLedger | null
 }
@@ -162,6 +165,22 @@ export function buildPublicationBaselineSnapshot(
       definitionHash: entry.definitionHash,
       lineage: entry.sourceProcedureCode,
       semanticVersion: versionSuffix(entry.recipeVersionId),
+      dependencies: [],
+      lifecycle: {},
+    })
+  }
+
+  // Retained whole definition sets are content-addressed, so the id carries the hash: a
+  // "consistent rewrite" — new content with a matching new hash — changes the id itself,
+  // which this comparison reads as removing a published entry. The hash is still recorded
+  // separately so an id kept intact with edited content also fires the mutation code.
+  for (const entry of artifacts.definitionSetLedger?.entries ?? []) {
+    entries.push({
+      kind: 'definition-set',
+      id: `${entry.definitionSetId}@${entry.definitionHash}`,
+      definitionHash: entry.definitionHash,
+      lineage: entry.definitionSetId,
+      semanticVersion: null,
       dependencies: [],
       lifecycle: {},
     })

@@ -2,8 +2,10 @@ import { readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
 import {
+  getLiveDefinitionSets,
   getLiveRecipeVersions,
   getReleaseDefinitionSources,
+  type ReleaseDefinitionSetPins,
 } from '../../src/features/preference-cards/data/demo-context.server'
 import {
   emptyCompositionLedger,
@@ -11,6 +13,17 @@ import {
   withPublishedRecipes,
   type CompositionLedger,
 } from '../../src/features/preference-cards/domain/composition-ledger'
+import {
+  emptyDefinitionSetLedger,
+  validateDefinitionSetLedger,
+  withPublishedDefinitionSets,
+  COMPATIBILITY_RULE_SET_DEFINITION_ID as COMPAT_SET_ID,
+  MODIFIER_SET_DEFINITION_ID as MODIFIER_SET_ID,
+  RESCUE_MODULE_SET_DEFINITION_ID as RESCUE_SET_ID,
+  ROLE_TAXONOMY_DEFINITION_ID as TAXONOMY_SET_ID,
+  type DefinitionSetContent,
+  type DefinitionSetLedger,
+} from '../../src/features/preference-cards/domain/definition-set-ledger'
 import {
   computeReleaseBundle,
   diffReleaseBundles,
@@ -115,11 +128,27 @@ interface SeedReleaseFile {
   releases: SeedRelease[]
 }
 
+/** The shape of the previously generated bundle file, read back as the record of pins. */
+interface GeneratedReleaseFile {
+  pointers: Record<string, string>
+  bundles: PreferenceCardReleaseBundle[]
+}
+
 export interface BuildReleaseBundlesResult {
   bundles: PreferenceCardReleaseBundle[]
   pointers: ReleasePointerMap
   impact: ReleaseImpactReport[]
   messages: ReleaseValidationMessage[]
+}
+
+/** A bundle's four whole-set pins, in the shape `getReleaseDefinitionSources` resolves. */
+export function setPinsOfBundle(bundle: PreferenceCardReleaseBundle): ReleaseDefinitionSetPins {
+  return {
+    modifierSetHash: bundle.modifierSetPin.definitionHash,
+    rescueModuleSetHash: bundle.rescueModuleSetPin.definitionHash,
+    compatibilityRuleSetHash: bundle.compatibilityRuleSetPin.definitionHash,
+    roleTaxonomyHash: bundle.roleTaxonomyPin.definitionHash,
+  }
 }
 
 function fail(message: string): never {
@@ -131,13 +160,25 @@ function fail(message: string): never {
  *
  * Exported so `build-release-bundles.test.ts` can feed it a mutated seed and assert the
  * failure rather than trusting that the failure exists.
+ *
+ * `recordedSetPinsByReleaseId` carries the four whole-set pins each frozen release recorded
+ * in the previously generated bundles. A frozen release resolves its sets through those
+ * pins — live content when the hash still matches, the retention ledger otherwise — so
+ * editing a live definition set moves only the releases that have not yet been frozen. The
+ * frozen `definitionHash` still guards the pins themselves: recorded pins that disagree with
+ * what was frozen recompute to a different bundle hash and fail as `release_definition_mutated`.
  */
 export function buildReleaseBundles(input: {
   seed: SeedReleaseFile
   resolverContractVersion: string
-  loadSources: (recipeVersionId: string) => ReleaseDefinitionSources | null
+  loadSources: (
+    recipeVersionId: string,
+    setPins?: ReleaseDefinitionSetPins,
+  ) => ReleaseDefinitionSources | null
+  recordedSetPinsByReleaseId?: ReadonlyMap<string, ReleaseDefinitionSetPins>
 }): BuildReleaseBundlesResult {
   const { seed, loadSources } = input
+  const recordedSetPins = input.recordedSetPinsByReleaseId ?? new Map<string, never>()
 
   const bundles: PreferenceCardReleaseBundle[] = []
   const sourcesByBundleId = new Map<string, ReleaseDefinitionSources | null>()
@@ -165,10 +206,12 @@ export function buildReleaseBundles(input: {
       )
     }
 
-    const sources = loadSources(release.recipeVersionId)
+    // A frozen release resolves through the whole-set pins it recorded when generated; a
+    // draft resolves the live sets, because a draft's pins are still being computed.
+    const sources = loadSources(release.recipeVersionId, recordedSetPins.get(release.id))
     if (!sources) {
       fail(
-        `Release ${release.id} pins recipe version ${release.recipeVersionId}, which the generated data no longer publishes. A retained release must stay reconstructable: restore the composition, or the cards pinned to it cannot be rebuilt.`,
+        `Release ${release.id} pins definitions the generated data no longer supplies — the recipe version ${release.recipeVersionId} is not retained, or a pinned definition set is in neither the live sources nor the definition-set ledger. A retained release must stay reconstructable.`,
       )
     }
 
@@ -391,11 +434,26 @@ async function main() {
   }
 
   const seed = await readJson<SeedReleaseFile>(seedDirectory, 'release-bundles.json')
+
+  // The whole-set pins each already-generated bundle recorded, keyed by release id — the
+  // retained record that lets a frozen release keep resolving the sets it actually pinned
+  // after the live sources move on. Absent on the very first generation, in which case every
+  // release resolves the live sets, exactly as before retention existed.
+  const generatedBefore = await readJsonOrDefault<GeneratedReleaseFile | null>(
+    generatedDirectory,
+    'release-bundles.json',
+    null,
+  )
+  const recordedSetPinsByReleaseId = new Map<string, ReleaseDefinitionSetPins>(
+    (generatedBefore?.bundles ?? []).map((bundle) => [bundle.id, setPinsOfBundle(bundle)]),
+  )
+
   const result = buildReleaseBundles({
     seed,
     resolverContractVersion: resolverContract.version,
-    loadSources: (recipeVersionId) =>
-      getReleaseDefinitionSources(recipeVersionId, resolverContract),
+    loadSources: (recipeVersionId, setPins) =>
+      getReleaseDefinitionSources(recipeVersionId, resolverContract, setPins),
+    recordedSetPinsByReleaseId,
   })
 
   // Every module version a published release pins is copied into the retention ledger, once,
@@ -416,17 +474,73 @@ async function main() {
     releaseBundleId: string
   }> = []
   const pinnedRecipeVersionIds = new Set<string>()
+  // Every whole set a published release pins, retained the same way — see
+  // `definition-set-ledger.ts` for why the sets need a ledger of their own.
+  const publishedDefinitionSets: Array<{
+    content: DefinitionSetContent
+    releaseBundleId: string
+  }> = []
+  const pinnedSetHashes = new Map<string, Set<string>>()
   for (const bundle of result.bundles) {
     if (bundle.releaseState === 'draft') continue
-    const sources = getReleaseDefinitionSources(bundle.recipeVersionId, resolverContract)
+    const sources = getReleaseDefinitionSources(
+      bundle.recipeVersionId,
+      resolverContract,
+      setPinsOfBundle(bundle),
+    )
     for (const moduleVersion of sources?.modules ?? []) {
       pinnedModuleVersionIds.add(moduleVersion.id)
       publishedModules.push({ moduleVersion, releaseBundleId: bundle.id })
     }
     pinnedRecipeVersionIds.add(bundle.recipeVersionId)
-    if (sources) publishedRecipes.push({ recipe: sources.recipe, releaseBundleId: bundle.id })
+    if (sources) {
+      publishedRecipes.push({ recipe: sources.recipe, releaseBundleId: bundle.id })
+      publishedDefinitionSets.push(
+        {
+          content: { definitionSetId: MODIFIER_SET_ID, definition: sources.modifiers },
+          releaseBundleId: bundle.id,
+        },
+        {
+          content: { definitionSetId: RESCUE_SET_ID, definition: sources.rescueModules },
+          releaseBundleId: bundle.id,
+        },
+        {
+          content: { definitionSetId: COMPAT_SET_ID, definition: sources.compatibilityRules },
+          releaseBundleId: bundle.id,
+        },
+        {
+          content: { definitionSetId: TAXONOMY_SET_ID, definition: sources.roleTaxonomy },
+          releaseBundleId: bundle.id,
+        },
+      )
+    }
+    for (const [setId, hash] of [
+      [bundle.modifierSetPin.id, bundle.modifierSetPin.definitionHash],
+      [bundle.rescueModuleSetPin.id, bundle.rescueModuleSetPin.definitionHash],
+      [bundle.compatibilityRuleSetPin.id, bundle.compatibilityRuleSetPin.definitionHash],
+      [bundle.roleTaxonomyPin.id, bundle.roleTaxonomyPin.definitionHash],
+    ] as const) {
+      const existing = pinnedSetHashes.get(setId) ?? new Set<string>()
+      existing.add(hash)
+      pinnedSetHashes.set(setId, existing)
+    }
   }
   const ledger = withPublishedModules(ledgerBefore, publishedModules)
+
+  const definitionSetLedgerBefore = await readJsonOrDefault<DefinitionSetLedger>(
+    generatedDirectory,
+    'definition-set-ledger.json',
+    emptyDefinitionSetLedger(),
+  )
+  const definitionSetLedger = withPublishedDefinitionSets(
+    definitionSetLedgerBefore,
+    publishedDefinitionSets,
+  )
+  const definitionSetLedgerProblems = validateDefinitionSetLedger({
+    ledger: definitionSetLedger,
+    pinnedSetHashes,
+    live: getLiveDefinitionSets(),
+  })
 
   const compositionLedgerBefore = await readJsonOrDefault<CompositionLedger>(
     generatedDirectory,
@@ -538,6 +652,21 @@ async function main() {
   console.log(
     `${families.versions.length} reviewed product family version(s): ${families.versions.filter((version) => version.governanceState === 'approved').length} approved, ${families.versions.filter((version) => version.governanceState === 'draft').length} draft, ${families.versions.filter((version) => version.governanceState === 'retired').length} retired.`,
   )
+  console.log(
+    `Definition-set ledger retains ${definitionSetLedger.entries.length} set(s): ${(
+      [
+        [MODIFIER_SET_ID, 'modifier'],
+        [RESCUE_SET_ID, 'rescue-module'],
+        [COMPAT_SET_ID, 'compatibility-rule'],
+        [TAXONOMY_SET_ID, 'role-taxonomy'],
+      ] as const
+    )
+      .map(
+        ([setId, label]) =>
+          `${definitionSetLedger.entries.filter((entry) => entry.definitionSetId === setId).length} ${label}`,
+      )
+      .join(', ')}.`,
+  )
   for (const version of families.versions.filter(
     (candidate) => candidate.governanceState === 'draft',
   )) {
@@ -565,6 +694,16 @@ async function main() {
     console.log('')
     console.error(`${compositionLedgerProblems.length} composition retention problem(s):`)
     for (const problem of compositionLedgerProblems) {
+      console.error(`  ✗ ${problem.code}: ${problem.message}`)
+    }
+    process.exitCode = 1
+    return
+  }
+
+  if (definitionSetLedgerProblems.length > 0) {
+    console.log('')
+    console.error(`${definitionSetLedgerProblems.length} definition-set retention problem(s):`)
+    for (const problem of definitionSetLedgerProblems) {
       console.error(`  ✗ ${problem.code}: ${problem.message}`)
     }
     process.exitCode = 1
@@ -607,6 +746,7 @@ async function main() {
   await writeJsonWhenChanged(generatedDirectory, 'product-family-versions.json', familyLedger)
   await writeJsonWhenChanged(generatedDirectory, 'module-ledger.json', ledger)
   await writeJsonWhenChanged(generatedDirectory, 'composition-ledger.json', compositionLedger)
+  await writeJsonWhenChanged(generatedDirectory, 'definition-set-ledger.json', definitionSetLedger)
   await writeJsonWhenChanged(generatedDirectory, 'release-bundles.json', {
     pointers: result.pointers,
     bundles: result.bundles,

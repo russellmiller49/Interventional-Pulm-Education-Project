@@ -1,5 +1,6 @@
 import catalogReleaseJson from '../../../../data/ip-preference-cards/generated/catalog-release.json'
 import compositionLedgerJson from '../../../../data/ip-preference-cards/generated/composition-ledger.json'
+import definitionSetLedgerJson from '../../../../data/ip-preference-cards/generated/definition-set-ledger.json'
 import generatedModifiersJson from '../../../../data/ip-preference-cards/generated/modifier-definitions.json'
 import generatedScenariosJson from '../../../../data/ip-preference-cards/generated/scenarios.json'
 import moduleLedgerJson from '../../../../data/ip-preference-cards/generated/module-ledger.json'
@@ -17,8 +18,14 @@ import {
 } from '../domain/expand-recipe-composition'
 import { selectionsFromResolvedCard } from '../domain/hospital-selection'
 import { retainedRecipeById, type CompositionLedger } from '../domain/composition-ledger'
+import {
+  createDefinitionSetResolver,
+  liveTaxonomyExtendsRetained,
+  type DefinitionSetLedger,
+  type LiveDefinitionSets,
+} from '../domain/definition-set-ledger'
 import { resolveRetainedModules, type ModuleLedger } from '../domain/module-ledger'
-import type { ReleaseDefinitionSources } from '../domain/release-bundle'
+import type { ReleaseDefinitionSources, RoleTaxonomySnapshot } from '../domain/release-bundle'
 import {
   LEGACY_ROLE_CATEGORY_MAP,
   ROLE_CATEGORIES,
@@ -203,16 +210,66 @@ const allModifierDefinitions: ModifierDefinition[] = [
   ...generatedModifierDefinitions.filter((modifier) => !handTunedModifierCodes.has(modifier.code)),
 ].sort((left, right) => left.code.localeCompare(right.code))
 
+const liveRoleTaxonomy: RoleTaxonomySnapshot = {
+  categories: ROLE_CATEGORIES,
+  legacyCategoryMap: LEGACY_ROLE_CATEGORY_MAP,
+  categoryOverrides: ROLE_CATEGORY_OVERRIDES,
+  roleCodeAliases: ROLE_CODE_ALIASES,
+}
+
+/**
+ * The four live sets in one object, and the resolver that answers an exact set pin with
+ * either that live content (hash match) or the retained ledger entry — never anything else.
+ *
+ * The resolver is a pure lookup over immutable module-level data, keyed by the pinned hash.
+ * There is deliberately no "currently selected set" anywhere: two bundles pinning two
+ * different modifier-set hashes resolve concurrently, in any order, without contaminating
+ * each other, because nothing here has state to contaminate.
+ */
+const liveDefinitionSets: LiveDefinitionSets = {
+  modifiers: allModifierDefinitions,
+  rescueModules,
+  compatibilityRules: typedCompatibilityRules,
+  roleTaxonomy: liveRoleTaxonomy,
+}
+const definitionSetResolver = createDefinitionSetResolver(
+  liveDefinitionSets,
+  definitionSetLedgerJson as unknown as DefinitionSetLedger,
+)
+
+/** The exact set hashes a release bundle pins, in resolution shape. */
+export interface ReleaseDefinitionSetPins {
+  modifierSetHash: string
+  rescueModuleSetHash: string
+  compatibilityRuleSetHash: string
+  roleTaxonomyHash: string
+}
+
+/**
+ * The current live sets, for the release build's ledger generation and validation. The
+ * "live" side of the definition-set ledger comparison — deliberately excludes everything
+ * retained, for the same reason `getLiveRecipeVersions` does: the build compares live
+ * against retained to decide what is new, and folding retention in here would make the
+ * comparison vacuous.
+ */
+export function getLiveDefinitionSets(): LiveDefinitionSets {
+  return liveDefinitionSets
+}
+
 /**
  * The modifier definitions a recipe permits, in the merged set's own order.
  *
  * `allowedModifierCodes` is authored clinical governance frozen into the composition and
  * pinned by `recipeDefinitionHash`, so this filter is the release's permission being applied
- * rather than a convenience.
+ * rather than a convenience. The set filtered is the one the caller resolved — the pinned
+ * retained set for a release context, the live merge otherwise.
  */
-function allowedModifiers(recipe: RecipeVersion): ModifierDefinition[] {
+function allowedModifiers(
+  recipe: RecipeVersion,
+  modifierSet: ModifierDefinition[],
+): ModifierDefinition[] {
   const allowed = new Set(recipe.allowedModifierCodes)
-  return allModifierDefinitions.filter((modifier) => allowed.has(modifier.code))
+  return modifierSet.filter((modifier) => allowed.has(modifier.code))
 }
 
 function catalogProductSummary(productId: string | undefined): CatalogProductSummary | null {
@@ -546,6 +603,14 @@ export function getCatalogReleaseId(): string {
  * has to hash them: editing a compatibility rule changes what an already-saved card
  * re-resolves to while its recipe and module pins sit untouched.
  *
+ * When `setPins` is given, each of the four sets resolves **by its pinned hash**: the live
+ * set when its hash equals the pin, the retained ledger entry otherwise, and null — never a
+ * fallback to current content — when the pin matches neither. The object returned here is
+ * both what `pinDiff` validates and what `buildReleaseContext` reconstructs from, so the
+ * validator and the runtime cannot disagree about which content a bundle means. Without
+ * `setPins` the live sets are supplied — the authoring/current path used by drafts, the demo
+ * context, and the release build's *new* publications.
+ *
  * Returns null when the recipe version is not retained. It never falls back to another one.
  */
 export function getReleaseDefinitionSources(
@@ -556,6 +621,7 @@ export function getReleaseDefinitionSources(
    * load would hand the build a value one run out of date and freeze it into a bundle.
    */
   resolverContract: { version: string; implementationHash: string },
+  setPins?: ReleaseDefinitionSetPins,
 ): ReleaseDefinitionSources | null {
   const recipe = recipeForRecipeVersionId(recipeVersionId)
   if (!recipe) return null
@@ -569,18 +635,42 @@ export function getReleaseDefinitionSources(
     modules.push(cloneModule(moduleVersion))
   }
 
+  let modifiers = liveDefinitionSets.modifiers
+  let pinnedRescueModules = liveDefinitionSets.rescueModules
+  let compatibilityRules = liveDefinitionSets.compatibilityRules
+  let roleTaxonomy = liveDefinitionSets.roleTaxonomy
+  if (setPins) {
+    const resolvedModifiers = definitionSetResolver.modifiers(setPins.modifierSetHash)
+    const resolvedRescue = definitionSetResolver.rescueModules(setPins.rescueModuleSetHash)
+    const resolvedCompatibility = definitionSetResolver.compatibilityRules(
+      setPins.compatibilityRuleSetHash,
+    )
+    const resolvedTaxonomy = definitionSetResolver.roleTaxonomy(setPins.roleTaxonomyHash)
+    // A pin that matches neither the live set nor a retained entry is a broken pin, reported
+    // by the caller as release_pin_missing. Nothing here substitutes the current set.
+    if (!resolvedModifiers || !resolvedRescue || !resolvedCompatibility || !resolvedTaxonomy) {
+      return null
+    }
+    // Alias application stays live under the permanent-alias contract, so a retained
+    // taxonomy is only servable while the live table still agrees with everything it
+    // retained. A contradiction fails the bundle rather than applying either table.
+    // See definition-set-retention.md §3.6.
+    if (!liveTaxonomyExtendsRetained(liveDefinitionSets.roleTaxonomy, resolvedTaxonomy)) {
+      return null
+    }
+    modifiers = resolvedModifiers
+    pinnedRescueModules = resolvedRescue
+    compatibilityRules = resolvedCompatibility
+    roleTaxonomy = resolvedTaxonomy
+  }
+
   return {
     recipe,
     modules,
-    modifiers: allModifierDefinitions,
-    rescueModules,
-    compatibilityRules: typedCompatibilityRules,
-    roleTaxonomy: {
-      categories: ROLE_CATEGORIES,
-      legacyCategoryMap: LEGACY_ROLE_CATEGORY_MAP,
-      categoryOverrides: ROLE_CATEGORY_OVERRIDES,
-      roleCodeAliases: ROLE_CODE_ALIASES,
-    },
+    modifiers,
+    rescueModules: pinnedRescueModules,
+    compatibilityRules,
+    roleTaxonomy,
     catalogImportId: getCatalogReleaseId(),
     resolverContractVersion: resolverContract.version,
     resolverImplementationHash: resolverContract.implementationHash,
@@ -640,7 +730,19 @@ export function buildContextForRecipe(
    * resolve honestly with null provenance rather than borrowing a release nobody selected.
    */
   releaseIdentity: BuildContext['releaseIdentity'] = null,
+  /**
+   * The definition sets this context resolves from, when the caller resolved them by a
+   * release's pins. Absent for the demo/authoring paths, which are current by design. A
+   * release context passes the sets from its resolved `ReleaseDefinitionSources`, so the
+   * content a card resolves against is the content the bundle's pins were verified over —
+   * never the live globals those pins may no longer describe.
+   */
+  pinnedSets?: Pick<ReleaseDefinitionSources, 'modifiers' | 'rescueModules' | 'compatibilityRules'>,
 ): BuildContext {
+  const contextModifierSet = pinnedSets?.modifiers ?? liveDefinitionSets.modifiers
+  const contextRescueModules = pinnedSets?.rescueModules ?? liveDefinitionSets.rescueModules
+  const contextCompatibilityRules =
+    pinnedSets?.compatibilityRules ?? liveDefinitionSets.compatibilityRules
   return {
     organizationName: 'Demo IP Program',
     siteName: 'Demo Hospital',
@@ -654,7 +756,7 @@ export function buildContextForRecipe(
     // modifier the procedure never offered used to be applied and stored, because the
     // resolver looked codes up in the whole merged set. Now the permission the release pinned
     // is what builds the context, so an unauthorized code has nothing to resolve against.
-    modifiers: allowedModifiers(recipe).map((modifier) => ({
+    modifiers: allowedModifiers(recipe, contextModifierSet).map((modifier) => ({
       ...modifier,
       preview: [...modifier.preview],
       conflictsWith: [...modifier.conflictsWith],
@@ -663,7 +765,7 @@ export function buildContextForRecipe(
         payload: { ...action.payload },
       })),
     })),
-    rescueModules: rescueModules.map((module) => ({
+    rescueModules: contextRescueModules.map((module) => ({
       ...module,
       slots: module.slots.map((slot) => ({
         ...slot,
@@ -672,7 +774,7 @@ export function buildContextForRecipe(
     })),
     hospitalItems: hospitalItems(),
     hospitalRoleOptions: roleOptions(),
-    compatibilityRules: typedCompatibilityRules.map((rule) => ({
+    compatibilityRules: contextCompatibilityRules.map((rule) => ({
       ...rule,
       modifierCodes: [...rule.modifierCodes],
     })),

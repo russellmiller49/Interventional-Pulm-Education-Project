@@ -5,7 +5,10 @@ import { getReleaseDefinitionSources } from '../../src/features/preference-cards
 import { PREFERENCE_CARD_RESOLVER_CONTRACT_VERSION } from '../../src/features/preference-cards/domain/resolve-card'
 import { RUNTIME_RESOLVER_CONTRACT } from '../../src/features/preference-cards/data/release-bundles.server'
 
-import { buildReleaseBundles } from './build-release-bundles'
+import type { ReleaseDefinitionSetPins } from '../../src/features/preference-cards/data/demo-context.server'
+import type { PreferenceCardReleaseBundle } from '../../src/features/preference-cards/domain/release-bundle'
+
+import { buildReleaseBundles, setPinsOfBundle } from './build-release-bundles'
 
 /**
  * The release build is the gate that makes "published definitions are immutable" true rather
@@ -16,13 +19,24 @@ import { buildReleaseBundles } from './build-release-bundles'
  * like one that had always said that.
  */
 
-const loadSources = (recipeVersionId: string) =>
-  getReleaseDefinitionSources(recipeVersionId, RUNTIME_RESOLVER_CONTRACT)
+const loadSources = (recipeVersionId: string, setPins?: ReleaseDefinitionSetPins) =>
+  getReleaseDefinitionSources(recipeVersionId, RUNTIME_RESOLVER_CONTRACT, setPins)
+
+// Frozen releases resolve through the whole-set pins the generated bundles recorded — the
+// same record the script itself reads back — so this test keeps reproducing committed output
+// after a live definition set moves on from what an old release pinned.
+const recordedSetPinsByReleaseId = new Map<string, ReleaseDefinitionSetPins>(
+  (generatedReleasesJson as { bundles: PreferenceCardReleaseBundle[] }).bundles.map((bundle) => [
+    bundle.id,
+    setPinsOfBundle(bundle),
+  ]),
+)
 
 const baseInput = () => ({
   seed: JSON.parse(JSON.stringify(seedReleasesJson)) as never,
   resolverContractVersion: PREFERENCE_CARD_RESOLVER_CONTRACT_VERSION,
   loadSources,
+  recordedSetPinsByReleaseId,
 })
 
 type SeedRelease = {
