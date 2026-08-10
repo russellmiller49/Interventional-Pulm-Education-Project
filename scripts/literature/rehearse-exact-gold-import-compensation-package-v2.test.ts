@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises'
 import {
   assertExactGeneratedPackageReferenceV2,
   assertMigrationEquivalentPostV2SeedIdentity,
+  controlledFaultTransactionSql,
   renderOwnerFirstFunctionRawAclV2,
   v2StateSql,
 } from './execute-exact-gold-import-compensation-package-v2'
@@ -51,11 +52,28 @@ function result(path: 'fresh' | 'upgrade'): V2DisposablePathResult {
 }
 
 describe('exact V2 package rehearsal entrypoint', () => {
-  test('correlates controlled-fault post-state to the materialized receipt operation', () => {
+  test('correlates controlled-fault post-state to the captured receipt operation', () => {
     const operationId = '00000000-0000-4000-8000-000000000001'
     const sql = v2StateSql('00000000-0000-4000-8000-000000000002', operationId)
     expect(sql).toContain("where receipt.value ->> 'operationId' = $v2_exact_")
     expect(sql).toContain(operationId)
+  })
+
+  test('observes the controlled-fault journal in a command after the volatile RPC', () => {
+    const operationId = '00000000-0000-4000-8000-000000000001'
+    const sql = controlledFaultTransactionSql('public.apply_probe_v2()', {
+      batchId: '00000000-0000-4000-8000-000000000002',
+      operationId,
+    })
+    const receiptWrite = sql.indexOf('insert into pg_temp.v2_controlled_fault_receipt')
+    const evidenceRead = sql.indexOf('select pg_catalog.jsonb_build_object')
+    expect(receiptWrite).toBeGreaterThan(-1)
+    expect(evidenceRead).toBeGreaterThan(receiptWrite)
+    expect(sql).toContain('from pg_temp.v2_controlled_fault_receipt receipt')
+    expect(sql).toContain(operationId)
+    expect(sql).toContain("operation.error_sqlstate = 'P7799'")
+    expect(sql).toContain('operation.post_physical_state_sha256 is not null')
+    expect(sql).toContain('operation.post_effective_state_sha256 is not null')
   })
 
   test('renders normalized V2 ACL records in exact owner-first catalog order', () => {

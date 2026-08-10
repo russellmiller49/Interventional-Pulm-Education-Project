@@ -910,21 +910,7 @@ async function runControlledFaultProbe(
   const plan = cloneFaultPlan(basePlan, label, faultAfterAction)
   const authorization = bindDisposableImportAuthorization(plan)
   const call = importRpcCall(plan, authorization)
-  const result = await context.psql(`begin;
-set local role service_role;
-with receipt as materialized (select ${call} as value)
-select pg_catalog.jsonb_build_object(
-  'receipt', receipt.value,
-  'journalSealed', exists (
-    select 1 from public.literature_gold_review_operations operation
-    where operation.id = ${sqlLiteral(plan.operationId)}::uuid
-      and operation.id = (receipt.value ->> 'operationId')::uuid
-      and operation.status = 'failed'
-  ),
-  'state', (${v2StateSql(basePlan.batchId, plan.operationId).replace(/;$/u, '')})
-)
-from receipt;
-rollback;`)
+  const result = await context.psql(controlledFaultTransactionSql(call, plan))
   const parsed = z
     .object({
       journalSealed: z.literal(true),
@@ -936,6 +922,34 @@ rollback;`)
   const receipt = parseImportReceiptV2(parsed.receipt)
   if (receipt.outcome !== 'failed') throw new Error('Controlled V2 fault did not seal failure.')
   return faultEvidence(before, parsed.state, parsed.journalSealed)
+}
+
+export function controlledFaultTransactionSql(
+  call: string,
+  plan: Pick<ImportPlanV2, 'batchId' | 'operationId'>,
+): string {
+  return `begin;
+set local role service_role;
+create temporary table v2_controlled_fault_receipt (
+  value jsonb not null
+) on commit drop;
+insert into pg_temp.v2_controlled_fault_receipt (value)
+select ${call};
+select pg_catalog.jsonb_build_object(
+  'receipt', receipt.value,
+  'journalSealed', exists (
+    select 1 from public.literature_gold_review_operations operation
+    where operation.id = ${sqlLiteral(plan.operationId)}::uuid
+      and operation.id = (receipt.value ->> 'operationId')::uuid
+      and operation.status = 'failed'
+      and operation.error_sqlstate = 'P7799'
+      and operation.post_physical_state_sha256 is not null
+      and operation.post_effective_state_sha256 is not null
+  ),
+  'state', (${v2StateSql(plan.batchId, plan.operationId).replace(/;$/u, '')})
+)
+from pg_temp.v2_controlled_fault_receipt receipt;
+rollback;`
 }
 
 async function runBeforeActionFaultProbe(
