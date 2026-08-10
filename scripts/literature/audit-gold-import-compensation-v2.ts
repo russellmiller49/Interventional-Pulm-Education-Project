@@ -296,7 +296,10 @@ function assertDerivedV2ReadinessPolicy(input: {
     )
     const schemaAclEntries = aclEntriesFromSchemaRecords(inventory, rpc)
     const expectedAclEntries = expectedFunctionAclEntries(profile, true)
-    const expectedRawAcl = `{${schemaAclEntries
+    // pg_proc.proacl preserves the owner-first catalog order. The schema ACL records are
+    // independently canonicalized as a set above, so reconstruct raw ACL bytes from the exact
+    // profile grant order rather than their normalized record order.
+    const expectedRawAcl = `{${expectedAclEntries
       .map(({ grantee, grantor }) => `${grantee}=X/${grantor}`)
       .join(',')}}`
     if (
