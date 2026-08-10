@@ -8244,5 +8244,379 @@
         "compatibilityState": "its compatibility"
       }
     }
+  },
+  "deviceIntelligence": {
+    "common": {
+      "notRecorded": "not recorded",
+      "unlistedNote": "Phase D1 preview — this page is public-unlisted and excluded from search indexing. Reference information only; it is not clinical advice and no product recommendation is made.",
+      "noEquivalenceNote": "Shared clinical-role membership and manufacturer product-line groupings are catalog-discovery facts. They are never clinical equivalence, procurement substitution, or formulary claims.",
+      "compatibilityWithheldNote": "This compatibility statement is withheld from the public atlas because it references a product outside the Phase D1 atlas cohort. Products outside the cohort are not identified on this surface.",
+      "draftTitle": "DRAFT PROTOTYPE — NOT APPROVED FOR CLINICAL USE",
+      "draftDisclaimer": "This procedure content is a governance-draft prototype rendered from release-pinned data. It has not completed clinician review.",
+      "badges": {
+        "verifiedSource": "Verified source",
+        "candidate": "Manufacturer-sourced (candidate)",
+        "unknown": "Unknown",
+        "authoredSelectable": "Authored selectable option",
+        "authoredNonSelectable": "Authored — not selectable",
+        "unreviewedProposal": "Unreviewed proposal",
+        "demoStandIn": "Demo stand-in",
+        "unresolvedStatement": "Unresolved textual statement",
+        "historicalContext": "Historical / release-pinned context"
+      },
+      "crossLinks": {
+        "atlasDevicePage": "View in Device Atlas (D1 preview)",
+        "atlasRolePage": "View in Clinical Roles (D1 preview)"
+      },
+      "rescueAuthoringGapNote": "Rescue modelling in this release consists only of: {modules}. No rescue module for this procedure has been authored yet — absence here is an authoring gap, not a clinical statement that rescue planning is unnecessary."
+    },
+    "devices": {
+      "metadataTitle": "Device Atlas",
+      "metadataDescription": "Read-only atlas of verified interventional pulmonology devices with source citations.",
+      "title": "Device Atlas",
+      "intro": "A read-only reference of interventional pulmonology devices, restricted to catalog products whose specifications trace to a verified source and which are cleared for prototype display. Every fact carries its citation.",
+      "cohortBadge": "{count} verified products",
+      "cohortRule": "Cohort rule: verification_grade = verified_source AND visibility_state = prototype_visible.",
+      "exclusionNote": "Candidate-grade and hidden catalog products are not shown here. They remain reviewable on the existing public-unlisted (direct-link) catalog surfaces.",
+      "form": {
+        "search": "Search",
+        "searchPlaceholder": "Name, manufacturer, or catalog number…",
+        "manufacturer": "Manufacturer",
+        "category": "Category",
+        "role": "Clinical role",
+        "procedure": "Procedure",
+        "any": "Any",
+        "apply": "Apply",
+        "clear": "Clear"
+      },
+      "unknownFilter": "The \"{filter}\" filter value is not recognized.",
+      "resultsHeading": "Results",
+      "resultCount": "{count, plural, one {# product} other {# products}}",
+      "excludedMissingSpec": "{count, plural, one {# product was} other {# products were}} excluded only because the filtered specification is not recorded for it.",
+      "noResults": "No products in the atlas cohort match these filters.",
+      "table": {
+        "product": "Product",
+        "manufacturer": "Manufacturer",
+        "kind": "Kind / category",
+        "catalogNumber": "Catalog number",
+        "size": "Size / specification",
+        "evidence": "Evidence"
+      },
+      "pagination": {
+        "next": "Next",
+        "page": "Page",
+        "previous": "Previous"
+      },
+      "resultsRegionLabel": "Results table (scrolls horizontally)"
+    },
+    "device": {
+      "notFound": "Device not found",
+      "metadataDescription": "Verified device facts with source citations.",
+      "back": "Back to Device Atlas",
+      "identifiersHeading": "Identifiers and packaging",
+      "specsHeading": "Dimensions and configuration",
+      "specsMissingNote": "A value shown as \"not recorded\" means the source documents reviewed so far do not state it — not that the device lacks it.",
+      "fields": {
+        "catalogNumber": "Catalog number",
+        "gtin": "GTIN / UDI-DI",
+        "globalPartNumber": "Global part number",
+        "referencePartNumber": "Reference part number",
+        "alternateIds": "Alternate identifiers",
+        "packageUom": "Package unit",
+        "sterileStatus": "Sterile status",
+        "reuseStatus": "Reuse status",
+        "diameterMm": "Diameter (mm)",
+        "lengthMm": "Length (mm)",
+        "frenchSize": "French size",
+        "gauge": "Gauge",
+        "workingLengthCm": "Working length (cm)",
+        "minWorkingChannelMm": "Minimum working channel (mm)",
+        "deliverySystemOdMm": "Delivery system OD (mm)",
+        "material": "Material",
+        "sizeDisplay": "Size display"
+      },
+      "rolesHeading": "Clinical roles",
+      "rolesDiscoveryNote": "Role membership is a catalog-discovery fact recorded in the governed product–role table. It is not a clinical equivalence or substitution claim.",
+      "noRoles": "No clinical-role mappings are recorded for this product.",
+      "proceduresHeading": "Authored procedure use",
+      "proceduresNote": "Slots where this product is an authored option in a procedure template. All procedures shown are governance drafts; each carries its verbatim status.",
+      "compatibilityHeading": "Compatibility statements",
+      "compatibilitySource": "Source:",
+      "ruleConditionNote": "Displayed as an authored condition. Nothing is evaluated on this page — evaluation happens only inside the preference-card resolver.",
+      "rawStatementSource": "Statement source:",
+      "noCompatibilityData": "No compatibility statements are recorded for this product.",
+      "sourcesHeading": "Sources",
+      "noSources": "No source citations are recorded for this product.",
+      "sameLineHeading": "Same manufacturer product line",
+      "displayOnlyGroupingNote": "Display-only grouping by manufacturer and product line for discovery. It is never persisted as identity and is not a clinical equivalence group.",
+      "otherManufacturersHeading": "Other manufacturers with products mapped to this clinical role",
+      "roleDiscoveryCaption": "Shared clinical-role mapping is a catalog-discovery fact, not a claim that these products are clinically equivalent or substitutable.",
+      "notRecordedFields": "Not recorded in reviewed sources: {fields}.",
+      "otherManufacturersSelectionNote": "One product per manufacturer, drawn from {productCount, plural, one {# cohort product} other {# cohort products}} across {manufacturerCount, plural, one {# other manufacturer} other {# other manufacturers}} mapped to this role ({shown} shown). Representatives prefer primary-fit mappings and are otherwise arbitrary — never a matched or comparable set, and sizes are not matched.",
+      "otherManufacturersViewRole": "View every cohort product mapped to this role."
+    },
+    "role": {
+      "metadataTitle": "Clinical role",
+      "metadataDescription": "One clinical role across manufacturers, with authored selection guidance quoted verbatim.",
+      "back": "Back to Device Atlas",
+      "membershipNote": "Products listed under this role share a catalog-discovery mapping. Role membership is a discovery fact — it is not clinical equivalence, interchangeability, or a substitution recommendation.",
+      "guidanceHeading": "Authored selection guidance",
+      "guidanceVerbatim": "Quoted verbatim from the governed role table; never paraphrased.",
+      "guidanceGenericNote": "Authored selection guidance is generic educational content from the governed role table. Wording that mentions a formulary or hospital stocking is template language only — it does not establish that any hospital carries, stocks, prefers, approves, or uses any product.",
+      "productsHeading": "Atlas products mapped to this role ({count, plural, one {# product} other {# products}})",
+      "cohortNote": "Only the Phase D1 atlas cohort is listed here (verified source, prototype-visible). Additional mapped products may exist on the existing public-unlisted (direct-link) catalog surfaces. Counts reflect catalog-ingestion coverage, not market availability.",
+      "manufacturerProducts": "{count, plural, one {# product} other {# products}}",
+      "noCohortProducts": "No products in the D1 atlas cohort are mapped to this role.",
+      "proceduresHeading": "Procedures and slots using this role",
+      "proceduresNote": "Every procedure template slot that requests this role, with its authored-option status. All procedures are governance drafts.",
+      "noProcedures": "No procedure slots request this role.",
+      "table": {
+        "procedure": "Procedure",
+        "slot": "Slot",
+        "requiredness": "Requiredness",
+        "optionStatus": "Authored-option status"
+      },
+      "proposalCount": "{count, plural, one {# unreviewed proposal} other {# unreviewed proposals}}",
+      "noAuthoredOption": "No authored option",
+      "evidenceHeading": "How to read the evidence states",
+      "evidence": {
+        "verifiedSource": "Product specifications trace to a verified primary source (for example GUDID/UDI or a manufacturer IFU), cited on the device page.",
+        "authoredSelectable": "A clinician-authored, reviewed slot option that the preference-card builder may select.",
+        "authoredNonSelectable": "An authored slot option that reviewers deliberately hold out of selection; shown for context only.",
+        "unreviewedProposal": "A machine-derived suggestion awaiting review. Never selectable, never public beyond counts, and never satisfies coverage or readiness."
+      },
+      "currentIfuFooter": "This role is flagged in the governed role table as requiring current instructions-for-use review — as nearly every role in this atlas is. Confirm compatibility and sizing against the current IFU before clinical use.",
+      "criteriaHeading": "Selection criteria",
+      "availabilityNone": "No procedure in this release has an authored selectable option for this role.",
+      "availabilitySome": "Authored selectable options for this role exist in {count, plural, one {# procedure} other {# procedures}} in this release.",
+      "singleManufacturerNote": "All cohort products for this role are from one manufacturer: {manufacturer}.",
+      "tableRegionLabel": "Procedure-slot table (scrolls horizontally)"
+    },
+    "procedures": {
+      "metadataTitle": "Procedure workspaces",
+      "metadataDescription": "Read-only procedure workspaces for the Phase D1 exemplar procedures.",
+      "title": "Procedure workspaces",
+      "exemplarNote": "Phase D1 exemplar set: these three procedures were selected by the physician owner to exercise the full mechanism set. Other procedures exist in the catalog and are not shown on this Phase D1 surface.",
+      "allDraftStatus": "All listed procedures are governance drafts with no clinical-owner sign-off.",
+      "templateVersion": "Template version",
+      "releaseBundle": "Release bundle",
+      "slotCount": "Requirement slots",
+      "requiredness": "Requiredness",
+      "requirednessValue": "{required} required · {contingency} contingency · {optional} optional",
+      "ladderHeading": "Role-coverage ladder",
+      "ladder": {
+        "selectable": "{count} with authored selectable options",
+        "nonSelectable": "{count} authored but non-selectable only",
+        "proposalsOnly": "{count} with unreviewed proposals only",
+        "noCoverage": "{count} with no option and no proposal"
+      },
+      "openWorkspace": "Open workspace",
+      "openReadiness": "Demo readiness",
+      "otherProceduresNote": "This index deliberately shows only the Phase D1 exemplar procedures — it is not a statement that other procedures do not exist."
+    },
+    "workspace": {
+      "metadataTitle": "Procedure workspace",
+      "metadataDescription": "Read-only requirement browser over the release-pinned procedure composition.",
+      "back": "All procedures",
+      "overview": {
+        "templateVersion": "Template version",
+        "releaseBundle": "Release bundle",
+        "scenario": "Scenario",
+        "governanceState": "Governance state",
+        "noClinicalOwner": "No clinical owner has signed off on this procedure."
+      },
+      "ladderHeading": "Role-coverage ladder",
+      "ladderNote": "Computed from the governed catalog rows (authored options, unreviewed proposals, and product–role mappings) — the same partition the Phase D0 audit records.",
+      "coverage": {
+        "selectableAuthored": "Authored selectable options",
+        "nonSelectableAuthoredOnly": "Authored, non-selectable only",
+        "proposalsOnly": "Unreviewed proposals only",
+        "noOptionRoleMapped": "No option or proposal (role mapped elsewhere)",
+        "noOptionUnmapped": "No option, no proposal, no mapped product"
+      },
+      "proposalsTotal": "{count, plural, one {# unreviewed proposal touches} other {# unreviewed proposals touch}} this procedure.",
+      "proposalsNeverSelectable": "Proposals are unreviewed machine-derived suggestions: never selectable, and they never satisfy coverage or readiness.",
+      "requirementsHeading": "Requirement browser",
+      "viewTabsLabel": "Requirement view",
+      "viewZones": "By setup zone",
+      "viewPhases": "By procedural phase",
+      "requirement": {
+        "order": "Authored order",
+        "section": "Section",
+        "role": "Clinical role",
+        "dependencyRule": "Dependency rule",
+        "selectionMode": "Selection",
+        "openHold": "Open / hold",
+        "zone": "Zone",
+        "phase": "Phase",
+        "allowCustom": "custom allowed",
+        "proposals": "Unreviewed proposals",
+        "proposalsDisclaimer": "Unreviewed machine-derived suggestions. Never selectable; never satisfy coverage or readiness.",
+        "authoredOptions": "Authored options",
+        "noAuthoredOptions": "No authored options exist for this requirement.",
+        "optionsWithheld": "{count, plural, one {# authored option} other {# authored options}} ({selectable} selectable) withheld from this public view — products outside the Phase D1 atlas cohort are not identified here."
+      },
+      "setupZones": {
+        "room_capital_equipment": "Room / capital equipment",
+        "equipment_tower": "Equipment tower",
+        "back_table": "Back table",
+        "mayo_stand": "Mayo stand",
+        "sterile_field": "Sterile field",
+        "specimen_station": "Specimen station",
+        "emergency_cart": "Emergency cart",
+        "other": "Other",
+        "unassigned": "Unassigned"
+      },
+      "proceduralPhases": {
+        "pre_room": "Pre-room",
+        "pre_induction_or_sedation": "Pre-induction / sedation",
+        "airway_access": "Airway access",
+        "diagnostic": "Diagnostic",
+        "therapeutic": "Therapeutic",
+        "specimen_handling": "Specimen handling",
+        "rescue_or_contingency": "Rescue / contingency",
+        "post_procedure": "Post-procedure",
+        "unassigned": "Unassigned"
+      },
+      "modifiersHeading": "Allowed modifiers and their effects",
+      "modifiersNote": "The modifiers this release permits, with effects computed through the existing canonical expansion — nothing here is a second engine.",
+      "modifierDefault": "default",
+      "modifierConflicts": "Mutually exclusive with: {codes}",
+      "effects": {
+        "adds": "Adds {count, plural, one {# requirement} other {# requirements}}",
+        "removes": "Removes {count, plural, one {# requirement} other {# requirements}}",
+        "requiredness": "{label}: requiredness {from} → {to}",
+        "roleReplacement": "{label}: role {from} → {to}",
+        "rescueModule": "Appends rescue module {code}",
+        "capability": "Requires room capability \"{capability}\"",
+        "none": "No structural effect in this release."
+      },
+      "rescueHeading": "Rescue pathways",
+      "noRescueFact": "No rescue module is defined or reachable for this procedure, and it has {count} Rescue-section slots. This is a fact of the release-pinned composition — no rescue pathway is invented here.",
+      "rescueReachableVia": "Added when modifier {codes} is selected.",
+      "compatibilityHeading": "Compatibility conditions",
+      "missingValueBehavior": "When a value is missing",
+      "noTypedRules": "No pinned typed compatibility rules touch the roles of this procedure.",
+      "rawStatements": "{count, plural, one {# cited raw compatibility statement} other {# cited raw compatibility statements}}",
+      "openReadiness": "Open demo readiness view",
+      "modifiersActingSummary": "{acting} of {total} allowed modifiers change the requirement list in this release.",
+      "modifierInertBadge": "Informational — no structural effect in this release",
+      "inertModifiersDisclosure": "{count, plural, one {# allowed modifier is informational only in this release — selecting it has no structural effect} other {# allowed modifiers are informational only in this release — selecting them has no structural effect}}",
+      "laserPathwayNote": "No laser requirement in this release has an authored selectable option. The laser pathway is not modelled here and must not be planned from this page.",
+      "longTermDrainageNote": "The Long-term drainage section lists indwelling pleural catheter (IPC) equipment — a divergent long-term pathway; a separate IPC placement procedure exists in the catalog. In this release every long-term drainage role carries authored selectable options while several chest-tube pathway roles remain non-selectable or unmapped. Authoring coverage reflects catalog ingestion, not clinical priority.",
+      "divergentPathwayGroup": "Long-term drainage — divergent pathway ({count, plural, one {# requirement} other {# requirements}})",
+      "divergentPathwayCaption": "Indwelling pleural catheter equipment for long-term drainage — a pathway distinct from chest-tube insertion itself, collapsed here so it does not read as core setup."
+    },
+    "readiness": {
+      "metadataTitle": "Demo readiness",
+      "metadataDescription": "Deterministic demo-data-only readiness projection for a Phase D1 exemplar procedure.",
+      "back": "Back to workspace",
+      "title": "Demo readiness — {procedure}",
+      "demoTitle": "DEMO DATA — NOT AN ACTUAL INSTITUTION",
+      "demoDisclaimer": "Every state below is computed from the fictional \"Demo IP Program\" context to prove the deterministic rules against real catalog structure. It reports on no real room, no real inventory, and no real institution, and makes no procurement recommendation.",
+      "realFormularyHeading": "The real formulary, honestly",
+      "realFormularyHeadline": "Not ready — no institutional data recorded.",
+      "realFormularyBody": "{rows} formulary staging rows intersect the roles of this procedure; {carried} are marked as carried and {preferred} as preferred. The scaffold holds no institutional signal.",
+      "realFormularyNote": "This empty scaffold is not institutional data and is never presented as such. The projection below runs on the explicitly fictional demo context instead.",
+      "demoProjectionHeading": "Demo-context projection",
+      "demoProjectionNote": "Evaluated for {organization} · {location} with the scenario default modifiers ({modifiers}), through the existing resolver — this page adds a pure projection over its output and persists nothing.",
+      "capabilities": "Demo location capabilities: {capabilities}",
+      "blockingHeading": "Blocking resolver messages",
+      "cardDiagnosticsHeading": "Card-level diagnostics",
+      "states": {
+        "ready": "Demo: Ready",
+        "ready_with_limitations": "Demo: Ready with limitations",
+        "not_ready": "Demo: Not ready"
+      },
+      "diagnostics": {
+        "missing_required_product_role": "Missing required product role",
+        "missing_room_capability": "Missing room capability",
+        "missing_rescue_pathway": "Missing rescue pathway",
+        "available_but_unverified": "Available but unverified",
+        "inventory_formulary_mismatch": "Inventory–formulary mismatch"
+      },
+      "table": {
+        "requirement": "Requirement",
+        "requiredness": "Requiredness",
+        "state": "State and diagnostics",
+        "evidence": "Evidence"
+      },
+      "evidence": {
+        "mapping": "Demo mapping",
+        "verificationState": "Mapping verification state",
+        "noMapping": "No institutional mapping in the demo context.",
+        "product": "Catalog product",
+        "coverage": "Role coverage rung",
+        "resolverAdvisory": "Resolver advisory"
+      },
+      "noRescueDefinedFact": "No rescue module is defined for this procedure. This is reported as a fact of the release-pinned composition, not as a missing-rescue-pathway state.",
+      "legendHeading": "State definitions",
+      "legend": {
+        "ready": "The demo mapping is an authored selectable option on a verified-source product and no limitation applies (spec §4 rule 1). Any resolver advisory about the mapping — for example a pending current-local-verification check — is quoted verbatim beneath the state chip.",
+        "ready_with_limitations": "Coverage exists but at least one limitation applies — a demo stand-in, candidate-grade evidence, an unresolved conditional requirement, or a compatibility check that evaluated unknown.",
+        "not_ready": "At least one required requirement has no institutional mapping at all.",
+        "missing_required_product_role": "A required requirement whose role has no authored selectable option anywhere in the catalog (proposals-only or wholly unmapped) — a structural gap independent of any institution.",
+        "missing_room_capability": "A room capability named by the composition or a selected modifier is absent from the location context — the same check that produces the resolver’s blocking message.",
+        "missing_rescue_pathway": "A reachable rescue module has a requirement with no coverage, or the module itself fails to resolve.",
+        "available_but_unverified": "Coverage exists only through unverified evidence: a demo-only or unverified mapping, a candidate/unknown-grade product, or a compatibility rule that could not be evaluated. Never a silent pass.",
+        "inventory_formulary_mismatch": "An institutional assertion disagrees with authored eligibility — for example a carried product that is not an authored selectable option. It cannot fire from a scaffold that carries no assertions."
+      },
+      "legendSafetyNote": "Safety rules: candidate or unknown evidence never produces plain Ready; demo stand-ins always force a limitation; unreviewed proposals never count as coverage; a missing attribute resolves to unknown rather than passing.",
+      "noProcurementNote": "This is a demo/readiness gap preview over fictional data. It is not a procurement report, a shortage analysis, or a substitution recommendation for any hospital.",
+      "otherWarnings": "{count, plural, one {# other resolver message, quoted verbatim} other {# other resolver messages, quoted verbatim}}",
+      "realFormularyHeadlineNonEmpty": "Formulary staging rows carry institutional assertions. Phase D1 shows them as data only; institutional readiness remains unevaluated.",
+      "realFormularyLocalFields": "{count, plural, one {# row carries} other {# rows carry}} a populated local field, shown for honesty about what the scaffold holds.",
+      "seeAdvisorySuffix": "see advisory",
+      "tableRegionLabel": "Requirement readiness table (scrolls horizontally)"
+    },
+    "outputs": {
+      "heading": "Read-only output previews",
+      "tabsLabel": "Output previews",
+      "readOnlyNote": "All previews are recomputed projections of one resolved demo card. Nothing is saved, exported, or written in Phase D1.",
+      "tabs": {
+        "card": "Preference card",
+        "room": "Room setup",
+        "nursing": "Nursing / technician",
+        "training": "Training",
+        "gaps": "Gap preview"
+      },
+      "card": {
+        "heading": "Preference card — existing builder",
+        "body": "Preference cards remain the existing engine, unchanged. This workspace links into the builder for the matching scenario; it does not duplicate it.",
+        "openBuilder": "Open the preference-card builder",
+        "builderNote": "The builder opens in the preserved preference-cards area with its own access rules; saving a card requires an account."
+      },
+      "room": {
+        "quantity": "Qty"
+      },
+      "nursing": {
+        "unassignedRole": "No responsible role recorded",
+        "allUnassignedNote": "No resolved requirement of this procedure carries a responsible role, so this preview cannot group by role yet. Until responsible roles are authored, its line set is identical to the Training preview; the list below is shown flat, without a role grouping."
+      },
+      "training": {
+        "authoredOnlyNote": "Every clinical sentence below is authored text quoted from the governed catalog (generic requirement, selection guidance, dependency rule). Nothing is machine-generated.",
+        "dependencyRule": "Dependency rule",
+        "currentIfuAdvisory": "Role flagged as requiring current instructions-for-use review before clinical use.",
+        "currentIfuUniversalNote": "Every role in this preview is flagged as requiring current instructions-for-use review before clinical use — stated once here instead of repeated on every line."
+      },
+      "gaps": {
+        "demoOnlyNote": "Demo/readiness gap preview — structural gaps in the governed catalog plus the demo projection. Because no real institution exists in this system, this is NOT a procurement report for any hospital.",
+        "proposalsOnlyRoles": "Roles covered only by unreviewed proposals",
+        "proposalsNote": "Proposal counts are shown for review load only; proposals never satisfy coverage.",
+        "unmappedRoles": "Roles with no option and no proposal",
+        "nonSelectableRoles": "Roles with authored but non-selectable options only",
+        "demoStandInRoles": "Roles covered by demo stand-ins",
+        "dimensionGaps": "Dimension / configuration metadata gaps",
+        "dimensionGapCount": "{count, plural, one {# authored-option product has} other {# authored-option products have}} all eight dimension fields empty.",
+        "formularyHeading": "Institutional inventory",
+        "formularyBody": "No institutional inventory is recorded: {rows} staging rows intersect this procedure, {carried} carried, {preferred} preferred.",
+        "none": "None"
+      },
+      "demoDisclaimer": "These previews resolve the fictional \"Demo IP Program\" context. They describe no real room, no real inventory, and no real institution, and they make no procurement recommendation.",
+      "suppressed": {
+        "heading": "Included in a selected kit — not listed separately",
+        "note": "The resolver records these requirements as satisfied by a selected kit's bill of materials. They are suppressed from the lists above and shown here — never silently dropped."
+      }
+    }
   }
 }

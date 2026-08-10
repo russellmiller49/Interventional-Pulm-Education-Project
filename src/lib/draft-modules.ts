@@ -61,8 +61,12 @@ const unlistedModulePathPrefixes = [
   ...icuHemodynamicsUnlistedPathPrefixes,
   ...icuSimulationUnlistedPathPrefixes,
   ...mechanicalCirculatorySupportUnlistedPathPrefixes,
+  // Phase D1 device-intelligence routes stay absent from all site navigation
+  // (decision D-03 as modified): reachable by direct link only.
+  '/clinical-roles',
   '/critical-care',
   '/cardiohelp-ecmo',
+  '/devices',
   '/mechanical-ventilation',
   '/hamilton-c6-ventilation',
   // Reachable by direct link for beta testers, so these stay out of navigation entirely
@@ -70,6 +74,7 @@ const unlistedModulePathPrefixes = [
   // treated this way; `/socrates-demo` and the pleural simulator were the exceptions.
   '/preference-cards',
   '/pleural-procedures/pleural-ultrasound-simulator',
+  '/procedures',
   '/socrates-demo',
 ] as const
 

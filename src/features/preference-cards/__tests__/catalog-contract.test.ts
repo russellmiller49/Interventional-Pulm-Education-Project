@@ -74,6 +74,36 @@ describe('generated catalog contract', () => {
     expect(detail!.sources[0].title).toBeTruthy()
   })
 
+  it('C-06: every product page gets the exact legacy representative ids by default', () => {
+    // The pre-D1 algorithm, re-implemented independently: walk the role's catalog order,
+    // one representative per manufacturer group — the FIRST candidate seen — capped at six
+    // groups. `getProductDetail` with no options must reproduce it id-for-id across the
+    // whole real catalog, which is precisely the 114-page collateral change being pinned
+    // away (Primary-fit preference now lives behind the atlas-only opt-in).
+    for (const product of store.products) {
+      const roleLinks = store.rolesByProduct.get(product.product_id) ?? []
+      const primaryRole = roleLinks.find((link) => link.role_fit === 'Primary') ?? roleLinks[0]
+      const expected: string[] = []
+      if (primaryRole) {
+        const seenGroups = new Set<string>([product.manufacturerGroupId])
+        for (const candidateId of store.productIdsByRole.get(primaryRole.role_code) ?? []) {
+          if (expected.length >= 6) break
+          const candidate = store.productById.get(candidateId)
+          if (!candidate || seenGroups.has(candidate.manufacturerGroupId)) continue
+          seenGroups.add(candidate.manufacturerGroupId)
+          expected.push(candidate.product_id)
+        }
+      }
+      const detail = getProductDetail(product.product_id, store)!
+      const actual = detail.otherManufacturers.map((item) => item.productId)
+      if (actual.join('|') !== expected.join('|')) {
+        throw new Error(
+          `legacy representative regression for ${product.product_id}: got ${actual.join(', ')} expected ${expected.join(', ')}`,
+        )
+      }
+    }
+  })
+
   it('offers every facet value the search form renders', () => {
     const facets = getCatalogFacets(store)
     expect(facets.manufacturers.length).toBeGreaterThan(0)

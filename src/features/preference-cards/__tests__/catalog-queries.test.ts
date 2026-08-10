@@ -457,6 +457,51 @@ describe('product detail', () => {
     ])
   })
 
+  it('C-06: the default representative is the legacy catalog-order pick; Primary-fit needs the explicit opt-in', () => {
+    // Bravo Medical gets a second candidate whose PRIMARY-fit mapping sorts AFTER the
+    // existing Exact-fit one in catalog order. Legacy behavior (and therefore the default)
+    // must keep representing Bravo by the first-in-catalog-order product; only the explicit
+    // Atlas opt-in may prefer the Primary-fit product. Representative product ids are the
+    // behavior under review — the manufacturer list is identical either way.
+    const input = buildFixtureStore()
+    input.products.push(
+      product({
+        product_id: 'PRD-EEE',
+        product_name: 'Bravo Late Primary Stent',
+        manufacturer_id: 'MFR-B',
+        manufacturer: 'Bravo Medical',
+        catalog_number: 'BET-900',
+        diameter_mm: 14,
+        length_mm: 50,
+        material: 'Silicone',
+      }),
+    )
+    input.productRoles.push({
+      product_id: 'PRD-EEE',
+      role_code: 'AIRWAY_STENT',
+      role_fit: 'Primary',
+      notes: null,
+    })
+    const divergentStore = buildCatalogStore(input)
+    // Catalog order inside the Bravo group: PRD-BBB ("Beta …") before PRD-EEE ("Bravo …").
+    const legacy = getProductDetail('PRD-AAA', divergentStore)!
+    expect(legacy.otherManufacturers.map((item) => item.productId)).toEqual(['PRD-BBB'])
+    const explicitDefault = getProductDetail('PRD-AAA', divergentStore, {
+      representativeSelection: 'catalog_order',
+    })!
+    expect(explicitDefault.otherManufacturers.map((item) => item.productId)).toEqual(['PRD-BBB'])
+    const primaryFit = getProductDetail('PRD-AAA', divergentStore, {
+      representativeSelection: 'primary_fit',
+    })!
+    expect(primaryFit.otherManufacturers.map((item) => item.productId)).toEqual(['PRD-EEE'])
+    // The denominators and the primary-role header are mode-independent.
+    for (const detail of [legacy, primaryFit]) {
+      expect(detail.otherManufacturersTotalProducts).toBe(2)
+      expect(detail.otherManufacturersTotalManufacturers).toBe(1)
+      expect(detail.primaryRoleCode).toBe('AIRWAY_STENT')
+    }
+  })
+
   it('returns null for an unknown product', () => {
     expect(getProductDetail('PRD-NOPE', store)).toBeNull()
   })

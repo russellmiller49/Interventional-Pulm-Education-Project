@@ -319,3 +319,18 @@ The repository inventory (domain resolution, taxonomy/families, server + Supabas
 ## What happens next
 
 All ten decisions were recorded by the physician owner on 2026-08-08: D-01, D-02, D-04, D-05, D-06, D-08, and D-09 accepted as recommended; D-03 and D-07 accepted with modification; D-10 accepted with bounded scope. The modifications are reflected in the sibling documents that argue those decisions ([information-architecture.md](./information-architecture.md), [relationship-taxonomy.md](./relationship-taxonomy.md), [vertical-slice-spec.md](./vertical-slice-spec.md)). Phase D1 is now authorized under the bounded scope recorded in D-10 and the D1-time constraints of D-03 (all new routes public-unlisted and noindex; public indexing needs a separate launch decision).
+
+---
+
+## Part 3 — Phase D1 implementation record (added 2026-08-08; Parts 1–2 are the Phase D0 record and are unchanged)
+
+The D-10 slice was implemented on branch `claude/device-intelligence-vertical-slice` and delivered as a draft pull request for owner review. Record of what the implementation did and did not do, against the ten decisions:
+
+- **D-03/D-04 honored.** Six new routes under `/[locale]/devices`, `/[locale]/clinical-roles`, `/[locale]/procedures` — every one public-unlisted, per-page robots-noindexed, proxy-stamped `X-Robots-Tag`, absent from navigation, behind a new production env flag (`NEXT_PUBLIC_ENABLE_DEVICE_INTELLIGENCE`, set nowhere). All existing preference-card routes preserved; two additive cross-links only.
+- **D-05 honored.** The procedure surfaces serve exactly `EBUS_TBNA`, `THERAPEUTIC_BRONCH`, `CHEST_TUBE`; every other code 404s and the index labels the set as the Phase D1 exemplars.
+- **D-06 honored.** No new relationship structures; `productFamily` untouched; discovery `familyKey` rendered display-only with its caption.
+- **D-07 honored.** Atlas cohort = `verified_source` AND `prototype_visible`, enforced at store construction (753 products); candidate/hidden products unreachable on the new routes including by direct id.
+- **D-08 honored.** Readiness and output previews are driven only by the existing governed walls; proposals render as counts and never satisfy anything; candidate/unknown/demo evidence can never produce plain `ready`.
+- **D-10 boundaries held.** No persistence of any kind (no table, no Supabase write, no localStorage key, no new cache beyond a second in-memory index over the same imported JSON), no migration, no catalog/seed/reviewed/generated data change, no release or pointer change, no governance-state change, no equivalence/substitution claim, no second resolution engine, no server action, no write API. The Phase D0 audit artifact remained byte-identical and the 54-entry publication baseline unchanged throughout.
+
+Two pre-existing-code changes were required and are within scope: the catalog Fuse cache became per-store (a latent single-slot cache that would have cross-contaminated two store instances), and the two preserved catalog pages gained the cross-links R6 calls for. Implementation details: [d1-implementation.md](./d1-implementation.md); validation: [d1-validation.md](./d1-validation.md); review packet: [d1-review/](./d1-review/). Public indexing, candidate-cohort review, and route consolidation remain open owner decisions.

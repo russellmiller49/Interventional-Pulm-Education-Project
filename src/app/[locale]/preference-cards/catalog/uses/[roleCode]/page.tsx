@@ -15,6 +15,7 @@ import {
   canonicalRoleCode,
 } from '@/features/preference-cards/domain/role-taxonomy'
 import { getUseDetail, specColumnPriority } from '@/features/preference-cards/server/catalog'
+import { deviceIntelligenceEnabled } from '@/features/device-intelligence/feature'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,6 +42,7 @@ export default async function CatalogUseDetailPage({ params, searchParams }: Pag
   const showAllVariants = (await searchParams)?.view === 'all'
   setRequestLocale(locale)
   const t = await getTranslations('preferenceCards.catalog')
+  const tCrossLinks = await getTranslations('deviceIntelligence.common.crossLinks')
 
   // A link saved before a taxonomy-v2 rename still names the old role. An alias resolves, but
   // it is never a URL the module owns, so send the reader to the canonical one rather than
@@ -85,12 +87,25 @@ export default async function CatalogUseDetailPage({ params, searchParams }: Pag
 
   return (
     <div className="container space-y-8 py-8 md:py-12">
-      <Button asChild variant="ghost" size="sm" className="-ml-2">
-        <Link href={`/${locale}/preference-cards/catalog/uses` as Route}>
-          <ChevronLeft aria-hidden="true" className="h-4 w-4" />
-          {t('uses.backToUses')}
-        </Link>
-      </Button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Button asChild variant="ghost" size="sm" className="-ml-2">
+          <Link href={`/${locale}/preference-cards/catalog/uses` as Route}>
+            <ChevronLeft aria-hidden="true" className="h-4 w-4" />
+            {t('uses.backToUses')}
+          </Link>
+        </Button>
+        {deviceIntelligenceEnabled() ? (
+          <Button asChild variant="outline" size="sm">
+            <Link
+              href={
+                `/${locale}/clinical-roles/${encodeURIComponent(detail.role.role_code)}` as Route
+              }
+            >
+              {tCrossLinks('atlasRolePage')}
+            </Link>
+          </Button>
+        ) : null}
+      </div>
 
       <header className="max-w-4xl space-y-4">
         <p className="font-mono text-xs text-muted-foreground">{detail.role.role_code}</p>
