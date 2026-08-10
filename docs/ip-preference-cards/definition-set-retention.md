@@ -210,3 +210,122 @@ invalidates published releases — that is the entire point. The discipline that
 freeze: the ledger keeps every published pin resolvable, the publication baseline keeps
 every retained entry and every published pin immutable, and the demo-equals-current-release
 invariant test keeps the unpinned surfaces coherent with what a new card would actually pin.
+
+## 5. The F-09 application record
+
+The first real use of the ledger, in the shape the D1.1 release-impact record established.
+
+### 5.1 Correction
+
+`OPS-APC-RIGID` (`APC_APPLICATOR_RIGID`), added by the APC modifier's `add_slot` action in
+`seed/operational.ts`: `requiredness` `required` → `conditional`, `dependencyRule`
+absent → `"Rigid system in use"` (owner-review finding F-09, 2026-08-09; the exact
+owner-authorized phrase, recorded in `d1-review/owner-review-dispositions.md`). No other
+field of the slot, no other action of the APC modifier, and no other modifier changed — the
+regression suite proves the whole-set delta is exactly this edit.
+
+### 5.2 Forward-release surface
+
+APC reachability was audited across every procedure: a procedure consumes the corrected
+modifier definition only if its current release's recipe lists `APC` in
+`allowedModifierCodes` (the merged set is filtered by that authored permission before
+anything reaches the resolver), and no rescue module adds the role through another door.
+Exactly two qualify.
+
+| Procedure               | Current release                 | APC allowed? | APC reachable? | Rigid applicator reachable?               | New set needed? | Reason                                                                                     | New release                     | Pointer moved? |
+| ----------------------- | ------------------------------- | ------------ | -------------- | ----------------------------------------- | --------------- | ------------------------------------------------------------------------------------------ | ------------------------------- | -------------- |
+| RIGID_BRONCH            | release-rigid-bronch-v1-0       | yes          | yes            | yes (modifier + composed SLOT-18617846CD) | yes             | corrected APC definition is in its active surface                                          | release-rigid-bronch-v1-1       | yes            |
+| THERAPEUTIC_BRONCH      | release-therapeutic-bronch-v1-1 | yes          | yes            | yes (modifier)                            | yes             | same                                                                                       | release-therapeutic-bronch-v1-2 | yes            |
+| all 14 other procedures | (unchanged)                     | no           | no             | no                                        | no              | APC outside `allowedModifierCodes`; allowed-modifier projection identical under either set | —                               | no             |
+
+Mixed current set pins are the intended end state: the fourteen non-advanced procedures keep
+pinning `e3335096…`, now resolved from the ledger, and their resolved cards are byte-identical
+under either set because the APC modifier never survives their permission filter — pinned by
+the demo-equals-current-release invariant test.
+
+### 5.3 Set-pin statement
+
+The **modifier-set pin** moved for the two new releases and only for them:
+`definition-set-modifiers` `e333509636d4564b…` → `a9758b0b0ace11f1…`. The rescue-module,
+compatibility-rule, and role-taxonomy pins are unchanged on every release. The two prior
+generations of the modifier set are both retained in the ledger.
+
+### 5.4 Known reporting gap
+
+`diffReleaseBundles`' requirement-level diff indexes recipe and module slots; a requirement
+living inside a modifier's `add_slot` payload is outside it, so the impact report for each
+new release shows the pin change and **zero requirement changes** — the same class of gap
+recorded for F-04 in the D1.1 pass. The semantic delta is proven at expansion level instead:
+`f09-apc-rigid-applicator.test.ts` diffs the effective slots and the resolved card of
+v1-1 vs v1-2 field by field and pins that exactly one item changed, in exactly the four
+conditional fields.
+
+### 5.5 Publication mechanics
+
+Two-pass freeze, per the release workflow: drafts (no hash) → generator reported
+`release-rigid-bronch-v1-1` = `eee55a3ef86ee5a2…` and `release-therapeutic-bronch-v1-2` =
+`759912d06739ec21…` with one pin change each → hashes, catalog release
+(`8ece7648b8436…`), resolver contract (`ip-cards-resolver-contract/1`), and resolver build
+(`72ea5fc70fc3…`) frozen, `publishedAt` set, both pointers advanced → clean re-run.
+`check-publication-baseline` against the `origin/main` merge base: every base entry
+unchanged, zero lifecycle advances, everything new reported as additions (the two releases,
+the five ledger entries, and the seven D1.1 releases still in their pre-publication window).
+The superseded releases stay `published`; retiring them is a separate owner decision.
+
+### 5.6 Generated artifacts
+
+Every generated file this branch touches, with its generator and content identity
+(sha256 of the file bytes):
+
+| Artifact                                                | Generator                   | Semantic change                                                                                                                                                                                                                                                                              | Before (base `e833b97f`) | After                                                 |
+| ------------------------------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ----------------------------------------------------- |
+| `generated/definition-set-ledger.json`                  | `npm run ip-cards:releases` | new artifact; 4 entries at the foundation commit, 5 after F-09 (two modifier-set generations)                                                                                                                                                                                                | — (absent)               | `855da98e16d1b240…` (foundation: `5da5ea61fe7b360e…`) |
+| `generated/release-bundles.json`                        | `npm run ip-cards:releases` | +2 published releases; 2 pointer moves; all 23 prior bundles byte-identical                                                                                                                                                                                                                  | `8b7453196efecb55…`      | `65087cfe12a3d3bb…`                                   |
+| `generated/release-impact-report.json`                  | `npm run ip-cards:releases` | +2 reports, one modifier-set pin change each, zero requirement changes                                                                                                                                                                                                                       | `41ba0880bcf7bfa9…`      | `02f4080f7eb5bb5c…`                                   |
+| `docs/ip-device-intelligence/data-readiness-audit.json` | `npm run ip-intel:audit`    | **unchanged** — F-09 is outside the audit's measured surface: the audit reads the generated workbook-derived artifacts (`procedure-slots.json`, `slot-product-options.json`, `modifier-definitions.json`, which excludes the hand-tuned seed modifiers), none of which the seed edit touches | `bba2b9402cbfe4a4…`      | `bba2b9402cbfe4a4…` (identical)                       |
+
+`module-ledger.json`, `composition-ledger.json`, `catalog-rows.json`,
+`catalog-release-manifests.json`, `product-family-versions.json`, `catalog-release.json`,
+`resolver-release.json`, `modifier-definitions.json`, and every other generated file are
+byte-identical to the base.
+
+## 6. Post-implementation import classification
+
+The Phase-9 sweep over every remaining direct import of the four live sets, after the
+retention work landed. Categories as in §1.
+
+- **Release-pinned runtime, now resolved by pin** — `data/demo-context.server.ts`
+  (`getReleaseDefinitionSources` with `setPins`, `buildContextForRecipe` with `pinnedSets`),
+  `data/release-bundles.server.ts` (`loadSources` passes the bundle's pins;
+  `buildReleaseContext` builds from the resolved sources). Everything downstream of
+  `buildReleaseContext` — create/save, exact edit/reopen, reconciliation, reviewed rebuild —
+  inherits pinned resolution.
+- **Alias application on the live table, guarded** — `historical-catalog.server.ts`,
+  `product-families.server.ts`, `domain/card-rebuild-plan.ts`, `domain/equipment-set.ts`,
+  `domain/product-family.ts`, `server/rebuild-builder-context.ts`, `server/rebuild-card.ts`
+  (`canonicalRoleCode`). Deliberate, documented in §3.6, guarded by
+  `liveTaxonomyExtendsRetained` at bundle resolution.
+- **Current-by-design surfaces (unpinned, documented)** —
+  `device-intelligence/server/compatibility.server.ts` (atlas display conditions),
+  `procedures.server.ts` / `outputs.server.ts` (D1 workspace/readiness/outputs via the demo
+  context), `server/catalog.ts` and the two role-code routes (alias routing / browse),
+  dashboard and admin pages, the new-card wizard preview. Coherence with pinned resolution
+  is not assumed: the demo-equals-current-release invariant test fails if the live sets and
+  the pointer targets ever tell different stories.
+- **Canonical authoring/generation** — `build-release-bundles.ts` (creates the pins),
+  `build-recipe-compositions.ts`, `generate-scenarios.ts` (producer of the generated
+  modifier definitions), `validate-seed.ts`, `apply-role-taxonomy.ts`, `import-catalog.ts`,
+  `validate-data.ts`.
+- **Point-in-time tooling** — `scripts/ip-device-intelligence/audit-data-readiness.ts`
+  (fs-reads the generated modifier definitions; an audit is a snapshot by definition).
+- **Tests/fixtures** — `scenarios.test.ts`, `role-taxonomy.test.ts`,
+  `recipe-composition.test.ts`, `resolver-contract-v1.test.ts`, plus the new
+  `definition-set-ledger.test.ts` and F-09 suites.
+
+No release-pinned runtime path reads an unqualified live global for the three
+resolver-facing sets. One pre-existing live read inside pinned resolution remains outside
+this pass's scope and is recorded as accepted: `isProductCurrentlyUnselectable`
+(`server/catalog.ts`) applies the _current_ catalog's slotting governance to historical
+catalog picks during rebuild — fail-closed (a pick can become unavailable, never silently
+substituted), predates this branch, and concerns catalog governance rather than the four
+definition sets.

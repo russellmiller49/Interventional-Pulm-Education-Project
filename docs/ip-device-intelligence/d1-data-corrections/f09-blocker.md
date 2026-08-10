@@ -1,5 +1,14 @@
 # F-09 — BLOCKED: no historical retention exists for the modifier definition set
 
+> **Resolved on the stacked definition-set-retention branch.** The mechanism proposed at the
+> bottom of this document was implemented as `generated/definition-set-ledger.json` and the
+> one-line seed edit applied, with forward releases `release-rigid-bronch-v1-1` and
+> `release-therapeutic-bronch-v1-2`. The reproduction of this blocker, the ledger contract,
+> and the application record live in
+> [`docs/ip-preference-cards/definition-set-retention.md`](../../ip-preference-cards/definition-set-retention.md).
+> The analysis below is retained as written, as the record of why the pass that produced this
+> directory stopped.
+
 **Finding.** `OPS-APC-RIGID` (`APC_APPLICATOR_RIGID`) is authored `requiredness: 'required'`
 with no dependency rule inside the APC modifier's `add_slot` action
 (`src/features/preference-cards/seed/operational.ts:759–769`). Selecting APC on a

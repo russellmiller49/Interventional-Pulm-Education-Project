@@ -139,6 +139,18 @@ an edited entry, a live/published divergence, or a pinned version missing from b
 custom module composition — derived from the current module set — versions forward through
 the same ledger.
 
+**Retaining a superseded _definition set_** — the four whole-set pins
+(`definition-set-modifiers`, `-rescue-modules`, `-compatibility-rules`, `-role-taxonomy`) —
+is handled by `generated/definition-set-ledger.json`, the fourth ledger, introduced with the
+F-09 correction. The sets have no version ids, so entries are addressed by
+**(set id, content hash)** — the exact pair a pin names — and `getReleaseDefinitionSources`
+resolves each set by the bundle's own pin: the live source when its hash matches, the
+retained entry otherwise, a typed failure when neither. Two releases pinning two different
+modifier sets resolve side by side in one process; mixed current set pins across procedures
+are the intended end state, since only the procedures whose behaviour a set change affects
+publish forward releases. Full contract, consumer inventory, and failure modes:
+[`definition-set-retention.md`](./definition-set-retention.md).
+
 ## Adding a new release
 
 ```bash
