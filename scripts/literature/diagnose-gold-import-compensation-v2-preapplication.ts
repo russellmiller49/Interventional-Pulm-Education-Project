@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process'
-import { readFile } from 'node:fs/promises'
+import { randomBytes } from 'node:crypto'
+import { lstat, mkdir, readFile, realpath, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
@@ -26,6 +27,13 @@ import {
 import { GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2 } from './gold-import-note-disposition-gate-v2'
 import { assertKnownArguments, parseCliArguments, stringArgument } from './lib/cli'
 import {
+  PROTECTED_V2_BACKUP_INSTANCE_WITNESS_DIRECTORY,
+  PROTECTED_V2_BACKUP_RECEIPT_SCHEMA_VERSION,
+  buildProtectedV2BackupExecutionReceipt,
+  buildProtectedV2BackupInstanceWitness,
+} from './protected-gold-import-contract-v2-evidence'
+import {
+  PROTECTED_GOLD_IMPORT_CONTRACT_V1,
   PROTECTED_GOLD_IMPORT_CONTRACT_V2,
   buildDefaultLocalStartPlan,
   classifyProtectedV2Ledger,
@@ -35,7 +43,7 @@ import {
 export const GOLD_IMPORT_V2_PREAPPLICATION_REPORT_SCHEMA_VERSION =
   'gold-import-contract-v2-preapplication-report/1.0.0' as const
 export const GOLD_IMPORT_V2_PREAPPLICATION_RECEIPT_SCHEMA_VERSION =
-  'gold-import-contract-v2-preapplication-execution/1.0.0' as const
+  PROTECTED_V2_BACKUP_RECEIPT_SCHEMA_VERSION
 export const GOLD_IMPORT_V2_TASK_BRANCH =
   'codex/ip-literature-import-contract-v2-forward-repair-v1' as const
 
@@ -54,8 +62,9 @@ Usage:
     --backup-root <existing-directory> --output <fresh-directory>
 
 The command is pinned to the exact task branch, local Supabase container, and development batch.
-Every database query opens a repeatable-read/read-only transaction. It never reads finalized source
-artifacts, constructs an application database client, or exposes held-out identities.
+Every database query opens a repeatable-read/read-only transaction. It creates a path-bound,
+externally witnessed backup-instance identity, never reads finalized source artifacts, constructs an
+application database client, or exposes held-out identities.
 `.trim()
 
 interface OperationCounts {
@@ -301,6 +310,7 @@ export async function runGoldImportV2PreapplicationDiagnostic(argv: string[]) {
     cwd,
     output: outputArgument,
   })
+  const backupRootRealpath = await realpath(resolve(cwd, backupRoot))
   const [v1Bytes, v2Bytes] = await Promise.all([
     readFile(resolve(cwd, 'supabase/migrations', IMPORT_COMPENSATION_MIGRATION_FILE)),
     readFile(resolve(cwd, 'supabase/migrations', V2_MIGRATION_FILE)),
@@ -483,23 +493,68 @@ blocked until a separately authorized migration-application session completes an
       ...Object.entries(backupFiles),
     ]),
   )
-  const executionReceipt = {
+  const executedAt = new Date().toISOString()
+  const executionReceipt = buildProtectedV2BackupExecutionReceipt({
     schemaVersion: GOLD_IMPORT_V2_PREAPPLICATION_RECEIPT_SCHEMA_VERSION,
-    executedAt: new Date().toISOString(),
-    outputDirectory,
+    backupRoot: backupRootRealpath,
     canonicalManifestSha256: artifacts.manifestSha256,
+    database: {
+      batchId: String(batch.id ?? ''),
+      datasetSplit: 'development',
+      developmentMembershipSha256: stateHashesAfter.developmentMembershipSha256,
+      developmentPlanningStateSha256: planningAfter,
+      effectiveStateSha256: stateHashesAfter.effectiveStateSha256,
+      physicalStateSha256: stateHashesAfter.physicalStateSha256,
+    },
+    executedAt,
+    executionNonce: randomBytes(32).toString('hex'),
+    migrationLedger: {
+      sha256: sha256(backupFiles['protected-migration-ledger.json']),
+      v1: { ...PROTECTED_GOLD_IMPORT_CONTRACT_V1, occurrence: 1 },
+      v2: { ...PROTECTED_GOLD_IMPORT_CONTRACT_V2, occurrence: 0 },
+    },
+    outputDirectory,
     repositoryCommitSha: repository.head,
-    databaseMutationCount: 0,
-    heldOutIdentitiesAccessed: false,
-    remoteDatabaseAccessed: false,
-  }
+    safety: {
+      databaseMutationCount: 0,
+      heldOutIdentitiesAccessed: false,
+      remoteDatabaseAccessed: false,
+    },
+  })
   await writeCanonicalPackage({
     artifacts,
-    executionReceipt,
+    executionReceipt: { ...executionReceipt },
     outputDirectory,
-    outputRoot: resolve(cwd, backupRoot),
+    outputRoot: backupRootRealpath,
   })
-  return { outputDirectory, manifestSha256: artifacts.manifestSha256, report }
+  if ((await realpath(outputDirectory)) !== outputDirectory) {
+    throw new Error('Protected V2 backup output realpath changed during creation.')
+  }
+  const executionReceiptBytes = canonicalJson(executionReceipt)
+  const witness = buildProtectedV2BackupInstanceWitness(
+    executionReceipt,
+    sha256(executionReceiptBytes),
+  )
+  const witnessDirectory = resolve(
+    backupRootRealpath,
+    PROTECTED_V2_BACKUP_INSTANCE_WITNESS_DIRECTORY,
+  )
+  await mkdir(witnessDirectory, { mode: 0o700, recursive: true })
+  const witnessDirectoryStat = await lstat(witnessDirectory)
+  if (!witnessDirectoryStat.isDirectory() || witnessDirectoryStat.isSymbolicLink()) {
+    throw new Error('Protected V2 backup instance witness root is unsafe.')
+  }
+  await writeFile(
+    resolve(witnessDirectory, `${executionReceipt.backupInstanceId}.json`),
+    canonicalJson(witness),
+    { encoding: 'utf8', flag: 'wx', mode: 0o400 },
+  )
+  return {
+    backupInstanceId: executionReceipt.backupInstanceId,
+    outputDirectory,
+    manifestSha256: artifacts.manifestSha256,
+    report,
+  }
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
@@ -511,6 +566,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
           JSON.stringify(
             {
               outputDirectory: result.outputDirectory,
+              backupInstanceId: result.backupInstanceId,
               manifestSha256: result.manifestSha256,
               status: result.report.status,
             },

@@ -43,8 +43,11 @@ file SHA-256. Filename presence alone is never authorization.
 
 The armed state is ephemeral. It is not a hand-editable marker. Its canonical authorization binds
 clean primary `main`, exact `HEAD == origin/main`, the exact migration SHA, the local target,
-accepted database hashes, and both backup manifests/receipts. Any repository, database, or backup
-drift invalidates it. Applying V2 changes the ledger and makes the authorization single-use.
+accepted database hashes, and two independently executed backup instances. Each instance binds its
+output-directory realpath, a fresh execution nonce, repository and database identities, canonical
+manifest, migration ledger, development-only safety proof, and an external checksum-bound witness
+under the backup root. Any repository, database, backup, receipt, or witness drift invalidates the
+authorization. Applying V2 changes the ledger and makes the authorization single-use.
 
 ## Default command matrix
 
@@ -95,9 +98,14 @@ npm run literature:diagnose-gold-import-compensation-v2-preapplication -- \
 
 Each backup is a repeatable-read/read-only, checksum-sealed development snapshot. It contains the
 development database seed, exact migration ledger, accepted state hashes, report, manifest, and
-execution receipt; it contains no held-out identities. Verify both manifests independently. The
-operator re-verifies every file and receipt and rejects old, same-directory, reserialized, unsafe,
-or state/HEAD-mismatched backups.
+execution receipt; it contains no held-out identities. The diagnostic also creates a separate,
+exclusive instance witness below `.protected-v2-backup-instance-witnesses/` in the backup root.
+Verify both manifests independently. Identical canonical development snapshots are expected, but
+the output realpaths, backup-instance identities, execution-receipt checksums, and witnesses must
+all be distinct. The operator re-verifies every file, canonical receipt, and witness and rejects
+old, same-directory, realpath-alias, copied, reserialized, unsafe, or state/HEAD-mismatched backups.
+Editing a copied receipt's output path cannot create a new diagnostic execution: it invalidates the
+instance checksum and the external witness binding.
 
 ### 2. Run the default read-only dry-run
 
@@ -133,18 +141,49 @@ npm run literature:apply-protected-gold-import-contract-v2 -- \
   --commit
 ```
 
-Immediately before staging, the command re-reads the repository, database, and both backups and
-compares them to the checksum-bound in-memory authorization. It then stages the exact protected file
-in the ignored generated workdir, invokes the project-pinned `supabase migration up --local`, and
-rechecks V1 once, V2 once, and unchanged membership/effective/V1-physical/planning hashes. The local
-receipt records only the schema-migration capability and expressly records import/compensation as
-unauthorized.
+Immediately before mutation, the command re-reads the repository, database, and both backups and
+compares them to the checksum-bound in-memory authorization. Before staging, it exclusively creates
+the requested local-only output directory and writes an immutable, checksum-sealed application
+intent. That intent preserves the exact authorization, both independent backup instances, complete
+pre-state, migration-only capability, and explicit `importAuthorized=false` and
+`compensationAuthorized=false`. If intent sealing fails, neither staging nor migration application
+is attempted.
 
-If output is lost or ambiguous, do not rerun the commit command. Use observational
-`npm run literature:local:status` to distinguish exact-once applied, absent, and drifted states. If
-absent, discard the lost in-memory authorization and repeat the complete backup/dry-run/approval
-sequence. If exact-once applied, preserve the generated migration and application receipt evidence;
-never apply again. Any ambiguity is a stop condition.
+Only after sealing does the command stage the exact protected file in the ignored generated
+workdir and invoke the project-pinned `supabase migration up --local` once. It then proves V1 stayed
+once, V2 moved from absent to exactly once, the bound development state did not change, and no
+review, pointer, reveal, action, import, or compensation mutation occurred. It runs the committed
+read-only V2 RPC/function/trigger security audit and binds that audit and the pinned verifier source
+identity into the application result. Finally it atomically adds a `finalized/` subpackage with the
+result, checksum manifest, and execution receipt; it never deletes or rewrites the original intent.
+
+### 4. Resolve an ambiguous or lost acknowledgement without replay
+
+Never rerun `--commit` after an ambiguous migration outcome. Preserve the intent directory and use
+observational `npm run literature:local:status` first. The operator response is determined by the
+exact ledger state:
+
+| Observed state                                       | Required action                                                                                                                                                                                                                                                 |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| V2 absent                                            | Reconciliation fails without staging or applying. After the incident is understood, discard that authorization and obtain a new decision with two fresh backups before any later commit attempt.                                                                |
+| V2 applied exactly once                              | Run the reconciliation command below. It verifies the sealed intent, both original backup instances, exact repository/migration bytes, unchanged development state, and the committed read-only V2 audit, then finalizes the receipt with zero migration calls. |
+| Duplicate, wrong-pair, or otherwise ambiguous ledger | Stop. Do not stage, apply, reconcile, start migration-up, or reset. Escalate for a separately reviewed recovery.                                                                                                                                                |
+
+```bash
+npm run literature:apply-protected-gold-import-contract-v2 -- \
+  --target local \
+  --operator <SAME_OPERATOR_IDENTITY> \
+  --output <EXISTING_SEALED_INTENT_DIRECTORY> \
+  --reconciliation-reason "<NONEMPTY_INCIDENT_REASON>" \
+  --reconcile-applied-receipt
+```
+
+Reconciliation accepts no `--backup`, `--commit`, or confirmation argument. It loads the immutable
+intent and its original bindings, never stages a migration, never calls `migration up`, and never
+infers that an absent migration should be applied. A reconciled receipt records
+`receiptReconciled=true`, `migrationReexecuted=false`, and
+`migrationApplicationCallCount=0`. Repeating reconciliation against an already complete package
+only verifies and reports it as already complete; it does not rewrite any evidence.
 
 ## Later import and compensation remain separate
 

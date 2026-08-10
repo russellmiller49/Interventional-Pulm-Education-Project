@@ -33,9 +33,12 @@ fail closed.
 
 The dedicated command `literature:apply-protected-gold-import-contract-v2` is dry-run/read-only by
 default. Commit mode requires primary clean main at exact origin/main, exact local target, V1 once,
-V2 absent, accepted hashes, two fresh checksum-verified backups, exact confirmation, and an
-in-memory checksum-bound migration-only authorization. It reuses the project-pinned Supabase
-migration-up path. It cannot authorize import or compensation.
+V2 absent, accepted hashes, two fresh independently witnessed checksum-verified backup instances,
+exact confirmation, and a checksum-bound migration-only authorization. Before staging it persists
+an immutable application-intent package. It reuses the project-pinned Supabase migration-up path
+exactly once and finalizes only after exact schema/state and read-only V2 security verification. A
+separate reconciliation mode can finalize a lost-ack exact-once application from that intent while
+making zero migration calls. It cannot authorize import or compensation.
 
 See
 [`gold-import-contract-v2-protected-application-runbook.md`](./gold-import-contract-v2-protected-application-runbook.md)

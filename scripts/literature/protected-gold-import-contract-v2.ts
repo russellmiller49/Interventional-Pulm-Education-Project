@@ -26,6 +26,11 @@ export const PROTECTED_GOLD_IMPORT_CONTRACT_V1 = {
   version: '20260808035633',
 } as const
 
+export const PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER = {
+  filename: '20260809231651_verify_literature_gold_import_compensation_contract_v2.sql',
+  sha256: '2570f0885ed646247df7dd3e375b835c7591f2750bc190d63845191cd0426eeb',
+} as const
+
 export const PROTECTED_V2_CONFIRMATION =
   'APPLY PROTECTED LITERATURE GOLD IMPORT CONTRACT V2 EXACTLY ONCE' as const
 export const PROTECTED_V2_AUTHORIZATION_SCHEMA_VERSION =
@@ -77,6 +82,8 @@ export type ProtectedV2State =
     }
 
 export interface ProtectedV2BackupBinding {
+  backupInstanceId: string
+  backupRoot: string
   canonicalManifestSha256: string
   directory: string
   executedAt: string
@@ -272,14 +279,24 @@ function assertAuthorizationContext(context: ProtectedV2AuthorizationContext) {
   }
   if (
     context.backups.length !== 2 ||
-    context.backups[0].directory === context.backups[1].directory
+    context.backups[0].directory === context.backups[1].directory ||
+    context.backups[0].backupInstanceId === context.backups[1].backupInstanceId ||
+    context.backups[0].executionReceiptSha256 === context.backups[1].executionReceiptSha256
   ) {
-    throw new Error('Protected V2 authorization requires two distinct pre-application backups.')
+    throw new Error(
+      'Protected V2 authorization requires two independently executed pre-application backups.',
+    )
   }
   for (const [index, backup] of context.backups.entries()) {
-    if (!backup.directory || !backup.executedAt || Number.isNaN(Date.parse(backup.executedAt))) {
+    if (
+      !backup.directory ||
+      !backup.backupRoot ||
+      !backup.executedAt ||
+      Number.isNaN(Date.parse(backup.executedAt))
+    ) {
       throw new Error(`Protected V2 backup ${index + 1} has malformed identity fields.`)
     }
+    assertSha256(backup.backupInstanceId, `backup ${index + 1} instance`)
     assertSha256(backup.canonicalManifestSha256, `backup ${index + 1} manifest`)
     assertSha256(backup.executionReceiptSha256, `backup ${index + 1} receipt`)
   }
