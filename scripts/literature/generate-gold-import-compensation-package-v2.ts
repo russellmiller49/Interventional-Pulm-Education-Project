@@ -1567,6 +1567,7 @@ export function verifyGeneratedGoldImportCompensationPackageV2(
   const intrinsic = verifyGoldImportCompensationPackageV2IntrinsicFiles(input.files)
   const { authenticatedSource: authenticatedDevelopmentPlanningState } =
     validateAndSnapshotDevelopmentPlanningStateV2(input.developmentPlanningState)
+  const sourceArtifactBytes = Buffer.from(input.sourceArtifactBytes)
   const expectedVerifiedBindings = {
     completeCatalogAuditIdentitySha256:
       intrinsic.sourceAuthorizationSet.completeCatalogAudit.fullAuditIdentitySha256,
@@ -1574,7 +1575,9 @@ export function verifyGeneratedGoldImportCompensationPackageV2(
     expectedCatalogBindingSha256: intrinsic.sourceAuthorizationSet.expectedCatalog.bindingSha256,
     migrationSha256: intrinsic.sourceAuthorizationSet.migration.sha256,
     sourceArtifactSha256: intrinsic.sourceAuthorizationSet.finalArtifactSha256,
-    sourceAuthorizationSetSha256: sha256Bytes(input.files.get('source-authorization-set-v4.json')!),
+    sourceAuthorizationSetSha256: sha256Bytes(
+      intrinsic.files.get('source-authorization-set-v4.json')!,
+    ),
   }
   if (
     intrinsic.manifestSha256 !== input.manifestSha256 ||
@@ -1584,8 +1587,7 @@ export function verifyGeneratedGoldImportCompensationPackageV2(
     canonicalJson(intrinsic.sourceAuthorizationSet) !==
       canonicalJson(input.sourceAuthorizationSet) ||
     canonicalJson(expectedVerifiedBindings) !== canonicalJson(input.verifiedBindings) ||
-    sha256Bytes(input.sourceArtifactBytes) !==
-      intrinsic.sourceAuthorizationSet.finalArtifactSha256 ||
+    sha256Bytes(sourceArtifactBytes) !== intrinsic.sourceAuthorizationSet.finalArtifactSha256 ||
     intrinsic.importPlan.sourceArtifactSha256 !==
       intrinsic.sourceAuthorizationSet.finalArtifactSha256 ||
     intrinsic.importPlan.sourceAuthorizationSetSha256 !==
@@ -1602,7 +1604,7 @@ export function verifyGeneratedGoldImportCompensationPackageV2(
     importPlan: intrinsic.importPlan,
     manifestSha256: intrinsic.manifestSha256,
     packageDescriptor: intrinsic.packageDescriptor,
-    sourceArtifactBytes: Buffer.from(input.sourceArtifactBytes),
+    sourceArtifactBytes,
     sourceAuthorizationSet: intrinsic.sourceAuthorizationSet,
     verifiedBindings: canonicalFrozenClone(expectedVerifiedBindings),
   })

@@ -263,9 +263,12 @@ describe('V2 authenticated planning-state evidence', () => {
     )
     expect(generatorSource.match(/input\.developmentPlanningState/gu)).toHaveLength(1)
     expect(verifierSource.match(/input\.developmentPlanningState/gu)).toHaveLength(1)
+    expect(verifierSource.match(/input\.files/gu)).toHaveLength(1)
+    expect(verifierSource.match(/input\.sourceArtifactBytes/gu)).toHaveLength(1)
     expect(verifierSource).toContain(
       'developmentPlanningState: authenticatedDevelopmentPlanningState,',
     )
+    expect(verifierSource).toContain('sourceArtifactBytes,')
   })
 })
 
