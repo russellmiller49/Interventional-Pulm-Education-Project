@@ -78,9 +78,11 @@ export interface FormularyAssertionInput {
   preferred: boolean
   productVisibilityState: string | null
   /**
-   * The role codes parsed from THIS formulary row. Eligibility is judged against the slots
-   * these codes name, never against a procedure-wide product set: a product selectable for
-   * an unrelated slot cannot satisfy a row that maps it to a different role.
+   * The PROCEDURE-RELEVANT role codes asserted by this formulary row: the row's parsed
+   * codes already intersected with this procedure's own requirement roles by the server
+   * assembly. Eligibility requires the product to be an authored SELECTABLE option for
+   * EVERY one of these roles (C-04b) — one matching role never suppresses another relevant
+   * role's mismatch, and an empty set fails closed rather than passing vacuously.
    */
   roleCodes: string[]
 }
@@ -324,21 +326,28 @@ export function projectDemoReadiness(input: ReadinessProjectionInput): Readiness
   // State 8 — an institutional assertion that disagrees with authored eligibility. The real
   // formulary carries zero assertions today, so in production data this never fires; the
   // rule is exercised by fixtures in tests, exactly as the D0 specification records.
-  // Eligibility is role/slot-scoped (Codex C-04): a carried or preferred row is eligible only
-  // when its product is an authored SELECTABLE option for a slot of a role the row itself
-  // names. A product selectable for an unrelated slot never satisfies a different role's row,
-  // and hidden-product rows stay mismatches regardless of eligibility (fail closed).
+  // Eligibility is role/slot-scoped across EVERY relevant role (Codex C-04, tightened by
+  // C-04b): a carried or preferred row is eligible only when its product is an authored
+  // SELECTABLE option for each procedure-relevant role the row names. One matching role
+  // never suppresses another relevant role's mismatch; an empty relevant set fails closed
+  // (never `every([])` vacuous truth); hidden-product rows stay mismatches regardless.
   for (const assertion of input.formularyAssertions) {
     if (!assertion.hospitalCarries && !assertion.preferred) continue
-    const eligibleForNamedRole = assertion.roleCodes.some((roleCode) =>
-      input.authoredSelectableProductIdsByRole.get(roleCode)?.has(assertion.productId),
+    // Deduplicate and sort defensively so diagnostics are deterministic for any caller,
+    // whatever order or duplication the row's codes arrived in.
+    const relevantRoleCodes = [...new Set(assertion.roleCodes)].sort()
+    const mismatchingRoleCodes = relevantRoleCodes.filter(
+      (roleCode) =>
+        !input.authoredSelectableProductIdsByRole.get(roleCode)?.has(assertion.productId),
     )
-    if (!eligibleForNamedRole || assertion.productVisibilityState === 'hidden') {
+    const eligibleForAllRelevantRoles =
+      relevantRoleCodes.length > 0 && mismatchingRoleCodes.length === 0
+    if (!eligibleForAllRelevantRoles || assertion.productVisibilityState === 'hidden') {
       cardDiagnostics.push({
         code: 'inventory_formulary_mismatch',
         sourceKind: 'formulary_row',
         sourceId: assertion.formularyId,
-        detail: `product ${assertion.productId} carried=${assertion.hospitalCarries} preferred=${assertion.preferred} roleCodes=${assertion.roleCodes.join('/') || 'none'} eligibleForNamedRole=${eligibleForNamedRole} visibility=${assertion.productVisibilityState ?? 'unknown'}`,
+        detail: `product ${assertion.productId} carried=${assertion.hospitalCarries} preferred=${assertion.preferred} relevantRoles=${relevantRoleCodes.join('/') || 'none'} mismatchingRoles=${mismatchingRoleCodes.join('/') || 'none'} eligibleForAllRelevantRoles=${eligibleForAllRelevantRoles} visibility=${assertion.productVisibilityState ?? 'unknown'}`,
       })
     }
   }

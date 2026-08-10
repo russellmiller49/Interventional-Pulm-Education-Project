@@ -817,7 +817,14 @@ export function buildReadinessProjection(
       hospitalCarries: row.hospital_carries,
       preferred: row.preferred,
       productVisibilityState: store.productById.get(row.product_id)?.visibility_state ?? null,
-      roleCodes: parseFormularyRoleCodes(row),
+      // C-04b: only the roles this row asserts THAT this procedure actually requires — the
+      // parsed codes intersected with the procedure's own role set, deduplicated, sorted.
+      // The projection then requires eligibility for every one of them; a role the row
+      // names for some other procedure never widens (or falsely fails) this procedure's
+      // check.
+      roleCodes: [
+        ...new Set(parseFormularyRoleCodes(row).filter((code) => roleCodes.has(code))),
+      ].sort(),
     }),
   )
 

@@ -361,6 +361,114 @@ describe('demo readiness projection — the eight states', () => {
     ).toBe(true)
   })
 
+  it('C-04b: a multi-role row must be eligible for EVERY relevant role — one match never suppresses another', () => {
+    // PRD-TEST000001 is selectable for ROLE_A only; ROLE_B authors nothing for it.
+    const authoredSelectableProductIdsByRole = new Map([
+      ['ROLE_A', new Set(['PRD-TEST000001'])],
+      ['ROLE_B', new Set(['PRD-OTHER00001'])],
+    ])
+    const assertionWith = (
+      formularyId: string,
+      roleCodes: string[],
+      visibility: string = 'prototype_visible',
+    ) => ({
+      formularyId,
+      productId: 'PRD-TEST000001',
+      hospitalCarries: true,
+      preferred: false,
+      productVisibilityState: visibility,
+      roleCodes,
+    })
+    const mismatchesOf = (projection: ReturnType<typeof projectDemoReadiness>) =>
+      projection.cardDiagnostics.filter(
+        (diagnostic) => diagnostic.code === 'inventory_formulary_mismatch',
+      )
+
+    // A+B partial match: the matching ROLE_A must not suppress ROLE_B's mismatch (the
+    // pre-C-04b `.some(...)` did exactly that). The diagnostic names the mismatching role.
+    const partial = mismatchesOf(
+      projectDemoReadiness(
+        minimalInput({
+          authoredSelectableProductIdsByRole,
+          formularyAssertions: [assertionWith('FORM-A-AND-B', ['ROLE_A', 'ROLE_B'])],
+        }),
+      ),
+    )
+    expect(partial).toHaveLength(1)
+    expect(partial[0].sourceId).toBe('FORM-A-AND-B')
+    expect(partial[0].detail).toContain('relevantRoles=ROLE_A/ROLE_B')
+    expect(partial[0].detail).toContain('mismatchingRoles=ROLE_B')
+    expect(partial[0].detail).toContain('eligibleForAllRelevantRoles=false')
+
+    // A+B full match: the product independently selectable for both roles → no mismatch.
+    const fullMatch = mismatchesOf(
+      projectDemoReadiness(
+        minimalInput({
+          authoredSelectableProductIdsByRole: new Map([
+            ['ROLE_A', new Set(['PRD-TEST000001'])],
+            ['ROLE_B', new Set(['PRD-TEST000001', 'PRD-OTHER00001'])],
+          ]),
+          formularyAssertions: [assertionWith('FORM-A-AND-B-FULL', ['ROLE_A', 'ROLE_B'])],
+        }),
+      ),
+    )
+    expect(fullMatch).toHaveLength(0)
+
+    // Empty relevant-role set: fails CLOSED — `every([])` vacuous truth must not pass it.
+    const emptyRoles = mismatchesOf(
+      projectDemoReadiness(
+        minimalInput({
+          authoredSelectableProductIdsByRole,
+          formularyAssertions: [assertionWith('FORM-NO-RELEVANT-ROLES', [])],
+        }),
+      ),
+    )
+    expect(emptyRoles).toHaveLength(1)
+    expect(emptyRoles[0].detail).toContain('relevantRoles=none')
+    expect(emptyRoles[0].detail).toContain('eligibleForAllRelevantRoles=false')
+
+    // Hidden stays a mismatch even when EVERY relevant role authorizes the product.
+    const hiddenAllMatch = mismatchesOf(
+      projectDemoReadiness(
+        minimalInput({
+          authoredSelectableProductIdsByRole: new Map([
+            ['ROLE_A', new Set(['PRD-TEST000001'])],
+            ['ROLE_B', new Set(['PRD-TEST000001'])],
+          ]),
+          formularyAssertions: [
+            assertionWith('FORM-HIDDEN-ALL-MATCH', ['ROLE_A', 'ROLE_B'], 'hidden'),
+          ],
+        }),
+      ),
+    )
+    expect(hiddenAllMatch).toHaveLength(1)
+    expect(hiddenAllMatch[0].detail).toContain('eligibleForAllRelevantRoles=true')
+    expect(hiddenAllMatch[0].detail).toContain('visibility=hidden')
+
+    // Determinism: differently ordered, duplicated input codes normalize to the same
+    // sorted, deduplicated diagnostic lists.
+    const shuffled = mismatchesOf(
+      projectDemoReadiness(
+        minimalInput({
+          authoredSelectableProductIdsByRole,
+          formularyAssertions: [assertionWith('FORM-SHUFFLED', ['ROLE_B', 'ROLE_A', 'ROLE_B'])],
+        }),
+      ),
+    )
+    expect(shuffled).toHaveLength(1)
+    expect(shuffled[0].detail).toContain('relevantRoles=ROLE_A/ROLE_B')
+    expect(shuffled[0].detail).toContain('mismatchingRoles=ROLE_B')
+    const ordered = mismatchesOf(
+      projectDemoReadiness(
+        minimalInput({
+          authoredSelectableProductIdsByRole,
+          formularyAssertions: [assertionWith('FORM-SHUFFLED', ['ROLE_A', 'ROLE_B'])],
+        }),
+      ),
+    )
+    expect(shuffled[0].detail).toBe(ordered[0].detail)
+  })
+
   it('a compatibility rule that evaluates unknown is a limitation, never a silent pass', () => {
     const projection = projectDemoReadiness(
       minimalInput({

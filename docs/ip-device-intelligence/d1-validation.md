@@ -19,7 +19,7 @@ No database operation of any kind was performed; no migration was added; no rele
 
 ## 2. Jest
 
-- New: `src/features/device-intelligence/__tests__/` — 11 suites / 106 tests, all passing: route-access, atlas-filtering, procedure-registry, mechanisms, readiness, readiness-formulary, outputs, role-pages, messages, cohort-wall, accessibility (jest-axe). (Historical counts: 76 at initial validation, 90 after the owner-review regressions; the current figure includes the Codex C-01..C-08 correction regressions.)
+- New: `src/features/device-intelligence/__tests__/` — 11 suites / 110 tests, all passing: route-access, atlas-filtering, procedure-registry, mechanisms, readiness, readiness-formulary, outputs, role-pages, messages, cohort-wall, accessibility (jest-axe). (Historical counts: 76 at initial validation, 90 after the owner-review regressions; the current figure includes the Codex C-01..C-08 correction regressions.)
 - Affected existing scope (`src/features/preference-cards`, `src/lib`, `src/i18n`): 91 suites / 1,420 tests, all passing (two Codex C-06 regressions added) — including the publication-baseline, release-bundle-integrity, and golden-scenario suites, which pin that the preserved engines behave byte-identically.
 - Full run (`npx jest`): exit 0 (completed during the session; re-run after the final edits before commit).
 
@@ -177,3 +177,39 @@ fact (C-07). Zero horizontal page overflow at 1600×900; `X-Robots-Tag: noindex,
 noarchive` on every checked response; `PRD-CB1622624D`, `PRD-F43B951B75`, and
 `RIGID_BRONCH` all 404; both watermarks present; console errors were exclusively the known
 `/api/analytics` 401 (dev-only, known limitation #8).
+
+## 9. C-04b residual correction (2026-08-09)
+
+Targeted Codex verification of head `4f6c5695` passed C-01, C-02, C-03, C-05, C-06, C-07,
+C-08, the synthetic merge with current main, and every gate — and returned exactly one
+reproducible MEDIUM residual inside C-04: a multi-role formulary row was eligible when ANY
+one named role authorized the product, so a matching role suppressed another relevant
+role's mismatch (reproduction and corrected semantics recorded in
+[d1-review/codex-correction-pass.md](./d1-review/codex-correction-pass.md), "Residual
+finding C-04b"). This session merged current `origin/main` @ `8098fb97` once (62 mainline
+files — literature operations + ICU-hemodynamics cardiac-output work; zero changed-file
+overlap, zero conflicts), corrected the eligibility rule to require every procedure-relevant
+row role independently (server-side procedure-role intersection, deduplicated and sorted;
+empty relevant sets fail closed; hidden stays fail-closed; row-level diagnostic reports
+sorted relevant/mismatching role lists), and re-ran every gate:
+
+| Gate                                  | Result on the C-04b head                                                                                                      |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Focused D1 jest                       | 11 suites / 110 tests, all passing (C-04b unit set + the A+B / hidden-multi / non-EBUS-role integration regressions)          |
+| Affected scope jest                   | `preference-cards` + `lib` + `i18n`: 91 suites / 1,420 tests, all passing                                                     |
+| Full `npx jest`                       | 539 suites passed / 7,041 tests passed (2 suites, 3 tests pre-existing skips; 0 failures) — main's merge added its own suites |
+| `npm run type-check`                  | Zero errors                                                                                                                   |
+| `npm run lint`                        | Zero errors; 18 pre-existing warnings, all in files this branch does not touch                                                |
+| Prettier                              | Every PR-changed file passes `--check`                                                                                        |
+| `git diff --check`                    | Clean                                                                                                                         |
+| `npm run ip-intel:audit`              | Byte-identical `data-readiness-audit.json` (`git diff` empty)                                                                 |
+| `npm run ip-cards:release:check-base` | `54 published entries in the base; 54 unchanged, 0 advanced, 0 new`                                                           |
+| `npm run ip-cards:validate-data`      | Clean; workbook sha `fb25b24e…` unchanged                                                                                     |
+| `npm run build:content`               | Clean (24 documents)                                                                                                          |
+| `npm run build`                       | Succeeds; `devices/`, `clinical-roles/`, `procedures/` present; standalone prepared                                           |
+
+Because the real formulary scaffold still carries zero carried/preferred rows, C-04b is not
+browser-visible and no data was added to make it so; the post-build browser smoke check was
+limited to regression safety (EBUS readiness still "Demo: Not ready" via the GENERIC_SUCTION
+structural gap; noindex headers; no hidden identity; no new console errors beyond the known
+`/api/analytics` environment issue).

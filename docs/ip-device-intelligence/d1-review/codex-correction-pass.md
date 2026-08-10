@@ -24,3 +24,44 @@ No governed/seed/generated data changed; the D0 audit artifact is byte-identical
 no flag, navigation, sitemap, or indexing change; no persistence/API/action/write path added;
 proposals still never satisfy coverage, readiness, or outputs; no equivalence or substitution
 inference introduced. PR #88 remains draft.
+
+## Residual finding C-04b — multi-role row all-relevant-role eligibility (2026-08-09)
+
+Targeted Codex verification of the correction head `4f6c5695` **passed C-01, C-02, C-03,
+C-05, C-06, C-07, C-08, the synthetic merge with current main, and all gates**, and returned
+one reproducible MEDIUM residual inside C-04:
+
+- **Reproduction** (through `getProcedureReadinessView('EBUS_TBNA')`, product
+  `PRD-2302DA77DA`, all rows `hospital_carries=true`): rows `FORM-B-ONLY`
+  (GENERIC_SUCTION), `FORM-A-ONLY` (EBUS_NEEDLE_FNA), `FORM-A-AND-B`
+  (GENERIC_SUCTION; EBUS_NEEDLE_FNA) produced `mismatches = ["FORM-B-ONLY"]` — the
+  multi-role row's matching EBUS_NEEDLE_FNA suppressed its GENERIC_SUCTION mismatch. The
+  correct result is `["FORM-A-AND-B", "FORM-B-ONLY"]`.
+- **Why the prior regression missed it**: the C-04 fix replaced the procedure-wide boolean
+  with per-role eligibility but combined the row's roles with `.some(...)` — "eligible for
+  at least one named role" — and every C-04 regression used single-role rows, so the
+  any-vs-all distinction was never exercised.
+- **Corrected semantics** (`domain/readiness.ts`): the server assembly intersects the row's
+  parsed role codes with the procedure's own role set (deduplicated, sorted) and passes only
+  those procedure-relevant roles into `FormularyAssertionInput.roleCodes`; the projection
+  derives `relevantRoleCodes` / `mismatchingRoleCodes` / `eligibleForAllRelevantRoles`, and
+  a carried or preferred row mismatches when `eligibleForAllRelevantRoles` is false or the
+  product is hidden. Every relevant role must independently authorize the product; one
+  matching role never suppresses another's mismatch; an empty relevant set fails closed
+  (never `every([])` vacuous truth) — and the naive "every over the RAW parsed codes"
+  variant is equally ruled out, because a role the row names for a different procedure is
+  removed by the intersection instead of failing the row. The single row-level diagnostic
+  (`sourceKind: formulary_row`, `sourceId: formularyId`) reports the product id, carried and
+  preferred states, the sorted relevant-role list, the sorted mismatching-role list, the
+  all-relevant-roles eligibility result, and the visibility state.
+- **Regressions added**: unit (A-only / B-only / A+B partial with the diagnostic naming
+  GENERIC_SUCTION's analogue / A+B full match / empty-relevant-set fail-closed /
+  hidden-with-all-roles-passing / duplicate-and-shuffled input determinism) and the exact
+  A+B server-integration reproduction in `readiness-formulary.test.ts` (pre-import mock →
+  `getProcedureReadinessView('EBUS_TBNA')`; `FORM-A-AND-B` mismatches with
+  `mismatchingRoles=GENERIC_SUCTION`, `FORM-A-ONLY` does not, exact mismatch set pinned)
+  plus a multi-role hidden-product row and a real-but-non-EBUS role (`TALC_VIAL`) row pair
+  proving the intersection drops unrelated roles without creating false mismatches and that
+  the unrelated role never survives into the domain assertion.
+
+No other C-01..C-08 behavior was modified in the C-04b pass.
