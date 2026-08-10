@@ -284,7 +284,7 @@ export interface GenerateGoldImportCompensationPackageV2Input {
 
 export interface GeneratedGoldImportCompensationPackageV2 {
   compensationTemplate: CompensationPlanTemplateV2
-  developmentPlanningState: DevelopmentPlanningStateV2
+  developmentPlanningState: z.input<typeof developmentPlanningStateV2Schema>
   files: ReadonlyMap<string, Buffer>
   importPlan: ImportPlanV2
   manifestSha256: string
@@ -325,6 +325,19 @@ function deepFreezeCanonicalValue<T>(value: T): T {
 
 function canonicalFrozenClone<T>(value: T): T {
   return deepFreezeCanonicalValue(JSON.parse(canonicalJson(value)) as T)
+}
+
+export function validateAndSnapshotDevelopmentPlanningStateV2(input: unknown): Readonly<{
+  authenticatedSource: z.input<typeof developmentPlanningStateV2Schema>
+  projection: DevelopmentPlanningStateV2
+}> {
+  const projection = developmentPlanningStateV2Schema.parse(input)
+  return Object.freeze({
+    authenticatedSource: canonicalFrozenClone(input) as z.input<
+      typeof developmentPlanningStateV2Schema
+    >,
+    projection: deepFreezeCanonicalValue(projection),
+  })
 }
 
 class DetachedReadonlyBufferMap implements ReadonlyMap<string, Buffer> {
@@ -774,7 +787,8 @@ export function generateGoldImportCompensationPackageV2(
   if (rawPlanningStateSha256 !== audit.database.developmentPlanningStateSha256) {
     throw new Error('V2 planning-state identity does not match the authenticated audit.')
   }
-  const planningState = developmentPlanningStateV2Schema.parse(input.developmentPlanningState)
+  const { authenticatedSource: authenticatedDevelopmentPlanningState, projection: planningState } =
+    validateAndSnapshotDevelopmentPlanningStateV2(input.developmentPlanningState)
   const sourceIdentities = {
     amendedTwoRowAuthorizationSha256: sha256Bytes(input.sources.amendedAuthorizationBytes),
     finalArtifactSha256: sha256Bytes(input.sources.finalArtifactBytes),
@@ -1118,7 +1132,7 @@ export function generateGoldImportCompensationPackageV2(
   files.set('checksum-manifest-v2.sha256', manifest)
   return {
     compensationTemplate,
-    developmentPlanningState: planningState,
+    developmentPlanningState: authenticatedDevelopmentPlanningState,
     files,
     importPlan,
     manifestSha256: sha256Bytes(manifest),

@@ -28,6 +28,7 @@ import {
 } from './gold-import-compensation-contract-reconciliation'
 import {
   buildExpectedPostImportEffectiveStateProjectionV2,
+  validateAndSnapshotDevelopmentPlanningStateV2,
   deriveExpectedPostImportEffectiveStateSha256V2,
   deriveImportActionCountsV2,
   type PackagePlanningRowV2,
@@ -193,6 +194,47 @@ function importPlan(
     sourceAuthorizationSetSha256: '1'.repeat(64),
   })
 }
+
+describe('V2 authenticated planning-state evidence', () => {
+  it('preserves the authenticated source while using its defaulted projection for planning', () => {
+    const raw = {
+      datasetSplit: 'development' as const,
+      rows: [
+        {
+          currentEffectiveReview: includedReview(),
+          currentReviewId: REVIEW_ID,
+          currentRevision: 1,
+          datasetSplit: 'development' as const,
+          displayOrder: 0,
+          effectiveReviewId: REVIEW_ID,
+          itemId: ITEM_ID,
+          itemState: {
+            automatedSignalsRevealedAt: null,
+            completedAt: TIME,
+            reviewStatus: 'completed' as const,
+            startedAt: TIME,
+            supplementalMetadataRevealedAt: null,
+          },
+          pmid: '12345',
+          sequence: 1,
+        },
+      ],
+      schemaVersion: 'gold-import-compensation-development-planning-state/1.0.0' as const,
+    }
+    const validated = validateAndSnapshotDevelopmentPlanningStateV2(raw)
+
+    expect(validated.projection.rows[0]?.currentEffectiveReview).toMatchObject({
+      operationContractVersion: null,
+    })
+    expect(validated.authenticatedSource.rows[0]?.currentEffectiveReview).not.toHaveProperty(
+      'operationContractVersion',
+    )
+    expect(sha256Canonical(validated.authenticatedSource)).toBe(sha256Canonical(raw))
+    expect(sha256Canonical(validated.projection)).not.toBe(sha256Canonical(raw))
+    expect(Object.isFrozen(validated.authenticatedSource)).toBe(true)
+    expect(Object.isFrozen(validated.projection)).toBe(true)
+  })
+})
 
 describe('V2 authorization wire contract', () => {
   it('uses the SQL-compatible authorizedAt/authorizedBy field names', () => {
