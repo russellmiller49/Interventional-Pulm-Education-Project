@@ -1215,7 +1215,9 @@ create table if not exists supabase_migrations.schema_migrations (
       migrationPath: input.migrationPath,
       migrationSha256,
       postV2SeedSnapshot,
-      psql: (sql) => psql(sql),
+      // The shared production catalog collector parses a checksum-bound marker line. Keep the
+      // disposable transport byte-compatible with the local operator's tuples-only/no-align mode.
+      psql: (sql) => psql(sql, true),
       queryJson,
       schemaOnlyUpgrade,
     })
