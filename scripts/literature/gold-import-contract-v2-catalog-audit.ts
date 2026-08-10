@@ -489,7 +489,7 @@ export function validateProtectedV2CompleteCatalogAuditIdentity(
     identity.fullEnvironmentInventoryRecordCount !==
       EXPECTED_FULL_ENVIRONMENT_INVENTORY_RECORD_COUNT ||
     identity.verifierExecuted !== false ||
-    sha256(canonicalJson(content)) !== fullAuditIdentitySha256
+    reconciliationIdentitySha256(content) !== fullAuditIdentitySha256
   ) {
     throw new Error('Protected V2 complete catalog audit identity is inconsistent or drifted.')
   }
@@ -513,9 +513,8 @@ const AUDIT_MODEL_CONTENT = {
   verifierExecuted: false,
 } as const
 
-export const PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL_IDENTITY_SHA256 = sha256(
-  canonicalJson(AUDIT_MODEL_CONTENT),
-)
+export const PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL_IDENTITY_SHA256 =
+  reconciliationIdentitySha256(AUDIT_MODEL_CONTENT)
 
 function recordsOfTypes(
   identity: SchemaSecurityDefinitionIdentity,
@@ -730,7 +729,7 @@ export function buildProtectedV2CompleteCatalogAuditIdentity(input: {
     schemaSecurityDefinitionIdentity: schemaIdentity,
   })
   const invariantIdentity = buildContractInvariantIdentity(schemaIdentity, rpcMetadata)
-  const environmentInvariantIdentitySha256 = sha256(canonicalJson(invariantIdentity))
+  const environmentInvariantIdentitySha256 = reconciliationIdentitySha256(invariantIdentity)
   if (environmentInvariantIdentitySha256 !== PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256) {
     throw new Error(
       `Protected V2 environment-invariant catalog identity drifted: ${environmentInvariantIdentitySha256}.`,
@@ -781,7 +780,7 @@ export function buildProtectedV2CompleteCatalogAuditIdentity(input: {
   const componentIdentities = Object.fromEntries(
     PROTECTED_V2_AUDIT_COMPONENT_NAMES.map((name) => [
       name,
-      sha256(canonicalJson(componentInputs[name])),
+      reconciliationIdentitySha256(componentInputs[name]),
     ]),
   ) as Record<ProtectedV2AuditComponentName, string>
   const identityContent = {
@@ -790,15 +789,15 @@ export function buildProtectedV2CompleteCatalogAuditIdentity(input: {
     auditModelIdentitySha256: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL_IDENTITY_SHA256,
     componentIdentities,
     environmentInvariantIdentitySha256,
-    fullEnvironmentInventoryIdentitySha256: sha256(canonicalJson(fullInventory)),
+    fullEnvironmentInventoryIdentitySha256: reconciliationIdentitySha256(fullInventory),
     fullEnvironmentInventoryRecordCount: schemaIdentity.records.length,
-    localPostgresOwnerProfileIdentitySha256: sha256(canonicalJson(profileIdentity)),
+    localPostgresOwnerProfileIdentitySha256: reconciliationIdentitySha256(profileIdentity),
     schemaVersion: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_SCHEMA_VERSION,
     verifierExecuted: false as const,
   }
   return validateProtectedV2CompleteCatalogAuditIdentity({
     ...identityContent,
-    fullAuditIdentitySha256: sha256(canonicalJson(identityContent)),
+    fullAuditIdentitySha256: reconciliationIdentitySha256(identityContent),
   })
 }
 
