@@ -1,4 +1,5 @@
 import catalogReleaseJson from '../../../../data/ip-preference-cards/generated/catalog-release.json'
+import compositionLedgerJson from '../../../../data/ip-preference-cards/generated/composition-ledger.json'
 import generatedModifiersJson from '../../../../data/ip-preference-cards/generated/modifier-definitions.json'
 import generatedScenariosJson from '../../../../data/ip-preference-cards/generated/scenarios.json'
 import moduleLedgerJson from '../../../../data/ip-preference-cards/generated/module-ledger.json'
@@ -15,6 +16,7 @@ import {
   expandDefaultRecipeComposition,
 } from '../domain/expand-recipe-composition'
 import { selectionsFromResolvedCard } from '../domain/hospital-selection'
+import { retainedRecipeById, type CompositionLedger } from '../domain/composition-ledger'
 import { resolveRetainedModules, type ModuleLedger } from '../domain/module-ledger'
 import type { ReleaseDefinitionSources } from '../domain/release-bundle'
 import {
@@ -26,6 +28,7 @@ import {
 import {
   CUSTOM_COMPOSITION_PROCEDURE_CODE,
   CUSTOM_COMPOSITION_RECIPE_ID,
+  CUSTOM_COMPOSITION_RECIPE_VERSION,
   CUSTOM_COMPOSITION_SCENARIO_ID,
 } from './scenario-ids'
 import { resolveCard } from '../domain/resolve-card'
@@ -331,7 +334,7 @@ function customCompositionRecipe(): RecipeVersion {
     sourceProcedureCode: CUSTOM_COMPOSITION_PROCEDURE_CODE,
     sourceTemplateVersion: '1.0',
     name: customCompositionScenario.recipeName,
-    version: '1.0',
+    version: CUSTOM_COMPOSITION_RECIPE_VERSION,
     governanceState: 'draft',
     clinicalOwner: null,
     operationalOwner: null,
@@ -386,13 +389,57 @@ function recipeForComposition(composition: GeneratedProcedureComposition): Recip
 }
 
 /**
+ * The recipe versions published releases froze, keyed by id — everything the current seed no
+ * longer produces but a pinned card may still name. Live data wins for ids it holds (see
+ * `recipeForRecipeVersionId`), which is safe because the release build fails when the two
+ * disagree about a published version.
+ */
+const retainedRecipes = retainedRecipeById(compositionLedgerJson as unknown as CompositionLedger)
+
+/**
  * The recipe for an exact recipe version id. Null when that version is not retained — never
  * a newer publication of the same procedure.
+ *
+ * Resolution order: the current custom-composition recipe, then the current generated
+ * compositions, then the retention ledger. The ledger comes last so a live definition always
+ * wins for an id both hold — the same ordering `resolveRetainedModules` uses one level down.
  */
 export function recipeForRecipeVersionId(recipeVersionId: string): RecipeVersion | null {
   if (recipeVersionId === CUSTOM_COMPOSITION_RECIPE_ID) return customCompositionRecipe()
   const composition = compositionByRecipeVersionId.get(recipeVersionId)
-  return composition ? recipeForComposition(composition) : null
+  if (composition) return recipeForComposition(composition)
+  const retained = retainedRecipes.get(recipeVersionId)
+  return retained ? cloneRecipeVersion(retained) : null
+}
+
+/** A defensive copy, so no caller can mutate the retained ledger definition in place. */
+function cloneRecipeVersion(recipe: RecipeVersion): RecipeVersion {
+  return {
+    ...recipe,
+    allowedModifierCodes: [...recipe.allowedModifierCodes],
+    slots: recipe.slots.map(cloneSlot),
+    moduleReferences: recipe.moduleReferences.map((reference) => ({ ...reference })),
+    compositionActions: recipe.compositionActions.map((action) => ({
+      ...action,
+      payload: { ...action.payload },
+    })),
+    requirementSequences: { ...recipe.requirementSequences },
+  }
+}
+
+/**
+ * Every recipe version the current generated data produces, by id — the "live" side the
+ * composition ledger is validated against. Excludes retained history on purpose: the release
+ * build compares these against the ledger to detect a published composition being edited in
+ * place, and folding the ledger in here would make that comparison vacuous.
+ */
+export function getLiveRecipeVersions(): Map<string, RecipeVersion> {
+  const live = new Map<string, RecipeVersion>()
+  for (const composition of compositionByRecipeVersionId.values()) {
+    live.set(composition.recipeVersionId, recipeForComposition(composition))
+  }
+  live.set(CUSTOM_COMPOSITION_RECIPE_ID, customCompositionRecipe())
+  return live
 }
 
 /** The recipe version a scenario currently publishes. Used to *start* a card, never to reopen one. */

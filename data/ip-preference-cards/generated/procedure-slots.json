@@ -68,6 +68,23 @@
     "requiredness_raw": "Required"
   },
   {
+    "slot_id": "SLOT-0306E7B77D",
+    "procedure_code": "EBUS_TBNA",
+    "section": "Ventilation",
+    "display_order": 17,
+    "role_code": "GENERIC_AIRWAY_ADAPTER",
+    "slot_label": "Airway adapter if mechanically ventilated",
+    "generic_requirement": "Swivel, bronchoscopy, or ventilation adapter.",
+    "requiredness": "conditional",
+    "default_qty": 1,
+    "selection_mode": "single",
+    "allow_custom": true,
+    "dependency_rule": "Mechanically ventilated patient",
+    "notes": null,
+    "selection_mode_raw": "Single select",
+    "requiredness_raw": "Conditional"
+  },
+  {
     "slot_id": "SLOT-030A408C27",
     "procedure_code": "EBV",
     "section": "Rescue",
@@ -561,6 +578,23 @@
     "requiredness_raw": "Conditional"
   },
   {
+    "slot_id": "SLOT-190EFC825B",
+    "procedure_code": "THERAPEUTIC_BRONCH",
+    "section": "Ventilation",
+    "display_order": 30,
+    "role_code": "GENERIC_AIRWAY_ADAPTER",
+    "slot_label": "Airway adapter if mechanically ventilated",
+    "generic_requirement": "Swivel, bronchoscopy, or ventilation adapter.",
+    "requiredness": "conditional",
+    "default_qty": 1,
+    "selection_mode": "single",
+    "allow_custom": true,
+    "dependency_rule": "Mechanically ventilated patient",
+    "notes": null,
+    "selection_mode_raw": "Single select",
+    "requiredness_raw": "Conditional"
+  },
+  {
     "slot_id": "SLOT-19FC83049A",
     "procedure_code": "RIGID_BRONCH",
     "section": "Visualization",
@@ -726,6 +760,23 @@
     "selection_mode": "single",
     "allow_custom": true,
     "dependency_rule": "APC planned",
+    "notes": null,
+    "selection_mode_raw": "Single select",
+    "requiredness_raw": "Conditional"
+  },
+  {
+    "slot_id": "SLOT-2147BE329B",
+    "procedure_code": "EBUS_TBNA",
+    "section": "Airway protection",
+    "display_order": 16,
+    "role_code": "BITE_BLOCK",
+    "slot_label": "Bite block",
+    "generic_requirement": "Bite block matched to scope diameter.",
+    "requiredness": "conditional",
+    "default_qty": 1,
+    "selection_mode": "single",
+    "allow_custom": true,
+    "dependency_rule": "Oral insertion without protected airway",
     "notes": null,
     "selection_mode_raw": "Single select",
     "requiredness_raw": "Conditional"
@@ -1836,23 +1887,6 @@
     "requiredness_raw": "Conditional"
   },
   {
-    "slot_id": "SLOT-67171A33D4",
-    "procedure_code": "CHEST_TUBE",
-    "section": "Long-term drainage",
-    "display_order": 13,
-    "role_code": "IPC_MANAGEMENT_ACCESSORY",
-    "slot_label": "IPC management accessories",
-    "generic_requirement": "Valve, cap, drainage line, adapter, or removal kit for selected IPC system.",
-    "requiredness": "conditional",
-    "default_qty": 1,
-    "selection_mode": "single",
-    "allow_custom": true,
-    "dependency_rule": "Required as applicable for selected IPC system",
-    "notes": null,
-    "selection_mode_raw": "Single select",
-    "requiredness_raw": "Conditional"
-  },
-  {
     "slot_id": "SLOT-678712810C",
     "procedure_code": "RIGID_BRONCH",
     "section": "Airway protection",
@@ -2038,23 +2072,6 @@
     "notes": null,
     "selection_mode_raw": "Single",
     "requiredness_raw": "Required"
-  },
-  {
-    "slot_id": "SLOT-702914B1CF",
-    "procedure_code": "CHEST_TUBE",
-    "section": "Long-term drainage",
-    "display_order": 12,
-    "role_code": "IPC_DRESSING_KIT",
-    "slot_label": "IPC dressing kit",
-    "generic_requirement": "Dressing supplies compatible with selected IPC system.",
-    "requiredness": "conditional",
-    "default_qty": 1,
-    "selection_mode": "single",
-    "allow_custom": true,
-    "dependency_rule": "Required when IPC_INSERTION_KIT is selected",
-    "notes": null,
-    "selection_mode_raw": "Single select",
-    "requiredness_raw": "Conditional"
   },
   {
     "slot_id": "SLOT-702FD644B7",
@@ -2890,23 +2907,6 @@
     "requiredness_raw": "Required"
   },
   {
-    "slot_id": "SLOT-B4E5C6A7A9",
-    "procedure_code": "CHEST_TUBE",
-    "section": "Long-term drainage",
-    "display_order": 9,
-    "role_code": "IPC_DRAINAGE_KIT",
-    "slot_label": "Compatible IPC drainage kits",
-    "generic_requirement": "Vacuum bottle, bag, or drainage set for an indwelling pleural catheter.",
-    "requiredness": "conditional",
-    "default_qty": 1,
-    "selection_mode": "multiple",
-    "allow_custom": true,
-    "dependency_rule": "IPC selected",
-    "notes": null,
-    "selection_mode_raw": "Multiple",
-    "requiredness_raw": "Conditional"
-  },
-  {
     "slot_id": "SLOT-B6ED05FBC7",
     "procedure_code": "ICU_BRONCH",
     "section": "Ventilation",
@@ -3347,23 +3347,6 @@
     "notes": null,
     "selection_mode_raw": "Multiple",
     "requiredness_raw": "Required"
-  },
-  {
-    "slot_id": "SLOT-D02F71E583",
-    "procedure_code": "CHEST_TUBE",
-    "section": "Long-term drainage",
-    "display_order": 8,
-    "role_code": "IPC_INSERTION_KIT",
-    "slot_label": "Indwelling pleural catheter kit",
-    "generic_requirement": "Tunneled indwelling pleural catheter and insertion kit.",
-    "requiredness": "optional",
-    "default_qty": 1,
-    "selection_mode": "single",
-    "allow_custom": true,
-    "dependency_rule": "Long-term recurrent effusion pathway",
-    "notes": null,
-    "selection_mode_raw": "Single",
-    "requiredness_raw": "Optional"
   },
   {
     "slot_id": "SLOT-D08C74941A",

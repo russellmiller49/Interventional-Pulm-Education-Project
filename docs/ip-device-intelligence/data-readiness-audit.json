@@ -31,14 +31,14 @@
     "products": 1532,
     "roles": 135,
     "procedures": 15,
-    "procedureSlots": 233,
-    "authoredSlotOptions": 2073,
-    "slotOptionProposals": 813,
+    "procedureSlots": 232,
+    "authoredSlotOptions": 2035,
+    "slotOptionProposals": 831,
     "proposalStatusSplit": {
-      "unreviewed": 813
+      "unreviewed": 831
     },
     "productRoleLinks": 1622,
-    "selectableAndVisibleSlotOptions": 942,
+    "selectableAndVisibleSlotOptions": 909,
     "productVerificationGradeSplit": {
       "candidate": 200,
       "unknown": 1,
@@ -56,21 +56,21 @@
       "status": "Draft - clinician review required",
       "templateVersion": "0.3",
       "slots": {
-        "total": 13,
+        "total": 9,
         "requiredness": {
           "required": 3,
-          "contingency": 7,
-          "optional": 3
+          "contingency": 4,
+          "optional": 2
         },
-        "withAllowCustom": 13,
+        "withAllowCustom": 9,
         "rescueSectionSlotCount": 0,
         "rescueSectionSlotIds": [],
         "rescueModulesReachable": []
       },
       "roleCoverage": {
-        "distinctRoles": 13,
+        "distinctRoles": 9,
         "ladder": {
-          "rolesWithSelectableAuthoredOption": 8,
+          "rolesWithSelectableAuthoredOption": 4,
           "rolesWithOnlyNonSelectableAuthoredOptions": 3,
           "rolesWithOnlyProposals": 1,
           "rolesWithNoOptionNoProposal": {
@@ -81,7 +81,7 @@
         },
         "rolesCoveredByDemoStandIns": 3,
         "slotRollup": {
-          "slotsWithSelectableAuthoredOption": 8,
+          "slotsWithSelectableAuthoredOption": 4,
           "slotsWithOnlyNonSelectableAuthoredOptions": 3,
           "slotsWithOnlyProposals": 1,
           "slotsWithNoOptionNoProposal": 1
@@ -130,30 +130,6 @@
             "demoStandIn": false
           },
           {
-            "roleCode": "IPC_DRAINAGE_KIT",
-            "slotCount": 1,
-            "coverage": "selectable_authored",
-            "demoStandIn": false
-          },
-          {
-            "roleCode": "IPC_DRESSING_KIT",
-            "slotCount": 1,
-            "coverage": "selectable_authored",
-            "demoStandIn": false
-          },
-          {
-            "roleCode": "IPC_INSERTION_KIT",
-            "slotCount": 1,
-            "coverage": "selectable_authored",
-            "demoStandIn": false
-          },
-          {
-            "roleCode": "IPC_MANAGEMENT_ACCESSORY",
-            "slotCount": 1,
-            "coverage": "selectable_authored",
-            "demoStandIn": false
-          },
-          {
             "roleCode": "PLEURAL_DRAINAGE_ACCESSORY",
             "slotCount": 1,
             "coverage": "selectable_authored",
@@ -168,7 +144,7 @@
         ]
       },
       "dependencies": {
-        "slotsWithDependencyRule": 10,
+        "slotsWithDependencyRule": 6,
         "rules": [
           {
             "slotId": "SLOT-20D17E94D4",
@@ -181,16 +157,6 @@
             "dependencyRule": "Surgical/trocar approach selected"
           },
           {
-            "slotId": "SLOT-67171A33D4",
-            "roleCode": "IPC_MANAGEMENT_ACCESSORY",
-            "dependencyRule": "Required as applicable for selected IPC system"
-          },
-          {
-            "slotId": "SLOT-702914B1CF",
-            "roleCode": "IPC_DRESSING_KIT",
-            "dependencyRule": "Required when IPC_INSERTION_KIT is selected"
-          },
-          {
             "slotId": "SLOT-708736B8C2",
             "roleCode": "CHEST_TUBE_SMALL_BORE",
             "dependencyRule": "Small-bore approach selected"
@@ -201,19 +167,9 @@
             "dependencyRule": "Selected catheter requires accessory components"
           },
           {
-            "slotId": "SLOT-B4E5C6A7A9",
-            "roleCode": "IPC_DRAINAGE_KIT",
-            "dependencyRule": "IPC selected"
-          },
-          {
             "slotId": "SLOT-C7DBD5BC4C",
             "roleCode": "GENERIC_ULTRASOUND",
             "dependencyRule": "Image-guided insertion"
-          },
-          {
-            "slotId": "SLOT-D02F71E583",
-            "roleCode": "IPC_INSERTION_KIT",
-            "dependencyRule": "Long-term recurrent effusion pathway"
           },
           {
             "slotId": "SLOT-D5C3DB0027",
@@ -271,25 +227,11 @@
       },
       "compatibility": {
         "resolvedRulesTouchingProcedure": {
-          "total": 13,
+          "total": 3,
           "byVerificationGrade": {
-            "verified_source": 13
+            "verified_source": 3
           },
-          "ruleIds": [
-            "RULE-0673A3B60C",
-            "RULE-092FCBD9DD",
-            "RULE-1CC64E5F41",
-            "RULE-21D7AFFDBB",
-            "RULE-4616EF138F",
-            "RULE-541C89AE7A",
-            "RULE-6BDE2819F9",
-            "RULE-6D8FEF80AF",
-            "RULE-A2C900E1AB",
-            "RULE-AB5AD42944",
-            "RULE-CF9D2B47C0",
-            "RULE-E9B402E86B",
-            "RULE-ED8AEAB4CC"
-          ]
+          "ruleIds": ["RULE-6BDE2819F9", "RULE-CF9D2B47C0", "RULE-E9B402E86B"]
         },
         "unresolvedTextualRoleMatches": {
           "total": 0,
@@ -302,26 +244,26 @@
         "note": "equipment sets are browser-localStorage only; no server-side entity exists"
       },
       "localAvailability": {
-        "formularyRowsIntersectingRoles": 107,
+        "formularyRowsIntersectingRoles": 81,
         "hospitalCarries": 0,
         "preferred": 0,
         "withAnyLocalFieldPopulated": 0
       },
       "sourceVerification": {
-        "distinctAuthoredOptionProducts": 113,
+        "distinctAuthoredOptionProducts": 87,
         "byVerificationGrade": {
-          "candidate": 30,
-          "verified_source": 83
+          "candidate": 25,
+          "verified_source": 62
         },
         "byVisibilityState": {
-          "hidden": 60,
-          "prototype_visible": 53
+          "hidden": 55,
+          "prototype_visible": 32
         },
-        "withProductSourceRow": 113,
-        "withGudidConfirmation": 60
+        "withProductSourceRow": 87,
+        "withGudidConfirmation": 41
       },
       "dimensionGaps": {
-        "count": 89,
+        "count": 70,
         "productIds": [
           "PRD-0410844D48",
           "PRD-070884900C",
@@ -329,7 +271,6 @@
           "PRD-0E088FC681",
           "PRD-10959CEA29",
           "PRD-12231F4168",
-          "PRD-13CE349B91",
           "PRD-19DEF7AEC5",
           "PRD-1CBA97E863",
           "PRD-1CCEDCCC76",
@@ -340,26 +281,18 @@
           "PRD-35BAC12D9F",
           "PRD-36D0F6CBA0",
           "PRD-3A27A7B76D",
-          "PRD-3A7C0C418C",
           "PRD-3EDAA08D62",
-          "PRD-412ADCED34",
           "PRD-4130F930C5",
-          "PRD-41BA4FDFE6",
           "PRD-425DB43083",
-          "PRD-4423366610",
-          "PRD-460DB62059",
           "PRD-49A7F962D0",
           "PRD-4EC3E00AB7",
           "PRD-56DF49383B",
           "PRD-59D02C1811",
           "PRD-5C99BF6AB0",
           "PRD-629828B799",
-          "PRD-6A7E037C55",
           "PRD-6A84EE66C8",
           "PRD-6B69B7F1D1",
-          "PRD-6B7E932D54",
           "PRD-6C9FB1DC9F",
-          "PRD-6D1BDDE146",
           "PRD-6DAF9E3AA4",
           "PRD-6DBE766019",
           "PRD-6F32150552",
@@ -368,9 +301,6 @@
           "PRD-744A95F952",
           "PRD-7518A5B1E1",
           "PRD-7578C8D45A",
-          "PRD-77C1FEFC4F",
-          "PRD-78DC6578D9",
-          "PRD-82C2B15804",
           "PRD-848FD7C902",
           "PRD-8776B50EA8",
           "PRD-8A73541235",
@@ -384,34 +314,27 @@
           "PRD-9E24CD4C73",
           "PRD-9F5884AD09",
           "PRD-A5EE9A7377",
-          "PRD-A5F6B25BCB",
           "PRD-AB6D9F097B",
-          "PRD-B2B0419598",
           "PRD-B31434240A",
           "PRD-BDA5B2EF14",
           "PRD-BDB5AF3EB5",
           "PRD-BF8CA98FF8",
           "PRD-C0FA666A98",
-          "PRD-C6BE641E4E",
           "PRD-C73E87B7EE",
           "PRD-C79EA91A93",
           "PRD-C96F155F93",
-          "PRD-CC55BDA6C8",
           "PRD-D20BB54503",
           "PRD-D3E1DD19D2",
           "PRD-DB63DF1DF0",
           "PRD-DD4AFE7DE4",
-          "PRD-E2A3EFD37E",
           "PRD-F008B12AC0",
           "PRD-F351B4D76F",
-          "PRD-F54D35983D",
           "PRD-F7FFFFA87F",
           "PRD-F8B8727229",
           "PRD-F96AA87958",
           "PRD-FD34401E04",
           "PRD-FD3915EF93",
-          "PRD-FE028163EB",
-          "PRD-FEAA795BDD"
+          "PRD-FE028163EB"
         ]
       },
       "needsReviewBeforePublic": {
@@ -433,23 +356,23 @@
       "status": "Draft - clinician/pathology review required",
       "templateVersion": "0.3",
       "slots": {
-        "total": 15,
+        "total": 17,
         "requiredness": {
           "required": 7,
-          "contingency": 4,
+          "contingency": 6,
           "optional": 4
         },
-        "withAllowCustom": 15,
+        "withAllowCustom": 17,
         "rescueSectionSlotCount": 0,
         "rescueSectionSlotIds": [],
         "rescueModulesReachable": ["MAJOR_AIRWAY_BLEEDING"]
       },
       "roleCoverage": {
-        "distinctRoles": 15,
+        "distinctRoles": 17,
         "ladder": {
           "rolesWithSelectableAuthoredOption": 11,
           "rolesWithOnlyNonSelectableAuthoredOptions": 0,
-          "rolesWithOnlyProposals": 2,
+          "rolesWithOnlyProposals": 4,
           "rolesWithNoOptionNoProposal": {
             "total": 2,
             "withProductRoleMappingElsewhere": 0,
@@ -460,10 +383,16 @@
         "slotRollup": {
           "slotsWithSelectableAuthoredOption": 11,
           "slotsWithOnlyNonSelectableAuthoredOptions": 0,
-          "slotsWithOnlyProposals": 2,
+          "slotsWithOnlyProposals": 4,
           "slotsWithNoOptionNoProposal": 2
         },
         "roles": [
+          {
+            "roleCode": "BITE_BLOCK",
+            "slotCount": 1,
+            "coverage": "proposals_only",
+            "demoStandIn": false
+          },
           {
             "roleCode": "EBUS_BALLOON",
             "slotCount": 1,
@@ -502,6 +431,12 @@
           },
           {
             "roleCode": "FLUOROSCOPY_C_ARM",
+            "slotCount": 1,
+            "coverage": "proposals_only",
+            "demoStandIn": false
+          },
+          {
+            "roleCode": "GENERIC_AIRWAY_ADAPTER",
             "slotCount": 1,
             "coverage": "proposals_only",
             "demoStandIn": false
@@ -557,12 +492,22 @@
         ]
       },
       "dependencies": {
-        "slotsWithDependencyRule": 7,
+        "slotsWithDependencyRule": 9,
         "rules": [
+          {
+            "slotId": "SLOT-0306E7B77D",
+            "roleCode": "GENERIC_AIRWAY_ADAPTER",
+            "dependencyRule": "Mechanically ventilated patient"
+          },
           {
             "slotId": "SLOT-1D13D48BD7",
             "roleCode": "RADIATION_PROTECTION",
             "dependencyRule": "Fluoroscopy planned"
+          },
+          {
+            "slotId": "SLOT-2147BE329B",
+            "roleCode": "BITE_BLOCK",
+            "dependencyRule": "Oral insertion without protected airway"
           },
           {
             "slotId": "SLOT-76F4405D68",
@@ -689,7 +634,7 @@
         "note": "equipment sets are browser-localStorage only; no server-side entity exists"
       },
       "localAvailability": {
-        "formularyRowsIntersectingRoles": 60,
+        "formularyRowsIntersectingRoles": 71,
         "hospitalCarries": 0,
         "preferred": 0,
         "withAnyLocalFieldPopulated": 1
@@ -734,7 +679,7 @@
         ]
       },
       "needsReviewBeforePublic": {
-        "proposalCount": 12,
+        "proposalCount": 22,
         "candidateGradeCompatibilityRules": {
           "count": 0,
           "ruleIds": []
@@ -752,23 +697,23 @@
       "status": "Draft - clinician review required",
       "templateVersion": "0.3",
       "slots": {
-        "total": 29,
+        "total": 30,
         "requiredness": {
           "required": 3,
-          "contingency": 21,
+          "contingency": 22,
           "optional": 5
         },
-        "withAllowCustom": 29,
+        "withAllowCustom": 30,
         "rescueSectionSlotCount": 0,
         "rescueSectionSlotIds": [],
         "rescueModulesReachable": ["MAJOR_AIRWAY_BLEEDING"]
       },
       "roleCoverage": {
-        "distinctRoles": 29,
+        "distinctRoles": 30,
         "ladder": {
           "rolesWithSelectableAuthoredOption": 14,
           "rolesWithOnlyNonSelectableAuthoredOptions": 5,
-          "rolesWithOnlyProposals": 7,
+          "rolesWithOnlyProposals": 8,
           "rolesWithNoOptionNoProposal": {
             "total": 3,
             "withProductRoleMappingElsewhere": 0,
@@ -779,7 +724,7 @@
         "slotRollup": {
           "slotsWithSelectableAuthoredOption": 14,
           "slotsWithOnlyNonSelectableAuthoredOptions": 5,
-          "slotsWithOnlyProposals": 7,
+          "slotsWithOnlyProposals": 8,
           "slotsWithNoOptionNoProposal": 3
         },
         "roles": [
@@ -892,6 +837,12 @@
             "demoStandIn": false
           },
           {
+            "roleCode": "GENERIC_AIRWAY_ADAPTER",
+            "slotCount": 1,
+            "coverage": "proposals_only",
+            "demoStandIn": false
+          },
+          {
             "roleCode": "GENERIC_SPECIMEN",
             "slotCount": 1,
             "coverage": "no_option_no_proposal_unmapped",
@@ -960,7 +911,7 @@
         ]
       },
       "dependencies": {
-        "slotsWithDependencyRule": 21,
+        "slotsWithDependencyRule": 22,
         "rules": [
           {
             "slotId": "SLOT-09A64B2C62",
@@ -986,6 +937,11 @@
             "slotId": "SLOT-185FBB545F",
             "roleCode": "LASER_CONSOLE",
             "dependencyRule": "Laser planned"
+          },
+          {
+            "slotId": "SLOT-190EFC825B",
+            "roleCode": "GENERIC_AIRWAY_ADAPTER",
+            "dependencyRule": "Mechanically ventilated patient"
           },
           {
             "slotId": "SLOT-34CDBAB683",
@@ -1209,7 +1165,7 @@
         "note": "equipment sets are browser-localStorage only; no server-side entity exists"
       },
       "localAvailability": {
-        "formularyRowsIntersectingRoles": 377,
+        "formularyRowsIntersectingRoles": 386,
         "hospitalCarries": 0,
         "preferred": 0,
         "withAnyLocalFieldPopulated": 0
@@ -1291,7 +1247,7 @@
         ]
       },
       "needsReviewBeforePublic": {
-        "proposalCount": 36,
+        "proposalCount": 44,
         "candidateGradeCompatibilityRules": {
           "count": 1,
           "ruleIds": ["CMP-58DE7D49C4"]

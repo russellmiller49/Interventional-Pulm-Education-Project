@@ -175,7 +175,7 @@
     "applied": true,
     "roles_added": 19,
     "procedures_added": 2,
-    "slots_added": 59,
+    "slots_added": 62,
     "slot_options_added": 0,
     "visibility_conflicts": [],
     "details": {
@@ -260,9 +260,61 @@
         "SLOT-063C99B0F4",
         "SLOT-B7C11A32AD",
         "SLOT-26B0E004DD",
-        "SLOT-8AB12F127A"
+        "SLOT-8AB12F127A",
+        "SLOT-2147BE329B",
+        "SLOT-0306E7B77D",
+        "SLOT-190EFC825B"
       ],
       "added_slot_options": []
+    },
+    "errors": []
+  },
+  "procedure_template_corrections": {
+    "applied": true,
+    "slots_removed": 4,
+    "slot_options_removed": 38,
+    "details": {
+      "removed_slots": ["SLOT-67171A33D4", "SLOT-702914B1CF", "SLOT-B4E5C6A7A9", "SLOT-D02F71E583"],
+      "removed_slot_options": [
+        "SLOT-67171A33D4 × PRD-0E088FC681",
+        "SLOT-67171A33D4 × PRD-10959CEA29",
+        "SLOT-67171A33D4 × PRD-2E6996BA6A",
+        "SLOT-67171A33D4 × PRD-56DF49383B",
+        "SLOT-67171A33D4 × PRD-5C99BF6AB0",
+        "SLOT-67171A33D4 × PRD-6E2197DFEE",
+        "SLOT-67171A33D4 × PRD-7578C8D45A",
+        "SLOT-67171A33D4 × PRD-8D82B325C6",
+        "SLOT-67171A33D4 × PRD-D3E1DD19D2",
+        "SLOT-67171A33D4 × PRD-F3BBB75E29",
+        "SLOT-67171A33D4 × PRD-F96AA87958",
+        "SLOT-702914B1CF × PRD-82C2B15804",
+        "SLOT-702914B1CF × PRD-C6BE641E4E",
+        "SLOT-B4E5C6A7A9 × PRD-22A349ADEC",
+        "SLOT-B4E5C6A7A9 × PRD-2C648B78A4",
+        "SLOT-B4E5C6A7A9 × PRD-41BA4FDFE6",
+        "SLOT-B4E5C6A7A9 × PRD-60C171D0E6",
+        "SLOT-B4E5C6A7A9 × PRD-6F8A951376",
+        "SLOT-B4E5C6A7A9 × PRD-77C1FEFC4F",
+        "SLOT-B4E5C6A7A9 × PRD-9FFD95C095",
+        "SLOT-B4E5C6A7A9 × PRD-A5F6B25BCB",
+        "SLOT-B4E5C6A7A9 × PRD-A8F80E7C94",
+        "SLOT-B4E5C6A7A9 × PRD-B2B0419598",
+        "SLOT-B4E5C6A7A9 × PRD-BACF8FDE9B",
+        "SLOT-B4E5C6A7A9 × PRD-CC55BDA6C8",
+        "SLOT-D02F71E583 × PRD-13CE349B91",
+        "SLOT-D02F71E583 × PRD-22A349ADEC",
+        "SLOT-D02F71E583 × PRD-3A7C0C418C",
+        "SLOT-D02F71E583 × PRD-412ADCED34",
+        "SLOT-D02F71E583 × PRD-4423366610",
+        "SLOT-D02F71E583 × PRD-460DB62059",
+        "SLOT-D02F71E583 × PRD-6A7E037C55",
+        "SLOT-D02F71E583 × PRD-6B7E932D54",
+        "SLOT-D02F71E583 × PRD-6D1BDDE146",
+        "SLOT-D02F71E583 × PRD-78DC6578D9",
+        "SLOT-D02F71E583 × PRD-E2A3EFD37E",
+        "SLOT-D02F71E583 × PRD-F54D35983D",
+        "SLOT-D02F71E583 × PRD-FEAA795BDD"
+      ]
     },
     "errors": []
   },
@@ -518,8 +570,8 @@
     "errors": []
   },
   "slot_option_proposals": {
-    "authored_canonical_options": 2073,
-    "generated_unreviewed_proposals": 813,
+    "authored_canonical_options": 2035,
+    "generated_unreviewed_proposals": 831,
     "excluded_proposal_pairs": 0,
     "required_slots_with_catalog_coverage": 82,
     "required_slots_with_curated_defaults": 44,

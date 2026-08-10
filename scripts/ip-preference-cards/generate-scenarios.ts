@@ -81,6 +81,24 @@ interface ScenarioOverride {
   removeModifiers?: string[]
 }
 
+/**
+ * The slice of `seed/procedure-compositions.json` the scenario generator reads: which recipe
+ * version each procedure currently publishes.
+ *
+ * The recipe version id used to be derived here as a hardcoded `-v0-1` suffix, which made the
+ * scenario's claim about "the current recipe version" true only while no procedure had ever
+ * republished. The seed composition file is the authored source of that fact, so the scenario
+ * reads it rather than re-deriving it.
+ */
+interface SeedCompositionRef {
+  procedureCode: string
+  recipeVersionId: string
+}
+
+interface SeedCompositionFile {
+  compositions: SeedCompositionRef[]
+}
+
 interface OverridesFile {
   procedureGroups: Record<string, string[]>
   appliesToProcedures: Record<string, string[]>
@@ -185,6 +203,7 @@ export function buildScenarios(input: {
   slotProductOptions: SlotProductOptionRow[]
   modifierCatalog: ModifierCatalogRow[]
   overrides: OverridesFile
+  seedCompositions: SeedCompositionFile
 }): GenerateScenariosResult {
   const {
     procedures,
@@ -194,7 +213,21 @@ export function buildScenarios(input: {
     slotProductOptions,
     modifierCatalog,
     overrides,
+    seedCompositions,
   } = input
+
+  // One current composition per procedure. The scenario names the recipe version a *new* card
+  // is built on; superseded versions live in the composition retention ledger, not the seed.
+  const recipeVersionByProcedure = new Map<string, string>()
+  for (const composition of seedCompositions.compositions) {
+    const existing = recipeVersionByProcedure.get(composition.procedureCode)
+    if (existing) {
+      throw new Error(
+        `Procedure ${composition.procedureCode} has more than one seed composition (${existing}, ${composition.recipeVersionId}). The seed carries exactly the current one; superseded versions are retained by the composition ledger.`,
+      )
+    }
+    recipeVersionByProcedure.set(composition.procedureCode, composition.recipeVersionId)
+  }
 
   const allProcedureCodes = procedures.map((procedure) => procedure.procedure_code).sort()
   const coverageByProcedure = new Map(
@@ -248,6 +281,13 @@ export function buildScenarios(input: {
       for (const code of override.addModifiers ?? []) available.add(code)
       for (const code of override.removeModifiers ?? []) available.delete(code)
 
+      const recipeVersionId = recipeVersionByProcedure.get(procedure.procedure_code)
+      if (!recipeVersionId) {
+        throw new Error(
+          `Procedure ${procedure.procedure_code} has no seed composition, so its scenario has no recipe version to name. Author one in seed/procedure-compositions.json.`,
+        )
+      }
+
       const title = override.title ?? procedure.procedure_name
       return {
         id: override.id ?? kebab(procedure.procedure_code),
@@ -256,7 +296,7 @@ export function buildScenarios(input: {
         shortDescription:
           override.shortDescription ??
           `Equipment and room setup for ${procedure.procedure_name.toLowerCase()}.`,
-        recipeVersionId: `recipe-${kebab(procedure.procedure_code)}-v0-1`,
+        recipeVersionId,
         sourceProcedureCode: procedure.procedure_code,
         templateVersion: procedure.template_version ?? '0.1',
         defaultModifierCodes: [...(override.defaultModifierCodes ?? [])].sort(),
@@ -320,6 +360,7 @@ async function main() {
     slotProductOptions,
     modifierCatalog,
     overrides,
+    seedCompositions,
   ] = await Promise.all([
     readJson<ProcedureRow[]>(generatedDirectory, 'procedures.json'),
     readJson<ProcedureSlotRow[]>(generatedDirectory, 'procedure-slots.json'),
@@ -328,6 +369,7 @@ async function main() {
     readJson<SlotProductOptionRow[]>(generatedDirectory, 'slot-product-options.json'),
     readJson<ModifierCatalogRow[]>(generatedDirectory, 'modifier-catalog.json'),
     readJson<OverridesFile>(seedDirectory, 'scenario-overrides.json'),
+    readJson<SeedCompositionFile>(seedDirectory, 'procedure-compositions.json'),
   ])
 
   const result = buildScenarios({
@@ -338,6 +380,7 @@ async function main() {
     slotProductOptions,
     modifierCatalog,
     overrides,
+    seedCompositions,
   })
 
   await writeJsonWhenChanged(generatedDirectory, 'scenarios.json', result.scenarios)

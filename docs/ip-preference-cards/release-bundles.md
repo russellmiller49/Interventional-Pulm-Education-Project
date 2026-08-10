@@ -126,10 +126,18 @@ one deliberately trivial change — a requirement moving `optional` → `require
 and deletion detection, hash coverage, and impact review.
 `release-bundle-integrity.test.ts` checks the real committed data on every CI run.
 
-**Retaining a superseded _recipe_ version works today**: compositions are keyed by
-`recipeVersionId`, and adding a second seed entry for a procedure retains both. **Retaining a
-superseded _module_ version does not yet** — the build's "every module is referenced by some
-composition" rule rejects it. Named in [`dependency-closure.md`](./dependency-closure.md).
+**Retaining a superseded _module_ version** is handled by the module ledger below.
+**Retaining a superseded _recipe_ version** is handled the same way by
+`generated/composition-ledger.json` (introduced with the 2026-08-09 owner-review data
+corrections): the seed carries exactly one — the current — composition per procedure, because
+a superseded entry cannot keep rebuilding (it would be validated against the _current_
+imported template and module map, both of which the new version exists to change). Every
+recipe version a published release pins is instead copied into the ledger once, verbatim, as
+the `RecipeVersion` the release hashed into `recipePin`; `recipeForRecipeVersionId` falls
+back to it when live data misses, and `validateCompositionLedger` fails the release build on
+an edited entry, a live/published divergence, or a pinned version missing from both. The
+custom module composition — derived from the current module set — versions forward through
+the same ledger.
 
 ## Adding a new release
 

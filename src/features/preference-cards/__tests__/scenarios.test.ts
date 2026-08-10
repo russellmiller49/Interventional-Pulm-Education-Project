@@ -7,6 +7,7 @@ import generatedModifiersJson from '../../../../data/ip-preference-cards/generat
 import slotProductOptionsJson from '../../../../data/ip-preference-cards/generated/slot-product-options.json'
 import slotsJson from '../../../../data/ip-preference-cards/generated/procedure-slots.json'
 import overridesJson from '../../../../data/ip-preference-cards/seed/scenario-overrides.json'
+import seedCompositionsJson from '../../../../data/ip-preference-cards/seed/procedure-compositions.json'
 
 import { buildScenarios } from '../../../../scripts/ip-preference-cards/generate-scenarios'
 import { buildDemoContext, getScenarioDefinitions } from '../data/demo-context.server'
@@ -22,6 +23,7 @@ describe('scenario generator', () => {
     slotProductOptions: slotProductOptionsJson as never,
     modifierCatalog: modifierCatalogJson as never,
     overrides: overridesJson as never,
+    seedCompositions: seedCompositionsJson as never,
   })
 
   it('reproduces the committed scenarios.json exactly', () => {

@@ -1,3 +1,4 @@
+import type { CompositionLedger } from './composition-ledger'
 import type { HistoricalCatalogReleaseFile } from './historical-catalog'
 import type { ModuleLedger } from './module-ledger'
 import type { ProductFamilyLedger } from './product-family'
@@ -40,6 +41,7 @@ import type { PreferenceCardReleaseBundle, ReleasePointerMap } from './release-b
 export type PublicationEntryKind =
   | 'release-bundle'
   | 'module-version'
+  | 'recipe-version'
   | 'catalog-release'
   | 'product-family-version'
 
@@ -86,6 +88,7 @@ export interface PublicationArtifacts {
     bundles: PreferenceCardReleaseBundle[]
   } | null
   moduleLedger: ModuleLedger | null
+  compositionLedger: CompositionLedger | null
   catalogReleases: HistoricalCatalogReleaseFile | null
   productFamilies: ProductFamilyLedger | null
 }
@@ -143,6 +146,22 @@ export function buildPublicationBaselineSnapshot(
       definitionHash: entry.definitionHash,
       lineage: entry.moduleCode,
       semanticVersion: entry.moduleVersion,
+      dependencies: [],
+      lifecycle: {},
+    })
+  }
+
+  // Retained recipe versions get the same direct second-copy protection as retained module
+  // versions: without this, a superseded ledger entry that no live build reproduces could be
+  // rewritten together with its recorded hash in one commit and nothing would compare it to
+  // what was published.
+  for (const entry of artifacts.compositionLedger?.entries ?? []) {
+    entries.push({
+      kind: 'recipe-version',
+      id: entry.recipeVersionId,
+      definitionHash: entry.definitionHash,
+      lineage: entry.sourceProcedureCode,
+      semanticVersion: versionSuffix(entry.recipeVersionId),
       dependencies: [],
       lifecycle: {},
     })

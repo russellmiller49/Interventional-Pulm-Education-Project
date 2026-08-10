@@ -118,3 +118,16 @@ export const setRequirednessPayloadSchema = z.object({
   value: z.enum(['required', 'conditional', 'optional', 'backup', 'emergency_only']),
   dependencyRule: z.string().min(1).nullable().optional(),
 })
+
+/**
+ * Zone and phase values a composition action may assign. Enumerated for the same reason
+ * `set_requiredness` is: an arbitrary string here would flow into the workspace's zone/phase
+ * grouping and its i18n lookups, and nothing downstream re-validates it.
+ */
+export const setSetupZonePayloadSchema = z.object({
+  value: z.enum(setupZones),
+})
+
+export const setProceduralPhasePayloadSchema = z.object({
+  value: z.enum(proceduralPhases),
+})

@@ -176,7 +176,7 @@ describe('recipe composition build', () => {
     )!
     thoracentesis.moduleReferences.push({
       moduleCode: 'FLEX_BRONCH_CORE',
-      moduleVersion: '1.0',
+      moduleVersion: '1.1',
       selectionBehavior: 'required',
       sequence: 30,
     })

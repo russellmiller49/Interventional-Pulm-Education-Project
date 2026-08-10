@@ -1,17 +1,20 @@
-import { quantityExpressionSchema, setRequirednessPayloadSchema } from './schemas'
+import {
+  quantityExpressionSchema,
+  setProceduralPhasePayloadSchema,
+  setRequirednessPayloadSchema,
+  setSetupZonePayloadSchema,
+} from './schemas'
 import { stableStringify } from './stable-hash'
 import type {
   IncludedRecipeModule,
   ModuleSelectionSource,
   OpenHoldStatus,
-  ProceduralPhase,
   ProcedureCompositionAction,
   RecipeModuleVersion,
   RecipeSlot,
   RecipeVersion,
   RuleMessage,
   RuleTraceEvent,
-  SetupZone,
 } from './types'
 
 /**
@@ -448,15 +451,13 @@ export function expandRecipeComposition(input: ExpandRecipeCompositionInput): Ex
         break
       }
       case 'set_setup_zone': {
-        const value = payloadString(action, 'value') as SetupZone | null
-        if (!value) break
-        for (const slot of affected) slot.setupZone = value
+        const payload = setSetupZonePayloadSchema.parse(action.payload)
+        for (const slot of affected) slot.setupZone = payload.value
         break
       }
       case 'set_procedural_phase': {
-        const value = payloadString(action, 'value') as ProceduralPhase | null
-        if (!value) break
-        for (const slot of affected) slot.proceduralPhase = value
+        const payload = setProceduralPhasePayloadSchema.parse(action.payload)
+        for (const slot of affected) slot.proceduralPhase = payload.value
         break
       }
       case 'set_open_hold_status': {

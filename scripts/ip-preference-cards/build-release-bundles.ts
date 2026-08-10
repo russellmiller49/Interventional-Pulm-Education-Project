@@ -1,7 +1,16 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
-import { getReleaseDefinitionSources } from '../../src/features/preference-cards/data/demo-context.server'
+import {
+  getLiveRecipeVersions,
+  getReleaseDefinitionSources,
+} from '../../src/features/preference-cards/data/demo-context.server'
+import {
+  emptyCompositionLedger,
+  validateCompositionLedger,
+  withPublishedRecipes,
+  type CompositionLedger,
+} from '../../src/features/preference-cards/domain/composition-ledger'
 import {
   computeReleaseBundle,
   diffReleaseBundles,
@@ -400,6 +409,13 @@ async function main() {
   const publishedModules: Array<{ moduleVersion: RecipeModuleVersion; releaseBundleId: string }> =
     []
   const pinnedModuleVersionIds = new Set<string>()
+  // The recipe versions published releases pin are retained the same way — see
+  // `composition-ledger.ts` for why the seed cannot keep producing a superseded composition.
+  const publishedRecipes: Array<{
+    recipe: NonNullable<ReturnType<typeof getReleaseDefinitionSources>>['recipe']
+    releaseBundleId: string
+  }> = []
+  const pinnedRecipeVersionIds = new Set<string>()
   for (const bundle of result.bundles) {
     if (bundle.releaseState === 'draft') continue
     const sources = getReleaseDefinitionSources(bundle.recipeVersionId, resolverContract)
@@ -407,8 +423,22 @@ async function main() {
       pinnedModuleVersionIds.add(moduleVersion.id)
       publishedModules.push({ moduleVersion, releaseBundleId: bundle.id })
     }
+    pinnedRecipeVersionIds.add(bundle.recipeVersionId)
+    if (sources) publishedRecipes.push({ recipe: sources.recipe, releaseBundleId: bundle.id })
   }
   const ledger = withPublishedModules(ledgerBefore, publishedModules)
+
+  const compositionLedgerBefore = await readJsonOrDefault<CompositionLedger>(
+    generatedDirectory,
+    'composition-ledger.json',
+    emptyCompositionLedger(),
+  )
+  const compositionLedger = withPublishedRecipes(compositionLedgerBefore, publishedRecipes)
+  const compositionLedgerProblems = validateCompositionLedger({
+    ledger: compositionLedger,
+    liveRecipes: getLiveRecipeVersions(),
+    pinnedRecipeVersionIds,
+  })
 
   const liveModules = new Map(
     (await readJson<RecipeModuleVersion[]>(generatedDirectory, 'recipe-modules.json')).map(
@@ -531,6 +561,16 @@ async function main() {
     return
   }
 
+  if (compositionLedgerProblems.length > 0) {
+    console.log('')
+    console.error(`${compositionLedgerProblems.length} composition retention problem(s):`)
+    for (const problem of compositionLedgerProblems) {
+      console.error(`  ✗ ${problem.code}: ${problem.message}`)
+    }
+    process.exitCode = 1
+    return
+  }
+
   if (catalogProblems.length > 0) {
     console.log('')
     console.error(`${catalogProblems.length} catalog retention problem(s):`)
@@ -566,6 +606,7 @@ async function main() {
   )
   await writeJsonWhenChanged(generatedDirectory, 'product-family-versions.json', familyLedger)
   await writeJsonWhenChanged(generatedDirectory, 'module-ledger.json', ledger)
+  await writeJsonWhenChanged(generatedDirectory, 'composition-ledger.json', compositionLedger)
   await writeJsonWhenChanged(generatedDirectory, 'release-bundles.json', {
     pointers: result.pointers,
     bundles: result.bundles,

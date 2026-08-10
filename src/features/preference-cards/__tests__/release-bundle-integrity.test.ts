@@ -57,7 +57,7 @@ describe('the committed release set', () => {
   it('gives the custom module composition a release too, so a custom card is pinned like any other', () => {
     const bundle = getCurrentReleaseBundleForScenario('custom-composition')
     expect(bundle).not.toBeNull()
-    expect(bundle!.recipeVersionId).toBe('recipe-custom-composition-v1-0')
+    expect(bundle!.recipeVersionId).toBe('recipe-custom-composition-v1-1')
   })
 
   it('reconstructs every retained release from the definitions it pins', () => {
