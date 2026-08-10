@@ -736,8 +736,11 @@ function bindDisposableImportAuthorization(plan: ImportPlanV2) {
   })
 }
 
-function v2StateSql(batchId: string): string {
+export function v2StateSql(batchId: string, receiptOperationId?: string): string {
   const batch = sqlLiteral(batchId)
+  const receiptBarrier = receiptOperationId
+    ? `\nwhere receipt.value ->> 'operationId' = ${sqlLiteral(receiptOperationId)}`
+    : ''
   return `select pg_catalog.jsonb_build_object(
     'effective', public.literature_gold_effective_state_hash_v2(${batch}::uuid, 'development'),
     'physical', public.literature_gold_physical_state_hash_v2(${batch}::uuid, 'development'),
@@ -789,7 +792,7 @@ function v2StateSql(batchId: string): string {
       from public.literature_gold_set_reviews review
       join public.literature_gold_set_items item on item.id = review.item_id
       where item.batch_id = ${batch}::uuid and item.dataset_split = 'development'), '[]'::jsonb))
-  );`
+  )${receiptBarrier};`
 }
 
 const stateSchema = z
@@ -915,11 +918,10 @@ select pg_catalog.jsonb_build_object(
   'journalSealed', exists (
     select 1 from public.literature_gold_review_operations operation
     where operation.id = ${sqlLiteral(plan.operationId)}::uuid
+      and operation.id = (receipt.value ->> 'operationId')::uuid
       and operation.status = 'failed'
   ),
-  'state', (${v2StateSql(basePlan.batchId)
-    .replace(/^select /u, 'select ')
-    .replace(/;$/u, '')})
+  'state', (${v2StateSql(basePlan.batchId, plan.operationId).replace(/;$/u, '')})
 )
 from receipt;
 rollback;`)

@@ -5,6 +5,7 @@ import {
   assertExactGeneratedPackageReferenceV2,
   assertMigrationEquivalentPostV2SeedIdentity,
   renderOwnerFirstFunctionRawAclV2,
+  v2StateSql,
 } from './execute-exact-gold-import-compensation-package-v2'
 import {
   GOLD_IMPORT_PRE_V1_BACKUP_PHYSICAL_STATE_SHA256_V2,
@@ -50,6 +51,13 @@ function result(path: 'fresh' | 'upgrade'): V2DisposablePathResult {
 }
 
 describe('exact V2 package rehearsal entrypoint', () => {
+  test('correlates controlled-fault post-state to the materialized receipt operation', () => {
+    const operationId = '00000000-0000-4000-8000-000000000001'
+    const sql = v2StateSql('00000000-0000-4000-8000-000000000002', operationId)
+    expect(sql).toContain("where receipt.value ->> 'operationId' = $v2_exact_")
+    expect(sql).toContain(operationId)
+  })
+
   test('renders normalized V2 ACL records in exact owner-first catalog order', () => {
     const grant = (grantee: string, grantor: string) => ({
       grantee,
