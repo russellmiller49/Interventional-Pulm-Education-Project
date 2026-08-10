@@ -43,11 +43,30 @@ file SHA-256. Filename presence alone is never authorization.
 
 The armed state is ephemeral. It is not a hand-editable marker. Its canonical authorization binds
 clean primary `main`, exact `HEAD == origin/main`, the exact migration SHA, the local target,
-accepted database hashes, and two independently executed backup instances. Each instance binds its
-output-directory realpath, a fresh execution nonce, repository and database identities, canonical
-manifest, migration ledger, development-only safety proof, and an external checksum-bound witness
-under the backup root. Any repository, database, backup, receipt, or witness drift invalidates the
-authorization. Applying V2 changes the ledger and makes the authorization single-use.
+accepted database hashes, and two separately executed redundant backup captures. Each capture binds
+its output-directory realpath, capture identity, fresh execution nonce and timestamp, repository and
+database identities, canonical manifest, migration ledger, development-only safety proof, and local
+duplicate-detection marker. Commit mode also requires and checksum-binds this exact attestation:
+
+`I ATTEST THESE ARE TWO SEPARATE READ-ONLY BACKUP CAPTURES`
+
+Any repository, database, capture, receipt, or marker drift invalidates the authorization. Applying
+V2 changes the ledger and makes the authorization single-use.
+
+## Trusted local operator — redundant capture model V1
+
+The trust-model identity is `trusted-local-operator-redundant-captures/1.0.0`. The authorized local
+operator is trusted not to deliberately fabricate evidence and is assumed to have filesystem and
+Docker/database administrative access. The two captures protect against accidental omission,
+stale state, partial output, inadvertent path duplication, wrong targets, and ordinary operational
+mistakes. Their unkeyed local receipts and markers provide integrity, staleness, and duplicate
+detection; they are not a separate trust root or cryptographic proof of separate execution.
+
+A malicious authorized operator can recompute or bypass these local controls. Resistance to that
+operator would require a genuinely separate principal or service and is outside this workflow. No
+local nonce, chmod mode, inode, same-user key, receipt, or marker is represented as unforgeable.
+The repository-grounded abuse-path and residual-risk analysis is in
+[`gold-import-contract-v2-threat-model.md`](./gold-import-contract-v2-threat-model.md).
 
 ## Default command matrix
 
@@ -81,7 +100,7 @@ The status output must be empty. The local stack must already be the exact proje
 If it is stopped, ordinary start may be used to start the existing V1 stack; while V2 occurrence is
 zero it will explicitly leave V2 pending and unarmed.
 
-### 1. Create two fresh read-only backups
+### 1. Create two fresh, separately executed read-only captures
 
 Run the pre-application diagnostic twice into distinct new directories no more than two hours before
 application:
@@ -96,16 +115,16 @@ npm run literature:diagnose-gold-import-compensation-v2-preapplication -- \
   --output <NEW_PREAPPLICATION_BACKUP_TWO>
 ```
 
-Each backup is a repeatable-read/read-only, checksum-sealed development snapshot. It contains the
+Each capture is a repeatable-read/read-only, checksum-sealed development snapshot. It contains the
 development database seed, exact migration ledger, accepted state hashes, report, manifest, and
-execution receipt; it contains no held-out identities. The diagnostic also creates a separate,
-exclusive instance witness below `.protected-v2-backup-instance-witnesses/` in the backup root.
-Verify both manifests independently. Identical canonical development snapshots are expected, but
-the output realpaths, backup-instance identities, execution-receipt checksums, and witnesses must
-all be distinct. The operator re-verifies every file, canonical receipt, and witness and rejects
-old, same-directory, realpath-alias, copied, reserialized, unsafe, or state/HEAD-mismatched backups.
-Editing a copied receipt's output path cannot create a new diagnostic execution: it invalidates the
-instance checksum and the external witness binding.
+execution receipt; it contains no held-out identities. The diagnostic also creates a local marker
+below `.protected-v2-backup-duplicate-markers/` in the backup root. Verify both manifests
+separately. Identical canonical development snapshots are expected, but output realpaths, capture
+identities, execution nonces, execution-receipt checksums, and timestamps must be distinct. The
+operator re-verifies every file, canonical receipt, and marker and rejects stale, same-directory,
+realpath-alias, retained-copy, reserialized, unsafe, or state/HEAD-mismatched captures. An authorized
+same-user operator can honestly recompute a copied receipt and marker; that capability is explicitly
+outside the claimed accidental-safety boundary above.
 
 ### 2. Run the default read-only dry-run
 
@@ -137,6 +156,7 @@ npm run literature:apply-protected-gold-import-contract-v2 -- \
   --backup <NEW_PREAPPLICATION_BACKUP_ONE> \
   --backup <NEW_PREAPPLICATION_BACKUP_TWO> \
   --confirmation "APPLY PROTECTED LITERATURE GOLD IMPORT CONTRACT V2 EXACTLY ONCE" \
+  --separate-capture-attestation "I ATTEST THESE ARE TWO SEPARATE READ-ONLY BACKUP CAPTURES" \
   --output <ABSOLUTE_NEW_CHILD_UNDER_LOCAL_ONLY_RECEIPT_ROOT> \
   --commit
 ```
@@ -144,18 +164,27 @@ npm run literature:apply-protected-gold-import-contract-v2 -- \
 Immediately before mutation, the command re-reads the repository, database, and both backups and
 compares them to the checksum-bound in-memory authorization. Before staging, it exclusively creates
 the requested local-only output directory and writes an immutable, checksum-sealed application
-intent. That intent preserves the exact authorization, both independent backup instances, complete
-pre-state, migration-only capability, and explicit `importAuthorized=false` and
-`compensationAuthorized=false`. If intent sealing fails, neither staging nor migration application
-is attempted.
+intent. That intent preserves the exact authorization, both redundant captures, trust model and
+attestation, complete pre-state, migration-only capability, and a deterministic transitive
+protected-operator bundle. The bundle records the intent repository HEAD, ordered relative file
+inventory, each file SHA-256, and aggregate SHA-256, including package runtime files, guards,
+operator/audit modules and their relative imports, the V2 migration, and verifier. It also records
+explicit `importAuthorized=false` and `compensationAuthorized=false`. If intent sealing fails,
+neither staging nor migration application is attempted.
 
 Only after sealing does the command stage the exact protected file in the ignored generated
 workdir and invoke the project-pinned `supabase migration up --local` once. It then proves V1 stayed
 once, V2 moved from absent to exactly once, the bound development state did not change, and no
 review, pointer, reveal, action, import, or compensation mutation occurred. It runs the committed
-read-only V2 RPC/function/trigger security audit and binds that audit and the pinned verifier source
-identity into the application result. Finally it atomically adds a `finalized/` subpackage with the
-result, checksum manifest, and execution receipt; it never deletes or rewrites the original intent.
+complete deterministic catalog audit under REPEATABLE READ READ ONLY. It binds exact tables,
+columns/types/nullability/defaults/generated expressions, constraints, indexes, the complete trigger
+inventory, RLS/FORCE RLS and policies, raw ACLs/effective privileges, all transition and semantic
+functions, signatures/bodies/configuration/ACLs, and exact `pg_depend` dependencies. The audit emits
+component identities, the environment-invariant identity, local postgres-owner profile identity,
+full inventory identity, and one canonical full identity. The verifier source remains SHA-pinned but
+is not executed against real local; receipts say `verifierExecuted=false` and
+`auditMethod=complete_read_only_catalog_identity`. Finally the operator atomically adds a
+`finalized/` subpackage and never deletes or rewrites the original intent.
 
 ### 4. Resolve an ambiguous or lost acknowledgement without replay
 
@@ -178,9 +207,15 @@ npm run literature:apply-protected-gold-import-contract-v2 -- \
   --reconcile-applied-receipt
 ```
 
-Reconciliation accepts no `--backup`, `--commit`, or confirmation argument. It loads the immutable
-intent and its original bindings, never stages a migration, never calls `migration up`, and never
-infers that an absent migration should be applied. A reconciled receipt records
+Reconciliation accepts no `--backup`, `--commit`, confirmation, or attestation argument. It loads
+the immutable intent and its original bindings, never stages a migration, never calls `migration
+up`, and never infers that an absent migration should be applied. Same-HEAD recovery is accepted.
+A later clean primary `main` is also accepted only when current `HEAD == origin/main`, the intent
+commit is an ancestor, and the complete protected-operator bundle is byte-identical. Unrelated code
+or documentation descendants may therefore recover; divergent history, unreachable intent,
+protected dependency, package-lock/runtime, migration, or verifier drift fails closed. The result
+records `intentRepositoryHead`, `recoveryRepositoryHead`, `intentCommitIsAncestor=true`, and
+`operatorBundleUnchanged=true`. A reconciled receipt records
 `receiptReconciled=true`, `migrationReexecuted=false`, and
 `migrationApplicationCallCount=0`. Repeating reconciliation against an already complete package
 only verifies and reports it as already complete; it does not rewrite any evidence.

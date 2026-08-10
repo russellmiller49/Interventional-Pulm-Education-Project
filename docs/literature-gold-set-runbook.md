@@ -78,6 +78,15 @@ ordinary start leaves it pending and says so. V2 requires the separate protected
 in
 [`gold-import-contract-v2-protected-application-runbook.md`](./ip-literature/gold-import-contract-v2-protected-application-runbook.md).
 
+That protected path uses trusted-local-operator redundant-capture model
+`trusted-local-operator-redundant-captures/1.0.0`: two separately executed read-only captures and
+the exact operator attestation are accidental-safety controls, not cryptographic evidence against
+the filesystem/Docker-owning operator. It seals the protected operator dependency bundle before
+mutation, runs a complete read-only post-application catalog audit, records that the pinned verifier
+was not executed real-locally, and permits lost-ack recovery from a later clean main descendant only
+when the intent commit remains an ancestor and the bundle is unchanged. Recovery never reapplies
+V2. Neither migration application nor its receipt authorizes a later import or compensation.
+
 The main site's Supabase URL, authentication, and other modules are unchanged. Server-side
 literature queries use the dedicated local values when present and retain the existing main
 database only as a backwards-compatible fallback.

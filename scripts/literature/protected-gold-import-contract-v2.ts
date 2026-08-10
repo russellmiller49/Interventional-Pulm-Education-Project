@@ -10,6 +10,16 @@ import {
   type CommandRunner,
   type LocalDockerTarget,
 } from './gold-import-compensation-migration-operations'
+import {
+  PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD,
+  PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL,
+  PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL_IDENTITY_SHA256,
+  PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256,
+} from './gold-import-contract-v2-catalog-audit'
+import {
+  validateProtectedV2OperatorBundle,
+  type ProtectedV2OperatorBundle,
+} from './protected-gold-import-contract-v2-recovery-bundle'
 
 export const PROTECTED_GOLD_IMPORT_CONTRACT_V2 = {
   filename: '20260809231651_add_literature_gold_import_compensation_contract_v2.sql',
@@ -33,8 +43,12 @@ export const PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER = {
 
 export const PROTECTED_V2_CONFIRMATION =
   'APPLY PROTECTED LITERATURE GOLD IMPORT CONTRACT V2 EXACTLY ONCE' as const
+export const PROTECTED_V2_BACKUP_TRUST_MODEL =
+  'trusted-local-operator-redundant-captures/1.0.0' as const
+export const PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION =
+  'I ATTEST THESE ARE TWO SEPARATE READ-ONLY BACKUP CAPTURES' as const
 export const PROTECTED_V2_AUTHORIZATION_SCHEMA_VERSION =
-  'literature-gold-protected-v2-migration-authorization/1.0.0' as const
+  'literature-gold-protected-v2-migration-authorization/2.0.0' as const
 export const PROTECTED_V2_AUTHORIZED_CAPABILITY =
   'apply_protected_contract_v2_migration_exactly_once' as const
 export const PROTECTED_V2_FORBIDDEN_CAPABILITIES = [
@@ -87,6 +101,7 @@ export interface ProtectedV2BackupBinding {
   canonicalManifestSha256: string
   directory: string
   executedAt: string
+  executionNonce: string
   executionReceiptSha256: string
 }
 
@@ -105,12 +120,23 @@ export interface ProtectedV2AuthorizationContext {
     v2Occurrence: 0
   }
   migration: typeof PROTECTED_GOLD_IMPORT_CONTRACT_V2
+  expectedPostApplicationAudit: {
+    auditMethod: typeof PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD
+    auditModel: typeof PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL
+    auditModelIdentitySha256: string
+    environmentInvariantIdentitySha256: typeof PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256
+    verifier: typeof PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER
+    verifierExecuted: false
+  }
   repository: {
     branch: 'main'
     head: string
+    operatorBundle: ProtectedV2OperatorBundle
     originMain: string
     statusCleanIncludingUntracked: true
   }
+  backupTrustModel: typeof PROTECTED_V2_BACKUP_TRUST_MODEL
+  separateCaptureAttestation: typeof PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION
   safety: {
     heldOutIdentitiesAccessed: false
     remoteDatabaseAccessed: false
@@ -119,6 +145,7 @@ export interface ProtectedV2AuthorizationContext {
 
 export interface ProtectedV2OperatorAuthorization {
   authorizedCapability: typeof PROTECTED_V2_AUTHORIZED_CAPABILITY
+  backupTrustModel: typeof PROTECTED_V2_BACKUP_TRUST_MODEL
   confirmation: typeof PROTECTED_V2_CONFIRMATION
   context: ProtectedV2AuthorizationContext
   contentSha256: string
@@ -126,6 +153,7 @@ export interface ProtectedV2OperatorAuthorization {
   operator: string
   requestedAt: string
   schemaVersion: typeof PROTECTED_V2_AUTHORIZATION_SCHEMA_VERSION
+  separateCaptureAttestation: typeof PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION
 }
 
 const LEDGER_MARKER = 'LITERATURE_PROTECTED_V2_LEDGER_JSON:'
@@ -236,6 +264,29 @@ export function classifyProtectedV2State(input: {
 
 function assertAuthorizationContext(context: ProtectedV2AuthorizationContext) {
   if (
+    context.backupTrustModel !== PROTECTED_V2_BACKUP_TRUST_MODEL ||
+    context.separateCaptureAttestation !== PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION
+  ) {
+    throw new Error(
+      'Protected V2 authorization requires the exact trusted-operator capture model and attestation.',
+    )
+  }
+  if (
+    context.expectedPostApplicationAudit.auditMethod !==
+      PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD ||
+    context.expectedPostApplicationAudit.auditModel !== PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL ||
+    context.expectedPostApplicationAudit.auditModelIdentitySha256 !==
+      PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL_IDENTITY_SHA256 ||
+    context.expectedPostApplicationAudit.environmentInvariantIdentitySha256 !==
+      PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256 ||
+    context.expectedPostApplicationAudit.verifierExecuted !== false ||
+    canonicalJson(context.expectedPostApplicationAudit.verifier) !==
+      canonicalJson(PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER)
+  ) {
+    throw new Error('Protected V2 authorization expected complete catalog-audit model drifted.')
+  }
+  validateProtectedV2OperatorBundle(context.repository.operatorBundle)
+  if (
     context.repository.branch !== 'main' ||
     context.repository.head !== context.repository.originMain ||
     !COMMIT_PATTERN.test(context.repository.head) ||
@@ -281,10 +332,11 @@ function assertAuthorizationContext(context: ProtectedV2AuthorizationContext) {
     context.backups.length !== 2 ||
     context.backups[0].directory === context.backups[1].directory ||
     context.backups[0].backupInstanceId === context.backups[1].backupInstanceId ||
+    context.backups[0].executionNonce === context.backups[1].executionNonce ||
     context.backups[0].executionReceiptSha256 === context.backups[1].executionReceiptSha256
   ) {
     throw new Error(
-      'Protected V2 authorization requires two independently executed pre-application backups.',
+      'Protected V2 authorization requires two separately executed redundant pre-application captures.',
     )
   }
   for (const [index, backup] of context.backups.entries()) {
@@ -298,6 +350,7 @@ function assertAuthorizationContext(context: ProtectedV2AuthorizationContext) {
     }
     assertSha256(backup.backupInstanceId, `backup ${index + 1} instance`)
     assertSha256(backup.canonicalManifestSha256, `backup ${index + 1} manifest`)
+    assertSha256(backup.executionNonce, `backup ${index + 1} nonce`)
     assertSha256(backup.executionReceiptSha256, `backup ${index + 1} receipt`)
   }
 }
@@ -324,12 +377,14 @@ export function buildProtectedV2Authorization(input: {
   }
   const content = {
     authorizedCapability: PROTECTED_V2_AUTHORIZED_CAPABILITY,
+    backupTrustModel: PROTECTED_V2_BACKUP_TRUST_MODEL,
     confirmation: PROTECTED_V2_CONFIRMATION,
     context: input.context,
     forbiddenCapabilities: PROTECTED_V2_FORBIDDEN_CAPABILITIES,
     operator: input.operator,
     requestedAt: input.requestedAt,
     schemaVersion: PROTECTED_V2_AUTHORIZATION_SCHEMA_VERSION,
+    separateCaptureAttestation: PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION,
   } as const
   return { ...content, contentSha256: sha256(canonicalJson(content)) }
 }
@@ -342,7 +397,9 @@ export function validateProtectedV2Authorization(
   if (
     authorization.schemaVersion !== PROTECTED_V2_AUTHORIZATION_SCHEMA_VERSION ||
     authorization.authorizedCapability !== PROTECTED_V2_AUTHORIZED_CAPABILITY ||
+    authorization.backupTrustModel !== PROTECTED_V2_BACKUP_TRUST_MODEL ||
     authorization.confirmation !== PROTECTED_V2_CONFIRMATION ||
+    authorization.separateCaptureAttestation !== PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION ||
     canonicalJson(authorization.forbiddenCapabilities) !==
       canonicalJson(PROTECTED_V2_FORBIDDEN_CAPABILITIES)
   ) {

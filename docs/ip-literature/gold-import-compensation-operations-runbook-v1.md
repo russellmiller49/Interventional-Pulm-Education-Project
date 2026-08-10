@@ -218,6 +218,17 @@ contract V2. Do not use `db push`, do not link a project, and do not use a
 remote target. The V2 procedure is exclusively the dry-run-first workflow in
 [`gold-import-contract-v2-protected-application-runbook.md`](./gold-import-contract-v2-protected-application-runbook.md).
 
+That V2 workflow requires two separately executed redundant read-only captures under
+`trusted-local-operator-redundant-captures/1.0.0` and the exact attestation
+`I ATTEST THESE ARE TWO SEPARATE READ-ONLY BACKUP CAPTURES`. Its local receipts and duplicate
+markers detect accidental copies, staleness, and incomplete output; they are not a separate trust
+root from the trusted filesystem/Docker-owning operator. Before mutation it seals a transitive
+protected-operator bundle. After an exact schema-only application it runs the complete read-only
+catalog audit; the verifier source is pinned but is not executed real-locally. Lost-ack
+reconciliation never runs migration-up and accepts a later clean current-main descendant only when
+the intent commit is an ancestor and that bundle remains byte-identical. Import and compensation
+continue to require later, separate authorizations.
+
 If the command response is lost or ambiguous, do not run it again. Treat the
 outcome as unknown and run the read-only audit in step 4 against the preserved
 backup. Exactly one matching migration-ledger row means it committed; absence

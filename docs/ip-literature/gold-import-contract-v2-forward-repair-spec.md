@@ -227,6 +227,35 @@ not see V2. Application requires the dry-run-first, backup-bound protected opera
 No owner or ACL repair is required by the current evidence. The safe-profile conclusion remains
 independent and unchanged.
 
+## Protected application audit, recovery, and operator trust model
+
+The implemented migration-only operator uses one production complete-catalog audit for disposable
+readiness, the catalog-drift matrix, and eventual real-local post-application verification. Its
+REPEATABLE READ READ ONLY identity covers exact columns (including defaults, nullability, generated
+expressions, identity behavior, and collation), constraints, indexes, the full trigger inventory,
+RLS/FORCE RLS and policies, raw/effective table privileges, functions/RPCs and ACLs, fixed
+configuration, bodies, and exact `pg_depend` dependencies. It emits seven component identities,
+the environment-invariant V2 identity, selected owner-profile identity, full inventory identity,
+and canonical full audit identity. The intent binds the audit model and invariant expectation; the
+result and execution receipt bind the observed full and component identities. The verifier source
+SHA remains pinned, but the real-local receipt truthfully records `verifierExecuted=false`.
+
+The sealed intent also contains a deterministic relative-import-closure identity for the complete
+protected operator runtime, package and lockfile, primary-checkout guard, migration, verifier, and
+all pinned-identity sources. Normal commit mode still requires clean primary `main` at exact
+`origin/main`. Lost-ack reconciliation may use a later clean current `main` only when the intent
+commit is an ancestor and this operator bundle is exactly unchanged; it never stages or reapplies
+the migration and records zero migration calls.
+
+Backup evidence follows trusted-local-operator redundant-capture model
+`trusted-local-operator-redundant-captures/1.0.0`. Two separately executed read-only captures and
+the exact attestation `I ATTEST THESE ARE TWO SEPARATE READ-ONLY BACKUP CAPTURES` protect against
+accidental omission, stale/incomplete output, path duplication, wrong target, and unintended replay.
+The authorized operator is assumed to control the filesystem and Docker/database administration;
+unkeyed local receipts and duplicate markers are not cryptographic proof against that operator. A
+separate principal or service would be required for malicious-operator resistance and is not
+claimed here. Migration application still authorizes neither import nor compensation.
+
 ## Verification obligations
 
 Focused tests for a future implementation must prove at least:

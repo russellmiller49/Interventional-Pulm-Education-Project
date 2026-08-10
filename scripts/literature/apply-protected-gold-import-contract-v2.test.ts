@@ -28,19 +28,22 @@ import {
   type CommandRunner,
 } from './gold-import-compensation-migration-operations'
 import {
-  REQUIRED_TRANSITION_RPCS_V1,
-  REQUIRED_TRANSITION_RPCS_V2,
-  REQUIRED_V2_SEMANTIC_FUNCTIONS,
-} from './gold-import-compensation-rehearsal-evidence-v2'
+  PROTECTED_V2_AUDIT_COMPONENT_NAMES,
+  PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD,
+  PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL,
+  PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL_IDENTITY_SHA256,
+  PROTECTED_V2_COMPLETE_CATALOG_AUDIT_SCHEMA_VERSION,
+  PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256,
+} from './gold-import-contract-v2-catalog-audit'
 import {
   PROTECTED_V2_APPLICATION_INTENT_SCHEMA_VERSION,
-  PROTECTED_V2_BACKUP_INSTANCE_WITNESS_DIRECTORY,
+  PROTECTED_V2_BACKUP_DUPLICATE_MARKER_DIRECTORY,
   PROTECTED_V2_BACKUP_RECEIPT_SCHEMA_VERSION,
   buildProtectedV2ApplicationExecutionReceipt,
   buildProtectedV2ApplicationIntent,
   buildProtectedV2ApplicationResult,
   buildProtectedV2BackupExecutionReceipt,
-  buildProtectedV2BackupInstanceWitness,
+  buildProtectedV2BackupDuplicateMarker,
   buildProtectedV2PostApplicationAudit,
   parseProtectedV2BackupExecutionReceipt,
   type ProtectedV2ApplicationExecutionReceipt,
@@ -51,17 +54,16 @@ import {
   PROTECTED_GOLD_IMPORT_CONTRACT_V2,
   PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER,
   PROTECTED_V2_AUTHORIZED_CAPABILITY,
+  PROTECTED_V2_BACKUP_TRUST_MODEL,
   PROTECTED_V2_CONFIRMATION,
   PROTECTED_V2_FORBIDDEN_CAPABILITIES,
+  PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION,
   buildProtectedV2Authorization,
   validateProtectedV2Authorization,
   type ProtectedV2AuthorizationContext,
   type ProtectedV2BackupBinding,
 } from './protected-gold-import-contract-v2'
-import {
-  V2_SEMANTIC_FUNCTION_CONTRACTS,
-  V2_SEMANTIC_FUNCTION_RAW_DEFINITION_SHA256,
-} from './rehearse-gold-import-compensation-db-v2'
+import { PROTECTED_V2_OPERATOR_BUNDLE_SCHEMA_VERSION } from './protected-gold-import-contract-v2-recovery-bundle'
 
 const HEAD = '1111111111111111111111111111111111111111'
 const NOW = new Date('2026-08-09T20:00:00.000Z')
@@ -76,9 +78,40 @@ function sha256(value: string) {
 }
 
 function repository(head = HEAD): ProtectedV2RepositoryEvidence {
+  const operatorBundleContent: Omit<
+    ProtectedV2RepositoryEvidence['operatorBundle'],
+    'aggregateSha256'
+  > = {
+    files: [
+      { path: 'package-lock.json', sha256: 'a'.repeat(64) },
+      {
+        path: 'scripts/literature/apply-protected-gold-import-contract-v2.ts',
+        sha256: 'b'.repeat(64),
+      },
+      {
+        path: 'supabase/migrations/20260809231651_add_literature_gold_import_compensation_contract_v2.sql',
+        sha256: PROTECTED_GOLD_IMPORT_CONTRACT_V2.sha256,
+      },
+      {
+        path: 'supabase/verification/20260809231651_verify_literature_gold_import_compensation_contract_v2.sql',
+        sha256: PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER.sha256,
+      },
+    ],
+    roots: [
+      'package-lock.json',
+      'scripts/literature/apply-protected-gold-import-contract-v2.ts',
+      'supabase/migrations/20260809231651_add_literature_gold_import_compensation_contract_v2.sql',
+      'supabase/verification/20260809231651_verify_literature_gold_import_compensation_contract_v2.sql',
+    ],
+    schemaVersion: PROTECTED_V2_OPERATOR_BUNDLE_SCHEMA_VERSION,
+  }
   return {
     branch: 'main',
     head,
+    operatorBundle: {
+      ...operatorBundleContent,
+      aggregateSha256: sha256(canonicalJson(operatorBundleContent)),
+    },
     originMain: head,
     statusCleanIncludingUntracked: true,
   }
@@ -119,6 +152,7 @@ function backup(directory: string, identity: 'a' | 'b'): ProtectedV2BackupBindin
     canonicalManifestSha256: '9'.repeat(64),
     directory,
     executedAt: NOW.toISOString(),
+    executionNonce: (identity === 'a' ? '1' : '2').repeat(64),
     executionReceiptSha256: (identity === 'a' ? 'c' : 'd').repeat(64),
   }
 }
@@ -136,64 +170,55 @@ function context(): ProtectedV2AuthorizationContext {
       v2Occurrence: 0,
     },
     migration: PROTECTED_GOLD_IMPORT_CONTRACT_V2,
+    expectedPostApplicationAudit: {
+      auditMethod: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD,
+      auditModel: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL,
+      auditModelIdentitySha256: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL_IDENTITY_SHA256,
+      environmentInvariantIdentitySha256: PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256,
+      verifier: PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER,
+      verifierExecuted: false,
+    },
     repository: repository(),
+    backupTrustModel: PROTECTED_V2_BACKUP_TRUST_MODEL,
+    separateCaptureAttestation: PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION,
     safety: { heldOutIdentitiesAccessed: false, remoteDatabaseAccessed: false },
   }
 }
 
-function postApplicationAudit(after = database(true)) {
+function postApplicationAudit(after = database(true), repositoryCommitSha = HEAD) {
+  const componentIdentities = Object.fromEntries(
+    PROTECTED_V2_AUDIT_COMPONENT_NAMES.map((name, index) => [
+      name,
+      (index + 1).toString(16).repeat(64),
+    ]),
+  ) as Record<(typeof PROTECTED_V2_AUDIT_COMPONENT_NAMES)[number], string>
+  const catalogAuditContent = {
+    auditMethod: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD,
+    auditModel: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL,
+    auditModelIdentitySha256: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL_IDENTITY_SHA256,
+    componentIdentities,
+    environmentInvariantIdentitySha256: PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256,
+    fullEnvironmentInventoryIdentitySha256: '8'.repeat(64),
+    fullEnvironmentInventoryRecordCount: 823,
+    localPostgresOwnerProfileIdentitySha256: '9'.repeat(64),
+    schemaVersion: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_SCHEMA_VERSION,
+    verifierExecuted: false as const,
+  }
   return buildProtectedV2PostApplicationAudit({
+    auditMethod: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD,
     auditedAt: NOW.toISOString(),
+    catalogAudit: {
+      ...catalogAuditContent,
+      fullAuditIdentitySha256: sha256(canonicalJson(catalogAuditContent)),
+    },
     databaseEvidenceSha256: sha256(canonicalJson(after)),
     migration: PROTECTED_GOLD_IMPORT_CONTRACT_V2,
     readOnly: true,
     repeatableRead: true,
-    repositoryCommitSha: HEAD,
-    rpcMetadataSha256: '7'.repeat(64),
-    semanticFunctionMetadataSha256: '8'.repeat(64),
-    triggerMetadataSha256: '9'.repeat(64),
+    repositoryCommitSha,
     verifier: PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER,
+    verifierExecuted: false,
   })
-}
-
-function rpcMetadataFixture() {
-  const applyArguments =
-    'p_operation_id uuid, p_idempotency_key text, p_batch_id uuid, p_artifact_sha256 text, p_plan_sha256 text, p_plan jsonb, p_authorization_sha256 text, p_authorization jsonb, p_actor_user_id uuid, p_actor_email text'
-  const compensationArguments =
-    'p_operation_id uuid, p_target_import_operation_id uuid, p_idempotency_key text, p_batch_id uuid, p_artifact_sha256 text, p_plan_sha256 text, p_plan jsonb, p_authorization_sha256 text, p_authorization jsonb, p_actor_user_id uuid, p_actor_email text'
-  return {
-    functions: [...REQUIRED_TRANSITION_RPCS_V1, ...REQUIRED_TRANSITION_RPCS_V2].map((name) => ({
-      anonExecute: false,
-      authenticatedExecute: false,
-      identityArguments: name.startsWith('apply_')
-        ? applyArguments
-        : name.startsWith('compensate_')
-          ? compensationArguments
-          : 'p_operation_id uuid, p_recovery_authorization_sha256 text, p_recovery_authorization jsonb',
-      name,
-      owner: 'postgres',
-      publicExecute: false,
-      resultType: 'jsonb',
-      searchPath: 'pg_catalog, public, extensions',
-      securityDefiner: true,
-      serviceRoleExecute: true,
-      volatility: name.startsWith('reconcile_') ? 's' : 'v',
-    })),
-  }
-}
-
-function semanticMetadataFixture() {
-  return {
-    functions: REQUIRED_V2_SEMANTIC_FUNCTIONS.map((name) => ({
-      anonExecute: false,
-      authenticatedExecute: false,
-      ...V2_SEMANTIC_FUNCTION_CONTRACTS[name],
-      name,
-      owner: 'postgres',
-      publicExecute: false,
-      rawDefinitionSha256: V2_SEMANTIC_FUNCTION_RAW_DEFINITION_SHA256[name],
-    })),
-  }
 }
 
 interface Scenario {
@@ -255,10 +280,14 @@ function operatorDependencies(state: Scenario): ProtectedV2OperatorDependencies 
       if (state.fail === 'finalize') throw new Error('final receipt write failed')
       const result = buildProtectedV2ApplicationResult({
         after: input.after,
+        backupInstances: input.intentPackage.intent.backupInstances,
         before: input.intentPackage.intent.before,
+        intentCommitIsAncestor: input.intentCommitIsAncestor,
+        intentRepositoryHead: input.intentPackage.intent.repository.head,
         migrationApplicationCallCount: input.migrationApplicationCallCount,
         operatorAuthorizationSha256: input.intentPackage.intent.authorizationSha256,
         originalIntentSha256: input.intentPackage.intentSha256,
+        operatorBundleSha256: input.intentPackage.intent.operatorBundle.aggregateSha256,
         postApplicationAudit: input.postApplicationAudit,
         receiptReconciled: input.receiptReconciled,
         reconciliationReason: input.reconciliationReason,
@@ -266,25 +295,42 @@ function operatorDependencies(state: Scenario): ProtectedV2OperatorDependencies 
       })
       const resultBytes = canonicalJson(result)
       const executionReceipt = buildProtectedV2ApplicationExecutionReceipt({
+        auditMethod: PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD,
+        backupCaptureIds: input.intentPackage.intent.backupInstances.map(
+          ({ backupInstanceId }) => backupInstanceId,
+        ) as [string, string],
+        backupTrustModel: PROTECTED_V2_BACKUP_TRUST_MODEL,
         canonicalManifestSha256: 'a'.repeat(64),
         compensationAuthorized: false,
         executedAt: NOW.toISOString(),
         heldOutIdentitiesAccessed: false,
         importAuthorized: false,
+        intentCommitIsAncestor: input.intentCommitIsAncestor,
+        intentRepositoryHead: input.intentPackage.intent.repository.head,
         migrationApplied: true,
         migrationApplicationCallCount: input.migrationApplicationCallCount,
         migrationId: PROTECTED_GOLD_IMPORT_CONTRACT_V2.id,
         migrationReexecuted: false,
         migrationSha256: PROTECTED_GOLD_IMPORT_CONTRACT_V2.sha256,
         operatorAuthorizationSha256: input.intentPackage.intent.authorizationSha256,
+        operatorBundleSha256: input.intentPackage.intent.operatorBundle.aggregateSha256,
+        operatorBundleUnchanged: true,
         originalIntentSha256: input.intentPackage.intentSha256,
         outputDirectory: input.intentPackage.outputDirectory,
         postApplicationAuditSha256: input.postApplicationAudit.auditIdentitySha256,
+        postApplicationCatalogAuditIdentitySha256:
+          input.postApplicationAudit.catalogAudit.fullAuditIdentitySha256,
+        postApplicationComponentIdentities:
+          input.postApplicationAudit.catalogAudit.componentIdentities,
         receiptReconciled: input.receiptReconciled,
         reconciliationReason: input.reconciliationReason,
         remoteDatabaseAccessed: false,
-        repositoryCommitSha: HEAD,
+        recoveryRepositoryHead: input.repository.head,
+        repositoryCommitSha: input.repository.head,
         resultSha256: sha256(resultBytes),
+        separateCaptureAttestation: PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION,
+        verifierExecuted: false,
+        verifierSourceSha256: PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER.sha256,
       })
       state.completed = { executionReceipt, result }
       return {
@@ -304,6 +350,7 @@ function operatorDependencies(state: Scenario): ProtectedV2OperatorDependencies 
       return database(true)
     },
     inspectRepository: async () => repository(),
+    isRepositoryCommitAncestor: async () => true,
     loadIntentPackage: async () => {
       if (!state.intentPackage) throw new Error('sealed intent absent')
       return {
@@ -339,10 +386,10 @@ function operatorDependencies(state: Scenario): ProtectedV2OperatorDependencies 
       state.backupVerificationTimes.push(now.toISOString())
       return directory.endsWith('one') ? backup(directory, 'a') : backup(directory, 'b')
     },
-    verifyPostApplication: async ({ after }) => {
+    verifyPostApplication: async ({ after, repository: repositoryEvidence }) => {
       state.events.push('audit')
       state.counters.audit += 1
-      return postApplicationAudit(after)
+      return postApplicationAudit(after, repositoryEvidence.head)
     },
   }
 }
@@ -354,6 +401,7 @@ function commitArguments(): ProtectedV2OperatorArguments {
     mode: 'commit',
     operator: 'operator',
     output: '/local/receipt',
+    separateCaptureAttestation: PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION,
     target: 'local',
   }
 }
@@ -443,12 +491,12 @@ async function createBackupFixture(input: { name: string; nonceCharacter: string
   })
   const receiptBytes = canonicalJson(receipt)
   await writeFile(resolve(directory, 'execution-receipt.json'), receiptBytes, 'utf8')
-  const witnessDirectory = resolve(backupRoot, PROTECTED_V2_BACKUP_INSTANCE_WITNESS_DIRECTORY)
-  await mkdir(witnessDirectory, { recursive: true })
-  const witness = buildProtectedV2BackupInstanceWitness(receipt, sha256(receiptBytes))
+  const markerDirectory = resolve(backupRoot, PROTECTED_V2_BACKUP_DUPLICATE_MARKER_DIRECTORY)
+  await mkdir(markerDirectory, { recursive: true })
+  const marker = buildProtectedV2BackupDuplicateMarker(receipt, sha256(receiptBytes))
   await writeFile(
-    resolve(witnessDirectory, `${receipt.backupInstanceId}.json`),
-    canonicalJson(witness),
+    resolve(markerDirectory, `${receipt.backupInstanceId}.json`),
+    canonicalJson(marker),
     'utf8',
   )
   return { directory, manifest, receipt }
@@ -488,11 +536,36 @@ describe('protected V2 migration operator recovery boundary', () => {
         '/two',
         '--confirmation',
         PROTECTED_V2_CONFIRMATION,
+        '--separate-capture-attestation',
+        PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION,
         '--output',
         '/receipt',
         '--commit',
       ]).mode,
     ).toBe('commit')
+    for (const attestationArguments of [
+      [],
+      ['--separate-capture-attestation', 'I made some backups'],
+    ]) {
+      expect(() =>
+        parseProtectedV2OperatorArguments([
+          '--target',
+          'local',
+          '--operator',
+          'operator',
+          '--backup',
+          '/one',
+          '--backup',
+          '/two',
+          '--confirmation',
+          PROTECTED_V2_CONFIRMATION,
+          '--output',
+          '/receipt',
+          '--commit',
+          ...attestationArguments,
+        ]),
+      ).toThrow('--commit requires --separate-capture-attestation')
+    }
     expect(
       parseProtectedV2OperatorArguments([
         '--target',
@@ -535,7 +608,7 @@ describe('protected V2 migration operator recovery boundary', () => {
         'lost acknowledgement',
         '--reconcile-applied-receipt',
       ]),
-    ).toThrow('forbids --commit, --confirmation, and --backup')
+    ).toThrow('forbids --commit, --confirmation, --backup, and --separate-capture-attestation')
   })
 
   it('performs no intent, staging, migration, audit, or receipt write in dry-run mode', async () => {
@@ -587,61 +660,34 @@ describe('protected V2 migration operator recovery boundary', () => {
     )
   })
 
-  it('collects the committed post-application contract audit only through read-only repeatable-read queries', async () => {
-    const outputs = [
-      rpcMetadataFixture(),
-      semanticMetadataFixture(),
-      {
-        isolation: 'repeatable read',
-        readOnly: true,
-        triggers: [
-          {
-            enabled: 'O',
-            function: 'enforce_literature_gold_operation_contract_v2',
-            name: 'enforce_literature_gold_operation_contract_v2',
-            table: 'literature_gold_review_operations',
-          },
-          {
-            enabled: 'O',
-            function: 'enforce_literature_gold_review_contract_v2',
-            name: 'enforce_literature_gold_review_contract_v2',
-            table: 'literature_gold_set_reviews',
-          },
-        ],
-      },
-    ]
+  it('fails closed on an incomplete catalog while issuing only read-only repeatable-read audits', async () => {
     const statements: string[] = []
-    let outputIndex = 0
     const runCommand: CommandRunner = async (command, _arguments, options) => {
       expect(command).toBe('docker')
       statements.push(options?.stdin ?? '')
-      return { stderr: '', stdout: `${JSON.stringify(outputs[outputIndex++])}\n` }
+      return { stderr: '', stdout: '{}\n' }
     }
     const after = database(true)
-    const audit = await collectProtectedV2PostApplicationAudit({
-      after,
-      dockerTarget: {
-        context: null,
-        dockerArguments: [],
-        endpoint: 'unix:///var/run/docker.sock',
-        environment: { NODE_ENV: 'test' },
-      },
-      now: NOW,
-      repository: repository(),
-      runCommand,
-    })
+    await expect(
+      collectProtectedV2PostApplicationAudit({
+        after,
+        dockerTarget: {
+          context: null,
+          dockerArguments: [],
+          endpoint: 'unix:///var/run/docker.sock',
+          environment: { NODE_ENV: 'test' },
+        },
+        now: NOW,
+        repository: repository(),
+        runCommand,
+      }),
+    ).rejects.toThrow()
     expect(statements).toHaveLength(3)
     for (const statement of statements) {
       expect(statement).toMatch(/^begin transaction isolation level repeatable read read only;/u)
       expect(statement).toMatch(/rollback;$/u)
       expect(statement).not.toContain('migration up')
     }
-    expect(audit).toMatchObject({
-      databaseEvidenceSha256: sha256(canonicalJson(after)),
-      readOnly: true,
-      repeatableRead: true,
-      verifier: PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER,
-    })
   })
 
   it.each([
@@ -700,6 +746,87 @@ describe('protected V2 migration operator recovery boundary', () => {
       migrationReexecuted: false,
       receiptReconciled: true,
     })
+  })
+
+  it.each([
+    ['unrelated code descendant', '2'.repeat(40)],
+    ['unrelated documentation descendant', '3'.repeat(40)],
+  ])(
+    'recovers from a clean current-main %s with an unchanged operator bundle',
+    async (_label, descendant) => {
+      const state = scenario('lost_ack')
+      let currentRepository = repository()
+      const dependencies = operatorDependencies(state)
+      dependencies.inspectRepository = async () => currentRepository
+      dependencies.isRepositoryCommitAncestor = async (ancestor, current) =>
+        ancestor === HEAD && current === descendant
+      await expect(runProtectedV2Operator(commitArguments(), dependencies)).rejects.toThrow(
+        'acknowledgement lost',
+      )
+      currentRepository = repository(descendant)
+      state.fail = undefined
+      await expect(
+        runProtectedV2Operator(reconciliationArguments(), dependencies),
+      ).resolves.toMatchObject({ mode: 'reconciled_applied_receipt' })
+      expect(state.completed?.result).toMatchObject({
+        intentCommitIsAncestor: true,
+        intentRepositoryHead: HEAD,
+        operatorBundleUnchanged: true,
+        recoveryRepositoryHead: descendant,
+      })
+      expect(state.counters.apply).toBe(1)
+    },
+  )
+
+  it.each([
+    'scripts/literature/apply-protected-gold-import-contract-v2.ts',
+    'package-lock.json',
+    'supabase/migrations/20260809231651_add_literature_gold_import_compensation_contract_v2.sql',
+    'supabase/verification/20260809231651_verify_literature_gold_import_compensation_contract_v2.sql',
+  ])('rejects descendant reconciliation after protected bundle drift in %s', async (path) => {
+    const state = scenario('lost_ack')
+    let currentRepository = repository()
+    const dependencies = operatorDependencies(state)
+    dependencies.inspectRepository = async () => currentRepository
+    await expect(runProtectedV2Operator(commitArguments(), dependencies)).rejects.toThrow()
+    const drifted = JSON.parse(
+      JSON.stringify(repository('2'.repeat(40))),
+    ) as ProtectedV2RepositoryEvidence
+    const file = drifted.operatorBundle.files.find((entry) => entry.path === path)
+    if (!file) throw new Error(`Test fixture omitted protected path ${path}.`)
+    file.sha256 = '0'.repeat(64)
+    const driftedBundleContent = {
+      files: drifted.operatorBundle.files,
+      roots: drifted.operatorBundle.roots,
+      schemaVersion: drifted.operatorBundle.schemaVersion,
+    }
+    drifted.operatorBundle.aggregateSha256 = sha256(canonicalJson(driftedBundleContent))
+    currentRepository = drifted
+    state.fail = undefined
+    await expect(runProtectedV2Operator(reconciliationArguments(), dependencies)).rejects.toThrow(
+      'operator-bundle or dependency-inventory drift',
+    )
+    expect(state.counters.apply).toBe(1)
+    expect(state.counters.finalize).toBe(0)
+  })
+
+  it.each([
+    ['divergent branch', false],
+    ['absent or unreachable intent commit', false],
+  ])('rejects %s before any reconciliation database inspection', async (_label, isAncestor) => {
+    const state = scenario('lost_ack')
+    let currentRepository = repository()
+    const dependencies = operatorDependencies(state)
+    dependencies.inspectRepository = async () => currentRepository
+    dependencies.isRepositoryCommitAncestor = async () => isAncestor
+    await expect(runProtectedV2Operator(commitArguments(), dependencies)).rejects.toThrow()
+    currentRepository = repository('2'.repeat(40))
+    state.fail = undefined
+    await expect(runProtectedV2Operator(reconciliationArguments(), dependencies)).rejects.toThrow(
+      'recovery rule failed',
+    )
+    expect(state.counters.audit).toBe(0)
+    expect(state.counters.apply).toBe(1)
   })
 
   it.each(['post_inspection', 'finalize'] as const)(
@@ -784,7 +911,7 @@ describe('protected V2 migration operator recovery boundary', () => {
     },
   )
 
-  it('pins migration-only scope and independent backup instances', () => {
+  it('pins migration-only scope and separately executed redundant capture instances', () => {
     const authorization = buildProtectedV2Authorization({
       confirmation: PROTECTED_V2_CONFIRMATION,
       context: context(),
@@ -797,7 +924,7 @@ describe('protected V2 migration operator recovery boundary', () => {
       authorization.context.backups[1].backupInstanceId,
     )
     expect(PROTECTED_V2_APPLICATION_REPORT_SCHEMA_VERSION).toBe(
-      'literature-gold-protected-v2-application-result/1.0.0',
+      'literature-gold-protected-v2-application-result/2.0.0',
     )
 
     const identicalReceiptContext = context()
@@ -810,7 +937,7 @@ describe('protected V2 migration operator recovery boundary', () => {
         operator: 'operator',
         requestedAt: NOW.toISOString(),
       }),
-    ).toThrow('independently executed')
+    ).toThrow('separately executed')
 
     const identicalInstanceContext = context()
     identicalInstanceContext.backups[1].backupInstanceId =
@@ -822,10 +949,35 @@ describe('protected V2 migration operator recovery boundary', () => {
         operator: 'operator',
         requestedAt: NOW.toISOString(),
       }),
-    ).toThrow('independently executed')
+    ).toThrow('separately executed')
+
+    const identicalNonceContext = context()
+    identicalNonceContext.backups[1].executionNonce =
+      identicalNonceContext.backups[0].executionNonce
+    expect(() =>
+      buildProtectedV2Authorization({
+        confirmation: PROTECTED_V2_CONFIRMATION,
+        context: identicalNonceContext,
+        operator: 'operator',
+        requestedAt: NOW.toISOString(),
+      }),
+    ).toThrow('separately executed')
+
+    const wrongAttestationContext = context()
+    ;(
+      wrongAttestationContext as { separateCaptureAttestation: string }
+    ).separateCaptureAttestation = 'wrong attestation'
+    expect(() =>
+      buildProtectedV2Authorization({
+        confirmation: PROTECTED_V2_CONFIRMATION,
+        context: wrongAttestationContext,
+        operator: 'operator',
+        requestedAt: NOW.toISOString(),
+      }),
+    ).toThrow('exact trusted-operator capture model and attestation')
   })
 
-  it('accepts two independent backups with identical data manifests but distinct instances', async () => {
+  it('accepts two separate redundant captures with identical data manifests but distinct instances', async () => {
     const root = await mkdtemp(resolve(tmpdir(), 'protected-v2-backups-'))
     cleanupDirectories.push(root)
     const first = await createBackupFixture({ name: 'one', nonceCharacter: 'a', root })
@@ -843,6 +995,46 @@ describe('protected V2 migration operator recovery boundary', () => {
     expect(verified[0]?.canonicalManifestSha256).toBe(verified[1]?.canonicalManifestSha256)
     expect(verified[0]?.backupInstanceId).not.toBe(verified[1]?.backupInstanceId)
     expect(verified[0]?.executionReceiptSha256).not.toBe(verified[1]?.executionReceiptSha256)
+  })
+
+  it('rejects a capture whose local duplicate-detection marker is missing', async () => {
+    const root = await mkdtemp(resolve(tmpdir(), 'protected-v2-missing-marker-'))
+    cleanupDirectories.push(root)
+    const fixture = await createBackupFixture({ name: 'one', nonceCharacter: 'a', root })
+    await rm(
+      resolve(
+        await realpath(root),
+        PROTECTED_V2_BACKUP_DUPLICATE_MARKER_DIRECTORY,
+        `${fixture.receipt.backupInstanceId}.json`,
+      ),
+    )
+    await expect(
+      verifyProtectedV2PreapplicationBackup({
+        database: database(),
+        directory: fixture.directory,
+        now: NOW,
+        repository: repository(),
+      }),
+    ).rejects.toThrow()
+  })
+
+  it.each([
+    ['wrong manifest', 'checksum-manifest.sha256', 'corrupted manifest'],
+    ['ledger drift', 'protected-migration-ledger.json', '{}'],
+    ['unexpected file', 'unexpected.txt', 'unexpected'],
+  ])('rejects accidental capture defect: %s', async (_label, filename, bytes) => {
+    const root = await mkdtemp(resolve(tmpdir(), 'protected-v2-capture-defect-'))
+    cleanupDirectories.push(root)
+    const fixture = await createBackupFixture({ name: 'one', nonceCharacter: 'a', root })
+    await writeFile(resolve(fixture.directory, filename), bytes, 'utf8')
+    await expect(
+      verifyProtectedV2PreapplicationBackup({
+        database: database(),
+        directory: fixture.directory,
+        now: NOW,
+        repository: repository(),
+      }),
+    ).rejects.toThrow()
   })
 
   it('rejects same-directory paths and realpath aliases', async () => {
@@ -907,7 +1099,7 @@ describe('protected V2 migration operator recovery boundary', () => {
     ).rejects.toThrow('instance identity or receipt checksum is invalid')
   })
 
-  it('rejects a recomputed copied receipt without a genuine diagnostic witness', async () => {
+  it('accepts an honestly recomputed copy when the trusted operator also recomputes its local duplicate marker', async () => {
     const root = await mkdtemp(resolve(tmpdir(), 'protected-v2-recomputed-'))
     cleanupDirectories.push(root)
     const fixture = await createBackupFixture({ name: 'one', nonceCharacter: 'a', root })
@@ -923,7 +1115,18 @@ describe('protected V2 migration operator recovery boundary', () => {
       ...(projection as unknown as Parameters<typeof buildProtectedV2BackupExecutionReceipt>[0]),
       outputDirectory: await realpath(copied),
     })
-    await writeFile(resolve(copied, 'execution-receipt.json'), canonicalJson(recomputed), 'utf8')
+    const recomputedBytes = canonicalJson(recomputed)
+    await writeFile(resolve(copied, 'execution-receipt.json'), recomputedBytes, 'utf8')
+    const markerDirectory = resolve(
+      await realpath(root),
+      PROTECTED_V2_BACKUP_DUPLICATE_MARKER_DIRECTORY,
+    )
+    const marker = buildProtectedV2BackupDuplicateMarker(recomputed, sha256(recomputedBytes))
+    await writeFile(
+      resolve(markerDirectory, `${recomputed.backupInstanceId}.json`),
+      canonicalJson(marker),
+      'utf8',
+    )
     await expect(
       verifyProtectedV2PreapplicationBackup({
         database: database(),
@@ -931,7 +1134,11 @@ describe('protected V2 migration operator recovery boundary', () => {
         now: NOW,
         repository: repository(),
       }),
-    ).rejects.toThrow()
+    ).resolves.toMatchObject({ backupInstanceId: recomputed.backupInstanceId })
+    expect(PROTECTED_V2_BACKUP_TRUST_MODEL).toBe('trusted-local-operator-redundant-captures/1.0.0')
+    expect(PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION).toBe(
+      'I ATTEST THESE ARE TWO SEPARATE READ-ONLY BACKUP CAPTURES',
+    )
   })
 
   it('still rejects stale backup age and current state drift', async () => {
@@ -993,6 +1200,7 @@ describe('protected V2 migration operator recovery boundary', () => {
     await finalizeProtectedV2ApplicationReceipt({
       after: database(true),
       cwd,
+      intentCommitIsAncestor: true,
       intentPackage: sealed,
       migrationApplicationCallCount: 1,
       now: NOW,

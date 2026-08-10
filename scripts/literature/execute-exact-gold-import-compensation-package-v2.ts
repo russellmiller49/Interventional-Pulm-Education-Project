@@ -41,18 +41,19 @@ import {
   buildContractInvariantIdentity,
   buildDeploymentProfileIdentity,
   type EnrichedRpcMetadata,
-  type RpcAclEntry,
 } from './gold-import-compensation-contract-reconciliation'
 import {
   buildContractDiagnosticsSql,
   parseContractDiagnosticsOutput,
 } from './gold-import-compensation-contract-diagnostics'
+import { buildSchemaSecurityDefinitionIdentity } from './gold-import-compensation-rehearsal-evidence'
 import {
-  SCHEMA_SECURITY_FUNCTION_NAMES,
-  buildSchemaSecurityDefinitionIdentity,
-  type SchemaSecurityDefinitionIdentity,
-} from './gold-import-compensation-rehearsal-evidence'
-import { SECURITY_INTROSPECTION_SQL } from './rehearse-gold-import-compensation-db'
+  collectProtectedV2CompleteCatalogAudit,
+  enrichedV2TransitionMetadata,
+  type ProtectedV2CompleteCatalogAuditIdentity,
+  v2SecurityIntrospectionSql,
+} from './gold-import-contract-v2-catalog-audit'
+export { renderOwnerFirstFunctionRawAclV2 } from './gold-import-contract-v2-catalog-audit'
 import {
   validateReadyGoldImportCompensationV2Audit,
   type GoldImportCompensationV2ReadyAudit,
@@ -65,26 +66,6 @@ import type {
 
 const NOTE_OVERLAY_PMIDS = new Set(['36879724', '39281191'])
 const SHA256_PATTERN = /^[a-f0-9]{64}$/u
-const V2_CONTRACT_FUNCTION_NAMES = [
-  'apply_literature_gold_import_v2',
-  'compensate_literature_gold_import_v2',
-  'enforce_literature_gold_operation_contract_v2',
-  'enforce_literature_gold_review_contract_v2',
-  'literature_gold_effective_state_hash_v2',
-  'literature_gold_physical_state_hash_v2',
-  'literature_gold_review_clinical_projection_v2',
-  'literature_gold_review_operation_receipt_v2',
-  'literature_gold_review_operation_result_v2',
-  'reconcile_literature_gold_review_operation_v2',
-  'validate_literature_gold_import_review_payload_v2',
-  'validate_literature_gold_operation_authorization_v2',
-  'validate_literature_gold_operation_plan_v2',
-] as const
-const V2_TRANSITION_FUNCTION_NAMES = [
-  'apply_literature_gold_import_v2',
-  'compensate_literature_gold_import_v2',
-  'reconcile_literature_gold_review_operation_v2',
-] as const
 
 function sha256(value: string | Uint8Array): string {
   return createHash('sha256').update(value).digest('hex')
@@ -101,141 +82,6 @@ function record(value: unknown, label: string): Record<string, unknown> {
     throw new Error(`${label} must be a JSON object.`)
   }
   return value as Record<string, unknown>
-}
-
-function string(value: unknown, label: string): string {
-  if (typeof value !== 'string' || value.length === 0) {
-    throw new Error(`${label} must be a nonempty string.`)
-  }
-  return value
-}
-
-function boolean(value: unknown, label: string): boolean {
-  if (typeof value !== 'boolean') throw new Error(`${label} must be boolean.`)
-  return value
-}
-
-function v2SecurityIntrospectionSql(): string {
-  const startMarker = 'contract_functions(name) as (\n'
-  const endMarker = '\n),\nfunctions as ('
-  const start = SECURITY_INTROSPECTION_SQL.indexOf(startMarker)
-  const end = SECURITY_INTROSPECTION_SQL.indexOf(endMarker, start + startMarker.length)
-  if (start < 0 || end < 0) {
-    throw new Error('V1 security introspection no longer has the expected function inventory CTE.')
-  }
-  const functionNames = [...SCHEMA_SECURITY_FUNCTION_NAMES, ...V2_CONTRACT_FUNCTION_NAMES].filter(
-    (name, index, all) => all.indexOf(name) === index,
-  )
-  const replacement = `contract_functions(name) as (\n  values ${functionNames
-    .map((name) => `('${name}')`)
-    .join(',\n    ')}`
-  return `${SECURITY_INTROSPECTION_SQL.slice(0, start)}${replacement}${SECURITY_INTROSPECTION_SQL.slice(end)}`
-}
-
-function functionRecord(identity: SchemaSecurityDefinitionIdentity, name: string) {
-  const matches = identity.records.filter(
-    (entry) => entry.objectType === 'function' && entry.objectName === name,
-  )
-  if (matches.length !== 1) {
-    throw new Error(`V2 schema identity has no unique function record for ${name}.`)
-  }
-  return matches[0]!
-}
-
-export function renderOwnerFirstFunctionRawAclV2(
-  owner: string,
-  grants: readonly RpcAclEntry[],
-): string {
-  const ordered = [...grants].sort((left, right) => {
-    const leftOwnerRank = left.grantee === owner ? 0 : 1
-    const rightOwnerRank = right.grantee === owner ? 0 : 1
-    if (leftOwnerRank !== rightOwnerRank) return leftOwnerRank - rightOwnerRank
-    const leftIdentity = canonicalJson(left)
-    const rightIdentity = canonicalJson(right)
-    return leftIdentity < rightIdentity ? -1 : leftIdentity > rightIdentity ? 1 : 0
-  })
-  return `{${ordered.map(({ grantee, grantor }) => `${grantee}=X/${grantor}`).join(',')}}`
-}
-
-function enrichedV2TransitionMetadata(
-  identity: SchemaSecurityDefinitionIdentity,
-): EnrichedRpcMetadata[] {
-  return V2_TRANSITION_FUNCTION_NAMES.map((name): EnrichedRpcMetadata => {
-    const function_ = functionRecord(identity, name)
-    const state = record(function_.state, `${name} function state`)
-    const identityArguments = string(state.identityArguments, `${name} identity arguments`)
-    const owner = string(state.owner, `${name} owner`)
-    const searchPath = string(state.searchPath, `${name} search path`)
-    const securityDefiner = boolean(state.securityDefiner, `${name} security definer`)
-    const grants = identity.records
-      .filter(
-        (entry) =>
-          entry.objectType === 'function_acl' &&
-          entry.objectName === name &&
-          record(entry.state, `${name} ACL state`).identityArguments === identityArguments,
-      )
-      .map((entry) => {
-        const grant = record(entry.state, `${name} ACL state`)
-        return {
-          grantee: string(grant.grantee, `${name} ACL grantee`),
-          grantor: string(grant.grantor, `${name} ACL grantor`),
-          isGrantable: boolean(grant.isGrantable, `${name} ACL grantable`),
-          privilegeType: string(grant.privilegeType, `${name} ACL privilege`),
-        }
-      })
-    const canExecute = (role: string) =>
-      grants.some(({ grantee, privilegeType }) => grantee === role && privilegeType === 'EXECUTE')
-    const volatility = string(state.volatility, `${name} volatility`)
-    const normalizedDefinition = function_.normalizedDefinition
-    const rawAcl = renderOwnerFirstFunctionRawAclV2(owner, grants)
-    return {
-      argumentsWithDefaults: identityArguments,
-      configuration: [`search_path=${searchPath}`],
-      definitionSha256: function_.definitionSha256,
-      dependencies: [
-        {
-          dependencyType: 'n',
-          referencedClass: 'pg_language',
-          referencedIdentity: 'language plpgsql',
-        },
-        {
-          dependencyType: 'n',
-          referencedClass: 'pg_namespace',
-          referencedIdentity: 'schema public',
-        },
-      ],
-      effectiveExecute: {
-        PUBLIC: canExecute('PUBLIC'),
-        anon: canExecute('anon'),
-        authenticated: canExecute('authenticated'),
-        service_role: canExecute('service_role'),
-      },
-      explicitGrants: grants,
-      identityArguments,
-      language: 'plpgsql',
-      name,
-      normalizedDefinition,
-      objectIdentity: `public.${name}(${identityArguments})`,
-      overloadCount: 1,
-      owner,
-      parallelSafety: 'unsafe',
-      rawAcl,
-      rawDefinition: normalizedDefinition,
-      rawDefinitionSha256: sha256(normalizedDefinition),
-      resultType: string(state.resultType, `${name} result type`),
-      routineKind: 'function',
-      schema: 'public',
-      searchPath: {
-        actual: searchPath,
-        entries: [`search_path=${searchPath}`],
-        expected: 'pg_catalog, public, extensions',
-        matchesExpected: searchPath === 'pg_catalog, public, extensions',
-      },
-      securityDefiner,
-      securityMode: securityDefiner ? 'definer' : 'invoker',
-      volatility: volatility === 'i' ? 'immutable' : volatility === 's' ? 'stable' : 'volatile',
-    }
-  })
 }
 
 const bootstrapStateSchema = z
@@ -367,6 +213,7 @@ async function buildDisposableReadyAuditAndPackage(input: {
   state: z.infer<typeof bootstrapStateSchema>
 }): Promise<{
   audit: GoldImportCompensationV2ReadyAudit
+  completeCatalogAudit: ProtectedV2CompleteCatalogAuditIdentity
   package: GeneratedGoldImportCompensationPackageV2
 }> {
   const { context, sources, state } = input
@@ -433,11 +280,15 @@ async function buildDisposableReadyAuditAndPackage(input: {
     `\\pset tuples_only on\n\\pset format unaligned\n${buildContractDiagnosticsSql()}`,
   )
   const diagnostics = parseContractDiagnosticsOutput(diagnosticsResult.stdout)
-  const schemaSecurityDefinitionIdentity = buildSchemaSecurityDefinitionIdentity(
-    await context.queryJson(
-      `begin transaction isolation level repeatable read read only;\nset local statement_timeout = '120s';\n${v2SecurityIntrospectionSql()}\nrollback;`,
-    ),
+  const completeCatalogAudit = await collectProtectedV2CompleteCatalogAudit({
+    context,
+    profile: 'disposable_clone',
+  })
+  const securityIntrospection = await context.queryJson(
+    `begin transaction isolation level repeatable read read only;\nset local statement_timeout = '120s';\n${v2SecurityIntrospectionSql()}\nrollback;`,
   )
+  const schemaSecurityDefinitionIdentity =
+    buildSchemaSecurityDefinitionIdentity(securityIntrospection)
   const rpcMetadata: EnrichedRpcMetadata[] = [
     ...diagnostics.functions,
     ...enrichedV2TransitionMetadata(schemaSecurityDefinitionIdentity),
@@ -579,13 +430,14 @@ async function buildDisposableReadyAuditAndPackage(input: {
     signedProtocolAuthorization: sources.sources.signedProtocolAuthorizationBytes,
     sourceAuthorizationSet: sourceAuthorizationSetBytes,
   })
-  return { audit, package: package_ }
+  return { audit, completeCatalogAudit, package: package_ }
 }
 
 export interface BootstrappedExactPackageExecutorV2 {
   executor: V2ExactPackageDatabaseExecutor
   generatedPackageCount(): number
   referenceAudit(): GoldImportCompensationV2ReadyAudit
+  referenceCompleteCatalogAudit(): ProtectedV2CompleteCatalogAuditIdentity
   referencePackage(): GeneratedGoldImportCompensationPackageV2
 }
 
@@ -597,12 +449,14 @@ export interface BootstrappedExactPackageExecutorV2 {
 export function createBootstrappedExactPackageDatabaseExecutorV2(input: {
   onGenerated?: (input: {
     audit: GoldImportCompensationV2ReadyAudit
+    completeCatalogAudit: ProtectedV2CompleteCatalogAuditIdentity
     package: GeneratedGoldImportCompensationPackageV2
     path: V2DisposableDatabaseContext['migrationPath']
   }) => Promise<void> | void
   readSources: () => Promise<V2ExactPackageBootstrapSources>
 }): BootstrappedExactPackageExecutorV2 {
   let referenceAudit: GoldImportCompensationV2ReadyAudit | undefined
+  let referenceCompleteCatalogAudit: ProtectedV2CompleteCatalogAuditIdentity | undefined
   let referencePackage: GeneratedGoldImportCompensationPackageV2 | undefined
   let referencePostV2SeedIdentity: unknown
   let generatedPackageCount = 0
@@ -631,14 +485,23 @@ export function createBootstrappedExactPackageDatabaseExecutorV2(input: {
         if (referenceAudit && canonicalJson(referenceAudit) !== canonicalJson(generated.audit)) {
           throw new Error('Repeated disposable paths produced different V2 ready audits.')
         }
+        if (
+          referenceCompleteCatalogAudit &&
+          canonicalJson(referenceCompleteCatalogAudit) !==
+            canonicalJson(generated.completeCatalogAudit)
+        ) {
+          throw new Error('Repeated disposable paths produced different complete catalog audits.')
+        }
         if (referencePackage) {
           assertExactGeneratedPackageReferenceV2(referencePackage, generated.package)
         }
         referenceAudit ??= generated.audit
+        referenceCompleteCatalogAudit ??= generated.completeCatalogAudit
         referencePackage ??= generated.package
         generatedPackageCount += 1
         await input.onGenerated?.({
           audit: generated.audit,
+          completeCatalogAudit: generated.completeCatalogAudit,
           package: generated.package,
           path: context.migrationPath,
         })
@@ -649,6 +512,12 @@ export function createBootstrappedExactPackageDatabaseExecutorV2(input: {
     referenceAudit: () => {
       if (!referenceAudit) throw new Error('The V2 ready audit has not been bootstrapped.')
       return referenceAudit
+    },
+    referenceCompleteCatalogAudit: () => {
+      if (!referenceCompleteCatalogAudit) {
+        throw new Error('The V2 complete catalog audit has not been bootstrapped.')
+      }
+      return referenceCompleteCatalogAudit
     },
     referencePackage: () => {
       if (!referencePackage) throw new Error('The exact V2 package has not been bootstrapped.')

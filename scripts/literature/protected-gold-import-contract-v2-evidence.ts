@@ -1,29 +1,40 @@
 import { canonicalJson, sha256 } from './gold-import-compensation-migration-operations'
 import {
+  PROTECTED_V2_AUDIT_COMPONENT_NAMES,
+  PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD,
+  PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL_IDENTITY_SHA256,
+  PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256,
+  validateProtectedV2CompleteCatalogAuditIdentity,
+  type ProtectedV2CompleteCatalogAuditIdentity,
+} from './gold-import-contract-v2-catalog-audit'
+import {
   PROTECTED_GOLD_IMPORT_CONTRACT_V1,
   PROTECTED_GOLD_IMPORT_CONTRACT_V2,
   PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER,
   PROTECTED_V2_AUTHORIZED_CAPABILITY,
+  PROTECTED_V2_BACKUP_TRUST_MODEL,
   PROTECTED_V2_CONFIRMATION,
+  PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION,
   type ProtectedMigrationLedgerEntry,
   type ProtectedV2BackupBinding,
   type ProtectedV2OperatorAuthorization,
 } from './protected-gold-import-contract-v2'
+import type { ProtectedV2OperatorBundle } from './protected-gold-import-contract-v2-recovery-bundle'
 
 export const PROTECTED_V2_BACKUP_RECEIPT_SCHEMA_VERSION =
   'gold-import-contract-v2-preapplication-execution/2.0.0' as const
 export const PROTECTED_V2_BACKUP_INSTANCE_IDENTITY_SCHEMA_VERSION =
-  'gold-import-contract-v2-preapplication-instance/1.0.0' as const
-export const PROTECTED_V2_BACKUP_INSTANCE_WITNESS_SCHEMA_VERSION =
-  'gold-import-contract-v2-preapplication-instance-witness/1.0.0' as const
-export const PROTECTED_V2_BACKUP_INSTANCE_WITNESS_DIRECTORY =
-  '.protected-v2-backup-instance-witnesses' as const
+  'gold-import-contract-v2-preapplication-instance/2.0.0' as const
+export const PROTECTED_V2_BACKUP_DUPLICATE_MARKER_SCHEMA_VERSION =
+  'gold-import-contract-v2-preapplication-local-duplicate-marker/2.0.0' as const
+export const PROTECTED_V2_BACKUP_DUPLICATE_MARKER_DIRECTORY =
+  '.protected-v2-backup-duplicate-markers' as const
 export const PROTECTED_V2_APPLICATION_INTENT_SCHEMA_VERSION =
-  'literature-gold-protected-v2-application-intent/1.0.0' as const
+  'literature-gold-protected-v2-application-intent/2.0.0' as const
 export const PROTECTED_V2_POST_APPLICATION_AUDIT_SCHEMA_VERSION =
-  'literature-gold-protected-v2-post-application-audit/1.0.0' as const
+  'literature-gold-protected-v2-post-application-audit/2.0.0' as const
 export const PROTECTED_V2_APPLICATION_RESULT_SCHEMA_VERSION =
-  'literature-gold-protected-v2-application-result/1.0.0' as const
+  'literature-gold-protected-v2-application-result/2.0.0' as const
 export const PROTECTED_V2_APPLICATION_EXECUTION_SCHEMA_VERSION =
   'literature-gold-protected-v2-migration-application-execution/2.0.0' as const
 
@@ -79,6 +90,7 @@ function parseCanonicalJson(bytes: string, label: string): Record<string, unknow
 export interface ProtectedV2RepositoryEvidence {
   branch: 'main'
   head: string
+  operatorBundle: ProtectedV2OperatorBundle
   originMain: string
   statusCleanIncludingUntracked: true
 }
@@ -266,7 +278,7 @@ export function parseProtectedV2BackupExecutionReceipt(
   return rebuilt
 }
 
-export interface ProtectedV2BackupInstanceWitness {
+export interface ProtectedV2BackupDuplicateMarker {
   backupInstanceId: string
   backupRoot: string
   contentSha256: string
@@ -274,14 +286,14 @@ export interface ProtectedV2BackupInstanceWitness {
   executionReceiptSha256: string
   outputDirectory: string
   repositoryCommitSha: string
-  schemaVersion: typeof PROTECTED_V2_BACKUP_INSTANCE_WITNESS_SCHEMA_VERSION
+  schemaVersion: typeof PROTECTED_V2_BACKUP_DUPLICATE_MARKER_SCHEMA_VERSION
 }
 
-export function buildProtectedV2BackupInstanceWitness(
+export function buildProtectedV2BackupDuplicateMarker(
   receipt: ProtectedV2BackupExecutionReceipt,
   executionReceiptSha256: string,
-): ProtectedV2BackupInstanceWitness {
-  requiredSha256(executionReceiptSha256, 'backup witness execution receipt')
+): ProtectedV2BackupDuplicateMarker {
+  requiredSha256(executionReceiptSha256, 'backup duplicate marker execution receipt')
   const content = {
     backupInstanceId: receipt.backupInstanceId,
     backupRoot: receipt.backupRoot,
@@ -289,15 +301,15 @@ export function buildProtectedV2BackupInstanceWitness(
     executionReceiptSha256,
     outputDirectory: receipt.outputDirectory,
     repositoryCommitSha: receipt.repositoryCommitSha,
-    schemaVersion: PROTECTED_V2_BACKUP_INSTANCE_WITNESS_SCHEMA_VERSION,
+    schemaVersion: PROTECTED_V2_BACKUP_DUPLICATE_MARKER_SCHEMA_VERSION,
   } as const
   return { ...content, contentSha256: sha256(canonicalJson(content)) }
 }
 
-export function parseProtectedV2BackupInstanceWitness(
+export function parseProtectedV2BackupDuplicateMarker(
   bytes: string,
-): ProtectedV2BackupInstanceWitness {
-  const parsed = parseCanonicalJson(bytes, 'Protected V2 backup instance witness')
+): ProtectedV2BackupDuplicateMarker {
+  const parsed = parseCanonicalJson(bytes, 'Protected V2 backup local duplicate marker')
   exactKeys(
     parsed,
     [
@@ -310,20 +322,20 @@ export function parseProtectedV2BackupInstanceWitness(
       'repositoryCommitSha',
       'schemaVersion',
     ],
-    'Protected V2 backup instance witness',
+    'Protected V2 backup local duplicate marker',
   )
   const { contentSha256, ...content } = parsed
   if (
-    parsed.schemaVersion !== PROTECTED_V2_BACKUP_INSTANCE_WITNESS_SCHEMA_VERSION ||
-    requiredSha256(parsed.backupInstanceId, 'witness backupInstanceId') !==
+    parsed.schemaVersion !== PROTECTED_V2_BACKUP_DUPLICATE_MARKER_SCHEMA_VERSION ||
+    requiredSha256(parsed.backupInstanceId, 'duplicate marker backupInstanceId') !==
       parsed.backupInstanceId ||
-    requiredSha256(parsed.executionReceiptSha256, 'witness executionReceiptSha256') !==
+    requiredSha256(parsed.executionReceiptSha256, 'duplicate marker executionReceiptSha256') !==
       parsed.executionReceiptSha256 ||
     sha256(canonicalJson(content)) !== contentSha256
   ) {
-    throw new Error('Protected V2 backup instance witness is invalid.')
+    throw new Error('Protected V2 backup local duplicate marker is invalid.')
   }
-  return parsed as unknown as ProtectedV2BackupInstanceWitness
+  return parsed as unknown as ProtectedV2BackupDuplicateMarker
 }
 
 export interface ProtectedV2ApplicationIntent {
@@ -331,13 +343,16 @@ export interface ProtectedV2ApplicationIntent {
   authorizationSha256: string
   authorizedCapability: typeof PROTECTED_V2_AUTHORIZED_CAPABILITY
   backupInstances: readonly [ProtectedV2BackupBinding, ProtectedV2BackupBinding]
+  backupTrustModel: typeof PROTECTED_V2_BACKUP_TRUST_MODEL
   before: ProtectedV2DatabaseEvidence
   confirmation: typeof PROTECTED_V2_CONFIRMATION
   createdAt: string
   migration: typeof PROTECTED_GOLD_IMPORT_CONTRACT_V2
   operator: string
+  operatorBundle: ProtectedV2OperatorBundle
   outputDirectory: string
   repository: ProtectedV2RepositoryEvidence
+  separateCaptureAttestation: typeof PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION
   safety: {
     compensationAuthorized: false
     finalReceiptComplete: false
@@ -361,13 +376,16 @@ export function buildProtectedV2ApplicationIntent(input: {
     authorizationSha256: input.authorization.contentSha256,
     authorizedCapability: PROTECTED_V2_AUTHORIZED_CAPABILITY,
     backupInstances: input.authorization.context.backups,
+    backupTrustModel: PROTECTED_V2_BACKUP_TRUST_MODEL,
     before: input.before,
     confirmation: PROTECTED_V2_CONFIRMATION,
     createdAt: input.authorization.requestedAt,
     migration: PROTECTED_GOLD_IMPORT_CONTRACT_V2,
     operator: input.authorization.operator,
+    operatorBundle: input.repository.operatorBundle,
     outputDirectory: input.outputDirectory,
     repository: input.repository,
+    separateCaptureAttestation: PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION,
     safety: {
       compensationAuthorized: false,
       finalReceiptComplete: false,
@@ -390,13 +408,16 @@ export function parseProtectedV2ApplicationIntent(bytes: string): ProtectedV2App
       'authorizationSha256',
       'authorizedCapability',
       'backupInstances',
+      'backupTrustModel',
       'before',
       'confirmation',
       'createdAt',
       'migration',
       'operator',
+      'operatorBundle',
       'outputDirectory',
       'repository',
+      'separateCaptureAttestation',
       'safety',
       'schemaVersion',
       'state',
@@ -420,7 +441,9 @@ export function parseProtectedV2ApplicationIntent(bytes: string): ProtectedV2App
     parsed.schemaVersion !== PROTECTED_V2_APPLICATION_INTENT_SCHEMA_VERSION ||
     parsed.state !== 'application_intent_sealed' ||
     parsed.authorizedCapability !== PROTECTED_V2_AUTHORIZED_CAPABILITY ||
+    parsed.backupTrustModel !== PROTECTED_V2_BACKUP_TRUST_MODEL ||
     parsed.confirmation !== PROTECTED_V2_CONFIRMATION ||
+    parsed.separateCaptureAttestation !== PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION ||
     canonicalJson(parsed.migration) !== canonicalJson(PROTECTED_GOLD_IMPORT_CONTRACT_V2) ||
     safety.compensationAuthorized !== false ||
     safety.finalReceiptComplete !== false ||
@@ -437,29 +460,33 @@ export function parseProtectedV2ApplicationIntent(bytes: string): ProtectedV2App
 }
 
 export interface ProtectedV2PostApplicationAudit {
+  auditMethod: typeof PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD
   auditIdentitySha256: string
   auditedAt: string
+  catalogAudit: ProtectedV2CompleteCatalogAuditIdentity
   databaseEvidenceSha256: string
   migration: typeof PROTECTED_GOLD_IMPORT_CONTRACT_V2
   readOnly: true
   repeatableRead: true
   repositoryCommitSha: string
-  rpcMetadataSha256: string
   schemaVersion: typeof PROTECTED_V2_POST_APPLICATION_AUDIT_SCHEMA_VERSION
-  semanticFunctionMetadataSha256: string
-  triggerMetadataSha256: string
   verifier: typeof PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER
+  verifierExecuted: false
 }
 
 export function buildProtectedV2PostApplicationAudit(
   input: Omit<ProtectedV2PostApplicationAudit, 'auditIdentitySha256' | 'schemaVersion'>,
 ): ProtectedV2PostApplicationAudit {
-  const content = { ...input, schemaVersion: PROTECTED_V2_POST_APPLICATION_AUDIT_SCHEMA_VERSION }
+  const content = {
+    ...input,
+    catalogAudit: validateProtectedV2CompleteCatalogAuditIdentity(input.catalogAudit),
+    schemaVersion: PROTECTED_V2_POST_APPLICATION_AUDIT_SCHEMA_VERSION,
+  }
   for (const [label, value] of Object.entries({
     databaseEvidenceSha256: content.databaseEvidenceSha256,
-    rpcMetadataSha256: content.rpcMetadataSha256,
-    semanticFunctionMetadataSha256: content.semanticFunctionMetadataSha256,
-    triggerMetadataSha256: content.triggerMetadataSha256,
+    fullAuditIdentitySha256: content.catalogAudit.fullAuditIdentitySha256,
+    auditModelIdentitySha256: content.catalogAudit.auditModelIdentitySha256,
+    environmentInvariantIdentitySha256: content.catalogAudit.environmentInvariantIdentitySha256,
   })) {
     requiredSha256(value, `post-application audit ${label}`)
   }
@@ -467,6 +494,13 @@ export function buildProtectedV2PostApplicationAudit(
   if (
     content.readOnly !== true ||
     content.repeatableRead !== true ||
+    content.auditMethod !== PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD ||
+    content.verifierExecuted !== false ||
+    content.catalogAudit.auditMethod !== PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD ||
+    content.catalogAudit.auditModelIdentitySha256 !==
+      PROTECTED_V2_COMPLETE_CATALOG_AUDIT_MODEL_IDENTITY_SHA256 ||
+    content.catalogAudit.environmentInvariantIdentitySha256 !==
+      PROTECTED_V2_EXPECTED_INVARIANT_IDENTITY_SHA256 ||
     !COMMIT_PATTERN.test(content.repositoryCommitSha) ||
     canonicalJson(content.migration) !== canonicalJson(PROTECTED_GOLD_IMPORT_CONTRACT_V2) ||
     canonicalJson(content.verifier) !== canonicalJson(PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER)
@@ -484,17 +518,17 @@ export function parseProtectedV2PostApplicationAudit(
     parsed,
     [
       'auditIdentitySha256',
+      'auditMethod',
       'auditedAt',
+      'catalogAudit',
       'databaseEvidenceSha256',
       'migration',
       'readOnly',
       'repeatableRead',
       'repositoryCommitSha',
-      'rpcMetadataSha256',
       'schemaVersion',
-      'semanticFunctionMetadataSha256',
-      'triggerMetadataSha256',
       'verifier',
+      'verifierExecuted',
     ],
     'Protected V2 post-application audit',
   )
@@ -520,17 +554,25 @@ export function parseProtectedV2PostApplicationAudit(
 
 export interface ProtectedV2ApplicationResult {
   after: ProtectedV2DatabaseEvidence
+  backupInstances: readonly [ProtectedV2BackupBinding, ProtectedV2BackupBinding]
+  backupTrustModel: typeof PROTECTED_V2_BACKUP_TRUST_MODEL
   before: ProtectedV2DatabaseEvidence
+  intentCommitIsAncestor: true
+  intentRepositoryHead: string
   migration: typeof PROTECTED_GOLD_IMPORT_CONTRACT_V2
   migrationApplicationCallCount: 0 | 1
   migrationApplied: true
   migrationReexecuted: false
   operatorAuthorizationSha256: string
   originalIntentSha256: string
+  operatorBundleSha256: string
+  operatorBundleUnchanged: true
   postApplicationAudit: ProtectedV2PostApplicationAudit
   receiptReconciled: boolean
   reconciliationReason: string | null
+  recoveryRepositoryHead: string
   repository: ProtectedV2RepositoryEvidence
+  separateCaptureAttestation: typeof PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION
   safety: {
     compensationAuthorized: false
     heldOutIdentitiesAccessed: false
@@ -544,10 +586,14 @@ export interface ProtectedV2ApplicationResult {
 
 export function buildProtectedV2ApplicationResult(input: {
   after: ProtectedV2DatabaseEvidence
+  backupInstances: readonly [ProtectedV2BackupBinding, ProtectedV2BackupBinding]
   before: ProtectedV2DatabaseEvidence
+  intentCommitIsAncestor: true
+  intentRepositoryHead: string
   migrationApplicationCallCount: 0 | 1
   operatorAuthorizationSha256: string
   originalIntentSha256: string
+  operatorBundleSha256: string
   postApplicationAudit: ProtectedV2PostApplicationAudit
   receiptReconciled: boolean
   reconciliationReason: string | null
@@ -579,25 +625,38 @@ export function buildProtectedV2ApplicationResult(input: {
     input.before.revealStateSha256 !== input.after.revealStateSha256 ||
     input.before.reviewStateSha256 !== input.after.reviewStateSha256 ||
     input.postApplicationAudit.databaseEvidenceSha256 !== sha256(canonicalJson(input.after)) ||
-    input.postApplicationAudit.repositoryCommitSha !== input.repository.head
+    input.postApplicationAudit.repositoryCommitSha !== input.repository.head ||
+    input.intentCommitIsAncestor !== true ||
+    !COMMIT_PATTERN.test(input.intentRepositoryHead) ||
+    input.repository.head !== input.repository.originMain ||
+    input.operatorBundleSha256 !== input.repository.operatorBundle.aggregateSha256
   ) {
     throw new Error('Protected V2 finalization database transition is not schema-only exact-once.')
   }
   requiredSha256(input.operatorAuthorizationSha256, 'result authorization')
   requiredSha256(input.originalIntentSha256, 'result intent')
+  requiredSha256(input.operatorBundleSha256, 'result operator bundle')
   return {
     after: input.after,
+    backupInstances: input.backupInstances,
+    backupTrustModel: PROTECTED_V2_BACKUP_TRUST_MODEL,
     before: input.before,
+    intentCommitIsAncestor: true,
+    intentRepositoryHead: input.intentRepositoryHead,
     migration: PROTECTED_GOLD_IMPORT_CONTRACT_V2,
     migrationApplicationCallCount: input.migrationApplicationCallCount,
     migrationApplied: true,
     migrationReexecuted: false,
     operatorAuthorizationSha256: input.operatorAuthorizationSha256,
     originalIntentSha256: input.originalIntentSha256,
+    operatorBundleSha256: input.operatorBundleSha256,
+    operatorBundleUnchanged: true,
     postApplicationAudit: input.postApplicationAudit,
     receiptReconciled: input.receiptReconciled,
     reconciliationReason: input.reconciliationReason,
+    recoveryRepositoryHead: input.repository.head,
     repository: input.repository,
+    separateCaptureAttestation: PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION,
     safety: {
       compensationAuthorized: false,
       heldOutIdentitiesAccessed: false,
@@ -616,17 +675,25 @@ export function parseProtectedV2ApplicationResult(bytes: string): ProtectedV2App
     parsed,
     [
       'after',
+      'backupInstances',
+      'backupTrustModel',
       'before',
+      'intentCommitIsAncestor',
+      'intentRepositoryHead',
       'migration',
       'migrationApplicationCallCount',
       'migrationApplied',
       'migrationReexecuted',
       'operatorAuthorizationSha256',
       'originalIntentSha256',
+      'operatorBundleSha256',
+      'operatorBundleUnchanged',
       'postApplicationAudit',
       'receiptReconciled',
       'reconciliationReason',
+      'recoveryRepositoryHead',
       'repository',
+      'separateCaptureAttestation',
       'safety',
       'schemaVersion',
       'state',
@@ -636,10 +703,17 @@ export function parseProtectedV2ApplicationResult(bytes: string): ProtectedV2App
   )
   const rebuilt = buildProtectedV2ApplicationResult({
     after: parsed.after as ProtectedV2DatabaseEvidence,
+    backupInstances: parsed.backupInstances as unknown as readonly [
+      ProtectedV2BackupBinding,
+      ProtectedV2BackupBinding,
+    ],
     before: parsed.before as ProtectedV2DatabaseEvidence,
+    intentCommitIsAncestor: parsed.intentCommitIsAncestor as true,
+    intentRepositoryHead: String(parsed.intentRepositoryHead ?? ''),
     migrationApplicationCallCount: parsed.migrationApplicationCallCount as 0 | 1,
     operatorAuthorizationSha256: String(parsed.operatorAuthorizationSha256 ?? ''),
     originalIntentSha256: String(parsed.originalIntentSha256 ?? ''),
+    operatorBundleSha256: String(parsed.operatorBundleSha256 ?? ''),
     postApplicationAudit: parseProtectedV2PostApplicationAudit(parsed.postApplicationAudit),
     receiptReconciled: parsed.receiptReconciled === true,
     reconciliationReason:
@@ -653,27 +727,40 @@ export function parseProtectedV2ApplicationResult(bytes: string): ProtectedV2App
 }
 
 export interface ProtectedV2ApplicationExecutionReceipt {
+  auditMethod: typeof PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD
+  backupCaptureIds: readonly [string, string]
+  backupTrustModel: typeof PROTECTED_V2_BACKUP_TRUST_MODEL
   canonicalManifestSha256: string
   compensationAuthorized: false
   contentSha256: string
   executedAt: string
   heldOutIdentitiesAccessed: false
   importAuthorized: false
+  intentCommitIsAncestor: true
+  intentRepositoryHead: string
   migrationApplied: true
   migrationApplicationCallCount: 0 | 1
   migrationId: typeof PROTECTED_GOLD_IMPORT_CONTRACT_V2.id
   migrationReexecuted: false
   migrationSha256: typeof PROTECTED_GOLD_IMPORT_CONTRACT_V2.sha256
   operatorAuthorizationSha256: string
+  operatorBundleSha256: string
+  operatorBundleUnchanged: true
   originalIntentSha256: string
   outputDirectory: string
   postApplicationAuditSha256: string
+  postApplicationCatalogAuditIdentitySha256: string
+  postApplicationComponentIdentities: Record<string, string>
   receiptReconciled: boolean
   reconciliationReason: string | null
   remoteDatabaseAccessed: false
+  recoveryRepositoryHead: string
   repositoryCommitSha: string
   resultSha256: string
   schemaVersion: typeof PROTECTED_V2_APPLICATION_EXECUTION_SCHEMA_VERSION
+  separateCaptureAttestation: typeof PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION
+  verifierExecuted: false
+  verifierSourceSha256: typeof PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER.sha256
 }
 
 export function buildProtectedV2ApplicationExecutionReceipt(
@@ -683,14 +770,34 @@ export function buildProtectedV2ApplicationExecutionReceipt(
   for (const [label, value] of Object.entries({
     canonicalManifestSha256: content.canonicalManifestSha256,
     operatorAuthorizationSha256: content.operatorAuthorizationSha256,
+    operatorBundleSha256: content.operatorBundleSha256,
     originalIntentSha256: content.originalIntentSha256,
     postApplicationAuditSha256: content.postApplicationAuditSha256,
+    postApplicationCatalogAuditIdentitySha256: content.postApplicationCatalogAuditIdentitySha256,
     resultSha256: content.resultSha256,
   })) {
     requiredSha256(value, `application receipt ${label}`)
   }
   if (
     content.migrationId !== PROTECTED_GOLD_IMPORT_CONTRACT_V2.id ||
+    content.auditMethod !== PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD ||
+    content.backupTrustModel !== PROTECTED_V2_BACKUP_TRUST_MODEL ||
+    content.separateCaptureAttestation !== PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION ||
+    content.verifierExecuted !== false ||
+    content.verifierSourceSha256 !== PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER.sha256 ||
+    content.intentCommitIsAncestor !== true ||
+    content.operatorBundleUnchanged !== true ||
+    !COMMIT_PATTERN.test(content.intentRepositoryHead) ||
+    !COMMIT_PATTERN.test(content.recoveryRepositoryHead) ||
+    content.recoveryRepositoryHead !== content.repositoryCommitSha ||
+    content.backupCaptureIds.length !== 2 ||
+    content.backupCaptureIds.some((identity) => !SHA256_PATTERN.test(identity)) ||
+    content.backupCaptureIds[0] === content.backupCaptureIds[1] ||
+    canonicalJson(Object.keys(content.postApplicationComponentIdentities).sort()) !==
+      canonicalJson([...PROTECTED_V2_AUDIT_COMPONENT_NAMES].sort()) ||
+    Object.values(content.postApplicationComponentIdentities).some(
+      (identity) => !SHA256_PATTERN.test(identity),
+    ) ||
     content.migrationSha256 !== PROTECTED_GOLD_IMPORT_CONTRACT_V2.sha256 ||
     content.migrationApplied !== true ||
     content.migrationReexecuted !== false ||
@@ -718,26 +825,39 @@ export function parseProtectedV2ApplicationExecutionReceipt(
     parsed,
     [
       'canonicalManifestSha256',
+      'auditMethod',
+      'backupCaptureIds',
+      'backupTrustModel',
       'compensationAuthorized',
       'contentSha256',
       'executedAt',
       'heldOutIdentitiesAccessed',
       'importAuthorized',
+      'intentCommitIsAncestor',
+      'intentRepositoryHead',
       'migrationApplied',
       'migrationApplicationCallCount',
       'migrationId',
       'migrationReexecuted',
       'migrationSha256',
       'operatorAuthorizationSha256',
+      'operatorBundleSha256',
+      'operatorBundleUnchanged',
       'originalIntentSha256',
       'outputDirectory',
       'postApplicationAuditSha256',
+      'postApplicationCatalogAuditIdentitySha256',
+      'postApplicationComponentIdentities',
       'receiptReconciled',
       'reconciliationReason',
       'remoteDatabaseAccessed',
+      'recoveryRepositoryHead',
       'repositoryCommitSha',
       'resultSha256',
       'schemaVersion',
+      'separateCaptureAttestation',
+      'verifierExecuted',
+      'verifierSourceSha256',
     ],
     'Protected V2 application execution receipt',
   )

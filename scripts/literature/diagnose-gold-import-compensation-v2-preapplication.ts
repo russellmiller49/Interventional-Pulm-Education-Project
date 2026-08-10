@@ -27,10 +27,10 @@ import {
 import { GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2 } from './gold-import-note-disposition-gate-v2'
 import { assertKnownArguments, parseCliArguments, stringArgument } from './lib/cli'
 import {
-  PROTECTED_V2_BACKUP_INSTANCE_WITNESS_DIRECTORY,
+  PROTECTED_V2_BACKUP_DUPLICATE_MARKER_DIRECTORY,
   PROTECTED_V2_BACKUP_RECEIPT_SCHEMA_VERSION,
   buildProtectedV2BackupExecutionReceipt,
-  buildProtectedV2BackupInstanceWitness,
+  buildProtectedV2BackupDuplicateMarker,
 } from './protected-gold-import-contract-v2-evidence'
 import {
   PROTECTED_GOLD_IMPORT_CONTRACT_V1,
@@ -63,7 +63,7 @@ Usage:
 
 The command is pinned to the exact task branch, local Supabase container, and development batch.
 Every database query opens a repeatable-read/read-only transaction. It creates a path-bound,
-externally witnessed backup-instance identity, never reads finalized source artifacts, constructs an
+local duplicate-detection marker for each trusted-operator capture, never reads finalized source artifacts, constructs an
 application database client, or exposes held-out identities.
 `.trim()
 
@@ -531,22 +531,25 @@ blocked until a separately authorized migration-application session completes an
     throw new Error('Protected V2 backup output realpath changed during creation.')
   }
   const executionReceiptBytes = canonicalJson(executionReceipt)
-  const witness = buildProtectedV2BackupInstanceWitness(
+  const duplicateMarker = buildProtectedV2BackupDuplicateMarker(
     executionReceipt,
     sha256(executionReceiptBytes),
   )
-  const witnessDirectory = resolve(
+  const duplicateMarkerDirectory = resolve(
     backupRootRealpath,
-    PROTECTED_V2_BACKUP_INSTANCE_WITNESS_DIRECTORY,
+    PROTECTED_V2_BACKUP_DUPLICATE_MARKER_DIRECTORY,
   )
-  await mkdir(witnessDirectory, { mode: 0o700, recursive: true })
-  const witnessDirectoryStat = await lstat(witnessDirectory)
-  if (!witnessDirectoryStat.isDirectory() || witnessDirectoryStat.isSymbolicLink()) {
-    throw new Error('Protected V2 backup instance witness root is unsafe.')
+  await mkdir(duplicateMarkerDirectory, { mode: 0o700, recursive: true })
+  const duplicateMarkerDirectoryStat = await lstat(duplicateMarkerDirectory)
+  if (
+    !duplicateMarkerDirectoryStat.isDirectory() ||
+    duplicateMarkerDirectoryStat.isSymbolicLink()
+  ) {
+    throw new Error('Protected V2 backup local duplicate-marker root is unsafe.')
   }
   await writeFile(
-    resolve(witnessDirectory, `${executionReceipt.backupInstanceId}.json`),
-    canonicalJson(witness),
+    resolve(duplicateMarkerDirectory, `${executionReceipt.backupInstanceId}.json`),
+    canonicalJson(duplicateMarker),
     { encoding: 'utf8', flag: 'wx', mode: 0o400 },
   )
   return {

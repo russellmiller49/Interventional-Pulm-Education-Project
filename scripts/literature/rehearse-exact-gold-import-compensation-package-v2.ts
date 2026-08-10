@@ -17,6 +17,7 @@ import {
   type V2ExactPackageBootstrapSources,
   createBootstrappedExactPackageDatabaseExecutorV2,
 } from './execute-exact-gold-import-compensation-package-v2'
+import type { ProtectedV2CompleteCatalogAuditIdentity } from './gold-import-contract-v2-catalog-audit'
 import type { GeneratedGoldImportCompensationPackageV2 } from './generate-gold-import-compensation-package-v2'
 import {
   loadAndVerifyBackup,
@@ -37,6 +38,10 @@ import {
   type V2DisposablePathResult,
   type V2ExactPackageDatabaseExecutor,
 } from './rehearse-gold-import-compensation-db-v2'
+import {
+  runProtectedV2DisposableCatalogDriftMatrix,
+  type ProtectedV2CatalogDriftMatrixEvidence,
+} from './rehearse-gold-import-contract-v2-catalog-drift-matrix'
 import { developmentDatabaseSeedSchema } from './rehearse-exact-gold-import-compensation-package-v1'
 
 const execFileAsync = promisify(execFile)
@@ -49,6 +54,8 @@ export const V2_REHEARSAL_TASK_BRANCH =
 export const GOLD_IMPORT_PRE_V1_BACKUP_PHYSICAL_STATE_SHA256_V2 =
   'b509e876f48112957eda42e8ec04e92a10bc40c3217b0011d1c0d708d519ce4f' as const
 const CANONICAL_OUTPUT_NAMES = [
+  'disposable-v2-catalog-drift-matrix.json',
+  'disposable-v2-complete-catalog-audit.json',
   'disposable-v2-ready-audit.json',
   'exact-package-rehearsal-report-v2.json',
   'fresh-v2-rehearsal-evidence.json',
@@ -353,14 +360,20 @@ function canonicalManifest(files: ReadonlyMap<string, Buffer>): Buffer {
 function buildCanonicalOutputs(input: {
   audit: unknown
   backupManifestSha256: string
+  completeCatalogAudit: ProtectedV2CompleteCatalogAuditIdentity
+  driftMatrix: ProtectedV2CatalogDriftMatrixEvidence
   package: GeneratedGoldImportCompensationPackageV2
   results: CompleteV2RehearsalResults
 }) {
   const freshEvidence = canonicalPathEvidence(input.results.fresh[0])
   const upgradeEvidence = canonicalPathEvidence(input.results.upgrade[0])
   const auditBytes = prettyCanonical(input.audit)
+  const completeCatalogAuditBytes = prettyCanonical(input.completeCatalogAudit)
+  const driftMatrixBytes = prettyCanonical(input.driftMatrix)
   const report = {
     audit: {
+      completeCatalogAuditIdentitySha256: input.completeCatalogAudit.fullAuditIdentitySha256,
+      completeCatalogAuditModelIdentitySha256: input.completeCatalogAudit.auditModelIdentitySha256,
       environmentInvariantIdentitySha256: record(
         record(input.audit, 'ready audit').contractAudit,
         'ready audit contractAudit',
@@ -371,6 +384,13 @@ function buildCanonicalOutputs(input: {
       ).environmentProfileIdentitySha256,
       sha256: sha256(auditBytes),
       source: 'first_v1_seeded_upgrade_disposable_context',
+    },
+    catalogDriftMatrix: {
+      localOwnerProjectionIdentitySha256:
+        input.driftMatrix.localOwnerProjection.fullAuditIdentitySha256,
+      probeCount: input.driftMatrix.probes.length,
+      rejectedCount: input.driftMatrix.probes.filter(({ auditRejected }) => auditRejected).length,
+      sha256: sha256(driftMatrixBytes),
     },
     backup: {
       manifestSha256: input.backupManifestSha256,
@@ -427,6 +447,8 @@ function buildCanonicalOutputs(input: {
     status: 'passed',
   }
   const files = new Map<string, Buffer>([
+    ['disposable-v2-catalog-drift-matrix.json', driftMatrixBytes],
+    ['disposable-v2-complete-catalog-audit.json', completeCatalogAuditBytes],
     ['disposable-v2-ready-audit.json', auditBytes],
     ['exact-package-rehearsal-report-v2.json', prettyCanonical(report)],
     ['fresh-v2-rehearsal-evidence.json', freshEvidence],
@@ -589,9 +611,16 @@ export async function runExactPackageRehearsalV2Cli(
   await assertV2RehearsalRepositoryUnchanged(commitSha, dependencies.readRepositoryHead)
   const package_ = controller.referencePackage()
   const audit = controller.referenceAudit()
+  const completeCatalogAudit = controller.referenceCompleteCatalogAudit()
+  const driftMatrix = await runProtectedV2DisposableCatalogDriftMatrix({
+    package: package_,
+    seed,
+  })
   const canonical = buildCanonicalOutputs({
     audit,
     backupManifestSha256: trustedBackupManifestSha256,
+    completeCatalogAudit,
+    driftMatrix,
     package: package_,
     results,
   })
@@ -606,6 +635,8 @@ export async function runExactPackageRehearsalV2Cli(
     canonicalManifestExcludedVolatileReceipt: true,
     fresh: results.fresh.map(executionPathReceipt),
     packageGenerationCount: controller.generatedPackageCount(),
+    catalogDriftProbeCount: driftMatrix.probes.length,
+    localOwnerCatalogProjectionPassed: true,
     schemaVersion: 'gold-import-compensation-exact-package-rehearsal-execution/2.0.0',
     sourceReadCount,
     upgrade: results.upgrade.map(executionPathReceipt),

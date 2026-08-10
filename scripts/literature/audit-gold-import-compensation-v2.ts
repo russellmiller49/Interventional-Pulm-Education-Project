@@ -225,7 +225,7 @@ function assertTrustedDeploymentProfile(
   }
 }
 
-function assertDerivedV2ReadinessPolicy(input: {
+export function assertDerivedV2ReadinessPolicy(input: {
   auditTarget: GoldImportCompensationV2ReadyAudit['target']
   deploymentProfileEvidence: unknown
   rpcMetadata: unknown[]

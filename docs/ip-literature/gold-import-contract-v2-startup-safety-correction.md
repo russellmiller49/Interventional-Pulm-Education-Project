@@ -33,12 +33,22 @@ fail closed.
 
 The dedicated command `literature:apply-protected-gold-import-contract-v2` is dry-run/read-only by
 default. Commit mode requires primary clean main at exact origin/main, exact local target, V1 once,
-V2 absent, accepted hashes, two fresh independently witnessed checksum-verified backup instances,
-exact confirmation, and a checksum-bound migration-only authorization. Before staging it persists
-an immutable application-intent package. It reuses the project-pinned Supabase migration-up path
-exactly once and finalizes only after exact schema/state and read-only V2 security verification. A
-separate reconciliation mode can finalize a lost-ack exact-once application from that intent while
-making zero migration calls. It cannot authorize import or compensation.
+V2 absent, accepted hashes, two fresh checksum-verified redundant backup captures,
+exact confirmation, and a checksum-bound migration-only authorization. The corrected contract calls
+these two separately executed redundant captures under trust model
+`trusted-local-operator-redundant-captures/1.0.0`; commit mode requires the exact operator
+attestation `I ATTEST THESE ARE TWO SEPARATE READ-ONLY BACKUP CAPTURES`. Local unkeyed receipts and
+duplicate markers protect against accidental mistakes and stale/incomplete captures, but are not a
+separate trust root against the trusted filesystem/Docker-owning operator.
+
+Before staging the command persists an immutable application-intent package with a deterministic
+transitive protected-operator bundle. It reuses the project-pinned Supabase migration-up path
+exactly once and finalizes only after exact schema/state and a complete read-only catalog audit of
+columns, constraints, indexes, triggers, RLS/policies, table privileges, functions/RPCs/ACLs, and
+dependencies. The verifier source remains pinned but is not executed real-locally; the receipt says
+`verifierExecuted=false`. Lost-ack reconciliation makes zero migration calls and may run from a
+later clean current-main descendant only if the intent commit remains an ancestor and the sealed
+operator bundle is unchanged. It cannot authorize import or compensation.
 
 See
 [`gold-import-contract-v2-protected-application-runbook.md`](./gold-import-contract-v2-protected-application-runbook.md)
