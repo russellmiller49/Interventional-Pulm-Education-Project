@@ -12,6 +12,7 @@ import {
   REQUIRED_RECONCILIATION_RPCS,
   reconciliationIdentitySha256,
   TRUSTED_SUPABASE_DEPLOYMENT_ROLE_INVENTORY_SHA256,
+  TRUSTED_SUPABASE_DISPOSABLE_ROLE_INVENTORY_SHA256,
   type DeploymentProfileEvidence,
   type DeploymentProfileId,
   type EnrichedRpcMetadata,
@@ -208,11 +209,37 @@ const ROLE_INVENTORY: RoleSecurityAttributes[] = [
   },
 ]
 
+const DISPOSABLE_ROLE_INVENTORY: RoleSecurityAttributes[] = ROLE_INVENTORY.map((role) => {
+  const copy = structuredClone(role)
+  if (copy.roleName === 'postgres') {
+    copy.effectiveMemberships = copy.effectiveMemberships.filter(
+      (membership) =>
+        !['pg_database_owner', 'supabase_functions_admin', 'supabase_realtime_admin'].includes(
+          membership,
+        ),
+    )
+    copy.memberOf = copy.memberOf.filter(
+      ({ roleName }) => !['supabase_functions_admin', 'supabase_realtime_admin'].includes(roleName),
+    )
+  } else if (copy.roleName === 'supabase_admin') {
+    copy.effectiveMemberships = copy.effectiveMemberships.filter(
+      (membership) => !['supabase_functions_admin', 'supabase_realtime_admin'].includes(membership),
+    )
+  }
+  return copy
+})
+
 function profileEvidence(
   profileId: DeploymentProfileId,
   target: DeploymentProfileEvidence['target'],
 ): DeploymentProfileEvidence {
-  return { profileId, target, roleInventory: structuredClone(ROLE_INVENTORY) }
+  return {
+    profileId,
+    target,
+    roleInventory: structuredClone(
+      profileId === 'supabase_admin_owner_v1' ? DISPOSABLE_ROLE_INVENTORY : ROLE_INVENTORY,
+    ),
+  }
 }
 
 function expectedRpcs(): EnrichedRpcMetadata[] {
@@ -342,6 +369,9 @@ describe('gold import-compensation contract reconciliation', () => {
   test('completely explains 763 versus 683 as the exact local postgres-owner representation', async () => {
     expect(reconciliationIdentitySha256(ROLE_INVENTORY)).toBe(
       TRUSTED_SUPABASE_DEPLOYMENT_ROLE_INVENTORY_SHA256,
+    )
+    expect(reconciliationIdentitySha256(DISPOSABLE_ROLE_INVENTORY)).toBe(
+      TRUSTED_SUPABASE_DISPOSABLE_ROLE_INVENTORY_SHA256,
     )
     const result = reconcileGoldImportCompensationContract(await localInput())
 
