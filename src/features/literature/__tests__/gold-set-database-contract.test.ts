@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -33,6 +34,10 @@ const importCompensationMigrationPath = join(
   process.cwd(),
   'supabase/migrations/20260808035633_add_literature_gold_import_compensation_contract.sql',
 )
+const importCompensationV2MigrationPath = join(
+  process.cwd(),
+  'supabase/migrations/20260809231651_add_literature_gold_import_compensation_contract_v2.sql',
+)
 const localSupabaseScriptPath = join(process.cwd(), 'scripts/literature/local-supabase.ts')
 const legacyImportScriptPath = join(process.cwd(), 'scripts/literature/import-gold-reviews.ts')
 
@@ -45,6 +50,7 @@ describe('gold-set database contract', () => {
   const safetyPreventionSql = readFileSync(safetyPreventionMigrationPath, 'utf8')
   const testUnlockSql = readFileSync(testUnlockMigrationPath, 'utf8')
   const importCompensationSql = readFileSync(importCompensationMigrationPath, 'utf8')
+  const importCompensationV2Sql = readFileSync(importCompensationV2MigrationPath, 'utf8')
   const localSupabaseScript = readFileSync(localSupabaseScriptPath, 'utf8')
   const legacyImportScript = readFileSync(legacyImportScriptPath, 'utf8')
   const tables = [
@@ -166,6 +172,12 @@ describe('gold-set database contract', () => {
     )
   })
 
+  it('keeps the historical V1 migration byte-identical', () => {
+    expect(createHash('sha256').update(importCompensationSql).digest('hex')).toBe(
+      'e846ef70a7b484460682a7ff61d579d3d6fdae3400805fa5395adc0464244528',
+    )
+  })
+
   it('defines atomic operations, separate hashes, and explicit event types', () => {
     expect(importCompensationSql).toContain('create table public.literature_gold_review_operations')
     expect(importCompensationSql).toContain(
@@ -215,6 +227,22 @@ describe('gold-set database contract', () => {
     expect(importCompensationSql).toContain('to service_role')
     expect(localSupabaseScript).toContain(
       "'20260808035633_add_literature_gold_import_compensation_contract.sql'",
+    )
+    expect(localSupabaseScript).toContain(
+      "'20260809231651_add_literature_gold_import_compensation_contract_v2.sql'",
+    )
+  })
+
+  it('installs V2 as an explicit forward-only contract boundary', () => {
+    expect(importCompensationV2Sql).toContain('apply_literature_gold_import_v2')
+    expect(importCompensationV2Sql).toContain('compensate_literature_gold_import_v2')
+    expect(importCompensationV2Sql).toContain('reconcile_literature_gold_review_operation_v2')
+    expect(importCompensationV2Sql).toContain('literature_gold_effective_state_hash_v2')
+    expect(importCompensationV2Sql).toContain('literature_gold_physical_state_hash_v2')
+    expect(importCompensationV2Sql).toContain('full_text_used')
+    expect(importCompensationV2Sql).toContain('gold-review-import-compensation/2.0.0')
+    expect(importCompensationV2Sql).not.toMatch(
+      /(?:alter|update|delete)[\s\S]{0,80}20260808035633_add_literature_gold_import_compensation_contract/iu,
     )
   })
 
