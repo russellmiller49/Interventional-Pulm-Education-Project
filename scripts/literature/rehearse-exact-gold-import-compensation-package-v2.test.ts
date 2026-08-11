@@ -133,6 +133,16 @@ describe('exact V2 package rehearsal entrypoint', () => {
     expect(bootstrap).toContain('referenceMigrationReceiptGate ??= generated.migrationReceiptGate')
     expect(bootstrap).toContain('migrationReceiptGate: generated.migrationReceiptGate')
     expect(bootstrap).not.toContain('migrationReceiptGate: privatePackage.migrationReceiptGate')
+    const rehearsalSource = await readFile(
+      resolve(
+        process.cwd(),
+        'scripts/literature/rehearse-exact-gold-import-compensation-package-v2.ts',
+      ),
+      'utf8',
+    )
+    expect(rehearsalSource).toContain(
+      'migrationReceiptGate: controller.referenceMigrationReceiptGate()',
+    )
     const gateIndex = direct.indexOf(
       'requireIssuedGoldImportCompensationV2MigrationReceiptGateForBinding(',
     )

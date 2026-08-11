@@ -472,6 +472,7 @@ export interface BootstrappedExactPackageExecutorV2 {
   generatedPackageCount(): number
   referenceAudit(): GoldImportCompensationV2ReadyAudit
   referenceCompleteCatalogAudit(): ProtectedV2CompleteCatalogAuditIdentity
+  referenceMigrationReceiptGate(): GoldImportCompensationV2MigrationReceiptGate
   referencePackage(): GeneratedGoldImportCompensationPackageV2
 }
 
@@ -572,6 +573,12 @@ export function createBootstrappedExactPackageDatabaseExecutorV2(input: {
         throw new Error('The V2 complete catalog audit has not been bootstrapped.')
       }
       return canonicalDetachedClone(referenceCompleteCatalogAudit)
+    },
+    referenceMigrationReceiptGate: () => {
+      if (!referenceMigrationReceiptGate) {
+        throw new Error('The disposable migration receipt proof has not been bootstrapped.')
+      }
+      return referenceMigrationReceiptGate
     },
     referencePackage: () => {
       if (!referencePackage) throw new Error('The exact V2 package has not been bootstrapped.')

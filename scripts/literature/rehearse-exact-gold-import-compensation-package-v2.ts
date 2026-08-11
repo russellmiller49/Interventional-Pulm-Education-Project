@@ -737,6 +737,7 @@ export async function runExactPackageRehearsalV2Cli(
     throw new Error('Observed disposable catalog audit differs from its committed expectation.')
   }
   const driftMatrix = await runProtectedV2DisposableCatalogDriftMatrix({
+    migrationReceiptGate: controller.referenceMigrationReceiptGate(),
     package: package_,
     seed,
   })
