@@ -136,16 +136,17 @@ is protected as an undeclared lifecycle field: any later change to it is
 
 ### 3.4 Failure modes (all fail closed)
 
-| Condition                                                                     | Where it fails                                           | Code                                                          |
-| ----------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------- |
-| Entry content no longer matches its recorded hash                             | build + integrity suite                                  | `definition_set_ledger_entry_mutated`                         |
-| Two entries claim one (id, hash) key                                          | build + integrity suite                                  | `definition_set_ledger_duplicate_entry`                       |
-| Entry carries an unknown set id                                               | build + integrity suite                                  | `definition_set_ledger_unknown_set`                           |
-| A published pin present in neither the matching live set nor the ledger       | build + integrity suite + runtime resolution             | `definition_set_ledger_entry_missing` / `release_pin_missing` |
-| Retained taxonomy contradicted by the live table (§3.6)                       | runtime resolution                                       | `release_pin_missing` (typed, card goes view-only)            |
-| Tampered ledger content reaching runtime                                      | `pinDiff` re-hashes the resolved content against the pin | `release_definition_mutated`                                  |
-| Retained entry removed, or its hash rewritten, relative to the protected base | `check-publication-baseline`                             | `publication_entry_removed`                                   |
-| Retained entry's content edited with its recorded hash left intact            | build gate + committed-data suite (re-hash)              | `definition_set_ledger_entry_mutated`                         |
+| Condition                                                                          | Where it fails                                                     | Code                                                          |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------- |
+| Entry content no longer matches its recorded hash                                  | build + integrity suite                                            | `definition_set_ledger_entry_mutated`                         |
+| Two entries claim one (id, hash) key                                               | build + integrity suite                                            | `definition_set_ledger_duplicate_entry`                       |
+| Entry carries an unknown set id                                                    | build + integrity suite                                            | `definition_set_ledger_unknown_set`                           |
+| A published pin present in neither the matching live set nor the ledger            | build + integrity suite + runtime resolution                       | `definition_set_ledger_entry_missing` / `release_pin_missing` |
+| Retained taxonomy contradicted by the live table (§3.6)                            | runtime resolution                                                 | `release_pin_missing` (typed, card goes view-only)            |
+| Tampered ledger content reaching runtime                                           | `pinDiff` re-hashes the resolved content against the pin           | `release_definition_mutated`                                  |
+| Retained entry removed, or its hash rewritten, relative to the protected base      | `check-publication-baseline`                                       | `publication_entry_removed`                                   |
+| Retained entry's content edited with its recorded hash left intact                 | build gate + committed-data suite (re-hash)                        | `definition_set_ledger_entry_mutated`                         |
+| Frozen release's `publishedAt` null or outside the canonical instant contract (§8) | build gate (phase A, before any ordering) + attribution validation | `definition_set_attribution_unorderable_release`              |
 
 There is no fallback from a missing pinned set to the current live set, and no "latest"
 selection anywhere.
@@ -447,3 +448,48 @@ state in and reconciled both directions. What changed against the record above:
 - **D0 audit boundary.** `data-readiness-audit.json` is byte-identical to merged main
   (`bba2b940…`), as §5.7 predicted — the F-09 seed edit is outside the audit's measured
   surface.
+
+## 8. The canonical publication-instant contract (P92-C2b, 2026-08-11)
+
+The second Codex verification pass confirmed the P92-C2 attribution derivation but found
+its boundary condition: the publication order underneath it was a `localeCompare` over raw
+`publishedAt` strings guarded only by a null check. A non-null malformed value —
+`release-ebus-tbna-v1-1.publishedAt = "zzzz-not-a-date"` — was accepted, sorted
+lexicographically after every real timestamp, participated in first-publisher derivation,
+and was written into `generated/release-bundles.json` by a zero-exit run of the real
+generator (reproduced at `7de6c4bf`: exit 0, 27 bundles retained, the malformed string in
+the output).
+
+**The contract** (`domain/published-instant.ts`, `parsePublishedReleaseInstant`): a frozen
+release's `publishedAt` must be a calendar-valid RFC 3339 / ISO 8601 UTC instant — four-digit
+year, seconds required, optional fractional seconds, uppercase `T` and `Z`, anchored, no
+offset forms, no timezone-less or date-only forms, non-strings and null refused. Validation
+is the repository's `z.string().datetime()` (calendar-aware: leap years, days-in-month,
+field ranges) composed with one shape refinement requiring the seconds component; the same
+regex extracts the fields, so acceptance and extraction cannot drift. The epoch value is
+derived arithmetically from the validated fields (`setUTCFullYear`/`setUTCHours` on a zero
+date — never `Date.parse`, the `Date` string constructor, or `Date.UTC`'s 0–99 year
+remapping), and the authored string is preserved byte-for-byte in every artifact. Fractional
+digits beyond milliseconds are truncated for ordering; instants equal to the millisecond
+fall to the release-id tiebreak, deterministically.
+
+**Where it is enforced.** `comparePublicationOrder` compares parsed instants and throws
+rather than ordering an unparseable value; `validateReleasePublicationInstants` holds every
+frozen release to the contract with the existing typed
+`definition_set_attribution_unorderable_release` code (naming the release, the raw value,
+and why it cannot establish publication order); `validateDefinitionSetAttribution` runs that
+check first and fails closed — with any release unorderable there is no publication order to
+derive attribution from; and the generator's phase A validates all frozen instants
+immediately after bundle construction, before the first-publisher fold, before any sort,
+and long before phase B writes. Drafts keep their existing lifecycle: `publishedAt: null`
+remains valid until publication.
+
+**Evidence.** The CLI atomicity suite pins the exact Codex reproduction plus four more
+classes (impossible-but-ISO-looking date, timezone-less, invalid offset, null) — each fails
+the literal CLI nonzero with the typed code and leaves all ten targets byte-identical with
+no partial output; `published-instant.test.ts` pins the full accept/reject matrix, the
+chronological-vs-lexicographic ordering (including two spellings of the same instant
+falling to the id tiebreak), byte-for-byte raw preservation, and the committed-data
+invariant that every frozen release in the seed and the generated bundles parses. The
+committed timestamps were already valid, so regeneration after the correction is
+byte-identical — the contract changed what the generator refuses, not what it writes.
